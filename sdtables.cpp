@@ -528,6 +528,7 @@ Cstring warning_strings[] = {
    /*  warn__tasteless_junk      */   "*The algorithmic nondeterminism of this usage is truly extraordinary.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial.",
    /*  warn__went_to_other_side  */   "*People went to the other side; is this really what you want?",
+   /*  warn__maybe_use_concentric*/   "*Maybe you should use 'concentric'.",
    /*  warn__horrible_conc_hinge */   "*Extremely awkward for outsides; is this really what you want?",
    /*  warn__this_is_tight       */   "*This is tight; it may not be a good combination.",
    /*  warn__compress_carefully  */   "*Preserve the phantom spots internal to the outer setups.",
@@ -2051,6 +2052,9 @@ map::map_thing map::map_init_table[] = {
    {{5, 4,                 6, 7,                 0, 1,              3, 2},
     s1x2,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,1, warn__none,  s_alamo, 0x0CC, 0},
 
+   {{-1, -1, -1, -1,    6, 0, 7, 5,        -1, -1, -1, -1,  3, 1, 2, 4},
+    s_star,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,1, warn__none,  s_2stars, 0, 0x00000000},
+
    {{9, 11, 6, 8,       10, 12, 13, 15,    14, 0, 1, 3,     5, 7, 2, 4},
     s2x2,4,MPKIND__4_QUADRANTS,1, warn__none,  s4x4, 0x0CC, 0},
 
@@ -3426,6 +3430,7 @@ static expand::thing rear_bone_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_bone, s_rig
 static expand::thing rear_bone_stuffd = {{0, 3, 5, 2, 4, 7, 1, 6}, s_bone, s2x4, 0};
 static expand::thing rear_qtag_stuffa = {{7, 6, 0, 1, 3, 2, 4, 5}, s_qtag, s_rigger, 1};
 static expand::thing rear_qtag_stuffb = {{1, 0, 2, 3, 5, 4, 6, 7}, s_qtag, s_crosswave, 1};
+static expand::thing rear_2x1d_stuffa = {{0, 1, 2, 3, 4, 5}, s_1x2dmd, s1x6, 0};
 static expand::thing rear_rig_stuffa = {{1, 2, 3, 4, 5, 6, 7, 0}, s_rigger, s2x4, 0};
 static expand::thing rear_rig_stuffb = {{3, 6, 4, 5, 7, 2, 0, 1}, s_rigger, s1x8, 0};
 static expand::thing rear_rig_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_rigger, s_bone, 0};
@@ -3661,6 +3666,9 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  0, &rear_funnydmd,  s_qtag,    0xFFFFU,     0x78D2U, ~0U},
    // Centers rear back 3&1 lines, ends facing, centers have right hands.
    {warn__centers_rear_back_staying_in_center, 0, &rear_funny3x1,  s2x4,      0xFFFFU,     0x8A20U, ~0U},
+
+   // Center 2 rear back from 2x1dmd to 1x6
+   {warn__some_rear_back,  0, &rear_2x1d_stuffa,s_1x2dmd,    0xFFFU,      0x557U, 0x5D7U},
 
    // Ends rear back from a "rigger" to lines facing or "split square thru" setup.
    {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFU,     0x0802U, 0x0F0FU},
@@ -4734,6 +4742,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s_bone6,  0, 0, 1, 1,  0x8FA, schema_concentric},
    {s_qtag,         schema_concentric_2_6, {7, 3,    5, 6, 0, 1, 2, 4},
              s1x2,     s_short6, 0, 1, 1, 1,  0x8FD, schema_concentric},
+   {s_2stars,         schema_concentric_2_6, {7, 3,    5, 6, 0, 1, 2, 4},
+             s1x2,     s_short6, 0, 1, 1, 1,  0x9FD, schema_concentric},
    {s_343,          schema_concentric_2_6, {9, 4,    7, 8, 0, 2, 3, 5},
              s1x2,     s_short6, 0, 1, 1, 1,  0x9FD, schema_concentric},
    {s_hrglass,      schema_concentric_2_6, {7, 3,    5, 6, 0, 1, 2, 4},

@@ -6,7 +6,7 @@
 CC = g++
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = -m32 -static -Wall -Wno-switch -Wno-uninitialized -Wno-deprecated -Wno-char-subscripts -Wno-narrowing
+DEFS = -m32 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts -Wno-narrowing
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you

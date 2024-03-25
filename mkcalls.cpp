@@ -1080,6 +1080,7 @@ const char *flagtab1f[] = {
    "overcast_transparent",
    "is_star_call",
    "can_do_in_z",
+   "warn_on_elongation",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.
@@ -1701,6 +1702,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "pass_in"},
    {0, "pass_out"},
    {0, "check_cross_counter"},
+   {0, "endscounter"},
    {0, "lockit"},
    {0, "disband1"},
    {0, "slither"},

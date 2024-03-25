@@ -71,9 +71,11 @@ SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
 HFILES = sdui.h sd.h database.h paths.h mapcachefile.h sort.h \
              deploy.h resource.h sdprint.h sdmatch.h sdchars.h
 
-MAKEFILES = makefile.linux32 makefile.linux64 \
+MAKEFILES = makefile.linux32 makefile.linux64 makefile.linuxnostatic32 makefile.linuxnostatic64 \
             makefile.cygnus makefile.cygwin makefile.djgpp \
             makefile.mingw makefile.mac makefile.solaris
+
+SVG_ICONS = sdtty.svg sd.svg sdbg.svg sdbw.svg sdby.svg sdgy.svg sdry.svg
 
 SDTTY_OBJS = sdui-tty.o sdui-ttu.o
 
@@ -121,10 +123,10 @@ clean::
 	-$(RM) *.o sd sdtty mkcalls sd_calls.dat tags
 
 tarball::
-	tar zcvf linux.tgz sdtty mkcalls sd_calls.txt sd_calls.dat COPYING.txt
+	tar zcvf linux.tgz sdtty mkcalls sd_calls.txt sd_calls.dat COPYING.txt $(SVG_ICONS)
 
 savesource::
 	tar cvf sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
-               $(SD_OBJS:.o=.cpp) $(MKCALLS_OBJS:.o=.cpp) $(HFILES) \
+               $(MKCALLS_OBJS:.o=.cpp) $(HFILES) \
                sdui-ttu.cpp $(MAKEFILES) \
                sd_calls.txt db_doc.txt COPYING.txt
