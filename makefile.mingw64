@@ -39,7 +39,7 @@ ICONS = sd.ico sdbg.ico sdbw.ico sdby.ico sdcpl.ico sdgy.ico sdry.ico sdtty.ico
 SHORTCUTS = "Edit sd.ini.lnk" Faq.lnk "Release Notes.lnk" "SD couple.lnk" "SD hidecouple.lnk" "Sd manual.lnk" \
              "SD nocheckers.lnk" "SD plain.lnk" SD.lnk "SDTTY plain.lnk" SDTTY.lnk
 
-MAKEFILES = makefile.linux32 makefile.linux64 \
+MAKEFILES = makefile.linux32 makefile.linux64 makefile.linuxnostatic32 makefile.linuxnostatic64 \
             makefile.cygnus makefile.cygwin makefile.djgpp \
             makefile.mingw makefile.mingw64 makefile.mac makefile.solaris
 

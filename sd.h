@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2024  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -598,6 +598,7 @@ enum warning_index {
    warn__tasteless_junk,
    warn__tasteless_slide_thru,
    warn__went_to_other_side,
+   warn__maybe_use_concentric,
    warn__horrible_conc_hinge,
    warn__this_is_tight,
    warn__compress_carefully,
@@ -762,9 +763,9 @@ enum {
    STABLE_VLBIT     = 0x00100000U,  // this is low bit
    STABLE_VRMASK    = 0x000F0000U,  // stability "V" field for right turns, 4 bits
    STABLE_VRBIT     = 0x00010000U,  // this is low bit
-   STABLE_RMASK     = 0x0000F000U,  // stability "R" field, 4 bits
-   STABLE_RBIT      = 0x00001000U,  // this is low bit
-   STABLE_ALL_MASK  = STABLE_ENAB|STABLE_VLMASK|STABLE_VRMASK|STABLE_RMASK, // This is 0x01FFF000.
+   STABLE_REMMASK   = 0x0000F000U,  // stability "REM" field, 4 bits
+   STABLE_REMBIT    = 0x00001000U,  // this is low bit
+   STABLE_ALL_MASK  = STABLE_ENAB|STABLE_VLMASK|STABLE_VRMASK|STABLE_REMMASK, // This is 0x01FFF000.
 
    BIT_PERSON       = 0x00000800U,  // live person (just so at least one bit is always set)
    BIT_ACT_PHAN     = 0x00000400U,  // active phantom (see below, under XPID_MASK)
@@ -1671,6 +1672,7 @@ public:
 
    const concept_descriptor *concept; // the concept or end marker
    call_with_name *call;          // if this is end mark, gives the call; otherwise unused
+   setup *setup_for_print;        // may need to know actual setup to decide whether we can say "outer pairs".
    call_with_name *call_to_print; // the original call, for printing (sometimes the field
                                   // above gets changed temporarily)
    parse_block *next;             // next concept, or, if this is end mark,
@@ -1855,6 +1857,36 @@ struct setup {
          clear_person(j+(MAX_PEOPLE/2));
       }
    }
+
+// in sdtop.cpp.
+
+void do_matrix_expansion(
+   uint32_t concprops,
+   bool recompute_id) THROW_DECL;
+
+// These get a ===> BIG-ENDIAN <=== mask of people's facing directions.
+// Each person occupies 2 bits in the resultant masks.  The "livemask"
+// bits are both on if the person is live.
+void big_endian_get_directions64(
+   uint64_t & directions,
+   uint64_t & livemask) const;
+
+void big_endian_get_directions32(
+   uint32_t & directions,      // These get only the low 32 bits,
+   uint32_t & livemask) const; // Which are good enough for most clients.
+
+uint32_t little_endian_live_mask() const;
+
+void update_id_bits();
+void clear_bits_for_update();
+void clear_absolute_proximity_bits();
+void clear_absolute_proximity_and_facing_bits();
+void put_in_absolute_proximity_and_facing_bits();
+
+void touch_or_rear_back(
+   bool did_mirror,
+   int callflags1) THROW_DECL;
+
 };
 
 
@@ -5248,35 +5280,6 @@ void initialize_getout_tables();
 
 /* In SDTOP */
 
-extern void update_id_bits(setup *ss);
-extern void clear_bits_for_update(setup *ss);
-extern void clear_absolute_proximity_bits(setup *ss);
-extern void clear_absolute_proximity_and_facing_bits(setup *ss);
-extern void put_in_absolute_proximity_and_facing_bits(setup *ss);
-
-// This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
-// Each person occupies 2 bits in the resultant masks.  The "livemask"
-// bits are both on if the person is live.
-extern void big_endian_get_directions64(
-   const setup *ss,
-   uint64_t & directions,
-   uint64_t & livemask);
-
-extern void big_endian_get_directions32(
-   const setup *ss,
-   uint32_t & directions,    // These get only the low 32 bits,
-   uint32_t & livemask);     // Which are good enough for most clients.
-
-extern void touch_or_rear_back(
-   setup *scopy,
-   bool did_mirror,
-   int callflags1) THROW_DECL;
-
-extern void do_matrix_expansion(
-   setup *ss,
-   uint32_t concprops,
-   bool recompute_id) THROW_DECL;
-
 void initialize_sdlib();
 void finalize_sdlib();
 
@@ -5334,17 +5337,6 @@ inline uint32_t rotcw(uint32_t n)
 
 inline uint32_t rotccw(uint32_t n)
 { if (n == 0) return 0; else return (n + 033) & ~064; }
-
-
-inline uint32_t little_endian_live_mask(const setup *ss)
-{
-   int i;
-   uint32_t j, result;
-   for (i=0, j=1, result = 0; i<=attr::slimit(ss); i++, j<<=1) {
-      if (ss->people[i].id1) result |= j;
-   }
-   return result;
-}
 
 
 inline uint32_t or_all_people(const setup *ss)
@@ -5670,7 +5662,7 @@ public:
    }
 
    void note_prefilled_result()
-      { m_result_mask = little_endian_live_mask(m_result_ptr); }
+      { m_result_mask = m_result_ptr->little_endian_live_mask(); }
 
    uint32_t * install_with_collision(
       int resultplace,
@@ -6010,7 +6002,7 @@ extern void inner_selective_move(
 
 /* In SDUTIL */
 
-extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
+extern void ThingToTryToKeepTheStupidMicrosoftCompilerFromScrewingUp();
 
 SDLIB_API extern parse_block *copy_parse_tree(parse_block *original_tree);
 SDLIB_API extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);

@@ -1025,12 +1025,12 @@ static bool inner_search(command_kind goal,
 {
    int i, j;
    uint32_t directions, p, q;
-   double CLOCKS_TO_RESOLVE;
+   uint64_t CLOCKS_TO_RESOLVE;
 
    if (ui_options.resolve_test_minutes > 0)
-      CLOCKS_TO_RESOLVE = (double) ui_options.resolve_test_minutes * 60.0 * ((double) CLOCKS_PER_SEC);
+      CLOCKS_TO_RESOLVE = ui_options.resolve_test_minutes * 60ULL * ((uint64_t) CLOCKS_PER_SEC);
    else
-      CLOCKS_TO_RESOLVE = 5.0 * ((double) CLOCKS_PER_SEC);
+      CLOCKS_TO_RESOLVE = 5ULL * ((uint64_t) CLOCKS_PER_SEC);
 
    history_insertion_point = huge_history_ptr;
 
@@ -1065,8 +1065,8 @@ static bool inner_search(command_kind goal,
    volatile int little_count = 0;
    volatile int attempt_count = 0;
 
-   int32_t air_start_time = clock();
-   double big_resolve_time = 0.0;
+   uint64_t air_start_time = clock();
+   uint64_t big_resolve_time = 0;
    hashed_random_list[0] = 0;
 
    // Mark the parse block allocation, so that we throw away the garbage created by failing attempts.
@@ -1122,17 +1122,17 @@ static bool inner_search(command_kind goal,
       if (!(attempt_count & 4095)) {
          // Come up for air; see how much clock time has elapsed.  It will be about 100
          // ticks on Windows, and 100,000 ticks on Linux.  Tally that in a
-         // doubleprecision floating variable.  36 billion is trivial for such a thing.
+         // 64 bit variable.  36 billion is trivial for such a thing.
 
-         int32_t air_time = clock() - air_start_time;
+         uint64_t air_time = clock() - air_start_time;
          air_start_time += air_time; // Reset it for the next time we come up for air.
 
          // But what if the system clock wrapped around (overflowed) during this time?
-         // No problem; the signed 32-bit subtract will do the right thing.  That is,
+         // No problem; the signed 64-bit subtract will do the right thing.  That is,
          // assuming the system clock didn't advance by more than 2 billion during this
          // time.
 
-         big_resolve_time += (double) air_time;
+         big_resolve_time += air_time;
 
          if (big_resolve_time > CLOCKS_TO_RESOLVE) {
             // Too many tries -- too bad.
