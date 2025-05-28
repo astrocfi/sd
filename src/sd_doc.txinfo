@@ -3,7 +3,7 @@
 @settitle Sd
 @c %**end of header
 @ifinfo
-sd_doc.txinfo time-stamp: @{93/02/10 18:37:18 gildea@}
+sd_doc.txinfo time-stamp: @{93/04/10 21:26:16 gildea@}
 @end ifinfo
 @iftex
 @finalout
@@ -19,8 +19,7 @@ sd_doc.txinfo time-stamp: @{93/02/10 18:37:18 gildea@}
 @end titlepage
 @headings off
 @iftex
-@c to make vskip work:
-@hbox{}
+@ @c hard Space to make vskip work
 @vskip 0pt plus 1fill
 @end iftex
 
@@ -39,6 +38,13 @@ Permission is granted to make and distribute copies of this manual
 provided the copyright notice and this permission notice are preserved
 on all copies.
 
+The authors disclaim all liability for your use of this software and 
+documentation and make no representation as to the suitability of the 
+software for any purpose.  THE SOFTWARE IS PROVIDED "AS IS" WITHOUT 
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, 
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+NONINFRINGMENT.
+
 @page	@c end of copyright page
 @headings on   
 
@@ -47,6 +53,8 @@ on all copies.
 @ifinfo
 This file documents Sd, a square dance caller's helper.
 
+@end ifinfo
+@menu
 Table of Contents
 
 You can pick a item out of one of the menus here, or, to start reading
@@ -54,54 +62,59 @@ the manual from the beginning, type @key{n} to go to the next node.
 
 This is the summary table of contents:
 
-@end ifinfo
-@menu
 * Intro::                       Introduction
-* Starting Sd::                 Starting Sd
+* Invoking Sd::                 Invoking Sd
 * Calling::                     Calling
 * Resolving and Searching::     Resolving and Searching
-* Miscellaneous Commands::      Miscellaneous Commands
+* Misc Commands::               Miscellaneous Commands
+* Terminal Interface::          Terminal Interface
 * Call Notes::                  Call Notes
 * Concept Notes::               Concept Notes
-* Bugs and Misfeatures::        Known Bugs and Misfeatures (very incomplete)
-* Miscellaneous Advice::        Miscellaneous Advice and Warnings
+* Bugs::                        Known Bugs and Misfeatures (very incomplete)
+* Misc Advice::                 Miscellaneous Advice and Warnings
 * Customization::               Customization with X Resources
 * Versions::                    Version Numbers
+* Installation::                Building and Installing the Program
 
 This is the complete table of contents:
 
-Starting Sd
+Introduction
+
+* Contact Info::                How to Contact the Authors
+* Acknowledgements::            Acknowlegdements
+
+Invoking Sd
 
 * Command Switches::            Command Switches
 * Abridgement::                 Abridgement
 
 Calling
 
-* The Startup Screen::          The Startup Screen
+* Startup Screen::              The Startup Screen
 * Heads/Sides Start::             starting with the heads or sides
 * 1P2P Lines::                    starting with 1P2P lines
 * Just As They Are::              starting with a squared set
 * Entering Calls::              Entering Calls
 * Call Menus::                    call menus
-* The Scroll Bar::                the call menu scroll bar
-* Variations on Calls::           how to write variations on calls
+* Scrolling::                   the call menu scroll bar
+* Call Variations::             how to write Call Variations
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Tag/Scoot Calls::             Tag/Scoot Call Modifications
+* Tag/Scoot::                   Tag/Scoot Call Modifications
 * Single/Cross/Left::           The Single, Cross, and Left Modifiers
 * Asymmetric Selectors::        How to Write Asymmetric Sequences
 
 Resolving and Searching
 
 * Resolving::                   Resolving
-* Making Nice Setups::          Making Nice Setups
+* Nice Setup::                  Making Nice Setups
 * Do Anything::                 The @code{Do Anything} operation.
 * Reconcile::                   The @code{Reconcile} operation.
 
 Miscellaneous Commands
 
-* Writing Out the Sequence::    Writing Out the Sequence
-* Changing the Output File::    Changing the Output File
+* Save Sequence::               Saving the Sequence
+* Change Output File::          Changing the Output File
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Saving Pictures::             Saving Pictures
@@ -122,13 +135,23 @@ Concept Notes
 * Gruesome::                    Gruesome
 * Divided::                     Divided
 * Concentric::                  Concentric
-* Two Calls in Succession::     Two Calls in Succession
+* Two Calls::                   Two Calls in Succession
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * So-And-So Only::              So-And-So Only
+
+Installation
+
+* Building on Unix::            Building on Unix
+* Building on the Mac::         Building on the Mac with Think C
+* Creating Project Files::	  Creating Think C Project Files
+* Compiling a New Release::	  Compiling a New Release
+* Running on Macintosh::	  Running on the Mac
+
+
 @end menu
 
-@node Intro, Starting Sd, Top, Top
+@node Intro, Invoking Sd, Top, Top
 @unnumbered Introduction
 
 Sd is a square dance caller's helper.  The program assists in writing material
@@ -159,10 +182,64 @@ wish to write material containing calls such as these, you can use the
 In short, if you are writing a Traditional or Mainstream dance,
 you may find that this program is not for you.
 
-@node Starting Sd, Calling, Intro, Top
-@chapter Starting Sd
+@menu
+* Contact Info::                How to Contact the Authors
+* Acknowledgements::            Acknowlegdements
+@end menu
 
-The program is invoked with a single argument---the level.
+@node Contact Info, Acknowledgements, ,Intro
+@unnumberedsec How to Contact the Authors
+
+The Internet mailing list @code{sd@@mc.lcs.mit.edu} is for discussion of Sd
+and announcements of new versions.  Send to @code{sd-request@@mc.lcs.mit.edu}
+to be added.
+
+Please send bug reports and other comments on Sd to the authors at the
+addresses given below.  Be sure to include the version number.
+
+@display
+William Ackerman
+wba@@apollo.hp.com
+
+Stephen Gildea
+gildea@@lcs.mit.edu
+@end display
+@iftex
+
+If you do not have access to electronic mail, write to
+
+@display
+Bill Ackerman
+5 Parlmont Park Apt 100
+North Billerica MA 01862
+@end display
+@end iftex
+
+@node Acknowledgements, , Contact Info,Intro
+@unnumberedsec Acknowlegdements
+
+Thanks to Kathy Godfrey, Sue Curtis, and Chris Stacy for their help,
+encouragement, suggestions, contributions of calls, feedback, testing,
+and many other contributions.
+
+The non-windowed interface (@pxref{Terminal Interface}) was written by
+Alan Snyder.
+The section on building Sd for the Macintosh (@pxref{Building on the
+Mac}) was written by Sue Curtis.
+
+We received helpful feedback and testing from Robert French, Judy
+Anderson, Lynette McNiel, Bill van Melle, Lois Lew, and Ron Nicholson.
+
+@node Invoking Sd, Calling, Intro, Top
+@chapter Invoking Sd
+
+@example
+sd level [ Xt options ... ] [ -abridge filename ]
+sd level -write_list filename
+sd level -write_full_list filename
+@end example
+
+The program is normally invoked with a single argument---the level.
 This is one of @code{m} (mainstream), @code{p} (plus), @code{a1},
 @code{a2}, @code{c1}, @code{c2}, @code{c3a}, @code{c3}, @code{c3x},
 @code{c4a}, or @code{c4}.
@@ -182,7 +259,7 @@ takes about (200/MIPS) seconds at C4, correspondingly less at lower levels.
 * Abridgement::                 Abridgement
 @end menu
 
-@node Command Switches, Abridgement,  , Starting Sd
+@node Command Switches, Abridgement,  , Invoking Sd
 @section Command Switches
 
 Sd accepts all Xt command-line options.  The following are some of the
@@ -229,7 +306,7 @@ command-line switch, you may find it more convenient to set the
 corresponding resource.
 
 
-@node Abridgement,  , Command Switches, Starting Sd
+@node Abridgement,  , Command Switches, Invoking Sd
 @section Abridgement
 
 In addition to the calling level and any X Window System arguments on
@@ -284,23 +361,23 @@ call in the menu is simply ignored.  The order is not important, though it
 is possible that leaving it in the original menu order may someday yield
 faster program startup.
 
-@node Calling, Resolving and Searching, Starting Sd, Top
+@node Calling, Resolving and Searching, Invoking Sd, Top
 @chapter Calling
 
 This chapter describes how to use the program in its normal mode to
 generate a sequence of calls of your choosing.
 
 @menu
-* The Startup Screen::          The Startup Screen
+* Startup Screen::              The Startup Screen
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Tag/Scoot Calls::             Tag/Scoot Call Modifications
+* Tag/Scoot::                   Tag/Scoot Call Modifications
 * Single/Cross/Left::           The Single, Cross, and Left Modifiers
 * Asymmetric Selectors::        How to Write Asymmetric Sequences
 @end menu
 
-@node The Startup Screen, Entering Calls,  , Calling
+@node Startup Screen, Entering Calls,  , Calling
 @section The Startup Screen
 
 The startup menu is displayed when the program starts and after each
@@ -316,7 +393,7 @@ chosen item, and pressing Mouse Button 1 (typically the left button).
 * Just As They Are::            starting with a squared set
 @end menu
 
-@node Heads/Sides Start, 1P2P Lines,  , The Startup Screen
+@node Heads/Sides Start, 1P2P Lines,  , Startup Screen
 @subsection Heads/Sides Start
 
 If you click on @code{heads start} or @code{sides start}, the sequence will begin
@@ -334,7 +411,7 @@ or @i{heads touch 1/4 ; walk and dodge}, you must click on @code{centers}
 before all calls after the initial one.  Whether you actually read the card
 that way while calling is up to you.
 
-@node 1P2P Lines, Just As They Are, Heads/Sides Start, The Startup Screen
+@node 1P2P Lines, Just As They Are, Heads/Sides Start, Startup Screen
 @subsection 1P2P Lines
 
 The @code{heads 1P2P} and @code{sides 1P2P} starting actions refer to caller jargon
@@ -347,7 +424,7 @@ thru})} and circle up 4}.
 
 Whether you consider 1P2P openings to be overused is up to you.
 
-@node Just As They Are,  , 1P2P Lines, The Startup Screen
+@node Just As They Are,  , 1P2P Lines, Startup Screen
 @subsection Just As They Are
 
 The @code{just as they are} button starts the sequence on squared set spots,
@@ -356,7 +433,7 @@ the program doesn't know about the @i{all 4 couples} concept or about
 thars or alamo rings.  This shortcoming may be fixed in the future.
 
 
-@node Entering Calls, Entering Concepts, The Startup Screen, Calling
+@node Entering Calls, Entering Concepts, Startup Screen, Calling
 @section Entering Calls
 
 The usual thing you do when writing a sequence is to select calls from
@@ -365,11 +442,11 @@ discussed in the next section.)
 
 @menu
 * Call Menus::                  call menus
-* The Scroll Bar::              The call menu scroll bar
-* Variations on Calls::         How to write variations on calls
+* Scrolling::                   The call menu scroll bar
+* Call Variations::             How to write variations on calls
 @end menu
 
-@node Call Menus, The Scroll Bar,  , Entering Calls
+@node Call Menus, Scrolling,  , Entering Calls
 @subsection Call Menus
 
 The call menu is the long menu near the center of the screen.  There are
@@ -392,8 +469,8 @@ followed by lower case letters.
 A number of calls have limitations or quirks that you should be aware of.
 @xref{Call Notes}.
 
-@node The Scroll Bar, Variations on Calls, Call Menus, Entering Calls
-@subsection The Scroll Bar
+@node Scrolling, Call Variations, Call Menus, Entering Calls
+@subsection Scrolling
 
 The call menu can be scrolled with the scroll bar to its left.  Move the
 mouse into the scroll bar area.  Clicking the left mouse button will scroll
@@ -405,8 +482,8 @@ percentage down the menu that is equal to the percentage that the cursor
 is down from the top of the scroll bar.  If the mouse is moved while the
 middle mouse button is held down, the menu will scroll in real time.
 
-@node Variations on Calls,  , The Scroll Bar, Entering Calls
-@subsection Variations on Calls
+@node Call Variations,  , Scrolling, Entering Calls
+@subsection Call Variations
 
 Some calls require a numeric designator (e.g., @i{square thru 3}) or a people
 designator (e.g., @i{boys run}) or another call (e.g., @i{clover and star
@@ -482,7 +559,7 @@ apply to it.  The program will then prompt you for the second call.
 A complex tree of concepts and calls can thus be constructed.
 
 
-@node Call Modifications, Tag/Scoot Calls, Entering Concepts, Calling
+@node Call Modifications, Tag/Scoot, Entering Concepts, Calling
 @section Call Modifications
 
 Some calls can be modified in a natural way, such as @samp{in roll motivate}
@@ -513,8 +590,8 @@ modification.  For example, in @i{motivate}, you can replace the initial
 @i{circulate} and can turn the star a different amount.  You may select
 any or all of these modifications.
 
-For both these optional modifications and the mandatory subcalls (e.g., @code{clover
-and <anything>}) discussed earlier, the program attempts to show
+For both these optional modifications and the mandatory subcalls discussed
+earlier (e.g., @code{clover and <anything>}), the program attempts to show
 unambiguously how everything is structured, by putting subcalls and their
 accompanying concepts in square brackets.  It also attempts to put
 natural modifications in their natural place in the phrase.  In complex
@@ -523,7 +600,7 @@ cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
 How (and whether) you choose to read such a card is up to you.
 
 
-@node Tag/Scoot Calls, Single/Cross/Left, Call Modifications, Calling
+@node Tag/Scoot, Single/Cross/Left, Call Modifications, Calling
 @section Tag/Scoot Call Modifications
 
 To use tagging call modifications, like @samp{tag the star your leader},
@@ -540,7 +617,7 @@ whatever.  Then change the @code{1/2 tag}.
 @code{1/2 invert} is an acceptable tagging replacement.
 
 
-@node Single/Cross/Left, Asymmetric Selectors, Tag/Scoot Calls, Calling
+@node Single/Cross/Left, Asymmetric Selectors, Tag/Scoot, Calling
 @section The @i{Single,} @i{Cross,} and @i{Left} Modifiers
 
 There are a number of calls that contain these words in a nonstraightforward
@@ -592,7 +669,7 @@ If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
 
-@node Resolving and Searching, Miscellaneous Commands, Calling, Top
+@node Resolving and Searching, Misc Commands, Calling, Top
 @chapter Resolving and Searching
 
 This chapter describes how to have the program find calls for you to
@@ -600,12 +677,12 @@ accomplish various goals.
 
 @menu
 * Resolving::                   Resolving
-* Making Nice Setups::          Making Nice Setups
+* Nice Setup::                  Making Nice Setups
 * Do Anything::                 The @code{Do Anything} operation.
 * Reconcile::                   The @code{Reconcile} operation.
 @end menu
 
-@node Resolving, Making Nice Setups,  , Resolving and Searching
+@node Resolving, Nice Setup,  , Resolving and Searching
 @section Resolving
 
 Whenever the setup is in a resolved state, whether intentionally or
@@ -679,7 +756,7 @@ operation fails.  (This tends to happen if you try to resolve out of an
 hourglass at mainstream.)  You can click on @code{find another} again to make
 another attempt if you wish.
 
-@node Making Nice Setups, Do Anything, Resolving, Resolving and Searching
+@node Nice Setup, Do Anything, Resolving, Resolving and Searching
 @section Making Nice Setups
 
 Clicking on @code{nice setup} invokes an operation very similar to the resolver,
@@ -691,7 +768,7 @@ The program does not yet have the ability to perform other normalization
 tasks, such as using the @i{triple box} or @i{triple line} concepts to get out
 of various 12 matrices.
 
-@node Do Anything, Reconcile, Making Nice Setups, Resolving and Searching
+@node Do Anything, Reconcile, Nice Setup, Resolving and Searching
 @section The @code{Do Anything} operation
 
 Clicking on @code{do anything} invokes an operation very similar to the resolver,
@@ -750,22 +827,22 @@ before doing the reconcile, you know that any inserted sequence will
 have to be gender-preserving anyway, so calls like @samp{star thru} and
 @samp{boys kickoff} will be okay.
 
-@node Miscellaneous Commands, Call Notes, Resolving and Searching, Top
+@node Misc Commands, Terminal Interface, Resolving and Searching, Top
 @chapter Miscellaneous Commands
 
 This section describes commands that are not concerned with generating
 sequences.
 
 @menu
-* Writing Out the Sequence::    Writing Out the Sequence
-* Changing the Output File::    Changing the Output File
+* Save Sequence::               Saving the Sequence
+* Change Output File::          Changing the Output File
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Saving Pictures::             Saving Pictures
 @end menu
 
-@node Writing Out the Sequence, Changing the Output File,  , Miscellaneous Commands
-@section Writing Out the Sequence
+@node Save Sequence, Change Output File,  , Misc Commands
+@section Saving the Sequence
 
 At any time when the sequence is resolved (for example, after a successful
 use of the @code{resolve} operation), you can click on @code{end this sequence}.
@@ -780,12 +857,12 @@ Until you have done the @code{end this sequence} operation, the sequence is not
 written to disk and you cannot start writing a new sequence.  Just
 resolving isn't enough.
 
-@node Changing the Output File, Abort/Exit/Undo, Writing Out the Sequence, Miscellaneous Commands
+@node Change Output File, Abort/Exit/Undo, Save Sequence, Misc Commands
 @section Changing the Output File
 
 TBA
 
-@node Abort/Exit/Undo, Inserting Comments, Changing the Output File, Miscellaneous Commands
+@node Abort/Exit/Undo, Inserting Comments, Change Output File, Misc Commands
 @section @code{Abort}, @code{Exit}, and @code{Undo}
 
 If you click on the @code{exit} button, the program will exit.  If a
@@ -804,12 +881,12 @@ that is, while no concepts have been entered, the program will erase
 the last complete call, with all of its concepts.  If one or more
 concepts have been entered, only the last concept will be erased.
 
-@node Inserting Comments, Saving Pictures, Abort/Exit/Undo, Miscellaneous Commands
+@node Inserting Comments, Saving Pictures, Abort/Exit/Undo, Misc Commands
 @section Inserting Comments
 
 TBA
 
-@node Saving Pictures,  , Inserting Comments, Miscellaneous Commands
+@node Saving Pictures,  , Inserting Comments, Misc Commands
 @section Saving Pictures
 
 The program shows pictures in the transcript for the current position
@@ -820,7 +897,36 @@ sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
 box'') click on @code{save picture}.
 
-@node Call Notes, Concept Notes, Miscellaneous Commands, Top
+
+@node Terminal Interface, Call Notes, Misc Commands, Top
+@chapter Terminal Interface
+
+A variation of the program, called @code{sdtty}, provides
+a terminal-oriented interface useful when you don't have access to a
+window system.  In this version, you type the commands, calls, and
+concepts to a completing reader.
+
+Where window-based interface prompts in a separate popup for people or
+number designators, you type the designator as part of the call name.
+For example, to call @code{<ANYONE> run} and select @code{centers}, just
+type @code{centers run}.
+Where in the window interface you would select @code{square thru <n>}
+hand then select @code{4} in response to the ``How many?'' prompt, with
+@code{sdtty} you type @code{square thru 4} as one command.
+
+When typing, press @key{SPC} to complete the current word.
+Type @key{TAB} or @key{ESC} to complete as much as possible.
+Type @kbd{C-u} to clear a partially-typed line.
+
+Press @kbd{?} to see the possible completions.
+If there are many possibilities, @code{sdtty} will display a page and
+offer a @samp{More} prompt.  Type @key{SPC} to see the next
+page, @key{DEL} to stop.
+
+Text from a @kbd{%} to the end of line is ignored.  This comment feature
+may be useful when preparing a file to give to @code{sdtty} as input.
+
+@node Call Notes, Concept Notes, Terminal Interface, Top
 @chapter Call Notes
 
 @menu
@@ -891,7 +997,7 @@ If simple modifications are enabled, you will be able to turn
 the @i{1/2 tag} into whatever tagging variation you want.
 The philosophy is the same as for things like @i{tagger's dilemma}.
 
-If you want to modify both, you must enable all modifications
+If you want to modify the call both ways, you must enable all modifications
 (click twice on @code{allow modifications}), do @code{tag the yellow brick
 road}, and use the second modification.  It will come out
 looking ugly.  Sorry.
@@ -915,14 +1021,14 @@ To permit fractional use of recycle, as with
 (but don't read the "by parts" phrase) when fractions are required.
 
 
-@node Concept Notes, Bugs and Misfeatures, Call Notes, Top
+@node Concept Notes, Bugs, Call Notes, Top
 @chapter Concept Notes
 
 @menu
 * Gruesome::                    Gruesome
 * Divided::                     Divided
 * Concentric::                  Concentric
-* Two Calls in Succession::     Two Calls in Succession
+* Two Calls::                   Two Calls in Succession
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * So-And-So Only::              So-And-So Only
@@ -950,7 +1056,7 @@ to permit the concept to be used.  In all
 cases outboard phantoms are added as required at the start of the call,
 and removed where possible at the conclusion of the call.
 
-@node Concentric, Two Calls in Succession, Divided, Concept Notes
+@node Concentric, Two Calls, Divided, Concept Notes
 @section Concentric
 
 The @samp{concentric} and @samp{cross concentric} concepts are formulated
@@ -1007,7 +1113,7 @@ They finish in approximately the places where the ends began.
 If we do it from a 1/4 tag, the centers finish where the ends began.
 @end enumerate
 
-@node Two Calls in Succession, Diamond, Concentric, Concept Notes
+@node Two Calls, Diamond, Concentric, Concept Notes
 @section Two Calls in Succession
 
 The @code{do two calls in succession} concept allows a pair of calls to
@@ -1018,7 +1124,7 @@ to say the concept when calling is problematical.  Something like @samp{consider
 the following two calls to be one unit, and do a stable swing thru and turn thru}
 might be appropriate.  Or you could just read the parentheses.
 
-@node Diamond, Implied Piecewise, Two Calls in Succession, Concept Notes
+@node Diamond, Implied Piecewise, Two Calls, Concept Notes
 @section Diamond
 
 You should not need to click on @code{diamond} except when you actually
@@ -1074,7 +1180,7 @@ nothing}.  It does not do the call in their disconnected setup, even
 though that is a common interpretation.
 
 
-@node Bugs and Misfeatures, Miscellaneous Advice, Concept Notes, Top
+@node Bugs, Misc Advice, Concept Notes, Top
 @chapter Known Bugs and Misfeatures
 
 The @dfn{funny} concept is not fully implemented.  Only @dfn{funny circulate}
@@ -1089,7 +1195,7 @@ this.
 
 This chapter is very incomplete.
 
-@node Miscellaneous Advice, Customization, Bugs and Misfeatures, Top
+@node Misc Advice, Customization, Bugs, Top
 @chapter Miscellaneous Advice and Warnings
 
 If a call that you believe is legal does not appear on the menu,
@@ -1136,8 +1242,8 @@ set this X resource:
 Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
 @end example
 
-@node Customization, Versions, Miscellaneous Advice, Top
-@chapter Customization
+@node Customization, Versions, Misc Advice, Top
+@chapter Customization with X Resources
 
 The file @file{Sd.res} is a sample X user resource file for the program.  It
 contains values for a number of parameters, including most of the
@@ -1177,14 +1283,14 @@ Sd*frame*Label*Translations: #override <Btn3Down>: undo()
 Sd*frame*List*Translations: #override <Btn3Down>: undo()
 @end example
 
-@node Versions, , Customization, Top
+@node Versions, Installation, Customization, Top
 @chapter Versions
 
 The version is a string consisting of parts separated by colons, each
 of which is a string consisting of parts separated by dots.
 
-The authors distribute versions of the form @code{major.minor}.  For
-example, 25.6 has major version number 25 and minor version 6.
+The authors distribute versions @code{major.minor} form.  For
+example, @code{25.6} has major version @code{25} and minor version @code{6}.
 Minor versions are compatible with each other.  They have the same
 user interface and read the same database format.  No new features
 are introduced in new minor versions.
@@ -1201,11 +1307,13 @@ The calls database also has a version.  Unlike the program version,
 the major and minor parts of the database version must be numeric,
 and there can be no additional parts.
 
+@include install.txinfo
+
 @page
 @contents
 @bye
 
 @c Local Variables:
 @c time-stamp-start: "time-stamp: @{"
-@c time-stamp-finish: "@}"
+@c time-stamp-end: "@}"
 @c End:

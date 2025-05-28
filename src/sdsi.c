@@ -104,7 +104,11 @@ extern long int lrand48(void);
    compilation systems that claim to be POSIX compliant, but
    aren't really, and do not have unistd.h. */
 
-#ifndef NO_UNISTD
+#if defined(_POSIX_SOURCE) || defined(sun)
+#define POSIX_STYLE
+#endif
+
+#ifdef POSIX_STYLE
 #include <unistd.h>
 #endif
 
@@ -121,6 +125,7 @@ extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
 extern void srand48(long int);
 extern long int lrand48(void);
+extern char *strerror(int);
 #endif
 
 /* I think we have everything now.  Isn't portability fun?  Before people
@@ -137,17 +142,17 @@ int random_number;
 int hashed_randoms;
 
 
-static int last_hashed_randoms;
-static FILE *fp;
-static FILE *fildes;
-static long_boolean file_error;
-static char fail_message[MAX_ERR_LENGTH];
-static char fail_errstring[MAX_ERR_LENGTH];
+Private int last_hashed_randoms;
+Private FILE *fp;
+Private FILE *fildes;
+Private long_boolean file_error;
+Private char fail_message[MAX_ERR_LENGTH];
+Private char fail_errstring[MAX_ERR_LENGTH];
 
 
-static char *get_errstring(void)
+Private char *get_errstring(void)
 {
-#ifdef sun
+#if defined(sun) || defined(athena_vax)
    extern int sys_nerr;
    extern char *sys_errlist[];
 
@@ -311,7 +316,7 @@ extern long_boolean probe_file(char filename[])
       not be possible because of directory permissions.  It is unfortunate
       that there is no feasible way to determine whether a given pathname
       could be opened for writing. */
-#ifndef NO_UNISTD
+#ifdef POSIX_STYLE
    if (access(filename, F_OK) || !access(filename, W_OK))
       return (TRUE);
    else
@@ -468,7 +473,7 @@ extern void fill_in_neglect_percentage(char junk[], int n)
 }
 
 
-static FILE *call_list_file;
+Private FILE *call_list_file;
 
 extern long_boolean open_call_list_file(call_list_mode_t call_list_mode, char filename[])
 {

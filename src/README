@@ -1,15 +1,11 @@
-This is Sd for POSIX.1/X11 systems.  Time-stamp: <93/02/10 18:44:23 gildea>
+This is Sd for POSIX.1/X11 systems.  Time-stamp: <93/04/09 17:42:58 gildea>
 
 ABOUT SD:
 
 Sd is a square dance caller's helper.  The program assists in writing
-material for western square dancing by doing the checker pushing.  You
+material for Western square dancing by doing the checker pushing.  You
 tell the program what call you want to call next, and it computes the
 resulting setup and shows it to you.
-
-See the file sd_doc.txinfo for some user documentation.  The file database.doc
-gives internal information on the database format, useful only to people
-editing the calls database.
 
 There are several user interfaces available with Sd.  The standard is
 an X Window System interface.  Also included is a terminal-based user
@@ -17,49 +13,13 @@ interface featuring a completing reader.  Support for Apollo's Domain
 Dialog is available from the authors, but is not part of the
 distribution.
 
+The file INSTALL contains instructions for building and installing Sd.
+
+The file sd_doc.txinfo documents using Sd.  The file database.doc
+gives internal information on the database format, useful only to
+people editing the calls database.
+
 See the file Relnotes for information about what is new in this release.
-
-
-INSTALLATION:
-
-To compile and link Sd, you need an ANSI C compiler (gcc qualifies)
-and the Athena Widgets from X11 Release 4 or 5.
-
-mkcalls must be run once to compile sd_calls.txt, the calls database,
-into sd_calls.dat, the binary file used by Sd.
-
-Type "make" to build the two programs, sd and mkcalls, and the
-database, sd_calls.dat.
-
-If you do not have X, type "make sdtty" to build the character-oriented
-version of the program.  This command builds the database as well.
-
-
-BUILD DETAILS:
-
-If your X system was compiled with an ANSI C compiler,
-you can run "xmkmf", which will use the Imakefile and your local X
-configuration information to generate a Makefile that should work.
-The sample Makefile will be moved to Makefile.bak.  Do not run xmkmf
-twice or you will lose the sample Makefile entirely!
-
-If your X system was NOT compiled with an ANSI C compiler, you may
-have to edit Makefile by hand to customize it for your system.
-If you are using a system that can do dynamic linking (e.g., SunOS 4
-or OSF/1), taking advantage of this will make your sd executable much
-smaller.  Make sure the FLAGS variable in Makefile says "-O", not "-g".
-
-Sun's OpenWindows 3 has a buggy xmkmf, so you cannot use it.  Instead,
-set the environment variable OPENWINHOME appropriately, then type
-"imake -I$OPENWINHOME/lib/config".
-
-This release has been tested with the following configurations:
-   SunOS 4.1.3, gcc 2.2, X11 Release 5 with public patches 1-22,
-      the twm window manager, on both Sun3 and a Sun4 (Sparc)
-   Domain/OS 10.4, C compiler 6.9, Dialog 2.0, on Apollo M68K
-   OSF/1.0.A, C compiler 1.0, X11 Release 4, on HP series 700
-   HP-UX 8.07, C compiler 8.71, X11 Release 4, on HP series 700
-   HP-UX 9.0, C compiler 9.15, X11 Release 5, on HP series 700
 
 
 DOCUMENTATION:
@@ -80,9 +40,8 @@ document.  In the Texinfo package, "makeinfo" converts to Info, and
 
 You can use the following "make" commands to format the documentation:
 
-make sd_doc.info		convert to Info format
-make sd_doc.dvi			run through TeX
-make sd_doc.PS			run TeX and convert result to PostScript
+make info			convert to Info format
+make dvi			run through TeX.  Use this to make hardcopy.
 
 In future releases we may also distribute pre-formatted versions of
 the documentation.
@@ -90,11 +49,15 @@ the documentation.
 
 GETTING SD:
 
-Sd is available for anonymous FTP in the file contrib/c4/sd/sd-nn.tar.Z
-(where "nn" changes with the version) on export.lcs.mit.edu.
+Sd is available via anonymous FTP from the file contrib/c4/sd/sd-nn.tar.Z
+(where "nn" changes with the version) on host export.lcs.mit.edu.
+FTP is the Internet file transfer protocol.
 
-The mailing list sd@mc.lcs.mit.edu is for discussion of Sd and
-announcements of new versions.  Send to sd-request@mc.lcs.mit.edu
+If your mailer can interpret MIME messages, we can also send you Sd
+by email.  MIME is a draft Internet standard for multi-media mail.
+
+The Internet mailing list sd@mc.lcs.mit.edu is for discussion of Sd
+and announcements of new versions.  Send to sd-request@mc.lcs.mit.edu
 to be added.
 
 Please send bug reports and other comments on Sd to the authors at the
@@ -105,4 +68,4 @@ William Ackerman
 wba@apollo.hp.com
 
 Stephen Gildea
-gildea@expo.lcs.mit.edu
+gildea@lcs.mit.edu

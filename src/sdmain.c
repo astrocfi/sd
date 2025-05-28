@@ -19,19 +19,20 @@
     The version of this file is as shown immediately below.  This string
     gets displayed at program startup. */
 
-#define VERSION_STRING "28.1"
+#define VERSION_STRING "28.6"
 
 /* This defines the following functions:
-   main
    mark_parse_blocks
    release_parse_blocks_to_mark
    initialize_parse
+   copy_parse_tree
    save_parse_state
    restore_parse_state
-   copy_parse_tree
    deposit_call
    deposit_concept
    query_for_call
+   write_header_stuff
+   main
    get_real_subcall
 
 and the following external variables:
@@ -59,7 +60,7 @@ and the following external variables:
 #include "paths.h"
    
 
-static void display_help(void)
+Private void display_help(void)
 {
     printf("Usage: sd [flags ...] level\n");
     printf("  legal flags:\n");
@@ -95,27 +96,27 @@ selector_kind selector_for_initialize;
 
 /* These variables are are global to this file. */
 
-static uims_reply reply;
-static long_boolean reply_pending;
-static int error_flag;
-static parse_block *parse_active_list;
-static parse_block *parse_inactive_list;
-static int allowing_modifications;
-static int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
-static short int *concept_sublists[NUM_CALL_LIST_KINDS];
+Private uims_reply reply;
+Private long_boolean reply_pending;
+Private int error_flag;
+Private parse_block *parse_active_list;
+Private parse_block *parse_inactive_list;
+Private int allowing_modifications;
+Private int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
+Private short int *concept_sublists[NUM_CALL_LIST_KINDS];
 
 
 /* Stuff for saving parse state while we resolve. */
 
-static parse_state_type saved_parse_state;
-static parse_block *saved_command_root;
+Private parse_state_type saved_parse_state;
+Private parse_block *saved_command_root;
 
 
 
 
 /* This static variable is used by main. */
 
-static concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, l_mainstream, {0, 0}};
+Private concept_descriptor centers_concept = {"centers????", concept_centers_or_ends, l_mainstream, {0, 0}};
 
 
 /* This fills in concept_sublist_sizes and concept_sublists. */
@@ -136,7 +137,7 @@ static concept_descriptor centers_concept = {"centers????", concept_centers_or_e
 #define MASK_TAND       0770362
 #define MASK_SIAM       0400002
 
-static void initialize_concept_sublists(void)
+Private void initialize_concept_sublists(void)
 {
    int number_of_concepts;
    int concepts_at_level;
@@ -236,7 +237,7 @@ extern void release_parse_blocks_to_mark(parse_block *mark_point)
 
 
 
-static parse_block *get_parse_block(void)
+Private parse_block *get_parse_block(void)
 {
    parse_block *item;
 
@@ -329,7 +330,7 @@ extern void save_parse_state(void)
 }
 
 
-static void reset_parse_tree(
+Private void reset_parse_tree(
    parse_block *original_tree,
    parse_block *final_head)
 
@@ -800,9 +801,9 @@ extern long_boolean query_for_call(void)
 
 
 
-static int age_buckets[33];
+Private int age_buckets[33];
 
-static int mark_aged_calls(
+Private int mark_aged_calls(
    int rr,
    int dd,
    int kk)
@@ -876,8 +877,32 @@ static int mark_aged_calls(
 }
 
 
-/* This is static to keep it from being lost by the longjmp. */
-static call_list_mode_t call_list_mode;
+
+/* This is not automatic to keep it from being lost by the longjmp.
+   It is also read by "write_header_stuff". */
+Private call_list_mode_t call_list_mode;
+
+
+extern void write_header_stuff(void)
+{
+      /* log creation version info */
+      writestuff("Sd");
+      writestuff(VERSION_STRING);
+      writestuff(":db");
+      writestuff(major_database_version);
+      writestuff(".");
+      writestuff(minor_database_version);
+      writestuff("     ");
+
+      /* log level info */
+      writestuff(getout_strings[calling_level]);
+      if (call_list_mode == call_list_mode_abridging)
+          writestuff(" (abridged)");
+
+      newline();
+}
+
+
 
 void main(int argc, char *argv[])
 {
@@ -1357,31 +1382,15 @@ void main(int argc, char *argv[])
             
                /* User really wants this sequence.  Open the file and write it. */
             
-               clear_screen();
                open_file();
                enable_file_writing = TRUE;
-            
                doublespace_file();
 
+               clear_screen();
                get_date(date);
                writestuff(date);
                writestuff("     ");
-
-               /* log creation version info */
-               writestuff("Sd");
-               writestuff(VERSION_STRING);
-               writestuff(":db");
-               writestuff(major_database_version);
-               writestuff(".");
-               writestuff(minor_database_version);
-               writestuff("     ");
-
-               /* log level info */
-               writestuff(getout_strings[calling_level]);
-               if (call_list_mode == call_list_mode_abridging)
-                   writestuff(" (abridged)");
-
-               newline();
+               write_header_stuff();
 
                if (getout_ind == POPUP_ACCEPT_WITH_STRING) {
                   writestuff("             ");
@@ -1437,7 +1446,7 @@ void main(int argc, char *argv[])
 
 
 
-static long_boolean debug_popup = FALSE;
+Private long_boolean debug_popup = FALSE;
 
 extern void get_real_subcall(
    parse_block *parseptr,
@@ -1496,7 +1505,7 @@ extern void get_real_subcall(
    if (parseptr->concept->kind == concept_another_call_next_mod) {
       newsearch = &parseptr->next;
 
-      while (search = *newsearch) {
+      while ((search = *newsearch) != NULL) {
          if (base_calls[item->call_id] == search->call) {
             /* Found a reference to this call. */
             parse_block *subsidiary_ptr = search->subsidiary_root;

@@ -29,6 +29,8 @@ typedef int long_boolean;
 /* The IBM AIX compiler, for example, considers char to be unsigned. */
 typedef short veryshort;
 
+#define Private static
+
 #include <setjmp.h>
 #include "database.h"
 
@@ -1093,6 +1095,9 @@ extern map_thing map_rh_s2x3_2;                                     /* in SDTABL
 extern map_thing map_lf_s2x4_r;                                     /* in SDTABLES */
 extern map_thing map_rf_s2x4_r;                                     /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
+extern map_thing map_qtag_f0;                                       /* in SDTABLES */
+extern map_thing map_qtag_f1;                                       /* in SDTABLES */
+extern map_thing map_qtag_f2;                                       /* in SDTABLES */
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
 extern map_hunk *map_lists[][4];                                    /* in SDTABLES */
@@ -1130,18 +1135,24 @@ extern long_boolean (*pred_table[])(                                /* in PREDS 
    int real_direction,
    int northified_index);
 
+#ifdef __GNUC__
+#define nonreturning volatile
+#else
+#define nonreturning
+#endif
 
 /* In SDMAIN */
 
 extern parse_block *mark_parse_blocks(void);
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
 extern void initialize_parse(void);
+extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
-extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern long_boolean deposit_call(callspec_block *call);
 extern long_boolean deposit_concept(concept_descriptor *conc);
 extern long_boolean query_for_call(void);
+extern void write_header_stuff(void);
 extern void get_real_subcall(
    parse_block *parseptr,
    by_def_item *item,
@@ -1217,8 +1228,8 @@ extern void writestuff(char s[]);
 extern void newline(void);
 extern void doublespace_file(void);
 extern void exit_program(int code);
-extern void fail(char s[]);
-extern void fail2(char s1[], char s2[]);
+extern void nonreturning fail(char s[]);
+extern void nonreturning fail2(char s1[], char s2[]);
 extern void specialfail(char s[]);
 extern void string_copy(char **dest, char src[]);
 extern void display_initial_history(int upper_limit, int num_pics);

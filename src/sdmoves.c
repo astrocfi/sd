@@ -174,7 +174,7 @@ typedef struct gloop {
 
 /* This function is internal. */
 
-static void start_matrix_call(
+Private void start_matrix_call(
    setup *ss,
    int *nump,
    matrix_rec matrix_info[],
@@ -229,7 +229,7 @@ static void start_matrix_call(
 
 /* This function is internal. */
 
-static void finish_matrix_call(
+Private void finish_matrix_call(
    matrix_rec matrix_info[],
    int nump,
    setup *people,
@@ -481,7 +481,7 @@ doitrot:
 
 /* This function is internal. */
 
-static void matrixmove(
+Private void matrixmove(
    setup *ss,
    callspec_block *callspec,
    setup *result)
@@ -521,7 +521,7 @@ static void matrixmove(
 
 /* This function is internal. */
 
-static void do_pair(
+Private void do_pair(
    matrix_rec *ppp,        /* Selected person */
    matrix_rec *qqq,        /* Unselected person */
    callspec_block *callspec,
@@ -582,7 +582,7 @@ static void do_pair(
 
 /* This function is internal. */
 
-static void do_matrix_chains(
+Private void do_matrix_chains(
    matrix_rec matrix_info[],
    int nump,
    callspec_block *callspec,
@@ -712,7 +712,7 @@ static void do_matrix_chains(
 
 /* This function is internal. */
 
-static void partner_matrixmove(
+Private void partner_matrixmove(
    setup *ss,
    callspec_block *callspec,
    setup *result)
@@ -764,7 +764,7 @@ static void partner_matrixmove(
 
 /* This function is internal. */
 
-static void rollmove(
+Private void rollmove(
    setup *ss,
    callspec_block *callspec,
    setup *result)
@@ -807,7 +807,7 @@ static void rollmove(
    both "FINAL__REVERSE" and "FINAL__LEFT", turning the former into the latter.  This makes reverse
    circle by, touch by, and clean sweep work. */
 
-static final_set get_mods_for_subcall(final_set new_final_concepts, defmodset this_mod, int callflags)
+Private final_set get_mods_for_subcall(final_set new_final_concepts, defmodset this_mod, int callflags)
 {
    final_set retval;
 
@@ -830,7 +830,7 @@ static final_set get_mods_for_subcall(final_set new_final_concepts, defmodset th
 }
 
 
-static void move_with_real_call(
+Private void move_with_real_call(
    setup *ss,
    parse_block *parseptr,
    callspec_block *callspec,
@@ -1063,6 +1063,8 @@ static void move_with_real_call(
 
       for (j=0; j<=setup_limits[ss->kind]; j++) tbonetest |= ss->people[j].id1;
       if (!(tbonetest & 011)) {
+         if (ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK)
+            fail("Can't fractionalize a call if no one is doing it.");
          result->kind = nothing;
          return;
       }

@@ -1,0 +1,179 @@
+INSTALL, produced by Makeinfo-1.47 from the input
+file ./install.txinfo.
+
+
+Building and Installing
+************************
+
+   To compile Sd, you need an ANSI C compiler.
+
+   `mkcalls' must be run once to compile `sd_calls.txt', the calls
+database, into `sd_calls.dat', the binary file used by Sd.
+
+   This release has been tested with the following configurations:
+        SunOS 4.1.2, gcc 2.3.3, X11 Release 5 with public patches 1-23,
+           the twm window manager, on both Sun3 and Sun4 (Sparc)
+        Domain/OS 10.4, C compiler 6.9, Dialog 2.0, on Apollo M68K
+        OSF/1.0.A, C compiler 1.0, X11 Release 4, on HP series 700
+        HP-UX 8.07, C compiler 8.71, X11 Release 4, on HP series 700
+        HP-UX 9.0, C compiler 9.15, X11 Release 5, on HP series 700
+        AIX 3.2.1, C compiler XLC v1.2.0.12, X11 Release 5, on RS/6000
+
+
+Building on Unix
+=================
+
+   To compile and link Sd, you need an ANSI C compiler (`gcc' qualifies)
+and the Athena Widgets from X11 Release 4 or 5.
+
+   If your X system was compiled with an ANSI C compiler, you can run
+`xmkmf', which will use `Imakefile' and your local X configuration
+information to generate a `Makefile'.
+
+   If your X system was *not* compiled with an ANSI C compiler, run
+`./configure', which will use `Makefile.in' to create a `Makefile' by
+examining your system and trying to figure out what options to use.
+
+   Using `configure' is not as reliable as using `xmkmf' because
+`configure' has to guess the local preferences, whereas `xmkmf' reads a
+local configuration file.
+
+   Once you have a `Makefile', type `make' to build Sd.
+
+   `mkcalls' must be run once to compile `sd_calls.txt', the calls
+database, into `sd_calls.dat', the binary file used by Sd.  This step
+is done automatically by `make'.
+
+   If you do not have X, type `make sdtty' to build the
+character-oriented version of the program.  This command builds the
+database as well.
+
+   Sun's OpenWindows 3 has a buggy `xmkmf', so you cannot use it. 
+Instead, set the environment variable `OPENWINHOME' appropriately, then
+type `imake -I$OPENWINHOME/lib/config'.
+
+
+Building on the Mac with Think C
+=================================
+
+   To compile C programs with Think C, you first need to create project
+files.  In this case you will need 2 project files--one for Sd and one
+for mkcalls.  These instructions will first describe what you need to do
+to setup your Sd project file correctly; the instructions for mkcalls
+are simpler and will be stated briefly at the end. *Note Compiling a
+New Release::, if you already have project files from compiling a
+previous release.
+
+
+Creating Think C Project Files
+-------------------------------
+
+   When you start Think C, it will ask you for the name of your project
+file; select `New', then type in the name you wish to use, e.g., `Sd
+Project'. Then select `Add...' from the Source Menu; a menu will appear
+that suggests `*.c' and library files that you might want to add to
+your project. Add all of the `sd*.c' files except for `sdui*.c' files
+other than `sdui-tty.c' (e.g., not `sdui-x11.c'). You will eventually
+add the ANSI library also, but read the discussion of 4-byte integers
+below before you do this.
+
+   There are several other things you need to set because some of the
+Think C defaults are not appropriate for this program. Start by
+selecting `Set Project Type' from the Project menu, select the `Far
+Data' option, and choose a partition size of at least 700K.  You might
+be able to use slightly less than this if you are only interested in
+calling lower levels, and you may need more than this if you have
+created your own additions to the database. If you do not select a
+large enough partition space, the program will either fail immediately
+upon startup or may fail when trying to allocate additional memory for
+resolving.  Selecting a larger partition space than necessary is only a
+problem if you attempt to run the program on a machine with a small
+amount of memory, or with several other applications open.
+
+   Next, select `Options' from the Edit menu, and go to the `Language
+Settings' page. It is important to select the option `define __STDC__'.
+If you do not select this, Sd will not run.  It will probably print an
+error message `Can't allocate XXX bytes of memory'. You can either
+choose this option directly or you can click on `ANSI settings'; the
+other ANSI settings are immaterial.
+
+   Next, go to the `Compiler Settings' page and select 4-byte integers.
+If you do not do this, the program will not run.   It will print the
+error message `arithmetic is less than 32 bits' upon start-up.
+
+   If your Mac uses a 68020 or 68030 processor, you should check the
+68020 option to produce code for these processors.
+
+   Unfortunately for us, the standard ANSI library distributed with
+Think C is compiled with 2-byte integers.  To use the library with this
+program, you must first recompile it with the 4-byte integer setting,
+or else Sd will crash at the first call to an ANSI routine.  The ANSI
+library file is located in the C Libraries Folder in the Think C
+Folder.  We recommend you make a second copy of your ANSI library file,
+and call it e.g., `ANSI-4', so that you do not have problems compiling
+your 2-byte-integer programs. Open the new ANSI file as a Project File
+in Think C, select 4-byte integers, and recompile it (use `Bring Up to
+Date' from the Project Menu). When you have finished with this, add
+this new library file to your Sd Project file.
+
+   Next you must rearrange the files in your Sd project file into
+different segments so that no segment has more than 32K of code.  Some
+of the files use about 20K of code; others use much less, around 5K. 
+You can choose to put each file in its own segment, or you can compile
+the code as is, see how big each file is, and then try to put the files
+into segments more efficiently, at your option.   In the project file
+window, segments are separated by dotted lines.   Initially, all the
+files you have added will be in one segment.  If you wish to move a
+file from one segment to another, simply click on it and drag it into
+the segment that you want to put it in.  To put it in a new segment,
+drag it to the space below the dotted line at the bottom of the project
+file.   If you end up with any segments > 32K when you try to compile
+and link the program, you will get an error message `link failed: code
+segment too big'.
+
+   Once the project file is created, you are almost finished.  Choose
+`Build Application' from the Project Menu and if everything works, an
+Sd application program will be created.
+
+   Creating the `mkcalls' application is similar.  Create a project
+file with 2 entries--`mkcalls.c' and the 4-byte version of the ANSI
+library. Put these in 2 different segments.  Select 4-byte integers,
+the `define __STDC__' option, and `Far Data' as above, but for this
+program the default partition size of 384K is fine.
+
+
+Compiling a New Release
+------------------------
+
+   If you have compiled a previous release of Sd, you do not need to
+create a new project file.  Simply replace all of your old sources with
+new sources, or move the old sources to a folder named, e.g., `(Old
+Sources)'.  (A folder name in parentheses tells Think C not to look in
+this folder for sources.)  Then select `Make...' from the Source Menu. 
+You will get a menu of `.c' files to check off for recompilation. 
+Select `Check All .c', and Think C will recompile all of your sources. 
+Unfortunately it seems to automatically recompile sources only if you
+edit them from within Think C, add them to a Project File for the first
+time, or change your compilation options. It does not appear to
+consider the file modification dates, as the Unix `make' command does. 
+After recompiling the sources, select `Build Application' from the
+Project Menu, as before.
+
+
+Running on the Mac
+-------------------
+
+   The instructions for running this program are very similar to those
+for running the UNIX-based terminal interface version.  When Sd starts
+up, it will produce a window that allows you to type a UNIX-style
+command line specifying the level and the other options described in
+the manual. When either `mkcalls' or `sd' exits, the window it has been
+using will become entitled `<< press return to exit >>'; you must do so
+to exit the program.
+
+
+Building on DOS with gcc
+=========================
+
+   (DOS support is not released yet.)
+

@@ -42,27 +42,27 @@ typedef struct {
    expand_thing *expand_lists;
    } full_expand_thing;
 
-static expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s_4dmd, 0};
-static expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s_4dmd, 0};
-static expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s_3x1dmd, s_3dmd, 0};
-static expand_thing exp_4x4_4dm_stuff_a = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s_4dmd, 1};
-static expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s_4dmd, 0};
-static expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
-static expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
-static expand_thing exp_2x6_2x8_stuff   = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
-static expand_thing exp_1x8_1x12_stuff  = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
-static expand_thing exp_1x10_1x12_stuff = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
-static expand_thing exp_1x12_1x14_stuff = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
-static expand_thing exp_1x14_1x16_stuff = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
-static expand_thing exp_1x8_1x10_stuff = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
-static expand_thing exp_2x6_4x6_stuff   = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
-static expand_thing exp_2x4_2x8_stuff   = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
-static expand_thing exp_2x4_4x4_stuff   = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
-static expand_thing exp_4x4_blob_stuff  = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
+Private expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s_4dmd, 0};
+Private expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s_4dmd, 0};
+Private expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s_3x1dmd, s_3dmd, 0};
+Private expand_thing exp_4x4_4dm_stuff_a = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s_4dmd, 1};
+Private expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s_4dmd, 0};
+Private expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
+Private expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
+Private expand_thing exp_2x6_2x8_stuff   = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
+Private expand_thing exp_1x8_1x12_stuff  = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
+Private expand_thing exp_1x10_1x12_stuff = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
+Private expand_thing exp_1x12_1x14_stuff = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
+Private expand_thing exp_1x14_1x16_stuff = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
+Private expand_thing exp_1x8_1x10_stuff = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
+Private expand_thing exp_2x6_4x6_stuff   = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
+Private expand_thing exp_2x4_2x8_stuff   = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
+Private expand_thing exp_2x4_4x4_stuff   = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
+Private expand_thing exp_4x4_blob_stuff  = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
 
 
 
-static void compress_setup(expand_thing *thing, setup *stuff)
+Private void compress_setup(expand_thing *thing, setup *stuff)
 {
    int i;
    setup temp = *stuff;
@@ -76,13 +76,13 @@ static void compress_setup(expand_thing *thing, setup *stuff)
 
 
 
-static int bit_table_2x2[][4] = {
+Private int bit_table_2x2[][4] = {
    {ID2_LEAD|ID2_BEAU,     ID2_TRAILER|ID2_BEAU,  ID2_TRAILER|ID2_BELLE, ID2_LEAD|ID2_BELLE},
    {ID2_LEAD|ID2_BELLE,    ID2_LEAD|ID2_BEAU,     ID2_TRAILER|ID2_BEAU,  ID2_TRAILER|ID2_BELLE},
    {ID2_TRAILER|ID2_BELLE, ID2_LEAD|ID2_BELLE,    ID2_LEAD|ID2_BEAU,     ID2_TRAILER|ID2_BEAU},
    {ID2_TRAILER|ID2_BEAU,  ID2_TRAILER|ID2_BELLE, ID2_LEAD|ID2_BELLE,    ID2_LEAD|ID2_BEAU}};
 
-static int bit_table_2x4[][4] = {
+Private int bit_table_2x4[][4] = {
    {ID2_LEAD|ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_BEAU|ID2_END,     ID2_TRAILER|ID2_BELLE|ID2_END,    ID2_LEAD|ID2_BELLE|ID2_END},
    {ID2_LEAD|ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_BEAU|ID2_CENTER,  ID2_TRAILER|ID2_BELLE|ID2_CENTER},
    {ID2_LEAD|ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_BEAU|ID2_CENTER,  ID2_TRAILER|ID2_BELLE|ID2_CENTER, ID2_LEAD|ID2_BELLE|ID2_CENTER},
@@ -92,17 +92,17 @@ static int bit_table_2x4[][4] = {
    {ID2_TRAILER|ID2_BELLE|ID2_CENTER, ID2_LEAD|ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_BEAU|ID2_CENTER},
    {ID2_TRAILER|ID2_BEAU|ID2_END,     ID2_TRAILER|ID2_BELLE|ID2_END,    ID2_LEAD|ID2_BELLE|ID2_END,       ID2_LEAD|ID2_BEAU|ID2_END}};
 
-static int bit_table_1x2[][4] = {
+Private int bit_table_1x2[][4] = {
    {ID2_BEAU,              ID2_TRAILER,           ID2_BELLE,             ID2_LEAD},
    {ID2_BELLE,             ID2_LEAD,              ID2_BEAU,              ID2_TRAILER}};
 
-static int bit_table_1x4[][4] = {
+Private int bit_table_1x4[][4] = {
    {ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_END,      ID2_BELLE|ID2_END,       ID2_LEAD|ID2_END},
    {ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER,      ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER},
    {ID2_BELLE|ID2_END,       ID2_LEAD|ID2_END,         ID2_BEAU|ID2_END,        ID2_TRAILER|ID2_END},
    {ID2_BEAU|ID2_CENTER,     ID2_TRAILER|ID2_CENTER,   ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER}};
 
-static int bit_table_1x8[][4] = {
+Private int bit_table_1x8[][4] = {
    {ID2_BEAU|ID2_OUTR6|ID2_OUTR2,   ID2_TRAILER|ID2_OUTR6|ID2_OUTR2, ID2_BELLE|ID2_OUTR6|ID2_OUTR2,  ID2_LEAD|ID2_OUTR6|ID2_OUTR2},
    {ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6,     ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6},
    {ID2_BELLE|ID2_CTR2|ID2_CTR6,    ID2_LEAD|ID2_CTR2|ID2_CTR6,      ID2_BEAU|ID2_CTR2|ID2_CTR6,     ID2_TRAILER|ID2_CTR2|ID2_CTR6},
@@ -112,7 +112,7 @@ static int bit_table_1x8[][4] = {
    {ID2_BEAU|ID2_CTR2|ID2_CTR6,     ID2_TRAILER|ID2_CTR2|ID2_CTR6,   ID2_BELLE|ID2_CTR2|ID2_CTR6,    ID2_LEAD|ID2_CTR2|ID2_CTR6},
    {ID2_BELLE|ID2_OUTR6|ID2_CTR6,   ID2_LEAD|ID2_OUTR6|ID2_CTR6,     ID2_BEAU|ID2_OUTR6|ID2_CTR6,    ID2_TRAILER|ID2_OUTR6|ID2_CTR6}};
 
-static int bit_table_qtag[][4] = {
+Private int bit_table_qtag[][4] = {
    {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
    {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
    {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
@@ -122,7 +122,7 @@ static int bit_table_qtag[][4] = {
    {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
    {ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2}};
 
-static int bit_table_hrglass[][4] = {
+Private int bit_table_hrglass[][4] = {
    {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
    {ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6,    ID2_END|ID2_OUTR6},
    {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
@@ -132,7 +132,7 @@ static int bit_table_hrglass[][4] = {
    {ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6, ID2_CENTER|ID2_OUTR6},
    {ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2,  ID2_CENTER|ID2_CTR2}};
 
-static int bit_table_spindle[][4] = {
+Private int bit_table_spindle[][4] = {
    {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
    {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
    {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
@@ -142,7 +142,7 @@ static int bit_table_spindle[][4] = {
    {ID2_CTR6,    ID2_CTR6,   ID2_CTR6,   ID2_CTR6},
    {ID2_OUTR2,   ID2_OUTR2,  ID2_OUTR2,  ID2_OUTR2}};
 
-static int bit_table_rigger[][4] = {
+Private int bit_table_rigger[][4] = {
    {ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BEAU,     ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BEAU,  ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BELLE, ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BELLE},
    {ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BELLE,    ID2_CTR6|ID2_CENTER|ID2_LEAD|ID2_BEAU,     ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BEAU,  ID2_CTR6|ID2_CENTER|ID2_TRAILER|ID2_BELLE},
    {ID2_OUTR2|ID2_END|ID2_BELLE,               ID2_OUTR2|ID2_END|ID2_LEAD,                ID2_OUTR2|ID2_END|ID2_BEAU,                ID2_OUTR2|ID2_END|ID2_TRAILER},
@@ -200,57 +200,57 @@ extern void update_id_bits(setup *ss)
 }
 
 
-static expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, nothing, s2x2, 0};
-static expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, nothing, s2x4, 0};
-static expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, nothing, s2x4, 0};
-static expand_thing rear_c1a_stuff = {{0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1, 7, -1}, 16, nothing, s2x4, 0};
-static expand_thing rear_c1b_stuff = {{-1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6}, 16, nothing, s2x4, 0};
-static expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1}, 16, nothing, s2x4, 1};
-static expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, nothing, s2x4, 1};
-static expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s_1x2, 1};
-static expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, nothing, s2x4, 1};
-static expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, nothing, s1x8, 0};
-static expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, nothing, s1x4, 1};
-static expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
-static expand_thing rear_gwave_stuff = {{7, 0, 1, 6, 3, 4, 5, 2}, 8, nothing, s2x4, 0};
-static expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s2x4, 1};
-static expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
+Private expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, nothing, s2x2, 0};
+Private expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, nothing, s2x4, 0};
+Private expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, nothing, s2x4, 0};
+Private expand_thing rear_c1a_stuff = {{0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1, 7, -1}, 16, nothing, s2x4, 0};
+Private expand_thing rear_c1b_stuff = {{-1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6}, 16, nothing, s2x4, 0};
+Private expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1}, 16, nothing, s2x4, 1};
+Private expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, nothing, s2x4, 1};
+Private expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s_1x2, 1};
+Private expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, nothing, s2x4, 1};
+Private expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, nothing, s1x8, 0};
+Private expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, nothing, s1x4, 1};
+Private expand_thing rear_hrbox_stuff = {{0, 3, 2, 1}, 4, nothing, s1x4, 0};
+Private expand_thing rear_gwave_stuff = {{7, 0, 1, 6, 3, 4, 5, 2}, 8, nothing, s2x4, 0};
+Private expand_thing rear_qtag_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s2x4, 1};
+Private expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 
-static full_expand_thing rear_wave_pair     = {warn__rear_back,       0, &rear_wave_stuff};
-static full_expand_thing rear_bone_pair     = {warn__some_rear_back,  0, &rear_bone_stuff};
-static full_expand_thing rear_wing_pair     = {warn__some_rear_back,  0, &rear_wing_stuff};
-static full_expand_thing rear_c1a_pair      = {warn__some_rear_back,  0, &rear_c1a_stuff};
-static full_expand_thing rear_c1b_pair      = {warn__some_rear_back,  0, &rear_c1b_stuff};
-static full_expand_thing rear_c1c_pair      = {warn__some_rear_back,  0, &rear_c1c_stuff};
-static full_expand_thing rear_c1d_pair      = {warn__some_rear_back,  0, &rear_c1d_stuff};
-static full_expand_thing rear_miniwave_pair = {warn__rear_back,       0, &rear_miniwave_stuff};
-static full_expand_thing rear_2x4_pair      = {warn__rear_back,       0, &rear_2x4_stuff};
-static full_expand_thing rear_col_pair      = {warn__awful_rear_back, 0, &rear_col_stuff};
-static full_expand_thing rear_vrbox_pair    = {warn__awful_rear_back, 0, &rear_vrbox_stuff};
-static full_expand_thing rear_hrbox_pair    = {warn__awful_rear_back, 0, &rear_hrbox_stuff};
-static full_expand_thing rear_gwave_pair    = {warn__rear_back,       0, &rear_gwave_stuff};
-static full_expand_thing rear_qtag_pair     = {warn__rear_back,       0, &rear_qtag_stuff};
-static full_expand_thing rear_sqtag_pair    = {warn__awful_rear_back, 0, &rear_sqtag_stuff};
+Private full_expand_thing rear_wave_pair     = {warn__rear_back,       0, &rear_wave_stuff};
+Private full_expand_thing rear_bone_pair     = {warn__some_rear_back,  0, &rear_bone_stuff};
+Private full_expand_thing rear_wing_pair     = {warn__some_rear_back,  0, &rear_wing_stuff};
+Private full_expand_thing rear_c1a_pair      = {warn__some_rear_back,  0, &rear_c1a_stuff};
+Private full_expand_thing rear_c1b_pair      = {warn__some_rear_back,  0, &rear_c1b_stuff};
+Private full_expand_thing rear_c1c_pair      = {warn__some_rear_back,  0, &rear_c1c_stuff};
+Private full_expand_thing rear_c1d_pair      = {warn__some_rear_back,  0, &rear_c1d_stuff};
+Private full_expand_thing rear_miniwave_pair = {warn__rear_back,       0, &rear_miniwave_stuff};
+Private full_expand_thing rear_2x4_pair      = {warn__rear_back,       0, &rear_2x4_stuff};
+Private full_expand_thing rear_col_pair      = {warn__awful_rear_back, 0, &rear_col_stuff};
+Private full_expand_thing rear_vrbox_pair    = {warn__awful_rear_back, 0, &rear_vrbox_stuff};
+Private full_expand_thing rear_hrbox_pair    = {warn__awful_rear_back, 0, &rear_hrbox_stuff};
+Private full_expand_thing rear_gwave_pair    = {warn__rear_back,       0, &rear_gwave_stuff};
+Private full_expand_thing rear_qtag_pair     = {warn__rear_back,       0, &rear_qtag_stuff};
+Private full_expand_thing rear_sqtag_pair    = {warn__awful_rear_back, 0, &rear_sqtag_stuff};
 
-static expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, nothing, s2x4, 0};
-static expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
-static expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
-static expand_thing step_1x2_stuff = {{0, 1}, 2, nothing, s_1x2, 1};
-static expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, nothing, s1x4, 0};
-static expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
-static expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
-static expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
-static expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
+Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, nothing, s2x4, 0};
+Private expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
+Private expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
+Private expand_thing step_1x2_stuff = {{0, 1}, 2, nothing, s_1x2, 1};
+Private expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, nothing, s1x4, 0};
+Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
+Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
+Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8, 0};
+Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
 
-static full_expand_thing step_1x8_pair =      {0, 0, &step_1x8_stuff};
-static full_expand_thing step_1x4_side_pair = {0, 0, &step_1x4_side_stuff};
-static full_expand_thing step_1x4_pair =      {0, 0, &step_1x4_stuff};
-static full_expand_thing step_2x2v_pair =     {0, 2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
-static full_expand_thing step_2x2h_pair =     {0, 1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
-static full_expand_thing step_8ch_pair =      {0, 0, &step_8ch_stuff};
-static full_expand_thing step_li_pair =       {0, 0, &step_li_stuff};
-static full_expand_thing step_tby_pair =      {0, 0, &step_tby_stuff};
-static full_expand_thing step_1x2_pair =      {0, 0, &step_1x2_stuff};
+Private full_expand_thing step_1x8_pair =      {0, 0, &step_1x8_stuff};
+Private full_expand_thing step_1x4_side_pair = {0, 0, &step_1x4_side_stuff};
+Private full_expand_thing step_1x4_pair =      {0, 0, &step_1x4_stuff};
+Private full_expand_thing step_2x2v_pair =     {0, 2*SETUPFLAG__ELONGATE_BIT, &step_2x2v_stuff};
+Private full_expand_thing step_2x2h_pair =     {0, 1*SETUPFLAG__ELONGATE_BIT, &step_2x2h_stuff};
+Private full_expand_thing step_8ch_pair =      {0, 0, &step_8ch_stuff};
+Private full_expand_thing step_li_pair =       {0, 0, &step_li_stuff};
+Private full_expand_thing step_tby_pair =      {0, 0, &step_tby_stuff};
+Private full_expand_thing step_1x2_pair =      {0, 0, &step_1x2_stuff};
 
 
 
@@ -550,7 +550,7 @@ extern void do_matrix_expansion(setup *ss, unsigned int concprops)
 }
 
 
-static void normalize_4x4(setup *stuff)
+Private void normalize_4x4(setup *stuff)
 {
    if (!(stuff->people[0].id1 | stuff->people[4].id1 | stuff->people[8].id1 | stuff->people[12].id1)) {
       if (!(stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[13].id1 | stuff->people[14].id1)) {
@@ -572,7 +572,7 @@ static void normalize_4x4(setup *stuff)
 }
 
 
-static void normalize_blob(setup *stuff)
+Private void normalize_blob(setup *stuff)
 
 {
    if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
@@ -637,7 +637,7 @@ static void normalize_blob(setup *stuff)
 
 
 
-static void normalize_4x6(setup *stuff)
+Private void normalize_4x6(setup *stuff)
 {
    if (!(stuff->people[0].id1 | stuff->people[11].id1 | stuff->people[18].id1 | stuff->people[17].id1 |
             stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[23].id1 | stuff->people[12].id1)) {
@@ -681,7 +681,7 @@ static void normalize_4x6(setup *stuff)
 }
 
 
-static void normalize_4dmd(setup *stuff)
+Private void normalize_4dmd(setup *stuff)
 
 {
    setup temp;
@@ -751,7 +751,7 @@ static void normalize_4dmd(setup *stuff)
 
 /* See if this 3x4 is actually occupied only in spots of a qtag. */
 
-static void normalize_3x4(setup *stuff)
+Private void normalize_3x4(setup *stuff)
 {
    if ((!stuff->people[0].id1) && (!stuff->people[3].id1) && (!stuff->people[6].id1) && (!stuff->people[9].id1)) {
       stuff->kind = s_qtag;
@@ -769,7 +769,7 @@ static void normalize_3x4(setup *stuff)
 
 /* Check whether "C1 phantom" setup is only occupied in 2x4 spots, and fix it if so. */
 
-static void normalize_c1_phan(setup *stuff)
+Private void normalize_c1_phan(setup *stuff)
 
 {
    if (!(stuff->people[1].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[6].id1 |
@@ -891,11 +891,18 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
    if (nlevel >= normalize_before_isolated_call) {
       if (ss->kind == s_qtag) {
          if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
-            ss->kind = s1x4;
-            (void) copy_person(ss, 0, ss, 6);
-            (void) copy_person(ss, 1, ss, 7);
+            if (!(ss->people[2].id1 | ss->people[6].id1)) {
+               ss->kind = s_1x2;
+               (void) copy_person(ss, 0, ss, 7);
+               (void) copy_person(ss, 1, ss, 3);
+            }
+            else {
+               ss->kind = s1x4;
+               (void) copy_person(ss, 0, ss, 6);
+               (void) copy_person(ss, 1, ss, 7);
+            }
          }
-         if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+         else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1)) {
             /* We do NOT compress to a 2x2 -- doing so might permit people to
                work with each other across the set when they shouldn't, as in
                "heads pass the ocean; heads recycle while the sides star thru". */

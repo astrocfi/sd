@@ -1,0 +1,146 @@
+# Makefile.in for Sd (square dance caller's helper)
+# Time-stamp: <93/04/10 22:22:17 gildea>
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+CC = @CC@
+DEFS = @DEFS@
+CFLAGS = $(DEFS) $(CDEBUGFLAGS)
+
+# CDEBUGFLAGS is used by both cc and ld.
+# If you want a smaller executable and are willing to lose the ability
+# to debug, use "-O" instead of "-g".
+CDEBUGFLAGS = @CDEBUGFLAGS@
+
+X11_INCLUDES = @X11_INCLUDES@
+
+TTY_DEFS = @TTY_DEFS@
+
+X11_LIBS = @X11_LIBS@
+
+TTY_LIBS = @TTY_LIBS@
+
+SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
+          sdtables.c sdctable.c sdtop.c sd.c sdpreds.c sd12.c sd16.c \
+          sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
+          sdsi.c
+
+SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
+          sdtables.o sdctable.o sdtop.o sd.o sdpreds.o sd12.o sd16.o \
+          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
+          sdsi.o
+
+SDX11_SRC = sdui-x11.c
+SDX11_OBJ = sdui-x11.o
+
+SDTTY_SRC = sdui-tty.c sdui-ttu.c
+SDTTY_OBJ = @SDTTY_OBJ@
+
+SDTTY_OBJS = @SDTTY_OBJS@
+
+all: @DEFAULT_TARGET@
+allx11: sd sd_calls.dat
+alltty: sdtty sd_calls.dat
+everything: allx11 sdtty
+
+sd: $(SD_OBJS) $(SDX11_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(X11_LIBS)
+
+sdtty: $(SD_OBJS) $(SDTTY_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
+	@STRIP@
+	@AOUT2EXE@
+
+mkcalls: mkcalls.o
+	$(CC) $(CFLAGS) -o $@ $@.o
+	@STRIP@
+	@AOUT2EXE@
+
+sd_calls.dat: sd_calls.txt mkcalls
+	./mkcalls
+
+# This rule and the aout2exe program are for qmake on MS-DOS.
+# Most versions of make execute this implicitly, but not PC's.
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+# sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
+
+sdui-x11.o: sdui-x11.c
+	$(CC) $(CFLAGS) $(X11_INCLUDES) -c $(srcdir)/$*.c
+
+sdui-ttu.o: sdui-ttu.c
+	$(CC) $(CFLAGS) $(TTY_DEFS) -c $(srcdir)/$*.c
+
+mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
+
+mkcalls.o: database.h
+
+$(SD_OBJS) $(SDX11_OBJ): sd.h database.h
+
+Makefile:: configure
+	$(srcdir)/configure
+
+Makefile:: Makefile.in config.status
+	./config.status
+
+info: sd_doc.info
+dvi: sd_doc.dvi
+
+sd_doc.info sd_doc.dvi: sd_doc.txinfo install.txinfo
+
+.SUFFIXES: .dvi .info .txinfo
+
+MAKEINFO = makeinfo
+TXI2DVI = tex
+DVISELECT = dviselect
+DVICONCAT = dviconcat
+DVIPS = dvips
+
+.txinfo.dvi:
+	$(TXI2DVI) $<
+
+.txinfo.info:
+	$(MAKEINFO) -I$(srcdir) $<
+
+# TeX outputs front, body, toc; we want front, toc, body
+
+sd_doc-sorted.dvi: sd_doc.dvi
+	$(DVISELECT) -i sd_doc.dvi =1:2 > tempa.dvi
+	$(DVISELECT) -i sd_doc.dvi :_1 > tempb.dvi
+	($(DVISELECT) -i sd_doc.dvi -s 1: | $(DVISELECT) =3:) > tempc.dvi
+	$(DVICONCAT) -o sd_doc-sorted.dvi tempa.dvi tempb.dvi tempc.dvi
+	rm -f tempa.dvi tempb.dvi tempc.dvi
+
+sd_doc.PS: sd_doc-sorted.dvi
+	$(DVIPS) -U -o sd_doc.ps1 sd_doc-sorted.dvi
+	$(srcdir)/pspretty.sh sd_doc.ps1 > sd_doc.PS
+	rm -f sd_doc.ps1
+
+INSTALL: install.txinfo
+	makeinfo --no-headers --no-validate -o $@.tmp $(srcdir)/install.txinfo
+	sed '1s/This is Info file $@.tmp/$@/' $@.tmp > $@
+	rm -f $@.tmp
+
+clean::
+	rm -f *~ core *.o sd sdtty mkcalls sd_calls.dat sd.tar sd.tar.Z
+
+LINT = /usr/lang/alint
+
+lint:
+	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
+
+DISTTXT = README INSTALL Relnotes oldnotes \
+            Imakefile Makefile.in configure Sd.res sd_calls.txt \
+            COPYING database.doc sd_doc.txinfo install.txinfo
+DISTSRCS = sd.h database.h paths.h sdui-ttu.h mkcalls.c
+DISTFILES = $(DISTTXT) $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(DISTSRCS)
+
+dist: INSTALL
+	tar cvf sd.tar $(DISTFILES)
+
+ls:
+	@echo $(DISTFILES)
+
+# end of Makefile from @TIME_STAMP@

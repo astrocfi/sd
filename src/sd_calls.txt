@@ -21,7 +21,7 @@
     at program startup, as the "db" part of the complete version.
 */
 
-version 28 1
+version 28 5
 
 /* ****************** TEMPORARY HACK FOR TESTING
 
@@ -119,7 +119,7 @@ call "000 triangle circulate CCW" mainstream
 
 /* End of inappropriate calls -- real stuff starts here. */
 
-call "(nothing)" c1 tag nullcall
+call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
    nulldefine
 
@@ -665,8 +665,7 @@ call "swing and mix" a2
    seq ctrcrossrun [inherit_grand]
    seq maybegrandslip [inherit_grand]
 
-call "_centers cross run" dontshow tag ctrcrossrun
-            dont_use_in_resolve
+call "centers cross run" mainstream tag ctrcrossrun
    setup 1x4 1x4
       array [ZM1N CR2S ZM3N AL0S]
             alternate_definition [grand] c3a
@@ -1932,12 +1931,19 @@ call "2/3 cross cycle" c3
       array [R1E R2W L0W L3E]
 
 call "explode" a1 tag explode
-   /* ***** not really right -- should reject 2FL */
             parallel_conc_end
-   setup 1x4 2x2
-      preds "Can't explode from this line."
-         if lines_miniwave [R0E R0E L1W L1W]
-         if lines_couple [R3E R0E L2W L1W]
+   setup 1x4 2x2 qualifier miniwaves
+      array [R0E R0E L1W L1W]
+   setup 1x4 2x2 restriction forbidden 1fl_only
+      array [R3E R0E L2W L1W]
+
+call "explode the line" plus tag explodeline
+            parallel_conc_end
+
+   setup 1x4 2x2 qualifier miniwaves
+      array [1E 1E 0W 0W]
+   setup 1x4 2x2 restriction forbidden 1fl_only
+      array [2E 1E 3W 0W]
 
 /* ***** bug!!!!! tried to implement reverse explode with "reverse" alternate definition, didn't work. */
 call "reverse explode" c1
@@ -1947,14 +1953,6 @@ call "reverse explode" c1
       preds "Can't explode from this line."
          if lines_miniwave [L0W L0W R1E R1E]
          if lines_couple [L0W L3W R1E R2E]
-
-call "explode the wave" plus tag explodeline
-   /* not really right -- should allow 1FL */
-            parallel_conc_end
-   setup 1x4 2x2 restriction wave_only
-      preds "Can't explode from this line."
-         if lines_miniwave [1E 1E 0W 0W]
-         if lines_couple [2E 1E 3W 0W]
 
 call "explode the diamond" c3
    conc explodeline [] coupleup [conc_demand_lines conc_force_lines]
@@ -2133,11 +2131,11 @@ call "follow your neighbor" plus tag neighbor
       array [CR0S AL0N AL3N CR3S]
 
 call "cross your neighbor" c1
-   setup 2x2 1x4 rotate restriction wave_only
+   setup 2x2 1x4 rotate restriction resolve_ok wave_only
       array [CR0S AL0N CR3S AL3N]
 
 call "criss cross your neighbor" c2
-   setup 2x2 1x4 rotate restriction wave_only
+   setup 2x2 1x4 rotate restriction resolve_ok wave_only
       array [R3S L3N M2S M2N]
 
 call "follow thru" c1
@@ -2413,6 +2411,23 @@ call "reset @a" c3
       a numeric argument to determine how many sub-parts to execute. */
    seq strict_peel_and_nothing [repeat_n_alternate]
    seq armturn1_4 []
+
+call "_eight chain part 1" dontshow tag eightchain1
+            left_means_mirror
+   setup 4x2 2x4
+      array [ZM1N 0 ZM3N 0 0 ZM4N 0 ZM6N]
+
+call "_eight chain part 2" dontshow tag eightchain2
+            left_means_mirror
+   setup 4x2 2x4
+      array [0 ZM2N 0 AL4S AL3S 0 ZM5N 0]
+
+call "eight chain @9" mainstream
+            rear_back_from_r_wave left_means_mirror neednumber
+   /* We do *NOT* set "visible_fractions" for this.  It is not permitted
+      when "repeat_n_alternate" is used. */
+   seq eightchain1 [inherit_left repeat_n_alternate]
+   seq eightchain2 [inherit_left]
 
 /***** not right: if in 8CH this would split it and lose */
 /* Need to specify a 1x4 version, and make the program */
@@ -3023,26 +3038,19 @@ call "box counter couple up" c3x
    setup 2x2 2x2
       array [CR1W AL0E AL1W CR0E]
 
-call "single rotate 1/4" c2 tag snglrot1
-            parallel_conc_end       /* This makes it win if we tell the ends only to do it */
+call "single file rotate 1/4" c4
             reverse_means_mirror
-   setup 4x2 2x4 rotate
-      array [L4W L5W L6E L7E L0E L1E L2W L3W]
-   setup 2x4 2x4
-      array [L7S L0S L5S L2S L3N L4N L1N L6N]
-   setup 2x2 2x2
-      array [L3S L0S L1N L2N]
+   setup 4x1 1x4 rotate
+      array [L2W L3W L0E L1E]
 
-call "single rotate 1/2" c2 tag snglrot2
+call "single file rotate 1/2" c4
             reverse_means_mirror
-   setup 4x2 2x4
-      array [L4W L5W L6E L7E L0E L1E L2W L3W]
-   setup 2x4 2x4
-      array [L6E L7E L4E L5E L2W L3W L0W L1W]
-   setup 2x2 2x2
-      array [L2E L3E L0W L1W]
+   setup 4x1 1x4
+      array [L2W L3W L0E L1E]
 
-call "@hrotate 1/4" c2 tag rot1
+call "rotate 1/4" c2 tag rot1
+            parallel_conc_end       /* This makes it win if we tell the ends only
+                                          to do a single rotate 1/4.  Is this OK? */
             reverse_means_mirror
    setup 4x2 1x8 rotate restriction forbidden couples_only
       array [L5W L6W L2E L1E L0E L3E L7W L4W]
@@ -3050,12 +3058,19 @@ call "@hrotate 1/4" c2 tag rot1
       array [L1S L0S L7S L6S L4N L5N L2N L3N]
    setup 2x2 1x4 restriction forbidden couples_only
       array [L1S L0S L2N L3N]
-            /* This is "single file rotate" */
-            alternate_definition [single] c4
-   setup 4x1 1x4 rotate
-      array [L2W L3W L0E L1E]
+            alternate_definition [single] c2
+   setup 4x2 2x4 rotate
+      array [L4W L5W L6E L7E L0E L1E L2W L3W]
+   setup 2x4 2x4
+      array [L7S L0S L5S L2S L3N L4N L1N L6N]
+   setup 2x2 2x2
+      array [L3S L0S L1N L2N]
+   setup 6x1 1x6 rotate
+      array [L3W L4W L5W L0E L1E L2E]
+   setup 8x1 1x8 rotate
+      array [L4W L5W L6W L7W L0E L1E L2E L3E]
 
-call "@hrotate 1/2" c2 tag rot2
+call "rotate 1/2" c2 tag rot2
             reverse_means_mirror
    setup 4x2 1x8 restriction forbidden couples_only
       array [L5W L6W L2E L1E L0E L3E L7W L4W]
@@ -3063,31 +3078,31 @@ call "@hrotate 1/2" c2 tag rot2
       array [L5N L4N L2N L3N L0S L1S L7S L6S]
    setup 2x2 1x4 rotate restriction forbidden couples_only
       array [L3N L2N L0S L1S]
-            /* This is "single file rotate" */
-            alternate_definition [single] c4
-   setup 4x1 1x4
-      array [L2W L3W L0E L1E]
+            alternate_definition [single] c2
+   setup 4x2 2x4
+      array [L4W L5W L6E L7E L0E L1E L2W L3W]
+   setup 2x4 2x4
+      array [L6E L7E L4E L5E L2W L3W L0W L1W]
+   setup 2x2 2x2
+      array [L2E L3E L0W L1W]
+   setup 6x1 1x6
+      array [L3W L4W L5W L0E L1E L2E]
+   setup 8x1 1x8
+      array [L4W L5W L6W L7W L0E L1E L2E L3E]
 
-call "single rotate 1/4 while the others @1" c1
-            sequence_starter reverse_means_mirror dont_use_in_resolve
-      /* We need "conc_force_lines" because we already had so-and-so
-         go into the center, so they perceive the elongation of the
-         setup incorrectly.  The call "single rotate" has the
-         "parallel_conc_end" flag on, saying to go to antispots,
-         which is not what we want here. */
-   crossconc nullcall [mandatory_anycall] snglrot1 [inherit_reverse conc_force_lines]
-
-call "single rotate 1/2 while the others @1" c1
-            sequence_starter reverse_means_mirror dont_use_in_resolve
-   crossconc nullcall [mandatory_anycall] snglrot2 [inherit_reverse conc_force_lines]
+/* We need "conc_force_lines" on these because we already had so-and-so
+   go into the center, so they perceive the elongation of the setup
+   incorrectly.  The call "rotate 1/4" has the "parallel_conc_end"
+   flag on, saying to go to antispots if it was single, which is not
+   what we want here. */
 
 call "rotate 1/4 while the others @1" c1
-            sequence_starter reverse_means_mirror dont_use_in_resolve
-   crossconc nullcall [mandatory_anycall] rot1 [inherit_reverse]
+            sequence_starter reverse_means_mirror single_is_inherited dont_use_in_resolve
+   crossconc nullcall [mandatory_anycall] rot1 [inherit_reverse inherit_single conc_force_lines]
 
 call "rotate 1/2 while the others @1" c1
-            sequence_starter reverse_means_mirror dont_use_in_resolve
-   crossconc nullcall [mandatory_anycall] rot2 [inherit_reverse]
+            sequence_starter reverse_means_mirror single_is_inherited dont_use_in_resolve
+   crossconc nullcall [mandatory_anycall] rot2 [inherit_reverse inherit_single conc_force_lines]
 
 call "trixie" c3x tag trixie
    setup 2x2 2x2
@@ -4262,7 +4277,10 @@ call "chain the square" c2
 call "turn away" c4a
             left_means_mirror
    setup 4x2 2x4 rotate
-   array [5E 4E 2E 3E 4E 5E 7W 6W]
+      array [CR5E CR4E CR2E CR3E CM4E CM5E CR7W CR6W]
+            alternate_definition [single] c4
+   setup 2x2 2x2
+      array [CR1S CM2S CR3N CR2S]
 
 call "@ghang a @eright@f" c4
             left_means_mirror
@@ -6125,24 +6143,24 @@ call "slant touch and @2wheel@3" c3a
    seq slant_touch_nothing1 []
    seq slant_touch_nothing2 []
 
-call "_slip and cast off 3/4" dontshow tag slip_cast_3
+call "_centers slip" dontshow tag ctrs_slip
             dont_use_in_resolve
-   seq slip [allow_forced_mod]
-   seq cast_off_34 [allow_forced_mod]
+   /* This call, and the one following, create serious problems for
+      the concentric call mechanism.  If we are doing diamond chain thru
+      in, say, split phantom diamonds with only the points as real people
+      (that is, we physically have columns far apart), then the outsides
+      will all be phantoms when the setup is concentrified.  The concentric
+      call mechanism has a hard time figuring out the result setup in such
+      a case.  Special code has been added to look for the case of outsides
+      being phantoms and the call being "nullcall", in which case it make
+      the outsides hold the setup that the phantoms were occupying, and
+      forces the "conc_force_spots" flag to be obeyed. */
+   conc slip [allow_forced_mod] nullcall []
 
-call "_finish diamond chain thru" dontshow tag finishchainthru
+call "_centers cast 3/4" dontshow tag ctrs_cast_3_4
             dont_use_in_resolve
-   /* This call creates serious problems for the concentric call mechanism.
-      If we are doing diamond chain thru in, say, split phantom diamonds
-      with only the points as real people (that is, we physically have
-      columns far apart), then the outsides will all be phantoms when
-      the setup is concentrified.  The concentric call mechanism has a
-      hard time figuring out the result setup in such a case.  Special
-      code has been added to look for the case of outsides being phantoms
-      and the call being "nullcall", in which case it make the outsides
-      hold the setup that the phantoms were occupying, and forces the
-      "conc_force_spots" flag to be obeyed. */
-   conc slip_cast_3 [] nullcall []
+   /* See the previous call. */
+   conc cast_off_34 [allow_forced_mod] nullcall []
 
 call "_start sterling chain thru" dontshow tag startsterl
             dont_use_in_resolve
@@ -6150,13 +6168,15 @@ call "_start sterling chain thru" dontshow tag startsterl
    array [6N 1E 4E 6S 3S 1W 4W 3N]
 
 call "@2diamond @3chain thru" a2
-            intlk_is_inherited magic_is_inherited funny_is_inherited
+            intlk_is_inherited magic_is_inherited funny_is_inherited visible_fractions
    seq diamondcirc [or_anycall inherit_intlk inherit_magic inherit_funny]
-   seq finishchainthru []
+   seq ctrs_slip []
+   seq ctrs_cast_3_4 []
 
 call "sterling chain thru" c3x
    seq startsterl []
-   seq finishchainthru []
+   seq ctrs_slip []
+   seq ctrs_cast_3_4 []
 
 call "_double circulate" dontshow tag dblcirc
             dont_use_in_resolve
@@ -6175,14 +6195,16 @@ call "_start 3/4 chain and circ in" dontshow tag start34chcircin
 call "@b chain and circulate in" c4
             neednumber
    seq startchcircin []
-   seq finishchainthru []
+   seq ctrs_slip []
+   seq ctrs_cast_3_4 []
    seq spread []
 
 call "spin chain and circulate in" c4
             step_to_wave
    seq swing []
    seq start34chcircin []
-   seq finishchainthru []
+   seq ctrs_slip []
+   seq ctrs_cast_3_4 []
    seq spread []
 
 call "scoot and weave" a2
@@ -6234,13 +6256,25 @@ call "_rally" dontshow tag rally
          if q_line_front [4S 5N 6N 7S 0 0 2N 3S]
          if q_line_back [4S 5N 6N 7S 0 0 2N 3S]
 
-call "_little" dontshow tag little
+call "little" c1 tag little
             fudge_to_q_tag left_means_mirror
-   setup qtag 2x4
-      array [3S 4S 2S 2N 0 0 1S 1N]
+   setup qtag 2x4 restriction wave_only
+      array [CR3S CR4S AL2S ZM2N 0 0 CR1S ZM1N]
             alternate_definition [interlocked] c3a
-   setup qtag 2x4
-      array [3S 4S 1S 2N 0 0 2S 1N]
+   setup qtag 2x4 restriction 2fl_only
+      array [CR3S CR4S AL1S ZM2N 0 0 CR2S ZM1N]
+
+call "little, ends go as you are" c1 tag little_ends_as_are
+            fudge_to_q_tag
+   setup qtag 2x4 restriction wave_only
+      array [0 0 AL2S ZM2N 0 0 CR1S ZM1N]
+   setup pqtag 2x4 restriction wave_only
+      array [CR3E CR4E 0 0 AL3W AL4W 0 0]
+            alternate_definition [interlocked] c3a
+   setup qtag 2x4 restriction 2fl_only
+      array [0 0 AL1S ZM2N 0 0 CR2S ZM1N]
+   setup pqtag 2x4 restriction 2fl_only
+      array [CR3E CR4E 0 0 AL3W AL4W 0 0]
 
 call "_finish plenty" dontshow tag finishplenty
             dont_use_in_resolve
@@ -6253,6 +6287,12 @@ call "_finish plenty" dontshow tag finishplenty
 call "plenty" c1 tag plenty
             left_means_mirror intlk_is_inherited
    seq little [inherit_left inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "plenty, ends go as you are" c1
+            intlk_is_inherited
+   seq little_ends_as_are [inherit_intlk]
    seq turnstar2 [allow_forced_mod]
    seq finishplenty []
 

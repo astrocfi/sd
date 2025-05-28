@@ -109,15 +109,15 @@ long_boolean enable_file_writing;
 
 /* These variables are used by the text-packing stuff. */
 
-static char *destcurr;
-static char lastchar;
-static char *lastblank;
-static char current_line[MAX_TEXT_LINE_LENGTH];
-static int text_line_count = 0;
+Private char *destcurr;
+Private char lastchar;
+Private char *lastblank;
+Private char current_line[MAX_TEXT_LINE_LENGTH];
+Private int text_line_count = 0;
 
 
 
-static void open_text_line(void)
+Private void open_text_line(void)
 {
    destcurr = current_line;
    lastchar = ' ';
@@ -134,7 +134,7 @@ extern void clear_screen(void)
 }
 
 
-static void writechar(char src)
+Private void writechar(char src)
 {
    char save_buffer[MAX_TEXT_LINE_LENGTH];
    char *p;
@@ -190,19 +190,19 @@ extern void writestuff(char s[])
 
 
 
-static void writestuff_with_fraction(char s[], long_boolean do_number, int num)
+Private void writestuff_with_fraction(char s[], long_boolean do_number, int num)
 {
    if (do_number) {
       char *f = s;
       while (*f) {
-         if (f[0] == 'N' && f[1] == '/' && f[2] == '4') {
+         if (f[0] == '<' && f[1] == 'N' && f[2] == '/' && f[3] == '4' &&f[4] == '>') {
             if ((num & 0xFFFF) == 2)
                writestuff("1/2");
             else {
                writechar('0' + (num & 0xFFFF));
                writestuff("/4");
             }
-            writestuff(&f[3]);
+            writestuff(&f[5]);
             return;
          }
          else
@@ -213,6 +213,44 @@ static void writestuff_with_fraction(char s[], long_boolean do_number, int num)
       writestuff(s);
    }
 }
+
+
+
+Private void writestuff_with_decorations(char s[], long_boolean do_number, long_boolean do_selector, int num, char *selname)
+{
+   if (do_number || do_selector) {
+      char *f = s;
+      while (*f) {
+         if (f[0] == '<') {
+            if (do_number && f[1] == 'N' && f[2] == '/' && f[3] == '4' &&f[4] == '>') {
+               if ((num & 0xFFFF) == 2)
+                  writestuff("1/2");
+               else {
+                  writechar('0' + (num & 0xFFFF));
+                  writestuff("/4");
+               }
+               f += 5;
+            }
+            else if (do_selector && f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' &&f[7] == '>') {
+               writestuff(selname);
+               f += 8;
+            }
+            else
+               writechar(*f++);
+         }
+         else {
+            writechar(*f++);
+         }
+      }
+   }
+   else {
+      writestuff(s);
+   }
+}
+
+
+
+
 
 
 extern void doublespace_file(void)
@@ -229,7 +267,7 @@ extern void exit_program(int code)
 }
 
 
-extern void fail(char s[])
+extern void nonreturning fail(char s[])
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -238,7 +276,7 @@ extern void fail(char s[])
 }
 
 
-extern void fail2(char s1[], char s2[])
+extern void nonreturning fail2(char s1[], char s2[])
 {
    (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
@@ -302,7 +340,7 @@ char *selector_names[] = {
    "no one",
    NULL};         /* The X11 interface uses this when making the popup text. */
 
-static char *selector_singular[] = {
+Private char *selector_singular[] = {
    "???",
    "boy",
    "girl",
@@ -334,7 +372,7 @@ static char *selector_singular[] = {
    "no one"};
 
 /* BEWARE!!  These strings are keyed to the definitions of "warn__<whatever>" in sd.h . */
-static char *warning_strings[] = {
+Private char *warning_strings[] = {
    /*  warn__do_your_part        */   "Do your part.",
    /*  warn__tbonephantom        */   "This is a T-bone phantom setup call.  Everyone will do their own part.",
    /*  warn__ends_work_to_spots  */   "Ends work to same spots.",
@@ -373,19 +411,19 @@ static char *warning_strings[] = {
    /*  warn__dyp_resolve_ok      */   "Do your part.",
    /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center."};
 
-static char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
+Private char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th"};
 
 /* This variable is shared by "print_recurse", which is subordinate
    to "write_history_line". */
 
-static parse_block *static_cptr;
+Private parse_block *static_cptr;
 
 /* Bits that go into argument to print_recurse. */
 #define PRINT_RECURSE_STAR 01
 #define PRINT_RECURSE_TAGREACT 02
 #define PRINT_RECURSE_TAGENDING 04
 
-static void print_recurse(int print_recurse_arg)
+Private void print_recurse(int print_recurse_arg)
 {
    long_boolean use_left_name = FALSE;
    long_boolean use_cross_name = FALSE;
@@ -414,8 +452,10 @@ static void print_recurse(int print_recurse_arg)
          /* This is a concept. */
 
          int index = static_cptr->number;
+         selector_kind selector = static_cptr->selector;
          long_boolean request_final_space = FALSE;
          long_boolean you_owe_me_a_number = FALSE;
+         long_boolean you_owe_me_a_selector = FALSE;
          long_boolean request_comma_after_next_concept = FALSE;
          concept_kind kk = k;
          parse_block *cc = static_cptr;
@@ -437,27 +477,8 @@ static void print_recurse(int print_recurse_arg)
             kk = cc->concept->kind;
          }
 
-         if (concept_table[k].concept_prop & CONCPROP__USE_SELECTOR) {
-            selector_kind selector = static_cptr->selector;
-
-            if (k == concept_some_vs_others) {
-               writestuff("OWN the ");
-               writestuff(selector_names[selector]);
-               writestuff(", ");
-            }
-            else if (k == concept_selbasedtrngl) {
-               writestuff(selector_singular[selector]);
-            }
-            else {
-               writestuff(selector_names[selector]);
-               writestuff(" ");
-            }
-         }
-
-         /* These concepts are missing the word "are" in the menu, because otherwise the menu would
-            be excessively wide, so we put the word back in. */
-         if (k == concept_some_are_frac_tandem || k == concept_some_are_tandem)
-            writestuff("ARE ");
+         if (concept_table[k].concept_prop & CONCPROP__USE_SELECTOR)
+            you_owe_me_a_selector = TRUE;
 
          if ((concept_table[k].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) &&
                      k != concept_nth_part && k != concept_replace_nth_part) {
@@ -494,8 +515,10 @@ static void print_recurse(int print_recurse_arg)
                else
                   writestuff("CENTERS ");
             }
-            else if (k == concept_some_vs_others)
-               ;
+            else if (k == concept_some_vs_others) {
+               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
+               writestuff(", ");
+            }
             else if (k == concept_sequential) {
                writestuff("(");
             }
@@ -532,8 +555,10 @@ static void print_recurse(int print_recurse_arg)
 
                if (k == concept_centers_and_ends)
                   writestuff(" WHILE THE ENDS");
-               else if (k == concept_on_your_own || k == concept_interlace)
+               else if (k == concept_on_your_own)
                   writestuff(" AND");
+               else if (k == concept_interlace)
+                  writestuff(" WITH");
                else if (k == concept_replace_nth_part) {
                   if (saved_cptr->concept->value.arg1)
                      writestuff(" BUT INTERRUPT AFTER THE ");
@@ -551,38 +576,19 @@ static void print_recurse(int print_recurse_arg)
 
             static_cptr = subsidiary_ptr;
          }
-         else if (k == concept_so_and_so_only) {
-            writestuff("ONLY");
+         else if (k == concept_so_and_so_only || k == concept_standard || k == concept_double_offset || k == concept_single_diagonal) {
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
             request_final_space = TRUE;
          }
          else if (k == concept_selbasedtrngl) {
-            writestuff(&item->name[9]);      /* Strip off the "so-and-so". */
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_singular[selector]);
             request_final_space = TRUE;
          }
-         else if (k == concept_standard) {
-            writestuff("ARE STANDARD IN");
-            request_final_space = TRUE;
-         }
-         else if (k == concept_some_are_frac_tandem || k == concept_so_and_so_frac_stable ||
-                  k == concept_some_are_tandem || k == concept_so_and_so_stable || k == concept_so_and_so_begin) {
-            writestuff_with_fraction(&item->name[10], you_owe_me_a_number, index);      /* Strip off the "so-and-so ". */
+         else if (k == concept_so_and_so_stable || k == concept_so_and_so_frac_stable ||
+                  k == concept_so_and_so_begin || k == concept_some_are_frac_tandem ||
+                  k == concept_some_are_tandem) {
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
             writestuff(",");
-            request_final_space = TRUE;
-         }
-         else if (k == concept_frac_stable) {
-            writestuff_with_fraction(item->name, you_owe_me_a_number, index);
-            request_final_space = TRUE;
-         }
-         else if (k == concept_double_offset) {
-            int scarg1 = saved_cptr->concept->value.arg1;
-            if (scarg1 == 0)
-               writestuff("ARE CENTERS OF A DOUBLE-OFFSET 1/4 TAG");
-            else if (scarg1 == 1)
-               writestuff("ARE CENTERS OF A DOUBLE-OFFSET 3/4 TAG");
-            else if (scarg1 == 3)
-               writestuff("ARE CENTERS OF DOUBLE-OFFSET DIAMONDS");
-            else
-               writestuff("ARE CENTERS OF A DOUBLE-OFFSET QUARTER-SOMETHING");
             request_final_space = TRUE;
          }
          else if (static_cptr && (k == concept_left || k == concept_cross || k == concept_single)) {
@@ -667,7 +673,7 @@ static void print_recurse(int print_recurse_arg)
             request_final_space = TRUE;
          }
          else {
-            writestuff_with_fraction(item->name, you_owe_me_a_number, index);      /* Strip off the "so-and-so are ". */
+            writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, index, selector_names[selector]);
             request_final_space = TRUE;
          }
 
@@ -907,11 +913,11 @@ static void print_recurse(int print_recurse_arg)
 
 /* These static variables are used by printperson. */
 
-static char peoplenames[] = "1234";
-static char directions[] = "B?B>B?B<B?B?B?B?B^B?BVB?B?B?B?B?G?G>G?G<G?G?G?G?G^G?GVG?G?G?G?G?";
-static char personbuffer[] = " ZZZ";
+Private char peoplenames[] = "1234";
+Private char directions[] = "B?B>B?B<B?B?B?B?B^B?BVB?B?B?B?B?G?G>G?G<G?G?G?G?G^G?GVG?G?G?G?G?";
+Private char personbuffer[] = " ZZZ";
 
-static void printperson(int x)
+Private void printperson(int x)
 {
    int i;
 
@@ -930,10 +936,10 @@ static void printperson(int x)
 
 /* These static variables are used by printsetup/print_4_person_setup/do_write/do_write4/do_write4_small. */
 
-static int offs, roti, ri, modulus, personstart;
-static setup *printarg;
+Private int offs, roti, ri, modulus, personstart;
+Private setup *printarg;
 
-static void do_write4_small(char s[])
+Private void do_write4_small(char s[])
 {
    char c;
 
@@ -949,7 +955,7 @@ static void do_write4_small(char s[])
 }
 
 
-static void do_write(char s[])
+Private void do_write(char s[])
 {
    char c;
 
@@ -964,7 +970,7 @@ static void do_write(char s[])
 }
 
 
-static void print_4_person_setup(int ps, small_setup *s, int elong)
+Private void print_4_person_setup(int ps, small_setup *s, int elong)
 {
    roti = (s->srotation & 3);
    ri = roti * 011;
@@ -1060,7 +1066,7 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
    }
 }
 
-static void printsetup(setup *x)
+Private void printsetup(setup *x)
 {
    printarg = x;
    modulus = setup_limits[x->kind]+1;
@@ -1297,6 +1303,8 @@ extern void display_initial_history(int upper_limit, int num_pics)
    else {
       /* We lose, there is nothing we can use. */
       clear_screen();
+      write_header_stuff();
+      newline();
       startpoint = 1;
    }
 
@@ -2248,46 +2256,39 @@ extern long_boolean fix_n_results(int arity, setup z[])
 }
 
 
-static void innards(
+Private void innards(
    setup *ss,
    parse_block *parseptr,
    callspec_block *callspec,
    final_set final_concepts,
    map_thing *maps,
    long_boolean recompute_id,
-   setup *a1,
-   setup *a2,
-   setup *a3,
-   setup *a4,
+   setup *x,
    setup *result)
 {
    int i, r;
    map_thing *final_map;
    map_hunk *hunk;
-   setup *x[4];
    setup z[4];
 
    int finalsetupflags = 0;
-   setup_kind kn = maps->inner_kind;
    int rot = maps->rot;
    int vert = maps->vert;
    int arity = maps->arity;
 
    clear_people(result);
-   
-   x[0] = a1;
-   x[1] = a2;
-   x[2] = a3;
-   x[3] = a4;
-   
+
    for (i=0; i<arity; i++) {
-      /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-      x[i]->setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED | SETUPFLAG__NO_EXPAND_MATRIX;
-      x[i]->kind = kn;
-      x[i]->rotation = 0;
-      if (recompute_id) update_id_bits(x[i]);
-      move(x[i], parseptr, callspec, final_concepts, FALSE, &z[i]);
-      finalsetupflags |= z[i].setupflags;
+      if (x[i].kind != nothing) {
+         /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
+         x[i].setupflags = (ss->setupflags & ~SETUPFLAG__OFFSET_Z) | SETUPFLAG__DISTORTED | SETUPFLAG__NO_EXPAND_MATRIX;
+         x[i].rotation = 0;
+         if (recompute_id) update_id_bits(&x[i]);
+         move(&x[i], parseptr, callspec, final_concepts, FALSE, &z[i]);
+         finalsetupflags |= z[i].setupflags;
+      }
+      else
+         z[i].kind = nothing;
    }
 
    if (fix_n_results(arity, z)) {
@@ -2313,7 +2314,7 @@ static void innards(
 
    /* See if we can put things back with the same map we used before. */
 
-   if (z[0].kind == kn && (z[0].rotation&3) == 0) {
+   if (z[0].kind == maps->inner_kind && (z[0].rotation&3) == 0) {
       final_map = maps;
       result->rotation = 0;
       goto finish;
@@ -2496,7 +2497,7 @@ extern void divided_setup_move(
    setup *result)
 {
    int i, mm, v1flag, v2flag, v3flag, v4flag;
-   setup a1, a2, a3, a4;
+   setup x[4];
 
    setup_kind kn = maps->inner_kind;
    int rot = maps->rot;
@@ -2539,43 +2540,43 @@ extern void divided_setup_move(
 
       if (rot & 1) {
          /* Rotation is odd.  3 is a special case. */
-         (void) copy_rot(&a1, i, &tstuff, 0, (rot==3 ? 011 : 033));
+         (void) copy_rot(&x[0], i, &tstuff, 0, (rot==3 ? 011 : 033));
          if (maps->map_kind == MPKIND__4_QUADRANTS) {
-            (void) copy_person(&a2, i, &tstuff, 1);
-            (void) copy_rot(&a3, i, &tstuff, 2, 033);
-            (void) copy_person(&a4, i, &tstuff, 3);
+            (void) copy_person(&x[1], i, &tstuff, 1);
+            (void) copy_rot(&x[2], i, &tstuff, 2, 033);
+            (void) copy_person(&x[3], i, &tstuff, 3);
          }
          else if (maps->map_kind == MPKIND__DMD_STUFF) {
-            (void) copy_person(&a2, i, &tstuff, 1);
+            (void) copy_person(&x[1], i, &tstuff, 1);
          }
          else {
-            if (arity >= 2) (void) copy_rot(&a2, i, &tstuff, 1, 033);
-            if (arity >= 3) (void) copy_rot(&a3, i, &tstuff, 2, 033);
-            if (arity == 4) (void) copy_rot(&a4, i, &tstuff, 3, 033);
+            if (arity >= 2) (void) copy_rot(&x[1], i, &tstuff, 1, 033);
+            if (arity >= 3) (void) copy_rot(&x[2], i, &tstuff, 2, 033);
+            if (arity == 4) (void) copy_rot(&x[3], i, &tstuff, 3, 033);
          }
       }
       else {
          /* Rotation is even.  2 is a special case. */
-         (void) copy_person(&a1, i, &tstuff, 0);
+         (void) copy_person(&x[0], i, &tstuff, 0);
          if (maps->map_kind == MPKIND__4_QUADRANTS) {
-            (void) copy_rot(&a2, i, &tstuff, 1, 033);
-            (void) copy_person(&a3, i, &tstuff, 2);
-            (void) copy_rot(&a4, i, &tstuff, 3, 033);
+            (void) copy_rot(&x[1], i, &tstuff, 1, 033);
+            (void) copy_person(&x[2], i, &tstuff, 2);
+            (void) copy_rot(&x[3], i, &tstuff, 3, 033);
          }
          else if (maps->map_kind == MPKIND__DMD_STUFF) {
-            (void) copy_rot(&a2, i, &tstuff, 1, 033);
+            (void) copy_rot(&x[1], i, &tstuff, 1, 033);
          }
          else {
             if (arity >= 2) {
                if (rot == 2) {
-                  (void) copy_rot(&a2, i, &tstuff, 1, 022);
+                  (void) copy_rot(&x[1], i, &tstuff, 1, 022);
                }
                else {
-                  (void) copy_person(&a2, i, &tstuff, 1);
+                  (void) copy_person(&x[1], i, &tstuff, 1);
                }
             }
-            if (arity >= 3) (void) copy_person(&a3, i, &tstuff, 2);
-            if (arity == 4) (void) copy_person(&a4, i, &tstuff, 3);
+            if (arity >= 3) (void) copy_person(&x[2], i, &tstuff, 2);
+            if (arity == 4) (void) copy_person(&x[3], i, &tstuff, 3);
          }
       }
    }
@@ -2618,9 +2619,18 @@ extern void divided_setup_move(
          break;
    }
 
+   x[0].kind = nothing;
+   x[1].kind = nothing;
+   x[2].kind = nothing;
+   x[3].kind = nothing;
+
+   if (v1flag) x[0].kind = maps->inner_kind;
+   if (v2flag) x[1].kind = maps->inner_kind;
+   if (v3flag) x[2].kind = maps->inner_kind;
+   if (v4flag) x[3].kind = maps->inner_kind;
+
    innards(ss, parseptr, callspec,
-      final_concepts, maps, recompute_id,
-      &a1, &a2, &a3, &a4, result);
+      final_concepts, maps, recompute_id, x, result);
 }
 
 
@@ -2628,7 +2638,7 @@ extern void overlapped_setup_move(setup *s, map_thing *maps,
    int m1, int m2, int m3, parse_block *parseptr, setup *result)
 {
    int i, j;
-   setup a1, a2, a3;
+   setup x[4];
 
    setup_kind kn = maps->inner_kind;
    int rot = maps->rot;
@@ -2655,27 +2665,29 @@ extern void overlapped_setup_move(setup *s, map_thing *maps,
       }
 
       if (j & m1)
-         (void) copy_person(&a1, i, &tstuff, 0);
+         (void) copy_person(&x[0], i, &tstuff, 0);
       else
-         clear_person(&a1, i);
+         clear_person(&x[0], i);
 
       if (arity >= 2) {
          if (j & m2)
-            (void) copy_person(&a2, i, &tstuff, 1);
+            (void) copy_person(&x[1], i, &tstuff, 1);
          else
-            clear_person(&a2, i);
+            clear_person(&x[1], i);
       }
 
       if (arity >= 3) {
          if (j & m3)
-            (void) copy_person(&a3, i, &tstuff, 2);
+            (void) copy_person(&x[2], i, &tstuff, 2);
          else
-            clear_person(&a3, i);
+            clear_person(&x[2], i);
       }
    }
 
-   innards(s, parseptr, NULLCALLSPEC, 0, maps,
-      FALSE, &a1, &a2, &a3, &a3, result);
-/* Note: we pass garbage    ^^^   for a4. */
+   x[0].kind = maps->inner_kind;
+   x[1].kind = maps->inner_kind;
+   x[2].kind = maps->inner_kind;
 
+   innards(s, parseptr, NULLCALLSPEC,
+      0, maps, FALSE, x, result);
 }

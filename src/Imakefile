@@ -1,6 +1,6 @@
 /*
  * Imakefile for Sd (square dance caller's helper)
- * Time-stamp: <93/02/16 17:42:37 gildea>
+ * Time-stamp: <93/04/10 22:04:34 gildea>
  *
  * Run "xmkmf" to generate a Makefile from this description.
  * Then run "make" to build the Sd system.
@@ -34,6 +34,7 @@ OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(OBJS2)
 
 AllTarget(sd sd_calls.dat)
 alltty: sdtty sd_calls.dat
+everything: all alltty
 
 NormalProgramTarget(sd, $(SD_OBJS) $(SDX11_OBJ), XawClientDepLibs, XawClientLibs, /**/)
 
@@ -53,16 +54,25 @@ sd_calls.dat: sd_calls.txt mkcalls
  * printing the documenmtation
  */
 
+info: sd_doc.info
+dvi: sd_doc.dvi
+
+sd_doc.info sd_doc.dvi: sd_doc.txinfo install.txinfo
+
 .SUFFIXES: .dvi .info .txinfo
 
+MAKEINFO = makeinfo
+TXI2DVI = tex
+DVIPS = dvips
+
 .txinfo.dvi:
-	tex $?
+	$(TXI2DVI) $?
 
 .txinfo.info:
-	makeinfo $?
+	$(MAKEINFO) $?
 
 sd_doc.PS: sd_doc.dvi
-	dvips -o $@ $?
+	$(DVIPS) -o $@ $?
 
 /*
  * miscellaneous
@@ -74,11 +84,12 @@ clean::
 	$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
 
-DISTFILES = README Relnotes relnotes.archive Imakefile Makefile Sd.res \
-            sd_calls.txt COPYING database.doc sd_doc.txinfo
+DISTFILES = README INSTALL Relnotes oldnotes \
+            Imakefile Makefile.in configure Sd.res sd_calls.txt \
+            COPYING database.doc sd_doc.txinfo install.txinfo
 HSRCS = sd.h database.h paths.h sdui-ttu.h
 
-distrib:
+dist:
 	tar cvf sd.tar $(DISTFILES) $(SRCS) $(HSRCS)
 
 DependTarget()			

@@ -1,6 +1,6 @@
 /*
  * sdui-ttu.h - header file for sdui-ttu.c
- * Time-stamp: <93/02/10 14:56:32 gildea>
+ * Time-stamp: <93/03/17 16:05:30 gildea>
  * Copyright 1993 Stephen Gildea
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -35,3 +35,5 @@ extern void ccleos(FILE *filep);
 extern void csetmode(int mode, FILE *fp);
 extern FILE *fopenc(void);
 extern void cshow(FILE *filep);
+extern void initialize_signal_handlers(void);
+extern void refresh_input(void);

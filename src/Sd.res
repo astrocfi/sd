@@ -1,5 +1,5 @@
 ! Sd.res - sample user resource file for Sd (square dance caller's helper)
-! Time-stamp: <92/11/22 19:00:29 gildea>
+! Time-stamp: <93/03/17 17:09:11 gildea>
 
 !
 ! colors - suggested color customizations for color monitors
@@ -62,7 +62,7 @@
 *confirmpopup.modifyLineTwo: Do you want to replace it?
 *Dialog.value*Translations: #override <Key>Return: accept_string()
 *comment.label: You can insert a comment:
-*outfile.label: Enter new name for sequence output file:
+*outfilepopup.format: Sequence output file is "%s".  Enter new name:
 *getout.label: Text to be placed at the beginning of this sequence:
 *neglect.label: Percentage (integer) of neglected calls:
 *abort.label: Abort

@@ -1,3 +1,87 @@
+oldnotes - release notes relating to older versions of Sd.
+
+See the file Relnotes for what is new in the current release.
+
+
+		    RELEASE NOTES FOR VERSION 28.0
+       Database version = 28.0, format = 34, X11 UI version 1.12.
+
+Fixed long-standing bug in so-and-so-based triangle calls.
+
+Added support for sdtty, a version written by Alan Snyder with a
+terminal-based user interface featuring a completing reader.  In
+addition to running on Unix, this version has been ported to both
+the Macintosh and the IBM PC.  Both ports are still experimental.
+The source file "sdtables.c" has been split -- there is a new file
+"sdctable.c".  If you use your own Makefile or other tools for
+handling sources, you may need to update them.
+
+Fixed the mechanism for dealing with calls that take 4x4 to 2x8 setups.
+
+Fixed a bug that made the trace concept almost always consider the call
+illegal.  It is a tribute to the immense popularity of this concept that
+the bug went undetected for so long.
+
+Fractional stability is now supported for the call "roll" and calls that
+use same.  For example, fraction stable sidetrack now works.
+
+Added a lot more knowledge about how to do "1/2 circulate" (and hence
+tally ho and cover up) from T-boned 2x4's.
+
+Repaired the inability to do "so-and-so are N/4 stable" stuff.
+
+New calls: 3X3/4X4 roll out to a column and countershake.
+2/3 countershake, including 3X3 and 4X4.
+Grand fan the top and reverse the top from suitable 12 matrices.
+Cross counterpoint, diamond counterpoint, diamond recoil.
+Mix the deucey, touch tone, contour the line, replace the column
+but [], shadow to a diamond, detach, sashay thru,
+trap it, strike out, mix the deal, mix the turn & deal, fractionalizable
+recycle.  Unfortunately, the latter had to be entered as a separate call --
+"recycle (by parts)".  This is because there is no mechanism for a call to
+be defined by parts from some setups and by array from others, and the
+face-to-face recycle has no parts.  Since we need one call "recycle" that
+is invoked by, for example, counterpoint, that call is defined by array
+from both waves and facing couples.  The wave-only fractionalizable
+recycle needs to be a separate call.  Use it only when doing interlaces,
+randoms, etc.
+
+Regroup and trip the set are defined by their centers and ends'
+parts, so they are more general.
+
+Couples/tandems of 3 and 4, and box/boxsome diamond/diamondsome
+were added.  When you bring up the couples/tandem concepts submenu,
+you really get your money's worth.  The "phantom" versions of these
+concepts are no longer in the couples/tandem concepts submenu.
+Click on the "phantom" concept before choosing the couples/tandem
+concept if you want this effect.
+
+It can do "riggers" in quarter-tag setups.  The "frontrigger" and
+"backrigger" concepts were added for this.
+
+"Slider" concept added.
+
+16 matrix was added.  It now knows as much about 16 matrices as about
+12 matrices.  Well, almost.
+
+The concepts "4x4 matrix", "2x6 matrix", "2x8 matrix", and "16 matrix
+of parallel diamonds" (well, what would YOU call it?) were added.
+These enable one to declare the matrix when doing things like
+"couples foursome", "boxsome", or "3x3".  Four example, from parallelogram
+columns, "2x6 matrix 2x1 checkmate" will work, splitting it into 2x3's.
+From normal two-faced lines, "2x8 matrix boxsome recycle" will create
+extra boxes on the outside and do a wave-type recycle.  From normal waves,
+"2x8 matrix tandem spin chain the line" works.
+
+The internal restriction in the "mkcalls" program on the number of tagged
+calls (1000) has been removed.  Most tables are allocated dynamically.
+There are now no limits (within reason) on the database size, database
+tag size, length of a sequence, or number of saved resolves, other than
+the case of catastrophic failure of the operating system's memory
+allocation mechanism.
+
+===============================================================================
+
 		    RELEASE NOTES FOR VERSION 27.8
        Database version = 27.7, format = 31, X11 UI version 1.11.
 

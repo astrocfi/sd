@@ -45,20 +45,20 @@ typedef struct {
    int rotchange;
 } resolve_rec;
 
-static configuration *huge_history_save = (configuration *) 0;
-static int huge_history_allocation = 0;
-static int huge_history_ptr;
+Private configuration *huge_history_save = (configuration *) 0;
+Private int huge_history_allocation = 0;
+Private int huge_history_ptr;
 
-static resolve_rec *all_resolves = (resolve_rec *) 0;
-static int resolve_allocation = 0;
+Private resolve_rec *all_resolves = (resolve_rec *) 0;
+Private int resolve_allocation = 0;
 
-static int avoid_list[AVOID_LIST_MAX];
-static int avoid_list_size;
-static int perm_array[8];
-static setup_kind goal_kind;
-static int goal_directions[8];
+Private int avoid_list[AVOID_LIST_MAX];
+Private int avoid_list_size;
+Private int perm_array[8];
+Private setup_kind goal_kind;
+Private int goal_directions[8];
 
-static char *title_string[] = {
+Private char *title_string[] = {
    "Anything: ",
    "Nice setup: ",
    "Resolve: ",
@@ -454,19 +454,19 @@ extern resolve_indicator resolve_p(setup *s)
 /* These variables are actually local to inner_search, but they are
    expected to be preserved across the longjmp, so they must be static. */
 
-static int perm_indices[8];
-static int attempt_count, little_count;
-static int hashed_random_list[5];
-static parse_block *inner_parse_mark, *outer_parse_mark;
-static int history_insertion_point;    /* Where our resolve should lie in the history.
+Private int perm_indices[8];
+Private int attempt_count, little_count;
+Private int hashed_random_list[5];
+Private parse_block *inner_parse_mark, *outer_parse_mark;
+Private int history_insertion_point;    /* Where our resolve should lie in the history.
                                           This is normally the end of the history, but
                                           may be earlier if doing a reconcile.  We clobber
                                           everything in the given history past this point. */
-static int history_save;               /* Where we are inserting calls now.  This moves
+Private int history_save;               /* Where we are inserting calls now.  This moves
                                           forward as we build multiple-call resolves. */
        
 
-static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, long_boolean accept_extend, int insertion_point)
+Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, long_boolean accept_extend, int insertion_point)
 {
    long_boolean retval;
    int i, j;
@@ -774,10 +774,10 @@ static long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, lon
 }
 
 
-static int promperm[8] = {1, 0, 6, 7, 5, 4, 2, 3};
-static int qtagperm[8] = {1, 0, 7, 6, 5, 4, 3, 2};
-static int crossperm[8] = {5, 4, 3, 2, 1, 0, 7, 6};
-static int laperm[8] = {1, 3, 6, 0, 5, 7, 2, 4};
+Private int promperm[8] = {1, 0, 6, 7, 5, 4, 2, 3};
+Private int qtagperm[8] = {1, 0, 7, 6, 5, 4, 3, 2};
+Private int crossperm[8] = {5, 4, 3, 2, 1, 0, 7, 6};
+Private int laperm[8] = {1, 3, 6, 0, 5, 7, 2, 4};
 
 
 extern uims_reply full_resolve(search_kind goal)

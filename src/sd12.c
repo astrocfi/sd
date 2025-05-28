@@ -25,7 +25,7 @@
 #include "sd.h"
 
 
-static void ctr_end_triangle_move(
+Private void ctr_end_triangle_move(
    setup *s,
    parse_block *parseptr,
    setup *result)
@@ -85,15 +85,15 @@ typedef struct qwerty {
    } tgl_map;
 
 /* These need to be predeclared so that they can refer to each other. */
-static tgl_map map1b;
-static tgl_map map2b;
+Private tgl_map map1b;
+Private tgl_map map2b;
 
 /*                 mapqt1     mapqt2   mapqti    mapcp1        mapcp2      mapcpi    map241     map242   map24i   kind     other */
-static tgl_map map1b = {{4, 3, 2}, {0, 7, 6}, {1, 5}, {6,  8, 10}, {14,  0,  2}, {4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
-static tgl_map map2b = {{5, 6, 7}, {1, 2, 3}, {0, 4}, {3, 15, 13}, {11,  7,  5}, {1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
+Private tgl_map map1b = {{4, 3, 2}, {0, 7, 6}, {1, 5}, {6,  8, 10}, {14,  0,  2}, {4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
+Private tgl_map map2b = {{5, 6, 7}, {1, 2, 3}, {0, 4}, {3, 15, 13}, {11,  7,  5}, {1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
 
 
-static void do_glorious_triangles(
+Private void do_glorious_triangles(
    setup *s,
    setup *a1,
    setup *a2,
@@ -227,7 +227,7 @@ static void do_glorious_triangles(
 
 
 /* This procedure does wave-base, tandem-base, and so-and-so-base. */
-static void wv_tand_base_move(
+Private void wv_tand_base_move(
    setup *s,
    parse_block *parseptr,
    setup *result)
@@ -320,7 +320,7 @@ static void wv_tand_base_move(
 }
 
 
-static void tall_short_6_move(
+Private void tall_short_6_move(
    setup *s,
    parse_block *parseptr,
    setup *result)

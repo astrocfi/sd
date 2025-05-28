@@ -1,79 +1,63 @@
-		    RELEASE NOTES FOR VERSION 28.0
-       Database version = 28.0, format = 34, X11 UI version 1.12.
+		    RELEASE NOTES FOR VERSION 28.6
+       Database version = 28.5, format = 34, X11 UI version 1.13.
 
-Fixed long-standing bug in so-and-so-based triangle calls.
+28.6:
 
-Added support for sdtty, a version written by Alan Snyder with a
-terminal-based user interface featuring a completing reader.  In
-addition to running on Unix, this version has been ported to both
-the Macintosh and the IBM PC.  Both ports are still experimental.
-The source file "sdtables.c" has been split -- there is a new file
-"sdctable.c".  If you use your own Makefile or other tools for
-handling sources, you may need to update them.
+Installation instructions moved from README to new file INSTALL.
+Renamed "relnotes.archive" to "oldnotes".
+Documentation expanded.
 
-Fixed the mechanism for dealing with calls that take 4x4 to 2x8 setups.
+28.5:
 
-Fixed a bug that made the trace concept almost always consider the call
-illegal.  It is a tribute to the immense popularity of this concept that
-the bug went undetected for so long.
+New calls:  Eight chain N.
 
-Fractional stability is now supported for the call "roll" and calls that
-use same.  For example, fraction stable sidetrack now works.
+A bug was fixed in tandem/couples/siamese that could make it switch the paired
+people with each other if the call being executed involved stepping to a wave
+or rearing back from one.  This seems to have been introduced at about the time
+that fractional twosom/solid was added.  This bug is serious.
 
-Added a lot more knowledge about how to do "1/2 circulate" (and hence
-tally ho and cover up) from T-boned 2x4's.
+28.4:
 
-Repaired the inability to do "so-and-so are N/4 stable" stuff.
+New calls:  [single] rotate from 6x1 and 8x1 columns.  Also, the concept "single"
+is now used to get single rotate -- single rotate is not separately listed in the menu.
+The call "single file rotate" is now listed separately.  This is the 4x1 call.
+The calls "little, ends go as you are" and "plenty, ends go as you are" were added.
+These are intended to be called from diamonds.  Exactly how you would say these
+calls may depend on the audience.  Many callers and dancers believe that one
+could just say "little" or "plenty" from these setups.  Some very fussy people
+believe that the definition is always quarter right, counter rotate, and roll,
+meaning that one must tell the ends to go as they are in order to get the
+intended effect.
 
-New calls: 3X3/4X4 roll out to a column and countershake.
-2/3 countershake, including 3X3 and 4X4.
-Grand fan the top and reverse the top from suitable 12 matrices.
-Cross counterpoint, diamond counterpoint, diamond recoil.
-Mix the deucey, touch tone, contour the line, replace the column
-but [], shadow to a diamond, detach, sashay thru,
-trap it, strike out, mix the deal, mix the turn & deal, fractionalizable
-recycle.  Unfortunately, the latter had to be entered as a separate call --
-"recycle (by parts)".  This is because there is no mechanism for a call to
-be defined by parts from some setups and by array from others, and the
-face-to-face recycle has no parts.  Since we need one call "recycle" that
-is invoked by, for example, counterpoint, that call is defined by array
-from both waves and facing couples.  The wave-only fractionalizable
-recycle needs to be a separate call.  Use it only when doing interlaces,
-randoms, etc.
+Build changes:
 
-Regroup and trip the set are defined by their centers and ends'
-parts, so they are more general.
+default Makefile replaced by Makefile.in and configure.  See README
+for new build procedures.  If you are using xmkmf, the procedure does
+not change.
 
-Couples/tandems of 3 and 4, and box/boxsome diamond/diamondsome
-were added.  When you bring up the couples/tandem concepts submenu,
-you really get your money's worth.  The "phantom" versions of these
-concepts are no longer in the couples/tandem concepts submenu.
-Click on the "phantom" concept before choosing the couples/tandem
-concept if you want this effect.
+28.3:
 
-It can do "riggers" in quarter-tag setups.  The "frontrigger" and
-"backrigger" concepts were added for this.
+User Interface changes:
 
-"Slider" concept added.
+Name of old sequence file displayed in prompt for new name.
 
-16 matrix was added.  It now knows as much about 16 matrices as about
-12 matrices.  Well, almost.
+X11:
+Level included in icon name.
 
-The concepts "4x4 matrix", "2x6 matrix", "2x8 matrix", and "16 matrix
-of parallel diamonds" (well, what would YOU call it?) were added.
-These enable one to declare the matrix when doing things like
-"couples foursome", "boxsome", or "3x3".  Four example, from parallelogram
-columns, "2x6 matrix 2x1 checkmate" will work, splitting it into 2x3's.
-From normal two-faced lines, "2x8 matrix boxsome recycle" will create
-extra boxes on the outside and do a wave-type recycle.  From normal waves,
-"2x8 matrix tandem spin chain the line" works.
+sdtty:
+Documented the terminal interface in a new chapter of sd_doc.txinfo.
 
-The internal restriction in the "mkcalls" program on the number of tagged
-calls (1000) has been removed.  Most tables are allocated dynamically.
-There are now no limits (within reason) on the database size, database
-tag size, length of a sequence, or number of saved resolves, other than
-the case of catastrophic failure of the operating system's memory
-allocation mechanism.
+Added these commands: ^Z (stop), ESC (complete, like TAB),
+^U (kill line), and % (comment).
+
+28.2:
+
+Fixed bug that made things like "bigblock checkerbox" not work.
+
+It can now do two-person calls between people directly lined up in
+a quarter tag.  After "heads spin the top" (which leaves the boys
+facing directly), you can do "SO-AND-SO ONLY", select boys, and
+do things like pass thru or slide thru.
 
 ===============================================================================
 

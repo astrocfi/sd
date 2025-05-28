@@ -128,7 +128,7 @@ typedef struct {
    int warning;              /* if >= 0, a warning to give */
    } collision_map;
 
-static collision_map collision_map_table[] = {
+Private collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
    {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, -1},   /* from lines in */
    {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, -1},   /* from lines out */
@@ -194,7 +194,7 @@ static collision_map collision_map_table[] = {
    {-1}};
 
 
-static void fix_collision(
+Private void fix_collision(
    int collision_mask,
    int collision_index,
    int result_mask,
@@ -254,52 +254,52 @@ static void fix_collision(
 }
 
 
-static int identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
-static int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-static int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
-static int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
-static int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
-static int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
-static int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
-static int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
-static int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
-static int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
-static int sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
-static int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
-static int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
-static int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
-static int s3dmntranslatev[12] = {0, 7, 0, 9, 10, 11, 0, 1, 0, 3, 4, 5};
+Private int identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+Private int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+Private int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
+Private int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
+Private int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
+Private int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
+Private int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
+Private int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
+Private int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
+Private int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
+Private int sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
+Private int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
+Private int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
+Private int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
+Private int s3dmntranslatev[12] = {0, 7, 0, 9, 10, 11, 0, 1, 0, 3, 4, 5};
 
 
 
-static int octtranslateh[64] = {
+Private int octtranslateh[64] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
 
-static int octtranslatev[64] = {
+Private int octtranslatev[64] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
 
-static int qdmtranslateh[32] = {
+Private int qdmtranslateh[32] = {
    12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
    4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
 
-static int qdmtranslatev[32] = {
+Private int qdmtranslatev[32] = {
    0,   0,  0,  0, 11,  0, 10,  0, 12, 13, 14, 15,  0,  1,  0,  0,
    0,   0,  0,  0,  3,  0,  2,  0,  4,   5,  6,  7,  0,  9,  0,  8};
 
-static int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
-static int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
-static int galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
-static int dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
-static int linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
-static int galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
-static int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
-static int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
+Private int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
+Private int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
+Private int galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+Private int dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
+Private int linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
+Private int galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
+Private int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+Private int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 
 
 
@@ -341,7 +341,7 @@ extern void do_stability(unsigned int *personp, unsigned int def_word, int turni
 
 
 
-static void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags)
+Private void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags)
 {
    int q0, q1, q2, q3, q4, q5, q6, q7;
    int i, j, k, z, t;
@@ -824,7 +824,7 @@ static void check_line_restriction(setup *ss, call_restriction restr, unsigned i
 
 
 
-static void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags)
+Private void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags)
 {
    int q0, q1, q2, q3, q4, q5, q6, q7;
    int i, k, t;
@@ -1078,7 +1078,7 @@ static void check_column_restriction(setup *ss, call_restriction restr, unsigned
 
 
 
-static void special_4_way_symm(
+Private void special_4_way_symm(
    callarray *tdef,
    setup *scopy,
    personrec newpersonlist[],
@@ -1167,7 +1167,7 @@ static void special_4_way_symm(
 
 /* This function is internal. */
 
-static void special_triangle(
+Private void special_triangle(
    callarray *cdef,
    callarray *ldef,
    setup *scopy,
@@ -1613,6 +1613,7 @@ extern void basic_move(
                      (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
                   goto divide_us_no_recompute;
+               break;
             case 0xA6A6: case 0x9C9C:
                division_maps = &map_lh_s2x3_3;
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
@@ -1620,6 +1621,7 @@ extern void basic_move(
                      (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
                   goto divide_us_no_recompute;
+               break;
             case 0xE4E4: case 0xB8B8:
                division_maps = &map_rh_s2x3_2;
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
@@ -1627,6 +1629,7 @@ extern void basic_move(
                      (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
                   goto divide_us_no_recompute;
+               break;
             case 0x6A6A: case 0xC9C9:
                division_maps = &map_lh_s2x3_2;
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
@@ -1634,6 +1637,7 @@ extern void basic_move(
                      (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
                   goto divide_us_no_recompute;
+               break;
          }
 
          fail("You must specify a concept.");
@@ -2038,6 +2042,18 @@ extern void basic_move(
                   (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
             concentric_move(ss, parseptr, parseptr, callspec, callspec, final_concepts, final_concepts, schema_concentric, 0, 0, result);
             goto un_mirror;
+         }
+         else if ((livemask & 0x55) == 0) {    /* Check for stuff like "heads pass the ocean; side corners */
+            division_maps = &map_qtag_f1;      /* only slide thru". */
+            goto divide_us_no_recompute;
+         }
+         else if ((livemask & 0x66) == 0) {
+            division_maps = &map_qtag_f2;
+            goto divide_us_no_recompute;
+         }
+         else if ((livemask & 0x77) == 0) {    /* Check for stuff like "center two slide thru". */
+            division_maps = &map_qtag_f0;
+            goto divide_us_no_recompute;
          }
          break;
       case s_bone:

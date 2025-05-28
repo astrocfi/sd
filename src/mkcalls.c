@@ -29,7 +29,7 @@
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
-#ifdef __STDC__
+#if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
 #include <stdlib.h>
 #else
 extern void exit(int code);
@@ -205,7 +205,7 @@ new points can roll.
 
 typedef struct {
    int def;
-   char s[80];
+   char *s;
 } tagtabitem;
 
 
@@ -747,8 +747,7 @@ static int get_char(void)
       return_ptr = fgets(line, 199, infile);
       lineptr = return_ptr;
       linelen = strlen(line);
-      if (!return_ptr)
-         {
+      if (!return_ptr) {
          if (feof(infile)) {
             eof = 1;
             return 1;
@@ -759,7 +758,7 @@ static int get_char(void)
          }
       }
       chars_left = linelen;
-      }
+   }
    ch = *return_ptr++;
    chars_left--;
    return 0;
@@ -889,12 +888,17 @@ static int tagsearch(int def)
    for (i = 0; i < tagtabsize; i++) {
       if (!strcmp(tok_str, tagtab[i].s)) goto done;
    }
+
    i = tagtabsize++;
    if (i >= tagtabmax) {
       tagtabmax <<= 1;
-      tagtab = (tagtabitem *)realloc(tagtab, tagtabmax * sizeof(tagtabitem));
+      tagtab = (tagtabitem *) realloc(tagtab, tagtabmax * sizeof(tagtabitem));
       if (!tagtab) errexit("Out of memory!!!!!!");
    }
+
+   tagtab[i].s = (char *) malloc(strlen(tok_str)+1);
+   if (!tagtab[i].s) errexit("Out of memory!!!!!!");
+
    strcpy(tagtab[i].s, tok_str);
    tagtab[i].def = 0;
 

@@ -64,112 +64,112 @@ typedef struct {
                                                              outlimit -----|                          bigsize ----|   |  |  |
                                   mapin           mapout       inlimit -|  |  bigsetup      insetup  outsetup     |   |  |  |   */
 
-static cm_thing map1x2_1x2 =        {{1, 3},       {0, 2},              2, 2, s1x4,           s_1x2,    s_1x2,    4,  0, 0, 0};
-static cm_thing oddmap1x2_1x2 =     {{3, 1},       {0, 2},              2, 2, sdmd,           s_1x2,    s_1x2,    4,  1, 0, 0};
-static cm_thing mapdmd_dmd =        {{1, 3, 5, 7}, {0, 2, 4, 6},        4, 4, s_crosswave,    sdmd,     sdmd,     8,  0, 0, 9};
-static cm_thing oddmapdmd_1x4 =     {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 1, 9};
-static cm_thing mapdmd_1x4 =        {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 0, 9};
-static cm_thing oddmap_s_dmd_1x4 =  {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 1, 9};
-static cm_thing map_s_dmd_1x4 =     {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 9};
-static cm_thing map_cs_1x4_dmd =    {{0, 3, 4, 7}, {1, 2, 5, 6},        4, 4, s_wingedstar,   sdmd,     s1x4,     8,  0, 0, 9};
-static cm_thing oddmap_s_star_1x4 = {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 1, 9};
-static cm_thing map_s_star_1x4 =    {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 0, 9};
-static cm_thing oddmap_s_short_1x6 = {{1, 2, 4, 7, 8, 10},
+Private cm_thing map1x2_1x2 =        {{1, 3},       {0, 2},              2, 2, s1x4,           s_1x2,    s_1x2,    4,  0, 0, 0};
+Private cm_thing oddmap1x2_1x2 =     {{3, 1},       {0, 2},              2, 2, sdmd,           s_1x2,    s_1x2,    4,  1, 0, 0};
+Private cm_thing mapdmd_dmd =        {{1, 3, 5, 7}, {0, 2, 4, 6},        4, 4, s_crosswave,    sdmd,     sdmd,     8,  0, 0, 9};
+Private cm_thing oddmapdmd_1x4 =     {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 1, 9};
+Private cm_thing mapdmd_1x4 =        {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 0, 9};
+Private cm_thing oddmap_s_dmd_1x4 =  {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 1, 9};
+Private cm_thing map_s_dmd_1x4 =     {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 9};
+Private cm_thing map_cs_1x4_dmd =    {{0, 3, 4, 7}, {1, 2, 5, 6},        4, 4, s_wingedstar,   sdmd,     s1x4,     8,  0, 0, 9};
+Private cm_thing oddmap_s_star_1x4 = {{1, 2, 5, 6}, {7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 1, 9};
+Private cm_thing map_s_star_1x4 =    {{1, 2, 5, 6}, {0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 0, 9};
+Private cm_thing oddmap_s_short_1x6 = {{1, 2, 4, 7, 8, 10},
                                              {11, 0, 3, 5, 6, 9},       6, 6, s_wingedstar12, s_1x6,    s_short6, 12, 0, 1, 9};
-static cm_thing map_s_spindle_1x8 = {{1, 2, 6, 5, 9, 10, 14, 13},
+Private cm_thing map_s_spindle_1x8 = {{1, 2, 6, 5, 9, 10, 14, 13},
                                      {3, 7, 12, 8, 11, 15, 4, 0},       8, 8, s_wingedstar16, s1x8,    s_spindle, 16, 0, 0, 9};
-static cm_thing map_spec_star12 =   {{2, 3, 4, 11}, {0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 0, 0, 0};
-static cm_thing map_spec_star12v =  {{11, 2, 3, 4}, {0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 1, 0, 0};
-static cm_thing map_spec_star16 =   {{2, 3, 5, 4}, {0, 1, 8, 9},       4, 4, s_wingedstar16, s_star,   s1x4,     16, 0, 0, 0};
-static cm_thing map_spec_star16v =  {{4, 2, 3, 5}, {0, 1, 8, 9},       4, 4, s_wingedstar16, s_star,   s1x4,     16, 1, 0, 0};
-static cm_thing mapdmd_2x2h =       {{1, 3, 5, 7}, {0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  0, 0, 9};
-static cm_thing mapdmd_2x2v =       {{7, 1, 3, 5}, {0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  1, 0, 9};
-static cm_thing map2x3_1x2 =        {{11, 5}, {0, 1, 2, 6, 7, 8},       2, 6, s_3dmd,         s_1x2,    s_2x3,    12, 0, 0, 9};
-static cm_thing map1x4_1x4 =        {{3, 2, 7, 6}, {0, 1, 4, 5},        4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0};
-static cm_thing oddmap1x4_1x4 =     {{6, 7, 2, 3}, {0, 1, 4, 5},        4, 4, s_crosswave,    s1x4,     s1x4,     8,  1, 0, 0};
-static cm_thing map2x3_2x3 = {{8, 11, 1, 2, 5, 7}, {9, 10, 0, 3, 4, 6}, 6, 6, s3x4,           s_2x3,    s_2x3,    12, 1, 1, 1};
-static cm_thing map2x4_2x4 = {{10, 15, 3, 1, 2, 7, 11, 9}, {12, 13, 14, 0, 4, 5, 6, 8}, 8, 8, s4x4, s2x4, s2x4,   16, 0, 0, 1};
-static cm_thing map2x4_2x4v = {{6, 11, 15, 13, 14, 3, 7, 5}, {8, 9, 10, 12, 0, 1, 2, 4}, 8, 8, s4x4, s2x4, s2x4,  16, 1, 1, 1};
-static cm_thing map1x2_bone6 = {{1, 7, 6, 5, 3, 2}, {0, 4},             6, 2, s_ptpd,         s_bone6,  s_1x2,    8,  0, 0, 0};
-static cm_thing map1x6_1x2 = {{2, 6}, {0, 1, 3, 4, 5, 7},               2, 6, s1x8,           s_1x2,    s_1x6,    8,  0, 0, 0};
-static cm_thing mapbone6_1x2 = {{7, 3}, {0, 1, 2, 4, 5, 6},             2, 6, s_bone,         s_1x2,    s_bone6,  8,  0, 0, 0};
-static cm_thing map1x4_1x4_rc = {{0, 2, 4, 6}, {1, 3, 5, 7},            4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0};
-static cm_thing map1x2_bone6_rc = {{0, 1, 3, 4, 5, 7}, {6, 2},          6, 2, s_bone,         s_bone6,  s_1x2,    8,  0, 0, 0};
-static cm_thing map2x2_dmd_rc = {{7, 1, 3, 5}, {0, 2, 4, 6},            4, 4, s_spindle,      sdmd,     s2x2,     8,  0, 0, 0};
-static cm_thing map2x2_1x4_rc = {{0, 2, 4, 6}, {1, 7, 5, 3},            4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 0, 0};
-static cm_thing oddmap2x2_1x4_rc = {{0, 2, 4, 6}, {3, 1, 7, 5},         4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 1, 9};
-static cm_thing map1x2_2x3 = {{0, 1, 2, 4, 5, 6}, {7, 3},               6, 2, s_spindle,      s_2x3,    s_1x2,    8,  0, 0, 0};
-static cm_thing map1x2_short6 = {{1, 2, 3, 5, 6, 7}, {0, 4},            6, 2, s_galaxy,       s_short6, s_1x2,    8,  0, 0, 0};
-static cm_thing mapshort6_1x2h = {{5, 1}, {6, 7, 0, 2, 3, 4},           2, 6, s_spindle,      s_1x2,    s_short6, 8,  1, 1, 1};
-static cm_thing mapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},           2, 6, s_hrglass,      s_1x2,    s_short6, 8,  1, 1, 0};
-static cm_thing mapstar_2x2 = {{1, 3, 5, 7}, {0, 2, 4, 6},              4, 4, s_galaxy,       s2x2,     s_star,   8,  0, 0, 0};
-static cm_thing map1x2_1x6 = {{1, 3, 2, 5, 7, 6}, {0, 4},               6, 2, s1x8,           s_1x6,    s_1x2,    8,  0, 0, 0};
-static cm_thing oddmap1x2_1x6 = {{0, 1, 2, 4, 5, 6}, {7, 3},            6, 2, s_3x1dmd,       s_1x6,    s_1x2,    12, 0, 1, 0};
-static cm_thing map1x4_2x2 = {{0, 1, 4, 5}, {6, 7, 2, 3},               4, 4, s_rigger,       s2x2,     s1x4,     8,  0, 0, 0};
-static cm_thing oddmap1x4_2x2 = {{5, 0, 1, 4}, {6, 7, 2, 3},            4, 4, s_rigger,       s2x2,     s1x4,     8,  1, 0, 0};
-static cm_thing map1x4_star = {{2, 3, 6, 7}, {0, 1, 4, 5},              4, 4, s_wingedstar,   s_star,   s1x4,     8,  0, 0, 0};
-static cm_thing oddmap1x4_star = {{7, 2, 3, 6}, {0, 1, 4, 5},           4, 4, s_wingedstar,   s_star,   s1x4,     8,  1, 0, 0};
-static cm_thing map2x2_dmd = {{6, 3, 2, 7}, {0, 1, 4, 5},               4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 0, 1};
-static cm_thing oddmap2x2_dmd = {{6, 3, 2, 7}, {5, 0, 1, 4},            4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 1, 9};
-static cm_thing map2x2_1x4h = {{6, 7, 2, 3}, {0, 1, 4, 5},              4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 0, 1};
-static cm_thing oddmap2x2_1x4h = {{6, 7, 2, 3}, {5, 0, 1, 4},           4, 4, s_bone,         s1x4,     s2x2,     8,  0, 1, 9};
-static cm_thing mapstar_1x4 =    {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_3x1dmd,       s1x4,     s_star,   12, 0, 0, 9};
-static cm_thing oddmapstar_1x4 = {{1, 2, 5, 6}, {7, 0, 3, 4},           4, 4, s_3x1dmd,       s1x4,     s_star,   12, 0, 1, 9};
-static cm_thing mapstar_dmd ={{1, 3, 5, 7}, {0, 2, 4, 6},               4, 4, s_crosswave,    sdmd,     s_star,   8,  0, 0, 9};
-static cm_thing oddmapstar_dmd =  {{1, 3, 5, 7}, {6, 0, 2, 4},          4, 4, s_crosswave,    sdmd,     s_star,   8,  0, 1, 9};
-static cm_thing map2x2_1x4v = {{6, 7, 2, 3}, {0, 1, 4, 5},              4, 4, s_bone,         s1x4,     s2x2,     8,  0, 0, 0};
-static cm_thing oddmap2x2_1x4v = {{6, 7, 2, 3}, {5, 0, 1, 4},           4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 1, 9};
-static cm_thing map2x2_2x2v = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s2x4,           s2x2,     s2x2,     8,  0, 0, 0};
-static cm_thing oddmap2x2_2x2h = {{1, 2, 5, 6}, {7, 0, 3, 4},           4, 4, s2x4,           s2x2,     s2x2,     8,  0, 1, 9};
-static cm_thing oddmap2x2_2x2v = {{6, 1, 2, 5}, {0, 3, 4, 7},           4, 4, s2x4,           s2x2,     s2x2,     8,  1, 0, 9};
-static cm_thing map2x2_2x2h = {{6, 1, 2, 5}, {7, 0, 3, 4},              4, 4, s2x4,           s2x2,     s2x2,     8,  1, 1, 9};
-static cm_thing maplatgal = {{7, 0, 1, 3, 4, 5}, {6, 2},                6, 2, s_galaxy,       s_short6, s_1x2,    8,  1, 1, 0};
-static cm_thing oddmap1x4_dmd = {{7, 2, 3, 6}, {0, 1, 4, 5},            4, 4, s_3x1dmd,       sdmd,     s1x4,     12, 1, 0, 0};
-static cm_thing oddmap1x2_bone6 = {{5, 0, 3, 1, 4, 7}, {6, 2},          6, 2, s_hrglass,      s_bone6,  s_1x2,    8,  1, 0, 0};
-static cm_thing oddmap1x2_2x3 = {{5, 7, 0, 1, 3, 4}, {6, 2},            6, 2, s_qtag,         s_2x3,    s_1x2,    8,  1, 0, 0};
-static cm_thing oddmap1x2_short6 = {{5, 7, 0, 1, 3, 4}, {6, 2},         6, 2, s_rigger,       s_short6, s_1x2,    8,  1, 0, 0};
-static cm_thing oddmap2x3_1x2 = {{11, 5}, {9, 10, 0, 3, 4, 6},          2, 6, s3x4,           s_1x2,    s_2x3,    12, 0, 1, 0};
-static cm_thing oddmapshort6_1x2h = {{2, 6}, {3, 0, 1, 7, 4, 5},        2, 6, s_ptpd,         s_1x2,    s_short6, 8,  0, 1, 1};
-static cm_thing oddmapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},        2, 6, s_qtag,         s_1x2,    s_short6, 8,  0, 1, 0};
-static cm_thing oddmap1x2_short6_rc = {{5, 6, 0, 1, 2, 4}, {7, 3},      6, 2, s_rigger,       s_short6, s_1x2,    8,  1, 0, 0};
-static cm_thing map2x4_2x2 = {{2, 3, 8, 9}, {0, 1, 4, 5, 6, 7, 10, 11}, 4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9};
-static cm_thing oddmap2x4_2x2 = {{9, 2, 3, 8},
+Private cm_thing map_spec_star12 =   {{2, 3, 4, 11}, {0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 0, 0, 0};
+Private cm_thing map_spec_star12v =  {{11, 2, 3, 4}, {0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 1, 0, 0};
+Private cm_thing map_spec_star16 =   {{2, 3, 5, 4}, {0, 1, 8, 9},       4, 4, s_wingedstar16, s_star,   s1x4,     16, 0, 0, 0};
+Private cm_thing map_spec_star16v =  {{4, 2, 3, 5}, {0, 1, 8, 9},       4, 4, s_wingedstar16, s_star,   s1x4,     16, 1, 0, 0};
+Private cm_thing mapdmd_2x2h =       {{1, 3, 5, 7}, {0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  0, 0, 9};
+Private cm_thing mapdmd_2x2v =       {{7, 1, 3, 5}, {0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  1, 0, 9};
+Private cm_thing map2x3_1x2 =        {{11, 5}, {0, 1, 2, 6, 7, 8},       2, 6, s_3dmd,         s_1x2,    s_2x3,    12, 0, 0, 9};
+Private cm_thing map1x4_1x4 =        {{3, 2, 7, 6}, {0, 1, 4, 5},        4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0};
+Private cm_thing oddmap1x4_1x4 =     {{6, 7, 2, 3}, {0, 1, 4, 5},        4, 4, s_crosswave,    s1x4,     s1x4,     8,  1, 0, 0};
+Private cm_thing map2x3_2x3 = {{8, 11, 1, 2, 5, 7}, {9, 10, 0, 3, 4, 6}, 6, 6, s3x4,           s_2x3,    s_2x3,    12, 1, 1, 1};
+Private cm_thing map2x4_2x4 = {{10, 15, 3, 1, 2, 7, 11, 9}, {12, 13, 14, 0, 4, 5, 6, 8}, 8, 8, s4x4, s2x4, s2x4,   16, 0, 0, 1};
+Private cm_thing map2x4_2x4v = {{6, 11, 15, 13, 14, 3, 7, 5}, {8, 9, 10, 12, 0, 1, 2, 4}, 8, 8, s4x4, s2x4, s2x4,  16, 1, 1, 1};
+Private cm_thing map1x2_bone6 = {{1, 7, 6, 5, 3, 2}, {0, 4},             6, 2, s_ptpd,         s_bone6,  s_1x2,    8,  0, 0, 0};
+Private cm_thing map1x6_1x2 = {{2, 6}, {0, 1, 3, 4, 5, 7},               2, 6, s1x8,           s_1x2,    s_1x6,    8,  0, 0, 0};
+Private cm_thing mapbone6_1x2 = {{7, 3}, {0, 1, 2, 4, 5, 6},             2, 6, s_bone,         s_1x2,    s_bone6,  8,  0, 0, 0};
+Private cm_thing map1x4_1x4_rc = {{0, 2, 4, 6}, {1, 3, 5, 7},            4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0};
+Private cm_thing map1x2_bone6_rc = {{0, 1, 3, 4, 5, 7}, {6, 2},          6, 2, s_bone,         s_bone6,  s_1x2,    8,  0, 0, 0};
+Private cm_thing map2x2_dmd_rc = {{7, 1, 3, 5}, {0, 2, 4, 6},            4, 4, s_spindle,      sdmd,     s2x2,     8,  0, 0, 0};
+Private cm_thing map2x2_1x4_rc = {{0, 2, 4, 6}, {1, 7, 5, 3},            4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 0, 0};
+Private cm_thing oddmap2x2_1x4_rc = {{0, 2, 4, 6}, {3, 1, 7, 5},         4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 1, 9};
+Private cm_thing map1x2_2x3 = {{0, 1, 2, 4, 5, 6}, {7, 3},               6, 2, s_spindle,      s_2x3,    s_1x2,    8,  0, 0, 0};
+Private cm_thing map1x2_short6 = {{1, 2, 3, 5, 6, 7}, {0, 4},            6, 2, s_galaxy,       s_short6, s_1x2,    8,  0, 0, 0};
+Private cm_thing mapshort6_1x2h = {{5, 1}, {6, 7, 0, 2, 3, 4},           2, 6, s_spindle,      s_1x2,    s_short6, 8,  1, 1, 1};
+Private cm_thing mapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},           2, 6, s_hrglass,      s_1x2,    s_short6, 8,  1, 1, 0};
+Private cm_thing mapstar_2x2 = {{1, 3, 5, 7}, {0, 2, 4, 6},              4, 4, s_galaxy,       s2x2,     s_star,   8,  0, 0, 0};
+Private cm_thing map1x2_1x6 = {{1, 3, 2, 5, 7, 6}, {0, 4},               6, 2, s1x8,           s_1x6,    s_1x2,    8,  0, 0, 0};
+Private cm_thing oddmap1x2_1x6 = {{0, 1, 2, 4, 5, 6}, {7, 3},            6, 2, s_3x1dmd,       s_1x6,    s_1x2,    12, 0, 1, 0};
+Private cm_thing map1x4_2x2 = {{0, 1, 4, 5}, {6, 7, 2, 3},               4, 4, s_rigger,       s2x2,     s1x4,     8,  0, 0, 0};
+Private cm_thing oddmap1x4_2x2 = {{5, 0, 1, 4}, {6, 7, 2, 3},            4, 4, s_rigger,       s2x2,     s1x4,     8,  1, 0, 0};
+Private cm_thing map1x4_star = {{2, 3, 6, 7}, {0, 1, 4, 5},              4, 4, s_wingedstar,   s_star,   s1x4,     8,  0, 0, 0};
+Private cm_thing oddmap1x4_star = {{7, 2, 3, 6}, {0, 1, 4, 5},           4, 4, s_wingedstar,   s_star,   s1x4,     8,  1, 0, 0};
+Private cm_thing map2x2_dmd = {{6, 3, 2, 7}, {0, 1, 4, 5},               4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 0, 1};
+Private cm_thing oddmap2x2_dmd = {{6, 3, 2, 7}, {5, 0, 1, 4},            4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 1, 9};
+Private cm_thing map2x2_1x4h = {{6, 7, 2, 3}, {0, 1, 4, 5},              4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 0, 1};
+Private cm_thing oddmap2x2_1x4h = {{6, 7, 2, 3}, {5, 0, 1, 4},           4, 4, s_bone,         s1x4,     s2x2,     8,  0, 1, 9};
+Private cm_thing mapstar_1x4 =    {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_3x1dmd,       s1x4,     s_star,   12, 0, 0, 9};
+Private cm_thing oddmapstar_1x4 = {{1, 2, 5, 6}, {7, 0, 3, 4},           4, 4, s_3x1dmd,       s1x4,     s_star,   12, 0, 1, 9};
+Private cm_thing mapstar_dmd ={{1, 3, 5, 7}, {0, 2, 4, 6},               4, 4, s_crosswave,    sdmd,     s_star,   8,  0, 0, 9};
+Private cm_thing oddmapstar_dmd =  {{1, 3, 5, 7}, {6, 0, 2, 4},          4, 4, s_crosswave,    sdmd,     s_star,   8,  0, 1, 9};
+Private cm_thing map2x2_1x4v = {{6, 7, 2, 3}, {0, 1, 4, 5},              4, 4, s_bone,         s1x4,     s2x2,     8,  0, 0, 0};
+Private cm_thing oddmap2x2_1x4v = {{6, 7, 2, 3}, {5, 0, 1, 4},           4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 1, 9};
+Private cm_thing map2x2_2x2v = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s2x4,           s2x2,     s2x2,     8,  0, 0, 0};
+Private cm_thing oddmap2x2_2x2h = {{1, 2, 5, 6}, {7, 0, 3, 4},           4, 4, s2x4,           s2x2,     s2x2,     8,  0, 1, 9};
+Private cm_thing oddmap2x2_2x2v = {{6, 1, 2, 5}, {0, 3, 4, 7},           4, 4, s2x4,           s2x2,     s2x2,     8,  1, 0, 9};
+Private cm_thing map2x2_2x2h = {{6, 1, 2, 5}, {7, 0, 3, 4},              4, 4, s2x4,           s2x2,     s2x2,     8,  1, 1, 9};
+Private cm_thing maplatgal = {{7, 0, 1, 3, 4, 5}, {6, 2},                6, 2, s_galaxy,       s_short6, s_1x2,    8,  1, 1, 0};
+Private cm_thing oddmap1x4_dmd = {{7, 2, 3, 6}, {0, 1, 4, 5},            4, 4, s_3x1dmd,       sdmd,     s1x4,     12, 1, 0, 0};
+Private cm_thing oddmap1x2_bone6 = {{5, 0, 3, 1, 4, 7}, {6, 2},          6, 2, s_hrglass,      s_bone6,  s_1x2,    8,  1, 0, 0};
+Private cm_thing oddmap1x2_2x3 = {{5, 7, 0, 1, 3, 4}, {6, 2},            6, 2, s_qtag,         s_2x3,    s_1x2,    8,  1, 0, 0};
+Private cm_thing oddmap1x2_short6 = {{5, 7, 0, 1, 3, 4}, {6, 2},         6, 2, s_rigger,       s_short6, s_1x2,    8,  1, 0, 0};
+Private cm_thing oddmap2x3_1x2 = {{11, 5}, {9, 10, 0, 3, 4, 6},          2, 6, s3x4,           s_1x2,    s_2x3,    12, 0, 1, 0};
+Private cm_thing oddmapshort6_1x2h = {{2, 6}, {3, 0, 1, 7, 4, 5},        2, 6, s_ptpd,         s_1x2,    s_short6, 8,  0, 1, 1};
+Private cm_thing oddmapshort6_1x2v = {{7, 3}, {5, 6, 0, 1, 2, 4},        2, 6, s_qtag,         s_1x2,    s_short6, 8,  0, 1, 0};
+Private cm_thing oddmap1x2_short6_rc = {{5, 6, 0, 1, 2, 4}, {7, 3},      6, 2, s_rigger,       s_short6, s_1x2,    8,  1, 0, 0};
+Private cm_thing map2x4_2x2 = {{2, 3, 8, 9}, {0, 1, 4, 5, 6, 7, 10, 11}, 4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9};
+Private cm_thing oddmap2x4_2x2 = {{9, 2, 3, 8},
                                        {0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 1, 0, 9};
-static cm_thing mapdmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 0, 0};
-static cm_thing map_s_dmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 0};
-static cm_thing *concmap1x2_1x2[4]       = {&map1x2_1x2,          &oddmap1x2_1x2,       &map1x2_1x2,      &oddmap1x2_1x2};
-static cm_thing *concmapdmd_dmd[4]       = {&mapdmd_dmd,          0,                    &mapdmd_dmd,      0};
-static cm_thing *concmapdmd_1x4[4]       = {&mapdmd_1x4,          &oddmapdmd_1x4,       &mapdmd_1x4,      &oddmapdmd_1x4};
-static cm_thing *concmap_s_dmd_1x4[4]    = {&map_s_dmd_1x4,       &oddmap_s_dmd_1x4,    &map_s_dmd_1x4,   &oddmap_s_dmd_1x4};
-static cm_thing *concmap_cs_1x4_dmd[4]   = {&map_cs_1x4_dmd,      0,                    &map_cs_1x4_dmd,  0};
-static cm_thing *concmap_s_star_1x4[4]   = {&map_s_star_1x4,      &oddmap_s_star_1x4,   &map_s_star_1x4,  &oddmap_s_star_1x4};
-static cm_thing *concmap_s_short_1x6[4]  = {0,                    &oddmap_s_short_1x6,  0,                0};
-static cm_thing *concmap_s_spindle_1x8[4] = {0,                   0,                    &map_s_spindle_1x8, 0};
-static cm_thing *concmapdmd_2x2[4]       = {&mapdmd_2x2h,         &mapdmd_2x2v,         &mapdmd_2x2h,     &mapdmd_2x2v};
-static cm_thing *concmap2x2_2x2[4]       = {&map2x2_2x2v,         &oddmap2x2_2x2v,      &map2x2_2x2h,     &oddmap2x2_2x2h};
-static cm_thing *concmap2x2_1x4[4]       = {&map2x2_1x4v,         &oddmap2x2_1x4v,      &map2x2_1x4h,     &oddmap2x2_1x4h};
-static cm_thing *concmap2x2_dmd[4]       = {0,                    &oddmap2x2_dmd,       &map2x2_dmd,      0};
-static cm_thing *concmapshort6_1x2[4]    = {&mapshort6_1x2v,      &oddmapshort6_1x2v,   &mapshort6_1x2h,  &oddmapshort6_1x2h};
-static cm_thing *concmap1x2_1x6[4]       = {&map1x2_1x6,          &oddmap1x2_1x6,       &map1x2_1x6,      &oddmap1x2_1x6};
-static cm_thing *concmap1x2_bone6[4]     = {&map1x2_bone6,        &oddmap1x2_bone6,     &map1x2_bone6,    &oddmap1x2_bone6};
-static cm_thing *concmap1x2_2x3[4]       = {&map1x2_2x3,          &oddmap1x2_2x3,       &map1x2_2x3,      &oddmap1x2_2x3};
-static cm_thing *concmap1x2_short6[4]    = {&map1x2_short6,       &oddmap1x2_short6,    &map1x2_short6,   &oddmap1x2_short6};
-static cm_thing *concmap2x4_2x2[4]       = {&map2x4_2x2,          &oddmap2x4_2x2,       &map2x4_2x2,      &oddmap2x4_2x2};
-static cm_thing *concmap2x4_2x4[4]       = {&map2x4_2x4,          0,                    &map2x4_2x4,      0};
-static cm_thing *concmap1x4_2x2[4]       = {&map1x4_2x2,          &oddmap1x4_2x2,       &map1x4_2x2,      &oddmap1x4_2x2};
-static cm_thing *concmap1x4_star[4]      = {&map1x4_star,         &oddmap1x4_star,      &map1x4_star,     &oddmap1x4_star};
-static cm_thing *concmap1x4_dmd[4]       = {0,                    &oddmap1x4_dmd,       0,                &oddmap1x4_dmd};
-static cm_thing *concmap1x4_1x4[4]       = {&map1x4_1x4,          &oddmap1x4_1x4,       &map1x4_1x4,      &oddmap1x4_1x4};
-static cm_thing *concmapstar_2x2[4]      = {&mapstar_2x2,         0,                    &mapstar_2x2,     0};
-static cm_thing *concmapstar_1x4[4]      = {&mapstar_1x4,         &oddmapstar_1x4,      &mapstar_1x4,     &oddmapstar_1x4};
-static cm_thing *concmapstar_dmd[4]      = {&mapstar_dmd,         &oddmapstar_dmd,      &mapstar_dmd,     &oddmapstar_dmd};
-static cm_thing *concmap2x3_1x2[4]       = {&map2x3_1x2,          &oddmap2x3_1x2,       &map2x3_1x2,      &oddmap2x3_1x2};
-static cm_thing *concmap2x3_2x3[4]       = {&map2x3_2x3,          0,                    &map2x3_2x3,      0};
-static cm_thing *concmapbone6_1x2[4]     = {&mapbone6_1x2,        0,                    &mapbone6_1x2,    0};
-static cm_thing *concmap1x6_1x2[4]       = {&map1x6_1x2,          0,                    &map1x6_1x2,      0};
-static cm_thing *concmap1x4_1x4_rc[4]    = {&map1x4_1x4_rc,       0,                    &map1x4_1x4_rc,   0};
-static cm_thing *concmap2x2_dmd_rc[4]    = {&map2x2_dmd_rc,       0,                    &map2x2_dmd_rc,   0};
-static cm_thing *concmap2x2_1x4_rc[4]    = {&map2x2_1x4_rc,       &oddmap2x2_1x4_rc,    &map2x2_1x4_rc,   &oddmap2x2_1x4_rc};
+Private cm_thing mapdmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},              4, 4, s_3x1dmd,       s1x4,     sdmd,     8,  0, 0, 0};
+Private cm_thing map_s_dmd_line = {{1, 2, 5, 6}, {0, 3, 4, 7},           4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 0};
+Private cm_thing *concmap1x2_1x2[4]       = {&map1x2_1x2,          &oddmap1x2_1x2,       &map1x2_1x2,      &oddmap1x2_1x2};
+Private cm_thing *concmapdmd_dmd[4]       = {&mapdmd_dmd,          0,                    &mapdmd_dmd,      0};
+Private cm_thing *concmapdmd_1x4[4]       = {&mapdmd_1x4,          &oddmapdmd_1x4,       &mapdmd_1x4,      &oddmapdmd_1x4};
+Private cm_thing *concmap_s_dmd_1x4[4]    = {&map_s_dmd_1x4,       &oddmap_s_dmd_1x4,    &map_s_dmd_1x4,   &oddmap_s_dmd_1x4};
+Private cm_thing *concmap_cs_1x4_dmd[4]   = {&map_cs_1x4_dmd,      0,                    &map_cs_1x4_dmd,  0};
+Private cm_thing *concmap_s_star_1x4[4]   = {&map_s_star_1x4,      &oddmap_s_star_1x4,   &map_s_star_1x4,  &oddmap_s_star_1x4};
+Private cm_thing *concmap_s_short_1x6[4]  = {0,                    &oddmap_s_short_1x6,  0,                0};
+Private cm_thing *concmap_s_spindle_1x8[4] = {0,                   0,                    &map_s_spindle_1x8, 0};
+Private cm_thing *concmapdmd_2x2[4]       = {&mapdmd_2x2h,         &mapdmd_2x2v,         &mapdmd_2x2h,     &mapdmd_2x2v};
+Private cm_thing *concmap2x2_2x2[4]       = {&map2x2_2x2v,         &oddmap2x2_2x2v,      &map2x2_2x2h,     &oddmap2x2_2x2h};
+Private cm_thing *concmap2x2_1x4[4]       = {&map2x2_1x4v,         &oddmap2x2_1x4v,      &map2x2_1x4h,     &oddmap2x2_1x4h};
+Private cm_thing *concmap2x2_dmd[4]       = {0,                    &oddmap2x2_dmd,       &map2x2_dmd,      0};
+Private cm_thing *concmapshort6_1x2[4]    = {&mapshort6_1x2v,      &oddmapshort6_1x2v,   &mapshort6_1x2h,  &oddmapshort6_1x2h};
+Private cm_thing *concmap1x2_1x6[4]       = {&map1x2_1x6,          &oddmap1x2_1x6,       &map1x2_1x6,      &oddmap1x2_1x6};
+Private cm_thing *concmap1x2_bone6[4]     = {&map1x2_bone6,        &oddmap1x2_bone6,     &map1x2_bone6,    &oddmap1x2_bone6};
+Private cm_thing *concmap1x2_2x3[4]       = {&map1x2_2x3,          &oddmap1x2_2x3,       &map1x2_2x3,      &oddmap1x2_2x3};
+Private cm_thing *concmap1x2_short6[4]    = {&map1x2_short6,       &oddmap1x2_short6,    &map1x2_short6,   &oddmap1x2_short6};
+Private cm_thing *concmap2x4_2x2[4]       = {&map2x4_2x2,          &oddmap2x4_2x2,       &map2x4_2x2,      &oddmap2x4_2x2};
+Private cm_thing *concmap2x4_2x4[4]       = {&map2x4_2x4,          0,                    &map2x4_2x4,      0};
+Private cm_thing *concmap1x4_2x2[4]       = {&map1x4_2x2,          &oddmap1x4_2x2,       &map1x4_2x2,      &oddmap1x4_2x2};
+Private cm_thing *concmap1x4_star[4]      = {&map1x4_star,         &oddmap1x4_star,      &map1x4_star,     &oddmap1x4_star};
+Private cm_thing *concmap1x4_dmd[4]       = {0,                    &oddmap1x4_dmd,       0,                &oddmap1x4_dmd};
+Private cm_thing *concmap1x4_1x4[4]       = {&map1x4_1x4,          &oddmap1x4_1x4,       &map1x4_1x4,      &oddmap1x4_1x4};
+Private cm_thing *concmapstar_2x2[4]      = {&mapstar_2x2,         0,                    &mapstar_2x2,     0};
+Private cm_thing *concmapstar_1x4[4]      = {&mapstar_1x4,         &oddmapstar_1x4,      &mapstar_1x4,     &oddmapstar_1x4};
+Private cm_thing *concmapstar_dmd[4]      = {&mapstar_dmd,         &oddmapstar_dmd,      &mapstar_dmd,     &oddmapstar_dmd};
+Private cm_thing *concmap2x3_1x2[4]       = {&map2x3_1x2,          &oddmap2x3_1x2,       &map2x3_1x2,      &oddmap2x3_1x2};
+Private cm_thing *concmap2x3_2x3[4]       = {&map2x3_2x3,          0,                    &map2x3_2x3,      0};
+Private cm_thing *concmapbone6_1x2[4]     = {&mapbone6_1x2,        0,                    &mapbone6_1x2,    0};
+Private cm_thing *concmap1x6_1x2[4]       = {&map1x6_1x2,          0,                    &map1x6_1x2,      0};
+Private cm_thing *concmap1x4_1x4_rc[4]    = {&map1x4_1x4_rc,       0,                    &map1x4_1x4_rc,   0};
+Private cm_thing *concmap2x2_dmd_rc[4]    = {&map2x2_dmd_rc,       0,                    &map2x2_dmd_rc,   0};
+Private cm_thing *concmap2x2_1x4_rc[4]    = {&map2x2_1x4_rc,       &oddmap2x2_1x4_rc,    &map2x2_1x4_rc,   &oddmap2x2_1x4_rc};
 
 
 
@@ -659,7 +659,7 @@ gotit:
 /* BEWARE!!  The horizontal structure is keyed to the enumeration "analyzer_kind" :
    normal      checkpt                   2x6                 6x2             star12            star16             single       vertical6          lateral6     diamond_line */
                                                                                                                      
-static cm_thing *bigconctab[][10] = {
+Private cm_thing *bigconctab[][10] = {
    {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* nothing */
    {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_1x1 */
    {0,              0,                    0,                  0,                 0,                0,                0,              0,                0,          0},               /* s_1x2 */
@@ -712,7 +712,7 @@ static cm_thing *bigconctab[][10] = {
 
 
 /* BEWARE!!  This is keyed to the enumeration "analyzer_kind". */
-static char *conc_error_messages[] = {
+Private char *conc_error_messages[] = {
    "Can't find centers and ends in this formation.",                   /* analyzer_NORMAL */
    "Can't find checkpoint people in this formation.",                  /* analyzer_CHECKPT */
    "Can't find 2 centers and 6 ends in this formation.",               /* analyzer_2X6 */
@@ -755,7 +755,7 @@ static char *conc_error_messages[] = {
          the 3x4 matrix.  Once again, this does not arise in any actual
          checkpoint or concentric case. */
 
-static void concentrify(
+Private void concentrify(
    setup *ss,
    calldef_schema analyzer,
    setup inners[],
@@ -1745,6 +1745,19 @@ extern void merge_setups(setup *ss, setup *result)
 
       result->rotation += r;
       canonicalize_rotation(result);
+      return;
+   }
+   else if (res2->kind == s_qtag && res1->kind == s_1x2 &&
+            (!(res2->people[3].id1 | res2->people[7].id1))) {
+      res2->kind = s_short6;
+      res2->rotation++;
+      (void) copy_rot(res2, 3, res2, 5, 033);         /* careful -- order is important */
+      (void) copy_rot(res2, 5, res2, 0, 033);
+      (void) copy_rot(res2, 0, res2, 1, 033);
+      (void) copy_rot(res2, 1, res2, 2, 033);
+      (void) copy_rot(res2, 2, res2, 4, 033);
+      (void) copy_rot(res2, 4, res2, 6, 033);
+      normalize_concentric(schema_concentric_2_6, 1, res1, res2, res2->rotation, result);
       return;
    }
    else if (res2->kind == s2x4 && res1->kind == s2x2) {

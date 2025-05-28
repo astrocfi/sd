@@ -32,14 +32,14 @@
 
 
 
-static int list_10_6_5_4[4] = {8, 6, 5, 4};
-static int list_11_13_7_2[4] = {9, 11, 7, 2};
-static int list_12_17_3_1[4] = {10, 15, 3, 1};
-static int list_14_15_16_0[4] = {12, 13, 14, 0};
-static int list_14_12_11_10[4] = {12, 10, 9, 8};
-static int list_15_17_13_6[4] = {13, 15, 11, 6};
-static int list_16_3_7_5[4] = {14, 3, 7, 5};
-static int list_0_1_2_4[4] = {0, 1, 2, 4};
+Private int list_10_6_5_4[4] = {8, 6, 5, 4};
+Private int list_11_13_7_2[4] = {9, 11, 7, 2};
+Private int list_12_17_3_1[4] = {10, 15, 3, 1};
+Private int list_14_15_16_0[4] = {12, 13, 14, 0};
+Private int list_14_12_11_10[4] = {12, 10, 9, 8};
+Private int list_15_17_13_6[4] = {13, 15, 11, 6};
+Private int list_16_3_7_5[4] = {14, 3, 7, 5};
+Private int list_0_1_2_4[4] = {0, 1, 2, 4};
 
 
 extern void distorted_2x2s_move(
@@ -338,7 +338,7 @@ extern void distorted_2x2s_move(
 
 
 
-static long_boolean search_row(
+Private long_boolean search_row(
    int n,
    int *x1,
    int *x2,
@@ -784,10 +784,10 @@ typedef struct {
    int bigmap2[8];
    } rig_thing;
 
-static rig_thing rig_wing = {{3, 2, -1, -1}, {-1, -1, 7, 6}, s1x4, s2x2, 0, 0, {0, 1, 8, 9, 4, 5, 14, 15}, {12, 13, 0, 1, 10, 11, 4, 5}};
-static rig_thing rig_2x4 =  {{3, -1, -1, 4}, {-1, 0, 7, -1}, s2x2, s2x2, 0, 0, {1, 2, 8, 9, 5, 6, 14, 15}, {12, 13, 1, 2, 10, 11, 5, 6}};
-static rig_thing rig_xwv =  {{5, 4, -1, -1}, {-1, -1, 1, 0}, s1x4, s1x4, 1, 0, {8, 9, 7, 6, 14, 15, 3, 2}, {2, 3, 11, 10, 6, 7, 13, 12}};
-static rig_thing rig_qtag=  {{-1, -1, 1, 0}, {5, 4, -1, -1}, s2x2, s1x4, 0, 1, {8, 9, 3, 2, 14, 15, 7, 6}, {6, 7, 11, 10, 2, 3, 13, 12}};
+Private rig_thing rig_wing = {{3, 2, -1, -1}, {-1, -1, 7, 6}, s1x4, s2x2, 0, 0, {0, 1, 8, 9, 4, 5, 14, 15}, {12, 13, 0, 1, 10, 11, 4, 5}};
+Private rig_thing rig_2x4 =  {{3, -1, -1, 4}, {-1, 0, 7, -1}, s2x2, s2x2, 0, 0, {1, 2, 8, 9, 5, 6, 14, 15}, {12, 13, 1, 2, 10, 11, 5, 6}};
+Private rig_thing rig_xwv =  {{5, 4, -1, -1}, {-1, -1, 1, 0}, s1x4, s1x4, 1, 0, {8, 9, 7, 6, 14, 15, 3, 2}, {2, 3, 11, 10, 6, 7, 13, 12}};
+Private rig_thing rig_qtag=  {{-1, -1, 1, 0}, {5, 4, -1, -1}, s2x2, s1x4, 0, 1, {8, 9, 3, 2, 14, 15, 7, 6}, {6, 7, 11, 10, 2, 3, 13, 12}};
 
 
 

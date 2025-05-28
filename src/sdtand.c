@@ -57,7 +57,7 @@ typedef struct {
 } tm_thing;
 
 
-static tm_thing maps_isearch_twosome[] = {
+Private tm_thing maps_isearch_twosome[] = {
 
 /*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup            old name */
    {{7, 6, 4, 5},                   {0, 1, 3, 2},                 {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
@@ -131,7 +131,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
-static tm_thing maps_isearch_threesome[] = {
+Private tm_thing maps_isearch_threesome[] = {
 
 /*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
    {{0, 5},               {1, 4},               {2, 3},                {0},    0x5,      077,         2, 0,  0,  0, 0,  s_1x2, s_1x6},
@@ -142,7 +142,7 @@ static tm_thing maps_isearch_threesome[] = {
    {{9, 8, 6, 7},         {10, 11, 4, 5},       {0, 1, 3, 2},          {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
-static tm_thing maps_isearch_foursome[] = {
+Private tm_thing maps_isearch_foursome[] = {
 
 /*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
    {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s1x8},
@@ -154,7 +154,7 @@ static tm_thing maps_isearch_foursome[] = {
    {{12, 10, 8, 9},   {13, 15, 6, 11},  {14, 3, 5, 7},    {0, 1, 4, 2},          0,   0xFFFF,         4, 1,  0,  0, 0,  s1x4,  s4x4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
-static tm_thing maps_isearch_boxsome[] = {
+Private tm_thing maps_isearch_boxsome[] = {
 
 /*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
    {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s2x4},
@@ -165,7 +165,7 @@ static tm_thing maps_isearch_boxsome[] = {
    {{10, 3, 5, 8},    {12, 14, 7, 9},   {15, 1, 4, 6},   {13, 0, 2, 11},         0,        0,         4, 0,  0,  0, 0,  s2x2,  s4x4},
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
-static tm_thing maps_isearch_dmdsome[] = {
+Private tm_thing maps_isearch_dmdsome[] = {
 
 /*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
    {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s_ptpd},
@@ -209,7 +209,7 @@ siamese_item siamese_table[] = {
    {nothing, 0, 0, -1}};
 
 
-static void initialize_one_table(tm_thing *map_start, int np)
+Private void initialize_one_table(tm_thing *map_start, int np)
 {
    tm_thing *map_search;
 
@@ -269,7 +269,7 @@ extern void initialize_tandem_tables(void)
 }
 
 
-static void unpack_us(
+Private void unpack_us(
    tm_thing *map_ptr,
    unsigned int orbitmask,
    tandrec *tandstuff,
@@ -356,7 +356,7 @@ static void unpack_us(
    Real_front_people gets person on left (lat=1) near person (lat=0).
    Real_back_people gets person on right (lat=1) or far person (lat=0). */
 
-static void pack_us(
+Private void pack_us(
    personrec *s,
    tm_thing *map_ptr,
    int fraction,
@@ -393,7 +393,7 @@ static void pack_us(
 
          if (!(tandstuff->virtual_setup.setupflags & SETUPFLAG__PHANTOMS)) {
             if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
-               fail("Use phantom tandem/phantom couples concept instead.");
+               fail("Use \"phantom\" concept in front of this concept.");
          }
          
          if (f.id1 | b.id1 | b2.id1 | b3.id1) {
@@ -489,6 +489,7 @@ extern void tandem_couples_move(
    unsigned int orbitmask;
    unsigned int sglmask;
    unsigned int livemask;
+   setup saved_originals;
    long_boolean fractional = FALSE;
    tm_thing *our_map_table;
 
@@ -639,6 +640,8 @@ extern void tandem_couples_move(
    tandstuff.virtual_setup.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
    pack_us(ss->people, map, fraction, twosome, &tandstuff);
    update_id_bits(&tandstuff.virtual_setup);
+   saved_originals = tandstuff.virtual_setup;    /* Move will clobber the incoming setup.  This bug caused
+                                                    embarrassment at an ATA dance, April 3, 1993. */
    move(&tandstuff.virtual_setup, conceptptrcopy, callspec, final_concepts, FALSE, &tandstuff.virtual_result);
 
    if (setup_limits[tandstuff.virtual_result.kind] < 0)
@@ -672,8 +675,8 @@ extern void tandem_couples_move(
                   fail("fractional twosome not supported for this call.");
             }
 
-            orbit = p - tandstuff.virtual_setup.rotation +
-                  tandstuff.virtual_result.rotation - tandstuff.virtual_setup.people[vpi].id1;
+            orbit = p - saved_originals.rotation +
+                  tandstuff.virtual_result.rotation - saved_originals.people[vpi].id1;
 
             if (twosome == 2) {
                orbit -= ((p & (STABLE_VBIT*3)) / STABLE_VBIT);

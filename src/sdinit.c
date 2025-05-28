@@ -28,14 +28,14 @@
 /* Global to this file. */
 
 /* These two get temporarily allocated.  They persist through the entire initialization. */
-static callspec_block **global_temp_call_list;
-static char **global_temp_call_name_list;
-static int global_callcount;     /* Index into the above. */
+Private callspec_block **global_temp_call_list;
+Private char **global_temp_call_name_list;
+Private int global_callcount;     /* Index into the above. */
 
 /* This contains the menu-presentable (e.g. "@" escapes turned into "<ANYONE>", etc.)
    text corresponding to "main_call_lists[call_list_any]", that is, the alphabetized
    universal menu.  It persists through the entire initialization. */
-static char **global_main_call_name_list;
+Private char **global_main_call_name_list;
 
 #define SB (ID2_SIDE|ID2_BOY)
 #define HB (ID2_HEAD|ID2_BOY)
@@ -48,20 +48,20 @@ static char **global_main_call_name_list;
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
    ladies chain, and curlique work. */
-static setup test_setup_1x8  = {s1x8, 0, {{NORT(6), SB}, {SOUT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
-static setup test_setup_l1x8 = {s1x8, 0, {{SOUT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
-static setup test_setup_dpt  = {s2x4, 0, {{EAST(6), SB}, {EAST(4), HB}, {WEST(5), HG}, {WEST(7), SG}, {WEST(2), SB}, {WEST(0), HB}, {EAST(1), HG}, {EAST(3), SG}}, 0};
-static setup test_setup_cdpt = {s2x4, 0, {{WEST(7), SG}, {WEST(5), HG}, {EAST(4), HB}, {EAST(6), SB}, {EAST(3), SG}, {EAST(1), HG}, {WEST(0), HB}, {WEST(2), SB}}, 0};
-static setup test_setup_rcol = {s2x4, 0, {{EAST(6), SB}, {EAST(5), HG}, {EAST(4), HB}, {EAST(7), SG}, {WEST(2), SB}, {WEST(1), HG}, {WEST(0), HB}, {WEST(3), SG}}, 0};
-static setup test_setup_lcol = {s2x4, 0, {{WEST(6), SB}, {WEST(5), HG}, {WEST(4), HB}, {WEST(7), SG}, {EAST(2), SB}, {EAST(1), HG}, {EAST(0), HB}, {EAST(3), SG}}, 0};
-static setup test_setup_8ch  = {s2x4, 0, {{EAST(6), SB}, {WEST(5), HG}, {EAST(4), HB}, {WEST(7), SG}, {WEST(2), SB}, {EAST(1), HG}, {WEST(0), HB}, {EAST(3), SG}}, 0};
-static setup test_setup_tby  = {s2x4, 0, {{WEST(5), HG}, {EAST(6), SB}, {WEST(7), SG}, {EAST(4), HB}, {EAST(1), HG}, {WEST(2), SB}, {EAST(3), SG}, {WEST(0), HB}}, 0};
-static setup test_setup_lin  = {s2x4, 0, {{SOUT(5), HG}, {SOUT(6), SB}, {SOUT(7), SG}, {SOUT(4), HB}, {NORT(1), HG}, {NORT(2), SB}, {NORT(3), SG}, {NORT(0), HB}}, 0};
-static setup test_setup_lout = {s2x4, 0, {{NORT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
-static setup test_setup_rwv  = {s2x4, 0, {{NORT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
-static setup test_setup_lwv  = {s2x4, 0, {{SOUT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
-static setup test_setup_r2fl = {s2x4, 0, {{NORT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {NORT(3), SG}}, 0};
-static setup test_setup_l2fl = {s2x4, 0, {{SOUT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
+Private setup test_setup_1x8  = {s1x8, 0, {{NORT(6), SB}, {SOUT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
+Private setup test_setup_l1x8 = {s1x8, 0, {{SOUT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
+Private setup test_setup_dpt  = {s2x4, 0, {{EAST(6), SB}, {EAST(4), HB}, {WEST(5), HG}, {WEST(7), SG}, {WEST(2), SB}, {WEST(0), HB}, {EAST(1), HG}, {EAST(3), SG}}, 0};
+Private setup test_setup_cdpt = {s2x4, 0, {{WEST(7), SG}, {WEST(5), HG}, {EAST(4), HB}, {EAST(6), SB}, {EAST(3), SG}, {EAST(1), HG}, {WEST(0), HB}, {WEST(2), SB}}, 0};
+Private setup test_setup_rcol = {s2x4, 0, {{EAST(6), SB}, {EAST(5), HG}, {EAST(4), HB}, {EAST(7), SG}, {WEST(2), SB}, {WEST(1), HG}, {WEST(0), HB}, {WEST(3), SG}}, 0};
+Private setup test_setup_lcol = {s2x4, 0, {{WEST(6), SB}, {WEST(5), HG}, {WEST(4), HB}, {WEST(7), SG}, {EAST(2), SB}, {EAST(1), HG}, {EAST(0), HB}, {EAST(3), SG}}, 0};
+Private setup test_setup_8ch  = {s2x4, 0, {{EAST(6), SB}, {WEST(5), HG}, {EAST(4), HB}, {WEST(7), SG}, {WEST(2), SB}, {EAST(1), HG}, {WEST(0), HB}, {EAST(3), SG}}, 0};
+Private setup test_setup_tby  = {s2x4, 0, {{WEST(5), HG}, {EAST(6), SB}, {WEST(7), SG}, {EAST(4), HB}, {EAST(1), HG}, {WEST(2), SB}, {EAST(3), SG}, {WEST(0), HB}}, 0};
+Private setup test_setup_lin  = {s2x4, 0, {{SOUT(5), HG}, {SOUT(6), SB}, {SOUT(7), SG}, {SOUT(4), HB}, {NORT(1), HG}, {NORT(2), SB}, {NORT(3), SG}, {NORT(0), HB}}, 0};
+Private setup test_setup_lout = {s2x4, 0, {{NORT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
+Private setup test_setup_rwv  = {s2x4, 0, {{NORT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
+Private setup test_setup_lwv  = {s2x4, 0, {{SOUT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
+Private setup test_setup_r2fl = {s2x4, 0, {{NORT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {NORT(3), SG}}, 0};
+Private setup test_setup_l2fl = {s2x4, 0, {{SOUT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
 
 
 
@@ -73,7 +73,7 @@ static setup test_setup_l2fl = {s2x4, 0, {{SOUT(6), SB}, {SOUT(5), HG}, {NORT(4)
    for the menus.  It simply re-uses the stored string where it can, and allocates
    fresh memory if a substitution took place. */
 
-static void create_call_name_list(void)
+Private void create_call_name_list(void)
 {
    int i, j;
    char *name_ptr;
@@ -159,7 +159,7 @@ static void create_call_name_list(void)
 }
 
 
-static void create_menu(call_list_kind cl, char *call_name_list[])
+Private void create_menu(call_list_kind cl, char *call_name_list[])
 {
    int i;
 
@@ -172,11 +172,11 @@ static void create_menu(call_list_kind cl, char *call_name_list[])
 
 /* These variables are actually local to test_starting_setup, but they are
    expected to be preserved across the longjmp, so they must be static. */
-static parse_block *parse_mark;
-static int call_index;
+Private parse_block *parse_mark;
+Private int call_index;
 
 
-static void test_starting_setup(call_list_kind cl, setup test_setup)
+Private void test_starting_setup(call_list_kind cl, setup test_setup)
 {
    callspec_block *test_call;
    real_jmp_buf my_longjmp_buffer;
@@ -298,10 +298,10 @@ static void test_starting_setup(call_list_kind cl, setup test_setup)
 
 /* This pointer to a call array is used by the heapsort routine. */
 
-static callspec_block **the_array;
+Private callspec_block **the_array;
 
 
-static long_boolean callcompare(callspec_block *x, callspec_block *y)
+Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 {
    char *m, *n;
 
@@ -333,7 +333,7 @@ static long_boolean callcompare(callspec_block *x, callspec_block *y)
    }
 }
 
-static void heapify(int lo, int hi)
+Private void heapify(int lo, int hi)
 {
    int j = lo-1;
 
@@ -355,7 +355,7 @@ static void heapify(int lo, int hi)
 
 
 
-static void heapsort(int n)
+Private void heapsort(int n)
 {
    int i;
 
@@ -382,7 +382,7 @@ static void heapsort(int n)
 }
 
 
-static void create_misc_call_lists(void)
+Private void create_misc_call_lists(void)
 {
    int j;
    long_boolean accept_it;
@@ -473,21 +473,21 @@ static void create_misc_call_lists(void)
 
 /* These are used by the database reading stuff. */
 
-static int last_datum, last_12;
-static callspec_block *call_root;
-static callarray *tp;
+Private int last_datum, last_12;
+Private callspec_block *call_root;
+Private callarray *tp;
 /* This shows the highest index we have seen so far.  It must never exceed max_base_calls-1. */
-static int highest_base_call;
+Private int highest_base_call;
 
 
-static void read_halfword(void)
+Private void read_halfword(void)
 {
    last_datum = read_from_database();
    last_12 = last_datum & 0xFFF;
 }
 
 
-static void read_fullword(void)
+Private void read_fullword(void)
 {
    int t = read_from_database();
    last_datum = t << 16 | read_from_database();
@@ -500,7 +500,7 @@ static void read_fullword(void)
    Should take the call as an argument, but since this entire file uses global variables,
    we will, too. */
 
-static void database_error(char *message)
+Private void database_error(char *message)
 {
     print_line(message);
     if (call_root && call_root->name) {
@@ -511,7 +511,7 @@ static void database_error(char *message)
 }
 
 
-static void read_level_3_groups(calldef_block *where_to_put)
+Private void read_level_3_groups(calldef_block *where_to_put)
 {
    int j, char_count;
    callarray *current_call_block;
@@ -650,7 +650,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
 }
 
 
-static void check_tag(int tag)
+Private void check_tag(int tag)
 {
    if (tag >= max_base_calls)
       database_error("Too many tagged calls -- mkcalls made an error.");
@@ -668,7 +668,7 @@ static void check_tag(int tag)
          "write full" we do the usual action.
    It also fills in the "base_calls" array with tagged calls, independent of level. */
 
-static void build_database(call_list_mode_t call_list_mode)
+Private void build_database(call_list_mode_t call_list_mode)
 {
    int i, j, char_count;
    calldef_schema call_schema;
@@ -905,7 +905,7 @@ static void build_database(call_list_mode_t call_list_mode)
 
 extern void initialize_menus(call_list_mode_t call_list_mode)
 {
-   int arithtest = 4163215360;
+   int arithtest = 2081607680;
 
    /* Test that the necessary constants are in step with each other.
       This "if" should never get executed.  We expect compilers to optimize
@@ -950,7 +950,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       init_error("constants not consistent -- program has been compiled incorrectly.");
       final_exit(1);
    }
-   else if ((508205 << 13) != arithtest) {
+   else if ((508205 << 12) != arithtest) {
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
       final_exit(1);
    }

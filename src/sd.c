@@ -36,7 +36,7 @@ int global_selectmask;
 
 
 
-static void do_concept_expand_2x6_matrix(
+Private void do_concept_expand_2x6_matrix(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -48,7 +48,7 @@ static void do_concept_expand_2x6_matrix(
 }
 
 
-static void do_concept_expand_2x8_matrix(
+Private void do_concept_expand_2x8_matrix(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -66,7 +66,7 @@ static void do_concept_expand_2x8_matrix(
 }
 
 
-static void do_concept_expand_4x4_matrix(
+Private void do_concept_expand_4x4_matrix(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -84,7 +84,7 @@ static void do_concept_expand_4x4_matrix(
 }
 
 
-static void do_concept_expand_4dm_matrix(
+Private void do_concept_expand_4dm_matrix(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -102,7 +102,7 @@ static void do_concept_expand_4dm_matrix(
 }
 
 
-static void do_c1_phantom_move(
+Private void do_c1_phantom_move(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -271,8 +271,8 @@ static void do_c1_phantom_move(
 
 
 
-static map_thing map_diag2a            = {{5, 7, 21, 15, 17, 19, 9, 3},   {0},                            {0}, {0}, MPKIND__NONE,        1,  s4x6,   s2x4,      1, 0};
-static map_thing map_diag2b            = {{2, 8, 22, 12, 14, 20, 10, 0},  {0},                            {0}, {0}, MPKIND__NONE,        1,  s4x6,   s2x4,      1, 0};
+Private map_thing map_diag2a            = {{5, 7, 21, 15, 17, 19, 9, 3},   {0},                            {0}, {0}, MPKIND__NONE,        1,  s4x6,   s2x4,      1, 0};
+Private map_thing map_diag2b            = {{2, 8, 22, 12, 14, 20, 10, 0},  {0},                            {0}, {0}, MPKIND__NONE,        1,  s4x6,   s2x4,      1, 0};
 
 
 
@@ -291,7 +291,7 @@ diag_map map_diag1a = {{8, 11, 0, 3}, {12, 15, 4, 7}, &map_diag1b};
 diag_map map_diag1b = {{12, 15, 4, 7}, {0, 3, 8, 11}, &map_diag1a};
 
 
-static void do_concept_single_diagonal(
+Private void do_concept_single_diagonal(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -364,7 +364,7 @@ static void do_concept_single_diagonal(
 }
 
 
-static void do_concept_double_diagonal(
+Private void do_concept_double_diagonal(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -398,7 +398,7 @@ static void do_concept_double_diagonal(
 }
 
 
-static void do_concept_double_offset(
+Private void do_concept_double_offset(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -457,7 +457,7 @@ static void do_concept_double_offset(
 
 
 
-static void do_concept_quad_lines(
+Private void do_concept_quad_lines(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -501,7 +501,7 @@ static void do_concept_quad_lines(
 }
 
 
-static void do_concept_quad_lines_tog(
+Private void do_concept_quad_lines_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -576,7 +576,7 @@ static void do_concept_quad_lines_tog(
 }
 
 
-static void do_concept_parallelogram(
+Private void do_concept_parallelogram(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -603,7 +603,7 @@ static void do_concept_parallelogram(
 }
 
 
-static void do_concept_quad_boxes_tog(
+Private void do_concept_quad_boxes_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -660,7 +660,7 @@ static void do_concept_quad_boxes_tog(
 }
 
 
-static void do_concept_triple_diamonds_tog(
+Private void do_concept_triple_diamonds_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -683,7 +683,7 @@ static void do_concept_triple_diamonds_tog(
 
 
 
-static void do_concept_quad_diamonds_tog(
+Private void do_concept_quad_diamonds_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -710,7 +710,7 @@ static void do_concept_quad_diamonds_tog(
 
 
 
-static void do_concept_triple_boxes_tog(
+Private void do_concept_triple_boxes_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -760,7 +760,7 @@ static void do_concept_triple_boxes_tog(
 }
 
 
-static void do_concept_triple_lines(
+Private void do_concept_triple_lines(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -801,7 +801,7 @@ static void do_concept_triple_lines(
 }
 
 
-static void do_concept_triple_lines_tog(
+Private void do_concept_triple_lines_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -879,7 +879,7 @@ static void do_concept_triple_lines_tog(
 
 
 
-static void do_concept_triple_diag(
+Private void do_concept_triple_diag(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -906,7 +906,7 @@ static void do_concept_triple_diag(
 
 
 
-static void do_concept_triple_diag_tog(
+Private void do_concept_triple_diag_tog(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -949,7 +949,7 @@ static void do_concept_triple_diag_tog(
 
 
 
-static void do_concept_grand_working(
+Private void do_concept_grand_working(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1006,7 +1006,7 @@ static void do_concept_grand_working(
 }
 
 
-static void do_concept_do_phantom_2x2(
+Private void do_concept_do_phantom_2x2(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1021,7 +1021,7 @@ static void do_concept_do_phantom_2x2(
 }
 
 
-static void do_concept_do_phantom_boxes(
+Private void do_concept_do_phantom_boxes(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1034,7 +1034,7 @@ static void do_concept_do_phantom_boxes(
 }
 
 
-static void do_concept_do_phantom_diamonds(
+Private void do_concept_do_phantom_diamonds(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1048,7 +1048,7 @@ static void do_concept_do_phantom_diamonds(
 
 
 
-static void do_concept_do_phantom_2x3(
+Private void do_concept_do_phantom_2x3(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1073,7 +1073,7 @@ static void do_concept_do_phantom_2x3(
 
 
 
-static void do_concept_divided_2x4(
+Private void do_concept_divided_2x4(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1096,7 +1096,7 @@ static void do_concept_divided_2x4(
 
 
 
-static void do_concept_divided_2x3(
+Private void do_concept_divided_2x3(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1119,7 +1119,7 @@ static void do_concept_divided_2x3(
 
 
 
-static void do_concept_do_phantom_1x6(
+Private void do_concept_do_phantom_1x6(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1144,7 +1144,7 @@ static void do_concept_do_phantom_1x6(
 
 
 
-static void do_concept_do_phantom_1x8(
+Private void do_concept_do_phantom_1x8(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1169,7 +1169,7 @@ static void do_concept_do_phantom_1x8(
 
 
 
-static void do_concept_once_removed(
+Private void do_concept_once_removed(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1208,7 +1208,7 @@ static void do_concept_once_removed(
 }
 
 
-static void do_concept_old_stretch(
+Private void do_concept_old_stretch(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1228,7 +1228,7 @@ static void do_concept_old_stretch(
       fail("Old stretch call didn't go to 2x4 or 1x8 setup.");
 }
 
-static void do_concept_new_stretch(
+Private void do_concept_new_stretch(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1254,7 +1254,7 @@ static void do_concept_new_stretch(
 }
 
 
-static void do_concept_stable(
+Private void do_concept_stable(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1321,7 +1321,7 @@ static void do_concept_stable(
 }
 
 
-static void do_concept_checkerboard(
+Private void do_concept_checkerboard(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1410,7 +1410,7 @@ static void do_concept_checkerboard(
 }
 
 
-static void do_concept_checkpoint(
+Private void do_concept_checkpoint(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1431,7 +1431,7 @@ static void do_concept_checkpoint(
 
 
 
-static void do_concept_sequential(
+Private void do_concept_sequential(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1490,7 +1490,7 @@ static void do_concept_sequential(
 
 
 
-static void do_concept_trace(
+Private void do_concept_trace(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1720,7 +1720,7 @@ static void do_concept_trace(
 
 
 
-static void do_concept_quad_boxes(
+Private void do_concept_quad_boxes(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1733,7 +1733,7 @@ static void do_concept_quad_boxes(
 
 
 
-static void do_concept_do_both_boxes(
+Private void do_concept_do_both_boxes(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1752,7 +1752,7 @@ static void do_concept_do_both_boxes(
 }
 
 
-static void do_concept_triple_boxes(
+Private void do_concept_triple_boxes(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1766,7 +1766,7 @@ static void do_concept_triple_boxes(
 }
 
 
-static void do_concept_centers_or_ends(
+Private void do_concept_centers_or_ends(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1795,7 +1795,7 @@ static void do_concept_centers_or_ends(
 }
 
 
-static void do_concept_centers_and_ends(
+Private void do_concept_centers_and_ends(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1815,7 +1815,7 @@ static void do_concept_centers_and_ends(
 }
 
 
-static void do_concept_triple_diamonds(
+Private void do_concept_triple_diamonds(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1826,7 +1826,7 @@ static void do_concept_triple_diamonds(
 }
 
 
-static void do_concept_quad_diamonds(
+Private void do_concept_quad_diamonds(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1839,7 +1839,7 @@ static void do_concept_quad_diamonds(
 }
 
 
-static void do_concept_ferris(
+Private void do_concept_ferris(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -1980,7 +1980,7 @@ static void do_concept_ferris(
 }
 
 
-static void do_concept_meta(
+Private void do_concept_meta(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2075,7 +2075,7 @@ static void do_concept_meta(
 }
 
 
-static void do_concept_nth_part(
+Private void do_concept_nth_part(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2147,7 +2147,7 @@ static void do_concept_nth_part(
 }
 
 
-static void do_concept_replace_nth_part(
+Private void do_concept_replace_nth_part(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2199,7 +2199,7 @@ static void do_concept_replace_nth_part(
 }
 
 
-static void do_concept_interlace(
+Private void do_concept_interlace(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2253,7 +2253,7 @@ static void do_concept_interlace(
 }
 
 
-static void do_concept_fractional(
+Private void do_concept_fractional(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2276,7 +2276,7 @@ static void do_concept_fractional(
 }
 
 
-static void do_concept_so_and_so_begin(
+Private void do_concept_so_and_so_begin(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2332,7 +2332,7 @@ static void do_concept_so_and_so_begin(
 }
 
 
-static void do_concept_misc_distort(
+Private void do_concept_misc_distort(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2342,7 +2342,7 @@ static void do_concept_misc_distort(
 }
 
 
-static void do_concept_do_phantom_2x4(
+Private void do_concept_do_phantom_2x4(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2380,7 +2380,7 @@ static void do_concept_do_phantom_2x4(
 }
 
 
-static void do_concept_concentric(
+Private void do_concept_concentric(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2390,7 +2390,7 @@ static void do_concept_concentric(
 }
 
 
-static void do_concept_single_concentric(
+Private void do_concept_single_concentric(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2418,7 +2418,7 @@ static void do_concept_single_concentric(
 }
 
 
-static void do_concept_tandem(
+Private void do_concept_tandem(
    setup *ss,
    parse_block *parseptr,
    setup *result)
@@ -2434,7 +2434,7 @@ static void do_concept_tandem(
 
 
 /* ARGSUSED */
-static void do_concept_standard(
+Private void do_concept_standard(
    setup *ss,
    parse_block *parseptr,
    setup *result)

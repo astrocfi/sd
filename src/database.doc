@@ -1223,7 +1223,7 @@ restriction is violated, as follows:
    "unusual" -- the warning "This is an unusual setup for this call" is given,
                and the call is not considered acceptable when searching for
                resolves.  This should be used to alert the user of the program
-               that this may not be an appropriate use of the call, but
+               that this may not be an appropriate use of the call, but that
                telling the dancers to do their own part isn't the right fix.
    "forbidden" -- an error is given.  The call is simply not permitted.
 
@@ -1650,9 +1650,152 @@ q_line_back
                            APPENDIX B -- RESTRICTIONS
 
 
+                           APPENDIX C -- TOP LEVEL FLAGS
+
+step_to_wave
+rear_back_from_r_wave
+rear_back_from_qtag
+dont_use_in_resolve
+neednumber
+sequence_starter
+split_like_square_thru
+split_like_dixie_style
+
+parallel_conc_end
+      For any by-array definition that this call has that explicitly indicates
+      a 1x4, diamond, or 2x2 starting setup and a 2x2 final setup, the elongation
+      of the final 2x2 is set opposite to what it would be by default.  This flag
+      will be meaningful if one chooses something like "ends counter rotate" or
+      if a call is defined concentrically and this is the outsides' part and no
+      overriding invocation flag is used.  This flag will NOT be used if one
+      chooses something like "concentric counter rotate" -- the concentric rule
+      always takes precedence if the "concentric" or "checkpoint" concept is used.
+
+      By default, a call that begins in a 1x4 or diamond and finishes in a
+      2x2 will, if the ends are told to do it without benefit of the word
+      "concentric" finish perpendicular to the original 1x4 or diamond, so
+      this flag forces those people to finish parallel to the original 1x4
+      or diamond (hence the name of the flag).  By default, a call that
+      begins in a 2x2 and finishes in a 2x2 will work to the same spots, so
+      this flag forces those people to finish on the opposite spots.
+
+      Note that this does NOT apply to calls that are defined sequentially or
+      concentrically.  The invocation flags such as "conc_force_otherway"
+      should be used in that case.  Also, this only applies to calls that
+      are explicitly defined as going from a 1x4/diamond/2x2 to a 2x2.  If
+      a 1-person or 2-person definition is used and a 4-person setup is
+      automatically divided into smaller setups, the people will finish
+      near the person with whom they worked in the smaller setup.  Hence,
+      even if the call "star thru" had this flag (which it doesn't), if
+      "ends star thru" were called from facing lines the people would stay
+      on the same spots.
+
+      This flag is complicated.  Use with care.  Test with care.
 
 
-                           APPENDIX C -- ESCAPE CODES IN CALL NAMES
+take_right_hands
+is_tag_call
+is_scoot_call
+is_star_call
+split_large_setups
+fudge_to_q_tag
+visible_fractions
+first_part_visible
+12_16_matrix_means_split
+diamond_is_legal
+reverse_means_mirror
+left_means_mirror
+funny_is_inherited
+intlk_is_inherited
+magic_is_inherited
+grand_is_inherited
+12_matrix_is_inherited
+16_matrix_is_inherited
+cross_is_inherited
+single_is_inherited
+
+
+
+                           APPENDIX D -- INVOCATION FLAGS
+
+These will be documented more methodically someday.
+
+These flags are used in the brackets after each call that is invoked in
+a sequential or concentric definition.  Note: the brackets are mandatory,
+even if nothing is within them.  Note: some of these flags are only meaningful
+for sequential definitions, or for concentric definitions.
+
+conc_demand_lines
+conc_demand_columns
+
+conc_force_lines
+conc_force_columns
+      If this call is invoked in a concentric definition, and these people
+      finish on the outside in a 2x2, each person's finishing position will
+      be such as to give line-like or column-like elongation.  The final
+      centers need not be in a 2x2 for this to operate, so the resulting
+      setup need not be a 2x4.  If the final outsides are T-boned to each
+      other, they will make their line-like/column-like determinations
+      independently, possibly resulting in a messy 16-matrix.  This flag
+      overrides any defaults or "parallel_conc_end" behavior specified
+      in the invoked call itself.
+
+conc_force_spots
+conc_force_otherway
+      If this call is invoked in a concentric definition, and these people
+      finish on the outside in a 2x2, the finishing position will be such
+      that the elongation of the resulting setup will be the same, or
+      opposite, respectively, relative to the elongation of the original
+      setup.  (Note that, if the invocation is cross concentric, the original
+      elongation was determined by different people.)  The final centers need
+      not be in a 2x2 for this to operate, so the resulting setup need not be
+      a 2x4.  The original outsides need not have been in a 2x2 -- if they
+      were in a 1x4 or a diamond their elongation is evaluated anyway.  This
+      flag overrides any defaults or "parallel_conc_end" behavior specified
+      in the invoked call itself.
+
+***** Check all this in the code, now that there is documentation to check against!
+
+conc_concentric_rules
+      If this call is invoked in a concentric definition, and these people
+      finish on the outside in a 2x2, the finishing position will be as though
+      had said the concept "concentric" or "cross concentric".  That is,
+      they will use the "lines-to-lines/columns-to-columns" rule or the
+      "opposite elongation" rule as appropriate.  This flag overrides any
+      defaults or "parallel_conc_end" behavior specified in the invoked call
+      itself.
+
+
+
+suppress_elongation_warnings
+or_anycall
+mandatory_anycall
+repeat_n
+repeat_nm1
+repeat_n_alternate
+endscando
+allow_forced_mod
+roll_transparent
+must_be_tag_call
+must_be_scoot_call
+cpls_unless_single
+inherit_diamond
+inherit_reverse
+inherit_left
+inherit_funny
+inherit_intlk
+inherit_magic
+inherit_grand
+inherit_12_matrix
+inherit_16_matrix
+inherit_cross
+inherit_single
+
+
+
+
+
+                           APPENDIX E -- ESCAPE CODES IN CALL NAMES
 
                   These are not in any particularly logical order.
 
