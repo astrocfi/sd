@@ -2500,7 +2500,7 @@ static void do_concept_do_phantom_diamonds(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   uint32_t code;
+   uint32_t map_code;
 
    // Arg2 is assumption stuff, described in "do_triple_formation".
    // Arg3 is an MPKIND: SPLIT, INTLK, or CONCPHAN.
@@ -2508,20 +2508,37 @@ static void do_concept_do_phantom_diamonds(
    mpkind map_kind = (mpkind) parseptr->concept->arg3;
    mpkind het_map_kind = (map_kind == MPKIND__CONCPHAN) ? MPKIND__HET_CONCPHAN : map_kind;
 
+   if (two_couple_calling && ss->kind == s2x3 && parseptr->concept->arg3 == MPKIND__CONCPHAN) {
+      // This code copied from line 3643 or so.
+      copy_person(ss, 6, ss, 5);
+      copy_rot(ss, 5, ss, 0, 033);
+      copy_person(ss, 7, ss, 4);
+      copy_rot(ss, 4, ss, 6, 033);
+      copy_person(ss, 6, ss, 1);
+      copy_rot(ss, 1, ss, 3, 033);
+      copy_rot(ss, 0, ss, 2, 033);
+      copy_rot(ss, 3, ss, 7, 033);
+      copy_rot(ss, 7, ss, 6, 033);
+      ss->clear_person(2);
+      ss->clear_person(6);
+      ss->rotation++;
+      ss->kind = s_qtag;
+   }
+
    if (ss->kind == s4dmd)
-      code = MAPCODE(s_qtag,2,map_kind,0);
+      map_code = MAPCODE(s_qtag,2,map_kind,0);
    else if (ss->kind == s4ptpd)
-      code = MAPCODE(s_ptpd,2,map_kind,0);
+      map_code = MAPCODE(s_ptpd,2,map_kind,0);
    else if (ss->kind == s_4mdmd)
-      code = HETERO_MAPCODE(s_qtag,2,het_map_kind,0,s_ptpd,0);
+      map_code = HETERO_MAPCODE(s_qtag,2,het_map_kind,0,s_ptpd,0);
    else if (ss->kind == s_4mptpd)
-      code = HETERO_MAPCODE(s_ptpd,2,het_map_kind,0,s_qtag,0);
+      map_code = HETERO_MAPCODE(s_ptpd,2,het_map_kind,0,s_qtag,0);
    else
       fail("Must have a quadruple diamond/quarter-tag setup for this concept.");
 
    ss->cmd.cmd_misc_flags |= parseptr->concept->arg2;
 
-   divided_setup_move(ss, code, (phantest_kind) parseptr->concept->arg1, true, result);
+   divided_setup_move(ss, map_code, (phantest_kind) parseptr->concept->arg1, true, result);
 }
 
 
@@ -3415,7 +3432,7 @@ static void do_concept_assume_waves(
             case s2x4: goto check_it;
          }
       }
-      else if (t.assumption == cr_split_square_setup) {
+      else if (t.assumption == cr_split_square_setup || t.assumption == cr_liftoff_setup) {
          if (ss->kind == s2x4)
             goto check_it;
          else
@@ -3468,6 +3485,7 @@ static void do_concept_assume_waves(
       switch (t.assumption) {
       case cr_tidal_wave:
       case cr_tidal_line:
+      case cr_tidal_2fl:
          switch (ss->kind) {     // "assume tidal wave/line", 2-couple only
          case s1x4: case s1x6: case s1x8: goto check_for_1x4_1x6;
          }
@@ -3586,12 +3604,13 @@ static void do_concept_assume_waves(
  check_for_1x4_1x6:
    // expand to 1x8
 
-   if (!two_couple_calling)
+   if (two_couple_calling) {
+      no_phan_error = false;
+      if (ss->kind != s1x8)
+         expand::expand_setup((ss->kind == s1x4) ? s_1x4_1x8_ctrs : s_1x6_1x8_ctrs, ss);
+   }
+   else
       goto bad_assume;
-
-   no_phan_error = false;
-   if (ss->kind != s1x8)
-      expand::expand_setup((ss->kind == s1x4) ? s_1x4_1x8_ctrs : s_1x6_1x8_ctrs, ss);
 
    goto check_it;
 
@@ -3674,7 +3693,7 @@ static void do_concept_assume_waves(
 
    check_it:
 
-   if (no_phan_error) fail("Don't know where the phantoms should be assumed to be.");
+   //   if (no_phan_error) fail("Don't know where the phantoms should be assumed to be.");
 
    move_perhaps_with_active_phantoms(ss, result);
 }

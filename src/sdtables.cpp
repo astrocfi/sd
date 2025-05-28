@@ -1147,6 +1147,10 @@ expand::thing expand::expand_init_table[] = {
     s2x4, s4dmd, 1, 0x66, ~0U, false,
     warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
 
+   {{10, 15, 1, 2, 7, 9},
+    s2x3, s4dmd, 1, 0, ~0U, false,
+    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+
    {{0, 1, -1, -1, 2, 3, 5, 6, 7, 8, 9, -1, -1, 10, 11, 13, 14, 15},
     s3x6, s4dmd, 0, 0014014, ~0U, false,
     warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},

@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.28"
+version "39.29"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -25727,38 +25727,68 @@ call "link up but @0" c3a
    seq busy_any_part_2 [normalize]
 
 call "_make a pass part 1" dontshow tag makepass_1
+   setup qtag qtag qualifier in qtag_like
+      predscantdocallinsetup
+      // If the concept had been "phantom 1/4 lines", the setup was pre-screened for
+      // couples in the center.  But if it was "phantom 1/4 tags", the center line
+      // could be anything.
+         if q_tag_back   [   0    0 ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
+         //                         stay move           stay move
+         if q_line_front [   0    0 ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
+         //                         stay move           stay move
+         if always       [   0    0 ZM2N ZM1N ZM4N ZM5N ZM6N ZM0N]
+         //                         stay move           stay move
    setup qtag qtag
-      preds "Can't determine facing directions."
+      predscantdocallinsetup
          if q_tag_front  [ZM0N ZM1N ZM2N ZM1N ZM4N ZM5N ZM6N ZM0N]
          if q_line_back  [ZM0N ZM1N ZM2N ZM1N ZM4N ZM5N ZM6N ZM0N]
          if q_tag_back   [ZM0N ZM1N ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
          if q_line_front [ZM0N ZM1N ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
    setup 4x2 2x4
-      preds "Not in proper setup."
+      predscantdocallinsetup
          if columns_antitandem [ZM1N ZM1N ZM3N ZM3N ZM4N ZM4N ZM6N ZM6N]
          if always             [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 3x2 2x3
-      preds "Not in proper setup."
+      predscantdocallinsetup
          if columns_antitandem [ZM1N ZM2N ZM2N ZM3N ZM3N ZM4N]
          if always             [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N]
    setup 2x4 2x4
        array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
             alternate_definition [cross] c3
+   setup qtag qtag qualifier in qtag_like
+      predscantdocallinsetup
+      // If the concept had been "phantom 1/4 lines", the setup was pre-screened for
+      // couples in the center.  But if it was "phantom 1/4 tags", the center line
+      // could be anything.
+         if q_tag_front  [   0    0 ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
+         //                         stay move           stay move
+         if q_line_back  [   0    0 ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
+         //                         stay move           stay move
+         if always       [   0    0 ZM2N ZM0N ZM4N ZM5N ZM6N ZM1N]
+         //                         stay move           stay move
    setup qtag qtag
-      preds "Can't determine facing directions."
+      predscantdocallinsetup
          if q_tag_front  [ZM0N ZM1N ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
          if q_line_back  [ZM0N ZM1N ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
          if q_tag_back   [ZM0N ZM1N ZM2N ZM0N ZM4N ZM5N ZM6N ZM1N]
          if q_line_front [ZM0N ZM1N ZM2N ZM0N ZM4N ZM5N ZM6N ZM1N]
    setup 4x2 2x4
-      preds "Not in proper setup."
+      predscantdocallinsetup
          if columns_magic_antitandem [ZM6N ZM1N ZM4N ZM3N ZM4N ZM3N ZM6N ZM1N]
          if always                   [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 2x4 2x4
        array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
 
-// This is very similar to "_make a pass part 1", but only allows 1/4 tag setups.
+// This is very similar to "_make a pass part 1".
 call "_nuclear reaction part 1" dontshow tag nuclear_1
+   setup qtag qtag qualifier in qtag_like
+      preds "Can't determine facing directions."
+         if q_tag_back   [   0    0 ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
+         //                         stay move           stay move
+         if q_line_front [   0    0 ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
+         //                         stay move           stay move
+         if always       [   0    0 ZM2N ZM1N ZM4N ZM5N ZM6N ZM0N]
+         //                         stay move           stay move
    setup qtag qtag
       preds "Can't determine facing directions."
          if q_tag_front  [ZM0N ZM1N ZM2N ZM1N ZM4N ZM5N ZM6N ZM0N]
@@ -25766,6 +25796,17 @@ call "_nuclear reaction part 1" dontshow tag nuclear_1
          if q_tag_back   [ZM0N ZM1N ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
          if q_line_front [ZM0N ZM1N ZM2N ZM1N ZM3N ZM7N ZM6N ZM0N]
             alternate_definition [cross] c3
+   setup qtag qtag qualifier in qtag_like
+      preds "Can't determine facing directions."
+      // If the concept had been "phantom 1/4 lines", the setup was pre-screened for
+      // couples in the center.  But if it was "phantom 1/4 tags", the center line
+      // could be anything.
+         if q_tag_front  [   0    0 ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
+         //                         stay move           stay move
+         if q_line_back  [   0    0 ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
+         //                         stay move           stay move
+         if always       [   0    0 ZM2N ZM0N ZM4N ZM5N ZM6N ZM1N]
+         //                         stay move           stay move
    setup qtag qtag
       preds "Can't determine facing directions."
          if q_tag_front  [ZM0N ZM1N ZM2N ZM0N ZM7N ZM3N ZM6N ZM1N]
@@ -26678,7 +26719,7 @@ call "big time but @0" c4x
 
 call "_hinge/half circ" dontshow tag hinge_and_half_circ
             left_means_mirror fractal_is_inherited gen_sting_is_inherited
-   seq hinge [inherit_left inherit_fractal inherit_gensting]
+   seq hinge_with_warn [inherit_left inherit_fractal inherit_gensting]
    seq circulate [force_half]
 
 call "_half circ/hinge" dontshow tag half_circ_and_hinge

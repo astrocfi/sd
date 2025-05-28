@@ -5164,14 +5164,8 @@ void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x
       case CMD_MISC__VERIFY_2FL:           t.assumption = cr_2fl_only;      break;
       case CMD_MISC__VERIFY_DMD_LIKE:      t.assumption = cr_diamond_like;  break;
       case CMD_MISC__VERIFY_QTAG_LIKE:     t.assumption = cr_qtag_like;     break;
-      case CMD_MISC__VERIFY_1_4_TAG:
-         t.assumption = cr_qtag_like;
-         t.assump_both = 1;
-         break;
-      case CMD_MISC__VERIFY_3_4_TAG:
-         t.assumption = cr_qtag_like;
-         t.assump_both = 2;
-         break;
+      case CMD_MISC__VERIFY_1_4_TAG:       t.assumption = cr_qtag_like; t.assump_both = 1; break;
+      case CMD_MISC__VERIFY_3_4_TAG:       t.assumption = cr_qtag_like; t.assump_both = 2; break;
       case CMD_MISC__VERIFY_REAL_1_4_TAG:  t.assumption = cr_real_1_4_tag;  break;
       case CMD_MISC__VERIFY_REAL_3_4_TAG:  t.assumption = cr_real_3_4_tag;  break;
       case CMD_MISC__VERIFY_REAL_1_4_LINE: t.assumption = cr_real_1_4_line; break;

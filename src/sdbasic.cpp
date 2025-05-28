@@ -577,7 +577,8 @@ static collision_map collision_map_table[] = {
 void collision_collector::install_with_collision(
    setup *result, int resultplace,
    const setup *sourcepeople, int sourceplace,
-   int rot) THROW_DECL
+   int rot,
+   bool force_moved_bit /* = false */) THROW_DECL
 {
    if (resultplace < 0) fail("This would go into an excessively large matrix.");
    m_result_mask |= 1<<resultplace;

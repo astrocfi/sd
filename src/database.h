@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 379
+#define DATABASE_FORMAT_VERSION 381
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -238,6 +238,8 @@ enum base_call_index {
    base_call_plainpromeighths,
    base_call_any_hand_remake,
    base_call_passthru,
+   base_call_passin,
+   base_call_passout,
    base_call_check_cross_counter,
    base_call_lockit,
    base_call_disband1,
@@ -1081,6 +1083,7 @@ enum call_restriction {
    cr_4x4_2fl_only,
    cr_tidal_line,
    cr_tidal_wave,
+   cr_tidal_2fl,
    cr_leads_only,          // Restriction only.
    cr_trailers_only,       // Restriction only.
    cr_couples_only,
@@ -1205,6 +1208,7 @@ enum call_restriction {
    cr_hourglass,           // Restriction only.
    cr_galaxy,              // Restriction only.
    cr_split_square_setup,  // Restriction only.
+   cr_liftoff_setup,       // Restriction only.
    cr_i_setup,             // Restriction only.
    cr_jleft,               // Restriction only.
    cr_jright,              // Restriction only.

@@ -5605,7 +5605,8 @@ public:
    void install_with_collision(
       setup *result, int resultplace,
       const setup *sourcepeople, int sourceplace,
-      int rot) THROW_DECL;
+      int rot,
+      bool force_moved_bit = false) THROW_DECL;
 
    void fix_possible_collision(setup *result,
                                merge_action action = merge_strict_matrix,

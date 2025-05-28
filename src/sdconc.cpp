@@ -2455,6 +2455,7 @@ static bool fix_empty_outers(
       result_outer->kind = s2x2;
       result_outer->clear_people();
       clear_result_flags(result_outer);
+      result_outer->result_flags.misc = 1;
       result_outer->rotation = 0;
       result_outer->eighth_rotation = 0;
    }
@@ -2509,13 +2510,10 @@ static bool fix_empty_outers(
 
       // We may be in serious trouble -- we have to figure out what setup the ends
       // finish in, and they are all phantoms.
-
       *result_outer = *begin_outer;          // Restore the original bunch of phantoms.
       clear_result_flags(result_outer);
-
       // If setup is 2x2 and a command "force spots" or "force otherway" was given, we can
       // honor it, even though there are no people present in the outer setup.
-
       if (final_outers_start_kind == s2x2 &&
           result_outer->kind == s2x2 &&
           (localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY))) {
@@ -2537,9 +2535,9 @@ static bool fix_empty_outers(
       }
       else if (final_outers_start_kind == s1x4 &&
                result_outer->kind == s1x4 &&
-               (localmods1 & DFM1_CONC_FORCE_SPOTS)) {
-         // If a call starts in a 1x4 and has "force spots" indicated, it must go to a 2x2
-         // with same elongation.
+               ((localmods1 & (DFM1_CONC_FORCE_SPOTS | DFM1_CONC_FORCE_OTHERWAY)) != 0)) {
+         // If a call starts in a 1x4 and has "force spots" or "force otherway" indicated,
+         // it must go to a 2x2 with same elongation.
          result_outer->kind = s2x2;    // Take no further action.
       }
       else if (final_outers_start_kind == s1x4 &&
@@ -2613,6 +2611,8 @@ static bool fix_empty_outers(
                           the_call->the_defn.schema == schema_nothing_other_elong))
             ;        // It's OK, the call was "nothing".
          else if (the_call == base_calls[base_call_trade] ||
+                  the_call == base_calls[base_call_passin] ||
+                  the_call == base_calls[base_call_passout] ||
                   the_call == base_calls[base_call_any_hand_remake])
             ;        // It's OK, the call was "trade" or "any hand remake".
          else if (the_call == base_calls[base_call_circulate] &&

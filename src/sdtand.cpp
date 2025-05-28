@@ -2218,6 +2218,10 @@ extern void tandem_couples_move(
          if (ss->kind == s1x4 || ss->kind == s2x4 || ss->kind == s1x8)
             tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_wave_only;
          break;
+      case cr_tidal_2fl:
+         if (ss->kind == s1x8)
+            tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_wave_only;
+         break;
       }
    }
 
