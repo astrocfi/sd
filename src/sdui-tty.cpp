@@ -1039,7 +1039,7 @@ popup_return iofull::get_popup_string(Cstring prompt1, Cstring prompt2, Cstring 
 
    char buffer[MAX_TEXT_LINE_LENGTH];
    sprintf(buffer, "%s ", final_inline_prompt);
-   get_string_input(buffer, dest, 200);
+   get_string_input(buffer, dest, MAX_TEXT_LINE_LENGTH);
    return dest[0] ? POPUP_ACCEPT_WITH_STRING : POPUP_ACCEPT;
 }
 

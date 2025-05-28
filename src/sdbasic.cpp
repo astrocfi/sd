@@ -138,13 +138,16 @@ typedef struct {
    warning_index warning;    /* an optional warning to give */
    int assume_key;           // special stuff for checking assumptions; sign bit -> dangerous
                              // 40000000 bit -> allow partial setup
+                             // 20000000 bit -> reject if action = merge_c1_phantom_real_couples
 } collision_map;
 
 static collision_map collision_map_table[] = {
    // These items handle various types of "1/2 circulate" calls from 2x4's.
 
    {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // from lines out
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0x20000000},   // from lines out
+   {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 1, 7, 6},          {3, 2, 4, 5},
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},            // alternative if couples
    {2, 0x000000, 0x11, 0x11, {0, 4},               {0, 5},                {1, 4},
     s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // from lines out, only ends exist
    {2, 0x000000, 0x22, 0x22, {1, 5},               {3, 6},                {2, 7},
@@ -155,7 +158,9 @@ static collision_map collision_map_table[] = {
     s_crosswave, s1x8,        0, warn__really_no_collision, 0},
 
    {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // from lines in
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0x20000000},   // from lines in
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 1, 7, 6},          {3, 2, 4, 5},
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},            // alternative if couples
    {2, 0x044044, 0x44, 0x44, {2, 6},               {0, 5},                {1, 4},
     s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // from lines in, only ends exist
    {2, 0x088088, 0x88, 0x88, {3, 7},               {3, 6},                {2, 7},
@@ -254,7 +259,9 @@ static collision_map collision_map_table[] = {
    {6, 0x000000,  077, 011,  {0, 1, 2, 3, 4, 5},   {0, 3, 2, 5, 7, 6},    {1, 3, 2, 4, 7, 6},
     s1x6,        s1x8,        0, warn__none, 0},
    {6, 0x000000,  077, 022,  {0, 1, 2, 3, 4, 5},   {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
-    s1x6,        s1x8,        0, warn__none, 0},
+    s1x6,        s1x8,        0, warn__none, 0x20000000},
+   {6, 0x000000,  077, 022,  {0, 1, 2, 3, 4, 5},   {0, 3, 2, 4, 5, 6},    {0, 1, 2, 4, 7, 6},
+    s1x6,        s1x8,        0, warn__really_no_collision, 0},            // alternative if couples
    {6, 0x000000,  077, 044,  {0, 1, 2, 3, 4, 5},   {0, 1, 3, 4, 5, 6},    {0, 1, 2, 4, 5, 7},
     s1x6,        s1x8,        0, warn__none, 0},
    {4, 0x000000,  055, 055,  {0, 2, 3, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},
@@ -518,15 +525,16 @@ void collision_collector::install_with_collision(
       // we need to keep track of who collides, and set things appropriately.
       // If we have "ends take right hands" and the setup is a 2x2, we consider it
       // to be perfectly legal.  This makes 2/3 recycle work from an inverted line.
-      if ((callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
-          ((callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
+      if ((m_callflags1 & CFLAG1_TAKE_RIGHT_HANDS) ||
+          (m_callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES) ||
+          ((m_callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
            (((result->kind == s1x4 || result->kind == sdmd) && !(resultplace&1)) ||
             (result->kind == s2x4 && !((resultplace+1)&2)) ||
             (result->kind == s_qtag && !(resultplace&2)) ||
             result->kind == s2x2))) {
          // Collisions are legal.
       }
-      else if (callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS)
+      else if (m_callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS)
          // If the specific violation was that "ends take right hands" was on, but
          // the centers are taking right hands, it is extremely serious.
          m_collision_appears_illegal |= 4;
@@ -540,7 +548,7 @@ void collision_collector::install_with_collision(
 
 
 
-void collision_collector::fix_possible_collision(setup *result) THROW_DECL
+void collision_collector::fix_possible_collision(setup *result, merge_action action /*= merge_strict_matrix*/) THROW_DECL
 {
    if (!collision_mask) return;
 
@@ -602,6 +610,10 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 
          if (c_map_ptr->warning == warn_bad_collision)
             goto win;   // Entries with this warning always know exactly what they are doing.
+
+         // If doing real as_couples call, we reject certain maps and pick up the next one.
+         if (action == merge_c1_phantom_real_couples && (c_map_ptr->assume_key & 0x20000000))
+            continue;
 
          if ((m_collision_appears_illegal & 6) ||
              ((m_collision_appears_illegal & 1) &&
@@ -892,6 +904,8 @@ static const veryshort phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
                                              -1,  3,  2,  2,  4, -1,  5,  5};
 static const veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
 static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
+static const veryshort stharlinetranslateh[8] = {0, 1, 0, 0, 2, 3, 0, 0};
+static const veryshort stharlinetranslatev[8] = {0, 0, 0, 1, 0, 0, 2, 3};
 static const veryshort sdmdripoff56[8] = {0, 0, 1, 0, 2, 0, 3, 0};
 static const veryshort sdmdripoff65[8] = {0, 0, 1, 0, 0, 2, 3, 0};
 static const veryshort sdmdripoff95[8] = {3, 0, 0, 0, 1, 0, 0, 2};
@@ -1476,7 +1490,7 @@ static void special_4_way_symm(
    switch (result->kind) {
    case s2x2: case s_galaxy:
    case s_c1phan: case s4x4:
-   case s_hyperglass: case s_thar: case s_confused_dmd:
+   case s_hyperglass: case s_thar:
    case s_star: case s1x1: case s_alamo:
       break;
    case s1x4:
@@ -2943,7 +2957,7 @@ static int divide_the_setup(
                                phantest_ok, false, &the_results[1]);
             *result = the_results[1];
             result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
-            merge_setups(&the_results[0], merge_c1_phantom, result);
+            merge_table::merge_setups(&the_results[0], merge_c1_phantom, result);
             return 1;
          }
       }
@@ -4931,38 +4945,15 @@ static uint32 do_actual_array_call(
                permuter = sdmdtranslatev;
                rotator = 1;
             }
-            else
-               fail("Call went to improperly-formed setup.");
-            break;
-         case s_confused_dmd:
-            if ((lilresult_mask[0] & 0x66) == 0) {         // Check horiz dmd spots.
-               result->kind = sdmd;
-               permuter = sdmdtranslateh;
+            else if ((lilresult_mask[0] & 0xCC) == 0) {    // Check horiz line spots.
+               result->kind = s1x4;
+               permuter = stharlinetranslateh;
             }
-            else if ((lilresult_mask[0] & 0x99) == 0) {    // Check vert dmd spots.
-               result->kind = sdmd;
-               permuter = sdmdtranslatev;
+            else if ((lilresult_mask[0] & 0x33) == 0) {    // Check vert line spots.
+               result->kind = s1x4;
+               permuter = stharlinetranslatev;
                rotator = 1;
             }
-            else if (lilresult_mask[0] == 0x95) {    // Fudgy ripoff is happening; make the people
-               result->kind = sdmd;                  // who could be facing each other be close.
-               permuter = sdmdripoff95;
-               rotator = 1;
-            }
-            else if (lilresult_mask[0] == 0x59) {    // Ditto.
-               result->kind = sdmd;
-               permuter = sdmdripoff59;
-               rotator = 1;
-            }
-            else if (lilresult_mask[0] == 0x65) {    // Ditto.
-               result->kind = sdmd;
-               permuter = sdmdripoff65;
-            }
-            else if (lilresult_mask[0] == 0x56) {    // Ditto.
-               result->kind = sdmd;
-               permuter = sdmdripoff56;
-            }
-
             else
                fail("Call went to improperly-formed setup.");
             break;
@@ -5633,7 +5624,15 @@ static uint32 do_actual_array_call(
       if (funny && (!funny_ok1 || !funny_ok2))
          warn(warn__not_funny);
 
-      CC.fix_possible_collision(result);
+      call_with_name *maybe_call = (ss->cmd.parseptr &&
+                                    ss->cmd.parseptr->concept &&
+                                    ss->cmd.parseptr->concept->kind == marker_end_of_list) ?
+         ss->cmd.parseptr->call : (call_with_name *) 0;
+
+      merge_action action = (maybe_call && (maybe_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES)) ?
+         merge_c1_phantom_real_couples : merge_strict_matrix;
+
+      CC.fix_possible_collision(result, action);
    }
 
    // Fix up "dixie tag" result if fraction was 1/4.

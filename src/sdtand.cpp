@@ -873,7 +873,7 @@ void tandrec::unpack_us(
 
    result->kind = map_ptr->outsetup;
    result->rotation = virtual_result.rotation - map_ptr->rot;
-   result->eighth_rotation = 0;
+   result->eighth_rotation = virtual_result.eighth_rotation;
    result->result_flags = virtual_result.result_flags;
 
    const veryshort *my_huge_map = (const veryshort *) 0;
@@ -2133,17 +2133,18 @@ extern void tandem_couples_move(
 
       // If overlapped siamese, we do everything eight times
       ttt[finalcount] = *result;   // Save the result of this run
+      if (result->eighth_rotation != 0) fail("Can't do this.");  // Would be way too hairy.
    }
 
    // If overlapped siamese, we have eight setups to merge.
    if (key == tandem_key_overlap_siam) {
-      merge_setups(&ttt[4], merge_strict_matrix, &ttt[0]);
-      merge_setups(&ttt[5], merge_strict_matrix, &ttt[1]);
-      merge_setups(&ttt[6], merge_strict_matrix, &ttt[2]);
-      merge_setups(&ttt[7], merge_strict_matrix, &ttt[3]);
-      merge_setups(&ttt[3], merge_strict_matrix, &ttt[1]);
-      merge_setups(&ttt[2], merge_strict_matrix, &ttt[0]);
-      merge_setups(&ttt[1], merge_strict_matrix, &ttt[0]);
+      merge_table::merge_setups(&ttt[4], merge_strict_matrix, &ttt[0]);
+      merge_table::merge_setups(&ttt[5], merge_strict_matrix, &ttt[1]);
+      merge_table::merge_setups(&ttt[6], merge_strict_matrix, &ttt[2]);
+      merge_table::merge_setups(&ttt[7], merge_strict_matrix, &ttt[3]);
+      merge_table::merge_setups(&ttt[3], merge_strict_matrix, &ttt[1]);
+      merge_table::merge_setups(&ttt[2], merge_strict_matrix, &ttt[0]);
+      merge_table::merge_setups(&ttt[1], merge_strict_matrix, &ttt[0]);
       *result = ttt[0];
    }
 
@@ -2590,6 +2591,7 @@ void mimic_move(
    MI.groupsize = 1;
    MI.fwd = 0;
    MI.setup_hint = parseptr->concept->arg1;
+   warning_info saved_warnings = configuration::save_warnings();
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DOING_ENDS;
 
@@ -2782,6 +2784,8 @@ void mimic_move(
       return;
    }
 
+   configuration::restore_warnings(saved_warnings);
+
    if (MI.groupsize <= 2) {
       try {
          // Don't split into 1x2's if user requested C/L/W.
@@ -2836,6 +2840,8 @@ void mimic_move(
       }
    }
 
+   configuration::restore_warnings(saved_warnings);
+
    if (MI.groupsize == 4) {
       // If we're already in a 4-person setup, do it directly.
       if ((attr::slimit(ss) == 3) && MI.groupsize <= 4) {
@@ -2868,6 +2874,8 @@ void mimic_move(
          }
       }
    }
+
+   configuration::restore_warnings(saved_warnings);
 
    // If we're already in a 4-person setup, and subdivision failed, we must be able to do it directly.
    if (attr::slimit(ss) <= 3) {
@@ -2920,6 +2928,8 @@ void mimic_move(
          if (e == error_flag_no_retry) throw e;
       }
 
+      configuration::restore_warnings(saved_warnings);
+
       try {
          bool dontdoit = false;
 
@@ -2963,6 +2973,8 @@ void mimic_move(
       }
    }
 
+   configuration::restore_warnings(saved_warnings);
+
    // Just try the whole thing.
 
    if (MI.groupsize == 4 && ss->kind == s2x4) {
@@ -2977,6 +2989,8 @@ void mimic_move(
       catch(error_flag_type e) {
          if (e == error_flag_no_retry) throw e;
       }
+
+      configuration::restore_warnings(saved_warnings);
 
       // Finally, with an implict "split phantom boxes".
       small_mimic_move(ss, MI, MAPCODE(s2x4,2,MPKIND__SPLIT,0), result);

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2011  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1748,11 +1748,11 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   /* Need to check for case of replacing one star turn with another. */
 
                   if ((first_replace == 0) &&
-                      (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) &&
+                      (replaced_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) &&
                       ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
                        subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
                       cc &&
-                      ((cc->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ||
+                      ((cc->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ||
                        cc->the_defn.schema == schema_nothing)) {
                      first_replace++;
 
@@ -1807,7 +1807,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
                         writestuff_with_decorations(
                            &search->options,
-                           (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
+                           (replaced_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ?
                            "turn the star @b" : replaced_call->name, false);
 
                         writestuff(" WITH [");
@@ -1921,20 +1921,30 @@ extern void writechar(char src)
 
       char save_buffer[MAX_TEXT_LINE_LENGTH];
       char *q = save_buffer;
+      char *p = writechar_block.lastblank+1;
 
-      if (writechar_block.lastblank) {
-         char *p = writechar_block.lastblank+1;
+      // If we are after a blank, see if we are after a whole bunch of blanks; delete same.
+      // This could happen if the only blanks are the indentation at the start of the line.
+      // In that case, strip it all away.
+      while (writechar_block.lastblank && writechar_block.lastblank > current_line && writechar_block.lastblank[-1] == ' ')
+         writechar_block.lastblank--;
+
+      // If there is nonblank text before the last blank, write it out and save
+      // whatever comes next for the next round.  But if the only blanks are those
+      // at the beginning of the line, treat is as though there weren't any blanks
+      // at all--break a word.
+      if (writechar_block.lastblank && writechar_block.lastblank > current_line) {
          while (p <= writechar_block.destcurr) *q++ = *p++;
          writechar_block.destcurr = writechar_block.lastblank;
       }
       else {
-         /* Must break a word. */
+         // Must break a word.  Save just the final character that we couldn't fit.
          *q++ = *writechar_block.destcurr;
       }
 
       *q = '\0';
 
-      newline();            // End the current buffer and write it out.
+      newline();           // End the current buffer and write it out.
       writestuff("   ");   // Make a new line, copying saved stuff into it.
       writestuff(save_buffer);
    }
@@ -2387,6 +2397,8 @@ static bool write_sequence_to_file() THROW_DECL
                                         "Enter comment:", "", second_header);
    }
 
+   second_header[MAX_TEXT_LINE_LENGTH-1] = 0;
+
    // Some user interfaces (those with buttons or icons) may have a button to abort the
    // sequence, rather than just decline the comment.  Such an action comes back as
    // "POPUP_DECLINE".  Otherwise, we get POPUP_ACCEPT_WITH_STRING if a nonempty string
@@ -2819,7 +2831,7 @@ void run_program()
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2011 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2012 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -475,15 +475,15 @@ static bool multiple_move_innards(
    // If multiple setups are involved and they have rotated by 45 degrees, we have to be very careful.
 
    if (arity >= 2 && eighth_rot_flag == 1) {
-      if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) || (arity != 4 && arity != 8))
+      if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) || (arity != 2 && arity != 4 && arity != 8))
          fail("Can't handle this rotation.");
 
-      if (arity == 8 || map_kind == MPKIND__4_QUADRANTS) warn(warn__may_be_fudgy);
+      if (arity == 2 || arity == 8 || map_kind == MPKIND__4_QUADRANTS) warn(warn__may_be_fudgy);
 
       bool take_out_double_45_rotation = false;
 
       if (map_kind == MPKIND__SPLIT) {
-         map_kind = MPKIND__SPLIT_WITH_45_ROTATION;
+         map_kind = (z[0].rotation & vert & 1) ? MPKIND__SPLIT_WITH_M45_ROTATION : MPKIND__SPLIT_WITH_45_ROTATION;
       }
       else if (map_kind == MPKIND__SPLIT_WITH_45_ROTATION) {
          map_kind = MPKIND__SPLIT;
@@ -601,7 +601,7 @@ static bool multiple_move_innards(
 
       if (fix_n_results(arity,
                         (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
-                        arity == 4 && map_kind == MPKIND__SPLIT,    // For now!
+                        map_kind == MPKIND__SPLIT,
                         z, rotstate, pointclip, rot)) {
          result->kind = nothing;
          clear_result_flags(result);
@@ -1611,7 +1611,7 @@ static void phantom_2x4_move(
    }
 
    the_setups[0].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
-   merge_setups(&the_setups[1], merge_strict_matrix, &the_setups[0]);
+   merge_table::merge_setups(&the_setups[1], merge_strict_matrix, &the_setups[0]);
    reinstate_rotation(ss, &the_setups[0]);
    *result = the_setups[0];
 }
@@ -3679,7 +3679,7 @@ void do_concept_wing(
    if (all_people != normal_people+winged_people)
       fail("Can't do this.");
 
-   merge_setups(&the_results[0], merge_after_dyp, &the_results[1]);
+   merge_table::merge_setups(&the_results[0], merge_after_dyp, &the_results[1]);
    *result = the_results[1];
    result->clear_all_overcasts();
 }
@@ -4209,7 +4209,7 @@ extern void common_spot_move(
       }
 
       the_results[1].result_flags = get_multiple_parallel_resultflags(the_results, 2);
-      merge_setups(&the_results[0], merge_c1_phantom, &the_results[1]);
+      merge_table::merge_setups(&the_results[0], merge_c1_phantom, &the_results[1]);
       reinstate_rotation(ss, &the_results[1]);
       *result = the_results[1];
    }
@@ -4218,7 +4218,7 @@ extern void common_spot_move(
       // independently.  They do not have to be similar.  Just merge them.
 
       the_results[0].result_flags = get_multiple_parallel_resultflags(the_results, 2);
-      merge_setups(&the_results[1], merge_c1_phantom, &the_results[0]);
+      merge_table::merge_setups(&the_results[1], merge_c1_phantom, &the_results[0]);
       reinstate_rotation(ss, &the_results[0]);
       *result = the_results[0];
    }

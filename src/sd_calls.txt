@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2011  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.44"
+version "38.45"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2440,6 +2440,11 @@ call "diamond circulate" plus tag diamondcirc
       array [CR1E 0 AL1W ZM2N 0 ZM0N]
    setup pshort6 short6
       array [0 CR2E 0 0 AL3W 0]
+            alternate_definition [half] c1
+   setup dmd thar plus_eighth_rotation qualifier live dmd_facing
+      array [CR0N 0 AL3W 0]
+   setup pmd thar plus_eighth_rotation qualifier live dmd_facing
+      array [0 CR2N 0 AL5W]
 
 call "diamond single rotate 1/4" c4
             fudge_to_q_tag reverse_means_mirror
@@ -4515,6 +4520,13 @@ call "lockit" a1 tag lockit
             alternate_definition [cross 4x4] c4
    setup 1x8 1x8 rotate
       array [CR2N CR3N CR0N CR1N AL2S AL3S AL0S AL1S]
+            alternate_definition [half] c1
+   setup 1x4 thar plus_eighth_rotation
+      array [CR0N CR1N AL2W AL3W]
+   setup dmd thar plus_eighth_rotation
+      array [CR0N 0 AL2W 0]
+   setup pmd thar plus_eighth_rotation
+      array [0 CR3N 0 AL5W]
 
 call "lock it" a1
    alias lockit
@@ -4554,6 +4566,13 @@ call "fan the top" plus tag fanthetop
       array [CR0N 0 AL0S 0]
    setup pmd 1x4 rotate
       array [0 CR1W 0 AL3W]
+            alternate_definition [half] c1
+   setup 1x4 thar plus_eighth_rotation qualifier live none
+      array [CR0N CR3E AL2W AL1S]
+   setup dmd thar plus_eighth_rotation qualifier live none
+      array [CR0N 0 AL2W 0]
+   setup pmd thar plus_eighth_rotation qualifier live none
+      array [0 CR5E 0 AL3S]
    // To allow the centers to do only part of the cast off 3/4.
             step_to_wave left_means_touch_or_check gen_sting_is_inherited visible_fractions
    singleconc cast_off_n4_with_warn [inherit_gensting insert_number 3] hinge []
@@ -5445,14 +5464,14 @@ call "couples hinge" mainstream
    seq hinge [cpls_unless_single]   // Of course, "single" isn't allowed.
 
 call "couples trade" mainstream
+            take_right_hands_as_couples
+   setup 1x4 1x4 qualifier couples_only restriction unusual 2fl_only
+      array [CR2S CR3S AL0S AL1S]
             mxn_is_inherited
    seq trade [cpls_unless_single]   // Of course, "single" isn't allowed.
 
 call "couples circulate" mainstream tag couples_circ
-            mxn_is_inherited
-   seq circulate [cpls_unless_single]   // Of course, "single" isn't allowed.
-   // What remains should be unneeded legacy code.  Correct?
-            take_right_hands
+            take_right_hands_as_couples
    setup 2x4 2x4 qualifier couples_only restriction unusual 2fl_only
       array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
             alternate_definition [3x3] c4
@@ -5465,6 +5484,8 @@ call "couples circulate" mainstream tag couples_circ
             alternate_definition [half] mainstream
    setup 2x4 crosswave rotate qualifier couples_only restriction unusual 2fl_only
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
+            mxn_is_inherited
+   seq circulate [cpls_unless_single]   // Of course, "single" isn't allowed.
 
 call "shazam" c2
             visible_fractions diamond_is_legal fractal_is_inherited gen_sting_is_inherited rewind_is_inherited
@@ -7331,10 +7352,13 @@ call "slide thru in miniwave" dontshow tag slidethru_in_miniwave
          if boyp_rh_slide_thru [CR0N CR0N]
          if girlp_rh_slide_thru [AL0S AL0S]
 
-call "half breed thru" a1
+call "brace thru" a1 tag bracethru
             rear_back_from_r_wave visible_fractions twisted_is_inherited funny_is_inherited
    seq passthru [inherit_twisted inherit_funny]
    seq brace_yourself []
+
+call "half breed thru" a1
+   alias bracethru
 
 call "brace yourself" c4 tag brace_yourself
    setup 1x2 1x2 qualifier left opposite_sex restriction forbidden couples_only
@@ -9010,13 +9034,13 @@ call "cross cycle" c3
          if always       [CR2S 0    0    CR3S]
             visible_fractions
    seq ctrsfoldforrecycle [force_cross]
-   seq splitctrrot []
+   seq splitctrrot [seq_re_evaluate]
    seq roll []
 
 call "2/3 cross cycle" c3
             visible_fractions
    seq ctrsfoldforrecycle [force_cross]
-   seq splitctrrot []
+   seq splitctrrot [seq_re_evaluate]
 
 call "explode" plus tag explode
             parallel_conc_end
@@ -9922,7 +9946,7 @@ call "pair the line" c4
       array [CR6S CR4S CR5S AL2S AL3S AL1S]
    setup short6 2x4
       array [CR6S    0 CR5S AL2S    0 AL1S]
-   setup 2x4 2x4 rotate qualifier line_ends_looking_out
+   setup 2x4 2x4 rotate qualifier tbone line_ends_looking_out
       array [CR0E CR1E AL6E AL7E 0 AL5E CR2E 0]
    setup 4x2 2x4 rotate
       array [   0 CR5E CR2E    0 0 AL1E AL6E 0]
@@ -9950,7 +9974,7 @@ call "pair the line" c4
       array [   0 CR5N    0 AL2S]    // Only the centers can do it.
    setup 1x4 bone6 rotate
       array [   0 CR5N    0 AL5S]
-   setup 2x4 2x4 rotate qualifier line_ends_looking_out
+   setup 2x4 2x4 rotate qualifier tbone line_ends_looking_out
       array [   0 CR1E AL6E    0 0 AL5E CR2E 0]
    setup 4x2 2x4 rotate
       array [   0 CR5E CR2E    0 0 AL1E AL6E 0]
@@ -12248,12 +12272,26 @@ call "criss cross follow to a diamond" c4
 
 call "scatter follow to a diamond" c4
    setup 2x4 qtag qualifier ntbone none restriction forbidden wave_only
-      array [C2S C3S A7S A6S A4E C4W A5E C5W]
+      array [CM2S CM3S AM7S AM6S AM4E CM4W AM5E CM5W]
    // If they are T-boned, we're a little more lenient.
    setup 2x4 qtag restriction unusual wave_only
-      array [C2S C3S A7S A6S A4E C4W A5E C5W]
+      array [CM2S CM3S AM7S AM6S AM4E CM4W AM5E CM5W]
    setup 4x2 1x8
-      array [C0W 0 C6W 0 0 A6E 0 A0E]
+      array [CM0W 0 CM6W 0 0 AM6E 0 AM0E]
+            alternate_definition [generous] c3x
+   setup 2x4 1x8 qualifier ntbone none restriction forbidden wave_only
+      array [CM5S CM7S AM3S AM1S AL4N CM6N AL2N CM0N]
+   setup 2x4 qtag
+      array [CM2S CM3S AM7S AM6S 0 0 0 0]
+   setup 4x2 qtag
+      array [CM0N 0 CM1N 0 0 AM4N 0 AM5N]
+            alternate_definition [stingy] c3x
+   setup 2x4 1x8 qualifier ntbone none restriction forbidden wave_only
+      array [CM5S CM7S AM3S AM1S AL6S CM4S AL0S CM2S]
+   setup 2x4 qtag
+      array [CM2S CM3S AM7S AM6S 0 0 0 0]
+   setup 4x2 qtag
+      array [CM5S 0 CM4S 0 0 AM1S 0 AM0S]
 
 call "follow to an hourglass" c3x
    setup 2x4 hrglass restriction resolve_ok wave_only
@@ -16204,10 +16242,14 @@ call "retreat the line" c4
       array [AL4S AL5S AL7S AL6S CR3N CR2N CR0N CR1N]
 
 call "ends bend" a1 tag endsbend
-   setup 2x4 2x4 rotate
+   setup 2x4 2x4 rotate qualifier line_ends_looking_out
       array [R7N M6W M1W L0S 0 M2W M5W 0]
-   setup 4x2 2x4 rotate
+   setup 4x2 2x4 rotate qualifier line_ends_looking_out
       array [0 M6W M1W 0 0 M2W M5W 0]
+   setup 1x4 2x3 rotate restriction unusual alwaysfail
+      array [CR5N ZM4W AL0S ZM1W]
+   setup 4x1 2x3 rotate restriction unusual alwaysfail
+      array [0 ZM4W 0 ZM1W]
 
 call "_square the bases part 1" dontshow tag sqbases1
             left_means_mirror twisted_is_inherited
@@ -18501,6 +18543,9 @@ call "_pass and roll 4" dontshow tag passnroll_4
             left_means_mirror
    setup 4x1 2x2
       array [0 ZM1N CR2S 0]
+            alternate_definition [half] a2
+   setup 4x1 dmd
+      array [0 ZM1N CR2E 0]
             alternate_definition [grand] c3
    setup 6x1 2x3
       array [0 ZM1N 0 CR3S 0 ZM2N]
@@ -19398,17 +19443,15 @@ call "checkmate the column" a2
          if antitandem_side_of_out_3n1_col [CM4E CR5W CM4E CR7W AL0E AM3W AL2E AM3W]
          if tandem_side_of_out_3n1_col     [CM6E CM5E CR6W CR7W AL0E AL1E AM2W AM1W]
 
-call "box checkmate" c3a
+call "box checkmate" c3a tag boxcheckmate
    setup 2x2 2x2 restriction wave_only
       array [CR2W AL3E AM0W CM1E]
 
 call "split checkmate" c3a
-   setup 2x2 2x2 restriction wave_only
-      array [CR2W AL3E AM0W CM1E]
+   alias boxcheckmate
 
 call "single checkmate" c3a
-   setup 2x2 2x2 restriction wave_only
-      array [CR2W AL3E AM0W CM1E]
+   alias boxcheckmate
 
 /* We're not completely happy with this.  We would like fractionalization,
    and "finish" to work properly, and be compatible with "mystic". */

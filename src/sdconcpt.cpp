@@ -525,7 +525,14 @@ static void do_c1_phantom_move(
 
    *result = the_setups[1];
    result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
-   merge_setups(&the_setups[0], merge_c1_phantom_real, result);
+
+   merge_table::merge_setups(&the_setups[0],
+                             merge_c1_phantom_real,
+                             result,
+                             (ss->cmd.parseptr &&
+                              ss->cmd.parseptr->concept &&
+                              ss->cmd.parseptr->concept->kind == marker_end_of_list) ?
+                             ss->cmd.parseptr->call : (call_with_name *) 0);
 }
 
 
@@ -950,7 +957,7 @@ static void do_concept_multiple_lines_tog(
 
             *result = the_setups[1];
             result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
-            merge_setups(&the_setups[0], merge_strict_matrix, result);
+            merge_table::merge_setups(&the_setups[0], merge_strict_matrix, result);
             warn(warn__tbonephantom);
          }
          else {
@@ -4443,6 +4450,14 @@ static void do_call_in_series_simple(setup *result) THROW_DECL
 }
 
 
+static void do_call_in_series_and_update_bits(setup *result) THROW_DECL
+{
+   do_call_in_series(result, false, true, false);
+   if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
+      update_id_bits(result);
+}
+
+
 static void do_concept_sequential(
    setup *ss,
    parse_block *parseptr,
@@ -6415,7 +6430,7 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_FROMTO,(parseptr->options.number_fields-1),0));
 
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
          result->cmd = ss->cmd;
       }
 
@@ -6440,7 +6455,7 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_LATEFROMTOREV,shiftynum,0) | CMD_FRAC_BREAKING_UP);
 
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
          result->cmd = ss->cmd;
 
          // Do the initial part up to the shift point.
@@ -6460,7 +6475,7 @@ static void do_concept_meta(
                FRACS(CMD_FRAC_CODE_FROMTOREVREV,shiftynum,0));
 
             // Do the last (shifted) part.
-            do_call_in_series_simple(result);
+            do_call_in_series_and_update_bits(result);
             result->cmd = ss->cmd;
 
             // Do the initial part up to the shift point.
@@ -6486,7 +6501,8 @@ static void do_concept_meta(
             else if (shiftynum <= kfield)
                fail("Can't stack these meta or fractional concepts.");
 
-            do_call_in_series_simple(result);
+            do_call_in_series_and_update_bits(result);
+
             result->cmd = ss->cmd;
             // Do the initial part up to the shift point.
             result->cmd.cmd_fraction.set_to_null_with_flags(
@@ -6512,7 +6528,7 @@ static void do_concept_meta(
          else if (corefracs.is_null()) {
             result->cmd.cmd_fraction.set_to_null_with_flags(
                CMD_FRAC_BREAKING_UP | FRACS(CMD_FRAC_CODE_FROMTOREV,shiftynum+1,0));
-            do_call_in_series_simple(result);
+            do_call_in_series_and_update_bits(result);
             result->cmd = ss->cmd;
 
             // Do the initial part up to the shift point.
@@ -6574,13 +6590,10 @@ static void do_concept_meta(
       result->cmd = yescmd;
 
       for (;;) {
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
 
          // Set up so that next round will be without the concept.
          result->cmd = nocmd;
-
-         if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
-            update_id_bits(result);
 
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
@@ -6614,7 +6627,7 @@ static void do_concept_meta(
 
       // Do the call without the concept.
       result->cmd = nocmd;
-      do_call_in_series_simple(result);
+      do_call_in_series_and_update_bits(result);
 
       // And then again with it.
       result->cmd = yescmd;
@@ -6666,7 +6679,7 @@ static void do_concept_meta(
             result->cmd.parseptr = result_of_skip;      // Skip over the concept.
             result->cmd.cmd_fraction.flags = CMD_FRAC_BREAKING_UP;
             result->cmd.cmd_fraction.fraction = afracs;
-            do_call_in_series_simple(result);
+            do_call_in_series_and_update_bits(result);
          }
 
          // Do bfracs with.
@@ -6674,7 +6687,7 @@ static void do_concept_meta(
             result->cmd = yescmd;
             result->cmd.cmd_fraction.flags = corefracs.flags | CMD_FRAC_BREAKING_UP;
             result->cmd.cmd_fraction.fraction = bfracs;
-            do_call_in_series_simple(result);
+            do_call_in_series_and_update_bits(result);
          }
 
          // Do cfracs without.
@@ -6701,7 +6714,7 @@ static void do_concept_meta(
             // Set the fractionalize field to do the first few parts of the call.
             result->cmd.cmd_fraction.set_to_null_with_flags(
                FRACS(CMD_FRAC_CODE_FROMTO,shiftynum-1,0));
-            do_call_in_series_simple(result);
+            do_call_in_series_and_update_bits(result);
          }
 
          // Do the part of the call that needs the concept.
@@ -6710,7 +6723,7 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) | CMD_FRAC_BREAKING_UP);
 
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
 
          int did_last = 0;
          if (result->result_flags.misc & RESULTFLAG__PARTS_ARE_KNOWN)
@@ -6776,7 +6789,8 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
 
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
+
          result->cmd = nocmd;
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
@@ -6802,7 +6816,8 @@ static void do_concept_meta(
             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
 
          // The first part, with the concept.
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
+
          result->cmd = nocmd;
          // Assumptions don't carry through.
          result->cmd.cmd_assume.assumption = cr_none;
@@ -6816,7 +6831,7 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
 
          // And the rest of the call without it.
 
@@ -6878,7 +6893,7 @@ static void do_concept_meta(
 
          result->cmd = nocmd;
          result->cmd.cmd_fraction.flags += CMD_FRAC_PART2_BIT;
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
          result->cmd = yescmd;
          result->result_flags.misc &= ~expirations_to_clearmisc;
          // Assumptions don't carry through.
@@ -6904,7 +6919,8 @@ static void do_concept_meta(
          result->cmd = nocmd;
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_BREAKING_UP);
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
+
          // Do the call with the concept.
          // Set the fractionalize field to execute the last part of the call.
          result->cmd = yescmd;
@@ -6957,7 +6973,7 @@ static void do_concept_meta(
          result->cmd.cmd_assume.assumption = cr_none;
          result->cmd.cmd_fraction.flags += CMD_FRAC_PART2_BIT;
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
 
          // and the last part with it.  Be sure to reset the "twisted"/"yoyo" expiration.
 
@@ -6976,7 +6992,7 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_ONLY,1,0) | CMD_FRAC_BREAKING_UP);
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
 
          // the interior of the call without it,
 
@@ -6986,7 +7002,7 @@ static void do_concept_meta(
          result->cmd.cmd_fraction.set_to_null_with_flags(
             FRACS(CMD_FRAC_CODE_FROMTOREV,2,1) | CMD_FRAC_BREAKING_UP);
          result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
-         do_call_in_series_simple(result);
+         do_call_in_series_and_update_bits(result);
 
          // and the last part with it.  Be sure to reset the "twisted"/"yoyo" expiration.
 
@@ -7085,6 +7101,9 @@ static void do_concept_meta(
          result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
 
          do_call_in_series(result, true, true, false);
+
+         if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
+            update_id_bits(result);
 
          if (result->result_flags.misc & RESULTFLAG__SECONDARY_DONE) {
             index = 0;
@@ -7736,7 +7755,7 @@ static void do_concept_so_and_so_begin(
    the_setups[1].result_flags = the_setups[0].result_flags;
    the_setups[1].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
 
-   merge_setups(&the_setups[0], merge_c1_phantom, &the_setups[1]);
+   merge_table::merge_setups(&the_setups[0], merge_c1_phantom, &the_setups[1]);
    uint32 finalresultflagsmisc = the_setups[1].result_flags.misc;
    normalize_setup(&the_setups[1], simple_normalize, false);
 

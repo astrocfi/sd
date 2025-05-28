@@ -40,7 +40,7 @@
    merge_table::map_24r24d
    merge_table::initialize
    merge_table::lookup
-   merge_setups
+   merge_table::merge_setups
    on_your_own_move
    punt_centers_use_concept
    selective_move
@@ -4298,7 +4298,10 @@ void merge_table::initialize()
 
 
 // This overwrites its first argument setup.
-extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL
+void merge_table::merge_setups(setup *ss,
+                               merge_action action,
+                               setup *result,
+                               call_with_name *maybe_the_call /* = (call_with_name *) 0 */) THROW_DECL
 {
    int i, r, rot;
    setup outer_inners[2];
@@ -4421,6 +4424,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       outer_inners[1] = *res1;
       normalize_concentric(ss, schema_concentric, 1, outer_inners, outer_elong, 0, result);
    }
+   else if (res1->kind == nothing) {
+      *result = *res2;
+      canonicalize_rotation(result);
+      return;
+   }
    else {
       reinstatement_rotation = res2->rotation;
       res1->rotation -= res2->rotation;
@@ -4435,11 +4443,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
 
       r = res1->rotation & 3;
       rot = r * 011;
-
-      if (res1->kind == nothing) {
-         *result = *res2;
-         goto final_getout;
-      }
 
       uint32 rotmaskreject = (1<<r);
       if (action != merge_without_gaps) rotmaskreject |= 0x10;
@@ -4611,6 +4614,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
             install_scatter(res2, 16, fixup, &temp, 0);
          }
 
+         if (action == merge_c1_phantom_real &&
+             maybe_the_call &&
+             (maybe_the_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES))
+            action = merge_c1_phantom_real_couples;
+
          brute_force_merge(res1, res2, action, result);
          goto final_getout;
       }
@@ -4742,7 +4750,7 @@ extern void on_your_own_move(
    outer_inners[1] = *result;
 
    result->result_flags = get_multiple_parallel_resultflags(outer_inners, 2);
-   merge_setups(&res1, merge_strict_matrix, result);
+   merge_table::merge_setups(&res1, merge_strict_matrix, result);
 
    // Shut off "superfluous phantom setups" warnings.
 
@@ -5070,7 +5078,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
    }
 
-   merge_setups(&the_results[1], merge_c1_phantom, result);
+   merge_table::merge_setups(&the_results[1], merge_c1_phantom, result);
 
    if (doing_yoyo) {
       the_setups[0] = *result;
@@ -6718,7 +6726,7 @@ extern void inner_selective_move(
       else if (indicator == selective_key_disc_dist)
          ma = merge_without_gaps;
 
-      merge_setups(&the_results[0], ma, result);
+      merge_table::merge_setups(&the_results[0], ma, result);
    }
 
    return;

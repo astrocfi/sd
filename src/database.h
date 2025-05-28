@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2011  William B. Ackerman.
+//    Copyright (C) 1990-2012  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 306
+#define DATABASE_FORMAT_VERSION 309
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -252,7 +252,7 @@ enum {
    CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010U,
    CFLAG1_PARALLEL_CONC_END         = 0x00000020U,
    CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040U,
-   CFLAG1_IS_STAR_CALL              = 0x00000080U,
+   CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES= 0x00000080U,
    CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100U,
    CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200U,
    CFLAG1_STEP_REAR_MASK            = 0x00001C00U, // 3 bit field
@@ -296,8 +296,9 @@ enum {
    CFLAG2_IF_MOVE_CANT_ROLL         = 0x02000000U,
    CFLAG2_FRACTIONAL_NUMBERS        = 0x04000000U,
    CFLAG2_NO_RAISE_OVERCAST         = 0x08000000U,
-   CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U
-   // 3 spares.
+   CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U,
+   CFLAG2_IS_STAR_CALL              = 0x20000000U
+   // 2 spares.
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -500,7 +501,6 @@ enum setup_kind {
    s3oqtg,
    s_thar,
    s_alamo,
-   s_confused_dmd,
    sx4dmd,    // These are too big to actually represent --
    sx4dmdbone,// we don't let them out of their cage.
    s_hyperbone, // Ditto.

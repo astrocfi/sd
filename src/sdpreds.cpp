@@ -695,6 +695,9 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
                else if (B == C && C != D && A != B) thing_to_test = 0x6;
                else if (C == D && B != C && A != B) thing_to_test = 0xC;
                break;
+            case s_ptpd:
+               if (B == D) thing_to_test = 0xA;
+               break;
             }
          }
          else if (allow_some == 3) {

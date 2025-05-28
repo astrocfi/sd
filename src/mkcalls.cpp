@@ -565,7 +565,6 @@ const char *estab[] = {
    "3oqtg",
    "thar",
    "alamo",
-   "confused_dmd",
    "???",
    "???",
    "???",
@@ -943,7 +942,7 @@ const char *flagtab1f[] = {
    "split_like_dixie_style",
    "parallel_conc_end",
    "take_right_hands",
-   "is_star_call",
+   "take_right_hands_as_couples",
    "yoyo_fractal_numbers",
    "fudge_to_q_tag",
    "step_to_wave",
@@ -982,6 +981,7 @@ const char *flagtab1f[] = {
    "fractional_numbers",
    "dont_raise_overcast",
    "overcast_transparent",
+   "is_star_call",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.

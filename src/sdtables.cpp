@@ -2523,6 +2523,23 @@ map::map_thing map::map_init_table[] = {
    {{5, 4,                  3, 2,                  6, 7,                  0, 1},
     s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, 0, s_rigger, 0x000, 0},
 
+
+   {{11, 10, 8, 9,                2, 3, 5, 4},
+    s1x4,2,MPKIND__SPLIT_WITH_45_ROTATION,0, 0, s2x6, 0x000, 0},
+   {{11, 10, 8, 9,                2, 3, 5, 4},
+    s1x4,2,MPKIND__SPLIT_WITH_M45_ROTATION,0, 0, s2x6, 0x000, 0},
+   {{9, 8, 6, 7,                  0, 1, 3, 2},
+    s1x4,2,MPKIND__SPLIT_WITH_45_ROTATION,1, 0, s2x6, 0x000, 0},
+
+
+   {{0, 7, 5, 6,                  1, 2, 4, 3},
+    sdmd,2,MPKIND__SPLIT_WITH_45_ROTATION,0, 0, spgdmdcw, 0x005, 0},
+   {{1, 2, 4, 3,                  0, 7, 5, 6},
+    sdmd,2,MPKIND__SPLIT_WITH_M45_ROTATION,0, 0, spgdmdcw, 0x005, 0},
+   {{0, 7, 5, 6,                  1, 2, 4, 3},
+    sdmd,2,MPKIND__SPLIT_WITH_45_ROTATION,1, 0, spgdmdccw, 0x005, 0},
+
+
    {{7, 6, 5, 4, 0, 1, 2, 3},
     s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,0, 0, s2x4, 0x000, 0},
    {{7, 6, 5, 4, 0, 1, 2, 3},
@@ -8772,16 +8789,6 @@ const setup_attr setup_attrs[] = {
     true, false,
     (const id_bit_table *) 0,
     {"6ab@h66c@g66d@6fe",
-     (Cstring) 0}},
-   {7,                     // s_confused_dmd
-    (const coordrec *) 0,
-    (const coordrec *) 0,
-    {0, 0, 0, 0},
-    {b_nothing, b_nothing},
-    {0, 0},
-    false, false,
-    (const id_bit_table *) 0,
-    {(Cstring) 0,
      (Cstring) 0}},
    {31,                     // sx4dmd
     (const coordrec *) 0,

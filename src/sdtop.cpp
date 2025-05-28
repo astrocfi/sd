@@ -4188,15 +4188,6 @@ extern callarray *assoc(
          goto bad;
       case cr_line_ends_looking_out:
          if (ssK != s2x4) goto bad;
-
-            /* We demand at least one center person T-boned, so that we
-               know it has to be an 8-person call. */
-
-         if (!((  ss->people[1].id1 |
-                  ss->people[2].id1 |
-                  ss->people[5].id1 |
-                  ss->people[6].id1) & 1)) goto bad;
-
          if ((t = ss->people[0].id1) && (t & d_mask) != d_north) goto bad;
          if ((t = ss->people[3].id1) && (t & d_mask) != d_north) goto bad;
          if ((t = ss->people[4].id1) && (t & d_mask) != d_south) goto bad;
@@ -4940,7 +4931,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 
 extern bool fix_n_results(int arity,
                           int goal,
-                          bool reorder_setups_2_and_3,
+                          bool kind_is_split,
                           setup z[],
                           uint32 & rotstates,
                           uint32 & pointclip,
@@ -4948,6 +4939,7 @@ extern bool fix_n_results(int arity,
 {
    int i;
 
+   bool reorder_setups_2_and_3 = kind_is_split && arity == 4;
    int lineflag = 0;
    bool dmdflag = false;
    bool qtflag = false;
@@ -5112,6 +5104,17 @@ extern bool fix_n_results(int arity,
                          (kk == sdmd && z[i].kind == s1x4))) {
                   dmdflag = true;
                   dmdqtagfudge = 1;
+               }
+               else if (arity == 2 && fudgystupidrot == 5 &&
+                        z[0].rotation == 1 && z[1].rotation == 1 &&
+                        ((kk == s1x4 && z[i].kind == s1x6) ||
+                         (kk == s1x6 && z[i].kind == s1x4))) {
+
+                  // We have a 1x4 parallel to a 1x6.  Someone is doing a horrible unsymmetrical
+                  // somewhat-colliding flip the diamond.
+                  static const expand::thing exp_1x4_1x6 = {{1, 2, 4, 5}, s1x4, s1x6, 0};
+                  expand::expand_setup(exp_1x4_1x6, &z[(z[i].kind == s1x4) ? i : 1-i]);
+                  kk = s1x6;
                }
                else
                   goto lose;
@@ -6494,7 +6497,7 @@ extern bool do_subcall_query(
       // Star turn calls can have funny names like "nobox".
 
       unparse_call_name(
-         (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
+         (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL) ?
          "turn the star @b" : orig_call->name,
          pretty_call_name, &current_options);
 

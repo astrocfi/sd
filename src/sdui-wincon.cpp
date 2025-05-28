@@ -619,7 +619,8 @@ extern void get_string(char *dest, int max)
       if (key > 128) continue;   // This was a function key press.
 
       put_char(key);
-      dest[size++] = key;
+      if (size < max-1)
+         dest[size++] = key;
    }
 
    dest[size] = '\0';

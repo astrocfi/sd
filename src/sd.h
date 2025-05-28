@@ -2597,6 +2597,7 @@ enum merge_action {
    merge_strict_matrix,
    merge_strict_matrix_but_colliding_merge,
    merge_c1_phantom,
+   merge_c1_phantom_real_couples,
    merge_c1_phantom_real,
    merge_after_dyp,
    merge_without_gaps
@@ -2652,7 +2653,10 @@ class merge_table {
    static const concmerge_thing map_24r24c;
    static const concmerge_thing map_24r24d;
 
-   friend void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL;
+   static void merge_setups(setup *ss,   // In sdconc.
+                            merge_action action,
+                            setup *result,
+                            call_with_name *maybe_the_call = (call_with_name *) 0) THROW_DECL;
 
    static void initialize();             // In sdconc.
 };
@@ -4537,6 +4541,7 @@ enum mpkind {
    MPKIND__SPLIT,
    MPKIND__SPLIT_OTHERWAY_TOO,
    MPKIND__SPLIT_WITH_45_ROTATION,
+   MPKIND__SPLIT_WITH_M45_ROTATION,
    MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,
    MPKIND__QTAG8,
    MPKIND__QTAG8_WITH_45_ROTATION,
@@ -5021,7 +5026,7 @@ extern parse_block *process_final_concepts(
 
 extern bool fix_n_results(int arity,
                           int goal,
-                          bool reorder_setups_2_and_3,
+                          bool kind_is_split,
                           setup z[],
                           uint32 & rotstates,
                           uint32 & pointclip,
@@ -5154,7 +5159,7 @@ public:
    collision_collector(bool allow):
       allow_collisions(allow),
       collision_mask(0),
-      callflags1(CFLAG1_TAKE_RIGHT_HANDS),  // Default is that collisions are legal.
+      m_callflags1(CFLAG1_TAKE_RIGHT_HANDS),  // Default is that collisions are legal.
       assume_ptr((assumption_thing *) 0),
       m_force_mirror_warn(false),
       m_doing_half_override(false),
@@ -5168,7 +5173,7 @@ public:
    collision_collector(bool mirror, setup_command *cmd, const calldefn *callspec):
       allow_collisions(true),
       collision_mask(0),
-      callflags1(callspec->callflags1),
+      m_callflags1(callspec->callflags1),
       assume_ptr(&cmd->cmd_assume),
       m_force_mirror_warn(mirror),
       m_doing_half_override(false),
@@ -5192,13 +5197,13 @@ public:
       const setup *sourcepeople, int sourceplace,
       int rot) THROW_DECL;
 
-   void fix_possible_collision(setup *result) THROW_DECL;
+   void fix_possible_collision(setup *result, merge_action action = merge_strict_matrix) THROW_DECL;
 
 private:
    const bool allow_collisions;
    int collision_index;
    uint32 collision_mask;
-   uint32 callflags1;
+   uint32 m_callflags1;
    assumption_thing *assume_ptr;
    bool m_force_mirror_warn;
    bool m_doing_half_override;
@@ -5481,8 +5486,6 @@ extern void normalize_concentric(
    int outer_elongation,
    uint32 matrix_concept,
    setup *result) THROW_DECL;
-
-extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL;
 
 extern void on_your_own_move(
    setup *ss,

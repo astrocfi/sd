@@ -1765,6 +1765,7 @@ static void finish_matrix_call(
    bool do_roll_stability,
    bool allow_collisions,
    bool allow_fudging,
+   merge_action action,
    setup *people,
    setup *result) THROW_DECL
 {
@@ -1924,7 +1925,8 @@ static void finish_matrix_call(
       }
    }
 
-   CC.fix_possible_collision(result);
+   // Pass the "action" in case it's merge_c1_phantom_real_couples.
+   CC.fix_possible_collision(result, action);
 }
 
 
@@ -2015,7 +2017,7 @@ static void matrixmove(
       // This call split the setup in every possible way.
       result->result_flags.maximize_split_info();
 
-   finish_matrix_call(matrix_info, nump, true, false, true, &people, result);
+   finish_matrix_call(matrix_info, nump, true, false, true, merge_strict_matrix, &people, result);
 
    reinstate_rotation(ss, result);
    clear_result_flags(result);
@@ -2604,7 +2606,7 @@ static void partner_matrixmove(
       }
    }
 
-   finish_matrix_call(matrix_info, nump, true, false, true, &people, result);
+   finish_matrix_call(matrix_info, nump, true, false, true, merge_strict_matrix, &people, result);
    reinstate_rotation(ss, result);
 
    // Take out any active phantoms that we placed.
@@ -2666,7 +2668,7 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       // "do_roll_stability" argument here.  It would treat the rotation
       // as though the person had actually done a call.
       finish_matrix_call(matrix_info, nump, false, allow_collisions,
-                         action > merge_strict_matrix_but_colliding_merge, &people, result);
+                         action > merge_strict_matrix_but_colliding_merge, action, &people, result);
       return;
    }
 
@@ -2807,7 +2809,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    }
 
    ss->rotation += result->rotation;
-   finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, true, &second_people, result);
+   finish_matrix_call(second_matrix_info, final_2nd_nump, true, false, true, merge_strict_matrix, &second_people, result);
    reinstate_rotation(ss, result);
    clear_result_flags(result);
 }
@@ -3042,7 +3044,7 @@ extern void anchor_someone_and_move(
       after_matrix_info[i].dir = 0;
    }
 
-   finish_matrix_call(after_matrix_info, nump, false, false, true, &people, result);
+   finish_matrix_call(after_matrix_info, nump, false, false, true, merge_strict_matrix, &people, result);
    reinstate_rotation(&saved_start_people, result);
    clear_result_flags(result);
 }
@@ -3221,7 +3223,7 @@ extern bool get_real_subcall(
    // Do the substitutions called for by star turn replacements (from "@S" escape codes.)
 
    if (current_options.star_turn_option != 0 &&
-       (orig_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL)) {
+       (orig_call->the_defn.callflagsf & CFLAG2_IS_STAR_CALL)) {
       parse_block *xx = parse_block::get_block();
       xx->concept = &conzept::marker_concept_mod;
       xx->options = current_options;
@@ -6090,7 +6092,7 @@ void really_inner_move(
 
                *result = the_results[1];
                result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
-               merge_setups(&the_results[0], merge_c1_phantom, result);
+               merge_table::merge_setups(&the_results[0], merge_c1_phantom, result);
             }
 
             /* ******* end of "punt_centers" junk. */

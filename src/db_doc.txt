@@ -792,9 +792,9 @@ littlestars |  6           7  |  3           2  |    (internal use only!)
                         |     |
                         |  3  |
              _____ _____|     |_____ _____
-thar        |     |      \   /      |     |
-     or     |  0  |  1           5  |  4  |      (4 way symmetry)
-confused_dmd|_____|_____ /   \ _____|_____|    (confused_dmd is internal use only!)
+            |     |      \   /      |     |
+thar        |  0  |  1           5  |  4  |      (4 way symmetry)
+            |_____|_____ /   \ _____|_____|
                         |     |
                         |  7  |
                         |_____|
@@ -3909,7 +3909,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    occupied_as_3x1tgl      Q        3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
                                        triangles of some sort.  Symmetric only.
 
-   line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads,
+   line_ends_looking_out            2x4 ends must be line-like and must be leads.
+                                    May be used with tbone or ntbone.
                                     and at least one center must be column-like.
    col_ends_looking_in              2x4 columns - the ends are #4
    people_1_and_5_real              1x8 (or any applicable setup) people #1 and #5 are real.
