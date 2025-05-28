@@ -899,6 +899,7 @@ static void multiple_move_innards(
       for (i=0; i<arity; i++) {
          if (z[i].kind == nothing) {
             z[i] = z[goodindex[i&1]];
+            xorigrot[i] = xorigrot[goodindex[i&1]];
             z[i].clear_people();
          }
 

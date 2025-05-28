@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.49"
+version "39.50"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -18709,7 +18709,9 @@ call "mix and mingle" c4x
 
 call "_chisel1" dontshow tag chisel1
             twisted_is_inherited
-   conc pass_in [inherit_twisted] pass_in [conc_demand_lines conc_force_otherway suppress_elongation_warnings endscando inherit_twisted]
+   conc pass_in [inherit_twisted]
+        pass_in [inherit_twisted conc_demand_lines conc_force_otherway
+                 suppress_elongation_warnings endscando]
 
 call "_chisel2" dontshow tag chisel2
             visible_fractions
@@ -18720,12 +18722,6 @@ call "chisel thru" c2
    seq chisel1 [inherit_twisted]
    seq chisel2 [inherit_twisted]
    seq pass_in [allow_plain_mod inherit_twisted]
-
-call "chisel thru but @0" c2
-            visible_fractions twisted_is_inherited
-   seq chisel1 [inherit_twisted]
-   seq chisel2 [inherit_twisted]
-   seq nullcall [mandatory_anycall]
 
 call "_pass one person" dontshow tag passoneperson
             rear_back_from_r_wave left_means_mirror
@@ -27832,6 +27828,9 @@ call "_finish plenty" dontshow tag finishplenty
 call "_finish little more" dontshow tag finlilmore
    conc box_circulate_maybe_diamond [] nullcall []
 
+call "_finish little more but @m" dontshow tag finlilmorebutsecond
+   conc nullsecond [mandatory_secondary_call] nullcall []
+
 call "little" c1 tag little
             fudge_to_q_tag left_means_mirror
             intlk_is_inherited straight_is_inherited visible_fractions
@@ -27884,10 +27883,20 @@ call "little more" c2 tag lilmore
    seq little [inherit_intlk inherit_left]
    seq finlilmore []
 
+call "little more but @m" c2 tag lilmorebutsecond
+            fudge_to_q_tag left_means_mirror intlk_is_inherited visible_fractions
+   seq little [inherit_intlk inherit_left]
+   seq finlilmorebutsecond []
+
 call "_natural little more" dontshow tag natural_lilmore
             left_means_mirror intlk_is_inherited visible_fractions
    seq natural_little [inherit_left inherit_intlk]
    seq finlilmore []
+
+call "_natural little more but @m" dontshow tag natural_lilmorebutsecond
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq natural_little [inherit_left inherit_intlk]
+   seq finlilmorebutsecond []
 
 call "little more, ends go as you are" c2 tag lilmore_ends_as_are
             fudge_to_q_tag intlk_is_inherited      /* No visible fractions. */
@@ -28010,6 +28019,12 @@ call "@2scoot @3and little more" c2
             intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
    seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
    seq natural_lilmore [inherit_left inherit_intlk]
+
+call "@2scoot @3and little more but @m" c2
+            visible_fractions left_means_mirror
+            intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
+   seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting inherit_cross]
+   seq natural_lilmorebutsecond [inherit_left inherit_intlk]
 
 call "@2scoot @3and little more, ends go as you are" c2
             left_means_mirror intlk_is_inherited yoyo_is_inherited gen_sting_is_inherited cross_is_inherited
@@ -28134,6 +28149,11 @@ call "@0 and little more" c2
             left_means_mirror intlk_is_inherited
    seq nullcall [mandatory_anycall]
    seq lilmore [inherit_left inherit_intlk]
+
+call "@0 and little more but @m" c2
+            left_means_mirror intlk_is_inherited
+   seq nullcall [mandatory_anycall]
+   seq lilmorebutsecond [inherit_left inherit_intlk]
 
 call "@0 and little more, ends go as you are" c2
             intlk_is_inherited

@@ -232,9 +232,9 @@ user name USERNAME  (P=PASSWORD)
 On right pane, choose public_html/sd (It might already be showing that.)
 On left pane, navigate to C:\Users\wba\sdfullarchive\vnnnn
    or wherever the pack.zip file is.
-Drag left to right.  Exit from WinSCP.
+Drag pack.zip left to right.  Exit from WinSCP.
 
-Start PuTTY.  Choose host www.challengedance.org .
+Start PuTTY.  Choose host www.challengedance.org, called "chal".
 Login as USERNAME  (P=PASSWORD)
   challengedance.org> cd public_html/sd
   challengedance.org> ls -lt
