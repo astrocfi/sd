@@ -19,7 +19,7 @@
     The version of this file is as shown immediately below.  This string
     gets displayed at program startup. */
 
-#define VERSION_STRING "28.0"
+#define VERSION_STRING "28.1"
 
 /* This defines the following functions:
    main

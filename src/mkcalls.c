@@ -1333,7 +1333,11 @@ void main(void)
       exit(1);
    }
 
-   tagtab = (tagtabitem *)malloc(tagtabmax * sizeof(tagtabitem));
+   tagtab = (tagtabitem *) malloc(tagtabmax * sizeof(tagtabitem));
+   if (!tagtab) {
+      printf("Can't allocate memory\n");
+      exit(1);
+   }
    memcpy(tagtab, tagtabinit, sizeof(tagtabinit));   /* initialize first two entries in tagtab */
 
    filecount = 0;

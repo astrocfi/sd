@@ -905,6 +905,8 @@ static void build_database(call_list_mode_t call_list_mode)
 
 extern void initialize_menus(call_list_mode_t call_list_mode)
 {
+   int arithtest = 4163215360;
+
    /* Test that the necessary constants are in step with each other.
       This "if" should never get executed.  We expect compilers to optimize
       it away, and perhaps print a warning about it. */
@@ -945,8 +947,11 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       "modifier_set" field from the database. */
    
          (HERITABLE_FLAG_MASK & 0x0000FFFF)) {
-      init_error("constants not consistent");
-
+      init_error("constants not consistent -- program has been compiled incorrectly.");
+      final_exit(1);
+   }
+   else if ((508205 << 13) != arithtest) {
+      init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
       final_exit(1);
    }
 

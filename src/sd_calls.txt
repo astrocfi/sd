@@ -21,7 +21,7 @@
     at program startup, as the "db" part of the complete version.
 */
 
-version 28 0
+version 28 1
 
 /* ****************** TEMPORARY HACK FOR TESTING
 
@@ -1005,8 +1005,9 @@ call "hinge" mainstream tag hinge
          if always [0 AL1S]
 
 call "shazam" c2
-   setup 1x2 1x2 rotate
-      array [CR0S AL0N]
+            visible_fractions
+   seq armturn1_4 []
+   seq uturnback []
 
 call "snake" c3x
    setup 1x2 1x2 rotate
