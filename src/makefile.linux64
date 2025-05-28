@@ -120,6 +120,9 @@ $(SDLIB_OBJS) $(SDTTY_OBJS): sd.h database.h paths.h
 clean::
 	-$(RM) *.o sd sdtty mkcalls sd_calls.dat tags
 
+tarball::
+	tar zcvf sdtty.tgz sdtty mkcalls sd_calls.txt sd_calls.dat COPYING.txt
+
 savesource::
 	tar cvf sd_source $(SDLIB_OBJS:.o=.cpp) $(SDTTY_OBJS:.o=.cpp) \
                $(MKCALLS_OBJS:.o=.cpp) $(HFILES) \

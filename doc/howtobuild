@@ -184,6 +184,17 @@ Copy these into an appropriate directory:
 
                PRODUCTION BUILD AND TESTING - Linux
 
+On Linux:
+
+Get the source files.
+make -f makefile.linux32
+// This should have created sdtty, mkcalls, etc.
+make -f makefile.linux32 tarball
+// This should have created sdtty.tgz
+scp sdtty.tgz ackerman@scotch.ics.uci.edu:~
+
+
+
 This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress directory.
 
 ****** BE SURE SOURCE FILES IN THE CURRENT DIRECTORY ARE UP TO DATE!
@@ -306,9 +317,11 @@ put pack.zip
 
 
 
+
+
 -----------------------------------------------------------------
 -----------------------------------------------------------------
-New way, Oct 08, does not require any FTP/SCP from Philips, uses mail.
+Older way, Oct 08, does not require any FTP/SCP from Philips, uses mail.
 
 Be sure "chpobox" is turned off at athena.  That is, mail is
 received locally, and not forwarded.
@@ -340,7 +353,7 @@ Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
    athena> exit
 
 -----------------------------------------------------------------
-    Older method.
+    Even older method.
 -----------------------------------------------------------------
 
 

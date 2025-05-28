@@ -87,9 +87,10 @@ struct tm_thing {
 class tandrec {
 public:
 
-   tandrec(bool phantom_pairing_ok, bool no_unit_symmetry) :
+   tandrec(bool phantom_pairing_ok, bool no_unit_symmetry, bool melded) :
       m_phantom_pairing_ok(phantom_pairing_ok),
-      m_no_unit_symmetry(no_unit_symmetry)
+      m_no_unit_symmetry(no_unit_symmetry),
+      m_melded(melded)
    {}
 
    bool pack_us(personrec *s,
@@ -106,13 +107,14 @@ public:
 
 
    setup m_real_saved_people[8];
-   int saved_originals[MAX_PEOPLE];
-   setup m_virtual_setup;
+   int m_saved_rotations[MAX_PEOPLE];
+   setup m_virtual_setup[2];       // If melded, use both.  Otherwise only m_virtual_setup[0].
    setup virtual_result;
-   int vertical_people[MAX_PEOPLE];    // 1 if original people were near/far; 0 if lateral.
+   int m_vertical_people[MAX_PEOPLE];    // 1 if original people were near/far; 0 if lateral.
    uint32 single_mask;
    bool m_phantom_pairing_ok;
    bool m_no_unit_symmetry;
+   bool m_melded;
    int m_people_per_group;
 };
 
@@ -824,6 +826,8 @@ void tandrec::unpack_us(
 
          personrec fb[8];
 
+         uint32 save_people_access_mask = m_melded ? 1 : ~0U;
+
          for (j=0 ; j<howmanytounpack ; j++) {
             fb[j] = m_real_saved_people[j].people[ii];
             if (fb[j].id1) fb[j].id1 =
@@ -1004,10 +1008,16 @@ bool tandrec::pack_us(
    uint32 mhigh, mlow, sglhigh, sgllow;
    int virt_index = -1;
 
-   m_virtual_setup.clear_people();
-   m_virtual_setup.rotation = map_ptr->rot & 3;
-   m_virtual_setup.eighth_rotation = 0;
-   m_virtual_setup.kind = map_ptr->insetup;
+   m_virtual_setup[0].clear_people();
+   m_virtual_setup[0].rotation = map_ptr->rot & 3;
+   m_virtual_setup[0].eighth_rotation = 0;
+   m_virtual_setup[0].kind = map_ptr->insetup;
+   m_virtual_setup[1] = m_virtual_setup[0];   // Need this one also.
+
+   if (m_melded) {
+      m_real_saved_people[0].clear_people();
+      m_real_saved_people[1].clear_people();
+   }
 
    for (i=0,
            mhigh=map_ptr->ilatmask3high,
@@ -1025,8 +1035,8 @@ bool tandrec::pack_us(
       // of people working together.
 
       personrec fb[8];    // Will receive the people being assembled.
-      personrec *ptr = &m_virtual_setup.people[i];
       uint32 vp1, vp2, vp3;
+      uint32 vp1a, vp2a, vp3a;
       // We know (hopefully) that this map doesn't have the "1/8 twosome" stuff, so the bits will be AB0.
       // This will get an error, of course.  Where m was ......AB,
       // mlow is .....AB0.  Or maybe AB1, in which case this map must not be used.
@@ -1075,14 +1085,14 @@ bool tandrec::pack_us(
             // since we couldn't possibly fill them.  This allows skewsome Z axle.
 
             if ((orpeople1 ||
-                 !(m_virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) &&
-                (attr::slimit(&m_virtual_setup) < 4 || orpeople1) &&
+                 !(m_virtual_setup[0].cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) &&
+                (attr::slimit(&m_virtual_setup[0]) < 4 || orpeople1) &&
                 (((fb[0].id1 ^ fb[3].id1) |
                   (fb[1].id1 ^ fb[2].id1) |
                   (~(fb[0].id1 ^ fb[1].id1))) & BIT_PERSON))
                fail("Can't find skew people.");
          }
-         else if (!(m_virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && !m_phantom_pairing_ok) {
+         else if (!(m_virtual_setup[0].cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && !m_phantom_pairing_ok) {
 
             // Otherwise, we usually forbid phantoms unless some phantom concept was used
             // (either something like "phantom tandem" or some other phantom concept such
@@ -1093,7 +1103,7 @@ bool tandrec::pack_us(
 
             if (!(andpeople1 & BIT_PERSON)) {
                if (orpeople1 ||
-                   (m_virtual_setup.kind != s2x3 &&
+                   (m_virtual_setup[0].kind != s2x3 &&
                     key != tandem_key_siam))
                   fail("Use \"phantom\" concept in front of this concept.");
             }
@@ -1116,67 +1126,101 @@ bool tandrec::pack_us(
 
             for (j=0 ; j<m_people_per_group ; j++) {
                if (fb[j].id1) {
-                  vp1 &= fb[j].id1;
-                  vp2 &= fb[j].id2;
-                  vp3 &= fb[j].id3;
+                  if (m_melded) {
+                     if (j == 0) {
+                        vp1 = fb[j].id1;
+                        vp2 = fb[j].id2;
+                        vp3 = fb[j].id3;
+                     }
+                     else {
+                        vp1a = fb[j].id1;
+                        vp2a = fb[j].id2;
+                        vp3a = fb[j].id3;
+                     }
+                  }
+                  else {
+                     vp1 &= fb[j].id1;
+                     vp2 &= fb[j].id2;
+                     vp3 &= fb[j].id3;
 
-                  // If they have different fractional stability states,
-                  // just clear them -- they can't do it.
-                  if ((fb[j].id1 ^ orpeople1) & STABLE_ALL_MASK) vp1 &= ~STABLE_ALL_MASK;
-                  // If they have different slide or roll states, just clear them -- they can't roll.
-                  if ((fb[j].id1 ^ orpeople1) & ROLL_DIRMASK) vp1 &= ~ROLL_DIRMASK;
-                  if ((fb[j].id1 ^ orpeople1) & NSLIDE_MASK) vp1 &= ~NSLIDE_MASK;
-                  // Check that all real people face the same way.
-                  if ((fb[j].id1 ^ orpeople1) & 077)
-                     return true;
+                     // If they have different fractional stability states,
+                     // just clear them -- they can't do it.
+                     if ((fb[j].id1 ^ orpeople1) & STABLE_ALL_MASK) vp1 &= ~STABLE_ALL_MASK;
+                     // If they have different slide or roll states, just clear them -- they can't roll.
+                     if ((fb[j].id1 ^ orpeople1) & ROLL_DIRMASK) vp1 &= ~ROLL_DIRMASK;
+                     if ((fb[j].id1 ^ orpeople1) & NSLIDE_MASK) vp1 &= ~NSLIDE_MASK;
+                     // Check that all real people face the same way.
+                     if ((fb[j].id1 ^ orpeople1) & 077)
+                        return true;
+                  }
                }
             }
          }
-         else
+         else {
             vp1 = 0;
+            vp1a = 0;
+         }
       }
 
-      if (vp1) {
+      for (int meld_number = 0 ; meld_number < 2 ; meld_number++) {
+         personrec *ptr = &m_virtual_setup[meld_number].people[i];
 
-         // Create a virtual person number.  Only 8 are allowed, because of the tightness
-         // in the person representation.  That shouldn't be a problem, since each
-         // virtual person came from a group of real people that had at least one
-         // live person.  Unless active phantoms have been created, that is.
-
-         if ((++virt_index) >= 8) fail("Sorry, too many tandem or as couples people.");
-
-         ptr->id1 = (vp1 & ~0700) | (virt_index << 6) | BIT_TANDVIRT;
-         ptr->id2 = vp2;
-         ptr->id3 = vp3;
-
-         if (!(sgllow & 1)) {
-            if (fraction_in_use)
-               ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
-            else if (dynamic_in_use)
-               ptr->id1 |= STABLE_ENAB;
-
-            // 1 if original people were near/far; 0 if lateral.
-            vertical_people[virt_index] = vert;
+         // **** Do this right.
+         if (meld_number == 1) {
+            vp1 = vp1a;
+            vp2 = vp2a;
+            vp3 = vp3a;
          }
 
-         if (map_ptr->rot & 1)   // Compensate for setup rotation.
-            ptr->id1 = rotperson(ptr->id1, (-map_ptr->rot & 3) * 011);
+         if (vp1) {
 
-         for (j=0 ; j<m_people_per_group ; j++)
-            m_real_saved_people[j].people[virt_index] = fb[j];
+            // Create a virtual person number.  Only 8 are allowed, because of the tightness
+            // in the person representation.  That shouldn't be a problem, since each
+            // virtual person came from a group of real people that had at least one
+            // live person.  Unless active phantoms have been created, that is.
 
-         saved_originals[virt_index] = ptr->id1 + m_virtual_setup.rotation;
-      }
-      else {
-         ptr->id1 = 0;
-         ptr->id2 = 0;
-         ptr->id3 = 0;
+            if ((++virt_index) >= 8) fail("Sorry, too many tandem or as couples people.");
+
+            ptr->id1 = (vp1 & ~0700) | (virt_index << 6) | BIT_TANDVIRT;
+            ptr->id2 = vp2;
+            ptr->id3 = vp3;
+
+            if (!(sgllow & 1)) {
+               if (fraction_in_use)
+                  ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
+               else if (dynamic_in_use)
+                  ptr->id1 |= STABLE_ENAB;
+
+               // 1 if original people were near/far; 0 if lateral.
+               m_vertical_people[virt_index] = vert;
+            }
+
+            if (map_ptr->rot & 1)   // Compensate for setup rotation.
+               ptr->id1 = rotperson(ptr->id1, (-map_ptr->rot & 3) * 011);
+
+            if (m_melded) {
+               m_real_saved_people[meld_number].people[virt_index] = fb[meld_number];
+            }
+            else {
+               for (j=0 ; j<m_people_per_group ; j++)
+                  m_real_saved_people[j].people[virt_index] = fb[j];
+            }
+
+            m_saved_rotations[virt_index] = ptr->id1 + m_virtual_setup[meld_number].rotation;
+         }
+         else {
+            ptr->id1 = 0;
+            ptr->id2 = 0;
+            ptr->id3 = 0;
+         }
+
+         if (!m_melded)
+            break;
       }
    }
 
    return false;
 }
-
 
 
 extern void tandem_couples_move(
@@ -1186,7 +1230,7 @@ extern void tandem_couples_move(
                           // also, 4 bit => dynamic, 8 bit => reverse dynamic
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
-                          // this is a "melded (phantom)" thing=4
+                          // "4" bit on --> this is a "melded (phantom)" thing
    tandem_key key,
    uint32 mxn_bits,
    bool phantom_pairing_ok,
@@ -1205,8 +1249,8 @@ extern void tandem_couples_move(
    clean_up_unsymmetrical_setup(ss);
 
    selector_kind saved_selector;
-   tm_thing *map;
-   tm_thing *map_search;
+   const tm_thing *map;
+   const tm_thing *map_search;
    int i, people_per_group;
    uint32 jbit;
    bool fractional = false;
@@ -1215,12 +1259,16 @@ extern void tandem_couples_move(
    bool dead_conc = false;
    bool dead_xconc = false;
    tm_thing *our_map_table;
+   int finalcount;
+   setup ttt[8];
 
    uint32 special_mask = 0;
    result->clear_people();
    remove_z_distortion(ss);
 
    bool no_unit_symmetry = false;
+   bool melded = (key == tandem_key_overlap_siam) || (phantom & 4);
+   phantom &= 3;    // Get rid of that bit.
 
    if (mxn_bits != 0) {
       tandem_key transformed_key = key;
@@ -1527,20 +1575,21 @@ extern void tandem_couples_move(
       our_map_table = maps_isearch_twosome;
    }
 
-   if (key == tandem_key_overlap_siam) {
-      static const expand::thing localized_thing = {
-         {0, 3, 4, 7, 8, 11, 12, 15}, s2x4, s2x8, 0};
-      if (ss->kind != s2x4 || phantom != 0)
-         fail("Need 2x4 for this concept.");
-      phantom = 1;
-      expand::expand_setup(localized_thing, ss);
-   }
-
    if (attr::slimit(ss) < 0)
       fail("Can't do tandem/couples concept from this position.");
 
-   tandrec tandstuff(phantom_pairing_ok, no_unit_symmetry);
+   tandrec tandstuff(phantom_pairing_ok, no_unit_symmetry, melded);
    tandstuff.single_mask = 0;
+
+   uint32 nsmask = 0;
+   uint32 ewmask = 0;
+   uint32 allmask = 0;
+
+   if (key == tandem_key_overlap_siam) {
+      if (ss->kind != s2x4 || phantom != 0)
+         fail("Need 2x4 for this concept.");
+      phantom = 1;
+   }
 
    // We use the phantom indicator to forbid an already-distorted setup.
    // The act of forgiving phantom pairing is based on the setting of the
@@ -1554,10 +1603,6 @@ extern void tandem_couples_move(
 
    if (selector != selector_uninitialized)
       current_options.who = selector;
-
-   uint32 nsmask = 0;
-   uint32 ewmask = 0;
-   uint32 allmask = 0;
 
    for (i=0, jbit=1; i<=attr::slimit(ss); i++, jbit<<=1) {
       uint32 p = ss->people[i].id1;
@@ -1726,12 +1771,9 @@ extern void tandem_couples_move(
       }
    }
    else if (key == tandem_key_overlap_siam) {
-      saveew = ewmask;
-      savens = nsmask;
       ewmask = allmask;
       nsmask = 0;
       tandstuff.m_phantom_pairing_ok = true;
-      goto try_this;
    }
    else if (key & 2) {
 
@@ -1800,10 +1842,10 @@ extern void tandem_couples_move(
    while (map_search->outsetup != nothing) {
       if ((map_search->outsetup == ss->kind) &&
           !map_search->map_is_eighth_twosome &&
-            map_search->outsinglemask == tandstuff.single_mask &&
-            (!(allmask & map_search->outunusedmask)) &&
-            (!(ewmask & (~map_search->olatmask))) &&
-            (!(nsmask & map_search->olatmask))) {
+          map_search->outsinglemask == tandstuff.single_mask &&
+          (!(allmask & map_search->outunusedmask)) &&
+          (!(ewmask & (~map_search->olatmask))) &&
+          (!(nsmask & map_search->olatmask))) {
          map = map_search;
          goto fooy;
       }
@@ -1817,10 +1859,14 @@ extern void tandem_couples_move(
 
  fooy:
 
+   tandstuff.m_people_per_group = people_per_group;
+   tandstuff.m_virtual_setup[0].cmd = ss->cmd;
+   tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_none;
+
    // We also use the subtle aspects of the phantom indicator to tell what kind
    // of setup we allow, and whether pairings must be parallel to the long axis.
 
-   if (phantom == 1) {
+   if (phantom == 1 && !melded) {
       if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s3x4 && ss->kind != s2x6 &&
           ss->kind != s4x6 && ss->kind != s1x12 && ss->kind != s2x12 && ss->kind != s1x16 &&
           ss->kind != s3dmd && ss->kind != s_323 &&
@@ -1832,17 +1878,13 @@ extern void tandem_couples_move(
          fail("Can't do gruesome concept in this setup.");
    }
 
-   tandstuff.m_people_per_group = people_per_group;
-   tandstuff.m_virtual_setup.cmd = ss->cmd;
-   tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_none;
-
    // There are a small number of assumptions that we can transform.
 
    if (ss->cmd.cmd_assume.assump_col == 4) {
       if (ss->cmd.cmd_assume.assumption == cr_ijright)
-         tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_jright;
+         tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_jright;
       else if (ss->cmd.cmd_assume.assumption == cr_ijleft)
-         tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_jleft;
+         tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_jleft;
    }
 
    if (ss->cmd.cmd_assume.assumption == cr_jright ||
@@ -1856,20 +1898,20 @@ extern void tandem_couples_move(
          break;
       case cr_li_lo:
          if (ss->kind == s2x2 || ss->kind == s2x4)
-            tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = ss->cmd.cmd_assume.assumption;
+            tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = ss->cmd.cmd_assume.assumption;
          break;
       case cr_1fl_only:
          if (ss->kind == s1x4 || ss->kind == s2x4)
-            tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_couples_only;
+            tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_couples_only;
          break;
       case cr_2fl_only:
          if (ss->kind == s1x4 || ss->kind == s2x4 || ss->kind == s1x8)
-            tandstuff.m_virtual_setup.cmd.cmd_assume.assumption = cr_wave_only;
+            tandstuff.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_wave_only;
          break;
       }
    }
 
-   if (phantom == 3) tandstuff.m_virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+   if (phantom == 3) tandstuff.m_virtual_setup[0].cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    // Give it the fraction in quarters, rounded down if an eighth part was specified.
    if (!tandstuff.pack_us(ss->people, map, fraction_in_eighths, fractional, dynamic != 0, key))
@@ -1877,7 +1919,6 @@ extern void tandem_couples_move(
 
    // Or failure to pack people properly may just be because we are taking
    // "siamese" too seriously.
-
 
    if (!doing_siamese)
       fail("People not facing same way for tandem or as couples.");
@@ -1910,33 +1951,52 @@ extern void tandem_couples_move(
 
    warn(siamese_warning);
 
-   if (tandstuff.m_virtual_setup.kind == s_ntrgl6cw ||
-       tandstuff.m_virtual_setup.kind == s_ntrgl6ccw)
-      tandstuff.m_virtual_setup.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
+   if (tandstuff.m_virtual_setup[0].kind == s_ntrgl6cw ||
+       tandstuff.m_virtual_setup[0].kind == s_ntrgl6ccw)
+      tandstuff.m_virtual_setup[0].cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
 
-   update_id_bits(&tandstuff.m_virtual_setup);
+   update_id_bits(&tandstuff.m_virtual_setup[0]);
 
-   setup ttt[8];
+   int tttcount = 1;
 
-   if (key == tandem_key_overlap_siam) {
+   if (melded) {
+      tttcount = -1;
       uint32 rotstate, pointclip;
 
-      for (int j=0 ; j<8 ; j++) {
-         setup sss = tandstuff.m_virtual_setup;
-         sss.kind = s2x2;
-         sss.rotation = 0;
-         sss.eighth_rotation = 0;
-         sss.clear_people();
-         copy_person(&sss, j >> 1, &tandstuff.m_virtual_setup, j);
-         impose_assumption_and_move(&sss, &ttt[j]);
+      update_id_bits(&tandstuff.m_virtual_setup[1]);
+
+      // ***** Used to be 8
+
+      for (int k=0 ; k<2 ; k++) {
+         for (int j=0 ; j<=attr::klimit(map->insetup) ; j++) {
+            setup sss = tandstuff.m_virtual_setup[k];
+            sss.clear_people();
+            if (copy_person(&sss, j, &tandstuff.m_virtual_setup[k], j)) {
+               if ((++tttcount) >= 8) fail("Sorry, too many tandem or as couples people.");
+               impose_assumption_and_move(&sss, &ttt[tttcount]);
+            }
+         }
       }
 
-      if (fix_n_results(8, -1, false, ttt, rotstate, pointclip, 0) || !(rotstate & 0xF03))
+      /*
+      for (int j=0 ; j<= attr::klimit(map->outsetup) ; j++) {
+         // Used to be 0/0/0/0/1/1/1/1
+         setup sss = tandstuff.m_virtual_setup[j >> 2];
+         sss.clear_people();
+         // Used to be 0/0/0/0/1/1/1/1, and 0/1/2/3/0/1/2/3
+         if (copy_person(&sss, j&3, &tandstuff.m_virtual_setup[j >> 2], j&3)) {
+            if ((++tttcount) >= 8) fail("Sorry, too many tandem or as couples people.");
+            impose_assumption_and_move(&sss, &ttt[tttcount]);
+         }
+      }
+      */
+
+      if (fix_n_results(tttcount+1, -1, false, ttt, rotstate, pointclip, 0) || !(rotstate & 0xF03))
          fail("Can't do this.");
 
-      result->result_flags = get_multiple_parallel_resultflags(ttt, 8);
+      result->result_flags = get_multiple_parallel_resultflags(ttt, tttcount+1);
 
-      if (ttt[0].kind != s2x2)
+      if (key == tandem_key_overlap_siam && ttt[0].kind != s2x2)
          fail("Can't do this.");    // They will all be the same, because of fix_n_results.
    }
    else {
@@ -1944,13 +2004,13 @@ extern void tandem_couples_move(
       // of certain semi-bogus "crazy" stuff.  We always set this to indicate east-west.
       // Why?  Because we have dropped the orientation of the 2x4, and will reinstate it later.
       // So it's always east-west in our present view.
-      if (ss->kind == s2x4 && tandstuff.m_virtual_setup.kind == s2x2)
-         tandstuff.m_virtual_setup.cmd.prior_elongation_bits |= PRIOR_ELONG_BASE_FOR_TANDEM;
-      impose_assumption_and_move(&tandstuff.m_virtual_setup, &ttt[0]);
+      if (ss->kind == s2x4 && tandstuff.m_virtual_setup[0].kind == s2x2)
+         tandstuff.m_virtual_setup[0].cmd.prior_elongation_bits |= PRIOR_ELONG_BASE_FOR_TANDEM;
+      impose_assumption_and_move(&tandstuff.m_virtual_setup[0], &ttt[0]);
    }
 
    // This loop runs only once, unless overlapped siamese, in which case it runs eight times.
-   for (int finalcount = 0 ; finalcount < 8 ; finalcount++) {
+   for (finalcount = 0 ; finalcount <= tttcount ; finalcount++) {
       tandstuff.virtual_result = ttt[finalcount];
 
       remove_mxn_spreading(&tandstuff.virtual_result);
@@ -2013,7 +2073,7 @@ extern void tandem_couples_move(
             int vpi = (p >> 6) & 7;
             livemask3low |= 7;
 
-            if (tandstuff.m_real_saved_people[1].people[vpi].id1 == ~0U) {
+            if (!melded && tandstuff.m_real_saved_people[1].people[vpi].id1 == ~0U) {
                sglmask3low |= 7;
             }
             else {
@@ -2022,8 +2082,7 @@ extern void tandem_couples_move(
                      fail("fractional twosome not supported for this call.");
                }
 
-               int orbit_in_eighths =
-                  (p + tandstuff.virtual_result.rotation - tandstuff.saved_originals[vpi]) << 1;
+               int orbit_in_eighths = (p + tandstuff.virtual_result.rotation - tandstuff.m_saved_rotations[vpi]) << 1;
 
                uint32 stable_stuff_in_eighths = ((p & STABLE_VRMASK) / STABLE_VRBIT) - ((p & STABLE_VLMASK) / STABLE_VLBIT);
 
@@ -2060,7 +2119,7 @@ extern void tandem_couples_move(
                }
 
                orbitmask3low |=
-                  (orbit_in_eighths - ((tandstuff.virtual_result.rotation + tandstuff.vertical_people[vpi]) << 1)) & 7;
+                  (orbit_in_eighths - ((tandstuff.virtual_result.rotation + tandstuff.m_vertical_people[vpi]) << 1)) & 7;
             }
 
             if (fractional || dynamic != 0)
@@ -2148,7 +2207,7 @@ extern void tandem_couples_move(
       }
 
       // In the usual case (not overlapped siamese) we just exit from the whole thing after one iteration.
-      if (key != tandem_key_overlap_siam)
+      if (!melded)
          break;
 
       // If overlapped siamese, we do everything eight times
@@ -2156,16 +2215,55 @@ extern void tandem_couples_move(
       if (result->eighth_rotation != 0) fail("Can't do this.");  // Would be way too hairy.
    }
 
-   // If overlapped siamese, we have eight setups to merge.
-   if (key == tandem_key_overlap_siam) {
-      merge_table::merge_setups(&ttt[4], merge_strict_matrix, &ttt[0]);
-      merge_table::merge_setups(&ttt[5], merge_strict_matrix, &ttt[1]);
-      merge_table::merge_setups(&ttt[6], merge_strict_matrix, &ttt[2]);
-      merge_table::merge_setups(&ttt[7], merge_strict_matrix, &ttt[3]);
-      merge_table::merge_setups(&ttt[3], merge_strict_matrix, &ttt[1]);
-      merge_table::merge_setups(&ttt[2], merge_strict_matrix, &ttt[0]);
-      merge_table::merge_setups(&ttt[1], merge_strict_matrix, &ttt[0]);
-      *result = ttt[0];
+   if (melded) {
+      int horizontal_setup_indices = -1;
+      int vertical_setup_indices = -1;
+
+      // Grab 2x4's, in both orientations, in a first scan.
+      for (i=0 ; i<=tttcount ; i++) {
+         if (ttt[i].kind == s2x4) {
+            if (ttt[i].rotation & 1) {
+               if (vertical_setup_indices < 0)
+                  vertical_setup_indices = i;
+               else {
+                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[vertical_setup_indices]);
+                  ttt[i].kind = s2x4;   // Be sure we don't see it in the next scan.
+               }
+            }
+            else {
+               if (horizontal_setup_indices < 0)
+                  horizontal_setup_indices = i;
+               else {
+                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_setup_indices]);
+                  ttt[i].kind = s2x4;   // Be sure we don't see it in the next scan.
+               }
+            }
+         }
+      }
+
+      // If we have both, combine them.
+      if (horizontal_setup_indices >= 0 && vertical_setup_indices >= 0) {
+         merge_table::merge_setups(&ttt[vertical_setup_indices], merge_strict_matrix, &ttt[horizontal_setup_indices]);
+         ttt[vertical_setup_indices].kind = s2x4;   // Be sure we don't see it in the next scan.
+      }
+      else if (vertical_setup_indices >= 0) {
+         horizontal_setup_indices = vertical_setup_indices;
+      }
+
+      // Now horizontal_setup_indices has all 2x4's.  Everything else that was a 2x4 has been
+      // merged into horizontal_setup_indices, and its kind has been reset to 2x4.
+
+      // Now grab non-2x4's, and save them in horizontal_setup_indices also.
+      for (i=0 ; i<=tttcount ; i++) {
+         if (i != horizontal_setup_indices && ttt[i].kind != s2x4) {
+            if (horizontal_setup_indices < 0)
+               horizontal_setup_indices = i;
+            else
+               merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_setup_indices]);
+         }
+      }
+
+      *result = ttt[horizontal_setup_indices];
    }
 
    result->clear_all_overcasts();
@@ -2541,7 +2639,7 @@ static void small_mimic_move(setup *ss,
    setup temp1 = *ss;
    uint32 ilatmask3low = 0;
 
-   tandrec ttt(false, true);
+   tandrec ttt(false, true, false);
    ttt.m_people_per_group = 2;
    ttt.virtual_result = temp1;
 
@@ -3067,7 +3165,7 @@ bool process_brute_force_mxn(
       {{0, 5, 8, 9, 1, 4, 7, 10, 2, 3, 6, 11},                 0,022222222, 0xFFFF, 4, 0,  s_qtag,  s3dmd},
       {{0, 7, 11, 12, 1, 6, 10, 13, 2, 5, 9, 14, 3, 4, 8, 15}, 0,022222222, 0xFFFF, 4, 0,  s_qtag,  s4dmd}};
 
-   tandrec ttt(true, false);
+   tandrec ttt(true, false, false);
    const tm_thing *map_ptr;
    uint32 directions;
    uint32 livemask;
@@ -3077,8 +3175,8 @@ bool process_brute_force_mxn(
    const tm_thing *getout_map;
    int reversal_bits = 0;
 
-   ttt.m_virtual_setup.cmd = ss->cmd;
-   ttt.m_virtual_setup.cmd.cmd_assume.assumption = cr_none;
+   ttt.m_virtual_setup[0].cmd = ss->cmd;
+   ttt.m_virtual_setup[0].cmd.cmd_assume.assumption = cr_none;
 
    if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_4X4) {
       ttt.m_people_per_group = 4;
@@ -3095,10 +3193,10 @@ bool process_brute_force_mxn(
             // We now have a 1x4 wave with the first two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out to the full 4-person wave.
 
-            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
-            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
-            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
-            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[0];
+            ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[2] = ttt.m_virtual_setup[0].people[1];
+            ttt.m_virtual_setup[0].people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
          }
          else if (livemask == 0xFFFF && (directions == 0xAA00 || directions == 0x00AA)) {
             // Tidal 1FL.
@@ -3110,12 +3208,12 @@ bool process_brute_force_mxn(
             // We now have a 1x4 2fl with the first two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out to the full 4-person 2fl.
 
-            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
-            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
-            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
-            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[0];
+            ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[2] = ttt.m_virtual_setup[0].people[1];
+            ttt.m_virtual_setup[0].people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
 
-            ttt.m_virtual_setup.swap_people(1, 3);
+            ttt.m_virtual_setup[0].swap_people(1, 3);
          }
          else
             return false;
@@ -3131,12 +3229,12 @@ bool process_brute_force_mxn(
             // We now have a 2x2 box with the first two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out to the full 4-person box.
 
-            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
-            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
-            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
-            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[0];
+            ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[2] = ttt.m_virtual_setup[0].people[1];
+            ttt.m_virtual_setup[0].people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
 
-            ttt.m_virtual_setup.swap_people(1, 3);
+            ttt.m_virtual_setup[0].swap_people(1, 3);
          }
          else
             return false;
@@ -3153,28 +3251,28 @@ bool process_brute_force_mxn(
             // We now have a 2x4 with two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out.
 
-            ttt.m_virtual_setup.swap_people(2, 5);
-            ttt.m_virtual_setup.swap_people(1, 2);
-            ttt.m_virtual_setup.swap_people(3, 7);
+            ttt.m_virtual_setup[0].swap_people(2, 5);
+            ttt.m_virtual_setup[0].swap_people(1, 2);
+            ttt.m_virtual_setup[0].swap_people(3, 7);
 
-            if (ttt.m_virtual_setup.people[0].id1) {
-               ttt.m_virtual_setup.people[1] = ttt.m_virtual_setup.people[0];
-               ttt.m_virtual_setup.people[1].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[0].id1) {
+               ttt.m_virtual_setup[0].people[1] = ttt.m_virtual_setup[0].people[0];
+               ttt.m_virtual_setup[0].people[1].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
 
-            if (ttt.m_virtual_setup.people[2].id1) {
-               ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[2];
-               ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[2].id1) {
+               ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[2];
+               ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
 
-            if (ttt.m_virtual_setup.people[5].id1) {
-               ttt.m_virtual_setup.people[4] = ttt.m_virtual_setup.people[5];
-               ttt.m_virtual_setup.people[4].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[5].id1) {
+               ttt.m_virtual_setup[0].people[4] = ttt.m_virtual_setup[0].people[5];
+               ttt.m_virtual_setup[0].people[4].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
 
-            if (ttt.m_virtual_setup.people[7].id1) {
-               ttt.m_virtual_setup.people[6] = ttt.m_virtual_setup.people[7];
-               ttt.m_virtual_setup.people[6].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[7].id1) {
+               ttt.m_virtual_setup[0].people[6] = ttt.m_virtual_setup[0].people[7];
+               ttt.m_virtual_setup[0].people[6].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
          }
          else
@@ -3200,10 +3298,10 @@ bool process_brute_force_mxn(
             // We now have a 1x4 wave with the first two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out to the full 4-person wave.
 
-            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
-            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
-            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
-            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[0];
+            ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[2] = ttt.m_virtual_setup[0].people[1];
+            ttt.m_virtual_setup[0].people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
          }
          else if (((directions ^ 0xA80) & livemask) == 0 || ((directions ^ 0x02A) & livemask) == 0) {
             // Tidal 1FL.
@@ -3215,12 +3313,12 @@ bool process_brute_force_mxn(
             // We now have a 1x4 2fl with the first two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out to the full 4-person 2fl.
 
-            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
-            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
-            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
-            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[0];
+            ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[2] = ttt.m_virtual_setup[0].people[1];
+            ttt.m_virtual_setup[0].people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
 
-            ttt.m_virtual_setup.swap_people(1, 3);
+            ttt.m_virtual_setup[0].swap_people(1, 3);
          }
          else
             return false;
@@ -3236,12 +3334,12 @@ bool process_brute_force_mxn(
             // We now have a 2x2 box with the first two people in place.  Each of these virtual
             // people represents 4 real people.  Spread them out to the full 4-person box.
 
-            ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[0];
-            ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
-            ttt.m_virtual_setup.people[2] = ttt.m_virtual_setup.people[1];
-            ttt.m_virtual_setup.people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[0];
+            ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            ttt.m_virtual_setup[0].people[2] = ttt.m_virtual_setup[0].people[1];
+            ttt.m_virtual_setup[0].people[2].id1 += 0100*map_ptr->limit;    // A new virtual person number.
 
-            ttt.m_virtual_setup.swap_people(1, 3);
+            ttt.m_virtual_setup[0].swap_people(1, 3);
          }
          else
             return false;
@@ -3258,28 +3356,28 @@ bool process_brute_force_mxn(
             // We now have a 2x4 with two people in place.  Each of these virtual
             // people represents 3 real people.  Spread them out.
 
-            ttt.m_virtual_setup.swap_people(2, 5);
-            ttt.m_virtual_setup.swap_people(1, 2);
-            ttt.m_virtual_setup.swap_people(3, 7);
+            ttt.m_virtual_setup[0].swap_people(2, 5);
+            ttt.m_virtual_setup[0].swap_people(1, 2);
+            ttt.m_virtual_setup[0].swap_people(3, 7);
 
-            if (ttt.m_virtual_setup.people[0].id1) {
-               ttt.m_virtual_setup.people[1] = ttt.m_virtual_setup.people[0];
-               ttt.m_virtual_setup.people[1].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[0].id1) {
+               ttt.m_virtual_setup[0].people[1] = ttt.m_virtual_setup[0].people[0];
+               ttt.m_virtual_setup[0].people[1].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
 
-            if (ttt.m_virtual_setup.people[2].id1) {
-               ttt.m_virtual_setup.people[3] = ttt.m_virtual_setup.people[2];
-               ttt.m_virtual_setup.people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[2].id1) {
+               ttt.m_virtual_setup[0].people[3] = ttt.m_virtual_setup[0].people[2];
+               ttt.m_virtual_setup[0].people[3].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
 
-            if (ttt.m_virtual_setup.people[5].id1) {
-               ttt.m_virtual_setup.people[4] = ttt.m_virtual_setup.people[5];
-               ttt.m_virtual_setup.people[4].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[5].id1) {
+               ttt.m_virtual_setup[0].people[4] = ttt.m_virtual_setup[0].people[5];
+               ttt.m_virtual_setup[0].people[4].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
 
-            if (ttt.m_virtual_setup.people[7].id1) {
-               ttt.m_virtual_setup.people[6] = ttt.m_virtual_setup.people[7];
-               ttt.m_virtual_setup.people[6].id1 += 0100*map_ptr->limit;    // A new virtual person number.
+            if (ttt.m_virtual_setup[0].people[7].id1) {
+               ttt.m_virtual_setup[0].people[6] = ttt.m_virtual_setup[0].people[7];
+               ttt.m_virtual_setup[0].people[6].id1 += 0100*map_ptr->limit;    // A new virtual person number.
             }
          }
          else
@@ -3295,11 +3393,11 @@ bool process_brute_force_mxn(
    // Do the call.
 
    // Clear whatever flag we are preocessing.
-   ttt.m_virtual_setup.cmd.cmd_final_flags.clear_heritbits(
+   ttt.m_virtual_setup[0].cmd.cmd_final_flags.clear_heritbits(
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK));
 
-   update_id_bits(&ttt.m_virtual_setup);
-   backstop(&ttt.m_virtual_setup, parseptr, &ttt.virtual_result);
+   update_id_bits(&ttt.m_virtual_setup[0]);
+   backstop(&ttt.m_virtual_setup[0], parseptr, &ttt.virtual_result);
    normalize_setup(&ttt.virtual_result, normalize_before_merge, false);
 
    // Figure out what happened.
