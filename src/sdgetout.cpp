@@ -1493,17 +1493,25 @@ static bool inner_search(command_kind goal,
       // Why?  Because squared-set reconcile endings are supposed to be
       // clever "you're home" types of things.
 
-     if (goal == command_reconcile) {
-        resolve_indicator & rr = configuration::current_resolve();
-        resolve_kind rk = rr.the_item->k;
-        if (resolve_table[rk].not_in_reconcile != 0) goto cant_consider_this_call;
-        if (rk == resolve_circle && rr.distance != 0) goto cant_consider_this_call;
-     }
+      if (goal == command_reconcile) {
+         resolve_indicator & rr = configuration::current_resolve();
+         resolve_kind rk = rr.the_item->k;
+         if (resolve_table[rk].not_in_reconcile != 0)
+            goto cant_consider_this_call;
+         // Fudge the meaning of "at home" if there is a 1/8 reotation.
+         if (rk == resolve_circle && rr.distance != (configuration::current_config().state.eighth_rotation ? 7 : 0))
+            goto cant_consider_this_call;
+      }
 
       // We win.  Really save it and exit.  History_ptr has been clobbered.
 
-      for (j=0; j<MAX_RESOLVE_SIZE; j++)
+      for (j=0; j<MAX_RESOLVE_SIZE; j++) {
          new_resolve->stuph[j] = configuration::history[j+history_insertion_point+1];
+         if (j < new_resolve->size) {
+            if (new_resolve->stuph[j].command_root == 0 || new_resolve->stuph[j].command_root->concept == 0)
+               goto cant_consider_this_call;   // What????  Some kind of bug, apparently.
+         }
+      }
 
       // Grow the "avoid_list" array as needed.
 
@@ -1784,7 +1792,7 @@ uims_reply full_resolve()
       }
 
       // Modify the history to show the current resolve.
-      // Note that the currrent history has been restored to its saved state.
+      // Note that the current history has been restored to its saved state.
 
       if ((current_resolve_index != 0) && show_resolve) {
          // Display the current resolve.

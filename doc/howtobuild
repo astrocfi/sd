@@ -283,7 +283,7 @@ open scotch.ics.uci.edu
 lcd \wba\sddoc
 put pack.zip
   This is silent and not helpful.  It takes a while.  Run putty,
-  and doubleclick "scotch" (PW=x464pq) to connect in another window,
+  and doubleclick "scotch" (U=ackerman, P=x464pq) to connect in another window,
   and watch the file come in.
       scotch> unzip pack
       scotch> rm pack.zip

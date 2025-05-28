@@ -6318,6 +6318,8 @@ extern void inner_selective_move(
             if (indicator == selective_key_disc_dist)
                lilss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
+            lilss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+
             if (key == LOOKUP_Z) {
                if (fixp->outk == sd2x7) {
                   if (thislivemask == 0x060C)
