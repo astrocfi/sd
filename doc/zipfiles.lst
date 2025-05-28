@@ -4,6 +4,7 @@
 ..\sd\sdlib.dll
 ..\sd\sd_calls.txt
 ..\sd\sd_calls.dat
+..\sd\libwinpthread-1.dll
 "..\sd\Edit sd.ini.lnk"
 ..\sd\Faq.lnk
 "..\sd\Release Notes.lnk"

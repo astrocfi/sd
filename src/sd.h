@@ -56,7 +56,7 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-#define THROW_DECL throw(error_flag_type)
+#define THROW_DECL
 
 // Not so!  Throw is now in effect.
 //
@@ -1322,33 +1322,21 @@ class final_and_herit_flags {
 
    // Stuff for manipulating the "herit" bits.
 
-   // Test all 64 bits, report if any bits match.
-   inline bool bool_test_heritbits(heritflags & y) const { return ((herit.r & y.r) | (herit.l & y.l)) != 0; }
+   // This is just an AND of the herit item and the given argument, returning a 64-bit int.
+   inline uint64_t test_heritbits(uint64_t y) const { return herit & y; }
 
-   // This tests a single bit.  It returns an int rather than a bool
-   // in case the client wants to combine the result with other
-   // stuff for greater efficiency.
-   inline uint32_t test_heritbit_r(uint32_t y) const { return herit.r & y; }
-   // This tests against a word, presumably containing a mask of 2 or more bits.
-   inline uint32_t test_heritbits_r(uint32_t y) const { return herit.r & y; }
-   inline uint32_t test_heritbits_l(uint32_t y) const { return herit.l & y; }
-   // This clears a single bit.
-   inline void clear_heritbit_r(uint32_t y) { herit.r = (heritflagsr) (herit.r & ~y); }
-   // This clears a mask of bits.  Bits that are ON in the argument
-   // get CLEARED in the field.
-   inline void clear_heritbits_r(uint32_t y) { herit.r = (heritflagsr) (herit.r & ~y); }
-   // This clears a mask of bits.  Bits that are ON in the argument
-   // get CLEARED in the field.
-   inline void clear_heritbits_l(uint32_t y) { herit.l = (heritflagsl) (herit.l & ~y); }
+   // Same, but return TRUE if the result of the AND is nonzero.
+   inline bool bool_test_heritbits(uint64_t y) const { return (herit & y) != 0ULL; }
 
-   // This sets a single bit.
-   //   inline void set_heritbit_r(heritflags y) { herit.r = (heritflagsr) (herit.r | y.r); }
    // This sets a mask of bits.
-   inline void set_heritbits_r(uint32_t y) { herit.r = (heritflagsr) (herit.r | y); }
-   inline void set_heritbits_l(uint32_t y) { herit.l = (heritflagsl) (herit.l | y); }
+   inline void set_heritbits(uint64_t y) { herit |= y; }
+
+   // This clears a mask of bits.  Bits that are ON in the argument
+   // get CLEARED in the field.
+   inline void clear_heritbits(uint64_t y) { herit &= ~y; }
 
    // Clear all bits.
-   inline void clear_all_heritbits() { herit.r = (heritflagsr) 0; herit.l = (heritflagsl) 0; }
+   inline void clear_all_heritbits() { herit = 0ULL; }
 
    // Stuff for manipulating the "final" bits.  Exactly analogous
    // to the "herit" stuff.  See comments above.
@@ -1362,11 +1350,11 @@ class final_and_herit_flags {
    inline void clear_all_finalbits() { final = (finalflags) 0; }
 
    // Clear both herit and final bits.
-   inline void clear_all_herit_and_final_bits()
-      { herit.r = (heritflagsr) 0; herit.l = (heritflagsl) 0; final = (finalflags) 0; }
+   inline void clear_all_herit_and_final_bits() { herit = 0ULL; final = (finalflags) 0; }
 
    // Test both fields, to see whether any bits, in either field, are on.
-   inline bool test_for_any_herit_or_final_bit() { return (herit.l | herit.r | final) != 0; }
+   // ****** Is this appropriate for mixed sizes?
+   inline bool test_for_any_herit_or_final_bit() { return (herit | final) != 0; }
 };
 
 
@@ -1483,6 +1471,8 @@ enum selector_kind {
    selector_farsix,
    selector_nearthree,
    selector_farthree,
+   selector_neartriangle,
+   selector_fartriangle,
    selector_nearfive,
    selector_farfive,
    selector_the2x3,
@@ -1600,6 +1590,17 @@ struct who_list {
       for (int i=0 ; i<who_stack_size-1 ; i++)
          who[i] = who[i+1];
       who[who_stack_size-1] = selector_uninitialized;
+   }
+
+   who_list() { initialize(); }
+
+   who_list(selector_kind sel)
+   {
+      who[0] = sel;
+
+      for (int i=1 ; i<who_stack_size ; i++)
+         who[i] = selector_uninitialized;
+      who_stack_ptr = 1;
    }
 
    selector_kind who[who_stack_size];
@@ -1751,8 +1752,7 @@ struct resultflag_rec {
 
    resultflag_rec() : misc(0)
    { 
-      res_heritflags_to_save_from_mxn_expansion.r = (heritflagsr) 0;
-      res_heritflags_to_save_from_mxn_expansion.l = (heritflagsl) 0;
+      res_heritflags_to_save_from_mxn_expansion = 0ULL;
       clear_split_info();
    }
 };
@@ -1874,11 +1874,8 @@ struct concept_table_item {
 */
 
 
-#define LB32 (CONCPROP__NEED_LOBIT*32)
 
-#define NEEDMASKL(K) (((K) < LB32) ? ((uint32_t) (1<<(((uint32_t) (K))/((uint32_t) CONCPROP__NEED_LOBIT)))) : 0)
-
-#define NEEDMASKR(K) (((K) >= LB32) ? ((uint32_t) (1<<(((uint32_t) ((K)-LB32))/((uint32_t) CONCPROP__NEED_LOBIT)))) : 0)
+#define NB(x) (1ULL << (x/CONCPROP__NEED_LOBIT))
 
 
 enum {
@@ -4230,6 +4227,10 @@ class configuration {
    been done the same way without the "split" concept.  This prevents superfluous
    things like "split pass thru".
 
+   CMD_MISC__REDUCED_BY_TANDEM means that we are at a level of recursion in which
+   some couples or tandem concept is in effect.  If we see a call with schema_concentric,
+   change it to schema_single_concentric.
+
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -4308,7 +4309,7 @@ enum {
    CMD_MISC__OFFSET_Z             = 0x00080000U,
    CMD_MISC__SAID_SPLIT           = 0x00100000U,
    CMD_MISC__EXPLICIT_MIRROR      = 0x00200000U,
-   //   CMD_MISC__                = 0x00400000U,    // Unused
+   CMD_MISC__REDUCED_BY_TANDEM    = 0x00400000U,
    CMD_MISC__SAID_PG_OFFSET       = 0x00800000U,  // Explicitly said it, so space-invasion rules don't apply.
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000U,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000U,
@@ -4484,8 +4485,7 @@ class expand {
       warning_index expwarning;
       warning_index norwarning;
       normalize_action action_level;
-      uint32_t expandconcpropmaskl;
-      uint32_t expandconcpropmaskr;
+      uint64_t expandconcpropmask;
       thing *next_expand;
       thing *next_compress;
    };
@@ -4504,8 +4504,7 @@ class expand {
                                         bool noqtagcompress) THROW_DECL;
 
    static bool expand_from_hash_table(setup *ss,                               // In sdtop.
-                                      uint32_t needpropbitsl,
-                                      uint32_t needpropbitsr,
+                                      uint64_t needpropbits,
                                       uint32_t livemask) THROW_DECL;
 
  private:
@@ -5197,12 +5196,15 @@ extern void put_in_absolute_proximity_and_facing_bits(setup *ss);
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
-extern void big_endian_get_directions(
+extern void big_endian_get_directions64(
    const setup *ss,
-   uint32_t & directions,
-   uint32_t & livemask,
-   uint32_t * high_directions_p = 0,    // These are optional, for setups larger than 16 people.
-   uint32_t * high_livemask_p = 0);
+   uint64_t & directions,
+   uint64_t & livemask);
+
+extern void big_endian_get_directions32(
+   const setup *ss,
+   uint32_t & directions,    // These get only the low 32 bits,
+   uint32_t & livemask);     // Which are good enough for most clients.
 
 extern void touch_or_rear_back(
    setup *scopy,
@@ -5232,7 +5234,7 @@ struct skipped_concept_info {
    skipped_concept_info() : m_nocmd_misc3_bits(0) {}
    skipped_concept_info(parse_block *incoming) THROW_DECL;    // In SDTOP
    parse_block *get_next() {
-      parse_block *t =  (m_heritflag.r != 0 || m_heritflag.l != 0) ? m_concept_with_root : m_result_of_skip;
+      parse_block *t = (m_heritflag != 0ULL) ? m_concept_with_root : m_result_of_skip;
       if (!t)
          fail("Need a concept.");
       return t; }
@@ -5593,7 +5595,7 @@ public:
       {
          // If doing half of a call, and doing it left,
          // and there is a "collision", make them come to left hands.
-         if (mirror && cmd->cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF)) {
+         if (mirror && cmd->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
             m_force_mirror_warn = false;
             m_doing_half_override = true;
          }
@@ -5855,7 +5857,7 @@ extern void tandem_couples_move(
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
-   uint32_t mxn_bitsr,    // always grouped on the right side.
+   uint64_t mxn_bits,
    bool phantom_pairing_ok,
    setup *result) THROW_DECL;
 
@@ -6251,7 +6253,7 @@ extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP 
 extern SDLIB_API bool verify_used_number;                           /* in SDTOP */
 extern SDLIB_API bool verify_used_direction;                        /* in SDTOP */
 extern SDLIB_API bool verify_used_selector;                         /* in SDTOP */
-extern SDLIB_API heritflagsl simple_herit_leftbits_table[];         /* in SDTOP */
+extern SDLIB_API heritflags simple_herit_bits_table[];              /* in SDTOP */
 
 
 struct comment_block {

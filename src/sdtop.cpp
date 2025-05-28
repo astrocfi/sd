@@ -287,18 +287,18 @@ interactivity_state interactivity = interactivity_normal;
 char database_version[81];
 bool testing_fidelity = false;
 
-heritflagsl simple_herit_leftbits_table[] = {
-   INHERITFLAGL_CROSSOVER,
-   INHERITFLAGL_INROLL,
-   INHERITFLAGL_OUTROLL,
-   INHERITFLAGL_SPLITTRADE,
-   INHERITFLAGL_BIAS,
-   INHERITFLAGL_BIASTRADE,
-   INHERITFLAGL_ORBIT,
-   INHERITFLAGL_TWINORBIT,
-   INHERITFLAGL_ROTARY,
-   INHERITFLAGL_SCATTER,
-   INHERITFLAGL_ZOOMROLL
+heritflags simple_herit_bits_table[] = {
+   INHERITFLAG_CROSSOVER,
+   INHERITFLAG_INROLL,
+   INHERITFLAG_OUTROLL,
+   INHERITFLAG_SPLITTRADE,
+   INHERITFLAG_BIAS,
+   INHERITFLAG_BIASTRADE,
+   INHERITFLAG_ORBIT,
+   INHERITFLAG_TWINORBIT,
+   INHERITFLAG_ROTARY,
+   INHERITFLAG_SCATTER,
+   INHERITFLAG_ZOOMROLL
 };
 
 
@@ -1024,31 +1024,34 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
-extern void big_endian_get_directions(
+extern void big_endian_get_directions64(
    const setup *ss,
-   uint32_t & directions,
-   uint32_t & livemask,
-   uint32_t * high_directions_p /* = 0 */,    // These are optional, for setups larger than 16 people.
-   uint32_t * high_livemask_p /* = 0 */)
+   uint64_t & directions,
+   uint64_t & livemask)
 {
-   directions = 0;
-   livemask = 0;
-   uint32_t high_directions = 0;
-   uint32_t high_livemask = 0;
+   directions = 0ULL;
+   livemask = 0ULL;
 
    for (int i=0; i<=attr::slimit(ss); i++) {
       uint32_t p = ss->people[i].id1;
-      high_livemask <<= 2;
-      high_directions <<= 2;
-      high_livemask |= (livemask >> 30) & 3;
-      high_directions |= (directions >> 30) & 3;
-      directions = ((directions & 0x3FFFFFFF)<<2) | (p&3);
+      directions = (directions<<2) | (p&3);
       livemask <<= 2;
       if (p) { livemask |= 3 ; }
    }
+}
 
-   if (high_livemask_p) *high_livemask_p = high_livemask;
-   if (high_directions_p) *high_directions_p = high_directions;
+extern void big_endian_get_directions32(
+   const setup *ss,
+   uint32_t & directions,
+   uint32_t & livemask)
+{
+   uint64_t local_directions;
+   uint64_t local_livemask;
+
+   big_endian_get_directions64(ss, local_directions, local_livemask);
+
+   directions = (uint32_t) local_directions;
+   livemask = (uint32_t) local_livemask;
 }
 
 
@@ -1065,14 +1068,14 @@ extern void touch_or_rear_back(
    if (attr::slimit(scopy) < 0) return;
 
    // We don't do this if doing the last half of a call.
-   if (scopy->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_LASTHALF)) return;
+   if (scopy->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_LASTHALF)) return;
 
    if (!(callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
       return;
 
    remove_z_distortion(scopy);
 
-   big_endian_get_directions(scopy, directions, livemask);
+   big_endian_get_directions32(scopy, directions, livemask);
 
    uint32_t touchflags = (callflags1 & CFLAG1_STEP_REAR_MASK);
    call_restriction new_assume = cr_none;
@@ -1083,7 +1086,7 @@ extern void touch_or_rear_back(
    case CFLAG1_REAR_BACK_FROM_EITHER:
       if (scopy->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED) ||
           (touchflags != CFLAG1_REAR_BACK_FROM_QTAG &&
-           !scopy->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MXNMASK))) {
+           !scopy->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_MXNMASK))) {
          // Check for rearing back from a wave.
          tptr = full_expand::search_table_1(scopy->kind, livemask, directions);
          if (tptr) goto found_tptr;
@@ -1267,7 +1270,7 @@ extern void touch_or_rear_back(
    // We need to raise an error if the caller said "left spin the top" when we were in a right-hand wave.
 
    if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-      big_endian_get_directions(scopy, directions, livemask);    // Need to do this again.
+      big_endian_get_directions32(scopy, directions, livemask);    // Need to do this again.
 
       uint32_t rtest = ~0U;
       uint32_t rothertest = ~0U;
@@ -1462,8 +1465,7 @@ bool expand::compress_from_hash_table(setup *ss,
 
 
 bool expand::expand_from_hash_table(setup *ss,
-                                    uint32_t needpropbitsl,
-                                    uint32_t needpropbitsr,
+                                    uint64_t needpropbits,
                                     uint32_t livemask) THROW_DECL
 {
    uint32_t hash_num = (ss->kind * 25) & (NUM_EXPAND_HASH_BUCKETS-1);
@@ -1471,8 +1473,7 @@ bool expand::expand_from_hash_table(setup *ss,
 
    for (eptr=expand_hash_table[hash_num] ; eptr ; eptr=eptr->next_expand) {
       if (eptr->inner_kind == ss->kind &&
-          ((eptr->expandconcpropmaskl & needpropbitsl) ||
-           (eptr->expandconcpropmaskr & needpropbitsr)) &&
+          ((eptr->expandconcpropmask & needpropbits)) &&
           (livemask & eptr->lillivemask) == 0) {
          warn(eptr->expwarning);
          expand_setup(*eptr, ss);
@@ -1494,20 +1495,18 @@ extern void do_matrix_expansion(
 {
    uint32_t needprops = concprops & CONCPROP__NEED_MASK;
    if (needprops == 0) return;
-   uint32_t needpropbitsl = NEEDMASKL(needprops);
-   uint32_t needpropbitsr = NEEDMASKR(needprops);
+   uint64_t needpropbits = NB(needprops);
 
    for (;;) {
       uint32_t livemask = little_endian_live_mask(ss);
 
       // Search for simple things in the hash table.
 
-      if (expand::expand_from_hash_table(ss, needpropbitsl, needpropbitsr, livemask))
+      if (expand::expand_from_hash_table(ss, needpropbits, livemask))
          goto expanded;
 
       if (ss->kind == s4x4) {
-         if ((needpropbitsl & (NEEDMASKL(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASKL(CONCPROP__NEEDK_4DMD))) ||
-             (needpropbitsr & (NEEDMASKR(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASKR(CONCPROP__NEEDK_4DMD)))) {
+         if (needpropbits & (NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD))) {
             if (livemask == 0x1717U) {
                expand::expand_setup(s_4x4_4dma, ss);
                goto expanded;
@@ -1519,8 +1518,7 @@ extern void do_matrix_expansion(
          }
 
 
-         else if ((needpropbitsl & (NEEDMASKL(CONCPROP__NEEDK_TWINDMD) | NEEDMASKL(CONCPROP__NEEDK_TWINQTAG))) ||
-                  (needpropbitsr & (NEEDMASKR(CONCPROP__NEEDK_TWINDMD) | NEEDMASKR(CONCPROP__NEEDK_TWINQTAG)))) {
+         else if (needpropbits & (NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG))) {
             // Egads!  It turns out that the "CONCPROP__NEEDK_TWINQTAG"
             // indicator is used not just for "twin phantom 1/4 tags", but for
             // "tandem in a 1/4 tag"!!!!  Both require a 4x6, but with very
@@ -1577,8 +1575,7 @@ extern void do_matrix_expansion(
       }
 
       if (ss->kind == s_23232) {
-         if ((needpropbitsl & (NEEDMASKL(CONCPROP__NEEDK_4X5))) ||
-             (needpropbitsr & (NEEDMASKR(CONCPROP__NEEDK_4X5)))) {
+         if (needpropbits & NB(CONCPROP__NEEDK_4X5)) {
             // Have to figure out where to move the people in the lines of 3.
             if ((livemask & 04343) == 04242) {
                warn(warn__check_hokey_4x5);
@@ -3503,8 +3500,7 @@ void finalize_sdlib()
 static bool check_for_supercall(parse_block *parseptrcopy)
 {
    concept_kind kk = parseptrcopy->concept->kind;
-   heritflags zeroherit;
-   zeroherit.initialize_rl(0, 0);
+   heritflags zeroherit = 0ULL;
 
    if (kk <= marker_end_of_list) {
       // Only calls with "@0" or "@m" in their name may be supercalls.
@@ -3527,7 +3523,7 @@ static bool check_for_supercall(parse_block *parseptrcopy)
             innerdef.modifiers1 = DFM1_CALL_MOD_MAND_SECONDARY;
          }
 
-         innerdef.modifiersh.initialize_rl(0, 0);
+         innerdef.modifiersh = 0ULL;
          setup_command bar;
          bar.cmd_final_flags.clear_all_herit_and_final_bits();
          calldefn this_defn = base_calls[innerdef.call_id]->the_defn;
@@ -3613,8 +3609,7 @@ bool check_for_concept_group(
    parse_block *temp = process_final_concepts(parseptrcopy, false, &junk_concepts, false, false);
 
    if (temp && temp != parseptrcopy && temp->concept->kind == concept_concentric &&
-       junk_concepts.test_heritbits_r(~(INHERITFLAGR_GRAND|INHERITFLAGR_SINGLE|INHERITFLAGR_CROSS)) == 0 &&
-       junk_concepts.test_heritbits_l(~0) == 0) {
+       !junk_concepts.bool_test_heritbits(~(INHERITFLAG_GRAND|INHERITFLAG_SINGLE|INHERITFLAG_CROSS))) {
          skip_a_pair = temp;
    }
    else {
@@ -4335,10 +4330,9 @@ extern callarray *assoc(
          else if (ssK == s4x6 && (t & 010) == 0) goto good;
          else if (ssK == s3x8 && (t & 001) == 0) goto good;
          goto bad;
-      case cr_dmd_same_pt:                   /* dmd or pdmd - centers would circulate
-                                                to same point */
-         if (((ss->people[1].id1 & 01011) == d_east) &&         /* faces either east or west */
-             (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))  /* and both face same way */
+      case cr_dmd_same_pt:                   // dmd or pdmd - centers would circulate to same point
+         if (((ss->people[1].id1 & (BIT_PERSON | 011U)) == d_east) &&         // faces either east or west
+             (!((ss->people[3].id1 ^ ss->people[1].id1) & d_mask)))            // and both face same way
             goto good;
          goto bad;
       case cr_nice_diamonds:
@@ -4883,7 +4877,7 @@ uint32_t uncompress_position_number(uint32_t datum)
 extern void clear_result_flags(setup *z, uint32_t preserve_these /* = 0 */)
 {
    z->result_flags.misc &= preserve_these;
-   z->result_flags.res_heritflags_to_save_from_mxn_expansion.initialize_rl(0, 0);
+   z->result_flags.res_heritflags_to_save_from_mxn_expansion = 0ULL;
    z->result_flags.clear_split_info();
 }
 
@@ -5139,14 +5133,12 @@ parse_block *process_final_concepts(
    for ( ; cptr ; cptr=cptr->next) {
       finalflags the_final_bit = (finalflags) 0;
       uint32_t forbidfinalbit = 0;
-      heritflags heritsetbit;
-      heritsetbit.initialize_rl(0, 0);
-      heritflags forbidheritbit;
-      forbidheritbit.initialize_rl(0, 0);
+      heritflags heritsetbit = 0ULL;
+      heritflags forbidheritbit = 0ULL;
 
       if (cptr->concept->kind >= FIRST_SIMPLE_HERIT_CONCEPT &&
           cptr->concept->kind <= LAST_SIMPLE_HERIT_CONCEPT) {
-         heritsetbit.initialize_rl(0, simple_herit_leftbits_table[cptr->concept->kind - FIRST_SIMPLE_HERIT_CONCEPT]);
+         heritsetbit = simple_herit_bits_table[cptr->concept->kind - FIRST_SIMPLE_HERIT_CONCEPT];
       }
       else {
          switch (cptr->concept->kind) {
@@ -5162,111 +5154,111 @@ parse_block *process_final_concepts(
             goto new_final;
          case concept_magic:
             last_magic_diamond = cptr;
-            heritsetbit.initialize_rl(INHERITFLAGR_MAGIC, 0);
-            forbidheritbit.initialize_rl(INHERITFLAGR_SINGLE | INHERITFLAGR_DIAMOND, 0);
+            heritsetbit = INHERITFLAG_MAGIC;
+            forbidheritbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
             break;
          case concept_interlocked:
             last_magic_diamond = cptr;
-            heritsetbit.initialize_rl(INHERITFLAGR_INTLK, 0);
-            forbidheritbit.initialize_rl(INHERITFLAGR_SINGLE | INHERITFLAGR_DIAMOND, 0);
+            heritsetbit = INHERITFLAG_INTLK;
+            forbidheritbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
             break;
          case concept_grand:
-            heritsetbit.initialize_rl(INHERITFLAGR_GRAND, 0);
-            forbidheritbit.initialize_rl(INHERITFLAGR_SINGLE, 0);
+            heritsetbit = INHERITFLAG_GRAND;
+            forbidheritbit = INHERITFLAG_SINGLE;
             break;
          case concept_cross:
-            heritsetbit.initialize_rl(INHERITFLAGR_CROSS, 0); break;
+            heritsetbit = INHERITFLAG_CROSS; break;
          case concept_reverse:
-            heritsetbit.initialize_rl(INHERITFLAGR_REVERSE, 0); break;
+            heritsetbit = INHERITFLAG_REVERSE; break;
          case concept_fast:
-            heritsetbit.initialize_rl(INHERITFLAGR_FAST, 0); break;
+            heritsetbit = INHERITFLAG_FAST; break;
          case concept_left:
-            heritsetbit.initialize_rl(INHERITFLAGR_LEFT, 0); break;
+            heritsetbit = INHERITFLAG_LEFT; break;
          case concept_yoyo:
-            heritsetbit.initialize_rl(INHERITFLAGR_YOYOETCK_YOYO, 0);
-            forbidheritbit.initialize_rl(0, INHERITFLAGL_SCATTER);
+            heritsetbit = INHERITFLAG_YOYOETCK_YOYO;
+            forbidheritbit = INHERITFLAG_SCATTER;
             break;
          case concept_generous:
-            heritsetbit.initialize_rl(INHERITFLAGR_YOYOETCK_GENEROUS, 0);
-            forbidheritbit.initialize_rl(0, INHERITFLAGL_SCATTER);
+            heritsetbit = INHERITFLAG_YOYOETCK_GENEROUS;
+            forbidheritbit = INHERITFLAG_SCATTER;
             break;
          case concept_stingy:
-            heritsetbit.initialize_rl(INHERITFLAGR_YOYOETCK_STINGY, 0);
-            forbidheritbit.initialize_rl(0, INHERITFLAGL_SCATTER);
+            heritsetbit = INHERITFLAG_YOYOETCK_STINGY;
+            forbidheritbit = INHERITFLAG_SCATTER;
             break;
          case concept_fractal:
-            heritsetbit.initialize_rl(INHERITFLAGR_FRACTAL, 0);
-            forbidheritbit.initialize_rl(0, INHERITFLAGL_SCATTER);
+            heritsetbit = INHERITFLAG_FRACTAL;
+            forbidheritbit = INHERITFLAG_SCATTER;
             break;
          case concept_straight:
-            heritsetbit.initialize_rl(INHERITFLAGR_STRAIGHT, 0); break;
+            heritsetbit = INHERITFLAG_STRAIGHT; break;
          case concept_rewind:
-            heritsetbit.initialize_rl(INHERITFLAGR_REWIND, 0); break;
+            heritsetbit = INHERITFLAG_REWIND; break;
          case concept_twisted:
-            heritsetbit.initialize_rl(INHERITFLAGR_TWISTED, 0); break;
+            heritsetbit = INHERITFLAG_TWISTED; break;
          case concept_single:
-            heritsetbit.initialize_rl(INHERITFLAGR_SINGLE, 0); break;
+            heritsetbit = INHERITFLAG_SINGLE; break;
          case concept_singlefile:
-            heritsetbit.initialize_rl(INHERITFLAGR_SINGLEFILE, 0); break;
+            heritsetbit = INHERITFLAG_SINGLEFILE; break;
          case concept_1x2:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_1X2, 0); break;
+            heritsetbit = INHERITFLAGMXNK_1X2; break;
          case concept_2x1:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_2X1, 0); break;
+            heritsetbit = INHERITFLAGMXNK_2X1; break;
          case concept_1x3:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_1X3, 0); break;
+            heritsetbit = INHERITFLAGMXNK_1X3; break;
          case concept_3x1:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_3X1, 0); break;
+            heritsetbit = INHERITFLAGMXNK_3X1; break;
          case concept_3x0:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_3X0, 0); break;
+            heritsetbit = INHERITFLAGMXNK_3X0; break;
          case concept_0x3:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_0X3, 0); break;
+            heritsetbit = INHERITFLAGMXNK_0X3; break;
          case concept_4x0:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_4X0, 0); break;
+            heritsetbit = INHERITFLAGMXNK_4X0; break;
          case concept_0x4:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_0X4, 0); break;
+            heritsetbit = INHERITFLAGMXNK_0X4; break;
          case concept_6x2:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_6X2, 0); break;
+            heritsetbit = INHERITFLAGMXNK_6X2; break;
          case concept_3x2:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_3X2, 0); break;
+            heritsetbit = INHERITFLAGMXNK_3X2; break;
          case concept_3x5:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_3X5, 0); break;
+            heritsetbit = INHERITFLAGMXNK_3X5; break;
          case concept_5x3:
-            heritsetbit.initialize_rl(INHERITFLAGRMXNK_5X3, 0); break;
+            heritsetbit = INHERITFLAGMXNK_5X3; break;
          case concept_2x2:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_2X2, 0); break;
+            heritsetbit = INHERITFLAGNXNK_2X2; break;
          case concept_3x3:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_3X3, 0); break;
+            heritsetbit = INHERITFLAGNXNK_3X3; break;
          case concept_4x4:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_4X4, 0); break;
+            heritsetbit = INHERITFLAGNXNK_4X4; break;
          case concept_5x5:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_5X5, 0); break;
+            heritsetbit = INHERITFLAGNXNK_5X5; break;
          case concept_6x6:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_6X6, 0); break;
+            heritsetbit = INHERITFLAGNXNK_6X6; break;
          case concept_7x7:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_7X7, 0); break;
+            heritsetbit = INHERITFLAGNXNK_7X7; break;
          case concept_8x8:
-            heritsetbit.initialize_rl(INHERITFLAGRNXNK_8X8, 0); break;
+            heritsetbit = INHERITFLAGNXNK_8X8; break;
          case concept_revert:
-            heritsetbit.initialize_rl(cptr->concept->arg1, 0); break;
+            heritsetbit = (heritflags) cptr->concept->arg1; break;
          case concept_split:
             the_final_bit = FINAL__SPLIT;
             goto new_final;
          case concept_12_matrix:
             if (check_errors && final_concepts->test_for_any_herit_or_final_bit())
                fail("Matrix modifier must appear first.");
-            heritsetbit.initialize_rl(INHERITFLAGR_12_MATRIX, 0);
+            heritsetbit = INHERITFLAG_12_MATRIX;
             break;
          case concept_16_matrix:
             if (check_errors && final_concepts->test_for_any_herit_or_final_bit())
                fail("Matrix modifier must appear first.");
-            heritsetbit.initialize_rl(INHERITFLAGR_16_MATRIX, 0);
+            heritsetbit = INHERITFLAG_16_MATRIX;
             break;
          case concept_diamond:
-            heritsetbit.initialize_rl(INHERITFLAGR_DIAMOND, 0);
-            forbidheritbit.initialize_rl(INHERITFLAGR_SINGLE, 0);
+            heritsetbit = INHERITFLAG_DIAMOND;
+            forbidheritbit = INHERITFLAG_SINGLE;
             break;
          case concept_funny:
-            heritsetbit.initialize_rl(INHERITFLAGR_FUNNY, 0); break;
+            heritsetbit = INHERITFLAG_FUNNY; break;
          default:
             return cptr;
          }
@@ -5283,8 +5275,7 @@ parse_block *process_final_concepts(
       }
       else {
          // If not checking for errors, we just have to set the "herit" field nonzero.
-         final_concepts->set_heritbits_r(heritsetbit.r);
-         final_concepts->set_heritbits_l(heritsetbit.l);
+         final_concepts->herit |= heritsetbit;
       }
 
       goto check_level;
@@ -5303,7 +5294,7 @@ parse_block *process_final_concepts(
          // whether any modifier at all was seen.  Only the zero/nonzero nature
          // of the "herit" word will be looked at if we are not checking for errors.
 
-         final_concepts->set_heritbits_r(INHERITFLAGR_DIAMOND);
+         final_concepts->herit |= INHERITFLAG_DIAMOND;
       }
 
       final_concepts->set_finalbit(the_final_bit);
@@ -5314,7 +5305,7 @@ parse_block *process_final_concepts(
          warn(warn__bad_concept_level);
 
       // Stop now if we have been asked to process only one concept.
-      if (only_one && (the_final_bit != 0 || !heritsetbit.is_zero())) return cptr->next;
+      if (only_one && (the_final_bit != 0 || heritsetbit != 0ULL)) return cptr->next;
    }
 
    if (forbid_unfinished_parse) fail_no_retry("Incomplete parse.");
@@ -5332,7 +5323,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
       incoming = incoming->next;
 
    m_nocmd_misc3_bits = 0;
-   m_heritflag.initialize_rl(0, 0);
+   m_heritflag = 0ULL;
    m_old_retval = incoming;
    m_skipped_concept = incoming;
    m_result_of_skip = m_skipped_concept->next;
@@ -5351,7 +5342,7 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
    // is a modifier or a "real" concept.
 
    if (junk_concepts.final == 0 &&
-       (junk_concepts.test_heritbit_r(INHERITFLAGR_YOYOETCMASK | INHERITFLAGR_LEFT | INHERITFLAGR_FRACTAL)) != 0) {
+       (junk_concepts.bool_test_heritbits(INHERITFLAG_YOYOETCMASK | INHERITFLAG_LEFT | INHERITFLAG_FRACTAL))) {
       m_heritflag = junk_concepts.herit;
       return;
    }
@@ -6231,8 +6222,7 @@ bool check_for_centers_concept(uint32_t & callflags1_to_examine,   // We rewrite
    final_and_herit_flags finaljunk;
    finaljunk.clear_all_herit_and_final_bits();
    bool did_something = true;
-   heritflags zeroherit;
-   zeroherit.initialize_rl(0, 0);
+   heritflags zeroherit = 0ULL;
 
    // Here's the loop that strips off the stuff that we need to strip off,
    // and checks the call.
@@ -6647,18 +6637,18 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.cmd_misc_flags = 0;
    starting_setup.cmd.cmd_misc2_flags = 0;
    starting_setup.cmd.cmd_misc3_flags = 0;
-   starting_setup.cmd.do_couples_her8itflags.initialize_rl(0, 0);
+   starting_setup.cmd.do_couples_her8itflags = 0ULL;
    starting_setup.cmd.cmd_fraction.set_to_null();
    starting_setup.cmd.cmd_assume.assumption = cr_none;
    starting_setup.cmd.cmd_assume.assump_cast = 0;
    starting_setup.cmd.prior_elongation_bits = 0;
    starting_setup.cmd.prior_expire_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
-   starting_setup.cmd.skippable_heritflags.initialize_rl(0, 0);
-   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion.initialize_rl(0, 0);
+   starting_setup.cmd.skippable_heritflags = 0ULL;
+   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0ULL;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
-   starting_setup.cmd.restrained_super8flags.initialize_rl(0, 0);
-   starting_setup.cmd.restrained_super9flags.initialize_rl(0, 0);
+   starting_setup.cmd.restrained_super8flags = 0ULL;
+   starting_setup.cmd.restrained_super9flags = 0ULL;
    starting_setup.cmd.restrained_do_as_couples = false;
    starting_setup.cmd.restrained_miscflags = 0;
    starting_setup.cmd.restrained_misc2flags = 0;
@@ -6719,7 +6709,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
    starting_setup.result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
-   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion.initialize_rl(0, 0);
+   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0ULL;
    move(&starting_setup, false, &newhist.state, true);
    newhist.state_is_valid = true;
    remove_mxn_spreading(&newhist.state);

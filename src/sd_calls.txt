@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.29"
+version "39.30"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3464,8 +3464,8 @@ call "_single centers hinge" dontshow tag sglctrhinge
    singleconc hinge_with_warn [inherit_intlk inherit_left inherit_fractal inherit_gensting] nullcall []
 
 call "_single centers together hinge" dontshow tag sglctrtogetherhinge
-            left_means_mirror intlk_is_inherited
-   singleconc_together hinge_with_warn [inherit_intlk inherit_left] nullcall []
+            left_means_mirror intlk_is_inherited gen_sting_is_inherited
+   singleconc_together hinge_with_warn [inherit_intlk inherit_left inherit_gensting] nullcall []
 
 call "_single centers together @0" dontshow tag sglctrtogetheranything
    singleconc_together nullcall [mandatory_anycall] nullcall []
@@ -6588,6 +6588,11 @@ call "@6 trade" mainstream
    // Some setups have natural holes, or unusual positions.
    // Use the old definition for those.
 
+   setup 1x2 1x2
+      preds "Can't find anyone to trade with."
+         if select_near_select [CR1S AL0S]
+         if select_near_select_or_phantom [CR1S AL0S]
+
    // The matrix mechanism can handle normal qtags correctly, but it can't handle
    // pqtags because the people are not in the same plane.
    setup pqtag qtag
@@ -8646,7 +8651,7 @@ call "_extend 1/2 to @a" dontshow tag extend_n
    setup 2x2 dmd rotate qualifier num 1 miniwaves
       // Yikes!!  We gotta back up!
       array [ZM3W ZM1W ZM2W ZM2W]
-   setup 2x2 2x2 restriction wave_only qualifier num 2 none
+   setup 2x2 2x2 roll_transparent restriction wave_only qualifier num 2 none
       array [ZM0N ZM1N ZM2N ZM3N]
    setup 1x4 1x4 qualifier num 2 miniwaves
       array [ZM0N ZM1N ZM2N ZM3N]
@@ -9499,6 +9504,20 @@ call "crossfire" plus
             alternate_definition [yoyo] c4
    // Of course, when we start getting serious,
    // everyone steps forward, and rolling is problematical.
+   setup 1x4 2x2 qualifier wave_only
+      array [C1S C3W A0S A2E]
+   setup dmd 2x2
+      array [C1S 0 A0S 0]
+   setup pmd 2x2
+      array [0 C0W 0 A3E]
+            alternate_definition [stingy] c4
+   setup 1x4 2x2 qualifier wave_only
+      array [C1S C1E A0S A0W]
+   setup dmd 2x2
+      array [C1S 0 A0S 0]
+   setup pmd 2x2
+      array [0 C2E 0 A1W]
+            alternate_definition [generous] c4
    setup 1x4 2x2 qualifier wave_only
       array [C1S C3W A0S A2E]
    setup dmd 2x2
@@ -11927,9 +11946,9 @@ call "peel to a@I diamond" c2
       predscantdocallinsetup
          if next_dmd_spot_is_facing [0 0 0 AM1W]
          if next_dmd_spot_is_normal [0 0 0 CM2E]
-            intlk_is_inherited
+            intlk_is_inherited gen_sting_is_inherited
    seq peelforpeeltoadiamond []
-   seq sglctrtogetherhinge [inherit_intlk roll_transparent]
+   seq sglctrtogetherhinge [inherit_intlk inherit_gensting roll_transparent]
 
 call "trail to a@I diamond" c2
    setup 2x2 2x2 qualifier alwaysfail
@@ -11945,9 +11964,9 @@ call "trail to a@I diamond" c2
       predscantdocallinsetup
          if next_dmd_spot_is_facing [0 0 0 AM1W]
          if next_dmd_spot_is_normal [0 0 0 CM2E]
-            intlk_is_inherited
+            intlk_is_inherited gen_sting_is_inherited
    seq trailfortrailtodiamond []
-   seq sglctrtogetherhinge [inherit_intlk roll_transparent]
+   seq sglctrtogetherhinge [inherit_intlk inherit_gensting roll_transparent]
 
 call "peel off" plus tag peeloff
             can_be_one_side_lateral split_if_z
@@ -17758,7 +17777,7 @@ call "plan ahead" c3a
 call "take @9" c3
             left_means_mirror neednumber
    setup 2x4 2x4 qualifier num 0 none
-      array [CM0E CM1E CM2E CM3E 0 0 0 0]
+      array [CR0E CR1E CR2E CR3E 0 0 0 0]
    setup 2x4 spindle qualifier num 1 none
       array [CM0E CM1E CM2E CR3W 0 0 0 0]
    setup 2x4 2x4 qualifier num 2 none
@@ -17772,13 +17791,19 @@ call "take @9" c3
    setup 2x4 2x4 rotate qualifier num 4 none
       array [CR0S CR1S CR2S CR3S 0 0 0 0]
    setup 2x3 2x3 qualifier num 0 none
-      array [CM0E CM1E CM2E 0 0 0]
+      array [CR0E CR1E CR2E 0 0 0]
    setup 2x3 short6 rotate qualifier num 1 none
       array [CM5N CM0N CR1S 0 0 0]
    setup 2x3 2x3 qualifier num 2 none
       array [CM1E CR2W CR3W 0 0 0]
    setup 2x3 2x3 rotate qualifier num 3 none
       array [CR0S CR1S CR2S 0 0 0]
+   setup 2x2 2x2 qualifier num 0 none
+      array [CR0E CR1E 0 0]
+   setup 2x2 dmd qualifier num 1 none
+      array [CM1E CR2W 0 0]
+   setup 2x2 2x2 qualifier num 2 none
+      array [CR1W CR2W 0 0]
             alternate_definition [12matrix] c4
    setup 2x6 2x6 qualifier num 0 none
       array [CM0E CM1E CM2E CM3E CM4E CM5E 0 0 0 0 0 0]
@@ -18140,24 +18165,10 @@ call "_ends regroup" dontshow tag eregroup
    seq trade []
    seq nullcall_other_elong []
 
-call "_regroup 1" dontshow tag regroup1
-            yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
-   conc2_4_or_single trade_w_tbone [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
-                     eregroup1 [conc_demand_lines endscando]
-
-call "_regroup 2" dontshow tag regroup2
-            yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
-   conc roll  []
-        trade [conc_force_lines endscando]
-
 call "regroup" c1
-   // Need both the conc-over-seq definition and the seq-over-conc one.
             visible_fractions diamond_is_legal funny_is_inherited
    conc trade_and_roll_w_tbone [inherit_diamond inherit_funny]
         eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
-            visible_fractions yoyo_is_inherited gen_sting_is_inherited diamond_is_legal funny_is_inherited
-   seq regroup1 [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
-   seq regroup2 [inherit_yoyo inherit_gensting inherit_diamond inherit_funny]
 
 call "regroup but @m" c3
             visible_fractions diamond_is_legal funny_is_inherited

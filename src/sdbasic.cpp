@@ -189,6 +189,11 @@ static collision_map collision_map_table[] = {
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},
     s1x4,        s1x8,        0, warn__really_no_collision, 0},   // more of same
 
+   {6, 0x000000, 0xFC, 0x30, {2, 3, 4, 5, 6, 7},   {5, 4, 7, 9, 11, 10},  {5, 4, 6, 8, 11, 10},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+   {6, 0x000000, 0xCF, 0x03, {0, 1, 2, 3, 6, 7},   {0, 2, 5, 4, 11, 10},  {1, 3, 5, 4, 11, 10},
+    s1x8,        s1x12,       0, warn__really_no_collision, 0},
+
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},
     s_spindle,   s_crosswave, 0, warn__none, 0},   // from trade by
    {2, 0x022022, 0x22, 0x22, {1, 5},               {2, 7},                {3, 6},
@@ -618,7 +623,7 @@ void collision_collector::install_with_collision(
           ((m_callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS) &&
            (((result->kind == s1x4 || result->kind == sdmd) && !(resultplace&1)) ||
             (result->kind == s2x4 && !((resultplace+1)&2)) ||
-            (result->kind == s_qtag && !(resultplace&2)) ||
+            ((result->kind == s_qtag || result->kind == s1x8) && !(resultplace&2)) ||
             result->kind == s2x2))) {
          // Collisions are legal.
       }
@@ -1522,6 +1527,30 @@ static uint32_t do_slide_roll(uint32_t person_in, uint32_t z, int direction)
       (((((z + direction) & 3) * 011) ^ 010) & 013) | sliderollstuff;
 }
 
+static void put_person_away(setup *destination, callarray *tdef, personrec & this_person, uint32_t z, int real_index,
+                            int real_direction, int k, uint16_t resultrot, int newplacelist[], uint32_t lilresult_mask[])
+{
+   destination->people[real_index].id1 = do_slide_roll(this_person.id1, z, real_direction);
+
+   if (this_person.id1 & STABLE_ENAB)
+      do_stability(&destination->people[real_index].id1,
+                   z/DBSTAB_BIT,
+                   z + resultrot, false);
+
+   destination->people[real_index].id2 = this_person.id2;
+   destination->people[real_index].id3 = this_person.id3;
+
+   // Restore roll information if this is transparent.
+   if (tdef->callarray_flags & CAF__ROLL_TRANSPARENT) {
+      destination->people[real_index].id1 = 
+         (destination->people[real_index].id1 & ~ROLL_IS_M) |
+         (this_person.id1 & ROLL_IS_M);
+   }
+
+   newplacelist[real_index] = k;
+   lilresult_mask[k>>5] |= (1 << (k&037));
+}
+
 
 static void special_4_way_symm(
    callarray *tdef,
@@ -1665,17 +1694,8 @@ static void special_4_way_symm(
          k = (z >> 2) & 0x3F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
-         destination->people[real_index].id1 = do_slide_roll(this_person.id1, z, real_direction);
-
-         if (this_person.id1 & STABLE_ENAB)
-            do_stability(&destination->people[real_index].id1,
-                         z/DBSTAB_BIT,
-                         z + result->rotation, false);
-
-         destination->people[real_index].id2 = this_person.id2;
-         destination->people[real_index].id3 = this_person.id3;
-         newplacelist[real_index] = k;
-         lilresult_mask[k>>5] |= (1 << (k&037));
+         put_person_away(destination, tdef, this_person, z, real_index,
+                         real_direction, k, result->rotation, newplacelist, lilresult_mask);
       }
    }
 }
@@ -1754,17 +1774,9 @@ static void special_triangle(
             }
          }
 
-         destination->people[real_index].id1 = do_slide_roll(this_person.id1, z, real_direction);
+         put_person_away(destination, ldef ? ldef : cdef, this_person, z, real_index,
+                         real_direction, k, result->rotation, newplacelist, lilresult_mask);
 
-         if (this_person.id1 & STABLE_ENAB)
-            do_stability(&destination->people[real_index].id1,
-                         z/DBSTAB_BIT,
-                         z+result->rotation, false);
-
-         destination->people[real_index].id2 = this_person.id2;
-         destination->people[real_index].id3 = this_person.id3;
-         newplacelist[real_index] = k;
-         lilresult_mask[0] |= (1 << k);
       }
    }
 
@@ -1808,8 +1820,8 @@ static bool handle_3x4_division(
    callarray *calldeflist, bool matrix_aware, setup *result)
 {
    bool forbid_little_stuff;
-   uint32_t nxnbits =
-      ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_NXNMASK|INHERITFLAGR_MXNMASK);
+   uint64_t nxnbits =
+      ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    /* The call has no applicable 3x4 or 4x3 definition. */
    /* First, check whether it has 2x3/3x2 definitions, and divide the setup if so,
@@ -1820,11 +1832,11 @@ static bool handle_3x4_division(
 
    if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
        ((callflags1 & CFLAG1_SPLIT_IF_Z) &&
-        nxnbits != INHERITFLAGRNXNK_3X3 &&
+        nxnbits != INHERITFLAGNXNK_3X3 &&
         (livemask == 06565 || livemask == 07272)) ||
        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
-       nxnbits == INHERITFLAGRMXNK_1X3 ||
-       nxnbits == INHERITFLAGRMXNK_3X1) {
+       nxnbits == INHERITFLAGMXNK_1X3 ||
+       nxnbits == INHERITFLAGMXNK_3X1) {
 
       if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
@@ -2015,8 +2027,8 @@ static bool handle_4x4_division(
    callarray *calldeflist, bool matrix_aware)
 {
    bool forbid_little_stuff;
-   uint32_t nxnbits =
-     ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_NXNMASK|INHERITFLAGR_MXNMASK);
+   uint64_t nxnbits =
+     ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // The call has no applicable 4x4 definition.
    // First, check whether it has 2x4/4x2 definitions, and divide the setup if so,
@@ -2043,9 +2055,9 @@ static bool handle_4x4_division(
 
    if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
-       nxnbits == INHERITFLAGRMXNK_1X3 ||
-       nxnbits == INHERITFLAGRMXNK_3X1 ||
-       nxnbits == INHERITFLAGRNXNK_3X3) {
+       nxnbits == INHERITFLAGMXNK_1X3 ||
+       nxnbits == INHERITFLAGMXNK_3X1 ||
+       nxnbits == INHERITFLAGNXNK_3X3) {
       uint32_t assocstuff = 0;
       if (assoc(b_3x2, ss, calldeflist)) assocstuff |= 001;
       if (assoc(b_2x3, ss, calldeflist)) assocstuff |= 010;
@@ -2508,8 +2520,8 @@ static int divide_the_setup(
    int finalrot = 0;
    bool maybe_horrible_hinge = false;
 
-   uint32_t nxnbits =
-      ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_NXNMASK|INHERITFLAGR_MXNMASK);
+   uint64_t nxnbits =
+      ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // It will be helpful to have a mask of where the live people are.
    uint32_t livemask = little_endian_live_mask(ss);
@@ -2556,10 +2568,10 @@ static int divide_the_setup(
 
       temp =
          (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-         (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_NXNMASK)) != INHERITFLAGRNXNK_4X4;
+         (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK)) != INHERITFLAGNXNK_4X4;
 
       if (temp ||
-          ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_16_MATRIX) ||
+          ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_16_MATRIX) ||
           (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS))) {
          if ((!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
@@ -2663,11 +2675,11 @@ static int divide_the_setup(
       temp =
          (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
          ((callflags1 & CFLAG1_SPLIT_IF_Z) &&
-          nxnbits != INHERITFLAGRNXNK_3X3 &&
+          nxnbits != INHERITFLAGNXNK_3X3 &&
           (livemask == 03333 || livemask == 06666));
 
       if (temp ||
-          ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_12_MATRIX) ||
+          ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_12_MATRIX) ||
           (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS))) {
          if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
@@ -2902,7 +2914,7 @@ static int divide_the_setup(
       temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) != 0;
 
       if (temp ||
-          ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_12_MATRIX) ||
+          ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_12_MATRIX) ||
           (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
          if ((!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
@@ -2945,7 +2957,7 @@ static int divide_the_setup(
       temp = (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) != 0;
 
       if (temp ||
-          ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_16_MATRIX) ||
+          ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_16_MATRIX) ||
           (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
          if ((!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
@@ -3057,7 +3069,7 @@ static int divide_the_setup(
 
       // Check for "twisted split" stuff.
 
-      if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_TWISTED) &&
+      if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_TWISTED) &&
           (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED |
                                                   FINAL__SPLIT_DIXIE_APPROVED)) &&
           (livemask == 0xAAAA || livemask == 0x5555)) {
@@ -3410,9 +3422,9 @@ static int divide_the_setup(
 
       if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
            (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
-           nxnbits == INHERITFLAGRMXNK_1X3 ||
-           nxnbits == INHERITFLAGRMXNK_3X1 ||
-           nxnbits == INHERITFLAGRNXNK_3X3) &&
+           nxnbits == INHERITFLAGMXNK_1X3 ||
+           nxnbits == INHERITFLAGMXNK_3X1 ||
+           nxnbits == INHERITFLAGNXNK_3X3) &&
           (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
          division_code = spcmap_qtag_2x3;
@@ -4454,7 +4466,7 @@ static uint32_t do_actual_array_call(
    callarray *linedefinition,
    callarray *coldefinition,
    uint32_t newtb,
-   uint32_t funnyr,
+   uint64_t funnybits,
    bool mirror,
    bool four_way_startsetup,
    int orig_elongation,
@@ -4632,7 +4644,7 @@ static uint32_t do_actual_array_call(
       if (inconsistent_rotation | inconsistent_setup)
          fail("This call is an inconsistent shape-changer.");
 
-      if (funnyr) fail("Sorry, can't do this call 'funny'");
+      if (funnybits != 0ULL) fail("Sorry, can't do this call 'funny'");
 
       p1.clear_people();
 
@@ -4690,7 +4702,7 @@ static uint32_t do_actual_array_call(
       lilresult_mask[0] = 0;
       lilresult_mask[1] = 0;
 
-      if (funnyr) {
+      if (funnybits != 0ULL) {
          if ((ss->kind != result->kind) || result->rotation ||
              inconsistent_rotation || inconsistent_setup)
             fail("Can't do 'funny' shape-changer.");
@@ -5016,21 +5028,11 @@ static uint32_t do_actual_array_call(
                   where = where % thisnumout;
                }
 
-               newpersonlist.people[real_index].id1 =
-                  do_slide_roll(this_person.id1, z, final_direction);
-
-               if (this_person.id1 & STABLE_ENAB)
-                  do_stability(&newpersonlist.people[real_index].id1,
-                               z/DBSTAB_BIT,
-                               z + final_direction - real_direction + result->rotation,
-                               false);
-
-               newpersonlist.people[real_index].id2 = this_person.id2;
-               newpersonlist.people[real_index].id3 = this_person.id3;
                kt = final_translate[where];
                if (kt < 0) fail("T-bone call went to a weird and confused setup.");
-               newplacelist[real_index] = kt;
-               lilresult_mask[0] |= (1 << kt);
+
+               put_person_away(&newpersonlist, goodies, this_person, z, real_index, final_direction, kt,
+                               final_direction - real_direction + result->rotation, newplacelist, lilresult_mask);
             }
          }
       }
@@ -5761,7 +5763,7 @@ static uint32_t do_actual_array_call(
       for (real_index=0; real_index<num; real_index++) {
          personrec newperson = newpersonlist.people[real_index];
          if (newperson.id1) {
-            if (funnyr) {
+            if (funnybits != 0ULL) {
                if (newperson.id1 != ~0U) {  // We only handle people who haven't been erased.
                   k = real_index;
                   j = real_index;    // J will move twice as fast as k, looking for a loop not containing starting point.
@@ -5816,7 +5818,7 @@ static uint32_t do_actual_array_call(
          }
       }
 
-      if (funnyr && (!funny_ok1 || !funny_ok2))
+      if (funnybits != 0ULL && (!funny_ok1 || !funny_ok2))
          warn(warn__not_funny);
 
       call_with_name *maybe_call = (ss->cmd.parseptr &&
@@ -5974,11 +5976,11 @@ extern void basic_move(
 {
    int j;
    callarray *calldeflist;
-   uint32_t funnyr;
+   uint64_t funnybits;
    uint32_t division_code = ~0U;
    callarray *linedefinition;
    callarray *coldefinition;
-   uint32_t matrix_check_flagr = 0;
+   uint64_t matrix_check_flag = 0ULL;
    heritflags search_temp_without_funny;
    heritflags search_temp_with_funny;
    int orig_elongation = 0;
@@ -6070,7 +6072,7 @@ extern void basic_move(
             // directions of the live people.  Demand that it be unambiguous.
 
             uint32_t directions, livemask;
-            big_endian_get_directions(ss, directions, livemask);
+            big_endian_get_directions32(ss, directions, livemask);
             int i1 = -1;
 
             for (int i=0 ; i<4 ; i++) {
@@ -6100,7 +6102,7 @@ extern void basic_move(
       case s_trngl4:
          // The same, with twisted.
 
-         if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_TWISTED) &&
+         if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_TWISTED) &&
              (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
@@ -6138,38 +6140,38 @@ extern void basic_move(
    // except "funny" and "left", but "left" has been taken care of)
    // determine what call definition we will get.
 
-   uint32_t given_funny_flagr = ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_FUNNY);
+   uint64_t given_funny_flag = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_FUNNY);
 
-   heritflags search_concepts_without_funny = ss->cmd.cmd_final_flags.herit;
+   heritflags search_concepts_without_funny = ss->cmd.cmd_final_flags.herit & ~INHERITFLAG_FUNNY;
 
-   search_concepts_without_funny.clear_bits_rl(INHERITFLAGR_FUNNY, 0);
-   search_temp_without_funny.initialize_rl(0, 0);
+   search_temp_without_funny = 0ULL;
 
 foobar:
 
-   search_temp_without_funny.set_bits_rl(search_concepts_without_funny.r, search_concepts_without_funny.l);
+   search_temp_without_funny |= search_concepts_without_funny;
    search_temp_with_funny = search_temp_without_funny;
-   search_temp_with_funny.set_bits_rl(given_funny_flagr, 0);
+   search_temp_with_funny |= given_funny_flag;
 
-   funnyr = 0;   // Will have the bit if we are supposed to use the "CAF__FACING_FUNNY" stuff.
+   heritflags arg2 = 0ULL;
+   funnybits = 0ULL;   // Will have the bit if we are supposed to use the "CAF__FACING_FUNNY" stuff.
 
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
       // First, see if we have a match including any incoming "funny" flag.
-      if (qq->modifier_seth.equalsequals(search_temp_with_funny)) {
+      if (qq->modifier_seth == search_temp_with_funny) {
          goto use_this_calldeflist;
       }
       // Search again, for a plain definition that has the "CAF__FACING_FUNNY" flag.
-      else if (given_funny_flagr &&
-               qq->modifier_seth.equalsequals(search_temp_without_funny) &&
+      else if (given_funny_flag != 0ULL &&
+               qq->modifier_seth == search_temp_without_funny &&
                (qq->callarray_list->callarray_flags & CAF__FACING_FUNNY)) {
-         funnyr = given_funny_flagr;
+         funnybits = given_funny_flag;
          goto use_this_calldeflist;
       }
    }
 
    /* We didn't find anything. */
 
-   if (matrix_check_flagr != 0) goto need_to_divide;
+   if (matrix_check_flag != 0ULL) goto need_to_divide;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
       fail("Can't do \"snag/mystic\" with this call.");
@@ -6179,13 +6181,11 @@ foobar:
    // magically or interlockedly.  Or a similar thing with 12 matrix.
 
    // First, check for "magic" and "interlocked" stuff, and do those divisions if so.
-   result->result_flags.res_heritflags_to_save_from_mxn_expansion.r = (heritflagsr) 0;
-   result->result_flags.res_heritflags_to_save_from_mxn_expansion.l = (heritflagsl) 0;
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0ULL;
 
-   heritflags arg2;
-   arg2.initialize_rl(search_concepts_without_funny.r & ~(INHERITFLAGR_DIAMOND | INHERITFLAGR_SINGLE |
-                                                         INHERITFLAGR_SINGLEFILE | INHERITFLAGR_CROSS |
-                                                         INHERITFLAGR_GRAND | INHERITFLAGR_REVERTMASK), ~0);
+   arg2 = search_concepts_without_funny & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE |
+                                            INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS |
+                                            INHERITFLAG_GRAND | INHERITFLAG_REVERTMASK);
 
    if (divide_for_magic(ss, arg2, result))
       goto un_mirror;
@@ -6195,55 +6195,55 @@ foobar:
    // was what we were looking for, remove those flags and split the setup.
 
    if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
-      uint32_t z = search_concepts_without_funny.r & ~INHERITFLAGR_NXNMASK;
+      uint64_t z = search_concepts_without_funny & ~INHERITFLAG_NXNMASK;
 
       switch (ss->kind) {
       case s3x4:
-         if (z == INHERITFLAGR_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
          }
          break;
       case s1x12:
-         if (z == INHERITFLAGR_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
          }
          break;
       case s3dmd:
-         if (z == INHERITFLAGR_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into diamonds in the appropriate way.
             division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
 
          }
          break;
       case s4dmd:
-         if (z == INHERITFLAGR_16_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_16_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "16 matrix" was specified.  Split it into diamonds in the appropriate way.
             division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
          }
          break;
       case s2x6:
-         if (z == INHERITFLAGR_12_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_12_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 2x2's in the appropriate way.
             division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
          }
          break;
       case s2x8:
-         if (z == INHERITFLAGR_16_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_16_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "16 matrix" was specified.  Split it into 2x2's in the appropriate way.
             division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
          }
          break;
       case s4x4:
-         if (z == INHERITFLAGR_16_MATRIX ||
-             (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+         if (z == INHERITFLAG_16_MATRIX ||
+             (z == 0ULL && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
             /* But which way is appropriate?  A 4x4 is ambiguous. */
             /* Being rather lazy, we just look to see whether the call is "pass thru",
@@ -6274,7 +6274,7 @@ foobar:
 
  divide_us:
 
-   ss->cmd.cmd_final_flags.clear_heritbits_r(search_concepts_without_funny.r);
+   ss->cmd.cmd_final_flags.herit &= ~search_concepts_without_funny;
    divided_setup_move(ss, division_code, phantest_ok, true, result);
    goto un_mirror;
 
@@ -6497,36 +6497,36 @@ foobar:
 
       We do this only once.  Because of all the goto's that we execute as we
       try various things, there is danger of looping.  To make sure that this happens
-      only once, we set "matrix_check_flagr" nonzero when we do it, and only do it if
+      only once, we set "matrix_check_flag" nonzero when we do it, and only do it if
       that flag is zero.
 
       We don't do this if "snag" or "mystic" was given.  In those cases, we know exactly
       why there is no definition, and we need to call "divide_the_setup" to fix it. */
 
-   if (matrix_check_flagr == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
-      if (!(search_concepts_without_funny.r & INHERITFLAGR_16_MATRIX) &&
+   if (matrix_check_flag == 0ULL && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
+      if ((search_concepts_without_funny & INHERITFLAG_16_MATRIX) == 0ULL &&
           ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == sd3x4 ||
             ss->kind == s1x12 || ss->kind == sdeepqtg) ||
            (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
-            !(search_concepts_without_funny.r & INHERITFLAGR_16_MATRIX) &&
+            (search_concepts_without_funny & INHERITFLAG_16_MATRIX)== 0ULL &&
             (ss->kind == s2x3 || ss->kind == s1x6))))
-         matrix_check_flagr = INHERITFLAGR_12_MATRIX;
-      else if (!(search_concepts_without_funny.r & INHERITFLAGR_12_MATRIX) &&
+         matrix_check_flag = INHERITFLAG_12_MATRIX;
+      else if ((search_concepts_without_funny & INHERITFLAG_12_MATRIX) == 0ULL &&
                ((ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) ||
                 (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
                   (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
-                 !(search_concepts_without_funny.r & INHERITFLAGR_12_MATRIX) &&
+                 (search_concepts_without_funny & INHERITFLAG_12_MATRIX) == 0ULL &&
                  (ss->kind == s2x4 || ss->kind == s1x8))))
-         matrix_check_flagr = INHERITFLAGR_16_MATRIX;
+         matrix_check_flag = INHERITFLAG_16_MATRIX;
 
-      /* But we might not have set "matrix_check_flagr" nonzero!  How are we going to
-         prevent looping?  The answer is that we won't execute the goto unless we did
-         set set it nonzero. */
+      // But we might not have set "matrix_check_flag" nonzero!  How are we going to
+      // prevent looping?  The answer is that we won't execute the goto unless we did
+      // set it nonzero.
 
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
           calldeflist == 0 &&
-          (matrix_check_flagr & ~search_concepts_without_funny.r) == 0) {
+          (matrix_check_flag & ~search_concepts_without_funny) == 0ULL) {
 
          /* Here is where we do the very special stuff.  We turn a "12 matrix" concept
             into an explicit matrix.  Note that we only do it if we would have lost
@@ -6535,12 +6535,12 @@ foobar:
             which it isn't.)  So we turn on the CMD_MISC__EXPLICIT_MATRIX bit,
             and we turn off the INHERITFLAG_12_MATRIX or INHERITFLAG_16_MATRIX bit. */
 
-         if (matrix_check_flagr == 0) {
+         if (matrix_check_flag == 0ULL) {
             /* We couldn't figure out from the setup what the matrix is,
                so we have to expand it. */
 
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
-               if (search_concepts_without_funny.bool_test_any_bit_rl(INHERITFLAGR_12_MATRIX, 0)) {
+               if ((search_concepts_without_funny & INHERITFLAG_12_MATRIX) != 0ULL) {
                   do_matrix_expansion(
                      ss,
                      (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
@@ -6548,9 +6548,9 @@ foobar:
 
                   if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12)
                      fail("Can't expand to a 12 matrix.");
-                  matrix_check_flagr = INHERITFLAGR_12_MATRIX;
+                  matrix_check_flag = INHERITFLAG_12_MATRIX;
                }
-               else if (search_concepts_without_funny.r & INHERITFLAGR_16_MATRIX) {
+               else if ((search_concepts_without_funny & INHERITFLAG_16_MATRIX) != 0ULL) {
                   if (ss->kind == s2x6)
                      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
                   else if (ss->kind == s_alamo)
@@ -6564,36 +6564,36 @@ foobar:
 
                   if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
                      fail("Can't expand to a 16 matrix.");
-                  matrix_check_flagr = INHERITFLAGR_16_MATRIX;
+                  matrix_check_flag = INHERITFLAG_16_MATRIX;
                }
             }
 
             newtb = or_all_people(ss);
          }
 
-         search_concepts_without_funny.clear_bits_rl(matrix_check_flagr, 0);
-         ss->cmd.cmd_final_flags.clear_heritbits_r(matrix_check_flagr);
-         search_temp_without_funny.initialize_rl(0, 0);
+         search_concepts_without_funny &= ~matrix_check_flag;
+         ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
+         search_temp_without_funny = 0ULL;
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
       else {
-         uint32_t scr = search_concepts_without_funny.r & INHERITFLAGR_NXNMASK;
+         uint64_t scr = search_concepts_without_funny & INHERITFLAG_NXNMASK;
 
-         if (((matrix_check_flagr & INHERITFLAGR_12_MATRIX) &&
-              (search_concepts_without_funny.r & INHERITFLAGR_12_MATRIX) &&
-              (scr == INHERITFLAGRNXNK_3X3 || scr == INHERITFLAGRNXNK_6X6)) ||
-             ((matrix_check_flagr & INHERITFLAGR_16_MATRIX) &&
-              (search_concepts_without_funny.r & INHERITFLAGR_16_MATRIX) &&
-              (scr == INHERITFLAGRNXNK_4X4 || scr == INHERITFLAGRNXNK_8X8))) {
-            search_concepts_without_funny.clear_bits_rl(matrix_check_flagr, 0);
-            ss->cmd.cmd_final_flags.clear_heritbits_r(matrix_check_flagr);
-            search_temp_without_funny.r = (heritflagsr) 0;
+         if (((matrix_check_flag & INHERITFLAG_12_MATRIX) != 0ULL &&
+              (search_concepts_without_funny & INHERITFLAG_12_MATRIX) != 0ULL &&
+              (scr == INHERITFLAGNXNK_3X3 || scr == INHERITFLAGNXNK_6X6)) ||
+             ((matrix_check_flag & INHERITFLAG_16_MATRIX) != 0ULL &&
+              (search_concepts_without_funny & INHERITFLAG_16_MATRIX) != 0ULL &&
+              (scr == INHERITFLAGNXNK_4X4 || scr == INHERITFLAGNXNK_8X8))) {
+            search_concepts_without_funny &= ~matrix_check_flag;
+            ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
+            search_temp_without_funny = 0ULL;
          }
          else
-            search_temp_without_funny.r = (heritflagsr) matrix_check_flagr;
+            search_temp_without_funny = matrix_check_flag;
       }
 
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flagr != 0)
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0)
          goto foobar;
    }
 
@@ -6646,7 +6646,7 @@ foobar:
 
    resultflagsmisc = do_actual_array_call(
       ss, callspec, linedefinition, coldefinition, newtb,
-      funnyr, mirror, four_way_startsetup, orig_elongation, desired_elongation,
+      funnybits, mirror, four_way_startsetup, orig_elongation, desired_elongation,
       check_peeloff_migration, result);
 
    // Check for special case of "touch" going directly from a 2x2 to a 1x4.  In that case

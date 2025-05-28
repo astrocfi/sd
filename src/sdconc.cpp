@@ -1636,8 +1636,8 @@ static calldef_schema concentrify(
 
    // Need to do this now, so that the "schema_concentric_big2_6" stuff below will be triggered.
    if (analyzer_result == schema_concentric_6p_or_normal_or_2x6_2x3) {
-      if (ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MXNMASK) == INHERITFLAGRMXNK_6X2 ||
-          ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MXNMASK) == INHERITFLAGRMXNK_3X2)
+      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_6X2 ||
+          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X2)
          analyzer_result = schema_concentric_2_6;
       else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_6p;
@@ -1756,7 +1756,7 @@ static calldef_schema concentrify(
       else if (ss->kind == s_ptpd) {
          // Check for point-to-point diamonds all facing toward other diamond.
          uint32_t dir, live;
-         big_endian_get_directions(ss, dir, live);
+         big_endian_get_directions32(ss, dir, live);
          if (((dir ^ 0x55FF) & live) == 0)
             analyzer_result = schema_concentric_2_6;
          else
@@ -1787,10 +1787,15 @@ static calldef_schema concentrify(
          fail("Can't find centers and ends in this formation.");
       break;
    case schema_concentric:
-      if (crossing) {
-         if (ss->kind == s4x4 && livemask != 0x9999)
-            fail("Can't find centers and ends in this formation.");
-      }
+      if (crossing && ss->kind == s4x4 && livemask != 0x9999)
+         fail("Can't find centers and ends in this formation.");
+
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__REDUCED_BY_TANDEM) != 0 && attr::klimit(ss->kind) < 4)
+         analyzer_result = schema_single_concentric;
+      break;
+   case schema_cross_concentric:
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__REDUCED_BY_TANDEM) != 0 && attr::klimit(ss->kind) < 4)
+         analyzer_result = schema_single_cross_concentric;
       break;
    case schema_rev_checkpoint:
    case schema_rev_checkpoint_concept:
@@ -2616,7 +2621,7 @@ static bool fix_empty_outers(
                   the_call == base_calls[base_call_any_hand_remake])
             ;        // It's OK, the call was "trade" or "any hand remake".
          else if (the_call == base_calls[base_call_circulate] &&
-                  cmdout && cmdout->cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF) &&
+                  cmdout && cmdout->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF) &&
                   cmdout->cmd_fraction.is_null()) {
             // The call is "1/2 circulate".  We assume it goes to a diamond.
             // We don't check that the facing directions are such that this is
@@ -3191,12 +3196,11 @@ extern void concentric_move(
 
    parse_block *save_skippable_concept = ss->cmd.skippable_concept;
    ss->cmd.skippable_concept = (parse_block *) 0;
-   uint32_t save_skippable_heritflags_r = ss->cmd.skippable_heritflags.r;
-   ss->cmd.skippable_heritflags.l = (heritflagsl) 0;
-   ss->cmd.skippable_heritflags.r = (heritflagsr) 0;
+   heritflags save_skippable_heritflags = ss->cmd.skippable_heritflags;
+   ss->cmd.skippable_heritflags = 0ULL;
 
-   const uint32_t scrnxn =
-      ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_NXNMASK | INHERITFLAGR_MXNMASK);
+   const uint64_t scrnxn =
+      ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK);
 
    ss->cmd.cmd_misc2_flags &= ~(0xFFF | CMD_MISC2__ANY_WORK_INVERT |
                                 CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG);
@@ -3258,10 +3262,10 @@ extern void concentric_move(
 
    if (ss->kind == s_qtag &&
        analyzer != schema_concentric_6_2 &&
-       (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_12_MATRIX) ||
-        scrnxn == INHERITFLAGRMXNK_1X3 ||
-        scrnxn == INHERITFLAGRMXNK_3X1 ||
-        scrnxn == INHERITFLAGRNXNK_3X3))
+       (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_12_MATRIX) ||
+        scrnxn == INHERITFLAGMXNK_1X3 ||
+        scrnxn == INHERITFLAGMXNK_3X1 ||
+        scrnxn == INHERITFLAGNXNK_3X3))
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, true);
 
    for (i=0; i<32; i++) {
@@ -3494,15 +3498,15 @@ extern void concentric_move(
          // and "single" into the other one.
          if (analyzer == schema_1331_concentric) {
             if (attr::slimit(begin_ptr) == 5) {
-               begin_ptr->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_NXNMASK);
-               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGRNXNK_3X3);
+               begin_ptr->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_NXNMASK);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(INHERITFLAGNXNK_3X3);
             }
             else
-               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_SINGLE);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(INHERITFLAG_SINGLE);
          }
          else if (analyzer == schema_1221_concentric) {
             if (attr::slimit(begin_ptr) == 1)
-               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_SINGLE);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(INHERITFLAG_SINGLE);
          }
 
          // Check for operating on a Z.
@@ -3715,20 +3719,13 @@ extern void concentric_move(
          if ((save_cmd_misc2_flags &
               (CMD_MISC2__ANY_WORK|CMD_MISC2__ANY_WORK_INVERT)) == ctr_use_flag) {
 
-            if (save_skippable_heritflags_r != 0) {
-               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(save_skippable_heritflags_r);
+            if (save_skippable_heritflags != 0) {
+               begin_ptr->cmd.cmd_final_flags.set_heritbits(save_skippable_heritflags);
                impose_assumption_and_move(begin_ptr, result_ptr);
             }
             else {
                if (!save_skippable_concept)
                   fail("Internal error in centers/ends work, please report this.");
-
-               /*
-               if (doing_ends)
-                  warn(warn__check_butterfly);
-               else
-                  warn(warn__check_galaxy);
-               */
 
                if (!begin_ptr->cmd.callspec)
                   fail("No callspec, centers/ends!!!!!!");
@@ -4105,7 +4102,7 @@ extern void concentric_move(
 
    // If doing half of an acey deucey, don't force spots--it messes up short6 orientation.
    if (analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 &&
-       ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF) != 0)
+       ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))
       localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
 
    // If the outsides did "emulate", they stay on the same spots no matter what
@@ -4129,8 +4126,8 @@ extern void concentric_move(
    setup_command *outercmd = (inverting) ? cmdin : cmdout;
 
    if (outercmd &&
-       (outercmd->cmd_final_flags.test_heritbit_r(INHERITFLAGR_TWISTED) != 0 ||
-       outercmd->cmd_final_flags.test_heritbits_r(INHERITFLAGR_REVERTMASK) == INHERITFLAGRRVRTK_REFLECT)) {
+       (outercmd->cmd_final_flags.bool_test_heritbits(INHERITFLAG_TWISTED) != 0 ||
+       outercmd->cmd_final_flags.test_heritbits(INHERITFLAG_REVERTMASK) == INHERITFLAGRVRTK_REFLECT)) {
       columnsfailbit = 1 << elongshift;
       linesfailbit = 8 >> elongshift;
    }
@@ -4141,13 +4138,13 @@ extern void concentric_move(
       switch (localmods1 & (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS)) {
       case DFM1_CONC_DEMAND_LINES:
          // We make use of the fact that the setup, being a 2x2, is canonicalized.
-         if (foob != fraction_command::no) {
+         if (foob == fraction_command::yes) {
             if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 || (orig_outers_start_dirs & linesfailbit) != 0)
                fail("Outsides must be as if in lines at start of this call.");
          }
          break;
       case DFM1_CONC_DEMAND_COLUMNS:
-         if (foob != fraction_command::no) {
+         if (foob == fraction_command::yes) {
             if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 || (orig_outers_start_dirs & columnsfailbit) != 0)
                fail("Outsides must be as if in columns at start of this call.");
          }
@@ -5157,7 +5154,7 @@ void infer_assumption(setup *ss)
 
    if (ss->cmd.cmd_assume.assumption == cr_none && sizem1 >= 0) {
       uint32_t directions, livemask;
-      big_endian_get_directions(ss, directions, livemask);
+      big_endian_get_directions32(ss, directions, livemask);
       if (livemask == (uint32_t) (1<<((sizem1+1)<<1))-1) {
          assumption_thing tt;
          tt.assump_col = 0;
@@ -5317,8 +5314,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
        (ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_alternate ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_remainder) &&
-       (ss->cmd.parseptr->next->call->the_defn.callflagsherit.r & INHERITFLAGR_YOYOETCMASK) &&
-       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh.r & INHERITFLAGR_YOYOETCMASK) &&
+       (ss->cmd.parseptr->next->call->the_defn.callflagsherit & INHERITFLAG_YOYOETCMASK) != 0ULL &&
+       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh & INHERITFLAG_YOYOETCMASK) != 0ULL &&
        ss->cmd.cmd_fraction.is_null()) {
       doing_yoyo = true;
       ss->cmd.cmd_fraction.set_to_null_with_flags(
@@ -5603,10 +5600,8 @@ extern void selective_move(
           (kk->arg4 == tandem_key_cpls || kk->arg4 == tandem_key_tand ||
            kk->arg4 == tandem_key_cpls3 || kk->arg4 == tandem_key_tand3 ||
            kk->arg4 == tandem_key_special_triangles) &&
-          ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_SINGLE |
-                                                   INHERITFLAGR_MXNMASK |
-                                                   INHERITFLAGR_NXNMASK |
-                                                   INHERITFLAGR_TWISTED) == 0) {
+          !ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_SINGLE | INHERITFLAG_MXNMASK |
+                                                       INHERITFLAG_NXNMASK | INHERITFLAG_TWISTED)) {
          // Save a few things in case we have to try a second theory.
          uint32_t save_flags = ss->cmd.cmd_misc_flags;
          parse_block *save_parse = ss->cmd.parseptr;
@@ -5620,7 +5615,7 @@ extern void selective_move(
                                 kkk->options.number_fields,
                                 0,
                                 (tandem_key) kk->arg4,
-                                0,
+                                0ULL,
                                 false,
                                 result);
             return;
@@ -5770,6 +5765,8 @@ extern void inner_selective_move(
          if (calling_level < intlk_triangle_level)
             warn_about_concept_level();
          // FALL THROUGH
+      case selector_neartriangle:
+      case selector_fartriangle:
       case selector_outside_tgl:
       case selector_inside_tgl:
       case selector_inpoint_tgl:
@@ -6231,7 +6228,7 @@ extern void inner_selective_move(
 
       const int8_t *map_prom;
       uint32_t dirmask, junk;
-      big_endian_get_directions(ss, dirmask, junk);
+      big_endian_get_directions32(ss, dirmask, junk);
 
       if (ss->kind == s2x4 && orig_indicator == selective_key_promenade_and_lead_for_a) {
          if (bigend_ssmask == 0xCC) {
@@ -8212,7 +8209,7 @@ extern void inner_selective_move(
          restr.assump_col = 1;
          restr.assump_both = 1;
          if (verify_restriction(ss, restr, false, &booljunk) == restriction_passes)
-         ss->cmd.cmd_assume = restr;
+            ss->cmd.cmd_assume = restr;
       }
    }
 

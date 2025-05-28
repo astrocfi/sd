@@ -58,7 +58,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 
    uint32_t directions;
    uint32_t livemask;
-   big_endian_get_directions(ss, directions, livemask);
+   big_endian_get_directions32(ss, directions, livemask);
 
    selector_used = true;
    selector_kind local_selector = current_options.who.who[0];
@@ -589,24 +589,32 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       if      (pid3 & ID3_FARSIX) return true;
       else if (pid3 & ID3_NEARTWO) return false;
       break;
-   case selector_nearthree:
+   case selector_nearthree: case selector_neartriangle:
       if (two_couple_calling) {
-         if      (pid3 & ID3_NEARTHREE) return true;
-         else if (pid3 & ID3_FARTHEST1) return false;
+         if (local_selector == selector_nearthree || ss->kind == sdmd) {
+            if      (pid3 & ID3_NEARTHREE) return true;
+            else if (pid3 & ID3_FARTHEST1) return false;
+         }
       }
       else {
-         if      (pid3 & ID3_NEARTHREE) return true;
-         else if (pid3 & ID3_FARFIVE) return false;
+         if (local_selector == selector_nearthree || (ss->kind == s_ptpd && (ss->rotation & 1)) != 0) {
+            if      (pid3 & ID3_NEARTHREE) return true;
+            else if (pid3 & ID3_FARFIVE) return false;
+         }
       }
       break;
-   case selector_farthree:
+   case selector_farthree: case selector_fartriangle:
       if (two_couple_calling) {
-         if      (pid3 & ID3_FARTHREE) return true;
-         else if (pid3 & ID3_NEAREST1) return false;
+         if (local_selector == selector_farthree || ss->kind == sdmd) {
+            if      (pid3 & ID3_FARTHREE) return true;
+            else if (pid3 & ID3_NEAREST1) return false;
+         }
       }
       else {
-         if      (pid3 & ID3_FARTHREE) return true;
-         else if (pid3 & ID3_NEARFIVE) return false;
+         if (local_selector == selector_farthree || (ss->kind == s_ptpd && (ss->rotation & 1)) != 0) {
+            if      (pid3 & ID3_FARTHREE) return true;
+            else if (pid3 & ID3_NEARFIVE) return false;
+         }
       }
       break;
    case selector_nearfive:

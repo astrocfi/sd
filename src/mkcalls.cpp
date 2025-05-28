@@ -1716,8 +1716,7 @@ int callcount;
 int filecount;
 int dumbflag;
 uint32_t call_flags1;
-uint32_t call_flagshl;
-uint32_t call_flagshr;
+uint64_t call_flagsh;
 uint32_t call_flags1overflow;
 uint32_t call_tag;
 heritflags phonyheritbit;
@@ -1796,7 +1795,7 @@ static int get_char()
          return 1;
       }
 
-      linelen = strlen(line);
+      linelen = (int) strlen(line);
 
       // Strip off any superfluous "return" or "newline" characters at the end.
       // If things are going well, there will just be a single '\n', because the
@@ -2042,8 +2041,7 @@ static void write_defmod_flags(int is_seq)
 {
    int i;
    uint32_t rr1 = 0;
-   heritflags rrh;
-   rrh.initialize_rl(0, 0);
+   heritflags rrh = 0ULL;
 
    get_tok();
    if (tok_kind != tok_lbkt)
@@ -2082,78 +2080,71 @@ static void write_defmod_flags(int is_seq)
             rr1 |= (nnn*DFM1_NUM_INSERT_BIT) | DFM1_FRACTAL_INSERT;
          }
          else if (!strcmp(tok_str, "inherit_nxn")) {
-            if (INHERITFLAGR_NXNMASK & ~call_flagshr)
+            if (INHERITFLAG_NXNMASK & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            rrh.set_bits_rl(INHERITFLAGR_NXNMASK, 0);
+            rrh |= INHERITFLAG_NXNMASK;
          }
          else if (!strcmp(tok_str, "inherit_mxn")) {
-            if (INHERITFLAGR_MXNMASK & ~call_flagshr)
+            if (INHERITFLAG_MXNMASK & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            rrh.set_bits_rl(INHERITFLAGR_MXNMASK, 0);
+            rrh |= INHERITFLAG_MXNMASK;
          }
          else if (!strcmp(tok_str, "inherit_bigmatrix")) {
-            if ((INHERITFLAGR_12_MATRIX|INHERITFLAGR_16_MATRIX) & ~call_flagshr)
+            if ((INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX) & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            rrh.set_bits_rl(INHERITFLAGR_12_MATRIX|INHERITFLAGR_16_MATRIX, 0);
+            rrh |= INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
          }
          else if (!strcmp(tok_str, "inherit_revert")) {
-            if ((INHERITFLAGR_REVERTMASK) & ~call_flagshr)
+            if ((INHERITFLAG_REVERTMASK) & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            rrh.set_bits_rl(INHERITFLAGR_REVERTMASK, 0);
+            rrh |= INHERITFLAG_REVERTMASK;
          }
          else if (!strcmp(tok_str, "inherit_yoyo")) {
-            if (INHERITFLAGR_YOYOETCK_YOYO & ~call_flagshr)
+            if (INHERITFLAG_YOYOETCK_YOYO & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            rrh.set_bits_rl(INHERITFLAGR_YOYOETCK_YOYO, 0);
+            rrh |= INHERITFLAG_YOYOETCK_YOYO;
          }
          else if (!strcmp(tok_str, "inherit_gensting")) {
-            if (INHERITFLAGR_YOYOETCK_GENEROUS & ~call_flagshr)
+            if (INHERITFLAG_YOYOETCK_GENEROUS & ~call_flagsh)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            rrh.set_bits_rl(INHERITFLAGR_YOYOETCK_GENEROUS, 0);
+            rrh |= INHERITFLAG_YOYOETCK_GENEROUS;
          }
          else if ((i = search(defmodtabh)) >= 0) {
-            uint32_t bit = 1U << (i&31);  // Bit in whichever word it is in.
+            uint64_t bit = 1ULL << i;
 
             // Don't check the left/reverse flags -- they are complicated,
             // so there is no "force" word for them.
-            if ((i < 32) && (bit & ~(call_flagshr | INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT)) != 0)
+            if ((bit & ~(call_flagsh | INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) != 0)
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
-            if (i < 32)
-               rrh.set_bits_rl(bit, 0);
-            else
-               rrh.set_bits_rl(0, bit);
+            rrh |= bit;
          }
          else {
-            heritflags heritbit;
-            heritbit.initialize_rl(0, 0);
+            heritflags heritbit= 0ULL;
 
             if ((i = search(forcetabh)) >= 0) {
-               uint32_t bit = 1U << (i&31);  // Bit in whichever word it is in.
-               if (i < 32)
-                  heritbit.set_bits_rl(bit, 0);
-               else
-                  heritbit.set_bits_rl(0, bit);
+               uint64_t bit = 1ULL << i;
+               heritbit |= bit;
             }
             else if ((i = search(yoyotabforce)) >= 0) 
-               heritbit.set_bits_rl(INHERITFLAGR_YOYOETCBIT * (i+1), 0);
+               heritbit |= INHERITFLAG_YOYOETCBIT * (i+1);
             else if ((i = search(mxntabforce)) >= 0)
-               heritbit.set_bits_rl(INHERITFLAGR_MXNBIT * (i+1), 0);
+               heritbit |= INHERITFLAG_MXNBIT * (i+1);
             else if ((i = search(nxntabforce)) >= 0)
-               heritbit.set_bits_rl(INHERITFLAGR_NXNBIT * (i+1), 0);
+               heritbit |= INHERITFLAG_NXNBIT * (i+1);
             else if ((i = search(reverttabforce)) >= 0)
-               heritbit.set_bits_rl(INHERITFLAGR_REVERTBIT * (i+1), 0);
+               heritbit |= INHERITFLAG_REVERTBIT * (i+1);
             else errexit("Unknown defmod key");
 
             // Don't check the left/reverse flags -- they are complicated,
             // so there is no "force" word for them.
-            if ((i < 32) && (heritbit.r & call_flagshr & ~(INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT)))
+            if ((heritbit & call_flagsh & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT)))
                errexit("Can't use a \"force\" flag unless corresponding top level flag is off");
 
             if (do_heritflag_merge(rrh, heritbit))
@@ -2166,8 +2157,8 @@ static void write_defmod_flags(int is_seq)
    }
 
    write_fullword(rr1);
-   write_fullword(rrh.r);
-   write_fullword(rrh.l);
+   write_fullword(rrh & 0x00000000FFFFFFFFULL);
+   write_fullword(rrh >> 32);
 }
 
 
@@ -2328,15 +2319,15 @@ static void write_call_header(calldef_schema schema)
 
    // If this is a "base_circ_call", write out 64 bits of phony "force" info.
    if (call_flags1 & CFLAG1_BASE_CIRC_CALL) {
-      write_fullword(phonyheritbit.r);
-      write_fullword(phonyheritbit.l);
+      write_fullword(phonyheritbit & 0x00000000FFFFFFFFULL);
+      write_fullword(phonyheritbit >> 32);
    }
-   else if (!phonyheritbit.is_zero()) {
+   else if (phonyheritbit != 0ULL) {
       errexit("Special top-level herit item requires \"base_circ_call\"");
    }
 
-   write_fullword(call_flagshr);
-   write_fullword(call_flagshl);
+   write_fullword(call_flagsh & 0x00000000FFFFFFFFULL);
+   write_fullword(call_flagsh >> 32);
    write_halfword((call_namelen << 8) | (uint32_t) schema);
 
    for (j=0; j<call_namelen; j++)
@@ -2448,8 +2439,7 @@ static int scan_for_per_array_def_flags(void)
 
 static void process_alt_def_header()
 {
-   heritflags altherit;
-   altherit.initialize_rl(0, 0);
+   heritflags altherit = 0ULL;
 
    get_tok();
    if (tok_kind != tok_lbkt)
@@ -2459,27 +2449,23 @@ static void process_alt_def_header()
    if (tok_kind != tok_rbkt) {
       for (;;) {
          int i;
-         heritflags heritbit;
-         heritbit.initialize_rl(0, 0);
+         heritflags heritbit = 0ULL;
 
          if (tok_kind != tok_symbol)
             errexit("Improper alternate_definition key");
 
          if ((i = search(altdeftabh)) >= 0) {
-            uint32_t bit = 1U << (i&31);  // Bit in whichever word it is in.
-            if (i < 32)
-               heritbit.set_bits_rl(bit, 0);
-            else
-               heritbit.set_bits_rl(0, bit);
+            uint64_t bit = 1ULL << i;
+            heritbit |= bit;
          }
          else if ((i = search(yoyotabplain)) >= 0)
-            heritbit.set_bits_rl(INHERITFLAGR_YOYOETCBIT * (i+1), 0);
+            heritbit |= INHERITFLAG_YOYOETCBIT * (i+1);
          else if ((i = search(mxntabplain)) >= 0)
-            heritbit.set_bits_rl(INHERITFLAGR_MXNBIT * (i+1), 0);
+            heritbit |= INHERITFLAG_MXNBIT * (i+1);
          else if ((i = search(nxntabplain)) >= 0)
-            heritbit.set_bits_rl(INHERITFLAGR_NXNBIT * (i+1), 0);
+            heritbit |= INHERITFLAG_NXNBIT * (i+1);
          else if ((i = search(reverttabplain)) >= 0)
-            heritbit.set_bits_rl(INHERITFLAGR_REVERTBIT * (i+1), 0);
+            heritbit |= INHERITFLAG_REVERTBIT * (i+1);
          else errexit("Unknown alternate_definition key");
 
          if (do_heritflag_merge(altherit, heritbit))
@@ -2497,8 +2483,8 @@ static void process_alt_def_header()
    if (alt_level >= 16) errexit("Too many levels");
 
    write_halfword(0x4000 | alt_level);
-   write_fullword(altherit.r);
-   write_fullword(altherit.l);
+   write_fullword(altherit & 0x00000000FFFFFFFFULL);
+   write_fullword(altherit >> 32);
 }
 
 
@@ -2680,6 +2666,10 @@ def2:
          callarray_flags1 |= CAF__NO_COMPRESS;
       else if (!strcmp(tok_str, "plus_eighth_rotation"))
          callarray_flags1 |= CAF__PLUSEIGHTH_ROTATION;
+      else if (!strcmp(tok_str, "plus_eighth_rotation"))
+         callarray_flags1 |= CAF__PLUSEIGHTH_ROTATION;
+      else if (!strcmp(tok_str, "roll_transparent"))
+         callarray_flags1 |= CAF__ROLL_TRANSPARENT;
       else if ((!(callarray_flags1 & CAF__CONCEND)) && (!strcmp(tok_str, "concendsetup"))) {
          if (call_endsetup != (int) s_normal_concentric)
             errexit("concendsetup with wrong end_setup");
@@ -2809,7 +2799,7 @@ int main(int argc, char *argv[])
 
       get_tok_or_eof();
    startagain:
-      phonyheritbit.initialize_rl(0, 0);
+      phonyheritbit = 0ULL;
       if (eof) break;
       else if (tok_kind != tok_symbol) errexit("Missing indicator");
       else if (strcmp(tok_str, "call")) errexit("Item in illegal context");
@@ -2843,11 +2833,8 @@ int main(int argc, char *argv[])
 
       // Get the phony "force" flag, if present.  This is only allowed on "base_circ_call" things.
       if ((iii = search(forcetabh)) >= 0) {
-         uint32_t bit = 1U << (iii&31);
-         if (iii < 32)
-            phonyheritbit.set_bits_rl(bit, 0);
-         else
-            phonyheritbit.set_bits_rl(0, bit);
+         uint64_t bit = 1ULL << iii;
+         phonyheritbit |= bit;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }
@@ -2856,15 +2843,13 @@ int main(int argc, char *argv[])
 
       // Get toplevel options.
 
-      call_flagshl = 0;
-      call_flagshr = 0;
+      call_flagsh = 0ULL;
       call_flags1 = 0;
       call_flags1overflow = 0;
 
       for (;;) {
          uint32_t flag1_to_set = 0;
-         uint32_t heritflagr_to_set = 0;
-         uint32_t heritflagl_to_set = 0;
+         uint64_t heritflag_to_set = 0ULL;
 
          if ((iii = search(flagtab1f)) >= 0) {
             if (iii >= 32) {
@@ -2909,24 +2894,20 @@ int main(int argc, char *argv[])
          else if (!strcmp(tok_str, "base_tag_call_2"))
             flag1_to_set = (3*CFLAG1_BASE_TAG_CALL_BIT);
          else if (!strcmp(tok_str, "yoyo_is_inherited"))        // These two sort of cheat.
-            heritflagr_to_set = INHERITFLAGR_YOYOETCK_YOYO;     // Set the "yoyo" bit.
+            heritflag_to_set = INHERITFLAG_YOYOETCK_YOYO;     // Set the "yoyo" bit.
          else if (!strcmp(tok_str, "gen_sting_is_inherited"))
-            heritflagr_to_set = INHERITFLAGR_YOYOETCK_GENEROUS; // Set the other bit, which is called "generous".
+            heritflag_to_set = INHERITFLAG_YOYOETCK_GENEROUS; // Set the other bit, which is called "generous".
          else if (!strcmp(tok_str, "mxn_is_inherited"))
-            heritflagr_to_set = INHERITFLAGR_MXNMASK;
+            heritflag_to_set = INHERITFLAG_MXNMASK;
          else if (!strcmp(tok_str, "nxn_is_inherited"))
-            heritflagr_to_set = INHERITFLAGR_NXNMASK;
+            heritflag_to_set = INHERITFLAG_NXNMASK;
          else if (!strcmp(tok_str, "bigmatrix_is_inherited"))
-            heritflagr_to_set = INHERITFLAGR_12_MATRIX|INHERITFLAGR_16_MATRIX;
+            heritflag_to_set = INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX;
          else if (!strcmp(tok_str, "revert_is_inherited"))
-            heritflagr_to_set = INHERITFLAGR_REVERTMASK;
+            heritflag_to_set = INHERITFLAG_REVERTMASK;
          else if ((iii = search(flagtabh)) >= 0) {
-            uint32_t bit = 1U << (iii&31);  // Bit in whichever word it is in.
-
-            if (iii < 32)
-               heritflagr_to_set = bit;
-            else
-               heritflagl_to_set = bit;
+            uint64_t bit = 1ULL << iii;
+            heritflag_to_set = bit;
          }
          else
             break;
@@ -2936,11 +2917,10 @@ int main(int argc, char *argv[])
 
          call_flags1 |= flag1_to_set;
 
-         if ((call_flagshr & heritflagr_to_set) != 0 || (call_flagshl & heritflagl_to_set) != 0)
+         if ((call_flagsh & heritflag_to_set) != 0)
             errexit("Redundant indicator");
 
-         call_flagshr |= heritflagr_to_set;
-         call_flagshl |= heritflagl_to_set;
+         call_flagsh |= heritflag_to_set;
 
          get_tok();
          if (tok_kind != tok_symbol) errexit("Missing indicator");
@@ -3019,7 +2999,7 @@ int main(int argc, char *argv[])
 
          break;
       case schema_alias:
-         if (call_flagshr|call_flagshl|(call_flags1 & ~CFLAG1_BASE_CIRC_CALL)|call_flags1overflow|call_tag)
+         if (call_flagsh|(call_flags1 & ~CFLAG1_BASE_CIRC_CALL)|call_flags1overflow|call_tag)
             errexit("Flags not allowed with alias");
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper alias symbol");

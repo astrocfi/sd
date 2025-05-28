@@ -755,21 +755,21 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"TRIPLE WAVES WORKING COUNTERCLOCKWISE", concept_multiple_lines_tog_std,  D, l_c4,
     UC_none, 9,  CONCPROP__NEEDK_TRIPLE_1X4, 3, 3},
    {"TRIPLE BOXES WORKING TOGETHER",         concept_triple_boxes_together,   D, l_c3,
-    UC_tbwt, 6, 0},
+    UC_tbwt, 6, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING APART",            concept_triple_boxes_together,   D, l_c3,
-    UC_tbwa, 7, 0},
+    UC_tbwa, 7, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING FORWARD",          concept_triple_boxes_together,   D, l_c3,
-    UC_tbwf, 0, 0},
+    UC_tbwf, 0, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING BACKWARD",         concept_triple_boxes_together,   D, l_c3,
-    UC_tbwb, 2, 0},
+    UC_tbwb, 2, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING RIGHT",            concept_triple_boxes_together,   D, l_c3,
-    UC_tbwr, 3, 0},
+    UC_tbwr, 3, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING LEFT",             concept_triple_boxes_together,   D, l_c3,
-    UC_tbwl, 1, 0},
+    UC_tbwl, 1, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING CLOCKWISE",        concept_triple_boxes_together,   D, l_c4,
-    UC_none, 8, 0},
+    UC_none, 8, CONCPROP__NEEDK_2X6},
    {"TRIPLE BOXES WORKING COUNTERCLOCKWISE", concept_triple_boxes_together,   D, l_c4,
-    UC_none, 9, 0},
+    UC_none, 9, CONCPROP__NEEDK_2X6},
    {"TRIPLE DIAMONDS WORKING TOGETHER",      concept_triple_diamonds_together,D, l_c3,
     UC_tdwt, 0},
    {"TRIPLE 1/4 TAGS WORKING TOGETHER",      concept_triple_diamonds_together,D, l_c4a,
@@ -2178,17 +2178,17 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"ALL 8 (diamonds)",                      concept_all_8,                   D, l_a2,
     UC_none, 2},
    {"REVERT",                                concept_revert,                L+D, l_c4a,
-    UC_none, INHERITFLAGRRVRTK_REVERT},
+    UC_none, INHERITFLAGRVRTK_REVERT},
    {"REFLECTED",                             concept_revert,                L+D, l_c3,
-    UC_none, INHERITFLAGRRVRTK_REFLECT},
+    UC_none, INHERITFLAGRVRTK_REFLECT},
    {"REVERT AND THEN REFLECT",               concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRRVRTK_RVF},
+    UC_none, INHERITFLAGRVRTK_RVF},
    {"REFLECT AND THEN REVERT",               concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRRVRTK_RFV},
+    UC_none, INHERITFLAGRVRTK_RFV},
    {"REVERT, THEN REFLECT, THEN REVERT",     concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRRVRTK_RVFV},
+    UC_none, INHERITFLAGRVRTK_RVFV},
    {"REFLECT, THEN REVERT, THEN REFLECT",    concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRRVRTK_RFVF},
+    UC_none, INHERITFLAGRVRTK_RFVF},
    {"FAST",                                  concept_fast,                  L+D, l_c4,
     UC_none},
    {"CENTERS",                               concept_centers_or_ends,         D, l_mainstream,
@@ -2272,23 +2272,23 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
 
 const concept_fixer_thing_r concept_fixer_table_r[] = {
    {0, FINAL__SPLIT,       UC_pl, UC_spl},    // SPLIT + PHANTOM LINES
-   {INHERITFLAGR_INTLK, 0, UC_pl, UC_ipl},    // INTERLOCKED + PHANTOM LINES
+   {INHERITFLAG_INTLK, 0, UC_pl, UC_ipl},     // INTERLOCKED + PHANTOM LINES
    {0, FINAL__SPLIT,       UC_pw, UC_spw},    // SPLIT + PHANTOM WAVES
-   {INHERITFLAGR_INTLK, 0, UC_pw, UC_ipw},    // INTERLOCKED + PHANTOM WAVES
+   {INHERITFLAG_INTLK, 0, UC_pw, UC_ipw},     // INTERLOCKED + PHANTOM WAVES
    {0, FINAL__SPLIT,       UC_pc, UC_spc},    // SPLIT + PHANTOM COLUMNS
-   {INHERITFLAGR_INTLK, 0, UC_pc, UC_ipc},    // INTERLOCKED + PHANTOM COLUMNS
+   {INHERITFLAG_INTLK, 0, UC_pc, UC_ipc},     // INTERLOCKED + PHANTOM COLUMNS
    {0, FINAL__SPLIT,       UC_pb, UC_spb},    // SPLIT + PHANTOM BOXES
-   {INHERITFLAGR_INTLK, 0, UC_pb, UC_ipb},    // INTERLOCKED + PHANTOM BOXES
+   {INHERITFLAG_INTLK, 0, UC_pb, UC_ipb},     // INTERLOCKED + PHANTOM BOXES
    {0, FINAL__SPLIT,       UC_pd, UC_spd},    // SPLIT + PHANTOM DIAMONDS
-   {INHERITFLAGR_INTLK, 0, UC_pd, UC_ipd},    // INTERLOCKED + PHANTOM DIAMONDS
+   {INHERITFLAG_INTLK, 0, UC_pd, UC_ipd},     // INTERLOCKED + PHANTOM DIAMONDS
    {0, FINAL__SPLIT,       UC_pds, UC_spds},  // SPLIT + PHANTOM DIAMOND SPOTS
-   {INHERITFLAGR_INTLK, 0, UC_pds, UC_ipds},  // INTERLOCKED + PHANTOM DIAMOND SPOTS
+   {INHERITFLAG_INTLK, 0, UC_pds, UC_ipds},   // INTERLOCKED + PHANTOM DIAMOND SPOTS
    {0, FINAL__SPLIT,       UC_p1, UC_sp1},    // SPLIT + PHANTOM 1/4 TAGS
-   {INHERITFLAGR_INTLK, 0, UC_p1, UC_ip1},    // INTERLOCKED + PHANTOM 1/4 TAGS
+   {INHERITFLAG_INTLK, 0, UC_p1, UC_ip1},     // INTERLOCKED + PHANTOM 1/4 TAGS
    {0, FINAL__SPLIT,       UC_p3, UC_sp3},    // SPLIT + PHANTOM 3/4 TAGS
-   {INHERITFLAGR_INTLK, 0, UC_p3, UC_ip3},    // INTERLOCKED + PHANTOM 3/4 TAGS
+   {INHERITFLAG_INTLK, 0, UC_p3, UC_ip3},     // INTERLOCKED + PHANTOM 3/4 TAGS
    {0, FINAL__SPLIT,       UC_pgt, UC_spgt},  // SPLIT + PHANTOM GENERAL 1/4 TAGS
-   {INHERITFLAGR_INTLK, 0, UC_pgt, UC_ipgt},  // INTERLOCKED + PHANTOM GENERAL 1/4 TAGS
+   {INHERITFLAG_INTLK, 0, UC_pgt, UC_ipgt},   // INTERLOCKED + PHANTOM GENERAL 1/4 TAGS
    {0, 0, UC_none, UC_none}};
 
 static const useful_concept_enum nice_setup_concept_4x4[] = {

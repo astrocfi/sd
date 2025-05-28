@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 381
+#define DATABASE_FORMAT_VERSION 382
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -174,38 +174,15 @@ typedef unsigned char uint8_t;
 #undef UINT16_C
 #undef INT32_C
 #undef UINT32_C
+#undef UINT64_C
 #define INT8_C(val) ((int8_t) + (val))
 #define UINT8_C(val) ((uint8_t) + (val##U))
 #define INT16_C(val) ((int16_t) + (val))
 #define UINT16_C(val) ((uint16_t) + (val##U))
 #define INT32_C(val) ((uint32_t) + (val##L))
 #define UINT32_C(val) ((uint32_t) + (val##UL))
+#define UINT64_C(val) ((uint64_t) + (val##ULL))
 
-class my_uint64_t {
- public:
-
-   // Construct from two 32-bit words.
-   my_uint64_t(uint32_t left = 0, uint32_t right = 0)
-      { l = left; r = right; }
-
-   bool operator != (const my_uint64_t & rhs) const
-      {
-         if ((l != rhs.l)) return true;
-         if ((r != rhs.r)) return true;
-         return false;
-      }
-
-   bool operator == (const my_uint64_t & rhs) const
-      {
-         if ((l != rhs.l)) return false;
-         if ((r != rhs.r)) return false;
-         return true;
-      }
-
- private:
-   uint32_t l;
-   uint32_t r;
-};
 
 typedef const char *Cstring;
 
@@ -284,157 +261,101 @@ enum base_call_index {
 // "calldef_block", and the "cmd_final_flags.herit" of a setup with its command block.
 // These things (right then left) track the table "defmodtabh" in mkcalls.cpp.
 
-enum heritflagsr {
-   INHERITFLAGR_DIAMOND    = 0x00000001U,
-   INHERITFLAGR_REVERSE    = 0x00000002U,
-   INHERITFLAGR_LEFT       = 0x00000004U,
-   INHERITFLAGR_FUNNY      = 0x00000008U,
-   INHERITFLAGR_INTLK      = 0x00000010U,
-   INHERITFLAGR_MAGIC      = 0x00000020U,
-   INHERITFLAGR_GRAND      = 0x00000040U,
-   INHERITFLAGR_12_MATRIX  = 0x00000080U,
-   INHERITFLAGR_16_MATRIX  = 0x00000100U,
-   INHERITFLAGR_CROSS      = 0x00000200U,
-   INHERITFLAGR_SINGLE     = 0x00000400U,
-   INHERITFLAGR_SINGLEFILE = 0x00000800U,
-   INHERITFLAGR_HALF       = 0x00001000U,
-   INHERITFLAGR_LASTHALF   = 0x00002000U,
-   INHERITFLAGR_REWIND     = 0x00004000U,
-   INHERITFLAGR_STRAIGHT   = 0x00008000U,
-   INHERITFLAGR_TWISTED    = 0x00010000U,
-   INHERITFLAGR_FRACTAL    = 0x00020000U,
-   INHERITFLAGR_FAST       = 0x00040000U,
+// This (heritflags) used to be an enum (two of them, in fact, because these things were
+// divided into 32-bit fields.  But apparently enums aren't 64 bits, even with 64 bit
+// compilers, so they are now nakes uint64's.
 
-   // This is a 2 bit field.  These track "yoyotabforce" and "yoyotabplain" in mkcalls.cpp.
-   INHERITFLAGR_YOYOETCMASK      = 0x00180000U,
-   // This is its low bit.
-   INHERITFLAGR_YOYOETCBIT       = 0x00080000U,
-   // These 3 things are the choices available inside.
-   // Warning!  We sort of cheat on inheritance.  The low bit ("yoyo") means inherit yoyo,
-   // and the high bit ("generous") means inherit both generous and stingy.
-   // The local function "fix_gensting_weirdness", in sdmoves.cpp, deals with this.
-   INHERITFLAGR_YOYOETCK_YOYO    = 0x00080000U,
-   INHERITFLAGR_YOYOETCK_GENEROUS= 0x00100000U,
-   INHERITFLAGR_YOYOETCK_STINGY  = 0x00180000U,
+const uint64_t INHERITFLAG_DIAMOND    = 0x0000000000000001ULL;
+const uint64_t INHERITFLAG_REVERSE    = 0x0000000000000002ULL;
+const uint64_t INHERITFLAG_LEFT       = 0x0000000000000004ULL;
+const uint64_t INHERITFLAG_FUNNY      = 0x0000000000000008ULL;
+const uint64_t INHERITFLAG_INTLK      = 0x0000000000000010ULL;
+const uint64_t INHERITFLAG_MAGIC      = 0x0000000000000020ULL;
+const uint64_t INHERITFLAG_GRAND      = 0x0000000000000040ULL;
+const uint64_t INHERITFLAG_12_MATRIX  = 0x0000000000000080ULL;
+const uint64_t INHERITFLAG_16_MATRIX  = 0x0000000000000100ULL;
+const uint64_t INHERITFLAG_CROSS      = 0x0000000000000200ULL;
+const uint64_t INHERITFLAG_SINGLE     = 0x0000000000000400ULL;
+const uint64_t INHERITFLAG_SINGLEFILE = 0x0000000000000800ULL;
+const uint64_t INHERITFLAG_HALF       = 0x0000000000001000ULL;
+const uint64_t INHERITFLAG_LASTHALF   = 0x0000000000002000ULL;
+const uint64_t INHERITFLAG_REWIND     = 0x0000000000004000ULL;
+const uint64_t INHERITFLAG_STRAIGHT   = 0x0000000000008000ULL;
+const uint64_t INHERITFLAG_TWISTED    = 0x0000000000010000ULL;
+const uint64_t INHERITFLAG_FRACTAL    = 0x0000000000020000ULL;
+const uint64_t INHERITFLAG_FAST       = 0x0000000000040000ULL;
 
-   // This is a 4 bit field.  These track "mxntabforce" and "mxntabplain" in mkcalls.cpp.
-   INHERITFLAGR_MXNMASK    = 0x01E00000U,
-   // This is its low bit.
-   INHERITFLAGR_MXNBIT     = 0x00200000U,
-   // These 12 things are some of the 15 choices available inside.
-   INHERITFLAGRMXNK_1X2    = 0x00200000U,
-   INHERITFLAGRMXNK_2X1    = 0x00400000U,
-   INHERITFLAGRMXNK_1X3    = 0x00600000U,
-   INHERITFLAGRMXNK_3X1    = 0x00800000U,
-   INHERITFLAGRMXNK_0X3    = 0x00A00000U,
-   INHERITFLAGRMXNK_3X0    = 0x00C00000U,
-   INHERITFLAGRMXNK_0X4    = 0x00E00000U,
-   INHERITFLAGRMXNK_4X0    = 0x01000000U,
-   INHERITFLAGRMXNK_6X2    = 0x01200000U,   // For 6x2 acey deucey.
-   INHERITFLAGRMXNK_3X2    = 0x01400000U,   // For 3x2 acey deucey.
-   INHERITFLAGRMXNK_3X5    = 0x01600000U,
-   INHERITFLAGRMXNK_5X3    = 0x01800000U,
+// This is a 2 bit field.  These track "yoyotabforce" and "yoyotabplain" in mkcalls.cpp.
+const uint64_t INHERITFLAG_YOYOETCMASK      = 0x0000000000180000ULL;
+// This is its low bit.
+const uint64_t INHERITFLAG_YOYOETCBIT       = 0x0000000000080000ULL;
+// These 3 things are the choices available inside.
+// Warning!  We sort of cheat on inheritance.  The low bit ("yoyo") means inherit yoyo,
+// and the high bit ("generous") means inherit both generous and stingy.
+// The local function "fix_gensting_weirdness", in sdmoves.cpp, deals with this.
+const uint64_t INHERITFLAG_YOYOETCK_YOYO    = 0x0000000000080000ULL;
+const uint64_t INHERITFLAG_YOYOETCK_GENEROUS= 0x0000000000100000ULL;
+const uint64_t INHERITFLAG_YOYOETCK_STINGY  = 0x0000000000180000ULL;
 
-   // This is a 3 bit field.  These track "nxntabforce" and  "nxntabplain" in mkcalls.cpp.
-   INHERITFLAGR_NXNMASK    = 0x0E000000U,
-   // This is its low bit.
-   INHERITFLAGR_NXNBIT     = 0x02000000U,
-   // These 7 things are the choices available inside.
-   INHERITFLAGRNXNK_2X2    = 0x02000000U,
-   INHERITFLAGRNXNK_3X3    = 0x04000000U,
-   INHERITFLAGRNXNK_4X4    = 0x06000000U,
-   INHERITFLAGRNXNK_5X5    = 0x08000000U,
-   INHERITFLAGRNXNK_6X6    = 0x0A000000U,
-   INHERITFLAGRNXNK_7X7    = 0x0C000000U,
-   INHERITFLAGRNXNK_8X8    = 0x0E000000U,
+// This is a 4 bit field.  These track "mxntabforce" and "mxntabplain" in mkcalls.cpp.
+const uint64_t INHERITFLAG_MXNMASK    = 0x0000000001E00000ULL;
+// This is its low bit.
+const uint64_t INHERITFLAG_MXNBIT     = 0x0000000000200000ULL;
+// These 12 things are some of the 15 choices available inside.
+const uint64_t INHERITFLAGMXNK_1X2    = 0x0000000000200000ULL;
+const uint64_t INHERITFLAGMXNK_2X1    = 0x0000000000400000ULL;
+const uint64_t INHERITFLAGMXNK_1X3    = 0x0000000000600000ULL;
+const uint64_t INHERITFLAGMXNK_3X1    = 0x0000000000800000ULL;
+const uint64_t INHERITFLAGMXNK_0X3    = 0x0000000000A00000ULL;
+const uint64_t INHERITFLAGMXNK_3X0    = 0x0000000000C00000ULL;
+const uint64_t INHERITFLAGMXNK_0X4    = 0x0000000000E00000ULL;
+const uint64_t INHERITFLAGMXNK_4X0    = 0x0000000001000000ULL;
+const uint64_t INHERITFLAGMXNK_6X2    = 0x0000000001200000ULL;   // For 6x2 acey deucey.
+const uint64_t INHERITFLAGMXNK_3X2    = 0x0000000001400000ULL;   // For 3x2 acey deucey.
+const uint64_t INHERITFLAGMXNK_3X5    = 0x0000000001600000ULL;
+const uint64_t INHERITFLAGMXNK_5X3    = 0x0000000001800000ULL;
 
-   // This is a 3 bit field.  These track "reverttabforce" and "reverttabplain" in mkcalls.cpp .
-   INHERITFLAGR_REVERTMASK = 0x70000000U,
-   // This is its low bit.
-   INHERITFLAGR_REVERTBIT  = 0x10000000U,
-   // These 7 things are the choices available inside.
-   INHERITFLAGRRVRTK_REVERT= 0x10000000U,
-   INHERITFLAGRRVRTK_REFLECT=0x20000000U,
-   INHERITFLAGRRVRTK_RVF   = 0x30000000U,
-   INHERITFLAGRRVRTK_RFV   = 0x40000000U,
-   INHERITFLAGRRVRTK_RVFV  = 0x50000000U,
-   INHERITFLAGRRVRTK_RFVF  = 0x60000000U,
-   INHERITFLAGRRVRTK_RFF   = 0x70000000U,
-   INHERITFLAGR_QUARTER    = 0x80000000U
-};
+// This is a 3 bit field.  These track "nxntabforce" and  "nxntabplain" in mkcalls.cpp.
+const uint64_t INHERITFLAG_NXNMASK    = 0x000000000E000000ULL;
+// This is its low bit.
+const uint64_t INHERITFLAG_NXNBIT     = 0x0000000002000000ULL;
+// These 7 things are the choices available inside.
+const uint64_t INHERITFLAGNXNK_2X2    = 0x0000000002000000ULL;
+const uint64_t INHERITFLAGNXNK_3X3    = 0x0000000004000000ULL;
+const uint64_t INHERITFLAGNXNK_4X4    = 0x0000000006000000ULL;
+const uint64_t INHERITFLAGNXNK_5X5    = 0x0000000008000000ULL;
+const uint64_t INHERITFLAGNXNK_6X6    = 0x000000000A000000ULL;
+const uint64_t INHERITFLAGNXNK_7X7    = 0x000000000C000000ULL;
+const uint64_t INHERITFLAGNXNK_8X8    = 0x000000000E000000ULL;
 
-enum heritflagsl {
-   INHERITFLAGL_INROLL     = 0x00000001U,
-   INHERITFLAGL_OUTROLL    = 0x00000002U,
-   INHERITFLAGL_SPLITTRADE = 0x00000004U,
-   INHERITFLAGL_BIAS       = 0x00000008U,
-   INHERITFLAGL_BIASTRADE  = 0x00000010U,
-   INHERITFLAGL_ORBIT      = 0x00000020U,
-   INHERITFLAGL_TWINORBIT  = 0x00000040U,
-   INHERITFLAGL_ROTARY     = 0x00000080U,
-   INHERITFLAGL_SCATTER    = 0x00000100U,
-   INHERITFLAGL_ZOOMROLL   = 0x00000200U,
-   INHERITFLAGL_TRADE      = 0x00000400U,
-   INHERITFLAGL_CROSSOVER  = 0x00000800U
-};
-
+// This is a 3 bit field.  These track "reverttabforce" and "reverttabplain" in mkcalls.cpp .
+const uint64_t INHERITFLAG_REVERTMASK = 0x0000000070000000ULL;
+// This is its low bit.
+const uint64_t INHERITFLAG_REVERTBIT  = 0x0000000010000000ULL;
+// These 7 things are the choices available inside.
+const uint64_t INHERITFLAGRVRTK_REVERT= 0x0000000010000000ULL;
+const uint64_t INHERITFLAGRVRTK_REFLECT=0x0000000020000000ULL;
+const uint64_t INHERITFLAGRVRTK_RVF   = 0x0000000030000000ULL;
+const uint64_t INHERITFLAGRVRTK_RFV   = 0x0000000040000000ULL;
+const uint64_t INHERITFLAGRVRTK_RVFV  = 0x0000000050000000ULL;
+const uint64_t INHERITFLAGRVRTK_RFVF  = 0x0000000060000000ULL;
+const uint64_t INHERITFLAGRVRTK_RFF   = 0x0000000070000000ULL;
+const uint64_t INHERITFLAG_QUARTER    = 0x0000000080000000ULL;
+const uint64_t INHERITFLAG_INROLL     = 0x0000000100000000ULL;
+const uint64_t INHERITFLAG_OUTROLL    = 0x0000000200000000ULL;
+const uint64_t INHERITFLAG_SPLITTRADE = 0x0000000400000000ULL;
+const uint64_t INHERITFLAG_BIAS       = 0x0000000800000000ULL;
+const uint64_t INHERITFLAG_BIASTRADE  = 0x0000001000000000ULL;
+const uint64_t INHERITFLAG_ORBIT      = 0x0000002000000000ULL;
+const uint64_t INHERITFLAG_TWINORBIT  = 0x0000004000000000ULL;
+const uint64_t INHERITFLAG_ROTARY     = 0x0000008000000000ULL;
+const uint64_t INHERITFLAG_SCATTER    = 0x0000010000000000ULL;
+const uint64_t INHERITFLAG_ZOOMROLL   = 0x0000020000000000ULL;
+const uint64_t INHERITFLAG_TRADE      = 0x0000040000000000ULL;
+const uint64_t INHERITFLAG_CROSSOVER  = 0x0000080000000000ULL;
 
 
-class heritflags {
- public:
-
-   // Stupid constructor, doesn't work.
-   // Why can't I get constructors to work on VC++ 6?
-   /*
-   heritflags() : r(INHERITFLAGR_INTLK), l(INHERITFLAGL_SPLITTRADE)
-      {}
-   */
-
-   // Why can't I get a constructor that does this to work on VC++ 6?
-   inline void initialize_rl(uint32_t yr, uint32_t yl) {
-      l = (heritflagsl) yl;
-      r = (heritflagsr) yr;
-   }
-
-   // Test all 64 bits, report if any bits match.
-   inline bool bool_test_any_bit_rl(uint32_t yr, uint32_t yl) const { return ((r & yr) | (l & yl)) != 0; }
-
-   // Return true is some bit OTHER THAN the ones listed in the argument, is on.
-   inline bool test_unselected_bits_rl(uint32_t yr, uint32_t yl) const { return ((r & ~yr) | (l & ~yl)) != 0; }
-
-   inline bool is_zero() const { return (r | l) == 0; }
-
-   inline bool equalsequals(const heritflags rhs) const { return (r == rhs.r && l == rhs.l); }
-
-   // More VC lossage.
-   //   inline bool operator == (const heritflags & rhs) const { return (r == rhs.r && l == rhs.l); }
-
-
-   inline void orequals(const heritflags & rhs) {
-      r = (heritflagsr) (r | rhs.r);
-      l = (heritflagsl) (l | rhs.l);
-   }
-
-
-   // and "subtract", like clear_bits_rl
-
-
-   // This sets a mask of bits, from a right int and a left int.
-   inline void set_bits_rl(uint32_t yr, uint32_t yl) {
-      r = (heritflagsr) (r | yr);
-      l = (heritflagsl) (l | yl);
-   }
-
-   // This clears a mask of bits, from a right int and a left int.
-   // Bits that are ON in the argument get CLEARED in the field.
-   inline void clear_bits_rl(uint32_t yr, uint32_t yl) {
-      r = (heritflagsr) (r & ~yr);
-      l = (heritflagsl) (l & ~yl);
-   }
-
-   heritflagsr r;
-   heritflagsl l;
-};
+typedef uint64_t heritflags;
 
 
 // CFLAG1_FUDGE_TO_Q_TAG means three things, the main one being that the
@@ -1063,6 +984,7 @@ enum {
    CAF__REALLY_WANT_DIAMOND  = 0x2000,
    CAF__NO_COMPRESS          = 0x4000,
    CAF__PLUSEIGHTH_ROTATION  = 0x8000,
+   CAF__ROLL_TRANSPARENT    = 0x10000
 };
 
 // BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp

@@ -1193,11 +1193,7 @@ int WINAPI WinMain(
    // They had previously had two initial underscores.  The double-underscore
    // symbols exist, but they don't give what we want.
 
-#if defined(__GNUC__)
-   return sdmain(_argc, _argv, ggg);
-#else
    return sdmain(__argc, __argv, ggg);
-#endif
 }
 
 

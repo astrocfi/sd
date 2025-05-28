@@ -54,6 +54,7 @@ char const *file_list[] = {
    "sdlib.dll",
    "sd_calls.txt",
    "sd_calls.dat",
+   "libwinpthread-1.dll",
    "SD.lnk",
    "SD plain.lnk",
    "SDTTY.lnk",

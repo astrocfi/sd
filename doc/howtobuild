@@ -40,7 +40,7 @@ cygwinB19.dll into the \bin directory.
 
 Go to sddoc directory and do:
 
-    setmingw
+    setmingw64
     settex
     clean clean
     do_plain
@@ -106,7 +106,8 @@ Go to sddoc directory and do:
 24 Dec 18  -  21 Jan 19  #61  // (1-3/4, swing thru) TWICE
 21 Jan 19  -  30 Jun 20  #62  // hairy interrupted swing the fractions
 30 Jun 20  -  14 Aug 20  #67  // thirdly split 5 times grand chain 8
-14 Aug 20  -             #63  // hairy interrupted scoot and plenty
+14 Aug 20  -  26 Dec 20  #63  // hairy interrupted scoot and plenty
+26 Dec 20                #69  // initially as couples regroup
                          #64  // hairy [boys trade] and circle 1/2
                          #65  // middle half tandem, slide thru
                          #66  // twisted split grand chain 8
@@ -136,18 +137,22 @@ BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
 
 -----------------------------------------------------------------
 
-               TESTING AND PRODUCTION BUILD - MINGW
+               TESTING AND PRODUCTION BUILD - MINGW 64 BITS
+               32 BIT COMPILERS MAY NO LONGER BE USED!!!!
+                    Yes, the make utility for 64-bit mingw
+                    is still called "mingw32-make".
+
 
    THE DOCUMENTATION MUST HAVE BEEN PREPARED BEFORE DOING THIS!
    This is because the html files from document preparation are
    needed by this step.
 
    In directory sd:
-   setmingw
-   mingw clean
-   mingw all
-   mingw cleanup   // optional: remove .o files etc. after building
-   mingw savesource    // This packs the "official" source distribution.
+   setmingw64
+   mingw64 clean
+   mingw64 all
+   mingw64 cleanup   // optional: remove .o files etc. after building
+   mingw64 savesource    // This packs the "official" source distribution.
 
 DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, MKCALLS.EXE and DEPLOY.EXE!
 

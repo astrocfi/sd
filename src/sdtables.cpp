@@ -266,6 +266,8 @@ selector_item selector_list[] = {
    {"far 6",        "far 6",       "FAR 6",        "FAR 6",       selector_neartwo},
    {"near 3",       "near 3",      "NEAR 3",       "NEAR 3",      selector_farfive},
    {"far 3",        "far 3",       "FAR 3",        "FAR 3",       selector_nearfive},
+   {"near triangle","near triangle","NEAR triangle","NEAR triangle",selector_neartriangle},
+   {"far triangle", "far triangle","FAR triangle", "FAR triangle",selector_fartriangle},
    {"near 5",       "near 5",      "NEAR 5",       "NEAR 5",      selector_farthree},
    {"far 5",        "far 5",       "FAR 5",        "FAR 5",       selector_nearthree},
    {"the 2x3",      "the 2x3",     "THE 2X3",      "THE 2X3",     selector_uninitialized},
@@ -678,6 +680,30 @@ expand::thing expand::expand_init_table[] = {
     s2x4, s2x6, 0, 0U, 0x0F0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
+   {{2, 5, 3, 4},
+    s1x4, s1x6, 0, 0U, 003, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 5, 2},
+    s1x4, s1x6, 0, 0U, 030, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3},
+    s1x4, s1x8, 0, 0U, 0xF0, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{6, 7, 4, 5},
+    s1x4, s1x8, 0, 0U, 0x0F, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 4, 5},
+    s2x2, s2x4, 0, 0U, 0xC3, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 6, 7},
+    s2x2, s2x4, 0, 0U, 0x03C, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
    {{1, 2, 3, 4, 5, 6, 7, 8},
     s2x4, s2x5, 0, 0U, 0x201, false,
     warn__none, warn__none, normalize_recenter, 0},
@@ -869,46 +895,24 @@ expand::thing expand::expand_init_table[] = {
     s1x2, s2x9, 1, 0U, 0x3BF7, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
-#define NEEDMASK1(a)                NEEDMASKL(a), NEEDMASKR(a)
-#define NEEDMASK2(a, b)             NEEDMASKL(a) | NEEDMASKL(b), NEEDMASKR(a) | NEEDMASKR(b)
-#define NEEDMASK3(a, b, c)          NEEDMASKL(a) | NEEDMASKL(b) | NEEDMASKL(c), \
-                                    NEEDMASKR(a) | NEEDMASKR(b) | NEEDMASKR(c)
-#define NEEDMASK4(a, b, c, d)       NEEDMASKL(a) | NEEDMASKL(b) | NEEDMASKL(c) | NEEDMASKL(d), \
-                                    NEEDMASKR(a) | NEEDMASKR(b) | NEEDMASKR(c) | NEEDMASKR(d)
-#define NEEDMASK6(a, b, c, d, e, f) NEEDMASKL(a) | NEEDMASKL(b) | NEEDMASKL(c) | \
-                                    NEEDMASKL(d) | NEEDMASKL(e) | NEEDMASKL(f), \
-                                    NEEDMASKR(a) | NEEDMASKR(b) | NEEDMASKR(c) | \
-                                    NEEDMASKR(d) | NEEDMASKR(e) | NEEDMASKR(f)
-#define NEEDMASK7(a, b, c, d, e, f, g) \
-                                    NEEDMASKL(a) | NEEDMASKL(b) | NEEDMASKL(c) | NEEDMASKL(d) | \
-                                    NEEDMASKL(e) | NEEDMASKL(f) | NEEDMASKL(g), \
-                                    NEEDMASKR(a) | NEEDMASKR(b) | NEEDMASKR(c) | NEEDMASKR(d) | \
-                                    NEEDMASKR(e) | NEEDMASKR(f) | NEEDMASKR(g)
-#define NEEDMASK10(a, b, c, d, e, f, g, h, i, j) \
-                                    NEEDMASKL(a) | NEEDMASKL(b) | NEEDMASKL(c) | NEEDMASKL(d) | NEEDMASKL(e) | \
-                                    NEEDMASKL(f) | NEEDMASKL(g) | NEEDMASKL(h) | NEEDMASKL(i) | NEEDMASKL(j), \
-                                    NEEDMASKR(a) | NEEDMASKR(b) | NEEDMASKR(c) | NEEDMASKR(d) | NEEDMASKR(e) | \
-                                    NEEDMASKR(f) | NEEDMASKR(g) | NEEDMASKR(h) | NEEDMASKR(i) | NEEDMASKR(j)
-
-
    {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
     s2x6, sbigdhrgl, 0, ~0U, 01414, false,
-    warn__none, warn__none, normalize_before_isolated_call, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, normalize_before_isolated_call, NB(CONCPROP__NEEDK_END_2X2)},
 
    // These three must be in this order.
    {{0, 1, -1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 10, 11},
     s2x8, sbigbone, 0, 0x3C3C, 01414, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_END_2X2)},
    {{0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11},
     s2x6, sbigbone, 0, 01414, 01414, false,
-    warn__none, warn__none, normalize_after_disconnected, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, normalize_after_disconnected, NB(CONCPROP__NEEDK_END_2X2)},
    {{0, 1, -1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 10, 11},
     s2x8, sbigbone, 0, 0x3C3C, 01414, false,
-    warn__none, warn__none, normalize_strict_matrix, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, normalize_strict_matrix, NB(CONCPROP__NEEDK_END_2X2)},
 
    {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
     s2x6, sbighrgl, 0, ~0U, 01414, false,
-    warn__none, warn__none, normalize_before_isolated_call, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, normalize_before_isolated_call, NB(CONCPROP__NEEDK_END_2X2)},
 
    /* If only the center diamond is present, turn it into a 3dmd.
             If only the "wings" are present, turn it into a 2x6. */
@@ -1084,11 +1088,11 @@ expand::thing expand::expand_init_table[] = {
 
    {{1, 2, 4, 5},
     s1x4, s1x6, 0, 0U, 011, false,
-    warn__none, warn__none, normalize_to_4, NEEDMASK1(CONCPROP__NEEDK_1X6)},
+    warn__none, warn__none, normalize_to_4, NB(CONCPROP__NEEDK_1X6)},
 
    {{3, 2, 7, 6},
     s1x4, s1x8, 0, 0U, 0x33, false,
-    warn__none, warn__none, normalize_to_4, NEEDMASK1(CONCPROP__NEEDK_1X8)},
+    warn__none, warn__none, normalize_to_4, NB(CONCPROP__NEEDK_1X8)},
 
    {{2, 6},
     s1x2, s1x8, 0, 0U, 0xBB, false,
@@ -1101,7 +1105,7 @@ expand::thing expand::expand_init_table[] = {
 
    {{1, 3, 2, 5, 7, 6},
     s1x6, s1x8, 0, 0U, 0x11, false,
-    warn__none, warn__none, normalize_to_6, NEEDMASK1(CONCPROP__NEEDK_1X8)},
+    warn__none, warn__none, normalize_to_6, NB(CONCPROP__NEEDK_1X8)},
 
    {{1, 2, 3, 5, 6, 7},
     s_1x2dmd, s1x3dmd, 0, 0U, 0x11, false,
@@ -1132,117 +1136,129 @@ expand::thing expand::expand_init_table[] = {
 
    {{2, 3, 7, 6, 5, 4, 10, 11, 15, 14, 13, 12},
     sbigh, sdblxwave, 0, 0U, 0x0303, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_DBLX)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_DBLX)},
 
    {{-1, 1, -1, -1, 7, -1, 4, 5, 6, 2, 3, 0,
      -1, 9, -1, -1, 15, -1, 12, 13, 14, 10, 11, 8},
     s4x6, s2x2dmd, 0, 0x02D02D, 0U, false,
-    warn__none, warn__none, normalize_before_merge, NEEDMASK2(CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
+    warn__none, warn__none, normalize_before_merge, NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
 
    {{13, 14, 1, 2, 5, 6, 9, 10},
     s_alamo, s4x4, 0, 0U, 0x9999, false,
-    warn__none, warn__none, normalize_never, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__none, warn__none, normalize_never, NB(CONCPROP__NEEDK_4X4)},
 
    {{10, -1,-1, 1, 2, -1, -1, 9},
     s2x4, s4dmd, 1, 0x66, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{10, 15, 1, 2, 7, 9},
     s2x3, s4dmd, 1, 0, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{0, 1, -1, -1, 2, 3, 5, 6, 7, 8, 9, -1, -1, 10, 11, 13, 14, 15},
     s3x6, s4dmd, 0, 0014014, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{-1, 0, 1, -1, -1, 2, 3, -1, 4, 5, 6, 7, -1, 8, 9, -1, -1, 10, 11, -1, 12, 13, 14, 15},
     s3x8, s4dmd, 0, 0x099099, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{1, -1, -1, 2, 6, 7, 9, -1, -1, 10, 14, 15},
     s3x4, s4dmd, 0, 00606, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1},
     s3x4, s4dmd, 0, 06060, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{-1, 2, 3, -1, -1, 6, 7, 8, -1, 11, 12, -1, -1, 15, 16, 17},
     s4dmd, s3x6, 0, 0x1919, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_3X6)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X6)},
 
    {{13, 14, 1, -1, -1, 10, 5, 6, 9, -1, -1, 2},
     sdeepqtg, s4x4, 0, 03030, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__check_4x4_start, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{-1, -1, 13, 14, 1, -1, -1, 10, -1, -1, 5, 6, 9, -1, -1, 2},
     sdeepbigqtg, s4x4, 0, 0x6363, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__check_4x4_start, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{-1, -1, 13, 10, -1, -1, 1, 14, -1, -1, 5, 2, -1, -1, 9, 6},
     s_c1phan, s4x4, 0, 0x3333, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{-1, 13, -1, 15, -1, 1, -1, 3, 2, -1, 7, -1, 6, -1, 11, -1},
     s_c1phan, s4x4, 0, 0xAA55, ~0U, false,
-    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{10, -1, 15, -1, -1, 1, -1, 3, -1, 5, -1, 7, 6, -1, 11, -1},
     s_c1phan, s4x4, 0, 0xA55A, ~0U, false,
-    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{10, -1, 15, -1, 14, -1, 3, -1, -1, 5, -1, 7, -1, 9, -1, 11},
     s_c1phan, s4x4, 0, 0x55AA, ~0U, false,
-    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{-1, 13, -1, 15, 14, -1, 3, -1, 2, -1, 7, -1, -1, 9, -1, 11},
     s_c1phan, s4x4, 0, 0x5AA5, ~0U, false,
-    warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X4)},
+    warn__check_4x4_ctrbox, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X4)},
 
    {{10, 13, -1, 15, 14, 1, 3, -1, 2, 5, -1, 7, 6, 9, 11, -1},
     s_c1phan, s4x4, 0, 0x8484, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK6(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                                   CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                                   CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
+    warn__check_4x4_start, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
+
    {{10, 13, 15, -1, 14, 1, -1, 3, 2, 5, 7, -1, 6, 9, -1, 11},
     s_c1phan, s4x4, 0, 0x4848, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK6(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                                   CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                                   CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
+    warn__check_4x4_start, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
+
    {{10, 13, 15, -1, 14, 1, 3, -1, 2, 5, 7, -1, 6, 9, 11, -1},
     s_c1phan, s4x4, 0, 0x8888, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK6(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                                   CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                                   CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
+    warn__check_4x4_start, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
 
    {{10, 13, -1, 15, 14, 1, -1, 3, 2, 5, -1, 7, 6, 9, -1, 11},
     s_c1phan, s4x4, 0, 0x4444, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK6(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                                   CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                                   CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
-
+    warn__check_4x4_start, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
 
    {{12, 13, 14, 0, -1, -1, -1, -1, 4, 5, 6, 8, -1, -1, -1, -1},
     s4dmd, s4x4, 0, 0xF0F0, ~0U, false,
-    warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK6(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                                   CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                                   CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
+    warn__check_4x4_start, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
 
    {{0, 1, 2, 3, -1, -1, 4, 5, 6, 7, 8, 9, -1, -1, 10, 11},
     s4dmd, s3x4, 0, 0x3030, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK3(CONCPROP__NEEDK_3X4, CONCPROP__NEEDK_3X4_D3X4,
-                                                        CONCPROP__NEEDK_TRIPLE_1X4)},
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_3X4) | NB(CONCPROP__NEEDK_3X4_D3X4) |
+    NB(CONCPROP__NEEDK_TRIPLE_1X4)},
+
+   {{10, 11, 4, 5},
+    s1x4, s3x4, 0, 0U, ~0U, false,
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_3X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4)},
 
    {{0, 1, 4, 5, -1, 6, 7, 8, 9, 10, 13, 14, -1, 15, 16, 17},
     s4dmd, s3x6, 0, 0x1010, ~0U, false,
-    warn__check_centered_qtag, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_3X6)},
+    warn__check_centered_qtag, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X6)},
    {{1, 2, 5, 6, 8, 9, 10, 11, 13, 14, 17, 18, 20, 21, 22, 23},
     s4dmd, s3x8, 0, 0U, ~0U, false,
-    warn__check_centered_qtag, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_3X8)},
+    warn__check_centered_qtag, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X8)},
 
    {{1, 2, 3, 5, 7, 8, 9, 11},
     s_spindle, sd3x4, 0, 0U, 02121, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_3X4_D3X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X4_D3X4)},
    {{1, 2, 3, 7, 8, 9},
     s2x3, sd3x4, 0, 0U, 06161, false,
     warn__none, warn__none, simple_normalize, 0},
@@ -1257,11 +1273,13 @@ expand::thing expand::expand_init_table[] = {
 
    {{11, 1, 9, 10, 6, 7, 8, 4, 23, 13, 21, 22, 18, 19, 20, 16},
     s2x2dmd, s4x6, 0, 0U, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_4X6)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4X6)},
 
    {{-1, 12, 15, 10, -1, 1, 3, 0, -1, 4, 7, 2, -1, 9, 11, 8},
     s2x2dmd, s4x4, 0, 0x1111, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK4(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4, CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6)},
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6)},
 
    {{2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15},
     sdeepqtg, sdeepbigqtg, 0, 0, 0x0303, false,
@@ -1290,24 +1308,25 @@ expand::thing expand::expand_init_table[] = {
 
    {{8, 11, 1, 2, 5, 7},
     s2x3, s3x4, 1, 0U, 03131, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_TRIPLE_1X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_TRIPLE_1X4)},
 
    {{10, 15, 3, 1, 2, 7, 11, 9},
     s2x4, s4x4, 0, 0U, 0x7171, false,
     warn__none, warn__none, simple_normalize,
-    NEEDMASK6(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                        CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                        CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG)},
-
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG)},
    // s_qtg_3x4
    /* ***** This is a kludge to make threesome work!!!! */
    {{1, 2, 4, 5, 7, 8, 10, 11},
     s_qtag, s3x4, 0, 0U, ~0U, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK10(CONCPROP__NEEDK_4X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                         CONCPROP__NEEDK_BLOB, CONCPROP__NEEDK_4X6,
-                                                         CONCPROP__NEEDK_TWINDMD, CONCPROP__NEEDK_TWINQTAG,
-                                                         CONCPROP__NEEDK_3X4, CONCPROP__NEEDK_3X4_D3X4,
-                                                         CONCPROP__NEEDK_3X8, CONCPROP__NEEDK_TRIPLE_1X4)},
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_4X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_BLOB) | NB(CONCPROP__NEEDK_4X6) |
+    NB(CONCPROP__NEEDK_TWINDMD) | NB(CONCPROP__NEEDK_TWINQTAG) |
+    NB(CONCPROP__NEEDK_3X4) | NB(CONCPROP__NEEDK_3X4_D3X4) |
+    NB(CONCPROP__NEEDK_3X8) | NB(CONCPROP__NEEDK_TRIPLE_1X4)},
+
    {{0, 1, 2, 4, 5, 6, 7, 9},
     s_323, s_343, 0, 0U, 0x108, false,
     warn__none, warn__none, simple_normalize, 0},
@@ -1340,29 +1359,31 @@ expand::thing expand::expand_init_table[] = {
     warn__none, warn__none, simple_normalize, 0},
    {{5, 4, 3, 2, 11, 10, 9, 8},
     s2x4, sdeepxwv, 1, 0U, 0303, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_DEEPXWV)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_DEEPXWV)},
    {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15},
     s1x14, s1x16, 0, 0U, 0x101, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_QUAD_1X4, CONCPROP__NEEDK_1X16)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_QUAD_1X4) | NB(CONCPROP__NEEDK_1X16)},
    {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13},
     s1x12, s1x14, 0, 0U, 0x81, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_QUAD_1X4, CONCPROP__NEEDK_1X16)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_QUAD_1X4) | NB(CONCPROP__NEEDK_1X16)},
    {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11},
     s1x10, s1x12, 0, 0U, 0101, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK7(CONCPROP__NEEDK_CTR_1X4, CONCPROP__NEEDK_TRIPLE_1X4,
-                                                        CONCPROP__NEEDK_END_1X4, CONCPROP__NEEDK_QUAD_1X4,
-                                                        CONCPROP__NEEDK_QUAD_1X3, CONCPROP__NEEDK_1X12,
-                                                        CONCPROP__NEEDK_1X16)},
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_CTR_1X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4) |
+    NB(CONCPROP__NEEDK_END_1X4) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_QUAD_1X3) | NB(CONCPROP__NEEDK_1X12) |
+    NB(CONCPROP__NEEDK_1X16)},
+
    {{0, 1, 2, 3, 5, 14, 8, 9, 10, 11, 13, 6},
     sbigrig, sbigbigx, 0, 0U, 0x9090, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_QUAD_1X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_QUAD_1X4)},
    {{3, 10, 6, 7, 9, 4, 0, 1},
     s_rigger, sdeepxwv, 0, 0U, 04444, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_QUAD_1X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_QUAD_1X4)},
 
    {{2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15},
     sdeepxwv, sbigbigx, 0, 0U, 0x303, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_QUAD_1X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_QUAD_1X4)},
 
    // order of these next 2 items must be as shown: must be 3x4, 1x6!!!!
    {{15, 16, 17, 6, 7, 8},
@@ -1370,24 +1391,24 @@ expand::thing expand::expand_init_table[] = {
     warn__none, warn__none, simple_normalize, 0},
    {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17},
     s3x4, s3x6, 0, 0U, 0141141, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_3X6)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X6)},
 
    {{12, 13, 15, 14, 4, 5, 7, 6},
     s1x8, s4dmd, 0, 0U, 0x0F0F, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
    {{13, 14, 15, 5, 6, 7},
     s1x6, s4dmd, 0, 0U, 0x1F1F, false,
-    warn__none, warn__none, normalize_to_6, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, normalize_to_6, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
    {{14, 15, 6, 7},
     s1x4, s4dmd, 0, 0U, 0x3F3F, false,
-    warn__none, warn__none, normalize_to_4, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, normalize_to_4, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
 
    {{1, 2, 5, 6, 7, 9, 10, 13, 14, 15},
     swqtag, s4dmd, 0, 0U, 0x1919, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
    {{1, 2, 6, 7, 9, 10, 14, 15},
     s_qtag, s4dmd, 0, 0U, 0x3939, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_4D_4PTPD, CONCPROP__NEEDK_4DMD)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_4D_4PTPD) | NB(CONCPROP__NEEDK_4DMD)},
    {{0, 1, 3, 4, 5, 6, 8, 9},
     s_qtag, swqtag, 0, 0U, 0x084, false,
     warn__none, warn__none, simple_normalize, 0},
@@ -1428,60 +1449,65 @@ expand::thing expand::expand_init_table[] = {
 
    {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18},
     s2x6, s4x6, 0, 0U, 0x03F03F, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK3(CONCPROP__NEEDK_4X6, CONCPROP__NEEDK_TWINDMD,
-                                                       CONCPROP__NEEDK_TWINQTAG)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_4X6) | NB(CONCPROP__NEEDK_TWINDMD) |
+    NB(CONCPROP__NEEDK_TWINQTAG)},
 
    {{11, -1, -1, 9, 8, -1, -1, 6, 23, -1, -1, 21, 20, -1, -1, 18},
     s2x8, s4x6, 0, 0x6666, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK3(CONCPROP__NEEDK_4X6, CONCPROP__NEEDK_TWINDMD,
-                                                       CONCPROP__NEEDK_TWINQTAG)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_4X6) | NB(CONCPROP__NEEDK_TWINDMD) |
+    NB(CONCPROP__NEEDK_TWINQTAG)},
 
    // order of these next 3 items must be as shown: must be 1x8, 3x6, 3x4!!!!
    {{20, 21, 23, 22, 8, 9, 11, 10},
     s1x8, s3x8, 0, 0U, 0x0FF0FF, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3X8)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3X8)},
    {{1, 2, 3, 4, 5, 6, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 22, 23},
     s3x6, s3x8, 0, 0U, 0x181181, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_3X8)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_3X8)},
    {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23},
     s3x4, s3x8, 0, 0U, 0x3C33C3, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3X8)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3X8)},
    {{1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18},
     s2x8, s2x10, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X10)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X10)},
    {{2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17},
     s2x6, s2x10, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X10)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X10)},
    {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22},
     s2x10, s2x12, 0, 0U, 0x801801, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X12)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X12)},
    {{2, 3, 4, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18, 19, 20, 21},
     s2x8, s2x12, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X12)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X12)},
    {{3, 4, 5, 6, 7, 8, 15, 16, 17, 18, 19, 20},
     s2x6, s2x12, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X12)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X12)},
    {{4, 5, 6, 7, 16, 17, 18, 19},
     s2x4, s2x12, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X12)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X12)},
    {{14, 1, 15, 10, 6, 9, 7, 2},
     s_ptpd, s4ptpd,0, 0U, 0x3939, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_4D_4PTPD)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_4D_4PTPD)},
    {{1, 2, 4, 3, 6, 7, 9, 8},
     s1x8, s1x10, 0, 0U, 0x21, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_1X10)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_1X10)},
 
    {{1, 8, 10, 11, 7, 2, 4, 5},
     s_bone, sbigh, 0, 0U, 01111, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK2(CONCPROP__NEEDK_TRIPLE_1X4, CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_TRIPLE_1X4) | NB(CONCPROP__NEEDK_END_1X4)},
    {{1, 2, 3, 5, 7, 8, 9, 11},
     s1x3dmd, sbigx, 0, 0U, 02121, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK3(CONCPROP__NEEDK_CTR_1X4, CONCPROP__NEEDK_TRIPLE_1X4,
-                                                       CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_CTR_1X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4) |
+    NB(CONCPROP__NEEDK_END_1X4)},
+
    {{2, 3, 4, 5, 8, 9, 10, 11},
     s_crosswave, sbigx, 0, 0U, 0303, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK3(CONCPROP__NEEDK_CTR_1X4, CONCPROP__NEEDK_TRIPLE_1X4,
-                                                       CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_CTR_1X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4) |
+    NB(CONCPROP__NEEDK_END_1X4)},
 
    {{1, 2, 6, 7, 9, 10, 14, 15},
     s_crosswave, sx1x8, 0, 0U, 0x3939, false,
@@ -1492,26 +1518,32 @@ expand::thing expand::expand_init_table[] = {
 
    {{2, 3, 5, 8, 9, 11},
     s_1x2dmd, sbigx, 0, 0U, 02323, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK3(CONCPROP__NEEDK_CTR_1X4, CONCPROP__NEEDK_TRIPLE_1X4,
-                                                       CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_CTR_1X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4) |
+    NB(CONCPROP__NEEDK_END_1X4)},
+
    {{2, 3, 5, 4, 8, 9, 11, 10},
     s1x8,    s1x12, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK7(CONCPROP__NEEDK_CTR_1X4, CONCPROP__NEEDK_TRIPLE_1X4,
-                                                       CONCPROP__NEEDK_END_1X4, CONCPROP__NEEDK_1X12,
-                                                       CONCPROP__NEEDK_QUAD_1X3, CONCPROP__NEEDK_QUAD_1X4,
-                                                       CONCPROP__NEEDK_1X16)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_CTR_1X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4) |
+    NB(CONCPROP__NEEDK_END_1X4) | NB(CONCPROP__NEEDK_1X12) |
+    NB(CONCPROP__NEEDK_QUAD_1X3) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_1X16)},
+
    {{3, 4, 5, 9, 10, 11},
     s1x6,    s1x12, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK7(CONCPROP__NEEDK_CTR_1X4, CONCPROP__NEEDK_TRIPLE_1X4,
-                                                       CONCPROP__NEEDK_END_1X4, CONCPROP__NEEDK_1X12,
-                                                       CONCPROP__NEEDK_QUAD_1X3, CONCPROP__NEEDK_QUAD_1X4,
-                                                       CONCPROP__NEEDK_1X16)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_CTR_1X4) | NB(CONCPROP__NEEDK_TRIPLE_1X4) |
+    NB(CONCPROP__NEEDK_END_1X4) | NB(CONCPROP__NEEDK_1X12) |
+    NB(CONCPROP__NEEDK_QUAD_1X3) | NB(CONCPROP__NEEDK_QUAD_1X4) |
+    NB(CONCPROP__NEEDK_1X16)},
+
    {{1, 4, 8, 9, 7, 10, 2, 3},
     s_bone, sbigbone, 0, 0U, 04141, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK2(CONCPROP__NEEDK_END_2X2, CONCPROP__NEEDK_CTR_1X4)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_END_2X2) | NB(CONCPROP__NEEDK_CTR_1X4)},
    {{4, 5, 8, 9, 10, 11, 2, 3},
     s_rigger, sbigrig, 0, 0U, 0303, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK2(CONCPROP__NEEDK_CTR_2X2, CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_CTR_2X2) | NB(CONCPROP__NEEDK_END_1X4)},
 
    {{0, 1, 2, 4, 5, 6, 7, 8, 10, 11},
     s_spindle12, srigger12, 0, 0U, 01010, false,
@@ -1525,32 +1557,38 @@ expand::thing expand::expand_init_table[] = {
     warn__none, warn__none, plain_normalize, 0},
    {{2, 3, 4, 5, 8, 9, 10, 11},
     s3x1dmd, s5x1dmd, 0, 0U, 0303, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK2(CONCPROP__NEEDK_CTR_DMD, CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_CTR_DMD) | NB(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 4, 5, 8, 9, 10, 11},
     s1x3dmd, s1x5dmd,    0, 0U, 0303, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK2(CONCPROP__NEEDK_CTR_DMD, CONCPROP__NEEDK_END_1X4)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_CTR_DMD) | NB(CONCPROP__NEEDK_END_1X4)},
    {{1, 2, 3, 4, 6, 7, 8, 9},
     s1x3dmd, s1x4dmd,    0, 0U, 0x021, false,
     warn__none, warn__none, plain_normalize, 0},
    {{1, 4, 3, 2, 7, 10, 9, 8},
     s_dhrglass,sbigdhrgl,0, 0U, 04141, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_END_2X2)},
    {{10, 1, 2, 9, 4, 7, 8, 3},
     s_hrglass, sbighrgl, 1, 0U, 04141, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK1(CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_END_2X2)},
    {{8, 9, 2, 3},
     sdmd, sbighrgl, 1, 0U, 06363, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{10, 1, 2, 3, 4, 7, 8, 9},
     s_qtag, sbigdmd, 1, 0U, 04141, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK2(CONCPROP__NEEDK_END_2X2, CONCPROP__NEEDK_CTR_1X4)},
+    warn__none, warn__none, simple_normalize, NB(CONCPROP__NEEDK_END_2X2) | NB(CONCPROP__NEEDK_CTR_1X4)},
 
    // This one is troublesome.
    {{1, 2, 3, 4, 7, 8, 9, 10},
     s2x4, s2x6, 0, 0U, 04141, false,
-    warn__none, warn__none, simple_normalize, NEEDMASK3(CONCPROP__NEEDK_2X6, CONCPROP__NEEDK_CTR_2X2,
-                                                        CONCPROP__NEEDK_END_2X2)},
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_2X6) | NB(CONCPROP__NEEDK_CTR_2X2) |
+    NB(CONCPROP__NEEDK_END_2X2)},
+
+   {{2, 3, 8, 9},
+    s2x2, s2x6, 0, 0U, ~0U, false,
+    warn__none, warn__none, simple_normalize,
+    NB(CONCPROP__NEEDK_2X6)},
 
    {{2, 3, 8, 9},
     s2x2, s2x6, 0, 0U, 06363, false,
@@ -1561,45 +1599,46 @@ expand::thing expand::expand_init_table[] = {
     warn__none, warn__none, plain_normalize, 0},
    {{11, 5},
     s1x2, s3dmd, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3DMD)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3DMD)},
    {{0, 1, 2, 4, 5, 6, 7, 8, 10, 11},
     s_343, s3dmd, 0, 0U, ~0U, false,
-    warn__check_3dmd_is_wide, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3DMD)},
+    warn__check_3dmd_is_wide, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3DMD)},
    {{8, 9, 3, 4},
     s1x4, s_343, 0, 0U, 0x0E7, false,
     warn__none, warn__none, normalize_to_4, 0},
    {{0, 1, 2, 5, 6, 7, 8, 11},
     s_323, s3dmd, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3DMD)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3DMD)},
    {{9, 10, 11, 1, 3, 4, 5, 7},
     s1x3dmd, s_3mdmd, 0, 0U, 0505, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3DMD)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3DMD)},
    {{0, 2, 4, 5, 6, 8, 10, 11},
     s_bone, s_3mptpd, 0, 0U, 01212, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_3DMD)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_3DMD)},
    {{9, 10, 11, 1, 3, 4, 5, 7},
     s3x1dmd, s3dmd,  0, 0U, 0505, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK3(CONCPROP__NEEDK_END_DMD, CONCPROP__NEEDK_CTR_DMD,
-                                                       CONCPROP__NEEDK_3DMD)},
+    warn__none, warn__none, plain_normalize,
+    NB(CONCPROP__NEEDK_END_DMD) | NB(CONCPROP__NEEDK_CTR_DMD) |
+    NB(CONCPROP__NEEDK_3DMD)},
 
    {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14},
     s2x6,    s2x8,   0, 0U, 0x8181, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X8)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X8)},
    {{2, 3, 4, 5, 10, 11, 12, 13},
     s2x4,    s2x8,   0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_2X8)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_2X8)},
    {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23},
     s4x4, s_bigblob, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_BLOB)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_BLOB)},
    {{9, 8, 2, 7, 6, 5, 19, 18, 12, 17, 16, 15},
     sbigdmd, s4x5, 0, 0U, ~0U, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_4X5)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_4X5)},
    {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15},
     s2x5, s4x5, 0, 0U, 0x07C1F, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_4X5)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_4X5)},
    {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17},
     s3x4, s4x5, 1, 0U, 0x8C631, false,
-    warn__none, warn__none, plain_normalize, NEEDMASK1(CONCPROP__NEEDK_4X5)},
+    warn__none, warn__none, plain_normalize, NB(CONCPROP__NEEDK_4X5)},
 
    {{0}, nothing, nothing}};
 
@@ -9853,8 +9892,8 @@ const setup_attr setup_attrs[] = {
     {"5 a  6  b@f  e  d  c@@i  j  k  l@5 h  6  g",
      "6i  f@7h6  6a@76j  e@@6k  d@7g6  6b@76l  c"}},
    {15,                     // sdeepbigqtg
-    &thingdeepbigqtg,    
-    &thingdeepbigqtg,    
+    &thingdeepbigqtg,
+    &thingdeepbigqtg,
     {0, 0, 0, 0},
     {b_deepbigqtg, b_pdeepbigqtg},
     {4, 6},

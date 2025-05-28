@@ -92,10 +92,29 @@ void matcher_class::initialize_for_parse(int which_commands, bool show, bool onl
       s_modifier_inactive_list = item;
    }
 
-   ::memset(&m_active_result, 0, sizeof(match_result));
-   m_active_result.valid = true;
+   // (Mostly) clear out m_active_result.  We used to do this as one big memset over the
+   // whole object.  But modern compilers have gotten extremely fussy about this.
+   //
+   // It is of type "match_result", which is defined in sd.h around line 2306.
+   //
+   // Yeah, yeah, we should use nice constructors and do this up real purty.
+
+   m_active_result.valid = true;   // The field we don't clear.
+   m_active_result.exact = false;
+   m_active_result.indent = false;
+   m_active_result.real_next_subcall = (const match_result *) 0;
+   m_active_result.real_secondary_subcall = (const match_result *) 0;
+   m_active_result.recursion_depth = 0;
+   m_active_result.yield_depth = 0;
+
    m_active_result.match.kind = ui_start_select;
+   m_active_result.match.index = 0;
    m_active_result.match.call_conc_options.initialize();
+   m_active_result.match.call_ptr = (call_with_name *) 0;
+   m_active_result.match.concept_ptr = (const concept_descriptor *) 0;
+   m_active_result.match.packed_next_conc_or_subcall = (modifier_block *) 0;
+   m_active_result.match.packed_secondary_subcall = (modifier_block *) 0;
+   m_active_result.match.gc_ptr = (modifier_block *) 0;
 
    m_current_result = &m_active_result;
    m_only_extension = only_want_extension;

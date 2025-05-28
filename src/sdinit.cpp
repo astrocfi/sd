@@ -620,6 +620,16 @@ static void read_fullword()
 }
 
 
+static uint64_t read_hugeword()
+{
+   read_fullword();
+   uint64_t righthalf = (uint64_t) last_datum;
+   read_fullword();
+   uint64_t lefthalf = (uint64_t) last_datum;
+   return (lefthalf << 32) | righthalf;
+}
+
+
 
 // Found an error while reading a call out of the database.
 // Print an error message and quit.
@@ -917,8 +927,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          root_to_use->stuff.matrix.matrix_def_list = this_matrix_block;
 
          this_matrix_block->modifier_level = calling_level;
-         this_matrix_block->alternate_def_flags.r = (heritflagsr) 0;
-         this_matrix_block->alternate_def_flags.l = (heritflagsl) 0;
+         this_matrix_block->alternate_def_flags = 0ULL;
          this_matrix_block->next = (matrix_def_block *) 0;
 
       next_matrix_clause:
@@ -947,10 +956,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
             this_matrix_block = this_matrix_block->next;
             this_matrix_block->modifier_level = (dance_level) (last_datum & 0xFFF);
-            read_fullword();
-            this_matrix_block->alternate_def_flags.r = (heritflagsr) last_datum;
-            read_fullword();
-            this_matrix_block->alternate_def_flags.l = (heritflagsl) last_datum;
+            this_matrix_block->alternate_def_flags = read_hugeword();
             this_matrix_block->next = (matrix_def_block *) 0;
             goto next_matrix_clause;
          }
@@ -963,7 +969,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
          zz = new calldef_block;
          zz->next = 0;
-         zz->modifier_seth.initialize_rl(0, 0);
+         zz->modifier_seth = 0ULL;
          zz->modifier_level = l_mainstream;
          root_to_use->stuff.arr.def_list = zz;
 
@@ -975,10 +981,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             zz = yy;
             zz->modifier_level = (dance_level) (last_datum & 0xFF);
             zz->next = 0;
-            read_fullword();
-            zz->modifier_seth.r = (heritflagsr) last_datum;
-            read_fullword();
-            zz->modifier_seth.l = (heritflagsl) last_datum;
+            zz->modifier_seth = read_hugeword();
             read_halfword();
             read_array_def_blocks(zz);
          }
@@ -1003,10 +1006,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             templist[next_definition_index].call_id = (uint16_t) last_12;
             read_fullword();
             templist[next_definition_index].modifiers1 = (mods1_word) last_datum;
-            read_fullword();
-            templist[next_definition_index].modifiersh.r = (heritflagsr) last_datum;
-            read_fullword();
-            templist[next_definition_index++].modifiersh.l = (heritflagsl) last_datum;
+            templist[next_definition_index++].modifiersh = read_hugeword();
             read_halfword();
          }
 
@@ -1027,19 +1027,13 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       root_to_use->stuff.conc.innerdef.call_id = (uint16_t) last_12;
       read_fullword();
       root_to_use->stuff.conc.innerdef.modifiers1 = (mods1_word) last_datum;
-      read_fullword();
-      root_to_use->stuff.conc.innerdef.modifiersh.r = (heritflagsr) last_datum;
-      read_fullword();
-      root_to_use->stuff.conc.innerdef.modifiersh.l = (heritflagsl) last_datum;
+      root_to_use->stuff.conc.innerdef.modifiersh = read_hugeword();
       read_halfword();
       check_tag(last_12);
       root_to_use->stuff.conc.outerdef.call_id = (uint16_t) last_12;
       read_fullword();
       root_to_use->stuff.conc.outerdef.modifiers1 = (mods1_word) last_datum;
-      read_fullword();
-      root_to_use->stuff.conc.outerdef.modifiersh.r = (heritflagsr) last_datum;
-      read_fullword();
-      root_to_use->stuff.conc.outerdef.modifiersh.l = (heritflagsl) last_datum;
+      root_to_use->stuff.conc.outerdef.modifiersh = read_hugeword();
       read_halfword();
       break;
    }
@@ -1059,11 +1053,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
                              // This is the "callflags1" stuff.
       uint32_t saveflags1 = last_datum;
       // The "heritflags" stuff, two full words, right then left.
-      read_fullword();
-      heritflags saveflagsherit;
-      saveflagsherit.r = (heritflagsr) last_datum;
-      read_fullword();
-      saveflagsherit.l = (heritflagsl) last_datum;
+      heritflags saveflagsherit = read_hugeword();
       read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->frequency = 0;
@@ -1773,21 +1763,14 @@ static void build_database_1(abridge_mode_t abridge_mode)
       uint32_t saveflags1 = last_datum;
 
       // Deal with the special "base_circ_call" / phony "force" info.
-      heritflags phonyheritbit;
-      phonyheritbit.initialize_rl(0, 0);
+      heritflags phonyheritbit = 0ULL;
       if (saveflags1 & CFLAG1_BASE_CIRC_CALL) {
-         read_fullword();
-         phonyheritbit.r = (heritflagsr) last_datum;
-         read_fullword();
-         phonyheritbit.l = (heritflagsl) last_datum;
+         phonyheritbit = read_hugeword();
       }
 
-      // The "heritflags" stuff, two full words, right then left.
-      read_fullword();
-      heritflags saveflagsherit;
-      saveflagsherit.r = (heritflagsr) last_datum;
-      read_fullword();
-      saveflagsherit.l = (heritflagsl) last_datum;
+      // The "heritflags" stuff, 64-bit "hugeword".
+      heritflags saveflagsherit = read_hugeword();
+
       read_halfword();       // Get char count and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       char_count = (last_datum >> 8) & 0xFF;
@@ -1935,7 +1918,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
       circcer_calls[gg].the_concept = (concept_descriptor *) 0;   // In case we don't find anything.
 
       for (kk = 0 ; kk <= LAST_SIMPLE_HERIT_CONCEPT-FIRST_SIMPLE_HERIT_CONCEPT ; kk++) {
-         if (simple_herit_leftbits_table[kk] == circcer_calls[gg].the_herit_thing.l) {
+         if (simple_herit_bits_table[kk] == circcer_calls[gg].the_herit_thing) {
             for (jj = 0 ; concept_descriptor_table[jj].kind != marker_end_of_list ; jj++) {
                if (concept_descriptor_table[jj].kind == kk+FIRST_SIMPLE_HERIT_CONCEPT) {
                   circcer_calls[gg].the_concept = &concept_descriptor_table[jj];
@@ -2127,11 +2110,11 @@ static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
 static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
 
 
-who_list who_centers_thing = {{selector_centers, selector_uninitialized, selector_uninitialized}, 1};
-who_list who_center6_thing = {{selector_center6, selector_uninitialized, selector_uninitialized}, 1};
-who_list who_outer6_thing = {{selector_outer6, selector_uninitialized, selector_uninitialized}, 1};
-who_list who_some_thing = {{selector_some, selector_uninitialized, selector_uninitialized}, 1};
-who_list who_uninit_thing = {{selector_uninitialized, selector_uninitialized, selector_uninitialized}, 1};
+who_list who_centers_thing(selector_centers);
+who_list who_center6_thing(selector_center6);
+who_list who_outer6_thing(selector_outer6);
+who_list who_some_thing(selector_some);
+who_list who_uninit_thing(selector_uninitialized);
 
 
 int useful_concept_indices[UC_extent];
