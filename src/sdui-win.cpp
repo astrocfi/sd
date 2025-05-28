@@ -2913,7 +2913,7 @@ int iofull::do_abort_popup()
 }
 
 
-// This returns true if it got a real result, false if user cancalled.
+// This returns true if it got a real result, false if user cancelled.
 static bool do_popup(int nWhichOne)
 {
    uims_reply_kind SavedMenuKind = MenuKind;

@@ -137,7 +137,7 @@ BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
    mingw cleanup   // optional: remove .o files etc. after building
    mingw savesource    // This packs the "official" source distribution.
 
-DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, KCALLS.EXE and DEPLOY.EXE!
+DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, MKCALLS.EXE and DEPLOY.EXE!
 
    // Test that Sd comes up.
 
@@ -195,7 +195,7 @@ make -f makefile.linux32 all
 // This should have created sdtty, mkcalls, etc.
 make -f makefile.linux32 tarball
 // This should have created linux.tgz
-scp linux.tgz ackerman@scotch.ics.uci.edu:~
+scp linux.tgz USERNAME@challengedance.org:public_html/sd
 
 
 
@@ -250,7 +250,7 @@ windows> use reflection garbage to connect to an-cs1
       goblin> gzip linux.tar
       goblin> rm sd/*
       goblin> rmdir sd
-      goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
+      goblin> scp linux.tgz USERNAME@challengedance.org:public_html/sd
             (pass=And15user)
       goblin> exit
    an-cs1> exit
@@ -306,105 +306,15 @@ install                                  *
         CURRENT METHOD
 -----------------------------------------------------------------
 Start psftp (under "putty" group.)
-open scotch.ics.uci.edu
-(U=ackerman, P=x464pq)
+open www.challengedance.org
+(U=USERNAME, P=PASSWORD)
+cd public_html/sd
 lcd \wba\sddoc
 put pack.zip
   This is silent and not helpful.  It takes a while.  Run putty,
-  and doubleclick "scotch" (U=ackerman, P=x464pq) to connect in another window,
+  and doubleclick "chaldance" (U=USERNAME, P=PASSWORD) to connect in another window,
+  cd public_html/sd
   and watch the file come in.
-      scotch> unzip pack
-      scotch> rm pack.zip
-      scotch> exit
-
-
-
-
-
------------------------------------------------------------------
------------------------------------------------------------------
-Older way, Oct 08, does not require any FTP/SCP from Philips, uses mail.
-
-Be sure "chpobox" is turned off at athena.  That is, mail is
-received locally, and not forwarded.
-
-**** Rename pack.zip to pack.zig
-
-Mail it as an attachment to wba@mit.edu
-Wait for it to arrive, then
-
-Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
-
-   athena> pine
-   athena> I
-   athena> arrow down to the message, then cr.
-   athena> V, then arrow down to attachment section
-   athena> S, give file name "pack.zig" if needed, cr.
-   athena> Q
-   athena> Check that pack.zip is exactly the same size as original.
-   athena> scp pack.zig ackerman@scotch.ics.uci.edu:pack.zig
-   P=x464pq.
-   athena> ssh -l ackerman scotch.ics.uci.edu
-   P=x464pq.
-      scotch> mv pack.zig pack.zip
-      scotch> unzip pack
-      scotch> rm pack.zip
-      scotch> exit
-   athena> rm pack.zig
-(delete the mail message)
-   athena> exit
-
------------------------------------------------------------------
-    Even older method.
------------------------------------------------------------------
-
-
-Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
-Leave that connection open.
-
-Run WinSCP.  Under Session->Stored sessions, doubleclick localhost.
-P=x464pq.
-
-When explorer window comes up in WinSCP, navigate left side to the
-directory, and drag-and-drop pack.zip from there to the right side.
-Be sure to drop in the lower part of the right side, in the "file"
-region, not the higher "directory" region.  Exit WinSCP.
-
-   athena> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
-   P=x464pq.
-   athena> ssh -l ackerman scotch.ics.uci.edu
-   P=x464pq.
-      scotch> unzip pack
-      scotch> rm pack.zip
-      scotch> exit
-   athena> rm pack.zip
-   athena> exit
------------------------------------------------------------------
-
-windows> pscp -l wba -pw And15user pack.zip an-cs1:pack.zip
-
-windows> use reflection garbage to connect to an-cs1
-   an-cs1> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
-            (pass=And15user)
-   an-cs1> ssh -l ackerman scotch.ics.uci.edu
-            (pass=And15user)
-          # dir will appear to be /home/ackerman,
-          # is actually /home/lynette/public-html/sd,
-          # which is where the web pages are.
-      scotch> unzip pack
-      scotch> rm pack.zip
-      scotch> exit
-   an-cs1> rm pack.zip
-   an-cs1> exit
-windows> exit
-
------------------------------------------------------------------
-
-Putty was from www.openssh.com.
-Scp was from winscp.vse.cz.
-
-Actual directory is /home/lynette/public-html/sd
-It is visible to me as /home/wba
-Files in it are visible on the web as http://www.lynette.org/sd/*
-
------------------------------------------------------------------
+      challengedance.org> unzip pack
+      challengedance.org> rm pack.zip
+      challengedance.org> exit

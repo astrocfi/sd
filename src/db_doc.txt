@@ -3266,6 +3266,18 @@ roll_is_ccw
       is clockwise, or the person can't roll, or roll direction from the
       preceding call is ill-defined.
 
+slide_or_roll_is_cw
+      applies to any setup.  Returns TRUE if this person's sliding direction,
+      from the preceding call, is to the left, as indicated by an "F" character
+      in the call definition.  Returns FALSE if it is to the right, as indicated
+      by a "G" character.  If neither "F" nor "G" is given (the usual state of
+      affairs) falls back on the meaning of roll_is_cw.
+
+slide_or_roll_is_ccw
+      Opposite of slide_or_roll_is_cw.  Returns TRUE if sliding direction was
+      right, as indicated by "G", or FALSE if sliding direction was left, as
+      indicated by "F".  Otherwise, fall back on roll_is_ccw.
+
 x12_boy_with_girl
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous boy, and the other person in the column is alive and an

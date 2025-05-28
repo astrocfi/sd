@@ -6209,8 +6209,6 @@ static void do_concept_all_8(
          divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, true, result);
       }
       else if (ss->kind == s4x4) {
-         uint32 t1, t2, tl, tc;
-
          /* This is "all 8" in a squared-set-type of formation.  This concept isn't really formally
             defined here, except for the well-known cases like "all 8 spin the top", in which they
             would step to a wave and then proceed from the resulting thar.  That is, it is known
@@ -6232,13 +6230,6 @@ static void do_concept_all_8(
          if ((    ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
                   ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1) != 0)
             fail("Must be on squared-set spots.");
-
-         /* Next, we remember whether people started in line-like or column-like elongation. */
-
-         t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
-         t2 = ss->people[14].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1;
-         tl = t1 | (t2 << 3);         /* If (tl & 010)   then people are in line-like orientation. */
-         tc = t2 | (t1 << 3);         /* If (tc & 010)   then people are in column-like orientation. */
 
          /* If people started out line-like, we demand that they be facing in.  That is, we do not allow
             "all quarter away from your partner, then all 8 shakedown", though we do allow "all
@@ -6502,7 +6493,9 @@ static void do_concept_meta(
          while (--rountrip_nesting_count > 0)
             howmanyparts = howmanyparts*2-1;
 
+         /*
          int howmanyparts_in_subcall = howmanyparts;
+         */
          howmanyparts = howmanyparts*2-1;
 
          // We now have the number of parts for the complete roundtrip.

@@ -423,6 +423,7 @@ static bool multiple_move_innards(
          // Executing a call can mess up the x's, so save what we need.
          xorigkind[i] = x[i].kind;
          xorigrot[i] = x[i].rotation;
+         uint32 save_verify_flags = x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK;
 
          // Handle special cases of things like "parallelogram triple boxes".
          if (thing) {
@@ -457,6 +458,26 @@ static bool multiple_move_innards(
          }
          else
             impose_assumption_and_move(&x[i], &z[i]);
+
+         // Some space-invader calls can turn a qtag into a 3x4.
+         // If user gave a qtag/dmd concept (e.g. split phantom 1/4 lines),
+         // try to turn it back into a general 1/4 tag.  (If the call was being
+         // done directly, not with one of these concepts, this will be handled
+         // at a higher level.)  Tests are t55, rh06, and vg05.
+         if (z[i].kind == s3x4) {
+            switch (save_verify_flags) {
+            case CMD_MISC__VERIFY_DMD_LIKE:
+            case CMD_MISC__VERIFY_QTAG_LIKE:
+            case CMD_MISC__VERIFY_1_4_TAG:
+            case CMD_MISC__VERIFY_3_4_TAG:
+            case CMD_MISC__VERIFY_REAL_1_4_TAG:
+            case CMD_MISC__VERIFY_REAL_3_4_TAG:
+            case CMD_MISC__VERIFY_REAL_1_4_LINE:
+            case CMD_MISC__VERIFY_REAL_3_4_LINE:
+               expand::fix_3x4_to_qtag(&z[i]);
+               break;
+            }
+         }
 
          if (mirror)
             mirror_this(&z[i]);

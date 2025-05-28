@@ -1163,10 +1163,8 @@ extern bool get_next_session_line(char *dest)
 
 extern void prepare_to_read_menus()
 {
-   uint32 arithtest = 2081607680;
-
-   // This "if" should never get executed.  We expect compilers to optimize
-   // it away, and perhaps print a warning about it.
+   // These "ifs" should never get executed.  Compilers will probably optimize
+   // them away.
 
    // Test that the constants ROLL_BIT and DBSLIDEROLL_BIT are in the right
    // relationship, with ROLL_BIT >= DBSLIDEROLL_BIT, that is, the roll bits
@@ -1176,7 +1174,7 @@ extern void prepare_to_read_menus()
 
    if ((int) NROLL_BIT < (int) DBSLIDEROLL_BIT)
       gg77->iob88.fatal_error_exit(1, "Constants not consistent", "program has been compiled incorrectly.");
-   else if ((508205 << 12) != arithtest)
+   else if ((UINT32_C(508205) << 12) != UINT32_C(2081607680))
       gg77->iob88.fatal_error_exit(1, "Arithmetic is less than 32 bits", "program has been compiled incorrectly.");
    else if (l_nonexistent_concept > 15)
       gg77->iob88.fatal_error_exit(1, "Too many levels", "program has been compiled incorrectly.");
@@ -1184,8 +1182,12 @@ extern void prepare_to_read_menus()
       gg77->iob88.fatal_error_exit(1, "Insufficient qualifier space", "program has been compiled incorrectly.");
    else if (NUM_PLAINMAP_KINDS > 252)
       gg77->iob88.fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");
-   else if (sizeof(uint32) > sizeof(void *))    // Need this because of horrible cheating we do with main_call_lists.
+   else if (sizeof(uint32) > sizeof(void *)) // Need this because of horrible cheating we do with main_call_lists.
       gg77->iob88.fatal_error_exit(1, "Incorrect pointer size", "program has been compiled incorrectly.");
+   else if (UINT16_C(0xFFFFFFFF) != 0xFFFF)  // Must have UINT16_C convert to uint16_t, chopping bits as needed.
+      gg77->iob88.fatal_error_exit(1, "Incorrect type coercion 1", "program has been compiled incorrectly.");
+   else if (UINT16_C(~0) != 0xFFFF)          // Do it this way also.
+      gg77->iob88.fatal_error_exit(1, "Incorrect type coercion 2", "program has been compiled incorrectly.");
 
    // We need to take away the "zig-zag" directions if the level is below A2, and "the music" if below C3A.
 

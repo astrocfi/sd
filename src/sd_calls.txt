@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.56"
+version "38.57"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1656,14 +1656,14 @@ call "_top it off part 2" dontshow tag topitoff_part2
             yoyo_is_inherited gen_sting_is_inherited
    conc6_2 boxy_cast_off_34 [] hinge []
 
-call "@2top @3it off" plus tag topitoff
+call "@2top @3it off" c4x tag topitoff
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             first_part_visible
    seq trade [inherit_yoyo inherit_gensting or_anycall]
    seq topitoff_part2 [inherit_yoyo inherit_gensting inherit_fractal]
    seq topitoff_part3 [roll_transparent]
 
-call "@0 it off" c1
+call "@0 it off" c4x
             dont_use_in_resolve first_part_visible
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq nullcall [mandatory_anycall]
@@ -5422,6 +5422,57 @@ call "left loop 7" c2
 call "@6 left loop 7" c2
             dont_use_in_resolve
    matrix use_selector [AL0S 16 AL0S 16]
+
+// We support "in loop" and "out loop" from 0 to 2.
+
+call "in loop 0" c2
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [CR18S 16 CR18S 16]
+
+
+call "@6 in loop 0" c2
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [CR18S 16 CR18S 16]
+
+call "in loop 1" c2
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [CR20S 16 CR20S 16]
+
+call "@6 in loop 1" c2
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [CR20S 16 CR20S 16]
+
+call "in loop 2" c2
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [CR22S 16 CR22S 16]
+
+call "@6 in loop 2" c2
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [CR22S 16 CR22S 16]
+
+call "out loop 0" c2
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [AL14S 16 AL14S 16]
+
+call "@6 out loop 0" c2
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [AL14S 16 AL14S 16]
+
+call "out loop 1" c2
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [AL12S 16 AL12S 16]
+
+call "@6 out loop 1" c2
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [AL12S 16 AL12S 16]
+
+call "out loop 2" c2
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [AL10S 16 AL10S 16]
+
+call "@6 out loop 2" c2
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [AL10S 16 AL10S 16]
 
 call "curve right" c3x
             dont_use_in_resolve
@@ -18808,9 +18859,23 @@ call "_pass and roll 2" dontshow tag passnroll_2
       array [0 CM1S CR2S 0]
             alternate_definition [grand] c3
    setup 6x1 1x6
-      array [0 CR1S 0 CR3S 0 CR5S]
+      array [0 CM1S 0 CR3S 0 CM5S]
    setup 8x1 1x8
-      array [0 CR1S CR2S 0 CR4S 0 0 CR7S]
+      array [0 CM1S CM2S 0 CR4S 0 0 CM7S]
+            alternate_definition [generous] c3x
+   setup 4x1 dmd
+      array [0 CM1W CR2S 0]
+   setup dmd 1x4
+      array [0 0 0 CM1W]
+   setup pmd 1x4
+      array [0 0 CR2S 0]
+            alternate_definition [stingy] c3x
+   setup 4x1 dmd
+      array [0 CM3E CR2S 0]
+   setup dmd 1x4
+      array [0 0 0 CM3E]
+   setup pmd 1x4
+      array [0 0 CR2S 0]
 
 call "_funny pass and roll 1" dontshow tag passnroll_1_funny
    setup 2x1 1x2 qualifier in in_or_out
@@ -18838,10 +18903,10 @@ call "_pass and roll 4" dontshow tag passnroll_4
 
 call "pass and roll" a2
             rear_back_from_r_wave visible_fractions
-            left_means_mirror twisted_is_inherited
+            left_means_mirror twisted_is_inherited gen_sting_is_inherited
             magic_is_inherited grand_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
-   seq passnroll_2 [inherit_left inherit_grand]
+   seq passnroll_2 [inherit_left inherit_grand inherit_gensting]
    seq passthru [inherit_left inherit_magic inherit_twisted]
    seq passnroll_4 [inherit_left inherit_grand]
 
@@ -18856,26 +18921,36 @@ call "_finish pass and roll something" dontshow tag fin_passnroll_something
             left_means_mirror
    setup 4x1 2x2
       array [0 C3S C2S 0]
+            alternate_definition [generous] c3x
+   setup dmd 2x2
+      array [0 0 0 C3W]
+   setup pmd 2x2
+      array [0 0 C2S 0]
+            alternate_definition [stingy] c3x
+   setup dmd 2x2
+      array [0 0 0 C1E]
+   setup pmd 2x2
+      array [0 0 C2S 0]
 
 call "pass and roll your neighbor" a2
             rear_back_from_r_wave first_part_visible
-            left_means_mirror twisted_is_inherited magic_is_inherited
+            left_means_mirror twisted_is_inherited gen_sting_is_inherited magic_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
-   seq fin_passnroll_something [inherit_left]
+   seq fin_passnroll_something [inherit_left inherit_gensting]
    seq neighbor []
 
 call "pass and roll your cross neighbor" c1
             rear_back_from_r_wave first_part_visible
-            left_means_mirror twisted_is_inherited magic_is_inherited
+            left_means_mirror twisted_is_inherited gen_sting_is_inherited magic_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
-   seq fin_passnroll_something [inherit_left]
+   seq fin_passnroll_something [inherit_left inherit_gensting]
    seq xneighbor []
 
 call "pass and roll your criss cross neighbor" c2
             rear_back_from_r_wave first_part_visible
-            left_means_mirror twisted_is_inherited magic_is_inherited
+            left_means_mirror twisted_is_inherited gen_sting_is_inherited magic_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
-   seq fin_passnroll_something [inherit_left]
+   seq fin_passnroll_something [inherit_left inherit_gensting]
    seq xxneighbor []
 
 call "pass and roll the axle" c4
@@ -20466,6 +20541,10 @@ call "lateral substitute" c2
       array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
    setup trngl trngl
       array [   0 ZM5N ZM4N    0 ZM2N ZM1N]
+   setup rigger bone
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup bone rigger
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
             alternate_definition [twisted] c4
    setup 2x4 2x4 rotate
       array [AM7S AM6S CM1N CM0N AM3S AM2S CM5N CM4N]
@@ -20763,7 +20842,7 @@ call "in or out circulate" dontshow tag in_or_out_circ
    setup 2x1 1x2 rotate restriction controversial in_or_out
       array [ZM0W 0]
 
-call "concentric half circulate with centers facing" dontshow tag conchalfcirculate_ctrsfacing
+call "concentric half circulate with centers facing" dontshow tag conchalfcirculate_ctrsin_endsout
    conc half_in_circ [] half_out_circ [conc_force_otherway]
 
 call "half circulate, facing in" dontshow tag half_in_circ
@@ -20996,8 +21075,7 @@ call "split circulate 1-1/2" mainstream /* Same as box circ 1.5. */
 
 call "_1/2 box circulate in miniwaves" dontshow tag halfboxcirc_miniwaves
             take_right_hands
-   // A restriction would be better, but this is good enough.
-   setup 2x2 dmd rotate qualifier miniwaves
+   setup 2x2 dmd rotate restriction unusual miniwaves
       array [CR0N AL0S ZM1W ZM3W]
 
 call "double down" c4
@@ -25747,24 +25825,27 @@ call "@N stimulate but @m" c3
    seq stim2 []
    seq finishwithplainmodbut2nd []
 
+// **** The last one in the original column (#1 or #5 now) is still wrong.  They had
+// roll direction from the triple trade, so that "roll_transparent" will leave them able
+// to roll at the end of the call.  But they moved up, which should erase the roll info.
 call "_coordinate part 3" dontshow tag coord3
             take_right_hands
    setup spindle 2x4 rotate
       array [0 0 0 AL0S 0 0 0 CR7N]
    setup pspindle 2x4 rotate
-      array [CR6W ZM0W CR1W 0 AL2W ZM3W AL5W 0]
+      array [ZM6W ZM0W ZM1W 0 ZM2W ZM3W ZM5W 0]
    setup 1x8 qtag
-      array [CR0E CR6N ZM0N AL7N AL1W AL2N ZM1N CR3N]
+      array [CR0E ZM6N ZM0N ZM7N AL1W ZM2N ZM1N ZM3N]
    setup ptpd 2x4 rotate
       array [CR7N    0 ZM7W    0 AL0S    0 ZM0W    0]
    setup pptpd 2x4 rotate
       array [   0 ZM6W    0 ZM5W    0 ZM2W    0 ZM1W]
    setup 1x3dmd qtag
-      array [CR0E CR6N AL7N 0 AL1W AL2N CR3N 0]
+      array [CR0E ZM6N ZM7N 0 AL1W ZM2N ZM3N 0]
    setup p1x3dmd qtag
       array [0 0 0 ZM1N 0 0 0 ZM4N]
    setup wingedstar qtag
-      array [CR0E CR6N AL7N 0 AL1W AL2N CR3N 0]
+      array [CR0E ZM6N ZM7N 0 AL1W ZM2N ZM3N 0]
    setup pwingedstar qtag
       array [0 0 0 ZM1N 0 0 0 ZM4N]
             alternate_definition [rewind] c4
@@ -25805,21 +25886,21 @@ call "@1coordinate" plus
    seq circ_for_coord [or_anycall inherit_magic inherit_twisted]
    seq circ_for_coord [force_half inherit_magic inherit_twisted inherit_rewind]
    seq tripletrade [inherit_yoyo inherit_gensting]
-   seq coord3 [inherit_rewind]
+   seq coord3 [inherit_rewind roll_transparent]
 
 call "@T coordinate" c2
             magic_is_inherited yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible
    seq circulate [mandatory_anycall inherit_twisted]
    seq circ_for_coord [force_half inherit_twisted inherit_magic]
    seq tripletrade [inherit_yoyo inherit_gensting]
-   seq coord3 []
+   seq coord3 [roll_transparent]
 
 call "@N coordinate" c2
             yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible
    seq circnullcall [or_anycall inherit_twisted]
    seq circ_for_coord [force_half inherit_twisted]
    seq tripletrade [inherit_yoyo inherit_gensting]
-   seq coord3 []
+   seq coord3 [roll_transparent]
 
 call "@1coordinate to a diamond" c4a
             magic_is_inherited yoyo_is_inherited gen_sting_is_inherited rewind_is_inherited
@@ -25827,21 +25908,21 @@ call "@1coordinate to a diamond" c4a
    seq circ_for_coord [or_anycall inherit_twisted inherit_magic]
    seq circ_for_coord [force_half inherit_twisted inherit_magic inherit_rewind]
    seq tripletrade [inherit_yoyo inherit_gensting]
-   seq coord3d [inherit_rewind]
+   seq coord3d [inherit_rewind roll_transparent]
 
 call "@T coordinate to a diamond" c4a
             magic_is_inherited yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible
    seq circulate [mandatory_anycall inherit_twisted]
    seq circ_for_coord [force_half inherit_twisted inherit_magic]
    seq tripletrade [inherit_yoyo inherit_gensting]
-   seq coord3d []
+   seq coord3d [roll_transparent]
 
 call "@N coordinate to a diamond" c4a
             yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited first_two_parts_visible
    seq circnullcall [or_anycall inherit_twisted]
    seq circ_for_coord [force_half inherit_twisted]
    seq tripletrade [inherit_yoyo inherit_gensting]
-   seq coord3d []
+   seq coord3d [roll_transparent]
 
 call "_cooperate 2" dontshow tag coop2
             magic_is_inherited rewind_is_inherited
@@ -26032,7 +26113,7 @@ call "@N percolate, @6 to a wave" c2
 
 call "turn up" dontshow tag hinge_circ_trade
             visible_fractions yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   seq hinge_with_warn [allow_forced_mod inherit_fractal]
+   seq hinge_with_warn [allow_forced_mod inherit_fractal inherit_gensting]
    seq circulate []
    seq trade [allow_forced_mod inherit_yoyo inherit_gensting]
 
@@ -26063,7 +26144,7 @@ call "@1perk up" c2
    // at the cost of not being able to do other things that might also be interesting.
             first_part_visible yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    seq conccirculate []
-   seq conchalfcirculate_ctrsfacing []
+   seq conchalfcirculate_ctrsin_endsout []
    seq finperk [inherit_yoyo inherit_gensting inherit_fractal]
 
 call "@T perk up" c2

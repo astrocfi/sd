@@ -25,6 +25,7 @@
 /* This defines the following functions:
    expand::compress_setup
    expand::expand_setup
+   expand::fix_3x4_to_qtag
    update_id_bits
    clear_bits_for_update
    clear_absolute_proximity_bits
@@ -379,6 +380,14 @@ void expand::expand_setup(const expand::thing & thing, setup *stuff) THROW_DECL
    scatter(stuff, &temp, thing.source_indices, attr::klimit(thing.inner_kind), thing.rot * 033);
    stuff->rotation += thing.rot;
    canonicalize_rotation(stuff);
+}
+
+// Turn a 3x3 into a 1/4 tag if the spots are occupied appropriately.  Otherwise do nothing.
+void expand::fix_3x4_to_qtag(setup *stuff) THROW_DECL
+{
+   static const expand::thing foo = {{1, 2, 4, 5, 7, 8, 10, 11}, s_qtag, s3x4, 0};
+   if ((little_endian_live_mask(stuff) & 01111) == 0)
+      expand::compress_setup(foo, stuff);
 }
 
 
@@ -3666,7 +3675,7 @@ extern callarray *assoc(
    bool *specialpass /* = (bool *) 0 */) THROW_DECL
 {
    for (callarray *p = spec ; p ; p = p->next) {
-      uint32 i, k, t, u, w, mask;
+      uint32 k, t, u, w, mask;
       assumption_thing tt;
       int plaini;
       bool booljunk;
@@ -3751,7 +3760,6 @@ extern callarray *assoc(
 
       k = 0;   // Many tests will find these values useful.
       mask = 0;
-      i = 2;
       tt.assumption = this_qualifier;
       tt.assump_col = 0;
       tt.assump_cast = 0;
@@ -6234,12 +6242,8 @@ void toplevelmove() THROW_DECL
          uint32 near4bit = ID3_NEARFOUR;
          uint32 far4bit = ID3_FARFOUR;
          uint32 near5bit = ID3_NEARFIVE;
-         uint32 far5bit = ID3_FARFIVE;
-         uint32 near3bit = ID3_NEARTHREE;
          uint32 far3bit = ID3_FARTHREE;
          uint32 near6bit = ID3_NEARSIX;
-         uint32 far6bit = ID3_FARSIX;
-         uint32 near2bit = ID3_NEARTWO;
          uint32 far2bit = ID3_FARTWO;
          uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
          uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
@@ -6253,12 +6257,8 @@ void toplevelmove() THROW_DECL
             near4bit = ID3_FARFOUR;
             far4bit = ID3_NEARFOUR;
             near5bit = ID3_FARTHREE;
-            far5bit = ID3_NEARTHREE;
-            near3bit = ID3_FARFIVE;
             far3bit = ID3_NEARFIVE;
             near6bit = ID3_FARTWO;
-            far6bit = ID3_NEARTWO;
-            near2bit = ID3_FARSIX;
             far2bit = ID3_NEARSIX;
             near1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
             far1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;

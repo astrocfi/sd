@@ -149,7 +149,8 @@ typedef struct {
    setup_kind final_kind;    /* what setup to change it to */
    int rot;                  /* whether to rotate final setup CW */
    warning_index warning;    /* an optional warning to give */
-   int assume_key;           // special stuff for checking assumptions; sign bit -> dangerous
+   uint32 assume_key;        // special stuff for checking assumptions:
+                             // 80000000 bit -> dangerous
                              // 40000000 bit -> allow partial setup
                              // 20000000 bit -> reject if action = merge_c1_phantom_real_couples
 } collision_map;
@@ -252,7 +253,7 @@ static collision_map collision_map_table[] = {
    // This one is marked as dangerous, meaning it can't be used from
    // merge_setups, but can be used when normalizing the result of basic_move.
    {6, 0x044044, 0x77, 0x44, {0, 1, 2, 4, 5, 6},   {0, 1, 2, 4, 5, 7},   {0, 1, 3, 4, 5, 6},
-    s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, INT32_C(0x80000000)}, // From inverted lines w/ centers out.
+    s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, UINT32_C(0x80000000)}, // From inverted lines w/ centers out.
 
    {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},
     s_crosswave, s_crosswave, 0, warn__ctrs_stay_in_ctr, 0},      // from trade-by w/ ctrs 1/4 out
@@ -4386,7 +4387,7 @@ static uint32 do_actual_array_call(
    bool other_elongate = false;
    callarray *goodies;
    int real_index, northified_index;
-   int num, halfnum, final_numout;
+   int num, halfnum;
    int i, j, k;
    setup newpersonlist;
    int newplacelist[MAX_PEOPLE];
@@ -5682,8 +5683,6 @@ static uint32 do_actual_array_call(
       // assumption.
 
       collision_collector CC(mirror, &ss->cmd, callspec);
-
-      final_numout = attr::slimit(result)+1;
 
       for (real_index=0; real_index<num; real_index++) {
          personrec newperson = newpersonlist.people[real_index];

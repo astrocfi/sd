@@ -980,7 +980,7 @@ void ui_utils::write_history_line(int history_index,
 
 
 
-uint32 ui_utils::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
+uint32_t ui_utils::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
 {
    int i;
    uint32 number_fields = matcher_p->m_final_result.match.call_conc_options.number_fields;
@@ -1003,7 +1003,7 @@ uint32 ui_utils::get_number_fields(int nnumbers, bool odd_number_only, bool forb
       if ((odd_number_only && !(this_num & 1)) ||
           (forbid_zero && this_num == 0) ||
           (this_num >= NUM_CARDINALS))
-         return ~0U;
+         return UINT32_C(~0);
 
       number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
    }

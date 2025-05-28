@@ -1419,10 +1419,10 @@ static const checkitem checktable[] = {
    {0x00E70055, 0x0900A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {-4, 5, -5, 5, 4, -5, 5, -5, 127}},
    // Next two: The centers did a 1/2 truck from point-to-point diamonds.  Fudge to a 3x6.
-   {0x00930044, 0x01018800, s3x6, 0522522, 0, warn__none, (const coordrec *) 0,
+   {0x00930044, 0x01018800, s3x6, UINT32_C(0522522), 0, warn__none, (const coordrec *) 0,
     {-9, 0, -10, 0,    9, 0, 10, 0,      -5, 0, -6, 0,
      -5, -4, -6, -4,   -5, 4, -6, 4,     5, -4, 6, -4,     5, 4, 6, 4}},
-   {0x00930044, 0x21018800, s3x6, 0722722, 0, warn__none, (const coordrec *) 0,
+   {0x00930044, 0x21018800, s3x6, UINT32_C(0722722), 0, warn__none, (const coordrec *) 0,
     {-9, 0, -10, 0,    9, 0, 10, 0,      -5, 0, -6, 0,     5, 0, 6, 0,
      -5, -4, -6, -4,   -5, 4, -6, 4,     5, -4, 6, -4,     5, 4, 6, 4}},
 
@@ -1506,11 +1506,6 @@ static const checkitem checktable[] = {
    {0x00730055, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
    {0x00710051, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
 
-   // The points pressed ahead from normal diamonds.  Fudge to quadruple diamonds.
-   {0x00970055, 0x01400480, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd1, {127}},
-   // Same, other way.
-   {0x00870055, 0x09080400, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd2, {127}},
-
    // This must precede the "squeezefinalglass" stuff.
    {0x00620026, 0x01080002, s_bone6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
@@ -1567,7 +1562,7 @@ static const checkitem checktable[] = {
    {0x00C40086, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    {0x00A200A2, 0x101CC4E6, s_bigblob, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00670055, 0x01000420, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   //   {0x00670055, 0x01000420, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00770055, 0x01400420, s_2stars, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    // Inner wing did a tow-truck-like operation from a rigger, for example,
@@ -1647,6 +1642,8 @@ static const checkitem checktable[] = {
    {0x00530026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00620044, 0x11800C40, s3x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00440062, 0x0C202300, s3x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
+   {0x00670055, 0x31800420, s3x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
+    {-4, 5, -2, 4, 5, 5, 2, 4, -3, 5, -6, 4, 4, 5, 6, 4, 4, -5, 2, -4, -5, -5, -2, -4, 3, -5, 6, -4, -4, -5, -6, -4, 127}},
    {0x00840022, 0x06001300, s2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00220084, 0x21080840, s2x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
    {0x00E20004, 0x09002400, s1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -1675,6 +1672,24 @@ static const checkitem checktable[] = {
    {0x00670095, 0x10840C40, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
     {-4, 1, -2, 0, 5, 9, 2, 8, 4, -1, 2, 0, -5, -9, -2, -8,
      -4, 9, -2, 8, 5, 1, 2, 0, 4, -9, 2, -8, -5, -1, -2, 0}},
+   // And this, similar trucking.
+   {0x00670085, 0x21088420, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
+    {-4, 5, -2, 4, 5, 5, 2, 4, 4, -5, 2, -4, -5, -5, -2, -4, 127}},
+   // And this, similar trucking.
+   {0x00870055, 0x09000420, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
+    {-8, 5, -6, 4, 5, 5, 2, 4, 8, -5, 6, -4, -5, -5, -2, -4, 127}},
+   // And this, similar trucking.
+   //             This replaces the stuff from line 1510.
+   {0x00970055, 0x01400400, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
+    {-4, 5, -2, 4, 9, 5, 6, 4, 4, -5, 2, -4, -9, -5, -6, -4, 127}},
+
+   // This is the aforesaid stuff, moved below.
+   // The points pressed ahead from normal diamonds.  Fudge to quadruple diamonds.
+   {0x00970055, 0x01400480, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd1, {127}},
+   // Same, other way.
+   {0x00870055, 0x09080400, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd2, {127}},
+
+
    {0x00A20062, 0x109CC067, s4x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x006200A2, 0x1918C4C6, s4x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
    {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -1788,7 +1803,6 @@ void initialize_matrix_position_tables()
       int xmax, ymax, x, y, k;
       uint32 signature, xpar, ypar;
       xmax = xpar = ymax = ypar = signature = 0;
-      int xatnonzeroy = -1000;
       const coordrec *checkptr = setup_attrs[p->new_setup].setup_coords;
 
       for (i=0; i<=attr::klimit(p->new_setup); i++) {
@@ -1820,8 +1834,6 @@ void initialize_matrix_position_tables()
          xpar |= (k & (~(k-1)));
          k = y | 4;
          ypar |= (k & (~(k-1)));
-
-         if (y != 0) xatnonzeroy = x;
       }
 
       ypar |= (xmax << 20) | (xpar << 16) | (ymax << 4);
@@ -5414,7 +5426,6 @@ static bool do_misc_schema(
            the_schema == schema_cross_concentric ||
            the_schema == schema_concentric_4_2_or_normal ||
            the_schema == schema_conc_o)) {
-
          if (ss->people[0].id1) {
             if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
          }
@@ -5450,6 +5461,14 @@ static bool do_misc_schema(
 
          ss->kind = s_qtag;
          ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+      }
+      if (ss->kind == s3x4 && the_schema == schema_concentric_or_diamond_line) {
+         // If the schema is schema_concentric_or_diamond_line, and the 3x4 is occupied as in a
+         // 1/4 tag, convert it.  Don't ask for CFLAG1_FUDGE_TO_Q_TAG, just do it.
+         // The schema_concentric_or_diamond_line specifically looks for a 1x4 in the center, so a
+         // suitably occupied 3x4 definitely has those centers and ends.  If we didn't do this,
+         // it wouldn't see the centers and outsides.  Test is lo01.
+         expand::fix_3x4_to_qtag(ss);
       }
       else if (ss->kind == s_qtag &&
                (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&

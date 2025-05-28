@@ -3009,11 +3009,7 @@ extern void concentric_move(
 
    // The original info about the people who will FINISH on the outside.
    setup_kind final_outers_start_kind;
-   int final_outers_start_rot;
    uint32 *final_outers_start_directions;
-
-   // The original info about the people who will FINISH on the inside.
-   setup_kind final_inners_start_kind;
 
    // The final info about the people who FINISHED on the outside.
    int final_outers_finish_dirs;
@@ -3157,15 +3153,11 @@ extern void concentric_move(
       ccmask = eemask;
       eemask = ttt;
       final_outers_start_kind = orig_inners_start_kind;
-      final_outers_start_rot = orig_inners_start_rot;
       final_outers_start_directions = orig_inners_start_directions;
-      final_inners_start_kind = orig_outers_start_kind;
    }
    else {
       final_outers_start_kind = orig_outers_start_kind;
-      final_outers_start_rot = orig_outers_start_rot;
       final_outers_start_directions = orig_outers_start_directions;
-      final_inners_start_kind = orig_inners_start_kind;
    }
 
    // If the call turns out to be "detour", this will make it do just the ends part.

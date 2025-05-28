@@ -1392,7 +1392,7 @@ public:
    void writechar(char src);
    void write_blank_if_needed();
    void newline();
-   uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero);
+   uint32_t get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero);
    bool look_up_abbreviations(int which);
    void unparse_call_name(Cstring name, char *s, const call_conc_option_state *options);
    void print_recurse(parse_block *thing, int print_recurse_arg);

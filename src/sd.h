@@ -868,6 +868,7 @@ class select {
       fx_fo6zz,
       fx_foozz,
       fx_fo6zzd,
+      fx_fo6zze,
       fx_foozzd,
       fx_f3x4east,
       fx_f3x4west,
@@ -1331,7 +1332,7 @@ class select {
       fixerkey mykey;
       setup_kind ink;
       setup_kind outk;
-      int rot;
+      uint32_t rot;
       short prior_elong;
       short numsetups;
       veryshort indices[24];
@@ -2435,6 +2436,8 @@ class expand {
    static void compress_setup(const thing & thing, setup *stuff) THROW_DECL;   // In sdtop.
 
    static void expand_setup(const thing & thing, setup *stuff) THROW_DECL;     // In sdtop.
+
+   static void fix_3x4_to_qtag(setup *stuff) THROW_DECL;                       // In sdtop.
 
    static bool compress_from_hash_table(setup *ss,
                                         normalize_action action,

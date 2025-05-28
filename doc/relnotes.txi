@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.56
-@set title2 Database version = 38.56 format = 315
+@set title1 RELEASE NOTES FOR VERSION 38.57
+@set title2 Database version = 38.57 format = 316
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.57::
 * 38.56::
 * 38.55::
 * 38.54::
@@ -95,7 +96,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.56, Top, (dir)
+@node Intro, 38.57, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -106,11 +107,25 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2013 William B. Ackerman
 @sp 3
 @menu
-* 38.56::               Changes in the current version
+* 38.57::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.56, 38.55, Intro, Top
+@node 38.57, 38.56, Intro, Top
+@unnumberedsec Version 38.57 changes
+
+The call @strong{top it off} has been removed.
+
+A bug in fractional stable @strong{coordinate} was fixed.
+
+The program is better able to handle space-invading calls like @strong{loop} in general 1/4 tag setups.
+
+Various minor improvements were made, including @strong{generous} and @strong{stingy} in certain chopped-up versions of @strong{perk up} and @strong{pass and roll}.
+
+The source files were made more robust for use with a variety of compilers and operating systems.
+
+@c ************
+@node 38.56, 38.55, 38.57, Top
 @unnumberedsec Version 38.56 changes
 
 The @strong{finally twice rims trade back} bug was fixed.
