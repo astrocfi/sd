@@ -2744,18 +2744,32 @@ static int divide_the_setup(
 
       goto divide_us_no_recompute;
    case s_343:
-      if (((ss->people[1].id1 | ss->people[6].id1) & 011) == 0 &&
-          (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) ||
-           assoc(b_qtag, ss, calldeflist) || assoc(b_pqtag, ss, calldeflist))) {
-         static const expand::thing s_fix_343 = {{0, 2, 3, 4, 5, 7, 8, 9}, s_qtag, s_343, 0};
-         setup sss = *ss;
-         expand::compress_setup(s_fix_343, &sss);
-         move(&sss, true, result);
-         result->result_flags.clear_split_info();
-         return 1;
+      if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[5].id1 | ss->people[6].id1) & 011) == 0 &&
+          (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist))) {
+
+         // Need to turn into an nftrgl6ccw.
+         const expand::thing s343_nfccw = {{-1, -1, 2, 3, 4, -1, -1, 5, 0, 1}, s_343, s_nftrgl6ccw, 0};
+         expand::expand_setup(s343_nfccw, ss);
+         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_OFFS_L_HALF,0,s_trngl,0x8);
+      }
+      else if (((ss->people[1].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[7].id1) & 011) == 0 &&
+          (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist))) {
+
+         // Need to turn into an nftrgl6cw.
+         const expand::thing s343_nfcw = {{0, -1, -1, 2, 1, 3, -1, -1, 5, 4}, s_343, s_nftrgl6cw, 0};
+         expand::expand_setup(s343_nfcw, ss);
+         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_OFFS_R_HALF,0,s_trngl,0x2);
+      }
+      else if (((ss->people[1].id1 | ss->people[6].id1) & 011) == 0 &&
+          (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist))) {
+         const expand::thing s343_qtg = {
+            {0, -1, 1, 2, 3, 4, -1, 5, 6, 7}, s_343, s_qtag, 0};
+
+         expand::expand_setup(s343_qtg, ss);   // Compress to a qtag.
+         return 2;                             // And try again.
       }
 
-      break;
+      goto divide_us_no_recompute;
    case s2x2dmd:
       if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) ||
           assoc(b_qtag, ss, calldeflist) || assoc(b_pqtag, ss, calldeflist))
@@ -4180,6 +4194,9 @@ static int divide_the_setup(
       goto divide_us_no_recompute;
    case sdbltrngl4:
       division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0x5);
+      goto divide_us_no_recompute;
+   case sdbltrngl:
+      division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x5);
       goto divide_us_no_recompute;
    case slinejbox:
       division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s2x2,0x1);

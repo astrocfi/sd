@@ -509,6 +509,7 @@ const char *estab[] = {
    "2x3",
    "1x2dmd",
    "2x1dmd",
+   "dbltrngl",
    "wingedstar6",
    "1x3p1dmd",
    "3p1x1dmd",

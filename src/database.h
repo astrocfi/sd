@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 357
+#define DATABASE_FORMAT_VERSION 358
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -532,6 +532,7 @@ enum setup_kind {
    s2x3,
    s_1x2dmd,
    s_2x1dmd,
+   sdbltrngl,
    s_wingedstar6,
    s1x3p1dmd,
    s3p1x1dmd,

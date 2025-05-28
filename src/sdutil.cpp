@@ -879,6 +879,26 @@ void ui_utils::printsetup(setup *x)
 
          do_write(str);
          break;
+      case sdbltrngl:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 b 6 e@7a 6 d@76 c 6 f";
+            break;
+         case 1:
+            str = "6 5a@@6 c b@@6 5d@@6 f e";
+            break;
+         case 2:
+            str = "f 6 c@76 6 d 6 a@7e 6 b";
+            break;
+         default:
+            str = "6 e f@@6 5d@@6 b c@@6 5a";
+            break;
+         }
+
+         do_write(str);
+         break;
       case sboxpdmd:
          offs = 0;
 

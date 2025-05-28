@@ -5640,6 +5640,7 @@ extern void inner_selective_move(
    bool inner_shape_change = false;
    bool doing_special_promenade_thing = false;
    int tglindicator = 0;
+   bool special_tgl_ignore = false;
    uint32 mask = ~(~0 << (sizem1+1));
    const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
    selector_kind local_selector = selector_to_use.who[0];
@@ -5871,8 +5872,6 @@ extern void inner_selective_move(
             case 0x0A0AA0A0: delta = 0x8080; break;
             case 0x50500505: delta = 0x0404; break;
             case 0x05055050: delta = 0x4040; break;
-            default:
-               fail("Can't find the indicated triangles.");
             }
             break;
          case s_323:
@@ -5882,39 +5881,64 @@ extern void inner_selective_move(
                fail("Can't find the indicated triangles.");
             }
             break;
+         case s_343:
+            switch (bothlivemask) {
+            case 0x031800C6: delta = 0x84; break;
+            case 0x03180063: delta = 0x21; break;
+            }
+            break;
          case s_bone:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x44; break;
+               delta = 0x44;
+            break;
          case s_rigger:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x88; break;
+               delta = 0x88;
+            break;
+         case sd2x5:
+            if ((bothlivemask & ~0x41) == 0x01980022) {
+               delta = 0x22;
+            }
+            else if ((bothlivemask & ~0x22) == 0x030C0041) {
+               delta = 0x41;
+            }
+            break;
          case s_short6:
             if ((livemask[0] & ~055) == 0)
-               delta = 022; break;
+               delta = 022;
+            break;
          case s_bone6:
             if ((livemask[0] & ~033) == 0)
-               delta = 044; break;
+               delta = 044;
+            break;
          case s_ntrgl6cw:
             if ((livemask[0] & ~066) == 0)
-               delta = 011; break;
+               delta = 011;
+            break;
          case s_ntrgl6ccw:
             if ((livemask[0] & ~033) == 0)
-               delta = 044; break;
+               delta = 044;
+            break;
          case s_spindle:
             if ((livemask[0] & ~0x55) == 0)
-               delta = 0x88; break;
+               delta = 0x88;
+            break;
          case s_ntrglcw: case s_nptrglcw:
             if ((livemask[0] & ~0xCC) == 0)
-               delta = 0x11; break;
+               delta = 0x11;
+            break;
          case s_ntrglccw: case s_nptrglccw:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x88; break;
+               delta = 0x88;
+            break;
          case s_nxtrglcw:
             if ((livemask[0] & ~0x66) == 0)
-               delta = 0x11; break;
+               delta = 0x11;
+            break;
          case s_nxtrglccw:
             if ((livemask[0] & ~0x33) == 0)
-               delta = 0x44; break;
+               delta = 0x44;
+            break;
          case sdeepbigqtg:
             if (livemask[0] == 0x3030)
                delta = 0x0808;
@@ -6913,8 +6937,16 @@ extern void inner_selective_move(
 
       if (ctr_end_masks_to_use->mask_6_2) {
          schema = schema_concentric_6_2;
-         if (bigend_ssmask == ctr_end_masks_to_use->mask_6_2) goto do_concentric_ctrs;
-         else if (bigend_ssmask == mask - ctr_end_masks_to_use->mask_6_2) goto do_concentric_ends;
+         if (bigend_ssmask == ctr_end_masks_to_use->mask_6_2) {
+            // Don't do this if qtag and are being told to ignore the outer 2.
+            // It would set the other 6 to a 2x3, from which a triangle circulate would be impossible.
+            if (ss->kind == s_qtag && orig_indicator == selective_key_ignore)
+               special_tgl_ignore = true;
+            else
+               goto do_concentric_ctrs;
+         }
+         else if (bigend_ssmask == mask - ctr_end_masks_to_use->mask_6_2)
+            goto do_concentric_ends;
       }
 
       // We don't do this if the selector is "outer 1x3's", because that
@@ -6981,7 +7013,8 @@ extern void inner_selective_move(
        cmd1->parseptr->concept->kind == concept_tandem)
       action = normalize_before_isolated_callMATRIXMATRIXMATRIX;
 
-   if (!tglindicator)    // Don't normalize if doing triangle stuff.
+   // Don't normalize if doing triangle stuff.
+   if (!tglindicator && !special_tgl_ignore)
       normalize_setup(&the_setups[0], action, false);
    if (others > 0)
       normalize_setup(&the_setups[1], action, false);
@@ -7210,6 +7243,22 @@ extern void inner_selective_move(
                }
                else if (thislivemask == 0xEE) {
                   map_key_table = tglmap::s323map66;
+               }
+            }
+            else if (tglindicator == 0024 && kk == sd2x5) {
+               if (thislivemask == 0x34D) {
+                  map_key_table = tglmap::sd25map33;
+               }
+               else if (thislivemask == 0x1BA) {
+                  map_key_table = tglmap::sd25map66;
+               }
+            }
+            else if (tglindicator == 0024 && kk == s_343) {
+               if (thislivemask == 0x39C) {
+                  map_key_table = tglmap::s343map33;
+               }
+               else if (thislivemask == 0x339) {
+                  map_key_table = tglmap::s343map66;
                }
             }
             else if (tglindicator == 0124 && kk == s_c1phan) {
@@ -7562,7 +7611,10 @@ extern void inner_selective_move(
                else if (fixp == select::fixer_ptr_table[select::fx_fdhrgl] ||
                         fixp == select::fixer_ptr_table[select::fx_specspindle] ||
                         fixp == select::fixer_ptr_table[select::fx_specfix3x40] ||
-                        fixp == select::fixer_ptr_table[select::fx_specfix3x41]) {
+                        fixp == select::fixer_ptr_table[select::fx_specfix3x41] ||
+                        fixp == select::fixer_ptr_table[select::fx_fqtgitgl] ||
+                        fixp == select::fixer_ptr_table[select::fx_fqtgctgl] ||
+                        fixp == select::fixer_ptr_table[select::fx_fqtgatgl]) {
                   nextfixp = fixp;
                }
                else

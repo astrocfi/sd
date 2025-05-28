@@ -6777,12 +6777,13 @@ void really_inner_move(
                current_options.who.who[0] = local_selector;
                return;
             }
-            else if (local_selector == selector_ends || local_selector == selector_outsides)
+            else if (local_selector == selector_ends || local_selector == selector_outsides) {
                current_options.who.who[0] = selector_all;
                concentric_move(ss, (setup_command *) 0, &ss->cmd, schema_concentric,
                                0, 0, true, false, ~0U, result);
                current_options.who.who[0] = local_selector;
                return;
+            }
          }
 
          bool expanded = false;

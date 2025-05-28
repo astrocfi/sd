@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.07"
+version "39.08"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -14284,22 +14284,26 @@ call "_courtesy turn 1/2" dontshow tag courtesy
 
 call "courtesy turn" mainstream
             reverse_means_mirror
-   /* While we normally assume that this call turns 180 degrees, the Callerlab
-      definition says, "unless otherwise specified", to turn until you face
-      the center of the set or the center of the group you are working in.
-      From a 2-faced line, a 180 degree turn is therefore probably not right.
-      We print the "controversial" warning to remind the caller to specify
-      clearly what is wanted. */
+   // While we normally assume that this call turns 180 degrees, the Callerlab
+   // definition says, "unless otherwise specified", to turn until you face
+   // the center of the set or the center of the group you are working in.
+   // From a 2-faced line, a 180 degree turn is therefore probably not right.
+   // We print the "controversial" warning to remind the caller to specify
+   // clearly what is wanted.
    setup 2x4 2x4 qualifier 2fl_only restriction controversial alwaysfail
       array [AL1S AL0S AL3S AL2S AL5S AL4S AL7S AL6S]
-   /* We pick out a few more such cases.  We don't raise a warning for a
-      trade-by setup, because this is presumably the second half of a right
-      and left thru, so they are turning toward the center of the group they
-      are working in.  It seems that the "splitseq" concept doesn't do the
-      right thing in this case.  That is, it doesn't do the right thing if
-      we want "twisted" to work. */
+   // We pick out a few more such cases.  We don't raise a warning for a
+   // trade-by setup, because this is presumably the second half of a right
+   // and left thru, so they are turning toward the center of the group they
+   // are working in.  It seems that the "splitseq" concept doesn't do the
+   // right thing in this case.  That is, it doesn't do the right thing if
+   // we want "twisted" to work.
    setup 2x2 2x2 qualifier in in_or_out restriction controversial alwaysfail
       array [AL1S AL0S AL3S AL2S]
+   setup 1x4 2x2 qualifier left wave_only
+      array [0 AL3E AAL2W 0]
+   setup 4x2 2x4 qualifier left wave_only
+      array [0 0 0 0 AL3S AL2S AL1N AL0N]
    setup 4x2 2x4 qualifier in 2fl_only restriction controversial alwaysfail
       array [AL7S AL6S AL5S AL4S AL3S AL2S AL1S AL0S]
    setup 4x2 2x4 qualifier in in_or_out restriction controversial alwaysfail

@@ -2805,6 +2805,8 @@ class select {
       fx_f2x6cw,
       fx_f2x6ccw,
       fx_fdhrgl,
+      fx_fdbtgll,
+      fx_fdbtglr,
       fx_specspindle,
       fx_specfix3x40,
       fx_specfix3x41,
@@ -2891,6 +2893,8 @@ class select {
       fx_sp12wing,
       fx_f4ptpd,
       fx_fd2x5d,
+      fx_fd2x5e,
+      fx_fd2x5f,
       fx_fd2x7d1,
       fx_fd2x7d2,
       fx_fd2x7d3,
@@ -3255,6 +3259,9 @@ class select {
       fx_fhrgl2,
       fx_fhrgle,
       fx_fptpdid,
+      fx_fqtgctgl,
+      fx_fqtgatgl,
+      fx_fqtgitgl,
       fx_phanigna,
       fx_phanignb,
       fx_phanignc,
@@ -3393,6 +3400,10 @@ class tglmap {
       tglmap8r,
       tglmap323_33,
       tglmap323_66,
+      tglmap343_33,
+      tglmap343_66,
+      tglmapd25_33,
+      tglmapd25_66,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
@@ -3465,6 +3476,10 @@ class tglmap {
    static const tglmapkey rtglmap500[];
    static const tglmapkey s323map33[];
    static const tglmapkey s323map66[];
+   static const tglmapkey s343map33[];
+   static const tglmapkey s343map66[];
+   static const tglmapkey sd25map33[];
+   static const tglmapkey sd25map66[];
 };
 
 
@@ -4870,8 +4885,8 @@ class map {
       map_thing *next;
    };
 
-   static void initialize();
-   static const map_thing *get_map_from_code(uint32 map_encoding);
+   static void initialize();    // In sdistort.
+   static const map_thing *get_map_from_code(uint32 map_encoding);   // In sdistort.
 
  private:
 

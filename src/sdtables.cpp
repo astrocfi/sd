@@ -1833,14 +1833,14 @@ map::map_thing map::map_init_table[] = {
     s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6ccw, (((veryshort) s_trngl) << 24) | 0x108, 0},
    {{0, 4, 5,                          3, 1, 2},
     s_trngl,2,MPKIND__HET_SPLIT,0,   warn__none, s_ntrgl6cw,  (((veryshort) s_trngl) << 24) | 0x3010D, 0x555},
+   {{0, 1, 2,                          3, 4, 5},
+    s_trngl,2,MPKIND__HET_SPLIT,1,   warn__none, sdbltrngl,    (((veryshort) s_trngl) << 24) | 0x005, 0},
 
    // Need both of these.  The first to keep "fix_n_results" from getting bent out of shape when
    // it sees that the setup isn't really symmetric, and the second because it will get turned
    // into MPKIND__SPLIT when it sees that the two triangles are the same after all.
    {{0, 1, 2, 3,                       4, 5, 6, 7},
     s_trngl4,2,MPKIND__HET_SPLIT,1,  warn__none, sdbltrngl4,  (((veryshort) s_trngl4) << 24) | 0x005, 0},
-   //   {{0, 1, 2, 3,                       4, 5, 6, 7},
-   //    s_trngl4,2,MPKIND__SPLIT,1,      0, sdbltrngl4,  0x005, 0},
    {{4, 5, 6, 7,                       0, 1, 2, 3},
     s_trngl4,2,MPKIND__HET_SPLIT,1,  warn__none, sdbltrngl4,  (((veryshort) s_trngl4) << 24) | 0x2000F, 0xAAAA},
 
@@ -5243,6 +5243,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          s3x4, 0,        0, 0x0E, 0x10, schema_matrix,        s3x6,        nothing,  warn__none, 0, 0, {16, 17, 7, 8},             {0, -1, -1, 5, 6, -1, 9, -1, -1, 14, 15, -1}},
    {s1x4,          s3x4, 0,        0, 0x0E, 0x10, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
    {sdmd,         s_343, 0,    0x252, 0x0D, 0x10, schema_nothing,       nothing,     nothing,  warn__none, 1, 0, {1, 4, 6, 9},             {0}},
+   {s1x4,         s_343, 0xA,   0x42, 0x0D, 0x10, schema_nothing,       nothing,     nothing,  warn__none, 1, 0, {1, -1, 6, -1},             {0}},
    {s2x2,         s_323, 0,     0x44, 0x0E, 0x0, schema_matrix,         s_3223,      nothing,  warn__none, 0, 1,
     {8, 4, 3, 9}, {6, 7, 0, -1, 1, 2, 5, -1}},
    {s1x4,          s3x4, 0,    04646, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 1, {8, 9, 3, 4},             {7, -1, -1, 0, 1, -1, 2, -1, -1, 5, 6, -1}},
@@ -5325,6 +5326,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x2,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 6},                     {0}},
    {s_dhrglass,    s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 3, 4, 7}},
    {s_hrglass,     s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {6, 3, 2, 7},            {0, 3, 4, 7}},
+   {s_dhrglass,    s2x4, 0x21,  0x7E, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, -1, -1, -1, -1, -1, 5},            {0}},
+   {s_dhrglass,    s2x4, 0x12,  0xE7, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, 1, 4, -1, -1, -1},            {0}},
    {s_bone6,   s_galaxy, 0,     0xBB, 0x0E, 0x0, schema_concentric,     s_bone6,     s1x2,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},         {2, 6}},
    {s_bone6,   s_galaxy, 0,     0xEE, 0x0D, 0x0, schema_concentric,     s_bone6,     s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 4}},
    {s_hrglass, s_galaxy, 0x44,  0xBB, 0x0D, 0x0, schema_concentric,     s_bone6,     s1x2,     warn__none, 1, 1, {1, 4, 7, 5, 0, 3},         {2, 6}},
@@ -5554,7 +5557,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          sdmd, 0xA,    0x5, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, 2, -1},             {0}},
    {s_ntrgl6ccw, s_nxtrglccw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
    {s_ntrgl6cw,   s_nxtrglcw, 0,   0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},               {0}},
-
+   {s1x4,      s_nftrgl6cw,  0xA,  0, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 0, {1, -1, 6, -1}, {0, 4, 3, 5, 9, 8}},
+   {s1x4,      s_nftrgl6ccw, 0xA,  0, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 0, {1, -1, 6, -1}, {8, 9, 2, 3, 4, 7}},
    {s_ntrglcw,    s_323,  0x33, 0x33, 0x0D, 0x0, schema_matrix,         s_ntrglcw,   nothing,  warn__none, 0, 1, {-1, -1, 2, 3, -1, -1, 6, 7},               {-1, -1, 0, 1, -1, -1, 4, 5}},
    {s_ntrglccw,   s_323,  0xCC, 0x66, 0x0D, 0x0, schema_matrix,         s_ntrglccw,  nothing,  warn__none, 0, 1, {0, 1, -1, -1, 4, 5, -1, -1},               {7, -1, -1, 2, 3, -1, -1, 6}},
    {s_ntrglcw,    s_323,  0xCC, 0xCC, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, -1, -1, 6, 7, -1, -1},               {0}},
@@ -7088,6 +7092,14 @@ static const coordrec thinglineybox = {slineybox, 0x24,
       -1, -1, -1, -1, -1, -1,  1, -1, -1,  7,  6, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thingdbltrngl = {sdbltrngl, 0x24,
+   { -6,  -2,  -2,   2,   6,   6},
+   {  0,   2,  -2,   0,   2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1,  0,  1,  3,  4, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1,  2, -1,  5, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thingdbltrngl4 = {sdbltrngl4, 0x24,
    {-10,  -6,  -2,  -2,   2,   6,  10,  10},
    {  0,   0,   2,  -2,   0,   0,   2,  -2}, {
@@ -7463,8 +7475,8 @@ id_bit_table id_bit_table_d2x5_ctr6[] = {
 static const id_bit_table id_bit_table_bone6[] = {
    NORTHBIT(0),
    NORTHBIT(0),
-   /* We mark triangle points as trailers, in case we need to identify them in a 2x2 box,
-       as in "leads start wheel the ocean". */
+   // We mark triangle points as trailers, in case we need to identify them in a 2x2 box,
+   // as in "leads start wheel the ocean".
    {ID2_BEAU|ID2_TRAILER,     ID2_TRAILER,             ID2_BELLE|ID2_TRAILER,  ID2_LEAD},
    SOUTHBIT(0),
    SOUTHBIT(0),
@@ -7477,6 +7489,14 @@ static const id_bit_table id_bit_table_short6[] = {
    SEBITS(ID2_CENTER),
    NOBIT(ID2_END),
    SWBITS(ID2_CENTER)};
+
+static const id_bit_table id_bit_table_dbltrngl[] = {
+   NOBIT(0),
+   NORTHBIT(0),
+   SOUTHBIT(0),
+   NOBIT(0),
+   NORTHBIT(0),
+   SOUTHBIT(0)};
 
 static const id_bit_table id_bit_table_1x6[] = {
    WESTBIT(ID2_OUTRPAIRS| ID2_OUTR2| ID2_NCTR1X4),
@@ -8366,7 +8386,7 @@ static const id_bit_table id_bit_table_2x1dmd[] = {
    WESTBIT(ID2_CTRDMD  | ID2_CTR1X4),
    NOBIT(  ID2_CTRDMD  | ID2_NCTR1X4)};
 
-/*   Used to be this ...
+// The "center 6" are the 1x6.
 static const id_bit_table id_bit_table_3x1dmd[] = {
    WESTBIT(ID2_OUTR2| ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_NCTR1X4),
    EASTBIT(ID2_CTR6|  ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_CTR1X4),
@@ -8376,19 +8396,6 @@ static const id_bit_table id_bit_table_3x1dmd[] = {
    WESTBIT(ID2_CTR6|  ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_CTR1X4),
    EASTBIT(ID2_CTR6|  ID2_CTR2|  ID2_CTR4|   ID2_CENTER| ID2_CTR1X6|  ID2_CTRDMD  | ID2_CTR1X4),
    NOBIT(  ID2_CTR6|  ID2_OUTR6| ID2_CTR4|   ID2_CENTER| ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4)};
-*/
-
-// Now changed to this, so the "center 6" are the 1x6.
-static const id_bit_table id_bit_table_3x1dmd[] = {
-   WESTBIT(ID2_OUTR2| ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_NCTR1X4),
-   EASTBIT(ID2_CTR6|  ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_CTR1X4),
-   WESTBIT(ID2_CTR6|  ID2_CTR2|  ID2_CTR4|   ID2_CENTER| ID2_CTR1X6|  ID2_CTRDMD  | ID2_CTR1X4),
-   NOBIT(  ID2_CTR6|  ID2_OUTR6| ID2_CTR4|   ID2_CENTER| ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4),
-   EASTBIT(ID2_OUTR2| ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_NCTR1X4),
-   WESTBIT(ID2_CTR6|  ID2_OUTR6| ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6|  ID2_NCTRDMD | ID2_CTR1X4),
-   EASTBIT(ID2_CTR6|  ID2_CTR2|  ID2_CTR4|   ID2_CENTER| ID2_CTR1X6|  ID2_CTRDMD  | ID2_CTR1X4),
-   NOBIT(  ID2_CTR6|  ID2_OUTR6| ID2_CTR4|   ID2_CENTER| ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4)};
-
 
 // If center diamond is fully occupied and outer diamonds have only points, use this.
 static const id_bit_table id_bit_table_3dmd[] = {
@@ -8781,6 +8788,16 @@ const setup_attr setup_attrs[] = {
     id_bit_table_2x1dmd,
     {"6  5 c@@a  b  e  d@@6  5 f",
      "6  a@@6  b@7f  6  c@76  e@@6  d"}},
+   {5,                      // sdbltrngl
+    &thingdbltrngl,
+    &thingdbltrngl,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    SPROP_NO_SYMMETRY|SPROP_FIND_NEAR_PEOPLE,
+    id_bit_table_dbltrngl,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {5,                      // s_wingedstar6
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -8947,7 +8964,7 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_d2x5, b_5x2},
     {4, 3},
-    0U,
+    SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_d2x5,
     {"58c  j@7a6 6g@758d  i@7b6 6f@758e  h",
      "6  b  a@@5 e  d  c@@5 h  i  j@@6  f  g"}},
@@ -10882,6 +10899,10 @@ select::fixer select::fixer_init_table[] = {
 
    {fx_fdhrgl, s_trngl, s_dhrglass, 0x2A03, 0, 2, {6, 5, 0, 2, 1, 4},
     fx_f323, fx0,               fx0, fx0,                   fx0, fx_specspindle,        fx0, fx0},
+   {fx_fdbtgll, sdbltrngl, s_dhrglass, 0x2, 0, 1, {2, 7, 3, 6, 5, 0},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fdbtglr, sdbltrngl, s_dhrglass, 0x0, 0, 1, {6, 3, 7, 2, 1, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_specspindle, s_trngl, s_spindle, 0x2A01, 0, 2, {7, 0, 6, 3, 4, 2},
     fx_specspindle, fx0,        fx0, fx0,                   fx0, fx_fdhrgl,             fx0, fx0},
    {fx_specfix3x40, s_trngl, s_ptpd, 0x00AB, 0, 2, {0, 1, 3, 4, 5, 7},
@@ -11068,6 +11089,10 @@ select::fixer select::fixer_init_table[] = {
    {fx_f4ptpd, s1x2, s4ptpd,     0, 0, 3,          {13, 14, 15, 7, 6, 5},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_fd2x5d, s2x3, sd2x5,      1, 0, 1,          {9, 8, 7, 4, 3, 2},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+   {fx_fd2x5e, s_short6, sd2x5,  1, 0, 1,          {8, 5, 7, 4, 1, 3},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+   {fx_fd2x5f, s_short6, sd2x5,  1, 0, 1,          {9, 6, 8, 3, 0, 2},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_fd2x7d1, s1x2, sd2x7,      0, 0, 2,          {13, 12, 5, 6},
     fx0,          fx_f3x4east,  fx0,          fx0, fx0,          fx0,    fx0,          fx0},
@@ -11875,7 +11900,12 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx_frigendd, fx_frigendd,   fx_fhrgl1, fx_fhrgl2,       fx_fhrgle, fx_fqtgend},
    {fx_fptpdid, s_ptpd, s_ptpd,         0, 1, 1,          {0, 1, 2, 3, 4, 5, 6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-
+   {fx_fqtgitgl, s_trngl, s_qtag,  0x2A03, 0, 2,          {7, 5, 0, 3, 1, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fqtgctgl, s_trngl, s_qtag,  0x2A00, 0, 2,          {4, 3, 2, 0, 7, 6},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fqtgatgl, s_trngl, s_qtag,  0x2A00, 0, 2,          {5, 6, 7, 1, 2, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_phanigna, s_ntrgl6ccw, s_c1phan, 0, 0, 1,     {0, 2, 4, 8, 10, 12},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_phanignb, s_ntrgl6ccw, s_c1phan, 0, 0, 1,     {0, 2, 6, 8, 10, 14},
@@ -12104,6 +12134,9 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_IGNORE,             s2x4,        0xEE,   fx_f2x4ee,     fx0, -1},  /* 2x4 with 2 centers ignored.  These 2 *ARE* disconnected (or ignored). */
    {LOOKUP_IGNORE,             s_ptpd,      0x77,   fx_fptpdid,    fx0, -1},
    {LOOKUP_IGNORE,             s_ptpd,      0xDD,   fx_fptpdid,    fx0, -1},
+   {LOOKUP_IGNORE,             s_qtag,      0xBB,   fx_fqtgitgl,   fx0, -1},
+   {LOOKUP_IGNORE,             s_qtag,      0xDD,   fx_fqtgctgl,   fx0, -1},
+   {LOOKUP_IGNORE,             s_qtag,      0xEE,   fx_fqtgatgl,   fx0, -1},
    {LOOKUP_IGNORE,             s_c1phan,  0x1515,   fx_phanigna,    fx0, -1},
    {LOOKUP_IGNORE,             s_c1phan,  0x4545,   fx_phanignb,    fx0, -1},
    {LOOKUP_IGNORE,             s_c1phan,  0x5151,   fx_phanignc,    fx0, -1},
@@ -12304,6 +12337,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      spgdmdcw,    0xCC,   fx_fpgdmdcw,   fx0, -1},
    {LOOKUP_NONE,                      spgdmdccw,   0xCC,   fx_fpgdmdccw,  fx0, -1},
    {LOOKUP_NONE,                      s_dhrglass,   0x77,  fx_fdhrgl,     fx0, -1},
+   {LOOKUP_NONE,                      s_dhrglass,   0xED,  fx_fdbtgll,    fx0, -1},
+   {LOOKUP_NONE,                      s_dhrglass,   0xDE,  fx_fdbtglr,    fx0, -1},
    {LOOKUP_NONE,                      s_ptpd,       0xBB,  fx_specfix3x40,fx0, -1},
    {LOOKUP_NONE,                      s_bone,       0x77,  fx_specfix3x41,fx0, -1},
    {LOOKUP_NONE,                      s_spindle,    0xDD,  fx_specspindle,fx0, -1},
@@ -12408,6 +12443,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      sd2x5,       0x198,  fx_fd2x5d,     fx0, -1},
    {LOOKUP_NONE,                      sd2x5,       0x30C,  fx_fd2x5d,     fx0, -1},
    {LOOKUP_NONE,                      sd2x5,       0x294,  fx_fd2x5d,     fx0, -1},
+   {LOOKUP_NONE,                      sd2x5,       0x1BA,  fx_fd2x5e,     fx0, -1},
+   {LOOKUP_NONE,                      sd2x5,       0x34D,  fx_fd2x5f,     fx0, -1},
    {LOOKUP_NONE,                      sd2x7,      0x3060,  fx_fd2x7d1,    fx0, -1},
    {LOOKUP_NONE,                      sd2x7,      0x0183,  fx_fd2x7d2,    fx0, -1},
    {LOOKUP_DIST_CLW|LOOKUP_OFFS_CLW,  sd2x7,      0x3060,  fx_fd2x7d3,    fx0, -1},
@@ -12589,6 +12626,36 @@ const tglmap::map tglmap::init_table[] = {
     {1, 2, 3,   5, 6, 7},
     {0, 1, 2,   5, 6, 7}},
 
+   // In 343: as above.
+   {tglmap343_33, s_323, s2x4, tglmap343_33, 0, 0,
+    {7, 8, 9,   2, 3, 4},
+    {0},
+    {0},
+    {0, 1, 2,   4, 5, 6},
+    {9, 8, 7,   4, 3, 2}},
+
+   {tglmap343_66, s_323, s2x4, tglmap343_66, 0, 0,
+    {5, 4, 3,   0, 9, 8},
+    {0},
+    {0},
+    {1, 2, 3,   5, 6, 7},
+    {0, 1, 2,   5, 6, 7}},
+
+   // In d25: as above.
+   {tglmapd25_33, sd2x5, s2x4, tglmapd25_33, 0, 0x10,
+    {0, 2, 3,   6, 8, 9},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmapd25_66, sd2x5, s2x4, tglmapd25_66, 0, 0x10,
+    {1, 3, 4,   5, 7, 8},
+    {0},
+    {0},
+    {0},
+    {0}},
+
    // Interlocked triangles in bigdmd:
    {tglmap1k, nothing, nothing, tglmap2k, 1, 0,
     {0, 0, 0,   0, 0, 0},
@@ -12731,3 +12798,9 @@ const tglmap::tglmapkey tglmap::d7tglmap2[4] = {tglmapd72};
 
 const tglmap::tglmapkey tglmap::s323map33[1] = {tglmap323_33};
 const tglmap::tglmapkey tglmap::s323map66[1] = {tglmap323_66};
+
+const tglmap::tglmapkey tglmap::s343map33[1] = {tglmap343_33};
+const tglmap::tglmapkey tglmap::s343map66[1] = {tglmap343_66};
+
+const tglmap::tglmapkey tglmap::sd25map33[1] = {tglmapd25_33};
+const tglmap::tglmapkey tglmap::sd25map66[1] = {tglmapd25_66};
