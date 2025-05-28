@@ -49,22 +49,24 @@ valid for 1995).  If you want sources, or a different format instead,
 please say so.
 
    To install the program from a floppy disk to a PC-compatible, change
-to the desired directory, insert the disk, and type `A:INSTALL' or
-`B:INSTALL' as appropriate.
+to the desired directory on your hard drive, insert the disk, and type
+`A:INSTALL' or `B:INSTALL' as appropriate.
 
    Sd is also available via anonymous FTP from the directory `misc/sd/'
 on host ftp.x.org.  FTP is the Internet file transfer protocol.  The
 file `sd-nn.tar.Z' (where `nn' changes with the version) is a
 compressed Unix-format "tar" file containing the sources.  You will
-need the standard "tar" and "uncompress" or "zcat" utilities to process
+need the standard `tar' and `uncompress' or `zcat' utilities to process
 it.  The file `sdxxxbn.exe' (where `xxx' changes with the version) is a
 self-extracting DOS archive containing a pre-built executable of Sdtty
-for PC-compatible computers.
+for PC-compatible computers.  There is not yet a pre-built version for
+Macintosh; you have to compile it yourself.  See "Building on the Mac"
+in the `INSTALL' file.
 
    You must run FTP in binary mode to obtain these files.
 
-   Versions for the Macintosh, and binaries for other systems, may be
-available also.  See the file `README' at the FTP site for availability,
+   Binaries for the Macintosh and other systems may become available
+later.  See the file `README' at the FTP site for availability.
 
    If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for structured mail, and
@@ -72,15 +74,15 @@ it includes support for mailing large binary files.
 
    If you are on the Internet, you can read Sd documentation using the
 World Wide Web.  Give the locator http://www.x.org/misc/sd/ to your WWW
-program.
+browser program.
 
    Sd and Sdtty are "free" programs, in that they are licensed under the
 GNU General Public License, which is an appendix to this manual.  In
 short, this means that it is perfectly legal and ethical to copy and
 redistribute the program and documentation.  For example, you may
 obtain the program by having a friend copy the disk and manual for you.
-(Or just copy the disk, and print your own manual from the the file
-that is on the disk.)
+(Or just copy the disk and print your own manual from the file that is
+on the disk.)
 
    Sd and Sdtty are sometimes also distributed in source form.  The
 licensing terms for distribution of source files, or programs made from

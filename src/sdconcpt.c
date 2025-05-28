@@ -1939,7 +1939,7 @@ Private long_boolean fill_active_phantoms_and_move(
 
 
 
-extern long_boolean move_perhaps_with_active_phantoms(
+extern void move_perhaps_with_active_phantoms(
    setup *ss,
    restriction_thing *restr_thing_ptr,
    setup *result)

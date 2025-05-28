@@ -1,6 +1,6 @@
 # Generated automatically from makefile.pc.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <94/07/27 17:14:02 gildea>
+# Time-stamp: <95/03/15 21:19:10 gildea>
 
 srcdir = .
 # VPATH is for GNU make
@@ -111,6 +111,8 @@ dbcomp.o: database.h
 
 $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
 
+$(SDTTY_OBJ): sdmatch.h
+
 configure: configure.in
 	-autoconf
 
@@ -139,7 +141,7 @@ MAKE_ASCII = makeinfo --no-split --no-headers
 TXI2DVI = tex
 DVIPS = dvips
 TXI2HTML = texi2html
-MAKE = make
+MAKE=make
 
 # We do it twice, so cross references will be reconciled.
 .txinfo.dvi:
@@ -232,6 +234,7 @@ pcfiles.lnk: Makefile.in
 LN = ln -s
 
 makefile.pc: configure Makefile.in
+	-rm -f config.cache
 	-mv config.status config.status.save
 	-$(LN) Makefile.in makefile.pc.in
 	$(srcdir)/configure --with-pc

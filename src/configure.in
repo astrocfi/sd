@@ -1,4 +1,4 @@
-AC_REVISION(Time-stamp: "94/08/23 17:41:13 gildea")dnl
+AC_REVISION(Time-stamp: "95/03/15 21:08:30 gildea")
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -27,6 +27,7 @@ TTY_FLAGS=
 TTY_LIBS=-lpc
 X11_LIBS=
 LN_S="ln -s"
+SET_MAKE="MAKE=make"	dnl is this necessary for dmake?
 dnl those are Tab characters in the next two lines
 STRIP="	strip \$@"
 AOUT2EXE="	aout2exe \$@"
@@ -179,8 +180,8 @@ TTY_LIBS="$LIBS"
 SDTTY_OBJ="$(SDTTY_OBJ_UNIX)"
 SDTTY_OBJS="$(SD_OBJS) $(SDTTY_OBJ)"
 
-dnl This will set the definition of "LN_S".
-AC_LN_S
+AC_LN_S		dnl set the definition of "LN_S".
+AC_SET_MAKE	dnl set MAKE variable if necessary
 
 dnl since user chose configure over xmkmf, lean towards non-X
 if test -z "$no_x" -a -n "$DISPLAY"; then

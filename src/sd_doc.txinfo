@@ -1,38 +1,11 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c See the file INSTALL for how to format and view.
-@c
-@c    NOTE:  The preparation of this document may require a
-@c    blank page at the end to make the pagination of the table
-@c    of contents come out correctly for two-sided printing.
-@c
-@c    Whether you need that page is unpredictable, and varies as
-@c    the document is edited.
-@c
-@c    To see whether you need it for a given version, look at the
-@c    on-line output of the "dvips" run that makes the postscript
-@c    file.  If it ends something like this:
-@c        [59] [60] [61] [62] [63] [64] [65] [-1] [-2] [-3] [-4] 
-@c    showing an odd number (in this case 65) before the "[-1]",
-@c    you need to change the parity of the pages by changing the line
-@c    below from 
-@c          @set need-extra-page
-@c    to
-@c          @clear need-extra-page
-@c    or vice-versa.
-@c
-@c    When you have it right, the "dvips" run should show an even number.
-@c
-@c    The current status is ON, as indicated by the "set" command immediately below.
-@c
-@set need-extra-page
-@c
-@c
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set sd-version 30.88
-@set Time-stamp: Jan 25, 1995
+@set Time-stamp: Mar 16, 1995
+@set sd-version 30.89
 @set full-manual
 @c %**end of header
 @iftex
@@ -123,6 +96,8 @@ This is the complete table of contents:
 
 Introduction
 
+* Documentation::               Documentation
+* Getting Sd or Sdtty::         Getting Sd or Sdtty
 * Contact Info::                How to Contact the Authors
 * Acknowledgements::            Acknowledgements
 
@@ -246,7 +221,8 @@ reading this document.  The following chapters cover using @code{Sd} and
 @node The Completing Reader for Sdtty, Invoking Sd, Getting Started, Top
 @chapter The Completing Reader for Sdtty
 
-@code{Sdtty} uses a "completing reader" for interpreting the characters that you type.
+@code{Sdtty} uses a @dfn{completing reader} for interpreting the
+characters that you type.
 This means that you only need to type as much of the word or command as is
 required to be unambiguous.  Whenever you type a space, @code{sdtty} completes
 the word you just typed, if necessary and possible.  Whenever you type
@@ -254,8 +230,8 @@ the word you just typed, if necessary and possible.  Whenever you type
 if necessary and possible.
 
 For example, at mainstream, you can enter a swing thru by typing
-@samp{swing thru <RET>}.  When the space aftter @samp{swing} is typed,
-no completion is required.  When the @samp{<RET>} after @samp{thru} is typed,
+@samp{swing thru <RET>}.  When the space after @samp{swing} is typed,
+no completion is required.  When the @key{<RET>} after @samp{thru} is typed,
 no completion is required either.  If you type @samp{sw thru <RET>} instead,
 @code{sdtty} completes the word @samp{swing}.  It does this by printing
 @samp{ing} on the screen as soon as you type the space after
@@ -276,10 +252,10 @@ type @kbd{?} (discussed below) to see what the problem is.
 With practice, you can get a reasonable feel for how much abbreviation you can
 get away with in a given context.
 
-Typing @code{<ESCAPE>} (or @code{<ALT MODE>} on some keyboards) or @code{<TAB>} will
-complete the entire line, just like @code{<RET>}, but will not actually process
-the line.  If you like what you see, you can then press @code{<RET>} to execute
-the call.
+Typing @key{<ESCAPE>} (or @key{<ALT MODE>} on some keyboards) or
+@key{<TAB>} will complete the entire line, just like @key{<RET>}, but
+will not actually process the line.  If you like what you see, you can
+then press @key{<RET>} to execute the call.
 
 At any time, you can type a question mark.  This will make @code{sdtty} print out
 all legal completions of the line that has been entered so far.  If what you
@@ -289,15 +265,15 @@ that is every call, every concept, and every special command.
 
 The output from typing a question mark may be quite lengthy.  If it fills
 more than one screenful, @code{sdtty} will stop and display @samp{--More--} at the
-bottom of the screen.  Type a space to go on to the next screenful.  Type
-@code{<RET>} to see just one more line.  Type a backspace (or @code{<DEL>})
+bottom of the screen.  Type @key{<Space>} to go on to the next screenful.  Type
+@key{<RET>} to see just one more line.  Type a backspace (or @key{<DEL>})
 to stop.  When the output ends, either because @code{sdtty} printed everything or
 because you typed a backspace, the partially entered line will be redisplayed, just
 as it was before you typed the question mark.
 
 @code{Sdtty}'s completing reader is completely indifferent to the capitalization of
-what you type.  It caplitalizes its output according to its own notions of
-esthetics and ambiguity avoidance.
+what you type.  It capitalizes its output according to its own notions of
+aesthetics and ambiguity avoidance.
 
 @node Invoking Sd, Calling, The Completing Reader for Sdtty, Top
 @chapter Invoking Sd via Command Line
@@ -386,7 +362,7 @@ These options are specific to the terminal-based version, @code{sdtty}.
 @table @code
 @item -no_cursor
 dumb terminal mode: do not use cursor motion commands to keep the screen
-up-to-date efficiently.  Use this if the cursor motion adn screen manipulation
+up-to-date efficiently.  Use this if the cursor motion and screen manipulation
 operations of your terminal or operating system are not available or are not
 working satisfactorily.
 @item -lines @var{nlines}
@@ -541,7 +517,7 @@ on the desired menu item.  In @code{sdtty}, a call is selected by typing
 its name, followed by a @key{Return}.  The completing reader
 (@xref{The Completing Reader for Sdtty}) lets you abbreviate calls.
 
-It is important to be aware that a number of "modifier" words like 
+It is important to be aware that a number of @dfn{modifier} words like 
 @code{grand} and @code{cross} are treated as @i{concepts} by @code{sd}
 and @code{sdtty}.  While concepts don't officially exist below the
 Advanced program, @code{sd} and @code{sdtty} consider the Mainstream
@@ -589,8 +565,8 @@ In @code{sd}, the menus list only the base calls with special keywords
 as in @code{quarter <DIRECTION>} or @code{square thru <N>}.  When you
 click on such a menu item, a popup menu appears listing the possible choices.
 
-In @code{sdtty}, the "menu" (that is, what you see if you type a question
-mark) also has keywords.  You can type the item just as shown, e.g.
+In @code{sdtty}, the @dfn{menu} (that is, what you see if you type a question
+mark) also has keywords.  You can type the item just as shown, e.g.,
 @code{quarter <DIRECTION>} or @code{square thru <N>} (you would actually type the
 angle brackets) and then answer the question that @code{sdtty} asks.  But there is
 an easier way---you can type what you want directly.  That is, just type
@@ -630,7 +606,8 @@ When using @code{sdtty}, you can either type the keyword literally,
 and then answer the question, or just type the number just as you want it to
 appear in the call.  That is, you can type @code{invert the column <N/4>} and then
 @code{3}, or @code{invert the column 3/4}.  You can type @code{1/2} or
-@code{2/4}---the program will print it as @code{1/2} in all cases.  For @code{square
+@code{2/4}---the program will print it as @code{1/2} in either case.
+For @code{square
 thru but on the <Nth> hand}, you can type the number in @code{Nth} form,
 as in @code{square thru but on the 3rd hand}.  Of course, if you just type @code{3},
 the completing reader will finish it for you.
@@ -663,11 +640,11 @@ appear in the Callerlab mainstream list.  The author does not take a position
 on whether the adult terms would be more reasonable words to use in any given context.
 You must use your own judgement in deciding what to say.
 
-Not all designators are legal in all cases, such as @code{leads run} from a grand
-wave.
+Not all designators are legal in all cases; for example, you can't call
+@code{leads run} from a grand wave.
 
 The program specifically refuses to recognize the meaning of the designators @code{centers}
-and @code{ends} while in a 1x8 setup (e.g. a grand wave).  This is because these terms
+and @code{ends} while in a 1x8 setup (e.g., a grand wave).  This is because these terms
 can be ambiguous in such a setup.  If you want the centers of each 1x4, you must use
 the @code{EACH 1X4}, @code{EACH LINE}, or @code{EACH WAVE} concept in order to make the
 @code{centers} or @code{ends} designators work.  Of course, in many cases, other designators,
@@ -698,8 +675,7 @@ the program will prompt you for a subcall.  This can be any legal call, includin
 concepts and modifiers.  Whatever you enter will appear in brackets, as in
 @code{clover and [TANDEM shazam]}.
 These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
-are just one of many types of modifications.  @xref{Call Modifications},
-for others.
+are just one of many types of modifications.  @xref{Call Modifications}.
 
 @item modifiers such as cross, left, magic, and interlocked
 As discussed above, the program considers these to be actual concepts,
@@ -1159,7 +1135,7 @@ written to disk and you cannot start writing a new sequence.  Just
 resolving isn't enough.
 
 If you are using the Macintosh version, files are handled differently.
-@xref{Sequence Files}. To specify a label to be used as a subtitle,
+@xref{Sequence Files}.  To specify a label to be used as a subtitle,
 use the @code{Label} command in the @code{Sequence} menu.
 
 @node Change Output File, Abort/Exit/Undo, Save Sequence, Misc Commands
@@ -1181,7 +1157,7 @@ If you select the @code{exit} command, the program will exit.  If a
 sequence is in progress, the program will ask for confirmation first.
 (Remember that a sequence is not finished until the @code{end this
 sequence} command has been given.)
-In @code{sdtty} with the X Window System, using your window manager
+In @code{sd} with the X Window System, using your window manager
 to send a @code{Delete Window} message to the
 program is equivalent to clicking on the @code{exit} button.  This is
 what normally happens when you double-click the special control button in the
@@ -1250,7 +1226,7 @@ There are two commands that change some aspect of the way @code{sd}
 or @code{sdtty} run.  The two commands are @code{toggle concept levels}
 and @code{toggle active phantoms}.  Normally, both of these are off.
 You may want to turn one or both of them on for your own personal
-preference, or for some special reason.  These commands "toggle" their
+preference, or for some special reason.  These commands @dfn{toggle} their
 respective modes.  That is, they turn the mode on if it was off, and
 off if it was on.  The current state of the modes is always displayed
 in the input prompt in @code{sdtty}, or the mode line in the upper
@@ -1644,7 +1620,7 @@ dancers do not necessarily know this computer-ese dialect.  Use the words
 that you think are correct and natural.  Your judgement is much better than any
 program's judgement can ever be.
 
-The program sometimes requires you to say various "helper" words, such
+The program sometimes requires you to say various @dfn{helper} words, such
 as @code{left} in cases where their necessity is is not universally
 agreed upon.  For example, from a left-handed quarter-tag, @code{sd}
 will not accept @code{scoot and plenty}---you are required to enter
@@ -1732,7 +1708,7 @@ after @samp{tag the line}, to give the direction that you wish to
 have the dancers face.  So, for example, you could enter the calls
 @samp{tag the line} followed by @samp{face in} to get the action
 that is commonly expressed as @samp{tag the line, in}.  Note that
-the A2 designators @samp{zig-zag} etc. are among the permissible
+the A2 designators @samp{zig-zag}, etc., are among the permissible
 directions.
 
 @node Snag Circulate, Colliding Recycle, Face <DIRECTION>, Call Notes
@@ -1912,7 +1888,7 @@ are facing.  They are
 @end example
 
 Additionally, there are two related concepts, @code{assume normal casts} and
-@code{with active phantoms}, that will be discussed below.
+@code{with active phantoms}, which will be discussed below.
 
 When these concepts are used by themselves, the information
 that they convey tells the dancers how to begin certain calls such as
@@ -2001,7 +1977,7 @@ otherwise intelligent dancers
 on the phantom spots, with facing directions deduced from the assumption.
 Those phantoms proceed through the entire call, interacting with each other
 and with the live dancers as necessary.  If the call is impossible for the
-phantoms do, or if illegal collisions occur between live dancers and phantoms.
+phantoms do, or if illegal collisions occur between live dancers and phantoms,
 an error message is printed.  At the end of the call, any live dancers or
 phantoms that come to the same spot may take right hands with each other,
 if that is appropriate for the call.
@@ -2266,7 +2242,7 @@ This is a recognized C3A concept.
 
 To Sd, @code{finish} means ``skip the first part,'' and is only legal for
 calls for which the first part is recognizable.  Sd also recognizes the concept
-@code{like a}, meaning ``do the last part''.  You need to be aware, however,
+@code{like a}, meaning ``do the last part.''  You need to be aware, however,
 that there are calls for which, while it is technically legal to say such things,
 they are not accepted as common usage.  For example, @code{finish shazam} as a way of
 saying @dfn{U turn back}, or @code{finish mix} or @code{like a mix} as ways
@@ -2284,7 +2260,7 @@ is a commonly accepted and completely correct usage.
 
 One occasionally hears things like @dfn{cross chain reaction, centers
 finish like a wheel the ocean}, in which the final cast off 3/4 of the
-chain reaction was ``pushy''.  While the plain English language meaning
+chain reaction was ``pushy.''  While the plain English language meaning
 of that is clear, the way you must enter that to Sd is
 @example
    @code{CROSS chain reaction}
@@ -2348,7 +2324,7 @@ and @samp{12 MATRIX circulate} are equivalent in triple lines.  It should
 never be necessary to give both an explicit matrix concept and a call
 size modifier.
 
-The explict matrix concepts and call size modifiers all have the additional
+The explicit matrix concepts and call size modifiers all have the additional
 property that they can expand a smaller setup as required, so, for example,
 @samp{12 MATRIX circulate} is legal in normal columns.
 (Special case: in a 2x4
@@ -2545,18 +2521,27 @@ change the version string at the top of the file.
 @include gpl.txinfo
 
 @page
-@ifset need-extra-page
-@c next line makes the page contain a blank, so it won't get optimized away.
-@ @c
-@page
-@end ifset
+@iftex
+@c make an even number of pages so the TOC comes out
+@c correctly with two-sided printing.
+@ifodd@pageno@else
+@ @page
+@fi
+@end iftex
+
 @contents
+@iftex
+@c make an even number of pages of TOC
+@ifodd@pageno@else
 @page
-@ @c make an even 4 pages of TOC
+@ @c
+@fi
+@end iftex
+
 @bye
 
 @c Local Variables:
 @c time-stamp-start: "Time-stamp: "
 @c time-stamp-end: "$"
-@c time-stamp-format: (time-stamp-month-dd-yyyy)
+@c time-stamp-format: "%b %d, %y"
 @c End:

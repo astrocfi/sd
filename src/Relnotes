@@ -1,10 +1,10 @@
-		   RELEASE NOTES FOR SD VERSION 30.88
+		   RELEASE NOTES FOR SD VERSION 30.89
 		 Database version = 30.88 format = 56.
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
 
 ****** Changes as of version 30.88 ******
 
-The sdtty parser can now read the modifiers "grand", interlocked",
+The sdtty parser can now read the modifiers "grand", "interlocked",
 "cross", and "magic" on the same line as the call.  So you can type,
 for example, "grand swing thru".  You can also type it the old way:
 "grand", <enter>, and "swing thru".  On sd, you still must click on
@@ -225,7 +225,7 @@ only be acted upon if the qualifier is satisfied and the number matches.  The qu
 
 ****** Changes as of version 30.77 ******
 
-For users of the X11 window system (Sd on Unix), the "parallelogram" concept
+For users of the X Window System (Sd on Unix), the "parallelogram" concept
 has been moved to the "distorted setup concepts" submenu, at the bottom of
 the second column.
 

@@ -1904,7 +1904,7 @@ extern void triangle_move(
 
 extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t);
 
-extern long_boolean move_perhaps_with_active_phantoms(
+extern void move_perhaps_with_active_phantoms(
    setup *ss,
    restriction_thing *restr_thing_ptr,
    setup *result);

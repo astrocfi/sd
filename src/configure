@@ -1,5 +1,6 @@
 #!/bin/sh
-# From configure.in Time-stamp: 94/08/23 17:41:13 gildea
+# From configure.in Time-stamp: 95/03/15 21:08:30 gildea
+
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -346,7 +347,7 @@ TTY_FLAGS=
 TTY_LIBS=-lpc
 X11_LIBS=
 LN_S="ln -s"
-STRIP="	strip \$@"
+SET_MAKE="MAKE=make"	STRIP="	strip \$@"
 AOUT2EXE="	aout2exe \$@"
 DEFAULT_TARGET=alltty
 # ****** End of PC section ******
@@ -950,8 +951,16 @@ else
   LN_S=ln
 fi
 
-
-
+		cat > conftestmake <<'EOF'
+all:
+	@echo 'ac_maketemp="${MAKE}"'
+EOF
+# GNU make sometimes prints "make[1]: Entering...", which would confuse us.
+eval `${MAKE-make} -f conftestmake 2>/dev/null | grep temp=`
+if test -n "$ac_maketemp"; then SET_MAKE=
+else SET_MAKE="MAKE=${MAKE-make}"; fi
+rm -f conftestmake
+	
 if test -z "$no_x" -a -n "$DISPLAY"; then
   DEFAULT_TARGET=allx11
 else
@@ -1036,6 +1045,7 @@ AOUT2EXE='$AOUT2EXE'
 CC='$CC'
 CPP='$CPP'
 LN_S='$LN_S'
+SET_MAKE='$SET_MAKE'
 CONFIG_FILES='$CONFIG_FILES'
 CDEBUGFLAGS='$CDEBUGFLAGS'
 DEFS='$DEFS'
@@ -1100,6 +1110,7 @@ s%@AOUT2EXE@%$AOUT2EXE%g
 s%@CC@%$CC%g
 s%@CPP@%$CPP%g
 s%@LN_S@%$LN_S%g
+s%@SET_MAKE@%$SET_MAKE%g
 s%@CONFIG_FILES@%$CONFIG_FILES%g
 s%@CDEBUGFLAGS@%$CDEBUGFLAGS%g
 s%@DEFS@%$DEFS%g

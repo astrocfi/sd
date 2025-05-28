@@ -20,6 +20,14 @@
 
 /* dbcomp.c */
 
+#include "database.h"
+
+#define DB_FMT_STR(name) DB_FMT_NUM(name)
+#define DB_FMT_NUM(number) #number
+static char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@apollo.hp.com  15 Jan 95 $";
+
+#include "paths.h"
+
 /* ***  This next test used to be
     ifdef _POSIX_SOURCE
    We have taken it out and replaced with what you see below.  If this breaks
@@ -45,9 +53,6 @@ extern void exit(int code);
 #endif
 
 #include <string.h>
-
-#include "database.h"
-#include "paths.h"
 
 /* We would like to think that we will always be able to count on compilers to do the
    right thing with "int" and "long int" and so on.  What we would really like is

@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.88"
+#define VERSION_STRING "30.89"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -1583,7 +1583,7 @@ void main(int argc, char *argv[])
       
                error_flag = 0;
                
-**** this call is no longer in conformance with the procedure's behavior
+/* **** this call is no longer in conformance with the procedure's behavior */
                local_reply = uims_get_call_command(&dummy);
             
                if (local_reply == ui_call_select) {
