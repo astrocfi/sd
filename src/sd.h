@@ -2230,7 +2230,13 @@ struct resolve_indicator {
    //        (compiler file 'E:\utc\src\\P2\main.c', line 379)
    //          Please choose the Technical Support command on the Visual C++
    //          Help menu, or open the Technical Support help file for more information
+   //
    // Isn't that cool?
+   //
+   // Of course, if one were to take it out now, the error probably wouldn't
+   // happen, because many other things have changed, and the error has a
+   // serious phase-of-the-moon dependency.  But I have saved the files
+   // that can provoke it.  July 2002.
 
    float ICantBelieveWhatABunchOfDunderheadsTheyHaveAtMicrosoft;
 
@@ -2499,8 +2505,8 @@ class configuration {
    inline startinfo *get_startinfo_specific() { return &startinfolist[startinfoindex]; }
    inline void init_resolve() { resolve_flag.the_item = &null_resolve; }
    void calculate_resolve();                          // in SDTOP
-   inline static resolve_indicator current_resolve() { return current_config().resolve_flag; }
-   inline static resolve_indicator next_resolve() { return next_config().resolve_flag; }
+   inline static resolve_indicator & current_resolve() { return current_config().resolve_flag; }
+   inline static resolve_indicator & next_resolve() { return next_config().resolve_flag; }
    inline static bool sequence_is_resolved() { return current_resolve().the_item->k != resolve_none; }
 
    inline void restore_warnings_specific(const warning_info & rhs)
@@ -4376,6 +4382,7 @@ SDLIB_API int match_user_input(
 
 /* In SDPICK */
 
+SDLIB_API bool in_exhaustive_search();
 SDLIB_API void reset_internal_iterators();
 SDLIB_API selector_kind do_selector_iteration(long_boolean allow_iteration);
 SDLIB_API direction_kind do_direction_iteration();
@@ -4384,14 +4391,14 @@ SDLIB_API void do_number_iteration(int howmanynumbers,
                                    long_boolean allow_iteration,
                                    uint32 *number_list);
 SDLIB_API void do_circcer_iteration(uint32 *circcp);
-SDLIB_API long_boolean do_tagger_iteration(uint32 tagclass,
-                                           uint32 *tagg,
-                                           uint32 numtaggers,
-                                           call_with_name **tagtable);
+SDLIB_API bool do_tagger_iteration(uint32 tagclass,
+                                   uint32 *tagg,
+                                   uint32 numtaggers,
+                                   call_with_name **tagtable);
 SDLIB_API call_with_name *do_pick();
 SDLIB_API const concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
 SDLIB_API resolve_goodness_test get_resolve_goodness_info();
-SDLIB_API long_boolean pick_allow_multiple_items();
+SDLIB_API bool pick_allow_multiple_items();
 SDLIB_API void start_pick();
 SDLIB_API void end_pick();
 SDLIB_API long_boolean forbid_call_with_mandatory_subcall();

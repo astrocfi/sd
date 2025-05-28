@@ -113,8 +113,8 @@ static char *resolve_distances[] = {
    "7/8",
    "0"};
 
-/* BEWARE!!  This enum must track the table "resolve_first_parts". */
-typedef enum {
+// BEWARE!!  This enum must track the table "resolve_first_parts".
+enum first_part_kind {
    first_part_none,
    first_part_ext,
    first_part_slcl,
@@ -122,9 +122,9 @@ typedef enum {
    first_part_pthru,
    first_part_trby,
    first_part_xby
-} first_part_kind;
+};
 
-/* Beware!!  This table must track the definition of enum "first_part_kind". */
+// Beware!!  This table must track the definition of enum "first_part_kind".
 static Cstring resolve_first_parts[] = {
    (Cstring) 0,
    "extend",
@@ -134,8 +134,8 @@ static Cstring resolve_first_parts[] = {
    "trade by",
    "cross by"};
 
-/* BEWARE!!  This enum must track the table "resolve_main_parts". */
-typedef enum {
+// BEWARE!!  This enum must track the table "resolve_main_parts".
+enum main_part_kind {
    main_part_none,
    main_part_rlg,
    main_part_la,
@@ -147,9 +147,9 @@ typedef enum {
    main_part_rsglprom,
    main_part_circ,
    main_part_swing
-} main_part_kind;
+};
 
-/* Beware!!  This table must track the definition of enum "main_part_kind". */
+// Beware!!  This table must track the definition of enum "main_part_kind".
 static Cstring resolve_main_parts[] = {
    "???",
    "right and left grand",
@@ -164,7 +164,7 @@ static Cstring resolve_main_parts[] = {
    "swing and promenade"};
 
 
-typedef struct {
+struct resolve_descriptor {
    // 0 means accept all such resolves.
    // Each increase cuts the acceptance probability in half when searching
    // randomly.  For example, 4 means accept only 1/16 of such resolves,
@@ -176,9 +176,9 @@ typedef struct {
    int how_bad;
    first_part_kind first_part;
    main_part_kind main_part;
-} resolve_descriptor;
+};
 
-/* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
+// BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h .
 static resolve_descriptor resolve_table[] = {
    {2,  first_part_none,  main_part_none},     /* resolve_none */
    {0,  first_part_none,  main_part_rlg},      /* resolve_rlg */
@@ -207,8 +207,9 @@ static resolve_descriptor resolve_table[] = {
 /* This assumes that "sequence_is_resolved" passes. */
 SDLIB_API void write_resolve_text(long_boolean doing_file)
 {
-   resolve_indicator r = configuration::current_resolve();
+   resolve_indicator & r = configuration::current_resolve();
    int distance = r.distance;
+   resolve_kind index = r.the_item->k;
 
    if (configuration::current_config().state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT)
       distance++;
@@ -217,7 +218,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
 
    if (doing_file && !ui_options.singlespace_mode) doublespace_file();
 
-   if (r.the_item->k == resolve_circle) {
+   if (index == resolve_circle) {
       if (distance == 0) {
          if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
@@ -235,7 +236,6 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       }
    }
    else {
-      resolve_kind index = r.the_item->k;
       first_part_kind first;
       main_part_kind mainpart;
 
@@ -278,8 +278,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
          writestuff("at home)");
       }
       else {
-         if (r.the_item->k == resolve_revprom ||
-             r.the_item->k == resolve_revsglfileprom)
+         if (index == resolve_revprom || index == resolve_revsglfileprom)
             writestuff(resolve_distances[8 - distance]);
          else
             writestuff(resolve_distances[distance]);
@@ -438,7 +437,7 @@ static long_boolean inner_search(command_kind goal,
       /* We don't like certain warnings either. */
       if (warnings_are_unacceptable(goal != command_standardize)) goto try_again;
 
-      /* See if we have already seen this sequence. */
+      // See if we have already seen this sequence.
 
       for (i=0; i<avoid_list_size; i++) {
          if (hashed_randoms == avoid_list[i]) goto try_again;
@@ -454,7 +453,14 @@ static long_boolean inner_search(command_kind goal,
       switch (goal) {
       case command_resolve:
          {
-            resolve_kind r = configuration::next_resolve().the_item->k;
+            resolve_indicator & r = configuration::next_resolve();
+            resolve_kind index = r.the_item->k;
+
+            if (index == resolve_none) goto what_a_loss;
+
+            // Some resolves are so bad we never find them.
+            // This is indicated by the 40 bit in the distance word.
+            if (r.the_item->distance & 0x40) goto what_a_loss;
 
             // Here we bias the search against resolves with circulates (which we
             // consider to be of lower quality) by only sometimes accepting them.
@@ -463,16 +469,16 @@ static long_boolean inner_search(command_kind goal,
             // fraction of the resolves.  For example, we bias the search VERY HEAVILY
             // against reverse single file promenades, accepting only 1 in 16.
 
-            if (r == resolve_none) goto what_a_loss;
+            int badness = resolve_table[index].how_bad;
 
             switch (get_resolve_goodness_info()) {
             case resolve_goodness_only_nice:
                // Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
                // Furthermore, at C2 and above, only accept if promenade distance
                // is 0 to 3/8.
-               if (resolve_table[r].how_bad != 0 ||
+               if (badness != 0 ||
                    (calling_level >= l_c2 &&
-                    ((configuration::next_resolve().distance & 7) > 3)))
+                    ((r.distance & 7) > 3)))
                   goto what_a_loss;
                break;
             case resolve_goodness_always:
@@ -481,7 +487,7 @@ static long_boolean inner_search(command_kind goal,
             case resolve_goodness_maybe:
                // Accept resolves randomly.  The probability that we reject a
                // resolve increases as the resolve quality goes down.
-               if (~(~0 << resolve_table[r].how_bad) & attempt_count) goto what_a_loss;
+               if (~(~0 << badness) & attempt_count) goto what_a_loss;
                break;
             }
          }

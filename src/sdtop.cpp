@@ -45,7 +45,7 @@
    process_final_concepts
    really_skip_one_concept
    fix_n_results
-   resolve_p
+   configuration::calculate_resolve
    warnings_are_unacceptable
    normalize_setup
    toplevelmove

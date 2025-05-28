@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.7m"
+#define VERSION_STRING "34.7n"
 #define TIME_STAMP "wba@alum.mit.edu  11 August 2002 $"
 
 /* This defines the following functions:
@@ -375,11 +375,26 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    uint32 number_list = 0;
    int howmanynums = (call->the_defn.callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
+   // **** If call requires both a selector and a circulator (the culprit
+   // is "<ANYCIRC> percolate, <ANYONE> to a wave"), we don't generate
+   // it in exhaustive searches.
+
+   if ((call->the_defn.callflagsf & (CFLAGH__CIRC_CALL_RQ_BIT|CFLAGH__REQUIRES_SELECTOR)) ==
+       (CFLAGH__CIRC_CALL_RQ_BIT|CFLAGH__REQUIRES_SELECTOR) &&
+       interactivity != interactivity_normal &&
+       interactivity != interactivity_verify &&
+       interactivity != interactivity_database_init) {
+      if (in_exhaustive_search()) {
+         return TRUE;
+      }
+   }
+
    /* Put in tagging call info if required. */
 
    if (call->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
       if (find_tagger(
-               ((call->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) / CFLAGH__TAG_CALL_RQ_BIT) - 1,
+               ((call->the_defn.callflagsf & CFLAGH__TAG_CALL_RQ_MASK) /
+                CFLAGH__TAG_CALL_RQ_BIT) - 1,
                &tagg,
                &tagger_call))
          return TRUE;

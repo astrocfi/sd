@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7m"
+version "34.7n"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -132,7 +132,7 @@ call "vertical tag" c1 tag vertical_half_tag
       array [0 0 0 0 Z7W Z6W Z5W Z4W]
 
 call "vertical left tag" c2 tag vertical_left_half_tag
-            base_tag_call_1 dont_use_in_resolve
+            base_tag_call_1
    setup 2x2 2x2 restriction not_tboned
       preds "Can't do this with phantoms or T-boned people."
          if vert1 [C0S A3S Z1N Z2N]
@@ -2461,6 +2461,10 @@ call "_centers mandatory @m" dontshow tag ctrs_mandatory_2ndcall
 
 call "_centers boxy cast 3/4" dontshow tag ctrs_boxy_cast_3_4
    conc boxy_cast_off_34 [] nullcall []
+
+call "_check line and centers boxy cast 3/4" dontshow tag checkline_and_ctrs_boxy_cast_3_4
+   seq checkline_unusual []
+   seq ctrs_boxy_cast_3_4 []
 
 /* This is used for finishing a rotary spin.
    It has special interpretations of "grand/3x3/4x4 single". */
@@ -6632,14 +6636,11 @@ call "vertical tag" c1 tag verticaltag
    not the same as "left vertical half tag", which is a complete
    mirror image call, and is available above.  We might like
    to have a call that does a "left vertical" followed by a
-   right-shoulder pass, but the nomenclature is very murky, and
-   we can't really implement it correctly until the "left pitch right"
-   issue is resolved.  So we don't allow the "left" modifier on this
-   call.  Furthermore, we mark it c2, since it is esoteric.  This is
-   really only useful for "divide the sea", for which its properties
-   are just right. */
+   right-shoulder pass, but the nomenclature is very murky.
+   So we don't allow the "left" modifier on this
+   call.  Furthermore, we mark it c2, since it is esoteric. */
 call "vertical left @a tag" c2
-            dont_use_in_resolve neednumber
+            neednumber
             single_is_inherited singlefile_is_inherited revert_is_inherited
    seq vertical_left_half_tag [inherit_single inherit_singlefile]
    seq revert_if_needed [inherit_revert]
@@ -15504,7 +15505,7 @@ call "open ups @0" c4
    seq nullcall [mandatory_anycall]
 
 call "_fudgy replace the column 1" dontshow tag replacecolfudge1
-   /* This is just invert the column 1/2. */
+   // This is just invert the column 1/2.
    setup 4x2 2x4 rotate restriction unusual wave_only
       array [ZM6W ZM1W AL0E AM7E CM4E CR3E ZM2W ZM5W]
             alternate_definition [cross] c4a
@@ -15534,8 +15535,8 @@ call "_fudgy replace the column 1" dontshow tag replacecolfudge1
             CM8S CM6S CM5S CR4S ZM2N ZM7N ZM11N ZM9N]
 
 call "_replace the column 1" dontshow tag replacecol1but
-   /* We do all but that 2/3 recycle.  This is so that
-      "replace the column but <...>" will work. */
+   // We do all but that 2/3 recycle.  This is so that
+   // "replace the column but <...>" will work.
    setup 4x2 bone rotate restriction unusual wave_only
       array [ZM7W AM6E AL0E AL5E CR4E CR1E CM2E ZM3W]
             alternate_definition [cross] c4a
@@ -15564,21 +15565,21 @@ call "_replace the column 2, ends" dontshow tag replacecol2ends
       array [CR0N CR1N CR2N CR3N AL0S AL1S AL2S AL3S]
 
 call "_replace the column 2, centers" dontshow tag replacecol2centers
-   /* The "magic" and "magic cross" modifiers are problematical and perhaps
-      controversial.  We're not aware that anyone actually uses them.
-      We do a 2/3 cross cycle for magic and 2/3 recycle for cross magic.
-      This is rather peculiar.  But we allow it anyway. */
    setup 2x2 2x2
-      array [AM2E CM3W CR2W AL3E]
+      array [AL2E CR3W CR2W AL3E]
             alternate_definition [cross] c4a
    setup 2x2 2x2
-      array [CM3W AM2E AL3E CR2W]
+      array [CR3W AL2E AL3E CR2W]
+   // The "magic" and "magic cross" modifiers are problematical and somewhere
+   // between controversial and bogus.  We're not aware that anyone actually
+   // uses them.  We do a 2/3 cross cycle for magic and 2/3 recycle for
+   // cross magic.  This is rather peculiar.  But we allow it anyway.
             alternate_definition [magic] c4a
-   setup 2x2 2x2
-      array [CM3W AM2E AL3E CR2W]
+   setup 2x2 2x2 restriction controversial alwaysfail
+      array [CR3W AL2E AL3E CR2W]
             alternate_definition [magic cross] c4a
-   setup 2x2 2x2
-      array [AM2E CM3W CR2W AL3E]
+   setup 2x2 2x2 restriction controversial alwaysfail
+      array [AL2E CR3W CR2W AL3E]
             alternate_definition [single] c4
    setup 1x2 1x2 rotate restriction forbidden wave_only
       array [AL1N CR1S]
@@ -18019,7 +18020,7 @@ call "clover the horn" c4
 
 call "fan chain thru" c3
             step_to_wave left_means_touch_or_check visible_fractions
-   seq ctrs_boxy_cast_3_4 []
+   seq checkline_and_ctrs_boxy_cast_3_4 []
    seq ctrs_slip_with_mod [roll_transparent]
    seq ctrs_cast_3_4_with_warn []
 
