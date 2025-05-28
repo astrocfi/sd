@@ -173,7 +173,6 @@ windows> use reflection garbage to connect to an-cs1
       goblin> make -f makefile.linux
       goblin> rm *.o *.c *.h *.cpp *.a
       goblin> rm *cache
-      goblin> rm sample*
       goblin> rm makef*
       goblin> rm db_doc.txt
       goblin> ls -l
@@ -233,7 +232,6 @@ sessions        *      *     *    *
 relnotes        *      *     *    *
 relnotes98      *      *     *    *
 readings        *
-sample          *
 download-pc     *
 index           *
 intro           *

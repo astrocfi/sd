@@ -14,9 +14,92 @@ You may find that @code{Sd} is more user-friendly than @code{Sdtty},
 particularly if you are having trouble with sessions or abridgement
 files.  It will show you the startup options more clearly.  You can type
 commands at @code{Sd} the same way you type at @code{Sdtty}.  It just
-looks different.  During the @code{Sdtty} startup screen, you can click
-on the question mark in the upper right corner and then on any button
-or checkbox to get help.
+looks different.  During the @code{Sd} startup screen, you may want to
+look at the help text for each item before using it.  Click on the
+question mark in the upper right corner, and then click on the item of
+interest.  This may help explain what is going on.
+
+Anything that you set up with @code{Sd} can be used with @code{Sdtty}.
+
+@unnumberedsec How can I set up and use the ``sessions'' feature?
+
+First, it is better to do this in Sd, not Sdtty, even if you use Sdtty
+for normal writing.  See the previous question.
+
+Sessions are used to keep track of the levels, sequence numbers, and
+similar things for the various workshops, dances, and conventions you
+might be writing material for.  You can create a session for each
+workshop, and then select the session each time you start the program.
+
+You must have an ``initialization file'' to use sessions.  It is easy to
+create one.  If you don't have one, @code{Sd} or @code{Sdtty} will print
+this whenever it starts up:
+
+@example
+@group
+   You do not have a session control file.  If you want to
+   create one, give the command "initialize session file".
+@end group
+@end example
+
+Do that.  Then exit from the program and start it again.  Some sample
+sessions will now be active.
+
+Once sessions are active and are presented during startup, you can use
+them by clicking on the desired session in @code{Sd}, or typing its
+number in @code{Sdtty}.  The level, output file name, starting sequence
+number, and header title will be set for you.
+
+If you want to create a new session, click or type the item labeled
+"(create a new session)".  You will be asked for the level.  Enter that.
+You will then be asked for the file name.  We recommend giving a "+"
+sign.  This will cause all sequences to be written to a file with a name
+based on the current date.  You will then be asked for the header title.
+This will be printed at the top of every sequence written for that
+session.
+
+@unnumberedsec How can I set up an ``abridge'' list for a session?
+
+First, it is better to do this in Sd, not Sdtty, even if you use Sdtty
+for normal writing.  See the previous two questions.
+
+Abridge lists are used for writing material for a class or workshop,
+using only the calls that the class knows at any given time.
+
+To set up a session with abridgement, start Sd.  In the startup screen,
+click "write list".  The "abridgement file name" will light up.  Fill it
+in with the name of the file you want to use with that session.
+("abridge.txt" is not a very creative name.)  Remember that file name.
+Then double-click "no session" and double-click the level that you want.
+
+Start Sd again.  Click "use abridged list", and fill in the
+same file name (again! sorry!)  Then double-click "create
+new session" and double-click the lavel.  A popup will appear,
+for the output file name.  Change it to a single "+" sign,
+unless you are a masochist.  (Or a "*" sign if you prefer,
+and if you know the difference.)  Click "accept".  A new
+popup asks for the session title.  Enter it (e.g. "my C2
+group") and click "accept".  You are now in business.
+
+Edit the file (it's in the "C:\Sd" directory) to delete calls, as you
+teach the group.  Whenever you start Sd or Sdtty, it should offer the
+new session.  It will read the abridgement file and act accordingly.
+
+See the manual, under ``abridgement'', for detailed instructions on
+how to maintain an abridge list.
+
+If you really want to do the initial setup in Sdtty, it could be
+accomplished with:
+
+@example
+@group
+sdtty -write_list my_group_list.txt c2
+sdtty -abridge my_group_list.txt c2
+Type the number associated with "create a new session".
+Type a "+" sign, or whatever file name you want.
+Type the session title.
+@end group
+@end example
 
 @unnumberedsec Entering complex calls is confusing!
 
@@ -191,6 +274,11 @@ abbreviations are actually there.)  You can add things like
 p       pass thru
 @end group
 @end example
+
+@unnumberedsec Why can't I put blanks in the output file name?
+
+Sorry, but doing so would make it impossible to process session descriptors
+in the initialization file.
 
 @unnumberedsec How can I abort a sequence in progress?
 
@@ -535,8 +623,8 @@ You can also use designators like @strong{center line}, @strong{center box},
 
 @code{Sd} defines this call in terms of @strong{3/4 exchange the
 diamonds} and @strong{interlocked flip the diamond}, and sets the roll
-direction accordingly.  We consider the Callerlab definition to be a
-pathetic attempt to give precision to a definition that was never
+direction accordingly.  We consider the Callerlab definition to be an
+attempt to give precision to a definition that was never
 intended to be precise.  Accordingly, we consider attempts to deduce
 roll direction from the Callerlab definition to be misguided.
 
@@ -975,47 +1063,6 @@ minigrand getouts} command.  You can also start the program (@code{Sd} or
 @code{Sdtty}) with a command-line argument of "-minigrand_getouts", either
 on the command line or in a script or Windows shortcut, or put the line
 "minigrand_getouts" in the ``[Options]'' section of the "sd.ini" file.
-
-@unnumberedsec How can I set up an ``abridge'' list for a session?
-
-General comment: It is better to do this in Sd, not Sdtty, even if you
-use Sdtty for normal writing.  Sd is much more user-friendly when it
-comes to setting up abridge lists.  Also, when in the Sd startup screen,
-you may want to look at the help text for each item before using it.
-Click on the question mark in the upper-right corner, and then click on
-the item of interest.  This may help explain what is going on.
-
-Start Sd.  In the startup screen, click "write list".  The "abridgement
-file name" will light up.  Fill it in with the name of the file you want
-to use with that session.  ("abridge.txt" is not a very creative name.)
-Remember that file name.  Then double-click "no session" and
-double-click the level that you want.
-
-Start Sd again.  Click "use abridged list", and fill in the
-same file name (again! sorry!)  Then double-click "create
-new session" and double-click the lavel.  A popup will appear,
-for the output file name.  Change it to a single "+" sign,
-unless you are a masochist.  (Or a "*" sign if you prefer,
-and if you know the difference.)  Click "accept".  A new
-popup asks for the session title.  Enter it (e.g. "my C2
-group") and click "accept".  You are now in business.
-
-Edit the file (it's in the "C:\Sd" directory) to delete calls, as you
-teach the group.  Whenever you start Sd or Sdtty, it should offer the
-new session.  It will read the abridgement file and act accordingly.
-
-If you really want to do the initial setup in Sdtty, it could be
-accomplished with:
-
-@example
-@group
-sdtty -write_list my_group_list.txt c2
-sdtty -abridge my_group_list.txt c2
-Type the number associated with "create a new session".
-Type a "+" sign, or whatever file name you want.
-Type the session title.
-@end group
-@end example
 
 @unnumberedsec Why are Sd and Sdtty no longer compiled with Microsoft Visual C++?
 

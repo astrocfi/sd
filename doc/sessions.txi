@@ -9,7 +9,7 @@
 @end iftex
 @c %**end of header
 
-Copyright @copyright{} 1996 William B. Ackerman
+Copyright @copyright{} 1996, 2005 William B. Ackerman
 
 @unnumberedsec USING THE SDTTY ``SESSION'' FEATURE
 
@@ -18,6 +18,7 @@ and the files that contain them.  Depending on your individual
 tastes, there are several ways that you might choose to manage
 things.  We will explain a number of different ways of doing
 things.  Hopefully, one of them will be suitable for you.
+
 @unnumberedsec THE OLD-FASHIONED WAY
 
 The simplest way to use sdtty is without any session file at all.
@@ -40,51 +41,29 @@ sequences will result in a file containing all of the sequences.
 If you print that file, the sequences will all be printed, one per
 page.
 
-This is very simple, but it is dangerous.  When you write another
+This is very simple, but it is inconvenient.  When you write another
 batch of sequences the next day, sdtty continues to append the
 sequences to that file.  When you print the file, you will get
 all the old sequences as well as the new ones.  Sdtty never deletes
 a file, or removes a sequence from an existing file, so the file
 @file{sequence.C1} will just keep getting bigger.
 
-A very simple way to deal with this problem is to delete the file
-immediately after you print it.  You might print it by saying
+A very simple way to deal with this problem is to delete or rename the
+file immediately after you print it.  You might print it by giving the
+``print current file'' command in Sd, or printing it with some other
+program such as "notepad".  Then you can delete or rename it with the
+Windows Explorer.
 
-@example
-@group
-@kbd{copy sequence.c1 lpt:}
-@end group
-@end example
+Be very careful with this.  Don't delete the file until you are sure you
+have successfully printed it.  Once you delete it, it is gone, and only
+the printed-on-paper copies of the sequences survive.  Renaming it is
+safer.  For example, you could rename it to something containing the
+date.  Then all those files will be an archive of everything that you
+have written.
 
-You could then delete it by saying
-
-@example
-@group
-@kbd{del sequence.c1}
-@end group
-@end example
-
-Be very careful with this.  Don't delete the file until you
-are sure you have successfully printed it.  Once you delete it,
-it is gone, and only the printed-on-paper copies of the sequences
-survive.  You might want to copy the file first, before deleting
-it:
-
-@example
-@group
-@kbd{copy sequence.c1 lpt:}
-@kbd{copy sequence.c1 21may95.c1}
-@kbd{del sequence.c1}
-@end group
-@end example
-
-You must choose a new name (in the example above, it was @file{21may95.C1})
-each time.  Then all those files will be an archive of everything
-that you have written.
-
-You may find it more to your liking to change the name of the file,
-from @file{sequence.C1} to something else.  The ``change output file''
-command in sdtty lets you do this.  As soon as you start sdtty,
+You may find it more to your liking to set the name of the file in Sd,
+before it writes the file in the first place.  The ``change output
+file'' command in Sd lets you do this.  As soon as you start Sd,
 you can issue that command:
 
 @example
@@ -102,10 +81,10 @@ Enter startup command> sides start         <-- we're off and running
 You can give the ``change output file'' command at any time, and it
 will take effect the next time a sequence is written.
 
-As we will see later, we can make sdtty choose a file name for us,
+As we will see later, we can make Sd choose a file name for us,
 by giving the name @file{+} or @file{*}.
 
-At the end of a sequence, sdtty always tells you what file it is
+At the end of a sequence, Sd always tells you what file it is
 writing to, and whether it is creating a new file or appending to
 an old one.
 
@@ -128,76 +107,36 @@ Sequence written to "21may95.C1".      <-- and what file it wrote to
 @end example
 
 
-WARNING!!!!!!  Sdtty can't always successfully append new sequences
-to a file that has been processed by a word processor.  If you write
-a number of sequences, read the file into a word processor (e.g., Word
-Perfect), edit them to make them look nicer, and then print them, you
-must not let sdtty write to that file again.  Delete the file (saving it
-first if you wish) before running sdtty on that file again.  If you use
-the ``change output file'' command to make sdtty write to a different file
-each time, you won't have this problem.  But if you write to @file{sequence.C1}
-each time, the following could happen:
+WARNING!!!!!!  Sdtty can't always successfully append new sequences to a
+file that has been processed by a word processor.  If you write a number
+of sequences, read the file into a word processor (e.g., Microsoft
+Word), edit them to make them look nicer, and then print them, you must
+not let Sd write to that file again.  Delete the file (saving it
+first if you wish) before running Sd on that file again.  If you use
+the ``change output file'' command to make Sd write to a different
+file each time, you won't have this problem.  But if you write to
+@file{sequence.C1} each time, the following could happen:
 
 You write 10 sequences, creating the file @file{sequence.C1}.  You read that
-into Word Perfact and edit it, perhaps changing fonts, spacing, indentation,
-and so on.  Then you leave Word Perfect and use sdtty to write 10 more
-sequences.  You start Word Perfect again, intending to edit sequences
+into Microsoft Word and edit it, perhaps changing fonts, spacing, indentation,
+and so on.  Then you leave Microsoft Word and use Sd to write 10 more
+sequences.  You start Microsoft Word again, intending to edit sequences
 11 through 20 of the file.  Sequences 11 through 20 will be lost.
-The problem is that word processors can convert files from sdtty into
+The problem is that word processors can convert files from Sd into
 their own internal format, but they can't convert files that are partially
-in sdtty format and partially in their own internal format.
+in Sd format and partially in their own internal format.
 
-After editing sequences 1 through 10 with Word Perfect, you must print
-that file (preferably with the print command in Word Perfect.)  After you
+After editing sequences 1 through 10 with Microsoft Word, you must print
+that file (preferably with the print command in Microsoft Word.)  After you
 print it, delete it before running sdtty again.  Sdtty will re-create
-a fresh file, which Word Perfect will be able to read.
-@unnumberedsec PRINTING SEQUENCES IMMEDIATELY
-
-If you wish, you can tell sdtty to print each sequence directly,
-without storing it in a file.  This may be a somewhat dangerous
-operation, in that the sequences are never saved in files.
-
-To do this, use the ``change output file'' command to set the
-file name to @file{lpt:} or whatever the name of your printer is.
-For example, if you normally would print a file by typing
-
-@example
-@group
-@kbd{copy sequence.c1 lpt:}
-@end group
-@end example
-
-your printer is called @file{lpt:}.  you can make sdtty send the file
-directly to the printer.
-
-@example
-@group
-Enter startup command> @kbd{change output file}
-Sequence output file is "sequence.C1".
-Enter new file name: @kbd{lpt:}                   <-- we give the name lpt:
-Output file changed to "lpt:"
-Enter startup command> 
-@end group
-@end example
-
-Doing it this way makes the management problem extremely simple --
-perhaps too simple.  If your printer jams, you lose the sequence.
+a fresh file, which Microsoft Word will be able to read.
 @unnumberedsec USING THE SESSION FILE
 
 For more sophisticated file management, you can use the ``session
-file''.  This is the file @file{SD.INI}.  Normally, no such file exists
+file''.  This is the file @file{sd.ini}.  Normally, no such file exists
 when sdtty is shipped, so the session feature is turned off.  You
-can turn it on by creating that file.  The simplest way is by copying
-the file @file{SAMPLE1.INI}, which is shipped with the program.
-
-Just do this:
-
-@example
-@group
-@kbd{copy sample1.ini sd.ini}
-@end group
-@end example
-
+can turn it on by issuing the command "initialize session file"
+and then exiting and restarting the program.
 The file @file{sd.ini} is now ready to go.  Sdtty will now use it to enable
 the session feature.
 
@@ -213,7 +152,7 @@ Simple.  Just delete the file:
       
 and sdtty will go back to the old way of doing things.
 
-Assuming that you have copied @file{sample1.ini} to @file{sd.ini}, you can try the
+Assuming that you have created @file{sd.ini}, you can try the
 session feature.  What will be set up is just a demonstration.  After
 you learn how to use it, you can change the configuration to suit
 your own style of usage.
@@ -322,7 +261,7 @@ Enter startup command>
 @end example
 
 Sdtty displays the entire sequence in the usual way.  Note that both the
-title ``My wednesday group'' and the individual comment ``opening biggie''
+session title ``My wednesday group'' and the individual comment ``opening biggie''
 appear on the card, along with the sequence number.  Sdtty also tells
 us the usual things, such as the fact that the file did not exist and
 hence was created, and that the file name was @file{workshop}.
@@ -487,7 +426,7 @@ our own sessions.
 @end itemize
 
 For example, we have now learned how to create and use sessions.
-The demonstration file that came with @file{sample1.ini} is no longer
+The demonstration file is no longer
 needed.  We want to delete sessions 1 through 5, and just use the
 one we have created for our Monday C2 group.
 
@@ -630,7 +569,7 @@ file manager) may be useful for keeping track of things.
 Creating a new file name each day will help you keep track of
 your files, and should greatly reduce the risk of lost sequences.
 However, if you use a word processor, there is still a vulnerability.
-If sdtty is used after Word Perfect is used on the same day, it
+If sdtty is used after Microsoft Word is used on the same day, it
 will append its sequences to the same file, and, as noted previously,
 those sequences will be lost.
 

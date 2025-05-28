@@ -3073,7 +3073,8 @@ bool check_for_concept_group(
    else
       kk = &pbend;
 
-   k = kk->concept->kind;
+   const conzept::concept_descriptor *this_concept = kk->concept;
+   k = this_concept->kind;
 
    if (!retval) {
       retstuff.skipped_concept = kk;
@@ -3088,16 +3089,8 @@ bool check_for_concept_group(
 
    if (k == concept_supercall ||
        k == concept_fractional ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_initially) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_finally) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_initially_and_finally) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_piecewise) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_echo) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_rev_echo) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_revorder) ||
-       (k == concept_meta && parseptrcopy->concept->arg1 == meta_key_finish))
+       (get_meta_key_props(this_concept) & MKP_RESTRAIN_1))
       retstuff.need_to_restrain |= 1;
-
 
    // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
    // Similarly with "parallelogram split phantom C/L/W/B" or
@@ -3140,19 +3133,11 @@ bool check_for_concept_group(
          goto try_again;
       }
    }
-   else if (k == concept_meta || k == concept_meta_one_arg || k == concept_meta_two_args) {
-      meta_key_kind subkey = (meta_key_kind) parseptrcopy->concept->arg1;
-
-      if (subkey == meta_key_random || subkey == meta_key_rev_random ||
-          subkey == meta_key_piecewise || subkey == meta_key_nth_part_work ||
-          subkey == meta_key_first_frac_work || subkey == meta_key_initially ||
-          subkey == meta_key_finally || subkey == meta_key_initially_and_finally ||
-          subkey == meta_key_echo || subkey == meta_key_rev_echo) {
-         next_parseptr = parseptr_skip;
-         parseptrcopy = next_parseptr;
-         retval = true;
-         goto try_again;
-      }
+   else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
+      next_parseptr = parseptr_skip;
+      parseptrcopy = next_parseptr;
+      retval = true;
+      goto try_again;
    }
    else if (k == concept_so_and_so_only &&
             ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {

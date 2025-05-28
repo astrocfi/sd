@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -89,23 +89,49 @@ enum {
 // and half breed thru from waves.
 //
 // But the setup for starting DPT has the appropriate sex for triple star thru.
-static setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
-static setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, {{0, 0}, 0}};
-static setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0}, {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
-static setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0}, {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, {{0, 0}, 0}};
-static setup test_setup_rcol = {s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0}, {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, {{0, 0}, 0}};
-static setup test_setup_lcol = {s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0}, {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
-static setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0}, {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, {{0, 0}, 0}};
-static setup test_setup_tby  = {s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0}, {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, {{0, 0}, 0}};
-static setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0}, {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, {{0, 0}, 0}};
-static setup test_setup_lout = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
-static setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
-static setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {NORT|B3A, 0}, {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {SOUT|B1A, 0}}, {{0, 0}, 0}};
-static setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0}, {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
-static setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0}, {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
 
-
-
+static setup test_setup_1x8 = {
+   s1x8, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {SOUT|B3A, 0}, {NORT|G4A, 0},
+                  {SOUT|B2A, 0}, {NORT|G1A, 0}, {NORT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_l1x8 = {
+   s1x8, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {SOUT|G4A, 0},
+                  {NORT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {NORT|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_dpt = {
+   s2x4, 0, {0}, {{EAST|G2A, 0}, {EAST|B3A, 0}, {WEST|G3A, 0}, {WEST|B2A, 0},
+                  {WEST|G4A, 0}, {WEST|B1A, 0}, {EAST|G1A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
+static setup test_setup_cdpt = {
+   s2x4, 0, {0}, {{WEST|G4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {EAST|B4A, 0},
+                  {EAST|G2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {WEST|B2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_rcol = {
+   s2x4, 0, {0}, {{EAST|B4A, 0}, {EAST|G3A, 0}, {EAST|B3A, 0}, {EAST|G4A, 0},
+                  {WEST|B2A, 0}, {WEST|G1A, 0}, {WEST|B1A, 0}, {WEST|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lcol = {
+   s2x4, 0, {0}, {{WEST|G2A, 0}, {WEST|B1A, 0}, {WEST|G1A, 0}, {WEST|B2A, 0},
+                  {EAST|G4A, 0}, {EAST|B3A, 0}, {EAST|G3A, 0}, {EAST|B4A, 0}}, {{0, 0}, 0}};
+static setup test_setup_8ch = {
+   s2x4, 0, {0}, {{EAST|B4A, 0}, {WEST|G3A, 0}, {EAST|B3A, 0}, {WEST|G4A, 0},
+                  {WEST|B2A, 0}, {EAST|G1A, 0}, {WEST|B1A, 0}, {EAST|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_tby = {
+   s2x4, 0, {0}, {{WEST|G3A, 0}, {EAST|B4A, 0}, {WEST|G4A, 0}, {EAST|B3A, 0},
+                  {EAST|G1A, 0}, {WEST|B2A, 0}, {EAST|G2A, 0}, {WEST|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lin = {
+   s2x4, 0, {0}, {{SOUT|G2A, 0}, {SOUT|B1A, 0}, {SOUT|G1A, 0}, {SOUT|B2A, 0},
+                  {NORT|G4A, 0}, {NORT|B3A, 0}, {NORT|G3A, 0}, {NORT|B4A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lout = {
+   s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0},
+                  {SOUT|B2A, 0}, {SOUT|G1A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
+static setup test_setup_rwv = {
+   s2x4, 0, {0}, {{NORT|B4A, 0}, {SOUT|G3A, 0}, {NORT|G4A, 0}, {SOUT|B3A, 0},
+                  {SOUT|B2A, 0}, {NORT|G1A, 0}, {SOUT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_lwv = {
+   s2x4, 0, {0}, {{SOUT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {NORT|B3A, 0},
+                  {NORT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {SOUT|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_r2fl = {
+   s2x4, 0, {0}, {{NORT|B4A, 0}, {NORT|G3A, 0}, {SOUT|G4A, 0}, {SOUT|B3A, 0},
+                  {SOUT|B2A, 0}, {SOUT|G1A, 0}, {NORT|G2A, 0}, {NORT|B1A, 0}}, {{0, 0}, 0}};
+static setup test_setup_l2fl = {
+   s2x4, 0, {0}, {{SOUT|G3A, 0}, {SOUT|B4A, 0}, {NORT|B3A, 0}, {NORT|G4A, 0},
+                  {NORT|G1A, 0}, {NORT|B2A, 0}, {SOUT|B1A, 0}, {SOUT|G2A, 0}}, {{0, 0}, 0}};
 
 
 /* These variables are actually local to test_starting_setup, but they are
@@ -323,13 +349,13 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
 
    try {
       if (crossiness)
-         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_cross]]);
+         deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_cross]]);
 
       if (magicness)
-         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_magic]]);
+         deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_magic]]);
 
       if (intlkness)
-         (void) deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
+         deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
 
       if (deposit_call(test_call, &null_options)) goto try_again;
       toplevelmove();
@@ -1016,22 +1042,22 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       calldefn *recursed_call_root = (calldefn *)
          get_mem(sizeof(calldefn));
 
-      read_halfword();       /* Get level and 8 bits of "callflags2" stuff. */
+      read_halfword();       // Get level and 8 bits of "callflags2" stuff.
       saveflags2 = last_datum >> 8;
-      read_fullword();       /* Get top level flags, first word.
-                                This is the "callflags1" stuff. */
+      read_fullword();       // Get top level flags, first word.
+                             // This is the "callflags1" stuff.
       saveflags1 = last_datum;
-      read_fullword();       /* Get top level flags, second word.
-                                This is the "heritflags" stuff. */
+      read_fullword();       // Get top level flags, second word.
+                             // This is the "heritflags" stuff.
       saveflagsh = last_datum;
-      read_halfword();       /* Get char count (ignore same) and schema. */
+      read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->age = 0;
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
-      recursed_call_root->callflagsf = saveflags2 << 24;    /* Will get "CFLAGH" and "ESCAPE_WORD"
-                                                               bits later. */
+      // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
+      recursed_call_root->callflagsf = saveflags2 << 24;
       recursed_call_root->callflagsh = saveflagsh;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
@@ -1041,22 +1067,20 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
 
 
-/* This makes sure that outfile string is a legal filename, and sets up
-   "outfile_special" to tell if it is a printing device.
-   Returns FALSE if error occurs.  No action taken in that case. */
-
-
-extern bool install_outfile_string(char newstring[])
+// This makes sure that outfile_string is a legal filename.
+// Returns FALSE if error occurs.  No action taken in that case.
+// We do not allow blanks in the file name.  To do so would make
+// the parsing of session lines ambiguous.
+extern bool install_outfile_string(const char newstring[])
 {
    char test_string[MAX_FILENAME_LENGTH];
-   bool file_is_ok;
-   int j;
 
    rewrite_filename_as_star[0] = '\0';
 
    // Clean off leading blanks, and stop after any internal blank.
 
    sscanf(newstring, "%s", test_string);
+   if (!test_string[0]) return false;   // Null file name is not allowed.
 
    // Look for special file string of "*" or "+".
    // If so, generate a new file name.
@@ -1076,59 +1100,37 @@ extern bool install_outfile_string(char newstring[])
 
       // Now t2 = "Jan", t3 = "16", and t5 = "1996".
 
-      (void) strncpy(junk, t3, 3);
-      (void) strncat(junk, t2, 3);
-      (void) strncat(junk, &t5[strlen(t5)-2], 2);
+      strncpy(junk, t3, 3);
+      strncat(junk, t2, 3);
+      strncat(junk, &t5[strlen(t5)-2], 2);
       for (p=junk ; *p ; p++) *p = tolower(*p);  // Month in lower case.
-      (void) strncpy(junk2, junk, 10);           // This should be "16jan96".
+      strncpy(junk2, junk, 10);           // This should be "16jan96".
 
       for (;;) {
-         (void) strcat(junk2, filename_strings[calling_level]);
+         strcat(junk2, filename_strings[calling_level]);
 
          // If the given filename is "+", accept it immediately.
          // Otherwise, fuss with the generated name until we get a
          // nonexistent file.
 
          if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
-         (void) fclose(filetest);
+         fclose(filetest);
          if (letter[0] == 'z'+1) letter[0] = 'A';
          else if (letter[0] == 'Z'+1) return false;
-         (void) strncpy(junk2, junk, 10);
-         (void) strncat(junk2, letter, 4);     /* Try appending a letter. */
+         strncpy(junk2, junk, 10);
+         strncat(junk2, letter, 4);     /* Try appending a letter. */
          letter[0]++;
       }
 
-      (void) strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
-      outfile_special = false;
+      strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
       last_file_position = -1;
       rewrite_filename_as_star[0] = test_string[0];
       return true;
    }
 
-   // Now see if we can write to it.
-
-#ifdef POSIX_STYLE
-   /* If the file does not exist, we allow it, even though creation may
-      not be possible because of directory permissions.  It is unfortunate
-      that there is no feasible way to determine whether a given pathname
-      could be opened for writing. */
-   if (access(test_string, F_OK) || !access(test_string, W_OK))
-      file_is_ok =  true;
-   else
-      file_is_ok =  false;
-#else
-   file_is_ok =  true;
-#endif
-
-   if (file_is_ok) {
-      (void) strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
-      j = strlen(outfile_string);
-      outfile_special = (j>0 && outfile_string[j-1] == ':');
-      last_file_position = -1;
-      return true;
-   }
-   else
-      return false;
+   strncpy(outfile_string, test_string, MAX_FILENAME_LENGTH);
+   last_file_position = -1;
+   return true;
 }
 
 
@@ -1491,9 +1493,9 @@ static void rewrite_init_file()
 
                copy_done:
 
-               (void) fclose(wfile);
+               fclose(wfile);
             }
-            (void) fclose(rfile);
+            fclose(rfile);
          }
       }
    }
@@ -2031,7 +2033,7 @@ extern bool open_session(int argc, char **argv)
       the user.  In the latter case, we will do this step again. */
 
    if (calling_level != l_nonexistent_concept)
-      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+      strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
 
    /* At this point, the command-line arguments, and the preferences in the "[Options]"
       section of the initialization file, have been processed.  Some of those things
@@ -2096,7 +2098,7 @@ extern bool open_session(int argc, char **argv)
       gg->init_step(final_level_query, 0);
 
    if (new_outfile_string)
-      (void) install_outfile_string(new_outfile_string);
+      install_outfile_string(new_outfile_string);
 
    // Translate the concept menu names, and then export the sealed
    // concept list for ordinary folks to see in a constant array.

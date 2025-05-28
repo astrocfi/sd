@@ -583,9 +583,6 @@ expand::thing expand::init_table[] = {
     8, s2x4, s_hrglass, 1, 0UL, 0xCC,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
-
-
-   // New stuff, 22 apr 01.
    {{0, 1, 2, 4, 5, 6},
     6, s2x3, s_spindle, 0, 0UL, 0x88,
     warn__none, warn__none, normalize_to_2, 0},
@@ -597,8 +594,6 @@ expand::thing expand::init_table[] = {
    {{0, 1, 2, 4, 5, 6},
     6, s_ntrgl6ccw, s_nxtrglccw, 0, 0UL, 0x88,
     warn__none, warn__none, normalize_to_2, 0},
-
-
 
    /* This makes it possible to do "own the <points>, trade by flip the diamond" from
       normal diamonds. */
@@ -719,6 +714,10 @@ expand::thing expand::init_table[] = {
    {{2, 3, 7, 6, 5, 4, 10, 11, 15, 14, 13, 12},
     12, sbigh, sdblxwave, 0, 0UL, 0x0303,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_DBLX)},
+
+   {{13, 14, 1, 2, 5, 6, 9, 10},
+    8, s_alamo, s4x4, 0, 0UL, 0x9999,
+    warn__none, warn__none, normalize_never, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, -1,-1, 1, 2, -1, -1, 9},
     8, s2x4, s4dmd, 1, 0x66, ~0UL,
@@ -7712,6 +7711,26 @@ const schema_attr schema_attrs[] = {
    {SCA_SNAGOK,
     schema_nothing},                     // schema_sequential_with_split_1x8_id
 };
+
+
+// BEWARE!!  This list is keyed to the definition of "meta_key_kind" in sd.h .
+const uint32 meta_key_props[] = {
+   MKP_RESTRAIN_2,                    // meta_key_random
+   MKP_RESTRAIN_2,                    // meta_key_rev_random
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_piecewise
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially
+   MKP_RESTRAIN_1,                    // meta_key_finish
+   MKP_RESTRAIN_1,                    // meta_key_revorder
+   0,                                 // meta_key_like_a
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_finally
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially_and_finally
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_nth_part_work
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_first_frac_work
+   0,                                 // meta_key_skip_nth_part
+   0,                                 // meta_key_shift_n
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_echo
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_echo
+   0};                                // meta_key_shift_half
 
 
 /* In the print_strings tables below, characters have the following meanings:

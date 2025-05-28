@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.57"
-#define TIME_STAMP "wba@alum.mit.edu  11 Mar 2005 $"
+#define VERSION_STRING "36.58"
+#define TIME_STAMP "wba@alum.mit.edu  9 Apr 2005 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -134,6 +134,8 @@ command_list_menu_item command_menu[] = {
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
    {"toggle keep all pictures",       command_toggle_keepallpic_mode, -1},
    {"toggle singleclick mode",        command_toggle_singleclick_mode, -1},
+   {"toggle singing call",            command_toggle_singer, -1},
+   {"toggle reverse singing call",    command_toggle_singer_backward, -1},
    {"choose font for printing",       command_select_print_font, ID_FILE_CHOOSE_FONT},
    {"print current file",             command_print_current, ID_FILE_PRINTTHIS},
    {"print any file",                 command_print_any, ID_FILE_PRINTFILE},
@@ -142,7 +144,7 @@ command_list_menu_item command_menu[] = {
    {"abort this sequence",            command_abort, ID_COMMAND_ABORTTHISSEQUENCE},
    {"insert a comment",               command_create_comment, ID_COMMAND_COMMENT},
    {"change output file",             command_change_outfile, ID_COMMAND_CH_OUTFILE},
-   {"change title",                   command_change_header, ID_COMMAND_CH_TITLE},
+   {"change title",                   command_change_title, ID_COMMAND_CH_TITLE},
    {"write this sequence",            command_getout, -1},
    {"end this sequence",              command_getout, ID_COMMAND_ENDTHISSEQUENCE},
    {"cut to clipboard",               command_cut_to_clipboard, -1},
@@ -228,7 +230,7 @@ startup_list_menu_item startup_menu[] = {
    {"print any file",              start_select_print_any, ID_FILE_PRINTFILE},
    {"initialize session file",     start_select_init_session_file, -1},
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
-   {"change title",                start_select_change_header_comment, ID_COMMAND_CH_TITLE},
+   {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
    {(Cstring) 0}};
 int last_file_position = -1;
 
@@ -803,12 +805,25 @@ extern bool query_for_call()
          case command_toggle_singleclick_mode:
             ui_options.accept_single_click = !ui_options.accept_single_click;
             goto check_menu;
+         case command_toggle_singer:
+            if (ui_options.singing_call_mode != 0)
+               ui_options.singing_call_mode = 0;    // Turn it off.
+            else
+               ui_options.singing_call_mode = 1;    // 1 for forward progression,
+                                                    // 2 for backward.
+            goto check_menu;
+         case command_toggle_singer_backward:
+            if (ui_options.singing_call_mode != 0)
+               ui_options.singing_call_mode = 0;    // Turn it off.
+            else
+               ui_options.singing_call_mode = 2;
+            goto check_menu;
          case command_refresh:
-            written_history_items = -1; /* suppress optimized display update */
-            global_error_flag = old_error_flag; /* want to see error messages, too */
+            written_history_items = -1;         // Suppress optimized display update.
+            global_error_flag = old_error_flag; // Want to see error messages, too.
             goto redisplay;
          default:
-            global_reply = local_reply;     /* Save this -- top level will need it. */
+            global_reply = local_reply;         // Save this -- top level will need it.
             return true;
          }
       }

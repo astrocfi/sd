@@ -2195,6 +2195,12 @@ extern void concentric_move(
    uint32 specialoffsetmapcode,
    setup *result) THROW_DECL
 {
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
+      clear_result_flags(result);
+      result->kind = nothing;
+      return;
+   }
+
    setup begin_inner[3];
    setup begin_outer;
    int begin_outer_elongation;

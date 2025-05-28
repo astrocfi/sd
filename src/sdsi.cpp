@@ -111,7 +111,6 @@ int random_number;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
 char abridge_filename[MAX_TEXT_LINE_LENGTH];
-bool outfile_special = false;
 
 static bool file_error;
 static FILE *fildes;
@@ -223,23 +222,6 @@ void open_file()
    int i;
 
    file_error = false;
-
-   // If this is a "special" file (indicated by ending with a colon),
-   // we simply open it and write.
-
-   if (outfile_special) {
-      if (!(fildes = fopen(outfile_string, "w"))) {
-         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-         (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
-         file_error = true;
-         return;
-      }
-
-      writestuff("Writing to special device.");
-      newline();
-      newline();
-      return;
-   }
 
    // We need to find out whether there are garbage characters (e.g. ^Z)
    // near the end of the existing file, and remove same.  Such things
@@ -601,12 +583,10 @@ extern void close_file()
 
    if (fclose(fildes)) goto error;
 
-   if (!outfile_special) {
-      if (stat(outfile_string, &statbuf))
-         goto error;
+   if (stat(outfile_string, &statbuf))
+      goto error;
 
-      last_file_position = statbuf.st_size;
-   }
+   last_file_position = statbuf.st_size;
 
    return;
 

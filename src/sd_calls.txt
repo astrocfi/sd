@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.57"
+version "36.58"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -6072,35 +6072,46 @@ call "soft touch @b" c4a
 
 // Beware!!!  This is a problematical and easily abused call.
 call "box the gnat" mainstream
-   // Still not really right -- need to exclude same gender.
-   setup 2x1 1x2 qualifier in in_or_out
+   setup 2x1 1x2 qualifier live in in_or_out
       preds "???"
          if x12_boy_with_girl [CR1S 0]
          if x12_girl_with_boy [AL1S 0]
+         if always [0 0]
+   setup 2x1 1x2 qualifier in in_or_out
+      preds "???"
          if boyp [CR1S 0]     // Legal if facing a phantom.
          if girlp [AL1S 0]
          if always [0 0]
-   setup 1x2 1x2 rotate qualifier right wave_only
+   setup 1x2 1x2 rotate qualifier live right wave_only
       preds "???"
          if x12_boy_with_girl [CR0E 0]
          if x12_girl_with_boy [AL0E 0]
+         if always [0 0]
+   setup 1x2 1x2 rotate qualifier right wave_only
+      preds "???"
          if boyp [CR0E 0]
          if girlp [AL0E 0]
          if always [0 0]
 
 // Beware!!!  This is a problematical and easily abused call.
 call "swat the flea" c4
-   setup 2x1 1x2 qualifier in in_or_out
+   setup 2x1 1x2 qualifier live in in_or_out
       preds "???"
          if x12_boy_with_girl [AL1S 0]
          if x12_girl_with_boy [CR1S 0]
+         if always [0 0]
+   setup 2x1 1x2 qualifier in in_or_out
+      preds "???"
          if boyp [AL1S 0]     // Legal if facing a phantom.
          if girlp [CR1S 0]
          if always [0 0]
-   setup 1x2 1x2 rotate qualifier left wave_only
+   setup 1x2 1x2 rotate qualifier live left wave_only
       preds "???"
          if x12_boy_with_girl [0 AL0E]
          if x12_girl_with_boy [0 CR0E]
+         if always [0 0]
+   setup 1x2 1x2 rotate qualifier left wave_only
+      preds "???"
          if boyp [0 AL0E]
          if girlp [0 CR0E]
          if always [0 0]

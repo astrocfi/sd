@@ -1163,6 +1163,14 @@ static const checkitem checktable[] = {
    // The centers did a 1/2 truck from a 3x6.  Fudge to point-to-point diamonds.
    {0x00A20026, 0x09080002, nothing, 0, warn__none, &truck_to_ptpd, {127}},
 
+   // Fudge to 2x4.  People pressed ahead from an alamo ring.
+   {0x00530023, 0x00102090, s2x4,  0, warn__none, (const coordrec *) 0,
+    {-5, 2, -6, 2, -2, 1, -2, 2, 2, 1, 2, 2, 5, 2, 6, 2,
+     5, -2, 6, -2, 2, -1, 2, -2, -2, -1, -2, -2, -5, -2, -6, -2}},
+   {0x00230053, 0x00220009, s2x4,  1, warn__none, (const coordrec *) 0,
+    {2, -5, 2, -6, 1, -2, 2, -2, 1, 2, 2, 2, 2, 5, 2, 6,
+     -2, 5, -2, 6, -1, 2, -2, 2, -1, -2, -2, -2, -2, -5, -2, -6}},
+
    // Next 2 items: fudge to a galaxy.  The points got here by pressing and trucking.
    // Don't need to tell them to check a galaxy -- it's pretty obvious.
    {0x00660066, 0x08008404, s_galaxy, 0, warn__none, (const coordrec *) 0,
@@ -5378,10 +5386,11 @@ static void really_inner_move(setup *ss,
          if (result->kind == sbigdmd || result->kind == sbigptpd)
             normalize_setup(result, normalize_compress_bigdmd, false);
       }
-      else
+      else {
          if (do_misc_schema(ss, the_schema, callspec, callflags1, &foo1, &special_selector,
                             &special_modifiers, &special_indicator, result))
             goto do_special_select_stuff;
+      }
 
       break;
    }
@@ -5856,6 +5865,13 @@ static void move_with_real_call(
             switch (ss->kind) {
             case s1x8: case s_ptpd:
                force_split = split_command_1x4;
+            case s2x4:
+               // If this is "crazy" or "central" (i.e. some split bit is on)
+               // and the schema is something like "schema_single_concentric_together"
+               // (e.g. the call is "you all"), and the setup is a 2x4, we force a split
+               // into 1x4's.  If that makes the call illegal, that's too bad.
+               if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+                  force_split = split_command_1x4;
             }
             break;
          case schema_sgl_in_out_triple_squash:
@@ -6217,8 +6233,16 @@ extern void move(
       if (t->concept->kind == concept_another_call_next_mod) {
          // This is a "supercall".
 
-         if (ss->cmd.callspec == 0)
-            fail("Incomplete supercall.");
+         if (ss->cmd.callspec == 0) {
+            // We need to fill in the call.  This requires that things be nice.
+            parseptrcopy = process_final_concepts(parseptr, true, &ss->cmd.cmd_final_flags, true, __FILE__, __LINE__);
+
+            if (parseptrcopy->concept->kind > marker_end_of_list)
+               fail("Incomplete supercall.");
+
+            ss->cmd.parseptr = parseptrcopy;
+            ss->cmd.callspec = parseptrcopy->call;
+         }
 
          parse_block p1 = *t;
          parse_block p2 = *p1.next;
@@ -6607,8 +6631,7 @@ extern void move(
 
       const conzept::concept_descriptor *ddd = ss->cmd.parseptr->concept;
 
-      if (!(concept_table[ddd->kind].concept_prop &
-          CONCPROP__PERMIT_MODIFIERS)) {
+      if (!(concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_MODIFIERS)) {
          foobar = INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
             INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_REVERSE;
          fooble = ~0UL;

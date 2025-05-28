@@ -1041,21 +1041,12 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                if (deferred_concept_paren) writestuff("(");
             }
             else {
-               if ((k == concept_meta_one_arg &&
-                    item->arg1 == meta_key_nth_part_work) ||
-                   (k == concept_meta_two_args &&
-                    item->arg1 == meta_key_first_frac_work) ||
-                   (k == concept_meta &&
-                    item->arg1 == meta_key_first_frac_work) ||
-                   (k == concept_snag_mystic && item->arg1 == CMD_MISC2__SAID_INVERT) ||
-                   (k == concept_meta &&
-                    (item->arg1 == meta_key_initially ||
-                     item->arg1 == meta_key_finally ||
-                     item->arg1 == meta_key_initially_and_finally))) {
-                  /* This is "DO THE <Nth> PART",
-                     or INVERT followed by another concept, which must be SNAG or MYSTIC,
-                     or INITIALLY/FINALLY.
-                     These concepts require a comma after the following concept. */
+               if ((get_meta_key_props(item) & MKP_COMMA_NEXT) ||
+                   (k == concept_snag_mystic && item->arg1 == CMD_MISC2__SAID_INVERT)) {
+                  // This is "DO THE <Nth> PART",
+                  // or INVERT followed by another concept, which must be SNAG or MYSTIC,
+                  // or INITIALLY/FINALLY.
+                  // These concepts require a comma after the following concept.
                   request_comma_after_next_concept = 1;
                }
                else if (k == concept_so_and_so_only &&
@@ -2582,8 +2573,8 @@ void run_program()
       case start_select_change_outfile:
          do_change_outfile(false);
          goto new_sequence;
-      case start_select_change_header_comment:
-         (void) gg->do_header_popup(header_comment);
+      case start_select_change_title:
+         gg->do_header_popup(header_comment);
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
@@ -2976,18 +2967,18 @@ void run_program()
          case command_change_outfile:
             do_change_outfile(true);
             goto start_cycle;
-         case command_change_header:
+         case command_change_title:
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
 
                if (gg->do_header_popup(newhead_string)) {
-                  (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
+                  strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
                   if (newhead_string[0]) {
                      char confirm_message[MAX_TEXT_LINE_LENGTH+25];
-                     (void) strncpy(confirm_message, "Header comment changed to \"", 28);
-                     (void) strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
-                     (void) strncat(confirm_message, "\"", 2);
+                     strncpy(confirm_message, "Header comment changed to \"", 28);
+                     strncat(confirm_message, header_comment, MAX_TEXT_LINE_LENGTH);
+                     strncat(confirm_message, "\"", 2);
                      specialfail(confirm_message);
                   }
                   else {

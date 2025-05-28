@@ -2158,13 +2158,13 @@ struct { int id; const char *message; } dialog_help_list[] = {
     "need to do anything here.  You can, in any case, use the \"change output file\"\n"
     "command to change the file name later."},
    {IDC_SEQ_NUM_OVERRIDE, 
-    "Sessions generally keep track of sequence (card) numbers,\n"
-    "so you usually don't need this.  If you specify a number here\n"
-    "and then choose a session, that session's numbering will be premanently changed."},
+    "Sessions generally keep track of sequence (card) numbers, so you\n"
+    "usually don't need this.  If you specify a number here and then choose\n"
+    "a session, that session's numbering will be permanently changed."},
    {IDC_SEQ_NUM_OVERRIDE_SPIN, 
-    "Sessions generally keep track of sequence (card) numbers,\n"
-    "so you usually don't need this.  If you specify a number here\n"
-    "and then choose a session, that session's numbering will be premanently changed."},
+    "Sessions generally keep track of sequence (card) numbers, so you\n"
+    "usually don't need this.  If you specify a number here and then choose\n"
+    "a session, that session's numbering will be permanently changed."},
    {IDC_DEFAULT,
     "Leave this checked, unless you want an alternative database, for experts only."},
    {IDC_USERDEFINED,

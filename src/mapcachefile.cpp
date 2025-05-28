@@ -194,6 +194,10 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
    else if (innards->map_address[2] != endiantest)
       innards->the_miss_reason = MISS_WRONG_ENDIAN;
 
+   // The st_mtime test has been observed to fail on Windows
+   // NT 4.0, leading to a cache miss, when daylight saving
+   // time changes.
+
    for (i=0 ; i<innards->numsourcefiles ; i++) {
       if (innards->map_address[3+2*i] != innards->source_stats[i].st_size)
          innards->the_miss_reason = MISS_WRONG_SOURCE_FILE_SIZE;

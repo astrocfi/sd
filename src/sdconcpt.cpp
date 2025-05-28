@@ -7618,13 +7618,13 @@ concept_table_item concept_table[] = {
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_special_sequential},                         // concept_special_sequential_num
    {CONCPROP__MATRIX_OBLIVIOUS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
     do_concept_meta},                                       // concept_meta
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_NUMBER |
-    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
     do_concept_meta},                                       // concept_meta_one_arg
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS |
-    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
+    CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE | CONCPROP__IS_META,
     do_concept_meta},                                       // concept_meta_two_args
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
     do_concept_so_and_so_begin},                            // concept_so_and_so_begin

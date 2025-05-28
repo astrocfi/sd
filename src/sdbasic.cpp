@@ -4319,11 +4319,16 @@ foobar:
                   matrix_check_flag = INHERITFLAG_12_MATRIX;
                }
                else if (search_concepts_without_funny & INHERITFLAG_16_MATRIX) {
-                  if (ss->kind == s2x6) do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
-                  else if (ss->kind != s2x4) do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
-                  /* Take no action (and hence cause an error) if the setup was a 2x4.
-                     If someone wants to say "16 matrix 4x4 peel off" from normal columns,
-                     that person needs more help than we can give. */
+                  if (ss->kind == s2x6)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
+                  else if (ss->kind == s_alamo)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
+                  else if (ss->kind != s2x4)
+                     do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+
+                  // Take no action (and hence cause an error) if the setup was a 2x4.
+                  // If someone wants to say "16 matrix 4x4 peel off" from normal columns,
+                  // that person needs more help than we can give.
 
                   if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
                      fail("Can't expand to a 16 matrix."); 

@@ -876,7 +876,7 @@ enum command_kind {
    command_abort,
    command_create_comment,
    command_change_outfile,
-   command_change_header,
+   command_change_title,
    command_getout,
    command_cut_to_clipboard,
    command_delete_entire_clipboard,
@@ -896,6 +896,8 @@ enum command_kind {
    command_toggle_nowarn_mode,
    command_toggle_keepallpic_mode,
    command_toggle_singleclick_mode,
+   command_toggle_singer,
+   command_toggle_singer_backward,
    command_select_print_font,
    command_print_current,
    command_print_any,
@@ -970,7 +972,7 @@ enum start_select_kind {
    start_select_print_any,
    start_select_init_session_file,
    start_select_change_outfile,
-   start_select_change_header_comment,
+   start_select_change_title,
    start_select_kind_enum_extent    // Not a start_select kind; indicates extent of the enum.
 };
 
@@ -2917,7 +2919,7 @@ enum {
    /* spare:                   0x00020000UL, */
    /* spare:                   0x00040000UL, */
    /* spare:                   0x00080000UL, */
-   /* spare:                   0x00100000UL, */
+   CONCPROP__IS_META         = 0x00100000UL,
    CONCPROP__GET_MASK        = 0x00200000UL,
    CONCPROP__STANDARD        = 0x00400000UL,
    CONCPROP__USE_NUMBER      = 0x00800000UL,
@@ -3437,7 +3439,8 @@ enum normalize_action {
    normalize_before_merge,
    normalize_strict_matrix,
    normalize_compress_bigdmd,
-   normalize_recenter
+   normalize_recenter,
+   normalize_never
 };
 
 // Beware!  There are >= tests lying around, so order is important.
@@ -3658,6 +3661,16 @@ enum meta_key_kind {
    meta_key_shift_half
 };
 
+
+// These are the "meta_key_props" bits.
+enum mkprop {
+   MKP_RESTRAIN_1    = 0x00000001UL,
+   MKP_RESTRAIN_2    = 0x00000002UL,
+   MKP_COMMA_NEXT    = 0x00000004UL
+};
+
+extern const uint32 meta_key_props[];    // In sdtables.
+
 enum revert_weirdness_type {
    weirdness_off,
    weirdness_flatten_from_3,
@@ -3679,7 +3692,6 @@ extern int random_number;                                     // in SDSI
 extern SDLIB_API char *database_filename;                     // in SDSI
 extern SDLIB_API char *new_outfile_string;                    // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
-extern bool outfile_special;                                  // in SDSI
 
 extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
@@ -4019,6 +4031,14 @@ extern full_expand::thing touch_init_table1[];
 extern full_expand::thing touch_init_table2[];
 extern full_expand::thing touch_init_table3[];
 
+
+inline uint32 get_meta_key_props(const conzept::concept_descriptor *this_concept)
+{
+   if (concept_table[this_concept->kind].concept_prop & CONCPROP__IS_META)
+      return meta_key_props[this_concept->arg1];
+   else
+      return 0;
+}
 
 
 #define NEEDMASK(K) (1<<(((uint32) (K))/((uint32) CONCPROP__NEED_LOBIT)))
@@ -4923,7 +4943,7 @@ bool iterate_over_sel_dir_num(
    bool enable_selector_iteration,
    bool enable_direction_iteration,
    bool enable_number_iteration);
-bool install_outfile_string(char newstring[]);
+bool install_outfile_string(const char newstring[]);
 SDLIB_API bool get_first_session_line();
 SDLIB_API bool get_next_session_line(char *dest);
 void prepare_to_read_menus();

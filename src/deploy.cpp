@@ -71,9 +71,6 @@ char *file_list[] = {
    "appnote3.html",
    "appnote4.html",
    "faq.html",
-   "sample1.ini",
-   "sample2.ini",
-   "sample3.ini",
    "COPYING.txt",
    (char *) 0};
 

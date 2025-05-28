@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.57
-@set Time-stamp: March 11, 2005
+@set sd-version 36.58
+@set Time-stamp: April 9, 2005
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -190,7 +190,7 @@ The Initialization File
 * Session Control::             Session Control
 * Option Control::              Option Control
 * Accelerator Key Control::     Accelerator Key Control
-* Sample Initialization Files:: Sample Initialization Files
+* Creating an Intialization File:: Creating an Intialization File
 
 Invoking Sd via Command Line
 
@@ -2580,7 +2580,7 @@ separated from each other by blank lines.
 * Session Control::             Session Control
 * Option Control::              Option Control
 * Accelerator Key Control::     Accelerator Key Control
-* Sample Initialization Files:: Sample Initialization Files
+* Creating an Intialization File:: Creating an Intialization File
 @end menu
 
 @node Session Control, Option Control,  , The Initialization File
@@ -2903,7 +2903,7 @@ if these commands are not working satisfactorily on your terminal.
 This is only legal in @code{Sdtty}, and is meaningless when running Windows.
 @end table
 
-@node Accelerator Key Control, Sample Initialization Files, Option Control, The Initialization File
+@node Accelerator Key Control, Creating an Intialization File, Option Control, The Initialization File
 @section Accelerator Key Control
 
 The text of the @file{sd.ini} initialization file, from the line
@@ -3026,20 +3026,23 @@ Therefore, whenever you change your initialization file, it is a good
 idea to test it by starting the program at C4X to find out if any warning
 messages are printed.
 
-@node Sample Initialization Files, , Accelerator Key Control, The Initialization File
-@section Sample Initialization Files
+@node Creating an Intialization File, , Accelerator Key Control, The Initialization File
+@section Creating an Intialization File
 
-When @code{Sd} or @code{Sdtty} is first installed, no initialization file exists,
-but the files @file{sample1.ini}, @file{sample2.ini} and @file{sample3.ini}
-are provided for you
-in the working directory.  The @file{sample1.ini} file shows an example of
-the ``session'' mechanism only, and @file{sample2.ini} show both the
-''session'' and ``option'' mechanisms.
-The @file{sample2.ini} file is the same as the example shown previously.
-The @file{sample3.ini} file is the same as @file{sample1.ini}, but it
-has an @code{[Accelerators]} section containing all of the standard key
-bindings, plus a number of other helpful suggested bindings.
-You can copy any of these files to @file{sd.ini} and edit it if you wish.
+When @code{Sd} or @code{Sdtty} is first installed, no initialization
+file @file{sd.ini} exists.  When you run the program, it will print
+
+@example
+@group
+   You do not have a session control file.  If you want to
+   create one, give the command "initialize session file".
+@end group
+@end example
+
+After doing that, exit from the program and start it again.  The file
+will have been created, with some sample sessions.  It will also contain
+all of the standard accelerator key bindings and abbreviations.  You may
+edit those.
 
 @node Invoking Sd, Terminal Interface, The Initialization File, Top
 @chapter Invoking Sd via Command Line (DOS or UNIX only)
