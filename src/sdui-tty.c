@@ -1,8 +1,8 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <93/03/22 18:32:26 gildea>
- * Copyright (c) 1990,1991,1992 Stephen Gildea, William B. Ackerman, and
+ * Time-stamp: <93/06/03 10:06:02 gildea>
+ * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -34,7 +34,17 @@
  *  the complete version.
  */
 
-static char *sdui_version = "1.2";
+static char *sdui_version = "1.3";
+
+
+
+
+/* ***** We should make the file sdmatch.c (and sdmatch.h) be part of the sdtty
+   program, and use the matching functions therein.  See sdui-mac.c for an example. */
+
+
+
+
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -55,13 +65,19 @@ static char *sdui_version = "1.2";
    uims_do_concept_popup
    uims_add_new_line
    uims_reduce_line_count
+   uims_begin_search
+   uims_begin_reconcile_history
+   uims_end_reconcile_history
    uims_update_resolve_menu
    uims_terminate
+   uims_database_tick_max
+   uims_database_tick
+   uims_database_tick_end
+   uims_database_error
+   uims_bad_argument
 */
 
-/* This really wants to say "if NOT Macintosh" but I don't
-   know how.  Alan?  */
-#if defined(hpux) || defined (unix) || defined (__unix__) || defined(SYSV) || defined(SVR4) || defined(_AES_SOURCE) || defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(sun)
+#ifndef THINK_C
 #define UNIX_STYLE
 #endif
 
@@ -95,7 +111,12 @@ uims_version_string(void)
     return version_mem;
 }
 
-Private int input_window_height = 32; /* number of lines */
+/*
+ * number of lines on the screen.
+ * XXX - should calculate and update dynamically.
+ * Original Mac tty intrf had 32 here.
+ */
+Private int input_window_height = 24;
 
 /*
  * User Input functions
@@ -348,7 +369,6 @@ uims_process_command_line(int *argcp, char ***argvp)
 #ifndef UNIX_STYLE
    *argcp = ccommand(argvp); /* pop up window to get command line arguments */
 #endif
-   printf("Reading database...\n");
 }
 
 /*
@@ -843,7 +863,10 @@ get_user_input(String prompt, input_matcher *f)
                 printf("\n");
                 return;
             }
-            printf(" %d matches\n", matches);
+            printf("  (%d matches", matches);
+	    if (matches > 0)
+		printf(", type ? for list");
+	    printf(")\n");
         }
         else if (c == '\t' || c == '\033') {
             n = strlen(user_input);
@@ -1037,9 +1060,59 @@ uims_do_modifier_popup(char callname[], modify_popup_kind kind)
    return confirm("Do you want to replace it? ");
 }
 
+static int first_reconcile_history;
+static search_kind reconcile_goal;
+
+/*
+ * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
+ * command (resolve, reconcile, nice setup, do anything).
+ */
+
 extern void
-uims_update_resolve_menu(char *title)
+uims_begin_search(search_kind goal)
 {
+    reconcile_goal = goal;
+    first_reconcile_history = (goal == search_reconcile);
+}
+
+/*
+ * UIMS_BEGIN_RECONCILE_HISTORY is called at the beginning of a reconcile,
+ * after UIMS_BEGIN_SEARCH,
+ * and whenever the current reconcile point changes.  CURRENTPOINT is the
+ * current reconcile point and MAXPOINT is the maximum possible reconcile
+ * point.  This call is followed by calls to UIMS_REDUCE_LINE_COUNT
+ * and UIMS_ADD_NEW_LINE that
+ * display the current sequence with the reconcile point indicated.  These
+ * calls are followed by a call to UIMS_END_RECONCILE_HISTORY.
+ * Return TRUE to cause sd to forget its cached history output; do this
+ * if the reconcile history is written to a separate window.
+ */
+
+extern int
+uims_begin_reconcile_history(int currentpoint, int maxpoint)
+{
+    if (!first_reconcile_history)
+        uims_update_resolve_menu(reconcile_goal, 0, 0, resolver_display_ok);
+    return FALSE;
+}
+
+/*
+ * Return TRUE to cause sd to forget its cached history output.
+ */
+
+extern int
+uims_end_reconcile_history(void)
+{
+    first_reconcile_history = FALSE;
+    return FALSE;
+}
+
+extern void
+uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state)
+{
+    char title[MAX_TEXT_LINE_LENGTH];
+
+    create_resolve_menu_title(goal, cur, max, state, title);
     printf("%s\n", title);   
 }
 
@@ -1113,4 +1186,70 @@ uims_terminate(void)
 {
     text_output_close();
     restore_input_mode();
+}
+
+/*
+ * The following two functions allow the UI to put up a progress
+ * indicator while the call database is being read (and processed).
+ *
+ * uims_database_tick_max is called before reading the database
+ * with the number of ticks that will be sent.
+ * uims_database_tick is called repeatedly with the number of new
+ * ticks to add.
+ */
+
+Private int db_tick_max;
+Private int db_tick_cur;	/* goes from 0 to db_tick_max */
+
+#define TICK_STEPS 52
+Private int tick_displayed;	/* goes from 0 to TICK_STEPS */
+
+extern void
+uims_database_tick_max(int n)
+{
+   db_tick_max = n;
+   db_tick_cur = 0;
+   printf("Sd: reading database...");
+   fflush(stdout);
+   tick_displayed = 0;
+}
+
+extern void
+uims_database_tick(int n)
+{
+    int tick_new;
+
+    db_tick_cur += n;
+    tick_new = TICK_STEPS*db_tick_cur/db_tick_max;
+    while (tick_displayed < tick_new) {
+	printf(".");
+	tick_displayed++;
+    }
+    fflush(stdout);
+}
+
+extern void
+uims_database_tick_end(void)
+{
+    printf("done\n");
+}
+
+extern void
+uims_database_error(char *message, char *call_name)
+{
+   print_line(message);
+   if (call_name) {
+      print_line("  While reading this call from the database:");
+      print_line(call_name);
+   }
+}
+
+extern void
+uims_bad_argument(char *s1, char *s2, char *s3)
+{
+   if (s1) print_line(s1);
+   if (s2) print_line(s2);
+   if (s3) print_line(s3);
+   print_line("Use the -help flag for help.");
+   exit_program(1);
 }

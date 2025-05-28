@@ -1,5 +1,5 @@
 static char *id="@(#)$Sd: sdui-x11.c  1.13    gildea@lcs.mit.edu  18 Mar 93 $";
-static char *time_stamp = "sdui-x11.c Time-stamp: <93/03/19 16:44:20 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <93/06/03 15:12:30 gildea>";
 /* 
  * sdui-x11.c - SD User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -14,7 +14,7 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/03/19 16:44:20 gildea>";
  * By Stephen Gildea, March 1990.
  * Uses the Athena Widget Set from X11 Release 4 or 5.
  *
- * For use with version 28 of the Sd program.
+ * For use with version 28.7 of the Sd program.
  *
  *  The version of this file is as shown in the third field of the id
  *  string in the first line.  This string gets displayed at program
@@ -40,8 +40,16 @@ static char *time_stamp = "sdui-x11.c Time-stamp: <93/03/19 16:44:20 gildea>";
    uims_do_concept_popup
    uims_add_new_line
    uims_reduce_line_count
+   uims_begin_search
+   uims_begin_reconcile_history
+   uims_end_reconcile_history
    uims_update_resolve_menu
    uims_terminate
+   uims_database_tick_max
+   uims_database_tick
+   uims_database_tick_end
+   uims_database_error
+   uims_bad_argument
 */
 
 #include "sd.h"
@@ -481,9 +489,7 @@ uims_process_command_line(int *argcp, char **argvp[])
     char **argv = *argvp;
 
     program_name = argv[0];
-    toplevel = XtAppInitialize(&xtcontext, "Sd",
-			       cmd_line_options, XtNumber(cmd_line_options),
-			       argcp, argv,
+    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
 			       fallback_resources, NULL, 0);
     XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
 			      top_level_resources, XtNumber(top_level_resources),
@@ -1196,9 +1202,61 @@ update_display(Widget w)
     XFlush(display);
 }
 
+static int first_reconcile_history;
+static search_kind reconcile_goal;
+
+/*
+ * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
+ * command (resolve, reconcile, nice setup, do anything).
+ */
+
 extern void
-uims_update_resolve_menu(char *title)
+uims_begin_search(search_kind goal)
 {
+    reconcile_goal = goal;
+    first_reconcile_history = TRUE;
+}
+
+/*
+ * UIMS_BEGIN_RECONCILE_HISTORY is called at the beginning of a reconcile,
+ * after UIMS_BEGIN_SEARCH,
+ * and whenever the current reconcile point changes.  CURRENTPOINT is the
+ * current reconcile point and MAXPOINT is the maximum possible reconcile
+ * point.  This call is followed by calls to UIMS_REDUCE_LINE_COUNT
+ * and UIMS_ADD_NEW_LINE that
+ * display the current sequence with the reconcile point indicated.  These
+ * calls are followed by a call to UIMS_END_RECONCILE_HISTORY.
+ * Return TRUE to cause sd to forget its cached history output; do this
+ * if the reconcile history is written to a separate window, which is the
+ * point of uims_begin_reconcile_history and uims_end_reconcile_history.
+ */
+
+/* ARGSUSED */
+extern int
+uims_begin_reconcile_history(int currentpoint, int maxpoint)
+{
+    if (!first_reconcile_history)
+        uims_update_resolve_menu(reconcile_goal, 0, 0, resolver_display_ok);
+    return FALSE;
+}
+
+/*
+ * Return TRUE to cause sd to forget its cached history output.
+ */
+
+extern int
+uims_end_reconcile_history(void)
+{
+    first_reconcile_history = FALSE;
+    return FALSE;
+}
+
+extern void
+uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state)
+{
+    char title[MAX_TEXT_LINE_LENGTH];
+
+    create_resolve_menu_title(goal, cur, max, state, title);
     XtVaSetValues(resolvetitle, XtNlabel, title, NULL);
     switch_to_resolve_mode();
     update_display(resolvetitle);
@@ -1406,4 +1464,52 @@ uims_terminate(void)
     /* if uims_preinitialize was called, close down the window system */
     if (program_name)
 	XtDestroyApplicationContext(xtcontext);
+}
+
+/*
+ * The following two functions allow the UI to put up a progress
+ * indicator while the call database is being read (and processed).
+ *
+ * uims_database_tick_max is called before reading the database
+ * with the number of ticks that will be sent.
+ * uims_database_tick is called repeatedly with the number of new
+ * ticks to add.
+ */
+
+extern void
+uims_database_tick_max(int n)
+{
+    /* not implemented yet */
+}
+
+extern void
+uims_database_tick(int n)
+{
+    /* not implemented yet */
+}
+
+extern void
+uims_database_tick_end(void)
+{
+    /* not implemented yet */
+}
+
+extern void
+uims_database_error(char *message, char *call_name)
+{
+   print_line(message);
+   if (call_name) {
+      print_line("  While reading this call from the database:");
+      print_line(call_name);
+   }
+}
+
+extern void
+uims_bad_argument(char *s1, char *s2, char *s3)
+{
+   if (s1) print_line(s1);
+   if (s2) print_line(s2);
+   if (s3) print_line(s3);
+   print_line("Use the -help flag for help.");
+   exit_program(1);
 }

@@ -17,11 +17,20 @@
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
     The version of this file is as shown immediately below.  This string
-    gets displayed at program startup. */
+    gets displayed at program startup.
 
-#define VERSION_STRING "28.6"
+    ATTENTION!  If you modify the program, we recommend that
+    you change the version string below to identify the change.
+    This will facilitate tracking errors, since the program version
+    will be written onto every sequence.  Changing the version
+    string is also required by paragraphs 2(a) and 2(c) of the GNU
+    General Public License if you distribute the file.
+*/
+
+#define VERSION_STRING "28.7"
 
 /* This defines the following functions:
+   sd_version_string
    mark_parse_blocks
    release_parse_blocks_to_mark
    initialize_parse
@@ -33,7 +42,9 @@
    query_for_call
    write_header_stuff
    main
+   write_sequence_to_file
    get_real_subcall
+   sequence_is_resolved
 
 and the following external variables:
    abs_max_calls
@@ -44,13 +55,13 @@ and the following external variables:
    global_age
    parse_state
    uims_menu_index
-   major_database_version
-   minor_database_version
+   database_version
    whole_sequence_low_lim
    not_interactive
    initializing_database
    testing_fidelity
    selector_for_initialize
+   allowing_modifications
 */
 
 
@@ -59,9 +70,15 @@ and the following external variables:
 #include "sd.h"
 #include "paths.h"
    
+extern char *sd_version_string(void)
+{
+   return VERSION_STRING;
+}
 
 Private void display_help(void)
 {
+    printf("Sd version %s : ui%s\n",
+	   sd_version_string(), uims_version_string());
     printf("Usage: sd [flags ...] level\n");
     printf("  legal flags:\n");
     printf("-write_list filename        write out list for this level\n");
@@ -86,13 +103,13 @@ int last_file_position = -1;
 int global_age;
 parse_state_type parse_state;
 int uims_menu_index;
-char major_database_version[20];
-char minor_database_version[20];
+char database_version[81];
 int whole_sequence_low_lim;
 long_boolean not_interactive = FALSE;
 long_boolean initializing_database = FALSE;
 long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
+int allowing_modifications;
 
 /* These variables are are global to this file. */
 
@@ -101,7 +118,6 @@ Private long_boolean reply_pending;
 Private int error_flag;
 Private parse_block *parse_active_list;
 Private parse_block *parse_inactive_list;
-Private int allowing_modifications;
 Private int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
 Private short int *concept_sublists[NUM_CALL_LIST_KINDS];
 
@@ -282,7 +298,7 @@ extern void initialize_parse(void)
 
    parse_state.parse_stack_index = 0;
    parse_state.specialprompt = (char *) 0;
-   parse_state.topcallflags = 0;
+   parse_state.topcallflags1 = 0;
 }
 
 
@@ -397,7 +413,7 @@ extern long_boolean deposit_call(callspec_block *call)
 
    /* Put in selector and/or number as required. */
 
-   if (call->callflags & cflag__requires_selector) {
+   if (call->callflags1 & CFLAG1_REQUIRES_SELECTOR) {
       int j;
 
       if (initializing_database)
@@ -410,7 +426,7 @@ extern long_boolean deposit_call(callspec_block *call)
          return(TRUE);
    }
 
-   if (call->callflags & cflag__requires_number) {
+   if (call->callflags1 & CFLAG1_REQUIRES_NUMBER) {
       if (initializing_database)
          /* If this wants a number, give it 1.  0 won't work for the call 1/4 the alter. */
          number = 1;
@@ -428,7 +444,7 @@ extern long_boolean deposit_call(callspec_block *call)
    new_block->selector = sel;
    new_block->number = number;
 
-   parse_state.topcallflags = call->callflags;
+   parse_state.topcallflags1 = call->callflags1;
    *parse_state.concept_write_ptr = new_block;
 
    return(FALSE);
@@ -497,7 +513,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
       parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind = conc->kind;
       parse_state.parse_stack[parse_state.parse_stack_index++].concept_write_save_ptr = parse_state.concept_write_ptr;
       parse_state.specialprompt = (char *) 0;
-      parse_state.topcallflags = 0;          /* Erase anything we had -- it is meaningless now. */
+      parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
    }
 
    parse_state.call_list_to_use = call_list_any;
@@ -554,12 +570,14 @@ extern long_boolean query_for_call(void)
       
       display_initial_history(history_ptr, 2);
 
-      if (history[history_ptr].resolve_flag.kind != resolve_none) {
+      if (sequence_is_resolved()) {
          newline();
          writestuff("     resolve is:");
          newline();
          writestuff(resolve_names[history[history_ptr].resolve_flag.kind]);
-         writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
+         if (history[history_ptr].resolve_flag.kind != resolve_at_home ||
+               (history[history_ptr].resolve_flag.distance & 7) != 0)
+            writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
          newline();
       }
       
@@ -752,7 +770,7 @@ extern long_boolean query_for_call(void)
          just called the random number generator again, it would screw up the hash numbers,
          which would make the uniquefication fail, so we could see the same thing twice. */
    
-      if (result->callflags & cflag__dont_use_in_resolve) fail("This shouldn't get printed.");
+      if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
    }
    else {
       result = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
@@ -789,7 +807,7 @@ extern long_boolean query_for_call(void)
             break;
       }
    
-      parse_state.topcallflags = 0;          /* Erase anything we had -- it is meaningless now. */
+      parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
       goto recurse_entry;
    }
 
@@ -858,7 +876,7 @@ Private int mark_aged_calls(
          }
 
          if (hibit < j) {
-            main_call_lists[call_list_any][i]->callflags |= 0x80000000;
+            main_call_lists[call_list_any][i]->callflagsh |= 0x80000000;
             remainder--;
          }
       }
@@ -885,21 +903,19 @@ Private call_list_mode_t call_list_mode;
 
 extern void write_header_stuff(void)
 {
-      /* log creation version info */
-      writestuff("Sd");
-      writestuff(VERSION_STRING);
-      writestuff(":db");
-      writestuff(major_database_version);
-      writestuff(".");
-      writestuff(minor_database_version);
-      writestuff("     ");
+   /* log creation version info */
+   writestuff("Sd");
+   writestuff(sd_version_string());
+   writestuff(":db");
+   writestuff(database_version);
+   writestuff("     ");
 
-      /* log level info */
-      writestuff(getout_strings[calling_level]);
-      if (call_list_mode == call_list_mode_abridging)
-          writestuff(" (abridged)");
+   /* log level info */
+   writestuff(getout_strings[calling_level]);
+   if (call_list_mode == call_list_mode_abridging)
+       writestuff(" (abridged)");
 
-      newline();
+   newline();
 }
 
 
@@ -912,7 +928,7 @@ void main(int argc, char *argv[])
        display_help();		/* does not return */
 
    /* This lets the X user interface intercept command line arguments that it is
-      interested in. */
+      interested in.  It also handles the flags "-seq" and "-db". */
    uims_process_command_line(&argc, &argv);
 
    /* Do general initializations, which currently consist only of
@@ -938,20 +954,28 @@ void main(int argc, char *argv[])
             call_list_mode = call_list_mode_writing_full;
          else if (strcmp(&argv[argno][1], "abridge") == 0)
             call_list_mode = call_list_mode_abridging;
-         else {
-	     /* flags -seq and -db handled by uims_process_command_line */
-	     print_line("Unknown flag:");
-	     print_line(argv[argno]);
-	     goto bad_flag;
+	 /*
+	  * These options may be handled by the UI, but if not
+	  * be sure it gets done.
+	  */
+         else if (strcmp(&argv[argno][1], "sequence") == 0) {
+	     if (argno+1 < argc)
+		 strncpy(outfile_string, argv[argno+1], MAX_FILENAME_LENGTH);
 	 }
+         else if (strcmp(&argv[argno][1], "db") == 0) {
+	     if (argno+1 < argc)
+		 database_filename = argv[argno+1];
+	 }
+         else
+            uims_bad_argument("Unknown flag:", argv[argno], NULL);
+
          argno++;
-         if (argno>=argc) {
-	     print_line("This flag must be followed by a file name:");
-	     print_line(argv[argno-1]);
-	     goto bad_flag;
-	 }
-         if (open_call_list_file(call_list_mode, argv[argno]))
-            exit_program(1);
+         if (argno>=argc)
+            uims_bad_argument("This flag must be followed by a file name:", argv[argno-1], NULL);
+
+	 if (call_list_mode != call_list_mode_none)
+	     if (open_call_list_file(call_list_mode, argv[argno]))
+		 exit_program(1);
       }
       else if (argv[argno][0] == 'm') calling_level = l_mainstream;
       else if (argv[argno][0] == 'p') calling_level = l_plus;
@@ -991,16 +1015,12 @@ void main(int argc, char *argv[])
    parse_inactive_list = (parse_block *) 0;
 
    if (history == 0) {
-      int n;
-      char *p;
-      history_allocation = 55;    /* To test reallocation. */
-      n = history_allocation * sizeof(configuration);
-      p = (char *) get_mem(n);
-      history = (configuration *) p;
-      while (--n>=0) *p++ = -1; /* clear memory (well, set it, so we can see if there is a problem) */
+      history_allocation = 15;
+      history = (configuration *) get_mem(history_allocation * sizeof(configuration));
    }
    
    initialize_menus(call_list_mode);    /* This sets up max_base_calls. */
+   uims_database_tick_end();
 
    /* If we wrote a call list file, that's all we do. */
    if (call_list_mode == call_list_mode_writing || call_list_mode == call_list_mode_writing_full)
@@ -1065,7 +1085,7 @@ void main(int argc, char *argv[])
    writestuff("under certain conditions; for details see the license.");
    newline();
    writestuff("You should have received a copy of the GNU General Public License ");
-   writestuff("along with this program, in the file \"COPYING\"; if not, write to ");
+   writestuff("along with this program, in the file \"COPYING\" or with the manual; if not, write to ");
    writestuff("the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA ");
    writestuff("02139, USA.");
    newline();
@@ -1074,14 +1094,7 @@ void main(int argc, char *argv[])
    show_banner:
 
    writestuff("Version ");
-   writestuff(VERSION_STRING);
-   writestuff(" : db");
-   writestuff(major_database_version);
-   writestuff(".");
-   writestuff(minor_database_version);
-   writestuff(" : ui");
-   writestuff(uims_version_string());
-   newline();
+   write_header_stuff();
    writestuff("Output file is \"");
    writestuff(outfile_string);
    writestuff("\"");
@@ -1163,17 +1176,25 @@ void main(int argc, char *argv[])
          so that history items [0..history_ptr+1] will exist.
          We also need to allow for MAX_RESOLVE_SIZE extra items, so that
          resolver can work.  Why don't we just increase the allocation
-         at the start of the resolver if we are too close?  We tried that once,
+         at the start of the resolver if we are too close?  We tried that once.
          The resolver uses the current parse state, so we can do "TANDEM <resolve>".
          This means that things like "parse_state.concept_write_base", which point
          into the history array, must remain valid.  So the resolver can't
          reallocate the history array.  There is only one place where it is safe
          to reallocate, and that is right here.  Note that we are about to go to
-         "start_cycle", which does an "initialize_parse". */
+         "start_cycle", which does an "initialize_parse", and hence destroys any
+         lingering pointers into the history array. */
 
       if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
+         configuration * t;
          history_allocation <<= 1;
-         history = (configuration *) get_more_mem(history, history_allocation * sizeof(configuration));
+         t = (configuration *) get_more_mem_gracefully(history, history_allocation * sizeof(configuration));
+         if (!t) {
+            history_allocation >>= 1;
+            history_ptr--;
+            specialfail("Not enough memory!");
+         }
+         history = t;
       }
 
       goto start_cycle;
@@ -1278,7 +1299,7 @@ void main(int argc, char *argv[])
                /* Clear all the marks. */
       
                for (i=0; i<number_of_calls[call_list_any]; i++) {
-                  main_call_lists[call_list_any][i]->callflags &= ~0x80000000;
+                  main_call_lists[call_list_any][i]->callflagsh &= ~0x80000000;
                }
       
                deficit = mark_aged_calls(0, calls_to_mark, 31);
@@ -1296,7 +1317,7 @@ void main(int argc, char *argv[])
                /* Print the marked calls. */
             
                for (i=0; i<number_of_calls[call_list_any]; i++) {
-                  if (main_call_lists[call_list_any][i]->callflags & 0x80000000) {
+                  if (main_call_lists[call_list_any][i]->callflagsh & 0x80000000) {
                      writestuff(main_call_lists[call_list_any][i]->name);
                      writestuff(", ");
                   }
@@ -1363,64 +1384,20 @@ void main(int argc, char *argv[])
                goto start_cycle;
             }
          case command_getout:
-            {
-               int getout_ind;
-               char date[MAX_TEXT_LINE_LENGTH];
-               char header[MAX_TEXT_LINE_LENGTH];
-               int j;
-            
-               /* Check that it is really resolved. */
-            
-               if (history[history_ptr].resolve_flag.kind == resolve_none)
-                  specialfail("This sequence is not resolved.");
-            
-               /* Put up the getout popup to see if the user wants to enter a header string. */
-            
-               getout_ind = uims_do_getout_popup(header);
-         
-               if (getout_ind == POPUP_DECLINE) goto start_cycle;    /* User didn't want to end this sequence after all. */
-            
-               /* User really wants this sequence.  Open the file and write it. */
-            
-               open_file();
-               enable_file_writing = TRUE;
-               doublespace_file();
 
-               clear_screen();
-               get_date(date);
-               writestuff(date);
-               writestuff("     ");
-               write_header_stuff();
+            /* Check that it is really resolved. */
 
-               if (getout_ind == POPUP_ACCEPT_WITH_STRING) {
-                  writestuff("             ");
-                  writestuff(header);
-                  newline();
-               }
-         
-               newline();
-         
-               for (j=whole_sequence_low_lim; j<=history_ptr; j++) write_history_line(j, (char *) 0, FALSE, file_write_double);
-            
-               doublespace_file();
-               writestuff(resolve_names[history[history_ptr].resolve_flag.kind]);
-               writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
-         
-               newline();
-               enable_file_writing = FALSE;
-               newline();
-            
-               close_file();     /* This will signal a "specialfail" if a file error occurs. */
-      
-               writestuff("Sequence written to \"");
-               writestuff(outfile_string);
-               writestuff("\".");
-               newline();
-         
-               global_age++;
-      
-               goto new_sequence;
-            }
+            if (!sequence_is_resolved())
+               specialfail("This sequence is not resolved.");
+            if (write_sequence_to_file() == 0)
+               goto start_cycle; /* user cancelled action */
+
+            writestuff("Sequence written to \"");
+            writestuff(outfile_string);
+            writestuff("\".");
+            newline();
+            goto new_sequence;
+
          default:
             goto normal_exit;
       }
@@ -1430,20 +1407,76 @@ void main(int argc, char *argv[])
    
    bad_level:
 
-   print_line("Unknown calling level argument:");
-   print_line(argv[argno]);
-   print_line("Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
-
-   bad_flag:
-
-   print_line("Use the -help flag for help.");
-   exit_program(1);
+   uims_bad_argument("Unknown calling level argument:", argv[argno],
+      "Known calling levels: m, p, a1, a2, c1, c2, c3a, c3, c3x, c4a, or c4.");
 
    normal_exit:
    
    exit_program(0);
 }
 
+/* return TRUE if sequence was written */
+
+extern long_boolean write_sequence_to_file(void)
+{
+   int getout_ind;
+   char date[MAX_TEXT_LINE_LENGTH];
+   char header[MAX_TEXT_LINE_LENGTH];
+   int j;
+
+   /* Put up the getout popup to see if the user wants to enter a header string. */
+
+   getout_ind = uims_do_getout_popup(header);
+
+   if (getout_ind == POPUP_DECLINE)
+      return FALSE;    /* User didn't want to end this sequence after all. */
+
+   /* User really wants this sequence.  Open the file and write it. */
+
+   clear_screen();
+   open_file();
+   enable_file_writing = TRUE;
+   doublespace_file();
+
+   get_date(date);
+   writestuff(date);
+   writestuff("     ");
+   write_header_stuff();
+
+   if (getout_ind == POPUP_ACCEPT_WITH_STRING) {
+      writestuff("             ");
+      writestuff(header);
+      newline();
+   }
+
+   newline();
+
+   for (j=whole_sequence_low_lim; j<=history_ptr; j++)
+      write_history_line(j, (char *) 0, FALSE, file_write_double);
+
+   /* Echo the concepts entered so far.  */
+
+   if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+      write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
+   }
+
+   if (sequence_is_resolved()) {
+      doublespace_file();
+      writestuff(resolve_names[history[history_ptr].resolve_flag.kind]);
+      if (history[history_ptr].resolve_flag.kind != resolve_at_home ||
+            (history[history_ptr].resolve_flag.distance & 7) != 0)
+         writestuff(resolve_distances[history[history_ptr].resolve_flag.distance & 7]);
+   }
+
+   newline();
+   enable_file_writing = FALSE;
+   newline();
+
+   close_file();     /* This will signal a "specialfail" if a file error occurs. */
+
+   global_age++;
+   return TRUE;
+}
 
 
 Private long_boolean debug_popup = FALSE;
@@ -1487,7 +1520,7 @@ extern void get_real_subcall(
       and we don't want the unmodifiable nullcall that the ends are supposed to
       do getting modified, do we? */
 
-   if (!(item->modifiers & (dfm_mandatory_anycall | dfm_or_anycall | dfm_allow_forced_mod)))
+   if (!(item->modifiers1 & (DFM1_MANDATORY_ANYCALL | DFM1_OR_ANYCALL | DFM1_ALLOW_FORCED_MOD)))
       return;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
@@ -1549,9 +1582,9 @@ extern void get_real_subcall(
       Therefore, whether resolving or in normal interactive mode, we are guided by the
       call modifier flags and the "allowing_modifications" global variable. */
 
-   if (      (item->modifiers & dfm_mandatory_anycall) ||
-             ((item->modifiers & dfm_or_anycall) && (allowing_modifications)) ||
-             ((item->modifiers & dfm_allow_forced_mod) && (allowing_modifications > 1)))
+   if (      (item->modifiers1 & DFM1_MANDATORY_ANYCALL) ||
+             ((item->modifiers1 & DFM1_OR_ANYCALL) && (allowing_modifications)) ||
+             ((item->modifiers1 & DFM1_ALLOW_FORCED_MOD) && (allowing_modifications > 1)))
       ;
    else
       return;     /* Do not query about this subcall.  Just return the default. */
@@ -1571,9 +1604,9 @@ extern void get_real_subcall(
    /* Create a reference on the list.  "search" points to the null item at the end. */
 
    marker = &marker_concept_mod;
-   if (dfm_allow_forced_mod & item->modifiers) marker = &marker_concept_force;
-   else if (dfm_must_be_scoot_call & item->modifiers) marker = &marker_concept_modreact;
-   else if (dfm_must_be_tag_call & item->modifiers) marker = &marker_concept_modtag;
+   if (DFM1_ALLOW_FORCED_MOD & item->modifiers1) marker = &marker_concept_force;
+   else if (DFM1_MUST_BE_SCOOT_CALL & item->modifiers1) marker = &marker_concept_modreact;
+   else if (DFM1_MUST_BE_TAG_CALL & item->modifiers1) marker = &marker_concept_modtag;
 
    tempstringptr = tempstring_text;
    *tempstringptr = 0;           /* Null string, just to be safe. */
@@ -1583,7 +1616,7 @@ extern void get_real_subcall(
 
    if (not_interactive)
       ;
-   else if (dfm_mandatory_anycall & item->modifiers) {
+   else if (DFM1_MANDATORY_ANYCALL & item->modifiers1) {
       string_copy(&tempstringptr, "SUBSIDIARY CALL --> ");
    }
    else {
@@ -1593,8 +1626,8 @@ extern void get_real_subcall(
 
       modify_popup_kind kind;
 
-      if (item->modifiers & dfm_must_be_tag_call) kind = modify_popup_only_tag;
-      else if (item->modifiers & dfm_must_be_scoot_call) kind = modify_popup_only_scoot;
+      if (item->modifiers1 & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
+      else if (item->modifiers1 & DFM1_MUST_BE_SCOOT_CALL) kind = modify_popup_only_scoot;
       else kind = modify_popup_any;
 
       if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->name, kind)) {
@@ -1636,4 +1669,9 @@ extern void get_real_subcall(
    *concptrout = (*newsearch)->subsidiary_root;
    *callout = NULLCALLSPEC;              /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */
    *concout = 0;
+}
+
+extern long_boolean sequence_is_resolved(void)
+{
+   return history[history_ptr].resolve_flag.kind != resolve_none;
 }

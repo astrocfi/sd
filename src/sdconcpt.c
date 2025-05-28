@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following function:
    do_big_concept
@@ -150,7 +150,7 @@ Private void do_c1_phantom_move(
       }
 
       if (what_we_need != 0)
-         do_matrix_expansion(ss, what_we_need);
+         do_matrix_expansion(ss, what_we_need, TRUE);
 
       ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX | SETUPFLAG__PHANTOMS;
 
@@ -471,7 +471,7 @@ Private void do_concept_quad_lines(
    int rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
 
    /* If this was quadruple columns, we allow stepping to a wave.  This makes it
-      possible to do interested cases of turn and weave, when one column
+      possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was quadruple
       lines, we forbid it. */
 
@@ -525,7 +525,7 @@ Private void do_concept_quad_lines_tog(
    for (i=0; i<16; i++) tbonetest |= ss->people[i].id1;
 
    /* If this was quadruple columns, we allow stepping to a wave.  This makes it
-      possible to do interested cases of turn and weave, when one column
+      possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was quadruple
       lines, we forbid it. */
 
@@ -773,7 +773,7 @@ Private void do_concept_triple_lines(
    map_thing *maps;
 
    /* If this was triple columns, we allow stepping to a wave.  This makes it
-      possible to do interested cases of turn and weave, when one column
+      possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was triple
       lines, we forbid it. */
 
@@ -825,7 +825,7 @@ Private void do_concept_triple_lines_tog(
    for (i=0; i<12; i++) tbonetest |= ss->people[i].id1;
 
    /* If this was triple columns, we allow stepping to a wave.  This makes it
-      possible to do interested cases of turn and weave, when one column
+      possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was triple
       lines, we forbid it. */
 
@@ -1087,7 +1087,7 @@ Private void do_concept_divided_2x4(
 
    if ((((parseptr->concept->value.arg2 ^ global_tbonetest) & 1) == 0) || ((global_tbonetest & 011) == 011)) {
       if (parseptr->concept->value.arg2 & 1) fail("There are no divided lines here.");
-      else                                       fail("There are no divided columns here.");
+      else                                   fail("There are no divided columns here.");
    }
 
    divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
@@ -1425,7 +1425,7 @@ Private void do_concept_checkpoint(
          If checkpointers go from 1x4 to 2x2, "dfm_conc_force_otherway" forces
             the Callerlab rule in preference to the "parallel_concentric_end" property
             on the call. */
-      concentric_move(ss, parseptr->subsidiary_root, parseptr->next, NULLCALLSPEC, NULLCALLSPEC, 0, 0, schema_checkpoint, 0, dfm_conc_force_otherway, result);
+      concentric_move(ss, parseptr->subsidiary_root, parseptr->next, NULLCALLSPEC, NULLCALLSPEC, 0, 0, schema_checkpoint, 0, DFM1_CONC_FORCE_OTHERWAY, result);
    }
 }
 
@@ -1490,6 +1490,59 @@ Private void do_concept_sequential(
 
 
 
+Private void do_concept_twice(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   int finalsetupflags;
+   int call_index;
+   setup tempsetup;
+   setup tttt;
+   int current_elongation = ss->setupflags & SETUPFLAG__ELONGATE_MASK;
+
+   finalsetupflags = 0;
+   *result = *ss;
+
+   for (call_index=0; call_index<2; call_index++) {
+      tttt = *result;
+      tttt.setupflags = (ss->setupflags & ~SETUPFLAG__ELONGATE_MASK) | current_elongation;
+
+      move(&tttt, parseptr->next, NULLCALLSPEC, 0, FALSE, &tempsetup);
+
+      finalsetupflags |= tempsetup.setupflags;
+
+      if (tempsetup.kind == s2x2) {
+         switch (result->kind) {
+            case s1x4: case sdmd: case s2x2:
+               current_elongation = (((tempsetup.setupflags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) * SETUPFLAG__ELONGATE_BIT);
+               break;
+
+            /* Otherwise (perhaps the setup was a star) we have no idea how to elongate the setup. */
+
+            default:
+               current_elongation = 0;
+               break;
+         }
+      }
+      else
+         current_elongation = 0;
+
+      *result = tempsetup;
+
+      /* Remove outboard phantoms. 
+         It used to be that normalize_setup was not called
+         here.  It was found that we couldn't do things like, from a suitable offset wave,
+         [triple line 1/2 flip] back to a wave, that is, start offset and finish normally.
+         So this has been added.  However, there may have been a reason for not normalizing.
+         If any problems are found, it may be that a flag needs to be added to seqdef calls
+         saying whether to remove outboard phantoms after each part. */
+
+      normalize_setup(result, simple_normalize);
+   }
+
+   result->setupflags = (finalsetupflags & ~RESULTFLAG__ELONGATE_MASK) | ((current_elongation / SETUPFLAG__ELONGATE_BIT) * RESULTFLAG__ELONGATE_BIT);
+}
 Private void do_concept_trace(
    setup *ss,
    parse_block *parseptr,
@@ -1749,6 +1802,24 @@ Private void do_concept_do_both_boxes(
    }
    else
       fail("Need a 2x4 setup to do this concept.");
+}
+
+
+Private void do_concept_do_each_1x4(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   if (ss->kind == s2x4) {
+      divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
+         (*map_lists[s1x4][1])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+   }
+   else if (ss->kind == s1x8) {
+      divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
+         (*map_lists[s1x4][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+   }
+   else
+      fail("Need a 2x4 or 1x8 setup for this concept.");
 }
 
 
@@ -2380,13 +2451,53 @@ Private void do_concept_do_phantom_2x4(
 }
 
 
+Private void do_concept_do_phantom_lines(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result)
+{
+   /* This concept is "standard", which means that it can look at global_tbonetest
+      and global_livemask, but may not look at anyone's facing direction other
+      than through global_tbonetest. */
+
+   if (ss->kind == s4x4) {
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+      do_concept_do_phantom_2x4(ss, parseptr, result);
+   }
+   else if (ss->kind == s1x16) {
+      int linesp = parseptr->concept->value.arg2;
+
+      if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup, try using \"standard\".");
+
+      /* If this was phantom columns, we allow stepping to a wave.  This makes it
+         possible to do interesting cases of turn and weave, when one column
+         is a single 8 chain and another is a single DPT.  But if it was phantom
+         lines, we forbid it. */
+   
+      if (linesp) {
+         ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+      }
+      else {
+         if (global_tbonetest & 010) fail("There are no columns of 4 here.");
+      }
+      
+      divided_setup_move(ss, parseptr->next, NULLCALLSPEC, 0,
+            (*map_lists[s1x8][1])[parseptr->concept->value.arg3][0],
+            (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+   }
+   else
+      fail("Need a 4x4 or 1x16 setup to do this concept.");
+}
+
+
 Private void do_concept_concentric(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
    concentric_move(ss, parseptr->next, parseptr->next, NULLCALLSPEC, NULLCALLSPEC, 0, 0,
-         (calldef_schema) parseptr->concept->value.arg1, 0, dfm_conc_concentric_rules, result);
+         (calldef_schema) parseptr->concept->value.arg1, 0, DFM1_CONC_CONCENTRIC_RULES, result);
 }
 
 
@@ -2410,7 +2521,7 @@ Private void do_concept_single_concentric(
          break;
       case s1x4: case sdmd:
          concentric_move(ss, parseptr->next, parseptr->next, NULLCALLSPEC, NULLCALLSPEC, 0, 0,
-               (calldef_schema) parseptr->concept->value.arg1, 0, dfm_conc_concentric_rules, result);
+               (calldef_schema) parseptr->concept->value.arg1, 0, DFM1_CONC_CONCENTRIC_RULES, result);
          break;
       default:
          fail("Can't figure out how to do single concentric here.");
@@ -2488,9 +2599,8 @@ extern long_boolean do_big_concept(
       if (concept_table[parseptr_realconcept->concept->kind].concept_prop & CONCPROP__SET_PHANTOMS)
          ss->setupflags |= SETUPFLAG__PHANTOMS;
 
-      if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-         do_matrix_expansion(ss, concept_table[parseptr_realconcept->concept->kind].concept_prop);
-      }
+      if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX))
+         do_matrix_expansion(ss, concept_table[parseptr_realconcept->concept->kind].concept_prop, FALSE);
 
       ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
@@ -2532,9 +2642,8 @@ extern long_boolean do_big_concept(
       return(TRUE);
    }
 
-   if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-      do_matrix_expansion(ss, concept_table[parseptr->concept->kind].concept_prop);
-   }
+   if (!(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX))
+      do_matrix_expansion(ss, concept_table[parseptr->concept->kind].concept_prop, FALSE);
 
    /* We can no longer do any matrix expansion, unless this is "phantom" and "tandem", in which case we continue to allow it. */
    if (parseptr->concept->kind != concept_c1_phantom)
@@ -2611,6 +2720,13 @@ concept_table_item concept_table[] = {
    {0,                                                                                      0},                               /* concept_interlocked */
    {0,                                                                                      0},                               /* concept_12_matrix */
    {0,                                                                                      0},                               /* concept_16_matrix */
+   {0,                                                                                      0},                               /* concept_1x2 */
+   {0,                                                                                      0},                               /* concept_2x1 */
+   {0,                                                                                      0},                               /* concept_2x2 */
+   {0,                                                                                      0},                               /* concept_1x3 */
+   {0,                                                                                      0},                               /* concept_3x1 */
+   {0,                                                                                      0},                               /* concept_3x3 */
+   {0,                                                                                      0},                               /* concept_4x4 */
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_2x6_matrix},    /* concept_2x6_matrix */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_2x8_matrix},    /* concept_2x8_matrix */
    {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP,                        do_concept_expand_4x4_matrix},    /* concept_4x4_matrix */
@@ -2619,6 +2735,7 @@ concept_table_item concept_table[] = {
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},                   /* concept_randomtrngl */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},                   /* concept_selbasedtrngl */
    {0,                                                                                      0},                               /* concept_split */
+   {CONCPROP__NO_STEP,                                                                      do_concept_do_each_1x4},          /* concept_each_1x4 */
    {0,                                                                                      0},                               /* concept_diamond */
    {0,                                                                                      0},                               /* concept_triangle */
    {CONCPROP__NO_STEP,                                                                      do_concept_do_both_boxes},        /* concept_do_both_boxes */
@@ -2629,6 +2746,7 @@ concept_table_item concept_table[] = {
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_1x6},       /* concept_do_phantom_1x6 */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_1x8},       /* concept_do_phantom_1x8 */
    {CONCPROP__NEED_4X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_2x4},       /* concept_do_phantom_2x4 */
+   {CONCPROP__NEED_4X4_1X16 | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,                  do_concept_do_phantom_lines},     /* concept_do_phantom_lines */
    {CONCPROP__NEED_3X4 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_do_phantom_2x3},       /* concept_do_phantom_2x3 */
    {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_divided_2x4},          /* concept_divided_2x4 */
    {CONCPROP__NEED_2X6 | CONCPROP__SET_PHANTOMS | CONCPROP__NO_STEP | CONCPROP__STANDARD,   do_concept_divided_2x3},          /* concept_divided_2x3 */
@@ -2670,6 +2788,7 @@ concept_table_item concept_table[] = {
    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},                /* concept_trace */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_ferris},               /* concept_ferris */
    {CONCPROP__SECOND_CALL,                                                                  do_concept_centers_and_ends},     /* concept_centers_and_ends */
+   {0,                                                                                      do_concept_twice},                /* concept_twice */
    {CONCPROP__SECOND_CALL,                                                                  do_concept_sequential},           /* concept_sequential */
    {0,                                                                                      do_concept_meta},                 /* concept_meta */
    {CONCPROP__USE_SELECTOR,                                                                 do_concept_so_and_so_begin},      /* concept_so_and_so_begin */

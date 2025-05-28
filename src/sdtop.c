@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following functions:
    update_id_bits
@@ -162,7 +162,6 @@ Private int bit_table_rigger[][4] = {
 typedef int bit_table[4];
 
 extern void update_id_bits(setup *ss)
-
 {
    int i, j;
    bit_table *ptr;
@@ -256,7 +255,7 @@ Private full_expand_thing step_1x2_pair =      {0, 0, &step_1x2_stuff};
 
 extern void touch_or_rear_back(
    setup *scopy,
-   int callflags)
+   int callflags1)
 
 {
    int i, j;
@@ -275,7 +274,7 @@ extern void touch_or_rear_back(
       if (p) livemask |= j;
    }
 
-   if (callflags & cflag__rear_back_from_r_wave) {
+   if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
       if (scopy->kind == s1x4 && (livemask == 0xF) && (directions == 0x28)) {
          tptr = &rear_wave_pair;          /* Rear back from a wave to facing couples. */
       }
@@ -325,7 +324,7 @@ extern void touch_or_rear_back(
          }
       }
    }
-   else if (callflags & cflag__rear_back_from_qtag) {
+   else if (callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
       if (scopy->kind == s_qtag && livemask == 0xFF && ((directions == 0x08A2) || (directions == 0xA802))) {
          tptr = &rear_qtag_pair;         /* Have the centers rear back from a 1/4 tag or 3/4 tag. */
       }
@@ -333,7 +332,7 @@ extern void touch_or_rear_back(
          tptr = &rear_sqtag_pair;         /* Have the centers rear back from a single 1/4 tag or 3/4 tag. */
       }
    }
-   else {      /* We know that (callflags & cflag__step_to_wave) is true here. */
+   else {      /* We know that (callflags1 & CFLAG1_STEP_TO_WAVE) is true here. */
       switch (scopy->kind) {
          case s2x2:
             if ((livemask == 0xF) && (directions == 0x7D)) {
@@ -424,7 +423,11 @@ extern void touch_or_rear_back(
 
 
 
-extern void do_matrix_expansion(setup *ss, unsigned int concprops)
+
+extern void do_matrix_expansion(
+   setup *ss,
+   unsigned int concprops,
+   long_boolean recompute_id)
 {
    int i, j;
    expand_thing *eptr;
@@ -545,7 +548,7 @@ extern void do_matrix_expansion(setup *ss, unsigned int concprops)
       canonicalize_rotation(ss);
    
       /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
-      update_id_bits(ss);
+      if (recompute_id) update_id_bits(ss);
    }
 }
 
@@ -805,8 +808,9 @@ Private void normalize_c1_phan(setup *stuff)
    When merging the results of "on your own" or "own the so-and-so",
    we set nlevel=normalize_before_merge to work very hard at stripping away
    outside phantoms, so that we can see more readily how to put things together.
-   When preparing for an isolated call, we work at it a little, so
-   nlevel=normalize_before_isolated_call.   For normal usage, nlevel=simple_normalize. */
+   When preparing for an isolated call, that is, "so-and-so do your part, whatever",
+   we work at it a little, so we set nlevel=normalize_before_isolated_call.
+   For normal usage, we set nlevel=simple_normalize. */
 extern void normalize_setup(setup *ss, normalize_level nlevel)
 {
    /* Normalize setup by removing outboard phantoms. */
@@ -865,11 +869,6 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
       }
    }
 
-   /* If preparing for a "so-and-so only do whatever", we remove outboard phantoms
-      more aggressively.  For example, if we are selecting just the center line of
-      a quarter tag, we reduce the setup all the way down to a line.  Normally we
-      wouldn't do this, lest we lose phantoms when gluing setups together. */
-
    if (nlevel >= normalize_before_merge) {
       /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
       if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
@@ -886,7 +885,19 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
          (void) copy_person(ss, 2, ss, 7);
          (void) copy_person(ss, 3, ss, 6);
       }
+      else if ((ss->kind == s_rigger) && (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1))) {
+         ss->kind = s2x2;
+         (void) copy_person(ss, 2, ss, 4);
+         (void) copy_person(ss, 3, ss, 5);
+      }
    }
+
+   /* If preparing for a "so-and-so only do your part", we remove outboard phantoms
+      more aggressively.  For example, if we are selecting just the center line of
+      a quarter tag, we reduce the setup all the way down to a line.  Normally we
+      wouldn't do this, lest we lose phantoms when gluing setups together.
+      If we are selecting the ends of a rigger, we tell them to think of themselves
+      as being in a 1x8, so that we could tell them to explode, for example. */
 
    if (nlevel >= normalize_before_isolated_call) {
       if (ss->kind == s_qtag) {
@@ -915,6 +926,19 @@ extern void normalize_setup(setup *ss, normalize_level nlevel)
             clear_person(ss, 1);
             clear_person(ss, 5);
             canonicalize_rotation(ss);
+         }
+      }
+      else if (ss->kind == s_rigger) {
+         if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
+            ss->kind = s1x8;
+            (void) copy_person(ss, 0, ss, 6);
+            (void) copy_person(ss, 1, ss, 7);
+            (void) copy_person(ss, 4, ss, 2);
+            (void) copy_person(ss, 5, ss, 3);
+            clear_person(ss, 2);
+            clear_person(ss, 3);
+            clear_person(ss, 6);
+            clear_person(ss, 7);
          }
       }
    }
@@ -950,13 +974,13 @@ extern void toplevelmove(void)
          with so-and-so moved into the middle, which is what the encoding of these calls
          wants. */
    
-      if (parse_state.topcallflags & cflag__sequence_starter)
+      if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER)
          concept_read_base = 1;
    
       /* If the call is a "split square thru" type of call, we do the same.  We leave the
          "split" concept in place.  Other mechanisms will do the rest. */
 
-      else if ((parse_state.topcallflags & cflag__split_like_square_thru) &&
+      else if ((parse_state.topcallflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) &&
             ((newhist->command_root->next->concept->kind == concept_split) ||
                   ((newhist->command_root->next->concept->kind == concept_left) &&
                   (newhist->command_root->next->next->concept->kind == concept_split))))
@@ -966,7 +990,7 @@ extern void toplevelmove(void)
          but the transformation we perform on the starting setup is highly peculiar. */
    /* ****** bug: ability to handle "left" concept patched out!  It does it wrong! */
    
-      else if ((parse_state.topcallflags & cflag__split_like_dixie_style) &&
+      else if ((parse_state.topcallflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE) &&
                newhist->command_root->next->concept->kind == concept_split &&
                newhist->command_root->next->next->concept->kind == marker_end_of_list) {
          personrec x;

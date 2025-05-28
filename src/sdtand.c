@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This file contains stuff for tandem and as-couples moves. */
 
@@ -133,7 +133,7 @@ Private tm_thing maps_isearch_twosome[] = {
 
 Private tm_thing maps_isearch_threesome[] = {
 
-/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+/*   map1                  map2                  map3                 map4    sidemask outsidemask limit rot            insetup outsetup */
    {{0, 5},               {1, 4},               {2, 3},                {0},    0x5,      077,         2, 0,  0,  0, 0,  s_1x2, s_1x6},
    {{0, 5},               {1, 4},               {2, 3},                {0},      0,      077,         2, 1,  0,  0, 0,  s_1x2, s_2x3},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
@@ -144,7 +144,7 @@ Private tm_thing maps_isearch_threesome[] = {
 
 Private tm_thing maps_isearch_foursome[] = {
 
-/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+/*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
    {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s1x8},
    {{0, 7},           {1, 6},           {2, 5},           {3, 4},                0,    0x0FF,         2, 1,  0,  0, 0,  s_1x2, s2x4},
    {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s2x8},
@@ -156,7 +156,7 @@ Private tm_thing maps_isearch_foursome[] = {
 
 Private tm_thing maps_isearch_boxsome[] = {
 
-/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+/*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
    {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s2x4},
    {{7, 5},           {0, 2},           {6, 4},           {1, 3},                0,        0,         2, 0,  0,  0, 0,  s_1x2, s2x4},
    {{0, 2, 6, 4},     {1, 3, 7, 5},     {15, 13, 9, 11},  {14, 12, 8, 10},    0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4,  s2x8},
@@ -167,7 +167,7 @@ Private tm_thing maps_isearch_boxsome[] = {
 
 Private tm_thing maps_isearch_dmdsome[] = {
 
-/*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup */
+/*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
    {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s_ptpd},
    {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s_1x2, s_qtag},
    {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s_4dmd},
@@ -361,6 +361,7 @@ Private void pack_us(
    tm_thing *map_ptr,
    int fraction,
    long_boolean twosome,
+   int tnd_cpl_siam,
    tandrec *tandstuff)
 {
    int i;
@@ -391,11 +392,24 @@ Private void pack_us(
          if (tandstuff->np >= 3) b2 = s[map_ptr->map3[i]];
          if (tandstuff->np >= 4) b3 = s[map_ptr->map4[i]];
 
-         if (!(tandstuff->virtual_setup.setupflags & SETUPFLAG__PHANTOMS)) {
-            if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
-               fail("Use \"phantom\" concept in front of this concept.");
+         if (tnd_cpl_siam == 3) {
+            /* If this is skew/skewsome, we require people paired in the appropriate way.
+               This means [f, b3] must match, [b, b2] must match, and [f, b] must not match. */
+
+            if ((((f.id1 ^ b3.id1) | (b.id1 ^ b2.id1) | (~(f.id1 ^ b.id1))) & BIT_PERSON))
+               fail("Can't find skew people.");
          }
-         
+         else {
+            /* If this is not skew/skewsome, we forbid a live person grouped with a phantom unless
+               some phantom concept was used (either something like "phantom tandem" or some other
+               phantom concept such as "split phantom lines"). */
+
+            if (!(tandstuff->virtual_setup.setupflags & SETUPFLAG__PHANTOMS)) {
+               if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
+                  fail("Use \"phantom\" concept in front of this concept.");
+            }
+         }
+
          if (f.id1 | b.id1 | b2.id1 | b3.id1) {
             unsigned int vp1, vp2;
          
@@ -474,7 +488,9 @@ extern void tandem_couples_move(
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
    int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
-   int tnd_cpl_siam,          /* tandem=0 / couples=1 / siamese=2 / skew=3 */
+   int tnd_cpl_siam,          /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
+                                 tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
+                                 box = 8 / diamond = 9 */
    setup *result)
 {
    selector_kind saved_selector;
@@ -546,7 +562,7 @@ extern void tandem_couples_move(
       np = 4;
       our_map_table = maps_isearch_dmdsome;
    }
-   else if (tnd_cpl_siam == 8) {
+   else if (tnd_cpl_siam == 8 || tnd_cpl_siam == 3) {
       np = 4;
       our_map_table = maps_isearch_boxsome;
    }
@@ -563,9 +579,7 @@ extern void tandem_couples_move(
       our_map_table = maps_isearch_twosome;
    }
 
-   if (tnd_cpl_siam == 3)
-      fail("Sorry, can't do skew/skewsome.");
-   else if (tnd_cpl_siam == 2) {
+   if (tnd_cpl_siam == 2) {
       /* Siamese. */
       siamese_item *ptr;
 
@@ -582,6 +596,10 @@ extern void tandem_couples_move(
       foox:
       ewmask ^= j;
       nsmask ^= j;
+   }
+   else if (tnd_cpl_siam == 3) {
+      ewmask = allmask;
+      nsmask = 0;
    }
    else if (tnd_cpl_siam == 8) {
       ewmask = allmask;
@@ -638,7 +656,7 @@ extern void tandem_couples_move(
 
    tandstuff.np = np;
    tandstuff.virtual_setup.setupflags = ss->setupflags | SETUPFLAG__DISTORTED;
-   pack_us(ss->people, map, fraction, twosome, &tandstuff);
+   pack_us(ss->people, map, fraction, twosome, tnd_cpl_siam, &tandstuff);
    update_id_bits(&tandstuff.virtual_setup);
    saved_originals = tandstuff.virtual_setup;    /* Move will clobber the incoming setup.  This bug caused
                                                     embarrassment at an ATA dance, April 3, 1993. */

@@ -1,0 +1,153 @@
+@c readme.txinfo Time-stamp: <93/05/24 17:59:13 gildea>
+@c Included by sd_doc, also used to produce README.
+@node Intro, Getting Started, Top, Top
+@unnumbered Introduction
+
+Sd is a square dance caller's helper.  The program assists in writing material
+for Western square dancing by doing the checker pushing.  You tell the
+program what call you want to call next, and it computes the resulting
+setup and shows it to you.
+
+@ifset full-manual
+Sd was intended to be used to write challenge-level material where the
+sequences are often complex and the checker pushing tedious and
+error-prone.  Most challenge callers write out the material they will
+call before they get to the dance, unlike Mainstream callers, who
+often invent the material on the fly from the stage.
+
+@heading What Sd Is Not
+
+Sd knows nothing about timing, body flow, or esthetics.
+
+This program is not appropriate for Traditional-style squares.  Designing
+the exquisitely timed and well-phrased sequences that make up Traditional
+squares may or may not be beyond the capability of computer programs,
+but it is definitely beyond the capability of this program.
+
+Since the emphasis here is on checker pushing, you will find various
+Mainstream staples missing, such as Circle Left, Grand Square, and
+Allemande Left.  Since these calls are technical zeros, there is no
+reason to have them in a checker-pushing program.  However, if you
+wish to write material containing calls such as these, you can use the
+@code{insert comment} command to write them into the sequence.
+
+In short, if you are writing a Traditional or Mainstream dance,
+you may find that this program is not for you.
+
+@heading Variations of the Program
+@end ifset
+
+There are several user interfaces available with Sd.  The standard is
+an X Window System interface.  Also included is a terminal-based user
+interface featuring a completing reader.  Support for Apollo's Domain
+Dialog is available from the authors, but is not part of the
+distribution.
+
+@ifset full-manual
+Most of the manual describes the X Window System interface, but there
+is one chapter on @code{sdtty}, the version with the terminal interface.
+@xref{Terminal Interface}.
+@end ifset
+
+@menu
+* Documentation::               Documentation
+* Getting Sd::                  Getting Sd
+* Contact Info::                How to Contact the Authors
+* Acknowledgements::            Acknowlegdements
+@end menu
+
+@node Documentation, Getting Sd,  , Intro
+@heading Documentation
+
+The file @file{INSTALL} contains instructions for building and installing Sd.
+
+The file @file{sd_doc.txinfo} documents using Sd.  The file
+@file{database.doc} gives internal information on the database format,
+useful only to people editing the calls database.
+
+See the file @file{Relnotes} for information about what is new in this
+release.
+
+The file @file{sd_doc.txinfo} is in Texinfo format, which allows both
+on-line information and a printed manual to be generated from the same
+source document.  You can run it through @TeX{} to produce a printed
+manual, or you can format it for use with @code{Info}, a hypertext
+documentation reader.
+
+Support for Texinfo-style documentation is distributed as part of
+Emacs and as a stand-alone package, both available via anonymous ftp
+from prep.ai.mit.edu and other GNU software archives.
+
+Both the Emacs and Texinfo distributions contain texinfo.tex, the
+macros required to print the document with @TeX{}.  In Emacs, use
+@w{@code{M-x texinfo-format-buffer}} to convert to Info, and use
+@w{@code{M-x info}} to read the document.  In the Texinfo package,
+@code{makeinfo} converts to Info, and @code{info} is the reader; both
+are C programs.
+
+You can use the following @code{make} commands to format the documentation:
+
+@table @kbd
+@item make info
+convert to Info format
+@item make dvi
+run through @TeX{}.  Use this to make hardcopy.
+@end table
+
+In future releases we may also distribute pre-formatted versions of
+the documentation.
+Printed copies of the manual are available from the authors.
+
+@node Getting Sd, Contact Info, Documentation, Intro
+@heading Getting Sd
+
+Sd is available via anonymous FTP from the file
+@file{contrib/c4/sd/sd-nn.tar.Z} (where @code{nn} changes with
+the version) on host export.lcs.mit.edu.  FTP is the Internet file
+transfer protocol.
+
+If your mailer can interpret MIME messages, we can also send you Sd
+by email.  MIME is a draft Internet standard for multi-media mail.
+
+@node Contact Info, Acknowledgements, Getting Sd, Intro
+@heading How to Contact the Authors
+
+The Internet mailing list @code{sd@@expo.lcs.mit.edu} is for discussion of Sd
+and announcements of new versions.  Send to @code{sd-request@@expo.lcs.mit.edu}
+to be added.
+
+Please send bug reports and other comments on Sd to the authors at the
+addresses given below.  Be sure to include the version number.
+
+@display
+William Ackerman
+wba@@apollo.hp.com
+
+Stephen Gildea
+gildea@@lcs.mit.edu
+@end display
+
+If you do not have access to electronic mail, write to
+
+@display
+Bill Ackerman
+5 Parlmont Park Apt 100
+North Billerica MA 01862-2722
+@end display
+
+@ifset full-manual
+@node Acknowledgements, , Contact Info,Intro
+@heading Acknowlegdements
+
+Thanks to Kathy Godfrey, Sue Curtis, and Chris Stacy for their help,
+encouragement, suggestions, contributions of calls, feedback, testing,
+and many other contributions.
+
+The non-windowed interface (@pxref{Terminal Interface}) was written by
+Alan Snyder.
+The section on building Sd for the Macintosh (@pxref{Building on the
+Mac}) was written by Sue Curtis.
+
+We received helpful feedback and testing from Robert French, Judy
+Anderson, Lynette McNiel, Bill van Melle, Lois Lew, and Ron Nicholson.
+@end ifset

@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* This defines the following functions:
    mirror_this
@@ -29,7 +29,7 @@
 
 
 /* This file uses a few bogus setups.  They are never allowed to escape:
-   8x8 =
+   s_8x8 =
      0   1   2   3  28  24  20  16 
      4   5   6   7  29  25  21  17
      8   9  10  11  30  26  22  18
@@ -39,7 +39,7 @@
     49  53  57  61  39  38  37  36
     48  52  56  60  35  34  33  32
 
-   x4dmd =
+   s_x4dmd =
       4        8       15
    7     5     9    14    12
       6       10       13
@@ -50,7 +50,7 @@
   28    30    25    21    23
      31       24       20
 
-   x1x6 =
+   s_x1x6 =
             3
             4
             5
@@ -1102,11 +1102,13 @@ Private void special_4_way_symm(
    int real_direction, northified_index;
    unsigned int z;
    int k, zzz, result_size, result_quartersize;
-   int *the_table;
+   int *the_table = (int *) 0;
 
    switch (result->kind) {
-      case s2x2: case s_galaxy: case s_c1phan: case s4x4: case s_hyperglass: case s_star: case s_1x1:
-         the_table = 0;
+      case s2x2: case s_galaxy:
+      case s_c1phan: case s4x4:
+      case s_hyperglass: case s_thar:
+      case s_star: case s_1x1:
          break;
       case s1x4:
          result->kind = s_hyperglass;
@@ -1267,7 +1269,7 @@ extern void basic_move(
 
    orig_elongation = desired_elongation;   /* We may need this later. */
 
-   if (callspec->callflags & cflag__parallel_conc_end) desired_elongation ^= RESULTFLAG__ELONGATE_MASK;
+   if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) desired_elongation ^= RESULTFLAG__ELONGATE_MASK;
    /* If the flags were zero and we complemented them so that both are set, that's not good. */
    if (desired_elongation == RESULTFLAG__ELONGATE_MASK)
       desired_elongation = 0;
@@ -1317,7 +1319,7 @@ extern void basic_move(
          }
          break;
       case s_qtag:
-         if (fudged && !(callspec->callflags & cflag__fudge_to_q_tag))
+         if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
             fail("Can't do this call from arbitrary 3x4 setup.");
          break;
    }
@@ -1326,12 +1328,12 @@ extern void basic_move(
       except "funny" and "left", but "left" has been taken care of)
       determine what call definition we will get. */
 
-   search_concepts = final_concepts & HERITABLE_FLAG_MASK & ~FINAL__FUNNY;
+   search_concepts = final_concepts & HERITABLE_FLAG_MASK & ~INHERITFLAG_FUNNY;
 
    calldeflist = 0;
 
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-      if (qq->modifier_set == search_concepts) {
+      if (qq->modifier_seth == search_concepts) {
          if (qq->modifier_level > calling_level)
             fail("Use of this modifier on this call is not allowed at this level.");
          calldeflist = qq->callarray_list;
@@ -1349,8 +1351,8 @@ extern void basic_move(
       unsigned long int y;
       switch (ss->kind) {
          case s2x4:
-            y = search_concepts & ~(FINAL__DIAMOND | FINAL__SINGLE | FINAL__CROSS | FINAL__GRAND);
-            if (y == FINAL__MAGIC) {
+            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
+            if (y == INHERITFLAG_MAGIC) {
                /* "Magic" was specified.  Split it into 1x4's in the appropriate magical way. */
                division_maps = &map_2x4_magic;
                final_concepts &= ~y;
@@ -1358,7 +1360,7 @@ extern void basic_move(
             }
             break;
          case s3x4:
-            if (search_concepts == FINAL__12_MATRIX && callspec->callflags & cflag__12_16_matrix_means_split) {
+            if (search_concepts == INHERITFLAG_12_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
                /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
                division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
                final_concepts &= ~search_concepts;
@@ -1366,7 +1368,7 @@ extern void basic_move(
             }
             break;
          case s2x6:
-            if (search_concepts == FINAL__12_MATRIX && callspec->callflags & cflag__12_16_matrix_means_split) {
+            if (search_concepts == INHERITFLAG_12_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
                /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
                division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
                final_concepts &= ~search_concepts;
@@ -1374,7 +1376,7 @@ extern void basic_move(
             }
             break;
          case s2x8:
-            if (search_concepts == FINAL__16_MATRIX && callspec->callflags & cflag__12_16_matrix_means_split) {
+            if (search_concepts == INHERITFLAG_16_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
                /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
                division_maps = (*map_lists[s2x2][3])[MPKIND__SPLIT][0];
                final_concepts &= ~search_concepts;
@@ -1382,7 +1384,7 @@ extern void basic_move(
             }
             break;
          case s4x4:
-            if (search_concepts == FINAL__16_MATRIX && callspec->callflags & cflag__12_16_matrix_means_split) {
+            if (search_concepts == INHERITFLAG_16_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
                /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
                /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look at
                   the call definition (the "assoc" stuff), we assume the call wants lines, since
@@ -1398,22 +1400,22 @@ extern void basic_move(
             }
             break;
          case s_qtag:
-            y = search_concepts & ~(FINAL__DIAMOND | FINAL__SINGLE | FINAL__CROSS | FINAL__GRAND);
-            if (y == FINAL__MAGIC) {
+            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
+            if (y == INHERITFLAG_MAGIC) {
                /* "Magic" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate magical way. */
                division_maps = &map_qtg_magic;
                final_concepts &= ~y;
                resultflags |= RESULTFLAG__NEED_DIAMOND;      /* Indicate that we have done the division and the concept name needs to be changed. */
                goto divide_us;
             }
-            else if (y == FINAL__INTERLOCKED) {
+            else if (y == INHERITFLAG_INTLK) {
                /* "Interlocked" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate interlocked way. */
                division_maps = &map_qtg_intlk;
                final_concepts &= ~y;
                resultflags |= RESULTFLAG__NEED_DIAMOND;      /* Indicate that we have done the division and the concept name needs to be changed. */
                goto divide_us;
             }
-            else if (y == (FINAL__INTERLOCKED | FINAL__MAGIC)) {
+            else if (y == (INHERITFLAG_INTLK | INHERITFLAG_MAGIC)) {
                /* "Magic interlocked" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate disgusting way. */
                division_maps = &map_qtg_magic_intlk;
                final_concepts &= ~y;
@@ -1422,22 +1424,22 @@ extern void basic_move(
             }
             break;
          case s_ptpd:
-            y = search_concepts & ~(FINAL__DIAMOND | FINAL__SINGLE | FINAL__CROSS | FINAL__GRAND);
-            if (y == FINAL__MAGIC) {
+            y = search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_CROSS | INHERITFLAG_GRAND);
+            if (y == INHERITFLAG_MAGIC) {
                /* "Magic" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate magical way. */
                division_maps = &map_ptp_magic;
                final_concepts &= ~y;
                resultflags |= RESULTFLAG__NEED_DIAMOND;      /* Indicate that we have done the division and the concept name needs to be changed. */
                goto divide_us;
             }
-            else if (y == FINAL__INTERLOCKED) {
+            else if (y == INHERITFLAG_INTLK) {
                /* "Interlocked" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate interlocked way. */
                division_maps = &map_ptp_intlk;
                final_concepts &= ~y;
                resultflags |= RESULTFLAG__NEED_DIAMOND;      /* Indicate that we have done the division and the concept name needs to be changed. */
                goto divide_us;
             }
-            else if (y == (FINAL__INTERLOCKED | FINAL__MAGIC)) {
+            else if (y == (INHERITFLAG_INTLK | INHERITFLAG_MAGIC)) {
                /* "Magic interlocked" was specified, perhaps with "diamond".  Split it into diamonds in the appropriate disgusting way. */
                division_maps = &map_ptp_magic_intlk;
                final_concepts &= ~y;
@@ -1558,13 +1560,13 @@ extern void basic_move(
       what people want. */
       
    if (matrix_check_flag == 0 && (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) {
-      if (ss->kind == s2x6) matrix_check_flag |= FINAL__12_MATRIX;
-      else matrix_check_flag |= FINAL__16_MATRIX;
+      if (ss->kind == s2x6) matrix_check_flag |= INHERITFLAG_12_MATRIX;
+      else matrix_check_flag |= INHERITFLAG_16_MATRIX;
 
       /* Now search again. */
 
       for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-         if (qq->modifier_set == matrix_check_flag | search_concepts) {
+         if (qq->modifier_seth == matrix_check_flag | search_concepts) {
             if (qq->modifier_level > calling_level)
                fail("Use of this modifier on this call is not allowed at this level.");
             calldeflist = qq->callarray_list;
@@ -1589,6 +1591,9 @@ extern void basic_move(
             we can do "Z axle". */
    
          switch (livemask) {
+            case 0x6666:
+               division_maps = (*map_lists[s_1x2][3])[MPKIND__4_EDGES][0];
+               goto divide_us_no_recompute;
             case 0x7171:
                division_maps = &map_4x4_ns;
                warn(warn__each1x4);
@@ -1609,7 +1614,7 @@ extern void basic_move(
                   other than a parallelogram, divided_setup_move will raise
                   an error. */
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
-               if ((callspec->callflags & cflag__split_large_setups) &&
+               if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
                   goto divide_us_no_recompute;
@@ -1617,7 +1622,7 @@ extern void basic_move(
             case 0xA6A6: case 0x9C9C:
                division_maps = &map_lh_s2x3_3;
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
-               if ((callspec->callflags & cflag__split_large_setups) &&
+               if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
                   goto divide_us_no_recompute;
@@ -1625,7 +1630,7 @@ extern void basic_move(
             case 0xE4E4: case 0xB8B8:
                division_maps = &map_rh_s2x3_2;
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
-               if ((callspec->callflags & cflag__split_large_setups) &&
+               if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
                   goto divide_us_no_recompute;
@@ -1633,7 +1638,7 @@ extern void basic_move(
             case 0x6A6A: case 0xC9C9:
                division_maps = &map_lh_s2x3_2;
                ss->setupflags |= SETUPFLAG__OFFSET_Z;
-               if ((callspec->callflags & cflag__split_large_setups) &&
+               if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                      (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                      (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
                   goto divide_us_no_recompute;
@@ -1641,6 +1646,9 @@ extern void basic_move(
          }
 
          fail("You must specify a concept.");
+      case s_thar:
+         division_maps = (*map_lists[s_1x2][3])[MPKIND__4_EDGES][1];
+         goto divide_us_no_recompute;
       case s2x6:
          /* The call has no applicable 2x6 or 6x2 definition. */
 
@@ -1650,7 +1658,7 @@ extern void basic_move(
          if ((!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_8x2, ss, calldeflist)) &&
                !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-            do_matrix_expansion(ss, CONCPROP__NEED_2X8);
+            do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
             if (ss->kind != s2x8) fail("Failed to expand to 2X8.");  /* Should never fail, but we don't want a loop. */
             goto search_for_call_def;        /* And try again. */
          }
@@ -1660,7 +1668,7 @@ extern void basic_move(
             a 2x6 but forbidding "circulate".  We also enable this if the caller explicitly
             said "2x6 matrix". */
 
-         if (((callspec->callflags & cflag__split_large_setups) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) &&
+         if (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->setupflags & SETUPFLAG__EXPLICIT_MATRIX)) &&
                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
             division_maps = (*map_lists[s_2x3][1])[MPKIND__SPLIT][0];
@@ -1851,7 +1859,7 @@ extern void basic_move(
          if ((!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist)) &&
                !(ss->setupflags & SETUPFLAG__NO_EXPAND_MATRIX)) {
-            do_matrix_expansion(ss, CONCPROP__NEED_2X6);
+            do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
             if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
             goto search_for_call_def;        /* And try again. */
          }
@@ -1940,7 +1948,7 @@ extern void basic_move(
                a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
                phantom columns.) */
       
-            if ((callspec->callflags & cflag__split_large_setups) &&
+            if ((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                division_maps = (*map_lists[s_2x3][1])[MPKIND__SPLIT][1];
@@ -2246,7 +2254,7 @@ extern void basic_move(
 
    ss->setupflags |= SETUPFLAG__NO_EXPAND_MATRIX;
 
-   funny = final_concepts & FINAL__FUNNY;
+   funny = final_concepts & INHERITFLAG_FUNNY;
    inconsistent_rotation = 0;
    inconsistent_setup = 0;
 
@@ -2379,7 +2387,7 @@ extern void basic_move(
       /* For calls defined by array with concentric end setup, the "parallel_conc_end" flag
          turns on the outer elongation. */
       outer_elongation = outers.rotation;
-      if (callspec->callflags & cflag__parallel_conc_end) outer_elongation ^= 1;
+      if (callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) outer_elongation ^= 1;
 
       normalize_concentric(schema_concentric, 1, &inners, &outers, outer_elongation, result);
 
@@ -2520,9 +2528,8 @@ extern void basic_move(
          to be part of doing the call.  If we someday were able to do a reverse flip of split
          phantom galaxies, we would want each galaxy to compress itself to a 2x4 before
          reassembling them.
-      If we handle 4x4 start setups in the future, we would NOT want to compress
-         a 4x4 to a 2x4 after a 16-matrix circulate!!!!!  This is why we compare the beginning and
-         ending setup sizes. */
+      When we do a 16-matrix circulate in a 4x4 start setup, we do NOT want to compress
+         the 4x4 to a 2x4!!!!!  This is why we compare the beginning and ending setup sizes. */
 
       if (setup_limits[ss->kind] < setup_limits[result->kind]) {
          int *permuter = (int *) 0;
@@ -2592,30 +2599,26 @@ extern void basic_move(
          }
          else if (result->kind == s_8x8) {
             /* See if people landed on 2x8 spots. */
-            if ((lilresult_mask[0] & 0x77770FFF) == 0 && (lilresult_mask[1] & 0x77770FFF) == 0) {
-               result->kind = s2x8;
-               permuter = octtranslateh;
-            }
-            else if ((lilresult_mask[0] & 0x0FFF7777) == 0 && (lilresult_mask[1] & 0x0FFF7777) == 0) {
-               result->kind = s2x8;
+            result->kind = s2x8;
+            permuter = octtranslateh;
+
+            if ((lilresult_mask[0] & 0x0FFF7777) == 0 && (lilresult_mask[1] & 0x0FFF7777) == 0) {
                permuter = octtranslatev;
                rotator = 1;
             }
-            else
+            else if ((lilresult_mask[0] & 0x77770FFF) != 0 || (lilresult_mask[1] & 0x77770FFF) != 0)
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == s_x4dmd) {
             /* See if people landed on quad diamond spots. */
-            if ((lilresult_mask[0] & 0xAF50AF50) == 0) {
-               result->kind = s_4dmd;
-               permuter = qdmtranslateh;
-            }
-            else if ((lilresult_mask[0] & 0x50AF50AF) == 0) {
-               result->kind = s2x8;
+            result->kind = s_4dmd;
+            permuter = qdmtranslateh;
+
+            if ((lilresult_mask[0] & 0x50AF50AF) == 0) {
                permuter = qdmtranslatev;
                rotator = 1;
             }
-            else
+            else if ((lilresult_mask[0] & 0xAF50AF50) != 0)
                fail("Call went to improperly-formed setup.");
          }
          else if (result->kind == s_hyperglass) {
@@ -2745,7 +2748,7 @@ extern void basic_move(
                result->people[k] = newperson;
                result_mask |= (1 << k);
             }
-            else if ((callspec->callflags & cflag__take_right_hands) && (final_numout <= 12) && (result->people[k+12].id1 == 0)) {
+            else if ((callspec->callflags1 & CFLAG1_TAKE_RIGHT_HANDS) && (final_numout <= 12) && (result->people[k+12].id1 == 0)) {
                /* Collisions are legal.  Store the person in the overflow area
                   (12 higher than the main area, which is why we only permit
                   this if the result setup size is <= 12) and record the fact

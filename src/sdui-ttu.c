@@ -26,24 +26,70 @@
 extern char *tgetstr();
 #endif
 
-static char *top_of_screen;
-static char *clear_to_end_of_line;
-static char *clear_to_end_of_screen;
+static char *top_of_screen = (char *) 0;
+static char *clear_to_end_of_line = (char *) 0;
+static char *clear_to_end_of_screen = (char *) 0;
 
 static void terminfo_init(FILE *filep)
 {
-#ifdef NO_TERMINFO
-    /* Provide standard defaults in case terminfo fails */
-    top_of_screen = "\033[H";
-    clear_to_end_of_line = "\033[K";
-    clear_to_end_of_screen = "\033[J";
-#else
+#ifndef NO_TERMINFO
+    int status;
 
-    setupterm(NULL, fileno(filep), NULL); /* exits on failure, too harsh? */
-    top_of_screen = tgetstr("ho", NULL);
-    clear_to_end_of_line = tgetstr("ce", NULL);
-    clear_to_end_of_screen = tgetstr("cd", NULL);
+    /* You won't believe this, but the procedure "setupterm" does not use
+       the usual return-an-integer-which-is-zero-if-successful-and-nonzero-
+       with-a-reason-for-failure-in-errno protocol that seems to have been
+       good enough for most of the rest of UNIX.  Instead, you pass the
+       address to which the success or failure status is to be stored
+       (success=1, other values indicate failure, but the meaning isn't
+       documented beyond that).  If the address passed is null and the
+       call fails, setupterm PRINTS A MESSAGE (remember, we are trying to
+       set up special terminal I/O, so the meaning of printing a message
+       is murky), AND THEN ABORTS THE ENTIRE #$%*@#(!%$$#^%!$# PROGRAM!!!!!!
+       I'm not making this up! */
+
+    /* Find out what kind of "terminal" we are using.  What we would like is
+       to communicate with the user through something like the SUPDUP
+       protocol, or some other method at least as technologically advanced
+       as that 20-year-old system.  After all, we might be on a WORKSTATION
+       or other device that has powerful bit-mapped graphical I/O
+       capabilities.  As such, we ought to be able to access those
+       capabilities in a reasonable way.  Instead, we seem to have been
+       provided with the "curses" interface, whose complexity-of-use to
+       generality,-power,-and-winningness-of-design ratio is utterly
+       astonishing.  Just using the stupid VT-100 escape sequences is
+       probably the best way to get what we want, considering the lengths
+       the OS seems to be trying to go through in order to prevent us from
+       doing something reasonable.  But we will humor the system by doing
+       the "setupterm" call, so it can look in its "termcap" database to
+       find out whether we are connected, for example, to a Datapoint
+       Beehive terminal which the OS after 20 years still hasn't figured
+       out how to handle.  If we are lucky, the "setupterm" call will report
+       failure (perhaps we are using a WORKSTATION!) in which case we will
+       just use the VT-100 escape sequences and assume that that WORKSTATION
+       will do the right thing with them.  If we are unlucky, the
+       "setupterm" call will succeed, in which case we will do whatever it
+       tells us to do, hoping that the "termcap" file has correctly
+       described whatever abomination it, rightly or wrongly, thinks we
+       are connected to. */
+
+    setupterm(NULL, fileno(filep), &status);
+
+    if (status == 1) {
+       /* Setupterm succeeded.  Use the "curses" stuff and pray for the day
+          when we don't need to do this any more. */
+       top_of_screen = tgetstr("ho", NULL);
+       clear_to_end_of_line = tgetstr("ce", NULL);
+       clear_to_end_of_screen = tgetstr("cd", NULL);
+    }
 #endif
+
+    /* Setupterm or some other part of the system may have failed.
+       Maybe we aren't using "terminfo" at all, lucky us!
+       Use VT-100 protocols and pray for the day when we don't need
+       to do this any more. */
+    if (!top_of_screen) top_of_screen = "\033[H";
+    if (!clear_to_end_of_line) clear_to_end_of_line = "\033[K";
+    if (!clear_to_end_of_screen) clear_to_end_of_screen = "\033[J";
 }
 
 /* ARGSUSED */

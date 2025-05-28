@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
@@ -27,53 +27,128 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 34
+#define DATABASE_FORMAT_VERSION 40
 
-/* BEWARE!!  This list must track the tables "flagtab" and "nexttab"" in mkcalls.c .
-   Because the constants are not defined contiguously, there are spacer items
-   in those tables.
-   The last bunch of flags are pushed up against the high end of the word, so that
-   they can exactly match some other flags.  The constant HERITABLE_FLAG_MASK
-   embraces them.  The flags that must stay in step are in the "FINAL__XXX" group
-   in sd.h, the "cflag__xxx" group in database.h, and the "dfm_xxx" group in
-   database.h . There is compile-time code in sdinit.c to check that these
-   constants are all in step.
+
+
+
+/* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh", and
+   "altdeftabh" in dbcomp.c .  These are the infamous "heritable flags".
+   They are used in generally corresponding ways in the "callflagsh" word
+   of a top level callspec_block, the "modifiersh" word of a "by_def_item",
+   and the "modifier_seth" word of a "calldef_block".
+   The constant HERITABLE_FLAG_MASK embraces them.
 */
 
-#define cflag__step_to_wave               0x00000001
-#define cflag__rear_back_from_r_wave      0x00000002
-#define cflag__rear_back_from_qtag        0x00000004
-#define cflag__dont_use_in_resolve        0x00000008
-#define cflag__requires_selector          0x00000010
-#define cflag__requires_number            0x00000020
-#define cflag__sequence_starter           0x00000040
-#define cflag__split_like_square_thru     0x00000080
-#define cflag__split_like_dixie_style     0x00000100
-#define cflag__parallel_conc_end          0x00000200
-#define cflag__take_right_hands           0x00000400
-#define cflag__is_tag_call                0x00000800
-#define cflag__is_scoot_call              0x00001000
-#define cflag__is_star_call               0x00002000
-#define cflag__split_large_setups         0x00004000
-#define cflag__fudge_to_q_tag             0x00008000
-#define cflag__visible_fractions          0x00010000
-#define cflag__first_part_visible         0x00020000
-#define cflag__12_16_matrix_means_split   0x00040000
-/* space left for                         0x00080000 */
-/* space left for                         0x00100000 */
-#define cflag__diamond_is_inherited       0x00200000
-#define cflag__reverse_means_mirror       0x00400000
-#define cflag__left_means_mirror          0x00800000
-#define cflag__funny_is_inherited         0x01000000
-#define cflag__intlk_is_inherited         0x02000000
-#define cflag__magic_is_inherited         0x04000000
-#define cflag__grand_is_inherited         0x08000000
-#define cflag__12_matrix_is_inherited     0x10000000
-#define cflag__16_matrix_is_inherited     0x20000000
-#define cflag__cross_is_inherited         0x40000000
-#define cflag__single_is_inherited        0x80000000
+#define INHERITFLAG_DIAMOND               0x00000001
+#define INHERITFLAG_REVERSE               0x00000002
+#define INHERITFLAG_LEFT                  0x00000004
+#define INHERITFLAG_FUNNY                 0x00000008
+#define INHERITFLAG_INTLK                 0x00000010
+#define INHERITFLAG_MAGIC                 0x00000020
+#define INHERITFLAG_GRAND                 0x00000040
+#define INHERITFLAG_12_MATRIX             0x00000080
+#define INHERITFLAG_16_MATRIX             0x00000100
+#define INHERITFLAG_CROSS                 0x00000200
+#define INHERITFLAG_SINGLE                0x00000400
+#define INHERITFLAG_1X2                   0x00000800
+#define INHERITFLAG_2X1                   0x00001000
+#define INHERITFLAG_2X2                   0x00002000
+#define INHERITFLAG_1X3                   0x00004000
+#define INHERITFLAG_3X1                   0x00008000
+#define INHERITFLAG_3X3                   0x00010000
+#define INHERITFLAG_4X4                   0x00020000
 
-#define HERITABLE_FLAG_MASK               0xFFE00000
+#define HERITABLE_FLAG_MASK               0x0003FFFF
+
+/* These spare bits are used in the include file sd.h to allocate flag bits
+   that will share a word with the heritable flags.  Those flag bits are
+   used internally by the program and are not part of the database definition,
+   so they don't belong here.  By setting up  these spare bit definitions we
+   can ensure that those bits will not conflict with the heritable flags.
+   That is, if we add a heritable flag, we necessarily destroy a spare bit.
+   If the definitions in sd.h find themselves using an undefined spare bit,
+   we know we are in serious trouble. */
+
+#define INHERITSPARE_1                    0x00040000
+#define INHERITSPARE_2                    0x00080000
+#define INHERITSPARE_3                    0x00100000
+#define INHERITSPARE_4                    0x00200000
+#define INHERITSPARE_5                    0x00400000
+#define INHERITSPARE_6                    0x00800000
+#define INHERITSPARE_7                    0x01000000
+#define INHERITSPARE_8                    0x02000000
+#define INHERITSPARE_9                    0x04000000
+#define INHERITSPARE_10                   0x08000000
+#define INHERITSPARE_11                   0x10000000
+#define INHERITSPARE_12                   0x20000000
+#define INHERITSPARE_13                   0x40000000
+#define INHERITSPARE_14                   0x80000000
+
+
+#ifdef notused
+/*  Need to get rid of these. */
+#define FINAL__DIAMOND                    INHERITFLAG_DIAMOND
+#define FINAL__REVERSE                    INHERITFLAG_REVERSE
+#define FINAL__LEFT                       INHERITFLAG_LEFT
+#define FINAL__FUNNY                      INHERITFLAG_FUNNY
+#define FINAL__INTERLOCKED                INHERITFLAG_INTLK
+#define FINAL__MAGIC                      INHERITFLAG_MAGIC
+#define FINAL__GRAND                      INHERITFLAG_GRAND
+#define FINAL__12_MATRIX                  INHERITFLAG_12_MATRIX
+#define FINAL__16_MATRIX                  INHERITFLAG_16_MATRIX
+#define FINAL__CROSS                      INHERITFLAG_CROSS
+#define FINAL__SINGLE                     INHERITFLAG_SINGLE
+
+#define cflag__diamond_is_inherited       0x00000001
+#define cflag__reverse_means_mirror       0x00000002
+#define cflag__left_means_mirror          0x00000004
+#define cflag__funny_is_inherited         0x00000008
+#define cflag__intlk_is_inherited         0x00000010
+#define cflag__magic_is_inherited         0x00000020
+#define cflag__grand_is_inherited         0x00000040
+#define cflag__12_matrix_is_inherited     0x00000080
+#define cflag__16_matrix_is_inherited     0x00000100
+#define cflag__cross_is_inherited         0x00000200
+#define cflag__single_is_inherited        0x00000400
+
+#define dfm_inherit_diamond               0x00000001
+#define dfm_inherit_reverse               0x00000002
+#define dfm_inherit_left                  0x00000004
+#define dfm_inherit_funny                 0x00000008
+#define dfm_inherit_intlk                 0x00000010
+#define dfm_inherit_magic                 0x00000020
+#define dfm_inherit_grand                 0x00000040
+#define dfm_inherit_12_matrix             0x00000080
+#define dfm_inherit_16_matrix             0x00000100
+#define dfm_inherit_cross                 0x00000200
+#define dfm_inherit_single                0x00000400
+#endif
+
+/* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
+   These flags go into the "callflags1" word of a callspec_block. */
+
+#define CFLAG1_VISIBLE_FRACTIONS          0x00000001
+#define CFLAG1_FIRST_PART_VISIBLE         0x00000002
+#define CFLAG1_12_16_MATRIX_MEANS_SPLIT   0x00000004
+#define CFLAG1_IMPRECISE_ROTATION         0x00000008
+#define CFLAG1_SPLIT_LIKE_DIXIE_STYLE     0x00000010
+#define CFLAG1_PARALLEL_CONC_END          0x00000020
+#define CFLAG1_TAKE_RIGHT_HANDS           0x00000040
+#define CFLAG1_IS_TAG_CALL                0x00000080
+#define CFLAG1_IS_SCOOT_CALL              0x00000100
+#define CFLAG1_IS_STAR_CALL               0x00000200
+#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000400
+#define CFLAG1_FUDGE_TO_Q_TAG             0x00000800
+#define CFLAG1_STEP_TO_WAVE               0x00001000
+#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00002000
+#define CFLAG1_REAR_BACK_FROM_QTAG        0x00004000
+#define CFLAG1_DONT_USE_IN_RESOLVE        0x00008000
+#define CFLAG1_REQUIRES_SELECTOR          0x00010000
+#define CFLAG1_REQUIRES_NUMBER            0x00020000
+#define CFLAG1_SEQUENCE_STARTER           0x00040000
+#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00080000
+
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.c . */
 
@@ -93,7 +168,7 @@ typedef enum {
    l_a1, l_a2, l_c1, l_c2,
    l_c3a, l_c3, l_c3x, l_c4a, l_c4,
    l_dontshow, l_nonexistent_concept
-} level;
+} dance_level;
 
 /* These are the states that people can be in, and the "ending setups" that can appear
    in the call data base. */
@@ -255,8 +330,9 @@ typedef enum {
 
 typedef enum {
    sq_none,
-   sq_wave_only,                    /* 1x4 or 2x4 - waves */
+   sq_wave_only,                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
    sq_2fl_only,                     /* 1x4 or 2x4 - 2FL's */
+   sq_in_or_out,                    /* 2x2 - all facing in or all facing out */
    sq_miniwaves,                    /* 1x2, 1x4, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
                                        are paired in miniwaves of various handedness.
                                        For diamonds and qtags, this applies just to the centers.
@@ -308,6 +384,7 @@ typedef enum {
    schema_cross_concentric,
    schema_single_concentric,
    schema_single_cross_concentric,
+   schema_any_concentric,    /* This means we will do center 2 out of 4, if necessary. */
    schema_maybe_single_concentric,
    schema_concentric_diamond_line,
    schema_concentric_6_2,
@@ -330,12 +407,7 @@ typedef enum {
    schema_roll
 } calldef_schema;
 
-/* Maximum number of subcalls in a sequential definition ("schema_sequential") list. */
-#define SEQDEF_MAX 8
 
-/* BEWARE!!  This list must track the table "defmodtab" in mkcalls.c .
-   Because the constants are not defined contiguously, there are spacer items
-   in that table. */
 /* BEWARE!!  Some of these flags co-exist with other flags defined elsewhere.
    The early ones are "concentricity" flags.  They must co-exist with the
    setupflags defined in sd.h because they share the same word.  For that reason,
@@ -371,69 +443,52 @@ typedef enum {
    dfm_must_be_scoot_call            --  seqdefine: the subject call (or any replacement for it) must be a scoot-back-type call
    dfm_cpls_unless_single            --  seqdefine: the do this part as couples, unless this call is being done "single"
                                                                and "single_is_inherited" was set
-   dfm_inherit_diamond               --  concdefine/seqdefine: if original call said "diamond" apply it to this part
-   dfm_inherit_left                  --  concdefine/seqdefine: if original call said "left" apply it to this part
-   dfm_inherit_funny                 --  concdefine/seqdefine: if original call said "funny" apply it to this part
-   dfm_inherit_intlk                 --  concdefine/seqdefine: if original call said "interlocked" apply it to this part
-   dfm_inherit_magic                 --  concdefine/seqdefine: if original call said "magic" apply it to this part
-   dfm_inherit_grand                 --  concdefine/seqdefine: if original call said "grand" apply it to this part
-   dfm_inherit_12_matrix             --  concdefine/seqdefine: if original call said "12matrix" apply it to this part
-   dfm_inherit_16_matrix             --  concdefine/seqdefine: if original call said "16matrix" apply it to this part
-   dfm_inherit_cross                 --  concdefine/seqdefine: if original call said "cross" apply it to this part
-   dfm_inherit_single                --  concdefine/seqdefine: if original call said "single" apply it to this part
+   INHERITFLAG_DIAMOND               --  concdefine/seqdefine: if original call said "diamond" apply it to this part
+   INHERITFLAG_LEFT                  --  concdefine/seqdefine: if original call said "left" apply it to this part
+   INHERITFLAG_FUNNY                 --  concdefine/seqdefine: if original call said "funny" apply it to this part
+   INHERITFLAG_INTLK                 --  concdefine/seqdefine: if original call said "interlocked" apply it to this part
+   INHERITFLAG_MAGIC                 --  concdefine/seqdefine: if original call said "magic" apply it to this part
+   INHERITFLAG_GRAND                 --  concdefine/seqdefine: if original call said "grand" apply it to this part
+   INHERITFLAG_12_MATRIX             --  concdefine/seqdefine: if original call said "12matrix" apply it to this part
+   INHERITFLAG_16_MATRIX             --  concdefine/seqdefine: if original call said "16matrix" apply it to this part
+   INHERITFLAG_CROSS                 --  concdefine/seqdefine: if original call said "cross" apply it to this part
+   INHERITFLAG_SINGLE                --  concdefine/seqdefine: if original call said "single" apply it to this part
 */
 
 
-/* Start of concentricity flags. */
+/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c .
+/* Start of concentricity flags.  These go in the "modifiers1" word of a by_def_item. */
 
-#define dfm_conc_demand_lines             0x00000001
-#define dfm_conc_demand_columns           0x00000002
-#define dfm_conc_force_lines              0x00000004
-#define dfm_conc_force_columns            0x00000008
-#define dfm_conc_force_otherway           0x00000010
-#define dfm_conc_force_spots              0x00000020
-#define dfm_conc_concentric_rules         0x00000040
-#define dfm_suppress_elongation_warnings  0x00000080
+#define DFM1_CONC_DEMAND_LINES            0x00000001
+#define DFM1_CONC_DEMAND_COLUMNS          0x00000002
+#define DFM1_CONC_FORCE_LINES             0x00000004
+#define DFM1_CONC_FORCE_COLUMNS           0x00000008
+#define DFM1_CONC_FORCE_OTHERWAY          0x00000010
+#define DFM1_CONC_FORCE_SPOTS             0x00000020
+#define DFM1_CONC_CONCENTRIC_RULES        0x00000040
+#define DFM1_SUPPRESS_ELONGATION_WARNINGS 0x00000080
 
 /* End of concentricity flags.  This constant embraces them. */
-#define DFM_CONCENTRICITY_FLAG_MASK       0x000000FF
+#define DFM1_CONCENTRICITY_FLAG_MASK      0x000000FF
 
-/* Start of miscellaneous flags. */
+/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c .
+/* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
 
-#define dfm_or_anycall                    0x00000100
-#define dfm_mandatory_anycall             0x00000200
-#define dfm_repeat_n                      0x00000400
-#define dfm_repeat_nm1                    0x00000800
-#define dfm_repeat_n_alternate            0x00001000
-#define dfm_endscando                     0x00002000
-#define dfm_allow_forced_mod              0x00004000
-#define dfm_roll_transparent              0x00008000
-#define dfm_must_be_tag_call              0x00010000
-#define dfm_must_be_scoot_call            0x00020000
-#define dfm_cpls_unless_single            0x00040000
+#define DFM1_OR_ANYCALL                   0x00000100
+#define DFM1_MANDATORY_ANYCALL            0x00000200
+#define DFM1_REPEAT_N                     0x00000400
+#define DFM1_REPEAT_NM1                   0x00000800
+#define DFM1_REPEAT_N_ALTERNATE           0x00001000
+#define DFM1_ENDSCANDO                    0x00002000
+#define DFM1_ALLOW_FORCED_MOD             0x00004000
+#define DFM1_ROLL_TRANSPARENT             0x00008000
+#define DFM1_MUST_BE_TAG_CALL             0x00010000
+#define DFM1_MUST_BE_SCOOT_CALL           0x00020000
+#define DFM1_CPLS_UNLESS_SINGLE           0x00040000
 
-/* End of miscellaneous flags. */
-
-/* space left for                         0x00080000 */
-/* space left for                         0x00100000 */
-
-/* Start of inheritance flags. */
-
-#define dfm_inherit_diamond               0x00200000
-#define dfm_inherit_reverse               0x00400000
-#define dfm_inherit_left                  0x00800000
-#define dfm_inherit_funny                 0x01000000
-#define dfm_inherit_intlk                 0x02000000
-#define dfm_inherit_magic                 0x04000000
-#define dfm_inherit_grand                 0x08000000
-#define dfm_inherit_12_matrix             0x10000000
-#define dfm_inherit_16_matrix             0x20000000
-#define dfm_inherit_cross                 0x40000000
-#define dfm_inherit_single                0x80000000
-
-/* The first 6 predicates (in "pred_table" in preds.c and "predtab" in mkcalls.c)
+/* The first 10 predicates (in "pred_table" in preds.c and "predtab" in dbcomp.c)
    take selectors.  The following constant indicates that. */
-#define SELECTOR_PREDS 6
+#define SELECTOR_PREDS 10
 
 typedef enum {
    stb_none,

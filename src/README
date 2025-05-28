@@ -1,71 +1,88 @@
-This is Sd for POSIX.1/X11 systems.  Time-stamp: <93/04/09 17:42:58 gildea>
+Introduction
+************
 
-ABOUT SD:
+   Sd is a square dance caller's helper.  The program assists in
+writing material for Western square dancing by doing the checker
+pushing.  You tell the program what call you want to call next, and it
+computes the resulting setup and shows it to you.
 
-Sd is a square dance caller's helper.  The program assists in writing
-material for Western square dancing by doing the checker pushing.  You
-tell the program what call you want to call next, and it computes the
-resulting setup and shows it to you.
-
-There are several user interfaces available with Sd.  The standard is
+   There are several user interfaces available with Sd.  The standard is
 an X Window System interface.  Also included is a terminal-based user
 interface featuring a completing reader.  Support for Apollo's Domain
 Dialog is available from the authors, but is not part of the
 distribution.
 
-The file INSTALL contains instructions for building and installing Sd.
+Documentation
+=============
 
-The file sd_doc.txinfo documents using Sd.  The file database.doc
-gives internal information on the database format, useful only to
-people editing the calls database.
+   The file `INSTALL' contains instructions for building and installing
+Sd.
 
-See the file Relnotes for information about what is new in this release.
+   The file `sd_doc.txinfo' documents using Sd.  The file
+`database.doc' gives internal information on the database format,
+useful only to people editing the calls database.
 
+   See the file `Relnotes' for information about what is new in this
+release.
 
-DOCUMENTATION:
+   The file `sd_doc.txinfo' is in Texinfo format, which allows both
+on-line information and a printed manual to be generated from the same
+source document.  You can run it through TeX to produce a printed
+manual, or you can format it for use with `Info', a hypertext
+documentation reader.
 
-The file sd_doc.txinfo is in Texinfo format.  You can run it through TeX
-to produce a printed manual, or you can format it for use with
-Info, a hypertext documentation reader.
-
-Support for Texinfo-style documentation is distributed as part of
-Emacs and as stand-alone package, both available via anonymous ftp
+   Support for Texinfo-style documentation is distributed as part of
+Emacs and as a stand-alone package, both available via anonymous ftp
 from prep.ai.mit.edu and other GNU software archives.
 
-Both the Emacs and Texinfo distributions contain texinfo.tex, the
-macros required to print the document with TeX.  In Emacs, use M-x
-texinfo-format-buffer to convert to Info, and use M-x info to read the
-document.  In the Texinfo package, "makeinfo" converts to Info, and
-"info" is the reader; both are C programs.
+   Both the Emacs and Texinfo distributions contain texinfo.tex, the
+macros required to print the document with TeX.  In Emacs, use
+`M-x texinfo-format-buffer' to convert to Info, and use `M-x info' to
+read the document.  In the Texinfo package, `makeinfo' converts to
+Info, and `info' is the reader; both are C programs.
 
-You can use the following "make" commands to format the documentation:
+   You can use the following `make' commands to format the
+documentation:
 
-make info			convert to Info format
-make dvi			run through TeX.  Use this to make hardcopy.
+`make info'
+     convert to Info format
 
-In future releases we may also distribute pre-formatted versions of
-the documentation.
+`make dvi'
+     run through TeX.  Use this to make hardcopy.
 
+   In future releases we may also distribute pre-formatted versions of
+the documentation.  Printed copies of the manual are available from the
+authors.
 
-GETTING SD:
+Getting Sd
+==========
 
-Sd is available via anonymous FTP from the file contrib/c4/sd/sd-nn.tar.Z
-(where "nn" changes with the version) on host export.lcs.mit.edu.
-FTP is the Internet file transfer protocol.
+   Sd is available via anonymous FTP from the file
+`contrib/c4/sd/sd-nn.tar.Z' (where `nn' changes with the version) on
+host export.lcs.mit.edu.  FTP is the Internet file transfer protocol.
 
-If your mailer can interpret MIME messages, we can also send you Sd
+   If your mailer can interpret MIME messages, we can also send you Sd
 by email.  MIME is a draft Internet standard for multi-media mail.
 
-The Internet mailing list sd@mc.lcs.mit.edu is for discussion of Sd
-and announcements of new versions.  Send to sd-request@mc.lcs.mit.edu
-to be added.
+How to Contact the Authors
+==========================
 
-Please send bug reports and other comments on Sd to the authors at the
-addresses given below.  Be sure to include the version number.
+   The Internet mailing list `sd@expo.lcs.mit.edu' is for discussion of
+Sd and announcements of new versions.  Send to
+`sd-request@expo.lcs.mit.edu' to be added.
 
+   Please send bug reports and other comments on Sd to the authors at
+the addresses given below.  Be sure to include the version number.
 
-William Ackerman
-wba@apollo.hp.com
+     William Ackerman
+     wba@apollo.hp.com
+     
+     Stephen Gildea
+     gildea@lcs.mit.edu
 
-Stephen Gildea
-gildea@lcs.mit.edu
+   If you do not have access to electronic mail, write to
+
+     Bill Ackerman
+     5 Parlmont Park Apt 100
+     North Billerica MA 01862-2722
+

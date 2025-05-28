@@ -190,32 +190,6 @@ extern void writestuff(char s[])
 
 
 
-Private void writestuff_with_fraction(char s[], long_boolean do_number, int num)
-{
-   if (do_number) {
-      char *f = s;
-      while (*f) {
-         if (f[0] == '<' && f[1] == 'N' && f[2] == '/' && f[3] == '4' &&f[4] == '>') {
-            if ((num & 0xFFFF) == 2)
-               writestuff("1/2");
-            else {
-               writechar('0' + (num & 0xFFFF));
-               writestuff("/4");
-            }
-            writestuff(&f[5]);
-            return;
-         }
-         else
-            writechar(*f++);
-      }
-   }
-   else {
-      writestuff(s);
-   }
-}
-
-
-
 Private void writestuff_with_decorations(char s[], long_boolean do_number, long_boolean do_selector, int num, char *selname)
 {
    if (do_number || do_selector) {
@@ -223,10 +197,10 @@ Private void writestuff_with_decorations(char s[], long_boolean do_number, long_
       while (*f) {
          if (f[0] == '<') {
             if (do_number && f[1] == 'N' && f[2] == '/' && f[3] == '4' &&f[4] == '>') {
-               if ((num & 0xFFFF) == 2)
+               if ((num & 0xF) == 2)
                   writestuff("1/2");
                else {
-                  writechar('0' + (num & 0xFFFF));
+                  writechar('0' + (num & 0xF));
                   writestuff("/4");
                }
                f += 5;
@@ -691,13 +665,10 @@ Private void print_recurse(int print_recurse_arg)
          parse_block *save_cptr;
          parse_block *subsidiary_ptr;
          parse_block *search;
-         selector_kind i16junk;
-         int i17junk;
          callspec_block *localcall;
          long_boolean pending_subst, subst_in_use;
-
-         i16junk = static_cptr->selector;
-         i17junk = static_cptr->number;
+         selector_kind i16junk = static_cptr->selector;
+         int i17junk = static_cptr->number;
          localcall = static_cptr->call;
 
          save_cptr = static_cptr;
@@ -753,13 +724,13 @@ Private void print_recurse(int print_recurse_arg)
                      char nn[2];
 
                      if (lastchar != ' ' && lastchar != '[') writestuff(" ");
-                     nn[0] = '0' + i17junk;
+                     nn[0] = '0' + (i17junk & 0xF);
                      nn[1] = '\0';
                      if (np[1] == '9')
                         writestuff(nn);
-                     else if (i17junk == 2)
+                     else if ((i17junk & 0xF) == 2)
                         writestuff("1/2");
-                     else if ((i17junk == 4) && (np[1] == 'a'))
+                     else if ((i17junk & 0xF) == 4 && np[1] == 'a')
                         writestuff("full");
                      else {
                         writestuff(nn);
@@ -870,11 +841,11 @@ Private void print_recurse(int print_recurse_arg)
                      localcall = search->call;
 
                      if ((!(first_replace++)) && static_cptr &&
-                           (localcall->callflags & cflag__is_star_call) &&
+                           (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
                                  ((static_cptr->concept->kind == marker_end_of_list) ||
                                  (static_cptr->concept->kind == concept_another_call_next_mod)) &&
                            (static_cptr->call) &&
-                           (static_cptr->call->callflags & cflag__is_star_call)) {
+                           (static_cptr->call->callflags1 & CFLAG1_IS_STAR_CALL)) {
                         writestuff(" BUT [");
                      }
                      else {
@@ -1167,7 +1138,7 @@ Private void printsetup(setup *x)
          if (x->rotation & 1)
             do_write("     g@f      a@   hd@e      b@     c");
          else
-            do_write("  a  b@     d@g       c@     h@  f  e");
+            do_write("   a  b@      d@g        c@      h@   f  e");
          break;
       case s_galaxy:
          offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
@@ -1238,6 +1209,10 @@ Private void printsetup(setup *x)
       case s_c1phan:
          offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
          do_write("   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j");
+         break;
+      case s_thar:
+         offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
+         do_write("      c@      d@abfe@      h@      g");
          break;
       case s4x6:
          if (x->rotation & 1)
@@ -1565,8 +1540,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          k = 0;   /* Many tests will find these values useful. */
          i = 2;
 
-         switch(p->qualifier) {
-            case sq_wave_only:                    /* 1x4 or 2x4 - wave */
+         switch (p->qualifier) {
+            case sq_wave_only:                    /* 1x4 or 2x4 - waves; 2x2 - real RH or LH box */
                switch (ss->kind) {
                   case s1x4:
                      if (t = ss->people[0].id1) { k |=  t; i &=  t; }
@@ -1574,6 +1549,25 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                      if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
                      if (t = ss->people[3].id1) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
+                     goto bad;
+                  case s2x2:
+                     u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+
+                     if ((u & 1) == 0) {
+                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+                        if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+                        if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+                        if (!(k & ~i & 2)) goto good;
+                     }
+                     else if ((u & 010) == 0) {
+                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+                        if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+                        if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+                        if (!(k & ~i & 2)) goto good;
+                     }
+
                      goto bad;
                   case s2x4:
                      if (t = ss->people[0].id1) { k |=  t; i &=  t; }
@@ -1585,6 +1579,30 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                      if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
                      if (t = ss->people[7].id1) { k |=  t; i &=  t; }
                      if (!(k & ~i & 2)) goto good;
+                     goto bad;
+                  default:
+                     goto good;                 /* We don't understand the setup -- we'd better accept it. */
+               }
+            case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
+               switch (ss->kind) {
+                  case s2x2:
+                     u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
+
+                     if ((u & 1) == 0) {
+                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+                        if (t = ss->people[1].id1) { k |=  t; i &=  t; }
+                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+                        if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+                        if (!(k & ~i & 2)) goto good;
+                     }
+                     else if ((u & 010) == 0) {
+                        if (t = ss->people[0].id1) { k |=  t; i &=  t; }
+                        if (t = ss->people[1].id1) { k |= ~t; i &= ~t; }
+                        if (t = ss->people[2].id1) { k |= ~t; i &= ~t; }
+                        if (t = ss->people[3].id1) { k |=  t; i &=  t; }
+                        if (!(k & ~i & 2)) goto good;
+                     }
+
                      goto bad;
                   default:
                      goto good;                 /* We don't understand the setup -- we'd better accept it. */
@@ -2100,42 +2118,47 @@ extern parse_block *process_final_concepts(
             bit_to_set = FINAL__TRIANGLE; break;
          case concept_magic:
             last_magic_diamond = tptr;
-            if (check_errors && (*final_concepts & (FINAL__SINGLE | FINAL__DIAMOND)))
+            if (check_errors && (*final_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND)))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = FINAL__MAGIC; break;
+            bit_to_set = INHERITFLAG_MAGIC; break;
          case concept_grand:
-            if (check_errors && (*final_concepts & FINAL__SINGLE))
+            if (check_errors && (*final_concepts & INHERITFLAG_SINGLE))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = FINAL__GRAND; break;
-         case concept_cross:
-            bit_to_set = FINAL__CROSS; break;
-         case concept_single:
-            bit_to_set = FINAL__SINGLE; break;
+            bit_to_set = INHERITFLAG_GRAND; break;
+         case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
+         case concept_single: bit_to_set = INHERITFLAG_SINGLE; break;
+         case concept_1x2: bit_to_set = INHERITFLAG_1X2; break;
+         case concept_2x1: bit_to_set = INHERITFLAG_2X1; break;
+         case concept_2x2: bit_to_set = INHERITFLAG_2X2; break;
+         case concept_1x3: bit_to_set = INHERITFLAG_1X3; break;
+         case concept_3x1: bit_to_set = INHERITFLAG_3X1; break;
+         case concept_3x3: bit_to_set = INHERITFLAG_3X3; break;
+         case concept_4x4: bit_to_set = INHERITFLAG_4X4; break;
          case concept_interlocked:
             last_magic_diamond = tptr;
-            if (check_errors && (*final_concepts & (FINAL__SINGLE | FINAL__DIAMOND)))
+            if (check_errors && (*final_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND)))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = FINAL__INTERLOCKED; break;
+            bit_to_set = INHERITFLAG_INTLK; break;
          case concept_split:
             bit_to_set = FINAL__SPLIT; break;
          case concept_reverse:
-            bit_to_set = FINAL__REVERSE; break;
+            bit_to_set = INHERITFLAG_REVERSE; break;
          case concept_left:
-            bit_to_set = FINAL__LEFT; break;
+            bit_to_set = INHERITFLAG_LEFT; break;
          case concept_12_matrix:
             if (check_errors && *final_concepts)
                fail("Matrix modifier must appear first.");
-            bit_to_set = FINAL__12_MATRIX; break;
+            bit_to_set = INHERITFLAG_12_MATRIX; break;
          case concept_16_matrix:
             if (check_errors && *final_concepts)
                fail("Matrix modifier must appear first.");
-            bit_to_set = FINAL__16_MATRIX; break;
+            bit_to_set = INHERITFLAG_16_MATRIX; break;
          case concept_diamond:
-            if (check_errors && (*final_concepts & FINAL__SINGLE))
+            if (check_errors && (*final_concepts & INHERITFLAG_SINGLE))
                fail("Modifiers specified in illegal order.");
-            bit_to_set = FINAL__DIAMOND; break;
+            bit_to_set = INHERITFLAG_DIAMOND; break;
          case concept_funny:
-            bit_to_set = FINAL__FUNNY; break;
+            bit_to_set = INHERITFLAG_FUNNY; break;
          default:
             goto exit5;
       }
@@ -2338,6 +2361,7 @@ Private void innards(
    /* Do various special things. */
 
    switch (maps->map_kind) {
+      case MPKIND__4_EDGES:
       case MPKIND__4_QUADRANTS:
          /* These particular maps misrepresent the rotation of subsetups 2 and 4, so
             we have to repair things when a shape-changer is called. */
@@ -2416,7 +2440,7 @@ Private void innards(
 
       if (rot & 1) {
          install_rot(result, final_map->map1[i], &z[0], i, r);
-         if (maps->map_kind == MPKIND__4_QUADRANTS) {
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
             install_person(result, final_map->map2[i], &z[1], i);
             install_rot(result, final_map->map3[i], &z[2], i, 011);
             install_person(result, final_map->map4[i], &z[3], i);
@@ -2438,7 +2462,7 @@ Private void innards(
          else if (z[0].people[i].id1 & BIT_PERSON)
             fail("This would go into an excessively large matrix.");
 
-         if (maps->map_kind == MPKIND__4_QUADRANTS) {
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
             install_rot(result, final_map->map2[i], &z[1], i, 011);
             install_person(result, final_map->map3[i], &z[2], i);
             install_rot(result, final_map->map4[i], &z[3], i, 011);
@@ -2541,7 +2565,7 @@ extern void divided_setup_move(
       if (rot & 1) {
          /* Rotation is odd.  3 is a special case. */
          (void) copy_rot(&x[0], i, &tstuff, 0, (rot==3 ? 011 : 033));
-         if (maps->map_kind == MPKIND__4_QUADRANTS) {
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
             (void) copy_person(&x[1], i, &tstuff, 1);
             (void) copy_rot(&x[2], i, &tstuff, 2, 033);
             (void) copy_person(&x[3], i, &tstuff, 3);
@@ -2558,7 +2582,7 @@ extern void divided_setup_move(
       else {
          /* Rotation is even.  2 is a special case. */
          (void) copy_person(&x[0], i, &tstuff, 0);
-         if (maps->map_kind == MPKIND__4_QUADRANTS) {
+         if (maps->map_kind == MPKIND__4_QUADRANTS || maps->map_kind == MPKIND__4_EDGES) {
             (void) copy_rot(&x[1], i, &tstuff, 1, 033);
             (void) copy_person(&x[2], i, &tstuff, 2);
             (void) copy_rot(&x[3], i, &tstuff, 3, 033);

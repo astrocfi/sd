@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 28. */
+    This is for version 29. */
 
 #define TRUE 1
 #define FALSE 0
@@ -303,30 +303,6 @@ typedef struct {
    as part of a concentrically defined call for which some forcing modifier
    such as "force_columns" was used.
 
-******** not true any longer VVVVVVVV *********
-   RESULTFLAG__PAR_CONC_END means that, if the call just executed went from a
-   2x2 to a 2x2, the call desires that the elongation change, or if the call just
-   executed went from a 1x4/diamond to a 2x2, the call desires that the elongation
-   be parallel to the original long axis.  The defaults for such calls are, for
-   2x2->2x2, that the elongation remain, and, for 1x4->2x2, that the elongation
-   be perpendicular to the long axis.  Whatever the outcome of this flag or the
-   default, it can be overriden by various concentric invocation flags, or by
-   the "concentric" and "checkpoint" concepts.  In general, this flag is taken
-   from the corresponding flag in the call definition.  HOWEVER: this is done only
-   for calls that are defined for 2x2->2x2 or 1x4->2x2 or dmd->2x2.  If the call
-   is defined for 1x2->1x2 and finds itself being executed on a 1x4 or 2x2 (by
-   subdividing the setup), the flag from the calls database is IGNORED.  In such
-   a case, RESULTFLAG__PAR_CONC_END will be cleared for a 2x2->2x2 transformation
-   and set for a 1x4->2x2 transformation, in each case indicating the the call
-   desires the elongation to stay the same.
-
-   RESULTFLAG__PAR_CONC_UNK means that it is unknown what
-   the state of RESULTFLAG__PAR_CONC_END should be, that is, if the call just
-   executed went to a 2x2, it is not known what elongation the call prefers.
-   This will never be set for any existing calls.  Only compound calls that
-   go through an intermediate state which is a star could cause this.
-******** not true any longer ^^^^^^^^ *********
-
    RESULTFLAG__NEED_DIAMOND means that a call has been executed with the "magic" or
    "interlocked" modifier, and it really should be changed to the "magic diamond"
    concept.  Otherwise, we might end up saying "magic diamond single wheel" when
@@ -419,17 +395,18 @@ typedef struct {
 
 
 /* BEWARE!!  If change this next definition, be sure to update the definition of
-   "resolve_names" in SDTABLES. */
+   "resolve_names" in sdtables.c . */
 typedef enum {
    resolve_none,
    resolve_rlg, resolve_la,
    resolve_ext_rlg, resolve_ext_la,
+   resolve_slipclutch_rlg, resolve_slipclutch_la,
    resolve_circ_rlg, resolve_circ_la,
    resolve_pth_rlg, resolve_pth_la,
    resolve_tby_rlg, resolve_tby_la,
    resolve_xby_rlg, resolve_xby_la,
    resolve_dixie_grand,
-   resolve_prom
+   resolve_prom, resolve_at_home
 } resolve_kind;
 
 typedef struct {
@@ -529,34 +506,19 @@ typedef enum {
 } call_list_kind;
 #define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
 
-/* BEWARE!!  
-   The last bunch of flags are pushed up against the high end of the word, so that
-   they can exactly match some other flags.  The constant HERITABLE_FLAG_MASK
-   embraces them.  The flags that must stay in step are in the "FINAL__XXX" group
-   in sd.h, the "cflag__xxx" group in database.h, and the "dfm_xxx" group in
-   database.h . There is compile-time code in sdinit.c to check that these
-   constants are all in step.
-*/
 
-#define FINAL__SPLIT                 0x00000001
-#define FINAL__SPLIT_SQUARE_APPROVED 0x00000002
-#define FINAL__SPLIT_DIXIE_APPROVED  0x00000004
-#define FINAL__MUST_BE_TAG           0x00000008
-#define FINAL__MUST_BE_SCOOT         0x00000010
-#define FINAL__TRIANGLE              0x00000020
-#define FINAL__SPLIT_SEQ_DONE        0x00000040
+/* These flags go along for the ride, in some parts of the code, in the same word
+   as the heritable flags, but are not part of the inheritance mechanism.  We use
+   symbols that have been graciously provided for us from database.h to tell us
+   what bits may be safely used next to the heritable flags. */
 
-#define FINAL__DIAMOND               0x00200000
-#define FINAL__REVERSE               0x00400000
-#define FINAL__LEFT                  0x00800000
-#define FINAL__FUNNY                 0x01000000
-#define FINAL__INTERLOCKED           0x02000000
-#define FINAL__MAGIC                 0x04000000
-#define FINAL__GRAND                 0x08000000
-#define FINAL__12_MATRIX             0x10000000
-#define FINAL__16_MATRIX             0x20000000
-#define FINAL__CROSS                 0x40000000
-#define FINAL__SINGLE                0x80000000
+#define FINAL__SPLIT                      INHERITSPARE_1
+#define FINAL__SPLIT_SQUARE_APPROVED      INHERITSPARE_2
+#define FINAL__SPLIT_DIXIE_APPROVED       INHERITSPARE_3
+#define FINAL__MUST_BE_TAG                INHERITSPARE_4
+#define FINAL__MUST_BE_SCOOT              INHERITSPARE_5
+#define FINAL__TRIANGLE                   INHERITSPARE_6
+#define FINAL__SPLIT_SEQ_DONE             INHERITSPARE_7
 
 typedef unsigned int final_set;
 
@@ -607,18 +569,20 @@ typedef int defmodset;
 
 typedef struct {
    short call_id;
-   defmodset modifiers;
+   unsigned int modifiers1;
+   unsigned int modifiersh;
 } by_def_item;
 
 typedef struct glowk {
-   int modifier_set;
+   unsigned int modifier_seth;
    callarray *callarray_list;
    struct glowk *next;
-   level modifier_level;
+   dance_level modifier_level;
 } calldef_block;
 
 typedef struct {
-   int callflags;
+   unsigned int callflags1;
+   unsigned int callflagsh;
    int age;
    calldef_schema schema;
    union {
@@ -630,7 +594,7 @@ typedef struct {
          short stuff[8];
       } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
       struct {
-         by_def_item defarray[SEQDEF_MAX+1];
+         by_def_item *defarray;  /* Dynamically allocated, ends with a zero. */
       } def;            /* if schema = schema_by_def */
       struct {
          by_def_item innerdef;
@@ -648,6 +612,7 @@ typedef enum {
    MPKIND__REMOVED,
    MPKIND__OVERLAP,
    MPKIND__INTLK,
+   MPKIND__CONCPHAN,
    MPKIND__OFFS_L_HALF,
    MPKIND__OFFS_R_HALF,
    MPKIND__OFFS_L_FULL,
@@ -655,6 +620,7 @@ typedef enum {
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
+   MPKIND__4_EDGES,
    MPKIND__DMD_STUFF
 } mpkind;
 
@@ -682,7 +648,7 @@ typedef struct {
 } coordrec;
 
 
-/* BEWARE!!  This list must track the array "concept_table" in sd.c . */
+/* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
 typedef enum {
 
 /* These next few are not concepts.  Their appearance marks
@@ -720,6 +686,13 @@ typedef enum {
    concept_interlocked,
    concept_12_matrix,
    concept_16_matrix,
+   concept_1x2,
+   concept_2x1,
+   concept_2x2,
+   concept_1x3,
+   concept_3x1,
+   concept_3x3,
+   concept_4x4,
    concept_2x6_matrix,
    concept_2x8_matrix,
    concept_4x4_matrix,
@@ -728,6 +701,7 @@ typedef enum {
    concept_randomtrngl,
    concept_selbasedtrngl,
    concept_split,
+   concept_each_1x4,
    concept_diamond,
    concept_triangle,
    concept_do_both_boxes,
@@ -738,6 +712,7 @@ typedef enum {
    concept_do_phantom_1x6,
    concept_do_phantom_1x8,
    concept_do_phantom_2x4,
+   concept_do_phantom_lines,
    concept_do_phantom_2x3,
    concept_divided_2x4,
    concept_divided_2x3,
@@ -779,6 +754,7 @@ typedef enum {
    concept_trace,
    concept_ferris,
    concept_centers_and_ends,
+   concept_twice,
    concept_sequential,
    concept_meta,
    concept_so_and_so_begin,
@@ -889,7 +865,7 @@ typedef enum {
 typedef struct {
    char *name;
    concept_kind kind;
-   level level;
+   dance_level level;
    struct {
       map_thing *maps;
       int arg1;
@@ -942,7 +918,7 @@ typedef struct {
    parse_block **concept_write_ptr;
    parse_block **concept_write_base;
    char *specialprompt;
-   int topcallflags;
+   int topcallflags1;
    call_list_kind call_list_to_use;
 } parse_state_type;
 
@@ -969,8 +945,20 @@ typedef struct {
    setup the_setup;
 } startinfo;
 
-/* BEWARE!!  This next definition is keyed to stuff in SDRESOLVE, particularly the array "title_string". */
-typedef enum {search_anything, search_nice_setup, search_resolve, search_reconcile} search_kind;
+/* BEWARE!!  This next two definitions are keyed to stuff in SDRESOLVE or 
+   the UI, particularly the array "title_string". */
+typedef enum {
+   search_anything,
+   search_nice_setup,
+   search_resolve,
+   search_reconcile
+} search_kind;
+
+typedef enum {
+   resolver_display_ok,
+   resolver_display_searching,
+   resolver_display_failed
+} resolver_display_state;
 
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
@@ -1024,7 +1012,7 @@ extern concept_descriptor marker_concept_force;                     /* in SDCTAB
 extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
 extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
 extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
-extern level calling_level;                                         /* in SDCTABLE */
+extern dance_level calling_level;                                   /* in SDCTABLE */
 extern concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
 extern int nice_setup_concept[];                                    /* in SDCTABLE */
 extern int general_concept_offset;                                  /* in SDCTABLE */
@@ -1115,13 +1103,13 @@ extern int last_file_position;                                      /* in SDMAIN
 extern int global_age;                                              /* in SDMAIN */
 extern parse_state_type parse_state;                                /* in SDMAIN */
 extern int uims_menu_index;                                         /* in SDMAIN */
-extern char major_database_version[20];                             /* in SDMAIN */
-extern char minor_database_version[20];                             /* in SDMAIN */
+extern char database_version[81];                                   /* in SDMAIN */
 extern int whole_sequence_low_lim;                                  /* in SDMAIN */
 extern long_boolean not_interactive;                                /* in SDMAIN */
 extern long_boolean initializing_database;                          /* in SDMAIN */
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
+extern int allowing_modifications;                                  /* in SDMAIN */
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
@@ -1143,6 +1131,7 @@ extern long_boolean (*pred_table[])(                                /* in PREDS 
 
 /* In SDMAIN */
 
+extern char *sd_version_string(void);
 extern parse_block *mark_parse_blocks(void);
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
 extern void initialize_parse(void);
@@ -1160,6 +1149,8 @@ extern void get_real_subcall(
    parse_block **concptrout,
    callspec_block **callout,
    final_set *concout);
+extern long_boolean sequence_is_resolved(void);
+extern long_boolean write_sequence_to_file(void);
 
 /* In PREDS */
 
@@ -1175,7 +1166,9 @@ extern void general_initialize(void);
 extern int generate_random_number(int modulus);
 extern long_boolean generate_random_concept_p(void);
 extern void *get_mem(unsigned int siz);
+extern void *get_mem_gracefully(unsigned int siz);
 extern void *get_more_mem(void *oldp, unsigned int siz);
+extern void *get_more_mem_gracefully(void *oldp, unsigned int siz);
 extern void free_mem(void *ptr);
 extern void get_date(char dest[]);
 extern void unparse_number(int arg, char dest[]);
@@ -1189,7 +1182,8 @@ extern void init_error(char s[]);
 extern void add_resolve_indices(char junk[], int cur, int max);
 extern void final_exit(int code);
 extern void open_database(void);
-extern int read_from_database(void);
+extern unsigned int read_8_from_database(void);
+extern unsigned int read_16_from_database(void);
 extern void close_database(void);
 extern void fill_in_neglect_percentage(char junk[], int n);
 extern int parse_number(char junk[]);
@@ -1217,9 +1211,17 @@ extern int uims_do_concept_popup(int kind);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_command(mode_kind mode, call_list_kind call_menu, int modifications_flag);
-extern void uims_update_resolve_menu(char *title);
+extern void uims_begin_search(search_kind goal);
+extern void uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state);
+extern int uims_begin_reconcile_history(int currentpoint, int maxpoint);
+extern int uims_end_reconcile_history(void);
 extern void uims_terminate(void);
 extern char *uims_version_string(void);
+extern void uims_database_tick_max(int n);
+extern void uims_database_tick(int n);
+extern void uims_database_tick_end(void);
+extern void uims_database_error(char *message, char *call_name);
+extern void uims_bad_argument(char *s1, char *s2, char *s3);
 
 /* In SDUTIL */
 
@@ -1274,6 +1276,11 @@ extern void overlapped_setup_move(setup *s, map_thing *maps,
 
 extern resolve_indicator resolve_p(setup *s);
 extern uims_reply full_resolve(search_kind goal);
+extern int concepts_in_place(void);
+extern int reconcile_command_ok(int **permutation_map_p, int *accept_extend_p);
+extern int resolve_command_ok(void);
+extern int nice_setup_command_ok(void);
+extern void create_resolve_menu_title(search_kind goal, int cur, int max, resolver_display_state state, char *title);
 
 /* In SDBASIC */
 
@@ -1384,8 +1391,8 @@ extern void concentric_move(
    final_set final_conceptsin,
    final_set final_conceptsout,
    calldef_schema analyzer,
-   defmodset modifiersin,
-   defmodset modifiersout,
+   defmodset modifiersin1,
+   defmodset modifiersout1,
    setup *result);
 
 extern void normalize_concentric(
@@ -1414,9 +1421,12 @@ extern void update_id_bits(setup *ss);
 
 extern void touch_or_rear_back(
    setup *scopy,
-   int callflags);
+   int callflags1);
 
-extern void do_matrix_expansion(setup *ss, unsigned int concprops);
+extern void do_matrix_expansion(
+   setup *ss,
+   unsigned int concprops,
+   long_boolean recompute_id);
 
 extern void normalize_setup(setup *ss, normalize_level nlevel);
 

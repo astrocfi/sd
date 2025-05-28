@@ -190,14 +190,14 @@ extern long_boolean selectp(setup *ss, int place)
 Private long_boolean selected(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(selectp(real_people, real_index));
+   return selectp(real_people, real_index);
 }
 
 /* ARGSUSED */
 Private long_boolean unselect(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(!selectp(real_people, real_index));
+   return !selectp(real_people, real_index);
 }
 
 /* ARGSUSED */
@@ -229,10 +229,39 @@ Private long_boolean unselect_near_unselect(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
+Private long_boolean once_rem_from_select(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return selectp(real_people, real_index ^ 3);
+}
+
+/* ARGSUSED */
+Private long_boolean conc_from_select(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return selectp(real_people, real_index ^ 2);
+          
+}
+
+/* ARGSUSED */
+Private long_boolean select_once_rem_from_unselect(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return(selectp(real_people, real_index) && !selectp(real_people, real_index ^ 3));
+}
+
+/* ARGSUSED */
+Private long_boolean unselect_once_rem_from_select(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   return(!selectp(real_people, real_index) && selectp(real_people, real_index ^ 3));
+}
+
+/* ARGSUSED */
 Private long_boolean always(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return(TRUE);
+   return TRUE;
 }
 
 /* ARGSUSED */
@@ -777,7 +806,7 @@ Private long_boolean column_double_down(setup *real_people, int real_index,
       (northified_index > 4)
          ||
       /* if #1, my adjacent end must exist and face in */
-      (((((real_index + 2) & 4) ^ 1) + 1) == (real_people->people[real_index ^ 7].id1 & 017)));
+      (((((real_index + 2) & 4) >> 1) + 1) == (real_people->people[real_index ^ 7].id1 & 017)));
 }
 
 /* ARGSUSED */
@@ -940,7 +969,7 @@ Private long_boolean q_line_back(setup *real_people, int real_index,
 
 /* BEWARE!!  This list must track the array "predtab" in the database maker. */
 
-/* The first 6 of these (the constant to use is SELECTOR_PREDS) take a predicate.
+/* The first 10 of these (the constant to use is SELECTOR_PREDS) take a predicate.
    Any call that uses one of these predicates in its definition will cause a
    popup to appear asking "who?". */
 
@@ -955,6 +984,10 @@ long_boolean (*pred_table[])(
       select_near_unselect,            /* "select_near_unselect" */
       unselect_near_select,            /* "unselect_near_select" */
       unselect_near_unselect,          /* "unselect_near_unselect" */
+      once_rem_from_select,            /* "once_rem_from_select" */
+      conc_from_select,                /* "conc_from_select" */
+      select_once_rem_from_unselect,   /* "select_once_rem_from_unselect" */
+      unselect_once_rem_from_select,   /* "unselect_once_rem_from_select" */
       always,                          /* "always" */
       x22_miniwave,                    /* "x22_miniwave" */
       x22_couple,                      /* "x22_couple" */
