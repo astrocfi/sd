@@ -8353,14 +8353,14 @@ void move(
          p1.next = &p2;
          p2.concept = &concept_marker_concept_supercall;
          p2.subsidiary_root = &p3;
-         p3.call = ss->cmd.callspec;
-         p3.call_to_print = p3.call;
-
 
          if (p3.concept->kind != concept_another_call_next_mod) {
             p3.concept = &concept_mark_end_of_list;
             p3.next = (parse_block *) 0;
          }
+
+         p3.call = ss->cmd.callspec;
+         p3.call_to_print = p3.call;
 
          p3.no_check_call_level = true;
          p3.options = current_options;
@@ -8707,6 +8707,7 @@ void move(
          p2.subsidiary_root = &p3;
 
          p3.no_check_call_level = true;
+         p3.options = current_options;
          ss->cmd.parseptr = &p1;
          ss->cmd.callspec = (call_with_name *) 0;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
