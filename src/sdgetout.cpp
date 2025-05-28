@@ -21,6 +21,9 @@
 //    This is for version 36.
 
 /* This defines the following functions:
+   configuration::null_resolve_thing
+   configuration::null_resolve_ptr
+   configuration::calculate_resolve
    write_resolve_text
    full_resolve
    configuration::concepts_in_place
@@ -175,30 +178,554 @@ struct resolve_descriptor {
    main_part_kind main_part;
 };
 
-// BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h .
+// BEWARE!!  This list must track the array "resolve_table".
+enum resolve_kind {
+   resolve_none,
+   resolve_rlg,
+   resolve_la,
+   resolve_ext_rlg,
+   resolve_ext_la,
+   resolve_slipclutch_rlg,
+   resolve_slipclutch_la,
+   resolve_circ_rlg,
+   resolve_circ_la,
+   resolve_pth_rlg,
+   resolve_pth_la,
+   resolve_tby_rlg,
+   resolve_tby_la,
+   resolve_xby_rlg,
+   resolve_xby_la,
+   resolve_dixie_grand,
+   resolve_minigrand,
+   resolve_prom,
+   resolve_revprom,
+   resolve_sglfileprom,
+   resolve_revsglfileprom,
+   resolve_circle
+};
+
+// BEWARE!!  This list is keyed to the definition of "resolve_kind".
 static const resolve_descriptor resolve_table[] = {
-   {2,  first_part_none,  main_part_none},     /* resolve_none */
-   {0,  first_part_none,  main_part_rlg},      /* resolve_rlg */
-   {0,  first_part_none,  main_part_la},       /* resolve_la */
-   {1,  first_part_ext,   main_part_rlg},      /* resolve_ext_rlg */
-   {1,  first_part_ext,   main_part_la},       /* resolve_ext_la */
-   {2,  first_part_slcl,  main_part_rlg},      /* resolve_slipclutch_rlg */
-   {2,  first_part_slcl,  main_part_la},       /* resolve_slipclutch_la */
-   {3,  first_part_circ,  main_part_rlg},      /* resolve_circ_rlg */
-   {3,  first_part_circ,  main_part_la},       /* resolve_circ_la */
-   {3,  first_part_pthru, main_part_rlg},      /* resolve_pth_rlg */
-   {3,  first_part_pthru, main_part_la},       /* resolve_pth_la */
-   {4,  first_part_trby,  main_part_rlg},      /* resolve_tby_rlg */
-   {4,  first_part_trby,  main_part_la},       /* resolve_tby_la */
-   {1,  first_part_xby,   main_part_rlg},      /* resolve_xby_rlg */
-   {1,  first_part_xby,   main_part_la},       /* resolve_xby_la */
-   {1,  first_part_none,  main_part_dixgnd},   /* resolve_dixie_grand */
-   {2,  first_part_none,  main_part_minigrand},/* resolve_minigrand */
-   {0,  first_part_none,  main_part_prom},     /* resolve_prom */
-   {1,  first_part_none,  main_part_revprom},  /* resolve_revprom */
-   {3,  first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
-   {4,  first_part_none,  main_part_rsglprom}, /* resolve_revsglfileprom */
-   {2,  first_part_none,  main_part_circ}};    /* resolve_circle */
+   {2,  first_part_none,  main_part_none},     // resolve_none
+   {0,  first_part_none,  main_part_rlg},      // resolve_rlg
+   {0,  first_part_none,  main_part_la},       // resolve_la
+   {1,  first_part_ext,   main_part_rlg},      // resolve_ext_rlg
+   {1,  first_part_ext,   main_part_la},       // resolve_ext_la
+   {2,  first_part_slcl,  main_part_rlg},      // resolve_slipclutch_rlg
+   {2,  first_part_slcl,  main_part_la},       // resolve_slipclutch_la
+   {3,  first_part_circ,  main_part_rlg},      // resolve_circ_rlg
+   {3,  first_part_circ,  main_part_la},       // resolve_circ_la
+   {3,  first_part_pthru, main_part_rlg},      // resolve_pth_rlg
+   {3,  first_part_pthru, main_part_la},       // resolve_pth_la
+   {4,  first_part_trby,  main_part_rlg},      // resolve_tby_rlg
+   {4,  first_part_trby,  main_part_la},       // resolve_tby_la
+   {1,  first_part_xby,   main_part_rlg},      // resolve_xby_rlg
+   {1,  first_part_xby,   main_part_la},       // resolve_xby_la
+   {1,  first_part_none,  main_part_dixgnd},   // resolve_dixie_grand
+   {2,  first_part_none,  main_part_minigrand},// resolve_minigrand
+   {0,  first_part_none,  main_part_prom},     // resolve_prom
+   {1,  first_part_none,  main_part_revprom},  // resolve_revprom
+   {3,  first_part_none,  main_part_sglprom},  // resolve_sglfileprom
+   {4,  first_part_none,  main_part_rsglprom}, // resolve_revsglfileprom
+   {2,  first_part_none,  main_part_circ}};    // resolve_circle
+
+
+// Some resolves are only legal at certain levels, so there is a "level" field
+// in a resolve_tester.  We define these short names to keep the table entries
+// from being unwieldy.
+enum level_abbreviation {
+   MS = l_mainstream,
+   XB = cross_by_level,
+   DX = dixie_grand_level,
+   EX = extend_34_level
+};
+
+struct resolve_tester {
+   resolve_kind k;
+   level_abbreviation level_needed;
+   // Add 0x10 bit for singer-only; these must be last.
+   // Also, last item in each table has 0x10 only.
+   // Add 0x20 bit to indicate that we demand only nonzero distances.
+   // Add 0x40 bit to make the resolver never find this, though
+   //    we will display it if user gets here.
+   uint32 distance;
+   veryshort locations[8];
+   uint32 directions;
+};
+
+bool configuration::sequence_is_resolved()
+{
+   return current_resolve().the_item->k != resolve_none;
+}
+
+
+const resolve_tester null_resolve_thing = {
+   resolve_none, MS, 0, {0,0,0,0,0,0,0,0}, 0};
+
+const resolve_tester *configuration::null_resolve_ptr = &null_resolve_thing;
+
+// Notes for "distance" field:
+// Add 0x10 bit for singer-only; these must be last.
+// Also, last item in each table has 0x10 only.
+// Add 0x20 bit to indicate that we demand only nonzero distances.
+// Add 0x40 bit to make the resolver never find this, though
+//    we will display it if user gets here.
+
+static const resolve_tester test_thar_stuff[] = {
+   {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
+   {resolve_minigrand,      MS, 4,   {5, 0, 3, 6, 1, 4, 7, 2},     0x8833AA11},
+   {resolve_prom,           MS, 6,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8833AA11},
+   {resolve_slipclutch_rlg, MS, 1,   {5, 2, 3, 0, 1, 6, 7, 4},     0x8138A31A},
+   {resolve_la,             MS, 5,   {5, 2, 3, 0, 1, 6, 7, 4},     0xA31A8138},
+   {resolve_slipclutch_la,  MS, 6,   {5, 4, 3, 2, 1, 0, 7, 6},     0xA8138A31},
+   {resolve_xby_rlg,        XB, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},
+   {resolve_revprom,        MS, 4,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},
+   {resolve_xby_la,         XB, 4,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},
+   {resolve_dixie_grand,    DX, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xAA118833},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_rigger_stuff[] = {
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x8A31A813},
+   {resolve_minigrand,      MS, 4,   {3, 6, 1, 4, 7, 2, 5, 0},     0x8833AA11},
+   {resolve_la,             MS, 5,   {3, 1, 0, 6, 7, 5, 4, 2},     0xA31A8138},
+   {resolve_dixie_grand,    DX, 0,   {2, 7, 0, 5, 6, 3, 4, 1},     0xAA118833},
+
+   // From a strange  rigger.  This rates about
+   // 500 milli-Tersoffs, on a scale named after Mike Tersoff, a devotee
+   // of extremely strange getout positions.
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x8AA8A88A},
+   {resolve_minigrand,      MS, 4,   {3, 6, 1, 4, 7, 2, 5, 0},     0x88AAAA88},
+   {resolve_la,             MS, 5,   {3, 1, 0, 6, 7, 5, 4, 2},     0xA8AA8A88},
+
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_4x4_stuff[] = {
+   // "circle left/right" from squared-set, normal.
+   {resolve_circle,         MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},
+   // "circle left/right" from squared-set, sashayed.
+   {resolve_circle,         MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},
+
+   // From vertical 8-chain in "O".
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8AA8A88},
+
+   // From horizontal 8-chain in "O".
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x13313113},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33131131},
+
+   // Weird ones from squared set.
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x8A31A813},
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x138A31A8},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x38A31A81},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA31A8138},
+
+   // From squared set, around the corner.
+   {resolve_rlg,            MS, 3,   {5, 2, 1, 14, 13, 10, 9, 6},  0x1A8138A3},
+   {resolve_la,             MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0xA8138A31},
+
+   // From squared set, facing directly.
+   {resolve_rlg,            MS, 2,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8A31A813},
+   {resolve_la,             MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x38A31A81},
+
+   // From ladder columns, facing directly.
+   {resolve_rlg,            MS, 3,   {7, 2, 0, 14, 15, 10, 8, 6},  0x13313113},
+   {resolve_rlg,            MS, 1,   {3, 14, 12, 10, 11, 6, 4, 2}, 0x8AA8A88A},
+   {resolve_rlg,            MS, 3,   {5, 4, 1, 3, 13, 12, 9, 11},  0x13313113},
+   {resolve_rlg,            MS, 1,   {1, 0, 13, 15, 9, 8, 5, 7},   0x8AA8A88A},
+   {resolve_la,             MS, 6,   {2, 0, 14, 15, 10, 8, 6, 7},  0x33131131},
+   {resolve_la,             MS, 4,   {14, 12, 10, 11, 6, 4, 2, 3}, 0xAA8A88A8},
+   {resolve_la,             MS, 6,   {4, 1, 3, 13, 12, 9, 11, 5},  0x33131131},
+   {resolve_la,             MS, 4,   {0, 13, 15, 9, 8, 5, 7, 1},   0xAA8A88A8},
+
+   // From pinwheel, facing directly.
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x138A31A8},
+   {resolve_rlg,            MS, 3,   {5, 7, 1, 3, 13, 15, 9, 11},  0x8A31A813},
+
+   // From pinwheel, all in miniwaves.
+   {resolve_rlg,            MS, 3,   {7, 5, 3, 1, 15, 13, 11, 9},  0x138A31A8},
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A31A813},
+
+   // From pinwheel, some of each.
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x13313113},
+   {resolve_rlg,            MS, 3,   {5, 7, 3, 1, 13, 15, 11, 9},  0x8A8AA8A8},
+
+   // From pinwheel, others of each.
+   {resolve_rlg,            MS, 3,   {7, 2, 3, 14, 15, 10, 11, 6}, 0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {7, 5, 1, 3, 15, 13, 9, 11},  0x13313113},
+
+   // From clumps.
+   {resolve_rlg,            MS, 2,   {3, 1, 14, 0, 11, 9, 6, 8},   0x8A8AA8A8},
+   {resolve_rlg,            MS, 4,   {5, 4, 7, 2, 13, 12, 15, 10}, 0x8A8AA8A8},
+   {resolve_rlg,            MS, 2,   {1, 0, 3, 14, 9, 8, 11, 6},   0x31311313},
+   {resolve_rlg,            MS, 4,   {7, 5, 2, 4, 15, 13, 10, 12}, 0x13133131},
+   {resolve_la,             MS, 5,   {3, 0, 14, 9, 11, 8, 6, 1},   0xA8AA8A88},
+   {resolve_la,             MS, 7,   {5, 2, 7, 12, 13, 10, 15, 4}, 0xA8AA8A88},
+   {resolve_la,             MS, 5,   {1, 14, 3, 8, 9, 6, 11, 0},   0x13113133},
+   {resolve_la,             MS, 7,   {7, 4, 2, 13, 15, 12, 10, 5}, 0x31331311},
+
+   // From stairsteps.
+   {resolve_rlg,            MS, 3,   {7, 2, 14, 0, 15, 10, 6, 8},  0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {5, 4, 3, 1, 13, 12, 11, 9},  0x8A8AA8A8},
+   {resolve_rlg,            MS, 1,   {1, 0, 15, 13, 9, 8, 7, 5},   0x31311313},
+   {resolve_rlg,            MS, 5,   {11, 6, 2, 4, 3, 14, 10, 12}, 0x13133131},
+   {resolve_la,             MS, 6,   {7, 0, 14, 10, 15, 8, 6, 2},  0xA8AA8A88},
+   {resolve_la,             MS, 6,   {5, 1, 3, 12, 13, 9, 11, 4},  0xA8AA8A88},
+   {resolve_la,             MS, 4,   {1, 13, 15, 8, 9, 5, 7, 0},   0x13113133},
+   {resolve_la,             MS, 0,   {11, 4, 2, 14, 3, 12, 10, 6}, 0x31331311},
+
+   // From blocks.
+   {resolve_rlg,            MS, 3,   {5, 2, 3, 0, 13, 10, 11, 8},  0x8A8AA8A8},
+   {resolve_rlg,            MS, 1,   {1, 14, 15, 12, 9, 6, 7, 4},  0x31311313},
+   {resolve_la,             MS, 7,   {5, 2, 3, 0, 13, 10, 11, 8},  0xA8A88A8A},
+   {resolve_la,             MS, 5,   {1, 14, 15, 12, 9, 6, 7, 4},  0x13133131},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_4x6_stuff[] = {
+   {resolve_rlg,            MS, 2,   {23, 6, 3, 2, 11, 18, 15, 14},0x8A31A813},
+   {resolve_la,             MS, 7,   {14, 23, 6, 3, 2, 11, 18, 15},0x38A31A81},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_c1phan_stuff[] = {
+   // From phantoms, all facing.
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x138A31A8},
+   {resolve_rlg,            MS, 3,   {9, 11, 5, 7, 1, 3, 13, 15},  0x8A31A813},
+   // From phantoms, all in miniwaves.
+   {resolve_rlg,            MS, 3,   {11, 9, 7, 5, 3, 1, 15, 13},  0x138A31A8},
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A31A813},
+   // From phantoms, some of each.
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x13313113},
+   {resolve_rlg,            MS, 3,   {9, 11, 7, 5, 1, 3, 15, 13},  0x8A8AA8A8},
+   // From phantoms, others of each.
+   {resolve_rlg,            MS, 3,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {11, 9, 5, 7, 3, 1, 13, 15},  0x13313113},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_galaxy_stuff[] = {
+   {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x1A313813},
+   {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A81A8A3},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_qtag_stuff[] = {
+   // From 1/4 tag.
+   {resolve_dixie_grand,    DX, 2,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8AAAA888},
+   {resolve_ext_rlg,        MS, 5,   {7, 5, 4, 2, 3, 1, 0, 6},     0xA88A8AA8},
+   {resolve_ext_la,         MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA8AA8A88},
+   // From 3/4 tag.
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0xAA8A88A8},
+   {resolve_minigrand,      MS, 6,   {5, 0, 3, 6, 1, 4, 7, 2},     0xA8888AAA},
+   {resolve_la,             MS, 7,   {4, 2, 3, 1, 0, 6, 7, 5},     0xA8A88A8A},
+
+   // From diamonds with points facing each other.
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0x138A31A8},
+   {resolve_minigrand,      MS, 6,   {5, 0, 3, 6, 1, 4, 7, 2},     0x118833AA},
+   {resolve_la,             MS, 7,   {4, 2, 3, 1, 0, 6, 7, 5},     0x38A31A81},
+
+   // From a strange "6x2 acey deucey" situation.  This rates about
+   // 500 milli-Tersoffs, on a scale named after Mike Tersoff, a devotee
+   // of extremely strange getout positions.
+   {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A8AA8A8},
+   {resolve_minigrand,      MS, 6,   {5, 0, 3, 6, 1, 4, 7, 2},     0x8888AAAA},
+   {resolve_la,             MS, 7,   {4, 2, 3, 1, 0, 6, 7, 5},     0x88A8AA8A},
+
+   // Singers only.
+   // Swing/prom from 3/4 tag, ends sashayed (normal case is above).
+   {resolve_rlg,            MS, 0x14,{4, 5, 3, 2, 0, 1, 7, 6},     0xAA8A88A8},
+   // Swing/prom from 3/4 tag, centers traded, ends normal.
+   {resolve_rlg,            MS, 0x14,{5, 4, 2, 3, 1, 0, 6, 7},     0xAAA8888A},
+   // Swing/prom from 3/4 tag, centers traded, ends sashayed.
+   {resolve_rlg,            MS, 0x14,{4, 5, 2, 3, 0, 1, 6, 7},     0xAAA8888A},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_2x6_stuff[] = {
+   // From "Z" 8-chain.
+   {resolve_rlg,            MS, 3,   {7, 6, 4, 3, 1, 0, 10, 9},    0x13313113},
+   {resolve_rlg,            MS, 3,   {8, 7, 5, 4, 2, 1, 11, 10},   0x13313113},
+   {resolve_la,             MS, 6,   {6, 4, 3, 1, 0, 10, 9, 7},    0x33131131},
+   {resolve_la,             MS, 6,   {7, 5, 4, 2, 1, 11, 10, 8},   0x33131131},
+   // From outer triple boxes.
+   {resolve_rlg,            MS, 3,   {7, 6, 4, 5, 1, 0, 10, 11},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 5, 4, 0, 1, 11, 10, 6},   0xA8AA8A88},
+   // From parallelogram waves.
+   {resolve_rlg,            MS, 3,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},
+   {resolve_rlg,            MS, 3,   {9, 8, 4, 5, 3, 2, 10, 11},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {9, 5, 4, 2, 3, 11, 10, 8},   0xA8AA8A88},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_2x8_stuff[] = {
+   // From outer quadruple boxes.
+   {resolve_rlg,            MS, 3,   {9, 8, 6, 7, 1, 0, 14, 15},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {9, 7, 6, 0, 1, 15, 14, 8},   0xA8AA8A88},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_3x4_stuff[] = {
+   // From offset waves.
+   {resolve_rlg,            MS, 3,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
+   {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
+   {resolve_la,             MS, 6,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
+   // From sort of skewed offset 8-chain.
+   // It may have been a mistake to write these.
+   //   {resolve_rlg,       MS, 2,   {6, 4, 11, 1, 0, 10, 5, 7},   0x8A8AA8A8},
+   //   {resolve_rlg,       MS, 2,   {4, 3, 5, 2, 11, 8, 10, 9},   0x8A8AA8A8},
+   //   {resolve_la,        MS, 5,   {4, 11, 1, 0, 10, 5, 7, 6},   0xA8AA8A88},
+   //   {resolve_la,        MS, 5,   {3, 2, 5, 10, 9, 8, 11, 4},   0xAA8A88A8},
+   {resolve_rlg,            MS, 1,   {4, 5, 1, 0, 10, 11, 7, 6},   0x31311313},
+   {resolve_rlg,            MS, 1,   {3, 2, 11, 10, 9, 8, 5, 4},   0x31311313},
+   {resolve_la,             MS, 4,   {5, 1, 0, 10, 11, 7, 6, 4},   0x13113133},
+   {resolve_la,             MS, 4,   {2, 11, 10, 9, 8, 5, 4, 3},   0x13113133},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_4dmd_stuff[] = {
+   // These test for people in a miniwave as centers of the outer diamonds,
+   // while the others are facing each other as points.  There are three of each
+   // to allow for the outsides to be symmetrical (points of the center diamonds)
+   // or unsymmetrical (points of a center diamond and the adjacent outer diamond).
+   {resolve_la,             MS, 7,   {8, 4, 5, 1, 0, 12, 13, 9},   0x38A31A81},
+   {resolve_la,             MS, 7,   {9, 4, 5, 2, 1, 12, 13, 10},  0x38A31A81},
+   {resolve_la,             MS, 7,   {10, 4, 5, 3, 2, 12, 13, 11}, 0x38A31A81},
+   {resolve_rlg,            MS, 4,   {9, 8, 5, 4, 1, 0, 13, 12},   0x138A31A8},
+   {resolve_rlg,            MS, 4,   {10, 9, 5, 4, 2, 1, 13, 12},  0x138A31A8},
+   {resolve_rlg,            MS, 4,   {11, 10, 5, 4, 3, 2, 13, 12}, 0x138A31A8},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_bigdmd_stuff[] = {
+   // From  miniwaves in "common point diamonds".
+   {resolve_rlg,            MS, 2,   {7, 6, 3, 2, 1, 0, 9, 8},     0x8A31A813},
+   {resolve_rlg,            MS, 2,   {4, 5, 3, 2, 10, 11, 9, 8},   0x8A31A813},
+   {resolve_la,             MS, 5,   {7, 2, 3, 0, 1, 8, 9, 6},     0xA31A8138},
+   {resolve_la,             MS, 5,   {4, 2, 3, 11, 10, 8, 9, 5},   0xA31A8138},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_deepqtg_stuff[] = {
+   {resolve_circle,         MS, 6,   {11, 2, 1, 0, 5, 8, 7, 6},    0x33AA1188},
+   {resolve_circle,         MS, 7,   {6, 11, 2, 1, 0, 5, 8, 7},    0x833AA118},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_deepxwv_stuff[] = {
+   {resolve_rlg,            MS, 4,   {5, 8, 7, 6, 11, 2, 1, 0},    0x138A31A8},
+   {resolve_la,             MS, 7,   {8, 6, 7, 11, 2, 0, 1, 5},    0x38A31A81},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_3x6_stuff[] = {
+   {resolve_rlg,            MS, 4,   {12, 11, 7, 6, 3, 2, 16, 15}, 0x138A31A8},
+   {resolve_la,             MS, 7,   {11, 6, 7, 3, 2, 15, 16, 12}, 0x38A31A81},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_spindle_stuff[] = {
+   // These test for people looking around the corner.
+   {resolve_rlg,            MS, 3,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13313113},
+   {resolve_rlg,            MS, 3,   {4, 3, 2, 1, 0, 7, 6, 5},     0x1A313813},
+   {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x31311313},
+   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},     0x8131A313},
+   {resolve_la,             MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0x33131131},
+   {resolve_la,             MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA3138131},
+   {resolve_circle,         MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},     0x83AAA188},
+   {resolve_circle,         MS, 5,   {3, 2, 1, 0, 7, 6, 5, 4},     0x3AAA1888},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_2x4_stuff[] = {
+   // 8-chain.
+   {resolve_rlg,            MS, 3,   {5, 4, 3, 2, 1, 0, 7, 6},     0x13313113},
+   {resolve_minigrand,      MS, 5,   {5, 0, 3, 6, 1, 4, 7, 2},     0x11333311},
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33131131},
+   {resolve_pth_rlg,        MS, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x11313313},
+   {resolve_pth_la,         MS, 5,   {2, 3, 0, 1, 6, 7, 4, 5},     0x13133131},
+   {resolve_dixie_grand,    DX, 1,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},
+
+   // Trade-by.
+   {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x11313313},
+   {resolve_minigrand,      MS, 4,   {4, 7, 2, 5, 0, 3, 6, 1},     0x13333111},
+   {resolve_la,             MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x31131331},
+   {resolve_tby_rlg,        MS, 3,   {6, 3, 4, 1, 2, 7, 0, 5},     0x11113333},
+   {resolve_tby_la,         MS, 0,   {5, 6, 3, 4, 1, 2, 7, 0},     0x31111333},
+
+   // Waves.
+   {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8A8AA8A8},
+   {resolve_minigrand,      MS, 5,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
+   {resolve_la,             MS, 6,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA8AA8A88},
+   {resolve_ext_rlg,        EX, 2,   {5, 3, 2, 0, 1, 7, 6, 4},     0x8A88A8AA},
+   {resolve_ext_la,         EX, 7,   {5, 4, 2, 3, 1, 0, 6, 7},     0xA8A88A8A},
+   {resolve_circ_rlg,       MS, 1,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8888AAAA},
+   {resolve_circ_la,        MS, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},
+   {resolve_xby_rlg,        XB, 2,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},
+   {resolve_xby_la,         XB, 5,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
+   {resolve_dixie_grand,    DX, 0x27,{3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},
+
+   // From T-bone setup, ends facing.
+   {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
+   {resolve_la,             MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x38A31A81},
+   {resolve_dixie_grand,    DX, 2,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33AA1188},
+
+   // RLG from centers facing and ends in miniwaves.
+   {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},
+   // LA from lines-out.  This has been decreed to be a horrible resolve.
+   {resolve_la,             MS, 0x46,{4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},
+   // From wacky T-bone.
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
+
+   // From 2FL.
+   {resolve_prom,           MS, 7,   {5, 4, 2, 3, 1, 0, 6, 7},     0x8888AAAA},
+   {resolve_revprom,        MS, 5,   {3, 2, 0, 1, 7, 6, 4, 5},     0xAA8888AA},
+
+   // "circle left/right" from pseudo squared-set, normal.
+   {resolve_circle,         MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},
+   // "circle left/right" from pseudo squared-set, sashayed.
+   {resolve_circle,         MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},
+   // "circle left/right" from lines-in, sashayed.
+   {resolve_circle,         MS, 0x26,{4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},
+   // "circle left/right" from lines-in, normal.
+   {resolve_circle,         MS, 0x27,{5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},
+   // From DPT.
+   {resolve_dixie_grand,    DX, 2,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},
+
+   // From magic column.
+   {resolve_dixie_grand,    DX, 3,   {6, 3, 5, 0, 2, 7, 1, 4},     0x33331111},
+   {resolve_dixie_grand,    DX, 1,   {4, 1, 3, 6, 0, 5, 7, 2},     0x33111133},
+
+   // From columns.
+   {resolve_sglfileprom,    MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x11333311},
+   {resolve_sglfileprom,    MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13333111},
+   {resolve_revsglfileprom, MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x33111133},
+   {resolve_revsglfileprom, MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31111333},
+
+   // From T-bone.
+   {resolve_sglfileprom,    MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x18833AA1},
+   {resolve_sglfileprom,    MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8833AA11},
+   {resolve_revsglfileprom, MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x3AA11883},
+   {resolve_revsglfileprom, MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0xAA118833},
+
+   // From T-bone mixed 8-chain and waves.
+   {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 1, 0, 6, 7},     0x138A31A8},
+   {resolve_rlg,            MS, 3,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
+   {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38A31A81},
+   {resolve_la,             MS, 6,   {5, 3, 2, 0, 1, 7, 6, 4},     0xA31A8138},
+
+   // Singers only.
+   // Swing/prom from waves, boys looking in.
+   {resolve_rlg,            MS,   0x13,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8AA8A88A},
+   // Swing/prom from waves, girls looking in.
+   {resolve_rlg,            MS,   0x13,   {4, 5, 2, 3, 0, 1, 6, 7},     0xA88A8AA8},
+   // Swing/prom from lines-out.
+   {resolve_rlg,            MS,   0x13,   {4, 5, 2, 3, 0, 1, 6, 7},     0xAA8888AA},
+   // Same as cross-by-LA from waves (above), but it's mainstream here.
+   {resolve_rlg,            MS,   0x11,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
+   // 8-chain, boys in center.
+   {resolve_rlg,            MS,   0x13,   {5, 4, 2, 3, 1, 0, 6, 7},     0x13133131},
+   // 8-chain, girls in center.
+   {resolve_rlg,            MS,   0x11,   {3, 2, 0, 1, 7, 6, 4, 5},     0x31131331},
+   // Trade-by, ends sashayed.
+   {resolve_rlg,            MS,   0x12,   {4, 3, 1, 2, 0, 7, 5, 6},     0x11133331},
+   // trade-by, centers sashayed.
+   {resolve_rlg,            MS,   0x14,   {6, 5, 3, 4, 2, 1, 7, 0},     0x13113133},
+   {resolve_none, MS, 0x10}};
+
+static const resolve_tester test_hrgl_stuff[] = {
+   {resolve_rlg,            MS, 5,   {6, 5, 7, 4, 2, 1, 3, 0},     0xA3138131},
+   {resolve_la,             MS, 1,   {6, 5, 7, 4, 2, 1, 3, 0},     0x8131A313},
+   {resolve_none, MS, 0x10}};
+
+
+void configuration::calculate_resolve()
+{
+   const resolve_tester *testptr;
+   int i;
+   uint32 singer_offset = 0;
+
+   if (ui_options.singing_call_mode == 1) singer_offset = 0600;
+   else if (ui_options.singing_call_mode == 2) singer_offset = 0200;
+
+   switch (state.kind) {
+   case s2x4:
+      testptr = test_2x4_stuff; break;
+   case s3x4:
+      testptr = test_3x4_stuff; break;
+   case s2x6:
+      testptr = test_2x6_stuff; break;
+   case s2x8:
+      testptr = test_2x8_stuff; break;
+   case s_qtag:
+      testptr = test_qtag_stuff; break;
+   case s_hrglass:
+      testptr = test_hrgl_stuff; break;
+   case s4dmd:
+      testptr = test_4dmd_stuff; break;
+   case sbigdmd:
+      testptr = test_bigdmd_stuff; break;
+   case sdeepqtg:
+      testptr = test_deepqtg_stuff; break;
+   case sdeepxwv:
+      testptr = test_deepxwv_stuff; break;
+   case s3x6:
+      testptr = test_3x6_stuff; break;
+   case s4x4:
+      testptr = test_4x4_stuff; break;
+   case s4x6:
+      testptr = test_4x6_stuff; break;
+   case s_c1phan:
+      testptr = test_c1phan_stuff; break;
+   case s_galaxy:
+      testptr = test_galaxy_stuff; break;
+   case s_crosswave: case s_thar:
+      // This makes use of the fact that the person numbering
+      // in crossed lines and thars is identical.
+      testptr = test_thar_stuff; break;
+   case s_rigger:
+      testptr = test_rigger_stuff; break;
+   case s_spindle:
+      testptr = test_spindle_stuff; break;
+   default: goto no_resolve;
+   }
+
+   do {
+      uint32 directionword;
+      uint32 firstperson = state.people[testptr->locations[0]].id1 & 0700;
+      if (firstperson & 0100) goto not_this_one;
+
+      // We run the tests in descending order, because the test for i=0 is especially
+      // likely to pass (since the person ID is known to match), and we want to find
+      // failures as quickly as possible.
+
+      for (i=7,directionword=testptr->directions ; i>=0 ; i--,directionword>>=4) {
+         uint32 expected_id = (i << 6) + ((i&1) ? singer_offset : 0);
+
+         // The adds of "expected_id" and "firstperson" may overflow out of the "700" bits
+         // into the next 2 bits.  (One bit for each add.)
+
+         if ((state.people[testptr->locations[i]].id1 ^
+              (expected_id + firstperson + (directionword & 0xF))) &
+             0777)
+            goto not_this_one;
+      }
+
+      if (calling_level < (dance_level) testptr->level_needed ||
+          (testptr->k == resolve_minigrand && !allowing_minigrand)) goto not_this_one;
+
+      resolve_flag.the_item = testptr;
+      resolve_flag.distance =
+         ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
+      if (resolve_flag.distance == 0 && (testptr->distance & 0x20)) goto not_this_one;
+      return;
+
+      not_this_one: ;
+   }
+   while (
+          // always do next one if it doesn't have the singer-only mark.
+          !((++testptr)->distance & 0x10) ||
+          // Even if it has the mark, do it if this is a singer
+          // and it isn't really the end of the table.
+          (ui_options.singing_call_mode != 0 && testptr->k != resolve_none));
+
+   // Too bad.
+
+ no_resolve:
+
+   init_resolve();   // Set it to the null resolve.
+}
+
+
 
 
 // This assumes that "sequence_is_resolved" passes.
@@ -233,14 +760,11 @@ void write_resolve_text(bool doing_file)
       }
    }
    else {
-      first_part_kind first;
-      main_part_kind mainpart;
+      first_part_kind first = resolve_table[index].first_part;
+      main_part_kind mainpart = resolve_table[index].main_part;
 
-      first = resolve_table[index].first_part;
-      mainpart = resolve_table[index].main_part;
-
-      /* In a singer, "pass thru, allemande left", "trade by, allemande left", or
-         "cross by, allemande left" can be just "swing and promenade". */
+      // In a singer, "pass thru, allemande left", "trade by, allemande left", or
+      // "cross by, allemande left" can be just "swing and promenade".
 
       if (ui_options.singing_call_mode != 0 &&
           (index == resolve_pth_la ||

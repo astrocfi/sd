@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //    Copyright (C) 1993 Alan Snyder
 //
 //    This file is part of "Sd".
@@ -148,8 +148,6 @@ static bool GLOB_verify;                /* true => verify calls before showing *
 static int GLOB_lowest_yield_depth;
 
 
-
-/* The following array must be coordinated with the Sd program */
 
 static Cstring n_4_patterns[] = {
    "0/4",
@@ -928,7 +926,17 @@ static bool verify_call()
 
          if (anythings->kind == ui_call_select) {
             verify_options = anythings->call_conc_options;
-            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) goto failed;
+            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) {
+               // The problem may be just that the current number is
+               // inconsistent with the call's "odd number only" requirement.
+               number_used = true;
+               if (iterate_over_sel_dir_num(verify_used_selector,
+                                            verify_used_direction,
+                                            verify_used_number))
+                  goto try_another_selector;
+
+               goto failed;
+            }
             save1 = *parse_state.concept_write_ptr;
             theres_a_call_in_here = true;
          }
@@ -1833,7 +1841,7 @@ static void match_wildcard(
          number_table = ordinals;
          goto do_number_stuff;
       case 'a': case 'b': case 'B': case 'D':
-         if ((*user >= '0' && *user <= '8') ||
+         if ((*user >= '0' && *user <= '9') ||
              *user == 'q' || *user == 'h' ||
              *user == 't' || *user == 'f') {
             save_howmanynumbers = current_result->match.call_conc_options.howmanynumbers;
@@ -1845,31 +1853,31 @@ static void match_wildcard(
                if (key != 'D' || (i&1) != 0)
                   match_suffix_2(user, prefix, &p2b, patxi);
                current_result->match.call_conc_options.number_fields +=
-                  1 << (save_howmanynumbers*4);
+                  1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
             }
 
             /* special case: allow "quarter" for 1/4 */
             current_result->match.call_conc_options.number_fields =
-               save_number_fields + (1 << (save_howmanynumbers*4));
+               save_number_fields + (1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
             match_suffix_2(user, "quarter", &p2b, patxi);
 
             /* special case: allow "half" or "1/2" for 2/4 */
             if (key != 'D') {
                current_result->match.call_conc_options.number_fields =
-                  save_number_fields + (2 << (save_howmanynumbers*4));
+                  save_number_fields + (2 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
                match_suffix_2(user, "half", &p2b, patxi);
                match_suffix_2(user, "1/2", &p2b, patxi);
             }
 
             /* special case: allow "three quarter" for 3/4 */
             current_result->match.call_conc_options.number_fields =
-               save_number_fields + (3 << (save_howmanynumbers*4));
+               save_number_fields + (3 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
             match_suffix_2(user, "three quarter", &p2b, patxi);
 
             /* special case: allow "full" for 4/4 */
             if (key != 'D') {
                current_result->match.call_conc_options.number_fields =
-                  save_number_fields + (4 << (save_howmanynumbers*4));
+                  save_number_fields + (4 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD));
                match_suffix_2(user, "full", &p2b, patxi);
             }
 
@@ -1993,7 +2001,8 @@ static void match_wildcard(
 
    for (i=0 ; (prefix = number_table[i]) ; i++) {
       match_suffix_2(user, prefix, &p2b, patxi);
-      current_result->match.call_conc_options.number_fields += 1 << (save_howmanynumbers*4);
+      current_result->match.call_conc_options.number_fields +=
+         1 << (save_howmanynumbers*BITS_PER_NUMBER_FIELD);
    }
 
    current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;

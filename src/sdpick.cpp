@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -236,12 +236,15 @@ void do_number_iteration(int howmanynumbers,
             verify_used_number = true;
          }
          else {
-            this_num = verify_options.number_fields & 0xF;
-            verify_options.number_fields >>= 4;
+            this_num = verify_options.number_fields & NUMBER_FIELD_MASK;
+            verify_options.number_fields >>= BITS_PER_NUMBER_FIELD;
             verify_options.howmanynumbers--;
          }
 
-         *number_list |= (this_num << (i*4));
+         *number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
+
+         if (odd_number_only && !(this_num & 1))
+            *number_list = ~0UL;     // Set it illegal.
       }
 
       return;
@@ -261,7 +264,7 @@ void do_number_iteration(int howmanynumbers,
 
       hash_nonrandom_number(this_num-1);
 
-      *number_list |= (this_num << (i*4));
+      *number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
    }
 
    if (pick_type_table[current_pick_type].exhaustive_search &&

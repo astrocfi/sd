@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //    Copyright (C) 1995  Robert E. Cays
 //    Copyright (C) 1996  Charles Petzold
 //
@@ -3042,7 +3042,7 @@ int iofull::do_tagger_popup(int tagger_class)
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -3059,14 +3059,15 @@ uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
          user_match = saved_match;
       }
       else {
-         this_num = number_fields & 0xF;
-         number_fields >>= 4;
+         this_num = number_fields & NUMBER_FIELD_MASK;
+         number_fields >>= BITS_PER_NUMBER_FIELD;
          howmanynumbers--;
       }
 
+      if (odd_number_only && !(this_num & 1)) return ~0UL;
       if (forbid_zero && this_num == 0) return ~0UL;
-      if (this_num > 15) return ~0UL;    /* User gave bad answer. */
-      number_list |= (this_num << (i*4));
+      if (this_num >= NUM_CARDINALS) return ~0UL;    // User gave bad answer.
+      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
    }
 
    return number_list;

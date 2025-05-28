@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -740,6 +740,50 @@ enum direction_kind {
    direction_zagzag
 };
 
+// There are two different contexts in which we deal with collections of
+// numbers.  In each case the numbers are packed into 6 bit fields, so they can
+// theoretically go up to 63.  We could therefore handle up to 5 numbers, though
+// we never do more than 4.
+// Helpful hint:  when debugging, display the word in octal.
+//
+//  (1) The "number_fields" part of a call_conc_option_state.
+//         This has the numbers (up to four of them) that the user entered
+//         with a call or concept, as in "3/4 crazy" or "cast off 1/2".  Those
+//         numbers are packed in right-to-left order.  So, for example, "circle
+//         by 1/2 by 3/4" will have 0/0/3/2 in those fields (this call takes its
+//         numeric arguments in quarters).  The "do the last 3/5" concept will
+//         have 0/0/5/3 in those fields.  The parser will never put a number
+//         larger than 36 (NUM_CARDINALS-1) in the "number_fields" word.
+//
+//  (2) The "fraction" field of a "fraction_command".  This also takes four
+
+//         numbers, though there is no direct correspondence with the other
+//         usage described above.  The four numbers are the numerators and
+//         denominators of the starting and ending points of the desired part of
+//         the call.  The layout is
+//         <start den> / <start num> / <end den> / <end num>.  To do the whole
+//         call, we use 1/0/1/1, which is the constant NUMBER_FIELDS_1_0_1_1 or
+//         CMD_FRAC_NULL_VALUE.
+
+enum {
+   BITS_PER_NUMBER_FIELD = 6,
+   NUMBER_FIELD_MASK = (1<<BITS_PER_NUMBER_FIELD)-1,
+   NUMBER_FIELD_MASK_SECOND_ONE = NUMBER_FIELD_MASK << (BITS_PER_NUMBER_FIELD*2),
+   NUMBER_FIELD_MASK_RIGHT_TWO = (1<<(BITS_PER_NUMBER_FIELD*2))-1,
+   NUMBER_FIELD_MASK_LEFT_TWO = NUMBER_FIELD_MASK_RIGHT_TWO << (BITS_PER_NUMBER_FIELD*2),
+   NUMBER_FIELDS_1_0 = 00100UL,          // A few useful canned values.
+   NUMBER_FIELDS_2_1 = 00201UL,
+   NUMBER_FIELDS_1_1 = 00101UL,
+   NUMBER_FIELDS_0_0_1_1 = 000000101UL,
+   NUMBER_FIELDS_1_0_0_0 = 001000000UL,
+   NUMBER_FIELDS_1_0_1_1 = 001000101UL,
+   NUMBER_FIELDS_1_0_2_1 = 001000201UL,
+   NUMBER_FIELDS_1_0_4_0 = 001000400UL,
+   NUMBER_FIELDS_2_1_1_1 = 002010101UL,
+   NUMBER_FIELDS_2_1_2_1 = 002010201UL,
+   NUMBER_FIELDS_4_0_1_1 = 004000101UL
+};
+
 /* BEWARE!!  There is a static initializer for this, "null_options", in sdtop.cpp
    that must be kept up to date. */
 struct call_conc_option_state {
@@ -754,7 +798,7 @@ struct call_conc_option_state {
    int star_turn_option;     /* For calls with "@S" star turn stuff. */
 };
 
-// We need a forward reference.
+// We need a forward reference; it's defined later in this file.
 struct predptr_pair;
 
 struct callarray {
@@ -1333,20 +1377,104 @@ class final_and_herit_flags {
 };
 
 
+// The following enumeration and struct encode the fraction/parts information
+// about a call to be executed.
+
+enum {
+   // These refer to the "fraction" field.
+   CMD_FRAC_NULL_VALUE      = NUMBER_FIELDS_1_0_1_1,
+   CMD_FRAC_HALF_VALUE      = NUMBER_FIELDS_1_0_2_1,
+   CMD_FRAC_LASTHALF_VALUE  = NUMBER_FIELDS_2_1_1_1,
+
+   // These refer to the "flags" field.  First, there are two numeric fields,
+   // called "n" and "k", that are associated with the codes.  We encode those
+   // fields in 6 bits, as usual.
+   CMD_FRAC_PART_BIT        = 00001UL,  // This is "n".
+   CMD_FRAC_PART_MASK       = 00077UL,
+   CMD_FRAC_PART2_BIT       = 00100UL,  // This is "k".
+   CMD_FRAC_PART2_MASK      = 07700UL,
+
+   CMD_FRAC_IMPROPER_BIT    = 0x00400000UL,
+   CMD_FRAC_THISISLAST      = 0x00800000UL,
+   CMD_FRAC_REVERSE         = 0x01000000UL,
+   CMD_FRAC_CODE_MASK       = 0x0E000000UL,    // This is a 3 bit field.
+
+   // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
+   // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
+   // when these are in use.  If the PART_MASK field is zero, the code must be zero
+   // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
+
+   CMD_FRAC_CODE_ONLY           = 0x00000000UL,
+   CMD_FRAC_CODE_ONLYREV        = 0x02000000UL,
+   CMD_FRAC_CODE_FROMTO         = 0x04000000UL,
+   CMD_FRAC_CODE_FROMTOREV      = 0x06000000UL,
+   CMD_FRAC_CODE_FROMTOREVREV   = 0x08000000UL,
+   CMD_FRAC_CODE_FROMTOMOST     = 0x0A000000UL,
+   CMD_FRAC_CODE_LATEFROMTOREV  = 0x0C000000UL,
+
+   CMD_FRAC_BREAKING_UP     = 0x10000000UL,
+   CMD_FRAC_FORCE_VIS       = 0x20000000UL,
+   CMD_FRAC_LASTHALF_ALL    = 0x40000000UL,
+   CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL
+};
+
+// The "flags" word has special information, like "do parts 5 through 2 in
+// reverse order".  The "fraction" word has 4 numbers, encoding information like
+// "do from 1/3 to 7/8".  The interaction of these things is quite complicated.
+// See the comments in front of "get_fraction_info" in sdmoves.cpp for details
+// about this.
+//
+// The default value ("do the whole call") is zero in the flags word and
+// CMD_FRAC_NULL_VALUE in the fraction word.  Note that CMD_FRAC_NULL_VALUE is
+// not zero.  Under normal circumstances, the fraction word is never zero,
+// because it has fraction denominators.  There are a few special situations in
+// which zero is stored in the fractions word.  For example, the
+// "restrained_fraction" field of a command may have its fraction word zero.
+// That means that the restrained fraction mechanism is turned off.
+
+// Helpful macro for assembling the code and its two numeric arguments.
+#define FRACS(code,n,k) (code|((n)*CMD_FRAC_PART_BIT)|((k)*CMD_FRAC_PART2_BIT))
+
+struct fraction_command {
+   uint32 flags;
+   uint32 fraction;  // The fraction info, packed into 4 fields.
+
+   inline void set_to_null()     { flags = 0; fraction = CMD_FRAC_NULL_VALUE; }
+   inline void set_to_firsthalf(){ flags = 0; fraction = CMD_FRAC_HALF_VALUE; }
+   inline void set_to_lasthalf() { flags = 0; fraction = CMD_FRAC_LASTHALF_VALUE; }
+   inline void set_to_null_with_flags(uint32 newflags)
+   { flags = newflags; fraction = CMD_FRAC_NULL_VALUE; }
+   inline void set_to_firsthalf_with_flags(uint32 newflags)
+   { flags = newflags; fraction = CMD_FRAC_HALF_VALUE; }
+   inline void set_to_lasthalf_with_flags(uint32 newflags)
+   { flags = newflags; fraction = CMD_FRAC_LASTHALF_VALUE; }
+
+   inline bool is_null() { return flags == 0 && fraction == CMD_FRAC_NULL_VALUE; }
+   inline bool is_firsthalf() { return flags == 0 && fraction == CMD_FRAC_HALF_VALUE; }
+   inline bool is_lasthalf() { return flags == 0 && fraction == CMD_FRAC_LASTHALF_VALUE; }
+
+   inline bool is_null_with_exact_flags(uint32 testflags)
+   { return flags == testflags && fraction == CMD_FRAC_NULL_VALUE; }
+
+   inline bool is_null_with_masked_flags(uint32 testmask, uint32 testflags)
+   { return (flags & testmask) == testflags && fraction == CMD_FRAC_NULL_VALUE; }
+};
+
 struct setup_command {
    parse_block *parseptr;
    call_with_name *callspec;
    final_and_herit_flags cmd_final_flags;
-   uint32 cmd_frac_flags;
+   fraction_command cmd_fraction;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
+   uint32 cmd_misc3_flags;
    uint32 do_couples_her8itflags;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
    uint32 prior_expire_bits;
    parse_block *restrained_concept;
    parse_block **restrained_final;
-   uint32 restrained_fraction;
+   fraction_command restrained_fraction;
    uint32 restrained_super8flags;
    bool restrained_do_as_couples;
    uint32 restrained_super9flags;
@@ -1504,15 +1632,16 @@ enum {
    LOOKUP_DIST_BOX = 0x40UL,
    LOOKUP_DIAG_BOX = 0x80UL,
    LOOKUP_STAG_BOX = 0x100UL,
-   LOOKUP_DIAG_CLW = 0x200UL,
-   LOOKUP_OFFS_CLW = 0x400UL,
-   LOOKUP_STAG_CLW = 0x800UL,
-   LOOKUP_DBL_BENT = 0x1000UL,
-   LOOKUP_MINI_B   = 0x2000UL,
-   LOOKUP_MINI_O   = 0x4000UL,
+   LOOKUP_TRAPEZOID= 0x200UL,
+   LOOKUP_DIAG_CLW = 0x400UL,
+   LOOKUP_OFFS_CLW = 0x800UL,
+   LOOKUP_STAG_CLW = 0x1000UL,
+   LOOKUP_DBL_BENT = 0x2000UL,
+   LOOKUP_MINI_B   = 0x4000UL,
+   LOOKUP_MINI_O   = 0x8000UL,
 
-   LOOKUP_GEN_MASK = (LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX|
-                      LOOKUP_DIAG_BOX|LOOKUP_STAG_BOX|LOOKUP_DIAG_CLW|
+   LOOKUP_GEN_MASK = (LOOKUP_DIST_DMD|LOOKUP_Z|LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX|
+                      LOOKUP_STAG_BOX|LOOKUP_TRAPEZOID|LOOKUP_DIAG_CLW|
                       LOOKUP_OFFS_CLW|LOOKUP_STAG_CLW|LOOKUP_DBL_BENT|
                       LOOKUP_MINI_B|LOOKUP_MINI_O)
 };
@@ -1564,6 +1693,20 @@ class select {
       fx_f4x4rzz,
       fx_f4x4lzza,
       fx_f4x4rzza,
+      fx_f2x4tt0,
+      fx_f2x4tt1,
+      fx_f2x8qq0,
+      fx_f2x8qq1,
+      fx_f2x8tt0,
+      fx_f2x8tt1,
+      fx_f2x8tt2,
+      fx_f2x8tt3,
+      fx_f2x6qq0,
+      fx_f2x6qq1,
+      fx_f2x6tt0,
+      fx_f2x6tt1,
+      fx_f2x6tt2,
+      fx_f2x6tt3,
       fx_f3x4outer,
       fx_f3dmouter,
       fx_f3ptpdin,
@@ -2428,7 +2571,10 @@ struct writechar_block_type {
 #define FCN_KEY_TAB_LOW (FKEY+1)
 #define FCN_KEY_TAB_LAST (CTLALTLET+'Z')
 
-#define NUM_CARDINALS 16
+// This allows numbers from 0 to 36, inclusive.
+enum {
+   NUM_CARDINALS = 37
+};
 
 
 /* This is the number of tagger classes.  It must not be greater than 7,
@@ -2801,45 +2947,8 @@ struct comment_block {
 #define CONCPARSE_PARSE_G_TYPE 0x20
 
 
-// BEWARE!!  This list must track the array "resolve_table" in sdgetout.cpp
-enum resolve_kind {
-   resolve_none,
-   resolve_rlg,
-   resolve_la,
-   resolve_ext_rlg,
-   resolve_ext_la,
-   resolve_slipclutch_rlg,
-   resolve_slipclutch_la,
-   resolve_circ_rlg,
-   resolve_circ_la,
-   resolve_pth_rlg,
-   resolve_pth_la,
-   resolve_tby_rlg,
-   resolve_tby_la,
-   resolve_xby_rlg,
-   resolve_xby_la,
-   resolve_dixie_grand,
-   resolve_minigrand,
-   resolve_prom,
-   resolve_revprom,
-   resolve_sglfileprom,
-   resolve_revsglfileprom,
-   resolve_circle
-};
-
-struct resolve_tester {
-   resolve_kind k;
-   dance_level level_needed;
-   // Add 0x10 bit for singer-only; these must be last.
-   // Also, last item in each table has 0x10 only.
-   // Add 0x20 bit to indicate that we demand only nonzero distances.
-   // Add 0x40 bit to make the resolver never find this, though
-   //    we will display it if user gets here.
-   uint32 distance;
-   veryshort locations[8];
-   uint32 directions;
-};
-
+// We need a forward reference; it's actually defined in sdgetout.
+struct resolve_tester;
 
 struct resolve_indicator {
 
@@ -3035,7 +3144,7 @@ class configuration {
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
 
-   static const resolve_tester null_resolve;                 /* in SDTOP */
+   static const resolve_tester *configuration::null_resolve_ptr;    /* in SDTOP */
 
  private:
    resolve_indicator resolve_flag;
@@ -3089,11 +3198,11 @@ class configuration {
    }
    inline bool nontrivial_startinfo_specific() { return startinfoindex != 0; }
    inline startinfo *get_startinfo_specific() { return &startinfolist[startinfoindex]; }
-   inline void init_resolve() { resolve_flag.the_item = &null_resolve; }
-   void calculate_resolve();                          // in SDTOP
+   inline void init_resolve() { resolve_flag.the_item = null_resolve_ptr; }
+   void calculate_resolve();                          // in SDGETOUT
    inline static resolve_indicator & current_resolve() { return current_config().resolve_flag; }
    inline static resolve_indicator & next_resolve() { return next_config().resolve_flag; }
-   inline static bool sequence_is_resolved() { return current_resolve().the_item->k != resolve_none; }
+   static bool sequence_is_resolved();                // in SDGETOUT
 
    inline void restore_warnings_specific(const warning_info & rhs)
       { warnings = rhs; }
@@ -3130,17 +3239,6 @@ struct concept_table_item{
    // We wish we could put a "throw" clause on this function, but we can't.
    void (*concept_action)(setup *, parse_block *, setup *);
 };
-
-
-static const dance_level dixie_grand_level = l_plus;
-static const dance_level extend_34_level = l_plus;
-static const dance_level zig_zag_level = l_a2;
-static const dance_level beau_belle_level = l_a2;
-static const dance_level cross_by_level = l_c1;
-static const dance_level intlk_triangle_level = l_c2;
-static const dance_level general_magic_level = l_c3;
-static const dance_level phantom_tandem_level = l_c4a;
-static const dance_level Z_CLW_level = l_c4a;
 
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
@@ -3206,39 +3304,6 @@ static const dance_level Z_CLW_level = l_c4a;
       interpretation of the elongation direction is always absolute.  A 1 means
       the elongation is east-west.  A 2 means the elongation is north-south.
       A zero means there was no elongation. */
-
-enum {
-   // See the comments in front of "get_fraction_info" in sdmoves.cpp for details.
-   CMD_FRAC_NULL_VALUE      = 0x00000111UL,
-   CMD_FRAC_HALF_VALUE      = 0x00000112UL,
-   CMD_FRAC_LASTHALF_VALUE  = 0x00001211UL,
-   CMD_FRAC_PART_BIT        = 0x00010000UL,
-   CMD_FRAC_PART_MASK       = 0x00070000UL,
-   CMD_FRAC_THISISLAST      = 0x00080000UL,
-   CMD_FRAC_REVERSE         = 0x00100000UL,
-   CMD_FRAC_CODE_MASK       = 0x00E00000UL,    // This is a 3 bit field.
-
-   // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
-   // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
-   // when these are in use.  If the PART_MASK field is zero, the code must be zero
-   // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
-
-   CMD_FRAC_CODE_ONLY           = 0x00000000UL,
-   CMD_FRAC_CODE_ONLYREV        = 0x00200000UL,
-   CMD_FRAC_CODE_FROMTO         = 0x00400000UL,
-   CMD_FRAC_CODE_FROMTOREV      = 0x00600000UL,
-   CMD_FRAC_CODE_FROMTOREVREV   = 0x00800000UL,
-   CMD_FRAC_CODE_FROMTOMOST     = 0x00A00000UL,
-   CMD_FRAC_CODE_LATEFROMTOREV  = 0x00C00000UL,
-
-   CMD_FRAC_PART2_BIT       = 0x01000000UL,
-   CMD_FRAC_PART2_MASK      = 0x07000000UL,
-   CMD_FRAC_IMPROPER_BIT    = 0x08000000UL,
-   CMD_FRAC_BREAKING_UP     = 0x10000000UL,
-   CMD_FRAC_FORCE_VIS       = 0x20000000UL,
-   CMD_FRAC_LASTHALF_ALL    = 0x40000000UL,
-   CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL
-};
 
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
@@ -3364,15 +3429,20 @@ enum {
    CMD_MISC__VERIFY_TALL6         = 0x00003400UL,
 
    CMD_MISC__EXPLICIT_MATRIX      = 0x00004000UL,
-   CMD_MISC__NO_EXPAND_MATRIX     = 0x00008000UL,
-   CMD_MISC__DISTORTED            = 0x00010000UL,
-   CMD_MISC__OFFSET_Z             = 0x00020000UL,
-   CMD_MISC__SAID_SPLIT           = 0x00040000UL,
-   CMD_MISC__SAID_TRIANGLE        = 0x00080000UL,
-   CMD_MISC__PUT_FRAC_ON_FIRST    = 0x00100000UL,
+
+   CMD_MISC__NO_EXPAND_1          = 0x00008000UL,  // Allow only one triple box expansion.
+   CMD_MISC__NO_EXPAND_2          = 0x00010000UL,  // Positively no expansion.
+   CMD_MISC__NO_EXPAND_MATRIX = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2,
+
+   CMD_MISC__DISTORTED            = 0x00020000UL,
+   CMD_MISC__OFFSET_Z             = 0x00040000UL,
+   CMD_MISC__SAID_SPLIT           = 0x00080000UL,
+   CMD_MISC__SAID_TRIANGLE        = 0x00100000UL,
    CMD_MISC__DO_AS_COUPLES        = 0x00200000UL,
-   CMD_MISC__RESTRAIN_CRAZINESS   = 0x00400000UL,
-   CMD_MISC__RESTRAIN_MODIFIERS   = 0x00800000UL,
+
+   // spare:                        0x00400000UL,
+   // spare:                        0x00800000UL,
+
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
    CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
@@ -3383,6 +3453,14 @@ enum {
    CMD_MISC__DOING_ENDS           = 0x80000000UL,
 
    CMD_MISC__MUST_SPLIT_MASK      = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
+};
+
+
+// Flags that reside in the "cmd_misc3_flags" word of a setup BEFORE a call is executed.
+enum {
+   CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
+   CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
+   CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
 };
 
 
@@ -3832,7 +3910,7 @@ class iobase {
    virtual int do_tagger_popup(int tagger_class) = 0;
    virtual int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info) = 0;
    virtual popup_return do_comment_popup(char dest[]) = 0;
-   virtual uint32 get_number_fields(int nnumbers, bool forbid_zero) = 0;
+   virtual uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero) = 0;
    virtual bool get_call_command(uims_reply *reply_p) = 0;
    virtual void set_pick_string(const char *string) = 0;
    virtual void display_help() = 0;
@@ -3874,7 +3952,7 @@ class iofull : public iobase {
    int yesnoconfirm(char *title, char *line1, char *line2, bool excl, bool info);
    void set_pick_string(const char *string);
    popup_return do_comment_popup(char dest[]);
-   uint32 get_number_fields(int nnumbers, bool forbid_zero);
+   uint32 get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero);
    bool get_call_command(uims_reply *reply_p);
    void display_help();
    void terminate(int code);
@@ -3904,8 +3982,8 @@ extern SDLIB_API bool there_is_a_call;                              /* in SDTOP 
 extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
 extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
 extern SDLIB_API bool enable_file_writing;                          /* in SDTOP */
-extern SDLIB_API Cstring cardinals[];                               /* in SDTOP */
-extern SDLIB_API Cstring ordinals[];                                /* in SDTOP */
+extern SDLIB_API Cstring cardinals[NUM_CARDINALS+1];                /* in SDTOP */
+extern SDLIB_API Cstring ordinals[NUM_CARDINALS+1];                 /* in SDTOP */
 extern SDLIB_API Cstring direction_names[];                         /* in SDTOP */
 extern SDLIB_API Cstring getout_strings[];                          /* in SDTOP */
 extern SDLIB_API writechar_block_type writechar_block;              /* in SDTOP */
@@ -4525,7 +4603,7 @@ enum fraction_invert_flags {
 
 extern uint32 process_stupendously_new_fractions(int start, int end,
                                                  fraction_invert_flags invert_flags,
-                                                 uint32 incoming_fracs,
+                                                 const fraction_command & incoming_fracs,
                                                  bool make_improper = false,
                                                  bool *improper_p = 0) THROW_DECL;
 
@@ -4923,7 +5001,7 @@ class fraction_info {
       {}
 
    // This one is in sdmoves.cpp
-   void get_fraction_info(uint32 frac_flags,
+   void get_fraction_info(fraction_command frac_stuff,
                           uint32 callflags1,
                           revert_weirdness_type doing_weird_revert) THROW_DECL;
 

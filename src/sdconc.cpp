@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -130,12 +130,10 @@ void select::initialize()
 const select::fixer *select::hash_lookup(setup_kind kk, uint32 thislivemask, uint32 key, uint32 arg, const setup *ss)
 {
    uint32 hash_num = ((thislivemask + (5*kk)) * 25) & (NUM_SEL_HASH_BUCKETS-1);
-   const sel_item *p;
-   const fixer *fixp = (const fixer *) 0;
 
-   for (p = sel_hash_table[hash_num] ; p ; p = p->next) {
+   for (const sel_item *p = sel_hash_table[hash_num] ; p ; p = p->next) {
       if ((p->key & key) && p->kk == kk && p->thislivemask == thislivemask) {
-         fixp = fixer_ptr_table[p->fixp];
+         const fixer *fixp = fixer_ptr_table[p->fixp];
 
          // We make an extremely trivial test here to see which way the distortion goes.
          // It will be checked thoroughly later.
@@ -1775,7 +1773,7 @@ static bool fix_empty_outers(
          if (sskind == s2x4 &&
              final_outers_start_kind == s4x4 &&
              cmdout &&
-             cmdout->cmd_frac_flags == CMD_FRAC_NULL_VALUE &&
+             cmdout->cmd_fraction.is_null() &&
              cmdout->callspec == base_calls[base_call_two_o_circs]) {
             result_outer->kind = s2x2;
             analyzer = schema_concentric;
@@ -1865,7 +1863,7 @@ static bool fix_empty_outers(
             ;        // It's OK, the call was "trade" or "any hand remake".
          else if (the_call == base_calls[base_call_circulate] &&
                   cmdout && cmdout->cmd_final_flags.test_heritbit(INHERITFLAG_HALF) &&
-                  cmdout->cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
+                  cmdout->cmd_fraction.is_null()) {
             // The call is "1/2 circulate".  We assume it goes to a diamond.
             // We don't check that the facing directions are such that this is
             // actually true.  Too bad.
@@ -1977,11 +1975,33 @@ static bool fix_empty_inners(
       // This is what makes split phantom diamonds diamond chain through work
       // from a tidal wave.
       // Also, if doing "O" stuff, it's easy.  Do the same thing.
+      // Also, if the call was "nothing", or something for which we know the
+      // ending setup and orientation, follow same.
       uint32 orig_elong_flags = result_outer->result_flags.misc & 3;
+
+      calldefn *def = begin_inner->cmd.callspec ?
+         &begin_inner->cmd.callspec->the_defn :
+         (calldefn *) 0;
 
       if (analyzer_result == schema_concentric_6p && ((orig_elong_flags+1) & 2)) {
          result_inner->kind = s1x2;
          result_inner->rotation = orig_elong_flags & 1;
+      }
+      else if (def &&
+               (def->schema == schema_nothing ||
+                def->schema == schema_nothing_noroll)) {
+         // Restore the original bunch of phantoms.
+         *result_inner = *begin_inner;
+         clear_result_flags(result_inner);
+      }
+      else if (def &&
+               def->schema == schema_by_array &&
+               (def->stuff.arr.def_list->callarray_list->callarray_flags & CAF__ROT) == 0 &&
+               (begin_kind) def->stuff.arr.def_list->callarray_list->start_setup == b_1x4 &&
+               (setup_kind) def->stuff.arr.def_list->callarray_list->end_setup == s1x4) {
+         // Restore the original bunch of phantoms.
+         *result_inner = *begin_inner;
+         clear_result_flags(result_inner);
       }
       else {
          result_inner->kind = s2x2;
@@ -2308,7 +2328,7 @@ extern void concentric_move(
 
    if (save_cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
       if (save_cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG) {
-         if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+         if (!ss->cmd.cmd_fraction.is_null())
             fail("Can't do fractional \"snag\".");
       }
 
@@ -2495,7 +2515,7 @@ extern void concentric_move(
          begin_ptr->cmd.parseptr = cmdptr->parseptr;
          begin_ptr->cmd.callspec = cmdptr->callspec;
          begin_ptr->cmd.cmd_final_flags = cmdptr->cmd_final_flags;
-         begin_ptr->cmd.cmd_frac_flags = cmdptr->cmd_frac_flags;
+         begin_ptr->cmd.cmd_fraction = cmdptr->cmd_fraction;
 
          // If doing something under a "3x1" (or "1x3") concentric schema,
          // put the "3x3" flag into the 6-person call, whichever call that is,
@@ -2652,11 +2672,11 @@ extern void concentric_move(
                 (CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__INVERT_SNAG)) {
                if (mystictest == CMD_MISC2__CENTRAL_MYSTIC)
                   fail("Can't do \"central/snag/mystic\" with this call.");
-               begin_ptr->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+               begin_ptr->cmd.cmd_fraction.set_to_firsthalf();
             }
             else if ((save_cmd_misc2_flags & (CMD_MISC2__ANY_SNAG | CMD_MISC2__ANY_WORK_INVERT))
                      == (CMD_MISC2__ANY_SNAG | CMD_MISC2__ANY_WORK_INVERT)) {
-               begin_ptr->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+               begin_ptr->cmd.cmd_fraction.set_to_firsthalf();
             }
 
             // This makes it not normalize the setup between parts -- the 4x4 stays around.
@@ -2675,11 +2695,11 @@ extern void concentric_move(
                 == CMD_MISC2__CENTRAL_SNAG) {
                if (mystictest == (CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__INVERT_MYSTIC))
                   fail("Can't do \"central/snag/mystic\" with this call.");
-               begin_ptr->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+               begin_ptr->cmd.cmd_fraction.set_to_firsthalf();
             }
             else if ((save_cmd_misc2_flags & (CMD_MISC2__ANY_SNAG | CMD_MISC2__ANY_WORK_INVERT))
                      == CMD_MISC2__ANY_SNAG) {
-               begin_ptr->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+               begin_ptr->cmd.cmd_fraction.set_to_firsthalf();
             }
          }
 
@@ -3169,7 +3189,7 @@ extern void concentric_move(
             }
             else if (DFM1_CONC_FORCE_OTHERWAY & localmods1) {
                // But we don't obey this flag unless we did the whole call.
-               if (begin_outer.cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
+               if (begin_outer.cmd.cmd_fraction.is_null())
                   final_elongation ^= 3;
             }
             else if (DFM1_CONC_FORCE_SPOTS & localmods1) {
@@ -3798,11 +3818,12 @@ extern void on_your_own_move(
    setup1.cmd = ss->cmd;
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
 
-   if ((setup1.cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
-       CMD_MISC__PUT_FRAC_ON_FIRST) {
+   if ((setup1.cmd.cmd_misc3_flags &
+        (CMD_MISC3__PUT_FRAC_ON_FIRST|CMD_MISC3__RESTRAIN_CRAZINESS)) ==
+       CMD_MISC3__PUT_FRAC_ON_FIRST) {
       // Curried meta-concept.  Take the fraction info off the first call.
-      setup1.cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
-      setup1.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+      setup1.cmd.cmd_misc3_flags &= ~CMD_MISC3__PUT_FRAC_ON_FIRST;
+      setup1.cmd.cmd_fraction.set_to_null();
    }
 
    move(&setup1, false, &res1);
@@ -4002,16 +4023,15 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
        (ss->cmd.parseptr->next->call->the_defn.callflagsh & INHERITFLAG_YOYO) &&
        (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh &
         INHERITFLAG_YOYO) &&
-       ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
+       ss->cmd.cmd_fraction.is_null()) {
       doing_yoyo = true;
-      ss->cmd.cmd_frac_flags =
-         CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS |
-         CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE;
+      ss->cmd.cmd_fraction.set_to_null_with_flags(
+         CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_PART_BIT);
    }
    else if ((cmd2word & CMD_MISC2__ANY_WORK) &&
             ss->cmd.parseptr->concept->kind == concept_fractional &&
             ss->cmd.parseptr->concept->arg1 == 1 &&
-            ss->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
+            ss->cmd.cmd_fraction.is_null()) {
       doing_do_last_frac = true;
    }
 
@@ -4026,11 +4046,12 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          }
          else
             // Non-designees do first part only.
-            this_one->cmd.cmd_frac_flags =
-               process_stupendously_new_fractions(0x10,
+            this_one->cmd.cmd_fraction.fraction =
+               process_stupendously_new_fractions(NUMBER_FIELDS_1_0,
                                                   ss->cmd.parseptr->options.number_fields,
                                                   FRAC_INVERT_END,
-                                                  this_one->cmd.cmd_frac_flags);
+                                                  this_one->cmd.cmd_fraction);
+            this_one->cmd.cmd_fraction.flags = 0;
       }
 
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -4050,23 +4071,23 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
                 (cmd2word &
                  (CMD_MISC2__SAID_INVERT|CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) ==
                 CMD_MISC2__CENTRAL_SNAG)) {
-         if (this_one->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
-         else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
+         if (this_one->cmd.cmd_fraction.is_null())
+            this_one->cmd.cmd_fraction.set_to_firsthalf();
+         else if (this_one->cmd.cmd_fraction.is_null_with_exact_flags(CMD_FRAC_REVERSE))
+            this_one->cmd.cmd_fraction.set_to_lasthalf();
          else
-            this_one->cmd.cmd_frac_flags |= CMD_FRAC_FIRSTHALF_ALL;
+            this_one->cmd.cmd_fraction.flags |= CMD_FRAC_FIRSTHALF_ALL;
       }
       else if (setupcount == 1 &&
                (cmd2word &
                 (CMD_MISC2__SAID_INVERT|CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) ==
                (CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) {
-         if (this_one->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
-         else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
+         if (this_one->cmd.cmd_fraction.is_null())
+            this_one->cmd.cmd_fraction.set_to_firsthalf();
+         else if (this_one->cmd.cmd_fraction.is_null_with_exact_flags(CMD_FRAC_REVERSE))
+            this_one->cmd.cmd_fraction.set_to_lasthalf();
          else
-            this_one->cmd.cmd_frac_flags |= CMD_FRAC_FIRSTHALF_ALL;
+            this_one->cmd.cmd_fraction.flags |= CMD_FRAC_FIRSTHALF_ALL;
       }
 
       move(this_one, false, &the_results[setupcount]);
@@ -4151,7 +4172,9 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       the_setups[0] = *result;
       the_setups[0].cmd = ss->cmd;    // Restore original command stuff (though we clobbered fractionalization info).
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
-      the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS | CMD_FRAC_CODE_FROMTOREV | (CMD_FRAC_PART_BIT*2) | CMD_FRAC_NULL_VALUE;
+      the_setups[0].cmd.cmd_fraction.set_to_null_with_flags(
+         CMD_FRAC_BREAKING_UP | CMD_FRAC_FORCE_VIS |
+         FRACS(CMD_FRAC_CODE_FROMTOREV,2,0));
       the_setups[0].cmd.parseptr = parseptrcopy->next;      // Skip over the concept.
       uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
@@ -4163,11 +4186,14 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       the_setups[0] = *result;
       the_setups[0].cmd = ss->cmd;    // Restore original command stuff.
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
-      the_setups[0].cmd.cmd_frac_flags =
-         process_stupendously_new_fractions(0x10,
+
+      the_setups[0].cmd.cmd_fraction.flags ^= CMD_FRAC_REVERSE;
+      the_setups[0].cmd.cmd_fraction.fraction =
+         process_stupendously_new_fractions(NUMBER_FIELDS_1_0,
                                             ss->cmd.parseptr->options.number_fields,
                                             FRAC_INVERT_NONE,
-                                            the_setups[0].cmd.cmd_frac_flags ^ CMD_FRAC_REVERSE);
+                                            the_setups[0].cmd.cmd_fraction);
+      the_setups[0].cmd.cmd_fraction.flags = 0;
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
       uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
       move(&the_setups[0], false, result);
@@ -4959,9 +4985,9 @@ back_here:
       if (indicator == selective_key_snag_anyone) {
          // Snag the <anyone>.
          if (setupcount == 0) {
-            if (this_one->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+            if (!this_one->cmd.cmd_fraction.is_null())
                fail("Can't do fractional \"snag\".");
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+            this_one->cmd.cmd_fraction.set_to_firsthalf();
          }
 
          move(this_one, false, this_result);
@@ -5043,7 +5069,8 @@ back_here:
          else
             key = LOOKUP_NONE;
 
-         const select::fixer *fixp = select::hash_lookup(kk, thislivemask, key, arg2, this_one);
+         const select::fixer *fixp =
+            select::hash_lookup(kk, thislivemask, key, arg2, this_one);
 
          if (!fixp) {
 
@@ -5346,8 +5373,8 @@ back_here:
             for (k=0;
                  k<=attr::klimit(lilresult[0].kind);
                  k++,map_scanner++,vrot>>=2)
-               (void) copy_rot(this_result, fixp->nonrot[map_scanner],
-                               &lilresult[lilcount], k, 011*((frot+vrot) & 3));
+               copy_rot(this_result, fixp->nonrot[map_scanner],
+                        &lilresult[lilcount], k, 011*((frot+vrot) & 3));
          }
 
          // We only give the warning if they in fact went to spots.  Some of the
@@ -5379,9 +5406,9 @@ back_here:
          }
          else if ((doing_mystic & (CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) ==
                   CMD_MISC2__CENTRAL_SNAG) {
-            if (this_one->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+            if (!this_one->cmd.cmd_fraction.is_null())
                fail("Can't do fractional \"snag\".");
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+            this_one->cmd.cmd_fraction.set_to_firsthalf();
          }
 
          if (mirror) {
@@ -5390,12 +5417,13 @@ back_here:
          }
 
          if (others > 0 && setupcount == 0) {
-            if ((this_one->cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
-                CMD_MISC__PUT_FRAC_ON_FIRST) {
+            if ((this_one->cmd.cmd_misc3_flags &
+                 (CMD_MISC3__PUT_FRAC_ON_FIRST|CMD_MISC3__RESTRAIN_CRAZINESS)) ==
+                CMD_MISC3__PUT_FRAC_ON_FIRST) {
                // Curried meta-concept.  Take the fraction info off the first call.
                // This should only be legal for "own the <anyone>".
-               this_one->cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
-               this_one->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               this_one->cmd.cmd_misc3_flags &= ~CMD_MISC3__PUT_FRAC_ON_FIRST;
+               this_one->cmd.cmd_fraction.set_to_null();
             }
          }
 

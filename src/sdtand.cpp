@@ -1501,8 +1501,8 @@ extern void tandem_couples_move(
    if (twosome >= 2) {
       fractional = true;
 
-      int num = (fraction_fields & 0xF) << 2;
-      int fractional_twosome_part_den = fraction_fields >> 4;
+      int num = (fraction_fields & NUMBER_FIELD_MASK) << 2;
+      int fractional_twosome_part_den = fraction_fields >> BITS_PER_NUMBER_FIELD;
 
       fraction_in_eighths =
          num / fractional_twosome_part_den;
@@ -1791,7 +1791,7 @@ extern void tandem_couples_move(
 
    // We allow pointless siamese if this is a part of a call that is being done
    // "piecewise" or "random" or whatever.
-   if (!(ss->cmd.cmd_frac_flags & CMD_FRAC_BREAKING_UP))
+   if (!(ss->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
       fail("Can't do Siamese in this setup.");
 
    nsmask = savens;

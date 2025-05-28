@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -779,12 +779,12 @@ extern uint32 do_call_in_series(
       The test for this is [waves] initially twice initially once removed
       hinge the lock.  We want the "once removed" to be re-evaluated. */
 
-   if (qqqq.cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS &&
-       (qqqq.cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
+   if (qqqq.cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS &&
+       (qqqq.cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
       if (qqqq.cmd.restrained_concept->concept->kind == concept_n_times_const) {
-         qqqq.cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
-         qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_frac_flags;
-         qqqq.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+         qqqq.cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
+         qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_fraction;
+         qqqq.cmd.cmd_fraction.set_to_null();
       }
    }
 
@@ -1664,7 +1664,7 @@ static void matrixmove(
          }
 
          if (flags & MTX_USE_NUMBER) {
-            int count = current_options.number_fields & 0xF;
+            int count = current_options.number_fields & NUMBER_FIELD_MASK;
             thisrec->deltax *= count;
             thisrec->deltay *= count;
          }
@@ -1897,7 +1897,8 @@ static void make_matrix_chains(
                   }
                   else {
                      if ((flags & MTX_MUST_FACE_SAME_WAY) && dirxor)
-                        fail("Paired people must face the same way.");
+                        continue;    // No adjacency here.
+                     // fail("Paired people must face the same way.");
                   }
                }
                else
@@ -1991,8 +1992,8 @@ static void process_matrix_chains(
 
                         // Look for people who have been identified
                         // as extreme jaywalkers with each other.
-                        // But only if they are facing opposite directions.
-                        if ((mi->dir ^ mj->dir) == 2 &&
+                        // But only if they are not facing the same direction.
+                        if ((mi->dir ^ mj->dir) != 0 &&
                             ((j == mi->leftidx && i == mj->rightidx) ||
                             (j == mi->rightidx && i == mj->leftidx))) {
                            // Delete all of i's jaywalk candidates except j.
@@ -2771,12 +2772,13 @@ extern void process_number_insertion(uint32 mod_word)
       if ((mod_word & DFM1_FRACTAL_INSERT) && (insertion_num & ~2) == 1)
          insertion_num ^= 2;
 
-      current_options.number_fields <<= 4;
+      current_options.number_fields <<= BITS_PER_NUMBER_FIELD;
       current_options.number_fields += insertion_num;
       current_options.howmanynumbers++;
    }
 
-   current_options.number_fields >>= ((DFM1_NUM_SHIFT_MASK & mod_word) / DFM1_NUM_SHIFT_BIT) * 4;
+   current_options.number_fields >>=
+      ((DFM1_NUM_SHIFT_MASK & mod_word) / DFM1_NUM_SHIFT_BIT) * BITS_PER_NUMBER_FIELD;
    current_options.howmanynumbers -= ((DFM1_NUM_SHIFT_MASK & mod_word) / DFM1_NUM_SHIFT_BIT);
 }
 
@@ -2831,7 +2833,7 @@ extern bool get_real_subcall(
       xx->options.star_turn_option = 0;
       xx->replacement_key = 0;
       xx->call = orig_call;
-      xx->options.number_fields &= ~0xF;
+      xx->options.number_fields &= ~NUMBER_FIELD_MASK;
       xx->no_check_call_level = true;
       xx->call_to_print = xx->call;
 
@@ -3159,14 +3161,14 @@ extern int gcd(int a, int b)
 // CMD_FRAC_REVERSE flag on that, it will do the last 1/4 of the call.
 extern uint32 process_stupendously_new_fractions(int start, int end,
                                                  fraction_invert_flags invert_flags,
-                                                 uint32 incoming_fracs,
+                                                 const fraction_command & incoming_fracs,
                                                  bool make_improper /* = false */,
                                                  bool *improper_p /* = 0 */) THROW_DECL
 {
-   int cn = (start) & 0xF;
-   int cd = (start >> 4) & 0xF;
-   int dn = (end) & 0xF;
-   int dd = (end >> 4) & 0xF;
+   int cn = start & NUMBER_FIELD_MASK;
+   int cd = (start >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
+   int dn = end & NUMBER_FIELD_MASK;
+   int dd = (end >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
 
    if (invert_flags & FRAC_INVERT_START) cn = cd-cn;
    if (invert_flags & FRAC_INVERT_END) dn = dd-dn;
@@ -3175,7 +3177,7 @@ extern uint32 process_stupendously_new_fractions(int start, int end,
    int denom = dd*cd;
    int P = cn*dd;
 
-   if (incoming_fracs & CMD_FRAC_REVERSE)
+   if (incoming_fracs.flags & CMD_FRAC_REVERSE)
       P = (dd-dn)*cd;
 
    // Check that the user isn't doing something stupid.
@@ -3185,10 +3187,10 @@ extern uint32 process_stupendously_new_fractions(int start, int end,
    // If being asked to do "1-M/N", make the fraction improper.
    if (make_improper) numer += denom;
 
-   int s_numer = (incoming_fracs & 0xF000) >> 12;       // Start point.
-   int s_denom = (incoming_fracs & 0xF00) >> 8;
-   int e_numer = (incoming_fracs & 0xF0) >> 4;          // Stop point.
-   int e_denom = (incoming_fracs & 0xF);
+   int s_denom = (incoming_fracs.fraction >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK;
+   int s_numer = (incoming_fracs.fraction >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK;
+   int e_denom = (incoming_fracs.fraction >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
+   int e_numer = (incoming_fracs.fraction & NUMBER_FIELD_MASK);
 
    s_numer = P*s_denom+numer*s_numer;
    e_numer = P*e_denom+numer*e_numer;
@@ -3212,15 +3214,19 @@ extern uint32 process_stupendously_new_fractions(int start, int end,
    e_numer /= divisor;
    e_denom /= divisor;
 
-   if (s_numer > 15 || s_denom > 15 || e_numer > 15 || e_denom > 15)
+   if (s_numer > NUMBER_FIELD_MASK || s_denom > NUMBER_FIELD_MASK ||
+       e_numer > NUMBER_FIELD_MASK || e_denom > NUMBER_FIELD_MASK)
       fail("Fractions are too complicated.");
 
-   return (s_numer<<12) | (s_denom<<8) | (e_numer<<4) | e_denom;
+   return (s_denom<<(BITS_PER_NUMBER_FIELD*3)) |
+      (s_numer<<(BITS_PER_NUMBER_FIELD*2)) |
+      (e_denom<<BITS_PER_NUMBER_FIELD) |
+      e_numer;
 }
 
 
 void fraction_info::get_fraction_info(
-   uint32 frac_flags,
+   fraction_command frac_stuff,
    uint32 callflags1,
    revert_weirdness_type doing_weird_revert) THROW_DECL
 {
@@ -3229,7 +3235,7 @@ void fraction_info::get_fraction_info(
 
    int available_fractions =
       (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
-   if (available_fractions == 3 || (frac_flags & CMD_FRAC_FORCE_VIS))
+   if (available_fractions == 3 || (frac_stuff.flags & CMD_FRAC_FORCE_VIS))
       available_fractions = 1000;     /* 3 means all parts. */
 
    m_reverse_order = false;
@@ -3237,11 +3243,11 @@ void fraction_info::get_fraction_info(
    m_do_half_of_last_part = 0;
    m_do_last_half_of_first_part = 0;
 
-   int this_part = (frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
-   int s_numer = (frac_flags & 0xF000) >> 12;      /* Start point. */
-   int s_denom = (frac_flags & 0xF00) >> 8;
-   int e_numer = (frac_flags & 0xF0) >> 4;         /* End point. */
-   int e_denom = (frac_flags & 0xF);
+   int this_part = (frac_stuff.flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
+   int s_denom = (frac_stuff.fraction >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK;
+   int s_numer = (frac_stuff.fraction >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK;
+   int e_denom = (frac_stuff.fraction >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
+   int e_numer = (frac_stuff.fraction & NUMBER_FIELD_MASK);
 
    if (s_numer >= s_denom) fail("Fraction must be proper.");
    int my_start_point = m_client_total * s_numer;
@@ -3255,7 +3261,10 @@ void fraction_info::get_fraction_info(
       my_start_point /= divisor;
       last_half_stuff = my_start_point - test_num * s_denom;   /* We will need this if we have
                                                                  to reverse the order. */
-      m_do_last_half_of_first_part = (last_half_stuff << 12) | (s_denom << 8) | 0x11;
+      m_do_last_half_of_first_part =
+         (last_half_stuff << (BITS_PER_NUMBER_FIELD*2)) |
+         (s_denom << (BITS_PER_NUMBER_FIELD*3)) |
+         NUMBER_FIELDS_1_1;
       if (m_do_last_half_of_first_part != CMD_FRAC_LASTHALF_VALUE)
          warn(warn_hairy_fraction);
    }
@@ -3273,7 +3282,8 @@ void fraction_info::get_fraction_info(
       m_highlimit /= divisor;
       e_denom /= divisor;
       first_half_stuff = m_highlimit-e_denom*test_num;
-      m_do_half_of_last_part = 0x0100 | (first_half_stuff << 4) | e_denom;
+      m_do_half_of_last_part = NUMBER_FIELDS_1_0_0_0 |
+         (e_denom << BITS_PER_NUMBER_FIELD) | first_half_stuff;
       if (m_do_half_of_last_part != CMD_FRAC_HALF_VALUE)
          warn(warn_hairy_fraction);
       test_num++;
@@ -3287,7 +3297,7 @@ void fraction_info::get_fraction_info(
       fail("Fraction must be proper.");
 
    // Check for "reverse order".
-   if (frac_flags & CMD_FRAC_REVERSE) {
+   if (frac_stuff.flags & CMD_FRAC_REVERSE) {
       uint32 orig_last = m_do_last_half_of_first_part;
       bool dont_clobber = false;
 
@@ -3297,20 +3307,25 @@ void fraction_info::get_fraction_info(
 
       if (m_do_half_of_last_part) {
          m_do_last_half_of_first_part =
-            ((e_denom - first_half_stuff) << 12) | (e_denom << 8) | 0x11;
+            (e_denom << (BITS_PER_NUMBER_FIELD*3)) |
+            ((e_denom - first_half_stuff) << (BITS_PER_NUMBER_FIELD*2)) |
+            NUMBER_FIELDS_1_1;
          m_do_half_of_last_part = 0;
          dont_clobber = true;
       }
 
       if (orig_last) {
-         m_do_half_of_last_part = 0x0100 | ((s_denom - last_half_stuff) << 4) | s_denom;
+         m_do_half_of_last_part =
+            NUMBER_FIELDS_1_0_0_0 |
+            (s_denom << BITS_PER_NUMBER_FIELD) |
+            (s_denom - last_half_stuff);
          if (!dont_clobber) m_do_last_half_of_first_part = 0;
       }
    }
 
    if (this_part != 0) {
       int highdel;
-      uint32 kvalue = ((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
+      uint32 kvalue = ((frac_stuff.flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
 
       // In addition to everything else, we are picking out a specific part
       // of whatever series we have decided upon.
@@ -3318,7 +3333,7 @@ void fraction_info::get_fraction_info(
       if (m_do_half_of_last_part | m_do_last_half_of_first_part)
          fail("This call can't be fractionalized with this fraction.");
 
-      switch (frac_flags & CMD_FRAC_CODE_MASK) {
+      switch (frac_stuff.flags & CMD_FRAC_CODE_MASK) {
       case CMD_FRAC_CODE_ONLY:
          m_instant_stop = 1;
          my_start_point += m_reverse_order ? (1-this_part) : (this_part-1);
@@ -3550,7 +3565,7 @@ void fraction_info::get_fraction_info(
          fail("Internal error: bad fraction code.");
       }
    }
-   else if (!(frac_flags & CMD_FRAC_REVERSE) &&
+   else if (!(frac_stuff.flags & CMD_FRAC_REVERSE) &&
             m_highlimit == 1 &&
             m_do_half_of_last_part) {
       // No action; it's OK even if call doesn't have visible fractions.
@@ -3562,7 +3577,7 @@ void fraction_info::get_fraction_info(
       fail("This call can't be fractionalized.");
    }
 
-   if (frac_flags & CMD_FRAC_FIRSTHALF_ALL) {
+   if (frac_stuff.flags & CMD_FRAC_FIRSTHALF_ALL) {
       int diff = m_highlimit - my_start_point;
 
       if (m_reverse_order || m_do_half_of_last_part || m_do_last_half_of_first_part)
@@ -3576,7 +3591,7 @@ void fraction_info::get_fraction_info(
          m_highlimit -= diff >> 1;
       }
    }
-   else if (frac_flags & CMD_FRAC_LASTHALF_ALL) {
+   else if (frac_stuff.flags & CMD_FRAC_LASTHALF_ALL) {
       int diff = m_highlimit - my_start_point;
 
       if (m_reverse_order || m_do_half_of_last_part || m_do_last_half_of_first_part)
@@ -3781,18 +3796,17 @@ static void do_stuff_inside_sequential_call(
    bool qtfudged,
    bool setup_is_elongated) THROW_DECL
 {
-   /* We don't supply these; they get filled in by the call. */
+   // We don't supply these; they get filled in by the call.
    result->cmd.cmd_misc_flags &= ~(DFM1_CONCENTRICITY_FLAG_MASK | CMD_MISC__NO_CHECK_MOD_LEVEL);
 
    if (this_mod1 & DFM1_NO_CHECK_MOD_LEVEL)
       result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHECK_MOD_LEVEL;
 
    if (this_mod1 & DFM1_FINISH_THIS) {
-      if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+      if (!result->cmd.cmd_fraction.is_null())
          fail("Can't fractionalize this call this way.");
 
-      result->cmd.cmd_frac_flags =
-         CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE;
+      result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_FROMTOREV,2,0));
    }
 
    if (!first_call) {    // Is this right, or should we be using "first_time" here also?
@@ -3850,8 +3864,7 @@ static void do_stuff_inside_sequential_call(
    // dancers really do track an awareness of the formation.
 
    if (!(result->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) &&
-       result->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE) {
-
+       result->cmd.cmd_fraction.is_null()) {
       if (result->cmd.callspec == base_calls[base_call_chreact_1]) {
 
          /* If we are starting a chain reaction, and the assumption was some form
@@ -4096,21 +4109,21 @@ static void do_sequential_call(
    // exactly as they are, to all subcalls that want them.  Either flag will do it.
    // *All* fractions are passed through, not just half or last half.
 
-   uint32 saved_fracs = ss->cmd.cmd_frac_flags;
+   fraction_command saved_fracs = ss->cmd.cmd_fraction;
    bool feeding_fractions_through =
       (callspec->callflagsh & (INHERITFLAG_HALF|INHERITFLAG_LASTHALF)) != 0;
 
    // If rewinding, do the parts in reverse order.
    if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REWIND)) {
-      ss->cmd.cmd_frac_flags ^= CMD_FRAC_REVERSE;
-      ss->cmd.cmd_frac_flags |= CMD_FRAC_FORCE_VIS;
+      ss->cmd.cmd_fraction.flags ^= CMD_FRAC_REVERSE;
+      ss->cmd.cmd_fraction.flags |= CMD_FRAC_FORCE_VIS;
    }
 
    // If a restrained concept is in place, it is waiting for the call to be pulled apart
    // into its pieces.  That is about to happen.  Turn off the restraint flag.
    // That will be the signal to "move" that it should act on the concept.
 
-   ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
+   ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
 
    if (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) distribute = true;
 
@@ -4126,7 +4139,7 @@ static void do_sequential_call(
 
          if (this_mod1 &
              (DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE)) {
-            uint32 this_count = current_options.number_fields & 0xF;
+            uint32 this_count = current_options.number_fields & NUMBER_FIELD_MASK;
 
             delta += this_count-1;  // Why -1?  Because we're counting *extra* parts.
 
@@ -4150,33 +4163,32 @@ static void do_sequential_call(
       zzz.fudge_client_total(delta);
    }
 
-   /* Check for special behavior of "sequential_with_fraction". */
+   // Check for special behavior of "sequential_with_fraction".
 
    if (callspec->schema == schema_sequential_with_fraction) {
-      uint32 new_fracs;
-
-      if ((ss->cmd.cmd_frac_flags & 0xFFFF) != CMD_FRAC_NULL_VALUE)
+      if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
          fail("Fractions have been specified in two places.");
 
       if (current_options.number_fields == 0 || current_options.number_fields > 4)
          fail("Illegal fraction.");
 
-      if (ss->cmd.cmd_frac_flags & CMD_FRAC_REVERSE) {
-         new_fracs = 0x0411 | ((4-current_options.number_fields) << 12);
+      if (ss->cmd.cmd_fraction.flags & CMD_FRAC_REVERSE) {
+         ss->cmd.cmd_fraction.fraction =
+            NUMBER_FIELDS_4_0_1_1 |
+            ((4-current_options.number_fields) << (BITS_PER_NUMBER_FIELD*2));
       }
       else {
-         new_fracs = 0x0104 | (current_options.number_fields << 4);
+         ss->cmd.cmd_fraction.fraction =
+            NUMBER_FIELDS_1_0_4_0 | current_options.number_fields;
       }
-
-      ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | new_fracs;
    }
 
-   /* If the "cmd_frac_flags" word is not null, we are being asked to do something special.
-      Otherwise, the defaults that we have placed into zzz will be used. */
+   // If the "cmd_frac_flags" word is not null, we are being asked to do something special.
+   // Otherwise, the defaults that we have placed into zzz will be used.
 
    revert_weirdness_type doing_weird_revert = weirdness_off;
 
-   if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+   if (!ss->cmd.cmd_fraction.is_null()) {
       if ((zzz.m_do_half_of_last_part | zzz.m_do_last_half_of_first_part) != 0)
          fail("Sorry, can't fractionalize this.");
 
@@ -4229,7 +4241,7 @@ static void do_sequential_call(
          doing_weird_revert = weirdness_otherstuff;
       }
 
-      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
+      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_fraction,
                                                             callflags1, weirdness_off);
 
       // If distribution is on, we have to do some funny stuff.
@@ -4438,7 +4450,7 @@ static void do_sequential_call(
 
       /* Check for special repetition stuff. */
       if ((DFM1_SEQ_REPEAT_N | DFM1_SEQ_REPEAT_NM1 | DFM1_SEQ_REPEAT_N_ALTERNATE) & this_mod1) {
-         int count_to_use = current_options.number_fields & 0xF;
+         int count_to_use = current_options.number_fields & NUMBER_FIELD_MASK;
 
          number_used = true;
          if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) count_to_use++;
@@ -4493,20 +4505,22 @@ static void do_sequential_call(
       // causes the fraction info to be fed to this subcall.
       if (feeding_fractions_through) {
          if (this_item->modifiersh & (INHERITFLAG_HALF|INHERITFLAG_LASTHALF))
-            result->cmd.cmd_frac_flags = saved_fracs;
+            result->cmd.cmd_fraction = saved_fracs;
          else
-            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            result->cmd.cmd_fraction.set_to_null();
       }
-      else
-         result->cmd.cmd_frac_flags = zzz.get_fracs_for_this_part();
+      else {
+         result->cmd.cmd_fraction.flags = 0;
+         result->cmd.cmd_fraction.fraction = zzz.get_fracs_for_this_part();
+      }
 
       if (doing_weird_revert == weirdness_otherstuff) {
          if (zzz.m_client_index == 0) {
             zzz.m_fetch_index--;
-            result->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE|CMD_FRAC_FORCE_VIS;
+            result->cmd.cmd_fraction.set_to_firsthalf_with_flags(CMD_FRAC_FORCE_VIS);
          }
          else if (zzz.m_client_index == 1) {
-            result->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE|CMD_FRAC_FORCE_VIS;
+            result->cmd.cmd_fraction.set_to_lasthalf_with_flags(CMD_FRAC_FORCE_VIS);
          }
       }
 
@@ -4614,8 +4628,8 @@ static bool do_misc_schema(
    get_real_subcall(parseptr, outerdef,
                     &ss->cmd, callspec, false, 0, &foo2);
 
-   foo1p->cmd_frac_flags = ss->cmd.cmd_frac_flags;
-   foo2.cmd_frac_flags = ss->cmd.cmd_frac_flags;
+   foo1p->cmd_fraction = ss->cmd.cmd_fraction;
+   foo2.cmd_fraction = ss->cmd.cmd_fraction;
 
    if (the_schema == schema_select_leads) {
       inner_selective_move(ss, foo1p, &foo2,
@@ -5455,9 +5469,9 @@ static void really_inner_move(setup *ss,
                    INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK |
                    INHERITFLAG_SINGLEFILE)) == 0 &&
                 the_schema == schema_sequential &&
-                (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) != 0 &&
-                (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) ||
-                 ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV))) {
+                (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) != 0 &&
+                (((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) ||
+                 ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV))) {
                extra_heritmask_bits = unaccepted_flags;
             }
             else {
@@ -5473,18 +5487,18 @@ static void really_inner_move(setup *ss,
          uint32 misc2 = ss->cmd.cmd_misc2_flags;
 
          if ((misc2 & CMD_MISC2__CENTRAL_SNAG) &&
-             ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
-              (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
-               ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV)))) {
-            if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+             ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) == 0 ||
+              (((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
+               ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV)))) {
+            if (!ss->cmd.cmd_fraction.is_null())
                fail("Can't fractionalize a call and use \"snag\" at the same time.");
 
             ss->cmd.cmd_misc2_flags &=
                ~(CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__INVERT_SNAG);
-            ss->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
+            ss->cmd.cmd_fraction.set_to_firsthalf();
 
-            /* Note the uncanny similarity between the following and
-               "punt_centers_use_concept". */
+            // Note the uncanny similarity between the following and
+            // "punt_centers_use_concept".
             {
                int i;
                int m, j;
@@ -5538,7 +5552,7 @@ static void really_inner_move(setup *ss,
 
                the_setups[0].cmd = ss->cmd;
                the_setups[0].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-               the_setups[0].cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
+               the_setups[0].cmd.cmd_fraction.set_to_lasthalf();
                move(&the_setups[0], false, &the_results[0]);
 
                the_results[1] = the_setups[1];
@@ -5671,9 +5685,9 @@ static bool do_forced_couples_stuff(
    uint32 mxnflags = ss->cmd.do_couples_her8itflags &
       (INHERITFLAG_SINGLE | INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK);
 
-   /* Mxnflags now has the "single" bit, or any "1x3" stuff.  If it is the "single"
-      bit alone, we do the call directly--we don't do "as couples".  Otherwise,
-      we the do call as couples, passing any modifiers. */
+   // Mxnflags now has the "single" bit, or any "1x3" stuff.  If it is the "single"
+   // bit alone, we do the call directly--we don't do "as couples".  Otherwise,
+   // we the do call as couples, passing any modifiers.
 
    ss->cmd.do_couples_her8itflags &= ~mxnflags;
 
@@ -5701,8 +5715,8 @@ static void move_with_real_call(
    // useful to check that someday) and we just have the callspec and the final
    // concepts.
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_MODIFIERS) {
+      ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
       ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.restrained_super8flags);
       ss->cmd.do_couples_her8itflags = ss->cmd.restrained_super9flags;
 
@@ -5712,7 +5726,7 @@ static void move_with_real_call(
    }
 
    if (ss->kind == nothing) {
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+      if (!ss->cmd.cmd_fraction.is_null())
          fail("Can't fractionalize a call if no one is doing it.");
 
       result->kind = nothing;
@@ -5765,12 +5779,12 @@ static void move_with_real_call(
 
       if ((callflags1 & CFLAG1_YOYO_FRACTAL_NUM)) {
          if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FRACTAL)) {
-            if ((current_options.number_fields & 0xD) == 1)
+            if ((current_options.number_fields & (NUMBER_FIELD_MASK ^ 2)) == 1)
                current_options.number_fields ^= 2;
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_FRACTAL);
          }
          else if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYO)) {
-            if ((current_options.number_fields & 0xF) == 2)
+            if ((current_options.number_fields & NUMBER_FIELD_MASK) == 2)
                current_options.number_fields++;
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_YOYO);
          }
@@ -5884,35 +5898,55 @@ static void move_with_real_call(
       // For now, any flag is acceptable.  Later, we will
       // distinguish among the various flags.
 
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+      if (!ss->cmd.cmd_fraction.is_null()) {
          switch (the_schema) {
          case schema_by_array:
          case schema_matrix:
          case schema_partner_matrix:
             // We allow the fractions "1/2" and "last 1/2" to be given.
             // Basic_move or matrixmove will handle them.
-            // But we skip the test if the incoming setup is empty.
 
-            {
-               uint32 tbonetest = (attr::slimit(ss) >= 0) ? or_all_people(ss) : 99;
+            // We also allow any incoming fraction to alter the given number,
+            // if the call is of the kind that allows that.
 
-               if (tbonetest) {
-                  heritflags bit_to_set = (heritflags) 0;
-                  if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
-                      CMD_FRAC_HALF_VALUE)
-                     bit_to_set = INHERITFLAG_HALF;
-                  else if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
-                           CMD_FRAC_LASTHALF_VALUE) {
-                     bit_to_set = INHERITFLAG_LASTHALF;
+            // But we skip all of this if the incoming setup is empty.
+
+            if (attr::slimit(ss) < 0 || or_all_people(ss) != 0) {
+               heritflags bit_to_set = (heritflags) 0;
+
+               if ((callflagsf & CFLAG2_FRACTIONAL_NUMBERS) &&
+                   (ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0 &&
+                   current_options.howmanynumbers == 1) {
+                  fraction_info zzz(current_options.number_fields & NUMBER_FIELD_MASK);
+
+                  zzz.get_fraction_info(ss->cmd.cmd_fraction,
+                                        CFLAG1_VISIBLE_FRACTION_BIT*3,
+                                        weirdness_off);
+
+                  if ((zzz.m_do_half_of_last_part |
+                       zzz.m_do_last_half_of_first_part |
+                       zzz.m_fetch_index) == 0) {
+                     current_options.number_fields = zzz.m_highlimit;
+                     goto done;
                   }
-
-                  if (bit_to_set == 0 || ss->cmd.cmd_final_flags.test_heritbit(bit_to_set))
-                     fail("This call can't be fractionalized this way.");
-                  ss->cmd.cmd_final_flags.set_heritbit(bit_to_set);
                }
 
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               if ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0) {
+                  if (ss->cmd.cmd_fraction.fraction == CMD_FRAC_HALF_VALUE)
+                     bit_to_set = INHERITFLAG_HALF;
+                  else if (ss->cmd.cmd_fraction.fraction == CMD_FRAC_LASTHALF_VALUE) {
+                     bit_to_set = INHERITFLAG_LASTHALF;
+                  }
+               }
+
+               if (bit_to_set == 0 || ss->cmd.cmd_final_flags.test_heritbit(bit_to_set))
+                  fail("This call can't be fractionalized this way.");
+               ss->cmd.cmd_final_flags.set_heritbit(bit_to_set);
+
+            done: ;
             }
+
+            ss->cmd.cmd_fraction.set_to_null();
 
             break;
          case schema_nothing:
@@ -5935,15 +5969,15 @@ static void move_with_real_call(
 
             if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
 
-               /* Otherwise, we allow the fraction "1/2" to be given, if the top-level
-                  heritablilty flag allows it.  We turn the fraction into a "final concept". */
+               // Otherwise, we allow the fraction "1/2" to be given, if the top-level
+               // heritablilty flag allows it.  We turn the fraction into a "final concept".
 
-               if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
-                  ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               if (ss->cmd.cmd_fraction.is_firsthalf()) {
+                  ss->cmd.cmd_fraction.set_to_null();
                   ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_HALF);
                }
-               else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-                  ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+               else if (ss->cmd.cmd_fraction.is_lasthalf()) {
+                  ss->cmd.cmd_fraction.set_to_null();
                   ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_LASTHALF);
                }
                else {
@@ -6006,13 +6040,15 @@ static void move_with_real_call(
       if ((!(ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) ||
            the_schema != schema_by_array) &&
           (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
-         uint32 frac = ss->cmd.cmd_frac_flags;
+         uint32 fracflags = ss->cmd.cmd_fraction.flags;
+         uint32 fracfrac = ss->cmd.cmd_fraction.fraction;
 
          // See if what we are doing includes the first part.
 
-         if (frac == CMD_FRAC_NULL_VALUE ||
-             frac == (CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE) ||
-             (frac & ~CMD_FRAC_PART_MASK) == (CMD_FRAC_CODE_FROMTO | CMD_FRAC_NULL_VALUE)) {
+         if ((fracfrac == CMD_FRAC_NULL_VALUE) &&
+             (fracflags == 0 ||
+              fracflags == FRACS(CMD_FRAC_CODE_ONLY,1,0) ||
+              (fracflags & ~CMD_FRAC_PART_MASK) == CMD_FRAC_CODE_FROMTO)) {
 
             if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
                                             CMD_MISC__ALREADY_STEPPED |
@@ -6022,7 +6058,7 @@ static void move_with_real_call(
                   mirror = true;
                }
 
-               ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
+               ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
                touch_or_rear_back(ss, mirror, callflags1);
 
                // But, if the "left_means_touch_or_check" flag is set,
@@ -6042,9 +6078,9 @@ static void move_with_real_call(
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
             }
          }
-         else if ((frac & ~CMD_FRAC_PART_MASK) ==
-                  (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTOREV) &&
-                  (frac & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
+         else if (fracfrac == CMD_FRAC_NULL_VALUE &&
+                  ((fracflags & ~CMD_FRAC_PART_MASK) == CMD_FRAC_CODE_FROMTOREV) &&
+                  (fracflags & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2)) {
             /* If we're doing the rest of the call, just turn all that stuff off. */
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
@@ -6167,17 +6203,17 @@ static void move_with_real_call(
       // Do some quick error checking for visible fractions.  For now,
       // any flag is acceptable.  Later, we will distinguish among the various flags.
 
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+      if (!ss->cmd.cmd_fraction.is_null()) {
          switch (the_schema) {
          case schema_by_array:
             // We allow the fractions "1/2" and "last 1/2" to be given.
             // Basic_move will handle them.
-            if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            if (ss->cmd.cmd_fraction.is_firsthalf()) {
+               ss->cmd.cmd_fraction.set_to_null();
                ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_HALF);
             }
-            else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-               ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            else if (ss->cmd.cmd_fraction.is_lasthalf()) {
+               ss->cmd.cmd_fraction.set_to_null();
                ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_LASTHALF);
             }
             else
@@ -6212,10 +6248,11 @@ static void move_with_real_call(
          // If the code is "ONLYREV", we assume, without checking, that the first part
          // isn't included.  That may not be right, but we can't check at present.
 
-         if ((ss->cmd.cmd_frac_flags & 0xFF00) != 0x0100 ||
-             (ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV ||
-             ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
-              (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) > CMD_FRAC_PART_BIT))
+         if ((ss->cmd.cmd_fraction.fraction & NUMBER_FIELD_MASK_LEFT_TWO) !=
+             NUMBER_FIELDS_1_0_0_0 ||
+             (ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV ||
+             ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
+              (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) > CMD_FRAC_PART_BIT))
             starting = false;     // We aren't doing the first part.
 
          if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
@@ -6223,7 +6260,7 @@ static void move_with_real_call(
             ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT);
 
             if (current_options.howmanynumbers != 0 &&
-                (current_options.number_fields & 0xF) <= 1)
+                (current_options.number_fields & NUMBER_FIELD_MASK) <= 1)
                fail("Can't split square thru 1.");
          }
          else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE) {
@@ -6332,7 +6369,7 @@ static void move_with_real_call(
 
             if (!(ss->cmd.cmd_final_flags.test_finalbits(
                        FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) &&
-                !(ss->cmd.cmd_frac_flags & CMD_FRAC_BREAKING_UP))
+                !(ss->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
                // If "BREAKING_UP", caller presumably knows what she is doing.
                warn(warn__excess_split);
 
@@ -6437,7 +6474,7 @@ extern void move(
    //   ni03\2061  vg03\3285  ci04\3066  yh07\4161
 
    if (ss->cmd.restrained_concept &&
-       !(ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS)) {
+       !(ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS)) {
       parse_block *t = ss->cmd.restrained_concept;
       ss->cmd.restrained_concept = (parse_block *) 0;
       remove_z_distortion(ss);
@@ -6534,7 +6571,7 @@ extern void move(
          if (saved_old_call) (*z0)->call = saved_old_call;
          (*z0)->no_check_call_level = true;
 
-         ss->cmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_MODIFIERS;
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
          ss->cmd.restrained_do_as_couples =
             (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) != 0;
@@ -6568,7 +6605,7 @@ extern void move(
             ss->cmd.parseptr->options = saved_options;
          }
 
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
+         ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
          ss->cmd.cmd_final_flags.herit = (heritflags) ss->cmd.restrained_super8flags;
 
          if (maybe_throw_this != error_flag_none)
@@ -6578,7 +6615,7 @@ extern void move(
       return;
    }
 
-   if (ss->cmd.restrained_fraction) {
+   if (ss->cmd.restrained_fraction.fraction) {
       conzept::concept_descriptor bar = {"?????", concept_fractional, 0, l_mainstream, UC_none, 90};
       parse_block foo(&bar);
       (concept_table[foo.concept->kind].concept_action)(ss, &foo, result);
@@ -6727,9 +6764,9 @@ extern void move(
       else if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_SNAG) {
          // Doing plain snag -- we are tolerant of calls like 6x2 acey deucey.
          // But if we are doing something like "initially snag" or "finally snag", don't.
-         if ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
-             (((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
-              ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
+         if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) == 0 ||
+             (((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
+              ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
             FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
             switch (this_call->the_defn.schema) {
             case schema_concentric:

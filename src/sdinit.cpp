@@ -373,7 +373,13 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
       if (intlkness)
          deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_intlk]]);
 
-      if (deposit_call(test_call, &null_options)) goto try_again;
+      if (deposit_call(test_call, &null_options)) {
+         // The problem may be just that the current number is
+         // inconsistent with the call's "odd number only" requirement.
+         number_used = true;
+         if (iterate_over_sel_dir_num(true, true, true)) goto try_another_selector;
+         goto try_again;
+      }
       toplevelmove();
    }
    catch(error_flag_type) {
@@ -2300,6 +2306,46 @@ extern bool open_session(int argc, char **argv)
       gg->init_step(init_database2, 0);
       gg->init_step(calibrate_tick, TICK_TOTAL);
       gg->init_step(do_tick, 2);
+
+      // Make the cardinal/ordinal tables.
+
+      for (i=0 ; i<NUM_CARDINALS ; i++) {
+         int tens_digit = i/10;
+         int units_digit = i - tens_digit*10;
+         char *cardptr = new char [3]; 
+         char *ordptr = new char [5]; 
+         cardinals[i] = cardptr;
+         ordinals[i] = ordptr;
+         if (tens_digit > 0) {
+            *cardptr++ = (char) ('0'+tens_digit);
+            *ordptr++ = (char) ('0'+tens_digit);
+         }
+         *cardptr++ = (char) ('0'+units_digit);
+         *ordptr++ = (char) ('0'+units_digit);
+
+         if (units_digit == 1 && tens_digit != 1) {
+            *ordptr++ = 's';
+            *ordptr++ = 't';
+         }
+         else if (units_digit == 2 && tens_digit != 1) {
+            *ordptr++ = 'n';
+            *ordptr++ = 'd';
+         }
+         else if (units_digit == 3 && tens_digit != 1) {
+            *ordptr++ = 'r';
+            *ordptr++ = 'd';
+         }
+         else {
+            *ordptr++ = 't';
+            *ordptr++ = 'h';
+         }
+
+         *cardptr++ = (char) 0;
+         *ordptr++ = (char) 0;
+      }
+
+      cardinals[NUM_CARDINALS] = (Cstring) 0;
+      ordinals[NUM_CARDINALS] = (Cstring) 0;
 
       // Make the translated names for all calls and concepts.  These have the "<...>"
       // phrases, suitable for external display on menus, instead of "@" escapes.

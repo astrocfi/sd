@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -333,8 +333,8 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
          switch (f[1]) {
          case 'a': case 'b': case 'B': case 'D': case 'u': case '9':
             // DJGPP has a problem with this, need convert to int.
-            write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & 0xF));
-            index >>= 4;
+            write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & NUMBER_FIELD_MASK));
+            index >>= BITS_PER_NUMBER_FIELD;
             howmany--;
             break;
          case '6':
@@ -1284,16 +1284,16 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      write_blank_if_needed();
 
                      // Watch for "zero and a half".
-                     if (savec == '9' && (number_list & 0xF) == 0 &&
+                     if (savec == '9' && (number_list & NUMBER_FIELD_MASK) == 0 &&
                          np[0] == '-' && np[1] == '1' &&
                          np[2] == '/' && np[3] == '2') {
                         writestuff("1/2");
                         np += 4;
                      }
                      else
-                        write_nice_number(savec, number_list & 0xF);
+                        write_nice_number(savec, number_list & NUMBER_FIELD_MASK);
 
-                     number_list >>= 4;    // Get ready for next number.
+                     number_list >>= BITS_PER_NUMBER_FIELD;    // Get ready for next number.
                      break;
                   case 'e':
                      if (use_left_name) {

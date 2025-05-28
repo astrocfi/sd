@@ -5,7 +5,7 @@
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
- * Copyright (c) 1994-2003 William B. Ackerman
+ * Copyright (c) 1994-2006 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -1224,7 +1224,7 @@ int iofull::do_circcer_popup()
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, bool odd_number_only, bool forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;
@@ -1239,10 +1239,10 @@ uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
             char buffer[200];
             get_string_input("How many? ", buffer, 200);
             if (buffer[0] == '!' || buffer[0] == '?') {
-               writestuff("Type a number between 0 and 15");
+               writestuff("Type a number between 0 and 36");
                newline();
             }
-            else if (!buffer[0]) return ~0;
+            else if (!buffer[0]) return ~0UL;
             else {
                this_num = atoi(buffer);
                break;
@@ -1250,14 +1250,15 @@ uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
          }
       }
       else {
-         this_num = number_fields & 0xF;
-         number_fields >>= 4;
+         this_num = number_fields & NUMBER_FIELD_MASK;
+         number_fields >>= BITS_PER_NUMBER_FIELD;
          howmanynumbers--;
       }
 
-      if (forbid_zero && this_num == 0) return ~0;
-      if (this_num > 15) return ~0;    /* User gave bad answer. */
-      number_list |= (this_num << (i*4));
+      if (odd_number_only && !(this_num & 1)) return ~0UL;
+      if (forbid_zero && this_num == 0) return ~0UL;
+      if (this_num >= NUM_CARDINALS) return ~0UL;    // User gave bad answer.
+      number_list |= (this_num << (i*BITS_PER_NUMBER_FIELD));
    }
 
    return number_list;

@@ -359,9 +359,9 @@ static void innards(
          }
 
          // It is clearly too late to expand the matrix -- that can't be what is wanted.
-         x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags &
-                                    ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) |
-            CMD_MISC__NO_EXPAND_MATRIX;
+         x[i].cmd.cmd_misc_flags =
+            (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) |
+            CMD_MISC__NO_EXPAND_1;
          if (map_kind != MPKIND__SPLIT && map_kind != MPKIND__SPLIT_OTHERWAY_TOO)
             x[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
          x[i].cmd.cmd_assume = new_assume;

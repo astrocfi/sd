@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -31,7 +31,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.63"
+#define VERSION_STRING "36.63A"
 #define TIME_STAMP "wba@alum.mit.edu  20 Nov 2005 $"
 
 /* This defines the following functions:
@@ -362,18 +362,18 @@ static bool find_direction(direction_kind *dir_p)
 }
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+// Returns TRUE if it fails, meaning that the user waved the mouse away,
+// or that the number from a verify iteration violated the "odd only" rule.
 static bool find_numbers(int howmanynumbers, bool forbid_zero,
    uint32 odd_number_only, bool allow_iteration, uint32 *number_list)
 {
-   if (interactivity == interactivity_normal) {
-      *number_list = gg->get_number_fields(howmanynumbers, forbid_zero);
-
-      if ((*number_list) == ~0UL)
-         return true;           /* User waved the mouse away. */
-   }
+   if (interactivity == interactivity_normal)
+      *number_list = gg->get_number_fields(howmanynumbers, odd_number_only != 0, forbid_zero);
    else
       do_number_iteration(howmanynumbers, odd_number_only, allow_iteration, number_list);
+
+   if ((*number_list) == ~0UL)
+      return true;           // User waved the mouse away.
 
    return false;
 }

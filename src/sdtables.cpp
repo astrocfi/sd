@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -2508,7 +2508,7 @@ static expand::thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_q
 static expand::thing step_2x4_rig_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, nothing, s_rigger, 0};
 static expand::thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, s_bone, s1x8, 0};
 static expand::thing step_bone_rigstuff = {{7, 2, 4, 1, 3, 6, 0, 5}, 8, s_bone, s_rigger, 0};
-static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
+static expand::thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, s_rigger, s1x8, 0};
 static expand::thing step_2x1d_stuff = {{0, 1, 5, 3, 4, 2}, 6, s_1x2dmd, s1x6, 0};
 
 static expand::thing step_phan1_stuff = {{-1, 7, -1, 6, -1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4},
@@ -2678,9 +2678,12 @@ full_expand::thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0xF0UL,       0x20UL, ~0UL},
    {warn__some_touch, 0, &step_tgl4_stuffb,   s_trngl4,     0x0FUL,       0x02UL, ~0UL},
 
-   // Ends touch from a "bone" to a grand wave.
+   // Ends touch from a "bone" to a tidal wave.
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA802UL, 0xFFFFUL},
    {warn__some_touch, 0, &step_bone_stuff,    s_bone,     0xFFFFUL,     0xA208UL, 0xFFFFUL},
+   // Same, but we get a 3&1 or inverted line, from which fan the top is legal.
+   {warn__some_touch, 32, &step_bone_stuff,   s_bone,     0xFFFFUL,     0xAA00UL, 0xFFFFUL},
+   {warn__some_touch, 32, &step_bone_stuff,   s_bone,     0xFFFFUL,     0xA00AUL, 0xFFFFUL},
 
    // All touch from a "bone" to a rigger.
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xFFFFUL,     0xAD07UL, 0xFFFFUL},
@@ -2688,8 +2691,11 @@ full_expand::thing touch_init_table3[] = {
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0xF0F0UL,     0xAD07UL, 0xF0F0UL},
    {warn__none,       0, &step_bone_rigstuff, s_bone,     0x0F0FUL,     0xAD07UL, 0x0F0FUL},
 
-   // Centers touch from a "rigger" to a grand wave.
+   // Centers touch from a "rigger" to a tidal wave.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xFFFFUL,     0xA802UL, 0xFFFFUL},
+   // Same, but we get a 3&1 or inverted line, from which fan the top is legal.
+   {warn__some_touch, 32, &step_rig_stuff,    s_rigger,   0xFFFFUL,     0xA00AUL, 0xFFFFUL},
+
    // Same, with missing people.
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0xF0F0UL,     0xA802UL, 0xF0F0UL},
    {warn__some_touch, 0, &step_rig_stuff,     s_rigger,   0x0F0FUL,     0xA802UL, 0x0F0FUL},
@@ -8210,6 +8216,25 @@ select::fixer select::fixer_init_table[] = {
    {fx_f4x4rzz, s1x2, s2x8,        0, 0, 0x100+2, fx_f4x4rzz,   fx_f4x4nw,      fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 15, 14}},
    {fx_f4x4lzza,s1x2, s2x6,        0, 0, 2,         fx0,   fx_f4x4ne,           fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 7, 6}},
    {fx_f4x4rzza,s1x2, s2x6,        0, 0, 0x100+2,   fx0,   fx_f4x4nw,           fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 5, 11, 10}},
+
+   {fx_f2x4tt0, s2x2, s2x4,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 4, 7}},
+   {fx_f2x4tt1, s2x2, s2x4,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 5, 6}},
+
+   {fx_f2x8qq0, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 14, 15}},
+   {fx_f2x8qq1, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {6, 7, 8, 9}},
+
+   {fx_f2x8tt0, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 12, 15}},
+   {fx_f2x8tt1, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 13, 14}},
+   {fx_f2x8tt2, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {5, 6, 8, 11}},
+   {fx_f2x8tt3, s2x2, s2x8,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 7, 9, 10}},
+
+   {fx_f2x6qq0, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 10, 11}},
+   {fx_f2x6qq1, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {4, 5, 6, 7}},
+   {fx_f2x6tt0, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 8, 11}},
+   {fx_f2x6tt1, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 9, 10}},
+   {fx_f2x6tt2, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 5, 7, 8}},
+   {fx_f2x6tt3, s2x2, s2x6,          0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 4, 6, 9}},
+
    {fx_f3x4outer, s1x3, s3x4,        1, 0, 2,       fx_f3x4outer, fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 10, 9, 3, 4, 6}},
    {fx_f3dmouter, s1x3, s3dmd,       0, 0, 2,       fx_f3dmouter, fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {8, 7, 6, 0, 1, 2}},
    {fx_f3ptpdin,  s1x2, s3ptpd,      0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {10, 11, 5, 4}},
@@ -8529,6 +8554,7 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2x4far, s1x4, s2x4,        0, 0, 1,       fx0,          fx0,          fx_f2x4far, fx_f1x8hif, fx0,     fx0,    fx_f2x4rl,   fx_f2x4rl,     {0, 1, 3, 2}},
    {fx_f2x4near, s1x4, s2x4,        0, 0, 1,       fx0,          fx0,          fx_f2x4near, fx_f1x8lowf, fx0,   fx0,    fx_f2x4lr,   fx_f2x4lr,     {7, 6, 4, 5}},
    {fx_f4dmdiden, s4dmd, s4dmd,      0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}},
+
    {fx_f2x4pos1, s1x2, s2x4,        1, 0, 1,       fx_f2x4pos1,  fx0,         fx0,           fx0, fx0,          fx0,    fx0,          fx0,          {0, 7}},
    {fx_f2x4pos2, s1x2, s2x4,        1, 0, 1,       fx_f2x4pos2,  fx0,         fx0,           fx0, fx0,          fx0,    fx0,          fx0,          {1, 6}},
    {fx_f2x4pos3, s1x2, s2x4,        1, 0, 1,       fx_f2x4pos3,  fx0,         fx0,           fx0, fx0,          fx0,    fx0,          fx0,          {2, 5}},
@@ -8865,6 +8891,26 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               s2x6,        0xC30,  fx_f3x4rzz,    fx0, -1},
    {LOOKUP_NONE,               s2x8,       0x0303,  fx_f4x4lzz,    fx0, -1},
    {LOOKUP_NONE,               s2x8,       0xC0C0,  fx_f4x4rzz,    fx0, -1},
+
+   {LOOKUP_TRAPEZOID,          s2x4,         0x96,  fx_f2x4tt0,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x4,         0x69,  fx_f2x4tt1,    fx0, -1},
+
+   // Next 6 are unsymmetrical in a 2x8 - boxes and trapezoids.
+   {LOOKUP_NONE,               s2x8,       0xC003,  fx_f2x8qq0,    fx0, -1},
+   {LOOKUP_NONE,               s2x8,       0x03C0,  fx_f2x8qq1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x9006,  fx_f2x8tt0,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x6009,  fx_f2x8tt1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x0960,  fx_f2x8tt2,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x8,       0x0690,  fx_f2x8tt3,    fx0, -1},
+
+   // Next 6 are unsymmetrical in a 2x6 - boxes and trapezoids.
+   {LOOKUP_NONE,               s2x6,        0xC03,  fx_f2x6qq0,    fx0, -1},
+   {LOOKUP_NONE,               s2x6,        0x0F0,  fx_f2x6qq1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x906,  fx_f2x6tt0,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x609,  fx_f2x6tt1,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x1A4,  fx_f2x6tt2,    fx0, -1},
+   {LOOKUP_TRAPEZOID,          s2x6,        0x258,  fx_f2x6tt3,    fx0, -1},
+
    {LOOKUP_NONE,               s1x8,        0x33,   fx_f1x8endo,   fx0, -1},
    {LOOKUP_NONE,               s1x8,        0x77,   fx_f1x8_77_3,  fx0, -1},
    {LOOKUP_NONE,               s1x8,        0x0F,   fx_f1x8lowf,   fx0, -1},

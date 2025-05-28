@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1097,6 +1097,7 @@ char *flagtab1[] = {
    "yield_if_ambiguous",
    "do_exchange_compress",
    "anyone_who_moves_cant_roll",
+   "fractional_numbers",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
