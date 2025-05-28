@@ -2,14 +2,14 @@ REM        This creates the program executable, both for
 REM           uploading to the web and for distribution
 REM           on disk.
 REM
-REM        You must first do an appropriate DJGPP "make"
+REM        You must first do an appropriate MSVC++ build
 REM           in directory \wba\sd .
 REM
 REM This uses the files sdtty.exe, mkcalls.exe,
-REM         sd_calls.txt, and sd_calls.dat, readme
-REM         cwsdpmi.exe, sdtty.lnk, sdtty.pif, sdtty.ico,
-REM         sample1.ini, sample2.ini, sample3.ini
-REM         and the shortcut setup command files
+REM         sd_calls.txt, and sd_calls.dat, readme,
+REM         sdtty.lnk, sdtty.pif, sdtty.ico,
+REM         Do_desk.cmd, Do_prog.cmd, Do_start.cmd,
+REM         sample1.ini, sample2.ini, sample3.ini.
 del install.lzh
 lha a install ..\sd\sdtty.exe ..\sd\mkcalls.exe
 lha a install ..\sd\sd_calls.txt ..\sd\sd_calls.dat

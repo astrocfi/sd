@@ -56,6 +56,7 @@ typedef struct {
 Private tm_thing maps_isearch_twosome[] = {
 
 /*         map1                              map2                map3  map4   ilatmask olatmask    limit rot            insetup outsetup */
+
    {{7, 6, 4, 5,                     0, 1, 3, 2},                                0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
    {{0, 2, 5, 7,                     1, 3, 4, 6},                             0x55,     0xFF,         4, 0,  0,  0, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0,                     3, 4, 6, 1},                                0,     0xFF,         4, 1,  0,  0, 0,  s2x2,  s2x4},
@@ -175,6 +176,10 @@ Private tm_thing maps_isearch_twosome[] = {
    {{1, 3, 5, 0,                     2, -1, 4, -1},                              0,     0066,         4, 1,  0,  0, 0,  s2x2,  s2x3},
    {{2, 4, 5, 0,                     -1, 3, -1, 1},                              0,     0033,         4, 1,  0,  0, 0,  s2x2,  s2x3},
    {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},                     0x555,   0x0FFF,         6, 0,  0,  0, 0,  s2x3,  s2x6},
+   /* The two maps just below must be after the map just above. */
+   {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},                  02020,  0x18060,         6, 0,  0,  0, 0,  s2x3,  s4x5},
+   {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},                  00101,  0xC0300,         6, 0,  0,  0, 0,  s2x3,  s4x5},
+
    {{2, 0,                           3, 1},                                    0x4,      0xC,         2, 1,  0,  0, 0,  s1x2,  s_trngl4},
    {{1, 3,                           0, 2},                                    0x1,      0xC,         2, 3,  0,  0, 0,  s1x2,  s_trngl4},
    {{2, 1, 0,                        3, -1, -1},                                 0,      0xC,         3, 1,  0,  0, 0,  s1x3,  s_trngl4},
@@ -364,10 +369,16 @@ siamese_item siamese_table[] = {
    {s_c1phan,    0xA55A0000UL, 0x005AUL, warn__none},
    {s_c1phan,    0x55AA0000UL, 0x500AUL, warn__none},
    {s_c1phan,    0xAA550000UL, 0x0A50UL, warn__none},
+
    {s4x4,        0x0000AAAAUL, 0x0A0AUL, warn__none},
    {s4x4,        0x0000CCCCUL, 0x8484UL, warn__none},
    {s4x4,        0xAAAA0000UL, 0xA0A0UL, warn__none},
    {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
+
+   {s4x5,        0x000390E4UL, 0x18060UL, warn__none},
+   {s4x5,        0x000E1384UL, 0xC0300UL, warn__none},
+   {s4x5,        0x90E40000UL, 0x21084UL, warn__none},
+   {s4x5,        0x13840000UL, 0x21084UL, warn__none},
 
    {s4x4,        0x30304141UL, 0x80004141UL, warn__none},
    {s4x4,        0x41413030UL, 0x80003030UL, warn__none},
@@ -1134,7 +1145,7 @@ extern void tandem_couples_move(
       for (ptr = siamese_table; ptr->testkind != nothing; ptr++) {
          if (ptr->testkind == ss->kind && ((((ewmask << 16) | nsmask) ^ ptr->testval) & ((allmask << 16) | allmask)) == 0) {
             warn(ptr->warning);
-            j = ptr->fixup & 0xFFFF;
+            j = ptr->fixup & 0xFFFFFF;
             goto foox;
          }
       }

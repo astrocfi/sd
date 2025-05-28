@@ -370,6 +370,9 @@ static collision_map collision_map_table[] = {
 /* Some new ones. */
    {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 3},                {1, 2},                 s1x4,        s1x8,        0, warn_bad_collision, 0},
    {2, 0x000000, 0x0C, 0x0C, {3, 2},               {6, 5},                {7, 4},                 s1x4,        s1x8,        0, warn_bad_collision, 0},
+
+   {6, 0x000033, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 3, 4, 5, 6},    {0, 1, 2, 4, 5, 7},     s_qtag,      s_qtag,      0, warn_bad_collision, 0},
+
    /* These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey. */
    {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 7, 8},           {1, 2, 6, 8},          s_short6,    sbigdmd,     0, warn__none, 0},
    {4, 0x12, 0x36, 0x24, {1, 2, 4, 5},             {2, 4, 8, 11},          {2, 5, 8, 10},         s_short6,    sbigdmd,     0, warn__none, 0},
@@ -2418,23 +2421,25 @@ Private int divide_the_setup(
          break;
       case s_trngl:
          if (assoc(b_2x2, ss, calldeflist)) {
+            uint32 leading = final_concepts.final;
+
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) {
                if (final_concepts.final & FINAL__TRIANGLE)
                   fail("'Triangle' concept is redundant.");
             }
             else {
-               if (!(final_concepts.final & FINAL__TRIANGLE))
+               if (!(final_concepts.final & (FINAL__TRIANGLE|FINAL__LEADTRIANGLE)))
                   fail("You must give the 'triangle' concept.");
             }
 
             if ((ss->people[0].id1 & d_mask) == d_east)
-               division_maps = &map_trngl_box1;
-            else if ((ss->people[0].id1 & d_mask) == d_west)
-               division_maps = &map_trngl_box2;
-            else
+               leading = ~leading;
+            else if ((ss->people[0].id1 & d_mask) != d_west)
                fail("Can't figure out which way triangle point is facing.");
 
-            final_concepts.final &= ~FINAL__TRIANGLE;
+            division_maps = (leading & FINAL__LEADTRIANGLE) ? &map_trngl_box1 : &map_trngl_box2;
+
+            final_concepts.final &= ~(FINAL__TRIANGLE|FINAL__LEADTRIANGLE);
             ss->cmd.cmd_final_flags = final_concepts;
             divided_setup_move(ss, division_maps, phantest_ok, FALSE, result);
 
@@ -2595,14 +2600,35 @@ Private int divide_the_setup(
             The same thing is done below for 2x4's and 1x4's. */
 
          if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
-                  (ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1) == 0) {
+                  (ss->people[1].id1 | ss->people[3].id1 |
+                   ss->people[5].id1 | ss->people[7].id1) == 0) {
             setup sstest = *ss;
+            sstest.kind = s_ptpd;
 
-            sstest.kind = s_ptpd;   /* It makes assoc happier if we do this now. */
+            if ((!(newtb & 010) ||
+                 assoc(b_ptpd, &sstest, calldeflist) ||
+                 assoc(b_dmd, &sstest, calldeflist)) &&
+                (!(newtb & 001) ||
+                 assoc(b_pptpd, &sstest, calldeflist) ||
+                 assoc(b_pmd, &sstest, calldeflist))) {
+               *ss = sstest;
+               return 2;
+            }
+         }
+         else if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
+                  (ss->people[0].id1 | ss->people[1].id1 |
+                   ss->people[4].id1 | ss->people[5].id1) == 0) {
+            setup sstest = *ss;
+            swap_people(&sstest, 2, 7);
+            swap_people(&sstest, 3, 6);
+            sstest.kind = s_qtag;
 
-            if (
-                  (!(newtb & 010) || assoc(b_ptpd, &sstest, calldeflist) || assoc(b_dmd, &sstest, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_pptpd, &sstest, calldeflist) || assoc(b_pmd, &sstest, calldeflist))) {
+            if ((!(newtb & 010) ||
+                 assoc(b_qtag, &sstest, calldeflist) ||
+                 assoc(b_pmd, &sstest, calldeflist)) &&
+                (!(newtb & 001) ||
+                 assoc(b_pqtag, &sstest, calldeflist) ||
+                 assoc(b_dmd, &sstest, calldeflist))) {
                *ss = sstest;
                return 2;
             }
@@ -3134,7 +3160,8 @@ extern void basic_move(
    /* We demand that the final concepts that remain be only the following ones. */
 
    if (ss->cmd.cmd_final_flags.final &
-         ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED | FINAL__TRIANGLE))
+         ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED |
+           FINAL__TRIANGLE | FINAL__LEADTRIANGLE))
       fail("This concept not allowed here.");
 
    /* Set up the result elongation that we will need if the result is
@@ -3524,7 +3551,7 @@ foobar:
       case s_trngl:
          break;
       default:
-         if (ss->cmd.cmd_final_flags.final & FINAL__TRIANGLE)
+         if (ss->cmd.cmd_final_flags.final & (FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
             fail("Triangle concept not allowed here.");
    }
 
@@ -3564,7 +3591,7 @@ foobar:
       }
       */
 
-      if (ss->cmd.cmd_final_flags.final & FINAL__TRIANGLE)
+      if (ss->cmd.cmd_final_flags.final & (FINAL__TRIANGLE|FINAL__LEADTRIANGLE))
          fail("Triangle concept not allowed here.");
 
       /* We got here if either linedefinition or coldefinition had something.

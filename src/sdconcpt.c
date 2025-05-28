@@ -3169,13 +3169,21 @@ Private long_boolean do_call_under_repetition(repetitionrec *yyy, setup *ss, set
    uint32 save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
    uint32 save_expire = result->cmd.prior_expire_bits;           /* Save it temporarily. */
 
-   if (yyy->fracs.subcall_index*yyy->fracs.subcall_incr >= yyy->fracs.highlimit) return TRUE;
-   if (yyy->fracs.subcall_index >= yyy->repetitions) fail("The indicated part number doesn't exist.");
+   if (yyy->fracs.subcall_index*yyy->fracs.subcall_incr >= yyy->fracs.highlimit)
+      return TRUE;
+
+   if (yyy->fracs.subcall_index >= yyy->repetitions)
+      fail("The indicated part number doesn't exist.");
 
    result->cmd = ss->cmd;      /* The call we wish to execute. */
 
-   if (yyy->fracs.do_half_of_last_part != 0 && yyy->fracs.subcall_index+1 == yyy->fracs.highlimit)
+   if (yyy->fracs.do_half_of_last_part != 0 &&
+       yyy->fracs.subcall_index+1 == yyy->fracs.highlimit)
       result->cmd.cmd_frac_flags = yyy->fracs.do_half_of_last_part;
+   else if (result->cmd.restrained_fraction) {
+      result->cmd.cmd_frac_flags = result->cmd.restrained_fraction;
+      result->cmd.restrained_fraction = 0;
+   }
    else
       result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  /* No fractions to constituent call. */
 
@@ -4487,9 +4495,6 @@ Private void do_concept_meta(
    parse_block *parseptr_skip;
    parse_block fudgyblock;
    setup_command nocmd, yescmd;
-   concept_kind subject_concept;
-   parse_block *subject_concptr;
-   int subject_is_n_times = 0;
    meta_key_kind key = parseptr->concept->value.arg1;
 
    prepare_for_call_in_series(result, ss);
@@ -4588,6 +4593,9 @@ Private void do_concept_meta(
    if (key != meta_key_skip_nth_part &&
        key != meta_key_shift_n && key != meta_key_shifty &&
        key != meta_key_shift_half && key != meta_key_shift_n_half) {
+      concept_kind k;
+      uint32 need_to_restrain;
+      parse_block *parseptrcopy;
 
       /* Scan the modifiers, remembering them and their end point.  The reason for this is to
          avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
@@ -4595,54 +4603,27 @@ Private void do_concept_meta(
          worth it, and isn't worth holding up "random left" for.  In any case, the stupid
          handling of comments will go away soon. */
    
-      subject_concptr = really_skip_one_concept(
-         ss->cmd.parseptr, &subject_concept, &parseptr_skip);
-      yescmd.parseptr = subject_concptr;
+      parseptrcopy = really_skip_one_concept(parseptr->next, &k,
+                                             &need_to_restrain, &parseptr_skip);
+      yescmd.parseptr = parseptrcopy;
 
-      if (concept_table[subject_concept].concept_prop & CONCPROP__SECOND_CALL)
-         nocmd.parseptr = subject_concptr->subsidiary_root;
+      if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL)
+         nocmd.parseptr = parseptrcopy->subsidiary_root;
       else
          nocmd.parseptr = parseptr_skip;
 
-      if (subject_concept == concept_twice || subject_concept == concept_n_times) {
-         if (subject_concptr->concept->value.arg1)
-            subject_is_n_times = subject_concptr->options.number_fields;
-         else
-            subject_is_n_times = subject_concptr->concept->value.arg2;
-      }
-
-      /* Just do "initially" and random/piecewise for now. */
-
-      if (key == meta_key_initially/* || key == meta_key_finally*/ ||
-          key == meta_key_random || key == meta_key_rev_random ||
-          key == meta_key_piecewise) {
-         if (subject_is_n_times != 0) {
-            if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
-               goto didnt_do_it;
-         }
-      }
-   
-      /* We don't do this for echo with supercalls, because echo doesn't pull parts
-         apart, and supercalls don't work with multiple-part calls as the target
-         for which they are restraining the concept.
-         For some reason, we treat "finish" the same as supercalls for this. */
-      if (subject_concept == concept_crazy || subject_concept == concept_frac_crazy || 
-          subject_concept == concept_twice || subject_concept == concept_n_times ||
-          ((subject_concept == concept_supercall || subject_concept == concept_fractional ||
-            (subject_concept == concept_meta &&
-             subject_concptr->concept->value.arg1 == meta_key_finish)) &&
+      if ((need_to_restrain & 2) ||
+          ((need_to_restrain & 1) &&
            (key != meta_key_rev_echo && key != meta_key_echo))) {
          yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_CRAZINESS;
          yescmd.restrained_concept = &fudgyblock;
          yescmd.parseptr = parseptr_skip;
-         fudgyblock = *subject_concptr;
+         fudgyblock = *parseptrcopy;
       }
-       didnt_do_it: ;
    }
 
    switch (key) {
       int shiftynum;
-      uint32 revrand;
       uint32 frac_flags;
       uint32 save_elongation;
       uint32 save_expire;
@@ -4813,38 +4794,6 @@ Private void do_concept_meta(
 
       /* This is "initially": we select the first part with the concept,
          and then the rest of the call without the concept. */
-
-      if (subject_is_n_times != 0) {
-         if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
-            /* YOW!!!!!  We are doing "initially twice", and we have been
-               requested to do just one part of the call.  We have to "flatten"
-               the call and make the result of that flattening visible to
-               whoever is calling us. */
-            /* We know that we did *not* put on the concept restraint. */
-
-            if (subject_is_n_times != 2) 
-               fail("Sorry, can't do this initially N-times stuff.");
-
-            if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
-                                           CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE)) {
-               /* Asked to do part 1 of "initially twice <call>".  Just do part 1
-                  of the call. */
-               result->cmd = nocmd;
-               goto do_less;
-            }
-            else if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV |
-                                                CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE)) {
-               /* Asked to do everything after part 1 of "initially twice <call>".
-                  Just do the whole call! */
-               result->cmd = nocmd;
-               result->cmd.cmd_frac_flags = (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV |
-                                                CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE);
-               goto do_less;
-            }
-            else
-               fail("Sorry, can't do this initially twice stuff.");
-         }
-      }
 
       if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
                                      CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE)) {
@@ -5040,82 +4989,34 @@ Private void do_concept_meta(
       /* Otherwise, this is the "random", "reverse random", or "piecewise" concept.
          Repeatedly execute parts of the call, skipping the concept where required. */
 
-      revrand = key-meta_key_random;  /* Here is where we make use of actual
-                                         numerical assignments. */
-
-      /* First, check for special case of selecting a specific part of "random twice". */
-
-      if (subject_is_n_times != 0) {
-         if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
-            /* YOW!!!!!  We are doing "random twice", and we have been
-               requested to do just one part of the call.  We have to "flatten"
-               the call and make the result of that flattening visible to
-               whoever is calling us. */
-
-            /* We know that we did *not* put on the concept restraint. */
-
-            if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
-                (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE)) {
-               /* Asked to do part N of "random twice <call>".
-                  Just do the appropriate part of the call. */
-               uint32 partnum = (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
-               uint32 yy, xx, newpart, residue;
-
-               yy = subject_is_n_times;
-
-               if ((revrand & ~1) == 0) yy++;
-
-               if (revrand != 0) partnum += yy-1;
-
-               xx = partnum / yy;
-               residue = partnum - xx * yy;
-               newpart = xx;
-
-               if ((revrand & ~1) == 0) {
-                  newpart <<= 1;
-                  if (revrand != 0) newpart--;
-                  if (residue != 0) newpart++;
-               }
-
-               result->cmd = nocmd;
-               result->cmd.cmd_frac_flags =
-                  (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
-                   CMD_FRAC_PART_BIT*newpart | CMD_FRAC_NULL_VALUE);
-               do_call_in_series_simple(result);
-
-               /* If the subject call says it wasn't finished, we aren't finished.
-                  If it says it was finished, we may or may not be, depending on
-                  whether we did the last expansion of that part.  If we didn't
-                  do the last expansion, turn off the "last part" flag. */
-
-               if ((residue != yy-1) &&
-                   (((revrand & ~1) != 0) || (residue != 0)))
-                  result->result_flags &= ~RESULTFLAG__DID_LAST_PART;
-
-               goto get_out;
-            }
-            else
-               fail("Sorry, can't do this random twice stuff with \"initially\".");
-         }
-      }
-
       index = 0;
       doing_just_one = FALSE;
 
-      /* We allow interlace, but no other fractional stuff. */
+      /* We allow picking a specific part, and we allow "finishing" from a specific
+         part, but we allow nothing else. */
 
-      if ((ss->cmd.cmd_frac_flags & (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
-                                     CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | 0xFFFF)) ==
+      if ((ss->cmd.cmd_frac_flags &
+           (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
+            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE)) {
          index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
          doing_just_one = TRUE;
       }
+      else if ((ss->cmd.cmd_frac_flags &
+           (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
+            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
+          (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_NULL_VALUE)) {
+         index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
+      }
       else if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
          fail("Can't stack meta or fractional concepts.");
 
-      frac_flags = ss->cmd.cmd_frac_flags;
+      frac_flags = ss->cmd.cmd_frac_flags & ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK);
 
       do {
+         /* Here is where we make use of actual numerical assignments. */
+         uint32 revrand = key-meta_key_random;
+
          index++;
          save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
          save_expire = result->cmd.prior_expire_bits;           /* Save it temporarily. */
@@ -5628,10 +5529,13 @@ Private void do_concept_concentric(
          }
       }
 
-      ss->cmd.cmd_final_flags.her8it &= ~(INHERITFLAG_CROSS | INHERITFLAG_SINGLE | INHERITFLAG_GRAND);
+      ss->cmd.cmd_final_flags.her8it &=
+         ~(INHERITFLAG_CROSS | INHERITFLAG_SINGLE | INHERITFLAG_GRAND);
 
-      /* We don't allow other flags, like "left". */
-      if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
+      /* We don't allow other flags, like "left", though we do allow "half". */
+
+      if ((ss->cmd.cmd_final_flags.her8it & ~(INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) |
+          ss->cmd.cmd_final_flags.final)
          fail("Illegal modifier before \"concentric\".");
    }
 
@@ -6101,6 +6005,7 @@ concept_table_item concept_table[] = {
     do_concept_do_each_1x4},                                /* concept_each_1x4 */
    {0, 0},                                                  /* concept_diamond */
    {0, 0},                                                  /* concept_triangle */
+   {0, 0},                                                  /* concept_leadtriangle */
    {0, do_concept_do_both_boxes},                           /* concept_do_both_boxes */
    {CONCPROP__SHOW_SPLIT, do_concept_once_removed},         /* concept_once_removed */
    {CONCPROP__NEEDK_4X4 | Nostep_phantom,

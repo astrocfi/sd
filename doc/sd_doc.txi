@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 26, 1998
-@set sd-version 32.5
+@set Time-stamp: February 24, 1999
+@set sd-version 32.6
 @set full-manual
 @c %**end of header
 @iftex
@@ -201,6 +201,7 @@ Call Notes
 * Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have two forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
+* Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
 
 Concept Notes
@@ -557,6 +558,25 @@ It is the same as giving the
 @item -no_warnings
 This suppresses the display and printing of the
 warning messages that are sometimes given to help less-experienced callers.
+@item -no_color
+On Windows and other systems that support it, the program color-codes
+the dancers shown on the screen.  Boys are shown in blue and girls in
+red.  This option disables the use of color.  Pictures drawn in the
+output file will never be in color.
+@item -color_by_couple
+If colors are being used for on-screen display of dancers, this option
+uses an alternative color scheme.  Each couple is shown in a different
+color.
+@item -no_intensify
+On Windows, @code{Sdtty} displays text at
+full brightness, rather than the 3/4 brightness that is the default for command
+prompt windows.  This option leaves the brightness at its default value.
+@item -no_graphics
+Suppress the use of special PC graphics characters when drawing pictures
+on the screen.  These characters are not standard on all PC's.  Pictures
+drawn in the output file will never use the special graphics characters.
+@item -no_sound
+Do not ring the bell or make any other sound when reporting errors.
 @item -retain_after_error
 This makes the program automatically retain all concepts that had
 been typed prior to the current call whenever an error occurs.
@@ -615,20 +635,6 @@ working satisfactorily.  @xref{Sdtty}.
 @item -no_console
 Extremely dumb terminal mode: turn off all special input/output processing completely.
 This allows input or output to be redirected from files.
-@item -no_color
-On Windows and other systems that support it, @code{Sdtty} color-codes the dancers
-shown on the screen.  This option disables the use of color.
-Pictures drawn in the output file will never be in color.
-@item -no_intensify
-On Windows, @code{Sdtty} displays text at
-full brightness, rather than the 3/4 brightness that is the default for command
-prompt windows.  This option leaves the brightness at its default value.
-@item -no_graphics
-Suppress the use of special PC graphics characters when drawing pictures
-on the screen.  These characters are not standard on all PC's.  Pictures
-drawn in the output file will never use the special graphics characters.
-@item -no_sound
-Do not ring the bell or make any other sound when reporting errors.
 @item -lines @var{nlines}
 The number of lines on the screen.  Default is 25.
 @item -no_line_delete
@@ -2354,6 +2360,7 @@ concept, and command entry.
 When typing, press @key{Space} to complete the current word.
 Type @key{TAB} or @key{ESC} to complete as much as possible.
 Type @kbd{C-u} (that is, Control U) to clear a partially-typed line.
+Type @kbd{C-v} (that is, Control V) to clear just the last word.
 
 @code{Sdtty} has a special command @code{refresh display}
 that has no counterpart in @code{Sd}.  It causes a complete clean transcript
@@ -2419,8 +2426,6 @@ following special keys are defined:
 <home>             resolve
 <end>              write this sequence
 <insert>           insert a comment
-<up-arrow>         previous
-<down arrow>       next
 shift-<up-arrow>   raise reconcile point
 shift-<down arrow> lower reconcile point
 <left-arrow>       previous     (same as <left-arrow>)
@@ -2621,6 +2626,7 @@ This section documents these calls.
 * Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie:: These have alternate forms in the Database
 * Adjust Alamo to Other Pairing:: Adjust Alamo to Other Pairing
 * Going Through Impossible Situations:: Going Through Impossible Situations
+* Changing between a 4x4 matrix and a Phantom Setup:: Changing between a 4x4 matrix and a Phantom Setup
 * Matrix Calls in 1/4 Tags::    Matrix Calls in 1/4 Tags
 @end menu
 
@@ -2701,7 +2707,7 @@ For example, you could enter
 special case call on the Plus list.)
 
 @node <ANYTHING> and circle, Centers Back Away, Spread, Call Notes
-@section @code{ANYTHING and circle}
+@section @code{ANYTHING} and circle
 
 Callers use the @code{<ANYTHING> and circle} construction with either
 an 8-person call to be done by everyone, or a 4-person call to be done
@@ -2745,7 +2751,7 @@ You might read this as ``head ladies chain, then the sides move in and
 star thru.''
 
 @node <ANYONE> Promenade, Up to the Middle, Centers Back Away, Call Notes
-@section @code{ANYONE Promenade}
+@section @code{ANYONE} Promenade
 
 These calls are intended for use in sequences that begin with heads
 or sides promenading halfway around the set.  The calls are
@@ -2799,7 +2805,7 @@ square thru 2.''  The way this would be entered to the program is as follows:
 @end example
 
 @node <ANYONE> Cloverleaf, And N/4 More, Up to the Middle, Call Notes
-@section @code{ANYONE Cloverleaf}
+@section @code{ANYONE} Cloverleaf
 
 The call @samp{cloverleaf} is expected to be done from a completed
 double pass thru setup, and has everyone doing the call.
@@ -2970,7 +2976,7 @@ but allows modifiers such as @samp{single} or @samp{3x3}.  Use the call
 @samp{mini busy (matrix)} for this.  It is not fractionalizable.
 
 @node <ANYONE> Run the Wheel, Bridge the Gap, Mini Busy, Call Notes
-@section @code{ANYONE Run the Wheel}
+@section @code{ANYONE} Run the Wheel
 
 As originally defined, this is a rather remarkable ``space invader''
 call which can go into 16 matrix formations under certain
@@ -3065,6 +3071,12 @@ word ``(parts)'' after it.  When you do this, certain other aspects of the
 call (such as the ability to to it from all positions) are compromised.
 Hence they should only be used when fractionalization is required.
 
+The cal @samp{invert the column} is similar.  If you want to interrupt it, for
+example, use the call @samp{invert the column (parts)}.  This call has 4 parts.
+However, if you only want fractional invert the column, just say @samp{invert the
+column 3/4}.  The call @samp{invert the column (parts)} is only needed when
+interruptions or complex meta-concepts are used.
+
 @node Adjust Alamo to Other Pairing, Going Through Impossible Situations, Recycle/Cross Cycle/Scoot and Weave/Couple Up/<ANYONE> tie, Call Notes
 @section Adjust Alamo to Other Pairing
 
@@ -3084,7 +3096,7 @@ Typical instances in which this is needed are calling @samp{swing the fractions}
 when the four miniwaves of the alamo ring do not have the correct handedness, and calling things
 like @samp{all 8 spin the top} after a @samp{dixie grand}.
 
-@node Going Through Impossible Situations, Matrix Calls in 1/4 Tags, Adjust Alamo to Other Pairing, Call Notes
+@node Going Through Impossible Situations, Changing between a 4x4 matrix and a Phantom Setup, Adjust Alamo to Other Pairing, Call Notes
 @section Going Through Impossible Situations
 
 Under certain circumstances, people who collide in the same spot during
@@ -3114,7 +3126,18 @@ is illegal from facing lines.  If you really want people to do it anyway,
 with everyone doing their part, you can enter @code{beaus do your part,
 flip back while the others flip back}.
 
-@node Matrix Calls in 1/4 Tags,  , Going Through Impossible Situations, Call Notes
+@node Changing between a 4x4 matrix and a Phantom Setup, Matrix Calls in 1/4 Tags, Going Through Impossible Situations, Call Notes
+@section Changing between a 4x4 matrix and a Phantom Setup
+
+Some calls leave the setup in a ``C1 phantom'' formation, and some calls leave the
+setup in a nearly-identical 4x4 matrix formation.  Occasionally one wishes that the
+program had made the other choice.  For most applicable calls and concepts it doesn't
+matter, because the program is generally forgiving about these two formations.
+(For example, the @samp{split phantom waves} concept will work from a phantom formation.)
+On those occasions when you need to change from one formation to the other, you can
+use the @samp{phantom} concept or the @samp{4x4 matrix} concept with the call @samp{nothing}.
+
+@node Matrix Calls in 1/4 Tags,  , Changing between a 4x4 matrix and a Phantom Setup, Call Notes
 @section Matrix Calls in 1/4 Tags
 
 The program believes that, in 1/4 tags and diamonds, the outsides are not
@@ -3440,12 +3463,12 @@ The menu for these concepts is brought up by clicking on the
 @item as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome
 @item tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome
 @item siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese twosome
-@item couples of three@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples threesome
-@item tandems of three@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem threesome
-@item siamese of three@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese threesome
-@item couples of four@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples foursome
-@item tandems of four@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem foursome
-@item siamese of four@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese foursome
+@item couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples threesome
+@item tandems of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem threesome
+@item siamese of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese threesome
+@item couples of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples foursome
+@item tandems of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem foursome
+@item siamese of 4@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese foursome
 @item boxes are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ boxsome
 @item diamonds are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ diamondsome
 @item skew@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ skewsome
@@ -3462,8 +3485,8 @@ The menu for these concepts is brought up by clicking on the
 @item tandem in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 line
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
-@item <ANYONE> are couples of three@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
-@item <ANYONE> are tandems of three@ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem threesome
+@item <ANYONE> are couples of 3@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
+@item <ANYONE> are tandems of 3@ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem threesome
 @item inside triangles are solid@ @ @ @ @ @ @ @ @ @ @ @ inside triangles are threesome
 @item outside triangles are solid@ @ @ @ @ @ @ @ @ @ @ outside triangles are threesome
 @item in point triangles are solid@ @ @ @ @ @ @ @ @ @ in point triangles are threesome
@@ -3508,7 +3531,7 @@ line, you could say:
 The @samp{tandem} or @samp{as couples} concepts, and their twosome
 and fractional twosome/solid variants, may be preceded by a modifier
 such as @samp{4x4} or @samp{2x1}.  These cause people to be grouped
-as indicated.  @samp{4x4 tandem} is equivalent to @samp{tandems of four}.
+as indicated.  @samp{4x4 tandem} is equivalent to @samp{tandems of 4}.
 @samp{3x1 couples twosome} directs 3 people (determined by the usual
 rules---whichever 3 people face the same way if that determines it,
 otherwise the 3 in front or the 3 on the right) to work as a threesome
@@ -3620,8 +3643,9 @@ These are done from triple diamonds in which the points are offset.
 @item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
-@item <ANYONE> in your distorted C/L/W/B/D/Z @r{(singular)}
+@item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
 @item <ANYONE> in your offset C/L/W @r{(singular)}
+@item <ANYONE> in your Z @r{(singular)}
 These are done from a variety of setups, in which the designated people
 form a recognizable distorted or offset setup.  Reasonable shape-changers are allowed.
 @item parallelogram
@@ -3740,6 +3764,9 @@ double pass thru.
 @item triangle
 This turns a triangle into a box by having the apex step backward.
 It is intended for things like @code{triangle peel and trail}.
+@item leading triangle
+This turns a triangle into a box by having the apex step forward.
+It is intended for things like @code{leading triangle reach out}.
 @item diamond
 This is for things like @code{diamond quarter thru} and
 @code{diamond single wheel}.  You should not need to select @code{diamond}

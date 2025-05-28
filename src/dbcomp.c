@@ -16,15 +16,6 @@
 
 /* dbcomp.c */
 
-typedef unsigned long int uint32;
-typedef unsigned short int uint16;
-typedef unsigned char uint8;
-typedef int long_boolean;
-#define TRUE 1
-#define FALSE 0
-#define Const const
-typedef Const char *Cstring;
-
 #include "database.h"
 
 
@@ -700,7 +691,7 @@ char *defmodtab1[] = {
    "no_check_mod_level",
    ""};
 
-/* This table is keyed to the constants "DFM1_***".  These are the general
+/* This table is keyed to the constants "DFM1_SEQ***".  These are the general
    definition-modifier flags.  They go in the "modifiers1" word of a by_def_item. */
 char *seqmodtab1[] = {
    "seq_re_evaluate",
@@ -1109,6 +1100,8 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "circulate"},
       {0, "trade"},
       {0, "check_cross_counter"},
+      {0, "lockit"},
+      {0, "disband1"},
       {0, "slither"},
       /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
       {0, "tagnullcall0"},

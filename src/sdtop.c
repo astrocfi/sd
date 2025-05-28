@@ -46,9 +46,12 @@ and the following external variables:
 
 typedef struct grilch {
    Const warning_index warning;
-   Const int forbidden_elongation;   /* Low 2 bits = elongation bits to forbid; "4" bit = must set elongation. */
-                           /* Also, the "8" bit means to use "gather" and do this the other way. */
-                           /* Also, the "16" bit means allow only step to a box, not step to a full wave. */
+   Const int forbidden_elongation;   /* Low 2 bits = elongation bits to forbid;
+                                        "4" bit = must set elongation.
+                                        Also, the "8" bit means to use "gather"
+                                        and do this the other way.
+                                        Also, the "16" bit means allow only step
+                                        to a box, not step to a full wave. */
    Const expand_thing *expand_lists;
    Const setup_kind kind;
    Const uint32 live;
@@ -518,6 +521,8 @@ static expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, s2x2, s1x4, 0};
 static expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 static expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, s2x4, 1};
 static expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, s2x4, s1x8, 0};
+static expand_thing step_li6_stuff = {{1, 5, 3, 4, 2, 0}, 6, s2x3, s1x6, 0};
+static expand_thing step_spindle_stuff = {{3, 6, 5, 4, 7, 2, 1, 0}, 8, s_spindle, s1x8, 0};
 static expand_thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, 8, nothing, s_bone, 0};
 static expand_thing step_bn23_stuff = {{0, 2, 1, 3, 5, 4}, 6, nothing, s_bone6, 0};
 static expand_thing step_24bn_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, nothing, s2x4, 0};
@@ -542,11 +547,14 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
 
 static full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
 static full_expand_thing rear_1x2_pair      = {warn__rear_back,  8, &step_1x2_stuff};
+static full_expand_thing rear_bone_pair     = {warn__some_rear_back, 0, &rear_bone_stuffb};
 static full_expand_thing step_2x2v_pair     = {warn__none,    16+2, &step_2x2v_stuff};
 static full_expand_thing step_2x2h_pair     = {warn__none,    16+1, &step_2x2h_stuff};
 static full_expand_thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
 static full_expand_thing step_qtgctr_pair   = {warn__some_touch, 0, &step_qtgctr_stuff};
 static full_expand_thing step_qtag_pair     = {warn__none,       0, &step_tby_stuff};
+static full_expand_thing step_spindle_pair  = {warn__some_touch, 0, &step_spindle_stuff};
+
 
 
 static full_expand_thing touch_init_table1[] = {
@@ -615,13 +623,20 @@ static full_expand_thing touch_init_table3[] = {
    {warn__some_touch, 0, &step_phan2_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x4C4CC4C4UL, ~0UL},
    {warn__some_touch, 0, &step_phan3_stuff,   s_c1phan, 0xCCCCCCCCUL, 0x08808008UL, ~0UL},
    {warn__some_touch, 0, &step_phan4_stuff,   s_c1phan, 0x33333333UL, 0x20200202UL, ~0UL},
-   {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},      /* Some people touch from horrible "T"'s. */
+
+   /* Some people touch from horrible "T"'s. */
+   {warn__some_touch, 0, &step_bigd_stuff1,   sbigdmd,    0xFF0FF0UL,   0x280820UL, ~0UL},
+
    {warn__some_touch, 0, &step_bigd_stuff2,   sbigdmd,    0x0FF0FFUL,   0x082028UL, ~0UL},
-   {warn__none,      16, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},      /* Check for stepping to a grand wave from lines facing. */
-   {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},         /* Same, with missing people. */
-   {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},         /* Same, with missing people. */
 
+   /* Check for stepping to a grand wave from lines facing. */
+   {warn__none,      16, &step_li_stuff,      s2x4,         0xFFFFUL,     0xAA00UL, ~0UL},
+   {warn__none,      16, &step_li6_stuff,     s2x3,          0xFFFUL,      0xA80UL, ~0UL},
+   {warn__none,      16, &step_spindle_stuff, s_spindle,    0xFFFFUL,     0xA802UL, ~0UL},
 
+   /* Same, with missing people. */
+   {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
+   {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
 
    /* Check for stepping to a bone from a squared set or whatever. */
    {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},
@@ -752,7 +767,8 @@ extern void touch_or_rear_back(
    Const full_expand_thing *tptr;
    Const expand_thing *zptr;
 
-   if (setup_attrs[scopy->kind].setup_limits < 0) return;          /* We don't understand absurd setups. */
+   /* We don't understand absurd setups. */
+   if (setup_attrs[scopy->kind].setup_limits < 0) return;
 
    /* We don't do this if doing the last half of a call. */
    if (TEST_HERITBITS(scopy->cmd.cmd_final_flags,INHERITFLAG_LASTHALF)) return;
@@ -778,13 +794,14 @@ extern void touch_or_rear_back(
 
    /* Check first for rearing back from a wave. */
 
-   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|CFLAG1_STEP_TO_WAVE)) == CFLAG1_REAR_BACK_FROM_R_WAVE) {
+   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE|CFLAG1_STEP_TO_WAVE)) ==
+       CFLAG1_REAR_BACK_FROM_R_WAVE) {
       uint32 hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
       for (tptr = touch_hash_table1[hash_num] ; tptr ; tptr = tptr->next) {
-         if (     tptr->kind == scopy->kind &&
-                  tptr->live == livemask &&
-                  ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
+         if (tptr->kind == scopy->kind &&
+             tptr->live == livemask &&
+             ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
       }
 
       /* 1x2 setups are special -- we allow any combination at all in livemask. */
@@ -795,17 +812,24 @@ extern void touch_or_rear_back(
             goto found_tptr;
          }
       }
+      else if (scopy->kind == s_bone && livemask != 0) {
+         if (((directions ^ 0xA802UL) & livemask) == 0) {
+            tptr = &rear_bone_pair;
+            goto found_tptr;
+         }
+      }
    }
 
    /* If we didn't find anything, check for rearing back from a qtag. */
 
-   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_QTAG|CFLAG1_STEP_TO_WAVE)) == CFLAG1_REAR_BACK_FROM_QTAG) {
+   if ((callflags1 & (CFLAG1_REAR_BACK_FROM_QTAG|CFLAG1_STEP_TO_WAVE)) ==
+       CFLAG1_REAR_BACK_FROM_QTAG) {
       uint32 hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
       for (tptr = touch_hash_table2[hash_num] ; tptr ; tptr = tptr->next) {
-         if (     tptr->kind == scopy->kind &&
-                  tptr->live == livemask &&
-                  ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
+         if (tptr->kind == scopy->kind &&
+             tptr->live == livemask &&
+             ((tptr->dir ^ directions) & tptr->dirmask) == 0) goto found_tptr;
       }
    }
 
@@ -829,10 +853,10 @@ extern void touch_or_rear_back(
       hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
 
       for (tptr = touch_hash_table3[hash_num] ; tptr ; tptr = tptr->next) {
-         if (     tptr->kind == scopy->kind &&
-                  tptr->live == livemask &&
-                  ((tptr->dir ^ directions) & tptr->dirmask) == 0) {
-               goto found_tptr;
+         if (tptr->kind == scopy->kind &&
+             tptr->live == livemask &&
+             ((tptr->dir ^ directions) & tptr->dirmask) == 0) {
+            goto found_tptr;
          }
       }
 
@@ -853,33 +877,44 @@ extern void touch_or_rear_back(
          }
       }
       else if (scopy->kind == s2x4 && livemask != 0) {
-         if (     ((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE || livemask == 0xFFFFUL) &&
-                  ((directions ^ 0x77DDUL) & livemask) == 0) {
+         if (((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
+              livemask == 0xFFFFUL) &&
+             ((directions ^ 0x77DDUL) & livemask) == 0) {
             /* Check for stepping to parallel waves from an 8-chain. */
             tptr = &step_8ch_pair;
             goto found_tptr;
          }
-         else if (   (0x3C3C & ~livemask) == 0 &&
-                     ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
+         else if ((0x3C3C & ~livemask) == 0 &&
+                  ((directions ^ 0x5D75UL) & 0x7D7DUL & livemask) == 0) {
             /* Check for stepping to some kind of 1/4 tag from a DPT or trade-by or whatever. */
             tptr = &step_qtag_pair;
             goto found_tptr;
          }
       }
+      else if (scopy->kind == s_spindle && livemask != 0) {
+         if (((callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE ||
+              livemask == 0xFFFFUL) &&
+             ((directions ^ 0xA802UL) & livemask) == 0) {
+            tptr = &step_spindle_pair;
+            goto found_tptr;
+         }
+      }
 
-      switch (scopy->kind) {    /* These ones are not allowed for calls like "spin the top" that have "left_means_touch_or_check" on. */
+      /* These ones are not allowed for calls like "spin the top"
+         that have "left_means_touch_or_check" on. */
+      switch (scopy->kind) {
          case sdmd:
-            if (  (0x33UL & ~livemask) == 0 &&
-                  ((directions ^ 0xA0UL) & livemask) == 0 &&
-                  !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
+            if ((0x33UL & ~livemask) == 0 &&
+                ((directions ^ 0xA0UL) & livemask) == 0 &&
+                !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
                tptr = &step_dmd_pair;
                goto found_tptr;
             }
             break;
          case s_qtag:
-            if (  (0x0F0FUL & ~livemask) == 0 &&
-                  ((directions ^ 0xFD57UL) & livemask) == 0 &&
-                  !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
+            if ((0x0F0FUL & ~livemask) == 0 &&
+                ((directions ^ 0xFD57UL) & livemask) == 0 &&
+                !(callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) {
                tptr = &step_qtgctr_pair;
                goto found_tptr;
             }
@@ -929,9 +964,11 @@ extern void touch_or_rear_back(
    warn(tptr->warning);
 
    if ((tptr->forbidden_elongation & 4) && scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)
-      scopy->cmd.prior_elongation_bits = (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
+      scopy->cmd.prior_elongation_bits =
+         (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
 
-   if ((scopy->cmd.prior_elongation_bits & tptr->forbidden_elongation & 3) && (!(scopy->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)))
+   if ((scopy->cmd.prior_elongation_bits & tptr->forbidden_elongation & 3) &&
+       (!(scopy->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)))
       fail("People are too far away to work with each other on this call.");
 
    zptr = tptr->expand_lists;
@@ -1849,6 +1886,7 @@ extern void toplevelmove(void)
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_super8flags = 0;
+   starting_setup.cmd.restrained_fraction = 0;
 
    for (i=0 ; i<WARNING_WORDS ; i++) newhist->warnings.bits[i] = 0;
 

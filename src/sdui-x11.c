@@ -83,10 +83,6 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
 /* See comments in sdmain.c regarding this string. */
 static Const char id[] = "@(#)$He" "ader: Sd: sdui-x11.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
-static Cstring *tagger_menu_list[4];
-static Cstring *circcer_menu_list;
-static Cstring *selector_menu_list;
-
 static Widget toplevel, cmdmenu, conceptspecialmenu;
 static Widget conceptpopup, conceptlist;
 static Widget lview, callview, conceptmenu, callmenu;
@@ -1229,45 +1225,19 @@ Private Cstring empty_menu[] = {NULL};
 
 extern void uims_postinitialize(void)
 {
-   int i, k;
+   int i;
 
-   /* Create the tagger lists. */
-   for (i=0 ; i<4 ; i++) {
-      tagger_menu_list[i] = (Cstring *) get_mem((number_of_taggers[i]+1) * sizeof(char *));
-
-      for (k=0; k<number_of_taggers[i]; k++)
-         tagger_menu_list[i][k] = tagger_calls[i][k]->menu_name;
-
-      tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
-   }
-
-   /* And the circcer lists. */
-   circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
-
-   for (k=0; k<number_of_circcers; k++)
-      circcer_menu_list[k] = circcer_calls[k]->menu_name;
-
-   circcer_menu_list[number_of_circcers] = (Cstring) 0;
-
-   /* And the selector list. */
-   selector_menu_list = (Cstring *) get_mem((last_selector_kind+2) * sizeof(char *));
-
-   for (k=0; k<last_selector_kind+1; k++)
-      selector_menu_list[k] = selector_list[k].name;
-
-   selector_menu_list[last_selector_kind+1] = (Cstring) 0;
-
-    /* initialize our special empty call menu */
-    call_menu_lists[call_list_empty] = empty_menu;
-    number_of_calls[call_list_empty] = 0;
-    call_menu_names[call_list_empty] = "";
+   /* initialize our special empty call menu */
+   call_menu_lists[call_list_empty] = empty_menu;
+   number_of_calls[call_list_empty] = 0;
+   call_menu_names[call_list_empty] = "";
 
     /* fill in general concept menu */
-    for (i=0; i<general_concept_size; i++)
-	add_call_to_menu(&concept_menu_list, i, general_concept_size,
-			 concept_descriptor_table[i+general_concept_offset].menu_name);
+   for (i=0; i<general_concept_size; i++)
+      add_call_to_menu(&concept_menu_list, i, general_concept_size,
+                       concept_descriptor_table[i+general_concept_offset].menu_name);
 
-    concept_menu_len = general_concept_size;
+   concept_menu_len = general_concept_size;
 
     /*
      * Before realizing, fill everything up with its normal information
@@ -1806,7 +1776,7 @@ choose_popup(String label, Cstring names[])
 extern int uims_do_selector_popup(void)
 {
    /* We skip the zeroth selector, which is selector_uninitialized. */
-   int t = choose_popup(sd_resources.selector_title, &selector_menu_list[1]);
+   int t = choose_popup(sd_resources.selector_title, selector_menu_list);
    if (t==0) return POPUP_DECLINE;
    return t;
 }    
@@ -1851,6 +1821,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
          this_num = choose_popup(sd_resources.quantifier_title, cardinals);
          if (this_num == 0) return ~0;    /* User waved the mouse away. */
       }
+
       if (forbid_zero && this_num == 1) return ~0;
       number_list |= ((this_num-1) << (i*4));
    }
@@ -2007,4 +1978,10 @@ extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
    if (s3) print_line(s3);
    print_line("Use the -help flag for help.");
    exit_program(1);
+}
+
+
+extern void uims_final_exit(int code)
+{
+   exit(code);
 }

@@ -2,7 +2,7 @@
 
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -23,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "32.5"
-#define TIME_STAMP "wba@an.hp.com  26 December 98 $"
+#define VERSION_STRING "32.6"
+#define TIME_STAMP "wba@an.hp.com  26 January 99 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -54,6 +54,7 @@ and the following external variables:
    header_comment
    need_new_header_comment
    sequence_number
+   starting_sequence_number
    last_file_position
    global_age
    parse_state
@@ -64,6 +65,9 @@ and the following external variables:
    testing_fidelity
    selector_for_initialize
    number_for_initialize
+   tagger_menu_list
+   selector_menu_list
+   circcer_menu_list
    null_options
    verify_options
    verify_used_number
@@ -127,12 +131,14 @@ Private void display_help(void)
    printf("-write_list filename        write out list for this level\n");
    printf("-write_full_list filename   write this list and all lower\n");
    printf("-abridge filename           do not use calls in this file\n");
+   printf("-no_graphics                do not use special characters for showing facing directions\n");
+   printf("-no_color                   do not display people in color\n");
+   printf("-color_by_couple            display color according to couple number\n");
+   printf("-no_sound                   do not make any noise when an error occurs\n");
+   printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
    printf("-singlespace                single space the output file\n");
    printf("-no_warnings                do not display or print any warning messages\n");
    printf("-retain_after_error         retain pending concepts after error\n");
-#ifdef OLD_ELIDE_BLANKS_JUNK
-   printf("-ignoreblanks               allow user to omit spaces when typing in\n");
-#endif
    printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
    printf("-sequence filename          base name for sequence output (def \"%s\")\n",
           SEQUENCE_FILENAME);
@@ -158,6 +164,7 @@ char header_comment[MAX_TEXT_LINE_LENGTH];
 long_boolean need_new_header_comment = FALSE;
 call_list_mode_t glob_call_list_mode;
 int sequence_number = -1;
+int starting_sequence_number;
 int last_file_position = -1;
 int global_age;
 parse_state_type parse_state;
@@ -168,6 +175,9 @@ interactivity_state interactivity = interactivity_normal;
 long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
 int number_for_initialize;
+Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
+Cstring *selector_menu_list;
+Cstring *circcer_menu_list;
 Const call_conc_option_state null_options = {
    selector_uninitialized,
    direction_uninitialized,
@@ -245,10 +255,11 @@ Private concept_descriptor centers_concept = {"centers????", concept_centers_or_
 #define MASK_2X4        0177762
 
 
-Private void initialize_concept_sublists(void)
+extern void initialize_concept_sublists(void)
 {
    int concept_index;
    int concepts_at_level;
+   concept_descriptor *p;
    call_list_kind test_call_list_kind;
    concept_kind end_marker = concept_diagnose;
 
@@ -256,26 +267,32 @@ Private void initialize_concept_sublists(void)
       when we will stop the concept list scan. */
    if (diagnostic_mode) end_marker = marker_end_of_list;
 
-   for (       concept_index = 0, concepts_at_level = 0;
-               concept_descriptor_table[concept_index].kind != end_marker;
-               concept_index++) {
-      if (!(concept_descriptor_table[concept_index].concparseflags & CONCPARSE_MENU_DUP) && concept_descriptor_table[concept_index].level <= calling_level)
+   for (concept_index=0,concepts_at_level=0 ; ; concept_index++) {
+      p = &concept_descriptor_table[concept_index];
+      if (p->kind == end_marker) break;
+
+      if (!(p->concparseflags & CONCPARSE_MENU_DUP) &&
+          concept_descriptor_table[concept_index].level <= calling_level)
          concepts_at_level++;
    }
 
-   general_concept_size = concept_index - general_concept_offset;  /* Our friends in the UI will need this. */
+   /* Our friends in the UI will need this. */
+   general_concept_size = concept_index - general_concept_offset;
 
    concept_sublists[call_list_any] = (short int *) get_mem(concepts_at_level*sizeof(short int));
 
-   /* Make the concept sublists, one per setup.  We do them in downward order, with "any setup" last.
-      This is because we put our results into the "any setup" slot while we are working, and then
-      copy them to the correct slot for each setup other than "any". */
+   /* Make the concept sublists, one per setup.  We do them in downward order,
+      with "any setup" last.  This is because we put our results into the
+      "any setup" slot while we are working, and then copy them to the
+      correct slot for each setup other than "any". */
 
-   for (test_call_list_kind = call_list_qtag; test_call_list_kind >= call_list_any; test_call_list_kind--) {
-      for (       concept_index = 0, concepts_at_level = 0;
-                  concept_descriptor_table[concept_index].kind != end_marker;
-                  concept_index++) {
+   for (test_call_list_kind = call_list_qtag;
+        test_call_list_kind >= call_list_any;
+        test_call_list_kind--) {
+      for (concept_index=0,concepts_at_level=0 ; ; concept_index++) {
          concept_descriptor *p = &concept_descriptor_table[concept_index];
+
+         if (p->kind == end_marker) break;
 
          if (!(p->concparseflags & CONCPARSE_MENU_DUP) && p->level <= calling_level) {
             uint32 setup_mask = ~0;      /* Default is to accept the concept. */
@@ -373,6 +390,7 @@ extern void release_parse_blocks_to_mark(parse_block *mark_point)
       /* Clear pointers so we will notice if it gets erroneously re-used. */
       item->concept = &mark_end_of_list;
       item->call = base_calls[1];
+      item->call_to_print = item->call;
       item->subsidiary_root = (parse_block *) 0;
       item->next = (parse_block *) 0;
    }
@@ -398,6 +416,7 @@ extern parse_block *get_parse_block(void)
 
    item->concept = (concept_descriptor *) 0;
    item->call = (callspec_block *) 0;
+   item->call_to_print = (callspec_block *) 0;
    item->options = null_options;
    item->replacement_key = 0;
    item->no_check_call_level = 0;
@@ -448,6 +467,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
    for (;;) {
       new_item->concept = original_tree->concept;
       new_item->call = original_tree->call;
+      new_item->call_to_print = original_tree->call_to_print;
       new_item->options = original_tree->options;
       new_item->replacement_key = original_tree->replacement_key;
       new_item->no_check_call_level = original_tree->no_check_call_level;
@@ -488,6 +508,7 @@ Private void reset_parse_tree(
    for (;;) {
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
+      new_item->call_to_print = old_item->call_to_print;
       new_item->options = old_item->options;
 
       /* Chop off branches that don't belong. */
@@ -535,10 +556,22 @@ Private long_boolean find_tagger(uint32 tagclass, uint32 *tagg, callspec_block *
 
    if (numtaggers == 0) return TRUE;   /* We can't possibly do this. */
 
-   if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
+   if (interactivity == interactivity_normal) {
       if ((*tagg = uims_do_tagger_popup(tagclass)) == 0) return TRUE;
       if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
       if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
+   }
+   else if (interactivity == interactivity_verify) {
+      if (verify_options.tagger != 0) {
+         *tagg = verify_options.tagger;
+         if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
+      }
+      else {
+         *tagg = (tagclass << 5) + 1;
+      }
+
+      if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
+      verify_options.tagger = 0;
    }
    else {
       uint32 tag;
@@ -880,6 +913,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
    new_block = get_parse_block();
    new_block->concept = &mark_end_of_list;
    new_block->call = call;
+   new_block->call_to_print = call;
    new_block->options = *options;
    new_block->options.who = sel;
    new_block->options.where = dir;
@@ -901,6 +935,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
       /* Deposit the index of the base tagging call.  This will of course be replaced. */
 
       new_block->next->call = base_calls[base_call_tagger0];
+      new_block->next->call_to_print = base_calls[base_call_tagger0];
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
       if (deposit_call(tagger_call, &null_options))
@@ -921,6 +956,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
       /* Deposit the index of the base circcing call.  This will of course be replaced. */
 
       new_block->next->call = base_calls[base_call_circcer];
+      new_block->next->call_to_print = base_calls[base_call_circcer];
 
       if (circc > number_of_circcers) fail("bad circcer index???");
 
@@ -1230,6 +1266,7 @@ extern long_boolean query_for_call(void)
                (*parse_state.concept_write_ptr)->concept = &marker_concept_comment;
 
                (*parse_state.concept_write_ptr)->call = (callspec_block *) new_comment_block;
+               (*parse_state.concept_write_ptr)->call_to_print = (callspec_block *) new_comment_block;
                /* Advance the write pointer. */
                parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
             }
@@ -1795,7 +1832,6 @@ Private uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 int main(int argc, char *argv[])
 {
    int i;
-   int starting_sequence_number;
 
    enable_file_writing = FALSE;
    singlespace_mode = FALSE;
@@ -1804,10 +1840,12 @@ int main(int argc, char *argv[])
    testing_fidelity = FALSE;
    parse_active_list = (parse_block *) 0;
    parse_inactive_list = (parse_block *) 0;
-   header_comment[0] = '\0';
+   header_comment[0] = 0;
    verify_options.who = selector_uninitialized;
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
+   history_allocation = 15;
+   history = (configuration *) get_mem(history_allocation * sizeof(configuration));
 
    if (argc >= 2 && strcmp(argv[1], "-help") == 0)
       display_help();		/* does not return */
@@ -1820,46 +1858,6 @@ int main(int argc, char *argv[])
       This will return TRUE if we are to cease execution immediately. */
 
    if (open_session(argc, argv)) goto normal_exit;
-
-   starting_sequence_number = sequence_number;
-
-   /* We need to take away the "zig-zag" directions if the level is below A2. */
-
-   if (calling_level < zig_zag_level) {
-      last_direction_kind = direction_zigzag-1;
-      direction_names[direction_zigzag] = (Cstring) 0;
-   }
-
-   if (glob_call_list_mode == call_list_mode_none ||
-       glob_call_list_mode == call_list_mode_abridging)
-      uims_preinitialize();
-
-   if (history == 0) {
-      history_allocation = 15;
-      history = (configuration *) get_mem(history_allocation * sizeof(configuration));
-   }
-
-   /* A few other modules want to initialize some static tables. */
-
-   initialize_tandem_tables();
-   initialize_getout_tables();
-   initialize_restr_tables();
-   initialize_conc_tables();
-   initialize_map_tables();
-   initialize_touch_tables();
-
-   initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */
-
-   /* If we wrote a call list file, that's all we do. */
-   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full) {
-      close_init_file();
-      goto normal_exit;
-   }
-
-   initialize_concept_sublists();
-
-   uims_postinitialize();
-   close_init_file();
 
    for (i=0 ; i<NUM_WARNINGS ; i++) {
       char c = warning_strings[i][0];
@@ -1885,10 +1883,8 @@ int main(int argc, char *argv[])
       /* The call we were trying to do has failed.  Abort it and display the error message. */
    
       if (interactivity == interactivity_database_init ||
-          interactivity == interactivity_verify) {
+          interactivity == interactivity_verify)
          init_error(error_message1);
-         goto normal_exit;
-      }
 
       history[0] = history[history_ptr+1];     /* So failing call will get printed. */
       /* But copy the parse tree, since we are going to clip it. */
@@ -1944,11 +1940,13 @@ int main(int argc, char *argv[])
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1991-1998 William B. Ackerman");
+      writestuff("Copyright (c) 1990-1999 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
-      writestuff("Copyright (c) 1990-1993 Alan Snyder");
+      writestuff("Copyright (c) 1992-1993 Alan Snyder");
+      newline();
+      writestuff("Copyright (c) 1995, Robert E. Cays");
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();
@@ -2008,9 +2006,11 @@ int main(int argc, char *argv[])
          numstuff[0] = '\0';
 
       if (header_comment[0])
-            (void) sprintf(title, "Sdtty %s  %s%s", &filename_strings[calling_level][1], header_comment, numstuff);
+         (void) sprintf(title, "Sdtty %s  %s%s",
+                        &filename_strings[calling_level][1], header_comment, numstuff);
       else
-            (void) sprintf(title, "Sdtty %s%s", &filename_strings[calling_level][1], numstuff);
+         (void) sprintf(title, "Sdtty %s%s",
+                        &filename_strings[calling_level][1], numstuff);
 
       uims_set_window_title(title);
    }
@@ -2644,6 +2644,7 @@ int main(int argc, char *argv[])
    normal_exit:
    
    exit_program(0);
+
    /* NOTREACHED */
    return 0;
 }

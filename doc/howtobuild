@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 17 Nov 1998.
+        Last modified 3 Mar 1999.
 
 -----------------------------------------------------------------
 
@@ -29,6 +29,7 @@ This is not done any more .....
 ###       [del *.o if necessary to force build]
 ###       make
 ###       cd regress
+###       del *.tmp
 ###       doit
 
 Build and test the optimized version from DJGPP:
@@ -36,6 +37,7 @@ Build and test the optimized version from DJGPP:
     [del *.o if necessary to force build]
     make
     cd regress
+    del *.tmp
     doit
 
 Now give the command "do_binaryw" (in sddoc) to save the DJGPP build for Windows 3.1.
@@ -45,6 +47,11 @@ Build and test the optimized version from MSVC++:
     so that MSVC++ will create them in lower case.
     Set project configuration to both "sdtty release" and "mkcalls release",
     issuing "build / rebuild all" in each case.
+
+Then do the usual:
+    cd regress
+    del *.tmp
+    doit
 
 BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "do_binary" RELEASE!!!
 BUILD BOTH SDTTY AND MKCALLS UNDER MSVC++.
@@ -62,7 +69,8 @@ In \wba\sd\regress:  save _vnnnn
 
 Copy these onto archival disks.  All sources can fit onto 2 disks.
 If taking stuff to MPG at this point, be sure to take "install.exe"
-and "installw.exe" also.
+and "installw.exe" also (if preparing release at MPG.)  If preparing
+release at home, just continue.
 
     At MPG, if desired to send sources:
                 tarball _vnnnn
@@ -74,8 +82,9 @@ BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
 Go to sddoc directory and do:
 
     clean clean
+    do_binaryw   (with DJGPP build)
     do_binary    (with MSVC build)
-    do_binaryw   (with djgpp build)
+    do_binarys   (with MSVC build)
     do_plain
     do_ps
     do_pdf
@@ -88,10 +97,11 @@ This creates these files, all in the sddoc directory:
 
     bin.zip    /  bin.txt       \
     binw.zip   /  binw.txt      |
+    bins.zip   /  bins.txt      |
     plain.zip  /  plain.txt     |
-    ps.zip     /  ps.txt        |
-    pdf.zip    /  pdf.txt       |   These files get mailed
-    html.zip   /  html.txt      |   to update the web page.
+    ps.zip     /  ps.txt        |   These files get mailed
+    pdf.zip    /  pdf.txt       |   to update the web page.
+    html.zip   /  html.txt      |
     dnp.zip    /  dnp.txt       |
     dnu.zip    /  dnu.txt       |   (HP-UX only)
     hpux.zip   /  hpux.txt      /   (HP-UX only)

@@ -71,7 +71,7 @@ OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
 
 all: alltty
 allx11: sd.exe sd_calls.dat
-alltty: sdtty.exe sd_calls.dat
+alltty: sdbg.exe sd_calls.dat
 everything: allx11 sdtty.exe
 
 LDPRELIBS = 
@@ -83,7 +83,7 @@ sd.exe: $(SD_OBJS) $(SDX11_OBJ)
 mkcalls.exe: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
 
-sdtty.exe: $(SD_OBJS) $(SDTTY_OBJ)
+sdbg.exe: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o sdbg.exe $(SDTTY_OBJS) $(TTY_LIBS)
 
 sd_calls.dat: sd_calls.txt mkcalls.exe
@@ -102,7 +102,7 @@ sdui-ttu.o: sdui-ttu.c
 
 sdui-tty.o sdmatch.o: sdmatch.h
 
-sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui-tty.h
+sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
 
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 

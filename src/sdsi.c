@@ -37,11 +37,21 @@
    print_id_error
    init_error
    add_resolve_indices
+   parse_level
    read_from_call_list_file
    write_to_call_list_file
    close_call_list_file
    install_outfile_string
+   get_first_session_line
+   get_next_session_line
+   prepare_to_read_menus
+   initialize_misc_lists
    open_session
+   process_session_info
+   open_call_list_file
+   open_accelerator_region
+   get_accelerator_line
+   close_init_file
    final_exit
    open_database
    read_8_from_database
@@ -51,9 +61,24 @@
    parse_number
 
 and the following external variables:
+
+   session_index
+   num_command_commands
+   command_commands
+   command_command_values
+   number_of_resolve_commands
+   resolve_command_strings
+   startup_commands
+   no_graphics
+   no_intensify
+   no_color
+   color_by_couple
+   no_sound
    random_number
    hashed_randoms
    database_filename
+   new_outfile_string
+   call_list_string
 */
 
 /* You should compile this file (and might as well compile all the others
@@ -130,7 +155,6 @@ extern long int lrand48(void);
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
-extern void exit(int code);
 extern void srand48(long int);
 extern long int lrand48(void);
 #endif
@@ -162,9 +186,28 @@ extern char *strerror(int);
 
 /* These variables are external. */
 
+
+/* Used for controlling the session file.  When index is nonzero,
+   the session file is in use, and the final state should be written back
+   to it at that line. */
+
+int session_index = 0;        /* If this is nonzero, we have opened a session. */
+int num_command_commands;   /* Size of the command menu. */
+Cstring *command_commands;
+command_kind *command_command_values;
+int number_of_resolve_commands;
+Cstring *resolve_command_strings;
+resolve_command_kind *resolve_command_values;
+int no_graphics = 0;
+int no_intensify = 0;
+int no_color = 0;
+int color_by_couple = 0;
+int no_sound = 0;
 int random_number;
 int hashed_randoms;
 char *database_filename = DATABASE_FILENAME;
+char *new_outfile_string = (char *) 0;
+char *call_list_string = (char *) 0;
 
 
 Private FILE *fp;
@@ -227,7 +270,9 @@ extern void *get_mem(uint32 siz)
 
    buf = get_mem_gracefully(siz);
    if (!buf && siz != 0) {
-      fprintf(stderr, "Can't allocate %d bytes of memory.\n", (int) siz);
+      char msg [50];
+      sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+      uims_fatal_error(msg, 0);
       exit_program(2);
    }
    return buf;
@@ -250,7 +295,9 @@ extern void *get_more_mem(void *oldp, uint32 siz)
       return get_mem(siz);	/* SunOS 4 realloc doesn't handle NULL */
    buf = get_more_mem_gracefully(oldp, siz);
    if (!buf && siz != 0) {
-      fprintf(stderr, "Can't allocate %d bytes of memory.\n", (int) siz);
+      char msg [50];
+      sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
+      uims_fatal_error(msg, 0);
       exit_program(2);
    }
    return buf;
@@ -588,7 +635,14 @@ extern void open_file(void)
 extern void write_file(char line[])
 {
    uint32 size;
-   char nl = '\n';
+
+#if defined(WIN32)
+   char nl[] = "\r\n";
+#define NLSIZE 2
+#else
+   char nl[] = "\n";
+#define NLSIZE 1
+#endif
 
    if (file_error) return;    /* Don't keep trying after a failure. */
 
@@ -600,7 +654,7 @@ extern void write_file(char line[])
       return;
    }
 
-   if ((fwrite(&nl, 1, 1, fildes) != 1) || ferror(fildes)) {
+   if ((fwrite(nl, 1, NLSIZE, fildes) != NLSIZE) || ferror(fildes)) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
       file_error = TRUE;      /* Indicate that sequence will not get written. */
@@ -652,13 +706,18 @@ extern void print_line(Cstring s)
 
 extern void print_id_error(int n)
 {
-   fprintf(stderr, "Call didn't identify self -- %d\n", n);
+   char msg [50];
+   sprintf(msg, "Call didn't identify self -- %d", n);
+   uims_fatal_error(msg, 0);
 }
 
 
 extern void init_error(char s[])
 {
-   fprintf(stderr, "Error initializing program: %s\n", s);
+   char msg [50];
+   sprintf (msg, "Error initializing program: %s", s);
+   uims_fatal_error(msg, 0);
+   exit_program(1);
 }
 
 
@@ -668,7 +727,7 @@ extern void add_resolve_indices(char junk[], int cur, int max)
 }
 
 
-Private long_boolean parse_level(Cstring s, dance_level *levelp)
+extern long_boolean parse_level(Cstring s, dance_level *levelp)
 {
    char first = tolower(s[0]);
 
@@ -711,21 +770,7 @@ Private long_boolean parse_level(Cstring s, dance_level *levelp)
 
 
 
-static FILE *call_list_file;
-
-Private long_boolean open_call_list_file(char filename[])
-{
-   call_list_file = fopen(filename,
-      (glob_call_list_mode == call_list_mode_abridging) ? "r" : "w");
-
-   if (!call_list_file) {
-      printf("Can't open call list file\n");
-      perror(filename);
-      return TRUE;
-   }
-   else
-      return FALSE;
-}
+extern FILE *call_list_file;
 
 
 extern char *read_from_call_list_file(char name[], int n)
@@ -744,17 +789,14 @@ extern void write_to_call_list_file(Const char name[])
 extern long_boolean close_call_list_file(void)
 {
    if (fclose(call_list_file)) {
-      printf("Can't close call list file\n");
+      uims_fatal_error("Can't close call list file", 0);
       return TRUE;
    }
    else
       return FALSE;
 }
-/* Stuff used for controlling the session file.  When index is nonzero,
-   the session file is in use, and the final state should be written back
-   to it at that line. */
 
-static int session_index = 0;        /* If this is nonzero, we have opened a session. */
+
 static char rewrite_filename_as_star[2] = { '\0' , '\0' };  /* First char could be "*" or "+". */
 
 
@@ -848,16 +890,184 @@ extern long_boolean install_outfile_string(char newstring[])
 
 
 static FILE *init_file;
+static int session_linenum = 0;
+
+/* 0 for "no session" line, 1 for real ones, 2 for "new session". */
+static int session_line_state = 0;
+
+extern long_boolean get_first_session_line(void)
+{
+   char line[MAX_FILENAME_LENGTH];
+
+   session_line_state = 0;
+
+   /* If we are writing a call list file, that's all we do. */
+
+   if (glob_call_list_mode == call_list_mode_writing ||
+       glob_call_list_mode == call_list_mode_writing_full)
+      return TRUE;
+
+   /* Or if the file didn't exist, or we are in diagnostic mode. */
+   if (!init_file || diagnostic_mode) return TRUE;
+
+   /* Search for the "[Sessions]" indicator. */
+
+   if (fseek(init_file, 0, SEEK_SET))
+      return TRUE;
+
+   for (;;) {
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) return TRUE;
+      if (!strncmp(line, "[Sessions]", 10)) break;
+   }
+
+   return FALSE;
+}
+
+
+extern long_boolean get_next_session_line(char *dest)
+{
+   int j;
+   char line[MAX_FILENAME_LENGTH];
+
+   if (session_line_state == 0) {
+      session_line_state = 1;
+      sprintf(dest, "  0     (no session)");
+      return TRUE;
+   }
+   else if (session_line_state == 2)
+      return FALSE;
+
+   if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n') {
+      session_line_state = 2;
+      sprintf(dest, "%3d     (create a new session)", session_linenum+1);
+      return TRUE;
+   }
+
+   j = strlen(line);
+   if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+   sprintf(dest, "%3d  %s", ++session_linenum, line);
+   return TRUE;
+}
+
+
+extern void prepare_to_read_menus(void)
+{
+   uint32 arithtest = 2081607680;
+
+   /* This "if" should never get executed.  We expect compilers to optimize
+      it away, and perhaps print a warning about it. */
+
+   /* Test that the constants ROLL_BIT and DBROLL_BIT are in the right
+      relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
+      in a person record are to the left of the roll bits in the binary database.
+      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.c to
+      align stuff from the binary database into the person record. */
+
+   if (ROLL_BIT < DBROLL_BIT)
+      init_error("constants not consistent -- program has been compiled incorrectly.");
+   else if ((508205 << 12) != arithtest)
+      init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
+   else if (NUM_WARNINGS > (WARNING_WORDS << 5))
+      init_error("insufficient warning bit space -- program has been compiled incorrectly.");
+   else if (NUM_QUALIFIERS > 125)
+      init_error("insufficient qualifier space -- program has been compiled incorrectly.");
+
+   /* We need to take away the "zig-zag" directions if the level is below A2. */
+
+   if (calling_level < zig_zag_level) {
+      last_direction_kind = direction_zigzag-1;
+      direction_names[direction_zigzag] = (Cstring) 0;
+   }
+
+   if (glob_call_list_mode == call_list_mode_none ||
+       glob_call_list_mode == call_list_mode_abridging) {
+      int i;
+
+      /* Find out how big the command menu needs to be. */
+
+      for (num_command_commands = 0 ;
+           command_menu[num_command_commands].command_name ;
+           num_command_commands++) ;
+
+      command_commands = (Cstring *) get_mem(sizeof(Cstring) * num_command_commands);
+      command_command_values =
+         (command_kind *) get_mem(sizeof(command_kind) * num_command_commands);
+
+      for (i = 0 ; i < num_command_commands; i++) {
+         command_commands[i] = command_menu[i].command_name;
+         command_command_values[i] = command_menu[i].action;
+      }
+
+      /* Find out how big the resolve menu needs to be. */
+
+      for (number_of_resolve_commands = 0 ;
+           resolve_menu[number_of_resolve_commands].command_name ;
+           number_of_resolve_commands++) ;
+
+      resolve_command_strings = (Cstring *) get_mem(sizeof(Cstring) * number_of_resolve_commands);
+      resolve_command_values = (resolve_command_kind *)
+         get_mem(sizeof(resolve_command_kind) * number_of_resolve_commands);
+
+      for (i = 0 ; i < number_of_resolve_commands; i++) {
+         resolve_command_strings[i] = resolve_menu[i].command_name;
+         resolve_command_values[i] = resolve_menu[i].action;
+      }
+   }
+
+
+   /* A few other modules want to initialize some static tables. */
+
+   initialize_tandem_tables();
+   initialize_getout_tables();
+   initialize_restr_tables();
+   initialize_conc_tables();
+   initialize_map_tables();
+   initialize_touch_tables();
+}
+
+
+extern void initialize_misc_lists(void)
+{
+   int i;
+   uint32 ui;
+
+   /* Create the tagger menu lists */
+
+   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
+      tagger_menu_list[i] = (Cstring *) get_mem((number_of_taggers[i]+1) * sizeof(char *));
+
+      for (ui=0; ui<number_of_taggers[i]; ui++)
+         tagger_menu_list[i][ui] = tagger_calls[i][ui]->menu_name;
+
+      tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
+   }
+
+   /* Create the selector menu list. */
+
+   selector_menu_list = (Cstring *) get_mem((last_selector_kind+1) * sizeof(char *));
+
+   for (i=0; i<last_selector_kind; i++)
+      selector_menu_list[i] = selector_list[i+1].name;
+
+   selector_menu_list[last_selector_kind] = (Cstring) 0;
+
+   /* Create the circcer list. */
+
+   circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
+
+   for (ui=0; ui<number_of_circcers; ui++)
+      circcer_menu_list[ui] = circcer_calls[ui]->menu_name;
+
+   circcer_menu_list[number_of_circcers] = (Cstring) 0;
+}
 
 
 
 extern long_boolean open_session(int argc, char **argv)
 {
-   int session_linenum = 0;
    int i, j;
    int argno;
    char line[MAX_FILENAME_LENGTH];
-   char *new_outfile_string = (char *) 0;
    char **args;
    int nargs = argc;
 
@@ -927,7 +1137,6 @@ extern long_boolean open_session(int argc, char **argv)
 
    for (argno=1; argno < nargs; argno++) {
       if (args[argno][0] == '-') {
-         call_list_mode_t this_mode_maybe = call_list_mode_none;
 
          /* Special flag: must be one of
             -write_list <filename>  -- write out the call list for the
@@ -938,12 +1147,28 @@ extern long_boolean open_session(int argc, char **argv)
                   contained therein off the menus, and proceed.
             -diagnostic  -- (this is a hidden flag) suppress display of version info */
 
-         if (strcmp(&args[argno][1], "write_list") == 0)
-            this_mode_maybe = call_list_mode_writing;
-         else if (strcmp(&args[argno][1], "write_full_list") == 0)
-            this_mode_maybe = call_list_mode_writing_full;
-         else if (strcmp(&args[argno][1], "abridge") == 0)
-            this_mode_maybe = call_list_mode_abridging;
+         if (strcmp(&args[argno][1], "write_list") == 0) {
+            glob_call_list_mode = call_list_mode_writing;
+            if (argno+1 < nargs) call_list_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "write_full_list") == 0) {
+            glob_call_list_mode = call_list_mode_writing_full;
+            if (argno+1 < nargs) call_list_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "abridge") == 0) {
+            glob_call_list_mode = call_list_mode_abridging;
+            if (argno+1 < nargs) call_list_string = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "no_intensify") == 0)
+            { no_intensify = 1; continue; }
+         else if (strcmp(&args[argno][1], "no_color") == 0)
+            { no_color = 1; continue; }
+         else if (strcmp(&args[argno][1], "color_by_couple") == 0)
+            { color_by_couple = 1; continue; }
+         else if (strcmp(&args[argno][1], "no_sound") == 0)
+            { no_sound = 1; continue; }
+         else if (strcmp(&args[argno][1], "no_graphics") == 0)
+            { no_graphics = 1; continue; }
          else if (strcmp(&args[argno][1], "diagnostic") == 0)
             { diagnostic_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)
@@ -954,36 +1179,22 @@ extern long_boolean open_session(int argc, char **argv)
             { allowing_all_concepts = TRUE; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
             { using_active_phantoms = TRUE; continue; }
-#ifdef OLD_ELIDE_BLANKS_JUNK
-         else if (strcmp(&args[argno][1], "ignoreblanks") == 0)
-            { elide_blanks = TRUE; continue; }
-#endif
          else if (strcmp(&args[argno][1], "discard_after_error") == 0)
             { retain_after_error = FALSE; continue; }
          else if (strcmp(&args[argno][1], "retain_after_error") == 0)
             { retain_after_error = TRUE; continue; }
          else if (strcmp(&args[argno][1], "sequence") == 0) {
-	     if (argno+1 < nargs) new_outfile_string = args[argno+1];  /* We'll install it later. */
-	}
+	     if (argno+1 < nargs) new_outfile_string = args[argno+1];
+         }
          else if (strcmp(&args[argno][1], "db") == 0) {
-	     if (argno+1 < nargs) database_filename = args[argno+1];
-	}
+            if (argno+1 < nargs) database_filename = args[argno+1];
+         }
          else
             uims_bad_argument("Unknown flag:", args[argno], (char *) 0);
 
-         /* At this point, if "this_mode_maybe" is not null, we have to deal with some
-            kind of "write_list" or "abridge" operation.  If not, we have already processed
-            the file name, and all that remains is to check its existence and then skip it. */
-
          argno++;
          if (argno >= nargs)
-            uims_bad_argument("This flag must be followed by a file name:", args[argno-1], NULL);
-
-         if (this_mode_maybe != call_list_mode_none) {
-            glob_call_list_mode = this_mode_maybe;
-            if (open_call_list_file(args[argno]))
-               exit_program(1);
-         }
+            uims_bad_argument("This flag must be followed by a file name:", args[argno-1], (char *) 0);
       }
       else if (!parse_level(args[argno], &calling_level)) {
          uims_bad_argument("Unknown calling level argument:", args[argno],
@@ -993,59 +1204,40 @@ extern long_boolean open_session(int argc, char **argv)
 
    free(args);
 
-   /* Initialize outfile_string to calling-level-specific default outfile, that is,
-      "sequence.A2" or whatever.  It already contains "sequence".  If no level was given
-      on the command line, it will be the null suffix, and we will query for it later. */
+   /* If we have a calling level at this point, fill in the output file name.
+      If we do not have a calling level, we will either get it from the session
+      file, in which case we will get the file name also, or we will have to query
+      the user.  In the latter case, we will do this step again. */
 
-   (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+   if (calling_level != l_nonexistent_concept)
+      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
 
-   /* If we are writing a call list file, that's all we do. */
-   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full)
-      goto no_session;
+   /* At this point, the command-line arguments, and the preferences in the "[Options]"
+      section of the initialization file, have been processed.  Some of those things
+      may still interact with the start-up procedure.  They are:
 
-   /* Or if the file didn't exist, or we are in diagnostic mode. */
-   if (!init_file || diagnostic_mode) goto no_session;
+         glob_call_list_mode [default = call_list_mode_none]
+         calling_level       [default = l_nonexistent_concept]
+         new_outfile_string  [default = (char *) 0, this is just a pointer]
+         call_list_string    [default = (char *) 0], this is just a pointer]
+         database_filename   [default = "sd_calls.dat", this is just a pointer]
+   */
 
-   /* Search for the "[Sessions]" indicator. */
+   /* Now open the session file and find out what we are doing. */
 
-   if (fseek(init_file, 0, SEEK_SET))
-      goto no_session;
+   return uims_open_session(argc, argv);
+}
 
-   for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) goto no_session;
-      if (!strncmp(line, "[Sessions]", 10)) break;
-   }
 
-   printf("Do you want to use one of the following sessions?\n\n");
-   printf("  0     (no session)\n");
-
-   for (;;) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n') break;
-      printf("%3d  %s", ++session_linenum, line);
-   }
-
-   printf("%3d     (create a new session)\n\n", session_linenum+1);
-
-   printf("Enter the number of the desired session:  ");
-
-   if (!gets(line) || !line[0])
-      goto no_session;
-
-   if (!sscanf(line, "%d", &session_index)) {
-      session_index = 0;         /* User typed garbage -- exit the program immediately. */
-      (void) fclose(init_file);
-      return TRUE;
-   }
+extern int process_session_info(Cstring *error_msg)
+{
+   int i, j;
 
    if (session_index == 0)
-      goto no_session;
-
-   if (session_index < 0) {
-      (void) fclose(init_file);
-      return TRUE;    /* Exit the program immediately. */
-   }
+      return 1;
 
    if (session_index <= session_linenum) {
+      char line[MAX_FILENAME_LENGTH];
       int ccount;
       int num_fields_parsed;
       char junk_name[MAX_FILENAME_LENGTH];
@@ -1055,14 +1247,14 @@ extern long_boolean open_session(int argc, char **argv)
       /* Find the "[Sessions]" indicator again. */
 
       if (fseek(init_file, 0, SEEK_SET)) {
-         printf("Can't find correct position in session file.\n");
-         goto no_session;
+         *error_msg = "Can't find correct position in session file.";
+         return 3;
       }
 
       for (;;) {
          if (!fgets(line, MAX_FILENAME_LENGTH, init_file)) {
-            printf("Can't find correct indicator in session file.\n");
-            goto no_session;
+            *error_msg = "Can't find correct indicator in session file.";
+            return 3;
          }
          if (!strncmp(line, "[Sessions]", 10)) break;
       }
@@ -1074,72 +1266,61 @@ extern long_boolean open_session(int argc, char **argv)
       }
 
       if (i != session_index)
-         goto no_session;
+         return 1;
 
       j = strlen(line);
       if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
 
       num_fields_parsed = sscanf(
-                                 line,
-                                 "%s %s %d %n%s",
-                                 filename_string,
-                                 session_levelstring,
-                                 &sequence_number,
-                                 &ccount,
-                                 junk_name);
+                             line, "%s %s %d %n%s",
+                             filename_string, session_levelstring,
+                             &sequence_number, &ccount,
+                             junk_name);
 
       if (num_fields_parsed < 3) {
-         printf("Bad format in session file.\n");
-         goto no_session;
+         *error_msg = "Bad format in session file.";
+         return 3;
       }
 
       if (!parse_level(session_levelstring, &calling_level)) {
-         printf("Bad level given in session file.\n");
-         goto no_session;
-      }
-
-      if (!install_outfile_string(filename_string)) {
-         printf("Bad file name in session file, using default instead.\n");
+         *error_msg = "Bad level given in session file.";
+         return 3;
       }
 
       if (num_fields_parsed == 4)
          strncpy(header_comment, &line[ccount], MAX_TEXT_LINE_LENGTH);
       else
-         header_comment[0] = '\0';
+         header_comment[0] = 0;
+
+      if (!install_outfile_string(filename_string)) {
+         *error_msg = "Bad file name in session file, using default instead.";
+         return 2;    /* This return code will not abort the session. */
+      }
    }
    else {
-      sequence_number = 1;       /* We are creating a new session to be appended to the file. */
+      /* We are creating a new session to be appended to the file. */
+      sequence_number = 1;
       need_new_header_comment = TRUE;
    }
 
-   goto really_do_it;
+   return 0;
+}
 
-   no_session:
 
-   session_index = 0;
+extern long_boolean open_call_list_file(char filename[])
+{
+   char msg [50];
 
-   really_do_it:
+   call_list_file = fopen(filename,
+      (glob_call_list_mode == call_list_mode_abridging) ? "r" : "w");
 
-   if (calling_level == l_nonexistent_concept) {
-
-      /* The level never got specified, either from a command line argument
-         or from the session file.  Perhaps the program was invoked under
-         a window-ish OS in which one clicks on icons rather than typing
-         a command line.  In that case, we need to query the user for the level. */
-
-      calling_level = l_mainstream;   /* Default in case we fail. */
-      printf("Enter the level: ");
-
-      if (gets(line))
-         (void) parse_level(line, &calling_level);
-
-      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+   if (!call_list_file) {
+      sprintf (msg, "Can't open call list file: %s", filename);
+      uims_fatal_error (msg, 0);
+      return TRUE;
    }
-
-   if (new_outfile_string)
-      (void) install_outfile_string(new_outfile_string);
-
-   return FALSE;
+   else
+      return FALSE;
 }
 
 
@@ -1201,7 +1382,6 @@ Private int write_back_session_line(FILE *wfile)
                  getout_strings[calling_level],
                  sequence_number);
 }
-
 
 
 extern void final_exit(int code)
@@ -1281,35 +1461,36 @@ extern void final_exit(int code)
       }
    }
 
-   exit(code);
+   uims_final_exit(code);
 }
 
-extern void open_database(void)
+extern long_boolean open_database(char *msg1, char *msg2)
 {
    int format_version, n, j;
+
+   *msg1 = (char) 0;
+   *msg2 = (char) 0;
 
    /* The "b" in the mode is meaningless and harmless in POSIX.  Some systems,
       however, require it for correct handling of binary data. */
    if (!(fp = fopen(database_filename, "rb"))) {
-      fprintf(stderr, "sd: Can't open database file.\n");
-      perror(database_filename);
-      if (errno == ENOENT)
-         fprintf(stderr, "Use the mkcalls program to create the database file.\n");
-      exit_program(1);
+      strncpy(msg1, "Can't open database file.", 199);
+      return TRUE;
    }
 
    if (read_16_from_database() != DATABASE_MAGIC_NUM) {
-      fprintf(stderr,
-         "Database file \"%s\" has improper format.\n", database_filename);
-      exit_program(1);
+      sprintf(msg1,
+              "Database file \"%s\" has improper format.", database_filename);
+      return TRUE;
    }
 
    format_version = read_16_from_database();
    if (format_version != DATABASE_FORMAT_VERSION) {
-      fprintf(stderr,
-         "Database format version (%d) is not the required one (%d) -- you must recompile the database.\n",
-         format_version, DATABASE_FORMAT_VERSION);
-      exit_program(1);
+      sprintf(msg1,
+              "Database format version (%d) is not the required one (%d)",
+              format_version, DATABASE_FORMAT_VERSION);
+      strncpy(msg2, "You must recompile the database.", 199);
+      return TRUE;
    }
 
    abs_max_calls = read_16_from_database();
@@ -1318,14 +1499,15 @@ extern void open_database(void)
    n = read_16_from_database();
 
    if (n > 80) {
-      fprintf(stderr, "Database version string is too long.\n");
-      exit_program(1);
+      strncpy(msg1, "Database version string is too long.", 199);
+      return TRUE;
    }
 
    for (j=0; j<n; j++)
       database_version[j] = (unsigned char) read_8_from_database();
 
    database_version[j] = '\0';
+   return FALSE;
 }
 
 

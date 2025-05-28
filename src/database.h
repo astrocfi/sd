@@ -14,6 +14,81 @@
 
     This is for version 32. */
 
+/* We would like to not need to customize things for different "dialects" of
+   ANSI C, because we would like to think that there are no "dialects".  But, alas,
+   there are two issues:
+   (1) Some versions of GNU C (gcc) recognize the "volatile" keyword on a procedure
+      as indicating that its call-return behavior is anomalous, and generate
+      better code with that knowledge.  We can take advantage of that for some
+      of our functions that never return, so we define a keyword "nonreturning".
+   (2) Some compilers trying to pass for ANSI C have been observed failing
+      to handle the "const" attribute.  (Yes, an ANSI C compiler that doesn't handle
+      "const" is an oxymoron.)  We grudgingly accept such compilers if the
+      "CONST_IS_BROKEN" symbol is defined.  We allow that to be set by a Makefile,
+      and we set it ourselves for those compilers that we know about. */
+
+/* Default is that "nonreturning" is meaningless. */
+#define nonreturning
+
+#ifdef __GNUC__
+#if __GNUC__ >= 2
+/* GNU C versions 2 or greater recognize volatile procedures. */
+#undef nonreturning
+#define nonreturning __attribute__ ((noreturn))
+#else
+/* GNU C versions less than 2 can't do "const". */
+#define CONST_IS_BROKEN
+#endif
+#endif
+
+#ifdef __CODECENTER_4__
+#define CONST_IS_BROKEN		/* in CodeCenter 4.0.2 */
+#endif
+
+/* We will use "Const" with a capital "C" for our attempts at the "const" attribute. */
+#ifndef CONST_IS_BROKEN
+#define Const const
+#else
+/* Too bad.  Define it as nothing. */
+#define Const
+#endif
+
+/* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
+#define Private static
+
+/* We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
+   The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
+   alerts us to that fact.  The configure script has checked this for us. */
+#ifdef NO_SIGNED_CHAR
+typedef short veryshort;
+#else
+typedef char veryshort;
+#endif
+
+/* We would like to think that we will always be able to count on compilers to do the
+   right thing with "int" and "long int" and so on.  What we would really like is
+   for compilers to be counted on to make "int" at least 32 bits, because we need
+   32 bits in many places.  However, some compilers don't, so we have to use
+   "long int" or "unsigned long int".  We think that all compilers we deal with
+   will do the right thing with that, but, just in case, we use a typedef.
+
+   The type "uint32" must be an unsigned integer of at least 32 bits.
+   The type "uint16" must be an unsigned integer of at least 16 bits.
+
+   Note also:  There are many places in the program (not just in database.h and sd.h)
+   where the suffix "UL" is put on constants that are intended to be of type "uint32".
+   If "uint32" is changed to anything other than "unsigned long int", it may be
+   necessary to change all of those. */
+
+typedef unsigned long int uint32;
+typedef unsigned short int uint16;
+typedef unsigned char uint8;
+typedef int long_boolean;
+typedef Const char *Cstring;
+
+#define TRUE 1
+#define FALSE 0
+
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
    It is used only to make sure that the "mkcalls" program that compiled
@@ -39,6 +114,8 @@ typedef enum {
    base_call_circulate,
    base_call_trade,
    base_call_check_cross_counter,
+   base_call_lockit,
+   base_call_disband1,
    base_call_slither,
       /* the next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
    base_call_tagger0,

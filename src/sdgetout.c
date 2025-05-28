@@ -149,7 +149,7 @@ static resolve_tester test_thar_stuff[] = {
    {resolve_la,             l_mainstream,      5, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0xA31A8138},    /* LA from thar. */
    {resolve_slipclutch_la,  l_mainstream,      6, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0xA8138A31},    /* slip-the-clutch-LA from thar. */
    {resolve_xby_rlg,        cross_by_level,    1, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8138A31A},    /* cross-by-RLG from thar. */
-   {resolve_revprom,        l_mainstream,      4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x33AA1188},    /* reverse promenade from thar. */
+   {resolve_revprom,        l_mainstream,      4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x118833AA},    /* reverse promenade from thar. */
    {resolve_xby_la,         cross_by_level,    4, 0,   {2, 3, 0, 1, 6, 7, 4, 5},     0x138A31A8},    /* cross-by-LA from thar. */
    {resolve_none,           l_mainstream,      64}};
 

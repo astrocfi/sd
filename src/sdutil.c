@@ -32,6 +32,7 @@
    print_recurse
    display_initial_history
    write_history_line
+   deposit_call_tree
    warn
    find_proper_call_list
    get_rh_test
@@ -62,6 +63,8 @@ and the following external variables:
    history_ptr
    written_history_items
    written_history_nopic
+   the_topcallflags
+   there_is_a_call
    last_magic_diamond
    error_message1
    error_message2
@@ -118,6 +121,8 @@ int written_history_items;
    written_history_items, that's OK.  It just means that none of the lines had
    forced pictures. */
 int written_history_nopic;
+uint32 the_topcallflags;
+long_boolean there_is_a_call;
 
 parse_block *last_magic_diamond;
 char error_message1[MAX_ERR_LENGTH];
@@ -853,19 +858,63 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
 
 
 
-Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
-                                             concept_kind *k_p,
-                                             parse_block **next_parseptr_p)
+Private long_boolean check_for_concept_group(
+   Const parse_block *parseptrcopy,
+   long_boolean want_all_that_other_stuff,
+   concept_kind *k_p,
+   uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
+   parse_block **parseptr_skip_p)
 {
    concept_kind k;
-   parse_block *parseptr_skip = parseptrcopy->next;
+   long_boolean retval = FALSE;
+   parse_block *parseptr_skip;
+   parse_block *next_parseptr;
 
-   if (parseptrcopy->concept)
+   Const parse_block *first_arg = parseptrcopy;
+
+   *need_to_restrain_p = 0;
+
+ try_again:
+
+   parseptr_skip = parseptrcopy->next;
+
+   if (parseptrcopy->concept) {
       k = parseptrcopy->concept->kind;
+
+      if (k <= marker_end_of_list) {
+         /* Look for "supercalls". */
+         if (k == concept_another_call_next_mod &&
+             parseptrcopy->next &&
+             parseptrcopy->next->call == base_calls[base_call_null] &&
+             !parseptrcopy->next->next &&
+             parseptrcopy->next->subsidiary_root) {
+            k = concept_supercall;
+         }
+         else
+            fail("A concept is required.");
+      }
+   }
    else
       k = marker_end_of_list;
 
-   *k_p = k;
+   if (!retval) {
+      *k_p = k;
+
+      if (k == concept_crazy ||
+          k == concept_frac_crazy || 
+          k == concept_twice ||
+          k == concept_n_times)
+         *need_to_restrain_p |= 2;
+   }
+
+   /* We do these even if we aren't the first concept. */
+
+   if (k == concept_supercall ||
+       k == concept_fractional ||
+       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_initially) ||
+       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finally) ||
+       (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finish))
+      *need_to_restrain_p |= 1;
 
    /* If skipping "phantom", maybe it's "phantom tandem", so we need to skip both. */
 
@@ -875,13 +924,16 @@ Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
       junk_concepts.her8it = 0;
       junk_concepts.final = 0;
 
-      *next_parseptr_p =
+      next_parseptr =
          process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
 
-      if (((*next_parseptr_p)->concept->kind == concept_tandem ||
-           (*next_parseptr_p)->concept->kind == concept_frac_tandem) &&
-          (junk_concepts.her8it | junk_concepts.final) == 0)
-         return TRUE;
+      if ((next_parseptr->concept->kind == concept_tandem ||
+           next_parseptr->concept->kind == concept_frac_tandem) &&
+          (junk_concepts.her8it | junk_concepts.final) == 0) {
+         parseptrcopy = next_parseptr;
+         retval = TRUE;
+         goto try_again;
+      }
    }
    else if (k == concept_meta) {
       meta_key_kind subkey = parseptrcopy->concept->value.arg1;
@@ -890,17 +942,32 @@ Private long_boolean check_for_concept_group(Const parse_block *parseptrcopy,
           subkey == meta_key_piecewise || subkey == meta_key_nth_part_work ||
           subkey == meta_key_initially || subkey == meta_key_finally ||
           subkey == meta_key_echo || subkey == meta_key_rev_echo) {
-         *next_parseptr_p = parseptr_skip;
-         return TRUE;
+         next_parseptr = parseptr_skip;
+         parseptrcopy = next_parseptr;
+         retval = TRUE;
+         goto try_again;
       }
    }
    else if (k == concept_so_and_so_only &&
             ((selective_key) parseptrcopy->concept->value.arg1) == selective_key_work_concept) {
-      *next_parseptr_p = parseptr_skip;
-      return TRUE;
+      next_parseptr = parseptr_skip;
+      parseptrcopy = next_parseptr;
+      retval = TRUE;
+      goto try_again;
    }
 
-   return FALSE;
+   if (want_all_that_other_stuff) {
+      if (k == concept_supercall)
+         *parseptr_skip_p = parseptrcopy->next->subsidiary_root;
+      else if (retval)
+         *parseptr_skip_p = next_parseptr->next;
+      else if (parseptrcopy->concept->kind == concept_special_sequential)
+         *parseptr_skip_p = first_arg->subsidiary_root;
+      else
+         *parseptr_skip_p = first_arg->next;
+   }
+
+   return retval;
 }
 
 
@@ -1251,7 +1318,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
       if (k == concept_comment) {
          comment_block *fubb;
 
-         fubb = (comment_block *) local_cptr->call;
+         fubb = (comment_block *) local_cptr->call_to_print;
          if (request_final_space) writestuff(" ");
          writestuff("{ ");
          writestuff(fubb->txt);
@@ -1448,7 +1515,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                   has been entered, and that its name starts with "@g". */
                tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts);
    
-               if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call;
+               if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
 
             if (target_call &&
@@ -1536,10 +1603,12 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
             comma_after_next_concept = request_comma_after_next_concept;
 
          if (comma_after_next_concept == 2 && next_cptr) {
+            //            parse_block *junk2;
+            concept_kind kjunk;
             parse_block *junk2;
-            concept_kind junk_k;
+            uint32 njunk;
 
-            if (check_for_concept_group(next_cptr, &junk_k, &junk2))
+            if (check_for_concept_group(next_cptr, FALSE, &kjunk, &njunk, &junk2))
                comma_after_next_concept = 3;    /* Will try again later. */
          }
 
@@ -1572,7 +1641,7 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
          uint32 number_list = local_cptr->options.number_fields;
-         callspec_block *localcall = local_cptr->call;
+         callspec_block *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
          long_boolean subst1_in_use = FALSE;
@@ -1653,8 +1722,8 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                      while (search) {
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
-                            subsidiary_ptr->call &&
-                            (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
+                            subsidiary_ptr->call_to_print &&
+                            (subsidiary_ptr->call_to_print->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                            print_recurse(subsidiary_ptr, 0);
                            goto did_tagger;
                         }
@@ -1685,8 +1754,8 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                      while (search) {
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
-                            subsidiary_ptr->call &&
-                            (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
+                            subsidiary_ptr->call_to_print &&
+                            (subsidiary_ptr->call_to_print->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
                            goto did_circcer;
                         }
@@ -1867,19 +1936,19 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                      BUT:  only check if there is actually a call there. */
 
                if (!subsidiary_ptr) continue;
-               cc = subsidiary_ptr->call;
+               cc = subsidiary_ptr->call_to_print;
 
                if (     !cc ||    /* If no call pointer, it isn't a tag base call. */
                            (
                               !(cc->callflags1 & (CFLAG1_BASE_TAG_CALL_MASK)) &&
                                  (
                                     !(cc->callflags1 & (CFLAG1_BASE_CIRC_CALL)) ||
-                                    search->call != base_calls[base_call_circcer]
+                                    search->call_to_print != base_calls[base_call_circcer]
                                  )
                            )) {
 
 
-                  callspec_block *replaced_call = search->call;
+                  callspec_block *replaced_call = search->call_to_print;
 
                   /* Need to check for case of replacing one star turn with another. */
 
@@ -2288,6 +2357,60 @@ extern void write_history_line(int history_index, Const char *header, long_boole
    /* Record that this history item has been written to the UI. */
    this_item->text_line = text_line_count;
 }
+
+
+
+
+/* This stuff is duplicated in verify_call in sdmatch.c . */
+extern long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
+{
+   /* First, if we have already deposited a call, and we see more stuff, it must be
+      concepts or calls for an "anything" subcall. */
+
+   if (save1) {
+      parse_block *tt = get_parse_block();
+      /* Run to the end of any already-deposited things.  This could happen if the
+         call takes a tagger -- it could have a search chain before we even see it. */
+      while (save1->next) save1 = save1->next;
+      save1->next = tt;
+      save1->concept = &marker_concept_mod;
+      tt->concept = &marker_concept_mod;
+      tt->call = base_calls[(key == 6) ? base_call_null_second: base_call_null];
+      tt->call_to_print = tt->call;
+      tt->replacement_key = key;
+      parse_state.concept_write_ptr = &tt->subsidiary_root;
+   }
+
+   save1 = (parse_block *) 0;
+   user_match.match.call_conc_options = anythings->call_conc_options;
+
+   if (anythings->kind == ui_call_select) {
+      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
+      save1 = *parse_state.concept_write_ptr;
+      if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
+      there_is_a_call = TRUE;
+   }
+   else if (anythings->kind == ui_concept_select) {
+      if (deposit_concept(anythings->concept_ptr)) return TRUE;
+   }
+   else return TRUE;   /* Huh? */
+
+   if (anythings->packed_next_conc_or_subcall) {
+      /* key for "mandatory_anycall" */
+      if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1, 2)) return TRUE;
+   }
+
+   if (anythings->packed_secondary_subcall) {
+      /* key for "mandatory_secondary_call" */
+      if (deposit_call_tree(anythings->packed_secondary_subcall, save1, 6)) return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+
+
 
 
 extern void warn(warning_index w)
@@ -3899,27 +4022,32 @@ extern parse_block *process_final_concepts(
    while (cptr) {
       uint32 the_final_bit;
       uint32 heritsetbit = 0;
-      uint32 heritforbidbit = 0;
+      uint32 forbidbit = 0;
 
       switch (cptr->concept->kind) {
       case concept_comment:
          goto get_next;               /* Skip comments. */
       case concept_triangle:
          the_final_bit = FINAL__TRIANGLE;
+         forbidbit = FINAL__LEADTRIANGLE;
+         goto new_final;
+      case concept_leadtriangle:
+         the_final_bit = FINAL__LEADTRIANGLE;
+         forbidbit = FINAL__TRIANGLE;
          goto new_final;
       case concept_magic:
          last_magic_diamond = cptr;
          heritsetbit = INHERITFLAG_MAGIC;
-         heritforbidbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+         forbidbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
          break;
       case concept_interlocked:
          last_magic_diamond = cptr;
          heritsetbit = INHERITFLAG_INTLK;
-         heritforbidbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+         forbidbit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
          break;
       case concept_grand:
          heritsetbit = INHERITFLAG_GRAND;
-         heritforbidbit = INHERITFLAG_SINGLE;
+         forbidbit = INHERITFLAG_SINGLE;
          break;
       case concept_cross:
          heritsetbit = INHERITFLAG_CROSS; break;
@@ -3978,7 +4106,7 @@ extern parse_block *process_final_concepts(
          break;
       case concept_diamond:
          heritsetbit = INHERITFLAG_DIAMOND;
-         heritforbidbit = INHERITFLAG_SINGLE;
+         forbidbit = INHERITFLAG_SINGLE;
          break;
       case concept_funny:
          heritsetbit = INHERITFLAG_FUNNY; break;
@@ -3989,7 +4117,7 @@ extern parse_block *process_final_concepts(
       /* At this point we have a "herit" concept. */
 
       if (check_errors) {
-         if (final_concepts->her8it & heritforbidbit)
+         if (final_concepts->her8it & forbidbit)
             fail("Illegal order of call modifiers.");
 
          if (do_heritflag_merge(&final_concepts->her8it, heritsetbit))
@@ -4010,7 +4138,7 @@ extern parse_block *process_final_concepts(
          is not broken into fields that need special checking. */
 
       if (check_errors) {
-         if ((final_concepts->final & the_final_bit))
+         if ((final_concepts->final & (the_final_bit|forbidbit)))
             fail("Redundant call modifier.");
       }
       else {
@@ -4042,10 +4170,10 @@ extern parse_block *process_final_concepts(
 extern parse_block *really_skip_one_concept(
    parse_block *incoming,
    concept_kind *k_p,
+   uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
    parse_block **parseptr_skip_p)
 {
    uint64 junk_concepts;
-   parse_block *next_parseptr;
    parse_block *parseptrcopy;
 
    while (incoming->concept->kind == concept_comment)
@@ -4074,6 +4202,12 @@ extern parse_block *really_skip_one_concept(
              parseptrcopy->next->subsidiary_root) {
             *parseptr_skip_p = parseptrcopy->next->subsidiary_root;
             *k_p = concept_supercall;
+
+            /* We don't restrain for echo with supercalls, because echo doesn't pull parts
+               apart, and supercalls don't work with multiple-part calls as the target
+               for which they are restraining the concept. */
+
+            *need_to_restrain_p = 1;
             return parseptrcopy;
          }
          else
@@ -4088,12 +4222,7 @@ extern parse_block *really_skip_one_concept(
          fail("Can't use a concept that takes a second call.");
    }
 
-   if (check_for_concept_group(parseptrcopy, k_p, &next_parseptr))
-      *parseptr_skip_p = next_parseptr->next;
-   else if (parseptrcopy->concept->kind == concept_special_sequential)
-      *parseptr_skip_p = parseptrcopy->subsidiary_root;
-   else
-      *parseptr_skip_p = parseptrcopy->next;
+   (void) check_for_concept_group(parseptrcopy, TRUE, k_p, need_to_restrain_p, parseptr_skip_p);
 
    return parseptrcopy;
 }

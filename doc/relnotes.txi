@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.5
-@set title2 Database version = 32.5 format = 144
+@set title1 RELEASE NOTES FOR SD VERSION 32.6
+@set title2 Database version = 32.6 format = 144
 @set title3 X11 UI version 1.17, SDTTY UI version 1.11
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.6::
 * 32.5::
 * 32.4::
 * 32.3::
@@ -58,7 +59,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.5, Top, (dir)
+@node Intro, 32.6, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -69,11 +70,99 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 32.5::               Changes in the current version
+* 32.6::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.5, 32.4, Intro, Top
+@node 32.6, 32.5, Intro, Top
+@unnumberedsec Version 32.6 changes
+
+The last few versions wrote out their transcript files in "Unix" format,
+with just line-feeds separating lines.  This has now been corrected to
+"Windows" format, with carriage-return line-feed sequences.  Most
+file-handling software is impervious to the difference, but some is not.
+We apologize for any unprintable cards that may have been generated.
+
+The program can use a different color scheme when displaying the dancers
+on the computer screen.  If the line ``color_by_couple'' is given in the
+``[Options]'' section of the initialization file, each of the four couples
+will we displayed in a different color.  You can of course turn the colors
+off completely with the line ``no_color''.
+
+The programmable keys have been made more general.  The behavior of
+control-U, to mean ``delete the input line'', is now programmable.  Also,
+function key @key{F8}, meaning to insert the literal text @code{<anything>},
+is programmable.  (Note:  You almost never need the latter function.)
+
+The programmable key control-V has been added, meaning to delete the last word.
+
+If you have an ``[Accelerators]'' section in your initialization file, you
+will need to add the lines
+@example
+@group
+   cu     deleteline
+   cv     deleteword
+   f8     quoteanything
+@end group
+@end example
+@noindent to get this behavior.  This file ``sample3.ini'' has been modified
+to contain these 3 lines.  You should copy the new bindings from that
+file if you have your own initialization file with an ``[Accelerators]''
+section.  You can, of course, bind other keys to the @code{deleteline},
+@code{deleteword}, and @code{quoteanything} commands.
+
+If you do not have an initialization file, or it does not have
+an ``[Accelerators]'' section, you do not need to do anything.
+
+The program recognizes a few more resolves.
+
+New concept: @samp{leading triangle}.  In this concept, the apex of the
+triangle steps forward to become the lead of a 2x2 box.  As with all calls
+and concepts, we do not take a position for or against the use of this concept.
+
+The spelling of the concepts @samp{couples of three}, @samp{tandems of four},
+and so on, were changed to use the digits @samp{3} or @samp{4} instead of
+spelling the numbers out.  The only places where numbers continue to be
+spelled out is in words like @samp{twosome} or @samp{threesome}.
+
+There is a fractionalizable version of @samp{invert the column}, called
+@samp{invert the column (parts)}.  Use this if you want to use concepts
+like @samp{sandwich}, @samp{random}, or @samp{interrupt}.  If you only need
+to do some fraction (say 3/4) of an @samp{invert the column}, just use call
+@samp{invert the column 3/4}.  The latter call is better able to handle
+concepts like @samp{single} or @samp{3x3}.
+
+The program now expects dancers to work together more closely during
+@samp{snag the <anyone>} or @samp{<anyone> work <concept>}.
+Specifically, it requires that it would have been legal for everyone to
+begin the call normally.  Previously, the two groups of dancers ignored
+each other so completely that things like @samp{snag the ends, cross and
+wheel} were considered legal in waves---each group of people worked in
+their own imagined 2-faced lines.
+
+An error in @samp{roll} after @samp{mini chase} has been fixed.
+
+An error in the definition of @samp{dixie diamond}, @samp{dixie sashay},
+@samp{dixie derby}, and @samp{dixie spin} was fixed.  These calls now have
+just two parts.  The first of those is a @samp{dixie style to a wave}, which in
+turn has two parts---@samp{belles/centers pull by} and @samp{left touch 1/4}.
+
+The interpretation of things like @samp{initially twice} or @samp{random twice}
+has been changed again.  The ``emerging consensus'' of the preceding version
+was a figment of my imagination.  @samp{Initially twice mix}
+has two parts.  The first of these is @samp{centers cross run}, done twice.
+The philosophical point here is that ``parts don't subdivide''.  If a concept
+effectively goes inside a call, to apply just to a certain part or parts,
+the overall number of parts is not changed.  @samp{Mix} is a two part call, even if
+a concept is applied to one of its parts.  This is true even if that concept
+is @samp{twice}.
+
+An obscure bug was fixed in deeply nested (3 or more levels) meta-concepts.  It
+is now possible to call, for example, @samp{initially initially echo tandem settle back}
+or @samp{finally finally reverse echo busy [hot foot spin]}.
+
+@c ************
+@node 32.5, 32.4, 32.6, Top
 @unnumberedsec Version 32.5 changes
 
 The missing @code{CWSDPMI} memory manager has been restored to the
@@ -115,6 +204,8 @@ on this.  The subject call is ``flattened''.  That is, @samp{initially twice mix
 has three parts---@samp{centers cross run}, @samp{centers cross run}, and
 @samp{centers trade}.  @samp{Initially as couples initially twice mix} will do
 an as couples centers cross run, a normal centers cross run, and a normal centers trade.
+
+[Note: the above was incorrect, and was removed in version 32.6.]
 
 The usual number of radical changes were made in the internal mechanism of the
 program, making it more elegant, general, and powerful.  The usual number of

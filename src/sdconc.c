@@ -123,7 +123,13 @@ extern void initialize_conc_tables(void)
 }
 
 
-Private void fix_missing_centers(setup *inners, setup *outers, setup_kind kki, setup_kind kko, int center_arity)
+Private void fix_missing_centers(
+   setup *inners,
+   setup *outers,
+   setup_kind kki,
+   setup_kind kko,
+   int center_arity,
+   long_boolean enforce_kk)
 {
    int i;
 
@@ -136,11 +142,11 @@ Private void fix_missing_centers(setup *inners, setup *outers, setup_kind kki, s
          inners[i].result_flags = outers->result_flags;
          clear_people(&inners[i]);
       }
-      else if (inners[i].kind != kki)
+      else if (inners[i].kind != kki && enforce_kk)
          fail("Don't recognize concentric ending setup.");
    }
 
-   if (outers->kind != kko)
+   if (outers->kind != kko && enforce_kk)
       fail("Don't recognize concentric ending setup.");
 }
 
@@ -393,56 +399,56 @@ extern void normalize_concentric(
       break;
    case schema_conc_star12:
       if (center_arity == 2) {
-         fix_missing_centers(inners, outers, s_star, s1x4, center_arity);
+         fix_missing_centers(inners, outers, s_star, s1x4, center_arity, TRUE);
       }
 
       break;
    case schema_conc_star16:
       if (center_arity == 3) {
-         fix_missing_centers(inners, outers, s_star, s1x4, center_arity);
+         fix_missing_centers(inners, outers, s_star, s1x4, center_arity, TRUE);
       }
 
       break;
    case schema_conc_12:
       if (center_arity == 2) {
-         fix_missing_centers(inners, outers, s1x6, s2x3, center_arity);
+         fix_missing_centers(inners, outers, s1x6, s2x3, center_arity, TRUE);
       }
       table_synthesizer = schema_concentric;
 
       break;
    case schema_conc_16:
       if (center_arity == 3) {
-         fix_missing_centers(inners, outers, s1x8, s2x4, center_arity);
+         fix_missing_centers(inners, outers, s1x8, s2x4, center_arity, TRUE);
       }
       table_synthesizer = schema_concentric;
 
       break;
    case schema_conc_bar12:
       if (center_arity == 2) {
-         fix_missing_centers(inners, outers, s_star, s2x3, center_arity);
+         fix_missing_centers(inners, outers, s_star, s2x3, center_arity, TRUE);
       }
 
       break;
    case schema_conc_bar16:
       if (center_arity == 3) {
-         fix_missing_centers(inners, outers, s_star, s2x3, center_arity);
+         fix_missing_centers(inners, outers, s_star, s2x3, center_arity, TRUE);
       }
 
       break;
    case schema_concentric_others:
       if (center_arity == 2) {
-         fix_missing_centers(inners, outers, s1x2, s2x2, center_arity);
+         fix_missing_centers(inners, outers, s1x2, s2x2, center_arity, FALSE);
       }
       else if (center_arity == 3) {
-         fix_missing_centers(inners, outers, s1x2, s1x2, center_arity);
+         fix_missing_centers(inners, outers, s1x2, s1x2, center_arity, FALSE);
       }
       else
-         fail("Don't recognize concentric ending setup.");
+         table_synthesizer = schema_concentric;
 
       break;
    case schema_grand_single_concentric:
       if (center_arity == 3) {
-         fix_missing_centers(inners, outers, s1x2, s1x2, center_arity);
+         fix_missing_centers(inners, outers, s1x2, s1x2, center_arity, TRUE);
       }
 
       break;
@@ -1551,7 +1557,7 @@ extern void concentric_move(
          /* Inherit certain assumptions to the child setups.  This is EXTREMELY incomplete. */
 
          {
-            if (analyzer == schema_concentric) {
+            if (analyzer == schema_concentric || analyzer == schema_concentric_6p_or_normal) {
                if (ss->kind == s2x4 && begin_ptr->kind == s2x2) {
                   switch (begin_ptr->cmd.cmd_assume.assumption) {
                   case cr_wave_only:
@@ -1724,6 +1730,7 @@ extern void concentric_move(
 
                f2.concept = &mark_end_of_list;
                f2.call = begin_ptr->cmd.callspec;
+               f2.call_to_print = f2.call;
                f2.next = (parse_block *) 0;
                f2.subsidiary_root = (parse_block *) 0;
                f2.gc_ptr = (parse_block *) 0;
@@ -2585,6 +2592,11 @@ static concmerge_thing merge_maps[] = {
    {s1x6,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
    {s1x6,      s_2x1dmd, 022,    022, 0x0E, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {0, -1, 2, 4, -1, 6},       {1, -1, 3, 5, -1, 7}},
    {s1x6,   s_spindle,   044,   0x55, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},       {-1, 3, -1, 4, -1, 7, -1, 0}},
+
+
+   {s1x6,   s_spindle,   0,     0x77, 0x0E, 0x0, schema_concentric,        s1x6,     s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},       {7, 3}},
+
+
    {s1x2,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},                    {0}},
    {s1x4,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
    {s1x6,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {9, 10, 11, 3, 4, 5},       {0}},
@@ -3196,6 +3208,34 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
 
    ssmask = setup_attrs[ss->kind].mask_normal;
 
+#ifdef NOTHERE
+   /* *********************** */
+   if (cmd2word & CMD_MISC2__ANY_SNAG) {
+      if (ss->kind == s2x4 && ss->cmd.cmd_assume.assumption == cr_none) {
+         if ((ss->people[0].id1 & d_mask) == d_north &&
+             (ss->people[1].id1 & d_mask) == d_south &&
+             (ss->people[2].id1 & d_mask) == d_north &&
+             (ss->people[3].id1 & d_mask) == d_south &&
+             (ss->people[4].id1 & d_mask) == d_south &&
+             (ss->people[5].id1 & d_mask) == d_north &&
+             (ss->people[6].id1 & d_mask) == d_south &&
+             (ss->people[7].id1 & d_mask) == d_north)
+            ss->cmd.cmd_assume.assumption = cr_wave_only;
+         if ((ss->people[0].id1 & d_mask) == d_south &&
+             (ss->people[1].id1 & d_mask) == d_north &&
+             (ss->people[2].id1 & d_mask) == d_south &&
+             (ss->people[3].id1 & d_mask) == d_north &&
+             (ss->people[4].id1 & d_mask) == d_north &&
+             (ss->people[5].id1 & d_mask) == d_south &&
+             (ss->people[6].id1 & d_mask) == d_north &&
+             (ss->people[7].id1 & d_mask) == d_south)
+            ss->cmd.cmd_assume.assumption = cr_wave_only;
+      }
+   }
+   /* *********************** */
+#endif
+
+
    if (cmd2word & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
       switch ((calldef_schema) (cmd2word & 0xFFF)) {
       case schema_concentric_2_6:
@@ -3265,9 +3305,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
 
       if (setupcount == 1 && (cmd2word & CMD_MISC2__ANY_WORK)) {
          concept_kind kjunk;
+         uint32 njunk;
 
          parseptrcopy =
-            really_skip_one_concept(ss->cmd.parseptr, &kjunk, &this_one->cmd.parseptr);
+            really_skip_one_concept(ss->cmd.parseptr, &kjunk, &njunk, &this_one->cmd.parseptr);
          if (kjunk == concept_supercall)
             fail("A concept is required.");
       }
@@ -3448,8 +3489,9 @@ extern void selective_move(
          by the unselected people. */
 
       concept_kind k;
+      uint32 njunk;
 
-      (void) really_skip_one_concept(parseptr->next, &k, &cmd2thing.parseptr);
+      (void) really_skip_one_concept(parseptr->next, &k, &njunk, &cmd2thing.parseptr);
       if (k == concept_supercall)
          fail("A concept is required.");
 
@@ -4472,6 +4514,28 @@ back_here:
    ss->cmd.cmd_misc2_flags &= ~(0xFFF | CMD_MISC2__ANY_WORK_INVERT);
    ss->cmd.cmd_misc2_flags |= (0xFFF & ((int) schema));
    if (crossconc) ss->cmd.cmd_misc2_flags |= CMD_MISC2__ANY_WORK_INVERT;
+
+   /* If we aren't already looking for something,
+      check whether to put on a new assumption. */
+
+   if (ss->kind == s2x4 && ss->cmd.cmd_assume.assumption == cr_none) {
+      assumption_thing restr;
+      long_boolean junk;
+
+      restr.assumption = cr_wave_only;
+      restr.assump_col = 0;
+      restr.assump_both = 0;
+      restr.assump_negate = 0;
+      restr.assump_live = 1;    /* Only do this if all are live -- otherwise
+                                   we would be imposing a stronger restriction
+                                   on the whole setup than we ought to. */
+
+      if (verify_restriction(ss,
+                             get_restriction_thing(s2x4, restr),
+                             restr, FALSE, &junk)) {
+         ss->cmd.cmd_assume = restr;
+      }
+   }
 
    move(ss, FALSE, result);
 }

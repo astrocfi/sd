@@ -570,19 +570,32 @@ extern void do_call_in_series(
    setup tempsetup;
    setup qqqq = *sss;
    uint32 current_elongation = 0;
-   uint32 saved_result_flags = sss->result_flags;
+   uint32 saved_result_flags = qqqq.result_flags;
    uint32 save_expire;
 
    qqqq.cmd.prior_expire_bits |= saved_result_flags & (RESULTFLAG__YOYO_FINISHED |
                                                        RESULTFLAG__TWISTED_FINISHED |
                                                        RESULTFLAG__SPLIT_FINISHED);
 
+   /* Check for a concept that will need to be re-evaluated under "twice".
+      The test for this is [waves] initially twice initially once removed
+      hinge the lock.  We want the "once removed" to be re-evaluated. */
+
+   if (qqqq.cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS &&
+       (qqqq.cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
+      if (qqqq.cmd.restrained_concept->concept->kind == concept_twice) {
+         qqqq.cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
+         qqqq.cmd.restrained_fraction = qqqq.cmd.cmd_frac_flags;
+         qqqq.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+      }
+   }
+
    /* If we are forcing a split, and an earlier call in the series has responded
       to that split by returning an unequivocal splitting axis (indicated by
       one field being zero and the other nonzero), we continue to split
       along the same axis. */
 
-   if ((sss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
+   if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
        !dont_enforce_consistent_split &&
        (saved_result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) &&    /* at least one field
                                                                         is nonzero */
@@ -832,6 +845,7 @@ Private int start_matrix_call(
    coordrec *thingyptr, *nicethingyptr;
    int nump = 0;
 
+   *people = *ss;    /* Get the setup kind, so selectp will be happier. */
    clear_people(people);
 
    nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
@@ -1452,7 +1466,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s4x5].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00620084) && ((signature & (~0x30888860)) == 0)) {
+   else if ((ypar == 0x00620084) && ((signature & (~0x31888C60)) == 0)) {
       checkptr = setup_attrs[s4x5].setup_coords;
       goto doitrot;
    }
@@ -2400,6 +2414,7 @@ Private long_boolean get_real_subcall(
          xx->options.howmanynumbers++;
       }
 
+      xx->call_to_print = xx->call;
       cmd_out->parseptr = xx;
       cmd_out->callspec = (callspec_block *) 0;
       cmd_out->cmd_final_flags.her8it = 0;
@@ -2602,6 +2617,7 @@ Private long_boolean get_real_subcall(
          (*newsearch)->options = current_options;
          (*newsearch)->replacement_key = snumber;
          (*newsearch)->call = orig_call;
+         (*newsearch)->call_to_print = orig_call;
          goto ret_false;
       }
    }
@@ -2611,6 +2627,7 @@ Private long_boolean get_real_subcall(
    (*newsearch)->options = current_options;
    (*newsearch)->replacement_key = snumber;
    (*newsearch)->call = orig_call;
+   (*newsearch)->call_to_print = orig_call;
 
    /* Set stuff up for reading subcall and its concepts. */
 
@@ -3534,7 +3551,7 @@ Private void do_sequential_call(
       int use_alternate;
       setup_command foobar;
       setup_kind oldk;
-      uint32 recompute_id;
+      long_boolean recompute_id = FALSE;
       uint32 saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
       uint32 resultflags_to_put_in = 0;
@@ -3562,6 +3579,7 @@ Private void do_sequential_call(
 
       if (zzz.reverse_order) {
          if (fetch_index < 0) break;
+         else if (fetch_index == 0) recompute_id = TRUE;
       }
       else {
          if (fetch_index >= realtotal) break;
@@ -3620,7 +3638,7 @@ Private void do_sequential_call(
       foobar = ss->cmd;
       foobar.cmd_final_flags = new_final_concepts;
 
-      recompute_id = get_real_subcall(parseptr, this_item, &foobar, callspec, &foo1);
+      recompute_id |= get_real_subcall(parseptr, this_item, &foobar, callspec, &foo1);
 
       /* We allow stepping (or rearing back) again. */
       if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
@@ -3631,7 +3649,7 @@ Private void do_sequential_call(
 
       /* We also re-evaluate if the invocation flag "seq_re_evaluate" is on. */
 
-      if (recompute_id | (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
+      if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
 
       /* If this subcall invocation involves inserting or shifting the numbers, do so. */
 
@@ -3891,6 +3909,31 @@ Private void do_sequential_call(
                break;
             }
          }
+         else if (result->cmd.callspec == base_calls[base_call_lockit] &&
+                  result->cmd.cmd_assume.assump_col == 0 &&
+                  result->cmd.cmd_assume.assump_both == 0) {
+            switch (result->cmd.cmd_assume.assumption) {
+            case cr_2fl_only:
+            case cr_wave_only:
+               fix_next_assumption = result->cmd.cmd_assume.assumption;
+               break;
+            }
+         }
+         else if (result->cmd.callspec == base_calls[base_call_disband1] &&
+                  result->kind == s2x4 &&
+                  result->cmd.cmd_assume.assump_col == 1 &&
+                  result->cmd.cmd_assume.assump_both == 0) {
+            switch (result->cmd.cmd_assume.assumption) {
+            case cr_wave_only:
+               fix_next_assumption = cr_magic_only;
+               fix_next_assump_col = 1;
+               break;
+            case cr_magic_only:
+               fix_next_assumption = cr_wave_only;
+               fix_next_assump_col = 1;
+               break;
+            }
+         }
          else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
             /* Just pass everything directly -- this call does nothing. */
             fix_next_assumption = result->cmd.cmd_assume.assumption;
@@ -4037,17 +4080,22 @@ Private calldef_schema fixup_conc_schema(Const callspec_block *callspec, setup *
       /* "Single" has the usual meaning for this one.  But "grand single"
          turns it into a "special concentric", which has the centers working
          in three pairs. */
-      if (herit_concepts & INHERITFLAG_GRAND) {
-         if (herit_concepts & INHERITFLAG_SINGLE)
+
+      if (herit_concepts & INHERITFLAG_SINGLE) {
+         if (herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) {
             the_schema = schema_concentric_others;
-         else
-            fail("You must not use \"grand\" without \"single\".");
+         }
+         else {
+            the_schema = schema_single_concentric;
+         }
       }
       else {
-         if (herit_concepts & INHERITFLAG_SINGLE)
-            the_schema = schema_single_concentric;
-         else
+         if (herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) {
+            fail("You must not use \"grand\" without \"single\" or \"nxn\".");
+         }
+         else {
             the_schema = schema_concentric;
+         }
       }
    }
    else if (the_schema == schema_maybe_nxn_lines_concentric) {
@@ -4271,7 +4319,8 @@ that probably need to be put in. */
             case schema_conc_o:
             case schema_concentric_6p:
             case schema_concentric_6p_or_normal:
-
+            case schema_concentric_6p_or_sgltogether:
+            case schema_cross_concentric_6p_or_normal:
                /* Normally, we get the centers' part of the definition.  But if the user said
                   either "invert central" (the concept that means to get the ends' part)
                   or "central invert" (the concept that says to get the centers' part
@@ -4476,7 +4525,9 @@ that probably need to be put in. */
           (ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
           (CMD_FRAC_NULL_VALUE | CMD_FRAC_CODE_FROMTO)) {
 
-         if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED | CMD_MISC__MUST_SPLIT_MASK))) {
+         if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
+                                         CMD_MISC__ALREADY_STEPPED |
+                                         CMD_MISC__MUST_SPLIT_MASK))) {
             if (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_LEFT)) {
                mirror_this(ss);
                mirror = TRUE;
@@ -4485,9 +4536,9 @@ that probably need to be put in. */
             ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
             touch_or_rear_back(ss, mirror, callflags1);
       
-            /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left" flag for the
-               purpose of what "touch_or_rear_back" just did.  So, in that case, we turn off the "left"
-               flag and set things back to normal. */
+            /* But, if the "left_means_touch_or_check" flag is set, we only wanted the "left"
+               flag for the purpose of what "touch_or_rear_back" just did.  So, in that case,
+               we turn off the "left" flag and set things back to normal. */
       
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                if (mirror) mirror_this(ss);
@@ -4652,15 +4703,29 @@ that probably need to be put in. */
       setup into 2x2's that are isolated from each other, or else the "grand mix" won't work. */
 
    if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
+      long_boolean starting = TRUE;
+
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
+      /* Check for doing "split square thru" or "split dixie style" stuff.
+         But don't propagate the stuff if we aren't doing the first part of the call. */
+
+      if ((ss->cmd.cmd_frac_flags & 0xFF00) != 0x0100 ||
+          ((ss->cmd.cmd_frac_flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
+           (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) > CMD_FRAC_PART_BIT))
+         starting = FALSE;     /* We aren't doing the first part. */
+
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
-         ss->cmd.cmd_final_flags.final = (ss->cmd.cmd_final_flags.final | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
+         if (starting) ss->cmd.cmd_final_flags.final |= FINAL__SPLIT_SQUARE_APPROVED;
+         ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
+
          if (current_options.howmanynumbers != 0 && (current_options.number_fields & 0xF) <= 1)
             fail("Can't split square thru 1.");
       }
-      else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
-         ss->cmd.cmd_final_flags.final = (ss->cmd.cmd_final_flags.final | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
+      else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE) {
+         if (starting) ss->cmd.cmd_final_flags.final |= FINAL__SPLIT_DIXIE_APPROVED;
+         ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
+      }
 
       if (ss->kind == s4x4) {
          /* The entire rest of the program expects split calls to be done in
@@ -4815,6 +4880,9 @@ that probably need to be put in. */
    if ((callflags1 & CFLAG1_FUNNY_MEANS_THOSE_FACING) &&
        (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_FUNNY))) {
       ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_FUNNY;
+
+      /* We have to do this -- we need to know who is facing *now*. */
+      update_id_bits(ss);
       foo1 = ss->cmd;
       special_selector = selector_thosefacing;
       goto do_special_select_stuff;
@@ -5428,6 +5496,7 @@ extern void move(
          p2.concept = &marker_concept_supercall;
          p2.subsidiary_root = &p3;
          p3.call = ss->cmd.callspec;
+         p3.call_to_print = p3.call;
          p3.concept = &mark_end_of_list;
          p3.no_check_call_level = 1;
          p3.options = current_options;
@@ -5438,8 +5507,26 @@ extern void move(
          ss->cmd.cmd_final_flags.her8it = 0;
          move(ss, FALSE, result);
       }
-      else
+      else {
+         /* We need to find the end of the concept chain, and plug in our
+            call, after saving its old contents. */
+         callspec_block *saved_new_call;
+         callspec_block *saved_old_call = ss->cmd.callspec;
+
+         parse_block *z1 = t;
+         ss->cmd.callspec = (callspec_block *) 0;
+         while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
+         if (z1->concept->kind == concept_another_call_next_mod) {
+            z1 = z1->next->subsidiary_root;
+         }
+
+         saved_new_call = z1->call;
+         if (saved_old_call) z1->call = saved_old_call;
+         z1->no_check_call_level = 1;
          (concept_table[t->concept->kind].concept_action)(ss, t, result);
+         if (saved_old_call) z1->call = saved_new_call;
+         ss->cmd.callspec = saved_old_call;
+      }
 
       return;
    }
@@ -5492,8 +5579,9 @@ extern void move(
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
       concept_kind kjunk;
+      uint32 njunk;
 
-      (void) really_skip_one_concept(ss->cmd.parseptr, &kjunk, &parseptrcopy);
+      (void) really_skip_one_concept(ss->cmd.parseptr, &kjunk, &njunk, &parseptrcopy);
       if (kjunk == concept_supercall)
          fail("A concept is required.");
    }

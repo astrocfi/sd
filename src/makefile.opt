@@ -102,7 +102,7 @@ sdui-ttu.o: sdui-ttu.c
 
 sdui-tty.o sdmatch.o: sdmatch.h
 
-sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui-tty.h
+sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
 
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 

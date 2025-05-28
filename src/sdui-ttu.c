@@ -33,9 +33,7 @@
 #include <unistd.h>    /* This too. */
 #include <signal.h>
 #include <string.h>
-
-extern int diagnostic_mode;    /* We need this. */
-#include "sdui-tty.h"
+#include "sdui.h"
 
 
 static int curses_initialized = 0;
@@ -77,14 +75,9 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
  */   
 
 
-extern int ttu_process_command_line(int *argcp,
-                                    char **argv,
-                                    int *use_escapes_for_drawing_people_p,
-                                    char *pn1,
-                                    char *pn2,
-                                    char **direc_p)
+extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
+                                  char *pn1, char *pn2, char **direc_p)
 {
-   return 0;
 }
 
 
@@ -406,20 +399,30 @@ extern void put_char(int c)
 
 extern int get_char(void)
 {
+   int nc;
+
 #ifndef NO_CURSES
    if (!no_cursor) {
       int c = getch();      /* A "curses" call. */
       /* Handle function keys. */
-      return c >= 0410 ? c-0410+FKEY : c;
+      nc = c >= 0410 ? c-0410+FKEY : c;
    }
    else {
-      csetmode(1);         /* Raw, no echo, single-character mode. */
-      return getchar();    /* A "stdio" call. */
+      csetmode(1);       /* Raw, no echo, single-character mode. */
+      nc = getchar();    /* A "stdio" call. */
    }
 #else
    csetmode(1);         /* Raw, no echo, single-character mode. */
-   return getchar();    /* A "stdio" call. */
+   nc = getchar();      /* A "stdio" call. */
 #endif
+
+   if (nc >= 'A'-0100 && nc <= 'Z'-0100) {
+      if (nc != '\b' && nc != '\r' &&
+          nc != '\n' && nc != '\t')
+         nc += CTLLET+0100;
+   }
+
+   return nc;
 }
 
 

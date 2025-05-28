@@ -15,6 +15,9 @@
     This is for version 32. */
 
 /* This defines the following external variables:
+   command_menu
+   resolve_menu
+   startup_commands
    getout_strings
    filename_strings
    level_threshholds
@@ -131,6 +134,103 @@
 */
 
 #include "sd.h"
+
+command_list_menu_item command_menu[] = {
+   {"exit the program",               command_quit},
+   {"quit the program",               command_quit},
+   {"simple modifications",           command_simple_mods},
+   {"allow modifications",            command_all_mods},
+   {"toggle concept levels",          command_toggle_conc_levels},
+   {"toggle active phantoms",         command_toggle_act_phan},
+   {"toggle retain after error",      command_toggle_retain_after_error},
+   {"toggle nowarn mode",             command_toggle_nowarn_mode},
+   {"undo last call",                 command_undo},
+   {"discard entered concepts",       command_erase},
+   {"abort this sequence",            command_abort},
+   {"insert a comment",               command_create_comment},
+   {"change output file",             command_change_outfile},
+   {"change title",                   command_change_header},
+   {"write this sequence",            command_getout},
+   {"end this sequence",              command_getout},
+   {"cut to clipboard",               command_cut_to_clipboard},
+   {"clipboard cut",                  command_cut_to_clipboard},
+   {"delete entire clipboard",        command_delete_entire_clipboard},
+   {"clipboard delete all",           command_delete_entire_clipboard},
+   {"delete one call from clipboard", command_delete_one_call_from_clipboard},
+   {"clipboard delete one",           command_delete_one_call_from_clipboard},
+   {"paste one call",                 command_paste_one_call},
+   {"clipboard paste one",            command_paste_one_call},
+   {"paste all calls",                command_paste_all_calls},
+   {"clipboard paste all",            command_paste_all_calls},
+   {"keep picture",                   command_save_pic},
+   {"refresh display",                command_refresh},
+   {"resolve",                        command_resolve},
+   {"normalize",                      command_normalize},
+   {"standardize",                    command_standardize},
+   {"reconcile",                      command_reconcile},
+   {"pick random call",               command_random_call},
+   {"pick simple call",               command_simple_call},
+   {"pick concept call",              command_concept_call},
+   {"pick level call",                command_level_call},
+   {"pick 8 person level call",       command_8person_level_call},
+   {"create any lines",               command_create_any_lines},
+   {"create waves",                   command_create_waves},
+   {"create 2fl",                     command_create_2fl},
+   {"create lines in",                command_create_li},
+   {"create lines out",               command_create_lo},
+   {"create inverted lines",          command_create_inv_lines},
+   {"create 3x1 lines",               command_create_3and1_lines},
+   {"create any columns",             command_create_any_col},
+   {"create columns",                 command_create_col},
+   {"create magic columns",           command_create_magic_col},
+   {"create dpt",                     command_create_dpt},
+   {"create cdpt",                    command_create_cdpt},
+   {"create trade by",                command_create_tby},
+   {"create 8 chain",                 command_create_8ch},
+   {"create any 1/4 tag",             command_create_any_qtag},
+   {"create 1/4 tag",                 command_create_qtag},
+   {"create 3/4 tag",                 command_create_3qtag},
+   {"create 1/4 line",                command_create_qline},
+   {"create 3/4 line",                command_create_3qline},
+   {"create diamonds",                command_create_dmd},
+   {"create any tidal setup",         command_create_any_tidal},
+   {"create tidal wave",              command_create_tidal_wave},
+   {(Cstring) 0}};
+
+resolve_list_menu_item resolve_menu[] = {
+   {"abort the search",       resolve_command_abort},
+   {"exit the search",        resolve_command_abort},
+   {"quit the search",        resolve_command_abort},
+   {"undo the search",        resolve_command_abort},
+   {"find another",           resolve_command_find_another},
+   {"next",                   resolve_command_goto_next},
+   {"previous",               resolve_command_goto_previous},
+   {"accept current choice",  resolve_command_accept},
+   {"raise reconcile point",  resolve_command_raise_rec_point},
+   {"lower reconcile point",  resolve_command_lower_rec_point},
+   {"write this sequence",    resolve_command_write_this},
+   {(Cstring) 0}};
+
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
+Cstring startup_commands[] = {
+   "exit from the program",
+   "heads 1p2p",
+   "sides 1p2p",
+   "heads start",
+   "sides start",
+   "just as they are",
+   "toggle concept levels",
+   "toggle active phantoms",
+   "toggle retain after error",
+   "toggle nowarn mode",
+   "toggle singing call",
+   "toggle reverse singing call",
+   "initialize session file",
+   "change output file",
+   "change title",
+   (Cstring) 0
+};
+
 
 /* These are used in setup_coords. */
 
@@ -891,6 +991,7 @@ Cstring filename_strings[] = {
    ".C4",
    ".C4X",
    ".all",
+   ".all",
    ""};
 
 /* This list tells what level calls will be accepted for the "pick level call"
@@ -947,6 +1048,12 @@ dance_level higher_acceptable_level[] = {
 
 Cstring concept_key_table[] = {
    /* These are the standard bindings. */
+   "cu     deleteline",
+   "cv     deleteword",
+   "e6     lineup",                 /* up arrow */
+   "e8     linedown",               /* down arrow */
+   "e1     pageup",
+   "e2     pagedown",
    "+f1    heads start",
    "+sf1   sides start",
    "+cf1   just as they are",
@@ -972,6 +1079,7 @@ Cstring concept_key_table[] = {
    "+f7    toggle concept levels",
    "sf7    toggle active phantoms",
    "+sf7   toggle active phantoms",
+   "f8     quoteanything",
    "sf8    cut to clipboard",
    "cf8    paste one call",
    "f9     undo last call",
@@ -989,14 +1097,12 @@ Cstring concept_key_table[] = {
    "f11    pick level call",
    "sf11   pick 8 person level call",
    "*f12   find another",
-   "*e7    find another",           /* right arrow */
    "*sf12  accept current choice",
    "*cf12  previous",
-   "*e6    previous",               /* up arrow */
+   "*af12  next",
    "*se6   raise reconcile point",  /* shift up arrow */
    "*e5    previous",               /* left arrow */
-   "*af12  next",
-   "*e8    next",                   /* down arrow */
+   "*e7    next",                   /* right arrow */
    "*se8   lower reconcile point",  /* shift down arrow */
    (char *) 0};
 
@@ -1163,6 +1269,14 @@ static id_bit_table id_bit_table_short6[] = {
    SEBITS(ID2_CENTER),
    NOBIT(ID2_END),
    SWBITS(ID2_CENTER)};
+
+static id_bit_table id_bit_table_1x6[] = {
+   NOBIT(ID2_OUTRPAIRS| ID2_OUTR2| ID2_NCTR1X4),
+   NOBIT(ID2_OUTRPAIRS| ID2_CTR4 | ID2_CTR1X4),
+   NOBIT(ID2_CTR2     | ID2_CTR4 | ID2_CTR1X4),
+   NOBIT(ID2_OUTRPAIRS| ID2_OUTR2| ID2_NCTR1X4),
+   NOBIT(ID2_OUTRPAIRS| ID2_CTR4 | ID2_CTR1X4),
+   NOBIT(ID2_CTR2     | ID2_CTR4 | ID2_CTR1X4)};
 
 static id_bit_table id_bit_table_1x8[] = {
    WESTBIT(ID2_OUTR6| ID2_OUTR2| ID2_NCTR1X6| ID2_NCTR1X4| ID2_OUTRPAIRS),
@@ -1958,10 +2072,12 @@ cm_thing conc_init_table[] = {
    {s_bone6,      X24, {5, 2,    0, 1, 3, 4},              2, 4, s1x2,     s2x2,     6,  0, 0, 1, 1,  0x0FE, schema_concentric},
 
    {s2x3,           Z, {4, 1,    5, 0, 2, 3},              2, 4, s1x2,     s2x2,     6,  1, 1, 2, 1,  0x2FB, schema_concentric},
-   {s_short6,       Z, {5, 0, 2, 3,    4, 1},              4, 2, s2x2,     s1x2,     6,  1, 1, 2, 1,  0x2FA, schema_concentric},
    {s_1x2dmd,     X6P, {5, 2,    0, 1, 3, 4},              2, 4, s1x2,     s1x4,     6,  1, 0, 1, 1,  0x0F5, schema_concentric},
    {s_1x2dmd,     X24, {5, 2,    0, 1, 3, 4},              2, 4, s1x2,     s1x4,     6,  1, 0, 1, 1,  0x0F5, schema_concentric},
+
    {s1x6,           Z, {2, 5,    0, 1, 3, 4},              2, 4, s1x2,     s1x4,     6,  0, 0, 1, 1,  0x2FA, schema_concentric},
+   {s1x6,           Z, {1, 2, 4, 5,    0, 3},              4, 2, s1x4,     s1x2,     6,  0, 0, 1, 1,  0x2FA, schema_concentric},
+
    /* these two are duplicate. */
    {s_wingedstar,   Z, {7, 2, 3, 6,    0, 1, 4, 5},        4, 4, s_star,   s1x4,     8,  1, 0, 1, 1,  0x2F5, schema_conc_star},
    {s_wingedstar,   Z, {7, 2, 3, 6,    0, 1, 4, 5},        4, 4, s_star,   s1x4,     8,  1, 0, 1, 1,  0x2F5, schema_concentric},
@@ -2019,8 +2135,22 @@ cm_thing conc_init_table[] = {
    {s_barredstar,  DL, {8, 9, 3, 4,
                            0, 1, 2, 5, 6, 7},              4, 6, s1x4,     s2x3,    10,  0, 0, 2, 1,  0x0FB, schema_concentric},
    {s_qtag,        OT, {6, 7, 3, 2,    0, 1, 4, 5},        2, 4, s1x2,     s2x2,     8,  0, 0, 2, 2,  0x100, schema_nothing},
-   {s_spindle,     OT, {6, 0, 5, 1, 4, 2,    7, 3},        2, 2, s1x2,     s1x2,     8,  1, 0, 1, 3,  0x0F5, schema_concentric_others},
    {s1x8,          OT, {1, 3, 2, 6, 7, 5,    0, 4},        2, 2, s1x2,     s1x2,     8,  0, 0, 1, 3,  0x0FA, schema_concentric_others},
+   {s1x6,          OT, {1, 2, 5, 4,    0, 3},              2, 2, s1x2,     s1x2,     6,  0, 0, 1, 2,  0x0FA, schema_concentric_others},
+
+   {s_spindle,      Z, {6, 0, 5, 1, 4, 2,    7, 3},        2, 2, s1x2,     s1x2,     8,  1, 0, 1, 3,  0x2F5, schema_concentric_others},
+   {s_spindle,     OT, {0, 1, 2, 4, 5, 6,    7, 3},        6, 2, s2x3,     s1x2,     8,  0, 0, 1, 1,  0x100, schema_nothing},
+
+   /*
+   {s_short6,      OT, {0, 2, 5, 3,    4, 1},              2, 2, s1x2,     s1x2,     6,  0, 1, 2, 2,  0x100, schema_nothing},
+   */
+
+   {s_short6,     X6P, {0, 2, 3, 5,    4, 1},              4, 2, s2x2,     s1x2,     6,  0, 1, 2, 1,  0x100, schema_nothing},
+
+   {s_short6,      OT, {0, 2, 3, 5,    4, 1},              4, 2, s2x2,     s1x2,     6,  0, 1, 2, 1,  0x0F5, schema_concentric},
+   {s_short6,       Z, {5, 0, 2, 3,    4, 1},              4, 2, s2x2,     s1x2,     6,  1, 1, 2, 1,  0x0FA, schema_concentric},
+   {s_short6,       Z, {5, 3, 0, 2,    4, 1},              2, 2, s1x2,     s1x2,     6,  0, 1, 2, 2,  0x2F5, schema_concentric_others},
+
    {s2x4,          OT, {1, 2, 6, 5,    0, 3, 4, 7},        2, 4, s1x2,     s2x2,     8,  0, 0, 1, 2,  0x100, schema_nothing},
    {s_galaxy,      IL, {0, 3, 5, 4, 7, 1,    6, 2},        3, 2, s_trngl,  s1x2,     8,  3, 1, 1, 2,  0x0FE, schema_intlk_lateral_6},
    {s_hrglass,     IV, {7, 0, 1, 3, 4, 5,    6, 2},        3, 2, s_trngl,  s1x2,     8,  0, 0, 1, 2,  0x0FE, schema_intlk_vertical_6},
@@ -2150,10 +2280,6 @@ cm_thing conc_init_table[] = {
    {s_bone,        OO, {6, 7, 2, 3,    -1, 1, 4, -1, -1, -1, -1, -1,
                            -1, 5, 0, -1, -1, -1, -1, -1},  4,16, s1x4,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
    {s_qtag,        T6, {0, 1, 3, 4, 5, 7,    6, 2},        6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x100, schema_nothing},
-
-   /* these 2 are sort of duplicates */
-   {s_short6,     X6P, {0, 2, 3, 5,    4, 1},              4, 2, s2x2,     s1x2,     6,  0, 1, 2, 1,  0x100, schema_nothing},
-   {s_short6,       Z, {0, 2, 3, 5,    4, 1},              4, 2, s2x2,     s1x2,     6,  0, 1, 2, 1,  0x0F5, schema_concentric},
 
    {s2x3,         X6P, {4, 1,    0, 2, 3, 5},              2, 4, s1x2,     s2x2,     6,  1, 0, 1, 1,  0x0FD, schema_concentric},
    {s2x3,         X24, {4, 1,    0, 2, 3, 5},              2, 4, s1x2,     s2x2,     6,  1, 0, 1, 1,  0x0FD, schema_concentric},
@@ -2944,7 +3070,7 @@ setup_attr setup_attrs[] = {
       {b_1x6,       b_6x1},
       { 6, 1},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_1x6,
       {  "a  b  c  f  e  d@",
          "a@b@c@f@e@d@"}},
    /* s2x3 */

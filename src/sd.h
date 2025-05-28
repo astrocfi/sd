@@ -14,90 +14,12 @@
 
     This is for version 32. */
 
-/* We would like to not need to customize things for different "dialects" of
-   ANSI C, because we would like to think that there are no "dialects".  But, alas,
-   there are two issues:
-   (1) Some versions of GNU C (gcc) recognize the "volatile" keyword on a procedure
-      as indicating that its call-return behavior is anomalous, and generate
-      better code with that knowledge.  We can take advantage of that for some
-      of our functions that never return, so we define a keyword "nonreturning".
-   (2) Some compilers trying to pass for ANSI C have been observed failing
-      to handle the "const" attribute.  (Yes, an ANSI C compiler that doesn't handle
-      "const" is an oxymoron.)  We grudgingly accept such compilers if the
-      "CONST_IS_BROKEN" symbol is defined.  We allow that to be set by a Makefile,
-      and we set it ourselves for those compilers that we know about. */
-
-/* Default is that "nonreturning" is meaningless. */
-#define nonreturning
-
-#ifdef __GNUC__
-#if __GNUC__ >= 2
-/* GNU C versions 2 or greater recognize volatile procedures. */
-#undef nonreturning
-#define nonreturning __attribute__ ((noreturn))
-#else
-/* GNU C versions less than 2 can't do "const". */
-#define CONST_IS_BROKEN
-#endif
-#endif
-
-#ifdef __CODECENTER_4__
-#define CONST_IS_BROKEN		/* in CodeCenter 4.0.2 */
-#endif
-
-/* We will use "Const" with a capital "C" for our attempts at the "const" attribute. */
-#ifndef CONST_IS_BROKEN
-#define Const const
-#else
-/* Too bad.  Define it as nothing. */
-#define Const
-#endif
-
-/* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
-#define Private static
-
-/* We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
-   The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
-   alerts us to that fact.  The configure script has checked this for us. */
-#ifdef NO_SIGNED_CHAR
-typedef short veryshort;
-#else
-typedef char veryshort;
-#endif
-
-/* We would like to think that we will always be able to count on compilers to do the
-   right thing with "int" and "long int" and so on.  What we would really like is
-   for compilers to be counted on to make "int" at least 32 bits, because we need
-   32 bits in many places.  However, some compilers don't, so we have to use
-   "long int" or "unsigned long int".  We think that all compilers we deal with
-   will do the right thing with that, but, just in case, we use a typedef.
-
-   The type "uint32" must be an unsigned integer of at least 32 bits.
-   The type "uint16" must be an unsigned integer of at least 16 bits.
-
-   Note also:  There are many places in the program (not just in database.h and sd.h)
-   where the suffix "UL" is put on constants that are intended to be of type "uint32".
-   If "uint32" is changed to anything other than "unsigned long int", it may be
-   necessary to change all of those. */
-
-typedef unsigned long int uint32;
-typedef unsigned short int uint16;
-typedef unsigned char uint8;
-
-typedef Const char *Cstring;
-
+#include <stdio.h>
 #include <setjmp.h>
 #include "database.h"
+#include "sdui.h"
 
-#define TRUE 1
-#define FALSE 0
-#define NULLCONCEPTPTR (concept_descriptor *) 0
-#define NULLCALLSPEC (callspec_block *) 0
 
-typedef int long_boolean;
-
-#define MAX_ERR_LENGTH 200
-#define MAX_FILENAME_LENGTH 260
 #define MAX_PEOPLE 24
 /* Actually, we don't make a resolve bigger than 3.  This is how much space
    we allocate for things.  Just being careful. */
@@ -108,19 +30,6 @@ typedef int long_boolean;
 /* We use lots more concepts for "standardize", since it is much less likely (though
    by no means impossible) that a plain call will do the job. */
 #define STANDARDIZE_CONCEPT_PROBABILITY 6
-
-/* Absolute maximum length we can handle in text operations, including
-   writing to file.  If a call gets more complicated than this, stuff
-   will simply not be written to the file.  Too bad. */
-#define MAX_TEXT_LINE_LENGTH 200
-
-/* This is the number of tagger classes.  It must not be greater than 7,
-   because class numbers, in 1-based form, are put into the CFLAGH__TAG_CALL_RQ_MASK
-   and CFLAG1_BASE_TAG_CALL fields, and because the tagger class is stored
-   (albeit in 0-based form) in the high 3 bits (along with the tagger call number
-   in the low 5 bits) in an 8-bit field that is replicated 4 times in the
-   "tagger" field of a call_conc_option_state. */
-#define NUM_TAGGER_CLASSES 4
 
 /* This defines a person in a setup.  Unfortunately, there is too much data to fit into 32 bits. */
 typedef struct {
@@ -596,58 +505,6 @@ static Const uint32 RESULTFLAG__VERY_CTRS_ODD       = 0x00400000UL;
 
 
 
-typedef struct glork {
-   struct glork *next;
-   uint32 callarray_flags;
-   call_restriction restriction;
-   uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
-   uint8 start_setup;       /* Must cast to begin_kind! */
-   uint8 end_setup;         /* Must cast to setup_kind! */
-   uint8 end_setup_in;      /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
-   uint8 end_setup_out;     /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
-   union {
-      /* Dynamically allocated to whatever size is required. */
-      uint16 def[4];     /* only if pred = false */
-      struct {                   /* only if pred = true */
-         struct predptr_pair_struct *predlist;
-         /* Dynamically allocated to whatever size is required. */
-         char errmsg[4];
-      } prd;
-   } stuff;
-} callarray;
-
-typedef struct {
-   short call_id;
-   uint32 modifiers1;
-
-   /* The "modifiersh" field of an invocation of a subcall tells what
-      incoming modifiers will be passed to the subcall.  What the bits mean
-      depends on whether the call's top-level "callflagsh" bit is on.
-
-      If the bit is on in "callflagsh", the corresponding bit in "modifiersh"
-      says to pass the modifier, if present, on to the subcall.  If this is
-      a group (e.g. INHERITFLAG_MXNMASK), and it is on in "callflagsh", the
-      entire field in "modifiersh" must be on or off.  It will be on if the
-      subcall involcation is marked "inherit_mxn" or wahatever.
-
-      If the bit is off in "callflagsh", the corresponding bit in "modifiersh"
-      says to force the modifier.  In this case groups are treated as individual
-      modifiers.  An individual switch like "force_3x3" causes that key to be
-      placed in the field of "modifiersh". */
-
-   uint32 modifiersh;
-} by_def_item;
-
-typedef struct glowk {
-   /* This has individual keys for groups of heritable modifiers.  Hence one
-      can't say anything like "alternate_definition [3x3 4x4]".  But of course
-      one can mix things from different groups. */
-   uint32 modifier_seth;
-   callarray *callarray_list;
-   struct glowk *next;
-   dance_level modifier_level;
-} calldef_block;
-
 #define TEST_HERITBITS(x,y) ((x).her8it & (y))
 
 typedef struct {
@@ -655,96 +512,7 @@ typedef struct {
    uint32 final;
 } uint64;
 
-typedef struct {
-   uint32 callflags1;    /* The CFLAG1_??? flags. */
-   uint32 callflagsh;    /* The mask for the heritable flags. */
-   /* Within the "callflagsh" field, the various grouped fields
-      (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
-      on or they are all off.  A call can only inherit the entire group,
-      by saying "mxn_is_inherited". */
-   uint32 callflagsf;    /* The ESCAPE_WORD__???  and CFLAGH__??? flags. */
-   short int age;
-   short int level;
-   calldef_schema schema;
-   union {
-      struct {
-         calldef_block *def_list;
-      } arr;            /* if schema = schema_by_array */
-      struct {
-         uint32 flags;
-         uint32 *stuff;
-      } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
-      struct {
-         int howmanyparts;
-         by_def_item *defarray;  /* Dynamically allocated, there are "howmanyparts" of them. */
-      } def;            /* if schema = schema_by_def */
-      struct {
-         by_def_item innerdef;
-         by_def_item outerdef;
-      } conc;           /* if schema = any of the concentric ones. */
-   } stuff;
-   /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
-      If there are no escapes, this just points to the stuff below.
-      If escapes are present, it points to allocated storage elsewhere.
-      Either way, it persists throughout the program. */
-   Cstring menu_name;
-   /* Dynamically allocated to whatever size is required, will have trailing null.
-      This is the name as it appeared in the database, with "@" escapes. */
-   char name[4];
-} callspec_block;
-
-typedef enum {
-   MPKIND__NONE,
-   MPKIND__SPLIT,
-   MPKIND__REMOVED,
-   MPKIND__TWICE_REMOVED,
-   MPKIND__THRICE_REMOVED,
-   MPKIND__OVERLAP,
-   MPKIND__INTLK,
-   MPKIND__CONCPHAN,
-   MPKIND__NONISOTROPIC,
-   MPKIND__NONISOTROP1,
-   MPKIND__OFFS_L_HALF,
-   MPKIND__OFFS_R_HALF,
-   MPKIND__OFFS_L_FULL,
-   MPKIND__OFFS_R_FULL,
-   MPKIND__OFFS_L_HALF_SPECIAL,
-   MPKIND__OFFS_R_HALF_SPECIAL,
-   MPKIND__OFFS_L_FULL_SPECIAL,
-   MPKIND__OFFS_R_FULL_SPECIAL,
-   MPKIND__LILZCCW,
-   MPKIND__LILZCW,
-   MPKIND__LILAZCCW,
-   MPKIND__LILAZCW,
-   MPKIND__LILZCOM,
-   MPKIND__O_SPOTS,
-   MPKIND__X_SPOTS,
-   MPKIND__4_QUADRANTS,
-   MPKIND__4_EDGES,
-   MPKIND__ALL_8,
-   MPKIND__DMD_STUFF,
-   MPKIND__STAG,
-   MPKIND__DIAGQTAG,
-   MPKIND_DBLBENTCW,
-   MPKIND_DBLBENTCCW,
-   MPKIND__SPEC_ONCEREM,
-   MPKIND__SPEC_TWICEREM
-} mpkind;
-
 #define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
-
-typedef struct skrilch {
-   Const veryshort maps[40];
-   Const mpkind map_kind;
-   Const short int warncode;
-   Const short int arity;
-   Const setup_kind outer_kind;
-   Const setup_kind inner_kind;
-   Const uint32 rot;
-   Const int vert;
-   uint32 code;
-   struct skrilch *next;
-} map_thing;
 
 
 typedef struct gfwzqg {
@@ -788,157 +556,6 @@ typedef enum {
    meta_key_shift_n_half
 } meta_key_kind;
 
-/* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
-typedef enum {
-
-/* These next few are not concepts.  Their appearance marks the end of a parse tree. */
-
-   concept_another_call_next_mod,         /* calla modified by callb */
-   concept_mod_declined,                  /* user was queried about modification, and said no. */
-   marker_end_of_list,                    /* normal case */
-
-/* This is not a concept.  Its appearance indicates a comment is to be placed here. */
-
-   concept_comment,
-
-/* Everything after this is a real concept. */
-
-   concept_concentric,
-   concept_tandem,
-   concept_some_are_tandem,
-   concept_frac_tandem,
-   concept_some_are_frac_tandem,
-   concept_gruesome_tandem,
-   concept_gruesome_frac_tandem,
-   concept_checkerboard,
-   concept_sel_checkerboard,
-   concept_anchor,
-   concept_reverse,
-   concept_left,
-   concept_grand,
-   concept_magic,
-   concept_cross,
-   concept_single,
-   concept_singlefile,
-   concept_interlocked,
-   concept_yoyo,
-   concept_fractal,
-   concept_straight,
-   concept_twisted,
-   concept_12_matrix,
-   concept_16_matrix,
-   concept_revert,
-   concept_1x2,
-   concept_2x1,
-   concept_2x2,
-   concept_1x3,
-   concept_3x1,
-   concept_3x3,
-   concept_4x4,
-   concept_5x5,
-   concept_6x6,
-   concept_7x7,
-   concept_8x8,
-   concept_create_matrix,
-   concept_funny,
-   concept_randomtrngl,
-   concept_selbasedtrngl,
-   concept_split,
-   concept_each_1x4,
-   concept_diamond,
-   concept_triangle,
-   concept_do_both_boxes,
-   concept_once_removed,
-   concept_do_phantom_2x2,
-   concept_do_phantom_boxes,
-   concept_do_phantom_diamonds,
-   concept_do_phantom_1x6,
-   concept_do_phantom_triple_1x6,
-   concept_do_phantom_1x8,
-   concept_do_phantom_triple_1x8,
-   concept_do_phantom_2x4,
-   concept_do_phantom_stag_qtg,
-   concept_do_phantom_diag_qtg,
-   concept_do_phantom_2x3,
-   concept_divided_2x4,
-   concept_divided_2x3,
-   concept_do_divided_diamonds,
-   concept_distorted,
-   concept_single_diagonal,
-   concept_double_diagonal,
-   concept_parallelogram,
-   concept_triple_lines,
-   concept_multiple_lines_tog,
-   concept_multiple_lines_tog_std,
-   concept_triple_1x8_tog,
-   concept_quad_lines,
-   concept_quad_boxes,
-   concept_quad_boxes_together,
-   concept_triple_boxes,
-   concept_triple_boxes_together,
-   concept_triple_diamonds,
-   concept_triple_diamonds_together,
-   concept_quad_diamonds,
-   concept_quad_diamonds_together,
-   concept_in_out_std,
-   concept_in_out_nostd,
-   concept_triple_diag,
-   concept_triple_diag_together,
-   concept_triple_twin,
-   concept_misc_distort,
-   concept_old_stretch,
-   concept_new_stretch,
-   concept_assume_waves,
-   concept_active_phantoms,
-   concept_mirror,
-   concept_central,
-   concept_snag_mystic,
-   concept_crazy,
-   concept_frac_crazy,
-   concept_phan_crazy,
-   concept_frac_phan_crazy,
-   concept_fan,
-   concept_c1_phantom,
-   concept_grand_working,
-   concept_centers_or_ends,
-   concept_so_and_so_only,
-   concept_some_vs_others,
-   concept_stable,
-   concept_so_and_so_stable,
-   concept_frac_stable,
-   concept_so_and_so_frac_stable,
-   concept_emulate,
-   concept_standard,
-   concept_matrix,
-   concept_double_offset,
-   concept_checkpoint,
-   concept_on_your_own,
-   concept_trace,
-   concept_outeracting,
-   concept_ferris,
-   concept_overlapped_diamond,
-   concept_all_8,
-   concept_centers_and_ends,
-   concept_twice,
-   concept_n_times,
-   concept_sequential,
-   concept_special_sequential,
-   concept_meta,
-   concept_meta_one_arg,
-   concept_so_and_so_begin,
-   concept_replace_nth_part,
-   concept_replace_last_part,
-   concept_interrupt_at_fraction,
-   concept_sandwich,
-   concept_interlace,
-   concept_fractional,
-   concept_rigger,
-   concept_common_spot,
-   concept_dblbent,
-   concept_supercall,
-   concept_diagnose
-} concept_kind;
-
 
 /* These bits appear in the "concparseflags" word. */
 /* This is a duplicate, and exists only to make menus nicer.
@@ -958,156 +575,6 @@ typedef enum {
 #define CONCPARSE_PARSE_F_TYPE 0x10
 #define CONCPARSE_PARSE_G_TYPE 0x20
 
-
-typedef struct {
-   Cstring name;
-   Const concept_kind kind;
-   Const uint32 concparseflags;   /* See above. */
-   Const dance_level level;
-   Const struct {
-      Const map_thing *maps;
-      Const uint32 arg1;
-      Const uint32 arg2;
-      Const uint32 arg3;
-      Const uint32 arg4;
-      Const uint32 arg5;
-   } value;
-   Cstring menu_name;
-} concept_descriptor;
-
-/* BEWARE!!  This list must track the array "selector_list" in sdutil.c . */
-typedef enum {
-   selector_uninitialized,
-   selector_boys,
-   selector_girls,
-   selector_heads,
-   selector_sides,
-   selector_headcorners,
-   selector_sidecorners,
-   selector_headboys,
-   selector_headgirls,
-   selector_sideboys,
-   selector_sidegirls,
-   selector_centers,
-   selector_ends,
-   selector_leads,
-   selector_trailers,
-   selector_lead_ends,
-   selector_lead_ctrs,
-   selector_trail_ends,
-   selector_trail_ctrs,
-   selector_end_boys,
-   selector_end_girls,
-   selector_center_boys,
-   selector_center_girls,
-   selector_beaus,
-   selector_belles,
-   selector_center2,
-   selector_verycenters,
-   selector_center6,
-   selector_outer2,
-   selector_veryends,
-   selector_outer6,
-   selector_ctrdmd,
-   selector_ctr_1x4,
-   selector_ctr_1x6,
-   selector_outer1x3s,
-   selector_center4,
-   selector_outerpairs,
-#ifdef TGL_SELECTORS
-   /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
-   selector_wvbasetgl,
-   selector_tndbasetgl,
-   selector_insidetgl,
-   selector_outsidetgl,
-   selector_inpttgl,
-   selector_outpttgl,
-#endif
-   selector_headliners,
-   selector_sideliners,
-   selector_thosefacing,
-   selector_everyone,
-   selector_all,
-   selector_none,
-   /* Start of unsymmetrical selectors. */
-#define unsymm_selector_start ((int) selector_nearline)
-   selector_nearline,
-   selector_farline,
-   selector_nearcolumn,
-   selector_farcolumn,
-   selector_nearbox,
-   selector_farbox,
-   selector_facingfront,
-   selector_facingback,
-   selector_boy1,
-   selector_girl1,
-   selector_cpl1,
-   selector_boy2,
-   selector_girl2,
-   selector_cpl2,
-   selector_boy3,
-   selector_girl3,
-   selector_cpl3,
-   selector_boy4,
-   selector_girl4,
-   selector_cpl4,
-   selector_cpls1_2,
-   selector_cpls2_3,
-   selector_cpls3_4,
-   selector_cpls4_1
-} selector_kind;
-#define last_selector_kind ((int) selector_cpls4_1)
-
-typedef struct {
-   Cstring name;
-   Cstring sing_name;
-   Cstring name_uc;
-   Cstring sing_name_uc;
-   selector_kind opposite;
-} selector_item;
-
-/* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
-   It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
-/* Note also that the "zig-zag" items will get disabled below A2.
-   The key for this is "direction_zigzag". */
-typedef enum {
-   direction_uninitialized,
-   direction_no_direction,
-   direction_left,
-   direction_right,
-   direction_in,
-   direction_out,
-   direction_back,
-   direction_zigzag,
-   direction_zagzig,
-   direction_zigzig,
-   direction_zagzag
-} direction_kind;
-
-/* BEWARE!!  There is a static initializer for this, "null_options", in sdmain.c
-   that must be kept up to date. */
-typedef struct {
-   selector_kind who;        /* selector, if any, used by concept or call */
-   direction_kind where;     /* direction, if any, used by concept or call */
-   uint32 tagger;            /* tagging call indices, if any, used by call.
-                                If nonzero, this is 3 bits for the 0-based tagger class
-                                and 5 bits for the 1-based tagger call */
-   uint32 circcer;           /* circulating call index, if any, used by call */
-   uint32 number_fields;     /* number, if any, used by concept or call */
-   int howmanynumbers;       /* tells how many there are */
-   int star_turn_option;     /* For calls with "@S" star turn stuff. */
-} call_conc_option_state;
-
-typedef struct glock {
-   concept_descriptor *concept;   /* the concept or end marker */
-   callspec_block *call;          /* if this is end mark, gives the call; otherwise unused */
-   struct glock *next;            /* next concept, or, if this is end mark, points to substitution list */
-   struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
-   struct glock *gc_ptr;          /* used for reclaiming dead blocks */
-   call_conc_option_state options;/* number, selector, direction, etc. */
-   short replacement_key;         /* this is the "DFM1_CALL_MOD_MASK" stuff (shifted down) for a modification block */
-   short no_check_call_level;     /* if nonzero, don't check whether this call is at the level. */
-} parse_block;
 
 /* The following items are not actually part of the setup description,
    but are placed here for the convenience of "move" and similar procedures.
@@ -1225,14 +692,15 @@ typedef struct {
    parse_block *parseptr;
    callspec_block *callspec;
    uint64 cmd_final_flags;
+   uint32 cmd_frac_flags;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
    uint32 do_couples_her8itflags;
-   uint32 cmd_frac_flags;
-   parse_block *restrained_concept;
    assumption_thing cmd_assume;
    uint32 prior_elongation_bits;
    uint32 prior_expire_bits;
+   parse_block *restrained_concept;
+   uint32 restrained_fraction;
    uint32 restrained_super8flags;
    parse_block *skippable_concept;
 } setup_command;
@@ -1393,168 +861,6 @@ typedef struct {
    int distance;
 } resolve_indicator;
 
-typedef enum {
-   mode_none,     /* Not a real mode; used only for fictional purposes
-                        in the user interface; never appears in the rest of the program. */
-   mode_normal,
-   mode_startup,
-   mode_resolve
-} mode_kind;
-
-typedef enum {
-    modify_popup_any,
-    modify_popup_only_tag,
-    modify_popup_only_circ
-} modify_popup_kind;
-
-/* These are the values returned by "uims_get_command". */
-
-typedef enum {
-   ui_special_concept,  /* Not a real return; used only for fictional purposes
-                              in the user interface; never appears in the rest of the program. */
-   ui_command_select,   /* (normal/resolve) User chose one of the special buttons like "resolve" or "quit". */
-   ui_resolve_select,   /* (resolve only) User chose one of the various actions peculiar to resolving. */
-   ui_start_select,     /* (startup only) User chose something. This is the only outcome in startup mode. */
-   ui_concept_select,   /* (normal only) User selected a concept. */
-   ui_call_select       /* (normal only) User selected a call from the current call menu. */
-} uims_reply;
-
-/* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
-   depends on which of the replies above was given.  For some of the replies, it gives the index
-   into a menu.  For "ui_start_select" it is a start_select_kind.
-   For other replies, it is one of the following constants: */
-
-/* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
-/* BEWARE!!  This list must track the array "startup_resources" in sdui-x11.c . */
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
-   The latter includes the definition of "start_choices" in sd.dps
-   in the Domain/Dialog system, and the corresponding CNTLs in *.rsrc
-   in the Macintosh system.  You may also need changes in create_controls() in
-   macstuff.c. */
-typedef enum {
-   start_select_exit,        /* Don't start a sequence; exit from the program. */
-   start_select_h1p2p,       /* Start with Heads 1P2P. */
-   start_select_s1p2p,       /* Etc. */
-   start_select_heads_start,
-   start_select_sides_start,
-   start_select_as_they_are,
-   start_select_toggle_conc,
-   start_select_toggle_act,
-   start_select_toggle_retain,
-   start_select_toggle_nowarn_mode,
-   start_select_toggle_singer,
-   start_select_toggle_singer_backward,
-   start_select_init_session_file,
-   start_select_change_outfile,
-   start_select_change_header_comment
-} start_select_kind;
-#define NUM_START_SELECT_KINDS (((int) start_select_change_header_comment)+1)
-
-/* For ui_command_select: */
-/* BEWARE!!  This next definition must be keyed to the array "title_string"
-   in sdgetout.c, and maybe stuff in the UI.  For example, see "command_commands"
-   in sdui-tty.c. */
-/* BEWARE!!  The order is slightly significant -- all search-type commands
-   are >= command_resolve, and all "create some setup" commands
-   are >= command_create_any_lines.  Certain tests are made easier by this. */
-typedef enum {
-   command_quit,
-   command_undo,
-   command_erase,
-   command_abort,
-   command_create_comment,
-   command_change_outfile,
-   command_change_header,
-   command_getout,
-   command_cut_to_clipboard,
-   command_delete_entire_clipboard,
-   command_delete_one_call_from_clipboard,
-   command_paste_one_call,
-   command_paste_all_calls,
-#ifdef NEGLECT
-   command_neglect,
-#endif
-   command_save_pic,
-   command_help,
-   command_simple_mods,
-   command_all_mods,
-   command_toggle_conc_levels,
-   command_toggle_act_phan,
-   command_toggle_retain_after_error,
-   command_toggle_nowarn_mode,
-   command_refresh,
-   command_resolve,            /* Search commands start here */
-   command_normalize,
-   command_standardize,
-   command_reconcile,
-   command_random_call,
-   command_simple_call,
-   command_concept_call,
-   command_level_call,
-   command_8person_level_call,
-   command_create_any_lines,   /* Create setup commands start here */
-   command_create_waves,
-   command_create_2fl,
-   command_create_li,
-   command_create_lo,
-   command_create_inv_lines,
-   command_create_3and1_lines,
-   command_create_any_col,
-   command_create_col,
-   command_create_magic_col,
-   command_create_dpt,
-   command_create_cdpt,
-   command_create_tby,
-   command_create_8ch,
-   command_create_any_qtag,
-   command_create_qtag,
-   command_create_3qtag,
-   command_create_qline,
-   command_create_3qline,
-   command_create_dmd,
-   command_create_any_tidal,
-   command_create_tidal_wave
-} command_kind;
-#define NUM_COMMAND_KINDS (((int) command_create_tidal_wave)+1)
-
-/* For ui_resolve_select: */
-/* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
-typedef enum {
-   resolve_command_abort,
-   resolve_command_find_another,
-   resolve_command_goto_next,
-   resolve_command_goto_previous,
-   resolve_command_accept,
-   resolve_command_raise_rec_point,
-   resolve_command_lower_rec_point,
-   resolve_command_write_this
-} resolve_command_kind;
-#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_write_this)+1)
-
-/* BEWARE!!  There may be tables in the user interface file keyed to this enumeration.
-   In particular, this list must track the array "menu_names" in sdtables.c . */
-/* BEWARE!!  This list is keyed to some messy stuff in the procedure "initialize_concept_sublists".
-   In particular, there are octal constants like "MASK_CTR_2" that contain bits assigned
-   according to these items.  Changing these items is not recommended. */
-
-typedef enum {
-   call_list_none, call_list_empty, /* Not real call list kinds; used only for
-                                       fictional purposes in the user interface;
-				       never appear in the rest of the program. */
-   call_list_any,                   /* This is the "universal" call list; used
-                                       whenever the setup isn't one of the known ones. */
-   call_list_1x8, call_list_l1x8,
-   call_list_dpt, call_list_cdpt,
-   call_list_rcol, call_list_lcol,
-   call_list_8ch, call_list_tby,
-   call_list_lin, call_list_lout,
-   call_list_rwv, call_list_lwv,
-   call_list_r2fl, call_list_l2fl,
-   call_list_gcol, call_list_qtag
-} call_list_kind;
-#define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
-
 
 /* These bits are used to allocate flag bits
    that appear in the "callflagsf" word of a top level callspec_block
@@ -1572,6 +878,7 @@ typedef enum {
 #define CFLAGHSPARE_3                     0x00000200UL
 #define CFLAGHSPARE_4                     0x00000400UL
 #define CFLAGHSPARE_5                     0x00000800UL
+#define CFLAGHSPARE_6                     0x00001000UL
 /* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
    They must lie in the top 8 bits for now. */
 #define CFLAG2_FRACTAL_NUM                0x01000000UL
@@ -1588,6 +895,7 @@ typedef enum {
 #define FINAL__SPLIT_DIXIE_APPROVED       CFLAGHSPARE_3
 #define FINAL__MUST_BE_TAG                CFLAGHSPARE_4
 #define FINAL__TRIANGLE                   CFLAGHSPARE_5
+#define FINAL__LEADTRIANGLE               CFLAGHSPARE_6
 
 /* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
    word of a callspec.  We use symbols that have been graciously
@@ -1857,63 +1165,15 @@ typedef struct {           /* This record is one state in the evolving sequence.
 } configuration;
 
 typedef struct {
-   parse_block **concept_write_save_ptr;
-   concept_kind save_concept_kind;
-} parse_stack_item;
-
-typedef struct {
-   parse_stack_item parse_stack[40];
-   int parse_stack_index;
-   parse_block **concept_write_ptr;
-   parse_block **concept_write_base;
-   char specialprompt[MAX_TEXT_LINE_LENGTH];
-   uint32 topcallflags1;
-   call_list_kind call_list_to_use;
-} parse_state_type;
-
-typedef struct {
    uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
    void (*concept_action)(setup *, parse_block *, setup *);
 } concept_table_item;
-
-typedef enum {
-   file_write_no,
-   file_write_double
-} file_write_flag;
-
-/* Warning!  Do not move these around without checking carefully.  Values are changed
-   by simple incrementing, so order is important. */
-typedef enum {
-   interactivity_database_init,
-   interactivity_no_query_at_all,    /* Used when pasting from clipboard.  All subcalls,
-                                        selectors, numbers, etc. must be filled in already.
-                                        If not, it is a bug. */
-   interactivity_verify,
-   interactivity_normal,
-   interactivity_starting_first_scan,
-   interactivity_in_first_scan,
-   interactivity_in_second_scan,
-   interactivity_in_random_search
-} interactivity_state;
-
-typedef enum {
-   call_list_mode_none,
-   call_list_mode_writing,
-   call_list_mode_writing_full,
-   call_list_mode_abridging
-} call_list_mode_t;
 
 typedef struct {
    char *name;
    long_boolean into_the_middle;
    setup the_setup;
 } startinfo;
-
-typedef enum {
-   resolver_display_ok,
-   resolver_display_searching,
-   resolver_display_failed
-} resolver_display_state;
 
 typedef enum {
    error_flag_none = 0,          /* Must be zero because setjmp returns this. */
@@ -2038,12 +1298,6 @@ typedef struct {           /* This is done to preserve the encapsulation of type
                            /*   of type encapsulation.                                                       */
 
 
-/* Values returned by the various popup routines: */
-#define POPUP_DECLINE 0
-#define POPUP_ACCEPT  1
-#define POPUP_ACCEPT_WITH_STRING 2
-
-
 /* VARIABLES */
 
 extern real_jmp_buf longjmp_buffer;                                 /* in SDUTIL */
@@ -2058,20 +1312,7 @@ extern char error_message1[MAX_ERR_LENGTH];                         /* in SDUTIL
 extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL */
 extern uint32 collision_person1;                                    /* in SDUTIL */
 extern uint32 collision_person2;                                    /* in SDUTIL */
-extern long_boolean enable_file_writing;                            /* in SDUTIL */
-extern long_boolean singlespace_mode;                               /* in SDUTIL */
-extern long_boolean nowarn_mode;                                    /* in SDUTIL */
-extern Cstring cardinals[];                                         /* in SDUTIL */
-extern Cstring ordinals[];                                          /* in SDUTIL */
-extern selector_item selector_list[];                               /* in SDUTIL */
-extern Cstring direction_names[];                                   /* in SDUTIL */
-extern int last_direction_kind;                                     /* in SDUTIL */
 extern Cstring warning_strings[];                                   /* in SDUTIL */
-extern long_boolean use_escapes_for_drawing_people;                 /* in SDUTIL */
-extern char *pn1;                                                   /* in SDUTIL */
-extern char *pn2;                                                   /* in SDUTIL */
-extern char *direc;                                                 /* in SDUTIL */
-
 
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
@@ -2079,17 +1320,6 @@ extern uint32 global_selectmask;                                    /* in SDCONC
 extern uint32 global_tboneselect;                                   /* in SDCONCPT */
 extern concept_table_item concept_table[];                          /* in SDCONCPT */
 
-extern concept_descriptor special_magic;                            /* in SDCTABLE */
-extern concept_descriptor special_interlocked;                      /* in SDCTABLE */
-extern concept_descriptor mark_end_of_list;                         /* in SDCTABLE */
-extern concept_descriptor marker_decline;                           /* in SDCTABLE */
-extern concept_descriptor marker_concept_mod;                       /* in SDCTABLE */
-extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
-extern concept_descriptor marker_concept_supercall;                 /* in SDCTABLE */
-extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
-extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
-extern dance_level calling_level;                                   /* in SDCTABLE */
-extern concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
 extern concept_fixer_thing concept_fixer_table[];                   /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_4x4;                       /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_3x4;                       /* in SDCTABLE */
@@ -2112,12 +1342,7 @@ extern int general_concept_size;                                    /* in SDCTAB
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
 extern int *concept_size_tables[];                                  /* in SDCTABLE */
 extern Cstring concept_menu_strings[];                              /* in SDCTABLE */
-extern Cstring getout_strings[];                                    /* in SDTABLES */
-extern Cstring filename_strings[];                                  /* in SDTABLES */
-extern dance_level level_threshholds[];                             /* in SDTABLES */
-extern dance_level higher_acceptable_level[];                       /* in SDTABLES */
-extern Cstring concept_key_table[];                                 /* in SDTABLES */
-extern Cstring menu_names[];                                        /* in SDTABLES */
+
 extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABLES */
 extern id_bit_table id_bit_table_bigbone_wings[];                   /* in SDTABLES */
@@ -2234,60 +1459,10 @@ extern comment_block *comment_root;
 extern comment_block *comment_last;
 */
 
-extern int abs_max_calls;                                           /* in SDMAIN */
-extern int max_base_calls;                                          /* in SDMAIN */
-extern callspec_block **base_calls;                                 /* in SDMAIN */
-extern uint32 number_of_taggers[NUM_TAGGER_CLASSES];                /* in SDMAIN */
-extern callspec_block **tagger_calls[NUM_TAGGER_CLASSES];           /* in SDMAIN */
-extern uint32 number_of_circcers;                                   /* in SDMAIN */
-extern callspec_block **circcer_calls;                              /* in SDMAIN */
-extern char outfile_string[];                                       /* in SDMAIN */
-extern char header_comment[];                                       /* in SDMAIN */
-extern long_boolean need_new_header_comment;                        /* in SDMAIN */
-extern call_list_mode_t glob_call_list_mode;                        /* in SDMAIN */
-extern int sequence_number;                                         /* in SDMAIN */
-extern int last_file_position;                                      /* in SDMAIN */
-extern int global_age;                                              /* in SDMAIN */
-extern parse_state_type parse_state;                                /* in SDMAIN */
-extern int uims_menu_index;                                         /* in SDMAIN */
-extern long_boolean uims_menu_cross;                                /* in SDMAIN */
-extern long_boolean uims_menu_magic;                                /* in SDMAIN */
-extern long_boolean uims_menu_intlk;                                /* in SDMAIN */
-extern long_boolean uims_menu_left;                                 /* in SDMAIN */
-extern long_boolean uims_menu_grand;                                /* in SDMAIN */
-extern char database_version[81];                                   /* in SDMAIN */
-extern int whole_sequence_low_lim;                                  /* in SDMAIN */
-extern interactivity_state interactivity;                           /* in SDMAIN */
-extern long_boolean testing_fidelity;                               /* in SDMAIN */
-extern selector_kind selector_for_initialize;                       /* in SDMAIN */
-extern int number_for_initialize;                                   /* in SDMAIN */
-extern Const call_conc_option_state null_options;                   /* in SDMAIN */
-extern call_conc_option_state verify_options;                       /* in SDMAIN */
-extern long_boolean verify_used_number;                             /* in SDMAIN */
-extern long_boolean verify_used_selector;                           /* in SDMAIN */
-extern int allowing_modifications;                                  /* in SDMAIN */
-extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
-extern long_boolean using_active_phantoms;                          /* in SDMAIN */
-#ifdef OLD_ELIDE_BLANKS_JUNK
-extern long_boolean elide_blanks;                                   /* in SDMAIN */
-#endif
-extern long_boolean retain_after_error;                             /* in SDMAIN */
-extern int singing_call_mode;                                       /* in SDMAIN */
-extern long_boolean diagnostic_mode;                                /* in SDMAIN */
-extern call_conc_option_state current_options;                      /* in SDMAIN */
-extern uint32 selector_iterator;                                    /* in SDMAIN */
-extern uint32 direction_iterator;                                   /* in SDMAIN */
-extern uint32 number_iterator;                                      /* in SDMAIN */
-extern uint32 tagger_iterator;                                      /* in SDMAIN */
-extern uint32 circcer_iterator;                                     /* in SDMAIN */
 extern warning_info no_search_warnings;                             /* in SDMAIN */
 extern warning_info conc_elong_warnings;                            /* in SDMAIN */
 extern warning_info dyp_each_warnings;                              /* in SDMAIN */
 extern warning_info useless_phan_clw_warnings;                      /* in SDMAIN */
-
-extern int random_number;                                           /* in SDSI */
-extern int hashed_randoms;                                          /* in SDSI */
-extern char *database_filename;                                     /* in SDSI */
 
 extern long_boolean selector_used;                                  /* in SDPREDS */
 extern long_boolean number_used;                                    /* in SDPREDS */
@@ -2310,13 +1485,10 @@ extern  expand_thing exp_c1phan_4x4_stuff2;                         /* in SDTOP 
 extern char *sd_version_string(void);
 extern parse_block *mark_parse_blocks(void);
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
-extern parse_block *get_parse_block(void);
 extern void initialize_parse(void);
 extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
-extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_state *options);
-extern long_boolean deposit_concept(concept_descriptor *conc);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
 extern long_boolean sequence_is_resolved(void);
@@ -2325,20 +1497,11 @@ extern long_boolean sequence_is_resolved(void);
 
 extern long_boolean selectp(setup *ss, int place);
 
-/* In SDINIT */
-
-extern void initialize_menus(call_list_mode_t call_list_mode);
-
 /* In SDSI */
 
 extern void general_initialize(void);
 extern int generate_random_number(int modulus);
 extern void hash_nonrandom_number(int number);
-extern void *get_mem(uint32 siz);
-extern void *get_mem_gracefully(uint32 siz);
-extern void *get_more_mem(void *oldp, uint32 siz);
-extern void *get_more_mem_gracefully(void *oldp, uint32 siz);
-extern void free_mem(void *ptr);
 extern void get_date(char dest[]);
 extern void unparse_number(int arg, char dest[]);
 extern void open_file(void);
@@ -2346,66 +1509,10 @@ extern void write_file(char line[]);
 extern void close_file(void);
 extern void print_line(Cstring s);
 extern void print_id_error(int n);
-extern void init_error(char s[]);
+extern void init_error(char s[]) nonreturning;
 extern void add_resolve_indices(char junk[], int cur, int max);
-extern char *read_from_call_list_file(char name[], int n);
-extern void write_to_call_list_file(Const char name[]);
-extern long_boolean close_call_list_file(void);
-extern long_boolean install_outfile_string(char newstring[]);
-extern long_boolean open_session(int argc, char **argv);
-extern long_boolean open_accelerator_region(void);
-extern long_boolean get_accelerator_line(char line[]);
-extern void close_init_file(void);
-extern void final_exit(int code) nonreturning;
-extern void open_database(void);
-extern uint32 read_8_from_database(void);
-extern uint32 read_16_from_database(void);
-extern void close_database(void);
 extern void fill_in_neglect_percentage(char junk[], int n);
 extern int parse_number(char junk[]);
-
-/* In SDUI */
-
-extern char *uims_version_string(void);
-extern void uims_process_command_line(int *argcp, char ***argvp);
-extern void uims_display_help(void);
-extern void uims_display_ui_intro_text(void);
-extern void uims_preinitialize(void);
-extern void uims_create_menu(call_list_kind cl);
-extern void uims_postinitialize(void);
-extern void uims_set_window_title(char s[]);
-extern void uims_bell(void);
-extern int uims_do_comment_popup(char dest[]);
-extern int uims_do_outfile_popup(char dest[]);
-extern int uims_do_header_popup(char dest[]);
-extern int uims_do_getout_popup(char dest[]);
-extern int uims_do_write_anyway_popup(void);
-extern int uims_do_delete_clipboard_popup(void);
-extern int uims_do_abort_popup(void);
-extern int uims_do_session_init_popup(void);
-extern int uims_do_neglect_popup(char dest[]);
-extern int uims_do_selector_popup(void);
-extern int uims_do_direction_popup(void);
-extern int uims_do_circcer_popup(void);
-extern int uims_do_tagger_popup(int tagger_class);
-extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
-extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero);
-extern void uims_reduce_line_count(int n);
-extern void uims_add_new_line(char the_line[]);
-extern uims_reply uims_get_startup_command(void);
-extern long_boolean uims_get_call_command(uims_reply *reply_p);
-extern uims_reply uims_get_resolve_command(void);
-extern void uims_begin_search(command_kind goal);
-extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state);
-extern int uims_begin_reconcile_history(int currentpoint, int maxpoint);
-extern int uims_end_reconcile_history(void);
-extern void uims_terminate(void);
-extern void uims_database_tick_max(int n);
-extern void uims_database_tick(int n);
-extern void uims_database_tick_end(void);
-extern void uims_database_error(Cstring message, Cstring call_name);
-extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3);
-extern void uims_debug_print(Cstring s);		/* Alan's code only */
 
 /* In SDUTIL */
 
@@ -2416,7 +1523,6 @@ extern void newline(void);
 extern void writestuff(Const char s[]);
 extern void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
 extern void doublespace_file(void);
-extern void exit_program(int code) nonreturning;
 extern void fail(Const char s[]) nonreturning;
 extern void fail2(Const char s1[], Const char s2[]) nonreturning;
 extern void failp(uint32 id1, Const char s[]) nonreturning;
@@ -2461,6 +1567,7 @@ extern parse_block *process_final_concepts(
 extern parse_block *really_skip_one_concept(
    parse_block *incoming,
    concept_kind *k_p,
+   uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
    parse_block **parseptr_skip_p);
 extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep);
 
@@ -2473,7 +1580,6 @@ extern int concepts_in_place(void);
 extern int reconcile_command_ok(void);
 extern int resolve_command_ok(void);
 extern int nice_setup_command_ok(void);
-extern void create_resolve_menu_title(command_kind goal, int cur, int max, resolver_display_state state, char *title);
 extern void initialize_getout_tables(void);
 
 /* In SDBASIC */

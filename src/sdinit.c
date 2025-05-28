@@ -921,7 +921,7 @@ Private void read_in_call_definition(void)
          "write full" we do the usual action.
    It also fills in the "base_calls" array with tagged calls, independent of level. */
 
-Private void build_database(call_list_mode_t call_list_mode)
+extern void build_database(call_list_mode_t call_list_mode)
 {
    int i, j, char_count;
    calldef_schema call_schema;
@@ -930,6 +930,8 @@ Private void build_database(call_list_mode_t call_list_mode)
    dance_level this_level;
    callspec_block **local_call_list;
    dance_level acceptable_level = calling_level;
+
+   uims_database_tick_max(10*16);
 
    if (call_list_mode == call_list_mode_none)
       acceptable_level = higher_acceptable_level[calling_level];
@@ -1122,58 +1124,16 @@ Private void build_database(call_list_mode_t call_list_mode)
    }
 
    close_database();
+   uims_database_tick(10);
 }
 
 
 
 extern void initialize_menus(call_list_mode_t call_list_mode)
 {
-   uint32 arithtest = 2081607680;
    uint32 escape_bit_junk;
    uint32 uj;
    int i, j;
-
-   /* This "if" should never get executed.  We expect compilers to optimize
-      it away, and perhaps print a warning about it. */
-
-   /* Test that the constants ROLL_BIT and DBROLL_BIT are in the right
-      relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
-      in a person record are to the left of the roll bits in the binary database.
-      This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.c to
-      align stuff from the binary database into the person record. */
-
-   if (ROLL_BIT < DBROLL_BIT) {
-      init_error("constants not consistent -- program has been compiled incorrectly.");
-      final_exit(1);
-   }
-   else if ((508205 << 12) != arithtest) {
-      init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
-      final_exit(1);
-   }
-   else if (NUM_WARNINGS > (WARNING_WORDS << 5)) {
-      init_error("insufficient warning bit space -- program has been compiled incorrectly.");
-      final_exit(1);
-   }
-   else if (NUM_QUALIFIERS > 125) {
-      init_error("insufficient qualifier space -- program has been compiled incorrectly.");
-      final_exit(1);
-   }
-
-
-   /* Read in the calls database, then start the user interface package,
-      whatever that might be, and finally create all the call menus.
-      If we are writing a call list, we do all this differently.
-      The user interface is never actually started, and we exit
-      from the program after writing the list. */
-
-   /* Opening the database sets up the values of
-      abs_max_calls and max_base_calls.
-      Must do before telling the uims so any open failure messages
-      come out first. */
-   open_database();
-   uims_database_tick_max(10*16);
-   build_database(call_list_mode);
-   uims_database_tick(10);
 
    /* Make the translated names for all calls and concepts.  These have the "<...>"
       phrases, suitable for external display on menus, instead of "@" escapes. */

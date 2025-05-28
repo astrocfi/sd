@@ -158,16 +158,32 @@ extern long_boolean selectp(setup *ss, int place)
          goto eq_return;
       case selector_center2:
       case selector_outer6:
-         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-         if      (p2 == ID2_CTR2)  s = selector_center2;
-         else if (p2 == ID2_OUTR6) s = selector_outer6;
-         else break;
+         if (ss->kind == s1x6) {
+            p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
+            if      (p2 == ID2_CTR2)      s = selector_center2;
+            else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
+            else break;
+         }
+         else {
+            p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+            if      (p2 == ID2_CTR2)  s = selector_center2;
+            else if (p2 == ID2_OUTR6) s = selector_outer6;
+            else break;
+         }
          goto eq_return;
       case selector_verycenters:    /* Gotta fix this stuff - use fall-through variable. */
-         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-         if      (p2 == ID2_CTR2)  s = selector_verycenters;
-         else if (p2 == ID2_OUTR6) s = selector_outer6;
-         else break;
+         if (ss->kind == s1x6) {
+            p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
+            if      (p2 == ID2_CTR2)  s = selector_verycenters;
+            else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
+            else break;
+         }
+         else {
+            p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+            if      (p2 == ID2_CTR2)  s = selector_verycenters;
+            else if (p2 == ID2_OUTR6) s = selector_outer6;
+            else break;
+         }
          goto eq_return;
       case selector_center6:
       case selector_outer2:
@@ -235,10 +251,17 @@ extern long_boolean selectp(setup *ss, int place)
          else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
          break;
       case selector_outerpairs:
-         if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
-         else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
-         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
-         else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return FALSE;
+         if (ss->kind == s1x6) {
+            if      ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+            else if ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_CTR2) return FALSE;
+         }
+         else {
+            if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+            else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return FALSE;
+         }
+
          break;
       case selector_headliners:
          if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return TRUE;

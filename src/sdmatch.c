@@ -46,6 +46,14 @@
 #include <time.h>
 #endif
 
+
+modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+modifier_block *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
+match_result user_match;
+
+long_boolean verify_has_stopped;
+
 /* Must be a power of 2. */
 #define NUM_NAME_HASH_BUCKETS 128
 #define BRACKET_HASH (NUM_NAME_HASH_BUCKETS+1)
@@ -68,14 +76,10 @@ static short selector_hash_list_size;
 static short *tagger_hash_list;
 static short tagger_hash_list_size;
 
-
-static Cstring *selector_menu_list;
-
-static int *concept_list; /* all concepts */
-static int concept_list_length;
-
-static int *level_concept_list; /* indices of concepts valid at current level */
-static int level_concept_list_length;
+int *concept_list;        /* indices of all concepts */
+int concept_list_length;
+int *level_concept_list;  /* indices of concepts valid at current level */
+int level_concept_list_length;
 
 
 typedef struct pat2_blockstruct {
@@ -105,6 +109,15 @@ static match_result *current_result;
 static match_result everyones_real_result;
 
 
+static int GLOB_match_count;            /* the number of matches so far */
+static int GLOB_exact_count;            /* the number of exact matches so far */
+static int GLOB_exact_match;            /* true if an exact match has been found */
+static long_boolean GLOB_showing;       /* we are only showing the matching patterns */
+static long_boolean GLOB_verify;        /* true => verify calls before showing */
+static int GLOB_lowest_yield_depth;
+
+
+
 /* The following array must be coordinated with the Sd program */
 
 static Cstring n_4_patterns[] = {
@@ -116,6 +129,224 @@ static Cstring n_4_patterns[] = {
    "5/4",
    (Cstring) 0
 };
+
+
+
+static int translate_keybind_spec(char key_name[])
+{
+   int key_length;
+   int d1, d2, digits;
+
+   key_length = strlen(key_name);
+
+   if (key_length < 2) return -1;
+
+   d2 = key_name[key_length-1] - '0';
+   if (d2 >= 0 && d2 <= 9) {
+      digits = d2;
+      d1 = key_name[key_length-2] - '0';
+      if (d1 >= 0 && d1 <= 9) {
+         digits += d1*10;
+         key_length--;
+      }
+
+      if (key_name[key_length-2] == 'f') {
+         if (digits < 1 || digits > 12)
+            return -1;
+
+         if (key_length == 2) {
+            return FKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 's') {
+            return SFKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'c') {
+            return CFKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'a') {
+            return AFKEY+digits;
+         }
+         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+            return CAFKEY+digits;
+         }
+         else {
+            return -1;
+         }
+      }
+      if (key_name[key_length-2] == 'n') {
+         if (digits > 9 || key_length < 3)
+            return -1;
+
+         if (key_length == 3 && key_name[0] == 'c') {
+            return CTLNKP+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'a') {
+            return ALTNKP+digits;
+         }
+         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+            return CTLALTNKP+digits;
+         }
+         else {
+            return -1;
+         }
+      }
+      if (key_name[key_length-2] == 'e') {
+         if (digits > 15)
+            return -1;
+
+         if (key_length == 2) {
+            return EKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 's') {
+            return SEKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'c') {
+            return CEKEY+digits;
+         }
+         else if (key_length == 3 && key_name[0] == 'a') {
+            return AEKEY+digits;
+         }
+         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
+            return CAEKEY+digits;
+         }
+         else {
+            return -1;
+         }
+      }
+      else if (key_length == 2 && key_name[0] == 'c') {
+         return CTLDIG+digits;
+      }
+      else if (key_length == 2 && key_name[0] == 'a') {
+         return ALTDIG+digits;
+      }
+      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
+         return CTLALTDIG+digits;
+      }
+      else { 
+         return -1;
+      }
+   }
+   else if (key_name[key_length-1] >= 'a' && key_name[key_length-1] <= 'z') {
+      if (key_length == 2 && key_name[0] == 'c') {
+         return CTLLET+key_name[key_length-1]+'A'-'a';
+      }
+      else if (key_length == 2 && key_name[0] == 'a') {
+         return ALTLET+key_name[key_length-1]+'A'-'a';
+      }
+      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
+         return CTLALTLET+key_name[key_length-1]+'A'-'a';
+      }
+      else {
+         return -1;
+      }
+   }
+   else
+      return -1;
+}
+
+
+extern void do_accelerator_spec(Cstring qq)
+{
+   char key_name[MAX_FILENAME_LENGTH];
+   char junk_name[MAX_FILENAME_LENGTH];
+   modifier_block **table_thing;
+   modifier_block *newthing;
+   int ccount;
+   int matches;
+   int menu_type = call_list_any;
+   int keybindcode = -1;
+
+   if (!qq[0] || qq[0] == '#') return;   /* This is a blank line or a comment. */
+
+   if (sscanf(qq, "%s %n%s", key_name, &ccount, junk_name) == 2) {
+      if (key_name[0] == '+') {
+         menu_type = match_startup_commands;
+         keybindcode = translate_keybind_spec(&key_name[1]);
+      }
+      else if (key_name[0] == '*') {
+         menu_type = match_resolve_commands;
+         keybindcode = translate_keybind_spec(&key_name[1]);
+      }
+      else
+         keybindcode = translate_keybind_spec(key_name);
+   }
+
+   if (keybindcode < 0) {
+      printf("Bad format in key binding \"%s\".\n", qq);
+      return;
+   }
+
+   user_match.match.kind = ui_call_select;
+
+   if (!strcmp(&qq[ccount], "deleteline")) {
+      user_match.match.index = special_index_deleteline;
+   }
+   else if (!strcmp(&qq[ccount], "deleteword")) {
+      user_match.match.index = special_index_deleteword;
+   }
+   else if (!strcmp(&qq[ccount], "lineup")) {
+      user_match.match.index = special_index_lineup;
+   }
+   else if (!strcmp(&qq[ccount], "linedown")) {
+      user_match.match.index = special_index_linedown;
+   }
+   else if (!strcmp(&qq[ccount], "pageup")) {
+      user_match.match.index = special_index_pageup;
+   }
+   else if (!strcmp(&qq[ccount], "pagedown")) {
+      user_match.match.index = special_index_pagedown;
+   }
+   else if (!strcmp(&qq[ccount], "quoteanything")) {
+      user_match.match.index = special_index_quote_anything;
+   }
+   else {
+      strcpy(static_ss.full_input, &qq[ccount]);
+      matches = match_user_input(menu_type, FALSE, FALSE);
+      user_match = static_ss.result;
+
+      if ((matches != 1 && matches - static_ss.yielding_matches != 1 && !user_match.exact)) {
+         /* Didn't find the target of the key binding.  Below C4X, failure to find
+            something could just mean that it was a call off the list.  At C4X, we
+            take it seriously.  So the initialization file should always be tested at C4X. */
+         if (calling_level >= l_c4x) {
+            uims_database_error("Didn't find target of key binding", qq);
+         }
+         return;
+      }
+
+      if (user_match.match.packed_next_conc_or_subcall ||
+          user_match.match.packed_secondary_subcall) {
+         printf("Target of key binding \"%s\" is too complicated.\n", qq);
+         return;
+      }
+   }
+
+   if (user_match.match.kind == ui_start_select) {
+      table_thing = &fcn_key_table_start[keybindcode-FCN_KEY_TAB_LOW];
+   }
+   else if (user_match.match.kind == ui_resolve_select) {
+      table_thing = &fcn_key_table_resolve[keybindcode-FCN_KEY_TAB_LOW];
+   }
+   else if (user_match.match.kind == ui_concept_select ||
+            user_match.match.kind == ui_call_select ||
+            user_match.match.kind == ui_command_select) {
+      table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
+   }
+   else {
+      printf("Anomalous key binding \"%s\".\n", qq);
+      return;
+   }
+
+   newthing = (modifier_block *) get_mem(sizeof(modifier_block));
+   *newthing = user_match.match;
+
+   if (*table_thing) {
+      printf("Redundant key binding \"%s\".\n", qq);
+      return;
+   }
+
+   *table_thing = newthing;
+}
 
 
 
@@ -156,11 +387,7 @@ Private int get_hash(Cstring string, int *bucket_p)
 
 
 
-/*
-   Call MATCHER_INITIALIZE first.  If SHOW_COMMANDS_LAST is true, then the
-   commands will be displayed last when matching against a call menu;
-   otherwise, they will be displayed first.
-   
+/* Call MATCHER_INITIALIZE first.
    This function sets up the concept list.  The concepts are found
    in the external array concept_descriptor_table.  For each
    i, the field concept_descriptor_table[i].name has the text that we
@@ -179,18 +406,23 @@ extern void matcher_initialize(void)
       when we will stop the concept list scan. */
    if (diagnostic_mode) end_marker = marker_end_of_list;
 
+   (void) memset(fcn_key_table_normal, 0,
+                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_start, 0,
+                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+   (void) memset(fcn_key_table_resolve, 0,
+                 sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
+
    /* Count the number of concepts to put in the lists. */
    
    concept_list_length = 0;
    level_concept_list_length = 0;
    for (concept_number=0;;concept_number++) {
       p = &concept_descriptor_table[concept_number];
-      if (p->kind == end_marker) {
-         break;
-      }
-      else if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP)) {
+      if (p->kind == end_marker) break;
+
+      if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP))
          continue;
-      }
 
       concept_list_length++;
 
@@ -222,14 +454,6 @@ extern void matcher_initialize(void)
          level_item++;
       }
    }
-
-   /* And the selector list. */
-   selector_menu_list = (Cstring *) get_mem((last_selector_kind+2) * sizeof(char *));
-
-   for (i=0; i<last_selector_kind+1; i++)
-      selector_menu_list[i] = selector_list[i].name;
-
-   selector_menu_list[last_selector_kind+1] = (Cstring) 0;
 
    /* Initialize the hash buckets for call names. */
 
@@ -492,7 +716,7 @@ Private long_boolean verify_call(void)
    /* If we are not verifying, we return TRUE immediately,
       thereby causing the item to be listed. */
 
-   if (!static_ss.verify) return TRUE;
+   if (!GLOB_verify) return TRUE;
 
    interactivity = interactivity_verify;   /* so deposit_call doesn't ask user for info */
    saved_warnings = history[history_ptr+1].warnings;
@@ -591,6 +815,7 @@ Private long_boolean verify_call(void)
             save1->next = tt;
             tt->concept = &marker_concept_mod;
             tt->call = base_calls[base_call_null];
+            tt->call_to_print = tt->call;
             tt->replacement_key = 2;    /* "mandatory_anycall" */
             parse_state.concept_write_ptr = &tt->subsidiary_root;
             save1 = (parse_block *) 0;
@@ -725,10 +950,10 @@ Private void copy_sublist(Const match_result *outbar, modifier_block *tails)
     
 Private void record_a_match(void)
 {
-   int old_yield = static_ss.lowest_yield_depth;
+   int old_yield = GLOB_lowest_yield_depth;
 
-   if (!static_ss.showing) {
-      if (static_ss.match_count == 0)
+   if (!GLOB_showing) {
+      if (GLOB_match_count == 0)
          /* this is the first match */
          strcpy(static_ss.extended_input, static_ss.extension);
       else
@@ -736,19 +961,19 @@ Private void record_a_match(void)
    }
 
    /* Copy if we are doing the "show" operation, whether we are verifying or not. */
-   if (static_ss.showing) static_ss.result = everyones_real_result;
+   if (GLOB_showing) static_ss.result = everyones_real_result;
 
    /* Always copy the first match.
       Also, always copy, and process modifiers, if we are processing the "verify" operation.
       Also, copy the first exact match, and any exact match that isn't yielding relative to what we have so far. */
 
-   if (     static_ss.match_count == 0 ||
-            static_ss.verify ||
-            (*static_ss.extension == '\0' && (
-                  static_ss.exact_count == 0 || 
-                  current_result->yield_depth <= old_yield))) {
+   if (GLOB_match_count == 0 ||
+       GLOB_verify ||
+       (*static_ss.extension == '\0' && (
+                                         GLOB_exact_count == 0 || 
+                                         current_result->yield_depth <= old_yield))) {
       static_ss.result = everyones_real_result;
-      static_ss.lowest_yield_depth = current_result->yield_depth;
+      GLOB_lowest_yield_depth = current_result->yield_depth;
 
       /* We need to copy the modifiers to reasonably stable storage. */
 
@@ -756,16 +981,16 @@ Private void record_a_match(void)
    }
 
    if (*static_ss.extension == '\0') {
-      static_ss.exact_count++;
+      GLOB_exact_count++;
       static_ss.result.exact = TRUE;
    }
 
-   static_ss.match_count++;
+   GLOB_match_count++;
 
    if (current_result->yield_depth > old_yield)
       static_ss.yielding_matches++;
 
-   if (static_ss.showing) {
+   if (GLOB_showing) {
       if (verify_call())
          show_match();
    }
@@ -834,7 +1059,7 @@ Theorem 4 (<anything> calls):
          AND
    user[0] is not left bracket or NUL
 ***** under what circumstances is it true even if user[0] = NUL???????
-Well, we need static_ss.showing off, and pat2, if non-nil, must have folks_to_restore = nil
+Well, we need GLOB_showing off, and pat2, if non-nil, must have folks_to_restore = nil
 then it won't do anything except record bunches of extra partial matches (but no exact ones),
 and generally mess around.
          AND
@@ -1123,7 +1348,7 @@ Private void scan_concepts_and_calls(
       save_stuff2 = saved_folksptr->real_secondary_subcall;
    }
 
-   if (!user[0] && static_ss.showing)
+   if (!user[0] && GLOB_showing)
       goto mundane;
 
    /* We now know that it will do nothing if:
@@ -1584,12 +1809,12 @@ Private void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
    uch = static_ss.full_input[0];
 
    if (uch == '\0') {
-      if (!static_ss.showing) {
+      if (!GLOB_showing) {
          /* null user input matches everything (except a comment) */
          /* special case: pattern never begins with SPACE */
          /* special case: ignore wildcards, we know there are multiple matches */
          /* special case: static_ss.extension not set */
-         static_ss.match_count++;
+         GLOB_match_count++;
          return;
       }
    }
@@ -1636,7 +1861,7 @@ Private void search_menu(uims_reply kind)
       for (i = 0; i < menu_length; i++) {
          callspec_block *cb;
 
-         if (static_ss.verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
+         if (GLOB_verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
          parse_state.call_list_to_use = static_call_menu;
          cb = main_call_lists[static_call_menu][i];
          everyones_real_result.match.call_ptr = cb;
@@ -1695,8 +1920,12 @@ Private void search_menu(uims_reply kind)
          menu = &direction_names[1];
          menu_length = last_direction_kind;
       }
+      else if (static_call_menu == match_number) {
+         menu = cardinals;
+         menu_length = NUM_CARDINALS;
+      }
       else if (static_call_menu == match_selectors) {
-         menu = &selector_menu_list[1];
+         menu = selector_menu_list;
          menu_length = last_selector_kind;
       }
       else if (static_call_menu == match_startup_commands) {
@@ -1799,17 +2028,17 @@ extern int match_user_input(
       modifier_inactive_list = item;
    }
 
+   GLOB_match_count = 0;
+   GLOB_exact_count = 0;
+   GLOB_lowest_yield_depth = 999;
+   GLOB_exact_match = FALSE;
+   GLOB_showing = show;
+   GLOB_verify = show_verify;
    static_ss.extended_input[0] = 0;   /* needed if no matches or user input is empty */
-   static_ss.match_count = 0;
-   static_ss.exact_count = 0;
    static_ss.yielding_matches = 0;
-   static_ss.lowest_yield_depth = 999;
-   static_ss.exact_match = FALSE;
-   static_ss.showing = show;
    static_ss.result.valid = FALSE;
    static_ss.result.exact = FALSE;
    static_ss.space_ok = FALSE;
-   static_ss.verify = show_verify;
    static_call_menu = which_commands;
 
    if (static_call_menu >= 0) {
@@ -1826,5 +2055,5 @@ extern int match_user_input(
     uims_debug_print(time_buf);
 #endif
 
-   return static_ss.match_count;
+   return GLOB_match_count;
 }

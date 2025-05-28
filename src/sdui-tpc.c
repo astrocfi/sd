@@ -28,8 +28,8 @@
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #endif
-extern int diagnostic_mode;    /* We need this. */
-#include "sdui-tty.h"
+#include "database.h"
+#include "sdui.h"
 
 
 static char *text_ptr;           /* End of text buffer; where we are packing. */
@@ -67,12 +67,8 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 #endif
 
 
-extern int ttu_process_command_line(int *argcp,
-                                    char **argv,
-                                    int *use_escapes_for_drawing_people_p,
-                                    char *pn1,
-                                    char *pn2,
-                                    char **direc_p)
+extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
+                                  char *pn1, char *pn2, char **direc_p)
 {
    /* If no "-no_graphics" switch was not given, and our run-time
       system supports it, switch over to the "pointy triangles"
@@ -82,15 +78,12 @@ extern int ttu_process_command_line(int *argcp,
    if (!no_graphics)
       *direc_p = "?\020?\021????\036?\037?????";
 #endif
-
-   return 0;
 }
 
 extern void ttu_display_help(void)
 {
    printf("-lines <N>                  assume this many lines on the screen\n");
    printf("-no_cursor                  do not use screen management functions\n");
-   printf("-no_graphics                do not use special characters for showing facing directions\n");
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
@@ -352,6 +345,12 @@ extern int get_char(void)
    else if (n >= 128)
       goto translate_special;
 
+   if (n >= 'A'-0100 && n <= 'Z'-0100) {
+      if (n != '\b' && n != '\r' &&
+          n != '\n' && n != '\t')
+         n += CTLLET+0100;
+   }
+
    return n;
 
  translate_special:
@@ -390,8 +389,16 @@ extern int get_char(void)
 
    for ( ;; ) {
       c = getchar();
-      if (c != '\r') return c;
+      if (c != '\r') break;
    }
+
+   if (c >= 'A'-0100 && c <= 'Z'-0100) {
+      if (c != '\b' && c != '\r' &&
+          c != '\n' && c != '\t')
+         c += CTLLET+0100;
+   }
+
+   return c;
 }
 #endif
 

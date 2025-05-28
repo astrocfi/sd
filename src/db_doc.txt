@@ -2546,24 +2546,29 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
    alwaysfail,                      any setup - this always fails (presumably to give
                                     some warning)
-   wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave; 2x3 - two "waves" -- people not in tandem with each other;
-                                       2x4/3x4/2x6/2x8 - consistent waves the long way; 4x4 - consistent waves either way, but not T-boned;
-                                       2x2 - real RH or LH box
-                                       3x2/4x2/5x2/6x2/8x2 - columns
-                                       qtag/pqtag - wave in center
-                                       ptpd/pptpd - miniwaves in centers of each diamond
-                                       pshort6 (note that this means the short6 is
-                                          laterally oriented) - centers tandem in wave
-                                       bone6 - ends tandem in wave
-                                       dmd, trngl - people are paired in miniwaves.
-                                          For diamonds, this applies just to the centers.
-                                          For triangles, it applies just to the base.
-                                       thar/crosswave - same handedness waves
-   wave_unless_say_2faced,
-   all_facing_same,              /* 1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1 - all people in the setup facing the same way */
-   1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
-                                       thar - crossed 2FL's of opposite handedness, ready to move along
-   2fl_only,                        1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
+   wave_only,                       1x2 - a miniwave; 1x3-1x16 - [grand] wave;
+                                    2x3 - two "waves" -- people not in tandem with each other;
+                                    2x4/3x4/2x6/2x8 - consistent waves the long way;
+                                    4x4 - consistent waves either way, but not T-boned;
+                                    2x2 - real RH or LH box
+                                    3x2/4x2/5x2/6x2/8x2 - columns
+                                    qtag/pqtag - wave in center
+                                    ptpd/pptpd - miniwaves in centers of each diamond
+                                    pshort6 (note that this means the short6 is
+                                       laterally oriented) - centers tandem in wave
+                                    bone6 - ends tandem in wave
+                                    dmd, trngl - people are paired in miniwaves.
+                                       For diamonds, this applies just to the centers.
+                                       For triangles, it applies just to the base.
+                                    thar/crosswave - same handedness waves
+   wave_unless_say_2faced           not implemented
+   all_facing_same                  1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
+                                    all people in the setup facing the same way */
+   1fl_only                         1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
+                                    2x3/2x4 - individual 1FL's
+                                    thar - crossed 2FL's of opposite handedness,
+                                       ready to move along
+   2fl_only                         1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
                                     1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;

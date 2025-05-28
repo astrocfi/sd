@@ -40,9 +40,8 @@
    uims_process_command_line
    uims_display_help
    uims_display_ui_intro_text
-   uims_preinitialize
+   uims_open_session
    uims_create_menu
-   uims_postinitialize
    uims_set_window_title
    show_match
    uims_get_startup_command
@@ -76,24 +75,12 @@
    uims_database_error
    uims_bad_argument
 
-and the following data that are used by sdmatch.c :
-
-   num_command_commands
-   command_commands
-   number_of_resolve_commands
-   resolve_command_strings
-   startup_commands
-
 and the following other variables:
 
    journal_file
-   no_graphics
    screen_height
    no_cursor
    no_console
-   no_intensify
-   no_color
-   no_sound
    no_line_delete
    concept_key_table
 */
@@ -110,14 +97,17 @@ and the following other variables:
 /* For "atoi". */
 #include <stdlib.h>
 
+extern void exit(int code);
+
 #include "sd.h"
+#include "paths.h"
+extern void initialize_concept_sublists(void);
+extern void build_database(call_list_mode_t call_list_mode);
 #include "sdmatch.h"
 
 /* See comments in sdmain.c regarding this string. */
 static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
 
-
-#include "sdui-tty.h"
 
 #define DEL 0x7F
 
@@ -128,13 +118,9 @@ static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
  */
 
 FILE *journal_file = (FILE *) 0;
-int no_graphics = 0;
 int screen_height = 25;
 int no_cursor = 0;
 int no_console = 0;
-int no_intensify = 0;
-int no_color = 0;
-int no_sound = 0;
 int no_line_delete = 0;
 
 static char version_mem[12];
@@ -145,139 +131,9 @@ extern char *uims_version_string(void)
     return version_mem;
 }
 
-static match_result user_match;
+static char journal_name[MAX_TEXT_LINE_LENGTH];
 
 static resolver_display_state resolver_happiness = resolver_display_failed;
-
-
-typedef struct {
-   modifier_block value;
-} fcn_key_thing;
-
-
-
-static fcn_key_thing *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-static fcn_key_thing *fcn_key_table_start[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-static fcn_key_thing *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
-
-
-/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
-Cstring startup_commands[] = {
-   "exit from the program",
-   "heads 1p2p",
-   "sides 1p2p",
-   "heads start",
-   "sides start",
-   "just as they are",
-   "toggle concept levels",
-   "toggle active phantoms",
-   "toggle retain after error",
-   "toggle nowarn mode",
-   "toggle singing call",
-   "toggle reverse singing call",
-   "initialize session file",
-   "change output file",
-   "change title",
-   (Cstring) 0
-};
-
-
-typedef struct {
-   Cstring command_name;
-   command_kind action;
-} command_list_menu_item;
-
-typedef struct {
-   Cstring command_name;
-   resolve_command_kind action;
-} resolve_list_menu_item;
-
-
-static command_list_menu_item command_menu[] = {
-   {"exit the program",               command_quit},
-   {"quit the program",               command_quit},
-   {"simple modifications",           command_simple_mods},
-   {"allow modifications",            command_all_mods},
-   {"toggle concept levels",          command_toggle_conc_levels},
-   {"toggle active phantoms",         command_toggle_act_phan},
-   {"toggle retain after error",      command_toggle_retain_after_error},
-   {"toggle nowarn mode",             command_toggle_nowarn_mode},
-   {"undo last call",                 command_undo},
-   {"discard entered concepts",       command_erase},
-   {"abort this sequence",            command_abort},
-   {"insert a comment",               command_create_comment},
-   {"change output file",             command_change_outfile},
-   {"change title",                   command_change_header},
-   {"write this sequence",            command_getout},
-   {"end this sequence",              command_getout},
-   {"cut to clipboard",               command_cut_to_clipboard},
-   {"clipboard cut",                  command_cut_to_clipboard},
-   {"delete entire clipboard",        command_delete_entire_clipboard},
-   {"clipboard delete all",           command_delete_entire_clipboard},
-   {"delete one call from clipboard", command_delete_one_call_from_clipboard},
-   {"clipboard delete one",           command_delete_one_call_from_clipboard},
-   {"paste one call",                 command_paste_one_call},
-   {"clipboard paste one",            command_paste_one_call},
-   {"paste all calls",                command_paste_all_calls},
-   {"clipboard paste all",            command_paste_all_calls},
-   {"keep picture",                   command_save_pic},
-   {"refresh display",                command_refresh},
-   {"resolve",                        command_resolve},
-   {"normalize",                      command_normalize},
-   {"standardize",                    command_standardize},
-   {"reconcile",                      command_reconcile},
-   {"pick random call",               command_random_call},
-   {"pick simple call",               command_simple_call},
-   {"pick concept call",              command_concept_call},
-   {"pick level call",                command_level_call},
-   {"pick 8 person level call",       command_8person_level_call},
-   {"create any lines",               command_create_any_lines},
-   {"create waves",                   command_create_waves},
-   {"create 2fl",                     command_create_2fl},
-   {"create lines in",                command_create_li},
-   {"create lines out",               command_create_lo},
-   {"create inverted lines",          command_create_inv_lines},
-   {"create 3x1 lines",               command_create_3and1_lines},
-   {"create any columns",             command_create_any_col},
-   {"create columns",                 command_create_col},
-   {"create magic columns",           command_create_magic_col},
-   {"create dpt",                     command_create_dpt},
-   {"create cdpt",                    command_create_cdpt},
-   {"create trade by",                command_create_tby},
-   {"create 8 chain",                 command_create_8ch},
-   {"create any 1/4 tag",             command_create_any_qtag},
-   {"create 1/4 tag",                 command_create_qtag},
-   {"create 3/4 tag",                 command_create_3qtag},
-   {"create 1/4 line",                command_create_qline},
-   {"create 3/4 line",                command_create_3qline},
-   {"create diamonds",                command_create_dmd},
-   {"create any tidal setup",         command_create_any_tidal},
-   {"create tidal wave",              command_create_tidal_wave},
-   {(Cstring) 0}};
-
-
-int num_command_commands;   /* Size of the command menu. */
-Cstring *command_commands;
-command_kind *command_command_values;
-
-int number_of_resolve_commands;
-Cstring *resolve_command_strings;
-static resolve_command_kind *resolve_command_values;
-
-
-static resolve_list_menu_item resolve_menu[] = {
-   {"abort the search",       resolve_command_abort},
-   {"exit the search",        resolve_command_abort},
-   {"quit the search",        resolve_command_abort},
-   {"undo the search",        resolve_command_abort},
-   {"find another",           resolve_command_find_another},
-   {"next",                   resolve_command_goto_next},
-   {"previous",               resolve_command_goto_previous},
-   {"accept current choice",  resolve_command_accept},
-   {"raise reconcile point",  resolve_command_raise_rec_point},
-   {"lower reconcile point",  resolve_command_lower_rec_point},
-   {"write this sequence",    resolve_command_write_this},
-   {(Cstring) 0}};
 
 
 /*
@@ -352,6 +208,7 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
 {
    int argno = 1;
    char **argv = *argvp;
+   journal_name[0] = '\0';
 
    while (argno < (*argcp)) {
       int i;
@@ -362,14 +219,6 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
          no_cursor = 1;
       else if (strcmp(argv[argno], "-no_console") == 0)
          no_console = 1;
-      else if (strcmp(argv[argno], "-no_intensify") == 0)
-         no_intensify = 1;
-      else if (strcmp(argv[argno], "-no_color") == 0)
-         no_color = 1;
-      else if (strcmp(argv[argno], "-no_sound") == 0)
-         no_sound = 1;
-      else if (strcmp(argv[argno], "-no_graphics") == 0)
-         no_graphics = 1;
       else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
          pn1 = alt1_names1;
          pn2 = alt1_names2;
@@ -379,6 +228,7 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
          goto remove_two;
       }
       else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
+         strcpy(journal_name, argv[argno+1]);
          journal_file = fopen(argv[argno+1], "w");
 
          if (!journal_file) {
@@ -404,10 +254,6 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
       for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
       continue;
    }
-
-   if (ttu_process_command_line(argcp, *argvp, &use_escapes_for_drawing_people,
-                                pn1, pn2, &direc))
-      exit_program(1);
 }
 
 extern void uims_display_help(void)
@@ -426,56 +272,160 @@ extern void uims_display_ui_intro_text(void)
    newline();
 }
 
-/*
- * The main program calls this before any of the call menus are
- * created, that is, before any calls to uims_create_menu.
- */
- 
-extern void uims_preinitialize(void)
+
+FILE *call_list_file;
+
+
+extern long_boolean uims_open_session(int argc, char **argv)
 {
-   int i;
+   int session_outcome;
+   Cstring session_error_msg;
+   char session_error_msg1[200], session_error_msg2[200];
 
-   current_text_line = 0;
-   ttu_initialize();
+   char line[MAX_FILENAME_LENGTH];
 
-   (void) memset(fcn_key_table_normal, 0,
-                 sizeof(fcn_key_thing *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   (void) memset(fcn_key_table_start, 0,
-                 sizeof(fcn_key_thing *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-   (void) memset(fcn_key_table_resolve, 0,
-                 sizeof(fcn_key_thing *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
-
-   /* Find out how big the command menu needs to be. */
-
-   for (num_command_commands = 0 ;
-        command_menu[num_command_commands].command_name ;
-        num_command_commands++) ;
-
-   command_commands = (Cstring *) get_mem(sizeof(Cstring) * num_command_commands);
-   command_command_values =
-      (command_kind *) get_mem(sizeof(command_kind) * num_command_commands);
-
-   for (i = 0 ; i < num_command_commands; i++) {
-      command_commands[i] = command_menu[i].command_name;
-      command_command_values[i] = command_menu[i].action;
+   if (glob_call_list_mode != call_list_mode_none) {
+      if (open_call_list_file(call_list_string))
+         exit_program(1);
    }
 
-   /* Find out how big the resolve menu needs to be. */
+   /* Put up the session list. */
 
-   for (number_of_resolve_commands = 0 ;
-        resolve_menu[number_of_resolve_commands].command_name ;
-        number_of_resolve_commands++) ;
+   if (get_first_session_line()) goto no_session;
 
-   resolve_command_strings = (Cstring *) get_mem(sizeof(Cstring) * number_of_resolve_commands);
-   resolve_command_values = (resolve_command_kind *)
-      get_mem(sizeof(resolve_command_kind) * number_of_resolve_commands);
+   printf("Do you want to use one of the following sessions?\n\n");
 
-   for (i = 0 ; i < number_of_resolve_commands; i++) {
-      resolve_command_strings[i] = resolve_menu[i].command_name;
-      resolve_command_values[i] = resolve_menu[i].action;
+   while (get_next_session_line(line))
+      printf("%s\n", line);
+
+   printf("Enter the number of the desired session:  ");
+
+   if (!gets(line) || !line[0])
+      goto no_session;
+
+   if (!sscanf(line, "%d", &session_index)) {
+      session_index = 0;         /* User typed garbage -- exit the program immediately. */
+      close_init_file();
+      return TRUE;
    }
+
+   if (session_index < 0) {
+      close_init_file();
+      return TRUE;    /* Exit the program immediately. */
+   }
+
+   session_outcome = process_session_info(&session_error_msg);
+
+   if (session_outcome & 2)
+      printf("%s\n", session_error_msg);
+
+   if (session_outcome & 1) {
+      /* We are not using a session, either because the user selected
+         "no session", or because of some error in processing the
+         selected session. */
+      goto no_session;
+   }
+
+   goto really_do_it;
+
+   no_session:
+
+   session_index = 0;
+   sequence_number = -1;
+
+   really_do_it:
+
+   if (calling_level == l_nonexistent_concept) {
+
+      /* The level never got specified, either from a command line argument
+         or from the session file.  Perhaps the program was invoked under
+         a window-ish OS in which one clicks on icons rather than typing
+         a command line.  In that case, we need to query the user for the level. */
+
+      calling_level = l_mainstream;   /* Default in case we fail. */
+      printf("Enter the level: ");
+
+      if (gets(line))
+         (void) parse_level(line, &calling_level);
+
+      (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
+   }
+
+   if (new_outfile_string)
+      (void) install_outfile_string(new_outfile_string);
+
+   starting_sequence_number = sequence_number;
+
+   if (glob_call_list_mode == call_list_mode_none ||
+       glob_call_list_mode == call_list_mode_abridging) {
+      current_text_line = 0;
+      ttu_initialize();
+   }
+
+   prepare_to_read_menus();
+
+   /* Opening the database sets up the values of
+      abs_max_calls and max_base_calls.
+      Must do before telling the uims so any open failure messages
+      come out first. */
+
+   if (open_database(session_error_msg1, session_error_msg2)) {
+      uims_fatal_error(session_error_msg1, session_error_msg2);
+      exit_program(1);
+   }
+
+   build_database(glob_call_list_mode);
+
+   /* This is the thing that takes all the time! */
+
+   initialize_menus(glob_call_list_mode);
+
+   /* If we wrote a call list file, that's all we do. */
+   if (glob_call_list_mode == call_list_mode_writing || glob_call_list_mode == call_list_mode_writing_full) {
+      close_init_file();
+      return TRUE;
+   }
+
+   call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
+
+   initialize_concept_sublists();
+   initialize_misc_lists();
+   matcher_initialize();
+
+   {
+      long_boolean save_allow = allowing_all_concepts;
+      allowing_all_concepts = TRUE;
+
+      /* Process the keybindings for user-definable calls, concepts, and commands. */
+
+      if (open_accelerator_region()) {
+         char q[INPUT_TEXTLINE_SIZE];
+         while (get_accelerator_line(q))
+            do_accelerator_spec(q);
+      }
+      else {
+         Cstring *q;
+         for (q = concept_key_table ; *q ; q++)
+            do_accelerator_spec(*q);
+      }
+
+      allowing_all_concepts = save_allow;
+   }
+
+   ttu_final_option_setup(&use_escapes_for_drawing_people,
+                             pn1, pn2, &direc);
+
+#if !defined(MSDOS)
+   initialize_signal_handlers();
+#endif
+
+   close_init_file();
+
+   return FALSE;
 }
 
+
+ 
 /*
  * Create a menu containing number_of_calls[cl] items.
  * Use the "menu_names" array to create a
@@ -499,6 +449,9 @@ extern void uims_create_menu(call_list_kind cl)
 }
 
 
+
+
+
 /* The main program calls this after all the call menus have been created,
    after all calls to uims_create_menu.
    This performs any final initialization required by the interface package.
@@ -512,232 +465,18 @@ extern void uims_create_menu(call_list_kind cl)
 */
 
 
-Private int translate_keybind_spec(char key_name[])
-{
-   int key_length;
-   int d1, d2, digits;
-
-   key_length = strlen(key_name);
-
-   if (key_length < 2) return -1;
-
-   d2 = key_name[key_length-1] - '0';
-   if (d2 >= 0 && d2 <= 9) {
-      digits = d2;
-      d1 = key_name[key_length-2] - '0';
-      if (d1 >= 0 && d1 <= 9) {
-         digits += d1*10;
-         key_length--;
-      }
-
-      if (key_name[key_length-2] == 'f') {
-         if (digits < 1 || digits > 12)
-            return -1;
-
-         if (key_length == 2) {
-            return FKEY+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 's') {
-            return SFKEY+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 'c') {
-            return CFKEY+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 'a') {
-            return AFKEY+digits;
-         }
-         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
-            return CAFKEY+digits;
-         }
-         else {
-            return -1;
-         }
-      }
-      if (key_name[key_length-2] == 'n') {
-         if (digits > 9 || key_length < 3)
-            return -1;
-
-         if (key_length == 3 && key_name[0] == 'c') {
-            return CTLNKP+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 'a') {
-            return ALTNKP+digits;
-         }
-         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
-            return CTLALTNKP+digits;
-         }
-         else {
-            return -1;
-         }
-      }
-      if (key_name[key_length-2] == 'e') {
-         if (digits > 15)
-            return -1;
-
-         if (key_length == 2) {
-            return EKEY+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 's') {
-            return SEKEY+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 'c') {
-            return CEKEY+digits;
-         }
-         else if (key_length == 3 && key_name[0] == 'a') {
-            return AEKEY+digits;
-         }
-         else if (key_length == 4 && key_name[0] == 'c' && key_name[1] == 'a') {
-            return CAEKEY+digits;
-         }
-         else {
-            return -1;
-         }
-      }
-      else if (key_length == 2 && key_name[0] == 'c') {
-         return CTLDIG+digits;
-      }
-      else if (key_length == 2 && key_name[0] == 'a') {
-         return ALTDIG+digits;
-      }
-      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
-         return CTLALTDIG+digits;
-      }
-      else { 
-         return -1;
-      }
-   }
-   else if (key_name[key_length-1] >= 'a' && key_name[key_length-1] <= 'z') {
-      if (key_length == 2 && key_name[0] == 'c') {
-         return CTLLET+key_name[key_length-1]+'A'-'a';
-      }
-      else if (key_length == 2 && key_name[0] == 'a') {
-         return ALTLET+key_name[key_length-1]+'A'-'a';
-      }
-      else if (key_length == 3 && key_name[0] == 'c' && key_name[1] == 'a') {
-         return CTLALTLET+key_name[key_length-1]+'A'-'a';
-      }
-      else {
-         return -1;
-      }
-   }
-   else
-      return -1;
-}
-
-
-static void do_accelerator_spec(Cstring qq)
-{
-   char key_name[MAX_FILENAME_LENGTH];
-   char junk_name[MAX_FILENAME_LENGTH];
-   int ccount;
-   int matches;
-   int menu_type = call_list_any;
-   int keybindcode = -1;
-
-   if (!qq[0] || qq[0] == '#') return;   /* This is a blank line or a comment. */
-
-   if (sscanf(qq, "%s %n%s", key_name, &ccount, junk_name) == 2) {
-      if (key_name[0] == '+') {
-         menu_type = match_startup_commands;
-         keybindcode = translate_keybind_spec(&key_name[1]);
-      }
-      else if (key_name[0] == '*') {
-         menu_type = match_resolve_commands;
-         keybindcode = translate_keybind_spec(&key_name[1]);
-      }
-      else
-         keybindcode = translate_keybind_spec(key_name);
-   }
-
-   if (keybindcode < 0) {
-      printf("Bad format in key binding \"%s\".\n", qq);
-      return;
-   }
-
-   strcpy(static_ss.full_input, &qq[ccount]);
-   matches = match_user_input(menu_type, FALSE, FALSE);
-   user_match = static_ss.result;
-
-   if ((matches != 1 && matches - static_ss.yielding_matches != 1 && !user_match.exact)) {
-      /* Didn't find the target of the key binding.  Below C4X, failure to find
-         something could just mean that it was a call off the list.  At C4X, we
-         take it seriously.  So the initialization file should always be tested at C4X. */
-      if (calling_level >= l_c4x) {
-         printf("Didn't find target of key binding \"%s\".\n", qq);
-         return;
-      }
-   }
-   else {
-      fcn_key_thing **table_thing;
-      fcn_key_thing *newthing;
-
-      if (user_match.match.packed_next_conc_or_subcall ||
-          user_match.match.packed_secondary_subcall) {
-         printf("Target of key binding \"%s\" is too complicated.\n", qq);
-         return;
-      }
-
-      newthing = (fcn_key_thing *) get_mem(sizeof(fcn_key_thing));
-      newthing->value = user_match.match;
-
-      if (user_match.match.kind == ui_concept_select ||
-          user_match.match.kind == ui_call_select ||
-          user_match.match.kind == ui_command_select) {
-         table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
-      }
-      else if (user_match.match.kind == ui_start_select) {
-         table_thing = &fcn_key_table_start[keybindcode-FCN_KEY_TAB_LOW];
-      }
-      else if (user_match.match.kind == ui_resolve_select) {
-         table_thing = &fcn_key_table_resolve[keybindcode-FCN_KEY_TAB_LOW];
-      }
-      else {
-         printf("Anomalous key binding \"%s\".\n", qq);
-         return;
-      }
-
-      if (*table_thing) {
-         printf("Redundant key binding \"%s\".\n", qq);
-         return;
-      }
-
-      *table_thing = newthing;
-   }
-}
-
-
-extern void uims_postinitialize(void)
-{
-   long_boolean save_allow = allowing_all_concepts;
-   allowing_all_concepts = TRUE;
-
-   call_menu_prompts[call_list_empty] = "--> ";   /* This prompt should never be used. */
-   matcher_initialize();
-
-   /* Process the keybindings for user-definable calls, concepts, and commands. */
-
-   if (open_accelerator_region()) {
-      char q[INPUT_TEXTLINE_SIZE];
-      while (get_accelerator_line(q))
-         do_accelerator_spec(q);
-   }
-   else {
-      Cstring *q;
-      for (q = concept_key_table ; *q ; q++)
-         do_accelerator_spec(*q);
-   }
-
-   allowing_all_concepts = save_allow;
-
-#if !defined(MSDOS)
-   initialize_signal_handlers();
-#endif
-}
 
 
 extern void uims_set_window_title(char s[])
 {
-   ttu_set_window_title(s);   
+   if (journal_name[0]) {
+      char full_text[MAX_TEXT_LINE_LENGTH];
+      (void) sprintf(full_text, "%s {%s}", s, journal_name);
+      ttu_set_window_title(full_text);
+   }
+   else {
+      ttu_set_window_title(s);
+   }
 }
 
 
@@ -767,7 +506,6 @@ Private void pack_and_echo_character(char c)
    user has given a negative reply to one of our queries, and so we don't
    print any more stuff. */
 Private int match_counter;
-long_boolean verify_has_stopped;
 
 /* This is what we reset the counter to whenever the user confirms.  That
    is, it is the number of lines we print per "screenful".  On a VT-100-like
@@ -873,21 +611,9 @@ Private long_boolean get_user_input(char *prompt, int which)
 
       nc = get_char();
 
-      /* Control-U can come in either of two forms.  Either way, kill the line */
-
-      if (nc == CTLLET+'U' || nc == ('U'&'\037')) {
-         user_input[0] = '\0';
-         static_ss.full_input[0] = '\0';
-         static_ss.full_input_size = 0;
-         function_key_expansion = (char *) 0;
-         clear_line();           /* Clear the current line */
-         put_line(user_input_prompt);    /* Redisplay the prompt. */
-         continue;
-      }
-
       if (nc >= 128) {
          char linebuff [INPUT_TEXTLINE_SIZE+1];
-         fcn_key_thing *keyptr;
+         modifier_block *keyptr;
          int which_target = which;
 
          if (which_target > 0) which_target = 0;
@@ -895,11 +621,46 @@ Private long_boolean get_user_input(char *prompt, int which)
          if (nc < FCN_KEY_TAB_LOW || nc > FCN_KEY_TAB_LAST)
             continue;      /* Ignore this key. */
 
-         /* This one is hard-wired. */
+         keyptr = fcn_key_table_normal[nc-FCN_KEY_TAB_LOW];
 
-         if (nc == FKEY+8) {
-            function_key_expansion = "<anything>";    /* F8 */
-            goto do_character;
+         /* Check for special bindings.
+            These always come from the main binding table, even if
+            we are doing something else, like a resolve. */
+
+         if (keyptr && keyptr->index < 0) {
+            long_boolean deleted_letter = FALSE;
+
+            switch (keyptr->index) {
+            case special_index_deleteline:
+               user_input[0] = '\0';
+               static_ss.full_input[0] = '\0';
+               static_ss.full_input_size = 0;
+
+               function_key_expansion = (char *) 0;
+               clear_line();           /* Clear the current line */
+               put_line(user_input_prompt);    /* Redisplay the prompt. */
+               continue;
+            case special_index_deleteword:
+               while (static_ss.full_input_size > 0) {
+                  if (user_input[static_ss.full_input_size-1] == ' ') {
+                     if (deleted_letter) break;
+                  }
+                  else
+                     deleted_letter = TRUE;
+
+                  static_ss.full_input_size--;
+                  user_input[static_ss.full_input_size] = '\0';
+                  static_ss.full_input[static_ss.full_input_size] = '\0';
+                  rubout(); /* Update the display. */
+               }
+               function_key_expansion = (char *) 0;
+               continue;
+            case special_index_quote_anything:
+               function_key_expansion = "<anything>";
+               goto do_character;
+            default:
+               continue;    /* Ignore all others. */
+            }
          }
 
          if (which_target == match_startup_commands)
@@ -915,7 +676,7 @@ Private long_boolean get_user_input(char *prompt, int which)
 
          /* If we get here, we have a function key to process from the table. */
 
-         user_match.match = keyptr->value;
+         user_match.match = *keyptr;
          user_match.indent = FALSE;
          user_match.real_next_subcall = (match_result *) 0;
          user_match.real_secondary_subcall = (match_result *) 0;
@@ -1148,59 +909,6 @@ extern uims_reply uims_get_startup_command(void)
    uims_menu_index = user_match.match.index;
    return user_match.match.kind;
 }
-
-
-static uint32 the_topcallflags;
-static long_boolean there_is_a_call;
-
-
-
-/* This stuff is duplicated in verify_call in sdmatch.c . */
-static long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
-{
-   /* First, if we have already deposited a call, and we see more stuff, it must be
-      concepts or calls for an "anything" subcall. */
-
-   if (save1) {
-      parse_block *tt = get_parse_block();
-      /* Run to the end of any already-deposited things.  This could happen if the
-         call takes a tagger -- it could have a search chain before we even see it. */
-      while (save1->next) save1 = save1->next;
-      save1->next = tt;
-      save1->concept = &marker_concept_mod;
-      tt->concept = &marker_concept_mod;
-      tt->call = base_calls[(key == 6) ? base_call_null_second: base_call_null];
-      tt->replacement_key = key;
-      parse_state.concept_write_ptr = &tt->subsidiary_root;
-   }
-
-   save1 = (parse_block *) 0;
-   user_match.match.call_conc_options = anythings->call_conc_options;
-
-   if (anythings->kind == ui_call_select) {
-      if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
-      save1 = *parse_state.concept_write_ptr;
-      if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
-      there_is_a_call = TRUE;
-   }
-   else if (anythings->kind == ui_concept_select) {
-      if (deposit_concept(anythings->concept_ptr)) return TRUE;
-   }
-   else return TRUE;   /* Huh? */
-
-   if (anythings->packed_next_conc_or_subcall) {
-      /* key for "mandatory_anycall" */
-      if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1, 2)) return TRUE;
-   }
-
-   if (anythings->packed_secondary_subcall) {
-      /* key for "mandatory_secondary_call" */
-      if (deposit_call_tree(anythings->packed_secondary_subcall, save1, 6)) return TRUE;
-   }
-
-   return FALSE;
-}
-
 
 
 
@@ -1512,10 +1220,10 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolv
     current_text_line++;
 }
 
-volatile uint32 popup_retval;     /* Just love that HP-UX C compiler!!!!! */
-
 extern int uims_do_selector_popup(void)
 {
+   int retval;
+
    if (!user_match.valid || (user_match.match.call_conc_options.who == selector_uninitialized)) {
       match_result saved_match = user_match;
 
@@ -1529,21 +1237,22 @@ extern int uims_do_selector_popup(void)
       }
 
       /* We skip the zeroth selector, which is selector_uninitialized. */
-      popup_retval = user_match.match.index+1;
+      retval = user_match.match.index+1;
       user_match = saved_match;
    }
    else {
-      popup_retval = (int) user_match.match.call_conc_options.who;
+      retval = (int) user_match.match.call_conc_options.who;
       user_match.match.call_conc_options.who = selector_uninitialized;
    }
-   return popup_retval;
+   return retval;
 }
 
 extern int uims_do_direction_popup(void)
 {
    int retval;
 
-   if (!user_match.valid || (user_match.match.call_conc_options.where == direction_uninitialized)) {
+   if (!user_match.valid ||
+       (user_match.match.call_conc_options.where == direction_uninitialized)) {
       match_result saved_match = user_match;
 
       for (;;) {
@@ -1568,14 +1277,10 @@ extern int uims_do_direction_popup(void)
 
 extern int uims_do_tagger_popup(int tagger_class)
 {
-   uint32 retval;
+   int retval;
 
-   if (interactivity == interactivity_verify) {
-      user_match.match.call_conc_options.tagger = verify_options.tagger;
-      if (user_match.match.call_conc_options.tagger == 0)
-        user_match.match.call_conc_options.tagger = (tagger_class << 5) + 1;
-   }
-   else if (!user_match.valid || (user_match.match.call_conc_options.tagger == 0)) {
+   if (!user_match.valid ||
+       (user_match.match.call_conc_options.tagger == 0)) {
       match_result saved_match = user_match;
 
       for (;;) {
@@ -1593,9 +1298,6 @@ extern int uims_do_tagger_popup(int tagger_class)
 
    retval = user_match.match.call_conc_options.tagger;
    user_match.match.call_conc_options.tagger = 0;
-
-   if (interactivity == interactivity_verify) verify_options.tagger = 0;
-
    return retval;
 }
 
@@ -1761,4 +1463,19 @@ extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
    if (s3) print_line(s3);
    print_line("Use the -help flag for help.");
    exit_program(1);
+}
+
+
+extern void uims_fatal_error(Cstring pszLine1, Cstring pszLine2)
+{
+   session_index = 0;    /* We don't write back the session file in this case. */
+   fprintf(stderr, "%s\n", pszLine1);
+   if (pszLine2)
+      fprintf(stderr, "%s\n", pszLine2);
+}
+
+
+extern void uims_final_exit(int code)
+{
+   exit(code);
 }
