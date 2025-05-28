@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2022  William B. Ackerman.
+//    Copyright (C) 1990-2023  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 399
+#define DATABASE_FORMAT_VERSION 400
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -207,6 +207,7 @@ enum base_call_index {
    base_call_splctrrot,
    base_call_backemup,
    base_call_circulate,
+   base_call_motcirc,
    base_call_trade,
    base_call_touch,
    base_call_plainprom,
@@ -262,7 +263,7 @@ enum base_call_index {
 
 // This (heritflags) used to be an enum (two of them, in fact, because these things were
 // divided into 32-bit fields.  But apparently enums aren't 64 bits, even with 64 bit
-// compilers, so they are now nakes uint64's.
+// compilers, so they are now naked uint64's.
 
 const uint64_t INHERITFLAG_DIAMOND    = 0x0000000000000001ULL;
 const uint64_t INHERITFLAG_REVERSE    = 0x0000000000000002ULL;

@@ -4295,7 +4295,7 @@ extern bool get_real_subcall(
    if (parseptr->concept->kind == concept_another_call_next_mod) {
       if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) &&
           (cmd_in->cmd_misc3_flags & CMD_MISC3__NO_ANYTHINGERS_SUBST) &&
-          item_id == base_call_circulate) {
+          (item_id == base_call_circulate || item_id == base_call_motcirc)) {
          return false;
       }
       else if (snumber == (DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT) &&
@@ -4308,7 +4308,8 @@ extern bool get_real_subcall(
       while ((search = *newsearch) != (parse_block *) 0) {
          if (orig_call == search->call ||
              (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) &&
-              search->call == base_calls[base_call_null] && orig_call == base_calls[base_call_circulate]) ||
+              search->call == base_calls[base_call_null] &&
+              (orig_call == base_calls[base_call_circulate] || orig_call == base_calls[base_call_motcirc])) ||
              (this_is_tagger && search->call == base_calls[base_call_tagger0])) {
             // Found a reference to this call.
             parse_block *subsidiary_ptr = search->subsidiary_root;
@@ -5550,7 +5551,7 @@ static void propagate_seq_assumptions(const assumption_thing incoming_assumption
                fix_next_assumption_p->assumption = cr_ctr_couples;
          }
       }
-      else if (this_call == base_calls[base_call_circulate]) {
+      else if ((this_call == base_calls[base_call_circulate] || this_call == base_calls[base_call_motcirc])) {
          // If we are doing a circulate in columns, and the assumption was
          // "8 chain" or "trade by", change it to the other assumption.
          // Similarly for facing lines and back-to-back lines.
@@ -5674,7 +5675,7 @@ static void propagate_seq_assumptions(const assumption_thing incoming_assumption
       }
    }
    else if ((result->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF))) {
-      if (this_call == base_calls[base_call_circulate]) {
+      if ((this_call == base_calls[base_call_circulate] || this_call == base_calls[base_call_motcirc])) {
          // If we are doing a 1/2 circulate in a 2x2 that assumes lines facing in or out,
          // result is a wave.
 

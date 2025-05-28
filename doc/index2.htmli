@@ -12,7 +12,7 @@ can handle this.
 Version 39.29, the last one for 32-bit systems, will continue to be made available.</strong>
 <br>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 39.48</strong>, released on December 15, 2022.
+<strong>The current version of Sd/Sdtty is 39.49</strong>, released on January 18, 2023.
 <br>
 <p align="center">
 <strong>The program has support for writing two-couple material.  See the release notes</strong>
@@ -73,11 +73,11 @@ Background and availability info.
 <font size="+1"><a href="download-pc.html">Get <strong>Sd</strong> now!</a></font></dt>
 <dd>
 Be running the latest, fully-functional version
-<a href="download-pc.html">on your own PC</a>
-(Windows or Linux) in minutes.
+<a href="download-pc.html">on your own Windows PC</a>
+in minutes.
 <br>
-Or download the program for other varieties of
-<a href="download-unix.html">Unix</a>.
+Or download the program, in source form, for most varieties of
+<a href="download-unix.html">Unix</a>  You will have to compile it yourself..
 <br>
 You should be able to compile a version for a Mac by downloading the sources
 and typing "make" in a terminal window.

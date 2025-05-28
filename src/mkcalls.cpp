@@ -1663,6 +1663,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "splitctrrot"},
    {0, "backemup"},       // This is used for remembering the handedness.
    {0, "circulate"},
+   {0, "motcirc"},
    {0, "trade"},
    {0, "touch"},
    {0, "plainprom"},

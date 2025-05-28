@@ -2674,7 +2674,7 @@ static bool fix_empty_outers(
                   the_call == base_calls[base_call_any_hand_remake] ||
                   the_call == base_calls[base_call_any_hand_remake_with_step])
             ;        // It's OK, the call was "trade" or "any hand remake".
-         else if (the_call == base_calls[base_call_circulate] &&
+         else if ((the_call == base_calls[base_call_circulate] || the_call == base_calls[base_call_motcirc]) &&
                   cmdout && cmdout->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF) &&
                   cmdout->cmd_fraction.is_null()) {
             // The call is "1/2 circulate".  We assume it goes to a diamond.
@@ -6365,7 +6365,7 @@ extern void inner_selective_move(
       if (foo && foo->concept && foo->call && foo->concept->kind == marker_end_of_list) {
          if ((foo->call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) == 0 &&
              (foo->call->the_defn.schema == schema_matrix || 
-              (foo->call == base_calls[base_call_circulate] &&
+              ((foo->call == base_calls[base_call_circulate] || foo->call == base_calls[base_call_motcirc]) &&
                (ss->kind == s2x4 || ss->kind == s2x2) &&
                // The "who-you-are" selectors are in two groups, because some have to be in the
                // unsymmetrical "no_resolve" section near the end.
