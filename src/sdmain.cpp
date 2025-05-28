@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8a"
+#define VERSION_STRING "34.8b"
 #define TIME_STAMP "wba@alum.mit.edu  21 October 2002 $"
 
 /* This defines the following functions:

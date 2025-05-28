@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8a"
+version "34.8b"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -16963,6 +16963,24 @@ call "circulate" mainstream tag circulate
              AL7S ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N]
             alternate_definition [half] mainstream
    simple_funny
+   // If consistent with waves or 2-faced lines, give preference
+   // to the "usual" interpretation.  But if user said
+   // "assume facing lines" or "assume back-to-back lines",
+   // these will be rejected ...
+/*
+   setup 2x4 crosswave qualifier miniwaves rotate
+      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
+   setup 2x4 crosswave qualifier 2fl_only rotate
+      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
+   setup 2x4 crosswave qualifier magic_only rotate
+      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
+*/
+   // ... and one of these used instead.
+   setup 2x4 1x8 rotate qualifier explicit out in_or_out
+      array [CR0N CR3N AL2S AL1S 0 0 0 0]
+   setup 2x4 1x8 qualifier explicit in in_or_out
+      array [0 0 0 0 ZM5N ZM6N ZM3N ZM0N]
+   // Otherwise, use the "usual" interpretation.
    setup 2x4 crosswave rotate
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM7W ZM6W]
    setup 2x2 dmd rotate no_cutting_through

@@ -1990,19 +1990,11 @@ def2:
 
          /* Look for other indicators. */
          for (;;) {
-            if (tok_kind == tok_symbol && !strcmp(tok_str, "left")) {
+            if (tok_kind == tok_symbol && (!strcmp(tok_str, "left") || !strcmp(tok_str, "out"))) {
                call_qual_stuff |= QUALBIT__LEFT;
                get_tok();
             }
-            else if (tok_kind == tok_symbol && !strcmp(tok_str, "out")) {
-               call_qual_stuff |= QUALBIT__LEFT;
-               get_tok();
-            }
-            else if (tok_kind == tok_symbol && !strcmp(tok_str, "right")) {
-               call_qual_stuff |= QUALBIT__RIGHT;
-               get_tok();
-            }
-            else if (tok_kind == tok_symbol && !strcmp(tok_str, "in")) {
+            else if (tok_kind == tok_symbol && (!strcmp(tok_str, "right") || !strcmp(tok_str, "in"))) {
                call_qual_stuff |= QUALBIT__RIGHT;
                get_tok();
             }
@@ -2011,11 +2003,21 @@ def2:
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "tbone")) {
+               if (call_qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
+                  errexit("Can't specify both \"tbone\" and \"ntbone\"");
                call_qual_stuff |= QUALBIT__TBONE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "ntbone")) {
+               if (call_qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
+                  errexit("Can't specify both \"tbone\" and \"ntbone\"");
                call_qual_stuff |= QUALBIT__NTBONE;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "explicit")) {
+               if (call_qual_stuff & (QUALBIT__TBONE|QUALBIT__NTBONE))
+                  errexit("Can't specify \"explicit\" and \"tbone\"");
+               call_qual_stuff |= QUALBIT__TBONE|QUALBIT__NTBONE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "num")) {

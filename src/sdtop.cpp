@@ -1136,7 +1136,7 @@ extern void do_matrix_expansion(
                   (NEEDMASK(CONCPROP__NEEDK_TWINDMD) | NEEDMASK(CONCPROP__NEEDK_TWINQTAG))) {
             uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 |
                ss->people[11].id1 | ss->people[15].id1;
-   
+
             if (ctrs != 0 && (ctrs & 011) != 011) {
                if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
                expand::expand_setup((ctrs & 1) ? &s_4x4_4x6b : &s_4x4_4x6a, ss);
@@ -1745,7 +1745,7 @@ restriction_test_result verify_restriction(
       p = rr->map1;
       qa2 = rr->map2[0];
       qa3 = rr->map2[1];
-            
+
       while (*p>=0) {
          uint32 t1 = ss->people[*(p++)].id1;
          uint32 t2 = ss->people[*(p++)].id1;
@@ -1823,14 +1823,14 @@ restriction_test_result verify_restriction(
 
             for (i=0; i<rr->size; i++) {
                int p = rr->map1[i];
-   
+
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16) fail("Too many phantoms.");
-   
+
                   ss->people[p].id1 =           (i&1) ?
                      ((i&2) ? qdirodd : qdir) :
                      ((i&2) ? pdirodd : pdir);
-   
+
                   ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[p].id2 = 0;
                }
@@ -2809,7 +2809,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       uint32 i, k, t, u, w, mask;
       assumption_thing tt;
       int idx, plaini;
-      call_restriction this_qualifier;
       long_boolean booljunk;
 
       // First, we demand that the starting setup be correct.
@@ -2830,7 +2829,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          4000  right/in only (put 1 into assump_both)
          2000  must be live
          1000  must be T-boned
-         0800  must not be T-boned
+         0800  must not be T-boned (both together means explicit assumption)
          0780  if these 4 bits are nonzero, they must match the number plus 1
          007F  the qualifier itself (we allow 127 qualifiers) */
 
@@ -2841,19 +2840,26 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             continue;
       }
 
+      bool require_explicit = false;
+
       if ((p->qualifierstuff & (QUALBIT__TBONE|QUALBIT__NTBONE)) != 0) {
-         u = 0;
-
-         for (plaini=0; plaini<=attr::slimit(ss); plaini++)
-            u |= ss->people[plaini].id1;
-
-         if ((u & 011) == 011) {
-            // They are T-boned.  The "QUALBIT__NTBONE" bit says to reject.
-            if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
+         if ((p->qualifierstuff & (QUALBIT__TBONE|QUALBIT__NTBONE)) == (QUALBIT__TBONE|QUALBIT__NTBONE)) {
+            require_explicit = true;
          }
          else {
-            // They are not T-boned.  The "QUALBIT__TBONE" bit says to reject.
-            if ((p->qualifierstuff & QUALBIT__TBONE) != 0) continue;
+            u = 0;
+
+            for (plaini=0; plaini<=attr::slimit(ss); plaini++)
+               u |= ss->people[plaini].id1;
+
+            if ((u & 011) == 011) {
+               // They are T-boned.  The "QUALBIT__NTBONE" bit says to reject.
+               if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
+            }
+            else {
+               // They are not T-boned.  The "QUALBIT__TBONE" bit says to reject.
+               if ((p->qualifierstuff & QUALBIT__TBONE) != 0) continue;
+            }
          }
       }
 
@@ -2861,7 +2867,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       uint32 ssB = ss->cmd.cmd_assume.assump_both;
       setup_kind ssK = ss->kind;
 
-      this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
+      call_restriction this_qualifier = (call_restriction) (p->qualifierstuff & QUALBIT__QUAL_CODE);
 
       if (this_qualifier == cr_none) {
          if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   // All live people were demanded.
@@ -2900,6 +2906,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          case cr_1fl_only:
          case cr_2fl_only:
          case cr_wave_only:
+         case cr_li_lo:
             goto bad;
          }
 
@@ -2910,7 +2917,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          }
 
          goto fix_col_line_stuff;
-      case cr_li_lo: 
+      case cr_li_lo:
+         switch (ssA) {
+         case cr_magic_only: case cr_wave_only:
+            goto bad;
+         }
+
          switch (ssK) {
          case s1x2: case s1x4: case s2x2: case s2x3: case s2x4:
             goto fix_col_line_stuff;
@@ -3036,6 +3048,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_miniwaves:                    // miniwaves everywhere
          /* **** FELL THROUGH!!!!!! */
          switch (ssA) {
+         case cr_li_lo:
          case cr_1fl_only:
          case cr_2fl_only:
             goto bad;
@@ -3541,7 +3554,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
    do_2fl_stuff:
 
       switch (ssA) {
-      case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
+      case cr_li_lo: case cr_1fl_only: case cr_wave_only: case cr_miniwaves: case cr_magic_only: goto bad;
       }
 
       tt.assumption = cr_2fl_only;
@@ -3558,6 +3571,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
    do_wave_stuff:
       switch (ssA) {
       case cr_1fl_only: case cr_2fl_only: case cr_couples_only: case cr_magic_only: goto bad;
+      case cr_li_lo: goto bad;
       case cr_ijright: case cr_ijleft: case cr_real_1_4_line: case cr_real_3_4_line: goto bad;
       case cr_wave_only: case cr_jright:
          if (ssB == 2 && tt.assump_both == 1) goto bad;
@@ -3631,6 +3645,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       }
 
    check_tt:
+
+      // If the "explicit" flag was on, we don't accept anything unless an assumption was in place.
+
+      if (require_explicit && ssA == cr_none) goto bad;
 
       if (verify_restriction(ss, tt, FALSE, &booljunk) == restriction_passes) return p;
       continue;

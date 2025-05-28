@@ -82,7 +82,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 201
+#define DATABASE_FORMAT_VERSION 202
 
 // BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
 enum base_call_index {
@@ -278,7 +278,7 @@ enum {
    QUALBIT__LEFT           = 0x8000,
    QUALBIT__RIGHT          = 0x4000,
    QUALBIT__LIVE           = 0x2000,
-   QUALBIT__TBONE          = 0x1000,
+   QUALBIT__TBONE          = 0x1000,  // TBONE and NTBONE together mean "explicit assumption"
    QUALBIT__NTBONE         = 0x0800,
    // A 4 bit field.  If nonzero, there is a number requirement,
    // and the field is that number plus 1.
