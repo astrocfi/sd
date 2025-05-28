@@ -1084,7 +1084,8 @@ static bool x22_cpltest(setup *real_people, int real_index,
 static bool whos_on_base(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff)
 {
-   if (real_people->result_flags.misc & (RESULTFLAG__IMPRECISE_ROT | RESULTFLAG__PLUSEIGHTH_ROT))
+   if ((real_people->result_flags.misc & RESULTFLAG__IMPRECISE_ROT) ||
+       real_people->eighth_rotation != 0)
       fail("Rotation is imprecise or is 45 degrees.");
 
    if (real_people->kind == s_alamo)

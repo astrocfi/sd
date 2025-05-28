@@ -36,7 +36,7 @@
    process_number_insertion
    get_real_subcall
    gcd
-   process_stupendously_new_fractions
+   process_fractions
    fraction_info::get_fraction_info
    fraction_info::get_fracs_for_this_part
    fraction_info::query_instant_stop
@@ -214,6 +214,12 @@ extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL
       default:
          result->rotation += globalrotation;
          break;
+   }
+
+   if (ss->eighth_rotation) {
+      result->eighth_rotation ^= 1;
+      if (!result->eighth_rotation)
+         result->rotation++;
    }
 
    // If we turned by 90 degrees, we have to to swap the "split_info" fields.
@@ -1199,10 +1205,6 @@ extern uint32 do_call_in_series(
             but it actually a little bit subtle.  Put this in the
             "cmd.prior_elongation_bits" field also.
 
-         *  The RESULTFLAG__PLUSEIGHTH_ROT bit:
-            XOR it with the previous stuff.  But, if both are set,
-            rotate the setup.
-
          *  The other bits:
             Set to the OR of the incoming values and what we just got --
             this is believed to be the correct way to accumulate these bits.
@@ -1212,7 +1214,7 @@ extern uint32 do_call_in_series(
 
    sss->result_flags = saved_result_flags;
 
-   sss->result_flags.misc &= ~(RESULTFLAG__PART_COMPLETION_BITS|RESULTFLAG__PLUSEIGHTH_ROT);
+   sss->result_flags.misc &= ~RESULTFLAG__PART_COMPLETION_BITS;
    sss->result_flags.misc |= tempsetup.result_flags.misc;
 
    // Here is where we implement the policy that the internal boundaries between subcalls
@@ -1228,14 +1230,6 @@ extern uint32 do_call_in_series(
    sss->result_flags.misc &= ~3;
 
    sss->cmd.cmd_heritflags_to_save_from_mxn_expansion = tempsetup.result_flags.res_heritflags_to_save_from_mxn_expansion;
-
-   if (sss->result_flags.misc & saved_result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
-      sss->result_flags.misc &= ~RESULTFLAG__PLUSEIGHTH_ROT;
-      sss->rotation++;
-   }
-   else
-      sss->result_flags.misc |= saved_result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
-
    sss->result_flags.misc |= current_elongation;
    sss->result_flags.copy_split_info(tempsetup.result_flags);
 
@@ -1894,6 +1888,7 @@ static void finish_matrix_call(
       checkptr = setup_attrs[p->new_setup].setup_coords;
 
    result->rotation = p->new_rot & 3;
+   result->eighth_rotation = 0;
    result->kind = checkptr->result_kind;
 
    int doffset = 32 - (1 << (checkptr->xfactor-1));
@@ -2709,6 +2704,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    setup scopy = *ss;      // Will save rotation of this to the very end.
    scopy.rotation = 0;
+   scopy.eighth_rotation = 0;
 
    if (scopy.kind == s_qtag) {
       expand::expand_setup(s_qtg_3x4, &scopy);
@@ -2847,6 +2843,7 @@ extern void anchor_someone_and_move(
    for (i=0 ; i<MAX_GROUPS ; i++) { Eindex[i] = Bindex[i] = Aindex[i] = -1; }
 
    ss->rotation = 0;
+   ss->eighth_rotation = 0;
 
    if (ss->kind != s2x4 &&
        ss->kind != s1x8 &&
@@ -3063,6 +3060,7 @@ static void rollmove(
 
    result->kind = ss->kind;
    result->rotation = ss->rotation;
+   result->eighth_rotation = ss->eighth_rotation;
 
    for (i=0; i<=attr::slimit(ss); i++) {
       if (ss->people[i].id1) {
@@ -3571,11 +3569,11 @@ extern int gcd(int a, int b)
 //      "incoming_fracs of reverse order of arg_fracs",
 // that is, the first 1/4 (1,0,4,1).  If the client retains the
 // CMD_FRAC_REVERSE flag on that, it will do the last 1/4 of the call.
-extern uint32 process_stupendously_new_fractions(int start, int end,
-                                                 fraction_invert_flags invert_flags,
-                                                 const fraction_command & incoming_fracs,
-                                                 bool make_improper /* = false */,
-                                                 bool *improper_p /* = 0 */) THROW_DECL
+extern uint32 process_fractions(int start, int end,
+                                fraction_invert_flags invert_flags,
+                                const fraction_command & incoming_fracs,
+                                bool make_improper /* = false */,
+                                bool *improper_p /* = 0 */) THROW_DECL
 {
    int cn = start & NUMBER_FIELD_MASK;
    int cd = (start >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;

@@ -1624,12 +1624,11 @@ struct resultflag_rec {
    }
 };
 
-// Warning!  Do not rearrange these fields without good reason.  There are data
-// initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
-// (startinfolist) that would need to be rewritten.
+
 struct setup {
    setup_kind kind;
-   int rotation;
+   uint16 rotation;
+   uint16 eighth_rotation;
    setup_command cmd;
    personrec people[MAX_PEOPLE];
 
@@ -3192,11 +3191,11 @@ enum {
 
    RESULTFLAG__NO_REEVALUATE        = 0x02000000U,
    RESULTFLAG__IMPRECISE_ROT        = 0x04000000U,
-   RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000U,
-   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000U,
-   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
-   RESULTFLAG__INVADED_SPACE        = 0x40000000U,
-   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
+   RESULTFLAG__DID_SHORT6_2X3       = 0x08000000U,
+   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x10000000U,
+   RESULTFLAG__INVADED_SPACE        = 0x20000000U,
+   RESULTFLAG__STOP_OVERCAST_CHECK  = 0x40000000U
+   // 1 spare.
 };
 
 
@@ -4539,8 +4538,9 @@ enum mpkind {
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
+   MPKIND__4_QUADRANTS_WITH_45_ROTATION,
+   MPKIND__4_EDGES_FROM_4X4,
    MPKIND__4_EDGES,
-   MPKIND__4_EDGES_ALAMO,
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
    MPKIND__STAG,
@@ -5239,11 +5239,11 @@ enum fraction_invert_flags {
    FRAC_INVERT_END = 2
 };
 
-extern uint32 process_stupendously_new_fractions(int start, int end,
-                                                 fraction_invert_flags invert_flags,
-                                                 const fraction_command & incoming_fracs,
-                                                 bool make_improper = false,
-                                                 bool *improper_p = 0) THROW_DECL;
+extern uint32 process_fractions(int start, int end,
+                                fraction_invert_flags invert_flags,
+                                const fraction_command & incoming_fracs,
+                                bool make_improper = false,
+                                bool *improper_p = 0) THROW_DECL;
 
 extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 

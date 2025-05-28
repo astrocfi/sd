@@ -361,8 +361,6 @@ static bool multiple_move_innards(
    mpkind starting_map_kind = map_kind;
    uint32 eighth_rot_flag = ~0U;
 
-   result->clear_people();
-   result->rotation = 0;
    sscmd->cmd_misc2_flags &= ~(CMD_MISC2__MYSTIFY_SPLIT | CMD_MISC2__MYSTIFY_INVERT);
 
    for (i=0,rrr=rot; i<arity; i++,rrr>>=2) {
@@ -377,6 +375,7 @@ static bool multiple_move_innards(
 
          x[i].cmd = *sscmd;
          x[i].rotation = rrr & 3;
+         x[i].eighth_rotation = 0;
          canonicalize_rotation(&x[i]);
          if (rrr & 1)
             x[i].result_flags.swap_split_info_fields();
@@ -447,13 +446,19 @@ static bool multiple_move_innards(
          if (mirror)
             mirror_this(&z[i]);
 
+         if (z[i].kind == nothing) {
+            z[i].eighth_rotation = 0;
+            z[i].rotation = 0;
+         }
+
          if (arity >= 2 && (z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT))
             fail("Rotation is imprecise.");
 
          if (eighth_rot_flag == ~0U)
-            eighth_rot_flag = z[i].result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
-         else if ((eighth_rot_flag ^ z[i].result_flags.misc) & RESULTFLAG__PLUSEIGHTH_ROT)
+            eighth_rot_flag = z[i].eighth_rotation;
+         else if (eighth_rot_flag ^ z[i].eighth_rotation) {
             fail("Rotation is inconsistent.");
+         }
       }
       else {
          xorigkind[i] = x[i].kind;
@@ -463,13 +468,17 @@ static bool multiple_move_innards(
       }
    }
 
+   result->clear_people();
+   result->rotation = 0;
+   result->eighth_rotation = eighth_rot_flag;
+
    // If multiple setups are involved and they have rotated by 45 degrees, we have to be very careful.
 
-   if (arity >= 2 && (eighth_rot_flag & RESULTFLAG__PLUSEIGHTH_ROT)) {
+   if (arity >= 2 && eighth_rot_flag == 1) {
       if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) || (arity != 4 && arity != 8))
          fail("Can't handle this rotation.");
 
-      if (arity == 8) warn(warn__may_be_fudgy);
+      if (arity == 8 || map_kind == MPKIND__4_QUADRANTS) warn(warn__may_be_fudgy);
 
       bool take_out_double_45_rotation = false;
 
@@ -482,6 +491,10 @@ static bool multiple_move_innards(
       }
       else if (map_kind == MPKIND__SPLIT_OTHERWAY_TOO) {
          map_kind = MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO;
+         if (arity == 4 && (z[0].rotation & 1)) {
+            vert ^= 1;
+            take_out_double_45_rotation = true;
+         }
       }
       else if (map_kind == MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO) {
          map_kind = MPKIND__SPLIT_OTHERWAY_TOO;
@@ -493,6 +506,16 @@ static bool multiple_move_innards(
       else if (map_kind == MPKIND__QTAG8_WITH_45_ROTATION) {
          map_kind = MPKIND__QTAG8;
          take_out_double_45_rotation = true;
+      }
+      else if (map_kind == MPKIND__4_QUADRANTS) {
+         map_kind = MPKIND__4_QUADRANTS_WITH_45_ROTATION;
+      }
+      else if (map_kind == MPKIND__4_EDGES) {
+         if ((vert & 1) || (z[0].rotation & 1)) {
+            z[1].rotation += 2;
+            z[3].rotation += 2;
+         }
+         map_kind = MPKIND__4_QUADRANTS;
       }
       else
          fail("Can't handle this rotation.");
@@ -527,7 +550,7 @@ static bool multiple_move_innards(
    // example, if we split a bone6 into triangles, those triangles have opposite
    // orientation.  The incoming map caused that to be so.  There are other cases in
    // which the incoming map might cause this: maps with kind = MPKIND__DMD_STUFF or
-   // MPKIND__4_EDGES, for example.
+   // MPKIND__4_EDGES_FROM_4X4, for example.
 
    if (map_kind == MPKIND__X_SPOTS && arity == 2 && 
        z[0].kind == nothing && z[1].kind == s_dead_concentric && z[1].inner.skind == s2x2) {
@@ -591,6 +614,7 @@ static bool multiple_move_innards(
          else if (map_kind != MPKIND__DMD_STUFF &&
                   map_kind != MPKIND__ALL_8 &&
                   map_kind != MPKIND__4_QUADRANTS &&
+                  map_kind != MPKIND__4_QUADRANTS_WITH_45_ROTATION &&
                   map_kind != MPKIND__TRIPLETRADEINWINGEDSTAR6 &&
                   map_kind != MPKIND__NONE) {
             // This stuff might not be correct.  We are trying to let the above map kinds go through,
@@ -744,18 +768,20 @@ static bool multiple_move_innards(
          final_map = maps;
          final_mapcode = map_encoding;
          result->rotation = 0;
+         result->eighth_rotation = 0;
          goto finish;
       }
    }
 
    switch (map_kind) {
-      case MPKIND__4_EDGES:
-      case MPKIND__4_QUADRANTS:
-         // These particular maps misrepresent the rotation of subsetups 2 and 4, so
-         // we have to repair things when a shape-changer is called.
-         z[1].rotation += 2;
-         z[3].rotation += 2;
-         break;
+   case MPKIND__4_EDGES_FROM_4X4:
+   case MPKIND__4_QUADRANTS:
+   case MPKIND__4_QUADRANTS_WITH_45_ROTATION:
+      // These particular maps misrepresent the rotation of subsetups 2 and 4, so
+      // we have to repair things when a shape-changer is called.
+      z[1].rotation += 2;
+      z[3].rotation += 2;
+      break;
    }
 
    if (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) {
@@ -1076,7 +1102,7 @@ static bool multiple_move_innards(
 
       // All other maps are comparatively straightforward.  Action is only required
       // if the actual setups are stacked vertically and are rotated.
-
+	   
       if (vert && (z[0].rotation & 1)) {
          if (((final_map->rot+1) & 2) == 0) {
             for (i=0; i<arity; i++) {
@@ -2424,6 +2450,7 @@ extern void distorted_2x2s_move(
             gather(&inputs[i], ss, &map_ptr[i*4], 3, 011);
             inputs[i].kind = s2x2;
             inputs[i].rotation = 0;
+            inputs[i].eighth_rotation = 0;
             inputs[i].cmd = ss->cmd;
             inputs[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             update_id_bits(&inputs[i]);
@@ -2435,6 +2462,7 @@ extern void distorted_2x2s_move(
 
          result->kind = s4x4;
          result->rotation = results[0].rotation;
+         result->eighth_rotation = 0;
 
          result->result_flags = results[0].result_flags;
          result->result_flags.clear_split_info();
@@ -2459,6 +2487,7 @@ extern void distorted_2x2s_move(
       inputs[i] = *ss;
       gather(&inputs[i], ss, map_ptr, attr::klimit(inner_kind), 0);
       inputs[i].rotation = 0;
+      inputs[i].eighth_rotation = 0;
       inputs[i].kind = inner_kind;
       inputs[i].cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
       inputs[i].cmd.cmd_assume.assumption = cr_none;
@@ -2480,6 +2509,7 @@ extern void distorted_2x2s_move(
 
    result->kind = ss->kind;
    result->rotation = 0;
+   result->eighth_rotation = 0;
 
    if (misc_indicator == 1 || misc_indicator == 8 || misc_indicator == 4) {
       if (results[0].kind == s1x4 && results[1].kind == s1x4) {
@@ -2979,6 +3009,7 @@ extern void distorted_move(
    gather(&a1, ss, the_map, 7, rot);
    a1.kind = k;
    a1.rotation = 0;
+   a1.eighth_rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
@@ -2990,6 +3021,7 @@ extern void distorted_move(
 
    if (res1.kind != k || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
    result->rotation = res1.rotation;
+   result->eighth_rotation = 0;
    scatter(result, &res1, the_map, 7, rotz);
    result->result_flags = res1.result_flags;
    result->result_flags.clear_split_info();
@@ -3348,6 +3380,7 @@ extern void do_concept_rigger(
    scatter(&a1, ss, &map_ptr[base], attr::slimit(ss), rot*033);
    a1.kind = startkind;
    a1.rotation = 0;
+   a1.eighth_rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a1.cmd.cmd_assume.assumption = cr_none;
@@ -3402,6 +3435,7 @@ extern void do_concept_rigger(
 
    gather(result, &res1, &map_ptr[base], attr::klimit(res1.kind), rot*011);
    result->rotation = res1.rotation;
+   result->eighth_rotation = 0;
    result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
    result->clear_all_overcasts();
@@ -4030,6 +4064,8 @@ extern void common_spot_move(
    a1.kind = map_ptr->partial_kind;
    a0.rotation = map_ptr->rot;
    a1.rotation = map_ptr->rot;
+   a0.eighth_rotation = 0;
+   a1.eighth_rotation = 0;
 
    r = 011*((-map_ptr->rot) & 3);
 
@@ -4219,6 +4255,8 @@ void tglmap::do_glorious_triangles(
    a2.kind = s_trngl;
    a1.rotation = 0;
    a2.rotation = 2;
+   a1.eighth_rotation = 0;
+   a2.eighth_rotation = 0;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    move(&a1, false, &res[0]);
@@ -4248,6 +4286,7 @@ void tglmap::do_glorious_triangles(
    if (res[0].kind == s_trngl && res[0].rotation == 0) {
       result->kind = ss->kind;
       result->rotation = 0;
+      result->eighth_rotation = 0;
       reassemble_triangles(mapnums, 0, (startingrot^2) * 011, 0, res, idle, result);
       return;
    }
@@ -4258,6 +4297,7 @@ void tglmap::do_glorious_triangles(
    canonicalize_rotation(&res[1]);
 
    result->rotation = res[0].rotation;
+   result->eighth_rotation = 0;
 
    r = ((-res[0].rotation) & 3) * 011;
 

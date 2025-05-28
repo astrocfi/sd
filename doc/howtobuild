@@ -5,7 +5,7 @@ Doing so would cause it to be included in the "do_pack" script.
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 9 Jan 2010.
+        Last modified 28 Nov 2010.
 
 -----------------------------------------------------------------
 
@@ -85,7 +85,8 @@ Go to sddoc directory and do:
 19 Sep 09  -   9 Jan 10  #39
  9 Jan 10  -  23 May 10  #40
 23 May 10  -  16 Oct 10  #41
-16 Oct 10                #35
+16 Oct 10  -  28 Nov 10  #35
+28 Nov 10                #42
 (#25, #26, #29, #30, #36 are also available.)
 -----------------------------------------------------------------
 
@@ -290,7 +291,7 @@ Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
    athena> I
    athena> arrow down to the message, then cr.
    athena> V, then arrow down to attachment section
-   athena> S, give file name "pack.zig" if needed.
+   athena> S, give file name "pack.zig" if needed, cr.
    athena> Q
    athena> Check that pack.zip is exactly the same size as original.
    athena> scp pack.zig ackerman@scotch.ics.uci.edu:pack.zig

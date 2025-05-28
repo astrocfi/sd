@@ -818,7 +818,7 @@ void write_resolve_text(bool doing_file)
    int distance = r.distance;
    resolve_kind index = r.the_item->k;
 
-   if (configuration::current_config().state.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT)
+   if (configuration::current_config().state.eighth_rotation)
       distance++;
 
    distance &= 7;

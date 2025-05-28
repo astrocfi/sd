@@ -690,6 +690,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
       result->inner.srotation = result->rotation;
       result->inner.skind = s1x4;
       result->rotation = 0;
+      result->eighth_rotation = 0;
       result->concsetup_outer_elongation = 0;
    }
 }
@@ -781,11 +782,13 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s->inner.skind;
          s->rotation = s->inner.srotation;
+         s->eighth_rotation = 0;
          mirror_this(s);    // Sorry!
          s->inner.srotation = s->rotation;
 
          s->kind = s->outer.skind;
          s->rotation = s->outer.srotation;
+         s->eighth_rotation = 0;
          for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          mirror_this(s);    // Sorrier!
          for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
@@ -793,6 +796,7 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s_normal_concentric;
          s->rotation = 0;
+         s->eighth_rotation = 0;
          return;
       }
       else if (s->kind == s_dead_concentric) {
@@ -806,6 +810,7 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s_dead_concentric;
          s->rotation = 0;
+         s->eighth_rotation = 0;
          return;
       }
       else
@@ -827,6 +832,11 @@ void mirror_this(setup *s) THROW_DECL
       for (i=0; i<=limit; i++)
          install_mirror_person_in_matrix(-cptr->xca[i], cptr->yca[i], doffset,
                                          s, &temp.people[i], cptr, optr, 1);
+   }
+
+   if (s->eighth_rotation) {
+      s->rotation = (s->rotation-1) & 3;
+      canonicalize_rotation(s);
    }
 }
 
@@ -1970,7 +1980,7 @@ static bool handle_4x4_division(
          division_code = MAPCODE(s1x1,8,MPKIND__QTAG8_WITH_45_ROTATION,0);
          return true;
       case 0x6666:
-         division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
+         division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_FROM_4X4,0);
          return true;
       case 0xAAAA:
          division_code = spcmap_4x4_spec0;
@@ -2399,12 +2409,12 @@ static int divide_the_setup(
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
-      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_ALAMO,1);
+      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,1);
       goto divide_us_no_recompute;
    case s_alamo:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
-      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_ALAMO,0);
+      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
       goto divide_us_no_recompute;
    case s2x8:
       // The call has no applicable 2x8 or 8x2 definition.
@@ -4259,10 +4269,11 @@ static uint32 do_actual_array_call(
       fail("Can't do \"snag/mystic\" with this call.");
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   result->eighth_rotation = 0;
 
    if ((coldefinition && (coldefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)) ||
        (linedefinition && (linedefinition->callarray_flags & CAF__PLUSEIGHTH_ROTATION)))
-      result->result_flags.misc |= RESULTFLAG__PLUSEIGHTH_ROT;
+      result->eighth_rotation = 1;
 
    if ((callspec->callflags1 & CFLAG1_PARALLEL_CONC_END) ||
        (coldefinition && (coldefinition->callarray_flags & CAF__OTHER_ELONGATE)) ||
@@ -4436,6 +4447,8 @@ static uint32 do_actual_array_call(
       outer_inners[1].kind = goodies->get_end_setup_in();
       outer_inners[0].rotation = (goodies->callarray_flags & CAF__ROT_OUT) ? 1 : 0;
       outer_inners[1].rotation = goodies->callarray_flags & CAF__ROT;
+      outer_inners[0].eighth_rotation = 0;
+      outer_inners[1].eighth_rotation = 0;
 
       // For calls defined by array with concentric end setup, the "other_elongate" flag,
       // which comes from "CFLAG1_PARALLEL_CONC_END" or "CAF__OTHER_ELONGATE",
@@ -4561,6 +4574,7 @@ static uint32 do_actual_array_call(
                }
                else if (result->kind == s2x4 && other_kind == s_hrglass) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
+                  result->eighth_rotation = 0;
                   result->kind = s_hrglass;
                   tempkind = s_hrglass;
 
@@ -4595,6 +4609,7 @@ static uint32 do_actual_array_call(
                   else {
                      // In this case, line people are right, column people are wrong.
                      result->rotation = linedefinition->callarray_flags & CAF__ROT;
+                     result->eighth_rotation = 0;
                      result->kind = s_qtag;
                      tempkind = s_qtag;
 
@@ -4624,6 +4639,7 @@ static uint32 do_actual_array_call(
                }
                else if (result->kind == s_qtag && other_kind == s_bone) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
+                  result->eighth_rotation = 0;
                   result->kind = sx4dmdbone;
                   tempkind = sx4dmdbone;
                   rotfudge_col = 1;

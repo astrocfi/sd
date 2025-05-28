@@ -861,6 +861,7 @@ void tandrec::unpack_us(
 
    result->kind = map_ptr->outsetup;
    result->rotation = virtual_result.rotation - map_ptr->rot;
+   result->eighth_rotation = 0;
    result->result_flags = virtual_result.result_flags;
 
    const veryshort *my_huge_map = (const veryshort *) 0;
@@ -974,6 +975,7 @@ bool tandrec::pack_us(
 
    m_virtual_setup.clear_people();
    m_virtual_setup.rotation = map_ptr->rot & 3;
+   m_virtual_setup.eighth_rotation = 0;
    m_virtual_setup.kind = map_ptr->insetup;
 
    for (i=0,
@@ -1888,6 +1890,7 @@ extern void tandem_couples_move(
          setup sss = tandstuff.m_virtual_setup;
          sss.kind = s2x2;
          sss.rotation = 0;
+         sss.eighth_rotation = 0;
          sss.clear_people();
          copy_person(&sss, j >> 1, &tandstuff.m_virtual_setup, j);
          impose_assumption_and_move(&sss, &ttt[j]);
@@ -2080,6 +2083,7 @@ extern void tandem_couples_move(
          result->inner.skind = result->kind;
          result->inner.srotation = result->rotation;
          result->rotation = 0;
+         result->eighth_rotation = 0;
          result->kind = s_dead_concentric;
       }
       else if (dead_xconc) {
@@ -2087,6 +2091,7 @@ extern void tandem_couples_move(
          result->outer.srotation = result->rotation;
          result->concsetup_outer_elongation = tandstuff.virtual_result.outer.srotation+1;
          result->rotation = 0;
+         result->eighth_rotation = 0;
          result->inner.skind = nothing;
          result->kind = s_normal_concentric;
          for (i=0 ; i<MAX_PEOPLE/2 ; i++) result->swap_people(i, i+MAX_PEOPLE/2);
@@ -2146,6 +2151,7 @@ void recurse(uint32 code, setup *result, const uint16 split_info[2],
 
       aa[s].kind = splitme->inner_kind;
       aa[s].rotation = frot & 3;
+      aa[s].eighth_rotation = 0;
       recursively_fix(&aa[s], split_info, orig_before_press);
    }
 
@@ -2162,6 +2168,7 @@ void recurse(uint32 code, setup *result, const uint16 split_info[2],
       fail("Sorry, can't handle this result setup.");
 
    result->rotation = (aa[0].rotation & 1) - (final_map->rot & 1);
+   result->eighth_rotation = 0;
    result->clear_people();
    ssize = attr::klimit(final_map->inner_kind)+1;
 
@@ -2406,6 +2413,7 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
    case s_dead_concentric:
       result->kind = result->inner.skind;
       result->rotation = result->inner.srotation;
+      result->eighth_rotation = 0;
       canonicalize_rotation(result);
       return;
    default:

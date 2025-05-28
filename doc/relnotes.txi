@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.35
-@set title2 Database version = 38.35 format = 300
+@set title1 RELEASE NOTES FOR VERSION 38.36
+@set title2 Database version = 38.36 format = 300
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.36::
 * 38.35::
 * 38.33::
 * 38.32::
@@ -74,7 +75,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.35, Top, (dir)
+@node Intro, 38.36, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -85,11 +86,32 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2010 William B. Ackerman
 @sp 3
 @menu
-* 38.35::               Changes in the current version
+* 38.36::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.35, 38.33, Intro, Top
+@node 38.36, 38.35, Intro, Top
+@unnumberedsec Version 38.36 changes
+
+The program is much better at doing things that turn people by 45 degrees.
+
+The program is more careful about @strong{<anyone> *work* tandem}
+vs. @strong{<anyone> *are* tandem} (and as couples, siamese, etc.)  The
+word "are" is almost always what you want.  It combines the indicated
+people from their couple or tandem into a single virtual person, changes
+the virtual setup to a smaller setup in response to that, and does the
+call.
+
+In contrast to that, @strong{<anyone> work <concept> <call>} is
+done as though it were @strong{<anyone> do your part, <concept> <call>,
+while the others just do the <call>}.
+
+The program will automatically do @strong{<anyone> work tandem} as
+though it were @strong{<anyone> are tandem}, except in the small number
+of cases in which that won't work.
+
+@c ************
+@node 38.35, 38.33, 38.36, Top
 @unnumberedsec Version 38.35 changes
 
 The call @strong{kickoff} was brought into compliance with the current Callerlab definition.  The non-desgnees

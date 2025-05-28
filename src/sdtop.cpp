@@ -4438,7 +4438,7 @@ setup::setup(setup_kind k, int r,
              uint32 P6, uint32 I6,
              uint32 P7, uint32 I7,
              uint32 little_endian_wheretheygo /* = 0x76543210 */) :
-   kind(k), rotation(r)
+   kind(k), rotation(r), eighth_rotation(0)
 {
    clear_people();
    clear_result_flags(this);
@@ -4973,12 +4973,13 @@ extern bool fix_n_results(int arity,
    // the center line is fully occupied.  In this case we repopulate the outer lines
    // to 1x4's.
 
+   uint32 eighth_rot_flag = ~0U;
+
    for (i=0; i<arity; i++) {
       // First, check that all setups have the same "eighth rotation" stuff,
       // and don't have any "imprecise rotation".
 
-      if ((z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT) ||
-          (i > 0 && (z[0].result_flags.misc ^ z[i].result_flags.misc) & RESULTFLAG__PLUSEIGHTH_ROT))
+      if (z[i].result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
          goto lose;
 
       // This guides us in following differing rotations from one subsetup to the
@@ -5018,6 +5019,7 @@ extern bool fix_n_results(int arity,
 
             z[i].kind = s1x4;
             z[i].rotation = z[i].outer.srotation;
+            z[i].eighth_rotation = 0;
             copy_person(&z[i], 0, &z[i], 12);
             copy_person(&z[i], 2, &z[i], 13);
             z[i].clear_person(1);
@@ -5032,6 +5034,12 @@ extern bool fix_n_results(int arity,
 
       if (z[i].kind != nothing) {
          canonicalize_rotation(&z[i]);
+
+         if (eighth_rot_flag == ~0U)
+            eighth_rot_flag = z[i].eighth_rotation;
+         else if (eighth_rot_flag ^ z[i].eighth_rotation)
+            goto lose;
+
          uint32 dmdqtagfudge = 0;
 
          // Unfortunately, this code wants all setups to be oriented the
@@ -5157,6 +5165,7 @@ extern bool fix_n_results(int arity,
             canonicalize_rotation(&z[i]);
             z[i].kind = kk;
             z[i].rotation = rr;
+            z[i].eighth_rotation = 0;
             z[i].swap_people(3, 6);
             z[i].swap_people(2, 5);
             z[i].swap_people(2, 1);
@@ -5176,6 +5185,7 @@ extern bool fix_n_results(int arity,
 
             z[i].kind = kk;
             z[i].rotation = rr;
+            z[i].eighth_rotation = 0;
             z[i].swap_people(0, 6);
             z[i].swap_people(1, 7);
             z[i].clear_person(0);
@@ -5254,6 +5264,7 @@ extern bool fix_n_results(int arity,
       if (z[i].kind == nothing) {
          z[i].kind = kk;
          z[i].clear_people();
+         z[i].eighth_rotation = 0;
 
          int suggested_incremental_rotation_parity = i & 1;
          if (reorder_setups_2_and_3 && (i&2)) suggested_incremental_rotation_parity ^= 1;
@@ -5778,6 +5789,7 @@ void toplevelmove() THROW_DECL
 
             starting_setup.kind = configuration::startinfolist[start_select_as_they_are].the_setup.kind;
             starting_setup.rotation = configuration::startinfolist[start_select_as_they_are].the_setup.rotation;
+            starting_setup.eighth_rotation = 0;
             memcpy(starting_setup.people,
                    configuration::startinfolist[start_select_as_they_are].the_setup.people,
                    sizeof(personrec)*MAX_PEOPLE);
@@ -6198,14 +6210,16 @@ void toplevelmove() THROW_DECL
    newhist.state.result_flags.misc |= starting_setup.result_flags.misc &
       (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
 
+   /*
    // But 1/8 rotation stuff cancels in pairs.
-   if (newhist.state.result_flags.misc & starting_setup.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
-      newhist.state.result_flags.misc &= ~RESULTFLAG__PLUSEIGHTH_ROT;
+   if (newhist.state.eighth_rotation & starting_setup.eighth_rotation) {
+      newhist.state.eighth_rotation = 0;
       newhist.state.rotation++;
       canonicalize_rotation(&newhist.state);
    }
    else
-      newhist.state.result_flags.misc |= starting_setup.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT;
+      newhist.state.eighth_rotation += starting_setup.eighth_rotation;
+   */
 }
 
 

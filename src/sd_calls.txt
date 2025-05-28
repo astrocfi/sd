@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.35"
+version "38.36"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -11058,6 +11058,15 @@ call "_ @D by the right for about" dontshow tag odd_frac_by_right_for_about
    setup 2x2 1x4 rotate restriction forbidden wave_only qualifier num 3 right wave_only
       array [CR1S 0 0 CR2S]
 
+call "_ 1/8 by the right" dontshow tag 1_8_by_right
+            left_means_mirror
+   setup 1x2 1x2 plus_eighth_rotation restriction forbidden wave_only
+      array [CR0N 0]
+
+call "_turn by the right @9 eighths" dontshow tag turn_by_right_by_eighths
+            neednumber visible_fractions distribute_repetitions left_means_mirror
+   seq 1_8_by_right [inherit_left repeat_n]
+
 call "_half by the right" dontshow tag 1_2_by_right
             left_means_mirror diamond_is_legal
    setup 1x3 1x3 restriction forbidden wave_only
@@ -11387,6 +11396,12 @@ call "swing thru" mainstream
                     inherit_diamond inherit_yoyo inherit_gensting]
    seq 1_2_by_left  [inherit_left inherit_grand inherit_bigmatrix
                     inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+            // Try again, allowing exquisite fractions.
+            step_to_wave left_means_mirror grand_is_inherited bigmatrix_is_inherited
+            yoyo_is_inherited gen_sting_is_inherited visible_fractions
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting insert_number 4]
+   seq 1_2_by_left  [inherit_left inherit_grand inherit_bigmatrix
+                    inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand swing thru" mainstream
             dont_use_in_nice_resolve
@@ -11425,8 +11440,13 @@ call "remake" a2
             yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
    seq 1_2_by_left [inherit_left inherit_grand inherit_diamond inherit_yoyo inherit_gensting]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3
-                         roll_transparent]
+   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
+            // Try again, allowing exquisite fractions (mostly.)
+            left_means_mirror grand_is_inherited visible_fractions
+            yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2]
+   seq 1_2_by_left [inherit_left inherit_grand inherit_yoyo inherit_gensting]
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 6 roll_transparent]
 
 call "remake the wave" a2
             // Actually, left should mean check, but "touch_or_check" isn't right.  Sigh.
@@ -11435,6 +11455,12 @@ call "remake the wave" a2
    seq odd_frac_by_right [inherit_left inherit_gensting inherit_fractal insert_number 1]
    seq 1_2_by_left [inherit_left inherit_grand inherit_yoyo inherit_gensting]
    seq odd_frac_by_right [inherit_left inherit_gensting inherit_fractal insert_number 3 roll_transparent]
+            // Try again, allowing exquisite fractions (mostly.)
+            left_means_mirror grand_is_inherited visible_fractions
+            yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2]
+   seq 1_2_by_left [inherit_left inherit_grand inherit_yoyo inherit_gensting]
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 6]
 
 call "remake the column" a2
             // Actually, left should mean check, but "touch_or_check" isn't right.  Sigh.
@@ -11517,8 +11543,14 @@ call "swing the fractions" c1
    seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting]
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3]
    seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1
-                         roll_transparent]
+   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1 roll_transparent]
+            // Try again, allowing exquisite fractions (mostly.)
+            left_means_mirror yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited visible_fractions
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting]
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 6]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting]
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2 roll_transparent]
 
 call "swing the fractions 3/5" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited gen_sting_is_inherited fractal_is_inherited

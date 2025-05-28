@@ -1647,14 +1647,14 @@ map::map_thing map::map_init_table[] = {
     s1x4,2,MPKIND__ALL_8,1,       0,  s_thar,    0x001, 0},
 
    {{13, 14,               1, 2,                 6, 5,               10, 9},
-    s1x2,4,MPKIND__4_EDGES,0,     0,  s4x4,      0, 0x5050},
+    s1x2,4,MPKIND__4_EDGES_FROM_4X4,0, 0,s4x4,   0, 0x5050},
    {{0, 1,                 2, 3,                 5, 4,               7, 6},
-    s1x2,4,MPKIND__4_EDGES,1,     0,  s_thar,    0, 0x5050},
+    s1x2,4,MPKIND__4_EDGES_FROM_4X4,1, 0,s_thar, 0, 0x5050},
 
    {{0, 1,                 2, 3,                 5, 4,               7, 6},
-    s1x2,4,MPKIND__4_EDGES_ALAMO,0, 0,s_alamo,   0, 0x5050},
+    s1x2,4,MPKIND__4_EDGES,0,     0,  s_alamo,   0, 0x5050},
    {{0, 1,                 2, 3,                 5, 4,               7, 6},
-    s1x2,4,MPKIND__4_EDGES_ALAMO,1, 0,s_thar,    0, 0x5050},
+    s1x2,4,MPKIND__4_EDGES,1,     0,  s_thar,    0, 0x5050},
 
    {{0, 2,                 4, 6,                 10, 8,              14, 12},
     s1x2,4,MPKIND__4_QUADRANTS,0, 0,  s_c1phan,  0x044, 0},
@@ -1662,6 +1662,11 @@ map::map_thing map::map_init_table[] = {
     s1x2,4,MPKIND__4_QUADRANTS,1, 0,  s_c1phan,  0x011, 0},
    {{0, 1, 2, 3,        7, 4, 5, 6,        10, 11, 8, 9,    13, 14, 15, 12},
     s_star,4,MPKIND__4_QUADRANTS,0, 0, s_c1phan, 0x000, 0},
+
+   {{0, 1,                 2, 3,                 5, 4,              7, 6},
+    s1x2,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,0, 0,  s_thar,  0x044, 0},
+   {{5, 4,                 6, 7,                 0, 1,              3, 2},
+    s1x2,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,1, 0,  s_alamo, 0x0CC, 0},
 
    {{0, 1, 2, 3, 6, 7, 8, 9},
     s2x4,1,MPKIND__OFFS_L_HALF,1, 0,  s2x6,      0x000, 0},
@@ -2945,6 +2950,8 @@ full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFU,     0x2288U, ~0U},
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xF0F0U,     0x2080U, ~0U},
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0x0F0FU,     0x0208U, ~0U},
+   {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0x0FF0U,     0x0280U, ~0U},
+   {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xF00FU,     0x2008U, ~0U},
    // Some people rear back from parallel waves, while the others are column-like, to a C1 phantom.
    {warn__some_rear_back,  8, &step_2x4nestuff,s2x4,        0xFFFFU,     0x52F8U, ~0U},
    {warn__some_rear_back,  8, &step_2x4nestuff,s2x4,        0xFFFFU,     0x72D8U, ~0U},

@@ -220,6 +220,7 @@ static void fix_missing_centers(
       if (inners[i].kind == nothing) {
          inners[i].kind = kki;
          inners[i].rotation = 0;
+         inners[i].eighth_rotation = 0;
          inners[i].result_flags = outers->result_flags;
          inners[i].clear_people();
       }
@@ -263,6 +264,7 @@ bool conc_tables::analyze_this(
          *center_arity_p = lmap_ptr->center_arity;
          outers->kind = lmap_ptr->outsetup;
          outers->rotation = (-lmap_ptr->outer_rot) & 3;
+         outers->eighth_rotation = 0;
 
          gather(outers, ss, &lmap_ptr->maps[inlim*lmap_ptr->center_arity],
                 outlim-1, lmap_ptr->outer_rot * 011);
@@ -276,6 +278,7 @@ bool conc_tables::analyze_this(
             inners[m].clear_people();
             inners[m].kind = lmap_ptr->insetup;
             inners[m].rotation = (0-rr) & 3;
+            inners[m].eighth_rotation = 0;
             gather(&inners[m], ss, &lmap_ptr->maps[m*inlim], inlim-1, rr * 011);
          }
 
@@ -448,6 +451,7 @@ bool conc_tables::synthesize_this(
 
    result->kind = lmap_ptr->bigsetup;
    result->rotation = outers->rotation + lmap_ptr->outer_rot;
+   result->eighth_rotation = 0;
    return true;
 }
 
@@ -985,6 +989,7 @@ extern void normalize_concentric(
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 0;
+         outers->eighth_rotation = 0;
          outers->kind = s2x2;
          *i0p = temp;
          relative_rotation = (i0p->rotation - outers->rotation) & 3;
@@ -997,6 +1002,7 @@ extern void normalize_concentric(
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 0;
+         outers->eighth_rotation = 0;
          outers->kind = s2x2;
          *i0p = temp;
          relative_rotation = (i0p->rotation - outers->rotation) & 3;
@@ -1009,6 +1015,7 @@ extern void normalize_concentric(
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 0;
+         outers->eighth_rotation = 0;
          outers->kind = s1x4;
          *i0p = temp;
          // Compute the rotation again.
@@ -1022,6 +1029,7 @@ extern void normalize_concentric(
          scatter(outers, i0p, v1, 1, 0);
          scatter(outers, i1p, v2, 1, 0);
          outers->rotation = 1;
+         outers->eighth_rotation = 0;
          outers->kind = s1x4;
          *i0p = temp;
          // Compute the rotation again.
@@ -1036,6 +1044,7 @@ extern void normalize_concentric(
             i0p->clear_people();
             i0p->kind = s2x2;
             i0p->rotation = 0;
+            i0p->eighth_rotation = 0;
             *i1p = *i0p;
             center_arity = 2;
             table_synthesizer = schema_in_out_triple;
@@ -1046,6 +1055,7 @@ extern void normalize_concentric(
             *i0p = *outers;
             outers->kind = nothing;
             outers->rotation = 0;
+            outers->eighth_rotation = 0;
             // Compute the rotation again.
             relative_rotation = (i0p->rotation - outers->rotation) & 3;
             center_arity = 1;
@@ -1109,9 +1119,11 @@ extern void normalize_concentric(
       else if (i0p->kind == nothing && outer_elongation == 2) {
          i0p->kind = s2x3;
          i0p->rotation = 0;
+         i0p->eighth_rotation = 0;
          i0p->clear_people();
          i1p->kind = s2x3;
          i1p->rotation = 0;
+         i1p->eighth_rotation = 0;
          i1p->clear_people();
          // Compute the rotation again.
          relative_rotation = (i0p->rotation - outers->rotation) & 3;
@@ -1152,9 +1164,11 @@ extern void normalize_concentric(
       else if (i0p->kind == nothing && outer_elongation == 2) {
          i0p->kind = s2x4;
          i0p->rotation = 0;
+         i0p->eighth_rotation = 0;
          i0p->clear_people();
          i1p->kind = s2x4;
          i1p->rotation = 0;
+         i1p->eighth_rotation = 0;
          i1p->clear_people();
       }
       else
@@ -1190,6 +1204,7 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing) {
          inners[0].kind = outers->kind;
          inners[0].rotation = outers->rotation;
+         inners[0].eighth_rotation = 0;
          inners[0].result_flags = outers->result_flags;
          inners[0].clear_people();
          relative_rotation = 0;
@@ -1197,6 +1212,7 @@ extern void normalize_concentric(
       else if (outers->kind == nothing) {
          outers->kind = inners[0].kind;
          outers->rotation = inners[0].rotation;
+         outers->eighth_rotation = 0;
          outers->result_flags = inners[0].result_flags;
          outers->clear_people();
          relative_rotation = 0;
@@ -1209,6 +1225,7 @@ extern void normalize_concentric(
       if (inners[0].kind == nothing && outers->kind == s1x4) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
+         inners[0].eighth_rotation = 0;
          inners[0].result_flags = outers->result_flags;
          inners[0].clear_people();
          goto compute_rotation_again;
@@ -1217,6 +1234,7 @@ extern void normalize_concentric(
          // The test case for this is: RWV:intlkphanbox relay top;splitphanbox flip reaction.
          outers->kind = s1x4;
          outers->rotation = inners[0].rotation;
+         outers->eighth_rotation = 0;
          outers->result_flags = inners[0].result_flags;
          outers->clear_people();
          goto compute_rotation_again;
@@ -1229,6 +1247,7 @@ extern void normalize_concentric(
       if (outers->kind == nothing && inners[0].kind == s1x4) {
          outers->kind = s_star;
          outers->rotation = 0;
+         outers->eighth_rotation = 0;
          outers->result_flags = inners[0].result_flags;
          outers->clear_people();
          goto compute_rotation_again;
@@ -1236,6 +1255,7 @@ extern void normalize_concentric(
       else if (outers->kind == nothing && inners[0].kind == s_star) {
          outers->kind = s1x4;
          outers->rotation = outer_elongation-1;
+         outers->eighth_rotation = 0;
          outers->result_flags = inners[0].result_flags;
          outers->clear_people();
          goto compute_rotation_again;
@@ -1243,6 +1263,7 @@ extern void normalize_concentric(
       else if (outers->kind == s1x4 && inners[0].kind == nothing) {
          inners[0].kind = s_star;
          inners[0].rotation = 0;
+         inners[0].eighth_rotation = 0;
          inners[0].result_flags = outers->result_flags;
          inners[0].clear_people();
          goto compute_rotation_again;
@@ -1336,10 +1357,12 @@ extern void normalize_concentric(
          if (table_synthesizer == schema_conc_o) {
             inners[0].kind = s2x2;
             inners[0].rotation = 0;
+            inners[0].eighth_rotation = 0;
          }
          else {
             inners[0].kind = outers->kind;
             inners[0].rotation = outers->rotation;
+            inners[0].eighth_rotation = 0;
          }
 
          inners[0].result_flags = outers->result_flags;
@@ -1351,12 +1374,14 @@ extern void normalize_concentric(
          if (table_synthesizer == schema_conc_o) {
             outers->kind = s4x4;
             outers->rotation = 0;
+            outers->eighth_rotation = 0;
             outer_elongation = 3;
          }
          else if (table_synthesizer == schema_concentric) {
             // This makes vi01 and vi03 work.
             result->kind = s_dead_concentric;
             result->rotation = 0;
+            result->eighth_rotation = 0;
             result->inner.skind = inners[0].kind;
             result->inner.srotation = inners[0].rotation;
             result->outer.skind = nothing;
@@ -1373,6 +1398,7 @@ extern void normalize_concentric(
          else {
             outers->kind = inners[0].kind;
             outers->rotation = inners[0].rotation;
+            outers->eighth_rotation = 0;
          }
          outers->result_flags = inners[0].result_flags;
          outers->clear_people();
@@ -1470,6 +1496,7 @@ extern void normalize_concentric(
 
    result->kind = s_normal_concentric;
    result->rotation = 0;
+   result->eighth_rotation = 0;
    result->inner.skind = inners[0].kind;
    result->inner.srotation = inners[0].rotation;
    result->outer.skind = outers->kind;
@@ -1843,6 +1870,7 @@ static calldef_schema concentrify(
          if (ss->inner.skind == nothing && ss->outer.skind == s2x3) {
             inners[0].kind = s_star;
             inners[0].rotation = 0;
+            inners[0].eighth_rotation = 0;
             outers->kind = s2x3;
             for (i=0; i<(MAX_PEOPLE/2); i++)
                copy_person(outers, i, ss, i+(MAX_PEOPLE/2));
@@ -1859,11 +1887,14 @@ static calldef_schema concentrify(
 
       case schema_concentric_2_6:
          outers->rotation = ss->outer.srotation;
+         outers->eighth_rotation = 0;
          inners[0].rotation = ss->outer.srotation;   // Yes, this looks wrong, but it isn't.
+         inners[0].eighth_rotation = 0;
 
          if (ss->outer.skind == nothing) {
             inners[0].kind = ss->inner.skind;
             inners[0].rotation = ss->inner.srotation;
+            inners[0].eighth_rotation = 0;
             outers->kind = nothing;
             for (i=0; i<MAX_PEOPLE; i++)
                copy_person(&inners[0], i, ss, i);
@@ -1873,6 +1904,7 @@ static calldef_schema concentrify(
          else if (ss->inner.skind == nothing) {
             outers[0].kind = ss->outer.skind;
             outers[0].rotation = ss->outer.srotation;
+            outers[0].eighth_rotation = 0;
             inners->kind = nothing;
             for (i=0; i<MAX_PEOPLE/2; i++)
                copy_person(&outers[0], i, ss, i+MAX_PEOPLE/2);
@@ -1883,11 +1915,14 @@ static calldef_schema concentrify(
 
       case schema_concentric:
          outers->rotation = ss->outer.srotation;
+         outers->eighth_rotation = 0;
          inners[0].rotation = ss->outer.srotation;   // Yes, this looks wrong, but it isn't.
+         inners[0].eighth_rotation = 0;
 
          if (ss->outer.skind == nothing) {
             inners[0].kind = ss->inner.skind;
             inners[0].rotation = ss->inner.srotation;
+            inners[0].eighth_rotation = 0;
             outers->kind = nothing;
             for (i=0; i<MAX_PEOPLE; i++)
                copy_person(&inners[0], i, ss, i);
@@ -1935,8 +1970,10 @@ static calldef_schema concentrify(
          *center_arity_p = 1;
          inners[0].kind = s1x4;
          inners[0].rotation = 0;
+         inners[0].eighth_rotation = 0;
          outers->kind = s2x2;
          outers->rotation = 0;
+         outers->eighth_rotation = 0;
 
          if (livemask == 07171U)
             *outer_elongation = 3;   // If occupied as "H", put them in the corners.
@@ -2236,6 +2273,7 @@ static bool fix_empty_outers(
       result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
+      result_outer->eighth_rotation = 0;
    }
    else if (analyzer == schema_conc_bar ||
             analyzer == schema_conc_bar12 ||
@@ -2249,30 +2287,35 @@ static bool fix_empty_outers(
       clear_result_flags(result_outer);
       result_outer->result_flags.misc |= 1;
       result_outer->rotation = 1;
+      result_outer->eighth_rotation = 0;
    }
    else if (analyzer == schema_checkpoint || analyzer == schema_checkpoint_mystic_ok) {
       result_outer->kind = s2x2;
       result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
+      result_outer->eighth_rotation = 0;
    }
    else if (analyzer == schema_rev_checkpoint) {
       result_outer->kind = s1x4;
       result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = result_inner->rotation;
+      result_outer->eighth_rotation = 0;
    }
    else if (analyzer == schema_in_out_triple_squash) {
       result_outer->kind = s2x2;
       result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
+      result_outer->eighth_rotation = 0;
    }
    else if (analyzer == schema_in_out_triple_dyp_squash) {
       result_outer->kind = s2x2;
       result_outer->clear_people();
       clear_result_flags(result_outer);
       result_outer->rotation = 0;
+      result_outer->eighth_rotation = 0;
    }
    else if (analyzer == schema_concentric_diamond_line) {
       switch (sskind) {
@@ -2285,6 +2328,7 @@ static bool fix_empty_outers(
       case s3x1dmd:
          result_outer->kind = s2x2;
          result_outer->rotation = 0;
+         result_outer->eighth_rotation = 0;
          result_outer->clear_people();
          // Set their "natural" elongation perpendicular to their original diamond.
          // The test for this is 1P2P; touch 1/4; column circ; boys truck; split phantom
@@ -2359,6 +2403,7 @@ static bool fix_empty_outers(
          // of the "parallel_conc_end" flag.)  So we do what
          // seems to be the wrong thing.
          result_outer->rotation = orig_elong_flags & 1;
+         result_outer->eighth_rotation = 0;
       }
       else {
          // Otherwise, we can save the day only if we can convince
@@ -2428,10 +2473,12 @@ static bool fix_empty_outers(
             if (result_outer->kind == s1x4) {
                result_outer->kind = s2x2;
                result_outer->rotation = 0;
+               result_outer->eighth_rotation = 0;
             }
             else {
                result_outer->kind = s1x4;
                result_outer->rotation = (orig_elong_flags & 1) ^ 1;
+               result_outer->eighth_rotation = 0;
             }
          }
          else if (center_arity > 1)
@@ -2451,6 +2498,7 @@ static bool fix_empty_outers(
             result->inner.skind = result_inner[0].kind;
             result->inner.srotation = result_inner[0].rotation;
             result->rotation = 0;
+            result->eighth_rotation = 0;
 
             // This used to set concsetup_outer_elongation to begin_outer_elongation
             // instead of zero.  It was explained with a comment:
@@ -2469,6 +2517,7 @@ static bool fix_empty_outers(
    if (cmdin == cmdout && analyzer == schema_in_out_triple) {
       result_outer->kind = result_inner[0].kind;
       result_outer->rotation = result_inner[0].rotation;
+      result->eighth_rotation = 0;
       result_outer->clear_people();  // Do we need this?  Maybe the result setup got bigger.
    }
 
@@ -2544,6 +2593,7 @@ static bool fix_empty_inners(
       *result_inner = *begin_inner;
       result_inner->kind = s1x4;
       result_inner->rotation = 1;
+      result_inner->eighth_rotation = 0;
       clear_result_flags(result_inner);
    }
    else if (analyzer == schema_conc_star ||   // If the schema is one of the special ones, we will know what to do.
@@ -2564,14 +2614,18 @@ static bool fix_empty_inners(
    else if (analyzer == schema_in_out_triple_squash && center_arity == 2) {
       result_inner[0].kind = s2x2;
       result_inner[0].rotation = 0;
+      result_inner[0].eighth_rotation = 0;
       result_inner[1].kind = s2x2;
       result_inner[1].rotation = 0;
+      result_inner[1].eighth_rotation = 0;
    }
    else if (analyzer == schema_in_out_triple_dyp_squash && center_arity == 2) {
       result_inner[0].kind = s2x2;
       result_inner[0].rotation = 0;
+      result_inner[0].eighth_rotation = 0;
       result_inner[1].kind = s2x2;
       result_inner[1].rotation = 0;
+      result_inner[1].eighth_rotation = 0;
    }
    else if (analyzer == schema_conc_bar && result_outer->kind == s2x3) {
       // Fix some quarter the deucey stuff.
@@ -2579,10 +2633,12 @@ static bool fix_empty_inners(
       case s2x2:
          result_inner->kind = s1x4;
          result_inner->rotation = result_outer->rotation;
+         result_inner->eighth_rotation = 0;
          break;
       case s_star:
          result_inner->kind = s_star;
          result_inner->rotation = 0;
+         result_inner->eighth_rotation = 0;
          break;
       }
    }
@@ -2604,6 +2660,7 @@ static bool fix_empty_inners(
       if (analyzer_result == schema_concentric_6p && ((orig_elong_flags+1) & 2)) {
          result_inner->kind = s1x2;
          result_inner->rotation = orig_elong_flags & 1;
+         result_inner->eighth_rotation = 0;
       }
       else {
          if (this_call_preserves_shape(begin_inner, call_options, s1x2) ||
@@ -2616,6 +2673,7 @@ static bool fix_empty_inners(
          else {
             result_inner->kind = s2x2;
             result_inner->rotation = 0;
+            result_inner->eighth_rotation = 0;
          }
       }
    }
@@ -2631,6 +2689,7 @@ static bool fix_empty_inners(
       else {
          result_inner->kind = s1x2;
          result_inner->rotation = result_outer->rotation;
+         result_inner->eighth_rotation = 0;
       }
    }
    else if (result_outer->kind == s1x4 && center_arity == 1) {
@@ -2647,6 +2706,7 @@ static bool fix_empty_inners(
       else {
          result_inner->kind = inner_start;
          result_inner->rotation = result_outer->rotation;
+         result_inner->eighth_rotation = 0;
       }
    }
    else if (result_outer->kind == s1x2 &&
@@ -2654,6 +2714,7 @@ static bool fix_empty_inners(
       // A similar thing, for single concentric.
       result_inner->kind = s1x2;
       result_inner->rotation = result_outer->rotation;
+      result_inner->eighth_rotation = 0;
    }
    else if (result_outer->kind == s1x6 && analyzer == schema_concentric_2_6) {
       // If the ends are a 1x6, we just set the missing centers to a 1x2,
@@ -2662,6 +2723,7 @@ static bool fix_empty_inners(
       // just above.
       result_inner->kind = s1x2;
       result_inner->rotation = result_outer->rotation;
+      result_inner->eighth_rotation = 0;
    }
    else if (result_outer->kind == s_short6 &&
             analyzer_result == schema_concentric_2_6 &&
@@ -2688,6 +2750,7 @@ static bool fix_empty_inners(
       *result = *result_outer;   // This gets the result_flags.
       result->kind = s_normal_concentric;
       result->rotation = 0;
+      result->eighth_rotation = 0;
       result->outer.skind = result_outer->kind;
       result->outer.srotation = result_outer->rotation;
       result->inner.skind = nothing;
@@ -3437,7 +3500,9 @@ extern void concentric_move(
             setup1.kind = s2x2;
             setup2.kind = s2x2;
             setup1.rotation = 0;
+            setup1.eighth_rotation = 0;
             setup2.rotation = 0;
+            setup2.eighth_rotation = 0;
             setup1.clear_people();
             setup2.clear_people();
 
@@ -3471,6 +3536,7 @@ extern void concentric_move(
 
             result_ptr->kind = s4x4;
             result_ptr->rotation = 0;
+            result_ptr->eighth_rotation = 0;
             result_ptr->clear_people();
 
             for (int k=0; k<4; k++) {
@@ -4334,7 +4400,9 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
       reinstatement_rotation = res2->rotation;
       res1->rotation -= res2->rotation;
       res2->rotation = 0;
+      res2->eighth_rotation = 0;
       result->rotation = 0;
+      result->eighth_rotation = 0;
       canonicalize_rotation(res1);
       canonicalize_rotation(res2);
       uint32 mask1 = little_endian_live_mask(res1);
@@ -4472,6 +4540,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
          copy_rot(res2, 0, res2, 0, 011);
          copy_rot(res2, 1, res2, 1, 011);
          res2->rotation = 3;
+         res2->eighth_rotation = 0;
          the_map = &merge_table::map_tgl4l;
          r = 1;
       }
@@ -4844,10 +4913,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          else
             // Non-designees do first part only.
             this_one->cmd.cmd_fraction.fraction =
-               process_stupendously_new_fractions(NUMBER_FIELDS_1_0,
-                                                  ss->cmd.parseptr->options.number_fields,
-                                                  FRAC_INVERT_END,
-                                                  this_one->cmd.cmd_fraction);
+               process_fractions(NUMBER_FIELDS_1_0,
+                                 ss->cmd.parseptr->options.number_fields,
+                                 FRAC_INVERT_END,
+                                 this_one->cmd.cmd_fraction);
             this_one->cmd.cmd_fraction.flags = 0;
       }
 
@@ -4985,10 +5054,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
 
       the_setups[0].cmd.cmd_fraction.flags ^= CMD_FRAC_REVERSE;
       the_setups[0].cmd.cmd_fraction.fraction =
-         process_stupendously_new_fractions(NUMBER_FIELDS_1_0,
-                                            ss->cmd.parseptr->options.number_fields,
-                                            FRAC_INVERT_NONE,
-                                            the_setups[0].cmd.cmd_fraction);
+         process_fractions(NUMBER_FIELDS_1_0,
+                           ss->cmd.parseptr->options.number_fields,
+                           FRAC_INVERT_NONE,
+                           the_setups[0].cmd.cmd_fraction);
       the_setups[0].cmd.cmd_fraction.flags = 0;
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
       uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
@@ -5085,7 +5154,46 @@ extern void selective_move(
       if (concept_table[k].concept_prop & CONCPROP__SET_PHANTOMS)
          indicator = selective_key_work_no_concentric;
 
-      if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
+      // Check for special case of "<anyone> work tandem", and change it to
+      // "<anyone> are tandem".  But sometimes (rarely) this isn't what is wanted.
+
+      if ((k == concept_tandem || k == concept_frac_tandem) &&
+          kk->arg1 == 0 &&
+          kk->arg2 == 0 &&
+          (kk->arg3 & ~0xF0) == 0 &&
+          (kk->arg4 == tandem_key_cpls ||
+           kk->arg4 == tandem_key_tand ||
+           kk->arg4 == tandem_key_cpls3 ||
+           kk->arg4 == tandem_key_tand3) &&
+          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
+                                                 INHERITFLAG_MXNMASK |
+                                                 INHERITFLAG_NXNMASK |
+                                                 INHERITFLAG_TWISTED) == 0) {
+         // Save a few things in case we have to try a second theory.
+         uint32 save_flags = ss->cmd.cmd_misc_flags;
+         parse_block *save_parse = ss->cmd.parseptr;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+         ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
+
+         try {
+            tandem_couples_move(ss, 
+                                parseptr->options.who,
+                                kk->arg3 >> 4,
+                                kkk->options.number_fields,
+                                0,
+                                (tandem_key) kk->arg4,
+                                0,
+                                false,
+                                result);
+            return;
+         }
+         catch(error_flag_type) {
+            ss->cmd.cmd_misc_flags = save_flags;
+            ss->cmd.parseptr = save_parse;
+            // Fall into regular "work" code.
+         }
+      }
+      else if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
          stable_move(ss,
                      kk->arg2 != 0,
@@ -6114,8 +6222,11 @@ extern void inner_selective_move(
                lilss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             lilss->kind = fixp->ink;
             lilss->rotation = 0;
-            if (fixp->ink == s_trngl && lilcount == 1)
+            lilss->eighth_rotation = 0;
+            if (fixp->ink == s_trngl && lilcount == 1) {
                lilss->rotation = 2;
+               lilss->eighth_rotation = 0;
+            }
 
             for (k=0;
                  k<=attr::klimit(fixp->ink);
@@ -6202,6 +6313,7 @@ extern void inner_selective_move(
          }
 
          this_result->rotation = 0;
+         this_result->eighth_rotation = 0;
 
          // Ought to make this a method of "select".
 
@@ -6222,6 +6334,7 @@ extern void inner_selective_move(
 
                if (fixp == select::fixer_ptr_table[select::fx_f323]) {
                   this_result->rotation = 3;
+                  this_result->eighth_rotation = 0;
                   nextfixp = select::fixer_ptr_table[select::fx_specspindle];
                }
                else if (fixp == select::fixer_ptr_table[select::fx_f3x4outer]) {
@@ -6377,11 +6490,14 @@ extern void inner_selective_move(
                      else
                         this_result->rotation = 1;
 
+                     this_result->eighth_rotation = 0;
+
                      if (nextfixp->rot & 0x80000000)
                         this_result->rotation += 2;
                   }
                   else {
                      this_result->rotation = 2;
+                     this_result->eighth_rotation = 0;
                   }
 
                   if (!(nextfixp->rot & 0x80000000)) {

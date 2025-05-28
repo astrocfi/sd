@@ -947,7 +947,7 @@ void write_history_line(int history_index,
        (picture || this_item->draw_pic || ui_options.keep_all_pictures)) {
       printsetup(&this_item->state);
 
-      if (this_item->state.result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
+      if (this_item->state.eighth_rotation != 0) {
          writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
          newline();
       }

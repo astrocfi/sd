@@ -442,6 +442,8 @@ static void do_c1_phantom_move(
 
    setup1.rotation = ((parseptr->concept->arg2) ? 0 : ss->rotation);
    setup2.rotation = ((parseptr->concept->arg2) ? 0 : ss->rotation+1);
+   setup1.eighth_rotation = 0;
+   setup2.eighth_rotation = 0;
    setup1.clear_people();
    setup2.clear_people();
 
@@ -478,6 +480,7 @@ static void do_c1_phantom_move(
 
       if (the_setups[0].kind == s2x2 && the_setups[1].kind == s2x2) {
          result->rotation = 0;
+         result->eighth_rotation = 0;
          result->kind = s2x4;
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map1, &the_setups[0], 0);
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map2, &the_setups[1], 0);
@@ -487,6 +490,7 @@ static void do_c1_phantom_move(
          map_ptr = &map_diag_hinged;
          result->kind = s2x4;
          result->rotation = 1;
+         result->eighth_rotation = 0;
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map1, &the_setups[0], 0);
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map2, &the_setups[1], 0);
       }
@@ -495,6 +499,7 @@ static void do_c1_phantom_move(
          map_ptr = &map_diag_phan1;
          result->kind = s_c1phan;
          result->rotation = 1;
+         result->eighth_rotation = 0;
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map1, &the_setups[0], 033);
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map2, &the_setups[1], 0);
       }
@@ -503,6 +508,7 @@ static void do_c1_phantom_move(
          map_ptr = &map_diag_phan2;
          result->kind = s_c1phan;
          result->rotation = 0;
+         result->eighth_rotation = 0;
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map1, &the_setups[0], 011);
          install_scatter(result, map_ptr->sizem1+1, map_ptr->map2, &the_setups[1], 0);
       }
@@ -3944,6 +3950,7 @@ static void do_concept_emulate(
    result->result_flags.misc |= RESULTFLAG__FORCE_SPOTS_ALWAYS;
    result->kind = ss->kind;
    result->rotation = ss->rotation;
+   result->eighth_rotation = 0;
 
    n = attr::slimit(ss);
    m = attr::klimit(res1.kind);
@@ -4253,6 +4260,7 @@ static void do_concept_checkerboard(
    a1.kind = kn;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    a1.rotation = 0;
+   a1.eighth_rotation = 0;
    a1.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
    setup res1;
@@ -4286,6 +4294,7 @@ static void do_concept_checkerboard(
 
    result->kind = ss->kind;
    result->rotation = 0;
+   result->eighth_rotation = 0;
    result->result_flags = res1.result_flags;
    reinstate_rotation(ss, result);
    result->clear_all_overcasts();
@@ -4508,16 +4517,15 @@ static void do_concept_special_sequential(
             // Doing the first call.  Apply the fraction "first 1/2", or whatever.
             result->cmd.cmd_fraction.flags = 0;
             result->cmd.cmd_fraction.fraction =
-               process_stupendously_new_fractions(NUMBER_FIELDS_1_0, given_fractions,
-                                                  FRAC_INVERT_NONE, corefracs);
+               process_fractions(NUMBER_FIELDS_1_0, given_fractions,
+                                 FRAC_INVERT_NONE, corefracs);
          }
          else {
             // Doing the second call.  Apply the fraction "last 1/2", or whatever.
             result->cmd.cmd_fraction.flags = 0;
             result->cmd.cmd_fraction.fraction =
-               process_stupendously_new_fractions(given_fractions >> (BITS_PER_NUMBER_FIELD*2),
-                                                  NUMBER_FIELDS_1_1,
-                                                  FRAC_INVERT_START, corefracs);
+               process_fractions(given_fractions >> (BITS_PER_NUMBER_FIELD*2), NUMBER_FIELDS_1_1,
+                                 FRAC_INVERT_START, corefracs);
             result->cmd.parseptr = parseptr->subsidiary_root;
          }
 
@@ -4782,6 +4790,7 @@ static void do_concept_trace(
       a[i].clear_people();
       a[i].kind = s2x2;
       a[i].rotation = 0;
+      a[i].eighth_rotation = 0;
    }
 
    if ((ss->people[6].id1 & d_mask) == d_north && (ss->people[2].id1 & d_mask) == d_south) {
@@ -4819,6 +4828,7 @@ static void do_concept_trace(
    // Process people going into the center.
 
    outer_inners[1].rotation = 0;
+   outer_inners[1].eighth_rotation = 0;
    clear_result_flags(&outer_inners[1]);
 
    if   ((res[0].kind == s2x2 && (res[0].people[2].id1 | res[0].people[3].id1)) ||
@@ -4881,6 +4891,7 @@ static void do_concept_trace(
    // Process people going to the outside.
 
    outer_inners[0].rotation = 0;
+   outer_inners[0].eighth_rotation = 0;
    clear_result_flags(&outer_inners[0]);
 
    for (i=0 ; i<4 ; i++) {
@@ -4902,6 +4913,7 @@ static void do_concept_trace(
       if (outer_inners[0].kind != nothing) fail("You can't do this.");
       outer_inners[0].kind = s1x4;
       outer_inners[0].rotation = 1;
+      outer_inners[0].eighth_rotation = 0;
    }
 
    for (i=0 ; i<4 ; i++) {
@@ -4936,7 +4948,7 @@ static void do_concept_move_in_and(
    setup *result) THROW_DECL
 {
    int rotfix = 0;
-   bool eighthrot = false;
+   int eighthrot = 0;
    calldef_schema the_schema = schema_concentric;
 
    if (ss->kind == s_alamo && global_livemask == 0xFF) {
@@ -4949,7 +4961,7 @@ static void do_concept_move_in_and(
       case 0x66:
          // FELL THROUGH!!!
          // Move them counterclockwise one eighth.
-         eighthrot = true;
+         eighthrot = 1;
          copy_person(ss, 8, ss, 2);
          copy_person(ss, 2, ss, 3);
          copy_rot(ss, 3, ss, 4, 033);
@@ -4990,7 +5002,7 @@ static void do_concept_move_in_and(
       case 0x4242:
          // FELL THROUGH!!!
          // Move them counterclockwise one eighth.
-         eighthrot = true;
+         eighthrot = 1;
          copy_person(ss, 0, ss, 1);
          copy_person(ss, 1, ss, 2);
          copy_rot(ss, 2, ss, 5, 033);
@@ -5040,8 +5052,8 @@ static void do_concept_move_in_and(
    }
 
    if (eighthrot) {
-      if (result->result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) rotfix++;
-      result->result_flags.misc ^= RESULTFLAG__PLUSEIGHTH_ROT;
+      result->eighth_rotation ^= 1;
+      if (!result->eighth_rotation) rotfix++;
    }
 
    result->rotation += rotfix;
@@ -6552,26 +6564,19 @@ static void do_concept_meta(
          if (concept_option_code == 2) {
             // This is "middle M/N".
             uint32 middlestuff = stuff + denom*((1<<BITS_PER_NUMBER_FIELD)+1);
-            afracs = process_stupendously_new_fractions(NUMBER_FIELDS_1_0, middlestuff,
-                                                        FRAC_INVERT_END, corefracs);
-            bfracs = process_stupendously_new_fractions(middlestuff, middlestuff,
-                                                        FRAC_INVERT_START, corefracs);
-            cfracs = process_stupendously_new_fractions(middlestuff, NUMBER_FIELDS_1_1,
-                                                        FRAC_INVERT_NONE, corefracs);
+            afracs = process_fractions(NUMBER_FIELDS_1_0, middlestuff, FRAC_INVERT_END, corefracs);
+            bfracs = process_fractions(middlestuff, middlestuff, FRAC_INVERT_START, corefracs);
+            cfracs = process_fractions(middlestuff, NUMBER_FIELDS_1_1, FRAC_INVERT_NONE, corefracs);
          }
          else if (concept_option_code) {
             // This is "last M/N".
-            afracs = process_stupendously_new_fractions(NUMBER_FIELDS_1_0, stuff,
-                                                        FRAC_INVERT_END, corefracs);
-            bfracs = process_stupendously_new_fractions(stuff, NUMBER_FIELDS_1_1,
-                                                        FRAC_INVERT_START, corefracs);
+            afracs = process_fractions(NUMBER_FIELDS_1_0, stuff, FRAC_INVERT_END, corefracs);
+            bfracs = process_fractions(stuff, NUMBER_FIELDS_1_1, FRAC_INVERT_START, corefracs);
          }
          else {
             // This is "halfway" or "first M/N".
-            bfracs = process_stupendously_new_fractions(NUMBER_FIELDS_1_0, stuff,
-                                                        FRAC_INVERT_NONE, corefracs);
-            cfracs = process_stupendously_new_fractions(stuff, NUMBER_FIELDS_1_1,
-                                                        FRAC_INVERT_NONE, corefracs);
+            bfracs = process_fractions(NUMBER_FIELDS_1_0, stuff, FRAC_INVERT_NONE, corefracs);
+            cfracs = process_fractions(stuff, NUMBER_FIELDS_1_1, FRAC_INVERT_NONE, corefracs);
          }
 
          // Do afracs without.
@@ -7121,11 +7126,8 @@ static void do_concept_replace_nth_part(
    case 2:
       // "Interrupt after M/N".
       frac_key1.flags = 0;
-      frac_key1.fraction = process_stupendously_new_fractions(
-         NUMBER_FIELDS_1_0,
-         parseptr->options.number_fields,
-         FRAC_INVERT_NONE,
-         ss->cmd.cmd_fraction);
+      frac_key1.fraction = process_fractions(NUMBER_FIELDS_1_0, parseptr->options.number_fields,
+                                             FRAC_INVERT_NONE, ss->cmd.cmd_fraction);
 
       frac_key2.flags = 0;
       frac_key2.fraction =
@@ -7135,11 +7137,8 @@ static void do_concept_replace_nth_part(
    case 3:
       // "Sandwich".
       frac_key1.flags = 0;
-      frac_key1.fraction = process_stupendously_new_fractions(
-         NUMBER_FIELDS_1_0,
-         NUMBER_FIELDS_2_1,
-         FRAC_INVERT_NONE,
-         ss->cmd.cmd_fraction);
+      frac_key1.fraction = process_fractions(NUMBER_FIELDS_1_0, NUMBER_FIELDS_2_1,
+                                             FRAC_INVERT_NONE, ss->cmd.cmd_fraction);
 
       frac_key2.flags = 0;
       frac_key2.fraction =
@@ -7436,12 +7435,12 @@ static void do_concept_fractional(
    }
 
    bool improper = false;
-   uint32 new_fracs = process_stupendously_new_fractions((FOO >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK_RIGHT_TWO,
-                                                         FOO & NUMBER_FIELD_MASK_RIGHT_TWO,
-                                                         FRAC_INVERT_NONE,
-                                                         ARG4,
-                                                         parseptr->concept->arg1 == 2,
-                                                         &improper);
+   uint32 new_fracs = process_fractions((FOO >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK_RIGHT_TWO,
+                                        FOO & NUMBER_FIELD_MASK_RIGHT_TWO,
+                                        FRAC_INVERT_NONE,
+                                        ARG4,
+                                        parseptr->concept->arg1 == 2,
+                                        &improper);
 
    if (improper) {
       // Do the whole call first, then part of it again.
