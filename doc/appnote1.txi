@@ -1,4 +1,4 @@
-\input texinfo @c %**start of header -*-texinfo-*-
+\input whatever @c %**start of header -*-texinfo-*-
 @setfilename appnote1.info
 @settitle Sd Application note 1
 @iftex

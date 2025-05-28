@@ -36,6 +36,7 @@ extern void ttu_terminate(void);
    with the "screen" size. */
 
 extern int get_lines_for_more(void);
+extern FILE *journal_file;
 
 /* Clear the current line, leave cursor at left edge. */
 extern void clear_line(void);

@@ -1,4 +1,4 @@
-\input texinfo @c %**start of header -*-texinfo-*-
+\input whatever @c %**start of header -*-texinfo-*-
 @setfilename demo.info
 @settitle sdtty demo
 @c Time-stamp: <96/04/05 14:25:00 wba>

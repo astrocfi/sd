@@ -1,0 +1,28 @@
+SD/SDTTY    square dance caller's helper
+
+System requirements:
+DOS, 386 or higher, 2MB memory, hard disk
+
+Copyright 1993-1998 WBA.  Portions copyright by others.
+
+This is free software, and you are welcome to redistribute it.
+
+The file INSTALL.EXE is a self-extracting archive of the program
+   and database.  Other .EXE files are self-extracting archives
+   of documentation.
+
+Installation:
+1.  Select hard drive, e.g.,             > C:
+2.  Make directory for Sd:               > MD \SD
+3.  Change to new directory:             > CD \SD
+4.  Insert disk in drive A, then         > A:INSTALL
+  or Insert disk in drive B, then        > B:INSTALL
+5.  Run program:                         > sdtty level
+
+You can install plain documentation files into the same
+directory by typing:
+      > A:TEXTDOC
+
+You can install documentation files in Adobe Acrobat
+format into the same directory by typing:
+      > A:PDFDOC

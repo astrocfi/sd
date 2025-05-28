@@ -35,8 +35,7 @@ call make_text demo.txt plain.msg
 call make_text sessions.txt plain.msg
 call make_text relnotes.txt plain.msg
 pgp -sta +clearsig=on +armor=on plain.msg -u wba -o plain.txt
-del plain.msg
-REM zip plain plain.txt
+zip plain plain.txt
 REM
 REM         The file "plain.zip" may now be unzipped to "plain.txt",
 REM            which can then be mailed.

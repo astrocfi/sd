@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -12,30 +14,44 @@
 
     This is for version 32. */
 
+/* We would like to not need to customize things for different "dialects" of
+   ANSI C, because we would like to think that there are no "dialects".  But, alas,
+   there are two issues:
+   (1) Some versions of GNU C (gcc) recognize the "volatile" keyword on a procedure
+      as indicating that its call-return behavior is anomalous, and generate
+      better code with that knowledge.  We can take advantage of that for some
+      of our functions that never return, so we define a keyword "nonreturning".
+   (2) Some compilers trying to pass for ANSI C have been observed failing
+      to handle the "const" attribute.  (Yes, an ANSI C compiler that doesn't handle
+      "const" is an oxymoron.)  We grudgingly accept such compilers if the
+      "CONST_IS_BROKEN" symbol is defined.  We allow that to be set by a Makefile,
+      and we set it ourselves for those compilers that we know about. */
 
-/* We customize the necessary declarations for functions
-   that don't return.  Alas, this requires something in front
-   and something in back. */
+/* Default is that "nonreturning" is meaningless. */
+#define nonreturning
 
-#if defined(__GNUC__)
-#define NORETURN1
-#define NORETURN2 __attribute__ ((noreturn))
-#elif defined(WIN32)
-// This declspec only works for VC++ version 6.
-#define NORETURN1 /*__declspec(noreturn)*/
-#define NORETURN2
+#ifdef __GNUC__
+#if __GNUC__ >= 2
+/* GNU C versions 2 or greater recognize volatile procedures. */
+#undef nonreturning
+#define nonreturning __attribute__ ((noreturn))
 #else
-#define NORETURN1
-#define NORETURN2
+/* GNU C versions less than 2 can't do "const". */
+#define CONST_IS_BROKEN
+#endif
 #endif
 
-/* We used to do some stuff to cater to compiler vendors
-   (e.g. Sun Microsystems) that couldn't be bothered to
-   do the "const" attribute correctly.  We no longer have
-   any patience with such things. */
+#ifdef __CODECENTER_4__
+#define CONST_IS_BROKEN		/* in CodeCenter 4.0.2 */
+#endif
 
+/* We will use "Const" with a capital "C" for our attempts at the "const" attribute. */
+#ifndef CONST_IS_BROKEN
 #define Const const
-
+#else
+/* Too bad.  Define it as nothing. */
+#define Const
+#endif
 
 /* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
 #define Private static
@@ -82,7 +98,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 148
+#define DATABASE_FORMAT_VERSION 146
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -210,7 +226,6 @@ static Const uint32 INHERITFLAG_FRACTAL    = 0x00020000UL;
 /* This is a 2 bit field -- VISIBLE_FRACTION_BIT tells where its low bit lies. */
 static Const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL;
 static Const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL;
-
 static Const uint32 CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL;
 static Const uint32 CFLAG1_IMPRECISE_ROTATION        = 0x00000008UL;
 static Const uint32 CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL;
@@ -227,34 +242,25 @@ static Const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL;
 static Const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL;
 static Const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL;
 
-static Const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00002000UL;
-
+static Const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00002000UL;
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
 static Const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL;
 static Const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL;
-
 static Const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00020000UL;
 static Const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x00040000UL;
 static Const uint32 CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL;
-static Const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL;
-static Const uint32 CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL;
+static Const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00100000UL;
+static Const uint32 CFLAG1_CAN_BE_FAN                = 0x00200000UL;
 static Const uint32 CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL;
 static Const uint32 CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL;
-
 /* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
 static Const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL;
 static Const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL;
-
 static Const uint32 CFLAG1_BASE_CIRC_CALL            = 0x08000000UL;
 static Const uint32 CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL;
 static Const uint32 CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL;
 static Const uint32 CFLAG1_ONE_PERSON_CALL           = 0x40000000UL;
 static Const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x80000000UL;
-
-/* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
-   They must lie in the top 8 bits for now. */
-static Const uint32 CFLAG2_YOYO_FRACTAL_NUM          = 0x01000000UL;
-static Const uint32 CFLAG2_CAN_BE_FAN                = 0x02000000UL;
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -625,7 +631,6 @@ typedef enum {
    cr_diamond_like,
    cr_qtag_like,
    cr_pu_qtag_like,
-   cr_reg_tbone,
    cr_gen_qbox,            /* Qualifier only. */
    cr_nice_diamonds,       /* Restriction only. */
    cr_magic_only,

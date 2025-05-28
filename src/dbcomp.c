@@ -1,3 +1,5 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1999  William B. Ackerman.
@@ -599,7 +601,6 @@ char *qualtab[] = {
    "diamond_like",
    "qtag_like",
    "pu_qtag_like",
-   "regular_tbone",
    "gen_qbox",
    "nice_diamonds",
    "magic_only",
@@ -722,15 +723,15 @@ char *flagtab1[] = {
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
-   "left_means_touch_or_check",
+   "dont_use_in_resolve",
    "neednumber",
    "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
    "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
    "distribute_repetitions",
-   "dont_use_in_resolve",
-   "dont_use_in_nice_resolve",
+   "left_means_touch_or_check",
+   "can_be_fan",
    "yield_if_ambiguous",
    "no_elongation_allowed",
    "base_tag_call_0",
@@ -742,7 +743,6 @@ char *flagtab1[] = {
    "one_person_call",
    "preserve_z_stuff",
    "yoyo_fractal_numbers",
-   "can_be_fan",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -936,7 +936,6 @@ char *predtab[] = {
    "person_select_sum11",
    "person_select_sum15",
    "person_select_plus4",
-   "person_select_plus6",
    "person_select_plus8",
    "person_select_plus12",
    "semi_squeezer_select",

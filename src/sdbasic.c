@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -20,13 +22,8 @@
    basic_move
 */
 
-#ifdef WIN32
-#define SDLIB_API __declspec(dllexport)
-#else
-#define SDLIB_API
-#endif
-
 #include "sd.h"
+
 
 
 /* This file uses a few bogus setups.  They are never allowed to escape:
@@ -76,10 +73,61 @@
 
 
 
+static coordrec tgl3_0 = {s_trngl, 3,
+   {  0,  -2,   2},
+   {  0,   4,   4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  1,  2, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+static coordrec tgl3_1 = {s_trngl, 3,
+   {  0,   4,   4},
+   {  0,   2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  0,  1, -1, -1,
+      -1, -1, -1, -1, -1,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec tgl4_0 = {s_trngl4, 3,
+   {  0,   0,  -2,   2},
+   { -4,   0,   4,   4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  2,  3, -1, -1, -1,
+      -1, -1, -1, -1,  1, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+static coordrec tgl4_1 = {s_trngl4, 3,
+   { -4,   0,   4,   4},
+   {  0,   0,   2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1, -1, -1, -1,  3, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
 extern void mirror_this(setup *s)
 {
    uint32 l, r, z, n, t;
-   const coordrec *cptr;
+   coordrec *cptr;
    int i, x, y, place, limit, doffset;
 
    setup temp = *s;
@@ -409,7 +457,7 @@ extern void fix_collision(
    }
 
    /* Don't recognize the pattern, report this as normal collision. */
-   (*the_callback_block.do_throw_fn)(error_flag_collision);
+   longjmp(longjmp_ptr->the_buf, 3);
 
    win:
 
@@ -696,28 +744,41 @@ extern long_boolean check_restriction(
    uint32 i, k, z, t;
    int idx;
    Const veryshort *mp;
+   restriction_thing *restr_thing_ptr;
    long_boolean retval = TRUE;   /* TRUE means we were not able to instantiate phantoms.
                                     It is only meaningful if instantiation was requested. */
 
-   // First, check for nice things.
+   if (restr.assumption == cr_alwaysfail) goto restr_failed;
 
-   switch (verify_restriction(ss, restr, instantiate_phantoms, &retval)) {
-   case restriction_passes:
-      // If this successfully instantiates phantoms, it will clear retval.
-      goto getout;
-   case restriction_fails:
+   if (restr.assumption == cr_nice_diamonds) {
+      restr.assumption = cr_jright;
+      restr.assump_col = 4;
+   }
+   else if (restr.assumption == cr_leads_only) {
+      restr.assump_both = 2;
+   }
+   else if (restr.assumption == cr_trailers_only) {
+      restr.assump_both = 1;
+   }
+
+   /* First, check for nice things. */
+
+   restr_thing_ptr = get_restriction_thing(ss->kind, restr);
+
+   if (restr_thing_ptr) {
+      /* If this finds the restriction satisfied AND successfully instantiates
+         phantoms, it will clear retval. */
+
+      if (verify_restriction(ss, restr_thing_ptr, restr, instantiate_phantoms, &retval))
+         goto getout;
       goto restr_failed;
    }
 
-   // Now check all the other stuff.
+   /* Now check all the other stuff. */
 
-   switch (restr.assumption) {
-   case cr_real_1_4_tag: case cr_real_3_4_tag:
-   case cr_real_1_4_line: case cr_real_3_4_line:
-      /* These are not legal if they weren't handled already. */
-      goto restr_failed;
-   case cr_siamese_in_quad:
-      /* This is independent of whether we are line-like or column-like. */
+   /* This next restriction is independent of whether we are line-like or column-like. */
+
+   if (restr.assumption == cr_siamese_in_quad) {
       for (idx=0 ; idx<4 ; idx++) {
          int ii;
          int perquad = (setup_attrs[ss->kind].setup_limits+1) >> 2;
@@ -737,7 +798,6 @@ extern long_boolean check_restriction(
 
          if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
       }
-      break;
    }
 
    if (restr.assump_col & 1) {
@@ -2031,24 +2091,21 @@ Private int divide_the_setup(
             ones empty, we could do a swing-thru.  We also identify Z's from which
             we can do "Z axle". */
 
-         // But if user said "16 matrix" or something, do don't do implicit division.
-
-         if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-            switch (livemask) {
-            case 0x6666:
-               division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
-               goto divide_us_no_recompute;
-            case 0x7171:
-               division_maps = &map_4x4_ns;
-               warn(warn__each1x4);
-               goto divide_us_no_recompute;
-            case 0x1717:
-               division_maps = &map_4x4_ew;
-               warn(warn__each1x4);
-               goto divide_us_no_recompute;
-            case 0x4E4E: case 0x8B8B:
-               division_maps = &map_rh_s2x3_3;
-               /* If this changes shape (as it will in the only known case
+         switch (livemask) {
+         case 0x6666:
+            division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
+            goto divide_us_no_recompute;
+         case 0x7171:
+            division_maps = &map_4x4_ns;
+            warn(warn__each1x4);
+            goto divide_us_no_recompute;
+         case 0x1717:
+            division_maps = &map_4x4_ew;
+            warn(warn__each1x4);
+            goto divide_us_no_recompute;
+         case 0x4E4E: case 0x8B8B:
+            division_maps = &map_rh_s2x3_3;
+            /* If this changes shape (as it will in the only known case
                   of this -- Z axle), divided_setup_move will give a warning
                   about going to a parallelogram, since we did not start
                   with 50% offset, though common practice says that a
@@ -2057,64 +2114,63 @@ Private int divide_the_setup(
                   the call is a shape changer that tries to go into a setup
                   other than a parallelogram, divided_setup_move will raise
                   an error. */
-               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
-               if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
-                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
-                  goto divide_us_no_recompute;
-               break;
-            case 0xA6A6: case 0x9C9C:
-               division_maps = &map_lh_s2x3_3;
-               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
-               if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
-                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
-                  goto divide_us_no_recompute;
-               break;
-            case 0xE4E4: case 0xB8B8:
-               division_maps = &map_rh_s2x3_2;
-               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
-               if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
-                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
-                  goto divide_us_no_recompute;
-               break;
-            case 0x6A6A: case 0xC9C9:
-               division_maps = &map_lh_s2x3_2;
-               ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
-               if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
-                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
-                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
-                  goto divide_us_no_recompute;
-               break;
-            case 0x4B4B: case 0xB4B4:
-               /* See comment above, for 3x4. */
-               {
-                  long_boolean forbid_little_stuff =
-                     !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
-                     (assoc(b_2x4, ss, calldeflist) ||
-                      assoc(b_4x2, ss, calldeflist) ||
-                      /*    these lines make peel off not work in clumps.
-                            assoc(b_2x3, ss, calldeflist) ||
-                            assoc(b_3x2, ss, calldeflist) ||
-                      */                           assoc(b_dmd, ss, calldeflist) ||
-                      assoc(b_pmd, ss, calldeflist) ||
-                      assoc(b_qtag, ss, calldeflist) ||
-                      assoc(b_pqtag, ss, calldeflist));
+            ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
+            if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+                (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
+               goto divide_us_no_recompute;
+            break;
+         case 0xA6A6: case 0x9C9C:
+            division_maps = &map_lh_s2x3_3;
+            ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
+            if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+                (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_2x3, ss, calldeflist)))
+               goto divide_us_no_recompute;
+            break;
+         case 0xE4E4: case 0xB8B8:
+            division_maps = &map_rh_s2x3_2;
+            ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
+            if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+                (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
+               goto divide_us_no_recompute;
+            break;
+         case 0x6A6A: case 0xC9C9:
+            division_maps = &map_lh_s2x3_2;
+            ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
+            if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
+                (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_3x2, ss, calldeflist)))
+               goto divide_us_no_recompute;
+            break;
+         case 0x4B4B: case 0xB4B4:
+            /* See comment above, for 3x4. */
+            {
+               long_boolean forbid_little_stuff =
+                  !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
+                  (assoc(b_2x4, ss, calldeflist) ||
+                   assoc(b_4x2, ss, calldeflist) ||
+                   /*    these lines make peel off not work in clumps.
+                         assoc(b_2x3, ss, calldeflist) ||
+                         assoc(b_3x2, ss, calldeflist) ||
+                   */                           assoc(b_dmd, ss, calldeflist) ||
+                   assoc(b_pmd, ss, calldeflist) ||
+                   assoc(b_qtag, ss, calldeflist) ||
+                   assoc(b_pqtag, ss, calldeflist));
 
-                  /* We are in "clumps".  See if we can do the call in 2x2 or smaller setups. */
-                  if (forbid_little_stuff ||
-                      (!assoc(b_2x2, ss, calldeflist) &&
-                       !assoc(b_1x2, ss, calldeflist) &&
-                       !assoc(b_2x1, ss, calldeflist) &&
-                       !assoc(b_1x1, ss, calldeflist)))
-                     fail("Don't know how to do this call in this setup.");
-                  if (!matrix_aware) warn(warn__each2x2);
-                  division_code = (livemask == 0x4B4B) ?
-                     MAPCODE(s2x2,2,MPKIND__OFFS_L_FULL,0) :
-                     MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0);
-                  goto divide_us_no_recompute;
-               }
+               /* We are in "clumps".  See if we can do the call in 2x2 or smaller setups. */
+               if (  forbid_little_stuff ||
+                     (  !assoc(b_2x2, ss, calldeflist) &&
+                        !assoc(b_1x2, ss, calldeflist) &&
+                        !assoc(b_2x1, ss, calldeflist) &&
+                        !assoc(b_1x1, ss, calldeflist)))
+                  fail("Don't know how to do this call in this setup.");
+               if (!matrix_aware) warn(warn__each2x2);
+               division_code = (livemask == 0x4B4B) ?
+                  MAPCODE(s2x2,2,MPKIND__OFFS_L_FULL,0) :
+                  MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0);
+               goto divide_us_no_recompute;
             }
          }
 
@@ -2792,11 +2848,8 @@ Private int divide_the_setup(
 
          break;
       case s1x4:
-         /* See if the call has a 1x2, 2x1, or 1x1 definition,
-            in which case split it and do each part. */
-         if ((assoc(b_1x2, ss, calldeflist) ||
-              assoc(b_2x1, ss, calldeflist) ||
-              assoc(b_1x1, ss, calldeflist))) {
+         /* See if the call has a 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
+         if ((assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist))) {
 
             /* The following makes "ends hinge" work from a grand wave.  Any 1x4 -> 2x2 call
                that acts by dividing itself into 1x2's is presumed to want the people in each 1x2
@@ -2805,8 +2858,7 @@ Private int divide_the_setup(
                have been in the call definition. */
 
             *desired_elongation_p ^= 3;
-            /* If the flags were zero and we complemented them so that
-               both are set, that's not good. */
+            /* If the flags were zero and we complemented them so that both are set, that's not good. */
             if (*desired_elongation_p == 3)
                *desired_elongation_p = 0;
 
@@ -2971,7 +3023,7 @@ Private int divide_the_setup(
    do_concentrically:
 
    conc_cmd = ss->cmd;
-   concentric_move(ss, &conc_cmd, &conc_cmd, conc_schema, 0, DFM1_SUPPRESS_ELONGATION_WARNINGS, FALSE, result);
+   concentric_move(ss, &conc_cmd, &conc_cmd, conc_schema, 0, 0, FALSE, result);
    return 1;
 
    do_mystically:
@@ -3622,8 +3674,7 @@ foobar:
 
    if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
       if (!(search_concepts & INHERITFLAG_16_MATRIX) &&
-          ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s_d3x4 ||
-            ss->kind == s1x12 || ss->kind == sdeepqtg) ||
+          ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12 || ss->kind == sdeepqtg) ||
            (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
             !(search_concepts & INHERITFLAG_16_MATRIX) &&
@@ -3749,7 +3800,8 @@ foobar:
        (linedefinition && (linedefinition->callarray_flags & CAF__OTHER_ELONGATE)))
       other_elongate = TRUE;
 
-   if (other_elongate && ((desired_elongation+1) & 2))
+   if (other_elongate &&
+       (desired_elongation == 1 || desired_elongation == 2))
       desired_elongation ^= 3;
 
    if (!newtb) {
@@ -3807,6 +3859,11 @@ foobar:
       t.assump_cast = 0;
       t.assump_live = 0;
       t.assump_negate = 0;
+
+      if (t.assumption == cr_nice_diamonds && ss->kind == s_qtag) {
+         t.assumption = cr_jright;
+         t.assump_col = 4;
+      }
 
       if (t.assumption != cr_none)
          (void) check_restriction(ss, t, FALSE,
@@ -4599,7 +4656,7 @@ foobar:
                newperson.id1 = (ss->people[real_index].id1 & ~ROLL_MASK) | ROLLBITM;
                newperson.id2 = ss->people[real_index].id2;
                result->people[k] = newperson;
-               newpersonlist[k].id1 = ~0UL;
+               newpersonlist[k].id1 = -1;
                funny_ok1 = TRUE;    /* Someone decided not to move.  Hilarious. */
                goto funny_end;
 
@@ -4609,7 +4666,7 @@ foobar:
                j = 0;      /* See how long the loop is. */
                do {
                   newperson = newpersonlist[k];
-                  newpersonlist[k].id1 = ~0UL;
+                  newpersonlist[k].id1 = -1;
                   k = newplacelist[k];
                   result->people[k] = newperson;
                   j++;
@@ -4637,9 +4694,8 @@ foobar:
                error_message1[0] = '\0';
                error_message2[0] = '\0';
 
-               /* We can't handle it at all -- just raise the error. */
                if (final_numout > 12 || result->people[k+12].id1 != 0)
-                  (*the_callback_block.do_throw_fn)(error_flag_collision);
+                  longjmp(longjmp_ptr->the_buf, 3);    /* We can't handle it at all -- just raise the error. */
 
                /* Store the person in the overflow area
                   (12 higher than the main area, which is why we only permit
@@ -4703,8 +4759,5 @@ foobar:
    /* We take out any elongation info that divided_setup_move may have put in
       and override it with the correct info. */
 
-   result->result_flags =
-      (result->result_flags & (~3)) |
-      resultflags |
-      (desired_elongation & 3);
+   result->result_flags = (result->result_flags & (~3)) | resultflags | (desired_elongation & 3);
 }
