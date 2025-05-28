@@ -5565,7 +5565,7 @@ back_here:
                else
                   goto lose;
 
-               if (lilresult[0].rotation != 0)
+               if (lilresult[0].rotation != 0 && !(nextfixp->rot & 0x40000000))
                   nextfixp = select::fixer_ptr_table[nextfixp->nextdmdrot];
             }
             else if (lilresult[0].rotation != 0) {
@@ -5575,7 +5575,7 @@ back_here:
                      nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
                   else if (lilresult[0].kind == s2x3)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2v];
-                  else if (lilresult[0].kind == s_short6)
+                  else if (lilresult[0].kind == s_short6 && !(fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                   else if (lilresult[0].kind == s_bone6)
                      nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
@@ -5589,7 +5589,7 @@ back_here:
                else if (attr::klimit(fixp->ink) == 2) {
                   if (lilresult[0].kind == s1x3)
                      nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
-                  else if (lilresult[0].kind == s_trngl)
+                  else if (lilresult[0].kind == s_trngl && !(fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                }
                else if (attr::klimit(fixp->ink) == 11) {
@@ -5601,7 +5601,9 @@ back_here:
                      nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
                   else if (lilresult[0].kind == s1x4)
                      nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
-                  else if (lilresult[0].kind == sdmd)
+                  else if (lilresult[0].kind == sdmd && !(fixp->rot & 0x40000000))
+                     nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
+                  else if (lilresult[0].kind == s2x3 && (fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                }
 

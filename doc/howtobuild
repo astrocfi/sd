@@ -17,7 +17,7 @@ Be sure the version numbers and dates are correct in:
     [sd]    sd_calls.txt (version # is visible)
     [sd]       [When rolling the year, fix copyright notice in sdutil.cpp]
     [sddoc] title.lst    (version # is visible)
-    [sddoc] about.lst    (version # is visible)
+    [sddoc] about.lst    (version # and year are visible)
     [sddoc] sd_doc.txi         (version # and date are visible)
     [sddoc] relnotes.txi       (version #, database format version #,
                                and UI version # are visible.
@@ -298,6 +298,7 @@ Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
    athena> exit
 
 -----------------------------------------------------------------
+    Older method.
 -----------------------------------------------------------------
 
 

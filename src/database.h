@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2008  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 280
+#define DATABASE_FORMAT_VERSION 282
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -1125,7 +1125,7 @@ enum  {
    STB_AA,        // "AA" - person turns anticlockwise from 5 to 8 quadrants
 
    // This is the entire field in which it fits.
-   STB_MASK = 15,
+   STB_MASK = 0xF,
 
    // This bit reverses everything (or changes "none" to "Z".)
    STB_REVERSE = 8
@@ -1136,19 +1136,15 @@ enum  {
    "arr" array of a predptr_pair or the "stuff.def" array of a callarray.
 
    The format of this item is:
-       stability info     roll info     where to go     direction to face
-           4 bits           3 bits        5 bits            4 bits
+       stability info   slide and roll info         where to go     direction to face
+                     (2 for slide, 3 for roll)     (compressed!)
+           4 bits            5 bits                   5 bits            2 bits
 
-   The direction is in the special format
-            north   10 octal
-            south   12 octal
-            east    01 octal
-            west    03 octal
-   that makes procedures "rotcw" etc. work correctly.  The constants
-   d_north, d_south, d_east, d_west in sd.h are just these numbers
-   with the 1000 (octal) bit, which is BIT_PERSON, added. */
+   The direction is 4 plus the two-bit code.  The 4 is to make sure that the word is never zero.
+*/
 
 enum {
-   NDBROLL_BIT    = 0x0200,
-   DBSTAB_BIT     = 0x1000
+   DBSLIDEROLL_BIT = 0x0080,
+   DBSLIDE_BIT     = 0x0400,
+   DBSTAB_BIT      = 0x1000
 };

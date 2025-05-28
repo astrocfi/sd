@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2008  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -37,10 +37,12 @@
    fail2
    failp
    specialfail
+   saved_error_info::collect
+   saved_error_info::throw_saved_error
    warn
    verify_restriction
    assoc
-   find_calldef
+   uncompress_position_number
    setup::clear_people
    clear_result_flags
    setup::setup    // big constructor.
@@ -3244,8 +3246,8 @@ static bool check_for_supercall(parse_block *parseptrcopy)
    return false;
 }
 
-static parse_block pbend(&conzept::mark_end_of_list);
-static parse_block pbsuper(&conzept::marker_concept_supercall);
+static parse_block pbend(conzept::mark_end_of_list);
+static parse_block pbsuper(conzept::marker_concept_supercall);
 
 bool check_for_concept_group(
    parse_block *parseptrcopy,
@@ -3454,7 +3456,7 @@ extern void fail2(const char s1[], const char s2[]) THROW_DECL
 extern void failp(uint32 id1, const char s[]) THROW_DECL
 {
    collision_person1 = id1;
-   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    throw error_flag_type(error_flag_cant_execute);
 }
@@ -3462,10 +3464,29 @@ extern void failp(uint32 id1, const char s[]) THROW_DECL
 
 extern void specialfail(const char s[]) THROW_DECL
 {
-   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
    throw error_flag_type(error_flag_wrong_resolve_command);
+}
+
+
+void saved_error_info::collect(error_flag_type flag)
+{
+   save_error_flag = flag;
+   strncpy((char *) save_error_message1, error_message1, MAX_ERR_LENGTH);
+   strncpy((char *) save_error_message2, error_message2, MAX_ERR_LENGTH);
+   save_collision_person1 = collision_person1;
+   save_collision_person2 = collision_person2;
+}
+
+void saved_error_info::throw_saved_error() THROW_DECL
+{
+   strncpy(error_message1, (char *) save_error_message1, MAX_ERR_LENGTH);
+   strncpy(error_message2, (char *) save_error_message2, MAX_ERR_LENGTH);
+   collision_person1 = save_collision_person1;
+   collision_person2 = save_collision_person2;
+   throw save_error_flag;
 }
 
 
@@ -4402,40 +4423,12 @@ extern callarray *assoc(
 }
 
 
-extern uint32 find_calldef(
-   callarray *tdef,
-   setup *scopy,
-   int real_index,
-   int real_direction,
-   int northified_index) THROW_DECL
+
+// See also end of "find_calldef" in sdbasic.cpp.
+uint32 uncompress_position_number(uint32 datum)
 {
-   if (!tdef) crash_print(__FILE__, __LINE__);
-
-   unsigned short *calldef_array;
-   uint32 z;
-
-   if (tdef->callarray_flags & CAF__PREDS) {
-      for (predptr_pair *predlistptr = tdef->stuff.prd.predlist ;
-           predlistptr ;
-           predlistptr = predlistptr->next) {
-         if ((*(predlistptr->pred->predfunc))
-             (scopy, real_index, real_direction,
-              northified_index, predlistptr->pred->extra_stuff)) {
-            calldef_array = predlistptr->array_pred_def;
-            goto got_it;
-         }
-      }
-      fail(tdef->stuff.prd.errmsg);
-   }
-   else
-      calldef_array = tdef->stuff.array_no_pred_def;
-
-got_it:
-
-   z = calldef_array[northified_index];
-   if (!z) failp(scopy->people[real_index].id1, "can't execute their part of this call.");
-
-   return z;
+   int field = ((datum >> 2) & 0x1F) - 1;
+   return (field <= 24) ? field : (field-12) << 1;
 }
 
 

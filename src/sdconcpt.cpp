@@ -81,13 +81,18 @@ static phan_map map_c1_phan   = {7, s2x4,   {0, 2, 7, 5, 8, 10, 15, 13},    {4, 
 
 static phan_map map_pinwheel1 = {7, s2x4,   {10, 15, -1, -1,  2,  7, -1, -1},  {14,  3, -1, -1,  6, 11, -1, -1}};
 static phan_map map_pinwheel2 = {7, s2x4,   {-1, -1,  3,  1, -1, -1, 11,  9},  {-1, -1,  7,  5, -1, -1, 15, 13}};
+static phan_map map_pinwheel3 = {7, s2x4,   {12, 13, -1, -1,  4, 5, -1, -1},  {14,  3, -1, -1,  6, 11, -1, -1}};
+static phan_map map_pinwheel4 = {7, s2x4,   {-1, -1,  14,  0, -1, -1, 6,  8},  {-1, -1,  7,  5, -1, -1, 15, 13}};
+static phan_map map_pinwheel5 = {7, s2x4,   {10, 15, -1, -1,  2,  7, -1, -1},  {0, 1, -1, -1,  8, 9, -1, -1}};
+static phan_map map_pinwheel6 = {7, s2x4,   {-1, -1,  3,  1, -1, -1, 11,  9},  {-1, -1,  2, 4, -1, -1, 10, 12}};
+
 static phan_map map_tophat1   = {7, s2x4,   {-1, -1,  3,  1,  2,  7, -1, -1},  {-1, -1, -1, -1,  6, 11, 15, 13}};
 static phan_map map_tophat2   = {7, s2x4,   {10, 15,  3,  1, -1, -1, -1, -1},  {-1, -1,  7,  5,  6, 11, -1, -1}};
 static phan_map map_tophat3   = {7, s2x4,   {10, 15, -1, -1, -1, -1, 11,  9},  {14,  3,  7,  5, -1, -1, -1, -1}};
 static phan_map map_tophat4   = {7, s2x4,   {-1, -1, -1, -1,  2,  7, 11,  9},  {14,  3, -1, -1, -1, -1, 15, 13}};
 
-static phan_map map_pinwheel3 = {7, s2x4,   {0, 1, -1, -1, 6, 7, -1, -1}, {2, 5, -1, -1, 8, 11, -1, -1}};
-static phan_map map_pinwheel4 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9},  {-1, -1, 5, 7, -1, -1, 11, 1}};
+static phan_map map_pinwheel7 = {7, s2x4,   {0, 1, -1, -1, 6, 7, -1, -1}, {2, 5, -1, -1, 8, 11, -1, -1}};
+static phan_map map_pinwheel8 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9},  {-1, -1, 5, 7, -1, -1, 11, 1}};
 
 static phan_map map_o_spots   = {7, s2x4,   {10, -1, -1, 1, 2, -1, -1, 9},  {14, -1, -1, 5, 6, -1, -1, 13}};
 static phan_map map_qt_phan   = {7, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7},   {1, 4, -1, -1, 5, 0, -1, -1}};
@@ -305,9 +310,9 @@ static void do_c1_phantom_move(
       // Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms.
 
       if (global_livemask == 04747)
-         map_ptr = &map_pinwheel3;
+         map_ptr = &map_pinwheel7;
       else if (global_livemask == 05656)
-         map_ptr = &map_pinwheel4;
+         map_ptr = &map_pinwheel8;
    }
    else if (ss->kind == s4x4) {
       setup temp;
@@ -320,6 +325,22 @@ static void do_c1_phantom_move(
       }
       else if (global_livemask == 0xAAAA) {
          map_ptr = &map_pinwheel2;
+         goto use_map;
+      }
+      else if (global_livemask == 0x7878) {
+         map_ptr = &map_pinwheel3;
+         goto use_map;
+      }
+      else if (global_livemask == 0xE1E1) {
+         map_ptr = &map_pinwheel4;
+         goto use_map;
+      }
+      else if (global_livemask == 0x8787) {
+         map_ptr = &map_pinwheel5;
+         goto use_map;
+      }
+      else if (global_livemask == 0x1E1E) {
+         map_ptr = &map_pinwheel6;
          goto use_map;
       }
       else if (global_livemask == 0xA8CE) {
@@ -1016,6 +1037,8 @@ static void do_concept_parallelogram(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_PG_OFFSET;
+
    // First, deal with "parallelogram diamonds".
 
    if (parseptr->concept->arg1) {
@@ -2265,6 +2288,7 @@ static void do_concept_distorted(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
+   ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_PG_OFFSET;
    distorted_move(ss, parseptr, (disttest_kind) parseptr->concept->arg1, result);
 }
 
@@ -3840,8 +3864,8 @@ static void do_concept_emulate(
          for (j=0; j<=m; j++) {
             uint32 q = res1.people[j].id1;
             if ((q & BIT_PERSON) && ((q ^ p) & XPID_MASK) == 0) {
-               result->people[i].id1 &= ~(NROLL_MASK | STABLE_ALL_MASK | 0x3F);
-               result->people[i].id1 |= rotperson(q, rot) & (NROLL_MASK | STABLE_ALL_MASK | 0x3F);
+               result->people[i].id1 &= ~(NSLIDE_ROLL_MASK | STABLE_ALL_MASK | 0x3F);
+               result->people[i].id1 |= rotperson(q, rot) & (NSLIDE_ROLL_MASK | STABLE_ALL_MASK | 0x3F);
                goto did_it;
             }
          }
@@ -4045,19 +4069,19 @@ static void do_concept_checkerboard(
       copy_rot(result, mapeptr[2], ss, mapeptr[1], 0);
       if (result->people[mapeptr[2]].id1)
          result->people[mapeptr[2]].id1 =
-            (result->people[mapeptr[2]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[2]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[1], ss, mapeptr[0], 022);
       if (result->people[mapeptr[1]].id1)
          result->people[mapeptr[1]].id1 =
-            (result->people[mapeptr[1]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[1]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[0], ss, mapeptr[3], 0);
       if (result->people[mapeptr[0]].id1)
          result->people[mapeptr[0]].id1 =
-            (result->people[mapeptr[0]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[0]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[3], ss, mapeptr[2], 022);
       if (result->people[mapeptr[3]].id1)
          result->people[mapeptr[3]].id1 =
-            (result->people[mapeptr[3]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[3]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
    }
    else if ((parseptr->concept->arg2 & 7) == 4) {
       // left orbitboard
@@ -4068,19 +4092,19 @@ static void do_concept_checkerboard(
       copy_rot(result, mapeptr[2], ss, mapeptr[3], 022);
       if (result->people[mapeptr[2]].id1)
          result->people[mapeptr[2]].id1 =
-            (result->people[mapeptr[2]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[2]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[1], ss, mapeptr[2], 0);
       if (result->people[mapeptr[1]].id1)
          result->people[mapeptr[1]].id1 =
-            (result->people[mapeptr[1]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[1]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[0], ss, mapeptr[1], 022);
       if (result->people[mapeptr[0]].id1)
          result->people[mapeptr[0]].id1 =
-            (result->people[mapeptr[0]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[0]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[3], ss, mapeptr[0], 0);
       if (result->people[mapeptr[3]].id1)
          result->people[mapeptr[3]].id1 =
-            (result->people[mapeptr[3]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[3]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
    }
    else if ((parseptr->concept->arg2 & 7) == 3) {
       // twin orbitboard
@@ -4091,19 +4115,19 @@ static void do_concept_checkerboard(
       copy_rot(result, mapeptr[2], ss, mapeptr[1], 0);
       if (result->people[mapeptr[2]].id1)
          result->people[mapeptr[2]].id1 =
-            (result->people[mapeptr[2]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[2]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[3], ss, mapeptr[0], 0);
       if (result->people[mapeptr[3]].id1)
          result->people[mapeptr[3]].id1 =
-            (result->people[mapeptr[3]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[3]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[0], ss, mapeptr[3], 0);
       if (result->people[mapeptr[0]].id1)
          result->people[mapeptr[0]].id1 =
-            (result->people[mapeptr[0]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[0]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[1], ss, mapeptr[2], 0);
       if (result->people[mapeptr[1]].id1)
          result->people[mapeptr[1]].id1 =
-            (result->people[mapeptr[1]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[1]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
    }
    else {
       // checkerboard/box/diamond
@@ -4113,19 +4137,19 @@ static void do_concept_checkerboard(
       copy_rot(result, mapeptr[0], ss, mapeptr[1], 022);
       if (result->people[mapeptr[0]].id1)
          result->people[mapeptr[0]].id1 =
-            (result->people[mapeptr[0]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[0]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[1], ss, mapeptr[0], 022);
       if (result->people[mapeptr[1]].id1)
          result->people[mapeptr[1]].id1 =
-            (result->people[mapeptr[1]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[1]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[2], ss, mapeptr[3], 022);
       if (result->people[mapeptr[2]].id1)
          result->people[mapeptr[2]].id1 =
-            (result->people[mapeptr[2]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
+            (result->people[mapeptr[2]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[3], ss, mapeptr[2], 022);
       if (result->people[mapeptr[3]].id1)
          result->people[mapeptr[3]].id1 =
-            (result->people[mapeptr[3]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
+            (result->people[mapeptr[3]].id1 & (~NSLIDE_ROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
    }
 
    setup a1 = *ss;
@@ -5520,19 +5544,6 @@ static void do_concept_mini_but_o(
    return;
 }
 
-
-
-static void so_and_so_only_move(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result) THROW_DECL
-{
-   ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
-
-   selective_move(ss, parseptr, (selective_key) parseptr->concept->arg1,
-                  parseptr->concept->arg2, parseptr->concept->arg3,
-                  0, parseptr->options.who, false, result);
-}
 
 
 static void do_concept_multiple_diamonds(
@@ -7489,6 +7500,73 @@ static void do_concept_so_and_so_begin(
    normalize_setup(result, simple_normalize, false);
 }
 
+
+static void so_and_so_only_move(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
+
+   // The general principle is "reevaluate often".  The thing that the selected people
+   // are being asked to do might have multiple parts, such that those parts can't normally
+   // be done in the manner stated, but can be done if reevaluation takes place.  So, if
+   // this concept fails while doing a "two calls in succession", put an implicit "piecewise"
+   // around it to pick out the individual calls.
+
+   // Preserved across a throw; must be volatile.
+   volatile saved_error_info err;
+   volatile error_flag_type save_throw_this = error_flag_none;
+
+   try {
+      selective_move(ss, parseptr, (selective_key) parseptr->concept->arg1,
+                     parseptr->concept->arg2, parseptr->concept->arg3,
+                     0, parseptr->options.who, false, result);
+   }
+   catch(error_flag_type foo) {
+      save_throw_this = foo;
+      ((saved_error_info *) &err)->collect(foo);
+   }
+
+   if (save_throw_this != error_flag_none) {
+
+      // Try the special stuff, reevaluating through a "two calls in succession".
+      // Do this only under carefully controlled circumstances.  Failuer to check
+      // could lead to infinite recursion.
+
+      // Don't do it if this is "concept_some_vs_others" or "concept_same_sex_disconnected",
+      // or if it is something like "own the <anyone>" or "snag <anyone>".
+      // We do it only for plain "<anyone>".
+
+      if (parseptr->concept->kind != concept_so_and_so_only ||
+          (selective_key) parseptr->concept->arg1 != selective_key_plain)
+         throw save_throw_this;
+
+      // If we are going to do a complete "two calls in succession",
+      // or some similar thing like "<anything> with the flow",
+      // see if we can succeed by putting an implicit "piecewise" around this.
+
+      if (!parseptr->next ||
+          !parseptr->next->concept ||
+          (parseptr->next->concept->kind != concept_sequential &&
+           parseptr->next->concept->kind != concept_another_call_next_mod) ||
+          !ss->cmd.cmd_fraction.is_null())
+         throw save_throw_this;
+
+      parse_block meta_thing(conzept::special_piecewise);
+      meta_thing.next = parseptr;
+
+      // Now do the "piecewise <anyone> ( X ; Y )", watching for errors again.
+
+      try {
+         do_concept_meta(ss, &meta_thing, result);
+      }
+      catch(error_flag_type) {
+         // This failed too?  Throw the *original* error.
+         ((saved_error_info *) &err)->throw_saved_error();
+      }
+   }
+}
 
 
 static void do_concept_concentric(

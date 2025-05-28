@@ -800,8 +800,8 @@ void tandrec::unpack_us(
          for (j=0 ; j<howmanytounpack ; j++) {
             fb[j] = m_real_saved_people[j].people[ii];
             if (fb[j].id1) fb[j].id1 =
-                              (fb[j].id1 & ~(NROLL_MASK|STABLE_ALL_MASK|077)) |
-                              (z & (NROLL_MASK|STABLE_ALL_MASK|013));
+                              (fb[j].id1 & ~(NSLIDE_ROLL_MASK|STABLE_ALL_MASK|077)) |
+                              (z & (NSLIDE_ROLL_MASK|STABLE_ALL_MASK|013));
          }
 
          for (j=0 ; j<howmanytounpack ; j++) {
@@ -1095,8 +1095,9 @@ bool tandrec::pack_us(
                   // If they have different fractional stability states,
                   // just clear them -- they can't do it.
                   if ((fb[j].id1 ^ orpeople1) & STABLE_ALL_MASK) vp1 &= ~STABLE_ALL_MASK;
-                  // If they have different roll states, just clear them -- they can't roll.
+                  // If they have different slide or roll states, just clear them -- they can't roll.
                   if ((fb[j].id1 ^ orpeople1) & NROLL_MASK) vp1 &= ~NROLL_MASK;
+                  if ((fb[j].id1 ^ orpeople1) & NSLIDE_MASK) vp1 &= ~NSLIDE_MASK;
                   // Check that all real people face the same way.
                   if ((fb[j].id1 ^ orpeople1) & 077)
                      return true;

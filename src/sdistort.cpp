@@ -907,6 +907,18 @@ static void innards(
    if (map_kind == MPKIND__NONE)
       fail("Can't do this shape-changing call here.");
 
+   // Fix "ends fold" or "pair the line" from a parallelogram, so that the
+   // space-invasion properties are preserved.  But not if the user explicitly said
+   // "parallelogram" or "offset"---in that case the offset percentage is preserved.
+
+   if ((result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) &&
+       !(sscmd->cmd_misc_flags & CMD_MISC__SAID_PG_OFFSET)) {
+      if (map_kind == MPKIND__OFFS_L_HALF)
+         map_kind = MPKIND__OFFS_L_FULL;
+      else if (map_kind == MPKIND__OFFS_R_HALF)
+         map_kind = MPKIND__OFFS_R_FULL;
+   }
+
    final_mapcode = MAPCODE(z[0].kind,arity,map_kind,(z[0].rotation ^ vert) & 1);
 
  got_mapcode:

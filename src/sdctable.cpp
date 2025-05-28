@@ -66,28 +66,24 @@
 #define G CONCPARSE_PARSE_G_TYPE
 
 
-conzept::concept_descriptor conzept::centers_concept = {
-   "centers????",
-   concept_centers_or_ends,
-   1,
-   l_mainstream,
-   UC_none,
-   selector_centers, false};
-
-conzept::concept_descriptor conzept::special_magic = {
+const conzept::concept_descriptor conzept::centers_concept = {
+   "centers????", concept_centers_or_ends, 1, l_mainstream, UC_none, selector_centers, false};
+const conzept::concept_descriptor conzept::special_magic = {
    "MAGIC DIAMOND,",       concept_magic,             L+D, l_c1, UC_none, 1};
-conzept::concept_descriptor conzept::special_interlocked = {
+const conzept::concept_descriptor conzept::special_interlocked = {
    "INTERLOCKED DIAMOND,", concept_interlocked,       L+D, l_c1, UC_none, 1};
-conzept::concept_descriptor conzept::mark_end_of_list = {
+const conzept::concept_descriptor conzept::mark_end_of_list = {
    "(end)",                 marker_end_of_list,            0, l_dontshow, UC_none};
-conzept::concept_descriptor conzept::marker_decline = {
+const conzept::concept_descriptor conzept::marker_decline = {
    "decline???",           concept_mod_declined,          0, l_dontshow, UC_none};
-conzept::concept_descriptor conzept::marker_concept_mod = {
+const conzept::concept_descriptor conzept::marker_concept_mod = {
    ">>MODIFIED BY<<",      concept_another_call_next_mod, 0, l_dontshow, UC_none, 0, 0};
-conzept::concept_descriptor conzept::marker_concept_comment = {
+const conzept::concept_descriptor conzept::marker_concept_comment = {
    ">>COMMENT<<",          concept_comment,               0, l_dontshow, UC_none};
-conzept::concept_descriptor conzept::marker_concept_supercall = {
-   ">>SUPER<<",          concept_supercall,             0, l_dontshow, UC_none};
+const conzept::concept_descriptor conzept::marker_concept_supercall = {
+   ">>SUPER<<",            concept_supercall,             0, l_dontshow, UC_none};
+const conzept::concept_descriptor conzept::special_piecewise = {
+   ">>SPECIALPIECEWISE<<", concept_meta,                  0, l_dontshow, UC_none, meta_key_piecewise};
 
 
 

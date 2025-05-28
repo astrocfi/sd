@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "37.82"
+version "37.83"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -4233,7 +4233,7 @@ call "rotary spin the windmill" c2
             first_part_visible dont_use_in_resolve left_means_mirror
             magic_is_inherited twisted_is_inherited
    seq passthru [inherit_left inherit_magic inherit_twisted]
-   seq rotary [inherit_left]
+   seq rotary [inherit_left force_straight]  // Not really straight; this is just a cookie to raise a warning.
    seq finish_windmill [insert_number 2]
 
 call "partner tag" a1 tag partnertag
@@ -4436,32 +4436,32 @@ call "@6 jay slide thru" c3a
 
 call "@6 shove off" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 AL14S 16 AL14S 16 CR18S 16 CR18S 16
+      [ZGM18N 16 ZGM18N 16 ZFM14N 16 ZFM14N 16 AGL14S 16 AGL14S 16 CFR18S 16 CFR18S 16
       0 0 0 0 0 0 0 0]
 
 call "@6 1/2 shove off" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 AL15W 16 AL15W 16 CR17E 16 CR17E 16
+      [ZGM17N 16 ZGM17N 16 ZFM15N 16 ZFM15N 16 AGL15W 16 AGL15W 16 CFR17E 16 CFR17E 16
       0 0 0 0 0 0 0 0]
 
 call "@6 tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 ZM14N 16 0 0 ZM18N 16
+      [ZGM18N 16 ZGM18N 16 ZFM14N 16 ZFM14N 16 ZFM14N 16 0 0 ZGM18N 16
       0 0 0 0 0 0 0 0]
 
 call "@6 1/2 tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 ZM15N 16 0 0 ZM17N 16
+      [ZGM17N 16 ZGM17N 16 ZFM15N 16 ZFM15N 16 ZFM15N 16 0 0 ZGM17N 16
       0 0 0 0 0 0 0 0]
 
 call "@6 reverse tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 0 ZM14N 16 ZM18N 16 0
+      [ZGM18N 16 ZGM18N 16 ZFM14N 16 ZFM14N 16 0 ZFM14N 16 ZGM18N 16 0
       0 0 0 0 0 0 0 0]
 
 call "@6 1/2 reverse tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 0 ZM15N 16 ZM17N 16 0
+      [ZGM17N 16 ZGM17N 16 ZFM15N 16 ZFM15N 16 0 ZFM15N 16 ZGM17N 16 0
       0 0 0 0 0 0 0 0]
 
 /* This is somewhat pathetic, but people have used this call with "own the anyone",
@@ -4689,51 +4689,51 @@ call "@6 press back" mainstream
 
 call "press right" mainstream
             dont_use_in_resolve
-   matrix [ZM18N 18 ZM18N 18]
+   matrix [ZGM18N 18 ZGM18N 18]
             alternate_definition [half] mainstream
-   [ZM17N 17 ZM17N 17]
+   [ZGM17N 17 ZGM17N 17]
 
 call "@6 press right" mainstream
             dont_use_in_resolve
-   matrix use_selector [ZM18N 18 ZM18N 18]
+   matrix use_selector [ZGM18N 18 ZGM18N 18]
             alternate_definition [half] mainstream
-   [ZM17N 17 ZM17N 17]
+   [ZGM17N 17 ZGM17N 17]
 
 call "press left" mainstream
             dont_use_in_resolve
-   matrix [ZM14N 18 ZM14N 18]
+   matrix [ZFM14N 18 ZFM14N 18]
             alternate_definition [half] mainstream
-   [ZM15N 17 ZM15N 17]
+   [ZFM15N 17 ZFM15N 17]
 
 call "@6 press left" mainstream
             dont_use_in_resolve
-   matrix use_selector [ZM14N 18 ZM14N 18]
+   matrix use_selector [ZFM14N 18 ZFM14N 18]
             alternate_definition [half] mainstream
-   [ZM15N 17 ZM15N 17]
+   [ZFM15N 17 ZFM15N 17]
 
 call "press in" mainstream
             dont_use_in_resolve
-   matrix lateral_mirror_if_right_of_center [ZM18N 18 ZM18N 18]
+   matrix lateral_mirror_if_right_of_center [ZGM18N 18 ZGM18N 18]
             alternate_definition [half] mainstream
-   [ZM17N 17 ZM17N 17]
+   [ZGM17N 17 ZGM17N 17]
 
 call "@6 press in" mainstream
             dont_use_in_resolve
-   matrix use_selector lateral_mirror_if_right_of_center [ZM18N 18 ZM18N 18]
+   matrix use_selector lateral_mirror_if_right_of_center [ZGM18N 18 ZGM18N 18]
             alternate_definition [half] mainstream
-   [ZM17N 17 ZM17N 17]
+   [ZGM17N 17 ZGM17N 17]
 
 call "press out" mainstream
             dont_use_in_resolve
-   matrix lateral_mirror_if_right_of_center [ZM14N 18 ZM14N 18]
+   matrix lateral_mirror_if_right_of_center [ZFM14N 18 ZFM14N 18]
             alternate_definition [half] mainstream
-   [ZM15N 17 ZM15N 17]
+   [ZFM15N 17 ZFM15N 17]
 
 call "@6 press out" mainstream
             dont_use_in_resolve
-   matrix use_selector lateral_mirror_if_right_of_center [ZM14N 18 ZM14N 18]
+   matrix use_selector lateral_mirror_if_right_of_center [ZFM14N 18 ZFM14N 18]
             alternate_definition [half] mainstream
-   [ZM15N 17 ZM15N 17]
+   [ZFM15N 17 ZFM15N 17]
 
 call "@6 cast back to the right" c1
             dont_use_in_resolve
@@ -4753,41 +4753,41 @@ call "@6 cross cast back" c1
 
 call "truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix [ZM14N 16 ZM18N 16]
+   matrix [ZFM14N 16 ZGM18N 16]
             alternate_definition [half] c2
-          [ZM15N 16 ZM17N 16]
+          [ZFM15N 16 ZGM17N 16]
 
 call "1/2 truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix [ZM15N 16 ZM17N 16]
+   matrix [ZFM15N 16 ZGM17N 16]
 
 call "@6 truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix use_selector [ZM14N 16 ZM18N 16]
+   matrix use_selector [ZFM14N 16 ZGM18N 16]
             alternate_definition [half] c2
-                       [ZM15N 16 ZM17N 16]
+                       [ZFM15N 16 ZGM17N 16]
 
 call "@6 1/2 truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix use_selector [ZM15N 16 ZM17N 16]
+   matrix use_selector [ZFM15N 16 ZGM17N 16]
 
 call "reverse truck" c2
             dont_use_in_resolve
-   matrix [ZM18N 16 ZM14N 16]
+   matrix [ZGM18N 16 ZFM14N 16]
             alternate_definition [half] c2
-          [ZM17N 16 ZM15N 16]
+          [ZGM17N 16 ZFM15N 16]
 
 call "1/2 reverse truck" c2
             dont_use_in_resolve
-   matrix [ZM17N 16 ZM15N 16]
+   matrix [ZGM17N 16 ZFM15N 16]
 
 call "@6 reverse truck" c2
             dont_use_in_resolve
-   matrix use_selector [ZM18N 16 ZM14N 16]
+   matrix use_selector [ZGM18N 16 ZFM14N 16]
 
 call "@6 1/2 reverse truck" c2
             dont_use_in_resolve
-   matrix use_selector [ZM17N 16 ZM15N 16]
+   matrix use_selector [ZGM17N 16 ZFM15N 16]
 
 call "E.R.A." c4
             dont_use_in_resolve
@@ -4991,11 +4991,11 @@ call "@6 curve out" c3x
 
 call "plus @9" c4 tag plainplus
             dont_use_in_resolve
-   matrix use_veer_data use_number [ZM15N 16 ZM17N 16]
+   matrix use_veer_data use_number [ZFM15N 16 ZGM17N 16]
 
 call "@6 plus @9" c4
             dont_use_in_resolve
-   matrix use_selector use_veer_data use_number [ZM15N 16 ZM17N 16]
+   matrix use_selector use_veer_data use_number [ZFM15N 16 ZGM17N 16]
 
 call "@0 plus @9" c4
             neednumber visible_fractions
@@ -5004,11 +5004,11 @@ call "@0 plus @9" c4
 
 call "plus @9 (left)" c4 tag plainplusleft
             dont_use_in_resolve
-   matrix use_number [ZM15N 16 ZM15N 16]
+   matrix use_number [ZFM15N 16 ZFM15N 16]
 
 call "@6 plus @9 (left)" c4
             dont_use_in_resolve
-   matrix use_selector use_number [ZM15N 16 ZM15N 16]
+   matrix use_selector use_number [ZFM15N 16 ZFM15N 16]
 
 call "@0 plus @9 (left)" c4
             neednumber visible_fractions
@@ -5017,11 +5017,11 @@ call "@0 plus @9 (left)" c4
 
 call "plus @9 (right)" c4 tag plainplusright
             dont_use_in_resolve
-   matrix use_number [ZM17N 16 ZM17N 16]
+   matrix use_number [ZGM17N 16 ZGM17N 16]
 
 call "@6 plus @9 (right)" c4
             dont_use_in_resolve
-   matrix use_selector use_number [ZM17N 16 ZM17N 16]
+   matrix use_selector use_number [ZGM17N 16 ZGM17N 16]
 
 call "@0 plus @9 (right)" c4
             neednumber visible_fractions
@@ -5054,6 +5054,7 @@ call "roll @b times" dontshow tag roll_n
    seq roll [repeat_n]
 
 call "@0 and roll" plus
+            visible_fractions
             dont_use_in_resolve
    seq nullcall [mandatory_anycall]
    seq roll []
@@ -6971,50 +6972,50 @@ call "less or more turn and deal" c4
 call "shuffle the deck" c4
             reverse_means_mirror left_means_mirror
    setup 1x4 2x2 restriction 1fl_only
-      array [ZM3N ZM2N ZM1N ZM0N]
+      array [ZGM3N ZGM2N ZFM1N ZFM0N]
             alternate_definition [single] c4
    setup 1x2 1x2 rotate restriction couples_only
-      array [ZM1W ZM0W]
+      array [ZGM1W ZFM0W]
             alternate_definition [3x3] c4
    setup 1x6 2x3 restriction 1fl_only
-      array [ZM5N ZM4N ZM3N ZM2N ZM1N ZM0N]
+      array [ZGM5N ZGM4N ZGM3N ZFM2N ZFM1N ZFM0N]
             alternate_definition [4x4] c4
    setup 1x8 2x4 restriction 1fl_only
-      array [ZM7N ZM6N ZM4N ZM5N ZM3N ZM2N ZM0N ZM1N]
+      array [ZGM7N ZGM6N ZGM4N ZGM5N ZFM3N ZFM2N ZFM0N ZFM1N]
             alternate_definition [3x3 single] c4
    setup 1x3 1x3 rotate restriction couples_only
-      array [ZM2W ZM1W ZM0W]
+      array [ZGM2W ZM1W ZFM0W]
             alternate_definition [4x4 single] c4
    setup 1x4 1x4 rotate restriction couples_only
-      array [ZM2W ZM3W ZM0W ZM1W]
+      array [ZGM2W ZFM3W ZFM0W ZGM1W]
 
 call "single shuffle" c4 tag sglshuffle
             reverse_means_mirror
    setup 1x2 1x2 rotate restriction couples_only
-      array [ZM1W ZM0W]
+      array [ZGM1W ZFM0W]
             alternate_definition [3x3] c4
    setup 1x3 1x3 rotate restriction couples_only
-      array [ZM2W ZM1W ZM0W]
+      array [ZGM2W ZM1W ZFM0W]
             alternate_definition [4x4] c4
    setup 1x4 1x4 rotate restriction couples_only
-      array [ZM2W ZM3W ZM0W ZM1W]
+      array [ZGM2W ZGM3W ZFM0W ZFM1W]
 
 call "shuffle and wheel" c4
             reverse_means_mirror left_means_mirror
    setup 1x4 2x2 restriction 1fl_only
-      array [ZM3N ZM2N AL0S AL1S]
+      array [ZGM3N ZGM2N AL0S AL1S]
             alternate_definition [single] c4
    setup 1x2 1x2 rotate restriction couples_only
-      array [ZM1W AL0E]
+      array [ZGM1W AL0E]
             alternate_definition [3x3] c4
    setup 1x6 2x3 restriction 1fl_only
-      array [ZM5N ZM4N ZM3N AL0S AL1S AL2S]
+      array [ZGM5N ZGM4N ZGM3N AL0S AL1S AL2S]
             alternate_definition [4x4] c4
    setup 1x8 2x4 restriction 1fl_only
-      array [ZM7N ZM6N ZM4N ZM5N AL0S AL1S AL3S AL2S]
+      array [ZGM7N ZGM6N ZGM4N ZGM5N AL0S AL1S AL3S AL2S]
             alternate_definition [straight] c4
    setup 2x4 2x4 rotate
-      array [0 0 0 0 ZM1W AL2E ZM3W ZM4W]
+      array [0 0 0 0 ZFM1W AL2E ZGM3W ZGM4W]
 
 call "_spread after wheel" dontshow tag spread_after_wheel
    setup 2x2 1x4 qualifier all_facing_same
@@ -9958,47 +9959,47 @@ call "pass the sea" a1
 // Better just to list both of them.
 call "veer right" mainstream
    setup 2x2 1x4 qualifier in in_or_out
-      array [0 0 ZM2N ZM3N]
+      array [0 0 ZGM2N ZGM3N]
    setup 1x4 2x2 qualifier right 2fl_only
-      array [ZM0N ZM1N 0 0]
+      array [ZGM0N ZGM1N 0 0]
             alternate_definition [single] mainstream
    setup 2x1 1x2 rotate qualifier in in_or_out
-      array [ZM1W 0]
+      array [ZGM1W 0]
    setup 1x2 1x2 rotate qualifier right miniwaves
-      array [ZM0W 0]
+      array [ZGM0W 0]
 
 call "veer left" mainstream
    setup 2x2 1x4 qualifier in in_or_out
-      array [0 0 ZM1N ZM0N]
+      array [0 0 ZFM1N ZFM0N]
    setup 1x4 2x2 qualifier left 2fl_only
-      array [0 0 ZM1N ZM0N]
+      array [0 0 ZFM1N ZFM0N]
             alternate_definition [single] mainstream
    setup 2x1 1x2 rotate qualifier in in_or_out
-      array [ZM0W 0]
+      array [ZFM0W 0]
    setup 1x2 1x2 rotate qualifier left miniwaves
-      array [0 ZM0W]
+      array [0 ZFM0W]
 
 call "leftable veer left" dontshow tag lft_veer_left
             left_means_mirror
    setup 2x2 1x4 qualifier in in_or_out
-      array [0 0 ZM1N ZM0N]
+      array [0 0 ZFM1N ZFM0N]
    setup 1x4 2x2 qualifier left 2fl_only
-      array [0 0 ZM1N ZM0N]
+      array [0 0 ZFM1N ZFM0N]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
-      array [ZM0W 0]
+      array [ZFM0W 0]
    setup 1x2 1x2 rotate
-      array [0 ZM0W]
+      array [0 ZFM0W]
             alternate_definition [3x3] c4
    setup 2x3 1x6
-      array [0 0 0 ZM2N ZM1N ZM0N]
+      array [0 0 0 ZFM2N ZFM1N ZFM0N]
    setup 1x6 2x3
-      array [0 0 0 ZM2N ZM1N ZM0N]
+      array [0 0 0 ZFM2N ZFM1N ZFM0N]
             alternate_definition [4x4] c4
    setup 2x4 1x8
-      array [0 0 0 0 ZM2N ZM3N ZM1N ZM0N]
+      array [0 0 0 0 ZFM2N ZFM3N ZFM1N ZFM0N]
    setup 1x8 2x4
-      array [0 0 0 0 ZM3N ZM2N ZM0N ZM1N]
+      array [0 0 0 0 ZFM3N ZFM2N ZFM0N ZFM1N]
 
 call "_sashay thru part 1" dontshow tag sashay_thru_1
             rear_back_from_r_wave left_means_mirror
@@ -10044,9 +10045,9 @@ call "scatter reach out" c4
       array [AL0S 0 AL1S 0 0 CR4S 0 CR5S]
 
 call "flare out to a line" c3a
-   setup 2x4 1x8 restriction 2fl_only
+   setup 2x4 1x8 restriction unusual 2fl_only
       array [AL0S AL1S CR5S CR4S ZM7N ZM6N ZM2N ZM3N]
-   setup 4x2 rigger restriction 2fl_only
+   setup 4x2 rigger restriction unusual alwaysfail qualifier tbone siamese_in_quad
       array [ZM0N ZM1N 0 0 0 0 ZM4N ZM5N]
             alternate_definition [1x2] c4
    setup 2x3 1x6 qualifier ntbone none
@@ -13394,13 +13395,13 @@ call "circle 4 with bogus flow" dontshow tag circle4flow
    doesn't know which popular calls happen to work correctly with this. */
    setup 2x2 2x2
       preds "Can't determine sweep direction"
-         if roll_is_cw  [0 0 CR3E CR0E]
-         if roll_is_ccw [0 0 AL1W AL2W]
+         if slide_or_roll_is_cw  [0 0 CR3E CR0E]
+         if slide_or_roll_is_ccw [0 0 AL1W AL2W]
             alternate_definition [single] c3x
    setup 2x1 1x2 rotate
       preds "Can't determine sweep direction"
-         if roll_is_cw  [CR0N 0]
-         if roll_is_ccw [AL1S 0]
+         if slide_or_roll_is_cw  [CR0N 0]
+         if slide_or_roll_is_ccw [AL1S 0]
 
 call "circle by @b X @b" c1
             reverse_means_mirror need_two_numbers
@@ -13462,6 +13463,7 @@ call "sweep @b" mainstream tag sweep_n4
    seq circle4flow [inherit_single repeat_n]
 
 call "@0 and sweep @b" mainstream
+            visible_fractions
             dont_use_in_resolve neednumber single_is_inherited
    seq nullcall [mandatory_anycall]
    seq sweep_n4 [inherit_single]
@@ -13471,25 +13473,26 @@ call "by golly" c3 tag by_golly
             dont_use_in_resolve
    setup 2x2 2x2
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 CR1E CR0E]
-         if roll_is_ccw [0 0 AL1W AL0W]
+         if slide_or_roll_is_cw  [0 0 CR1E CR0E]
+         if slide_or_roll_is_ccw [0 0 AL1W AL0W]
             alternate_definition [single] c3x
    setup 2x1 1x2
       preds "Can't determine flow direction"
-         if roll_is_cw  [CR1E 0]
-         if roll_is_ccw [AL1W 0]
+         if slide_or_roll_is_cw  [CR1E 0]
+         if slide_or_roll_is_ccw [AL1W 0]
             alternate_definition [3x3] c4
    setup 2x3 2x3
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 0 CR2E CR1E CR0E]
-         if roll_is_ccw [0 0 0 AL2W AL1W AL0W]
+         if slide_or_roll_is_cw  [0 0 0 CR2E CR1E CR0E]
+         if slide_or_roll_is_ccw [0 0 0 AL2W AL1W AL0W]
             alternate_definition [4x4] c4
    setup 2x4 2x4
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 0 0 CR3E CR2E CR1E CR0E]
-         if roll_is_ccw [0 0 0 0 AL3W AL2W AL1W AL0W]
+         if slide_or_roll_is_cw  [0 0 0 0 CR3E CR2E CR1E CR0E]
+         if slide_or_roll_is_ccw [0 0 0 0 AL3W AL2W AL1W AL0W]
 
 call "@0 by golly" c3
+            visible_fractions
             dont_use_in_resolve bigmatrix_is_inherited
             single_is_inherited nxn_is_inherited
    seq nullcall [mandatory_anycall inherit_single inherit_bigmatrix inherit_nxn]
@@ -13499,8 +13502,8 @@ call "_veer and turn zero" dontshow tag veer_and_turn
             dont_use_in_resolve
    setup 2x2 1x4
       preds "Can't determine veer direction"
-         if roll_is_cw  [0 0 ZR1N ZR0N]
-         if roll_is_ccw [0 0 ZL2N ZL3N]
+         if slide_or_roll_is_cw  [0 0 ZR1N ZR0N]
+         if slide_or_roll_is_ccw [0 0 ZL2N ZL3N]
 
 call "veer and turn @b X @b" c4
    // See "circle 4 with bogus flow" above.
@@ -13584,40 +13587,41 @@ call "with the flow" c2 tag withflow
             dont_use_in_resolve
    setup 2x2 2x2
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 ZM3N ZM0N]
-         if roll_is_ccw [0 0 ZM1N ZM2N]
+         if slide_or_roll_is_cw  [0 0 ZM3N ZM0N]
+         if slide_or_roll_is_ccw [0 0 ZM1N ZM2N]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
       preds "Can't determine flow direction"
-         if roll_is_cw  [ZM0W 0]
-         if roll_is_ccw [ZM1W 0]
+         if slide_or_roll_is_cw  [ZM0W 0]
+         if slide_or_roll_is_ccw [ZM1W 0]
             alternate_definition [3x3] c4
    setup 2x3 2x3 rotate
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 0 ZM3W ZM4W ZM5W]
-         if roll_is_ccw [0 0 0 ZM0W ZM1W ZM2W]
+         if slide_or_roll_is_cw  [0 0 0 ZM3W ZM4W ZM5W]
+         if slide_or_roll_is_ccw [0 0 0 ZM0W ZM1W ZM2W]
             alternate_definition [4x4] c4
    setup 2x4 2x4 rotate
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 0 0 ZM4W ZM5W ZM6W ZM7W]
-         if roll_is_ccw [0 0 0 0 ZM0W ZM1W ZM2W ZM3W]
+         if slide_or_roll_is_cw  [0 0 0 0 ZM4W ZM5W ZM6W ZM7W]
+         if slide_or_roll_is_ccw [0 0 0 0 ZM0W ZM1W ZM2W ZM3W]
             alternate_definition [6x6] c4
    setup 2x6 2x6 rotate
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 0 0 0 0 ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
-         if roll_is_ccw [0 0 0 0 0 0 ZM0W ZM1W ZM2W ZM3W  ZM4W  ZM5W]
+         if slide_or_roll_is_cw  [0 0 0 0 0 0 ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
+         if slide_or_roll_is_ccw [0 0 0 0 0 0 ZM0W ZM1W ZM2W ZM3W  ZM4W  ZM5W]
             alternate_definition [8x8] c4
    setup 2x8 2x8 rotate
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 0 0 0 0 0 0 ZM8W ZM9W ZM10W ZM11W ZM12W ZM13W ZM14W ZM15W]
-         if roll_is_ccw [0 0 0 0 0 0 0 0 ZM0W ZM1W ZM2W   ZM3W  ZM4W  ZM5W  ZM6W  ZM7W]
+         if slide_or_roll_is_cw  [0 0 0 0 0 0 0 0 ZM8W ZM9W ZM10W ZM11W ZM12W ZM13W ZM14W ZM15W]
+         if slide_or_roll_is_ccw [0 0 0 0 0 0 0 0 ZM0W ZM1W ZM2W   ZM3W  ZM4W  ZM5W  ZM6W  ZM7W]
             alternate_definition [half] c2
    setup 2x2 dmd rotate
       preds "Can't determine flow direction"
-         if roll_is_cw  [0 0 ZM2W ZM3W]
-         if roll_is_ccw [0 0 ZM1W ZM2W]
+         if slide_or_roll_is_cw  [0 0 ZM2W ZM3W]
+         if slide_or_roll_is_ccw [0 0 ZM1W ZM2W]
 
 call "@0 with the flow" c2
+            visible_fractions
             dont_use_in_resolve bigmatrix_is_inherited
             single_is_inherited nxn_is_inherited
    seq nullcall [mandatory_anycall inherit_single inherit_bigmatrix inherit_nxn]
@@ -17323,6 +17327,13 @@ call "_rotary nothing" dontshow tag rotary
             alternate_definition [3x3 12matrix] c4
    setup 4x3 3dmd rotate
       array [0 ZM10W 0 AL2N AL1N 0 AL0N 0 ZM3W 0 0 ZM5W]
+            alternate_definition [straight] c2
+   // This doesn't have anything to do with straight.  The call "rotary spin the windmill"
+   // turns this on, so that the warning will be raised.
+   setup 4x2 qtag rotate restriction controversial alwaysfail
+      array [0 ZM7W 0 AL1N AL0N 0 ZM2W 0]
+   setup 2x4 bone restriction controversial alwaysfail
+      array [0 0 0 0 0 ZM2N ZM7N 0]
 
 call "_finish rotary @2spin@3" dontshow tag fin_rot_spin
             left_means_mirror single_is_inherited grand_is_inherited

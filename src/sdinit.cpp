@@ -1168,13 +1168,13 @@ extern void prepare_to_read_menus()
    // This "if" should never get executed.  We expect compilers to optimize
    // it away, and perhaps print a warning about it.
 
-   // Test that the constants ROLL_BIT and DBROLL_BIT are in the right
-   // relationship, with ROLL_BIT >= DBROLL_BIT, that is, the roll bits
+   // Test that the constants ROLL_BIT and DBSLIDEROLL_BIT are in the right
+   // relationship, with ROLL_BIT >= DBSLIDEROLL_BIT, that is, the roll bits
    // in a person record are to the left of the roll bits in the binary database.
-   // This is because of expressions "ROLL_BIT/DBROLL_BIT" in sdbasic.cpp to
+   // This is because of expressions "ROLL_BIT/DBSLIDEROLL_BIT" in sdbasic.cpp to
    // align stuff from the binary database into the person record.
 
-   if ((int) NROLL_BIT < (int) NDBROLL_BIT)
+   if ((int) NROLL_BIT < (int) DBSLIDEROLL_BIT)
       gg->fatal_error_exit(1, "Constants not consistent",
                            "program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)

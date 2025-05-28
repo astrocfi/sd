@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1130,7 +1130,7 @@ struct matrix_rec {
    int rightidx;       // X-increment of rightmost valid jaywalkee.
    int rightidxjdist;  // Jdist for same.
    int deltarot;       // How this person will turn.
-   uint32 roll_stability_info; // This person's roll & stability info, from call def'n.
+   uint32 roll_stability_info; // This person's slide, roll, & stability info, from call def'n.
    int orig_source_idx;
    matrix_rec *nextse; // Points to next person south (dir even) or east (dir odd.)
    matrix_rec *nextnw; // Points to next person north (dir even) or west (dir odd.)
@@ -1211,10 +1211,10 @@ static int start_matrix_call(
          matrix_info[nump].deltay = 0;
          matrix_info[nump].nearestdrag = 100000;
          matrix_info[nump].deltarot = 0;
-         // Set it to "roll is 'M'" and "stability is 'Z'".
+         // Set it to "roll is 'M'", no slide, and "stability is 'Z'".
          // "Z" is set with "stb_none" and "REV".
          matrix_info[nump].roll_stability_info =
-            (NDBROLL_BIT * 3) | ((STB_NONE|STB_REVERSE) * DBSTAB_BIT);
+            (DBSLIDEROLL_BIT * 3) | ((STB_NONE|STB_REVERSE) * DBSTAB_BIT);
          matrix_info[nump].orig_source_idx = i;
          matrix_info[nump].tbstopse = false;
          matrix_info[nump].tbstopnw = false;
@@ -1699,10 +1699,11 @@ static void finish_matrix_call(
       CC.install_with_collision(result, place, people, i, rot);
 
       if (do_roll_stability) {
-         uint32 rollstuff = (mp->roll_stability_info * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
-         if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= PERSON_MOVED;
-         result->people[place].id1 &= ~NROLL_MASK;
-         result->people[place].id1 |= rollstuff;
+         uint32 sliderollstuff = (mp->roll_stability_info * (NROLL_BIT/DBSLIDEROLL_BIT)) & NSLIDE_ROLL_MASK;
+         // If just "L" or "R" (but not "M", that is, not both bits), turn on "moved".
+         if ((sliderollstuff+NROLL_BIT) & (NROLL_BIT*2)) sliderollstuff |= PERSON_MOVED;
+         result->people[place].id1 &= ~NSLIDE_ROLL_MASK;
+         result->people[place].id1 |= sliderollstuff;
 
          if (result->people[place].id1 & STABLE_ENAB)
             do_stability(&result->people[place].id1,
@@ -1717,12 +1718,22 @@ static void finish_matrix_call(
 
 static void set_matrix_info_from_calldef(matrix_rec & mi, uint32 datum)
 {
-   mi.deltax = (((datum >> 3) & 0x3F) - 16) << 1;
-   mi.deltay = (((datum >> 16) & 0x3F) - 16) << 1;
+   mi.deltax = (uncompress_position_number(datum) - 16) << 1;
+   mi.deltay = (((datum >> 16) & 0x3F) - 16) << 1;   // This part isn't compressed.
    mi.deltarot = datum & 3;
-   mi.roll_stability_info = datum;
+   mi.roll_stability_info = datum;   // For slide, roll, and stability.
 }
 
+
+static void mirror_slide_roll(matrix_rec *ppp)
+{
+   // Switch the roll direction.
+   ppp->roll_stability_info ^=
+      (((ppp->roll_stability_info+DBSLIDEROLL_BIT) >> 1) & DBSLIDEROLL_BIT) * 3;
+   // Switch the slide direction.
+   ppp->roll_stability_info ^=
+      (((ppp->roll_stability_info+DBSLIDE_BIT) >> 1) & DBSLIDE_BIT) * 3;
+}
 
 static void matrixmove(
    setup *ss,
@@ -1763,9 +1774,7 @@ static void matrixmove(
                thisrec->mirror_this_op = true;
                thisrec->deltarot = (-thisrec->deltarot) & 3;
                thisrec->deltax = -thisrec->deltax;
-               // Switch the roll direction.
-               thisrec->roll_stability_info ^=
-                  (((thisrec->roll_stability_info+NDBROLL_BIT) >> 1) & NDBROLL_BIT) * 3;
+               mirror_slide_roll(thisrec);
                // The stability info is too hard to fix at this point.
                // It will be handled later.
             }
@@ -1875,11 +1884,9 @@ static void do_pair(
             ttt = ppp->deltay;
             ppp->deltay = qqq->deltay;
             qqq->deltay = ttt;
-            // Switch the roll direction.
-            ppp->roll_stability_info ^=
-               (((ppp->roll_stability_info+NDBROLL_BIT) >> 1) & NDBROLL_BIT) * 3;
-            qqq->roll_stability_info ^=
-               (((qqq->roll_stability_info+NDBROLL_BIT) >> 1) & NDBROLL_BIT) * 3;
+            // Switch the roll directions.
+            mirror_slide_roll(ppp);
+            mirror_slide_roll(qqq);
             // The stability info is too hard to fix at this point.
             // It will be handled later.
          }
@@ -4207,7 +4214,7 @@ static void do_stuff_inside_sequential_call(
    }
 
    if (DFM1_CPLS_UNLESS_SINGLE & this_mod1) {
-      result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+      result->cmd.cmd_misc3_flags |= CMD_MISC3__DO_AS_COUPLES;
       result->cmd.do_couples_her8itflags = new_final_concepts.herit;
    }
 
@@ -5902,7 +5909,7 @@ static bool do_forced_couples_stuff(
       return true;
    }
 
-   ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
+   ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DO_AS_COUPLES;
    uint32 mxnflags = ss->cmd.do_couples_her8itflags &
       (INHERITFLAG_SINGLE | INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK);
 
@@ -6810,8 +6817,8 @@ extern void move(
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_MODIFIERS;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
          ss->cmd.restrained_do_as_couples =
-            (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) != 0;
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
+            (ss->cmd.cmd_misc3_flags & CMD_MISC3__DO_AS_COUPLES) != 0;
+         ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DO_AS_COUPLES;
          ss->cmd.restrained_super9flags = ss->cmd.do_couples_her8itflags;
          ss->cmd.cmd_final_flags.clear_all_herit_and_final_bits();
 
@@ -6845,7 +6852,7 @@ extern void move(
       return;
    }
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__DO_AS_COUPLES) {
+   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__DO_AS_COUPLES) {
       if (do_forced_couples_stuff(ss, result)) return;
    }
 
@@ -7052,7 +7059,7 @@ extern void move(
          ss->cmd.cmd_final_flags.set_finalbits(ss->cmd.parseptr->more_finalherit_flags.final);
 
          if (ss->cmd.restrained_do_as_couples) {
-            // Maybe should just set ss->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+            // Maybe should just set ss->cmd.cmd_misc3_flags |= CMD_MISC3__DO_AS_COUPLES;
             if (do_forced_couples_stuff(ss, result)) return;
          }
       }

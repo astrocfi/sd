@@ -23,6 +23,7 @@
 //    This is for version 37.
 
 #include <stdio.h>
+#include <string.h>
 
 // Figure out how to do dll linkage.  If the source file that includes this
 // had "SDLIB_EXPORTS" set (which it will if it's a file for sdlib.dll),
@@ -177,6 +178,25 @@ enum error_flag_type {
    error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
    error_flag_formation_changed, // warn that formation changed during clipboard paste.
    error_flag_OK_but_dont_erase  // We have finished a "frequency" operation -- don't clear the screen.
+};
+
+
+enum { MAX_ERR_LENGTH = 200 };
+
+class saved_error_info {
+
+public:
+
+   void collect(error_flag_type flag);      // in sdtop.cpp.
+   void throw_saved_error() THROW_DECL;     // in sdtop.cpp.
+
+private:
+
+   error_flag_type save_error_flag;
+   char save_error_message1[MAX_ERR_LENGTH];
+   char save_error_message2[MAX_ERR_LENGTH];
+   uint32 save_collision_person1;
+   uint32 save_collision_person2;
 };
 
 
@@ -595,14 +615,15 @@ class SDLIB_API conzept {
       Cstring menu_name;
    };
 
-   static concept_descriptor centers_concept;
-   static concept_descriptor special_magic;
-   static concept_descriptor special_interlocked;
-   static concept_descriptor mark_end_of_list;
-   static concept_descriptor marker_decline;
-   static concept_descriptor marker_concept_mod;
-   static concept_descriptor marker_concept_comment;
-   static concept_descriptor marker_concept_supercall;
+   static const concept_descriptor centers_concept;
+   static const concept_descriptor special_magic;
+   static const concept_descriptor special_interlocked;
+   static const concept_descriptor mark_end_of_list;
+   static const concept_descriptor marker_decline;
+   static const concept_descriptor marker_concept_mod;
+   static const concept_descriptor marker_concept_comment;
+   static const concept_descriptor marker_concept_supercall;
+   static const concept_descriptor special_piecewise;
 
    // We want the concept list, as used by the main program, to be
    // constant.  But we can't literally make it constant, because
@@ -875,7 +896,7 @@ struct matrix_def_block {
    matrix_def_block *next;
    uint32 alternate_def_flags;
    dance_level modifier_level;
-   uint32 matrix_def_items[2];     // Dynamically allocated to either 2 or 8.
+   uint32 matrix_def_items[2];     // Dynamically allocated to either 2 or 16.
 };
 
 struct calldefn {
@@ -1142,7 +1163,7 @@ struct parse_block {
 
    // We allow static instantiation of these things with just
    // the "concept" field filled in.
-   parse_block(const conzept::concept_descriptor *ccc) : concept(ccc)
+   parse_block(const conzept::concept_descriptor & ccc) : concept(&ccc)
    { more_finalherit_flags.clear_all_herit_and_final_bits(); }
    // Which of course means we need to provide the default constructor too.
    parse_block()
@@ -1333,7 +1354,13 @@ struct personrec {
 // It changes frequently as the person moves around.
 
 enum {
-   // Highest 4 bits are unused.
+   // Highest 2 bits are unused.
+
+   // These comprise a 2 bit field for slide info.
+   NSLIDE_MASK      = 0x30000000UL,  // mask of the field
+   NSLIDE_BIT       = 0x10000000UL,  // low bit of the field
+   SLIDE_IS_R       = 0x10000000UL,
+   SLIDE_IS_L       = 0x20000000UL,
 
    // These comprise a 3 bit field for roll info.
    // High bit says person moved.
@@ -1346,7 +1373,9 @@ enum {
    ROLL_IS_L        = 0x04000000UL,
    ROLL_IS_M        = 0x06000000UL,
 
-   // These comprise an 8 bit field for fractional stability info.  STABLE_ENAB
+   NSLIDE_ROLL_MASK = NSLIDE_MASK | NROLL_MASK,   // Commonly used together.
+
+   // These comprise a 13 bit field for fractional stability info.  STABLE_ENAB
    // means some fractional stable (or fractional twosome) is in effect.  The
    // "R" field has the amount of fraction left to go.  It is initialized to the
    // number given (in eighths) in the fractional stable command, and counts
@@ -1745,6 +1774,10 @@ class select {
       fx_foo33a,
       fx_foocc,
       fx_foo33,
+      fx_foocct,
+      fx_foo33t,
+      fx_fooccd,
+      fx_foo33d,
       fx_foo5a,
       fx_fooa5,
       fx_foo55,
@@ -2413,6 +2446,7 @@ enum warning_index {
    warn__check_hokey_4x4,
    warn__check_4x4_start,
    warn__check_4x4_ctrbox,
+   warn__check_3dmd_is_wide,
    warn__check_centered_qtag,
    warn__check_pgram,
    warn__ctrs_stay_in_ctr,
@@ -2694,7 +2728,6 @@ struct writechar_block_type {
 #endif
 
 
-#define MAX_ERR_LENGTH 200
 #define MAX_FILENAME_LENGTH 260
 #define INPUT_TEXTLINE_SIZE 300
 /* Absolute maximum length we can handle in text operations, including
@@ -3427,7 +3460,7 @@ class configuration {
 };
 
 
-struct concept_table_item{
+struct concept_table_item {
    uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
    // We wish we could put a "throw" clause on this function, but we can't.
    void (*concept_action)(setup *, parse_block *, setup *);
@@ -3631,7 +3664,7 @@ enum {
    CMD_MISC__SAID_SPLIT           = 0x00100000UL,
    CMD_MISC__SAID_TRIANGLE        = 0x00200000UL,
    CMD_MISC__SAID_DIAMOND         = 0x00400000UL,
-   CMD_MISC__DO_AS_COUPLES        = 0x00800000UL,
+   CMD_MISC__SAID_PG_OFFSET       = 0x00800000UL,  // Explicitly said it, so space-invasion rules don't apply.
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
    CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
@@ -3642,28 +3675,6 @@ enum {
    CMD_MISC__DID_LEFT_MIRROR      = 0x80000000UL,
 
    CMD_MISC__MUST_SPLIT_MASK      = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT)
-};
-
-
-// Flags that reside in the "cmd_misc3_flags" word of a setup BEFORE a call is executed.
-/*
-   CMD_MISC3__DOING_ENDS means that this call is directed only to the ends
-   of the original setup.  If the call turns out to be an 8-person call with distinct
-   centers and ends parts, we may want to just apply the ends part.  This is what
-   makes "ends detour" work.
-*/
-enum {
-   CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
-   CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
-   CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
-   CMD_MISC3__META_NOCMD           = 0x00000010UL,
-   //    unused                    = 0x00000020UL,
-   CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL,    // Some kind of "DYP" has happened, setups may be bizarre.
-   CMD_MISC3__NEED_DIAMOND         = 0x00000080UL,
-   CMD_MISC3__DOING_ENDS           = 0x00000100UL,
-   CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
-   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
-   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL
 };
 
 
@@ -3680,50 +3691,35 @@ enum {
 //    CMD_MISC2__ANY_WORK_INVERT is only meaningful if the CMD_MISC2__ANY_WORK is on.
 //    It says that the ends are doing the concept, instead of the centers.
 
-// The following are used for Z's.
-//    CMD_MISC2__IN_Z_CW and CMD_MISC2__IN_Z_CCW say that the setup is actually
-//    a 2x3, but the "Z" (or "each Z", or "triple Z's") concept has been given,
-//    and the setup should probably be turned into a 2x2.  The only exception
-//    is if the call takes a 2x3 starting setup but not a 2x2 (that is, the call
-//    is "Z axle").  In that case, the call is done directly in the 2x3, and the
-//    "Z" distortion is presumed not to have been in place.
-
-// The following are used for "mystic".
-//
-//    CMD_MISC2__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
-//    of the subsidiary setups because a concept like "mystic triple boxes" is in use.
-//    It is removed immediately by "divided_setup_move" after use.
-//
-//    CMD_MISC2__MYSTIFY_INVERT is only meaningful when CMD_MISC2__MYSTIFY_SPLIT is on.
-//    It says that the concept is actually "invert mystic triple boxes" or whatever.
-
-//  The following are used for what we call the "center/end" mechanism.  This
-//    mechanism is used for the "invert" (centers and ends) concept, as well as
-//    "central", "snag", and "mystic" and inverts thereof.
-//
-//    CMD_MISC2__CTR_END_KMASK, when nonzero, says that one of the "central", "snag",
-//    or "mystic" concepts is in use.  They are all closely related.
-//
-//    CMD_MISC2__CTR_END_INVERT means that the call is being inverted.  It is
-//    orthogonal to such issues as "snag" and "invert snag".  "Invert snag invert
-//    strike out" means that the physical ends do only half, and everyone do
-//    an invert strike out.  That is, the ends hinge but do not step & fold,
-//    while the centers detour.
-//
-//    CMD_MISC2__CTR_END_MASK embraces all of the bits of the "center/end" mechanism.
-
 // The low 12 bits are used for encoding the schema if
 // CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on.
 
 enum {
+
+   // The following are used for Z's.
+   //    CMD_MISC2__IN_Z_CW and CMD_MISC2__IN_Z_CCW say that the setup is actually
+   //    a 2x3, but the "Z" (or "each Z", or "triple Z's") concept has been given,
+   //    and the setup should probably be turned into a 2x2.  The only exception
+   //    is if the call takes a 2x3 starting setup but not a 2x2 (that is, the call
+   //    is "Z axle").  In that case, the call is done directly in the 2x3, and the
+   //    "Z" distortion is presumed not to have been in place.
    CMD_MISC2__IN_Z_CW           = 0x00001000UL,
    CMD_MISC2__IN_Z_CCW          = 0x00002000UL,
    CMD_MISC2__IN_AZ_CW          = 0x00004000UL,
    CMD_MISC2__IN_AZ_CCW         = 0x00008000UL,
    CMD_MISC2__IN_Z_MASK         = 0x0000F000UL,
+
    CMD_MISC2_RESTRAINED_SUPER   = 0x00010000UL,
 
+   // The following two are used for "mystic".
+
+   // This tells "divided_setup_move" to perform selective mirroring
+   // of the subsidiary setups because a concept like "mystic triple boxes" is in use.
+   // It is removed immediately by "divided_setup_move" after use.
    CMD_MISC2__MYSTIFY_SPLIT     = 0x00020000UL,
+
+   // This is only meaningful when CMD_MISC2__MYSTIFY_SPLIT is on.
+   // It says that the concept is actually "invert mystic triple boxes" or whatever.
    CMD_MISC2__MYSTIFY_INVERT    = 0x00040000UL,
 
    CMD_MISC2__ANY_WORK          = 0x00080000UL,
@@ -3735,11 +3731,16 @@ enum {
    CMD_MISC2__INVERT_SNAG       = 0x00800000UL,
    CMD_MISC2__INVERT_MYSTIC     = 0x01000000UL,
 
+   // The following are used for what we call the "center/end" mechanism.  This
+   //    mechanism is used for the "invert" (centers and ends) concept, as well as
+   //    "central", "snag", and "mystic" and inverts thereof.
+   //
    // Here are the basic operations we can do.
    CMD_MISC2__DO_CENTRAL        = 0x02000000UL,
    CMD_MISC2__CENTRAL_SNAG      = 0x04000000UL,
    CMD_MISC2__CENTRAL_MYSTIC    = 0x08000000UL,
-   // This field embraces the above 3 bits.
+   // This field embraces the above 3 bits.  When nonzero, says that one of the "central", "snag",
+   //    or "mystic" concepts is in use.  They are all closely related.
    CMD_MISC2__CTR_END_KMASK     = 0x0E000000UL,
 
    // This says the the operator said "invert".  It might later cause
@@ -3753,6 +3754,25 @@ enum {
    CMD_MISC2__DID_Z_COMPRESSMASK= 0x60000000UL,
    CMD_MISC2__DID_Z_COMPRESSBIT = 0x20000000UL,
    CMD_MISC2__DO_NOT_EXECUTE    = 0x80000000UL
+};
+
+
+// Flags that reside in the "cmd_misc3_flags" word of a setup BEFORE a call is executed.
+enum {
+   CMD_MISC3__PUT_FRAC_ON_FIRST    = 0x00000002UL,
+   CMD_MISC3__RESTRAIN_CRAZINESS   = 0x00000004UL,
+   CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
+   CMD_MISC3__META_NOCMD           = 0x00000010UL,
+   CMD_MISC3__DO_AS_COUPLES        = 0x00000020UL,
+   CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL,    // Some kind of "DYP" has happened, setups may be bizarre.
+   CMD_MISC3__NEED_DIAMOND         = 0x00000080UL,
+   CMD_MISC3__DOING_ENDS           = 0x00000100UL,    // This call is directed only to the ends of the original setup.
+                                                      // If the call turns out to be an 8-person call with distinct
+                                                      // centers and ends parts, we may want to just apply the ends part.
+                                                      // This is what makes "ends detour" work.
+   CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
+   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
+   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL
 };
 
 enum normalize_action {
@@ -4745,14 +4765,9 @@ extern callarray *assoc(
    callarray *spec,
    bool *specialpass = (bool *) 0) THROW_DECL;
 
-extern uint32 find_calldef(
-   callarray *tdef,
-   setup *scopy,
-   int real_index,
-   int real_direction,
-   int northified_index) THROW_DECL;
+uint32 uncompress_position_number(uint32 datum);
 
-extern void clear_result_flags(setup *z);    // in sdtop.cpp.
+extern void clear_result_flags(setup *z);
 
 inline uint32 rotperson(uint32 n, int amount)
 { if (n == 0) return 0; else return (n + amount) & ~064; }

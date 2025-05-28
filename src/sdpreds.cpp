@@ -2385,6 +2385,28 @@ static bool roll_is_ccw(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
+static bool slide_or_roll_is_cw(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   // Slide info takes precedence.
+   if (real_people->people[real_index].id1 & NSLIDE_MASK)
+      return (real_people->people[real_index].id1 & NSLIDE_MASK) == SLIDE_IS_L;
+
+   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
+}
+
+/* ARGSUSED */
+static bool slide_or_roll_is_ccw(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   // Slide info takes precedence.
+   if (real_people->people[real_index].id1 & NSLIDE_MASK)
+      return (real_people->people[real_index].id1 & NSLIDE_MASK) == SLIDE_IS_R;
+
+   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
+}
+
+/* ARGSUSED */
 static bool x12_with_other_sex(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
@@ -2625,10 +2647,9 @@ static bool q_tag_check(setup *real_people, int real_index,
 // BEWARE!!  This list must track the array "predtab" in mkcalls.cpp.
 // BEWARE!!  Obey the correctness of SELECTOR_PREDS.
 
-// The first several of these take a predicate.
+// The first several of these (the ones before "SELECTOR_PREDS") take a selector.
 // Any call that uses one of these predicates will have its "need_a_selector"
-// flag set during initialization.  We set the variable "selector_preds" to contain
-// the number of such predicates.
+// flag set during initialization.
 
 predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[0]},            // "select"
@@ -2802,6 +2823,8 @@ predicate_descriptor pred_table[] = {
       {boygirlp,                       girlstuff_rh},            // "girlp_rh_slide_thru"
       {roll_is_cw,                   (const long int *) 0},      // "roll_is_cw"
       {roll_is_ccw,                  (const long int *) 0},      // "roll_is_ccw"
+      {slide_or_roll_is_cw,          (const long int *) 0},      // "slide_or_roll_is_cw"
+      {slide_or_roll_is_ccw,         (const long int *) 0},      // "slide_or_roll_is_ccw"
       {x12_with_other_sex,            boystuff_no_rh},           // "x12_boy_with_girl"
       {x12_with_other_sex,           girlstuff_no_rh},           // "x12_girl_with_boy"
       {x22_facing_other_sex,          boystuff_no_rh},           // "x22_boy_facing_girl"

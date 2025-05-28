@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1512,6 +1512,8 @@ char *predtab[] = {
    "girlp_rh_slide_thru",
    "roll_is_cw",
    "roll_is_ccw",
+   "slide_or_roll_is_cw",
+   "slide_or_roll_is_ccw",
    "x12_boy_with_girl",
    "x12_girl_with_boy",
    "x22_boy_facing_girl",
@@ -2114,7 +2116,7 @@ static void write_defmod_flags(int is_seq)
 
 
 
-static void write_callarray(int num, int doing_matrix)
+static void write_callarray(int num, bool doing_matrix)
 {
    int count;
 
@@ -2182,13 +2184,26 @@ static void write_callarray(int num, int doing_matrix)
 
          uint32 dat = 0;
 
+         // Read the "slide" indicator.
+
+         if (letcount-p >= 2) {
+            switch (tok_str[p]) {
+            case 'F': case 'f': dat |= 16 * DBSLIDEROLL_BIT;
+               p++;
+               break;
+            case 'G': case 'g': dat |= 8 * DBSLIDEROLL_BIT;
+               p++;
+               break;
+            }
+         }
+
          if (repetition != 0) errexit("Improper callarray specifier");
 
          if (letcount-p == 2) {
             switch (tok_str[p]) {
-            case 'R': case 'r': dat = 1; break;
-            case 'L': case 'l': dat = 2; break;
-            case 'M': case 'm': dat = 3; break;
+            case 'R': case 'r': dat |= 1 * DBSLIDEROLL_BIT; break;
+            case 'L': case 'l': dat |= 2 * DBSLIDEROLL_BIT; break;
+            case 'M': case 'm': dat |= 3 * DBSLIDEROLL_BIT; break;
             default:
                errexit("Improper callarray specifier");
             }
@@ -2196,14 +2211,28 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * NDBROLL_BIT) | (tok_value << 3) | (stab * DBSTAB_BIT);
+         // Compress tok_value into a 5 bit field.
+         // Everything up to 24 is natural.  Beyond that, only even numbers 26-36 are allowed.
+         // They are compressed to 25-30.
 
-         // We now have roll indicator and position, need to get direction.
+         if (tok_value > 24) {
+            if (tok_value > 36 || (tok_value & 1))
+               errexit("Callarray number out of range");
+            tok_value = (tok_value >> 1) + 12;
+         }
+
+         // It's now in the range 0 ... 30.  Shift it to 1 ... 31 so that the word will never be zero.
+
+         tok_value++;
+
+         dat |= (stab * DBSTAB_BIT) | (tok_value << 2);
+
+         // We now have slide/roll indicator and position, need to get direction.
          switch (tok_str[char_ct-1]) {
-         case 'N': case 'n': dat |= 4; break;
-         case 'E': case 'e': dat |= 5; break;
-         case 'S': case 's': dat |= 6; break;
-         case 'W': case 'w': dat |= 7; break;
+         case 'N': case 'n': break;
+         case 'E': case 'e': dat |= 1; break;
+         case 'S': case 's': dat |= 2; break;
+         case 'W': case 'w': dat |= 3; break;
          default:
             errexit("Improper callarray direction specifier");
          }
@@ -2387,7 +2416,7 @@ def2:
       if (!strcmp(tok_str, "array")) {
          write_array_def_block(callarray_flags1 | callarray_flags2);             // Pred flag off.
          get_tok();
-         write_callarray(begin_sizes[call_startsetup], 0);
+         write_callarray(begin_sizes[call_startsetup], false);
          get_tok_or_eof();
          break;
       }
@@ -2417,7 +2446,7 @@ def2:
                write_halfword(0x8000);
                write_halfword(iii);
                get_tok();
-               write_callarray(begin_sizes[call_startsetup], 0);
+               write_callarray(begin_sizes[call_startsetup], false);
             }
             else
                break;
@@ -2814,7 +2843,7 @@ int main(int argc, char *argv[])
          write_fullword(matrixflags);
 
          for ( ;; ) {
-            write_callarray((ccc == schema_matrix) ? 2 : 16, 1);
+            write_callarray((ccc == schema_matrix) ? 2 : 16, true);
             get_tok_or_eof();
 
             if (tok_kind != tok_symbol || strcmp(tok_str, "alternate_definition"))

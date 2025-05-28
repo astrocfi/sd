@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2009  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -693,9 +693,9 @@ static void install_mirror_person_in_matrix(int x, int y, int doffset,
    uint32 tr = (n & STABLE_VRMASK) / STABLE_VRBIT;
    uint32 z = (n & ~(STABLE_VLMASK|STABLE_VRMASK)) | (tl*STABLE_VRBIT) | (tr*STABLE_VLBIT);
 
-   // Switch the roll bits.
-   z &= ~(3*NROLL_BIT);
-   z |= ((n >> 1) & NROLL_BIT) | ((n & NROLL_BIT) << 1);
+   // Switch the slide and roll bits.
+   z &= ~((3*NSLIDE_BIT) | (3*NROLL_BIT));
+   z |= ((n >> 1) & (NSLIDE_BIT|NROLL_BIT)) | ((n & (NSLIDE_BIT|NROLL_BIT)) << 1);
 
    s->people[place].id1 = (z & zmask) ? (z ^ 2) : z;
    s->people[place].id2 = temp_p->id2;
@@ -1282,13 +1282,58 @@ extern bool check_restriction(
 
 
 
-
-static uint32 do_roll(uint32 person_in, uint32 z, int direction)
+static uint32 find_calldef(
+   callarray *tdef,
+   setup *scopy,
+   int real_index,
+   int real_direction,
+   int northified_index) THROW_DECL
 {
-   uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
-   if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
-   return (person_in & ~(NROLL_MASK | 077)) |
-      (((((z + direction) & 3) * 011) ^ 010) & 013) | rollstuff;
+   if (!tdef) crash_print(__FILE__, __LINE__);
+
+   unsigned short *calldef_array;
+   uint32 z;
+
+   if (tdef->callarray_flags & CAF__PREDS) {
+      for (predptr_pair *predlistptr = tdef->stuff.prd.predlist ;
+           predlistptr ;
+           predlistptr = predlistptr->next) {
+         if ((*(predlistptr->pred->predfunc))
+             (scopy, real_index, real_direction,
+              northified_index, predlistptr->pred->extra_stuff)) {
+            calldef_array = predlistptr->array_pred_def;
+            goto got_it;
+         }
+      }
+      fail(tdef->stuff.prd.errmsg);
+   }
+   else
+      calldef_array = tdef->stuff.array_no_pred_def;
+
+got_it:
+
+   z = (uint32) calldef_array[northified_index];
+   if (!z) failp(scopy->people[real_index].id1, "can't execute their part of this call.");
+
+   // Uncompress the destination position.
+   int field = uncompress_position_number(z);
+
+   // Shift the slide/roll data up into the right place.
+   uint32 rollstuff = (z * (NROLL_BIT/DBSLIDEROLL_BIT)) & (NSLIDE_MASK|NROLL_MASK);
+
+   // Preserve stability and direction from original.
+   return (z & 0xF003) | (field << 2) | rollstuff;
+}
+
+
+static uint32 do_slide_roll(uint32 person_in, uint32 z, int direction)
+{
+   uint32 sliderollstuff = z & (NSLIDE_MASK|NROLL_MASK);
+   // If just "L" or "R" (but not "M", that is, not both bits), turn on "moved".
+   if ((sliderollstuff+NROLL_BIT) & (NROLL_BIT*2)) sliderollstuff |= PERSON_MOVED;
+
+   return (person_in & ~(NSLIDE_MASK | NROLL_MASK | 077)) |
+      (((((z + direction) & 3) * 011) ^ 010) & 013) | sliderollstuff;
 }
 
 
@@ -1423,10 +1468,10 @@ static void special_4_way_symm(
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
          uint32 z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 3) & 0x3F;
+         k = (z >> 2) & 0x3F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
-         destination->people[real_index].id1 = do_roll(this_person.id1, z, real_direction);
+         destination->people[real_index].id1 = do_slide_roll(this_person.id1, z, real_direction);
 
          if (this_person.id1 & STABLE_ENAB)
             do_stability(&destination->people[real_index].id1,
@@ -1482,7 +1527,7 @@ static void special_triangle(
          }
 
          z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 3) & 0x3F;
+         k = (z >> 2) & 0x3F;
 
          if (real_direction & 2) {
             if (result_is_triangle) {
@@ -1497,7 +1542,7 @@ static void special_triangle(
             }
          }
 
-         destination->people[real_index].id1 = do_roll(this_person.id1, z, real_direction);
+         destination->people[real_index].id1 = do_slide_roll(this_person.id1, z, real_direction);
 
          if (this_person.id1 & STABLE_ENAB)
             do_stability(&destination->people[real_index].id1,
@@ -3811,7 +3856,8 @@ static int divide_the_setup(
 
       const expand::thing *expand_ptr = (const expand::thing *) 0;
 
-      if (result->kind == s2x6) {
+      switch (result->kind) {
+      case s2x6:
          if (!(result->people[2].id1 | result->people[3].id1 |
                result->people[8].id1 | result->people[9].id1)) {
             // Inner spots are empty.
@@ -3826,8 +3872,8 @@ static int divide_the_setup(
 
             expand_ptr = &inner_2x6;
          }
-      }
-      else if (result->kind == sdblbone6) {
+         break;
+      case sdblbone6:
          if (!(result->people[1].id1 | result->people[3].id1 |
                result->people[7].id1 | result->people[9].id1)) {
             // Inner spots are empty.
@@ -3840,8 +3886,8 @@ static int divide_the_setup(
             else
                expand_ptr = &outer_dblbone6;    // Remove the inner ones, and leave the flag on.
          }
-      }
-      else if (result->kind == s2x10) {
+         break;
+      case s2x10:
          if (!(result->people[4].id1 | result->people[5].id1 |
                result->people[14].id1 | result->people[15].id1)) {
             // Innermost 4 spots are empty.
@@ -3858,8 +3904,8 @@ static int divide_the_setup(
             else
                expand_ptr = &outer_2x10;
          }
-      }
-      else if (result->kind == s_rigger) {
+         break;
+      case s_rigger:
          // The outer spots are already known to be empty and have been cleaned up.
          // So we just have to deal with the inner spots.  This means that both
          // inner and outer spots are empty, so we have to do the same thing
@@ -3869,8 +3915,8 @@ static int divide_the_setup(
             result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
             expand_ptr = &inner_rig;
          }
-      }
-      else if (result->kind == s4x6) {
+         break;
+      case s4x6:
          // We do the same for two concatenated 3x4's.
          // This could happen if the people folding were not the ends.
          if (!(result->people[2].id1 | result->people[3].id1 |
@@ -3887,21 +3933,23 @@ static int divide_the_setup(
             // Outer spots are empty.
             expand_ptr = &inner_4x6;
          }
-      }
-      else if (result->kind == s3x6 &&
-               result->result_flags.split_info[result->rotation & 1] == 1 &&
-               result->result_flags.split_info[(result->rotation ^ 1) & 1] == 0) {
-         // These were offset 2x3's.
-         if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 |
-               result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
-            // Inner spots are empty.
-            expand_ptr = &inner_3x6;
+         break;
+      case s3x6:
+         if (result->result_flags.split_info[result->rotation & 1] == 1 &&
+             result->result_flags.split_info[(result->rotation ^ 1) & 1] == 0) {
+            // These were offset 2x3's.
+            if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 |
+                  result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
+               // Inner spots are empty.
+               expand_ptr = &inner_3x6;
+            }
+            else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 |
+                       result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
+               // Outer spots are empty.
+               expand_ptr = &outer_3x6;
+            }
          }
-         else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 |
-                    result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
-            // Outer spots are empty.
-            expand_ptr = &outer_3x6;
-         }
+         break;
       }
 
       if (expand_ptr) expand::compress_setup(*expand_ptr, result);
@@ -4369,7 +4417,7 @@ foobar:
 
    goto un_mirror;
 
-   use_this_calldeflist:
+ use_this_calldeflist:
 
    calldeflist = qq->callarray_list;
    if (qq->modifier_level > calling_level &&
@@ -4896,9 +4944,9 @@ foobar:
             northified_index = (real_index ^ d2);
             z = find_calldef((real_direction & 1) ? coldefinition : linedefinition,
                              ss, real_index, real_direction, northified_index);
-            k = ((z >> 3) & 0x3F) ^ (d2 >> 1);
+            k = ((z >> 2) & 0x3F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
-            p1.people[k].id1 = do_roll(p1.people[k].id1, z, real_direction);
+            p1.people[k].id1 = do_slide_roll(p1.people[k].id1, z, real_direction);
 
             // For now, can't do fractional stable on this kind of call.
             p1.people[k].id1 &= ~STABLE_ALL_MASK;
@@ -5234,7 +5282,7 @@ foobar:
 
                uint32 z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
 
-               uint32 where = (z >> 3) & 0x3F;
+               uint32 where = (z >> 2) & 0x3F;
 
                if (oddness != 0) {
                   if (where < oddness) {
@@ -5248,7 +5296,7 @@ foobar:
                }
 
                newpersonlist.people[real_index].id1 =
-                  do_roll(this_person.id1, z, final_direction);
+                  do_slide_roll(this_person.id1, z, final_direction);
 
                if (this_person.id1 & STABLE_ENAB)
                   do_stability(&newpersonlist.people[real_index].id1,
@@ -5853,10 +5901,10 @@ foobar:
          case s3x4:
             if (ss->kind == s1x4) {
 
-               /* This could be the even more glorious form of the above, for "fold".
-                  If we can strip it down to a 2x3 (because the ends were the ones doing
-                  the fold), do so now.  In any case, set the flag so that the 3-to-2
-                  squashing can take place later. */
+               // This could be the even more glorious form of the above, for "fold".
+               // If we can strip it down to a 2x3 (because the ends were the ones doing
+               // the fold), do so now.  In any case, set the flag so that the 3-to-2
+               // squashing can take place later.
 
                if ((lilresult_mask[0] & 03131) == 0) {
                   result->kind = s2x3;
@@ -5935,7 +5983,7 @@ foobar:
                   // This person can't move, because he moves into a loop
                   // not containing his starting point.
                   k = real_index;
-                  newperson.id1 = (ss->people[real_index].id1 & ~NROLL_MASK) | (3*NROLL_BIT);
+                  newperson.id1 = (ss->people[real_index].id1 & ~NSLIDE_ROLL_MASK) | (3*NROLL_BIT);
                   newperson.id2 = ss->people[real_index].id2;
                   newperson.id3 = ss->people[real_index].id3;
                   result->people[k] = newperson;
