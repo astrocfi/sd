@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -6099,6 +6099,9 @@ extern void move(
 
    for (;;) {
       parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &ss->cmd.cmd_final_flags);
+
+      if (!parseptrcopy)
+         fail("Incomplete parse.");
 
       if (parseptrcopy->concept->kind == concept_fractional &&
           ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {

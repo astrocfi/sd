@@ -328,6 +328,9 @@ extern void normalize_concentric(
          i = (i0p->rotation - outers->rotation) & 3;
          center_arity = 1;
       }
+      else if (i0p->kind == sdmd) {
+         table_synthesizer = schema_in_out_triple;
+      }
       else if (i0p->kind == nothing) {
          if (outers->kind == sdmd) {
             clear_people(i0p);

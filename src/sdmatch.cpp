@@ -2015,7 +2015,8 @@ static void search_menu(uims_reply kind)
             //    that one is hashed.
             char pch = this_call->name[0];
 
-            if (uch != pch &&
+            if (!GLOB_showing &&
+                uch != pch &&
                 (pch > 'Z' || pch < 'A' || uch != pch+'a'-'A') &&
                 ((pch != '@') ||
                  (this_call->name[1] == '0' && uch != '[' && uch != '<')))

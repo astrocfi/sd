@@ -1,6 +1,6 @@
               FORMAT OF THE SD/SDTTY DATABASE
 
-    Copyright (C) 1990-2001  William B. Ackerman.
+    Copyright (C) 1990-2002  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -2222,20 +2222,26 @@ x22_couple
       or is T-boned.
 
 x22_facing_someone
-      applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the opposite direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       same way or is T-boned.  The name may be misleading.  It is intended
       to be used to determine if the person being tested is facing someone
       else's face, but, if the two people are back-to-back, the predicate
-      will also be satisfied.  To get the desired effect, you must require
-      everyone to be a trailer.
+      will also be satisfied.  To get the effect actually implied by the name,
+      you must require everyone to be a trailer.
 
 x22_tandem_with_someone
-      applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the same direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       opposite way or is T-boned.
+
+x24_facing_someone
+x24_tandem_with_someone
+      Applies to 2x4 only (lines or columns).  Equivalent to x22_facing_someone
+      or x22_tandem_with_someone, for 2x4's.  Finds the vertical partner in
+      the person's 2x2 box.
 
 columns_someone_in_front
       applies to 3x2 or 4x2 only.  For a 3x2:  Returns TRUE for any of the

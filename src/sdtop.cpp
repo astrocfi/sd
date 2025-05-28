@@ -4799,6 +4799,29 @@ extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
 
 
 
+static void check_concept_parse_tree(parse_block *conceptptr) THROW_DECL
+{
+   for (;;) {
+
+      if (!conceptptr)
+         fail("Incomplete parse.");
+
+      if (conceptptr->concept->kind <= marker_end_of_list) {
+         if (!conceptptr->call)
+            fail("Incomplete parse.");
+         break;
+      }
+      else {
+         if (concept_table[conceptptr->concept->kind].concept_prop & CONCPROP__SECOND_CALL) {
+            check_concept_parse_tree(conceptptr->subsidiary_root);
+         }
+
+         conceptptr = conceptptr->next;
+      }
+   }
+}
+
+
 /* Top level move routine. */
 
 SDLIB_API void toplevelmove(void) THROW_DECL
@@ -4808,6 +4831,12 @@ SDLIB_API void toplevelmove(void) THROW_DECL
    setup starting_setup = history[history_ptr].state;
    configuration *newhist = &history[history_ptr+1];
    parse_block *conceptptr = newhist->command_root;
+
+   // Check for an incomplete parse.  This could happen if we do
+   // something like "make a pass but [?".  There's just no way to make sure
+   // that the parse tree is complete.
+
+   check_concept_parse_tree(conceptptr);
 
    /* Be sure that the amount of written history that we consider to be safely
       written is less than the item we are about to change. */
@@ -4880,8 +4909,10 @@ SDLIB_API void toplevelmove(void) THROW_DECL
 
    for (i=0; i<MAX_PEOPLE; i++) starting_setup.people[i].id2 &= ~GLOB_BITS_TO_CLEAR;
 
-   if (!(starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT)) {    /* Can't do it if rotation is not known. */
-      if (setup_attrs[starting_setup.kind].setup_limits >= 0) {     /* Put in headliner/sideliner stuff if possible. */
+   if (!(starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT)) {
+      // Can't do it if rotation is not known.
+      if (setup_attrs[starting_setup.kind].setup_limits >= 0) {
+         // Put in headliner/sideliner stuff if possible.
          for (i=0; i<=setup_attrs[starting_setup.kind].setup_limits; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON) {
                if ((starting_setup.people[i].id1 + starting_setup.rotation) & 1)
@@ -4986,7 +5017,7 @@ SDLIB_API void toplevelmove(void) THROW_DECL
       }
    }
 
-   /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
+   // Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.)
    update_id_bits(&starting_setup);
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = (call_with_name *) 0;

@@ -6757,6 +6757,8 @@ extern long_boolean do_big_concept(
 
    concept_func = this_table_item->concept_action;
    ss->cmd.parseptr = ss->cmd.parseptr->next;
+   if (!ss->cmd.parseptr)
+      fail("Incomplete parse.");
 
    /* When we invoke one of the functions, we will have:
       2ndarg = the concept we are doing

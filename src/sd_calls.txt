@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7a"
+version "34.7b"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -3538,6 +3538,7 @@ call "slither" a2 tag slither
       array [ZM0N ZM6N ZM7N ZM1N ZM4N ZM2N ZM3N ZM5N]
 
 call "_maybe grand slither" dontshow tag maybegrandslither
+            diamond_is_legal
    setup 1x4 1x4
       array [ZM0N ZM3N ZM2N ZM1N]
             alternate_definition [3x3] c4
@@ -3551,6 +3552,11 @@ call "_maybe grand slither" dontshow tag maybegrandslither
       array [ZM0N ZM2N ZM1N ZM3N ZM5N ZM4N]
    setup 1x8 1x8
       array [ZM0N ZM3N ZM6N ZM1N ZM4N ZM7N ZM2N ZM5N]
+            alternate_definition [diamond] c3a
+   setup qtag qtag
+      array [0 0 ZM2N ZM7N 0 0 ZM6N ZM3N]
+   setup pqtag qtag
+      array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
 
 call "swing/slip" dontshow tag swingslip
             step_to_wave
@@ -4333,15 +4339,22 @@ call "snake" c3x
 
 call "patch the @6" c3a
             visible_fractions diamond_is_legal
-   /* Selector identities *do not* get re-evaluated between parts of a sequential
-      call, which makes this work.  Compare wave the <anyone>. */
+   // Selector identities *do not* get re-evaluated between parts of this
+   // call, which makes it work.  Compare wave the <anyone>. */
    seq hinge [seq_never_re_evaluate allow_forced_mod inherit_diamond]
    seq some_utb_in_roll_dir []
 
 call "tap the @6" c4a
             visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
+   seq some_utb_in_roll_dir [seq_re_evaluate]
+   seq splitctrrot []
+   seq roll []
+
+call "tap the original @6" c4a
+            visible_fractions twisted_is_inherited
    seq passthru [seq_never_re_evaluate inherit_twisted]
-   seq some_utb_in_roll_dir []
+   seq some_utb_in_roll_dir [seq_never_re_evaluate]
    seq splitctrrot []
    seq roll []
 
@@ -7615,13 +7628,13 @@ call "_later hinge by @b" dontshow tag latehingeby
 call "hinge by @b X @b" c4a
             visible_fractions need_two_numbers
    seq firsthingeby []
-   seq latehingeby [shift_one_number]
+   seq latehingeby [roll_transparent shift_one_number]
 
 call "hinge by @b X @b X @b" c4a
             visible_fractions need_three_numbers
    seq firsthingeby []
-   seq latehingeby [shift_one_number]
-   seq latehingeby [shift_two_numbers]
+   seq latehingeby [roll_transparent shift_one_number]
+   seq latehingeby [roll_transparent shift_two_numbers]
 
 call "switch to a@M@I diamond" a2 tag switch_to_diamond
             take_right_hands
@@ -9277,7 +9290,6 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [0 0 0 ZM3N 0 0 0 0]
    setup 1x3dmd 1x3dmd
       array [ZM0N 0 0 0 0 AL6S 0 0]
-
             alternate_definition [half grand] plus
    setup 1x6 2x3 qualifier left wave_only
       array [0 AL0W 0 AL2W 0 AL1W]
@@ -11816,7 +11828,8 @@ call "rip off" c3
 call "boomerang" c3
    setup 2x2 2x2 restriction forbidden peelable_box qualifier 2fl_only
       array [AL3N CR2N AL0S CR1S]
-   setup 2x2 2x2 restriction forbidden peelable_box qualifier wave_only
+   // Otherwise, default to the "boxy" version.  This includes T-bones.
+   setup 2x2 2x2
       array [AL3N CR2N AM3S CM2S]
             alternate_definition [half] c3
    setup 2x2 dmd restriction forbidden peelable_box qualifier wave_only
@@ -15455,9 +15468,9 @@ call "checkover" c1
       array [CM0W CM1W CM2W CM3W CR12W CR13W CR14W CR15W AL0E AL1E AL2E AL3E AM12E AM13E AM14E AM15E]
 
 call "turnover" c4
-            visible_fractions grand_is_inherited nxn_is_inherited
-   seq boxy_cast_off_34 []
-   seq maybegrandslither [inherit_grand inherit_nxn]
+            visible_fractions diamond_is_legal grand_is_inherited nxn_is_inherited
+   seq boxy_cast_off_34 [inherit_diamond]
+   seq maybegrandslither [roll_transparent inherit_grand inherit_diamond inherit_nxn]
 
 call "turn by" c4 tag turnby
    /* Do we actually allow this from a single 8-chain?  Isn't it the equivalent of a trade by,
@@ -15814,8 +15827,8 @@ call "triple scoot" a1 tag triple_scoot
       array [C15S C14S C13S C12S C11S C10S C9S C8S A7S A6S A5S A4S A3S A2S A1S A0S]
 
 call "triple cross" c1 tag triplecross
-   /* Check for the cases in which we can definitively
-      deduce the handedness of the center box. */
+   // Check for the cases in which we can definitively
+   // deduce the handedness of the center box.
    setup 4x2 2x4 restriction quarterbox_or_col qualifier live right gen_qbox
          array [ZM6N ZM5N ZM4N ZM3N ZM4N    0    0 ZM7N]
    setup 4x2 2x4 restriction quarterbox_or_col qualifier live left gen_qbox
@@ -15828,7 +15841,10 @@ call "triple cross" c1 tag triplecross
          if columns_tandem           [ZM6N ZM5N ZM4N ZM3N ZM4N ZM3N ZM2N ZM1N]
          if always                   [   0 ZM5N ZM4N ZM3N ZM4N ZM3N ZM2N    0]
    setup 2x4 2x4
-      array [ZM0N 0 0 ZM3N 0 0 0 0]
+      preds "Don't know whether to cross."
+         if x24_facing_someone       [ZM0N ZM1N ZM2N ZM3N ZM3N    0    0 ZM0N]
+         if lines_magic_miniwave     [ZM0N ZM1N ZM2N ZM3N ZM2N ZM3N ZM0N ZM1N]
+         if always                   [ZM0N ZM1N ZM2N ZM3N    0    0    0    0]
 
 call "double cross" c3x
    setup 3x2 2x3
@@ -16874,8 +16890,8 @@ call "step and step" c3 tag startwave
 
 call "finish wave the @6" dontshow tag finishwave
             yield_if_ambiguous
-   /* Selector identities *do* get re-evaluated for the new centers and ends,
-      which makes this work.  Compare patch the <anyone>. */
+   // Selector identities *do* get re-evaluated for the new centers and ends,
+   // which makes this work.  Compare patch the <anyone>. */
    conc starthopping []
         designeeskick [conc_demand_columns conc_force_lines]
 
@@ -18981,7 +18997,7 @@ call "busy @0" c3
    seq busy_nothing [normalize]
    seq busy_any_part_2 [normalize]
 
-call "linking @0" c3x
+call "link up but @0" c3x
    seq linking_nothing [normalize]
    seq busy_any_part_2 [normalize]
 

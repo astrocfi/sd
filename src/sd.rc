@@ -172,7 +172,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 34.7a:   Copyright © 1990-2002 All rights reserved.",
+    CTEXT           "SD Version 34.7b:   Copyright © 1990-2002 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8

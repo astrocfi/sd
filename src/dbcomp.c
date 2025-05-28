@@ -1008,7 +1008,6 @@ char *matrixcallflagtab[] = {
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
-
 char *predtab[] = {
    "select",
    "unselect",
@@ -1044,6 +1043,8 @@ char *predtab[] = {
    "x22_couple",
    "x22_facing_someone",
    "x22_tandem_with_someone",
+   "x24_facing_someone",
+   "x24_tandem_with_someone",
    "columns_someone_in_front",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
