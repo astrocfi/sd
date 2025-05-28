@@ -413,7 +413,7 @@ bool matcher_class::process_accel_or_abbrev(modifier_block & mb, char linebuff[]
 
 void matcher_class::do_accelerator_spec(Cstring inputline, bool is_accelerator)
 {
-   if (!inputline[0] || inputline[0] == '#') return;   // This is a blank line or a comment.
+   if (!inputline[0] || inputline[0] == '\r' || inputline[0] == '\n' || inputline[0] == '#') return;   // This is a blank line or a comment.
 
    char key_name[MAX_FILENAME_LENGTH];
    char *key_org;
@@ -517,7 +517,7 @@ void matcher_class::do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
       *table_thing = newthing;
    }
-   else  {
+   else {
       abbrev_block **table_thing;
 
       if (m_active_result.match.kind == ui_start_select) {

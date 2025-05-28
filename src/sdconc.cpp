@@ -333,14 +333,15 @@ bool conc_tables::synthesize_this(
    else
       index = relative_rotation&1;
 
-   uint32 allowmask;
+   // Select maps depending on 1/8 rotation stuff.  It's generally off, so get 0x400 here.
+   uint32 allowmask = ((outers->eighth_rotation&1) + 1) << 10;
 
    if (outer_elongation == 3)
-      allowmask = 0x10 << index;
+      allowmask |= 0x10 << index;
    else if (outer_elongation <= 0 || outer_elongation > 3)
-      allowmask = 5 << index;
+      allowmask |= 5 << index;
    else
-      allowmask = 1 << (index + ((((outer_elongation-1) ^ outers->rotation) & 1) << 1));
+      allowmask |= 1 << (index + ((((outer_elongation-1) ^ outers->rotation) & 1) << 1));
 
    if (matrix_concept) allowmask |= 0x40;
 
@@ -468,7 +469,6 @@ bool conc_tables::synthesize_this(
 
    result->kind = lmap_ptr->bigsetup;
    result->rotation = outers->rotation + lmap_ptr->outer_rot;
-   result->eighth_rotation = 0;
    return true;
 }
 
@@ -676,7 +676,7 @@ extern void normalize_concentric(
                outer_elongation = 2;
                swap_setups = true;
                todo = fix_1x8_to_1x4;
-            }             
+            }
          }
          else if (i0p->kind == s_qtag && i0p->rotation == 0) {
             if (mask0 == 0x41 && mask1 == 0x14) {
@@ -1466,6 +1466,10 @@ extern void normalize_concentric(
       break;
    }
 
+   // We don't allow different eighths-rotation under any circumstances (for now).
+   if (inners[0].eighth_rotation != outers->eighth_rotation)
+      fail("Inconsistent rotation.");
+
    if (!conc_tables::synthesize_this(
          inners,
          outers,
@@ -1479,10 +1483,10 @@ extern void normalize_concentric(
          result))
       goto anomalize_it;
 
-   if (inners->eighth_rotation != outers->eighth_rotation)
-      fail("Inconsistent rotation.");
+   if (outers->eighth_rotation & 1)
+      warn(warn_controversial);
 
-   result->eighth_rotation = inners->eighth_rotation;
+   result->eighth_rotation = outers->eighth_rotation;
 
    if (table_synthesizer == schema_conc_o ||
        synthesizer == schema_in_out_triple_squash ||
@@ -1766,6 +1770,17 @@ static calldef_schema concentrify(
       }
       else
          analyzer_result = schema_concentric;
+      break;
+   case schema_special_trade_by:
+      if (attr::slimit(ss) == 5)
+         analyzer_result = schema_concentric_2_4;
+      else if (attr::slimit(ss) == 3)
+         analyzer_result = schema_single_concentric;
+      else if (ss->kind == s3x4 && (livemask == 06363 || livemask == 07474)) {
+         analyzer_result = schema_in_out_triple;
+         analyzer = schema_in_out_triple;
+         inverting ^= 1;
+      }
       break;
    case schema_concentric_4_2_or_normal:
       if (attr::slimit(ss) == 5)
@@ -2134,6 +2149,7 @@ static calldef_schema concentrify(
             analyzer_result)) {
          switch (analyzer_result) {
          case schema_concentric:
+         case schema_special_trade_by:
          case schema_conc_bar:
             fail("Can't find centers and ends in this formation.");
          case schema_checkpoint:
@@ -2620,7 +2636,7 @@ static bool fix_empty_inners(
    if (analyzer == schema_conc_star &&
        analyzer_result == schema_concentric &&
        result_outer->kind == sdmd &&
-       center_arity == 1 && 
+       center_arity == 1 &&
        begin_outer_elongation == 1 &&
        begin_inner->kind == s2x2 &&
        begin_inner->cmd.callspec &&
@@ -3348,8 +3364,7 @@ extern void concentric_move(
          uint32 z_compress_direction99skew;
 
          if (begin_ptr->kind == s2x3 &&
-             ((!doing_ends && analyzer == schema_concentric) ||
-              analyzer == schema_concentric_zs ||
+             (analyzer == schema_concentric_zs ||
               analyzer == schema_in_out_triple_zcom ||
               analyzer == schema_in_out_center_triple_z)) {
             z_compress_direction99skew = doing_ends ? eemask : ccmask;
@@ -5375,7 +5390,7 @@ extern void selective_move(
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
 
          try {
-            tandem_couples_move(ss, 
+            tandem_couples_move(ss,
                                 parseptr->options.who,
                                 kk->arg3 >> 4,
                                 kkk->options.number_fields,

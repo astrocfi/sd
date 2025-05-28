@@ -476,6 +476,8 @@ static tm_thing maps_isearch_foursome[] = {
    {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12}, 0,02222,  0x0FFFF,       4, 0,  s2x2,  s2x8},
    {{4, 11, 15, 0,     5, 10, 14, 1,     6, 9, 13, 2,      7, 8, 12, 3},     0,0,  0x0FFFF,       4, 1,  s2x2,  s2x8},
    {{0, 7, 11, 12,     1, 6, 10, 13,     2, 5, 9, 14,      3, 4, 8, 15},     0,0,  0x0FFFF,       4, 1,  sdmd,  s4dmd},
+
+
    {{0, 4, 11, 15,     1, 5, 10, 14,     2, 6, 9, 13,      3, 7, 8, 12}, 0,02222,  0x0FFFF,       4, 0,  s1x4,  s1x16},
    {{17, 16, 15, 12, 13, 14,         18, 19, 20, 23, 22, 21,
          11, 10, 9, 6, 7, 8,                 0, 1, 2, 5, 4, 3},              0,0,     0000,       6, 0,  s1x6,  s4x6},
@@ -615,6 +617,29 @@ static tm_thing maps_isearch_ysome[] = {
    {{15, 7,            13, 5,            3, 11,            1, 9},              0,040,     0000,         2, 0,  s1x2,  s_c1phan},
    {{0, 8,             2, 10,            14, 6,            12, 4},             0,004,     0000,         2, 0,  s1x2,  s_c1phan},
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
+
+static tm_thing maps_isearch_fudgy2x3[] = {
+   {{1, 2},                                                    0,02,        006,          1, 0,  s1x1,  s2x3},
+   {{4, 3},                                                    0,00,        030,          1, 1,  s1x1,  s2x3},
+   {{5, 4},                                                    0,02,        060,          1, 0,  s1x1,  s2x3},
+   {{0, 1},                                                    0,00,        003,          1, 1,  s1x1,  s2x3},
+   {{0, 1},                                                    0,02,        003,          1, 0,  s1x1,  s2x3},
+   {{1, 2},                                                    0,00,        006,          1, 1,  s1x1,  s2x3},
+   {{4, 3},                                                    0,02,        030,          1, 0,  s1x1,  s2x3},
+   {{5, 4},                                                    0,00,        060,          1, 1,  s1x1,  s2x3},
+   {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
+
+static tm_thing maps_isearch_fudgy2x6[] = {
+   {{2, 3, 4, 5},                                              0,02,        00074,          1, 0,  s1x1,  s2x6},
+   {{9, 8, 7, 6},                                              0,00,        01700,          1, 1,  s1x1,  s2x6},
+   {{11, 10, 9, 8},                                            0,02,        07400,          1, 0,  s1x1,  s2x6},
+   {{0, 1, 2, 3},                                              0,00,        00017,          1, 1,  s1x1,  s2x6},
+   {{0, 1, 2, 3},                                              0,02,        00017,          1, 0,  s1x1,  s2x6},
+   {{2, 3, 4, 5},                                              0,00,        00074,          1, 1,  s1x1,  s2x6},
+   {{9, 8, 7, 6},                                              0,02,        01700,          1, 0,  s1x1,  s2x6},
+   {{11, 10, 9, 8},                                            0,00,        07400,          1, 1,  s1x1,  s2x6},
+   {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
+
 
 struct siamese_item {
    setup_kind testkind;
@@ -809,6 +834,8 @@ extern void initialize_tandem_tables()
    initialize_one_table(maps_isearch_ysome, 4);
    initialize_one_table(maps_isearch_mimictwo, 2);
    initialize_one_table(maps_isearch_mimicfour, 2);
+   initialize_one_table(maps_isearch_fudgy2x3, 2);
+   initialize_one_table(maps_isearch_fudgy2x6, 4);
 }
 
 
@@ -944,7 +971,7 @@ void tandrec::unpack_us(
       else if ((hyperarrayoccupation & 0x00FF00FF) == 0) {
          result->kind = s2x8;
          my_huge_map = fixer_4x8a_2x8;
-      } 
+      }
    }
    else if (result->kind == shyper4x8b) {
       if ((hyperarrayoccupation & 0x99FF99FF) == 0) {
@@ -1007,12 +1034,15 @@ void tandrec::unpack_us(
       fail("This would go to an impossible setup.");
 
    for (i=0; i<MAX_PEOPLE; i++) {
-      if (my_huge_map[i] >= 0)
-         result->people[i] = hyperarray[my_huge_map[i]];
-         result->people[i].id1 = rotperson(hyperarray[my_huge_map[i]].id1, rot);
-   }
+      if (my_huge_map[i] >= 0) {
+         personrec fb = hyperarray[my_huge_map[i]];
 
-   canonicalize_rotation(result);
+         if (m_melded || fb.id1 != 0) {
+            result->people[i] = fb;
+            result->people[i].id1 = rotperson(fb.id1, rot);
+         }
+      }
+   }
 }
 
 
@@ -1296,7 +1326,7 @@ extern void tandem_couples_move(
    clean_up_unsymmetrical_setup(ss);
 
    selector_kind saved_selector;
-   const tm_thing *map;
+   const tm_thing *incoming_map;
    const tm_thing *map_search;
    int i, people_per_group;
    uint32 jbit;
@@ -1305,6 +1335,8 @@ extern void tandem_couples_move(
    bool fraction_eighth_part = false;
    bool dead_conc = false;
    bool dead_xconc = false;
+   int fudgy2x3count = 0;
+   int fudgy2x3limit = 0;
    tm_thing *our_map_table;
    int finalcount;
    setup ttt[8];
@@ -1889,6 +1921,25 @@ extern void tandem_couples_move(
    ewmask &= ~tandstuff.single_mask;         // Clear out unpaired people.
    nsmask &= ~tandstuff.single_mask;
 
+   // Initiate the "fudgy 2x3" or "fudgy 2x6" mechanism.
+
+   if (phantom == 0 && nsmask == 0 && ewmask == allmask) {
+      if ((key == tandem_key_cpls || key == tandem_key_tand) && ss->kind == s2x3 &&
+          (allmask == 033 || allmask == 066)) {
+         our_map_table = maps_isearch_fudgy2x3;
+         incoming_map = &maps_isearch_fudgy2x3[(allmask == 033) ? 4 : 0];
+         fudgy2x3limit = 1;
+         goto fooy;
+      }
+      else if ((key == tandem_key_cpls4 || key == tandem_key_tand4) && ss->kind == s2x6 &&
+          (allmask == 01717 || allmask == 07474)) {
+         our_map_table = maps_isearch_fudgy2x6;
+         incoming_map = &maps_isearch_fudgy2x6[(allmask == 01717) ? 4 : 0];
+         fudgy2x3limit = 1;
+         goto fooy;
+      }
+   }
+
    map_search = our_map_table;
    while (map_search->outsetup != nothing) {
       if ((map_search->outsetup == ss->kind) &&
@@ -1897,7 +1948,7 @@ extern void tandem_couples_move(
           (!(allmask & map_search->outunusedmask)) &&
           (!(ewmask & (~map_search->olatmask))) &&
           (!(nsmask & map_search->olatmask))) {
-         map = map_search;
+         incoming_map = map_search;
          goto fooy;
       }
       map_search++;
@@ -1925,7 +1976,7 @@ extern void tandem_couples_move(
          fail("Can't do couples or tandem concepts in this setup.");
    }
    else if (phantom >= 2) {
-      if (ss->kind != s2x8 || map->insetup != s2x4)
+      if (ss->kind != s2x8 || incoming_map->insetup != s2x4)
          fail("Can't do gruesome concept in this setup.");
    }
 
@@ -1965,7 +2016,7 @@ extern void tandem_couples_move(
    if (phantom == 3) tandstuff.m_virtual_setup[0].cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    // Give it the fraction in quarters, rounded down if an eighth part was specified.
-   if (!tandstuff.pack_us(ss->people, map, fraction_in_eighths, fractional, dynamic != 0, key))
+   if (!tandstuff.pack_us(ss->people, incoming_map, fraction_in_eighths, fractional, dynamic != 0, key))
       goto got_good_separation;
 
    // Or failure to pack people properly may just be because we are taking
@@ -2017,12 +2068,12 @@ extern void tandem_couples_move(
       update_id_bits(&tandstuff.m_virtual_setup[1]);
 
       for (int k=0 ; k<2 ; k++) {
-         for (int j=0 ; j<=attr::klimit(map->insetup) ; j++) {
+         for (int j=0 ; j<=attr::klimit(incoming_map->insetup) ; j++) {
             setup sss = tandstuff.m_virtual_setup[k];
             sss.clear_people();
             if (copy_person(&sss, j, &tandstuff.m_virtual_setup[k], j)) {
                if ((++tttcount) >= 8) fail("Sorry, too many tandem or as couples people.");
-               impose_assumption_and_move(&sss, &ttt[tttcount]);
+               impose_assumption_and_move(&sss, &ttt[tttcount], true);
             }
          }
       }
@@ -2039,13 +2090,13 @@ extern void tandem_couples_move(
       // So it's always east-west in our present view.
       if (ss->kind == s2x4 && tandstuff.m_virtual_setup[0].kind == s2x2)
          tandstuff.m_virtual_setup[0].cmd.prior_elongation_bits |= PRIOR_ELONG_BASE_FOR_TANDEM;
-      impose_assumption_and_move(&tandstuff.m_virtual_setup[0], &ttt[0]);
+      impose_assumption_and_move(&tandstuff.m_virtual_setup[0], &ttt[0], true);
    }
 
    // This loop runs only once, unless melded, in which case it runs eight times.
    for (finalcount = 0 ; finalcount <= tttcount ; finalcount++) {
       tandstuff.virtual_result = ttt[finalcount];
-
+      remove_fudgy_2x3_2x6(&tandstuff.virtual_result);
       remove_mxn_spreading(&tandstuff.virtual_result);
       remove_tgl_distortion(&tandstuff.virtual_result);
 
@@ -2184,7 +2235,14 @@ extern void tandem_couples_move(
          hmasklow = hmask3low;
       }
 
-      map_search = our_map_table;
+      // If doing a "fudgy 2x3", we have to do two separate actions, with two different getin maps.
+      if (fudgy2x3limit != 0) {
+         map_search = incoming_map;
+      }
+      else {
+         map_search = our_map_table;
+      }
+
       // We don't accept the special 1/8-twosome maps from the "maps_isearch_boxsome"
       // table unless we are doing "skew".  If we are doing "box" (the only other
       // possibility) the maps are not used.
@@ -2205,7 +2263,26 @@ extern void tandem_couples_move(
 
       tandstuff.unpack_us(map_search, orbitmask3high, orbitmask3low, result);
 
+      if (fudgy2x3limit != 0) {
+         // We should have gotten out either with the same map we went in with,
+         // or (for orientation changer) the very next one.
+         if (map_search != incoming_map && map_search != incoming_map+1)
+            fail("Internal error: failed to find getout map for a 1x1.");
+
+         // See whether to do another round.
+         if (fudgy2x3count < fudgy2x3limit) {
+            // Did the first one, go back and do the second.  Don't canonicalize the rotation.
+            fudgy2x3count++;
+            incoming_map += 2;
+            goto fooy;
+         }
+      }
+
+      canonicalize_rotation(result);
       reinstate_rotation(ss, result);
+
+      if (fudgy2x3limit != 0 && ss->rotation != result->rotation)
+         warn(warn_controversial);
 
       // When we fudge wrongly-oriented triangles to a 2x4, we need
       // to say something.
@@ -2369,7 +2446,7 @@ static void fixup_mimic(setup *result, const uint16 split_info[2],
       if (orig_before_press->kind == sdmd) {
          if ((orig_before_press->rotation ^ result->rotation) == 1)
             orig_height = 3;
-         else 
+         else
             orig_width = 3;
       }
    }
@@ -2818,7 +2895,9 @@ static void small_mimic_move(setup *ss,
    if (map_search->outsetup == nothing)
       fail("Can't do this.");
 
+   temp1.clear_people();
    ttt.unpack_us(map_search, 0, 0, &temp1);
+   canonicalize_rotation(&temp1);
    if (MI.setup_hint & MIMIC_SETUP_WAVES) temp1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    temp1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
@@ -2941,7 +3020,7 @@ void mimic_move(
                      CMD_MISC__VERIFY_COLS : CMD_MISC__VERIFY_LINES;
 
                   impose_assumption_and_move(&a1, result);
-               }         
+               }
 
                whole_fixup_mimic(result, ss);
                trial_results[trial_number] = *result;
@@ -3987,6 +4066,7 @@ bool process_brute_force_mxn(
    }
 
    ttt.unpack_us(getout_map, 0, reversal_bits, result);
+   canonicalize_rotation(result);
    warn(warn__brute_force_mxn);
    result->rotation -= rotfix;   // Flip the setup back.
    reinstate_rotation(ss, result);

@@ -523,6 +523,10 @@ const char *estab[] = {
    "spindle12",
    "???",
    "???",
+   "???",
+   "???",
+   "???",
+   "???",
    "2x8",
    "4x4",
    "1x10",
@@ -642,7 +646,8 @@ const char *schematab[] = {
    "maybegrandsingleconc",
    "maybegrandsinglecrossconc",
    "maybespecialsingleconc",
-   "maybespecialsingleconc_or_2_4",
+   "maybespecialtradeby",
+   "specialtradeby",
    "maybegrandsingleormatrixconc",
    "3x3_conc",
    "4x4_lines_conc",
@@ -957,14 +962,13 @@ const char *flagtab1f[] = {
    "take_right_hands_as_couples",
    "yoyo_fractal_numbers",
    "fudge_to_q_tag",
-
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
    "distribute_repetitions",
    "neednumber",
-   "need_two_numbers",     // The constant "need_three_numbers" is elsewhere.
-   "need_four_numbers",
+   "need_two_numbers",      // The constants "need_three_numbers" and
+   "need_four_numbers",     // "optional_special_number" are elsewhere.
    "left_means_touch_or_check",
    "sequence_starter",
    "sequence_starter_promenade",
@@ -2129,6 +2133,33 @@ static void write_seq_stuff(void)
 }
 
 
+static void write_pred_clauses()
+{
+   for (;;) {
+      get_tok_or_eof();
+      if (eof) break;
+
+      if (tok_kind != tok_symbol) break;    // Will give an error.
+
+      if (!strcmp(tok_str, "if")) {
+         int iii;
+
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Improper predicate");
+         if ((iii = search(predtab)) < 0) errexit("Unknown predicate");
+
+         // Write a level 4 group.
+         write_halfword(0x6000);
+         write_halfword(iii);
+         get_tok();
+         write_callarray(begin_sizes[call_startsetup], false);
+      }
+      else
+         break;
+   }
+}
+
+
 static void write_array_def_block(uint32 callarrayflags)
 {
    // Bits in specifying an array def are very precious, so we use only a single "1" bit
@@ -2221,7 +2252,7 @@ static void process_alt_def_header()
 
 static void write_array_def(uint32 incoming)
 {
-   int iii, jjj;
+   int jjj;
    uint32 callarray_flags1, callarray_flags2;
 
    callarray_flags1 = incoming;
@@ -2246,44 +2277,43 @@ def2:
       if (tok_kind != tok_symbol) errexit("Missing indicator");
 
       if (!strcmp(tok_str, "array")) {
-         write_array_def_block(callarray_flags1 | callarray_flags2);             // Pred flag off.
+         write_array_def_block(callarray_flags1 | callarray_flags2);              // Pred flag off.
          get_tok();
          write_callarray(begin_sizes[call_startsetup], false);
          get_tok_or_eof();
          break;
       }
       else if (!strcmp(tok_str, "preds")) {
-         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);        // Pred flag on.
+         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2); // Pred flag on.
          get_tok();
          if (tok_kind != tok_string) errexit("Missing string");
-         iii = char_ct;
-         write_halfword(iii);
-         for (jjj = 1; jjj <= (iii >> 1); jjj++)
+
+         write_halfword(char_ct);
+         for (jjj = 1; jjj <= (char_ct >> 1); jjj++)
             write_halfword((((int)(tok_str[2*jjj-2])) << 8) | ((int)(tok_str[2*jjj-1])));
-         if (iii&1)
-            write_halfword(((int)(tok_str[iii-1])) << 8);
+         if (char_ct&1)
+            write_halfword(((int)(tok_str[char_ct-1])) << 8);
 
-         for (;;) {
-            get_tok_or_eof();
-            if (eof) break;
-
-            if (tok_kind != tok_symbol) break;    // Will give an error.
-
-            if (!strcmp(tok_str, "if")) {
-               get_tok();
-               if (tok_kind != tok_symbol) errexit("Improper predicate");
-               if ((iii = search(predtab)) < 0) errexit("Unknown predicate");
-
-               // Write a level 4 group.
-               write_halfword(0x6000);
-               write_halfword(iii);
-               get_tok();
-               write_callarray(begin_sizes[call_startsetup], false);
-            }
-            else
-               break;
-         }
-
+         write_pred_clauses();
+         break;
+      }
+      else if (!strcmp(tok_str, "predscantdo")) {
+         // See prederrmgstable in sdinit.cpp .
+         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);
+         write_halfword(0x8000+0);
+         write_pred_clauses();
+         break;
+      }
+      else if (!strcmp(tok_str, "predscantdocallinsetup")) {
+         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);
+         write_halfword(0x8000+1);
+         write_pred_clauses();
+         break;
+      }
+      else if (!strcmp(tok_str, "predsnoselect")) {
+         write_array_def_block(CAF__PREDS | callarray_flags1 | callarray_flags2);
+         write_halfword(0x8000+2);
+         write_pred_clauses();
          break;
       }
       else if (!strcmp(tok_str, "qualifier")) {
@@ -2607,6 +2637,8 @@ int main(int argc, char *argv[])
             call_flags1 |= (5*CFLAG1_VISIBLE_FRACTION_BIT);
          else if (!strcmp(tok_str, "need_three_numbers"))
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);
+         else if (!strcmp(tok_str, "optional_special_number"))
+            call_flags1 |= (CFLAG1_NUMBER_MASK);
          else if (!strcmp(tok_str, "base_tag_call_2"))
             flag1_to_set = (3*CFLAG1_BASE_TAG_CALL_BIT);
          else if (!strcmp(tok_str, "yoyo_is_inherited"))        // These two sort of cheat.

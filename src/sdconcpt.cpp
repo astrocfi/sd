@@ -3723,7 +3723,7 @@ static void do_concept_crazy(
          if (attr::klimit(tempsetup.kind) < 7) {
             if (tempsetup.kind == s2x2 && (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*3))) {
                warn(warn__crazy_tandem_interaction);
-               tempsetup.cmd.cmd_misc_flags |= 
+               tempsetup.cmd.cmd_misc_flags |=
                   (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*2)) ?
                   CMD_MISC__MUST_SPLIT_VERT :
                   CMD_MISC__MUST_SPLIT_HORIZ;
@@ -3732,7 +3732,7 @@ static void do_concept_crazy(
                fail("Need an 8-person setup for this.");
          }
          else {
-            tempsetup.cmd.cmd_misc_flags |= 
+            tempsetup.cmd.cmd_misc_flags |=
                (tempsetup.rotation & 1) ?
                CMD_MISC__MUST_SPLIT_VERT :
                CMD_MISC__MUST_SPLIT_HORIZ;
@@ -4028,7 +4028,7 @@ void nose_move(
             break;
          default: fail("Illegal direction.");
          }
-         
+
          if (select) ss->people[i].id1 = rotperson(p, turn * 011);
          initial_turn[(p >> 6) & 037] = select ? turn : 0;
       }
@@ -8108,7 +8108,7 @@ static void do_concept_fractional(
 
          if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART2_MASK) != 0) {
             result->cmd.cmd_fraction.flags &= ~CMD_FRAC_PART_MASK;  // Force "N" to 1.
-            result->cmd.cmd_fraction.flags |= CMD_FRAC_PART_BIT; 
+            result->cmd.cmd_fraction.flags |= CMD_FRAC_PART_BIT;
          }
          else {
             result->cmd.cmd_fraction.flags = 0;   // Do the whole 3/5.

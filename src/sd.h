@@ -2412,7 +2412,11 @@ enum {
    CMD_MISC3__DID_Z_COMPRESSMASK   = 0x01800000U,
    CMD_MISC3__DID_Z_COMPRESSBIT    = 0x00800000U,
 
-   CMD_MISC3__ACTUAL_Z_CONCEPT     = 0x02000000U
+   CMD_MISC3__ACTUAL_Z_CONCEPT     = 0x02000000U,
+
+   // This refers to the special invocation of a "optional_special_number" call;
+   // call is being given an optional numeric arg because of really hairy fraction.
+   CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x04000000U
 };
 
 enum normalize_action {
@@ -2425,7 +2429,7 @@ enum normalize_action {
    normalize_before_isolated_call,
    normalize_before_isolate_not_too_strict,
    plain_normalize,
-   normalize_after_triple_squash,    // ***** this used to be after normalize_to_2.
+   normalize_after_triple_squash,
    normalize_to_6,
    normalize_to_4,
    normalize_to_2,
@@ -2747,6 +2751,7 @@ extern const coordrec tgl4_0;                                       /* in SDTABL
 extern const coordrec tgl4_1;                                       /* in SDTABLES */
 extern const coordrec squeezethingglass;                            /* in SDTABLES */
 extern const coordrec squeezethinggal;                              /* in SDTABLES */
+extern const coordrec squeezething343;                              /* in SDTABLES */
 extern const coordrec squeezethingqtag;                             /* in SDTABLES */
 extern const coordrec squeezething4dmd;                             /* in SDTABLES */
 extern const coordrec squeezefinalglass;                            /* in SDTABLES */
@@ -2869,10 +2874,12 @@ enum mpkind {
    MPKIND__NONISOTROPREM,
    MPKIND__OFFS_L_ONEQ,
    MPKIND__OFFS_R_ONEQ,
+   MPKIND__OFFS_L_THIRD,
+   MPKIND__OFFS_R_THIRD,
    MPKIND__OFFS_L_HALF,
    MPKIND__OFFS_R_HALF,
-   MPKIND__OFFS_L_STEP,
-   MPKIND__OFFS_R_STEP,
+   MPKIND__FUDGYOFFS_L_HALF,
+   MPKIND__FUDGYOFFS_R_HALF,
    MPKIND__OVLOFS_L_HALF,
    MPKIND__OVLOFS_R_HALF,
    MPKIND__OFFS_L_HALF_STAGGER,
@@ -2993,12 +3000,6 @@ enum specmapkind {
    spcmap_rh_c1phana,
    spcmap_lh_c1phanb,
    spcmap_rh_c1phanb,
-   spcmap_lh_s2x3_3,
-   spcmap_rh_s2x3_3,
-   spcmap_lh_s2x3_2,
-   spcmap_rh_s2x3_2,
-   spcmap_lh_s2x3_7,
-   spcmap_rh_s2x3_7,
    spcmap_d1x10,
    spcmap_tgl451,
    spcmap_tgl452,
@@ -3601,6 +3602,10 @@ extern void fix_roll_transparency_stupidly(const setup *ss, setup *result);
 
 extern void remove_mxn_spreading(setup *ss) THROW_DECL;
 
+extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL;
+
+extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL;
+
 extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check, bool splitting) THROW_DECL;
 
 extern bool divide_for_magic(
@@ -3655,13 +3660,13 @@ extern uint32 process_fractions(int start, int end,
 
 extern int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) THROW_DECL;
 
-extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
+bool fill_active_phantoms_and_move(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
 
-extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL;
+void move_perhaps_with_active_phantoms(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
 
-extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL;
+void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
 
-extern void really_inner_move(
+void really_inner_move(
    setup *ss,
    bool qtfudged,
    calldefn *callspec,
@@ -3674,10 +3679,11 @@ extern void really_inner_move(
    bool mirror,
    setup *result) THROW_DECL;
 
-extern void move(
+void move(
    setup *ss,
    bool qtfudged,
-   setup *result) THROW_DECL;
+   setup *result,
+   bool suppress_fudgy_2x3_2x6_fixup = false) THROW_DECL;
 
 /* In SDISTORT */
 

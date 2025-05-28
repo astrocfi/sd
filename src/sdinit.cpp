@@ -47,6 +47,7 @@ and the following external variables:
 */
 
 #include <stdlib.h>
+#include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -267,9 +268,11 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    if (test_call->the_defn.schema == schema_roll) goto accept;
 
    // If the call takes 3 or more numeric arguments, accept it.  This makes
-   // "hinge by I x J x K" work from columns.
-   if ((test_call->the_defn.callflags1 & ((uint32) CFLAG1_NUMBER_MASK)) >=
-       3*((uint32) CFLAG1_NUMBER_BIT))
+   // "hinge by I x J x K" work from columns.  But if the indicated number is 7,
+   // that doesn't count.  So we do the calculation by adding 1, letting it
+   // wrap around, and checking that the result is >= 4.
+   if (((test_call->the_defn.callflags1+1) & ((uint32) CFLAG1_NUMBER_MASK)) >=
+       4*((uint32) CFLAG1_NUMBER_BIT))
       goto accept;
 
    // If the call has the "matrix" schema, and it is sex-dependent, we accept it,
@@ -617,6 +620,13 @@ static void database_error_exit(const char *message)
 }
 
 
+// This must be kept synchronized with some code in mkcalls.cpp .
+static char const * const prederrmgstable[] = {
+   "Can't do this.",
+   "Can't do this call in this setup.",
+   "Can't tell who is selected."};
+
+
 static void read_array_def_blocks(calldef_block *where_to_put)
 {
    int j, char_count;
@@ -636,6 +646,7 @@ static void read_array_def_blocks(calldef_block *where_to_put)
       int this_start_size;
       uint32 these_flags;
       int extra;
+      const char *prederrmsg;
 
       these_flags = (last_datum & 0x7FFF) << 7;    // We allow 22 callarray_flags.
 
@@ -657,7 +668,14 @@ static void read_array_def_blocks(calldef_block *where_to_put)
 
       if (these_flags & CAF__PREDS) {
          read_halfword();    // Get error message count.
-         char_count = last_datum & 0xFF;
+
+         if (last_datum & 0x8000) {
+            prederrmsg = prederrmgstable[last_datum & 0xFF];
+            char_count = strlen(prederrmsg);
+         }
+         else
+            char_count = last_datum & 0xFF;
+
          // We will naturally get 4 items in the "stuff.prd.errmsg" field;
          // we are responsible all for the others.
          // We subtract 3 because 4 chars are already present, but we need one extra for the pad.
@@ -697,13 +715,21 @@ static void read_array_def_blocks(calldef_block *where_to_put)
          predptr_pair *temp_predlist;
          predptr_pair *this_predlist = (predptr_pair *) 0;
 
-         // Read error message text.
-
-         for (j=1; j <= ((char_count+1) >> 1); j++) {
-            read_halfword();
-            tp->stuff.prd.errmsg[(j << 1)-2] = (char) ((last_datum >> 8) & 0xFF);
-            if ((j << 1) != char_count+1)
-               tp->stuff.prd.errmsg[(j << 1)-1] = (char) (last_datum & 0xFF);
+         if (last_datum & 0x8000) {
+            // Use a canned error message.  Strncpy has gotten so fussy about
+            // destination overruns, and so skillful at evading our attempts to evade
+            // its memory tracking, that it won't take our word for it that we have
+            // allocated enough space.  So use memcpy instead.
+            memcpy(tp->stuff.prd.errmsg, prederrmsg, (char_count+1)*sizeof(char));
+         }
+         else {
+            // Read and copy error message text.
+            for (j=1; j <= ((char_count+1) >> 1); j++) {
+               read_halfword();
+               tp->stuff.prd.errmsg[(j << 1)-2] = (char) ((last_datum >> 8) & 0xFF);
+               if ((j << 1) != char_count+1)
+                  tp->stuff.prd.errmsg[(j << 1)-1] = (char) (last_datum & 0xFF);
+            }
          }
 
          tp->stuff.prd.errmsg[char_count] = '\0';
@@ -1358,7 +1384,7 @@ extern int process_session_info(Cstring *error_msg)
 static bool get_accelerator_line(char line[])
 {
    for ( ;; ) {
-      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '[') return false;
+      if (!fgets(line, MAX_FILENAME_LENGTH, init_file) || line[0] == '\n' || line[0] == '\r' || line[0] == '[') return false;
 
       int j = strlen(line);
       if (j>0) line[j-1] = '\0';   // Strip off the <NEWLINE> -- we don't want it.
@@ -1423,7 +1449,7 @@ static void rewrite_init_file()
          strncpy(errmsg, "Failed to save file '" SESSION_FILENAME
                  "' in '" SESSION2_FILENAME "':\n",
                  MAX_TEXT_LINE_LENGTH);
-         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH-80);
+         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH-141);
          strncat(errmsg, ".", MAX_FILENAME_LENGTH);
          gg77->iob88.serious_error_print(errmsg);
       }
@@ -1987,7 +2013,7 @@ bool open_session(int argc, char **argv)
          char *lineptr = line;
 
          // Blank line or line starting with left bracket ends the section.
-         if (!fgets(&line[1], MAX_FILENAME_LENGTH, init_file) || line[1] == '\n' || line[1] == '[') break;
+         if (!fgets(&line[1], MAX_FILENAME_LENGTH, init_file) || line[1] == '\n' || line[1] == '\r' || line[1] == '[') break;
 
          j = strlen(&line[1]);
          if (j>0) line[j] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
@@ -2058,6 +2084,9 @@ bool open_session(int argc, char **argv)
          }
          else if (strcmp(&args[argno][1], "db") == 0) {
             if (argno+1 < nargs) database_filename = args[argno+1];
+         }
+         else if (strcmp(&args[argno][1], "output_prefix") == 0) {
+            if (argno+1 < nargs) strncpy(outfile_prefix, args[argno+1], MAX_FILENAME_LENGTH);
          }
          else if (strcmp(&args[argno][1], "sequence_num") == 0) {
             if (argno+1 < nargs) {
@@ -2380,10 +2409,11 @@ bool open_session(int argc, char **argv)
       // Make the translated names for all calls and concepts.  These have the "<...>"
       // phrases, suitable for external display on menus, instead of "@" escapes.
 
-      for (i=0; i<local_callcount; i++)
+      for (i=0; i<local_callcount; i++) {
          main_call_lists[call_list_any][i]->menu_name =
             translate_menu_name(main_call_lists[call_list_any][i]->name,
                                 &main_call_lists[call_list_any][i]->the_defn.callflagsf);
+      }
 
       for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
          for (uj=0; uj<number_of_taggers[i]; uj++)
@@ -2844,7 +2874,7 @@ bool open_session(int argc, char **argv)
       // Process the keybindings for user-definable calls, concepts, and commands.
 
       if (find_init_file_region("[Accelerators]", 14)) {
-         char q[INPUT_TEXTLINE_SIZE];
+         char q[MAX_FILENAME_LENGTH];
          while (get_accelerator_line(q))
             gg77->matcher_p->do_accelerator_spec(q, true);
       }
@@ -2857,7 +2887,7 @@ bool open_session(int argc, char **argv)
       // Now do the abbreviations.
 
       if (find_init_file_region("[Abbreviations]", 15)) {
-         char q[INPUT_TEXTLINE_SIZE];
+         char q[MAX_FILENAME_LENGTH];
          while (get_accelerator_line(q))
             gg77->matcher_p->do_accelerator_spec(q, false);
       }

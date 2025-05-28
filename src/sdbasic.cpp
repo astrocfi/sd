@@ -1022,12 +1022,12 @@ static const veryshort hyper3x4v[30] = {3, 2, 1, 0, 4, 5, -1, -1, -1, -1, -1, -1
                                         9, 8, 7, 6, 10, 11, -1, -1, -1, -1, -1, -1,
                                         3, 2, 1, 0, 4, 5};
 
-static const veryshort tinyhyperbonet[20] = {-1, -1, -1, -1, -1, -1, -1, -1, 
+static const veryshort tinyhyperbonet[20] = {-1, -1, -1, -1, -1, -1, -1, -1,
                                              -1, -1, -1, -1,  2,  3,  1,  0,
                                              -1, -1, -1, -1};
 
-static const veryshort tinyhyperbonel[20] = {-1, -1,  3,  2, -1, -1, -1, -1, 
-                                             -1, -1,  1,  0, -1, -1, -1, -1, 
+static const veryshort tinyhyperbonel[20] = {-1, -1,  3,  2, -1, -1, -1, -1,
+                                             -1, -1,  1,  0, -1, -1, -1, -1,
                                              -1, -1,  3,  2};
 
 static const veryshort tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
@@ -1218,7 +1218,7 @@ extern bool check_restriction(
          warn(warn__bad_call_level);
          goto getout;
       }
-      else if (flags == CAF__RESTR_UNUSUAL) 
+      else if (flags == CAF__RESTR_UNUSUAL)
          // If it has been marked unusual below some level, just give that warning;
          // don't complain about the level itself.
          goto restr_failed;
@@ -1974,49 +1974,53 @@ static bool handle_4x4_division(
       if (livemask == 0x6969 &&
           (!(newtb & 001) || (assocstuff&001)) &&
           (!(newtb & 010) || (assocstuff&010))) {
-         division_code = spcmap_rh_s2x3_2;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
          return true;
       }
       else if (livemask == 0x9696 &&
           (!(newtb & 010) || (assocstuff&001)) &&
           (!(newtb & 001) || (assocstuff&010))) {
-         division_code = spcmap_rh_s2x3_3;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
+         finalrot++;
          return true;
       }
       else if (livemask == 0xF0F0 &&
           (!(newtb & 001) || (assocstuff&001)) &&
           (!(newtb & 010) || (assocstuff&010))) {
-         division_code = spcmap_lh_s2x3_2;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
          return true;
       }
       else if (livemask == 0x0F0F &&
           (!(newtb & 010) || (assocstuff&001)) &&
           (!(newtb & 001) || (assocstuff&010))) {
-         division_code = spcmap_lh_s2x3_3;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
+         finalrot++;
          return true;
       }
       else if (livemask == 0xACAC &&
                (((newtb & 011) == 001 && (assocstuff==001)) ||
                 ((newtb & 011) == 010 && (assocstuff==010)))) {
-         division_code = spcmap_lh_s2x3_2;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
          return true;
       }
       else if (livemask == 0xCACA &&
                (((newtb & 011) == 001 && (assocstuff==001)) ||
                 ((newtb & 011) == 010 && (assocstuff==010)))) {
-         division_code = spcmap_rh_s2x3_2;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
          return true;
       }
       else if (livemask == 0xACAC &&
                (((newtb & 011) == 010 && (assocstuff==001)) ||
                 ((newtb & 011) == 001 && (assocstuff==010)))) {
-         division_code = spcmap_rh_s2x3_3;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
+         finalrot++;
          return true;
       }
       else if (livemask == 0xCACA &&
                (((newtb & 011) == 010 && (assocstuff==001)) ||
                 ((newtb & 011) == 001 && (assocstuff==010)))) {
-         division_code = spcmap_lh_s2x3_3;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
+         finalrot++;
          return true;
       }
    }
@@ -2071,39 +2075,28 @@ static bool handle_4x4_division(
          warn(warn__each1x4);
          return true;
       case 0x4E4E: case 0x8B8B:
-         division_code = spcmap_lh_s2x3_3;
-         goto handle_z;
-      case 0xA6A6: case 0x9C9C:
-         division_code = spcmap_rh_s2x3_3;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
+         finalrot++;
          goto handle_z;
       case 0xE4E4: case 0xB8B8:
-         division_code = spcmap_lh_s2x3_2;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_THIRD,1);
          goto handle_other_z;
+      case 0xA6A6: case 0x9C9C:
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
+         finalrot++;
+         goto handle_z;
       case 0x6A6A: case 0xC9C9:
-         division_code = spcmap_rh_s2x3_2;
+         division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
          goto handle_other_z;
       case 0x4B4B: case 0xB4B4:
-         // See comment above, for 3x4.
-         forbid_little_stuff =
-            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
-            (assoc(b_2x4, ss, calldeflist) ||
-             assoc(b_4x2, ss, calldeflist) ||
-             assoc(b_dmd, ss, calldeflist) ||
-             assoc(b_pmd, ss, calldeflist) ||
-             assoc(b_qtag, ss, calldeflist) ||
-             assoc(b_pqtag, ss, calldeflist));
-
          // We are in "clumps".  See if we can do the call in 2x2 or smaller setups.
 
-         // Special stuff:  See if we survive overriding things when call has 1x1 def'n.
-         if (!assoc(b_1x1, ss, calldeflist)) {
-            if (forbid_little_stuff ||
-                (!assoc(b_2x2, ss, calldeflist) &&
-                 !assoc(b_1x2, ss, calldeflist) &&
-                 !assoc(b_2x1, ss, calldeflist) &&
-                 !assoc(b_1x1, ss, calldeflist)))
-               fail("Don't know how to do this call in this setup.");
-         }
+         if (!assoc(b_1x1, ss, calldeflist) &&
+             !assoc(b_2x2, ss, calldeflist) &&
+             !assoc(b_1x2, ss, calldeflist) &&
+             !assoc(b_2x1, ss, calldeflist) &&
+             !assoc(b_1x1, ss, calldeflist))
+            fail("Don't know how to do this call in this setup.");
 
          if (!matrix_aware) warn(warn__each2x2);
          division_code = (livemask == 0x4B4B) ?
@@ -2217,7 +2210,7 @@ static bool handle_4x6_division(
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
          switch (livemask) {
          case 043204320: case 023402340:
-            division_code = spcmap_lh_s2x3_7;
+            division_code = MAPCODE(s2x3,2,MPKIND__OFFS_L_FULL,1);
             if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
@@ -2225,7 +2218,7 @@ static bool handle_4x6_division(
             }
             break;
          case 061026102: case 062016201:
-            division_code = spcmap_rh_s2x3_7;
+            division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_FULL,1);
             if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                 (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
                ss->cmd.cmd_misc_flags |= CMD_MISC__OFFSET_Z;
@@ -2349,7 +2342,7 @@ static bool handle_3x8_division(
       }
    }
 
-   return false; 
+   return false;
 }
 
 
@@ -2407,7 +2400,7 @@ static bool handle_2x12_division(
       }
    }
 
-   return false; 
+   return false;
 }
 
 
@@ -2726,11 +2719,11 @@ static int divide_the_setup(
          if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
              (!(newtb & 001) || assoc(b_2x1, ss, calldeflist))) {
             if (livemask == 0x360D8) {
-               division_code = MAPCODE(s1x2,4,MPKIND__OFFS_R_STEP,1);
+               division_code = MAPCODE(s1x2,4,MPKIND__OFFS_R_HALF,1);
                goto divide_us_no_recompute;
             }
             else if (livemask == 0x60D83) {
-               division_code = MAPCODE(s1x2,4,MPKIND__OFFS_L_STEP,1);
+               division_code = MAPCODE(s1x2,4,MPKIND__OFFS_L_HALF,1);
                goto divide_us_no_recompute;
             }
          }
@@ -3450,29 +3443,21 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
 
-      // See if people only occupy Z-like spots.  Maybe this isn't good enough.
+      // See if people only occupy Z-like spots.
 
-      if (livemask == 033 &&
-          (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-          (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+      if (livemask == 033) {
          division_code = MAPCODE(s1x2,2,MPKIND__OFFS_L_HALF,1);
          goto divide_us_no_recompute;
       }
-      else if (livemask == 066 &&
-               (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+      else if (livemask == 066) {
          division_code = MAPCODE(s1x2,2,MPKIND__OFFS_R_HALF,1);
          goto divide_us_no_recompute;
       }
-      else if (livemask == 036 &&
-               (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+      else if (livemask == 036) {
          division_code = spcmap_2x3_1234;
          goto divide_us_no_recompute;
       }
-      else if (livemask == 063 &&
-               (!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-               (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+      else if (livemask == 063) {
          division_code = spcmap_2x3_0145;
          goto divide_us_no_recompute;
       }
@@ -4051,6 +4036,9 @@ static int divide_the_setup(
 
    // Flip the setup back if necessary.  It will get canonicalized.
    result->rotation -= finalrot;
+   // And note that the splitting has changed.
+   if (finalrot & 1)
+      result->result_flags.swap_split_info_fields();
 
    // If a "horrible hinge" went to a 1x4, it's horrible.
    if (maybe_horrible_hinge && result->kind == s1x4)
@@ -6491,7 +6479,7 @@ foobar:
                   // that person needs more help than we can give.
 
                   if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16)
-                     fail("Can't expand to a 16 matrix."); 
+                     fail("Can't expand to a 16 matrix.");
                   matrix_check_flag = INHERITFLAG_16_MATRIX;
                }
             }

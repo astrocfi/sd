@@ -2161,11 +2161,11 @@ static struct { int id; const char *message; } dialog_help_list[] = {
     "If creating a new session, it will ask you for the file name, so you don't\n"
     "need to do anything here.  You can, in any case, use the \"change output file\"\n"
     "command to change the file name later."},
-   {IDC_SEQ_NUM_OVERRIDE, 
+   {IDC_SEQ_NUM_OVERRIDE,
     "Sessions generally keep track of sequence (card) numbers, so you\n"
     "usually don't need this.  If you specify a number here and then choose\n"
     "a session, that session's numbering will be permanently changed."},
-   {IDC_SEQ_NUM_OVERRIDE_SPIN, 
+   {IDC_SEQ_NUM_OVERRIDE_SPIN,
     "Sessions generally keep track of sequence (card) numbers, so you\n"
     "usually don't need this.  If you specify a number here and then choose\n"
     "a session, that session's numbering will be permanently changed."},
@@ -3101,7 +3101,10 @@ bool iofull::choose_font()
 
 bool iofull::print_this()
 {
-   GLOBprinter->print_this(outfile_string, szMainTitle, false);
+   char full_outfile_name[MAX_FILENAME_LENGTH];
+   strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
+   strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
+   GLOBprinter->print_this(full_outfile_name, szMainTitle, false);
    return true;
 }
 
@@ -3150,7 +3153,7 @@ void iofull::terminate(int code)
          if (yesnoconfirm("Confirmation", (char *) 0,
                           "Do you want to print the file?",
                           false, true) == POPUP_ACCEPT)
-            GLOBprinter->print_this(outfile_string, szMainTitle, false);
+            print_this();
       }
 
       SendMessage(hwndMain, WM_USER+2, 0, 0L);

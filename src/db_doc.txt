@@ -4348,4 +4348,5 @@ inherit_single
 @y        - put tagging call here.
 @N        - put circulate call here.
 @O ... @P - text to remove if invoked as a circulate-type call
+@X        - put "others" here, or be more specific if possible.
 @S        - put star turn modifier here.

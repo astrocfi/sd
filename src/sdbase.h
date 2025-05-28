@@ -895,6 +895,7 @@ enum start_select_kind {
    start_select_change_to_new_style_filename,
    start_select_randomize_couple_colors,
    start_select_change_outfile,
+   start_select_change_outprefix,
    start_select_change_title,
 
    start_select_freq_show,
@@ -1234,6 +1235,7 @@ enum command_kind {
    command_create_comment,
    command_randomize_couple_colors,
    command_change_outfile,
+   command_change_outprefix,
    command_change_title,
    command_getout,
    command_cut_to_clipboard,
@@ -1392,6 +1394,7 @@ public:
    void print_4_person_setup(int ps, small_setup *s, int elong);
    void do_write(Cstring s);
    void do_change_outfile(bool signal);
+   void do_change_outprefix(bool signal);
    void open_text_line();
    void clear_screen();
    void writechar(char src);

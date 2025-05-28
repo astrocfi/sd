@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 324
+#define DATABASE_FORMAT_VERSION 326
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -339,6 +339,15 @@ enum heritflags {
 // or schema_in_out_triple_squash.  See the call "quick step part 2".
 // It also means that a short6 is to be fudged to a 2x3.  See the call
 // "quick step part 1".
+//
+// CFLAG1_NUMBER_MASK and CFLAG1_NUMBER_BIT, when nonzero, say that the call
+// takes that number of numeric arguments.  So it must have that number of "@9"
+// (or equivalent) things in its name.  The number can go up to 4.  But there
+// is a special case for an encoding of 7.  That says that the call is declared
+// "optional_special_number".  If an otherwise intractable fraction comes in
+// (e.g. 3/4 swing the fractions from a left wave), a subcall that would otherwise
+// not take a numeric argument, but has indicated, through this mechanism, that
+// it is willing to accept an optional argument, will be given an argument.
 
 // BEWARE!!  This list must track the table "flagtab1" in mkcalls.cpp .
 // These flags go into the "callflags1" word of a callspec_block,
@@ -554,6 +563,10 @@ enum setup_kind {
    s_spindle12,
    s1p5x8,   // internal use only
    s1p5x4,   // internal use only
+   sfudgy2x6l,
+   sfudgy2x6r,
+   sfudgy2x3l,
+   sfudgy2x3r,
    s2x8,
    s4x4,
    s1x10,
@@ -1068,7 +1081,8 @@ enum calldef_schema {
    schema_maybe_grand_single_concentric,
    schema_maybe_grand_single_cross_concentric,
    schema_maybe_special_single_concentric,
-   schema_maybe_special_single_concentric_or_2_4,
+   schema_maybe_special_trade_by,
+   schema_special_trade_by,
    schema_grand_single_or_matrix_concentric,
    schema_3x3_concentric,
    schema_4x4_lines_concentric,

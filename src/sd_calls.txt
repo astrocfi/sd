@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.76"
+version "38.79"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -114,12 +114,12 @@ call "tag" mainstream tag plain_tag
       array [C0E C1E C3E C2E A4W A5W A7W A6W]
             alternate_definition [1x3] c4
    setup 1x4 2x3
-      preds "Can't do this."
+      predscantdo
          if miniwave_side_of_out_3n1_line [C1E A0W A1W C2E]
          if couple_side_of_out_3n1_line   [C0E C1E A2W A1W]
             alternate_definition [3x1] c4    /* Same as 1x3. */
    setup 1x4 2x3
-      preds "Can't do this."
+      predscantdo
          if miniwave_side_of_out_3n1_line [C1E A0W A1W C2E]
          if couple_side_of_out_3n1_line   [C0E C1E A2W A1W]
 
@@ -164,11 +164,11 @@ call "vertical tag" c1 tag vertical_half_tag
 call "@6 start vertical tag" c1 tag anyone_start_vertical_half_tag
             base_tag_call_1
    setup trngl4 2x2 qualifier ntbone dmd_ctrs_1f
-      preds "?"
+      predsnoselect
          if select   [  0   0 C1S A2S 0 0 Z0N Z3N]
          if unselect [Z3N Z0N   0   0 0 0 0 0]
    setup trngl4 2x2 qualifier ntbone dmd_ctrs_mwv
-      preds "?"
+      predsnoselect
          if select   [  0   0 C1S A1S 0 0 Z0N Z0N]
          if unselect [Z3N Z0N   0   0 0 0 0 0]
 
@@ -620,41 +620,41 @@ call "in roll@O circulate@P" a2 tag inrollcirc
       array [   0 AL0S AL1S AL2S ZM3N CR4S CR5S    0]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw [CR1S CR2S CR3S    0    0 AL6S AL7S ZM0N]
          if always         [   0 AL0S AL1S AL2S ZM3N CR4S CR5S    0]
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw_2x3 [CR1S CR2S    0    0 AL5S ZM0N]
          if always             [   0 AL0S AL1S ZM2N CR3S    0]
             alternate_definition [half] a2
    setup 2x4 spindle
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw [CR0E CR1E CR2E    0    0 AL5W AL6W ZM7N]
          if always         [   0 AL0W AL1W AL2W ZM3N CR4E CR5E    0]
    setup 2x3 short6 rotate
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw_2x3 [CR5N CR0N    0    0 AL3S ZM4W]
          if always             [   0 AL5S AL0S ZM1W CR2N    0]
             alternate_definition [12matrix] c3
    setup 2x6 2x6
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw_2x6 [CR1S CR2S CR3S CR4S CR5S    0    0 AL8S AL9S AL10S AL11S ZM0N]
          if always             [   0 AL0S AL1S AL2S AL3S AL4S ZM5N CR6S CR7S  CR8S CR9S     0]
             alternate_definition [16matrix] c3
    setup 2x8 2x8
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw_2x8 [CR1S  CR2S  CR3S  CR4S  CR5S  CR6S  CR7S    0
                                    0 AL10S AL11S AL12S AL13S AL14S AL15S ZM0N]
          if always             [   0  AL0S  AL1S  AL2S  AL3S  AL4S  AL5S AL6S
                                 ZM7N  CR8S  CR9S CR10S CR11S CR12S CR13S    0]
             alternate_definition [magic] c3
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if magic_inroller_is_cw [CR6S AL7S AL1S    0    0 CR3S CR5S ZM0N]
          if always               [   0 CR2S CR4S AL5S ZM3N AL6S AL0S    0]
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if magic_inroller_is_cw_2x3 [CR4S AL5S    0    0 CR2S ZM0N]
          if always                   [   0 CR3S AL4S ZM2N AL0S    0]
 
@@ -669,43 +669,43 @@ call "out roll@O circulate@P" a2 tag outrollcirc
       array [CR3S AL0S AL1S    0    0 CR4S CR5S CR6S]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 CR2S CR3S AL0S AL5S AL6S AL7S    0]
          if always          [CR3S AL0S AL1S    0    0 CR4S CR5S CR6S]
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x3 [   0 CR2S AL0S AL4S AL5S    0]
          if always              [CR2S AL0S    0    0 CR3S CR4S]
             alternate_definition [half] a2
    setup 2x4 3x4 rotate
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [    0 CR11N CR1N  AL10S AL2S AL5S AL7S    0]
          if always          [CR10N  AL8S AL11S     0    0 CR2N CR5N CR7N]
    setup 2x3 short6
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x3 [   0 CR2E AL1W AL3W AL5W    0]
          if always              [CR1E AL0W    0    0 CR3E CR5E]
             alternate_definition [12matrix] c3
    setup 2x6 2x6
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x6 [   0 CR2S CR3S  CR4S  CR5S  AL0S
                                  AL7S AL8S AL9S AL10S AL11S     0]
          if always              [CR5S AL0S AL1S  AL2S  AL3S     0
                                     0 CR6S CR7S  CR8S  CR9S CR10S]
             alternate_definition [16matrix] c3
    setup 2x8 2x8
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x8 [   0  CR2S  CR3S  CR4S  CR5S  CR6S  CR7S  AL0S
                                  AL9S AL10S AL11S AL12S AL13S AL14S AL15S     0]
          if always              [CR7S  AL0S  AL1S  AL2S  AL3S  AL4S  AL5S     0
                                     0  CR8S  CR9S CR10S CR11S CR12S CR13S CR14S]
             alternate_definition [magic] c3
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if magic_outroller_is_cw [   0 AL7S AL1S AL0S AL2S CR3S CR5S    0]
          if always                [CR3S CR2S CR4S    0    0 AL6S AL0S CR1S]
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if magic_outroller_is_cw_2x3 [   0 AL5S AL0S AL1S CR2S    0]
          if always                    [CR2S CR3S    0    0 AL0S CR1S]
 
@@ -716,20 +716,20 @@ call "prefer the @6 out roll circulate" c1
    // Yes, this can be called from a 1x4.  "Out" doesn't matter,
    // since we are specifying the person.
    setup 1x4 1x4 qualifier ripple_one_end restriction unusual alwaysfail
-      preds "?"
+      predsnoselect
          if select_near_unselect   [CR2S 0    AL0S 0]
          if unselect_near_select   [0    AL0S 0    CR2S]
          if unselect_near_unselect [CR1S CR3S AL3S AL1S]
    // If in a 2x4, the selected person must not be facing in.
    setup 2x4 2x4 qualifier ripple_one_end
-      preds "?"
+      predsnoselect
          if select_near_unselect   [CR3S 0    0    AL0S 0    0    0    0]
          if unselect_near_select   [0    AL0S CR3S 0    0    CR4S AL7S 0]
          if unselect_near_unselect [CR1S CR2S AL1S AL2S AL5S AL6S CR5S CR6S]
 
 call "prefer the @6 in roll circulate" c1
    setup 2x4 2x4 qualifier ripple_one_end
-      preds "?"
+      predsnoselect
          if select_near_unselect   [0    0    0    0    ZM3N 0    0    ZM0N]
          if unselect_near_select   [0    AL0S CR3S 0    0    CR4S AL7S 0]
          if unselect_near_unselect [CR1S CR2S AL1S AL2S AL5S AL6S CR5S CR6S]
@@ -742,34 +742,34 @@ call "zoom roll@O circulate@P" c4
       array [AL7N AL0S AL1S    0    0 CR4S CR5S CR6S]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 CR2S CR3S CR4N AL5S AL6S AL7S    0]
          if always          [AL7N AL0S AL1S    0    0 CR4S CR5S CR6S]
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x3 [   0 CR2S CR3N AL4S AL5S    0]
          if always              [AL5N AL0S    0    0 CR3S CR4S]
             alternate_definition [12matrix] c3
    setup 2x6 2x6
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x6 [    0 CR2S CR3S  CR4S  CR5S  CR6N
                                   AL7S AL8S AL9S AL10S AL11S     0]
          if always              [AL11N AL0S AL1S  AL2S  AL3S     0
                                      0 CR6S CR7S  CR8S  CR9S CR10S]
             alternate_definition [16matrix] c3
    setup 2x8 2x8
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x8 [    0  CR2S  CR3S  CR4S  CR5S  CR6S  CR7S  CR8N
                                   AL9S AL10S AL11S AL12S AL13S AL14S AL15S     0]
          if always              [AL15N  AL0S  AL1S  AL2S  AL3S  AL4S  AL5S     0
                                      0  CR8S  CR9S CR10S CR11S CR12S CR13S CR14S]
             alternate_definition [magic] c4
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if magic_outroller_is_cw [   0 AL7S AL1S CR4N AL2S CR3S CR5S    0]
          if always                [AL7N CR2S CR4S    0    0 AL6S AL0S CR1S]
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if magic_outroller_is_cw_2x3 [   0 AL5S CR3N AL1S CR2S    0]
          if always                    [AL5N CR3S    0    0 AL0S CR1S]
 
@@ -1084,10 +1084,14 @@ call "counter@O rotate@P" c1 tag ctr_rot
    setup 4x2 2x4 qualifier magic_only restriction forbidden alwaysfail
       array [0 0 0 0 0 0 0 0]
             alternate_definition [half] c1
+   setup 2x2 2x2 plus_eighth_rotation
+      array [CR0N AL0W AL1W CR3N]
    setup 2x4 4x4 plus_eighth_rotation
       array [CR10N CR15N AL15W AL13W AL14W AL3W CR11N CR9N]
    setup 4x2 4x4 plus_eighth_rotation
       array [CR10N CR15N CR3N CR1N AL14W AL3W AL7W AL5W]
+   setup 4x4 4x4 plus_eighth_rotation
+      array [AL12W AL13W AL14W AL15W AL0W AL1W CR6N AL3W CR8N CR9N CR10N CR11N CR12N CR13N AL10W CR15N]
             alternate_definition [lasthalf] c1
    setup 2x4 4x4 plus_eighth_rotation
       array [CR10N CR15N AL15W AL13W AL14W AL3W CR11N CR9N]
@@ -1375,6 +1379,10 @@ call "split counter rotate @b" a2
             magic_is_inherited funny_is_inherited nxn_is_inherited dont_raise_overcast
    splitseq ctr_rot [inherit_magic inherit_funny inherit_nxn repeat_n]
 
+call "split counter rotate @9/8" a2
+            neednumber distribute_repetitions
+   splitseq ctr_rot [force_half repeat_n]
+
 call "box counter rotate @b" a2
             neednumber visible_fractions distribute_repetitions
             magic_is_inherited funny_is_inherited nxn_is_inherited dont_raise_overcast
@@ -1492,25 +1500,25 @@ call "remember the alamo" c4
 
 call "@6 break the alamo" c4
    setup 2x4 2x4 rotate
-      preds "?"
+      predsnoselect
          if select [0 C0N A7S 0 0 A6S C1N 0]
          if always [0 0 0 0 0 0 0 0]
    setup 4x2 2x4 rotate
-      preds "?"
+      predsnoselect
          if unselect [Z6W 0 0 C3E A0E 0 0 Z5W]
          if always   [0 0 0 0 0 0 0 0]
    setup 4x4 c1phan
-      preds "?"
+      predsnoselect
          if select_once_rem_from_select [0 0 0 0 0 A3W  C6E  0 0 0 0 0 0 C4E A1W 0]
          if unselect                    [0 0 0 0 0 Z10N Z15N 0 0 0 0 0 0 C5S A0S 0]
          if always                      [0 0 0 0 0 0    0    0 0 0 0 0 0 0   0   0]
    setup alamo c1phan
-      preds "?"
+      predsnoselect
          if select_near_select [C4E A1W 0 0 A3W  C6E  0 0]
          if unselect           [C5S A0S 0 0 Z10N Z15N 0 0]
          if always             [0   0   0 0 0    0    0 0]
    setup c1phan c1phan
-      preds "?"
+      predsnoselect
          if unselect           [0 0 C5S 0 0 0 0 A0S 0 0 Z10N 0 0 0 0 Z15N]
          if person_select_sum9 [0 0 C4E 0 0 0 0 A1W 0 0 A3W  0 0 0 0 C6E]
          if always             [0 0 0   0 0 0 0 0   0 0 0    0 0 0 0 0]
@@ -1645,7 +1653,7 @@ call "@6 _prepare to separate" dontshow tag prepare_to_separate
    setup 4x2 2x4 qualifier ends_sel
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 4x4 4x4
-      preds "?"
+      predsnoselect
          if select   [  0    0    0 0 0 ZM5N  ZM6N 0  0     0     0 0 0 AL13S CR14S 0]
          if unselect [  0 ZM3N ZM7N 0 0 ZM7N ZM11N 0  0 ZM11N ZM15N 0 0 ZM15N ZM3N 0]
 
@@ -1780,13 +1788,13 @@ call "@2scoot @3and scamper" c4a
 call "stroll part 1" dontshow tag stroll1
             fudge_to_q_tag
    setup qtag 3x4
-      preds "???"
+      predscantdocallinsetup
          if q_line_front [ZM1N ZM2N ZM3N AL11S ZM7N  ZM8N ZM0N CR5S]
          if q_line_back  [   0    0 ZM3N AL11S ZM4N ZM10N ZM0N CR5S]
          if always       [   0    0 ZM3N AL11S    0     0 ZM0N CR5S]
             alternate_definition [yoyo] c4
    setup hrglass 3x4
-      preds "???"
+      predscantdocallinsetup
          if q_line_front [ZM1N ZM2N ZM3N 0 ZM7N  ZM8N ZM0N 0]
          if q_line_back  [   0    0 ZM3N 0 ZM4N ZM10N ZM0N 0]
          if always       [   0    0 ZM3N 0    0     0 ZM0N 0]
@@ -2132,7 +2140,7 @@ call "exchange the boxes @a" c3a
    setup 2x4 2x4 no_compress qualifier num 3 none
       array [CCAL4N AL6N CR5N AACR7N AM6S AM7S CM4S CM5S]
    setup 4x2 4x4 no_compress qualifier live num 3 none
-      preds "???"
+      predscantdocallinsetup
          if columns_tandem [ZM2N AL1S CM7S CM13S AM6S AM3S CR2S ZM1N]
          if always         [ZM2N AL1S CM7S CM15S AM11S AM3S CR2S ZM1N]
    setup 4x2 2x4 no_compress qualifier num 3 none
@@ -2239,13 +2247,13 @@ call "exchange the 3x1 triangles 3/4" c3a
 
 call "convert the triangle" c4 tag trngle_convert
    setup trngl trngl qualifier miniwaves
-      preds "???"
+      predscantdocallinsetup
          if trngl_pt_rh [0 CR3E AL3W 0 CR1E CR1E]
          if always      [0 CR3E AL3W 0 AL2W AL2W]
    setup ptrngl trngl qualifier miniwaves
       array [ZM4N 0 0 ZM2N 0 0]
    setup trngl 1x3 qualifier couples_only
-      preds "???"
+      predscantdocallinsetup
          if trngl_pt_rh [0    0    0 0 CR1E CR0E]
          if always      [0    0    0 0 AL2W AL1W]
    setup ptrngl 1x3 qualifier couples_only
@@ -2297,13 +2305,13 @@ call "wrap to an hourglass" c3a
 call "unwrap the galaxy" c2
             take_right_hands
    setup galaxy 4x4
-      preds "???"
+      predscantdocallinsetup
          if next_galaxyspot_is_tboned [ZM3E  ZM3S 0 ZM15S ZM15W ZM14N 0 ZM13N]
          if always                    [CR14S ZM3S 0 ZM15S AL13S ZM14N 0 ZM13N]
 
 call "unwrap the wave-based triangles" c2
    setup galaxy hyperglass
-      preds "???"
+      predscantdocallinsetup
          if next_galaxyspot_is_tboned [CM4E CR5S 0 AL2S AM4W ZM5N 0 ZM2N]
          if always                    [ZM0N CR5S 0 AL2S ZM6N ZM5N 0 ZM2N]
 
@@ -2324,13 +2332,13 @@ call "unwrap the stars" c2
 // Same as above, with more info.
 call "unwrap the stars to a normal column, follow the @6" c2
    setup c1phan c1phan qualifier occupied_as_stars restriction forbidden nice_diamonds
-      preds "Can't tell who is selected."
+      predsnoselect
          if select   [   0 0    0 0 0     0 0    0     0 0 ZM4N 0 0     0 0 ZM1N]
          if unselect [CM3S 0 AL0E 0 0  AM6S 0 CR5W AM15W 0    0 0 0 CM10E 0    0]
 
 call "unwrap the boxes to a normal column, follow the @6" c3a
    setup 4x4 2x4 rotate restriction forbidden wave_only
-      preds "Can't tell who is selected."
+      predsnoselect
          if select   [   0    0 0 0 0    0    0 ZM0W 0 0    0 ZM7W    0 0 0 0]
          if unselect [AM1E AL0E 0 0 0 ZM1W ZM6W    0 0 0 CR7E    0 CM6E 0 0 0]
 
@@ -2419,19 +2427,19 @@ call "_ends strip" dontshow tag endsstrip
 
 call "_ends strip but the @6 criss cross it" dontshow tag endsxxstrip
    setup 2x2 1x4 restriction forbidden peelable_box
-      preds "Can't tell who is selected."
+      predsnoselect
       if select [AACR0N CCAL2N AL3S CR1S]
             alternate_definition [stingy] c3
    setup 2x2 2x2 restriction forbidden peelable_box
-      preds "Can't tell who is selected."
+      predsnoselect
       if select [AACR3W CCAL2E AL1W CR0E]
             alternate_definition [generous] c3
    setup 2x2 2x2 restriction forbidden peelable_box
-      preds "Can't tell who is selected."
+      predsnoselect
       if select [AACR0E CCAL1W AL2E CR3W]
             alternate_definition [yoyo] c4
    setup 2x2 2x2 restriction forbidden peelable_box
-      preds "Can't tell who is selected."
+      predsnoselect
       if select [AACR0E CCAL1W AL2E CR3W]
 
 call "strip the setup" c3a
@@ -2663,7 +2671,7 @@ call "triangle circulate" c1 tag trngle_circ
    setup trngl trngl
       array [0 CR2S AL1S 0 AL3W CR3E]
    setup ptrngl trngl
-      preds "???"
+      predscantdocallinsetup
          if nexttrnglspot_is_tboned [AL2W ZM2N CR0S CR4E AL3S ZM4N]
          if always                  [AL2S ZM2N CR0S CR4S AL3S ZM4N]
             alternate_definition [interlocked] c2
@@ -2671,11 +2679,11 @@ call "triangle circulate" c1 tag trngle_circ
    setup short6 short6
       array [CR2S 0 AL0S AL1W 0 CR1E]
    setup pshort6 short6
-      preds "???"
+      predscantdocallinsetup
          if nextinttrnglspot_is_tboned [ZM2N CR3E CR4S AL1S AL2W ZM3N]
          if always                     [ZM2N CR3S CR4S AL1S AL2S ZM3N]
    setup bone6 bone6
-      preds "???"
+      predscantdocallinsetup
          if nextinttrnglspot_is_tboned [CR2S AL5S AL0W ZM1N ZM0N CR1E]
          if always                     [CR2S AL5S AL0S ZM1N ZM0N CR1S]
    setup pbone6 bone6
@@ -2683,7 +2691,7 @@ call "triangle circulate" c1 tag trngle_circ
             alternate_definition [3x1] c2
    simple_funny
    setup 3x2 2x3 qualifier occupied_as_3x1tgl
-      preds "???"
+      predscantdocallinsetup
          if zero_cw_people [   0 CR3S CR4S    0 AL2S ZM4N]
          if one_cw_person  [   0 ZM2N    0    0 ZM3N    0]
          if always         [ZM1N    0    0 AL1S    0    0]
@@ -2702,7 +2710,7 @@ call "cut the 3x1 triangle" c4a
       array [0 0 0 0 0 0]   // This should suffice to make it illegal.
             alternate_definition [reverse] c2
    setup 3x2 1x4 rotate qualifier occupied_as_3x1tgl
-      preds "???"
+      predscantdocallinsetup
          if zero_cw_people [   0 CM2E CR3E    0 AM0E ZM3W]
          if one_cw_person  [   0 CM2E    0    0 AM0E    0]
          if always         [ZM1W    0    0 AL1E    0    0]
@@ -2713,7 +2721,7 @@ call "flip the 3x1 triangle" c4a
       array [0 0 0 0 0 0]   /* This should suffice to make it illegal. */
             alternate_definition [reverse] c2
    setup 3x2 1x4 rotate qualifier occupied_as_3x1tgl
-      preds "???"
+      predscantdocallinsetup
          if zero_cw_people [   0 AL0E CR3E    0 CR2E ZM3W]
          if one_cw_person  [   0 AL0E    0    0 CR2E    0]
          if always         [ZM1W    0    0 AL1E    0    0]
@@ -2752,7 +2760,7 @@ call "reshape the triangle" c2 tag trngle_reshape
    setup trngl trngl
       array [0 CR2E AL1W 0 AL3W CR3E]
    setup ptrngl trngl
-      preds "???"
+      predscantdocallinsetup
          if nexttrnglspot_is_tboned [AL2S CR2E CR0S CR4S AL3S AL4W]
          if always                  [AL2W CR2E CR0S CR4E AL3S AL4W]
 
@@ -2835,18 +2843,19 @@ call "_centers arm turn @b while ends roll @b times" dontshow tag ctrarmturn_n_e
             need_two_numbers yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    singleconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] roll_n [shift_one_number]
 
+// *********** Try to get rid of this.  Used only in obscure corner case of cast off n/4.
 call "cast off 1/4" dontshow tag cast_off_14
             parallel_conc_end
    setup 1x2 1x2 rotate
       preds "Need to be in miniwave or line of 4."
          if cast_normal  [CR0N AL0S]
    setup 1x4 2x2
-      preds "?"
+      predscantdo
          if cast_normal  [CR0E AL0W AL1W CR1E]
          if cast_pushy   [AL3W AL0W CR2E CR1E]
          if always       [0    AL0W 0    CR1E]
    setup 1x6 2x3
-      preds "?"
+      predscantdo
          if cast_normal  [CR0E AL0W CR1E AL2W CR2E AL1W]
          if cast_pushy   [AL5W AL0W 0    CR3E CR2E 0]
          if always       [0    AL0W 0    0    CR2E 0]
@@ -2869,7 +2878,7 @@ call "hinge @b times, opt for normal" dontshow tag hinge_for_relay_shad
             neednumber fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited yoyo_fractal_numbers
             fractional_numbers diamond_is_legal parallel_conc_end
    setup 1x4 2x2 qualifier num 1 none
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CM0E AM0W AM1W CM1E]
          if always              [CM0E AM3W AM2W CM1E]
    // Use this if "fractal" given.  Must be miniwave.
@@ -2895,36 +2904,36 @@ call "cast off @b, opt for normal" dontshow tag cast_off_n4_with_warn
       preds "Need to be in miniwave or line of 4."
          if cast_normal_or_warn [CR0N AL1N]
    setup 1x4 1x4 qualifier num 0 not_miniwaves  // Need qualifier for crazy any hand remake.
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [ZM0N ZM1N ZM2N ZM3N]
          if always              [ZM0N ZM1N ZM2N ZM3N]
    setup 1x4 2x2 qualifier num 1 not_miniwaves
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CR0E AL0W AL1W CR1E]
          if always              [AL3W AL0W CR2E CR1E]
    setup 1x4 1x4 qualifier num 2 not_miniwaves
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CR1S AL0S AL3S CR2S]
          if always              [AL1S AL0S CR3S CR2S]
    setup 1x4 2x2 qualifier num 3 not_miniwaves
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CR3W AL3E AL2E CR2W]
          if always              [AL0E AL3E CR1W CR2W]
    setup 1x4 1x4 qualifier num 4 not_miniwaves
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CR0N AL1N AL2N CR3N]
          if always              [AL0N AL1N CR2N CR3N]
    setup 1x6 2x3 qualifier num 1 none
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CR0E AL0W CR1E AL2W CR2E AL1W]
          if always              [AL5W AL0W 0    CR3E CR2E 0]
    setup 1x6 2x3 qualifier num 3 none
-      preds "?"
+      predscantdo
          if cast_normal_or_warn [CR5W AL5E CR4W AL3E CR3W AL4E]
          if always              [AL0E AL5E 0    CR2W CR3W 0]
             alternate_definition [interlocked] c3  // For interlocked counter.
    setup 1x4 2x2 qualifier num 3 none
-      preds "?"
+      predscantdo
          if intlk_cast_normal_or_warn [CR3W CR2W AL2E AL3E]
          if always                    [AL0E CR2W CR1W AL3E]
             alternate_definition [3x3 interlocked] c4
@@ -2953,7 +2962,7 @@ call "_boxy cast off 3/4" dontshow tag boxy_cast_off_34
       preds "Need to be in miniwave or line of 4."
          if cast_normal  [CR1S AL1N]
    setup 1x4 2x2
-      preds "?"
+      predscantdo
          if cast_normal_or_warn  [CR3W AL3E AL2E CR2W]
          if cast_pushy           [AL0E AL3E CR1W CR2W]
          if always               [0    AL3E 0    CR2W]
@@ -2964,7 +2973,7 @@ call "_boxy cast off 3/4" dontshow tag boxy_cast_off_34
       preds "Need to be in miniwave or line of 4."
          if cast_normal  [CR0N AL0S]
    setup 1x4 2x2
-      preds "?"
+      predscantdo
          if cast_normal_or_warn  [CR0E AL0W AL1W CR1E]
          if cast_pushy           [AL3W AL0W CR2E CR1E]
          if always               [0    AL0W 0    CR1E]
@@ -2974,9 +2983,9 @@ call "_boxy cast off 3/4" dontshow tag boxy_cast_off_34
             alternate_definition [generous] c3
    setup 1x2 1x2 qualifier miniwaves
          array [CR0N AL1N]
-// Alternate definition for fractionalization.
+   // Alternate definition for fractionalization.
             visible_fractions parallel_conc_end
-   seq cast_off_14 []
+   seq cast_off_n4 [insert_number 1]
    seq continue_cast []
    seq continue_cast []
 
@@ -3007,48 +3016,113 @@ call "_continue to cast off" dontshow tag continue_cast
 // which will make it do the right thing with the 1x3 modifier.
 
 call "cast off @b" mainstream tag cast_off_n4
-            parallel_conc_end yield_if_ambiguous neednumber
+            parallel_conc_end yield_if_ambiguous gen_sting_is_inherited neednumber
+   setup 1x2 1x2 rotate qualifier num 1 none
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR0N AL0S]
    setup 1x2 1x2 qualifier num 2 none
       preds "Need to be in miniwave or line of 4."
          if cast_normal  [CR1S AL0S]
    setup 1x2 1x2 rotate qualifier num 3 none
       preds "Need to be in miniwave or line of 4."
          if cast_normal  [CR1S AL1N]
+   setup 1x4 2x2 qualifier num 1 none
+      predscantdo
+         if cast_normal  [CR0E AL0W AL1W CR1E]
+         if cast_pushy   [AL3W AL0W CR2E CR1E]
+         if always       [0    AL0W 0    CR1E]
    setup 1x4 1x4 qualifier num 2 none
-      preds "?"
+      predscantdo
          if cast_normal  [CR1S AL0S AL3S CR2S]
          if cast_pushy   [AL1S AL0S CR3S CR2S]
          if always       [0    AL0S 0    CR2S]
    setup 1x4 2x2 qualifier num 3 not_miniwaves
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
+   setup 1x6 2x3 qualifier num 1 none
+      predscantdo
+         if cast_normal  [CR0E AL0W CR1E AL2W CR2E AL1W]
+         if cast_pushy   [AL5W AL0W 0    CR3E CR2E 0]
+         if always       [0    AL0W 0    0    CR2E 0]
    setup 1x6 1x6 qualifier num 2 none
-      preds "?"
+      predscantdo
          if cast_normal  [CR1S AL0S CR5S AL4S CR3S AL2S]
          if cast_pushy   [AL1S AL0S 0    CR4S CR3S 0]
          if always       [0    AL0S 0    0    CR3S 0]
    setup 1x6 2x3 qualifier num 3 none
-      preds "?"
+      predscantdo
          if cast_normal  [CR5W AL5E CR4W AL3E CR3W AL4E]
          if cast_pushy   [AL0E AL5E 0    CR2W CR3W 0]
          if always       [0    AL5E 0    0    CR3W 0]
+            alternate_definition [half] mainstream
+
+// ***********THIS IS CAST OFF [HALF]
+
+   setup 1x2 1x2        restriction forbidden wave_only qualifier num 0 none
+      array [ZM0N ZM1N]
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live num 1 wave_only
+      array [CR0N 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 1 wave_only
+      array [0 AL0S]
+   setup 1x2 1x2 rotate qualifier num 2 none
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR0N AL0S]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier right live num 3 wave_only
+      array [CR0N 0]
+   setup 1x2 1x2        plus_eighth_rotation qualifier  left live num 3 wave_only
+      array [0 AL0S]
+   setup 1x2 1x2 qualifier num 4 none
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR1S AL0S]
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live num 5 wave_only
+      array [CR1S 0]
+   setup 1x2 1x2 rotate plus_eighth_rotation qualifier  left live num 5 wave_only
+      array [0 AL1N]
+   setup 1x4 2x2 qualifier num 2 none
+      predscantdo
+         if cast_normal  [CR0E AL0W AL1W CR1E]
+         if cast_pushy   [AL3W AL0W CR2E CR1E]
+         if always       [0    AL0W 0    CR1E]
+   setup 1x4 1x4 qualifier num 4 none
+      predscantdo
+         if cast_normal  [CR1S AL0S AL3S CR2S]
+         if cast_pushy   [AL1S AL0S CR3S CR2S]
+         if always       [0    AL0S 0    CR2S]
+   setup 1x6 2x3 qualifier num 2 none
+      predscantdo
+         if cast_normal  [CR0E AL0W CR1E AL2W CR2E AL1W]
+         if cast_pushy   [AL5W AL0W 0    CR3E CR2E 0]
+         if always       [0    AL0W 0    0    CR2E 0]
+   setup 1x6 1x6 qualifier num 4 none
+      predscantdo
+         if cast_normal  [CR1S AL0S CR5S AL4S CR3S AL2S]
+         if cast_pushy   [AL1S AL0S 0    CR4S CR3S 0]
+         if always       [0    AL0S 0    0    CR3S 0]
             alternate_definition [single] c4
+   setup 1x2 1x2 qualifier num 1 none
+      array [AL0W CR1E]
    setup 1x2 1x2 qualifier num 2 none
       array [AL0S CR1S]
    setup 1x2 1x2 qualifier num 3 none
       array [AL0E CR1W]
             alternate_definition [3x3] c4
+   setup 1x6 2x3 rotate qualifier num 1 3x3couples_only
+      array [AL3S AL4S AL5S CR2N CR1N CR0N]
    setup 1x6 1x6 qualifier num 2 3x3couples_only
       array [AL2S AL1S AL0S CR5S CR4S CR3S]
    setup 1x6 2x3 rotate qualifier num 3 3x3couples_only
       array [AL5N AL4N AL3N CR0S CR1S CR2S]
+   setup 3x4 2x6 rotate qualifier num 1 couples_only
+      array [AL10S AL11S CR0N CR1N CR3N CR2N CR5N CR4N AL7S AL6S AL8S AL9S]
    setup 3x4 3x4 qualifier num 2 couples_only
       array [AL1S AL0S CR3S CR2S CR5S CR4S CR7S CR6S AL9S AL8S AL11S AL10S]
    setup 3x4 2x6 rotate qualifier num 3 couples_only
       array [AL11N AL10N CR1S CR0S CR2S CR3S CR4S CR5S AL6N AL7N AL9N AL8N]
             alternate_definition [4x4] c4
+   setup 1x8 2x4 rotate qualifier num 1 4x4couples_only
+      array [AL4S AL5S AL7S AL6S CR3N CR2N CR0N CR1N]
    setup 1x8 1x8 qualifier num 2 4x4couples_only
       array [AL2S AL3S AL0S AL1S CR6S CR7S CR4S CR5S]
    setup 1x8 2x4 rotate qualifier num 3 4x4couples_only
@@ -3059,17 +3133,19 @@ call "cast off @b" mainstream tag cast_off_n4
    setup 1x4 2x2 other_elongate qualifier num 2 not_miniwaves restriction controversial alwaysfail
       // Many people consider things like "yoyo split cast"
       // with a pushy cast to be bogus.
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
-// Alternate definition for fractionalization.
+      // Alternate definition for fractionalization.
             parallel_conc_end yield_if_ambiguous neednumber
-            diamond_is_legal bigmatrix_is_inherited
+            bigmatrix_is_inherited
             single_is_inherited nxn_is_inherited yoyo_fractal_numbers
             visible_fractions distribute_repetitions
-   seq_remainder cast_off_14 [inherit_diamond inherit_single inherit_nxn inherit_bigmatrix repeat_nm1]
-   seq continue_cast [inherit_diamond inherit_single inherit_nxn inherit_bigmatrix]
+   // Yes, recurse on same call, taking away "yoyo" and putting in "stingy".
+   //   Not so fast!   seq_remainder cast_off_n4 [inherit_single inherit_nxn inherit_bigmatrix force_stingy]
+   seq_remainder cast_off_14 [inherit_single inherit_nxn inherit_bigmatrix repeat_nm1]
+   seq continue_cast [inherit_single inherit_nxn inherit_bigmatrix]
 
 call "_check odd number" dontshow tag check_odd_number
    setup 1x1 1x1 qualifier num 1 none
@@ -3093,12 +3169,12 @@ call "_cast off @b and roll" dontshow tag cast_n_4_roll
       preds "Need to be in miniwave or line of 4."
          if lines_miniwave [CR1W AL1W]
    setup 1x4 2x2 qualifier num 1 none
-      preds "?"
+      predscantdo
          if lines_miniwave [CR0S AL0S AL1S CR1S]
          if lines_couple   [AL3S AL0S CR2S CR1S]
          if always         [0    AL0S 0    CR1S]
    setup 1x4 2x2 qualifier num 3 none
-      preds "?"
+      predscantdo
          if lines_miniwave [CR3N AL3N AL2N CR2N]
          if lines_couple   [AL0N AL3N CR1N CR2N]
          if always         [0    AL3N 0    CR2N]
@@ -3169,7 +3245,7 @@ call "turn the star 1/4" dontshow tag turnstar1
    setup trngl trngl     /* Yes, three-person stars. */
       array [0 CR2S AL1S 0 AL3W CR3E]
    setup ptrngl trngl
-      preds "???"
+      predscantdocallinsetup
          if nexttrnglspot_is_tboned [AL2W ZM2N CR0S CR4E AL3S ZM4N]
          if always                  [AL2S ZM2N CR0S CR4S AL3S ZM4N]
 
@@ -3556,14 +3632,14 @@ call "@0 and cross" a1
 
 call "@6 cross" a1      /* Actually, it's not on the list. */
    setup 2x2 2x2
-      preds "Can't tell who is designated."
+      predsnoselect
          if select   [0 0 ZM0N ZM1N]
          if unselect [ZM0N ZM1N ZM2N ZM3N]
 
 call "hinge (special)" dontshow tag hinge_for_nicely
             left_means_mirror
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_miniwave_or_warn [CR0N AL0S]
          if always                    [0    AL1S]
             alternate_definition [fractal] c4
@@ -3577,12 +3653,12 @@ call "hinge (special)" dontshow tag hinge_for_nicely
       array [ZM0N ZM1N]
             alternate_definition [1x3] c4
    setup 1x4 2x3
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_in_3n1_line  [AL0W CR1E CR2E AL1W]
          if couple_side_of_in_3n1_line    [CR0E CR1E AL2W AL1W]
             alternate_definition [3x1] c4   /* Same as 1x3. */
    setup 1x4 2x3
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_in_3n1_line  [AL0W CR1E CR2E AL1W]
          if couple_side_of_in_3n1_line    [CR0E CR1E AL2W AL1W]
             alternate_definition [3x3] c4
@@ -4032,7 +4108,7 @@ call "cross roll" c1 tag crossroll
    /* If the above clauses fail, we know there will be a collision,
       so we create an expanded setup. */
    setup 1x4 2x4 rotate no_cutting_through
-      preds "?"
+      predscantdo
          if x14_once_rem_couple [CR6N CR0N AL1S AL7S]
          if always              [CR6N CR1N AL1S AL6S]
             alternate_definition [grand] c3x
@@ -4059,7 +4135,7 @@ call "cross roll to a wave" c1
    /* If the above clauses fail, we know there will be a collision,
       so we create an expanded setup. */
    setup 1x4 2x4 rotate no_cutting_through
-      preds "?"
+      predscantdo
          if x14_once_rem_couple [CR6N CR0N AL1S AL7S]
          if always              [CR6N CR1N AL1S AL6S]
             alternate_definition [grand] c3x
@@ -4690,7 +4766,7 @@ call "partner tag" a1 tag partnertag
       array [CM1E AM0W]
             alternate_definition [funny] c2
    setup 2x2 2x2
-      preds "???"
+      predscantdocallinsetup
          if 2x2_miniwave [CM1E AM0W AM3W CM2E]
          if 2x2_couple   [CM1E AM0W AM3W CM2E]
          if always       [ZM0N ZM1N ZM2N ZM3N]
@@ -5000,7 +5076,7 @@ call "@6 run the wheel" c4a
       0 0 0 0 0 0 0 0]
             yield_if_ambiguous
    setup 2x2 2x2
-      preds "???"
+      predscantdocallinsetup
          if select [CR3W AL2E    0    0]
          if always [CR1W AL0E AL3E CR2W]
 
@@ -5131,7 +5207,7 @@ call "@6 start a squeeze" c1
             dont_use_in_resolve
    /* Beware!  This isn't quite right. */
    setup 4x4 4x4
-      preds "???"
+      predscantdocallinsetup
          if select               [AL13S AL15S AL11S ZM10S AL6S ZM8S ZM4S ZM9S CR5S CR7S CR3S ZM2S CR14S ZM0S ZM12S ZM1S]
          if semi_squeezer_select [0 0 0 AL15S 0 AL6S CR5S AL11S 0 0 0 CR7S 0 CR14S AL13S CR3S]
          if always               [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
@@ -5638,7 +5714,7 @@ call "hinge" mainstream tag hinge
    setup 1x2 1x2 rotate qualifier live wave_only
       array [CR0N AL0S]
    setup 1x2 1x2 rotate restriction forbidden levela1
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
             alternate_definition [fractal] c4
@@ -5655,61 +5731,52 @@ call "hinge" mainstream tag hinge
       array [CR0N 0 0 AL2W 0 CR5N AL7W 0]
    setup 2x4 alamo plus_eighth_rotation qualifier out live magic_only
       array [0 AL7W CR0N 0 AL2W 0 0 CR5N]
-   setup 1x2 1x2 plus_eighth_rotation qualifier right live wave_only
+   setup 1x2 1x2        plus_eighth_rotation qualifier right live wave_only
       array [CR0N 0]
    setup 1x2 1x2 rotate plus_eighth_rotation qualifier left live wave_only
       array [0 AL0S]
-
-   // ******* NEED TO PUT IN 2X4 WAVE VERSION, SO THAT 2X2 VERSION BELOW DOESN'T SCREW UP!
-
-/*
-   setup 2x2 2x3 plus_eighth_rotation qualifier right live wave_only
-      array [CR0N 0 0 CR4N]
-   setup 2x2 2x3 rotate plus_eighth_rotation qualifier left live wave_only
-      array [0 AL5S AL1S 0]
-*/
 
 call "_hinge but ignore gensting if couple" dontshow tag hinge_ignore_gen_if_couple
             left_means_mirror
    setup 1x2 1x2 rotate qualifier live wave_only
       array [CR0N AL0S]
    setup 1x2 1x2 rotate restriction forbidden levela1
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
             alternate_definition [fractal] c4
    setup 1x2 1x2 rotate qualifier live wave_only
       array [CR1S AL1N]
    setup 1x2 1x2 rotate restriction forbidden levela1
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
             alternate_definition [generous] c3
    setup 1x2 1x2 qualifier live wave_only
       array [CR1S AL0S]
    setup 1x2 1x2 rotate restriction forbidden levela1
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
             alternate_definition [stingy] c3
    setup 1x2 1x2 qualifier live wave_only
       array [ZM0N ZM1N]
    setup 1x2 1x2 rotate restriction forbidden levela1
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
 
 call "_couples hinge for short cycle" dontshow tag cplshinge_should_be_armturn
             left_means_mirror
    setup 1x4 1x4 rotate qualifier couples_only restriction controversial 2fl_only
-      preds "???"
+      predscantdocallinsetup
          if 1x4_wheel_and_deal [CR0N CR1N AL0S AL1S]   // 2FL, or beau side of 1FL
          if always             [0    0    AL3S AL2S]   // belle side of 1FL
 
 call "_arm turn, but hinge if needed" dontshow tag armturn_with_warn
             left_means_mirror
    setup 1x2 1x2 rotate restriction unusual miniwaves
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_miniwave_or_ok [CR0N AL0S]
          if always                  [0    AL1S]
             alternate_definition [fractal] c4
@@ -5727,7 +5794,7 @@ call "hinge, opt for normal" dontshow tag hinge_with_warn
             // Now need this for 12 matrix 3x3 contour the line in 2x6, cf. ng11
             12_16_matrix_means_split
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_miniwave_or_warn [CR0N AL0S]
          if always                    [0    AL1S]
             alternate_definition [fractal] c4
@@ -5746,7 +5813,7 @@ call "hinge, opt for normal" dontshow tag hinge_with_warn
 call "hinge for breaker" dontshow tag hinge_for_breaker
             left_means_mirror
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_miniwave_for_breaker [CR0N AL0S]
          if always                        [0    AL1S]
             alternate_definition [fractal] c4
@@ -5841,11 +5908,11 @@ call "@6 bypass" c4
    // By giving a 2x2 def'n, we allow roll, since they know which way
    // to turn back.  Also, this allows T-bone boxes.
    setup 2x2 2x2
-      preds "Can't tell who is designated."
+      predsnoselect
          if select [0 0 ZM1N ZM0N]
          if unselect [0 0 AL1S CR0S]
    setup 2x1 1x2
-      preds "Can't tell who is designated."
+      predsnoselect
          if select [1N 0]
          if unselect [1S 0]
 
@@ -5933,7 +6000,7 @@ call "trade or swing 1/2" dontshow tag trade_or_swing_half
       array [CR1S AL0S AL3S CR2S]
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [lasthalf] mainstream
@@ -5944,7 +6011,7 @@ call "trade or swing 1/2" dontshow tag trade_or_swing_half
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
       // Many people consider things like "yoyo turn the key"
       // with a pushy cast to be bogus.
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
@@ -5983,7 +6050,7 @@ call "_trade for 8-person call" dontshow tag trade_for_8_person_call
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
       // Many people consider things like "yoyo turn the key"
       // with a pushy cast to be bogus.
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
@@ -5996,7 +6063,7 @@ call "_trade for 8-person call" dontshow tag trade_for_8_person_call
       array [CR1S L0S]
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [lasthalf] mainstream
@@ -6018,7 +6085,7 @@ call "trade" mainstream tag trade
       array [CR1S AL0S]
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [lasthalf] mainstream
@@ -6029,7 +6096,7 @@ call "trade" mainstream tag trade
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
       // Many people consider things like "yoyo turn the key"
       // with a pushy cast to be bogus.
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
@@ -6070,7 +6137,7 @@ call "partner trade" mainstream
       array [CR1S AL0S]
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [twisted] c4
@@ -6110,12 +6177,12 @@ call "_trade, allow t-bone" dontshow tag trade_w_tbone
          if always       [ZM0N ZM1N ZM2N ZM3N]   // No.
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [half funny] c2
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [twisted] c4
@@ -6127,7 +6194,7 @@ call "_trade, allow t-bone" dontshow tag trade_w_tbone
    setup 1x4 2x2 other_elongate restriction controversial miniwaves
       // Many people consider things like "yoyo turn the key"
       // with a pushy cast to be bogus.
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]
@@ -6496,6 +6563,14 @@ call "U-turn back" mainstream tag uturnback
       array [CR0S AL1S CR2S 3S AL4S CR5S AL6S 7S]
    setup p1x3dmd 1x3dmd
       array [0S 1S 2S CR3S 4S 5S 6S AL7S]
+   setup 2x7 2x7
+      array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S]
+   setup 7x2 2x7
+      array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S]
+   setup 2x9 2x9
+      array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S 14S 15S 16S 17S]
+   setup 9x2 2x9
+      array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S 14S 15S 16S 17S]
    setup alamo alamo
       array [0S 1S 2S 3S 4S 5S 6S 7S]
    setup c1phan c1phan
@@ -6537,23 +6612,23 @@ call "@6 U-turn back" mainstream
 call "U-turn back in roll direction" mainstream tag uturnflow
             dont_use_in_resolve one_person_call
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if roll_is_cw  [CR0S CR1S CR2S CR3S]
          if roll_is_ccw [AL0S AL1S AL2S AL3S]
          if always      [  0S   1S   2S   3S]
    setup 1x1 1x1
-      preds "?"
+      predscantdo
          if roll_is_cw  [CR0S]
          if roll_is_ccw [AL0S]
          if always      [  0S]
             alternate_definition [half] mainstream
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if roll_is_cw  [CR0E CR1E CR2E CR3E]
          if roll_is_ccw [AL0W AL1W AL2W AL3W]
          if always      [0 0 0 0]
    setup 1x1 1x1
-      preds "?"
+      predscantdo
          if roll_is_cw  [CR0E]
          if roll_is_ccw [AL0W]
          if always      [0]
@@ -6561,25 +6636,25 @@ call "U-turn back in roll direction" mainstream tag uturnflow
 call "@6 U-turn back in roll direction" dontshow tag some_utb_in_roll_dir
             dont_use_in_resolve one_person_call
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if select_and_roll_is_cw  [CR0S CR1S CR2S CR3S]
          if select_and_roll_is_ccw [AL0S AL1S AL2S AL3S]
          if select                 [CR0S AL1S AL2S CR3S]
          if always                 [ZM0N ZM1N ZM2N ZM3N]
    setup 1x2 1x2
-      preds "?"
+      predscantdo
          if select_and_roll_is_cw  [CR0S CR1S]
          if select_and_roll_is_ccw [AL0S AL1S]
          if select                 [CR0S AL1S]
          if always                 [ZM0N ZM1N]
    setup 2x1 1x2
-      preds "?"
+      predscantdo
          if select_and_roll_is_cw  [CR0S CR1S]
          if select_and_roll_is_ccw [AL0S AL1S]
          if select                 [0S 1S]
          if always                 [ZM0N ZM1N]
    setup 1x1 1x1
-      preds "?"
+      predscantdo
          if select_and_roll_is_cw  [CR0S]
          if select_and_roll_is_ccw [AL0S]
          if select                 [0S]
@@ -6710,47 +6785,47 @@ call "quarter @h" mainstream
 call "@V 1/4 in" mainstream tag anyonequarterin
             dont_use_in_nice_resolve
    setup 2x2 2x2
-      preds "???"
+      predsnoselect
          if select   [CR0E AL1W AL2W CR3E]
          if unselect [ZM0N ZM1N ZM2N ZM3N]
    setup 1x2 1x2
-      preds "???"
+      predsnoselect
          if select   [CR0E AL1W]
          if unselect [ZM0N ZM1N]
    setup 2x1 1x2
-      preds "???"
+      predsnoselect
          if select   [0    0]
          if unselect [ZM0N ZM1N]
    setup dmd dmd
-      preds "???"
+      predsnoselect
          if select   [CR0E 0 AL2W 0]
          if unselect [ZM0N 0 ZM2N 0]
    setup pmd dmd
-      preds "???"
+      predsnoselect
          if select   [0 CR1E 0 AL3W]
          if unselect [0 ZM1N 0 ZM3N]
    setup star star
-      preds "???"
+      predsnoselect
          if select   [CR0E    0 AL2W    0]
          if unselect [ZM0N    0 ZM2N    0]
    setup galaxy galaxy
-      preds "???"
+      predsnoselect
          if select   [CR0E CR1E    0 AL3W AL4W AL5W    0 CR7E]
          if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
    setup hrglass hrglass
-      preds "???"
+      predsnoselect
          if select   [CR0E AL1W AL2W    0 AL4W CR5E CR6E 0]
          if unselect [ZM0N ZM1N ZM2N    0 ZM4N ZM5N ZM6N 0]
    setup phrglass hrglass
-      preds "???"
+      predsnoselect
          if select   [CR0E CR1E    0 CR3E AL4W AL5W    0 AL7W]
          if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
    setup short6 short6
-      preds "???"
+      predsnoselect
          if select   [CR0E    0 AL2W AL3W    0 CR5E]
          if unselect [ZM0N    0 ZM2N ZM3N    0 ZM5N]
    setup pshort6 short6
-      preds "???"
+      predsnoselect
          if select   [CR0E CR1E CR2E AL3W AL4W AL5W]
          if unselect [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N]
 
@@ -6760,47 +6835,47 @@ call "@V quarter in" mainstream
 call "@V 1/4 out" mainstream tag anyonequarterout
             dont_use_in_nice_resolve
    setup 2x2 2x2
-      preds "???"
+      predsnoselect
          if select   [AL0W CR1E CR2E AL3W]
          if unselect [ZM0N ZM1N ZM2N ZM3N]
    setup 1x2 1x2
-      preds "???"
+      predsnoselect
          if select   [AL0W CR1E]
          if unselect [ZM0N ZM1N]
    setup 2x1 1x2
-      preds "???"
+      predsnoselect
          if select   [0    0]
          if unselect [ZM0N ZM1N]
    setup dmd dmd
-      preds "???"
+      predsnoselect
          if select   [AL0W 0 CR2E 0]
          if unselect [ZM0N 0 ZM2N 0]
    setup pmd dmd
-      preds "???"
+      predsnoselect
          if select   [0 AL1W 0 CR3E]
          if unselect [0 ZM1N 0 ZM3N]
    setup star star
-      preds "???"
+      predsnoselect
          if select   [AL0W    0 CR2E    0]
          if unselect [ZM0N    0 ZM2N    0]
    setup galaxy galaxy
-      preds "???"
+      predsnoselect
          if select   [AL0W AL1W    0 CR3E CR4E CR5E    0 AL7W]
          if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
    setup hrglass hrglass
-      preds "???"
+      predsnoselect
          if select   [AL0W CR1E CR2E    0 CR4E AL5W AL6W 0]
          if unselect [ZM0N ZM1N ZM2N    0 ZM4N ZM5N ZM6N 0]
    setup phrglass hrglass
-      preds "???"
+      predsnoselect
          if select   [AL0W AL1W    0 AL3W CR4E CR5E    0 CR7E]
          if unselect [ZM0N ZM1N    0 ZM3N ZM4N ZM5N    0 ZM7N]
    setup short6 short6
-      preds "???"
+      predsnoselect
          if select   [AL0W    0 CR2E CR3E    0 AL5W]
          if unselect [ZM0N    0 ZM2N ZM3N    0 ZM5N]
    setup pshort6 short6
-      preds "???"
+      predsnoselect
          if select   [AL0W AL1W AL2W CR3E CR4E CR5E]
          if unselect [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N]
 
@@ -7211,7 +7286,7 @@ call "_ @6 start a separate" dontshow tag anyone_start_separate
    setup 4x2 2x4 rotate qualifier ends_sel
       array [ZM7W ZM6W ZM1W AL0E CR3E ZM2W ZM5W ZM4W]
    setup 4x4 4x4
-      preds "?"
+      predscantdo
          if select   [  0    0    0 0 0 ZM2N  ZM9N 0  0     0     0 0 0 AL10S CR1S 0]
          if unselect [  0 ZM3N ZM7N 0 0 ZM7N ZM11N 0  0 ZM11N ZM15N 0 0 ZM15N ZM3N 0]
 
@@ -7484,23 +7559,15 @@ call "touch @b" mainstream tag touch_n_4
    seq touch [inherit_left inherit_diamond inherit_twisted]
    seq armturn_n4 [inherit_diamond inherit_yoyo inherit_fractal inherit_gensting]
 
-call "touch 1/8" mainstream
-            visible_fractions rear_back_from_r_wave
+call "touch @9/8" mainstream
+            rear_back_from_r_wave neednumber
             left_means_mirror
    seq touch [inherit_left]
-   seq armturn_n4 [force_half insert_number 1]
+   seq armturn_n4 [force_half]
 
-call "touch 3/8" mainstream
-            visible_fractions rear_back_from_r_wave
-            left_means_mirror
-   seq touch [inherit_left]
-   seq armturn_n4 [force_half insert_number 3]
-
-call "touch 5/8" mainstream
-            visible_fractions rear_back_from_r_wave
-            left_means_mirror
-   seq touch [inherit_left]
-   seq armturn_n4 [force_half insert_number 5]
+call "cast off @9/8" mainstream
+            neednumber
+   seq cast_off_n4 [force_half]
 
 call "_leftable touch" dontshow tag lft_touch
             left_means_mirror 12_16_matrix_means_split
@@ -7559,22 +7626,22 @@ call "soft touch @b" c4a
 // Beware!!!  This is a problematical and easily abused call.
 call "box the gnat" mainstream
    setup 2x1 1x2 qualifier live in in_or_out
-      preds "???"
+      predscantdocallinsetup
          if x12_boy_with_girl [CR1S 0]
          if x12_girl_with_boy [AL1S 0]
          if always [0 0]
    setup 2x1 1x2 qualifier in in_or_out
-      preds "???"
+      predscantdocallinsetup
          if boyp [CR1S 0]     // Legal if facing a phantom.
          if girlp [AL1S 0]
          if always [0 0]
    setup 1x2 1x2 rotate qualifier live right wave_only
-      preds "???"
+      predscantdocallinsetup
          if x12_boy_with_girl [CR0E 0]
          if x12_girl_with_boy [AL0E 0]
          if always [0 0]
    setup 1x2 1x2 rotate qualifier right wave_only
-      preds "???"
+      predscantdocallinsetup
          if boyp [CR0E 0]
          if girlp [AL0E 0]
          if always [0 0]
@@ -7582,22 +7649,22 @@ call "box the gnat" mainstream
 // Beware!!!  This is a problematical and easily abused call.
 call "swat the flea" c4
    setup 2x1 1x2 qualifier live in in_or_out
-      preds "???"
+      predscantdocallinsetup
          if x12_boy_with_girl [AL1S 0]
          if x12_girl_with_boy [CR1S 0]
          if always [0 0]
    setup 2x1 1x2 qualifier in in_or_out
-      preds "???"
+      predscantdocallinsetup
          if boyp [AL1S 0]     // Legal if facing a phantom.
          if girlp [CR1S 0]
          if always [0 0]
    setup 1x2 1x2 rotate qualifier live left wave_only
-      preds "???"
+      predscantdocallinsetup
          if x12_boy_with_girl [0 AL0E]
          if x12_girl_with_boy [0 CR0E]
          if always [0 0]
    setup 1x2 1x2 rotate qualifier left wave_only
-      preds "???"
+      predscantdocallinsetup
          if boyp [0 AL0E]
          if girlp [0 CR0E]
          if always [0 0]
@@ -7659,7 +7726,7 @@ call "_start first change apex" dontshow tag start_first_change_apex
 call "_start second change apex" dontshow tag start_second_change_apex
             left_means_mirror
    setup 1x3 trngl rotate
-      preds "???"
+      predscantdocallinsetup
          if apex_test_3 [CR5N CR1N AL1S]
          if apex_test_2 [ZM0W AL5S ZM3W]
          if apex_test_1 [CR5N CR1N AL2S]
@@ -7671,7 +7738,7 @@ call "_continue change apex" dontshow tag continue_change_apex
    setup ptrngl 1x3 rotate
       array [ZM2W 0 0 ZM0W 0 0]
    setup 1x3 trngl rotate
-      preds "???"
+      predscantdocallinsetup
          if apex_test_1 [ZM0W AL5S ZM3W]
          if always      [CR5N CR1N AL1S]
 
@@ -7706,7 +7773,7 @@ call "left pitch @h" c4a
 call "leads roll @eright@f to a wave" a1 tag leadsrollright
             left_means_mirror
    setup 2x1 1x2 rotate qualifier live none
-      preds "???"
+      predscantdocallinsetup
          if columns_tandem [ZM0W CR1E]
          if always         [0    CR1E]
    setup 2x1 1x2 rotate   // If a phantom is present, we allow a lone trailer.
@@ -7730,7 +7797,7 @@ call "@eright@f roll to a wave" a1
 call "leads @eright@f roll to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier live none
-      preds "???"
+      predscantdocallinsetup
          if columns_tandem [ZM0W CM1E]
          if always         [0    CM1E]
    setup 2x1 1x2 rotate
@@ -7903,7 +7970,7 @@ call "first couple go left, next go left, keep walking" mainstream
 call "wheel and deal" mainstream tag wheelanddeal
             left_means_mirror
    setup 1x4 2x2 restriction forbidden couples_only
-      preds "???"
+      predscantdocallinsetup
          if 1x4_wheel_and_deal [CR1S CR0S AL0S AL1S]   // 2FL, or beau side of 1FL
          if always             [0    0    AL3S AL2S]   // belle side of 1FL
    setup 1x3 trngl qualifier 1fl_only restriction unusual alwaysfail
@@ -7911,17 +7978,17 @@ call "wheel and deal" mainstream tag wheelanddeal
                                    // unless the caller says "2x1".
             alternate_definition [single] a2
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0E AL0E]
          if always [0 AL1E]
             alternate_definition [3x3] c4
    setup 1x6 2x3 restriction forbidden 3x3couples_only
-      preds "???"
+      predscantdocallinsetup
          if 1x6_wheel_and_deal [CR2S CR1S CR0S AL0S AL1S AL2S]   /* 2FL, or beau side of 1FL */
          if always             [0    0    0    AL5S AL4S AL3S]   /* belle side of 1FL */
             alternate_definition [4x4] c4
    setup 1x8 2x4 restriction forbidden 4x4couples_only
-      preds "???"
+      predscantdocallinsetup
          /* 2FL, or beau side of 1FL */
          if 1x8_wheel_and_deal [CR3S CR2S CR0S CR1S AL0S AL1S AL3S AL2S]
          /* belle side of 1FL */
@@ -7962,28 +8029,16 @@ call "turn and deal" a1 tag turnanddeal
             alternate_definition [4x4] c4
    setup 1x8 2x4 qualifier 4x4couples_only restriction awkward_centers
       array [CR0S CR1S CR3S CR2S AL4S AL5S AL7S AL6S]
-/*
-            alternate_definition [1x2] c4
-   setup 1x6 2x3
-      preds "Can't do this call."
-         if miniwave_side_of_2n1_line [CR0S CR1S AL5S AL3S AL4S CR2S]
-         if couple_side_of_2n1_line   [CR0S AL5S AL4S AL3S CR2S CR1S]
-            alternate_definition [2x1] c4    // Same as 1x2.
-   setup 1x6 2x3
-      preds "Can't do this call."
-         if miniwave_side_of_2n1_line [CR0S CR1S AL5S AL3S AL4S CR2S]
-         if couple_side_of_2n1_line   [CR0S AL5S AL4S AL3S CR2S CR1S]
-*/
 
 call "_natural turn and deal" dontshow tag natturnanddeal
             left_means_mirror
    setup 1x4 2x2 restriction forbidden couples_only
-      preds "???"
+      predscantdocallinsetup
          if 1x4_wheel_and_deal [CR0S CR1S AL1S AL0S]   /* 2FL, or beau side of 1FL */
          if always             [0    0    AL2S AL3S]   /* belle side of 1FL */
             alternate_definition [single] c3x
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0E AL0E]
          if always [0 AL1E]
 
@@ -8057,7 +8112,7 @@ call "_spread after wheel" dontshow tag spread_after_wheel
 call "_wheel before spread" dontshow tag wheel_before_spread
             left_means_mirror
    setup 1x4 2x2 restriction forbidden couples_only
-      preds "???"
+      predscantdocallinsetup
          // If belle-side people can't tell, opt for a 1FL.
          if 1x4_wheel_and_deal_or_1fl [CR1S CR0S AL0S AL1S]   /* 2FL, or beau side of 1FL */
          if always             [0    0    AL3S AL2S]   /* belle side of 1FL */
@@ -8066,12 +8121,12 @@ call "_wheel before spread" dontshow tag wheel_before_spread
                                    // unless the caller says "2x1".
             alternate_definition [3x3] c4
    setup 1x6 2x3 restriction forbidden 3x3couples_only
-      preds "???"
+      predscantdocallinsetup
          if 1x6_wheel_and_deal [CR2S CR1S CR0S AL0S AL1S AL2S]   /* 2FL, or beau side of 1FL */
          if always             [0    0    0    AL5S AL4S AL3S]   /* belle side of 1FL */
             alternate_definition [4x4] c4
    setup 1x8 2x4 restriction forbidden 4x4couples_only
-      preds "???"
+      predscantdocallinsetup
          /* 2FL, or beau side of 1FL */
          if 1x8_wheel_and_deal [CR3S CR2S CR0S CR1S AL0S AL1S AL3S AL2S]
          /* belle side of 1FL */
@@ -8091,7 +8146,7 @@ call "wheel and spread" plus
 call "single wheel" a2 tag single_wheel
             left_means_mirror
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0E AL0E]
          if always [0 AL1E]
 
@@ -8298,7 +8353,7 @@ call "ah so" c1 tag ahso
       array [CR1S AL0S AL3S CR2S]
    // Yes, it's legal from 3&1 lines.  Callerlab C1 definitions, page 6.
    setup 1x4 2x2 no_cutting_through restriction unusual alwaysfail
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_out_3n1_line [CR1S AL3S AL0S CR2S]
          if couple_side_of_out_3n1_line   [CR1S CR0S AL0S AL1S]
          if miniwave_side_of_in_3n1_line  [CR1S AL0S AL3S CR2S]
@@ -9391,7 +9446,7 @@ call "_natural vertical 1/2 tag" dontshow tag natural_vertical_half_tag
    setup 2x2 2x2 qualifier left wave_only
       array [0 AL0S ZM1N 0]
    setup 2x2 2x2 restriction not_tboned
-      preds "???"
+      predscantdocallinsetup
          if 2x2_antitandem          [CR1S AL1S ZM0N ZM0N]
          if 2x2_tandem_with_someone [CR1S AL0S ZM1N ZM0N]
          if always                  [CR1S    0    0 ZM0N]
@@ -9423,7 +9478,7 @@ call "linear cycle" plus
 
 call "cycle and wheel" a1 tag cyclewheel
    setup 1x4 2x2
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_in_3n1_line  [CR1S AL0N AL3S CR2N]
          if couple_side_of_in_3n1_line    [CR1S CR0S AL3S AL2S]
          if miniwave_side_of_out_3n1_line [CR1S AL3N AL0S CR2N]
@@ -9443,7 +9498,7 @@ call "cycle and wheel" a1 tag cyclewheel
          array [0    0    ZM0N CR1S]
             alternate_definition [straight] c4
    setup 2x4 2x4 rotate
-      preds "Can't do this call."
+      predscantdocallinsetup
          if couple_side_of_in_3n1_line    [CR0E CR7E 0 0 0 0 CR5E ZM6W]
          if miniwave_side_of_in_3n1_line  [CR0E AL6W 0 0 0 0 AL4W ZM6W]
          if couple_side_of_out_3n1_line   [CR0E CR7E AL0E AL7E ZM1W AL2E CR5E ZM6W]
@@ -9459,7 +9514,7 @@ call "cycle and turn and deal" c2
    setup 1x4 2x2 no_cutting_through qualifier 2fl_only
       array [CR0S CR1S AL2S AL3S]
    setup 1x4 2x2
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_in_3n1_line  [CR1S AL0N AL3S CR2N]
          if couple_side_of_in_3n1_line    [CR0S CR1S AL2S AL3S]
          if miniwave_side_of_out_3n1_line [CR1S AL0N AL3S CR2N]
@@ -9683,7 +9738,7 @@ call "trim the web" c4
 call "cross and divide" c4
             parallel_conc_end
    setup 1x4 2x2
-      preds "???"
+      predscantdocallinsetup
          if x14_once_rem_miniwave [AL0W CR1E CR1E AL0W]
          if x14_once_rem_couple   [AL3W CR1E CR2E AL0W]
          if always                [   0 CR1E    0 AL0W]
@@ -9714,7 +9769,7 @@ call "_Z pass thru" dontshow tag zpass
    setup 3x2 2x3 qualifier true_Z_ccw
       array [ZM1N 0 0 0 ZM3N 0]
    setup 3x2 2x3
-      preds "???"
+      predscantdocallinsetup
          if columns_someone_in_front [ZM1N ZM2N 0 0 ZM3N ZM4N]
          if always                   [ZM1N ZM2N 0 0 ZM3N ZM4N]
    setup 2x1 1x2
@@ -10306,11 +10361,11 @@ call "follow thru" c1 tag followthru
    setup 2x2 1x4 no_cutting_through rotate restriction wave_only
       array [CR0N AL0S AL1S CR1N]
    setup pmd 1x4
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [CR1E CR2E 0 0]
          if always      [AL1W 0    0 AL2W]
    setup trngl 1x3 rotate
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [CR1N CR0N 0 0 0 CR0N]
          if always      [AL1S 0 AL0S 0 AL0S 0]
    setup ptrngl 1x3
@@ -10319,11 +10374,11 @@ call "follow thru" c1 tag followthru
    setup 2x2 dmd no_cutting_through rotate restriction wave_only
       array [CR0N AL0S AL3E CR1E]
    setup pmd 2x2
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [CR3S CR2S 0 0]
          if always      [AL0S 0    0 AL1S]
    setup trngl trngl
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [CR4S CR3E 0 0 0 CR2S]
          if always      [AL5S 0 AL3W 0 AL1S 0]
    setup ptrngl trngl rotate qualifier right tgl_tandbase
@@ -10334,11 +10389,11 @@ call "follow thru" c1 tag followthru
    setup 2x2 dmd no_cutting_through rotate restriction wave_only
       array [CR0N AL0S ZM1W ZM3W]
    setup pmd 2x2
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
          if always      [ZM3N 0    0 ZM2N]
    setup trngl trngl
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM5N CR3E 0 0 0 ZM1N]
          if always      [ZM4N 0 AL3W 0 ZM2N 0]
    // Stingy follow thru is same as convert!
@@ -10352,11 +10407,11 @@ call "follow thru" c1 tag followthru
    setup 4x2 1x8 restriction wave_only
       array [CR3E CR6E CR5E CR4E AL4W AL5W AL6W AL3W]
    setup short6 1x6 rotate
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [CR0N 0    0    0    CR4N CR2N]
          if always      [0    0    AL0S AL2S AL4S 0]
    setup pspindle 1x8
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [CR2E CR7E CR4E 0   0    0    0    CR1E]
          if always      [0    0    0    0   AL4W AL7W AL2W AL1W]
             alternate_definition [grand generous] c3
@@ -10369,11 +10424,11 @@ call "follow thru" c1 tag followthru
    setup 2x2 1x4 rotate restriction wave_only
       array [CR0N AL0S CR1N AL1S]
    setup trngl 1x3 rotate
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [AL1S CR0N 0 0 0 AL0S]
          if always      [CR1N 0 AL0S 0 CR0N 0]
    setup pmd 1x4
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [AL1W AL2W 0 0]
          if always      [CR1E 0    0 CR2E]
             alternate_definition [cross generous] c4a
@@ -10384,7 +10439,7 @@ call "follow thru" c1 tag followthru
       array [CR0N AL0S ZM3W ZM1W]
             alternate_definition [grand cross] c4a
    setup short6 1x6 rotate
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [AL0S 0 0    0    AL4S AL2S]
          if always      [0    0 CR0N CR2N CR4N 0]
             alternate_definition [3x3] c4a
@@ -10395,7 +10450,7 @@ call "follow thru" c1 tag followthru
       array [CR6E CR7E CR5E CR4E AL4W AL5W AL7W AL6W]
             alternate_definition [3x1] c4
    setup 3x2 1x4 qualifier occupied_as_3x1tgl
-      preds "???"
+      predscantdocallinsetup
          if zero_cw_people [   0 CR2E CR2E    0 AL2W AL1W]
          if one_cw_person  [   0 CR3E    0    0 AL3W    0]
          if always         [CR1E    0    0 AL2W    0    0]
@@ -10403,7 +10458,7 @@ call "follow thru" c1 tag followthru
       array [CR2E CR7E CR5E CR4E AL4W AL5W AL7W AL2W]
             alternate_definition [1x3] c4
    setup 3x2 1x4 qualifier occupied_as_3x1tgl
-      preds "???"
+      predscantdocallinsetup
          if zero_cw_people [   0 CR2E CR2E    0 AL2W AL1W]
          if one_cw_person  [   0 CR3E    0    0 AL3W    0]
          if always         [CR1E    0    0 AL2W    0    0]
@@ -10560,7 +10615,7 @@ call "_fudge 2 after fold" dontshow tag fold_fudge2
    setup 3x2 2x2 qualifier true_Z_ccw
       array [ZM0N ZM1N    0 ZM2N ZM3N    0]
    setup 3x2 2x2
-      preds "?"
+      predscantdo
          if columns_someone_in_front [ZM0N ZM0N ZM1N ZM2N ZM3N ZM3N]
          if always                   [ZM0N ZM1N ZM1N ZM2N ZM2N ZM3N]
    setup bone bone
@@ -10841,7 +10896,7 @@ call "@k hop" c3a
 
 call "_arm turn 1/4 for beau hop" dontshow tag specarmturn_14
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_miniwave_or_warn [CR0N AL0S]
          if always                    [0    AL1S]
             alternate_definition [fractal] c4
@@ -10953,7 +11008,7 @@ call "_start dixie style" dontshow tag start_dixie
    setup 2x2 1x4 rotate qualifier not_split_dixie
       array [0 0 ZM1W ZM2W]
    setup 2x2 2x2 qualifier split_dixie
-      preds "?"
+      predscantdo
          if 2x2_antitandem     [0 0 AL1W CR0E]
          if always             [0 0 ZM2N ZM3N]
    // We now allow this without requiring the caller to say "single file" or "on a double track".
@@ -10963,7 +11018,7 @@ call "_start dixie style" dontshow tag start_dixie
    setup 4x1 1x4 qualifier in 2fl_only
       array [ZM0N ZM3N 0 0 ]
    setup trngl4 1x4 rotate qualifier ntbone not_split_dixie
-      preds "?"
+      predscantdo
          if raise_some_sglfile [ZM2W ZM1W 0 0 0 0 ZM1W ZM2W]
             alternate_definition [singlefile] mainstream
    setup 4x1 1x4 qualifier in 2fl_only
@@ -11265,7 +11320,7 @@ call "flare out to a line" c3a
       array [ZM0N ZM1N 0 0 0 0 ZM4N ZM5N]
             alternate_definition [1x2] c4
    setup 2x3 1x6 qualifier ntbone none
-      preds "Can't do this in this setup"
+      predscantdocallinsetup
          if miniwave_side_of_2n1_line [AL0S 0 CR3S    0 ZM5N    0]
          if couple_side_of_2n1_line   [   0 0    0 ZM4N ZM2N ZM1N]
    setup 2x3 short6 rotate qualifier tbone none
@@ -11378,7 +11433,7 @@ call "peel to a@I diamond" c2
    setup dmd 2x2 qualifier dmd_pts_1f
       array [CR0S 0 AL1S 0]
    setup pmd 2x2 qualifier dmd_pts_1f
-      preds "???"
+      predscantdocallinsetup
          if next_dmd_spot_is_facing [0 0 0 AM1W]
          if next_dmd_spot_is_normal [0 0 0 CM2E]
             intlk_is_inherited
@@ -11396,7 +11451,7 @@ call "trail to a@I diamond" c2
    setup dmd 2x2 qualifier dmd_pts_1f
       array [CR1S 0 AL0S 0]
    setup pmd 2x2 qualifier dmd_pts_1f
-      preds "???"
+      predscantdocallinsetup
          if next_dmd_spot_is_facing [0 0 0 AM1W]
          if next_dmd_spot_is_normal [0 0 0 CM2E]
             intlk_is_inherited
@@ -12299,7 +12354,16 @@ call "_half by the left with 12 matrix" dontshow tag 1_2_by_left_with_12_matrix
          if always         [ZM0N ZM1N ZM2N ZM3N]
 
 call "_half by the left" dontshow tag 1_2_by_left
-            left_means_mirror diamond_is_legal
+            left_means_mirror diamond_is_legal optional_special_number
+
+   // These three clauses deal with the optional numeric argument.
+   setup 1x2 1x2 rotate plus_eighth_rotation restriction forbidden wave_only qualifier num 1 none
+      array [0 AL0S]
+   setup 1x2 1x2 rotate                      restriction forbidden wave_only qualifier num 2 none
+      array [0 AL0S]
+   setup 1x2 1x2        plus_eighth_rotation restriction forbidden wave_only qualifier num 3 none
+      array [0 AL0S]
+
    setup 1x3 1x3 restriction forbidden wave_only
       array [ZM0N AL0S AL1S]
    setup 1x2 1x2 restriction forbidden wave_only
@@ -12406,12 +12470,6 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [0 0 0 0 0 0 AL1S 0]
    setup pdhrglass 1x3dmd
       array [0 0 0 ZM3N 0 0 0 0]
-/*
-   setup 1x3dmd 1x3dmd
-      array [ZM0N 0 0 0 0 AL6S 0 0]
-*/
-
-
    setup 1x3dmd 1x3dmd
       preds "This person can't figure out whether to trade."
          if can_swing_left [   0 AL0S AL1S 0 AL5S AL6S    0 0]
@@ -12428,10 +12486,6 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM0N AL0S 0 AL4S AL1S 0]
    setup p2x1dmd 2x1dmd
       array [0 0 ZM2N 0 0 ZM5N]
-
-
-
-
             alternate_definition [half grand] plus
    setup 1x6 2x3 qualifier left wave_only
       array [0 AL0W 0 AL2W 0 AL1W]
@@ -12538,8 +12592,28 @@ call "_half by the left" dontshow tag 1_2_by_left
    setup 1x8 2x4 qualifier left wave_only
       array [0 AL0W AL1W 0 AL3W 0 0 AL2W]
 
-call "_half by the left for swing the fractions" dontshow tag 1_2_by_left_for_swing_fractions
-            left_means_mirror diamond_is_legal
+call "@b of half by the left" dontshow tag n_4_of_half_left
+            neednumber left_means_mirror
+   setup 1x2 1x2 rotate plus_eighth_rotation restriction forbidden wave_only qualifier num 1 none
+      array [0 AL0S]
+   setup 1x2 1x2 rotate                      restriction forbidden wave_only qualifier num 2 none
+      array [0 AL0S]
+   setup 1x2 1x2        plus_eighth_rotation restriction forbidden wave_only qualifier num 3 none
+      array [0 AL0S]
+
+// This call is very special.  It can optionally be invoked with a numeric argument,
+// which it interprets as a command to do N/4 of the call.  That is, to turn N/8 by the left.
+call "_half by the left for swing the fractions" dontshow tag half_left_for_swing_fractions
+            left_means_mirror diamond_is_legal optional_special_number
+
+   // These three clauses deal with the optional numeric argument.
+   setup 1x2 1x2 rotate plus_eighth_rotation restriction forbidden wave_only qualifier num 1 none
+      array [0 AL0S]
+   setup 1x2 1x2 rotate                      restriction forbidden wave_only qualifier num 2 none
+      array [0 AL0S]
+   setup 1x2 1x2        plus_eighth_rotation restriction forbidden wave_only qualifier num 3 none
+      array [0 AL0S]
+
    // We have a few special definitions that have an implicit "grand" in them.
    setup 1x6 1x6 restriction wave_only
       array [ZM0N AL0S AL1S AL4S AL5S AL2S]
@@ -12738,32 +12812,32 @@ call "swing the fractions" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1 roll_transparent]
             // Try again, allowing exquisite fractions (mostly.)
             left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting roll_transparent]
    seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 6 roll_transparent]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting roll_transparent]
    seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2 roll_transparent]
 
 call "swing the fractions 3/5" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting inherit_diamond roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting inherit_diamond roll_transparent]
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
 
 call "swing the fractions 4/5" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited gen_sting_is_inherited
             fractal_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+   seq half_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand swing the fractions" c1
             dont_use_in_nice_resolve
@@ -13043,7 +13117,7 @@ call "trade/stepnfold" dontshow tag tradestpnfld
 
 call "roll the wave" c4
    setup 1x4 2x2
-      preds "?"
+      predscantdo
          if lines_miniwave [AL3E AL3E CR2W CR2W]
          if lines_couple   [AL3E AL0E CR2W CR1W]
          if always         [AL3E 0    CR2W 0]
@@ -13070,7 +13144,7 @@ call "_relay the shadow part 3" dontshow tag relay_shadow_part_3
 call "_finish relay the shadow, but the @6 criss cross it" dontshow tag fin_relay_shadow_but_xx
             step_to_wave left_means_touch_or_check
    setup 1x8 2x4 restriction wave_only
-      preds "Can't tell who is selected."
+      predsnoselect
          if select   [   0 CCCAL5N       0 AAACM5S    0 AAACR6N       0 CCCAM6S]
          if unselect [CM3S       0 CCCAM7S       0 AM0S       0 AAACM4S       0]
 
@@ -13136,10 +13210,10 @@ call "swing chain the line" c4
    seq swingchainpart3 []
 
 call "_swing chain the line part 2" dontshow tag swingchainpart2
-   checkpoint any_hand_slip [] cast_off_14 [conc_force_lines suppress_elongation_warnings]
+   checkpoint any_hand_slip [] cast_off_n4 [conc_force_lines insert_number 1 suppress_elongation_warnings]
 
 call "_swing chain the line part 3" dontshow tag swingchainpart3
-   conc cast_off_14 [] nullcall []
+   conc cast_off_n4 [insert_number 1] nullcall []
 
 call "divide the ocean @h" c3
        single_is_inherited
@@ -13410,11 +13484,11 @@ call "@eright@f on @9 and @b" c4
 call "_funny_right_on finish" dontshow tag funnyrightonfinish
             neednumber
    setup 2x2 2x2 qualifier num 1 none
-      preds "?"
+      predscantdo
          if 2x2_facing_someone [0    0    1S   0S]
          if always             [ZM0N ZM1N ZM2N ZM3N]
    setup 2x2 2x2 qualifier num 3 none
-      preds "?"
+      predscantdo
          if 2x2_facing_someone [0    0    2N   3N]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
@@ -13487,19 +13561,19 @@ call "_funny square thru rear" dontshow tag funnysquarerear
 call "_funny square thru main" dontshow tag funnysquaremain
             left_means_mirror
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if 2x2_facing_someone [0    0    AL1W CR0E]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "_funny square thru finish" dontshow tag funnysquarefinish
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if 2x2_facing_someone [0    0    ZM1N ZM0N]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
 call "_funny square turn thru finish" dontshow tag funnysquaretnfinish
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if 2x2_facing_someone [0    0    C2S C3S]
          if always             [ZM0N ZM1N ZM2N ZM3N]
 
@@ -13725,7 +13799,7 @@ call "_turn and Q part 1" dontshow tag turn_and_q_1
    setup 2x1 1x2 qualifier not_split_dixie   // This is turn thru, of course.
       array [C0S 0]
    setup 2x2 2x2 qualifier split_dixie
-      preds "?"
+      predscantdo
          if 2x2_facing_someone [0 0 CR2S CR3S]
          if always             [0 0 ZM2N ZM3N]
             alternate_definition [twisted] c4
@@ -13738,7 +13812,7 @@ call "_turn and Q part 2" dontshow tag turn_and_q_2
    setup 2x2 2x2
       /* If we are doing "split turn and Q", we need to be careful, so we place
          a 2x2 definition here that is sensitive to people being T-boned. */
-      preds "?"
+      predscantdo
          if 2x2_facing_someone      [CR0E AL1W AL2W CR3E]
          if 2x2_tandem_with_someone [CR0E AL1W AL2W CR3E]  // This can happen also.
          if always                  [CR0E AL1W ZM2N ZM3N]
@@ -14113,7 +14187,7 @@ call "stack the line" c2
 
 call "@6 finish the stack" c4
    setup 2x2 2x2
-      preds "Can't tell who is selected."
+      predsnoselect
          if select [0 0 ZM0N ZM0N]
          if unselect [ZM1N ZM1N ZM3N ZM3N]
 
@@ -14229,12 +14303,12 @@ call "@6@C run" mainstream tag anyonerun
             alternate_definition [half] mainstream
    lateral_to_selectees
    setup 1x2 1x2 rotate restriction unusual not_all_sel
-      preds "Can't do this."
+      predscantdo
          if select [CR0N AL0S]
          if 1x2_selectee_is_linelike_facing_cw  [ZM0W ZM1W]
          if 1x2_selectee_is_linelike_facing_ccw [ZM1W ZM0W]
    setup 2x1 1x2 rotate restriction unusual not_all_sel
-      preds "Can't do this."
+      predscantdo
          if select [0 0]
          if 1x2_selectee_is_linelike_facing_cw  [ZM0W ZM1W]
          if 1x2_selectee_is_linelike_facing_ccw [ZM1W ZM0W]
@@ -14249,12 +14323,12 @@ call "@6@C run" mainstream tag anyonerun
          if unselect_once_rem_from_select   [ZM1N ZM0N ZM3N ZM2N]
             alternate_definition [cross half] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if select [CR1E CR1E AL0W AL0W]
          if 1x4_selectee_of_far_side_is_linelike_facing_cw  [ZM0N ZM0N ZM2N ZM2N]
          if 1x4_selectee_of_far_side_is_linelike_facing_ccw [ZM3N ZM3N ZM1N ZM1N]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if select [0 0 0 0]
          if 1x4_selectee_of_far_side_is_linelike_facing_cw  [ZM0N ZM0N ZM2N ZM2N]
          if 1x4_selectee_of_far_side_is_linelike_facing_ccw [ZM3N ZM3N ZM1N ZM1N]
@@ -14267,12 +14341,12 @@ call "@6@C run" mainstream tag anyonerun
    // At this point one person is running around the other.
    // We need to know the orbit direction.
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if select_near_unselect [CR1S AL1N]
          if 1x2_selectee_is_linelike_facing_cw  [CM1N CM0N]
          if 1x2_selectee_is_linelike_facing_ccw [AM0S AM1S]
    setup 2x1 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if select           [0 0]
          if 1x2_selectee_is_linelike_facing_cw  [CM1N CM0N]
          if 1x2_selectee_is_linelike_facing_ccw [AM0S AM1S]
@@ -14281,23 +14355,23 @@ call "@6 1/2@C run" mainstream
             yield_if_ambiguous split_large_setups
    lateral_to_selectees
    setup 1x2 1x2 rotate restriction unusual not_all_sel
-      preds "Can't do this."
+      predscantdo
          if select [CR0N AL0S]
          if 1x2_selectee_is_linelike_facing_cw  [ZM0W ZM1W]
          if 1x2_selectee_is_linelike_facing_ccw [ZM1W ZM0W]
    setup 2x1 1x2 rotate restriction unusual not_all_sel
-      preds "Can't do this."
+      predscantdo
          if select [0 0]
          if 1x2_selectee_is_linelike_facing_cw  [ZM0W ZM1W]
          if 1x2_selectee_is_linelike_facing_ccw [ZM1W ZM0W]
             alternate_definition [cross] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if select [CR1E CR1E AL0W AL0W]
          if 1x4_selectee_of_far_side_is_linelike_facing_cw  [ZM0N ZM0N ZM2N ZM2N]
          if 1x4_selectee_of_far_side_is_linelike_facing_ccw [ZM3N ZM3N ZM1N ZM1N]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if select [0 0 0 0]
          if 1x4_selectee_of_far_side_is_linelike_facing_cw  [ZM0N ZM0N ZM2N ZM2N]
          if 1x4_selectee_of_far_side_is_linelike_facing_ccw [ZM3N ZM3N ZM1N ZM1N]
@@ -14309,11 +14383,11 @@ call "centers@C run" mainstream tag ctrrun
       array [ZM1N    0 ZM3N    0]
             alternate_definition [half] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_this_side_is_linelike_facing_cw  [ZM3N AL0W ZM1N    0]
          if 1x4_center_of_this_side_is_linelike_facing_ccw [ZM0N    0 ZM2N CR1E]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_this_side_is_linelike_facing_cw  [ZM3N    0 ZM1N    0]
          if 1x4_center_of_this_side_is_linelike_facing_ccw [ZM0N    0 ZM2N    0]
             alternate_definition [cross] mainstream
@@ -14323,11 +14397,11 @@ call "centers@C run" mainstream tag ctrrun
       array [ZM1N    0 ZM3N    0]
             alternate_definition [cross half] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_far_side_is_linelike_facing_cw  [ZM0N CR1E ZM2N AL0W]
          if 1x4_center_of_far_side_is_linelike_facing_ccw [ZM3N CR1E ZM1N AL0W]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_far_side_is_linelike_facing_cw  [ZM0N 0 ZM2N 0]
          if 1x4_center_of_far_side_is_linelike_facing_ccw [ZM3N 0 ZM1N 0]
             alternate_definition [cross grand] c3a
@@ -14346,30 +14420,30 @@ call "centers@C run" mainstream tag ctrrun
       array [ZM7N CR1E CR2E AL0W ZM4N AL2W AL1W CR3E]
             alternate_definition [twisted] c4
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_this_side_is_linelike_facing_cw  [AM0W AL3E AM2W    0]
          if 1x4_center_of_this_side_is_linelike_facing_ccw [CM3E    0 CM1E CR2W]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_this_side_is_linelike_facing_cw  [AM0W    0 AM2W    0]
          if 1x4_center_of_this_side_is_linelike_facing_ccw [CM3E    0 CM1E    0]
 
 call "centers 1/2@C run" mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_this_side_is_linelike_facing_cw  [ZM3N AL0W ZM1N    0]
          if 1x4_center_of_this_side_is_linelike_facing_ccw [ZM0N    0 ZM2N CR1E]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_this_side_is_linelike_facing_cw  [ZM3N    0 ZM1N    0]
          if 1x4_center_of_this_side_is_linelike_facing_ccw [ZM0N    0 ZM2N    0]
             alternate_definition [cross] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_far_side_is_linelike_facing_cw  [ZM0N CR1E ZM2N AL0W]
          if 1x4_center_of_far_side_is_linelike_facing_ccw [ZM3N CR1E ZM1N AL0W]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_center_of_far_side_is_linelike_facing_cw  [ZM0N 0 ZM2N 0]
          if 1x4_center_of_far_side_is_linelike_facing_ccw [ZM3N 0 ZM1N 0]
 
@@ -14380,11 +14454,11 @@ call "ends@C run" mainstream
       array [0    ZM0N 0    ZM2N]
             alternate_definition [half] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_this_side_is_linelike_facing_cw  [CR0E ZM3N 0 ZM1N]
          if 1x4_end_of_this_side_is_linelike_facing_ccw [0 ZM0N AL1W ZM2N]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_this_side_is_linelike_facing_cw  [0 ZM3N 0 ZM1N]
          if 1x4_end_of_this_side_is_linelike_facing_ccw [0 ZM0N 0 ZM2N]
             alternate_definition [cross] mainstream
@@ -14394,39 +14468,39 @@ call "ends@C run" mainstream
       array [0    ZM0N 0    ZM2N]
             alternate_definition [cross half] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_far_side_is_linelike_facing_cw  [CR1E ZM0N AL0W ZM2N]
          if 1x4_end_of_far_side_is_linelike_facing_ccw [CR1E ZM3N AL0W ZM1N]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_far_side_is_linelike_facing_cw  [0 ZM0N 0 ZM2N]
          if 1x4_end_of_far_side_is_linelike_facing_ccw [0 ZM3N 0 ZM1N]
             alternate_definition [twisted] c4
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_this_side_is_linelike_facing_cw  [CR3W AM0E    0 AM2E]
          if 1x4_end_of_this_side_is_linelike_facing_ccw [   0 CM3W AL2E CM1W]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_this_side_is_linelike_facing_cw  [   0 CM0E    0 CM2E]
          if 1x4_end_of_this_side_is_linelike_facing_ccw [   0 AM3W    0 AM1W]
 
 call "ends 1/2@C run" mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_this_side_is_linelike_facing_cw  [CR0E ZM3N 0 ZM1N]
          if 1x4_end_of_this_side_is_linelike_facing_ccw [0 ZM0N AL1W ZM2N]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_this_side_is_linelike_facing_cw  [0 ZM3N 0 ZM1N]
          if 1x4_end_of_this_side_is_linelike_facing_ccw [0 ZM0N 0 ZM2N]
             alternate_definition [cross] mainstream
    setup 1x4 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_far_side_is_linelike_facing_cw  [CR1E ZM0N AL0W ZM2N]
          if 1x4_end_of_far_side_is_linelike_facing_ccw [CR1E ZM3N AL0W ZM1N]
    setup 4x1 2x2
-      preds "Can't do this."
+      predscantdo
          if 1x4_end_of_far_side_is_linelike_facing_cw  [0 ZM0N 0 ZM2N]
          if 1x4_end_of_far_side_is_linelike_facing_ccw [0 ZM3N 0 ZM1N]
 
@@ -14522,7 +14596,7 @@ call "@6@C kickoff" c2 tag designeeskick
    // is really what is wanted.  Of course, if the selector is literally "centers"
    // or "ends", the special case code below will save the day.
    setup 1x4 1x4 restriction alwaysfail
-      preds "???"
+      predscantdocallinsetup
          if select [CR3W CR2W AL1E AL0E]
          if always [CM1E AM0W AM3W CM2E]
 
@@ -14876,7 +14950,7 @@ call "@6 mark time" c4a
          if unselect_near_unselect        [CAL3S CAL4S  CR3S  CR4S  AL7N  AL0N ACR7N ACR0N]
             alternate_definition [single] c4a
    setup 2x2 1x4
-      preds "Can't tell who is selected."
+      predsnoselect
          if select   [CCR1E AAL3W     0     0]
          if unselect [ CR2W  AL0E ACR0E CAL2W]
 
@@ -15356,7 +15430,7 @@ call "walk and dodge" mainstream tag walkndodge
       array [ZM0W ZM0W]
             alternate_definition [1x2] c3
    setup 2x3 2x3
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw_2x3 [ZM1N ZM2N    0    0 0 ZM0N]
          if always             [   0 ZM0N ZM1N ZM2N 0 0  ]
             alternate_definition [2x1] c3
@@ -15509,7 +15583,7 @@ call "_finish couple up" dontshow tag fincoupleup
       array [ZM0N 1S]
             alternate_definition [half] c3a
    setup 2x2 2x2
-      array [CR0E AL1W AL2W CR3E]
+      array [CR0E AL1W ZM2N ZM3N]
 
 call "couple up" c3a tag coupleup
    simple_funny
@@ -15588,7 +15662,7 @@ call "arky star thru" c4a
 call "mesh" c4
             reverse_means_mirror
    setup 2x1 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if columns_tandem [M1W M0W]
          if always         [M1W 0]
             alternate_definition [3x3] c4
@@ -15817,7 +15891,7 @@ call "_leads wheel" dontshow tag leadswheel
       array [AL1S AL0S ZM2N ZM3N]
             alternate_definition [funny] c2
    setup 2x2 2x2
-      preds "???"
+      predscantdocallinsetup
          // This way, if someone is looking out and is next to a phantom, they wheel.
          if 2x2_miniwave [ZM0N ZM1N ZM2N ZM3N]
          if always       [AL1S AL0S ZM2N ZM3N]
@@ -16259,7 +16333,7 @@ call "gee whiz" c3
    setup 2x4 2x4 rotate qualifier 1fl_only
          array                            [CR0E CR1E AL6E AL7E    0    0    0    0]
    setup 2x4 2x4 rotate
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_out_3n1_line [   0 AM5E CM2E    0 ZM0W    0    0 ZM7W]
          if miniwave_side_of_in_3n1_line  [CM5E    0    0 AM2E    0 ZM0W ZM7W    0]
          if lines_miniwave                [CM5E AM5E CM2E AM2E ZM0W ZM0W ZM7W ZM7W]
@@ -16271,7 +16345,7 @@ call "gee whiz" c3
       array [CR1S AL0S ZM1N ZM0N]
             alternate_definition [1x2] c4
    setup 2x3 2x3 rotate
-      preds "Can't do this call."
+      predscantdocallinsetup
          if miniwave_side_of_2n1_line [CR0E 0 AL5E    0 ZM1W    0]
          if couple_side_of_2n1_line   [   0 0    0 ZM0W ZM5W ZM4W]
             alternate_definition [3x3] c4
@@ -16377,15 +16451,14 @@ call "link up" c3a
       array [A8S A9S A10S A12S C0S C1S C2S C4S A13S A15S A11S A6S C5S C7S C3S C14S]
             alternate_definition [1x2] c4
    setup 2x3 short6 rotate
-      preds "Can't do this call in this setup."
+      predscantdocallinsetup
          if miniwave_side_of_2n1_line [A4E   0 C1E   0 A3E   0]
          if couple_side_of_2n1_line   [  0   0   0 A5E C2E C0E]
             alternate_definition [2x1] c4
    setup 2x3 bone6
-      preds "Can't do this call in this setup."
+      predscantdocallinsetup
          if miniwave_side_of_2n1_line [  0 A0S   0 A5S   0 C2S]
          if couple_side_of_2n1_line   [A4S C1S C3S   0   0   0]
-
 
 call "and anything" c4 tag anything   /* **** not right, need to allow for pushy cast */
    setup 2x4 2x4
@@ -17122,7 +17195,7 @@ call "trip the set but @m" c3a
 
 call "siamese breakdown" c4a
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0E AL0E]
          if always [0 AL1E]
    setup 2x1 1x2 rotate
@@ -17139,7 +17212,7 @@ call "_cross to dmd part 1" dontshow tag cross_to_dmd_1
 call "_hinge with interlock" dontshow tag hinge_w_intlk
             left_means_mirror
    setup 1x2 1x2 rotate
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S]
          if always               [0    AL1S]
             alternate_definition [fractal] c4
@@ -17153,14 +17226,14 @@ call "_hinge with interlock" dontshow tag hinge_w_intlk
       array [ZM0N ZM1N]
             alternate_definition [interlocked] c4a
    setup 2x2 1x4 rotate restriction forbidden not_tboned
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S AL1S CR1N]
          if always               [   0 AL3S AL2S    0]
 
 call "_hinge and centers snake" dontshow tag hinge_n_snake
             left_means_mirror
    setup 2x2 dmd rotate restriction forbidden not_tboned
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_or_miniwave [CR0N AL0S ZM1W ZM3W]
          if always               [   0 AL1E AL2S    0]
 
@@ -18292,12 +18365,12 @@ call "_finish in roll to a wave" dontshow tag fin_inroll
       array [0 0 ZM5N ZM7N     0    0 ZM13N ZM15N]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw [CR1S ZM2N ZM3N    0    0 ZM6N ZM7N Z0N]
          if always         [   0 ZM0N ZM1N AL2S  Z3N ZM4N ZM5N   0]
             alternate_definition [magic] c3
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if magic_inroller_is_cw [CR6S ZM7N ZM1N    0    0 ZM3N ZM5N Z0N]
          if always               [   0 ZM2N ZM4N AL5S  Z3N ZM6N ZM0N   0]
 
@@ -18318,12 +18391,12 @@ call "_finish out roll to a wave" dontshow tag fin_outroll
       array [   0    0 ZM5N ZM7N 0 0 ZM13N ZM15N]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 ZM2N ZM3N AL0S AL5S ZM6N ZM7N    0]
          if always          [CR3S ZM0N ZM1N    0    0 ZM4N ZM5N CR6S]
             alternate_definition [magic] c3
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if magic_outroller_is_cw [   0 ZM7N ZM1N AL0S AL2S ZM3N ZM5N    0]
          if always                [CR3S ZM2N ZM4N    0    0 ZM6N ZM0N CR1S]
 
@@ -18344,12 +18417,12 @@ call "_finish zoom roll to a wave" dontshow tag fin_zoomroll
       array [   0    0 ZM5N ZM7N 0 0 ZM13N ZM15N]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 ZM2N ZM3N CR4N AL5S ZM6N ZM7N    0]
          if always          [AL7N ZM0N ZM1N    0    0 ZM4N ZM5N CR6S]
             alternate_definition [magic] c4
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if magic_outroller_is_cw [   0 ZM7N ZM1N CR4N AL2S ZM3N ZM5N    0]
          if always                [AL7N ZM2N ZM4N    0    0 ZM6N ZM0N CR1S]
 
@@ -18404,7 +18477,7 @@ call "_start in roll to a diamond" dontshow tag start_inroll
       array [   0 AL0S ZM1N ZM2N ZM3N CR4S ZM5N    0]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if inroller_is_cw [ZM1N ZM2N CR3S    0    0 ZM6N AL7S ZM0N]
          if always         [   0 AL0S ZM1N ZM2N ZM3N CR4S ZM5N    0]
 
@@ -18417,7 +18490,7 @@ call "_start out roll to a diamond" dontshow tag start_outroll
       array [CR3S AL0S ZM1N    0    0 CR4S ZM5N ZM6N]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 ZM2N CR3S AL0S ZM5N ZM6N AL7S    0]
          if always          [CR3S AL0S ZM1N    0    0 CR4S ZM5N ZM6N]
 
@@ -18430,7 +18503,7 @@ call "_start zoom roll to a diamond" dontshow tag start_zoomroll
       array [AL7N AL0S ZM1N    0    0 CR4S ZM5N ZM6N]
    // Catch the hard cases.
    setup 2x4 2x4
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 ZM2N CR3S CR4N ZM5N ZM6N AL7S    0]
          if always          [AL7N AL0S ZM1N    0    0 CR4S ZM5N ZM6N]
 
@@ -18577,20 +18650,20 @@ call "chip off" c4a
 
 call "ship ahoy" c4
    setup 2x4 2x4 rotate
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw [   0 CR1E AL0E AL7E ZM2W AL5E AL4W    0]
          if always          [CR0E CR7E AL6E    0    0 CR3W CR2E ZM5W]
    // Depending on how much of a purist one is about what "1x2"
    // really means, one might consider this questionable.
             alternate_definition [1x2] c4
    setup 2x3 short6
-      preds "???"
+      predscantdocallinsetup
          if outroller_is_cw_2x3 [   0 CR2S AL1S ZM3N AL5S    0]
          if always              [CR1S AL0S    0    0 CR3S ZM5N]
 
 call "_extend 1/4 to 1/2" dontshow tag extend_1_to_2
    setup pmd 2x2 qualifier in qtag_like
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
          if always      [ZM3N 0 0 ZM2N]
 
@@ -18610,13 +18683,13 @@ call "extend" mainstream tag extend
    // that is, that we have a live end to indicate that this is a 1/4 tag
    // and not a 3/4 tag.
    setup pmd 2x2 qualifier live in qtag_like
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
          if always      [ZM3N 0 0 ZM2N]
 
    // Bogus usage, with both points facing the same wall.
    setup pmd trngl4 rotate qualifier live qtag_like_anisotropic restriction serious_violation alwaysfail
-      preds "???"
+      predscantdocallinsetup
          if next_qtag_spot_faces_me   [ZM7W ZM2W ZM4W ZM3W]
          if next_qtag_spot_faces_away [ZM6W ZM5W ZM4W ZM5W]
 
@@ -18639,7 +18712,7 @@ call "extend" mainstream tag extend
    // 1/4 tag to 1/2 tag -- we do not demand a definitive test to distinguish
    // a 1/4 tag from a 3/4 tag, because cross extend is meaningless in a 3/4 tag.
    setup pmd 2x2 qualifier in qtag_like
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM3N ZM2N 0 0]
          if always      [ZM0N 0 0 ZM1N]
    setup 2x2 dmd rotate qualifier miniwaves
@@ -18701,11 +18774,11 @@ call "cross town roll" c4
    setup 2x2 dmd rotate restriction forbidden wave_only
       array [CR1E AL3E AL2E CR2E]
    setup pmd 2x2
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N CR3S ZM2N 0]
          if always      [ZM3N 0    ZM1N AL0S]
    setup dmd 2x2
-      preds "???"
+      predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N 0 ZM2N 0]
          if always      [ZM3N 0 ZM1N 0]
             alternate_definition [grand] c4a
@@ -18916,20 +18989,20 @@ call "trade by" mainstream tag trade_by
             single_is_inherited grand_is_inherited twisted_is_inherited funny_is_inherited
    // We are somewhat in violation of the Callerlab vanilla Mainstream rules:
    // the centers must be couples facing each other; single file is not allowed.
-   maybespecialsingleconc_or_2_4
+   maybespecialtradeby
       passthru [inherit_left inherit_twisted inherit_funny]
       // By inheriting funny to this part, we make it illegal.  You must say "centers are funny".
-      leads_trade [conc_demand_columns conc_force_spots inherit_left inherit_single inherit_funny endscando]
+      leads_trade_for_trade_by [conc_demand_columns conc_force_spots inherit_left inherit_single inherit_funny endscando]
 
 call "_trade by, centers to a wave" dontshow tag trade_by_to_wave
             visible_fractions left_means_mirror
    conc touch [inherit_left]
-        leads_trade [conc_demand_columns conc_force_spots inherit_left endscando]
+        leads_trade_for_trade_by [conc_demand_columns conc_force_spots inherit_left endscando]
 
 call "trade by but @m" dontshow tag trade_by_but
             visible_fractions left_means_mirror
    conc nullsecond [mandatory_secondary_call]
-        leads_trade [conc_demand_columns conc_force_spots inherit_left endscando]
+        leads_trade_for_trade_by [conc_demand_columns conc_force_spots inherit_left endscando]
 
 call "roll out to a column" c4a
             left_means_mirror take_right_hands
@@ -19570,7 +19643,7 @@ call "mini pleasure" c4a
 
 call "cheerio" c4
    setup 4x2 2x4 rotate
-      preds "???"
+      predscantdocallinsetup
          if columns_miniwave [ZM5W CCA4W CM3E CM2E AM1E AM0E AAC7W ZM6W]
          if columns_couple   [ZM6W CCA4W CM3E CM2E AM1E AM0E AAC7W ZM5W]
          if always           [0    CCA4W CM3E CM2E AM1E AM0E AAC7W 0]
@@ -19586,7 +19659,7 @@ call "cheerio" c4
    setup bone 2x4 rotate qualifier miniwaves
       array [0 0 AAAC3S C3S 0 0 CCCA4N A4N]
    setup pbone 2x4 rotate
-      preds "???"
+      predscantdocallinsetup
          if columns_miniwave [ZM5W CM2E 0 0 AM1E ZM6W 0 0]
          if columns_couple   [ZM6W CM2E 0 0 AM1E ZM5W 0 0]
          if always           [0    CM2E 0 0 AM1E 0    0 0]
@@ -19676,7 +19749,7 @@ call "quick @0" c3a
 call "make magic" c1
    // If anyone is in lines, this restriction will behave improperly.
    setup 4x2 2x4 restriction unusual quarterbox_or_magic_col
-      preds "???"
+      predscantdocallinsetup
          if columns_antitandem       [ZM1N ZM5N ZM3N ZM3N ZM4N ZM4N ZM2N ZM6N]
          if columns_someone_in_front [ZM0N ZM5N ZM2N ZM3N ZM4N ZM5N ZM2N ZM7N]
          // This could happen if lots of phantoms.
@@ -19904,7 +19977,7 @@ call "quick wrap" c4a
 
 call "dive thru" mainstream
    setup 4x2 2x4
-      preds "?"
+      predscantdo
          if boyp   [ZM1N 0 CR4S 0 0    0 0 ZM6N]
          if girlp  [ZM1N 0    0 0 0 AL3S 0 ZM6N]
          if always [ZM1N 0    0 0 0    0 0 ZM6N]
@@ -20616,13 +20689,13 @@ call "_@k tie part 2" dontshow tag anyone_tie_2
          if select_near_select_or_phantom [CR5S CR7S AL2S AL0S ZM5N  ZM7N ZM2N  ZM0N]
          if unselect_near_unselect        [CR1E CR3E AL6W AL4W AL11W AL9W CR12E CR14E]
    setup 1x4 2x2
-      preds "?"
+      predscantdo
          if unselect [CR0E CR3E AL1W AL2W]
          if always   [0 0 0 0]
 
 call "_@k tie part 3" dontshow tag anyone_tie_3
    setup c1phan c1phan
-      preds "Can't tell who is selected."
+      predsnoselect
          if select   [CR1E 0 CR3E 0 0 AL4W 0 AL6W AL11W 0 AL9W 0 0 CR14E 0 CR12E]
          if unselect [CR5S 0 CR7S 0 0 AL0S 0 AL2S ZM5N  0 ZM7N 0 0 ZM0N  0 ZM2N]
    setup 2x4 c1phan
@@ -20630,7 +20703,7 @@ call "_@k tie part 3" dontshow tag anyone_tie_3
          if select_near_select_or_phantom [CR1E CR3E AL6W AL4W AL11W AL9W CR12E CR14E]
          if unselect_near_unselect        [CR5S CR7S AL2S AL0S ZM5N  ZM7N ZM2N  ZM0N]
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if unselect [0 0 ZM1N ZM0N]
          if always   [0 0 0 0]
 
@@ -20643,7 +20716,7 @@ call "@k tie" c4a
          if select_near_select_or_phantom [AAL7W AAL6W AL1E AL0E CR7W CR6W CCR1E CCR0E]
          if unselect_near_unselect        [AM6E  AM7E  AM4E AM5E CM2W CM3W CM0W  CM1W]
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if unselect [AM2E CM3W CM0W AM1E]
          if always   [0 0 0 0]
             alternate_definition [3x3] c4
@@ -20666,17 +20739,17 @@ call "@k tie" c4a
          if select_near_select_or_phantom [CCR0E CCR1E CR6W CR7W AL0E AL1E AAL6W AAL7W]
          if unselect_near_unselect        [CM1W  CM0W  CM3W CM2W AM5E AM4E AM7E  AM6E]
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if unselect [CM3W AM2E AM1E CM0W]
          if always   [0 0 0 0]
             alternate_definition [single] c4
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if select [AL3E CR2W CR3E AL2W]
          if always [AM1E CM0W CM3W AM2E]
             alternate_definition [single cross] c4
    setup 2x2 2x2
-      preds "?"
+      predscantdo
          if select [CR2W AL3E AL2W CR3E]
          if always [CM0W AM1E AM2E CM3W]
             dont_use_in_nice_resolve
@@ -20890,7 +20963,7 @@ call "_horseshoe centers" dontshow tag partnertag_w_cross
       array [CM1E AM0W]
             alternate_definition [funny] c2
    setup 2x2 2x2
-      preds "???"
+      predscantdocallinsetup
          if 2x2_miniwave [CM1E AM0W AM3W CM2E]
          if 2x2_couple   [CM1E AM0W AM3W CM2E]
          if always       [ZM0N ZM1N ZM2N ZM3N]
@@ -20905,12 +20978,12 @@ call "_horseshoe centers" dontshow tag partnertag_w_cross
       array [CM1E AM0W CM3E AM2W CM5E AM4W CM7E AM6W AM9W CM8E AM11W CM10E AM13W CM12E AM15W CM14E]
             alternate_definition [1x3] c4
    setup 1x4 1x4
-      preds "Can't do this."
+      predscantdo
          if miniwave_side_of_in_3n1_line [AM0W CM2E CM2E AM0W]
          if couple_side_of_in_3n1_line   [CM1E CM3E AM3W AM1W]
             alternate_definition [3x1] c4    /* Same as 1x3. */
    setup 1x4 1x4
-      preds "Can't do this."
+      predscantdo
          if miniwave_side_of_in_3n1_line [AM0W CM2E CM2E AM0W]
          if couple_side_of_in_3n1_line   [CM1E CM3E AM3W AM1W]
 
@@ -20957,7 +21030,7 @@ call "polly wally" c3a
       array [0 0 0 0 A3S A2S A0S A1S]
             alternate_definition [1x2 single] c4
    setup 6x1 2x3 no_cutting_through
-      preds "Can't do this."
+      predscantdo
          if antitandem_side_of_2n1_col [0   0 A0S A2S A1S 0]
          if tandem_side_of_2n1_col     [0 A0S A1S A2S   0 0]
    setup 3x2 short6 qualifier left dmd_ctrs_mwv
@@ -20966,7 +21039,7 @@ call "polly wally" c3a
       array [0 A4E A0E A2E   0 0]
             alternate_definition [2x1 single] c4   // Same as 1x2.
    setup 6x1 2x3 no_cutting_through
-      preds "Can't do this."
+      predscantdo
          if antitandem_side_of_2n1_col [0   0 A0S A2S A1S 0]
          if tandem_side_of_2n1_col     [0 A0S A1S A2S   0 0]
    setup 3x2 short6 qualifier left dmd_ctrs_mwv
@@ -21086,7 +21159,7 @@ call "slim down" c4a tag slimdown
    setup 4x2 2x4 rotate
       array [ZM6W ZM7W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W]
    setup 4x4 4x4
-      preds "???"
+      predscantdocallinsetup
          if quad_person_cw  [0 ZM3N ZM7N ZM14N 0 ZM7N ZM11N ZM2N 0 ZM11N ZM15N ZM6N 0 ZM15N ZM3N ZM10N]
          if quad_person_ccw [0 ZM3N ZM7N ZM1N  0 ZM7N ZM11N ZM5N 0 ZM11N ZM15N ZM9N 0 ZM15N ZM3N ZM13N]
          if always          [0 ZM3N ZM7N    0  0 ZM7N ZM11N    0 0 ZM11N ZM15N    0 0 ZM15N ZM3N     0]
@@ -21237,13 +21310,13 @@ call "circulate" mainstream tag circulate
    setup short6 short6 qualifier didnt_say_triangle
       array [CR1E 0 AL1W ZM2N 0 ZM0N]
    setup pshort6 short6 qualifier didnt_say_triangle
-      preds "???"
+      predscantdocallinsetup
          if next62spot_is_tboned [ZM1N CR2E CR3S AL2S AL3W ZM4N]
          if always               [ZM1N ZM2N CR3S AL2S ZM3N ZM4N]
    setup trngl trngl qualifier said_triangle
       array [0 CR2S AL1S 0 AL3W CR3E]
    setup ptrngl trngl qualifier said_triangle
-      preds "???"
+      predscantdocallinsetup
          if nexttrnglspot_is_tboned [AL2W ZM2N CR0S CR4E AL3S ZM4N]
          if always                  [AL2S ZM2N CR0S CR4S AL3S ZM4N]
    setup spindle spindle qualifier didnt_say_triangle
@@ -21288,7 +21361,7 @@ call "circulate" mainstream tag circulate
    setup 3x2 2x3 no_cutting_through
       array [ZM4N ZM3N CR3S AL2S ZM2N ZM1N]
    setup pshort6 short6 qualifier didnt_say_triangle
-      preds "???"
+      predscantdocallinsetup
          if next_magic62spot_is_tboned [ZM4N ZM3N CR3S AL2S ZM2N ZM1N]
          if always [ZM4N ZM3N CR3S AL2S ZM2N ZM1N]
    setup spindle spindle qualifier didnt_say_triangle
@@ -21430,7 +21503,7 @@ call "circulate for acey deucey" dontshow tag circulateforacey
    setup short6 short6 qualifier didnt_say_triangle
       array [CR1E 0 AL1W ZM2N 0 ZM0N]
    setup pshort6 short6 qualifier didnt_say_triangle
-      preds "???"
+      predscantdocallinsetup
          if next62spot_is_tboned [ZM1N CR2E CR3S AL2S AL3W ZM4N]
          if always               [ZM1N ZM2N CR3S AL2S ZM3N ZM4N]
             alternate_definition [6x2] a1
@@ -21442,7 +21515,7 @@ call "circulate for acey deucey" dontshow tag circulateforacey
    setup short6 short6 qualifier didnt_say_triangle
       array [CR1E 0 AL1W ZM2N 0 ZM0N]
    setup pshort6 short6 qualifier didnt_say_triangle
-      preds "???"
+      predscantdocallinsetup
          if next62spot_is_tboned [ZM1N CR2E CR3S AL2S AL3W ZM4N]
          if always               [ZM1N ZM2N CR3S AL2S ZM3N ZM4N]
             alternate_definition [magic 6x2] c1
@@ -21450,7 +21523,7 @@ call "circulate for acey deucey" dontshow tag circulateforacey
    setup 3x2 2x3 no_cutting_through
       array [ZM4N ZM3N CR3S AL2S ZM2N ZM1N]
    setup pshort6 short6 qualifier didnt_say_triangle
-      preds "???"
+      predscantdocallinsetup
          if next_magic62spot_is_tboned [ZM4N ZM3N CR3S AL2S ZM2N ZM1N]
          if always [ZM4N ZM3N CR3S AL2S ZM2N ZM1N]
             alternate_definition [3x2] c1
@@ -21458,7 +21531,7 @@ call "circulate for acey deucey" dontshow tag circulateforacey
    setup trngl trngl // qualifier said_triangle
       array [0 CR2S AL1S 0 AL3W CR3E]
    setup ptrngl trngl // qualifier said_triangle
-      preds "???"
+      predscantdocallinsetup
          if nexttrnglspot_is_tboned [AL2W ZM2N CR0S CR4E AL3S ZM4N]
          if always                  [AL2S ZM2N CR0S CR4S AL3S ZM4N]
             alternate_definition [half] mainstream
@@ -21667,12 +21740,12 @@ call "tag circulate" c4a
       array [CR4S CR5S CR6S CR7S ACR0N ACR1N ACR2N ACR3N ZM7N ZM6N ZM5N ZM4N ZM3N ZM2N ZM1N ZM0N]
             alternate_definition [3x1] c4
    setup 2x4 2x4
-      preds "Can't do this."
+      predscantdo
          if miniwave_side_of_out_3n1_line [   0 ACR0N CR3S      0 ZM3N 0 0 ZM0N]
          if couple_side_of_out_3n1_line   [CR1S  CR2S ACR1N ACR2N    0 0 0    0]
             alternate_definition [1x3] c4
    setup 2x4 2x4
-      preds "Can't do this."
+      predscantdo
          if miniwave_side_of_out_3n1_line [CR3S 0 0 ACR0N    0 ZM2N ZM1N    0]
          if couple_side_of_out_3n1_line   [   0 0 0     0 ZM3N ZM2N ZM1N ZM0N]
 
@@ -22385,7 +22458,7 @@ call "hoop-de-do, new centers @0" c4x
 
 call "@6 rip n snort" c4x
    setup 4x4 4x4
-      preds "Can't tell who is selected."
+      predsnoselect
          if select               [0 0 0 0 0 CR5N AL6N 0 0 0 0 0 0 0 0 0]
          if person_select_plus4  [0 0 0 0 0 CR5N CR6N 0 0 0 0 0 0 0 0 0]
          if person_select_plus8  [0 0 0 0 0 AL5N CR6N 0 0 0 0 0 0 0 0 0]
@@ -23901,7 +23974,7 @@ call "squeeze the diamond" c1
 
 call "squeeze the galaxy" c1
    setup galaxy hyperglass
-      preds "???"
+      predscantdocallinsetup
          if next_galaxyspot_is_tboned [ZM0N ZM5S 0 ZM2S ZM6N ZM11S 0 ZM8S]
                             if always [CR7S ZM5S 0 ZM2S AL1S ZM11S 0 ZM8S]
 
@@ -23940,7 +24013,7 @@ call "cut the hourglass" a2
 call "galaxy circulate" c1
    take_right_hands simple_funny
    setup galaxy galaxy
-      preds "???"
+      predscantdocallinsetup
          if next_galaxyspot_is_tboned [R1E R2E 0 L2W L3W M4N 0 M0N]
          if always [M1N R2E 0 L2W M3N M4N 0 M0N]
 
@@ -23949,7 +24022,7 @@ call "flip the galaxy" c2
       array [CR1S CR2E 0 AL2W AL5S ZM4N 0 ZM0N]
             alternate_definition [reverse] c2
    setup galaxy 2x4
-      preds "???"
+      predscantdocallinsetup
          if next_galaxyspot_is_tboned [CR1E AL0S 0 CR3S AL2W CR4S 0 AL7S]
          if always                    [ZM1N AL0S 0 CR3S ZM2N CR4S 0 AL7S]
 
@@ -23958,7 +24031,7 @@ call "cut the galaxy" c2
       array [CR5S CR2E 0 AL2W AL1S ZM4N 0 ZM0N]
             alternate_definition [reverse] c2
    setup galaxy 2x4
-      preds "???"
+      predscantdocallinsetup
          if next_galaxyspot_is_tboned [CR1E CM3S 0 AM0S AL2W AM7S 0 CM4S]
          if always                    [ZM1N CM3S 0 AM0S ZM2N AM7S 0 CM4S]
             alternate_definition [yoyo reverse] c4
@@ -24257,7 +24330,7 @@ call "cross make a pass but @0" c4a
 call "straight away part 1" dontshow tag straightaway1
             fudge_to_q_tag
    setup qtag 3x4
-      preds "???"
+      predscantdocallinsetup
          if q_tag_front  [ZM1N ZM2N ZM3N CR4S ZM7N ZM8N  ZM0N AL10S]
          if q_tag_back   [   0    0 ZM3N CR4S ZM5N ZM11N ZM0N AL10S]
          if q_line_front [ZM1N ZM2N ZM3N CR4S ZM7N ZM8N  ZM0N AL10S]
@@ -24265,7 +24338,7 @@ call "straight away part 1" dontshow tag straightaway1
          if always       [   0    0 ZM3N CR4S   0   0    ZM0N AL10S]
             alternate_definition [cross] c4a
    setup qtag 3x4
-      preds "???"
+      predscantdocallinsetup
          if q_tag_front  [ZM1N ZM2N ZM3N CR4S ZM7N  ZM8N  ZM0N AL10S]
          if q_tag_back   [   0    0 ZM3N CR4S ZM11N ZM5N  ZM0N AL10S]
          if q_line_front [ZM1N ZM2N ZM3N CR4S ZM7N  ZM8N  ZM0N AL10S]
@@ -25739,7 +25812,7 @@ call "turn and weave" c4a
 call "_fold to face" dontshow tag foldtoface
    // Just single wheel, of course, but we mark it unusual if in couple.
    setup 1x2 1x2 rotate restriction unusual wave_only
-      preds "???"
+      predscantdocallinsetup
          if 1x2_beau_miniwave_or_warn [CR0E AL0E]
          if always [0 AL1E]
             alternate_definition [cross] c2
@@ -26928,10 +27001,15 @@ call "_bogus leads circulate" dontshow tag bogus_leads_circulate
    setup 2x2 2x2 restriction controversial alwaysfail
       array [CR1S AL0S 0 0]
 
-call "_leads trade" dontshow tag leads_trade
+call "_leads trade for trade by" dontshow tag leads_trade_for_trade_by
             left_means_mirror
    setup 2x2 2x2
       array [CR1S AL0S 0 0]
+   setup 2x4 2x4 restriction unusual alwaysfail
+      preds "Can't do this call in this formation."
+         if lines_couple [CR1S AL0S CR3S AL2S 0 0 0 0]
+   setup 4x2 2x4 restriction unusual alwaysfail
+      array [0 0 0 CR4S AL3S 0 0 0]
             alternate_definition [single] c1
    setup 2x1 1x2
       array [0 1S]
@@ -27206,7 +27284,7 @@ call "_centers turnstyle" dontshow tag central_turnstyle
    setup 1x2 1x2 rotate qualifier miniwaves
       array [CR1S AL1N]
    setup 1x4 2x2 qualifier not_miniwaves
-      preds "?"
+      predscantdo
          if cast_normal  [CR3W AL3E AL2E CR2W]
          if cast_pushy   [AL0E AL3E CR1W CR2W]
          if always       [0    AL3E 0    CR2W]

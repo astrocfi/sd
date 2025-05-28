@@ -132,6 +132,7 @@ const char *new_outfile_string = (char *) 0;
 char abridge_filename[MAX_TEXT_LINE_LENGTH];
 
 static bool file_error;
+static char full_outfile_name[MAX_FILENAME_LENGTH+1];
 static FILE *fildes;
 static char fail_errstring[MAX_ERR_LENGTH];
 static char fail_message[MAX_ERR_LENGTH];
@@ -166,7 +167,7 @@ extern void hash_nonrandom_number(int number)
 //   // This is obsolete; we now use the built-in memory management operations
 //   // of the C++ language, of course.  It is left here as a memorial to the types
 //   // of things people had to do when dealing with buggy compilers or libraries.
-//   
+//
 //   extern void *get_mem(uint32 siz)
 //   {
 //      // Using "calloc" instead of "malloc" clears the memory.
@@ -174,17 +175,17 @@ extern void hash_nonrandom_number(int number)
 //      // is insensitive to the initial contents of allocated memory.
 //      // But someone is a wuss, and thinks we need this.
 //      void *buf = calloc(siz, 1);
-//   
+//
 //      if (!buf && siz != 0) {
 //         char msg [50];
 //         sprintf(msg, "Can't allocate %d bytes of memory.", (int) siz);
 //         gg->fatal_error_exit(2, msg);
 //      }
-//   
+//
 //      return buf;
 //   }
-//   
-//   
+//
+//
 //   // An older version of this actually called "malloc" or "realloc"
 //   // depending on whether the incoming pointer was nil.  There was a
 //   // comment pointing out that this was because "SunOS 4 realloc doesn't
@@ -241,6 +242,9 @@ void ui_utils::open_file()
    int this_file_position;
    int i;
 
+   strncpy(full_outfile_name, outfile_prefix, MAX_FILENAME_LENGTH);
+   strncat(full_outfile_name, outfile_string, MAX_FILENAME_LENGTH);
+
    file_error = false;
 
    // We need to find out whether there are garbage characters (e.g. ^Z)
@@ -278,13 +282,13 @@ void ui_utils::open_file()
 
    struct stat statbuf;
 
-   if (stat(outfile_string, &statbuf))
-      this_file_position = 0;   /* File doesn't exist. */
+   if (stat(full_outfile_name, &statbuf))
+      this_file_position = 0;   // File doesn't exist.
    else
       this_file_position = statbuf.st_size;
 
    // This is still a little tricky.  We want a file mode that:
-   // (1) creates a new file if non exists,
+   // (1) creates a new file if none exists,
    // (2) allows us to read, so we can look around for control-Z,
    // (3) allows us to write at an arbitrary position, that is,
    //     not at the end of the file, so we can seek to just before
@@ -296,7 +300,7 @@ void ui_utils::open_file()
    // of the file -- seeks do not affect the write position.
    // But it will create the file if it doesn't exist.
 
-   if (!(fildes = fopen(outfile_string, "a"))) {
+   if (!(fildes = fopen(full_outfile_name, "a"))) {
       strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       strncpy(fail_message, "open", MAX_ERR_LENGTH);
       file_error = true;
@@ -320,7 +324,7 @@ void ui_utils::open_file()
 
    fclose(fildes);
 
-   if (!(fildes = fopen(outfile_string, "r+"))) {
+   if (!(fildes = fopen(full_outfile_name, "r+"))) {
       strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
       strncpy(fail_message, "open", MAX_ERR_LENGTH);
       file_error = true;
@@ -603,7 +607,7 @@ void ui_utils::close_file()
 
    if (fclose(fildes)) goto error;
 
-   if (stat(outfile_string, &statbuf))
+   if (stat(full_outfile_name, &statbuf))
       goto error;
 
    last_file_position = statbuf.st_size;
@@ -620,9 +624,9 @@ void ui_utils::close_file()
    strncpy(foo, "WARNING!!!  Sequence has not been written!  File ", MAX_ERR_LENGTH);
    strncat(foo, fail_message, MAX_ERR_LENGTH);
    strncat(foo, " failure on \"", MAX_ERR_LENGTH);
-   strncat(foo, outfile_string, MAX_ERR_LENGTH);
+   strncat(foo, full_outfile_name, MAX_ERR_LENGTH);
    strncat(foo, "\": ", MAX_ERR_LENGTH);
    strncat(foo, fail_errstring, MAX_ERR_LENGTH);
-   strncat(foo, " -- try \"change output file\" operation.", MAX_ERR_LENGTH);
+   strncat(foo, " -- try \"change output file\" or \"change output prefix\" operation.", MAX_ERR_LENGTH);
    specialfail(foo);
 }

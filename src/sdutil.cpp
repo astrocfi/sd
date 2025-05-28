@@ -72,6 +72,7 @@ and the following external variables:
    wrote_a_sequence
    retain_after_error
    outfile_string
+   outfile_prefix
    header_comment
    creating_new_session
    sequence_number
@@ -112,6 +113,7 @@ int clipboard_size = 0;
 bool wrote_a_sequence = false;
 bool retain_after_error = false;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
+char outfile_prefix[MAX_FILENAME_LENGTH] = "";
 char header_comment[MAX_TEXT_LINE_LENGTH];
 bool creating_new_session = false;
 int sequence_number = -1;
@@ -305,6 +307,8 @@ const char *get_escape_string(char c)
       return "<ATC>";
    case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
       return "";
+   case 'X':
+      return "others";
    default:
       return (char *) 0;
    }
@@ -2423,6 +2427,35 @@ void ui_utils::do_change_outfile(bool signal)
 }
 
 
+void ui_utils::do_change_outprefix(bool signal)
+{
+   char newprefix_string[MAX_FILENAME_LENGTH];
+   char buffer[MAX_TEXT_LINE_LENGTH];
+   sprintf(buffer, "Current sequence output prefix is \"%s\".", outfile_prefix);
+
+   if (iob88.get_popup_string(buffer,
+                              "*Enter new prefix",
+                              "Enter new prefix:",
+                              outfile_prefix, newprefix_string) == POPUP_DECLINE)
+      return;
+
+   char confirm_message[MAX_FILENAME_LENGTH+25];
+
+   strncpy(outfile_prefix, newprefix_string, MAX_FILENAME_LENGTH);
+   strncpy(confirm_message, "Output prefix changed to \"", 27);
+   strncat(confirm_message, outfile_prefix, MAX_FILENAME_LENGTH);
+   strncat(confirm_message, "\"", 2);
+
+   if (signal) {
+      specialfail(confirm_message);
+   }
+   else {
+      writestuff(confirm_message);
+      newline();
+   }
+}
+
+
 namespace {
 
 // Returns TRUE if it successfully backed up one parse block.
@@ -2580,6 +2613,7 @@ bool ui_utils::write_sequence_to_file() THROW_DECL
    }
 
    writestuff(" written to \"");
+   writestuff(outfile_prefix);
    writestuff(outfile_string);
    writestuff("\".");
    newline();
@@ -3073,6 +3107,7 @@ void ui_utils::run_program(iobase & ggg)
       write_header_stuff(true, 0);
       newline();
       writestuff("Output file is \"");
+      writestuff(outfile_prefix);
       writestuff(outfile_string);
       writestuff("\"");
       newline();
@@ -3263,6 +3298,9 @@ void ui_utils::run_program(iobase & ggg)
          goto new_sequence;
       case start_select_change_outfile:
          do_change_outfile(false);
+         goto new_sequence;
+      case start_select_change_outprefix:
+         do_change_outprefix(false);
          goto new_sequence;
       case start_select_change_title:
          do_header_popup(header_comment);
@@ -3666,6 +3704,9 @@ void ui_utils::run_program(iobase & ggg)
             goto start_cycle;
          case command_change_outfile:
             do_change_outfile(true);
+            goto start_cycle;
+         case command_change_outprefix:
+            do_change_outprefix(true);
             goto start_cycle;
          case command_change_title:
             {

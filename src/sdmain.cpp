@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.76"
-#define TIME_STAMP "wba@alum.mit.edu 4 June 2015 $"
+#define VERSION_STRING "38.79"
+#define TIME_STAMP "wba@alum.mit.edu 22 August 2015 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -163,6 +163,7 @@ command_list_menu_item command_menu[] = {
    {"insert a comment",               command_create_comment, ID_COMMAND_COMMENT},
    {"randomize couple colors",        command_randomize_couple_colors, ID_COMMAND_RANDOMIZE_COLORS},
    {"change output file",             command_change_outfile, ID_COMMAND_CH_OUTFILE},
+   {"change output prefix",           command_change_outprefix, -1},
    {"change title",                   command_change_title, ID_COMMAND_CH_TITLE},
    {"write this sequence",            command_getout, -1},
    {"end this sequence",              command_getout, ID_COMMAND_ENDTHISSEQUENCE},
@@ -265,6 +266,7 @@ startup_list_menu_item startup_menu[] = {
    {"change to new style filename",start_select_change_to_new_style_filename, -1},
    {"randomize couple colors",     start_select_randomize_couple_colors, ID_COMMAND_RANDOMIZE_COLORS},
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
+   {"change output prefix",        start_select_change_outprefix, -1},
    {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
 
    {"frequency show",              start_select_freq_show, -1},
@@ -443,6 +445,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
    uint32 circc = 0;    /* Circulator index (1-based). */
    uint32 number_list = 0;
    int howmanynums = (call->the_defn.callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
+   if (howmanynums == 7) howmanynums = 0;  // The "optional_special_number" stuff doesn't apply here.
 
    // **** If call requires both a selector and a circulator (the culprit
    // is "<ANYCIRC> percolate, <ANYONE> to a wave"), we don't generate
@@ -1040,6 +1043,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
       printf("-retain_after_error         retain pending concepts after error\n");
       printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
       printf("-sequence <filename>        base name for sequence output file (def \"" SEQUENCE_FILENAME "\")\n");
+      printf("-output_prefix <string>     extra prefix in front of output filename file (with directory separator if needed)\n");
       printf("-old_style_filename         use short file name, as in \"" SEQUENCE_FILENAME ".MS\"\n");
       printf("-new_style_filename         use long file name, as in \"" SEQUENCE_FILENAME "_MS.txt\"\n");
       printf("-db <filename>              calls database file (def \"" DATABASE_FILENAME "\")\n");

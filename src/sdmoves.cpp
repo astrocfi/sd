@@ -39,6 +39,8 @@
    canonicalize_rotation
    reinstate_rotation
    remove_mxn_spreading
+   remove_fudgy_2x3_2x6
+   repair_fudgy_2x3_2x6
    do_1x3_type_expansion
    divide_for_magic
    do_simple_split
@@ -507,6 +509,63 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
          ss->result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
       }
    }
+}
+
+
+extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL
+{
+   if (ss->kind == sfudgy2x3l) {
+      const expand::thing compressfudgy2x3l = {
+         {0, 1, -1, 4, 5, -1}, s2x3, sfudgy2x3l, 0};
+      expand::compress_setup(compressfudgy2x3l, ss);
+   }
+   else if (ss->kind == sfudgy2x3r) {
+      const expand::thing compressfudgy2x3r = {
+         {-1, 2, 3, -1, 6, 7}, s2x3, sfudgy2x3r, 0};
+      expand::compress_setup(compressfudgy2x3r, ss);
+   }
+   else if (ss->kind == sfudgy2x6l) {
+      const expand::thing compressfudgy2x6l = {
+         {0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, s2x6, sfudgy2x6l, 0};
+      expand::compress_setup(compressfudgy2x6l, ss);
+   }
+   else if (ss->kind == sfudgy2x6r) {
+      const expand::thing compressfudgy2x6r = {
+         {-1, -1, 4, 5, 6, 7, -1, -1, 12, 13, 14, 15}, s2x6, sfudgy2x6r, 0};
+      expand::compress_setup(compressfudgy2x6r, ss);
+   }
+   else
+      return;
+
+   warn(warn_controversial);
+}
+
+
+// This turns s1p5x4/s1p5x8 things into sfudgy things.
+extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL
+{
+   if (ss->kind == s1p5x4) {
+      uint32 mask = little_endian_live_mask(ss);
+      if (mask != 0 && (mask & 0xCC) == 0)
+         ss->kind = sfudgy2x3l;
+      else if (mask != 0 && (mask & 0x33) == 0)
+         ss->kind = sfudgy2x3r;
+      else
+         fail("Can't go into a 50% offset 1x4.");
+   }
+   else if (ss->kind == s1p5x8) {
+      uint32 mask = little_endian_live_mask(ss);
+      if (mask != 0 && (mask & 0xF0F0) == 0)
+         ss->kind = sfudgy2x6l;
+      else if (mask != 0 && (mask & 0x0F0F) == 0)
+         ss->kind = sfudgy2x6r;
+      else
+         fail("Can't go into a 50% offset 1x8.");
+   }
+   else
+      return;
+
+   warn(warn_controversial);
 }
 
 
@@ -996,6 +1055,23 @@ extern bool do_simple_split(
       mapcode = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
       if (split_command == split_command_1x8) recompute_id = false;
       break;
+   case s4x4:
+      {
+         mapcode = MAPCODE(s2x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0);
+         /*
+         uint32 mask = little_endian_live_mask(ss);
+
+         if (mask == 0xB4B4)
+            mapcode = MAPCODE(s2x4,1,MPKIND__OFFS_L_FULL,0);
+         else if (mask == 0x4B4B)
+            mapcode = MAPCODE(s2x4,1,MPKIND__OFFS_R_FULL,0);
+         else
+            return true;
+
+         ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
+         */
+      }
+      break;
    case s_qtag:
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
       break;
@@ -1083,6 +1159,8 @@ extern uint32 do_call_in_series(
       else
          prefer_1x4 = (~qqqq.rotation) & 1;
 
+      if (qqqq.kind == s4x4) prefer_1x4 = 0;
+
       if (prefer_1x4 && qqqq.kind != s2x4 && qqqq.kind != s2x6)
          fail("Can't figure out how to split multiple part call.");
 
@@ -1094,7 +1172,14 @@ extern uint32 do_call_in_series(
       qqqq.cmd.cmd_misc_flags |= save_split;  // Put it back in.
    }
    else
-      move(&qqqq, qtfudged, &tempsetup);
+      move(&qqqq, qtfudged, &tempsetup, false);
+
+   if (tempsetup.kind == sfudgy2x6l || tempsetup.kind == sfudgy2x6r) {
+      tempsetup.kind = s1p5x8;
+   }
+   else if (tempsetup.kind == sfudgy2x3l || tempsetup.kind == sfudgy2x3r) {
+      tempsetup.kind = s1p5x4;
+   }
 
    if (tempsetup.kind == s2x2) {
       switch (sss->kind) {
@@ -1247,7 +1332,9 @@ extern uint32 do_call_in_series(
    sss->result_flags.copy_split_info(tempsetup.result_flags);
 
    canonicalize_rotation(sss);
-   minimize_splitting_info(sss, saved_result_flags);
+   // If doing the special counter rotate 3/8 stuff, the result has all the information it needs.
+   if (qqqq.kind != s4x4 || qqqq.eighth_rotation == 0 || sss->kind != s2x4 || sss->eighth_rotation != 0)
+      minimize_splitting_info(sss, saved_result_flags);
 
    return retval;
 }
@@ -1322,6 +1409,7 @@ static int start_matrix_call(
       // They have funny coordinates so that they can't truck or loop.
       if (ss->kind == s_hrglass) thingyptr = &squeezethingglass;
       else if (ss->kind == s_galaxy) thingyptr = &squeezethinggal;
+      else if (ss->kind == s_343) thingyptr = &squeezething343;
       else if (ss->kind == s_qtag) thingyptr = &squeezethingqtag;
       else if (ss->kind == s4dmd) thingyptr = &squeezething4dmd;
    }
@@ -1479,10 +1567,8 @@ static const checkitem checktable[] = {
       -2, -9, -5, -6,   -2, -5, -5, -2}},
    // Full press ahead from LH star promenade.  Goes to same setup as 1/2 press ahead.
    {0x00950095, 0x00810404, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
-    { -4, 9, -3, 13,    -4, 5, -3, 9,
-      9, 4, 15, 4,      5, 4, 11, 4,
-      4, -9, 4, -14,    4, -5, 4, -10,
-      -9, -4, -14, -7,  -5, -4, -10, -7}},
+    { -4, 9, -3, 13,    -4, 5, -3, 9,      9, 4, 15, 4,      5, 4, 11, 4,
+      4, -9, 4, -14,    4, -5, 4, -10,     -9, -4, -14, -7,  -5, -4, -10, -7}},
    // As above, RH.
    {0x00950095, 0x11000800, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
     { -9, 4, -6, 4,     -5, 4, -2, 4,
@@ -1496,7 +1582,9 @@ static const checkitem checktable[] = {
     {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
    {0x00660077, 0x00018404, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
     {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
-
+   {0x00660066, 0x0C000500, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
+    {0, 6, 0, 7,    0, -6, 0, -7,    6, 0, 7, 0,      -6, 0, -7, 0,
+     4, 2, 2, 2,    4, -2, 2, -2,    -4, 2, -2, 2,    -4, -2, -2, -2, 127}},
    // Next 2 items: the trailing points pressed ahead from quadruple diamonds,
    // so that only the centers 2 diamonds are now occupied.  Fudge to diamonds.
    {0x00730055, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
@@ -1660,6 +1748,7 @@ static const checkitem checktable[] = {
    {0x00A20022, 0x000C8026, s2x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x002200A2, 0x10108484, s2x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
    {0x00C40022, 0x26001B00, s2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01040022, 0x36009B00, s2x9, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20022, 0x004C8036, s2x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x002200E2, 0x12908484, s2x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
    {0x01220022, 0x006C8136, s2x10,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -1723,6 +1812,13 @@ static const checkitem checktable[] = {
    {0x00E20026, 0x0808A006, swiderigger,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00460044, 0x41040010, s_323, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660044, 0x41040410, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660066, 0x18100400, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
+    {-2, -6, -4, -4,    0, 6, 0, 4,    2, -6, 4, -4,    2, 6, 4, 4,    0, -6, 0, -4, -2, 6, -4, 4, 127}},
+   {0x00840066, 0x08202008, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
+    {-4, -6, -4, -4,    0, 6, 0, 4,    4, -6, 4, -4,    4, 6, 4, 4,
+     0, -6, 0, -4,      -4, 6, -4, 4,  8, 0, 6, 0,      -8, 0, -6, 0, 127}},
+   {0x00660066, 0x00202600, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
+    {-4, -6, -5, -5, 6, 0, 5, 0, 4, -6, 4, -5, 4, 6, 5, 5, -6, 0, -5, 0, -4, 6, -4, 5, 127}},
    {0x00860044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00440044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00860044, 0x41250410, s_545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -4239,7 +4335,7 @@ int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) 
    that is an error.  But if we are only doing this because the automatic active phantoms
    switch is on, we will just ignore it. */
 
-extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL
+bool fill_active_phantoms_and_move(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup /*= false*/) THROW_DECL
 {
    int i;
 
@@ -4247,7 +4343,7 @@ extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL
       return true;   /* We couldn't do it -- the assumption is not specific enough, like "general diamonds". */
 
    ss->cmd.cmd_assume.assumption = cr_none;
-   move(ss, false, result);
+   move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
 
    // Take out the phantoms.
 
@@ -4261,27 +4357,27 @@ extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL
 
 
 
-extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL
+void move_perhaps_with_active_phantoms(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup) THROW_DECL
 {
    if (using_active_phantoms) {
-      if (fill_active_phantoms_and_move(ss, result)) {
+      if (fill_active_phantoms_and_move(ss, result, suppress_fudgy_2x3_2x6_fixup)) {
          // Active phantoms couldn't be used.  Just do the call the way it is.
          // This does not count as a use of active phantoms, so don't set the flag.
-         move(ss, false, result);
+         move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
       }
       else
          result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
    }
    else {
       check_restriction(ss, ss->cmd.cmd_assume, false, 99);
-      move(ss, false, result);
+      move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
       result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
    }
 }
 
 
 
-extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL
+void impose_assumption_and_move(setup *ss, setup *result, bool suppress_fudgy_2x3_2x6_fixup /*= false*/) THROW_DECL
 {
    if (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
       assumption_thing t;
@@ -4341,10 +4437,10 @@ extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL
          break;
       }
 
-      move_perhaps_with_active_phantoms(ss, result);
+      move_perhaps_with_active_phantoms(ss, result, suppress_fudgy_2x3_2x6_fixup);
    }
    else
-      move(ss, false, result);
+      move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
 }
 
 
@@ -5469,6 +5565,7 @@ static bool do_misc_schema(
           (the_schema == schema_concentric ||
            the_schema == schema_cross_concentric ||
            the_schema == schema_concentric_4_2_or_normal ||
+           the_schema == schema_special_trade_by ||
            the_schema == schema_conc_o)) {
          if (ss->people[0].id1) {
             if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
@@ -5506,6 +5603,7 @@ static bool do_misc_schema(
          ss->kind = s_qtag;
          ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
       }
+
       if (ss->kind == s3x4 && the_schema == schema_concentric_or_diamond_line) {
          // If the schema is schema_concentric_or_diamond_line, and the 3x4 is occupied as in a
          // 1/4 tag, convert it.  Don't ask for CFLAG1_FUDGE_TO_Q_TAG, just do it.
@@ -5677,7 +5775,7 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
             return schema_cross_concentric;
       }
    case schema_maybe_special_single_concentric:
-   case schema_maybe_special_single_concentric_or_2_4:
+   case schema_maybe_special_trade_by:
       // "Single" has the usual meaning for this one.  But "grand single"
       // turns it into a "special concentric", which has the centers working
       // in three pairs.
@@ -5692,8 +5790,8 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
          if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == INHERITFLAG_GRAND)
             fail("You must not use \"grand\" without \"single\" or \"nxn\".");
          else if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == 0) {
-            if (the_schema == schema_maybe_special_single_concentric_or_2_4)
-               return schema_concentric_2_4_or_normal;
+            if (the_schema == schema_maybe_special_trade_by)
+               return schema_special_trade_by;
             else
                return schema_concentric;
          }
@@ -6073,7 +6171,8 @@ void really_inner_move(
 
       if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT)) {
          /* ***** why isn't this particular error test taken care of more generally elsewhere? */
-         if (!(callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
+         if (!(callflagsh & INHERITFLAG_LEFT))
+            fail("Can't do this call 'left'.");
          if (!mirror) mirror_this(ss);
          mirror = true;
          ss->cmd.cmd_misc_flags |= CMD_MISC__DID_LEFT_MIRROR;
@@ -6085,8 +6184,9 @@ void really_inner_move(
       if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE)) &&
           (callflagsh & INHERITFLAG_REVERSE)) {
          // This "reverse" just means mirror.
-         if (mirror) fail("Can't do this call 'left' and 'reverse'.");
-         mirror_this(ss);
+         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT))
+            fail("Can't do this call 'left' and 'reverse'.");
+         if (!mirror) mirror_this(ss);
          mirror = true;
          ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_REVERSE);
       }
@@ -6682,6 +6782,21 @@ static void move_with_real_call(
                   }
                }
 
+               // Check for special case of swing the fractions with really hairy fraction.
+
+               if (bit_to_set == 0 &&
+                   ((callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_MASK) &&
+                   !(ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) {
+
+                  int n = ss->cmd.cmd_fraction.fraction - NUMBER_FIELDS_1_0_4_0;
+                  if (n >= 0 && n <= 3) {
+                     current_options.howmanynumbers = 1;
+                     current_options.number_fields = n;
+                     ss->cmd.cmd_misc3_flags |= CMD_MISC3__SPECIAL_NUMBER_INVOKE;
+                     goto done;
+                  }
+               }
+
                if (bit_to_set == 0 || ss->cmd.cmd_final_flags.test_heritbit(bit_to_set))
                   fail("This call can't be fractionalized this way.");
                ss->cmd.cmd_final_flags.set_heritbit(bit_to_set);
@@ -6793,13 +6908,14 @@ static void move_with_real_call(
           (callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK))) {
 
          // See if what we are doing includes the first part.
-         fraction_command::includes_first_part_enum foob = ss->cmd.cmd_fraction.fraction_command::includes_first_part();
-
-         if (foob == fraction_command::yes) {
+         switch (ss->cmd.cmd_fraction.fraction_command::includes_first_part()) {
+         case fraction_command::yes:
             if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
                                             CMD_MISC__ALREADY_STEPPED |
                                             CMD_MISC__MUST_SPLIT_MASK))) {
-               if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT)) {
+               if ((((callflagsh & INHERITFLAG_LEFT) || (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) &&
+                    ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT)) ||
+                   ((callflagsh & INHERITFLAG_REVERSE) && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE))) {
                   mirror_this(ss);
                   mirror = true;
                }
@@ -6823,12 +6939,13 @@ static void move_with_real_call(
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
             }
-         }
-         else if (foob == fraction_command::no) {
+            break;
+         case fraction_command::no:
             // If we're doing the rest of the call, just turn all that stuff off.
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
             }
+            break;
          }
       }
 
@@ -7238,8 +7355,8 @@ static void handle_expiration(setup *ss, uint32 *bit_to_set)
       remember the actual elongation in order to move people to the correct ending
       formation.
    On output, nonzero bits in the low two bits with a 2x2 setup mean that,
-      _if_ _result_ _elongation_ _is_ _required_, this is what it should be.  It does
-      _not_ mean that such elongation actually exists.  Whoever called "move" must
+      IF RESULT ELONGATION IS REQUIRED, this is what it should be.  It does
+      NOT mean that such elongation actually exists.  Whoever called "move" must
       make that judgement.  These bits are set when, for example, a 1x4 -> 2x2 call
       is executed, to indicate how to elongate the result, if it turns out that those
       people were working around the outside.  This determination is made not just on
@@ -7256,7 +7373,8 @@ static void handle_expiration(setup *ss, uint32 *bit_to_set)
 void move(
    setup *ss,
    bool qtfudged,
-   setup *result) THROW_DECL
+   setup *result,
+   bool suppress_fudgy_2x3_2x6_fixup /*= false*/) THROW_DECL
 {
    // Need this to check for dixie tag 1/4.
    if (current_options.number_fields == 1)
@@ -7425,11 +7543,12 @@ void move(
             throw maybe_throw_this;
       }
 
-      return;
+      goto really_getout;
    }
 
    if (ss->cmd.cmd_misc3_flags & CMD_MISC3__DO_AS_COUPLES) {
-      if (do_forced_couples_stuff(ss, result)) return;
+      if (do_forced_couples_stuff(ss, result))
+         goto really_getout;
    }
 
    if (ss->cmd.callspec) {
@@ -7438,7 +7557,7 @@ void move(
          since that concept should be next. */
       if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG)) {
          punt_centers_use_concept(ss, result);
-         return;
+         goto really_getout;
       }
 
       // Handle expired concepts.
@@ -7613,7 +7732,8 @@ void move(
 
          if (ss->cmd.restrained_do_as_couples) {
             // Maybe should just set ss->cmd.cmd_misc3_flags |= CMD_MISC3__DO_AS_COUPLES;
-            if (do_forced_couples_stuff(ss, result)) return;
+            if (do_forced_couples_stuff(ss, result))
+               goto really_getout;
          }
       }
 
@@ -7812,6 +7932,23 @@ void move(
          saved_magic_diamond->concept = &concept_special_magic;
       else if (saved_magic_diamond->concept->kind == concept_interlocked)
          saved_magic_diamond->concept = &concept_special_interlocked;
+   }
+
+ really_getout:
+
+   if (!suppress_fudgy_2x3_2x6_fixup) {
+      if (result->kind == sfudgy2x6l || result->kind == sfudgy2x6r) {
+         result->kind = s1p5x8;
+      }
+      else if (result->kind == sfudgy2x3l || result->kind == sfudgy2x3r) {
+         result->kind = s1p5x4;
+      }
+   }
+   else if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__DISTORTED|CMD_MISC__OFFSET_Z|CMD_MISC__SAID_PG_OFFSET))) {
+      // If no parallelogram-like concepts were given at this level, we allow the
+      // special "1p5" setups, and turn them, with a "controversial" warning,
+      // into the appropriate "fudgy" setups.
+      repair_fudgy_2x3_2x6(result);
    }
 
    return;

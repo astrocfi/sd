@@ -3711,10 +3711,67 @@ extern callarray *assoc(
       // 0780  if these 4 bits are nonzero, they must match the number plus 1
       // 007F  the qualifier itself (we allow 127 qualifiers)
 
+      // The handling of clauses with numeric tests (e.g. "qualifier num 2") is made
+      // complicated by the existence of special calls that can *optionally* be given a
+      // number.
+      //
+      // These special calls have the "optional_special_number" top-level flag.  Their
+      // definition has a mixture of clauses that take a number and clauses that do not.
+      // On any given usage of the call, only one or the other type of clause is to be
+      // used; the other type is ignored.
+      //
+      //    If the CMD_MISC3__SPECIAL_NUMBER_INVOKE is on, only numeric clauses are
+      //    considered; non-numeric clauses are skipped.  The call is being invoked with
+      //    the special mechanism, such as "3/4 swing the fractions".  The required
+      //    number will be present, in current_options.number_fields, and needs to be
+      //    checked.
+      //
+      //    If CMD_MISC3__SPECIAL_NUMBER_INVOKE is off, only non-numeric clauses are
+      //    considered, even if a number is present.  (Current_options.howmanynumbers
+      //    might be nonzero for unrelated reasons; that number is not to be used.)  The
+      //    call is being invoked without the special mechanism, such as plain "swing
+      //    the fractions".
+      //
+      // Other calls (the vast majority) consider all clauses.  Such calls typically
+      // either have all numeric clauses (and have something like "@b" in their name to
+      // get the required number), or all non-numeric clauses.  But they are not
+      // required to conform to that.
+      //
+      //    If a clause does not take a number, just proceed with it.
+      //
+      //    If a clause takes a number, demand that it be present, and check it.
+
       if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
-         number_used = true;
+         // Qualifier wants a number.
+
+         if (ss->cmd.callspec && (ss->cmd.callspec->the_defn.callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_MASK) {
+            // It's one of the special calls that optionally takes a number.  Proceed
+            // and check the number only if CMD_MISC3__SPECIAL_NUMBER_INVOKE is on.  If
+            // CMD_MISC3__SPECIAL_NUMBER_INVOKE is off, dismiss it immediately.
+            if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__SPECIAL_NUMBER_INVOKE) ||
+                current_options.howmanynumbers != 1)
+               continue;
+         }
+         else {
+            // Qualifier wants a number, call is not special.  Demand that number be
+            // present, and check same.
+            number_used = true;   // Turn this on whether the number matched or not.
+            if (current_options.howmanynumbers == 0)
+               continue;
+         }
+
+         // Either way, demand that it be the correct number.
          if (((unsigned int) (p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) !=
              (current_options.number_fields & NUMBER_FIELD_MASK)+1)
+            continue;
+      }
+      else {
+         // Qualifier does not want a number.  Accept the clause if the call is not
+         // special, or if it is special but CMD_MISC3__SPECIAL_NUMBER_INVOKE is off.
+         // If CMD_MISC3__SPECIAL_NUMBER_INVOKE is on, only numeric clauses, which this
+         // isn't, are accepted,
+         if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__SPECIAL_NUMBER_INVOKE) &&
+             ss->cmd.callspec && (ss->cmd.callspec->the_defn.callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_MASK)
             continue;
       }
 
@@ -6494,10 +6551,11 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
    starting_setup.result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
    starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0;
-   move(&starting_setup, false, &newhist.state);
+   move(&starting_setup, false, &newhist.state, true);
    newhist.state_is_valid = true;
    remove_mxn_spreading(&newhist.state);
    remove_tgl_distortion(&newhist.state);
+   remove_fudgy_2x3_2x6(&newhist.state);
 
    if (newhist.state.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");

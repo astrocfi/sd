@@ -55,23 +55,24 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 {
     static cc_t orig_eof = '\004';
     struct termios term;
-    int fd;
 
     if (mode == current_tty_mode) return;
 
-    fd = fileno(stdin);
+    int fd = fileno(stdin);
 
-    (void) tcgetattr(fd, &term);
+    tcgetattr(fd, &term);
     if (mode == 1) {
-         orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
-	term.c_cc[VMIN] = 1;	/* 1 char at a time */
-	term.c_cc[VTIME] = 0;	/* no time limit on input */
-	term.c_lflag &= ~(ICANON|ECHO);
-    } else {
-	term.c_cc[VEOF] = orig_eof;
-	term.c_lflag |= ICANON|ECHO;
+       orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
+       term.c_cc[VMIN] = 1;	/* 1 char at a time */
+       term.c_cc[VTIME] = 0;	/* no time limit on input */
+       term.c_lflag &= ~(ICANON|ECHO);
     }
-    (void) tcsetattr(fd, TCSADRAIN, &term);
+    else {
+       term.c_cc[VEOF] = orig_eof;
+       term.c_lflag |= ICANON|ECHO;
+    }
+
+    tcsetattr(fd, TCSADRAIN, &term);
     current_tty_mode = mode;
 }
 
@@ -237,7 +238,114 @@ extern void put_char(int c)
 extern int get_char()
 {
    csetmode(1);         // Raw, no echo, single-character mode.
-   int nc = getchar();  // A "stdio" call.
+   // Unfortunately, "read" doesn't work.  Previously written text doesn't appear
+   // on the screen until "read" reads a character.
+
+   int nc = getchar();
+   if (nc == 0x1B) {
+
+
+
+
+
+
+
+
+
+
+
+      /*
+      char foob[20];
+      printf("\nGot an escape character, reading.\n");
+      foob[0] = getchar();
+      foob[1] = getchar();
+      foob[2] = getchar();
+      foob[3] = getchar();
+      foob[4] = getchar();
+      printf("Result of read is: buffer is 0x%X 0x%X 0x%X 0x%X 0x%X.\n",
+             foob[0], foob[1], foob[2], foob[3], foob[4]);
+      */
+
+
+
+
+
+
+      int ec = getchar();
+
+      if (ec == 0x1B) {
+         // Need to type escape twice on Linux.  Just return same.
+      }
+      else if (ec == 0x4F) {
+         ec = getchar();
+         if (ec == 0x51)
+            nc = FCN_KEY_TAB_LOW+1;
+         else if (ec == 0x52)
+            nc = FCN_KEY_TAB_LOW+2;
+         else if (ec == 0x53)
+            nc = FCN_KEY_TAB_LOW+3;
+         else if (ec == 0x48)       // home
+            nc = EKEY+4;
+         else if (ec == 0x46)       // end
+            nc = EKEY+3;
+      }
+      else if (ec == 0x5B) {
+         int ec1 = getchar();
+
+         if (ec1 == 0x41)      // up arrow
+            nc = EKEY+6;
+         else if (ec1 == 0x42) // down arrow
+            nc = EKEY+8;
+         else if (ec1 == 0x43) // right arrow
+            nc = EKEY+7;
+         else if (ec1 == 0x44) // left arrow
+            nc = EKEY+5;
+         else {
+            int ec2 = getchar();
+
+            if (ec2 == '~') {
+               if (ec1 == '5') // page up
+                  nc = EKEY+1;
+               else if (ec1 == '6') // page down
+                  nc = EKEY+2;
+            }
+            else {
+               int ec3 = getchar();
+
+               if (ec3 == '~') {
+                  if (ec1 == '2' && ec2 == '4')
+                     nc = FCN_KEY_TAB_LOW+11;
+                  else if (ec1 == '1' && ec2 == '5')
+                     nc = FCN_KEY_TAB_LOW+4;
+                  else if (ec1 == '1' && ec2 == '7')
+                     nc = FCN_KEY_TAB_LOW+5;
+                  else if (ec1 == '1' && ec2 == '8')
+                     nc = FCN_KEY_TAB_LOW+6;
+                  else if (ec1 == '1' && ec2 == '9')
+                     nc = FCN_KEY_TAB_LOW+7;
+                  else if (ec1 == '2' && ec2 == '0')
+                     nc = FCN_KEY_TAB_LOW+8;
+                  else if (ec1 == '2' && ec2 == '1')
+                     nc = FCN_KEY_TAB_LOW+9;
+                  else if (ec1 == '2' && ec2 == '4')
+                     nc = FCN_KEY_TAB_LOW+11;
+               }
+            }
+         }
+      }
+      else if (ec >= 'a' && ec <= 'z') {
+         nc = ALTLET+ec-'a';
+      }
+      else if (ec >= 0x01 && ec <= 0x1A) {
+         nc = CTLLET+ec-'a';
+      }
+
+
+
+
+
+
+   }
 
    // Turn control characters (other than ones
    // that are real genuine control characters)
