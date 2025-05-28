@@ -2708,6 +2708,16 @@ do_plain_call:
                            ||
                   result->cmd.cmd_assume.assumption == cr_real_1_4_line)
             fix_next_assumption = cr_ctr_miniwaves;
+         else if (result->cmd.cmd_assume.assumption == cr_gen_1_4_tag &&
+                  oldk == s_qtag &&
+                  (result->people[2].id1 & d_mask & ~2) == d_north &&
+                  ((result->people[2].id1 ^ result->people[6].id1) & d_mask) == 2 &&
+                  ((result->people[3].id1 ^ result->people[7].id1) & d_mask) == 2) {
+            if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 0)
+               fix_next_assumption = cr_ctr_miniwaves;
+            else if (((result->people[2].id1 ^ result->people[3].id1) & d_mask) == 2)
+               fix_next_assumption = cr_ctr_couples;
+         }
       }
 
       do_call_in_series(

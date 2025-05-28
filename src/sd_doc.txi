@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: June 7, 1997
+@set Time-stamp: June 29, 1997
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.87
+@set sd-version 31.88
 @set full-manual
 @c %**end of header
 @iftex
@@ -187,7 +187,7 @@ Call Notes
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
-* Percolate and Cover Up::      Percolate and Cover Up
+* Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
 * Snag Circulate::              Snag Circulate
 * Bridge the Gap::              Bridge the Gap
@@ -649,7 +649,7 @@ through the use of the initialization file (@xref{Option Control}).
 The program is normally invoked with a single argument---the level.
 This is one of the following: @code{m} (mainstream), @code{p} (plus),
 @code{a1}, @code{a2}, @code{c1}, @code{c2}, @code{c3a},
-@code{c3}, @code{c3x}, @code{c4a}, or @code{c4}.
+@code{c3}, @code{c3x}, @code{c4a}, @code{c4}, or @code{c4x}.
 The level can also be determined by the selection made when using the
 ``session'' feature.
 If the level is not given, or the program was started by a mouse
@@ -2486,7 +2486,7 @@ appropriate to get the dancers through the action that you intend.
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
 * Grand Chain 8::               Grand Chain 8
-* Percolate and Cover Up::      Percolate and Cover Up
+* Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
 * Snag Circulate::              Snag Circulate
 * Bridge the Gap::              Bridge the Gap
@@ -2735,14 +2735,15 @@ or you are using some concept like @samp{central}.  In other circumstances,
 just @samp{grand chain 8} should work.
 
 @node Percolate and Cover Up, Countershake, Grand Chain 8, Call Notes
-@section Percolate and Cover Up
+@section Percolate, Perk Up, and Cover Up
 
 When performed from some formations (but not waves), these calls have the
 property that the centers stay centers and the ends stay ends.
 One can make use of that property, by using concepts like @samp{central}
 when the formation is appropriate.  Unfortunately, @code{Sd}, can't figure
 out whether to allow the @samp{central} concept, based on the starting
-formation, without help.  Use the calls @samp{percolate (centers and ends)}
+formation, without help.  Use the calls @samp{percolate (centers and ends)},
+@samp{perk up (centers and ends)},
 and @samp{cover up (centers and ends)} when using the @samp{central} concept.
 @code{Sd} will, of course, check that the facing directions are such that
 the dancers would have stayed in the center had all 8 people done the call.

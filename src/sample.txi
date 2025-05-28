@@ -1,0 +1,189 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename demo.info
+@settitle Sd - Sample
+@iftex
+@headings off
+@end iftex
+@c %**end of header
+Sd understands simple things:
+@example
+@group
+       1B^   2BV   4G^   3GV
+
+       1G^   2GV   4B^   3BV
+
+      BOYS hinge
+
+          1B>
+                   4G^   3GV
+          2B<
+
+                      4B>
+       1G^   2GV
+                      3B<
+@end group
+@end example
+
+and:
+@example
+@group
+           3G>  4B>  4G>
+       3B^               1BV
+           2G<  2B<  1G<
+
+      GIRLS hinge
+
+                      4B>
+       3B^  2G^  3GV       1G^  4GV  1BV
+                      2B<
+@end group
+@end example
+
+Sd understands moderately complex things:
+@example
+@group
+               4GV  3B^
+       3GV 4B^          2BV 1G^
+               1BV  2G^
+
+      BOYS IN YOUR DISTORTED WAVE swing thru
+
+               4GV  4B^
+       3GV 1B^          3BV 1G^
+               2BV  2G^
+@end group
+@end example
+
+and:
+@example
+@group
+             3BV
+       2BV   3G^   4G^
+       2GV   1GV   4B^
+             1B^
+
+      swing thru
+
+       3BV   2B^   4GV   3G^
+
+       1GV   2G^   4BV   1B^
+@end group
+@end example
+
+and:
+@example
+@group
+                      3B>
+       4G^   3GV
+                      2B<
+
+          4B>
+                   1G^   2GV
+          1B<
+
+      BOYS START, swing the fractions
+
+       1G^   2BV   2G^   3BV
+
+       1B^   4GV   4B^   3GV
+@end group
+@end example
+
+and:
+@example
+@group
+         2B<  3B<
+ 3GV 2G^          4GV 1G^
+         1B>  4B>
+
+      IGNORE THE SIDE GIRLS, triangle circulate
+
+         1B<  1G<
+ 2BV 2G^          4GV 4B^
+         3G>  3B>
+@end group
+@end example
+
+and:
+@example
+@group
+                 4B>
+                 1G<
+       3B^ 4GV         2G^ 1BV
+                 3G>
+                 2B<
+
+      GIRLS flip the diamond
+
+                    4B>
+
+       3B^  1GV  4G^  2GV  3G^  1BV
+
+                    2B<
+@end group
+@end example
+
+and even:
+@example
+@group
+                 4B>
+                 1G<
+       3B^ 4GV         2G^ 1BV
+                 3G>
+                 2B<
+
+      4 TIMES, CENTER DIAMOND, flip the diamond
+
+                 1G>
+                 4G<
+       3B^ 4BV         2B^ 1BV
+                 2G>
+                 3G<
+@end group
+@end example
+
+And of course Sd understands extremely complex things:
+@example
+@group
+       4B>   4G>   1B>   1G>
+
+       3G<   3B<   2G<   2B<
+
+      INVERT SNAG, INVERT deuces wild
+
+               1B>  4G>
+       3G^ 4BV          2B^ 1GV
+               2G<  3B<
+@end group
+@end example
+
+and:
+@example
+@group
+       4B>   4G>   1B>   1G>
+
+       3G<   3B<   2G<   2B<
+
+      RANDOM ONCE REMOVED, CENTRAL, lead the way
+
+       1BV   4BV   1GV   4GV
+
+       2G^   3G^   2B^   3B^
+@end group
+@end example
+
+and:
+@example
+@group
+    4B>                    2G<
+        1B^  3GV  1G^  3BV
+    4G>                    2B<
+
+      ONCE REMOVED single wheel
+
+        1BV            3G^
+    4G<     4B<    2B>     2G>
+        1GV            3B^
+@end group
+@end example
+@bye

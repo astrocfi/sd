@@ -235,6 +235,8 @@ Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 
 Private expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
 Private expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
 Private expand_thing step_1x2_stuff = {{0, 1}, 2, s1x2, s1x2, 1};
+Private expand_thing step_offs1_stuff = {{-1, -1, 0, 1, 3, 2, -1, -1, 6, 7, 9, 8}, 12, s3x4, s2x6, 1};
+Private expand_thing step_offs2_stuff = {{11, 10, -1, -1, 3, 2, 5, 4, -1, -1, 9, 8}, 12, s3x4, s2x6, 1};
 Private expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, s2x2, s1x4, 0};
 Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, s2x4, 1};
@@ -324,6 +326,8 @@ static full_expand_thing touch_init_table3[] = {
    {warn__none,       0, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},         /* Same, with missing people. */
    {warn__none,       0, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},  /* Check for stepping to a bone from a squared set or whatever. */
    {warn__some_touch, 0, &step_2x4_rig_stuff, s2x4,         0xFFFFUL,     0x963CUL, ~0UL},      /* Check for stepping to rigger from suitable T-bone. */
+   {warn__none,       0, &step_offs1_stuff,   s3x4,       0x0FF0FFUL,   0x07D0D7UL, ~0UL},
+   {warn__none,       0, &step_offs2_stuff,   s3x4,       0xF0FF0FUL,   0x70DD07UL, ~0UL},
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xFFUL,       0xD7UL, ~0UL},      /* Triangle base, who are facing, touch. */
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0xF0UL,       0xD0UL, ~0UL},      /* Same, with missing people. */
    {warn__some_touch, 0, &step_tgl4_stuffa,   s_trngl4,       0x0FUL,       0x07UL, ~0UL},      /* Same, with missing people. */

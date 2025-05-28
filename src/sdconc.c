@@ -165,22 +165,8 @@ extern void normalize_concentric(
       /* Do special stuff to put setups back properly for squashed schema. */
 
       if (inners[0].kind == s2x2) {
-         /* Move people down to the closer parts of 2x2 setups. */
-         if (!(inners[1].people[2].id1 | inners[1].people[3].id1)) {
-            swap_people(&inners[1], 0, 3);
-            swap_people(&inners[1], 1, 2);
-         }
-         if (!(inners[0].people[0].id1 | inners[0].people[1].id1)) {
-            swap_people(&inners[0], 0, 3);
-            swap_people(&inners[0], 1, 2);
-         }
-
-         center_arity = 2;
-         table_synthesizer = schema_in_out_triple;
-      }
-      else if (inners[0].kind == s1x4) {
-         if (inners[0].rotation) {
-            /* Move people down to the closer parts of 1x4 setups. */
+         /* Move people to the closer parts of 2x2 setups. */
+         if (outer_elongation == 1) {
             if (!(inners[1].people[2].id1 | inners[1].people[3].id1)) {
                swap_people(&inners[1], 0, 3);
                swap_people(&inners[1], 1, 2);
@@ -190,17 +176,66 @@ extern void normalize_concentric(
                swap_people(&inners[0], 1, 2);
             }
          }
+         else if (outer_elongation == 0) {
+            if (!(inners[1].people[0].id1 | inners[1].people[3].id1)) {
+               swap_people(&inners[1], 0, 1);
+               swap_people(&inners[1], 3, 2);
+            }
+            if (!(inners[0].people[2].id1 | inners[0].people[1].id1)) {
+               swap_people(&inners[0], 0, 1);
+               swap_people(&inners[0], 3, 2);
+            }
+         }
 
          center_arity = 2;
          table_synthesizer = schema_in_out_triple;
       }
-      else if (inners[0].kind == s1x2 && inners[0].rotation == 0) {
+      else if (inners[0].kind == s1x4) {
+         /* Move people to the closer parts of 1x4 setups. */
+         if (inners[0].rotation == 1 && outer_elongation == 1) {
+            if (!(inners[0].people[0].id1 | inners[0].people[1].id1)) {
+               swap_people(&inners[0], 0, 3);
+               swap_people(&inners[0], 1, 2);
+            }
+            if (!(inners[1].people[2].id1 | inners[1].people[3].id1)) {
+               swap_people(&inners[1], 0, 3);
+               swap_people(&inners[1], 1, 2);
+            }
+         }
+         else if (inners[0].rotation == 0 && outer_elongation == 0) {
+            if (!(inners[0].people[2].id1 | inners[0].people[3].id1)) {
+               swap_people(&inners[0], 0, 3);
+               swap_people(&inners[0], 1, 2);
+            }
+            if (!(inners[1].people[0].id1 | inners[1].people[1].id1)) {
+               swap_people(&inners[1], 0, 3);
+               swap_people(&inners[1], 1, 2);
+            }
+         }
+
+         center_arity = 2;
+         table_synthesizer = schema_in_out_triple;
+      }
+      else if (inners[0].kind == s1x2 && inners[0].rotation == 0 && outer_elongation == 1) {
          setup temp = *outers;
 
          (void) copy_person(outers, 0, &inners[1], 0);
          (void) copy_person(outers, 1, &inners[1], 1);
          (void) copy_person(outers, 2, &inners[0], 1);
          (void) copy_person(outers, 3, &inners[0], 0);
+         outers->rotation = 0;
+         outers->kind = s2x2;
+         inners[0] = temp;
+         i = (inners[0].rotation - outers->rotation) & 3;
+         center_arity = 1;
+      }
+      else if (inners[0].kind == s1x2 && inners[0].rotation == 1 && outer_elongation == 0) {
+         setup temp = *outers;
+
+         (void) copy_person(outers, 0, &inners[0], 0);
+         (void) copy_person(outers, 1, &inners[1], 0);
+         (void) copy_person(outers, 2, &inners[1], 1);
+         (void) copy_person(outers, 3, &inners[0], 1);
          outers->rotation = 0;
          outers->kind = s2x2;
          inners[0] = temp;
@@ -882,7 +917,7 @@ Private void concentrify(
             break;
       }
    }
-   else if (analyzer == schema_in_out_triple || analyzer == schema_in_out_quad || analyzer == schema_conc_o) {
+   else if (analyzer == schema_in_out_triple || analyzer == schema_in_out_triple_squash || analyzer == schema_in_out_quad || analyzer == schema_conc_o) {
       *outer_elongation = (lmap_ptr->mapelong) & 1;  /* The map defines it completely. */
    }
    else if (analyzer == schema_concentric_6_2_tgl) {
@@ -1733,11 +1768,8 @@ extern void concentric_move(
       When we are done, our final judgement will be put back into the variable
       "final_elongation". */
 
-   if (analyzer == schema_in_out_triple_squash)
-      /* This is ALWAYS vertically oriented.  In any case, we can't do any of the other calculations,
-         because the centers and ends have been reversed. */
-      final_elongation = 1;
-   else if (   analyzer == schema_in_out_triple ||
+   if (        analyzer == schema_in_out_triple ||
+               analyzer == schema_in_out_triple_squash ||
                analyzer == schema_in_out_quad ||
                analyzer == schema_conc_o ||
                analyzer == schema_conc_bar12 ||

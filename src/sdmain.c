@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.87"
-#define TIME_STAMP "wba@apollo.hp.com  03 Jun 97 $"
+#define VERSION_STRING "31.88"
+#define TIME_STAMP "wba@apollo.hp.com  29 Jun 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -1547,6 +1547,8 @@ void main(int argc, char *argv[])
       writestuff("Copyright (c) 1991-1997 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
+      newline();
+      writestuff("Copyright (c) 1990-1993 Alan Snyder");
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();

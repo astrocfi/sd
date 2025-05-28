@@ -21,10 +21,19 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.87
-         Database version = 31.87 format = 94
+          RELEASE NOTES FOR SD VERSION 31.88
+         Database version = 31.88 format = 94
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.88 ******
+
+The changes described below (for version 31.87) for
+@samp{percolate (centers and ends)}
+and @samp{cover up (centers and ends)} were added for
+@samp{perk up (centers and ends)} as well.
+
+An error in @samp{sidetrack} from a 1x8 column was fixed.
 
 ****** Changes as of version 31.87 ******
 

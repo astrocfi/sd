@@ -292,7 +292,7 @@ Cstring warning_strings[] = {
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn__tasteless_com_spot  */   "*Common-spot people have left hands -- this may be controversial.",
-   /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave is very controversial."};
+   /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial."};
 
 
 

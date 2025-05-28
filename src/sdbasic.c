@@ -237,6 +237,7 @@ static collision_map collision_map_table[] = {
    {6, 0x000088, 0x0DD, 0x044, {3, 4, 6, 7, 0, 2}, {3, 4, 6, 7, 0, 1},    {3, 4, 5, 7, 0, 2},     s3x1dmd,     s3x1dmd,     0, warn__none},   /* Same. */
    {6, 0x088088, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 2, 4, 5, 7},    {0, 1, 3, 4, 5, 6},     s_crosswave, s_crosswave, 0, warn__none},
    {6, 0x0000CC, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s_crosswave, 0, warn__none},
+   {6, 0x0000CC, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 5, 6, 7},    {1, 2, 3, 4, 6, 7},     s_crosswave, s_crosswave, 0, warn__none},
    {6, 0x000000,  077, 011,  {0, 1, 2, 3, 4, 5},   {0, 3, 2, 5, 7, 6},    {1, 3, 2, 4, 7, 6},     s1x6,        s1x8,        0, warn__none},
    {6, 0x000000,  077, 022,  {0, 1, 2, 3, 4, 5},   {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},     s1x6,        s1x8,        0, warn__none},
    {6, 0x000000,  077, 044,  {0, 1, 2, 3, 4, 5},   {0, 1, 3, 4, 5, 6},    {0, 1, 2, 4, 5, 7},     s1x6,        s1x8,        0, warn__none},
@@ -409,6 +410,8 @@ static veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static veryshort btlqtg[12] = {5, 0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1};
 static veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
+static veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
+static veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
 static veryshort galtranslateh[16] = {-1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6, -1, -1, -1,  1};
 static veryshort galtranslatev[16] = {-1, -1, -1,  1, -1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6};
 #ifdef BREAKS_CAST_BACK
@@ -655,31 +658,32 @@ extern long_boolean check_restriction(
       switch (ss->kind) {
          case s2x4:
             switch (restr.assumption) {
+               /* These ignore any people in line-like orientation. */
                case cr_quarterbox_or_col:
                   k = 0;         /* check for a reasonable "quick step" or "triple cross" setup */
                   i = 2;
-                  if (ss->people[0].id1) { k |=  ss->people[0].id1;                          }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) {                          i &=  ss->people[3].id1; }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1;                          }
-                  if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1) {                          i &= ~ss->people[7].id1; }
+                  if (ss->people[0].id1 & 1) { k |=  ss->people[0].id1;                          }
+                  if (ss->people[1].id1 & 1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+                  if (ss->people[2].id1 & 1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+                  if (ss->people[3].id1 & 1) {                          i &=  ss->people[3].id1; }
+                  if (ss->people[4].id1 & 1) { k |= ~ss->people[4].id1;                          }
+                  if (ss->people[5].id1 & 1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+                  if (ss->people[6].id1 & 1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
+                  if (ss->people[7].id1 & 1) {                          i &= ~ss->people[7].id1; }
                   if (k & ~i & 2)
                      goto restr_failed;
                   break;
                case cr_quarterbox_or_magic_col:
                   k = 0;         /* check for a reasonable "magic quick step" or "make magic" setup */
                   i = 2;
-                  if (ss->people[0].id1) {                          i &= ~ss->people[0].id1; }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) { k |= ~ss->people[3].id1;                          }
-                  if (ss->people[4].id1) {                          i &=  ss->people[4].id1; }
-                  if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1) { k |=  ss->people[7].id1;                          }
+                  if (ss->people[0].id1 & 1) {                          i &= ~ss->people[0].id1; }
+                  if (ss->people[1].id1 & 1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
+                  if (ss->people[2].id1 & 1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+                  if (ss->people[3].id1 & 1) { k |= ~ss->people[3].id1;                          }
+                  if (ss->people[4].id1 & 1) {                          i &=  ss->people[4].id1; }
+                  if (ss->people[5].id1 & 1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+                  if (ss->people[6].id1 & 1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
+                  if (ss->people[7].id1 & 1) { k |=  ss->people[7].id1;                          }
                   if (k & ~i & 2)
                      goto restr_failed;
                   break;
@@ -1064,12 +1068,12 @@ Private void special_3person(
       newpersonlist[real_index].id2 = 0;
       newplacelist[real_index] = -1;
       if (this_person.id1) {
-         int northified_index, d2, k;
+         int northified_index, k;
          uint32 z;
          int real_direction = this_person.id1 & 3;
 
          if (scopy->kind == s_trngl) {
-            d2 = ((this_person.id1 >> 1) & 1) * 3;
+            int d2 = ((real_direction >> 1) & 1) * 3;
             northified_index = (real_index + d2);
          }
          else {
@@ -1079,19 +1083,13 @@ Private void special_3person(
          z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
          k = (z >> 4) & 0x1F;
 
-         if (scopy->kind == s_trngl) {
-            k -= d2;
-            if (k<0) k+=6;
-         }
-         else {
-            if (real_direction & 2) {
-               if (result->kind == s_trngl) {
-                  k-=3;
-                  if (k<0) k+=6;
-               }
-               else
-                  k = numout-1-k;
+         if (real_direction & 2) {
+            if (result->kind == s_trngl) {
+               k-=3;
+               if (k<0) k+=6;
             }
+            else
+               k = numout-1-k;
          }
 
          newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
@@ -1689,8 +1687,10 @@ Private int divide_the_setup(
                   assoc(b_4x2, ss, calldeflist) ||
                   assoc(b_2x3, ss, calldeflist) ||
                   assoc(b_3x2, ss, calldeflist) ||
+/*   Taking these lines out -- they prevent pass the ocean from working in offset facing lines.
                   assoc(b_dmd, ss, calldeflist) ||
                   assoc(b_pmd, ss, calldeflist) ||
+*/
                   assoc(b_qtag, ss, calldeflist) ||
                   assoc(b_pqtag, ss, calldeflist);
 
@@ -3261,15 +3261,14 @@ foobar:
          special_3person(coldefinition, linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
       else {
-         int numout;
-         int halfnumout;
+         int halfnumoutl, halfnumoutc, numoutl, numoutc;
          veryshort *final_translatec = identity;
          veryshort *final_translatel = identity;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
 
-         numout = setup_attrs[result->kind].setup_limits+1;
-         halfnumout = numout >> 1;
+         numoutl = setup_attrs[result->kind].setup_limits+1;
+         numoutc = setup_attrs[result->kind].setup_limits+1;
 
          /* Check for a 1x4 call around the outside that sends people far away without permission. */
          if (     ss->kind == s1x4 &&
@@ -3332,8 +3331,17 @@ foobar:
             else {
                if (result->kind == s4x4 && (setup_kind) linedefinition->end_setup == s2x4) {
                   final_translatel = &ftc4x4[0];
+                  numoutl = setup_attrs[(setup_kind) linedefinition->end_setup].setup_limits+1;
+               }
+               if (result->kind == s4x4 && (setup_kind) linedefinition->end_setup == s_qtag) {
+                  numoutl = setup_attrs[(setup_kind) linedefinition->end_setup].setup_limits+1;
+                  result->kind = sbigh;
+                  tempkind = sbigh;
+                  final_translatec = ft4x4bh;
+                  final_translatel = ftqtgbh;
                }
                else if (result->kind == s_c1phan && (setup_kind) linedefinition->end_setup == s2x4) {
+                  numoutl = setup_attrs[(setup_kind) linedefinition->end_setup].setup_limits+1;
                   final_translatel = &ftcphan[0];
                }
                else if (result->kind == s2x4 && (setup_kind) linedefinition->end_setup == s_bone) {
@@ -3365,6 +3373,9 @@ foobar:
                fail("This call is an inconsistent shape-changer.");
          }
 
+         halfnumoutl = numoutl >> 1;
+         halfnumoutc = numoutc >> 1;
+
          for (real_index=0; real_index<num; real_index++) {
             veryshort *final_translate;
             int kt;
@@ -3374,18 +3385,21 @@ foobar:
             newpersonlist[real_index].id1 = 0;
             newpersonlist[real_index].id2 = 0;
             if (this_person.id1) {
-               int final_direction;
+               int final_direction, d2out, thisnumout;
                int real_direction = this_person.id1 & 3;
                int d2 = ((this_person.id1 >> 1) & 1) * halfnum;
-               int d2out = ((this_person.id1 >> 1) & 1) * halfnumout;
                northified_index = (real_index + d2) % num;
 
                if (real_direction & 1) {
+                  d2out = ((this_person.id1 >> 1) & 1) * halfnumoutc;
+                  thisnumout = numoutc;
                   final_translate = final_translatec;
                   final_direction = rotfudge_col;
                   the_definition = coldefinition;
                }
                else {
+                  d2out = ((this_person.id1 >> 1) & 1) * halfnumoutl;
+                  thisnumout = numoutl;
                   final_translate = final_translatel;
                   final_direction = rotfudge_line;
                   the_definition = linedefinition;
@@ -3394,7 +3408,7 @@ foobar:
                final_direction = (final_direction+real_direction) & 3;
 
                z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
-               k = (((z >> 4) & 0x1F) + d2out) % numout;
+               k = (((z >> 4) & 0x1F) + d2out) % thisnumout;
                newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
                      ((z + final_direction * 011) & 013) |
                      ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
