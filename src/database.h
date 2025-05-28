@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 317
+#define DATABASE_FORMAT_VERSION 318
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -622,6 +622,7 @@ enum setup_kind {
    swide4x4,  // but only have 16 people.  The reason is to prevent loss of phantoms.
    s_323,
    s_343,
+   s_3223,
    s_525,
    s_545,
    sh545,
@@ -804,6 +805,8 @@ enum begin_kind {
    b_p323,
    b_343,
    b_p343,
+   b_3223,
+   b_p3223,
    b_525,
    b_p525,
    b_545,

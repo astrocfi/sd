@@ -519,6 +519,9 @@ static collision_map collision_map_table[] = {
    {6, 0x000000, 0xBB, 0x11, {0, 1, 3, 4, 5, 7},   {6, 0, 1, 3, 4, 5},   {7, 0, 1, 2, 4, 5},
     s_galaxy,    s_rigger,    0, warn_bad_collision, 0x40000000},
 
+   {6, 0x000024, 0x3F, 0x09, {0, 1, 2, 3, 4, 5},   {0, 2, 3, 5, 6, 7},   {1, 2, 3, 4, 6, 7},
+    s_wingedstar6, s_wingedstar, 0, warn__none, 0x40000000},
+
    {-1}};
 
 
@@ -5942,11 +5945,11 @@ extern void basic_move(
       return;
    }
 
-   /* We demand that the final concepts that remain be only the following ones. */
+   // We demand that the final concepts that remain be only the following ones.
 
    if (ss->cmd.cmd_final_flags.test_finalbits(
          ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED |
-           FINAL__TRIANGLE | FINAL__LEADTRIANGLE)))
+           FINAL__TRIANGLE | FINAL__LEADTRIANGLE | FINAL__UNDER_RANDOM_META)))
       fail("This concept not allowed here.");
 
    /* Set up the result elongation that we will need if the result is

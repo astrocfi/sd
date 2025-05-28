@@ -1403,6 +1403,7 @@ struct checkitem {
 
 
 static const checkitem checktable[] = {
+   {0x00620046, 0x10808404, s_3223,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A60026, 0x08080104, s_nxtrglcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A60026, 0x0C008002, s_nxtrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00630095, 0x00840050, spgdmdcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -5895,8 +5896,7 @@ void really_inner_move(
    switch (the_schema) {
    case schema_nothing:
    case schema_nothing_noroll:
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
-          ss->cmd.cmd_final_flags.final)
+      if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF|FINAL__UNDER_RANDOM_META))))
          fail("Illegal concept for this call.");
       *result = *ss;
       result->suppress_all_rolls(the_schema == schema_nothing);
@@ -5908,7 +5908,7 @@ void really_inner_move(
       break;
    case schema_recenter:
       if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
-          ss->cmd.cmd_final_flags.final)
+          (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META)))
          fail("Illegal concept for this call.");
       *result = *ss;
       normalize_setup(result, normalize_recenter, false);
@@ -5969,7 +5969,7 @@ void really_inner_move(
          // Not sure what this is about.  How can these flags appear?
          ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX|INHERITFLAG_12_MATRIX);
 
-         if (ss->cmd.cmd_final_flags.final)
+         if (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META))
             fail("Illegal concept for this call.");
 
          uint32 flags = callspec->stuff.matrix.matrix_flags;
@@ -6024,7 +6024,8 @@ void really_inner_move(
 
       break;
    case schema_roll:
-      if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
+      if ((ss->cmd.cmd_final_flags.test_heritbits(~0)) |
+          (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META)))
          fail("Illegal concept for this call.");
       remove_z_distortion(ss);
       rollmove(ss, callspec, result);
@@ -6082,7 +6083,7 @@ void really_inner_move(
       if (ss->cmd.cmd_final_flags.test_finalbits(
           ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED |
             FINAL__SPLIT_DIXIE_APPROVED | FINAL__TRIANGLE |
-            FINAL__LEADTRIANGLE)))
+            FINAL__LEADTRIANGLE | FINAL__UNDER_RANDOM_META)))
          fail("This concept not allowed here.");
 
       // Now we figure out how to dispose of "heritable" concepts.
@@ -6580,9 +6581,8 @@ static void move_with_real_call(
                      defptr = &this_defn->stuff.conc.innerdef;
 
                   if (ss->cmd.cmd_final_flags.test_finalbits(
-                           ~(FINAL__SPLIT |
-                             FINAL__SPLIT_SQUARE_APPROVED |
-                             FINAL__SPLIT_DIXIE_APPROVED)))
+                           ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED |
+                             FINAL__SPLIT_DIXIE_APPROVED | FINAL__UNDER_RANDOM_META)))
                      fail("This concept not allowed here.");
 
                   switch (defptr->modifiers1 & DFM1_CALL_MOD_MASK) {

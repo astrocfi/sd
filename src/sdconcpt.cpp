@@ -2953,56 +2953,67 @@ static void do_concept_old_stretch(
 
    move(ss, false, result);
 
-   // We don't check if this was 3x1 -- too complicated for now.
+   // If the fraction info indicates that the call is being broken up and we are being
+   // asked to do a specific part, it's a good bet that it is not the last part.
+   // Why?  Because the mechanism generally uses CMD_FRAC_CODE_FROMTOREV or
+   // CMD_FRAC_CODE_FROMTOREVREV to get the last part.  It's not an iron-clad bet,
+   // but it's reasonable.  If this is so, don't do the stretch.
 
-   uint32 field_to_check = (result->rotation & 1);
+   if (!ss->cmd.cmd_fraction.is_null_with_masked_flags(CMD_FRAC_BREAKING_UP|CMD_FRAC_CODE_MASK,
+                                                       CMD_FRAC_BREAKING_UP|CMD_FRAC_CODE_ONLY) ||
+       parseptr->more_finalherit_flags.test_finalbit(FINAL__UNDER_RANDOM_META) != 0) {
 
-   if (!mxnstuff && result->result_flags.split_info[field_to_check] == 0)
-      fail("Stretch call was not a 4 person call divided along stretching axis.");
+      // We don't check if this was 3x1 -- too complicated for now.
 
-   if (mxnstuff && (result->kind == s1x8)) {
-      /* This is a bit sleazy. */
+      uint32 field_to_check = (result->rotation & 1);
 
-      if (((result->people[0].id1 ^ result->people[1].id1) & 2) ||
-               (result->result_flags.misc & RESULTFLAG__VERY_ENDS_ODD)) {
-         result->swap_people(1, 6);
-         result->swap_people(2, 5);
-         result->swap_people(3, 7);
-      }
-      else if (((result->people[2].id1 ^ result->people[3].id1) & 2) ||
-               (result->result_flags.misc & RESULTFLAG__VERY_CTRS_ODD)) {
-         result->swap_people(2, 6);
+      if (!mxnstuff && result->result_flags.split_info[field_to_check] == 0)
+         fail("Stretch call was not a 4 person call divided along stretching axis.");
+
+      if (mxnstuff && (result->kind == s1x8)) {
+         /* This is a bit sleazy. */
+
+         if (((result->people[0].id1 ^ result->people[1].id1) & 2) ||
+             (result->result_flags.misc & RESULTFLAG__VERY_ENDS_ODD)) {
+            result->swap_people(1, 6);
+            result->swap_people(2, 5);
+            result->swap_people(3, 7);
+         }
+         else if (((result->people[2].id1 ^ result->people[3].id1) & 2) ||
+                  (result->result_flags.misc & RESULTFLAG__VERY_CTRS_ODD)) {
+            result->swap_people(2, 6);
+         }
+         else {
+            fail("Sorry, can't figure this out.");
+         }
       }
       else {
-         fail("Sorry, can't figure this out.");
-      }
-   }
-   else {
-      if (mxnstuff)
-         fail("1x3 or 3x1 Stretch call not permitted here.");
+         if (mxnstuff)
+            fail("1x3 or 3x1 Stretch call not permitted here.");
 
-      if (result->kind == s2x4) {
-         result->swap_people(1, 2);
-         result->swap_people(5, 6);
+         if (result->kind == s2x4) {
+            result->swap_people(1, 2);
+            result->swap_people(5, 6);
+         }
+         else if (result->kind == s1x8) {
+            result->swap_people(3, 6);
+            result->swap_people(2, 7);
+         }
+         else if (result->kind == s_qtag) {
+            result->swap_people(3, 7);
+         }
+         else if (result->kind == s_ptpd) {
+            result->swap_people(2, 6);
+         }
+         else if (result->kind == s1x4) {
+            result->swap_people(1, 3);
+         }
+         else if (result->kind == s3x4 && little_endian_live_mask(result) == 07171) {
+            result->swap_people(5, 11);
+         }
+         else
+            fail("Stretch call didn't go to a legal setup.");
       }
-      else if (result->kind == s1x8) {
-         result->swap_people(3, 6);
-         result->swap_people(2, 7);
-      }
-      else if (result->kind == s_qtag) {
-         result->swap_people(3, 7);
-      }
-      else if (result->kind == s_ptpd) {
-         result->swap_people(2, 6);
-      }
-      else if (result->kind == s1x4) {
-         result->swap_people(1, 3);
-      }
-      else if (result->kind == s3x4 && little_endian_live_mask(result) == 07171) {
-         result->swap_people(5, 11);
-      }
-      else
-         fail("Stretch call didn't go to a legal setup.");
    }
 
    result->clear_all_overcasts();
@@ -6753,6 +6764,8 @@ static void do_concept_meta(
       }
    }
 
+   yescmd.parseptr->more_finalherit_flags.set_finalbit(FINAL__UNDER_RANDOM_META);
+
    switch (key) {
       fraction_command frac_stuff;
       uint32 index;
@@ -7102,6 +7115,7 @@ static void do_concept_meta(
          goto final_fixup;
       }
    case meta_key_nth_part_work:
+
       if (corefracs.is_null_with_exact_flags(
          FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) | CMD_FRAC_BREAKING_UP)) {
          // We are being asked to do just the selected part, because of another

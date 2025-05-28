@@ -1182,14 +1182,19 @@ int WINAPI WinMain(
    // Initialize all the callbacks that sdlib will need.
    iofull ggg;
 
-   // Run the Sd program.  The system-supplied variables "_argc"
-   // and "_argv" provide the predigested-as-in-traditional-C-programs
+   // Run the Sd program.  The system-supplied variables "__argc"
+   // and "__argv" provide the predigested-as-in-traditional-C-programs
    // command-line arguments.
    //
    // January, 2014:  An upgrade to MinGW changed the names of these.
-   // They had previously had two initial underscores.
+   // They had previously had two initial underscores.  The double-underscore
+   // symbols exist, but they don't give what we want.
 
+#if defined(__GNUC__)
    return sdmain(_argc, _argv, ggg);
+#else
+   return sdmain(__argc, __argv, ggg);
+#endif
 }
 
 

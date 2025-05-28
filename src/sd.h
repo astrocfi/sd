@@ -260,7 +260,8 @@ enum finalflags {
    FINAL__SPLIT_DIXIE_APPROVED       = CFLAGHSPARE_3,
    FINAL__MUST_BE_TAG                = CFLAGHSPARE_4,
    FINAL__TRIANGLE                   = CFLAGHSPARE_5,
-   FINAL__LEADTRIANGLE               = CFLAGHSPARE_6
+   FINAL__LEADTRIANGLE               = CFLAGHSPARE_6,
+   FINAL__UNDER_RANDOM_META          = CFLAGHSPARE_7  // This is a "yes" block under init/final/random/piecewise.
 };
 
 
@@ -2382,17 +2383,17 @@ enum {
    CMD_MISC3__DOING_YOUR_PART      = 0x00000040U,    // Some kind of "DYP" has happened, setups may be bizarre.
    CMD_MISC3__NEED_DIAMOND         = 0x00000080U,
    CMD_MISC3__DOING_ENDS           = 0x00000100U,    // This call is directed only to the ends of the original setup.
-                                                      // If the call turns out to be an 8-person call with distinct
-                                                      // centers and ends parts, we may want to just apply the ends part.
-                                                      // This is what makes "ends detour" work.
+                                                     // If the call turns out to be an 8-person call with distinct
+                                                     // centers and ends parts, we may want to just apply the ends part.
+                                                     // This is what makes "ends detour" work.
    CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200U,
    CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400U,    // Treat "<anything> motivate" as plain motivate.
    CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800U,
    CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000U,
    CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000U,
    CMD_MISC3__STOP_OVERCAST_CHECK  = 0x00004000U,    // Off at start of utterance, gets turned on after first part.
-                                                      // This is how we enforce the "no overcast warnings for actions
-                                                      // internal to a compound call" rule.
+                                                     // This is how we enforce the "no overcast warnings for actions
+                                                     // internal to a compound call" rule.
    CMD_MISC3__ROLL_TRANSP          = 0x00008000U,
    CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000U,
    CMD_MISC3__SUPERCALL            = 0x00020000U,
