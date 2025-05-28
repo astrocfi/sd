@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.58"
-#define TIME_STAMP "wba@alum.mit.edu 4 Jan 2014 $"
+#define VERSION_STRING "38.59"
+#define TIME_STAMP "wba@alum.mit.edu 31 Jan 2014 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -998,6 +998,8 @@ ui_option_type::ui_option_type() :
 
 extern int sdmain(int argc, char *argv[], iobase & ggg)
 {
+   bool just_get_out_of_here = false;
+
    if (argc >= 2 && strcmp(argv[1], "-help") == 0) {
       printf("Sd version %s : ui%s\n",
              sd_version_string(), ggg.version_string());
@@ -1042,7 +1044,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
       printf("-sequence_num <n>           use this initial sequence number\n");
 
       ggg.display_help(); // Get any others that the UI wants to tell us about.
-      general_final_exit(0);
+      just_get_out_of_here = true;
    }
 
    enable_file_writing = false;
@@ -1083,6 +1085,8 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    matcher_class global_matcher;
    ui_utils thingy(&global_matcher, ggg);
    gg77 = &thingy;
+
+   if (just_get_out_of_here) general_final_exit(0);  // general_final_exit requires gg77, even if just doing "-help".
 
    // In addition to the "ui_utils" object having a reference ("iob88") to the user interface,
    // the user interface needs a pointer back to the "ui_utils" object.  This is set with "set_utils_ptr".

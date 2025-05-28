@@ -2997,13 +2997,11 @@ extern void concentric_move(
 
    // The original info about the people who STARTED on the inside.
    setup_kind orig_inners_start_kind;
-   int orig_inners_start_rot;
    uint32 orig_inners_start_dirs;
    uint32 orig_inners_start_directions[32];
 
    // The original info about the people who STARTED on the outside.
    setup_kind orig_outers_start_kind;
-   int orig_outers_start_rot;
    uint32 orig_outers_start_dirs;
    uint32 orig_outers_start_directions[32];
 
@@ -3036,6 +3034,54 @@ extern void concentric_move(
    // But, if we thought we weren't sure enough of where people were to allow stepping
    // to a wave, we are once again sure.
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__NO_STEP_TO_WAVE;
+
+   // If there is a restrained concept that will presumably be lifted during the execution
+   // of the centers' and ends' part of the call, and that concept refers to a selector
+   // that refers to the setup, take special action.  The selector refers to the setup
+   // *now*, not the setups that will result from the splitting.
+   //
+   // The cases of this are things like "finally snag the ends, bits and pieces".
+   //
+   // Some calls are hierarchically defined as sequential-over-concentric, and some are
+   // the other way around.  There are good (messy, but good) reasons why this has to be so.
+   // Bits and pieces is concentric-over-sequential.  If invoked with something like
+   // "finally snag <someone>", it will come here first with no restraint or other special
+   // stuff, and we will do the first part.  We will be called again with fraction info
+   // saying to do the last part, lifting a restraint.  But, since this is concentric-over-sequential
+   // we will divide into centers and ends first, and then go to do_sequential_call separately
+   // for the centers and ends.  If the selector was "girls", there will be no problem.  But if
+   // it was "ends", we need to evaluate that right now, because the user wanted it to refer
+   // to the whole setup.
+
+   if (ss->cmd.restrained_concept && (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS)) {
+      // We have a restrained concept for which the restraint has not been lifted.
+      selector_kind sel = ss->cmd.restrained_concept->options.who;
+      if (sel != selector_uninitialized) {
+         if ((ss->cmd.restrained_selector_decoder[0] | ss->cmd.restrained_selector_decoder[1]) != 0)
+            fail("Concept nesting is too complicated.");    // Really shouldn't happen.
+
+         selector_kind little_saved_selector = current_options.who;
+         current_options.who = sel;
+
+         int nump = 0;
+         for (i=0; i<=attr::slimit(ss); i++) {
+            if (ss->people[i].id1) {
+               if (nump == 8) fail("?????too many people????");
+
+               bool fubb = selectp(ss, i);
+               ss->cmd.restrained_selector_decoder[0] <<= 8;
+               ss->cmd.restrained_selector_decoder[0] |= ss->cmd.restrained_selector_decoder[1] >> 24;
+               ss->cmd.restrained_selector_decoder[1] <<= 8;
+               // Set each byte to 4 bits of full person id (that's 6 bits), 0 bit, selection bit.
+               ss->cmd.restrained_selector_decoder[1] |= ((ss->people[i].id1 & (BIT_PERSON|XPID_MASK)) >> 4) |
+                  (fubb ? 1 : 0);
+               nump++;
+            }
+         }
+
+         current_options.who = little_saved_selector;
+      }
+   }
 
    if (ss->kind == s_qtag &&
        analyzer != schema_concentric_6_2 &&
@@ -3119,7 +3165,6 @@ extern void concentric_move(
       }
    }
    orig_outers_start_kind = begin_outer.kind;
-   orig_outers_start_rot = begin_outer.rotation;
 
    // Get initial info for the original centers.
    orig_inners_start_dirs = 0;
@@ -3134,7 +3179,6 @@ extern void concentric_move(
       }
    }
    orig_inners_start_kind = begin_inner[0].kind;
-   orig_inners_start_rot = begin_inner[0].rotation;
 
    bool suppress_overcasts = crossing != 0 || (schema_attrs[analyzer].attrs & SCA_NO_OVERCAST) != 0;
 
@@ -5361,7 +5405,6 @@ extern void inner_selective_move(
    uint32 modsb1,
    setup *result) THROW_DECL
 {
-   selector_kind saved_selector;
    int i, k;
    int setupcount;
    bool crossconc;
@@ -5438,8 +5481,12 @@ extern void inner_selective_move(
       }
    }
 
-   saved_selector = current_options.who;
+   selector_kind saved_selector = current_options.who;
    current_options.who = selector_to_use;
+
+   // Nonzero means we are not using the given selector, but are overriding it
+   // with specific "decoder" information.
+   uint32_t not_using_given_selector = ss->cmd.restrained_selector_decoder[0] | ss->cmd.restrained_selector_decoder[1];
 
    the_setups[0] = *ss;              // designees
    the_setups[1] = *ss;              // non-designees
@@ -5452,13 +5499,38 @@ extern void inner_selective_move(
       if (ss->people[i].id1) {
          int q = 0;
 
-         // We allow the designators "centers" and "ends" while in a 1x8, which
+         // Handle the "finally snag the <anyone>" restrained concept when the call is
+         // defined as concentric-over-sequential.  When we get to this point, the concentric
+         // decomposition has already occurred, so we are not in the same setup as when the
+         // selector was actually evaluated.  The result of that evaluation has been stored
+         // in the restrained_selector_decoder words, and we have to look each person up in
+         // those words to find out whether they were actually selected.
+         //
+         // Also, we allow the designators "centers" and "ends" while in a 1x8, which
          // would otherwise not be allowed.  The reason we don't allow it in
          // general is that people would carelessly say "centers kickoff" in a
          // 1x8 when they should really say "each 1x4, centers kickoff".  But we
          // assume that they will not misuse the term here.
 
-         if (ss->kind == s1x8 && current_options.who == selector_centers) {
+         uint32_t t0 = ss->cmd.restrained_selector_decoder[0];
+         uint32_t t1 = ss->cmd.restrained_selector_decoder[1];
+
+         if ((t0 | t1) != 0) {
+            while (true) {
+               if ((t0 | t1) == 0)
+                  fail("INTERNAL ERROR: LOST SOMEONE!!!!!");
+
+               if (((ss->people[i].id1 ^ (t1 << 4)) & (XPID_MASK|BIT_PERSON)) == 0) {
+                  q = t1 & 1;   // Found it.
+                  break;
+               }
+
+               t1 >>= 8;
+               t1 |= t0 << 24;
+               t0 >>= 8;
+            }
+         }
+         else if (ss->kind == s1x8 && current_options.who == selector_centers) {
             if (i&2) q = 1;
          }
          else if (ss->kind == s1x8 && current_options.who == selector_ends) {
@@ -5488,6 +5560,10 @@ extern void inner_selective_move(
    }
 
    current_options.who = saved_selector;
+
+   // If we are doing the special stuff instead of an actual selector,
+   // turn off the given selector to prevent the code below from being led astray.
+   if (not_using_given_selector != 0) selector_to_use = selector_uninitialized;
 
    if (demand_both_setups_live && (livemask[0] == 0 || livemask[1] == 0))
       fail("Can't do this call in this formation.");
@@ -6242,16 +6318,19 @@ extern void inner_selective_move(
 
       if (indicator == selective_key_plain &&
           ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
+           (kk == s1x6 && (thislivemask == 033)) ||
+           (kk == s_spindle12 && ((thislivemask & 0xE7) == 0)) ||
            (kk == s2x6 && (thislivemask == 00303 || thislivemask == 06060)))) {
          const call_with_name *callspec = this_one->cmd.callspec;
+
          if (!callspec &&
              this_one->cmd.parseptr &&
              this_one->cmd.parseptr->concept &&
              this_one->cmd.parseptr->concept->kind <= marker_end_of_list)
             callspec = this_one->cmd.parseptr->call;
-         if (callspec && (callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL)) {
+
+         if (callspec && (callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL))
             indicator = selective_key_dyp;
-         }
       }
 
       if (indicator == selective_key_snag_anyone) {

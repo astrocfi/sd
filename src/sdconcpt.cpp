@@ -124,8 +124,8 @@ static void do_concept_tandem(
    // "100" bit:  this takes a selector
    // "200" bit:  this takes an implicit selector of "some"
    // "F0" field: (fractional) twosome info --
-   //    0=solid
-   //    1=twosome
+   //    0=solid all the way
+   //    1=twosome all the way
    //    2=solid-frac-twosome
    //    3=twosome-frac-solid
    //    "8" bit: any twosome is actually "dynamic"
@@ -134,7 +134,8 @@ static void do_concept_tandem(
    //    0=normal
    //    2=plain-gruesome
    //    3=gruesome-with-wave-assumption
-   //    4=this is a "melded (phantom)" thing.
+   //    4 bit=this is a "melded (phantom)" thing.
+   //    8 bit=this is a plain "melded" thing.
 
    if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED))
       fail("Improper concept order.");

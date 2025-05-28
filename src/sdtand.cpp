@@ -1239,6 +1239,7 @@ extern void tandem_couples_move(
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
                           // "4" bit on --> this is a "melded (phantom)" thing
+                          // "8" bit on --> this is a plain "melded" thing
    tandem_key key,
    uint32 mxn_bits,
    bool phantom_pairing_ok,
@@ -1275,8 +1276,8 @@ extern void tandem_couples_move(
    remove_z_distortion(ss);
 
    bool no_unit_symmetry = false;
-   bool melded = (key == tandem_key_overlap_siam) || (phantom & 4);
-   phantom &= 3;    // Get rid of that bit.
+   bool melded = (key == tandem_key_overlap_siam) || (phantom & 0xC);
+   phantom &= 3;    // Get rid of those bits.
 
    if (mxn_bits != 0) {
       tandem_key transformed_key = key;
@@ -2002,7 +2003,7 @@ extern void tandem_couples_move(
       impose_assumption_and_move(&tandstuff.m_virtual_setup[0], &ttt[0]);
    }
 
-   // This loop runs only once, unless overlapped siamese, in which case it runs eight times.
+   // This loop runs only once, unless melded, in which case it runs eight times.
    for (finalcount = 0 ; finalcount <= tttcount ; finalcount++) {
       tandstuff.virtual_result = ttt[finalcount];
 
@@ -2199,64 +2200,116 @@ extern void tandem_couples_move(
             result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
       }
 
-      // In the usual case (not overlapped siamese) we just exit from the whole thing after one iteration.
+      // In the usual case (not melded) we just exit from the whole thing after one iteration.
       if (!melded)
          break;
 
-      // If overlapped siamese, we do everything eight times
+      // If melded, we do everything eight times
       ttt[finalcount] = *result;   // Save the result of this run
       if (result->eighth_rotation != 0) fail("Can't do this.");  // Would be way too hairy.
    }
 
    if (melded) {
-      int horizontal_setup_indices = -1;
-      int vertical_setup_indices = -1;
+      // We can't just merge all 8 of the setups in a haphazard fashion.  We have to merge 2x4's,
+      // of both orientation, with each other, and simplarly merge general 1x8's with each other.
+      int horizontal_2x4_indices = -1;
+      int vertical_2x4_indices = -1;
+      int horizontal_1x8_indices = -1;
+      int vertical_1x8_indices = -1;
 
-      // Grab 2x4's, in both orientations, in a first scan.
+      // Grab the various groups, in both orientations.
+      // 1/4 tags with only the centers occupied, and riggers with only the wings occupied, count
+      // as honorary 1x8's, as do 1x6's, 1x4's and 1x2's.  They will all merge just fine, even when
+      // done in a haphazard fashion.
       for (i=0 ; i<=tttcount ; i++) {
+         uint32 the_mask = little_endian_live_mask(&ttt[i]);
+
          if (ttt[i].kind == s2x4) {
             if (ttt[i].rotation & 1) {
-               if (vertical_setup_indices < 0)
-                  vertical_setup_indices = i;
+               if (vertical_2x4_indices < 0)
+                  vertical_2x4_indices = i;
                else {
-                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[vertical_setup_indices]);
-                  ttt[i].kind = s2x4;   // Be sure we don't see it in the next scan.
+                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[vertical_2x4_indices]);
+                  ttt[i].kind = nothing;   // Be sure we don't see it in the next scan.
                }
             }
             else {
-               if (horizontal_setup_indices < 0)
-                  horizontal_setup_indices = i;
+               if (horizontal_2x4_indices < 0)
+                  horizontal_2x4_indices = i;
                else {
-                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_setup_indices]);
-                  ttt[i].kind = s2x4;   // Be sure we don't see it in the next scan.
+                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_2x4_indices]);
+                  ttt[i].kind = nothing;
+               }
+            }
+         }
+         else if (ttt[i].kind == s1x8 || ttt[i].kind == s1x6 || ttt[i].kind == s1x4 ||
+                  (ttt[i].kind == s_qtag && (the_mask & 0x33) == 0) ||
+                  (ttt[i].kind == s_rigger && (the_mask & 0x33) == 0)) {
+            if (ttt[i].rotation & 1) {
+               if (vertical_1x8_indices < 0)
+                  vertical_1x8_indices = i;
+               else {
+                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[vertical_1x8_indices]);
+                  ttt[i].kind = nothing;
+               }
+            }
+            else {
+               if (horizontal_1x8_indices < 0)
+                  horizontal_1x8_indices = i;
+               else {
+                  merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_1x8_indices]);
+                  ttt[i].kind = nothing;
                }
             }
          }
       }
 
-      // If we have both, combine them.
-      if (horizontal_setup_indices >= 0 && vertical_setup_indices >= 0) {
-         merge_table::merge_setups(&ttt[vertical_setup_indices], merge_strict_matrix, &ttt[horizontal_setup_indices]);
-         ttt[vertical_setup_indices].kind = s2x4;   // Be sure we don't see it in the next scan.
+      // If we have both horizontal and vertical 2x4's, combine them now..
+      if (horizontal_2x4_indices >= 0 && vertical_2x4_indices >= 0) {
+         merge_table::merge_setups(&ttt[vertical_2x4_indices], merge_strict_matrix, &ttt[horizontal_2x4_indices]);
+         ttt[vertical_2x4_indices].kind = nothing;
       }
-      else if (vertical_setup_indices >= 0) {
-         horizontal_setup_indices = vertical_setup_indices;
+      else if (vertical_2x4_indices >= 0) {
+         horizontal_2x4_indices = vertical_2x4_indices;
       }
 
-      // Now horizontal_setup_indices has all 2x4's.  Everything else that was a 2x4 has been
-      // merged into horizontal_setup_indices, and its kind has been reset to 2x4.
+      // We now have all 2x4's, horizontal and vertical, in horizontal_2x4_indices.  So this might
+      // be a 4x4.  We also have 1x8's, or honorary 1x8's, in horizontal_1x8_indices and vertical_1x8_indices.
+      // And whatever is left over.
+      //
+      // Merge everything into horizontal_2x4_indices, and return that.
 
-      // Now grab non-2x4's, and save them in horizontal_setup_indices also.
-      for (i=0 ; i<=tttcount ; i++) {
-         if (i != horizontal_setup_indices && ttt[i].kind != s2x4) {
-            if (horizontal_setup_indices < 0)
-               horizontal_setup_indices = i;
-            else
-               merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_setup_indices]);
+      // First, the horizontal 1x8's.
+      if (horizontal_1x8_indices >= 0) {
+         if (horizontal_2x4_indices < 0)
+            horizontal_2x4_indices = horizontal_1x8_indices;
+         else {
+            merge_table::merge_setups(&ttt[horizontal_1x8_indices], merge_strict_matrix, &ttt[horizontal_2x4_indices]);
+            ttt[horizontal_1x8_indices].kind = nothing;
          }
       }
 
-      *result = ttt[horizontal_setup_indices];
+      // Next, the vertical 1x8's.
+      if (vertical_1x8_indices >= 0) {
+         if (horizontal_2x4_indices < 0)
+            horizontal_2x4_indices = vertical_1x8_indices;
+         else {
+            merge_table::merge_setups(&ttt[vertical_1x8_indices], merge_strict_matrix, &ttt[horizontal_2x4_indices]);
+            ttt[vertical_1x8_indices].kind = nothing;
+         }
+      }
+
+      // Finally, do the stragglers.
+      for (i=0 ; i<=tttcount ; i++) {
+         if (ttt[i].kind != nothing && i != horizontal_2x4_indices) {
+            if (horizontal_2x4_indices < 0)
+               horizontal_2x4_indices = i;
+            else
+               merge_table::merge_setups(&ttt[i], merge_strict_matrix, &ttt[horizontal_2x4_indices]);
+         }
+      }
+
+      *result = ttt[horizontal_2x4_indices];
    }
 
    result->clear_all_overcasts();

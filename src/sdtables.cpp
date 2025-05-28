@@ -878,6 +878,10 @@ expand::thing expand::init_table[] = {
     s2x2, s_rigger, 0, 0U, 0xCC, false,
     warn__none, warn__none, normalize_to_4, 0},
 
+   {{0, 1, 2, 5, 6, 7},
+    s2x3, s_spindle12, 0, 0U, 0x318, false,
+    warn__none, warn__none, simple_normalize, 0},
+
    {{6, 7, 2, 3},
     s1x4, s_bone, 0, 0U, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
@@ -1317,6 +1321,11 @@ expand::thing expand::init_table[] = {
     s_rigger, sbigrig, 0, 0U, 0303, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
+
+   {{0, 1, 2, 4, 5, 6, 7, 8, 10, 11},
+    s_spindle12, srigger12, 0, 0U, 01010, false,
+    warn__none, warn__none, plain_normalize, 0},
+
    {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4},
     sbigrig, sdblbone, 0, 0U, 0x2121, false,
     warn__none, warn__none, plain_normalize, 0},
@@ -3873,6 +3882,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x3,     s2x2,     0, 1, 2, 1,  0x0F7, schema_concentric},
    {s2x5,           schema_concentric, {1, 2, 3, 6, 7, 8,     0, 4, 5, 9},
              s2x3,     s2x2,     0, 0, 1, 1,  0x0FE, schema_concentric},
+
+   {s_spindle12,    schema_concentric, {0, 1, 2, 5, 6, 7,     8, 9, 3, 4},
+             s2x3,     s1x4,     0, 0, 1, 1,  0x0FE, schema_concentric},
+
    {s2x5,           schema_checkpoint, {-1, 2, 4, -1, 7, 9,     1, 3, 6, 8},
              s2x3,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
    {s2x5,           schema_checkpoint, {0, 2, -1, 5, 7, -1,     1, 3, 6, 8},
@@ -4527,6 +4540,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_qtag,        s2x3, 0,      022, 0x0D, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {5, -1, 0, 1, -1, 4},       {0}},
    {s1x4,          s2x3, 0xA,      0, 0x0C, 0x1, schema_concentric,     s2x3,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 2}},
    {s1x6,          s2x3, 0,        0, 0x0D, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 1, {15, 16, 17, 6, 7, 8}, {12, 17, 2, 3, 8, 11}},
+   {s1x6,          s2x3, 044,      0, 0x0E, 0x0, schema_matrix,         s_spindle12, nothing,  warn__none, 0, 0, {8, 9, -1, 3, 4, -1}, {0, 1, 2, 5, 6, 7}},
+   {s2x3,   s_spindle12, 0,     0xE7, 0x0D, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 0, {3, 8, 11, 12, 17, 2}, {-1, -1, -1, 6, 7, -1, -1, -1, 15, 16}},
    {s1x6,          s2x6, 044,  02222, 0x0E, 0x0, schema_matrix,         sdblbone6,   nothing,  warn__none, 0, 0, {5, 2, -1, 11, 8, -1}, {0, -1, 1, 9, -1, 10, 6, -1, 7, 3, -1, 4}},
    {s1x6,          s1x6, 0,      066, 0x2D, 0x0, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 3}},
    {s1x6,          s1x6, 066,      0, 0x2D, 0x1, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 3}},
@@ -5680,6 +5695,18 @@ static const coordrec thingspindle = {s_spindle, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1,  7,  0,  1,  2,  3, -1,
       -1, -1, -1,  6,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingspindle12 = {s_spindle12, 3,
+   { -4,   0,   4,  12,   8,   4,   0,  -4, -12,  -8},
+   {  2,   2,   2,   0,   0,  -2,  -2,  -2,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  8,  9,  0,  1,  2,  4,  3,
+      -1, -1, -1,  7,  6,  5, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -8468,6 +8495,18 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"a 6 6 6 6 6 o@b 6 6 6 6 6 n@76 f g h i j@7c 6 6 6 6 6 m@76 t s r q p@7d 6 6 6 6 6 l@e 6 6 6 6 6 k",
      "e d c b a@@56 t f@@56 s g@@56 r h@@56 q i@@56 p j@@k l m n o"}},
+
+   {9,                      // s_spindle12
+    &thingspindle12,
+    &thingspindle12,
+    {0, 0, 0, 0},
+    {b_spindle12, b_pspindle12},
+    {0, 0},
+    false, false,
+    (const id_bit_table *) 0,
+    {"6 6a b c@7i j6 6 6e d@76 6h g f",
+     "5i@5j@ha@gb@fc@5e@5d"}},
+
    {15,                     // s1p5x8
     (const coordrec *) 0,   // Code in anchor_someone_and_move requires that this
     (const coordrec *) 0,   // setup looks a lot like a 2x8.
@@ -10166,6 +10205,13 @@ select::fixer select::fixer_init_table[] = {
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_f2x5e, s1x2, s2x5,        1, 0, 3,          {0, 9, 2, 7, 4, 5},
     fx0,          fx_f4ptpd,    fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+
+   {fx_f2x5f, s1x2, s2x5,        1, 0, 2,          {0, 9, 4, 5},
+    fx0,          fx_sp12wing,  fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+
+   {fx_sp12wing, s1x2, s_spindle12, 0, 0, 2,       {8, 9, 4, 3},
+    fx0,          fx_f2x5f,     fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+
    {fx_f4ptpd, s1x2, s4ptpd,     0, 0, 3,          {13, 14, 15, 7, 6, 5},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_fd2x5d, s2x3, sd2x5,      1, 0, 1,          {9, 8, 7, 4, 3, 2},
@@ -11158,6 +11204,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s3x4,        03131,  fx_f3x4outer,  fx0, -1},
    {LOOKUP_NONE,                      s3dmd,       00707,  fx_f3dmouter,  fx0, -1},
    {LOOKUP_NONE,                      s3ptpd,      06060,  fx_f3ptpdin,   fx0, -1},
+   {LOOKUP_NONE,                      s_spindle12, 0x318,  fx_sp12wing,   fx0, -1},
    {LOOKUP_NONE,                      spgdmdcw,    0xCC,   fx_fpgdmdcw,   fx0, -1},
    {LOOKUP_NONE,                      spgdmdccw,   0xCC,   fx_fpgdmdccw,  fx0, -1},
    {LOOKUP_NONE,                      s_dhrglass,   0x77,  fx_fdhrgl,     fx0, -1},

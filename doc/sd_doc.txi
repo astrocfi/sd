@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.58
-@set Time-stamp: January 4, 2014
+@set sd-version 38.59
+@set Time-stamp: January 31, 2014
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -42,7 +42,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-@noindent Copyright @copyright{} 1992-2013 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2014 William B. Ackerman and Stephen Gildea
 
 @noindent Permission is granted to make and distribute verbatim copies of this manual.
 
@@ -4130,6 +4130,9 @@ These concepts are the same.  The setups are end-to-end.
 @item as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome
 @item tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome
 @item siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese twosome
+@item melded as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ melded couples twosome
+@item melded tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ melded tandem twosome
+@item melded siamese@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ melded siamese twosome
 @item couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples threesome
 @item tandems of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem threesome
 @item siamese of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ siamese threesome
@@ -4236,6 +4239,9 @@ difference---you can just type
 @example
    @kbd{phantom tandem swing thru @key{ENTER}}
 @end example
+
+When using a @i{melded} concept, it comes before the word @i{phantom};
+for all others the word @i{phantom} is first.
 
 The @i{phantom tandem} and @i{phantom as couples} concepts expand the
 people into a 4x4 matrix whenever possible.  When that is not possible,

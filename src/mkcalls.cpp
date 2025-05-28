@@ -331,6 +331,8 @@ const char *sstab[] = {
    "d4x3",
    "d4x5",
    "d5x4",
+   "spindle12",
+   "pspindle12",
    "2x8",
    "8x2",
    "4x4",
@@ -516,6 +518,7 @@ const char *estab[] = {
    "2x9",
    "d3x4",
    "d4x5",
+   "spindle12",
    "???",
    "???",
    "2x8",
@@ -1145,7 +1148,7 @@ const char *defmodtabh[] = {
 // Notice that it looks like flagtabh.
 const char *forcetabh[] = {
    "force_diamond",
-   "???",    // We don't allow "reverse" -- the bits move around during inheritance.
+   "force_reverse",  // Careful with "reverse" and "left" -- the bits move around during inheritance.
    "force_left",
    "force_funny",
    "force_intlk",

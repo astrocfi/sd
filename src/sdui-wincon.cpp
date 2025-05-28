@@ -313,9 +313,6 @@ void ttu_terminate()
       CONSOLE_SCREEN_BUFFER_INFO finalconsoleInfo;
 
       DWORD numWrite;
-      COORD coord;
-      coord.X = 0;
-      coord.Y = 0;
 
       // Find out what line we have advanced to.
       GetConsoleScreenBufferInfo(consoleStdout, &finalconsoleInfo);

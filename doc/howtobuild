@@ -171,7 +171,6 @@ In \wba\sd\regress:  save _vnnnn
 
    cd sddoc
    new_binary     (this depends on all documentation, binaries, and database)
-   del foo*       // be sure not to upload junk
    # REMEMBER TO KEEP THE SDDOC DIRECTORY CLEAR OF SUPERFLUOUS HTML AND TXT FILES!
    # All html and txt files get uploaded.
    do_pack        (this depends on all of the above, and the result of "savesource")
@@ -196,8 +195,8 @@ make -f makefile.linux32 all
 // This should have created sdtty, mkcalls, etc.
 make -f makefile.linux32 tarball
 // This should have created linux.tgz
-scp linux.tgz USERNAME@challengedance.org:public_html/sd
-
+scp linux.tgz USERNAME@www.challengedance.org:public_html/sd
+(pw=USERNAME)
 
 
 This assumes that a normal zip file (e.g. r_v348.zip) exists in the sd\regress directory.

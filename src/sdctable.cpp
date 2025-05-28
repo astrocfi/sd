@@ -128,6 +128,26 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"SIAMESE",                               concept_tandem,                  D, l_c1,
     UC_none, 0, 0,                    0x000, tandem_key_siam},
 
+   {"MELDED AS COUPLES",                     concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                    0x008, tandem_key_cpls},
+   {"MELDED TANDEM",                         concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                    0x008, tandem_key_tand},
+
+   {"MELDED COUPLES TWOSOME",                concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                    0x018, tandem_key_cpls},
+   {"MELDED TANDEM TWOSOME",                 concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                    0x018, tandem_key_tand},
+
+   {"MELDED COUPLES @9/@9 TWOSOME",          concept_frac_tandem,             D, l_c4,
+    UC_none, 0, 0,                    0x028, tandem_key_cpls},
+   {"MELDED TANDEM @9/@9 TWOSOME",           concept_frac_tandem,             D, l_c4,
+    UC_none, 0, 0,                    0x028, tandem_key_tand},
+
+   {"MELDED COUPLES TWOSOME @9/@9 SOLID", concept_frac_tandem,                D, l_c4,
+    UC_none, 0, 0,                    0x038, tandem_key_cpls},
+   {"MELDED TANDEM TWOSOME @9/@9 SOLID", concept_frac_tandem,                 D, l_c4,
+    UC_none, 0, 0,                    0x038, tandem_key_tand},
+
    {"MELDED PHANTOM AS COUPLES",             concept_tandem,                  D, l_c4,
     UC_none, 0, 0,                    0x004, tandem_key_cpls},
    {"MELDED PHANTOM TANDEM",                 concept_tandem,                  D, l_c4,

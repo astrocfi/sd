@@ -47,7 +47,7 @@ enum state_type {
 
 state_type state;
 
-char *file_list[] = {
+char const *file_list[] = {
    "sd.exe",
    "sdtty.exe",
    "mkcalls.exe",
@@ -73,18 +73,18 @@ char *file_list[] = {
    "appnote4.html",
    "faq.html",
    "COPYING.txt",
-   (char *) 0};
+   (char const *) 0};
 
-char *save_list[] = {
+char const *save_list[] = {
    "sd.exe",
    "sdtty.exe",
    "mkcalls.exe",
    "sdlib.dll",
    "sd_calls.txt",
    "sd_calls.dat",
-   (char *) 0};
+   (char const *) 0};
 
-char *shortcut_list[] = {
+char const *shortcut_list[] = {
    "SD.lnk",
    "SD plain.lnk",
    "SDTTY.lnk",
@@ -96,7 +96,7 @@ char *shortcut_list[] = {
    "Sd manual.lnk",
    "Release Notes.lnk",
    "Faq.lnk",
-   (char *) 0};
+   (char const *) 0};
 
 bool InstallDirExists;
 char szInstallDir[1000];
@@ -110,7 +110,7 @@ void do_install(HWND hwnd)
 
    // Copy the required files.
 
-   char **file_ptr;
+   char const **file_ptr;
    for (file_ptr = file_list ; *file_ptr ; file_ptr++) {
       lstrcpy(szStringBuf, szInstallDir);
       lstrcat(szStringBuf, "\\");
@@ -271,7 +271,7 @@ void create_and_install(HWND hwnd)
 
 void exists_check_and_install(HWND hwnd)
 {
-   char **file_ptr;
+   char const **file_ptr;
 
    for (file_ptr = save_list ; *file_ptr ; file_ptr++) {
       char szFilenameBuf[1000];
@@ -444,7 +444,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
             char szFromName[1000];
             char szToName[1000];
-            char **file_ptr;
+            char const **file_ptr;
 
             for (file_ptr = save_list ; *file_ptr ; file_ptr++) {
                lstrcpy(szFromName, "C:\\Sd\\");

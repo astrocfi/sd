@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.58"
+version "38.59"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -986,6 +986,10 @@ call "counter@O rotate@P" c1 tag ctr_rot
       array [CR0N    0 AL6S AL7S AL0S    0 CR6N CR7N]
    setup pspindle spindle rotate
       array [CR0N CR1N CR2N    0 AL0S AL1S AL2S    0]
+   setup spindle12 spindle12 rotate
+      array [CR0N    0 AL7S AL8S AL9S AL0S    0 CR7N CR8N CR9N]
+   setup pspindle12 spindle12 rotate
+      array [CR0N CR1N CR2N    0    0 AL0S AL1S AL2S    0    0]
    setup crosswave crosswave rotate
       array [CR0N CR1N    0    0 AL0S AL1S    0    0]
    setup pcrosswave crosswave rotate
@@ -7841,18 +7845,6 @@ call "wheel and deal" mainstream tag wheelanddeal
             alternate_definition [straight] c4
    setup 2x4 2x4 rotate restriction 2fl_only
       array [CR0E CR7E AL0E AL7E ZM1W AL2E CR5E ZM6W]
-/*
-            alternate_definition [1x2] c4
-   setup 1x6 2x3            // will use qualifier "3x3_2fl_only" to get other stuff???
-      preds "Can't do this call."
-         if miniwave_side_of_2n1_line [CR0S CR0S AL0S AL2S AL2S CR2S]
-         if couple_side_of_2n1_line   [CR1S AL1S AL0S AL1S CR1S CR2S]
-            alternate_definition [2x1] c4    // Same as 1x2.
-   setup 1x6 2x3            // will use qualifier "3x3_2fl_only" to get other stuff???
-      preds "Can't do this call."
-         if miniwave_side_of_2n1_line [CR0S CR0S AL0S AL2S AL2S CR2S]
-         if couple_side_of_2n1_line   [CR1S AL1S AL0S AL1S CR1S CR2S]
-*/
 
 call "two-faced wheel and deal" dontshow tag 2facedwheelanddeal
    setup 1x4 2x2 restriction forbidden couples_only
@@ -13413,7 +13405,7 @@ call "turn and flip" c4x
    in other calls is presumed to be "correct", so we don't complain
    if some concept or variation caused it not to be correct. */
 call "_courtesy turn 1/2" dontshow tag courtesy
-            left_means_mirror
+            reverse_means_mirror
    setup 1x2 1x2 restriction forbidden couples_only
       array [AL1S AL0S]
             alternate_definition [half] mainstream
@@ -13439,7 +13431,7 @@ call "_courtesy turn 1/2" dontshow tag courtesy
       array [AL0N AL1N]
 
 call "courtesy turn" mainstream
-            left_means_mirror
+            reverse_means_mirror
    /* While we normally assume that this call turns 180 degrees, the Callerlab
       definition says, "unless otherwise specified", to turn until you face
       the center of the set or the center of the group you are working in.
@@ -13486,9 +13478,9 @@ call "courtesy turn" mainstream
 
 call "courtesy turn and roll" dontshow tag courtesy_and_roll
             dont_use_in_nice_resolve
-            left_means_mirror yoyo_is_inherited single_is_inherited
+            reverse_means_mirror yoyo_is_inherited single_is_inherited
             twisted_is_inherited nxn_is_inherited
-   seq courtesy [inherit_left inherit_yoyo inherit_twisted inherit_single inherit_nxn]
+   seq courtesy [inherit_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
    seq roll []
 
 call "right and left thru" mainstream
@@ -13496,14 +13488,14 @@ call "right and left thru" mainstream
             twisted_is_inherited yoyo_is_inherited single_is_inherited
             nxn_is_inherited funny_is_inherited
    seq passthru [inherit_funny inherit_twisted]
-   seq courtesy [inherit_left inherit_yoyo inherit_twisted inherit_single inherit_nxn]
+   seq courtesy [inherit_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
 
 call "right and left roll" c4
             visible_fractions no_elongation_allowed left_means_mirror
             twisted_is_inherited yoyo_is_inherited single_is_inherited
             nxn_is_inherited funny_is_inherited
    seq passthru [inherit_funny inherit_twisted]
-   seq courtesy [inherit_left inherit_yoyo inherit_twisted inherit_single inherit_nxn]
+   seq courtesy [inherit_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
    seq roll []
 
 call "left and right thru" c4
@@ -13511,31 +13503,31 @@ call "left and right thru" c4
             twisted_is_inherited yoyo_is_inherited single_is_inherited
             nxn_is_inherited funny_is_inherited
    seq passthru [force_left inherit_funny inherit_twisted]
-   seq courtesy [force_left inherit_yoyo inherit_twisted inherit_single inherit_nxn]
+   seq courtesy [force_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
 
 call "left and right roll" c4
             visible_fractions no_elongation_allowed
             twisted_is_inherited yoyo_is_inherited single_is_inherited
             nxn_is_inherited funny_is_inherited
    seq passthru [force_left inherit_funny inherit_twisted]
-   seq courtesy [force_left inherit_yoyo inherit_twisted inherit_single inherit_nxn]
+   seq courtesy [force_reverse inherit_yoyo inherit_twisted inherit_single inherit_nxn]
    seq roll []
 
 call "right and left by" c4
             first_part_visible rear_back_from_r_wave
-            no_elongation_allowed left_means_mirror twisted_is_inherited
             single_is_inherited nxn_is_inherited mxn_is_inherited
+            no_elongation_allowed left_means_mirror twisted_is_inherited
    seq passthru [inherit_twisted]
-   seq courtesy [inherit_left inherit_twisted inherit_single inherit_nxn inherit_mxn]
+   seq courtesy [inherit_reverse inherit_twisted inherit_single inherit_nxn inherit_mxn]
    seq quarter_more [inherit_single inherit_nxn inherit_mxn]
    seq slither [inherit_single inherit_nxn inherit_mxn]
 
 call "right and left by by" c4
             first_part_visible rear_back_from_r_wave
-            no_elongation_allowed left_means_mirror twisted_is_inherited
             single_is_inherited nxn_is_inherited mxn_is_inherited
+            no_elongation_allowed left_means_mirror twisted_is_inherited
    seq passthru [inherit_twisted]
-   seq courtesy [inherit_left inherit_twisted inherit_single inherit_nxn inherit_mxn]
+   seq courtesy [inherit_reverse inherit_twisted inherit_single inherit_nxn inherit_mxn]
    seq quarter_more [inherit_single inherit_nxn inherit_mxn]
    seq slither [inherit_single inherit_nxn inherit_mxn]
    seq spread [inherit_single]
@@ -13545,7 +13537,7 @@ call "right and left by by by" c4
             single_is_inherited nxn_is_inherited mxn_is_inherited
             no_elongation_allowed left_means_mirror twisted_is_inherited
    seq passthru [inherit_twisted]
-   seq courtesy [inherit_left inherit_twisted inherit_single inherit_nxn inherit_mxn]
+   seq courtesy [inherit_reverse inherit_twisted inherit_single inherit_nxn inherit_mxn]
    seq quarter_more [inherit_single inherit_nxn inherit_mxn]
    seq slither [inherit_single inherit_nxn inherit_mxn]
    seq spread [inherit_single]
@@ -19558,7 +19550,7 @@ call "_finish cross chain and roll ends" dontshow tag finxchthruends
    setup 2x4 2x4 qualifier num 2 none
       array [AL3S AL2S AL1S AL0S 0 0 0 0]
 
-/* This is courtesy turn and roll. */
+// This is courtesy turn and roll.
 call "_finish cross chain and roll ends" dontshow tag finxchrollends
             left_means_mirror
    setup 2x2 2x2
@@ -21372,7 +21364,7 @@ call "_wheel and" dontshow tag wheel
 call "_8by" dontshow tag 8by
             visible_fractions left_means_mirror twisted_is_inherited
    seq passthru [inherit_left inherit_twisted]
-   seq courtesy_and_roll [inherit_left inherit_twisted]
+   seq courtesy_and_roll [inherit_reverse inherit_twisted]
 
 call "_final wheel and @0" dontshow tag final_wheel_and_anything
             dont_use_in_resolve reverse_means_mirror
@@ -24571,21 +24563,21 @@ call "_two o circs and trade" dontshow tag two_o_circs_and_trade
 
 call "bits and pieces" c4a
             visible_fractions yoyo_is_inherited gen_sting_is_inherited magic_is_inherited
-   /* Inheriting yoyo to the centers will make it fail, of course.  This is
-      only legal if the yoyo modifier is given just to the outsides. */
-   /* We no longer put "conc_demand_lines" on the outsides part.  This allows
-      reverse order to work.  The trade part will complain anyway if the elongation
-      isn't right. */
+   // Inheriting yoyo to the centers will make it fail, of course.  This is
+   // only legal if the yoyo modifier is given just to the outsides.
+   // We no longer put "conc_demand_lines" on the outsides part.  This allows
+   // reverse order to work.  The trade part will complain anyway if the elongation
+   // isn't right.
    conc c_bits_pieces         [inherit_yoyo inherit_gensting]
         two_o_circs_and_trade [inherit_yoyo inherit_gensting inherit_magic endscando]
 
 call "bits and pieces but @m" c4a
             visible_fractions yoyo_is_inherited gen_sting_is_inherited
-   /* Inheriting yoyo to the centers will make it fail, of course.  This is
-      only legal if the yoyo modifier is given just to the outsides. */
-   /* We no longer put "conc_demand_lines" on the outsides part.  This allows
-      reverse order to work.  The trade part will complain anyway if the elongation
-      isn't right. */
+   // Inheriting yoyo to the centers will make it fail, of course.  This is
+   // only legal if the yoyo modifier is given just to the outsides.
+   // We no longer put "conc_demand_lines" on the outsides part.  This allows
+   // reverse order to work.  The trade part will complain anyway if the elongation
+   // isn't right.
    conc c_bits_pieces_but [inherit_yoyo inherit_gensting] two_o_circs_and_trade [inherit_yoyo inherit_gensting endscando]
 
 call "_fascinate part 1" dontshow tag fascinate1

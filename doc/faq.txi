@@ -379,6 +379,16 @@ The program only recognizes the designators @strong{boys} and @strong{girls}.
 The only exception is the call @strong{ladies chain}.  Of course, you can
 use whatever designation you want when calling.
 
+@unnumberedsec Why, from a setup in which each gender has a straightforward @strong{cross over circulate} path (heads pass the ocean, extend, split circulate, switch the wave), can't it do @strong{boys cross over circulate}?
+
+What "boys" (or girls, heads, sides, etc.) means is more complicated than most people realize.  The designators take on different meanings in different contexts---boys run, boys trade, boys kickoff, boys hinge, boys u-turn-back, boys press ahead, have to be handled differently.  The general rule for a plain @strong{boys <some call that doesn't have special properties>} is to find the largest setups that are compact and free of holes or distortions, and do the call in each of those setups.  From parallel BBGG waves, there are two such setups---two miniwaves of two people each.  Sd can do a @strong{boys hinge} from there, because it can do a hinge in each of those two-person setups.  But it can't do @strong{boys circulate} or @strong{boys swing thru}.
+
+In the setup of this example, the only compact setups that are free of holes or distortions are the four individual people, so the only calls that can be done that way are one-person calls like @strong{1/4 right} or @strong{U-turn back}.
+
+There is another concept, @strong{boys do your part cross over circulate} that handles things like this.  It has each boy do the call in the entire 8-person setup.  If they can each do it without running into each other or the girls, it's legal.
+
+Of course you probably don't need to use such picky language in calling.  The dancers will understand what you mean by @strong{boys cross over circulate}.
+
 @unnumberedsec The Callerlab definitions allow @strong{veer left} and @strong{veer right} with single people.  Why doesn't @code{Sd} allow this?
 
 This situation is often ambiguous, so you need to say

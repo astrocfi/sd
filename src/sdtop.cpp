@@ -162,7 +162,7 @@ and the following external variables:
 
 
 // *** There are more globals proclaimed at line 235.
-ui_utils *gg77;
+ui_utils *gg77 = 0;
 int text_line_count = 0;
 char error_message1[MAX_ERR_LENGTH];
 char error_message2[MAX_ERR_LENGTH];
@@ -3453,6 +3453,8 @@ bool check_for_concept_group(
 
    if (k == concept_supercall ||
        k == concept_fractional ||
+       (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_SNAG)) ||
+       (k == concept_so_and_so_only && (this_concept->arg1 == selective_key_snag_anyone)) ||
        (get_meta_key_props(this_concept) & MKP_RESTRAIN_1))
       retstuff.m_need_to_restrain |= 1;
 
@@ -6049,6 +6051,8 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.restrained_do_as_couples = false;
    starting_setup.cmd.restrained_miscflags = 0;
    starting_setup.cmd.restrained_misc2flags = 0;
+   starting_setup.cmd.restrained_selector_decoder[0] = 0;
+   starting_setup.cmd.restrained_selector_decoder[1] = 0;
    starting_setup.cmd.extraspecialsuperduper_misc2flags = 0;
    starting_setup.cmd.restrained_fraction.flags = 0;
    starting_setup.cmd.restrained_fraction.fraction = 0;

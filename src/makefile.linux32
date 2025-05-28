@@ -71,11 +71,9 @@ SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
 HFILES = sdui.h sd.h sdbase.h database.h paths.h mapcachefile.h sort.h \
              deploy.h resource.h sdprint.h
 
-MAKEFILES = makefile.linux32withgpm makefile.linux32withoutgpm \
-             makefile.linux64withgpm makefile.linux64withoutgpm \
-             makefile.linux32 makefile.linux64 \
-             makefile.cygnus makefile.cygwin makefile.djgpp \
-             makefile.mingw makefile.mac makefile.solaris
+MAKEFILES = makefile.linux32 makefile.linux64 \
+            makefile.cygnus makefile.cygwin makefile.djgpp \
+            makefile.mingw makefile.mac makefile.solaris
 
 SDTTY_OBJS = sdui-tty.o sdui-ttu.o
 

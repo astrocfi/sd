@@ -2071,17 +2071,17 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    case abridge_mode_writing:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
       break;
    case abridge_mode_writing_full:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_WRITE_FULL_LIST);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
       break;
    case abridge_mode_abridging:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_ABRIDGE);
       EnableWindow(GetDlgItem(hwnd, IDC_ABRIDGE_NAME), TRUE);
-      if (abridge_filename) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
+      if (abridge_filename[0]) SetDlgItemText(hwnd, IDC_ABRIDGE_NAME, abridge_filename);
       break;
    default:
       CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGE, IDC_NORMAL);
@@ -2126,7 +2126,7 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    return TRUE;
 }
 
-struct { int id; const char *message; } dialog_help_list[] = {
+static struct { int id; const char *message; } dialog_help_list[] = {
    // These two must be first, so that the level-vs-session stuff
    // will come out right.
    {IDC_START_LIST,

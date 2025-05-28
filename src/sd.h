@@ -619,25 +619,26 @@ struct setup_command {
    call_with_name *callspec;
    final_and_herit_flags cmd_final_flags;
    fraction_command cmd_fraction;
-   uint32 cmd_misc_flags;
-   uint32 cmd_misc2_flags;
-   uint32 cmd_misc3_flags;
-   uint32 do_couples_her8itflags;
+   uint32_t cmd_misc_flags;
+   uint32_t cmd_misc2_flags;
+   uint32_t cmd_misc3_flags;
+   uint32_t do_couples_her8itflags;
    assumption_thing cmd_assume;
-   uint32 prior_elongation_bits;
-   uint32 prior_expire_bits;
+   uint32_t prior_elongation_bits;
+   uint32_t prior_expire_bits;
    parse_block *restrained_concept;
    parse_block **restrained_final;
    fraction_command restrained_fraction;
-   uint32 restrained_super8flags;
-   uint32 restrained_super9flags;
+   uint32_t restrained_super8flags;
+   uint32_t restrained_super9flags;
    bool restrained_do_as_couples;
-   uint32 restrained_miscflags;
-   uint32 restrained_misc2flags;
-   uint32 extraspecialsuperduper_misc2flags;
+   uint32_t restrained_miscflags;
+   uint32_t restrained_misc2flags;
+   uint32_t restrained_selector_decoder[2];
+   uint32_t extraspecialsuperduper_misc2flags;
    parse_block *skippable_concept;
-   uint32 skippable_heritflags;
-   uint32 cmd_heritflags_to_save_from_mxn_expansion;
+   uint32_t skippable_heritflags;
+   uint32_t cmd_heritflags_to_save_from_mxn_expansion;
 };
 
 
@@ -992,6 +993,8 @@ class select {
       fx_f2x5c,
       fx_f2x5d,
       fx_f2x5e,
+      fx_f2x5f,
+      fx_sp12wing,
       fx_f4ptpd,
       fx_fd2x5d,
       fx_fd2x7d1,

@@ -7389,6 +7389,8 @@ void move(
          z0->options = saved_options;
          z0->no_check_call_level = z0levelsave;
          z0->more_finalherit_flags = z0heritsave;
+         ss->cmd.restrained_selector_decoder[0] = 0;  // Don't need this any more.
+         ss->cmd.restrained_selector_decoder[1] = 0;
 
          if (maybe_throw_this != error_flag_none)
             throw maybe_throw_this;

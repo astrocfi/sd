@@ -184,6 +184,8 @@ int begin_sizes[] = {
    12,         // b_d4x3
    20,         // b_d4x5
    20,         // b_d5x4
+   10,         // b_spindle12
+   10,         // b_pspindle12
    16,         // b_2x8
    16,         // b_8x2
    16,         // b_4x4
