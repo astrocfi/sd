@@ -68,7 +68,7 @@ mkcalls.exe: $(MKCALLS_OBJS)
 	strip mkcalls.exe
 
 sdtty.exe: libsdlib.a sdlib.dll $(SDTTY_OBJS) sdttyres.o
-	$(CC) -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
+	$(CC) -mconsole -o $@ $(SDTTY_OBJS) sdttyres.o $(SDTTY_LIBS)
 	strip sdtty.exe
 
 sd.exe: libsdlib.a sdlib.dll $(SD_OBJS) sdres.o

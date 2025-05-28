@@ -1638,102 +1638,121 @@ static const long int sr1x8[4]  = {0, 0, 2, 0};
 static bool judge_check_1x4(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f;
-
+   // Some assumptions make this easy.  Sort of.
    switch (real_people->cmd.cmd_assume.assumption) {
-      // This is an error -- socker/judge can't be unambiguous.
-   case cr_wave_only: case cr_2fl_only: return false;
+   case cr_wave_only: case cr_2fl_only: return false;      // This can't work.
    case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return extra_stuff[0] != 0;
    case cr_magic_only: return (real_index & 1) != extra_stuff[0];
    }
 
-   f = (this_person & 2) ^ extra_stuff[1];
+   uint32 this_person = real_people->people[real_index].id1;
+   uint32 f = (this_person & 2) ^ extra_stuff[1];
 
-   return
-      // Judge/socker exists in the correct place.
-      (((real_people->people[2-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
-      &&
-      // We do not have another judge/socker in the wrong place.
-      (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
+   // If judge/socker exists in the correct place, and
+   // we do not have another judge/socker in the wrong place, OK.
+   if (((real_people->people[2-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
+      return true;
+
+   // If correct place is empty, but the person on the other side
+   // can't be a judge or socker, OK.
+   if (real_people->people[2-f].id1 == 0 &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
+      warn(warn__phantom_judge);
+      return true;
+   }
+
+   return false;
 }
 
 /* ARGSUSED */
 static bool judge_check_1x6(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f;
-
+   // Some assumptions make this easy.  Sort of.
    switch (real_people->cmd.cmd_assume.assumption) {
-      // This is an error -- socker/judge can't be unambiguous.
-   case cr_wave_only: case cr_3x3_2fl_only: return false;
+   case cr_wave_only: case cr_3x3_2fl_only: return false;      // This can't work.
    case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
    }
 
-   f = (this_person & 2) ^ extra_stuff[1];
+   uint32 this_person = real_people->people[real_index].id1;
+   uint32 f = (this_person & 2) ^ extra_stuff[1];
    f += f>>1;
 
-   return
-      // Judge/socker exists in the correct place.
-      (((real_people->people[3-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
-      &&
-      // We do not have another judge/socker in the wrong place.
-      (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
+   // If judge/socker exists in the correct place, and
+   // we do not have another judge/socker in the wrong place, OK.
+   if (((real_people->people[3-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
+      return true;
+
+   // If correct place is empty, but the person on the other side
+   // can't be a judge or socker, OK.
+   if (real_people->people[3-f].id1 == 0 &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
+      warn(warn__phantom_judge);
+      return true;
+   }
+
+   return false;
 }
 
 /* ARGSUSED */
 static bool judge_check_1x8(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f;
-
+   // Some assumptions make this easy.  Sort of.
    switch (real_people->cmd.cmd_assume.assumption) {
-      // This is an error -- socker/judge can't be unambiguous.
-   case cr_wave_only: case cr_4x4_2fl_only: return false;
+   case cr_wave_only: case cr_4x4_2fl_only: return false;      // This can't work.
    case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
    }
 
-   f = ((this_person & 2) ^ extra_stuff[1]) << 1;
+   uint32 this_person = real_people->people[real_index].id1;
+   uint32 f = ((this_person & 2) ^ extra_stuff[1]) << 1;
 
-   return
-      // Judge/socker exists in the correct place.
-      (((real_people->people[4-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
-      &&
-      // We do not have another judge/socker in the wrong place.
-      (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
+   // If judge/socker exists in the correct place, and
+   // we do not have another judge/socker in the wrong place, OK.
+   if (((real_people->people[4-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
+      return true;
+
+   // If correct place is empty, but the person on the other side
+   // can't be a judge or socker, OK.
+   if (real_people->people[4-f].id1 == 0 &&
+       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]){
+      warn(warn__phantom_judge);
+      return true;
+   }
+
+   return false;
 }
 
-// A remnant.
-#define C_const
 
-static C_const veryshort inroll_directions[24] = {
+static veryshort inroll_directions[24] = {
    012, 012, 012, 012, 010, 010, 010, 010,
       3,  3,  3,  3,  7,  7,  7,  7,
       0,  0,  0,  0,  4,  4,  4,  4};
 
-static C_const veryshort magic_inroll_directions[24] = {
+static veryshort magic_inroll_directions[24] = {
    012, 010, 010, 012, 010, 012, 012, 010,
       3,  7,  7,  3,  7,  3,  3,  7,
       0,  4,  4,  0,  4,  0,  0,  4};
 
-static C_const veryshort inroll_directions_2x3[18] = {
+static veryshort inroll_directions_2x3[18] = {
    012, 012, 012, 010, 010, 010,
       2,  2,  2,  5,  5,  5,
       0,  0,  0,  3,  3,  3};
 
-static C_const veryshort magic_inroll_directions_2x3[18] = {
+static veryshort magic_inroll_directions_2x3[18] = {
    012, 010, 012, 010, 012, 010,
       2,  5,  2,  5,  2,  5,
       0,  3,  0,  3,  0,  3};
 
-static C_const veryshort inroll_directions_2x6[36] = {
+static veryshort inroll_directions_2x6[36] = {
    012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010,
       5,  5,  5,  5,  5,  5, 11, 11, 11, 11, 11, 11,
       0,  0,  0,  0,  0,  0,  6,  6,  6,  6,  6,  6};
 
-static C_const veryshort inroll_directions_2x8[48] = {
+static veryshort inroll_directions_2x8[48] = {
    012, 012, 012, 012, 012, 012, 012, 012, 010, 010, 010, 010, 010, 010, 010, 010,
       7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15,
       0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
@@ -1747,24 +1766,24 @@ enum inroll_assume_test {
 
 
 typedef struct {
-   C_const veryshort *directions;
-   C_const long int code;
-   C_const inroll_assume_test ira;
+   veryshort *directions;
+   long int code;
+   inroll_assume_test ira;
 } inroll_action;
 
 
-static C_const inroll_action inroller_cw            = {inroll_directions,           0, ira__gen};
-static C_const inroll_action outroller_cw           = {inroll_directions,           1, ira__gen};
-static C_const inroll_action magic_inroller_cw      = {magic_inroll_directions,     2, ira__gen};
-static C_const inroll_action magic_outroller_cw     = {magic_inroll_directions,     3, ira__gen};
-static C_const inroll_action inroller_cw_2x3        = {inroll_directions_2x3,       0, ira__no_wave};
-static C_const inroll_action outroller_cw_2x3       = {inroll_directions_2x3,       1, ira__no_wave};
-static C_const inroll_action magic_inroller_cw_2x3  = {magic_inroll_directions_2x3, 2, ira__no_wave};
-static C_const inroll_action magic_outroller_cw_2x3 = {magic_inroll_directions_2x3, 3, ira__no_wave};
-static C_const inroll_action inroller_2x6           = {inroll_directions_2x6,       0, ira__sixes};
-static C_const inroll_action outroller_2x6          = {inroll_directions_2x6,       1, ira__sixes};
-static C_const inroll_action inroller_2x8           = {inroll_directions_2x8,       0, ira__eights};
-static C_const inroll_action outroller_2x8          = {inroll_directions_2x8,       1, ira__eights};
+static inroll_action inroller_cw            = {inroll_directions,           0, ira__gen};
+static inroll_action outroller_cw           = {inroll_directions,           1, ira__gen};
+static inroll_action magic_inroller_cw      = {magic_inroll_directions,     2, ira__gen};
+static inroll_action magic_outroller_cw     = {magic_inroll_directions,     3, ira__gen};
+static inroll_action inroller_cw_2x3        = {inroll_directions_2x3,       0, ira__no_wave};
+static inroll_action outroller_cw_2x3       = {inroll_directions_2x3,       1, ira__no_wave};
+static inroll_action magic_inroller_cw_2x3  = {magic_inroll_directions_2x3, 2, ira__no_wave};
+static inroll_action magic_outroller_cw_2x3 = {magic_inroll_directions_2x3, 3, ira__no_wave};
+static inroll_action inroller_2x6           = {inroll_directions_2x6,       0, ira__sixes};
+static inroll_action outroller_2x6          = {inroll_directions_2x6,       1, ira__sixes};
+static inroll_action inroller_2x8           = {inroll_directions_2x8,       0, ira__eights};
+static inroll_action outroller_2x8          = {inroll_directions_2x8,       1, ira__eights};
 
 
 
@@ -2168,19 +2187,19 @@ static bool trngl_pt_rh(setup *real_people, int real_index,
 
 
 typedef struct {
-   C_const long int ctr_action;    /* -1 for true, -2 for false, else required direction xor. */
-   C_const long int end_action;
-   C_const long int bbbbb;
+   long int ctr_action;    /* -1 for true, -2 for false, else required direction xor. */
+   long int end_action;
+   long int bbbbb;
 } simple_qtag_action;
 
 typedef struct {
-   C_const simple_qtag_action if_jleft;
-   C_const simple_qtag_action if_jright;
-   C_const simple_qtag_action if_ijleft;
-   C_const simple_qtag_action if_ijright;
-   C_const simple_qtag_action if_tag;
-   C_const simple_qtag_action if_line;
-   C_const simple_qtag_action none;
+   simple_qtag_action if_jleft;
+   simple_qtag_action if_jright;
+   simple_qtag_action if_ijleft;
+   simple_qtag_action if_ijright;
+   simple_qtag_action if_tag;
+   simple_qtag_action if_line;
+   simple_qtag_action none;
 } full_qtag_action;
 
 static full_qtag_action q_tag_front_action = {

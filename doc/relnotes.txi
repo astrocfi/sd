@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <13 May 2005 wba>
+@c Time-stamp: <17 Sep 2005 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.61
-@set title2 Database version = 36.61 format = 235
+@set title1 RELEASE NOTES FOR VERSION 36.62
+@set title2 Database version = 36.62 format = 236
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.62::
 * 36.61::
 * 36.60::
 * 36.59::
@@ -64,7 +65,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.61, Top, (dir)
+@node Intro, 36.62, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -75,11 +76,62 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2005 William B. Ackerman
 @sp 3
 @menu
-* 36.61::               Changes in the current version
+* 36.62::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.61, 36.60, Intro, Top
+@node 36.62, 36.61, Intro, Top
+@unnumberedsec Version 36.62 changes
+
+The calls @strong{cast back} and @strong{cross cast back} can be done
+from a wider variety of places, and can be done with concepts like
+@strong{tandem}.
+
+The @strong{pick random call} command can be given after a call with an
+@strong{<anything>} subcall, and it will search for calls to substitute
+for the @strong{<anything>}.  For example, one can type @strong{breaker
+<anything>} followed by @strong{pick random call}.
+
+There is a command (actually a concept, if you care) @strong{<anyone>
+move in and} that can be given when the formation is on squared-set
+spots.  The following call will be done as if the sequence had been
+started by having those people move in to the middle.  This replaces the
+old ``heads press ahead; heads pass the ocean'' usage.  For example:
+@example
+@group
+    just as they are
+    all 4 couples right and left thru
+    sides move in and split dixie diamond
+@end group
+@end example
+
+The calls @strong{press in}, @strong{press out}, @strong{curve in}, and
+@strong{curve out} were added.
+
+The calls @strong{here comes the judge} and @strong{sock it to me} have
+been improved and made more consistent in the presence of phantoms.
+
+The call @strong{spin the top} will not be presented as a resolve if the
+formations is a 2-faced line.  @strong{Fan the top} will continue to be
+presented.
+
+The call @strong{single ferris wheel} has been improved.
+
+A bug in @strong{roll} after @strong{trade the deucey} was fixed.
+
+An bug leading to improper orientation of the setup after certain
+pathological operations was fixed.
+
+More @strong{right and left grand} and @strong{left allemande} getouts
+are recognized when in blocks.
+
+The @strong{recenter} operation can handle 1x10 and 1x12 setups.
+
+A bug was fixed involving clipboard @strong{cut} and @strong{paste}
+operations on squared-set spots.
+
+@c ************
+@node 36.61, 36.60, 36.62, Top
 @unnumberedsec Version 36.61 changes
 
 A mechanism has been added to facilitate changing from ``old style''
@@ -98,8 +150,9 @@ and @strong{strut left and right} were fixed.  The initial pass thru for
 the centers is @i{always} right shoulder.
 
 A number of bugs (a few of which could cause a crash) were fixed in the
-following areas.  If you recognize your bug, it's been fixed.  If not,
-it's not worth going into the details---these are all quite obscure.
+following areas.  It's not worth going into the details---they are all
+quite obscure.  If you recognize your bug in this list, it's been fixed.
+
 @example
 @group
     "keep all pictures"
@@ -114,13 +167,6 @@ it's not worth going into the details---these are all quite obscure.
     grand chain 8
 @end group
 @end example
-
-
-
-
-
-
-
 
 @c ************
 @node 36.60, 36.59, 36.61, Top

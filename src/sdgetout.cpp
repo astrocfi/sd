@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -80,13 +80,14 @@ static setup_kind goal_kind;
 static uint32 goal_directions[8];
 static reconcile_descriptor *current_reconciler;
 
-/* BEWARE!!  This must be keyed to the enumeration "command_kind" in sd.h . */
+// BEWARE!!  This must be keyed to the enumeration "command_kind" in sd.h .
 static Cstring title_string[] = {
    "Resolve: ",
    "Normalize: ",
    "Standardize: ",
    "Reconcile: ",
    "Pick Random Call: ",
+   "Fill Random Call: ",
    "Pick Simple Call: ",
    "Pick Concept Call: ",
    "Pick Level Call: ",
@@ -307,7 +308,7 @@ static bool inner_search(command_kind goal,
    uint32 directions, p, q;
    int CLOCKS_TO_RESOLVE;
 
-   if (ui_options.resolve_test_minutes != 0)
+   if (ui_options.resolve_test_minutes > 0)
       CLOCKS_TO_RESOLVE = ui_options.resolve_test_minutes * 60 * CLOCKS_PER_SEC;
    else
       CLOCKS_TO_RESOLVE = 5*CLOCKS_PER_SEC;
@@ -463,7 +464,7 @@ static bool inner_search(command_kind goal,
 
       const setup *ns = &configuration::next_config().state;
 
-      if (ui_options.resolve_test_minutes != 0) goto what_a_loss;
+      if (ui_options.resolve_test_minutes > 0) goto what_a_loss;
 
       switch (goal) {
       case command_resolve:
@@ -735,8 +736,8 @@ static bool inner_search(command_kind goal,
 
          configuration::next_config() = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
 
-      /* Now execute the call again, from the new starting configuration. */
-      /* This might signal and go to try_again. */
+         // Now execute the call again, from the new starting configuration.
+         // This might signal and go to try_again.
          toplevelmove();
          finish_toplevelmove();
 
@@ -800,9 +801,7 @@ static bool inner_search(command_kind goal,
 
       if (avoid_list_allocation <= avoid_list_size) {
          avoid_list_allocation = avoid_list_size+100;
-         int *t = (int *) realloc(avoid_list, avoid_list_allocation * sizeof(int));
-         if (!t) specialfail("Not enough memory!");
-         avoid_list = t;
+         avoid_list = (int *) get_more_mem(avoid_list, avoid_list_allocation * sizeof(int));
       }
 
       avoid_list[avoid_list_size-1] = hashed_randoms;   // It's now safe to do this.
@@ -961,23 +960,18 @@ uims_reply full_resolve()
    /* Allocate or reallocate the huge_history_save save array if needed. */
 
    if (huge_history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
-      configuration *t;
       huge_history_allocation = configuration::history_ptr+MAX_RESOLVE_SIZE+2;
-      /* Increase by 50% beyond what we have now. */
+      // Increase by 50% beyond what we have now.
       huge_history_allocation += huge_history_allocation >> 1;
-      t = (configuration *)
-         realloc(huge_history_save,
-                 huge_history_allocation * sizeof(configuration));
-      if (!t) specialfail("Not enough memory!");
-      huge_history_save = t;
+      huge_history_save = (configuration *) get_more_mem(huge_history_save,
+         huge_history_allocation * sizeof(configuration));
    }
 
    // Do the resolve array.
 
    if (all_resolves == 0) {
       resolve_allocation = 10;
-      all_resolves = (resolve_rec *) malloc(resolve_allocation * sizeof(resolve_rec));
-      if (!all_resolves) specialfail("Not enough memory!");
+      all_resolves = (resolve_rec *) get_mem(resolve_allocation * sizeof(resolve_rec));
    }
 
    // Be sure the extra 5 slots in the history array are clean.
@@ -1178,14 +1172,10 @@ uims_reply full_resolve()
          switch ((resolve_command_kind) uims_menu_index) {
          case resolve_command_find_another:
             if (resolve_allocation <= max_resolve_index) {
-               /* Increase allocation if necessary. */
-               int new_allocation = resolve_allocation << 1;
-               resolve_rec *t = (resolve_rec *)
-                  realloc(all_resolves, new_allocation * sizeof(resolve_rec));
-               if (!t) break;               // By not turning on "find_another_resolve",
-                                            // we will take no action.
-               resolve_allocation = new_allocation;
-               all_resolves = t;
+               // Increase allocation if necessary.
+               resolve_allocation = resolve_allocation << 1;
+               all_resolves = (resolve_rec *)
+                  get_more_mem(all_resolves, resolve_allocation * sizeof(resolve_rec));
             }
 
             find_another_resolve = true;             // Will get it next time around.

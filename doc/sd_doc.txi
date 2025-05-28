@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.61
-@set Time-stamp: August 14, 2005
+@set sd-version 36.62
+@set Time-stamp: September 17, 2005
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4555,6 +4555,11 @@ wheel around}, it will have @emph{everyone} wheel around, resulting in 2-faced l
 To get the effect that
 is usually indicated by the words ``promenade, do not stop @dots{}, heads wheel around'',
 you must enter enter @code{heads lead for a heads wheel around}.
+@item <ANYONE> move in and
+This is used when the dancers are on squared-set spots, as would be the case after
+things like @samp{all 4 ladies chain} or @samp{all 4 couples star thru}.  The designated
+people move in to the center and do (or start) the next call as though they are starting
+a sequence.
 @item ends concentric
 @item outer 2 concentric
 @item outer 6 concentric

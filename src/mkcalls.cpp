@@ -1270,6 +1270,7 @@ char *matrixcallflagtab[] = {
    "find_spreaders",
    "use_veer_data",
    "use_number",
+   "lateral_mirror_if_right_of_center",
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .

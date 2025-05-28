@@ -1023,6 +1023,7 @@ extern void normalize_concentric(
       fail("Ends can't figure out what spots to finish on.");
 
    result->kind = s_normal_concentric;
+   result->rotation = 0;
    result->inner.skind = inners[0].kind;
    result->inner.srotation = inners[0].rotation;
    result->outer.skind = outers->kind;

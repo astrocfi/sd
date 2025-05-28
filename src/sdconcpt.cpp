@@ -293,7 +293,7 @@ static void do_c1_phantom_move(
       // This is a vanilla C1 phantom setup.
       map_ptr = &map_c1_phan;
    else if (ss->kind == s_bone)
-      // We allow "phantom" in a bone setup to mean two "dunlap" quarter tags. 
+      // We allow "phantom" in a bone setup to mean two "dunlap" quarter tags.
       map_ptr = &map_qt_phan;
 #ifdef WEIRD_BUT_DO_IT_ANYWAY
    else if (ss->kind == s3x4) {
@@ -339,7 +339,7 @@ static void do_c1_phantom_move(
 
       temp = *result;
       result->clear_people();
-      
+
       if (!(temp.people[0].id1 | temp.people[7].id1 | temp.people[8].id1 | temp.people[15].id1)) {
          (void) copy_person(result, 0, &temp, 1);
          (void) copy_person(result, 3, &temp, 6);
@@ -381,7 +381,7 @@ static void do_c1_phantom_move(
 
    setup1 = *ss;
    setup2 = *ss;
-   
+
    setup1.kind = map_ptr->ikind;
    setup2.kind = map_ptr->ikind;
    setup1.rotation = ss->rotation;
@@ -391,7 +391,7 @@ static void do_c1_phantom_move(
 
    gather(&setup1, ss, map_ptr->map1, map_ptr->sizem1, 0);
    gather(&setup2, ss, map_ptr->map2, map_ptr->sizem1, 033);
-   
+
    normalize_setup(&setup1, simple_normalize, false);
    normalize_setup(&setup2, simple_normalize, false);
 
@@ -667,14 +667,14 @@ static void do_concept_multiple_lines_tog(
          if (ss->kind != s1x12) fail("Must have a 1x12 setup for this concept.");
 
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
- 
+
          if (linesp & 1) {
             if (global_tbonetest & 1) fail("There are no lines of 4 here.");
          }
          else {
             if (!(global_tbonetest & 1)) fail("There are no columns of 4 here.");
          }
-    
+
          if (cstuff == 10) {     // Working together.
             masks[0] = 0xCF; masks[1] = 0xFC;
          }
@@ -687,30 +687,30 @@ static void do_concept_multiple_lines_tog(
       }
       else {
          int i, tbonetest;
- 
+
          if (ss->kind != s3x4) fail("Must have a 3x4 setup for this concept.");
-    
+
          if (cstuff >= 8)
             tbonetest = global_tbonetest;
          else {
             tbonetest = 0;
             for (i=0; i<12; i++) tbonetest |= ss->people[i].id1;
          }
-    
+
          if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
-    
+
          if (linesp & 1) {
             if (tbonetest & 1) fail("There are no lines of 4 here.");
          }
          else {
             if (!(tbonetest & 1)) fail("There are no columns of 4 here.");
          }
-    
+
          // Initially assign the centers to the upper (masks[1]) group.
          masks[0] = 0xF0; masks[1] = 0xFF;
-    
+
          // Look at the center line people and put each one in the correct group.
-    
+
          if (cstuff == 8) {
             masks[0] = 0xFC; masks[1] = 0xCF;   // clockwise
          }
@@ -822,28 +822,28 @@ static void do_concept_multiple_lines_tog(
       int i, tbonetest;
 
       if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
- 
+
       if (cstuff >= 8)
          tbonetest = global_tbonetest;
       else {
          tbonetest = 0;
          for (i=0; i<20; i++) tbonetest |= ss->people[i].id1;
       }
- 
+
       if ((tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
- 
+
       if (linesp & 1) {
          if (!(tbonetest & 1)) fail("There are no lines of 4 here.");
       }
       else {
          if (tbonetest & 1) fail("There are no columns of 4 here.");
       }
- 
+
       // Initially assign the center 3 lines to the right (masks[1]/masks[2]/masks[3]) group.
       masks[0] = 0xF0; masks[1] = 0xF0; masks[2] = 0xF0; masks[3] = 0xFF;
- 
+
       // Look at the center 3 lines of people and put each one in the correct group.
- 
+
       if (cstuff == 8) {
          // clockwise
          masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCC; masks[3] = 0xCF;
@@ -897,13 +897,13 @@ static void do_concept_multiple_lines_tog(
          if (linesp) fail("Can't find the required lines.");
          else fail("Can't find the required columns.");
       }
- 
+
       // Initially assign the center 3 lines to the right
       // (masks[1]/masks[2]/masks[3]/masks[4]) group.
       masks[0] = 0xF0; masks[1] = 0xF0; masks[2] = 0xF0; masks[3] = 0xF0; masks[4] = 0xFF;
- 
+
       // Look at the center 4 lines of people and put each one in the correct group.
- 
+
       if (cstuff == 8) {
          // clockwise
          masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCC; masks[3] = 0xCC; masks[4] = 0xCF;
@@ -947,9 +947,9 @@ static uint32 get_standard_people(setup *ss, selector_kind who,
    stdtest = 0;
    uint32 livemask = 0;
    selector_kind saved_selector = current_options.who;
-   
+
    current_options.who = who;
-   
+
    for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
       int p = ss->people[i].id1;
       tbonetest |= p;
@@ -958,7 +958,7 @@ static uint32 get_standard_people(setup *ss, selector_kind who,
          if (selectp(ss, i)) stdtest |= p;
       }
    }
-   
+
    current_options.who = saved_selector;
    return livemask;
 }
@@ -1106,10 +1106,10 @@ static void do_concept_parallelogram(
             clear_result_flags(result);
             return;
          }
-      
+
          if ((tbonetest & 011) != 011)
             fail("People are not T-boned -- 'standard' is meaningless.");
-      
+
          if (!global_tbonetest)
             fail("No one is standard.");
          if ((global_tbonetest & 011) == 011)
@@ -1282,7 +1282,7 @@ static void do_concept_triple_diamonds_tog(
    if (cstuff == 0) {
       if ((ss->people[1].id1 | ss->people[7].id1) & 010)
          fail("Can't tell where points of center diamond should work.");
-   
+
       m1 = 0xE9; m2 = 0xBF;
 
       /* Look at the center diamond points and put each one in the correct group. */
@@ -1334,11 +1334,11 @@ static void do_concept_quad_diamonds_tog(
    else if (cstuff == 0) {  /* Working together. */
       if ((ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1) & 010)
          fail("Can't tell where points of center diamonds should work.");
-   
+
       m1 = 0xE9; m2 = 0xA9; m3 = 0xBF;
-   
+
       /* Look at the center diamond points and put each one in the correct group. */
-   
+
       if (ss->people[1].id1 & 2)  { m1 |= 0x02; m2 &= ~0x01; }
       if (ss->people[2].id1 & 2)  { m2 |= 0x02; m3 &= ~0x01; }
       if (ss->people[9].id1 & 2)  { m2 |= 0x10; m3 &= ~0x20; }
@@ -1516,7 +1516,7 @@ static void do_concept_multiple_lines(
                if (clw_indicator & 1) fail("There are no lines of 3 here.");
                else                   fail("There are no columns of 3 here.");
             }
-   
+
             code = MAPCODE(s1x3,4,MPKIND__SPLIT,1);
          }
          else if (ss->kind == s1x12) {
@@ -1524,7 +1524,7 @@ static void do_concept_multiple_lines(
                if (clw_indicator & 1) fail("There are no lines of 3 here.");
                else                   fail("There are no columns of 3 here.");
             }
-   
+
             code = MAPCODE(s1x3,4,MPKIND__SPLIT,0);
          }
          else
@@ -1548,7 +1548,7 @@ static void do_concept_multiple_lines(
                if (clw_indicator & 1) fail("There are no lines of 4 here.");
                else                   fail("There are no columns of 4 here.");
             }
-   
+
             code = MAPCODE(s1x4,4,MPKIND__SPLIT,0);
          }
          else if (ss->kind == sbigbigh)
@@ -1574,7 +1574,7 @@ static void do_concept_multiple_lines(
       // Clw_indicator = 2 is the special case of "triple 1x4's".
       if (clw_indicator != 2 && ss->kind != sbigh && ss->kind != sbigx) {
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
-   
+
          if (!((clw_indicator ^ global_tbonetest) & 1)) {
             if (clw_indicator & 1) fail("There are no lines of 4 here.");
             else                   fail("There are no columns of 4 here.");
@@ -1598,7 +1598,7 @@ static void do_concept_multiple_lines(
       // Clw_indicator = 2 is the special case of "quintuple 1x4's".
       if (clw_indicator != 2) {
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
-   
+
          if ((clw_indicator ^ global_tbonetest) & 1) {
             if (clw_indicator & 1) fail("There are no lines of 4 here.");
             else                   fail("There are no columns of 4 here.");
@@ -3828,7 +3828,7 @@ static void do_concept_checkerboard(
 
       copy_rot(result, mapeptr[2], ss, mapeptr[1], 0);
       if (result->people[mapeptr[2]].id1)
-         result->people[mapeptr[2]].id1 = 
+         result->people[mapeptr[2]].id1 =
             (result->people[mapeptr[2]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_R;
       copy_rot(result, mapeptr[1], ss, mapeptr[0], 022);
       if (result->people[mapeptr[1]].id1)
@@ -3851,7 +3851,7 @@ static void do_concept_checkerboard(
 
       copy_rot(result, mapeptr[2], ss, mapeptr[3], 022);
       if (result->people[mapeptr[2]].id1)
-         result->people[mapeptr[2]].id1 = 
+         result->people[mapeptr[2]].id1 =
             (result->people[mapeptr[2]].id1 & (~NROLL_MASK)) | PERSON_MOVED | ROLL_IS_L;
       copy_rot(result, mapeptr[1], ss, mapeptr[2], 0);
       if (result->people[mapeptr[1]].id1)
@@ -3975,7 +3975,7 @@ static void do_concept_checkpoint(
 
    if ((this_cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
        CMD_MISC__PUT_FRAC_ON_FIRST) {
-      
+
       // Curried meta-concept, as in "finally checkpoint recycle
       // by 1/4 thru".  Take the fraction info off the first
       // call.  In this example, the 1/4 thru is affected but the
@@ -4112,7 +4112,6 @@ static void do_concept_sequential(
 }
 
 
-
 static void do_concept_special_sequential(
    setup *ss,
    parse_block *parseptr,
@@ -4132,7 +4131,7 @@ static void do_concept_special_sequential(
 
       fraction_info zzz(2);
 
-      uint32 given_fractions = (parseptr->concept->arg1 == 6) ? 
+      uint32 given_fractions = (parseptr->concept->arg1 == 6) ?
          parseptr->options.number_fields : 0x00002121;
 
       if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
@@ -4322,7 +4321,6 @@ static void do_concept_special_sequential(
       }
    }
 }
-
 
 
 static void do_concept_n_times(
@@ -4580,6 +4578,118 @@ static void do_concept_trace(
    }
 
    reinstate_rotation(ss, result);
+}
+
+
+static void do_concept_move_in_and(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   int rotfix = 0;
+   bool eighthrot = false;
+
+   if (ss->kind == s_alamo && global_livemask == 0xFF) {
+      switch (global_selectmask) {
+      case 0x99:
+         rotfix--;
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         // FALL THROUGH!!!
+      case 0x66:
+         // FELL THROUGH!!!
+         // Move them counterclockwise one eighth.
+         eighthrot = true;
+         copy_person(ss, 8, ss, 2);
+         copy_person(ss, 2, ss, 3);
+         copy_rot(ss, 3, ss, 4, 033);
+         copy_person(ss, 4, ss, 5);
+         copy_rot(ss, 5, ss, 6, 033);
+         copy_person(ss, 6, ss, 7);
+         copy_rot(ss, 7, ss, 0, 033);
+         copy_person(ss, 0, ss, 1);
+         copy_rot(ss, 1, ss, 8, 033);
+         break;
+      case 0xCC:
+         rotfix--;
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         break;
+      case 0x33:
+         break;
+      default:
+         fail("Can't do this with these people selected.");
+      }
+
+      ss->swap_people(6, 7);
+      ss->swap_people(5, 6);
+      ss->swap_people(4, 5);
+      ss->swap_people(3, 4);
+      ss->swap_people(2, 3);
+      ss->swap_people(1, 2);
+      ss->swap_people(0, 1);
+   }
+   else if (ss->kind == s4x4 && global_livemask == 0x6666) {
+      switch (global_selectmask) {
+      case 0x2424:
+         rotfix--;
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         // FALL THROUGH!!!
+      case 0x4242:
+         // FELL THROUGH!!!
+         // Move them counterclockwise one eighth.
+         eighthrot = true;
+         copy_person(ss, 0, ss, 1);
+         copy_person(ss, 1, ss, 2);
+         copy_rot(ss, 2, ss, 5, 033);
+         copy_person(ss, 5, ss, 6);
+         copy_rot(ss, 6, ss, 9, 033);
+         copy_person(ss, 9, ss, 10);
+         copy_rot(ss, 10, ss, 13, 033);
+         copy_person(ss, 13, ss, 14);
+         copy_rot(ss, 14, ss, 0, 033);
+         break;
+      case 0x0606:
+         rotfix--;
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         break;
+      case 0x6060:
+         break;
+      default:
+         fail("Can't do this with these people selected.");
+      }
+
+      ss->swap_people(1, 3);
+      ss->swap_people(2, 4);
+      ss->swap_people(7, 9);
+      ss->swap_people(0, 10);
+      ss->swap_people(1, 13);
+      ss->swap_people(2, 14);
+   }
+   else
+      fail("Must be on squared-set spots.");
+
+   ss->kind = s2x4;
+
+   // We need to find out whether the subject call has an implicit "centers" concept.
+
+   if (check_for_centers_concept(0, ss->cmd.parseptr, &ss->cmd)) {
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+      concentric_move(ss, &ss->cmd, 0, schema_concentric, 0, 0, true, ~0UL, result);
+   }
+   else {
+      move(ss, false, result);
+   }
+
+   if (eighthrot) {
+      if (result->result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) rotfix++;
+      result->result_flags.misc ^= RESULTFLAG__PLUSEIGHTH_ROT;
+   }
+
+   result->rotation += rotfix;
+   canonicalize_rotation(result);
 }
 
 
@@ -5810,7 +5920,7 @@ static void do_concept_meta(
    case meta_key_skip_nth_part:
       if (corefracs != CMD_FRAC_NULL_VALUE)
          fail("Can't stack meta or fractional concepts.");
-   
+
       // Do the initial part, if any.
 
       if (parseptr->options.number_fields > 1) {
@@ -6911,7 +7021,7 @@ static void do_concept_fractional(
          if ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2) &&
                   ((ss->cmd.cmd_frac_flags & (CMD_FRAC_CODE_MASK|CMD_FRAC_BREAKING_UP)) ==
                    (CMD_FRAC_CODE_FROMTOREV|CMD_FRAC_BREAKING_UP))) {
-   
+
             // We are being asked to do everything beyond some part of
             // "1-3/5 swing the fractions".
             result->cmd.cmd_frac_flags &= 0xFFFF;   // Do the whole 3/5.
@@ -6968,7 +7078,7 @@ static void do_concept_so_and_so_begin(
 
    setup1 = *ss;              /* designees */
    setup2 = *ss;              /* non-designees */
-   
+
    if (attr::slimit(ss) < 0) fail("Can't identify people in this setup.");
    for (i=0; i<=attr::slimit(ss); i++) {
       if (ss->people[i].id1) {
@@ -6978,9 +7088,9 @@ static void do_concept_so_and_so_begin(
             setup1.clear_person(i);
       }
    }
-   
+
    current_options.who = saved_selector;
-   
+
    normalize_setup(&setup1, normalize_before_isolated_call, false);
    normalize_setup(&setup2, normalize_before_isolated_call, false);
 
@@ -7117,7 +7227,7 @@ static void do_concept_concentric(
       default:
          fail("Can't figure out how to do single concentric here.");
       }
-      
+
       // Reset it to execute this same concept again, until it doesn't have to split any more.
       ss->cmd.parseptr = parseptr;
       divided_setup_move(ss, map_code, phantest_ok, true, result);
@@ -7278,7 +7388,7 @@ extern bool do_big_concept(
       substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
                                                      true, &junk_concepts,
                                                      true, __FILE__, __LINE__);
-   
+
       // If we hit "matrix", do a little extra stuff and continue.
 
       if (junk_concepts.test_herit_and_final_bits() == 0 &&
@@ -7320,24 +7430,24 @@ extern bool do_big_concept(
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
       if (attr::slimit(ss) < 0) fail("Can't do this concept in this setup.");
-   
+
       uint32 tbonetest;
       uint32 stdtest;
       int livemask = get_standard_people(ss, this_concept_parse_block->options.who,
                                          tbonetest, stdtest);
-   
+
       if (!tbonetest) {
          result->kind = nothing;
          clear_result_flags(result);
          return true;
       }
-   
+
       if ((tbonetest & 011) != 011)
          fail("People are not T-boned -- 'standard' is meaningless.");
-   
+
       if (!stdtest) fail("No one is standard.");
       if ((stdtest & 011) == 011) fail("The standard people are not facing consistently.");
-   
+
       global_tbonetest = stdtest;
       global_livemask = livemask;
       orig_tbonetest = tbonetest;
@@ -7461,7 +7571,7 @@ const concept_table_item concept_table[] = {
     complain_about_in_setup},                               // concept_tandem_in_setup
    {0, do_concept_checkerboard},                            // concept_checkerboard
    {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,
-    do_concept_checkerboard},                               // concept_sel_checkerboard  
+    do_concept_checkerboard},                               // concept_sel_checkerboard
    {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,
     anchor_someone_and_move},                               // concept_anchor
    {0, 0},                                                  // concept_reverse
@@ -7628,6 +7738,8 @@ const concept_table_item concept_table[] = {
     on_your_own_move},                                      // concept_on_your_own
    {CONCPROP__SECOND_CALL | CONCPROP__PERMIT_MODIFIERS | CONCPROP__NO_STEP,
     do_concept_trace},                                      // concept_trace
+   {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,
+    do_concept_move_in_and},                                // concept_move_in_and
    {CONCPROP__NO_STEP,
     do_concept_outeracting},                                // concept_outeracting
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS,

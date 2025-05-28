@@ -3073,7 +3073,7 @@ uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
 }
 
 
-void iofull::add_new_line(char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
 {
    erase_questionable_stuff();
    lstrcpyn(CurDisplay->Line, the_line, DISPLAY_LINE_LENGTH-1);

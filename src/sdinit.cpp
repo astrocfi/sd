@@ -877,6 +877,9 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             case '0':
                root_to_use->callflagsf |= CFLAGH__HAS_AT_ZERO;
                break;
+            case 'm':
+               root_to_use->callflagsf |= CFLAGH__HAS_AT_M;
+               break;
             }
          }
          else if (c == '[' || c == ']')
@@ -1427,6 +1430,7 @@ static void rewrite_init_file()
 {
    if (session_index != 0 || rewrite_with_new_style_filename) {
       char line[MAX_FILENAME_LENGTH];
+      char errmsg[MAX_TEXT_LINE_LENGTH];
       FILE *rfile;
       FILE *wfile;
       int i;
@@ -1434,16 +1438,24 @@ static void rewrite_init_file()
       remove(SESSION2_FILENAME);
 
       if (rename(SESSION_FILENAME, SESSION2_FILENAME)) {
-         printf("Failed to save file '" SESSION_FILENAME "' in '" SESSION2_FILENAME "'\n");
-         printf("%s\n", get_errstring());
+         strncpy(errmsg, "Failed to save file '" SESSION_FILENAME
+                 "' in '" SESSION2_FILENAME "':\n",
+                 MAX_TEXT_LINE_LENGTH);
+         strncat(errmsg, get_errstring(), MAX_FILENAME_LENGTH);
+         strncat(errmsg, ".", MAX_FILENAME_LENGTH);
+         gg->serious_error_print(errmsg);
       }
       else {
          if (!(rfile = fopen(SESSION2_FILENAME, "r"))) {
-            printf("Failed to open '" SESSION2_FILENAME "'\n");
+            strncpy(errmsg, "Failed to open '" SESSION2_FILENAME "'.",
+                    MAX_TEXT_LINE_LENGTH);
+            gg->serious_error_print(errmsg);
          }
          else {
             if (!(wfile = fopen(SESSION_FILENAME, "w"))) {
-               printf("Failed to open '" SESSION_FILENAME "'\n");
+               strncpy(errmsg, "Failed to open '" SESSION_FILENAME "'.",
+                       MAX_TEXT_LINE_LENGTH);
+               gg->serious_error_print(errmsg);
             }
             else {
                bool more_stuff = false;
@@ -1533,7 +1545,9 @@ static void rewrite_init_file()
 
             copy_failed:
 
-               printf("Failed to write to '" SESSION_FILENAME "'\n");
+               strncpy(errmsg, "Failed to write to '" SESSION_FILENAME "'.",
+                       MAX_TEXT_LINE_LENGTH);
+               gg->serious_error_print(errmsg);
 
             copy_done:
 
@@ -1548,8 +1562,21 @@ static void rewrite_init_file()
 
 extern void general_final_exit(int code)
 {
+   // If this is Sd, of course "ttu_initialize" won't have been called.
+   // (It doesn't even exist.)
+   //
+   // But if this is Sdtty, "ttu_initialize" will have been called
+   // unless we are just doing "command-line help".  That is, the user typed
+   // "sdtty -help".  In that case, "rewrite_init_file", will do nothing,
+   // so it won't matter that "ttu_initialize" wasn't called.
+
    if (glob_abridge_mode < abridge_mode_writing)
       rewrite_init_file();
+
+   // If this is Sdtty, this next procedure will call "ttu_terminate".
+   // If we had just been printing command-line help, "ttu_initialize"
+   // will not have happened.
+
    gg->terminate(code);
 }
 

@@ -206,8 +206,15 @@ void iofull::process_command_line(int *argcp, char ***argvp)
       }
       else if (strcmp(argv[argno], "-maximize") == 0)
          {}
-      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp)) {
+      else if (strcmp(argv[argno], "-window_size") == 0 && argno+1 < (*argcp))
          goto remove_two;
+      else if (strcmp(argv[argno], "-session") == 0 && argno+1 < (*argcp)) {
+         argno += 2;
+         continue;
+      }
+      else if (strcmp(argv[argno], "-resolve_test") == 0 && argno+1 < (*argcp)) {
+         argno += 2;
+         continue;
       }
       else {
          argno++;
@@ -244,16 +251,18 @@ static bool really_open_session()
    if (ui_options.force_session == -1000000) {
       char line[MAX_FILENAME_LENGTH];
 
-      printf("Do you want to use one of the following sessions?\n\n");
+      put_line("Do you want to use one of the following sessions?\n\n");
 
-      while (get_next_session_line(line))
-         printf("%s\n", line);
+      while (get_next_session_line(line)) {
+         put_line(line);
+         put_line("\n");
+      }
 
-      printf("Enter the number of the desired session\n");
-      printf("   (or a negative number to delete that session):  ");
+      put_line("Enter the number of the desired session\n");
+      put_line("   (or a negative number to delete that session):  ");
 
-      if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
-          !line[0] || line[0] == '\r' || line[0] == '\n')
+      get_string(line, MAX_FILENAME_LENGTH);
+      if (!line[0] || line[0] == '\r' || line[0] == '\n')
          goto no_session;
 
       if (!sscanf(line, "%d", &session_index)) {
@@ -272,8 +281,10 @@ static bool really_open_session()
    {
       int session_info = process_session_info(&session_error_msg);
 
-      if (session_info & 2)
-         printf("%s\n", session_error_msg);
+      if (session_info & 2) {
+         put_line(session_error_msg);
+         put_line("\n");
+      }
 
       if (session_info & 1) {
          // We are not using a session, either because the user selected
@@ -302,6 +313,7 @@ static int db_tick_cur;   /* goes from 0 to db_tick_max */
 #define TICK_STEPS 52
 static int tick_displayed;   /* goes from 0 to TICK_STEPS */
 
+static bool ttu_is_initialized = false;
 
 bool iofull::init_step(init_callback_state s, int n)
 {
@@ -309,10 +321,14 @@ bool iofull::init_step(init_callback_state s, int n)
    // in the boolean return value.  The others don't care.
 
    char line[MAX_FILENAME_LENGTH];
+   int size;
 
    switch (s) {
 
    case get_session_info:
+      current_text_line = 0;
+      if (!ttu_is_initialized) ttu_initialize();
+      ttu_is_initialized = true;
       return really_open_session();
 
    case final_level_query:
@@ -323,28 +339,22 @@ bool iofull::init_step(init_callback_state s, int n)
       // level.
 
       calling_level = l_mainstream;   // Default in case we fail.
-      printf("Enter the level: ");
+      put_line("Enter the level: ");
 
-      if (fgets(line, MAX_FILENAME_LENGTH, stdin)) {
-         int size = strlen(line);
+      get_string(line, MAX_FILENAME_LENGTH);
 
-         while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
-            line[--size] = '\000';
+      size = strlen(line);
 
-         parse_level(line);
-      }
+      while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
+         line[--size] = '\000';
+
+      parse_level(line);
 
       strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
       break;
 
    case init_database1:
       // The level has been chosen.  We are about to open the database.
-
-      if (glob_abridge_mode < abridge_mode_writing) {
-         current_text_line = 0;
-         ttu_initialize();
-      }
-
       call_menu_prompts[call_list_empty] = "--> ";   // This prompt should never be used.
       break;
 
@@ -354,8 +364,7 @@ bool iofull::init_step(init_callback_state s, int n)
    case calibrate_tick:
       db_tick_max = n;
       db_tick_cur = 0;
-      printf("Sd: reading database...");
-      fflush(stdout);
+      put_line("Sd: reading database...");
       tick_displayed = 0;
       break;
 
@@ -364,14 +373,14 @@ bool iofull::init_step(init_callback_state s, int n)
       {
          int tick_new = (TICK_STEPS*db_tick_cur)/db_tick_max;
          while (tick_displayed < tick_new) {
-            printf(".");
+            put_line(".");
             tick_displayed++;
          }
       }
-      fflush(stdout);
+
       break;
    case tick_end:
-      printf("done\n");
+      put_line("done\n");
       break;
 
    case do_accelerator:
@@ -1261,7 +1270,7 @@ uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
  * is volatile, so we must copy it if we need it to stay around.
  */
 
-void iofull::add_new_line(char the_line[], uint32 drawing_picture)
+void iofull::add_new_line(const char the_line[], uint32 drawing_picture)
 {
     put_line(the_line);
     put_line("\n");
@@ -1324,6 +1333,6 @@ void iofull::serious_error_print(Cstring s1)
 void iofull::terminate(int code)
 {
    if (journal_file) (void) fclose(journal_file);
-   ttu_terminate();
+   if (ttu_is_initialized) ttu_terminate();
    exit(code);
 }

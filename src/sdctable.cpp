@@ -1540,6 +1540,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, selective_key_work_concept, 1, 0},
    {"@6 LEAD FOR A",                         concept_so_and_so_only,          D, l_mainstream,
     UC_none, selective_key_lead_for_a, 0, 0},
+   {"@6 MOVE IN AND",                        concept_move_in_and,             D, l_mainstream,
+    UC_none},
    {"two calls in succession",               concept_sequential,              0, l_mainstream,
     UC_none},
    {"FOLLOW IT BY",                          concept_special_sequential,      0, l_c2,

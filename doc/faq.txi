@@ -8,6 +8,10 @@
 
 @contents
 
+@unnumberedsec The program offered something that I've never heard of, or don't understand, or doesn't seem right.  What should I do?
+
+Don't call it.
+
 @unnumberedsec The options for sessions and abridgement files are confusing!
 
 You may find that @code{Sd} is more user-friendly than @code{Sdtty},
@@ -985,8 +989,7 @@ will leave the dancers in a squared set.  Then, after doing the @strong{4 ladies
 chain} and whatever other thar/alamo/squared set calls you want, you may
 very well want to go into the more ``normal'' style of calling by having
 some people move in and pass the ocean or whatever.  To do this, use
-the call @strong{<anyone> press ahead}, and then have those same people
-(or just give the designator @strong{centers}) do the desired call.
+the concept @strong{<anyone> move in and}, and then then give the desired call.
 
 The sequence might look like:
 
@@ -994,26 +997,17 @@ The sequence might look like:
 @group
 just as they are
 all 4 ladies chain
-heads press ahead
-heads pass the ocean
+heads move in and pass the ocean
 etc...
 @end group
 @end example
-
-(You would presumably say something like @strong{heads move in and pass
-the ocean} when calling this.)
-
-The call @strong{press ahead} is actually a Challenge call, but
-Sd recognizes it at Mainstream, just for the purpose of
-dealing with this issue, and other similar issues of
-brute-force moving people around.
 
 If you had the ladies chain 3/4, @strong{heads} won't do.  In that
 case, use the designator @strong{headliners} or @strong{sideliners}.  These
 are also Challenge terms that Sd recognizes at Mainstream.
 They mean "whoever is facing head/side walls right now".
 When calling, you would presumably say
-@strong{All 4 ladies chain 3/4, @strong{*AT*} the heads, square thru ....}
+@strong{All 4 ladies chain 3/4, *AT* the heads, square thru ....}
 or whatever terminology you like to use.
 
 @unnumberedsec I can't seem to get it to do anything after things like @strong{all 4 couples right and left thru}.
@@ -1021,7 +1015,7 @@ or whatever terminology you like to use.
 This is really the same problem as the @strong{all 4 ladies chain}
 problem of the previous question.  You need to start the sequence with
 @strong{just as they are}, then do the @strong{all four couples} calls,
-and then have some people @strong{press ahead} to do the rest of the sequence.
+and then have some people @strong{move in and ...} to do the rest of the sequence.
 
 @unnumberedsec Why can't I do @strong{split phantom lines load the boat} from an 8-chain?
 

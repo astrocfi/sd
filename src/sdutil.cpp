@@ -2364,6 +2364,12 @@ void run_program()
    // Enter, or re-enter, the big try block.
 
    try {
+
+      if (global_error_flag == error_flag_user_wants_to_resolve) {
+         global_error_flag = error_flag_none;
+         goto do_a_resolve;
+      }
+
       if (global_error_flag) {
          // The call we were trying to do has failed.  Abort it and display the error message.
 
@@ -2790,11 +2796,11 @@ void run_program()
                   // that we need to translate the selectors.
 
                   for (i=0; i<=attr::slimit(old); i++) {
-                     uint32 p = old->people[i].id1;
-                     uint32 q = nuu->people[i].id1;
+                     uint32 q = old->people[i].id1;
+                     uint32 p = nuu->people[i].id1;
                      uint32 oldmask = mask;
-                     uint32 a = (q >> 6) & 3;
-                     uint32 b = (p >> 6) & 3;
+                     uint32 a = (p >> 6) & 3;
+                     uint32 b = (q >> 6) & 3;
 
                      livemask1 <<= 1;
                      livemask2 <<= 1;
@@ -2802,6 +2808,8 @@ void run_program()
                      if (q) livemask2 |= 1;
                      directions1 = (directions1<<2) | (p&3);
                      directions2 = (directions2<<2) | (q&3);
+
+                     if ((p | q) == 0) continue;
 
                      mask |= (b|4) << (a*3 + 18);
                      oldmask ^= mask;     // The bits that changed.
@@ -3058,8 +3066,12 @@ void run_program()
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     // Should be some kind of search command.
+
             // If it wasn't, we have a serious problem.
             if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;
+
+         do_a_resolve:
+
             search_goal = (command_kind) uims_menu_index;
             global_reply = full_resolve();
 

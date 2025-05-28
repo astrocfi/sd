@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1827,8 +1827,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
     {2, 1, 4}, {3, 0, 1, 5}, {3, 2, 3, 4}, true, chk_dmd_qtag},
    {s_short6, cr_wave_only, 6, {1, 0, 3, 2, 5, 4},
     {0}, {0}, {0}, true, chk_wave},
-   {s_trngl, cr_wave_only, 2, {1, 2},
-    {0}, {0}, {0}, true, chk_wave},   // Isn't this bogus?  It checks for TANDEM-BASE.
+   {s_trngl, cr_wave_only, 4, {0, 1, 0, 2},
+    {0}, {0}, {0}, true, chk_wave},
    {sdmd, cr_wave_only, 2, {1, 3},
     {0}, {0}, {0}, true, chk_wave},
    {sdmd, cr_miniwaves, 2, {1, 3},
@@ -3030,18 +3030,31 @@ static bool check_for_supercall(parse_block *parseptrcopy)
    concept_kind kk = parseptrcopy->concept->kind;
 
    if (kk <= marker_end_of_list) {
-      // Only calls with "@0" in their name may be supercalls.
+      // Only calls with "@0" or "@m" in their name may be supercalls.
+      // But we don't allow calls that have both.
+      // What would "finally [reverse the top] an anchor but [recoil]" mean?
       if (kk == marker_end_of_list &&
           !parseptrcopy->next &&
-          (parseptrcopy->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO)) {
+          ((parseptrcopy->call->the_defn.callflagsf &
+            (CFLAGH__HAS_AT_ZERO|CFLAGH__HAS_AT_M)) == CFLAGH__HAS_AT_ZERO ||
+           (parseptrcopy->call->the_defn.callflagsf &
+            (CFLAGH__HAS_AT_ZERO|CFLAGH__HAS_AT_M)) == CFLAGH__HAS_AT_M)) {
          setup_command foo2;
          by_def_item innerdef;
-         innerdef.call_id = base_call_null;
-         innerdef.modifiers1 = DFM1_CALL_MOD_MAND_ANYCALL;
+
+         if (parseptrcopy->call->the_defn.callflagsf & CFLAGH__HAS_AT_ZERO) {
+            innerdef.call_id = base_call_null;
+            innerdef.modifiers1 = DFM1_CALL_MOD_MAND_ANYCALL;
+         }
+         else {
+            innerdef.call_id = base_call_null_second;
+            innerdef.modifiers1 = DFM1_CALL_MOD_MAND_SECONDARY;
+         }
+
          innerdef.modifiersh = 0;
          setup_command bar;
          bar.cmd_final_flags.clear_all_herit_and_final_bits();
-         calldefn this_defn = base_calls[base_call_null]->the_defn;
+         calldefn this_defn = base_calls[innerdef.call_id]->the_defn;
          get_real_subcall(parseptrcopy, &innerdef, &bar, &this_defn, false, 0, &foo2);
       }
 
@@ -3382,6 +3395,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       tt.assump_cast = 0;
       tt.assump_live = (p->qualifierstuff / QUALBIT__LIVE) & 1;
       tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
+
+      for (idx=0,u=0 ; idx<=attr::slimit(ss) ; idx++)
+         u |= ss->people[idx].id1;
 
       switch (this_qualifier) {
       case cr_wave_only:
@@ -4082,18 +4098,23 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       tt.assumption = cr_wave_only;
 
       switch (ssK) {
+         uint32 vv;
       case s3x4:         // This only handles lines; not columns --
                          // we couldn't have "wavy" columns that were symmetric.
       case s_bone6:
-      case s_trngl:
       case s_qtag:
       case s3x1dmd:
          goto check_tt;
+      case s_trngl:
+         // See if this is tandem-based.  If so, we are presumably checking
+         // for something like single ferris wheel from a triangle.
+         if ((ss->people[1].id1 | ss->people[2].id1) & 1) tt.assump_col = 1;
+         goto check_tt;
       case s_galaxy:
-         u = ss->people[1].id1 | ss->people[3].id1 |
+         vv = ss->people[1].id1 | ss->people[3].id1 |
             ss->people[5].id1 | ss->people[7].id1;
-         if (!(u&010)) tt.assump_col = 1;
-         else if (u&001) goto bad;
+         if (!(vv&010)) tt.assump_col = 1;
+         else if (vv&001) goto bad;
          goto check_tt;
       case sdmd:
       case s_ptpd:
@@ -4101,9 +4122,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          tt.assump_col = 1;
          goto check_tt;
       case s2x4:
-         // If the setup is a 2x4, but we are deciding whether
+         // If the setup is a T-boned 2x4, but we are deciding whether
          // to split into 2x2's, let it pass.
-         if (key == b_2x2) goto good;
+         if (key == b_2x2 && (u & 011) == 011) goto good;
          else if (key == b_1x4) tt.assumption = cr_miniwaves;
          break;
       }
@@ -4131,8 +4152,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case s2x6:
       case s2x8:
       case s2x3:
-         for (idx=0,u=0 ; idx<=attr::slimit(ss) ; idx++)
-            u |= ss->people[idx].id1;
          if (!(u&010)) tt.assump_col = 1;
 
          // This line commented out.  We now recognize "handedness" of the waves of 3
@@ -5059,6 +5078,9 @@ static const resolve_tester test_4x4_stuff[] = {
 
    // From blocks.
    {resolve_rlg,            MS, 3,   {5, 2, 3, 0, 13, 10, 11, 8},  0x8A8AA8A8},
+   {resolve_rlg,            MS, 1,   {1, 14, 15, 12, 9, 6, 7, 4},  0x31311313},
+   {resolve_la,             MS, 7,   {5, 2, 3, 0, 13, 10, 11, 8},  0xA8A88A8A},
+   {resolve_la,             MS, 5,   {1, 14, 15, 12, 9, 6, 7, 4},  0x13133131},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_4x6_stuff[] = {
@@ -5639,6 +5661,128 @@ static void check_concept_parse_tree(parse_block *conceptptr) THROW_DECL
    }
 }
 
+bool check_for_centers_concept(uint32 callflags1_to_examine,
+                               parse_block *parse_scan,
+                               setup_command *the_cmd) THROW_DECL
+{
+   // If the call is a special sequence starter (e.g. spin a pulley) remove the implicit
+   // "centers" concept and just do it.  The setup in this case will be a squared set
+   // with so-and-so moved into the middle, which is what the encoding of these calls
+   // wants.
+   //
+   // If the call is a "split square thru" or "split dixie style" type of call, and the
+   // "split" concept has been given, possibly preceded by "left" we do the same.
+   // We leave the "split" concept in place.  Other mechanisms will do the rest.
+   //
+   // This is made much more complicated by the fact that we want the examination
+   // of the call to be transparent to modifiers, certain concepts (fractional,
+   // stretch, maybe others will be added to this list in the future) and to
+   // "<anything> and roll" types of suffixes.
+
+   final_and_herit_flags finaljunk;
+   finaljunk.clear_all_herit_and_final_bits();
+   bool did_something = true;
+
+   // Here's the loop that strips off the stuff that we need to strip off,
+   // and checks the call.
+   while (did_something) {
+      did_something = false;
+
+      while (parse_scan->concept->kind == concept_comment)
+         parse_scan = parse_scan->next;
+
+      if (parse_scan->call)
+         callflags1_to_examine = parse_scan->call->the_defn.callflags1;
+
+      if (callflags1_to_examine & (CFLAG1_SEQUENCE_STARTER|CFLAG1_SEQUENCE_STARTER_ONLY)) {
+         // The subject call is always a sequence starter.
+         return false;
+      }
+      else if ((callflags1_to_examine &
+               (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) &&
+               finaljunk.test_finalbit(FINAL__SPLIT)) {
+         // The subject call is a conditional sequence starter with the "split" modifier.
+         return false;
+      }
+
+      // Now skip things.
+      // First, skip any fractional concept.  Only simple "M/N".
+      // Also skip "stretch" and "once removed", and so on.
+      // And "add <call>", which requires tracing the subsidiary_root.
+      for ( ;; ) {
+         if ((parse_scan->concept->kind == concept_fractional &&
+              parse_scan->concept->arg1 == 0) ||
+             parse_scan->concept->kind == concept_meta ||
+             parse_scan->concept->kind == concept_once_removed ||
+             parse_scan->concept->kind == concept_stable ||
+             parse_scan->concept->kind == concept_frac_stable ||
+             parse_scan->concept->kind == concept_new_stretch ||
+             parse_scan->concept->kind == concept_old_stretch) {
+            parse_scan = parse_scan->next;
+         }
+         else if ((parse_scan->concept->kind == concept_special_sequential &&
+                   parse_scan->concept->arg1 == 0)) {
+            parse_scan = parse_scan->subsidiary_root;
+         }
+         else
+            break;
+
+         did_something = true;
+      }
+
+      // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
+      finaljunk.clear_all_herit_and_final_bits();
+      parse_block *new_parse_scan =
+         process_final_concepts(parse_scan, false, &finaljunk, true, __FILE__, __LINE__);
+
+      if (parse_scan != new_parse_scan) {
+         parse_scan = new_parse_scan;
+         did_something = true;
+      }
+
+      // If the subject call is something like "<anything> and roll",
+      // look at the <anything> to see whether it is a sequence starter.
+      // The test for this is "heads [split grand chain 8] and roll".
+      // The subcall may have already been filled in (the user typed
+      // "heads [split grand chain 8] and roll"), or it may need to be
+      // filled in (the user typed "heads <anything> and roll".)
+      // The concept kind will be "concept_another_call_next_mod" in the
+      // former case, or "marker_end_of_list" in the latter.
+      // In the latter case, "get_real_subcall" will perform the
+      // query.  Either way, "thingout" will have the subcall.
+      // We do this if the call is something like "<anything> and roll".
+      // The test is that it is sequentially defined, and part 1 is
+      // a mandatory substitution, replacing the call "nothing".
+      if ((parse_scan->concept->kind == concept_another_call_next_mod ||
+           parse_scan->concept->kind == marker_end_of_list) &&
+          parse_scan->call &&
+          parse_scan->call->the_defn.schema == schema_sequential) {
+         calldefn *seqdef = &parse_scan->call->the_defn;
+         by_def_item *part0item = &seqdef->stuff.seq.defarray[0];
+         setup_command thingout;
+
+         if (part0item->call_id == base_call_null &&
+             (part0item->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL &&
+             get_real_subcall(parse_scan,
+                              part0item,
+                              the_cmd,
+                              seqdef,
+                              false,
+                              0,
+                              &thingout)) {
+            parse_scan = thingout.parseptr;
+            // If there is no call, then process_final_concepts will do something
+            // on the next round, and we will get something on the round after that.
+            callflags1_to_examine = parse_scan->call ?
+               parse_scan->call->the_defn.callflags1 : 0;
+            did_something = true;
+         }
+      }
+   }
+
+   return true;
+}
+
 
 // Top level move routine.
 
@@ -5682,125 +5826,13 @@ void toplevelmove() THROW_DECL
    // flag on, and this call is a "sequence starter", take special action.
 
    if (configuration::current_config().get_startinfo_specific()->into_the_middle) {
-
-      // If the call is a special sequence starter (e.g. spin a pulley) remove the implicit
-      // "centers" concept and just do it.  The setup in this case will be a squared set
-      // with so-and-so moved into the middle, which is what the encoding of these calls
-      // wants.
-      //
-      // If the call is a "split square thru" or "split dixie style" type of call, and the
-      // "split" concept has been given, possibly preceded by "left" we do the same.
-      // We leave the "split" concept in place.  Other mechanisms will do the rest.
-      //
-      // This is made much more complicated by the fact that we want the examination
-      // of the call to be transparent to modifiers, certain concepts (fractional,
-      // stretch, maybe others will be added to this list in the future) and to
-      // "<anything> and roll" types of suffixes.
-
       // There's this weird stuff about using "parse_state.topcallflags1"
       // instead of the obvious call flags.  I no longer remember what that
       // is for.  But we do it.  For the first round.
-      uint32 callflags1_to_examine = parse_state.topcallflags1;
-      parse_block *parse_scan = conceptptr->next;
-      final_and_herit_flags finaljunk;
-      finaljunk.clear_all_herit_and_final_bits();
-      bool did_something = true;
-
-      // Here's the loop that strips off the stuff that we need to strip off,
-      // and checks the call.
-      while (did_something) {
-         did_something = false;
-         if (callflags1_to_examine & (CFLAG1_SEQUENCE_STARTER|CFLAG1_SEQUENCE_STARTER_ONLY)) {
-            // The subject call is a sequence starter.
-            // Strip the "centers" concept and exit.
-            conceptptr = conceptptr->next;
-            break;
-         }
-         else if (callflags1_to_examine &
-                  (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
-            // The subject call is a sequence starter if given the "split" modifier.
-            if (finaljunk.test_finalbit(FINAL__SPLIT)) {
-               conceptptr = conceptptr->next;
-               break;
-            }
-         }
-
-         // Now skip things.
-         // First, skip any fractional concept.  Only simple "M/N".
-         // Also skip "stretch" and "once removed", and so on.
-         // And "add <call>", which requires tracing the subsidiary_root.
-         for ( ;; ) {
-            if ((parse_scan->concept->kind == concept_fractional &&
-                 parse_scan->concept->arg1 == 0) ||
-                parse_scan->concept->kind == concept_meta ||
-                parse_scan->concept->kind == concept_once_removed ||
-                parse_scan->concept->kind == concept_stable ||
-                parse_scan->concept->kind == concept_frac_stable ||
-                parse_scan->concept->kind == concept_new_stretch ||
-                parse_scan->concept->kind == concept_old_stretch) {
-               parse_scan = parse_scan->next;
-            }
-            else if ((parse_scan->concept->kind == concept_special_sequential &&
-                      parse_scan->concept->arg1 == 0)) {
-               parse_scan = parse_scan->subsidiary_root;
-            }
-            else
-               break;
-
-            did_something = true;
-         }
-
-         // Skip all simple modifiers.  If we pass a "split" modifier, remember same.
-         finaljunk.clear_all_herit_and_final_bits();
-         parse_block *new_parse_scan = process_final_concepts(parse_scan, false,
-                                                              &finaljunk, true,
-                                                              __FILE__, __LINE__);
-         if (parse_scan != new_parse_scan) {
-            parse_scan = new_parse_scan;
-            if (parse_scan->call)
-               callflags1_to_examine = parse_scan->call->the_defn.callflags1;
-            did_something = true;
-         }
-
-         // If the subject call is something like "<anything> and roll",
-         // look at the <anything> to see whether it is a sequence starter.
-         // The test for this is "heads [split grand chain 8] and roll".
-         // The subcall may have already been filled in (the user typed
-         // "heads [split grand chain 8] and roll"), or it may need to be
-         // filled in (the user typed "heads <anything> and roll".)
-         // The concept kind will be "concept_another_call_next_mod" in the
-         // former case, or "marker_end_of_list" in the latter.
-         // In the latter case, "get_real_subcall" will perform the
-         // query.  Either way, "thingout" will have the subcall.
-         // We do this if the call is something like "<anything> and roll".
-         // The test is that it is sequentially defined, and part 1 is
-         // a mandatory substitution, replacing the call "nothing".
-         if ((parse_scan->concept->kind == concept_another_call_next_mod ||
-              parse_scan->concept->kind == marker_end_of_list) &&
-             parse_scan->call &&
-             parse_scan->call->the_defn.schema == schema_sequential) {
-            calldefn *seqdef = &parse_scan->call->the_defn;
-            by_def_item *part0item = &seqdef->stuff.seq.defarray[0];
-            setup_command thingout;
-
-            if (part0item->call_id == base_call_null &&
-                (part0item->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL &&
-                get_real_subcall(parse_scan,
-                                 part0item,
-                                 &starting_setup.cmd,
-                                 seqdef,
-                                 false,
-                                 0,
-                                 &thingout)) {
-               parse_scan = thingout.parseptr;
-               // If there is no call, then process_final_concepts will do something
-               // on the next round, and we will get something on the round after that.
-               callflags1_to_examine = parse_scan->call ?
-                  parse_scan->call->the_defn.callflags1 : 0;
-               did_something = true;
-            }
-         }
-      }
+      if (!check_for_centers_concept(parse_state.topcallflags1,
+                                     conceptptr->next,
+                                     &starting_setup.cmd))
+         conceptptr = conceptptr->next;
    }
    else if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER_ONLY)
       fail("This call may only be used at the beginning of a sequence.");
@@ -6120,9 +6152,9 @@ extern bool do_subcall_query(
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-      (void) sprintf(tempstring_text, "SUBSIDIARY CALL");
+      sprintf(tempstring_text, "SUBSIDIARY CALL");
    else if (snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-      (void) sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
+      sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
    else {
 
       // Need to present the popup to the operator
@@ -6183,10 +6215,10 @@ extern bool do_subcall_query(
 
    parse_state.parse_stack_index = 0;
    parse_state.call_list_to_use = call_list_any;
-   (void) strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
+   strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
 
-   /* Search for special case of "must_be_tag_call" with no other modification bits.
-      That means it is a new-style tagging call. */
+   // Search for special case of "must_be_tag_call" with no other modification bits.
+   // That means it is a new-style tagging call.
 
    if (snumber == 0 && this_is_tagger_circcer) {
       throw error_flag_type(error_flag_wrong_command);
@@ -6194,6 +6226,12 @@ extern bool do_subcall_query(
    else {
       if (query_for_call()) {
          // User clicked on something unusual like "exit" or "undo".
+         // These are generally not allowed.
+         // But it might be "pick random call", which we can handle.
+         if (global_reply == ui_command_select &&
+             ((command_kind) uims_menu_index) == command_random_call)
+            throw error_flag_type(error_flag_user_wants_to_resolve);
+
          throw error_flag_type(error_flag_wrong_command);
       }
    }

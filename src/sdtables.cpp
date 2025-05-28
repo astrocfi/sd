@@ -338,6 +338,7 @@ Cstring warning_strings[] = {
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__offset_hard_to_see  */   "*The offset setup is hard to see.",
    /*  warn__pg_hard_to_see      */   "*The parallelogram setup is hard to see.",
+   /*  warn__phantom_judge       */   "*The judge or socker may be a phantom.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
    /*  warn_big_outer_triangles  */   "*The outside triangles are very large.",
    /*  warn_hairy_fraction       */   " Fraction is very complicated.",
@@ -440,6 +441,22 @@ expand::thing expand::init_table[] = {
 
    {{0, 1, 2, 3, 4, 5, 11, 10},
     8, s2x4, s3x4, 0, 0UL, 0x3C0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 3, 2, 7, 8, 4, 9},
+    8, s1x8, s1x10, 0, 0UL, 0x060,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 9, 4, 5, 6, 8, 7},
+    8, s1x8, s1x10, 0, 0UL, 0x003,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 3, 2, 10, 11, 4, 5},
+    8, s1x8, s1x12, 0, 0UL, 0x3C0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{4, 5, 10, 11, 6, 7, 9, 8},
+    8, s1x8, s1x12, 0, 0UL, 0x00F,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 4, 5, 6, 7, 8, 9},

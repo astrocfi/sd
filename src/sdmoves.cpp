@@ -1599,7 +1599,6 @@ static void matrixmove(
    const uint32 *callstuff,
    setup *result) THROW_DECL
 {
-   uint32 datum;
    setup people;
    matrix_rec matrix_info[9];
    int i, nump, alldelta;
@@ -1612,8 +1611,9 @@ static void matrixmove(
       matrix_rec *thisrec = &matrix_info[i];
 
       if (!(flags & MTX_USE_SELECTOR) || thisrec->sel) {
-         /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
-            or if the two data are identical so the sex doesn't matter. */
+         // This is legal if girlbit or boybit is on (in which case we use
+         // the appropriate datum) or if the two data are identical so
+         // the sex doesn't matter.
          if ((thisrec->girlbit | thisrec->boybit) == 0 &&
              callstuff[0] != callstuff[1]) {
             if (flags & MTX_USE_VEER_DATA)
@@ -1622,10 +1622,24 @@ static void matrixmove(
                fail("Can't determine sex of this person.");
          }
 
-         datum = callstuff[thisrec->girlbit];
+         uint32 datum = callstuff[thisrec->girlbit];
 
          thisrec->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
          thisrec->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
+         thisrec->deltarot = datum & 3;
+         thisrec->roll_stability_info = datum;
+
+         if (flags & MTX_MIRROR_IF_RIGHT_OF_CTR) {
+            int relative_delta_x = (thisrec->dir & 1) ? thisrec->nicey : thisrec->nicex;
+            if ((thisrec->dir+1) & 2) relative_delta_x = -relative_delta_x;
+
+            if (relative_delta_x > 0) {
+               thisrec->deltarot = (-thisrec->deltarot) & 3;
+               thisrec->deltax = -thisrec->deltax;
+            }
+            else if (relative_delta_x == 0)
+               fail("Person is on a center line.");
+         }
 
          if (flags & MTX_USE_NUMBER) {
             int count = current_options.number_fields & 0xF;
@@ -1633,8 +1647,6 @@ static void matrixmove(
             thisrec->deltay *= count;
          }
 
-         thisrec->deltarot = datum & 3;
-         thisrec->roll_stability_info = datum;
          alldelta |= thisrec->deltax | thisrec->deltay;
       }
    }
@@ -4048,15 +4060,24 @@ static void do_sequential_call(
    bool setup_is_elongated =
       (ss->kind == s2x2 || ss->kind == s_short6) && (ss->cmd.prior_elongation_bits & 0x3F) != 0;
 
+   // If this call has "half_is_inherited" or "lasthalf_is_inherited" on,
+   // we don't use the fractions in the usual way.  Instead, we pass them,
+   // exactly as they are, to all subcalls that want them.  Either flag will do it.
+   // *All* fractions are passed through, not just half or last half.
+
+   uint32 saved_fracs = ss->cmd.cmd_frac_flags;
+   bool feeding_fractions_through =
+      (callspec->callflagsh & (INHERITFLAG_HALF|INHERITFLAG_LASTHALF)) != 0;
+
    // If rewinding, do the parts in reverse order.
    if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REWIND)) {
       ss->cmd.cmd_frac_flags ^= CMD_FRAC_REVERSE;
       ss->cmd.cmd_frac_flags |= CMD_FRAC_FORCE_VIS;
    }
 
-   /* If a restrained concept is in place, it is waiting for the call to be pulled apart
-      into its pieces.  That is about to happen.  Turn off the restraint flag.
-      That will be the signal to "move" that it should act on the concept. */
+   // If a restrained concept is in place, it is waiting for the call to be pulled apart
+   // into its pieces.  That is about to happen.  Turn off the restraint flag.
+   // That will be the signal to "move" that it should act on the concept.
 
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
 
@@ -4177,8 +4198,8 @@ static void do_sequential_call(
          doing_weird_revert = weirdness_otherstuff;
       }
 
-      zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
-                            callflags1, weirdness_off);
+      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
+                                                            callflags1, weirdness_off);
 
       // If distribution is on, we have to do some funny stuff.
       // We will scan the fetch array in its entirety, using the
@@ -4437,7 +4458,16 @@ static void do_sequential_call(
 
       result->cmd.prior_elongation_bits = remember_elongation;
 
-      result->cmd.cmd_frac_flags = zzz.get_fracs_for_this_part();
+      // If we are feeding fractions through, either "inherit_half" or "inherit_lasthalf"
+      // causes the fraction info to be fed to this subcall.
+      if (feeding_fractions_through) {
+         if (this_item->modifiersh & (INHERITFLAG_HALF|INHERITFLAG_LASTHALF))
+            result->cmd.cmd_frac_flags = saved_fracs;
+         else
+            result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+      }
+      else
+         result->cmd.cmd_frac_flags = zzz.get_fracs_for_this_part();
 
       if (doing_weird_revert == weirdness_otherstuff) {
          if (zzz.m_client_index == 0) {

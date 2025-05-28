@@ -146,21 +146,24 @@ enum { MAX_PEOPLE = 24 };
 
 
 enum error_flag_type {
-   error_flag_none = 0,          // Must be zero because setjmp returns this.
-                                 // (Of course, we haven't used setjmp since March, 2000.)
-   error_flag_1_line,            // 1-line error message, text is in error_message1.
-   error_flag_2_line,            // 2-line error message, text is in error_message1 and
-                                 // error_message2.
-   error_flag_collision,         // collision error, message is that people collided, they are in
-                                 // collision_person1 and collision_person2.
-   error_flag_cant_execute,      // unable-to-execute error, person is in collision_person1,
-                                 // text is in error_message1.
+   error_flag_none = 0,      // Must be zero because setjmp returns this.
+                             // (Of course, we haven't used setjmp since March, 2000.)
+   error_flag_1_line,        // 1-line error message, text is in error_message1.
+   error_flag_2_line,        // 2-line error message, text is in error_message1 and
+                             // error_message2.
+   error_flag_collision,     // collision error, message is that people collided, they are in
+                             // collision_person1 and collision_person2.
+   error_flag_cant_execute,  // unable-to-execute error, person is in collision_person1,
+                             // text is in error_message1.
 
    // Errors after this can't be restarted by the mechanism that goes on to the
    // call's next definition when a call execution fails.
    // "Error_flag_no_retry" is the indicator for this.
 
-   error_flag_no_retry,          // Like error_flag_1_line, but it is instantly fatal.
+   error_flag_no_retry,      // Like error_flag_1_line, but it is instantly fatal.
+
+   error_flag_user_wants_to_resolve, // User typed "pick random call" while querying
+                                     // for a subcall -- do a resolve.
 
    // Errors after this did not arise from call execution, so we don't
    // show the ending formation.  "Error_flag_wrong_command" is the indicator for this.
@@ -253,7 +256,20 @@ class ui_option_type {
    // This is 59 by default.
    int max_print_length;
 
+   // This is for the hidden command-line switch "resolve_test <N>".  Any
+   // nonzero argument will seed the random number generator with that value,
+   // thereby making all search operations deterministic.  (The random number
+   // generator is normally seeded with the clock, of course.)
+   //
+   // Also, if the number is positive, it makes all search operations fail, and
+   // sets the timeout to that many minutes.  This can be used for testing for
+   // crashes in the resolve searcher.  Give an argument of 60, for example, and
+   // any search command ("resolve", "pick random call", etc.) will generate
+   // random solutions for an hour, rejecting them all.  Doing this on multiple
+   // processors, with slightly different arguments, will run separate
+   // deterministic tests on each processor.
    int resolve_test_minutes;
+
    int singing_call_mode;
 
    // This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
@@ -415,6 +431,7 @@ enum concept_kind {
    concept_checkpoint,
    concept_on_your_own,
    concept_trace,
+   concept_move_in_and,
    concept_outeracting,
    concept_ferris,
    concept_overlapped_diamond,
@@ -904,7 +921,7 @@ enum command_kind {
    command_print_current,
    command_print_any,
    command_refresh,
-   command_resolve,            /* Search commands start here */
+   command_resolve,            // Search commands start here.
    command_normalize,
    command_standardize,
    command_reconcile,
@@ -913,7 +930,7 @@ enum command_kind {
    command_concept_call,
    command_level_call,
    command_8person_level_call,
-   command_create_any_lines,   /* Create setup commands start here */
+   command_create_any_lines,   // Create setup commands start here.
    command_create_waves,
    command_create_2fl,
    command_create_li,
@@ -1170,12 +1187,13 @@ enum {
    CFLAGH__CIRC_CALL_RQ_BIT        = 0x00000020UL,
    CFLAGH__ODD_NUMBER_ONLY         = 0x00000040UL,
    CFLAGH__HAS_AT_ZERO             = 0x00000080UL,
-   CFLAGHSPARE_1                   = 0x00000100UL,
-   CFLAGHSPARE_2                   = 0x00000200UL,
-   CFLAGHSPARE_3                   = 0x00000400UL,
-   CFLAGHSPARE_4                   = 0x00000800UL,
-   CFLAGHSPARE_5                   = 0x00001000UL,
-   CFLAGHSPARE_6                   = 0x00002000UL
+   CFLAGH__HAS_AT_M                = 0x00000100UL,
+   CFLAGHSPARE_1                   = 0x00000200UL,
+   CFLAGHSPARE_2                   = 0x00000400UL,
+   CFLAGHSPARE_3                   = 0x00000800UL,
+   CFLAGHSPARE_4                   = 0x00001000UL,
+   CFLAGHSPARE_5                   = 0x00002000UL,
+   CFLAGHSPARE_6                   = 0x00004000UL
    // We need to leave the top 8 bits free in order to accomodate the "CFLAG2" bits.
 };
 
@@ -2048,6 +2066,7 @@ enum warning_index {
    warn_interlocked_to_6,
    warn__offset_hard_to_see,
    warn__pg_hard_to_see,
+   warn__phantom_judge,
    warn__colocated_once_rem,
    warn_big_outer_triangles,
    warn_hairy_fraction,
@@ -3742,7 +3761,7 @@ class iobase {
    virtual int do_abort_popup() = 0;
    virtual uims_reply get_startup_command() = 0;
    virtual void set_window_title(char s[]) = 0;
-   virtual void add_new_line(char the_line[], uint32 drawing_picture) = 0;
+   virtual void add_new_line(const char the_line[], uint32 drawing_picture) = 0;
    virtual void reduce_line_count(int n) = 0;
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
                                     resolver_display_state state) = 0;
@@ -3782,7 +3801,7 @@ class iofull : public iobase {
    int do_abort_popup();
    uims_reply get_startup_command();
    void set_window_title(char s[]);
-   void add_new_line(char the_line[], uint32 drawing_picture);
+   void add_new_line(const char the_line[], uint32 drawing_picture);
    void reduce_line_count(int n);
    void update_resolve_menu(command_kind goal, int cur, int max,
                             resolver_display_state state);
@@ -4806,6 +4825,10 @@ extern bool warnings_are_unacceptable(bool strict);
 extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
      THROW_DECL;
 
+bool check_for_centers_concept(uint32 callflags1_to_examine,
+                               parse_block *parse_scan,
+                               setup_command *the_cmd) THROW_DECL;
+
 void toplevelmove() THROW_DECL;
 
 void finish_toplevelmove() THROW_DECL;
@@ -5009,32 +5032,31 @@ extern void ttu_initialize();
 // The opposite.
 extern void ttu_terminate();
 
-/* Get number of lines to use for "more" processing.  This number is
-   not used for any other purpose -- the rest of the program is not concerned
-   with the "screen" size. */
+// Get number of lines to use for "more" processing.  This number is
+// not used for any other purpose -- the rest of the program is not concerned
+// with the "screen" size.
 
 extern int get_lines_for_more();
 
-/* Clear the current line, leave cursor at left edge. */
+// Return true for 'tty-like' devices which don't require 'more' processing;
+// i.e. they have an unlimited scrollback buffer.
+extern bool ttu_unlimited_scrollback();
+
+// Clear the current line, leave cursor at left edge.
 extern void clear_line();
 
-/* Backspace the cursor and clear the rest of the line, presumably
-   erasing the last character. */
+// Backspace the cursor and clear the rest of the line, presumably
+// erasing the last character.
 extern void rubout();
 
-/* Move cursor up "n" lines and then clear rest of screen. */
+// Move cursor up "n" lines and then clear rest of screen.
 extern void erase_last_n(int n);
 
 // Write a line.  The text may or may not have a newline at the end.
 // This may or may not be after a prompt and/or echoed user input.
-// Returns the number of line advances on the transcript pad that
-// occurred because system line wraparound occurred.  A line advance
-// because there was a newline at the end of the given line does not count.
 extern void put_line(const char the_line[]);
 
 // Write a single character on the current output line.
-// Returns 1 if that character was not a newline but nevertheless
-// caused a line wraparound, zero otherwise.
 extern void put_char(int c);
 
 /* Get one character from input, no echo, no waiting for <newline>.

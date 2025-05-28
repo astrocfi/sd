@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.61"
-#define TIME_STAMP "wba@alum.mit.edu  14 Aug 2005 $"
+#define VERSION_STRING "36.62"
+#define TIME_STAMP "wba@alum.mit.edu  17 Sep 2005 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -599,6 +599,7 @@ extern bool query_for_call()
 {
    uims_reply local_reply;
    error_flag_type old_error_flag;
+   bool refresh_override = false;
    int concepts_deposited = 0;
 
    recurse_entry:
@@ -627,16 +628,19 @@ extern bool query_for_call()
          goto try_again;
       }
 
-      /* First, update the output area to the current state, with error messages, etc.
-         We draw a picture for the last two calls. */
+      // First, update the output area to the current state, with error messages, etc.
+      // We draw a picture for the last two calls.
 
       // Some things can only be done if we have a "nice" execution error.
       // Otherwise, the history array won't have the "last setup" that we want.
+      // But if we are doing a "refresh display", do it anyway.
 
-      if (global_error_flag < error_flag_wrong_command ||
+      if (refresh_override ||
+          global_error_flag < error_flag_wrong_command ||
           global_error_flag == error_flag_selector_changed ||
           global_error_flag == error_flag_formation_changed) {
-         display_initial_history(configuration::history_ptr, (ui_options.diagnostic_mode ? 1 : 2));
+         display_initial_history(configuration::history_ptr,
+                                 (ui_options.diagnostic_mode ? 1 : 2));
 
          if (configuration::sequence_is_resolved()) {
             newline();
@@ -824,6 +828,7 @@ extern bool query_for_call()
          case command_refresh:
             written_history_items = -1;         // Suppress optimized display update.
             global_error_flag = old_error_flag; // Want to see error messages, too.
+            refresh_override = true;
             goto redisplay;
          default:
             global_reply = local_reply;         // Save this -- top level will need it.

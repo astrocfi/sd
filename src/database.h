@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 235
+#define DATABASE_FORMAT_VERSION 236
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -213,7 +213,6 @@ enum {
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
-
 enum {
    MTX_USE_SELECTOR           = 0x01,
    MTX_STOP_AND_WARN_ON_TBONE = 0x02,
@@ -225,7 +224,8 @@ enum {
    MTX_FIND_SQUEEZERS         = 0x80,
    MTX_FIND_SPREADERS         = 0x100,
    MTX_USE_VEER_DATA          = 0x200,
-   MTX_USE_NUMBER             = 0x400
+   MTX_USE_NUMBER             = 0x400,
+   MTX_MIRROR_IF_RIGHT_OF_CTR = 0x800
 };
 
 

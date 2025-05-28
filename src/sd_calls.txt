@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.61"
+version "36.62"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1082,6 +1082,11 @@ call "split counter rotate @b" a2
             funny_is_inherited nxn_is_inherited
    splitseq ctr_rot [inherit_funny inherit_nxn repeat_n]
 
+call "box counter rotate @b" a2
+            neednumber visible_fractions distribute_repetitions
+            funny_is_inherited nxn_is_inherited
+   seq boxctrrot [inherit_funny inherit_nxn repeat_n]
+
 call "trade counter rotate" c4
    setup 2x4 2x4 rotate
       array [CR1N CR0N AL7S AL6S AL1S AL0S CR7N CR6N]
@@ -1121,16 +1126,17 @@ call "slip the clutch" mainstream tag slipclutch
       array [0N 3E 0 0 4N 3W 0 0]
    setup pcrosswave thar restriction forbidden wave_only
       array [0 0 2N 5E 0 0 6N 5W]
-   /* We wish this were legal from waves, so that we could print
-      "slip the clutch, left allemande" as a resolve, instead of
-      "extend".  Alas, it is not legal.  It seems that its use
-      prior to a left allemande is a common figure of speech, but
-      not a real call.  If it were a real call, this is what
-      it would be:
-   setup 2x4 thar restriction forbidden wave_only
-      array [CR2E CR3E AL3W AL2W ZM4N ZM5N ZM1N ZM0N] */
+   // We wish this were legal from waves, so that we could print
+   // "slip the clutch, left allemande" as a resolve, instead of
+   // "extend".  Alas, it is not legal.  It seems that its use
+   // prior to a left allemande is a common figure of speech, but
+   // not a real call.  If it were a real call, this is what
+   // it would be:
+   // setup 2x4 thar restriction forbidden wave_only
+   //    array [CR2E CR3E AL3W AL2W ZM4N ZM5N ZM1N ZM0N]
 
-call "move along" mainstream
+call "move along and make lines" mainstream
+            dont_use_in_resolve
    setup thar c1phan plus_eighth_rotation restriction forbidden 1fl_only
       array [13N 15N 0 0 4W 6W 0 0]
    setup crosswave c1phan plus_eighth_rotation restriction forbidden 1fl_only
@@ -4041,7 +4047,7 @@ call "partner tag" a1 tag partnertag
    setup 1x2 1x2 rotate
       array [CM1E ACM0W]
 
-/* This call makes divide the ocean illegal from riggers. */
+// This call makes divide the ocean illegal from riggers.
 call "_partner tag by pairs" dontshow tag partnertagbypairs
    setup 2x2 2x2
       array [CM1E AM0W AM3W CM2E]
@@ -4158,7 +4164,7 @@ call "fan the top (pushy)" dontshow tag pushyfanthetop
 call "spin the top" mainstream tag spinthetop
             step_to_wave can_be_fan left_means_touch_or_check
             yoyo_is_inherited fractal_is_inherited grand_is_inherited visible_fractions
-   seq trade [inherit_yoyo]
+   seq tradencheckawave [inherit_yoyo]
    seq fanthetop [inherit_grand inherit_fractal]
 
 call "reverse the top" c3
@@ -4386,7 +4392,7 @@ call "press ahead" mainstream
             dont_use_in_resolve
    matrix [ZM16N 18 ZM16N 18]
             alternate_definition [half] mainstream
-          [ZM16N 17 ZM16N 17]
+   [ZM16N 17 ZM16N 17]
 
 call "1/2 press ahead" mainstream
             dont_use_in_resolve
@@ -4396,7 +4402,7 @@ call "@6 press ahead" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM16N 18 ZM16N 18]
             alternate_definition [half] mainstream
-                       [ZM16N 17 ZM16N 17]
+   [ZM16N 17 ZM16N 17]
 
 call "@6 1/2 press ahead" mainstream
             dont_use_in_resolve
@@ -4406,37 +4412,61 @@ call "press back" mainstream
             dont_use_in_resolve
    matrix [ZM16N 14 ZM16N 14]
             alternate_definition [half] mainstream
-          [ZM16N 15 ZM16N 15]
+   [ZM16N 15 ZM16N 15]
 
 call "@6 press back" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM16N 14 ZM16N 14]
             alternate_definition [half] mainstream
-          [ZM16N 15 ZM16N 15]
+   [ZM16N 15 ZM16N 15]
 
 call "press right" mainstream
             dont_use_in_resolve
    matrix [ZM18N 18 ZM18N 18]
             alternate_definition [half] mainstream
-          [ZM17N 17 ZM17N 17]
+   [ZM17N 17 ZM17N 17]
 
 call "@6 press right" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM18N 18 ZM18N 18]
             alternate_definition [half] mainstream
-          [ZM17N 17 ZM17N 17]
+   [ZM17N 17 ZM17N 17]
 
 call "press left" mainstream
             dont_use_in_resolve
    matrix [ZM14N 18 ZM14N 18]
             alternate_definition [half] mainstream
-          [ZM15N 17 ZM15N 17]
+   [ZM15N 17 ZM15N 17]
 
 call "@6 press left" mainstream
             dont_use_in_resolve
    matrix use_selector [ZM14N 18 ZM14N 18]
             alternate_definition [half] mainstream
-          [ZM15N 17 ZM15N 17]
+   [ZM15N 17 ZM15N 17]
+
+call "press in" mainstream
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [ZM18N 18 ZM18N 18]
+            alternate_definition [half] mainstream
+   [ZM17N 17 ZM17N 17]
+
+call "@6 press in" mainstream
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [ZM18N 18 ZM18N 18]
+            alternate_definition [half] mainstream
+   [ZM17N 17 ZM17N 17]
+
+call "press out" mainstream
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [ZM14N 18 ZM14N 18]
+            alternate_definition [half] mainstream
+   [ZM15N 17 ZM15N 17]
+
+call "@6 press out" mainstream
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [ZM14N 18 ZM14N 18]
+            alternate_definition [half] mainstream
+   [ZM15N 17 ZM15N 17]
 
 call "@6 cast back to the right" c1
             dont_use_in_resolve
@@ -4445,6 +4475,14 @@ call "@6 cast back to the right" c1
 call "@6 cast back to the left" c1
             dont_use_in_resolve
    matrix use_selector [AL14S 14 AL14S 14]
+
+call "@6 cast back" c1
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [AL14S 14 AL14S 14]
+
+call "@6 cross cast back" c1
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [CR20S 14 CR20S 14]
 
 call "truck" c2
             dont_use_in_resolve reverse_means_mirror
@@ -4575,6 +4613,22 @@ call "curve left" c3x
 call "@6 curve left" c3x
             dont_use_in_resolve
    matrix use_selector [AL14W 18 AL14W 18]
+
+call "curve in" c3x
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [CR18E 18 CR18E 18]
+
+call "@6 curve in" c3x
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [CR18E 18 CR18E 18]
+
+call "curve out" c3x
+            dont_use_in_resolve
+   matrix lateral_mirror_if_right_of_center [AL14W 18 AL14W 18]
+
+call "@6 curve out" c3x
+            dont_use_in_resolve
+   matrix use_selector lateral_mirror_if_right_of_center [AL14W 18 AL14W 18]
 
 call "plus @9" c4
             dont_use_in_resolve
@@ -6300,25 +6354,6 @@ call "latch on @b" c3a
             left_means_mirror visible_fractions neednumber
    seq everyonerollright [inherit_left]
    seq hinge_with_warn [repeat_n]
-
-call "@6@C cast back" c1
-   setup 4x2 4x4
-      preds "Can't tell who is designated."
-         if select   [   0   AL12S    0  AL14S  CR5S    0  CR8S    0]
-         if unselect [ZM10N  ZM15N  ZM3N ZM1N   ZM2N  ZM7N ZM11N ZM9N]
-   setup 2x4 2x6
-      preds "Can't tell who is designated."
-         if select   [AL11S  0    0  CR6S    0    0    0     0]
-         if unselect [ZM1N ZM2N ZM3N ZM4N  ZM7N ZM8N ZM9N ZM10N]
-            alternate_definition [cross] c1
-   setup 4x2 4x4
-      preds "Can't tell who is designated."
-         if select   [   0   CR8S     0  CR5S  AL14S    0  AL12S  0]
-         if unselect [ZM10N  ZM15N  ZM3N ZM1N   ZM2N  ZM7N ZM11N ZM9N]
-   setup 2x4 2x6
-      preds "Can't tell who is designated."
-         if select   [  0    0    0    0     0    0    0     0]
-         if unselect [ZM1N ZM2N ZM3N ZM4N  ZM7N ZM8N ZM9N ZM10N]
 
 call "slide thru" mainstream tag slidethru
             rear_back_from_r_wave funny_means_those_facing
@@ -12367,7 +12402,7 @@ call "@6 mark time" c4a
          if select   [CCR1E AAL3W     0     0]
          if unselect [ CR2W  AL0E ACR0E CAL2W]
 
-call "box counter rotate" a2
+call "box counter rotate" a2 tag boxctrrot
    simple_funny
    setup 2x2 2x2
       array [CR1E AL0W AL1W CR0E]
@@ -13149,7 +13184,7 @@ call "shakedown" c1 tag shakedown
       array [0 0 0 0 CR4W CR5W CR7W CR6W]
 
 call "wheel thru" a1
-            left_means_mirror
+            left_means_mirror no_elongation_allowed
    setup 2x2 2x2
       array [0 0 CR2E CR1E]
             alternate_definition [3x3] c4
@@ -13169,7 +13204,7 @@ call "wheel thru" a1
       array [Cr3E CR2E 0 0]
 
 call "lead @eright@f" mainstream
-            left_means_mirror
+            left_means_mirror no_elongation_allowed
    setup 2x2 2x2
       array [0 0 CR2E CR1E]
 
@@ -13563,7 +13598,7 @@ call "@D wheel to an hourglass" c4
       inherit_nxn inherit_mxn]
 
 call "chase @eright@f" plus
-            left_means_mirror
+            left_means_mirror no_elongation_allowed
    setup 2x2 2x2
       // The original beau cannot roll.  It is box circulate two positions.
       // Callerlab plus definitions, page 1.
@@ -14687,8 +14722,14 @@ call "ferris wheel" mainstream
    setup 2x4 2x4 rotate qualifier couples_only restriction unusual 2fl_only
       array [CR0E CR7E AL0E AL7E AL6E AL1E CR6E CR1E]
             alternate_definition [single] c3a
-   setup 2x2 1x4 rotate restriction resolve_ok wave_only
+   split_to_box
+   // If it can be split into a non-T-boned box, do so.
+   setup 2x2 1x4 rotate qualifier ntbone wave_only
       array [CR0E AL0E AL1E CR1E]
+   // If the box is T-boned, use that, but raise a DYP warning.
+   setup 2x2 1x4 rotate qualifier tbone none restriction resolve_ok wave_only
+      array [CR0E AL0E AL1E CR1E]
+   // Otherwise, it's the line kind.  Pointless, but legal.
    setup 1x4 2x2 qualifier 2fl_only
       array [CR1S CR0S AL0S AL1S]
             alternate_definition [3x3] c4
@@ -15267,22 +15308,22 @@ call "_ends nightmare" dontshow tag enight
    setup 2x2 2x2 restriction unusual leads_only
       array [AL3E AM0W AM3W ACR0E]
 
-call "_swingslipslidethru" dontshow tag swingslipslidethru
+call "swing slip slide thru" dontshow tag swingslipslidethru
             visible_fractions yoyo_is_inherited step_to_wave
    seq swing [inherit_yoyo]
    seq slip [roll_transparent]
    seq slidethru_in_miniwave []
 
-call "_swingbackwindmill" dontshow tag swingbackwindmill
+call "swing back the windmill" dontshow tag swingbackwindmill
             visible_fractions yoyo_is_inherited fractal_is_inherited
-   seq swing [inherit_yoyo]
+   seq swing [inherit_yoyo allow_forced_mod]
    seq slip [roll_transparent]
    seq slip [roll_transparent]
-   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal]
+   seq cast_off_n4_with_warn [insert_number 3 inherit_fractal allow_forced_mod]
 
 call "delight" c3a tag delight
             yoyo_is_inherited fractal_is_inherited
-   conc swingbackwindmill [inherit_yoyo inherit_fractal]
+   conc swingbackwindmill [inherit_yoyo inherit_fractal allow_forced_mod]
         elight [conc_demand_columns conc_force_spots]
 
 call "dilemma" c3a tag dilemma
@@ -15514,10 +15555,6 @@ call "pass the top" c4a
    seq passtop3 []
 
 call "sock it to me" c2
-   setup 2x4 2x4 qualifier socker_is_cw
-      array [0 CR2S CR3S 0 AL5S AL6S AL7S CR4S]
-   setup 2x4 2x4 qualifier socker_is_ccw
-      array [CR3S AL0S AL1S AL2S 0 CR4S CR5S 0]
    setup 1x4 1x4
       preds "Can't find an unambiguous socker."
          if socker_is_left  [CR2S AL0S AL3S AL1S]
@@ -15547,10 +15584,6 @@ call "sock it to me" c2
          if socker_is_right_1x3 [0    CR2E 0]
 
 call "here comes the judge" c2
-   setup 2x4 2x4 qualifier judge_is_cw
-      array [CR1S CR2S CR3S AL0S 0 AL6S AL7S 0]
-   setup 2x4 2x4 qualifier judge_is_ccw
-      array [0 AL0S AL1S 0 AL7S CR4S CR5S CR6S]
    setup 1x4 1x4
       preds "Can't find an unambiguous judge."
          if judge_is_right [CR1S CR3S AL0S CR2S]
@@ -18309,7 +18342,7 @@ call "step and flip" c1
    setup 1x3 1x2 rotate qualifier wave_only restriction unusual alwaysfail
       array [CR0E ZM0W AL0E]
 
-call "step and squeeze" c1
+call "step and squeeze" c2
    setup 1x4 2x3 rotate
       array [CR1E ZM5W AL4E ZM0W]
 
@@ -19410,7 +19443,7 @@ call "mix the deucey" c4a
 
 call "trade the deucey" c3a tag trade_duck
    setup 2x4 2x4
-      array [CR2S CR3S AL0S AL1S ZM2N AM7S CM4S ZM1N]
+      array [CR2S CM3S AM0S AL1S ZM2N AM7S CM4S ZM1N]
    setup 4x2 2x4 rotate
       array [ZM5W CM4E CM3E 0 0 AM0E AM7E ZM6W]
    setup qtag ptpd
@@ -19567,16 +19600,21 @@ call "_check parallel lines" dontshow tag checkparlines
       array [ZM0N ZM1N  ZM2N  ZM3N  ZM4N  ZM5N  ZM6N  ZM7N
              ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
 
-/* This one raises "do your part", and rejects this for a resolve,
-   if the people are not in waves. */
+call "_check a wave" dontshow tag checkawave
+   setup 1x4 1x4 restriction wave_only
+      array [ZM0N ZM1N ZM2N ZM3N]
+   // In case it's "yoyo".
+   setup 2x2 2x2 restriction forbidden wave_only
+      array [ZM0N ZM1N ZM2N ZM3N]
+
 call "_check parallel waves" dontshow tag checkparwaves
    setup 2x4 2x4 restriction wave_only
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
-   /* This will allow "spin chain the gears" from a grand wave, for those who
-      think it's legal, but will give a serious warning. */
+   // This will allow "spin chain the gears" from a tidal wave, for those who
+   // think it's legal, but will give a serious warning.
    setup 1x8 1x8 restriction controversial alwaysfail
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
-   /* If we do things like "intially tandem", we get this one. */
+   // If we do things like "intially tandem", we get this one.
    setup 1x4 1x4 restriction wave_only
       array [ZM0N ZM1N ZM2N ZM3N]
             alternate_definition [12matrix] c3a
@@ -19605,10 +19643,19 @@ call "_trade and check line, illegal" dontshow tag tradencheckline_illegal
    seq trade [inherit_yoyo inherit_bigmatrix]
    seq checkline [inherit_bigmatrix roll_transparent]
 
-call "_trade and check par waves" dontshow tag tradencheckparwaves
+// This raises "do your part", and hence is not allowed during a resolve,
+//   if the setup isn't a wave.
+call "trade, should be a wave" dontshow tag tradencheckawave
+            half_is_inherited lasthalf_is_inherited yoyo_is_inherited bigmatrix_is_inherited
+   seq checkawave [roll_transparent inherit_bigmatrix]
+   seq trade [inherit_half inherit_lasthalf inherit_yoyo inherit_bigmatrix]
+
+// This raises "do your part", and hence is not allowed during a resolve,
+//   if the setup isn't waves.
+call "trade, should be parallel waves" dontshow tag tradencheckparwaves
             half_is_inherited yoyo_is_inherited bigmatrix_is_inherited
-   seq trade [inherit_half inherit_yoyo inherit_bigmatrix]
    seq checkparwaves [roll_transparent inherit_bigmatrix]
+   seq trade [inherit_half inherit_yoyo inherit_bigmatrix]
 
 call "_check par lines and mot 2" dontshow tag checkparlinesnmot2
             bigmatrix_is_inherited fractal_is_inherited
@@ -23795,12 +23842,14 @@ call "_ends scamper" dontshow tag ends_scamper
    seq touch_1_4 [inherit_left]
 
 call "divide" mainstream
+            dont_use_in_resolve
       /* ***** make sure we do a "fudge to 3/4 tag" */
       /* Note that this is illegal unless just the ends (under some designation)
          are told to do it. */
    conc boguscall [] div_move_along [conc_demand_columns conc_force_lines endscando suppress_elongation_warnings]
 
 call "divide and @0" mainstream
+            dont_use_in_resolve
       /* ***** make sure we do a "fudge to 3/4 tag" */
       /* Note that this is illegal unless just the ends (under some designation)
          are told to do it. */
@@ -23811,11 +23860,13 @@ call "_ends divide and @0" dontshow tag ends_div_do_something
    seq nullcall [mandatory_anycall]
 
 call "ends divide" mainstream
+            dont_use_in_resolve
       /* ***** make sure we do a "fudge to 3/4 tag" */
-   /* By making this "nullsecond" we make it illegal to do this with "central". */
+      /* By making this "nullsecond" we make it illegal to do this with "central". */
    conc nullsecond [] div_move_along [conc_demand_columns conc_force_lines]
 
 call "ends divide and @0" mainstream
+            dont_use_in_resolve
       /* ***** make sure we do a "fudge to 3/4 tag" */
       /* Note that this is illegal unless just the ends (under some designation) are told to do it. */
    conc nullsecond [] ends_div_do_something [conc_demand_columns conc_force_otherway]
@@ -23829,7 +23880,7 @@ call "scamper but @0" c4
    conc ctrs_scamper_but [inherit_left] ends_scamper [inherit_left conc_demand_columns conc_force_columns]
 
 call "divvy up" c3x
-      /* ***** make sure we do a "fudge to 3/4 tag" */
+   // ***** Make sure we do a "fudge to 3/4 tag".
    conc single_wheel [] div_move_along [conc_demand_columns conc_force_lines]
 
 call "_centers lead the way" dontshow tag clead_way
