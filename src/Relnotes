@@ -1,6 +1,16 @@
-		   RELEASE NOTES FOR SD VERSION 31.0
-		 Database version = 31.0 format = 56.
-    X11 UI version 1.17, SDTTY UI version 1.6, MAC UI version 2.2.
+		   RELEASE NOTES FOR SD VERSION 31.01
+		 Database version = 31.01 format = 58.
+    X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 31.01 ******
+
+The sdtty parser can now read the modifiers "grand", "magic",
+"cross", "single", "single file", "interlocked", "yoyo", and "MxN"
+for various values of M and N, on the same line as the call.
+So you can type, for example, "grand swing thru".
+You can also type it the old way:
+"grand", <enter>, and "swing thru".  On sd, you still must click on
+the concept "grand" followed by the call "swing thru".
 
 ****** Changes as of version 31.0 ******
 

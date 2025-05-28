@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @set Time-stamp: Apr 20, 1995
-@set sd-version 31.0
+@set sd-version 31.01
 @set full-manual
 @c %**end of header
 @iftex
@@ -63,8 +63,7 @@ NONINFRINGMENT.
 @node Top, Intro, (dir), (dir)
 
 @menu
-This file documents Sd, a square dance caller's helper,
-version @value{sd-version}.
+This file documents Sd, a square dance caller's helper.
 
 To get started quickly, type @key{1} to go to @dots{}
 
@@ -2036,7 +2035,7 @@ otherwise intelligent dancers
 on the phantom spots, with facing directions deduced from the assumption.
 Those phantoms proceed through the entire call, interacting with each other
 and with the live dancers as necessary.  If the call is impossible for the
-phantoms do, or if illegal collisions occur between live dancers and phantoms,
+phantoms to do, or if illegal collisions occur between live dancers and phantoms,
 an error message is printed.  At the end of the call, any live dancers or
 phantoms that come to the same spot may take right hands with each other,
 if that is appropriate for the call.

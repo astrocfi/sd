@@ -599,7 +599,13 @@ Private void get_user_input(char *prompt, int which)
         else if ((c == '\n') || (c == '\r')) {
             matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
 
-            if (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact) {
+            /* We forbid a match consisting of two or more "direct parse" concepts, such as "grand cross".
+               Direct parse concepts may only be stacked if they are followed by a call.
+               The "newmodifiers" field indicates that direct parse concepts were stacked. */
+
+            if (  (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact)
+                                       &&
+                  (!user_match.newmodifiers || user_match.kind == ui_call_select)) {
                 p = extended_input;
                 while (*p)
                     pack_and_echo_character(*p++);
@@ -747,18 +753,11 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
    }
 
    if (user_match.kind == ui_call_select) {
+      modifier_block *mods;
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
 
-      if (user_match.modifiers & INHERITFLAG_CROSS)
-         (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
-      if (user_match.modifiers & INHERITFLAG_MAGIC)
-         (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
-      if (user_match.modifiers & INHERITFLAG_INTLK)
-         (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
-      if (user_match.modifiers & INHERITFLAG_LEFT)
-         (void) deposit_concept(&concept_descriptor_table[left_concept_index], 0);
-      if (user_match.modifiers & INHERITFLAG_GRAND)
-         (void) deposit_concept(&concept_descriptor_table[grand_concept_index], 0);
+      for (mods = user_match.newmodifiers ; mods ; mods = mods->next)
+         (void) deposit_concept(mods->this_modifier, 0);
 
       if (deposit_call(save_call)) return TRUE;
    }

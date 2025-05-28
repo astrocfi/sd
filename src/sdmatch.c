@@ -1,6 +1,7 @@
 /*
  * sdmatch.c - command matching support
  *
+ * Copyright (C) 1994-1995 William B. Ackerman
  * Copyright (C) 1993 Alan Snyder
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -47,11 +48,13 @@ Private int concept_list_length;
 Private int *level_concept_list; /* indices of concepts valid at current level */
 Private int level_concept_list_length;
 
+
 typedef struct {
    char *full_input;      /* the current user input */
    char *extended_input;  /* the maximal common extension to the user input */
    char extension[200];   /* the extension for the current pattern */
    int match_count;       /* the number of matches so far */
+   modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
    int yielding_matches;  /* the number of them that are marked "yield_if_ambiguous". */
    int exact_match;       /* true if an exact match has been found */
    int showing;           /* we are only showing the matching patterns */
@@ -66,6 +69,31 @@ typedef struct pat2_blockstruct {
    concept_descriptor *special_concept;
    struct pat2_blockstruct *next;
 } pat2_block;
+
+static modifier_block *modifier_active_list = (modifier_block *) 0;
+static modifier_block *modifier_inactive_list = (modifier_block *) 0;
+
+
+
+Private modifier_block *get_modifier_block(void)
+{
+   modifier_block *item;
+
+   if (modifier_inactive_list) {
+      item = modifier_inactive_list;
+      modifier_inactive_list = item->gc_ptr;
+   }
+   else
+      item = (modifier_block *) get_mem(sizeof(modifier_block));
+
+   item->gc_ptr = modifier_active_list;
+   modifier_active_list = item;
+   item->next = (modifier_block *) 0;
+   return item;
+}
+
+
+
 
 static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *patxp, Const match_result *result);
 static void match_grand(Cstring user, concept_descriptor *grand_concept, char *patxp, Const match_result *result);
@@ -243,14 +271,25 @@ static long_boolean verify_call_with_selector(callspec_block *call, selector_kin
  * current context.
  */
 
-static long_boolean verify_call(call_list_kind cl, int call_index, selector_kind who)
+static long_boolean verify_call(call_list_kind cl, Const match_result *result)
 {
-    callspec_block *call;
+   callspec_block *call;
+   selector_kind who;
 
-    if (who < 0)
-        who = selector_uninitialized;
+
+/* ****** All patched out! */
+return TRUE;
+
+
+   /* If we are not verifying, or the menu we are examining is not the call menu,
+      we return TRUE immediately, thereby causing the item to be listed. */
+
+   if (!static_ss.verify || (result->kind != ui_call_select)) return TRUE;
+
+   who = result->who;
+   if (who < 0) who = selector_uninitialized;
     
-    call = main_call_lists[cl][call_index];
+    call = main_call_lists[cl][result->index];
     if ((call->callflagsh & CFLAGH__REQUIRES_SELECTOR) &&
             (who == selector_uninitialized)) {
 
@@ -322,10 +361,29 @@ static void record_a_match(Const match_result *result)
          strn_gcp(static_ss.extended_input, static_ss.extension);
    }
 
-   if (static_ss.match_count == 0)
-      static_ss.result = *result;      /* always copy the first match */
-   else if (*static_ss.extension == '\0' && !(result->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS))
-      static_ss.result = *result;      /* also copy any exact match, as long as it isn't yielding */
+   /* always copy the first match.  Also, copy any exact match, as long as it isn't yielding */
+
+   if (     static_ss.match_count == 0 ||
+            (*static_ss.extension == '\0' && !(result->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS))) {
+      Const match_result *foobar;
+      static_ss.result = *result;
+
+      /* We need to copy the modifiers to reasonably stable storage. */
+
+      static_ss.newmodifiers = (modifier_block *) 0;
+
+      foobar = result;
+
+      while (foobar && foobar->current_modifier) {
+         modifier_block *foo = get_modifier_block();
+         foo->this_modifier = foobar->current_modifier;
+         foo->next = static_ss.newmodifiers;
+         static_ss.newmodifiers = foo;
+         foobar = foobar->modifier_parent;
+      }
+
+      static_ss.result.current_modifier = (concept_descriptor *) 0;     /* We don't need these any more. */
+   }
 
    if (*static_ss.extension == '\0')
       static_ss.result.exact = TRUE;
@@ -336,9 +394,7 @@ static void record_a_match(Const match_result *result)
       static_ss.yielding_matches++;
 
    if (static_ss.showing) {
-      if (!static_ss.verify ||
-            (result->kind != ui_call_select) ||
-            verify_call(*call_menu_ptr, result->index, result->who))
+      if (verify_call(*call_menu_ptr, result))
          (*static_ss.sf)(static_ss.full_input, static_ss.extension, result);
    }
 }
@@ -556,7 +612,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
          match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxp, &new_result);
       }
    }
-   else if (key == 'j' && (!(result->modifiers & INHERITFLAG_CROSS))) {
+   else if (key == 'j') {
       char crossname[80];
       char *crossptr = crossname;
 
@@ -565,17 +621,19 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       pat++;
       crossptr--;
       *crossptr = 0;
-      new_result.modifiers |= INHERITFLAG_CROSS;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[cross_concept_index];
       p2b.car = pat;
       match_suffix_2(user, crossname, &p2b, patxp, &new_result);
    }
-   else if (key == 'C' && (!(result->modifiers & INHERITFLAG_CROSS))) {
+   else if (key == 'C') {
       new_result = *result;
-      new_result.modifiers |= INHERITFLAG_CROSS;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[cross_concept_index];
       p2b.car = pat;
       match_suffix_2(user, "cross ", &p2b, patxp, &new_result);
    }
-   else if (key == 'J' && (!(result->modifiers & INHERITFLAG_MAGIC))) {
+   else if (key == 'J') {
       char magicname[80];
       char *magicptr = magicname;
 
@@ -584,17 +642,19 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       pat++;
       magicptr--;
       *magicptr = 0;
-      new_result.modifiers |= INHERITFLAG_MAGIC;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[magic_concept_index];
       p2b.car = pat;
       match_suffix_2(user, magicname, &p2b, patxp, &new_result);
    }
-   else if (key == 'M' && (!(result->modifiers & INHERITFLAG_MAGIC))) {
+   else if (key == 'M') {
       new_result = *result;
-      new_result.modifiers |= INHERITFLAG_MAGIC;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[magic_concept_index];
       p2b.car = pat;
       match_suffix_2(user, "magic ", &p2b, patxp, &new_result);
    }
-   else if (key == 'E' && (!(result->modifiers & INHERITFLAG_INTLK))) {
+   else if (key == 'E') {
       char interlockedname[80];
       char *interlockedptr = interlockedname;
 
@@ -603,21 +663,24 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       pat++;
       interlockedptr--;
       *interlockedptr = 0;
-      new_result.modifiers |= INHERITFLAG_INTLK;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[intlk_concept_index];
       p2b.car = pat;
       match_suffix_2(user, interlockedname, &p2b, patxp, &new_result);
    }
-   else if (key == 'I' && (!(result->modifiers & INHERITFLAG_INTLK))) {
+   else if (key == 'I') {
       new_result = *result;
-      new_result.modifiers |= INHERITFLAG_INTLK;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[intlk_concept_index];
       p2b.car = pat;
       match_suffix_2(user, "interlocked ", &p2b, patxp, &new_result);
    }
-   else if (key == 'e' && (!(result->modifiers & INHERITFLAG_LEFT))) {
+   else if (key == 'e') {
       new_result = *result;
       while (*pat++ != '@');
       pat++;
-      new_result.modifiers |= INHERITFLAG_LEFT;
+      new_result.modifier_parent = result;
+      new_result.current_modifier = &concept_descriptor_table[left_concept_index];
       p2b.car = pat;
       match_suffix_2(user, "left", &p2b, patxp, &new_result);
    }
@@ -693,61 +756,42 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
    int menu_length;
 
    new_result = *result;
-   new_result.kind = ui_call_select;
-
-   if (grand_concept->kind == concept_magic && !(result->modifiers & INHERITFLAG_MAGIC)) {
-      new_result.modifiers |= INHERITFLAG_MAGIC;
-   }
-   else if (grand_concept->kind == concept_cross && !(result->modifiers & INHERITFLAG_CROSS)) {
-      new_result.modifiers |= INHERITFLAG_CROSS;
-   }
-   else if (grand_concept->kind == concept_grand && !(result->modifiers & INHERITFLAG_GRAND)) {
-      new_result.modifiers |= INHERITFLAG_GRAND;
-   }
-   else if (grand_concept->kind == concept_interlocked && !(result->modifiers & INHERITFLAG_INTLK)) {
-      new_result.modifiers |= INHERITFLAG_INTLK;
-   }
-   else
-      return;
-
+   new_result.modifier_parent = result;
+   new_result.current_modifier = grand_concept;
    new_result.need_big_menu = TRUE;
 
-/* *************************************************************** */
-/*       check concepts */
+   /* scan concepts */
 
-    if (allowing_all_concepts) {
-        item = concept_list;
-        menu_length = concept_list_length;
-    }
-    else {
-        item = level_concept_list;
-        menu_length = level_concept_list_length;
-    }
+   if (allowing_all_concepts) {
+      item = concept_list;
+      menu_length = concept_list_length;
+   }
+   else {
+      item = level_concept_list;
+      menu_length = level_concept_list_length;
+   }
 
    p2b.next = (pat2_block *) 0;
+   new_result.kind = ui_concept_select;
 
    for (i = 0; i < menu_length; i++) {
       concept_descriptor *this_concept = &concept_descriptor_table[*item];
-      concept_descriptor *grand_concept = this_concept;
-      new_result.index = *item;
-      if (     this_concept->kind != concept_magic &&
-               this_concept->kind != concept_grand &&
-               this_concept->kind != concept_cross &&
-               this_concept->kind != concept_interlocked)
-         grand_concept = (concept_descriptor *) 0;
-      p2b.car = this_concept->name;
-      p2b.special_concept = grand_concept;
-      if (grand_concept) match_suffix_2(user, " ", &p2b, patxp, &new_result);
+
+      if (concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY) {
+         new_result.index = *item;
+         p2b.car = this_concept->name;
+         p2b.special_concept = this_concept;
+         match_suffix_2(user, " ", &p2b, patxp, &new_result);
+      }
+
       item++;
    }
 
-
-
-/* *************************************************************** */
-/*       check calls */
+   /* scan calls */
 
    p2b.special_concept = (concept_descriptor *) 0;
    p2b.next = (pat2_block *) 0;
+   new_result.kind = ui_call_select;
 
    for (i = 0; i < number_of_calls[call_list_any]; i++) {
       new_result.index = i;
@@ -758,14 +802,9 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
          an ambiguous call/concept utterance.  For example, we do not expect anyone to
          invent a call "and turn" that can be used with the "cross" modifier. */
       new_result.callflags1 = CFLAG1_YIELD_IF_AMBIGUOUS;
-      /* But we need to search for concepts also, to pick up "grand magic ...." */
       p2b.car = call_menu_lists[call_list_any][i]->name;
       match_suffix_2(user, " ", &p2b, patxp, &new_result);
    }
-
-/* *************************************************************** */
-
-
 }
 
 /*
@@ -833,7 +872,7 @@ static void search_menu(uims_reply kind, int which_command)
    result.who = selector_uninitialized;
    result.where = direction_uninitialized;
    result.tagger = 0;
-   result.modifiers = 0;
+   result.current_modifier = (concept_descriptor *) 0;
    result.modifier_parent = (match_result *) 0;
    result.need_big_menu = FALSE;
    result.number_fields = 0;
@@ -865,10 +904,7 @@ static void search_menu(uims_reply kind, int which_command)
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
          concept_descriptor *grand_concept = this_concept;
          result.index = *item;
-         if (     this_concept->kind != concept_magic &&
-                  this_concept->kind != concept_grand &&
-                  this_concept->kind != concept_cross &&
-                  this_concept->kind != concept_interlocked)
+         if (!(concept_table[this_concept->kind].concept_prop & CONCPROP__PARSE_DIRECTLY))
             grand_concept = (concept_descriptor *) 0;
          match_pattern(this_concept->name, &result, grand_concept);
          item++;
@@ -993,6 +1029,16 @@ extern int match_user_input(
     uims_debug_print("");
 #endif
 
+   /* Reclaim all old modifier blocks. */
+
+   while (modifier_active_list) {
+      modifier_block *item = modifier_active_list;
+      modifier_active_list = item->gc_ptr;
+      item->gc_ptr = modifier_inactive_list;
+      modifier_inactive_list = item;
+   }
+
+
     static_ss.full_input = user_input;
     static_ss.extended_input = extension;
     static_ss.match_count = 0;
@@ -1034,6 +1080,7 @@ extern int match_user_input(
 
    if (mr) {
       *mr = static_ss.result;
+      mr->newmodifiers = static_ss.newmodifiers;
       mr->space_ok = static_ss.space_ok;
       mr->yielding_matches = static_ss.yielding_matches;
    }

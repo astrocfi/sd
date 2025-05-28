@@ -40,6 +40,12 @@ extern Cstring resolve_command_strings[];
  *
  */
 
+typedef struct glozk {
+   concept_descriptor *this_modifier;
+   struct glozk *next;            /* next concept, or, if this is end mark, points to substitution list */
+   struct glozk *gc_ptr;          /* used for reclaiming dead blocks */
+} modifier_block;
+
 typedef struct zilch {
    long_boolean valid;       /* set to TRUE if a match was found */
    long_boolean exact;       /* set to TRUE if an exact match was found */
@@ -48,8 +54,9 @@ typedef struct zilch {
    selector_kind who;        /* matches <anyone> */
    direction_kind where;     /* matches <direction> */
    uint32 tagger;            /* matches <atc> */
-   struct zilch *modifier_parent;
-   uint32 modifiers;         /* has bits for "left", "magic", etc. */
+   Const struct zilch *modifier_parent;
+   modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
+   concept_descriptor *current_modifier;
    long_boolean need_big_menu;
    uint32 number_fields;     /* matches all the number fields */
    int howmanynumbers;       /* tells how many there are */
