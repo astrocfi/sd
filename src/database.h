@@ -29,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 222
+#define DATABASE_FORMAT_VERSION 223
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -43,6 +43,7 @@ enum base_call_index {
    base_call_ends_shadow,
    base_call_chreact_1,
    base_call_makepass_1,
+   base_call_scootback,
    base_call_scoottowave,
    base_call_backemup,
    base_call_circulate,

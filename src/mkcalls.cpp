@@ -1447,6 +1447,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
                                 for part 2 of chain reaction. */
       {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info
                                 for part 2 of make a pass. */
+      {0, "scootback"},
       {0, "scootbacktowave"},
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},

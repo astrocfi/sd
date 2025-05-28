@@ -806,6 +806,12 @@ static void innards(
       else if (before_distance*2 == after_distance) {
          map_kind = MPKIND__OVERLAP;
       }
+      else if (before_distance*4 == after_distance) {
+         map_kind = MPKIND__OVERLAP14;
+      }
+      else if (before_distance*4 == after_distance*3) {
+         map_kind = MPKIND__OVERLAP34;
+      }
       else if (before_distance == after_distance*2 && arity == 2) {
          map_kind = MPKIND__SPLIT;
          z[2] = z[1];
@@ -826,6 +832,14 @@ static void innards(
          clear_people(&z[1]);
          clear_people(&z[2]);
          arity = 4;
+      }
+      else if (before_distance == after_distance*4 && arity == 2) {
+         map_kind = MPKIND__SPLIT;
+         z[4] = z[1];
+         clear_people(&z[1]);
+         clear_people(&z[2]);
+         clear_people(&z[3]);
+         arity = 5;
       }
       else
          fail("Can't do this matrix call.");
@@ -1903,10 +1917,6 @@ extern void distorted_2x2s_move(
    // For "Z"      :   0 == normal, 8 == interlocked.
    // For Jay/Pgram:   0 == normal, 8 == back-to-front, 16 == back-to-back.
 
-   directions = 0;
-   livemask = 0;
-   arity = 2;
-
    if (ss->kind == s4dmd) {
       // A quadruple 1/4-tag is always construed as a matrix formation.
       // Maybe they fit into a 3x6; maybe not.  We expand to a 3x8
@@ -1914,6 +1924,10 @@ extern void distorted_2x2s_move(
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
       normalize_setup(ss, simple_normalize, false);
    }
+
+   directions = 0;
+   livemask = 0;
+   arity = 2;
 
    for (i=0 ; i<=attr::slimit(ss) ; i++) {
       uint32 p = ss->people[i].id1;

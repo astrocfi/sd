@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.0
-@set title2 Database version = 36.0 format = 222
+@set title1 RELEASE NOTES FOR SD VERSION 36.1
+@set title2 Database version = 36.1 format = 223
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.1::
 * 36.0::
 * 35.1::
 * 35.0::
@@ -50,7 +51,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.0, Top, (dir)
+@node Intro, 36.1, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -65,7 +66,46 @@ notes relating to even older versions.
 @end menu
 
 @c ************
-@node 36.0, 35.1, Intro, Top
+@node 36.1, 36.0, Intro, Top
+@unnumberedsec Version 36.1 changes
+
+A new startup option was added:  print_length, followed by a number.
+This sets the point at which lines will be broken.  It may be used
+either as a command-line option (with a hyphen)
+
+@example
+@group
+sdtty -print_length 68
+@end group
+@end example
+
+or placed in the sd.ini file:
+
+@example
+@group
+[Options]
+print_length 68
+@end group
+@end example
+
+The ability to do @strong{Jay Walk} from C1 Phantom formations was imroved.
+
+The ability to fractionalize things, as in @strong{finally snag the boys outpost},
+was improved.
+
+New concepts: quintuple/sextuple C/L/W/B, quintuple/sextuple 1x4s.
+
+Improved ability to do matrix expansions in compound calls, for example,
+@strong{heads split catch [triple boxes recoil] 4}.
+
+Improved ability to handle the @strong{matrix} concept.
+
+The startup option "-color_by_couple_ygrb" was added.
+
+Various improvements and bug fixes.
+
+@c ************
+@node 36.0, 35.1, 36.1, Top
 @unnumberedsec Version 36.0 changes
 
 The program is now licensed under the GNU General Public License,

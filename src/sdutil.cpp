@@ -69,15 +69,6 @@ and the following external variables:
 #include "sd.h"
 
 
-// This is the line length beyond which we will take pity on
-// whatever device has to print the result, and break the text line.
-// It is presumably smaller than our internal text capacity.
-
-// It is an observed fact that, with the default font (14 point Courier),
-// one can print 66 characters on 8.5 x 11 inch paper.
-
-#define MAX_PRINT_LENGTH 59
-
 
 // External variables.
 error_flag_type global_error_flag;
@@ -1044,6 +1035,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                     item->arg1 == meta_key_nth_part_work) ||
                    (k == concept_meta_two_args &&
                     item->arg1 == meta_key_first_frac_work) ||
+                   (k == concept_meta &&
+                    item->arg1 == meta_key_first_frac_work) ||
                    (k == concept_snag_mystic && item->arg1 == CMD_MISC2__SAID_INVERT) ||
                    (k == concept_meta &&
                     (item->arg1 == meta_key_initially ||
@@ -1628,7 +1621,9 @@ extern void writechar(char src)
 
    // If drawing a picture, don't do automatic line breaks.
 
-   if (writechar_block.destcurr < &current_line[MAX_PRINT_LENGTH] || writechar_block.usurping_writechar || ui_options.drawing_picture)
+   if (writechar_block.destcurr < &current_line[ui_options.max_print_length] ||
+       writechar_block.usurping_writechar ||
+       ui_options.drawing_picture)
       writechar_block.destcurr++;
    else {
       // Line overflow.  Try to write everything up to the last

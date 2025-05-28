@@ -4119,6 +4119,12 @@ extern void selective_move(
       // This is "<anyone> work <concept>".  Pick out the concept to be skipped
       // by the unselected people.
 
+      // First, be sure these things are really correct.  Removal of
+      // restrained concepts could have messed them up.
+      ss->cmd.parseptr = parseptr->next;
+      cmd1thing.parseptr = parseptr->next;
+      cmd2thing.parseptr = parseptr->next;
+
       parse_block *kstuff;
       uint32 njunk;
       parse_block **foop;
@@ -4358,7 +4364,6 @@ extern void inner_selective_move(
    if (orig_indicator == selective_key_lead_for_a) {
       // This is "so-and-so lead for a cast a shadow".
 
-      uint32 dirmask;
       const veryshort *map_prom;
       static const veryshort map_prom_1[16] =
       {6, 7, 1, 0, 2, 3, 5, 4, 011, 011, 022, 022, 011, 011, 022, 022};
@@ -4391,10 +4396,8 @@ extern void inner_selective_move(
       clear_people(&the_setups[0]);
       the_setups[0].kind = s2x4;
 
-      for (i=0, dirmask=0; i<=attr::slimit(ss); i++) {
-         dirmask <<= 2;
-         dirmask |= ss->people[i].id1 & 3;
-      }
+      uint32 dirmask, junk;
+      get_directions(ss, dirmask, junk);
 
       if (ss->kind == s_crosswave || ss->kind == s_thar) {
          if (ssmask == 0xCC) {

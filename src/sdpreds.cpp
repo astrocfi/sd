@@ -44,17 +44,15 @@ bool number_used;
 bool mandatory_call_used;
 
 
-// If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
-// and the low bits of that result examined, it will tell whether the person under test is real
-// and facing in the same direction (result = 0), the opposite direction (result == 2), or whatever.
-
-#define DIR_MASK (BIT_PERSON | 3)
-
 enum {
+   // If a real person and a person under test are XOR'ed, the result AND'ed
+   // with this constant, and the low bits of that result examined, it will tell
+   // whether the person under test is real and facing in the same direction
+   // (result = 0), the opposite direction (result == 2), or whatever.
+   DIR_MASK = (BIT_PERSON | 3),
+   // These are the bits that never change.
    ID1_PERM_ALL_ID = ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL
 };
-
-
 
 
 

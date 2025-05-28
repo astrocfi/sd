@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.0
-@set Time-stamp: May 16, 2004
+@set sd-version 36.1
+@set Time-stamp: August 28, 2004
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -2561,6 +2561,7 @@ Such a file might look like this:
 [Options]
 reverse_video
 no_warnings
+print_length 68
 window_size 850x650
 singlespace
 
@@ -2718,6 +2719,11 @@ This may be useful for those who use special fonts or special printer
 arrangements.
 This option is the same as giving the @code{toggle singlespace mode}
 command while the program is starting a sequence.
+@item print_length @var{number}
+This sets the length of print lines for the output file, that is, the
+point at which long lines will be broken.  The default is 59, which
+seems to be correct for the Courier 14 point font on standard American
+(8.5 x 11 inch) paper size.
 @item concept_levels
 This allows all concepts, even those that are not
 actually legal at the specified level, to be used.
@@ -2749,6 +2755,16 @@ This is the opposite of @code{retain_after_error}.
 Since this is the usual behavior, you don't need this option.
 It is present only for compatibility with older versions.
 If it is in your @file{sd.ini} file, take it out.
+@item tab_changes_focus
+This applies to @code{Sd} only.  Windows programs normally use the tab key
+to move keyboard focus around among the active windows in some fixed order,
+and the shift-tab key to move in the opposite order.  This change of focus
+is nearly useless in @code{Sd}, because the keyboard focus is almost always
+on the text input region.  Therefore, the default behavior of @code{Sd} is to
+have the tab key instead perform the same completion function as the escape key,
+just as @code{Sdtty} does.  (The shift-tab key still moves focus in the backwards
+order.)  This option, which is nearly useless, re-enables the conventional Windows
+meaning of the tab key.
 @item keep_all_pictures
 This keeps a picture after every call, as if the ``keep picture''
 command had been given each time.
@@ -2807,6 +2823,8 @@ This draws dancers on the screen in four colors, one for each couple, in the seq
 red, green, blue, and yellow.
 @item color_by_couple_rgyb
 Like color_by_couple, but the color sequence is red, green, yellow, and blue.
+@item color_by_couple_ygrb
+Like color_by_couple, but the color sequence is yellow, green, red, and blue.
 @item color_by_corner
 Like color_by_couple, but dancers have the same color as their respective corners.
 In the absence of these color options, girls are drawn in red and boys in blue.
@@ -2830,9 +2848,10 @@ white.
 This causes the colors for the usual girls-are-red and boys-are-blue
 scheme to use lighter shades.  This may be preferable if
 @code{reverse_video} is used.  It has no effect when using the
-@code{color_by_couple}, @code{color_by_couple_rgyb}, or @code{color_by_corner} schemes.
-This is the default for @code{Sdtty},
-so you only need this option for @code{Sd}.
+@code{color_by_couple}, @code{color_by_couple_rgyb},
+@code{color_by_couple_ygrb}, or @code{color_by_corner} schemes.  This is
+the default for @code{Sdtty}, so you only need this option for
+@code{Sd}.
 @item bold_color
 This is the opposite of @code{pastel_color}---it uses darker shades.
 This is the default for @code{Sd},
@@ -3934,11 +3953,15 @@ in each of which the call is done independently.
 These are done from a 4x6.
 @item triple C/L/W/B/D/1T/3T/1L/3L/DS/GT
 @item quadruple C/L/W/B/D/1T/3T/1L/3L/DS/GT
+@item quintuple C/L/W/B
+@item sextuple C/L/W/B
 @item triple 1x4s
 @item triple lines or boxes
 @item triple boxes or lines
 @item triple lines or diamonds
 @item triple diamonds or lines
+@item quintuple 1x4s
+@item sextuple 1x4s
 These are straightforward.  In the concepts that name two setups, such as
 ``triple lines or boxes'', the outer two formations
 must be the same.  In these concepts, ``lines'' means any 1x4.  Use the correct
@@ -4688,6 +4711,7 @@ part of the call, but not to the rest.
 @item first <M>/<N>
 @item middle <M>/<N>
 @item last <M>/<N>
+@item halfway
 
 The @kbd{first <M>/<N>}, @kbd{middle <M>/<N>}, and @kbd{last <M>/<N>}
 are similar, but apply the concept to the indicated first, middle, or
@@ -4695,6 +4719,7 @@ last fraction of the call, independently of how the call divides into
 parts.  For example, @samp{first 1/4 tandem spin the top},
 @samp{middle 1/3 tandem remake}, or @samp{last 1/4 stable swing thru}.
 Whether these are precisely the words you should use is up to you.
+The @kbd{halfway} concept is the same as @kbd{first 1/2}.
 
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -4916,6 +4941,7 @@ are up to you.
 @item 2x5 matrix
 @item 2x6 matrix
 @item 2x8 matrix
+@item 2x10 matrix
 @item 2x12 matrix
 @item 3x4 matrix
 @item 4x4 matrix

@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.0"
+version "36.1"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1304,13 +1304,13 @@ call "stroll part 3" dontshow tag stroll3
    setup 2x3 2x4 rotate qualifier left dmd_ctrs_mwv
       array [ZM5W 0    ZM0W ZM1W 0    ZM4W]
    setup bigdmd c1phan qualifier right 2fl_only
-      array [ZM0N ZM2N 0 0 0 0 0 0 0 0 0 0]
+      array [ZM0N ZM2N    0    0 0 0 ZM8N ZM10N 0 0 0 0]
    setup pbigdmd c1phan qualifier right 2fl_only
-      array [0 0 ZM4N ZM6N 0 0 0 0 0 0 0 0]
+      array [ZM0N ZM2N ZM4N ZM6N 0 0 ZM8N ZM10N 0 0 0 0]
    setup bigdmd c1phan qualifier left 2fl_only
-      array [0 0 0 0 ZM7N ZM5N 0 0 0 0 0 0]
+      array [0 0 0 0 ZM7N ZM5N 0 0    0     0 ZM15N ZM13N]
    setup pbigdmd c1phan qualifier left 2fl_only
-      array [0 0 0 0 0 0 0 0 ZM9N ZM11N 0 0]
+      array [0 0 0 0 ZM7N ZM5N 0 0 ZM9N ZM11N ZM15N ZM13N]
    setup 3x4 2x4 qualifier right ctr_2fl_only
       array [ZM0N ZM1N ZM2N ZM3N 0 0 ZM4N ZM5N ZM6N ZM7N ZM0N ZM1N]
    setup 4x3 2x4 qualifier right ctr_2fl_only
@@ -1319,6 +1319,14 @@ call "stroll part 3" dontshow tag stroll3
       array [ZM0N ZM1N ZM2N ZM3N ZM3N ZM2N ZM4N ZM5N ZM6N ZM7N 0 0]
    setup 4x3 2x4 qualifier left ctr_2fl_only
       array [ZM0N ZM1N ZM2N ZM3N 0 0 ZM4N ZM5N ZM6N ZM7N 0 0]
+   setup crosswave c1phan qualifier right ctr_2fl_only
+      array [ZM0N ZM2N 0 0 ZM8N ZM10N 0 0]
+   setup pcrosswave c1phan qualifier right ctr_2fl_only
+      array [ZM0N ZM2N ZM4N ZM6N ZM8N ZM10N 0 0]
+   setup crosswave c1phan qualifier left ctr_2fl_only
+      array [ZM13N ZM15N 0 0 ZM5N ZM7N 0 0]
+   setup pcrosswave c1phan qualifier left ctr_2fl_only
+      array [ZM13N ZM15N 0 0 ZM5N ZM7N ZM9N ZM11N]
 
 call "stroll @2and cycle@3" c4a
             yoyo_is_inherited
@@ -4594,12 +4602,12 @@ call "hinge" mainstream tag hinge
    setup 1x2 1x2 rotate plus_eighth_rotation qualifier left live wave_only
       array [0 AL0S]
 
-call "_couples hinge for short cycle" dontshow tag hinge_must_be_armturn
+call "_couples hinge for short cycle" dontshow tag cplshinge_should_be_armturn
             left_means_mirror
-   setup 1x4 1x4 rotate qualifier couples_only restriction serious_violation 2fl_only
+   setup 1x4 1x4 rotate qualifier couples_only restriction controversial 2fl_only
       preds "???"
-         if 1x4_wheel_and_deal [CR0N CR1N AL0S AL1S]   /* 2FL, or beau side of 1FL */
-         if always             [0    0    AL3S AL2S]   /* belle side of 1FL */
+         if 1x4_wheel_and_deal [CR0N CR1N AL0S AL1S]   // 2FL, or beau side of 1FL
+         if always             [0    0    AL3S AL2S]   // belle side of 1FL
 
 call "hinge, opt for normal" dontshow tag hinge_with_warn
             left_means_mirror
@@ -4633,7 +4641,7 @@ call "couples trade" mainstream
 call "couples circulate" mainstream
             mxn_is_inherited
    seq circulate [cpls_unless_single]   // Of course, "single" isn't allowed.
-   // What remains should be unneded legacy code.  Correct?
+   // What remains should be unneeded legacy code.  Correct?
             take_right_hands
    setup 2x4 2x4 qualifier couples_only restriction unusual 2fl_only
       array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
@@ -4663,6 +4671,11 @@ call "_hinge and then trade" dontshow tag hinge_then_trade
    seq hinge [inherit_left inherit_fractal]  /* This isn't right.  They go around 5/4. */
    /* Probably ought to take a number, fractalize, and use repetition on hinge. */
    seq trade [inherit_yoyo]
+
+call "_hinge and then cast @b" dontshow tag hinge_then_cast_n
+            left_means_mirror neednumber
+   seq hinge [inherit_left]
+   seq cast_off_n4 []
 
 call "_hinge and then trade for breaker" dontshow tag hinge_then_trade_for_breaker
             left_means_mirror
@@ -5904,8 +5917,8 @@ call "touch 3/4" dontshow tag touch_3_4
       array [CR0W 0]
 
 call "touch @b" mainstream tag touch_n_4
-            rear_back_from_r_wave neednumber twisted_is_inherited
-            diamond_is_legal left_means_mirror
+            visible_fractions rear_back_from_r_wave neednumber
+            twisted_is_inherited diamond_is_legal left_means_mirror
    seq touch [inherit_left inherit_diamond inherit_twisted]
    seq armturn_14 [repeat_n inherit_diamond]
 
@@ -7804,9 +7817,10 @@ call "@0 about" c4
    seq about []
 
 call "swing about" c4
-            left_means_touch_or_check step_to_wave yoyo_is_inherited visible_fractions
+            left_means_touch_or_check step_to_wave
+            grand_is_inherited yoyo_is_inherited visible_fractions
    seq swing [inherit_yoyo]
-   seq slip [roll_transparent]
+   seq maybegrandslip [roll_transparent inherit_grand]
    seq about []
 
 // Quarter about and three quarter about.
@@ -7815,9 +7829,9 @@ call "@D about" c4x
    /* This is a right-hand-unless-the-caller-says-left call.  Note its
       grammatical similarity to the other calls that have the same property:
       quarter thru, quarter cross, and quarter mix. */
-            step_to_wave left_means_mirror neednumber visible_fractions
+            step_to_wave left_means_mirror grand_is_inherited neednumber visible_fractions
    seq odd_frac_by_right_for_about [inherit_left]
-   seq slip [roll_transparent]
+   seq maybegrandslip [roll_transparent inherit_grand]
    seq about []
 
 call "_triple cast ends1" dontshow tag triplecastends1
@@ -7832,8 +7846,15 @@ call "triple cast" c4a
 
 call "split cast" c4a
             left_means_mirror yoyo_is_inherited
-   conc2_4_or_normal cast_off_12      [inherit_yoyo]
-                     hinge_then_trade [inherit_left inherit_yoyo suppress_elongation_warnings]
+   conc2_4_or_normal
+      cast_off_12      [inherit_yoyo]
+      hinge_then_trade [inherit_left inherit_yoyo suppress_elongation_warnings endscando]
+
+call "split cast @b" c4a
+            left_means_mirror neednumber
+   conc2_4_or_normal
+      cast_off_n4       []
+      hinge_then_cast_n [inherit_left suppress_elongation_warnings endscando]
 
 call "_change the web 1" dontshow tag change_web_1
             fudge_to_q_tag
@@ -8283,7 +8304,7 @@ call "spin back" c4
 call "short cycle" c4
             visible_fractions
    seq shortcycle1 []
-   seq hinge_must_be_armturn [/*cpls_unless_single*/]   /* Of course, "single" isn't allowed. */
+   seq cplshinge_should_be_armturn []
 
 call "_short cycle 1" dontshow tag shortcycle1
    singleconc uturnaway [] nullcall []
@@ -9241,6 +9262,9 @@ call "scoot apart" c4
             alternate_definition [4x4] c4
    setup 4x2 1x8 rotate restriction peelable_box
       array [C4E C5E C7E C6E A2E A3E A1E A0E]
+            alternate_definition [cross] c4
+   setup 2x2 1x4 restriction wave_only
+      array [CM3S AM1S CM2S AM0S]
 
 call "criss cross scoot apart" c4
    setup 2x2 1x4 restriction wave_only
@@ -9890,9 +9914,9 @@ call "_half by the left" dontshow tag 1_2_by_left
    setup 2x2 1x4 rotate qualifier left wave_only
       array [0 AL0S AL3S 0]
             alternate_definition [grand] plus
-   setup 1x6 1x6 restriction wave_only
+   setup 1x6 1x6 qualifier wave_only
       array [ZM0N AL0S AL1S AL4S AL5S AL2S]
-   setup 1x8 1x8 restriction wave_only
+   setup 1x8 1x8 qualifier wave_only
       array [ZM0N AL0S AL3S AL1S AL5S AL7S AL2S AL6S]
    setup dhrglass 1x3dmd
       array [0 0 0 0 0 0 AL1S 0]
@@ -9930,6 +9954,15 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM4W 0 AL3N 0 AL2N 0]
    setup 1x6 bone6 qualifier left wave_only
       array [0 AL1E 0 AL3E 0 ZM2N]
+            alternate_definition [grand yoyo] c4
+   setup 1x6 short6 rotate qualifier right wave_only
+      array [ZM4W 0 AL3N 0 AL2N 0]
+   setup 1x6 2x3 qualifier right wave_only
+      array [0 AL5E 0 AL3E 0 AL4E]
+   setup 1x8 spindle qualifier right wave_only
+      array [ZM7N 0 0 AL6E 0 AL4E AL5E 0]
+   setup 1x8 2x4 qualifier left wave_only
+      array [0 AL7E AL6E 0 AL4E 0 0 AL5E]
 
 call "_half by the left for swing the fractions" dontshow tag 1_2_by_left_for_swing_fractions
             left_means_mirror diamond_is_legal
@@ -10152,7 +10185,6 @@ call "_centers crossback/ends two o's" dontshow tag crossbackandtwoos
             magic_is_inherited
    conc_o crossback []
           two_o_circs_for_frac [inherit_magic conc_force_otherway endscando]
-
             magic_is_inherited yoyo_is_inherited
    conc6p_or_normal crossback []
                     two_o_circs [inherit_magic conc_force_otherway endscando]
@@ -12568,7 +12600,7 @@ call "curli-pass" c3x
    seq lines_curlique [inherit_left allow_forced_mod]
    seq fin_curli_pass []
 
-call "touchy-pass" c4
+call "touchy-pass" c4x
             sequence_starter rear_back_from_r_wave left_means_mirror visible_fractions
    seq lines_touch_1_4 [inherit_left allow_forced_mod]
    seq fin_curli_pass []
@@ -13508,7 +13540,7 @@ call "mini shake" c4x
 
 call "divide and pair" c4x
    setup 4x2 2x4 rotate
-      array [0 AL6S AL1S AL7N CR4S CR2N CR5N 0]
+      array [ACR0N AL6S AL1S AL7N CR4S CR2N CR5N CAL3S]
    setup 2x4 2x4
       array [0 AL1W CR2E 0 0 CR5E AL6W 0]
 
@@ -14009,6 +14041,10 @@ call "_cross to wv part 2" dontshow tag cross_to_wv_2
       array [CR2S ZM0N ZM3N AL1S ZM2N ZM4N ZM7N ZM1N]
    setup 4x2 2x4 rotate
       array [ZM5W ZM7W ZM0W 0 0 ZM3W ZM4W ZM6W]
+   setup qtag ptpd
+      array [0 0 ZM4N ZM6N 0 0 ZM0N ZM2N]
+   setup pqtag ptpd
+      array [ZM7N CR5S 0 0 AL7S ZM5N 0 0]
 
 call "cross to a wave" c4
             left_means_mirror
@@ -14801,9 +14837,12 @@ call "track and trade" c4
       array [CR9S CR11S CR7S CR2S CM4S CM5S CM6S CM8S 0 0 0 0 0 0 0 0]
 
 call "track and nothing" dontshow tag trackandnothing
+            equalize
    setup 4x2 2x4 rotate
       // We say you can only do it in a right-hand column.
       array [ZM6W ZM1W CM3E CM4E 0 0 0 0]
+   setup 2x4 qtag restriction unusual siamese_in_quad
+      array [0 0 0 0 ZM2N ZM3N ZM7N ZM6N]
             alternate_definition [magic] c4
    setup 4x2 2x4 rotate
       array [ZM5W 0 0 CM4E 0 CM3E ZM2W 0]
@@ -15218,7 +15257,8 @@ call "_outpost part 1" dontshow tag outpost1
          if outposter_is_ccw [CR6N AL5S AL7S AL0S    0 CR1N CR3N CR4N]
 
 call "_outpost part 3" dontshow tag outpost3
-   conc ahso [] two_o_circs [conc_force_otherway endscando]
+            visible_fractions
+   conc_o ahso [] two_o_circs_for_frac [conc_force_otherway endscando]
 
 call "_outpost part 3 but @0" dontshow tag outpost3but
    conc nullcall [mandatory_anycall] two_o_circs [conc_force_otherway endscando]
@@ -15271,7 +15311,9 @@ call "extend" mainstream tag extend
    // Baloney!  It's definitive now!  And lg01t works!
    setup pmd 1x4 qualifier live out qtag_like restriction forbidden levelplus
       array [0 ZM3N ZM2N ZM3N]
-   // 1/4 tag to 1/2 tag -- "live" demands that the test be definitive.
+   // 1/4 tag to 1/2 tag -- "live" demands that the test be definitive,
+   // that is, that we have a live end to indicate that this is a 1/4 tag
+   // and not a 3/4 tag.
    setup pmd 2x2 qualifier live in qtag_like
       preds "???"
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
@@ -15292,8 +15334,9 @@ call "extend" mainstream tag extend
    setup 4x1 dmd qualifier live out regular_tbone restriction controversial alwaysfail
       array [0 0 ZM2N 0]
             alternate_definition [cross] c3
-   // 1/4 tag to 1/2 tag
-   setup pmd 2x2 qualifier live in qtag_like
+   // 1/4 tag to 1/2 tag -- we do not demand a definitive test to distinguish
+   // a 1/4 tag from a 3/4 tag, because cross extend is meaningless in a 3/4 tag.
+   setup pmd 2x2 qualifier in qtag_like
       preds "???"
          if dmd_ctrs_rh [ZM3N ZM2N 0 0]
          if always      [ZM0N 0 0 ZM1N]
@@ -16993,8 +17036,10 @@ call "countershake" c4
    setup 4x2 2x4
       array [0 0 C1W C6W C7W C0W 0 0]
             alternate_definition [single] c4
-   setup 4x1 2x2
+   setup 4x1 2x2 qualifier out 2fl_only
       array [0 0 C3W C0W]
+   setup 2x2 1x4 rotate qualifier out in_or_out
+      array [C3S C2S 0 0]
             alternate_definition [3x3 12matrix] c4
    setup 4x3 2x6
       array [0 0 C2W C9W C10W C1W C11W C0W 0 0 0 0]
@@ -20163,17 +20208,22 @@ call "_finish clearing the way" dontshow tag finclearway
       array [CR2S AL3S AL0S CR1S]
 
 call "_clear the way centers to ends" dontshow tag clearwayce
-   seq hinge []
+            cross_is_inherited left_means_mirror
+   seq hinge [inherit_left]
    seq box_circ []
-   seq finclearway []
+   seq finclearway [inherit_cross]
 
 call "clear the way" c4a
             cross_is_inherited left_means_mirror
-   crossconc clearwayec [conc_demand_columns inherit_left] clearwayce [conc_force_lines inherit_cross suppress_elongation_warnings]
+   crossconc clearwayec [conc_demand_columns inherit_left]
+             clearwayce [conc_force_lines inherit_cross
+                         inherit_left suppress_elongation_warnings]
 
 call "clear the centers for a @0" c4a
-            cross_is_inherited dont_use_in_resolve
-   crossconc nullcall [mandatory_anycall] clearwayce [conc_force_lines inherit_cross suppress_elongation_warnings]
+            cross_is_inherited left_means_mirror dont_use_in_resolve
+   crossconc nullcall [mandatory_anycall]
+             clearwayce [conc_force_lines inherit_cross
+                         inherit_left suppress_elongation_warnings]
 
 call "create a column" c4a
    setup 4x4 2x4 rotate
@@ -21209,29 +21259,6 @@ call "explode the top, turn the star @9 more than usual" c3a
    seq diamondcirc []
    seq diamondcirc [repeat_n]
    seq plodetop4 []
-
-/* conc_o lossage
-call "_bits and pieces 1" dontshow tag bits_pieces1
-            magic_is_inherited
-   conc_o c_bits_pieces1 [] two_o_circs [inherit_magic endscando]
-
-call "_bits and pieces 2" dontshow tag bits_pieces2
-            yoyo_is_inherited
-   * Inheriting yoyo to the centers will make it fail, of course.  This is
-      only legal if the yoyo modifier is given just to the outsides. *
-   * The "trade" used to have "conc_demand_columns conc_force_spots", now has force_columns.
-      What a crock. *
-   conc ahso [inherit_yoyo] trade [conc_force_columns inherit_yoyo endscando]
-
-call "bits and pieces" c4a
-            visible_fractions magic_is_inherited yoyo_is_inherited
-   seq bits_pieces1 [inherit_magic]
-   seq bits_pieces2 [inherit_yoyo]
-*/
-
-
-
-
 
 call "_centers bits and pieces part 1" dontshow tag c_bits_pieces1
    setup 2x2 1x4 qualifier in_or_out
@@ -23292,10 +23319,10 @@ call "linear action but @m" c1
    seq finishwithplainmodbut2nd []
 
 call "linear action but cross it" c4a
-            left_means_mirror
-   seq startlinact [inherit_left]
+            left_means_mirror fractal_is_inherited
+   seq startlinact [inherit_left inherit_fractal]
    seq cross_the_lin_act []
-   seq finishwithplainmod []
+   seq finishwithplainmod [inherit_fractal]
 
 call "reflected linear action" c3
             left_means_mirror

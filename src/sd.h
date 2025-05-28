@@ -222,7 +222,8 @@ enum color_scheme_type {
    no_color,
    color_by_couple,
    color_by_corner,
-   color_by_couple_rgyb
+   color_by_couple_rgyb,
+   color_by_couple_ygrb
 };
 
 class ui_option_type {
@@ -242,6 +243,16 @@ class ui_option_type {
    bool accept_single_click;
    bool diagnostic_mode;
    bool no_sound;
+   bool tab_changes_focus;
+
+   // This is the line length beyond which we will take pity on
+   // whatever device has to print the result, and break the text line.
+   // It is presumably smaller than our internal text capacity.
+   // It is an observed fact that, with the default font (14 point Courier),
+   // one can print 66 characters on 8.5 x 11 inch paper.
+   // This is 59 by default.
+   int max_print_length;
+
    int resolve_test_minutes;
    int singing_call_mode;
 
@@ -353,15 +364,12 @@ enum concept_kind {
    concept_single_diagonal,
    concept_double_diagonal,
    concept_parallelogram,
-   concept_triple_lines,
+   concept_multiple_lines,
    concept_multiple_lines_tog,
    concept_multiple_lines_tog_std,
    concept_triple_1x8_tog,
-   concept_quad_lines,
-   concept_quad_lines_of_3,
-   concept_quad_boxes,
+   concept_multiple_boxes,
    concept_quad_boxes_together,
-   concept_triple_boxes,
    concept_triple_boxes_together,
    concept_triple_diamonds,
    concept_triple_formations,
@@ -2042,7 +2050,8 @@ struct matrix_rec {
    int dir;            // This person's initial facing direction, 0 to 3.
    int deltax;         // How this person will move, relative to his own facing
    int deltay;         //   direction, when call is finally executed.
-   int nearest;        // Forward distance to nearest jaywalkee.
+   int nearest;        // Smallest forward distance to a jaywalkee.
+   int nearestlat;     // Smallest lateral distance to a jaywalkee.
    int leftidx;        // X-increment of leftmost valid jaywalkee.
    int rightidx;       // X-increment of rightmost valid jaywalkee.
    int deltarot;       // How this person will turn.
@@ -2874,10 +2883,11 @@ enum {
    CONCPROP__NEEDK_3X6       = 0x00000180UL,
    CONCPROP__NEEDK_4D_4PTPD  = 0x00000190UL,
    CONCPROP__NEEDK_4X5       = 0x000001A0UL,
-   CONCPROP__NEEDK_2X12      = 0x000001B0UL,
-   CONCPROP__NEEDK_DBLX      = 0x000001C0UL,
-   CONCPROP__NEEDK_DEEPXWV   = 0x000001D0UL,
-   CONCPROP__NEEDK_QUAD_1X3  = 0x000001E0UL,
+   CONCPROP__NEEDK_2X10      = 0x000001B0UL,
+   CONCPROP__NEEDK_2X12      = 0x000001C0UL,
+   CONCPROP__NEEDK_DBLX      = 0x000001D0UL,
+   CONCPROP__NEEDK_DEEPXWV   = 0x000001E0UL,
+   CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0UL,
 
    CONCPROP__NEED_ARG2_MATRIX= 0x00000200UL,
    /* spare:                   0x00000400UL, */
@@ -3989,6 +3999,8 @@ enum mpkind {
    MPKIND__TWICE_REMOVED,
    MPKIND__THRICE_REMOVED,
    MPKIND__OVERLAP,
+   MPKIND__OVERLAP14,
+   MPKIND__OVERLAP34,
    MPKIND__INTLK,
    MPKIND__CONCPHAN,
    MPKIND__INTLKDMD,
@@ -4664,6 +4676,18 @@ inline uint32 little_endian_live_mask(const setup *ss)
    }
    return result;
 }
+
+
+inline uint32 or_all_people(const setup *ss)
+{
+   uint32 result = 0;
+
+   for (int i=0 ; i<=attr::slimit(ss) ; i++)
+      result |= ss->people[i].id1;
+
+   return result;
+}
+
 
 
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);

@@ -1,4 +1,7 @@
 ===============================================================
+*********** DO NOT RENAME THIS TO HOWTOBUILD.TXT **************
+Doing so would cause it to be included in the "do_pack" script.
+===============================================================
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.

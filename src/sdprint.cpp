@@ -56,7 +56,8 @@
 struct printer_innards {
    HINSTANCE hInstance;
    HWND hwnd;
-   const print_default_info *local_info;
+   int IDD_PRINTING_DIALOG;
+   int IDC_FILENAME;
    LOGFONT lf;
    CHOOSEFONT cf;
    DOCINFO di;
@@ -77,7 +78,8 @@ printer::printer(HINSTANCE hInstance, HWND hwnd, const print_default_info & info
 
    innards->hwnd = hwnd;
    innards->hInstance = hInstance;
-   innards->local_info = &info;
+   innards->IDD_PRINTING_DIALOG = info.IDD_PRINTING_DIALOG;
+   innards->IDC_FILENAME = info.IDC_FILENAME;
 
    // Initialize the default file directory and type.
    innards->ofn.lStructSize = sizeof(OPENFILENAME);
@@ -101,9 +103,20 @@ printer::printer(HINSTANCE hInstance, HWND hwnd, const print_default_info & info
 
    // Here is where we set the initial default font and point size.
    lstrcpy(innards->lf.lfFaceName, info.font);
-   innards->cf.iPointSize = info.pointsize * 10;
+   set_point_size(info.pointsize);
    innards->lf.lfWeight = info.bold ? FW_BOLD : FW_NORMAL;
    innards->lf.lfItalic = info.italic;
+}
+
+printer::~printer()
+{
+   delete innards;
+}
+
+
+void printer::set_point_size(int size)
+{
+   innards->cf.iPointSize = size * 10;
    innards->lf.lfHeight = -((innards->cf.iPointSize*GetDeviceCaps(GetDC(innards->hwnd), LOGPIXELSY)+360)/720);
 
    // At all times, "lf" has the data for the current font (unfortunately,
@@ -115,12 +128,6 @@ printer::printer(HINSTANCE hInstance, HWND hwnd, const print_default_info & info
    // based on the printer calibration.  We will use the field "cf.iPointSize"
    // (the only thing that is invariant) to recompute it.
 }
-
-printer::~printer()
-{
-   delete innards;
-}
-
 
 void printer::choose_font()
 {
@@ -238,10 +245,10 @@ void printer::print_this(const char *szFileName, char *szMainTitle, bool pagenum
    bUserAbort = FALSE;
 
    hDlgPrint = CreateDialog(innards->hInstance,
-                            MAKEINTRESOURCE(innards->local_info->IDD_PRINTING_DIALOG),
+                            MAKEINTRESOURCE(innards->IDD_PRINTING_DIALOG),
                             innards->hwnd, (DLGPROC) PrintDlgProc);
 
-   SetDlgItemText(hDlgPrint, innards->local_info->IDC_FILENAME, szFileName);
+   SetDlgItemText(hDlgPrint, innards->IDC_FILENAME, szFileName);
    SetAbortProc(hdcPrn, PrintAbortProc);
 
    ZeroMemory(&innards->di, sizeof(DOCINFO));

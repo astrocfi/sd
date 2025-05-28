@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.0"
-#define TIME_STAMP "wba@alum.mit.edu  17 apr 2004 $"
+#define VERSION_STRING "36.1"
+#define TIME_STAMP "wba@alum.mit.edu  28 Aug 2004 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -902,6 +902,8 @@ ui_option_type::ui_option_type() :
    accept_single_click(false),
    diagnostic_mode(false),
    no_sound(false),
+   tab_changes_focus(false),
+   max_print_length(59),
    resolve_test_minutes(0),
    singing_call_mode(0),
    use_escapes_for_drawing_people(0),
@@ -925,6 +927,7 @@ extern int sdmain(int argc, char *argv[])
       printf("-write_full_list <filename> write this list and all lower\n");
       printf("-abridge <filename>         do not use calls in this file\n");
       printf("-delete_abridge             delete abridgement from existing session\n");
+      printf("-print_length <n>           set the line length for the output file\n");
       printf("-session <n>                use the indicated session number\n");
       printf("-no_checkers                do not use large \"checkers\" for setup display\n");
       printf("-no_graphics                do not use special characters for setup display\n");
@@ -935,9 +938,11 @@ extern int sdmain(int argc, char *argv[])
       printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
       printf("-color_by_couple            display color according to couple number, rgby\n");
       printf("-color_by_couple_rgyb       similar to color_by_couple, but with rgyb\n");
+      printf("-color_by_couple_ygrb       similar to color_by_couple, but with ygrb\n");
       printf("-color_by_corner            similar to color_by_couple, but make corners match\n");
       printf("-no_sound                   do not make any noise when an error occurs\n");
       printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
+      printf("-tab_changes_focus          (Sd only) make the tab key move keyboard focus\n");
       printf("-singlespace                single space the output file\n");
       printf("-keep_all_pictures          keep the picture after every call\n");
       printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");

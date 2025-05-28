@@ -29,7 +29,7 @@
 // The parameters passed here are just the initial defaults.  The user can
 // change them by calling "windows_choose_font" and clicking on things.
 
-// Q: why do we pass "ID" values in a structure at runtime, rather than
+// Q: Why do we pass "ID" values in a structure at runtime, rather than
 //    using values straight out of a "resource.h" file the way the rest
 //    of the civilized world does?
 // A: This file, and the file sdprint.cpp, are used in different programs,
@@ -57,6 +57,7 @@ class printer {
    printer(HINSTANCE hInstance, HWND hwnd, const print_default_info & info);
    ~printer();
 
+   void set_point_size(int size);
    void choose_font();
 
    // This prints a specific file.  Not sure what "szMainTitle" actually does.

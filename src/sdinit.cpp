@@ -1829,6 +1829,12 @@ static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
 // Red, green, substitute yellow, blue.
 static int couple_colors_rgkb[8] = {2, 2, 3, 3, 1, 1, 5, 5};
 
+// Yellow, green, red, blue.
+static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
+
+// Substitute yellow, green, red, blue.
+static int couple_colors_kgrb[8] = {1, 1, 3, 3, 2, 2, 5, 5};
+
 
 int useful_concept_indices[UC_extent];
 
@@ -1941,6 +1947,12 @@ extern bool open_session(int argc, char **argv)
                   gg->bad_argument("Bad number", args[argno+1], 0);
             }
          }
+         else if (strcmp(&args[argno][1], "print_length") == 0) {
+            if (argno+1 < nargs) {
+               if (sscanf(args[argno+1], "%d", &ui_options.max_print_length) != 1)
+                  gg->bad_argument("Bad number", args[argno+1], 0);
+            }
+         }
          else if (strcmp(&args[argno][1], "delete_abridge") == 0)
             { glob_abridge_mode = abridge_mode_deleting_abridge; continue; }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
@@ -1959,10 +1971,14 @@ extern bool open_session(int argc, char **argv)
             { ui_options.color_scheme = color_by_couple; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple_rgyb") == 0)
             { ui_options.color_scheme = color_by_couple_rgyb; continue; }
+         else if (strcmp(&args[argno][1], "color_by_couple_ygrb") == 0)
+            { ui_options.color_scheme = color_by_couple_ygrb; continue; }
          else if (strcmp(&args[argno][1], "color_by_corner") == 0)
             { ui_options.color_scheme = color_by_corner; continue; }
          else if (strcmp(&args[argno][1], "no_sound") == 0)
-            { ui_options.no_sound = 1; continue; }
+            { ui_options.no_sound = true; continue; }
+         else if (strcmp(&args[argno][1], "tab_changes_focus") == 0)
+            { ui_options.tab_changes_focus = true; continue; }
          else if (strcmp(&args[argno][1], "keep_all_pictures") == 0)
             { ui_options.keep_all_pictures = true; continue; }
          else if (strcmp(&args[argno][1], "single_click") == 0)
@@ -2055,6 +2071,8 @@ extern bool open_session(int argc, char **argv)
             color_index_list = couple_colors_rgby+1;
          else if (ui_options.color_scheme == color_by_couple_rgyb)
             color_index_list = couple_colors_rgyb;
+         else if (ui_options.color_scheme == color_by_couple_ygrb)
+            color_index_list = couple_colors_ygrb;
          else                      // color_by_couple
             color_index_list = couple_colors_rgby;
       }
@@ -2063,6 +2081,8 @@ extern bool open_session(int argc, char **argv)
             color_index_list = couple_colors_rgbk+1;
          else if (ui_options.color_scheme == color_by_couple_rgyb)
             color_index_list = couple_colors_rgkb;
+         else if (ui_options.color_scheme == color_by_couple_ygrb)
+            color_index_list = couple_colors_kgrb;
          else                      // color_by_couple
             color_index_list = couple_colors_rgbk;
       }

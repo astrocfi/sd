@@ -509,11 +509,35 @@ static int LookupKeystrokeBinding(
          return 1;    // We are not handling these, but don't change focus.
       }
       else if (wParam == VK_TAB) {
-         ButtonFocusIndex += 1 - (ctlbits & 2);   // Yeah, sleazy.
-         if (ButtonFocusIndex > ButtonFocusHigh) ButtonFocusIndex = 0;
-         else if (ButtonFocusIndex < 0) ButtonFocusIndex = ButtonFocusHigh;
-         SetFocus(ButtonFocusTable[ButtonFocusIndex]);
-         return 2;    // We have handled it.
+         // The tab key, under normal Windows conventions, moves focus around
+         // in one direction or the other among the focusable windows.  We have
+         // very little use for that, since most of the time focus is on the
+         // edit box, that is, the text input area.  On the other hand, we commonly
+         // want a "completion" character.  In Sdtty, that is either tab or escape.
+         // In Sd, escape will have that effect in any case, but we usually want
+         // tab to do that also.  The reason is that tab has that meaning in Emacs,
+         // and commonly has that meaning in a Windows command prompt window.
+         // Escape in a Windows command prompt window erases all input, so it's
+         // much safer to be in the habit of typing tab to get completion.
+         // Therefore, we normally usurp the conventional Windows meaning of tab,
+         // and have it cause completion.  Windows also has the convention that
+         // shift-tab moves focus in the opposite direction, and we leave that
+         // convention in place.  So you can still manually shift focus if you
+         // want to.  We also allow the "tab_changes_focus" option to make
+         // plain tab have its convention Windows meaning.
+         // Windows is used in this paragraph as a reference to a registered
+         // trademark of Microsoft, a notorious software / virus propagation
+         // company.
+         if (ui_options.tab_changes_focus || (ctlbits & 2)) {
+            ButtonFocusIndex += 1 - (ctlbits & 2);   // Yeah, sleazy.
+            if (ButtonFocusIndex > ButtonFocusHigh) ButtonFocusIndex = 0;
+            else if (ButtonFocusIndex < 0) ButtonFocusIndex = ButtonFocusHigh;
+            SetFocus(ButtonFocusTable[ButtonFocusIndex]);
+         }
+         else
+            PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndList);
+
+         return 2;    // One way or the other, we have handled it.
       }
       else if (wParam == 0x0C) {
          if (!(HIWORD(lParam) & KF_EXTENDED))

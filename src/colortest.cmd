@@ -30,30 +30,30 @@ REM    blk      wht         CM
 REM    blk      wht         blk
 REM    blk      wht         RGB dark yel
 
-sdtty m -no_cursor -reverse_video -no_intensify -bold_color
-sdtty m -no_cursor -reverse_video -no_intensify -bold_color   -no_color
-sdtty m -no_cursor -reverse_video -no_intensify -bold_color   -color_by_corner
-sdtty m -no_cursor -reverse_video -no_intensify -pastel_color
-sdtty m -no_cursor -reverse_video -no_intensify -pastel_color -no_color
-sdtty m -no_cursor -reverse_video -no_intensify -pastel_color -color_by_corner
+sdtty m -session 0 -no_cursor -reverse_video -no_intensify -bold_color
+sdtty m -session 0 -no_cursor -reverse_video -no_intensify -bold_color   -no_color
+sdtty m -session 0 -no_cursor -reverse_video -no_intensify -bold_color   -color_by_corner
+sdtty m -session 0 -no_cursor -reverse_video -no_intensify -pastel_color
+sdtty m -session 0 -no_cursor -reverse_video -no_intensify -pastel_color -no_color
+sdtty m -session 0 -no_cursor -reverse_video -no_intensify -pastel_color -color_by_corner
 
-sdtty m -no_cursor -reverse_video               -bold_color
-sdtty m -no_cursor -reverse_video               -bold_color   -no_color
-sdtty m -no_cursor -reverse_video               -bold_color   -color_by_corner
-sdtty m -no_cursor -reverse_video               -pastel_color
-sdtty m -no_cursor -reverse_video               -pastel_color -no_color
-sdtty m -no_cursor -reverse_video               -pastel_color -color_by_corner
+sdtty m -session 0 -no_cursor -reverse_video               -bold_color
+sdtty m -session 0 -no_cursor -reverse_video               -bold_color   -no_color
+sdtty m -session 0 -no_cursor -reverse_video               -bold_color   -color_by_corner
+sdtty m -session 0 -no_cursor -reverse_video               -pastel_color
+sdtty m -session 0 -no_cursor -reverse_video               -pastel_color -no_color
+sdtty m -session 0 -no_cursor -reverse_video               -pastel_color -color_by_corner
 
-sdtty m -no_cursor -normal_video  -no_intensify -bold_color
-sdtty m -no_cursor -normal_video  -no_intensify -bold_color   -no_color
-sdtty m -no_cursor -normal_video  -no_intensify -bold_color   -color_by_corner
-sdtty m -no_cursor -normal_video  -no_intensify -pastel_color
-sdtty m -no_cursor -normal_video  -no_intensify -pastel_color -no_color
-sdtty m -no_cursor -normal_video  -no_intensify -pastel_color -color_by_corner
+sdtty m -session 0 -no_cursor -normal_video  -no_intensify -bold_color
+sdtty m -session 0 -no_cursor -normal_video  -no_intensify -bold_color   -no_color
+sdtty m -session 0 -no_cursor -normal_video  -no_intensify -bold_color   -color_by_corner
+sdtty m -session 0 -no_cursor -normal_video  -no_intensify -pastel_color
+sdtty m -session 0 -no_cursor -normal_video  -no_intensify -pastel_color -no_color
+sdtty m -session 0 -no_cursor -normal_video  -no_intensify -pastel_color -color_by_corner
 
-sdtty m -no_cursor -normal_video                -bold_color
-sdtty m -no_cursor -normal_video                -bold_color   -no_color
-sdtty m -no_cursor -normal_video                -bold_color   -color_by_corner
-sdtty m -no_cursor -normal_video                -pastel_color
-sdtty m -no_cursor -normal_video                -pastel_color -no_color
-sdtty m -no_cursor -normal_video                -pastel_color -color_by_corner
+sdtty m -session 0 -no_cursor -normal_video                -bold_color
+sdtty m -session 0 -no_cursor -normal_video                -bold_color   -no_color
+sdtty m -session 0 -no_cursor -normal_video                -bold_color   -color_by_corner
+sdtty m -session 0 -no_cursor -normal_video                -pastel_color
+sdtty m -session 0 -no_cursor -normal_video                -pastel_color -no_color
+sdtty m -session 0 -no_cursor -normal_video                -pastel_color -color_by_corner

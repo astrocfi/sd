@@ -661,8 +661,10 @@ extern bool do_simple_split(
 
    switch (ss->kind) {
    case s3x4:
-      if (split_command == split_command_2x3)
+      if (split_command == split_command_2x3) {
          mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
+         break;
+      }
       else if (split_command == split_command_none) {
          if (ss->people[0].id1 & ss->people[1].id1 &
              ss->people[4].id1 & ss->people[5].id1 &
@@ -679,9 +681,8 @@ extern bool do_simple_split(
             break;
          }
       }
-      else
-         return true;
-      break;
+
+      return true;
    case s2x4:
       mapcode = (split_command == split_command_none) ?
          MAPCODE(s2x2,2,MPKIND__SPLIT,0) : MAPCODE(s1x4,2,MPKIND__SPLIT,1);
@@ -1060,6 +1061,7 @@ static int start_matrix_call(
          matrix_info[nump].deltax = 0;
          matrix_info[nump].deltay = 0;
          matrix_info[nump].nearest = 100000;
+         matrix_info[nump].nearestlat = 100000;
          matrix_info[nump].deltarot = 0;
          matrix_info[nump].roll_stability_info =
             (NDBROLL_BIT * 3) |
@@ -1258,6 +1260,8 @@ static const checkitem checktable[] = {
    {0x00C40022, 0x26001B00, s2x7, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20022, 0x004C8036, s2x8, 0, warn__none, (const coordrec *) 0, {127}},
    {0x002200E2, 0x12908484, s2x8, 1, warn__none, (const coordrec *) 0, {127}},
+   {0x01220022, 0x006C8136, s2x10,0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620022, 0x026C81B6, s2x12,0, warn__none, (const coordrec *) 0, {127}},
    {0x00A20044, 0x19804E40, s3x6, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20044, 0x1D806E41, s3x8, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00840062, 0x4E203380, s4x5, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1655,7 +1659,7 @@ static void make_matrix_chains(
 
          if ((flags & MTX_IGNORE_NONSELECTEES) && (!mj->sel)) continue;
 
-         /* Find out if these people are adjacent in the right way. */
+         // Find out if these people are adjacent in the right way.
 
          if (flags & MTX_FIND_JAYWALKERS) {
             jx = mj->nicex;
@@ -1683,10 +1687,12 @@ static void make_matrix_chains(
 
          if (flags & MTX_FIND_JAYWALKERS) {
             int jdist = (mi->dir & 1) ? delx : dely;
+            int lateraldist = (mi->dir & 1) ? dely : delx;
             int returndist = (mj->dir & 1) ? delx : dely;
 
             if (!(mi->dir & 2)) jdist = -jdist;
             if ((mj->dir & 2)) returndist = -returndist;
+            if (lateraldist < 0) lateraldist = -lateraldist;
 
             // Jdist is the forward distance to the jaywalkee.  We demand that it be
             // strictly positive, and minimal with respect to all other jaywalkee
@@ -1694,14 +1700,22 @@ static void make_matrix_chains(
             // back toward us or are facing lateral but are in such a position that
             // they can see us.
 
-            if (jdist > 0 && returndist > 0 && jdist <= mi->nearest && dirxor != 0) {
-               if (jdist < mi->nearest) {
-                  // This jaywalkee is closer than any others that we have seen;
-                  // drop all others.
+            if (jdist > 0 && returndist > 0 && dirxor != 0 &&
+                (jdist <= mi->nearest || lateraldist <= mi->nearestlat)) {
+
+               // If this is truly better than anything we have seen
+               // (vertically strictly better and laterally at least
+               // as good), delete old stuff.
+               if (jdist < mi->nearest && lateraldist <= mi->nearestlat)
                   mi->jbits = 0;
-                  mi->nearest = jdist;  // This is the new nearest distance.
+
+               // If this is truly worse than anything we have seen,
+               // do nothing.  Otherwise, save stuff.
+               if (jdist <= mi->nearest || lateraldist < mi->nearestlat) {
+                  mi->jbits |= (1 << j);
+                  if (jdist < mi->nearest) mi->nearest = jdist;
+                  if (lateraldist < mi->nearestlat) mi->nearestlat = lateraldist;
                }
-               mi->jbits |= (1 << j);
             }
          }
          else {
@@ -3307,21 +3321,29 @@ void fraction_info::get_fraction_info(
       int diff = m_highlimit - my_start_point;
 
       if (m_reverse_order || m_do_half_of_last_part || m_do_last_half_of_first_part)
-         fail("Can't do this fractional \"snag\".");
+         fail("Can't do this nested fraction.");
 
-      if (m_instant_stop || diff <= 0 || (diff & 1))
-         fail("Can't do this fractional \"snag\".");
-      m_highlimit -= diff >> 1;
+      if (m_instant_stop && diff == 1)
+         m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+      else {
+         if (m_instant_stop || diff <= 0 || (diff & 1))
+            fail("Can't do this nested fraction.");
+         m_highlimit -= diff >> 1;
+      }
    }
    else if (frac_flags & CMD_FRAC_LASTHALF_ALL) {
       int diff = m_highlimit - my_start_point;
 
       if (m_reverse_order || m_do_half_of_last_part || m_do_last_half_of_first_part)
-         fail("Can't do this fractional \"snag\".");
+         fail("Can't do this nested fraction.");
 
-      if (m_instant_stop || diff <= 0 || (diff & 1))
-         fail("Can't do this fractional \"snag\".");
-      my_start_point += diff >> 1;
+      if (m_instant_stop && diff == 1)
+         m_do_half_of_last_part = CMD_FRAC_LASTHALF_VALUE;
+      else {
+         if (m_instant_stop || diff <= 0 || (diff & 1))
+            fail("Can't do this nested fraction.");
+         my_start_point += diff >> 1;
+      }
    }
 
    m_subcall_incr = m_reverse_order ? -1 : 1;
@@ -3601,6 +3623,18 @@ static void do_stuff_inside_sequential_call(
              old_assumption == cr_real_1_4_tag ||
              old_assumption == cr_real_1_4_line)
             *fix_next_assumption_p = cr_ckpt_miniwaves;
+      }
+      else if (result->cmd.callspec == base_calls[base_call_scootback]) {
+         if (result->kind == s_qtag) {
+            if (old_assumption == cr_jright && old_assump_both == 2) {
+               *fix_next_assumption_p = cr_jleft;
+               *fix_next_assump_both_p = 1;
+            }
+            else if (old_assumption == cr_jleft && old_assump_both == 2) {
+               *fix_next_assumption_p = cr_jright;
+               *fix_next_assump_both_p = 1;
+            }
+         }
       }
       else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
          if (result->kind == s2x4 &&
@@ -4014,10 +4048,10 @@ static void do_sequential_call(
 
    prepare_for_call_in_series(result, ss);
 
-   int use_alternate(0);
-   uint32 remember_elongation(0);
-   int remembered_2x2_elongation(0);
-   int subpart_count(0);
+   int use_alternate = 0;
+   uint32 remember_elongation = 0;
+   int remembered_2x2_elongation = 0;
+   int subpart_count = 0;
 
    for (;;) {
       by_def_item *this_item;
@@ -4230,10 +4264,6 @@ static void do_sequential_call(
       if (subpart_count && !distribute) goto go_to_next_cycle;
 
    done_with_big_cycle:
-
-      /* We allow expansion on the first part, and then shut it off for later parts.
-         This is required for things like 12 matrix grand swing thru from a 1x8 or 1x10. */
-      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
       /* This really isn't right.  It is done in order to make "ENDS FINISH set back" work.
          The flaw is that, if the sequentially defined call "FINISH set back" had more than one
@@ -4881,7 +4911,7 @@ static void really_inner_move(setup *ss,
 
    uint32 tbonetest = 0;
    if (attr::slimit(ss) >= 0) {
-      for (int j=0; j<=attr::slimit(ss); j++) tbonetest |= ss->people[j].id1;
+      tbonetest = or_all_people(ss);
       if (!(tbonetest & 011) && the_schema != schema_by_array) {
          result->kind = nothing;
          clear_result_flags(result);
@@ -5576,12 +5606,7 @@ static void move_with_real_call(
             // But we skip the test if the incoming setup is empty.
 
             {
-               uint32 tbonetest = 0;
-               if (attr::slimit(ss) >= 0) {
-                  for (int j=0; j<=attr::slimit(ss); j++) tbonetest |= ss->people[j].id1;
-               }
-               else
-                  tbonetest = 99;
+               uint32 tbonetest = (attr::slimit(ss) >= 0) ? or_all_people(ss) : 99;
 
                if (tbonetest) {
                   if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_BREAKING_UP) ==
@@ -5874,8 +5899,6 @@ static void move_with_real_call(
 
       if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT)) {
          bool starting = true;
-
-         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
          // Check for doing "split square thru" or "split dixie style" stuff.
          // But don't propagate the stuff if we aren't doing the first part of the call.
@@ -6263,10 +6286,10 @@ extern void move(
       goto getout;
    }
 
-   /* Scan the "final" concepts, remembering them and their end point. */
+   // Scan the "final" concepts, remembering them and their end point.
    last_magic_diamond = 0;
 
-   /* But if we have a pending "centers/ends work <concept>" concept, don't. */
+   // But if we have a pending "centers/ends work <concept>" concept, don't.
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
       parse_block *kstuff;
@@ -6274,7 +6297,7 @@ extern void move(
 
       parse_block **foop;
 
-      (void) really_skip_one_concept(ss->cmd.parseptr, kstuff, njunk, &foop);
+      really_skip_one_concept(ss->cmd.parseptr, kstuff, njunk, &foop);
       parseptrcopy = *foop;
 
       if (kstuff->concept->kind == concept_supercall)
@@ -6286,18 +6309,7 @@ extern void move(
    // We will merge the new concepts with whatever we already had.
 
    save_incoming_final = ss->cmd.cmd_final_flags;   // In case we need to punt.
-
-   for (;;) {
-      parseptrcopy = process_final_concepts(parseptrcopy, true, &ss->cmd.cmd_final_flags, true, __FILE__, __LINE__);
-
-      if (parseptrcopy->concept->kind == concept_fractional &&
-          ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
-         parseptrcopy = parseptrcopy->next;
-      }
-      else
-         break;
-   }
-
+   parseptrcopy = process_final_concepts(parseptrcopy, true, &ss->cmd.cmd_final_flags, true, __FILE__, __LINE__);
    saved_magic_diamond = last_magic_diamond;
 
    // Handle expired concepts.

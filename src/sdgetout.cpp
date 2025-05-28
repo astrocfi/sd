@@ -462,7 +462,7 @@ static bool inner_search(command_kind goal,
       // We used to use an "if" statement here instead of a "switch", because
       // of a compiler bug.  We no longer take pity on buggy compilers.
 
-      setup *ns = &configuration::next_config().state;
+      const setup *ns = &configuration::next_config().state;
 
       if (ui_options.resolve_test_minutes != 0) goto what_a_loss;
 
@@ -474,7 +474,7 @@ static bool inner_search(command_kind goal,
 
             if (index == resolve_none) goto what_a_loss;
 
-            // Some resolves are so bad we never find them.
+            // Some resolves are so bad we never use them.
             // This is indicated by the 40 bit in the distance word.
             if (r.the_item->distance & 0x40) goto what_a_loss;
 
@@ -682,25 +682,26 @@ static bool inner_search(command_kind goal,
          break;
       }
 
-      /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
-         sure, we have to examine all future calls (for a reconcile -- for other stuff
-         there are no future calls), to make sure that, aside from the permutation
-         that gets performed, they will be executed the same way. */
+      // The call (or sequence thereof) seems to satisfy our criterion.  Just to be
+      // sure, we have to examine all future calls (for a reconcile -- for other stuff
+      // there are no future calls), to make sure that, aside from the permutation
+      // that gets performed, they will be executed the same way.
 
-      /* But first, we make the dynamic part of the parse state be a copy of what we
-         had, since we are repeatedly overwriting existing blocks. */
+      // But first, we make the dynamic part of the parse state be a copy of what we
+      // had, since we are repeatedly overwriting existing blocks.
 
-      /* The solution that we have found consists of the parse blocks hanging off of
-         huge_history_ptr+1 ... history_ptr inclusive.  We have to make sure that they will
-         be safe forever.  (That is, until we have exited the entire resolve operation.)
-         For the most part, this follows from the fact that we will not re-use any
-         already-in-use parse blocks.  But the tree hanging off of huge_history_ptr+1
-         gets destructively reset to the initial state by restore_parse_state, so we must
-         protect it. */
+      // The solution that we have found consists of the parse blocks hanging off of
+      // huge_history_ptr+1 ... history_ptr inclusive.  We have to make sure that they will
+      // be safe forever.  (That is, until we have exited the entire resolve operation.)
+      // For the most part, this follows from the fact that we will not re-use any
+      // already-in-use parse blocks.  But the tree hanging off of huge_history_ptr+1
+      // gets destructively reset to the initial state by restore_parse_state, so we must
+      // protect it.
 
-      configuration::history[huge_history_ptr+1].command_root = copy_parse_tree(configuration::history[huge_history_ptr+1].command_root);
+      configuration::history[huge_history_ptr+1].command_root =
+         copy_parse_tree(configuration::history[huge_history_ptr+1].command_root);
 
-      /* Save the entire resolve, that is, the calls we inserted, and where we inserted them. */
+      // Save the entire resolve, that is, the calls we inserted, and where we inserted them.
 
       configuration::history_ptr++;
       new_resolve->size = configuration::history_ptr - history_insertion_point;
@@ -773,19 +774,23 @@ static bool inner_search(command_kind goal,
 
       testing_fidelity = false;
 
-      /* One more check.  If this was a "reconcile", demand that we have an acceptable resolve.
-         How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
-         if the resolve is "at home", we demand that the promenade distance be zero.  Our
-         previous tests were impervious to promenade distance, because it usually doesn't matter.
-         But for "at home", resolve_p will only show a resolve if the distance is zero.
-         Note that the above comment is obsolete, because we now allow circling a nonzero amount.
-         However, it does little harm to leave this test in place, and it might avoid future
-         problems if rotation-sensitive resolves are ever re-introduced. */
+      // One more check.  If this was a "reconcile", demand that we
+      // have an acceptable resolve.  How could the permutation be
+      // acceptable but not lead to an acceptable resolve?  Because,
+      // if the resolve is "at home", we demand that the promenade
+      // distance be zero.  Our previous tests were impervious to
+      // promenade distance, because it usually doesn't matter.  But
+      // for "at home", resolve_p will only show a resolve if the
+      // distance is zero.  Note that the above comment is obsolete,
+      // because we now allow circling a nonzero amount.  However, it
+      // does little harm to leave this test in place, and it might
+      // avoid future problems if rotation-sensitive resolves are ever
+      // re-introduced.
 
       if (goal == command_reconcile && !configuration::sequence_is_resolved())
-         goto try_again;   /* Sorry. */
+         goto try_again;
 
-      /* We win.  Really save it and exit.  History_ptr has been clobbered. */
+      // We win.  Really save it and exit.  History_ptr has been clobbered.
 
       for (j=0; j<MAX_RESOLVE_SIZE; j++)
          new_resolve->stuph[j] = configuration::history[j+history_insertion_point+1];
@@ -795,9 +800,8 @@ static bool inner_search(command_kind goal,
       avoid_list_size++;
 
       if (avoid_list_allocation <= avoid_list_size) {
-         int *t;
          avoid_list_allocation = avoid_list_size+100;
-         t = (int *) realloc(avoid_list, avoid_list_allocation * sizeof(int));
+         int *t = (int *) realloc(avoid_list, avoid_list_allocation * sizeof(int));
          if (!t) specialfail("Not enough memory!");
          avoid_list = t;
       }

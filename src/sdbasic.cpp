@@ -955,13 +955,7 @@ extern bool check_restriction(
          }
          break;
       case cr_not_tboned:
-         q0 = 0;
-
-         for (idx=0 ; idx<=attr::slimit(ss) ; idx++)
-            q0 |= ss->people[idx].id1;
-
-         if ((q0 & 011) == 011) goto restr_failed;
-
+         if ((or_all_people(ss) & 011) == 011) goto restr_failed;
          break;
       }
    }
@@ -2739,18 +2733,16 @@ static int divide_the_setup(
       break;
    case s_qtag:
       if (assoc(b_dmd, ss, calldeflist) ||
-          assoc(b_pmd, ss, calldeflist) ||
-          assoc(b_1x1, ss, calldeflist) ||
-          assoc(b_1x4, ss, calldeflist)) {
+          assoc(b_pmd, ss, calldeflist)) {
          division_code = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
          goto divide_us_no_recompute;
       }
 
-      /* Check whether it has 2x3/3x2 definitions, and divide the setup if so,
-         and if the call permits it.  This is important for permitting "Z axle" from
-         a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
-         phantom columns.)  We also enable this if the caller explicitly said
-         "3x4 matrix". */
+      // Check whether it has 2x3/3x2 definitions, and divide the setup if so,
+      // and if the call permits it.  This is important for permitting "Z axle" from
+      // a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
+      // phantom columns.)  We also enable this if the caller explicitly said
+      // "3x4 matrix".
 
       if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
            (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) ||
@@ -4087,10 +4079,7 @@ foobar:
             else fail("Setup is bizarre.");
 
             *ss = stemp;
-            newtb = 0;
-
-            for (j=0; j<=attr::klimit(ss->kind); j++)
-               newtb |= ss->people[j].id1;
+            newtb = or_all_people(ss);
          }
       }
 
@@ -4128,11 +4117,7 @@ foobar:
                }
                else {
                   remove_z_distortion(ss);
-                  newtb = 0;
-
-                  for (j=0; j<=attr::slimit(ss); j++)
-                     newtb |= ss->people[j].id1;
-
+                  newtb = or_all_people(ss);
                   linedefinition = assoc(b_2x2, ss, calldeflist);
                   coldefinition = linedefinition;
                   four_way_startsetup = true;

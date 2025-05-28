@@ -657,14 +657,23 @@ extern void update_id_bits(setup *ss)
       if ((livemask & 01616UL) != 01616UL) ptr = (id_bit_table *) 0;
       break;
    case s4x4:
-      /* We recognize centers and ends if this is populated as a butterfly. */
-      /* Otherwise, we recognize "center 4" only if those 4 spots are occupied. */
+      // We recognize centers and ends if this is populated as a butterfly.
+      // Otherwise, we recognize "center 4" only if those 4 spots are occupied.
       if (livemask == 0x9999UL)
          ptr = id_bit_table_butterfly;
       else if (livemask == 0xC9C9UL || livemask == 0x9C9CUL ||
                livemask == 0xB8B8UL || livemask == 0x8B8BUL)
          ptr = id_bit_table_4x4_outer_pairs;
       else if ((livemask & 0x8888UL) != 0x8888UL)
+         ptr = (id_bit_table *) 0;
+      break;
+   case s4x6:
+      // The only selector we recognize is "center 4", when the center
+      // 2x2 box is full.  Unfortunately, the table we get when this is so
+      // is something of a crock.  It will recognize stupid things like
+      // "center line", "center wave", "center column", and "center 1x4".
+      // We expect users not to specify such things in a 4x6.
+      if ((livemask & 014001400UL) != 014001400UL)
          ptr = (id_bit_table *) 0;
       break;
    case sdeepxwv:
@@ -843,7 +852,7 @@ extern void get_directions(
 
    for (int i=0; i<=attr::slimit(ss); i++) {
       uint32 p = ss->people[i].id1;
-      directions = (directions<<2) | (p&3);
+      directions = ((directions & 0x3FFFFFFF)<<2) | (p&3);
       livemask <<= 2;
       if (p) livemask |= 3;
    }
@@ -1475,6 +1484,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {2}, {0}, {0}, false,  chk_anti_groups},
    {s3x4, cr_ctr_2fl_only, 4, {10, 4, 11, 5},
     {0}, {0}, {0}, true,  chk_wave},
+   {s_crosswave, cr_ctr_2fl_only, 4, {2, 6, 3, 7},
+    {8}, {0}, {0}, true,  chk_wave},
    {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
     {0}, {0}, {0}, true,  chk_wave},
    {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},
@@ -2622,38 +2633,38 @@ restriction_test_result verify_restriction(
 }
 
 
-/* This fills in concept_sublist_sizes and concept_sublists. */
+// This fills in concept_sublist_sizes and concept_sublists.
 
-/*   A "1" means the concept is allowed in this setup
-
-                     lout, lin, tby
-                           |
-                           |+- 8ch, Lcol, Rcol
-          R2fl, Lwv, Rwv -+||
-                          |||+- cdpt, dpt, L1x8
-        qtag, gcol, L2fl-+||||
-                         |||||+- R1x8, any, junk
-                         ||||||       */
-#define MASK_CTR_2      0600016
-#define MASK_QUAD_D     0200016
-#define MASK_CPLS       0547462
-#define MASK_GOODCPLS   0147460
-#define MASK_TAND       0770362
-#define MASK_GOODTAND   0170360
-#define MASK_GOODCONC   0177774
-#define MASK_GOODRMVD   0177760
-#define MASK_SIAM       0400002
-#define MASK_2X4        0177762
+//     A "1" means the concept is allowed in this setup
+//
+//                                lout, lin, tby
+//                                      |
+//                                      |+- 8ch, Lcol, Rcol
+//                     R2fl, Lwv, Rwv -+||
+//                                     |||+- cdpt, dpt, L1x8
+//                   qtag, gcol, L2fl-+||||
+//                                    |||||+- R1x8, any, junk
+//                                    ||||||
+static const uint32 MASK_CTR_2     = 0600016;
+static const uint32 MASK_QUAD_D    = 0200016;
+static const uint32 MASK_CPLS      = 0547462;
+static const uint32 MASK_GOODCPLS  = 0147460;
+static const uint32 MASK_TAND      = 0770362;
+static const uint32 MASK_GOODTAND  = 0170360;
+static const uint32 MASK_GOODCONC  = 0177774;
+static const uint32 MASK_GOODRMVD  = 0177760;
+static const uint32 MASK_SIAM      = 0400002;
+static const uint32 MASK_2X4       = 0177762;
 
 
 static void initialize_concept_sublists()
 {
    int test_call_list_kind;
-   concept_kind end_marker = concept_diagnose;
 
    // Decide whether we allow the "diagnose" concept, by deciding
    // when we will stop the concept list scan.
-   if (ui_options.diagnostic_mode) end_marker = marker_end_of_list;
+   concept_kind end_marker = ui_options.diagnostic_mode ?
+      marker_end_of_list : concept_diagnose;
 
    // First, just count up all the available concepts.
 
@@ -2702,7 +2713,7 @@ static void initialize_concept_sublists()
             case selector_verycenters:
             case selector_outer2:
             case selector_veryends:
-               setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
+               setup_mask = MASK_CTR_2;    // This is a 6 and 2 type of concept.
                break;
             default:
                break;
@@ -2752,7 +2763,7 @@ static void initialize_concept_sublists()
             case tandem_key_siam:
                setup_mask = MASK_SIAM; break;
             default:
-               setup_mask = 0; break;    /* Don't waste time on the others. */
+               setup_mask = 0; break;    // Don't waste time on the others.
             }
             break;
          case concept_multiple_lines_tog_std:
@@ -2770,8 +2781,11 @@ static void initialize_concept_sublists()
             if (p->arg3 == 10) setup_mask = MASK_2X4;
             break;
          case concept_do_phantom_2x4:
-         case concept_quad_lines:
             setup_mask = MASK_2X4;          // Can actually improve on this.
+            break;
+         case concept_multiple_lines:
+            // Check specifically for quadruple C/L/W.
+            if (p->arg3 == 0 && p->arg4 == 4) setup_mask = MASK_2X4;
             break;
          case concept_assume_waves:
             // We never allow any "assume_waves" concept.  In the early days,
@@ -2799,16 +2813,16 @@ static void initialize_concept_sublists()
          if (concepts_in_this_setup != 0) {
             concept_sublists[test_call_list_kind] =
                (short int *) get_mem(concepts_in_this_setup*sizeof(short int));
-            (void) memcpy(concept_sublists[test_call_list_kind],
-                          concept_sublists[call_list_any],
-                          concepts_in_this_setup*sizeof(short int));
+            memcpy(concept_sublists[test_call_list_kind],
+                   concept_sublists[call_list_any],
+                   concepts_in_this_setup*sizeof(short int));
          }
          if (good_concepts_in_this_setup != 0) {
             good_concept_sublists[test_call_list_kind] =
                (short int *) get_mem(good_concepts_in_this_setup*sizeof(short int));
-            (void) memcpy(good_concept_sublists[test_call_list_kind],
-                          good_concept_sublists[call_list_any],
-                          good_concepts_in_this_setup*sizeof(short int));
+            memcpy(good_concept_sublists[test_call_list_kind],
+                   good_concept_sublists[call_list_any],
+                   good_concepts_in_this_setup*sizeof(short int));
          }
       }
    }
@@ -3025,7 +3039,7 @@ extern bool check_for_concept_group(
          goto try_again;
       }
    }
-   else if (k == concept_meta) {
+   else if (k == concept_meta || k == concept_meta_one_arg || k == concept_meta_two_args) {
       meta_key_kind subkey = (meta_key_kind) parseptrcopy->concept->arg1;
 
       if (subkey == meta_key_random || subkey == meta_key_rev_random ||
@@ -3547,12 +3561,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          if (ssK == s2x6) {
             // In this case, we actually check the shear direction of the parallelogram.
 
-            mask = 0;
-
-            for (plaini=0, w=1; plaini<=attr::slimit(ss); plaini++, w<<=1) {
-               if (ss->people[plaini].id1) mask |= w;
-            }
-
+            mask = little_endian_live_mask(ss);
             if ((mask & k) == 0 && (mask & (k^01717U^07474U)) != 0) goto good;
             goto bad;
          }
@@ -3562,12 +3571,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 
          goto bad;   // If it's a 2x4, for example, it can't be a parallelogram.
       case cr_lateral_cols_empty:
-         mask = 0;
-         t = 0;
-
-         for (plaini=0, k=1; plaini<=attr::slimit(ss); plaini++, k<<=1) {
-            if (ss->people[plaini].id1) { mask |= k; t |= ss->people[plaini].id1; }
-         }
+         t = or_all_people(ss);
+         mask = little_endian_live_mask(ss);
 
          if (ssK == s3x4 && (t & 1) == 0 &&
              ((mask & 04646) == 0 ||
@@ -5323,17 +5328,13 @@ const expand::thing s_dmd_323 = {{5, 7, 1, 3}, 4, sdmd, s_323, 1};
 extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
    THROW_DECL
 {
-   int i;
-   uint32 livemask, tbonetest, j;
+   uint32 livemask, tbonetest;
    bool did_something = false;
 
  startover:
 
-   for (i=0, j=1, livemask=0, tbonetest=0; i<=attr::slimit(ss); i++, j<<=1) {
-      uint32 t = ss->people[i].id1;
-      tbonetest |= t;
-      if (t) livemask |= j;
-   }
+   tbonetest = or_all_people(ss);
+   livemask = little_endian_live_mask(ss);
 
    if (ss->kind == sfat2x8)
       ss->kind = s2x8;     /* That's all it takes! */

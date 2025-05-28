@@ -374,9 +374,9 @@ void do_circcer_iteration(uint32 *circcp)
 
 
 
-/* When we get here, resolve_scan_current_point has the *last* call that we
-   did.  If the iterators are nonzero, we will just repeat that call.
-   Otherwise, we will advance it to the next and use that call. */
+// When we get here, resolve_scan_current_point has the *last* call that we
+// did.  If the iterators are nonzero, we will just repeat that call.
+// Otherwise, we will advance it to the next and use that call.
 
 const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_place)
 {
@@ -387,15 +387,15 @@ const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_pla
 
    if (current_pick_type == pick_starting_first_scan) {
 
-         /* Generate the random starting point for the scan, so it won't be identical
-         each time we resolve from this position.  This is the only time that we use
-         the random number generator during the initial scans.  Note that this random
-         number will NOT be hashed.  But don't use a random number if in diagnostic mode. */
+      // Generate the random starting point for the scan, so it won't be identical
+      // each time we resolve from this position.  This is the only time that we use
+      // the random number generator during the initial scans.  Note that this random
+      // number will NOT be hashed.  But don't use a random number if in diagnostic mode.
 
-      /* Note also that this starting point for the call scan lies within
-         the available calls for the setup we are in.  Some scans will be
-         across the available calls for "any" setup, because we will be
-         doing concepts.  But "any" setup always allows more calls, so we are safe. */
+      // Note also that this starting point for the call scan lies within
+      // the available calls for the setup we are in.  Some scans will be
+      // across the available calls for "any" setup, because we will be
+      // doing concepts.  But "any" setup always allows more calls, so we are safe.
 
       resolve_scan_start_point =
          (ui_options.diagnostic_mode) ?
@@ -529,11 +529,11 @@ call_with_name *do_pick()
    hash_nonrandom_number(i);
    result = main_call_lists[parse_state.call_list_to_use][i];
 
-   /* Why don't we just call the random number generator again if the call is inappropriate?
-      Wouldn't that be much faster?  There are two reasons:  First, we would need to take
-      special precautions against an infinite loop.  Second, and more importantly, if we
-      just called the random number generator again, it would screw up the hash numbers,
-      which would make the uniquefication fail, so we could see the same thing twice. */
+   // Why don't we just call the random number generator again if the call is inappropriate?
+   // Wouldn't that be much faster?  There are two reasons:  First, we would need to take
+   // special precautions against an infinite loop.  Second, and more importantly, if we
+   // just called the random number generator again, it would screw up the hash numbers,
+   // which would make the uniquefication fail, so we could see the same thing twice.
 
    if ((search_goal == command_level_call || search_goal == command_8person_level_call) &&
        ((dance_level) result->the_defn.level) < level_threshholds[calling_level])

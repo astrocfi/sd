@@ -1,14 +1,28 @@
+// SD -- square dance caller's helper.
+//
+//    Copyright (C) 1990-2004  William B. Ackerman.
+//
+//    This file is part of "Sd".
+//
+//    Sd is free software; you can redistribute it and/or modify it
+//    under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    Sd is distributed in the hope that it will be useful, but WITHOUT
+//    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+//    or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
+//    License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Sd; if not, write to the Free Software Foundation, Inc.,
+//    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//
+//    This is for version 36.
+
+
+
               FORMAT OF THE SD/SDTTY DATABASE
-
-    Copyright (C) 1990-2003  William B. Ackerman.
-
-    This file is unpublished and contains trade secrets.  It is
-    to be used by permission only and not to be disclosed to third
-    parties without the express permission of the copyright holders.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 This attempts to document the externally visible format of the
 database, as seen in the "sd_calls.txt" file.  It is not wholly up
@@ -3035,7 +3049,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
                                     1x4/2x4/3x4 - R/L gives handedness of 2FL
                                     qtag/bigdmd - applies to center 2FL
-                                    4x2 - I/O means starting/completed DPT
+                                    4x1/4x2 - I/O means starting/completed DPT
                                     thar/crosswave - R/L 2FL's
 
    2fl_per_1x4        R/Q           2x4 or 1x8 - this is equivalent to "2fl_only"
@@ -3047,7 +3061,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     this, so that unsymmetrical formations will be
                                     handled correctly.
 
-   ctr_2fl_only       R/Q           3x4 - this is like "2fl_only", but is applied
+   ctr_2fl_only       R/Q           xwv/3x4 - this is like "2fl_only", but is applied
                                     only to the center 1x4.  The "left" and "right"
                                     modifiers may be used.
 

@@ -980,6 +980,9 @@ expand::thing expand::init_table[] = {
     12, s3x4, s3x8, 0, 0UL, 0x3C33C3,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
 
+   {{1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18},
+    16, s2x8, s2x10, 0, 0UL, ~0UL,
+    warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_2X10)},
    {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22},
     20, s2x10, s2x12, 0, 0UL, 0x801801,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_2X12)},
@@ -1392,6 +1395,11 @@ map::map_thing map::map_init_table[] = {
    {{3, 8, 19, 16, 17, 18, 9, 2,       5, 6, 21, 14, 15, 20, 7, 4},
     s2x4,2,MPKIND__OFFS_R_FULL_SPECIAL,1, 0,  s4x6,      0x005, 0},
 
+   {{0, 1, 2, 3, 16, 17, 18, 19,       4, 5, 6, 7, 12, 13, 14, 15},
+    s2x4,2,MPKIND__OFFS_L_FULL_SPECIAL,0, 0,  s2x12,     0x000, 0},
+   {{4, 5, 6, 7, 20, 21, 22, 23,       8, 9, 10, 11, 16, 17, 18, 19},
+    s2x4,2,MPKIND__OFFS_R_FULL_SPECIAL,0, 0,  s2x12,     0x000, 0},
+
    {{0, 1, 12, 13,       2, 3, 10, 11,       4, 5, 8, 9},
     s2x2,3,MPKIND__OFFS_L_HALF_SPECIAL,0, 0,  s2x8,      0x000, 0},
    {{2, 3, 14, 15,       4, 5, 12, 13,       6, 7, 10, 11},
@@ -1687,9 +1695,19 @@ map::map_thing map::map_init_table[] = {
     s2x8,2,MPKIND__OVERLAP,1,     0,  s3x8,      0x000, 0},
    {{0, 1, 3, 2, 10, 11, 4, 5,         4, 5, 10, 11, 6, 7, 9, 8},
     s1x8,2,MPKIND__OVERLAP,0,     0,  s1x12,      0x000, 0},
+
+   {{0, 1, 3, 2, 7, 8, 4, 9,           2, 3, 9, 4, 5, 6, 8, 7},
+    s1x8,2,MPKIND__OVERLAP14,0,     0,  s1x10,      0x000, 0},
+   {{0, 1, 3, 2, 13, 6, 4, 5,          6, 13, 11, 12, 7, 8, 10, 9},
+    s1x8,2,MPKIND__OVERLAP34,0,     0,  s1x14,      0x000, 0},
+
    {{0, 1, 3, 2, 7, 6, 4, 5,           4, 5, 7, 6, 12, 13, 15, 14,
      15, 14, 12, 13, 8, 9, 11, 10},
     s1x8,3,MPKIND__OVERLAP,0,     0,  s1x16,      0x000, 0},
+   {{0, 1, 3, 2, 10, 11, 4, 5,         2, 3, 5, 4, 8, 9, 11, 10,
+     4, 5, 10, 11, 6, 7, 9, 8},
+    s1x8,3,MPKIND__OVERLAP14,0,    0,  s1x12,    0x000, 0},
+
    {{0, 1, 2, 3, 8, 9, 10, 11,         2, 3, 4, 5, 6, 7, 8, 9},
     s2x4,2,MPKIND__OVERLAP,0,     0,  s2x6,      0x000, 0},
    {{10, 11, 5, 4, 6, 7, 8, 9,         0, 1, 2, 3, 4, 5, 11, 10},
@@ -1712,6 +1730,8 @@ map::map_thing map::map_init_table[] = {
     s2x2,4,MPKIND__OVERLAP,0,     0,  s2x5,      0x000, 0},
    {{0, 1, 10, 11,  1, 2, 9, 10,  2, 3, 8, 9,  3, 4, 7, 8,  4, 5, 6, 7},
     s2x2,5,MPKIND__OVERLAP,0,     0,  s2x6,      0x000, 0},
+   {{0, 1, 12, 13,  1, 2, 11, 12,  2, 3, 10, 11,  3, 4, 9, 10,  4, 5, 8, 9,  5, 6, 7, 8},
+    s2x2,6,MPKIND__OVERLAP,0,     0,  s2x7,      0x000, 0},
    {{0, 1, 14, 15,  1, 2, 13, 14,  2, 3, 12, 13,  3, 4, 11, 12,
      4, 5, 10, 11,  5, 6, 9, 10,   6, 7, 8, 9},
     s2x2,7,MPKIND__OVERLAP,0,     0,  s2x8,      0x000, 0},
@@ -1740,6 +1760,8 @@ map::map_thing map::map_init_table[] = {
     s1x4,5,MPKIND__OVERLAP,0,     0,  s1x12,      0x000, 0},
    {{0, 9, 14, 15, 1, 8, 13, 16, 2, 7, 12, 17, 3, 6, 11, 18, 4, 5, 10, 19},
     s1x4,5,MPKIND__OVERLAP,1,     3,  s4x5,      0x155, 0},
+   {{0, 1, 2, 3, 1, 3, 6, 2, 3, 2, 7, 6, 2, 6, 5, 7, 6, 7, 4, 5},
+    s1x4,5,MPKIND__OVERLAP14,0,     0,  s1x8,      0x000, 0},
 
    {{7, 0, -1, 6,           -1, 1, -1, 5,          -1, 2, 3, 4},
     sdmd,3,MPKIND__OVERLAP,0,     0,s_spindle,      0x000, 0},
@@ -5671,6 +5693,34 @@ id_bit_table id_bit_table_4x4[] = {
    NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_CTR4)};
 
+// This table is used for 4x6's if the center 2x2 box is full.
+// The use of "ID2_NCTR1X4" is a crock, of course.
+id_bit_table id_bit_table_4x6[] = {
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR4),
+   NOBIT(ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_CTR4),
+   NOBIT(ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4)};
+
 id_bit_table id_bit_table_525_nw[] = {
    NOBIT(ID2_OUTR6 | ID2_NCTRDMD | ID2_OUTR1X3),
    NOBIT(ID2_OUTR6 | ID2_NCTRDMD | ID2_OUTR1X3),
@@ -6886,7 +6936,7 @@ const setup_attr setup_attrs[] = {
     {b_4x6, b_6x4},
     {6, 4},
     false,
-    (const id_bit_table *) 0,
+    id_bit_table_4x6,
     {"a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m",
      "r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f"}},
    {19,                     // s2x10
@@ -7391,7 +7441,7 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_2_4
    {SCA_CROSS,
     schema_concentric_2_4},              // schema_cross_concentric_2_4
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_2_4_or_normal
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_4_2
