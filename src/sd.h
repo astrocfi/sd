@@ -937,6 +937,7 @@ class select {
       fx_f1x3zzd,
       fx_f3x1yyd,
       fx_f2x1yyd,
+      fx_fwstyyd,
       fx_f1x4xv,
       fx_f1x3yyd,
       fx_f1x6aad,
@@ -1416,6 +1417,10 @@ class tglmap {
       tglmap1k,
       tglmap2k,
       tglmap2r,
+      tglmap2p,
+      tglmap1t,
+      tglmap2t,
+      tglmap3t,
       tglmapd71,
       tglmapd72,
       tg6mapcw,
@@ -1479,7 +1484,11 @@ class tglmap {
    static const tglmapkey bdtglmap1[];
    static const tglmapkey bdtglmap2[];
    static const tglmapkey rgtglmap1[];
+   static const tglmapkey rgtglmap2[];
    static const tglmapkey rgtglmap3[];
+   static const tglmapkey ritglmap1[];
+   static const tglmapkey ritglmap2[];
+   static const tglmapkey ritglmap3[];
    static const tglmapkey d7tglmap1[];
    static const tglmapkey d7tglmap2[];
 };
@@ -2844,6 +2853,7 @@ enum mpkind {
    MPKIND__NONISOTROPIC,
    MPKIND__NONISOTROP1,
    MPKIND__NONISOTROP2,
+   MPKIND__NONISOTROP3,
    MPKIND__NONISOTROPREM,
    MPKIND__OFFS_L_ONEQ,
    MPKIND__OFFS_R_ONEQ,
@@ -3395,7 +3405,10 @@ class fraction_info {
                m_highlimit = m_fetch_total;
                m_client_total = m_fetch_total;
                m_end_point = m_fetch_total-1;
-               get_fraction_info(corefracs, pp->call->the_defn.callflags1, weirdness_off);
+               get_fraction_info(corefracs,
+                                 (pp->call->the_defn.callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) /
+                                 CFLAG1_VISIBLE_FRACTION_BIT,
+                                 weirdness_off);
 
                if (m_fetch_total <= 1)
                   m_instant_stop = -99;
@@ -3409,7 +3422,7 @@ class fraction_info {
 
    // This one is in sdmoves.cpp
    void get_fraction_info(fraction_command frac_stuff,
-                          uint32 callflags1,
+                          uint32 part_visibility_info,  // visible_fraction stuff in right half, size of call in left.
                           revert_weirdness_type doing_weird_revert) THROW_DECL;
 
    // This one is in sdmoves.cpp

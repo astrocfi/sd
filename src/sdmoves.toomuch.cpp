@@ -3738,44 +3738,32 @@ extern uint32 process_fractions(int start, int end,
 
 void fraction_info::get_fraction_info(
    fraction_command frac_stuff,
-   uint32 part_visibility_info,  // visible_fraction stuff in right half, size of call in left.
+   uint32 callflags1,
    revert_weirdness_type doing_weird_revert) THROW_DECL
 {
    uint32 last_half_stuff = 0;
    uint32 first_half_stuff = 0;
 
-   int available_initial_fractions = 0;
-   int available_final_fractions = 0;
+   int available_fractions =
+      (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
+   if (available_fractions >= 3 || (frac_stuff.flags & CMD_FRAC_FORCE_VIS))
+      available_fractions = 1000;     // This means all parts.
 
-   if (frac_stuff.flags & CMD_FRAC_FORCE_VIS) {
-      available_initial_fractions = 1000;
-      available_final_fractions = 1000;
-   }
+   // Available_fractions is ultimately intended to have the following meaning:
+   //    0  ==>  no parts visible
+   //    1  ==>  first part visible
+   //    2  ==>  first two parts visible
+   //    3  ==>  last part visible
+   //    4  ==>  last two parts visible
+   //    5  ==>  first and last parts visible
+   //    1000 ==>  all parts visible
 
-   switch (part_visibility_info) {
-   case 0:
-      break;
-   case 1:    // first_part_visible
-      available_initial_fractions = 1;
-      break;
-   case 2:    // first_two_parts_visible
-      available_initial_fractions = 2;
-      break;
-   case 3:    // last_part_visible
-      available_final_fractions = 1;
-      break;
-   case 4:    // last_two_parts_visible
-      available_final_fractions = 2;
-      break;
-   case 5:    // first_and_last_parts_visible
-      available_initial_fractions = 1;
-      available_final_fractions = 1;
-      break;
-   default:   // visible_fractions
-      available_initial_fractions = 1000;
-      available_final_fractions = 1000;
-      break;
-   }
+   // But for now it has the following meaning:
+   //    0  ==>  no parts visible
+   //    1  ==>  first part visible
+   //    2  ==>  first two parts visible
+   //    1000 ==>  all parts visible
+
 
    m_reverse_order = false;
    m_instant_stop = 0;
@@ -3878,7 +3866,7 @@ void fraction_info::get_fraction_info(
          my_start_point += m_reverse_order ? (1-this_part) : (this_part-1);
 
          // Be sure that enough parts are visible.
-         if (my_start_point >= available_initial_fractions)
+         if (my_start_point >= available_fractions)
             fail("This call can't be fractionalized.");
          if (my_start_point >= m_client_total)
             fail("The indicated part number doesn't exist.");
@@ -3899,7 +3887,7 @@ void fraction_info::get_fraction_info(
             (m_highlimit-1+this_part) : (m_highlimit-this_part);
 
          // Be sure that enough parts are visible.
-         if (my_start_point < m_client_total-available_final_fractions)
+         if (my_start_point >= available_fractions)
             fail("This call can't be fractionalized.");
          if (my_start_point >= m_client_total)
             fail("The indicated part number doesn't exist.");
@@ -3917,7 +3905,7 @@ void fraction_info::get_fraction_info(
             m_highlimit = highdel;
             my_start_point -= kvalue;
 
-            if (my_start_point > available_initial_fractions)
+            if (my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -3930,7 +3918,7 @@ void fraction_info::get_fraction_info(
             m_highlimit -= highdel;
             my_start_point += kvalue;
 
-            if (m_highlimit > available_initial_fractions || my_start_point > available_initial_fractions)
+            if (m_highlimit > available_fractions || my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -3954,8 +3942,8 @@ void fraction_info::get_fraction_info(
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
 
-            if ((my_start_point >= available_initial_fractions && lowdel != 0) ||
-                m_highlimit > available_initial_fractions)
+            if ((my_start_point >= available_fractions && lowdel != 0) ||
+                m_highlimit > available_fractions)
                fail("This call can't be fractionalized.");
          }
          else {
@@ -3966,8 +3954,8 @@ void fraction_info::get_fraction_info(
                If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((m_highlimit < m_client_total-available_final_fractions && kvalue != 0) ||
-                my_start_point > available_initial_fractions)
+            if ((m_highlimit > available_fractions && kvalue != 0) ||
+                my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -3991,8 +3979,8 @@ void fraction_info::get_fraction_info(
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
 
-            if ((my_start_point >= available_initial_fractions && highdel != 0) ||
-                m_highlimit > available_initial_fractions)
+            if ((my_start_point >= available_fractions && highdel != 0) ||
+                m_highlimit > available_fractions)
                fail("This call can't be fractionalized.");
          }
          else {
@@ -4003,8 +3991,8 @@ void fraction_info::get_fraction_info(
                If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((m_highlimit > available_initial_fractions && kvalue != 0) ||
-                my_start_point > available_initial_fractions)
+            if ((m_highlimit > available_fractions && kvalue != 0) ||
+                my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4025,7 +4013,7 @@ void fraction_info::get_fraction_info(
             my_start_point -= kvalue;
             m_do_last_half_of_first_part = CMD_FRAC_HALF_VALUE;
 
-            if (my_start_point > available_initial_fractions)
+            if (my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4042,7 +4030,7 @@ void fraction_info::get_fraction_info(
             my_start_point += kvalue;
             m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
 
-            if (m_highlimit > available_initial_fractions || my_start_point > available_initial_fractions)
+            if (m_highlimit > available_fractions || my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4070,8 +4058,8 @@ void fraction_info::get_fraction_info(
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
 
-            if ((my_start_point >= available_initial_fractions && lowdel != 0) ||
-                m_highlimit > available_initial_fractions)
+            if ((my_start_point >= available_fractions && lowdel != 0) ||
+                m_highlimit > available_fractions)
                fail("This call can't be fractionalized.");
             /* Be sure that we actually do the part that we take half of. */
             if (my_start_point < m_highlimit)
@@ -4086,8 +4074,8 @@ void fraction_info::get_fraction_info(
                If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((m_highlimit > available_initial_fractions && kvalue != 0) ||
-                my_start_point > available_initial_fractions)
+            if ((m_highlimit > available_fractions && kvalue != 0) ||
+                my_start_point > available_fractions)
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4107,7 +4095,7 @@ void fraction_info::get_fraction_info(
       // We would like to handle this properly when reverse order is on,
       // but we haven't gotten around to it.
    }
-   else if (available_initial_fractions != 1000 && (m_client_total > 1 || (frac_stuff.flags & CMD_FRAC_REVERSE))) {
+   else if (available_fractions != 1000 && (m_client_total > 1 || (frac_stuff.flags & CMD_FRAC_REVERSE))) {
       // Unless all parts are visible, this is illegal.
       // However:   Calls with just one part can always be fractionalized.
       // But they can't be reversed.
@@ -4812,19 +4800,17 @@ static void do_sequential_call(
 
       // Also, look for call whose first part is "_real @v tag base".
 
-      uint32 visibility_info = (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
-
       if (zzz.m_client_total == 3 &&    // Sorry, can't do tag the star.
           (revertflags == INHERITFLAGRVRTK_REVERT ||
            revertflags == INHERITFLAGRVRTK_REFLECT) &&
           (callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_BIT &&
           current_options.howmanynumbers == 1 &&
           current_options.number_fields == 2 &&
-          visibility_info == 0 &&
+          (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) == 0 &&
           callspec->stuff.seq.defarray[1].call_id == base_call_revert_if_needed &&
           callspec->stuff.seq.defarray[2].call_id == base_call_extend_n) {
          zzz.m_client_total = 2;
-         visibility_info |= CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT;    // Turn on all parts.
+         callflags1 |= CFLAG1_VISIBLE_FRACTION_MASK;    // Turn on all parts.
          doing_weird_revert = weirdness_flatten_from_3;
       }
       else if ((callspec->stuff.seq.defarray[0].call_id == base_call_basetag0 ||
@@ -4834,13 +4820,31 @@ static void do_sequential_call(
          // Treat it as though it had an extra part
          zzz.m_client_total++;
 
-         // If call has lots of parts, make them all visible.
-         visibility_info = (zzz.m_client_total >= 3) ? 7 : zzz.m_client_total;
+         // and all parts are visible, up to 3.  
+         callflags1 &= ~CFLAG1_VISIBLE_FRACTION_MASK;
+
+         switch (zzz.m_client_total) {
+         case 0:
+            break;
+         case 1:
+            callflags1 |= 1*CFLAG1_VISIBLE_FRACTION_BIT;
+            break;
+         case 2:
+            callflags1 |= 2*CFLAG1_VISIBLE_FRACTION_BIT;
+            break;
+         case 3:
+            callflags1 |= CFLAG1_VISIBLE_FRACTION_MASK;  // All parts visible, up to 3.
+            break;
+         default:
+            callflags1 |= CFLAG1_VISIBLE_FRACTION_BIT*2; // If call has lots of parts, make just the first 2 visible.
+            break;
+         }
 
          doing_weird_revert = weirdness_otherstuff;
       }
 
-      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_fraction, visibility_info, weirdness_off);
+      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_fraction,
+                                                            callflags1, weirdness_off);
 
       // If distribution is on, we have to do some funny stuff.
       // We will scan the fetch array in its entirety, using the
@@ -6675,7 +6679,7 @@ static void move_with_real_call(
                   fraction_info zzz(current_options.number_fields & NUMBER_FIELD_MASK);
 
                   zzz.get_fraction_info(ss->cmd.cmd_fraction,
-                                        CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
+                                        CFLAG1_VISIBLE_FRACTION_MASK,
                                         weirdness_off);
 
                   if ((zzz.m_do_half_of_last_part |

@@ -382,7 +382,7 @@ void expand::expand_setup(const expand::thing & thing, setup *stuff) THROW_DECL
    canonicalize_rotation(stuff);
 }
 
-// Turn a 3x3 into a 1/4 tag if the spots are occupied appropriately.  Otherwise do nothing.
+// Turn a 3x4 into a 1/4 tag if the spots are occupied appropriately.  Otherwise do nothing.
 void expand::fix_3x4_to_qtag(setup *stuff) THROW_DECL
 {
    static const expand::thing foo = {{1, 2, 4, 5, 7, 8, 10, 11}, s_qtag, s3x4, 0};
@@ -1887,6 +1887,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     {0}, {0}, {0}, true, chk_wave},
+   {s1x8, cr_magic_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
+    {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_li_lo, 8, {4, 0, 5, 1, 6, 2, 7, 3},
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_ctrs_in_out, 4, {5, 1, 6, 2},
@@ -1928,6 +1930,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_bone, cr_couples_only, 2, {6, 2, 7, 3},
     {2}, {0}, {0}, true, chk_groups},
    {s_bone6, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},
+    {0}, {0}, {0}, true, chk_wave},
+   {s_bone, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
     {0}, {0}, {0}, true, chk_wave},
    {s2x8, cr_wave_only, 16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},
     {0}, {0}, {0}, true, chk_wave},

@@ -2969,6 +2969,9 @@ static void inherit_conc_assumptions(
 
 static const expand::thing fix_cw  = {{1, 2, 4, 5}, s2x2, s2x3, 0};
 static const expand::thing fix_ccw = {{0, 1, 3, 4}, s2x2, s2x3, 0};
+static const expand::thing fix_2x3_r = {{1, 2, 3, 4}, s2x2, s2x3, 0};
+static const expand::thing fix_2x3_l = {{0, 1, 4, 5}, s2x2, s2x3, 0};
+
 
 extern void concentric_move(
    setup *ss,
@@ -6195,7 +6198,13 @@ extern void inner_selective_move(
             if (selector_to_use == selector_outer6)
                goto do_concentric_ends;
             schema = schema_concentric_diamond_line;
-            if (ss->kind == s3x1dmd && selector_to_use == selector_ctr_1x4)
+            // Why not include selector_center_col?  Because people are accustomed to thinking
+            // of a wave or line as 4 people.  Not so much for a column.  If you want the center
+            // column of 4, say "center 1x4".
+            if (ss->kind == s3x1dmd &&
+                (selector_to_use == selector_ctr_1x4 ||
+                 selector_to_use == selector_center_wave ||
+                 selector_to_use == selector_center_line))
                goto do_concentric_ctrs;
          }
 
@@ -6644,6 +6653,15 @@ extern void inner_selective_move(
                }
             }
 
+            if (numsetups == 1 && lilresult[0].kind == s2x3) {
+               if ((lilresult[0].people[0].id1 | lilresult[0].people[5].id1) == 0) {
+                  expand::compress_setup(fix_2x3_r, &lilresult[0]);
+               }
+               else if ((lilresult[0].people[2].id1 | lilresult[0].people[3].id1) == 0) {
+                  expand::compress_setup(fix_2x3_l, &lilresult[0]);
+               }
+            }
+
             if (numsetups == 2 && lilresult[0].kind == s_trngl) {
                if (((lilresult[0].rotation ^ lilresult[1].rotation) != 2) ||
                    ((lilresult[0].rotation & ~2) != 0))
@@ -6945,6 +6963,7 @@ extern void inner_selective_move(
 
       if (ss->kind == s4x4 && indicator == selective_key_plain && !inner_shape_change)
          ma = merge_strict_matrix;
+
       if (force_matrix_merge) {
          // If we are doing an "anyone truck" type of call from
          // a C1 phantom, go back to same.
@@ -6955,6 +6974,14 @@ extern void inner_selective_move(
          ma = merge_for_own;
       else if (indicator == selective_key_mini_but_o)
          ma = merge_strict_matrix;
+
+
+      else if (indicator == selective_key_dyp &&
+               ss->cmd.parseptr &&
+               ss->cmd.parseptr->concept->kind == concept_do_phantom_2x4)
+         ma = merge_strict_matrix;
+
+
       else if (indicator == selective_key_dyp ||
                indicator == selective_key_plain_from_id_bits)
          ma = merge_after_dyp;

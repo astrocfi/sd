@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 322
+#define DATABASE_FORMAT_VERSION 321
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -345,7 +345,7 @@ enum heritflags {
 // and the "topcallflags1" word of the parse_state.
 
 enum {
-   CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000007U, // 3 bit field
+   CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000007U, // 7 bit field
    CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001U, // its low bit
    CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000008U,
    CFLAG1_PRESERVE_Z_STUFF          = 0x00000010U,

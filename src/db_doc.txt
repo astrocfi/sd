@@ -3499,7 +3499,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     ptpd/pptpd - miniwaves in centers of each diamond
                                     pshort6 (note that this means the short6 is
                                        laterally oriented) - centers tandem in wave
-                                    bone6 - ends tandem in wave
                                     dmd, trngl - people are paired in miniwaves.
                                        For diamonds, this applies just to the centers.
                                        For triangles, it applies just to the base.
@@ -3527,9 +3526,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     pshort6 (note that this means the short6 is
                                        laterally oriented) - centers tandem in wave
                                        of OPPOSITE handedness (sorry)
-                                    bone6 - ends tandem in wave of correct handedness
-
-
+                                    bone - ends tandem in wave of stated handedness
+                                    bone6 - ends tandem in wave of stated handedness
 
    wave_unless_say_2faced           not implemented
 

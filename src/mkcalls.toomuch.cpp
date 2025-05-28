@@ -956,7 +956,6 @@ const char *flagtab1f[] = {
    "take_right_hands_as_couples",
    "yoyo_fractal_numbers",
    "fudge_to_q_tag",
-
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
@@ -965,6 +964,7 @@ const char *flagtab1f[] = {
    "need_two_numbers",     // The constant "need_three_numbers" is elsewhere.
    "need_four_numbers",
    "left_means_touch_or_check",
+   "zzzz_not_used_zzzz",
    "sequence_starter",
    "sequence_starter_promenade",
    "dont_use_in_resolve",
@@ -2597,12 +2597,12 @@ int main(int argc, char *argv[])
                errexit("Too many touch/rear flags");
             call_flags1 |= CFLAG1_STEP_TO_QTAG;
          }
-         else if (!strcmp(tok_str, "visible_fractions"))
-            call_flags1 |= (7*CFLAG1_VISIBLE_FRACTION_BIT);
          else if (!strcmp(tok_str, "last_part_visible"))
-            call_flags1 |= (3*CFLAG1_VISIBLE_FRACTION_BIT);
-         else if (!strcmp(tok_str, "first_and_last_parts_visible"))
+            call_flags1 |= (CFLAG1_VISIBLE_FRACTION_MASK);   // **** should be 3*CFLAG1_VISIBLE_FRACTION_BIT
+         else if (!strcmp(tok_str, "first_and_last_part_visible"))
             call_flags1 |= (5*CFLAG1_VISIBLE_FRACTION_BIT);
+         else if (!strcmp(tok_str, "visible_fractions"))
+            call_flags1 |= (CFLAG1_VISIBLE_FRACTION_MASK);   // which is 7*CFLAG1_VISIBLE_FRACTION_BIT
          else if (!strcmp(tok_str, "need_three_numbers"))
             call_flags1 |= (3*CFLAG1_NUMBER_BIT);
          else if (!strcmp(tok_str, "base_tag_call_2"))

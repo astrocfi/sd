@@ -150,6 +150,11 @@
    bdtglmap1
    bdtglmap2
    rgtglmap1
+   rgtglmap2
+   rgtglmap3
+   ritglmap1
+   ritglmap2
+   ritglmap3
 */
 
 #include "sd.h"
@@ -674,6 +679,14 @@ expand::thing expand::init_table[] = {
    {{2, 6},
     s1x2,     s3x1dmd, 0, 0U, 0xBB, false,
     warn__none, warn__none, normalize_to_2, 0},
+
+   // These next 2 must also be in this order.
+   {{1, 2, 3, 5, 6, 7},
+    s_wingedstar6, s_wingedstar, 0, 0U, 0x11, false,
+    warn__none, warn__none, normalize_to_6, 0},
+   {{1, 2, 5, 6},
+    s1x4,     s_wingedstar, 0, 0U, 0x99, false,
+    warn__none, warn__none, normalize_to_4, 0},
 
    {{11, 5},
     s1x2, s_hsqtag, 0, 0U, 03737, false,
@@ -1652,6 +1665,12 @@ map::map_thing map::map_init_table[] = {
     s_trngl4,2,MPKIND__SPLIT,0,     0, s_c1phan, 0x108, 0},
    {{1, 3, 15, 13,                     9, 11, 7, 5},
     s_trngl4,2,MPKIND__NONISOTROP1,0, 0,s_c1phan,0x002, 0},
+   // These are completely artificial (aren't they all?) uses of
+   // MPKIND__NONISOTROP3 and MPKIND__NONISOTROP2.
+   {{12, 14, 0, 2,                     9, 11, 7, 5},
+    s_trngl4,2,MPKIND__NONISOTROP3,0, 0,s_c1phan,0x000, 0x0000},
+   {{1, 3, 15, 13,                     4, 6, 8, 10},
+    s_trngl4,2,MPKIND__NONISOTROP2,0, 0,s_c1phan,0x00A, 0x0000},
 
    {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},
     s2x4,2,MPKIND__STAG,0,        0,  s4x4,      0x000, 0},
@@ -4748,7 +4767,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x2,         s3dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},                    {0}},
    {s1x2,         s3dmd, 0,    04242, 0x0D, 0x0, schema_matrix,         s_dmdlndmd,  nothing,  warn__none, 0, 0, {2, 8}, {0, -1, 3, 4, 5, -1, 6, -1, 9, 10, 11, -1}},
    {s1x2,         s_dmdlndmd, 0,   0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {2, 8},                     {0}},
-   {s1x2,         s_dmdlndmd, 0, 00606, 0x0E, 0x0, schema_matrix,       s3dmd,       nothing,  warn__none, 0, 0, {11, 5}, {0, -1, -1, 2, 3, 4, 6, -1, -1, 9, 9, 10}},
+   {s1x2,         s_dmdlndmd, 0, 00404, 0x0E, 0x0, schema_matrix,       s3dmd,       nothing,  warn__none, 0, 0, {11, 5}, {0, 1, -1, 2, 3, 4, 6, 7, -1, 8, 9, 10}},
 
    {s1x4,         s3dmd, 0,    07272, 0x0D, 0x0, schema_matrix,         s3dmd,       nothing,  warn__none, 0, 1, {10, 11, 4, 5},{8, -1, 0, -1, -1, -1, 2, -1, 6, -1, -1, -1}},
    {s1x4,         sbigh, 0,    06060, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},{9, 8, 7, 6, -1, -1, 3, 2, 1, 0, -1, -1}},
@@ -4784,6 +4803,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {sdmd,      s_2x1dmd, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 4, 5, 1},       {0}},
    {s1x6,      s_2x1dmd, 044,      0, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},       {6, 7, 1, 2, 3, 5}},
    {s1x6,      s_2x1dmd, 0,        0, 0x0E, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},       {1, 2, 3, 5, 6, 7}},
+   {s1x6, s_wingedstar6, 0,        0, 0x0E, 0x0, schema_matrix,         s_wingedstar,nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},       {1, 2, 3, 5, 6, 7}},
    {s1x4,      s_1x2dmd, 0,      044, 0x0D, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {2, 3, 6, 7},               {0, 1, -1, 4, 5, -1}},
    {s1x4,      s_1x2dmd, 0,      044, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, -1, 4, 5, -1}},
    {s1x6,       s3x1dmd, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, 2, 4, 5, 6},         {0}},
@@ -6239,7 +6259,7 @@ static const coordrec thingphan = {s_c1phan, 3,   /* "fudged" coordinates -- onl
 
 static const coordrec nicethingglass = {s_hrglass, 3,   // "True" coordinates for mirroring --
                                         // actually, the truck distances are greatly exaggerated.
-   { -5,   5,   5,   0,   5,  -5,  -5,   0},
+   { -5,   5,   6,   0,   5,  -5,  -6,   0},
    {  5,   5,   0,   2,  -5,  -5,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -7712,14 +7732,14 @@ static const id_bit_table id_bit_table_rigger[] = {
    EASTBIT(ID2_CTR6 |ID2_END   |ID2_OUTRPAIRS)};
 
 static const id_bit_table id_bit_table_1x3dmd[] = {
-   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_OUTR2| ID2_NCTRDMD),
-   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_CTR6|  ID2_NCTRDMD),
-   NOBIT(   ID2_CENTER| ID2_CTR4|      ID2_OUTR6| ID2_CTR6|  ID2_CTRDMD),
-   NORTHBIT(ID2_CENTER| ID2_CTR4|      ID2_CTR2|  ID2_CTR6|  ID2_CTRDMD),
-   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_OUTR2| ID2_NCTRDMD),
-   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_CTR6|  ID2_NCTRDMD),
-   NOBIT(   ID2_CENTER| ID2_CTR4|      ID2_OUTR6| ID2_CTR6|  ID2_CTRDMD),
-   SOUTHBIT(ID2_CENTER| ID2_CTR4|      ID2_CTR2|  ID2_CTR6|  ID2_CTRDMD)};
+   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_OUTR2| ID2_NCTRDMD | ID2_OUTR1X3),
+   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_CTR6|  ID2_NCTRDMD | ID2_OUTR1X3),
+   NOBIT(   ID2_CENTER| ID2_CTR4|      ID2_OUTR6| ID2_CTR6|  ID2_CTRDMD  | ID2_OUTR1X3),
+   NORTHBIT(ID2_CENTER| ID2_CTR4|      ID2_CTR2|  ID2_CTR6|  ID2_CTRDMD  | ID2_NOUTR1X3),
+   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_OUTR2| ID2_NCTRDMD | ID2_OUTR1X3),
+   NOBIT(   ID2_END|    ID2_OUTRPAIRS| ID2_OUTR6| ID2_CTR6|  ID2_NCTRDMD | ID2_OUTR1X3),
+   NOBIT(   ID2_CENTER| ID2_CTR4|      ID2_OUTR6| ID2_CTR6|  ID2_CTRDMD  | ID2_OUTR1X3),
+   SOUTHBIT(ID2_CENTER| ID2_CTR4|      ID2_CTR2|  ID2_CTR6|  ID2_CTRDMD  | ID2_NOUTR1X3)};
 
 static const id_bit_table id_bit_table_2x1dmd[] = {
    WESTBIT(ID2_NCTRDMD | ID2_CTR1X4),
@@ -10169,6 +10189,8 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,    fx_f1x8aad, fx0, fx_f3x1yyd, fx0,           fx0, fx0},
    {fx_f2x1yyd, s_star, s_2x1dmd,    0, 0, 1,          {0, 2, 3, 5},
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
+   {fx_fwstyyd, s_star, s_wingedstar6,0, 0, 1,         {0, 2, 3, 5},
+    fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
    {fx_f1x4xv, s1x4, s_crosswave,    1, 0, 1,          {2, 3, 6, 7},
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
    {fx_f1x3yyd, sdmd, s1x3dmd,       0, 0, 1, {1, 3, 5, 7},
@@ -11126,6 +11148,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_DISC|LOOKUP_IGNORE, s3x1dmd,     0x99,   fx_f3x1zzd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s3x1dmd,     0xAA,   fx_f3x1yyd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s_2x1dmd,     055,   fx_f2x1yyd,    fx0, -1},
+   {LOOKUP_DISC|LOOKUP_IGNORE, s_wingedstar6,055,   fx_fwstyyd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x99,   fx_f1x3zzd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0xAA,   fx_f1x3yyd,    fx0, -1},
    {LOOKUP_DISC|LOOKUP_IGNORE, s1x3dmd,     0x66,   fx_f1x3bbd,    fx0, -1},
@@ -11508,7 +11531,7 @@ const tglmap::map tglmap::init_table[] = {
     {0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0}},
 
-   {tglmap3j, s_qtag, nothing, tglmap3j, 1, 17,   // Inside.
+   {tglmap3j, s_qtag, nothing, tglmap3j, 1, 17,   // Inside, in qtag.
     {7, 1, 4,   3, 5, 0,   2, 6},
     {0, 0, 0,   0, 0, 0,   0, 0},
     {0, 0, 0,   0, 0, 0,   0, 0},
@@ -11560,10 +11583,38 @@ const tglmap::map tglmap::init_table[] = {
     {0},
     {0}},
 
-   {tglmap2r, nothing, nothing, tglmap2r, 1, 0,
+   {tglmap2r, nothing, nothing, tglmap2r, 1, 0,   // Inside interlock, in rigger.
     {0},
     {0},
     {7, 1, 4,   3, 5, 0,   2, 6},
+    {0},
+    {0}},
+
+   {tglmap2p, nothing, nothing, tglmap2p, 1, 0x10,// Inside interlock, in ptpd.
+    {2, 7, 5,   6, 3, 1,   0, 4},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmap1t, nothing, nothing, tglmap1t, 1, 0x10,// Outside interlock, in rigger.
+    {0},
+    {0},
+    {6, 1, 4,   2, 5, 0,   7, 3},
+    {0},
+    {0}},
+
+   {tglmap2t, nothing, nothing, tglmap2t, 1, 0x10,// Outside interlock, in ptpd.
+    {0, 7, 5,   4, 3, 1,   2, 6},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmap3t, nothing, nothing, tglmap3t, 1, 0x10,// Outside interlock, in qtag.
+    {6, 1, 4,   2, 5, 0,   7, 3},
+    {0},
+    {0},
     {0},
     {0}},
 
@@ -11639,7 +11690,11 @@ const tglmap::tglmapkey tglmap::qttglmap2[4] = {tglmap2b, tglmap2j, tglmap2x, tg
 const tglmap::tglmapkey tglmap::bdtglmap1[2] = {tglmap1b, tglmap1k};
 const tglmap::tglmapkey tglmap::bdtglmap2[2] = {tglmap2b, tglmap2k};
 const tglmap::tglmapkey tglmap::rgtglmap1[2] = {tglmap2r, tglmap2r};
+const tglmap::tglmapkey tglmap::rgtglmap2[2] = {tglmap2p, tglmap2p};
 const tglmap::tglmapkey tglmap::rgtglmap3[2] = {tglmap3j, tglmap3j};
+const tglmap::tglmapkey tglmap::ritglmap1[2] = {tglmap1t, tglmap1t};
+const tglmap::tglmapkey tglmap::ritglmap2[2] = {tglmap2t, tglmap2t};
+const tglmap::tglmapkey tglmap::ritglmap3[2] = {tglmap3t, tglmap3t};
 
 const tglmap::tglmapkey tglmap::d7tglmap1[4] = {tglmapd71};
 const tglmap::tglmapkey tglmap::d7tglmap2[4] = {tglmapd72};

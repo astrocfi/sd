@@ -774,7 +774,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    // to aid in debugging.
 
    if (calling_level == l_dontshow)
-      root_to_use->callflags1 |= CFLAG1_VISIBLE_FRACTION_MASK;  // everything visible.
+      root_to_use->callflags1 |= CFLAG1_VISIBLE_FRACTION_MASK;
 
    if (char_count) {
 

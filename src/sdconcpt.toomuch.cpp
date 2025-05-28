@@ -4650,7 +4650,7 @@ static void do_concept_sequential(
 
    if (!ss->cmd.cmd_fraction.is_null()) {
       zzz.get_fraction_info(ss->cmd.cmd_fraction,
-                            CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
+                            CFLAG1_VISIBLE_FRACTION_MASK,
                             weirdness_off);
    }
 
@@ -4709,7 +4709,7 @@ static void do_concept_special_sequential(
 
       if (!ss->cmd.cmd_fraction.is_null()) {
          zzz.get_fraction_info(ss->cmd.cmd_fraction,
-                               CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
+                               CFLAG1_VISIBLE_FRACTION_MASK,
                                weirdness_off);
       }
 
@@ -4927,7 +4927,7 @@ static void do_concept_n_times(
    // the fractions.  This makes "interlace twice this with twice that" work. */
 
    zzz.get_fraction_info(ss->cmd.cmd_fraction,
-                         CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
+                         CFLAG1_VISIBLE_FRACTION_MASK,
                          weirdness_off);
 
    zzz.m_first_call = !zzz.m_reverse_order;
@@ -6661,9 +6661,8 @@ static void do_concept_meta(
             fail("Sorry, fraction is too complicated.");
 
          fraction_info zzz(howmanyparts);
-         zzz.get_fraction_info(corefracs,
-                               CFLAG1_VISIBLE_FRACTION_MASK / CFLAG1_VISIBLE_FRACTION_BIT,
-                               weirdness_off);
+         // Setting visible fractions to 7 makes it accept anything.
+         zzz.get_fraction_info(corefracs, CFLAG1_VISIBLE_FRACTION_MASK, weirdness_off);
 
          if (zzz.m_reverse_order || zzz.m_do_half_of_last_part != 0 || zzz.m_do_last_half_of_first_part)
             fail("Sorry, fraction is too complicated.");

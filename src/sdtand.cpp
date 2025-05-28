@@ -121,8 +121,8 @@ public:
 
 
 static tm_thing maps_isearch_twosome[] = {
+   // PUT MAPS HERE
    //       maps                                                      ilatmaskH/L   olatmask  limit rot insetup outsetup
-
    // "2x4_4" - see below; this must be before the others.
    {{7, 6, 4, 5,                     0, 1, 3, 2},                          0,0,     0000,         4, 0,  s1x4,  s2x4},
    {{0, 2, 5, 7,                     1, 3, 4, 6},                      0,02222,     0xFF,         4, 0,  s2x2,  s2x4},
@@ -137,7 +137,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{4, 5, 7, 0,                     3, 2, 6, 1},                      0,00022,     0xC3,         4, 3, s_trngl4, s2x4},
 
    // This one comes back from far box
-   {{0, 2, 4, 6,                     1, 3, 5, 7},                         0,02200,     0xF0,      4, 0, s_trngl4, s_trngl8},
+   {{0, 2, 4, 6,                     1, 3, 5, 7},                         0,02200,  0xF0,         4, 0, s_trngl4, s_trngl8},
 
    // Special maps for couples 1/8 twosome stuff.
    // These need further work in the table initializer.
@@ -165,6 +165,34 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 6, 4, 9, 11, 15, 13,      1, 3, 7, 5, 8, 10, 14, 12},     0,022222222,  0xFFFF,        8, 0,  s1x8,  s1x16},
    {{15, 14, 12, 13, 8, 9, 11, 10,   0, 1, 3, 2, 7, 6, 4, 5},              0,0,     0000,         8, 0,  s1x8,  s2x8},
    {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                    0,0,     0000,         6, 0,  s1x6,  s2x6},
+
+   //       maps                                                      ilatmaskH/L   olatmask  limit rot insetup outsetup
+   // PUT MAPS HERE
+
+   // near line
+   {{6, 11, 10, 3, 5, 7, 15, 1},                                       0,02222,   0x8CEA,         4, 0,s_trngl4,s4x4},
+   {{12, 14, 0, 7, 9, 11, 2, 5},                                       0,02222,   0x5AA5,         4, 0,s_trngl4,s_c1phan},
+   {{10, 3, 5, 6, 15, 1, 7, 11},                                       0,00022,   0x840A,         4, 0,  s2x2,  s4x4},
+   {{0, 7, 9, 12, 2, 5, 11, 14},                                       0,00022,   0x00A5,         4, 0,  s2x2,  s_c1phan},
+   // line on caller's left
+   {{9, 11, 3, 5, 10, 15, 14, 7},                                      0,02222,   0x3157,         4, 1,s_trngl4,s4x4},
+   {{13, 15, 6, 9, 0, 2, 4, 11},                                       0,02222,   0x55AA,         4, 1,s_trngl4,s_c1phan},
+   {{10, 3, 5, 9, 15, 14, 7, 11},                                      0,02002,   0x8E00,         4, 0,  s2x2,  s4x4},
+   {{0, 6, 9, 13, 2, 4, 11, 15},                                       0,02002,   0xA005,         4, 0,  s2x2,  s_c1phan},
+   // far line
+   {{13, 15, 7, 9, 14, 3, 2, 11},                                      0,02222,   0xEA8C,         4, 2,s_trngl4,s4x4},
+   {{1, 3, 10, 13, 4, 6, 8, 15},                                       0,02222,   0xA55A,         4, 2,s_trngl4,s_c1phan},
+   {{15, 3, 7, 9, 13, 14, 2, 11},                                      0,02200,   0x0A84,         4, 0,  s2x2,  s4x4},
+   {{3, 6, 10, 13, 1, 4, 8, 15},                                       0,02200,   0xA500,         4, 0,  s2x2,  s_c1phan},
+   // line on caller's right
+   {{2, 7, 6, 15, 1, 3, 11, 13},                                       0,02222,   0x5731,         4, 3,s_trngl4,s4x4},
+   {{8, 10, 12, 3, 5, 7, 14, 1},                                       0,02222,   0xAA55,         4, 3,s_trngl4,s_c1phan},
+   {{15, 3, 7, 6, 13, 1, 2, 11},                                       0,00220,   0x008E,         4, 0,  s2x2,  s4x4},
+   {{3, 7, 10, 12, 1, 5, 8, 14},                                       0,00220,   0x05A0,         4, 0,  s2x2,  s_c1phan},
+
+   // Getouts for the above.
+   {{5, 4, 1, 3, 6, 7, 0, 2},                                          0,02200,   0x000F,         4, 2,  s1x4,  slinebox},
+   {{0, 2, 6, 7, 1, 3, 5, 4},                                          0,00022,   0x000F,         4, 0,  s1x4,  slinebox},
 
    {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},          0,0,     0000,         8, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},           0,0,   0xFFFF,         8, 1,  s2x4,  s4x4},
@@ -357,22 +385,16 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 1, 3,                        -1, -1, 2},                    0,0,          0xC,        3, 3,  s1x3,  s_trngl4},
    {{0, 3, 2,                        -1, 1, -1},                    0,0,          0,          3, 0,  s1x3,  sdmd},
 
-   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},
-    0,0200200,      0xC30,      6, 0,  s_ntrgl6cw,  s2x6},
-   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},
-    0,0002002,      0x0C3,      6, 0,  s_ntrgl6ccw, s2x6},
-   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},
-    0,0020020,      0x618,      6, 0,  s_ntrgl6cw,  s2x6},
-   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},
-    0,0020020,      0x186,      6, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},    0,0200200,      0xC30,        6, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},     0,0002002,      0x0C3,        6, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},    0,0020020,      0x618,        6, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},     0,0020020,      0x186,        6, 0,  s_ntrgl6ccw, s2x6},
 
    // This map must be very late, after the two that do 2x4->4x4
    // and the one that does 2x4->2x8.
-   {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},
-    0,020022002,     0xF0F0,     8, 1,  s2x4,  sdeepbigqtg},
+   {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},0,020022002,    0xF0F0,       8, 1,  s2x4,  sdeepbigqtg},
 
-   {{9, 8, 23, 22, 14, 15, 18, 19,       2, 3, 6, 7, 21, 20, 11, 10},
-    0,0,          0,          8, 0,  s_rigger, s4x6},
+   {{9, 8, 23, 22, 14, 15, 18, 19,       2, 3, 6, 7, 21, 20, 11, 10},   0,0,         0,       8, 0,  s_rigger, s4x6},
 
    // These must be at the end.  They can partially restore setups
    // through intermediate setups that are too big.
@@ -634,6 +656,11 @@ const siamese_item siamese_table_of_2[] = {
    {s4x4,        0xAAAA0000U, 0xA0A0U, warn__none},
    {s4x4,        0xCCCC0000U, 0x4848U, warn__none},
 
+   {s4x4,        0x00008CEAU, 0x840AU, warn__none},   // near
+   {s4x4,        0xCEA80000U, 0x40A8U, warn__none},   // **** need fixup left
+   {s4x4,        0x0000EA8CU, 0x0A84U, warn__none},   // far
+   {s4x4,        0xA8CE0000U, 0xA840U, warn__none},   // **** need fixup right
+
    {s4x5,        0x000090E4U, 0x18060U, warn__none},
    {s4x5,        0x00001384U, 0xC0300U, warn__none},
    {s4x5,        0x90E40000U, 0x21084U, warn__none},
@@ -708,6 +735,10 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
       // Yes, we could handle this better on a 64-bit system.
       map_search->outunusedmask = outsize >= 32 ? 0xFFFFFFFF : ((1U << outsize)-1);
 
+      uint32 very_special = ((setup_attrs[map_search->outsetup].four_way_symmetry) &&
+                             (setup_attrs[map_search->insetup].no_symmetry) &&
+                             (map_search->rot & 1) != 0) ? ((1U << outsize)-1) : 0;
+
       for (i=0; i<map_search->limit; i++) {
          if (map_search->maps[i] == -2) continue;
 
@@ -744,12 +775,14 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
                map_search->ilatmask3high >> (midbitpos-32) :
                map_search->ilatmask3low >> midbitpos;
 
-            if ((ilatmidbit ^ map_search->rot) & 1) {
+            if ((ilatmidbit ^ map_search->rot ^ very_special) & 1) {
                for (j=0 ; j<m_people_per_group ; j++)
                   osidemask |= 1U << map_search->maps[i+(map_search->limit*j)];
             }
          }
       }
+
+      osidemask ^= very_special;
 
       if (map_search->limit != attr::klimit(map_search->insetup)+1)
          gg77->iob88.fatal_error_exit(1, "Tandem table initialization failed", "limit wrong");
@@ -758,7 +791,6 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
          if (map_search->olatmask != osidemask)
             gg77->iob88.fatal_error_exit(1, "Tandem table initialization failed", "smask");
       }
-
    }
 }
 
@@ -1209,7 +1241,7 @@ bool tandrec::pack_us(
                m_vertical_people[virt_index] = vert;
             }
 
-            if (map_ptr->rot & 1)   // Compensate for setup rotation.
+            if (map_ptr->rot)   // Compensate for setup rotation.
                ptr->id1 = rotperson(ptr->id1, ((- map_ptr->rot) & 3) * 011);
 
             if (m_melded) {
@@ -2373,6 +2405,7 @@ static void fixup_mimic(setup *result, const uint16 split_info[2],
    static const expand::thing exp55_2x4_dmd = {{0, 2, 4, 6}, sdmd, s2x4, 0};
 
    static const expand::thing expCC_qtg_line = {{6, 7, 2, 3}, s1x4, s_qtag, 0};
+   static const expand::thing exp33_qtg_box  = {{0, 1, 4, 5}, s2x2, s_qtag, 0};
 
    static const expand::thing exp55_xwv_dmd = {{0, 2, 4, 6}, sdmd, s_crosswave, 0};
    static const expand::thing expAA_xwv_dmd = {{1, 3, 5, 7}, sdmd, s_crosswave, 0};
@@ -2633,7 +2666,9 @@ static void fixup_mimic(setup *result, const uint16 split_info[2],
    case s_qtag:
       if (finals == 0xCC) {
          compress_map = &expCC_qtg_line; break;  // It's just the center line.
-         break;
+      }
+      else if (finals == 0x33) {
+         compress_map = &exp33_qtg_box; break;   // It's just the outsides.
       }
 
       if (orig_before_press && orig_before_press->kind == sdmd && (orig_before_press->rotation ^ result->rotation) == 1) {

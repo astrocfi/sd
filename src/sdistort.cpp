@@ -360,6 +360,7 @@ static bool multiple_move_innards(
    switch (map_kind) {
    case MPKIND__NONISOTROP1:
    case MPKIND__NONISOTROP2:
+   case MPKIND__NONISOTROP3:
       map_kind = MPKIND__SPLIT;
       break;
    case MPKIND__NONISOTROPREM:
@@ -4399,7 +4400,7 @@ void tglmap::do_glorious_triangles(
       mapnums = map_ptr->mapbd1;
       startingrot = 3;
    }
-   else {   // s_qtag
+   else {   // s_qtag or s_ptpd
       mapnums = map_ptr->mapqt1;
       startingrot = (map_ptr->randombits & 16) ? 1 : 0;
    }
@@ -5011,8 +5012,6 @@ extern void triangle_move(
       else {
          // Indicator = 2 for inside, 3 for outside.
 
-         // Only a few cases allow interlocked.
-
          if (indicator_base == 2 && ss->kind == sbigdmd) {
             if (global_livemask == 07474)
                map_key_table = tglmap::bdtglmap1;
@@ -5030,8 +5029,28 @@ extern void triangle_move(
             reinstate_rotation(ss, result);
             return;
          }
+         else if (indicator == 0102 && ss->kind == s_ptpd) {
+            tglmap::do_glorious_triangles(ss, tglmap::rgtglmap2, indicator, result);
+            reinstate_rotation(ss, result);
+            return;
+         }
          else if (indicator == 0102 && ss->kind == s_qtag) {
             tglmap::do_glorious_triangles(ss, tglmap::rgtglmap3, indicator, result);
+            reinstate_rotation(ss, result);
+            return;
+         }
+         else if (indicator == 0103 && ss->kind == s_rigger) {
+            tglmap::do_glorious_triangles(ss, tglmap::ritglmap1, indicator, result);
+            reinstate_rotation(ss, result);
+            return;
+         }
+         else if (indicator == 0103 && ss->kind == s_ptpd) {
+            tglmap::do_glorious_triangles(ss, tglmap::ritglmap2, indicator, result);
+            reinstate_rotation(ss, result);
+            return;
+         }
+         else if (indicator == 0103 && ss->kind == s_qtag) {
+            tglmap::do_glorious_triangles(ss, tglmap::ritglmap3, indicator, result);
             reinstate_rotation(ss, result);
             return;
          }

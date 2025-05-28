@@ -2204,6 +2204,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 2},
    {"INSIDE INTERLOCKED TRIANGLES",          concept_randomtrngl,             D, l_c2,
     UC_none, 0102},
+   {"OUTSIDE INTERLOCKED TRIANGLES",         concept_randomtrngl,             D, l_c2,
+    UC_none, 0103},
    {"OUTSIDE TRIANGLES",                     concept_randomtrngl,             D, l_c1,
     UC_none, 3},
    {"IN POINT TRIANGLES",                    concept_randomtrngl,             D, l_c1,

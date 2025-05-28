@@ -2942,8 +2942,9 @@ static int divide_the_setup(
       // Check for division into trngl4's.  This is ambiguous, so we have
       // to peek at the call to see whether it is qualifying on something
       // that tells us how to divide.  The only such thing we know about
-      // is "ntbone" along with "dmd_ctr_mwv" or "dmd_ctr_1f".  The only
+      // is "ntbone" along with the few listed below.  The only
       // call at present that uses this is "<anyone> start vertical tag".
+      // And "dixie style", etc.
 
       // If that fails, the only way this can be legal is if people are in
       // genuine C1 phantom spots and the call can be done from 1x2's or 2x1's.
@@ -2957,6 +2958,7 @@ static int divide_the_setup(
             if ((t->qualifierstuff & QUALBIT__NTBONE) &&
                 (((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_mwv) ||
                  ((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_mwv_no_mirror) ||
+                 ((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_not_split_dixie) ||
                  ((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_1f))) {
                looking_for_lateral_triangle_split = true;
                break;
@@ -2977,6 +2979,10 @@ static int divide_the_setup(
                division_code = MAPCODE(s_trngl4,2,MPKIND__SPLIT,0);
             else if ((livemask & 0x5555) == 0)
                division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
+            else if ((livemask & 0xA55A) == 0)
+               division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP3,0);
+            else if ((livemask & 0x5AA5) == 0)
+               division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP2,0);
          }
          else if ((livemask & 0xAAAA) == 0)
             division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0);
