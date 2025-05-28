@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,10 +16,11 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This defines the following functions:
    concentric_move
+   get_multiple_parallel_resultflags
    normalize_concentric
    merge_setups
    on_your_own_move
@@ -183,12 +184,31 @@ Private cm_thing *concmap2x2_1x4_rc[4]    = {&map2x2_1x4_rc,       &oddmap2x2_1x
 Private cm_thing *concmapspecintgl[4]     = {&map1x2_intgl,        0,                    &map1x2_intgl,    0};
 
 
-/* This overwrites its "inners" and "outers argument setups. */
+extern unsigned int get_multiple_parallel_resultflags(setup outer_inners[], int number)
+{
+   int i;
+   unsigned int result_flags = 0;
+
+   /* If a call was being done "piecewise" or "random", we demand that both
+      calls run out of parts at the same time, and, when that happens, we
+      report it to the higher level in the recursion. */
+
+   for (i=0 ; i<number ; i++) {
+      if ((outer_inners[i].result_flags ^ outer_inners[0].result_flags) & RESULTFLAG__DID_LAST_PART)
+         fail("Two calls must use the same number of fractions.");
+
+      result_flags |= outer_inners[i].result_flags;
+   }
+
+   return result_flags;
+}
+
+
+/* This overwrites its "outer_inners" argument setups. */
 extern void normalize_concentric(
    calldef_schema synthesizer,
    int center_arity,
-   setup inners[],
-   setup *outers,
+   setup outer_inners[],   /* outers in position 0, inners follow */
    int outer_elongation,
    setup *result)
 {
@@ -199,17 +219,11 @@ extern void normalize_concentric(
    int i, j, q, rot;
    cm_thing **map_ptr;
    cm_thing *lmap_ptr;
+   setup *inners = &outer_inners[1];
+   setup *outers = &outer_inners[0];
 
    clear_people(result);
-
-   /* If a call was being done "piecewise" or "random", we demand that both
-      calls run out of parts at the same time, and, when that happens, we
-      report it to the higher level in the recursion. */
-
-   if ((inners[0].result_flags ^ outers->result_flags) & RESULTFLAG__DID_LAST_PART)
-      fail("Centers and ends parts must use the same number of fractions.");
-
-   result->result_flags = inners[0].result_flags | outers->result_flags;
+   result->result_flags = get_multiple_parallel_resultflags(outer_inners, center_arity+1);
 
    if (inners[0].kind == nothing && outers->kind == nothing) {
       result->kind = nothing;
@@ -333,6 +347,7 @@ extern void normalize_concentric(
                         fail("Sorry, code is broken at line 581 of sdconc.c.");
 
                      canonicalize_rotation(result);
+                     result->result_flags = 0;
                      return;
                   }
             }
@@ -674,6 +689,7 @@ gotit:
       (void) copy_person(result, j+12, outers, j);
    }
    canonicalize_rotation(result);
+   result->result_flags = 0;
    return;
 
    elongation_loss:
@@ -695,6 +711,7 @@ Private cm_thing *bigconctab[][11] = {
    {0,              0,                    0,                  0,                 0,                0,                0,                &oddmap1x2_1x2, 0,                0,          0},               /* sdmd */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_star */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_trngl */
+   {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_trngl4 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_bone6 */
    {0,              0,                    0,                  0,                 0,                0,                0,                0,              0,                0,          0},               /* s_short6 */
    {&map2x2_1x4h,   0,                    &oddmapshort6_1x2v, &oddmap1x2_2x3,    &map1x2_intgl,    0,                0,                0,              0,                0,          0},               /* s_qtag */
@@ -798,11 +815,6 @@ Private void concentrify(
 
    clear_people(outers);
    clear_people(&inners[0]);
-
-   outers->cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
-   inners[0].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
-   outers->cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
-   inners[0].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
 
    *center_arity = 1;
 
@@ -1012,8 +1024,6 @@ Private void concentrify(
    if (lmap_ptr == &map_spec_star12) {
       *center_arity = 2;
       clear_people(&inners[1]);
-      inners[1].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
-      inners[1].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
       inners[1].kind = lmap_ptr->insetup;
       inners[1].rotation = ss->rotation;
       (void) copy_person(&inners[1], 0, ss, 10);
@@ -1025,10 +1035,6 @@ Private void concentrify(
       *center_arity = 3;
       clear_people(&inners[1]);
       clear_people(&inners[2]);
-      inners[1].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
-      inners[2].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags;
-      inners[1].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
-      inners[2].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
       inners[1].kind = lmap_ptr->insetup;
       inners[2].kind = lmap_ptr->insetup;
       inners[1].rotation = ss->rotation;
@@ -1119,6 +1125,7 @@ extern void concentric_move(
    int center_arity;
    setup result_inner[3];
    setup result_outer;
+   setup outer_inners[4];
    int i, k;
 
    setup_kind orig_inners_start_kind;    /* The original info about the people who STARTED on the inside. */
@@ -1138,7 +1145,7 @@ extern void concentric_move(
    int saved_number_fields = current_number_fields;
 
    /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
-   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
 
    for (i=0; i<8; i++) {
       orig_inners_start_directions[i] =
@@ -1149,6 +1156,11 @@ extern void concentric_move(
    localmodsin1 = modifiersin1;
    localmodsout1 = modifiersout1;
 
+   begin_inner[0].cmd = ss->cmd;
+   begin_inner[1].cmd = ss->cmd;
+   begin_inner[2].cmd = ss->cmd;
+   begin_outer.cmd = ss->cmd;
+
    concentrify(ss, analyzer, begin_inner, &begin_outer, &center_arity, &begin_outer_elongation, &begin_xconc_elongation);
 
    /* Get initial info for the original ends. */
@@ -1156,7 +1168,7 @@ extern void concentric_move(
    for (i=0; i<=setup_limits[begin_outer.kind]; i++) {
       int q = begin_outer.people[i].id1;
       orig_outers_start_dirs |= q;
-      orig_outers_start_directions[(q >> 6) & 07] = q;
+      if (q) orig_outers_start_directions[(q >> 6) & 07] = q;
    }
    orig_outers_start_kind = begin_outer.kind;
 
@@ -1165,7 +1177,7 @@ extern void concentric_move(
    for (i=0; i<=setup_limits[begin_inner[0].kind]; i++) {
       int q = begin_inner[0].people[i].id1;
       orig_inners_start_dirs |= q;
-      orig_inners_start_directions[(q >> 6) & 07] = q;
+      if (q) orig_inners_start_directions[(q >> 6) & 07] = q;
    }
    orig_inners_start_kind = begin_inner[0].kind;
 
@@ -1182,16 +1194,8 @@ extern void concentric_move(
       final_outers_start_directions = orig_outers_start_directions;
    }
 
-   begin_inner[0].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
-   begin_inner[1].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
-   begin_inner[2].cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
-   begin_inner[0].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
-   begin_inner[1].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
-   begin_inner[2].cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
-
    /* If the call turns out to be "detour", this will make it do just the ends part. */
-   begin_outer.cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED | CMD_MISC__DOING_ENDS;
-   begin_outer.cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+   begin_outer.cmd.cmd_misc_flags |= CMD_MISC__DOING_ENDS;
 
    /* There are two special pieces of information we now have that will help us decide where to
       put the outsides.  "Orig_outers_start_kind" tells what setup the outsides were originally in,
@@ -1240,18 +1244,20 @@ extern void concentric_move(
          where they should go.  This is what makes "reverse checkpoint recycle by star thru"
          work from a DPT setup. */
 
-      if (begin_outer.kind == s2x2 && analyzer != schema_rev_checkpoint &&
+      if ((begin_outer.kind == s2x2 || begin_outer.kind == s_short6) &&
+            analyzer != schema_rev_checkpoint &&
             !(begin_outer_elongation & ~1)) {      /* We demand elongation be 0 or 1. */
          begin_outer.cmd.prior_elongation_bits = begin_outer_elongation+1;
 
          /* If "demand lines" or "demand columns" has been given, we suppress elongation
             checking.  In that case, the database author knows what elongation is required
             and is taking responsibility for it.  This is what makes "scamper" and "divvy up" work.
+            We also do this if "force_otherway" has been given.  This makes "hocus pocus" work.
             We also do this if the concept is cross concentric.  In that case the people doing the
             "ends" call actually did it in the center (the way they were taught in C2 class)
             before moving to the outside. */
 
-         if (((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS) & modifiersout1) ||
+         if (((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS | DFM1_CONC_FORCE_OTHERWAY) & modifiersout1) ||
                (analyzer == schema_cross_concentric) || (analyzer == schema_single_cross_concentric))
             begin_outer.cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
       }
@@ -1269,7 +1275,12 @@ extern void concentric_move(
    }
    else {
       result_outer = begin_outer;
-      result_outer.result_flags = 0;
+
+      if (!(begin_outer_elongation & ~1))
+         result_outer.result_flags = begin_outer_elongation+1;
+      else
+         result_outer.result_flags = 0;   /* Outer people have unknown elongation and aren't moving.  Not good. */
+
       localmodsout1 |= DFM1_CONC_FORCE_SPOTS;      /* Make sure these people go to the same spots. */
       /* Strip out the roll bits -- people who didn't move can't roll. */
       if (setup_limits[result_outer.kind] >= 0) {
@@ -1342,7 +1353,7 @@ extern void concentric_move(
    for (i=0; i<=setup_limits[result_outer.kind]; i++) {
       int q = result_outer.people[i].id1;
       final_outers_finish_dirs |= q;
-      final_outers_finish_directions[(q >> 6) & 07] = q;
+      if (q) final_outers_finish_directions[(q >> 6) & 07] = q;
    }
 
    /* Now final_outers_finish_dirs tells whether outer peoples' orientations changed.
@@ -1350,43 +1361,12 @@ extern void concentric_move(
       are 2x2's, canonicalization sets their rotation to zero, so the
       tbonetest quantities refer to absolute orientation. */
    
-   /* The time has come to compute the elongation of the outsides in the final setup.
-      This gets complicated if the outsides' final setup is a 2x2.  Among the
-      procedures we could use are:
-         (1) if the call is "checkpoint", go to spots with opposite elongation
-            from the original outsides' elongation.  This is the "Hodson checkpoint
-            rule", named after the caller who first used a consistent, methodical,
-            and universal rule for the checkpoint concept.
-         (2) if the call is "concentric", use the Hodson rule if the original setup
-            was a 1x4 or diamond, or the "lines-to-lines, columns-to-columns" rule
-            if the original setup was a 2x2.
-         (3) if we have various definition flags, such as "force_lines" or
-            "force_otherway", obey them.
-      We will use information from several sources in carrying out these rules.
-      The concentric concept will signify itself by turning on the "lines_lines"
-      flag.  The checkpoint concept will signify itself by turning on the
-      "force_otherway" flag.  The "parallel_conc_end" flag in the outsides' setup
-      indicates that, if "concentric" or "checkpoint" are NOT being used, the call
-      wants the outsides to maintain the same elongation as they had at the beginning.
-      This is what makes "ends hinge" and "ends recycle" do their respective
-      right things when called from a grand wave. */
-
-   /* Default: the ends just keep their original elongation.  This will often
-      mean that they stay on their spots. */
-
-   if ((analyzer == schema_cross_concentric) || (analyzer == schema_single_cross_concentric))
-      final_elongation = begin_xconc_elongation;
-   else
-      final_elongation = begin_outer_elongation;
-
-   /* Note: final_elongation might be -1 now, meaning that the people on the outside
-      cannot determine their elongation from the original setup.  Unless their
-      final setup is one that does not require knowing the value of final_elongation,
-      it is an error. */
+   /* Deal with empty setups. */
 
    if (result_outer.kind == nothing) {
       if (result_inner[0].kind == nothing) {
          result->kind = nothing;    /* If everyone is a phantom, it's simple. */
+         result->result_flags = 0;
          return;
       }
 
@@ -1413,8 +1393,7 @@ extern void concentric_move(
                The test for this is 1P2P; touch 1/4; column circ; boys truck; split phantom
                lines tag chain thru reaction.  They should finish in outer triple boxes,
                not a 2x4. */
-            result_outer.result_flags = (result_inner[0].result_flags & ~RESULTFLAG__ELONGATE_MASK) |
-                  (((~ss->rotation & 1) + 1) * RESULTFLAG__ELONGATE_BIT);
+            result_outer.result_flags = (result_inner[0].result_flags & ~3) | ((~ss->rotation & 1) + 1);
          }
          else
             goto no_end_err;
@@ -1448,7 +1427,7 @@ extern void concentric_move(
                these setups together, "fix_n_results" will raise an error, since
                it won't know whether to leave room for the phantoms. */
 
-            *result = result_inner[0];   /* This gets all the inner people. */
+            *result = result_inner[0];   /* This gets all the inner people, and the result_flags. */
             result->kind = s_normal_concentric;
             result->inner.skind = result_inner[0].kind;
             result->inner.srotation = result_inner[0].rotation;
@@ -1456,6 +1435,7 @@ extern void concentric_move(
             result->outer.srotation = 0;
             result->outer_elongation = 0;
             canonicalize_rotation(result);
+            result->result_flags = 0;
             return;
          }
       }
@@ -1499,6 +1479,7 @@ extern void concentric_move(
             lead to indecision about whether to leave space for the phantoms. */
 
          int j;
+         *result = result_outer;   /* This gets the result_flags. */
          result->kind = s_normal_concentric;
          result->outer.skind = result_outer.kind;
          result->outer.srotation = result_outer.rotation;
@@ -1508,22 +1489,44 @@ extern void concentric_move(
 
          for (j=0; j<12; j++) (void) copy_person(result, j+12, &result_outer, j);
          canonicalize_rotation(result);
+         result->result_flags = 0;
          return;
       }
    }
 
-/* ***** We used to have this:
-   if (result_outer.kind == s_short6) {
-      switch (final_outers_start_kind) {
-         case s_bone6:
-            final_elongation ^= 1;     Natural elongation is wrong way!!
-            break;
-      }
-   }
-which is wrong.  The fact that short6 has a funny definition is taken care of in
-normalize_concentric.  This code was making "outer 6 convert the triangle" fail
-from a bone (heads left swing thru, side girl turn back).
-***** */
+   /* The time has come to compute the elongation of the outsides in the final setup.
+      This gets complicated if the outsides' final setup is a 2x2.  Among the
+      procedures we could use are:
+         (1) if the call is "checkpoint", go to spots with opposite elongation
+            from the original outsides' elongation.  This is the "Hodson checkpoint
+            rule", named after the caller who first used a consistent, methodical,
+            and universal rule for the checkpoint concept.
+         (2) if the call is "concentric", use the Hodson rule if the original setup
+            was a 1x4 or diamond, or the "lines-to-lines, columns-to-columns" rule
+            if the original setup was a 2x2.
+         (3) if we have various definition flags, such as "force_lines" or
+            "force_otherway", obey them.
+      We will use information from several sources in carrying out these rules.
+      The concentric concept will signify itself by turning on the "lines_lines"
+      flag.  The checkpoint concept will signify itself by turning on the
+      "force_otherway" flag.  The "parallel_conc_end" flag in the outsides' setup
+      indicates that, if "concentric" or "checkpoint" are NOT being used, the call
+      wants the outsides to maintain the same elongation as they had at the beginning.
+      This is what makes "ends hinge" and "ends recycle" do their respective
+      right things when called from a grand wave. */
+
+   /* Default: the ends just keep their original elongation.  This will often
+      mean that they stay on their spots. */
+
+   if ((analyzer == schema_cross_concentric) || (analyzer == schema_single_cross_concentric))
+      final_elongation = begin_xconc_elongation;
+   else
+      final_elongation = begin_outer_elongation;
+
+   /* Note: final_elongation might be -1 now, meaning that the people on the outside
+      cannot determine their elongation from the original setup.  Unless their
+      final setup is one that does not require knowing the value of final_elongation,
+      it is an error. */
 
    /* At this point, "final_elongation" actually has the INITIAL elongation of the
       people who finished on the outside.  That is, if they went from a wave or diamond
@@ -1567,7 +1570,7 @@ from a bone (heads left swing thru, side girl turn back).
                   went to.  This uses the result of the "par_conc_end" flag for 1x4/dmd -> 2x2
                   calls, or the manner in which the setup was divided for calls that were put
                   together from 2-person calls, or whatever.  (For 1x4->2x2 calls, the "par_conc_end"
-                  flag means the call prefers the SAME elongation in the resulting 2x2.  The default,
+                  flag means the call prefers the SAME elongation in the resulting 2x2.)  The default,
                   absent this flag, is to change the elongation.  In any case, the result of all that
                   has been encoded into the elongation of the 2x2 setup that the people went to;
                   we just have to obey. */
@@ -1592,9 +1595,9 @@ from a bone (heads left swing thru, side girl turn back).
             }
             else {
                /* Get the elongation from the result setup, if possible. */
-               unsigned long int newelong = ((result_outer.result_flags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) - 1;
+               unsigned long int newelong = (result_outer.result_flags & 3) - 1;
 
-               if (result_outer.result_flags & RESULTFLAG__ELONGATE_MASK) {
+               if (result_outer.result_flags & 3) {
                   if (final_elongation == newelong) {
                      warn(concwarntable[2]);
                   }
@@ -1659,23 +1662,32 @@ from a bone (heads left swing thru, side girl turn back).
                   }
                }
 
-               /* The warning "warn__ends_work_to_spots" is now obsolete. */
-
                final_elongation = new_elongation;
             }
             else
-               final_elongation = ((result_outer.result_flags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) - 1;
+               final_elongation = (result_outer.result_flags & 3) - 1;
 
             break;
          default:
             fail("Don't recognize starting setup.");
       }
    }
+   else if (result_outer.kind == s_short6) {
+      /* If it both started and ended in a short6, take the info from the way the call was executed.
+         Otherwise, take it from the way concentrify thought the ends were initially elongated. */
+      if (final_outers_start_kind == s_short6)
+         final_elongation = (result_outer.result_flags & 3) - 1;
+   }
 
    /* Now lossage in "final_elongation" may have been repaired.  If it is still
       negative, there may be trouble ahead. */
 
-   normalize_concentric(analyzer, center_arity, result_inner, &result_outer, final_elongation, result);
+   outer_inners[0] = result_outer;
+   outer_inners[1] = result_inner[0];
+   outer_inners[2] = result_inner[1];
+   outer_inners[3] = result_inner[2];
+   normalize_concentric(analyzer, center_arity, outer_inners, final_elongation, result);
+   result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
    return;
 
    no_end_err:
@@ -1688,21 +1700,16 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 {
    int i, r, rot, offs, limit, lim1, limhalf;
    setup res2copy;
+   setup outer_inners[2];
    setup *res1, *res2;
-/*
-   long_boolean preserve_4x4 = FALSE;
-*/
+
    res2copy = *result;
    res1 = ss;
    res2 = &res2copy;
 
    /* If either incoming setup is big, opt for a 4x4 rather than C1 phantoms.
       The test for this is, from a squared set, everyone phantom column wheel thru.
-      It used to go to C1 phantoms.  We want a 4x4. */
-/*    see long comment below
-   if (setup_limits[res1->kind] > 7 || setup_limits[res2->kind] > 7)
-      preserve_4x4 = TRUE;
-*/
+      We want a 4x4. */
 
    canonicalize_rotation(res1);    /* Do we really need to do this before normalize_setup? */
    normalize_setup(res1, normalize_before_merge);
@@ -1781,7 +1788,12 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
          We now do this even more carefully.  The argument "action" tells us what to do. */
 
-      if (action == merge_strict_matrix) {
+      /* Late-breaking news:  We now go to a 16 matrix anyway, if the actual spots that people
+         occupy are "O" spots. */
+
+      if (action == merge_strict_matrix ||
+               (res1->people[1].id1 | res1->people[2].id1 | res1->people[5].id1 | res1->people[6].id1 |
+               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1) == 0) {
          result->kind = s4x4;
          clear_person(result, 12);
          clear_person(result, 13);
@@ -1871,7 +1883,9 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       (void) copy_rot(res2, 1, res2, 2, 033);
       (void) copy_rot(res2, 2, res2, 4, 033);
       (void) copy_rot(res2, 4, res2, 6, 033);
-      normalize_concentric(schema_concentric_2_6, 1, res1, res2, res2->rotation, result);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric_2_6, 1, outer_inners, res2->rotation, result);
       return;
    }
    else if (res2->kind == s2x4 && res1->kind == s2x2) {
@@ -1929,7 +1943,21 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       res2->kind = s1x4;
       (void) copy_person(res2, 2, res2, 4);
       (void) copy_person(res2, 3, res2, 5);
-      normalize_concentric(schema_concentric, 1, res1, res2, 0, result);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
+      return;
+   }
+   else if (res2->kind == s1x8 && res1->kind == s2x2 &&
+            (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
+      res2->kind = s1x4;
+      (void) copy_person(res2, 0, res2, 1);
+      (void) copy_person(res2, 1, res2, 3);
+      (void) copy_person(res2, 2, res2, 5);
+      (void) copy_person(res2, 3, res2, 7);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
       return;
    }
    else if (res1->kind == s_rigger &&
@@ -1937,7 +1965,9 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       res1->kind = s1x4;
       (void) copy_person(res1, 0, res1, 6);
       (void) copy_person(res1, 1, res1, 7);
-      normalize_concentric(schema_concentric, 1, res2, res1, 0, result);
+      outer_inners[1] = *res2;
+      outer_inners[0] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
       return;
    }
    else if (res2->kind == s1x8 && res1->kind == s1x4 &&
@@ -1945,7 +1975,9 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       res2->kind = s1x4;
       (void) copy_person(res2, 2, res2, 4);
       (void) copy_person(res2, 3, res2, 5);
-      normalize_concentric(schema_concentric, 1, res1, res2, 0, result);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, 0, result);
       return;
    }
    else if (res2->kind == s2x4 && res1->kind == s1x4 &&
@@ -1956,7 +1988,9 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       (void) copy_person(res2, 2, res2, 4);
       (void) copy_person(res2, 3, res2, 7);
       canonicalize_rotation(res2);
-      normalize_concentric(schema_concentric, 1, res1, res2, outer_elongation, result);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, outer_elongation, result);
       return;
    }
    else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 &&
@@ -1969,6 +2003,57 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 6, res1, 6);
       return;
    }
+   else if (res2->kind == s1x4 && res1->kind == s_bone && r == 0) {
+      *result = *res1;
+
+      install_person(result, 6, res2, 0);
+      install_person(result, 7, res2, 1);
+      install_person(result, 2, res2, 2);
+      install_person(result, 3, res2, 3);
+      return;
+   }
+   else if (res2->kind == s1x8 && res1->kind == s_bone && r == 0 &&
+            (!(res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
+      *result = *res2;
+
+      install_person(result, 3, res1, 6);
+      install_person(result, 2, res1, 7);
+      install_person(result, 7, res1, 2);
+      install_person(result, 6, res1, 3);
+      return;
+   }
+   else if (res2->kind == s_ptpd && res1->kind == s2x2 &&
+            (!(res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
+      result->kind = s2x4;
+      res1->rotation += r;
+      canonicalize_rotation(res1);
+      (void) copy_person(result, 0, res2, 1);
+      (void) copy_person(result, 3, res2, 7);
+      (void) copy_person(result, 4, res2, 5);
+      (void) copy_person(result, 7, res2, 3);
+      (void) copy_person(result, 1, res1, 0);
+      (void) copy_person(result, 2, res1, 1);
+      (void) copy_person(result, 5, res1, 2);
+      (void) copy_person(result, 6, res1, 3);
+      canonicalize_rotation(result);
+      return;
+   }
+   else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix &&
+            (!(res2->people[3].id1 | res2->people[2].id1 | res2->people[7].id1 | res2->people[6].id1))) {
+      result->kind = s2x4;
+      res1->rotation += r;
+      canonicalize_rotation(res1);
+      (void) copy_person(result, 0, res2, 0);
+      (void) copy_person(result, 3, res2, 1);
+      (void) copy_person(result, 4, res2, 4);
+      (void) copy_person(result, 7, res2, 5);
+      (void) copy_person(result, 1, res1, 0);
+      (void) copy_person(result, 2, res1, 1);
+      (void) copy_person(result, 5, res1, 2);
+      (void) copy_person(result, 6, res1, 3);
+      canonicalize_rotation(result);
+      return;
+   }
    else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 &&
             (!(res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
       *result = *res1;
@@ -1977,6 +2062,16 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 2, res2, 2);
       install_person(result, 4, res2, 4);
       install_person(result, 6, res2, 6);
+      return;
+   }
+   else if (res2->kind == s2x4 && res1->kind == s_bone && r == 0 &&
+            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+      *result = *res1;
+
+      install_person(result, 0, res2, 0);
+      install_person(result, 1, res2, 3);
+      install_person(result, 4, res2, 4);
+      install_person(result, 5, res2, 7);
       return;
    }
    else if (res2->kind == s2x6 && res1->kind == s2x4 && r == 0) {
@@ -2026,6 +2121,7 @@ extern void on_your_own_move(
    setup *result)
 {
    setup setup1, setup2, res1;
+   setup outer_inners[2];
 
    if (ss->kind != s2x4) fail("Must have 2x4 setup for 'on your own'.");
    
@@ -2047,12 +2143,367 @@ extern void on_your_own_move(
    setup2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
    setup2.cmd.parseptr = parseptr->subsidiary_root;
    move(&setup2, FALSE, result);
-   result->result_flags |= res1.result_flags;
-   
+
+   outer_inners[0] = res1;
+   outer_inners[1] = *result;
+
+   result->result_flags = get_multiple_parallel_resultflags(outer_inners, 2);
    merge_setups(&res1, merge_strict_matrix, result);
 }
 
 
+typedef struct fixerjunk {
+   setup_kind ink;
+   setup_kind outk;
+   int rot;
+   int numsetups;
+   Const struct fixerjunk *next1x2;
+   Const struct fixerjunk *next1x2rot;
+   Const struct fixerjunk *next1x4;
+   Const struct fixerjunk *next1x4rot;
+   Const struct fixerjunk *next2x2;
+   int nonrot[4][4];
+   int yesrot[4][4];
+} fixer;
+
+
+static Const fixer foo33;
+static Const fixer foocc;
+static Const fixer f1x8aa;
+static Const fixer foozz;
+static Const fixer foozzd;
+static Const fixer f1x8aad;
+static Const fixer foo55d;
+static Const fixer foo99d;
+static Const fixer foo66d;
+static Const fixer f2x4endd;
+static Const fixer bar55d;
+
+static Const fixer fppaad;
+static Const fixer fpp55d;
+
+static Const fixer fboneendo;
+
+
+static Const fixer foo33 = {
+   s_1x2,
+   s2x4,
+   0,
+   2,
+   &foo33,                   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 1}, {5, 4}},
+   {{7, 6}, {2, 3}}};
+
+static Const fixer foocc = {
+   s_1x2,
+   s2x4,
+   0,
+   2,
+   &foocc,                   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{2, 3}, {7, 6}},
+   {{0, 1}, {5, 4}}};
+
+static Const fixer f1x8aa = {
+   s_1x2,
+   s1x8,
+   0,
+   2,
+   &f1x8aa,                  /* next1x2    */
+   &foozz,                   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{1, 3}, {7, 5}},
+   {{-1}}};
+
+static Const fixer foozz = {
+   s_1x2,
+   s_ptpd,
+   1,
+   2,
+   &foozz,                   /* next1x2    */
+   &f1x8aa,                  /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{1, 3}, {7, 5}},
+   {{-1}}};
+
+static Const fixer foozzd = {
+   s2x2,
+   s_ptpd,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f1x8aad,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &foozzd,                  /* next2x2    */
+   {{1, 7, 5, 3}},
+   {{-1}}};
+
+static Const fixer f1x8aad = {
+   s1x4,
+   s1x8,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f1x8aad,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &foozzd,                  /* next2x2    */
+   {{1, 3, 5, 7}},
+   {{-1}}};
+
+static Const fixer foo55d = {
+   s1x4,
+   s1x8,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &foo55d,                  /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &bar55d,                  /* next2x2    */
+   {{0, 2, 4, 6}},
+   {{-1}}};
+
+static Const fixer foo99d = {
+   s1x4,
+   s1x8,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &foo99d,                  /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4endd,                /* next2x2    */
+   {{0, 3, 4, 7}},
+   {{-1}}};
+
+static Const fixer foo66d = {
+   s1x4,
+   s1x8,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &foo66d,                  /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &bar55d,                  /* next2x2    */
+   {{1, 2, 5, 6}},
+   {{-1}}};
+
+static Const fixer f1x8ctr = {
+   s1x4,
+   s1x8,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f1x8ctr,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &bar55d,                  /* next2x2    */
+   {{3, 2, 7, 6}},
+   {{-1}}};
+
+static Const fixer f1x8endd = {
+   s1x4,
+   s1x8,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f1x8endd,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4endd,                /* next2x2    */
+   {{0, 1, 4, 5}},
+   {{-1}}};
+
+static Const fixer f1x8endo = {
+   s_1x2,
+   s1x8,
+   0,
+   2,
+   &f1x8endo,                /* next1x2    */
+   &fboneendo,               /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 1}, {5, 4}},
+   {{-1}}};
+
+static Const fixer fbonectr = {
+   s1x4,
+   s_bone,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &fbonectr,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &bar55d,                  /* next2x2    */
+   {{6, 7, 2, 3}},
+   {{-1}}};
+
+static Const fixer fboneendd = {
+   s2x2,
+   s_bone,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f1x8endd,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &fboneendd,               /* next2x2    */
+   {{0, 1, 4, 5}},
+   {{-1}}};
+
+static Const fixer fboneendo = {
+   s_1x2,
+   s_bone,
+   1,
+   2,
+   &fboneendo,               /* next1x2    */
+   &f1x8endo,                /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 5}, {1, 4}},
+   {{-1}}};
+
+static Const fixer frigendd = {
+   s1x4,
+   s_rigger,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &frigendd,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4endd,                /* next2x2    */
+   {{6, 7, 2, 3}},
+   {{-1}}};
+
+
+
+
+
+static Const fixer frigctr = {
+   s2x2,
+   s_rigger,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &f1x8ctr,                 /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &frigctr,                 /* next2x2    */
+   {{0, 1, 4, 5}},
+   {{-1}}};
+
+
+static Const fixer f2x4ctr = {
+   s2x2,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &fbonectr,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4ctr,                 /* next2x2    */
+   {{1, 2, 5, 6}},
+   {{-1}}};
+
+
+
+
+
+
+
+
+
+static Const fixer f2x4endd = {
+   s2x2,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   &frigendd,                /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   &f2x4endd,                /* next2x2    */
+   {{0, 3, 4, 7}},
+   {{-1}}};
+
+static Const fixer f2x4endo = {
+   s_1x2,
+   s2x4,
+   1,
+   2,
+   &f2x4endo,                /* next1x2    */
+   &f1x8endo,                /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 7}, {3, 4}},
+   {{-1}}};
+
+
+
+/* This should actually be some special thing that causes
+   the setup not to be translated at all. */
+static Const fixer bar55d = {
+   s2x2,
+   s2x4,
+   0,
+   1,
+   (struct fixerjunk *) 0,   /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{1, 2, 5, 6}},
+   {{-1}}};
+
+static Const fixer fppaad = {
+   s_1x2,
+   s2x4,
+   0,
+   2,
+   &fppaad,                  /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{1, 3}, {7, 5}},
+   {{-1}}};
+
+static Const fixer fpp55d = {
+   s_1x2,
+   s2x4,
+   0,
+   2,
+   &fpp55d,                  /* next1x2    */
+   (struct fixerjunk *) 0,   /* next1x2rot */
+   (struct fixerjunk *) 0,   /* next1x4    */
+   (struct fixerjunk *) 0,   /* next1x4rot */
+   (struct fixerjunk *) 0,   /* next2x2    */
+   {{0, 2}, {6, 4}},
+   {{-1}}};
+
+
+
+/* This does the various types of "so-and-so do this while the others do that" concepts. */
 
 extern void so_and_so_only_move(
    setup *ss,
@@ -2060,54 +2511,240 @@ extern void so_and_so_only_move(
    setup *result)
 {
    selector_kind saved_selector;
-   int i;
-   long_boolean others;
-   setup setup1, setup2, res1;
+   int i, k, setupcount;
+   unsigned int livemask, j;
+   setup the_setups[2], the_results[2];
+
+   int indicator = parseptr->concept->value.arg1;
+   long_boolean others = indicator & 1;
+   indicator &= -2;
+
+/* arg1 = 0 - <> do your part
+          1 - <> do your part while the others ....
+          2 - own the <>, with the others not doing any call, which doesn't exist
+          3 - own the <>, .... by ....
+          4 - <> only
+          5 - <> only while the others ....
+          6 - <> disconnected
+          7 - <> disconnected .... while the others .... */
 
    saved_selector = current_selector;
-   others = parseptr->concept->value.arg1;
    current_selector = parseptr->selector;
 
    if (current_selector == selector_all || current_selector == selector_none)
       fail("Can't have 'everyone' or 'no one' do a call.");
 
-   setup1 = *ss;              /* designees */
-   setup2 = *ss;              /* non-designees */
-   
+   the_setups[0] = *ss;              /* designees */
+   the_setups[1] = *ss;              /* non-designees */
+
    if (setup_limits[ss->kind] < 0) fail("Can't identify people in this setup.");
    for (i=0; i<setup_limits[ss->kind]+1; i++) {
       if (ss->people[i].id1) {
-         if (selectp(ss, i))
-            clear_person(&setup2, i);
-         else
-            clear_person(&setup1, i);
+         int q = 0;
+
+         /* We allow the designators "centers" and "ends" while in a 1x8, which
+            would otherwise not be allowed.  The reason we don't allow it in
+            general is that people would carelessly say "centers kickoff" in a 1x8
+            when they should realy say "each 1x4, centers kickoff".  But we assume
+            that they will not misuse the term here. */
+
+         if (ss->kind == s1x8 && current_selector == selector_centers) {
+            if (i&2) q = 1;
+         }
+         else if (ss->kind == s1x8 && current_selector == selector_ends) {
+            if (!(i&2)) q = 1;
+         }
+         else if (selectp(ss, i))
+            q = 1;
+
+         clear_person(&the_setups[q], i);
       }
    }
-   
+
    current_selector = saved_selector;
-   
-   normalize_setup(&setup1, normalize_before_isolated_call);
-   normalize_setup(&setup2, normalize_before_isolated_call);
-   setup1.cmd = ss->cmd;
-   setup1.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
 
-   move(&setup1, FALSE, &res1);
-   
-   if (others) {     /* This is "own the <anyone>". */
-      setup2.cmd = ss->cmd;
-      setup2.cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      setup2.cmd.parseptr = parseptr->subsidiary_root;
-      move(&setup2, FALSE, result);
+   normalize_setup(&the_setups[0], normalize_before_isolated_call);
+   normalize_setup(&the_setups[1], normalize_before_isolated_call);
 
-      if ((res1.result_flags ^ result->result_flags) & RESULTFLAG__DID_LAST_PART)
-         fail("Two calls must use the same number of fractions.");
-   
-      result->result_flags |= res1.result_flags;
-      merge_setups(&res1, merge_strict_matrix, result);
+   /* Iterate 1 or 2 times, depending on whether the "other" people do a call. */
+
+   for (setupcount=0; setupcount<=others; setupcount++) {
+      the_setups[setupcount].cmd = ss->cmd;
+      the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+      if (setupcount == 1) the_setups[setupcount].cmd.parseptr = parseptr->subsidiary_root;
+
+      if (indicator >= 4) {
+         Const fixer *fixp;
+         int lilcount;
+         int numsetups;
+         setup lilsetup[4], lilresult[4];
+
+         /* It will be helpful to have a mask of where the live people are. */
+      
+         for (i=0, j=1, livemask = 0; i<=setup_limits[the_setups[setupcount].kind]; i++, j<<=1) {
+            if (the_setups[setupcount].people[i].id1) livemask |= j;
+         }
+
+         /* A few operations are independent of whether we said "disconnected",
+            because the people are connected anyway. */
+
+         if (the_setups[setupcount].kind == s1x8 && livemask == 0xCC)
+            fixp = &f1x8ctr;
+         else if (the_setups[setupcount].kind == s_bone && livemask == 0xCC)
+            fixp = &fbonectr;
+         else if (the_setups[setupcount].kind == s_rigger && livemask == 0x33)
+            fixp = &frigctr;
+         else if (the_setups[setupcount].kind == s2x4 && livemask == 0x66)
+            fixp = &f2x4ctr;
+         else if (indicator >= 6) {
+            /* Search for "disconnected" stuff. */
+            if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)
+               fixp = &f1x8aad;
+            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x55)
+               fixp = &foo55d;
+            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x99)
+               fixp = &foo99d;
+            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x66)
+               fixp = &foo66d;
+            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x33)
+               fixp = &f1x8endd;
+            else if (the_setups[setupcount].kind == s_bone && livemask == 0x33)
+               fixp = &fboneendd;
+            else if (the_setups[setupcount].kind == s2x4 && livemask == 0xAA)
+               fixp = &fppaad;
+            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x55)
+               fixp = &fpp55d;
+            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x99)
+               fixp = &f2x4endd;
+            else if (the_setups[setupcount].kind == s_ptpd && livemask == 0xAA)
+               fixp = &foozzd;
+            else
+               fail("Can't do this with these people designated.");
+         }
+         else {
+            /* Search for "so-and-so only" stuff. */
+            if (livemask == 0) {
+               /* Check for special case of no one. */
+               the_results[setupcount].kind = nothing;
+               the_results[setupcount].result_flags = 0;
+               continue;
+            }
+            else if (livemask == ((1 << (setup_limits[the_setups[setupcount].kind]+1)) - 1)) {
+               /* And special case of everyone. */
+               move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
+               continue;
+            }
+            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x33)
+               fixp = &foo33;
+            else if (the_setups[setupcount].kind == s2x4 && livemask == 0xCC)
+               fixp = &foocc;
+            else if (the_setups[setupcount].kind == s2x4 && livemask == 0x99)
+               fixp = &f2x4endo;
+            else if (the_setups[setupcount].kind == s1x8 && livemask == 0xAA)
+               fixp = &f1x8aa;
+            else if (the_setups[setupcount].kind == s1x8 && livemask == 0x33)
+               fixp = &f1x8endo;
+            else if (the_setups[setupcount].kind == s_bone && livemask == 0x33)
+               fixp = &fboneendo;
+            else if (the_setups[setupcount].kind == s_ptpd && livemask == 0xAA)
+               fixp = &foozz;
+            else
+               fail("Can't do this with these people designated.");
+         }
+
+         numsetups = fixp->numsetups;
+
+         for (lilcount=0; lilcount<numsetups; lilcount++) {
+            lilsetup[lilcount].cmd = the_setups[setupcount].cmd;
+            lilsetup[lilcount].kind = fixp->ink;
+            lilsetup[lilcount].rotation = 0;
+            for (k=0; k<=setup_limits[fixp->ink]; k++)
+               (void) copy_rot(&lilsetup[lilcount], k, &the_setups[setupcount], fixp->nonrot[lilcount][k], 011*((-fixp->rot) & 3));
+            move(&lilsetup[lilcount], FALSE, &lilresult[lilcount]);
+         }
+
+         if (fix_n_results(numsetups, lilresult)) goto lose;
+
+         clear_people(&the_results[setupcount]);
+         the_results[setupcount].result_flags = get_multiple_parallel_resultflags(lilresult, numsetups);
+
+         if (lilresult[0].rotation != 0) {
+            the_results[setupcount].kind = fixp->outk;
+            the_results[setupcount].rotation = 0;
+
+            if (lilresult[0].kind != fixp->ink) goto lose;
+
+            if (fixp->next1x2rot) {
+               fixp = fixp->next1x2rot;
+               the_results[setupcount].kind = fixp->outk;
+
+               if (fixp->rot == 0) {
+                  lilresult[0].rotation += 2;
+                  lilresult[1].rotation += 2;
+                  canonicalize_rotation(&lilresult[0]);
+                  canonicalize_rotation(&lilresult[1]);
+               }
+
+               for (lilcount=0; lilcount<numsetups; lilcount++) {
+                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][0], &lilresult[lilcount], 0, 011*fixp->rot);
+                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][1], &lilresult[lilcount], 1, 011*fixp->rot);
+               }
+            }
+            else {
+               if (fixp->yesrot[0][0] < 0) fail("Can't do this call with these people.");
+               the_results[setupcount].rotation++;
+               for (lilcount=0; lilcount<numsetups; lilcount++) {
+                  (void) copy_rot(&the_results[setupcount], fixp->yesrot[lilcount][0], &lilresult[lilcount], 0, 011*fixp->rot);
+                  (void) copy_rot(&the_results[setupcount], fixp->yesrot[lilcount][1], &lilresult[lilcount], 1, 011*fixp->rot);
+               }
+            }
+         }                                                
+         else {
+            if (lilresult[0].kind == s_1x2)
+               fixp = fixp->next1x2;
+            else if (lilresult[0].kind == s1x4)
+               fixp = fixp->next1x4;
+            else if (lilresult[0].kind == s2x2)
+               fixp = fixp->next2x2;
+            else
+               fixp = 0;    /* Raise an error. */
+
+            if (!fixp) goto lose;
+
+            the_results[setupcount].kind = fixp->outk;
+            the_results[setupcount].rotation = 0;
+
+            for (lilcount=0; lilcount<numsetups; lilcount++) {
+               for (k=0; k<=setup_limits[fixp->ink]; k++)
+                  (void) copy_rot(&the_results[setupcount], fixp->nonrot[lilcount][k], &lilresult[lilcount], k, 011*fixp->rot);
+            }
+         }
+
+         reinstate_rotation(&the_setups[setupcount], &the_results[setupcount]);
+      }
+      else
+         move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
    }
-   else {            /* This is "<anyone> do your part". */
-      *result = setup2;
-      result->result_flags = res1.result_flags;
-      merge_setups(&res1, merge_c1_phantom, result);
+
+   if (!others) {      /* The non-designees did nothing. */
+      the_results[1] = the_setups[1];
+       /* Give the people who didn't move the same result flags as those who did.
+         This is important for the "did last part" check. */
+      the_results[1].result_flags = the_results[0].result_flags;
    }
+
+   *result = the_results[1];
+   result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
+
+   /* For "own the <anyone>, we use strict matrix spots for the merge.
+      Otherwise, we allow a little breathing. */
+
+   merge_setups(
+      &the_results[0],
+      indicator == 2 ? merge_strict_matrix : merge_c1_phantom,
+      result);
+
+   return;
+
+   lose: fail("Can't do this call with these people.");
 }

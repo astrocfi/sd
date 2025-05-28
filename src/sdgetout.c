@@ -151,7 +151,7 @@ Private resolve_tester test_thar_slc_rg = {0173, 0102, 0207, 0167, 0102, 0076, l
 Private resolve_tester test_thar_scl_la = {0167, 0676, 0207, 0173, 0676, 0702, l_mainstream,      resolve_slipclutch_la, 6};    /* slip-the-clutch-LA from thar. */
 Private resolve_tester test_thar_pr     = {0173, 0700, 0207, 0167, 0700, 0700, l_mainstream,      resolve_prom, 6};             /* promenade from thar. */
 Private resolve_tester test_thar_revpr  = {0167, 0100, 0207, 0173, 0100, 0100, l_mainstream,      resolve_revprom, 5};          /* reverse promenade from thar. */
-Private resolve_tester test_2x4_circle  = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_circle, 7};           /* "circle left/right" from pseudo-squared-set. */
+Private resolve_tester test_2x4_circle  = {0173, 0671, 0207, 0167, 0711, 0671, l_mainstream,      resolve_circle, 7};           /* "circle left/right" from pseudo or real squared-set. */
 Private resolve_tester test_sglfile     = {0202, 0700, 0200, 0176, 0700, 0700, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from L columns */
 Private resolve_tester test_revsglfile  = {0176, 0700, 0200, 0202, 0700, 0700, l_mainstream,      resolve_revsglfileprom, 7};   /* reverse single file promenade from R columns */
 Private resolve_tester test_sglfilex    = {0207, 0705, 0173, 0207, 0671, 0711, l_mainstream,      resolve_sglfileprom, 7};      /* single file promenade from T-bone */
@@ -166,12 +166,14 @@ Private resolve_tester test_wv_crcrg    = {0702, 0502, 0500, 0676, 0302, 0476, l
 Private resolve_tester test_wv_xbyrg    = {0276, 0076, 0100, 0302, 0676, 0102, cross_by_level,    resolve_xby_rlg, 3};          /* cross-by-RLG from waves. */
 Private resolve_tester test_2fl_prom    = {0300, 0100, 0102, 0300, 0700, 0100, l_mainstream,      resolve_prom, 7};             /* promenade from 2FL. */
 Private resolve_tester test_2fl_revprom = {0100, 0700, 0276, 0100, 0100, 0700, l_mainstream,      resolve_revprom, 6};          /* reverse promenade from 2FL. */
-Private resolve_tester test_8ch_rg      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_rlg, 3};              /* RLG from 8-chain. */
+Private resolve_tester test_8ch_rg      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_rlg, 3};              /* RLG from 8-chain or squared set. */
+Private resolve_tester test_v44_rg      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from vertical 8-chain-squared set. */
 Private resolve_tester test_8ch_pthrg   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_rlg, 2};          /* pass-thru-RLG from 8-chain. */
 Private resolve_tester test_tby_rg      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_rlg, 3};              /* RLG from trade-by. */
 Private resolve_tester test_tby_tbyrg   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_rlg, 4};          /* trade-by-RLG from trade-by. */
 Private resolve_tester test_tbone_rg    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_rlg, 3};              /* RLG from T-bone setup, ends facing. */
-Private resolve_tester test_8ch_la      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_la, 7};               /* LA from 8-chain. */
+Private resolve_tester test_8ch_la      = {0202, 0702, 0200, 0176, 0702, 0676, l_mainstream,      resolve_la, 7};               /* LA from 8-chain or squared set. */
+Private resolve_tester test_v44_la      = {0200, 0676, 0202, 0200, 0702, 0702, l_mainstream,      resolve_la, 7};               /* LA from vertical 8-chain-squared set. */
 Private resolve_tester test_8ch_pthla   = {0202, 0102, 0200, 0176, 0102, 0076, l_mainstream,      resolve_pth_la, 6};           /* pass-thru-LA from 8-chain. */
 Private resolve_tester test_tby_la      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_la, 7};               /* LA from trade-by. */
 Private resolve_tester test_tby_tbyla   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_la, 0};           /* trade-by-LA from trade-by. */
@@ -287,6 +289,42 @@ extern resolve_indicator resolve_p(setup *s)
                break;
          }
          break;
+      case s4x4:
+         switch (s->people[5].id1 & 0177) {
+            case 0001:
+               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
+                  case 0676: testptr = &test_8ch_rg; goto check_me;
+               }
+               break;
+            case 0101:
+               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
+                  case 0676: testptr = &test_8ch_la; goto check_me;
+               }
+               break;
+            case 0010:
+               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
+                  case 0676: testptr = &test_v44_rg; goto check_me;
+                  case 0705: testptr = &test_2x4_circle; goto check_me;
+               }
+               break;
+            case 0110:
+               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
+                  case 0676: testptr = &test_v44_la; goto check_me;
+                  case 0705: testptr = &test_2x4_circle; goto check_me;
+               }
+               break;
+            case 0103:
+               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
+                  case 0673: testptr = &test_tbone_rg; goto check_me;
+               }
+               break;
+            case 0003:
+               switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
+                  case 0673: testptr = &test_tbone_la; goto check_me;
+               }
+               break;
+         }
+         break;
       case s_crosswave: case s_thar:
          /* This makes use of the fact that the person numbering
             in crossed lines and thars is identical. */
@@ -326,12 +364,21 @@ extern resolve_indicator resolve_p(setup *s)
 
    check_me:
 
-   if (  ((s->people[3].id1 - s->people[5].id1) & 0777) == testptr->d35 &&
+   if (((s->kind == s4x4 &&
+         ((s->people[1].id1  - s->people[5].id1)  & 0777) == testptr->d35 &&
+         ((s->people[1].id1  - s->people[14].id1) & 0777) == testptr->d32 &&
+         ((s->people[13].id1 - s->people[1].id1)  & 0777) == testptr->d13 &&
+         ((s->people[9].id1  - s->people[13].id1) & 0777) == testptr->d71 &&
+         ((s->people[13].id1 - s->people[10].id1) & 0777) == testptr->d10 &&
+         ((s->people[9].id1  - s->people[6].id1)  & 0777) == testptr->d76)
+                  ||
+        (((s->people[3].id1 - s->people[5].id1) & 0777) == testptr->d35 &&
          ((s->people[3].id1 - s->people[2].id1) & 0777) == testptr->d32 &&
          ((s->people[1].id1 - s->people[3].id1) & 0777) == testptr->d13 &&
          ((s->people[7].id1 - s->people[1].id1) & 0777) == testptr->d71 &&
          ((s->people[1].id1 - s->people[0].id1) & 0777) == testptr->d10 &&
-         ((s->people[7].id1 - s->people[6].id1) & 0777) == testptr->d76 &&
+         ((s->people[7].id1 - s->people[6].id1) & 0777) == testptr->d76))
+                  &&
          calling_level >= testptr->level_needed) {
       k.kind = testptr->k;
       k.distance = ((s->rotation << 1) + (s->people[5].id1 >> 6) + testptr->distance) & 7;
@@ -395,23 +442,32 @@ extern void write_resolve_text(void)
 
    if (r.kind == resolve_circle) {
       if ((r.distance & 7) == 0) {
+         if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+            writestuff("approximately ");
          writestuff("at home");
       }
       else {
          writestuff("circle left ");
+         if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+            writestuff("approximately ");
          writestuff(resolve_distances[8 - (r.distance & 7)]);
          writestuff(" or right ");
+         if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+            writestuff("approximately ");
          writestuff(resolve_distances[r.distance & 7]);
       }
    }
    else {
       writestuff(resolve_table[r.kind].name);
 
+      writestuff("  (");
+      if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         writestuff("approximately ");
+
       if ((r.distance & 7) == 0) {
-         writestuff("  (At home)");
+         writestuff("at home)");
       }
       else {
-         writestuff("  (");
          if (  r.kind == resolve_revprom ||
                r.kind == resolve_revsglfileprom)
             writestuff(resolve_distances[8 - (r.distance & 7)]);
@@ -443,7 +499,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    long_boolean retval;
    int i, j;
    setup *ns;
-   int bad_warnings;
+   warning_info bad_warnings;
    real_jmp_buf my_longjmp_buffer;
 
    history_insertion_point = huge_history_ptr;
@@ -551,12 +607,14 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    toplevelmove();
 
    /* We don't like certain warnings either. */
-   bad_warnings = history[history_ptr+1].warnings.bits[0] & Warnings_That_Preclude_Searching;
 
-   if (bad_warnings) {
+   bad_warnings.bits[0] = history[history_ptr+1].warnings.bits[0] & no_search_warnings.bits[0];
+   bad_warnings.bits[1] = history[history_ptr+1].warnings.bits[1] & no_search_warnings.bits[1];
+
+   if (bad_warnings.bits[0] | bad_warnings.bits[1]) {
       /* But if "allow all concepts" was given, and that's the only bad warning,
          we let it pass. */
-      if (!allowing_all_concepts || bad_warnings != (1<<warn__bad_concept_level))
+      if (!allowing_all_concepts || bad_warnings.bits[0] != (1 << ((int) warn__bad_concept_level)) || bad_warnings.bits[1] != 0)
          goto try_again;
    }
    

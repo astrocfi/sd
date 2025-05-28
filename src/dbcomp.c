@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* dbcomp.c */
 
@@ -245,6 +245,8 @@ char *sstab[] = {
    "star",
    "trngl",
    "ptrngl",
+   "trngl4",
+   "ptrngl4",
    "bone6",
    "pbone6",
    "short6",
@@ -311,6 +313,7 @@ char *estab[] = {
    "dmd",
    "star",
    "trngl",
+   "trngl4",
    "bone6",
    "short6",
    "qtag",
@@ -397,6 +400,11 @@ char *qualtab[] = {
    "true_Z",
    "ctrwv_end2fl",
    "ctr2fl_endwv",
+   "n_is_0",
+   "n_is_1",
+   "n_is_2",
+   "n_is_3",
+   "n_is_4",
    ""};
 
 /* This table is keyed to "call_restriction". */
@@ -410,6 +418,7 @@ char *crtab[] = {
    "2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
+   "leads_only",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
@@ -480,6 +489,8 @@ char *flagtab1[] = {
    "need_direction",       /* This actually never appears in the text -- it is automatically added. */
    "left_means_touch_or_check",
    "can_be_fan_or_yoyo",
+   "no_cutting_through",
+   "no_elongation_allowed",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -1016,29 +1027,56 @@ static void write_callarray(int num, int doing_matrix)
       else if (tok_kind == tok_number && tok_value == 0)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
-         while (letcount-p >= 2) {
+         int repetition = 0;
+
+         for (; letcount-p >= 2; p++) {
             switch (tok_str[p]) {
                case 'Z': case 'z':
                   if (stab == stb_none) stab = stb_z;
                   else errexit("Improper callarray specifier");
                   break;
                case 'A': case 'a':
-                  if (stab == stb_none) stab = stb_a;
-                  else if (stab == stb_c) stab = stb_ca;
-                  else errexit("Improper callarray specifier");
+                  switch (stab) {
+                     case stb_none: stab = stb_a; break;
+                     case stb_c: stab = stb_ca; break;
+                     case stb_a: stab = stb_aa; break;
+                     case stb_aa: repetition++; break;
+                     case stb_cc:
+                        if (repetition == 0)
+                           stab = stb_cca;
+                        else if (repetition == 1)
+                           { stab = stb_ccca; repetition = 0; }
+                        else if (repetition == 2)
+                           { stab = stb_cccca; repetition = 0; }
+                        break;
+                     default: errexit("Improper callarray specifier");
+                  }
                   break;
                case 'C': case 'c':
-                  if (stab == stb_none) stab = stb_c;
-                  else if (stab == stb_a) stab = stb_ac;
-                  else errexit("Improper callarray specifier");
+                  switch (stab) {
+                     case stb_none: stab = stb_c; break;
+                     case stb_a: stab = stb_ac; break;
+                     case stb_c: stab = stb_cc; break;
+                     case stb_cc: repetition++; break;
+                     case stb_aa:
+                        if (repetition == 0)
+                           stab = stb_aac;
+                        else if (repetition == 1)
+                           { stab = stb_aaac; repetition = 0; }
+                        else if (repetition == 2)
+                           { stab = stb_aaaac; repetition = 0; }
+                        break;
+                     default: errexit("Improper callarray specifier");
+                  }
                   break;
                default:
                   goto stability_done;
             }
-            p++;
          }
 
          stability_done:
+
+         if (repetition != 0) errexit("Improper callarray specifier");
 
          if (letcount-p == 2) {
             switch (tok_str[p]) {

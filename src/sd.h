@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* We would like to not need to customize things for different "dialects" of
    ANSI C, because we would like to think that there are no "dialects".  But, alas,
@@ -249,7 +249,9 @@ typedef struct {
    peel and trail" without giving the explicit "triangle" concept again.  This
    makes it possible to say things like "tandem-based triangles peel and trail".
 
-   CMD_MISC__FRACTIONALIZE_MASK is a 9 bit field that is nonzero when some form
+   CMD_MISC__DO_AS_COUPLES means the obvious thing.
+
+   CMD_FRAC__FRACTIONALIZE_MASK is a 9 bit field that is nonzero when some form
    of fractionalization control is in use.  These bits are set up by concepts like
    "random" and "fractional", and are used in sdmoves.c to control sequentially
    defined calls.  See the comments there for details.
@@ -280,6 +282,11 @@ typedef struct {
 
    CMD_MISC__ASSUME_WAVES means that the "assume waves" concept has been given.
 
+   CMD_MISC__EXPLICIT_MIRROR means that the setup has been mirrored by the "mirror"
+   concept, separately from anything done by "left" or "reverse".  Such a mirroring
+   does NOT cause the "take right hands" stuff to compensate by going to left hands,
+   so it has the effect of making the people physically take left hands.
+
    CMD_MISC__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
    so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
    a parallelogram, "2x6 matrix 1x2 checkmate" is legal -- the 2x6 gets divided naturally
@@ -295,7 +302,9 @@ typedef struct {
    makes "ends detour" work.
 */
 
-/* We are getting dangerously low on bits!!!  200 and 100 (and 0x04000000) are the only spares we have. */
+/* We are getting dangerously low on bits!!!  In fact, they are all gone!!!! */
+#define CMD_MISC__EXPLICIT_MIRROR    0x00000100
+#define CMD_MISC__MATRIX_CONCEPT     0x00000200
 #define CMD_MISC__ASSUME_WAVES       0x00000400
 #define CMD_MISC__EXPLICIT_MATRIX    0x00000800
 #define CMD_MISC__NO_EXPAND_MATRIX   0x00001000
@@ -303,9 +312,15 @@ typedef struct {
 #define CMD_MISC__OFFSET_Z           0x00004000
 #define CMD_MISC__SAID_SPLIT         0x00008000
 #define CMD_MISC__SAID_TRIANGLE      0x00010000
-/* This one is a 9 bit field -- FRACTIONALIZE_BIT tells where its low bit lies. */
-#define CMD_MISC__FRACTIONALIZE_MASK 0x03FE0000
-#define CMD_MISC__FRACTIONALIZE_BIT  0x00020000
+#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00020000
+#define CMD_MISC__DO_AS_COUPLES      0x00040000
+#define CMD_MISC__RESTRAIN_CRAZINESS 0x00080000
+/* available:                        0x00100000
+                                     0x00200000
+                                     0x00400000
+                                     0x00800000
+                                     0x01000000
+                                     0x02000000 */
 #define CMD_MISC__MUST_SPLIT         0x04000000
 #define CMD_MISC__CENTRAL            0x08000000
 #define CMD_MISC__NO_CHK_ELONG       0x10000000
@@ -313,23 +328,17 @@ typedef struct {
 #define CMD_MISC__NO_STEP_TO_WAVE    0x40000000
 #define CMD_MISC__DOING_ENDS         0x80000000
 
+/* Flags that reside in the "cmd_frac_flags" word of a setup BEFORE a call is executed. */
+
+/* This is a 9 bit field -- FRACTIONALIZE_BIT tells where its low bit lies. */
+#define CMD_FRAC__FRACTIONALIZE_MASK 0x3FE00000
+#define CMD_FRAC__FRACTIONALIZE_BIT  0x00200000
+
+
+
 /* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
 
-   RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
-   starting setup (typically a line) and yields a 2x3 result setup.  Two of those
-   result spots will be phantoms, of course.  When recombining a divided setup in
-   which such a call was executed, if the recombination wuold yield a 2x6, and if
-   the center 4 spots would be empty, this flag directs divided_setup_move to
-   collapse the setup to a 2x4.  This is what makes calls like "pair the line"
-   and "step and slide" behave correctly from parallel lines and from a grand line.
-
-   RESULTFLAG__DID_LAST_PART means that, when a sequentially defined call was executed
-   with the CMD_MISC__FRACTIONALIZE_MASK nonzero, so that just one part was done,
-   that part was the last part.  Hence, if we are doing a call with some "piecewise"
-   or "random" concept, we do that parts of the call one at a time, with appropriate
-   concepts on each part, until it comes back with this flag set.
-
-   RESULTFLAG__ELONGATE_MASK is a 2 bit field that tells, for a 2x2 setup after
+   The low two bits tell, for a 2x2 setup after
    having a call executed, how that 2x2 is elongated in the east-west or
    north-south direction.  Since 2x2's are always totally canonical, the
    interpretation of the elongation direction is always absolute.  A 1 in this
@@ -344,20 +353,52 @@ typedef struct {
    wave, for example.)  Furthermore, the bits will be overridden if the
    "concentric" or "checkpoint" concepts were used, or if the ends did this
    as part of a concentrically defined call for which some forcing modifier
-   such as "force_columns" was used.
+   such as "force_columns" was used.  Note that these two bits are in the same
+   format as the "cmd.prior_elongation" field of a setup before the call is
+   executed.  In many case, that field can be simply copied into the "result_flags"
+   field.
+
+   RESULTFLAG__DID_LAST_PART means that, when a sequentially defined call was executed
+   with the CMD_FRAC__FRACTIONALIZE_MASK nonzero, so that just one part was done,
+   that part was the last part.  Hence, if we are doing a call with some "piecewise"
+   or "random" concept, we do that parts of the call one at a time, with appropriate
+   concepts on each part, until it comes back with this flag set.
+
+   RESULTFLAG__EXPAND_TO_2X3 means that a call was executed that takes a four person
+   starting setup (typically a line) and yields a 2x3 result setup.  Two of those
+   result spots will be phantoms, of course.  When recombining a divided setup in
+   which such a call was executed, if the recombination wuold yield a 2x6, and if
+   the center 4 spots would be empty, this flag directs divided_setup_move to
+   collapse the setup to a 2x4.  This is what makes calls like "pair the line"
+   and "step and slide" behave correctly from parallel lines and from a grand line.
 
    RESULTFLAG__NEED_DIAMOND means that a call has been executed with the "magic" or
    "interlocked" modifier, and it really should be changed to the "magic diamond"
    concept.  Otherwise, we might end up saying "magic diamond single wheel" when
    we should have said "magic diamond, diamond single wheel".
+
+   RESULTFLAG__SPLIT_AXIS_MASK has info saying whether the call was split
+   vertically (2) or horizontally (1) in "absolute space".  We can't say for
+   sure whether the orientation is absolute, since a client may have stripped
+   out rotation info.  What we mean is that it is relative to the incoming setup
+   including the effect of its rotation field.  So, if the incoming setup was
+   a 2x4 with rotation=0, that is, horizontally oriented in "absolute space",
+   1 means it was done in 2x2's (split horizontally) and 2 means it was done
+   in 1x4's (split vertically).  If the incoming setup was a 2x4 with
+   rotation=1, that is, vertically oriented in "absolute space", 1 means it
+   was done in 1x4's (split horizontally) and 2 means it was done in 2x2's
+   (split vertically).  3 means that the call was a 1 or 2 person call, that
+   could be split either way, so we have no information.
 */
 
-#define RESULTFLAG__EXPAND_TO_2X3   0x00000002
+/* The two low bits are used for result elongation, so we start with 0x00000004. */
 #define RESULTFLAG__DID_LAST_PART   0x00000004
-/* This one is a 2 bit field -- ELONGATE_BIT tells where its low bit lies. */
-#define RESULTFLAG__ELONGATE_MASK   0x00000018
-#define RESULTFLAG__ELONGATE_BIT    0x00000008
+#define RESULTFLAG__EXPAND_TO_2X3   0x00000008
 #define RESULTFLAG__NEED_DIAMOND    0x00000020
+#define RESULTFLAG__IMPRECISE_ROT   0x00000040
+/* This is a two-bit field. */
+#define RESULTFLAG__SPLIT_AXIS_MASK 0x00000180
+#define RESULTFLAG__SPLIT_AXIS_BIT  0x00000080
 
 /* It should be noted that the CMD_MISC__??? and RESULTFLAG__XXX bits have
    nothing to do with each other.  It is not intended that
@@ -366,7 +407,7 @@ typedef struct {
    beginning of each call, and accumulate stuff as the call goes deeper into
    recursion.  The RESULTFLAG__XXX bits should, in general, be the OR of the
    bits of the components of a compound call, though this may not be so for
-   RESULTFLAG__ELONGATE_MASK. */
+   the elongation bits at the bottom of the word. */
 
 
 
@@ -465,19 +506,9 @@ typedef struct {
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
 typedef enum {
 
-/* These next few are not concepts.  Their appearance marks
-   the final end of the concept list.  It has a selector and number
-   specifier following, and then the call itself. */
+/* These next few are not concepts.  Their appearance marks the end of a parse tree. */
 
    concept_another_call_next_mod,         /* calla modified by callb */
-   concept_another_call_next_modreact,    /* calla, which is a "scoot reaction" type, modified by callb */
-   concept_another_call_next_modtag,      /* calla, which is a "tag your neighbor" type, modified by callb */
-   concept_another_call_next_2nd,         /* these are like the above 3, but use the "secondary" substitution point */
-   concept_another_call_next_2ndreact,
-   concept_another_call_next_2ndtag,
-   concept_another_call_next_force,       /* calla, old subcall, changed to callb */
-   concept_another_call_next_plain,       /* like force, but old call won't appear in transcript, and doesn't
-                                             require forcing modifications. */
    concept_mod_declined,                  /* user was queried about modification, and said no. */
    marker_end_of_list,                    /* normal case */
 
@@ -536,7 +567,6 @@ typedef enum {
    concept_do_phantom_1x6,
    concept_do_phantom_1x8,
    concept_do_phantom_2x4,
-   concept_do_phantom_endtoend,
    concept_do_phantom_2x3,
    concept_divided_2x4,
    concept_divided_2x3,
@@ -547,13 +577,11 @@ typedef enum {
    concept_double_diagonal,
    concept_parallelogram,
    concept_triple_lines,
-   concept_triple_lines_endtoend,
-   concept_triple_lines_together,
-   concept_triple_lines_tog_end2end,
+   concept_triple_lines_tog,
+   concept_triple_lines_tog_std,
    concept_quad_lines,
-   concept_quad_lines_endtoend,
-   concept_quad_lines_together,
-   concept_quad_lines_tog_end2end,
+   concept_quad_lines_tog,
+   concept_quad_lines_tog_std,
    concept_quad_boxes,
    concept_quad_boxes_together,
    concept_triple_boxes,
@@ -569,8 +597,10 @@ typedef enum {
    concept_old_stretch,
    concept_new_stretch,
    concept_assume_waves,
+   concept_mirror,
    concept_central,
    concept_crazy,
+   concept_frac_crazy,
    concept_fan_or_yoyo,
    concept_c1_phantom,
    concept_grand_working,
@@ -582,6 +612,7 @@ typedef enum {
    concept_frac_stable,
    concept_so_and_so_frac_stable,
    concept_standard,
+   concept_matrix,
    concept_double_offset,
    concept_checkpoint,
    concept_on_your_own,
@@ -590,6 +621,7 @@ typedef enum {
    concept_centers_and_ends,
    concept_twice,
    concept_sequential,
+   concept_special_sequential,
    concept_meta,
    concept_so_and_so_begin,
    concept_nth_part,
@@ -597,8 +629,7 @@ typedef enum {
    concept_interlace,
    concept_fractional,
    concept_rigger,
-   concept_slider,
-   concept_callrigger
+   concept_diagnose
 } concept_kind;
 
 typedef struct {
@@ -636,7 +667,7 @@ typedef enum {
    selector_ends,
    selector_leads,
    selector_trailers,
-   selector_beaux,
+   selector_beaus,
    selector_belles,
    selector_center2,
    selector_center6,
@@ -703,6 +734,7 @@ typedef struct {
                                     FINAL__??? bits contain other miscellaneous final concepts. */
    unsigned int cmd_misc_flags;  /* Other miscellaneous info controlling the execution of the call,
                                     with names like CMD_MISC__???. */
+   unsigned int cmd_frac_flags;  /* Fractionalization info controlling the execution of the call. */
 /*
    This field tells, for a 2x2 setup prior to having a call executed, how that
    2x2 is elongated (due to these people being the outsides) in the east-west
@@ -716,6 +748,9 @@ typedef struct {
 } setup_command;
 
 
+/* Warning!  Do not rearrange these fields without good reason.  There are data
+   initializers instantiating these in sdinit.c (test_setup_???) and in sdtables.c
+   (startinfolist) that will need to be rewritten. */
 typedef struct {
    setup_kind kind;
    int rotation;
@@ -754,9 +789,8 @@ typedef enum {
    warn__none,
    warn__do_your_part,
    warn__tbonephantom,
-   warn__ends_work_to_spots,
    warn__awkward_centers,
-   warn__bad_concept_level,
+   warn__bad_concept_level,  /* This must be in 1st 32, because of some sleaziness in resolver. */
    warn__not_funny,
    warn__hard_funny,
    warn__unusual,
@@ -782,8 +816,8 @@ typedef enum {
    warn__to_o_spots,
    warn__to_x_spots,
    warn__some_rear_back,
-   warn__not_tbone_person,  /* End of the first 31. */
-   warn__check_c1_phan,     /* Any below here can't be used in the aggregates below. */
+   warn__not_tbone_person,
+   warn__check_c1_phan,
    warn__check_dmd_qtag,
    warn__check_2x4,
    warn__check_pgram,
@@ -796,24 +830,14 @@ typedef enum {
    warn__split_to_2x3s,
    warn__split_to_1x8s,
    warn__split_to_1x6s,
+   warn__take_left_hands,
    warn__evil_interlocked,
-   warn__split_phan_in_pgram
+   warn__split_phan_in_pgram,
+   warn__bad_interlace_match,
+   warn__not_on_block_spots,
+   warn__did_not_interact
 } warning_index;
-
-/* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
-   mask that is checked against the first word in the warning struct.
-   It just isn't worth doing this the really right way. */
-#define Warnings_That_Preclude_Searching (1<<warn__do_your_part | 1<<warn__ends_work_to_spots | 1<<warn__awkward_centers | \
-                                          1<<warn__hard_funny   | 1<<warn__rear_back          | 1<<warn__awful_rear_back | \
-                                          1<<warn__excess_split | \
-                                          1<<warn__unusual      | 1<<warn__bad_concept_level  | 1<<warn__not_funny)
-
-/* BEWARE!!  The warning numbers in this set must all be <= 31.  This is a
-   mask that is cleared if a concentric call was done and the "suppress_elongation_warnings"
-   flag was on.  It just isn't worth doing this the really right way. */
-#define Warnings_About_Conc_elongation   (1<<warn__lineconc_perp | 1<<warn__dmdconc_perp    | 1<<warn__lineconc_par | \
-                                          1<<warn__dmdconc_par   | 1<<warn__xclineconc_perp | 1<<warn__xcdmdconc_perp)
-
+#define NUM_WARNINGS (((int) warn__did_not_interact)+1)
 
 /* BEWARE!!  This list must track the definition of "resolve_table" in sdgetout.c . */
 typedef enum {
@@ -952,7 +976,6 @@ typedef enum {
 #define FINAL__MUST_BE_TAG                INHERITSPARE_4
 #define FINAL__MUST_BE_SCOOT              INHERITSPARE_5
 #define FINAL__TRIANGLE                   INHERITSPARE_6
-#define FINAL__SPLIT_SEQ_DONE             INHERITSPARE_7
 
 typedef unsigned int final_set;
 
@@ -970,52 +993,67 @@ typedef unsigned int defmodset;
 
 typedef map_thing *map_hunk[][2];
 
-typedef struct {
-   setup_kind result_kind;
-   int xfactor;
-   veryshort xca[24];
-   veryshort yca[24];
-   veryshort diagram[64];
-} coordrec;
+
+/* These flags go into the "concept_prop" field of a "concept_table_item".
+
+   CONCPROP__SECOND_CALL means that the concept takes a second call, so a sublist must
+      be created, with a pointer to same just after the concept pointer.
+
+   CONCPROP__USE_SELECTOR means that the concept requires a selector, which must be
+      inserted into the concept list just after the concept pointer.
+
+   CONCPROP__NEED_4X4   mean that the concept requires the indicated setup, and, at
+   CONCPROP__NEED_2X8   the top level, the existing setup should be expanded as needed.
+   CONCPROP__NEED_2X6 
+   CONCPROP__NEED_4DMD
+   CONCPROP__NEED_BLOB
+   CONCPROP__NEED_4X6 
+
+   CONCPROP__SET_PHANTOMS means that phantoms are in use under this concept, so that,
+      when looking for tandems or couples, we shouldn't be disturbed if we
+      pair someone with a phantom.  It is what makes "split phantom lines tandem"
+      work, so that "split phantom lines phantom tandem" is unnecessary.
+
+   CONCPROP__NO_STEP means that stepping to a wave or rearing back from one is not
+      allowed under this concept.
+
+   CONCPROP__GET_MASK means that tbonetest & livemask need to be computed before executing the concept.
+
+   CONCPROP__STANDARD means that the concept can be "standard".
+
+   CONCPROP__USE_NUMBER         If a concept takes one number, only CONCPROP__USE_NUMBER is set.
+   CONCPROP__USE_TWO_NUMBERS    If it takes two numbers both bits are set.
+
+   CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
+      for transmission back to the client.  Normally this is off, and the split axis bits
+      will be cleared after execution of the concept.
+*/
 
 
-/* These flags go into the "concept_prop" field of a "concept_table_item". */
 
-/* This means that the concept takes a second call, so a sublist must
-   be created, with a pointer to same just after the concept pointer. */
-#define CONCPROP__SECOND_CALL     0x00000001
-/* This means that the concept requires a selector, which must be
-   inserted into the concept list just after the concept pointer. */
-#define CONCPROP__USE_SELECTOR    0x00000002
-/* These mean that the concept requires the indicated setup, and, at
-   the top level, the existing setup should be expanded as needed. */
-#define CONCPROP__NEED_4X4        0x00000004
-#define CONCPROP__NEED_2X8        0x00000008
-#define CONCPROP__NEED_2X6        0x00000010
-#define CONCPROP__NEED_4DMD       0x00000020
-#define CONCPROP__NEED_BLOB       0x00000040
-#define CONCPROP__NEED_4X6        0x00000080
-/* This means that phantoms are in use under this concept, so that,
-   when looking for tandems or couples, we shouldn't be disturbed if we
-   pair someone with a phantom.  It is what makes "split phantom lines tandem"
-   work, so that "split phantom lines phantom tandem" is unnecessary. */
-#define CONCPROP__SET_PHANTOMS    0x00000100
-/* This means that stepping to a wave or rearing back from one is not
-   allowed under this concept. */
-#define CONCPROP__NO_STEP         0x00000200
-/* This means that tbonetest & livemask need to be computed before executing the concept. */
-#define CONCPROP__GET_MASK        0x00000400
-/* This means that the concept can be "standard". */
-#define CONCPROP__STANDARD        0x00000800
-/* If a concept takes one number, only CONCPROP__USE_NUMBER is set.
-   If it takes two numbers both bits are set. */
-#define CONCPROP__USE_NUMBER      0x00001000
-#define CONCPROP__USE_TWO_NUMBERS 0x00002000
-#define CONCPROP__NEED_3DMD       0x00004000
-#define CONCPROP__NEED_1X12       0x00008000
-#define CONCPROP__NEED_3X4        0x00010000
-#define CONCPROP__NEED_1X16       0x00020000
-#define CONCPROP__MATRIX_OBLIVIOUS 0x00040000
+#define CONCPROP__SECOND_CALL      0x00000001
+#define CONCPROP__USE_SELECTOR     0x00000002
+#define CONCPROP__NEED_4X4         0x00000004
+#define CONCPROP__NEED_2X8         0x00000008
+#define CONCPROP__NEED_2X6         0x00000010
+#define CONCPROP__NEED_4DMD        0x00000020
+#define CONCPROP__NEED_BLOB        0x00000040
+#define CONCPROP__NEED_4X6         0x00000080
+#define CONCPROP__SET_PHANTOMS     0x00000100
+#define CONCPROP__NO_STEP          0x00000200
+#define CONCPROP__GET_MASK         0x00000400
+#define CONCPROP__STANDARD         0x00000800
+#define CONCPROP__USE_NUMBER       0x00001000
+#define CONCPROP__USE_TWO_NUMBERS  0x00002000
+#define CONCPROP__NEED_3DMD        0x00004000
+#define CONCPROP__NEED_1X12        0x00008000
+#define CONCPROP__NEED_3X4         0x00010000
+#define CONCPROP__NEED_1X16        0x00020000
+#define CONCPROP__NEED_4X4_1X16    0x00040000
+#define CONCPROP__NEED_3X4_1X12    0x00080000
+#define CONCPROP__MATRIX_OBLIVIOUS 0x00100000
+#define CONCPROP__PERMIT_MATRIX    0x00200000
+#define CONCPROP__SHOW_SPLIT       0x00400000
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1053,7 +1091,7 @@ typedef enum {
 } merge_action;
 
 typedef struct {
-   int bits[2];
+   unsigned int bits[2];
 } warning_info;
 
 typedef struct {           /* This record is one state in the evolving sequence. */
@@ -1126,6 +1164,49 @@ typedef struct {
    int full_list_size;
 } nice_setup_thing;
 
+typedef struct {
+   setup_kind result_kind;
+   int xfactor;
+   veryshort xca[24];
+   veryshort yca[24];
+   veryshort diagram[64];
+} coordrec;
+
+typedef struct {
+   int setup_limits;
+   /* These "coordrec" items have the fudged coordinates that are used for doing
+      press/truck calls.  For some setups, the coordinates of some people are
+      deliberately moved away from the obvious precise matrix spots so that
+      those people can't press or truck.  For example, the lateral spacing of
+      diamond points is not an integer.  If a diamond point does any truck or loop
+      call, he/she will not end up on the other diamond point spot (or any other
+      spot in the formation), so the call will not be legal.  This enforces our
+      view, not shared by all callers (Hi, Clark!) that the diamond points are NOT
+      as if the ends of lines of 3, and hence can NOT trade with each other by
+      doing a right loop 1. */
+   coordrec *setup_coords;
+   /* The above table is not suitable for performing mirror inversion because,
+      for example, the points of diamonds do not reflect onto each other.  This
+      table has unfudged coordinates, in which all the symmetries are observed.
+      This is the table that is used for mirror reversal.  Most of the items in
+      it are the same as those in the table above. */
+   coordrec *nice_setup_coords;
+   begin_kind keytab[2];
+   /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
+      the "height" of a qtag.  Everyone knows that the number must be 3, but it
+      is not really accepted that one can use that in instances where precision
+      is required.  That is, one should not make "matrix" calls depend on this
+      number.  Witness all the "diamond to quarter tag adjustment" stuff that
+      callers worry about, and the ongoing controversy about which way a quarter
+      tag setup is elongated, even though everyone knows that it is 4 wide and 3
+      deep, and that it is generally recognized, by the mathematically erudite,
+      that 4 is greater than 3. */
+   short int bounding_box[2];
+   /* This is true if the setup has 4-way symmetry.  Such setups will always be
+      canonicalized so that their rotation field will be zero. */
+   long_boolean four_way_symmetry;
+} setup_attr;
+
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
 
@@ -1162,6 +1243,7 @@ extern unsigned int collision_person2;                              /* in SDUTIL
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
 extern char *selector_names[];                                      /* in SDUTIL */
 extern char *direction_names[];                                     /* in SDUTIL */
+extern char *warning_strings[];                                     /* in SDUTIL */
 
 extern int global_tbonetest;                                        /* in SDCONCPT */
 extern int global_livemask;                                         /* in SDCONCPT */
@@ -1174,13 +1256,6 @@ extern concept_descriptor special_interlocked;                      /* in SDCTAB
 extern concept_descriptor mark_end_of_list;                         /* in SDCTABLE */
 extern concept_descriptor marker_decline;                           /* in SDCTABLE */
 extern concept_descriptor marker_concept_mod;                       /* in SDCTABLE */
-extern concept_descriptor marker_concept_modreact;                  /* in SDCTABLE */
-extern concept_descriptor marker_concept_modtag;                    /* in SDCTABLE */
-extern concept_descriptor marker_concept_force;                     /* in SDCTABLE */
-extern concept_descriptor marker_concept_plain;                     /* in SDCTABLE */
-extern concept_descriptor marker_concept_second;                    /* in SDCTABLE */
-extern concept_descriptor marker_concept_secondreact;               /* in SDCTABLE */
-extern concept_descriptor marker_concept_secondtag;                 /* in SDCTABLE */
 extern concept_descriptor marker_concept_comment;                   /* in SDCTABLE */
 extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTABLE */
 extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
@@ -1205,14 +1280,16 @@ extern char *concept_menu_strings[];                                /* in SDCTAB
 extern char *getout_strings[];                                      /* in SDTABLES */
 extern char *filename_strings[];                                    /* in SDTABLES */
 extern char *menu_names[];                                          /* in SDTABLES */
-extern begin_kind keytab[][2];                                      /* in SDTABLES */
-extern coordrec *setup_coords[];                                    /* in SDTABLES */
-extern coordrec *nice_setup_coords[];                               /* in SDTABLES */
+extern setup_attr setup_attrs[];                                    /* in SDTABLES */
 extern int setup_limits[];                                          /* in SDTABLES */
 extern int begin_sizes[];                                           /* in SDTABLES */
 extern startinfo startinfolist[];                                   /* in SDTABLES */
 extern map_thing map_b6_trngl;                                      /* in SDTABLES */
 extern map_thing map_s6_trngl;                                      /* in SDTABLES */
+extern map_thing map_bone_trngl4;                                   /* in SDTABLES */
+extern map_thing map_rig_trngl4;                                    /* in SDTABLES */
+extern map_thing map_s8_tgl4;                                       /* in SDTABLES */
+extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_2x2v;                                          /* in SDTABLES */
 extern map_thing map_2x4_magic;                                     /* in SDTABLES */
 extern map_thing map_qtg_magic;                                     /* in SDTABLES */
@@ -1259,8 +1336,6 @@ extern map_thing map_lh_s2x3_3;                                     /* in SDTABL
 extern map_thing map_lh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
-extern map_thing map_lf_s2x4_r;                                     /* in SDTABLES */
-extern map_thing map_rf_s2x4_r;                                     /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
 extern map_thing map_star_1x1;                                      /* in SDTABLES */
 extern map_thing map_qtag_f0;                                       /* in SDTABLES */
@@ -1292,9 +1367,12 @@ extern selector_kind selector_for_initialize;                       /* in SDMAIN
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 extern long_boolean resolver_is_unwieldy;                           /* in SDMAIN */
+extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern selector_kind current_selector;                              /* in SDMAIN */
 extern direction_kind current_direction;                            /* in SDMAIN */
 extern int current_number_fields;                                   /* in SDMAIN */
+extern warning_info no_search_warnings;                             /* in SDMAIN */
+extern warning_info conc_elong_warnings;                            /* in SDMAIN */
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
@@ -1455,12 +1533,9 @@ extern void initialize_getout_tables(void);
 /* In SDBASIC */
 
 extern void mirror_this(setup *s);
-extern void do_stability(unsigned int *personp, unsigned int def_word, int turning);
+extern void do_stability(unsigned int *personp, stability stab, int turning);
 extern void basic_move(
    setup *ss,
-   parse_block *parseptr,
-   callspec_block *callspec,
-   final_set final_concepts,
    int tbonetest,
    long_boolean fudged,
    long_boolean mirror,
@@ -1468,8 +1543,20 @@ extern void basic_move(
 
 /* In SDMOVES */
 
-extern void reinstate_rotation(setup *ss, setup *result);
 extern void canonicalize_rotation(setup *result);
+extern void reinstate_rotation(setup *ss, setup *result);
+
+extern long_boolean divide_for_magic(
+   setup *ss,
+   unsigned int flags_to_use,
+   unsigned int flags_to_check,
+   setup *result);
+
+extern void do_call_in_series(
+   setup *sss,
+   long_boolean roll_transparent,
+   long_boolean normalize,
+   long_boolean qtfudged);
 
 extern void move(
    setup *ss,
@@ -1520,16 +1607,6 @@ extern void do_concept_rigger(
    parse_block *parseptr,
    setup *result);
 
-extern void do_concept_slider(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result);
-
-extern void do_concept_callrigger(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result);
-
 extern void triangle_move(
    setup *ss,
    parse_block *parseptr,
@@ -1567,11 +1644,12 @@ extern void concentric_move(
    defmodset modifiersout1,
    setup *result);
 
+extern unsigned int get_multiple_parallel_resultflags(setup outer_inners[], int number);
+
 extern void normalize_concentric(
    calldef_schema synthesizer,
    int center_arity,
-   setup inners[],
-   setup *outers,
+   setup outer_inners[],   /* outers in position 0, inners follow */
    int outer_elongation,
    setup *result);
 

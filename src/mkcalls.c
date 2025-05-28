@@ -73,6 +73,8 @@ int begin_sizes[] = {
    4,          /* b_star */
    6,          /* b_trngl */
    6,          /* b_ptrngl */
+   8,          /* b_trngl4 */
+   8,          /* b_ptrngl4 */
    6,          /* b_bone6 */
    6,          /* b_pbone6 */
    6,          /* b_short6 */

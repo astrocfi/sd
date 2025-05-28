@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 29. */
+    This is for version 31. */
 
 /* This defines the following functions:
    update_id_bits
@@ -224,12 +224,18 @@ extern void update_id_bits(setup *ss)
 
 
 Private expand_thing rear_wave_stuff = {{3, 0, 1, 2}, 4, nothing, s2x2, 0};
+Private expand_thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, nothing, s4x4, 0};
+Private expand_thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, 16, nothing, s_thar, 0};
 Private expand_thing rear_bone_stuff = {{0, 3, 2, 5, 4, 7, 6, 1}, 8, nothing, s2x4, 0};
 Private expand_thing rear_wing_stuff = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, nothing, s2x4, 0};
+Private expand_thing rear_tgl4a_stuff = {{2, 3, 0, 1}, 4, nothing, s2x2, 0};
+Private expand_thing rear_tgl4b_stuff = {{2, 3, 1, 0}, 4, nothing, s1x4, 1};
 Private expand_thing rear_c1a_stuff = {{0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1, 6, -1, 7, -1}, 16, nothing, s2x4, 0};
 Private expand_thing rear_c1b_stuff = {{-1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6}, 16, nothing, s2x4, 0};
 Private expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1, 4, -1, 5, -1}, 16, nothing, s2x4, 1};
 Private expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, nothing, s2x4, 1};
+Private expand_thing rear_c1e_stuff = {{3, -1, 1, -1, 7, -1, 5, -1, 11, -1, 9, -1, 15, -1, 13, -1}, 16, nothing, s_c1phan, 0};
+Private expand_thing rear_c1f_stuff = {{-1, 0, -1, 2, -1, 4, -1, 6, -1, 8, -1, 10, -1, 12, -1, 14}, 16, nothing, s_c1phan, 0};
 Private expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s_1x2, 1};
 Private expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, nothing, s2x4, 1};
 Private expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, nothing, s1x8, 0};
@@ -242,10 +248,16 @@ Private expand_thing rear_sqtag_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 0};
 Private full_expand_thing rear_wave_pair     = {warn__rear_back,       0, &rear_wave_stuff};
 Private full_expand_thing rear_bone_pair     = {warn__some_rear_back,  0, &rear_bone_stuff};
 Private full_expand_thing rear_wing_pair     = {warn__some_rear_back,  0, &rear_wing_stuff};
+Private full_expand_thing rear_thar_pair     = {warn__rear_back,       0, &rear_thar_stuff};
+Private full_expand_thing rear_ohh_pair      = {warn__rear_back,       0, &rear_ohh_stuff};
+Private full_expand_thing rear_trgl4a        = {warn__some_rear_back,  0, &rear_tgl4a_stuff};
+Private full_expand_thing rear_trgl4b        = {warn__awful_rear_back, 0, &rear_tgl4b_stuff};
 Private full_expand_thing rear_c1a_pair      = {warn__some_rear_back,  0, &rear_c1a_stuff};
 Private full_expand_thing rear_c1b_pair      = {warn__some_rear_back,  0, &rear_c1b_stuff};
 Private full_expand_thing rear_c1c_pair      = {warn__some_rear_back,  0, &rear_c1c_stuff};
 Private full_expand_thing rear_c1d_pair      = {warn__some_rear_back,  0, &rear_c1d_stuff};
+Private full_expand_thing rear_c1e_pair      = {warn__rear_back,       0, &rear_c1e_stuff};
+Private full_expand_thing rear_c1f_pair      = {warn__rear_back,       0, &rear_c1f_stuff};
 Private full_expand_thing rear_miniwave_pair = {warn__rear_back,       0, &rear_miniwave_stuff};
 Private full_expand_thing rear_2x4_pair      = {warn__rear_back,       0, &rear_2x4_stuff};
 Private full_expand_thing rear_col_pair      = {warn__awful_rear_back, 0, &rear_col_stuff};
@@ -266,6 +278,7 @@ Private expand_thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, nothing, s1x8
 Private expand_thing step_tby_stuff = {{5, 6, 7, 0, 1, 2, 3, 4}, 8, nothing, s_qtag, 1};
 Private expand_thing step_bone_stuff = {{1, 4, 7, 6, 5, 0, 3, 2}, 8, nothing, s1x8, 0};
 Private expand_thing step_rig_stuff = {{2, 7, 4, 5, 6, 3, 0, 1}, 8, nothing, s1x8, 0};
+Private expand_thing step_tgl4_stuff = {{2, 3, 0, 1}, 4, nothing, s1x4, 1};
 
 Private full_expand_thing step_1x8_pair      = {warn__none,       0, &step_1x8_stuff};
 Private full_expand_thing step_1x4_side_pair = {warn__none,       0, &step_1x4_side_stuff};
@@ -278,6 +291,7 @@ Private full_expand_thing step_tby_pair      = {warn__none,       0, &step_tby_s
 Private full_expand_thing step_1x2_pair      = {warn__none,       0, &step_1x2_stuff};
 Private full_expand_thing step_bone_pair     = {warn__some_touch, 0, &step_bone_stuff};
 Private full_expand_thing step_rig_pair      = {warn__some_touch, 0, &step_rig_stuff};
+Private full_expand_thing step_tgl4_pair     = {warn__some_touch, 0, &step_tgl4_stuff};
 
 
 
@@ -302,7 +316,8 @@ extern void touch_or_rear_back(
    for (i=0; i<=setup_limits[scopy->kind]; i++) {
       int p = scopy->people[i].id1;
       directions = (directions<<2) | (p&3);
-      if (p) livemask = (livemask<<2) | 3;
+      livemask <<= 2;
+      if (p) livemask |= 3;
    }
 
    if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
@@ -339,6 +354,18 @@ extern void touch_or_rear_back(
          /* Ends rear back from a "wing" to lines facing or "split square thru" setup. */
          tptr = &rear_wing_pair;
       }
+      else if (scopy->kind == s_thar && livemask == 0xFFFF && directions == 0x278D) {
+         tptr = &rear_thar_pair;         /* Rear back from a grand wave to facing lines. */
+      }
+      else if (scopy->kind == s4x4 && livemask == 0x3C3C3C3C && directions == 0x1C203408) {
+         tptr = &rear_ohh_pair;         /* Rear back from a grand wave to facing lines. */
+      }
+      else if (scopy->kind == s_trngl4 && (livemask == 0xFF) && (directions == 0xDA)) {
+         tptr = &rear_trgl4a;        /* Rear back from a 4-person triangle to a "split square thru" setup. */
+      }
+      else if (scopy->kind == s_trngl4 && (livemask == 0xFF) && (directions == 0x22)) {
+         tptr = &rear_trgl4b;        /* Rear back from a 4-person triangle to a single 8 chain. */
+      }
       else if (scopy->kind == s_c1phan) {
          /* Check for certain people rearing back from C1 phantoms. */
          if ((livemask == 0xCCCCCCCC) && ((directions == 0x884C00C4) || (directions == 0x4C4CC4C4))) {
@@ -352,6 +379,12 @@ extern void touch_or_rear_back(
          }
          else if ((livemask == 0x33333333) && ((directions == 0x11203302) || (directions == 0x20200202))) {
             tptr = &rear_c1d_pair;
+         }
+         else if ((livemask == 0xCCCCCCCC) && ((directions == 0x084C80C4))) {
+            tptr = &rear_c1e_pair;
+         }
+         else if ((livemask == 0x33333333) && ((directions == 0x13203102))) {
+            tptr = &rear_c1f_pair;
          }
       }
    }
@@ -406,6 +439,11 @@ extern void touch_or_rear_back(
             if (livemask == 0xFFFF && (directions == 0xA802)) {
                /* Centers touch from a "wing" to a grand wave. */
                tptr = &step_rig_pair;
+            }
+            break;
+         case s_trngl4:
+            if (livemask == 0xFF && (directions == 0xD7)) {
+               tptr = &step_tgl4_pair;
             }
             break;
          case s_1x2:
@@ -501,12 +539,18 @@ extern void do_matrix_expansion(
    setup stemp;
 
    for (;;) {
-      if (concprops & (CONCPROP__NEED_4X4 | CONCPROP__NEED_BLOB | CONCPROP__NEED_4X6)) {
+      if (concprops & (CONCPROP__NEED_4X4 | CONCPROP__NEED_4X4_1X16 | CONCPROP__NEED_BLOB | CONCPROP__NEED_4X6)) {
          if (ss->kind == s2x4) {
             eptr = &exp_2x4_4x4_stuff; goto expand_me;
          }
 /* ***** This is a kludge to make threesome work!!!! */
          else if (ss->kind == s_qtag) {
+            eptr = &exp_qtg_3x4_stuff; goto expand_me;
+         }
+      }
+
+      if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X4_1X12)) {
+         if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
       }
@@ -560,12 +604,7 @@ extern void do_matrix_expansion(
             eptr = &exp_2x6_4x6_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_3X4) {
-         if (ss->kind == s_qtag) {       /* Need to expand to a 3x4. */
-            eptr = &exp_qtg_3x4_stuff; goto expand_me;
-         }
-      }
-      else if (concprops & CONCPROP__NEED_1X12) {
+      else if (concprops & (CONCPROP__NEED_1X12 | CONCPROP__NEED_3X4_1X12)) {
          switch (ss->kind) {             /* Need to expand to a 1x12. */
             case s1x8:
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
@@ -573,7 +612,7 @@ extern void do_matrix_expansion(
                eptr = &exp_1x10_1x12_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_1X16) {
+      else if (concprops & (CONCPROP__NEED_1X16 | CONCPROP__NEED_4X4_1X16)) {
          switch (ss->kind) {             /* Need to expand to a 1x16. */
             case s1x8:
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
@@ -610,7 +649,7 @@ extern void do_matrix_expansion(
 
       canonicalize_rotation(ss);
    
-      /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
+      /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
       if (recompute_id) update_id_bits(ss);
    }
 }
@@ -1075,6 +1114,7 @@ extern void toplevelmove(void)
       written_history_items = history_ptr;
 
    starting_setup.cmd.cmd_misc_flags = 0;
+   starting_setup.cmd.cmd_frac_flags = 0;
    starting_setup.cmd.prior_elongation_bits = 0;
    newhist->warnings.bits[0] = 0;
    newhist->warnings.bits[1] = 0;
@@ -1178,7 +1218,7 @@ extern void toplevelmove(void)
       }
    }
 
-   /* Put in position-identification bits (leads/trailers/beaux/belles/centers/ends etc.) */
+   /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
    update_id_bits(&starting_setup);
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = NULLCALLSPEC;
@@ -1190,5 +1230,7 @@ extern void toplevelmove(void)
    normalize_setup(&new_setup, simple_normalize);
    for (i=0; i<MAX_PEOPLE; i++) new_setup.people[i].id2 &= ~UNSYM_BITS_TO_CLEAR;
    newhist->state = new_setup;
-   newhist->resolve_flag = resolve_p(&new_setup);
+   /* Once rotation is imprecise, it is always imprecise. */
+   newhist->state.result_flags |= starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT;
+   newhist->resolve_flag = resolve_p(&newhist->state);
 }

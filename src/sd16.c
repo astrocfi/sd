@@ -34,11 +34,10 @@ extern void phantom_2x4_move(
    map_thing *maps,
    setup *result)
 {
-   setup resv;
    setup hpeople, vpeople;
+   setup the_setups[2];
    int i;
    int vflag, hflag;
-   int finalsetupflags = 0;
    phantest_kind newphantest = phantest;
 
    warn(warn__tbonephantom);
@@ -87,24 +86,27 @@ extern void phantom_2x4_move(
    if (vflag) {
       vpeople.rotation--;
       canonicalize_rotation(&vpeople);
-      divided_setup_move(&vpeople, maps, newphantest, 0, &resv);
-      finalsetupflags |= resv.result_flags;
-      resv.rotation++;
-      canonicalize_rotation(&resv);
+      divided_setup_move(&vpeople, maps, newphantest, 0, &the_setups[1]);
+      the_setups[1].rotation++;
+      canonicalize_rotation(&the_setups[1]);
    }
-   else
-      resv.kind = nothing;
+   else {
+      the_setups[1].kind = nothing;
+      the_setups[1].result_flags = 0;
+   }
 
    /* Do the N-S facing people. */
 
    if (hflag) {
-      divided_setup_move(&hpeople, maps, newphantest, 0, result);
-      finalsetupflags |= result->result_flags;
+      divided_setup_move(&hpeople, maps, newphantest, 0, &the_setups[0]);
    }
-   else
-      result->kind = nothing;
-  
-   merge_setups(&resv, merge_strict_matrix, result);
-   result->result_flags = finalsetupflags;
-   reinstate_rotation(ss, result);
+   else {
+      the_setups[0].kind = nothing;
+      the_setups[0].result_flags = 0;
+   }
+
+   the_setups[0].result_flags = get_multiple_parallel_resultflags(the_setups, 2);
+   merge_setups(&the_setups[1], merge_strict_matrix, &the_setups[0]);
+   reinstate_rotation(ss, &the_setups[0]);
+   *result = the_setups[0];
 }

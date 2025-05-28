@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This file contains stuff for tandem and as-couples moves. */
 
@@ -61,8 +61,8 @@ Private tm_thing maps_isearch_twosome[] = {
 
 /*         map1                              map2                map3  map4   sidemask outsidemask limit rot            insetup outsetup            old name */
    {{7, 6, 4, 5},                   {0, 1, 3, 2},                 {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
-   {{0, 2, 5, 7},                   {1, 3, 4, 6},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  s2x2,  s2x4},
-   {{2, 5, 7, 0},                   {3, 4, 6, 1},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  s2x2,  s2x4},
+   {{0, 2, 5, 7},                   {1, 3, 4, 6},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s2x2,  s2x4},
+   {{2, 5, 7, 0},                   {3, 4, 6, 1},                 {0}, {0},      0,     0xFF,         4, 1,  0,  0, 0,  s2x2,  s2x4},
    {{3, 2},                         {0, 1},                       {0}, {0},      0,     0000,         2, 0,  0,  0, 0,  s_1x2, s2x2},
    {{0, 3},                         {1, 2},                       {0}, {0},      0,     0017,         2, 1,  0,  0, 0,  s_1x2, s2x2},
    {{0, 3},                         {1, 2},                       {0}, {0},    0x5,     0017,         2, 0,  0,  0, 0,  s_1x2, s1x4},
@@ -98,10 +98,10 @@ Private tm_thing maps_isearch_twosome[] = {
    /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
    {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s_2x3, s2x4},
    {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0146,         6, 0,  0,  0, 0,  s_2x3, s2x4},
-   {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0314,         6, 0,  0,  0, 0,  s_2x3, s2x4},
+   {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s_2x3, s2x4},
    /* Next three are for various people as couples in a C1 phantom or 1/4 tag, making virtual columns of 6. */
    {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
-   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0314,         6, 1,  0,  0, 0,  s_2x3, s_qtag},
+   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s_2x3, s_qtag},
    {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
    /* Next three are for various people in tandem in a rigger or PTP diamonds, making a virtual line of 6. */
    {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_rigger},
@@ -110,27 +110,27 @@ Private tm_thing maps_isearch_twosome[] = {
 
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
 
-   {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* xyz      */
-   {{0, 6, 10, 12},                 {2, 4, 8, 14},                {0}, {0},   0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* pqr      */
+   {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
+   {{0, 6, 10, 12},                 {2, 4, 8, 14},                {0}, {0},   0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
 
-   {{0, 7, 9, 12},                  {2, 5, 11, 14},               {0}, {0},   0x05,   0x00A5,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},        /* these 4 are unsymmetrical */
+   {{0, 7, 9, 12},                  {2, 5, 11, 14},               {0}, {0},   0x05,   0x00A5,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},     /* these 4 are unsymmetrical */
    {{3, 6, 10, 13},                 {1, 4, 8, 15},                {0}, {0},   0x50,   0xA500,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
    {{3, 7, 10, 12},                 {1, 5, 8, 14},                {0}, {0},   0x14,   0x05A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
    {{0, 6, 9, 13},                  {2, 4, 11, 15},               {0}, {0},   0x41,   0xA005,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
 
-   {{15, 3, 5, 9},                  {13, 1, 7, 11},               {0}, {0},   0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* These do C1-phantom-like stuff from fudgy 4x4 */
-   {{10, 3, 7, 6},                  {15, 14, 2, 11},              {0}, {0},   0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},      /* They must follow the pair just above. */
+   {{15, 3, 5, 9},                  {13, 1, 7, 11},               {0}, {0},   0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* These do C1-phantom-like stuff from fudgy 4x4 */
+   {{10, 3, 7, 6},                  {15, 14, 2, 11},              {0}, {0},   0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* They must follow the pair just above. */
    {{6, 0, 3, 5},                   {7, 1, 2, 4},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
-   {{6, 5, 3, 4},                   {7, 0, 2, 1},                 {0}, {0},   0x11,     0314,         4, 0,  0,  0, 0,  s1x4,  s_rigger},       /* must be after "2x4_4" */
-   {{5, 6, 4, 3},                   {0, 7, 1, 2},                 {0}, {0},   0x44,     0314,         4, 0,  0,  0, 0,  s1x4,  s_bone},
-   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x11,     0063,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},     /* crosswave*/  
+   {{6, 5, 3, 4},                   {7, 0, 2, 1},                 {0}, {0},   0x11,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_rigger},     /* must be after "2x4_4" */
+   {{5, 6, 4, 3},                   {0, 7, 1, 2},                 {0}, {0},   0x44,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_bone},
+   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x11,     0063,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},  /* crosswave*/  
    {{7, 1, 4, 6},                   {0, 2, 3, 5},                 {0}, {0},   0x44,     0146,         4, 0,  0,  0, 0,  sdmd,  s2x4},         /* must be after "2x4_4" */
    /* Next one is for so-and-so in tandem in a bone6, making a virtual line of 4. */
    {{4, 5, 3, 2},                   {0, -1, 1, -1},               {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s_bone6},
    /* Next one is for so-and-so in tandem in a short6, making a virtual line of 4. */
    {{1, 0, 4, 5},                   {-1, 2, -1, 3},               {0}, {0},      0,     0055,         4, 1,  0,  0, 0,  s1x4,  s_short6},
    /* Next three are for so-and-so as couples in a line of 8, making a virtual line of 6. */
-   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0314,         6, 0,  0,  0, 0,  s_1x6, s1x8},
+   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s_1x6, s1x8},
    {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       {0}, {0},  0x104,     0252,         6, 0,  0,  0, 0,  s_1x6, s1x8},
    {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s_1x6, s1x8},
    /* Next two are for so-and-so as couples in a line of 6, making a virtual line of 4. */
@@ -143,7 +143,8 @@ Private tm_thing maps_isearch_twosome[] = {
    {{1, 3, 5, 0},                   {2, -1, 4, -1},               {0}, {0},      0,     0066,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
    {{2, 4, 5, 0},                   {-1, 3, -1, 1},               {0}, {0},      0,     0033,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
    {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,   0x0FFF,         6, 0,  0,  0, 0,  s_2x3, s2x6},
-
+   {{2, 0},                         {3, 1},                       {0}, {0},    0x4,      0xC,         2, 1,  0,  0, 0,  s_1x2, s_trngl4},
+   {{1, 3},                         {0, 2},                       {0}, {0},    0x1,      0xC,         2, 3,  0,  0, 0,  s_1x2, s_trngl4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
@@ -304,16 +305,15 @@ Private void unpack_us(
    setup *result)
 {
    int i;
-   unsigned int m, o;
+   unsigned int m, o, r;
 
    result->kind = map_ptr->outsetup;
    result->rotation = tandstuff->virtual_result.rotation - map_ptr->rot;
    result->result_flags = tandstuff->virtual_result.result_flags;
+   r = map_ptr->rot*011;
 
    for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=2, o>>=2) {
-      int z = tandstuff->virtual_result.people[i].id1;
-
-      if (map_ptr->rot) z = rotcw(z);
+      int z = rotperson(tandstuff->virtual_result.people[i].id1, r);
 
       if (m & 1) {
          /* Unpack single person. */
@@ -341,7 +341,7 @@ Private void unpack_us(
             if (b2.id1) b2.id1 = (b2.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
             if (b3.id1) b3.id1 = (b3.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
 
-            if ((o + map_ptr->rot + 1) & 2) {
+            if ((o + (map_ptr->rot&1) + 1) & 2) {
                if (tandstuff->np >= 4) {
                   result->people[map_ptr->map1[i]] = b3;
                   result->people[map_ptr->map2[i]] = b2;
@@ -396,7 +396,7 @@ Private void pack_us(
    int lat;
    unsigned int m, sgl;
 
-   tandstuff->virtual_setup.rotation = map_ptr->rot;
+   tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
    for (i=0, m=map_ptr->sidewaysmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=2) {
@@ -435,8 +435,19 @@ Private void pack_us(
                phantom concept such as "split phantom lines"). */
 
             if (!(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
+
+/* In fact, we forbid ANY PERSON AT ALL to be a phantom, even if paired with another phantom. */
+
+               if (!(f.id1 & b.id1 & b2.id1 & b3.id1 & BIT_PERSON))
+                  fail("Use \"phantom\" concept in front of this concept.");
+
+
+/*
                if ((((f.id1 ^ b.id1) | (f.id1 ^ b2.id1) | (f.id1 ^ b3.id1)) & BIT_PERSON))
                   fail("Use \"phantom\" concept in front of this concept.");
+*/
+
+
             }
          }
 
@@ -524,7 +535,7 @@ Private void pack_us(
          tandstuff->twosomep[i] = twosome;
       }
 
-      if (map_ptr->rot)   /* Compensate for above rotation. */
+      if (map_ptr->rot & 1)   /* Compensate for above rotation. */
          (void) copy_rot(&tandstuff->virtual_setup, i, &tandstuff->virtual_setup, i, 033);
 
       tandstuff->real_front_people[i] = f;
@@ -549,7 +560,6 @@ extern void tandem_couples_move(
    setup *result)
 {
    selector_kind saved_selector;
-   parse_block *conceptptrcopy;
    tandrec tandstuff;
    tm_thing *map;
    tm_thing *map_search;
@@ -564,11 +574,6 @@ extern void tandem_couples_move(
    long_boolean fractional = FALSE;
    tm_thing *our_map_table;
 
-   parse_block *parseptr = ss->cmd.parseptr;
-   callspec_block *callspec = ss->cmd.callspec;
-   final_set final_concepts = ss->cmd.cmd_final_flags;
-
-   conceptptrcopy = parseptr;
    tandstuff.single_mask = 0;
    clear_people(result);
 
@@ -608,6 +613,7 @@ extern void tandem_couples_move(
    current_selector = saved_selector;
 
    if (!allmask) {
+      result->result_flags = 0;
       result->kind = nothing;
       return;
    }
@@ -715,15 +721,12 @@ extern void tandem_couples_move(
    }
 
    tandstuff.np = np;
-   tandstuff.virtual_setup.cmd.cmd_misc_flags = ss->cmd.cmd_misc_flags | CMD_MISC__DISTORTED;
-   tandstuff.virtual_setup.cmd.prior_elongation_bits = ss->cmd.prior_elongation_bits;
+   tandstuff.virtual_setup.cmd = ss->cmd;
+   tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    pack_us(ss->people, map, fraction, twosome, tnd_cpl_siam, &tandstuff);
    update_id_bits(&tandstuff.virtual_setup);
    saved_originals = tandstuff.virtual_setup;    /* Move will clobber the incoming setup.  This bug caused
                                                     embarrassment at an ATA dance, April 3, 1993. */
-   tandstuff.virtual_setup.cmd.parseptr = conceptptrcopy;
-   tandstuff.virtual_setup.cmd.callspec = callspec;
-   tandstuff.virtual_setup.cmd.cmd_final_flags = final_concepts;
    move(&tandstuff.virtual_setup, FALSE, &tandstuff.virtual_result);
 
    if (setup_limits[tandstuff.virtual_result.kind] < 0)

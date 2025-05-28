@@ -23,7 +23,7 @@
  *
  */
 
-static char *sdui_version = "2.1";
+static char *sdui_version = "2.2";
 
 /* This file defines the following functions:
    uims_process_command_line
@@ -237,11 +237,16 @@ get_user_command(int which)
 call_list_kind uims_current_call_menu;
 
 static uims_reply
-get_call_command(call_list_kind call_menu)
+get_call_command(call_list_kind *call_menu)
 {
-    uims_current_call_menu = call_menu;
-    input_set_prompt("Enter concept or call", call_menu_names[call_menu]);
-    get_user_command((int) call_menu);
+    check_menu:
+
+    if (allowing_modifications)
+        *call_menu = call_list_any;
+
+    uims_current_call_menu = *call_menu;
+    input_set_prompt("Enter concept or call", call_menu_names[*call_menu]);
+    get_user_command((int) *call_menu);
     uims_menu_index = user_match.index;
     
     /*
@@ -262,8 +267,7 @@ get_call_command(call_list_kind call_menu)
             /* update checkmark in the menus */
             SetItemMark(sequence_menu, anyConceptCommand, allowing_all_concepts ? 022 : 0);
         }
-        /* set this to something harmless */
-        uims_menu_index = command_refresh;
+        goto check_menu;
     }
        
     if (!dirty) {
@@ -288,7 +292,7 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         return get_resolve_command();
     }
     else {
-        return get_call_command(*call_menu);
+        return get_call_command(call_menu);
     }
 }
 

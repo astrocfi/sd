@@ -189,17 +189,17 @@ getcommand(char ***av)
     }
     *av = argv;
 
-    window_close((Window *)&startupDW);
-    display_update();
-    DisposDialog(dp);
     if (!database_ok) {
         select_default_call_database();
     }
-    while (!database_ok) {
-        if (!select_call_database()) {
-            exit_program(0);
-        }
-    }
+    /* User might want to load a new database *or* recompile an existing database.
+       Presenting a message saying "you must recompile", and then putting a dialog
+       box asking for the new compiled database, is not very good. */
+    if (!database_ok)
+        goto restart_dialog;
+    window_close((Window *)&startupDW);
+    display_update();
+    DisposDialog(dp);
     return(argc);
 }
 

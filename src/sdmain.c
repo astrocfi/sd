@@ -27,26 +27,26 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.01"
+#define VERSION_STRING "30.6"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
    can print the version.
 
-   We do not endorse these programs, or any probabilistic identification
+   We do not endorse those programs, or any probabilistic identification
    mechanism -- we are simply trying to be helpful to those people who use them.
-   It is regrettable that these two identification mechanisms are different
+   It is regrettable that those two identification mechanisms are different
    and superficially incompatible, and that many existing programs only comply
-   with one or the other of them, but not both.
+   with one or the other of them, but not both.  By choosing the contents of
+   the string carefully, we believe we comply with both.
 
    We specifically break up the "Header" word to prevent utilities like RCS or
    SCCS, if anyone should use them to store this source file, from attempting
    to modify this.  Version control for this program is performed manually,
-   not by any utility. */
+   not by any utility.  Furthermore, we do not believe that it is proper for
+   source control utilities to alter the text in a source file. */
 
-static char *id="@(#)$He" "ader: Sd: version "
-   VERSION_STRING
-   "  wba@apollo.hp.com  10 Dec 93 $";
+static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  10 Dec 93 $";
 
 /* This defines the following functions:
    sd_version_string
@@ -86,6 +86,8 @@ and the following external variables:
    current_selector
    current_direction
    current_number_fields
+   no_search_warnings
+   conc_elong_warnings
 */
 
 
@@ -136,9 +138,12 @@ selector_kind selector_for_initialize;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean resolver_is_unwieldy = FALSE;
+long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
 direction_kind current_direction;
 int current_number_fields;
+warning_info no_search_warnings = {0, 0};
+warning_info conc_elong_warnings = {0, 0};
 
 /* These variables are are global to this file. */
 
@@ -149,7 +154,6 @@ Private parse_block *parse_active_list;
 Private parse_block *parse_inactive_list;
 Private int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
 Private short int *concept_sublists[NUM_CALL_LIST_KINDS];
-Private long_boolean diagnostic_mode = FALSE;
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -188,9 +192,14 @@ Private void initialize_concept_sublists(void)
    int concepts_at_level;
    call_list_kind test_call_list_kind;
    unsigned long int setup_mask;
+   concept_kind end_marker = concept_diagnose;
+
+   /* Decide whether we allow the "diagnose" concept, by deciding
+      when we will stop the concept list scan. */
+   if (diagnostic_mode) end_marker = marker_end_of_list;
 
    for (       number_of_concepts = 0, concepts_at_level = 0;
-               concept_descriptor_table[number_of_concepts].kind != marker_end_of_list;
+               concept_descriptor_table[number_of_concepts].kind != end_marker;
                number_of_concepts++) {
       if (concept_descriptor_table[number_of_concepts].level <= calling_level)
          concepts_at_level++;
@@ -205,7 +214,7 @@ Private void initialize_concept_sublists(void)
 
    for (test_call_list_kind = call_list_qtag; test_call_list_kind > call_list_any; test_call_list_kind--) {
       for (       number_of_concepts = 0, concepts_at_level = 0;
-                  concept_descriptor_table[number_of_concepts].kind != marker_end_of_list;
+                  concept_descriptor_table[number_of_concepts].kind != end_marker;
                   number_of_concepts++) {
          concept_descriptor *p = &concept_descriptor_table[number_of_concepts];
 
@@ -247,7 +256,7 @@ Private void initialize_concept_sublists(void)
    }
 
    for (       number_of_concepts = 0, concepts_at_level = 0;
-               concept_descriptor_table[number_of_concepts].kind != marker_end_of_list;
+               concept_descriptor_table[number_of_concepts].kind != end_marker;
                number_of_concepts++) {
       if (     concept_descriptor_table[number_of_concepts].level <= calling_level &&
                concept_descriptor_table[number_of_concepts].kind != concept_assume_waves)
@@ -999,9 +1008,9 @@ extern void write_header_stuff(long_boolean with_ui_version)
 
 void main(int argc, char *argv[])
 {
-   int argno;
+   int argno, i;
 
-   if (argc >= 2  && strcmp(argv[1], "-help") == 0)
+   if (argc >= 2 && strcmp(argv[1], "-help") == 0)
        display_help();		/* does not return */
 
    /* This lets the X user interface intercept command line arguments that it is
@@ -1110,6 +1119,13 @@ void main(int argc, char *argv[])
 
    uims_postinitialize();
 
+   for (i=0 ; i<NUM_WARNINGS ; i++) {
+      if (warning_strings[i][0] == '*')
+         no_search_warnings.bits[i>>5] |= 1 << (i & 0x1F);
+      if (warning_strings[i][0] == '+')
+         conc_elong_warnings.bits[i>>5] |= 1 << (i & 0x1F);
+   }
+
    global_age = 1;
 
    /* Create the top level error handler. */
@@ -1157,7 +1173,7 @@ void main(int argc, char *argv[])
 
    writestuff("SD -- square dance caller's helper.");
    newline();
-   writestuff("Copyright (c) 1991, 1992, 1993 William B. Ackerman and Stephen Gildea.");
+   writestuff("Copyright (c) 1991-1994 William B. Ackerman and Stephen Gildea.");
    newline();
    newline();
    writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
@@ -1306,14 +1322,19 @@ void main(int argc, char *argv[])
                   parse_block **last_ptr;
       
                   if (!*this_ptr) break;
-            
                   last_ptr = this_ptr;
-            
                   this_ptr = &((*this_ptr)->next);
       
                   if (this_ptr == parse_state.concept_write_ptr) {
                      parse_state.concept_write_ptr = last_ptr;
+
+                     /* See whether we need to destroy a frame in the parse stack. */
+                     if (parse_state.parse_stack_index != 0 &&
+                           parse_state.parse_stack[parse_state.parse_stack_index-1].concept_write_save_ptr == last_ptr)
+                        parse_state.parse_stack_index--;
+
                      *last_ptr = (parse_block *) 0;
+                     reply_pending = FALSE;
                      goto simple_restart;
                   }
       
@@ -1573,7 +1594,7 @@ extern void get_real_subcall(
    char *tempstringptr;
    parse_block *search;
    parse_block **newsearch;
-   concept_descriptor *marker;
+   int number, snumber;
 
    /* Fill in defaults in case we choose not to get a replacement call. */
 
@@ -1662,14 +1683,14 @@ extern void get_real_subcall(
    /* Depending on what type of substitution is involved and what the "allowing modifications"
       level is, we may choose not to query about this subcall, but just return the default. */
 
-   switch ((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+   number = item->modifiers1;
+   snumber = (number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
+
+   switch (snumber) {
       case 1:   /* or_anycall */
       case 3:   /* allow_plain_mod */
       case 5:   /* or_secondary_call */
          if (!allowing_modifications) return;
-         break;
-      case 2:   /* mandatory_anycall */
-      case 6:   /* mandatory_secondary_call */
          break;
       case 4:   /* allow_forced_mod */
          if (allowing_modifications <= 1) return;
@@ -1690,28 +1711,6 @@ extern void get_real_subcall(
 
    /* Create a reference on the list.  "search" points to the null item at the end. */
 
-   marker = &marker_concept_mod;
-
-   switch ((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
-      case 1:   /* or_anycall */
-      case 2:   /* mandatory_anycall */
-         if (DFM1_MUST_BE_SCOOT_CALL & item->modifiers1) marker = &marker_concept_modreact;
-         else if (DFM1_MUST_BE_TAG_CALL & item->modifiers1) marker = &marker_concept_modtag;
-         break;
-      case 3:   /* allow_plain_mod */
-         marker = &marker_concept_plain;
-         break;
-      case 4:   /* allow_forced_mod */
-         marker = &marker_concept_force;
-         break;
-      case 5:   /* or_secondary_call */
-      case 6:   /* mandatory_secondary_call */
-         marker = &marker_concept_second;
-         if (DFM1_MUST_BE_SCOOT_CALL & item->modifiers1) marker = &marker_concept_secondreact;
-         else if (DFM1_MUST_BE_TAG_CALL & item->modifiers1) marker = &marker_concept_secondtag;
-         break;
-   }
-
    tempstringptr = tempstring_text;
    *tempstringptr = 0;           /* Null string, just to be safe. */
 
@@ -1720,8 +1719,7 @@ extern void get_real_subcall(
 
    if (not_interactive)
       ;
-   else if (((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 2 ||
-            ((item->modifiers1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 6) {
+   else if (snumber == 2 || snumber == 6) {
       string_copy(&tempstringptr, "SUBSIDIARY CALL");
    }
    else {
@@ -1751,8 +1749,8 @@ extern void get_real_subcall(
             break;
       }
 
-      if (item->modifiers1 & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
-      else if (item->modifiers1 & DFM1_MUST_BE_SCOOT_CALL) kind = modify_popup_only_scoot;
+      if (number & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
+      else if (number & DFM1_MUST_BE_SCOOT_CALL) kind = modify_popup_only_scoot;
       else kind = modify_popup_any;
 
       if (debug_popup || uims_do_modifier_popup(nice_call_name, kind)) {
@@ -1765,14 +1763,16 @@ extern void get_real_subcall(
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */
          *newsearch = get_parse_block();
-         (*newsearch)->concept = marker;
+         (*newsearch)->concept = &marker_concept_mod;
+         (*newsearch)->number = number;
          (*newsearch)->call = base_calls[item->call_id];
          return;
       }
    }
 
    *newsearch = get_parse_block();
-   (*newsearch)->concept = marker;
+   (*newsearch)->concept = &marker_concept_mod;
+   (*newsearch)->number = number;
    (*newsearch)->call = base_calls[item->call_id];
 
    /* Set stuff up for reading subcall and its concepts. */

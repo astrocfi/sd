@@ -599,7 +599,7 @@ text_line_style(const char *text)
     if (text[0] != ' ') {
         return TS_TYPEOUT;
     }
-    n = strspn(text, " 1234BG^V<>?");
+    n = strspn(text, " 1234BG^V<>?.");
     if (text[n] == '\0') {
         return TS_PICTURE;
     }
@@ -1123,8 +1123,16 @@ encode_picture_text(const char *text, char *buffer, int multicolored)
         }
         else {
             *d++ = ch;
-            if (multicolored) {
+            if (multicolored) {  /* avoid 4-colored dots */
+                TESetStyle(doColor, &picture_color, true, TEH);
                 TEInsert(d-1, 1, TEH); /* don't use TEKey, it hides sprite */
+            }
+            /* make '.' char in special font effectively one spot wider */
+            if (ch == '.')  {
+               *d++ = '\t';
+               if (multicolored) {
+                   TEInsert(d-1, 1, TEH); /* don't use TEKey, it hides sprite */
+               }
             }
         }
     }

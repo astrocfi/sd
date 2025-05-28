@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This defines the following external variables:
    special_magic
@@ -24,13 +24,6 @@
    mark_end_of_list
    marker_decline
    marker_concept_mod
-   marker_concept_modreact
-   marker_concept_modtag
-   marker_concept_force
-   marker_concept_plain
-   marker_concept_second
-   marker_concept_secondreact
-   marker_concept_secondtag
    marker_concept_comment
    main_call_lists
    number_of_calls
@@ -59,18 +52,9 @@
 concept_descriptor special_magic = {"MAGIC DIAMOND,", concept_magic, l_c1, {0, 1}};
 concept_descriptor special_interlocked = {"INTERLOCKED DIAMOND,", concept_interlocked, l_c1, {0, 1}};
 
-
 concept_descriptor mark_end_of_list = {"????", marker_end_of_list, l_dontshow};
 concept_descriptor marker_decline = {"decline???", concept_mod_declined, l_dontshow};
-concept_descriptor marker_concept_mod = {">>MODIFIED BY<<", concept_another_call_next_mod, l_dontshow, {0, 0, 0}};
-concept_descriptor marker_concept_modreact = {">>REACTION MODIFIED BY<<", concept_another_call_next_modreact, l_dontshow, {0, 0, 1}};
-concept_descriptor marker_concept_modtag = {">>TAG ENDING MODIFIED BY<<", concept_another_call_next_modtag, l_dontshow, {0, 0, 2}};
-concept_descriptor marker_concept_force = {">>FORCIBLY MODIFIED BY<<", concept_another_call_next_force, l_dontshow, {0, 0, 0}};
-concept_descriptor marker_concept_plain = {">>PLAINLY MODIFIED BY<<", concept_another_call_next_plain, l_dontshow, {0, 0, 0}};
-concept_descriptor marker_concept_second = {">>2nd MODIFIED BY<<", concept_another_call_next_2nd, l_dontshow, {0, 1, 0}};
-concept_descriptor marker_concept_secondreact = {">>2nd REACTION MODIFIED BY<<", concept_another_call_next_2ndreact, l_dontshow, {0, 1, 1}};
-concept_descriptor marker_concept_secondtag = {">>2nd TAG ENDING MODIFIED BY<<", concept_another_call_next_2ndtag, l_dontshow, {0, 1, 2}};
-
+concept_descriptor marker_concept_mod         = {">>MODIFIED BY<<",                concept_another_call_next_mod,      l_dontshow, {0, 0, 0}};
 concept_descriptor marker_concept_comment = {">>COMMENT<<", concept_comment, l_dontshow};
 
 callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];
@@ -105,9 +89,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,        l_c3a, {&map_split_f, phantest_impossible, 1, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM LINES",             concept_do_phantom_2x4,        l_c3, {&map_intlk_f, phantest_impossible, 1, MPKIND__INTLK}},
    {"PHANTOM LINES",                         concept_do_phantom_2x4,        l_c3, {&map_full_f, phantest_first_or_both, 1, MPKIND__CONCPHAN}},
-   {"END-TO-END SPLIT PHANTOM LINES",        concept_do_phantom_endtoend,   l_c3a, {0, phantest_impossible, 1, MPKIND__SPLIT}},
-   {"END-TO-END INTERLOCKED PHANTOM LINES",  concept_do_phantom_endtoend,   l_c3, {0, phantest_impossible, 1, MPKIND__INTLK}},
-   {"END-TO-END PHANTOM LINES",              concept_do_phantom_endtoend,   l_c3, {0, phantest_first_or_both, 1, MPKIND__CONCPHAN}},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
    {"12 MATRIX SPLIT PHANTOM LINES",         concept_do_phantom_2x3,        l_c3x, {&map_3x4_2x3, phantest_impossible, 1}},
    {"12 MATRIX INTERLOCKED PHANTOM LINES",   concept_do_phantom_2x3,        l_c3x, {&map_3x4_2x3_intlk, phantest_impossible, 1}},
    {"12 MATRIX PHANTOM LINES",               concept_do_phantom_2x3,        l_c3x, {&map_3x4_2x3_conc, phantest_first_or_both, 1}},
@@ -118,15 +102,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"TWO PHANTOM LINES OF 6",                concept_do_phantom_1x6,        l_c3, {0, phantest_impossible, TRUE, 1}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE LINES",                          concept_triple_lines,          l_c2, {0, 1}},
-   {"END-TO-END TRIPLE LINES",               concept_triple_lines_endtoend, l_c2, {0, 1}},
-   {"END-TO-END TRIPLE LINES WORKING TOGETHER",concept_triple_lines_tog_end2end, l_c3, {0, 8, 1}},
-   {"END-TO-END TRIPLE LINES WORKING APART", concept_triple_lines_tog_end2end, l_c3, {0, 9, 1}},
-   {"TRIPLE LINES WORKING FORWARD",          concept_triple_lines_together, l_c3, {0, 0, 1}},
-   {"TRIPLE LINES WORKING BACKWARD",         concept_triple_lines_together, l_c3, {0, 2, 1}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"TRIPLE LINES WORKING TOGETHER",         concept_triple_lines_tog_std,  l_c3, {0, 10, 1}},
+   {"TRIPLE LINES WORKING APART",            concept_triple_lines_tog_std,  l_c3, {0, 11, 1}},
+   {"TRIPLE LINES WORKING FORWARD",          concept_triple_lines_tog,      l_c3, {0, 0, 1}},
+   {"TRIPLE LINES WORKING BACKWARD",         concept_triple_lines_tog,      l_c3, {0, 2, 1}},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"TRIPLE LINES WORKING CLOCKWISE",        concept_triple_lines_together, l_c4, {0, 8, 1}},
-   {"TRIPLE LINES WORKING COUNTERCLOCKWISE", concept_triple_lines_together, l_c4, {0, 9, 1}},
+   {"TRIPLE LINES WORKING CLOCKWISE",        concept_triple_lines_tog_std,  l_c4, {0, 8, 1}},
+   {"TRIPLE LINES WORKING COUNTERCLOCKWISE", concept_triple_lines_tog_std,  l_c4, {0, 9, 1}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE DIAGONAL LINES",                 concept_triple_diag,           l_c4, {0, 1}},
    {"TRIPLE DIAGONAL LINES WORKING FORWARD", concept_triple_diag_together,  l_c4, {0, 0, 1}},
@@ -137,15 +121,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE TWIN LINES",                     concept_triple_twin,           l_c4a, {&map_4x6_2x4, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"QUADRUPLE LINES",                       concept_quad_lines,            l_c4a, {0, 1}},
-   {"END-TO-END QUADRUPLE LINES",            concept_quad_lines_endtoend,   l_c4a, {0, 1}},
-   {"END-TO-END QUADRUPLE LINES WORKING TOGETHER",concept_quad_lines_tog_end2end,l_c4a, {0, 8, 1}},
-   {"END-TO-END QUADRUPLE LINES WORKING APART",concept_quad_lines_tog_end2end,l_c4a, {0, 9, 1}},
-   {"QUADRUPLE LINES WORKING FORWARD",       concept_quad_lines_together,   l_c4a, {0, 0, 1}},
-   {"QUADRUPLE LINES WORKING BACKWARD",      concept_quad_lines_together,   l_c4a, {0, 2, 1}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"QUADRUPLE LINES WORKING TOGETHER",      concept_quad_lines_tog_std,    l_c4a, {0, 10, 1}},
+   {"QUADRUPLE LINES WORKING APART",         concept_quad_lines_tog_std,    l_c4a, {0, 11, 1}},
+   {"QUADRUPLE LINES WORKING FORWARD",       concept_quad_lines_tog,        l_c4a, {0, 0, 1}},
+   {"QUADRUPLE LINES WORKING BACKWARD",      concept_quad_lines_tog,        l_c4a, {0, 2, 1}},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"QUADRUPLE LINES WORKING CLOCKWISE",     concept_quad_lines_together,   l_c4, {0, 8, 1}},
-   {"QUADRUPLE LINES WORKING COUNTERCLOCKWISE",concept_quad_lines_together, l_c4, {0, 9, 1}},
+   {"QUADRUPLE LINES WORKING CLOCKWISE",     concept_quad_lines_tog_std,    l_c4, {0, 8, 1}},
+   {"QUADRUPLE LINES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,  l_c4, {0, 9, 1}},
 /* -------- column break -------- */
 #define pp__2_size 44
 #define pp__2_spc 0
@@ -167,9 +151,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,        l_c3a, {&map_split_f, phantest_impossible, 0, MPKIND__SPLIT}},
    {"INTERLOCKED PHANTOM COLUMNS",           concept_do_phantom_2x4,        l_c3, {&map_intlk_f, phantest_impossible, 0, MPKIND__INTLK}},
    {"PHANTOM COLUMNS",                       concept_do_phantom_2x4,        l_c3a, {&map_full_f, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
-   {"END-TO-END SPLIT PHANTOM COLUMNS",      concept_do_phantom_endtoend,   l_c3a, {0, phantest_impossible, 0, MPKIND__SPLIT}},
-   {"END-TO-END INTERLOCKED PHANTOM COLUMNS",concept_do_phantom_endtoend,   l_c3, {0, phantest_impossible, 0, MPKIND__INTLK}},
-   {"END-TO-END PHANTOM COLUMNS",            concept_do_phantom_endtoend,   l_c3a, {0, phantest_first_or_both, 0, MPKIND__CONCPHAN}},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
    {"12 MATRIX SPLIT PHANTOM COLUMNS",       concept_do_phantom_2x3,        l_c3x, {&map_3x4_2x3, phantest_impossible, 0}},
    {"12 MATRIX INTERLOCKED PHANTOM COLUMNS", concept_do_phantom_2x3,        l_c3x, {&map_3x4_2x3_intlk, phantest_impossible, 0}},
    {"12 MATRIX PHANTOM COLUMNS",             concept_do_phantom_2x3,        l_c3x, {&map_3x4_2x3_conc, phantest_first_or_both, 0}},
@@ -180,15 +164,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"TWO PHANTOM COLUMNS OF 6",              concept_do_phantom_1x6,        l_c3, {0, phantest_impossible, TRUE, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE COLUMNS",                        concept_triple_lines,          l_c3, {0, 0}},
-   {"END-TO-END TRIPLE COLUMNS",             concept_triple_lines_endtoend, l_c3, {0, 0}},
-   {"END-TO-END TRIPLE COLUMNS WORKING TOGETHER", concept_triple_lines_tog_end2end, l_c3, {0, 8, 0}},
-   {"END-TO-END TRIPLE COLUMNS WORKING APART", concept_triple_lines_tog_end2end, l_c3, {0, 9, 0}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"TRIPLE COLUMNS WORKING TOGETHER",       concept_triple_lines_tog_std,  l_c3, {0, 10, 0}},
+   {"TRIPLE COLUMNS WORKING APART",          concept_triple_lines_tog_std,  l_c3, {0, 11, 0}},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"TRIPLE COLUMNS WORKING RIGHT",          concept_triple_lines_together, l_c3, {0, 2, 0}},
-   {"TRIPLE COLUMNS WORKING LEFT",           concept_triple_lines_together, l_c3, {0, 0, 0}},
-   {"TRIPLE COLUMNS WORKING CLOCKWISE",      concept_triple_lines_together, l_c4, {0, 8, 0}},
-   {"TRIPLE COLUMNS WORKING COUNTERCLOCKWISE",concept_triple_lines_together,l_c4, {0, 9, 0}},
+   {"TRIPLE COLUMNS WORKING RIGHT",          concept_triple_lines_tog,      l_c3, {0, 2, 0}},
+   {"TRIPLE COLUMNS WORKING LEFT",           concept_triple_lines_tog,      l_c3, {0, 0, 0}},
+   {"TRIPLE COLUMNS WORKING CLOCKWISE",      concept_triple_lines_tog_std,  l_c4, {0, 8, 0}},
+   {"TRIPLE COLUMNS WORKING COUNTERCLOCKWISE",concept_triple_lines_tog_std, l_c4, {0, 9, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"TRIPLE DIAGONAL COLUMNS",               concept_triple_diag,           l_c4, {0, 0}},
          {"", concept_comment, l_nonexistent_concept},
@@ -199,15 +183,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"TRIPLE TWIN COLUMNS",                   concept_triple_twin,           l_c4a, {&map_4x6_2x4, 1}},
          {"", concept_comment, l_nonexistent_concept},
    {"QUADRUPLE COLUMNS",                     concept_quad_lines,            l_c4a, {0, 0}},
-   {"END-TO-END QUADRUPLE COLUMNS",          concept_quad_lines_endtoend,   l_c4a, {0, 0}},
-   {"END-TO-END QUADRUPLE COLUMNS WORKING TOGETHER",concept_quad_lines_tog_end2end,l_c4a, {0, 8, 0}},
-   {"END-TO-END QUADRUPLE COLUMNS WORKING APART",concept_quad_lines_tog_end2end,l_c4a, {0, 9, 0}},
+         {"", concept_comment, l_nonexistent_concept},
+   {"QUADRUPLE COLUMNS WORKING TOGETHER",    concept_quad_lines_tog_std,    l_c4a, {0, 10, 0}},
+   {"QUADRUPLE COLUMNS WORKING APART",       concept_quad_lines_tog_std,    l_c4a, {0, 11, 0}},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"QUADRUPLE COLUMNS WORKING RIGHT",       concept_quad_lines_together,   l_c4a, {0, 2, 0}},
-   {"QUADRUPLE COLUMNS WORKING LEFT",        concept_quad_lines_together,   l_c4a, {0, 0, 0}},
-   {"QUADRUPLE COLUMNS WORKING CLOCKWISE",   concept_quad_lines_together,   l_c4, {0, 8, 0}},
-   {"QUADRUPLE COLUMNS WORKING COUNTERCLOCKWISE",concept_quad_lines_together,l_c4, {0, 9, 0}},
+   {"QUADRUPLE COLUMNS WORKING RIGHT",       concept_quad_lines_tog,        l_c4a, {0, 2, 0}},
+   {"QUADRUPLE COLUMNS WORKING LEFT",        concept_quad_lines_tog,        l_c4a, {0, 0, 0}},
+   {"QUADRUPLE COLUMNS WORKING CLOCKWISE",   concept_quad_lines_tog_std,    l_c4, {0, 8, 0}},
+   {"QUADRUPLE COLUMNS WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,l_c4, {0, 9, 0}},
 /* -------- column break -------- */
 #define pp__3_size 44
 #define pp__3_spb 0
@@ -280,12 +264,12 @@ concept_descriptor concept_descriptor_table[] = {
    {"SPLIT PHANTOM DIAMONDS",                concept_do_phantom_diamonds,   l_c3x, {&map_hv_qtg_2, phantest_impossible, 0}},
    {"INTERLOCKED PHANTOM DIAMONDS",          concept_do_phantom_diamonds,   l_c4, {&map_intlk_phantom_dmd, phantest_impossible, 0}},
    {"PHANTOM DIAMONDS",                      concept_do_phantom_diamonds,   l_c4, {&map_phantom_dmd, phantest_first_or_both, 0}},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
+         {"", concept_comment, l_nonexistent_concept},
    {"SPLIT PHANTOM 1/4-TAGS",                concept_do_phantom_qtags,      l_c3x, {&map_hv_qtg_2, phantest_impossible, 1}},
    {"INTERLOCKED PHANTOM 1/4-TAGS",          concept_do_phantom_qtags,      l_c4, {&map_intlk_phantom_dmd, phantest_impossible, 1}},
    {"PHANTOM 1/4-TAGS",                      concept_do_phantom_qtags,      l_c4, {&map_phantom_dmd, phantest_first_or_both, 1}},
-         {"", concept_comment, l_nonexistent_concept},
-         {"", concept_comment, l_nonexistent_concept},
-         {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
    {"TWIN PHANTOM DIAMONDS",                 concept_do_divided_diamonds,   l_c3x, {&map_vv_qtg_2, phantest_impossible}},
    {"TWIN PHANTOM 1/4-TAGS",                 concept_do_divided_qtags,      l_c3x, {&map_vv_qtg_2, phantest_impossible}},
@@ -390,21 +374,21 @@ concept_descriptor concept_descriptor_table[] = {
 /* distorted concepts */
 
 #define dd__1_size 10
-   {"STAGGER",                               concept_do_phantom_2x4,        l_c2,         {&map_stagger, phantest_only_one, 0}},
-   {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_only_one, 0}},
-   {"LADDER COLUMNS",                        concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_only_one, 0}},
+   {"STAGGER",                               concept_do_phantom_2x4,        l_c2,         {&map_stagger, phantest_only_one, 0, MPKIND__NONE}},
+   {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_only_one, 0, MPKIND__NONE}},
+   {"LADDER COLUMNS",                        concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_only_one, 0, MPKIND__NONE}},
    {"OFFSET COLUMNS",                        concept_distorted,             l_c2,         {0, 0, disttest_offset}},
    {"\"Z\" COLUMNS",                         concept_distorted,             l_c3,         {0, 0, disttest_z}},
    {"DISTORTED COLUMNS",                     concept_distorted,             l_c3,         {0, 0, disttest_any}},
    {"<ANYONE> IN A DIAGONAL COLUMN",         concept_single_diagonal,       l_c3,         {0, 0}},
    {"TWO DIAGONAL COLUMNS",                  concept_double_diagonal,       l_c3,         {0, 0}},
-   {"\"O\"",                                 concept_do_phantom_2x4,        l_c1,         {&map_o_s2x4_3, phantest_only_first_one, 0}},
-   {"BUTTERFLY",                             concept_do_phantom_2x4,        l_c1,         {&map_x_s2x4_3, phantest_only_second_one, 0}},
+   {"\"O\"",                                 concept_do_phantom_2x4,        l_c1,         {&map_o_s2x4_3, phantest_only_first_one, 0, MPKIND__NONE}},
+   {"BUTTERFLY",                             concept_do_phantom_2x4,        l_c1,         {&map_x_s2x4_3, phantest_only_second_one, 0, MPKIND__NONE}},
 /* -------- column break -------- */
 #define dd__2_size 8
-   {"BIGBLOCK",                              concept_do_phantom_2x4,        l_c3a,        {&map_stagger, phantest_only_one, 1}},
-   {"STAIRSTEP LINES",                       concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_only_one, 1}},
-   {"LADDER LINES",                          concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_only_one, 1}},
+   {"BIGBLOCK",                              concept_do_phantom_2x4,        l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
+   {"STAIRSTEP LINES",                       concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE}},
+   {"LADDER LINES",                          concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE}},
    {"OFFSET LINES",                          concept_distorted,             l_c2,         {0, 1, disttest_offset}},
    {"\"Z\" LINES",                           concept_distorted,             l_c3,         {0, 1, disttest_z}},
    {"DISTORTED LINES",                       concept_distorted,             l_c3,         {0, 1, disttest_any}},
@@ -414,22 +398,22 @@ concept_descriptor concept_descriptor_table[] = {
 #define dd__3_size 9
 #define dd__3_pofc 3
 #define dd__3_pob 8
-   {"PHANTOM STAGGER COLUMNS",               concept_do_phantom_2x4,        l_c4,         {&map_stagger, phantest_both, 0}},
-   {"PHANTOM STAIRSTEP COLUMNS",             concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_both, 0}},
-   {"PHANTOM LADDER COLUMNS",                concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_both, 0}},
-   {"PHANTOM OFFSET COLUMNS",                concept_do_phantom_2x4,        l_c4a,        {&map_offset, phantest_both, 0}},
+   {"PHANTOM STAGGER COLUMNS",               concept_do_phantom_2x4,        l_c4,         {&map_stagger, phantest_both, 0, MPKIND__NONE}},
+   {"PHANTOM STAIRSTEP COLUMNS",             concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_both, 0, MPKIND__NONE}},
+   {"PHANTOM LADDER COLUMNS",                concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_both, 0, MPKIND__NONE}},
+   {"PHANTOM OFFSET COLUMNS",                concept_do_phantom_2x4,        l_c4a,        {&map_offset, phantest_both, 0, MPKIND__NONE}},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
          {"", concept_comment, l_nonexistent_concept},
-   {"PHANTOM BUTTERFLY OR \"O\"",            concept_do_phantom_2x4,        l_c4a,        {&map_but_o, phantest_both, 0}},
+   {"PHANTOM BUTTERFLY OR \"O\"",            concept_do_phantom_2x4,        l_c4a,        {&map_but_o, phantest_both, 0, MPKIND__NONE}},
 /* -------- column break -------- */
 #define dd__4_size 4
 #define dd__4_pofl 3
-   {"PHANTOM BIGBLOCK LINES",                concept_do_phantom_2x4,        l_c4,         {&map_stagger, phantest_both, 1}},
-   {"PHANTOM STAIRSTEP LINES",               concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_both, 1}},
-   {"PHANTOM LADDER LINES",                  concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_both, 1}},
-   {"PHANTOM OFFSET LINES",                  concept_do_phantom_2x4,        l_c4a,        {&map_offset, phantest_both, 1}},
+   {"PHANTOM BIGBLOCK LINES",                concept_do_phantom_2x4,        l_c4,         {&map_stagger, phantest_both, 1, MPKIND__NONE}},
+   {"PHANTOM STAIRSTEP LINES",               concept_do_phantom_2x4,        l_c4,         {&map_ladder, phantest_both, 1, MPKIND__NONE}},
+   {"PHANTOM LADDER LINES",                  concept_do_phantom_2x4,        l_c4,         {&map_stairst, phantest_both, 1, MPKIND__NONE}},
+   {"PHANTOM OFFSET LINES",                  concept_do_phantom_2x4,        l_c4a,        {&map_offset, phantest_both, 1, MPKIND__NONE}},
 
 /* 4-person distorted concepts */
 
@@ -452,9 +436,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"JAY",                                   concept_misc_distort,          l_c3a,        {0, 1, 0}},
    {"BACK-TO-FRONT JAY",                     concept_misc_distort,          l_c3a,        {0, 1, 8}},
    {"BACK-TO-BACK JAY",                      concept_misc_distort,          l_c3a,        {0, 1, 16}},
-   {"FACING PARALLELOGRAM",                  concept_misc_distort,          l_c3x,        {0, 4, 0}},
-   {"BACK-TO-FRONT PARALLELOGRAM",           concept_misc_distort,          l_c3x,        {0, 4, 8}},
-   {"BACK-TO-BACK PARALLELOGRAM",            concept_misc_distort,          l_c3x,        {0, 4, 16}},
+   {"FACING PARALLELOGRAM",                  concept_misc_distort,          l_c3a,        {0, 4, 0}},
+   {"BACK-TO-FRONT PARALLELOGRAM",           concept_misc_distort,          l_c3a,        {0, 4, 8}},
+   {"BACK-TO-BACK PARALLELOGRAM",            concept_misc_distort,          l_c3a,        {0, 4, 16}},
 /* -------- column break -------- */
 #define d4__4_size 4
 #define d4__4_pibl 1
@@ -465,16 +449,17 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 37
-#define mm__1_3x3 35
-#define mm__1_4x4 36
-#define mm__1_phan 18
+#define mm__1_size 42
+#define mm__1_3x3 40
+#define mm__1_4x4 41
+#define mm__1_phan 22
    {"LEFT",                                  concept_left,                  l_mainstream},
    {"REVERSE",                               concept_reverse,               l_mainstream},
    {"CROSS",                                 concept_cross,                 l_mainstream},
    {"SINGLE",                                concept_single,                l_mainstream},
    {"SINGLE FILE",                           concept_singlefile,            l_c3x},
    {"GRAND",                                 concept_grand,                 l_plus},
+   {"MIRROR",                                concept_mirror,                l_c2},  /* C2 is about where people become aware of taking right hands. */
          {"", concept_comment, l_nonexistent_concept},
    {"TRIANGLE",                              concept_triangle,              l_c1},
    {"DIAMOND",                               concept_diamond,               l_c3x},
@@ -482,12 +467,16 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX",                             concept_12_matrix,             l_c3x},
    {"16 MATRIX",                             concept_16_matrix,             l_c3x},
    {"FUNNY",                                 concept_funny,                 l_c2},
-   {"ASSUME WAVES",                          concept_assume_waves,          l_c3},
+   {"ASSUME WAVES",                          concept_assume_waves,          l_c3,        {0, cr_wave_only, 0}},
+   {"ASSUME TWO-FACED LINES",                concept_assume_waves,          l_c3,        {0, cr_2fl_only, 0}},
+   {"ASSUME NORMAL COLUMNS",                 concept_assume_waves,          l_c3,        {0, cr_wave_only, 1}},
+   {"ASSUME MAGIC COLUMNS",                  concept_assume_waves,          l_c3,        {0, cr_magic_only, 1}},
    {"CENTRAL",                               concept_central,               l_c3x},
    {"FAN",                                   concept_fan_or_yoyo,           l_c3,        {0, 0}},
    {"YO-YO",                                 concept_fan_or_yoyo,           l_c4,        {0, 1}},
    {"PARALLELOGRAM",                         concept_parallelogram,         l_c2},
    {"PHANTOM",                               concept_c1_phantom,            l_c1},
+   {"MATRIX",                                concept_matrix,                l_c4},
    {"<ANYONE> ARE STANDARD IN",              concept_standard,              l_c4a,        {0, 0}},
    {"STABLE",                                concept_stable,                l_c3a,        {0, FALSE, FALSE}},
    {"<ANYONE> ARE STABLE",                   concept_so_and_so_stable,      l_c3a,        {0, TRUE,  FALSE}},
@@ -507,7 +496,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"3X3",                                   concept_3x3,                   l_c3x},
    {"4X4",                                   concept_4x4,                   l_c3x},
 /* -------- column break -------- */
-#define mm__2_size 38
+#define mm__2_size 47
    {"CENTERS",                               concept_centers_or_ends,       l_mainstream, {0, 0}},
    {"ENDS",                                  concept_centers_or_ends,       l_mainstream, {0, 1}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      l_mainstream, {0, 0}},
@@ -526,12 +515,21 @@ concept_descriptor concept_descriptor_table[] = {
          {"", concept_comment, l_nonexistent_concept},
    {"ON YOUR OWN",                           concept_on_your_own,           l_c4a},
    {"<ANYONE> DO YOUR PART,",                concept_so_and_so_only,        l_mainstream, {0, 0}},
-   {"OWN THE <ANYONE>",                      concept_some_vs_others,        l_c3a,        {0, 1}},
+   {"<ANYONE> DO YOUR PART, (while the others)", concept_some_vs_others,    l_mainstream, {0, 1}},
+   {"OWN THE <ANYONE>",                      concept_some_vs_others,        l_c3a,        {0, 3}},
+   {"<ANYONE> ONLY",                         concept_so_and_so_only,        l_mainstream, {0, 4}},
+   {"<ANYONE> ONLY (while the others)",      concept_some_vs_others,        l_mainstream, {0, 5}},
+   {"<ANYONE> DISCONNECTED",                 concept_so_and_so_only,        l_c2, {0, 6}},
+   {"<ANYONE> DISCONNECTED (while the others)", concept_some_vs_others,     l_c2, {0, 7}},
    {"<ANYONE> START",                        concept_so_and_so_begin,       l_c2,         {0, 0}},
          {"", concept_comment, l_nonexistent_concept},
    {"two calls in succession",               concept_sequential,            l_mainstream},
-   {"<N/4> CRAZY",                           concept_crazy,                 l_c2,        {0, 0}},
-   {"<N/4> REVERSE CRAZY",                   concept_crazy,                 l_c3x,       {0, 1}},
+   {"FOLLOW IT BY",                          concept_special_sequential,    l_c2,        {0, 0}},
+   {"PRECEDE IT BY",                         concept_special_sequential,    l_c2,        {0, 1}},
+   {"CRAZY",                                 concept_crazy,                 l_c2,        {0, 0, FALSE}},
+   {"REVERSE CRAZY",                         concept_crazy,                 l_c3x,       {0, 1, FALSE}},
+   {"<N/4> CRAZY",                           concept_frac_crazy,            l_c2,        {0, 0, TRUE}},
+   {"<N/4> REVERSE CRAZY",                   concept_frac_crazy,            l_c3x,       {0, 1, TRUE}},
    {"DO IT TWICE:",                          concept_twice,                 l_mainstream},
    {"RANDOM",                                concept_meta,                  l_c3a,        {0, 0}},
    {"REVERSE RANDOM",                        concept_meta,                  l_c3x,        {0, 1}},
@@ -541,13 +539,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE ORDER",                         concept_meta,                  l_c3x,        {0, 5}},
    {"INTERLACE",                             concept_interlace,             l_c3x},
    {"START <concept>",                       concept_meta,                  l_c2,         {0, 3}},
-   {"FINISH",                                concept_meta,                  l_c2,        {0, 4}},
+   {"FINISH",                                concept_meta,                  l_c2,         {0, 4}},
    {"SKIP THE <Nth> PART",                   concept_nth_part,              l_c2,         {0, 1}},
    {"DO THE <Nth> PART <concept>",           concept_nth_part,              l_c2,         {0, 0}},
    {"REPLACE THE <Nth> PART",                concept_replace_nth_part,      l_c2,         {0, 0}},
    {"INTERRUPT AFTER THE <Nth> PART",        concept_replace_nth_part,      l_c2,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 37
+#define mm__3_size 33
    {"IN POINT TRIANGLE",                     concept_randomtrngl,           l_c1,         {0, 1}},
    {"OUT POINT TRIANGLE",                    concept_randomtrngl,           l_c1,         {0, 0}},
    {"INSIDE TRIANGLES",                      concept_randomtrngl,           l_c1,         {0, 2}},
@@ -581,13 +579,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"RIGHTRIGGER",                           concept_rigger,                l_c3x,        {0, 3}},
    {"BACKRIGGER",                            concept_rigger,                l_c3x,        {0, 16}},
    {"FRONTRIGGER",                           concept_rigger,                l_c3x,        {0, 18}},
-   {"LEFTSLIDER",                            concept_slider,                l_c3x,        {0, 3}},
-   {"RIGHTSLIDER",                           concept_slider,                l_c3x,        {0, 1}},
-   {"BACKSLIDER",                            concept_slider,                l_c3x,        {0, 0}},
-   {"FRONTSLIDER",                           concept_slider,                l_c3x,        {0, 2}},
-/*
-   {"[call]-RIGGER",                         concept_callrigger,            l_c3x},
-*/
 
 /* general concepts */
 
@@ -617,6 +608,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"CONCENTRIC",                            concept_concentric,            l_c1,         {0, schema_concentric}},
    {"AS COUPLES",                            concept_tandem,                l_a1,         {0, FALSE, FALSE, 0, 1}},
    {"TANDEM",                                concept_tandem,                l_c1,         {0, FALSE, FALSE, 0, 0}},
+   {"DIAGNOSE",                              concept_diagnose,              l_mainstream},  /* Only appears if "-diagnostic" given. */
    {"???",                                   marker_end_of_list}};
 
 /* **** BEWARE!!!!  These things are keyed to "concept_descriptor_table"

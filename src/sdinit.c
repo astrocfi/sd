@@ -208,7 +208,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
          /* This call used a selector and didn't like it.  Try again with
             a different selector, until we run out of ideas. */
          switch (selector_for_initialize) {
-            case selector_beaux:
+            case selector_beaus:
                selector_for_initialize = selector_ends;
                goto try_another_selector;
             case selector_ends:
@@ -229,12 +229,12 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    if (call_index >= number_of_calls[call_list_any]) goto finished;
    test_call = main_call_lists[call_list_any][call_index];
 
-   /* Set the selector (for "so-and-so advance to a column", etc) to "beaux".
+   /* Set the selector (for "so-and-so advance to a column", etc) to "beaus".
       This seems to make most calls work -- note that "everyone run" and
-      "no one advance to a column" are illegal.  If "beaux" doesn't work, we will
+      "no one advance to a column" are illegal.  If "beaus" doesn't work, we will
       try "ends" (for the call "fold"), "all", and finally "none" (for the call
       "run"), before giving up. */
-   selector_for_initialize = selector_beaux;
+   selector_for_initialize = selector_beaus;
 
    try_another_selector:
 

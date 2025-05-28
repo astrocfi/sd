@@ -377,6 +377,7 @@ static void
 modify_menu_command(int item)
 {
     update_modification_state(item-1);
+    stuff_command(ui_command_select, command_refresh); 
 }
 
 /*

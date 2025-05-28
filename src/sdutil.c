@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This defines the following functions:
    clear_screen
@@ -63,6 +63,7 @@ and the following external variables:
    enable_file_writing
    selector_names
    direction_names
+   warning_strings
 */
 
 #include <string.h>
@@ -177,7 +178,7 @@ Private void writechar(char src)
    inside of brackets.  This procedure is part of that mechanism. */
 Private void write_blank_if_needed(void)
 {
-   if (lastchar != ' ' && lastchar != '[' && lastchar != '-') writestuff(" ");
+   if (lastchar != ' ' && lastchar != '[' && lastchar != '(' && lastchar != '-') writestuff(" ");
 }
 
 
@@ -337,7 +338,7 @@ char *selector_names[] = {
    "ends",
    "leads",
    "trailers",
-   "beaux",
+   "beaus",
    "belles",
    "center 2",
    "center 6",
@@ -401,60 +402,76 @@ char *direction_names[] = {
    NULL};         /* The X11 interface uses this when making the popup text. */
 
 
-/* BEWARE!!  These strings are keyed to the definitions of "warn__???" in sd.h . */
-Private char *warning_strings[] = {
-   /*  warn__none                */   "Unknown warning????",
-   /*  warn__do_your_part        */   "Do your part.",
-   /*  warn__tbonephantom        */   "This is a T-bone phantom setup call.  Everyone will do their own part.",
-   /*  warn__ends_work_to_spots  */   "Ends work to same spots.",
-   /*  warn__awkward_centers     */   "Awkward for centers.",
-   /*  warn__bad_concept_level   */   "This concept is not allowed at this level.",
-   /*  warn__not_funny           */   "That wasn't funny.",
-   /*  warn__hard_funny          */   "Very difficult funny concept.",
-   /*  warn__unusual             */   "This is an unusual setup for this call.",
-   /*  warn__rear_back           */   "Rear back from the handhold.",
-   /*  warn__awful_rear_back     */   "Rear back from the handhold -- this is very unusual.",
-   /*  warn__excess_split        */   "Split concept seems to be superfluous here.",
-   /*  warn__lineconc_perp       */   "Ends should opt for setup perpendicular to their original line.",
-   /*  warn__dmdconc_perp        */   "Ends should opt for setup perpendicular to their original diamond points.",
-   /*  warn__lineconc_par        */   "Ends should opt for setup parallel to their original line -- concentric rule does not apply.",
-   /*  warn__dmdconc_par         */   "Ends should opt for setup parallel to their original diamond points -- concentric rule does not apply.",
-   /*  warn__xclineconc_perp     */   "New ends should opt for setup perpendicular to their original (center) line.",
-   /*  warn__xcdmdconc_perp      */   "New ends should opt for setup perpendicular to their original (center) diamond points.",
-   /*  warn__ctrstand_endscpls   */   "Centers work in tandem, ends as couples.",
-   /*  warn__ctrscpls_endstand   */   "Centers work as couples, ends in tandem.",
-   /*  warn__each2x2             */   "Each 2x2.",
-   /*  warn__each1x4             */   "Each 1x4.",
-   /*  warn__each1x2             */   "Each 1x2.",
-   /*  warn__take_right_hands    */   "Take right hands.",
-   /*  warn__ctrs_are_dmd        */   "The centers are the diamond.",
-   /*  warn__full_pgram          */   "Completely offset parallelogram.",
-   /*  warn__offset_gone         */   "The offset goes away.",
-   /*  warn__overlap_gone        */   "The overlap goes away.",
-   /*  warn__to_o_spots          */   "Go back to 'O' spots.",
-   /*  warn__to_x_spots          */   "Go back to butterfly spots.",
-   /*  warn__some_rear_back      */   "Some people rear back.",
-   /*  warn__not_tbone_person    */   "Work with the person to whom you are not T-boned.",
-   /*  warn__check_c1_phan       */   "Check a 'C1 phantom' setup.",
-   /*  warn__check_dmd_qtag      */   "Fudge to a diamond/quarter-tag setup.",
-   /*  warn__check_2x4           */   "Check a 2x4 setup.",
-   /*  warn__check_pgram         */   "Opt for a parallelogram.",
-   /*  warn__dyp_resolve_ok      */   "Do your part.",
-   /*  warn__ctrs_stay_in_ctr    */   "Centers stay in the center.",
-   /*  warn__check_c1_stars      */   "Check a generalized 'star' setup.",
-   /*  warn__bigblock_feet       */   "Bigblock/stagger shapechanger -- go to footprints.",
-   /*  warn__some_touch          */   "Some people step to a wave.",
-   /*  warn__split_to_2x4s       */   "Do the call in each 2x4.",
-   /*  warn__split_to_2x3s       */   "Do the call in each 2x3.",
-   /*  warn__split_to_1x8s       */   "Do the call in each 1x8.",
-   /*  warn__split_to_1x6s       */   "Do the call in each 1x6.",
-   /*  warn__evil_interlocked    */   "Interlocked phantom shape-changers are very evil.",
-   /*  warn__split_phan_in_pgram */   "The split phantom setups are directly adjacent to the real people."};
+/* BEWARE!!  These strings are keyed to the definition of "warning_index" in sd.h . */
+/* A "*" as the first character means that this warning precludes acceptance while searching. */
+/* A "+" as the first character means that this warning is cleared if a concentric call was done
+   and the "suppress_elongation_warnings" flag was on. */
+char *warning_strings[] = {
+   /*  warn__none                */   " Unknown warning????",
+   /*  warn__do_your_part        */   "*Do your part.",
+   /*  warn__tbonephantom        */   " This is a T-bone phantom setup call.  Everyone will do their own part.",
+   /*  warn__awkward_centers     */   "*Awkward for centers.",
+   /*  warn__bad_concept_level   */   "*This concept is not allowed at this level.",
+   /*  warn__not_funny           */   "*That wasn't funny.",
+   /*  warn__hard_funny          */   "*Very difficult funny concept.",
+   /*  warn__unusual             */   "*This is an unusual setup for this call.",
+   /*  warn__rear_back           */   "*Rear back from the handhold.",
+   /*  warn__awful_rear_back     */   "*Rear back from the handhold -- this is very unusual.",
+   /*  warn__excess_split        */   "*Split concept seems to be superfluous here.",
+   /*  warn__lineconc_perp       */   "+Ends should opt for setup perpendicular to their original line.",
+   /*  warn__dmdconc_perp        */   "+Ends should opt for setup perpendicular to their original diamond points.",
+   /*  warn__lineconc_par        */   "+Ends should opt for setup parallel to their original line -- concentric rule does not apply.",
+   /*  warn__dmdconc_par         */   "+Ends should opt for setup parallel to their original diamond points -- concentric rule does not apply.",
+   /*  warn__xclineconc_perp     */   "+New ends should opt for setup perpendicular to their original (center) line.",
+   /*  warn__xcdmdconc_perp      */   "+New ends should opt for setup perpendicular to their original (center) diamond points.",
+   /*  warn__ctrstand_endscpls   */   " Centers work in tandem, ends as couples.",
+   /*  warn__ctrscpls_endstand   */   " Centers work as couples, ends in tandem.",
+   /*  warn__each2x2             */   " Each 2x2.",
+   /*  warn__each1x4             */   " Each 1x4.",
+   /*  warn__each1x2             */   " Each 1x2.",
+   /*  warn__take_right_hands    */   " Take right hands.",
+   /*  warn__ctrs_are_dmd        */   " The centers are the diamond.",
+   /*  warn__full_pgram          */   " Completely offset parallelogram.",
+   /*  warn__offset_gone         */   " The offset goes away.",
+   /*  warn__overlap_gone        */   " The overlap goes away.",
+   /*  warn__to_o_spots          */   " Go back to 'O' spots.",
+   /*  warn__to_x_spots          */   " Go back to butterfly spots.",
+   /*  warn__some_rear_back      */   " Some people rear back.",
+   /*  warn__not_tbone_person    */   " Work with the person to whom you are not T-boned.",
+   /*  warn__check_c1_phan       */   " Check a 'C1 phantom' setup.",
+   /*  warn__check_dmd_qtag      */   " Fudge to a diamond/quarter-tag setup.",
+   /*  warn__check_2x4           */   " Check a 2x4 setup.",
+   /*  warn__check_pgram         */   " Opt for a parallelogram.",
+   /*  warn__dyp_resolve_ok      */   " Do your part.",
+   /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
+   /*  warn__check_c1_stars      */   " Check a generalized 'star' setup.",
+   /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
+   /*  warn__some_touch          */   " Some people step to a wave.",
+   /*  warn__split_to_2x4s       */   " Do the call in each 2x4.",
+   /*  warn__split_to_2x3s       */   " Do the call in each 2x3.",
+   /*  warn__split_to_1x8s       */   " Do the call in each 1x8.",
+   /*  warn__split_to_1x6s       */   " Do the call in each 1x6.",
+   /*  warn__take_left_hands     */   " Take left hands, since this call is being done mirror.",
+   /*  warn__evil_interlocked    */   " Interlocked phantom shape-changers are very evil.",
+   /*  warn__split_phan_in_pgram */   " The split phantom setups are directly adjacent to the real people.",
+   /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
+   /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
+   /*  warn__did_not_interact    */   "*The setups did not interact with each other."};
 
-/* Bits that go into argument to print_recurse. */
-#define PRINT_RECURSE_STAR 01
-#define PRINT_RECURSE_TAGREACT 02
-#define PRINT_RECURSE_TAGENDING 04
+/* There are 3 (and only 3) bits that are meaningful in the argument to "print_recurse":
+         PRINT_RECURSE_STAR
+         DFM1_MUST_BE_SCOOT_CALL
+         DFM1_MUST_BE_TAG_CALL
+   The first of these means to print an asterisk for a call that is missing in the
+   current type-in state.  The other two mean that we are printing a subcall, and
+   that the indicated invocation flag is on.  These control the elision of stuff
+   like "1/2", so that we will say "[vertical tag] back to a wave" instead of
+   "[vertical 1/2 tag] back to a wave". */
+
+/* We define this one to be some bit that won't conflict with the other two.
+   The simplest way to do that is to use some other "DFM1" bit.  We pick on poor
+   defenseless "DFM1_CONC_DEMAND_LINES" because it is so far away from home in this file. */
+#define PRINT_RECURSE_STAR DFM1_CONC_DEMAND_LINES
 
 
 Private void print_recurse(parse_block *thing, int print_recurse_arg)
@@ -505,7 +522,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                break;
             }
             else if (kk != concept_left && kk != concept_cross) {
-               print_recurse_arg &= ~(PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING);
+               print_recurse_arg &= ~(DFM1_MUST_BE_SCOOT_CALL | DFM1_MUST_BE_TAG_CALL);
                break;
             }
             cc = cc->next;
@@ -534,14 +551,17 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff("CENTERS ");
             }
             else if (k == concept_some_vs_others) {
-               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
-               writestuff(", ");
+               if ((i = item->value.arg1) == 1)
+                  writestuff_with_decorations("<ANYONE> DO YOUR PART, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               else if (i == 3)
+                  writestuff_with_decorations("OWN THE <ANYONE>, ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               else if (i == 5)
+                  writestuff_with_decorations("<ANYONE> ONLY ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               else
+                  writestuff_with_decorations("<ANYONE> DISCONNECTED ", you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
             }
             else if (k == concept_sequential) {
                writestuff("(");
-            }
-            else if (k == concept_callrigger) {
-               writestuff("ENDS BEGIN A [");
             }
             else if (k == concept_replace_nth_part) {
                writestuff("DELAY: ");
@@ -561,33 +581,30 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             print_recurse(static_cptr->next, 0);
 
-            if (k == concept_callrigger) {
-               writestuff("]-RIGGER");             /* We want to print this even if input is incomplete. */
-               if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
-               request_final_space = TRUE;
-            }
-            else {
-               if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
+            if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
 
-               request_final_space = TRUE;
+            request_final_space = TRUE;
 
-               if (k == concept_centers_and_ends)
-                  writestuff(" WHILE THE ENDS");
-               else if (k == concept_on_your_own)
-                  writestuff(" AND");
-               else if (k == concept_interlace)
-                  writestuff(" WITH");
-               else if (k == concept_replace_nth_part) {
-                  writestuff(" BUT ");
-                  writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
-                  writestuff(" WITH A [");
-                  request_final_space = FALSE;
-               }
-               else if (k == concept_sequential)
-                  writestuff(" ;");
-               else
-                  writestuff(" BY");
+            if (k == concept_centers_and_ends)
+               writestuff(" WHILE THE ENDS");
+            else if (k == concept_some_vs_others && item->value.arg1 != 3)
+               writestuff(" WHILE THE OTHERS");
+            else if (k == concept_on_your_own)
+               writestuff(" AND");
+            else if (k == concept_interlace)
+               writestuff(" WITH");
+            else if (k == concept_replace_nth_part) {
+               writestuff(" BUT ");
+               writestuff_with_decorations(item->name, you_owe_me_a_number, you_owe_me_a_selector, &index, selector_names[selector]);
+               writestuff(" WITH A [");
+               request_final_space = FALSE;
             }
+            else if (k == concept_sequential)
+               writestuff(" ;");
+            else if (k == concept_special_sequential)
+               writestuff(",");
+            else
+               writestuff(" BY");
 
             next_cptr = subsidiary_ptr;
          }
@@ -698,26 +715,23 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          /* This is a "marker", so it has a call, perhaps with a selector and/or number.
             The call may be null if we are printing a partially entered line.  Beware. */
 
-         int next_recurse1_arg;
-         int next_recurse2_arg;
-         parse_block *save_cptr;
          parse_block *subsidiary_ptr;
          parse_block *sub1_ptr;
          parse_block *sub2_ptr;
          parse_block *search;
-         callspec_block *localcall;
          long_boolean pending_subst1, subst1_in_use, this_is_subst1;
          long_boolean pending_subst2, subst2_in_use, this_is_subst2;
+
          selector_kind i16junk = static_cptr->selector;
          direction_kind idirjunk = static_cptr->direction;
          int number_list = static_cptr->number;
-         localcall = static_cptr->call;
+         unsigned int next_recurse1_arg = 0;
+         unsigned int next_recurse2_arg = 0;
+         callspec_block *localcall = static_cptr->call;
+         parse_block *save_cptr = static_cptr;
 
-         save_cptr = static_cptr;
          subst1_in_use = FALSE;
          subst2_in_use = FALSE;
-         next_recurse1_arg = 0;
-         next_recurse2_arg = 0;
 
          if (k == concept_another_call_next_mod) {
             search = save_cptr->next;
@@ -726,25 +740,19 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                this_is_subst2 = FALSE;
                subsidiary_ptr = search->subsidiary_root;
                if (subsidiary_ptr) {
-                  switch (search->concept->kind) {
-                     case concept_another_call_next_mod:
-                     case concept_another_call_next_modreact:
-                     case concept_another_call_next_modtag:
-                        if (search->concept->value.arg2 == 1)
-                           next_recurse1_arg = PRINT_RECURSE_TAGREACT;
-                        else if (search->concept->value.arg2 == 2)
-                           next_recurse1_arg = PRINT_RECURSE_TAGENDING;
+                  switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+                     case 1:
+                     case 2:
+                        /* Pick up the MUST_BE_SCOOT and MUST_BE_TAG bits.  This might also
+                           inadvertently pick up the PRINT_RECURSE_STAR bit, but it
+                           doesn't matter, since we are going to set that bit anyway. */
+                        next_recurse1_arg = search->number;
                         this_is_subst1 = TRUE;
                         break;
-                     case concept_another_call_next_2nd:
-                        this_is_subst2 = TRUE;
-                        break;
-                     case concept_another_call_next_2ndreact:
-                        next_recurse2_arg = PRINT_RECURSE_TAGREACT;
-                        this_is_subst2 = TRUE;
-                        break;
-                     case concept_another_call_next_2ndtag:
-                        next_recurse2_arg = PRINT_RECURSE_TAGENDING;
+                     case 5:
+                     case 6:
+                        /* See above. */
+                        next_recurse2_arg = search->number;
                         this_is_subst2 = TRUE;
                         break;
                   }
@@ -780,6 +788,20 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             if (enable_file_writing) localcall->age = global_age;
             np = localcall->name;
+
+            /* Fix up elision of stuff.  If a call with "is_tag_call" on invokes a call
+               with "must_be_tag_call", we do not use the "must_be_tag_call" flag to cause
+               elision of "1/2" in things like "1/2 flip".  Instead, we simply pass on the
+               state of the "must_be_tag_call" that we inherited.  This makes "revert the [1/2 tag]"
+               or "[reflected [1/2 flip]] stimulate" not elide the "1/2", while
+               "revert the [flip] your neighbor" does elide it. */
+
+            if (localcall->callflags1 & CFLAG1_IS_TAG_CALL) {
+               if (!(print_recurse_arg & DFM1_MUST_BE_TAG_CALL)) {
+                  next_recurse1_arg &= ~DFM1_MUST_BE_TAG_CALL;
+                  next_recurse2_arg &= ~DFM1_MUST_BE_TAG_CALL;
+               }
+            }
 
             /* Skip any "@g" or "@i" marker (we already acted on it.) */
             if ((*np == '@') && ((np[1] == 'g') || (np[1] == 'i'))) np += 2;
@@ -844,7 +866,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         np += 2;
                         break;
                      case 'c':
-                        if (print_recurse_arg & (PRINT_RECURSE_TAGREACT | PRINT_RECURSE_TAGENDING)) {
+                        if (print_recurse_arg & (DFM1_MUST_BE_SCOOT_CALL | DFM1_MUST_BE_TAG_CALL)) {
                            np += 2;
                            while (*np != '@') np++;
                         }
@@ -933,22 +955,20 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             while (search) {
                subsidiary_ptr = search->subsidiary_root;
                if (subsidiary_ptr) {
-                  switch (search->concept->kind) {
-                     case concept_another_call_next_mod:
-                     case concept_another_call_next_modreact:
-                     case concept_another_call_next_modtag:
-                     case concept_another_call_next_plain:
+                  switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+                     case 1:
+                     case 2:
+                     case 3:
                         /* This is a natural replacement.  It may already have been taken care of. */
-                        if (pending_subst1 || search->concept->kind == concept_another_call_next_plain) {
+                        if (pending_subst1 || ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3) {
                            write_blank_if_needed();
                            writestuff("[modification: ");
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                            writestuff("]");
                         }
                         break;
-                     case concept_another_call_next_2nd:
-                     case concept_another_call_next_2ndreact:
-                     case concept_another_call_next_2ndtag:
+                     case 5:
+                     case 6:
                         /* This is a secondary replacement.  It may already have been taken care of. */
                         if (pending_subst2) {
                            write_blank_if_needed();
@@ -1007,7 +1027,7 @@ Private void printperson(int x)
    int i;
 
    if ((x & 01000) == 0) {
-      writestuff("    ");
+      writestuff("  . ");
    }
    else {
       i = 2 * (x & 017);
@@ -1019,37 +1039,23 @@ Private void printperson(int x)
    }
 }
 
-/* These static variables are used by printsetup/print_4_person_setup/do_write/do_write4/do_write4_small. */
+/* These static variables are used by printsetup/print_4_person_setup/do_write. */
 
-Private int offs, roti, ri, modulus, personstart;
+Private int offs, roti, modulus, personstart;
 Private setup *printarg;
-
-Private void do_write4_small(char s[])
-{
-   char c;
-
-   offs = (((roti >> 1) & 1) * (modulus / 2)) - modulus;
-   for (;;) {
-      if (!(c=(*s++))) return;
-      else if (c == '@') newline();
-      else if (c == ' ') writestuff(" ");
-      else if (c >= 'a' && c <= 'l')
-         printperson(rotperson(printarg->people[personstart + ((c-'a'-offs) % modulus)].id1, ri));
-      else writestuff("?");
-   }
-}
-
 
 Private void do_write(char s[])
 {
    char c;
+
+   int ri = roti * 011;
 
    for (;;) {
       if (!(c=(*s++))) return;
       else if (c == '@') newline();
       else if (c == ' ') writestuff(" ");
       else if (c >= 'a' && c <= 'x')
-         printperson(rotperson(printarg->people[personstart + ((c-'a'-offs) % modulus)].id1, roti));
+         printperson(rotperson(printarg->people[personstart + ((c-'a'-offs) % modulus)].id1, ri));
       else writestuff("?");
    }
 }
@@ -1065,6 +1071,7 @@ static char *printing_tables[][2] = {
    {"     b@a      c@     d@",                                                "   a@@d  b@@   c@"},                                                                                              /* sdmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_star */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_trngl */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_trngl4 */
    {"a        b@    fc@e        d@",                                          "ea@  f@  c@db@"},                                                                                                 /* s_bone6 */
    {"   b@a  c@f  d@   e@",                                                   "   fa@e      b@   dc@"},                                                                                          /* s_short6 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_qtag */
@@ -1082,14 +1089,14 @@ static char *printing_tables[][2] = {
    {"a  b  c  d@@k  l  f  e@@j  i  h  g",                                     "j  k  a@@i  l  b@@h  f  c@@g  e  d"},                                                                             /* s3x4 */
    {"a  b  c  d  e  f@@l  k  j  i  h  g",                                     "l  a@@k  b@@j  c@@i  d@@h  e@@g  f"},                                                                             /* s2x6 */
    {"a  b  c  d  e  f  g  h@@p  o  n  m  l  k  j  i",                         "p  a@@o  b@@n  c@@m  d@@l  e@@k  f@@j  g@@i  h"},                                                                 /* s2x8 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s4x4 */
+   {"m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e",                         (char *) 0},                                                                                                       /* s4x4 */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x1x6 */
    {"a b c d e j i h g f",                                                    "a@b@c@d@e@j@i@h@g@f"},                                                                                            /* s_1x10 */
    {"a b c d e f l k j i h g",                                                "a@b@c@d@e@f@l@k@j@i@h@g"},                                                                                        /* s_1x12 */
    {"abcdefgnmlkjih",                                                         "a@b@c@d@e@f@g@n@m@l@k@j@i@h"},                                                                                    /* s_1x14 */
    {"abcdefghponmlkji",                                                       "a@b@c@d@e@f@g@h@p@o@n@m@l@k@j@i"},                                                                                /* s_1x16 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_c1phan */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_bigblob */
+   {"   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j",                                       (char *) 0},                                                         /* s_c1phan */
+   {"            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m",           (char *) 0},                                                         /* s_bigblob */
    {"    b           h@a    c   g    e@    d           f",                    "  a@@db@@  c@@  g@@fh@@  e"},                                                                                     /* s_ptpd */
    {"             d@@a b c g f e@@             h",                            "      a@@      b@@      c@h        d@      g@@      f@@      e"},                                                 /* s_3x1dmd */
    {"   a      b      c@@j k l f e d@@   i      h      g",                    "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"},                             /* s_3dmd */
@@ -1097,9 +1104,9 @@ static char *printing_tables[][2] = {
    {"             d@a b c  g f e@             h",                             "   a@@   b@@   c@h  d@   g@@   f@@   e"},                                                                         /* s_wingedstar */
    {"             d       f@a b c  e k  i h g@             l       j",        "   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g"},                                                          /* s_wingedstar12 */
    {"             d       h       m@a b c  f g  o n  k j i@             e       p       l",  "   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i"},                            /* s_wingedstar16 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_galaxy */
+   {"     c@   bd@a      e@   hf@     g",                                     (char *) 0},                                                                                                       /* s_galaxy */
    {"a  b  c  d  e  f@@l  k  j  i  h  g@@s  t  u  v  w  x@@r  q  p  o  n  m", "r  s  l  a@@q  t  k  b@@p  u  j  c@@o  v  i  d@@n  w  h  e@@m  x  g  f"},                                         /* s4x6 */
-   {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_thar */
+   {"      c@      d@abfe@      h@      g",                                   (char *) 0},                                                                                                       /* s_thar */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x4dmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_8x8 */
    {(char *) 0,                                                               (char *) 0}};                                                                                                      /* s_normal_concentric */
@@ -1109,39 +1116,40 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
 {
    modulus = setup_limits[s->skind]+1;
    roti = (s->srotation & 3);
-   ri = roti * 011;
    personstart = ps;
+
+   offs = (((roti >> 1) & 1) * (modulus / 2)) - modulus;
 
    switch (s->skind) {
       case s2x2:
          newline();
          if (roti & 1) {
             if (elong < 0)
-               do_write4_small("da@cb@");
+               do_write("da@cb@");
             else if ((roti+elong) & 1)
-               do_write4_small("da@@@cb@");
+               do_write("da@@@cb@");
             else
-               do_write4_small("d    a@c    b@");
+               do_write("d    a@c    b@");
          }
          else {
             if (elong < 0)
-               do_write4_small("ab@dc@");
+               do_write("ab@dc@");
             else if ((roti+elong) & 1)
-               do_write4_small("ab@@@dc@");
+               do_write("ab@@@dc@");
             else
-               do_write4_small("a    b@d    c@");
+               do_write("a    b@d    c@");
          }
          break;
       case s_star:
          newline();
          if (roti & 1)
-            do_write4_small("   a@d  b@   c@");
+            do_write("   a@d  b@   c@");
          else
-            do_write4_small("   b@a  c@   d@");
+            do_write("   b@a  c@   d@");
          break;
       case s1x4: case sdmd: case s2x4: case s_2x3: case s_1x6: case s_short6: case s_bone6: case s_1x2:
          newline();
-         do_write4_small(printing_tables[s->skind][roti & 1]);
+         do_write(printing_tables[s->skind][roti & 1]);
          break;
       default:
          writestuff(" ????");
@@ -1156,18 +1164,30 @@ Private void printsetup(setup *x)
    char *str;
 
    printarg = x;
-   modulus = setup_limits[x->kind]+1;
-   roti = (x->rotation & 3) * 011;
-   offs = ((x->rotation & 2) * (modulus / 4)) - modulus;
+   modulus = setup_attrs[x->kind].setup_limits+1;
+   roti = x->rotation & 3;
    
    newline();
 
    personstart = 0;
-   str = printing_tables[x->kind][x->rotation & 1];
 
-   if (str) {
-      do_write(str);
+   if (setup_attrs[x->kind].four_way_symmetry) {
+      /* still to do???
+         s_1x1
+         s2x2
+         s_star
+         s_hyperglass */
+
+      offs = (roti * (modulus / 4)) - modulus;
+      str = printing_tables[x->kind][0];
    }
+   else {
+      offs = ((roti & 2) * (modulus / 4)) - modulus;
+      str = printing_tables[x->kind][roti & 1];
+   }
+
+   if (str)
+      do_write(str);
    else {
       switch (x->kind) {
          case s_qtag:
@@ -1188,26 +1208,6 @@ Private void printsetup(setup *x)
                   do_write("      a  b@@g  h  d  c@@      f  e");
                }
             }
-            break;
-         case s_galaxy:
-            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-            do_write("     c@   bd@a      e@   hf@     g");
-            break;
-         case s4x4:
-            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-            do_write("m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e");
-            break;
-         case s_bigblob:
-            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-            do_write("            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m");
-            break;
-         case s_c1phan:
-            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-            do_write("   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j");
-            break;
-         case s_thar:
-            offs = ((x->rotation & 3) * (modulus / 4)) - modulus;
-            do_write("      c@      d@abfe@      h@      g");
             break;
          case s_normal_concentric:
             writestuff(" centers:");
@@ -1335,10 +1335,10 @@ extern void write_history_line(int history_index, Const char *header, long_boole
    /* Check for warnings to print. */
    /* Do not double space them, even if writing final output. */
 
-   for (w=0; w<64; w++) {
+   for (w=0 ; w<NUM_WARNINGS ; w++) {
       if (((1 << (w & 0x1f)) & history[history_index].warnings.bits[w>>5]) != 0) {
          writestuff("  Warning:  ");
-         writestuff(warning_strings[w]);
+         writestuff(&warning_strings[w][1]);
          newline();
       }
    }
@@ -1937,6 +1937,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                    (ss->people[3].id1 & d_mask) == d_west)
                   goto good;
                goto bad;
+            case sq_n_is_0: if ((current_number_fields & 0xF) == 0) goto good; goto bad;
+            case sq_n_is_1: if ((current_number_fields & 0xF) == 1) goto good; goto bad;
+            case sq_n_is_2: if ((current_number_fields & 0xF) == 2) goto good; goto bad;
+            case sq_n_is_3: if ((current_number_fields & 0xF) == 3) goto good; goto bad;
+            case sq_n_is_4: if ((current_number_fields & 0xF) == 4) goto good; goto bad;
          }
       }
       bad:
@@ -2084,7 +2089,7 @@ extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeopl
 }
 
 
-#define SINGLE_BITS INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4
+#define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4)
 
 /* Take a concept pointer and scan for all "final" concepts,
    returning an updated concept pointer and a mask of all such concepts found.
@@ -2129,39 +2134,39 @@ extern parse_block *process_final_concepts(
          case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
          case concept_single:
             bit_to_set = INHERITFLAG_SINGLE;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = INHERITFLAG_SINGLEFILE;
             break;
          case concept_singlefile:
             bit_to_set = INHERITFLAG_SINGLEFILE;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = INHERITFLAG_SINGLE;
             break;
          case concept_1x2:
             bit_to_set = INHERITFLAG_1X2;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_2x1:
             bit_to_set = INHERITFLAG_2X1;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_2x2:
             bit_to_set = INHERITFLAG_2X2;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_1x3:
             bit_to_set = INHERITFLAG_1X3;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_3x1:
             bit_to_set = INHERITFLAG_3X1;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_3x3:
             bit_to_set = INHERITFLAG_3X3;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_4x4:
             bit_to_set = INHERITFLAG_4X4;
-            bit_to_forbid = SINGLE_BITS;
+            bit_to_forbid = MXN_BITS;
             break;
          case concept_split:
             bit_to_set = FINAL__SPLIT; break;

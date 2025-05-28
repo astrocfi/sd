@@ -124,7 +124,7 @@ extern long_boolean selectp(setup *ss, int place)
          if      ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_TRAILER) return(TRUE);
          else if ((pid2 & (ID2_LEAD|ID2_TRAILER)) == ID2_LEAD) return(FALSE);
          break;
-      case selector_beaux:
+      case selector_beaus:
          if      ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BEAU) return(TRUE);
          else if ((pid2 & (ID2_BEAU|ID2_BELLE)) == ID2_BELLE) return(FALSE);
          break;

@@ -402,6 +402,18 @@ trngl       |_____|_____|      (1 way symmetry -- leads to strange
                |_____|
 
 
+
+             _____ _____
+            |     |     |
+            |  2  |  3  |
+            |_____|_____|      (1 way symmetry -- leads to strange
+               |     |         requirements in call descriptions)
+trngl4         |  1  |
+               |_____|
+               |     |
+               |  0  |
+               |_____|
+
 
                          _____
                         |     |
@@ -1361,16 +1373,16 @@ x14_once_rem_couple
       opposite way or is T-boned.
 
 lines_miniwave
-      applies to 1x2, 1x4, 1x6, 2x4, 2x6, or 2x8 lines only.  Returns TRUE if the
-      lateral partner of the person under test is alive and facing the
-      opposite direction.  Returns FALSE if the partner is a phantom or
-      faces the same way or is T-boned.
+      applies to 1x2, 1x4, 1x6, 2x4, 3x4, 2x6, or 2x8 lines only.
+      Returns TRUE if the lateral partner of the person under test is alive
+      and facing the opposite direction.  Returns FALSE if the partner is
+      a phantom or faces the same way or is T-boned.
 
 lines_couple
-      applies to 1x2, 1x4, 1x6, 2x4, 2x6, or 2x8 lines only.  Returns TRUE if the
-      lateral partner of the person under test is alive and facing the
-      same direction.  Returns FALSE if the partner is a phantom or
-      faces the opposite way or is T-boned.
+      applies to 1x2, 1x4, 1x6, 2x4, 3x4, 2x6, or 2x8 lines only.
+      Returns TRUE if the lateral partner of the person under test is alive
+      and facing the same direction.  Returns FALSE if the partner is
+      a phantom or faces the opposite way or is T-boned.
 
 lines_magic_miniwave
       applies to 2x4 lines only.  Returns TRUE if the magic partner
@@ -1798,6 +1810,9 @@ rear_back_from_r_wave
 rear_back_from_qtag
 dont_use_in_resolve
 neednumber
+need_two_numbers 
+need_three_numbers
+need_four_numbers
 sequence_starter
 split_like_square_thru
 split_like_dixie_style
@@ -1833,6 +1848,15 @@ parallel_conc_end
 
       This flag is complicated.  Use with care.  Test with care.
 
+left_means_touch_or_check
+      This is used for calls like "spin the top" which call for stepping to
+      a right-handed wave if necessary, but are mirror-symmetric once in a
+      wave.  If the "left" modifier is used, the dancers will step to a
+      left-handed wave and do the call.  If already in a left-handed wave,
+      the "left" modifier is superfluous.  If the "left" modifier is given
+      when the dancers are in a right-handed wave, it is an error.  That is,
+      from a left-handed wave you may say "spin the top" or LEFT spin the top",
+      but from a right-handed wave you may only say "spin the top".
 
 take_right_hands
 is_tag_call
@@ -1842,6 +1866,39 @@ split_large_setups
 fudge_to_q_tag
 visible_fractions
 first_part_visible
+finish_means_skip_first_part
+can_be_fan_or_yoyo
+
+no_cutting_through
+      This applies only to by-array call definitions for 2x2 starting setups.
+      It is used for calls like "circulate" to indicate that they are illegal
+      from elongated setups if any dancers are facing into the 2x2 along the
+      long axis.  Hence, it is illegal to have the ends circulate when the
+      setup is a starting DPT, but it is legal from a completed DPT or from
+      any lines.  This will be checked whether the command to have the ends
+      do the call is explicit, as in "ENDS circulate", or implicit, as in
+      "acey deucey" or "team up".
+
+      If the "concentric" concept is given, this test is not applied, since
+      any call is legal.  We enforce the law; we do not enforce good taste.
+
+      The error message that is given indicates that the people would "cut
+      through the middle" -- the program doesn't actually check whether
+      they do.  It simply checks for suspicious starting positions.
+
+      Two-person definitions do not need this flag -- the two-person setup is
+      always checked for division along the separation axis.  Hence, "ends
+      star thru" and "ends pass thru" are illegal from a starting DPT, even
+      though this flag does not appear.
+
+no_elongation_allowed
+      This is like the "no_cutting_through" flag, except that it does not
+      check anyone's facing direction -- it simply makes the 2x2 call illegal
+      if called from an elongated setup.  Hence "ends flutterwheel" is illegal
+      from a starting DPT or from facing lines, though "concentric flutterwheel"
+      is of course legal.
+
+
 12_16_matrix_means_split
 imprecise_rotation
 diamond_is_legal
@@ -1855,6 +1912,14 @@ grand_is_inherited
 16_matrix_is_inherited
 cross_is_inherited
 single_is_inherited
+1x2_is_inherited
+2x1_is_inherited
+2x2_is_inherited
+1x3_is_inherited
+3x1_is_inherited
+3x3_is_inherited
+4x4_is_inherited
+singlefile_is_inherited
 
 
 

@@ -134,6 +134,11 @@ extern long int lrand48(void);
 extern char *strerror(int);
 #endif
 
+/* Despite all our efforts, some systems just can't be bothered ... */
+#ifndef SEEK_END
+#define SEEK_END 2
+#endif
+
 /* I think we have everything now.  Isn't portability fun?  Before people
    started taking these standards as semi-seriously as they do now, it was
    MUCH HARDER to make a program portable than what you just saw. */
@@ -288,16 +293,69 @@ extern void get_date(char dest[])
 
 extern void open_file(void)
 {
-   int this_file_position;
+   int i, this_file_position;
 
    file_error = FALSE;
 
-   if (!(fildes = fopen(outfile_string, "a"))) {
+   /* We need to find out whether there are garbage characters (e.g. ^Z)
+      near the end of the existing file, and remove same.  Such things
+      have been known to be placed in files by some programs running on PC's.
+      So we open in "r+" mode first, and look around. */
+
+   if (!(fildes = fopen(outfile_string, "r+"))) {
+
+      /* Failed.  Maybe the file doesn't exist, in which case we open it
+         in append mode (which will create it if necessary) and don't worry
+         about the garbage characters. */
+
+      if (!(fildes = fopen(outfile_string, "a"))) {
+         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+         (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+         file_error = TRUE;
+         return;
+      }
+
+      /* We are positioned at the end, because that's what "a" mode does. */
+      goto just_append;
+   }
+
+   /* The file exists, and we have opened it in "r+" mode.  Look at its end. */
+
+   if (fseek(fildes, -4, SEEK_END)) {
+      /* It isn't 4 characters long -- forget it.  But first, position at the end. */
+      if (fseek(fildes, 0, SEEK_END)) {
+         (void) fclose(fildes);     /* What happened????? */
+         (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
+         (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
+         file_error = TRUE;
+         return;
+      }
+      goto just_append;
+   }
+
+   /* We are now 4 before the end.  Look at those last 4 characters. */
+
+   for (i=0 ; i<4 ; i++) {
+      if (fgetc(fildes) == 0x1A) {
+         writestuff("Warning -- file contains spurious control character -- removing same.");
+         newline();
+         newline();
+         last_file_position = -1;   /* Suppress the other error. */
+         break;
+      }
+   }
+
+   /* Now seek to the end, or to the point just before the offending character. */
+
+   if (fseek(fildes, i-4, SEEK_END)) {
+      (void) fclose(fildes);     /* What happened????? */
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
-      (void) strncpy(fail_message, "open", MAX_ERR_LENGTH);
+      (void) strncpy(fail_message, "seek", MAX_ERR_LENGTH);
       file_error = TRUE;
       return;
    }
+
+   just_append:
 
    this_file_position = ftell(fildes);
 
@@ -313,7 +371,7 @@ extern void open_file(void)
       newline();
    }
    else {
-      char junk[1];
+      char formfeed = '\f';
 
       if (last_file_position == -1) {
          writestuff("Appending to existing file.");
@@ -321,8 +379,7 @@ extern void open_file(void)
          newline();
       }
 
-      junk[0] = '\f';      /* Write a formfeed (end-of-page indicator). */
-      if ((fwrite(junk, 1, 1, fildes) != 1) || ferror(fildes)) {
+      if ((fwrite(&formfeed, 1, 1, fildes) != 1) || ferror(fildes)) {
          (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
          (void) strncpy(fail_message, "write", MAX_ERR_LENGTH);
          file_error = TRUE;

@@ -22,9 +22,7 @@
 #define UI_VERSION_STRING "1.15"
 
 /* See comments in sdmain.c regarding this string. */
-static char *id="@(#)$He" "ader: Sd: sdui-x11.c "
-   UI_VERSION_STRING
-   "  gildea@lcs.mit.edu  18 Mar 93 $";
+static char *id="@(#)$He" "ader: Sd: sdui-x11.c " UI_VERSION_STRING "  gildea@lcs.mit.edu  18 Mar 93 $";
 static char *time_stamp = "sdui-x11.c Time-stamp: <93/12/04 18:39:21 gildea>";
 
 /* This file defines the following functions:
