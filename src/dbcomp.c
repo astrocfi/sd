@@ -12,40 +12,31 @@
 
     This is for version 34. */
 
+/* dbcomp.c */
+
 #include "database.h"
 
 
 #define DB_FMT_STR(name) DB_FMT_NUM(name)
 #define DB_FMT_NUM(number) #number
-volatile const char * id="@(#)$Sd: dbcomp.cpp for db fmt "
-   DB_FMT_STR(DATABASE_FORMAT_VERSION)
-   "      wba@alum.mit.edu  19 May 2002 $";
+volatile char *id="@(#)$Sd: dbcomp.c for db fmt " DB_FMT_STR(DATABASE_FORMAT_VERSION) "      wba@an.hp.com  1 Jul 1998 $";
 
 #include "paths.h"
 
 /* We take pity on those poor souls who are compelled to use
     troglodyte development environments. */
 
-// ***  This next test used to be:
-//    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
-//   We have taken it out and replaced with what you see below.  If this breaks
-//   anything, let us know. */
-
-#if __STDC__ || defined(sun)
+/* ***  This next test used to be
+    if defined(__STDC__) && !defined(athena_rt) && !defined(athena_vax)
+   We have taken it out and replaced with what you see below.  If this breaks
+   anything, let us know. */
+#if defined(__STDC__) || defined(sun)
 #include <stdlib.h>
 #else
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 extern void free(void *ptr);
 extern char *malloc(unsigned int siz);
 extern char *realloc(char *oldp, unsigned int siz);
 extern void exit(int code);
-#ifdef __cplusplus
-}
-#endif
-
 #endif
 
 #include <string.h>
@@ -417,10 +408,6 @@ char *sstab[] = {
    "pbigdmd",
    "bigptpd",
    "pbigptpd",
-   "big3dmd",
-   "pbig3dmd",
-   "big4dmd",
-   "pbig4dmd",
    "dblxwave",
    "pdblxwave",
    "dblspindle",
@@ -541,8 +528,6 @@ char *estab[] = {
    "bigbone",
    "bigdmd",
    "bigptpd",
-   "big3dmd",
-   "big4dmd",
    "dblxwave",
    "dblspindle",
    "???",
@@ -623,15 +608,8 @@ char *schematab[] = {
    "cross_checkpoint",
    "reverse_checkpoint",
    "ckpt_star",
-   "maybe_in_out_triple_squash",
    "in_out_triple_squash",
-   "sgl_in_out_triple_squash",
-   "3x3_in_out_triple_squash",
-   "4x4_in_out_triple_squash",
    "in_out_triple",
-   "sgl_in_out_triple",
-   "3x3_in_out_triple",
-   "4x4_in_out_triple",
    "in_out_quad",
    "in_out_12mquad",
    "???",
@@ -640,7 +618,6 @@ char *schematab[] = {
    "select_sideliners",
    "select_original_rims",
    "select_original_hubs",
-   "select_those_facing",
    "select_center2",
    "select_center4",
    "select_center6",
@@ -664,11 +641,10 @@ char *schematab[] = {
    "seq_with_split_1x8_id",
    ""};
 
-// This table is keyed to "call_restriction".
+/* This table is keyed to "call_restriction". */
 char *qualtab[] = {
    "none",
    "alwaysfail",
-   "give_fudgy_warn",
    "wave_only",
    "wave_unless_say_2faced",
    "all_facing_same",
@@ -724,8 +700,6 @@ char *qualtab[] = {
    "said_triangle",
    "didnt_say_triangle",
    "occupied_as_stars",
-   "occupied_as_clumps",
-   "occupied_as_blocks",
    "occupied_as_h",
    "occupied_as_qtag",
    "occupied_as_3x1tgl",
@@ -830,7 +804,7 @@ char *flagtab1[] = {
    "parallel_conc_end",
    "take_right_hands",
    "is_star_call",
-   "yoyo_fractal_numbers",
+   "split_large_setups",
    "fudge_to_q_tag",
    "step_to_wave",
    "rear_back_from_r_wave",
@@ -844,8 +818,8 @@ char *flagtab1[] = {
    "distribute_repetitions",
    "dont_use_in_resolve",
    "dont_use_in_nice_resolve",
-   "split_large_setups",
-   "split_if_z",
+   "yield_if_ambiguous",
+   "no_elongation_allowed",
    "base_tag_call_0",
    "base_tag_call_1",      /* The constant "base_tag_call_2" is elsewhere. */
    "base_tag_call_3",
@@ -853,12 +827,11 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "no_elongation_allowed",
+   "yoyo_fractal_numbers",
    "imprecise_rotation",       // The overflow (into CFLAG2_) items start here.
-   "can_be_fan",               //    There is space for 8 of them.  So there are 3 left.
+   "can_be_fan",               //    There is space for 8 of them.  So there are 4 left.
    "equalize",
    "one_person_call",
-   "yield_if_ambiguous",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -1035,6 +1008,7 @@ char *matrixcallflagtab[] = {
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
+
 char *predtab[] = {
    "select",
    "unselect",
@@ -1070,8 +1044,6 @@ char *predtab[] = {
    "x22_couple",
    "x22_facing_someone",
    "x22_tandem_with_someone",
-   "x24_facing_someone",
-   "x24_tandem_with_someone",
    "columns_someone_in_front",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
@@ -1214,9 +1186,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
                                 for any mandatory modifier, e.g. "clover and [anything]"
                                 is executed as "clover and [call #1]". */
       {0, "nullsecond"},     /* Base call for mandatory secondary modification. */
-      {0, "real_base_0"},    // General thing that takes a tagging call
-      {0, "real_base_0_noflip"},  // Same, but must not be "flip"
-      {0, "base_tag_call_flip"},  // "flip"
+      {0, "real_base_0"},
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info
@@ -1245,10 +1215,9 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "revert_if_needed"},
       {0, "extend_n"}};
 
-int tagtabsize = num_base_call_indices;  // Number of items we currently have in tagtab.
-int tagtabmax = 100;                     // Amount of space allocated for tagtab;
-                                         // must be >= tagtabsize at all times, obviously.
-tagtabitem *tagtab;                      // The dynamically allocated tag list.
+int tagtabsize = num_base_call_indices;  /* Number of items we currently have in tagtab. */
+int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
+tagtabitem *tagtab;               /* The dynamically allocated tag list. */
 
 
 int errnum1 = -1;   /* These may get set >= when raising a fatal error. */
@@ -1479,7 +1448,7 @@ static uint32 tagsearch(int def)
 
    if (i >= tagtabmax) {
       tagtabmax <<= 1;
-      tagtab = (tagtabitem *) realloc((char *) tagtab, tagtabmax * sizeof(tagtabitem));
+      tagtab = (tagtabitem *) realloc((void *) tagtab, tagtabmax * sizeof(tagtabitem));
       if (!tagtab) errexit("Out of memory!!!!!!");
    }
 
@@ -1714,16 +1683,18 @@ static void write_callarray(int num, int doing_matrix)
       errexit("Missing left bracket in callarray list");
 
    for (count=0; ; count++) {
+      uint32 dat = 0;
+      int p = 0;
+      stability stab = stb_none;
+
       get_tok();
       if (tok_kind == tok_rbkt) break;
       else if (tok_kind == tok_number && tok_value == 0)
          write_halfword(0);
       else if (tok_kind == tok_symbol) {
-         int p;
-         stability stab = stb_none;
          int repetition = 0;
 
-         for (p=0; letcount-p >= 2; p++) {
+         for (; letcount-p >= 2; p++) {
             switch (tok_str[p]) {
                case 'Z': case 'z':
                   if (stab == stb_none) stab = stb_z;
@@ -1770,15 +1741,13 @@ static void write_callarray(int num, int doing_matrix)
 
          stability_done:
 
-         uint32 dat = 0;
-
          if (repetition != 0) errexit("Improper callarray specifier");
 
          if (letcount-p == 2) {
             switch (tok_str[p]) {
+               case 'L': case 'l': dat = 4; break;
+               case 'M': case 'm': dat = 2; break;
                case 'R': case 'r': dat = 1; break;
-               case 'L': case 'l': dat = 2; break;
-               case 'M': case 'm': dat = 3; break;
                default:
                   errexit("Improper callarray specifier");
             }
@@ -1786,7 +1755,7 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
+         dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
 
          /* We now have roll indicator and position, need to get direction. */
          switch (tok_str[char_ct-1]) {
@@ -2172,7 +2141,7 @@ def2:
 
 
 
-extern void dbcompile()
+extern void dbcompile(void)
 {
    int i, iii;
    uint32 funnyflag;

@@ -1,5 +1,7 @@
 # Makefile for Sd/Sdtty for Linux
 
+srcdir = .
+
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
 # target hardware, etc.)
@@ -22,50 +24,22 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
-X11_FLAGS =
+X11_FLAGS = 
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
-# "-DNO_CURSES"       - disable compilation with curses.
-#
-TTY_FLAGS =
+TTY_FLAGS = -DNO_CURSES
 
 # These are the library flags that we must use for the final bind of
 # the X11 version of "sd".
-X11_LIBS =
+X11_LIBS = 
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-#
-# There was a time when I thought that libraries might actually work
-# properly on Linux.  After all, the Unix community has had nearly
-# 30 years to figure out how to do it.  Alas, it isn't so.  Libraries
-# are just as broken on Linux as on HP-UX.  (OK, not *that* broken,
-# but still unacceptable.)  Specifically, a compilation on Debian 3.0
-# wouldn't run on Red Hat 6.2.  Something about curses version 4 vs.
-# version 5.  Haven't these people had long enough to get curses
-# right?  Well, they're actually a long way from getting it right.
-# (Hint: press escape and note that it delays for 1 second before
-# clearing the text line.  The reason has to do with the nonexistent
-# possibility (honest, I'm using a modern keyboard, and I'm pretty
-# sure the OS knows that!) that the terminal is a DEC VT100.)
-# So they're nowhere close to getting it right.  But couldn't
-# they at least get it consistent and compatible?
-# And curses only handles a few function keys, because that's all the
-# VT100 had.  My keyboard has F1 through F12, and can distinguish
-# between normal, control, alt, and control alt.  PC hardware has had
-# this for many years.  Sd and Sdtty on Windoze make use of those,
-# but Linux can't be bothered.
-#
-# Sorry about the flaming, but I'm really sick of this.
-#
-# So we statically bind the curses library.  We do not use "-lcurses".
-#
-#TTY_LIBS = -lcurses
-TTY_LIBS = /usr/lib/libcurses.a
+TTY_LIBS =
 
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
-          sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \
+          sdtables.c sdctable.c sdtop.cpp sdconcpt.cpp sdpreds.cpp \
           sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
           sdpick.cpp sdsi.cpp
 
@@ -77,23 +51,27 @@ SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-SDTTY_SRCS = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp
-SDTTY_OBJS = sdui-tty.o sdmatch.o sdui-ttu.o
+# This has all special source files for sdtty and
+# making the distribution.
+SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp sdui-tpc.cpp
+SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
+SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
+# This has the special object files used for building this version of sdtty.
+SDTTY_OBJ = $(SDTTY_OBJ_UNIX)
+SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_UNIX)
 
-SDTTY_LINK_OBJS = $(SD_OBJS) $(SDTTY_OBJS)
-
-MKCALLS_SRCS = mkcalls.cpp dbcomp.cpp
+MKCALLS_SRCS = mkcalls.c dbcomp.c
 MKCALLS_OBJS = mkcalls.o dbcomp.o
 
-SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRCS) $(MKCALLS_SRCS)
-OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS) $(MKCALLS_OBJS)
+SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(MKCALLS_SRCS)
+OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
 
 all: alltty
 allx11: sd sd_calls.dat
 alltty: sdtty sd_calls.dat
 everything: allx11 sdtty
 
-LDPRELIBS =
+LDPRELIBS = 
 LDPOSTLIBS = lib\crt0.o lib\libc.a
 
 sd: $(SD_OBJS) $(SDX11_OBJ)
@@ -102,13 +80,11 @@ sd: $(SD_OBJS) $(SDX11_OBJ)
 mkcalls: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
 
-sdtty: $(SD_OBJS) $(SDTTY_OBJS)
-	$(CC) $(CFLAGS) -o $@ $(SDTTY_LINK_OBJS) $(TTY_LIBS)
+sdtty: $(SD_OBJS) $(SDTTY_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
 
 sd_calls.dat: sd_calls.txt mkcalls
-	./mkcalls ./sd_calls.txt
-
-.SUFFIXES: .c .cpp
+	./mkcalls $(srcdir)/sd_calls.txt
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
@@ -117,21 +93,90 @@ sd_calls.dat: sd_calls.txt mkcalls
 	$(CC) $(CFLAGS) -c $<
 
 sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) $(X11_FLAGS) -c $<
+	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
 
 sdui-ttu.o: sdui-ttu.cpp
-	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $<
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.cpp
+
+sdui-tty.o sdui-ttu.o sdui-tpc.o: sd.h
 
 dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
 dbcomp.o: database.h
 
-$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS): sd.h database.h
+$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
+
+info: sd_doc.info
+dvi: sd_doc.dvi
+ps: sd_doc.ps
+html: sd_doc_toc.html
+
+DOCSRCS = sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
+
+sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
+
+# additional suffixes used for the documentation
+.SUFFIXES: .dvi .info .txt .txinfo .cpp
+
+RM = del
+
+MAKEINFO = makeinfo --no-split
+MAKE_ASCII = makeinfo --no-split --no-headers
+TXI2DVI = tex
+DVIPS = dvips
+TXI2HTML = texi2html
+MAKE=make
+
+# We do it twice, so cross references will be reconciled.
+.txinfo.dvi:
+	$(TXI2DVI) $<
+	$(TXI2DVI) $<
+
+.txinfo.info:
+	$(MAKEINFO) -I$(srcdir) $<
+
+.txinfo.txt:
+	$(MAKE_ASCII) -o $@ -I$(srcdir) $<
+
+sd_doc.ps: sd_doc.dvi
+	$(DVIPS) -o $@ $?
+
+sessions.ps: sessions.dvi
+	$(DVIPS) -o $@ $?
+
+relnotes.ps: relnotes.dvi
+	$(DVIPS) -o $@ $?
+
+demo.ps: demo.dvi
+	$(DVIPS) -o $@ $?
+
+sd_doc_toc.html:
+	$(TXI2HTML) -split_node -menu sd_doc.txinfo
+
+# Stephen's fancy way of producing a pretty, compact PostScript file.
+# You don't want to know.
+sd_doc.PS: $(DOCSRCS)
+	if [ -r make-ps ]; then make-ps $@ $(DOCSRCS); \
+	else $(MAKE) sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
+
+INSTALL: install.txinfo
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txinfo
+
+README: readme.txinfo
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txinfo
+
+
+docclean:
+	-$(RM) *.aux *.log *.toc *.dvi
+	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
 clean::
-	-$(RM) *.o sd sdtty mkcalls sd_calls.dat tags
+	-$(RM) *.o sd sdtty mkcalls sd_calls.dat
 
-TAG_FILES = ${SRCS} *.h
+distclean: clean
+	-$(RM) sequence.*
+	-$(RM) *~ core
+	-$(RM) *.tar *.tar.Z
 
-tags: ${TAG_FILES}
-	/opt/sfw/bin/ctags ${TAG_FILES}
+realclean: distclean
+	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps

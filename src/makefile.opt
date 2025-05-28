@@ -36,13 +36,7 @@ X11_LIBS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-# The following line brings in (statically, apparently) the file
-# \cygwin\lib\libncurses.dll.a .  This is apparently a stub for the
-# actual dll, which is \cygwin\bin\cygncurses5.dll .
-# Note that libncurses.dll.a is 259KB, whereas cygncurses5.dll is
-# 226KB.  Not a stunningly efficient stub.  (The complete static
-# library, libncurses.a, is 384KB).
-TTY_LIBS = -lncurses.dll
+TTY_LIBS =
 
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
           sdtables.c sdctable.c sdtop.cpp sdconcpt.cpp sdpreds.cpp \
@@ -59,9 +53,9 @@ SDX11_OBJ = sdui-x11.o
 
 # This has all special source files for sdtty and
 # making the distribution.
-SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp
+SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp sdui-tpc.cpp
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
-SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-ttu.o
+SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
 SDTTY_OBJ = $(SDTTY_OBJ_PC)
 SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_PC)

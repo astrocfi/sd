@@ -1,6 +1,6 @@
               FORMAT OF THE SD/SDTTY DATABASE
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -1059,25 +1059,6 @@ bigptpd     |  2  |_____|  3  |  9  |_____|  8  |
                   |     |           |     |
                   |  0  |           | 11  |
                   |_____|           |_____|
-
-
-
-                _____       _____       _____
-               |     |     |     |     |     |
-               |  0  |     |  1  |     |  2  |
-               |_____|     |_____|     |_____|
-               |     |     |     |     |     |
-               |  5  |     |  4  |     |  3  |
-             __|__ __|__ __|__ __|__ __|__ __|__
-            |     |     |     |     |     |     |
-big3dmd     | 15  | 16  | 17  |  8  |  7  |  6  |
-            |_____|_____|_____|_____|_____|_____|
-               |     |     |     |     |     |
-               | 12  |     | 13  |     | 14  |
-               |_____|     |_____|     |_____|
-               |     |     |     |     |     |
-               | 11  |     | 10  |     |  9  |
-               |_____|     |_____|     |_____|
 
 
 
@@ -2241,26 +2222,20 @@ x22_couple
       or is T-boned.
 
 x22_facing_someone
-      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the opposite direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       same way or is T-boned.  The name may be misleading.  It is intended
       to be used to determine if the person being tested is facing someone
       else's face, but, if the two people are back-to-back, the predicate
-      will also be satisfied.  To get the effect actually implied by the name,
-      you must require everyone to be a trailer.
+      will also be satisfied.  To get the desired effect, you must require
+      everyone to be a trailer.
 
 x22_tandem_with_someone
-      Applies to 2x2 only.  Returns TRUE if the vertical partner of the
+      applies to 2x2 only.  Returns TRUE if the vertical partner of the
       person under test is alive and facing the same direction.
       Returns FALSE if the vertical partner is a phantom or faces the
       opposite way or is T-boned.
-
-x24_facing_someone
-x24_tandem_with_someone
-      Applies to 2x4 only (lines or columns).  Equivalent to x22_facing_someone
-      or x22_tandem_with_someone, for 2x4's.  Finds the vertical partner in
-      the person's 2x2 box.
 
 columns_someone_in_front
       applies to 3x2 or 4x2 only.  For a 3x2:  Returns TRUE for any of the
@@ -2717,12 +2692,12 @@ roll_is_ccw
       is clockwise, or the person can't roll, or roll direction from the
       preceding call is ill-defined.
 
-x12_boy_with_girl
+x12_boy_facing_girl
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous boy, and the other person in the column is alive and an
       unambiguous girl.  Facing directions are not checked.
 
-x12_girl_with_boy
+x12_girl_facing_boy
       applies to 1x2 lines or 2x1 columns only.  Returns TRUE if this person
       is an unambiguous girl, and the other person in the column is alive and an
       unambiguous boy.  Facing directions are not checked.
@@ -3228,12 +3203,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    dmd_ctrs_1f,                     dmd, 1x4 - the centers (2 of them) are in a couple
    said_triangle,                   short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle               short6/pshort6 - caller didn't say the word "triangle"
-   occupied_as_stars  Q             c1phan - live bodies are in 2 stars
-   occupied_as_clumps Q             4x4 - live bodies are in 2 clumps
-   occupied_as_blocks Q             4x4 - live bodies are in blocks
-   occupied_as_h      Q             3x4/4x3 - live bodies are (a subset of) an "H"
-   occupied_as_qtag   Q             3x4/4x3 - live bodies are (a subset of) a qtag
-   occupied_as_3x1tgl Q             3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
+   occupied_as_h                    3x4/4x3 - live bodies are (a subset of) an "H"
+   occupied_as_qtag                 3x4/4x3 - live bodies are (a subset of) a qtag
+   occupied_as_3x1tgl               3x4/4x3/2x6/6x2/2x3/3x2/qtag - live bodies are 3x1
                                     triangles of some sort.  Symmetric only.
    line_ends_looking_out            2x4 T-bone - the ends must be line-like and must be leads,
                                     and at least one center must be column-like.
@@ -3539,20 +3511,13 @@ inherit_single
                   These are not in any particularly logical order.
 
 @0        - for call with mandatory substitution (e.g. "clover and ...") put
-                      subcall here.  (See @m and @T also).
-@T        - like @0, but put in "er's".
-@m        - put mandatory secondary call substitution here.
-@n ... @o - text to ADD if optional secondary substitution has been made,
-                  as in the "ing" for "fascinating <anything>".
-@p ... @q - text to remove if optional secondary substitution has been made.
-@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
-@t        - put optional secondary call substitution here.
+                      subcall here.
 @1        - put optional subcall here.
 @2 ... @3 - text to remove and replace with subcall.  Like @4 ... @5 along with @1.
 @4 ... @5 - text to remove if optional substitution has been made.
+@6        - put selector here.
 @7 ... @8 - text to ADD if optional substitution has been made, as in the "ing"
                   for "fascinating <anything>".
-@6        - put selector here.
 @9        - put number here.
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
@@ -3570,8 +3535,16 @@ inherit_single
 @E ... @F - text to add if this call has "interlocked" modifier.  Presumably
                   has the word "interlocked" in it.
 @I          equivalent to "@Einterlocked @F".
-@G        - put the word "grand" here if this call has "grand" modifier.
+@P ... @Q - text to add if this call has "grand" modifier.  Presumably
+                  has the word "grand" in it.
+@G          equivalent to "@Pgrand @Q".
 @k        - put selector here, but use singular name, as in "beau tie".
+@m        - put mandatory secondary call substitution here.
+@n ... @o - text to ADD if optional secondary substitution has been made,
+                  as in the "ing" for "fascinating <anything>".
+@p ... @q - text to remove if optional secondary substitution has been made.
+@r ... @s - text to remove and replace with secondary subcall.  Like @p ... @q along with @t.
+@t        - put optional secondary call substitution here.
 @u        - put ordinal number (1st, 2nd, ...) here.
 @v        - put tagging call here.
 @w        - put tagging call here.
@@ -3579,4 +3552,3 @@ inherit_single
 @y        - put tagging call here.
 @N        - put circulate call here.
 @O ... @P - text to remove if invoked as a circulate-type call
-@S        - put star turn modifier here.

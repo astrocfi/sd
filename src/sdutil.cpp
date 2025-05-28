@@ -39,7 +39,6 @@ and the following external variables:
    global_error_flag
    global_reply
    global_age
-   global_leave_missing_calls_blank
    clipboard
    clipboard_size
    wrote_a_sequence
@@ -49,8 +48,6 @@ and the following external variables:
    need_new_header_comment
    sequence_number
    starting_sequence_number
-   old_filename_strings
-   new_filename_strings
    filename_strings
    concept_key_table
 */
@@ -81,33 +78,17 @@ and the following external variables:
 error_flag_type global_error_flag;
 uims_reply global_reply;
 int global_age;
-bool global_leave_missing_calls_blank;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
 long_boolean wrote_a_sequence = FALSE;
-bool retain_after_error = false;
+long_boolean retain_after_error = FALSE;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH];
 long_boolean need_new_header_comment = FALSE;
 int sequence_number = -1;
 int starting_sequence_number;
-
-// Under DJGPP, the default is always old-style filenames, because
-// the underlying system (DOS or Windows 3.1) presumably can only
-// handle "8.3" failenames.  Even under Windows NT, the emulation
-// seems to handle only 8.3 filenames.  Under Windows 2000, it
-// seems to handle long filenames, but is totally broken in other
-// respects (compilation with Cygwin crashed in ntvdm.)  The bug
-// has been reported to Microsoft, and, of course, never fixed.
-
-#if defined(DJGPP)
-Cstring *filename_strings = old_filename_strings;
-#else
-Cstring *filename_strings = old_filename_strings; // ******** For now
-#endif
-
-// BEWARE!!  These lists are keyed to the definition of "dance_level" in database.h
-Cstring old_filename_strings[] = {
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+Cstring filename_strings[] = {
    ".MS",
    ".Plus",
    ".A1",
@@ -122,23 +103,6 @@ Cstring old_filename_strings[] = {
    ".C4X",
    ".all",
    ".all",
-   ""};
-
-Cstring new_filename_strings[] = {
-   "_MS.txt",
-   "_Plus.txt",
-   "_A1.txt",
-   "_A2.txt",
-   "_C1.txt",
-   "_C2.txt",
-   "_C3A.txt",
-   "_C3.txt",
-   "_C3X.txt",
-   "_C4A.txt",
-   "_C4.txt",
-   "_C4X.txt",
-   "_all.txt",
-   "_all.txt",
    ""};
 
 Cstring concept_key_table[] = {
@@ -240,29 +204,29 @@ static void write_blank_if_needed(void)
    a non-null pointer to a null character.  If it is an escape that is normally
    simply dropped, it returns a null pointer. */
 
-SDLIB_API const char *get_escape_string(char c)
+SDLIB_API Const char *get_escape_string(char c)
 {
    switch (c) {
-   case '0': case 'm': case 'T':
-      return "<ANYTHING>";
-   case 'N':
-      return "<ANYCIRC>";
-   case '6': case 'k':
-      return "<ANYONE>";
-   case 'h':
-      return "<DIRECTION>";
-   case '9':
-      return "<N>";
-   case 'a': case 'b': case 'B': case 'D':
-      return "<N/4>";
-   case 'u':
-      return "<Nth>";
-   case 'v': case 'w': case 'x': case 'y':
-      return "<ATC>";
-   case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
-      return "";
-   default:
-      return (char *) 0;
+      case '0': case 'm':
+         return "<ANYTHING>";
+      case 'N':
+         return "<ANYCIRC>";
+      case '6': case 'k':
+         return "<ANYONE>";
+      case 'h':
+         return "<DIRECTION>";
+      case '9':
+         return "<N>";
+      case 'a': case 'b': case 'B': case 'D':
+         return "<N/4>";
+      case 'u':
+         return "<Nth>";
+      case 'v': case 'w': case 'x': case 'y':
+         return "<ATC>";
+      case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
+         return "";
+      default:
+         return (char *) 0;
    }
 }
 
@@ -343,6 +307,9 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
 }
 
 
+// **** This is duplicated here and in sdmain in sdmain.cpp
+static char directions[] = "?>?<????^?V?????";
+
 static void printperson(uint32 x)
 {
    if (x & BIT_PERSON) {
@@ -352,7 +319,7 @@ static void printperson(uint32 x)
          writechar(ui_options.pn1[(x >> 6) & 7]);
          writechar(ui_options.pn2[(x >> 6) & 7]);
          if (enable_file_writing)
-            writechar(ui_options.stddirec[x & 017]);
+            writechar(directions[x & 017]);
          else
             writechar(ui_options.direc[x & 017]);
       }
@@ -390,11 +357,11 @@ static void do_write(Cstring s)
          if (*s == '7') {
             s++;
             ui_options.squeeze_this_newline = 1;
-            newline();
+            (*the_callback_block.newline_fn)();
             ui_options.squeeze_this_newline = 0;
          }
          else
-            newline();
+            (*the_callback_block.newline_fn)();
       }
       else if (c >= 'a' && c <= 'x')
          printperson(rotperson(printarg->people[personstart + ((c-'a'-offs)%modulus)].id1, ri));
@@ -448,13 +415,13 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
       str = setup_attrs[s->skind].print_strings[roti & 1];
 
    if (str) {
-      newline();
+      (*the_callback_block.newline_fn)();
       do_write(str);
    }
    else
       writestuff(" ????");
 
-   newline();
+   (*the_callback_block.newline_fn)();
 }
 
 
@@ -468,7 +435,7 @@ static void printsetup(setup *x)
    modulus = setup_attrs[x->kind].setup_limits+1;
    roti = x->rotation & 3;
    
-   newline();
+   (*the_callback_block.newline_fn)();
 
    personstart = 0;
 
@@ -547,57 +514,52 @@ static void printsetup(setup *x)
       case s_dead_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers only:");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
          print_4_person_setup(0, &(x->inner), -1);
          break;
       case s_normal_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers:");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
          print_4_person_setup(0, &(x->inner), -1);
          ui_options.drawing_picture = 0;
          writestuff(" ends:");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
          print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
          break;
       default:
          ui_options.drawing_picture = 0;
          writestuff("???? UNKNOWN SETUP ????");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
       }
    }
 
-   newline();
+   (*the_callback_block.newline_fn)();
    ui_options.drawing_picture = 0;
-   newline();
+   (*the_callback_block.newline_fn)();
 }
 
 
-
-
-SDLIB_API void write_history_line(int history_index,
-                                  bool picture,
-                                  bool leave_missing_calls_blank,
-                                  file_write_flag write_to_file,
-                                  const char *header)
+SDLIB_API void write_history_line(int history_index, const char *header,
+                                  long_boolean picture, file_write_flag write_to_file)
 {
-   global_leave_missing_calls_blank = leave_missing_calls_blank;
-
-   int w, i;
+   int centersp, w, i;
    parse_block *thing;
-   configuration *this_item = &configuration::history[history_index];
+   configuration *this_item = &history[history_index];
 
    if (write_to_file == file_write_double && !ui_options.singlespace_mode)
       doublespace_file();
 
-   // Do not put index numbers into output file -- user may edit it later.
+   centersp = this_item->centersp;
+
+   /* Do not put index numbers into output file -- user may edit it later. */
 
    if (!enable_file_writing && !diagnostic_mode) {
-      i = history_index-configuration::whole_sequence_low_lim+1;
+      i = history_index-whole_sequence_low_lim+1;
       if (i > 0) {
          char indexbuf[10];
          sprintf(indexbuf, "%2d:   ", i);
@@ -605,9 +567,9 @@ SDLIB_API void write_history_line(int history_index,
       }
    }
 
-   if (this_item->nontrivial_startinfo_specific()) {
-      if (this_item->get_startinfo_specific()->into_the_middle) goto morefinal;
-      writestuff(this_item->get_startinfo_specific()->name);
+   if (centersp != 0) {
+      if (startinfolist[centersp].into_the_middle) goto morefinal;
+      writestuff(startinfolist[centersp].name);
       goto final;
    }
 
@@ -617,11 +579,10 @@ SDLIB_API void write_history_line(int history_index,
       If this is the first line of the history, and we started with heads of sides,
       change the name of this concept from "centers" to the appropriate thing. */
 
-   if (history_index == 2 &&
-       thing->concept->kind == concept_centers_or_ends &&
-       thing->concept->value.arg1 == selector_centers) {
-      if (configuration::history[1].get_startinfo_specific()->into_the_middle) {
-         writestuff(configuration::history[1].get_startinfo_specific()->name);
+   if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == selector_centers) {
+      centersp = history[1].centersp;
+      if (startinfolist[centersp].into_the_middle) {
+         writestuff(startinfolist[centersp].name);
          writestuff(" ");
          thing = thing->next;
       }
@@ -631,7 +592,7 @@ SDLIB_API void write_history_line(int history_index,
 
    final:
 
-   newline();
+   (*the_callback_block.newline_fn)();
 
    morefinal:
 
@@ -640,25 +601,25 @@ SDLIB_API void write_history_line(int history_index,
 
    // First, don't print both "bad concept level" and "bad modifier level".
 
-   if (this_item->test_one_warning_specific(warn__bad_concept_level))
-      this_item->clear_one_warning_specific(warn__bad_modifier_level);
+   if (this_item->warnings.testbit(warn__bad_concept_level))
+      this_item->warnings.clearbit(warn__bad_modifier_level);
 
    // Or "opt for parallelogram" and "each 1x4".
 
-   if (this_item->test_one_warning_specific(warn__check_pgram))
-      this_item->clear_one_warning_specific(warn__each1x4);
+   if (this_item->warnings.testbit(warn__check_pgram))
+      this_item->warnings.clearbit(warn__each1x4);
 
    // Or "each 1x6" and "each 1x3".
 
-   if (this_item->test_one_warning_specific(warn__split_1x6))
-      this_item->clear_one_warning_specific(warn__split_to_1x6s);
+   if (this_item->warnings.testbit(warn__split_1x6))
+      this_item->warnings.clearbit(warn__split_to_1x6s);
 
    if (!ui_options.nowarn_mode) {
       for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
-         if (this_item->test_one_warning_specific((warning_index) w)) {
+         if (this_item->warnings.testbit((warning_index) w)) {
             writestuff("  Warning:  ");
             writestuff(&warning_strings[w][1]);
-            newline();
+            (*the_callback_block.newline_fn)();
          }
       }
    }
@@ -668,12 +629,12 @@ SDLIB_API void write_history_line(int history_index,
 
       if (this_item->state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
          writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
-         newline();
+         (*the_callback_block.newline_fn)();
       }
    }
 
    // Record that this history item has been written to the UI.
-   this_item->text_line = text_line_count;
+   this_item->text_line = the_callback_block.text_line_count;
 }
 
 
@@ -729,7 +690,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
    while (local_cptr) {
       concept_kind k;
-      const concept_descriptor *item;
+      concept_descriptor *item;
 
       item = local_cptr->concept;
       k = item->kind;
@@ -820,12 +781,37 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-            else if (k == concept_special_sequential_num) {
-               writestuff("USE ");
 
-               // If stuff hasn't been completely entered, show the number.
-               if (!local_cptr->next || !subsidiary_ptr)
-                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
+            else if (k == concept_special_sequential &&
+                     local_cptr->concept->value.arg1 == 4) {
+               if (local_cptr->next && subsidiary_ptr) {
+                  writestuff("USE ");
+               }
+               else {
+                  if (local_cptr->next) {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "indicated part will be ");
+                  }
+                  else {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "using this call as the indicated part");
+                  }
+               }
+            }
+            else if (k == concept_special_sequential_num) {
+               if (local_cptr->next && subsidiary_ptr) {
+                  writestuff("USE ");
+               }
+               else {
+                  if (local_cptr->next) {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "@u part will be ");
+                  }
+                  else {
+                     writestuff_with_decorations(&local_cptr->options,
+                                                 "using this call as the @u part");
+                  }
+               }
             }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
@@ -887,6 +873,10 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      }
                   }
+                  else if (k == concept_special_sequential &&
+                           local_cptr->concept->value.arg1 == 4) {
+                     writestuff(" in this call:");
+                  }
                }
                break;
             }
@@ -913,10 +903,9 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_on_your_own)
                writestuff(" AND");
-            else if (k == concept_interlace)
+            else if (k == concept_interlace ||
+                     k == concept_sandwich)
                writestuff(" WITH");
-            else if (k == concept_sandwich)
-               writestuff(" AROUND");
             else if (k == concept_special_sequential_num) {
                writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
                request_final_space = FALSE;
@@ -973,7 +962,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                   concepts and certain escape characters are found in the name of
                   the following call. */
    
-               finalflags junk_concepts;
+               uint64 junk_concepts;
 
                junk_concepts.her8it = 0;
                junk_concepts.final = 0;
@@ -1013,29 +1002,24 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (allow_deferred_concept &&
                      next_cptr &&
-                     (k == concept_n_times_const ||
+                     (k == concept_twice ||
                       k == concept_n_times ||
                       (k == concept_fractional && item->value.arg1 == 2))) {
                deferred_concept = local_cptr;
                comma_after_next_concept = 0;
                did_concept = FALSE;
 
-               // If there is another concept, we need parens.
+               /* If there is another concept, we need parens. */
                if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
 
                if (deferred_concept_paren == 3) writestuff("(");
                if (deferred_concept_paren) writestuff("(");
             }
             else {
-               if ((k == concept_meta_one_arg &&
-                    item->value.arg1 == meta_key_nth_part_work) ||
-                   (k == concept_meta_two_args &&
-                    item->value.arg1 == meta_key_first_frac_work) ||
+               if ((k == concept_meta_one_arg && item->value.arg1 == meta_key_nth_part_work) ||
                    (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__SAID_INVERT) ||
-                   (k == concept_meta &&
-                    (item->value.arg1 == meta_key_initially ||
-                     item->value.arg1 == meta_key_finally ||
-                     item->value.arg1 == meta_key_initially_and_finally))) {
+                   (k == concept_meta && (item->value.arg1 == meta_key_initially ||
+                                          item->value.arg1 == meta_key_finally))) {
                   /* This is "DO THE <Nth> PART",
                      or INVERT followed by another concept, which must be SNAG or MYSTIC,
                      or INITIALLY/FINALLY.
@@ -1059,7 +1043,6 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                "<anyone> work swing thru 1-1/2". */
 
             if ((k != concept_so_and_so_only || item->value.arg2) &&
-                k != concept_centers_or_ends &&
                 k != concept_c1_phantom &&
                 k != concept_tandem)
                allow_deferred_concept = FALSE;
@@ -1113,7 +1096,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
          parse_block *sub1_ptr;
          parse_block *sub2_ptr;
          parse_block *search;
-         bool pending_subst1, pending_subst2;
+         long_boolean pending_subst1, pending_subst2;
 
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
@@ -1121,8 +1104,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
          call_with_name *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
-         bool subst1_in_use = false;
-         bool subst2_in_use = false;
+         long_boolean subst1_in_use = FALSE;
+         long_boolean subst2_in_use = FALSE;
 
          if (request_final_space) writestuff(" ");
 
@@ -1146,13 +1129,13 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 
                   if (this_is_subst1) {
                      if (subst1_in_use) writestuff("ERROR!!!");
-                     subst1_in_use = true;
+                     subst1_in_use = TRUE;
                      sub1_ptr = subsidiary_ptr;
                   }
 
                   if (this_is_subst2) {
                      if (subst2_in_use) writestuff("ERROR!!!");
-                     subst2_in_use = true;
+                     subst2_in_use = TRUE;
                      sub2_ptr = subsidiary_ptr;
                   }
                }
@@ -1200,8 +1183,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
-                             CFLAG1_BASE_TAG_CALL_MASK)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                            print_recurse(subsidiary_ptr, 0);
                            goto did_tagger;
                         }
@@ -1233,8 +1215,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
-                             CFLAG1_BASE_CIRC_CALL)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL)) {
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
                            goto did_circcer;
                         }
@@ -1339,8 +1320,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      }
                      break;
                   case 'l': case 'L': case 'R': case 'F': case '8': case 'o':
-                     // Just skip these -- they end stuff that we could have
-                     // elided but didn't.
+                     /* Just skip these -- they end stuff that we could have
+                        elided but didn't. */
                      break;
                   case 'n': case 'p': case 'r': case 'm': case 't':
                      if (subst2_in_use) {
@@ -1356,18 +1337,13 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
                      }
    
-                     if (savec != 'p' && savec != 'n') {
-                        if (pending_subst2) {
-                           write_blank_if_needed();
-                           writestuff("[");
-                           print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
-                           pending_subst2 = false;
-                        }
-                        else if (savec == 'm' && !global_leave_missing_calls_blank) {
-                           write_blank_if_needed();
-                           writestuff("[???]");
-                        }
+                     if (pending_subst2 && savec != 'p' && savec != 'n') {
+                        write_blank_if_needed();
+                        writestuff("[");
+                        print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
+         
+                        pending_subst2 = FALSE;
                      }
          
                      break;
@@ -1392,19 +1368,13 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
                      }
          
-                     if (savec != '4' && savec != '7') {
-                        if (pending_subst1) {
-                           write_blank_if_needed();
-                           writestuff("[");
-                           print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
-                           if (savec == 'T') writestuff(" er's");
-                           pending_subst1 = false;
-                        }
-                        else if (savec == '0' && !global_leave_missing_calls_blank) {
-                           write_blank_if_needed();
-                           writestuff("[???]");
-                        }
+                     if (pending_subst1 && savec != '4' && savec != '7') {
+                        write_blank_if_needed();
+                        writestuff("[");
+                        print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
+         
+                        pending_subst1 = FALSE;
                      }
          
                      break;
@@ -1473,8 +1443,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
-                        // This is a natural replacement.
-                        // It may already have been taken care of.
+                        /* This is a natural replacement.
+                           It may already have been taken care of. */
                         if (pending_subst1 ||
                             search->replacement_key ==
                             DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT) {
@@ -1490,8 +1460,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
-                        // This is a secondary replacement.
-                        // It may already have been taken care of.
+                        /* This is a secondary replacement.
+                           It may already have been taken care of. */
                         if (pending_subst2) {
                            write_blank_if_needed();
                            writestuff("[modification: ");
@@ -1533,7 +1503,7 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
       if (deferred_concept_paren & 1) writestuff(/*(*/")");
       writestuff(" ");
 
-      if (deferred_concept->concept->kind == concept_n_times_const &&
+      if (deferred_concept->concept->kind == concept_twice &&
           deferred_concept->concept->value.arg2 == 3)
          writestuff("3 TIMES");
       else
@@ -1547,8 +1517,8 @@ SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 SDLIB_API void clear_screen(void)
 {
    written_history_items = -1;
-   text_line_count = 0;
-   gg->reduce_line_count(0);
+   the_callback_block.text_line_count = 0;
+   (*the_callback_block.uims_reduce_line_count_fn)(0);
    open_text_line();
 }
 
@@ -1558,15 +1528,15 @@ SDLIB_API void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_
       /* log creation version info */
       if (with_ui_version) {     /* This is the "pretty" form that we display while running. */
          writestuff("Sd ");
-         writestuff(sd_version_string());
+         writestuff((*the_callback_block.sd_version_string_fn)());
          writestuff(" : db");
          writestuff(database_version);
          writestuff(" : ui");
-         writestuff(gg->version_string());
+         writestuff((*the_callback_block.uims_version_string_fn)());
       }
       else {                     /* This is the "compact" form that goes into the file. */
          writestuff("Sd");
-         writestuff(sd_version_string());
+         writestuff((*the_callback_block.sd_version_string_fn)());
          writestuff(":db");
          writestuff(database_version);
       }
@@ -1663,10 +1633,10 @@ SDLIB_API void newline(void)
 
 
    if (enable_file_writing)
-      write_file(current_line);
+      (*the_callback_block.write_file_fn)(current_line);
 
-   text_line_count++;
-   gg->add_new_line(current_line,
+   the_callback_block.text_line_count++;
+   (*the_callback_block.uims_add_new_line_fn)(current_line,
       enable_file_writing ? 0 : (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
    open_text_line();
 }
@@ -1686,7 +1656,7 @@ extern void open_text_line(void)
 
 SDLIB_API void doublespace_file(void)
 {
-   write_file("");
+   (*the_callback_block.write_file_fn)("");
 }
 
 
@@ -1756,7 +1726,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 }
 
 
-parse_block *get_parse_block(void)
+SDLIB_API parse_block *get_parse_block(void)
 {
    parse_block *item;
 
@@ -1765,7 +1735,7 @@ parse_block *get_parse_block(void)
       parse_inactive_list = item->gc_ptr;
    }
    else {
-      item = (parse_block *) get_mem(sizeof(parse_block));
+      item = (parse_block *) (*the_callback_block.get_mem_fn)(sizeof(parse_block));
    }
 
    item->gc_ptr = parse_active_list;
@@ -1824,7 +1794,7 @@ extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head
 extern void save_parse_state(void)
 {
    saved_parse_state = parse_state;
-   saved_command_root = copy_parse_tree(configuration::next_config().command_root);
+   saved_command_root = copy_parse_tree(history[history_ptr+1].command_root);
 }
 
 
@@ -1838,9 +1808,9 @@ extern long_boolean restore_parse_state(void)
    parse_state = saved_parse_state;
 
    if (saved_command_root)
-      reset_parse_tree(saved_command_root, configuration::next_config().command_root);
+      reset_parse_tree(saved_command_root, history[history_ptr+1].command_root);
    else
-      configuration::next_config().command_root = 0;
+      history[history_ptr+1].command_root = 0;
 
    return FALSE;
 }
@@ -1862,9 +1832,9 @@ SDLIB_API void string_copy(char **dest, Cstring src)
    The "num_pics" argument tells how many of the last history items
    are to have pictures forced, so we can tell exactly what items
    have pictures. */
-void display_initial_history(int upper_limit, int num_pics)
+SDLIB_API void display_initial_history(int upper_limit, int num_pics)
 {
-   int j, startpoint;
+   int j, startpoint, compilerbug;
 
    /* See if we can re-use some of the safely written history. */
    /* First, cut down overly optimistic estimates. */
@@ -1879,9 +1849,9 @@ void display_initial_history(int upper_limit, int num_pics)
       We cut written_history_items down to below that item if such is the case. */
 
    for (j=1; j<=written_history_items; j++) {
-      int compilerbug = ((int) ((unsigned int) (written_history_nopic-j)) ^
+      compilerbug = ((int) ((unsigned int) (written_history_nopic-j)) ^
                  ((unsigned int) (upper_limit-num_pics-j)));
-      if (compilerbug < 0 && ~configuration::history[j].draw_pic) {
+      if (compilerbug < 0 && ~history[j].draw_pic) {
          written_history_items = j-1;
          break;
       }
@@ -1890,8 +1860,8 @@ void display_initial_history(int upper_limit, int num_pics)
    if (written_history_items > 0) {
       /* We win.  Back up the text line count to the right place, and rewrite the rest. */
 
-      text_line_count = configuration::history[written_history_items].text_line;
-      gg->reduce_line_count(text_line_count);
+      the_callback_block.text_line_count = history[written_history_items].text_line;
+      (*the_callback_block.uims_reduce_line_count_fn)(the_callback_block.text_line_count);
       open_text_line();
       startpoint = written_history_items+1;
    }
@@ -1899,18 +1869,17 @@ void display_initial_history(int upper_limit, int num_pics)
       /* We lose, there is nothing we can use. */
       clear_screen();
       write_header_stuff(TRUE, 0);
-      newline();
-      newline();
+      (*the_callback_block.newline_fn)();
+      (*the_callback_block.newline_fn)();
       startpoint = 1;
    }
 
-   for (j=startpoint; j<=upper_limit-num_pics; j++)
-      write_history_line(j, false, false, file_write_no);
+   for (j=startpoint; j<=upper_limit-num_pics; j++) write_history_line(j, (char *) 0, FALSE, file_write_no);
 
-   // Now write stuff with forced pictures.
+   /* Now write stuff with forced pictures. */
 
    for (j=upper_limit-num_pics+1; j<=upper_limit; j++) {
-      if (j >= startpoint) write_history_line(j, true, false, file_write_no);
+      if (j >= startpoint) write_history_line(j, (char *) 0, TRUE, file_write_no);
    }
 
    written_history_items = upper_limit;   /* This stuff is now safe. */
@@ -1921,18 +1890,18 @@ void display_initial_history(int upper_limit, int num_pics)
 
 extern void initialize_parse(void)
 {
-   parse_state.concept_write_base = &configuration::next_config().command_root;
+   parse_state.concept_write_base = &history[history_ptr+1].command_root;
    parse_state.concept_write_ptr = parse_state.concept_write_base;
    *(parse_state.concept_write_ptr) = (parse_block *) 0;
    parse_state.parse_stack_index = 0;
-   parse_state.base_call_list_to_use = find_proper_call_list(&configuration::current_config().state);
+   parse_state.base_call_list_to_use = find_proper_call_list(&history[history_ptr].state);
    parse_state.call_list_to_use = parse_state.base_call_list_to_use;
-   configuration::next_config().init_centersp_specific();
-   configuration::init_warnings();
-   configuration::next_config().draw_pic = FALSE;
+   history[history_ptr+1].centersp = 0;
+   history[history_ptr+1].warnings = warning_info();
+   history[history_ptr+1].draw_pic = FALSE;
 
-   if (written_history_items > configuration::history_ptr)
-      written_history_items = configuration::history_ptr;
+   if (written_history_items > history_ptr)
+      written_history_items = history_ptr;
 
    parse_state.specialprompt[0] = '\0';
    parse_state.topcallflags1 = 0;
@@ -1945,12 +1914,12 @@ static void do_change_outfile(long_boolean signal)
 {
    char newfile_string[MAX_FILENAME_LENGTH];
 
-   if (gg->do_outfile_popup(newfile_string)) {
+   if ((*the_callback_block.uims_do_outfile_popup_fn)(newfile_string)) {
       if (newfile_string[0]) {
          char confirm_message[MAX_FILENAME_LENGTH+25];
          char *final_message;
 
-         if (install_outfile_string(newfile_string)) {
+         if ((*the_callback_block.install_outfile_string_fn)(newfile_string)) {
             (void) strncpy(confirm_message, "Output file changed to \"", 25);
             (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
             (void) strncat(confirm_message, "\"", 2);
@@ -1982,7 +1951,7 @@ static long_boolean backup_one_item(void)
    parse_block **this_ptr = parse_state.concept_write_base;
    if (!this_ptr || !*this_ptr) return FALSE;
 
-   if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
+   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
       this_ptr = &((*this_ptr)->next);
 
    for (;;) {
@@ -2024,7 +1993,7 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
 
    /* Put up the getout popup to see if the user wants to enter a header string. */
 
-   getout_ind = gg->do_getout_popup(second_header);
+   getout_ind = (*the_callback_block.uims_do_getout_popup_fn)(second_header);
 
    /* Some user interfaces (those with icons) may have an icon to abort the
       sequence, rather than just decline the comment.  Such an action comes
@@ -2037,16 +2006,16 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
    /* Open the file and write it. */
 
    clear_screen();
-   open_file();
+   (*the_callback_block.open_file_fn)();
    enable_file_writing = TRUE;
    doublespace_file();
-   get_date(date);
+   (*the_callback_block.get_date_fn)(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff(FALSE, configuration::current_config().state.result_flags);
+   write_header_stuff(FALSE, history[history_ptr].state.result_flags);
    newline();
 
-   if (!configuration::sequence_is_resolved()) {
+   if (!(*the_callback_block.sequence_is_resolved_fn)()) {
       writestuff("             NOT RESOLVED");
       newline();
    }
@@ -2085,23 +2054,23 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
 
    if (sequence_number >= 0) sequence_number++;
 
-   for (j=configuration::whole_sequence_low_lim; j<=configuration::history_ptr; j++)
-      write_history_line(j, false, false, file_write_double);
+   for (j=whole_sequence_low_lim; j<=history_ptr; j++)
+      write_history_line(j, (char *) 0, FALSE, file_write_double);
 
-   // Echo the concepts entered so far.
+   /* Echo the concepts entered so far.  */
 
-   if (parse_state.concept_write_ptr != &configuration::next_config().command_root) {
-      write_history_line(configuration::history_ptr+1, false, false, file_write_double);
+   if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+      write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
    }
 
-   if (configuration::sequence_is_resolved())
+   if ((*the_callback_block.sequence_is_resolved_fn)())
       write_resolve_text(TRUE);
 
    newline();
    enable_file_writing = FALSE;
    newline();
 
-   close_file();     /* This will signal a "specialfail" if a file error occurs. */
+   (*the_callback_block.close_file_fn)();     /* This will signal a "specialfail" if a file error occurs. */
 
    writestuff("Sequence");
 
@@ -2246,7 +2215,7 @@ static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 
 
 
-void run_program()
+SDLIB_API void run_program()
 {
    int i;
 
@@ -2268,8 +2237,6 @@ void run_program()
       writestuff("Copyright (c) 1995, Robert E. Cays");
       newline();
       writestuff("Copyright (c) 1996, Charles Petzold");
-      newline();
-      writestuff("Copyright (c) 2001-2002  Chris \"Fen\" Tamanaha");
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();
@@ -2308,20 +2275,20 @@ void run_program()
 
    try {
       if (global_error_flag) {
-         // The call we were trying to do has failed.  Abort it and display the error message.
+         /* The call we were trying to do has failed.  Abort it and display the error message. */
    
          if (interactivity == interactivity_database_init ||
              interactivity == interactivity_verify)
-            gg->fatal_error_exit(1, "Unknown error context", error_message1);
+            (*the_callback_block.init_error_fn)(error_message1);
 
          // If this is a real call execution error, save the call that caused it.
 
          if (global_error_flag < error_flag_wrong_command) {
-            configuration::history[0] = configuration::next_config();     // So failing call will get printed.
+            history[0] = history[history_ptr+1];     // So failing call will get printed.
             // But copy the parse tree, since we are going to clip it.
-            configuration::history[0].command_root = copy_parse_tree(configuration::history[0].command_root);
+            history[0].command_root = copy_parse_tree(history[0].command_root);
             // But without any warnings we may have collected.
-            configuration::history[0].init_warnings_specific();
+            history[0].warnings = warning_info();
          }
          if (global_error_flag == error_flag_wrong_command) {
             /* Special signal -- user clicked on special thing while trying to get subcall. */
@@ -2347,12 +2314,12 @@ void run_program()
 
          if (!diagnostic_mode && 
              retain_after_error &&
-             ((configuration::history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
+             ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
              backup_one_item()) {
             reply_pending = FALSE;
             // Take out warnings that arose from the failed call,
             // since we aren't going to do that call.
-            configuration::init_warnings();
+            history[history_ptr+1].warnings = warning_info();
             goto simple_restart;
          }
          goto start_cycle;      /* Failed, reinitialize the whole line. */
@@ -2369,7 +2336,7 @@ void run_program()
       newline();
 
       if (need_new_header_comment) {
-         (void) gg->do_header_popup(header_comment);
+         (void) (*the_callback_block.uims_do_header_popup_fn)(header_comment);
          need_new_header_comment = FALSE;
       }
    
@@ -2397,17 +2364,17 @@ void run_program()
 
          if (header_comment[0])
             (void) sprintf(title, "%s  %s%s",
-                           &old_filename_strings[calling_level][1], header_comment, numstuff);
+                           &filename_strings[calling_level][1], header_comment, numstuff);
          else
             (void) sprintf(title, "%s%s",
-                           &old_filename_strings[calling_level][1], numstuff);
+                           &filename_strings[calling_level][1], numstuff);
 
-         gg->set_window_title(title);
+         (*the_callback_block.uims_set_window_title_fn)(title);
       }
 
       /* Query for the starting setup. */
 
-      global_reply = gg->get_startup_command();
+      global_reply = (*the_callback_block.uims_get_startup_command_fn)();
 
       if (global_reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
       if (global_reply != ui_start_select) goto normal_exit;           /* Huh? */
@@ -2447,19 +2414,19 @@ void run_program()
             singing_call_mode = 2;
          goto new_sequence;
       case start_select_select_print_font:
-         if (!gg->choose_font()) {
+         if (!(*the_callback_block.uims_choose_font_fn)()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_current:
-         if (!gg->print_this()) {
+         if (!(*the_callback_block.uims_print_this_fn)()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_any:
-         if (!gg->print_any()) {
+         if (!(*the_callback_block.uims_print_any_fn)()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
@@ -2471,7 +2438,7 @@ void run_program()
 
             if (session) {
                (void) fclose(session);
-               if (gg->do_session_init_popup() != POPUP_ACCEPT) {
+               if ((*the_callback_block.uims_do_session_init_popup_fn)() != POPUP_ACCEPT) {
                   writestuff("No action has been taken.");
                   newline();
                   goto new_sequence;
@@ -2518,23 +2485,24 @@ void run_program()
          do_change_outfile(FALSE);
          goto new_sequence;
       case start_select_change_header_comment:
-         (void) gg->do_header_popup(header_comment);
+         (void) (*the_callback_block.uims_do_header_popup_fn)(header_comment);
          need_new_header_comment = FALSE;
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
       }
    
-      // We now know that uims_menu_index is in the range 1 to 5, that is,
-      // start_select_h1p2p ... start_select_as_they_are.  We will put
-      // that into the startinfo stuff in the history.
+      history_ptr = 1;              /* Clear the position history. */
 
-      configuration::initialize_history(uims_menu_index);   // Clear the position history.
-      configuration::history[1].init_warnings_specific();
-      configuration::history[1].init_resolve();
-      // Put the people into their starting position.
-      configuration::history[1].state = configuration::history[1].get_startinfo_specific()->the_setup;
+      whole_sequence_low_lim = 2;
+      if (!startinfolist[uims_menu_index].into_the_middle) whole_sequence_low_lim = 1;
 
+      history[1].warnings = warning_info();
+      history[1].draw_pic = FALSE;
+      history[1].centersp = uims_menu_index;
+      history[1].resolve_flag.kind = resolve_none;
+      /* Put the people into their starting position. */
+      history[1].state = startinfolist[uims_menu_index].the_setup;
       written_history_items = -1;
 
       global_error_flag = (error_flag_type) 0;
@@ -2562,28 +2530,28 @@ void run_program()
          and that is right here.  Note that we are about to call "initialize_parse",
          which destroys any lingering pointers into the history array. */
 
-      if (history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
+      if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
          configuration * t;
          history_allocation <<= 1;
          t = (configuration *)
-            get_more_mem_gracefully(configuration::history, history_allocation * sizeof(configuration));
+            (*the_callback_block.get_more_mem_gracefully_fn)(history, history_allocation * sizeof(configuration));
          if (!t) {
             /* Couldn't get memory; we are in serious trouble. */
             history_allocation >>= 1;
             /* Bring history_ptr down to safe size.  This will have the effect of
                throwing away the last call, or part or all of the last resolve. */
-            configuration::history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
+            history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
             specialfail("Not enough memory!");
          }
-         configuration::history = t;
+         history = t;
       }
 
       initialize_parse();
 
       /* Check for first call given to heads or sides only. */
    
-      if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
-         deposit_concept(&centers_concept);
+      if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
+         (*the_callback_block.deposit_concept_fn)(&centers_concept);
    
       /* Come here to get a concept or call or whatever from the user. */
    
@@ -2591,7 +2559,7 @@ void run_program()
    
    simple_restart:
 
-      if ((!reply_pending) && (!query_for_call())) {
+      if ((!reply_pending) && (!(*the_callback_block.query_for_call_fn)())) {
          // User specified a call (and perhaps concepts too).
 
          // The call to toplevelmove may make a call to "fail", which will get caught
@@ -2600,7 +2568,7 @@ void run_program()
 
          toplevelmove();
          finish_toplevelmove();
-         configuration::history_ptr++;         // Call successfully completed; save it.
+         history_ptr++;         // Call successfully completed; save it.
          goto start_cycle;
       }
    
@@ -2613,11 +2581,11 @@ void run_program()
       if (global_reply == ui_command_select) {
          switch ((command_kind) uims_menu_index) {
          case command_quit:
-            if (gg->do_abort_popup() != POPUP_ACCEPT)
+            if ((*the_callback_block.uims_do_abort_popup_fn)() != POPUP_ACCEPT)
                goto simple_restart;
             goto normal_exit;
          case command_abort:
-            if (gg->do_abort_popup() != POPUP_ACCEPT)
+            if ((*the_callback_block.uims_do_abort_popup_fn)() != POPUP_ACCEPT)
                goto simple_restart;
             clear_screen();
             goto show_banner;
@@ -2625,8 +2593,8 @@ void run_program()
             while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
             initialize_parse();
 
-            if (configuration::history_ptr <= 1 ||
-                (configuration::history_ptr == 2 && configuration::history[1].get_startinfo_specific()->into_the_middle))
+            if (history_ptr <= 1 ||
+                (history_ptr == 2 && startinfolist[history[1].centersp].into_the_middle))
                specialfail("Can't cut past this point.");
 
             clipboard_size++;
@@ -2637,19 +2605,19 @@ void run_program()
                /* Increase by 50% beyond what we have now. */
                clipboard_allocation += clipboard_allocation >> 1;
                t = (configuration *)
-                  get_more_mem_gracefully(clipboard,
+                  (*the_callback_block.get_more_mem_gracefully_fn)(clipboard,
                                           clipboard_allocation * sizeof(configuration));
                if (!t) specialfail("Not enough memory!");
                clipboard = t;
             }
 
-            clipboard[clipboard_size-1] = configuration::history[configuration::history_ptr-1];
-            clipboard[clipboard_size-1].command_root = configuration::current_config().command_root;
-            configuration::history_ptr--;
+            clipboard[clipboard_size-1] = history[history_ptr-1];
+            clipboard[clipboard_size-1].command_root = history[history_ptr].command_root;
+            history_ptr--;
             goto start_cycle;
          case command_delete_entire_clipboard:
             if (clipboard_size != 0) {
-               if (gg->do_delete_clipboard_popup() != POPUP_ACCEPT)
+               if ((*the_callback_block.uims_do_delete_clipboard_popup_fn)() != POPUP_ACCEPT)
                   goto simple_restart;
             }
 
@@ -2665,23 +2633,23 @@ void run_program()
             while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
             initialize_parse();
 
-            if (configuration::history_ptr >= 1 &&
-                (configuration::history_ptr >= 2 || !configuration::history[1].get_startinfo_specific()->into_the_middle)) {
+            if (history_ptr >= 1 &&
+                (history_ptr >= 2 || !startinfolist[history[1].centersp].into_the_middle)) {
                uint32 status = 0;
 
                while (clipboard_size != 0) {
                   uint32 directions1, directions2, livemask1, livemask2;
                   parse_block *saved_root;
-                  setup *old = &configuration::current_config().state;
+                  setup *old = &history[history_ptr].state;
                   setup *nuu = &clipboard[clipboard_size-1].state;
                   uint32 mask = 0777777;
 
-                  configuration::next_config() = clipboard[clipboard_size-1];
+                  history[history_ptr+1] = clipboard[clipboard_size-1];
 
                   /* Save the entire parse tree, in case it gets damaged
                      by an aborted selector replacement. */
 
-                  saved_root = copy_parse_tree(configuration::next_config().command_root);
+                  saved_root = copy_parse_tree(history[history_ptr+1].command_root);
 
                   /* If the setup, population, and facing directions don't match, the
                      call execution is problematical.  We don't translate selectors.
@@ -2736,11 +2704,11 @@ void run_program()
                   if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
 
                   status |=
-                     translate_selector_fields(configuration::next_config().command_root,
+                     translate_selector_fields(history[history_ptr+1].command_root,
                                                (mask << 1) | ((nuu->rotation ^ old->rotation) & 1));
 
                   if (status & 2) {
-                     reset_parse_tree(saved_root, configuration::next_config().command_root);
+                     reset_parse_tree(saved_root, history[history_ptr+1].command_root);
                      specialfail("Sorry, can't fix person identifier.  "
                                  "You can give the command 'delete one call from clipboard' "
                                  "to remove this call.");
@@ -2756,13 +2724,13 @@ void run_program()
                   try {
                      toplevelmove();
                      finish_toplevelmove();
-                     configuration::history_ptr++;
+                     history_ptr++;
                   }
                   catch(error_flag_type) {
                      // The call failed.
                      interactivity = interactivity_normal;
                      testing_fidelity = FALSE;
-                     reset_parse_tree(saved_root, configuration::next_config().command_root);
+                     reset_parse_tree(saved_root, history[history_ptr+1].command_root);
                      specialfail("The pasted call has failed.  "
                                  "You can give the command 'delete one call from clipboard' "
                                  "to remove it.");
@@ -2793,7 +2761,7 @@ void run_program()
                goto simple_restart;
             }
             else if (parse_state.concept_write_base != parse_state.concept_write_ptr ||
-                     parse_state.concept_write_base != &configuration::next_config().command_root) {
+                     parse_state.concept_write_base != &history[history_ptr+1].command_root) {
                /* Failed to back up, but some concept exists.  This must have been inside
                   a "checkpoint" or similar complex thing.  Just throw it all away,
                   but do not delete any completed calls. */
@@ -2801,34 +2769,25 @@ void run_program()
                goto start_cycle;
             }
             else {
-               // There were no concepts entered.  Throw away the entire preceding line.
-               if (configuration::history_ptr > 1) {
-                  configuration::history_ptr--;
-                  // Going to start_cycle will make sure written_history_items
-                  // does not exceed history_ptr.
-                  goto start_cycle;
-               }
-               else {
-                  // User type "undo" at the start of the sequence.
-                  // Just abort the sequence.  Don't even ask for permission --
-                  // there is nothing of value.
-                  clear_screen();
-                  goto show_banner;
-               }
+               /* There were no concepts entered.  Throw away the entire preceding line. */
+               if (history_ptr > 1) history_ptr--;
+               /* Going to start_cycle will make sure written_history_items
+                  does not exceed history_ptr. */
+               goto start_cycle;
             }
          case command_erase:
             reply_pending = FALSE;
             goto start_cycle;
          case command_save_pic:
-            configuration::current_config().draw_pic = TRUE;
+            history[history_ptr].draw_pic = TRUE;
             /* We have to back up to BEFORE the item we just changed. */
-            if (written_history_items > configuration::history_ptr-1)
-               written_history_items = configuration::history_ptr-1;
+            if (written_history_items > history_ptr-1)
+               written_history_items = history_ptr-1;
             goto simple_restart;
          case command_help:
             {
                char help_string[MAX_ERR_LENGTH];
-               const char *prefix;
+               Const char *prefix;
                int current_length;
 
                switch (parse_state.call_list_to_use) {
@@ -2877,7 +2836,7 @@ void run_program()
                help_string[MAX_ERR_LENGTH-1] = '\0';
                current_length = strlen(help_string);
 
-               if (configuration::sequence_is_resolved()) {
+               if ((*the_callback_block.sequence_is_resolved_fn)()) {
                   (void) strncpy(&help_string[current_length],
                                  "  You may also write out this finished sequence "
                                  "by typing 'write this sequence'.",
@@ -2899,7 +2858,7 @@ void run_program()
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
          
-               if (gg->do_header_popup(newhead_string)) {
+               if ((*the_callback_block.uims_do_header_popup_fn)(newhead_string)) {
                   (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
                   if (newhead_string[0]) {
@@ -2918,29 +2877,29 @@ void run_program()
          case command_getout:
             /* Check that it is really resolved. */
 
-            if (!configuration::sequence_is_resolved()) {
-               if (gg->do_write_anyway_popup() != POPUP_ACCEPT)
+            if (!(*the_callback_block.sequence_is_resolved_fn)()) {
+               if ((*the_callback_block.uims_do_write_anyway_popup_fn)() != POPUP_ACCEPT)
                   specialfail("This sequence is not resolved.");
-               configuration::current_config().draw_pic = TRUE;
+               history[history_ptr].draw_pic = TRUE;
             }
 
             if (!write_sequence_to_file())
                goto start_cycle; /* user cancelled action */
             goto new_sequence;
          case command_select_print_font:
-            if (!gg->choose_font())
+            if (!(*the_callback_block.uims_choose_font_fn)())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_current:
-            if (!gg->print_this())
+            if (!(*the_callback_block.uims_print_this_fn)())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_any:
-            if (!gg->print_any())
+            if (!(*the_callback_block.uims_print_any_fn)())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_help_manual:
-            if (!gg->help_manual())
+            if (!(*the_callback_block.uims_help_manual_fn)())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
          default:     /* Should be some kind of search command. */
@@ -2971,8 +2930,8 @@ void run_program()
                }
 
                allowing_modifications = 0;
-               configuration::next_config().draw_pic = FALSE;
-               parse_state.concept_write_base = &configuration::next_config().command_root;
+               history[history_ptr+1].draw_pic = FALSE;
+               parse_state.concept_write_base = &history[history_ptr+1].command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;
                reply_pending = TRUE;

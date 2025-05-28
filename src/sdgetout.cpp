@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2001  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -15,7 +15,7 @@
 /* This defines the following functions:
    write_resolve_text
    full_resolve
-   configuration::concepts_in_place
+   concepts_in_place
    reconcile_command_ok
    resolve_command_ok
    nice_setup_command_ok
@@ -53,20 +53,20 @@ typedef struct {
 typedef struct {
    int perm[8];
    int accept_extend;
-   bool allow_eighth_rotation;
+   long_boolean allow_eighth_rotation;
 } reconcile_descriptor;
 
 
 
-static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, false};
-static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, false};
-static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, false};
-static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, false};
-static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, true};
-static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, true};
-static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, false};
-static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, false};
-static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, false};
+static reconcile_descriptor promperm =  {{1, 0, 6, 7, 5, 4, 2, 3}, 0, FALSE};
+static reconcile_descriptor rpromperm = {{0, 1, 7, 6, 4, 5, 3, 2}, 0, FALSE};
+static reconcile_descriptor rlgperm =   {{1, 0, 6, 7, 5, 4, 2, 3}, 2, FALSE};
+static reconcile_descriptor qtagperm =  {{1, 0, 7, 6, 5, 4, 3, 2}, 0, FALSE};
+static reconcile_descriptor homeperm =  {{6, 5, 4, 3, 2, 1, 0, 7}, 0, TRUE};
+static reconcile_descriptor sglperm =   {{7, 6, 5, 4, 3, 2, 1, 0}, 0, TRUE};
+static reconcile_descriptor crossperm = {{5, 4, 3, 2, 1, 0, 7, 6}, 0, FALSE};
+static reconcile_descriptor crossplus = {{5, 4, 3, 2, 1, 0, 7, 6}, 1, FALSE};
+static reconcile_descriptor laperm =    {{1, 3, 6, 0, 5, 7, 2, 4}, 2, FALSE};
 
 
 static configuration *huge_history_save = (configuration *) 0;
@@ -113,8 +113,8 @@ static char *resolve_distances[] = {
    "7/8",
    "0"};
 
-// BEWARE!!  This enum must track the table "resolve_first_parts".
-enum first_part_kind {
+/* BEWARE!!  This enum must track the table "resolve_first_parts". */
+typedef enum {
    first_part_none,
    first_part_ext,
    first_part_slcl,
@@ -122,9 +122,9 @@ enum first_part_kind {
    first_part_pthru,
    first_part_trby,
    first_part_xby
-};
+} first_part_kind;
 
-// Beware!!  This table must track the definition of enum "first_part_kind".
+/* Beware!!  This table must track the definition of enum "first_part_kind". */
 static Cstring resolve_first_parts[] = {
    (Cstring) 0,
    "extend",
@@ -134,8 +134,8 @@ static Cstring resolve_first_parts[] = {
    "trade by",
    "cross by"};
 
-// BEWARE!!  This enum must track the table "resolve_main_parts".
-enum main_part_kind {
+/* BEWARE!!  This enum must track the table "resolve_main_parts". */
+typedef enum {
    main_part_none,
    main_part_rlg,
    main_part_la,
@@ -147,9 +147,9 @@ enum main_part_kind {
    main_part_rsglprom,
    main_part_circ,
    main_part_swing
-};
+} main_part_kind;
 
-// Beware!!  This table must track the definition of enum "main_part_kind".
+/* Beware!!  This table must track the definition of enum "main_part_kind". */
 static Cstring resolve_main_parts[] = {
    "???",
    "right and left grand",
@@ -164,78 +164,71 @@ static Cstring resolve_main_parts[] = {
    "swing and promenade"};
 
 
-struct resolve_descriptor {
-   // 0 means accept all such resolves.
-   // Each increase cuts the acceptance probability in half when searching
-   // randomly.  For example, 4 means accept only 1/16 of such resolves,
-   // throwing away the other 15/16.
-   // Special case: 10 means never accept such a resolve in a search.
-   // This is for really bad ones (LA from lines facing out) that we want
-   // to display when they arise while calling, but we don't want to find
-   // in a resolve command.
-   int how_bad;
+typedef struct {
+   int how_bad;  /* 0 means accept all such resolves.
+                  Otherwise, this is (2**N)-1, and accepts only one out of 2**N of them. */
    first_part_kind first_part;
    main_part_kind main_part;
-};
+} resolve_descriptor;
 
-// BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h .
+/* BEWARE!!  This list is keyed to the definition of "resolve_kind" in sd.h . */
 static resolve_descriptor resolve_table[] = {
-   {2,  first_part_none,  main_part_none},     /* resolve_none */
+   {3,  first_part_none,  main_part_none},     /* resolve_none */
    {0,  first_part_none,  main_part_rlg},      /* resolve_rlg */
    {0,  first_part_none,  main_part_la},       /* resolve_la */
    {1,  first_part_ext,   main_part_rlg},      /* resolve_ext_rlg */
    {1,  first_part_ext,   main_part_la},       /* resolve_ext_la */
-   {2,  first_part_slcl,  main_part_rlg},      /* resolve_slipclutch_rlg */
-   {2,  first_part_slcl,  main_part_la},       /* resolve_slipclutch_la */
-   {3,  first_part_circ,  main_part_rlg},      /* resolve_circ_rlg */
-   {3,  first_part_circ,  main_part_la},       /* resolve_circ_la */
-   {3,  first_part_pthru, main_part_rlg},      /* resolve_pth_rlg */
-   {3,  first_part_pthru, main_part_la},       /* resolve_pth_la */
-   {4,  first_part_trby,  main_part_rlg},      /* resolve_tby_rlg */
-   {4,  first_part_trby,  main_part_la},       /* resolve_tby_la */
+   {3,  first_part_slcl,  main_part_rlg},      /* resolve_slipclutch_rlg */
+   {3,  first_part_slcl,  main_part_la},       /* resolve_slipclutch_la */
+   {7,  first_part_circ,  main_part_rlg},      /* resolve_circ_rlg */
+   {7,  first_part_circ,  main_part_la},       /* resolve_circ_la */
+   {7,  first_part_pthru, main_part_rlg},      /* resolve_pth_rlg */
+   {7,  first_part_pthru, main_part_la},       /* resolve_pth_la */
+   {15, first_part_trby,  main_part_rlg},      /* resolve_tby_rlg */
+   {15, first_part_trby,  main_part_la},       /* resolve_tby_la */
    {1,  first_part_xby,   main_part_rlg},      /* resolve_xby_rlg */
    {1,  first_part_xby,   main_part_la},       /* resolve_xby_la */
    {1,  first_part_none,  main_part_dixgnd},   /* resolve_dixie_grand */
-   {2,  first_part_none,  main_part_minigrand},/* resolve_minigrand */
+   {3,  first_part_none,  main_part_minigrand},/* resolve_minigrand */
    {0,  first_part_none,  main_part_prom},     /* resolve_prom */
    {1,  first_part_none,  main_part_revprom},  /* resolve_revprom */
-   {3,  first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
-   {4,  first_part_none,  main_part_rsglprom}, /* resolve_revsglfileprom */
-   {2,  first_part_none,  main_part_circ}};    /* resolve_circle */
+   {7,  first_part_none,  main_part_sglprom},  /* resolve_sglfileprom */
+   {15, first_part_none,  main_part_rsglprom}, /* resolve_revsglfileprom */
+   {3,  first_part_none,  main_part_circ}};    /* resolve_circle */
 
 
 /* This assumes that "sequence_is_resolved" passes. */
 SDLIB_API void write_resolve_text(long_boolean doing_file)
 {
-   resolve_indicator & r = configuration::current_resolve();
+   resolve_indicator r = history[history_ptr].resolve_flag;
    int distance = r.distance;
-   resolve_kind index = r.the_item->k;
 
-   if (configuration::current_config().state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT)
+   if (history[history_ptr].state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT)
       distance++;
 
    distance &= 7;
 
    if (doing_file && !ui_options.singlespace_mode) doublespace_file();
 
-   if (index == resolve_circle) {
+   if (r.kind == resolve_circle) {
       if (distance == 0) {
-         if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff("at home");
       }
       else {
          writestuff("circle left ");
-         if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff(resolve_distances[8 - distance]);
          writestuff(" or right ");
-         if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+         if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
             writestuff("approximately ");
          writestuff(resolve_distances[distance]);
       }
    }
    else {
+      int index = (int) r.kind;
       first_part_kind first;
       main_part_kind mainpart;
 
@@ -256,7 +249,7 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       if (first != first_part_none) {
          writestuff(resolve_first_parts[first]);
          if (doing_file) {
-            newline();
+            (*the_callback_block.newline_fn)();
             if (!ui_options.singlespace_mode) doublespace_file();
          }
          else
@@ -271,14 +264,15 @@ SDLIB_API void write_resolve_text(long_boolean doing_file)
       writestuff(resolve_main_parts[mainpart]);
 
       writestuff("  (");
-      if (configuration::current_config().state.result_flags & RESULTFLAG__IMPRECISE_ROT)
+      if (history[history_ptr].state.result_flags & RESULTFLAG__IMPRECISE_ROT)
          writestuff("approximately ");
 
       if (distance == 0) {
          writestuff("at home)");
       }
       else {
-         if (index == resolve_revprom || index == resolve_revsglfileprom)
+         if (r.kind == resolve_revprom ||
+             r.kind == resolve_revsglfileprom)
             writestuff(resolve_distances[8 - distance]);
          else
             writestuff(resolve_distances[distance]);
@@ -310,6 +304,7 @@ static long_boolean inner_search(command_kind goal,
 {
    long_boolean retval;
    int i, j;
+   setup *ns;
    uint32 directions, p, q;
 
    history_insertion_point = huge_history_ptr;
@@ -317,14 +312,14 @@ static long_boolean inner_search(command_kind goal,
    if (goal == command_reconcile) {
       history_insertion_point -= insertion_point;    /* strip away the extra calls */
 
-      goal_kind = configuration::history[history_insertion_point].state.kind;
+      goal_kind = history[history_insertion_point].state.kind;
       if (setup_attrs[goal_kind].setup_limits != 7) return(FALSE);
-      for (j=0; j<8; j++) goal_directions[j] = configuration::history[history_insertion_point].state.people[j].id1 & d_mask;
+      for (j=0; j<8; j++) goal_directions[j] = history[history_insertion_point].state.people[j].id1 & d_mask;
 
       for (j=0; j<8; j++) {
          perm_indices[j] = -1;
          for (i=0; i<8; i++)
-            if ((configuration::history[history_insertion_point].state.people[i].id1 & PID_MASK) == perm_array[j]) perm_indices[j] = i;
+            if ((history[history_insertion_point].state.people[i].id1 & PID_MASK) == perm_array[j]) perm_indices[j] = i;
          if (perm_indices[j] < 0) return(FALSE);      /* didn't find the person???? */
       }
    }
@@ -357,11 +352,11 @@ static long_boolean inner_search(command_kind goal,
       /* Throw away garbage from last attempt. */
       release_parse_blocks_to_mark(inner_parse_mark);
       testing_fidelity = FALSE;
-      configuration::history_ptr = history_save;
+      history_ptr = history_save;
       attempt_count++;
       if (attempt_count > ATTEMPTS_PER_COMMAND) {
          /* Too many tries -- too bad. */
-         configuration::history_ptr = huge_history_ptr;
+         history_ptr = huge_history_ptr;
 
          /* We shouldn't have to do the following stuff.  The searcher should be written
             such that it doesn't get stuck on a call with any iterator nonzero, because,
@@ -380,23 +375,22 @@ static long_boolean inner_search(command_kind goal,
 
       /* Now clear any concepts if we are not on the first call of the series. */
 
-      if (configuration::history_ptr != history_insertion_point || goal == command_reconcile)
+      if (history_ptr != history_insertion_point || goal == command_reconcile)
          initialize_parse();
       else
          (void) restore_parse_state();
 
       /* Generate the concepts and call. */
 
-      hashed_randoms = hashed_random_list[configuration::history_ptr - history_insertion_point];
+      hashed_randoms = hashed_random_list[history_ptr - history_insertion_point];
 
       /* Put in a special initial concept if needed to normalize. */
 
-      if (goal == command_normalize && !configuration::concepts_in_place()) {
-         int k, l;
-         useful_concept_enum zzzc;
+      if (goal == command_normalize && !concepts_in_place()) {
+         int k, l, c;
 
          for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
-            if (nice_setup_info[k].kind == configuration::current_config().state.kind) {
+            if (nice_setup_info[k].kind == history[history_ptr].state.kind) {
                l = nice_setup_info[k].number_available_now;
                if (l != 0) goto found_k_and_l;
                else goto try_again;  /* This shouldn't happen, because we are screening setups carefully. */
@@ -407,27 +401,26 @@ static long_boolean inner_search(command_kind goal,
 
       found_k_and_l:
 
-         zzzc = nice_setup_info[k].array_to_use_now
-            [generate_random_number(l)];
+         c = nice_setup_info[k].array_to_use_now
+            [(*the_callback_block.generate_random_number_fn)(l)];
 
          /* If the concept is a tandem or as couples type, we really want "phantom"
             or "2x8 matrix"" in front of it. */
 
-         if (concept_descriptor_table[useful_concept_indices[zzzc]].kind == concept_tandem) {
-            if (configuration::current_config().state.kind == s4x4)
-               deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_phan]]);
+         if (concept_descriptor_table[c].kind == concept_tandem) {
+            if (history[history_ptr].state.kind == s4x4)
+               (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[phantom_concept_index]);
             else
-               deposit_concept(&concept_descriptor_table[useful_concept_indices[UC_2x8matrix]]);
+               (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[matrix_2x8_concept_index]);
          }
 
-         deposit_concept(&concept_descriptor_table[useful_concept_indices[zzzc]]);
+         (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[c]);
       }
 
-      // Select the call.  Selecting one that says "don't use in resolve"
-      // will signal and go to try_again.
-      // This may, of course, add more concepts.
+      /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
+      /* This may, of course, add more concepts. */
 
-      (void) query_for_call();
+      (void) (*the_callback_block.query_for_call_fn)();
 
       /* Do the call.  An error will signal and go to try_again. */
 
@@ -437,232 +430,208 @@ static long_boolean inner_search(command_kind goal,
       /* We don't like certain warnings either. */
       if (warnings_are_unacceptable(goal != command_standardize)) goto try_again;
 
-      // See if we have already seen this sequence.
+      /* See if we have already seen this sequence. */
 
       for (i=0; i<avoid_list_size; i++) {
          if (hashed_randoms == avoid_list[i]) goto try_again;
       }
 
-      // The call was legal, see if it satisfies our criterion.
+      /* The call was legal, see if it satisfies our criterion. */
 
-      // We used to use an "if" statement here instead of a "switch", because
-      // of a compiler bug.  We no longer take pity on buggy compilers.
+      /* ***** Because of an apparent bug in the C compiler, the "switch" statement that we would
+         like to have used doesn't work, so we use an "if". */
 
-      setup *ns = &configuration::next_config().state;
+      ns = &history[history_ptr+1].state;
 
-      switch (goal) {
-      case command_resolve:
-         {
-            resolve_indicator & r = configuration::next_resolve();
-            resolve_kind index = r.the_item->k;
+      if (goal == command_resolve) {
+         resolve_kind r = history[history_ptr+1].resolve_flag.kind;
 
-            if (index == resolve_none) goto what_a_loss;
+         /* Here we bias the search against resolves with circulates (which we
+            consider to be of lower quality) by only sometimes accepting them.
 
-            // Some resolves are so bad we never find them.
-            // This is indicated by the 40 bit in the distance word.
-            if (r.the_item->distance & 0x40) goto what_a_loss;
+            As more bits are set in the "how_bad" indicator, we ignore a larger
+            fraction of the resolves.  For example, we bias the search VERY HEAVILY
+            against reverse single file promenades, accepting only 1 in 16.
+         */
 
-            // Here we bias the search against resolves with circulates (which we
-            // consider to be of lower quality) by only sometimes accepting them.
-            //
-            //  As the "how_bad" indicator gets higher, we ignore a larger
-            // fraction of the resolves.  For example, we bias the search VERY HEAVILY
-            // against reverse single file promenades, accepting only 1 in 16.
+         if (r == resolve_none) goto what_a_loss;
 
-            int badness = resolve_table[index].how_bad;
-
-            switch (get_resolve_goodness_info()) {
-            case resolve_goodness_only_nice:
-               // Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
-               // Furthermore, at C2 and above, only accept if promenade distance
-               // is 0 to 3/8.
-               if (badness != 0 ||
-                   (calling_level >= l_c2 &&
-                    ((r.distance & 7) > 3)))
-                  goto what_a_loss;
-               break;
-            case resolve_goodness_always:
-               // Accept any one-call resolve.
-               break;
-            case resolve_goodness_maybe:
-               // Accept resolves randomly.  The probability that we reject a
-               // resolve increases as the resolve quality goes down.
-               if (~(~0 << badness) & attempt_count) goto what_a_loss;
-               break;
-            }
+         switch (get_resolve_goodness_info()) {
+         case resolve_goodness_only_nice:
+            /* Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
+               Furthermore, at C2 and above, only accept if promenade distance
+               is 0 to 3/8. */
+            if (resolve_table[r].how_bad != 0 ||
+                (calling_level >= l_c2 &&
+                 ((history[history_ptr+1].resolve_flag.distance & 7) > 3)))
+               goto what_a_loss;
+            break;
+         case resolve_goodness_always:
+            /* Accept any one-call resolve. */
+            break;
+         case resolve_goodness_maybe:
+            /* Accept resolves randomly.  The probability that we reject a
+               resolve increases as the resolve quality goes down. */
+            if (resolve_table[r].how_bad & attempt_count) goto what_a_loss;
+            break;
          }
-         break;
-
-      case command_normalize:
-
-         // We accept any setup with 8 people in it.  This could conceivably give
-         // somewhat unusual setups like dogbones or riggers, but they might be
-         // sort of interesting if they arise.  (Actually, it is highly unlikely,
-         // given the concepts that we use.)
+      }
+      else if (goal == command_normalize) {
+         /* We accept any setup with 8 people in it.  This could conceivably give
+            somewhat unusual setups like dogbones or riggers, but they might be
+            sort of interesting if they arise.  (Actually, it is highly unlikely,
+            given the concepts that we use.) */
          if (setup_attrs[ns->kind].setup_limits != 7) goto what_a_loss;
-         break;
+      }
+      else if (goal == command_standardize) {
+         uint32 tb = 0;
+         uint32 tbtb = 0;
+         uint32 tbpt = 0;
 
-      case command_standardize:
-         {
-            uint32 tb = 0;
-            uint32 tbtb = 0;
-            uint32 tbpt = 0;
-
-            for (i=0 ; i<8 ; i++) {
-               tb |= ns->people[i].id1;
-               tbtb |= ns->people[i].id1 ^ ((i & 2) << 2);
-               tbpt |= ns->people[i].id1 ^ (i & 1);
-            }
-
-            if (ns->kind == s2x4 || ns->kind == s1x8) {
-               if ((tb & 011) == 011) goto what_a_loss;
-            }
-            else if (ns->kind == s_qtag) {
-               if ((tb & 1) != 0 && (tbtb & 010) != 0) goto what_a_loss;
-            }
-            else if (ns->kind == s_ptpd) {
-               if ((tb & 010) != 0 && (tbpt & 1) != 0) goto what_a_loss;
-            }
-            else
-               goto what_a_loss;
-         }
-         break;
-
-      case command_reconcile:
-
-         {
-            if (ns->kind != goal_kind) goto what_a_loss;
-            for (j=0; j<8; j++)
-               if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
-
-            int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
-            int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
-            int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
-            int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
-            int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
-            int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
-            int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
-            int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
-
-            // Test for absolute sex correctness if required.
-            if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
-
-            p7 = (p7 - p6) & PID_MASK;
-            p6 = (p6 - p5) & PID_MASK;
-            p5 = (p5 - p4) & PID_MASK;
-            p4 = (p4 - p3) & PID_MASK;
-            p3 = (p3 - p2) & PID_MASK;
-            p2 = (p2 - p1) & PID_MASK;
-            p1 = (p1 - p0) & PID_MASK;
-
-            // Test each sex individually for uniformity of offset around the ring.
-            if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
-               goto what_a_loss;
-
-            if (((p1 + p2) & PID_MASK) != 0200) // Test for each sex in sequence.
-               goto what_a_loss;
-
-            if ((p2 & 0100) == 0)               // Test for alternating sex.
-               goto what_a_loss;
-
-            // Test for relative phase of boys and girls.
-            // "accept_extend" tells how accurate the placement must be.
-            switch (singing_call_mode) {
-            case 1: p2 -= 0200; break;
-            case 2: p2 -= 0600; break;
-            }
-
-            if (((p2 >>= 7) & 3) > current_reconciler->accept_extend)
-               goto what_a_loss;
+         for (i=0 ; i<8 ; i++) {
+            tb |= ns->people[i].id1;
+            tbtb |= ns->people[i].id1 ^ ((i & 2) << 2);
+            tbpt |= ns->people[i].id1 ^ (i & 1);
          }
 
-         break;
+         if (ns->kind == s2x4 || ns->kind == s1x8) {
+            if ((tb & 011) == 011) goto what_a_loss;
+         }
+         else if (ns->kind == s_qtag) {
+            if ((tb & 1) != 0 && (tbtb & 010) != 0) goto what_a_loss;
+         }
+         else if (ns->kind == s_ptpd) {
+            if ((tb & 010) != 0 && (tbpt & 1) != 0) goto what_a_loss;
+         }
+         else
+            goto what_a_loss;
+      }
+      else if (goal == command_reconcile) {
+         if (ns->kind != goal_kind) goto what_a_loss;
+         for (j=0; j<8; j++)
+            if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
 
-      case command_8person_level_call:
-         // We demand that no splitting have taken place along either axis.
+         int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
+         int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
+         int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
+         int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
+         int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
+         int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
+         int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
+         int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
+
+         // Test for absolute sex correctness if required.
+         if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
+
+         p7 = (p7 - p6) & PID_MASK;
+         p6 = (p6 - p5) & PID_MASK;
+         p5 = (p5 - p4) & PID_MASK;
+         p4 = (p4 - p3) & PID_MASK;
+         p3 = (p3 - p2) & PID_MASK;
+         p2 = (p2 - p1) & PID_MASK;
+         p1 = (p1 - p0) & PID_MASK;
+
+         // Test each sex individually for uniformity of offset around the ring.
+         if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
+            goto what_a_loss;
+
+         if (((p1 + p2) & PID_MASK) != 0200) // Test for each sex in sequence.
+            goto what_a_loss;
+
+         if ((p2 & 0100) == 0)               // Test for alternating sex.
+            goto what_a_loss;
+
+         // Test for relative phase of boys and girls.
+         // "accept_extend" tells how accurate the placement must be.
+         switch (singing_call_mode) {
+         case 1: p2 -= 0200; break;
+         case 2: p2 -= 0600; break;
+         }
+
+         if (((p2 >>= 7) & 3) > current_reconciler->accept_extend)
+            goto what_a_loss;
+      }
+      else if (goal >= command_create_any_lines) {
+         directions = 0;
+         for (i=0 ; i<8 ; i++) {
+            directions <<= 2;
+            directions |= ns->people[i].id1 & 3;
+         }
+
+         switch (goal) {
+         case command_create_any_lines:
+            if (ns->kind != s2x4 || (directions & 0x5555) != 0) goto what_a_loss;
+            break;
+         case command_create_any_col:
+            if (ns->kind != s2x4 || (directions & 0x5555) != 0x5555) goto what_a_loss;
+            break;
+         case command_create_any_qtag:
+            if (ns->kind != s_qtag || (directions & 0x5555) != 0) goto what_a_loss;
+            break;
+         case command_create_any_tidal:
+            if (ns->kind != s1x8) goto what_a_loss;
+            break;
+         case command_create_waves:
+            if (ns->kind != s2x4 || (directions != 0x2288 && directions != 0x8822)) goto what_a_loss;
+            break;
+         case command_create_2fl:
+            if (ns->kind != s2x4 || (directions != 0x0AA0 && directions != 0xA00A)) goto what_a_loss;
+            break;
+         case command_create_inv_lines:
+            if (ns->kind != s2x4 || (directions != 0x2882 && directions != 0x8228)) goto what_a_loss;
+            break;
+         case command_create_3and1_lines:
+            p = (directions ^ (directions >> 6)) & 0x202;
+            q = ((directions ^ (directions >> 2)) >> 2) & 0x202;
+            if (ns->kind != s2x4 || (directions & 0x5555) != 0 || (p | q) == 0 || p == q) goto what_a_loss;
+            break;
+         case command_create_tidal_wave:
+            if (ns->kind != s1x8 || (directions != 0x2882 && directions != 0x8228)) goto what_a_loss;
+            break;
+         case command_create_col:
+            if (ns->kind != s2x4 || (directions != 0x55FF && directions != 0xFF55)) goto what_a_loss;
+            break;
+         case command_create_magic_col:
+            if (ns->kind != s2x4 || (directions != 0x7DD7 && directions != 0xD77D)) goto what_a_loss;
+            break;
+         case command_create_qtag:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0xA000 || ((directions & 0x0F0F) != 0x0802 && (directions & 0x0F0F) != 0x0208)) goto what_a_loss;
+            break;
+         case command_create_3qtag:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0x00A0 || ((directions & 0x0F0F) != 0x0802 && (directions & 0x0F0F) != 0x0208)) goto what_a_loss;
+            break;
+         case command_create_qline:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0xA000 || ((directions & 0x0F0F) != 0x0A00 && (directions & 0x0F0F) != 0x000A)) goto what_a_loss;
+            break;
+         case command_create_3qline:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0x00A0 || ((directions & 0x0F0F) != 0x0A00 && (directions & 0x0F0F) != 0x000A)) goto what_a_loss;
+            break;
+         case command_create_dmd:
+            if (ns->kind != s_qtag || (directions & 0x5555) != 0x5050) goto what_a_loss;
+            break;
+         case command_create_li:
+            if (ns->kind != s2x4 || directions != 0xAA00) goto what_a_loss;
+            break;
+         case command_create_lo:
+            if (ns->kind != s2x4 || directions != 0x00AA) goto what_a_loss;
+            break;
+         case command_create_dpt:
+            if (ns->kind != s2x4 || directions != 0x5FF5) goto what_a_loss;
+            break;
+         case command_create_cdpt:
+            if (ns->kind != s2x4 || directions != 0xF55F) goto what_a_loss;
+            break;
+         case command_create_tby:
+            if (ns->kind != s2x4 || directions != 0xDD77) goto what_a_loss;
+            break;
+         case command_create_8ch:
+            if (ns->kind != s2x4 || directions != 0x77DD) goto what_a_loss;
+            break;
+         }
+      }
+      else if (goal == command_8person_level_call) {
+         /* We demand that no splitting have taken place along either axis. */
          if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) goto what_a_loss;
-         break;
-
-      default:
-         if (goal >= command_create_any_lines) {
-            directions = 0;
-            for (i=0 ; i<8 ; i++) {
-               directions <<= 2;
-               directions |= ns->people[i].id1 & 3;
-            }
-
-            switch (goal) {
-            case command_create_any_lines:
-               if (ns->kind != s2x4 || (directions & 0x5555) != 0) goto what_a_loss;
-               break;
-            case command_create_any_col:
-               if (ns->kind != s2x4 || (directions & 0x5555) != 0x5555) goto what_a_loss;
-               break;
-            case command_create_any_qtag:
-               if (ns->kind != s_qtag || (directions & 0x5555) != 0) goto what_a_loss;
-               break;
-            case command_create_any_tidal:
-               if (ns->kind != s1x8) goto what_a_loss;
-               break;
-            case command_create_waves:
-               if (ns->kind != s2x4 || (directions != 0x2288 && directions != 0x8822)) goto what_a_loss;
-               break;
-            case command_create_2fl:
-               if (ns->kind != s2x4 || (directions != 0x0AA0 && directions != 0xA00A)) goto what_a_loss;
-               break;
-            case command_create_inv_lines:
-               if (ns->kind != s2x4 || (directions != 0x2882 && directions != 0x8228)) goto what_a_loss;
-               break;
-            case command_create_3and1_lines:
-               p = (directions ^ (directions >> 6)) & 0x202;
-               q = ((directions ^ (directions >> 2)) >> 2) & 0x202;
-               if (ns->kind != s2x4 || (directions & 0x5555) != 0 || (p | q) == 0 || p == q) goto what_a_loss;
-               break;
-            case command_create_tidal_wave:
-               if (ns->kind != s1x8 || (directions != 0x2882 && directions != 0x8228)) goto what_a_loss;
-               break;
-            case command_create_col:
-               if (ns->kind != s2x4 || (directions != 0x55FF && directions != 0xFF55)) goto what_a_loss;
-               break;
-            case command_create_magic_col:
-               if (ns->kind != s2x4 || (directions != 0x7DD7 && directions != 0xD77D)) goto what_a_loss;
-               break;
-            case command_create_qtag:
-               if (ns->kind != s_qtag || (directions & 0xF0F0) != 0xA000 || ((directions & 0x0F0F) != 0x0802 && (directions & 0x0F0F) != 0x0208)) goto what_a_loss;
-               break;
-            case command_create_3qtag:
-               if (ns->kind != s_qtag || (directions & 0xF0F0) != 0x00A0 || ((directions & 0x0F0F) != 0x0802 && (directions & 0x0F0F) != 0x0208)) goto what_a_loss;
-               break;
-            case command_create_qline:
-               if (ns->kind != s_qtag || (directions & 0xF0F0) != 0xA000 || ((directions & 0x0F0F) != 0x0A00 && (directions & 0x0F0F) != 0x000A)) goto what_a_loss;
-               break;
-            case command_create_3qline:
-               if (ns->kind != s_qtag || (directions & 0xF0F0) != 0x00A0 || ((directions & 0x0F0F) != 0x0A00 && (directions & 0x0F0F) != 0x000A)) goto what_a_loss;
-               break;
-            case command_create_dmd:
-               if (ns->kind != s_qtag || (directions & 0x5555) != 0x5050) goto what_a_loss;
-               break;
-            case command_create_li:
-               if (ns->kind != s2x4 || directions != 0xAA00) goto what_a_loss;
-               break;
-            case command_create_lo:
-               if (ns->kind != s2x4 || directions != 0x00AA) goto what_a_loss;
-               break;
-            case command_create_dpt:
-               if (ns->kind != s2x4 || directions != 0x5FF5) goto what_a_loss;
-               break;
-            case command_create_cdpt:
-               if (ns->kind != s2x4 || directions != 0xF55F) goto what_a_loss;
-               break;
-            case command_create_tby:
-               if (ns->kind != s2x4 || directions != 0xDD77) goto what_a_loss;
-               break;
-            case command_create_8ch:
-               if (ns->kind != s2x4 || directions != 0x77DD) goto what_a_loss;
-               break;
-            }
-         }
-         break;
       }
 
       /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
@@ -681,12 +650,12 @@ static long_boolean inner_search(command_kind goal,
          gets destructively reset to the initial state by restore_parse_state, so we must
          protect it. */
 
-      configuration::history[huge_history_ptr+1].command_root = copy_parse_tree(configuration::history[huge_history_ptr+1].command_root);
+      history[huge_history_ptr+1].command_root = copy_parse_tree(history[huge_history_ptr+1].command_root);
 
       /* Save the entire resolve, that is, the calls we inserted, and where we inserted them. */
 
-      configuration::history_ptr++;
-      new_resolve->size = configuration::history_ptr - history_insertion_point;
+      history_ptr++;
+      new_resolve->size = history_ptr - history_insertion_point;
 
       if (goal == command_reconcile) {
          for (j=0; j<8; j++) {
@@ -694,7 +663,7 @@ static long_boolean inner_search(command_kind goal,
             new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID1_PERM_ALLBITS;
          }
 
-         new_resolve->rotchange = ns->rotation - configuration::history[history_insertion_point].state.rotation;
+         new_resolve->rotchange = ns->rotation - history[history_insertion_point].state.rotation;
          new_resolve->insertion_point = insertion_point;
       }
       else {
@@ -716,21 +685,22 @@ static long_boolean inner_search(command_kind goal,
          /* Copy the whole thing into the history, chiefly to get the call and concepts. */
          written_history_items = -1;
 
-         configuration::next_config() = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
+         history[history_ptr+1] = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
 
       /* Now execute the call again, from the new starting configuration. */
       /* This might signal and go to try_again. */
          toplevelmove();
          finish_toplevelmove();
 
-         this_state = configuration::next_config();
+         this_state = history[history_ptr+1];
          this_state.state.rotation -= new_resolve->rotchange;
          canonicalize_rotation(&this_state.state);
 
          if (this_state.state.rotation != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.rotation)
             goto try_again;
 
-         if (this_state.warnings_are_different(huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point]))
+         if (this_state.warnings !=
+             huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings)
             goto try_again;
 
          for (k=0; k<=setup_attrs[this_state.state.kind].setup_limits; k++) {
@@ -738,9 +708,7 @@ static long_boolean inner_search(command_kind goal,
 
             if (t.id1) {
                if (this_state.state.people[k].id1 !=
-                   ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) |
-                    new_resolve->permute1[(t.id1 & PID_MASK) >> 6] |
-                    new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
+                   ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | new_resolve->permute1[(t.id1 & PID_MASK) >> 6] | new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
                   goto try_again;
                if (this_state.state.people[k].id2 != t.id2)
                   goto try_again;
@@ -751,7 +719,7 @@ static long_boolean inner_search(command_kind goal,
             }
          }
 
-         configuration::history_ptr++;
+         history_ptr++;
       }
 
       testing_fidelity = FALSE;
@@ -765,13 +733,13 @@ static long_boolean inner_search(command_kind goal,
          However, it does little harm to leave this test in place, and it might avoid future
          problems if rotation-sensitive resolves are ever re-introduced. */
 
-      if (goal == command_reconcile && !configuration::sequence_is_resolved())
+      if (goal == command_reconcile && history[history_ptr].resolve_flag.kind == resolve_none)
          goto try_again;   /* Sorry. */
 
       /* We win.  Really save it and exit.  History_ptr has been clobbered. */
 
       for (j=0; j<MAX_RESOLVE_SIZE; j++)
-         new_resolve->stuph[j] = configuration::history[j+history_insertion_point+1];
+         new_resolve->stuph[j] = history[j+history_insertion_point+1];
 
       /* Grow the "avoid_list" array as needed. */
 
@@ -780,7 +748,7 @@ static long_boolean inner_search(command_kind goal,
       if (avoid_list_allocation <= avoid_list_size) {
          int *t;
          avoid_list_allocation = avoid_list_size+100;
-         t = (int *) get_more_mem_gracefully(avoid_list, avoid_list_allocation * sizeof(int));
+         t = (int *) (*the_callback_block.get_more_mem_gracefully_fn)(avoid_list, avoid_list_allocation * sizeof(int));
          if (!t) specialfail("Not enough memory!");
          avoid_list = t;
       }
@@ -811,7 +779,7 @@ static long_boolean inner_search(command_kind goal,
          if (goal == command_normalize) {
             int k;
 
-            if (setup_attrs[ns->kind].setup_limits > setup_attrs[configuration::current_config().state.kind].setup_limits)
+            if (setup_attrs[ns->kind].setup_limits > setup_attrs[history[history_ptr].state.kind].setup_limits)
                goto try_again;
 
             for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
@@ -824,7 +792,7 @@ static long_boolean inner_search(command_kind goal,
          ok_to_save_this: ;
          }
 
-         history_save = configuration::history_ptr + 1;
+         history_save = history_ptr + 1;
          inner_parse_mark = mark_parse_blocks();
          hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
       }
@@ -846,20 +814,20 @@ SDLIB_API uims_reply full_resolve(void)
    uims_reply reply;
    int current_resolve_index, max_resolve_index;
    long_boolean show_resolve;
-   personrec *current_people = configuration::current_config().state.people;
+   personrec *current_people = history[history_ptr].state.people;
    int current_depth = 0;
    long_boolean find_another_resolve = TRUE;
    resolver_display_state big_state; /* for display to the user */
 
    /* Allocate or reallocate the huge_history_save save array if needed. */
 
-   if (huge_history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
+   if (huge_history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
       configuration *t;
-      huge_history_allocation = configuration::history_ptr+MAX_RESOLVE_SIZE+2;
+      huge_history_allocation = history_ptr+MAX_RESOLVE_SIZE+2;
       /* Increase by 50% beyond what we have now. */
       huge_history_allocation += huge_history_allocation >> 1;
       t = (configuration *)
-         get_more_mem_gracefully(huge_history_save,
+         (*the_callback_block.get_more_mem_gracefully_fn)(huge_history_save,
                                  huge_history_allocation * sizeof(configuration));
       if (!t) specialfail("Not enough memory!");
       huge_history_save = t;
@@ -869,15 +837,15 @@ SDLIB_API uims_reply full_resolve(void)
 
    if (all_resolves == 0) {
       resolve_allocation = 10;
-      all_resolves = (resolve_rec *) get_mem_gracefully(resolve_allocation * sizeof(resolve_rec));
+      all_resolves = (resolve_rec *) (*the_callback_block.get_mem_gracefully_fn)(resolve_allocation * sizeof(resolve_rec));
       if (!all_resolves) specialfail("Not enough memory!");
    }
 
    /* Be sure the extra 5 slots in the history array are clean. */
 
    for (j=0; j<MAX_RESOLVE_SIZE; j++) {
-      configuration::history[configuration::history_ptr+j+2].command_root = (parse_block *) 0;
-      configuration::history[configuration::history_ptr+j+2].init_centersp_specific();
+      history[history_ptr+j+2].command_root = (parse_block *) 0;
+      history[history_ptr+j+2].centersp = 0;
    }
 
    /* See if we are in a reasonable position to do the search. */
@@ -908,10 +876,10 @@ SDLIB_API uims_reply full_resolve(void)
          break;
    }
 
-   for (j=0; j<=configuration::history_ptr+1; j++)
-      huge_history_save[j] = configuration::history[j];
+   for (j=0; j<=history_ptr+1; j++)
+      huge_history_save[j] = history[j];
 
-   huge_history_ptr = configuration::history_ptr;
+   huge_history_ptr = history_ptr;
    save_parse_state();
 
    (void) restore_parse_state();
@@ -929,7 +897,7 @@ SDLIB_API uims_reply full_resolve(void)
       if (find_another_resolve) {
          /* Put up the resolve title showing that we are searching. */
 
-         gg->update_resolve_menu
+         (*the_callback_block.uims_update_resolve_menu_fn)
             (search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
          (void) restore_parse_state();
@@ -950,10 +918,10 @@ SDLIB_API uims_reply full_resolve(void)
          }
 
          written_history_items = -1;
-         configuration::history_ptr = huge_history_ptr;
+         history_ptr = huge_history_ptr;
 
-         for (j=0; j<=configuration::history_ptr+1; j++)
-            configuration::history[j] = huge_history_save[j];
+         for (j=0; j<=history_ptr+1; j++)
+            history[j] = huge_history_save[j];
 
          find_another_resolve = FALSE;
       }
@@ -969,37 +937,39 @@ SDLIB_API uims_reply full_resolve(void)
       if ((current_resolve_index != 0) && show_resolve) {
          /* Display the current resolve. */
          resolve_rec *this_resolve;
+         configuration *this_state;
 
          this_resolve = &all_resolves[current_resolve_index-1];
 
          /* Copy the inserted calls. */
          written_history_items = -1;
          for (j=0; j<this_resolve->size; j++)
-            configuration::history[j+huge_history_ptr+1-this_resolve->insertion_point] = this_resolve->stuph[j];
+            history[j+huge_history_ptr+1-this_resolve->insertion_point] = this_resolve->stuph[j];
 
          /* Copy and repair the calls after the insertion. */
          for (j=0; j<this_resolve->insertion_point; j++) {
-            configuration *this_state = &configuration::history[j+huge_history_ptr+1-this_resolve->insertion_point+this_resolve->size];
+            this_state = &history[j+huge_history_ptr+1-this_resolve->insertion_point+this_resolve->size];
             *this_state = huge_history_save[j+huge_history_ptr+1-this_resolve->insertion_point];
             this_state->state.rotation += this_resolve->rotchange;
             canonicalize_rotation(&this_state->state);
 
-            // Repair this setup by permuting all the people.
+            /* Repair this setup by permuting all the people. */
 
             for (k=0; k<=setup_attrs[this_state->state.kind].setup_limits; k++) {
-               personrec & t = this_state->state.people[k];
+               personrec t = this_state->state.people[k];
 
                if (t.id1) {
-                  t.id1 =
+                  this_state->state.people[k].id1 =
                      (t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | this_resolve->permute1[(t.id1 & PID_MASK) >> 6]
                                                               | this_resolve->permute2[(t.id1 & PID_MASK) >> 6];
+                  this_state->state.people[k].id2 = t.id2;
                }
             }
 
-            this_state->calculate_resolve();
+            this_state->resolve_flag = resolve_p(&this_state->state);
          }
 
-         configuration::history_ptr = huge_history_ptr + this_resolve->size;
+         history_ptr = huge_history_ptr + this_resolve->size;
 
          /* Show the history up to the start of the resolve, forcing a picture on the last item (unless reconciling). */
 
@@ -1009,32 +979,29 @@ SDLIB_API uims_reply full_resolve(void)
          /* Or a dotted line if doing a reconcile. */
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
-            newline();
+            (*the_callback_block.newline_fn)();
          }
 
-         // Show the resolve itself, without its last item.
+         /* Show the resolve itself, without its last item. */
 
-         for (j=huge_history_ptr-this_resolve->insertion_point+1;
-              j<configuration::history_ptr-this_resolve->insertion_point;
-              j++)
-            write_history_line(j, false, false, file_write_no);
+         for (j=huge_history_ptr-this_resolve->insertion_point+1; j<history_ptr-this_resolve->insertion_point; j++)
+            write_history_line(j, (char *) 0, FALSE, file_write_no);
 
-         // Show the last item of the resolve, with a forced picture.
-         write_history_line(configuration::history_ptr-this_resolve->insertion_point,
+         /* Show the last item of the resolve, with a forced picture. */
+         write_history_line(history_ptr-this_resolve->insertion_point,
+                            (char *) 0,
                             search_goal != command_reconcile,
-                            false,
                             file_write_no);
 
          /* Or a dotted line if doing a reconcile. */
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
-            newline();
+            (*the_callback_block.newline_fn)();
          }
 
-         // Show whatever comes after the resolve.
-         for (j=configuration::history_ptr-this_resolve->insertion_point+1; j<=configuration::history_ptr; j++)
-            write_history_line(j, j==configuration::history_ptr-this_resolve->insertion_point,
-                               false, file_write_no);
+         /* Show whatever comes after the resolve. */
+         for (j=history_ptr-this_resolve->insertion_point+1; j<=history_ptr; j++)
+            write_history_line(j, (char *) 0, j==history_ptr-this_resolve->insertion_point, file_write_no);
       }
       else if (show_resolve) {
          /* We don't have any resolve to show.  Just draw the usual picture. */
@@ -1046,22 +1013,22 @@ SDLIB_API uims_reply full_resolve(void)
          display_reconcile_history(current_depth, huge_history_ptr);
       }
 
-      if (show_resolve && (configuration::sequence_is_resolved())) {
-         newline();
+      if (show_resolve && (history[history_ptr].resolve_flag.kind != resolve_none)) {
+         (*the_callback_block.newline_fn)();
          writestuff("     resolve is:");
-         newline();
+         (*the_callback_block.newline_fn)();
          write_resolve_text(FALSE);
-         newline();
-         newline();
+         (*the_callback_block.newline_fn)();
+         (*the_callback_block.newline_fn)();
       }
 
-      gg->update_resolve_menu
+      (*the_callback_block.uims_update_resolve_menu_fn)
          (search_goal, current_resolve_index, max_resolve_index, big_state);
 
       show_resolve = TRUE;
 
       for (;;) {          /* We ignore any "undo" or "erase" clicks. */
-         reply = gg->get_resolve_command();
+         reply = (*the_callback_block.uims_get_resolve_command_fn)();
          if ((reply != ui_command_select) || ((uims_menu_index != command_undo) && (uims_menu_index != command_erase))) break;
       }
 
@@ -1072,7 +1039,7 @@ SDLIB_API uims_reply full_resolve(void)
                /* Increase allocation if necessary. */
                int new_allocation = resolve_allocation << 1;
                resolve_rec *t = (resolve_rec *)
-                  get_more_mem_gracefully(all_resolves, new_allocation * sizeof(resolve_rec));
+                  (*the_callback_block.get_more_mem_gracefully_fn)(all_resolves, new_allocation * sizeof(resolve_rec));
                if (!t) break;               /* By not turning on "find_another_resolve",
                                                we will take no action. */
                resolve_allocation = new_allocation;
@@ -1101,10 +1068,10 @@ SDLIB_API uims_reply full_resolve(void)
             break;
          case resolve_command_abort:
             written_history_items = -1;
-            configuration::history_ptr = huge_history_ptr;
+            history_ptr = huge_history_ptr;
 
-            for (j=0; j<=configuration::history_ptr+1; j++)
-               configuration::history[j] = huge_history_save[j];
+            for (j=0; j<=history_ptr+1; j++)
+               history[j] = huge_history_save[j];
 
             goto getout;
          case resolve_command_write_this:
@@ -1127,10 +1094,10 @@ SDLIB_API uims_reply full_resolve(void)
 
       /* Restore history for next cycle. */
       written_history_items = -1;
-      configuration::history_ptr = huge_history_ptr;
+      history_ptr = huge_history_ptr;
 
-      for (j=0; j<=configuration::history_ptr+1; j++)
-         configuration::history[j] = huge_history_save[j];
+      for (j=0; j<=history_ptr+1; j++)
+         history[j] = huge_history_save[j];
    }
 
    getout:
@@ -1147,26 +1114,31 @@ static void display_reconcile_history(int current_depth, int n)
    display_initial_history(n-current_depth, 0);
    if (current_depth > 0) {
       writestuff("------------------------------------");
-      newline();
+      (*the_callback_block.newline_fn)();
       for (j=n-current_depth+1; j<=n; j++)
-         write_history_line(j, false, false, file_write_no);
+         write_history_line(j, (char *) 0, FALSE, file_write_no);
    }
 
-   gg->add_new_line("", 0);   // Write a blank line.
+   (*the_callback_block.uims_add_new_line_fn)("", 0);   // Write a blank line.
+}
+
+extern int concepts_in_place(void)
+{
+   return history[history_ptr+1].command_root != 0;
 }
 
 
-extern int reconcile_command_ok()
+extern int reconcile_command_ok(void)
 {
    int k;
    int dirmask = 0;
-   personrec *current_people = configuration::current_config().state.people;
-   setup_kind current_kind = configuration::current_config().state.kind;
+   personrec *current_people = history[history_ptr].state.people;
+   setup_kind current_kind = history[history_ptr].state.kind;
    current_reconciler = (reconcile_descriptor *) 0;
 
    /* Since we are going to go back 1 call, demand we have at least 3. ***** */
    /* Also, demand no concepts already in place. */
-   if ((configuration::history_ptr < 3) || configuration::concepts_in_place()) return FALSE;
+   if ((history_ptr < 3) || concepts_in_place()) return FALSE;
 
    for (k=0; k<8; k++)
       dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
@@ -1214,29 +1186,27 @@ extern int reconcile_command_ok()
 
 extern int resolve_command_ok(void)
 {
-   return setup_attrs[configuration::current_config().state.kind].setup_limits == 7;
+   return setup_attrs[history[history_ptr].state.kind].setup_limits == 7;
 }
 
 extern int nice_setup_command_ok(void)
 {
    int i, k;
    long_boolean setup_ok = FALSE;
-   setup_kind current_kind = configuration::current_config().state.kind;
+   setup_kind current_kind = history[history_ptr].state.kind;
 
-   // Decide which arrays we will use, depending on the current setting of the
-   // "allow all concepts" flag, and see if we are in one of the known setups
-   // and there are concepts available for that setup.
+   /* Decide which arrays we will use, depending on the current setting of the "allow all concepts" flag,
+      and see if we are in one of the known setups and there are concepts available for that setup. */
 
    for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
       /* Select the correct concept array. */
-      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->zzzfull_list : nice_setup_info[k].thing->zzzon_level_list;
+      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->full_list : nice_setup_info[k].thing->on_level_list;
 
-      // Note how many concepts are in it.  If there are zero in some of them,
-      // we may still be able to proceed, but we must have concepts available
-      // for the current setup.
+      /* Note how many concepts are in it.  If there are zero in some of them, we may still be able to proceed,
+         but we must have concepts available for the current setup. */
 
       for (i=0 ; ; i++) {
-         if (nice_setup_info[k].array_to_use_now[i] == UC_none) break;
+         if (nice_setup_info[k].array_to_use_now[i] == -1) break;
       }
 
       nice_setup_info[k].number_available_now = i;
@@ -1244,7 +1214,7 @@ extern int nice_setup_command_ok(void)
       if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = TRUE;
    }
 
-   return setup_ok || configuration::concepts_in_place();
+   return setup_ok || concepts_in_place();
 }
 
 /*
@@ -1287,7 +1257,7 @@ SDLIB_API void create_resolve_menu_title(
 }
 
 
-void initialize_getout_tables(void)
+SDLIB_API void initialize_getout_tables(void)
 {
    int i, j, k;
 
@@ -1298,20 +1268,18 @@ void initialize_getout_tables(void)
          Since we re-use some stuff (e.g. 1x10 and 1x12 both use
          the 1x12 things), it might not be necessary. */
 
-      if (!nice->zzzon_level_list) {
-         nice->zzzon_level_list = (useful_concept_enum *) get_mem(nice->full_list_size);
+      if (!nice->on_level_list) {
+         nice->on_level_list = (int *) (*the_callback_block.get_mem_fn)(nice->full_list_size);
 
-         // Copy those concepts that are on the level.
+         /* Copy those concepts that are on the level. */
          for (i=0,j=0 ; ; i++) {
-            if (nice->zzzfull_list[i] == UC_none) break;
-
-            if (concept_descriptor_table[useful_concept_indices[nice->zzzfull_list[i]]].level <=
-                   calling_level)
-               nice->zzzon_level_list[j++] = nice->zzzfull_list[i];
+            if (nice->full_list[i] == -1) break;
+            if (concept_descriptor_table[nice->full_list[i]].level <= calling_level)
+               nice->on_level_list[j++] = nice->full_list[i];
          }
 
-         // Put in the end mark.
-         nice->zzzon_level_list[j] = UC_none;
+         /* Put in the end mark. */
+         nice->on_level_list[j] = -1;
       }
    }
 }

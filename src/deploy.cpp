@@ -374,7 +374,7 @@ int WINAPI WinMain(
                int size = (((WORD) Buffer[8]) << 8) | ((WORD) Buffer[9]);
                Buffer[10+size] = 0;
                Buffer[40] = 0;    // In case of disaster.
-               lstrcat(szFilenameBuf, "The database version appears to be ");
+               lstrcat(szFilenameBuf, "The database verion appears to be ");
                lstrcat(szFilenameBuf, &Buffer[10]);
                lstrcat(szFilenameBuf, ".\n\n");
             }

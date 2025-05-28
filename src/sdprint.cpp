@@ -13,7 +13,7 @@
     This is for version 34. */
 
 /* This defines the following functions:
-   iofull::choose_font
+   uims_choose_font
 */
 
 #define STRICT
@@ -160,9 +160,8 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
    // This is where we choose to stop printing.  It must not be greater than
    // "GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight", that is, we must subtract
    // iPixelLineHeight.  If we set it to exactly that value, we print to the bottom
-   // of the page.  So we subtract twice that value to get a reasonable
-   // bottom margin.
-   int iPixelBottomOfPage = GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight*2;
+   // of the page.  That seems to look right.
+   int iPixelBottomOfPage = GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight;
 
    // Display the printing dialog box
      
@@ -327,7 +326,9 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
 }
 
 
-void windows_choose_font()
+
+
+extern bool uims_choose_font()
 {
    // This operation will take place in the context of the display
    // rather than the printer, but we have to do it that way, because
@@ -348,6 +349,7 @@ void windows_choose_font()
    // Now "lf" has all the info, though it is, unfortunately, calibrated
    // for the display.  Also, "cf.iPointSize" has the point size times 10,
    // which is, fortunately, invariant.
+   return TRUE;
 }
 
 
