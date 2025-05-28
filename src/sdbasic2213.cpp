@@ -4137,13 +4137,16 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
 
+      if (have_2x2) goto divide_us_no_recompute;
+
       // If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful.
 
       if ((newtb & 011) == 011) {
          tbi = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
          tbo = ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1;
-
+         if (have_2x2) goto divide_us_no_recompute;
          if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
+
             // The centers and ends are T-boned to each other but each is individually
             // consistent.  We can do the call concentrically *IF* the appropriate type of
             // definition exists for the ends to work with the near person rather than the
@@ -4166,16 +4169,10 @@ static int divide_the_setup(
                 ((tbo & 1) == 0 &&     // or in column-like 1x2's.
                  assoc(b_2x1, &leftends, calldeflist) != 0 &&
                  assoc(b_2x1, &rightends, calldeflist) != 0)) {
-
                if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
                   fail("Can't split the setup.");
 
-               if (have_2x2) goto divide_us_no_recompute;
-
                goto do_concentrically;
-            }
-            else {
-               if (have_2x2) goto divide_us_no_recompute;
             }
 
             if (assoc(b_1x1, ss, calldeflist))

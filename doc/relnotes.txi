@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <16 Mar 2021 wba>
+@c Time-stamp: <19 Jul 2021 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.35
-@set title2 Database version = 39.35 format = 396
+@set title1 RELEASE NOTES FOR VERSION 39.36
+@set title2 Database version = 39.36 format = 396
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.36::
 * 39.35::
 * 39.34::
 * 39.33::
@@ -135,7 +136,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.35, Top, (dir)
+@node Intro, 39.36, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -146,11 +147,18 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.35::               Changes in the current version
+* 39.36::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.35, 39.34, Intro, Top
+@node 39.36, 39.35, Intro, Top
+@unnumberedsec Version 39.36 changes
+
+A small improvement was made in the handling of 1x2 or 2x1 formations
+within 2x4 formations.
+
+@c ************
+@node 39.35, 39.34, 39.36, Top
 @unnumberedsec Version 39.35 changes
 
 The ``Solomon Rule'' is not absolute.  There are cases of offset
