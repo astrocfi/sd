@@ -278,29 +278,30 @@ bool conc_tables::analyze_this(
          int outlim = attr::klimit(lmap_ptr->outsetup)+1;
 
          *center_arity_p = lmap_ptr->center_arity;
+         mapelong = lmap_ptr->mapelong;
+         inner_rot = lmap_ptr->inner_rot;
+         outer_rot = lmap_ptr->outer_rot;
+
          outers->kind = lmap_ptr->outsetup;
-         outers->rotation = (-lmap_ptr->outer_rot) & 3;
+         outers->rotation = (-outer_rot) & 3;
+         outers->rotation_offset_from_true_north += (outer_rot + ss->rotation - 1) & 3;
          outers->eighth_rotation = 0;
 
          gather(outers, ss, &lmap_ptr->maps[inlim*lmap_ptr->center_arity],
-                outlim-1, lmap_ptr->outer_rot * 011);
+                outlim-1, outer_rot * 011);
 
          for (int m=0; m<lmap_ptr->center_arity; m++) {
-            uint32_t rr = lmap_ptr->inner_rot;
-
             // Need to flip alternating triangles upside down.
-            if (lmap_ptr->insetup == s_trngl && (m&1)) rr ^= 2;
+            int rr = (lmap_ptr->insetup == s_trngl && (m&1)) ? inner_rot^2 : inner_rot;
 
             inners[m].clear_people();
             inners[m].kind = lmap_ptr->insetup;
-            inners[m].rotation = (0-rr) & 3;
+            inners[m].rotation = (-rr) & 3;
+            inners[m].rotation_offset_from_true_north += (rr + ss->rotation - 1) & 3;
             inners[m].eighth_rotation = 0;
             gather(&inners[m], ss, &lmap_ptr->maps[m*inlim], inlim-1, rr * 011);
          }
 
-         mapelong = lmap_ptr->mapelong;
-         inner_rot = lmap_ptr->inner_rot;
-         outer_rot = lmap_ptr->outer_rot;
          return true;
       }
    not_this_one: ;
@@ -2670,7 +2671,8 @@ static bool fix_empty_outers(
          else if (the_call == base_calls[base_call_trade] ||
                   the_call == base_calls[base_call_passin] ||
                   the_call == base_calls[base_call_passout] ||
-                  the_call == base_calls[base_call_any_hand_remake])
+                  the_call == base_calls[base_call_any_hand_remake] ||
+                  the_call == base_calls[base_call_any_hand_remake_with_step])
             ;        // It's OK, the call was "trade" or "any hand remake".
          else if (the_call == base_calls[base_call_circulate] &&
                   cmdout && cmdout->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF) &&

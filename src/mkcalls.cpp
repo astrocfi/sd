@@ -1668,6 +1668,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "plainprom"},
    {0, "plainpromeighths"},
    {0, "any_hand_remake_start_with_n"},
+   {0, "any_hand_remake_start_with_n_with_step"},
    {0, "passthru"},       // To tell how to do "12_16_matrix_means_split".
    {0, "pass_in"},
    {0, "pass_out"},

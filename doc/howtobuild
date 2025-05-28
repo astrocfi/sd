@@ -42,7 +42,7 @@ BEFORE DOING THIS.
 
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- Underscore, but no periods)
 In \wba\sd\regress:  save _vnnnn
-In \wba\sddoc:   save _vnnnn
+In \wba\sddoc:       save _vnnnn
 
 It is important that this be done before "new_binary" is run, because
 the manual and faq files are now wrapped into the binary distribution file.
@@ -123,7 +123,8 @@ Go to the sddoc directory and do:
  8 Apr 21  -  20 Jul 21  #70  // triangles
 20 Jul 21  -  28 Sep 21  #65  // middle half tandem, slide thru
 28 Sep 21  -  30 Dec 21  #71  // once removed hinge in linebox
-30 Dec 21                #67  // thirdly split 5 times grand chain 8
+30 Dec 21  -  25 Apr 22  #67  // thirdly split 5 times grand chain 8
+25 Apr 22  -             #72  // funny split trade circulate 20 TIMES
                          #64  // hairy [boys trade] and circle 1/2
                          #66  // twisted split grand chain 8
                          #60  // really hairy fly the coop with interruption

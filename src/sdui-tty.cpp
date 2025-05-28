@@ -123,6 +123,7 @@ static resolver_display_state resolver_happiness = resolver_display_failed;
 // This is the top-level entry for Sdtty, on any Unix-like system, including the
 // Sdtty program on Windows.  The OS should invoke this when the command is given.
 int main(int argc, char *argv[])
+
 {
    // In Sdtty, the defaults are reverse video (white-on-black) and pastel colors.
 

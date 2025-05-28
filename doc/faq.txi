@@ -252,8 +252,8 @@ You have (or can create) an initialization file, which is ``C:\sd\sd.ini''.
 If you put options in it, you will get those options every time you run
 @code{Sd} or @code{Sdtty}.  If you don't have such a file, give the
 command @strong{initialize session file} to @code{Sd} or @code{Sdtty} to
-create it.  Then edit it.  Use a plain text editor such as Emacs or
-Notepad---do not use a word processor.  You will see a section called
+create it.  Then edit it.  Use a plain text editor such as Emacs. Notepad,
+or vi---do not use a word processor.  You will see a section called
 ``[Options]''.  Add whatever options you like.  Do not put hyphens in front
 of options in this file.  For example:
 

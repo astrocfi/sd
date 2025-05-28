@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2022  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 398
+#define DATABASE_FORMAT_VERSION 399
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -212,6 +212,7 @@ enum base_call_index {
    base_call_plainprom,
    base_call_plainpromeighths,
    base_call_any_hand_remake,
+   base_call_any_hand_remake_with_step,
    base_call_passthru,
    base_call_passin,
    base_call_passout,

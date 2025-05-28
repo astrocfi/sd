@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.42
-@set title2 Database version = 39.42 format = 398
+@set title1 RELEASE NOTES FOR VERSION 39.46
+@set title2 Database version = 39.46 format = 399
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,10 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.46::
+* 39.45::
+* 39.44::
+* 39.43::
 * 39.42::
 * 39.41::
 * 39.40::
@@ -142,7 +146,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.42, Top, (dir)
+@node Intro, 39.46, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -150,18 +154,82 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2021 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2022 William B. Ackerman
 @sp 3
 @menu
-* 39.42::               Changes in the current version
+* 39.46::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.42, 39.41, Intro, Top
+@node 39.46, 39.45, Intro, Top
+@unnumberedsec Version 39.46 changes
+
+@strong{magic pass to the center} is supported.
+
+@strong{change lanes} allows the centers to step to a miniwave
+at the start of the call.
+
+@c ************
+@node 39.45, 39.44, 39.46, Top
+@unnumberedsec Version 39.45 changes
+
+The behavior of @strong{touch tone} was changed.  It goes to the same handedness as the
+original waves.
+
+@c ************
+@node 39.44, 39.43, 39.45, Top
+@unnumberedsec Version 39.44 changes
+
+A few minor fixes.
+
+@c ************
+@node 39.43, 39.42, 39.44, Top
+@unnumberedsec Version 39.43 changes
+
+Two new calls/concepts were introduced, @strong{catch it <N>} and @strong{lines it thru}.
+These sorts of things are sometimes known as @i{supercalls}.  They are calls that take a
+subordinate call, and embed that into their own action.  There are actually quite a number
+of supercalls, like @strong{tally ho but <anything>} or @strong{chain reaction but
+<anything>}.  They are sort of like mathematical functions taking an argument.  As such,
+they are also concepts.  And as concepts, they can be preceded by metaconcepts, saying,
+for example, which parts of the subordinate call are to be acted on and which are to be
+performed normally.
+@sp 1
+Sd requires that the subcalls of supercalls be placed in square brackets, as in
+@strong{tally ho but [2/3 recycle]}.  This is to avoid potential ambiguity.  You
+can also type the literal word @strong{<anything>}, and then type the subcall
+(without brackets) on the next line.
+@sp 1
+Proper parsing of metaconcepts and supcalls, by humans and by computers, requires that the words be
+presented in an unambiguous order: metaconcept, concept/supercall, call.  For ordinary concepts,
+this is obvious, as in
+@sp 1
+@strong{initially tandem 1/4 thru}
+@sp 1
+@noindent This also works for nearly all supercalls, as in
+@sp 1
+@strong{first 1/2 motivate but [contour the line]}
+@sp 1
+The two existing supercalls @strong{catch <anything> <N>} and @strong{lines
+<anything> thru} violate this principle, in that the subcall is not at the end.
+These two new supercalls, @strong{catch it <N>} and @strong{lines it thru} are
+intended to correct that problem.  The ``it'' construction puts the word ``it''
+where the inserted call would be, and moves the actual subject call to the end.
+For example, @strong{first 1/2 catch it 3 [contour the line]}.
+@sp 1
+There is another concept that uses an ``it'' construction: @strong{checkpoint it by it} as in
+@strong{checkpoint it by it hinge the lock}.  It can only take one subject call, and uses that
+call in both of the places that @strong{checkpoint} would.  It can be preceded by metaconcepts in
+the usual way, as in @strong{initially checkpoint it by it hinge the lock}, meaning
+@strong{checkpoint hinge by hinge}, followed by plain @strong{lockit}.  Do not put the subject
+call in brackets; it is simply a call shown after a concept.
+
+@c ************
+@node 39.42, 39.41, 39.43, Top
 @unnumberedsec Version 39.42 changes
 
 The selector @strong{leaders} may be used, identical to @strong{leads}.
-
+@sp 1
 The build mechanism for Sd has been revamped over the last few months.  It is now built with 3
 identical toolchains, running on 3 identical Windows 10 computers, each with 2 compilers.
 Windows XP and Linux are no longer used.

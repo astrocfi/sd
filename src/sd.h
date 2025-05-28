@@ -257,6 +257,7 @@ enum concept_kind {
    concept_matrix,
    concept_double_offset,
    concept_checkpoint,
+   concept_checkpoint_it_it,
    concept_on_your_own,
    concept_trace,
    concept_move_in_and,
@@ -1785,13 +1786,14 @@ enum { MAX_PEOPLE = 24 };
 
 struct small_setup {
    setup_kind skind;
-   uint16_t srotation;
+   uint8_t srotation;
    uint16_t seighth_rotation;
 };
 
 struct setup {
    setup_kind kind;
-   uint16_t rotation;
+   uint8_t rotation;
+   uint8_t rotation_offset_from_true_north;
    uint16_t eighth_rotation;
    setup_command cmd;
    personrec people[MAX_PEOPLE];
@@ -1817,7 +1819,8 @@ struct setup {
    inline void swap_people(int oneplace, int otherplace);
    inline void rotate_person(int where, int rotamount);
 
-   setup() {}
+   setup() : rotation_offset_from_true_north(0) {}
+
    setup(setup_kind k, int r,    // in sdtop.cpp.
          uint32_t P0, uint32_t I0,
          uint32_t P1, uint32_t I1,
@@ -1838,6 +1841,7 @@ struct setup {
       kind = s_dead_concentric;
       rotation = 0;
       eighth_rotation = 0;
+      rotation_offset_from_true_north = 0;
 
       // And clear "outer".
       outer.skind = nothing;

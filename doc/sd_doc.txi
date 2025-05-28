@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.42
-@set Time-stamp: December 30, 2021
+@set sd-version 39.46
+@set Time-stamp: August 10, 2022
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -42,7 +42,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-@noindent Copyright @copyright{} 1992-2021 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2022 William B. Ackerman and Stephen Gildea
 
 @noindent Permission is granted to make and distribute verbatim copies of this manual.
 
@@ -1819,7 +1819,7 @@ In all cases, this will write out its C2 list into the file @file{mondayC2.txt}.
 
 Then delete from that file those calls that the group has
 learned, i.e., those calls not to be avoided.  Use a plain text editor,
-such as Emacs or Notepad, for this.
+such as Emacs, Notepad, or vi, for this.
 
 When writing sequences, start Sd from the Start Menu and then check the
 box marked ``Use abridged list'',
