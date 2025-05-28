@@ -132,11 +132,33 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, 0,                    0x004, tandem_key_cpls},
    {"MELDED PHANTOM TANDEM",                 concept_tandem,                  D, l_c4,
     UC_none, 0, 0,                    0x004, tandem_key_tand},
-   // These two are the same.
-   {"MELDED SIAMESE",                        concept_tandem,                  D, l_c4,
+
+   {"MELDED PHANTOM COUPLES TWOSOME",        concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                    0x014, tandem_key_cpls},
+   {"MELDED PHANTOM TANDEM TWOSOME",         concept_tandem,                  D, l_c4,
+    UC_none, 0, 0,                    0x014, tandem_key_tand},
+
+   {"MELDED PHANTOM COUPLES @9/@9 TWOSOME",  concept_frac_tandem,             D, l_c4,
+    UC_none, 0, 0,                    0x024, tandem_key_cpls},
+   {"MELDED PHANTOM TANDEM @9/@9 TWOSOME",   concept_frac_tandem,             D, l_c4,
+    UC_none, 0, 0,                    0x024, tandem_key_tand},
+
+   {"MELDED PHANTOM COUPLES TWOSOME @9/@9 SOLID", concept_frac_tandem,        D, l_c4,
+    UC_none, 0, 0,                    0x034, tandem_key_cpls},
+   {"MELDED PHANTOM TANDEM TWOSOME @9/@9 SOLID", concept_frac_tandem,         D, l_c4,
+    UC_none, 0, 0,                    0x034, tandem_key_tand},
+
+   // Same as MELDED SIAMESE; obsolete.
+   {"OVERLAPPED SIAMESE",             concept_tandem,                         D, l_c4,
     UC_none, 0, 0,                    0x000, tandem_key_overlap_siam},
-   {"OVERLAPPED SIAMESE",                    concept_tandem,                  D, l_c4,
+   {"MELDED SIAMESE",                 concept_tandem,                         D, l_c4,
     UC_none, 0, 0,                    0x000, tandem_key_overlap_siam},
+   {"MELDED SIAMESE TWOSOME",         concept_tandem,                         D, l_c4,
+    UC_none, 0, 0,                    0x010, tandem_key_overlap_siam},
+   {"MELDED SIAMESE @9/@9 TWOSOME",   concept_frac_tandem,                    D, l_c4,
+    UC_none, 0, 0,                    0x020, tandem_key_overlap_siam},
+   {"MELDED SIAMESE TWOSOME @9/@9 SOLID", concept_frac_tandem,                D, l_c4,
+    UC_none, 0, 0,                    0x030, tandem_key_overlap_siam},
 
    {"COUPLES OF 3",                          concept_tandem,                  D, l_a1,
     UC_none, 0, 0,                    0x000, tandem_key_cpls3},

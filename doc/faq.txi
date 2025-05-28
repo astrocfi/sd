@@ -381,9 +381,13 @@ use whatever designation you want when calling.
 
 @unnumberedsec The Callerlab definitions allow @strong{veer left} and @strong{veer right} with single people.  Why doesn't @code{Sd} allow this?
 
-@code{Sd} considers this situation ambiguous, so you need to say
+This situation is often ambiguous, so you need to say
 @strong{single veer left} or @strong{single veer right}.  Whether you
 need to say this when calling is up to you.
+
+@unnumberedsec Are you aware that allowing @strong{follow your neighbor} from a 1/4 tag, and the @strong{roll} behavior after @strong{circle to a line}, are at odds with Callerlab Applications Review Committee decisions?
+
+Yes.
 
 @unnumberedsec Isn't @strong{remake the column} a ``grand'' call even without saying so?
 
@@ -922,7 +926,7 @@ So if you tried just @code{triang}, you might get
 
 @code{Sd} recognizes the call @strong{line to line but <anything>}.  The <anything>
 replaces the final @strong{pass in}.  (Note that this is an exception to the general
-principle the @strong{but} calls replace the last thing done in the center.  This
+principle that @strong{but} calls replace the last thing done in the center.  This
 is one of a handful of exceptions that are justified by longstanding usage.)
 
 Suppose you didn't know that.  You do the usual thing---type something like
@@ -1267,25 +1271,19 @@ of the program could be getting compiled incorrectly.
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
 @example
-  computer:             Compaq Armada 7710MT
-  OS:                   Windows NT4.0 Workstation    commercial
-  editor:               GNU Emacs 20.7               free
-  development system:   MingW 2.0.0-3                free
-  compiler/linker:      GCC 3.2                      free
-  compress utilities:   Winzip 8.0                   commercial
-                        Winzip Self Extractor 2.1    commercial
+  computer:             HP/Compaq Presario V3000
+  OS:                   Windows XP                   commercial
+  editor:               GNU Emacs 20.7.1             free
+  development system:   MingW 5.1.4                  free
+  compiler/linker:      GCC 3.4.5                    free
+  compress utilities:   Winzip 8.1                   commercial
+                        Winzip Self Extractor 2.2    commercial
                         gzip 1.2.4                   free
   document preprocessor:texinfo 1999-03-26.17        free
-  Postscript formatter: MiKTeX 1.20d                 free
-  PDF formatter:        MiKTeX 1.20d                 free
+  Postscript formatter: MiKTeX 2.9                   free
+  PDF formatter:        MiKTeX 2.9                   free
   HTML formatter:       Perl 5.004-02                free
                         Texi2html 1.51               free
-  postscript viewer:    GSView 2.7                   free
-                        Ghostscript 5.50             free
-  PDF viewer:           Acrobat 4.0                  free
-  HTML viewer:          Firefox 1.0                  free
-  Zip disk software:    Iomega 2.8.0.2               commercial
-  mailer for upload:    Netscape 4.76                free
 @end example
 
 Microsoft Frontpage is not used at any point in the preparation, so there
@@ -1293,14 +1291,9 @@ is no danger of running afoul of Microsoft's licensing restrictions against
 making web pages that "disparage Microsoft, MSN, MSNBC, Expedia, or their
 products or services".
 
-The Compaq Armada on which Sd is developed has no internet connections,
-and runs no mail or internet software, Microsoft or otherwise.  It has
-never been exposed to a virus.  The released files are written onto a
-Zip disk and transferred to another computer for upload.
-
 @unnumberedsec Is free software actually that much higher in quality than commercial software?
 
-It sure is.  A worldwide network of hobby programmers who take pride in
+It sure is, in many cases.  A worldwide network of hobby programmers who take pride in
 their work make vastly better products than big companies that are
 managed by a philosophy of getting the most possible money from the least
 possible work.

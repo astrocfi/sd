@@ -810,8 +810,6 @@ void tandrec::unpack_us(
       if (z != 0) {
          int ii = (z >> 6) & 7;
 
-         // ****** Here is where things get tricky!
-
          bool invert_order =
             (((olow>>1) + (map_ptr->rot&1) + 1) & 2) && !m_no_unit_symmetry;
 
@@ -825,8 +823,6 @@ void tandrec::unpack_us(
          }
 
          personrec fb[8];
-
-         uint32 save_people_access_mask = m_melded ? 1 : ~0U;
 
          for (j=0 ; j<howmanytounpack ; j++) {
             fb[j] = m_real_saved_people[j].people[ii];
