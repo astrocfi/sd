@@ -45,7 +45,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 408
+#define DATABASE_FORMAT_VERSION 409
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -452,8 +452,8 @@ enum {
    CFLAG2_NO_RAISE_OVERCAST         = 0x08000000U,
    CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U,
    CFLAG2_IS_STAR_CALL              = 0x20000000U,
-   CFLAG2_CAN_DO_IN_Z               = 0x40000000U
-   // 1 spare.
+   CFLAG2_CAN_DO_IN_Z               = 0x40000000U,
+   CFLAG2_WARN_ON_ELONGATION        = 0x80000000U       // no spares!
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -532,6 +532,7 @@ enum dance_level {
    face_the_music_level = l_c3a,
    beau_belle_level = l_a2,
    cross_by_level = l_c1,
+   concentric_level = l_c1,
    intlk_triangle_level = l_c1,
    magic_triangle_level = l_c2,
    triangle_in_box_level = l_c2,

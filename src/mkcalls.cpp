@@ -1080,6 +1080,7 @@ const char *flagtab1f[] = {
    "overcast_transparent",
    "is_star_call",
    "can_do_in_z",
+   "warn_on_elongation",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.

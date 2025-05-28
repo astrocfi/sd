@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.63"
+version "39.64"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -17110,7 +17110,7 @@ call "cross back" c2 tag crossback
       array [AL0S CR1S ZM0N ZM1N]
 
 call "shakedown" c1 tag shakedown
-            left_means_mirror
+            left_means_mirror warn_on_elongation
    setup 2x2 2x2
       array [CR1W CR2W 0 0]
             alternate_definition [single] c3a
@@ -17482,7 +17482,7 @@ call "@D wheel to an hourglass" c4a
       inherit_nxn inherit_mxn]
 
 call "chase @eright@f" plus tag chase_right
-            left_means_mirror no_elongation_allowed
+            left_means_mirror warn_on_elongation
       // While everyone knows that the call involves two box circulates and should therefore
       // be subject to "rectify", the actual definition is in terms of an "exaggerated
       // Zoom action".  We have no idea how to rectify that, so it is illegal.
@@ -17504,7 +17504,7 @@ call "chase @eright@f" plus tag chase_right
       array [CM11S CM10S CM9S CM8S CR12N CR13N CR14N CR15N 0 0 0 0 0 0 0 0]
 
 call "left chase" plus
-            no_elongation_allowed
+            warn_on_elongation
    seq chase_right [force_left]
 
 call "mini chase" c3a

@@ -5670,7 +5670,9 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
    }
 
-   merge_table::merge_setups(&the_results[1], merge_c1_phantom, result);
+   merge_table::merge_setups(&the_results[1],
+                             (ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) ? merge_after_dyp : merge_c1_phantom,
+                             result);
 
    if (doing_yoyo) {
       the_setups[0] = *result;

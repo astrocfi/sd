@@ -4910,7 +4910,12 @@ static uint32_t do_actual_array_call(
           !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG)) {
          if (callspec->callflagsf & CFLAG2_NO_ELONGATION_ALLOWED)
             fail_no_retry("Call can't be done around the outside of the set.");
-
+         if (callspec->callflagsf & CFLAG2_WARN_ON_ELONGATION) {
+            if (calling_level >= concentric_level)
+               warn(warn__maybe_use_concentric);
+            else
+               warn(warn__went_to_other_side);
+         }
          if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
             if (result->kind == s1x4)
                check_peeloff_migration = true;
