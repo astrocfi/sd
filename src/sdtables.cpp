@@ -386,7 +386,7 @@ const expand::thing s_c1phan_4x4b = {
    {10, -1, 15, -1, 14, -1, 3, -1, 2, -1, 7, -1, 6, -1, 11, -1}, 16, s_c1phan, s4x4, 0};
 const expand::thing s_1x4_dmd = {{-1, 1, -1, 3}, 4, sdmd, s1x4, 1};
 /* s_qtg_3x4 is duplicated in the big table. */
-const expand::thing s_qtg_3x4 = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
+const expand::thing s_qtg_3x4 = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0, 0, 06666};
 const expand::thing s_short6_2x3 = {{0, 1, 2, 3, 4, 5}, 6, s2x3, s_short6, 0};
 // This is duplicated in the big table.
 const expand::thing s_bigrig_dblbone = {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4},
@@ -3692,7 +3692,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
 
    // Want this one NOT TO BE USED in the girls hinge case, but OK in the girls pass thru case.
-   {s2x4,          s2x6, 0,        0, 0x0E, 0x0, schema_recenter,        nothing,     nothing, warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
+   {s2x4,          s2x6, 0,        0, 0x0E, 0x10,schema_nothing,        nothing,     nothing, warn__none, 0, 0, {1, 2, 3, 4, 7, 8, 9, 10},  {0}},
 
 
    {s2x4,          s2x6, 0x99,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing, warn__none, 0, 0, {-1, 3, 8, -1, -1, 9, 2, -1}, {0}},

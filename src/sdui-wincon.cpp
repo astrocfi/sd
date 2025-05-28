@@ -346,7 +346,7 @@ extern void rubout()
 
 extern void erase_last_n(int n)
 {
-   if (!sdtty_no_console && !sdtty_no_cursor) {
+   if (!sdtty_no_console) {
       DWORD numWrite;
       CONSOLE_SCREEN_BUFFER_INFO myconsoleInfo;
       int delta = n;

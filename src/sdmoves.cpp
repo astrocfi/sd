@@ -23,6 +23,8 @@
 /* This defines the following functions:
    canonicalize_rotation
    reinstate_rotation
+   remove_mxn_spreading
+   do_1x3_type_expansion
    divide_for_magic
    do_simple_split
    do_call_in_series
@@ -221,51 +223,127 @@ extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL
 }
 
 
-extern bool divide_for_magic(
-   setup *ss,
-   uint32 heritflags_to_check,
-   setup *result) THROW_DECL
+static const expand::thing exp72  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 07272};
+static const expand::thing exp27  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 02727};
+static const expand::thing exp52  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 05252};
+static const expand::thing exp25  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 02525};
+static const expand::thing exp56  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 05656};
+static const expand::thing exp65  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 06565};
+static const expand::thing exp35  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 03535};
+static const expand::thing exp53  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 05353};
+static const expand::thing exp3u  = {{1, 3, 4, 5, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 02772};
+static const expand::thing exp3d  = {{0, 1, 2, 4, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 07227};
+
+static const expand::thing exp12m = {{9, 10, 1, 3, 4, 7},        6, s_2x1dmd, s3dmd, 0, 0, 03232};
+static const expand::thing exp21m = {{8, 11, 0, 2, 5, 6},        6, s2x3, s3dmd, 1, 0, 04545};
+
+static const expand::thing exp46  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 04646};
+static const expand::thing exp64  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 06464};
+static const expand::thing exp54  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 05454};
+static const expand::thing exp45  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 04545};
+static const expand::thing exp51  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 05151};
+static const expand::thing exp15  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 01515};
+static const expand::thing exp31  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 03131};
+static const expand::thing exp13  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 01313};
+
+static const expand::thing expl52 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0, 0, 05252};
+static const expand::thing expl25 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0, 0, 02525};
+static const expand::thing expg72 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0, 0, 07272};
+static const expand::thing expg27 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0, 0, 02727};
+static const expand::thing expg56 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0, 0, 05656};
+static const expand::thing expg35 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0, 0, 03535};
+
+static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0, 0, 05656};
+static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
+                                     12, s3dmd, s_d3x4, 1};
+static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1, 0, 06565};
+
+static const expand::thing expb51 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0, 0, 05151};
+static const expand::thing expb26 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1, 0, 02626};
+static const expand::thing expl65 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0, 0, 065};
+static const expand::thing expl56 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0, 0, 056};
+static const expand::thing expl72 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0, 0, 072};
+static const expand::thing expl27 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0, 0, 027};
+
+
+extern void remove_mxn_spreading(setup *ss) THROW_DECL
 {
-   static const expand::thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0, 0, 02727};
-   static const expand::thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0, 0, 07272};
-   static const expand::thing exp25  = {{1, 3, 5, 7, 9, 11},        6, s2x3, s2x6, 0, 0, 02525};
-   static const expand::thing exp52  = {{0, 2, 4, 6, 8, 10},        6, s2x3, s2x6, 0, 0, 05252};
-   static const expand::thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0, 0, 03535};
-   static const expand::thing exp53  = {{0, 2, 4, 5, 6, 8, 10, 11}, 8, s2x4, s2x6, 0, 0, 05353};
-   static const expand::thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
-   static const expand::thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
+   if (!(ss->result_flags.misc & RESULTFLAG__DID_MXN_EXPANSION))
+      return;
 
-   static const expand::thing exp12m = {{9, 10, 1, 3, 4, 7},        6, s_2x1dmd, s3dmd, 0, 0, 02626};
-   static const expand::thing exp21m = {{8, 11, 0, 2, 5, 6},        6, s2x3, s3dmd, 1, 0, 05151};
+   uint32 livemasklittle = little_endian_live_mask(ss);
 
-   static const expand::thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
-   static const expand::thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
-   static const expand::thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
-   static const expand::thing exp51  = {{0, 2, 5, 6, 8, 11},        6, s2x3, s2x6, 0, 0, 05151};
-   static const expand::thing exp45  = {{0, 3, 5, 6, 9, 11},        6, s2x3, s2x6, 0, 0, 04545};
-   static const expand::thing exp54  = {{0, 2, 3, 6, 8, 9},         6, s2x3, s2x6, 0, 0, 05454};
-   static const expand::thing exp46  = {{0, 3, 4, 6, 9, 10},        6, s2x3, s2x6, 0, 0, 04646};
-   static const expand::thing exp64  = {{0, 1, 3, 6, 7, 9},         6, s2x3, s2x6, 0, 0, 06464};
+   static const expand::thing *unwind_2x6_table[] = {
+      &exp52, &exp25, &exp72, &exp27,
+      &exp56, &exp65, &exp35, &exp53,
+      &exp46, &exp64, &exp54, &exp45,
+      &exp51, &exp15, &exp31, &exp13,
+      (const expand::thing *) 0};
 
-   static const expand::thing expl13 = {{1, 3, 5, 7, 9, 11},        6, s1x6, s1x12, 0};
-   static const expand::thing expl31 = {{0, 2, 4, 6, 8, 10},        6, s1x6, s1x12, 0};
-   static const expand::thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10}, 8, s1x8, s1x12, 0};
-   static const expand::thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
-   static const expand::thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
-   static const expand::thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
+   static const expand::thing *unwind_3dmd_table[] = {
+      &exp12m, &exp21m,
+      (const expand::thing *) 0};
 
-   static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
-   static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
-                                 12, s3dmd, s_d3x4, 1};
-   static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, 8, s_323, s_d3x4, 1};
+   static const expand::thing *unwind_3x4_table[] = {
+      &s_qtg_3x4, &expb51, &expb26,
+      (const expand::thing *) 0};
 
-   static const expand::thing expb45 = {{0, 3, 5, 6, 9, 11},        6, s_bone6, s3x4, 0};
-   static const expand::thing expb32 = {{8, 10, 1, 2, 4, 7},        6, s_short6, s3x4, 1};
-   static const expand::thing expl53 = {{0, 2, 4, 5},               4, s1x4, s1x6, 0};
-   static const expand::thing expl35 = {{1, 2, 3, 5},               4, s1x4, s1x6, 0};
-   static const expand::thing expl27 = {{1, 5, 3, 4},               4, s1x4, s1x6, 0};
-   static const expand::thing expl72 = {{0, 1, 4, 2},               4, s1x4, s1x6, 0};
+   static const expand::thing *unwind_1x6_table[] = {
+      &expl72, &expl27, &expl56, &expl65,
+      (const expand::thing *) 0};
 
+   static const expand::thing *unwind_d3x4_table[] = {
+      &exp323, &expsp3,
+      (const expand::thing *) 0};
+
+   static const expand::thing *unwind_1x12_table[] = {
+      &expl52, &expl25, &expg72, &expg27, &expg56, &expg35,
+      (const expand::thing *) 0};
+
+   const expand::thing **p = (const expand::thing **) 0;
+
+   switch (ss->kind) {
+   case s2x6:
+      p = unwind_2x6_table;
+      break;
+   case s3dmd:
+      p = unwind_3dmd_table;
+      break;
+   case s3x4:
+      p = unwind_3x4_table;
+      break;
+   case s1x6:
+      p = unwind_1x6_table;
+      break;
+   case s_d3x4:
+      p = unwind_d3x4_table;
+      break;
+   case s1x12:
+      p = unwind_1x12_table;
+      break;
+   }
+
+   if (p) {
+      for ( ; *p ; p++) {
+         const expand::thing *final = *p;
+
+         if (livemasklittle == final->biglivemask) {
+            expand::compress_setup(*final, ss);
+
+            if (final == &expg72)
+               ss->result_flags.misc |= RESULTFLAG__VERY_ENDS_ODD;
+            else if (final == &expg27)
+               ss->result_flags.misc |= RESULTFLAG__VERY_CTRS_ODD;
+
+            break;
+         }
+      }
+   }
+}
+
+
+extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_DECL
+{
    struct Nx1_checker {
       uint32 directions;
       const expand::thing *action_if_Nx1;
@@ -273,87 +351,215 @@ extern bool divide_for_magic(
    };
 
    static const Nx1_checker Nx1_checktable_2x4[] = {
-      {0x2A80, &exp27, &exp27},  // These are independent of whether we said "1x3" or "3x1".
-      {0x802A, &exp27, &exp27},
-      {0x7FD5, &exp27, &exp27},
-      {0xD57F, &exp27, &exp27},
-      {0xA802, &exp72, &exp72},
-      {0x02A8, &exp72, &exp72},
-      {0xFD57, &exp72, &exp72},
-      {0x57FD, &exp72, &exp72},
-      {0x208A, &exp35, &exp35},
-      {0x8A20, &exp35, &exp35},
-      {0x75DF, &exp35, &exp35},
-      {0xDF75, &exp35, &exp35},
-      {0xA208, &exp56, &exp56},
-      {0x08A2, &exp56, &exp56},
-      {0xF75D, &exp56, &exp56},
-      {0x5DF7, &exp56, &exp56},
-      {0x55FF, &exp27, &exp72},  // These are specific to "1x3" or "3x1".
-      {0x00AA, &exp27, &exp72},
-      {0xFF55, &exp72, &exp27},
-      {0xAA00, &exp72, &exp27},
+      {0x2A80, &exp72, &exp72},  // These are independent of whether we said "1x3" or "3x1".
+      {0x802A, &exp72, &exp72},
+      {0x7FD5, &exp72, &exp72},
+      {0xD57F, &exp72, &exp72},
+      {0xA802, &exp27, &exp27},
+      {0x02A8, &exp27, &exp27},
+      {0xFD57, &exp27, &exp27},
+      {0x57FD, &exp27, &exp27},
+      {0x208A, &exp56, &exp56},
+      {0x8A20, &exp56, &exp56},
+      {0x75DF, &exp56, &exp56},
+      {0xDF75, &exp56, &exp56},
+      {0xA208, &exp35, &exp35},
+      {0x08A2, &exp35, &exp35},
+      {0xF75D, &exp35, &exp35},
+      {0x5DF7, &exp35, &exp35},
+      {0x2AA8, &exp3u, &exp3u},  // These 8 are unsymmetrical.
+      {0x8002, &exp3u, &exp3u},
+      {0x7FFD, &exp3u, &exp3u},
+      {0xD557, &exp3u, &exp3u},
+      {0xA82A, &exp3d, &exp3d},
+      {0x0280, &exp3d, &exp3d},
+      {0xFD7F, &exp3d, &exp3d},
+      {0x57D5, &exp3d, &exp3d},
+      {0x55FF, &exp72, &exp27},  // These are specific to "1x3" or "3x1".
+      {0x00AA, &exp72, &exp27},
+      {0xFF55, &exp27, &exp72},
+      {0xAA00, &exp27, &exp72},
       {0}};
 
    static const Nx1_checker Nx1_checktable_1x8[] = {
-      {0x2A80, &expg27, &expg27},  // These are independent of whether we said "1x3" or "3x1".
-      {0x802A, &expg27, &expg27},
-      {0x7FD5, &expg27, &expg27},
-      {0xD57F, &expg27, &expg27},
-      {0xA208, &expg72, &expg72},
-      {0x08A2, &expg72, &expg72},
-      {0xF75D, &expg72, &expg72},
-      {0x5DF7, &expg72, &expg72},
-      {0x208A, &expg35, &expg35},
-      {0x8A20, &expg35, &expg35},
-      {0x75DF, &expg35, &expg35},
-      {0xDF75, &expg35, &expg35},
-      {0xA802, &expg56, &expg56},
-      {0x02A8, &expg56, &expg56},
-      {0xFD57, &expg56, &expg56},
-      {0x57FD, &expg56, &expg56},
-      {0x55FF, &expg27, &expg72},  // These are specific to "1x3" or "3x1".
-      {0x00AA, &expg27, &expg72},
-      {0xFF55, &expg72, &expg27},
-      {0xAA00, &expg72, &expg27},
+      {0x2A80, &expg72, &expg72},  // These are independent of whether we said "1x3" or "3x1".
+      {0x802A, &expg72, &expg72},
+      {0x7FD5, &expg72, &expg72},
+      {0xD57F, &expg72, &expg72},
+      {0xA208, &expg27, &expg27},
+      {0x08A2, &expg27, &expg27},
+      {0xF75D, &expg27, &expg27},
+      {0x5DF7, &expg27, &expg27},
+      {0x208A, &expg56, &expg56},
+      {0x8A20, &expg56, &expg56},
+      {0x75DF, &expg56, &expg56},
+      {0xDF75, &expg56, &expg56},
+      {0xA802, &expg35, &expg35},
+      {0x02A8, &expg35, &expg35},
+      {0xFD57, &expg35, &expg35},
+      {0x57FD, &expg35, &expg35},
+      {0x55FF, &expg72, &expg27},  // These are specific to "1x3" or "3x1".
+      {0x00AA, &expg72, &expg27},
+      {0xFF55, &expg27, &expg72},
+      {0xAA00, &expg27, &expg72},
       {0}};
 
    static const Nx1_checker Nx1_checktable_2x3[] = {
-      {01240, &exp25, &exp25},  // These are independent of whether we said "1x2" or "2x1".
-      {04012, &exp25, &exp25},
-      {03765, &exp25, &exp25},
-      {06537, &exp25, &exp25},
-      {05002, &exp52, &exp52},
-      {00250, &exp52, &exp52},
-      {07527, &exp52, &exp52},
-      {02775, &exp52, &exp52},
-      {02577, &exp25, &exp52},  // These are specific to "1x2" or "2x1".
-      {00052, &exp25, &exp52},
-      {07725, &exp52, &exp25},
-      {05200, &exp52, &exp25},
+      {01240, &exp52, &exp52},  // These are independent of whether we said "1x2" or "2x1".
+      {04012, &exp52, &exp52},
+      {03765, &exp52, &exp52},
+      {06537, &exp52, &exp52},
+      {05002, &exp25, &exp25},
+      {00250, &exp25, &exp25},
+      {07527, &exp25, &exp25},
+      {02775, &exp25, &exp25},
+      {02577, &exp52, &exp25},  // These are specific to "1x2" or "2x1".
+      {00052, &exp52, &exp25},
+      {07725, &exp25, &exp52},
+      {05200, &exp25, &exp52},
       {0}};
 
    static const Nx1_checker Nx1_checktable_1x6[] = {
-      {01240, &expl13, &expl13},  // These are independent of whether we said "1x2" or "2x1".
-      {04012, &expl13, &expl13},
-      {03765, &expl13, &expl13},
-      {06537, &expl13, &expl13},
-      {05002, &expl31, &expl31},
-      {00250, &expl31, &expl31},
-      {07527, &expl31, &expl31},
-      {02775, &expl31, &expl31},
-      {02577, &expl13, &expl31},  // These are specific to "1x2" or "2x1".
-      {00052, &expl13, &expl31},
-      {07725, &expl31, &expl13},
-      {05200, &expl31, &expl13},
+      {01240, &expl52, &expl52},  // These are independent of whether we said "1x2" or "2x1".
+      {04012, &expl52, &expl52},
+      {03765, &expl52, &expl52},
+      {06537, &expl52, &expl52},
+      {05002, &expl25, &expl25},
+      {00250, &expl25, &expl25},
+      {07527, &expl25, &expl25},
+      {02775, &expl25, &expl25},
+      {02577, &expl52, &expl25},  // These are specific to "1x2" or "2x1".
+      {00052, &expl52, &expl25},
+      {07725, &expl25, &expl52},
+      {05200, &expl25, &expl52},
       {0}};
 
-   warning_info saved_warnings;
-   int i;
-   uint32 division_code;
    uint32 directions;
    uint32 dblbitlivemask;
    const Nx1_checker *getin_search;
+
+   big_endian_get_directions(ss, directions, dblbitlivemask);
+
+   if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
+       heritflags_to_check == INHERITFLAGMXNK_1X3) {
+      if (ss->kind == s2x4) {
+         // ***** Want to get rid of this test, so can handle phantoms.
+         // But that doesn't work.
+         if (dblbitlivemask != 0xFFFF) return false;
+         getin_search = Nx1_checktable_2x4;
+         goto do_Nx1_search;
+      }
+      else if (ss->kind == s1x8) {
+         if (dblbitlivemask != 0xFFFF) return false;
+         getin_search = Nx1_checktable_1x8;
+         goto do_Nx1_search;
+      }
+      else if (ss->kind == s3x4) {
+         if (dblbitlivemask == 0x3CF3CF || dblbitlivemask == 0xC3FC3F ||
+             dblbitlivemask == 0x33FCCF || dblbitlivemask == 0xCCF33F) return true;
+      }
+      else if (ss->kind == s2x6) {
+         if (dblbitlivemask == 0x33F33F || dblbitlivemask == 0xFCCFCC ||
+             dblbitlivemask == 0x30CFFF || dblbitlivemask == 0xFFF30C) return true;
+      }
+      else if (ss->kind == s_spindle) {
+         if (dblbitlivemask == 0xFFFF) {
+            expand::expand_setup(expsp3, ss);
+            return true;
+         }
+      }
+      else if (ss->kind == s3dmd) {
+         if (dblbitlivemask == 0xFC3FC3) {
+            expand::expand_setup(exp3d3, ss);
+            return true;
+         }
+      }
+      else if (ss->kind == s_323) {
+         if (dblbitlivemask == 0xFFFF) {
+            expand::expand_setup(exp323, ss);
+            return true;
+         }
+      }
+      else if (ss->kind == s2x3) {
+         if (dblbitlivemask == 0x33F || dblbitlivemask == 0xFCC) return true;
+      }
+   }
+   else if (heritflags_to_check == INHERITFLAGMXNK_2X1 ||
+            heritflags_to_check == INHERITFLAGMXNK_1X2) {
+      if (ss->kind == s2x3) {
+         if (dblbitlivemask != 0xFFF) return false;
+         getin_search = Nx1_checktable_2x3;
+         goto do_Nx1_search;
+      }
+      else if (ss->kind == s1x6) {
+         if (dblbitlivemask != 0xFFF) return false;
+         getin_search = Nx1_checktable_1x6;
+         goto do_Nx1_search;
+      }
+      else if (ss->kind == s_bone6) {
+         if (dblbitlivemask != 0xFFF) return false;
+
+         if (directions == 01240 || directions == 04012 ||
+             directions == 01042 || directions == 04210 ||
+             directions == 03765 || directions == 06537 ||
+             directions == 03567 || directions == 06735) {
+            expand::expand_setup(expb51, ss);
+            return true;
+         }
+      }
+      else if (ss->kind == s_short6) {
+         if (dblbitlivemask != 0xFFF) return false;
+
+         if (directions == 00052 || directions == 05200 ||
+             directions == 07725 || directions == 02577 ||
+             directions == 03567 || directions == 06735 ||
+             directions == 01042 || directions == 04210) {
+            expand::expand_setup(expb26, ss);
+            return true;
+         }
+      }
+   }
+
+   return false;
+
+ do_Nx1_search:
+
+   // Search the table for a unique getin map.
+   // *** We used to check only the direction bits that were masked on by dblbitlivemask,
+   // and demand that the result be unique.  (That's what the "if (final) return false"
+   // is about.)  We also used to try not to demand that dblbitlivemask have all bits
+   // on.  But that really doesn't work.  We can't search for hard Nx1 and 1xN
+   // formulations in the presence of phantoms.
+
+   const expand::thing *final = (const expand::thing *) 0;
+
+   for ( ; getin_search->directions ; getin_search++) {
+      if (getin_search->directions == directions) {
+         if (final) return false;    // It's ambiguous.  ***** Won't happen.
+         final = (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
+                  heritflags_to_check == INHERITFLAGMXNK_2X1) ?
+            getin_search->action_if_Nx1 :
+            getin_search->action_if_1xN;
+         break;
+      }
+   }
+
+   if (final) {
+      expand::expand_setup(*final, ss);
+      return true;
+   }
+
+   return false;
+}
+
+
+extern bool divide_for_magic(
+   setup *ss,
+   uint32 heritflags_to_check,
+   setup *result) THROW_DECL
+{
+   warning_info saved_warnings;
+   uint32 division_code;
 
    uint32 heritflags_to_use = ss->cmd.cmd_final_flags.herit;
 
@@ -411,7 +617,7 @@ extern bool divide_for_magic(
       }
       else if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
                heritflags_to_check == INHERITFLAGMXNK_1X3) {
-         expand::expand_setup(&s_qtg_3x4, ss);
+         expand::expand_setup(s_qtg_3x4, ss);
          goto do_3x3;
       }
       break;
@@ -439,86 +645,14 @@ extern bool divide_for_magic(
        heritflags_to_check == INHERITFLAGMXNK_1X3 ||
        heritflags_to_check == INHERITFLAGMXNK_2X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X2) {
-      big_endian_get_directions(ss, directions, dblbitlivemask);
 
-      if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-          heritflags_to_check == INHERITFLAGMXNK_1X3) {
-         if (ss->kind == s2x4) {
-            // ***** Want to get rid of this test, so can handle phantoms.
-            // But that doesn't work.
-            if (dblbitlivemask != 0xFFFF) return false;
-            getin_search = Nx1_checktable_2x4;
-            goto do_Nx1_search;
-         }
-         else if (ss->kind == s1x8) {
-            if (dblbitlivemask != 0xFFFF) return false;
-            getin_search = Nx1_checktable_1x8;
-            goto do_Nx1_search;
-         }
-         else if (ss->kind == s3x4) {
-            if (dblbitlivemask == 0x3CF3CF || dblbitlivemask == 0xC3FC3F ||
-                dblbitlivemask == 0x33FCCF || dblbitlivemask == 0xCCF33F) goto do_3x3;
-         }
-         else if (ss->kind == s2x6) {
-            if (dblbitlivemask == 0x33F33F || dblbitlivemask == 0xFCCFCC ||
-                dblbitlivemask == 0x30CFFF || dblbitlivemask == 0xFFF30C) goto do_3x3;
-         }
-         else if (ss->kind == s_spindle) {
-            if (dblbitlivemask == 0xFFFF) {
-               expand::expand_setup(&expsp3, ss);
-               goto do_3x3;
-            }
-         }
-         else if (ss->kind == s3dmd) {
-            if (dblbitlivemask == 0xFC3FC3) {
-               expand::expand_setup(&exp3d3, ss);
-               goto do_3x3;
-            }
-         }
-         else if (ss->kind == s_323) {
-            if (dblbitlivemask == 0xFFFF) {
-               expand::expand_setup(&exp323, ss);
-               goto do_3x3;
-            }
-         }
-         else if (ss->kind == s2x3) {
-            if (dblbitlivemask == 0x33F || dblbitlivemask == 0xFCC) goto do_3x3;
-         }
+      // If we have already expanded, don't do it again.
+      if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion != heritflags_to_check) {
+         if (do_1x3_type_expansion(ss, heritflags_to_check))
+            goto do_3x3;
       }
-      else if (heritflags_to_check == INHERITFLAGMXNK_2X1 ||
-               heritflags_to_check == INHERITFLAGMXNK_1X2) {
-         if (ss->kind == s2x3) {
-            if (dblbitlivemask != 0xFFF) return false;
-            getin_search = Nx1_checktable_2x3;
-            goto do_Nx1_search;
-         }
-         else if (ss->kind == s1x6) {
-            if (dblbitlivemask != 0xFFF) return false;
-            getin_search = Nx1_checktable_1x6;
-            goto do_Nx1_search;
-         }
-         else if (ss->kind == s_bone6) {
-            if (dblbitlivemask != 0xFFF) return false;
-
-            if (directions == 01240 || directions == 04012 ||
-                directions == 01042 || directions == 04210 ||
-                directions == 03765 || directions == 06537 ||
-                directions == 03567 || directions == 06735) {
-               expand::expand_setup(&expb45, ss);
-               goto do_3x3;
-            }
-         }
-         else if (ss->kind == s_short6) {
-            if (dblbitlivemask != 0xFFF) return false;
-
-            if (directions == 00052 || directions == 05200 ||
-                directions == 07725 || directions == 02577 ||
-                directions == 03567 || directions == 06735 ||
-                directions == 01042 || directions == 04210) {
-               expand::expand_setup(&expb32, ss);
-               goto do_3x3;
-            }
-         }
+      else {
+         goto do_3x3;
       }
    }
 
@@ -528,49 +662,7 @@ extern bool divide_for_magic(
 
    ss->cmd.cmd_final_flags.herit = (heritflags) (heritflags_to_use & ~heritflags_to_check);
    divided_setup_move(ss, division_code, phantest_ok, true, result);
-
-   /* Since more concepts follow the magic and/or interlocked stuff, we can't
-      allow the concept to be just "magic" etc.  We have to change it to
-      "magic diamond, ..."  Otherwise, things could come out sounding like
-      "magic diamond as couples quarter right" when we should really be saying
-      "magic diamond, diamond as couples quarter right".  Therefore, we are going
-      to do something seriously hokey: we are going to change the concept descriptor
-      to one whose name has the extra "diamond" word.  We do this by marking the
-      setupflags word in the result. */
-
    return true;
-
- do_Nx1_search:
-
-   // Search the table for a unique getin map.
-   // *** We used to check only the direction bits that were masked on by dblbitlivemask,
-   // and demand that the result be unique.  (That's what the "if (final) return false"
-   // is about.)  We also used to try not to demand that dblbitlivemask have all bits
-   // on.  But that really doesn't work.  We can't search for hard Nx1 and 1xN
-   // formulations in the presence of phantoms.
-
-   {
-      const expand::thing *final = (const expand::thing *) 0;
-
-      while (getin_search->directions != 0) {
-         if (getin_search->directions == directions) {
-            if (final) return false;    // It's ambiguous.  ***** Won't happen.
-            final = (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-                     heritflags_to_check == INHERITFLAGMXNK_2X1) ?
-               getin_search->action_if_Nx1 :
-               getin_search->action_if_1xN;
-            break;
-         }
-         getin_search++;
-      }
-
-      if (final) {
-         expand::expand_setup(final, ss);
-         goto do_3x3;
-      }
-   }
-
-   return false;
 
  do_3x3:
 
@@ -583,76 +675,15 @@ extern bool divide_for_magic(
 
    saved_warnings = configuration::save_warnings();
    impose_assumption_and_move(ss, result);
+   result->result_flags.misc |= RESULTFLAG__DID_MXN_EXPANSION;
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion =
+      heritflags_to_use & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK);
 
    // Shut off "each 2x3" types of warnings -- they will arise spuriously
    // while the people do the calls in isolation.
 
    configuration::clear_multiple_warnings(dyp_each_warnings);
    configuration::set_multiple_warnings(saved_warnings);
-
-   uint32 livemask = 0;
-
-   for (i=0; i<=attr::slimit(result); i++) {
-      livemask <<= 1;
-      if (result->people[i].id1) livemask |= 1;
-   }
-
-   const expand::thing *final = (const expand::thing *) 0;
-
-   static const expand::thing *unwind_2x6_table[] = {
-      &exp25, &exp52, &exp27, &exp72,
-      &exp35, &exp53, &exp56, &exp65,
-      &exp31, &exp13, &exp15, &exp51,
-      &exp45, &exp54, &exp46, &exp64,
-      (const expand::thing *) 0};
-
-   if (result->kind == s2x6) {
-      const expand::thing **p = unwind_2x6_table;
-      while (*p) {
-         if (livemask == (*p)->biglivemask) {
-            final = *p;
-            break;
-         }
-         p++;
-      }
-
-      if (final) expand::compress_setup(final, result);
-      else fail("Can't figure out how to finish this call.");
-   }
-   else if (result->kind == s1x12) {
-      if (livemask == 02525) expand::compress_setup(&expl13, result);
-      else if (livemask == 05252) expand::compress_setup(&expl31, result);
-      else if (livemask == 02727) {
-         expand::compress_setup(&expg27, result);
-         result->result_flags.misc |= RESULTFLAG__VERY_ENDS_ODD;
-      }
-      else if (livemask == 07272) {
-         expand::compress_setup(&expg72, result);
-         result->result_flags.misc |= RESULTFLAG__VERY_CTRS_ODD;
-      }
-      else if (livemask == 03535) expand::compress_setup(&expg35, result);
-      else if (livemask == 05656) expand::compress_setup(&expg56, result);
-   }
-   else if (result->kind == s3dmd) {
-      if      (livemask == exp12m.biglivemask) expand::compress_setup(&exp12m, result);
-      else if (livemask == exp21m.biglivemask) expand::compress_setup(&exp21m, result);
-   }
-   else if (result->kind == s3x4) {
-      if (livemask == 03333) expand::compress_setup(&s_qtg_3x4, result);
-      else if (livemask == 04545) expand::compress_setup(&expb45, result);
-      else if (livemask == 03232) expand::compress_setup(&expb32, result);
-   }
-   else if (result->kind == s_d3x4) {
-      if (livemask == 05353) expand::compress_setup(&exp323, result);
-      else if (livemask == 03535) expand::compress_setup(&expsp3, result);
-   }
-   else if (result->kind == s1x6) {
-      if (livemask == 027) expand::compress_setup(&expl27, result);
-      else if (livemask == 072) expand::compress_setup(&expl72, result);
-      else if (livemask == 035) expand::compress_setup(&expl35, result);
-      else if (livemask == 053) expand::compress_setup(&expl53, result);
-   }
-
    return true;
 }
 
@@ -701,10 +732,17 @@ extern bool do_simple_split(
          break;
       }
       else if (split_command == split_command_1x4) {
-         if (ss->people[0].id1 & ss->people[1].id1 &
-             ss->people[2].id1 & ss->people[3].id1 &
-             ss->people[6].id1 & ss->people[7].id1 &
-             ss->people[8].id1 & ss->people[9].id1) {
+         if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_3X1 ||
+             ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_1X3 ||
+             ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_2X1 ||
+             ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_1X2) {
+            mapcode = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
+            break;
+         }
+         else if (ss->people[0].id1 & ss->people[1].id1 &
+                  ss->people[2].id1 & ss->people[3].id1 &
+                  ss->people[6].id1 & ss->people[7].id1 &
+                  ss->people[8].id1 & ss->people[9].id1) {
             mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF,1);
             break;
          }
@@ -1026,6 +1064,8 @@ extern uint32 do_call_in_series(
    sss->result_flags.misc &= ~(RESULTFLAG__PART_COMPLETION_BITS|RESULTFLAG__PLUSEIGHTH_ROT);
    sss->result_flags.misc |= tempsetup.result_flags.misc;
    sss->result_flags.misc &= ~3;
+
+   sss->cmd.cmd_heritflags_to_save_from_mxn_expansion = tempsetup.result_flags.res_heritflags_to_save_from_mxn_expansion;
 
    if (sss->result_flags.misc & saved_result_flags.misc & RESULTFLAG__PLUSEIGHTH_ROT) {
       sss->result_flags.misc &= ~RESULTFLAG__PLUSEIGHTH_ROT;
@@ -2395,7 +2435,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    scopy.rotation = 0;
 
    if (scopy.kind == s_qtag) {
-      expand::expand_setup(&s_qtg_3x4, &scopy);
+      expand::expand_setup(s_qtg_3x4, &scopy);
       fudged_start = true;
    }
 
@@ -2432,13 +2472,13 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    setup refudged = scopy;
    if (fudged_start)
-      expand::compress_setup(&s_qtg_3x4, &refudged);
+      expand::compress_setup(s_qtg_3x4, &refudged);
 
    move(&refudged, false, result);
 
    // Expand again if it's another qtag.
    if (result->kind == s_qtag)
-      expand::expand_setup(&s_qtg_3x4, result);
+      expand::expand_setup(s_qtg_3x4, result);
 
    // Now figure out where the people who moved really are.
 
@@ -3813,7 +3853,7 @@ extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL
          if (ss->kind == s3x4 &&
              !(ss->people[0].id1 | ss->people[3].id1 |
                ss->people[6].id1 | ss->people[9].id1)) {
-            expand::compress_setup(&s_qtg_3x4, ss);
+            expand::compress_setup(s_qtg_3x4, ss);
          }
          break;
       }
@@ -3889,7 +3929,7 @@ static void do_stuff_inside_sequential_call(
              result->kind == s2x4 &&
              (result->people[1].id1 | result->people[2].id1 |
               result->people[5].id1 | result->people[6].id1) == 0) {
-            expand::expand_setup(&s_qtg_2x4, result);
+            expand::expand_setup(s_qtg_2x4, result);
          }
       }
    }
@@ -4375,7 +4415,6 @@ static void do_sequential_call(
    *mirror_p = false;
 
    prepare_for_call_in_series(result, ss);
-
    uint32 remember_elongation = 0;
    int remembered_2x2_elongation = 0;
    int subpart_count = 0;
@@ -4456,6 +4495,7 @@ static void do_sequential_call(
          if (zzz.not_yet_in_active_section()) {
             if (doing_weird_revert == weirdness_otherstuff && zzz.m_client_index == 0)
                zzz.m_fetch_index--;
+
             goto go_to_next_cycle;
          }
          if (zzz.ran_off_active_section()) break;
@@ -4560,8 +4600,10 @@ static void do_sequential_call(
 
       {
          uint32 remember_expire = result->cmd.prior_expire_bits;
+         uint32 remember_save_3x1_herit = result->cmd.cmd_heritflags_to_save_from_mxn_expansion;
          result->cmd = ss->cmd;
          result->cmd.prior_expire_bits = remember_expire;
+         result->cmd.cmd_heritflags_to_save_from_mxn_expansion = remember_save_3x1_herit;
       }
 
       // If doing an explicit substitution, we allow another act of rearing
@@ -4605,6 +4647,15 @@ static void do_sequential_call(
       result->cmd.callspec = fooptr->callspec;
       result->cmd.cmd_final_flags = fooptr->cmd_final_flags;
       result->cmd.cmd_final_flags.clear_heritbits(herit_bits_to_clear);
+
+      if (result->cmd.cmd_heritflags_to_save_from_mxn_expansion != 0 &&
+          result->cmd.cmd_heritflags_to_save_from_mxn_expansion ==
+          (((uint32) result->cmd.cmd_final_flags.herit) & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK))) {
+
+         result->cmd.cmd_final_flags.herit = (heritflags)
+            ((result->cmd.cmd_final_flags.herit & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) |
+             (INHERITFLAGNXNK_3X3|INHERITFLAG_12_MATRIX));
+      }
 
       do_stuff_inside_sequential_call(
          result, this_mod1, first_call, first_time,
@@ -5356,6 +5407,7 @@ static void really_inner_move(setup *ss,
          static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
          static const expand::thing exp_back_to_2x4_stuff = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
          static const expand::thing exp_2x2_2x4r_stuff = {{7, 0, 3, 4}, 4, s2x2, s2x4, 1};
+         static const expand::thing exp_back_to_2x6_stuff = {{0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
 
          // The "reverse" concept might mean mirror, as in "reverse truck".
          // The "left" concept might also mean mirror, as in "left anchor".
@@ -5382,11 +5434,11 @@ static void really_inner_move(setup *ss,
                   the_schema != schema_partner_partial_matrix) {
             expanded = true;
             if (ss->cmd.prior_elongation_bits == 3)
-               expand::expand_setup(&exp_from_2x2_stuff, ss);
+               expand::expand_setup(exp_from_2x2_stuff, ss);
             else if (ss->cmd.prior_elongation_bits == 1)
-               expand::expand_setup(&exp_back_to_2x4_stuff, ss);
+               expand::expand_setup(exp_back_to_2x4_stuff, ss);
             else
-               expand::expand_setup(&exp_2x2_2x4r_stuff, ss);
+               expand::expand_setup(exp_2x2_2x4r_stuff, ss);
 
             // Since we are reconstructing the original setup,
             // we think it is reasonable to say that the setup is
@@ -5432,13 +5484,19 @@ static void really_inner_move(setup *ss,
                        result->people[10].id1 | result->people[9].id1 |
                        result->people[1].id1 | result->people[2].id1)) {
                result->result_flags.misc |= 3;
-               expand::compress_setup(&exp_from_2x2_stuff, result);
+               expand::compress_setup(exp_from_2x2_stuff, result);
             }
             else if (result->kind == s2x4 &&
                      !(result->people[1].id1 | result->people[2].id1 |
                        result->people[5].id1 | result->people[6].id1)) {
                result->result_flags.misc |= (result->rotation & 1) + 1;
-               expand::compress_setup(&exp_back_to_2x4_stuff, result);
+               expand::compress_setup(exp_back_to_2x4_stuff, result);
+            }
+            else if (result->kind == s2x6 &&
+                     !(result->people[2].id1 | result->people[3].id1 |
+                       result->people[8].id1 | result->people[9].id1)) {
+               result->result_flags.misc |= (result->rotation & 1) + 1;
+               expand::compress_setup(exp_back_to_2x6_stuff, result);
             }
          }
       }
@@ -5665,30 +5723,15 @@ static void really_inner_move(setup *ss,
          }
 
          if (the_schema == schema_split_sequential && result->kind == s2x6 &&
-             ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) ==
-              INHERITFLAGMXNK_1X3 ||
-              (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) ==
-              INHERITFLAGMXNK_3X1)) {
-            int i, j;
-            uint32 mask = 0;
-            static const veryshort map_3x1fixa[8] = {0, 1, 2, 4, 6, 7, 8, 10};
-            static const veryshort map_3x1fixb[8] = {1, 3, 4, 5, 7, 9, 10, 11};
-
-            for (i=0, j=1; i<12; i++, j<<=1) {
-               if (result->people[i].id1) mask |= j;
-            }
-
-            if (mask == 02727) {
-               setup temp = *result;
-               result->clear_people();
-               gather(result, &temp, map_3x1fixa, 7, 0);
-               result->kind = s2x4;
-            }
-            else if (mask == 07272) {
-               setup temp = *result;
-               result->clear_people();
-               gather(result, &temp, map_3x1fixb, 7, 0);
-               result->kind = s2x4;
+             ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) == INHERITFLAGMXNK_1X3 ||
+              (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) == INHERITFLAGMXNK_3X1)) {
+            switch(little_endian_live_mask(result)) {
+            case 02727:
+               expand::compress_setup(exp27, result);
+               break;
+            case 07272:
+               expand::compress_setup(exp72, result);
+               break;
             }
          }
 
@@ -6041,19 +6084,19 @@ static void move_with_real_call(
             ss->cmd.cmd_fraction.set_to_null();
 
             break;
-         case schema_nothing:
-         case schema_nothing_noroll:
          case schema_recenter:
          case schema_roll:
             fail("This call can't be fractionalized.");
             break;
+         case schema_nothing:
+         case schema_nothing_noroll:
          case schema_sequential:
          case schema_split_sequential:
          case schema_sequential_with_fraction:
          case schema_sequential_with_split_1x8_id:
          case schema_sequential_alternate:
          case schema_sequential_remainder:
-            // These will be thoroughly checked later.
+            // These (except for "nothing") will be thoroughly checked later.
             break;
          default:
 
@@ -6282,9 +6325,9 @@ static void move_with_real_call(
                if (ss->kind != s2x2) fail("Can't find outside 'O' spots.");
 
                if (ss->cmd.prior_elongation_bits == 1)
-                  expand::expand_setup(&thing1, ss);
+                  expand::expand_setup(thing1, ss);
                else if (ss->cmd.prior_elongation_bits == 2)
-                  expand::expand_setup(&thing2, ss);
+                  expand::expand_setup(thing2, ss);
                else
                   fail("Can't find outside 'O' spots.");
                local_4x4_exp = true;
@@ -6368,15 +6411,15 @@ static void move_with_real_call(
          }
 
          if (ss->kind == s4x4) {
-            // The entire rest of the program expects split calls to be done in
-            // a C1 phantom setup rather than a 4x4.
-
-            uint32 mask = little_endian_live_mask(ss);
-
-            if (mask == 0xAAAA)
-               expand::compress_setup(&s_c1phan_4x4a, ss);
-            else if (mask == 0xCCCC)
-               expand::compress_setup(&s_c1phan_4x4b, ss);
+            // The entire rest of the program expects split calls to be done in a C1 phantom setup rather than a 4x4.
+            switch(little_endian_live_mask(ss)) {
+            case 0xAAAA:
+               expand::compress_setup(s_c1phan_4x4a, ss);
+               break;
+            case 0xCCCC:
+               expand::compress_setup(s_c1phan_4x4b, ss);
+               break;
+            }
          }
       }
 
@@ -6553,6 +6596,7 @@ extern void move(
    bool qtfudged,
    setup *result) THROW_DECL
 {
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
    parse_block *saved_magic_diamond = (parse_block *) 0;
    parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
@@ -6915,6 +6959,7 @@ extern void move(
          warn(warn__bad_call_level);
 
       move_with_real_call(ss, qtfudged, false, result);
+      remove_mxn_spreading(result);
       remove_tgl_distortion(result);
       current_options = saved_options;
    }

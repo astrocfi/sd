@@ -1182,21 +1182,10 @@ extern void tandem_couples_move(
       }
 
       {
-         uint32 livemaskl = 0;
-         uint32 livemaskr = 0;
-         uint32 directionsl = 0;
-         uint32 directionsr = 0;
+         // ****** Maybe all this could be done in terms of "do_1x3_type_expansion".
 
-         for (i=0; i<=attr::slimit(ss); i++) {
-            uint32 t = ss->people[i].id1;
-            livemaskl = (livemaskl & 0x3FFFFFFF) << 2;
-            directionsl = (directionsl & 0x3FFFFFFF) << 2;
-            livemaskl |= (livemaskr >> 30) & 3;
-            directionsl |= (directionsr >> 30) & 3;
-            livemaskr = (livemaskr & 0x3FFFFFFF) << 2;
-            directionsr = (directionsr & 0x3FFFFFFF) << 2;
-            if (t) { livemaskr |= 3 ; directionsr |= t & 3; }
-         }
+         uint32 livemaskl, livemaskr, directionsl, directionsr;
+         big_endian_get_directions(ss, directionsr, livemaskr, &directionsl, &livemaskl);
 
          if (mxn_bits == INHERITFLAGMXNK_2X1 || mxn_bits == INHERITFLAGMXNK_1X2) {
             np = 2;
@@ -1836,6 +1825,7 @@ extern void tandem_couples_move(
 
    update_id_bits(&tandstuff.virtual_setup);
    impose_assumption_and_move(&tandstuff.virtual_setup, &tandstuff.virtual_result);
+   remove_mxn_spreading(&tandstuff.virtual_result);
    remove_tgl_distortion(&tandstuff.virtual_result);
 
    // If this is a concentric setup with dead ends or centers, we can still handle it.

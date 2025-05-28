@@ -27,7 +27,7 @@ CDEBUGFLAGS = -O2
 # installation of Cygwin will reveal that the "unix system root" is
 # (in Windoze notation) C:\cygwin.
 
-CFLAGS =$(CDEBUGFLAGS) $(DEFS) -I/cygwin/usr/include/ncurses -I/cygwin/usr/include
+CFLAGS =$(CDEBUGFLAGS) $(DEFS) -I/cygwin/usr/include
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
@@ -43,7 +43,7 @@ X11_LIBS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-TTY_LIBS = /cygwin/lib/crt0.o /cygwin/lib/libc.a -lncurses
+TTY_LIBS = /cygwin/lib/crt0.o /cygwin/lib/libc.a
 
 SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \

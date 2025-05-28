@@ -885,7 +885,7 @@ static void do_concept_multiple_lines_tog(
 
       if (ss->kind == s4x4) {
          expand::expand_setup(
-            ((tbonetest & 1) ? &s_4x4_4x6b : &s_4x4_4x6a), ss);
+            ((tbonetest & 1) ? s_4x4_4x6b : s_4x4_4x6a), ss);
          tbonetest = 0;
       }
 
@@ -2194,7 +2194,7 @@ static void do_concept_do_divided_bones(
       // Either or both of these may be unnecessary or may fail.
 
       do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_END_2X2, false);
-      if (tempsetup.kind == sbigbone) expand::expand_setup(&s_bigbone_dblrig, &tempsetup);
+      if (tempsetup.kind == sbigbone) expand::expand_setup(s_bigbone_dblrig, &tempsetup);
 
       divided_setup_move(&tempsetup,
                          MAPCODE(s_rigger,2,MPKIND__SPLIT,0),
@@ -2205,7 +2205,7 @@ static void do_concept_do_divided_bones(
       // Either or both of these may be unnecessary or may fail.
 
       do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_END_1X4, false);
-      if (tempsetup.kind == sbigrig) expand::expand_setup(&s_bigrig_dblbone, &tempsetup);
+      if (tempsetup.kind == sbigrig) expand::expand_setup(s_bigrig_dblbone, &tempsetup);
 
       divided_setup_move(&tempsetup,
                          MAPCODE(s_bone,2,MPKIND__SPLIT,0),
@@ -3484,7 +3484,6 @@ static void do_concept_fan(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   setup tempsetup;
    uint32 finalresultflagsmisc = 0;
    /* This is a huge amount of kludgy stuff shoveled in from a variety of sources.
       It needs to be cleaned up and thought about. */
@@ -3514,7 +3513,7 @@ static void do_concept_fan(
       touch_or_rear_back(ss, false, callspec->the_defn.callflags1);
    }
 
-   tempsetup = *ss;
+   setup tempsetup = *ss;
 
    // Normally, set the fractionalize field to start with the second part.
    // But if we have been requested to do a specific part number of "fan <call>",
@@ -3771,9 +3770,9 @@ static void do_concept_checkerboard(
       uint32 mask = little_endian_live_mask(ss);
 
       if (mask == 0xAAAA)
-         expand::compress_setup(&s_c1phan_4x4a, ss);
+         expand::compress_setup(s_c1phan_4x4a, ss);
       else if (mask == 0xCCCC)
-         expand::compress_setup(&s_c1phan_4x4b, ss);
+         expand::compress_setup(s_c1phan_4x4b, ss);
    }
 
    if (parseptr->concept->arg2 & 8) {
@@ -4297,12 +4296,11 @@ static void do_concept_special_sequential(
       if (!ss->cmd.cmd_fraction.is_null())
          fail("Can't stack meta or fractional concepts.");
 
-      setup tttt;
+      setup tttt = *ss;
       uint32 finalresultflagsmisc = 0;
 
       // Do the special first part.
 
-      tttt = *ss;
       if (!(tttt.result_flags.misc & RESULTFLAG__NO_REEVALUATE))
          update_id_bits(&tttt);           /* So you can use "leads run", etc. */
       move(&tttt, false, result);
@@ -4468,7 +4466,6 @@ static void do_concept_trace(
       fail("Illegal modifier before \"trace\".");
 
    int i, r[4], rot[4];
-   resultflag_rec finalresultflags;
    setup a[4], res[4];
    setup outer_inners[2];
    const veryshort *tracearray;
@@ -4513,7 +4510,7 @@ static void do_concept_trace(
       tracearray += 4;
    }
 
-   finalresultflags = get_multiple_parallel_resultflags(res, 4);
+   resultflag_rec finalresultflags = get_multiple_parallel_resultflags(res, 4);
    outer_inners[1].clear_people();
    outer_inners[0].clear_people();
 
@@ -5560,7 +5557,7 @@ static void do_concept_ferris(
    if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
       fail("Illegal modifier before \"ferris\" or \"release\".");
 
-   expand::expand_setup(map_ptr, ss);
+   expand::expand_setup(*map_ptr, ss);
    concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, false, ~0UL, result);
 }
 
@@ -5607,7 +5604,7 @@ static void do_concept_overlapped_diamond(
       fail("Not in correct setup for overlapped diamond/line concept.");
    }
 
-   expand::expand_setup(scatterlist, ss);
+   expand::expand_setup(*scatterlist, ss);
    divided_setup_move(ss, mapcode, phantest_ok, true, result);
 
    if (result->kind == s2x2)
@@ -5630,7 +5627,7 @@ static void do_concept_overlapped_diamond(
    else
       fail("Can't put the setups back together.");
 
-   expand::compress_setup(scatterlist, result);
+   expand::compress_setup(*scatterlist, result);
 }
 
 
@@ -7375,8 +7372,23 @@ extern bool do_big_concept(
    const concept_table_item *this_table_item = &concept_table[this_kind];
    const uint32 prop_bits = this_table_item->concept_prop;
 
-   if (this_concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
-      ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+   if (this_kind == concept_multiple_diamonds ||
+       this_kind == concept_in_out_nostd ||
+       this_kind == concept_do_divided_diamonds ||
+       this_kind == concept_phan_crazy ||
+       this_kind == concept_frac_phan_crazy ||
+       this_kind == concept_do_phantom_stag_qtg ||
+       this_kind == concept_do_phantom_diag_qtg ||
+       this_kind == concept_distorted ||
+       this_kind == concept_once_removed ||
+       this_kind == concept_concentric) {
+      if (this_concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+   }
+   else if (this_kind == concept_do_phantom_diamonds) {
+      if (this_concept->arg2 == CMD_MISC__VERIFY_DMD_LIKE)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+   }
 
    // Take care of combinations like "mystic triple waves".
 
@@ -7467,11 +7479,11 @@ extern bool do_big_concept(
    // If the "arg2_matrix" bit is on, pick up additional
    // matrix descriptor bits from the arg2 word.
 
-   // "Standard" is special -- process it now.
    uint32 prop_bits_for_expansion = prop_bits;
    if (prop_bits & CONCPROP__NEED_ARG2_MATRIX)
       prop_bits_for_expansion |= this_concept->arg2;
 
+   // "Standard" is special -- process it now.
    if (this_kind == concept_standard) {
       parse_block *substandard_concptptr;
       final_and_herit_flags junk_concepts;

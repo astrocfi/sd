@@ -1482,6 +1482,7 @@ struct setup_command {
    uint32 restrained_super9flags;
    parse_block *skippable_concept;
    uint32 skippable_heritflags;
+   uint32 cmd_heritflags_to_save_from_mxn_expansion;
 };
 
 
@@ -1496,8 +1497,13 @@ struct setup_command {
 // problems, that are simply not worth it.  Especially on 64-bit machines.
 
 struct resultflag_rec {
+   // BEWARE!!!  If add fields to this, be sure to initialize them at start of get_multiple_parallel_resultflags.
+   // Q: Why not just make a default constructor, the way good programmers do?
+   // A: This appears in static initializers in sdinit.  Someday, maybe.
    uint16 split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
    uint32 misc;           // Miscellaneous info, with names like RESULTFLAG__???.
+   uint32 res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__DID_MXN_EXPANSION bit on.
+                           // Gets copied to command block for next cycle of sequential call.
 
    inline void clear_split_info()
    { split_info[0] = split_info[1] = 0; }
@@ -2905,7 +2911,8 @@ enum {
    RESULTFLAG__PARTS_ARE_KNOWN      = 0x00000020UL,
 
    RESULTFLAG__NEED_DIAMOND         = 0x00000040UL,
-   // Skipped 6 bits here
+   RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080UL,
+   // Skipped 5 bits here
    RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00002000UL,
    RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00004000UL,
    RESULTFLAG__EXPAND_TO_2X3        = 0x00008000UL,
@@ -3600,8 +3607,8 @@ class expand {
       setup_kind inner_kind;
       setup_kind outer_kind;
       int rot;
-      uint32 lillivemask;
-      uint32 biglivemask;
+      uint32 lillivemask;    // Little-endian.
+      uint32 biglivemask;    // Little-endian.
       warning_index expwarning;
       warning_index norwarning;
       normalize_action action_level;
@@ -3612,9 +3619,9 @@ class expand {
 
    static void initialize();
 
-   static void compress_setup(const thing *thing, setup *stuff) THROW_DECL;
+   static void compress_setup(const thing & thing, setup *stuff) THROW_DECL;
 
-   static void expand_setup(const thing *thing, setup *stuff) THROW_DECL;
+   static void expand_setup(const thing & thing, setup *stuff) THROW_DECL;
 
    static bool compress_from_hash_table(setup *ss,
                                         normalize_action action,
@@ -3858,7 +3865,6 @@ extern SDLIB_API char *sd_version_string();                         /* In SDMAIN
 extern SDLIB_API bool query_for_call();                             /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
-extern bool sdtty_no_cursor;                                        /* in SDUI-TTY */
 extern bool sdtty_no_console;                                       /* in SDUI-TTY */
 extern bool sdtty_no_line_delete;                                   /* in SDUI-TTY */
 
@@ -4475,9 +4481,11 @@ extern void update_id_bits(setup *ss);
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
 extern void big_endian_get_directions(
-   setup *ss,
+   const setup *ss,
    uint32 & directions,
-   uint32 & livemask);
+   uint32 & livemask,
+   uint32 * high_directions_p = 0,    // These are optional, for setups larger than 16 people.
+   uint32 * high_livemask_p = 0);
 
 extern void touch_or_rear_back(
    setup *scopy,
@@ -4842,6 +4850,10 @@ extern void basic_move(
 extern void canonicalize_rotation(setup *result) THROW_DECL;
 
 extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL;
+
+extern void remove_mxn_spreading(setup *ss) THROW_DECL;
+
+extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check, bool splitting) THROW_DECL;
 
 extern bool divide_for_magic(
    setup *ss,

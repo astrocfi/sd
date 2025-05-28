@@ -79,7 +79,6 @@ int sdtty_screen_height = 0;  // The "lines" option may set this to something.
                               // Otherwise, any subsystem that sees the value zero
                               // will initialize it to whatever value it thinks best,
                               // perhaps by interrogating the OS.
-bool sdtty_no_cursor = false;
 bool sdtty_no_console = false;
 bool sdtty_no_line_delete = false;
 
@@ -181,7 +180,7 @@ void iofull::process_command_line(int *argcp, char ***argvp)
       if (strcmp(argv[argno], "-no_line_delete") == 0)
          sdtty_no_line_delete = true;
       else if (strcmp(argv[argno], "-no_cursor") == 0)
-         sdtty_no_cursor = true;
+         ;     // This is obsolete.
       else if (strcmp(argv[argno], "-no_console") == 0)
          sdtty_no_console = true;
       else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {

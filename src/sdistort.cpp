@@ -120,9 +120,9 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
 
    if (ss->kind != s2x3) fail("Internal error: Can't straighten 'Z'.");
 
-   const expand::thing *fixer =
+   const expand::thing & fixer =
       (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
-      &fix_cw : &fix_ccw;
+      fix_cw : fix_ccw;
 
    ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
    ss->cmd.cmd_misc2_flags |= CMD_MISC2__DID_Z_COMPRESSBIT << (ss->rotation & 1);
@@ -276,7 +276,7 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
  check_and_do:
    if (!eptr) goto losing;
    ss->result_flags.misc &= ~RESULTFLAG__DID_TGL_EXPANSION;
-   expand::compress_setup(eptr, ss);
+   expand::compress_setup(*eptr, ss);
    return;
 
  losing: fail("Bad ending setup for triangle-become-box.");
@@ -1044,13 +1044,13 @@ static void innards(
 
       switch (little_endian_live_mask(result)) {
       case 0xF0F0:
-         expand::compress_setup(&thingyF0F0, result);
+         expand::compress_setup(thingyF0F0, result);
 #ifndef Z_AXLE_GOES_TO_2X8
          warn(warn__check_pgram);
 #endif
          break;
       case 0x0F0F:
-         expand::compress_setup(&thingy0F0F, result);
+         expand::compress_setup(thingy0F0F, result);
 #ifndef Z_AXLE_GOES_TO_2X8
          warn(warn__check_pgram);
 #endif
@@ -1427,7 +1427,7 @@ extern void do_phantom_2x4_concept(
    if (ss->kind == s2x2 &&
        ss->cmd.prior_elongation_bits == 3 &&
        (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)) {
-      expand::expand_setup(&expand_big2x2_4x4, ss);
+      expand::expand_setup(expand_big2x2_4x4, ss);
    }
 
    // The default value.
@@ -1501,7 +1501,7 @@ extern void do_phantom_2x4_concept(
          warn(warn__split_phan_in_pgram);
 
          // Change the setup to a 4x6.
-         expand::expand_setup(&expand_2x6_4x6, ss);
+         expand::expand_setup(expand_2x6_4x6, ss);
          break;              // Note that rot is zero.
       }
       goto lose;
@@ -2596,7 +2596,7 @@ extern void distorted_move(
             p = &foo2;
          else fail("Can't find distorted 1/4 tag.");
 
-         expand::expand_setup(p, ss);
+         expand::expand_setup(*p, ss);
          warn(warn__fudgy_half_offset);
 
          // This line taken from do_matrix_expansion.  Would like to do it right.
@@ -2855,7 +2855,7 @@ extern void distorted_move(
          if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
       }
       else if (ss->kind == s4x4) {
-         expand::expand_setup(((linesp & 1) ? &s_4x4_4x6a : &s_4x4_4x6b), ss);
+         expand::expand_setup(((linesp & 1) ? s_4x4_4x6a : s_4x4_4x6b), ss);
       }
       else
          goto do_divided_call;
@@ -3014,7 +3014,7 @@ extern void triple_twin_move(
       if (parseptr->concept->arg3 != 0) tbonetest ^= 1;
 
       if (ss->kind == s4x4) {
-         expand::expand_setup(((tbonetest & 1) ? &s_4x4_4x6b : &s_4x4_4x6a), ss);
+         expand::expand_setup(((tbonetest & 1) ? s_4x4_4x6b : s_4x4_4x6a), ss);
          tbonetest = 0;
       }
 
@@ -3852,10 +3852,10 @@ extern void common_spot_move(
    if (uncommon) {
       if (the_results[0].kind == s_qtag && the_results[1].kind == s2x3 &&
           the_results[0].rotation != the_results[1].rotation)
-         expand::expand_setup(&s_2x3_qtg, &the_results[1]);
+         expand::expand_setup(s_2x3_qtg, &the_results[1]);
       else if (the_results[1].kind == s_qtag && the_results[0].kind == s2x3 &&
                the_results[0].rotation != the_results[1].rotation)
-         expand::expand_setup(&s_2x3_qtg, &the_results[0]);
+         expand::expand_setup(s_2x3_qtg, &the_results[0]);
       else if (the_results[0].kind == s2x4 && the_results[1].kind == s4x4)
          do_matrix_expansion(&the_results[0], CONCPROP__NEEDK_4X4, false);
       else if (the_results[1].kind == s2x4 && the_results[0].kind == s4x4)

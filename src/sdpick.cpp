@@ -44,9 +44,10 @@ and the following external variables:
 #include "sd.h"
 
 
+// BEWARE!!  This list must track the array "pick_type_table".
 enum pick_type {
    pick_starting_first_scan,
-   pick_plain_scan_nice_only,  // Just calls, very picky about quality.
+   pick_plain_nice_only,       // Just calls, very picky about quality.
    pick_concept_nice_only,     // Concept/call, very picky about quality.
    pick_plain_accept_all,      // Just calls, but accept anything.
    pick_concept_accept_all,    // Concept/call, accept anything.
@@ -63,9 +64,10 @@ struct pick_type_descriptor {
 };
 
 
+// BEWARE!!  This list is keyed to the definition of "pick_type".
 pick_type_descriptor pick_type_table[] = {
    { false, false, false, "pick start first scan"},  // pick_starting_first_scan
-   { true,  true,  false, "pick plain nice scan"},   // pick_plain_scan_nice_only
+   { true,  true,  false, "pick plain nice scan"},   // pick_plain_nice_only
    { true,  true,  true,  "pick concept nice scan"}, // pick_concept_nice_only
    { true,  false, false, "pick plain any scan"},    // pick_plain_accept_all
    { true,  false, true,  "pick concept any scan"},  // pick_concept_accept_all
@@ -146,7 +148,7 @@ selector_kind do_selector_iteration(bool allow_iteration)
       /* See if we have exhausted all possible selectors.
          We only look for "boys", "girls", "centers", and "ends" in the first scan. */
       if (selector_iterator_table[selector_iterator] ==
-          ((current_pick_type == pick_plain_scan_nice_only) ?
+          ((current_pick_type == pick_plain_nice_only) ?
            selector_leads :
            ((calling_level < beau_belle_level) ?
             selector_beaus :
@@ -198,10 +200,10 @@ direction_kind do_direction_iteration()
 
          /* See if we have exhausted all possible directions.
             We only look for "left" and "right" in the first scan. */
-         if (     direction_iterator_table[direction_iterator] ==
-                  ((current_pick_type == pick_plain_scan_nice_only) ?
-                   direction_in :
-                   direction_uninitialized))
+         if (direction_iterator_table[direction_iterator] ==
+             ((current_pick_type == pick_plain_nice_only) ?
+              direction_in :
+              direction_uninitialized))
             direction_iterator = 0;
       }
    }
@@ -405,7 +407,7 @@ const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_pla
          0 :
          generate_random_number(number_of_calls[parse_state.call_list_to_use]);
       resolve_scan_current_point = resolve_scan_start_point-1;
-      current_pick_type = pick_plain_scan_nice_only;
+      current_pick_type = pick_plain_nice_only;
       display_pick();
       reset_internal_iterators();
    }

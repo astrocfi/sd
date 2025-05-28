@@ -26,7 +26,6 @@ X11_FLAGS =
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
-# "-DNO_CURSES" - disable compilation with curses.
 #
 TTY_FLAGS =
 
@@ -60,8 +59,9 @@ X11_LIBS =
 # Sorry about the flaming, but I'm really tired of this.
 #
 # So we statically bind the curses library.
+# Not any more.  It's outta here!
 #
-TTY_LIBS = /usr/lib/libcurses.a
+TTY_LIBS =
 
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
           sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \

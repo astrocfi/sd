@@ -170,10 +170,7 @@ struct resolve_descriptor {
    // Each increase cuts the acceptance probability in half when searching
    // randomly.  For example, 4 means accept only 1/16 of such resolves,
    // throwing away the other 15/16.
-   // Special case: 10 means never accept such a resolve in a search.
-   // This is for really bad ones (LA from lines facing out) that we want
-   // to display when they arise while calling, but we don't want to find
-   // in a resolve command.
+   // Also, 4 or more means it will not be accepted in the "initial scan" parts of a resolve.
    short int how_bad;
    short int not_in_reconcile;   // Nonzero => do not accept in a reconcile.
    first_part_kind first_part;
@@ -1052,6 +1049,9 @@ static bool inner_search(command_kind goal,
             // against reverse single file promenades, accepting only 1 in 16.
 
             int badness = resolve_table[index].how_bad;
+
+            if (badness >= 4 && in_exhaustive_search())
+               goto not_a_solution_but_maybe_can_build_on_it;
 
             switch (get_resolve_goodness_info()) {
             case resolve_goodness_only_nice:

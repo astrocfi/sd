@@ -3321,7 +3321,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        2x3 - facing lines or back-to-back lines
                                        4x2/4x1/2x1 - [single] 8 chain or trade by
                                        (one or the other; we don't care which unless this
-                                       is a qualifier with additional modifiers.)
+                                       has additional modifiers like "in" or "out".)
                                        The 2x2/2x4/4x2 versions of these require that people
                                        not be T-boned -- they must face in or out as couples.
                                        To allow each person to be independent,
@@ -3452,10 +3452,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    split_dixie,                     2x2 - invoked with "split" for dixie style
    not_split_dixie,                 2x2 - invoked without "split" for dixie style
-   NEXT TWO ARE DISCONTINUED!!!!!   Use "in_or_out" with "in" or "out" modifier
-   8_chain,                         4x2/4x1/2x1 - [single] 8 chain
-   trade_by,                        4x2/4x1/2x1 - [single] trade by
-   LAST TWO ARE DISCONTINUED!!!!!   Use "in_or_out" with "in" or "out" modifier
    qtag_mwv,                        qtag only -- EVERYONE is in a miniwave of consistent
                                     handedness.
    qtag_mag_mwv,                    qtag only -- EVERYONE is in a miniwave, but the centers

@@ -1583,7 +1583,7 @@ static bool handle_3x4_division(
    bool really_fudged = false;
    setup sss = *ss;
 
-   expand::compress_setup(&s_qtg_3x4, &sss);
+   expand::compress_setup(s_qtg_3x4, &sss);
 
    if (ss->people[0].id1) {
       if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
@@ -3044,7 +3044,7 @@ static int divide_the_setup(
       // Maybe we should fudge to a 2x3.
       if (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) {
          setup sss = *ss;
-         expand::compress_setup(&s_short6_2x3, &sss);
+         expand::compress_setup(s_short6_2x3, &sss);
          sss.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
          move(&sss, true, result);
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
@@ -3361,7 +3361,7 @@ static int divide_the_setup(
          uint32 tbtest;
          setup sstest = *ss;
 
-         expand::expand_setup(&s_qtg_2x4, &sstest);
+         expand::expand_setup(s_qtg_2x4, &sstest);
 
          tbtest =
             sstest.people[0].id1 | sstest.people[1].id1 |
@@ -3690,7 +3690,7 @@ static int divide_the_setup(
          }
       }
 
-      if (expand_ptr) expand::compress_setup(expand_ptr, result);
+      if (expand_ptr) expand::compress_setup(*expand_ptr, result);
    }
 
    return 1;
@@ -4052,6 +4052,7 @@ foobar:
    // magically or interlockedly.  Or a similar thing with 12 matrix.
 
    // First, check for "magic" and "interlocked" stuff, and do those divisions if so.
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
    if (divide_for_magic(ss,
                         search_concepts_without_funny & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE |
                                                           INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS |

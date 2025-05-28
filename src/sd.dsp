@@ -99,6 +99,10 @@ SOURCE=.\paths.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\sd.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\resource.h
 # End Source File
 # Begin Source File

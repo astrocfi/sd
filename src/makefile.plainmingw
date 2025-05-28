@@ -22,9 +22,8 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the system-dependent part of the TTY user interface (sdui-ttu.cpp).
-# "-DNO_CURSES" - disable compilation with curses.
 #
-TTY_FLAGS =-DNO_CURSES
+TTY_FLAGS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
@@ -52,6 +51,7 @@ TTY_FLAGS =-DNO_CURSES
 # Sorry about the flaming, but I'm really tired of this.
 #
 # So we statically bind the curses library.
+# Not any more.  It's outta here!
 #
 # In fact, we statically bind all libraries, because there have been
 # other problems.  The Linux community, like the Unix community
@@ -60,7 +60,7 @@ TTY_FLAGS =-DNO_CURSES
 # to give the library pathname.
 #
 # 5 Jan 2005:  Gcc 3.2.3 under Red Hat now requires libgpm.
-TTY_LIBS = -static -lcurses -lgpm
+TTY_LIBS = -static -lgpm
 
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \

@@ -309,26 +309,26 @@ bool verify_used_selector;
 
 
 
-void expand::compress_setup(const expand::thing *thing, setup *stuff) THROW_DECL
+void expand::compress_setup(const expand::thing & thing, setup *stuff) THROW_DECL
 {
    setup temp = *stuff;
 
-   stuff->kind = thing->inner_kind;
+   stuff->kind = thing.inner_kind;
    stuff->clear_people();
-   gather(stuff, &temp, thing->source_indices, thing->size-1, thing->rot * 011);
-   stuff->rotation -= thing->rot;
+   gather(stuff, &temp, thing.source_indices, thing.size-1, thing.rot * 011);
+   stuff->rotation -= thing.rot;
    canonicalize_rotation(stuff);
 }
 
 
-void expand::expand_setup(const expand::thing *thing, setup *stuff) THROW_DECL
+void expand::expand_setup(const expand::thing & thing, setup *stuff) THROW_DECL
 {
    setup temp = *stuff;
 
-   stuff->kind = thing->outer_kind;
+   stuff->kind = thing.outer_kind;
    stuff->clear_people();
-   scatter(stuff, &temp, thing->source_indices, thing->size-1, thing->rot * 033);
-   stuff->rotation += thing->rot;
+   scatter(stuff, &temp, thing.source_indices, thing.size-1, thing.rot * 033);
+   stuff->rotation += thing.rot;
    canonicalize_rotation(stuff);
 }
 
@@ -850,19 +850,30 @@ full_expand::thing *full_expand::search_table_3(setup_kind kind,
 // Each person occupies 2 bits in the resultant masks.  The "livemask"
 // bits are both on if the person is live.
 extern void big_endian_get_directions(
-   setup *ss,
+   const setup *ss,
    uint32 & directions,
-   uint32 & livemask)
+   uint32 & livemask,
+   uint32 * high_directions_p /* = 0 */,    // These are optional, for setups larger than 16 people.
+   uint32 * high_livemask_p /* = 0 */)
 {
    directions = 0;
    livemask = 0;
+   uint32 high_directions = 0;
+   uint32 high_livemask = 0;
 
    for (int i=0; i<=attr::slimit(ss); i++) {
-      uint32 p = ss->people[i].id1;
-      directions = ((directions & 0x3FFFFFFF)<<2) | (p&3);
+      high_livemask <<= 2;
+      high_directions <<= 2;
+      high_livemask |= (livemask >> 30) & 3;
+      high_directions |= (directions >> 30) & 3;
+      directions <<= 2;
       livemask <<= 2;
-      if (p) livemask |= 3;
+      uint32 p = ss->people[i].id1;
+      if (p) { livemask |= 3 ; directions |= p & 3; }
    }
+
+   if (high_livemask_p) *high_livemask_p = high_livemask;
+   if (high_directions_p) *high_directions_p = high_directions;
 }
 
 
@@ -1221,7 +1232,7 @@ bool expand::expand_from_hash_table(setup *ss,
           (eptr->expandconcpropmask & needpropbits) &&
           (livemask & eptr->lillivemask) == 0) {
          warn(eptr->expwarning);
-         expand_setup(eptr, ss);
+         expand_setup(*eptr, ss);
          return true;
       }
    }
@@ -1257,11 +1268,11 @@ extern void do_matrix_expansion(
          if (needpropbits &
              (NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) | NEEDMASK(CONCPROP__NEEDK_4DMD))) {
             if (livemask == 0x1717UL) {
-               expand::expand_setup(&s_4x4_4dma, ss);
+               expand::expand_setup(s_4x4_4dma, ss);
                goto expanded;
             }
             else if (livemask == 0x7171UL) {
-               expand::expand_setup(&s_4x4_4dmb, ss);
+               expand::expand_setup(s_4x4_4dmb, ss);
                goto expanded;
             }
          }
@@ -1282,11 +1293,11 @@ extern void do_matrix_expansion(
             // for the twin qtag / twin diamond nature of the concept, an error
             // will be raised when the concept is executed.
             if ((livemask & 0x6060UL) != 0) {
-               expand::expand_setup(&s_4x4_4x6b, ss);
+               expand::expand_setup(s_4x4_4x6b, ss);
                goto expanded;
             }
             else if ((livemask & 0x0606UL) != 0) {
-               expand::expand_setup(&s_4x4_4x6a, ss);
+               expand::expand_setup(s_4x4_4x6a, ss);
                goto expanded;
             }
 
@@ -1298,7 +1309,7 @@ extern void do_matrix_expansion(
 
             if (ctrs != 0 && (ctrs & 011) != 011) {
                if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
-               expand::expand_setup((ctrs & 1) ? &s_4x4_4x6b : &s_4x4_4x6a, ss);
+               expand::expand_setup((ctrs & 1) ? s_4x4_4x6b : s_4x4_4x6a, ss);
                goto expanded;
             }
 #else
@@ -1307,15 +1318,15 @@ extern void do_matrix_expansion(
 
             if (ctrs != 0 && (ctrs & 011) != 011) {
                if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
-               expand::expand_setup((ctrs & 1) ? &s_4x4_4x6b : &s_4x4_4x6a, ss);
+               expand::expand_setup((ctrs & 1) ? s_4x4_4x6b : s_4x4_4x6a, ss);
                goto expanded;
             }
             else if (livemask == 0x1717UL) {
-               expand::expand_setup(&s_4x4_4x6a, ss);
+               expand::expand_setup(s_4x4_4x6a, ss);
                goto expanded;
             }
             else if (livemask == 0x7171UL) {
-               expand::expand_setup(&s_4x4_4x6b, ss);
+               expand::expand_setup(s_4x4_4x6b, ss);
                goto expanded;
             }
 #endif
@@ -3912,22 +3923,27 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
               ss->people[6].id1 | ss->people[9].id1)) goto bad;
          goto good;
       case cr_occupied_as_3x1tgl:
-         if (ssK == s_qtag) goto good;
-         if (ssK == s3x4 && !(ss->people[1].id1 | ss->people[2].id1 |
-                                   ss->people[7].id1 | ss->people[8].id1)) goto good;
-         if (ssK == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 |
-                                   ss->people[6].id1 | ss->people[9].id1)) goto good;
-         if (ssK == s3x4 && !(ss->people[1].id1 | ss->people[3].id1 |
-                                   ss->people[6].id1 | ss->people[8].id1)) goto good;
-         if (ssK == s3x4 && !(ss->people[0].id1 | ss->people[2].id1 |
-                                   ss->people[7].id1 | ss->people[9].id1)) goto good;
-         if (ssK == s2x6 && !(ss->people[0].id1 | ss->people[2].id1 |
-                                   ss->people[6].id1 | ss->people[8].id1)) goto good;
-         if (ssK == s2x6 && !(ss->people[3].id1 | ss->people[5].id1 |
-                                   ss->people[9].id1 | ss->people[11].id1)) goto good;
-         if (ssK == s2x3 && !(ss->people[0].id1 | ss->people[2].id1)) goto good;
-         if (ssK == s2x3 && !(ss->people[3].id1 | ss->people[5].id1)) goto good;
-         goto good;    // Must be evaluating a division of a 4x5 or whatever.
+         mask = little_endian_live_mask(ss);
+
+         switch (ssK) {
+         case s_qtag:
+            goto good;
+         case s3x4:
+            if (mask == 07171 || mask == 00170 || mask == 07001 ||
+                mask == 06666 || mask == 06402 || mask == 00264 ||
+                mask == 07265 || mask == 06572) goto good;
+            else goto bad;
+         case s2x6:
+            if (mask == 07272 || mask == 07002 || mask == 00270 ||
+                mask == 02727 || mask == 02007 || mask == 00720 ||
+                mask == 07722 || mask == 02277) goto good;
+            else goto bad;
+         case s2x3:
+            if (mask == 072 || mask == 027) goto good;
+            else goto bad;
+         default:
+            goto good;    // Must be evaluating a division of a 4x5 or whatever.
+         }
       case cr_reg_tbone:
          if (ssK == s2x4 && key == b_2x2) tt.assump_col = 1;
          /* **** FALL THROUGH!!!! */
@@ -4301,6 +4317,7 @@ void setup::clear_people()
 extern void clear_result_flags(setup *z)
 {
    z->result_flags.misc = 0;
+   z->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
    z->result_flags.clear_split_info();
 }
 
@@ -4414,19 +4431,19 @@ extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, set
 
    if (ss.inner.skind == s1x4) {
       static expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
-      expand::expand_setup(&exp_conc_1x8, &lineout);
+      expand::expand_setup(exp_conc_1x8, &lineout);
       static expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
-      expand::expand_setup(&exp_conc_qtg, &qtagout);
+      expand::expand_setup(exp_conc_qtg, &qtagout);
       static expand::thing exp_conc_dmd = {{1, 2, 5, 6}, 4, s1x4, s3x1dmd, 0};
-      expand::expand_setup(&exp_conc_dmd, &dmdout);
+      expand::expand_setup(exp_conc_dmd, &dmdout);
    }
    else if (ss.inner.skind == s2x2) {
       static expand::thing exp_conc_2x2a = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
       static expand::thing exp_conc_2x2b = {{6, 1, 2, 5}, 4, s2x2, s2x4, 1};
       if (ss.concsetup_outer_elongation == 1)
-         expand::expand_setup(&exp_conc_2x2a, &lineout);
+         expand::expand_setup(exp_conc_2x2a, &lineout);
       else if (ss.concsetup_outer_elongation == 2)
-         expand::expand_setup(&exp_conc_2x2b, &lineout);
+         expand::expand_setup(exp_conc_2x2b, &lineout);
       else fail("Setup is bizarre.");
    }
 
@@ -5044,12 +5061,12 @@ extern bool fix_n_results(int arity,
          // Turn the 2x4 into a qtag.
          if (z[i].people[1].id1 | z[i].people[2].id1 |
              z[i].people[5].id1 | z[i].people[6].id1) goto lose;
-         expand::compress_setup(&s_2x4_qtg, &z[i]);
+         expand::compress_setup(s_2x4_qtg, &z[i]);
       }
       else if (dmdflag && z[i].kind == s1x4) {
          // Turn the 1x4 into a diamond.
          if (z[i].people[0].id1 | z[i].people[2].id1) goto lose;
-         expand::compress_setup(&s_1x4_dmd, &z[i]);
+         expand::compress_setup(s_1x4_dmd, &z[i]);
          pointclip |= 1 << i;
       }
       else if (boxrectflag && z[i].kind == s2x2) {
@@ -5058,7 +5075,7 @@ extern bool fix_n_results(int arity,
             canonicalize_rotation(&z[i]);
          }
 
-         expand::expand_setup(&s_2x2_2x4, &z[i]);
+         expand::expand_setup(s_2x2_2x4, &z[i]);
       }
 
       canonicalize_rotation(&z[i]);
@@ -5191,7 +5208,7 @@ bool expand::compress_from_hash_table(setup *ss,
             continue;
 
          warn(cptr->norwarning);
-         expand::compress_setup(cptr, ss);
+         expand::compress_setup(*cptr, ss);
          return true;
       }
    }
@@ -5255,11 +5272,11 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    if (ss->kind == s_323) {
       if (!(ss->people[0].id1 | ss->people[2].id1 |
             ss->people[4].id1 | ss->people[6].id1)) {
-         expand::compress_setup(&s_dmd_323, ss);
+         expand::compress_setup(s_dmd_323, ss);
 
          if (action >= normalize_before_isolated_call) {
             if (ss->kind == sdmd && !(ss->people[0].id1 | ss->people[2].id1)) {
-               expand::compress_setup(&s_1x2_dmd, ss);
+               expand::compress_setup(s_1x2_dmd, ss);
             }
          }
 
@@ -5295,7 +5312,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
             ss->people[18].id1 | ss->people[17].id1 |
             ss->people[5].id1 | ss->people[6].id1 |
             ss->people[23].id1 | ss->people[12].id1)) {
-         expand::compress_setup(&s_4x4_4x6a, ss);
+         expand::compress_setup(s_4x4_4x6a, ss);
          did_something = true;
          goto startover;
       }
@@ -5339,7 +5356,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    if (!did_something && ss->kind == s3x4 &&
        !(ss->people[0].id1 | ss->people[3].id1 |
          ss->people[6].id1 | ss->people[9].id1)) {
-      expand::compress_setup(&s_qtg_3x4, ss);
+      expand::compress_setup(s_qtg_3x4, ss);
       did_something = true;
       goto startover;
    }
@@ -5350,15 +5367,15 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
       if (action >= normalize_to_2 && (livemask & 0x77) == 0) {
          // Be sure we match what the map says -- that might get checked someday.
          ss->kind = s_hrglass;
-         expand::compress_setup(&s_1x2_hrgl, ss);
+         expand::compress_setup(s_1x2_hrgl, ss);
          did_something = true;
          goto startover;
       }
       else if ((livemask & 0x33) == 0)  {
          // If normalizing before a merge (which might be from a "disconnected"),
          // and it is a real hourglass, be sure we leave space.
-         const expand::thing *t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
-            &s_dmd_hrgl_disc : &s_dmd_hrgl;
+         const expand::thing & t = (action == normalize_after_disconnected && ss->kind == s_hrglass) ?
+            s_dmd_hrgl_disc : s_dmd_hrgl;
 
          // Be sure we match what the map says -- that might get checked someday.
          ss->kind = s_hrglass;
@@ -5595,6 +5612,7 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.prior_expire_bits = 0;
    starting_setup.cmd.skippable_concept = (parse_block *) 0;
    starting_setup.cmd.skippable_heritflags = 0;
+   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_super8flags = 0;
    starting_setup.cmd.restrained_do_as_couples = false;
@@ -5745,8 +5763,11 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = (call_with_name *) 0;
    starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
+   starting_setup.result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
+   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0;
    move(&starting_setup, false, &newhist.state);
    newhist.state_is_valid = true;
+   remove_mxn_spreading(&newhist.state);
    remove_tgl_distortion(&newhist.state);
 
    if (newhist.state.kind == s1p5x8)

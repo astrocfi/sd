@@ -547,6 +547,21 @@ If something like @strong{boys trade} doesn't work when typed together, try
 typing the @strong{boys} designator, pressing @strong{<ENTER>}, and then typing
 the @strong{trade} call.
 
+@unnumberedsec Using Sd, I clicked on @strong{centers} and then @strong{squeeze}, and it didn't work.  Why?
+
+The call to click on is @strong{<ANYONE> squeeze}, followed by @strong{centers}.
+
+Squeeze is a call that takes a designator, telling those people to do it.  The difference between
+that and the use of the @strong{centers} concept with the plain call @strong{squeeze} is rather
+subtle.  Humans may have no trouble knowing what to do, but Sd has a difficult time with it.
+There are other calls (like @strong{trade}) that have a similar problem.  You must use the
+@strong{<ANYONE> squeeze} call.
+
+It is much simpler just to type "centers squeeze".  The parser in Sdtty and Sd is designed to
+resolve ambiguities such as this; the menu mechanism of Sd can't do it.  Even if you are using
+Sd and prefer the mouse-and-menu mechanism, typing what you want is a good way to proceed when
+problems like this arise.
+
 @unnumberedsec How can I use the @strong{two-faced} concept?
 
 It isn't clear that this is actually something that needs to be

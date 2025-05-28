@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2006  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -18,7 +18,7 @@
 //    along with Sd; if not, write to the Free Software Foundation, Inc.,
 //    59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 //
-//    This is for version 36.
+//    This is for version 37.
 
 // These are written as the first two halfwords of the binary database file.
 // The format version is not related to the version of the program or database.
@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 255
+#define DATABASE_FORMAT_VERSION 256
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -40,6 +40,7 @@ enum base_call_index {
    base_call_basetag0_noflip,
    base_call_flip,
    base_call_armturn_34,
+   base_call_armturn_n4,
    base_call_ends_shadow,
    base_call_chreact_1,
    base_call_makepass_1,
