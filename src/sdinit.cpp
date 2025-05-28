@@ -1258,6 +1258,9 @@ extern void prepare_to_read_menus()
    else if (NUM_QUALIFIERS > 125)
       gg->fatal_error_exit(1, "Insufficient qualifier space",
                            "program has been compiled incorrectly.");
+   else if (NUM_PLAINMAP_KINDS > 252)
+      gg->fatal_error_exit(1, "Insufficient mapkind space",
+                           "program has been compiled incorrectly.");
 
    // We need to take away the "zig-zag" directions if the level is below A2.
 

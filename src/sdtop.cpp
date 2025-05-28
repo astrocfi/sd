@@ -722,7 +722,7 @@ extern void update_id_bits(setup *ss)
       if (livemask == 06666UL || livemask == 06363UL || livemask == 07272UL)
          ptr = id_bit_table_3ptpd;
       break;
-   case shsqtag:
+   case s_hsqtag:
       // Only allow it if outer pairs are together.
       if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
       break;
@@ -1639,6 +1639,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {2}, {0}, {0}, true, chk_groups},
    {s2x4, cr_couples_only, 2, {0, 2, 4, 6, 1, 3, 5, 7},
     {4}, {0}, {0}, true, chk_groups},
+   {s3x4, cr_couples_only, 2, {0, 2, 4, 6, 8, 10, 1, 3, 5, 7, 9, 11},
+    {6}, {0}, {0}, true, chk_groups},
    {s2x4, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
     {4}, {0}, {0}, true, chk_anti_groups},
    {s_qtag, cr_wave_only, 4, {6, 7, 3, 2},
@@ -3270,7 +3272,7 @@ extern void specialfail(const char s[]) THROW_DECL
 
 extern void warn(warning_index w)
 {
-   if (w == warn__none) return;
+   if (w == warn__none || w == warn__really_no_collision) return;
 
    // If this is an "each 1x4" type of warning, and we already have
    // such a warning, don't enter the new one.  The first one takes precedence.
@@ -3287,7 +3289,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
    for (callarray *p = spec ; p ; p = p->next) {
       uint32 i, k, t, u, w, mask;
       assumption_thing tt;
-      int idx, plaini;
+      int plaini;
       bool booljunk;
 
       // First, we demand that the starting setup be correct.
@@ -3377,8 +3379,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       tt.assump_live = (p->qualifierstuff / QUALBIT__LIVE) & 1;
       tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
 
-      for (idx=0,u=0 ; idx<=attr::slimit(ss) ; idx++)
-         u |= ss->people[idx].id1;
+      u = or_all_people(ss);
 
       switch (this_qualifier) {
       case cr_wave_only:
@@ -3504,7 +3505,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
                                               in the future. */
 
          switch (ssK) {
-         case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
+         case s1x2: case s1x4: case s1x6: case s3x4: case s1x8: case s1x16: case s2x4:
          case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
          case s2x2: case s_alamo:
             goto fix_col_line_stuff;
@@ -4118,7 +4119,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          /* FALL THROUGH!!! */
       case s1x6: case s1x8: case s1x10:
       case s1x12: case s1x14: case s1x16:
-      case s2x2: case s4x4: case s_thar: case s_crosswave: case s_qtag:
+      case s2x2: case s3x4: case s4x4: case s_thar: case s_crosswave: case s_qtag:
       case s3x1dmd: case s_2x1dmd: case sbigdmd:
       case s_trngl: case s_bone: case s_alamo:
          /* FELL THROUGH!!! */

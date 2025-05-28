@@ -52,19 +52,19 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
    result->rotation &= 3;
 
    if (result->kind == s1x1) {
-      (void) copy_rot(result, 0, result, 0, (result->rotation) * 011);
+      copy_rot(result, 0, result, 0, (result->rotation) * 011);
       result->rotation = 0;
    }
    else if (result->kind == s_normal_concentric) {
-      int i, save_rotation;
+      int i;
 
-      if (     result->inner.skind == s_normal_concentric ||
-               result->outer.skind == s_normal_concentric ||
-               result->inner.skind == s_dead_concentric ||
-               result->outer.skind == s_dead_concentric)
+      if (result->inner.skind == s_normal_concentric ||
+          result->outer.skind == s_normal_concentric ||
+          result->inner.skind == s_dead_concentric ||
+          result->outer.skind == s_dead_concentric)
          fail("Recursive concentric?????.");
 
-      save_rotation = result->rotation;
+      int save_rotation = result->rotation;
 
       result->kind = result->inner.skind;
       result->rotation += result->inner.srotation;
@@ -142,7 +142,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->rotation = 0;
    }
-   else if (result->kind == s_trngl4) {
+   else if (result->kind == s_trngl || result->kind == s_trngl4) {
    }
    else if (result->kind == s1x3) {
       if (result->rotation & 2) {
@@ -150,9 +150,9 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          // Must turn this setup upside-down.
 
          result->swap_people(0, 2);
-         (void) copy_rot(result, 0, result, 0, 022);
-         (void) copy_rot(result, 1, result, 1, 022);
-         (void) copy_rot(result, 2, result, 2, 022);
+         copy_rot(result, 0, result, 0, 022);
+         copy_rot(result, 1, result, 1, 022);
+         copy_rot(result, 2, result, 2, 022);
       }
       result->rotation &= 1;
    }
@@ -164,16 +164,16 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
          // Must turn this setup upside-down.
 
-         int i, offs;
-
-         offs = (attr::slimit(result)+1) >> 1;     // Half the setup size.
+         int offs = (attr::slimit(result)+1) >> 1;     // Half the setup size.
+         int i;
 
          for (i=0; i<offs; i++) {
             result->swap_people(i, i+offs);
-            (void) copy_rot(result, i, result, i, 022);
-            (void) copy_rot(result, i+offs, result, i+offs, 022);
+            copy_rot(result, i, result, i, 022);
+            copy_rot(result, i+offs, result, i+offs, 022);
          }
       }
+
       result->rotation &= 1;
    }
 }
@@ -212,7 +212,7 @@ extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL
    // If we turned by 90 degrees, we have to to swap the "split_info" fields.
 
    if (globalrotation & 1)
-      result->result_flags.swap_fields();
+      result->result_flags.swap_split_info_fields();
 
    canonicalize_rotation(result);
 }
@@ -1123,7 +1123,7 @@ static int start_matrix_call(
    for (i=0; i<=attr::slimit(ss); i++) {
       if (ss->people[i].id1) {
          if (nump == 8) fail("?????too many people????");
-         (void) copy_person(people, nump, ss, i);
+         copy_person(people, nump, ss, i);
 
          matrix_info[nump].nicex = nicethingyptr->xca[i];
          matrix_info[nump].nicey = nicethingyptr->yca[i];
@@ -1317,8 +1317,10 @@ static const checkitem checktable[] = {
     {-11, 0, -9, 0, -7, 0, -5, 0, 0, 9, 0, 6, 0, 5, 0, 2,
     11, 0, 9, 0, 7, 0, 5, 0, 0, -9, 0, -6, 0, -5, 0, -2}},
 
-   {0x00570067, 0x03100084, shsqtag, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00570057, 0x03100084, shsqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570067, 0x03100084, s_hsqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570057, 0x03100084, s_hsqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00750067, 0x28008200, s_dmdlndmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950067, 0x28008200, s_dmdlndmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00550067, 0x08410200, s_qtag, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1330,6 +1332,7 @@ static const checkitem checktable[] = {
    {0x00950057, 0x20008620, swhrglass, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660073, 0x00098006, sdeep2x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A60055, 0x09000480, s3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A30055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A70055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00770055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00730055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1436,11 +1439,11 @@ static const checkitem checktable[] = {
    {0x00A20066, 0x09084042, sbigptpd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A20026, 0x414C0032, sdblspindle, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01220026, 0x414C0032, sdblspindle, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950063, 0x01080C60, shqtag, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930067, 0x01080C60, shqtag, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970067, 0x01080C60, shqtag, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970057, 0x01080C60, shqtag, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930057, 0x01080C60, shqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950063, 0x01080C60, s_hqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930067, 0x01080C60, s_hqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00970067, 0x01080C60, s_hqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00970057, 0x01080C60, s_hqtag, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930057, 0x01080C60, s_hqtag, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00970055, 0x114008A0, sbighrgl,  0, warn__none, (const coordrec *) 0, {127}},
    {0x00E70026, 0x20440230, sbigdhrgl, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00510062, 0x02000004, s2x4, 1, warn__none, (const coordrec *) 0,
@@ -1511,7 +1514,7 @@ static void finish_matrix_call(
       x = matrix_info[i].x;
       y = matrix_info[i].y;
 
-      /* Compute new max, parity, and signature info. */
+      // Compute new max, parity, and signature info.
 
       if ((x < 0) || ((x == 0) && (y < 0))) { x = -x; y = -y; }
       signature |= 1 << ((31000 + 12*x - 11*y) % 31);
@@ -3703,7 +3706,7 @@ extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DE
          result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_ON;
    }
    else {
-      (void) check_restriction(ss, ss->cmd.cmd_assume, false, 99);
+      check_restriction(ss, ss->cmd.cmd_assume, false, 99);
       move(ss, false, result);
       result->result_flags.misc |= RESULTFLAG__ACTIVE_PHANTOMS_OFF;
    }
@@ -4434,8 +4437,8 @@ static void do_sequential_call(
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;
 
       if (this_mod1 & DFM1_SEQ_REPEAT_N_ALTERNATE)
-         (void) get_real_subcall(parseptr, alt_item, &foobar,
-                                 callspec, false, extra_heritmask_bits, &foo2);
+         get_real_subcall(parseptr, alt_item, &foobar,
+                          callspec, false, extra_heritmask_bits, &foo2);
 
       // We also re-evaluate if the invocation flag "seq_re_evaluate" is on.
 
@@ -4824,31 +4827,35 @@ static bool do_misc_schema(
          if (ss->people[0].id1) {
             if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
          }
-         else (void) copy_person(ss, 0, ss, 1);
+         else
+            copy_person(ss, 0, ss, 1);
 
          if (ss->people[3].id1) {
             if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-            else (void) copy_person(ss, 1, ss, 3);
+            else copy_person(ss, 1, ss, 3);
          }
-         else (void) copy_person(ss, 1, ss, 2);
+         else
+            copy_person(ss, 1, ss, 2);
 
-         (void) copy_person(ss, 2, ss, 4);
-         (void) copy_person(ss, 3, ss, 5);
+         copy_person(ss, 2, ss, 4);
+         copy_person(ss, 3, ss, 5);
 
          if (ss->people[6].id1) {
             if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-            else (void) copy_person(ss, 4, ss, 6);
+            else copy_person(ss, 4, ss, 6);
          }
-         else (void) copy_person(ss, 4, ss, 7);
+         else
+            copy_person(ss, 4, ss, 7);
 
          if (ss->people[9].id1) {
             if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-            else (void) copy_person(ss, 5, ss, 9);
+            else copy_person(ss, 5, ss, 9);
          }
-         else (void) copy_person(ss, 5, ss, 8);
+         else
+            copy_person(ss, 5, ss, 8);
 
-         (void) copy_person(ss, 6, ss, 10);
-         (void) copy_person(ss, 7, ss, 11);
+         copy_person(ss, 6, ss, 10);
+         copy_person(ss, 7, ss, 11);
 
          ss->kind = s_qtag;
          ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
@@ -4857,15 +4864,15 @@ static bool do_misc_schema(
                (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
                (the_schema == schema_in_out_triple ||
                 the_schema == schema_in_out_triple_squash)) {
-         /* Or change from qtag to 3x4 if schema requires same. */
-         (void) copy_person(ss, 11, ss, 7);
-         (void) copy_person(ss, 10, ss, 6);
-         (void) copy_person(ss, 8, ss, 5);
-         (void) copy_person(ss, 7, ss, 4);
-         (void) copy_person(ss, 5, ss, 3);
-         (void) copy_person(ss, 4, ss, 2);
-         (void) copy_person(ss, 2, ss, 1);
-         (void) copy_person(ss, 1, ss, 0);
+         // Or change from qtag to 3x4 if schema requires same.
+         copy_person(ss, 11, ss, 7);
+         copy_person(ss, 10, ss, 6);
+         copy_person(ss, 8, ss, 5);
+         copy_person(ss, 7, ss, 4);
+         copy_person(ss, 5, ss, 3);
+         copy_person(ss, 4, ss, 2);
+         copy_person(ss, 2, ss, 1);
+         copy_person(ss, 1, ss, 0);
          ss->clear_person(0);
          ss->clear_person(3);
          ss->clear_person(6);
@@ -5970,7 +5977,7 @@ static void move_with_real_call(
             if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
 
                // Otherwise, we allow the fraction "1/2" to be given, if the top-level
-               // heritablilty flag allows it.  We turn the fraction into a "final concept".
+               // heritability flag allows it.  We turn the fraction into a "final concept".
 
                if (ss->cmd.cmd_fraction.is_firsthalf()) {
                   ss->cmd.cmd_fraction.set_to_null();

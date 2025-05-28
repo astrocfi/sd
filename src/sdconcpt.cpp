@@ -2533,9 +2533,7 @@ static void do_concept_once_removed(
          map_code = MAPCODE(s_trngl,2,MPKIND__REMOVED,1);
          break;
       case s_ptpd:
-         /* It's too bad we can't use the "MAPCODE" mechanism here.  Maybe can fix,
-            since the stuff in "innards" is fussing with these anyway. */
-         map_code = spcmap_p8_tgl4;
+         map_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROPREM,1);
          break;
       case s_spindle:
          map_code = spcmap_spndle_once_rem;
@@ -3280,6 +3278,9 @@ static void do_concept_crazy(
       if ((i ^ reverseness) & 1) {
          // Do it in the center.  The -1 for arg 4 makes it
          // preserve roll information for the inactives.
+         // But we might be doing a "finally 1/2 crazy central little more".
+         // We need to clear the splitting bits when doing it in the center.
+         tempsetup.cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
          selective_move(&tempsetup, parseptr, selective_key_plain,
                         -1, 0, 0, selector_center4, false, result);
       }
@@ -4839,7 +4840,7 @@ static void do_concept_inner_outer(
             else                      fail("There are no triple columns here.");
          }
          goto ready;
-      case sbigh: case sbigx: case sbigdmd: case sbigbone:
+      case sbigh: case sbigx: case s_dmdlndmd: case sbigdmd: case sbigbone:
          goto verify_clw;
       }
 
@@ -4855,7 +4856,7 @@ static void do_concept_inner_outer(
             else                      fail("There are no triple columns here.");
          }
          goto ready;
-      case sbigh: case sbigx: case sbigrig: case shsqtag: case sbig3x1dmd: case sbig1x3dmd:
+      case sbigh: case sbigx: case sbigrig: case s_hsqtag: case sbig3x1dmd: case sbig1x3dmd:
          goto verify_clw;
       }
 
@@ -4988,7 +4989,7 @@ static void do_concept_inner_outer(
       // Center triple diamond.
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
-      case shsqtag: case s_hrglass: case s_dhrglass: case sbighrgl: case sbigdhrgl:
+      case s_hsqtag: case s_hrglass: case s_dhrglass: case sbighrgl: case sbigdhrgl:
       case sbig3x1dmd: case sbig1x3dmd:
          goto ready;
       }
@@ -4997,7 +4998,7 @@ static void do_concept_inner_outer(
    case 8+5:
       // Outside triple diamonds.
       switch (ss->kind) {
-      case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
+      case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s_dmdlndmd: case s3x1dmd: case s1x3dmd:
          goto ready;
       }
 
@@ -5414,7 +5415,7 @@ static void do_concept_triple_formations(
       do_matrix_expansion(&tempsetup, need_prop, false);
 
       if (tempsetup.kind != sbig3x1dmd && tempsetup.kind != sbig1x3dmd &&
-          tempsetup.kind != shsqtag)
+          tempsetup.kind != s_hsqtag && tempsetup.kind != s_dmdlndmd)
          fail("Can't do this concept in this setup.");
       break;
    default:

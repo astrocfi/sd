@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 241
+#define DATABASE_FORMAT_VERSION 243
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -330,6 +330,8 @@ enum setup_kind {
    sd2x5,
    s_ntrgl6cw,
    s_ntrgl6ccw,
+   s_nftrgl6cw,
+   s_nftrgl6ccw,
    s_ntrglcw,
    s_ntrglccw,
    s_nptrglcw,
@@ -363,8 +365,9 @@ enum setup_kind {
    s4dmd,
    s3ptpd,
    s4ptpd,
-   shsqtag,
-   shqtag,
+   s_hsqtag,
+   s_dmdlndmd,
+   s_hqtag,
    s_wingedstar,
    s_wingedstar12,
    s_wingedstar16,
@@ -820,6 +823,7 @@ enum calldef_schema {
    schema_1313_concentric,       // Not for public use!
    schema_1221_concentric,
    schema_concentric_diamond_line,
+   schema_concentric_lines_z,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
    schema_concentric_zs,

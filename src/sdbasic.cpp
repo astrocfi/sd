@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2005  William B. Ackerman.
+//    Copyright (C) 1990-2006  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -113,32 +113,32 @@ typedef struct {
 } collision_map;
 
 static collision_map collision_map_table[] = {
-   /* These items handle various types of "1/2 circulate" calls from 2x4's. */
+   // These items handle various types of "1/2 circulate" calls from 2x4's.
 
    {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s_crosswave, s1x8,        0, warn__none, 0},   // from lines out
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // from lines out
    {2, 0x000000, 0x11, 0x11, {0, 4},               {0, 5},                {1, 4},
-    s_crosswave, s1x8,        0, warn__none, 0},   // from lines out, only ends exist
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // from lines out, only ends exist
    {2, 0x000000, 0x22, 0x22, {1, 5},               {3, 6},                {2, 7},
-    s_crosswave, s1x8,        0, warn__none, 3},   // from lines out, only centers exist
+    s_crosswave, s1x8,        0, warn__really_no_collision, 3},   // from lines out, only centers exist
    {2, 0x000000, 0x30, 0x30, {4, 5},               {5, 6},                {4, 7},
-    s_crosswave, s1x8,        0, warn__none, 0},   // more of same
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},   // more of same
    {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 3},                {1, 2},
-    s_crosswave, s1x8,        0, warn__none, 0},
+    s_crosswave, s1x8,        0, warn__really_no_collision, 0},
 
    {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s_crosswave, s1x8,        1, warn__none, 0},   // from lines in
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // from lines in
    {2, 0x044044, 0x44, 0x44, {2, 6},               {0, 5},                {1, 4},
-    s_crosswave, s1x8,        1, warn__none, 0},   // from lines in, only ends exist
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // from lines in, only ends exist
    {2, 0x088088, 0x88, 0x88, {3, 7},               {3, 6},                {2, 7},
-    s_crosswave, s1x8,        1, warn__none, 2},   // from lines in, only centers exist
+    s_crosswave, s1x8,        1, warn__really_no_collision, 2},   // from lines in, only centers exist
    {2, 0x0C00C0, 0xC0, 0xC0, {6, 7},               {5, 6},                {4, 7},
-    s_crosswave, s1x8,        1, warn__none, 0},   // more of same
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},   // more of same
    {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {0, 3},                {1, 2},
-    s_crosswave, s1x8,        1, warn__none, 0},
+    s_crosswave, s1x8,        1, warn__really_no_collision, 0},
 
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},
-    s1x4,        s1x8,        0, warn__none, 0},   // more of same
+    s1x4,        s1x8,        0, warn__really_no_collision, 0},   // more of same
 
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none, 0},   // from trade by
    {2, 0x022022, 0x22, 0x22, {1, 5},               {2, 7},                {3, 6},                 s_spindle,   s_crosswave, 0, warn__none, 1},   // from trade by with no ends
@@ -231,19 +231,19 @@ static collision_map collision_map_table[] = {
    {4, 0x000000, 0x33, 0x033, {0, 1, 4, 5},        {0, 2, 9, 11},         {1, 3, 8, 10},          s2x4,        s2x8,        0, warn_bad_collision, 0},
    {4, 0x000000, 0xCC, 0x0CC, {2, 3, 6, 7},        {4, 6, 13, 15},        {5, 7, 12, 14},         s2x4,        s2x8,        0, warn_bad_collision, 0},
 
-   /* These items handle various types of "1/2 circulate" calls from 2x2's. */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none, 0},   /* from couples out if it went to diamond */
-   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    sdmd,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    sdmd,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from couples out if it went to line */
-   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    s1x4,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    s1x4,        s1x4,        0, warn__none, 0},   /* same, but with missing people */
-   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1, warn__none, 0},   /* from couples in if it went to diamond */
-   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from couples in if it went to line */
-   {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from "head pass thru, all split circulate" */
-   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from "head pass thru, all split circulate" */
-   {3, 0x000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},              s1x4,        s1x4,        0, warn__none, 0},   /* from nasty T-bone */
-   {3, 0x000000, 0x0D, 0x01, {0, 2, 3},            {0, 2, 3},             {1, 2, 3},              s1x4,        s1x4,        0, warn__none, 0},   /* from nasty T-bone */
+   // These items handle various types of "1/2 circulate" calls from 2x2's.
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0, warn__none, 0},                  // From couples out if it went to diamond.
+   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    sdmd,        s1x4,        0, warn__none, 0},                  // Same, but with missing people.
+   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    sdmd,        s1x4,        0, warn__none, 0},                  // same, but with missing people.
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__really_no_collision, 0},   // From couples out if it went to line.
+   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    s1x4,        s1x4,        0, warn__really_no_collision, 0},   // Same, but with missing people.
+   {1, 0x000000, 0x04, 0x04, {2},                  {3},                   {2},                    s1x4,        s1x4,        0, warn__really_no_collision, 0},   // Same, but with missing people.
+   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1, warn__none, 0},                  // From couples in if it went to diamond.
+   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__really_no_collision, 0},   // From couples in if it went to line.
+   {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
+   {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
+   {3, 0x000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},              s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
+   {3, 0x000000, 0x0D, 0x01, {0, 2, 3},            {0, 2, 3},             {1, 2, 3},              s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
    /* These items handle "1/2 split trade circulate" from 2x2's.
       They also do "switch to a diamond" when the ends come to the same spot in the center. */
    {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn_bad_collision, 0},
@@ -387,13 +387,13 @@ void collision_collector::install_with_collision(
       else if (callflags1 & CFLAG1_ENDS_TAKE_RIGHT_HANDS)
          // If the specific violation was that "ends take right hands" was on, but
          // the centers are taking right hands, it is extremely serious.
-         collision_appears_illegal |= 4;
+         m_collision_appears_illegal |= 4;
       else
          // Otherwise it is serious.
-         collision_appears_illegal |= 2;
+         m_collision_appears_illegal |= 2;
    }
 
-   (void) copy_rot(result, destination, sourcepeople, sourceplace, rot);
+   copy_rot(result, destination, sourcepeople, sourceplace, rot);
 }
 
 
@@ -460,8 +460,8 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
          if (c_map_ptr->warning == warn_bad_collision)
             goto win;   // Entries with this warning always know exactly what they are doing.
 
-         if ((collision_appears_illegal & 6) ||
-             ((collision_appears_illegal & 1) &&
+         if ((m_collision_appears_illegal & 6) ||
+             ((m_collision_appears_illegal & 1) &&
               (c_map_ptr->assume_key & 0x80000000)))
             continue;
          else
@@ -474,12 +474,12 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
 
  win:
 
-   if ((collision_appears_illegal & 4) &&
+   if ((m_collision_appears_illegal & 4) &&
        c_map_ptr->warning == warn_bad_collision)
       warn(warn_very_bad_collision);
 
-   if ((collision_appears_illegal & 2) ||
-       ((collision_appears_illegal & 1) && (c_map_ptr->assume_key & 0x80000000)) ||
+   if ((m_collision_appears_illegal & 2) ||
+       ((m_collision_appears_illegal & 1) && (c_map_ptr->assume_key & 0x80000000)) ||
        c_map_ptr->warning != warn_bad_collision)
       warn(c_map_ptr->warning);
 
@@ -492,7 +492,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    else {
       if (cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
          warn(warn__take_left_hands);
-      else
+      else if (c_map_ptr->warning != warn__really_no_collision)
          warn(warn__take_right_hands);
    }
 
@@ -565,6 +565,7 @@ static void install_person_in_matrix(int x, int y, int doffset,
    if (place < 0 || (optr->xca[place] != x) || (optr->yca[place] != y))
       fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
+   // Switch the stable bits.
    uint32 n = temp_p->id1;
    uint32 t = (0 - (n & (STABLE_VBIT*7))) & (STABLE_VBIT*7);
    uint32 z = (n & ~(STABLE_VBIT*7)) | t;
@@ -614,7 +615,7 @@ void mirror_this(setup *s) THROW_DECL
       if (s->kind == s_trngl4) {
          if (s->rotation & 1) {
             s->rotation += 2;
-            for (i=0; i<4; i++) (void) copy_rot(s, i, s, i, 022);
+            for (i=0; i<4; i++) copy_rot(&temp, i, &temp, i, 022);
             cptr = &tgl4_1;
          }
          else
@@ -623,7 +624,7 @@ void mirror_this(setup *s) THROW_DECL
       else if (s->kind == s_trngl) {
          if (s->rotation & 1) {
             s->rotation += 2;
-            for (i=0; i<3; i++) (void) copy_rot(s, i, s, i, 022);
+            for (i=0; i<3; i++) copy_rot(&temp, i, &temp, i, 022);
             cptr = &tgl3_1;
          }
          else
@@ -2752,6 +2753,14 @@ static int divide_the_setup(
                               calldeflist, matrix_aware))
          goto divide_us_no_recompute;
       break;
+   case s_nftrgl6cw:
+      // The only legal thing we can do here is split into two triangles.
+      division_code = MAPCODE(s_trngl,2,MPKIND__OFFS_R_HALF,0);
+      goto divide_us_no_recompute;
+   case s_nftrgl6ccw:
+      // The only legal thing we can do here is split into two triangles.
+      division_code = MAPCODE(s_trngl,2,MPKIND__OFFS_L_HALF,0);
+      goto divide_us_no_recompute;
    case s_qtag:
       if (assoc(b_dmd, ss, calldeflist) ||
           assoc(b_pmd, ss, calldeflist)) {

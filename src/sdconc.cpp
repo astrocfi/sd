@@ -1135,10 +1135,17 @@ static calldef_schema concentrify(
          warn(warn_big_outer_triangles);
          analyzer = schema_concentric_big2_6;
          analyzer_result = schema_concentric_big2_6;
-         // Warning!  Fall through!
-      case s3dmd:
-         // Warning!  Fell through!
          if (livemask != 04747)
+            fail("Can't find centers and ends in this formation.");
+         break;
+      case s3dmd:
+         // Occupations 7171 and 7474 will go to s_nftrgl6cw or s_nftrgl6ccw, respectively.
+         if (livemask != 04747 && livemask != 07171 && livemask != 07474)
+            fail("Can't find centers and ends in this formation.");
+         break;
+      case s_dmdlndmd:
+         // Occupations 6565 and 7474 will go to s_nftrgl6cw or s_nftrgl6ccw, respectively.
+         if (livemask != 06565 && livemask != 07474)
             fail("Can't find centers and ends in this formation.");
          break;
       default:
@@ -1203,6 +1210,8 @@ static calldef_schema concentrify(
    case schema_concentric_or_diamond_line:
       if (ss->kind == s3x1dmd)
          analyzer_result = schema_concentric_diamond_line;
+      else if (ss->kind == s3x4 && (livemask == 0xAEB || livemask == 0xB6D))
+         analyzer_result = schema_concentric_lines_z;
       else
          analyzer_result = schema_concentric;
       break;

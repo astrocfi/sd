@@ -5,7 +5,7 @@ Doing so would cause it to be included in the "do_pack" script.
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 27 Feb 2005.
+        Last modified 9 Feb 2006.
 
 -----------------------------------------------------------------
 
@@ -40,6 +40,7 @@ put a better (i.e. real cygwin) version in there.
 Go to sddoc directory and do:
 
     setmingw
+    settex
     clean clean
     do_plain
     do_ps

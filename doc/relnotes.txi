@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <20 Nov 2005 wba>
+@c Time-stamp: <7 Jan 2006 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.63
-@set title2 Database version = 36.63 format = 240
+@set title1 RELEASE NOTES FOR VERSION 36.64
+@set title2 Database version = 36.64 format = 243
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.64::
 * 36.63::
 * 36.62::
 * 36.61::
@@ -66,7 +67,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.63, Top, (dir)
+@node Intro, 36.64, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -74,14 +75,60 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2005 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2006 William B. Ackerman
 @sp 3
 @menu
-* 36.63::               Changes in the current version
+* 36.64::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.63, 36.62, Intro, Top
+@node 36.64, 36.63, Intro, Top
+@unnumberedsec Version 36.64 changes
+
+The way numbers are handled was modified.  Numbers can be as high as 36.
+The fraction given in the @strong{crazy} concept need not be a multiple
+of 1/4.  Fractions can operate on the individual quarters of parts of a
+call defined with things like @strong{cast off 3/4}, so that it is
+possible to do things like @strong{8/9 remake the wave} or @strong{7/15
+swing the fractions} or @strong{17/36 crazy any hand remake}.
+
+It is legal to stack @strong{split phantom CLW} concepts with
+@strong{triple boxes} or @strong{quadruple boxes}.  Other combinations,
+such as @strong{split phantom lines split phantom columns}
+are still forbidden, because they would expand phantoms on top of
+each other.
+
+The call @strong{strike out} can be fractionalized, because @strong{detour}
+can be fractionalized.
+
+Various bugs were fixed, in such things as @strong{finally 1/2 crazy central
+little more}, @strong{1x3 cast off}, @strong{initially checkpoint recoil by sidetrack},
+@strong{scatter reach out} from T-bones, @strong{straight central interlocked little},
+and @strong{lines [Z axle] thru}.
+
+Collisions that occur on reasonably straightforward @strong{1/2 circulate} calls
+will not raise the "take right hands" warning.  This applies to calls like
+@strong{tally ho} and @strong{team up}.
+
+More resolves are recognized.
+
+It is permissible to spell the call @strong{lockit} as @strong{lock it}.
+
+The calls @strong{any hand grand 1/4 cross} and @strong{any hand grand 3/4 cross}
+have been moved to level C3X.
+
+The concepts @strong{center phantom columns} and @strong{outside phantom columns}
+have been moved to level C3.
+
+New concept: @strong{<anyone> in your trapezoid}.  This is typically
+used in unsymmetrical setups.
+
+The installation procedure should do a better job of installing on various
+varieties of Windows systems.  It reads the registry to determine where to
+place startup icons.
+
+@c ************
+@node 36.63, 36.62, 36.64, Top
 @unnumberedsec Version 36.63 changes
 
 The @strong{solid <fractional> twosome} and @strong{twosome <fractional>

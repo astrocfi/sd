@@ -1506,7 +1506,7 @@ struct resultflag_rec {
    inline void copy_split_info(const resultflag_rec & rhs)
    { split_info[0] = rhs.split_info[0]; split_info[1] = rhs.split_info[1]; }
 
-   inline void swap_fields()
+   inline void swap_split_info_fields()
    {
       uint16 temp = split_info[0];
       split_info[0] = split_info[1];
@@ -1514,9 +1514,9 @@ struct resultflag_rec {
    }
 };
 
-/* Warning!  Do not rearrange these fields without good reason.  There are data
-   initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
-   (startinfolist) that would need to be rewritten. */
+// Warning!  Do not rearrange these fields without good reason.  There are data
+// initializers instantiating these in sdinit.cpp (test_setup_*) and in sdtables.cpp
+// (startinfolist) that would need to be rewritten.
 struct setup {
    setup_kind kind;
    int rotation;
@@ -2179,6 +2179,7 @@ struct ctr_end_mask_rec {
 // BEWARE!!  This list must track the array "warning_strings" in sdtables.cpp
 enum warning_index {
    warn__none,
+   warn__really_no_collision,
    warn__do_your_part,
    warn__tbonephantom,
    warn__awkward_centers,
@@ -4188,10 +4189,13 @@ enum mpkind {
    MPKIND__MAGICINTLKDMD,
    MPKIND__NONISOTROPIC,
    MPKIND__NONISOTROP1,
+   MPKIND__NONISOTROPREM,
    MPKIND__OFFS_L_ONEQ,
    MPKIND__OFFS_R_ONEQ,
    MPKIND__OFFS_L_HALF,
    MPKIND__OFFS_R_HALF,
+   MPKIND__OFFS_L_HALF_NONISO,
+   MPKIND__OFFS_R_HALF_NONISO,
    MPKIND__OFFS_L_THRQ,
    MPKIND__OFFS_R_THRQ,
    MPKIND__OFFS_L_FULL,
@@ -4238,7 +4242,8 @@ enum mpkind {
    MPKIND__BENT7CW,
    MPKIND__BENT7CCW,
    MPKIND__SPEC_ONCEREM,
-   MPKIND__SPEC_TWICEREM
+   MPKIND__SPEC_TWICEREM,
+   NUM_PLAINMAP_KINDS   // End mark; not really in the enumeration.
 };
 
 // See sdtables.cpp (search for "map_thing") for extensive discussion
@@ -4332,11 +4337,8 @@ enum specmapkind {
    spcmap_emergency1,
    spcmap_emergency2,
    spcmap_fix_triple_turnstyle,
-   spcmap_p8_tgl4,
    spcmap_spndle_once_rem,
    spcmap_1x3dmd_once_rem,
-   spcmap_lh_zzztgl,
-   spcmap_rh_zzztgl,
    spcmap_2x2v,
    spcmap_2x4_magic,
    spcmap_ptp_magic,
@@ -4478,7 +4480,7 @@ public:
       m_force_mirror_warn(false),
       m_doing_half_override(false),
       cmd_misc_flags(0),
-      collision_appears_illegal(1),    // Halfway between "appears_illegal"
+      m_collision_appears_illegal(1),  // Halfway between "appears_illegal"
                                        // and not -- use table item.
       result_mask(0)
    {}
@@ -4492,7 +4494,7 @@ public:
       m_force_mirror_warn(mirror),
       m_doing_half_override(false),
       cmd_misc_flags(cmd->cmd_misc_flags),
-      collision_appears_illegal(0),    // May change to 2 as call progresses.
+      m_collision_appears_illegal(0),  // May change to 2 as call progresses.
       result_mask(0)
       {
          // If doing half of a call, and doing it left,
@@ -4525,7 +4527,7 @@ private:
    bool m_force_mirror_warn;
    bool m_doing_half_override;
    uint32 cmd_misc_flags;
-   int collision_appears_illegal;
+   int m_collision_appears_illegal;
    uint32 result_mask;
 };
 

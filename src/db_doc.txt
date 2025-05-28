@@ -1253,6 +1253,23 @@ hsqtag      |_____| 11  |  5  |_____|
             |_____|           |_____|
 
 
+
+                         _____
+                _____   |     |   _____
+               |     |  |  1  |  |     |
+               |  0  |  |_____|  |  3  |
+             __|__ __|__|     |__|__ __|__
+            |     |     |  2  |     |     |
+dmdlndmd    | 10  | 11  |_____|  5  |  4  |
+            |_____|_____|     |_____|_____|
+               |     |  |  8  |  |     |
+               |  9  |  |_____|  |  6  |
+               |_____|  |     |  |_____|
+                        |  7  |
+                        |_____|
+
+
+
              _____                         _____
             |     |   _____       _____   |     |
             |  0  |  |     |     |     |  | 11  |
@@ -1316,6 +1333,30 @@ ntrgl6ccw      |_____|_____|__|__ __|__
                   |     |  |     |     |
                   |  5  |  |  4  |  3  |
                   |_____|  |_____|_____|
+
+
+                   _____
+                  |     |
+                  |  0  |
+                __|__ __|__ _____ _____
+               |     |     |     |     |
+nftrgl6cw      |  5  |  4  |  1  |  2  |
+               |_____|_____|_____|_____|
+                              |     |
+                              |  3  |
+                              |_____|
+
+
+                               _____
+                              |     |
+                              |  2  |
+                _____ _____ __|__ __|__
+               |     |     |     |     |
+nftrgl6ccw     |  0  |  1  |  4  |  3  |
+               |_____|_____|_____|_____|
+                  |     |
+                  |  5  |
+                  |_____|
 
 
                    _____    _____ _____ _____
@@ -3120,7 +3161,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     As a qualifier, this can take the "live" modifier.
    trailers_only      R/Q           as above, people are trailers.
 
-   couples_only       R/Q           1x2/1x4/1x8/1x16, 2x4/2x6/2x8 (lines or cols),
+   couples_only       R/Q           1x2/1x4/1x8/1x16/3x4 (lines), 2x4/2x6/2x8 (lines or cols),
                                        2x2, qtag, bone, trngl, alamo - people are paired
                                        in genuine couples, not miniwaves.
                                        For qtags, and bones, this applies
