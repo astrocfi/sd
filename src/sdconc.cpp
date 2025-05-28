@@ -8112,6 +8112,11 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
                   else if (lilresult[0].kind == s2x3)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2v];
+                  else if (lilresult[0].kind == s2x4) {
+                     *this_result = lilresult[0];
+                     force_matrix_merge = true;
+                     goto fooble;
+                  }
                   else if (lilresult[0].kind == s_short6 && !(fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                   else if (lilresult[0].kind == s_bone6)
@@ -8488,6 +8493,9 @@ extern void inner_selective_move(
 
       merge_table::merge_setups(&the_results[0], ma, result);
    }
+
+   if (force_matrix_merge)
+      normalize_setup(result, normalize_recenter, qtag_compress);
 
    return;
 

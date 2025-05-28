@@ -110,6 +110,7 @@ static const phan_map map_pinwheel8 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9}, 
 
 static const phan_map map_o_spots   = {7, s2x4,   {10, -1, -1, 1, 2, -1, -1, 9},     {14, -1, -1, 5, 6, -1, -1, 13}};
 static const phan_map map_qt_phan   = {7, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7},      {1, 4, -1, -1, 5, 0, -1, -1}};
+static const phan_map map_hrg_phan  = {7, s_hrglass, {-1, -1, 2, 3, -1, -1, 6, 7},      {1, 4, -1, -1, 5, 0, -1, -1}};
 
 static void do_concept_tandem(
    setup *ss,
@@ -342,6 +343,9 @@ static void do_c1_phantom_move(
    else if (ss->kind == s_bone)
       // We allow "phantom" in a bone setup to mean two "dunlap" quarter tags.
       map_ptr = &map_qt_phan;
+   else if (ss->kind == s_dhrglass)
+      // Or in a dunlap hourglass.
+      map_ptr = &map_hrg_phan;
    else if (ss->kind == s3x4) {
 
       // Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms.
@@ -3339,14 +3343,12 @@ static void do_concept_mirror(
       selectors unless we are in absolute orientation space. */
 
    mirror_this(ss);
-   /* We xor it of course -- these can be nested! */
+   ss->update_id_bits();
+   // We xor it of course -- these can be nested! 
    ss->cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
    move(ss, false, result);
    mirror_this(result);
 }
-
-
-
 
 
 

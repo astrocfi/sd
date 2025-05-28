@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.68"
+version "39.69"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2064,28 +2064,12 @@ call "exchange the diamonds, first 1/4" dontshow tag exchd1
             // unless something very strange is going on.
    setup qtag bigdmd rotate qualifier wave_only
       array [   0    0 AL1S AL11S    0    0 CR10N CR0N]
-
-/* old way */
    setup qtag qtag qualifier 2fl_only
       array [   0    0 AL1W AL0W    0    0 CR0E CR1E]
-
-// New way
-//   setup qtag wqtag qualifier 2fl_only
-//      array [   0    0 AL1W AL0W    0    0 CR0E CR1E]
-
-
    setup pqtag bigdmd rotate qualifier wave_only
       array [CR9N CR2N    0     0 AL2S AL9S     0    0]
-/* old way */
    setup pqtag qtag qualifier 2fl_only
       array [CR7E CR2E    0    0 AL2W AL7W    0    0]
-
-// New way
-//   setup pqtag wqtag qualifier 2fl_only
-//      array [CR9E CR3E    0    0 AL3W AL9W    0    0]
-
-
-
    setup ptpd bigptpd qualifier dmd_not_intlk
       array [   CR4E    0 CR6E 0    AL7W    0 AL5W 0]
    setup ptpd ptpd qualifier dmd_intlk
@@ -2515,10 +2499,12 @@ call "_circ xocirc from cols" dontshow tag circ_xocirc
 call "change lanes" c3
             fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    crossconc circ_n_times [conc_demand_lines inherit_rectify insert_number 2]
-             any_hand_remake_start_with_n_with_step [inherit_fractal inherit_gensting conc_force_lines suppress_roll insert_number 1]
+             any_hand_remake_start_with_n_with_step [inherit_fractal inherit_gensting
+                                                     conc_force_lines suppress_roll insert_number 1]
             fractal_is_inherited gen_sting_is_inherited
    crossconc circ_xocirc [conc_demand_columns]
-             any_hand_remake_start_with_n [inherit_fractal inherit_gensting conc_force_lines suppress_roll insert_number 1]
+             any_hand_remake_start_with_n [inherit_fractal inherit_gensting
+                                           conc_force_lines suppress_roll insert_number 1]
 
 call "like a rigger" c3x
    setup 2x6 rigger
@@ -2529,6 +2515,10 @@ call "like a rigger" c3x
       array [ZM0N ZM1N ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM4N ZM5N ZM6N ZM7N]
    setup 4x3 qtag
       array [ZM0N ZM1N ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM4N ZM5N ZM6N ZM7N]
+   setup bigdmd crosswave
+      array [ZM0N ZM1N ZM2N ZM3N ZM5N ZM4N ZM4N ZM5N ZM6N ZM7N ZM1N ZM0N]
+   setup pbigdmd crosswave
+      array [ZM0N ZM1N ZM2N ZM3N ZM5N ZM4N ZM4N ZM5N ZM6N ZM7N ZM1N ZM0N]
 
 call "retain your lane" c4
    conc any_hand_remake_start_with_n [insert_number 1]
@@ -12592,11 +12582,11 @@ call "_ @B by the right for swing fractions" dontshow tag odd_frac_by_right_for_
       array [0 CR0E CR1E 0 ZM3N 0 0 CR2E]
    setup 1x8 spindle qualifier num 3 left wave_only
       array [0 CR6W CR5W 0 ZM3N 0 0 CR4W]
-   // Need these to go to squared set instead of alamo.
-   setup thar 4x4 qualifier num 1 right wave_only
-      array [CR10E 0 0 0 0 CR1E 0 0]
-   setup thar 4x4 qualifier num 3 right wave_only
-      array [CR9W 0 0 0 0 CR2W 0 0]
+   setup thar alamo qualifier num 1 right wave_only
+      array [CR7E 0 0 0 0 CR2E 0 0]
+   setup thar alamo qualifier num 3 right wave_only
+      array [CR6W 0 0 0 0 CR3W 0 0]
+
    // The main "base class" definition.
             left_means_mirror neednumber split_large_setups fractional_numbers
             gen_sting_is_inherited fractal_is_inherited yoyo_fractal_numbers diamond_is_legal
@@ -13685,6 +13675,11 @@ call "_half by the left for swing the fractions" dontshow tag half_left_for_swin
       array [0 0 0 ZM3N 0 0 0 0]
    setup 1x3dmd 1x3dmd
       array [ZM0N 0 0 0 0 AL6S 0 0]
+   setup 2x4 alamo
+      array [0 AL7E 0 0 0 0 AL6W 0]
+   setup 4x2 alamo
+      array [AL0W 0 0 AL1E 0 0 0 0]
+
    // Here's the "usual" definition.  Actually, we should demand that the
    // person trade with a live person for swing the fractions (though we
    // don't want that for 1/4 thru).  So we need lots of "can_swing_left"

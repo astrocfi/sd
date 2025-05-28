@@ -279,6 +279,13 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 1, 3, 5,                     -1, 2, -1, 4},                    02020ULL,    0066,         4, 0,  s1x4,  s1x6},
    {{0, 2, 4, 5,                     1, -1, 3, -1},                    00202ULL,    0033,         4, 0,  s1x4,  s1x6},
 
+   // Next two are for tandem triangles in a 2x3, doing a triangle circulate or some such.
+   {{3, 5, 0,                        2, 4, 1},                         0002ULL,     0063,         3, 3,  s_trngl, s2x3},
+   {{5, 1, 4,                        0, 2, 3},                         0002ULL,     0036,         3, 1,  s_trngl, s2x3},
+   // Or a rehape.
+   {{6, 0, 2,                        5, 1, 3},                         0222ULL,     0x6F,         3, 0,  s_trngl, s2x4},
+   {{1, 5, 7,                        2, 4, 6},                         0222ULL,     0xF6,         3, 2,  s_trngl, s2x4},
+
    // Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of
    // 4.  The first two are the real maps, and the other two take care of the
    // reorientation that sometimes happens when coming out of a 2x2.
@@ -825,9 +832,8 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
       // But the compiler will get bent out of shape while we are doing this.
       map_search->outunusedmask = (uint32_t) ((1ULL << outsize)-1);
 
-      uint32_t very_special = (((setup_attrs[map_search->outsetup].setup_props & SPROP_4_WAY_SYMMETRY) != 0) &&
-                             ((setup_attrs[map_search->insetup].setup_props & SPROP_NO_SYMMETRY) != 0) &&
-                             (map_search->rot & 1) != 0) ? ((1U << outsize)-1) : 0;
+      uint32_t very_special = (((setup_attrs[map_search->insetup].setup_props & SPROP_NO_SYMMETRY) != 0) &&
+                               (map_search->rot & 1) != 0) ? ((1U << outsize)-1) : 0;
 
       for (i=0; i<map_search->limit; i++) {
          if (map_search->maps[i] == -2) continue;
@@ -918,12 +924,20 @@ void tandrec::unpack_us(
    for (i=0, sgl=map_ptr->insinglemask, omask=orbitmask3;
         i<map_ptr->limit;
         i++, sgl >>= 3, omask >>= 3) {
+
+      int r0 = map_ptr->rot&3;
+      if (r0 == 2) r0 = 0;
+
       uint32_t z = rotperson(virtual_result.people[i].id1, r);
       if (z != 0) {
          int ii = (z >> 6) & 7;
 
+         if ((setup_attrs[map_ptr->outsetup].setup_props & SPROP_NO_SYMMETRY) ||
+             m_people_per_group != 2)
+            r0 &= 1;
+
          bool invert_order =
-            (((omask >> 1) + (map_ptr->rot&1) + 1) & 2) && !m_no_unit_symmetry;
+            (((omask >> 1) + r0 + 1) & 2) && !m_no_unit_symmetry;
 
          // Figure out whether we are unpacking a single person or multiple people.
          int howmanytounpack = 1;

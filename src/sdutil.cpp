@@ -1422,7 +1422,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                         writestuff_with_decorations(&local_cptr->options,
                                                     "interrupt this call after @9/@9:", true);
                      else
-                        writestuff("interrrupt ");
+                        writestuff("interrupt ");
                      break;
                   case 8:
                      writestuff_with_decorations(&local_cptr->options,
