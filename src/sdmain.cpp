@@ -46,7 +46,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.15"
+#define VERSION_STRING "39.15A"
 #define TIME_STAMP "wba@alum.mit.edu Jun 30 2020 $"
 
 /* This defines the following functions:
@@ -249,6 +249,7 @@ startup_list_menu_item startup_menu[] = {
    {"heads 1p2p",                  start_select_h1p2p, -1},
    {"sides 1p2p",                  start_select_s1p2p, -1},
    {"just as they are",            start_select_as_they_are, -1},
+   {"two couples only",            start_select_two_couple, -1},
    {"toggle concept levels",       start_select_toggle_conc, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",      start_select_toggle_act, ID_COMMAND_TOGGLE_PHAN},
    {"toggle minigrand getouts",    start_select_toggle_minigrand, -1},

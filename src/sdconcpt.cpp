@@ -3409,70 +3409,75 @@ static void do_concept_assume_waves(
       }
    }
    else if (t.assump_col == 1) {
-      /* This is a "column-like" assumption. */
+      // This is a "column-like" assumption.
 
-      if (t.assumption == cr_wave_only) {
-         switch (ss->kind) {     /* "assume normal columns" */
-            case s2x4: goto check_it;
+      if (((t.assumption == cr_wave_only ||
+            t.assumption == cr_magic_only ||
+            t.assumption == cr_2fl_only ||
+            t.assumption == cr_li_lo) &&
+           (ss->kind == s2x2 || ss->kind == s2x4)) ||
+          ((t.assumption == cr_couples_only ||
+            t.assumption == cr_miniwaves) &&
+           (ss->kind == s2x2 || ss->kind == s2x3 || ss->kind == s2x4 || ss->kind == s2x6 || ss->kind == s2x8)))
+      {
+         if (ss->kind == s2x2) {
+            if (two_couple_calling) {
+               no_phan_error = false;
+               // expand to 2x4
+               if ((or_all_people(ss) & 010) == 0)
+                  expand::expand_setup(s_2x2_2x4_ctrs, ss);
+               else
+                  expand::expand_setup(s_2x2_2x4_ctrsb, ss);
+            }
+            else
+               goto bad_assume;
          }
-      }
-      else if (t.assumption == cr_magic_only) {
-         switch (ss->kind) {     /* "assume magic columns" */
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_2fl_only) {
-         switch (ss->kind) {     /* "assume DPT/CDPT" */
-            case s2x4: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
-         switch (ss->kind) {     /* "assume couples" or "assume miniwaves" */
-            case s2x8: case s2x4: case s2x3: case s2x6: goto check_it;
-         }
-      }
-      else if (t.assumption == cr_li_lo) {
-         switch (ss->kind) {     /* "assume 8 chain" or "assume trade by" */
-            case s2x4: goto check_it;
-         }
+
+         goto check_it;
       }
    }
    else {
-      /* This is a "line-like" assumption. */
+      // This is a "line-like" assumption.
 
       switch (t.assumption) {
+      case cr_tidal_wave:
+      case cr_tidal_line:
+         switch (ss->kind) {     // "assume tidal wave/line", 2-couple only
+         case s1x4: goto check_for_1x4;
+         }
+         break;
       case cr_wave_only:
-         switch (ss->kind) {     /* "assume waves" */
-         case s2x4: case s3x4:  case s2x8:  case s2x6:
+         switch (ss->kind) {     // "assume waves"
+         case s2x2: case s2x4: case s3x4:  case s2x8:  case s2x6:
          case s1x8: case s1x10: case s1x12: case s1x14:
-         case s1x16: case s1x6: case s1x4: goto check_it;
+         case s1x16: case s1x6: case s1x4: goto check_for_2x2;
          }
          break;
       case cr_2fl_only:
-         switch (ss->kind) {     /* "assume two-faced lines" */
-         case s2x4:  case s3x4:  case s1x8:  case s1x4: goto check_it;
+         switch (ss->kind) {     // "assume two-faced lines" 
+         case s2x2: case s2x4:  case s3x4:  case s1x8:  case s1x4: goto check_for_2x2;
          }
          break;
       case cr_couples_only:
       case cr_miniwaves:
-         switch (ss->kind) {     /* "assume couples" or "assume miniwaves" */
+         switch (ss->kind) {     // "assume couples" or "assume miniwaves"
          case s2x2: case s1x2: case s1x8: case s1x16:
-         case s2x8: case s2x4: case s1x4: goto check_it;
+         case s2x8: case s2x4: case s1x4: goto check_it;  // 2x2 is completely acceptable.
          }
          break;
       case cr_magic_only:
-         switch (ss->kind) {     /* "assume inverted lines" */
-         case s2x4:  case s1x4: goto check_it;
+         switch (ss->kind) {     // "assume inverted lines"
+         case s2x2: case s2x4:  case s1x4: goto check_for_2x2;
          }
          break;
       case cr_1fl_only:
-         switch (ss->kind) {     /* "assume one-faced lines" */
-         case s1x4: case s2x4: goto check_it;
+         switch (ss->kind) {     // "assume one-faced lines"
+         case s2x2: case s1x4: case s2x4: goto check_for_2x2;
          }
          break;
       case cr_li_lo:
-         switch (ss->kind) {     /* "assume lines in" or "assume lines out" */
-         case s2x3: case s2x4: goto check_it;
+         switch (ss->kind) {     // "assume lines in" or "assume lines out"
+         case s2x2: case s2x3: case s2x4: goto check_for_2x2;
          }
          break;
       case cr_diamond_like:
@@ -3483,6 +3488,37 @@ static void do_concept_assume_waves(
    }
 
    goto bad_assume;
+
+ check_for_2x2:
+
+   if (ss->kind == s2x2) {
+      if (two_couple_calling) {
+         no_phan_error = false;
+         // expand to 2x4
+         if ((or_all_people(ss) & 010) == 0)
+            expand::expand_setup(s_2x2_2x4_ctrsb, ss);
+         else
+            expand::expand_setup(s_2x2_2x4_ctrs, ss);
+      }
+      else
+         goto bad_assume;
+   }
+
+   goto check_it;
+
+ check_for_1x4:
+
+   if (ss->kind == s1x4) {
+      if (two_couple_calling) {
+         no_phan_error = false;
+         // expand to 1x8
+         expand::expand_setup(s_1x4_1x8_ctrs, ss);
+      }
+      else
+         goto bad_assume;
+   }
+
+   goto check_it;
 
    fudge_diamond_like:
 

@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.15"
+version "39.15A"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -13698,7 +13698,6 @@ call "_finish travel thru" dontshow tag finishtravel
       array [AL1S AL0S]
 
 call "revolve to a wave" c3
-            left_means_mirror
    setup 2x2 1x4 no_cutting_through
       array [CR2S CR3N ZM0N CR1S]
             alternate_definition [singlefile] c4
@@ -13720,6 +13719,9 @@ call "follow to a@I diamond" c3a
             alternate_definition [stingy] c3
    setup 2x2 1x4 restriction resolve_ok wave_only
       array [AM3S CM1S AM0S CM2S]
+            alternate_definition [interlocked scatter] c4
+   setup 2x4 qtag restriction unusual wave_only
+      array [CM2S CM7S AM3S AM6S AM4E CM4W AM5E CM5W]
             alternate_definition [scatter] c4
    setup 2x4 qtag qualifier ntbone none restriction forbidden wave_only
       array [CM2S CM3S AM7S AM6S AM4E CM4W AM5E CM5W]
@@ -18221,23 +18223,13 @@ call "cross the deucey" c4x
    seq rfinfollx []
 
 call "follow and cross" c4a
-            visible_fractions
-   seq plainboxyscootback []
+            visible_fractions scatter_is_inherited
+   seq plainboxyscootback [inherit_scatter]
    seq finfollx []
 
 call "follow and criss cross" c4a
-            visible_fractions
-   seq plainboxyscootback []
-   seq finfollx [force_cross]
-
-call "scatter follow and cross" c4
-            visible_fractions
-   seq fudgyscatscoot []
-   seq finfollx []
-
-call "scatter follow and criss cross" c4
-            visible_fractions
-   seq fudgyscatscoot []
+            visible_fractions scatter_is_inherited
+   seq plainboxyscootback [inherit_scatter]
    seq finfollx [force_cross]
 
 call "_lines walk nowhere" dontshow tag lines_walk_nowhere
@@ -24324,6 +24316,9 @@ call "scoot back" mainstream tag scootback
       array [0 0    0    0 CM4S CM5S CM3S CM2S]
    setup qtag qtag qualifier left 2fl_only
       array [0 0 AM7S AM6S AM4S AM5S    0    0]
+            alternate_definition [scatter] c1
+   setup 2x4 2x4 qualifier ntbone none restriction forbidden wave_only
+      array [CR3S CR2S AL1S AL0S AM5S CM4S AM7S CM6S]
             alternate_definition [yoyo interlocked] c4
    setup qtag qtag rotate qualifier right 2fl_only
       array [0 0    0    0 CM2S CM4S CM5S CM3S]
@@ -24459,6 +24454,9 @@ call "_boxy scoot back" dontshow tag plainboxyscootback
    // This one allows the people not in miniwaves, for follow and cross, etc.
    setup 2x2 2x2 restriction unusual wave_only
       array [CR1S AL0S AM3S CM2S]
+            alternate_definition [scatter] c4
+   setup 2x4 2x4 qualifier ntbone none restriction forbidden wave_only
+      array [CR3S CR2S AL1S AL0S AM5S CM4S AM7S CM6S]
             alternate_definition [half] c4
    setup 2x2 1x4 no_cutting_through rotate qualifier wave_only
       array [CR0N AL0S AL1S CR1N]

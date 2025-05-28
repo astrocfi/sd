@@ -1,0 +1,155 @@
+        THIS IS TRY9  Client and lib are same solution, names are correct.
+
+CREATE THE VARIOUS PROJECTS--{DEPLOY/MKCALLS/SD/SDLIB/SDTTY}
+   Making sd first will give the whole thing that name.
+   For the first one (sd) give location C:\Users\wba\sd\vs
+
+   file->new->project
+   SD:      C++ | Windows | Desktop  Windows Desktop Application   NEXT
+   DEPLOY:  C++ | Windows | Desktop  Windows Desktop Application   NEXT
+   MKCALLS: C++ | Windows | console   console app                  NEXT
+   SDLIB    C++ | Windows | library   dll                          NEXT
+   SDTTY:   C++ | Windows | console   console app                  NEXT
+   for each, name = {sd/deploy/mkcalls/sdlib/sdtty}
+        *in same dir as solution*
+        "add to solution" of course   CREATE
+
+Do not change any files yet.
+All should compile as is, though they are skeletons.
+
+Do not delete any files that vs2019 has created.  They are in subdirectories,
+doing no harm.  Just delete them from their projects, without deleting the
+files, as the actual files are introduced to replace them.
+But do not delete dllmain.cpp from sdlib at all.
+
+DO THIS FOR EVERY PROJECT
+All projects, all configurations:
+   Properties->C/C++/Precompiled Headers:  Set to Not Using Precompiled Headers.
+      (only needed for sdlib)
+   Properties->C/C++/Advanced:  Disable Specific Warnings:  List 4703;4715;4996
+   Properties->Debugging->Working Directory:  set to $(Projectdir)..\..
+   Properties->Advanced->Character Set:  set to "Not Set"
+
+All should compile.
+
+DO THIS FOR SD AND SDTTY
+   Set dependencies:
+      Build Dependencies->Project Dependencies set to sdlib.
+
+DO THIS FOR ALL 5 PROJECTS
+   Fix the output dir:
+      props, all configs, General->Output Directory
+         edit to $(ProjectDir)$(Configuration)
+             (It was $(SolutionDir)$(Configuration))
+
+All should compile.
+
+DO THIS FOR SD AND SDTTY
+   Fix include path:
+      props, all configs, C/C++->General->additional include dirs
+         edit to ..\sdlib
+   Fix the linker:
+      props, all configs, Linker->Input->additional dependencies
+         edit to sdlib.lib
+      props, all configs, Linker->General->additional library directories
+         edit to ..\sdlib\$(IntDir)
+
+All should compile.
+
+By the way, sdlib.lib is observed to be in ~\sd\vs\sdlib\Debug (or Release)
+
+DO THIS FOR SD AND SDTTY, ALL CONFIGURATIONS.
+   This will get complicated later, because of the final copy out for release.
+   But do this now.  Copy sdlib to be next to this program.
+   This command is in the *client*, that is, sd or sdtty.
+   It grabs the dll out of the sdlib project and brings it over to itself.
+      props, all configs, Build Events->Post-Build Event
+         Command Line = copy /y ..\sdlib\$(IntDir)sdlib.dll $(OutDir)
+         Description = COPYING DLL TO BE WITH EXE
+
+All should compile.
+
+DO THIS FOR EVERY PROJECT, **RELEASE ONLY**.
+   Copy thing out to main wba\sd directory.
+For all but sd and sdtty release, it is straightforward.
+      props, release config only, Build Events->Post-Build Event
+         Description = COPYING OUT <FINAL FILE, e.g. MKCALLS>EXE>
+         Command = copy /y $(TargetPath) $(TargetPath)..\..\..\..\..
+            Yes, 5 of them. Effect is:
+            copy /y C:\Users\wba\sd\vs\mkcalls\Release\mkcalls.exe
+                                   C:\Users\wba\sd
+For sd and sdtty release, do this:
+      props, release config only, Build Events->Post-Build Event
+         There will already be some stuff.  Add to description.
+         And add this to the command, on a second line:
+         Command = copy /y $(TargetPath) $(TargetPath)..\..\..\..\..
+
+INSTALL THE SOURCE FILES
+
+For each project, add->Existing, get all the files.
+
+ADD FILES, DEPLOY
+"deploy.cpp" "deploy.h"
+"deploy.rc"
+
+ADD FILES, MKCALLS
+"database.h" "paths.h"
+"common.cpp" "mkcalls.cpp"
+
+ADD FILES, SD
+"database.h" "paths.h" "resource.h" "sd.h" "sdchars.h" "sdmatch.h" "sdprint.h"
+"sdui.h"
+"sdprint.cpp" "sdui-win.cpp"
+"sd.bmp" "sd.ico" "sd.rc" "sdbg.ico" "sdbw.ico" "sdby.ico" "sdcpl.ico" "sdgy.ico"
+"sdry.ico" "sdtty.ico"
+
+ADD FILES, SDLIB
+"database.h" "mapcachefile.h" "paths.h" "sd.h" "sdchars.h" "sdmatch.h" "sdui.h"
+"sort.h"
+"common.cpp" "mapcachefile.cpp" "sdbasic.cpp" "sdconc.cpp" "sdconcpt.cpp"
+"sdctable.cpp" "sdgetout.cpp" "sdinit.cpp" "sdistort.cpp" "sdmain.cpp"
+"sdmatch.cpp" "sdmoves.cpp" "sdpick.cpp" "sdpreds.cpp" "sdsi.cpp"
+"sdtables.cpp" "sdtand.cpp" "sdtop.cpp" "sdutil.cpp"
+
+ADD FILES, SDTTY
+"database.h" "paths.h" "sd.h" "sdchars.h" "sdmatch.h" "sdui.h"
+"sd.ico" "sdbg.ico" "sdbw.ico" "sdby.ico" "sdcpl.ico" "sdgy.ico" "sdry.ico"
+"sdtty.ico" "sdtty.rc"
+"sdui-tty.cpp" "sdui-wincon.cpp"   // There will be a skeleton file there.
+                   // Delete it from the project, but do not delete the file.
+
+Remove any pch.h and pch.cpp, but don't delete the files.
+
+All should compile.
+
+
+
+
+**********************************************************************
+******************                    ********************************
+******************        STOP        ********************************
+******************                    ********************************
+**********************************************************************
+
+This just isn't going to work.
+
+That could have been done, but there are two intractible problems:
+
+Debug versions get bent out of shape over variables being referenced without
+having been initialized even though the warning had been suppressed and the
+release version works.
+
+The startup scaffolding for sd, in sd.cpp around line 25, insists on running
+in Unicode for the startup arguments, even though I have switched the compiler.
+Various information on the internet suggests that use of ASCII is only slightly
+more respectable than COBOL.  (Sd.cpp is artificial; my main program is in
+sdui-win.cpp, around line 1171.)
+
+The programs created, on Windows 10, by VS2019, DO NOT RUN ON WINDOWS XP!!!!
+
+
+ProjectDir is wba\sd\vs\{mkcalls/sd/sdtty}
+SolutionDir is wba\sd\vs\sdlib
+IntDir is Release or Debug, as the case may be.
+TargetPath is the name of the .exe file.  Within VS.  That is:
+    C:\Users\wba\sd\vs\mkcalls\Release\mkcalls.exe

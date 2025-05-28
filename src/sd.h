@@ -1994,16 +1994,17 @@ struct startinfo {
 // "ui_start_select" it is a start_select_kind.  For other replies, it is one of
 // the following constants:
 
-/* BEWARE!!!!!!!!  Lots of implications for "centersp" and all that! */
-/* BEWARE!!  If change this next definition, be sure to update the definition of
-   "startinfolist" in sdinit.cpp, and also necessary stuff in the user interfaces. */
+// BEWARE!!!!!!!!  Lots of implications for "centersp" and all that!
+// BEWARE!!  If change this next definition, be sure to update the definition of
+// "startinfolist" in sdinit.cpp, and also necessary stuff in the user interfaces.
 enum start_select_kind {
-   start_select_exit,        /* Don't start a sequence; exit from the program. */
-   start_select_h1p2p,       /* Start with Heads 1P2P. */
-   start_select_s1p2p,       /* Etc. */
+   start_select_exit,        // Don't start a sequence; exit from the program.
+   start_select_h1p2p,       // Start with Heads 1P2P.
+   start_select_s1p2p,       // Etc.
    start_select_heads_start,
    start_select_sides_start,
-   start_select_as_they_are,    // End of items that are keyed to startinfolist.
+   start_select_as_they_are,
+   start_select_two_couple,     // End of items that are keyed to startinfolist.
    start_select_toggle_conc,
    start_select_toggle_singlespace,
    start_select_toggle_minigrand,
@@ -2566,6 +2567,7 @@ extern SDLIB_API int number_of_calls[call_list_extent];
 
 
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
+extern SDLIB_API bool two_couple_calling;                           /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int config_history_ptr;                            /* in SDTOP */
 extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
@@ -3990,7 +3992,7 @@ class configuration {
 
    // This constant table tells how to set up the configuration at the start of a sequence.
    // values that might be in "startinfoindex", e.g. sides start or heads 1P2P.
-   static startinfo startinfolist[start_select_as_they_are+1];    // In sdinit.cpp
+   static startinfo startinfolist[start_select_two_couple+1];    // In sdinit.cpp
 
    static void initialize_startinfolist_item(start_select_kind k,
                                              const char *name,

@@ -2053,8 +2053,8 @@ void conzept::translate_concept_names()
    concept_descriptor_table = conzept::unsealed_concept_descriptor_table;
 }
 
-/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h. */
-startinfo configuration::startinfolist[start_select_as_they_are+1];
+// BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h.
+startinfo configuration::startinfolist[start_select_two_couple+1];
 
 void configuration::initialize()
 {
@@ -2091,6 +2091,12 @@ void configuration::initialize()
       0400|d_south,ID2_B3, 0500|d_south,ID2_G3,
       0600|d_east,ID2_B4,  0700|d_east,ID2_G4,
       0x9ADE1256));
+
+   configuration::initialize_startinfolist_item(start_select_two_couple, "Two couples only", false, new setup(s2x2, 0,
+      0500|d_south,ID2_G3, 0400|d_south,ID2_B3,
+      0100|d_north,ID2_G1, 0000|d_north,ID2_B1,
+      0200|d_west,ID2_B2,  0300|d_west,ID2_G2,
+      0600|d_east,ID2_B4,  0700|d_east,ID2_G4));
 }
 
 

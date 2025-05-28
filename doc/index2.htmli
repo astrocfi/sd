@@ -7,14 +7,17 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 39.15</strong>, released on June 30, 2020.
+<strong>The current version of Sd/Sdtty is 39.15A</strong>, released on July 8, 2020.
+<br>
+<p align="center">
+<strong>The program has rudimentery support for writing two-couple material.. See the release notes</strong>.
 <br>
 <p align="center">
 Sdtty will now be released, reasonably regularly, for Linux.  If this doesn't work for your particular system,
 you can compile from source files.
 <br>
 <p align="center">
-Sdtty and Sd may soon start being released for 64-bit systems.  We believe that all modern computers can handle this.  The last 32-bit version will continue to be released.
+Sdtty and Sd may soon start being released for 64-bit systems.  We believe that all modern computers can handle this.  The last 32-bit version will continue to be made available.
 <br>
 <p align="center">
 <strong>There have been a number of recent false positives from anti-virus software, due to that software getting increasingly picky.  You may need to disable anti-virus software when downloading.  All versions of Sd and Sdtty are scanned before release, on multiple anti-virus programs, and the computer on which Sd is developed is scanned frequently.</strong>

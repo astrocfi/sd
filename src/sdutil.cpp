@@ -524,6 +524,9 @@ void ui_utils::print_4_person_setup(int ps, small_setup *s, int elong)
       else
          str = "a6b@@@d6c@";
    }
+   else if (s->skind == s1x4 && (roti & 1) && two_couple_calling) {
+      str = "a@@b@@d@@c";
+   }
    else
       str = setup_attrs[s->skind].print_strings[roti & 1];
 
@@ -572,7 +575,7 @@ void ui_utils::printsetup(setup *x)
       str = setup_attrs[x->kind].print_strings[roti & 1];
    }
 
-   if (str)
+   if (str && !two_couple_calling)
       do_write(str);
    else {
       switch (x->kind) {
@@ -994,10 +997,19 @@ void ui_utils::printsetup(setup *x)
          print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
          break;
       default:
-         ui_options.drawing_picture = 0;
-         writestuff("???? UNKNOWN SETUP ????");
-         newline();
-         ui_options.drawing_picture = 1;
+         if (two_couple_calling) {
+            small_setup ss;
+            ss.skind = x->kind;
+            ss.srotation = x->rotation;
+            ss.seighth_rotation = x->eighth_rotation;
+            print_4_person_setup(0, &ss, 3);
+         }
+         else {
+            ui_options.drawing_picture = 0;
+            writestuff("???? UNKNOWN SETUP ????");
+            newline();
+            ui_options.drawing_picture = 1;
+         }
       }
    }
 
@@ -3524,6 +3536,7 @@ void ui_utils::run_program(iobase & ggg)
       configuration::history[1].init_resolve();
       // Put the people into their starting position.
       configuration::history[1].state = *configuration::history[1].get_startinfo_specific()->the_setup_p;
+      two_couple_calling = (attr::klimit(configuration::history[1].state.kind) < 4);
       configuration::history[1].state_is_valid = true;
 
       written_history_items = -1;

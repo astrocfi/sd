@@ -313,6 +313,12 @@ const resolve_tester *configuration::null_resolve_ptr = &null_resolve_thing;
 // The assignment of couple number may be rotated freely, of course.  But the person
 // in slot 0 of the list (B1 in the example) must be a boy.
 
+
+static const resolve_tester test_2x2_stuff[] = {
+   // Look for at-home getout in two-couple material.
+   {resolve_circle,         MS, 4,   {1, 0, -1, -1, 3, 2, -1, -1},  0xAA008800},
+   {resolve_none, MS, 0x10}};
+
 static const resolve_tester test_thar_stuff[] = {
    {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
    {resolve_minigrand,      MS, 4,   {5, 0, 3, 6, 1, 4, 7, 2},     0x8833AA11},
@@ -793,6 +799,12 @@ void configuration::calculate_resolve()
    else if (ui_options.singing_call_mode == 2) singer_offset = 0200;
 
    switch (state.kind) {
+   case s2x2:
+      if (two_couple_calling)
+         testptr = test_2x2_stuff;
+      else
+         goto no_resolve;
+      break;
    case s2x4:
       testptr = test_2x4_stuff; break;
    case s3x4:
@@ -855,18 +867,20 @@ void configuration::calculate_resolve()
          // The adds of "expected_id" and "firstperson" may overflow out of the "700" bits
          // into the next 2 bits.  (One bit for each add.)
 
-         if ((state.people[testptr->locations[i]].id1 ^
+         if (((state.people[testptr->locations[i]].id1 ^
               (expected_id + firstperson + (directionword & 0xF))) &
-             0777)
+              0777) && (directionword & 0xF) != 0)  // Skip some tests if doing two couple.
             goto not_this_one;
       }
 
       if (calling_level < (dance_level) testptr->level_needed ||
           (testptr->k == resolve_minigrand && !allowing_minigrand)) goto not_this_one;
 
-      resolve_flag.the_item = testptr;
       resolve_flag.distance =
          ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
+      if (two_couple_calling && resolve_flag.distance != 0)
+         goto not_this_one;    // Must be at home.
+      resolve_flag.the_item = testptr;
       return;
 
       not_this_one: ;
@@ -1790,6 +1804,9 @@ uims_reply_thing ui_utils::full_resolve()
    }
 
    // See if we are in a reasonable position to do the search.
+
+   if (two_couple_calling)
+      specialfail("You need to do your own at-home getouts.");
 
    switch (search_goal) {
       case command_resolve:

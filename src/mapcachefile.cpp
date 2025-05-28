@@ -115,7 +115,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
          innards->properly_opened = false;
          innards->the_miss_reason = MISS_CANT_OPEN_SOURCE;
       }
-      else if (fstat(_fileno(srcfiles[i]), &innards->source_stats[i])) {
+      else if (fstat(fileno(srcfiles[i]), &innards->source_stats[i])) {
          // If we can open the source files but can't get their
          // modification times, it's still possible to proceed.  We
          // will leave the file descriptor nonzero.  But we will

@@ -833,6 +833,8 @@ const char *qualtab[] = {
    "ctr_2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
+   "tidal_line_only",
+   "tidal_wave_only",
    "leads_only",
    "trailers_only",
    "couples_only",

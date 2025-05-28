@@ -53,7 +53,7 @@ static colorspec color_translations[8] = {
 
 static void csetmode(int mode) // 1 means raw, no echo, one character at a time; 0 means normal.
 {
-    static int cc_t orig_eof = '\004';
+    static cc_t orig_eof = '\004';
     struct termios term;
 
     if (mode == current_tty_mode) return;

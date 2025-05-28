@@ -279,6 +279,7 @@ bool allowing_minigrand = false;
 bool allow_bend_home_getout = false;
 bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
+bool two_couple_calling = false;
 int last_direction_kind = direction_ENUM_EXTENT-1;
 interactivity_state interactivity = interactivity_normal;
 char database_version[81];
@@ -1837,6 +1838,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_hrglass, cr_magic_only, 4, {6, 2, 7, 3},
     {0}, {0}, {0}, false, chk_wave},
    {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},
+    {0}, {0}, {0}, true, chk_wave},
+   {s1x8, cr_tidal_wave, 8, {0, 1, 3, 2, 6, 7, 5, 4},
     {0}, {0}, {0}, true, chk_wave},
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
     {2}, {0}, {0}, true, chk_groups},
@@ -4837,6 +4840,9 @@ setup::setup(setup_kind k, int r,
    people[i].id1 = P2; people[i].id2 = I2; people[i].id3 = 0;
    i = (little_endian_wheretheygo >> 12) & 0xF;
    people[i].id1 = P3; people[i].id2 = I3; people[i].id3 = 0;
+
+   if (attr::klimit(k) < 4) return;   // Just calling to the heads.
+
    i = (little_endian_wheretheygo >> 16) & 0xF;
    people[i].id1 = P4; people[i].id2 = I4; people[i].id3 = 0;
    i = (little_endian_wheretheygo >> 20) & 0xF;
@@ -6672,7 +6678,7 @@ void finish_toplevelmove() THROW_DECL
    configuration & newhist = configuration::next_config();
 
    // Remove outboard phantoms from the resulting setup.
-   normalize_setup(&newhist.state, plain_normalize, true);
+   normalize_setup(&newhist.state, two_couple_calling ? normalize_to_4 : plain_normalize, true);
    // Resolve needs to know what "near 4" means right now.
    clear_absolute_proximity_and_facing_bits(&newhist.state);
    newhist.calculate_resolve();

@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 365
+#define DATABASE_FORMAT_VERSION 366
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1051,6 +1051,8 @@ enum call_restriction {
    cr_ctr_2fl_only,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
+   cr_tidal_line,
+   cr_tidal_wave,
    cr_leads_only,          // Restriction only.
    cr_trailers_only,       // Restriction only.
    cr_couples_only,
