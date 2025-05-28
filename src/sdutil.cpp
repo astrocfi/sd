@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 33. */
+    This is for version 34. */
 
 /* This defines the following functions:
    get_escape_string
@@ -122,12 +122,13 @@ Cstring concept_key_table[] = {
    "sf3    pick concept call",
    "cf3    pick simple call",
    "f4     resolve",
+   "e4     resolve",            // home
    "sf4    reconcile",
    "cf4    normalize",
    "f5     refresh display",
    "sf5    keep picture",
    "cf5    insert a comment",
-   "e13    insert a comment",   /* insert */
+   "e13    insert a comment",   // insert
    "f6     simple modifications",
    "sf6    allow modifications",
    "cf6    centers",
@@ -146,6 +147,7 @@ Cstring concept_key_table[] = {
    "*sf9   abort the search",
    "f10    write this sequence",
    "*f10   write this sequence",
+   "*e3    write this sequence",    // end
    "sf10   change output file",
    "+sf10  change output file",
    "f11    pick level call",
@@ -155,10 +157,10 @@ Cstring concept_key_table[] = {
    "*sf12  accept current choice",
    "*cf12  previous",
    "*af12  next",
-   "*se6   raise reconcile point",  /* shift up arrow */
-   "*e5    previous",               /* left arrow */
-   "*e7    next",                   /* right arrow */
-   "*se8   lower reconcile point",  /* shift down arrow */
+   "*se6   raise reconcile point",  // shift up arrow
+   "*e5    previous",               // left arrow
+   "*e7    find another",           // right arrow
+   "*se8   lower reconcile point",  // shift down arrow
    (char *) 0};
 
 
@@ -613,7 +615,7 @@ SDLIB_API void write_history_line(int history_index, const char *header,
       this_item->warnings.bits[warn__split_to_1x6s>>5] &= ~(1 << (warn__split_to_1x6s & 0x1F));
 
    if (!ui_options.nowarn_mode) {
-      for (w=0 ; w<NUM_WARNINGS ; w++) {
+      for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
          if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
             writestuff("  Warning:  ");
             writestuff(&warning_strings[w][1]);
@@ -1485,6 +1487,9 @@ static char current_line[MAX_TEXT_LINE_LENGTH];
 
 extern void writechar(char src)
 {
+   // Don't write two consecutive commas.
+   if (src == ',' && src == writechar_block.lastchar) return;
+
    writechar_block.lastlastchar = writechar_block.lastchar;
 
    *writechar_block.destcurr = (writechar_block.lastchar = src);
@@ -1957,7 +1962,7 @@ static long_boolean write_sequence_to_file(void) THROW_DECL
    }
 
    if (sequence_number >= 0) {
-      (void) sprintf(seqstring, "#%d", sequence_number);
+      (void) sprintf(seqstring, "%d", sequence_number);
       writestuff("   ");
       writestuff(seqstring);
    }
@@ -2304,6 +2309,12 @@ SDLIB_API void run_program()
       switch (uims_menu_index) {
       case start_select_toggle_conc:
          allowing_all_concepts = !allowing_all_concepts;
+         goto new_sequence;
+      case start_select_toggle_singlespace:
+         ui_options.singlespace_mode = !ui_options.singlespace_mode;
+         goto new_sequence;
+      case start_select_toggle_minigrand:
+         allowing_minigrand = !allowing_minigrand;
          goto new_sequence;
       case start_select_toggle_act:
          using_active_phantoms = !using_active_phantoms;

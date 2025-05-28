@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.2"
-#define TIME_STAMP "wba@alum.mit.edu  6 July 00 $"
+#define VERSION_STRING "34.3"
+#define TIME_STAMP "wba@alum.mit.edu  11 December 00 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -45,8 +45,7 @@ and the following external variables:
 
 #include <stdio.h>
 #include <string.h>
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 #include "paths.h"
 #include "resource.h"
 
@@ -76,7 +75,7 @@ extern char *sd_version_string(void)
    return VERSION_STRING;
 }
 
-Private void display_help(void)
+static void display_help(void)
 {
    printf("Sd version %s : ui%s\n",
    sd_version_string(), uims_version_string());
@@ -98,6 +97,7 @@ Private void display_help(void)
    printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
    printf("-singlespace                single space the output file\n");
    printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
+   printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
    printf("-concept_levels             allow concepts from any level\n");
    printf("-no_warnings                do not display or print any warning messages\n");
    printf("-retain_after_error         retain pending concepts after error\n");
@@ -146,6 +146,7 @@ command_list_menu_item command_menu[] = {
    {"allow modifications",            command_all_mods, -1},
    {"toggle concept levels",          command_toggle_conc_levels, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",         command_toggle_act_phan, ID_COMMAND_TOGGLE_PHAN},
+   {"toggle minigrand getouts",       command_toggle_minigrand, -1},
    {"toggle retain after error",      command_toggle_retain_after_error, -1},
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
    {"toggle singleclick mode",        command_toggle_singleclick_mode, -1},
@@ -229,6 +230,8 @@ startup_list_menu_item startup_menu[] = {
    {"just as they are",            start_select_as_they_are, -1},
    {"toggle concept levels",       start_select_toggle_conc, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",      start_select_toggle_act, ID_COMMAND_TOGGLE_PHAN},
+   {"toggle minigrand getouts",    start_select_toggle_minigrand, -1},
+   {"toggle singlespace mode",     start_select_toggle_singlespace, -1},
    {"toggle retain after error",   start_select_toggle_retain, -1},
    {"toggle nowarn mode",          start_select_toggle_nowarn_mode, -1},
    {"toggle singleclick mode",     start_select_toggle_singleclick_mode, -1},
@@ -375,6 +378,9 @@ static long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero,
 /* Deposit a call into the parse state.  A returned value of TRUE
    means that the user refused to click on a required number or selector,
    and so we have taken no action.  This can only occur if interactive.
+   Well, actually, a lossage in the database ("@y" type of ATC call
+   wants a tagger class which has no tagger calls available at this level)
+   can cause failure during a search.
    If not interactive, stuff will be chosen by random number. */
 
 extern long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options)
@@ -540,7 +546,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
 }
 
 
-Private void print_error_person(unsigned int person, long_boolean example)
+static void print_error_person(unsigned int person, long_boolean example)
 {
    char person_string[3];
 
@@ -758,6 +764,9 @@ extern long_boolean query_for_call(void)
          case command_toggle_conc_levels:
             allowing_all_concepts = !allowing_all_concepts;
             goto check_menu;
+         case command_toggle_minigrand:
+            allowing_minigrand = !allowing_minigrand;
+            goto check_menu;
          case command_toggle_act_phan:
             using_active_phantoms = !using_active_phantoms;
             goto check_menu;
@@ -813,8 +822,10 @@ extern long_boolean query_for_call(void)
 
    if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
       fail("This shouldn't get printed.");
-   else if (interactivity != interactivity_normal)
-      if (deposit_call(do_pick(), &null_options)) goto recurse_entry;
+   else if (interactivity != interactivity_normal) {
+      if (deposit_call(do_pick(), &null_options))
+         fail("This shouldn't get printed.");
+   }
 
    /* Check our "stack" and see if we have recursive invocations to clean up. */
 
@@ -858,9 +869,9 @@ extern long_boolean query_for_call(void)
 
 
 #ifdef NEGLECT
-Private int age_buckets[33];
+static int age_buckets[33];
 
-Private int mark_aged_calls(
+static int mark_aged_calls(
    int rr,
    int dd,
    int kk)

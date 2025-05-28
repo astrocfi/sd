@@ -26,8 +26,7 @@
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
 #include <unistd.h>    /* This too. */
 #endif
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 
 
 static char *text_ptr;           /* End of text buffer; where we are packing. */
@@ -88,9 +87,9 @@ extern void ttu_set_window_title(char s[])
 {
 }
 
-extern long_boolean uims_help_manual()
+extern bool uims_help_manual()
 {
-   return FALSE;
+   return false;
 }
 
 

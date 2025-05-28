@@ -34,15 +34,15 @@
    do the "const" attribute correctly.  We no longer have
    any patience with such things. */
 
+// In fact, we're getting rid of the capitalized "Const" crap throughout
+// the program.  No one still compiles for Sun garbage, do they?
+// So the next line will be gone soon.
 #define Const const
 
 
-/* We use "Private" on procedures and "static" on variables.  It makes things clearer. */
-#define Private static
-
-/* We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
-   The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
-   alerts us to that fact.  The configure script has checked this for us. */
+// We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
+// The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
+// alerts us to that fact.  The configure script has checked this for us.
 #ifdef NO_SIGNED_CHAR
 typedef short veryshort;
 #else
@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 165
+#define DATABASE_FORMAT_VERSION 168
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -194,53 +194,54 @@ static const uint32 INHERITFLAG_FAST       = 0x00040000UL;
    and the "topcallflags1" word of the parse_state. */
 
 /* This is a 2 bit field -- VISIBLE_FRACTION_BIT tells where its low bit lies. */
-static Const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL;
-static Const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL;
+static const uint32 CFLAG1_VISIBLE_FRACTION_MASK     = 0x00000003UL;
+static const uint32 CFLAG1_VISIBLE_FRACTION_BIT      = 0x00000001UL;
 
-static Const uint32 CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL;
-static Const uint32 CFLAG1_IMPRECISE_ROTATION        = 0x00000008UL;
-static Const uint32 CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL;
-static Const uint32 CFLAG1_PARALLEL_CONC_END         = 0x00000020UL;
-static Const uint32 CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL;
-static Const uint32 CFLAG1_IS_STAR_CALL              = 0x00000080UL;
-static Const uint32 CFLAG1_SPLIT_LARGE_SETUPS        = 0x00000100UL;
-static Const uint32 CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL;
+static const uint32 CFLAG1_12_16_MATRIX_MEANS_SPLIT  = 0x00000004UL;
+static const uint32 CFLAG1_IMPRECISE_ROTATION        = 0x00000008UL;
+static const uint32 CFLAG1_SPLIT_LIKE_DIXIE_STYLE    = 0x00000010UL;
+static const uint32 CFLAG1_PARALLEL_CONC_END         = 0x00000020UL;
+static const uint32 CFLAG1_TAKE_RIGHT_HANDS          = 0x00000040UL;
+static const uint32 CFLAG1_IS_STAR_CALL              = 0x00000080UL;
+static const uint32 CFLAG1_SPLIT_LARGE_SETUPS        = 0x00000100UL;
+static const uint32 CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL;
 
 /* This is a 3 bit field. */
-static Const uint32 CFLAG1_STEP_REAR_MASK            = 0x00001C00UL;
+static const uint32 CFLAG1_STEP_REAR_MASK            = 0x00001C00UL;
 /* Here are the 3 bits. */
-static Const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL;
-static Const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL;
-static Const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL;
+static const uint32 CFLAG1_STEP_TO_WAVE              = 0x00000400UL;
+static const uint32 CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL;
+static const uint32 CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL;
 
-static Const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00002000UL;
+static const uint32 CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00002000UL;
 
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
-static Const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL;
-static Const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL;
+static const uint32 CFLAG1_NUMBER_MASK               = 0x0001C000UL;
+static const uint32 CFLAG1_NUMBER_BIT                = 0x00004000UL;
 
-static Const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00020000UL;
-static Const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x00040000UL;
-static Const uint32 CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL;
-static Const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL;
-static Const uint32 CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL;
-static Const uint32 CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL;
-static Const uint32 CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL;
+static const uint32 CFLAG1_SEQUENCE_STARTER          = 0x00020000UL;
+static const uint32 CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x00040000UL;
+static const uint32 CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL;
+static const uint32 CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL;
+static const uint32 CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL;
+static const uint32 CFLAG1_YIELD_IF_AMBIGUOUS        = 0x00400000UL;
+static const uint32 CFLAG1_NO_ELONGATION_ALLOWED     = 0x00800000UL;
 
 /* This is a 3 bit field -- BASE_TAG_CALL_BIT tells where its low bit lies. */
-static Const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL;
-static Const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL;
+static const uint32 CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL;
+static const uint32 CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL;
 
-static Const uint32 CFLAG1_BASE_CIRC_CALL            = 0x08000000UL;
-static Const uint32 CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL;
-static Const uint32 CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL;
-static Const uint32 CFLAG1_ONE_PERSON_CALL           = 0x40000000UL;
-static Const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x80000000UL;
+static const uint32 CFLAG1_BASE_CIRC_CALL            = 0x08000000UL;
+static const uint32 CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL;
+static const uint32 CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL;
+static const uint32 CFLAG1_ONE_PERSON_CALL           = 0x40000000UL;
+static const uint32 CFLAG1_PRESERVE_Z_STUFF          = 0x80000000UL;
 
 /* These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
    They must lie in the top 8 bits for now. */
-static Const uint32 CFLAG2_YOYO_FRACTAL_NUM          = 0x01000000UL;
-static Const uint32 CFLAG2_CAN_BE_FAN                = 0x02000000UL;
+static const uint32 CFLAG2_YOYO_FRACTAL_NUM          = 0x01000000UL;
+static const uint32 CFLAG2_CAN_BE_FAN                = 0x02000000UL;
+static const uint32 CFLAG2_EQUALIZE                  = 0x04000000UL;
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -303,7 +304,6 @@ typedef enum {
    in the call data base. */
 /* BEWARE!!  This list must track the array "estab" in dbcomp.c . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.c . */
-/* BEWARE!!  This list must track the array "split_lists" in sdtables.c . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
    there before changing the order of existing setups. In general, keep small setups
@@ -371,6 +371,8 @@ typedef enum {
    s_barredstar12,
    s_barredstar16,
    s_galaxy,
+   sbigh,
+   sbigx,
    s3x6,
    s3x8,
    s4x5,
@@ -379,15 +381,17 @@ typedef enum {
    s2x12,
    sdeepqtg,
    sdeepbigqtg,
+   swiderigger,
    sdeepxwv,
    s3oqtg,
    s_thar,
    s_alamo,
-   sx4dmd,   /* These are too big to actually represent -- */
-   s8x8,     /* we don't let them out of their cage. */
-   sx1x16,
-   sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
-   swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
+   sx4dmd,    // These are too big to actually represent --
+   s8x8,      // we don't let them out of their cage.
+   sx1x16,    // Ditto.
+   shypergal, // Ditto.
+   sfat2x8,   // Ditto.  These are big setups that are the size of 4x8's,
+   swide4x4,  // but only have 16 people.  The reason is to prevent loss of phantoms.
    s_323,
    s_343,
    s_525,
@@ -397,8 +401,6 @@ typedef enum {
    s_3mptpd,
    s_4mdmd,
    s_4mptpd,
-   sbigh,
-   sbigx,
    sbigbigh,
    sbigbigx,
    sbigrig,
@@ -513,6 +515,8 @@ typedef enum {
    b_pdeepqtg,
    b_deepbigqtg,
    b_pdeepbigqtg,
+   b_widerigger,
+   b_pwiderigger,
    b_deepxwv,
    b_pdeepxwv,
    b_3oqtg,

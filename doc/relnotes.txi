@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 34.2
-@set title2 Database version = 34.2 format = 165
+@set title1 RELEASE NOTES FOR SD VERSION 34.3
+@set title2 Database version = 34.3 format = 168
 @set title3 X11 UI version 1.17, SDTTY UI version 1.12, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 34.3::
+* 34.21::
 * 34.2::
 * 34.0::
 * 33.15::
@@ -38,7 +40,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 34.2, Top, (dir)
+@node Intro, 34.3, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -49,11 +51,57 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2000 William B. Ackerman
 @sp 3
 @menu
-* 34.2::               Changes in the current version
+* 34.3::               Changes in the current version
 @end menu
 
 @c ************
-@node 34.2, 34.0, Intro, Top
+@node 34.3, 34.21, Intro, Top
+@unnumberedsec Version 34.3 changes
+
+Improved the ``crazy offset C/L/W'' concept.  It can handle shape-changers,
+under reasonable circumstances, up to a point.  The program can also do
+``crazy diaagonal boxes''.
+
+The program can handle ``equalizing'' cases of @samp{transfer and <anything>},
+@samp{busy <anything>}, and @samp{open up and <anything>},
+as per the article by Linda Kendall in the December, 2000 issue of Zip Coder.
+
+New concepts:  staggered C/L/W of 3.  Use this with ``ignore''.
+
+New concepts:  bent C/L/W/B (plural), from suitable formations.
+
+New concepts:  <anyone> in your double bent C/L/W.
+
+We allow "mini-grand" getouts, if the ``toggle minigrand getouts'' command
+has been given, or the command-line switch ``-minigrand_getouts'' was given,
+or the command ``minigrand_getouts '' appeared in the initialization file.
+When this has been done, the resolver will include such getouts in its
+search.  A ``mini-grand'' is ``right and left grand, but on the third hand,
+promenade home.''  We do not take a position on the tastefulness of these
+getouts.
+
+The ``funny'' concept is handled better internally, giving greater power
+in the database language.
+
+Fixed a bug in jay walk ``around the corner'' in C1 phantom setups.  For example,
+after Heads Spin the Top, Extend, Girls Hinge, one can now do Heads Jay Walk in a
+completely natural way.
+
+Fixed a bug in phantom 1/2 circulate.  We thank the contributors to the
+``challenge-sd'' mailing list for raising this issue.
+
+@c ************
+@node 34.21, 34.2, 34.3, Top
+@unnumberedsec Version 34.21 changes
+
+A serious defect in version 34.2 was fixed.
+
+In the final transcript file, the sequence number no longer has a ``#'' character
+in front of it.  Some post-processing text formatters are confused by the
+presence of this character.
+
+@c ************
+@node 34.2, 34.0, 34.21, Top
 @unnumberedsec Version 34.2 changes
 
 The call and concept lists have been updated to reflect the recent changes
@@ -64,7 +112,6 @@ to the C3B list.
 Dropped:    shove off
             kick by
             in style
-            kick by
             revert
 @end group
 @end example

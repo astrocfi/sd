@@ -16,6 +16,7 @@ call make_text index.html html.msg
 call make_text readings.html html.msg
 call make_text relnotes.html html.msg
 call make_text relnotes98.html html.msg
+call make_text sample.html html.msg
 call make_text appnote1.html html.msg
 call make_text appnote2.html html.msg
 call make_text appnote3.html html.msg

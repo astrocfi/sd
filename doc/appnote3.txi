@@ -24,9 +24,6 @@ described it as the ``lost concept''
 @iftex
 @footnote{Choreo Corner, @i{Zip Coder XXVII}, 2(June 1998), 23-28}
 @end iftex
-@ifset html
-@footnote{Choreo Corner, @i{Zip Coder XXVII}, 2(June 1998), 23-28}
-@end ifset
 .  This may be, in part, because people don't always perceive it as
 having a sound logical basis.
 
@@ -224,10 +221,6 @@ occupy the center, and the Solomon rule
 @footnote{The Solomon rule(I Kings 3:16-28) says that cutting
 people in half is generally not a good way to solve a problem.}
 @end iftex
-@ifset html
-@footnote{The Solomon rule(I Kings 3:16-28) says that cutting
-people in half is generally not a good way to solve a problem.}
-@end ifset
 says we can't put half of each
 in the center.  We either put in zero people or two.  The rule is that
 we always put someone in, unless we have run out of people.  So, in

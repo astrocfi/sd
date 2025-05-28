@@ -104,7 +104,7 @@ dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
 dbcomp.o: database.h
 
-$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sdui.h basetype.h sd.h database.h
+$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sdui.h sd.h database.h
 
 info: sd_doc.info
 dvi: sd_doc.dvi

@@ -12,8 +12,8 @@
 
     sdui-win.c - SD -- Microsoft Windows User Interface
   
-    Copyright (C) 1995, Robert E. Cays
-    Copyright (C) 1996, Charles Petzold
+    Copyright (C) 1995  Robert E. Cays
+    Copyright (C) 1996  Charles Petzold
   
     Permission to use, copy, modify, and distribute this software for
     any purpose is hereby granted without fee, provided that the above
@@ -23,7 +23,7 @@
     WARRANTY, without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.
   
-    This is for version 33. */
+    This is for version 34. */
 
 
 static char *sdui_version = "4.10";
@@ -72,14 +72,14 @@ static char *sdui_version = "4.10";
 #include <stdlib.h>
 #include <string.h>
 
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 #include "paths.h"
 
 void windows_init_printer_font(HWND hwnd, HDC hdc);
-extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance,
+                               const char *filename);
 extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
-void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 #include "resource.h"
 
 #pragma comment(lib, "comctl32")
@@ -254,21 +254,23 @@ static char szMainTitle[MAX_TEXT_LINE_LENGTH];
 
 static void UpdateStatusBar(Cstring szFirstPane)
 {
-   int StatusBarDimensions[6];
+   int StatusBarDimensions[7];
 
    if (szFirstPane)
       szGLOBFirstPane = szFirstPane;
 
-   StatusBarDimensions[0] = 3*GLOBStatusBarLength/8;
-   StatusBarDimensions[1] = 1*GLOBStatusBarLength/2;
-   StatusBarDimensions[2] = 5*GLOBStatusBarLength/8;
-   StatusBarDimensions[3] = 3*GLOBStatusBarLength/4;
-   StatusBarDimensions[4] = 7*GLOBStatusBarLength/8;
-   StatusBarDimensions[5] = -1;
+   StatusBarDimensions[0] = (50*GLOBStatusBarLength)>>7;
+   StatusBarDimensions[1] = (63*GLOBStatusBarLength)>>7;
+   StatusBarDimensions[2] = (76*GLOBStatusBarLength)>>7;
+   StatusBarDimensions[3] = (89*GLOBStatusBarLength)>>7;
+   StatusBarDimensions[4] = (102*GLOBStatusBarLength)>>7;
+   StatusBarDimensions[5] = (115*GLOBStatusBarLength)>>7;
+   StatusBarDimensions[6] = -1;
 
    if (allowing_modifications || allowing_all_concepts ||
-       using_active_phantoms || singing_call_mode || ui_options.nowarn_mode) {
-      (void) SendMessage(hwndStatusBar, SB_SETPARTS, 6, (LPARAM) StatusBarDimensions);
+       using_active_phantoms || allowing_minigrand ||
+       singing_call_mode || ui_options.nowarn_mode) {
+      (void) SendMessage(hwndStatusBar, SB_SETPARTS, 7, (LPARAM) StatusBarDimensions);
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 1,
                   (LPARAM) ((allowing_modifications == 2) ? "all mods" :
@@ -278,7 +280,7 @@ static void UpdateStatusBar(Cstring szFirstPane)
                   (LPARAM) (allowing_all_concepts ? "all concepts" : ""));
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 3,
-                  (LPARAM) (using_active_phantoms ? "active phantoms" : ""));
+                  (LPARAM) (using_active_phantoms ? "act phan" : ""));
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 4,
                   (LPARAM) ((singing_call_mode == 2) ? "rev singer" :
@@ -286,6 +288,9 @@ static void UpdateStatusBar(Cstring szFirstPane)
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 5,
                   (LPARAM) (ui_options.nowarn_mode ? "no warn" : ""));
+
+      SendMessage(hwndStatusBar, SB_SETTEXT, 6,
+                  (LPARAM) (allowing_minigrand ? "minigrand" : ""));
    }
    else {
       (void) SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
@@ -351,9 +356,9 @@ extern void show_match(void)
 {
    char szLocalString[MAX_TEXT_LINE_LENGTH];
    szLocalString[0] = '\0';
-   if (static_ss.result.indent) lstrcat(szLocalString, "   ");
-   lstrcat(szLocalString, static_ss.full_input);
-   lstrcat(szLocalString, static_ss.extension);
+   if (GLOB_match.indent) lstrcat(szLocalString, "   ");
+   lstrcat(szLocalString, GLOB_full_input);
+   lstrcat(szLocalString, GLOB_extension);
    szLocalString[85] = '\0';  /* Just to be sure. */
    uims_add_new_line(szLocalString, 0);
 }
@@ -384,9 +389,9 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
       by the user but were merely the stuff we put in due to completion. */
 
    if (doing_escape) {
-      matches = match_user_input(nLastOne, FALSE, FALSE);
-      user_match = static_ss.result;
-      p = static_ss.extended_input;
+      matches = match_user_input(nLastOne, FALSE, FALSE, FALSE);
+      user_match = GLOB_match;
+      p = GLOB_extended_input;
       if (*p) {
          changed_editbox = TRUE;
 
@@ -397,7 +402,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
       }
    }
-   else if (lstrcmp(szLocalString, static_ss.full_input)) {
+   else if (lstrcmp(szLocalString, GLOB_full_input)) {
       if (nLen >= 0) {
          char cCurChar = szLocalString[nLen];
 
@@ -411,21 +416,24 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
             if (nLen > 0) {    /* Don't do this on a blank line. */
                my_mark = CurDisplay;
-               lstrcpy(static_ss.full_input, szLocalString);
-               /* This will call show_match with each match. */
-               (void) match_user_input(nLastOne, TRUE, cCurChar == '?');
+               lstrcpy(GLOB_full_input, szLocalString);
+               GLOB_full_input_size = lstrlen(GLOB_full_input);
+               // This will call show_match with each match.
+               (void) match_user_input(nLastOne, TRUE, cCurChar == '?', FALSE);
                question_stuff_to_erase = my_mark;
             }
             changed_editbox = TRUE;
          }
          else if (cCurChar == ' ' || cCurChar == '-') {
             erase_questionable_stuff();
-            lstrcpy(static_ss.full_input, szLocalString);
-            static_ss.full_input[nLen] = '\0';
+            lstrcpy(GLOB_full_input, szLocalString);
+            GLOB_full_input[nLen] = '\0';
+            // **** do we think nLen has the right stuff here?
+            GLOB_full_input_size = lstrlen(GLOB_full_input);
             /* extend only to one space or hyphen, inclusive */
-            matches = match_user_input(nLastOne, FALSE, FALSE);
-            user_match = static_ss.result;
-            p = static_ss.extended_input;
+            matches = match_user_input(nLastOne, FALSE, FALSE, TRUE);
+            user_match = GLOB_match;
+            p = GLOB_extended_input;
 
             if (*p) {
                changed_editbox = TRUE;
@@ -442,7 +450,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
                   }
                }
             }
-            else if (!static_ss.space_ok || matches <= 1) {
+            else if (!GLOB_space_ok || matches <= 1) {
                uims_bell();
                szLocalString[nLen] = '\0';    /* Do *not* pack the character. */
                changed_editbox = TRUE;
@@ -462,8 +470,9 @@ static void check_text_change(HWND hListbox, HWND hEditbox, long_boolean doing_e
 
  pack_us:
 
-   lstrcpy(static_ss.full_input, szLocalString);
-   for (p=static_ss.full_input ; *p ; p++)
+   lstrcpy(GLOB_full_input, szLocalString);
+   GLOB_full_input_size = lstrlen(GLOB_full_input);
+   for (p=GLOB_full_input ; *p ; p++)
       *p = tolower(*p);
 
    /* Write it back to the window. */
@@ -675,55 +684,42 @@ static int LookupKeystrokeBinding(
    if (keyptr) {
       if (keyptr->index < 0) {
          // This function key specifies a special "syntactic" action.
-         long_boolean deleted_letter = FALSE;
          int nCount;
-         int nLen;
          int nIndex = 1;
          char szLocalString[MAX_TEXT_LINE_LENGTH];
 
          switch (keyptr->index) {
          case special_index_pageup:
-            nIndex -= PAGE_LEN-1;
+            nIndex -= PAGE_LEN-1;     // !!!! FALL THROUGH !!!!
          case special_index_lineup:
-            nIndex -= PAGE_LEN+1;
+            nIndex -= PAGE_LEN+1;     // !!!! FALL THROUGH !!!!
          case special_index_pagedown:
-            nIndex += PAGE_LEN-1;
+            nIndex += PAGE_LEN-1;     // !!!! FALL THROUGH !!!!
          case special_index_linedown:
-            /* nIndex now tells how far we want to move forward or back in the menu.
-               Change that to the absolute new position, by adding the old position. */
+            // nIndex now tells how far we want to move forward or back in the menu.
+            // Change that to the absolute new position, by adding the old position.
             nIndex += SendMessage(hwndList, LB_GETCURSEL, 0, 0);
 
-            /* Clamp to the menu limits. */
+            // Clamp to the menu limits.
             nCount = SendMessage(hwndList, LB_GETCOUNT, 0, 0) - 1;
             if (nIndex > nCount) nIndex = nCount;
             if (nIndex < 0) nIndex = 0;
 
-            /* Select the new item. */
+            // Select the new item.
             SendMessage(hwndList, LB_SETCURSEL, nIndex, 0);
             break;
          case special_index_deleteword:
             GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
-            nLen = lstrlen(szLocalString);
-
-            while (nLen > 0) {
-               if (szLocalString[nLen-1] == ' ') {
-                  if (deleted_letter) break;
-               }
-               else
-                  deleted_letter = TRUE;
-
-               nLen--;
-               szLocalString[nLen] = '\0';
-            }
-
-            lstrcpy(static_ss.full_input, szLocalString);
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) szLocalString);
+            lstrcpy(GLOB_full_input, szLocalString);
+            GLOB_full_input_size = lstrlen(GLOB_full_input);
+            (void) delete_matcher_word();
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_full_input);
             SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_deleteline:
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");  /* Erase the edit box. */
-            static_ss.full_input[0] = '\0';
-            static_ss.full_input_size = 0;
+            erase_matcher_input();
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_full_input);
+            SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          case special_index_copytext:
             SendMessage(hwndEdit, WM_COPY, 0, 0);
@@ -737,15 +733,16 @@ static int LookupKeystrokeBinding(
          case special_index_quote_anything:
             GetWindowText(hwndEdit, szLocalString, MAX_TEXT_LINE_LENGTH);
             lstrcat(szLocalString, "<anything>");
-            lstrcpy(static_ss.full_input, szLocalString);
-            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) szLocalString);
+            lstrcpy(GLOB_full_input, szLocalString);
+            GLOB_full_input_size = lstrlen(GLOB_full_input);
+            SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM) GLOB_full_input);
             SendMessage(hwndEdit, EM_SETSEL, MAX_TEXT_LINE_LENGTH, MAX_TEXT_LINE_LENGTH);
             break;
          }
       }
       else {
          // This function key specifies a normal "dancing" action.
-         user_match = static_ss.result;
+         user_match = GLOB_match;
          user_match.match = *keyptr;
          user_match.indent = FALSE;
          user_match.valid = TRUE;
@@ -1397,7 +1394,7 @@ void MainWindow_OnSize(HWND hwnd, UINT state, int cx, int cy)
 }
 
 
-extern long_boolean uims_help_manual()
+extern bool uims_help_manual()
 {
    (void) ShellExecute(NULL, "open", "c:\\sd\\sd_doc.html", NULL, NULL, SW_SHOWNORMAL);
    return TRUE;
@@ -1461,19 +1458,18 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       if (id != ENTER_INDEX ||
           (wherearewe != LB_ERR && wherearewe != nMenuIndex)) {
          SendMessage(hwndEdit, WM_SETTEXT, 0, (LPARAM)"");
-         static_ss.full_input[0] = '\0';
-         static_ss.full_input_size = 0;
+         erase_matcher_input();
       }
 
-      matches = match_user_input(nLastOne, FALSE, FALSE);
-      user_match = static_ss.result;
+      matches = match_user_input(nLastOne, FALSE, FALSE, FALSE);
+      user_match = GLOB_match;
 
       /* We forbid a match consisting of two or more "direct parse" concepts, such as
          "grand cross".  Direct parse concepts may only be stacked if they are followed
          by a call.  The "match.next" field indicates that direct parse concepts
          were stacked. */
 
-      if ((matches == 1 || matches - static_ss.yielding_matches == 1 || user_match.exact) &&
+      if ((matches == 1 || matches - GLOB_yielding_matches == 1 || user_match.exact) &&
           ((!user_match.match.packed_next_conc_or_subcall &&
             !user_match.match.packed_secondary_subcall) ||
            user_match.match.kind == ui_call_select ||
@@ -1493,7 +1489,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          clearly meant to accept the currently highlighted item. */
 
       if (id == ENTER_INDEX &&
-          (static_ss.full_input[0] != '\0' || wherearewe == nMenuIndex)) break;
+          (GLOB_full_input[0] != '\0' || wherearewe == nMenuIndex)) break;
 
       /* Or if, for some reason, the menu isn't anywhere, we don't accept it.
 
@@ -1787,7 +1783,7 @@ static void setup_level_menu(HWND hDlg)
 }
 
 
-void SetTitle(void)
+static void SetTitle(void)
 {
    UpdateStatusBar((Cstring) 0);
    SetWindowText(hwndMain, (LPSTR) szMainTitle);
@@ -2370,8 +2366,7 @@ void EnterMessageLoop(void)
    MSG Msg;
 
    user_match.valid = FALSE;
-   static_ss.full_input[0] = '\0';
-   static_ss.full_input_size = 0;
+   erase_matcher_input();
    WaitingForCommand = TRUE;
 
    while (GetMessage(&Msg, NULL, 0, 0) && WaitingForCommand) {
@@ -2562,6 +2557,7 @@ extern uims_reply uims_get_startup_command(void)
 
 extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
+ startover:
    if (allowing_modifications)
       parse_state.call_list_to_use = call_list_any;
 
@@ -2586,6 +2582,11 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
    else if (my_reply == ui_special_concept) {
    }
    else {
+      // Reject off-level concept accelerator key presses.
+      if (!allowing_all_concepts &&
+          user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
+         goto startover;
+
       call_conc_option_state save_stuff = user_match.match.call_conc_options;
       there_is_a_call = FALSE;
       my_retval = deposit_call_tree(&user_match.match, (parse_block *) 0, 2);
@@ -2954,16 +2955,16 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
 }
 
 
-extern long_boolean uims_print_this()
+extern bool uims_print_this()
 {
-   windows_print_this(hwndMain, szMainTitle, GLOBhInstance);
-   return TRUE;
+   windows_print_this(hwndMain, szMainTitle, GLOBhInstance, outfile_string);
+   return true;
 }
 
-extern long_boolean uims_print_any()
+extern bool uims_print_any()
 {
    windows_print_any(hwndMain, szMainTitle, GLOBhInstance);
-   return TRUE;
+   return true;
 }
 
 

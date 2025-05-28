@@ -31,8 +31,7 @@
 #include <unistd.h>    /* This too. */
 #include <signal.h>
 #include <string.h>
-#include "basetype.h"
-#include "sdui.h"
+#include "sd.h"
 
 
 static int curses_initialized = 0;
@@ -90,9 +89,9 @@ extern void ttu_set_window_title(char s[])
 {
 }
 
-extern long_boolean uims_help_manual()
+extern bool uims_help_manual()
 {
-   return FALSE;
+   return false;
 }
 
 

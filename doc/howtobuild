@@ -16,7 +16,7 @@ Be sure the version numbers and dates are correct in:
     [sddoc] about.lst    (version # is visible)
     [sddoc] sd_doc.txi         (version # and date are visible)
     [sddoc] relnotes.txi       (version #, database format version #,
-                               UI version #, and date are visible.
+                               and UI version # are visible.
                                Also, check its claimed database format
                                version against database.h)
     [sddoc] index2.htmli       (version # and date are visible)
@@ -45,13 +45,20 @@ Go to sddoc directory and do:
     do_plain
     do_ps
     do_pdf
-    do_index <poster-child number>
+    do_index <poster-child-number>
             (It is important that a poster child number
              always be loaded before running "do_html")
     do_html
     do_download-unix   (at MPG, if HP-UX release is desired, see below)
     do_hpux            (at MPG, if HP-UX release is desired, see below)
 
+-----------------------------------------------------------------
+                POSTER CHILD LOG
+10 Jun 00  -  21 Aug 00   #4
+21 Aug 00  -  14 Sep 00   #5
+14 Sep 00  -  09 Oct 00   #8
+09 Oct 00  -  11 Dec 00   #9
+11 Dec 00                 #7
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - DJGPP

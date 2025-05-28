@@ -87,7 +87,7 @@ text.all: demo.txt sessions.txt sd_doc.txt relnotes.txt relnotes98.txt \
           appnote1.txt appnote2.txt appnote3.txt
 
 html.all: demo.html sessions.html sessions_toc.html sd_doc.html sd_doc_toc.html \
-          relnotes.html relnotes98.html appnote1.html appnote2.html appnote3.html
+          relnotes.html relnotes98.html sample.html appnote1.html appnote2.html appnote3.html
 
 clean::
 	-$(RM) *.aux *.log *.toc *.dvi *.ps *.pso *.pdf *.info *.msg

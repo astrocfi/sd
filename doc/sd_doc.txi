@@ -1,8 +1,8 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 34.2
-@set Time-stamp: August 21, 2000
+@set sd-version 34.3
+@set Time-stamp: December 13, 2000
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -160,6 +160,7 @@ The Completing Reader
 Resolving and Searching
 
 * Resolving::                   Resolving
+* Mini-Grand Getouts::          Mini-Grand Getouts
 * Normalize and Standardize::   Normalizing or Standardizing the Setup
 * Pick Random Call::            Letting the program pick a random call
 * Create Setup::                Creating a Specific Setup
@@ -1278,13 +1279,14 @@ accomplish various goals.
 
 @menu
 * Resolving::                   Resolving
+* Mini-Grand Getouts::          Mini-Grand Getouts
 * Normalize and Standardize::   Normalizing or Standardizing the Setup
 * Pick Random Call::            Letting the program pick a random call
 * Create Setup::                Creating a Specific Setup
 * Reconcile::                   The @code{Reconcile} operation.
 @end menu
 
-@node Resolving, Normalize and Standardize,  , Resolving and Searching
+@node Resolving, Mini-Grand Getouts,  , Resolving and Searching
 @section Resolving
 
 Whenever the setup is in a resolved state, whether intentionally or
@@ -1378,7 +1380,17 @@ the sequence to a file.}  You will not be able to print a sequence until
 it has been written to a file.  You must give the @code{write this sequence}
 command (or press function key @key{F10}) to write out the sequence.
 
-@node Normalize and Standardize, Pick Random Call, Resolving, Resolving and Searching
+@node Mini-Grand Getouts, Normalize and Standardize, Resolving, Resolving and Searching
+@section Mini-Grand Getouts
+
+Some callers like to use the getout of ``Right and Left Grand, but promenade
+on the third hand'', sometimes known as a ``Mini-Grand''.  Under normal circumstances,
+@code{Sd} will not search for such things.  If you want them, issue the ``toggle
+minigrand getouts'' command.  You may also customize the program by putting
+the line ``minigrand_getouts'' in the initialization file, or ``-minigrand_getouts''
+in the command line of a shortcut icon.  @xref{Option Control}.
+
+@node Normalize and Standardize, Pick Random Call, Mini-Grand Getouts, Resolving and Searching
 @section Normalizing or Standardizing the Setup
 
 These commands invoke an operation very similar to the resolver,
@@ -1856,11 +1868,13 @@ timing for singing call figures.
 There are several commands that change some aspect of the way @code{Sd}
 or @code{Sdtty} runs.  They are:
 @example
+   toggle singlespace mode
    toggle concept levels
    toggle active phantoms
    toggle retain after error
    toggle nowarn mode
    toggle singleclick mode
+   toggle minigrand getouts
    toggle singing call
    toggle reverse singing call
 @end example
@@ -1872,6 +1886,11 @@ off if it was on.  The current status of some of these
 modes is always displayed
 in the input prompt in @code{Sdtty}, or the status bar at the bottom
 in @code{Sd}.
+
+The @code{toggle singlespace mode} command changes
+the format of the output file between single spacing and double
+spacing.  The default is double spacing.  This command affects
+only future sequences.  It has no effect on sequences already written.
 
 The @code{toggle concept levels} command changes the legality of concepts
 that are not on the specified calling level.  @xref{Entering Concepts},
@@ -1885,8 +1904,7 @@ phantoms colliding with or otherwise interfering with live dancers.
 Instances in which this option is needed are nearly unheard-of.
 
 The @code{toggle retain after error} command changes the option whereby
-program retains the concepts that
-you had typed when an error occurs.
+program retains the concepts that you had typed when an error occurs.
 @xref{Retaining Concepts After an Error}.
 
 The @code{toggle nowarn mode} command changes the suppression
@@ -1898,6 +1916,9 @@ mouse clicks on menu items.
 The @code{toggle singing call} commands change the singing call mode,
 which affects resolves.
 @xref{Singing Call Progressions}.
+
+The @code{toggle minigrand getouts} command changes the search
+for ``mini-grand'' getouts in the resolver.  @xref{Mini-Grand Getouts}.
 
 Any of these modes, except the singing call modes, can be turned on
 automatically when the program begins,
@@ -2068,10 +2089,12 @@ by giving suitable commands.  @xref{Changing Modes}.
 
 @table @code
 @item singlespace
-This makes the program write out the output file with single spacing
+This makes the program write the output file with single spacing
 instead of the usual double spacing.
 This may be useful for those who use special fonts or special printer
 arrangements.
+This option is the same as giving the @code{toggle singlespace mode}
+command while the program is starting a sequence.
 @item concept_levels
 This allows all concepts, even those that are not
 actually legal at the specified level, to be used.
@@ -2081,6 +2104,10 @@ command while the program is running.
 This turns on the ``active phantoms'' behavior,
 which makes phantoms persist throughout calls.
 This option is the same as giving the @code{toggle active phantoms}
+command while the program is running.
+@item minigrand_getouts
+This turns on the acceptance of ``mini-grand'' getouts in the resolver.
+This option is the same as giving the @code{toggle minigrand getouts}
 command while the program is running.
 @item no_warnings
 This suppresses the display and printing of the
@@ -3357,6 +3384,10 @@ independently, do the call.
 @item reverse crazy offset C/L/W
 @item <N/4> crazy offset C/L/W
 @item <N/4> reverse crazy offset C/L/W
+@item crazy diagonal boxes
+@item reverse crazy diagonal boxes
+@item <N/4> crazy diagonal boxes
+@item <N/4> reverse crazy diagonal boxes
 These are straightforward.
 @item triple C/L/W/B/D/1T/1L working together
 @item triple C/L/W/B working apart
@@ -3538,6 +3569,8 @@ in that family that is widely accepted.
 These encompass any kind of distorted lines or columns.
 @item O
 @item butterfly
+@item mini-O
+@item mini-butterfly
 These are straightforward.
 @item stairstep C/L/W
 A ``stairstep'' is a 4x4 matrix occupied so that everyone has exactly
@@ -3583,6 +3616,9 @@ These concepts are quite obscure.
 @item diagonal C/L/W of 3 @r{(plural)}
 These are done from ``blocks.''  The two lines or columns work together
 in a 2x3 matrix, doing a 6-person call.
+@item staggered C/L/W of 3 @r{(plural)}
+These are done from a 4x4 matrix occupied by only 6 people.  Hence
+the ``ignore'' concept must be used to remove 2 people from the setup.
 @item C/L/W of 3 @r{(plural)}
 The lines or columns are not distorted.  They are simply picked
 out from the formation.
@@ -3602,6 +3638,11 @@ These are done from triple diamonds in which the points are offset.
 @item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
+@item <ANYONE> in your double bent C/L/W @r{(singular)}
+These are done from a variety of setups, in which the designated people
+form a recognizable ``double bent'' setup.
+@item bent C/L/W/B @r{(plural)}
+These are done from suitable setups.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
 @item <ANYONE> in your diagonal box
 @item <ANYONE> in your offset C/L/W @r{(singular)}
@@ -3666,6 +3707,10 @@ These two are done from a setup in which there are two identifiable Z's.
 A 4-person call must be used.
 @item triple Z's
 This requires a setup with three Z's.
+@item Z diamond
+@item Z diamonds
+In these concepts, Z's are treated as distorted diamonds.  The dancers
+do a diamond call and then go back to footprints.
 @item jay
 @item back-to-front jay
 @item back-to-back jay
@@ -3775,6 +3820,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <N/4> stable
 @item <ANYONE> are <N/4> stable
 @item emulate
+@item drag the <ANYONE>
 @item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item outeracting
 @item ferris
@@ -3983,6 +4029,7 @@ smooth dancing of this figure.
 @item <ANYONE> start
 @item skip the <Nth> part
 @item do the <Nth> part
+@item do the last part
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item interrupt after the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -4000,10 +4047,10 @@ You should type this in as, for example
 @end example
 @xref{Anyone Start}, for more on the @code{<ANYONE> start} concept.
 
-The @code{do the <Nth> part} concept is intended to be used
-with a following concept, as in @samp{do the 2nd part tandem remake}.
-It applies the following concept
-to the indicated part of the call, but not to the rest.
+The @code{do the <Nth> part} and @code{do the last part} concepts are
+intended to be used with a following concept, as in @samp{do the 2nd
+part tandem remake}.  It applies the following concept to the indicated
+part of the call, but not to the rest.
 
 The @code{replace} and @code{interrupt} concepts require two calls.  After
 typing the concept, type the call that is to have a part interrupted or replaced.
