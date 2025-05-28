@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 32. */
+    This is for version 33. */
 
 /* This defines the following functions:
    compress_setup
@@ -54,9 +54,10 @@
    normalize_setup
    toplevelmove
    finish_toplevelmove
-   get_escape_string
-   unparse_call_name
-   print_recurse
+   deposit_call_tree
+   do_subcall_query
+   print_id_error
+   find_proper_call_list
 and the following external variables:
    the_callback_block
    error_message1
@@ -66,27 +67,68 @@ and the following external variables:
    last_magic_diamond
    history
    history_ptr
+   history_allocation
    written_history_items
    written_history_nopic
+   higher_acceptable_level
+   the_topcallflags
+   there_is_a_call
    base_calls
+   ui_options
+   whole_sequence_low_lim
+   enable_file_writing
    cardinals
    ordinals
    direction_names
+   getout_strings
+   writechar_block
+   num_command_commands
+   command_commands
+   command_command_values
+   num_startup_commands
+   startup_commands
+   startup_command_values
+   resolve_command_values
+   number_of_resolve_commands
+   resolve_command_strings
+   glob_call_list_mode
+   abs_max_calls
+   max_base_calls
+   tagger_menu_list
+   selector_menu_list
+   circcer_menu_list
    tagger_calls
    circcer_calls
+   number_of_taggers
+   number_of_circcers
+   selector_for_initialize
+   number_for_initialize
    diagnostic_mode
    singing_call_mode
+   parse_state
    current_options
+   uims_menu_index
    no_search_warnings
    conc_elong_warnings
    dyp_each_warnings
    useless_phan_clw_warnings
    allowing_all_concepts
    using_active_phantoms
+   last_direction_kind
+   interactivity
+   database_version
+   testing_fidelity
+   level_threshholds
+   allowing_modifications
+   hashed_randoms
    concept_sublist_sizes
    concept_sublists
    good_concept_sublist_sizes
    good_concept_sublists
+   null_options
+   verify_options
+   verify_used_number
+   verify_used_selector
 */
 
 
@@ -110,6 +152,7 @@ uint32 collision_person2;
 parse_block *last_magic_diamond;
 configuration *history = (configuration *) 0; /* allocated in sdmain */
 int history_ptr;
+int history_allocation;
 
 /* This tells how much of the history text written to the UI is "safe".  If this
    is positive, the history items up to that number, inclusive, have valid
@@ -127,10 +170,40 @@ int written_history_items;
    forced pictures. */
 int written_history_nopic;
 
+/* This list tells what level calls will be put in the menu and hence made available.
+   In some cases, we make calls available that are higher than the requested level.
+   When we use such a call, a warning is printed. */
+
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+dance_level higher_acceptable_level[] = {
+   l_mainstream,
+   l_plus,
+   l_a1,
+   l_a2,
+   l_c1,
+   l_c2,
+   l_c3a,
+   l_c3x,     /* If c3 is given, we allow c3x. */
+   l_c3x,
+   l_c4a,
+   l_c4x,     /* If c4 is given, we allow c4x. */
+   l_c4x,
+   l_dontshow,
+   l_nonexistent_concept};
+
+
+uint32 the_topcallflags;
+long_boolean there_is_a_call;
 callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
+
+ui_option_type ui_options;
+int whole_sequence_low_lim;
+long_boolean enable_file_writing;
 
 Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", (Cstring) 0};
 Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th", "13th", "14th", "15th", (Cstring) 0};
+
+
 
 /* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
    and to the necessary stuff in SDUI. */
@@ -150,19 +223,83 @@ Cstring direction_names[] = {
    "zag-zag",
    (Cstring) 0};
 
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+Cstring getout_strings[] = {
+   "Mainstream",
+   "Plus",
+   "A1",
+   "A2",
+   "C1",
+   "C2",
+   "C3A",
+   "C3",
+   "C3X",
+   "C4A",
+   "C4",
+   "C4X",
+   "all",
+   ""};
+
+writechar_block_type writechar_block;
+int num_command_commands;     // Size of the command menu.
+Cstring *command_commands;
+command_kind *command_command_values;
+int num_startup_commands;     // Size of the startup menu.
+Cstring *startup_commands;
+start_select_kind *startup_command_values;
+int number_of_resolve_commands;
+Cstring *resolve_command_strings;
+resolve_command_kind *resolve_command_values;
+call_list_mode_t glob_call_list_mode;
+int abs_max_calls;
+int max_base_calls;
+Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
+Cstring *selector_menu_list;
+Cstring *circcer_menu_list;
 callspec_block **tagger_calls[NUM_TAGGER_CLASSES];
 callspec_block **circcer_calls;
-
-
+uint32 number_of_taggers[NUM_TAGGER_CLASSES];
+uint32 number_of_circcers;
+selector_kind selector_for_initialize;
+int number_for_initialize;
 long_boolean diagnostic_mode = FALSE;
 int singing_call_mode = 0;
+parse_state_type parse_state;
 call_conc_option_state current_options;
+int uims_menu_index;
 warning_info no_search_warnings = {{0, 0, 0}};
 warning_info conc_elong_warnings = {{0, 0, 0}};
 warning_info dyp_each_warnings = {{0, 0, 0}};
 warning_info useless_phan_clw_warnings = {{0, 0, 0}};
 long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
+int last_direction_kind = direction_zagzag;
+interactivity_state interactivity = interactivity_normal;
+char database_version[81];
+long_boolean testing_fidelity = FALSE;
+
+/* This list tells what level calls will be accepted for the "pick level call"
+   operation.  When doing a "pick level call, we don't actually require calls
+   to be exactly on the indicated level, as long as it's plausibly close. */
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+dance_level level_threshholds[] = {
+   l_mainstream,
+   l_plus,
+   l_a1,
+   l_a1,      /* If a2 is given, an a1 call is OK. */
+   l_c1,
+   l_c2,
+   l_c3a,
+   l_c3a,     /* If c3 is given, a c3a call is OK. */
+   l_c3a,     /* If c3x is given, a c3a call is OK. */
+   l_c3x,     /* If c4a is given, a c3x call is OK. */
+   l_c3x,     /* If c4 is given, a c3x call is OK. */
+   l_c3x,     /* If c4x is given, a c3x call is OK. */
+   l_dontshow,
+   l_nonexistent_concept};
+
+int allowing_modifications = 0;
+int hashed_randoms;
 
 
 /* These two direct the generation of random concepts when we are searching.
@@ -179,10 +316,17 @@ short int *concept_sublists[NUM_CALL_LIST_KINDS];
    we don't want anything the least bit ugly in these lists. */
 int good_concept_sublist_sizes[NUM_CALL_LIST_KINDS];
 short int *good_concept_sublists[NUM_CALL_LIST_KINDS];
+const call_conc_option_state null_options = {
+   selector_uninitialized,
+   direction_uninitialized,
+   0, 0, 0, 0, 0};
+call_conc_option_state verify_options;
+long_boolean verify_used_number;
+long_boolean verify_used_selector;
 
 
 
-extern void compress_setup(const expand_thing *thing, setup *stuff)
+extern void compress_setup(const expand_thing *thing, setup *stuff) THROW_DECL
 {
    setup temp = *stuff;
 
@@ -194,7 +338,7 @@ extern void compress_setup(const expand_thing *thing, setup *stuff)
 }
 
 
-extern void expand_setup(const expand_thing *thing, setup *stuff)
+extern void expand_setup(const expand_thing *thing, setup *stuff) THROW_DECL
 {
    setup temp = *stuff;
 
@@ -552,7 +696,7 @@ static void initialize_touch_tables(void)
 extern void touch_or_rear_back(
    setup *scopy,
    long_boolean did_mirror,
-   int callflags1)
+   int callflags1) THROW_DECL
 {
    int i;
    uint32 directions, livemask;
@@ -636,21 +780,25 @@ extern void touch_or_rear_back(
       }
    }
 
-   /* Finally, try stepping to a wave. */
+   // Finally, try stepping to a wave.
 
    if (callflags1 & CFLAG1_STEP_TO_WAVE) {
       uint32 hash_num;
 
-      /* Special stuff:  If lines facing, but people are incomplete, we honor
-         an "assume facing lines" command. */
+      // Special stuff:  If lines facing, but people are incomplete,
+      // we honor an "assume facing lines" command.
 
-      if (scopy->kind == s2x4 &&
-          scopy->cmd.cmd_assume.assump_col == 0 &&
+      if (scopy->cmd.cmd_assume.assump_col == 0 &&
           scopy->cmd.cmd_assume.assump_both == 1 &&
-          scopy->cmd.cmd_assume.assumption == cr_li_lo &&
-          directions == (livemask & 0xAA00)) {
-         livemask = 0xFFFF;
-         directions = 0xAA00;
+          scopy->cmd.cmd_assume.assumption == cr_li_lo) {
+         if (scopy->kind == s2x4 && directions == (livemask & 0xAA00)) {
+            livemask = 0xFFFF;
+            directions = 0xAA00;
+         }
+         else if (scopy->kind == s2x3 && directions == (livemask & 0xA80)) {
+            livemask = 0xFFF;
+            directions = 0xA80;
+         }
       }
 
       hash_num = ((scopy->kind + (5*livemask)) * 25) & (NUM_TOUCH_HASH_BUCKETS-1);
@@ -800,7 +948,7 @@ extern void touch_or_rear_back(
 extern void do_matrix_expansion(
    setup *ss,
    uint32 concprops,
-   long_boolean recompute_id)
+   long_boolean recompute_id) THROW_DECL
 {
    uint32 needprops = concprops & CONCPROP__NEED_MASK;
    uint32 needpropbits = NEEDMASK(needprops);
@@ -950,6 +1098,7 @@ static restr_initializer restr_init_table0[] = {
    {s1x16, cr_miniwaves, 2, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}, {8}, {0}, {0}, TRUE,  chk_anti_groups},
    {s2x3, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
    {s2x3, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups},
+   {s2x3, cr_li_lo, 6, {3, 0, 4, 1, 5, 2},                                        {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x4, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},                              {0}, {0}, {0}, TRUE,  chk_wave},
    {s2x3, cr_wave_only, 6, {0, 1, 2, 3, 4, 5},                                    {0}, {0}, {0}, FALSE, chk_wave},
@@ -1049,6 +1198,7 @@ static restr_initializer restr_init_table1[] = {
    {s2x8, cr_peelable_box, 8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_peelable},
    {s2x8, cr_couples_only, 2, {0, 1, 2, 3, 4, 5, 6, 7, 15, 14, 13, 12, 11, 10, 9, 8}, {8}, {0}, {0}, TRUE,  chk_groups},
    {s_qtag, cr_wave_only, 4, {2, 3, 7, 6},                                        {0}, {0}, {0}, FALSE, chk_wave},
+   {s_short6, cr_tall6, 6, {4, 0, 2, 3, 5},         {2, 1, 4},       {3, 0, 1, 5}, {3, 2, 3, 4}, TRUE,  chk_dmd_qtag},
    {s_short6, cr_wave_only, 6, {1, 0, 3, 2, 5, 4},                                {0}, {0}, {0}, TRUE,  chk_wave},
    {s_trngl, cr_wave_only, 2, {1, 2},                                             {0}, {0}, {0}, TRUE,  chk_wave},   /* isn't this bogus?  It checks for TANDEM-BASE. */
    {sdmd, cr_wave_only, 2, {1, 3},                                                {0}, {0}, {0}, TRUE,  chk_wave},
@@ -1368,6 +1518,8 @@ extern void initialize_sdlib(void)
    initialize_touch_tables();
    initialize_concept_sublists();
 
+   writechar_block.usurping_writechar = FALSE;
+
    int i;
 
    for (i=0 ; i<NUM_WARNINGS ; i++) {
@@ -1461,11 +1613,11 @@ static long_boolean check_for_supercall(const parse_block *parseptrcopy)
 
 
 extern long_boolean check_for_concept_group(
-   Const parse_block *parseptrcopy,
+   const parse_block *parseptrcopy,
    long_boolean want_all_that_other_stuff,
    concept_kind *k_p,
    uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
-   parse_block **parseptr_skip_p)
+   parse_block **parseptr_skip_p) THROW_DECL
 {
    concept_kind k;
    long_boolean retval = FALSE;
@@ -1581,40 +1733,40 @@ extern long_boolean check_for_concept_group(
 }
 
 
-extern void fail(Const char s[])
+extern void fail(Const char s[]) THROW_DECL
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
-   (*the_callback_block.do_throw_fn)(error_flag_1_line);
+   throw error_flag_type(error_flag_1_line);
 }
 
 
-extern void fail2(Const char s1[], Const char s2[])
+extern void fail2(Const char s1[], Const char s2[]) THROW_DECL
 {
    (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    (void) strncpy(error_message2, s2, MAX_ERR_LENGTH);
    error_message2[MAX_ERR_LENGTH-1] = '\0';
-   (*the_callback_block.do_throw_fn)(error_flag_2_line);
+   throw error_flag_type(error_flag_2_line);
 }
 
 
-extern void failp(uint32 id1, Const char s[])
+extern void failp(uint32 id1, Const char s[]) THROW_DECL
 {
    collision_person1 = id1;
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
-   (*the_callback_block.do_throw_fn)(error_flag_cant_execute);
+   throw error_flag_type(error_flag_cant_execute);
 }
 
 
-extern void specialfail(Const char s[])
+extern void specialfail(Const char s[]) THROW_DECL
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
-   (*the_callback_block.do_throw_fn)(error_flag_wrong_resolve_command);
+   throw error_flag_type(error_flag_wrong_resolve_command);
 }
 
 
@@ -1643,7 +1795,7 @@ extern restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
    long_boolean instantiate_phantoms,
-   long_boolean *failed_to_instantiate)
+   long_boolean *failed_to_instantiate) THROW_DECL
 {
    int idx, limit, i, j, k;
    uint32 t;
@@ -2141,7 +2293,7 @@ extern restriction_test_result verify_restriction(
 }
 
 
-extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
+extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 {
    callarray *p;
    long_boolean booljunk;
@@ -2241,7 +2393,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          goto fix_col_line_stuff;
       case cr_li_lo: 
          switch (ss->kind) {
-         case s1x2: case s1x4: case s2x2: case s2x4:
+         case s1x2: case s1x4: case s2x2: case s2x3: case s2x4:
             goto fix_col_line_stuff;
          default:
             goto good;           /* We don't understand the setup -- we'd better accept it. */
@@ -2605,7 +2757,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                                    ss->people[9].id1 | ss->people[11].id1)) goto good;
          if (ss->kind == s2x3 && !(ss->people[0].id1 | ss->people[2].id1)) goto good;
          if (ss->kind == s2x3 && !(ss->people[3].id1 | ss->people[5].id1)) goto good;
-         goto bad;
+         goto good;    // Must be evaluating a division of a 4x5 or whatever.
       case cr_reg_tbone:
          if (ss->kind == s2x4 && key == b_2x2) tt.assump_col = 1;
          /* **** FALL THROUGH!!!! */
@@ -2628,20 +2780,19 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             switch (ss->kind) {
             case s_qtag:
             case s_hrglass:
-               t1 = ss->people[6].id1;
-               t2 = ss->people[2].id1;
-               break;
+            case s_dhrglass:
+            case s_bone:
+               t1 = 6; t2 = 2; break;
             case s_2x1dmd:
-               t1 = ss->people[0].id1;
-               t2 = ss->people[3].id1;
-               break;
+               t1 = 0; t2 = 3; break;
             case s_bone6:
-               t1 = ss->people[5].id1;
-               t2 = ss->people[2].id1;
-               break;
+               t1 = 5; t2 = 2; break;
             default:
                goto bad;
             }
+
+            t1 = ss->people[t1].id1;
+            t2 = ss->people[t2].id1;
 
             if (t1 && (t1 & d_mask)!=d_north) b1 = FALSE;
             if (t2 && (t2 & d_mask)!=d_south) b1 = FALSE;
@@ -2824,9 +2975,15 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       case s2x6:
       case s2x8:
       case s2x3:
-         for (idx=0,u=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) u |= ss->people[idx].id1;
+         for (idx=0,u=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++)
+            u |= ss->people[idx].id1;
          if (!(u&010)) tt.assump_col = 1;
-         else if (tt.assump_both && ss->kind == s2x3) goto bad;   /* We can't check 2x3 lines for right-or-left-handedness. */
+
+         // This line commented out.  We now recognize "handedness" of the waves of 3
+         // in a 2x3.  OK?  This is needed for 1/2 circulate from lines of 3 with
+         // centers facing and ends back-to-back.  See test vg05/vg02.
+         //         else if (tt.assump_both && ss->kind == s2x3) goto bad;
+         //    /* We can't check 2x3 lines for right-or-left-handedness. */
          goto check_tt;
       default:
          /* ****** Try to change this (and other things) to "goto bad". */
@@ -2858,7 +3015,7 @@ extern uint32 find_calldef(
    setup *scopy,
    int real_index,
    int real_direction,
-   int northified_index)
+   int northified_index) THROW_DECL
 {
    unsigned short *calldef_array;
    predptr_pair *predlistptr;
@@ -2867,7 +3024,8 @@ extern uint32 find_calldef(
    if (tdef->callarray_flags & CAF__PREDS) {
       predlistptr = tdef->stuff.prd.predlist;
       while (predlistptr != (predptr_pair *) 0) {
-         if ((*(predlistptr->pred->predfunc))(scopy, real_index, real_direction, northified_index, predlistptr->pred->extra_stuff)) {
+         if ((*(predlistptr->pred->predfunc))
+             (scopy, real_index, real_direction, northified_index, predlistptr->pred->extra_stuff)) {
             calldef_array = predlistptr->arr;
             goto got_it;
          }
@@ -2890,31 +3048,6 @@ got_it:
 extern void clear_people(setup *z)
 {
    (void) memset(z->people, 0, sizeof(personrec)*MAX_PEOPLE);
-}
-
-
-extern uint32 rotperson(uint32 n, int amount)
-{
-   if (n == 0) return 0; else return (n + amount) & ~064;
-}
-
-
-extern uint32 rotcw(uint32 n)
-{
-   if (n == 0) return 0; else return (n + 011) & ~064;
-}
-
-
-extern uint32 rotccw(uint32 n)
-{
-   if (n == 0) return 0; else return (n + 033) & ~064;
-}
-
-
-extern void clear_person(setup *resultpeople, int resultplace)
-{
-   resultpeople->people[resultplace].id1 = 0;
-   resultpeople->people[resultplace].id2 = 0;
 }
 
 
@@ -2954,12 +3087,12 @@ extern void install_person(setup *resultpeople, int resultplace, const setup *so
       collision_person2 = newperson;
       error_message1[0] = '\0';
       error_message2[0] = '\0';
-      (*the_callback_block.do_throw_fn)(error_flag_collision);
+      throw error_flag_type(error_flag_collision);
    }
 }
 
 
-extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount)
+extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount) THROW_DECL
 {
    uint32 newperson = sourcepeople->people[sourceplace].id1;
 
@@ -2975,14 +3108,14 @@ extern void install_rot(setup *resultpeople, int resultplace, const setup *sourc
          collision_person2 = newperson;
          error_message1[0] = '\0';
          error_message2[0] = '\0';
-         (*the_callback_block.do_throw_fn)(error_flag_collision);
+         throw error_flag_type(error_flag_collision);
       }
    }
 }
 
 
 extern void scatter(setup *resultpeople, const setup *sourcepeople,
-                    const veryshort *resultplace, int countminus1, int rotamount)
+                    const veryshort *resultplace, int countminus1, int rotamount) THROW_DECL
 {
    int k, idx;
    for (k=0; k<=countminus1; k++) {
@@ -3112,7 +3245,7 @@ static long_boolean do_heritflag_merge(uint32 *dest, uint32 source)
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
-   uint64 *final_concepts)
+   uint64 *final_concepts) THROW_DECL
 {
    while (cptr) {
       uint32 the_final_bit;
@@ -3268,7 +3401,7 @@ extern parse_block *really_skip_one_concept(
    parse_block *incoming,
    concept_kind *k_p,
    uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
-   parse_block **parseptr_skip_p)
+   parse_block **parseptr_skip_p) THROW_DECL
 {
    uint64 junk_concepts;
    parse_block *parseptrcopy;
@@ -3323,6 +3456,7 @@ extern parse_block *really_skip_one_concept(
    setup to opt for (because of lots of phantoms), use "goal". */
 
 extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep)
+   THROW_DECL
 {
    int i;
    long_boolean lineflag = FALSE;
@@ -3605,7 +3739,6 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
 }
 
 
-
 typedef struct {
   resolve_kind k;
   dance_level level_needed;
@@ -3674,6 +3807,12 @@ static resolve_tester test_galaxy_stuff[] = {
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_qtag_stuff[] = {
+#ifdef BOGUSDIXIEGRAND
+   // We had this (and two more below) to satisfy test vg07t.  But we now consider it to be
+   // bogus, and have taken it out.  The people must be facing for the first pull-by.
+   // It is only after that that they can start working around the corner.
+   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0xA8AA8A88},    /* dixie grand from 3/4 tag. */
+#endif
    {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8AAAA888},    /* dixie grand from 1/4 tag. */
    {resolve_rlg,            l_mainstream,      4, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0xAA8A88A8},    /* RLG from 3/4 tag. */
    {resolve_ext_rlg,        l_mainstream,      5, 0,   {7, 5, 4, 2, 3, 1, 0, 6},     0xA88A8AA8},    /* extend-RLG from 1/4 tag. */
@@ -3705,11 +3844,21 @@ static resolve_tester test_2x6_stuff[] = {
    {resolve_none,           l_mainstream,      64}};
 
 static resolve_tester test_3x4_stuff[] = {
-   /* These test for offset waves. */
+   // These test for offset waves.
    {resolve_rlg,            l_mainstream, 3, 0,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
    {resolve_rlg,            l_mainstream, 3, 0,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
    {resolve_la,             l_mainstream, 6, 0,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
    {resolve_la,             l_mainstream, 6, 0,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
+   // These test for sort of skewed offset 8-chain.
+   // These may be a mistake.
+   //   {resolve_rlg,            l_mainstream, 2, 0,   {6, 4, 11, 1, 0, 10, 5, 7},   0x8A8AA8A8},
+   //   {resolve_rlg,            l_mainstream, 2, 0,   {4, 3, 5, 2, 11, 8, 10, 9},   0x8A8AA8A8},
+   //   {resolve_la,             l_mainstream, 5, 0,   {4, 11, 1, 0, 10, 5, 7, 6},   0xA8AA8A88},
+   //   {resolve_la,             l_mainstream, 5, 0,   {3, 2, 5, 10, 9, 8, 11, 4},   0xAA8A88A8},
+   {resolve_rlg,            l_mainstream, 1, 0,   {4, 5, 1, 0, 10, 11, 7, 6},   0x31311313},
+   {resolve_rlg,            l_mainstream, 1, 0,   {3, 2, 11, 10, 9, 8, 5, 4},   0x31311313},
+   {resolve_la,             l_mainstream, 4, 0,   {5, 1, 0, 10, 11, 7, 6, 4},   0x13113133},
+   {resolve_la,             l_mainstream, 4, 0,   {2, 11, 10, 9, 8, 5, 4, 3},   0x13113133},
    {resolve_none,           l_mainstream, 64}};
 
 static resolve_tester test_4dmd_stuff[] = {
@@ -3777,9 +3926,16 @@ static resolve_tester test_2x4_stuff[] = {
    {resolve_circle,         l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},    /* "circle left/right" from pseudo squared-set, sashayed. */
    {resolve_circle,         l_mainstream,      6, 1,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},    /* "circle left/right" from lines-in, sashayed. */
    {resolve_circle,         l_mainstream,      7, 1,   {5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},    /* "circle left/right" from lines-in, normal. */
+
    {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},    /* dixie grand from DPT. */
+#ifdef BOGUSDIXIEGRAND
+   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {6, 1, 3, 0, 2, 5, 7, 4},     0x33131131},    /* dixie grand from CDPT. */
+   {resolve_dixie_grand,    dixie_grand_level, 2, 0,   {5, 2, 3, 0, 1, 6, 7, 4},     0x33131131},    /* dixie grand from trade-by. */
+#endif
+   {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33111133},    /* dixie grand from 8-chain. */
    {resolve_dixie_grand,    dixie_grand_level, 3, 0,   {6, 3, 5, 0, 2, 7, 1, 4},     0x33331111},    /* dixie grand from magic column. */
    {resolve_dixie_grand,    dixie_grand_level, 1, 0,   {4, 1, 3, 6, 0, 5, 7, 2},     0x33111133},    /* dixie grand from other magic column. */
+
    {resolve_sglfileprom,    l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x11333311},    /* single file promenade from L columns */
    {resolve_sglfileprom,    l_mainstream,      6, 0,   {4, 3, 2, 1, 0, 7, 6, 5},     0x13333111},    /* single file promenade from L columns */
    {resolve_sglfileprom,    l_mainstream,      7, 0,   {5, 4, 3, 2, 1, 0, 7, 6},     0x18833AA1},    /* single file promenade from T-bone */
@@ -3926,7 +4082,7 @@ extern long_boolean warnings_are_unacceptable(long_boolean strict)
    When preparing for an isolated call, that is, "so-and-so do your part, whatever",
    we work at it a little, so we set action=normalize_before_isolated_call.
    For normal usage, we set action=simple_normalize. */
-extern void normalize_setup(setup *ss, normalize_action action)
+extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL
 {
    int i;
    uint32 livemask, j;
@@ -4045,7 +4201,7 @@ extern void normalize_setup(setup *ss, normalize_action action)
 
 /* Top level move routine. */
 
-SDLIB_API void toplevelmove(void)
+SDLIB_API void toplevelmove(void) THROW_DECL
 {
    int i;
 
@@ -4086,9 +4242,9 @@ SDLIB_API void toplevelmove(void)
          "split" concept has been given, possibly preceded by "left" we do the same.
          We leave the "split" concept in place.  Other mechanisms will do the rest. */
 
-      if (the_callback_block.parse_state_ptr->topcallflags1 & CFLAG1_SEQUENCE_STARTER)
+      if (parse_state.topcallflags1 & CFLAG1_SEQUENCE_STARTER)
          conceptptr = conceptptr->next;
-      else if (the_callback_block.parse_state_ptr->topcallflags1 &
+      else if (parse_state.topcallflags1 &
                (CFLAG1_SPLIT_LIKE_SQUARE_THRU | CFLAG1_SPLIT_LIKE_DIXIE_STYLE)) {
          uint64 finaljunk;
          parse_block *concept_scan = conceptptr->next;
@@ -4231,7 +4387,7 @@ SDLIB_API void toplevelmove(void)
    /* Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.) */
    update_id_bits(&starting_setup);
    starting_setup.cmd.parseptr = conceptptr;
-   starting_setup.cmd.callspec = NULLCALLSPEC;
+   starting_setup.cmd.callspec = (callspec_block *) 0;
    starting_setup.cmd.cmd_final_flags.final = 0;
    starting_setup.cmd.cmd_final_flags.her8it = 0;
    move(&starting_setup, FALSE, &newhist->state);
@@ -4251,7 +4407,7 @@ SDLIB_API void toplevelmove(void)
 
 /* Do the extra things that a call requires, that are not required when only testing for legality. */
 
-SDLIB_API void finish_toplevelmove(void)
+SDLIB_API void finish_toplevelmove(void) THROW_DECL
 {
    int i;
 
@@ -4265,910 +4421,372 @@ SDLIB_API void finish_toplevelmove(void)
 }
 
 
-// These are local gateways to the outside world.
-
-static void writestuff(Const char *s)
+/* This stuff is duplicated in verify_call in sdmatch.c . */
+SDLIB_API long_boolean deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
 {
-   (*the_callback_block.writestuff_fn)(s);
-}
+   /* First, if we have already deposited a call, and we see more stuff, it must be
+      concepts or calls for an "anything" subcall. */
 
-static void writechar(char src)
-{
-   (*the_callback_block.writechar_fn)(src);
-}
-
-
-/* Getting blanks into all the right places in the presence of substitions,
-   insertions, and elisions is way too complicated to do in the database or
-   to test.  For example, consider calls like "@4keep @5busy@1",
-   "fascinat@pe@q@ning@o@t", or "spin the pulley@7 but @8".  So we try to
-   help by never putting two blanks together, always putting blanks adjacent
-   to the outside of brackets, and never putting blanks adjacent to the
-   inside of brackets.  This procedure is part of that mechanism. */
-Private void write_blank_if_needed(void)
-{
-   if (the_callback_block.writechar_block_ptr->lastchar != ' ' && the_callback_block.writechar_block_ptr->lastchar != '[' && the_callback_block.writechar_block_ptr->lastchar != '(' && the_callback_block.writechar_block_ptr->lastchar != '-') writestuff(" ");
-}
-
-/* This examines the indicator character after an "@" escape.  If the escape
-   is for something that is supposed to appear in the menu as a "<...>"
-   wildcard, it returns that string.  If it is an escape that starts a
-   substring that would normally be elided, as in "@7 ... @8", it returns
-   a non-null pointer to a null character.  If it is an escape that is normally
-   simply dropped, it returns a null pointer. */
-
-SDLIB_API Const char *get_escape_string(char c)
-{
-   switch (c) {
-      case '0': case 'm':
-         return "<ANYTHING>";
-      case 'N':
-         return "<ANYCIRC>";
-      case '6': case 'k':
-         return "<ANYONE>";
-      case 'h':
-         return "<DIRECTION>";
-      case '9':
-         return "<N>";
-      case 'a': case 'b': case 'B': case 'D':
-         return "<N/4>";
-      case 'u':
-         return "<Nth>";
-      case 'v': case 'w': case 'x': case 'y':
-         return "<ATC>";
-      case '7': case 'n': case 'j': case 'J': case 'E':
-         return "";
-      default:
-         return (char *) 0;
+   if (save1) {
+      parse_block *tt = get_parse_block();
+      /* Run to the end of any already-deposited things.  This could happen if the
+         call takes a tagger -- it could have a search chain before we even see it. */
+      while (save1->next) save1 = save1->next;
+      save1->next = tt;
+      save1->concept = &marker_concept_mod;
+      tt->concept = &marker_concept_mod;
+      tt->call = base_calls[(key == 6) ? base_call_null_second: base_call_null];
+      tt->call_to_print = tt->call;
+      tt->replacement_key = key;
+      parse_state.concept_write_ptr = &tt->subsidiary_root;
    }
+
+   save1 = (parse_block *) 0;
+   user_match.match.call_conc_options = anythings->call_conc_options;
+
+   if (anythings->kind == ui_call_select) {
+      if ((*the_callback_block.deposit_call_fn)(anythings->call_ptr, &anythings->call_conc_options)) return TRUE;
+      save1 = *parse_state.concept_write_ptr;
+      if (!there_is_a_call) the_topcallflags = parse_state.topcallflags1;
+      there_is_a_call = TRUE;
+   }
+   else if (anythings->kind == ui_concept_select) {
+      if ((*the_callback_block.deposit_concept_fn)(anythings->concept_ptr)) return TRUE;
+   }
+   else return TRUE;   /* Huh? */
+
+   if (anythings->packed_next_conc_or_subcall) {
+      /* key for "mandatory_anycall" */
+      if (deposit_call_tree(anythings->packed_next_conc_or_subcall, save1, 2)) return TRUE;
+   }
+
+   if (anythings->packed_secondary_subcall) {
+      /* key for "mandatory_secondary_call" */
+      if (deposit_call_tree(anythings->packed_secondary_subcall, save1, 6)) return TRUE;
+   }
+
+   return FALSE;
 }
 
 
-Private void write_nice_number(char indicator, int num)
+
+extern long_boolean do_subcall_query(
+   int snumber,
+   parse_block *parseptr,
+   parse_block **newsearch,
+   long_boolean this_is_tagger,
+   long_boolean this_is_tagger_circcer,
+   callspec_block *orig_call)
 {
-   if (num < 0) {
-      writestuff(get_escape_string(indicator));
+   char tempstring_text[MAX_TEXT_LINE_LENGTH];
+
+   /* Note whether we are using any mandatory substitutions, so that the menu
+      initialization will always accept this call. */
+
+   if (snumber == 2 || snumber == 6) {
+      /* In some types of pick operations, the picker simply doesn't know how
+         to choose a mandatory subcall.  In that case, the call requiring the
+         mandatory subcall (e.g. "wheel and <anything>") is simply rejected. */
+      if (forbid_call_with_mandatory_subcall())
+         fail("Mandatory subcall fail.");
+      mandatory_call_used = TRUE;
    }
+
+   /* Now we know that the list doesn't say anything about this call.  Perhaps we should
+      query the user for a replacement and add something to the list.  First, decide whether
+      we should consider doing so.  If we are initializing the database, the answer is
+      always "no", even for calls that require a replacement call, such as
+      "clover and anything".  This means that, for the purposes of database initialization,
+      "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
+      that appears in the database. */
+
+   /* Also, when doing pick operations, the picker might not want to do a random pick.
+      It might just want to leave the default call ("clover and [nothing]") in place.
+      So we ask the picker. */
+
+   /* Of course, if we are testing the fidelity of later calls during a reconcile
+      operation, we DO NOT EVER add any modifiers to the list, even if the user
+      clicked on "allow modification" before clicking on "reconcile".  It is perfectly
+      legal to click on "allow modification" before clicking on "reconcile".  It means
+      we want modifications (chosen by random number generator, since we won't be
+      interactive) for the calls that we randomly choose, but not for the later calls
+      that we test for fidelity. */
+
+   if (!(interactivity == interactivity_normal ||
+         allow_random_subcall_pick()) ||
+       testing_fidelity)
+      return TRUE;
+
+   /* When we are searching for resolves and the like, the situation is different.  In this case,
+      the interactivity state is set for a search.  We do perform mandatory
+      modifications, so we will generate things like "clover and shakedown".  Of course, no
+      querying actually takes place.  Instead, get_subcall just uses the random number generator.
+      Therefore, whether resolving or in normal interactive mode, we are guided by the
+      call modifier flags and the "allowing_modifications" global variable. */
+
+   /* Depending on what type of substitution is involved and what the "allowing modifications"
+      level is, we may choose not to query about this subcall, but just return the default. */
+
+   switch (snumber) {
+      case 1:   /* or_anycall */
+      case 3:   /* allow_plain_mod */
+      case 5:   /* or_secondary_call */
+         if (!allowing_modifications) return TRUE;
+         break;
+      case 4:   /* allow_forced_mod */
+         if (allowing_modifications <= 1) return TRUE;
+         break;
+   }
+
+   /* At this point, we know we should query the user about this call. */
+
+   /* Set ourselves up for modification by making the null modification list
+      if necessary.  ***** Someday this null list will always be present. */
+
+   if (parseptr->concept->kind == marker_end_of_list)
+      parseptr->concept = &marker_concept_mod;
+
+   /* Create a reference on the list.  "search" points to the null item at the end. */
+
+   tempstring_text[0] = '\0';           /* Null string, just to be safe. */
+
+   /* If doing a tagger, just get the call. */
+
+   if (snumber == 0 && this_is_tagger_circcer)
+      ;
+
+   /* If the replacement is mandatory, or we are not interactive,
+      don't present the popup.  Just get the replacement call. */
+
+   else if (interactivity != interactivity_normal)
+      ;
+   else if (snumber == 2)
+      (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
+   else if (snumber == 6)
+      (void) sprintf (tempstring_text, "SECOND SUBSIDIARY CALL");
    else {
-      switch (indicator) {
-      case '9': case 'a': case 'b': case 'B': case 'D':
-         if (indicator == '9')
-            writestuff(cardinals[num]);
-         else if (indicator == 'B' || indicator == 'D') {
-            if (num == 1)
-               writestuff("quarter");
-            else if (num == 2)
-               writestuff("half");
-            else if (num == 3)
-               writestuff("three quarter");
-            else if (num == 4)
-               writestuff("four quarter");
-            else {
-               writestuff(cardinals[num]);
-               writestuff("/4");
-            }
-         }
-         else if (num == 2)
-            writestuff("1/2");
-         else if (num == 4 && indicator == 'a')
-            writestuff("full");
-         else {
-            writestuff(cardinals[num]);
-            writestuff("/4");
-         }
-         break;
-      case 'u':     /* Need to plug in an ordinal number. */
-         writestuff(ordinals[num]);
-         break;
-      }
-   }
-}
 
+      /* Need to present the popup to the operator and find out whether modification is desired. */
 
+      modify_popup_kind kind;
+      char pretty_call_name[MAX_TEXT_LINE_LENGTH];
 
+      /* Star turn calls can have funny names like "nobox". */
 
-Private void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
-{
-   uint32 index = cptr->number_fields;
-   int howmany = cptr->howmanynumbers;
+      unparse_call_name(
+         (orig_call->callflags1 & CFLAG1_IS_STAR_CALL) ?
+         "turn the star @b" : orig_call->name,
+         pretty_call_name, &current_options);
 
-   while (f[0]) {
-      if (f[0] == '@') {
-         switch (f[1]) {
-         case 'a': case 'b': case 'B': case 'D': case 'u': case '9':
-            // DJGPP has a problem with this, need convert to int.
-            write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & 0xF));
-            index >>= 4;
-            howmany--;
-            break;
-         case '6':
-            writestuff(selector_list[cptr->who].name_uc);
-            break;
-         case 'k':
-            writestuff(selector_list[cptr->who].sing_name_uc);
-            break;
-         default:   /**** maybe we should really do what "translate_menu_name"
-                          does, using call to "get_escape_string". */
-            break;
-         }
-         
-         f += 2;
-      }
-      else
-         writechar(*f++);
-   }
-}
+      if (this_is_tagger) kind = modify_popup_only_tag;
+      else if (this_is_tagger_circcer) kind = modify_popup_only_circ;
+      else kind = modify_popup_any;
 
+      if ((*the_callback_block.uims_do_modifier_popup_fn)(pretty_call_name, kind)) {
+         /* User accepted the modification.
+            Set up the prompt and get the concepts and call. */
 
-SDLIB_API void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
-{
-   writechar_block_type saved_writeblock = *the_callback_block.writechar_block_ptr;
-   the_callback_block.writechar_block_ptr->destcurr = s;
-   the_callback_block.writechar_block_ptr->usurping_writechar = TRUE;
-
-   writestuff_with_decorations(options, name);
-   writechar('\0');
-
-   *the_callback_block.writechar_block_ptr = saved_writeblock;
-   the_callback_block.writechar_block_ptr->usurping_writechar = FALSE;
-}
-
-
-/* There are 2 bits that are meaningful in the argument to "print_recurse":
-         PRINT_RECURSE_STAR
-   This means to print an asterisk for a call that is missing in the
-   current type-in state.
-         PRINT_RECURSE_CIRC
-   This means that this is a circulate-substitute call, and should have any
-   @O ... @P stuff elided from it. */
-
-#define PRINT_RECURSE_STAR 1
-#define PRINT_RECURSE_CIRC 2
-
-
-SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
-{
-   parse_block *local_cptr;
-   parse_block *next_cptr;
-   long_boolean use_left_name = FALSE;
-   long_boolean use_cross_name = FALSE;
-   long_boolean use_magic_name = FALSE;
-   long_boolean use_intlk_name = FALSE;
-   long_boolean allow_deferred_concept = TRUE;
-   parse_block *deferred_concept = (parse_block *) 0;
-   int deferred_concept_paren = 0;
-   int comma_after_next_concept = 0;    /* 1 for comma, 2 for the word "all". */
-   int did_comma = 0;                   /* Same as comma_after_next_concept. */
-   long_boolean did_concept = FALSE;
-   long_boolean last_was_t_type = FALSE;
-   long_boolean last_was_l_type = FALSE;
-   long_boolean request_final_space = FALSE;
-
-   local_cptr = thing;
-
-   while (local_cptr) {
-      concept_kind k;
-      concept_descriptor *item;
-
-      item = local_cptr->concept;
-      k = item->kind;
-
-      if (k == concept_comment) {
-         comment_block *fubb;
-
-         fubb = (comment_block *) local_cptr->call_to_print;
-         if (request_final_space) writestuff(" ");
-         writestuff("{ ");
-         writestuff(fubb->txt);
-         writestuff(" } ");
-         local_cptr = local_cptr->next;
-         request_final_space = FALSE;
-         last_was_t_type = FALSE;
-         last_was_l_type = FALSE;
-         comma_after_next_concept = 0;
-      }
-      else if (k > marker_end_of_list) {
-         /* This is a concept. */
-
-         long_boolean force = FALSE;
-         int request_comma_after_next_concept = 0;           /* Same as comma_after_next_concept. */
-
-         /* Some concepts look better with a comma after them. */
-
-         if (item->concparseflags & CONCPARSE_PARSE_F_TYPE) {
-            /* This is an "F" type concept. */
-            comma_after_next_concept = 1;
-            last_was_t_type = FALSE;
-            force = did_concept && !last_was_l_type;
-            last_was_l_type = FALSE;
-            did_concept = TRUE;
-         }
-         else if (item->concparseflags & CONCPARSE_PARSE_L_TYPE) {
-            /* This is an "L" type concept. */
-            last_was_t_type = FALSE;
-            last_was_l_type = TRUE;
-         }
-         else if (item->concparseflags & CONCPARSE_PARSE_G_TYPE) {
-            /* This is a "leading T/trailing L" type concept, also known as a "G" concept. */
-            force = last_was_t_type && !last_was_l_type;;
-            last_was_t_type = FALSE;
-            last_was_l_type = TRUE;
-         }
-         else {
-            /* This is a "T" type concept. */
-            if (did_concept) comma_after_next_concept = 1;
-            force = last_was_t_type && !last_was_l_type;
-            last_was_t_type = TRUE;
-            last_was_l_type = FALSE;
-            did_concept = TRUE;
-         }
-
-         if (force && did_comma == 0) writestuff(", ");
-         else if (request_final_space) writestuff(" ");
-
-         next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
-
-         request_final_space = FALSE;
-
-         if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL) {
-            parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
-
-            if (k == concept_centers_and_ends) {
-               if (item->value.arg1 == selector_center6 ||
-                   item->value.arg1 == selector_center2 ||
-                   item->value.arg1 == selector_verycenters)
-                  writestuff(selector_list[item->value.arg1].name_uc);
-               else
-                  writestuff(selector_list[selector_centers].name_uc);
-
-               writestuff(" ");
-            }
-            else if (k == concept_some_vs_others) {
-               selective_key sk = (selective_key) item->value.arg1;
-
-               if (sk == selective_key_dyp)
-                  writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ");
-               else if (sk == selective_key_own)
-                  writestuff_with_decorations(&local_cptr->options, "OWN THE @6, ");
-               else if (sk == selective_key_plain)
-                  writestuff_with_decorations(&local_cptr->options, "@6 ");
-               else
-                  writestuff_with_decorations(&local_cptr->options, "@6 DISCONNECTED ");
-            }
-            else if (k == concept_sequential) {
-               writestuff("(");
-            }
-            else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
-               writestuff("DELAY: ");
-               if (!local_cptr->next || !subsidiary_ptr) {
-                  switch (local_cptr->concept->value.arg1) {
-                     case 9:
-                        writestuff("(interrupting after the ");
-                        writestuff(ordinals[local_cptr->options.number_fields]);
-                        writestuff(" part) ");
-                        break;
-                     case 8:
-                        writestuff("(replacing the ");
-                        writestuff(ordinals[local_cptr->options.number_fields]);
-                        writestuff(" part) ");
-                        break;
-                     case 0:
-                        writestuff("(replacing the last part) ");
-                        break;
-                     case 1:
-                        writestuff("(interrupting before the last part) ");
-                        break;
-                     case 2:
-                        writestuff("(interrupting after ");
-                        writestuff(cardinals[local_cptr->options.number_fields & 0xF]);
-                        writestuff("/");
-                        writestuff(cardinals[(local_cptr->options.number_fields >> 4) & 0xF]);
-                        writestuff(") ");
-                        break;
-                  }
-               }
-            }
-            else {
-               writestuff(item->name);
-               writestuff(" ");
-            }
-
-            print_recurse(local_cptr->next, 0);
-
-            if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
-
-            did_concept = FALSE;                /* We're starting over. */
-            last_was_t_type = FALSE;
-            last_was_l_type = FALSE;
-            comma_after_next_concept = 0;
-            request_final_space = TRUE;
-
-            if (k == concept_centers_and_ends) {
-               if (item->value.arg2)
-                  writestuff(" WHILE THE ENDS CONCENTRIC");
-               else
-                  writestuff(" WHILE THE ENDS");
-            }
-            else if (k == concept_some_vs_others && (selective_key) item->value.arg1 != selective_key_own) {
-
-               selector_kind opp = selector_list[local_cptr->options.who].opposite;
-               writestuff(" WHILE THE ");
-               writestuff((opp == selector_uninitialized) ? ((Cstring) "OTHERS") : selector_list[opp].name_uc);
-            }
-            else if (k == concept_on_your_own)
-               writestuff(" AND");
-            else if (k == concept_interlace ||
-                     k == concept_sandwich)
-               writestuff(" WITH");
-            else if (k == concept_replace_nth_part ||
-                     k == concept_replace_last_part ||
-                     k == concept_interrupt_at_fraction) {
-               writestuff(" BUT ");
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
-               writestuff(" WITH A [");
-               request_final_space = FALSE;
-            }
-            else if (k == concept_sequential)
-               writestuff(" ;");
-            else if (k == concept_special_sequential) {
-               if (item->value.arg1 == 2)
-                  writestuff(" :");   /* This is "start with". */
-               else
-                  writestuff(",");
-            }
-            else
-               writestuff(" BY");
-
-            /* Note that we leave "allow_deferred_concept" on.  This means that if we say "twice"
-               immediately inside the second clause of an interlace, it will get the special
-               processing.  The first clause will get the special processing by virtue of the recursion. */
-
-            next_cptr = subsidiary_ptr;
-
-            /* Setting this means that, if the second argument uses "twice", we will put
-               it in parens.  This is needed to disambiguate this situation from the
-               use of "twice" before the entire "interlace". */
-            if (deferred_concept_paren == 0) deferred_concept_paren = 2;
-         }
-         else {
-            Const callspec_block *target_call = (callspec_block *) 0;
-            Const parse_block *tptr;
-
-            /* Look for special concepts that, in conjunction with calls that have certain escape codes
-               in them, get deferred and inserted into the call name. */
-
-            if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
-   
-               /* These concepts want to take special action if there are no following
-                  concepts and certain escape characters are found in the name of
-                  the following call. */
-   
-               uint64 junk_concepts;
-
-               junk_concepts.her8it = 0;
-               junk_concepts.final = 0;
-               
-               /* Skip all final concepts, then demand that what remains is a marker
-                  (as opposed to a serious concept), and that a real call
-                  has been entered, and that its name starts with "@g". */
-               tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts);
-   
-               if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
-            }
-
-            if (target_call &&
-                k == concept_left &&
-                (target_call->callflagsf & ESCAPE_WORD__LEFT)) {
-               use_left_name = TRUE;
-            }
-            else if (target_call &&
-                     k == concept_magic &&
-                     (target_call->callflagsf & ESCAPE_WORD__MAGIC)) {
-               use_magic_name = TRUE;
-            }
-            else if (target_call &&
-                     k == concept_interlocked &&
-                     (target_call->callflagsf & ESCAPE_WORD__INTLK)) {
-               use_intlk_name = TRUE;
-            }
-            else if (target_call &&
-                     k == concept_cross &&
-                     (target_call->callflagsf & ESCAPE_WORD__CROSS)) {
-               use_cross_name = TRUE;
-            }
-            else if (allow_deferred_concept &&
-                     next_cptr &&
-                     (k == concept_twice ||
-                      k == concept_n_times ||
-                      (k == concept_fractional && item->value.arg1 == 2))) {
-               deferred_concept = local_cptr;
-               comma_after_next_concept = 0;
-               did_concept = FALSE;
-
-               /* If there is another concept, we need parens. */
-               if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
-
-               if (deferred_concept_paren == 3) writestuff("("/*)*/);
-               if (deferred_concept_paren) writestuff("("/*)*/);
-            }
-            else {
-               if ((k == concept_meta_one_arg && item->value.arg1 == meta_key_nth_part_work) ||
-                   (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__SAID_INVERT) ||
-                   (k == concept_meta && (item->value.arg1 == meta_key_initially ||
-                                          item->value.arg1 == meta_key_finally))) {
-                  /* This is "DO THE <Nth> PART",
-                     or INVERT followed by another concept, which must be SNAG or MYSTIC,
-                     or INITIALLY/FINALLY.
-                     These concepts require a comma after the following concept. */
-                  request_comma_after_next_concept = 1;
-               }
-               else if (k == concept_so_and_so_only &&
-                        ((selective_key) item->value.arg1) == selective_key_work_concept) {
-                  /* "<ANYONE> WORK" */
-                  /* This concept requires the word "all" after the following concept. */
-                  request_comma_after_next_concept = 2;
-               }
-
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
-               request_final_space = TRUE;
-            }
-
-            /* For some concepts, we still permit the "defer" stuff.  But don't do it
-               if others are doing the call, because that would lead to
-               "<anyone> work 1-1/2, swing thru" turning into
-               "<anyone> work swing thru 1-1/2". */
-
-            if ((k != concept_so_and_so_only || item->value.arg2) &&
-                k != concept_c1_phantom &&
-                k != concept_tandem)
-               allow_deferred_concept = FALSE;
-         }
-
-         if (comma_after_next_concept == 2) {
-            writestuff(", ALL");
-            request_final_space = TRUE;
-         }
-         else if (comma_after_next_concept == 1) {
-            writestuff(",");
-            request_final_space = TRUE;
-         }
-
-         did_comma = comma_after_next_concept;
-
-         if (comma_after_next_concept == 3)
-            comma_after_next_concept = 2;
-         else
-            comma_after_next_concept = request_comma_after_next_concept;
-
-         if (comma_after_next_concept == 2 && next_cptr) {
-            //            parse_block *junk2;
-            concept_kind kjunk;
-            parse_block *junk2;
-            uint32 njunk;
-
-            if (check_for_concept_group(next_cptr, FALSE, &kjunk, &njunk, &junk2))
-               comma_after_next_concept = 3;    /* Will try again later. */
-         }
-
-         local_cptr = next_cptr;
-
-         if (k == concept_sequential) {
-            if (request_final_space) writestuff(" ");
-            print_recurse(local_cptr, PRINT_RECURSE_STAR);
-            writestuff(")");
-            return;
-         }
-         else if (k == concept_replace_nth_part ||
-                  k == concept_replace_last_part ||
-                  k == concept_interrupt_at_fraction) {
-            if (request_final_space) writestuff(" ");
-            print_recurse(local_cptr, PRINT_RECURSE_STAR);
-            writestuff("]");
-            return;
-         }
+         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
-         /* This is a "marker", so it has a call, perhaps with a selector and/or number.
-            The call may be null if we are printing a partially entered line.  Beware. */
-
-         parse_block *sub1_ptr;
-         parse_block *sub2_ptr;
-         parse_block *search;
-         long_boolean pending_subst1, pending_subst2;
-
-         selector_kind i16junk = local_cptr->options.who;
-         direction_kind idirjunk = local_cptr->options.where;
-         uint32 number_list = local_cptr->options.number_fields;
-         callspec_block *localcall = local_cptr->call_to_print;
-         parse_block *save_cptr = local_cptr;
-
-         long_boolean subst1_in_use = FALSE;
-         long_boolean subst2_in_use = FALSE;
-
-         if (request_final_space) writestuff(" ");
-
-         if (k == concept_another_call_next_mod) {
-            search = save_cptr->next;
-            while (search) {
-               parse_block *subsidiary_ptr = search->subsidiary_root;
-               long_boolean this_is_subst1 = FALSE;
-               long_boolean this_is_subst2 = FALSE;
-               if (subsidiary_ptr) {
-                  switch (search->replacement_key) {
-                     case 1:
-                     case 2:
-                        this_is_subst1 = TRUE;
-                        break;
-                     case 5:
-                     case 6:
-                        this_is_subst2 = TRUE;
-                        break;
-                  }
-
-                  if (this_is_subst1) {
-                     if (subst1_in_use) writestuff("ERROR!!!");
-                     subst1_in_use = TRUE;
-                     sub1_ptr = subsidiary_ptr;
-                  }
-
-                  if (this_is_subst2) {
-                     if (subst2_in_use) writestuff("ERROR!!!");
-                     subst2_in_use = TRUE;
-                     sub2_ptr = subsidiary_ptr;
-                  }
-               }
-               search = search->next;
-            }
-         }
-   
-         pending_subst1 = subst1_in_use;
-         pending_subst2 = subst2_in_use;
-
-         /* Now "subst_in_use" is on if there is a replacement call that goes in naturally.  During the
-            scan of the name, we will try to fit that replacement into the name of the call as directed
-            by atsign-escapes.  If we succeed at this, we will clear "pending_subst".
-            In addition to all of this, there may be any number of forcible replacements. */
-
-         /* Call = NIL means we are echoing input and user hasn't entered call yet. */
-
-         if (localcall) {
-            char *np = localcall->name;
-
-            //            if (enable_file_writing) localcall->age = global_age;
-
-            while (*np) {
-               char c = *np++;
-
-               if (c == '@') {
-                  char savec = *np++;
-
-                  switch (savec) {
-                  case '6': case 'k':
-                     write_blank_if_needed();
-                     if (savec == '6')
-                        writestuff(selector_list[i16junk].name);
-                     else
-                        writestuff(selector_list[i16junk].sing_name);
-                     if (np[0] && np[0] != ' ' && np[0] != ']')
-                        writestuff(" ");
-                     break;
-                  case 'v': case 'w': case 'x': case 'y':
-                     write_blank_if_needed();
-                     /* Find the base tag call that this is invoking. */
-
-                     search = save_cptr->next;
-                     while (search) {
-                        parse_block *subsidiary_ptr = search->subsidiary_root;
-                        if (subsidiary_ptr &&
-                            subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
-                           print_recurse(subsidiary_ptr, 0);
-                           goto did_tagger;
-                        }
-                        search = search->next;
-                     }
-
-                     /* We didn't find the tagger.  It must not have been entered into
-                           the parse tree.  See if we can get it from the "tagger" field. */
-
-                     if (save_cptr->options.tagger != 0)
-                        writestuff(tagger_calls
-                                   [save_cptr->options.tagger >> 5]
-                                   [(save_cptr->options.tagger & 0x1F)-1]->menu_name);
-                     else
-                        writestuff("NO TAGGER???");
-
-                  did_tagger:
-
-                     if (np[0] && np[0] != ' ' && np[0] != ']')
-                        writestuff(" ");
-                     break;
-                  case 'N':
-                     write_blank_if_needed();
-
-                     /* Find the base circ call that this is invoking. */
-
-                     search = save_cptr->next;
-                     while (search) {
-                        parse_block *subsidiary_ptr = search->subsidiary_root;
-                        if (subsidiary_ptr &&
-                            subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
-                           print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
-                           goto did_circcer;
-                        }
-                        search = search->next;
-                     }
-
-                     /* We didn't find the circcer.  It must not have been entered into the parse tree.
-                           See if we can get it from the "circcer" field. */
-
-                     if (save_cptr->options.circcer > 0)
-                        writestuff(circcer_calls[(save_cptr->options.circcer)-1]->menu_name);
-                     else
-                        writestuff("NO CIRCCER???");
-
-                  did_circcer:
-
-                     if (np[0] && np[0] != ' ' && np[0] != ']')
-                        writestuff(" ");
-                     break;
-                  case 'h':                   /* Need to plug in a direction. */
-                     write_blank_if_needed();
-                     writestuff(direction_names[idirjunk]);
-                     if (np[0] && np[0] != ' ' && np[0] != ']')
-                        writestuff(" ");
-                     break;
-                  case '9': case 'a': case 'b': case 'B': case 'D': case 'u':
-                     /* Need to plug in a number. */
-                     write_blank_if_needed();
-                     write_nice_number(savec, number_list & 0xF);
-                     number_list >>= 4;    /* Get ready for next number. */
-                     break;
-                  case 'e':
-                     if (use_left_name) {
-                        while (*np != '@') np++;
-                        if (the_callback_block.writechar_block_ptr->lastchar == ']') writestuff(" ");
-                        writestuff("left");
-                        np += 2;
-                     }
-                     break;
-                  case 'j':
-                     if (!use_cross_name) {
-                        while (*np != '@') np++;
-                        np += 2;
-                     }
-                     break;
-                  case 'C':
-                     if (use_cross_name) {
-                        write_blank_if_needed();
-                        writestuff("cross");
-                     }
-                     break;
-                  case 'S':                   /* Look for star turn replacement. */
-                     if (save_cptr->options.star_turn_option < 0) {
-                        writestuff(", don't turn the star");
-                     }
-                     else if (save_cptr->options.star_turn_option != 0) {
-                        writestuff(", turn the star ");
-                        write_nice_number('b', save_cptr->options.star_turn_option & 0xF);
-                     }
-                     break;
-                  case 'J':
-                     if (!use_magic_name) {
-                        while (*np != '@') np++;
-                        np += 2;
-                     }
-                     break;
-                  case 'M':
-                     if (use_magic_name) {
-                        if (the_callback_block.writechar_block_ptr->lastchar != ' ' && the_callback_block.writechar_block_ptr->lastchar != '[') writechar(' ');
-                        writestuff("magic");
-                     }
-                     break;
-                  case 'E':
-                     if (!use_intlk_name) {
-                        while (*np != '@') np++;
-                        np += 2;
-                     }
-                     break;
-                  case 'I':
-                     if (use_intlk_name) {
-                        if (the_callback_block.writechar_block_ptr->lastchar == 'a' && the_callback_block.writechar_block_ptr->lastlastchar == ' ')
-                           writestuff("n ");
-                        else if (the_callback_block.writechar_block_ptr->lastchar != ' ' && the_callback_block.writechar_block_ptr->lastchar != '[')
-                           writechar(' ');
-                        writestuff("interlocked");
-                     }
-                     break;
-                  case 'l': case 'L': case 'F': case '8': case 'o':
-                     /* Just skip these -- they end stuff that we could have
-                        elided but didn't. */
-                     break;
-                  case 'n': case 'p': case 'r': case 'm': case 't':
-                     if (subst2_in_use) {
-                        if (savec == 'p' || savec == 'r') {
-                           while (*np != '@') np++;
-                           np += 2;
-                        }
-                     }
-                     else {
-                        if (savec == 'n') {
-                           while (*np != '@') np++;
-                           np += 2;
-                        }
-                     }
-   
-                     if (pending_subst2 && savec != 'p' && savec != 'n') {
-                        write_blank_if_needed();
-                        writestuff("[");
-                        print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
-         
-                        pending_subst2 = FALSE;
-                     }
-         
-                     break;
-                  case 'O':
-                     if (print_recurse_arg & PRINT_RECURSE_CIRC) {
-                        while (*np != '@') np++;
-                        np += 2;
-                     }
-
-                     break;
-                  default:
-                     if (subst1_in_use) {
-                        if (savec == '2' || savec == '4') {
-                           while (*np != '@') np++;
-                           np += 2;
-                        }
-                     }
-                     else {
-                        if (savec == '7') {
-                           while (*np != '@') np++;
-                           np += 2;
-                        }
-                     }
-         
-                     if (pending_subst1 && savec != '4' && savec != '7') {
-                        write_blank_if_needed();
-                        writestuff("[");
-                        print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
-         
-                        pending_subst1 = FALSE;
-                     }
-         
-                     break;
-                  }
-               }
-               else {
-                  if (the_callback_block.writechar_block_ptr->lastchar == ']' && c != ' ' && c != ']')
-                     writestuff(" ");
-
-                  if ((the_callback_block.writechar_block_ptr->lastchar != ' ' && the_callback_block.writechar_block_ptr->lastchar != '[') || c != ' ') writechar(c);
-               }
-            }
-
-            if (the_callback_block.writechar_block_ptr->lastchar == ']' && *np && *np != ' ' && *np != ']')
-               writestuff(" ");
-         }
-         else if (print_recurse_arg & PRINT_RECURSE_STAR) {
-            writestuff("*");
-         }
-
-         /* Now if "pending_subst" is still on, we have to do by hand what should have been
-            a natural replacement.  In any case, we have to find forcible replacements and
-            report them. */
-   
-         if (k == concept_another_call_next_mod) {
-            int first_replace = 0;
-
-            for (search = save_cptr->next ; search ; search = search->next) {
-               Const callspec_block *cc;
-               parse_block *subsidiary_ptr = search->subsidiary_root;
-
-               /* If we have a subsidiary_ptr, handle the replacement that is indicated.
-                  BUT:  if the call shown in the subsidiary_ptr is a base tag call, don't
-                  do anything -- such substitutions were already taken care of.
-                     BUT:  only check if there is actually a call there. */
-
-               if (!subsidiary_ptr) continue;
-               cc = subsidiary_ptr->call_to_print;
-
-               if (!cc ||    /* If no call pointer, it isn't a tag base call. */
-                   (!(cc->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) &&
-                    (!(cc->callflags1 & CFLAG1_BASE_CIRC_CALL) ||
-                     search->call_to_print != base_calls[base_call_circcer]))) {
-                  callspec_block *replaced_call = search->call_to_print;
-
-                  /* Need to check for case of replacing one star turn with another. */
-
-                  if ((first_replace == 0) &&
-                      (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) &&
-                      ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
-                       subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
-                      cc &&
-                      ((cc->callflags1 & CFLAG1_IS_STAR_CALL) ||
-                       cc->schema == schema_nothing)) {
-                     first_replace++;
-
-                     if (cc->schema == schema_nothing)
-                        writestuff(", don't turn the star");
-                     else {
-                        writestuff(", ");
-                        print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                     }
-                  }
-                  else {
-                     switch (search->replacement_key) {
-                     case 1:
-                     case 2:
-                     case 3:
-                        /* This is a natural replacement.
-                           It may already have been taken care of. */
-                        if (pending_subst1 || search->replacement_key == 3) {
-                           write_blank_if_needed();
-                           if (search->replacement_key == 3)
-                              writestuff("but [");
-                           else
-                              writestuff("[modification: ");
-                           print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
-                        }
-                        break;
-                     case 5:
-                     case 6:
-                        /* This is a secondary replacement.
-                           It may already have been taken care of. */
-                        if (pending_subst2) {
-                           write_blank_if_needed();
-                           writestuff("[modification: ");
-                           print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
-                        }
-                        break;
-                     default:
-                        /* This is a forced replacement. */
-                        write_blank_if_needed();
-                        first_replace++;
-                        if (first_replace == 1)
-                           writestuff("BUT REPLACE ");
-                        else
-                           writestuff("AND REPLACE ");
-
-                        /* Star turn calls can have funny names like "nobox". */
-
-                        writestuff_with_decorations(
-                           &search->options,
-                           (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) ?
-                           "turn the star @b" : replaced_call->name);
-
-                        writestuff(" WITH [");
-                        print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
-                        break;
-                     }
-                  }
-               }
-            }
-         }
-
-         break;
+         /* User declined the modification.  Create a null entry so that we don't query again. */
+         *newsearch = get_parse_block();
+         (*newsearch)->concept = &marker_concept_mod;
+         (*newsearch)->options = current_options;
+         (*newsearch)->replacement_key = snumber;
+         (*newsearch)->call = orig_call;
+         (*newsearch)->call_to_print = orig_call;
+         return TRUE;
       }
    }
 
-   if (deferred_concept) {
-      if (deferred_concept_paren & 1) writestuff(/*(*/")");
-      writestuff(" ");
+   *newsearch = get_parse_block();
+   (*newsearch)->concept = &marker_concept_mod;
+   (*newsearch)->options = current_options;
+   (*newsearch)->replacement_key = snumber;
+   (*newsearch)->call = orig_call;
+   (*newsearch)->call_to_print = orig_call;
 
-      if (deferred_concept->concept->kind == concept_twice &&
-          deferred_concept->concept->value.arg2 == 3)
-         writestuff("3 TIMES");
-      else
-         writestuff_with_decorations(&deferred_concept->options, deferred_concept->concept->name);
-      if (deferred_concept_paren & 2) writestuff(/*(*/")");
+   /* Set stuff up for reading subcall and its concepts. */
+
+   /* Create a new parse block, point concept_write_ptr at its contents. */
+   /* Create the new root at the start of the subsidiary list. */
+
+   parse_state.concept_write_base = &(*newsearch)->subsidiary_root;
+   parse_state.concept_write_ptr = parse_state.concept_write_base;
+
+   parse_state.parse_stack_index = 0;
+   parse_state.call_list_to_use = call_list_any;
+   (void) strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
+
+   /* Search for special case of "must_be_tag_call" with no other modification bits.
+      That means it is a new-style tagging call. */
+
+   if (snumber == 0 && this_is_tagger_circcer) {
+      throw error_flag_type(error_flag_wrong_command);
+   }
+   else {
+      if ((*the_callback_block.query_for_call_fn)()) {
+         // User clicked on something unusual like "exit" or "undo".
+         throw error_flag_type(error_flag_wrong_command);
+      }
    }
 
-   return;
+   return FALSE;
+}
+
+
+SDLIB_API void print_id_error(int n)
+{
+   char msg [50];
+   sprintf(msg, "Call didn't identify self -- %d", n);
+   (*the_callback_block.uims_fatal_error_fn)(msg, 0);
+}
+
+
+extern call_list_kind find_proper_call_list(setup *s)
+{
+   if (s->kind == s1x8) {
+      if      ((s->people[0].id1 & 017) == 010 &&
+               (s->people[1].id1 & 017) == 012 &&
+               (s->people[2].id1 & 017) == 012 &&
+               (s->people[3].id1 & 017) == 010 &&
+               (s->people[4].id1 & 017) == 012 &&
+               (s->people[5].id1 & 017) == 010 &&
+               (s->people[6].id1 & 017) == 010 &&
+               (s->people[7].id1 & 017) == 012)
+         return call_list_1x8;
+      else if ((s->people[0].id1 & 017) == 012 &&
+               (s->people[1].id1 & 017) == 010 &&
+               (s->people[2].id1 & 017) == 010 &&
+               (s->people[3].id1 & 017) == 012 &&
+               (s->people[4].id1 & 017) == 010 &&
+               (s->people[5].id1 & 017) == 012 &&
+               (s->people[6].id1 & 017) == 012 &&
+               (s->people[7].id1 & 017) == 010)
+         return call_list_l1x8;
+      else if ((s->people[0].id1 & 015) == 1 &&
+               (s->people[1].id1 & 015) == 1 &&
+               (s->people[2].id1 & 015) == 1 &&
+               (s->people[3].id1 & 015) == 1 &&
+               (s->people[4].id1 & 015) == 1 &&
+               (s->people[5].id1 & 015) == 1 &&
+               (s->people[6].id1 & 015) == 1 &&
+               (s->people[7].id1 & 015) == 1)
+         return call_list_gcol;
+   }
+   else if (s->kind == s2x4) {
+      if      ((s->people[0].id1 & 017) == 1 &&
+               (s->people[1].id1 & 017) == 1 &&
+               (s->people[2].id1 & 017) == 3 &&
+               (s->people[3].id1 & 017) == 3 &&
+               (s->people[4].id1 & 017) == 3 &&
+               (s->people[5].id1 & 017) == 3 &&
+               (s->people[6].id1 & 017) == 1 &&
+               (s->people[7].id1 & 017) == 1)
+         return call_list_dpt;
+      else if ((s->people[0].id1 & 017) == 3 &&
+               (s->people[1].id1 & 017) == 3 &&
+               (s->people[2].id1 & 017) == 1 &&
+               (s->people[3].id1 & 017) == 1 &&
+               (s->people[4].id1 & 017) == 1 &&
+               (s->people[5].id1 & 017) == 1 &&
+               (s->people[6].id1 & 017) == 3 &&
+               (s->people[7].id1 & 017) == 3)
+         return call_list_cdpt;
+      else if ((s->people[0].id1 & 017) == 1 &&
+               (s->people[1].id1 & 017) == 1 &&
+               (s->people[2].id1 & 017) == 1 &&
+               (s->people[3].id1 & 017) == 1 &&
+               (s->people[4].id1 & 017) == 3 &&
+               (s->people[5].id1 & 017) == 3 &&
+               (s->people[6].id1 & 017) == 3 &&
+               (s->people[7].id1 & 017) == 3)
+         return call_list_rcol;
+      else if ((s->people[0].id1 & 017) == 3 &&
+               (s->people[1].id1 & 017) == 3 &&
+               (s->people[2].id1 & 017) == 3 &&
+               (s->people[3].id1 & 017) == 3 &&
+               (s->people[4].id1 & 017) == 1 &&
+               (s->people[5].id1 & 017) == 1 &&
+               (s->people[6].id1 & 017) == 1 &&
+               (s->people[7].id1 & 017) == 1)
+         return call_list_lcol;
+      else if ((s->people[0].id1 & 017) == 1 &&
+               (s->people[1].id1 & 017) == 3 &&
+               (s->people[2].id1 & 017) == 1 &&
+               (s->people[3].id1 & 017) == 3 &&
+               (s->people[4].id1 & 017) == 3 &&
+               (s->people[5].id1 & 017) == 1 &&
+               (s->people[6].id1 & 017) == 3 &&
+               (s->people[7].id1 & 017) == 1)
+         return call_list_8ch;
+      else if ((s->people[0].id1 & 017) == 3 &&
+               (s->people[1].id1 & 017) == 1 &&
+               (s->people[2].id1 & 017) == 3 &&
+               (s->people[3].id1 & 017) == 1 &&
+               (s->people[4].id1 & 017) == 1 &&
+               (s->people[5].id1 & 017) == 3 &&
+               (s->people[6].id1 & 017) == 1 &&
+               (s->people[7].id1 & 017) == 3)
+         return call_list_tby;
+      else if ((s->people[0].id1 & 017) == 012 &&
+               (s->people[1].id1 & 017) == 012 &&
+               (s->people[2].id1 & 017) == 012 &&
+               (s->people[3].id1 & 017) == 012 &&
+               (s->people[4].id1 & 017) == 010 &&
+               (s->people[5].id1 & 017) == 010 &&
+               (s->people[6].id1 & 017) == 010 &&
+               (s->people[7].id1 & 017) == 010)
+         return call_list_lin;
+      else if ((s->people[0].id1 & 017) == 010 &&
+               (s->people[1].id1 & 017) == 010 &&
+               (s->people[2].id1 & 017) == 010 &&
+               (s->people[3].id1 & 017) == 010 &&
+               (s->people[4].id1 & 017) == 012 &&
+               (s->people[5].id1 & 017) == 012 &&
+               (s->people[6].id1 & 017) == 012 &&
+               (s->people[7].id1 & 017) == 012)
+         return call_list_lout;
+      else if ((s->people[0].id1 & 017) == 010 &&
+               (s->people[1].id1 & 017) == 012 &&
+               (s->people[2].id1 & 017) == 010 &&
+               (s->people[3].id1 & 017) == 012 &&
+               (s->people[4].id1 & 017) == 012 &&
+               (s->people[5].id1 & 017) == 010 &&
+               (s->people[6].id1 & 017) == 012 &&
+               (s->people[7].id1 & 017) == 010)
+         return call_list_rwv;
+      else if ((s->people[0].id1 & 017) == 012 &&
+               (s->people[1].id1 & 017) == 010 &&
+               (s->people[2].id1 & 017) == 012 &&
+               (s->people[3].id1 & 017) == 010 &&
+               (s->people[4].id1 & 017) == 010 &&
+               (s->people[5].id1 & 017) == 012 &&
+               (s->people[6].id1 & 017) == 010 &&
+               (s->people[7].id1 & 017) == 012)
+         return call_list_lwv;
+      else if ((s->people[0].id1 & 017) == 010 &&
+               (s->people[1].id1 & 017) == 010 &&
+               (s->people[2].id1 & 017) == 012 &&
+               (s->people[3].id1 & 017) == 012 &&
+               (s->people[4].id1 & 017) == 012 &&
+               (s->people[5].id1 & 017) == 012 &&
+               (s->people[6].id1 & 017) == 010 &&
+               (s->people[7].id1 & 017) == 010)
+         return call_list_r2fl;
+      else if ((s->people[0].id1 & 017) == 012 &&
+               (s->people[1].id1 & 017) == 012 &&
+               (s->people[2].id1 & 017) == 010 &&
+               (s->people[3].id1 & 017) == 010 &&
+               (s->people[4].id1 & 017) == 010 &&
+               (s->people[5].id1 & 017) == 010 &&
+               (s->people[6].id1 & 017) == 012 &&
+               (s->people[7].id1 & 017) == 012)
+         return call_list_l2fl;
+   }
+   else if (s->kind == s_qtag)
+      return call_list_qtag;
+
+   return call_list_any;
 }

@@ -545,7 +545,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* tandem concepts */
 
-#define tt__1_size 73
+#define tt__1_size 57
 #define tt__1_cpl 2
 #define tt__1_tnd 3
    {"PHANTOM",                               concept_c1_phantom,            L+U+D, l_c1},
@@ -564,14 +564,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEW",                                  concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x000, tandem_key_skew}},
    {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, tandem_key_cpls}},
    {"GRUESOME TANDEM",                       concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x002, tandem_key_tand}},
-   {"AS COUPLES IN A 1/4 TAG",               concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x000, tandem_key_cpls}},
-   {"AS COUPLES IN A 3/4 TAG",               concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x000, tandem_key_cpls}},
-   {"AS COUPLES IN A 1/4 LINE",              concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x000, tandem_key_cpls}},
-   {"AS COUPLES IN A 3/4 LINE",              concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x000, tandem_key_cpls}},
-   {"TANDEM IN A 1/4 TAG",                   concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x000, tandem_key_tand}},
-   {"TANDEM IN A 3/4 TAG",                   concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x000, tandem_key_tand}},
-   {"TANDEM IN A 1/4 LINE",                  concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x000, tandem_key_tand}},
-   {"TANDEM IN A 3/4 LINE",                  concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x000, tandem_key_tand}},
    {"@6 ARE AS COUPLES",                     concept_some_are_tandem,         F+D, l_a1,         {0, 0, 0,                    0x100, tandem_key_cpls}},
    {"@6 ARE TANDEM",                         concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, tandem_key_tand}},
    {"@6 ARE COUPLES OF 3",                   concept_some_are_tandem,         F+D, l_c1,         {0, 0, 0,                    0x100, tandem_key_cpls3}},
@@ -600,14 +592,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEW @b TWOSOME",                       concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x020, tandem_key_skew}},
    {"GRUESOME AS COUPLES @b TWOSOME",        concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x022, tandem_key_cpls}},
    {"GRUESOME TANDEM @b TWOSOME",            concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x022, tandem_key_tand}},
-   {"COUPLES @b TWOSOME IN A 1/4 TAG",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x020, tandem_key_cpls}},
-   {"COUPLES @b TWOSOME IN A 3/4 TAG",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x020, tandem_key_cpls}},
-   {"COUPLES @b TWOSOME IN A 1/4 LINE",      concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x020, tandem_key_cpls}},
-   {"COUPLES @b TWOSOME IN A 3/4 LINE",      concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x020, tandem_key_cpls}},
-   {"TANDEM @b TWOSOME IN A 1/4 TAG",        concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x020, tandem_key_tand}},
-   {"TANDEM @b TWOSOME IN A 3/4 TAG",        concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x020, tandem_key_tand}},
-   {"TANDEM @b TWOSOME IN A 1/4 LINE",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x020, tandem_key_tand}},
-   {"TANDEM @b TWOSOME IN A 3/4 LINE",       concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x020, tandem_key_tand}},
    {"@6 ARE COUPLES @b TWOSOME",             concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, tandem_key_cpls}},
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, tandem_key_tand}},
    {"@6 ARE COUPLES OF 3 @b THREESOME",      concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x120, tandem_key_cpls3}},
@@ -622,7 +606,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"3X1 TRIANGLES ARE SOLID @b TRIANGLESOME",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_3x1tgls}},
    {"Y's ARE SOLID @b Y-SOME",                       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x020, tandem_key_ys}},
 /* -------- column break -------- */
-#define tt__2_size 73
+#define tt__2_size 57
 #define tt__2_cpl2s 2
 #define tt__2_tnd2s 3
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x013, tandem_key_cpls}},
@@ -641,14 +625,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEWSOME",                              concept_tandem,                    D, l_c4a,        {0, 0, 0,                    0x010, tandem_key_skew}},
    {"GRUESOME COUPLES TWOSOME",              concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x012, tandem_key_cpls}},
    {"GRUESOME TANDEM TWOSOME",               concept_gruesome_tandem,           D, l_c4a,        {0, 0, CONCPROP__NEEDK_2X8,  0x012, tandem_key_tand}},
-   {"COUPLES TWOSOME IN A 1/4 TAG",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x010, tandem_key_cpls}},
-   {"COUPLES TWOSOME IN A 3/4 TAG",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x010, tandem_key_cpls}},
-   {"COUPLES TWOSOME IN A 1/4 LINE",         concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x010, tandem_key_cpls}},
-   {"COUPLES TWOSOME IN A 3/4 LINE",         concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x010, tandem_key_cpls}},
-   {"TANDEM TWOSOME IN A 1/4 TAG",           concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x010, tandem_key_tand}},
-   {"TANDEM TWOSOME IN A 3/4 TAG",           concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x010, tandem_key_tand}},
-   {"TANDEM TWOSOME IN A 1/4 LINE",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x010, tandem_key_tand}},
-   {"TANDEM TWOSOME IN A 3/4 LINE",          concept_tandem,                    D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x010, tandem_key_tand}},
    {"@6 ARE COUPLES TWOSOME",                concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, tandem_key_cpls}},
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, tandem_key_tand}},
    {"@6 ARE COUPLES THREESOME",              concept_some_are_tandem,         F+D, l_c3,         {0, 0, 0,                    0x110, tandem_key_cpls3}},
@@ -677,14 +653,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"SKEWSOME @b SOLID",                     concept_frac_tandem,               D, l_c4,         {0, 0, 0,                    0x030, tandem_key_skew}},
    {"GRUESOME TWOSOME @b SOLID",             concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x032, tandem_key_cpls}},
    {"GRUESOME TANDEM TWOSOME @b SOLID",      concept_gruesome_frac_tandem,      D, l_c4,         {0, 0, CONCPROP__NEEDK_2X8,  0x032, tandem_key_tand}},
-   {"COUPLES TWOSOME @b SOLID IN A 1/4 TAG", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD, 0x030, tandem_key_cpls}},
-   {"COUPLES TWOSOME @b SOLID IN A 3/4 TAG", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD, 0x030, tandem_key_cpls}},
-   {"COUPLES TWOSOME @b SOLID IN A 1/4 LINE",concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD, 0x030, tandem_key_cpls}},
-   {"COUPLES TWOSOME @b SOLID IN A 3/4 LINE",concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD, 0x030, tandem_key_cpls}},
-   {"TANDEM TWOSOME @b SOLID IN A 1/4 TAG",  concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x030, tandem_key_tand}},
-   {"TANDEM TWOSOME @b SOLID IN A 3/4 TAG",  concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_TWINQTAG, 0x030, tandem_key_tand}},
-   {"TANDEM TWOSOME @b SOLID IN A 1/4 LINE", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x030, tandem_key_tand}},
-   {"TANDEM TWOSOME @b SOLID IN A 3/4 LINE", concept_frac_tandem,               D, l_c4,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_TWINQTAG, 0x030, tandem_key_tand}},
    {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, tandem_key_cpls}},
    {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, tandem_key_tand}},
    {"@6 ARE COUPLES THREESOME @b SOLID",     concept_some_are_frac_tandem,    F+D, l_c4,         {0, 0, 0,                    0x130, tandem_key_cpls3}},
@@ -948,7 +916,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 78
+#define mm__2_size 86
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
    {"CENTER 6/OUTER 2",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center6, FALSE}},
    {"CENTER 2/OUTER 6",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_center2, FALSE}},
@@ -992,9 +960,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"FOLLOW IT BY",                          concept_special_sequential,        0, l_c2,         {0, 0}},
    {"PRECEDE IT BY",                         concept_special_sequential,        0, l_c2,         {0, 1}},
    {"CRAZY",                                 concept_crazy,                     D, l_c2,         {0, 0, FALSE}},
-   {"REVERSE CRAZY",                         concept_crazy,                     D, l_c2,         {0, 1, FALSE}},
+   {"REVERSE CRAZY",                         concept_crazy,                     D, l_c3a,        {0, 1, FALSE}},
    {"@a CRAZY",                              concept_frac_crazy,                D, l_c2,         {0, 0, TRUE}},
-   {"@a REVERSE CRAZY",                      concept_frac_crazy,                D, l_c2,         {0, 1, TRUE}},
+   {"@a REVERSE CRAZY",                      concept_frac_crazy,                D, l_c3a,        {0, 1, TRUE}},
    {"RANDOM",                                concept_meta,                    G+D, l_c3,         {0, meta_key_random}},
    {"REVERSE RANDOM",                        concept_meta,                    G+D, l_c3x,        {0, meta_key_rev_random}},
    {"PIECEWISE",                             concept_meta,                    G+D, l_c3x,        {0, meta_key_piecewise}},
@@ -1007,7 +975,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"REVERSE ORDER",      concept_meta,       D, l_mainstream, {0, meta_key_revorder}},
    {"INTERLACE",          concept_interlace,  0, l_c3x},
    {"INITIALLY",          concept_meta,     G+D, l_c3a,     {0, meta_key_initially}},
-   {"FINALLY",            concept_meta,     G+D, l_c4,      {0, meta_key_finally}},
+   {"FINALLY",            concept_meta,     G+D, l_c3a,     {0, meta_key_finally}},
    {"FINISH",             concept_meta,       D, l_c2,      {0, meta_key_finish}},
    {"LIKE A",             concept_meta,       D, l_c2,      {0, meta_key_like_a}},
    {"LIKE AN",            concept_meta,       D, l_c2,      {0, meta_key_like_a}},
@@ -1027,6 +995,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"INTERRUPT BEFORE THE LAST PART",        concept_replace_last_part,         0, l_c1,         {0, 1}},
    {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
    {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
+   {"IN A 1/4 TAG",                          concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_TAG,  CONCPROP__NEEDK_4DMD}},
+   {"IN A 3/4 TAG",                          concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_TAG,  CONCPROP__NEEDK_4DMD}},
+   {"IN A 1/4 LINE",                         concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_REAL_1_4_LINE, CONCPROP__NEEDK_4DMD}},
+   {"IN A 3/4 LINE",                         concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_REAL_3_4_LINE, CONCPROP__NEEDK_4DMD}},
+   {"IN POINT-TO-POINT DIAMONDS",            concept_tandem_in_setup,           D, l_c3,         {0, 0, CONCPROP__NEEDK_DBLX}},
+   {"IN A TALL 6",                           concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_TALL6, CONCPROP__NEEDK_DEEPXWV}},
+   {"IN A TIDAL LINE",                       concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_LINES, CONCPROP__NEEDK_1X16}},
+   {"IN A TIDAL COLUMN",                     concept_tandem_in_setup,           D, l_c3,         {0, CMD_MISC__VERIFY_COLS, CONCPROP__NEEDK_2X8}},
 /* -------- column break -------- */
 #define mm__3_size 79
 #define mm__3_3x3 62
@@ -1152,8 +1128,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"DRAG THE @6",                           concept_drag,                      D, l_c4},
    {"FUNNY",                                 concept_funny,                   U+D, l_c2},
    {"CONCENTRIC",                            concept_concentric,              U+D, l_c1,         {0, schema_concentric}},
-   {"AS COUPLES",                            concept_tandem,                  U+D, l_a1,         {0, FALSE, FALSE, 0, tandem_key_cpls}},
-   {"TANDEM",                                concept_tandem,                  U+D, l_c1,         {0, FALSE, FALSE, 0, tandem_key_tand}},
+   {"AS COUPLES",                            concept_tandem,                  U+D, l_a1,         {0, 0, 0, 0, tandem_key_cpls}},
+   {"TANDEM",                                concept_tandem,                  U+D, l_c1,         {0, 0, 0, 0, tandem_key_tand}},
    {"DIAGNOSE",                              concept_diagnose,                  D, l_mainstream},  /* Only appears if "-diagnostic" given. */
    {"???",                                   marker_end_of_list}};
 

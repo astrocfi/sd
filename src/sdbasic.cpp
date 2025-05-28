@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 33. */
 
 /* This defines the following functions:
    mirror_this
@@ -76,7 +76,7 @@
 
 
 
-extern void mirror_this(setup *s)
+extern void mirror_this(setup *s) THROW_DECL
 {
    uint32 l, r, z, n, t;
    const coordrec *cptr;
@@ -321,7 +321,13 @@ static collision_map collision_map_table[] = {
    {2, 0x000000, 0x06, 0x06, {1, 2},               {2, 5},                {3, 4},                 s2x2,        s2x4,        0, warn_bad_collision, 0},   /* we need all four cases */
    {2, 0x003003, 0x03, 0x03, {1, 0},               {0, 7},                {1, 6},                 s2x2,        s2x4,        1, warn_bad_collision, 0},   /* sigh */
    {2, 0x00C00C, 0x0C, 0x0C, {2, 3},               {2, 5},                {3, 4},                 s2x2,        s2x4,        1, warn_bad_collision, 0},   /* sigh */
-   /* These items handle horrible lockit collisions in the middle (from inverted lines, for example). */
+
+   // This handles circulate from a starting DPT.
+   {4, 0x066066, 0x66, 0x66, {1, 2, 5, 6},         {7, 0, 2, 5},          {6, 1, 3, 4},
+    s2x4,        s2x4,        1, warn_bad_collision, 0},
+
+   // These items handle horrible lockit collisions in the middle
+   // (from inverted lines, for example).
    {2, 0x000000, 0x06, 0x06, {1, 2},               {3, 5},                {2, 4},                 s1x4,        s1x8,        0, warn_bad_collision, 0},
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 6},                {1, 7},                 s1x4,        s1x8,        0, warn_bad_collision, 0},
 /* Some new ones. */
@@ -367,7 +373,7 @@ extern void fix_collision(
    int appears_illegal,
    long_boolean mirror,
    assumption_thing *assumption,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 lowbitmask, flip;
    int i, temprot;
@@ -421,7 +427,7 @@ extern void fix_collision(
    }
 
    /* Don't recognize the pattern, report this as normal collision. */
-   (*the_callback_block.do_throw_fn)(error_flag_collision);
+   throw error_flag_type(error_flag_collision);
 
    win:
 
@@ -605,7 +611,7 @@ static veryshort q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
 
 
-extern void do_stability(uint32 *personp, stability stab, int turning)
+extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL
 {
    int t, at, st, atr;
 
@@ -702,7 +708,7 @@ extern long_boolean check_restriction(
    setup *ss,
    assumption_thing restr,
    long_boolean instantiate_phantoms,
-   uint32 flags)
+   uint32 flags) THROW_DECL
 {
    uint32 q0, q1, q2, q3;
    uint32 i, k, z, t;
@@ -726,6 +732,7 @@ extern long_boolean check_restriction(
    switch (restr.assumption) {
    case cr_real_1_4_tag: case cr_real_3_4_tag:
    case cr_real_1_4_line: case cr_real_3_4_line:
+   case cr_tall6:
       /* These are not legal if they weren't handled already. */
       goto restr_failed;
    case cr_siamese_in_quad:
@@ -934,13 +941,13 @@ extern long_boolean check_restriction(
 
 
 
-Private void special_4_way_symm(
+static void special_4_way_symm(
    callarray *tdef,
    setup *scopy,
    personrec newpersonlist[],
    int newplacelist[],
    int lilresult_mask[],
-   setup *result)
+   setup *result) THROW_DECL
 
 {
    static Const veryshort table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
@@ -1067,7 +1074,7 @@ Private void special_4_way_symm(
 
 /* This function is internal. */
 
-Private void special_triangle(
+static void special_triangle(
    callarray *cdef,
    callarray *ldef,
    setup *scopy,
@@ -1075,7 +1082,7 @@ Private void special_triangle(
    int newplacelist[],
    int num,
    int lilresult_mask[],
-   setup *result)
+   setup *result) THROW_DECL
 {
    int real_index;
    int numout = setup_attrs[result->kind].setup_limits+1;
@@ -1155,12 +1162,12 @@ Private void special_triangle(
 }
 
 
-Private int divide_the_setup(
+static int divide_the_setup(
    setup *ss,
    uint32 *newtb_p,
    callarray *calldeflist,
    int *desired_elongation_p,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i, j;
    uint32 livemask;
@@ -1223,8 +1230,6 @@ Private int divide_the_setup(
             (callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) &&
             (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_4X4;
 
-         /* NEW STUFF!!!! */
-
          if (temp ||
              (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
@@ -1276,14 +1281,6 @@ Private int divide_the_setup(
                warn(warn__each2x2);
                goto divide_us_no_recompute;
          }
-
-
-
-
-
-/* new stuff */
-
-
 
          {
             /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
@@ -1432,14 +1429,33 @@ Private int divide_the_setup(
          /* Check whether it has short6/pshort6 definitions, and divide the setup if so,
             and if the call permits it. */
 
-         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-            if (
-                  (!(newtb & 010) || assoc(b_short6, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_pshort6, ss, calldeflist))) {
+         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+            if ((!(newtb & 010) || assoc(b_short6, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_pshort6, ss, calldeflist))) {
                division_code = MAPCODE(s_short6,2,MPKIND__SPLIT,0);
                goto divide_us_no_recompute;
             }
          }
+         break;
+      case s4x5:
+         // **** actually want to test that call says "occupied_as_3x1tgl".
+
+         if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
+             (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+            if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
+                (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
+               if (livemask == 0x3A0E8 || livemask == 0x1705C) {
+                  division_maps = &map_tgl451;
+                  goto divide_us_no_recompute;
+               }
+               else if (livemask == 0x41D07 || livemask == 0xE0B82) {
+                  division_maps = &map_tgl452;
+                  goto divide_us_no_recompute;
+               }
+            }
+         }
+
          break;
       case s1p5x8:
          /* This is a phony setup, allowed only so that we can have people temporarily
@@ -3123,7 +3139,7 @@ extern void basic_move(
    int tbonetest,
    long_boolean fudged,
    long_boolean mirror,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int j, k;
    callarray *calldeflist;
@@ -4716,7 +4732,7 @@ foobar:
 
                /* We can't handle it at all -- just raise the error. */
                if (final_numout > 12 || result->people[k+12].id1 != 0)
-                  (*the_callback_block.do_throw_fn)(error_flag_collision);
+                  throw error_flag_type(error_flag_collision);
 
                /* Store the person in the overflow area
                   (12 higher than the main area, which is why we only permit

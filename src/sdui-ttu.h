@@ -53,13 +53,3 @@ extern void put_line(char the_line[]);
 
 /* Write a single character on the current output line. */
 extern void put_char(int c);
-
-/* Get string from input, up to <newline>, with echoing and editing.
-   Return it without the final <newline>. */
-extern void get_string(char *dest);
-
-/* Ring the bell, or whatever. */
-extern void bell(void);
-
-extern void initialize_signal_handlers(void);
-extern void refresh_input(void);

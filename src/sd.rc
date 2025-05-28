@@ -45,64 +45,72 @@ BEGIN
     END
     POPUP "&Command"
     BEGIN
-        MENUITEM "&Undo last call",             ID_COMMAND_UNDO
+        MENUITEM "&Undo last call\tF9",         ID_COMMAND_UNDO
         MENUITEM "&Abort this sequence",        ID_COMMAND_ABORTTHISSEQUENCE
         MENUITEM "&End this sequence",          ID_COMMAND_ENDTHISSEQUENCE
-        MENUITEM "&Write this sequence",        ID_COMMAND_ENDTHISSEQUENCE
-        MENUITEM "&Resolve",                    ID_COMMAND_RESOLVE
-        MENUITEM "Insert a comment",            ID_COMMAND_COMMENT
-        MENUITEM "Toggle concept levels",       ID_COMMAND_TOGGLE_CONC
+        MENUITEM "&Write this sequence\tF10",   ID_COMMAND_ENDTHISSEQUENCE
+        MENUITEM "&Resolve\tF4",                ID_COMMAND_RESOLVE
+        MENUITEM "Insert a &comment\tc-F5",     ID_COMMAND_COMMENT
+        MENUITEM "Toggle concept &levels\tF7",  ID_COMMAND_TOGGLE_CONC
         MENUITEM "Toggle active phantoms",      ID_COMMAND_TOGGLE_PHAN
         MENUITEM "Discard entered concepts",    ID_COMMAND_DISCARD_CONCEPT
         MENUITEM "Change output file",          ID_COMMAND_CH_OUTFILE
         MENUITEM "Change title",                ID_COMMAND_CH_TITLE
-        MENUITEM "Clipboard cut",               ID_COMMAND_CLIPBOARD_CUT
+        MENUITEM "Clipboard cut\ts-F8",         ID_COMMAND_CLIPBOARD_CUT
         MENUITEM "Clipboard delete all",        ID_COMMAND_CLIPBOARD_DEL_ALL
         MENUITEM "Clipboard delete one",        ID_COMMAND_CLIPBOARD_DEL_ONE
-        MENUITEM "Clipboard paste one",         ID_COMMAND_CLIPBOARD_PASTE_ONE
-
+        MENUITEM "Clipboard paste one\tc-F8",   ID_COMMAND_CLIPBOARD_PASTE_ONE
         MENUITEM "Clipboard paste all",         ID_COMMAND_CLIPBOARD_PASTE_ALL
+        MENUITEM "&Keep picture\ts-F5",         ID_COMMAND_KEEP_PICTURE
+        MENUITEM "&Normalize\tc-F4",            ID_COMMAND_NORMALIZE
+        MENUITEM "Rec&oncile\ts-F4",            ID_COMMAND_RECONCILE
+        MENUITEM "S&tandardize\tc-F11",         ID_COMMAND_STANDARDIZE
+        POPUP "&Pick\t"
+        BEGIN
+            MENUITEM "&Resolve\tF4",              ID_COMMAND_RESOLVE
+            MENUITEM "&Normalize\tc-F4",          ID_COMMAND_NORMALIZE
+            MENUITEM "Rec&oncile\ts-F4",          ID_COMMAND_RECONCILE
+            MENUITEM "S&tandardize\tc-F11",       ID_COMMAND_STANDARDIZE
+            MENUITEM "R&andom call\tF3",          ID_COMMAND_PICK_RANDOM
+            MENUITEM "&Simple call\tc-F3",        ID_COMMAND_PICK_SIMPLE
+            MENUITEM "&Concept call\ts-F3",       ID_COMMAND_PICK_CONCEPT
+            MENUITEM "&Level call\tF11",          ID_COMMAND_PICK_LEVEL
+            MENUITEM "&8 person level call\ts-F11", ID_COMMAND_PICK_8P_LEVEL
+        END
+        POPUP "Create &setup\t"
+        BEGIN
+            MENUITEM "&Waves",                      ID_COMMAND_CREATE_WAVES
+            MENUITEM "&2-faced lines",              ID_COMMAND_CREATE_2FL
+            MENUITEM "Lines &in",                   ID_COMMAND_CREATE_LINESIN
 
-        MENUITEM "Keep picture",                ID_COMMAND_KEEP_PICTURE
-        MENUITEM "Normalize",                   ID_COMMAND_NORMALIZE
-        MENUITEM "Standardize",                 ID_COMMAND_STANDARDIZE
-        MENUITEM "Reconcile",                   ID_COMMAND_RECONCILE
-    END
-    POPUP "&Pick"
-    BEGIN
-        MENUITEM "&Normalize",                  ID_COMMAND_NORMALIZE
-        MENUITEM "Rec&oncile",                  ID_COMMAND_RECONCILE
-        MENUITEM "S&tandardize",                ID_COMMAND_STANDARDIZE
-        MENUITEM "&Random call",                ID_COMMAND_PICK_RANDOM
-        MENUITEM "&Simple call",                ID_COMMAND_PICK_SIMPLE
-        MENUITEM "&Concept call",               ID_COMMAND_PICK_CONCEPT
-        MENUITEM "&Level call",                 ID_COMMAND_PICK_LEVEL
-        MENUITEM "&8 person level call",        ID_COMMAND_PICK_8P_LEVEL
-    END
-    POPUP "C&reate setup"
-    BEGIN
-        MENUITEM "&Waves",                      ID_COMMAND_CREATE_WAVES
-        MENUITEM "&2-faced lines",              ID_COMMAND_CREATE_2FL
-        MENUITEM "Lines &in",                   ID_COMMAND_CREATE_LINESIN
-        MENUITEM "Lines &out",                  ID_COMMAND_CREATE_LINESOUT
-        MENUITEM "In&verted lines",             ID_COMMAND_CREATE_INVLINES
-        MENUITEM "&3 && 1 lines",               ID_COMMAND_CREATE_3N1LINES
-        MENUITEM "&Any lines",                  ID_COMMAND_CREATE_ANYLINES
-        MENUITEM "Colum&ns",                    ID_COMMAND_CREATE_COLUMNS
-        MENUITEM "&Magic columns",              ID_COMMAND_CREATE_MAGCOL
-        MENUITEM "&DPT",                        ID_COMMAND_CREATE_DPT
-        MENUITEM "CD&PT",                       ID_COMMAND_CREATE_CDPT
-        MENUITEM "&8 chain",                    ID_COMMAND_CREATE_8CH
-        MENUITEM "&Trade by",                   ID_COMMAND_CREATE_TRBY
-        MENUITEM "An&y columns",                ID_COMMAND_CREATE_ANYCOLS
-        MENUITEM "Tida&l wave",                 ID_COMMAND_CREATE_GWV
-        MENUITEM "Any tidal setup",             ID_COMMAND_CREATE_ANY_TIDAL
-        MENUITEM "Diamonds",                    ID_COMMAND_CREATE_DMD
-        MENUITEM "1/4 tag",                     ID_COMMAND_CREATE_QTAG
-        MENUITEM "3/4 tag",                     ID_COMMAND_CREATE_3QTAG
-        MENUITEM "1/4 line",                    ID_COMMAND_CREATE_QLINE
-        MENUITEM "3/4 line",                    ID_COMMAND_CREATE_3QLINE
-        MENUITEM "Any 1/4 tag",                 ID_COMMAND_CREATE_ANY_QTAG
+            MENUITEM "Lines &out",                  ID_COMMAND_CREATE_LINESOUT
+
+            MENUITEM "In&verted lines",             ID_COMMAND_CREATE_INVLINES
+
+            MENUITEM "&3 && 1 lines",               ID_COMMAND_CREATE_3N1LINES
+
+            MENUITEM "&Any lines",                  ID_COMMAND_CREATE_ANYLINES
+
+            MENUITEM "Colum&ns",                    ID_COMMAND_CREATE_COLUMNS
+
+            MENUITEM "&Magic columns",              ID_COMMAND_CREATE_MAGCOL
+            MENUITEM "&DPT",                        ID_COMMAND_CREATE_DPT
+            MENUITEM "CD&PT",                       ID_COMMAND_CREATE_CDPT
+            MENUITEM "&8 chain",                    ID_COMMAND_CREATE_8CH
+            MENUITEM "&Trade by",                   ID_COMMAND_CREATE_TRBY
+            MENUITEM "An&y columns",                ID_COMMAND_CREATE_ANYCOLS
+
+            MENUITEM "Tida&l wave",                 ID_COMMAND_CREATE_GWV
+            MENUITEM "Any tidal setup",             ID_COMMAND_CREATE_ANY_TIDAL
+
+            MENUITEM "Diamonds",                    ID_COMMAND_CREATE_DMD
+            MENUITEM "1/4 tag",                     ID_COMMAND_CREATE_QTAG
+            MENUITEM "3/4 tag",                     ID_COMMAND_CREATE_3QTAG
+            MENUITEM "1/4 line",                    ID_COMMAND_CREATE_QLINE
+            MENUITEM "3/4 line",                    ID_COMMAND_CREATE_3QLINE
+            MENUITEM "Any 1/4 tag",                 ID_COMMAND_CREATE_ANY_QTAG
+
+        END
     END
 END
 
@@ -148,14 +156,14 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 33.0:   Copyright © 1990-2000 All rights reserved.",
+    CTEXT           "SD Version 33.15:   Copyright © 1990-2000 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
     CTEXT           "Parser Version 1.6:    Copyright © 1992-1993 All rights reserved.",
                     IDC_STATIC,12,52,201,8
     CTEXT           "Alan Snyder",IDC_STATIC,93,62,39,8
-    CTEXT           "GUI Version 4.8:    Copyright © 1995 All rights reserved.",
+    CTEXT           "GUI Version 4.10:    Copyright © 1995 All rights reserved.",
                     IDC_STATIC,24,72,176,8
     CTEXT           "Robert E. Cays",IDC_STATIC,88,82,48,8
     DEFPUSHBUTTON   "OK",IDOK,97,108,32,14,WS_GROUP
@@ -287,7 +295,7 @@ BEGIN
     ID_COMMAND_CLIPBOARD_PASTE_ALL 
                             "Move the entire contents of the clipboard back to the active sequence."
     ID_COMMAND_KEEP_PICTURE "Cause the current picture (setup diagram) to be printed on the card."
-    ID_COMMAND_NORMALIZE    "Search for a call or calls that leave an 8-person setup with no phantoms"
+    ID_COMMAND_NORMALIZE    "Search for a call or calls that leave an 8-person setup with no phantoms."
     ID_COMMAND_STANDARDIZE  "Search for a call or calls that leave a setup that isn't T-boned."
     ID_COMMAND_RECONCILE    "Search for a call or calls, not at the end of the sequence, that makes it resolve."
     ID_COMMAND_PICK_RANDOM  "Search for any legal call or concept/call combination."

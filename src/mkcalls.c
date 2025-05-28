@@ -162,6 +162,8 @@ int begin_sizes[] = {
    12,         /* b_p3ptpd */
    16,         /* b_4ptpd */
    16,         /* b_p4ptpd */
+   8,          /* b_wingedstar */
+   8,          /* b_pwingedstar */
    8,          /* b_323 */
    8,          /* b_p323 */
    10,         /* b_343 */
@@ -199,7 +201,9 @@ int begin_sizes[] = {
    12,         /* b_bigdmd */
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
-   12};        /* b_pbigptpd */
+   12,         /* b_pbigptpd */
+   16,         /* b_dblxwave */
+   16};        /* b_pdblxwave */
 
 extern void do_exit(void)
 {

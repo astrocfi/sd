@@ -54,9 +54,6 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_do_modifier_popup
    uims_add_new_line
    uims_reduce_line_count
-   uims_begin_search
-   uims_begin_reconcile_history
-   uims_end_reconcile_history
    uims_update_resolve_menu
    uims_terminate
    uims_database_tick_max
@@ -585,9 +582,9 @@ typedef struct _SdResources {
     String outfile_format;
     String title_format;
     String modifications_allowed[12];
-    String start_list[NUM_START_SELECT_KINDS];
+    String start_list[start_select_kind_enum_extent];
     String cmd_list[NUM_CMD_BUTTON_KINDS];
-    String resolve_list[NUM_RESOLVE_COMMAND_KINDS];
+    String resolve_list[resolve_command_kind_enum_extent];
     String quantifier_title;
     String selector_title;
     String direction_title;
@@ -805,11 +802,6 @@ extern void uims_display_help(void)
    printf("\nIn addition, the usual X Window System flags are supported.\n");
 }
 
-extern void uims_display_ui_intro_text(void)
-{
-   /* We have nothing to say. */
-}
-
 /*
  * The main program calls this before any of the call menus are
  * created, that is, before any calls to uims_create_menu.
@@ -917,7 +909,7 @@ extern void uims_preinitialize(void)
     XtGetApplicationResources(resolvemenu, (XtPointer) &sd_resources,
                resolve_resources,
                XtNumber(resolve_resources), NULL, 0);
-    XawListChange(resolvemenu, sd_resources.resolve_list, NUM_RESOLVE_COMMAND_KINDS,
+    XawListChange(resolvemenu, sd_resources.resolve_list, resolve_command_kind_enum_extent,
                0, TRUE);
 
     /* Text label is long enough to make widget wide enough.
@@ -1321,7 +1313,7 @@ extern uims_reply uims_get_startup_command(void)
       XtUnmanageChild(resolvewin); /* managed at startup, too */
       XtManageChild(callbox); /* nec if mode_resolve now */
       XawListChange(cmdmenu, sd_resources.start_list,
-                 NUM_START_SELECT_KINDS, 0, FALSE);
+                 start_select_kind_enum_extent, 0, FALSE);
       XawListChange(conceptspecialmenu, (char **) empty_menu, 0, 0, FALSE);
       XawListChange(conceptmenu, (char **) empty_menu, 0, 0, FALSE);
       set_call_menu (call_list_empty, call_list_empty);
@@ -1677,53 +1669,7 @@ update_display(Widget w)
     XFlush(display);
 }
 
-static int first_reconcile_history;
-static command_kind reconcile_goal;
 
-/*
- * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
- * command (resolve, reconcile, nice setup, pick random call).
- */
-
-extern void uims_begin_search(command_kind goal)
-{
-    reconcile_goal = goal;
-    first_reconcile_history = TRUE;
-}
-
-/*
- * UIMS_BEGIN_RECONCILE_HISTORY is called at the beginning of a reconcile,
- * after UIMS_BEGIN_SEARCH,
- * and whenever the current reconcile point changes.  CURRENTPOINT is the
- * current reconcile point and MAXPOINT is the maximum possible reconcile
- * point.  This call is followed by calls to UIMS_REDUCE_LINE_COUNT
- * and UIMS_ADD_NEW_LINE that
- * display the current sequence with the reconcile point indicated.  These
- * calls are followed by a call to UIMS_END_RECONCILE_HISTORY.
- * Return TRUE to cause sd to forget its cached history output; do this
- * if the reconcile history is written to a separate window, which is the
- * point of uims_begin_reconcile_history and uims_end_reconcile_history.
- */
-
-/* ARGSUSED */
-extern int
-uims_begin_reconcile_history(int currentpoint, int maxpoint)
-{
-    if (!first_reconcile_history)
-        uims_update_resolve_menu(reconcile_goal, 0, 0, resolver_display_ok);
-    return FALSE;
-}
-
-/*
- * Return TRUE to cause sd to forget its cached history output.
- */
-
-extern int
-uims_end_reconcile_history(void)
-{
-    first_reconcile_history = FALSE;
-    return FALSE;
-}
 
 extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state)
 {
@@ -1816,7 +1762,10 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
       unsigned int this_num;
 
       if (interactivity == interactivity_verify) {
-         this_num = number_for_initialize;
+         // The second number in the series is always 1.
+         // This makes "N-N-N-N change the web" and "N-N-N-N
+         // relay the top" work.
+         this_num = (i==1) ? 1 : number_for_initialize;
       }
       else {
          this_num = choose_popup(sd_resources.quantifier_title, cardinals);

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -23,10 +23,10 @@
     WARRANTY, without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.
   
-    This is for version 32. */
+    This is for version 33. */
 
 
-static char *sdui_version = "4.9";
+static char *sdui_version = "4.10";
 
 
 /* This file defines the following functions:
@@ -49,9 +49,6 @@ static char *sdui_version = "4.9";
    uims_do_modifier_popup
    uims_add_new_line
    uims_reduce_line_count
-   uims_begin_search
-   uims_begin_reconcile_history
-   uims_end_reconcile_history
    uims_update_resolve_menu
    uims_terminate
    uims_database_tick_max
@@ -73,14 +70,14 @@ static char *sdui_version = "4.9";
 #include <stdlib.h>
 #include <string.h>
 
-#include "paths.h"
 #include "basetype.h"
 #include "sdui.h"
+#include "paths.h"
+
 void windows_init_printer_font(HWND hwnd, HDC hdc);
 extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
-#include "sdmatch.h"
 #include "resource.h"
 
 #pragma comment(lib, "comctl32")
@@ -96,10 +93,6 @@ static int dammit = 0;
    handles them), so we subtract 128 as we embed them into the
    Windows command user segment. */
 #define SPECIAL_KEY_OFFSET (CM_REINIT-128+1)
-
-extern "C" {
-FILE *call_list_file;
-}
 
 static char szMainWindowName[] = "Sd main window class";
 static char szTranscriptWindowName[] = "Sd transcript window class";
@@ -159,7 +152,7 @@ static char szResolveWndTitle [MAX_TEXT_LINE_LENGTH];
 static int GLOBStatusBarLength;
 static Cstring szGLOBFirstPane;
 static HPALETTE hPalette;   // The palette that the system makes for us.
-static LPBITMAPINFO lpBi;   // Address of the DBI (bitmap file) mapped in memory.
+static LPBITMAPINFO lpBi;   // Address of the DIB (bitmap file) mapped in memory.
 static LPTSTR lpBits;       // Address of the pixel data in same.
 
 
@@ -272,7 +265,7 @@ static void UpdateStatusBar(Cstring szFirstPane)
    StatusBarDimensions[5] = -1;
 
    if (allowing_modifications || allowing_all_concepts ||
-       using_active_phantoms || singing_call_mode || nowarn_mode) {
+       using_active_phantoms || singing_call_mode || ui_options.nowarn_mode) {
       (void) SendMessage(hwndStatusBar, SB_SETPARTS, 6, (LPARAM) StatusBarDimensions);
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 1,
@@ -290,7 +283,7 @@ static void UpdateStatusBar(Cstring szFirstPane)
                             (singing_call_mode ? "singer" : "")));
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 5,
-                  (LPARAM) (nowarn_mode ? "no warn" : ""));
+                  (LPARAM) (ui_options.nowarn_mode ? "no warn" : ""));
    }
    else {
       (void) SendMessage(hwndStatusBar, SB_SETPARTS, 1, (LPARAM) StatusBarDimensions);
@@ -946,9 +939,9 @@ static void Transcript_OnPaint(HWND hwnd)
                   if (ui_options.no_color != 1)
                      (void) SetTextColor(PaintDC, colorlist[c1 & 7]);
 
-                  cc[0] = pn1[c1 & 7];
-                  cc[1] = pn2[c1 & 7];
-                  cc[2] = direc[c2 & 017];
+                  cc[0] = ui_options.pn1[c1 & 7];
+                  cc[1] = ui_options.pn2[c1 & 7];
+                  cc[2] = ui_options.direc[c2 & 017];
 
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 3, 0);
 
@@ -1428,7 +1421,8 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       break;
    case LISTBOX_INDEX:
       // See whether this an appropriate single-click or double-click.
-      if (codeNotify != (accept_single_click ? (UINT) LBN_SELCHANGE : (UINT) LBN_DBLCLK))
+      if (codeNotify != (ui_options.accept_single_click ?
+                         (UINT) LBN_SELCHANGE : (UINT) LBN_DBLCLK))
          break;
       /* Fall Through! */
    case ENTER_INDEX:
@@ -1494,7 +1488,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          double-click of a menu item, that item is clearly what she wants, so
          we use it. */
  
-      i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM)0);
+      i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM) 0);
       user_match.match.index = LOWORD(i);
       user_match.match.kind = (uims_reply) HIWORD(i);
 
@@ -2172,12 +2166,12 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    close_init_file();
 
-   use_escapes_for_drawing_people = 2;
+   ui_options.use_escapes_for_drawing_people = 2;
 
    /* Install the pointy triangles. */
 
    if (ui_options.no_graphics < 2)
-      direc = "?\020?\021????\036?\037?????";
+      ui_options.direc = "?\020?\021????\036?\037?????";
 
    {
       HANDLE hRes, hPal;
@@ -2241,7 +2235,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       13 light magenta
       14 light cyan
       15 white
-      The people are "colored in the DIB file as:
+      The people are "colored" in the DIB file as:
 
       1B - 9
       1G - 1
@@ -2359,11 +2353,6 @@ void EnterMessageLoop(void)
 }
 
 
-extern void uims_display_ui_intro_text(void)
-{
-}
-
-
 extern void uims_display_help(void)
 {
 }
@@ -2384,15 +2373,27 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
 }
 
 
+
+static void scan_menu(Cstring name, HDC hDC, int *nLongest_p, uint32 itemdata)
+{
+   SIZE Size;
+
+   GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
+   if ((Size.cx > *nLongest_p) && (Size.cx > CallsClientRect.right)) {
+      SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
+      *nLongest_p = Size.cx;
+   }
+
+   int nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
+   SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex, (LPARAM) itemdata);
+}
+
+
+
 void ShowListBox(int nWhichOne)
 {
    if (nWhichOne != nLastOne) {
       HDC hDC;
-      SIZE Size;
-      int nLongest;
-      int i;
-      int menu_length;
-      int *item;
       int nIndex = 1;
 
       nLastOne = nWhichOne;
@@ -2401,174 +2402,66 @@ void ShowListBox(int nWhichOne)
       SendMessage(hwndList, LB_RESETCONTENT, 0, 0L);
       hDC = GetDC(hwndList);
       SendMessage(hwndList, WM_SETREDRAW, FALSE, 0L);
-      nLongest = 0;
+
+      int nLongest = 0;
 
       if (nLastOne == match_number) {
-         int iu;
-
          UpdateStatusBar("<number>");
 
-         for (iu=0 ; iu<NUM_CARDINALS; iu++) {
-            Cstring name = cardinals[iu];
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, 0));
-         }
+         for (int iu=0 ; iu<NUM_CARDINALS; iu++)
+            scan_menu(cardinals[iu], hDC, &nLongest, MAKELONG(iu, 0));
       }
       else if (nLastOne == match_circcer) {
-         unsigned int iu;
-
          UpdateStatusBar("<circulate replacement>");
 
-         for (iu=0 ; iu<number_of_circcers ; iu++) {
-            Cstring name = circcer_calls[iu]->menu_name;
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, 0));
-         }
+         for (unsigned int iu=0 ; iu<number_of_circcers ; iu++)
+            scan_menu(circcer_calls[iu]->menu_name, hDC, &nLongest, MAKELONG(iu, 0));
       }
       else if (nLastOne >= match_taggers &&
                nLastOne < match_taggers+NUM_TAGGER_CLASSES) {
-         unsigned int iu;
          int tagclass = nLastOne - match_taggers;
 
          UpdateStatusBar("<tagging call>");
 
-         for (iu=0 ; iu<number_of_taggers[tagclass] ; iu++) {
-            Cstring name = tagger_calls[tagclass][iu]->menu_name;
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(iu, 0));
-         }
+         for (unsigned int iu=0 ; iu<number_of_taggers[tagclass] ; iu++)
+            scan_menu(tagger_calls[tagclass][iu]->menu_name, hDC, &nLongest, MAKELONG(iu, 0));
       }
       else if (nLastOne == match_startup_commands) {
-         Cstring *menu;
-
          UpdateStatusBar("<startup>");
 
-         menu = startup_commands;
-         menu_length = num_startup_commands;
-
-         for (i=0 ; i<menu_length ; i++) {
-            Cstring name = menu[i];
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, (int) ui_start_select));
-         }
+         for (int i=0 ; i<num_startup_commands ; i++)
+            scan_menu(startup_commands[i],
+                      hDC, &nLongest, MAKELONG(i, (int) ui_start_select));
       }
       else if (nLastOne == match_resolve_commands) {
-         Cstring *menu = resolve_command_strings;
-         menu_length = number_of_resolve_commands;
-
-         for (i=0 ; i<menu_length ; i++) {
-            Cstring name = menu[i];
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, (int) ui_resolve_select));
-         }
+         for (int i=0 ; i<number_of_resolve_commands ; i++)
+            scan_menu(resolve_command_strings[i],
+                      hDC, &nLongest, MAKELONG(i, (int) ui_resolve_select));
       }
       else if (nLastOne == match_directions) {
-         Cstring *menu;
-
          UpdateStatusBar("<direction>");
 
-         menu = &direction_names[1];
-         menu_length = last_direction_kind;
-
-         for (i=0 ; i<menu_length ; i++) {
-            Cstring name = menu[i];
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, (int) ui_special_concept));
-         }
+         for (int i=0 ; i<last_direction_kind ; i++)
+            scan_menu(direction_names[i+1],
+                      hDC, &nLongest, MAKELONG(i, (int) ui_special_concept));
       }
       else if (nLastOne == match_selectors) {
-         Cstring *menu = selector_menu_list;
-
          UpdateStatusBar("<selector>");
 
-         menu_length = last_selector_kind;
-
-         for (i=0 ; i<menu_length ; i++) {
-            Cstring name = menu[i];
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, (int) ui_special_concept));
-         }
+         // Menu is shorter than it appears, because we are skipping first item.
+         for (int i=0 ; i<selector_enum_extent-1 ; i++)
+            scan_menu(selector_menu_list[i],
+                      hDC, &nLongest, MAKELONG(i, (int) ui_special_concept));
       }
       else {
          UpdateStatusBar(menu_names[nLastOne]);
 
-         for (i = 0; i < number_of_calls[nLastOne]; i++) {
-            Cstring name = main_call_lists[nLastOne][i]->menu_name;
-            int nMenuIndex;
+         for (int i=0; i<number_of_calls[nLastOne]; i++)
+            scan_menu(main_call_lists[nLastOne][i]->menu_name,
+                      hDC, &nLongest, MAKELONG(i, (int) ui_call_select));
 
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage (hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, (int) ui_call_select));
-         }
+         int *item;
+         int menu_length;
 
          if (allowing_all_concepts) {
             item = concept_list;
@@ -2579,43 +2472,21 @@ void ShowListBox(int nWhichOne)
             menu_length = level_concept_list_length;
          }
 
-         for (i=0 ; i<menu_length ; i++) {
-            Cstring name = concept_descriptor_table[item[i]].menu_name;
-            int nMenuIndex;
-
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(item[i], ui_concept_select));
-         }
+         for (i=0 ; i<menu_length ; i++)
+            scan_menu(concept_descriptor_table[item[i]].menu_name,
+                      hDC, &nLongest, MAKELONG(item[i], ui_concept_select));
 
          for (i=0 ;  ; i++) {
             Cstring name = command_menu[i].command_name;
-            int nMenuIndex;
-
             if (!name) break;
-            GetTextExtentPoint(hDC, name, lstrlen(name), &Size);
-            if ((Size.cx > nLongest) && (Size.cx > CallsClientRect.right)) {
-               SendMessage(hwndList, LB_SETHORIZONTALEXTENT, Size.cx, 0L);
-               nLongest = Size.cx;
-            }
-
-            nMenuIndex = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM) name);
-            SendMessage(hwndList, LB_SETITEMDATA, nMenuIndex,
-                        (LPARAM) MAKELONG(i, ui_command_select));
+            scan_menu(name, hDC, &nLongest, MAKELONG(i, ui_command_select));
          }
       }
 
-      SendMessage (hwndList, WM_SETREDRAW, TRUE, 0L);
-      InvalidateRect (hwndList, NULL, TRUE);
-
-      ReleaseDC (hwndList, hDC);
-      SendMessage (hwndList, LB_SETCURSEL, 0, (LPARAM) 0);
+      SendMessage(hwndList, WM_SETREDRAW, TRUE, 0L);
+      InvalidateRect(hwndList, NULL, TRUE);
+      ReleaseDC(hwndList, hDC);
+      SendMessage(hwndList, LB_SETCURSEL, 0, (LPARAM) 0);
    }
 
    ButtonFocusIndex = 0;
@@ -3040,23 +2911,6 @@ extern void uims_reduce_line_count(int n)
 extern void uims_terminate (void)
 {
 }
-
-
-extern void uims_begin_search(command_kind goal)
-{
-}
-
-extern int uims_begin_reconcile_history (int currentpoint, int maxpoint)
-{
-   return FALSE;
-}
-
-
-extern int uims_end_reconcile_history (void)
-{
-   return FALSE;
-}
-
 
 
 extern void uims_update_resolve_menu(command_kind goal, int cur, int max,

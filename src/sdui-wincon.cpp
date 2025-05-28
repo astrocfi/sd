@@ -24,7 +24,6 @@
 
 #include "basetype.h"
 #include "sdui.h"
-#include "sdmatch.h"
 
 
 
@@ -38,20 +37,19 @@ static char *my_pn1;
 static char *my_pn2;
 static char *my_directions;
 
-extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
-                                  char *pn1, char *pn2, char **direc_p)
+extern void ttu_final_option_setup()
 {
-   my_pn1 = pn1;
-   my_pn2 = pn2;
+   my_pn1 = ui_options.pn1;
+   my_pn2 = ui_options.pn2;
 
    /* Install the pointy triangles. */
 
    if (ui_options.no_graphics < 2)
-      *direc_p = "?\020?\021????\036?\037?????";
+      ui_options.direc = "?\020?\021????\036?\037?????";
 
-   my_directions = *direc_p;
+   my_directions = ui_options.direc;
 
-   if (!no_console) *use_escapes_for_drawing_people_p = 1;
+   if (!no_console) ui_options.use_escapes_for_drawing_people = 1;
 }
 
 extern void ttu_display_help(void)
@@ -92,7 +90,6 @@ BOOL WINAPI control_c_handler(DWORD ControlInfo)
 }
 
 
-static WORD background_color;
 static WORD text_color;
 
 
@@ -122,7 +119,6 @@ static WORD pastel_person_colors[2] = {
 
 extern void ttu_initialize(void)
 {
-   COORD coord;
    DWORD numWrite;
    int i;
 
@@ -163,6 +159,8 @@ extern void ttu_initialize(void)
       ExitProcess(err);
    }
 
+   WORD background_color;
+
    /* Get information about the "buffer", that is, the "pad".  The window itself,
       and all resizing thereof, is irrelevant.  It will take care of itself, the way
       it does in any decent operating system (unlike some that I've had to deal with.) */
@@ -174,7 +172,7 @@ extern void ttu_initialize(void)
    else {
       /* If doing color_by_couple or color_by_corner, make the backround light
          gray instead of white, because yellow doesn't show up well against white. */
-      if (ui_options.no_color == 2 || ui_options.no_color == 3)
+      if (ui_options.no_color == 2 || ui_options.no_color == 3 || ui_options.no_intensify)
          background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
       else
          background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED |
@@ -188,26 +186,34 @@ extern void ttu_initialize(void)
       else
          text_color = background_color;
    }
-   else
-      text_color = globalconsoleInfo.wAttributes;
+   else {
+      if (ui_options.reverse_video)
+         text_color = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+      else
+         text_color = background_color;
+   }
 
    for (i=0 ; i<9 ; i++) couple_colors[i] |= background_color;
    for (i=0 ; i<2 ; i++) person_colors[i] |= background_color;
    for (i=0 ; i<2 ; i++) pastel_person_colors[i] |= background_color;
 
-   /* Set text to bright white.  Will reset it at end of program. */
+   if (ui_options.reverse_video) background_color |= FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
+   COORD coord;
    coord.X = 0;
    coord.Y = 0;
 
+   //globalconsoleInfo.dwCursorPosition.X
+   //globalconsoleInfo.dwCursorPosition.Y
+
    (void) FillConsoleOutputAttribute(consoleStdout,
                                      background_color,
-                                     globalconsoleInfo.dwSize.X * globalconsoleInfo.dwSize.Y,
-                                     coord,
-                                     &numWrite);
+                                     globalconsoleInfo.dwSize.X *
+                                     (globalconsoleInfo.dwSize.Y-globalconsoleInfo.dwCursorPosition.Y)
+                                     -globalconsoleInfo.dwCursorPosition.X,
+                                     globalconsoleInfo.dwCursorPosition, &numWrite);
 
-   if (!ui_options.no_intensify)
-      (void) SetConsoleTextAttribute(consoleStdout, text_color);
+   (void) SetConsoleTextAttribute(consoleStdout, text_color);
 
    (void) SetConsoleCtrlHandler(&control_c_handler, TRUE);
 }
@@ -216,6 +222,33 @@ extern void ttu_initialize(void)
 extern void ttu_terminate(void)
 {
    if (!no_console) {
+
+      CONSOLE_SCREEN_BUFFER_INFO finalconsoleInfo;
+
+      DWORD numWrite;
+      COORD coord;
+      coord.X = 0;
+      coord.Y = 0;
+
+      // Find out what line we have advanced to.
+      (void) GetConsoleScreenBufferInfo(consoleStdout, &finalconsoleInfo);
+
+      // Paint the rest of the screen to the original color.
+      (void) FillConsoleOutputAttribute(consoleStdout,
+                                        globalconsoleInfo.wAttributes,
+                                        finalconsoleInfo.dwSize.X *
+                                        (finalconsoleInfo.dwSize.Y-finalconsoleInfo.dwCursorPosition.Y)
+                                        -finalconsoleInfo.dwCursorPosition.X,
+                                        finalconsoleInfo.dwCursorPosition, &numWrite);
+
+
+      /*
+
+      (void) FillConsoleOutputAttribute(consoleStdout,
+         globalconsoleInfo.wAttributes, globalconsoleInfo.dwSize.X * globalconsoleInfo.dwSize.Y,
+         coord, &numWrite);
+      */
+
       (void) SetConsoleTextAttribute(consoleStdout, globalconsoleInfo.wAttributes);
       (void) SetConsoleMode(consoleStdin, oldMode);
       (void) SetConsoleCtrlHandler(&control_c_handler, FALSE);
@@ -491,7 +524,7 @@ extern int get_char(void)
    }
 }
 
-extern void get_string(char *dest)
+extern void get_string(char *dest, int max)
 {
    int size = 0;
 

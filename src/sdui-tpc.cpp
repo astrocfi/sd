@@ -65,8 +65,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 #endif
 
 
-extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
-                                  char *pn1, char *pn2, char **direc_p)
+extern void ttu_final_option_setup()
 {
    /* If no "-no_graphics" switch was not given, and our run-time
       system supports it, switch over to the "pointy triangles"
@@ -74,7 +73,7 @@ extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
 
 #if defined(DJGPP)
    if (ui_options.no_graphics < 2)
-      *direc_p = "?\020?\021????\036?\037?????";
+      ui_options.direc = "?\020?\021????\036?\037?????";
 #endif
 }
 
@@ -399,27 +398,18 @@ extern int get_char(void)
 }
 #endif
 
-extern void get_string(char *dest)
+extern void get_string(char *dest, int max)
 {
    int size;
 
 #if !defined(DJGPP)
    csetmode(0);         /* Regular full-line mode with system echo. */
 #endif
-   (void) gets(dest);
+   (void) fgets(dest, max, stdin);
    size = strlen(dest);
 
-   if (size > 0 && dest[size-1] == '\n') {
-      size--;
-      dest[size] = '\000';
-   }
-
-   /* Some libraries (Cygnus GCC) have been observed putting a
-      control-M at the end (although it does remove the control-J.) */
-   if (size > 0 && dest[size-1] == '\r') {
-      size--;
-      dest[size] = '\000';
-   }
+   while (size > 0 && (dest[size-1] == '\n' || dest[size-1] == '\r'))
+      dest[--size] = '\000';
 
    (void) fputs(dest, stdout);
    (void) putchar('\n');

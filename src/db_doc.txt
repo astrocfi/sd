@@ -788,6 +788,16 @@ deepbigqtg  |_____|_____|_____|_____|
 
 
 
+                            _____ _____ _____ _____
+                _____ _____|     |     |     |     |_____ _____
+               |     |     |  0  |  1  |  2  |  3  |     |     |
+widerigger     | 10  | 11  |_____|_____|_____|_____|  5  |  4  |
+               |_____|_____|     |     |     |     |_____|_____|
+                           |  9  |  8  |  7  |  6  |
+                           |_____|_____|_____|_____|
+
+
+
                          _____ _____
                         |     |     |
                         |  2  | 11  |
@@ -1014,6 +1024,25 @@ bigdhrgl    |_____|_____|  9  |_____|  3  |_____|_____|
             |     |     |_____|     |_____|     |     |
             | 11  | 10  |     |  8  |     |  7  |  6  |
             |_____|_____|     |_____|     |_____|_____|
+
+
+                         _____                         _____
+                        |     |                       |     |
+                        |  2  |                       | 14  |
+                        |_____|                       |_____|
+             _____ _____|     |_____ ___________ _____|     |_____ _____
+            |     |     |  3  |     |     |     |     | 15  |     |     |
+dblxwave    |  0  |  1  |_____|  5  |  4  | 12  | 13  |_____|  9  |  8  |
+            |_____|_____|     |_____|_____|_____|_____|     |_____|_____|
+                        |  7  |                       | 11  |
+                        |_____|                       |_____|
+                        |     |                       |     |
+                        |  6  |                       | 10  |
+                        |_____|                       |_____|
+
+
+
+
 
 
 
@@ -2475,6 +2504,9 @@ q_tag_front
       or "pbone" as long as it doesn't specify a legal move for persons
       2, 3, 6, or 7.
 
+      Actually, this is used to test the outsides of a "dhrglass", see the
+      2nd part of trim the web.
+
       This is strict relative to the people it tests.  For a person in the
       center line, this returns TRUE if the subject's partner is alive and
       facing in the opposite direction, and FALSE otherwise.  That is, it
@@ -2662,6 +2694,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    dmd_facing,                      dmd, qtag or ptpd - diamond(s) are actual diamonds, are
                                        facing, and have consistent handedness.
    in_or_out,                       2x2/2x4 - all facing in or all facing out of box of 4.
+                                       2x3 - facing lines or back-to-back lines
                                        4x2/4x1/2x1 - [single] 8 chain or trade by
                                        (one or the other; we don't care which)
                                        The 2x2/2x4/4x2 versions of these require that people
@@ -2696,10 +2729,10 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        mofifiers.  If "right" or "left", it means this:
                                           1x2-1x16 - R/L means handedness
                                           2x4/3x4/2x6/2x8 - R/L means handedness
-
+                                          2x3 - "right" means centers looking in; "left"
+                                             means centers loking out.
                                           2x2 - real R/L box;
                                           4x4 - consistent R/L waves either way, but not T-boned;
-
                                           3x2/4x2/5x2/6x2/8x2 - R/L columns;
                                           qtag/pqtag - right wave in center
                                           2x1dmd/3x1dmd - right wave (of 6) in center
@@ -2865,13 +2898,14 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                      LH versions will pass, so that splitting will take place.
 
 
-   ctr_pts_rh,                      qtag, 2x1dmd, hrglass, bone6 - the "points of the centers"
-                                    (ends of the center line of 4 in qtag or 2x1dmd;
-                                    points of the center diamond in hrglass) are in a
-                                    right-handed line or diamond, from their own perspective.
+   ctr_pts_rh,                      qtag, 2x1dmd, hrglass, dhrglass, bone, bone6 - the
+                                    "points of the centers" (ends of the center line
+                                    of 4 in qtag or 2x1dmd; points of the center diamond
+                                    in hrglass or dhrglass) are in a right-handed line
+                                    or diamond, from their own perspective.
                                     The direction of the center 2 people is immaterial.
                                     For bone6, it tests the center 2.
-   ctr_pts_lh,                      qtag, 2x1dmd, hrglass, bone6 - as above, but left-handed.
+   ctr_pts_lh,                      as above, but left-handed.
    dmd_ctrs_1f,                     dmd, 1x4 - the centers (2 of them) are in a couple
    said_triangle,                   short6/pshort6 - caller said the word "triangle"
    didnt_say_triangle               short6/pshort6 - caller didn't say the word "triangle"

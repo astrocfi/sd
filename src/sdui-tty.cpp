@@ -5,7 +5,7 @@
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
- * Copyright (c) 1994-1998 William B. Ackerman
+ * Copyright (c) 1994-2000 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -23,15 +23,15 @@
  * Type TAB to complete as much as possible.
  * Type Control-U to clear the line.
  *
- * For use with version 32 of the Sd program.
+ * For use with version 33 of the Sd program.
  *
  * The version of this file is as shown immediately below.  This string
  * gets displayed at program startup, as the "ui" part of the complete
  * version.
  */
 
-#define UI_VERSION_STRING "1.11"
-#define UI_TIME_STAMP "wba@an.hp.com  29 Nov 98 $"
+#define UI_VERSION_STRING "1.12"
+#define UI_TIME_STAMP "wba@alum.mit.edu  14 Mar 2000 $"
 
 /* This file defines the following functions:
    uims_version_string
@@ -62,9 +62,6 @@
    uims_do_modifier_popup
    uims_add_new_line
    uims_reduce_line_count
-   uims_begin_search
-   uims_begin_reconcile_history
-   uims_end_reconcile_history
    uims_update_resolve_menu
    uims_terminate
    uims_database_tick_max
@@ -79,7 +76,6 @@ and the following other variables:
    no_cursor
    no_console
    no_line_delete
-   concept_key_table
 */
 
 
@@ -96,9 +92,9 @@ and the following other variables:
 
 extern void exit(int code);
 
-#include "sdprog.h"
+#include "basetype.h"
+#include "sdui.h"
 #include "paths.h"
-#include "sdmatch.h"
 
 /* See comments in sdmain.c regarding this string. */
 static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;
@@ -130,6 +126,7 @@ static char journal_name[MAX_TEXT_LINE_LENGTH];
 static resolver_display_state resolver_happiness = resolver_display_failed;
 
 int main(int argc, char *argv[])
+
 {
    // In Sdtty, the defaults are reverse video (white-on-black) and pastel colors.
    ui_options.no_graphics = 0;
@@ -194,10 +191,10 @@ static char alt1_names1[] = "        ";
 static char alt1_names2[] = "1P2R3O4C";
 
 
-Private void get_string_input(char prompt[], char dest[])
+static void get_string_input(char prompt[], char dest[], int max)
 {
    put_line(prompt);
-   get_string(dest);
+   get_string(dest, max);
    current_text_line++;
 }
 
@@ -227,8 +224,8 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
       else if (strcmp(argv[argno], "-no_console") == 0)
          no_console = 1;
       else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
-         pn1 = alt1_names1;
-         pn2 = alt1_names2;
+         ui_options.pn1 = alt1_names1;
+         ui_options.pn2 = alt1_names2;
       }
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
          screen_height = atoi(argv[argno+1]);
@@ -268,22 +265,6 @@ extern void uims_display_help(void)
    ttu_display_help();
 }
 
-extern void uims_display_ui_intro_text(void)
-{
-   writestuff("At any time that you don't know what you can type,");
-   newline();
-   writestuff("type a question mark (?).  The program will show you all");
-   newline();
-   writestuff("legal choices.");
-   newline();
-   newline();
-}
-
-
-extern "C" {
-FILE *call_list_file;
-}
-
 
 extern long_boolean uims_open_session(int argc, char **argv)
 {
@@ -309,7 +290,10 @@ extern long_boolean uims_open_session(int argc, char **argv)
 
    printf("Enter the number of the desired session:  ");
 
-   if (!gets(line) || !line[0])
+   if (!fgets(line, MAX_FILENAME_LENGTH, stdin) ||
+       !line[0] ||
+       line[0] == '\r' ||
+       line[0] == '\n')
       goto no_session;
 
    if (!sscanf(line, "%d", &session_index)) {
@@ -354,8 +338,14 @@ extern long_boolean uims_open_session(int argc, char **argv)
       calling_level = l_mainstream;   /* Default in case we fail. */
       printf("Enter the level: ");
 
-      if (gets(line))
+      if (fgets(line, MAX_FILENAME_LENGTH, stdin)) {
+         int size = strlen(line);
+
+         while (size > 0 && (line[size-1] == '\n' || line[size-1] == '\r'))
+            line[--size] = '\000';
+
          (void) parse_level(line, &calling_level);
+      }
 
       (void) strncat(outfile_string, filename_strings[calling_level], MAX_FILENAME_LENGTH);
    }
@@ -420,8 +410,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       allowing_all_concepts = save_allow;
    }
 
-   ttu_final_option_setup(&use_escapes_for_drawing_people,
-                             pn1, pn2, &direc);
+   ttu_final_option_setup();
 
 #if !defined(MSDOS)
    initialize_signal_handlers();
@@ -1064,7 +1053,7 @@ Private int get_popup_string(char prompt[], char dest[])
     char buffer[200];
 
     (void) sprintf(buffer, "%s: ", prompt);
-    get_string_input(buffer, dest);
+    get_string_input(buffer, dest, 200);
     return POPUP_ACCEPT_WITH_STRING;
 }
 
@@ -1206,45 +1195,6 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
     return confirm("Do you want to replace it? ");
 }
 
-/*
- * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
- * command (resolve, reconcile, nice setup, pick random call).
- */
-
-extern void uims_begin_search(command_kind goal)
-{
-}
-
-/*
- * UIMS_BEGIN_RECONCILE_HISTORY is called at the beginning of a reconcile,
- * after UIMS_BEGIN_SEARCH,
- * and whenever the current reconcile point changes.  CURRENTPOINT is the
- * current reconcile point and MAXPOINT is the maximum possible reconcile
- * point.  This call is followed by calls to UIMS_REDUCE_LINE_COUNT
- * and UIMS_ADD_NEW_LINE that
- * display the current sequence with the reconcile point indicated.  These
- * calls are followed by a call to UIMS_END_RECONCILE_HISTORY.
- * Return TRUE to cause sd to forget its cached history output; do this
- * if the reconcile history is written to a separate window.
- */
-
-extern int
-uims_begin_reconcile_history(int currentpoint, int maxpoint)
-{
-    return FALSE;
-}
-
-/*
- * Return TRUE to cause sd to forget its cached history output.
- */
-
-extern int
-uims_end_reconcile_history(void)
-{
-    put_line("\n");
-    return FALSE;
-}
-
 extern void uims_update_resolve_menu(command_kind goal, int cur, int max,
                                      resolver_display_state state)
 {
@@ -1384,7 +1334,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
       if (!user_match.valid || (howmanynumbers <= 0)) {
          for (;;) {
             char buffer[200];
-            get_string_input("How many? ", buffer);
+            get_string_input("How many? ", buffer, 200);
             if (buffer[0] == '!' || buffer[0] == '?') {
                put_line("Type a number between 0 and 15\n");
                current_text_line++;
@@ -1436,7 +1386,7 @@ extern void uims_reduce_line_count(int n)
 }
 
 
-extern void uims_choose_font(long_boolean in_startup)
+extern void uims_choose_font(long_boolean in_startup) /* THROW_DECL */
 {
    if (in_startup) {
       writestuff("Printing is not supported in Sdtty.");
@@ -1447,7 +1397,7 @@ extern void uims_choose_font(long_boolean in_startup)
 }
 
 
-extern void uims_print_this(long_boolean in_startup)
+extern void uims_print_this(long_boolean in_startup) /* THROW_DECL */
 {
    if (in_startup) {
       writestuff("Printing is not supported in Sdtty.");

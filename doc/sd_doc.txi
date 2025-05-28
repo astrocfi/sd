@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: January 20, 2000
-@set sd-version 33.0
+@set Time-stamp: March 14, 2000
+@set sd-version 33.15
 @set full-manual
 @c %**end of header
 @iftex
@@ -2546,7 +2546,7 @@ F7   toggle concept levels    toggle active phantoms
 F8   <anything>               cut to clipboard         paste one call
 F9   undo last call/exit search/exit program
 F10  write this sequence      change output file
-F11  pick level call          pick 8 person level call
+F11  pick level call          pick 8 person level call standardize
 F12  find another             accept current choice    previous
 @end group
 @end example
@@ -3622,14 +3622,6 @@ pairs work independently.
 @item @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome twosome
 @item gruesome as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome couples twosome
 @item gruesome tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ gruesome tandem twosome
-@item as couples in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 tag
-@item as couples in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 tag
-@item as couples in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 line
-@item as couples in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 line
-@item tandem in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 tag
-@item tandem in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 tag
-@item tandem in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 line
-@item tandem in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 line
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
 @item <ANYONE> are couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
@@ -3648,16 +3640,30 @@ These are straightforward.
 Any of the above twosome/threesome/whateversome may also be
 ``<N/4> whateversome'' or ``whateversome <N/4> solid.''
 
-The concepts like @samp{as couples in a 1/4 tag} are intended to be used from tidal
-2-faced lines or tidal 1-faced lines.  The concepts like @samp{tandem in a 1/4 tag}
-are intended to be used from parallel waves or parallel 2-faced lines.
-They cause the live dancers to become the centers of the resulting 1/4 tag or 1/4 line.
-They may also be used when the live
-people are partially or entirely on the outside.  If you want to instantiate outside
-phantoms with facing directions other than those provided, use the
-@samp{16 matrix of parallel diamonds} concept to create the spots, and then use
-whatever @samp{assume} concepts you need.  For example, from a tidal 2-faced
-line, you could say:
+@item as couples in a 1/4 tag
+@item as couples in a 3/4 tag
+@item as couples in a 1/4 line
+@item as couples in a 3/4 line
+@item as couples in point-to-point diamonds
+@item as couples in a tidal line
+@item as couples in a tidal column
+@item as couples in a tall 6
+
+These may be used with @samp{tandem} instead of @samp{as couples}, and may of
+course be used with all of the twosome variations.  Each of them is actually the
+juxtaposition of two concepts---an @samp{as couples} or @samp{tandem} concept
+followed by a special @samp{in a 1/4 tag} (or whatever) concept.
+This actually doesn't matter.  Just type it.
+
+The concepts referring to 1/4 tag-like setups are generally intended to be used
+from tidal lines (couples) or parallel waves or lines (tandem).  They
+cause the live dancers to become the centers of the resulting 1/4 tag or
+1/4 line.  They may also be used when the live people are partially or
+entirely on the outside.  If you want to instantiate outside phantoms
+with facing directions other than those provided, use the @samp{16
+matrix of parallel diamonds} concept to create the spots, and then use
+whatever @samp{assume} concepts you need.  For example, from a tidal
+2-faced line, you could say:
 
 @example
 @group
@@ -3672,6 +3678,10 @@ line, you could say:
          siamese twosome 6x2 acey deucey
 @end group
 @end example
+
+The @samp{as couples in a tall 6} is intended to be used from parallel
+2-faced lines.  It puts a phantom couple in front of each lead couple,
+making two wave-based triangles.
 
 @subsubheading MxN As Couples
 
@@ -3761,7 +3771,7 @@ ends press ahead from waves. The 3x4 matrix version can be formed by
 having everyone 1/2 press ahead from waves.
 @item distorted C/L/W
 This encompasses any kind of distortion of a pair of lines or columns
-into a 3x4 or 4x4 matrix.
+into a 3x4, 4x4, 2x6, or 2x8 matrix.
 @item diagonal C/L/W @r{(singular)}
 @item <ANYONE> in your diagonal C/L/W @r{(singular)}
 These require a ``blocks'' setup.  They specify the ``long diagonal'',
@@ -4229,7 +4239,8 @@ of these concepts.
 @item wave-based triangles
 @item tandem-based triangles
 @item <ANYONE>-based triangles
-These are straightforward.
+These are straightforward.  Some them may be preceded by modifiers such as @samp{interlocked}
+and/or @samp{magic}.
 @item concentric
 @item cross concentric
 @item single concentric

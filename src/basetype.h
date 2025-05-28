@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,16 +10,44 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 33. */
+
+// It seems that proper handling of throw clauses is just too hard to
+// implement.  GCC does it, and presumably does an excellent job of
+// diagnosing programs that violate throw-correctness.  However, the
+// program runs something like 13 times slower.  This is unacceptable.
+// So we turn it off for production builds, and use throws in the dumb
+// setjmp-like way that everyone else does.  Too bad.  They were a nice
+// idea.  Microsoft doesn't even try, and raises a warning (How thoughtful!
+// See flaming below.) if we use them.
+
+//#define USE_THROW
+
+#if defined USE_THROW
+
+#if defined(WIN32) && defined(__cplusplus)
+// Microsoft can't be bothered to support C++ exception declarations
+// properly, but this pragma at least makes the compiler not complain.
+// Geez!  If I wanted to use compilers that whine and wail
+// piteously about the fact that I'm actually using the language, I'd
+// use the HP-UX compilers!  They did a wonderful job of pointing out,
+// in warning messages, that function prototypes are an ANSI C feature.
+// As though this dangerous fact (that I was using ANSI C, of all things)
+// were something that I didn't know and needed to to warned about.
+// The HP-UX compilers came into the 20th century in the nick of time.
+#pragma warning(disable: 4290)
+#endif
+
+#define THROW_DECL throw(error_flag_type)
+#else
+#define THROW_DECL
+#endif
 
 #include "database.h"
 
 
-#define NULLCONCEPTPTR (concept_descriptor *) 0
-#define NULLCALLSPEC (callspec_block *) 0
 
 #define MAX_PEOPLE 24
-
 
 
 typedef struct {
@@ -38,10 +66,39 @@ typedef struct {
    int no_color;          // 0 = default (by gender); 1 = none at all;
                           // 2 = by_couple; 3 = by_corner
    int no_sound;
+   long_boolean singlespace_mode;
+   long_boolean nowarn_mode;
+   long_boolean accept_single_click;
+
+   /* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
+      for drawing people, so that it can fill in funny characters, or draw in color.
+      This applies only to calls to uims_add_new_line with a nonzero second argument.
+
+      0 means don't use any funny stuff.  The text strings transmitted when drawing
+      setups are completely plain ASCII.
+
+      1 means use escapes for the people themselves (13 octal followed by a byte of
+      person identifier followed by a byte of direction) byt don't use the special
+      spacing characters.  All spacing and formatting is done with spaces.
+
+      2 means use escapes and other special characters.  Whenever the second arg to
+      uims_add_new_line is nonzero, then in addition to the escape sequences for the
+      people themselves, we have an escape sequence for a phantom, and certain
+      characters have special meaning:  5 means space 1/2 of a glyph width, etc.
+      See the definition of newline for details. */
+   int use_escapes_for_drawing_people;
+
+   /* These could get changed if the user requests special naming.  See "alternate_glyphs_1"
+      in the command-line switch parser in sdsi.c. */
+   char *pn1;             // 1st char (1/2/3/4) of what we use to print person.
+   char *pn2;             // 2nd char (B/G) of what we use to print person.
+   char *direc;           // 3rd char (direction arrow) of what we use to print person.
+   int squeeze_this_newline;  // randomly used by printing stuff.
+   int drawing_picture;       // randomly used by printing stuff.
 } ui_option_type;
 
 
-/* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
+/* BEWARE!!  This list must track the array "concept_table" in sdconcpt.cpp . */
 typedef enum {
 
 /* These next few are not concepts.  Their appearance marks the end of a parse tree. */
@@ -63,6 +120,7 @@ typedef enum {
    concept_some_are_frac_tandem,
    concept_gruesome_tandem,
    concept_gruesome_frac_tandem,
+   concept_tandem_in_setup,
    concept_checkerboard,
    concept_sel_checkerboard,
    concept_anchor,
@@ -359,9 +417,9 @@ typedef enum {
    selector_cpls1_2,
    selector_cpls2_3,
    selector_cpls3_4,
-   selector_cpls4_1
+   selector_cpls4_1,
+   selector_enum_extent    // Not a selector; indicates extent of the enum.
 } selector_kind;
-#define last_selector_kind ((int) selector_cpls4_1)
 
 /* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
    It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
@@ -569,9 +627,10 @@ typedef enum {
    command_create_3qline,
    command_create_dmd,
    command_create_any_tidal,
-   command_create_tidal_wave
+   command_create_tidal_wave,
+   command_kind_enum_extent    // Not a command kind; indicates extent of the enum.
 } command_kind;
-#define NUM_COMMAND_KINDS (((int) command_create_tidal_wave)+1)
+
 
 /* In each case, an integer or enum is deposited into the global variable uims_menu_index.  Its interpretation
    depends on which of the replies above was given.  For some of the replies, it gives the index
@@ -605,9 +664,10 @@ typedef enum {
    start_select_print_any,
    start_select_init_session_file,
    start_select_change_outfile,
-   start_select_change_header_comment
+   start_select_change_header_comment,
+   start_select_kind_enum_extent    // Not a start select kind; indicates extent of the enum.
 } start_select_kind;
-#define NUM_START_SELECT_KINDS (((int) start_select_change_header_comment)+1)
+
 
 /* For ui_resolve_select: */
 /* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
@@ -619,9 +679,10 @@ typedef enum {
    resolve_command_accept,
    resolve_command_raise_rec_point,
    resolve_command_lower_rec_point,
-   resolve_command_write_this
+   resolve_command_write_this,
+   resolve_command_kind_enum_extent    // Not a resolve kind; indicates extent of the enum.
 } resolve_command_kind;
-#define NUM_RESOLVE_COMMAND_KINDS (((int) resolve_command_write_this)+1)
+
 
 typedef struct {
    Cstring command_name;
@@ -845,7 +906,8 @@ typedef struct {
 } setup;
 
 typedef struct {
-   long_boolean (*predfunc) (setup *, int, int, int, Const long int *);
+   // We wish we could put a "throw" clause on this function, but we can't.
+   long_boolean (*predfunc) (setup *, int, int, int, const long int *);
    Const long int *extra_stuff;
 } predicate_descriptor;
 
@@ -986,3 +1048,11 @@ typedef Const struct {
    /* These are the tables that show how to print out the setup. */
    Cstring print_strings[2];
 } setup_attr;
+
+typedef struct {
+   char *destcurr;
+   char lastchar;
+   char lastlastchar;
+   char *lastblank;
+   long_boolean usurping_writechar;
+} writechar_block_type;

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 33. */
 
 
 /* We customize the necessary declarations for functions
@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 153
+#define DATABASE_FORMAT_VERSION 157
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -399,6 +399,7 @@ typedef enum {
    sbigbone,
    sbigdmd,
    sbigptpd,
+   sdblxwave,
    s_dead_concentric,
    s_normal_concentric
 } setup_kind;
@@ -516,6 +517,8 @@ typedef enum {
    b_p3ptpd,
    b_4ptpd,
    b_p4ptpd,
+   b_wingedstar,
+   b_pwingedstar,
    b_323,
    b_p323,
    b_343,
@@ -538,12 +541,10 @@ typedef enum {
    b_pbigh,
    b_bigx,
    b_pbigx,
-
    b_bigbigh,
    b_pbigbigh,
    b_bigbigx,
    b_pbigbigx,
-
    b_bigrig,
    b_pbigrig,
    b_bighrgl,
@@ -555,7 +556,9 @@ typedef enum {
    b_bigdmd,
    b_pbigdmd,
    b_bigptpd,
-   b_pbigptpd
+   b_pbigptpd,
+   b_dblxwave,
+   b_pdblxwave
 } begin_kind;
 
 /* These bits are used in the "callarray_flags" field of a "callarray".
@@ -634,6 +637,7 @@ typedef enum {
    cr_dmd_ctrs_1f,         /* Qualifier only. */
    cr_dmd_intlk,
    cr_dmd_not_intlk,
+   cr_tall6,               /* Actually not checked as qualifier or restriction. */
    cr_ctr_pts_rh,          /* Qualifier only. */
    cr_ctr_pts_lh,          /* Qualifier only. */
    cr_said_tgl,            /* Qualifier only. */
@@ -745,6 +749,9 @@ typedef enum {
    schema_select_ctr2,
    schema_select_ctr4,
    schema_select_ctr6,
+   schema_select_who_can,
+   schema_select_who_did,
+   schema_select_who_didnt,
    schema_lateral_6,             /* Not for public use! */
    schema_vertical_6,            /* Not for public use! */
    schema_intlk_lateral_6,       /* Not for public use! */

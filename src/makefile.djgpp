@@ -57,7 +57,7 @@ SDX11_OBJ = sdui-x11.o
 
 # This has all special source files for sdtty,
 # for making the distribution and running lint.
-SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
+SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.c sdui-tpc.cpp
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
@@ -110,8 +110,6 @@ sdui-x11.o: sdui-x11.c
 
 sdui-ttu.o: sdui-ttu.c
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
-
-sdui-tty.o sdmatch.o: sdmatch.h
 
 sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
 
@@ -216,7 +214,7 @@ DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.t
             relnotes.ps relnotes.txt \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             sd_doc.PS sd_doc.txt db_doc.txt
-DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
+DISTSRCS = sd.h database.h paths.h sdui-ttu.h
 MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
             macmatch.c macmenu.c macpref.c macrec.c macsel.c macstart.c \

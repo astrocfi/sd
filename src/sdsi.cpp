@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 32. */
+    This is for version 33. */
 
 /* This defines the following functions:
    general_initialize
@@ -32,9 +32,7 @@
    write_file
    close_file
    print_line
-   print_id_error
    init_error
-   add_resolve_indices
    parse_level
    read_from_call_list_file
    write_to_call_list_file
@@ -61,18 +59,11 @@
 and the following external variables:
 
    session_index
-   num_command_commands
-   command_commands
-   command_command_values
-   number_of_resolve_commands
-   resolve_command_strings
-   concept_key_table
-   ui_options
    random_number
-   hashed_randoms
    database_filename
    new_outfile_string
    call_list_string
+   call_list_file
 */
 
 /* You should compile this file (and might as well compile all the others
@@ -196,7 +187,8 @@ extern char *strerror(int);
    started taking these standards as semi-seriously as they do now, it was
    MUCH HARDER to make a program portable than what you just saw. */
 
-#include "sdprog.h"
+#include "basetype.h"
+#include "sdui.h"
 #include "paths.h"
 
 
@@ -208,15 +200,6 @@ extern char *strerror(int);
    to it at that line. */
 
 int session_index = 0;        /* If this is nonzero, we have opened a session. */
-int num_command_commands;     // Size of the command menu.
-Cstring *command_commands;
-command_kind *command_command_values;
-int num_startup_commands;     // Size of the startup menu.
-Cstring *startup_commands;
-start_select_kind *startup_command_values;
-int number_of_resolve_commands;
-Cstring *resolve_command_strings;
-resolve_command_kind *resolve_command_values;
 
 /* e1 = page up
    e2 = page down
@@ -229,70 +212,12 @@ resolve_command_kind *resolve_command_values;
    e13 = insert
    e14 = delete */
 
-Cstring concept_key_table[] = {
-   /* These are the standard bindings. */
-   "cu     deleteline",
-   "cx     deleteword",
-   "e6     lineup",
-   "e8     linedown",
-   "e1     pageup",
-   "e2     pagedown",
-   "+f1    heads start",
-   "+sf1   sides start",
-   "+cf1   just as they are",
-   "f2     two calls in succession",
-   "sf2    twice",
-   "f3     pick random call",
-   "sf3    pick concept call",
-   "cf3    pick simple call",
-   "f4     resolve",
-   "sf4    reconcile",
-   "cf4    normalize",
-   "f5     refresh display",
-   "sf5    keep picture",
-   "cf5    insert a comment",
-   "e13    insert a comment",   /* insert */
-   "f6     simple modifications",
-   "sf6    allow modifications",
-   "cf6    centers",
-   "f7     toggle concept levels",
-   "+f7    toggle concept levels",
-   "sf7    toggle active phantoms",
-   "+sf7   toggle active phantoms",
-   "f8     quoteanything",
-   "sf8    cut to clipboard",
-   "cf8    paste one call",
-   "f9     undo last call",
-   "+f9    exit from the program",
-   "*f9    abort the search",
-   "sf9    undo last call",
-   "+sf9   exit from the program",
-   "*sf9   abort the search",
-   "f10    write this sequence",
-   "*f10   write this sequence",
-   "sf10   change output file",
-   "+sf10  change output file",
-   "f11    pick level call",
-   "sf11   pick 8 person level call",
-   "*f12   find another",
-   "*sf12  accept current choice",
-   "*cf12  previous",
-   "*af12  next",
-   "*se6   raise reconcile point",  /* shift up arrow */
-   "*e5    previous",               /* left arrow */
-   "*e7    next",                   /* right arrow */
-   "*se8   lower reconcile point",  /* shift down arrow */
-   (char *) 0};
-
-
-ui_option_type ui_options;
 
 int random_number;
-int hashed_randoms;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
 char *call_list_string = (char *) 0;
-
+FILE *call_list_file;
 
 Private FILE *fp;
 Private FILE *fildes;
@@ -371,12 +296,16 @@ extern void *get_mem_gracefully(uint32 siz)
 }
 
 
+/* An older version of this, and "get_more_mem_gracefully", actually
+   called "malloc" or "realloc" depending on whether the incoming
+   pointer was nil.  There was a comment pointing out that this
+   was because "SunOS 4 realloc doesn't handle NULL".
+   Isn't that funny? */
+
 extern void *get_more_mem(void *oldp, uint32 siz)
 {
    void *buf;
 
-   if (!oldp)
-      return get_mem(siz);	/* SunOS 4 realloc doesn't handle NULL */
    buf = get_more_mem_gracefully(oldp, siz);
    if (!buf && siz != 0) {
       char msg [50];
@@ -390,10 +319,6 @@ extern void *get_more_mem(void *oldp, uint32 siz)
 
 /* This will not fail catastrophically, but may return nil pointer
    on nonzero request.  Client must check and react accordingly. */
-/* An older version of this actually called "malloc" or "realloc"
-   depending on whether the incoming pointer was nil.  There was
-   a comment pointing out that this was because
-   "SunOS 4 realloc doesn't handle NULL".  Isn't that funny? */
 extern void *get_more_mem_gracefully(void *oldp, uint32 siz)
 {
    return realloc((char *) oldp, siz);
@@ -788,13 +713,6 @@ extern void print_line(Cstring s)
 }
 
 
-extern void print_id_error(int n)
-{
-   char msg [50];
-   sprintf(msg, "Call didn't identify self -- %d", n);
-   uims_fatal_error(msg, 0);
-}
-
 
 extern void init_error(char s[])
 {
@@ -804,11 +722,6 @@ extern void init_error(char s[])
    exit_program(1);
 }
 
-
-extern void add_resolve_indices(char junk[], int cur, int max)
-{
-   sprintf(junk, "%d out of %d", cur, max);
-}
 
 
 extern long_boolean parse_level(Cstring s, dance_level *levelp)
@@ -1046,6 +959,8 @@ extern void prepare_to_read_menus(void)
       init_error("constants not consistent -- program has been compiled incorrectly.");
    else if ((508205 << 12) != arithtest)
       init_error("arithmetic is less than 32 bits -- program has been compiled incorrectly.");
+   else if ((arithtest << 12) != 754974720)
+      init_error("arithmetic is more than 32 bits -- program has been compiled incorrectly.");
    else if (NUM_WARNINGS > (WARNING_WORDS << 5))
       init_error("insufficient warning bit space -- program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 125)
@@ -1128,14 +1043,15 @@ extern void initialize_misc_lists(void)
       tagger_menu_list[i][number_of_taggers[i]] = (Cstring) 0;
    }
 
-   /* Create the selector menu list. */
+   // Create the selector menu list.  It is one item shorter than the enumeration,
+   // because we skip the first item in the enumeration.
 
-   selector_menu_list = (Cstring *) get_mem((last_selector_kind+1) * sizeof(char *));
+   selector_menu_list = (Cstring *) get_mem((selector_enum_extent) * sizeof(char *));
 
-   for (i=0; i<last_selector_kind; i++)
+   for (i=0; i<selector_enum_extent-1; i++)
       selector_menu_list[i] = selector_list[i+1].name;
 
-   selector_menu_list[last_selector_kind] = (Cstring) 0;
+   selector_menu_list[selector_enum_extent-1] = (Cstring) 0;
 
    /* Create the circcer list. */
 
@@ -1272,7 +1188,7 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "no_sound") == 0)
             { ui_options.no_sound = 1; continue; }
          else if (strcmp(&args[argno][1], "single_click") == 0)
-            { accept_single_click = TRUE; continue; }
+            { ui_options.accept_single_click = TRUE; continue; }
          else if (strcmp(&args[argno][1], "no_checkers") == 0)
             { ui_options.no_graphics = 1; continue; }
          else if (strcmp(&args[argno][1], "no_graphics") == 0)
@@ -1280,9 +1196,9 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "diagnostic") == 0)
             { diagnostic_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)
-            { singlespace_mode = TRUE; continue; }
+            { ui_options.singlespace_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "no_warnings") == 0)
-            { nowarn_mode = TRUE; continue; }
+            { ui_options.nowarn_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "concept_levels") == 0)
             { allowing_all_concepts = TRUE; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)

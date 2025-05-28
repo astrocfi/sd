@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <2000-1-22 10:20:00 wba>
+@c Time-stamp: <2000-3-14 10:20:00 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,9 +10,9 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 33.0
-@set title2 Database version = 33.0 format = 153
-@set title3 X11 UI version 1.17, SDTTY UI version 1.11, SD UI version 4.8
+@set title1 RELEASE NOTES FOR SD VERSION 33.15
+@set title2 Database version = 33.15 format = 157
+@set title3 X11 UI version 1.17, SDTTY UI version 1.12, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
 
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 33.15::
 * 33.0::
 * 32.95::
 * 32.9::
@@ -63,7 +64,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to even older versions.
 @end menu
 
-@node Intro, 33.0, Top, (dir)
+@node Intro, 33.15, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -74,11 +75,59 @@ The file @file{oldnotes} has notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2000 William B. Ackerman
 @sp 3
 @menu
-* 33.0::               Changes in the current version
+* 33.15::               Changes in the current version
 @end menu
 
 @c ************
-@node 33.0, 32.95, Intro, Top
+@node 33.15, 33.0, Intro, Top
+@unnumberedsec Version 33.15 changes
+
+The function key control-F11 has been set to perform the @samp{standardize} operation.
+
+The @code{Sd} Windows menu has been reorganized.  (That's the menu across the top of the
+screen, that you probably don't use.)  The various types of search commands
+are now popups under the @samp{Command} menu.  The actual @code{Sd} call menu is not
+changed.
+
+Some obscure cases of color choice in @code{Sdtty} on Windows were improved.
+
+The programs have been tested on a pre-release version of Windows 2000.
+
+The program can now do calls in magic (and magic interlocked) in point and out point
+triangles.  We thank Bill Haynes for bringing this to our attention.
+
+The level for @samp{<ATC> chain thru reactivate} has been lowered to C3.  We thank
+Neil Heather for bringing this to our attention.
+
+The @samp{distorted <CLW>} concepts can operate in 2x6, 2x8, and similar matrices.
+The real people are identified and made into a virtual 2x4.
+
+Calls and concepts were moved on and off the C3A list in accordance with a
+recent vote of the Callerlab challenge committee.  The calls @samp{rolling ripple}
+and @samp{shove off} were moved to C3.  The name @samp{single checkmate} was added.
+The concepts @samp{finally} and @samp{reverse crazy} were added.
+
+The definition of @samp{split swap} was changed, in accordance with a decision by
+the Callerlab challenge committee, to allow everyone to roll.
+
+The program recognizes more Dixie Grand getouts.
+
+The call @samp{hinge by} was improved.  It is unforunate that this versatile
+call is not recognized below C4.
+
+New concepts:  @samp{as couples in point-to-point diamonds}, @samp{as couples
+in a tall 6}, @samp{as couples in a tidal line}, and @samp{as couples in a tidal column}.
+These may also be used with tandem, twosome, etc.  We thank various
+C4 callers for bring these, and many other things, to our attention.
+
+A few extremely embarrassing bugs were fixed.  We thank Rob French and Shinichi
+Mochizuki for pointing these out.
+
+Internal implementation note:  The program now uses modern C++ exceptions
+rather than the archaic setjmp/longjmp mechanism.
+
+@c ************
+@node 33.0, 32.95, 33.15, Top
 @unnumberedsec Version 33.0 changes
 
 The call previously known as just @samp{mixed up} has been changed to

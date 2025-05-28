@@ -89,21 +89,21 @@ extern void initialize_map_tables(void)
 }
 
 
-extern void remove_z_distortion(setup *ss)
+extern void remove_z_distortion(setup *ss) THROW_DECL
 {
    setup stemp;
-   static Const veryshort fix_cw[]  = {1, 2, 4, 5};
-   static Const veryshort fix_ccw[] = {0, 1, 3, 4};
+   static const veryshort fix_cw[]  = {1, 2, 4, 5};
+   static const veryshort fix_ccw[] = {0, 1, 3, 4};
 
    if (ss->kind != s2x3 ||
-       (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_CW) &&
-        !(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_CCW)))
+       (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)))
       fail("Internal error: Can't straighten 'Z'.");
 
    stemp = *ss;
    ss->kind = s2x2;
    gather(ss, &stemp,
-          (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_CW) ? fix_cw : fix_ccw,
+          (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
+          fix_cw : fix_ccw,
           3, 0);
 
    ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
@@ -137,14 +137,14 @@ Private Const map_thing *get_map_from_code(uint32 map_encoding)
 }
 
 
-Private void innards(
+static void innards(
    setup_command *sscmd,
    Const map_thing *maps,
    long_boolean recompute_id,
    assumption_thing new_assume,
    long_boolean do_second_only,
    setup *x,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i, j;
    uint32 main_rotation;
@@ -852,7 +852,7 @@ extern void new_divided_setup_move(
    uint32 map_encoding,
    phantest_kind phancontrol,
    long_boolean recompute_id,
-   setup *result)
+   setup *result) THROW_DECL
 {
    divided_setup_move(
       ss,
@@ -868,7 +868,7 @@ extern void divided_setup_move(
    Const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i, j;
    int vflags[8];
@@ -1030,7 +1030,7 @@ extern void divided_setup_move(
 
 
 extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
-   uint32 *masks, setup *result)
+   uint32 *masks, setup *result) THROW_DECL
 {
    overlapped_setup_move(
       ss,
@@ -1041,7 +1041,7 @@ extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
 
 
 extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
-   uint32 *masks, setup *result)
+   uint32 *masks, setup *result) THROW_DECL
 {
    int i, j, rot;
    uint32 k;
@@ -1073,10 +1073,10 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 }
 
-static Const veryshort list_10_6_5_4[4] = {8, 6, 5, 4};
-static Const veryshort list_11_13_7_2[4] = {9, 11, 7, 2};
-static Const veryshort list_12_17_3_1[4] = {10, 15, 3, 1};
-static Const veryshort list_14_15_16_0[4] = {12, 13, 14, 0};
+static const veryshort list_10_6_5_4[4] = {8, 6, 5, 4};
+static const veryshort list_11_13_7_2[4] = {9, 11, 7, 2};
+static const veryshort list_12_17_3_1[4] = {10, 15, 3, 1};
+static const veryshort list_14_15_16_0[4] = {12, 13, 14, 0};
 
 static Const veryshort indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18};
 
@@ -1095,7 +1095,7 @@ static Const veryshort indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 2
 extern void do_phantom_2x4_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    /* This concept is "standard", which means that it can look at global_tbonetest
       and global_livemask, but may not look at anyone's facing direction other
@@ -1204,7 +1204,7 @@ extern void do_phantom_2x4_concept(
 extern void do_phantom_stag_qtg_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int rot = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
 
@@ -1240,7 +1240,7 @@ extern void do_phantom_stag_qtg_concept(
 extern void do_phantom_diag_qtg_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int rot =   ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1 |
                ss->people[9].id1 | ss->people[10].id1 | ss->people[13].id1 | ss->people[14].id1;
@@ -1276,56 +1276,97 @@ extern void do_phantom_diag_qtg_concept(
 
 
 
-/* This returns true if the two live people were consecutive, meaning this is a true Z line/column. */
-Private long_boolean search_row(
-   int n,
-   veryshort *x1,
-   veryshort *x2,
-   Const veryshort row[8],
-   Const setup *s)
+// This returns true if each pair of live people were consecutive,
+// meaning this is a true Z line/column.
+static long_boolean full_search(
+   int num_searches,
+   int length_to_search,
+   long_boolean no_err_print,
+   int num_to_find,
+   veryshort map_to_fill[],
+   const veryshort dests[],
+   const veryshort srcs[],
+   const setup *ss) THROW_DECL
 {
-   int i, z, fill_count;
-   long_boolean win;
-   int nn = n;
-   if (n < 0) nn = -n;     /* Negative means we handle errors differently. */
+   long_boolean retval = TRUE;
 
-   fill_count = 0;
-   z = 2;                       /* counts downward as we see consecutive people */
-   win = FALSE;
-   for (i=0; i<nn; i++)
-      if (!s->people[row[i]].id1)           /* live person here? */
-         z = 2;                 /* no, reset the consecutivity counter */
-      else {
-         z--;                   /* yes, count -- if get two in a row, turn "win" on */
-         if (z == 0) win = TRUE;
-         /* then push this index onto the map, check for no more than 2 */
-         switch (++fill_count) {
-            case 1: *x1 = row[i]; break;
-            case 2: *x2 = row[i]; break;
-            default: goto lose;
+   for (int j=0 ; j<num_searches ; j++) {
+      const veryshort *row = &srcs[j*length_to_search];
+      int fill_count = 0;
+      int z = num_to_find;   // Counts downward as we see consecutive people.
+      long_boolean win = FALSE;
+
+      for (int i=0; i<length_to_search; i++) {
+         if (!ss->people[row[i]].id1)    // Live person here?
+            z = num_to_find;     // No, reset the consecutivity counter.
+         else {
+            z--;            // Yes, count -- if get all in a row, turn "win" on.
+            if (z == 0) win = TRUE;
+            // Then push this index onto the map, check for no more than num_to_find.
+            if (fill_count >= num_to_find) goto lose;
+            map_to_fill[dests[j+num_searches*fill_count]] = row[i];
+            fill_count++;
          }
       }
    
-   /* Now check that the map has exactly 2 (or 1 if nn==2) people.
-      But if n was negative, we don't print an error -- we just report as our
-      return value whether there were exactly two people, regardless of consecutivity. */
+      /* Now check that the map has exactly num_to_find people.
+         But if no_err_print was on, we don't print an error -- we just report as our
+         return value whether there were exactly two people, regardless of consecutivity. */
 
-   if (n < 0) return (fill_count == 2);
-   else if (fill_count == 2 || (nn == 2 && fill_count == 1)) return win;
+      if (no_err_print) {
+         if (fill_count != num_to_find) retval = FALSE;
+         continue;
+      }
+      else if (fill_count == num_to_find) {
+         if (!win) retval = FALSE;
+         continue;
+      }
 
    lose:
 
-   if (n >= 0)
-      fail("Can't identify distorted line or column.");
+      if (!no_err_print)
+         fail("Can't identify distorted line or column.");
 
-   return FALSE;
-}
+      retval = FALSE;
+   }
+
+   return retval;
+}                        
+
+
+static const veryshort list_2x8[16] = {
+   0, 15, 1, 14, 3, 12, 2, 13, 7, 8, 6, 9, 4, 11, 5, 10};
+
+static const veryshort list_2x8_in[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+
+static const veryshort list_3x4_in[8] = {0, 1, 2, 3, 7, 6, 5, 4};
+static const veryshort list_3x4_out[12] = {0, 10, 9, 1, 11, 8, 2, 5, 7, 3, 4, 6};
+
+static const veryshort list_2x4_in[8] = {7, 0, 6, 1, 5, 2, 4, 3};
+
+static const veryshort list_2x5_out[10] = {9, 8, 7, 6, 5, 0, 1, 2, 3, 4};
+static const veryshort list_2x6_out[12] = {11, 10, 9, 8, 7, 6, 0, 1, 2, 3, 4, 5};
+static const veryshort list_2x7_out[14] = {13, 12, 11, 10, 9, 8, 7, 0, 1, 2, 3, 4, 5, 6};
+static const veryshort list_2x8_out[16] = {
+   15, 14, 13, 12, 11, 10, 9, 8, 0, 1, 2, 3, 4, 5, 6, 7};
+static const veryshort list_2x10_out[20] = {
+   19, 18, 17, 16, 15, 14, 13, 12, 11, 10,
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+static const veryshort list_2x12_out[24] = {
+   23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12,
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
+static const veryshort list_foo_in[8] = {0, 4, 1, 5, 3, 7, 2, 6};
+static const veryshort list_bar_in[8] = {8, 12, 9, 13, 11, 15, 10, 14};
+
+static const veryshort list_4x4_out[16] = {
+   8, 6, 5, 4, 9, 11, 7, 2, 10, 15, 3, 1, 12, 13, 14, 0};
 
 
 extern void distorted_2x2s_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    // maps for 4x4 Z's
    static Const veryshort map1[16] = {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
@@ -1649,17 +1690,11 @@ extern void distorted_2x2s_move(
       
          /* Search for the live people, in rows first. */
 
-         if (!search_row(-4, &the_map[0], &the_map[3], list_10_6_5_4,   ss)) rows = 0;
-         if (!search_row(-4, &the_map[4], &the_map[7], list_11_13_7_2,  ss)) rows = 0;
-         if (!search_row(-4, &the_map[1], &the_map[2], list_12_17_3_1,  ss)) rows = 0;
-         if (!search_row(-4, &the_map[5], &the_map[6], list_14_15_16_0, ss)) rows = 0;
+         if (!full_search(4, 4, TRUE, 2, the_map, list_foo_in, list_4x4_out, ss)) rows = 0;
 
-            /* Now search in columns, and store the result starting at 8. */
+         /* Now search in columns, and store the result starting at 8. */
 
-         if (!search_row(-4, &the_map[8],  &the_map[11], list_10_6_5_4,   &rotss)) columns = 0;
-         if (!search_row(-4, &the_map[12], &the_map[15], list_11_13_7_2,  &rotss)) columns = 0;
-         if (!search_row(-4, &the_map[9],  &the_map[10], list_12_17_3_1,  &rotss)) columns = 0;
-         if (!search_row(-4, &the_map[13], &the_map[14], list_14_15_16_0, &rotss)) columns = 0;
+         if (!full_search(4, 4, TRUE, 2, the_map, list_bar_in, list_4x4_out, &rotss)) columns = 0;
 
          /* At this point, exactly one of "rows" and "columns" should be equal to 1. */
 
@@ -1757,7 +1792,7 @@ extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
    disttest_kind disttest,
-   setup *result)
+   setup *result) THROW_DECL
 {
 
 /*
@@ -1783,11 +1818,6 @@ extern void distorted_move(
       lines vs. columns nature of the concept.
 */
 
-   static Const veryshort list_0_12_11[3] = {0, 10, 9};
-   static Const veryshort list_1_13_10[3] = {1, 11, 8};
-   static Const veryshort list_2_5_7[3] = {2, 5, 7};
-   static Const veryshort list_3_4_6[3] = {3, 4, 6};
-   static Const veryshort list_2x8[16] = {0, 15, 1, 14, 3, 12, 2, 13, 7, 8, 6, 9, 4, 11, 5, 10};
 
    veryshort the_map[8];
    Const parse_block *next_parseptr;
@@ -1806,8 +1836,6 @@ extern void distorted_move(
    long_boolean zlines = TRUE;
 
    if (linesp & 8) {
-      int i;
-
       if (linesp & 1) {
          if (global_tbonetest & 1) fail("There is no tidal line here.");
       }
@@ -1834,14 +1862,14 @@ extern void distorted_move(
             else if (global_livemask == 07474) { map_ptr = &map_dbgbn2; }
             else fail("Can't find distorted 1x8.");
 
-            disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
+            // We know what we are doing -- shut off the error message.
+            disttest = disttest_offset;
             goto do_divided_call;
          }
          else if (ss->kind == s2x8) {
-            /* Search for the live people. */
+            // Search for the live people.
 
-            for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
-
+            (void) full_search(8, 2, FALSE, 1, the_map, list_2x8_in, list_2x8, ss);
             k = s1x8;
             zlines = FALSE;
             rot = 0;
@@ -1989,13 +2017,17 @@ extern void distorted_move(
          /* Look for butterfly or "O" spots occupied. */
 
          if (livemask == 0x6666 || livemask == 0x9999) {
-            if (!((linesp ^ global_tbonetest) & 1)) {    /* What a crock -- this is all backwards. */
-               rotate_back = 1;                          /* (Well, actually everything else is backwards.) */
+            if (!((linesp ^ global_tbonetest) & 1)) {
+               /* What a crock -- this is all backwards. */
+               rotate_back = 1;     /* (Well, actually everything else is backwards.) */
                ss->rotation++;
                canonicalize_rotation(ss);
             }
-            mapcode = (livemask & 1) ? MAPCODE(s2x4,2,MPKIND__X_SPOTS,1) : MAPCODE(s2x4,2,MPKIND__O_SPOTS,1);
-            disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
+            mapcode = (livemask & 1) ?
+               MAPCODE(s2x4,2,MPKIND__X_SPOTS,1) :
+               MAPCODE(s2x4,2,MPKIND__O_SPOTS,1);
+            // We know what we are doing -- shut off the error message.
+            disttest = disttest_offset;
             goto do_divided_call;
          }
    
@@ -2006,51 +2038,87 @@ extern void distorted_move(
             livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
          }
    
-         /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
+         // Check for special case of offset lines/columns, and do it
+         // the elegant way (handling shape-changers) if so.
 
-         if (livemask == 0xB4B4) { mk = MPKIND__OFFS_L_FULL; mkbox = MPKIND__OFFS_L_FULL_SPECIAL; goto do_offset_call; }
-         if (livemask == 0x4B4B) { mk = MPKIND__OFFS_R_FULL; mkbox = MPKIND__OFFS_R_FULL_SPECIAL; goto do_offset_call; }
+         if (livemask == 0xB4B4) {
+            mk = MPKIND__OFFS_L_FULL;
+            mkbox = MPKIND__OFFS_L_FULL_SPECIAL;
+            goto do_offset_call;
+         }
+         else if (livemask == 0x4B4B) {
+            mk = MPKIND__OFFS_R_FULL;
+            mkbox = MPKIND__OFFS_R_FULL_SPECIAL;
+            goto do_offset_call;
+         }
 
-         /* Search for the live people.
-            Must scan sideways for each Y value, looking for exactly 2 people
-            If any of the scans returns false, meaning that the 2 people are not adjacent,
-            set zlines to false. */
+         // Search for the live people.
+         // Must scan sideways for each Y value, looking for exactly 2 people
+         // If any of the scans returns false, meaning that the 2 people
+         // are not adjacent, set zlines to false.
 
-         if (!search_row(4, &the_map[0], &the_map[7], list_10_6_5_4, ss)) zlines = FALSE;
-         if (!search_row(4, &the_map[1], &the_map[6], list_11_13_7_2, ss)) zlines = FALSE;
-         if (!search_row(4, &the_map[2], &the_map[5], list_12_17_3_1, ss)) zlines = FALSE;
-         if (!search_row(4, &the_map[3], &the_map[4], list_14_15_16_0, ss)) zlines = FALSE;
-      
+         zlines = full_search(4, 4, FALSE, 2, the_map, list_3x4_in, list_4x4_out, ss);
          rot = 011;
          rotz = 033;
          result->kind = s4x4;
       }
-      else if (ss->kind == s3x4) {
+      else {
+         // All the remaining cases make the same test for lines vs. columns.
+
          if (linesp & 1) {
             if (global_tbonetest & 1) fail("There are no lines of 4 here.");
          }
          else {
             if (global_tbonetest & 010) fail("There are no columns of 4 here.");
          }
-   
-         /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
-         
-         if (livemask == 07474) { mk = MPKIND__OFFS_L_HALF; mkbox = MPKIND__OFFS_L_HALF_SPECIAL; goto do_offset_call; }
-         if (livemask == 06363) { mk = MPKIND__OFFS_R_HALF; mkbox = MPKIND__OFFS_R_HALF_SPECIAL; goto do_offset_call; }
-
-         /* Search for the live people. */
-         
-         if (!search_row(3, &the_map[0], &the_map[7], list_0_12_11, ss)) zlines = FALSE;
-         if (!search_row(3, &the_map[1], &the_map[6], list_1_13_10, ss)) zlines = FALSE;
-         if (!search_row(3, &the_map[2], &the_map[5], list_2_5_7, ss)) zlines = FALSE;
-         if (!search_row(3, &the_map[3], &the_map[4], list_3_4_6, ss)) zlines = FALSE;
          
          rot = 0;
          rotz = 0;
-         result->kind = s3x4;      
+         result->kind = ss->kind;      
+
+         if (ss->kind == s3x4) {
+            // Check for special case of offset lines/columns, and do it
+            // the elegant way (handling shape-changers) if so.
+            if (livemask == 07474) {
+               mk = MPKIND__OFFS_L_HALF;
+               mkbox = MPKIND__OFFS_L_HALF_SPECIAL;
+               goto do_offset_call;
+            }
+            else if (livemask == 06363) {
+               mk = MPKIND__OFFS_R_HALF;
+               mkbox = MPKIND__OFFS_R_HALF_SPECIAL;
+               goto do_offset_call;
+            }
+
+            zlines = full_search(4, 3, FALSE, 2, the_map, list_3x4_in, list_3x4_out, ss);
+         }
+         else if (ss->kind == s2x5) {
+            (void) full_search(2, 5, FALSE, 4, the_map, list_2x4_in, list_2x5_out, ss);
+            warn(warn_real_people_spots);
+         }
+         else if (ss->kind == s2x6) {
+            (void) full_search(2, 6, FALSE, 4, the_map, list_2x4_in, list_2x6_out, ss);
+            warn(warn_real_people_spots);
+         }
+         else if (ss->kind == s2x7) {
+            (void) full_search(2, 7, FALSE, 4, the_map, list_2x4_in, list_2x7_out, ss);
+            warn(warn_real_people_spots);
+         }
+         else if (ss->kind == s2x8) {
+            (void) full_search(2, 8, FALSE, 4, the_map, list_2x4_in, list_2x8_out, ss);
+            warn(warn_real_people_spots);
+         }
+         else if (ss->kind == s2x10) {
+            (void) full_search(2, 10, FALSE, 4, the_map, list_2x4_in, list_2x10_out, ss);
+            warn(warn_real_people_spots);
+         }
+         else if (ss->kind == s2x12) {
+            (void) full_search(2, 12, FALSE, 4, the_map, list_2x4_in, list_2x12_out, ss);
+            warn(warn_real_people_spots);
+         }
+         else
+            fail("Can't do this concept in this setup.");
       }
-      else
-         fail("Must have 2x4, 3x4 or 4x4 setup for this concept.");
    }
 
    /* Now see if the concept was correctly named. */
@@ -2166,7 +2234,7 @@ extern void distorted_move(
 extern void triple_twin_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 tbonetest = global_tbonetest;
    uint32 mapcode;
@@ -2260,7 +2328,7 @@ extern void triple_twin_move(
 extern void do_concept_rigger(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    /* First 8 are for rigger; second 8 are for 1/4-tag, final 16 are for crosswave. */
    /* A huge coincidence is at work here -- the first two parts of the maps are the same. */
@@ -2691,7 +2759,7 @@ common_spot_map cmaps[] = {
 extern void common_spot_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int rstuff, i, k, r;
    uint32 livemask, jbit;
@@ -2880,7 +2948,7 @@ static void do_glorious_triangles(
    setup *ss,
    const tgl_map **map_ptr_table,
    int indicator,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i, r, startingrot;
    uint32 rotstate;
@@ -2888,7 +2956,7 @@ static void do_glorious_triangles(
    setup idle;
    setup res[2];
    const veryshort *mapnums;
-   const tgl_map *map_ptr = map_ptr_table[(indicator >> 6) & 1];
+   const tgl_map *map_ptr = map_ptr_table[(indicator >> 6) & 3];
 
    if (ss->kind == s_c1phan || ss->kind == sdeepbigqtg) {
       mapnums = map_ptr->mapcp1;
@@ -2978,7 +3046,7 @@ static void do_glorious_triangles(
       if (startingrot == 1) fail("Sorry, can't do this.");
 
       if (res[0].rotation == 0) {
-         if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
+         if (result->kind == nothing) goto noshapechange;
          result->kind = s_qtag;
          /* Restore the two people who don't move. */
          (void) copy_person(result, map_ptr->mapqt1[6], &idle, 0);
@@ -2988,7 +3056,7 @@ static void do_glorious_triangles(
       }
       else if (res[0].rotation == 2) {
          if (map_ptr->nointlkshapechange)
-            fail("Can't do shape-changer in interlocked triangles.");
+            goto noshapechange;
 
          result->kind = s_c1phan;
          /* Restore the two people who don't move. */
@@ -2999,7 +3067,7 @@ static void do_glorious_triangles(
       }
       else {
          if (result->kind == nothing || map_ptr->nointlkshapechange)
-            fail("Can't do shape-changer in interlocked triangles.");
+            goto noshapechange;
 
          map_ptr = map_ptr->other;
 
@@ -3026,7 +3094,7 @@ static void do_glorious_triangles(
    else if (res[0].kind == s1x3) {
 
       if (result->kind == nothing || map_ptr->nointlkshapechange)
-         fail("Can't do shape-changer in interlocked triangles.");
+         goto noshapechange;
 
       if (res[0].rotation == 0) {
 
@@ -3087,6 +3155,11 @@ static void do_glorious_triangles(
       else if (result->kind == s_qtag)
           warn(warn__check_dmd_qtag);
    }
+
+   return;
+
+ noshapechange:
+   fail("Can't do shape-changer in interlocked or magic triangles.");
 }
 
 
@@ -3096,7 +3169,7 @@ static void do_glorious_triangles(
 static void wv_tand_base_move(
    setup *s,
    int indicator,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 tbonetest;
    int t;
@@ -3223,7 +3296,7 @@ static void wv_tand_base_move(
 extern void triangle_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 tbonetest;
    calldef_schema schema;
@@ -3239,20 +3312,29 @@ extern void triangle_move(
                6 - wave-base
                7 - tandem-base
                20 - <anyone>-base
-   Add 100 octal if interlocked triangles. */
+   Add 100 octal if interlocked triangles.
+   Add 200 octal if magic triangles. */
 
-   if (indicator >= 2 && indicator <= 21 && (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_INTLK))) {
+   indicator_base = indicator & 077;
+
+   if (indicator_base >= 2 && indicator_base <= 21 &&
+       (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_INTLK))) {
       indicator |= 0100;     /* Interlocked triangles. */
       ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_INTLK;
+   }
+
+   if (indicator_base >= 4 && indicator_base <= 5 &&
+       (TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_MAGIC))) {
+      indicator |= 0200;     /* Magic triangles. */
+      ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_MAGIC;
    }
 
    /* Now demand that no flags remain. */
    if (ss->cmd.cmd_final_flags.her8it | ss->cmd.cmd_final_flags.final)
       fail("Illegal modifier for this concept.");
 
-   indicator_base = indicator & 077;
-
-   if ((indicator & 0100) && calling_level < intlk_triangle_level) {
+   // Same level (C2) for interlocked or magic.  OK?
+   if ((indicator & 0300) && calling_level < intlk_triangle_level) {
       if (allowing_all_concepts)
          warn(warn__bad_concept_level);
       else
@@ -3263,8 +3345,9 @@ extern void triangle_move(
       /* Indicator = 0 for tall 6, 1 for short 6 */
 
       if (ss->kind == s_galaxy) {
-         /* We know the setup rotation is canonicalized. */
-         tbonetest = ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1;
+         // We know the setup rotation is canonicalized.
+         tbonetest = ss->people[1].id1 | ss->people[3].id1 |
+            ss->people[5].id1 | ss->people[7].id1;
 
          if ((tbonetest & 011) == 011) fail("Can't find tall/short 6.");
          else if ((indicator ^ tbonetest) & 1)
@@ -3397,7 +3480,7 @@ extern void phantom_2x4_move(
    int lineflag,
    phantest_kind phantest,
    Const map_thing *maps,
-   setup *result)
+   setup *result) THROW_DECL
 {
    setup hpeople, vpeople;
    setup the_setups[2];

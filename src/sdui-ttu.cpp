@@ -74,8 +74,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
  */   
 
 
-extern void ttu_final_option_setup(int *use_escapes_for_drawing_people_p,
-                                  char *pn1, char *pn2, char **direc_p)
+extern void ttu_final_option_setup()
 {
 }
 
@@ -424,7 +423,7 @@ extern int get_char(void)
 }
 
 
-extern void get_string(char *dest)
+extern void get_string(char *dest, int max)
 {
 #ifndef NO_CURSES
    if (!no_cursor) {
@@ -434,7 +433,8 @@ extern void get_string(char *dest)
    }
    else {
       csetmode(0);         /* Regular full-line mode with system echo. */
-      gets(dest);
+      gets(dest);          /* Yeah, we shouldn't use this.  Need to run test
+                              and see if end-of-line decorations are the same. */
    }
 #else
    csetmode(0);         /* Regular full-line mode with system echo. */

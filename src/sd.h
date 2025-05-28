@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,20 +10,14 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 33. */
 
 #include <stdio.h>
-#include <setjmp.h>
 
 #include "basetype.h"
 #include "sdui.h"
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "sdcom.h"
 
 #define EXPIRATION_STATE_BITS (RESULTFLAG__YOYO_FINISHED|RESULTFLAG__TWISTED_FINISHED|RESULTFLAG__SPLIT_FINISHED)
 
@@ -287,6 +281,7 @@ static const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|C
 #define             CMD_MISC__VERIFY_REAL_3_4_LINE 0x00002800UL
 #define             CMD_MISC__VERIFY_LINES         0x00002C00UL
 #define             CMD_MISC__VERIFY_COLS          0x00003000UL
+#define             CMD_MISC__VERIFY_TALL6         0x00003400UL
 
 
 /* Flags that reside in the "cmd_misc2_flags" word of a setup BEFORE a call is executed. */
@@ -561,11 +556,15 @@ typedef enum {
 
 /* VARIABLES */
 
-extern parse_block *last_magic_diamond;                             /* in SDTOP */
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
 extern uint32 global_selectmask;                                    /* in SDCONCPT */
 extern uint32 global_tboneselect;                                   /* in SDCONCPT */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern concept_fixer_thing concept_fixer_table[];                   /* in SDCTABLE */
 
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
@@ -604,16 +603,6 @@ extern const fixer fixfrotz;                                        /* in SDTABL
 extern const fixer fixwhuzzis;                                      /* in SDTABLES */
 extern const fixer fixgizmo;                                        /* in SDTABLES */
 
-
-extern expand_thing comp_qtag_2x4_stuff;                            /* in SDTOP */
-extern expand_thing exp_2x3_qtg_stuff;                              /* in SDTOP */
-extern expand_thing exp_4x4_4x6_stuff_a;                            /* in SDTOP */
-extern expand_thing exp_4x4_4x6_stuff_b;                            /* in SDTOP */
-extern expand_thing exp_4x4_4dm_stuff_a;                            /* in SDTOP */
-extern expand_thing exp_4x4_4dm_stuff_b;                            /* in SDTOP */
-extern expand_thing exp_c1phan_4x4_stuff1;                          /* in SDTOP */
-extern expand_thing exp_c1phan_4x4_stuff2;                          /* in SDTOP */
-
 extern expand_thing exp_dmd_323_stuff;
 extern expand_thing exp_1x2_dmd_stuff;
 extern expand_thing exp_qtg_3x4_stuff;
@@ -636,6 +625,15 @@ extern full_expand_thing touch_init_table2[];
 extern full_expand_thing touch_init_table3[];
 #define NEEDMASK(K) (1<<((K)/(CONCPROP__NEED_LOBIT)))
 extern expand_thing expand_init_table[];
+
+extern expand_thing comp_qtag_2x4_stuff;                            /* in SDTABLES */
+extern expand_thing exp_2x3_qtg_stuff;                              /* in SDTABLES */
+extern expand_thing exp_4x4_4x6_stuff_a;                            /* in SDTABLES */
+extern expand_thing exp_4x4_4x6_stuff_b;                            /* in SDTABLES */
+extern expand_thing exp_4x4_4dm_stuff_a;                            /* in SDTABLES */
+extern expand_thing exp_4x4_4dm_stuff_b;                            /* in SDTABLES */
+extern expand_thing exp_c1phan_4x4_stuff1;                          /* in SDTABLES */
+extern expand_thing exp_c1phan_4x4_stuff2;                          /* in SDTABLES */
 
 extern const coordrec tgl3_0;                                       /* in SDTABLES */
 extern const coordrec tgl3_1;                                       /* in SDTABLES */
@@ -730,6 +728,8 @@ extern map_thing map_rh_s2x3_2;                                     /* in SDTABL
 extern map_thing map_d1x10;                                         /* in SDTABLES */
 extern map_thing map_lz12;                                          /* in SDTABLES */
 extern map_thing map_rz12;                                          /* in SDTABLES */
+extern map_thing map_tgl451;                                        /* in SDTABLES */
+extern map_thing map_tgl452;                                        /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
 extern map_thing map_star_1x1;                                      /* in SDTABLES */
 extern map_thing map_qtag_f0;                                       /* in SDTABLES */
@@ -752,31 +752,51 @@ extern map_thing *maps_3diagwk[4];                                  /* in SDTABL
 extern mapcoder map_init_table[];                                   /* in SDTABLES */
 extern map_thing map_init_table2[];                                 /* in SDTABLES */
 extern map_thing *split_lists[][6];                                 /* in SDTABLES */
+
+#ifdef __cplusplus
+}
+#endif
+
+extern parse_block *last_magic_diamond;                             /* in SDTOP */
 extern warning_info no_search_warnings;                             /* in SDTOP */
 extern warning_info conc_elong_warnings;                            /* in SDTOP */
 extern warning_info dyp_each_warnings;                              /* in SDTOP */
 extern warning_info useless_phan_clw_warnings;                      /* in SDTOP */
+extern int concept_sublist_sizes[NUM_CALL_LIST_KINDS];              /* in SDTOP */
+extern short int *concept_sublists[NUM_CALL_LIST_KINDS];            /* in SDTOP */
+extern int good_concept_sublist_sizes[NUM_CALL_LIST_KINDS];         /* in SDTOP */
+extern short int *good_concept_sublists[NUM_CALL_LIST_KINDS];       /* in SDTOP */
+
+extern int global_age;                                              /* in SDUTIL */
+
+extern long_boolean selector_used;                                  /* in SDPREDS */
+extern long_boolean number_used;                                    /* in SDPREDS */
+extern long_boolean mandatory_call_used;                            /* in SDPREDS */
+extern predicate_descriptor pred_table[];                           /* in SDPREDS */
+extern int selector_preds;                                          /* in SDPREDS */
 
 
+/* This file is used by some plain C files for data initialization.
+   The plain C compiler won't like the "throw" declarations.
+   The files that do data initialization don't need function prototypes anyway.
+*/
 
+#ifdef __cplusplus
 
 /* In SDPREDS */
 
-extern long_boolean selectp(setup *ss, int place);
+extern long_boolean selectp(setup *ss, int place) THROW_DECL;
 
 /* In SDGETOUT */
 
-extern void write_resolve_text(long_boolean doing_file);
-extern uims_reply full_resolve(void);
 extern int concepts_in_place(void);
 extern int reconcile_command_ok(void);
 extern int resolve_command_ok(void);
 extern int nice_setup_command_ok(void);
-extern void initialize_getout_tables(void);
 
 /* In SDBASIC */
 
-extern void mirror_this(setup *s);
+extern void mirror_this(setup *s) THROW_DECL;
 
 extern void fix_collision(
    uint32 explicit_mirror_flag,
@@ -786,48 +806,50 @@ extern void fix_collision(
    int appears_illegal,
    long_boolean mirror,
    assumption_thing *assumption,
-   setup *result);
+   setup *result) THROW_DECL;
 
-extern void do_stability(uint32 *personp, stability stab, int turning);
+extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL;
 
 extern long_boolean check_restriction(
    setup *ss,
    assumption_thing restr,
    long_boolean instantiate_phantoms,
-   uint32 flags);
+   uint32 flags) THROW_DECL;
 
 extern void basic_move(
    setup *ss,
    int tbonetest,
    long_boolean fudged,
    long_boolean mirror,
-   setup *result);
+   setup *result) THROW_DECL;
 
 /* In SDMOVES */
 
-extern void reinstate_rotation(setup *ss, setup *result);
+extern void canonicalize_rotation(setup *result) THROW_DECL;
+
+extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL;
 
 extern long_boolean divide_for_magic(
    setup *ss,
    uint32 heritflags_to_check,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern long_boolean do_simple_split(
    setup *ss,
    uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void do_call_in_series(
    setup *sss,
    long_boolean dont_enforce_consistent_split,
    long_boolean roll_transparent,
    long_boolean normalize,
-   long_boolean qtfudged);
+   long_boolean qtfudged) THROW_DECL;
 
 
-extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
+extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result) THROW_DECL;
 
-extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result);
+extern void anchor_someone_and_move(setup *ss, parse_block *parseptr, setup *result) THROW_DECL;
 
 extern void process_number_insertion(uint32 mod_word);
 
@@ -839,24 +861,24 @@ extern uint32 process_new_fractions(
    uint32 incoming_fracs,
    uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
    long_boolean allow_improper,
-   long_boolean *improper_p);
+   long_boolean *improper_p) THROW_DECL;
 
 extern void get_fraction_info(
    uint32 frac_flags,
    uint32 callflags1,
    int total,
-   fraction_info *zzz);
+   fraction_info *zzz) THROW_DECL;
 
-extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result);
+extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 
-extern void move_perhaps_with_active_phantoms(setup *ss, setup *result);
+extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL;
 
-extern void impose_assumption_and_move(setup *ss, setup *result);
+extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL;
 
 extern void move(
    setup *ss,
    long_boolean qtfudged,
-   setup *result);
+   setup *result) THROW_DECL;
 
 /* In SDISTORT */
 
@@ -866,86 +888,86 @@ extern void minimize_splitting_info(setup *ss, uint32 other_info);
 
 extern void initialize_map_tables(void);
 
-extern void remove_z_distortion(setup *ss);
+extern void remove_z_distortion(setup *ss) THROW_DECL;
 
 extern void new_divided_setup_move(
    setup *ss,
    uint32 map_encoding,
    phantest_kind phancontrol,
    long_boolean recompute_id,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void divided_setup_move(
    setup *ss,
    const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
-   uint32 *masks, setup *result);
+   uint32 *masks, setup *result) THROW_DECL;
 
 extern void overlapped_setup_move(setup *ss, const map_thing *maps,
-   uint32 *masks, setup *result);
+   uint32 *masks, setup *result) THROW_DECL;
 
 extern void do_phantom_2x4_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void do_phantom_stag_qtg_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void do_phantom_diag_qtg_concept(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void phantom_2x4_move(
    setup *ss,
    int lineflag,
    phantest_kind phantest,
    const map_thing *maps,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void distorted_2x2s_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void distorted_move(
    setup *ss,
    parse_block *parseptr,
    disttest_kind disttest,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void triple_twin_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void do_concept_rigger(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void common_spot_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void triangle_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
 /* In SDCONCPT */
 
 extern long_boolean do_big_concept(
    setup *ss,
-   setup *result);
+   setup *result) THROW_DECL;
 
 /* In SDTAND */
 
@@ -958,7 +980,7 @@ extern void tandem_couples_move(
    tandem_key key,
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void initialize_tandem_tables(void);
 
@@ -972,9 +994,9 @@ extern void concentric_move(
    uint32 modifiersin1,
    uint32 modifiersout1,
    long_boolean recompute_id,
-   setup *result);
+   setup *result) THROW_DECL;
 
-extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number);
+extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number) THROW_DECL;
 
 extern void initialize_conc_tables(void);
 extern void initialize_sel_tables(void);
@@ -984,16 +1006,16 @@ extern void normalize_concentric(
    int center_arity,
    setup outer_inners[],   /* outers in position 0, inners follow */
    int outer_elongation,
-   setup *result);
+   setup *result) THROW_DECL;
 
-extern void merge_setups(setup *ss, merge_action action, setup *result);
+extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL;
 
 extern void on_your_own_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result);
+   setup *result) THROW_DECL;
 
-extern void punt_centers_use_concept(setup *ss, setup *result);
+extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL;
 
 extern void selective_move(
    setup *ss,
@@ -1004,7 +1026,7 @@ extern void selective_move(
    uint32 override_selector,
    selector_kind selector_to_use,
    long_boolean concentric_rules,
-   setup *result);
+   setup *result) THROW_DECL;
 
 extern void inner_selective_move(
    setup *ss,
@@ -1017,64 +1039,107 @@ extern void inner_selective_move(
    selector_kind selector_to_use,
    uint32 modsa1,
    uint32 modsb1,
-   setup *result);
+   setup *result) THROW_DECL;
 
 /* In SDTOP */
 
-extern void compress_setup(const expand_thing *thing, setup *stuff);
+extern void compress_setup(const expand_thing *thing, setup *stuff) THROW_DECL;
 
-extern void expand_setup(const expand_thing *thing, setup *stuff);
+extern void expand_setup(const expand_thing *thing, setup *stuff) THROW_DECL;
 
 extern void update_id_bits(setup *ss);
 
 extern void touch_or_rear_back(
    setup *scopy,
    long_boolean did_mirror,
-   int callflags1);
+   int callflags1) THROW_DECL;
 
 extern void do_matrix_expansion(
    setup *ss,
    uint32 concprops,
-   long_boolean recompute_id);
+   long_boolean recompute_id) THROW_DECL;
 
-NORETURN1 extern void fail2(const char s1[], const char s2[]) NORETURN2;
-NORETURN1 extern void failp(uint32 id1, const char s[]) NORETURN2;
+extern long_boolean check_for_concept_group(
+   const parse_block *parseptrcopy,
+   long_boolean want_all_that_other_stuff,
+   concept_kind *k_p,
+   uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
+   parse_block **parseptr_skip_p) THROW_DECL;
+
+NORETURN1 extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
+NORETURN1 extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
 extern void warn(warning_index w);
 
 extern restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
    long_boolean instantiate_phantoms,
-   long_boolean *failed_to_instantiate);
+   long_boolean *failed_to_instantiate) THROW_DECL;
+
+extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL;
 
 extern uint32 find_calldef(
    callarray *tdef,
    setup *scopy,
    int real_index,
    int real_direction,
-   int northified_index);
+   int northified_index) THROW_DECL;
 extern void clear_people(setup *z);
-extern uint32 rotcw(uint32 n);
-extern uint32 rotccw(uint32 n);
-extern void clear_person(setup *resultpeople, int resultplace);
+
+inline uint32 rotcw(uint32 n)
+{ if (n == 0) return 0; else return (n + 011) & ~064; }
+
+inline uint32 rotccw(uint32 n)
+{ if (n == 0) return 0; else return (n + 033) & ~064; }
+
+inline void clear_person(setup *resultpeople, int resultplace)
+{
+   resultpeople->people[resultplace].id1 = 0;
+   resultpeople->people[resultplace].id2 = 0;
+}
+
+
+
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount);
 extern void swap_people(setup *ss, int oneplace, int otherplace);
 extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
-extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount);
+extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount) THROW_DECL;
 extern void scatter(setup *resultpeople, const setup *sourcepeople,
-                    const veryshort *resultplace, int countminus1, int rotamount);
+                    const veryshort *resultplace, int countminus1, int rotamount) THROW_DECL;
 extern void gather(setup *resultpeople, const setup *sourcepeople,
                    const veryshort *resultplace, int countminus1, int rotamount);
+extern parse_block *process_final_concepts(
+   parse_block *cptr,
+   long_boolean check_errors,
+   uint64 *final_concepts) THROW_DECL;
 extern parse_block *really_skip_one_concept(
    parse_block *incoming,
    concept_kind *k_p,
    uint32 *need_to_restrain_p,   /* 1=(if not doing echo), 2=(yes, always) */
-   parse_block **parseptr_skip_p);
-extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep);
+   parse_block **parseptr_skip_p) THROW_DECL;
+extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 *rotstatep)
+   THROW_DECL;
 
-extern void normalize_setup(setup *ss, normalize_action action);
+extern void normalize_setup(setup *ss, normalize_action action) THROW_DECL;
 
-#ifdef __cplusplus
-}
+extern long_boolean do_subcall_query(
+   int snumber,
+   parse_block *parseptr,
+   parse_block **newsearch,
+   long_boolean this_is_tagger,
+   long_boolean this_is_tagger_circcer,
+   callspec_block *orig_call);
+
+extern void open_text_line(void);
+extern parse_block *mark_parse_blocks(void);
+extern void release_parse_blocks_to_mark(parse_block *mark_point);
+extern parse_block *copy_parse_tree(parse_block *original_tree);
+extern void initialize_parse(void);
+extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
+extern void save_parse_state(void);
+extern long_boolean restore_parse_state(void);
+extern call_list_kind find_proper_call_list(setup *s);
+
+
 #endif

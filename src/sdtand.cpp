@@ -163,10 +163,11 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 3, 5, 6,                     1, 2, 4, 7},                             0x11,     0x33,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},
    {{0, 3, 5, 6,                     1, 2, 4, 7},                             0x11,     0x33,         4, 0,  0,  0, 0,  s_star, s_thar},
 
+   {{0, 3, 5, 6, 9, 10, 12, 15,      1, 2, 4, 7, 8, 11, 13, 14},            0x1111,   0x3333,         8, 0,  0,  0, 0,  s_ptpd,  sdblxwave},
+
+   {{15, 1, 12, 14, 8, 10, 11, 5,    0, 2, 3, 13, 7, 9, 4, 6},              0x4444,   0x6666,         8, 0,  0,  0, 0,  s_ptpd,  s2x8},
 
    {{6, 0, 3, 5,                     7, 1, 2, 4},                             0x44,     0x33,         4, 0,  0,  0, 0,  s_star, s_alamo},
-
-
 
    {{7, 1, 4, 6,                     0, 2, 3, 5},                             0x44,     0146,         4, 0,  0,  0, 0,  sdmd,  s2x4},         /* must be after "2x4_4" */
    /* Next one is for so-and-so in tandem in a bone6, making a virtual line of 4. */
@@ -193,6 +194,10 @@ static tm_thing maps_isearch_twosome[] = {
    /* The two maps just below must be after the map just above. */
    {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},                  02020,  0x18060,         6, 0,  0,  0, 0,  s2x3,  s4x5},
    {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},                  00101,  0xC0300,         6, 0,  0,  0, 0,  s2x3,  s4x5},
+   // And this one must be after it also.
+   {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},                      00404,    03636,         6, 1,  0,  0, 0,  s_short6,  s2x6},
+
+   {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},                     02121,    00303,         6, 1,  0,  0, 0,  s_short6,  sdeepxwv},
 
    {{2, 0,                           3, 1},                                    0x4,      0xC,         2, 1,  0,  0, 0,  s1x2,  s_trngl4},
    {{1, 3,                           0, 2},                                    0x1,      0xC,         2, 3,  0,  0, 0,  s1x2,  s_trngl4},
@@ -233,6 +238,7 @@ static tm_thing maps_isearch_threesome[] = {
                                           0, 1, 3, 2, 7, 6, 4, 5},               0,     0000,         8, 0,  0,  0, 0,  s1x8,  s3x8},
    {{9, 8, 6, 7,           10, 11, 4, 5,         0, 1, 3, 2},                    0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
    {{9, 11, 6, 5,          10, -1, 4, -1,        0, -1, 3, -1},                  0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
+   {{10, 8, 4, 7,          -1, 11, -1, 5,        -1, 1, -1, 2},                  0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
    {{0, 3, 6, 7,           1, -1, 5, -1,         2, -1, 4, -1},               0x11,     0x77,         4, 0,  0,  0, 0,  s2x2,  s2x4},
    {{0, 1, 4, 7,           -1, 2, -1, 6,         -1, 3, -1, 5},               0x44,     0xEE,         4, 0,  0,  0, 0,  s2x2,  s2x4},
    {{3, 6, 7, 0,           -1, 5, -1, 1,         -1, 4, -1, 2},                  0,     0x77,         4, 1,  0,  0, 0,  s2x2,  s2x4},
@@ -514,7 +520,7 @@ static void unpack_us(
    tm_thing *map_ptr,
    uint32 orbitmask,
    tandrec *tandstuff,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i;
    uint32 m, o, r;
@@ -590,7 +596,7 @@ static long_boolean pack_us(
    int fraction,
    long_boolean twosome,
    int key,
-   tandrec *tandstuff)
+   tandrec *tandstuff) THROW_DECL
 {
    int i, j;
    uint32 m, sgl;
@@ -739,7 +745,7 @@ extern void tandem_couples_move(
    tandem_key key,
    uint32 mxn_bits,
    long_boolean phantom_pairing_ok,
-   setup *result)
+   setup *result) THROW_DECL
 {
    selector_kind saved_selector;
    tandrec tandstuff;
@@ -838,11 +844,11 @@ extern void tandem_couples_move(
       else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
          np = 3;
          our_map_table = maps_isearch_threesome;
-         if (transformed_key == tandem_key_tand) directions ^= 0x5555;
+         if (transformed_key == tandem_key_tand) directions ^= 0x555555;
 
          if (ss->kind == s2x4) {
             if (((directions ^ 0x02A8) & livemask) == 0 ||
-                ((directions ^ 0xa802) & livemask) == 0)
+                ((directions ^ 0xA802) & livemask) == 0)
                special_mask |= 0x88;
    
             if (((directions ^ 0x2A80) & livemask) == 0 ||
@@ -862,6 +868,16 @@ extern void tandem_couples_move(
                special_mask |= 0x11;
    
             if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
+         }
+         else if (ss->kind == s3x4 && livemask == 0xC3FC3F) {
+            // Don't look at facing directions; there's only one way it can be.
+            special_mask = 0x820;
+         }
+         else if (ss->kind == s3x4 && livemask == 0x3CF3CF) {
+            special_mask = 0x410;
+         }
+         else if (ss->kind == s_qtag) {
+            special_mask = 0x44;
          }
          else if (ss->kind == s1x8) {
             if (((directions ^ 0x08A2) & livemask) == 0 ||
@@ -954,7 +970,9 @@ extern void tandem_couples_move(
             special_mask = 0x44;   /* The triangles have to be these. */
          }
          else if (ss->kind == s_dhrglass) {
-            uint32 tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+            uint32 tbonetest =
+               ss->people[0].id1 | ss->people[1].id1 |
+               ss->people[4].id1 | ss->people[5].id1;
 
             if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
@@ -962,7 +980,9 @@ extern void tandem_couples_move(
             special_mask = 0x88;   /* The triangles have to be these. */
          }
          else if (ss->kind == s_galaxy) {
-            uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1;
+            uint32 tbonetest =
+               ss->people[1].id1 | ss->people[3].id1 |
+               ss->people[5].id1 | ss->people[7].id1;
 
             if ((tbonetest & 011) == 011)
                fail("Can't find the indicated triangles.");
@@ -1068,8 +1088,8 @@ extern void tandem_couples_move(
       if (p) {
          allmask |= jbit;
          /* We allow a "special" mask to override the selector. */
-         if (     (selector != selector_uninitialized && !selectp(ss, i)) ||
-                  (jbit & special_mask) != 0)
+         if ((selector != selector_uninitialized && !selectp(ss, i)) ||
+             (jbit & special_mask) != 0)
             tandstuff.single_mask |= jbit;
          else {
             if (p & 1)
@@ -1245,6 +1265,19 @@ extern void tandem_couples_move(
 
  try_this:
 
+   // If this is "tandem in a tall 6", be sure we get the map that assumes the ends
+   // of the 2x6 are oriented differently.
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) == CMD_MISC__VERIFY_TALL6) {
+      if (ss->kind == s2x6) {
+         ewmask |= 03636;
+         nsmask |= 04141;
+      }
+      else if (ss->kind == sdeepxwv) {
+         ewmask |= 00303;
+         nsmask |= 07474;
+      }
+   }
+
    /* Now ewmask and nsmask have the info about who is paired with whom. */
    ewmask &= ~tandstuff.single_mask;         /* Clear out unpaired people. */
    nsmask &= ~tandstuff.single_mask;
@@ -1307,7 +1340,7 @@ extern void tandem_couples_move(
    if (ss->cmd.cmd_assume.assumption == cr_jright || ss->cmd.cmd_assume.assumption == cr_jleft)
       fail("Couples or tandem concept is inconsistent with phantom facing direction.");
 
-   if (key == 1) {
+   if (key == tandem_key_cpls) {
       if (ss->cmd.cmd_assume.assumption == cr_wave_only)
          fail("Couples or tandem concept is inconsistent with phantom facing direction.");
       else if (ss->cmd.cmd_assume.assumption == cr_li_lo) {
@@ -1324,9 +1357,6 @@ extern void tandem_couples_move(
       }
    }
 
-   /*
-   tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   */
    if (phantom == 3) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (!pack_us(ss->people, map, fraction, twosome, key, &tandstuff))

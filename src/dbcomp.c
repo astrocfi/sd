@@ -354,6 +354,8 @@ char *sstab[] = {
    "p3ptpd",
    "4ptpd",
    "p4ptpd",
+   "wingedstar",
+   "pwingedstar",
    "3x23",
    "p3x23",
    "3x43",
@@ -392,6 +394,8 @@ char *sstab[] = {
    "pbigdmd",
    "bigptpd",
    "pbigptpd",
+   "dblxwave",
+   "pdblxwave",
    ""};
 
 /* This table is keyed to "setup_kind". */
@@ -489,6 +493,7 @@ char *estab[] = {
    "bigbone",
    "bigdmd",
    "bigptpd",
+   "dblxwave",
    "???",
    "normal_concentric",
    ""};
@@ -562,6 +567,9 @@ char *schematab[] = {
    "select_center2",
    "select_center4",
    "select_center6",
+   "select_who_can",
+   "select_who_did",
+   "select_who_didnt",
    "???",
    "???",
    "???",
@@ -626,6 +634,7 @@ char *qualtab[] = {
    "dmd_ctrs_1f",
    "dmd_intlk",
    "dmd_not_intlk",
+   "tall_6",
    "ctr_pts_rh",
    "ctr_pts_lh",
    "said_triangle",

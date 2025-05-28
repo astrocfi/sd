@@ -56,7 +56,7 @@ SDX11_OBJ = sdui-x11.o
 
 # This has all special source files for sdtty and
 # making the distribution.
-SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
+SDTTY_SRC = sdui-tty.cpp sdmatch.cpp sdui-ttu.cpp sdui-tpc.cpp
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
@@ -84,7 +84,7 @@ mkcalls.exe: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
 
 sdbg.exe: $(SD_OBJS) $(SDTTY_OBJ)
-	$(CC) $(CFLAGS) -o sdbg.exe $(SDTTY_OBJS) $(TTY_LIBS)
+	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
 
 sd_calls.dat: sd_calls.txt mkcalls.exe
 	./mkcalls $(srcdir)/sd_calls.txt
@@ -102,8 +102,6 @@ sdui-x11.o: sdui-x11.c
 
 sdui-ttu.o: sdui-ttu.c
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
-
-sdui-tty.o sdmatch.o: sdmatch.h
 
 sdui-tty.o sdui-ttu.o sdui-tpc.o: sdui.h
 

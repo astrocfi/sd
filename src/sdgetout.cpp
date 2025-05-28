@@ -24,7 +24,14 @@
 */
 
 
-#include "sdprog.h"
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
+#include <stdio.h>
+#include "sd.h"
 
 
 /* This is the number of resolves that we try in response to each
@@ -188,11 +195,11 @@ static resolve_descriptor resolve_table[] = {
 
 
 /* This assumes that "sequence_is_resolved" passes. */
-extern void write_resolve_text(long_boolean doing_file)
+SDLIB_API void write_resolve_text(long_boolean doing_file)
 {
    resolve_indicator r = history[history_ptr].resolve_flag;
 
-   if (doing_file && !singlespace_mode) doublespace_file();
+   if (doing_file && !ui_options.singlespace_mode) doublespace_file();
 
    if (r.kind == resolve_circle) {
       if ((r.distance & 7) == 0) {
@@ -231,8 +238,8 @@ extern void write_resolve_text(long_boolean doing_file)
       if (first != first_part_none) {
          writestuff(resolve_first_parts[first]);
          if (doing_file) {
-            newline();
-            if (!singlespace_mode) doublespace_file();
+            (*the_callback_block.newline_fn)();
+            if (!ui_options.singlespace_mode) doublespace_file();
          }
          else
             writestuff(", ");
@@ -266,7 +273,7 @@ extern void write_resolve_text(long_boolean doing_file)
 
 
 /* These variables are actually local to inner_search, but they are
-   expected to be preserved across the longjmp, so they must be static. */
+   expected to be preserved across the throw, so they must be static. */
 
 Private int perm_indices[8];
 Private int attempt_count, little_count;
@@ -280,13 +287,14 @@ Private int history_save;               /* Where we are inserting calls now.  Th
                                           forward as we build multiple-call resolves. */
 
 
-Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, int insertion_point)
+static long_boolean inner_search(command_kind goal,
+                                 resolve_rec *new_resolve,
+                                 int insertion_point)
 {
    long_boolean retval;
    int i, j;
    setup *ns;
    uint32 directions, p, q;
-   real_jmp_buf my_longjmp_buffer;
 
    history_insertion_point = huge_history_ptr;
 
@@ -315,11 +323,6 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
       created by failing attempts. */
    inner_parse_mark = outer_parse_mark = mark_parse_blocks();
 
-   /* Create a special error handler.  Any time a call fails, we will get back here. */
-
-   longjmp_ptr = &my_longjmp_buffer;          /* point the global pointer at it. */
-   setjmp(my_longjmp_buffer.the_buf);
-
    /* This loop searches through a group of twenty single-call resolves, then a group
       of twenty two-call resolves, then a group of twenty three-call resolves,
       repeatedly.  Any time it finds a resolve in less than the length of the sequence
@@ -334,212 +337,214 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
    try_again:
 
-   /* Throw away garbage from last attempt. */
-   release_parse_blocks_to_mark(inner_parse_mark);
-   testing_fidelity = FALSE;
-   history_ptr = history_save;
-   attempt_count++;
-   if (attempt_count > ATTEMPTS_PER_COMMAND) {
-      /* Too many tries -- too bad. */
-      history_ptr = huge_history_ptr;
+   try {
+      /* Throw away garbage from last attempt. */
+      release_parse_blocks_to_mark(inner_parse_mark);
+      testing_fidelity = FALSE;
+      history_ptr = history_save;
+      attempt_count++;
+      if (attempt_count > ATTEMPTS_PER_COMMAND) {
+         /* Too many tries -- too bad. */
+         history_ptr = huge_history_ptr;
 
-      /* We shouldn't have to do the following stuff.  The searcher should be written
-         such that it doesn't get stuck on a call with any iterator nonzero, because,
-         if the iterator is ever set to zero, the current call should continue
-         cycling that iterator until it goes back to zero.  However, if there were
-         a bug in that code, the consequences would be extremely embarrassing.
-         The resolver would just be stuck, repeatedly reporting failure until the
-         entire resolve operation is manually aborted.  To be sure that never happens,
-         we do this.  This could have the effect of prematurely terminating an
-         iteration search, but no one will notice. */
+         /* We shouldn't have to do the following stuff.  The searcher should be written
+            such that it doesn't get stuck on a call with any iterator nonzero, because,
+            if the iterator is ever set to zero, the current call should continue
+            cycling that iterator until it goes back to zero.  However, if there were
+            a bug in that code, the consequences would be extremely embarrassing.
+            The resolver would just be stuck, repeatedly reporting failure until the
+            entire resolve operation is manually aborted.  To be sure that never happens,
+            we do this.  This could have the effect of prematurely terminating an
+            iteration search, but no one will notice. */
 
-      reset_internal_iterators();
-      retval = FALSE;
-      goto timeout;
-   }
-
-   /* Now clear any concepts if we are not on the first call of the series. */
-
-   if (history_ptr != history_insertion_point || goal == command_reconcile)
-      initialize_parse();
-   else
-      (void) restore_parse_state();
-
-   /* Generate the concepts and call. */
-
-   hashed_randoms = hashed_random_list[history_ptr - history_insertion_point];
-
-   /* Put in a special initial concept if needed to normalize. */
-
-   if (goal == command_normalize && !concepts_in_place()) {
-      int k, l, c;
-
-      for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
-         if (nice_setup_info[k].kind == history[history_ptr].state.kind) {
-            l = nice_setup_info[k].number_available_now;
-            if (l != 0) goto found_k_and_l;
-            else goto try_again;  /* This shouldn't happen, because we are screening setups carefully. */
-         }
+         reset_internal_iterators();
+         retval = FALSE;
+         goto timeout;
       }
 
-      goto try_again;   /* This shouldn't happen. */
+      /* Now clear any concepts if we are not on the first call of the series. */
+
+      if (history_ptr != history_insertion_point || goal == command_reconcile)
+         initialize_parse();
+      else
+         (void) restore_parse_state();
+
+      /* Generate the concepts and call. */
+
+      hashed_randoms = hashed_random_list[history_ptr - history_insertion_point];
+
+      /* Put in a special initial concept if needed to normalize. */
+
+      if (goal == command_normalize && !concepts_in_place()) {
+         int k, l, c;
+
+         for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+            if (nice_setup_info[k].kind == history[history_ptr].state.kind) {
+               l = nice_setup_info[k].number_available_now;
+               if (l != 0) goto found_k_and_l;
+               else goto try_again;  /* This shouldn't happen, because we are screening setups carefully. */
+            }
+         }
+
+         goto try_again;   /* This shouldn't happen. */
 
       found_k_and_l:
 
-      c = nice_setup_info[k].array_to_use_now[generate_random_number(l)];
+         c = nice_setup_info[k].array_to_use_now
+            [(*the_callback_block.generate_random_number_fn)(l)];
 
-      /* If the concept is a tandem or as couples type, we really want "phantom"
-         or "2x8 matrix"" in front of it. */
+         /* If the concept is a tandem or as couples type, we really want "phantom"
+            or "2x8 matrix"" in front of it. */
 
-      if (concept_descriptor_table[c].kind == concept_tandem) {
-         if (history[history_ptr].state.kind == s4x4)
-            deposit_concept(&concept_descriptor_table[phantom_concept_index]);
+         if (concept_descriptor_table[c].kind == concept_tandem) {
+            if (history[history_ptr].state.kind == s4x4)
+               (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[phantom_concept_index]);
+            else
+               (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[matrix_2x8_concept_index]);
+         }
+
+         (*the_callback_block.deposit_concept_fn)(&concept_descriptor_table[c]);
+      }
+
+      /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
+      /* This may, of course, add more concepts. */
+
+      (void) (*the_callback_block.query_for_call_fn)();
+
+      /* Do the call.  An error will signal and go to try_again. */
+
+      toplevelmove();
+      finish_toplevelmove();
+
+      /* We don't like certain warnings either. */
+      if (warnings_are_unacceptable(goal != command_standardize)) goto try_again;
+
+      /* See if we have already seen this sequence. */
+
+      for (i=0; i<avoid_list_size; i++) {
+         if (hashed_randoms == avoid_list[i]) goto try_again;
+      }
+
+      /* The call was legal, see if it satisfies our criterion. */
+
+      /* ***** Because of an apparent bug in the C compiler, the "switch" statement that we would
+         like to have used doesn't work, so we use an "if". */
+
+      ns = &history[history_ptr+1].state;
+
+      if (goal == command_resolve) {
+         resolve_kind r = history[history_ptr+1].resolve_flag.kind;
+
+         /* Here we bias the search against resolves with circulates (which we
+            consider to be of lower quality) by only sometimes accepting them.
+
+            As more bits are set in the "how_bad" indicator, we ignore a larger
+            fraction of the resolves.  For example, we bias the search VERY HEAVILY
+            against reverse single file promenades, accepting only 1 in 16.
+         */
+
+         if (r == resolve_none) goto what_a_loss;
+
+         switch (get_resolve_goodness_info()) {
+         case resolve_goodness_only_nice:
+            /* Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
+               Furthermore, at C2 and above, only accept if promenade distance
+               is 0 to 3/8. */
+            if (resolve_table[r].how_bad != 0 ||
+                (calling_level >= l_c2 &&
+                 ((history[history_ptr+1].resolve_flag.distance & 7) > 3)))
+               goto what_a_loss;
+            break;
+         case resolve_goodness_always:
+            /* Accept any one-call resolve. */
+            break;
+         case resolve_goodness_maybe:
+            /* Accept resolves randomly.  The probability that we reject a
+               resolve increases as the resolve quality goes down. */
+            if (resolve_table[r].how_bad & attempt_count) goto what_a_loss;
+            break;
+         }
+      }
+      else if (goal == command_normalize) {
+         /* We accept any setup with 8 people in it.  This could conceivably give
+            somewhat unusual setups like dogbones or riggers, but they might be
+            sort of interesting if they arise.  (Actually, it is highly unlikely,
+            given the concepts that we use.) */
+         if (setup_attrs[ns->kind].setup_limits != 7) goto what_a_loss;
+      }
+      else if (goal == command_standardize) {
+         uint32 tb = 0;
+         uint32 tbtb = 0;
+         uint32 tbpt = 0;
+
+         for (i=0 ; i<8 ; i++) {
+            tb |= ns->people[i].id1;
+            tbtb |= ns->people[i].id1 ^ ((i & 2) << 2);
+            tbpt |= ns->people[i].id1 ^ (i & 1);
+         }
+
+         if (ns->kind == s2x4 || ns->kind == s1x8) {
+            if ((tb & 011) == 011) goto what_a_loss;
+         }
+         else if (ns->kind == s_qtag) {
+            if ((tb & 1) != 0 && (tbtb & 010) != 0) goto what_a_loss;
+         }
+         else if (ns->kind == s_ptpd) {
+            if ((tb & 010) != 0 && (tbpt & 1) != 0) goto what_a_loss;
+         }
          else
-            deposit_concept(&concept_descriptor_table[matrix_2x8_concept_index]);
-      }
-
-      deposit_concept(&concept_descriptor_table[c]);
-   }
-
-   /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
-   /* This may, of course, add more concepts. */
-
-   (void) query_for_call();
-
-   /* Do the call.  An error will signal and go to try_again. */
-
-   toplevelmove();
-   finish_toplevelmove();
-
-   /* We don't like certain warnings either. */
-   if (warnings_are_unacceptable(goal != command_standardize)) goto try_again;
-
-   /* See if we have already seen this sequence. */
-
-   for (i=0; i<avoid_list_size; i++) {
-      if (hashed_randoms == avoid_list[i]) goto try_again;
-   }
-
-   /* The call was legal, see if it satisfies our criterion. */
-
-   /* ***** Because of an apparent bug in the C compiler, the "switch" statement that we would
-      like to have used doesn't work, so we use an "if". */
-
-   ns = &history[history_ptr+1].state;
-
-   if (goal == command_resolve) {
-      resolve_kind r = history[history_ptr+1].resolve_flag.kind;
-
-      /* Here we bias the search against resolves with circulates (which we
-         consider to be of lower quality) by only sometimes accepting them.
-
-         As more bits are set in the "how_bad" indicator, we ignore a larger
-         fraction of the resolves.  For example, we bias the search VERY HEAVILY
-         against reverse single file promenades, accepting only 1 in 16.
-      */
-
-      if (r == resolve_none) goto what_a_loss;
-
-      switch (get_resolve_goodness_info()) {
-      case resolve_goodness_only_nice:
-         /* Only accept things with "how_bad" = 0, that is, RLG, LA, and prom.
-            Furthermore, at C2 and above, only accept if promenade distance
-            is 0 to 3/8. */
-         if (resolve_table[r].how_bad != 0 ||
-             (calling_level >= l_c2 &&
-              ((history[history_ptr+1].resolve_flag.distance & 7) > 3)))
             goto what_a_loss;
-         break;
-      case resolve_goodness_always:
-         /* Accept any one-call resolve. */
-         break;
-      case resolve_goodness_maybe:
-         /* Accept resolves randomly.  The probability that we reject a
-            resolve increases as the resolve quality goes down. */
-         if (resolve_table[r].how_bad & attempt_count) goto what_a_loss;
-         break;
       }
-   }
-   else if (goal == command_normalize) {
-      /* We accept any setup with 8 people in it.  This could conceivably give
-         somewhat unusual setups like dogbones or riggers, but they might be
-         sort of interesting if they arise.  (Actually, it is highly unlikely,
-         given the concepts that we use.) */
-      if (setup_attrs[ns->kind].setup_limits != 7) goto what_a_loss;
-   }
-   else if (goal == command_standardize) {
-      uint32 tb = 0;
-      uint32 tbtb = 0;
-      uint32 tbpt = 0;
+      else if (goal == command_reconcile) {
+         if (ns->kind != goal_kind) goto what_a_loss;
+         for (j=0; j<8; j++)
+            if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
 
-      for (i=0 ; i<8 ; i++) {
-         tb |= ns->people[i].id1;
-         tbtb |= ns->people[i].id1 ^ ((i & 2) << 2);
-         tbpt |= ns->people[i].id1 ^ (i & 1);
-      }
+         {
+            int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
+            int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
+            int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
+            int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
+            int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
+            int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
+            int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
+            int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
 
-      if (ns->kind == s2x4 || ns->kind == s1x8) {
-         if ((tb & 011) == 011) goto what_a_loss;
-      }
-      else if (ns->kind == s_qtag) {
-         if ((tb & 1) != 0 && (tbtb & 010) != 0) goto what_a_loss;
-      }
-      else if (ns->kind == s_ptpd) {
-         if ((tb & 010) != 0 && (tbpt & 1) != 0) goto what_a_loss;
-      }
-      else
-         goto what_a_loss;
-   }
-   else if (goal == command_reconcile) {
-      if (ns->kind != goal_kind) goto what_a_loss;
-      for (j=0; j<8; j++)
-         if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
+            /* Test for absolute sex correctness if required. */
+            if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
 
-         {        /* Need some local temporaries -- ugly in C, impossible in Pascal! */
-         int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
-         int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
-         int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
-         int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
-         int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
-         int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
-         int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
-         int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
+            p7 = (p7 - p6) & PID_MASK;
+            p6 = (p6 - p5) & PID_MASK;
+            p5 = (p5 - p4) & PID_MASK;
+            p4 = (p4 - p3) & PID_MASK;
+            p3 = (p3 - p2) & PID_MASK;
+            p2 = (p2 - p1) & PID_MASK;
+            p1 = (p1 - p0) & PID_MASK;
 
-         /* Test for absolute sex correctness if required. */
-         if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
+            /* Test each sex individually for uniformity of offset around the ring. */
+            if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
+               goto what_a_loss;
 
-         p7 = (p7 - p6) & PID_MASK;
-         p6 = (p6 - p5) & PID_MASK;
-         p5 = (p5 - p4) & PID_MASK;
-         p4 = (p4 - p3) & PID_MASK;
-         p3 = (p3 - p2) & PID_MASK;
-         p2 = (p2 - p1) & PID_MASK;
-         p1 = (p1 - p0) & PID_MASK;
+            if (((p1 + p2) & PID_MASK) != 0200)   /* Test for each sex in sequence. */
+               goto what_a_loss;
 
-         /* Test each sex individually for uniformity of offset around the ring. */
-         if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
-            goto what_a_loss;
-
-         if (((p1 + p2) & PID_MASK) != 0200)   /* Test for each sex in sequence. */
-            goto what_a_loss;
-
-         if ((p2 & 0100) == 0)         /* Test for alternating sex. */
-            goto what_a_loss;
+            if ((p2 & 0100) == 0)         /* Test for alternating sex. */
+               goto what_a_loss;
 
          /* Test for relative phase of boys and girls. */
          /* "accept_extend" tells how accurate the placement must be. */
-         if ((p2 >> 7) > current_reconciler->accept_extend)
-            goto what_a_loss;
+            if ((p2 >> 7) > current_reconciler->accept_extend)
+               goto what_a_loss;
          }
-   }
-   else if (goal >= command_create_any_lines) {
-      directions = 0;
-      for (i=0 ; i<8 ; i++) {
-         directions <<= 2;
-         directions |= ns->people[i].id1 & 3;
       }
+      else if (goal >= command_create_any_lines) {
+         directions = 0;
+         for (i=0 ; i<8 ; i++) {
+            directions <<= 2;
+            directions |= ns->people[i].id1 & 3;
+         }
 
-      switch (goal) {
+         switch (goal) {
          case command_create_any_lines:
             if (ns->kind != s2x4 || (directions & 0x5555) != 0) goto what_a_loss;
             break;
@@ -608,189 +613,189 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
          case command_create_8ch:
             if (ns->kind != s2x4 || directions != 0x77DD) goto what_a_loss;
             break;
+         }
       }
-   }
-   else if (goal == command_8person_level_call) {
-      /* We demand that no splitting have taken place along either axis. */
-      if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) goto what_a_loss;
-   }
-
-   /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
-      sure, we have to examine all future calls (for a reconcile -- for other stuff
-      there are no future calls), to make sure that, aside from the permutation
-      that gets performed, they will be executed the same way. */
-
-   /* But first, we make the dynamic part of the parse state be a copy of what we
-      had, since we are repeatedly overwriting existing blocks. */
-
-   /* The solution that we have found consists of the parse blocks hanging off of
-      huge_history_ptr+1 ... history_ptr inclusive.  We have to make sure that they will
-      be safe forever.  (That is, until we have exited the entire resolve operation.)
-      For the most part, this follows from the fact that we will not re-use any
-      already-in-use parse blocks.  But the tree hanging off of huge_history_ptr+1
-      gets destructively reset to the initial state by restore_parse_state, so we must
-      protect it. */
-
-   history[huge_history_ptr+1].command_root = copy_parse_tree(history[huge_history_ptr+1].command_root);
-
-   /* Save the entire resolve, that is, the calls we inserted, and where we inserted them. */
-
-   history_ptr++;
-   new_resolve->size = history_ptr - history_insertion_point;
-
-   if (goal == command_reconcile) {
-      for (j=0; j<8; j++) {
-         new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & PID_MASK;
-         new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID1_PERM_ALLBITS;
+      else if (goal == command_8person_level_call) {
+         /* We demand that no splitting have taken place along either axis. */
+         if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK) goto what_a_loss;
       }
 
-      new_resolve->rotchange = ns->rotation - history[history_insertion_point].state.rotation;
-      new_resolve->insertion_point = insertion_point;
-   }
-   else {
-      new_resolve->insertion_point = 0;
-   }
+      /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
+         sure, we have to examine all future calls (for a reconcile -- for other stuff
+         there are no future calls), to make sure that, aside from the permutation
+         that gets performed, they will be executed the same way. */
 
-   /* Now test the "fidelity" of the pre-existing calls after the insertion point,
-      to be sure they still behave the way we expect, that is, that they move the
-      permuted people around in the same way.  (If one of those calls uses a predicate
-      like "heads" or "boys" it will likely fail this test until we get around to
-      doing something clever.  Oh well.) */
+      /* But first, we make the dynamic part of the parse state be a copy of what we
+         had, since we are repeatedly overwriting existing blocks. */
 
-   testing_fidelity = TRUE;
+      /* The solution that we have found consists of the parse blocks hanging off of
+         huge_history_ptr+1 ... history_ptr inclusive.  We have to make sure that they will
+         be safe forever.  (That is, until we have exited the entire resolve operation.)
+         For the most part, this follows from the fact that we will not re-use any
+         already-in-use parse blocks.  But the tree hanging off of huge_history_ptr+1
+         gets destructively reset to the initial state by restore_parse_state, so we must
+         protect it. */
 
-   for (j=0; j<new_resolve->insertion_point; j++) {
-      int k;
-      configuration this_state;
+      history[huge_history_ptr+1].command_root = copy_parse_tree(history[huge_history_ptr+1].command_root);
 
-      /* Copy the whole thing into the history, chiefly to get the call and concepts. */
-      written_history_items = -1;
+      /* Save the entire resolve, that is, the calls we inserted, and where we inserted them. */
 
-      history[history_ptr+1] = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
+      history_ptr++;
+      new_resolve->size = history_ptr - history_insertion_point;
+
+      if (goal == command_reconcile) {
+         for (j=0; j<8; j++) {
+            new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & PID_MASK;
+            new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID1_PERM_ALLBITS;
+         }
+
+         new_resolve->rotchange = ns->rotation - history[history_insertion_point].state.rotation;
+         new_resolve->insertion_point = insertion_point;
+      }
+      else {
+         new_resolve->insertion_point = 0;
+      }
+
+      /* Now test the "fidelity" of the pre-existing calls after the insertion point,
+         to be sure they still behave the way we expect, that is, that they move the
+         permuted people around in the same way.  (If one of those calls uses a predicate
+         like "heads" or "boys" it will likely fail this test until we get around to
+         doing something clever.  Oh well.) */
+
+      testing_fidelity = TRUE;
+
+      for (j=0; j<new_resolve->insertion_point; j++) {
+         int k;
+         configuration this_state;
+
+         /* Copy the whole thing into the history, chiefly to get the call and concepts. */
+         written_history_items = -1;
+
+         history[history_ptr+1] = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
 
       /* Now execute the call again, from the new starting configuration. */
       /* This might signal and go to try_again. */
-      toplevelmove();
-      finish_toplevelmove();
+         toplevelmove();
+         finish_toplevelmove();
 
-      this_state = history[history_ptr+1];
-      this_state.state.rotation -= new_resolve->rotchange;
-      canonicalize_rotation(&this_state.state);
+         this_state = history[history_ptr+1];
+         this_state.state.rotation -= new_resolve->rotchange;
+         canonicalize_rotation(&this_state.state);
 
-      if (this_state.state.rotation != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.rotation)
-         goto try_again;
-
-      for (k=0 ; k<WARNING_WORDS ; k++) {
-         if (this_state.warnings.bits[k] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[k])
+         if (this_state.state.rotation != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.rotation)
             goto try_again;
-      }
 
-      for (k=0; k<=setup_attrs[this_state.state.kind].setup_limits; k++) {
-         personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];
-
-         if (t.id1) {
-            if (this_state.state.people[k].id1 !=
-                  ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | new_resolve->permute1[(t.id1 & PID_MASK) >> 6] | new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
-               goto try_again;
-            if (this_state.state.people[k].id2 != t.id2)
+         for (k=0 ; k<WARNING_WORDS ; k++) {
+            if (this_state.warnings.bits[k] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[k])
                goto try_again;
          }
-         else {
-            if (this_state.state.people[k].id1)
-               goto try_again;
+
+         for (k=0; k<=setup_attrs[this_state.state.kind].setup_limits; k++) {
+            personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];
+
+            if (t.id1) {
+               if (this_state.state.people[k].id1 !=
+                   ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | new_resolve->permute1[(t.id1 & PID_MASK) >> 6] | new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
+                  goto try_again;
+               if (this_state.state.people[k].id2 != t.id2)
+                  goto try_again;
+            }
+            else {
+               if (this_state.state.people[k].id1)
+                  goto try_again;
+            }
          }
+
+         history_ptr++;
       }
 
-      history_ptr++;
-   }
+      testing_fidelity = FALSE;
 
-   testing_fidelity = FALSE;
+      /* One more check.  If this was a "reconcile", demand that we have an acceptable resolve.
+         How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
+         if the resolve is "at home", we demand that the promenade distance be zero.  Our
+         previous tests were impervious to promenade distance, because it usually doesn't matter.
+         But for "at home", resolve_p will only show a resolve if the distance is zero.
+         Note that the above comment is obsolete, because we now allow circling a nonzero amount.
+         However, it does little harm to leave this test in place, and it might avoid future
+         problems if rotation-sensitive resolves are ever re-introduced. */
 
-   /* One more check.  If this was a "reconcile", demand that we have an acceptable resolve.
-      How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
-      if the resolve is "at home", we demand that the promenade distance be zero.  Our
-      previous tests were impervious to promenade distance, because it usually doesn't matter.
-      But for "at home", resolve_p will only show a resolve if the distance is zero.
-      Note that the above comment is obsolete, because we now allow circling a nonzero amount.
-      However, it does little harm to leave this test in place, and it might avoid future
-      problems if rotation-sensitive resolves are ever re-introduced. */
+      if (goal == command_reconcile && history[history_ptr].resolve_flag.kind == resolve_none)
+         goto try_again;   /* Sorry. */
 
-   if (goal == command_reconcile && history[history_ptr].resolve_flag.kind == resolve_none)
-      goto try_again;   /* Sorry. */
+      /* We win.  Really save it and exit.  History_ptr has been clobbered. */
 
-   /* We win.  Really save it and exit.  History_ptr has been clobbered. */
+      for (j=0; j<MAX_RESOLVE_SIZE; j++)
+         new_resolve->stuph[j] = history[j+history_insertion_point+1];
 
-   for (j=0; j<MAX_RESOLVE_SIZE; j++)
-      new_resolve->stuph[j] = history[j+history_insertion_point+1];
+      /* Grow the "avoid_list" array as needed. */
 
-   /* Grow the "avoid_list" array as needed. */
+      avoid_list_size++;
 
-   avoid_list_size++;
+      if (avoid_list_allocation <= avoid_list_size) {
+         int *t;
+         avoid_list_allocation = avoid_list_size+100;
+         t = (int *) (*the_callback_block.get_more_mem_gracefully_fn)(avoid_list, avoid_list_allocation * sizeof(int));
+         if (!t) specialfail("Not enough memory!");
+         avoid_list = t;
+      }
 
-   if (avoid_list_allocation <= avoid_list_size) {
-      int *t;
-      avoid_list_allocation = avoid_list_size+100;
-      t = (int *) get_more_mem_gracefully(avoid_list, avoid_list_allocation * sizeof(int));
-      if (!t) specialfail("Not enough memory!");
-      avoid_list = t;
-   }
+      avoid_list[avoid_list_size-1] = hashed_randoms;   /* It's now safe to do this. */
 
-   avoid_list[avoid_list_size-1] = hashed_randoms;   /* It's now safe to do this. */
-
-   retval = TRUE;
-   goto timeout;
+      retval = TRUE;
+      goto timeout;
 
    what_a_loss:
 
-   if (!pick_allow_multiple_items()) goto try_again;
+      if (!pick_allow_multiple_items()) goto try_again;
 
-   if (++little_count == 60) {
-      /* Revert back to beginning. */
-      history_save = history_insertion_point;
-      inner_parse_mark = outer_parse_mark;
-      little_count = 0;
-   }
-   else if (little_count == 20 || little_count == 40) {
-      /* Save current state as a base for future calls. */
+      if (++little_count == 60) {
+         /* Revert back to beginning. */
+         history_save = history_insertion_point;
+         inner_parse_mark = outer_parse_mark;
+         little_count = 0;
+      }
+      else if (little_count == 20 || little_count == 40) {
+         /* Save current state as a base for future calls. */
 
-      /* But first, if doing a "normalize" operation, we verify that the setup
-         we have arrived at is one from which we know how to do something.  Otherwise,
-         there is no point in trying to build on the setup at which we have arrived.
-         Also, if the setup has gotten bigger, do not proceed. */
+         /* But first, if doing a "normalize" operation, we verify that the setup
+            we have arrived at is one from which we know how to do something.  Otherwise,
+            there is no point in trying to build on the setup at which we have arrived.
+            Also, if the setup has gotten bigger, do not proceed. */
 
-      if (goal == command_normalize) {
-         int k;
+         if (goal == command_normalize) {
+            int k;
 
-         if (setup_attrs[ns->kind].setup_limits > setup_attrs[history[history_ptr].state.kind].setup_limits)
+            if (setup_attrs[ns->kind].setup_limits > setup_attrs[history[history_ptr].state.kind].setup_limits)
+               goto try_again;
+
+            for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+               if (nice_setup_info[k].kind == ns->kind && nice_setup_info[k].number_available_now != 0)
+                  goto ok_to_save_this;
+            }
+
             goto try_again;
 
-         for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
-            if (nice_setup_info[k].kind == ns->kind && nice_setup_info[k].number_available_now != 0)
-               goto ok_to_save_this;
+         ok_to_save_this: ;
          }
 
-         goto try_again;
-
-         ok_to_save_this: ;
+         history_save = history_ptr + 1;
+         inner_parse_mark = mark_parse_blocks();
+         hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
       }
-
-      history_save = history_ptr + 1;
-      inner_parse_mark = mark_parse_blocks();
-      hashed_random_list[history_save - history_insertion_point] = hashed_randoms;
+   }
+   catch(error_flag_type) {
    }
 
    goto try_again;
 
-   timeout:
+ timeout:
 
-   /* Restore the global error handler. */
-
-   longjmp_ptr = &longjmp_buffer;
    return retval;
 }
 
 
-extern uims_reply full_resolve(void)
+SDLIB_API uims_reply full_resolve(void)
 {
    int j, k;
    uims_reply reply;
@@ -809,7 +814,7 @@ extern uims_reply full_resolve(void)
       /* Increase by 50% beyond what we have now. */
       huge_history_allocation += huge_history_allocation >> 1;
       t = (configuration *)
-         get_more_mem_gracefully(huge_history_save,
+         (*the_callback_block.get_more_mem_gracefully_fn)(huge_history_save,
                                  huge_history_allocation * sizeof(configuration));
       if (!t) specialfail("Not enough memory!");
       huge_history_save = t;
@@ -819,7 +824,7 @@ extern uims_reply full_resolve(void)
 
    if (all_resolves == 0) {
       resolve_allocation = 10;
-      all_resolves = (resolve_rec *) get_mem_gracefully(resolve_allocation * sizeof(resolve_rec));
+      all_resolves = (resolve_rec *) (*the_callback_block.get_mem_gracefully_fn)(resolve_allocation * sizeof(resolve_rec));
       if (!all_resolves) specialfail("Not enough memory!");
    }
 
@@ -870,7 +875,6 @@ extern uims_reply full_resolve(void)
    max_resolve_index = 0;
    avoid_list_size = 0;
 
-   uims_begin_search(search_goal);
    if (search_goal == command_reconcile) show_resolve = FALSE;
 
    start_pick();   /* This sets interactivity, among other stuff. */
@@ -879,7 +883,9 @@ extern uims_reply full_resolve(void)
       /* We know the history is restored at this point. */
       if (find_another_resolve) {
          /* Put up the resolve title showing that we are searching. */
-         uims_update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
+
+         (*the_callback_block.uims_update_resolve_menu_fn)
+            (search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
          (void) restore_parse_state();
 
@@ -960,7 +966,7 @@ extern uims_reply full_resolve(void)
          /* Or a dotted line if doing a reconcile. */
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
-            newline();
+            (*the_callback_block.newline_fn)();
          }
 
          /* Show the resolve itself, without its last item. */
@@ -977,7 +983,7 @@ extern uims_reply full_resolve(void)
          /* Or a dotted line if doing a reconcile. */
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
-            newline();
+            (*the_callback_block.newline_fn)();
          }
 
          /* Show whatever comes after the resolve. */
@@ -995,20 +1001,21 @@ extern uims_reply full_resolve(void)
       }
 
       if (show_resolve && (history[history_ptr].resolve_flag.kind != resolve_none)) {
-         newline();
+         (*the_callback_block.newline_fn)();
          writestuff("     resolve is:");
-         newline();
+         (*the_callback_block.newline_fn)();
          write_resolve_text(FALSE);
-         newline();
-         newline();
+         (*the_callback_block.newline_fn)();
+         (*the_callback_block.newline_fn)();
       }
 
-      uims_update_resolve_menu(search_goal, current_resolve_index, max_resolve_index, big_state);
+      (*the_callback_block.uims_update_resolve_menu_fn)
+         (search_goal, current_resolve_index, max_resolve_index, big_state);
 
       show_resolve = TRUE;
 
       for (;;) {          /* We ignore any "undo" or "erase" clicks. */
-         reply = uims_get_resolve_command();
+         reply = (*the_callback_block.uims_get_resolve_command_fn)();
          if ((reply != ui_command_select) || ((uims_menu_index != command_undo) && (uims_menu_index != command_erase))) break;
       }
 
@@ -1019,7 +1026,7 @@ extern uims_reply full_resolve(void)
                /* Increase allocation if necessary. */
                int new_allocation = resolve_allocation << 1;
                resolve_rec *t = (resolve_rec *)
-                  get_more_mem_gracefully(all_resolves, new_allocation * sizeof(resolve_rec));
+                  (*the_callback_block.get_more_mem_gracefully_fn)(all_resolves, new_allocation * sizeof(resolve_rec));
                if (!t) break;               /* By not turning on "find_another_resolve",
                                                we will take no action. */
                resolve_allocation = new_allocation;
@@ -1091,23 +1098,15 @@ Private void display_reconcile_history(int current_depth, int n)
 {
    int j;
 
-   /*
-    * The UI might display the reconcile history in a different window
-    * than the normal sequence.  In that case, our remembered history
-    * must be discarded.
-    */
-
-   if (uims_begin_reconcile_history(current_depth, n-2))
-       written_history_items = -1;
    display_initial_history(n-current_depth, 0);
    if (current_depth > 0) {
       writestuff("------------------------------------");
-      newline();
+      (*the_callback_block.newline_fn)();
       for (j=n-current_depth+1; j<=n; j++)
          write_history_line(j, (char *) 0, FALSE, file_write_no);
    }
-   if (uims_end_reconcile_history())
-       written_history_items = -1;
+
+   (*the_callback_block.uims_add_new_line_fn)("", 0);   // Write a blank line.
 }
 
 extern int concepts_in_place(void)
@@ -1214,7 +1213,11 @@ extern int nice_setup_command_ok(void)
  * if not, whether the most recent search failed.
  */
 
-extern void create_resolve_menu_title(command_kind goal, int cur, int max, resolver_display_state state, char *title)
+SDLIB_API void create_resolve_menu_title(
+   command_kind goal,
+   int cur, int max,
+   resolver_display_state state,
+   char *title)
 {
    char junk[MAX_TEXT_LINE_LENGTH];
    char *titleptr = title;
@@ -1223,7 +1226,7 @@ extern void create_resolve_menu_title(command_kind goal, int cur, int max, resol
    string_copy(&titleptr, title_string[goal-command_resolve]);
 
    if (max > 0) {
-      add_resolve_indices(junk, cur, max);
+      sprintf(junk, "%d out of %d", cur, max);
       string_copy(&titleptr, junk);
    }
    switch (state) {
@@ -1241,7 +1244,7 @@ extern void create_resolve_menu_title(command_kind goal, int cur, int max, resol
 }
 
 
-extern void initialize_getout_tables(void)
+SDLIB_API void initialize_getout_tables(void)
 {
    int i, j, k;
 
@@ -1253,7 +1256,7 @@ extern void initialize_getout_tables(void)
          the 1x12 things), it might not be necessary. */
 
       if (!nice->on_level_list) {
-         nice->on_level_list = (int *) get_mem(nice->full_list_size);
+         nice->on_level_list = (int *) (*the_callback_block.get_mem_fn)(nice->full_list_size);
 
          /* Copy those concepts that are on the level. */
          for (i=0,j=0 ; ; i++) {

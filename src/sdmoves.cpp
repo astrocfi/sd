@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1999  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 32. */
+    This is for version 33. */
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -41,7 +41,7 @@
 #include "sd.h"
 
 
-extern void canonicalize_rotation(setup *result)
+extern void canonicalize_rotation(setup *result) THROW_DECL
 {
    result->rotation &= 3;
 
@@ -169,7 +169,7 @@ extern void canonicalize_rotation(setup *result)
 }
 
 
-extern void reinstate_rotation(setup *ss, setup *result)
+extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL
 {
    int globalrotation;
 
@@ -218,7 +218,7 @@ extern void reinstate_rotation(setup *ss, setup *result)
 extern long_boolean divide_for_magic(
    setup *ss,
    uint32 heritflags_to_check,
-   setup *result)
+   setup *result) THROW_DECL
 {
    static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0};
    static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0};
@@ -617,7 +617,7 @@ extern long_boolean divide_for_magic(
 extern long_boolean do_simple_split(
    setup *ss,
    uint32 prefer_1x4,   /* 1 means prefer 1x4, 2 means this is 1x8 and do not recompute id. */
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 mapcode;
    long_boolean recompute_id = TRUE;
@@ -690,7 +690,7 @@ extern void do_call_in_series(
    long_boolean dont_enforce_consistent_split,
    long_boolean roll_transparent,
    long_boolean normalize,
-   long_boolean qtfudged)
+   long_boolean qtfudged) THROW_DECL
 {
    setup tempsetup;
    setup qqqq = *sss;
@@ -1011,7 +1011,9 @@ Private int start_matrix_call(
          matrix_info[nump].deltay = 0;
          matrix_info[nump].nearest = 100000;
          matrix_info[nump].deltarot = 0;
-         matrix_info[nump].roll_stability_info = (ROLLBITM / ROLL_BIT) * DBROLL_BIT;
+         matrix_info[nump].roll_stability_info =
+            ((ROLLBITM / ROLL_BIT) * DBROLL_BIT) |
+            (((unsigned int) stb_z) * DBSTAB_BIT);
          matrix_info[nump].orig_source_idx = i;
          matrix_info[nump].tbstopse = FALSE;
          matrix_info[nump].tbstopnw = FALSE;
@@ -1024,12 +1026,12 @@ Private int start_matrix_call(
 
 
 
-Private void finish_matrix_call(
+static void finish_matrix_call(
    matrix_rec matrix_info[],
    int nump,
    long_boolean do_roll_stability,
    setup *people,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i, place;
    int xmax, xpar, ymax, ypar, x, y, k, doffset;
@@ -1412,7 +1414,8 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_dhrglass].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00930026) && ((signature & (~0x01108080)) == 0)) {
+   else if ((ypar == 0x00930026 || ypar == 0x00910026 || ypar == 0x00530026) &&
+            ((signature & (~0x01108080)) == 0)) {
       checkptr = setup_attrs[s_ptpd].setup_coords;
       goto doit;
    }
@@ -1651,10 +1654,10 @@ Private void finish_matrix_call(
 
 
 
-Private void matrixmove(
+static void matrixmove(
    setup *ss,
    Const callspec_block *callspec,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 datum;
    setup people;
@@ -1729,7 +1732,7 @@ Private void matrixmove(
 
 
 
-Private void do_part_of_pair(matrix_rec *thisrec, int base, Const uint32 *callstuff)
+static void do_part_of_pair(matrix_rec *thisrec, int base, Const uint32 *callstuff) THROW_DECL
 {
    /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
          or if the two data are identical so the sex doesn't matter. */
@@ -1745,13 +1748,13 @@ Private void do_part_of_pair(matrix_rec *thisrec, int base, Const uint32 *callst
 }
 
 
-Private void do_pair(
+static void do_pair(
    matrix_rec *ppp,        /* Selected person */
    matrix_rec *qqq,        /* Unselected person */
    Const uint32 *callstuff,
    uint32 flags,
    int flip,
-   int filter)             /* 1 to do N/S facers, 0 for E/W facers. */
+   int filter) THROW_DECL             /* 1 to do N/S facers, 0 for E/W facers. */
 {
    if (callstuff) {     // Doing normal matrix call.
       if ((!(flags & (MTX_IGNORE_NONSELECTEES | MTX_BOTH_SELECTED_OK))) && qqq->sel)
@@ -1797,12 +1800,12 @@ Private void do_pair(
 
 
 
-Private void make_matrix_chains(
+static void make_matrix_chains(
    matrix_rec matrix_info[],
    int nump,
    long_boolean finding_far_squeezers,
    uint32 flags,
-   int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
+   int filter) THROW_DECL       /* 1 for E/W chains, 0 for N/S chains. */
 {
    int i, j;
 
@@ -1904,12 +1907,12 @@ Private void make_matrix_chains(
 }
 
 
-Private void process_matrix_chains(
+static void process_matrix_chains(
    matrix_rec matrix_info[],
    int nump,
    const uint32 *callstuff,
    uint32 flags,
-   int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
+   int filter) THROW_DECL    /* 1 for E/W chains, 0 for N/S chains. */
 {
    long_boolean another_round = TRUE;
    long_boolean picking_end_jaywalkers = FALSE;
@@ -2112,10 +2115,10 @@ Private void process_matrix_chains(
 
 
 
-Private void partner_matrixmove(
+static void partner_matrixmove(
    setup *ss,
    Const callspec_block *callspec,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 flags = callspec->stuff.matrix.flags;
    const uint32 *callstuff = callspec->stuff.matrix.stuff;
@@ -2178,6 +2181,7 @@ Private void partner_matrixmove(
 
 
 extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result)
+   THROW_DECL
 {
    setup people, second_people;
    matrix_rec matrix_info[9];
@@ -2306,7 +2310,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 extern void anchor_someone_and_move(
    setup *ss,
    parse_block *parseptr,
-   setup *result)
+   setup *result)  THROW_DECL
 {
    setup people;
    matrix_rec before_matrix_info[9];
@@ -2438,10 +2442,10 @@ extern void anchor_someone_and_move(
 }
 
 
-Private void rollmove(
+static void rollmove(
    setup *ss,
    Const callspec_block *callspec,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int i;
 
@@ -2475,7 +2479,8 @@ Private void rollmove(
 }
 
 
-Private void do_inheritance(setup_command *cmd, Const callspec_block *parent_call, Const by_def_item *defptr)
+static void do_inheritance(setup_command *cmd,
+   Const callspec_block *parent_call, Const by_def_item *defptr) THROW_DECL
 {
    /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that
       they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
@@ -2543,12 +2548,12 @@ extern void process_number_insertion(uint32 mod_word)
 
 
 
-Private long_boolean get_real_subcall(
+static long_boolean get_real_subcall(
    parse_block *parseptr,
    Const by_def_item *item,
    setup_command *cmd_in,
    Const callspec_block *parent_call,
-   setup_command *cmd_out)         /* We fill in just the parseptr, callspec,
+   setup_command *cmd_out) THROW_DECL         /* We fill in just the parseptr, callspec,
                                       cmd_final_flags fields. */
 {
    parse_block *search;
@@ -2684,8 +2689,8 @@ Private long_boolean get_real_subcall(
    else if (parseptr->concept->kind != marker_end_of_list)
       fail("wrong marker in get_real_subcall???");
 
-   if ((*the_callback_block.do_subcall_query_fn)
-       (snumber, parseptr, newsearch, this_is_tagger, this_is_tagger_circcer, orig_call))
+   if (do_subcall_query(snumber, parseptr, newsearch,
+                        this_is_tagger, this_is_tagger_circcer, orig_call))
       goto ret_false;
 
    cmd_out->parseptr = (*newsearch)->subsidiary_root;
@@ -2703,7 +2708,7 @@ Private long_boolean get_real_subcall(
 }
 
 
-Private void divide_diamonds(setup *ss, setup *result)
+static void divide_diamonds(setup *ss, setup *result) THROW_DECL
 {
    uint32 ii;
 
@@ -2898,7 +2903,7 @@ extern uint32 process_new_fractions(
    uint32 incoming_fracs,
    uint32 reverse_orderbit,   /* Low bit on mean treat as if we mean "do the last M/N". */
    long_boolean allow_improper,
-   long_boolean *improper_p)
+   long_boolean *improper_p) THROW_DECL
 {
    int s_numer, s_denom, e_numer, e_denom, divisor;
 
@@ -2951,7 +2956,7 @@ extern void get_fraction_info(
    uint32 frac_flags,
    uint32 callflags1,
    int total,
-   fraction_info *zzz)
+   fraction_info *zzz) THROW_DECL
 {
    int e_numer, e_denom, s_numer, s_denom, this_part, divisor, test_num;
    int subcall_index, highlimit;
@@ -3315,7 +3320,7 @@ extern void get_fraction_info(
    that is an error.  But if we are only doing this because the automatic active phantoms
    switch is on, we will just ignore it. */
 
-extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result)
+extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL
 {
    int i;
 
@@ -3337,7 +3342,7 @@ extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result)
 
 
 
-extern void move_perhaps_with_active_phantoms(setup *ss, setup *result)
+extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL
 {
    if (using_active_phantoms) {
       if (fill_active_phantoms_and_move(ss, result)) {
@@ -3357,7 +3362,7 @@ extern void move_perhaps_with_active_phantoms(setup *ss, setup *result)
 
 
 
-extern void impose_assumption_and_move(setup *ss, setup *result)
+extern void impose_assumption_and_move(setup *ss, setup *result) THROW_DECL
 {
    if (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
       assumption_thing t;
@@ -3391,6 +3396,7 @@ extern void impose_assumption_and_move(setup *ss, setup *result)
       case CMD_MISC__VERIFY_REAL_3_4_LINE: t.assumption = cr_real_3_4_line; break;
       case CMD_MISC__VERIFY_LINES:         t.assumption = cr_all_ns;        break;
       case CMD_MISC__VERIFY_COLS:          t.assumption = cr_all_ew;        break;
+      case CMD_MISC__VERIFY_TALL6: t.assumption = cr_tall6; t.assump_col = 1; break;
       default:
          fail("Unknown assumption verify code.");
       }
@@ -3411,7 +3417,7 @@ static void do_sequential_call(
    Const callspec_block *callspec,
    long_boolean qtfudged,
    long_boolean *mirror_p,
-   setup *result)
+   setup *result) THROW_DECL
 {
    int fetch_index;
    int dist_index;
@@ -4087,7 +4093,7 @@ done_with_big_cycle:
 
 
 // Check for a schema that we weren't sure about, and fix it up, using the specified modifiers.
-Private calldef_schema fixup_conc_schema(Const callspec_block *callspec, setup *ss)
+static calldef_schema fixup_conc_schema(Const callspec_block *callspec, setup *ss) THROW_DECL
 {
    calldef_schema the_schema = callspec->schema;
    uint32 herit_concepts = ss->cmd.cmd_final_flags.her8it;
@@ -4243,19 +4249,370 @@ Private calldef_schema fixup_conc_schema(Const callspec_block *callspec, setup *
 }
 
 
-/* This leaves the split axis result bits in absolute orientation. */
+long_boolean do_misc_schema(
+   setup *ss,
+   calldef_schema the_schema,
+   callspec_block *callspec,
+   uint32 callflags1,
+   setup_command *foo1p,
+   selector_kind *special_selectorp,
+   uint32 *special_modifiersp,
+   selective_key *special_indicatorp,
+   setup *result) THROW_DECL
+{
+   setup_command foo2;
+   Const by_def_item *innerdef = &callspec->stuff.conc.innerdef;
+   Const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
+   parse_block *parseptr = ss->cmd.parseptr;
 
-Private void move_with_real_call(
+   /* Must be some form of concentric, or a "sel_XXX" schema. */
+
+   switch (the_schema) {
+   case schema_single_concentric_together:
+   case schema_select_original_rims:
+   case schema_select_original_hubs:
+   case schema_single_concentric:
+   case schema_select_ctr2:
+   case schema_select_ctr4:
+   case schema_select_ctr6:
+   case schema_select_who_can:
+   case schema_select_who_did:
+   case schema_select_who_didnt:
+      break;
+   default:
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
+         fail("Can't split this call.");
+      break;
+   }
+
+   (void) get_real_subcall(parseptr, innerdef,
+                           &ss->cmd, callspec, foo1p);
+
+   (void) get_real_subcall(parseptr, outerdef,
+                           &ss->cmd, callspec, &foo2);
+
+   foo1p->cmd_frac_flags = ss->cmd.cmd_frac_flags;
+   foo2.cmd_frac_flags = ss->cmd.cmd_frac_flags;
+
+   if (the_schema == schema_select_leads) {
+      inner_selective_move(ss, foo1p, &foo2,
+                           selective_key_plain, TRUE, 0, 0,
+                           selector_leads,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
+   else if (the_schema == schema_select_headliners) {
+      inner_selective_move(ss, foo1p, &foo2,
+                           selective_key_plain, TRUE, 0, 0x80000008UL,
+                           selector_uninitialized,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
+   else if (the_schema == schema_select_sideliners) {
+      inner_selective_move(ss, foo1p, &foo2,
+                           selective_key_plain, TRUE, 0, 0x80000001UL,
+                           selector_uninitialized,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
+   else if (the_schema == schema_select_ctr2 || the_schema == schema_select_ctr4) {
+      if ((ss->kind == s2x4 &&
+           !(ss->people[1].id1 | ss->people[2].id1 |
+             ss->people[5].id1 | ss->people[6].id1)) ||
+          (ss->kind == s2x6 &&
+           !(ss->people[2].id1 | ss->people[3].id1 |
+             ss->people[8].id1 | ss->people[9].id1))) {
+         *result = *ss;
+      }
+      else {
+         /* We have to do this -- the schema means the *current* centers. */
+         update_id_bits(ss);
+         *special_selectorp = (the_schema == schema_select_ctr2) ?
+            selector_center2 : selector_center4;
+         *special_modifiersp = innerdef->modifiers1;
+         return TRUE;
+      }
+   }
+   else if (the_schema == schema_select_ctr6) {
+      /* We have to do this -- the schema means the *current* centers. */
+      update_id_bits(ss);
+      *special_selectorp = selector_center6;
+      *special_modifiersp = innerdef->modifiers1;
+      return TRUE;
+   }
+   else if (the_schema == schema_select_who_can) {
+      uint32 resultmask = 0xFFFFFF;   // Everyone.
+      switch (ss->kind) {
+      case sdmd: resultmask = 0xA; break;
+      case s_short6: resultmask = 055; break;
+      case s_2x1dmd: resultmask = 033; break;
+      case s_qtag:
+         // If this is like diamonds, only the centers hinge.
+         // If it is like a 1/4 tag, everyone does.
+         if ((ss->people[0].id1 | ss->people[1].id1 |
+              ss->people[4].id1 | ss->people[5].id1) & 1)
+            resultmask = 0xCC;
+         break;
+      case s3x1dmd: resultmask = 0x77; break;
+      case s_spindle: resultmask = 0x77; break;
+      case s_hrglass: resultmask = 0x88; break;
+      case s_dhrglass: resultmask = 0xBB; break;
+      case s_ptpd: resultmask = 0xEE; break;
+      case s_galaxy: resultmask = 0xAA; break;
+      }
+      inner_selective_move(ss, foo1p, (setup_command *) 0,
+                           selective_key_plain, FALSE, 0, resultmask,
+                           selector_uninitialized,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
+   else if (the_schema == schema_select_who_did) {
+      uint32 result_mask = 0;
+      int i, j;
+
+      for (i=0,j=1; i<=setup_attrs[ss->kind].setup_limits; i++,j<<=1) {
+         if (ss->people[i].id1 & (ROLLBITL | ROLLBITR)) result_mask |= j;
+      }
+
+      inner_selective_move(ss, foo1p, (setup_command *) 0,
+                           selective_key_plain, FALSE, 0, result_mask,
+                           selector_uninitialized,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
+   else if (the_schema == schema_select_who_didnt) {
+      uint32 sourcemask = 0;
+      uint32 resultmask = 0xFFFFFF;   // Everyone.
+      int i, j;
+
+      for (i=0,j=1; i<=setup_attrs[ss->kind].setup_limits; i++,j<<=1) {
+         if (ss->people[i].id1 & (ROLLBITL | ROLLBITR)) sourcemask |= j;
+      }
+
+      switch (ss->kind) {
+      case s1x4:
+         if (sourcemask == 0xA) resultmask = 0xF;
+         else resultmask = 0xA;
+         break;
+      case s1x8:
+         if (sourcemask == 0xEE) resultmask = 0xFF;
+         else resultmask = 0xEE;
+         break;
+      case s1x6:
+         if (sourcemask == 066) resultmask = 077;
+         else resultmask = 066;
+         break;
+      case s2x4:
+         if (sourcemask == 0x66) resultmask = 0xFF;
+         else resultmask = 0x66;
+         break;
+      case s_qtag:
+         if (sourcemask == 0x88) resultmask = 0xCC;
+         else resultmask = 0x88;
+         break;
+         /*
+      case s_2x1dmd: resultmask = 033; break;
+      case s3x1dmd: resultmask = 0x77; break;
+      case s_spindle: resultmask = 0x77; break;
+      case s_hrglass: resultmask = 0x88; break;
+      case s_dhrglass: resultmask = 0xBB; break;
+      case s_ptpd: resultmask = 0xEE; break;
+      case s_galaxy: resultmask = 0xAA; break;
+         */
+      default: fail("Can't do this call from this setup.");
+      }
+
+      inner_selective_move(ss, foo1p, (setup_command *) 0,
+                           selective_key_plain, FALSE, 0, resultmask,
+                           selector_uninitialized,
+                           innerdef->modifiers1,
+                           outerdef->modifiers1,
+                           result);
+   }
+   else if (the_schema == schema_select_original_rims) {
+      *special_selectorp = selector_ends;
+      *special_modifiersp = innerdef->modifiers1;
+      *special_indicatorp = selective_key_plain_from_id_bits;
+      return TRUE;
+   }
+   else if (the_schema == schema_select_original_hubs) {
+      *special_selectorp = selector_centers;
+      *special_modifiersp = innerdef->modifiers1;
+      *special_indicatorp = selective_key_plain_from_id_bits;
+      return TRUE;
+   }
+   else {
+      int i;
+      int rot = 0;
+      long_boolean normalize_strongly = FALSE;
+      warning_info saved_warnings = history[history_ptr+1].warnings;
+
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the
+                                                                   right thing to do. */
+      /* Fudge a 3x4 into a 1/4-tag if appropriate. */
+
+      if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+          (the_schema == schema_concentric ||
+           the_schema == schema_cross_concentric ||
+           the_schema == schema_conc_o)) {
+
+         if (ss->people[0].id1) {
+            if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+         }
+         else (void) copy_person(ss, 0, ss, 1);
+
+         if (ss->people[3].id1) {
+            if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+            else (void) copy_person(ss, 1, ss, 3);
+         }
+         else (void) copy_person(ss, 1, ss, 2);
+
+         (void) copy_person(ss, 2, ss, 4);
+         (void) copy_person(ss, 3, ss, 5);
+
+         if (ss->people[6].id1) {
+            if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+            else (void) copy_person(ss, 4, ss, 6);
+         }
+         else (void) copy_person(ss, 4, ss, 7);
+
+         if (ss->people[9].id1) {
+            if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+            else (void) copy_person(ss, 5, ss, 9);
+         }
+         else (void) copy_person(ss, 5, ss, 8);
+
+         (void) copy_person(ss, 6, ss, 10);
+         (void) copy_person(ss, 7, ss, 11);
+
+         ss->kind = s_qtag;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+      }
+      else if (ss->kind == s_qtag &&
+               (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+               (the_schema == schema_in_out_triple ||
+                the_schema == schema_in_out_triple_squash)) {
+         /* Or change from qtag to 3x4 if schema requires same. */
+         (void) copy_person(ss, 11, ss, 7);
+         (void) copy_person(ss, 10, ss, 6);
+         (void) copy_person(ss, 8, ss, 5);
+         (void) copy_person(ss, 7, ss, 4);
+         (void) copy_person(ss, 5, ss, 3);
+         (void) copy_person(ss, 4, ss, 2);
+         (void) copy_person(ss, 2, ss, 1);
+         (void) copy_person(ss, 1, ss, 0);
+         clear_person(ss, 0);
+         clear_person(ss, 3);
+         clear_person(ss, 6);
+         clear_person(ss, 9);
+
+         ss->kind = s3x4;
+      }
+
+      switch (the_schema) {
+      case schema_in_out_triple_squash:
+      case schema_in_out_triple:
+      case schema_in_out_quad:
+         normalize_strongly = TRUE;
+   
+         if (ss->kind == s2x4)
+            do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
+   
+         if (ss->kind == s4x4) {
+   
+            /* We need to orient the setup so that it is vertical with respect
+               to the way we want to pick out the outer 1x4's. */
+   
+            uint32 t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
+            uint32 t2 = ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1;
+   
+            if (t1 && !t2)      rot = 1;              /* It has to be left-to-right. */
+            else if (t2 && !t1) ;                     /* It has to be top-to-bottom. */
+            else if (t2 && t1) fail("Can't pick out outside lines.");
+            else {
+               /* This "O" spots are unoccupied.  Try to figure it out from the orientation of the
+                  people in the corners, so that we have lines. */
+               uint32 t3 = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
+               if ((t3 & 011) == 011) fail("Can't pick out outside lines.");
+               else if (t3 & 1)        rot = 1;
+               /* Otherwise, it either needs a vertical orientaion, or only the center 2x2 is occupied,
+                  in which case it doesn't matter. */
+            }
+   
+            ss->rotation += rot;
+            canonicalize_rotation(ss);
+         }
+         break;
+      case schema_3x3_concentric:
+         if (!(TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) &&
+             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))
+            fail("You must specify a matrix.");
+
+         if (ss->kind == s2x6)
+            do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, FALSE);
+         else
+            do_matrix_expansion(ss, CONCPROP__NEEDK_3X4_D3X4, FALSE);
+
+         break;
+      case schema_4x4_lines_concentric:
+      case schema_4x4_cols_concentric:
+         if (!(TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) &&
+             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))
+            fail("You must specify a matrix.");
+
+         if (ss->kind == s2x4)
+            do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
+
+         break;
+      }
+
+      concentric_move(
+                      ss, foo1p, &foo2,
+                      the_schema,
+                      innerdef->modifiers1,
+                      outerdef->modifiers1,
+                      TRUE,
+                      result);
+
+      result->rotation -= rot;   /* Flip the setup back. */
+
+      /* If we expanded a 2x2 to a 4x4 and then chose an orientation at random,
+         that orientation may have gotten frozen into a 2x4.  Cut it back to
+         just the center 4, so that the illegal information won't affect anything. */
+
+      if (normalize_strongly)
+         normalize_setup(result, normalize_after_triple_squash);
+
+      if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
+         for (i=0 ; i<WARNING_WORDS ; i++)
+            history[history_ptr+1].warnings.bits[i] &= ~conc_elong_warnings.bits[i];
+      }
+      for (i=0 ; i<WARNING_WORDS ; i++)
+         history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
+   }
+
+   return FALSE;
+}
+
+
+
+// This leaves the split axis result bits in absolute orientation.
+
+static void move_with_real_call(
    setup *ss,
    long_boolean qtfudged,
-   setup *result)
+   setup *result) THROW_DECL
 {
    uint32 tbonetest;
    uint32 imprecise_rotation_result_flag = 0;
    uint32 unaccepted_flags;
    calldef_schema the_schema;
    setup_command foo1;
-   setup_command foo2;
    long_boolean mirror;
    long_boolean did_4x4_expansion = FALSE;
    uint32 force_split = 0;      /* 1 means force split,
@@ -4422,30 +4779,33 @@ that probably need to be put in. */
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
       switch (the_schema) {
-         case schema_sequential:
-         case schema_sequential_with_fraction:
-         case schema_sequential_with_split_1x8_id:
-         case schema_concentric:
-         case schema_concentric_2_6:
-         case schema_conc_o:
-         case schema_select_ctr2:
-         case schema_select_ctr4:
-         case schema_select_ctr6:
-         case schema_single_concentric:
-         case schema_single_concentric_together:
-         case schema_select_original_rims:
-         case schema_select_original_hubs:
-         case schema_cross_concentric:
-         case schema_single_cross_concentric:
-         case schema_concentric_or_diamond_line:
-         case schema_concentric_6p:
-         case schema_concentric_6p_or_sgltogether:
-         case schema_concentric_6p_or_normal:
-         case schema_cross_concentric_6p_or_normal:
-         case schema_by_array:
-            break;
-         default:
-            fail("Can't do \"central/snag/mystic\" with this call.");
+      case schema_sequential:
+      case schema_sequential_with_fraction:
+      case schema_sequential_with_split_1x8_id:
+      case schema_concentric:
+      case schema_concentric_2_6:
+      case schema_conc_o:
+      case schema_select_ctr2:
+      case schema_select_ctr4:
+      case schema_select_ctr6:
+      case schema_select_who_can:
+      case schema_select_who_did:
+      case schema_select_who_didnt:
+      case schema_single_concentric:
+      case schema_single_concentric_together:
+      case schema_select_original_rims:
+      case schema_select_original_hubs:
+      case schema_cross_concentric:
+      case schema_single_cross_concentric:
+      case schema_concentric_or_diamond_line:
+      case schema_concentric_6p:
+      case schema_concentric_6p_or_sgltogether:
+      case schema_concentric_6p_or_normal:
+      case schema_cross_concentric_6p_or_normal:
+      case schema_by_array:
+         break;
+      default:
+         fail("Can't do \"central/snag/mystic\" with this call.");
       }
    }
 
@@ -4794,9 +5154,12 @@ that probably need to be put in. */
       cause splitting to take place. */
 
    if (the_schema == schema_split_sequential) {
+      uint32 nxnflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK;
+      uint32 mxnflags = ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK;
+
       if (setup_attrs[ss->kind].setup_limits == 7) {
-         if ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_3X3 &&
-             (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) != INHERITFLAGNXNK_4X4 &&
+         if (nxnflags != INHERITFLAGNXNK_3X3 &&
+             nxnflags != INHERITFLAGNXNK_4X4 &&
              !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
             if (ss->rotation & 1)
                ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
@@ -4805,8 +5168,7 @@ that probably need to be put in. */
          }
       }
       else if (setup_attrs[ss->kind].setup_limits == 11 &&
-               ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_1X3 ||
-                (ss->cmd.cmd_final_flags.her8it & INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X1)) {
+               (mxnflags == INHERITFLAGMXNK_1X3 || mxnflags == INHERITFLAGMXNK_3X1)) {
          if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
             if (ss->rotation & 1)
                ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
@@ -4814,15 +5176,17 @@ that probably need to be put in. */
                ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
          }
       }
-      else if ((setup_attrs[ss->kind].setup_limits == 11 &&
-                ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_3X3)) ||
-               (setup_attrs[ss->kind].setup_limits == 15 &&
-                ((ss->cmd.cmd_final_flags.her8it & INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_4X4)))
+      else if ((setup_attrs[ss->kind].setup_limits == 11 && nxnflags == INHERITFLAGNXNK_3X3) ||
+               (setup_attrs[ss->kind].setup_limits == 15 && nxnflags == INHERITFLAGNXNK_4X4) ||
+               (setup_attrs[ss->kind].setup_limits == 5 && nxnflags == INHERITFLAGNXNK_3X3))
          ;    /* No action. */
-      /* This used to just bypass 3.  It now bypasses 1 in order to get disband to work in a bone6. */
-      else if (setup_attrs[ss->kind].setup_limits != 3 && setup_attrs[ss->kind].setup_limits != 1) {
 
-         /* If this is a 3x4 or 4x4 inhabited in boxes, we allow the splitting into those boxes. */
+      // This used to just bypass 3.  It now bypasses 1 in order to get
+      // disband to work in a bone6.
+      else if (setup_attrs[ss->kind].setup_limits != 3 &&
+               setup_attrs[ss->kind].setup_limits != 1) {
+
+         // If this is a 3x4 or 4x4 inhabited in boxes, we allow the splitting into those boxes.
 
          int i, j;
          uint32 mask = 0;
@@ -4833,13 +5197,15 @@ that probably need to be put in. */
 
          if (ss->kind == s3x4) {
             if (mask == 0xF3C || mask == 0xCF3)
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;    /* ****** This needs to be looked at */
+               // ****** This needs to be looked at.
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
             else
                fail("Can't split this setup.");
          }
          else if (ss->kind == s4x4) {
             if (mask == 0x4B4B || mask == 0xB4B4)
-               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;    /* ****** This needs to be looked at */
+               // ****** This needs to be looked at.
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
             else
                fail("Can't split this setup.");
          }
@@ -4937,8 +5303,8 @@ that probably need to be put in. */
           ss->cmd.cmd_final_flags.final)
          fail("Illegal concept for this call.");
       *result = *ss;
-      /* This call is a 1-person call, so it can be presumed
-         to have split maximally both ways. */
+      // This call is a 1-person call, so it can be presumed
+      // to have split maximally both ways.
       result->result_flags =
          (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_FIELDMASK;
       break;
@@ -5174,252 +5540,13 @@ that probably need to be put in. */
             }
          }
       }
-      else {
-         Const by_def_item *innerdef = &callspec->stuff.conc.innerdef;
-         Const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
-         parse_block *parseptr = ss->cmd.parseptr;
-
-         /* Must be some form of concentric, or a "sel_XXX" schema. */
-
-         switch (the_schema) {
-         case schema_single_concentric_together:
-         case schema_select_original_rims:
-         case schema_select_original_hubs:
-         case schema_single_concentric:
-         case schema_select_ctr2:
-         case schema_select_ctr4:
-         case schema_select_ctr6:
-            break;
-         default:
-            if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
-               fail("Can't split this call.");
-            break;
-         }
-
-         (void) get_real_subcall(parseptr, innerdef,
-                                 &ss->cmd, callspec, &foo1);
-
-         (void) get_real_subcall(parseptr, outerdef,
-                                 &ss->cmd, callspec, &foo2);
-
-         foo1.cmd_frac_flags = ss->cmd.cmd_frac_flags;
-         foo2.cmd_frac_flags = ss->cmd.cmd_frac_flags;
-
-         if (the_schema == schema_select_leads) {
-            inner_selective_move(ss, &foo1, &foo2,
-                                 selective_key_plain, TRUE, 0, 0,
-                                 selector_leads,
-                                 innerdef->modifiers1,
-                                 outerdef->modifiers1,
-                                 result);
-         }
-         else if (the_schema == schema_select_headliners) {
-            inner_selective_move(ss, &foo1, &foo2,
-                                 selective_key_plain, TRUE, 0, 0x80000008UL,
-                                 selector_uninitialized,
-                                 innerdef->modifiers1,
-                                 outerdef->modifiers1,
-                                 result);
-         }
-         else if (the_schema == schema_select_sideliners) {
-            inner_selective_move(ss, &foo1, &foo2,
-                                 selective_key_plain, TRUE, 0, 0x80000001UL,
-                                 selector_uninitialized,
-                                 innerdef->modifiers1,
-                                 outerdef->modifiers1,
-                                 result);
-         }
-         else if (the_schema == schema_select_ctr2 || the_schema == schema_select_ctr4) {
-            if ((ss->kind == s2x4 &&
-                 !(ss->people[1].id1 | ss->people[2].id1 |
-                   ss->people[5].id1 | ss->people[6].id1)) ||
-                (ss->kind == s2x6 &&
-                 !(ss->people[2].id1 | ss->people[3].id1 |
-                   ss->people[8].id1 | ss->people[9].id1))) {
-               *result = *ss;
-            }
-            else {
-               /* We have to do this -- the schema means the *current* centers. */
-               update_id_bits(ss);
-               special_selector = (the_schema == schema_select_ctr2) ?
-                                    selector_center2 : selector_center4;
-               special_modifiers = innerdef->modifiers1;
-               goto do_special_select_stuff;
-            }
-         }
-         else if (the_schema == schema_select_ctr6) {
-            /* We have to do this -- the schema means the *current* centers. */
-            update_id_bits(ss);
-            special_selector = selector_center6;
-            special_modifiers = innerdef->modifiers1;
+      else
+         if (do_misc_schema(ss, the_schema, callspec, callflags1, &foo1, &special_selector,
+                            &special_modifiers, &special_indicator, result))
             goto do_special_select_stuff;
-         }
-         else if (the_schema == schema_select_original_rims) {
-            special_selector = selector_ends;
-            special_modifiers = innerdef->modifiers1;
-            special_indicator = selective_key_plain_from_id_bits;
-            goto do_special_select_stuff;
-         }
-         else if (the_schema == schema_select_original_hubs) {
-            special_selector = selector_centers;
-            special_modifiers = innerdef->modifiers1;
-            special_indicator = selective_key_plain_from_id_bits;
-            goto do_special_select_stuff;
-         }
-         else {
-            int i;
-            int rot = 0;
-            long_boolean normalize_strongly = FALSE;
-            warning_info saved_warnings = history[history_ptr+1].warnings;
 
-            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the
-                                                                         right thing to do. */
-            /* Fudge a 3x4 into a 1/4-tag if appropriate. */
-
-            if (ss->kind == s3x4 && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                (the_schema == schema_concentric ||
-                 the_schema == schema_cross_concentric ||
-                 the_schema == schema_conc_o)) {
-
-               if (ss->people[0].id1) {
-                  if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-               }
-               else (void) copy_person(ss, 0, ss, 1);
-
-               if (ss->people[3].id1) {
-                  if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-                  else (void) copy_person(ss, 1, ss, 3);
-               }
-               else (void) copy_person(ss, 1, ss, 2);
-
-               (void) copy_person(ss, 2, ss, 4);
-               (void) copy_person(ss, 3, ss, 5);
-
-               if (ss->people[6].id1) {
-                  if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-                  else (void) copy_person(ss, 4, ss, 6);
-               }
-               else (void) copy_person(ss, 4, ss, 7);
-
-               if (ss->people[9].id1) {
-                  if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-                  else (void) copy_person(ss, 5, ss, 9);
-               }
-               else (void) copy_person(ss, 5, ss, 8);
-
-               (void) copy_person(ss, 6, ss, 10);
-               (void) copy_person(ss, 7, ss, 11);
-
-               ss->kind = s_qtag;
-               ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-            }
-            else if (ss->kind == s_qtag &&
-                     (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                     (the_schema == schema_in_out_triple ||
-                      the_schema == schema_in_out_triple_squash)) {
-               /* Or change from qtag to 3x4 if schema requires same. */
-               (void) copy_person(ss, 11, ss, 7);
-               (void) copy_person(ss, 10, ss, 6);
-               (void) copy_person(ss, 8, ss, 5);
-               (void) copy_person(ss, 7, ss, 4);
-               (void) copy_person(ss, 5, ss, 3);
-               (void) copy_person(ss, 4, ss, 2);
-               (void) copy_person(ss, 2, ss, 1);
-               (void) copy_person(ss, 1, ss, 0);
-               clear_person(ss, 0);
-               clear_person(ss, 3);
-               clear_person(ss, 6);
-               clear_person(ss, 9);
-
-               ss->kind = s3x4;
-            }
-
-            switch (the_schema) {
-            case schema_in_out_triple_squash:
-            case schema_in_out_triple:
-            case schema_in_out_quad:
-               normalize_strongly = TRUE;
-   
-               if (ss->kind == s2x4)
-                  do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
-   
-               if (ss->kind == s4x4) {
-   
-                  /* We need to orient the setup so that it is vertical with respect
-                     to the way we want to pick out the outer 1x4's. */
-   
-                  uint32 t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
-                  uint32 t2 = ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1;
-   
-                  if (t1 && !t2)      rot = 1;              /* It has to be left-to-right. */
-                  else if (t2 && !t1) ;                     /* It has to be top-to-bottom. */
-                  else if (t2 && t1) fail("Can't pick out outside lines.");
-                  else {
-                     /* This "O" spots are unoccupied.  Try to figure it out from the orientation of the
-                        people in the corners, so that we have lines. */
-                     uint32 t3 = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
-                     if ((t3 & 011) == 011) fail("Can't pick out outside lines.");
-                     else if (t3 & 1)        rot = 1;
-                     /* Otherwise, it either needs a vertical orientaion, or only the center 2x2 is occupied,
-                        in which case it doesn't matter. */
-                  }
-   
-                  ss->rotation += rot;
-                  canonicalize_rotation(ss);
-               }
-               break;
-            case schema_3x3_concentric:
-               if (!(TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_12_MATRIX)) &&
-                   !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))
-                  fail("You must specify a matrix.");
-
-               if (ss->kind == s2x6)
-                  do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, FALSE);
-               else
-                  do_matrix_expansion(ss, CONCPROP__NEEDK_3X4_D3X4, FALSE);
-
-               break;
-            case schema_4x4_lines_concentric:
-            case schema_4x4_cols_concentric:
-               if (!(TEST_HERITBITS(ss->cmd.cmd_final_flags,INHERITFLAG_16_MATRIX)) &&
-                   !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))
-                  fail("You must specify a matrix.");
-
-               if (ss->kind == s2x4)
-                  do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
-
-               break;
-            }
-
-            concentric_move(
-                            ss, &foo1, &foo2,
-                            the_schema,
-                            innerdef->modifiers1,
-                            outerdef->modifiers1,
-                            TRUE,
-                            result);
-
-            result->rotation -= rot;   /* Flip the setup back. */
-
-               /* If we expanded a 2x2 to a 4x4 and then chose an orientation at random,
-                  that orientation may have gotten frozen into a 2x4.  Cut it back to
-                  just the center 4, so that the illegal information won't affect anything. */
-
-            if (normalize_strongly)
-               normalize_setup(result, normalize_after_triple_squash);
-
-            if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
-               for (i=0 ; i<WARNING_WORDS ; i++)
-                  history[history_ptr+1].warnings.bits[i] &= ~conc_elong_warnings.bits[i];
-            }
-            for (i=0 ; i<WARNING_WORDS ; i++)
-               history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
-         }
-      }
       break;
    }
-
-
 
    // If the setup expanded from an 8-person setup to a "bigdmd", and we can
    // compress it back, do so.  This takes care of certain type of "triple diamonds
@@ -5515,10 +5642,9 @@ that probably need to be put in. */
 extern void move(
    setup *ss,
    long_boolean qtfudged,
-   setup *result)
+   setup *result) THROW_DECL
 {
    parse_block *saved_magic_diamond;
-   uint64 check_concepts;
    parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
    uint64 save_incoming_final;
@@ -5748,35 +5874,87 @@ extern void move(
          return;
       }
 
+      ss->cmd.parseptr = parseptrcopy;
+      result->result_flags = 0;
+
+      /* Most concepts simply have no understanding of, or tolerance for, modifiers
+         like "interlocked" in front of them.  So, in the general case, we check for
+         those modifiers and raise an error if any are on.  Hence, most of the concept
+         procedures don't check for these modifiers, we guarantee that they are off.
+         (There are other modifiers bits than those listed here.  They are never
+         tolerated under any circumstances by any concept, and have already been
+         checked.)
+
+         Now there are two contexts in which we allow modifiers:
+
+         Some concepts (e.g. [reverse] crazy) are explictly coded to allow,
+         and check for, modifier bits.  Those are marked with the
+         "CONCPROP__PERMIT_MODIFIERS" bit.  For those concepts, we don't do
+         the check, and the concept code is responsible for being sure that
+         everything is legal.
+
+         Some concepts (e.g. [interlocked] phantom lines) desire to allow the
+         user to type a modifier on one line and then enter another concept,
+         and have us figure out what concept was really chosen.  To handle
+         these, we look through a table of such pairs. */
+
+         /* If "CONCPROP__PERMIT_MODIFIERS" is on, let anything pass. */
+
+      parse_block artificial_parse_block;
+
+      uint32 extraheritmods = ss->cmd.cmd_final_flags.her8it &
+         (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|
+          INHERITFLAG_SINGLE|INHERITFLAG_INTLK|INHERITFLAG_DIAMOND);
+      uint32 extrafinalmods = ss->cmd.cmd_final_flags.final & FINAL__SPLIT;
+
+      if (extraheritmods | extrafinalmods) {
+         /* This can only be legal if we find a translation in the table. */
+
+         concept_fixer_thing *p;
+
+         for (p=concept_fixer_table ; p->newheritmods | p->newfinalmods ; p++) {
+            if (p->newheritmods == extraheritmods && p->newfinalmods == extrafinalmods &&
+                &concept_descriptor_table[p->before] == ss->cmd.parseptr->concept) {
+               artificial_parse_block = *ss->cmd.parseptr;
+               artificial_parse_block.concept = &concept_descriptor_table[p->after];
+               ss->cmd.parseptr = &artificial_parse_block;
+               parseptrcopy = ss->cmd.parseptr;
+               ss->cmd.cmd_final_flags.her8it &= ~extraheritmods;   /* Take out those mods. */
+               ss->cmd.cmd_final_flags.final &= ~extrafinalmods;
+               goto found_new_concept;
+            }
+         }
+      }
+
+   found_new_concept: ;
+
       /* These are the concepts that we are interested in. */
 
+      uint64 check_concepts;
       check_concepts = ss->cmd.cmd_final_flags;
       check_concepts.final &= ~FINAL__MUST_BE_TAG;
 
-      result->result_flags = 0;
+      // If concept does not accept "magic" or "interlocked", we have to take
+      // such modifiers seriously, and divide the setup magically.
+      // Otherwise, we just do the concept.
+      uint32 foobar = 0;
+      uint32 fooble = 0;
 
-      // ***** We used to have FINAL__SPLIT in the list below, but it caused
-      // "matrix split, tandem step thru" to fail.
-      // This needs to be reworked.
+      if (!(concept_table[ss->cmd.parseptr->concept->kind].concept_prop &
+          CONCPROP__PERMIT_MODIFIERS)) {
+         foobar = INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
+            INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_REVERSE;
+         fooble = ~0UL;
 
-      if (((check_concepts.her8it &
-            (INHERITFLAG_DIAMOND | INHERITFLAG_MAGIC |
-             INHERITFLAG_HALF | INHERITFLAG_LASTHALF)) |
-           check_concepts.final) == 0) {
+         if (concept_table[ss->cmd.parseptr->concept->kind].concept_prop &
+             CONCPROP__PERMIT_REVERSE) {
+            foobar &= ~INHERITFLAG_REVERSE;
+         }
+      }
 
-         /* Look for virtual setup concept that can be done by dispatch from table,
-            with no intervening final concepts. */
+      // If there are no modifier bits that the concept can't accept, do the concept.
 
-         ss->cmd.parseptr = parseptrcopy;
-
-         /* We know that ss->callspec is null. */
-         /* ss->cmd.cmd_final_flags may contain
-            FINAL__MUST_BE_TAG and/or one of the modifiers (reverse/left/grand/cross/single)
-            listed above.  do_big_concept will take care of the latter. */
-
-         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)
-            remove_z_distortion(ss);
-
+      if (((check_concepts.her8it & foobar) | (check_concepts.final & fooble)) == 0) {
          if (do_big_concept(ss, result)) {
             canonicalize_rotation(result);
             return;

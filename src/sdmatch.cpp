@@ -30,6 +30,11 @@
    matcher_initialize
    matcher_setup_call_menu
    match_user_input
+and the following external variables:
+   concept_list
+   concept_list_length
+   level_concept_list
+   level_concept_list_length
 */
 
 /* #define TIMING */ /* uncomment to display timing information */
@@ -42,13 +47,13 @@
 #include <time.h>
 #endif
 
-#include "sdprog.h"
-#include "sdmatch.h"
-extern void start_sel_and_num_iterator();
-extern long_boolean iterate_over_sel_and_num(
-   long_boolean enable_selector_iteration,
-   long_boolean enable_number_iteration);
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
 
+#include "sd.h"
 
 
 modifier_block *fcn_key_table_normal[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
@@ -57,6 +62,7 @@ modifier_block *fcn_key_table_resolve[FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1];
 match_result user_match;
 
 long_boolean verify_has_stopped;
+match_state static_ss;
 
 /* Must be a power of 2. */
 #define NUM_NAME_HASH_BUCKETS 128
@@ -108,7 +114,6 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
 
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
-match_state static_ss;
 static match_result *current_result;
 static match_result everyones_real_result;
 
@@ -267,7 +272,7 @@ static int translate_keybind_spec(char key_name[])
 }
 
 
-extern void do_accelerator_spec(Cstring qq)
+SDLIB_API void do_accelerator_spec(Cstring qq)
 {
    char key_name[MAX_FILENAME_LENGTH];
    char junk_name[MAX_FILENAME_LENGTH];
@@ -295,7 +300,7 @@ extern void do_accelerator_spec(Cstring qq)
    }
 
    if (keybindcode < 0) {
-      uims_database_error("Bad format in key binding.", qq);
+      (*the_callback_block.uims_database_error_fn)("Bad format in key binding.", qq);
       return;
    }
 
@@ -341,14 +346,14 @@ extern void do_accelerator_spec(Cstring qq)
             something could just mean that it was a call off the list.  At C4X, we
             take it seriously.  So the initialization file should always be tested at C4X. */
          if (calling_level >= l_c4x)
-            uims_database_error("Didn't find target of key binding.", qq);
+            (*the_callback_block.uims_database_error_fn)("Didn't find target of key binding.", qq);
 
          return;
       }
 
       if (user_match.match.packed_next_conc_or_subcall ||
           user_match.match.packed_secondary_subcall) {
-         uims_database_error("Target of key binding is too complicated.", qq);
+         (*the_callback_block.uims_database_error_fn)("Target of key binding is too complicated.", qq);
          return;
       }
    }
@@ -365,16 +370,16 @@ extern void do_accelerator_spec(Cstring qq)
       table_thing = &fcn_key_table_normal[keybindcode-FCN_KEY_TAB_LOW];
    }
    else {
-      uims_database_error("Anomalous key binding.", qq);
+      (*the_callback_block.uims_database_error_fn)("Anomalous key binding.", qq);
       return;
    }
 
-   newthing = (modifier_block *) get_mem(sizeof(modifier_block));
+   newthing = (modifier_block *) (*the_callback_block.get_mem_fn)(sizeof(modifier_block));
    *newthing = user_match.match;
 
    if (*table_thing) {
       sprintf(errbuf, "Redundant key binding.");
-      uims_database_error(errbuf, qq);
+      (*the_callback_block.uims_database_error_fn)(errbuf, qq);
       return;
    }
 
@@ -423,7 +428,7 @@ static void hash_me(int bucket, int i)
 {
    call_hash_list_sizes[bucket]++;
    call_hash_lists[bucket] = (short *)
-      get_more_mem(call_hash_lists[bucket],
+      (*the_callback_block.get_more_mem_fn)(call_hash_lists[bucket],
                    call_hash_list_sizes[bucket] * sizeof(short));
    call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
 }
@@ -436,7 +441,7 @@ static void hash_me(int bucket, int i)
    should display for the user.
 */
 
-extern void matcher_initialize(void)
+SDLIB_API void matcher_initialize(void)
 {
    int i, j;
    int concept_number;
@@ -474,8 +479,8 @@ extern void matcher_initialize(void)
 
    /* create the concept lists */
 
-   concept_list = (int *) get_mem(sizeof(int) * concept_list_length);
-   level_concept_list = (int *) get_mem(sizeof(int) * level_concept_list_length);
+   concept_list = (int *) (*the_callback_block.get_mem_fn)(sizeof(int) * concept_list_length);
+   level_concept_list = (int *) (*the_callback_block.get_mem_fn)(sizeof(int) * level_concept_list_length);
 
    item = concept_list;
    level_item = level_concept_list;
@@ -505,22 +510,22 @@ extern void matcher_initialize(void)
 
       /* First, do the selectors.  Before that, be sure "<anyone>" is hashed. */
 
-      selector_hash_list = (short *) get_mem(sizeof(short));
+      selector_hash_list = (short *) (*the_callback_block.get_mem_fn)(sizeof(short));
       selector_hash_list_size = 1;
 
       if (!get_hash("<an", &bucket)) {
-         uims_database_error("Can't hash selector base!", (Cstring) 0);
-         exit_program(2);
+         (*the_callback_block.uims_database_error_fn)("Can't hash selector base!", (Cstring) 0);
+         (*the_callback_block.exit_program_fn)(2);
       }
 
       selector_hash_list[0] = bucket;
 
-      for (i=1; i<=last_selector_kind; i++) {
+      for (i=1; i<selector_enum_extent; i++) {
          if (!get_hash(selector_list[i].name, &bucket)) {
             char errbuf[255];
             sprintf(errbuf, "Can't hash selector %d - 1!", i);
-            uims_database_error(errbuf, (Cstring) 0);
-            exit_program(2);
+            (*the_callback_block.uims_database_error_fn)(errbuf, (Cstring) 0);
+            (*the_callback_block.exit_program_fn)(2);
          }
 
          /* See if this bucket is already accounted for. */
@@ -531,7 +536,7 @@ extern void matcher_initialize(void)
 
          selector_hash_list_size++;
          selector_hash_list = (short *)
-            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
+            (*the_callback_block.get_more_mem_fn)(selector_hash_list, selector_hash_list_size * sizeof(short));
          selector_hash_list[selector_hash_list_size-1] = bucket;
 
          /* Now do it again for the singular names. */
@@ -541,8 +546,8 @@ extern void matcher_initialize(void)
          if (!get_hash(selector_list[i].sing_name, &bucket)) {
             char errbuf[255];
             sprintf(errbuf, "Can't hash selector %d - 2!", i);
-            uims_database_error(errbuf, (Cstring) 0);
-            exit_program(2);
+            (*the_callback_block.uims_database_error_fn)(errbuf, (Cstring) 0);
+            (*the_callback_block.exit_program_fn)(2);
          }
 
          for (j=0; j<selector_hash_list_size; j++) {
@@ -551,7 +556,7 @@ extern void matcher_initialize(void)
 
          selector_hash_list_size++;
          selector_hash_list = (short *)
-            get_more_mem(selector_hash_list, selector_hash_list_size * sizeof(short));
+            (*the_callback_block.get_more_mem_fn)(selector_hash_list, selector_hash_list_size * sizeof(short));
          selector_hash_list[selector_hash_list_size-1] = bucket;
 
          already_in2: ;
@@ -559,12 +564,12 @@ extern void matcher_initialize(void)
 
       /* Next, do the taggers.  Before that, be sure "<atc>" is hashed. */
 
-      tagger_hash_list = (short *) get_mem(sizeof(short));
+      tagger_hash_list = (short *) (*the_callback_block.get_mem_fn)(sizeof(short));
       tagger_hash_list_size = 1;
 
       if (!get_hash("<at", &bucket)) {
-         uims_database_error("Can't hash tagger base!", (Cstring) 0);
-         exit_program(2);
+         (*the_callback_block.uims_database_error_fn)("Can't hash tagger base!", (Cstring) 0);
+         (*the_callback_block.exit_program_fn)(2);
       }
 
       tagger_hash_list[0] = bucket;
@@ -574,8 +579,8 @@ extern void matcher_initialize(void)
             if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
                char errbuf[255];
                sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
-               uims_database_error(errbuf, (Cstring) 0);
-               exit_program(2);
+               (*the_callback_block.uims_database_error_fn)(errbuf, (Cstring) 0);
+               (*the_callback_block.exit_program_fn)(2);
             }
    
             for (j=0; j<tagger_hash_list_size; j++) {
@@ -584,7 +589,7 @@ extern void matcher_initialize(void)
    
             tagger_hash_list_size++;
             tagger_hash_list = (short *)
-               get_more_mem(tagger_hash_list,
+               (*the_callback_block.get_more_mem_fn)(tagger_hash_list,
                             tagger_hash_list_size * sizeof(short));
             tagger_hash_list[tagger_hash_list_size-1] = bucket;
    
@@ -672,7 +677,7 @@ extern void matcher_initialize(void)
                bucket = selector_hash_list[j];
                conc_hash_list_sizes[bucket]++;
                conc_hash_lists[bucket] = (short *)
-                  get_more_mem(conc_hash_lists[bucket],
+                  (*the_callback_block.get_more_mem_fn)(conc_hash_lists[bucket],
                                conc_hash_list_sizes[bucket] * sizeof(short));
                conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
             }
@@ -681,7 +686,7 @@ extern void matcher_initialize(void)
          else if (get_hash(name, &bucket)) {
             conc_hash_list_sizes[bucket]++;
             conc_hash_lists[bucket] = (short *)
-               get_more_mem(conc_hash_lists[bucket],
+               (*the_callback_block.get_more_mem_fn)(conc_hash_lists[bucket],
                             conc_hash_list_sizes[bucket] * sizeof(short));
             conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
             continue;
@@ -692,7 +697,7 @@ extern void matcher_initialize(void)
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             conc_hash_list_sizes[bucket]++;
             conc_hash_lists[bucket] = (short *)
-               get_more_mem(conc_hash_lists[bucket],
+               (*the_callback_block.get_more_mem_fn)(conc_hash_lists[bucket],
                             conc_hash_list_sizes[bucket] * sizeof(short));
             conc_hash_lists[bucket][conc_hash_list_sizes[bucket]-1] = *item;
          }
@@ -712,7 +717,7 @@ extern void matcher_initialize(void)
                bucket = selector_hash_list[j];
                conclvl_hash_list_sizes[bucket]++;
                conclvl_hash_lists[bucket] = (short *)
-                  get_more_mem(conclvl_hash_lists[bucket],
+                  (*the_callback_block.get_more_mem_fn)(conclvl_hash_lists[bucket],
                                conclvl_hash_list_sizes[bucket] * sizeof(short));
                conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
             }
@@ -721,7 +726,7 @@ extern void matcher_initialize(void)
          else if (get_hash(name, &bucket)) {
             conclvl_hash_list_sizes[bucket]++;
             conclvl_hash_lists[bucket] = (short *)
-               get_more_mem(conclvl_hash_lists[bucket],
+               (*the_callback_block.get_more_mem_fn)(conclvl_hash_lists[bucket],
                             conclvl_hash_list_sizes[bucket] * sizeof(short));
             conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
             continue;
@@ -732,7 +737,7 @@ extern void matcher_initialize(void)
          for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
             conclvl_hash_list_sizes[bucket]++;
             conclvl_hash_lists[bucket] = (short *)
-               get_more_mem(conclvl_hash_lists[bucket],
+               (*the_callback_block.get_more_mem_fn)(conclvl_hash_lists[bucket],
                             conclvl_hash_list_sizes[bucket] * sizeof(short));
             conclvl_hash_lists[bucket][conclvl_hash_list_sizes[bucket]-1] = *item;
          }
@@ -742,7 +747,7 @@ extern void matcher_initialize(void)
 
 
 
-extern void matcher_setup_call_menu(call_list_kind cl)
+SDLIB_API void matcher_setup_call_menu(call_list_kind cl)
 {
 }
 
@@ -753,7 +758,7 @@ extern void matcher_setup_call_menu(call_list_kind cl)
 
 
 /* These variables are actually local to verify_call, but they are
-   expected to be preserved across the longjmp, so they must be static. */
+   expected to be preserved across the throw, so they must be static. */
 static parse_block *parse_mark;
 static call_list_kind savecl;
 
@@ -762,15 +767,14 @@ static call_list_kind savecl;
  * current context.
  */
 
-Private long_boolean verify_call(void)
+static long_boolean verify_call(void)
 {
    warning_info saved_warnings;
    int old_history_ptr;
-   long_boolean resultval;
-   real_jmp_buf my_longjmp_buffer;
+   long_boolean resultval = TRUE;
 
-   /* If we are not verifying, we return TRUE immediately,
-      thereby causing the item to be listed. */
+   // If we are not verifying, we return TRUE immediately,
+   // thereby causing the item to be listed.
 
    if (!GLOB_verify) return TRUE;
 
@@ -782,29 +786,9 @@ Private long_boolean verify_call(void)
    save_parse_state();
    savecl = parse_state.call_list_to_use;
 
-   /* Create a temporary error handler. */
-
-   longjmp_ptr = &my_longjmp_buffer;
-   if (setjmp(my_longjmp_buffer.the_buf)) {
-
-      /* A call failed.  If the call had some mandatory substitution, pass it anyway. */
-
-      if (mandatory_call_used) goto accept;
-
-      // Now try cycling the selector and number according to the
-      // complex formula used for initializing the database.
-
-      if (iterate_over_sel_and_num(verify_used_selector, verify_used_number))
-         goto try_another_selector;
-
-      goto try_again;
-   }
-
    start_sel_and_num_iterator();
 
-   try_another_selector:
-
-   /* Do the call.  An error will signal and go to try_again. */
+ try_another_selector:
 
    selector_used = FALSE;
    number_used = FALSE;
@@ -812,20 +796,22 @@ Private long_boolean verify_call(void)
    verify_used_number = FALSE;
    verify_used_selector = FALSE;
 
-   (void) restore_parse_state();
+   // Do the call.  An error will signal and go to failed.
 
-   {
+   try {
       long_boolean theres_a_call_in_here = FALSE;
       parse_block *save1 = (parse_block *) 0;
       modifier_block *anythings = &static_ss.result.match;
+
+      (void) restore_parse_state();
 
       /* This stuff is duplicated in uims_get_call_command in sdui-tty.c . */
 
       while (anythings) {
          call_conc_option_state save_stuff = static_ss.result.match.call_conc_options;
 
-         /* First, if we have already deposited a call, and we see more stuff, it must be
-            concepts or calls for an "anything" subcall. */
+            /* First, if we have already deposited a call, and we see more stuff, it must be
+               concepts or calls for an "anything" subcall. */
 
          if (save1) {
             parse_block *tt = get_parse_block();
@@ -843,13 +829,13 @@ Private long_boolean verify_call(void)
 
          if (anythings->kind == ui_call_select) {
             verify_options = anythings->call_conc_options;
-            if (deposit_call(anythings->call_ptr, &anythings->call_conc_options)) goto try_again;
+            if ((*the_callback_block.deposit_call_fn)(anythings->call_ptr, &anythings->call_conc_options)) goto failed;
             save1 = *parse_state.concept_write_ptr;
             theres_a_call_in_here = TRUE;
          }
          else if (anythings->kind == ui_concept_select) {
             verify_options = anythings->call_conc_options;
-            if (deposit_concept(anythings->concept_ptr)) goto try_again;
+            if ((*the_callback_block.deposit_concept_fn)(anythings->concept_ptr)) goto failed;
          }
          else break;   /* Huh? */
 
@@ -859,32 +845,38 @@ Private long_boolean verify_call(void)
 
       parse_state.call_list_to_use = savecl;         /* deposit_concept screwed it up */
 
-      /* If we didn't see a call, the user is just verifying
-         a string of concepts. Accept it. */
+         /* If we didn't see a call, the user is just verifying
+            a string of concepts. Accept it. */
 
       if (!theres_a_call_in_here) goto accept;
 
       /* If the parse stack is nenempty, a subsidiary call is needed and hasn't been filled in.
-         Therefore, the parse tree is incomplete.  We can print such parse trees, but we
-         can't execute them.  So we just assume the call works. */
+            Therefore, the parse tree is incomplete.  We can print such parse trees, but we
+            can't execute them.  So we just assume the call works. */
 
       if (parse_state.parse_stack_index != 0) goto accept;
+
+      toplevelmove();   // This might throw an error.
+      goto accept;
+   }
+   catch(error_flag_type) {
+      // A call failed.  If the call had some mandatory substitution, pass it anyway.
+
+      if (mandatory_call_used) goto accept;
+
+      // Or a bad choice of selector or number may be the cause.
+      // Try again with a different selector, until we run out of ideas.
+
+      if (iterate_over_sel_and_num(verify_used_selector, verify_used_number))
+         goto try_another_selector;
+
+      goto failed;
    }
 
-   toplevelmove(); /* does longjmp if error */
+   failed:
+      resultval = FALSE;
 
    accept:
-
-   resultval = TRUE;
-   goto foobar;
-
-   try_again:
-
-   resultval = FALSE;
-
-   foobar:
-
-   longjmp_ptr = &longjmp_buffer;    /* restore the global error handler */
 
    (void) restore_parse_state();
    release_parse_blocks_to_mark(parse_mark);
@@ -926,7 +918,7 @@ Private void copy_sublist(Const match_result *outbar, modifier_block *tails)
          modifier_inactive_list = out->gc_ptr;
       }
       else
-         out = (modifier_block *) get_mem(sizeof(modifier_block));
+         out = (modifier_block *) (*the_callback_block.get_mem_fn)(sizeof(modifier_block));
 
       *out = newoutbar->match;
       out->packed_next_conc_or_subcall = (modifier_block *) 0;
@@ -946,7 +938,7 @@ Private void copy_sublist(Const match_result *outbar, modifier_block *tails)
          modifier_inactive_list = out->gc_ptr;
       }
       else
-         out = (modifier_block *) get_mem(sizeof(modifier_block));
+         out = (modifier_block *) (*the_callback_block.get_mem_fn)(sizeof(modifier_block));
 
       *out = newoutbar->match;
       out->packed_next_conc_or_subcall = (modifier_block *) 0;
@@ -1010,7 +1002,7 @@ Private void record_a_match(void)
 
    if (GLOB_showing) {
       if (verify_call())
-         show_match();
+         (*the_callback_block.show_match_fn)();
    }
 }
 
@@ -1531,7 +1523,7 @@ Private void match_wildcard(
             if (current_result->match.call_conc_options.who == selector_uninitialized) {
                selector_kind save_who = current_result->match.call_conc_options.who;
 
-               for (i=1; i<=last_selector_kind; i++) {
+               for (i=1; i<selector_enum_extent; i++) {
                   current_result->match.call_conc_options.who = (selector_kind) i;
                   match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxi);
                }
@@ -1948,7 +1940,8 @@ Private void search_menu(uims_reply kind)
       }
       else if (static_call_menu == match_selectors) {
          menu = selector_menu_list;
-         menu_length = last_selector_kind;
+         // Menu is shorter than it appears, because we are skipping first item.
+         menu_length = selector_enum_extent-1;
       }
       else if (static_call_menu == match_startup_commands) {
          kind = ui_start_select;
@@ -2030,17 +2023,11 @@ Private void search_menu(uims_reply kind)
  *
  */
 
-extern int match_user_input(
+SDLIB_API int match_user_input(
     int which_commands,
     long_boolean show,
     long_boolean show_verify)
 {
-#ifdef TIMING
-    clock_t timer = clock();
-    char time_buf[20];
-    uims_debug_print("");
-#endif
-
    /* Reclaim all old modifier blocks. */
 
    while (modifier_active_list) {
