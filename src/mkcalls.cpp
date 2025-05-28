@@ -515,7 +515,6 @@ const char *estab[] = {
    "qtag",
    "bone",
    "1x8",
-   "littlestars",
    "2stars",
    "1x3dmd",
    "3x1dmd",
@@ -713,6 +712,7 @@ const char *schematab[] = {
    "conc2_4",
    "crossconc2_4",
    "conc2_4_or_normal",
+   "conc2_4_or_single",
    "conc4_2",
    "conc4_2_prefer_1x4",
    "crossconc4_2",
@@ -723,6 +723,7 @@ const char *schematab[] = {
    "???",
    "conc2_6_or_2_4",
    "conc6_2_or_4_2",
+   "conc6_2_or_4_2_line",
    "crossconc2_6_or_2_4",
    "conc_innermost",
    "conc_touch_by_1_of_3",
@@ -742,6 +743,7 @@ const char *schematab[] = {
    "conc_no31dwarn",
    "conc_specialpromenade",
    "crossconc_specialpromenade",
+   "conc_ctrbox",
    "conc_12",
    "conc_16",
    "conc_star",
@@ -887,12 +889,14 @@ const char *qualtab[] = {
    "said_triangle",
    "didnt_say_triangle",
    "said_galaxy",
+   "didnt_say_matrix",
    "occupied_as_stars",
    "occupied_as_clumps",
    "occupied_as_blocks",
    "occupied_as_h",
    "occupied_as_qtag",
    "occupied_as_3x1tgl",
+   "occupied_as_o",
    "line_ends_looking_out",
    "col_ends_looking_in",
    "ripple_one_end",
@@ -1120,6 +1124,8 @@ const char *mxntabforce[] = {
    "force_4x0",
    "force_6x2",
    "force_3x2",
+   "force_3x5",
+   "force_5x3",
    ""};
 
 // See INHERITFLAG_MXNMASK in database.h
@@ -1134,6 +1140,8 @@ const char *mxntabplain[] = {
    "4x0",
    "6x2",
    "3x2",
+   "3x5",
+   "5x3",
    ""};
 
 // See INHERITFLAG_NXNMASK in database.h
@@ -1254,6 +1262,7 @@ const char *matrixcallflagtab[] = {
    "add_2n",
    "include_phantoms",
    "not_true_invader",
+   "selector_is_trailers",
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
@@ -1410,18 +1419,6 @@ const char *predtab[] = {
    "judge_is_left",
    "socker_is_right",
    "socker_is_left",
-   "judge_is_right_1x3",
-   "judge_is_left_1x3",
-   "socker_is_right_1x3",
-   "socker_is_left_1x3",
-   "judge_is_right_1x6",
-   "judge_is_left_1x6",
-   "socker_is_right_1x6",
-   "socker_is_left_1x6",
-   "judge_is_right_1x8",
-   "judge_is_left_1x8",
-   "socker_is_right_1x8",
-   "socker_is_left_1x8",
    "inroller_is_cw",
    "magic_inroller_is_cw",
    "outroller_is_cw",

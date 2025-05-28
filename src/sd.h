@@ -152,6 +152,8 @@ enum concept_kind {
    concept_0x4,
    concept_6x2,
    concept_3x2,
+   concept_3x5,
+   concept_5x3,
    concept_3x3,
    concept_4x4,
    concept_5x5,
@@ -1663,7 +1665,6 @@ struct setup_command {
    uint32_t restrained_miscflags;
    uint32_t restrained_misc2flags;
    uint32_t restrained_selector_decoder[2];
-   uint32_t extraspecialsuperduper_misc2flags;
    parse_block *skippable_concept;
    uint32_t skippable_heritflags;
    uint32_t cmd_heritflags_to_save_from_mxn_expansion;
@@ -2717,6 +2718,12 @@ class select {
       fx_foo33d,
       fx_foo55,
       fx_fooaa,
+      fx_foo55m3,
+      fx_fooaan3,
+      fx_foo55m5,
+      fx_fooaam5,
+      fx_foo55n5,
+      fx_fooaan5,
       fx_foo11,
       fx_foo22,
       fx_foo44,
@@ -3174,6 +3181,8 @@ class select {
       fx_fdmdhi3,
       fx_f1x8low3,
       fx_f1x8hi3,
+      fx_f1x8low5,
+      fx_f1x8hi5,
       fx_f2x4far,
       fx_f2x4near,
       fx_f2x4pos1,
@@ -4287,7 +4296,7 @@ enum {
    CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400U,    // Treat "<anything> motivate" as plain motivate.
    CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800U,
    CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000U,
-   CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000U,
+   // spare:                       = 0x00002000U,
    CMD_MISC3__STOP_OVERCAST_CHECK  = 0x00004000U,    // Off at start of utterance, gets turned on after first part.
                                                      // This is how we enforce the "no overcast warnings for actions
                                                      // internal to a compound call" rule.
@@ -4309,7 +4318,8 @@ enum {
 
    // This refers to the special invocation of a "optional_special_number" call;
    // call is being given an optional numeric arg because of really hairy fraction.
-   CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x08000000U
+   CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x08000000U,
+   CMD_MISC3__NO_FUDGY_2X3_FIX     = 0x10000000U
 };
 
 enum normalize_action {
@@ -4951,6 +4961,8 @@ enum specmapkind {
    spcmap_dqtag4,
    spcmap_dqtag5,
    spcmap_dqtag6,
+   spcmap_dqtag7,
+   spcmap_dqtag8,
    spcmap_stw3a,
    spcmap_stw3b,
    spcmap_3ri,

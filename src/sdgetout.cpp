@@ -581,6 +581,10 @@ static const resolve_tester test_3x4_stuff[] = {
    {resolve_revprom,        MS, 7,   {6, 7, 4, 5, 0, 1, 10, 11},   0xAAAA8888},
    {resolve_revprom,        MS, 7,   {4, 5, 3, 2, 10, 11, 9, 8},   0xAAAA8888},
 
+   // Far apart lines.
+   {resolve_rlg,            MS, 3,   {7, 6, 2, 3, 1, 0, 8, 9},     0x8A8AA8A8},
+   {resolve_la,             MS, 6,   {7, 3, 2, 0, 1, 9, 8, 6},     0xA8AA8A88},
+
    // From sort of skewed offset 8-chain.
    // It may have been a mistake to write these.
    //   {resolve_rlg,       MS, 2,   {6, 4, 11, 1, 0, 10, 5, 7},   0x8A8AA8A8},

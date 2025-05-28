@@ -1908,6 +1908,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     {0}, {0}, {0}, true, chk_wave},
+   {sbigdmd, cr_magic_only, 12, {0, 1, 4, 5, 7, 6, 11, 10, 3, 2, 8, 9},
+    {0}, {0}, {0}, false, chk_wave},
    {s1x8, cr_magic_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_li_lo, 8, {4, 0, 5, 1, 6, 2, 7, 3},
@@ -2544,6 +2546,7 @@ restriction_test_result verify_restriction(
          if (t2 && (t2 & 3)!=qa3) qa0 &= ~2;
          if (t1 && (t1 & 3)!=qa3) qa0 &= ~1;
          if (t2 && (t2 & 3)!=qa2) qa0 &= ~1;
+         if ((t1|t2) == 0 && tt.assump_live) goto bad;
       }
 
       if (qa1) {
@@ -3736,13 +3739,13 @@ extern callarray *assoc(
 
       // The bits of the "qualifierstuff" field have the following meaning
       //          (see definitions in database.h):
-      // 8000  left/out only (put 2 into assump_both)
-      // 4000  right/in only (put 1 into assump_both)
-      // 2000  must be live
-      // 1000  must be T-boned
-      // 0800  must not be T-boned (both together means explicit assumption)
-      // 0780  if these 4 bits are nonzero, they must match the number plus 1
-      // 007F  the qualifier itself (we allow 127 qualifiers)
+      // 10000  left/out only (put 2 into assump_both)
+      //  8000  right/in only (put 1 into assump_both)
+      //  4000  must be live
+      //  2000  must be T-boned
+      //  1000  must not be T-boned (both together means explicit assumption)
+      //  0F00  if these 4 bits are nonzero, they must match the number plus 1
+      //  00FF  the qualifier itself (we allow 127 qualifiers)
 
       // The handling of clauses with numeric tests (e.g. "qualifier num 2") is made
       // complicated by the existence of special calls that can *optionally* be given a
@@ -4313,6 +4316,9 @@ extern callarray *assoc(
          /* **** FELL THROUGH!!!!!! */
          if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_TRIANGLE) goto good;
          goto bad;
+      case cr_didnt_say_matrix:
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) goto bad;
+         goto good;
       case cr_occupied_as_h:
          if (ssK != s3x4 ||
              (ss->people[1].id1 | ss->people[2].id1 |
@@ -4381,6 +4387,10 @@ extern callarray *assoc(
          default:
             goto good;    // Must be evaluating a division of a 4x5 or whatever.
          }
+      case cr_occupied_as_o:
+         if (ssK != s4x4 || ((little_endian_live_mask(ss) & 0x9999) != 0))
+            goto bad;
+         goto good;
       case cr_reg_tbone:
          if (ssK == s2x4 && key == b_2x2) tt.assump_col = 1;
          /* **** FALL THROUGH!!!! */
@@ -5053,6 +5063,10 @@ parse_block *process_final_concepts(
          heritsetbit = INHERITFLAGMXNK_6X2; break;
       case concept_3x2:
          heritsetbit = INHERITFLAGMXNK_3X2; break;
+      case concept_3x5:
+         heritsetbit = INHERITFLAGMXNK_3X5; break;
+      case concept_5x3:
+         heritsetbit = INHERITFLAGMXNK_5X3; break;
       case concept_2x2:
          heritsetbit = INHERITFLAGNXNK_2X2; break;
       case concept_3x3:
@@ -6153,12 +6167,626 @@ bool check_for_centers_concept(uint32 & callflags1_to_examine,     // We rewrite
    return true;
 }
 
+void put_in_absolute_location_bits(setup *ss)
+{
+   int i;
+
+   if (attr::slimit(ss) >= 0) {
+      // Put in headliner/sideliner stuff if possible.
+      for (i=0; i<=attr::slimit(ss); i++) {
+         if (ss->people[i].id1 & BIT_PERSON) {
+            switch ((ss->people[i].id1 + ss->rotation) & 3) {
+            case 0:
+               ss->people[i].id2 |= ID2_FACEBACK;
+               break;
+            case 1:
+               ss->people[i].id2 |= ID2_FACERIGHT;
+               break;
+            case 2:
+               ss->people[i].id2 |= ID2_FACEFRONT;
+               break;
+            case 3:
+               ss->people[i].id2 |= ID2_FACELEFT;
+               break;
+            }
+         }
+      }
+   }
+
+   if (ss->kind == s2x4) {
+      if (ss->rotation & 1) {
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((i + (ss->rotation << 1)) & 4) ?
+                   ID3_NEARBOX|ID3_NEARFOUR : ID3_FARBOX|ID3_FARFOUR) |
+                  (((i + (ss->rotation << 1) + 1) & 6) == 6 ?
+                   ID3_NEARTWO : ID3_FARSIX) |
+                  (((i + (ss->rotation << 1) + 5) & 6) == 6 ?
+                   ID3_FARTWO : ID3_NEARSIX);
+
+               uint32 leftbit = (ss->people[i].id1 & 1) ?
+                  ID2_LEFTCOL : ID2_LEFTLINE;
+
+               uint32 rightbit = (ss->people[i].id1 & 1) ?
+                  ID2_RIGHTCOL : ID2_RIGHTLINE;
+
+               ss->people[i].id2 |= ((i & 4) ?
+                                                leftbit : rightbit);
+            }
+         }
+      }
+      else {
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               uint32 nearbit = (ss->people[i].id1 & 1) ?
+                  ID3_NEARCOL | ID3_NEARFOUR :
+                  ID3_NEARLINE | ID3_NEARFOUR;
+
+               uint32 farbit = (ss->people[i].id1 & 1) ?
+                  ID3_FARCOL | ID3_FARFOUR :
+                  ID3_FARLINE | ID3_FARFOUR;
+
+               ss->people[i].id3 |= ((i + (ss->rotation << 1)) & 4) ?
+                  nearbit : farbit;
+
+               ss->people[i].id2 |= ((i + (ss->rotation << 1)+2) & 4) ?
+                  ID2_RIGHTBOX : ID2_LEFTBOX;
+            }
+         }
+      }
+   }
+   else if ((ss->kind == s1x8 || ss->kind == s_ptpd)) {
+      if (ss->rotation & 1) {
+         uint32 or_all = or_all_people(ss);
+         uint32 near4bit = ID3_NEARFOUR;
+         uint32 far4bit = ID3_FARFOUR;
+         uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+         uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+         uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
+
+         if (ss->kind == s1x8) {
+            if (!(or_all & 1)) {
+               near4bit |= ID3_NEARLINE;
+               far4bit |= ID3_FARLINE;
+            }
+            else if (!(or_all & 010)) {
+               near4bit |= ID3_NEARCOL;
+               far4bit |= ID3_FARCOL;
+            }
+         }
+
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               if (ss->kind == s1x8) {
+                  ss->people[i].id3 |=
+                     (((i + 2) & 6) == 6 ? ID3_NEARTWO : ID3_FARSIX) |
+                     (((i + 6) & 6) == 6 ? ID3_FARTWO : ID3_NEARSIX);
+               }
+
+               if (i & 4) {
+                  ss->people[i].id3 |=
+                     near4bit | ID3_NEARFIVE |
+                     ((i == 6) ? ID3_FARFIVE : ID3_NEARTHREE) |
+                     ((i == 4) ? near1bit : no1bit);
+               }
+               else {
+                  ss->people[i].id3 |=
+                     far4bit | ID3_FARFIVE |
+                     ((i == 2) ? ID3_NEARFIVE : ID3_FARTHREE) |
+                     ((i == 0) ? far1bit : no1bit);
+               }
+            }
+         }
+      }
+      else if (ss->kind == s1x8) {
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               uint32 leftbit = (ss->people[i].id1 & 1) ?
+                  ID2_LEFTCOL : ID2_LEFTLINE;
+
+               uint32 rightbit = (ss->people[i].id1 & 1) ?
+                  ID2_RIGHTCOL : ID2_RIGHTLINE;
+
+               ss->people[i].id2 |= (i & 4) ?
+                  rightbit : leftbit;
+            }
+         }
+      }
+   }
+   else if ((ss->kind == s_bone) && ss->rotation & 1) {
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON) {
+            ss->people[i].id3 |=
+               (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
+               (((0x12 >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
+               (((0x21 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX) |
+               (((0x16 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+               (((0x61 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+         }
+      }
+   }
+   else if ((ss->kind == s_rigger) && ss->rotation & 1) {
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON) {
+            ss->people[i].id3 |=
+               (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
+               (((0x0C >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
+               (((0xC0 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX);
+         }
+      }
+   }
+   else if ((ss->kind == splinepdmd || ss->kind == splinedmd) &&
+            ss->rotation & 1) {
+      uint32 near4bit = ID3_NEARFOUR;
+      uint32 far4bit = ID3_FARFOUR;
+      uint32 near5bit = ID3_NEARFIVE;
+      uint32 far3bit = ID3_FARTHREE;
+      uint32 near6bit = ID3_NEARSIX;
+      uint32 far2bit = ID3_FARTWO;
+      uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+      uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+      uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
+
+      uint32 linepeople =
+         ss->people[0].id1 | ss->people[1].id1 |
+         ss->people[2].id1 | ss->people[3].id1;
+
+      if (ss->rotation & 2) {
+         near4bit = ID3_FARFOUR;
+         far4bit = ID3_NEARFOUR;
+         near5bit = ID3_FARTHREE;
+         far3bit = ID3_NEARFIVE;
+         near6bit = ID3_FARTWO;
+         far2bit = ID3_NEARSIX;
+         near1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+         far1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+
+         if (!(linepeople & 1))
+            far4bit |= ID3_NEARLINE;
+         else if (!(linepeople & 010))
+            far4bit |= ID3_NEARCOL;
+      }
+      else {
+         if (!(linepeople & 1))
+            far4bit |= ID3_FARLINE;
+         else if (!(linepeople & 010))
+            far4bit |= ID3_FARCOL;
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |=
+               ((i >= 4) ? near4bit : far4bit) |
+               ((i >= 3) ? near5bit : far3bit) |
+               ((i >= 2) ? near6bit : far2bit) |
+               ((i != 0) ? (i == 6 ? near1bit : no1bit) : far1bit);
+      }
+   }
+   else if ((ss->kind == slinebox || ss->kind == slinejbox ||
+             ss->kind == slinevbox || ss->kind == sdbltrngl4) &&
+            ss->rotation & 1) {
+      // All 4 of these setups can respond to near/far 1/2/4/6.
+      // Additionally, slinevbox can respond to 3 and 5.
+      // And slinebox responds to 3.
+      uint32 near1bit = ID3_FARTHEST1;
+      uint32 far7bit = ID3_NOTFARTHEST1;
+      uint32 near2bit = ID3_FARTWO;
+      uint32 far6bit = ID3_NEARSIX;
+      uint32 near3bit = ID3_FARTHREE;
+      uint32 far5bit = ID3_NEARFIVE;
+      uint32 near4bit = ID3_FARFOUR;
+      uint32 far4bit = ID3_NEARFOUR;
+      uint32 near5bit = ID3_FARFIVE;
+      uint32 far3bit = ID3_NEARTHREE;
+      uint32 near6bit = ID3_FARSIX;
+      uint32 far2bit = ID3_NEARTWO;
+      uint32 farboxbit = ID3_NEARBOX;
+
+      uint32 linepeople =
+         ss->people[0].id1 | ss->people[1].id1 |
+         ss->people[2].id1 | ss->people[3].id1;
+
+      if (ss->rotation & 2) {
+         near1bit = ID3_NEAREST1;
+         far7bit = ID3_NOTNEAREST1;
+         near2bit = ID3_NEARTWO;
+         far6bit = ID3_FARSIX;
+         near3bit = ID3_NEARTHREE;
+         far5bit = ID3_FARFIVE;
+         near4bit = ID3_NEARFOUR;
+         far4bit = ID3_FARFOUR;
+         near5bit = ID3_NEARFIVE;
+         far3bit = ID3_FARTHREE;
+         near6bit = ID3_NEARSIX;
+         far2bit = ID3_FARTWO;
+         farboxbit = ID3_FARBOX;
+
+         if (!(linepeople & 1))
+            near4bit |= ID3_NEARLINE;
+         else if (!(linepeople & 010))
+            near4bit |= ID3_NEARCOL;
+      }
+      else {
+         if (!(linepeople & 1))
+            near4bit |= ID3_FARLINE;
+         else if (!(linepeople & 010))
+            near4bit |= ID3_FARCOL;
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON) {
+            // These apply to all 4 setups.
+            ss->people[i].id3 |=
+               ((i < 2) ? near2bit : far6bit) |
+               ((i < 1) ? near1bit : far7bit);
+
+            // These are setup-specific.  The intention was to make all this
+            // code simple and elegant.  And see what happened.
+            switch (ss->kind) {
+            case slinebox:
+               ss->people[i].id3 |=
+                  ((i < 3) ? near3bit : far5bit) |
+                  ((i < 4) ? near4bit : far4bit|farboxbit) |
+                  ((i != 6 && i != 5) ? near6bit : far2bit);
+               break;
+            case slinejbox:
+               ss->people[i].id3 |=
+                  ((i != 4 && i != 5 && i != 3 && i != 6) ? near4bit : far4bit|farboxbit) |
+                  ((i != 4 && i != 5) ? near6bit : far2bit);
+               break;
+            case slinevbox:
+               ss->people[i].id3 |=
+                  ((i < 6) ? near6bit : far2bit) |
+                  ((i < 5) ? near5bit : far3bit) |
+                  ((i < 4) ? near4bit : far4bit) |
+                  ((i < 3) ? near3bit : far5bit);
+               break;
+            default:   // sdbltrngl4
+               ss->people[i].id3 |=
+                  ((i < 6) ? near6bit : far2bit) |
+                  ((i < 5) ? near5bit : far3bit) |
+                  ((i < 4) ? near4bit : far4bit);
+               break;
+            }
+         }
+      }
+   }
+   else if ((ss->kind == slineybox || ss->kind == slinefbox) &&
+            ss->rotation & 1) {
+      // These setups can respond to near/far 2/4/6, near 3, and far 5.
+      // And slinefbox responds to near/far 1/7.
+      uint32 near1bit = ID3_FARTHEST1;
+      uint32 far7bit = ID3_NOTFARTHEST1;
+      uint32 far1bit = ID3_NEAREST1;
+      uint32 near7bit = ID3_NOTNEAREST1;
+      uint32 near2bit = ID3_FARTWO;
+      uint32 far6bit = ID3_NEARSIX;
+      uint32 near6bit = ID3_FARSIX;
+      uint32 far2bit = ID3_NEARTWO;
+      uint32 near3bit = ID3_FARTHREE;
+      uint32 far5bit = ID3_NEARFIVE;
+      uint32 near4bit = ID3_FARFOUR;
+      uint32 far4bit = ID3_NEARFOUR;
+
+      uint32 linepeople =
+         ss->people[0].id1 | ss->people[1].id1 |
+         ss->people[2].id1 | ss->people[3].id1;
+
+      if (ss->rotation & 2) {
+         near1bit = ID3_NEAREST1;
+         far7bit = ID3_NOTNEAREST1;
+         far1bit = ID3_FARTHEST1;
+         near7bit = ID3_NOTFARTHEST1;
+         near2bit = ID3_NEARTWO;
+         far6bit = ID3_FARSIX;
+         near6bit = ID3_NEARSIX;
+         far2bit = ID3_FARTWO;
+         near3bit = ID3_NEARTHREE;
+         far5bit = ID3_FARFIVE;
+         near4bit = ID3_NEARFOUR;
+         far4bit = ID3_FARFOUR;
+
+         if (ss->kind == slinefbox) {
+            if (!(linepeople & 1))
+               near4bit |= ID3_NEARLINE;
+            else if (!(linepeople & 010)) 
+               near4bit |= ID3_NEARCOL;
+         }
+         else {
+            far4bit |= ID3_FARBOX;
+         }
+      }
+      else {
+         if (ss->kind == slinefbox) {
+            if (!(linepeople & 1))
+               near4bit |= ID3_FARLINE;
+            else if (!(linepeople & 010))
+               near4bit |= ID3_FARCOL;
+         }
+         else {
+            far4bit |= ID3_NEARBOX;
+         }
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON) {
+            ss->people[i].id3 |=
+               ((i < 2) ? near2bit : far6bit) | ((i < 3) ? near3bit : far5bit) |
+               ((i < 4) ? near4bit : far4bit) | ((i == 5 || i == 6) ? far2bit : near6bit);
+
+            if (ss->kind == slinefbox) {
+               ss->people[i].id3 |=
+                  ((i == 0) ? near1bit : far7bit) | ((i == 5) ? far1bit : near7bit);
+            }
+         }
+      }
+   }
+   else if ((ss->kind == slinepdmd || ss->kind == slinedmd) && !(ss->rotation & 1)) {
+      uint32 near4bit = ID3_NEARFOUR;
+      uint32 far4bit = ID3_FARFOUR;
+
+      uint32 hipeople =
+         ss->people[4].id1 | ss->people[5].id1 |
+         ss->people[6].id1 | ss->people[7].id1;
+
+      if (ss->rotation & 2) {
+         near4bit = ID3_FARFOUR;
+         far4bit = ID3_NEARFOUR;
+
+         if (!(hipeople & 1))
+            far4bit |= ID3_NEARLINE;
+         else if (!(hipeople & 010))
+            far4bit |= ID3_NEARCOL;
+      }
+      else {
+         if (!(hipeople & 1))
+            far4bit |= ID3_FARLINE;
+         else if (!(hipeople & 010))
+            far4bit |= ID3_FARCOL;
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |= ((i & 4) ? far4bit : near4bit);
+      }
+   }
+   else if ((ss->kind == sboxpdmd) && !(ss->rotation & 1)) {
+      uint32 near4bit = ID3_NEARFOUR;
+      uint32 far4bit = ID3_FARFOUR;
+      uint32 near3bit = ID3_NEARTHREE;
+      uint32 far5bit = ID3_FARFIVE;
+      uint32 farboxbit = ID3_FARBOX;
+
+      if (ss->rotation & 2) {
+         near4bit = ID3_FARFOUR;
+         far4bit = ID3_NEARFOUR;
+         near3bit = ID3_FARTHREE;
+         far5bit = ID3_NEARFIVE;
+         farboxbit = ID3_NEARBOX;
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |=
+               ((i >= 4) ? far4bit|farboxbit : near4bit) |
+               ((i >= 4 || i == 2) ? far5bit : near3bit);
+      }
+   }
+   else if ((ss->kind == sdmdpdmd || ss->kind == sboxdmd) &&
+            !(ss->rotation & 1)) {
+      uint32 near4bit = ID3_NEARFOUR;
+      uint32 far4bit = ID3_FARFOUR;
+      uint32 farboxbit = ID3_FARBOX;
+
+      if (ss->rotation & 2) {
+         near4bit = ID3_FARFOUR;
+         far4bit = ID3_NEARFOUR;
+         farboxbit = ID3_NEARBOX;
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |= ((i & 4) ? far4bit|farboxbit : near4bit);
+      }
+   }
+   else if (ss->kind == s_trngl8 && !(ss->rotation & 1)) {
+      uint32 near4bit = ID3_NEARFOUR;
+      uint32 far4bit = ID3_FARFOUR;
+
+      uint32 lowpeople =
+         ss->people[0].id1 | ss->people[1].id1 |
+         ss->people[2].id1 | ss->people[3].id1;
+      uint32 hipeople =
+         ss->people[4].id1 | ss->people[5].id1 |
+         ss->people[6].id1 | ss->people[7].id1;
+
+      if (ss->rotation & 2) {
+         near4bit = ID3_FARFOUR;
+         far4bit = ID3_NEARFOUR;
+
+         if (!(hipeople & 1))
+            far4bit |= ID3_NEARLINE;
+         else if (!(hipeople & 010))
+            far4bit |= ID3_NEARCOL;
+
+         if (!(lowpeople & 1))
+            near4bit |= ID3_FARCOL;
+         else if (!(lowpeople & 010))
+            near4bit |= ID3_FARLINE;
+      }
+      else {
+         if (!(lowpeople & 1))
+            near4bit |= ID3_NEARCOL;
+         else if (!(lowpeople & 010))
+            near4bit |= ID3_NEARLINE;
+
+         if (!(hipeople & 1))
+            far4bit |= ID3_FARLINE;
+         else if (!(hipeople & 010))
+            far4bit |= ID3_FARCOL;
+      }
+
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |= ((i & 4) ? far4bit : near4bit);
+      }
+   }
+   else if (ss->kind == s_qtag && ss->rotation & 1) {
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |= (((i+3) & 4) ? ID3_NEARFOUR : ID3_FARFOUR);
+      }
+   }
+   else if (ss->kind == s_spindle) {
+      if (ss->rotation & 1) {
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((0x1C >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+                  (((0xC1 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+            }
+         }
+      }
+      else {
+         for (i=0; i<8; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((0x70 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+                  (((0x07 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+            }
+         }
+      }
+   }
+   else if (ss->kind == s3dmd && !(ss->rotation & 1)) {
+      uint32 livemask = little_endian_live_mask(ss);
+      uint32 t = livemask & 0x1C0;
+
+      if (t == 0x1C0) {
+         for (i=0; i<12; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((t >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE);
+            }
+         }
+      }
+      else if (t == 0x0C0 || t == 0x180) {
+         for (i=0; i<12; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((t >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX);
+            }
+         }
+      }
+
+      t = livemask & 0x7;
+
+      if (t == 0x7) {
+         for (i=0; i<12; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((t >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+            }
+         }
+      }
+      else if (t == 0x6 || t == 0x3) {
+         for (i=0; i<12; i++) {
+            if (ss->people[i].id1 & BIT_PERSON) {
+               ss->people[i].id3 |=
+                  (((t >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX);
+            }
+         }
+      }
+   }
+   else if (ss->kind == s_galaxy) {
+      for (i=0; i<8; i++) {
+         if (ss->people[i].id1 & BIT_PERSON) {
+            if (!(i&3))
+               ss->people[i].id3 |= ID3_NEARFIVE|ID3_FARFIVE;
+            else if (i&4)
+               ss->people[i].id3 |= ID3_NEARTHREE|ID3_NEARFIVE;
+            else
+               ss->people[i].id3 |= ID3_FARTHREE|ID3_FARFIVE;
+         }
+      }
+   }
+   else if (ss->kind == s_c1phan) {
+      uint32 nearbit = 0;
+      uint32 farbit = 0;
+      uint32 tbonetest[2];
+      uint32 livemask = little_endian_live_mask(ss);
+
+      tbonetest[0] = 0;
+      tbonetest[1] = 0;
+
+      for (i=0; i<16; i++)
+         tbonetest[i>>3] |= ss->people[i].id1;
+
+      if (livemask == 0x5AA5U) {
+         nearbit = ID3_NEARBOX|ID3_NEARFOUR;
+
+         if (!(tbonetest[0] & 1))
+            farbit = ID3_FARLINE|ID3_FARFOUR;
+         else if (!(tbonetest[0] & 010))
+            farbit = ID3_FARCOL|ID3_FARFOUR;
+      }
+      else if (livemask == 0xA55AU) {
+         farbit = ID3_FARBOX|ID3_FARFOUR;
+
+         if (!(tbonetest[1] & 1))
+            nearbit = ID3_NEARLINE|ID3_NEARFOUR;
+         else if (!(tbonetest[1] & 010))
+            nearbit = ID3_NEARCOL|ID3_NEARFOUR;
+      }
+      else if (livemask == 0x5555U || livemask == 0xAAAAU || livemask == 0xAA55U || livemask == 0x55AAU) {
+         // We don't allow random populations; dancers might find it ambiguous.
+         farbit = ID3_FARFOUR;
+         nearbit = ID3_NEARFOUR;
+      }
+
+      for (i=0; i<16; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |= (i & 8) ? nearbit : farbit;
+      }
+   }
+   else if (ss->kind == s4x4) {
+      uint32 nearbit = 0;
+      uint32 farbit = 0;
+      uint32 tbonetest[2];
+      uint32 livemask = little_endian_live_mask(ss);
+
+      tbonetest[0] = 0;
+      tbonetest[1] = 0;
+
+      for (i=0; i<16; i++)
+         tbonetest[(setup_attrs[s4x4].nice_setup_coords->yca[i] < 0) ? 1 : 0] |= ss->people[i].id1;
+
+      if (livemask == 0x4B4BU || livemask == 0x0B4B4U) {
+         farbit = ID3_FARBOX|ID3_FARFOUR;
+         nearbit = ID3_NEARBOX|ID3_NEARFOUR;
+      }
+      else if (livemask == 0xEA8CU) {
+         farbit = ID3_FARBOX|ID3_FARFOUR;
+         nearbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
+      }
+      else if (livemask == 0x8CEAU) {
+         farbit = ID3_FARLINE|ID3_FARCOL|ID3_FARFOUR;
+         nearbit = ID3_NEARBOX|ID3_NEARFOUR;
+      }
+
+      for (i=0; i<16; i++) {
+         if (ss->people[i].id1 & BIT_PERSON)
+            ss->people[i].id3 |= (setup_attrs[s4x4].nice_setup_coords->yca[i] < 0) ? nearbit : farbit;
+      }
+   }
+}
+
 
 // Top level move routine.
 
 void toplevelmove() THROW_DECL
 {
-   int i;
+   current_options.initialize();
 
    // Must copy this out of the history; it may be modified.
    setup starting_setup = configuration::current_config().state;
@@ -6196,7 +6824,6 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.restrained_misc2flags = 0;
    starting_setup.cmd.restrained_selector_decoder[0] = 0;
    starting_setup.cmd.restrained_selector_decoder[1] = 0;
-   starting_setup.cmd.extraspecialsuperduper_misc2flags = 0;
    starting_setup.cmd.restrained_fraction.flags = 0;
    starting_setup.cmd.restrained_fraction.fraction = 0;
 
@@ -6241,601 +6868,13 @@ void toplevelmove() THROW_DECL
    newhist.draw_pic = false;
    newhist.state_is_valid = false;
    newhist.init_resolve();
-   current_options.initialize();
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
    clear_absolute_proximity_and_facing_bits(&starting_setup);
 
-   if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
-      // Can't do it if rotation is not known.
-      if (attr::slimit(&starting_setup) >= 0) {
-         // Put in headliner/sideliner stuff if possible.
-         for (i=0; i<=attr::slimit(&starting_setup); i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               switch ((starting_setup.people[i].id1 + starting_setup.rotation) & 3) {
-               case 0:
-                  starting_setup.people[i].id2 |= ID2_FACEBACK;
-                  break;
-               case 1:
-                  starting_setup.people[i].id2 |= ID2_FACERIGHT;
-                  break;
-               case 2:
-                  starting_setup.people[i].id2 |= ID2_FACEFRONT;
-                  break;
-               case 3:
-                  starting_setup.people[i].id2 |= ID2_FACELEFT;
-                  break;
-               }
-            }
-         }
-      }
-
-      if (starting_setup.kind == s2x4) {
-         if (starting_setup.rotation & 1) {
-            for (i=0; i<8; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON)
-                  starting_setup.people[i].id3 |=
-                     (((i + (starting_setup.rotation << 1)) & 4) ?
-                      ID3_NEARBOX|ID3_NEARFOUR : ID3_FARBOX|ID3_FARFOUR) |
-                     (((i + (starting_setup.rotation << 1) + 1) & 6) == 6 ?
-                      ID3_NEARTWO : ID3_FARSIX) |
-                     (((i + (starting_setup.rotation << 1) + 5) & 6) == 6 ?
-                      ID3_FARTWO : ID3_NEARSIX);
-
-                  uint32 leftbit = (starting_setup.people[i].id1 & 1) ?
-                     ID2_LEFTCOL : ID2_LEFTLINE;
-
-                  uint32 rightbit = (starting_setup.people[i].id1 & 1) ?
-                     ID2_RIGHTCOL : ID2_RIGHTLINE;
-
-                  starting_setup.people[i].id2 |= ((i & 4) ?
-                      leftbit : rightbit);
-            }
-         }
-         else {
-            for (i=0; i<8; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  uint32 nearbit = (starting_setup.people[i].id1 & 1) ?
-                     ID3_NEARCOL | ID3_NEARFOUR :
-                     ID3_NEARLINE | ID3_NEARFOUR;
-
-                  uint32 farbit = (starting_setup.people[i].id1 & 1) ?
-                     ID3_FARCOL | ID3_FARFOUR :
-                     ID3_FARLINE | ID3_FARFOUR;
-
-                  starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ?
-                     nearbit : farbit;
-
-                  starting_setup.people[i].id2 |= ((i + (starting_setup.rotation << 1)+2) & 4) ?
-                      ID2_RIGHTBOX : ID2_LEFTBOX;
-               }
-            }
-         }
-      }
-      else if ((starting_setup.kind == s1x8 || starting_setup.kind == s_ptpd)) {
-         if (starting_setup.rotation & 1) {
-            uint32 or_all = or_all_people(&starting_setup);
-            uint32 near4bit = ID3_NEARFOUR;
-            uint32 far4bit = ID3_FARFOUR;
-            uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
-            uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
-            uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
-
-            if (starting_setup.kind == s1x8) {
-               if (!(or_all & 1)) {
-                  near4bit |= ID3_NEARLINE;
-                  far4bit |= ID3_FARLINE;
-               }
-               else if (!(or_all & 010)) {
-                  near4bit |= ID3_NEARCOL;
-                  far4bit |= ID3_FARCOL;
-               }
-            }
-
-            for (i=0; i<8; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  if (starting_setup.kind == s1x8) {
-                     starting_setup.people[i].id3 |=
-                        (((i + 2) & 6) == 6 ? ID3_NEARTWO : ID3_FARSIX) |
-                        (((i + 6) & 6) == 6 ? ID3_FARTWO : ID3_NEARSIX);
-                  }
-
-                  if (i & 4) {
-                     starting_setup.people[i].id3 |=
-                        near4bit | ID3_NEARFIVE |
-                        ((i == 6) ? ID3_FARFIVE : ID3_NEARTHREE) |
-                        ((i == 4) ? near1bit : no1bit);
-                  }
-                  else {
-                     starting_setup.people[i].id3 |=
-                        far4bit | ID3_FARFIVE |
-                        ((i == 2) ? ID3_NEARFIVE : ID3_FARTHREE) |
-                        ((i == 0) ? far1bit : no1bit);
-                  }
-               }
-            }
-         }
-         else if (starting_setup.kind == s1x8) {
-            for (i=0; i<8; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  uint32 leftbit = (starting_setup.people[i].id1 & 1) ?
-                     ID2_LEFTCOL : ID2_LEFTLINE;
-
-                  uint32 rightbit = (starting_setup.people[i].id1 & 1) ?
-                     ID2_RIGHTCOL : ID2_RIGHTLINE;
-
-                  starting_setup.people[i].id2 |= (i & 4) ?
-                     rightbit : leftbit;
-               }
-            }
-         }
-      }
-      else if ((starting_setup.kind == s_bone) && starting_setup.rotation & 1) {
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               starting_setup.people[i].id3 |=
-                  (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
-                  (((0x12 >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
-                  (((0x21 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX) |
-                  (((0x16 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
-                  (((0x61 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
-            }
-         }
-      }
-      else if ((starting_setup.kind == s_rigger) && starting_setup.rotation & 1) {
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               starting_setup.people[i].id3 |=
-                  (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
-                  (((0x0C >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
-                  (((0xC0 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX);
-            }
-         }
-      }
-      else if ((starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd) &&
-               starting_setup.rotation & 1) {
-         uint32 near4bit = ID3_NEARFOUR;
-         uint32 far4bit = ID3_FARFOUR;
-         uint32 near5bit = ID3_NEARFIVE;
-         uint32 far3bit = ID3_FARTHREE;
-         uint32 near6bit = ID3_NEARSIX;
-         uint32 far2bit = ID3_FARTWO;
-         uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
-         uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
-         uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
-
-         uint32 linepeople =
-            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
-            starting_setup.people[2].id1 | starting_setup.people[3].id1;
-
-         if (starting_setup.rotation & 2) {
-            near4bit = ID3_FARFOUR;
-            far4bit = ID3_NEARFOUR;
-            near5bit = ID3_FARTHREE;
-            far3bit = ID3_NEARFIVE;
-            near6bit = ID3_FARTWO;
-            far2bit = ID3_NEARSIX;
-            near1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
-            far1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
-
-            if (!(linepeople & 1))
-               far4bit |= ID3_NEARLINE;
-            else if (!(linepeople & 010))
-               far4bit |= ID3_NEARCOL;
-         }
-         else {
-            if (!(linepeople & 1))
-               far4bit |= ID3_FARLINE;
-            else if (!(linepeople & 010))
-               far4bit |= ID3_FARCOL;
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |=
-                  ((i >= 4) ? near4bit : far4bit) |
-                  ((i >= 3) ? near5bit : far3bit) |
-                  ((i >= 2) ? near6bit : far2bit) |
-                  ((i != 0) ? (i == 6 ? near1bit : no1bit) : far1bit);
-         }
-      }
-      else if ((starting_setup.kind == slinebox || starting_setup.kind == slinejbox ||
-                starting_setup.kind == slinevbox || starting_setup.kind == sdbltrngl4) &&
-               starting_setup.rotation & 1) {
-         // All 4 of these setups can respond to near/far 1/2/4/6.
-         // Additionally, slinevbox can respond to 3 and 5.
-         // And slinebox responds to 3.
-         uint32 near1bit = ID3_FARTHEST1;
-         uint32 far7bit = ID3_NOTFARTHEST1;
-         uint32 near2bit = ID3_FARTWO;
-         uint32 far6bit = ID3_NEARSIX;
-         uint32 near3bit = ID3_FARTHREE;
-         uint32 far5bit = ID3_NEARFIVE;
-         uint32 near4bit = ID3_FARFOUR;
-         uint32 far4bit = ID3_NEARFOUR;
-         uint32 near5bit = ID3_FARFIVE;
-         uint32 far3bit = ID3_NEARTHREE;
-         uint32 near6bit = ID3_FARSIX;
-         uint32 far2bit = ID3_NEARTWO;
-         uint32 farboxbit = ID3_NEARBOX;
-
-         uint32 linepeople =
-            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
-            starting_setup.people[2].id1 | starting_setup.people[3].id1;
-
-         if (starting_setup.rotation & 2) {
-            near1bit = ID3_NEAREST1;
-            far7bit = ID3_NOTNEAREST1;
-            near2bit = ID3_NEARTWO;
-            far6bit = ID3_FARSIX;
-            near3bit = ID3_NEARTHREE;
-            far5bit = ID3_FARFIVE;
-            near4bit = ID3_NEARFOUR;
-            far4bit = ID3_FARFOUR;
-            near5bit = ID3_NEARFIVE;
-            far3bit = ID3_FARTHREE;
-            near6bit = ID3_NEARSIX;
-            far2bit = ID3_FARTWO;
-            farboxbit = ID3_FARBOX;
-
-            if (!(linepeople & 1))
-               near4bit |= ID3_NEARLINE;
-            else if (!(linepeople & 010))
-               near4bit |= ID3_NEARCOL;
-         }
-         else {
-            if (!(linepeople & 1))
-               near4bit |= ID3_FARLINE;
-            else if (!(linepeople & 010))
-               near4bit |= ID3_FARCOL;
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               // These apply to all 4 setups.
-               starting_setup.people[i].id3 |=
-                  ((i < 2) ? near2bit : far6bit) |
-                  ((i < 1) ? near1bit : far7bit);
-
-               // These are setup-specific.  The intention was to make all this
-               // code simple and elegant.  And see what happened.
-               switch (starting_setup.kind) {
-               case slinebox:
-                  starting_setup.people[i].id3 |=
-                     ((i < 3) ? near3bit : far5bit) |
-                     ((i < 4) ? near4bit : far4bit|farboxbit) |
-                     ((i != 6 && i != 5) ? near6bit : far2bit);
-                  break;
-               case slinejbox:
-                  starting_setup.people[i].id3 |=
-                     ((i != 4 && i != 5 && i != 3 && i != 6) ? near4bit : far4bit|farboxbit) |
-                     ((i != 4 && i != 5) ? near6bit : far2bit);
-                  break;
-               case slinevbox:
-                  starting_setup.people[i].id3 |=
-                     ((i < 6) ? near6bit : far2bit) |
-                     ((i < 5) ? near5bit : far3bit) |
-                     ((i < 4) ? near4bit : far4bit) |
-                     ((i < 3) ? near3bit : far5bit);
-                  break;
-               default:   // sdbltrngl4
-                  starting_setup.people[i].id3 |=
-                     ((i < 6) ? near6bit : far2bit) |
-                     ((i < 5) ? near5bit : far3bit) |
-                     ((i < 4) ? near4bit : far4bit);
-                  break;
-               }
-            }
-         }
-      }
-      else if ((starting_setup.kind == slineybox || starting_setup.kind == slinefbox) &&
-               starting_setup.rotation & 1) {
-         // These setups can respond to near/far 2/4/6, near 3, and far 5.
-         // And slinefbox responds to near/far 1/7.
-         uint32 near1bit = ID3_FARTHEST1;
-         uint32 far7bit = ID3_NOTFARTHEST1;
-         uint32 far1bit = ID3_NEAREST1;
-         uint32 near7bit = ID3_NOTNEAREST1;
-         uint32 near2bit = ID3_FARTWO;
-         uint32 far6bit = ID3_NEARSIX;
-         uint32 near6bit = ID3_FARSIX;
-         uint32 far2bit = ID3_NEARTWO;
-         uint32 near3bit = ID3_FARTHREE;
-         uint32 far5bit = ID3_NEARFIVE;
-         uint32 near4bit = ID3_FARFOUR;
-         uint32 far4bit = ID3_NEARFOUR;
-
-         uint32 linepeople =
-            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
-            starting_setup.people[2].id1 | starting_setup.people[3].id1;
-
-         if (starting_setup.rotation & 2) {
-            near1bit = ID3_NEAREST1;
-            far7bit = ID3_NOTNEAREST1;
-            far1bit = ID3_FARTHEST1;
-            near7bit = ID3_NOTFARTHEST1;
-            near2bit = ID3_NEARTWO;
-            far6bit = ID3_FARSIX;
-            near6bit = ID3_NEARSIX;
-            far2bit = ID3_FARTWO;
-            near3bit = ID3_NEARTHREE;
-            far5bit = ID3_FARFIVE;
-            near4bit = ID3_NEARFOUR;
-            far4bit = ID3_FARFOUR;
-
-            if (starting_setup.kind == slinefbox) {
-               if (!(linepeople & 1))
-                  near4bit |= ID3_NEARLINE;
-               else if (!(linepeople & 010)) 
-                  near4bit |= ID3_NEARCOL;
-            }
-            else {
-               far4bit |= ID3_FARBOX;
-            }
-         }
-         else {
-            if (starting_setup.kind == slinefbox) {
-               if (!(linepeople & 1))
-                  near4bit |= ID3_FARLINE;
-               else if (!(linepeople & 010))
-                  near4bit |= ID3_FARCOL;
-            }
-            else {
-               far4bit |= ID3_NEARBOX;
-            }
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               starting_setup.people[i].id3 |=
-                  ((i < 2) ? near2bit : far6bit) | ((i < 3) ? near3bit : far5bit) |
-                  ((i < 4) ? near4bit : far4bit) | ((i == 5 || i == 6) ? far2bit : near6bit);
-
-               if (starting_setup.kind == slinefbox) {
-                  starting_setup.people[i].id3 |=
-                     ((i == 0) ? near1bit : far7bit) | ((i == 5) ? far1bit : near7bit);
-               }
-            }
-         }
-      }
-      else if ((starting_setup.kind == slinepdmd || starting_setup.kind == slinedmd) && !(starting_setup.rotation & 1)) {
-         uint32 near4bit = ID3_NEARFOUR;
-         uint32 far4bit = ID3_FARFOUR;
-
-         uint32 hipeople =
-            starting_setup.people[4].id1 | starting_setup.people[5].id1 |
-            starting_setup.people[6].id1 | starting_setup.people[7].id1;
-
-         if (starting_setup.rotation & 2) {
-            near4bit = ID3_FARFOUR;
-            far4bit = ID3_NEARFOUR;
-
-            if (!(hipeople & 1))
-               far4bit |= ID3_NEARLINE;
-            else if (!(hipeople & 010))
-               far4bit |= ID3_NEARCOL;
-         }
-         else {
-            if (!(hipeople & 1))
-               far4bit |= ID3_FARLINE;
-            else if (!(hipeople & 010))
-               far4bit |= ID3_FARCOL;
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? far4bit : near4bit);
-         }
-      }
-      else if ((starting_setup.kind == sboxpdmd) && !(starting_setup.rotation & 1)) {
-         uint32 near4bit = ID3_NEARFOUR;
-         uint32 far4bit = ID3_FARFOUR;
-         uint32 near3bit = ID3_NEARTHREE;
-         uint32 far5bit = ID3_FARFIVE;
-         uint32 farboxbit = ID3_FARBOX;
-
-         if (starting_setup.rotation & 2) {
-            near4bit = ID3_FARFOUR;
-            far4bit = ID3_NEARFOUR;
-            near3bit = ID3_FARTHREE;
-            far5bit = ID3_NEARFIVE;
-            farboxbit = ID3_NEARBOX;
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |=
-                  ((i >= 4) ? far4bit|farboxbit : near4bit) |
-                  ((i >= 4 || i == 2) ? far5bit : near3bit);
-         }
-      }
-      else if ((starting_setup.kind == sdmdpdmd || starting_setup.kind == sboxdmd) &&
-               !(starting_setup.rotation & 1)) {
-         uint32 near4bit = ID3_NEARFOUR;
-         uint32 far4bit = ID3_FARFOUR;
-         uint32 farboxbit = ID3_FARBOX;
-
-         if (starting_setup.rotation & 2) {
-            near4bit = ID3_FARFOUR;
-            far4bit = ID3_NEARFOUR;
-            farboxbit = ID3_NEARBOX;
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? far4bit|farboxbit : near4bit);
-         }
-      }
-      else if (starting_setup.kind == s_trngl8 && !(starting_setup.rotation & 1)) {
-         uint32 near4bit = ID3_NEARFOUR;
-         uint32 far4bit = ID3_FARFOUR;
-
-         uint32 lowpeople =
-            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
-            starting_setup.people[2].id1 | starting_setup.people[3].id1;
-         uint32 hipeople =
-            starting_setup.people[4].id1 | starting_setup.people[5].id1 |
-            starting_setup.people[6].id1 | starting_setup.people[7].id1;
-
-         if (starting_setup.rotation & 2) {
-            near4bit = ID3_FARFOUR;
-            far4bit = ID3_NEARFOUR;
-
-            if (!(hipeople & 1))
-               far4bit |= ID3_NEARLINE;
-            else if (!(hipeople & 010))
-               far4bit |= ID3_NEARCOL;
-
-            if (!(lowpeople & 1))
-               near4bit |= ID3_FARCOL;
-            else if (!(lowpeople & 010))
-               near4bit |= ID3_FARLINE;
-         }
-         else {
-            if (!(lowpeople & 1))
-               near4bit |= ID3_NEARCOL;
-            else if (!(lowpeople & 010))
-               near4bit |= ID3_NEARLINE;
-
-            if (!(hipeople & 1))
-               far4bit |= ID3_FARLINE;
-            else if (!(hipeople & 010))
-               far4bit |= ID3_FARCOL;
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? far4bit : near4bit);
-         }
-      }
-      else if (starting_setup.kind == s_qtag && starting_setup.rotation & 1) {
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= (((i+3) & 4) ? ID3_NEARFOUR : ID3_FARFOUR);
-         }
-      }
-      else if (starting_setup.kind == s_spindle) {
-         if (starting_setup.rotation & 1) {
-            for (i=0; i<8; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  starting_setup.people[i].id3 |=
-                     (((0x1C >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
-                     (((0xC1 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
-               }
-            }
-         }
-         else {
-            for (i=0; i<8; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  starting_setup.people[i].id3 |=
-                     (((0x70 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
-                     (((0x07 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
-               }
-            }
-         }
-      }
-      else if (starting_setup.kind == s3dmd && !(starting_setup.rotation & 1)) {
-         uint32 livemask = little_endian_live_mask(&starting_setup);
-         if ((livemask & 0x1C0) == 0x1C0) {
-            for (i=0; i<12; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  starting_setup.people[i].id3 |=
-                     (((0x1C0 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE);
-               }
-            }
-         }
-
-         if ((livemask & 0x7) == 0x7) {
-            for (i=0; i<12; i++) {
-               if (starting_setup.people[i].id1 & BIT_PERSON) {
-                  starting_setup.people[i].id3 |=
-                     (((0x7 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
-               }
-            }
-         }
-      }
-      else if (starting_setup.kind == s_galaxy) {
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               if (!(i&3))
-                  starting_setup.people[i].id3 |= ID3_NEARFIVE|ID3_FARFIVE;
-               else if (i&4)
-                  starting_setup.people[i].id3 |= ID3_NEARTHREE|ID3_NEARFIVE;
-               else
-                  starting_setup.people[i].id3 |= ID3_FARTHREE|ID3_FARFIVE;
-            }
-         }
-      }
-      else if (starting_setup.kind == s_c1phan) {
-         uint32 nearbit = 0;
-         uint32 farbit = 0;
-         uint32 tbonetest[2];
-         uint32 livemask = little_endian_live_mask(&starting_setup);
-
-         tbonetest[0] = 0;
-         tbonetest[1] = 0;
-
-         for (i=0; i<16; i++)
-            tbonetest[i>>3] |= starting_setup.people[i].id1;
-
-         if (livemask == 0x5AA5U) {
-            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
-
-            if (!(tbonetest[0] & 1))
-               farbit = ID3_FARLINE|ID3_FARFOUR;
-            else if (!(tbonetest[0] & 010))
-               farbit = ID3_FARCOL|ID3_FARFOUR;
-         }
-         else if (livemask == 0xA55AU) {
-            farbit = ID3_FARBOX|ID3_FARFOUR;
-
-            if (!(tbonetest[1] & 1))
-               nearbit = ID3_NEARLINE|ID3_NEARFOUR;
-            else if (!(tbonetest[1] & 010))
-               nearbit = ID3_NEARCOL|ID3_NEARFOUR;
-         }
-         else if (livemask == 0x5555U || livemask == 0xAAAAU || livemask == 0xAA55U || livemask == 0x55AAU) {
-            // We don't allow random populations; dancers might find it ambiguous.
-            farbit = ID3_FARFOUR;
-            nearbit = ID3_NEARFOUR;
-         }
-
-         for (i=0; i<16; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= (i & 8) ? nearbit : farbit;
-         }
-      }
-      else if (starting_setup.kind == s4x4) {
-         uint32 nearbit = 0;
-         uint32 farbit = 0;
-         uint32 tbonetest[2];
-         uint32 livemask = little_endian_live_mask(&starting_setup);
-
-         tbonetest[0] = 0;
-         tbonetest[1] = 0;
-
-         for (i=0; i<16; i++)
-            tbonetest[(setup_attrs[s4x4].nice_setup_coords->yca[i] < 0) ? 1 : 0] |= starting_setup.people[i].id1;
-
-         if (livemask == 0x4B4BU || livemask == 0x0B4B4U) {
-            farbit = ID3_FARBOX|ID3_FARFOUR;
-            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
-         }
-         else if (livemask == 0xEA8CU) {
-            farbit = ID3_FARBOX|ID3_FARFOUR;
-            nearbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
-         }
-         else if (livemask == 0x8CEAU) {
-            farbit = ID3_FARLINE|ID3_FARCOL|ID3_FARFOUR;
-            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
-         }
-
-         for (i=0; i<16; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= (setup_attrs[s4x4].nice_setup_coords->yca[i] < 0) ? nearbit : farbit;
-         }
-      }
-   }
+   // Can't do it if rotation is not known.
+   if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT))
+      put_in_absolute_location_bits(&starting_setup);
 
    // Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.)
    update_id_bits(&starting_setup);
@@ -6851,7 +6890,7 @@ void toplevelmove() THROW_DECL
    remove_fudgy_2x3_2x6(&newhist.state);
 
    // If did a Cycle and Wheel with the 2x2 facing recycle as both parts,
-   // It sin't legal.  If it was done under a concentric concept, the error was cleared.
+   // It isn't legal.  If it was done under a concentric concept, the error was cleared.
    if (newhist.test_one_warning_specific(warn_suspect_destroyline))
       fail("This isn't a legitimate cycle and wheel.");
 

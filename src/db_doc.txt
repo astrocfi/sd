@@ -801,19 +801,6 @@ barredstar16   | 14  | 15          16  | 17           8  |  7           6  |  5 
 
 
 
-                   _____             _____
-                  |     |           |     |
-                  |  0  |           |  1  |
-             _____|     |_____ _____|     |_____
-            |      \   /      |      \   /      |
-littlestars |  6           7  |  3           2  |    (internal use only!)
-            |_____ /   \ _____|_____ /   \ _____|
-                  |     |           |     |
-                  |  5  |           |  4  |
-                  |_____|           |_____|
-
-
-
                          _____
                         |     |
                         |  2  |
@@ -3078,8 +3065,8 @@ columns_miniwave
       person is a phantom) it simply returns TRUE.
 
 can_swing_right, can_swing_left
-      applies to 1x4, 1x3dmd, c1phan, deep2x1dmd, or wqtag.  People are required
-      to be in "normal" couple-like orientation.  Returns TRUE if the
+      applies to 1x4, 1x3dmd, c1phan, deep2x1dmd, 4x4, or wqtag.  People are
+      required to be in "normal" couple-like orientation.  Returns TRUE if the
       person has a live neighbor to his right(left), and that person is facing
       in the opposite direction.  Returns FALSE otherwise.
 
@@ -3231,7 +3218,7 @@ outroller_is_cw_2x8
       apply to 2x6 and 2x8 lines only.  These are 2x6 and 2x8 versions.
 
 outposter_is_cw
-      applies to 2x4 lines only.  Returns TRUE if the end of the line clockwise
+      applies to 2x4 or 2x3 lines only.  Returns TRUE if the end of the line clockwise
       from this person is the outposter.  The rules for outposters are different
       from the rules for outrollers:  if both ends of the line are looking out,
       the one on the right (the "judge") is the outposter -- there is no conflict.
@@ -3239,7 +3226,7 @@ outposter_is_cw
       or there is no live outposter.
 
 outposter_is_ccw
-      applies to 2x4 lines only.  Returns TRUE if the end of the line counterclockwise
+      applies to 2x4 or 2x3 lines only.  Returns TRUE if the end of the line counterclockwise
       from this person is the outposter.  Returns FALSE if the outposter is at the
       clockwise end of the line, or there is no live outposter.
 
@@ -3791,6 +3778,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        Alamo (line-like) - miniwave boxes of opposite handedness.
                                        (For column-like alamo, use in_or_out.)
                                        Hourglass - the diamond is facing.  Points are not checked.
+                                       bigdmd - the center wave is of opposite handedness from
+                                       the outer miniwaves.  And they must be (mini)waves.
                                        "Right/left/in/out" and "live" may be used when
                                        it is a qualifier --
                                           2x4 - I/O refers to centers
@@ -3798,6 +3787,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                           crosswave - R/L refers to handedness of
                                              outer disconnected wave.
                                           hourglass - R/L refers to points of the diamond.
+                                          bigdmd - R/L refers to the outer miniwaves.
 
    explodable,                      1x4 - centers facing the same way
    reverse_explodable,              1x4 - ends facing the same way

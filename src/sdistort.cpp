@@ -3269,13 +3269,28 @@ extern void distorted_move(
       ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
 
       switch (ss->kind) {
+         uint32 dirs;
+         uint32 lives;
       case s3dmd:
          if (global_livemask == 06363) { map_code = spcmap_dqtag1; }
          else if (global_livemask == 06666) { map_code = spcmap_dqtag2; }
          break;
       case s4x4:
+         big_endian_get_directions(ss, dirs, lives);
+         dirs &= 0x55555555;
+
+         // In order to pick out the diamond spots unambigously from block spots
+         // in a 4x4, the points must be facing in appropriate directions, and
+         // the concept must be "DISTORTED DIAMONDS", so that the user will demand
+         // such orientation.
          if (global_livemask == 0x6C6C) { map_code = spcmap_dqtag3; }
          else if (global_livemask == 0xE2E2) { map_code = spcmap_dqtag4; }
+         else if (global_livemask == 0x2D2D && dirs == 0x01100110 &&
+                  parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+         { map_code = spcmap_dqtag7; }
+         else if (global_livemask == 0x2D2D && dirs == 0x40104010 &&
+                  parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+         { map_code = spcmap_dqtag8; }
          else {
             rotate_back = 1;   // It must be rotated.
             ss->rotation++;
@@ -3283,6 +3298,12 @@ extern void distorted_move(
 
             if (global_livemask == 0xC6C6) { map_code = spcmap_dqtag3; }
             else if (global_livemask == 0x2E2E) { map_code = spcmap_dqtag4; }
+            else if (global_livemask == 0xD2D2 && dirs == 0x00440044 &&
+                     parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+            { map_code = spcmap_dqtag7; }
+            else if (global_livemask == 0xD2D2 && dirs == 0x00050005 &&
+                     parseptr->concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+            { map_code = spcmap_dqtag8; }
          }
          break;
       case s4x6:
@@ -3292,7 +3313,7 @@ extern void distorted_move(
       }
 
       if (map_code == ~0U)
-         fail("Must have 4x4 or triple diamond setup for this concept.");
+         fail("Must have recognizable diamonds or 1/4 tags for this concept.");
 
       goto do_divided_nocheck;
 
@@ -3776,16 +3797,24 @@ extern void do_concept_rigger(
    setup *result) THROW_DECL
 {
    ss->clear_all_overcasts();
-   /* First 8 are for rigger; second 8 are for 1/4-tag, next 16 are for crosswave. */
-   /* A huge coincidence is at work here -- the first two parts of the maps are the same. */
-   static const veryshort map1[38] = {
-         0, 1, 3, 2, 4, 5, 7, 6, 0, 1, 3, 2, 4, 5, 7, 6,
-         13, 15, 1, 3, 5, 7, 9, 11, 14, 0, 2, 4, 6, 8, 10, 12,
-         4, 5, 0, 1, 2, 3};        // For 2x3.
-   static const veryshort map2[38] = {
-         2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1,
-         0, 2, 4, 6, 8, 10, 12, 14, 1, 7, 5, 11, 9, 15, 13, 3,
-         5, 0, 1, 2, 3, 4};        // For 2x3.
+
+   // First 8 are for rigger; second 8 are for 1/4-tag; next 16 are for crosswave;
+   // next 8 are for spindle; last 6 are for short6.
+   //
+   // A huge coincidence is at work here -- the first two parts of the maps are the same.
+
+   static const veryshort map1[46] = {
+      0, 1, 3, 2, 4, 5, 7, 6,   // For rigger setup, going to 2x4.
+      0, 1, 3, 2, 4, 5, 7, 6,   // For qtag setup, going to 2x4.
+      13, 15, 1, 3, 5, 7, 9, 11, 14, 0, 2, 4, 6, 8, 10, 12,   // For xwv setup, going to c1phan.
+      0, 1, 2, 3, 4, 5, 6, 7,   // For spindle setup, going to 2x4, 25% offset.
+      4, 5, 0, 1, 2, 3};        // For short6 setup, going to 2x3.
+   static const veryshort map2[46] = {
+      2, 3, 4, 5, 6, 7, 0, 1,
+      2, 3, 4, 5, 6, 7, 0, 1,
+      0, 2, 4, 6, 8, 10, 12, 14, 1, 7, 5, 11, 9, 15, 13, 3,
+      1, 2, 3, 4, 5, 6, 7, 0,
+      5, 0, 1, 2, 3, 4};        // For 2x3.
 
    int rstuff, indicator, base;
    setup a1;
@@ -3814,8 +3843,19 @@ extern void do_concept_rigger(
             ((ss->people[2].id1 ^ ss->people[6].id1) & d_mask) != 2)
          fail("'Rigger' people are not facing consistently!");
 
-      indicator = (ss->people[6].id1 ^ rstuff) & 3;
+      indicator = (ss->people[6].id1 ^ rstuff);
       base = 0;
+      startkind = s2x4;
+   }
+   else if (ss->kind == s_spindle) {
+      if (rstuff >= 16) fail("This variety of 'rigger' not permitted in this setup.");
+
+      if (!(ss->people[3].id1 & BIT_PERSON) ||
+            ((ss->people[3].id1 ^ ss->people[7].id1) & d_mask) != 2)
+         fail("'Rigger' people are not facing consistently!");
+
+      indicator = (ss->people[7].id1 ^ rstuff);
+      base = 32;
       startkind = s2x4;
    }
    else if (ss->kind == s_qtag) {
@@ -3827,7 +3867,7 @@ extern void do_concept_rigger(
             ((ss->people[0].id1 ^ ss->people[5].id1) & d_mask) != 2)
          fail("'Rigger' people are not facing consistently!");
 
-      indicator = (ss->people[0].id1 ^ rstuff ^ 3) & 3;
+      indicator = (ss->people[0].id1 ^ rstuff ^ 3);
       base = 8;
       startkind = s2x4;
    }
@@ -3838,7 +3878,7 @@ extern void do_concept_rigger(
             ((ss->people[4].id1 ^ ss->people[0].id1) & d_mask) != 2)
          fail("'Rigger' people are not facing consistently!");
 
-      indicator = (ss->people[0].id1 ^ rstuff) & 3;
+      indicator = (ss->people[0].id1 ^ rstuff);
       base = 16;
       startkind = s_c1phan;
    }
@@ -3849,13 +3889,15 @@ extern void do_concept_rigger(
             ((ss->people[1].id1 ^ ss->people[4].id1) & d_mask) != 2)
          fail("'Rigger' people are not facing consistently!");
 
-      indicator = ((ss->people[4].id1 + 1) ^ rstuff) & 3;
-      base = 32;
+      indicator = ((ss->people[4].id1 + 1) ^ rstuff);
+      base = 40;
       rot = 1;
       startkind = s2x3;
    }
    else
       fail("Can't do this concept in this setup.");
+
+   indicator &= 3;
 
    if (indicator & 1)
       fail("'Rigger' direction is inappropriate.");
@@ -3872,7 +3914,9 @@ extern void do_concept_rigger(
    a1.cmd.cmd_assume.assumption = cr_none;
    move(&a1, false, &res1);
 
-   if ((res1.rotation) & 1) base ^= 8;    /* Won't happen in C1 phantom. */
+   // Swap tables for rigger and qtag.
+   // Won't happen in C1 phantom, and will raise error if started in short6 or spindle.
+   if (((res1.rotation) & 1) && base < 16) base ^= 8;
 
    if (startkind == s_c1phan) {
       int i;
@@ -3916,7 +3960,13 @@ extern void do_concept_rigger(
    }
    else {
       if (res1.kind != s2x4) fail("Can't do this.");
-      result->kind = base ? s_qtag : s_rigger;
+      if (ss->kind == s_spindle) {
+         if ((res1.rotation) & 1) fail("Can't do this.");
+         result->kind = s_spindle;
+      }
+      else {
+         result->kind = base ? s_qtag : s_rigger;
+      }
    }
 
    gather(result, &res1, &map_ptr[base], attr::klimit(res1.kind), rot*011);

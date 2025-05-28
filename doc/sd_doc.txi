@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.03
-@set Time-stamp: Mar 23, 2018
+@set sd-version 39.04
+@set Time-stamp: Dec 14, 2018
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4569,7 +4569,7 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item release
 @item stretch
 @item stretched setup
-@item stretched C/L/W/B/D/1T
+@item stretched C/L/W/B/D/1T/3T
 @item stretched <any triangle concept>
 These are (reasonably) straightforward.
 @item overlapped siamese

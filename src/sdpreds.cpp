@@ -304,6 +304,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
       if      (p2 == ID2_CTR6)  s = selector_center6;
       else if (p2 == ID2_OUTR2) s = selector_veryends;
+      else if (ss->kind == s1x12 && local_selector == selector_veryends) return false;  // Close enough.
       else break;
       goto eq_return;
    case selector_ctrdmd:
@@ -968,30 +969,30 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          if (allow_some == 2) {
             switch (ss->kind) {
             case s1x3dmd:
-               if (A == B && B != C) thing_to_test = 0x3;
-               else if (B == C && A != B) thing_to_test = 0x6;
+               if (A == B && B != C) thing_to_test = 0x33;
+               else if (B == C && A != B) thing_to_test = 0x66;
                break;
             case s1x8:
-               if (A == B && B != D && C != D) thing_to_test = 0x3;
-               else if (B == D && C != D && A != B) thing_to_test = 0xA;
-               else if (C == D && B != D && A != B) thing_to_test = 0xC;
+               if (A == B && B != D && C != D) thing_to_test = 0x33;
+               else if (B == D && C != D && A != B) thing_to_test = 0xAA;
+               else if (C == D && B != D && A != B) thing_to_test = 0xCC;
                break;
             case s2x4:
-               if (A == B && B != C && C != D) thing_to_test = 0x3;
-               else if (B == C && C != D && A != B) thing_to_test = 0x6;
-               else if (C == D && B != C && A != B) thing_to_test = 0xC;
+               if (A == B && B != C && C != D) thing_to_test = 0x33;
+               else if (B == C && C != D && A != B) thing_to_test = 0x66;
+               else if (C == D && B != C && A != B) thing_to_test = 0xCC;
                break;
             case s_ptpd:
-               if (B == D) thing_to_test = 0xA;
+               if (B == D) thing_to_test = 0xAA;
                break;
             case s_bone:
-               if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x3;
+               if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x33;
                break;
             case s_qtag:
-               if (C == D && (A ^ B) == 0x202) thing_to_test = 0xC;
+               if (C == D && (A ^ B) == 0x202) thing_to_test = 0xCC;
                break;
             case s_rigger:
-               if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x3;
+               if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x33;
                break;
             }
          }
@@ -1000,23 +1001,31 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
             case s_323:
             case s3x1dmd:
             case s1x3dmd:
-               if (A == B && B == C) thing_to_test = 0x7;
+               if (A == B && B == C) thing_to_test = 0x77;
                break;
             case s_qtag:
-               if ((A ^ 0x0202) == B && B == D) thing_to_test = 0xB;
+               if ((A ^ 0x0202) == B && B == D) thing_to_test = 0xBB;
                break;
             case s1x8:
-               if (A == B && B == D && C != D) thing_to_test = 0xB;
-               else if (B == C && C == D && A != B) thing_to_test = 0xE;
+               if (A == B && B == D && C != D) thing_to_test = 0xBB;
+               else if (B == C && C == D && A != B) thing_to_test = 0xEE;
+               else if (A == 0x200 && B == 0x000 && C == 0x002 && D == 0x000) thing_to_test = 0xBE;
+               else if (A == 0x002 && B == 0x202 && C == 0x200 && D == 0x202) thing_to_test = 0xBE;
+               else if (A == 0x002 && B == 0x000 && C == 0x200 && D == 0x000) thing_to_test = 0xEB;
+               else if (A == 0x200 && B == 0x202 && C == 0x002 && D == 0x202) thing_to_test = 0xEB;
                break;
             case s2x4:
-               if (A == B && B == C && C != D) thing_to_test = 0x7;
-               else if (B == C && C == D && A != B) thing_to_test = 0xE;
+               if (A == B && B == C && C != D) thing_to_test = 0x77;
+               else if (B == C && C == D && A != B) thing_to_test = 0xEE;
+               else if (A == 0x200 && B == 0x000 && C == 0x000 && D == 0x002) thing_to_test = 0x7E;
+               else if (A == 0x002 && B == 0x202 && C == 0x202 && D == 0x200) thing_to_test = 0x7E;
+               else if (A == 0x002 && B == 0x000 && C == 0x000 && D == 0x200) thing_to_test = 0xE7;
+               else if (A == 0x200 && B == 0x202 && C == 0x202 && D == 0x002) thing_to_test = 0xE7;
                break;
             }
          }
 
-         if (thing_to_test != -1) return ((thing_to_test >> (place & 3)) & 1) != 0;
+         if (thing_to_test != -1) return ((thing_to_test >> place) & 1) != 0;
          break;
       case 11:
          A = (directions >> 10) & 0x003003;
@@ -1942,6 +1951,10 @@ static bool x12_beau_or_miniwave(setup *real_people, int real_index,
 static const int32 swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
 static const int32 swingleft_1x4[4] = {-1, 0, 3, 1};
 static const int32 swingleft_c1phan[16] = {-1, -1, 0, 1, -1, 7, 4, -1, 10, 11, -1, -1, 14, -1, -1, 13};
+static const int32 swingleft_4x4[16] = {14, 3, 7, 15, 5, 6, 8, 11, -1, -1, -1, 9, -1, 12, 13, 10};
+static const int32 swingleft_2x6[16] = {-1, 0, 1, 2, 3, 4, 7, 8, 9, 10, 11, -1};
+static const int32 swingleft_2x8[16] = {-1, 0, 1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, -1};
+static const int32 swingleft_3dmd[12] = {-1, -1, -1, 4, 5, 11, -1, -1, -1, -1, 9, 10};
 static const int32 swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
 static const int32 swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
@@ -1974,11 +1987,23 @@ static bool can_swing_left(setup *real_people, int real_index,
    case swqtag:
       t = swingleft_wqtag[direction_index];
       break;
+   case s3dmd:
+      t = swingleft_3dmd[direction_index];
+      break;
    case sdeep2x1dmd:
       t = swingleft_deep2x1dmd[direction_index];
       break;
    case s_c1phan:
       t = swingleft_c1phan[direction_index];
+      break;
+   case s4x4:
+      t = swingleft_4x4[direction_index];
+      break;
+   case s2x6:
+      t = swingleft_2x6[direction_index];
+      break;
+   case s2x8:
+      t = swingleft_2x8[direction_index];
       break;
    default:
       return false;
@@ -2239,154 +2264,79 @@ static bool outer_active_lines(setup *real_people, int real_index,
       return false;
 }
 
-static bool judge_is_right_1x3(setup *real_people, int real_index,
+
+//                               line of 3     line of 4    line of 5    line of 6    line of 7    line of 8
+//                                                                                 (no such thing)
+static const int32 jr1x4[24]  = {2, 0, 0, 2,  1, 0, 0, 2,  3, 0, 0, 2,  1, 0, 0, 2,  7, 7, 7, 7,  1, 0, 0, 2};
+static const int32 sl1x4[24]  = {0, 2, 0, 2,  1, 2, 0, 2,  0, 3, 0, 2,  1, 2, 0, 2,  7, 7, 7, 7,  1, 2, 0, 2};
+static const int32 jl1x4[24]  = {0, 2, 2, 0,  0, 2, 2, 0,  0, 3, 2, 0,  0, 2, 2, 0,  7, 7, 7, 7,  0, 2, 2, 0};
+static const int32 sr1x4[24]  = {2, 0, 2, 0,  0, 0, 2, 0,  3, 0, 2, 0,  0, 0, 2, 0,  7, 7, 7, 7,  0, 0, 2, 0};
+
+static bool judge_check(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff)
 {
-   int this_person = real_people->people[real_index].id1;
-   int f = this_person & 2;
+   int sizem1 = attr::slimit(real_people);
+   extra_stuff += (sizem1-2) << 2;
+   uint32 this_person = real_people->people[real_index].id1;
 
-   return
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 0)   // Judge exists to my right.
+   if (sizem1 == 2 || sizem1 == 4) {
+      // Lines of 3 or 5 are special.
+      int f = this_person & 2;
+      if (sizem1 == 4)
+         f += f>>1;
+
+      return
+         (((real_people->people[extra_stuff[0] ^ f].id1 ^ this_person) & 013) == (const uint32) extra_stuff[2])
          &&
-      (((real_people->people[f].id1 ^ this_person) & 013) != 2);      // We do not have another judge to my left.
-}
-
-static bool judge_is_left_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int f = this_person & 2;
-
-   return
-      (((real_people->people[f].id1 ^ this_person) & 013) == 2)       // Judge exists to my left.
-         &&
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 0);  // We do not have another judge to my right.
-}
-
-static bool socker_is_right_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int f = this_person & 2;
-
-   return
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 2)   // Socker exists to my right.
-         &&
-      (((real_people->people[f].id1 ^ this_person) & 013) != 0);      // We do not have another socker to my left.
-}
-
-static bool socker_is_left_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
-{
-   int this_person = real_people->people[real_index].id1;
-   int f = this_person & 2;
-
-   return
-      (((real_people->people[f].id1 ^ this_person) & 013) == 0)       // Socker exists to my left.
-         &&
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2);  // We do not have another socker to my right.
-}
-
-static const int32 jr1x4[4]  = {1, 0, 0, 2};
-static const int32 sl1x4[4]  = {1, 2, 0, 2};
-static const int32 jl1x4[4]  = {0, 2, 2, 0};
-static const int32 sr1x4[4]  = {0, 0, 2, 0};
-
-static const int32 jr1x6[4]  = {1, 0, 0, 2};
-static const int32 sl1x6[4]  = {1, 2, 0, 2};
-static const int32 jl1x6[4]  = {0, 2, 2, 0};
-static const int32 sr1x6[4]  = {0, 0, 2, 0};
-
-static const int32 jr1x8[4]  = {1, 0, 0, 2};
-static const int32 sl1x8[4]  = {1, 2, 0, 2};
-static const int32 jl1x8[4]  = {0, 2, 2, 0};
-static const int32 sr1x8[4]  = {0, 0, 2, 0};
-
-/* ARGSUSED */
-static bool judge_check_1x4(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
-{
-   // Some assumptions make this easy.  Sort of.
-   switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_2fl_only: return false;      // This can't work.
-   case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return extra_stuff[0] != 0;
-   case cr_magic_only: return (real_index & 1) != extra_stuff[0];
+         (((real_people->people[extra_stuff[1] ^ f].id1 ^ this_person) & 013) != (const uint32) extra_stuff[3]);
    }
 
-   uint32 this_person = real_people->people[real_index].id1;
    uint32 f = (this_person & 2) ^ extra_stuff[1];
 
+   int reverse_count = (sizem1+1) >> 1;
+
+   switch (sizem1) {
+   case 3:
+      // Line of 4.
+      // Some assumptions make this easy.  Sort of.
+      switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_2fl_only: return false;      // This can't work.
+      case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return extra_stuff[0] != 0;
+      case cr_magic_only: return (real_index & 1) != extra_stuff[0];
+      }
+      break;
+   case 5:
+      // Line of 6.
+      f += f>>1;
+
+      switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_3x3_2fl_only: return false;      // This can't work.
+      case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
+      }
+
+      break;
+   case 7:
+      // Line of 8.
+      f <<= 1;
+
+      switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_4x4_2fl_only: return false;      // This can't work.
+      case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
+      }
+
+      break;
+   }
+
    // If judge/socker exists in the correct place, and
    // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[2-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
+   if (((real_people->people[reverse_count-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
        ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
       return true;
 
    // If correct place is empty, but the person on the other side
    // can't be a judge or socker, OK.
-   if (real_people->people[2-f].id1 == 0 &&
+   if (real_people->people[reverse_count-f].id1 == 0 &&
        ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
-      warn(warn__phantom_judge);
-      return true;
-   }
-
-   return false;
-}
-
-/* ARGSUSED */
-static bool judge_check_1x6(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
-{
-   // Some assumptions make this easy.  Sort of.
-   switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_3x3_2fl_only: return false;      // This can't work.
-   case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
-   }
-
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f = (this_person & 2) ^ extra_stuff[1];
-   f += f>>1;
-
-   // If judge/socker exists in the correct place, and
-   // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[3-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
-      return true;
-
-   // If correct place is empty, but the person on the other side
-   // can't be a judge or socker, OK.
-   if (real_people->people[3-f].id1 == 0 &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]) {
-      warn(warn__phantom_judge);
-      return true;
-   }
-
-   return false;
-}
-
-/* ARGSUSED */
-static bool judge_check_1x8(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff)
-{
-   // Some assumptions make this easy.  Sort of.
-   switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_4x4_2fl_only: return false;      // This can't work.
-   case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
-   }
-
-   uint32 this_person = real_people->people[real_index].id1;
-   uint32 f = ((this_person & 2) ^ extra_stuff[1]) << 1;
-
-   // If judge/socker exists in the correct place, and
-   // we do not have another judge/socker in the wrong place, OK.
-   if (((real_people->people[4-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2] &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3])
-      return true;
-
-   // If correct place is empty, but the person on the other side
-   // can't be a judge or socker, OK.
-   if (real_people->people[4-f].id1 == 0 &&
-       ((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]){
       warn(warn__phantom_judge);
       return true;
    }
@@ -2528,55 +2478,95 @@ static bool outposter_is_cw(setup *real_people, int real_index,
    uint32 outroll_direction;
    uint32 cw_dir;
 
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-      return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
-   else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-      return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
-   else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
-      return (northified_index & 4) == 0;
-   else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
-            real_people->cmd.cmd_assume.assump_both == 2)
-      return true;
+   if (real_people->kind == s2x3) {
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return (northified_index & 1) == 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
+         return northified_index < 3;
 
-   outroll_direction = 010 + ((real_index & 4) >> 1);
-   cw_dir = real_people->people[real_index | 3].id1 & 017;
+      outroll_direction = (real_index >= 3) ? 012 : 010;
+      cw_dir = real_people->people[(real_index < 3) ? 2 : 5].id1 & 017;
 
-   // Cw_end exists and is looking out.
-   if (cw_dir == outroll_direction) return true;
-   // Or cw_end is phantom but ccw_end is looking in, so it has to be the phantom.
-   else if (cw_dir == 0 &&
-            (real_people->people[real_index & 4].id1 & 017) == (022 - outroll_direction))
-      return true;
-   // We don't know.
-   else return false;
+      // Cw_end exists and is looking out.
+      if (cw_dir == outroll_direction) return true;
+      // Or cw_end is phantom but ccw_end is looking in, so it has to be the phantom.
+      else if (cw_dir == 0 &&
+               (real_people->people[(real_index < 3) ? 0 : 3].id1 & 017) == (022 - outroll_direction))
+         return true;
+      // We don't know.
+      else return false;
+   }
+   else {
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+         return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
+         return (northified_index & 4) == 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
+               real_people->cmd.cmd_assume.assump_both == 2)
+         return true;
+
+      outroll_direction = 010 + ((real_index & 4) >> 1);
+      cw_dir = real_people->people[real_index | 3].id1 & 017;
+
+      // Cw_end exists and is looking out.
+      if (cw_dir == outroll_direction) return true;
+      // Or cw_end is phantom but ccw_end is looking in, so it has to be the phantom.
+      else if (cw_dir == 0 &&
+               (real_people->people[real_index & 4].id1 & 017) == (022 - outroll_direction))
+         return true;
+      // We don't know.
+      else return false;
+   }
 }
 
 /* ARGSUSED */
 static bool outposter_is_ccw(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff)
 {
-   uint32 inroll_direction;
+   uint32 outroll_direction;
 
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-      return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
-   else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-      return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
-   else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
-      return false;
-   else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
-            real_people->cmd.cmd_assume.assump_both == 2)
-      return false;
+   if (real_people->kind == s2x3) {
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return (northified_index & 1) == 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
+         return northified_index < 3;
 
-   inroll_direction = 012 - ((real_index & 4) >> 1);
+      outroll_direction = (real_index >= 3) ? 012 : 010;
+      uint32 ccw_dir = real_people->people[(real_index < 3) ? 0 : 3].id1 & 017;
 
-   // Demand that cw_end be looking in -- otherwise "outposter_is_cw"
-   // would have accepted it if it were legal.
-   if ((real_people->people[real_index | 3].id1 & 017) != inroll_direction) return false;
+      // Ccw_end exists and is looking out.
+      if (ccw_dir == outroll_direction) return true;
+      // Or ccw_end is phantom but cw_end is looking in, so it has to be the phantom.
+      else if (ccw_dir == 0 &&
+               (real_people->people[(real_index < 3) ? 2 : 5].id1 & 017) == (022 - outroll_direction))
+         return true;
+      // We don't know.
+      else return false;
+   }
    else {
-      // Now if ccw_end is looking out or is a phantom, it's OK.
-      uint32 ccw_dir = real_people->people[real_index & 4].id1 & 017;
-      if (ccw_dir == 0 || ccw_dir == 022-inroll_direction) return true;
-      return false;
+      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+         return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+         return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
+      else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
+         return false;
+      else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
+               real_people->cmd.cmd_assume.assump_both == 2)
+         return false;
+
+      outroll_direction = 012 - ((real_index & 4) >> 1);
+
+      // Demand that cw_end be looking in -- otherwise "outposter_is_cw"
+      // would have accepted it if it were legal.
+      if ((real_people->people[real_index | 3].id1 & 017) != outroll_direction) return false;
+      else {
+         // Now if ccw_end is looking out or is a phantom, it's OK.
+         uint32 ccw_dir = real_people->people[real_index & 4].id1 & 017;
+         if (ccw_dir == 0 || ccw_dir == 022-outroll_direction) return true;
+         return false;
+      }
    }
 }
 
@@ -3229,22 +3219,10 @@ predicate_descriptor pred_table[] = {
       {vert2,                        (const int32 *) 0},         // "vert2"
       {inner_active_lines,           (const int32 *) 0},         // "inner_active_lines"
       {outer_active_lines,           (const int32 *) 0},         // "outer_active_lines"
-      {judge_check_1x4,                       jr1x4},            // "judge_is_right"
-      {judge_check_1x4,                       jl1x4},            // "judge_is_left"
-      {judge_check_1x4,                       sr1x4},            // "socker_is_right"
-      {judge_check_1x4,                       sl1x4},            // "socker_is_left"
-      {judge_is_right_1x3,           (const int32 *) 0},         // "judge_is_right_1x3"
-      {judge_is_left_1x3,            (const int32 *) 0},         // "judge_is_left_1x3"
-      {socker_is_right_1x3,          (const int32 *) 0},         // "socker_is_right_1x3"
-      {socker_is_left_1x3,           (const int32 *) 0},         // "socker_is_left_1x3"
-      {judge_check_1x6,                       jr1x6},            // "judge_is_right_1x6"
-      {judge_check_1x6,                       jl1x6},            // "judge_is_left_1x6"
-      {judge_check_1x6,                       sr1x6},            // "socker_is_right_1x6"
-      {judge_check_1x6,                       sl1x6},            // "socker_is_left_1x6"
-      {judge_check_1x8,                       jr1x8},            // "judge_is_right_1x8"
-      {judge_check_1x8,                       jl1x8},            // "judge_is_left_1x8"
-      {judge_check_1x8,                       sr1x8},            // "socker_is_right_1x8"
-      {judge_check_1x8,                       sl1x8},            // "socker_is_left_1x8"
+      {judge_check,                           jr1x4},            // "judge_is_right"
+      {judge_check,                           jl1x4},            // "judge_is_left"
+      {judge_check,                           sr1x4},            // "socker_is_right"
+      {judge_check,                           sl1x4},            // "socker_is_left"
       {in_out_roll_select, (const int32 *) &inroller_cw},        // "inroller_is_cw"
       {in_out_roll_select, (const int32 *) &magic_inroller_cw},  // "magic_inroller_is_cw"
       {in_out_roll_select, (const int32 *) &outroller_cw},       // "outroller_is_cw"

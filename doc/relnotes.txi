@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <23 Mar 2018 wba>
+@c Time-stamp: <14 Dec 2018 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.03
-@set title2 Database version = 39.03 format = 349
+@set title1 RELEASE NOTES FOR VERSION 39.04
+@set title2 Database version = 39.04 format = 357
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.04::
 * 39.03::
 * 39.02::
 * 39.01::
@@ -135,7 +136,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.03, Top, (dir)
+@node Intro, 39.04, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -146,24 +147,32 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2018 William B. Ackerman
 @sp 3
 @menu
-* 39.03::               Changes in the current version
+* 39.04::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.03, 39.02, Intro, Top
+@node 39.04, 39.03, Intro, Top
+@unnumberedsec Version 39.04 changes
+
+Many bug fixes, especially relating to complex interactions of meta-concepts and supercalls, such as @strong{finally catch [tandem swing thru] 3}.
+
+@noindent An enormous backlog of improvements, mostly minor.
+
+@c ************
+@node 39.03, 39.02, 39.04, Top
 @unnumberedsec Version 39.03 changes
 
 There are new triangle designators, at C1.  They are not generally recognized as being part of C1.  They are useed in a 2x4.  An example might be @strong{end girls are the apex of tandem-based [or wave-based] triangles reshape the triangle}.  The two people in that 2x2 box who are not directly in front of or behind the designated apex constitute the base.  The triangle is effectively a right triangle.  Work to those spots.
 
-@strong{Cycle and wheel} was fixed so that it can't be called from facing couples, with everyone doing a facing recycle.
+@noindent @strong{Cycle and wheel} was fixed so that it can't be called from facing couples, with everyone doing a facing recycle.
 
-Better handling of tricky cases of the @strong{release} concept.
+@noindent Better handling of tricky cases of the @strong{release} concept.
 
-Better handling of tricky cases of @strong{triple trade}.
+@noindent Better handling of tricky cases of @strong{triple trade}.
 
-Better handling of tricky cases of @strong{kick off}.
+@noindent Better handling of tricky cases of @strong{kick off}.
 
-New call: @strong{leap frog <N>}.  Pass over that many spots.
+@noindent New call: @strong{leap frog <N>}.  Pass over that many spots.
 
 @c ************
 @node 39.02, 39.01, 39.03, Top
@@ -171,13 +180,13 @@ New call: @strong{leap frog <N>}.  Pass over that many spots.
 
 A bug in @strong{own the anyone}, that can cause incorrect results in certain cases, was fixed.
 
-The program can apply the modifiers @strong{generous} and @strong{stingy} to @strong{squeeze}.
+@noindent The program can apply the modifiers @strong{generous} and @strong{stingy} to @strong{squeeze}.
 
-The "centers work in tandem, ends as couples" and "centers work as
+@noindent The "centers work in tandem, ends as couples" and "centers work as
 couples, ends in tandem" warnings have been removed.  This used to be a
 noteworthy application of @strong{siamese}, but is no longer.
 
-New (C4) call: @strong{fly the coop}.  Typically from a 1x8 tidal line, the
+@noindent New (C4) call: @strong{fly the coop}.  Typically from a 1x8 tidal line, the
 center 2 do a grand cross run to the other far end.  Then everyone
 trade, then the new center 2 do another grand cross run, then everyone
 trade.  This call has 4 parts.  The setup can be smaller than 8 people,

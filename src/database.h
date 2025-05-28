@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 349
+#define DATABASE_FORMAT_VERSION 357
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -295,7 +295,7 @@ enum heritflags {
    INHERITFLAG_MXNMASK    = 0x01E00000U,
    // This is its low bit.
    INHERITFLAG_MXNBIT     = 0x00200000U,
-   // These 10 things are some of the 15 choices available inside.
+   // These 12 things are some of the 15 choices available inside.
    INHERITFLAGMXNK_1X2    = 0x00200000U,
    INHERITFLAGMXNK_2X1    = 0x00400000U,
    INHERITFLAGMXNK_1X3    = 0x00600000U,
@@ -306,6 +306,8 @@ enum heritflags {
    INHERITFLAGMXNK_4X0    = 0x01000000U,
    INHERITFLAGMXNK_6X2    = 0x01200000U,   // For 6x2 acey deucey.
    INHERITFLAGMXNK_3X2    = 0x01400000U,   // For 3x2 acey deucey.
+   INHERITFLAGMXNK_3X5    = 0x01600000U,
+   INHERITFLAGMXNK_5X3    = 0x01800000U,
 
    // This is a 3 bit field.  These track "nxntabforce" and  "nxntabplain" in mkcalls.cpp.
    INHERITFLAG_NXNMASK    = 0x0E000000U,
@@ -435,7 +437,8 @@ enum {
    MTX_ONLY_OUT               = 0x4000,
    MTX_ADD_2N                 = 0x8000,
    MTX_INCLUDE_PHANTOMS       = 0x10000,
-   MTX_NOT_TRUE_INVADER       = 0x20000
+   MTX_NOT_TRUE_INVADER       = 0x20000,
+   MTX_SELECTOR_IS_TRAILERS   = 0x40000
 };
 
 
@@ -535,7 +538,6 @@ enum setup_kind {
    s_qtag,
    s_bone,
    s1x8,
-   slittlestars,
    s_2stars,
    s1x3dmd,
    s3x1dmd,
@@ -1036,12 +1038,14 @@ enum call_restriction {
    cr_said_tgl,            // Qualifier only.
    cr_didnt_say_tgl,       // Qualifier only.
    cr_said_gal,            // Qualifier only.
+   cr_didnt_say_matrix,    // Qualifier only.
    cr_occupied_as_stars,   // Qualifier only.
    cr_occupied_as_clumps,  // Qualifier only.
    cr_occupied_as_blocks,  // Qualifier only.
    cr_occupied_as_h,       // Qualifier only.
    cr_occupied_as_qtag,    // Qualifier only.
    cr_occupied_as_3x1tgl,  // Qualifier only.
+   cr_occupied_as_o,       // Qualifier only.
    cr_line_ends_looking_out, // Qualifier only.
    cr_col_ends_lookin_in,  // Qualifier only.
    cr_ripple_one_end,      // Qualifier only.
@@ -1162,6 +1166,7 @@ enum calldef_schema {
    schema_concentric_2_4,
    schema_cross_concentric_2_4,
    schema_concentric_2_4_or_normal,
+   schema_concentric_2_4_or_single,
    schema_concentric_4_2,
    schema_concentric_4_2_prefer_1x4,
    schema_cross_concentric_4_2,
@@ -1172,6 +1177,7 @@ enum calldef_schema {
    schema_concentric_big2_6,     // Not for public use!
    schema_concentric_2_6_or_2_4,
    schema_concentric_6_2_or_4_2,
+   schema_concentric_6_2_or_4_2_line,
    schema_cross_concentric_2_6_or_2_4,
    schema_concentric_innermost,
    schema_concentric_touch_by_1_of_3,
@@ -1191,6 +1197,7 @@ enum calldef_schema {
    schema_concentric_no31dwarn,
    schema_concentric_specialpromenade,
    schema_cross_concentric_specialpromenade,
+   schema_concentric_ctrbox,
    schema_conc_12,
    schema_conc_16,
    schema_conc_star,

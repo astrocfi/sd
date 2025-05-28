@@ -1705,6 +1705,16 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric_6_2;
       break;
+   case schema_concentric_6_2_or_4_2_line:
+      if (attr::slimit(ss) == 5) {
+         warn(warn__unusual);
+         analyzer_result = schema_concentric_4_2;
+      }
+      else if (ss->kind == s3x1dmd || ss->kind == s_wingedstar || ss->kind == s_dead_concentric)
+         analyzer_result = schema_concentric_6_2_line;
+      else
+         analyzer_result = schema_concentric_6_2;
+      break;
    case schema_concentric_innermost:
       if (ss->kind == s_short6) {
          warn(warn__unusual);
@@ -1801,6 +1811,14 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric;
       break;
+   case schema_concentric_2_4_or_single:
+      if (ss->kind == s_bone6)
+         analyzer_result = schema_concentric_2_4;
+      else if (ss->kind == s1x4 || ss->kind == s1x8)
+         analyzer_result = schema_single_concentric;
+      else
+         analyzer_result = schema_concentric;
+      break;
    case schema_special_trade_by:
       if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_2_4;
@@ -1813,7 +1831,9 @@ static calldef_schema concentrify(
       }
       break;
    case schema_concentric_4_2_or_normal:
-      if (attr::slimit(ss) == 5)
+      if (ss->kind == s2x3)
+         analyzer_result = schema_concentric_2_4;
+      else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_4_2;
       else if (attr::slimit(ss) == 3)
          analyzer_result = schema_single_concentric;
@@ -1916,6 +1936,7 @@ static calldef_schema concentrify(
    case schema_concentric_8_4:
    case schema_concentric_zs:
    case schema_conc_o:
+   case schema_concentric_ctrbox:
       break;
    case schema_concentric_specialpromenade:
    case schema_cross_concentric_specialpromenade:
@@ -3411,7 +3432,11 @@ extern void concentric_move(
          begin_ptr->cmd.callspec = cmdptr->callspec;
          begin_ptr->cmd.cmd_final_flags = cmdptr->cmd_final_flags;
          begin_ptr->cmd.cmd_fraction = cmdptr->cmd_fraction;
-         begin_ptr->cmd.cmd_misc2_flags |= cmdptr->extraspecialsuperduper_misc2flags;
+         begin_ptr->cmd.restrained_fraction = cmdptr->restrained_fraction;
+
+         // If a restrained fraction got promoted, turn off this flag.
+         if (begin_ptr->cmd.restrained_fraction.fraction != 0 && cmdptr->restrained_fraction.fraction == 0)
+            begin_ptr->cmd.cmd_misc2_flags &= ~CMD_MISC2_RESTRAINED_SUPER;
 
          // If doing something under a "3x1" (or "1x3") concentric schema,
          // put the "3x3" flag into the 6-person call, whichever call that is,
@@ -3959,6 +3984,7 @@ extern void concentric_move(
    if (analyzer == schema_in_out_triple_zcom) analyzer = schema_concentric_zs;
    else if (analyzer == schema_in_out_triple && imposing_z) analyzer = schema_concentric;
    else if (analyzer == schema_inner_2x4 || analyzer == schema_inner_2x6) analyzer = schema_in_out_triple;
+   else if (analyzer == schema_concentric_ctrbox) analyzer = schema_concentric;
 
    if (analyzer == schema_concentric ||
        analyzer == schema_in_out_triple ||
@@ -7569,6 +7595,12 @@ extern void inner_selective_move(
                   else if (lilresult[0].kind == s_trngl && !(fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                }
+               else if (attr::klimit(fixp->ink) == 0) {
+                  if (lilresult[0].kind == s1x3)
+                     nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
+                  else if (lilresult[0].kind == s1x5)
+                     nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
+               }
                else if (attr::klimit(fixp->ink) == 11) {
                   if (lilresult[0].kind == s3x4)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2v];
@@ -7650,6 +7682,12 @@ extern void inner_selective_move(
                   else if (lilresult[0].kind == s_trngl)
                      nextfixp = select::fixer_ptr_table[fixp->nextdmd];
                }
+               else if (attr::klimit(fixp->ink) == 0) {
+                  if (lilresult[0].kind == s1x3)
+                     nextfixp = select::fixer_ptr_table[fixp->next1x4];
+                  else if (lilresult[0].kind == s1x5)
+                     nextfixp = select::fixer_ptr_table[fixp->nextdmd];
+               }
                else if (attr::klimit(fixp->ink) == 11) {
                   if (lilresult[0].kind == s3x4)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2];
@@ -7725,8 +7763,8 @@ extern void inner_selective_move(
             for (k=0;
                  k<=attr::klimit(lilresult[0].kind);
                  k++,map_scanner++,vrot>>=2)
-               copy_rot(this_result, fixp->indices[map_scanner],
-                        &lilresult[lilcount], k, 011*((frot+vrot) & 3));
+               install_rot(this_result, fixp->indices[map_scanner],
+                           &lilresult[lilcount], k, 011*((frot+vrot) & 3));
          }
 
          // We only give the warning if they in fact went to spots.  Some of the
@@ -7849,6 +7887,22 @@ extern void inner_selective_move(
       else if (indicator == selective_key_dyp ||
                indicator == selective_key_plain_from_id_bits)
          ma = merge_after_dyp;
+      else if (indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept &&
+               cmd1->parseptr->concept->kind == concept_tandem) {
+         livemask[0] = little_endian_live_mask(&the_results[0]);
+         livemask[1] = little_endian_live_mask(&the_results[1]);
+         if (the_results[0].kind == s2x8 && the_results[1].kind == s2x4 &&
+             (livemask[0] & 0x3C3C) == 0 &&
+             (livemask[1] & 0x99) == 0) {
+            // Some people working as couples or tandem went way to the outside, under
+            // the impression that the others must be getting wider also.  If the others
+            // weren't getting wider (since they were working normally), clear out some
+            // of the interior space in the first result.
+            static const expand::thing fix_big_2x8 =
+            {{0, 1, -1, -1, 6, 7, 8, 9, -1, -1, 14, 15}, s2x6, s2x8, 0};
+            expand::compress_setup(fix_big_2x8, &the_results[0]);
+         }
+      }
       else if (the_results[0].kind == s1x6 &&
                the_results[1].kind == s3x6 &&
                the_results[0].rotation == the_results[1].rotation)

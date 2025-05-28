@@ -2249,8 +2249,6 @@ static const checkitem checktable[] = {
    // Squeeze, 343 -> hourglass,.
    {0x00660066, 0x00202600, nothing, 0, warn__none, &x343toglass, (const veryshort *) 0},
 
-   {0x00840004, 0x00000008, s1x5, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
-   {0x00040084, 0x00000020, s1x5, 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00860044, 0x49650044, s_525, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00440044, 0x49650044, s_525, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00860044, 0x41250410, s_545, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
@@ -2278,6 +2276,8 @@ static const checkitem checktable[] = {
    // THESE TWO ARE INTRACTABLE!
    {0x00930004, 0x21008400, s1x6, 0x200, warn__none, (const coordrec *) 0, s1x6correction_a},
    {0x00040093, 0x0A000280, s1x6, 0x201, warn__none, (const coordrec *) 0, s1x6correction_b},
+
+
 
    {0x00620004, 0x01000400, s1x4, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00040062, 0x08000200, s1x4, 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
@@ -3926,9 +3926,12 @@ extern bool get_real_subcall(
    bool this_is_tagger =
       item_id >= base_call_tagger0 && item_id < base_call_tagger0+NUM_TAGGER_CLASSES;
    bool this_is_tagger_circcer = this_is_tagger || item_id == base_call_circcer;
+   call_conc_option_state save_state = current_options;
 
    if (!(new_final_concepts.test_heritbit(INHERITFLAG_FRACTAL)))
       mods1 &= ~DFM1_FRACTAL_INSERT;
+
+   process_number_insertion(mods1);
 
    // Fill in defaults in case we choose not to get a replacement call.
 
@@ -3954,14 +3957,12 @@ extern bool get_real_subcall(
       xx->no_check_call_level = true;
       xx->call_to_print = xx->call;
 
-      if (current_options.star_turn_option >= 0) {
+      if (current_options.star_turn_option >= 0)
          xx->options.number_fields += current_options.star_turn_option;
-         xx->options.howmanynumbers = 1;
-      }
 
       cmd_out->parseptr = xx;
       cmd_out->callspec = (call_with_name *) 0;
-      return true;
+      goto ret_true;
    }
 
    /* If this subcall invocation does not permit modification under any value of the
@@ -3984,7 +3985,7 @@ extern bool get_real_subcall(
       proceed with the search. */
 
    if (!(mods1 & DFM1_CALL_MOD_MASK) && !this_is_tagger_circcer)
-      return false;
+      goto ret_false;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
       done multiple times.  We want to query the user just once and use that result everywhere.
@@ -4006,13 +4007,13 @@ extern bool get_real_subcall(
       if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) &&
           (cmd_in->cmd_misc3_flags & CMD_MISC3__NO_ANYTHINGERS_SUBST) &&
           item_id == base_call_circulate) {
-         return false;
+         goto ret_false;
       }
       else if (snumber == (DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT) &&
           (cmd_in->cmd_misc3_flags & CMD_MISC3__NO_ANYTHINGERS_SUBST) &&
                item_id == base_call_circcer) {
          cmd_out->callspec = base_calls[base_call_circulate];
-         return true;
+         goto ret_true;
       }
 
       while ((search = *newsearch) != (parse_block *) 0) {
@@ -4025,7 +4026,7 @@ extern bool get_real_subcall(
 
             // If the pointer is nil, we already asked about this call, and the reply was no.
             if (!subsidiary_ptr)
-               return false;
+               goto ret_false;
 
             cmd_out->parseptr = subsidiary_ptr;
 
@@ -4055,7 +4056,7 @@ extern bool get_real_subcall(
                }
             }
 
-            return true;
+            goto ret_true;
          }
 
          newsearch = &search->next;
@@ -4064,24 +4065,24 @@ extern bool get_real_subcall(
    else if (parseptr->concept->kind != marker_end_of_list)
       fail_no_retry("wrong marker in get_real_subcall???");
 
-   // To be sure any query shows the actual number ("replace the cast off 3/4"
-   // rather than "replace the cast off <N/4>", do an unnecessary number insertion.
-   // Then throw it way; the actual insertion will occur later.
-   {
-      call_conc_option_state save_state = current_options;
-      process_number_insertion(mods1);
-      bool bbb = do_subcall_query(snumber, parseptr, newsearch,
-                                  this_is_tagger, this_is_tagger_circcer, orig_call);
-         current_options = save_state;
-      if (bbb) return false;
-   }
+   if (do_subcall_query(snumber, parseptr, newsearch,
+                        this_is_tagger, this_is_tagger_circcer, orig_call))
+      goto ret_false;
 
    cmd_out->parseptr = (*newsearch)->subsidiary_root;
    // We THROW AWAY the alternate call, because we want our user
    // to get it from the concept list.
    cmd_out->callspec = (call_with_name *) 0;
    cmd_out->cmd_final_flags.clear_all_herit_and_final_bits();
+
+ ret_true:
+   current_options = save_state;
    return true;
+
+ ret_false:
+
+   current_options = save_state;
+   return false;
 }
 
 static void promote_restrained_fraction(const by_def_item *source_def, setup_command *result_obj) {
@@ -5793,10 +5794,13 @@ static void do_sequential_call(
          // Turn on the expiration mechanism.
          result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
 
-         if (get_real_subcall(parseptr, this_item, &foobar,
-                              callspec, forbid_flip, extra_heritmask_bits, &foo1)) {
-            result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
-            recompute_id = true;
+         {
+            bool zzy = get_real_subcall(parseptr, this_item, &foobar,
+                                        callspec, forbid_flip, extra_heritmask_bits, &foo1);
+            if (zzy) {
+               result->cmd.prior_expire_bits &= ~RESULTFLAG__EXPIRATION_ENAB;
+               recompute_id = true;
+            }
          }
 
          // We allow stepping (or rearing back) again.
@@ -6045,6 +6049,7 @@ static bool do_misc_schema(
    promote_restrained_fraction(innerdef, foo1p);
    foo2.cmd_fraction = ss->cmd.cmd_fraction;
    promote_restrained_fraction(outerdef, &foo2);
+
    ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
 
    if (the_schema == schema_select_leads) {
@@ -7890,6 +7895,9 @@ static void move_with_real_call(
          }
       }
 
+      /* ******** We did this before, but maybe that was too early!!!!  Need to do it again
+         after pulling out the "doing ends" stuff. */
+
       // Do some quick error checking for visible fractions.  For now,
       // any flag is acceptable.  Later, we will distinguish among the various flags.
 
@@ -8238,8 +8246,7 @@ void move(
             p3.next = (parse_block *) 0;
          }
 
-         p3.no_check_call_level = true;
-         p3.options = current_options;
+         p3.no_check_call_level = true;          p3.options = current_options;
          ss->cmd.parseptr = &p1;
          ss->cmd.callspec = (call_with_name *) 0;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
@@ -8577,7 +8584,7 @@ void move(
          p2.concept = &concept_marker_concept_supercall;
          p2.subsidiary_root = &p3;
 
-         p3.no_check_call_level = true;
+         p3.no_check_call_level = true;          p3.options = current_options;
          ss->cmd.parseptr = &p1;
          ss->cmd.callspec = (call_with_name *) 0;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;

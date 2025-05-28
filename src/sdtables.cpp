@@ -378,10 +378,10 @@ selector_item selector_list[] = {
     "@k-BASED INTERLOCKED TRIANGLES","@k-BASED INTERLOCKED TRIANGLE",selector_uninitialized},
    {"interlocked @k-based triangles","interlocked @k-based triangle",
     "INTERLOCKED @k-BASED TRIANGLES","INTERLOCKED @k-BASED TRIANGLE",selector_uninitialized},
-   {"@6 are the apex of tandem-based triangles","@6 are the apex of tandem-based triangle",
-    "@6 are the apex of TANDEM-BASED TRIANGLES","@6 are the apex of TANDEM-BASED TRIANGLE",selector_uninitialized},
-   {"@6 are the apex of wave-based triangles","@6 are the apex of wave-based triangle",
-    "@6 are the apex of WAVE-BASED TRIANGLES","@6 are the apex of WAVE-BASED TRIANGLE",selector_uninitialized},
+   {"@6 are the apex of distorted tandem-based triangles","@6 are the apex of distorted tandem-based triangle",
+    "@6 ARE THE APEX OF DISTORTED TANDEM-BASED TRIANGLES","@6 ARE THE APEX OF DISTORTED TANDEM-BASED TRIANGLE",selector_uninitialized},
+   {"@6 are the apex of distorted wave-based triangles","@6 are the apex of distorted wave-based triangle",
+    "@6 ARE THE APEX OF DISTORTED WAVE-BASED TRIANGLES","@6 ARE THE APEX OF DISTORTED WAVE-BASED TRIANGLE",selector_uninitialized},
 
    // These are in the "selector_SOME_START" section.  They are only parsed for "<any> are/work tandem" things.
    {"some",         "some",        "SOME",         "SOME",        selector_uninitialized},
@@ -3193,7 +3193,7 @@ const map::map_thing map::spec_map_table[] = {
    {{11, 10, 3, 2, 5, 4, 9, 8},
     s1x8,1,MPKIND__NONE,0,        warn__none,  sbigbone,  0x000, 0, spcmap_dbgbn2},
 
-   // Distorted 1/4 tags.
+   // Distorted 1/4 tags / diamonds.
 
    {{0, 1, 4, 5, 6, 7, 10, 11},
     s_qtag,1,MPKIND__NONE,0,      warn__none,  s3dmd,     0x000, 0, spcmap_dqtag1},
@@ -3207,6 +3207,10 @@ const map::map_thing map::spec_map_table[] = {
     s_qtag,1,MPKIND__NONE,0,      warn__none,  s4x6,      0x001, 0, spcmap_dqtag5},
    {{6, 22, 14, 20, 18, 10, 2, 8},
     s_qtag,1,MPKIND__NONE,0,      warn__none,  s4x6,      0x001, 0, spcmap_dqtag6},
+   {{0, 2, 5, 11, 8, 10, 13, 3},
+    s_qtag,1,MPKIND__NONE,0,      warn__none,  s4x4,      0x005, 0, spcmap_dqtag7},
+   {{13, 0, 2, 3, 5, 8, 10, 11},
+    s_qtag,1,MPKIND__NONE,0,      warn__none,  s4x4,      0x000, 0, spcmap_dqtag8},
 
    // Maps for finding staggered C/L/W's of 3.
 
@@ -3993,8 +3997,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     s2x4,     1, 0, 2, 1,  0xAF7, schema_concentric},
    {s4x4,           schema_nothing, {15, 3, 7, 11,     12, 13, 14, 0, 4, 5, 6, 8},
              s2x2,     s2x4,     0, 0, 2, 1,  0xAFB, schema_concentric},
-   {s2x6,           schema_nothing, {9, 2, 3, 8,    0, 1, 4, 5, 6, 7, 10, 11},
-             s2x2,     s2x4,     1, 0, 9, 1,  0xAFD, schema_concentric},
+   {s2x6, schema_concentric_ctrbox, {9, 2, 3, 8,    0, 1, 4, 5, 6, 7, 10, 11},
+             s2x2,     s2x4,     1, 0, 1, 1,  0x8FD, schema_concentric},
    {s2x6,           schema_nothing, {2, 3, 8, 9,    0, 1, 4, 5, 6, 7, 10, 11},
              s2x2,     s2x4,     0, 0, 9, 1,  0xAFE, schema_concentric},
    {s2x6,           schema_nothing, {1, 2, 3, 4, 7, 8, 9, 10,   0, 5, 6, 11},
@@ -4565,13 +4569,15 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s3dmd,          schema_concentric_2_6, {11, 5,    0, 4, 3, 6, 10, 9},
              s1x2,  s_nftrgl6cw, 0, 0, 1, 1,  0x8FE, schema_concentric},
    {s3dmd,          schema_concentric_2_6, {11, 5,    9, 10, 2, 3, 4, 8},
-             s1x2,  s_nftrgl6ccw, 0, 0, 1, 1, 0x8FE, schema_concentric},
+             s1x2,  s_nftrgl6ccw,0, 0, 1, 1,  0x8FE, schema_concentric},
    {s_dmdlndmd,     schema_concentric_2_6, {2, 8,    0, 5, 4, 6, 11, 10},
              s1x2,  s_nftrgl6cw, 1, 0, 1, 1,  0x8FD, schema_concentric},
    {s_dmdlndmd,     schema_concentric_2_6, {2, 8,    10, 11, 3, 4, 5, 9},
-             s1x2,  s_nftrgl6ccw, 1, 0, 1, 1, 0x8FD, schema_concentric},
+             s1x2,  s_nftrgl6ccw,1, 0, 1, 1,  0x8FD, schema_concentric},
    {s_323,          schema_concentric_2_6, {7, 3,     0, 1, 2, 4, 5, 6},
              s1x2,     s2x3,     0, 0, 2, 1,  0x8FA, schema_concentric},
+   {s_323,          schema_concentric, {5, 7, 1, 3,   0, 2, 4, 6},
+             sdmd,     s2x2,     1, 0, 1, 1,  0x8FA, schema_concentric},
    {s_343,          schema_in_out_triple,  {7, 6, 5, 0, 1, 2,     8, 9, 3, 4},
              s1x3,     s1x4,     0, 0, 2, 2,  0x8FA, schema_in_out_triple},
    {s1x3dmd,        schema_checkpoint, {0, 3, 4, 7,    1, 2, 5, 6},
@@ -5648,7 +5654,7 @@ static const coordrec thing1x4 = {s1x4, 0x23,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
 static const coordrec thing1x5 = {s1x5, 0x23,
-   { -8,  -4,   0,   4,   8},
+   { -8,  -4,   0,   8,   4},
    {  0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -7467,6 +7473,20 @@ static const id_bit_table id_bit_table_1x8[] = {
    WESTBIT(ID2_CTR2 | ID2_CTR6 | ID2_CTR1X6 | ID2_CTR1X4 | ID2_CTR4),
    EASTBIT(ID2_OUTR6| ID2_CTR6 | ID2_CTR1X6 | ID2_CTR1X4 | ID2_CTR4)};
 
+static const id_bit_table id_bit_table_1x12[] = {
+   NOBIT(ID2_OUTR2),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(ID2_OUTR2),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0)};
+
 /* Used only if center 6 are contiguous, then a gap, then isolated people. */
 static const id_bit_table id_bit_table_1x10[] = {
    NOBIT(ID2_OUTR2| ID2_NCTR1X6| ID2_NCTR1X4),
@@ -7569,14 +7589,14 @@ static const id_bit_table id_bit_table_dhrglass[] = {
    SOUTHBIT(ID2_CENTER|ID2_CTR4|ID2_CTRDMD | ID2_CTR2 |ID2_OUTR1X3)};
 
 static const id_bit_table id_bit_table_323[] = {
-   NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   NOBIT(  ID2_CTRDMD | ID2_OUTR6|ID2_OUTR1X3),
-   NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   EASTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3),
-   NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   NOBIT(  ID2_CTRDMD | ID2_OUTR6|ID2_OUTR1X3),
-   NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   WESTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
+   NOBIT(  ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   NOBIT(  ID2_CENTER|ID2_CTRDMD | ID2_OUTR6|ID2_OUTR1X3),
+   NOBIT(  ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   EASTBIT(ID2_CENTER|ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3),
+   NOBIT(  ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   NOBIT(  ID2_CENTER|ID2_CTRDMD | ID2_OUTR6|ID2_OUTR1X3),
+   NOBIT(  ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   WESTBIT(ID2_CENTER|ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
 
 static const id_bit_table id_bit_table_23232[] = {
    NOBIT(   ID2_NCTRDMD),
@@ -8790,16 +8810,6 @@ const setup_attr setup_attrs[] = {
     id_bit_table_1x8,
     {"a b d c g h f e",
      "a@b@d@c@g@h@f@e"}},
-   {7,                      // slittlestars
-    (const coordrec *) 0,
-    (const coordrec *) 0,
-    {0, 0, 0, 0},
-    {b_nothing, b_nothing},
-    {0, 0},
-    0U,
-    (const id_bit_table *) 0,
-    {(Cstring) 0,
-     (Cstring) 0}},
    {7,                      // s_2stars
     &thing2stars,
     &nicething2stars,
@@ -9267,7 +9277,7 @@ const setup_attr setup_attrs[] = {
     {b_1x12, b_12x1},
     {12, 1},
     0U,
-    (const id_bit_table *) 0,
+    id_bit_table_1x12,
     {"a b c d e f l k j i h g",
      "a@b@c@d@e@f@l@k@j@i@h@g"}},
    {13,                     // s1x14
@@ -9953,7 +9963,7 @@ const setup_attr setup_attrs[] = {
    {7,                      // s_323
     &thing_323,
     &thing_323,
-    {0, 0, 0x11, 0},
+    {0x55, 0, 0x11, 0x55},
     {b_323, b_p323},
     {0, 0},
     0U,
@@ -10351,6 +10361,8 @@ const schema_attr schema_attrs[] = {
     schema_concentric_2_4},              // schema_cross_concentric_2_4
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_4_or_normal
+   {SCA_CENTRALCONC,
+    schema_nothing},                     // schema_concentric_2_4_or_single
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_4_2
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
@@ -10371,6 +10383,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_2_6_or_2_4
    {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_6_2_or_4_2
+   {0 | SCA_REMOVE_VERIFY,
+    schema_nothing},                     // schema_concentric_6_2_or_4_2_line
    {SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_2_6_or_2_4},       // schema_cross_concentric_2_6_or_2_4
    {0,
@@ -10409,6 +10423,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_specialpromenade
    {0,
     schema_nothing},                     // schema_cross_concentric_specialpromenade
+   {0,
+    schema_nothing},                     // schema_concentric_ctrbox
    {0,
     schema_nothing},                     // schema_conc_12
    {0,
@@ -10655,9 +10671,29 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_foo55, s1x1, s2x4,               0, 0, 4, {0, 2, 4, 6},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+    fx0, fx0,                   fx0, fx_foo55m3,            fx_foo55n5, fx_foo55m5,     fx0, fx0},
    {fx_fooaa, s1x1, s2x4,               0, 0, 4, {1, 3, 5, 7},
+    fx0, fx0,                   fx0, fx_fooaan3,            fx_fooaam5, fx_fooaan5,     fx0, fx0},
+
+   // If a 1x1 turns into a 1x3 or 1x5, use the "next1x4" or "nextdmd" fields, respectively.
+   // The user presumably did some kind of truck/loop operation.
+   {fx_foo55m3, s1x1, s4x4,             0, 0, 4, {13, 14, 0,   11, 7, 2,   8, 6, 5,   10, 15, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fooaan3, s1x1, s4x4,             0, 0, 4, {15, 3, 1,   6, 5, 4,   9, 11, 7,   12, 13, 14},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_foo55m5, s1x1, s4x6,             0, 0, 4,
+                {1, 2, 3, 5, 4,   19, 20, 21, 23, 22,   17, 16, 15, 13, 14,   11, 10, 9, 7, 8},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fooaam5, s1x1, s2x8,             0, 0, 4,
+                {1, 2, 3, 5, 4,   3, 4, 5, 7, 6,   13, 12, 11, 9, 10,   15, 14, 13, 11, 12},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fooaan5, s1x1, s4x6,             0, 0, 4,
+                {10, 9, 8, 6, 7,   16, 15, 14, 12, 13,   18, 19, 20, 22, 21,   0, 1, 2, 4, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_foo55n5, s1x1, s2x8,             0, 0, 4,
+                {0, 1, 2, 4, 3,   2, 3, 4, 6, 5,   12, 11, 10, 8, 9,   14, 13, 12, 10, 11},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
    {fx_foo11, s1x1, s2x4,               0, 0, 2, {0, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_foo22, s1x1, s2x4,               0, 0, 2, {1, 5},
@@ -11659,7 +11695,10 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f1x8hi3, s1x3,     s1x8,  0xA8, 0, 1, {4, 5, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-
+   {fx_f1x8low5, s1x5,    s1x8,     0, 0, 1, {0, 1, 3, 6, 2},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f1x8hi5, s1x5,     s1x8, 0xAA8, 0, 1, {4, 5, 7, 2, 6},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4far, s1x4, s2x4,         0, 0, 1, {0, 1, 3, 2},
     fx0, fx0,                   fx0, fx_f1x8hif,      fx_lndmd8, fx_linpdm8,             fx_f2x4rl, fx_f2x4rl},
    {fx_f2x4near, s1x4, s2x4,        0, 0, 1, {7, 6, 4, 5},
@@ -12297,6 +12336,10 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s1x8,        0xFC,   fx_f1x8hi6,    fx0, -1},
    {LOOKUP_NONE,                      s1x8,        0x3C,   fx_f1x8lodbt4, fx0, -1},
    {LOOKUP_NONE,                      s1x8,        0xC3,   fx_f1x8hidbt4, fx0, -1},
+   {LOOKUP_NONE,                      s1x8,        0x0B,   fx_f1x8low3,   fx0, -1},
+   {LOOKUP_NONE,                      s1x8,        0xB0,   fx_f1x8hi3,    fx0, -1},
+   {LOOKUP_NONE,                      s1x8,        0x4F,   fx_f1x8low5,   fx0, -1},
+   {LOOKUP_NONE,                      s1x8,        0xF4,   fx_f1x8hi5,    fx0, -1},
    {LOOKUP_NONE,                      s_qtag,      0xE1,   fx_fqtglowf,   fx0, -1},
    {LOOKUP_NONE,                      s_qtag,      0x1E,   fx_fqtghif,    fx0, -1},
    {LOOKUP_NONE,                      s_ptpd,      0x0F,   fx_fdmdlowf,   fx0, -1},

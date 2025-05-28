@@ -1080,7 +1080,9 @@ static const veryshort tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
 static const veryshort galhyperv[15] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
 static const veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
 static const veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
-static const veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+static const veryshort starhyperh[12] = {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+static const veryshort starhyperh6556[12] = {0, 0, 0, 0, 1, 0, 0, 2, 0, 3, 0, 0};
+static const veryshort starhyperh5665[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 3, 0};
 static const veryshort fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 static const veryshort lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
 static const veryshort lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
@@ -1703,9 +1705,17 @@ static void special_triangle(
             else if (scopy->kind == s1x3) {
                northified_index = 2-northified_index;
             }
+            else if (scopy->kind == s1x5) {
+               northified_index = 3-real_index;
+               if (northified_index == 2)
+                  northified_index = 4;
+               else if (northified_index == 1)
+                  northified_index = 2;
+               else if (northified_index == -1)
+                  northified_index = 1;
+            }
             else {
-               int d2 = num >> 1;
-               northified_index = (northified_index + d2) % num;
+               northified_index = (northified_index + (num >> 1)) % num;
             }
          }
 
@@ -1719,6 +1729,16 @@ static void special_triangle(
             }
             else if (result->kind == s1x3)
                k = numout-1-k;
+            else if (result->kind == s1x5) {
+               k = 3-k;
+
+               if (k == 1)
+                  k = 2;
+               else if (k == 2)
+                  k = 4;
+               else if (k == -1)
+                  k = 1;
+            }
             else {
                k -= (numout >> 1);
                if (k<0) k+=numout;
@@ -4047,21 +4067,21 @@ static int divide_the_setup(
       goto divide_us_no_recompute;
 
    case s1x4:
-      /* See if the call has a 1x2, 2x1, or 1x1 definition,
-         in which case split it and do each part. */
+      // See if the call has a 1x2, 2x1, or 1x1 definition,
+      // in which case split it and do each part.
       if ((assoc(b_1x2, ss, calldeflist) ||
            assoc(b_2x1, ss, calldeflist) ||
            assoc(b_1x1, ss, calldeflist))) {
 
-         /* The following makes "ends hinge" work from a grand wave.  Any 1x4 -> 2x2 call
-            that acts by dividing itself into 1x2's is presumed to want the people in each 1x2
-            to stay near each other.  We signify that by flipping the elongation, which we
-            had previously set perpendicular to the 1x4 axis, overriding anything that may
-            have been in the call definition. */
+         // The following makes "ends hinge" work from a tidal wave.  Any 1x4 -> 2x2 call
+         // that acts by dividing itself into 1x2's is presumed to want the people in each 1x2
+         // to stay near each other.  We signify that by flipping the elongation, which we
+         // had previously set perpendicular to the 1x4 axis, overriding anything that may
+         // have been in the call definition.
 
          *desired_elongation_p ^= 3;
-         /* If the flags were zero and we complemented them so that
-            both are set, that's not good. */
+         // If the flags were zero and we complemented them so that
+         // both are set, that's not good.
          if (*desired_elongation_p == 3)
             *desired_elongation_p = 0;
 
@@ -4069,22 +4089,36 @@ static int divide_the_setup(
          goto divide_us_no_recompute;
       }
 
-      /* See long comment above for s1x8.  The test cases for this are "tandem own the <points>, trade
-         by flip the diamond", and "tandem own the <points>, flip the diamond by flip the diamond",
-         both from a tandem diamond (the point being that there will be only one of them.) */
+      // See long comment above for s1x8.  The test cases for this are "tandem own the <points>, trade
+      // by flip the diamond", and "tandem own the <points>, flip the diamond by flip the diamond",
+      // both from a tandem diamond (the point being that there will be only one of them.)
 
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
           (ss->people[1].id1 | ss->people[3].id1) == 0) {
          setup sstest = *ss;
 
-         sstest.kind = sdmd;   /* It makes assoc happier if we do this now. */
+         sstest.kind = sdmd;   // It makes assoc happier if we do this now.
 
          if (
              (!(newtb & 010) || assoc(b_dmd, &sstest, calldeflist)) &&
              (!(newtb & 001) || assoc(b_pmd, &sstest, calldeflist))) {
             *ss = sstest;
-            return 2;                        /* And try again. */
+            return 2;                        // And try again.
          }
+      }
+
+      break;
+   case s1p5x4:
+      // See if the call has a 1x2, 2x1, or 1x1 definition,
+      // in which case split it and do each part.
+      if ((assoc(b_1x2, ss, calldeflist) ||
+           assoc(b_2x1, ss, calldeflist) ||
+           assoc(b_1x1, ss, calldeflist))) {
+         if (livemask == 0xCC)
+            division_code = MAPCODE(s1x2,2,MPKIND__OFFS_L_HALF,0);
+         else if (livemask == 0x33)
+            division_code = MAPCODE(s1x2,2,MPKIND__OFFS_R_HALF,0);
+         goto divide_us_no_recompute;
       }
 
       break;
@@ -4679,8 +4713,9 @@ static uint32 do_actual_array_call(
          special_4_way_symm(linedefinition, ss, &newpersonlist, newplacelist,
                             lilresult_mask, result);
       }
-      else if ((setup_attrs[ss->kind].setup_props & SPROP_NO_SYMMETRY) != 0 || ss->kind == s1x3 ||
-               (setup_attrs[result->kind].setup_props & SPROP_NO_SYMMETRY) != 0 || result->kind == s1x3) {
+      else if ((setup_attrs[ss->kind].setup_props & SPROP_NO_SYMMETRY) != 0 ||
+               (setup_attrs[result->kind].setup_props & SPROP_NO_SYMMETRY) != 0 ||
+               ss->kind == s1x3 || ss->kind == s1x5 || result->kind == s1x3 || result->kind == s1x5) {
          if (inconsistent_rotation | inconsistent_setup)
             fail("This call is an inconsistent shape-changer.");
          special_triangle(coldefinition, linedefinition, ss, &newpersonlist, newplacelist,
@@ -4752,6 +4787,20 @@ static uint32 do_actual_array_call(
                   }
                   else {
                      final_translatec += (attr::klimit(s_hrglass) + 1) >> 1;
+                     rotfudge_col = 3;
+                  }
+               }
+               else if (result->kind == s_hrglass && other_kind == s2x4) {
+                  result->rotation = linedefinition->callarray_flags & CAF__ROT;
+                  result->kind = s2x4;
+                  tempkind = s2x4;
+                  final_translatec = qtg2x4;
+
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatec += (attr::klimit(s2x4) + 1) >> 1;
+                     rotfudge_col = 1;
+                  }
+                  else {
                      rotfudge_col = 3;
                   }
                }
@@ -5471,6 +5520,17 @@ static uint32 do_actual_array_call(
                                              // need to invent a new setup, "farstar".
                permuter = fstarhyperh;
             }
+            else if ((lilresult_mask[0] & 06556) == 0) {
+               // These two take care of swap the windmill from T-bone boxes (as in "heads nothing".)
+               // We go to stars on the 1/2 swap around, because we don't know what else to do.
+               // The the "fudge_to_parallel_diamonds" then figures it out.  Cf. vi01t.
+               result->kind = s_star;
+               permuter = starhyperh6556;
+            }
+            else if ((lilresult_mask[0] & 05665) == 0) {
+               result->kind = s_star;
+               permuter = starhyperh5665;
+            }
             else
                fail("Call went to improperly-formed setup.");
             break;
@@ -5541,7 +5601,7 @@ static uint32 do_actual_array_call(
             else
                fail("Call went to improperly-formed setup.");
             break;
-         case slittlestars:
+         case s_2stars:
             if ((lilresult_mask[0] & 0xCC) == 0) {
                result->kind = s2x2;
                permuter = lilstar3;

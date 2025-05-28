@@ -207,14 +207,14 @@ bool iterate_over_sel_dir_num(
 
    if (number_used && enable_number_iteration) {
 
-      /* Try again with a different number, until we run out of ideas. */
+      // Try again with a different number, until we run out of ideas.
 
       if (number_for_initialize < 4) {
-         /* We try all numbers from 1 to 4.  We need to do 1-4 to get
-            "exchange the boxes N/4" on the waves menu.
-            Getting calls like "N-N-N-N change the web" and
-            "N-N-N-N relay the top" requires that we play games
-            with the list, setting the second item odd. */
+         // We try all numbers from 1 to 4.  We need to do 1-4 to get
+         // "exchange the boxes N/4" on the waves menu.
+         // Getting calls like "N-N-N-N change the web" and
+         // "N-N-N-N relay the top" requires that we play games
+         // with the list, setting the second item odd.
          number_for_initialize++;
          selector_for_initialize = selector_beaus;
          direction_for_initialize = direction_right;

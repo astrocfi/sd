@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2018  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -3127,7 +3127,7 @@ static void do_concept_new_stretch(
    //  3  : wave
    //  4  : column
    //  18 : box
-   //  19 : diamond
+   //  19 : diamond spots
    //  20 : just "stretched", to be used with triangles.
 
    if ((linesp == 18 && tempsetup.kind != s2x4) ||
@@ -4230,7 +4230,7 @@ static void do_concept_paranoid(
    if (process_brute_force_mxn(ss, parseptr, do_concept_paranoid, result)) return;
 
    if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
-      fail("Illegal modifier before \"stable\".");
+      fail("Illegal modifier before \"paranoid\".");
 
    move(ss, false, result);
 
@@ -4381,6 +4381,31 @@ static void do_concept_checkerboard(
        d_north, d_south, 0, {0, 1, 6, 7}, {-1, -1, -1, -1}, {2, 3, 4, 5}, {-1, -1, -1, -1}, {-1}},
       {s2x4, 0,              0x0FF0,     0x00AA,      // unsymmetrical, outfacers on right
        d_north, d_south, 0, {2, 3, 4, 5}, {-1, -1, -1, -1}, {0, 1, 6, 7}, {-1, -1, -1, -1}, {-1}},
+
+      // 2X6, left offset
+      {s2x6, 0,              0xCC0CC0,     0x000AA0,      // outfacers are as if in RWV
+       d_north, d_south, 0, {0, 2, 6, 8}, {1, 9, 7, 3}, {1, 3, 7, 9}, {1, 3, 7, 9}, {-1}},
+      {s2x6, 0,              0x330330,     0x000AA0,      // outfacers are as if in LWV
+       d_north, d_south, 0, {1, 3, 7, 9}, {0, 2, 6, 8}, {0, 2, 6, 8}, {0, 2, 6, 8}, {-1}},
+      {s2x6, 0,              0xF00F00,     0x000AA0,      // outfacers are as if in R2FL
+       d_north, d_south, 0, {0, 1, 6, 7}, {-1, -1, -1, -1}, {2, 3, 8, 9}, {-1, -1, -1, -1}, {-1}},
+      {s2x6, 0,              0x0F00F0,     0x000AA0,      // outfacers are as if in L2FL
+       d_north, d_south, 0, {2, 3, 8, 9}, {0, 1, 6, 7}, {0, 1, 6, 7}, {-1, -1, -1, -1}, {-1}},
+      {s2x6, 0,              0xC30C30,     0x000AA0,      // outfacers are ends
+       d_north, d_south, 0, {0, 3, 6, 9}, {1, 2, 7, 8}, {1, 2, 7, 8}, {-1, -1, -1, -1}, {-1}},
+
+      // 2X6, right offset
+      {s2x6, 0,              0x0CC0CC,     0x0000AA,      // outfacers are as if in RWV
+       d_north, d_south, 0, {2, 4, 8, 10}, {11, 9, 5, 3}, {3, 5, 9, 11}, {11, 3, 5, 9}, {-1}},
+      {s2x6, 0,              0x033033,     0x0000AA,      // outfacers are as if in LWV
+       d_north, d_south, 0, {3, 5, 9, 11}, {10, 2, 4, 8}, {2, 4, 8, 10}, {10, 2, 4, 8}, {-1}},
+      {s2x6, 0,              0x0F00F0,     0x0000AA,      // outfacers are as if in R2FL
+       d_north, d_south, 0, {2, 3, 8, 9}, {11, 10, 5, 4}, {4, 5, 10, 11}, {-1, -1, -1, -1}, {-1}},
+      {s2x6, 0,              0x00F00F,     0x0000AA,      // outfacers are as if in L2FL
+       d_north, d_south, 0, {4, 5, 10, 11}, {-1, -1, -1, -1}, {2, 3, 8, 9}, {-1, -1, -1, -1}, {-1}},
+      {s2x6, 0,              0x0C30C3,     0x0000AA,      // outfacers are ends
+       d_north, d_south, 0, {2, 5, 8, 11}, {10, 9, 4, 3}, {3, 4, 9, 10}, {-1, -1, -1, -1}, {-1}},
+
       {s_c1phan, 0x33333333, 0xCC00CC00, 0x004488CC,  // C1 phantoms, outfacers N/S
        d_north, d_south, 033, {0, 2, 8, 10}, {4, 6, 12, 14}, {4, 6, 12, 14}, {4, 6, 12, 14}, {15, 5, 7, 13}},
       {s_c1phan, 0x33333333, 0x00CC00CC, 0x004488CC,  // C1 phantoms, outfacers E/W
@@ -6303,7 +6328,7 @@ static void do_concept_ferris(
       uint32 livemask;
       big_endian_get_directions(ss, directions, livemask);
 
-      if ((((ss->kind != s_qtag) && (ss->kind != s_hrglass)) || ((directions & 0x5454) != 0)) &&
+      if ((((ss->kind != s_qtag) && (ss->kind != s_hrglass)) || ((directions & 0x4444) != 0)) &&
           (((ss->kind != s_spindle)) || ((directions & 0x4545) != 0)))
          fail("Must have quarter-tag or hourglass-like setup to do this concept.");
 
@@ -6497,6 +6522,9 @@ static void do_concept_all_8(
    if (ss->kind == s_alamo) {
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
    }
+
+   if (key == 0 && ss->kind == s_thar && (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_BIT) != 0)
+      key = 1;
 
    if (key == 0) {
       // This is "all 4 couples".
@@ -9321,7 +9349,7 @@ enum {
 };
 
 
-// Beware!!  This table must be keyed to definition of "concept_kind" in sdbase.h .
+// Beware!!  This table must be keyed to definition of "concept_kind" in sd.h .
 const concept_table_item concept_table[] = {
    {CONCPROP__USES_PARTS, 0},                               // concept_another_call_next_mod
    {0, 0},                                                  // concept_mod_declined
@@ -9385,6 +9413,8 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_0x4
    {0, 0},                                                  // concept_6x2
    {0, 0},                                                  // concept_3x2
+   {0, 0},                                                  // concept_3x5
+   {0, 0},                                                  // concept_5x3
    {0, 0},                                                  // concept_3x3
    {0, 0},                                                  // concept_4x4
    {0, 0},                                                  // concept_5x5
