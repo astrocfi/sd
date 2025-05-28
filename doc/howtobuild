@@ -100,9 +100,12 @@ Go to sddoc directory and do:
 22 Jan 16  -  13 Feb 17  #52
 13 Feb 17  -   3 Mar 17  #53
  3 Mar 17  -   5 Oct 17  #56
- 5 Oct                   #57
-                         #54
-                         #55
+ 5 Oct 17  -   5 Dec 17  #57  // 45 degree load the boat
+5 Dec 17   -             #59  // fly the coop
+                         #58  // Risha
+                         #60  // really hairy Risha/Justin
+
+
 
 (#25, #26, #48, #30, #47 are also available.)
 Also, do [DPT] initially touch by 1/2 x [split sidetrack]
@@ -221,17 +224,10 @@ cd ..
 make -f makefile.linux64 tarball
 
 sftp USERNAME@www.challengedance.org
-(P=PASSWORD)
-cd public_html/sd
-put linux.tgz
-
-
------------------------------------------------------------------
-
-To update the poster child:
-
-   run "do_index <poster-child number>"
-   Then mail the file index.txt
+  challengedance.org> (P=PASSWORD)
+  challengedance.org> cd public_html/sd
+  challengedance.org> put linux.tgz
+  challengedance.org> quit
 
 -----------------------------------------------------------------
 
@@ -274,19 +270,23 @@ install                                  *
 
 -----------------------------------------------------------------
         CURRENT METHOD
+             THIS NO LONGER WORKS ON WINDOZE.
+    BRING THE FILE (and sd_source too) OVER TO UBUNTU.
 -----------------------------------------------------------------
-Start psftp (under "putty" group.)
-open www.challengedance.org
-(U=USERNAME, P=PASSWORD)
-cd public_html/sd
-lcd \wba\sddoc or \wba\sdarchive\vxxx or wherever
-put pack.zip
-  This is silent and not helpful.  It takes a while.  Run putty,
-  and doubleclick "chaldance" (U=USERNAME, P=PASSWORD) to connect in another window,
-  cd public_html/sd
-  and watch the file come in.
-      challengedance.org> unzip pack
-      challengedance.org> rm pack.zip
-      challengedance.org> exit
+Put the files into home directory on Kanga.
+
+sftp USERNAME@www.challengedance.org
+  challengedance.org> (P=PASSWORD)
+  challengedance.org> cd public_html/sd
+  challengedance.org> put pack.zip
+  challengedance.org> (Check size)
+  challengedance.org> quit
+
+rsh USERNAME@www.challengedance.org
+  challengedance.org> (P=PASSWORD)
+  challengedance.org> cd public_html/sd
+  challengedance.org> unzip pack.zip
+  challengedance.org> rm pack.zip
+  challengedance.org> exit
 
 The c4 books (book1.pdf etc.) go into the same directory.

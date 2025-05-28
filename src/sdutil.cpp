@@ -88,7 +88,6 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
-#include "sdui.h"
 #include "sort.h"
 
 

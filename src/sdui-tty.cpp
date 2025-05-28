@@ -96,7 +96,7 @@ and the following other variables:
 
 extern void exit(int code);
 
-#include "sdui.h"
+#include "sd.h"
 
 // See comments in sdmain.cpp regarding this string.
 static const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  " UI_TIME_STAMP;

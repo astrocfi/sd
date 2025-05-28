@@ -249,6 +249,8 @@ int begin_sizes[] = {
    12,         // b_p3ptpd
    16,         // b_4ptpd
    16,         // b_p4ptpd
+   16,         // b_2x2dmd
+   16,         // b_p2x2dmd
    16,         // b_hqtag
    16,         // b_phqtag
    12,         // b_hsqtag

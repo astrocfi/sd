@@ -158,7 +158,6 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
-#include "sdui.h"
 
 
 // *** There are more globals proclaimed at line 235.
@@ -1386,8 +1385,8 @@ bool expand::compress_from_hash_table(setup *ss,
           action >= cptr->action_level &&
           (cptr->biglivemask & livemask) == 0) {
 
-         // Do not compress qtag to 2x3 is switch is on.
-         if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
+         // Do not compress qtag to 2x3 or 2x4 if switch is on.
+         if (noqtagcompress && cptr->outer_kind == s_qtag && (cptr->inner_kind == s2x3))
             continue;
 
          if (action != cptr->action_level && cptr->must_be_exact_level) {
@@ -1514,6 +1513,7 @@ extern void do_matrix_expansion(
 #endif
          }
       }
+
       if (ss->kind == s_23232) {
          if (needpropbits & NEEDMASK(CONCPROP__NEEDK_4X5)) {
             // Have to figure out where to move the people in the lines of 3.
@@ -1740,9 +1740,15 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s2x2dmd,    cr_dmd_ctrs_mwv, 8, {1, 3, 7, 5, 11, 9, 13, 15, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s_qtag,    cr_dmd_pts_mwv, 4, {0, 5, 1, 4, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s_ptpd,    cr_dmd_pts_mwv, 4, {0, 2, 6, 4, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s2x2dmd,    cr_dmd_pts_mwv, 8, {0, 2, 6, 4, 10, 18, 12, 14, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
@@ -1754,8 +1760,6 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
-   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},
-    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
     {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_pts_1f, 2, {0, 2, -1},
@@ -1937,6 +1941,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
    {s_qtag, cr_couples_only, 2, {6, 2, 7, 3},
     {2}, {0}, {0}, true, chk_groups},
    {sbigdmd, cr_2fl_only, 4, {3, 9, 2, 8},
+    {8}, {0}, {0}, true, chk_wave},
+   {s4x5, cr_2fl_only, 4, {7, 17, 2, 12},
     {8}, {0}, {0}, true, chk_wave},
    {s_galaxy, cr_wave_only, 4, {1, 3, 7, 5},
     {0}, {0}, {0}, true, chk_wave},
@@ -2397,9 +2403,9 @@ restriction_test_result verify_restriction(
       break;
 
    case cr_ptp_unwrap_sel:
-      k ^= 022002200 ^ 014001400;
+      k ^= (ss->kind == s2x2dmd) ? (0x2828 ^ 0x4444) : (022002200 ^ 014001400);
    case cr_nor_unwrap_sel:
-      k ^= 014001400;
+      k ^= (ss->kind == s2x2dmd) ? 0x4444 : 014001400;
       goto cr_none_sel_label;
 
    case cr_ends_sel:
@@ -4124,17 +4130,37 @@ extern callarray *assoc(
       case cr_not_tboned_in_quad:
          goto check_tt;
       case cr_true_Z_cw:
-         if (ssK != s2x3)
-            goto good;         // We don't understand the setup -- we'd better accept it.
-         if ((ss->people[2].id1 | ss->people[5].id1) && !ss->people[0].id1 && !ss->people[3].id1)
-            goto good;
-         goto bad;
+         if (ssK == s2x3) {
+            if ((ss->people[2].id1 | ss->people[5].id1) && !ss->people[0].id1 && !ss->people[3].id1)
+               goto good;
+            else
+               goto bad;
+         }
+         else if (ssK == s_qtag) {
+            if ((ss->people[0].id1 | ss->people[4].id1) && !ss->people[5].id1 && !ss->people[1].id1)
+               goto good;
+            else
+               goto bad;
+         }
+
+         // We don't understand the setup -- we'd better accept it.
+         goto good;
       case cr_true_Z_ccw:
-         if (ssK != s2x3)
-            goto good;         // We don't understand the setup -- we'd better accept it.
-         if ((ss->people[0].id1 | ss->people[3].id1) && !ss->people[2].id1 && !ss->people[5].id1)
-            goto good;
-         goto bad;
+         if (ssK == s2x3) {
+            if ((ss->people[0].id1 | ss->people[3].id1) && !ss->people[2].id1 && !ss->people[5].id1)
+               goto good;
+            else
+               goto bad;
+         }
+         else if (ssK == s_qtag) {
+            if ((ss->people[5].id1 | ss->people[1].id1) && !ss->people[0].id1 && !ss->people[4].id1)
+               goto good;
+            else
+               goto bad;
+         }
+
+         // We don't understand the setup -- we'd better accept it.
+         goto good;
       case cr_true_PG_cw:
          k ^= 01717U ^ 07474U;
          // **** FALL THROUGH!!!!
@@ -4614,6 +4640,16 @@ extern callarray *assoc(
       }
 
    fix_col_line_stuff:
+
+      // This is a horrible kludge to handle "stroll explode the wave" and the evil
+      // "1/2" hinge from a 4x5 occupied as 4 "stairstep" minwaves (going to a tidal
+      // wave).  We have to make "wave_only" and "2fl_only" do two different things
+      // (check the 1x4 down the middle in the former case and check each of the 4
+      // miniwaves in the latter case), and we don't want further explosion of the
+      // "cr_wave_only" and "cr_2fl_only" variants.  Thank you, Bryan Clark.
+
+      if (ssK == s4x5 && (little_endian_live_mask(ss) & 0x06C1B) == 0)
+         goto check_tt;
 
       switch (ssK) {
       case s1x3:
@@ -5535,7 +5571,7 @@ bool fix_n_results(
 
          if (rotstates & 0x20) {
             if (i&1) {
-               expand::expand_setup(s_2x2_2x4_ctrs, &z[i]);
+               expand::expand_setup(s_2x2_2x4_ctrsb, &z[i]);
                setfinal = 2;
             }
             else rotstates = 0;   // fail.

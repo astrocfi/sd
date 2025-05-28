@@ -2530,7 +2530,7 @@ static void do_concept_do_twinphantom_diamonds(
 {
    // See "do_triple_formation" for meaning of arg3.
 
-   if (ss->kind != s4x6 || (global_livemask & 0x02D02D) != 0)
+   if (ss->kind != s2x2dmd)
       fail("Must have twin phantom diamond or 1/4 tag setup for this concept.");
 
    ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
@@ -3948,9 +3948,9 @@ static void do_concept_phan_crazy(
 
       // Check the validity of the setup each time for boxes/diamonds,
       // or first time only for C/L/W.
-      if ((i==0 || ((parseptr->concept->arg1 & 7) >= 4 &&
-                    !(parseptr->concept->arg1 & 64))) &&
-          (tempsetup.kind != kk || tempsetup.rotation != 0))
+      // But allow 2x8 -> 4x4 transition for later parts.
+      if ((i==0 || (((parseptr->concept->arg1 & 7) >= 4 && !(parseptr->concept->arg1 & 64)) &&
+                    (kk != s2x8 || tempsetup.kind != s4x4))) && (tempsetup.kind != kk || tempsetup.rotation != 0))
          fail("Can't do crazy phantom or offset in this setup.");
 
       if (ctrflag) {
@@ -3963,6 +3963,13 @@ static void do_concept_phan_crazy(
             fail("Can't do crazy offset with this shape-changer.");
          concentric_move(&tempsetup, (setup_command *) 0, &tempsetup.cmd,
                          schema_in_out_quad, 0, 0, true, false, specialmapcode, result);
+
+         // Concentric_move sometimes gets carried away.  Maybe should fix same.
+         if (result->kind == s4x6) {
+            normalize_setup(result, simple_normalize, false);
+            do_matrix_expansion(result, CONCPROP__NEEDK_2X8, true);
+         }
+
          result->rotation -= spec_conc_rot;
       }
       else                              // Do it on each side.
@@ -4121,22 +4128,23 @@ void stable_move(
    selector_kind who,
    setup *result) THROW_DECL
 {
-   if (ss->kind == nothing) {   // Dust to dust.
-      clear_result_flags(result);
-      result->kind = nothing;
-      return;
-   }
+   int orig_rotation = ss->rotation;
+   setup_kind kk;
+   int rot;
+   int n = attr::slimit(ss);
+
+   who_list saved_selector = current_options.who;
+   current_options.who.who[0] = who;
+
+   if (ss->kind == nothing)
+      goto dust_to_dust;
+
+   if (n < 0) fail("Sorry, can't do stable starting in this setup.");
 
    if (fractional && howfar > 4)
       fail("Can't do fractional stable more than 4/4.");
 
    howfar <<= 1;    // Calibrated in eighths.
-
-   who_list saved_selector = current_options.who;
-   current_options.who.who[0] = who;
-
-   int n = attr::slimit(ss);
-   if (n < 0) fail("Sorry, can't do stable starting in this setup.");
 
    uint32 directions[32];
    bool selected[32];
@@ -4157,14 +4165,16 @@ void stable_move(
 
    current_options.who = saved_selector;
 
-   int orig_rotation = ss->rotation;
    move(ss, false, result);
-   int rot = ((orig_rotation - result->rotation) & 3) * 011;
+   rot = ((orig_rotation - result->rotation) & 3) * 011;
 
-   setup_kind kk = result->kind;
+   kk = result->kind;
 
    if (kk == s_dead_concentric)
       kk = result->inner.skind;
+
+   if (kk == nothing)
+      goto dust_to_dust;
 
    n = attr::klimit(kk);
    if (n < 0) fail("Sorry, can't do stable going to this setup.");
@@ -4203,6 +4213,12 @@ void stable_move(
          result->people[i].id1 = p;
       }
    }
+
+   return;
+
+ dust_to_dust:
+   clear_result_flags(result);
+   result->kind = nothing;
 }
 
 
@@ -5540,7 +5556,16 @@ static void do_concept_inner_outer(
    int rot = 0;
    int arg1 = parseptr->concept->arg1;
 
-   // 8 bit of arg1 means doing outer formations.
+   // Low octal digit of arg1 gives the basic inner type, as a CS_* enumeration.
+   // The 8 bit indicates the outer ones (as opposed to the inner ones):
+   // Next hex digit says how they are put together:
+   //
+   // 00 (center/outside) plain triple whatever
+   // 10 (center/outside) phantom whatever
+   // 20 (center/outside) triple twin whatever
+   // 30 (center/outside) triple twin whatever of 3
+   // 40 (center/outside) 12 matrix phantom whatever
+   // 50 (center) tidal whatever
 
    switch (arg1 & 0x70) {
    case 0:      // triple CLWBDZ
@@ -5555,10 +5580,16 @@ static void do_concept_inner_outer(
    case 0x40:
       sch = schema_in_out_12mquad;
       break;
+   case 0x60:
+      sch = schema_inner_2x4;
+      break;
+   case 0x70:
+      sch = schema_inner_2x6;
+      break;
    }
 
    switch (arg1) {
-   case 0: case 1: case 3:
+   case CS_C: case CS_L: case CS_W:
       // Center triple line/wave/column.
       switch (ss->kind) {
       case s3x4: case s1x12:
@@ -5574,7 +5605,7 @@ static void do_concept_inner_outer(
       }
 
       fail("Need a triple line/column setup for this.");
-   case 8+0: case 8+1: case 8+3:
+   case 8+CS_C: case 8+CS_L: case 8+CS_W:
       // Outside triple lines/waves/columns.
       switch (ss->kind) {
       case s3x4: case s1x12:
@@ -5590,8 +5621,8 @@ static void do_concept_inner_outer(
       }
 
       fail("Need a triple line/column setup for this.");
-   case 32+0: case 32+1: case 32+3:
-   case 32+8+0: case 32+8+1: case 32+8+3:
+   case 0x20+CS_C: case 0x20+CS_L: case 0x20+CS_W:
+   case 0x20+8+CS_C: case 0x20+8+CS_L: case 0x20+8+CS_W:
       // Center/outside triple twin lines/waves/columns.
       if (ss->kind != s4x6) fail("Need a 4x6 setup for this.");
 
@@ -5603,7 +5634,7 @@ static void do_concept_inner_outer(
       }
 
       goto ready;
-   case 80+0: case 80+1: case 80+3:
+   case 0x80+CS_C: case 0x80+CS_L: case 0x80+CS_W:
       // Center tidal line/wave/column.
       // This concept has the "CONCPROP__NEEDK_3X8" property set,
       // which will fail for quadruple diamonds.
@@ -5612,8 +5643,8 @@ static void do_concept_inner_outer(
       // Unfortunately, we can't readily test facing direction.
       // Too lazy to do it right.
       goto ready;
-   case 48+0: case 48+1: case 48+3:
-   case 48+8+0: case 48+8+1: case 48+8+3:
+   case 0x30+CS_C: case 0x30+CS_L: case 0x30+CS_W:
+   case 0x38+CS_C: case 0x38+CS_L: case 0x38+CS_W:
       // Center/outside triple twin lines/waves/columns of 3.
       if (ss->kind != s3x6) fail("Need a 3x6 setup for this.");
 
@@ -5625,8 +5656,8 @@ static void do_concept_inner_outer(
       }
 
       goto ready;
-   case 16+0: case 16+1: case 16+3:
-   case 16+8+0: case 16+8+1: case 16+8+3:
+   case 0x10+CS_C: case 0x10+CS_L: case 0x10+CS_W:
+   case 0x18+CS_C: case 0x18+CS_L: case 0x18+CS_W:
       // Center or outside phantom lines/waves/columns.
 
       if (ss->kind == s4x4) {
@@ -5671,15 +5702,15 @@ static void do_concept_inner_outer(
          fail("Need quadruple 1x4's for this.");
 
       break;
-   case 64+0: case 64+1:
-   case 64+8+0: case 64+8+1:
+   case 0x40+CS_C: case 0x40+CS_L:
+   case 0x48+CS_C: case 0x48+CS_L:
       // Center or outside phantom lines/columns (no wave).
       if (ss->kind == s3x4 || ss->kind == sd3x4 || ss->kind == s3dmd)
          goto verify_clw;
       else
          fail("Need quadruple 1x3's for this.");
       break;
-   case 4:
+   case CS_B:
       // Center triple box.
       switch (ss->kind) {
       case s2x6: case sbigrig:
@@ -5700,21 +5731,21 @@ static void do_concept_inner_outer(
       }
 
       fail("Need center triple box for this.");
-   case 8+4:
+   case 8+CS_B:
       // Outside triple boxes.
       switch (ss->kind) {
       case s2x6: case sbigbone: case sbigdmd:
-      case sbighrgl: case sbigdhrgl:
+      case sbighrgl: case sbigdhrgl: case s4x5:
          goto ready;
       }
 
       fail("Need outer triple boxes for this.");
-   case 16+4:
-   case 16+8+4:
+   case 0x10+CS_B:
+   case 0x18+CS_B:
       // Center or outside quadruple boxes.
       if (ss->kind != s2x8) fail("Need a 2x8 setup for this.");
       goto ready;
-   case 5:
+   case CS_D:
       // Center triple diamond.
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
@@ -5724,7 +5755,7 @@ static void do_concept_inner_outer(
       }
 
       fail("Need center triple diamond for this.");
-   case 8+5:
+   case 8+CS_D:
       // Outside triple diamonds.
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s_dmdlndmd: case s3x1dmd: case s1x3dmd:
@@ -5732,8 +5763,8 @@ static void do_concept_inner_outer(
       }
 
       fail("Need outer triple diamonds for this.");
-   case 16+5:
-   case 16+8+5:
+   case 0x10+CS_D:
+   case 8+0x10+CS_D:
       // Center or outside quadruple diamonds.
       if (ss->kind != s4dmd &&
           ss->kind != s4ptpd &&
@@ -5741,8 +5772,8 @@ static void do_concept_inner_outer(
           ss->kind != s_4mdmd) fail("Need quadruple diamonds for this.");
       ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
       break;
-   case 6:
-   case 8+6:
+   case CS_Z:
+   case 8+CS_Z:
       // Center/outside triple Z's.
       sch = schema_in_out_triple_zcom;
       livemask = little_endian_live_mask(ss);
@@ -5847,6 +5878,9 @@ static void do_concept_inner_outer(
       }
 
       fail("Can't find the indicated formation.");
+
+   case 0x60:
+   case 0x70:;
    }
 
  ready:
@@ -6209,9 +6243,11 @@ static void do_concept_multiple_formations(
       do_matrix_expansion(&tempsetup, need_prop, false);
 
       // The 4x4 case is for a box sandwiched between two parallel 1x4's.
-      // Concentric_move knows how to deal with this.
+      // The 4x5 case is for a line sandwiched between two boxes.
+      // Concentric_move knows how to deal with these.
       if (tempsetup.kind != sbigbone && tempsetup.kind != sbigrig &&
-          tempsetup.kind != sbigdmd && tempsetup.kind != s4x4)
+          tempsetup.kind != sbigdmd && tempsetup.kind != s4x4 &&
+          tempsetup.kind != s4x5)
          fail("Can't do this concept in this setup.");
       break;
    case 1:
@@ -7948,7 +7984,6 @@ static void do_concept_meta(
                index = nfield - 1;
                doing_just_one = true;
                code_to_use_for_only = CMD_FRAC_CODE_ONLYREV;
-               fail("Sorry, can't do this.");
             }
             else if (corefracs.is_null_with_masked_flags(
                         CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
@@ -8410,17 +8445,30 @@ static void do_concept_fractional(
    //   for the consequences of using this.
 
    // The meaning of arg1 is as follows:
-   // 0 - "M/N" - do first part
-   // 1 - "DO THE LAST M/N"
+   // 0 - "M/N" or "M/N OF" - do first fraction.
+   // 1 - "LAST M/N OF"
    // 2 - "1-M/N" do the whole call and then some.
+   // 3 - "MIDDLE M/N OF"
 
    uint32 ddnn = parseptr->options.number_fields;
 
    int dd = ddnn >> BITS_PER_NUMBER_FIELD;
    int nn = ddnn & NUMBER_FIELD_MASK;
-   uint32 FOO = (parseptr->concept->arg1 & 1) ?
-      ((dd << (BITS_PER_NUMBER_FIELD*3)) + ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) + NUMBER_FIELDS_1_1) :
-      ddnn+NUMBER_FIELDS_1_0_0_0;
+   uint32 FOO;
+
+   switch (parseptr->concept->arg1) {
+   case 1:
+      FOO = (dd << (BITS_PER_NUMBER_FIELD*3)) + ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) + NUMBER_FIELDS_1_1;
+      break;
+   case 3:
+      FOO = dd << (BITS_PER_NUMBER_FIELD+1);      // dd * 2.
+      FOO += FOO << (BITS_PER_NUMBER_FIELD*2);    // Both denominators.
+      FOO += ((dd-nn) << (BITS_PER_NUMBER_FIELD*2)) + dd + nn;
+      break;
+   default:    // 0 or 2.
+      FOO = ddnn+NUMBER_FIELDS_1_0_0_0;
+      break;
+   }
 
    fraction_command ARG4 = ss->cmd.cmd_fraction;
 
@@ -9178,6 +9226,11 @@ extern bool do_big_concept(
       else
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_AT_ALL;
    }
+
+   // Various concepts are allergic to s2x2dmd setups.
+   if ((this_kind == concept_do_phantom_2x4  || this_kind == concept_distorted  || this_kind == concept_misc_distort) &&
+       ss->kind == s2x2dmd)
+      do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
 
    // See if this concept can be invoked with "standard".  If so, it wants
    // tbonetest and livemask computed, and expects the former to indicate

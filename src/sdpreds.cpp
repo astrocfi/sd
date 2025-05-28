@@ -59,10 +59,15 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
    big_endian_get_directions(ss, directions, livemask);
 
    selector_used = true;
+   selector_kind local_selector = current_options.who.who[0];
+   if (local_selector == selector_outsides)
+      local_selector = selector_ends;
+   if (local_selector == selector_verycenters)
+      local_selector = selector_center2;
 
    // Pull out the cases that do not require the person to be real.
 
-   switch (current_options.who.who[0]) {
+   switch (local_selector) {
       case selector_all:
       case selector_everyone:
          return true;
@@ -92,7 +97,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
          if (ptr) {
-            switch (current_options.who.who[0]) {
+            switch (local_selector) {
             case selector_centers:
             case selector_ends:
             case selector_center2:
@@ -125,7 +130,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 
  do_switch:
 
-   switch (current_options.who.who[0]) {
+   switch (local_selector) {
    case selector_boys:
       if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return true;
       else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return false;
@@ -243,8 +248,16 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       goto eq_return;
    case selector_center2:
    case selector_outer6:
-      if (ss->kind == s3x4 && current_options.who.who[0] == selector_center2) {
+      if (ss->kind == s3x4 && local_selector == selector_center2) {
          return (pid2 & ID2_CTR2) != 0;  // This one is always valid, even if we don't know who the "outer 6" are.
+      }
+      else if (ss->kind == s4x5 && local_selector == selector_center2) {
+         return (place == 7 || place == 17);
+      }
+      else if (ss->kind == s4x4 && local_selector == selector_center2) {
+         // Demand that there not be too many in the center.
+         if ((livemask & 0x01010101) == 0x00010001 || (livemask & 0x01010101) == 0x01000100)
+         return ((place&3) == 3);
       }
       else if (ss->kind == s1x6) {
          p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
@@ -253,30 +266,13 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          else break;
       }
       else if (ss->kind == s2x7 || ss->kind == s_23232 || ss->kind == sdblspindle) {
-         if (current_options.who.who[0] == selector_center2)
+         if (local_selector == selector_center2)
             return (pid2 & ID2_CTR2) != 0;
          else break;
       }
       else {
          p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
          if      (p2 == ID2_CTR2)  s = selector_center2;
-         else if (p2 == ID2_OUTR6) s = selector_outer6;
-         else break;
-      }
-      goto eq_return;
-   case selector_verycenters:    /* Gotta fix this stuff - use fall-through variable. */
-      if (ss->kind == s1x6) {
-         p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
-         if      (p2 == ID2_CTR2) return true;
-         else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
-         else break;
-      }
-      else if (ss->kind == s2x7) {
-         return (pid2 & ID2_CTR2) != 0;
-      }
-      else {
-         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-         if      (p2 == ID2_CTR2) return true;
          else if (p2 == ID2_OUTR6) s = selector_outer6;
          else break;
       }
@@ -703,6 +699,28 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       if ((ss->people[4].id1 & d_mask) == d_east) thing_to_test |= 1;
       if ((ss->people[1].id1 & d_mask) == d_east) thing_to_test |= 2;
       if ((ss->people[5].id1 & d_mask) == d_west) thing_to_test |= 2;
+      goto finish_inoutpoint;
+   case selector_beaupoint_tgl:
+   case selector_beaupoint_intlk_tgl:
+   case selector_intlk_beaupoint_tgl:
+   case selector_magic_beaupoint_tgl:
+   case selector_magic_intlk_beaupoint_tgl:
+   case selector_intlk_magic_beaupoint_tgl:
+      if ((ss->people[0].id1 & d_mask) == d_east) thing_to_test |= 1;
+      if ((ss->people[4].id1 & d_mask) == d_west) thing_to_test |= 1;
+      if ((ss->people[1].id1 & d_mask) == d_east) thing_to_test |= 2;
+      if ((ss->people[5].id1 & d_mask) == d_west) thing_to_test |= 2;
+      goto finish_inoutpoint;
+   case selector_bellepoint_tgl:
+   case selector_bellepoint_intlk_tgl:
+   case selector_intlk_bellepoint_tgl:
+   case selector_magic_bellepoint_tgl:
+   case selector_magic_intlk_bellepoint_tgl:
+   case selector_intlk_magic_bellepoint_tgl:
+      if ((ss->people[0].id1 & d_mask) == d_west) thing_to_test |= 1;
+      if ((ss->people[4].id1 & d_mask) == d_east) thing_to_test |= 1;
+      if ((ss->people[1].id1 & d_mask) == d_west) thing_to_test |= 2;
+      if ((ss->people[5].id1 & d_mask) == d_east) thing_to_test |= 2;
    finish_inoutpoint:
 
       if (ss->kind != s_qtag) fail("Must have diamonds.");
@@ -827,8 +845,8 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          // Now tand_base is 1 to select the triangles whose bases are
          // vertically aligned, and 0 for the horizontally aligned bases.
 
-         if (current_options.who.who[0] == selector_tand_base_tgl ||
-             current_options.who.who[0] == selector_wave_base_tgl) {
+         if (local_selector == selector_tand_base_tgl ||
+             local_selector == selector_wave_base_tgl) {
             if (tand_base != 0)
                return (((0xDEDE >> place) & 1) != 0);
             else
@@ -997,10 +1015,10 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
    fail("Can't decide who are selected.");
 
  eq_return:
-   return (current_options.who.who[0] == s);
+   return (local_selector == s);
 
  first_last_test:
-   switch (current_options.who.who[0]) {
+   switch (local_selector) {
    case selector_firstone: case selector_rightmostone:
       return thing_to_test >= 3;
    case selector_firsttwo: case selector_rightmosttwo:

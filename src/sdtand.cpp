@@ -90,7 +90,8 @@ public:
    tandrec(bool phantom_pairing_ok, bool no_unit_symmetry, bool melded) :
       m_phantom_pairing_ok(phantom_pairing_ok),
       m_no_unit_symmetry(no_unit_symmetry),
-      m_melded(melded)
+      m_melded(melded),
+      m_maybe_raise_phantom_warning(false)
    {}
 
    bool pack_us(personrec *s,
@@ -115,6 +116,7 @@ public:
    bool m_phantom_pairing_ok;
    bool m_no_unit_symmetry;
    bool m_melded;
+   bool m_maybe_raise_phantom_warning;
    int m_people_per_group;
 };
 
@@ -222,6 +224,11 @@ static tm_thing maps_isearch_twosome[] = {
 
    // But we are nevertheless going to try it the other way, by swapping the
    // following two pairs with each other.
+
+   // Now try these, before either of the next two pairs.  Notice that thr rot fields have 0x10 set.
+   // This makes the maps not used if the incoming virtual setup was a 1x6.
+   {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},                0,0,   0x0033,         6, 0x11,  s2x3,  s_323},
+   {{1, 3, 4, 6, 7, 0,              2, -1, -1, 5, -1, -1},                0,0,   0x0066,         6, 0x11,  s2x3,  s_323},
 
    // Next two are for various people as couples in a C1 phantom, making virtual columns of 6.
    {{3, 7, 5, 9, 15, 13,             1, -1, -1, 11, -1, -1},               0,0,     0000,         6, 0,  s2x3,  s_c1phan},
@@ -658,14 +665,14 @@ struct siamese_item {
 };
 
 const siamese_item siamese_table_of_2[] = {
-   {s2x4,        0x00FF0000U, 0x99U,   warn__ctrstand_endscpls},
-   {s2x4,        0x00990066U, 0x99U,   warn__ctrstand_endscpls},
-   {s2x4,        0x000000FFU, 0x66U,   warn__ctrscpls_endstand},
-   {s2x4,        0x00660099U, 0x66U,   warn__ctrscpls_endstand},
+   {s2x4,        0x00FF0000U, 0x99U,   warn__none},
+   {s2x4,        0x00990066U, 0x99U,   warn__none},
+   {s2x4,        0x000000FFU, 0x66U,   warn__none},
+   {s2x4,        0x00660099U, 0x66U,   warn__none},
    {s2x4,        0x00F0000FU, 0x0FU,   warn__none},  // unsymm
    {s2x4,        0x000F00F0U, 0xF0U,   warn__none},  // unsymm
-   {s1x8,        0x00CC0033U, 0x33U,   warn__ctrstand_endscpls},
-   {s1x8,        0x003300CCU, 0xCCU,   warn__ctrscpls_endstand},
+   {s1x8,        0x00CC0033U, 0x33U,   warn__none},
+   {s1x8,        0x003300CCU, 0xCCU,   warn__none},
    {s2x4,        0x003300CCU, 0xCCU,   warn__none},
    {s2x4,        0x00CC0033U, 0x33U,   warn__none},
    {s2x6,        0x030C0CF3U, 0xCF3U,  warn__none},
@@ -722,25 +729,25 @@ const siamese_item siamese_table_of_2[] = {
    {s3x4,        0x0C3000C3U, 0x00C3U, warn__none},
    {s3x4,        0x00C30C30U, 0x0C30U, warn__none},
 
-   {s_qtag,      0x003300CCU, 0xCCU,   warn__ctrscpls_endstand},
-   {s_qtag,      0x00CC0033U, 0x33U,   warn__ctrstand_endscpls},
-   {s4dmd,       0x0F0FF0F0U, 0xF0F0U, warn__ctrscpls_endstand},
-   {s4dmd,       0xF0F00F0FU, 0x0F0FU, warn__ctrstand_endscpls},
-   {s_rigger,    0x00FF0000U, 0x33U,   warn__ctrscpls_endstand},
-   {s_rigger,    0x00CC0033U, 0x33U,   warn__ctrscpls_endstand},
-   {s_rigger,    0x000000FFU, 0xCCU,   warn__ctrstand_endscpls},
-   {s_rigger,    0x003300CCU, 0xCCU,   warn__ctrstand_endscpls},
-   {s_bone,      0x00FF0000U, 0x33U,   warn__ctrstand_endscpls},
-   {s_bone,      0x000000FFU, 0xCCU,   warn__ctrscpls_endstand},
-   {s_crosswave, 0x00FF0000U, 0xCCU,   warn__ctrscpls_endstand},
-   {s_crosswave, 0x000000FFU, 0x33U,   warn__ctrstand_endscpls},
+   {s_qtag,      0x003300CCU, 0xCCU,   warn__none},
+   {s_qtag,      0x00CC0033U, 0x33U,   warn__none},
+   {s4dmd,       0x0F0FF0F0U, 0xF0F0U, warn__none},
+   {s4dmd,       0xF0F00F0FU, 0x0F0FU, warn__none},
+   {s_rigger,    0x00FF0000U, 0x33U,   warn__none},
+   {s_rigger,    0x00CC0033U, 0x33U,   warn__none},
+   {s_rigger,    0x000000FFU, 0xCCU,   warn__none},
+   {s_rigger,    0x003300CCU, 0xCCU,   warn__none},
+   {s_bone,      0x00FF0000U, 0x33U,   warn__none},
+   {s_bone,      0x000000FFU, 0xCCU,   warn__none},
+   {s_crosswave, 0x00FF0000U, 0xCCU,   warn__none},
+   {s_crosswave, 0x000000FFU, 0x33U,   warn__none},
    {sdeepbigqtg, 0xFFFF0000U, 0x0F0FU, warn__none},
    {sdeepbigqtg, 0x0000FFFFU, 0xF0F0U, warn__none},
    {sdeepbigqtg, 0x3535CACAU, 0xC5C5U, warn__none},
    {sdeepbigqtg, 0xCACA3535U, 0x3A3AU, warn__none},
    {sdeepbigqtg, 0xC5C53A3AU, 0x3535U, warn__none},
    {sdeepbigqtg, 0x3A3AC5C5U, 0xCACAU, warn__none},
-   {nothing,     0,            0,        warn__none}};
+   {nothing,     0,           0,       warn__none}};
 
 const siamese_item siamese_table_of_3[] = {
    {s2x6,        0x01C70E38U, 0xE38U,  warn__none},
@@ -750,7 +757,7 @@ const siamese_item siamese_table_of_3[] = {
 const siamese_item siamese_table_of_4[] = {
    {s2x8,        0x0F0FF0F0U, 0xF0F0U, warn__none},
    {s2x8,        0xF0F00F0FU, 0x0F0FU, warn__none},
-   {nothing,     0,            0,        warn__none}};
+   {nothing,     0,           0,       warn__none}};
 
 static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
 {
@@ -857,7 +864,7 @@ void tandrec::unpack_us(
    int i, j;
    uint32 sglhigh, sgllow, ohigh, olow, r;
 
-   r = map_ptr->rot*011;
+   r = (map_ptr->rot&3)*011;
 
    // The result of the unpacking goes to an enormous "hyper" array.
    // This array may be bigger than the maximum allowed value of 24.
@@ -965,7 +972,7 @@ void tandrec::unpack_us(
    static const veryshort lilstar4[8] = {6, 7, 2, 3, 0, 0, 0, 0};
 
    result->kind = map_ptr->outsetup;
-   result->rotation = virtual_result.rotation - map_ptr->rot;
+   result->rotation = virtual_result.rotation - (map_ptr->rot&3);
    result->eighth_rotation = virtual_result.eighth_rotation;
    result->result_flags = virtual_result.result_flags;
 
@@ -1178,10 +1185,8 @@ bool tandrec::pack_us(
             // except in the special case of a virtual 2x3.
 
             if (!(andpeople1 & BIT_PERSON)) {
-               if (orpeople1 ||
-                   (m_virtual_setup[0].kind != s2x3 &&
-                    key != tandem_key_siam))
-                  fail("Use \"phantom\" concept in front of this concept.");
+               if (orpeople1 || (m_virtual_setup[0].kind != s2x3 && key != tandem_key_siam))
+                  m_maybe_raise_phantom_warning = true;
             }
          }
 
@@ -1280,7 +1285,7 @@ bool tandrec::pack_us(
                m_vertical_people[virt_index] = vert;
             }
 
-            if (map_ptr->rot)   // Compensate for setup rotation.
+            if (map_ptr->rot&3)   // Compensate for setup rotation.
                ptr->id1 = rotperson(ptr->id1, ((- map_ptr->rot) & 3) * 011);
 
             if (m_melded) {
@@ -2306,13 +2311,16 @@ extern void tandem_couples_move(
       // We don't accept the special 1/8-twosome maps from the "maps_isearch_boxsome"
       // table unless we are doing "skew".  If we are doing "box" (the only other
       // possibility) the maps are not used.
+      // The last clause decides how to expand a 2x3 virtual setup.  It can go to a c1phan
+      // unless the original virtual setup was a 1x6, in which case it goes to a 323.  Test at t25t.
       while (map_search->outsetup != nothing) {
          if ((map_search->insetup == tandstuff.virtual_result.kind) &&
              (!map_search->map_is_eighth_twosome || key != tandem_key_box) &&
              (map_search->insinglemaskhigh & livemaskhigh) == sglmaskhigh &&
              (map_search->insinglemasklow & livemasklow) == sglmasklow &&
              (map_search->ilatmask3high & livemaskhigh) == hmaskhigh &&
-             (map_search->ilatmask3low & livemasklow) == hmasklow) {
+             (map_search->ilatmask3low & livemasklow) == hmasklow &&
+             !(map_search->rot&0x10 && tandstuff.m_virtual_setup[0].kind != s1x6)) {
             break;
          }
          map_search++;
@@ -2483,6 +2491,16 @@ extern void tandem_couples_move(
       }
 
       *result = ttt[horizontal_2x4_indices];
+   }
+
+   // Don't raise the "phantom tandem" warning if it's just a 2x4 to a 2x4
+   // that splits into 1x2's.  That is, things like tandem hinge from clumps.
+   if (tandstuff.m_maybe_raise_phantom_warning) {
+      if (tandstuff.m_virtual_setup[0].kind != s2x4 ||
+          tandstuff.virtual_result.kind != s2x4 ||
+          (tandstuff.virtual_result.result_flags.split_info[0] &
+           tandstuff.virtual_result.result_flags.split_info[1]) != 1)
+         fail("Use \"phantom\" concept in front of this concept.");
    }
 
    result->clear_all_overcasts();
@@ -3018,6 +3036,7 @@ void mimic_move(
    case selector_centers:
       centers = true;
    case selector_ends:
+   case selector_outsides:
       if (attr::slimit(ss) > 3) {
          // We need to divide the setup.  Stuff our concept block back into the parse tree.
          // Based on what we know "do_big_concept" does, the following will always be OK,

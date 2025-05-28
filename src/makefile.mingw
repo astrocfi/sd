@@ -30,7 +30,7 @@ SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
              mapcachefile.o sdpick.o sdsi.o sdmatch.o common.o
 
-HFILES = sdui.h sd.h sdbase.h database.h paths.h mapcachefile.h sort.h \
+HFILES = sd.h database.h paths.h mapcachefile.h sort.h \
              deploy.h resource.h sdprint.h
 
 ICONS = sd.ico sdbg.ico sdbw.ico sdby.ico sdcpl.ico sdgy.ico sdry.ico sdtty.ico
@@ -120,7 +120,7 @@ sdprint.o: sdprint.cpp
 
 # Miscellaneous file dependencies.
 
-sd.h sdui.h: sdbase.h database.h
+sd.h: database.h
 
 mkcalls.o sdmain.o sdsi.o: paths.h
 
@@ -134,7 +134,7 @@ mapcachefile.cpp: mapcachefile.h
 
 sdprint.o: sdprint.h
 
-$(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h database.h paths.h
+$(SDLIB_OBJS) $(SDTTY_OBJS): sd.h database.h paths.h
 
 clean::
 	-del *.o deploy.exe sd.exe sdtty.exe mkcalls.exe sd_calls.dat \

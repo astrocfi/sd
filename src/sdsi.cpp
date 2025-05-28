@@ -100,7 +100,6 @@ and the following external variables:
 #include <ctype.h>
 
 #include "sd.h"
-#include "sdui.h"
 #include "paths.h"
 
 

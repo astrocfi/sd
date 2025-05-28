@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.01"
-#define TIME_STAMP "wba@alum.mit.edu Oct 5 2017 $"
+#define VERSION_STRING "39.02"
+#define TIME_STAMP "wba@alum.mit.edu Dec 5 2017 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -69,7 +69,6 @@ and the following external variables:
 #include <string.h>
 
 #include "sd.h"
-#include "sdui.h"
 #include "paths.h"
 #include "resource.h"
 

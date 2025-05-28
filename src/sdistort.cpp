@@ -1714,6 +1714,132 @@ extern void divided_setup_move(
       }
    }
 
+   // If expansion to a 2x3 occurred (because the call was, for example, a "pair the line"),
+   // and the two 2x3's are end-to-end in a 2x6, see if we can squash phantoms.  We squash both
+   // internal (the center triple box) and external ones.  The external ones would probably have
+   // been squashed anyway due to the top level normalization, but we want this to occur
+   // immediately, not just at the top level, though we can't think of a concrete example
+   // in which it makes a difference.
+
+   if (result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) {
+      static const expand::thing inner_2x6 = {{0, 1, 4, 5, 6, 7, 10, 11}, s2x4, s2x6, 0};
+      static const expand::thing inner_dblbone6 = {{1, 9, 11, 8, 7, 3, 5, 2}, s_rigger, sdblbone6, 0};
+      static const expand::thing outer_dblbone6 = {{0, 10, 11, 8, 6, 4, 5, 2}, s_bone, sdblbone6, 0};
+      static const expand::thing inner8_2x10 = {{0, 1, 2, 7, 8, 9, 10, 11, 12, 17, 18, 19}, s2x6, s2x10, 0};
+      static const expand::thing inner_2x10 = {
+         {0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19}, s2x8, s2x10, 0};
+      static const expand::thing outer8_2x10 = {{2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17}, s2x6, s2x10, 0};
+      static const expand::thing outer_2x10 = {
+         {1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18}, s2x8, s2x10, 0};
+      static const expand::thing inner_rig = {{6, 7, -1, 2, 3, -1}, s1x6, s_rigger, 0};
+      static const expand::thing inner_4x6 = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9},
+                                              s4x4, s4x6, 0};
+      static const expand::thing outer_4x6 = {{5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10},
+                                              s4x4, s4x6, 0};
+      static const expand::thing inner_3x6 = {{0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16}, s3x4, s3x6, 0};
+      static const expand::thing outer_3x6 = {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}, s3x4, s3x6, 0};
+
+      const expand::thing *expand_ptr = (const expand::thing *) 0;
+
+      switch (result->kind) {
+      case s2x6:
+         if (!(result->people[2].id1 | result->people[3].id1 |
+               result->people[8].id1 | result->people[9].id1)) {
+            // Inner spots are empty.
+
+            // If the outer ones are empty also, we don't know what to do.
+            // This is presumably a "snag pair the line", or something like that.
+            // Clear the inner spots away, and turn off the flag, so that
+            // "punt_centers_use_concept" will know what to do.
+            if (!(result->people[0].id1 | result->people[5].id1 |
+                  result->people[6].id1 | result->people[11].id1))
+               result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
+
+            expand_ptr = &inner_2x6;
+         }
+         break;
+      case sdblbone6:
+         if (!(result->people[1].id1 | result->people[3].id1 |
+               result->people[7].id1 | result->people[9].id1)) {
+            // Inner spots are empty.
+
+            // If the outer ones are empty also, trim the outer ones,
+            // resulting in a rigger, and leave the flag on.
+            if (!(result->people[0].id1 | result->people[4].id1 |
+                  result->people[6].id1 | result->people[10].id1))
+               expand_ptr = &inner_dblbone6;
+            else
+               expand_ptr = &outer_dblbone6;    // Remove the inner ones, and leave the flag on.
+         }
+         break;
+      case s2x10:
+         if (!(result->people[4].id1 | result->people[5].id1 |
+               result->people[14].id1 | result->people[15].id1)) {
+            // Innermost 4 spots are empty.
+            if (!(result->people[3].id1 | result->people[6].id1 | result->people[13].id1 | result->people[16].id1))
+               expand_ptr = &inner8_2x10;   // Actually, inner 8 spots are empty.
+            else
+               expand_ptr = &inner_2x10;
+         }
+         else if (!(result->people[0].id1 | result->people[9].id1 |
+                    result->people[10].id1 | result->people[19].id1)) {
+            // Outermost 4 spots are empty.
+            if (!(result->people[1].id1 | result->people[8].id1 | result->people[11].id1 | result->people[18].id1))
+               expand_ptr = &outer8_2x10;   // Actually, outer 8 spots are empty.
+            else
+               expand_ptr = &outer_2x10;
+         }
+         break;
+      case s_rigger:
+         // The outer spots are already known to be empty and have been cleaned up.
+         // So we just have to deal with the inner spots.  This means that both
+         // inner and outer spots are empty, so we have to do the same thing
+         // that we do above in the 2x6.
+         if (!(result->people[0].id1 | result->people[1].id1 |
+               result->people[4].id1 | result->people[5].id1)) {
+            result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
+            expand_ptr = &inner_rig;
+         }
+         break;
+      case s4x6:
+         // We do the same for two concatenated 3x4's.
+         // This could happen if the people folding were not the ends.
+         if (!(result->people[2].id1 | result->people[3].id1 |
+               result->people[8].id1 | result->people[9].id1 |
+               result->people[20].id1 | result->people[21].id1 |
+               result->people[14].id1 | result->people[15].id1)) {
+            // Inner spots are empty.
+            expand_ptr = &outer_4x6;
+         }
+         else if (!( result->people[0].id1 | result->people[5].id1 |
+                     result->people[6].id1 | result->people[11].id1 |
+                     result->people[18].id1 | result->people[23].id1 |
+                     result->people[12].id1 | result->people[17].id1)) {
+            // Outer spots are empty.
+            expand_ptr = &inner_4x6;
+         }
+         break;
+      case s3x6:
+         if (result->result_flags.split_info[result->rotation & 1] == 1 &&
+             result->result_flags.split_info[(result->rotation ^ 1) & 1] == 0) {
+            // These were offset 2x3's.
+            if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 |
+                  result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
+               // Inner spots are empty.
+               expand_ptr = &inner_3x6;
+            }
+            else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 |
+                       result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
+               // Outer spots are empty.
+               expand_ptr = &outer_3x6;
+            }
+         }
+         break;
+      }
+
+      if (expand_ptr) expand::compress_setup(*expand_ptr, result);
+   }
+
    // Now we reinstate the incoming rotation, which we have completely ignored up until
    // now.  This will give the result "absolute" orientation.  (That is, absolute
    // relative to the incoming "ss->rotation".  Some procedures (like a recursive call
@@ -1948,7 +2074,27 @@ extern void do_phantom_2x4_concept(
          }
       }
 
-      if ((global_tbonetest & 011) == 011) {
+      // Big block diamonds are special.  Just looking at global_tbonetest isn't enough.
+
+      if (map_code == spcmap_bbdmds) {
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
+
+         if (global_livemask != 0xD2D2 && global_livemask != 0x2D2D)
+            fail("Can't find big block diamonds.");
+
+         rot = ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1;
+
+         if (rot & 1)
+            rot |= ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1;
+         else
+            rot |= ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
+
+         if ((rot & 011) == 011)
+            fail("Can't find big block diamonds.");
+
+         rot &= 1;
+      }
+      else if ((global_tbonetest & 011) == 011) {
          // People are T-boned!  This is messy.
          phantom_2x4_move(ss,
                           linesp,
@@ -1958,9 +2104,8 @@ extern void do_phantom_2x4_concept(
          result->clear_all_overcasts();
          return;
       }
-
-      // Allow split phantom CLW, triple boxes.
-      if (parseptr->concept->arg3 == MPKIND__SPLIT)
+      else if (parseptr->concept->arg3 == MPKIND__SPLIT)
+         // Allow split phantom CLW, triple boxes.
          noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1;
       break;
    case s2x6:
@@ -4924,6 +5069,8 @@ extern void triangle_move(
                5 - in point
                6 - wave-base
                7 - tandem-base
+               8 - beau point
+               9 - belle point
                20 - <anyone>-base
    Add 100 octal if interlocked triangles.
    Add 200 octal if magic triangles. */
@@ -4949,13 +5096,31 @@ extern void triangle_move(
             schema = schema_lateral_6;
          else
             schema = schema_vertical_6;
+
+         // The schema is now in terms of the absolute orientation.
+         concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
+      }
+      else if (ss->kind == s_short6) {
+         uint32 tbonetest = ss->people[0].id1 | ss->people[2].id1 |
+            ss->people[3].id1 | ss->people[5].id1;
+         if ((tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
+            fail("Can't find tall/short 6.");
+
+         // No need to call any expand function; everyone is in the right place for a 2x3.
+         ss->kind = s2x3;
+         uint16 save_rotation = ss->rotation;  // Can the rotation field get clobbered?  We're not sure.
+
+         move(ss, false, result);
+
+         if (result->kind == s2x3 && result->rotation == save_rotation) {
+            // Once again, it's easy.
+            result->kind = s_short6;
+         }
+         else if (result->kind != s1x6)  // If it's a 1x6 of either orientation, we just let it pass.
+            fail("Can't do this.");
       }
       else
          fail("Must have galaxy for this concept.");
-
-      // The schema is now in terms of the absolute orientation.
-
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
    }
 
    configuration::set_multiple_warnings(saved_warnings);

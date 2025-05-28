@@ -1689,6 +1689,14 @@ static calldef_schema concentrify(
       else
          analyzer_result = schema_concentric_2_6;
       break;
+   case schema_concentric_6_2_or_4_2:
+      if (attr::slimit(ss) == 5) {
+         warn(warn__unusual);
+         analyzer_result = schema_concentric_4_2;
+      }
+      else
+         analyzer_result = schema_concentric_6_2;
+      break;
    case schema_concentric_innermost:
       if (ss->kind == s_short6) {
          warn(warn__unusual);
@@ -1876,6 +1884,8 @@ static calldef_schema concentrify(
    case schema_4x4_lines_concentric:
    case schema_4x4_cols_concentric:
    case schema_in_out_triple:
+   case schema_inner_2x4:
+   case schema_inner_2x6:
    case schema_3x3_in_out_triple:
    case schema_4x4_in_out_triple:
    case schema_sgl_in_out_triple:
@@ -2189,6 +2199,8 @@ static calldef_schema concentrify(
             goto finish;
          case schema_special_trade_by:
          case schema_conc_bar:
+         case schema_inner_2x4:
+         case schema_inner_2x6:
             fail("Can't find centers and ends in this formation.");
          case schema_checkpoint:
             fail("Can't find checkpoint people in this formation.");
@@ -3194,7 +3206,7 @@ extern void concentric_move(
       analyzer = schema_single_cross_concentric;     // Setup was already split.
    }
    else if (analyzer == schema_single_concentric_together) {
-      if (ss->kind == s1x8 || ss->kind == s_ptpd || attr::slimit(ss) == 3)
+      if (ss->kind == s1x8 || ss->kind == s_ptpd || ss->kind == s4x4 || attr::slimit(ss) == 3)
          analyzer = schema_single_concentric;
       else if (ss->kind == s_bone6)
          analyzer = schema_concentric_6p;
@@ -3202,7 +3214,7 @@ extern void concentric_move(
          analyzer = schema_concentric;
    }
    else if (analyzer == schema_single_cross_concentric_together) {
-      if (ss->kind == s1x8 || ss->kind == s_ptpd || attr::slimit(ss) == 3)
+      if (ss->kind == s1x8 || ss->kind == s_ptpd || ss->kind == s4x4 || attr::slimit(ss) == 3)
          analyzer = schema_single_cross_concentric;
       else
          analyzer = schema_cross_concentric;
@@ -3937,6 +3949,7 @@ extern void concentric_move(
 
    if (analyzer == schema_in_out_triple_zcom) analyzer = schema_concentric_zs;
    else if (analyzer == schema_in_out_triple && imposing_z) analyzer = schema_concentric;
+   else if (analyzer == schema_inner_2x4 || analyzer == schema_inner_2x6) analyzer = schema_in_out_triple;
 
    if (analyzer == schema_concentric ||
        analyzer == schema_in_out_triple ||
@@ -5573,6 +5586,8 @@ extern void inner_selective_move(
    uint32 mask = ~(~0 << (sizem1+1));
    const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
    selector_kind local_selector = selector_to_use.who[0];
+   if (local_selector == selector_outsides)
+      local_selector = selector_ends;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       clear_result_flags(result);
@@ -5589,9 +5604,10 @@ extern void inner_selective_move(
       case selector_thediamond:
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
          break;
-
       case selector_magic_inpoint_tgl:
       case selector_magic_outpoint_tgl:
+      case selector_magic_beaupoint_tgl:
+      case selector_magic_bellepoint_tgl:
          if (calling_level < magic_triangle_level)
             warn_about_concept_level();
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
@@ -5600,6 +5616,10 @@ extern void inner_selective_move(
       case selector_magic_intlk_inpoint_tgl:
       case selector_intlk_magic_outpoint_tgl:
       case selector_magic_intlk_outpoint_tgl:
+      case selector_intlk_magic_beaupoint_tgl:
+      case selector_magic_intlk_beaupoint_tgl:
+      case selector_intlk_magic_bellepoint_tgl:
+      case selector_magic_intlk_bellepoint_tgl:
          if (calling_level < magic_triangle_level)
             warn_about_concept_level();
          // FALL THROUGH
@@ -5611,6 +5631,10 @@ extern void inner_selective_move(
       case selector_intlk_inpoint_tgl:
       case selector_outpoint_intlk_tgl:
       case selector_intlk_outpoint_tgl:
+      case selector_intlk_beaupoint_tgl:
+      case selector_bellepoint_tgl:
+      case selector_bellepoint_intlk_tgl:
+      case selector_intlk_bellepoint_tgl:
       case selector_wave_base_intlk_tgl:
       case selector_intlk_wave_base_tgl:
       case selector_tand_base_intlk_tgl:
@@ -5625,6 +5649,8 @@ extern void inner_selective_move(
       case selector_inside_tgl:
       case selector_inpoint_tgl:
       case selector_outpoint_tgl:
+      case selector_beaupoint_tgl:
+      case selector_beaupoint_intlk_tgl:
       case selector_wave_base_tgl:
       case selector_tand_base_tgl:
       case selector_anyone_base_tgl:
@@ -5745,7 +5771,8 @@ extern void inner_selective_move(
          else if (ss->kind == s1x8 && current_options.who.who[0] == selector_centers) {
             if (i&2) q = 1;
          }
-         else if (ss->kind == s1x8 && current_options.who.who[0] == selector_ends) {
+         else if (ss->kind == s1x8 && (current_options.who.who[0] == selector_ends ||
+                                       current_options.who.who[0] == selector_outsides)) {
             if (!(i&2)) q = 1;
          }
          else if (override_selector) {
@@ -5902,29 +5929,36 @@ extern void inner_selective_move(
    if (indicator == selective_key_disc_dist)
       action = normalize_to_2;
 
-   // If the call is a "space-invader", and we are simply doing it
-   // under a selector, and the call takes no further selector, and
-   // "others" is <=0, that means the user simply said, for example,
-   // "boys" and "press ahead" as two seperate actions, rather than
-   // using the single call "boys press ahead".  In that case, we
-   // simply do whatever "boys press ahead" would have done -- we have
-   // the designated (or non-ignored) people do their part in a strict
-   // matrix.  We don't do any of the clever stuff that this procedure
-   // generally tries to do.  But if "others" is >0, things are more
-   // complicated, and the designees have to interact with the
-   // non-designees, so we don't take this shortcut.
-
+   // If the call is a "space-invader", and we are simply doing it under a selector, and
+   // the call takes no further selector, and "others" is <=0, that means the user
+   // simply said, for example, "boys" and "press ahead" as two seperate actions, rather
+   // than using the single call "boys press ahead".  In that case, we simply do
+   // whatever "boys press ahead" would have done -- we have the designated (or
+   // non-ignored) people do their part in a strict matrix.  We don't do any of the
+   // clever stuff ("find the largest contiguous undistorted subsetups") that this
+   // procedure generally tries to do.  But if "others" is >0, things are more
+   // complicated, and the designees have to interact with the non-designees, so we
+   // don't take this shortcut.
+   //
+   // Similarly, if the call was "girls circulate", we turn on "do your part".  But not
+   // if it was "ends circulate".  It needs to be a "who you are" selector, not "where
+   // you are".
+   //
    if (others <= 0 &&
        cmd1->parseptr &&
        cmd1->parseptr->concept &&
        cmd1->parseptr->concept->kind == marker_end_of_list &&
        cmd1->parseptr->call &&
-       cmd1->parseptr->call->the_defn.schema == schema_matrix &&
+       (cmd1->parseptr->call->the_defn.schema == schema_matrix ||
+        (cmd1->parseptr->call == base_calls[base_call_circulate] &&
+         (ss->kind == s2x4 || ss->kind == s2x2) &&
+         local_selector < selector_POSITIONAL_START)) &&
        !(cmd1->parseptr->call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) &&
        (orig_indicator == selective_key_ignore ||
         orig_indicator == selective_key_plain ||
         orig_indicator == selective_key_dyp)) {
       indicator = selective_key_dyp;
+      orig_indicator = selective_key_dyp;
       action = normalize_strict_matrix;
       force_matrix_merge = true;
    }
@@ -6543,7 +6577,7 @@ extern void inner_selective_move(
             tglindicator = 0103;
             goto back_here;
          case selector_inpoint_tgl:
-            tglindicator = 5;
+            tglindicator = 0005;
             goto back_here;
          case selector_inpoint_intlk_tgl:
          case selector_intlk_inpoint_tgl:
@@ -6557,7 +6591,7 @@ extern void inner_selective_move(
             tglindicator = 0305;
             goto back_here;
          case selector_outpoint_tgl:
-            tglindicator = 4;
+            tglindicator = 0004;
             goto back_here;
          case selector_outpoint_intlk_tgl:
          case selector_intlk_outpoint_tgl:
@@ -6569,6 +6603,34 @@ extern void inner_selective_move(
          case selector_magic_intlk_outpoint_tgl:
          case selector_intlk_magic_outpoint_tgl:
             tglindicator = 0304;
+            goto back_here;
+         case selector_beaupoint_tgl:
+            tglindicator = 0010;
+            goto back_here;
+         case selector_beaupoint_intlk_tgl:
+         case selector_intlk_beaupoint_tgl:
+            tglindicator = 0110;
+            goto back_here;
+         case selector_magic_beaupoint_tgl:
+            tglindicator = 0210;
+            goto back_here;
+         case selector_magic_intlk_beaupoint_tgl:
+         case selector_intlk_magic_beaupoint_tgl:
+            tglindicator = 0310;
+            goto back_here;
+         case selector_bellepoint_tgl:
+            tglindicator = 0011;
+            goto back_here;
+         case selector_bellepoint_intlk_tgl:
+         case selector_intlk_bellepoint_tgl:
+            tglindicator = 0111;
+            goto back_here;
+         case selector_magic_bellepoint_tgl:
+            tglindicator = 0211;
+            goto back_here;
+         case selector_magic_intlk_bellepoint_tgl:
+         case selector_intlk_magic_bellepoint_tgl:
+            tglindicator = 0311;
             goto back_here;
          case selector_wave_base_tgl:
             tglindicator = 6;
@@ -6953,9 +7015,9 @@ extern void inner_selective_move(
             else if (tglindicator == 0103 && kk == s_qtag) {
                map_key_table = tglmap::ritglmap3;
             }
-            else if ((tglindicator & ~0301) == 4 && kk == s_qtag) {
-               // In-point and out-point.
-               // Picking out 4 or 5, with 100 or 200 bits; will get taken care of later.
+            else if (kk == s_qtag && ((tglindicator & ~0301) == 4 || (tglindicator & ~0301) == 8)) {
+               // In/out/beau/belle-point.
+               // Picking out 4, 5, 8, or 9, with 100 or 200 bits; will get taken care of later.
                if ((thislivemask & 0x22) == 0)
                   map_key_table = tglmap::qttglmap1;
                else if ((thislivemask & 0x11) == 0)
@@ -7115,6 +7177,8 @@ extern void inner_selective_move(
             // These two have a looser livemask criterion.
             if (key & (LOOKUP_IGNORE|LOOKUP_DISC|LOOKUP_NONE)) {
                if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4) {
+                  // Used in rd03\1213:  Selector is girls, call is spread.  (Yes, if just say
+                  // "girls spread"
                   if ((thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
                      fixp = select::fixer_ptr_table[select::fx_f2x4far];
                   else if ((thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)

@@ -59,7 +59,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "sdui.h"
+#include "sd.h"
 
 static int window_size_args[4] = {780, 560, 10, 20};
 

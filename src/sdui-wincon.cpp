@@ -62,8 +62,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "sdui.h"
-
+#include "sd.h"
 
 
 static HANDLE consoleStdout, consoleStdin;

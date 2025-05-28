@@ -34,7 +34,7 @@
 
 // The definitions of "matcher_class" and "pat2_block" are in sdui.h.
 
-#include "sdui.h"
+#include "sd.h"
 
 
 
@@ -1608,7 +1608,7 @@ void matcher_class::match_wildcard(
             for (i=1; i<selector_INVISIBLE_START; i++) {
                if (key != 'K' && i >= selector_SOME_START)
                   continue;
-               if (key == 'V' && (i == selector_centers || i == selector_ends))
+               if (key == 'V' && (i == selector_centers || i == selector_ends || i == selector_outsides))
                   continue;
 
                m_current_result->match.call_conc_options.who.who[m_current_result->match.call_conc_options.who.who_stack_ptr-1] = (selector_kind) i;

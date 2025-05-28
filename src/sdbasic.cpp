@@ -2131,8 +2131,11 @@ static bool handle_4x4_division(
       case 0x6A6A: case 0xC9C9:
          division_code = MAPCODE(s2x3,2,MPKIND__OFFS_R_THIRD,1);
          goto handle_other_z;
-      case 0x4B4B: case 0xB4B4:
-         // We are in "clumps".  See if we can do the call in 2x2 or smaller setups.
+      case 0x4B4B: case 0x0303: case 0x4141:
+         finalrot++;
+      case 0xB4B4: case 0x3030: case 0x1414:
+         // We are in "clumps", or suitable subsets thereof.
+         // See if we can do the call in 2x2 or smaller setups.
 
          if (!assoc(b_1x1, ss, calldeflist) &&
              !assoc(b_2x2, ss, calldeflist) &&
@@ -2142,8 +2145,7 @@ static bool handle_4x4_division(
             fail("Don't know how to do this call in this setup.");
 
          if (!matrix_aware) warn(warn__each2x2);
-         division_code = (livemask == 0x4B4B) ?
-            MAPCODE(s2x2,2,MPKIND__OFFS_L_FULL,0) : MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0);
+         division_code = MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0);
          return true;
       }
    }
@@ -2704,6 +2706,29 @@ static int divide_the_setup(
          break;
       }
 
+      goto divide_us_no_recompute;
+   case s2x2dmd:
+      if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) ||
+          assoc(b_qtag, ss, calldeflist) || assoc(b_pqtag, ss, calldeflist))
+         division_code = MAPCODE(s_qtag,2,MPKIND__SPLIT,1);
+      else if (assoc(b_ptpd, ss, calldeflist) || assoc(b_pptpd, ss, calldeflist))
+         division_code = MAPCODE(s_ptpd,2,MPKIND__SPLIT,1);
+      else if (assoc(b_2x4, ss, calldeflist) || assoc(b_4x2, ss, calldeflist) ||
+               assoc(b_2x3, ss, calldeflist) || assoc(b_3x2, ss, calldeflist) ||
+               assoc(b_2x2, ss, calldeflist) ||
+               assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)) {
+         // Need to turn it into a mundane matrix setup.
+         do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
+         normalize_setup(ss, plain_normalize, true);
+         // Check that it did something.  (Otherwise, divide_us_no_recompute will raise an error.)
+         if (ss->kind == s2x4 || ss->kind == s4x4 || ss->kind == s4x6)
+            return 2;
+      }
+
+      goto divide_us_no_recompute;
+   case s4dmd:
+      // Try this.  If it doesn't work, it doesn't work.
+      division_code = MAPCODE(s_qtag,2,MPKIND__SPLIT,0);
       goto divide_us_no_recompute;
    case spgdmdcw:
       division_code = MAPCODE(sdmd,2,MPKIND__OFFS_R_HALF,1);
@@ -4142,132 +4167,6 @@ static int divide_the_setup(
    // If a "horrible hinge" went to a 1x4, it's horrible.
    if (maybe_horrible_hinge && result->kind == s1x4)
       warn(warn__horrible_conc_hinge);
-
-   // If expansion to a 2x3 occurred (because the call was, for example, a "pair the line"),
-   // and the two 2x3's are end-to-end in a 2x6, see if we can squash phantoms.  We squash both
-   // internal (the center triple box) and external ones.  The external ones would probably have
-   // been squashed anyway due to the top level normalization, but we want this to occur
-   // immediately, not just at the top level, though we can't think of a concrete example
-   // in which it makes a difference.
-
-   if (result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3) {
-      static const expand::thing inner_2x6 = {{0, 1, 4, 5, 6, 7, 10, 11}, s2x4, s2x6, 0};
-      static const expand::thing inner_dblbone6 = {{1, 9, 11, 8, 7, 3, 5, 2}, s_rigger, sdblbone6, 0};
-      static const expand::thing outer_dblbone6 = {{0, 10, 11, 8, 6, 4, 5, 2}, s_bone, sdblbone6, 0};
-      static const expand::thing inner8_2x10 = {{0, 1, 2, 7, 8, 9, 10, 11, 12, 17, 18, 19}, s2x6, s2x10, 0};
-      static const expand::thing inner_2x10 = {
-         {0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18, 19}, s2x8, s2x10, 0};
-      static const expand::thing outer8_2x10 = {{2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17}, s2x6, s2x10, 0};
-      static const expand::thing outer_2x10 = {
-         {1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18}, s2x8, s2x10, 0};
-      static const expand::thing inner_rig = {{6, 7, -1, 2, 3, -1}, s1x6, s_rigger, 0};
-      static const expand::thing inner_4x6 = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9},
-                                              s4x4, s4x6, 0};
-      static const expand::thing outer_4x6 = {{5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10},
-                                              s4x4, s4x6, 0};
-      static const expand::thing inner_3x6 = {{0, 1, 4, 5, 6, 7, 9, 10, 13, 14, 15, 16}, s3x4, s3x6, 0};
-      static const expand::thing outer_3x6 = {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}, s3x4, s3x6, 0};
-
-      const expand::thing *expand_ptr = (const expand::thing *) 0;
-
-      switch (result->kind) {
-      case s2x6:
-         if (!(result->people[2].id1 | result->people[3].id1 |
-               result->people[8].id1 | result->people[9].id1)) {
-            // Inner spots are empty.
-
-            // If the outer ones are empty also, we don't know what to do.
-            // This is presumably a "snag pair the line", or something like that.
-            // Clear the inner spots away, and turn off the flag, so that
-            // "punt_centers_use_concept" will know what to do.
-            if (!(result->people[0].id1 | result->people[5].id1 |
-                  result->people[6].id1 | result->people[11].id1))
-               result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
-
-            expand_ptr = &inner_2x6;
-         }
-         break;
-      case sdblbone6:
-         if (!(result->people[1].id1 | result->people[3].id1 |
-               result->people[7].id1 | result->people[9].id1)) {
-            // Inner spots are empty.
-
-            // If the outer ones are empty also, trim the outer ones,
-            // resulting in a rigger, and leave the flag on.
-            if (!(result->people[0].id1 | result->people[4].id1 |
-                  result->people[6].id1 | result->people[10].id1))
-               expand_ptr = &inner_dblbone6;
-            else
-               expand_ptr = &outer_dblbone6;    // Remove the inner ones, and leave the flag on.
-         }
-         break;
-      case s2x10:
-         if (!(result->people[4].id1 | result->people[5].id1 |
-               result->people[14].id1 | result->people[15].id1)) {
-            // Innermost 4 spots are empty.
-            if (!(result->people[3].id1 | result->people[6].id1 | result->people[13].id1 | result->people[16].id1))
-               expand_ptr = &inner8_2x10;   // Actually, inner 8 spots are empty.
-            else
-               expand_ptr = &inner_2x10;
-         }
-         else if (!(result->people[0].id1 | result->people[9].id1 |
-                    result->people[10].id1 | result->people[19].id1)) {
-            // Outermost 4 spots are empty.
-            if (!(result->people[1].id1 | result->people[8].id1 | result->people[11].id1 | result->people[18].id1))
-               expand_ptr = &outer8_2x10;   // Actually, outer 8 spots are empty.
-            else
-               expand_ptr = &outer_2x10;
-         }
-         break;
-      case s_rigger:
-         // The outer spots are already known to be empty and have been cleaned up.
-         // So we just have to deal with the inner spots.  This means that both
-         // inner and outer spots are empty, so we have to do the same thing
-         // that we do above in the 2x6.
-         if (!(result->people[0].id1 | result->people[1].id1 |
-               result->people[4].id1 | result->people[5].id1)) {
-            result->result_flags.misc &= ~RESULTFLAG__EXPAND_TO_2X3;
-            expand_ptr = &inner_rig;
-         }
-         break;
-      case s4x6:
-         // We do the same for two concatenated 3x4's.
-         // This could happen if the people folding were not the ends.
-         if (!(result->people[2].id1 | result->people[3].id1 |
-               result->people[8].id1 | result->people[9].id1 |
-               result->people[20].id1 | result->people[21].id1 |
-               result->people[14].id1 | result->people[15].id1)) {
-            // Inner spots are empty.
-            expand_ptr = &outer_4x6;
-         }
-         else if (!( result->people[0].id1 | result->people[5].id1 |
-                     result->people[6].id1 | result->people[11].id1 |
-                     result->people[18].id1 | result->people[23].id1 |
-                     result->people[12].id1 | result->people[17].id1)) {
-            // Outer spots are empty.
-            expand_ptr = &inner_4x6;
-         }
-         break;
-      case s3x6:
-         if (result->result_flags.split_info[result->rotation & 1] == 1 &&
-             result->result_flags.split_info[(result->rotation ^ 1) & 1] == 0) {
-            // These were offset 2x3's.
-            if (!(result->people[2].id1 | result->people[3].id1 | result->people[8].id1 |
-                  result->people[11].id1 | result->people[12].id1 | result->people[17].id1)) {
-               // Inner spots are empty.
-               expand_ptr = &inner_3x6;
-            }
-            else if (!(result->people[0].id1 | result->people[5].id1 | result->people[6].id1 |
-                       result->people[9].id1 | result->people[14].id1 | result->people[15].id1)) {
-               // Outer spots are empty.
-               expand_ptr = &outer_3x6;
-            }
-         }
-         break;
-      }
-
-      if (expand_ptr) expand::compress_setup(*expand_ptr, result);
-   }
 
    return 1;
 

@@ -44,7 +44,6 @@ and the following external variables:
 */
 
 #include "sd.h"
-#include "sdui.h"
 
 
 // BEWARE!!  This list must track the array "pick_type_table".
@@ -166,7 +165,7 @@ selector_kind do_selector_iteration(bool allow_iteration)
    else {
       // We don't generate unsymmetrical selectors when searching.  It generates
       // too many "couple #3 u-turn-back" calls.
-      j = generate_random_number(noresolve_SELECTOR_START-1)+1;
+      j = generate_random_number(selector_NORESOLVE_START-1)+1;
    }
 
    hash_nonrandom_number(j-1);

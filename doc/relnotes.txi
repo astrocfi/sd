@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.01
-@set title2 Database version = 39.01 format = 342
+@set title1 RELEASE NOTES FOR VERSION 39.02
+@set title2 Database version = 39.02 format = 346
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.02::
 * 39.01::
 * 38.93::
 * 38.92::
@@ -133,7 +134,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.01, Top, (dir)
+@node Intro, 39.02, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -144,11 +145,68 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2017 William B. Ackerman
 @sp 3
 @menu
-* 39.01::               Changes in the current version
+* 39.02::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.01, 38.93, Intro, Top
+@node 39.02, 39.01, Intro, Top
+@unnumberedsec Version 39.02 changes
+
+A bug in @strong{own the anyone}, that can cause incorrect results in certain cases, was fixed.
+
+The program can apply the modifiers @strong{generous} and @strong{stingy} to @strong{squeeze}.
+
+The "centers work in tandem, ends as couples" and "centers work as
+couples, ends in tandem" warnings have been removed.  This used to be a
+noteworthy application of @strong{siamese}, but is no longer.
+
+New (C4) call: @strong{fly the coop}.  Typically from a 1x8 tidal line, the
+center 2 do a grand cross run to the other far end.  Then everyone
+trade, then the new center 2 do another grand cross run, then everyone
+trade.  This call has 4 parts.  The setup can be smaller than 8 people,
+and the people lateral to the very centers don't have to be in a line.
+The very centers simply cross run around whoever is there, and they all
+move in.  So, for example, this action would take point-to-point
+diamonds to a "rigger".
+
+New concepts: @strong{M/N of}, @strong{middle M/N of}, and @strong{last
+M/N of}.  These call for the execution of (only) the appropriate section
+of the call.  The use of the word "of" is intended to disambiguate these
+from the C4 meta-concepts @strong{first M/N} <concept> and @strong{last
+M/N} <concept>, which direct the application of the concept to just the
+indicated part of the call, while doing the whole call.
+
+@strong{M/N of} is the same as the existing concept @strong{M/N}, and is
+included for completeness.  @strong{Last M/N of} is the same as the
+existing concept @strong{do the last M/N}.  @strong{Middle M/N of} is
+new.
+
+New concept: @strong{big block diamonds}.  This is similar to
+@strong{big block}; the points of the diamonds are essentially the ends
+of big block lines; the centers of the diamonds are on the appropriate
+other big block spots of the 4x4.  But disambiguating this can be
+tricky.  The people in the very corners of the setup are diamonds
+points, and the other people use that information to deduce where the
+rest of the diamonds are.
+
+New concepts: @strong{center 2x4} and @strong{center 2x6}, from 2x8, 2x10 or 2x12.
+Examples: @strong{center 2x6 triple boxes bingo} or @strong{center 2x6 12 matrix circulate}.
+
+New triangle designators: @strong{beau point triangles} and
+@strong{belle point triangles}.  These are analogous to @strong{in point
+triangles} and @strong{out point triangles}, but are used when all the
+points are facing in or all are facing out.  If you are a point and the
+rest of the diamond is to your right, you are the beau-point apex.  If
+the rest of the diamond is to your left, you are the belle-point apex.
+
+The program has a much better ability to deal with the decades-old
+problem known as the "diamond to 1/4 tag adjustment".  That is, it is
+much better at getting into and out of @strong{twin phantom 1/4 tags}
+and @strong{twin phantom diamonds}, that is, a 2x2 array of diamonds or
+single 1/4 tags.
+
+@c ************
+@node 39.01, 38.93, 39.02, Top
 @unnumberedsec Version 39.01 changes
 
 There has been a major redesign of the way triangle concepts are done

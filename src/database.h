@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 342
+#define DATABASE_FORMAT_VERSION 346
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -591,6 +591,7 @@ enum setup_kind {
    s4dmd,
    s3ptpd,
    s4ptpd,
+   s2x2dmd,
    s_trngl8,
    s4p2x1dmd,
    splinepdmd,
@@ -835,6 +836,8 @@ enum begin_kind {
    b_p3ptpd,
    b_4ptpd,
    b_p4ptpd,
+   b_2x2dmd,
+   b_p2x2dmd,
    b_hqtag,
    b_phqtag,
    b_hsqtag,
@@ -1102,6 +1105,7 @@ enum calldef_schema {
    schema_grand_single_cross_concentric,
    schema_single_concentric_together,
    schema_single_cross_concentric_together,
+   schema_maybe_6x2_single_conc_together,
    schema_maybe_matrix_single_concentric_together,
    schema_maybe_single_concentric,
    schema_maybe_single_cross_concentric,
@@ -1146,6 +1150,7 @@ enum calldef_schema {
    schema_concentric_8_4,        // Not for public use!
    schema_concentric_big2_6,     // Not for public use!
    schema_concentric_2_6_or_2_4,
+   schema_concentric_6_2_or_4_2,
    schema_cross_concentric_2_6_or_2_4,
    schema_concentric_innermost,
    schema_concentric_touch_by_1_of_3,
@@ -1197,6 +1202,8 @@ enum calldef_schema {
    schema_sgl_in_out_triple,
    schema_3x3_in_out_triple,
    schema_4x4_in_out_triple,
+   schema_inner_2x4,
+   schema_inner_2x6,
    schema_in_out_quad,
    schema_in_out_12mquad,
    schema_in_out_triple_zcom,
