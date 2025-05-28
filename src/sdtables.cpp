@@ -554,6 +554,9 @@ const expand::thing s_qtg_2x3 = {{5, -1, 0, 1, -1, 4}, s2x3, s_qtag, 1};
 const expand::thing s_qtg_2x4 = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_qtag, 1};
 const expand::thing s_2x2_gal_ctrs = {{1, 3, 5, 7}, s2x2, s_galaxy, 0};
 const expand::thing s_2x4_hrgl_pts = {{5, -1, -1, 0, 1, -1, -1, 4}, s2x4, s_hrglass, 1};
+const expand::thing s2x3_hrgl = {{5, -1, 0, 1, -1, 4}, s_bone6, s_hrglass, 1};
+const expand::thing s_bone6_hrgl = {{5, 0, 3, 1, 4, 7}, s_bone6, s_hrglass, 1};
+const expand::thing s_dmd_hrgl_ctrs = {{6, 3, 2, 7}, sdmd, s_hrglass, 0};
 const expand::thing s_4x4_4x6a = {
    {4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, s4x4, s4x6, 0};
 const expand::thing s_4x4_4x6b = {
@@ -10565,6 +10568,8 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_concentric_6p
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p_or_normal
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+    schema_nothing},                     // schema_concentric_6p_or_normal_maybe_single
    {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
     schema_nothing},                     // schema_concentric_6p_or_normal_or_2x6_2x3
    {SCA_CENTRALCONC | SCA_SNAGOK,

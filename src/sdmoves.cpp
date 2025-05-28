@@ -3600,7 +3600,9 @@ extern void anchor_someone_and_move(
    ss->eighth_rotation = 0;
 
    if (ss->kind != s2x4 &&
+       ss->kind != s1x4 &&
        ss->kind != s1x8 &&
+       ss->kind != s2x2 &&
        ss->kind != s2x3 &&
        ss->kind != s2x6 &&
        ss->kind != s2x8 &&
@@ -5707,7 +5709,7 @@ static void do_sequential_call(
    if (*mirror_p) mirror_this(ss);
    *mirror_p = false;
 
-   prepare_for_call_in_series(result, ss);
+   prepare_for_call_in_series(result, ss, false);
    uint32_t remember_elongation = 0;
    int remembered_2x2_elongation = 0;
    int subpart_count = 0;
@@ -6499,11 +6501,13 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
 
    switch (the_schema) {
    case schema_maybe_single_concentric:
-      return (herit_concepts.r & INHERITFLAGR_SINGLE) ?
+      return ((herit_concepts.r & INHERITFLAGR_SINGLE) || (attr::slimit(ss) == 3)) ?
          schema_single_concentric : schema_concentric;
    case schema_maybe_single_cross_concentric:
-      return (herit_concepts.r & INHERITFLAGR_SINGLE) ?
+      return ((herit_concepts.r & INHERITFLAGR_SINGLE) || (attr::slimit(ss) == 3)) ?
          schema_single_cross_concentric : schema_cross_concentric;
+   case schema_concentric_6p_or_normal_maybe_single:
+      return (herit_concepts.r & INHERITFLAGR_SINGLE) ? schema_single_concentric : schema_concentric_6p_or_normal;
    case schema_maybe_6x2_single_conc_together:
       return (herit_concepts.r & INHERITFLAGR_GRAND) ?
          schema_concentric_6_2 : schema_single_concentric_together;

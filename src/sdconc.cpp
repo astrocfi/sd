@@ -1949,6 +1949,7 @@ static calldef_schema concentrify(
    case schema_in_out_quad:
    case schema_in_out_12mquad:
    case schema_concentric_6_2:
+   case schema_concentric_6p_or_normal_maybe_single:
    case schema_concentric_6p:
    case schema_1221_concentric:
    case schema_concentric_others:

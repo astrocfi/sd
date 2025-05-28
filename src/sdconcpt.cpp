@@ -1266,37 +1266,37 @@ static void do_concept_parallelogram(
    mpkind mk;
 
    if (ss->kind == s2x6) {
-      if (global_livemask == 07474) {
-         mk = MPKIND__OFFS_R_HALF; }
-      else if (global_livemask == 01717) {
-         mk = MPKIND__OFFS_L_HALF; }
+      if ((global_livemask & ~01717) == 0 && (global_livemask & ~07474) != 0)
+         mk = MPKIND__OFFS_L_HALF;
+      else if ((global_livemask & ~07474) == 0 && (global_livemask & ~01717) != 0)
+         mk = MPKIND__OFFS_R_HALF;
       else fail("Can't find a parallelogram.");
       is_pgram = true;
    }
    else if (ss->kind == s2x5) {
       warn(warn__1_4_pgram);
-      if (global_livemask == 0x3DE) {
-         mk = MPKIND__OFFS_R_ONEQ; }
-      else if (global_livemask == 0x1EF) {
-         mk = MPKIND__OFFS_L_ONEQ; }
+      if ((global_livemask & ~0x1EF) == 0 && (global_livemask & ~0x3DE) != 0)
+         mk = MPKIND__OFFS_L_ONEQ;
+      else if ((global_livemask & ~0x3DE) == 0 && (global_livemask & ~0x1EF) != 0)
+         mk = MPKIND__OFFS_R_ONEQ;
       else fail("Can't find a parallelogram.");
       is_pgram = true;
    }
    else if (ss->kind == s2x7) {
       warn(warn__3_4_pgram);
-      if (global_livemask == 0x3C78) {
-         mk = MPKIND__OFFS_R_THRQ; }
-      else if (global_livemask == 0x078F) {
-         mk = MPKIND__OFFS_L_THRQ; }
+      if ((global_livemask & ~0x078F) == 0 && (global_livemask & ~0x3C78) != 0)
+         mk = MPKIND__OFFS_L_THRQ;
+      else if ((global_livemask & ~0x3C78) == 0 && (global_livemask & ~0x078F) != 0)
+         mk = MPKIND__OFFS_R_THRQ;
       else fail("Can't find a parallelogram.");
       is_pgram = true;
    }
    else if (ss->kind == s2x8) {
       warn(warn__full_pgram);
-      if (global_livemask == 0xF0F0) {
-         mk = MPKIND__OFFS_R_FULL; }
-      else if (global_livemask == 0x0F0F) {
-         mk = MPKIND__OFFS_L_FULL; }
+      if ((global_livemask & ~0x0F0F) == 0 && (global_livemask & ~0xF0F0) != 0)
+         mk = MPKIND__OFFS_L_FULL;
+      else if ((global_livemask & ~0xF0F0) == 0 && (global_livemask & ~0x0F0F) != 0)
+         mk = MPKIND__OFFS_R_FULL;
       else fail("Can't find a parallelogram.");
       is_pgram = true;
    }
@@ -3513,15 +3513,28 @@ static void do_concept_assume_waves(
       case cr_hourglass:
          if (ss->kind == s_hrglass)
             goto check_it;
-         else if (ss->kind == s2x4 &&
-                  (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
-            if (two_couple_calling) {
+         else if (two_couple_calling) {
+            if (ss->kind == s2x4 &&
+                (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
                no_phan_error = false;
                expand::expand_setup(s_2x4_hrgl_pts, ss);
                goto check_it;
             }
-            else
-               goto bad_assume;
+            else if (ss->kind == sdmd) {
+               no_phan_error = false;
+               expand::expand_setup(s_dmd_hrgl_ctrs, ss);
+               goto check_it;
+            }
+            else if (ss->kind == s2x3) {
+               no_phan_error = false;
+               expand::expand_setup(s2x3_hrgl, ss);
+               goto check_it;
+            }
+            else if (ss->kind == s_bone6) {
+               no_phan_error = false;
+               expand::expand_setup(s_bone6_hrgl, ss);
+               goto check_it;
+            }
          }
       case cr_galaxy:
          if (ss->kind == s_galaxy)
@@ -3608,16 +3621,17 @@ static void do_concept_assume_waves(
       ss->kind = s_qtag;
       goto check_it;
    case s2x3:
-      if (ss->people[1].id1 || ss->people[4].id1)
-         fail("Can't do this assumption.");
-      copy_rot(ss, 4, ss, 5, 033);
+      copy_person(ss, 6, ss, 5);
       copy_rot(ss, 5, ss, 0, 033);
+      copy_person(ss, 7, ss, 4);
+      copy_rot(ss, 4, ss, 6, 033);
+      copy_person(ss, 6, ss, 1);
       copy_rot(ss, 1, ss, 3, 033);
       copy_rot(ss, 0, ss, 2, 033);
+      copy_rot(ss, 3, ss, 7, 033);
+      copy_rot(ss, 7, ss, 6, 033);
       ss->clear_person(2);
-      ss->clear_person(3);
       ss->clear_person(6);
-      ss->clear_person(7);
       ss->rotation++;
       ss->kind = s_qtag;
       goto check_it;
@@ -7897,6 +7911,7 @@ static void do_concept_meta(
                result->cmd = yescmd;
                result->cmd.cmd_fraction.flags = corefracs.flags | CMD_FRAC_BREAKING_UP;
                result->cmd.cmd_fraction.fraction = bfracs.fraction;
+               result->cmd.prior_expire_bits |= RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS;
                do_call_in_series_and_update_bits(result);
             }
 
@@ -7906,6 +7921,7 @@ static void do_concept_meta(
                result->cmd.parseptr = result_of_skip;      // Skip over the concept.
                result->cmd.cmd_fraction.flags = CMD_FRAC_BREAKING_UP;
                result->cmd.cmd_fraction.fraction = cfracs.fraction;
+               result->cmd.prior_expire_bits |= RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS;
                do_call_in_series_simple(result);
             }
 

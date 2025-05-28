@@ -898,6 +898,10 @@ void configuration::calculate_resolve()
 
 
 
+uint32_t random_recent_history[128];
+int random_count;
+int random_top_level_start;
+
 
 void ui_utils::write_aproximately()
 {
@@ -1096,6 +1100,10 @@ static bool inner_search(command_kind goal,
       release_parse_blocks_to_mark(inner_parse_mark);
       testing_fidelity = false;
       config_history_ptr = history_save;
+      random_top_level_start = random_count;
+      random_number = (int) rand();
+      srand(random_number);
+      random_recent_history[(random_count++) & 127] = random_number*1000;
       attempt_count++;
 
       // Check whether we have been trying too long.  If so, give up and report failure.

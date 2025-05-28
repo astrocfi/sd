@@ -83,19 +83,26 @@ void tglmap::initialize()
 
 
 
-extern void prepare_for_call_in_series(setup *result, setup *ss, bool dont_clear__no_reeval /* = false */)
+void prepare_for_call_in_series(setup *result, setup *ss,
+                                bool dont_clear__no_reeval /* = false */)
 {
+
    *result = *ss;
-   // Clear all except these two bits.
-   result->result_flags.misc &= (RESULTFLAG__NO_REEVALUATE|RESULTFLAG__REALLY_NO_REEVALUATE);
-   // Or clear even RESULTFLAG__NO_REEVALUATE, but never RESULTFLAG__REALLY_NO_REEVALUATE.
+   if ((result->cmd.prior_expire_bits & RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS) == 0)
+      result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
+
+   // And clear all the rest except these few bits.
+   result->result_flags.misc &= (RESULTFLAG__NO_REEVALUATE|RESULTFLAG__REALLY_NO_REEVALUATE|RESULTFLAG__EXPIRATION_BITS);
+
+   // Or clear even RESULTFLAG__NO_REEVALUATE if requested, but never RESULTFLAG__REALLY_NO_REEVALUATE.
    if (!dont_clear__no_reeval)
-      result->result_flags.misc &= RESULTFLAG__REALLY_NO_REEVALUATE;
+      result->result_flags.misc &= ~RESULTFLAG__NO_REEVALUATE;
+
    result->result_flags.maximize_split_info();
 }
 
 
-extern void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info)
+void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info)
 {
    if (ss->result_flags.split_info[0] > other_split_info.split_info[0])
       ss->result_flags.split_info[0] = other_split_info.split_info[0];
@@ -134,7 +141,7 @@ void map::initialize()
 }
 
 
-extern void remove_z_distortion(setup *ss) THROW_DECL
+void remove_z_distortion(setup *ss) THROW_DECL
 {
    static const expand::thing fix_cw  = {{1, 2, 4, 5}, s2x2, s2x3, 0};
    static const expand::thing fix_ccw = {{0, 1, 3, 4}, s2x2, s2x3, 0};
@@ -159,7 +166,7 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
 }
 
 
-extern void remove_tgl_distortion(setup *ss) THROW_DECL
+void remove_tgl_distortion(setup *ss) THROW_DECL
 {
    if (!(ss->result_flags.misc & RESULTFLAG__DID_TGL_EXPANSION))
       return;

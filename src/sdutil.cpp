@@ -523,7 +523,7 @@ void ui_utils::print_4_person_setup(int ps, small_setup *s, int elong)
       else if (elong == 2)
          str = "ab@@@dc@";
       else
-         str = "a6b@@@d6c@";
+         str = "a  b@@d  c@";
    }
    else if (s->skind == s1x4 && (roti & 1) && two_couple_calling) {
       str = "a@@b@@d@@c";

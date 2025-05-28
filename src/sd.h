@@ -3916,10 +3916,11 @@ enum {
    RESULTFLAG__NEED_DIAMOND         = 0x00000040U,
    RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080U,
    RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000100U,
-   // 3 spare bits here
-   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00001000U,
-   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00002000U,
-   RESULTFLAG__EXPAND_TO_2X3        = 0x00004000U,
+   // 2 spare bits here
+   RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00000800U,
+   RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00001000U,
+   RESULTFLAG__EXPAND_TO_2X3        = 0x00002000U,
+   RESULTFLAG__PRESERVE_INCOMING_EXPIRATIONS = 0x00004000U,
 
    // This is a 5 bit field.
    RESULTFLAG__EXPIRATION_BITS      = 0x000F8000U,
@@ -4802,6 +4803,10 @@ extern const expand::thing s_qtg_2x3;
 extern const expand::thing s_qtg_2x4;
 extern const expand::thing s_2x2_gal_ctrs;
 extern const expand::thing s_2x4_hrgl_pts;
+extern const expand::thing s_2x4_hrgl_pts;
+extern const expand::thing s2x3_hrgl;
+extern const expand::thing s_bone6_hrgl;
+extern const expand::thing s_dmd_hrgl_ctrs;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
 extern const expand::thing s_4x4_4dma;
@@ -5721,13 +5726,14 @@ void move(
 
 /* In SDISTORT */
 
-extern void prepare_for_call_in_series(setup *result, setup *ss, bool dont_clear__no_reeval = false);
+void prepare_for_call_in_series(setup *result, setup *ss,
+                                bool dont_clear__no_reeval = false);
 
-extern void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info);
+void minimize_splitting_info(setup *ss, const resultflag_rec & other_split_info);
 
-extern void remove_z_distortion(setup *ss) THROW_DECL;
+void remove_z_distortion(setup *ss) THROW_DECL;
 
-extern void remove_tgl_distortion(setup *ss) THROW_DECL;
+void remove_tgl_distortion(setup *ss) THROW_DECL;
 
 struct whuzzisthingy {
    concept_kind k;
@@ -6311,6 +6317,9 @@ extern SDLIB_API char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];   // 
 extern SDLIB_API int session_index;                           // in SDSI
 extern SDLIB_API bool rewrite_with_new_style_filename;        // in SDSI
 extern SDLIB_API int random_number;                           // in SDSI
+extern SDLIB_API uint32_t random_recent_history[128];
+extern SDLIB_API int random_count;
+extern SDLIB_API int random_top_level_start;
 extern SDLIB_API const char *database_filename;               // in SDSI
 extern SDLIB_API const char *new_outfile_string;              // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI

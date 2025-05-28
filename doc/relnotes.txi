@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.23
-@set title2 Database version = 39.23 format = 378
+@set title1 RELEASE NOTES FOR VERSION 39.24
+@set title2 Database version = 39.24 format = 379
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.24::
 * 39.23::
 * 39.22::
 * 39.21::
@@ -123,7 +124,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.23, Top, (dir)
+@node Intro, 39.24, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -134,11 +135,26 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2020 William B. Ackerman
 @sp 3
 @menu
-* 39.23::               Changes in the current version
+* 39.24::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.23, 39.22, Intro, Top
+@node 39.24, 39.23, Intro, Top
+@unnumberedsec Version 39.24 changes
+
+BEWARE: in 2-couple calling, @strong{extend} from a wave, without an
+@strong{assume} specifying a 1/4 tag, will default to the bogus ``step thru''
+operation that some callers consider to be an appropriate application
+of this call.  You should use @strong{assume 1/4 tags} or
+@strong{assume right 1/4 tags} or @strong{assume left 1/4 tags}, as
+the case may be.
+
+In two-couple calling, the display of a 2x2 box was tightened up a bit.
+
+And the usual other improvements for two-couple calling.
+
+@c ************
+@node 39.23, 39.22, 39.24, Top
 @unnumberedsec Version 39.23 changes
 
 All @strong{assume} commands are now legal at all levels.  So, in
