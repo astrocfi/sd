@@ -1179,9 +1179,13 @@ typedef enum {
    start_select_s1p2p,       /* Etc. */
    start_select_heads_start,
    start_select_sides_start,
-   start_select_as_they_are
+   start_select_as_they_are,
+   start_select_toggle_conc,
+   start_select_toggle_act,
+   start_select_change_outfile,
+   start_select_change_header_comment
 } start_select_kind;
-#define NUM_START_SELECT_KINDS (((int) start_select_as_they_are)+1)
+#define NUM_START_SELECT_KINDS (((int) start_select_change_header_comment)+1)
 
 /* For ui_command_select: */
 /* BEWARE!!  This next definition must be keyed to stuff in sdgetout.c or 
@@ -1357,10 +1361,7 @@ typedef struct {
 
    CONCPROP__NEED_4X4   mean that the concept requires the indicated setup, and, at
    CONCPROP__NEED_2X8   the top level, the existing setup should be expanded as needed.
-   CONCPROP__NEED_2X6 
-   CONCPROP__NEED_4DMD
-   CONCPROP__NEED_BLOB
-   CONCPROP__NEED_4X6 
+      etc....
 
    CONCPROP__SET_PHANTOMS means that phantoms are in use under this concept, so that,
       when looking for tandems or couples, we shouldn't be disturbed if we
@@ -1403,25 +1404,29 @@ typedef struct {
 #define CONCPROP__NEED_BLOB        0x00000040UL
 #define CONCPROP__NEED_4X6         0x00000080UL
 #define CONCPROP__NEED_3X8         0x00000100UL
-#define CONCPROP__SET_PHANTOMS     0x00000200UL
-#define CONCPROP__NO_STEP          0x00000400UL
-#define CONCPROP__GET_MASK         0x00000800UL
-#define CONCPROP__STANDARD         0x00001000UL
-#define CONCPROP__USE_NUMBER       0x00002000UL
-#define CONCPROP__USE_TWO_NUMBERS  0x00004000UL
-#define CONCPROP__NEED_3DMD        0x00008000UL
-#define CONCPROP__NEED_1X12        0x00010000UL
-#define CONCPROP__NEED_3X4         0x00020000UL
-#define CONCPROP__NEED_1X16        0x00040000UL
-#define CONCPROP__NEED_4X4_1X16    0x00080000UL
-#define CONCPROP__NEED_3X4_1X12    0x00100000UL
-#define CONCPROP__MATRIX_OBLIVIOUS 0x00200000UL
-#define CONCPROP__PERMIT_MATRIX    0x00400000UL
-#define CONCPROP__SHOW_SPLIT       0x00800000UL
-#define CONCPROP__PERMIT_MYSTIC    0x01000000UL
-#define CONCPROP__PERMIT_REVERSE   0x02000000UL
-#define CONCPROP__PARSE_DIRECTLY   0x04000000UL
-#define CONCPROP__NEED_ARG2_MATRIX 0x08000000UL
+#define CONCPROP__NEED_3DMD        0x00000200UL
+#define CONCPROP__NEED_1X12        0x00000400UL
+#define CONCPROP__NEED_3X4         0x00000800UL
+#define CONCPROP__NEED_1X16        0x00001000UL
+#define CONCPROP__NEED_4X4_1X16    0x00002000UL
+#define CONCPROP__NEED_TRIPLE_1X4  0x00004000UL
+#define CONCPROP__NEED_CTR_1X4     0x00008000UL
+#define CONCPROP__NEED_END_1X4     0x00010000UL
+#define CONCPROP__NEED_CTR_2X2     0x00020000UL
+#define CONCPROP__NEED_END_2X2     0x00040000UL
+#define CONCPROP__SET_PHANTOMS     0x00080000UL
+#define CONCPROP__NO_STEP          0x00100000UL
+#define CONCPROP__GET_MASK         0x00200000UL
+#define CONCPROP__STANDARD         0x00400000UL
+#define CONCPROP__USE_NUMBER       0x00800000UL
+#define CONCPROP__USE_TWO_NUMBERS  0x01000000UL
+#define CONCPROP__MATRIX_OBLIVIOUS 0x02000000UL
+#define CONCPROP__PERMIT_MATRIX    0x04000000UL
+#define CONCPROP__SHOW_SPLIT       0x08000000UL
+#define CONCPROP__PERMIT_MYSTIC    0x10000000UL
+#define CONCPROP__PERMIT_REVERSE   0x20000000UL
+#define CONCPROP__PARSE_DIRECTLY   0x40000000UL
+#define CONCPROP__NEED_ARG2_MATRIX 0x80000000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of

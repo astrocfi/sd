@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.44"
+#define VERSION_STRING "31.47"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -46,7 +46,7 @@
    not by any utility.  Furthermore, we do not believe that it is proper for
    source control utilities to alter the text in a source file. */
 
-static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  29 Oct 94 $";
+static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  27 Oct 95 $";
 
 /* This defines the following functions:
    sd_version_string
@@ -1389,6 +1389,31 @@ void main(int argc, char *argv[])
 
    if (reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
    if (reply != ui_start_select || uims_menu_index == 0) goto normal_exit;           /* Huh? */
+
+   switch (uims_menu_index) {
+      case start_select_toggle_conc:
+         allowing_all_concepts = !allowing_all_concepts;
+         goto new_sequence;
+      case start_select_toggle_act:
+         using_active_phantoms = !using_active_phantoms;
+         goto new_sequence;
+      case start_select_change_outfile:
+         {
+            char newfile_string[MAX_FILENAME_LENGTH];
+      
+            if (uims_do_outfile_popup(newfile_string)) {
+               if (newfile_string[0] != '\0') {
+                  (void) strncpy(outfile_string, newfile_string, MAX_FILENAME_LENGTH);
+                  last_file_position = -1;
+               }
+            }
+         }
+         goto new_sequence;
+      case start_select_change_header_comment:
+         (void) uims_do_header_popup(header_comment);
+         need_new_header_comment = FALSE;
+         goto new_sequence;
+   }
 
    if (need_new_header_comment) {
       (void) uims_do_header_popup(header_comment);

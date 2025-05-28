@@ -2776,32 +2776,95 @@ Private void do_concept_inner_outer(
    else
       sch = schema_in_out_triple;
 
-   switch (parseptr->concept->value.arg1 & (16+7)) {
+   switch (parseptr->concept->value.arg1) {
       case 0: case 1: case 3:
-         if (ss->kind != s3x4) fail("Sorry, need a 3x4 setup for this.");
+         /* Center triple line/wave/column. */
+         switch (ss->kind) {
+            case s3x4: case s1x12:
+               if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-         if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+               if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
+                  if (global_tbonetest & 1) fail("There are no triple lines here.");
+                  else                      fail("There are no triple columns here.");
+               }
+               break;
+            case sbigh: case sbigx: case sbigdmd: case sbigbone:
+               /* ****** We punt the checking here.  It is rather hairy. */
+               break;
+            default:
+               fail("Need a triple line/column setup for this.");
+         }
 
-         if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
-            if (global_tbonetest & 1) fail("There are no triple lines here.");
-            else                      fail("There are no triple columns here.");
+         break;
+      case 8+0: case 8+1: case 8+3:
+         /* Outside triple lines/waves/columns. */
+         switch (ss->kind) {
+            case s3x4: case s1x12:
+               if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+               if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
+                  if (global_tbonetest & 1) fail("There are no triple lines here.");
+                  else                      fail("There are no triple columns here.");
+               }
+               break;
+            case sbigh: case sbigx: case sbigrig:
+               /* ****** We punt the checking here.  It is rather hairy. */
+               break;
+            default:
+               fail("Need a triple line/column setup for this.");
          }
 
          break;
       case 16+0: case 16+1: case 16+3:
-         if (ss->kind != s4x4) fail("Sorry, need a 4x4 setup for this.");
+      case 16+8+0: case 16+8+1: case 16+8+3:
+         if (ss->kind != s4x4 && ss->kind != s1x16) fail("Need a 1x16 or 4x4 setup for this.");
 
          if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
 
-         rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+         if (ss->kind == s4x4) {
+            rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
 
-         ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
-         canonicalize_rotation(ss);
+            ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+            canonicalize_rotation(ss);
+         }
+         else {
+            if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
+               if (global_tbonetest & 1) fail("There are no quadruple lines here.");
+               else                      fail("There are no quadruple columns here.");
+            }
+         }
+
          break;
       case 4:
-         if (ss->kind != s2x6) fail("Need a 2x6 setup for this.");
-         break;
+         if (ss->kind == s2x6)
+            break;
+         if (ss->kind == sbigrig)
+            break;
+         if (ss->kind == s4x4) {
+            if (ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1) {
+               /* The outer lines/columns are to the left and right.  That's not canonical.
+                  We want them at top and bottom.  So we flip the setup. */
+               rot = 1;
+               ss->rotation++;
+               canonicalize_rotation(ss);
+            }
+
+            /* Now the people had better be clear from the side centers. */
+
+            if (!(ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1))
+               break;
+         }
+         fail("Need center triple box for this.");
+      case 8+4:
+         if (ss->kind == s2x6)
+            break;
+         if (ss->kind == sbigbone)
+            break;
+         if (ss->kind == sbigdmd)
+            break;
+         fail("Need outer triple boxes for this.");
       case 16+4:
+      case 16+8+4:
          if (ss->kind != s2x8) fail("Need a 2x8 setup for this.");
          break;
    }
@@ -4302,6 +4365,7 @@ extern long_boolean do_big_concept(
 
 #define Standard_matrix_phantom (CONCPROP__SET_PHANTOMS | CONCPROP__PERMIT_MATRIX | CONCPROP__STANDARD)
 #define Nostandard_matrix_phantom (CONCPROP__SET_PHANTOMS | CONCPROP__PERMIT_MATRIX)
+#define Nostep_phantom (CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS)
 
 
 /* Beware!!  This table must be keyed to definition of "concept_kind" in sd.h . */
@@ -4336,7 +4400,7 @@ concept_table_item concept_table[] = {
    /* concept_3x1 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_3x3 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_4x4 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
-   /* concept_create_matrix */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                do_concept_expand_some_matrix},
+   /* concept_create_matrix */            {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_expand_some_matrix},
    /* concept_funny */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},
    /* concept_selbasedtrngl */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},
@@ -4346,7 +4410,7 @@ concept_table_item concept_table[] = {
    /* concept_triangle */                 {0,                                                                                      0},
    /* concept_do_both_boxes */            {CONCPROP__NO_STEP,                                                                      do_concept_do_both_boxes},
    /* concept_once_removed */             {CONCPROP__PARSE_DIRECTLY,                                                               do_concept_once_removed},
-   /* concept_do_phantom_2x2 */           {CONCPROP__NEED_4X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_do_phantom_2x2},
+   /* concept_do_phantom_2x2 */           {CONCPROP__NEED_4X4 | Nostep_phantom,                                                    do_concept_do_phantom_2x2},
    /* concept_do_phantom_boxes */         {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_do_phantom_boxes},
    /* concept_do_phantom_diamonds */      {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_do_phantom_diamonds},
    /* concept_do_phantom_1x6 */           {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x6},
@@ -4360,9 +4424,9 @@ concept_table_item concept_table[] = {
    /* concept_single_diagonal */          {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},
    /* concept_double_diagonal */          {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_double_diagonal},
    /* concept_parallelogram */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_parallelogram},
-   /* concept_triple_lines */             {CONCPROP__NEED_3X4_1X12 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,            do_concept_triple_lines},
-   /* concept_triple_lines_tog */         {CONCPROP__NEED_3X4_1X12 | Nostandard_matrix_phantom,                                    do_concept_triple_lines_tog},
-   /* concept_triple_lines_tog_std */     {CONCPROP__NEED_3X4_1X12 | Standard_matrix_phantom,                                      do_concept_triple_lines_tog},
+   /* concept_triple_lines */             {CONCPROP__NEED_TRIPLE_1X4 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,          do_concept_triple_lines},
+   /* concept_triple_lines_tog */         {CONCPROP__NEED_TRIPLE_1X4 | Nostandard_matrix_phantom,                                  do_concept_triple_lines_tog},
+   /* concept_triple_lines_tog_std */     {CONCPROP__NEED_TRIPLE_1X4 | Standard_matrix_phantom,                                    do_concept_triple_lines_tog},
    /* concept_quad_lines */               {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_concept_quad_lines},
    /* concept_quad_lines_tog */           {CONCPROP__NEED_4X4_1X16 | Nostandard_matrix_phantom,                                    do_concept_quad_lines_tog},
    /* concept_quad_lines_tog_std */       {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_concept_quad_lines_tog},
@@ -4374,12 +4438,12 @@ concept_table_item concept_table[] = {
    /* concept_triple_diamonds_together */ {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds_tog},
    /* concept_quad_diamonds */            {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds},
    /* concept_quad_diamonds_together */   {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds_tog},
-   /* concept_in_out_line_3 */            {CONCPROP__NEED_3X4_1X12 | CONCPROP__STANDARD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS, do_concept_inner_outer},
-   /* concept_in_out_line_4 */            {CONCPROP__NEED_4X4_1X16 | CONCPROP__STANDARD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS, do_concept_inner_outer},
-   /* concept_in_out_box_3 */             {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_inner_outer},
-   /* concept_in_out_box_4 */             {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_inner_outer},
-   /* concept_triple_diag */              {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,  do_concept_triple_diag},
-   /* concept_triple_diag_together */     {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__GET_MASK,  do_concept_triple_diag_tog},
+   /* concept_in_out_line_3 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
+   /* concept_in_out_line_4 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
+   /* concept_in_out_box_3 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
+   /* concept_in_out_box_4 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
+   /* concept_triple_diag */              {CONCPROP__NEED_BLOB | Nostep_phantom | CONCPROP__STANDARD,                              do_concept_triple_diag},
+   /* concept_triple_diag_together */     {CONCPROP__NEED_BLOB | Nostep_phantom | CONCPROP__GET_MASK,                              do_concept_triple_diag_tog},
    /* concept_triple_twin */              {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       triple_twin_move},
    /* concept_misc_distort */             {CONCPROP__NO_STEP,                                                                      distorted_2x2s_move},
    /* concept_old_stretch */              {CONCPROP__PARSE_DIRECTLY/*CONCPROP__NO_STEP*/,                                          do_concept_old_stretch},

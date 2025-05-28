@@ -871,7 +871,7 @@ extern void final_exit(int code)
                   if (line[0] == '\n') { more_stuff = TRUE; break; }
 
                   if (i == session_index-1) {
-                     if (fprintf(wfile, "%20-s %11-s %6d      %s\n", outfile_string, getout_strings[calling_level], sequence_number, header_comment) < 0)
+                     if (fprintf(wfile, "%-20s %-11s %6d      %s\n", outfile_string, getout_strings[calling_level], sequence_number, header_comment) < 0)
                         goto copy_failed;
                   }
                   else if (i == -session_index-1) {

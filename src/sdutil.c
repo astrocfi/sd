@@ -2867,6 +2867,8 @@ extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeopl
    unsigned int newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) {
+      if (resultplace < 0) fail("This would go into an excessively large matrix.");
+
       if (resultpeople->people[resultplace].id1 == 0) {
          resultpeople->people[resultplace].id1 = (newperson + rotamount) & ~064;
          resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;

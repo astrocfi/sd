@@ -608,6 +608,42 @@ Private coordrec thing4x6 = {s4x6, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+Private coordrec thingbigh = {sbigh, 3,
+   { -9,  -9,  -9,  -9,  -6,  -2,   9,   9,   9,   9,   6,   2},
+   {  6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0, -1, -1, -1, -1,  9, -1,
+      -1,  1,  4,  5, 11, 10,  8, -1,
+      -1,  2, -1, -1, -1, -1,  7, -1,
+      -1,  3, -1, -1, -1, -1,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+Private coordrec thingbigbone = {sbigbone, 3,
+   {-13,  -9,  -6,  -2,   9,  13,  13,   9,   6,   2,  -9, -13},
+   {  2,   2,   0,   0,   2,   2,  -2,  -2,   0,   0,  -2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+       0,  1,  2,  3,  9,  8,  4,  5,
+      11, 10, -1, -1, -1, -1,  7,  6,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+Private coordrec thingbigx = {sbigx, 4,
+   {-17, -13,  -9,  -5,   0,   0,  17,  13,   9,   5,   0,   0},
+   {  0,   0,   0,   0,   6,   2,   0,   0,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1,  0,
+       1,  2,  3, -1,  5,  9,  8,  7,
+       6, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, 11, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, 10, -1, -1, -1}};
+
 Private coordrec thingblob = {s_bigblob, 3,
    { -2,   2,   2,   6,   6,   2,  10,  10,   6,   6,   2,   2,   2,  -2,  -2,  -6,  -6,  -2, -10, -10,  -6,  -6,  -2,  -2},
    { 10,  10,   6,   6,   2,   2,   2,  -2,  -2,  -6,  -6,  -2, -10, -10,  -6,  -6,  -2,  -2,  -2,   2,   2,   6,   6,   2}, {
@@ -903,16 +939,55 @@ Private id_bit_table id_bit_table_bone[] = {
                                                                outlimit -----|                          bigsize ----|   |  |  |  |
                                           maps                   inlimit -|  |  bigsetup      insetup  outsetup     |   |  |  |  |   */
 
-Private cm_thing map_3line    =      {{0, 1, 3, 2, 9, 8, 6, 7,
+Private cm_thing map_3linel   =      {{0, 1, 3, 2, 9, 8, 6, 7,
+                                                      4, 5, 10, 11},      4, 4, s1x12,          s1x4,     s1x4,     12, 0, 0, 0, 2};
+Private cm_thing map_3lineh   =      {{3, 2, 0, 1, 6, 7, 9, 8,
+                                                      4, 5, 10, 11},      4, 4, sbigh,          s1x4,     s1x4,     12, 1, 0, 0, 2};
+Private cm_thing map_3linex   =      {{0, 1, 3, 2, 9, 8, 6, 7,
+                                                      10, 11, 4, 5},      4, 4, sbigx,          s1x4,     s1x4,     12, 0, 1, 1, 2};
+Private cm_thing map_3line    =      {{9, 8, 6, 7, 0, 1, 3, 2,
                                                       10, 11, 4, 5},      4, 4, s3x4,           s1x4,     s1x4,     12, 0, 0, 1, 2};
 Private cm_thing map_3lb      =      {{11, 0, 1, 10, 7, 4, 5, 6,
                                                       8, 9, 2, 3},        4, 4, sbigdmd,        s2x2,     s1x4,     12, 1, 1, 1, 2};
-Private cm_thing map_4line    =      {{12, 13, 0, 14, 8, 6, 4, 5,
+Private cm_thing map_cbox4      =      {{8, 6, 4, 5, 12, 13, 0, 14,
+                                                      15, 3, 7, 11},      4, 4, s4x4,           s1x4,     s2x2,     12, 0, 0, 1, 2};
+Private cm_thing map_3lbr     =      {{0, 1, 10, 11, 4, 5, 6, 7,
+                                                      8, 9, 2, 3},        4, 4, sbigdmd,        s2x2,     s1x4,     12, 0, 1, 1, 2};
+Private cm_thing map_3boxb    =      {{0, 1, 10, 11, 4, 5, 6, 7,
+                                                      2, 3, 8, 9},        4, 4, sbigbone,       s2x2,     s1x4,     12, 0, 0, 0, 2};
+Private cm_thing map_3boxbr   =      {{11, 0, 1, 10, 7, 4, 5, 6,
+                                                      2, 3, 8, 9},        4, 4, sbigbone,       s2x2,     s1x4,     12, 1, 0, 0, 2};
+Private cm_thing map_4line    =      {{8, 6, 4, 5, 12, 13, 0, 14,
                                            10, 15, 3, 1, 2, 7, 11, 9},    4, 8, s4x4,           s1x4,     s2x4,     16, 0, 0, 1, 2};
 Private cm_thing map_3box    =       {{0, 1, 10, 11, 4, 5, 6, 7,
                                                       2, 3, 8, 9},        4, 4, s2x6,           s2x2,     s2x2,     12, 0, 0, 0, 2};
 Private cm_thing map_3boxv   =       {{11, 0, 1, 10, 7, 4, 5, 6,
-                                                      9, 2, 3, 8},        4, 4, s2x6,           s2x2,     s2x2,     12, 1, 1, 0, 2};
+                                                      9, 2, 3, 8},        4, 4, s2x6,           s2x2,     s2x2,     12, 1, 1, 1, 2};
+Private cm_thing map_3boxr    =      {{0, 1, 3, 2, 9, 8, 6, 7,
+                                                      4, 5, 10, 11},      4, 4, sbigrig,        s1x4,     s2x2,     12, 0, 0, 0, 2};
+Private cm_thing map_3box4    =      {{8, 6, 4, 5, 12, 13, 0, 14,
+                                                      11, 15, 3, 7},      4, 4, s4x4,           s1x4,     s2x2,     12, 0, 1, 0, 2};
+Private cm_thing map_3boxrv   =      {{8, 6, 4, 5, 12, 13, 0, 14,
+                                                      15, 3, 7, 11},      4, 4, s4x4,           s1x4,     s2x2,     12, 0, 0, 1, 2};
+
+
+
+
+
+/* old
+Private cm_thing map_3box4v   =      {{8, 9, 12, 10, 4, 2, 0, 1,
+                                                      15, 3, 7, 11},      4, 4, s4x4,           s1x4,     s2x2,     12, 1, 0, 0, 2};
+*/
+
+/* new */
+Private cm_thing map_3box4v    =     {{0, 1, 3, 2, 9, 8, 6, 7,
+                                                      11, 4, 5, 10},      4, 4, sbigrig,        s1x4,     s2x2,     12, 0, 1, 0, 2};
+
+
+
+
+
+
 Private cm_thing map_4box    =       {{0, 1, 14, 15, 6, 7, 8, 9,
                                            2, 3, 4, 5, 10, 11, 12, 13},   4, 8, s2x8,           s2x2,     s2x4,     16, 0, 0, 0, 2};
 Private cm_thing map1x4_boxes =      {{6, 7, 2, 3,
@@ -1039,10 +1114,10 @@ Private cm_thing map2x4_2x2v = {{15, 3, 7, 11,
                                           12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 0, 0, 9, 1};
 Private cm_thing oddmap2x4_2x2v = {{11, 15, 3, 7,
                                           12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 1, 0, 9, 1};
-Private cm_thing map1x8_2x2 = {{0, 1, 4, 5,
-                                          -1, -1, 7, 6, -1, -1, 3, 2},    4, 8, s_rigger,       s2x2,     s1x8,     12, 0, 0, 9, 1};
-Private cm_thing oddmap1x8_2x2 = {{5, 0, 1, 4,
-                                          -1, -1, 7, 6, -1, -1, 3, 2},    4, 8, s_rigger,       s2x2,     s1x8,     12, 1, 0, 9, 1};
+Private cm_thing map1x8_2x2 = {{4, 5, 10, 11,
+                                          0, 1, 3, 2, 6, 7, 9, 8},        4, 8, sbigrig,        s2x2,     s1x8,     12, 0, 0, 9, 1};
+Private cm_thing oddmap1x8_2x2 = {{11, 4, 5, 10,
+                                          0, 1, 3, 2, 6, 7, 9, 8},        4, 8, sbigrig,        s2x2,     s1x8,     12, 1, 0, 9, 1};
 Private cm_thing map1x3dmd_line = {{1, 2, 5, 6,    0, 3, 4, 7},           4, 4, s1x3dmd,        s1x4,     sdmd,     8,  0, 0, 0, 1};
 Private cm_thing mapdmd_line = {{1, 2, 5, 6,    0, 3, 4, 7},              4, 4, s3x1dmd,        s1x4,     sdmd,     8,  0, 0, 0, 1};
 /* This one allows "finish" when the center "line" is actually a diamond whose centers are empty.
@@ -1068,9 +1143,10 @@ conc_initializer conc_init_table[] = {
    {s1x2,      s1x2, schema_grand_single_concentric, 3, {&mapgnd1x2_1x2,  &mapgnd1x2_1x2r,     &mapgnd1x2_1x2,   &mapgnd1x2_1x2r}},
    {s1x2,        s1x2,     schema_concentric_others, 3, {&map1x8_other,   &mapspin_other,      &map1x8_other,    &mapspin_other}},
    {s2x2,        s1x2,     schema_concentric_others, 2, {0,               &specialmapqtag_other, 0,              &specialmap2x4_other}},
-   {s1x4,        s1x4,     schema_in_out_triple,     2, {0,               0,                   &map_3line,       0}},
+   {s1x4,        s1x4,     schema_in_out_triple,     2, {&map_3linel,     &map_3lineh,         &map_3line,       &map_3linex}},
    {s2x2,        s2x2,     schema_in_out_triple,     2, {&map_3box,       0,                   &map_3boxv,       0}},
-   {s1x4,        s2x2,     schema_in_out_triple,     2, {0,               0,                   &map_3lb,         0}},
+   {s1x4,        s2x2,     schema_in_out_triple,     2, {&map_3boxb,      &map_3boxbr,         &map_3lb,         &map_3lbr}},
+   {s2x2,        s1x4,     schema_in_out_triple,     2, {&map_3boxr,      &map_3box4,          &map_3boxrv,      &map_3box4v}},
    {s2x4,        s1x4,     schema_in_out_quad,       2, {0,               0,                   &map_4line,       0}},
    {s2x4,        s2x2,     schema_in_out_quad,       2, {&map_4box,       0,                   0,                0}},
    {s1x6,        s1x2,     schema_concentric,        1, {&map1x6_1x2,     &oddmap1x6_1x2,      &map1x6_1x2,      &oddmap1x6_1x2}},
@@ -1209,6 +1285,30 @@ Private cm_hunk concthing_3x4 = {0, 0, 0x041,
                                                             0,      0,      0,      &map_3line,
                                                                                             0,      0,      0,      0,      0,      0}};
 
+Private cm_hunk concthing_1x12 = {0, 0, 0x041,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3linel,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_bigx = {0, 0, 0x041,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3linex,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_bigh = {0, 0, 0x041,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3lineh,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_bigbone = {0, 0, 0x104,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3boxb,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_bigrig = {0, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3boxr,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_bigdmd = {0, 0, 0x104,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3lb,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
 Private cm_hunk concthing_2x6 = {0, 0, 0,
    {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3box,
                                                                                             0,      0,      0,      0,      0,      0}};
@@ -1219,7 +1319,8 @@ Private cm_hunk concthing_2x8 = {0, 0, 0,
 
 Private cm_hunk concthing_4x4 = {0, 0, 0,
    {0,      0,      0,      0,      0,      0,      0,      &map2x4_2x4v,
-                                                                    0,      0,      0,      &map_4line,
+                                                                    0,      0,      &map_cbox4,
+                                                                                            &map_4line,
                                                                                                     0,      0,      0,      0,      0}};
 
 Private cm_hunk concthing_ptpd = {0, 0x77, 0x22,
@@ -1633,7 +1734,7 @@ setup_attr setup_attrs[] = {
       {11,
       &thing1x12,
       &thing1x12,
-      (cm_hunk *) 0,
+      &concthing_1x12,
       {b_1x12,      b_12x1},
       {12, 1},
       FALSE,
@@ -1816,6 +1917,17 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  "      c@      d@abfe@      h@      g",
          (Cstring) 0}},
+   /* s_alamo */
+      { 7,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_alamo,     b_alamo},
+      { 0, 0},
+      TRUE,
+      (id_bit_table *) 0,
+      {  "   ab@h   c@g   d@   fe",
+         (Cstring) 0}},
    /* sx4dmd */
       {31,
       (coordrec *) 0,
@@ -1860,11 +1972,55 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  (Cstring) 0,
          (Cstring) 0}},
+   /* sbigh */
+      {11,
+      &thingbigh,
+      &thingbigh,
+      &concthing_bigh,
+      {b_bigh,      b_pbigh},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a                   j@b                   i@    e f l k@c                   h@d                   g",
+         "dcba@      e@      f@      l@      k@ghij"}},
+   /* sbigx */
+      {11,
+      &thingbigx,
+      &thingbigx,
+      &concthing_bigx,
+      {b_bigx,      b_pbigx},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "                e@                f@abcd    jihg@                l@                k",
+         "      a@      b@      c@      d@klfe@      j@      i@      h@      g"}},
+   /* sbigrig */
+      {11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      &concthing_bigrig,
+      {b_bigrig,    b_pbigrig},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "                e f@abcd         jihg@                l k",
+         "  a@  b@  c@  d@le@kf@  j@  i@  h@  g"}},
+   /* sbigbone */
+      {11,
+      &thingbigbone,
+      &thingbigbone,
+      &concthing_bigbone,
+      {b_bigbone,   b_pbigbone},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b                   e  f@          c d j i@l  k                   h  g",
+         "la@kb@  c@  d@  j@  i@he@gf"}},
    /* sbigdmd */
       {11,
       &thingbigdmd,
       &thingbigdmd,
-      (cm_hunk *) 0,
+      &concthing_bigdmd,
       {b_bigdmd,    b_pbigdmd},
       { 0, 0},
       FALSE,
@@ -1955,6 +2111,7 @@ int begin_sizes[] = {
    24,         /* b_4x6 */
    24,         /* b_6x4 */
    8,          /* b_thar */
+   8,          /* b_alamo */
    8,          /* b_ptpd */
    8,          /* b_pptpd */
    8,          /* b_1x3dmd */
@@ -1965,6 +2122,14 @@ int begin_sizes[] = {
    12,         /* b_p3dmd */
    16,         /* b_4dmd */
    16,         /* b_p4dmd */
+   12,         /* b_bigh */
+   12,         /* b_pbigh */
+   12,         /* b_bigx */
+   12,         /* b_pbigx */
+   12,         /* b_bigrig */
+   12,         /* b_pbigrig */
+   12,         /* b_bigbone */
+   12,         /* b_pbigbone */
    12,         /* b_bigdmd */
    12};        /* b_pbigdmd */
 
@@ -2595,9 +2760,14 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s3x8 */
    {0,         0,         0,         0},          /* s4x6 */
    {0,         0,         0,         0},          /* s_thar */
+   {0,         0,         0,         0},          /* s_alamo */
    {0,         0,         0,         0},          /* sx4dmd */
    {0,         0,         0,         0},          /* s8x8 */
    {0,         0,         0,         0},          /* sfat2x8 */
    {0,         0,         0,         0},          /* swide4x4 */
+   {0,         0,         0,         0},          /* sbigh */
+   {0,         0,         0,         0},          /* sbigx */
+   {0,         0,         0,         0},          /* sbigrig */
+   {0,         0,         0,         0},          /* sbigbone */
    {0,         0,         0,         0},          /* sbigdmd */
    {0,         0,         0,         0}};         /* s_normal_concentric */

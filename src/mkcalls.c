@@ -129,6 +129,7 @@ int begin_sizes[] = {
    24,         /* b_4x6 */
    24,         /* b_6x4 */
    8,          /* b_thar */
+   8,          /* b_alamo */
    8,          /* b_ptpd */
    8,          /* b_pptpd */
    8,          /* b_1x3dmd */
@@ -139,6 +140,14 @@ int begin_sizes[] = {
    12,         /* b_p3dmd */
    16,         /* b_4dmd */
    16,         /* b_p4dmd */
+   12,         /* b_bigh */
+   12,         /* b_pbigh */
+   12,         /* b_bigx */
+   12,         /* b_pbigx */
+   12,         /* b_bigrig */
+   12,         /* b_pbigrig */
+   12,         /* b_bigbone */
+   12,         /* b_pbigbone */
    12,         /* b_bigdmd */
    12};        /* b_pbigdmd */
 
@@ -246,9 +255,10 @@ db_gets(char *s, int n)
 void
 db_putc(char ch)
 {
-    if (fputc(ch, db_output) == EOF) {
-        db_output_error();
-    }
+   errno = 0;
+   (void) fputc(ch, db_output);
+   if (errno)
+      db_output_error();
 }
 
 

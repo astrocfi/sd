@@ -1,4 +1,4 @@
-AC_REVISION(Time-stamp: "95/03/27 17:01:31 gildea")
+AC_REVISION(Time-stamp: "95/04/26 16:12:34 gildea")
 # configure script for Sd (square dance caller's helper)
 #
 # options:
@@ -112,7 +112,7 @@ dnl AC_CANONICAL_HOST
 dnl SYSTEM=$host_os
 SYSTEM=`config.guess | sed -e 's/.*-//' -e 's/\..*//'`
 AC_SUBST(SYSTEM)
-BINDIST_RULE="bindist: $(BIN_TARFILE).Z"
+BINDIST_RULE='bindist: $(BIN_TARFILE).Z'
 AC_SUBST(BINDIST_RULE)
 dnl figure out how to not use shared X libraries, because
 dnl I have much newer ones than most people.
@@ -231,8 +231,8 @@ dnl OSF/1 might put it in /usr/ccs/lib
 
 TTY_FLAGS="$CFLAGS"
 TTY_LIBS="$LIBS"
-SDTTY_OBJ="$(SDTTY_OBJ_UNIX)"
-SDTTY_OBJS="$(SD_OBJS) $(SDTTY_OBJ)"
+SDTTY_OBJ='$(SDTTY_OBJ_UNIX)'
+SDTTY_OBJS='$(SD_OBJS) $(SDTTY_OBJ)'
 
 AC_LN_S		dnl set the definition of "LN_S".
 AC_SET_MAKE	dnl set MAKE variable if necessary

@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 66
+#define DATABASE_FORMAT_VERSION 67
 
 
 
@@ -212,10 +212,15 @@ typedef enum {
    s3x8,
    s4x6,
    s_thar,
+   s_alamo,
    sx4dmd,   /* These are too big to actually represent -- */
    s8x8,     /* we don't let them out of their cage. */
    sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
    swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
+   sbigh,
+   sbigx,
+   sbigrig,
+   sbigbone,
    sbigdmd,
    s_normal_concentric
 } setup_kind;
@@ -294,6 +299,7 @@ typedef enum {
    b_4x6,
    b_6x4,
    b_thar,
+   b_alamo,
    b_ptpd,
    b_pptpd,
    b_1x3dmd,
@@ -304,6 +310,14 @@ typedef enum {
    b_p3dmd,
    b_4dmd,
    b_p4dmd,
+   b_bigh,
+   b_pbigh,
+   b_bigx,
+   b_pbigx,
+   b_bigrig,
+   b_pbigrig,
+   b_bigbone,
+   b_pbigbone,
    b_bigdmd,
    b_pbigdmd
 } begin_kind;

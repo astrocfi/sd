@@ -320,13 +320,8 @@ Private void innards(
 
    for (j=0 ; j<arity ; j++) {
       int rrr = 011*((rot>>(j*2)) & 3);
-      for (i=0 ; i<insize ; i++) {
-         int t = final_map->maps[i+insize*j];
-         if (t >= 0)
-            install_rot(result, t, &z[j], i, rrr);
-         else if (z[j].people[i].id1 & BIT_PERSON)
-            fail("This would go into an excessively large matrix.");
-      }
+      for (i=0 ; i<insize ; i++)
+         install_rot(result, final_map->maps[i+insize*j], &z[j], i, rrr);
    }
 
    result->kind = final_map->outer_kind;

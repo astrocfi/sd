@@ -1,8 +1,33 @@
-		   RELEASE NOTES FOR SD VERSION 31.44
-		 Database version = 31.44 format = 66.
-    X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+		   RELEASE NOTES FOR SD VERSION 31.47
+		 Database version = 31.47 format = 67.
+                X11 UI version 1.16, SDTTY UI version 1.6.
 
 
+****** Changes as of version 31.46 ******
+
+New concepts:  center or outside triple lines/waves/column/boxes,
+and center or outside phantom lines/waves/columns/boxes.
+
+The "triple" lines/waves/columns/boxes concepts refer to 12-spot setups
+of some kind, and pick out two outer 4-person setups or one inner 4-person
+setup.
+
+The "phantom" lines/waves/columns/boxes concepts refer to 16-spot setups
+of some kind, and pick out two outer 4-person setups or one inner 8-person
+setup.  For example, in a 2x8, "outside phantom boxes" refers to two boxes
+that can each do a 4-person call.  "Center phantom boxes" refers to the two
+center boxes together, doing an 8-person call.
+
+These concepts handle fairly general types of shape-changers.
+
+
+
+
+The database has been updated to reflect the 1995 changes in the
+Callerlab A1 and A2 lists.  Arky star thru was moved to C1, pending
+further developments.
+
+****** Changes as of version 31.43 ******
 
 New call:  "catch <anything> <n>, only the resulting centers finish".
 Use it with good taste!
@@ -243,7 +268,7 @@ The "disconnected" concept is also much improved.
 Sdtty now uses an "intelligent question mark" mechanism.
 When a question mark is typed, all calls are tested in
 the current setup before being displayed.  So, instead
-of listing all calles that one could possibly type, only calls
+of listing all calls that one could possibly type, only calls
 that could be legally executed are listed.   Concepts
 are still listed in full, without regard for whether they could
 be used sensibly in the current setup.

@@ -54,6 +54,11 @@ Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, not
 Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
 Private expand_thing exp_1x8_3x8_stuff     = {{20, 21, 23, 22, 8, 9, 11, 10}, 8, s1x8, s3x8, 0};
 Private expand_thing exp_qtag_bigdmd_stuff = {{10, 1, 2, 3, 4, 7, 8, 9}, 8, s_qtag, sbigdmd, 1};
+Private expand_thing exp_bone_bigh_stuff   = {{1, 8, 10, 11, 7, 2, 4, 5}, 8, s_bone, sbigh, 0};
+Private expand_thing exp_xwv_bigx_stuff    = {{2, 3, 4, 5, 8, 9, 10, 11}, 8, s_crosswave, sbigx, 0};
+Private expand_thing exp_1x3d_bigx_stuff   = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s1x3dmd, sbigx, 0};
+Private expand_thing exp_rig_bigrig_stuff  = {{4, 5, 8, 9, 10, 11, 2, 3}, 8, s_rigger, sbigrig, 0};
+Private expand_thing exp_bone_bigbone_stuff= {{1, 4, 8, 9, 7, 10, 2, 3}, 8, s_bone, sbigbone, 0};
 Private expand_thing exp_1x10_1x12_stuff   = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
 Private expand_thing exp_1x12_1x14_stuff   = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
 Private expand_thing exp_1x14_1x16_stuff   = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
@@ -545,7 +550,7 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X8 | CONCPROP__NEED_3X4_1X12)) {
+      if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X8 | CONCPROP__NEED_TRIPLE_1X4)) {
          if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
@@ -556,7 +561,7 @@ extern void do_matrix_expansion(
             }
          }
       }
-   
+
       if (concprops & (CONCPROP__NEED_BLOB)) {
          if (ss->kind == s4x4) {
             eptr = &exp_4x4_blob_stuff; goto expand_me;
@@ -614,12 +619,77 @@ extern void do_matrix_expansion(
             eptr = &exp_2x6_4x6_stuff; goto expand_me;
          }
       }
-      else if (concprops & (CONCPROP__NEED_1X12 | CONCPROP__NEED_3X4_1X12)) {
-         switch (ss->kind) {             /* Need to expand to a 1x12. */
+      else if (concprops & CONCPROP__NEED_CTR_2X2) {
+         switch (ss->kind) {
+            case s2x4:
+               eptr = &exp_2x4_2x6_stuff; goto expand_me;
+            case s_rigger:
+               eptr = &exp_rig_bigrig_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & CONCPROP__NEED_END_2X2) {
+         switch (ss->kind) {
+            case s2x4:
+               eptr = &exp_2x4_2x6_stuff; goto expand_me;
+            case s_qtag:
+               eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
+            case s_bone:
+               eptr = &exp_bone_bigbone_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & (CONCPROP__NEED_1X12)) {
+         switch (ss->kind) {
             case s1x8:
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
             case s1x10:
                eptr = &exp_1x10_1x12_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & (CONCPROP__NEED_TRIPLE_1X4)) {
+         switch (ss->kind) {
+            case s1x8:
+               eptr = &exp_1x8_1x12_stuff; goto expand_me;
+            case s1x10:
+               eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            case s_bone:
+               eptr = &exp_bone_bigh_stuff; goto expand_me;
+            case s_crosswave:
+               eptr = &exp_xwv_bigx_stuff; goto expand_me;
+            case s1x3dmd:
+               eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & (CONCPROP__NEED_CTR_1X4)) {
+         switch (ss->kind) {
+            case s_qtag:
+               eptr = &exp_qtag_bigdmd_stuff; goto expand_me;
+            case s_bone:
+               eptr = &exp_bone_bigbone_stuff; goto expand_me;
+            case s1x8:
+               eptr = &exp_1x8_1x12_stuff; goto expand_me;
+            case s1x10:
+               eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            case s_crosswave:
+               eptr = &exp_xwv_bigx_stuff; goto expand_me;
+            case s1x3dmd:
+               eptr = &exp_1x3d_bigx_stuff; goto expand_me;
+         }
+      }
+      else if (concprops & (CONCPROP__NEED_END_1X4)) {
+         switch (ss->kind) {
+            /* **** also create 4x4 */
+            case s_rigger:
+               eptr = &exp_rig_bigrig_stuff; goto expand_me;
+            case s1x8:
+               eptr = &exp_1x8_1x12_stuff; goto expand_me;
+            case s1x10:
+               eptr = &exp_1x10_1x12_stuff; goto expand_me;
+            case s_bone:
+               eptr = &exp_bone_bigh_stuff; goto expand_me;
+            case s_crosswave:
+               eptr = &exp_xwv_bigx_stuff; goto expand_me;
+            case s1x3dmd:
+               eptr = &exp_1x3d_bigx_stuff; goto expand_me;
          }
       }
       else if (concprops & (CONCPROP__NEED_1X16 | CONCPROP__NEED_4X4_1X16)) {
@@ -879,6 +949,39 @@ extern void normalize_setup(setup *ss, normalize_action action)
    if (ss->kind == swide4x4)
       ss->kind = s4x4;     /* That's all it takes! */
 
+   if (ss->kind == sbigh) {
+      if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) {
+         compress_setup(&exp_bone_bigh_stuff, ss);
+      }
+   }
+
+   if (ss->kind == sbigx) {
+      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+         compress_setup(&exp_xwv_bigx_stuff, ss);
+      }
+      else if (!(ss->people[0].id1 | ss->people[4].id1 | ss->people[6].id1 | ss->people[10].id1)) {
+         compress_setup(&exp_1x3d_bigx_stuff, ss);
+      }
+   }
+
+   if (ss->kind == sbigrig) {
+      if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[6].id1 | ss->people[7].id1)) {
+         compress_setup(&exp_rig_bigrig_stuff, ss);
+      }
+   }
+
+   if (ss->kind == sbigbone) {
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
+         compress_setup(&exp_bone_bigbone_stuff, ss);
+      }
+   }
+
+   if (ss->kind == sbigdmd) {         /* This might leave a qtag, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
+         compress_setup(&exp_qtag_bigdmd_stuff, ss);
+      }
+   }
+
    if (ss->kind == s1x16) {         /* This might leave a 1x14, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[8].id1)) {
          compress_setup(&exp_1x14_1x16_stuff, ss);
@@ -894,12 +997,6 @@ extern void normalize_setup(setup *ss, normalize_action action)
    if (ss->kind == s1x12) {         /* This might leave a 1x10, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[6].id1)) {
          compress_setup(&exp_1x10_1x12_stuff, ss);
-      }
-   }
-
-   if (ss->kind == sbigdmd) {         /* This might leave a qtag, which might be reduced further. */
-      if (!(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1)) {
-         compress_setup(&exp_qtag_bigdmd_stuff, ss);
       }
    }
 

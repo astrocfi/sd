@@ -635,6 +635,11 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s4dmd].setup_coords;
       goto doit;
    }
+   /* Similarly. */
+   else if (((ypar == 0x00D50066) || (ypar == 0x01150066)) && ((signature & (~0x28048202)) == 0)) {
+      checkptr = setup_attrs[sbigx].setup_coords;
+      goto doit;
+   }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
       checkptr = setup_attrs[s_hrglass].setup_coords;
       goto doit;
@@ -725,6 +730,14 @@ Private void finish_matrix_call(
    }
    else if ((ypar == 0x00620062) && ((signature & (~0x1018C046)) == 0)) {
       checkptr = setup_attrs[s4x4].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00930066) && ((signature & (~0x01080C40)) == 0)) {
+      checkptr = setup_attrs[sbigh].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00D30026) && ((signature & (~0x01800440)) == 0)) {
+      checkptr = setup_attrs[sbigbone].setup_coords;
       goto doit;
    }
    /* **** These last ones are sort of a crock.  They are designed to make

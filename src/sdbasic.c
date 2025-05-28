@@ -2811,8 +2811,10 @@ extern void basic_move(
 
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
                if (search_concepts & INHERITFLAG_12_MATRIX) {
-                  if (ss->kind == s2x4) do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
-                  else do_matrix_expansion(ss, CONCPROP__NEED_3X4_1X12, TRUE);
+                  do_matrix_expansion(
+                     ss,
+                     (ss->kind == s2x4) ? CONCPROP__NEED_2X6 : CONCPROP__NEED_TRIPLE_1X4,
+                     TRUE);
 
                   if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12) fail("Can't expand to a 12 matrix.");
                   matrix_check_flag = INHERITFLAG_12_MATRIX;

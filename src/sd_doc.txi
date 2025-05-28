@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set Time-stamp: Sep 26, 1995
-@set sd-version 31.44
+@set Time-stamp: Oct 27, 1995
+@set sd-version 31.47
 @set full-manual
 @c %**end of header
 @iftex
@@ -392,7 +392,7 @@ followed by @code{<ESCAPE>} is still a good way to proceed.
 @chapter Invoking Sd via Command Line
 
 @display
-@t{sd} level [ Xt options @dots{} ] [ @t{-abridge} filename ]
+@t{sd} level [ Xt options @dots{} ] [ Sd options @dots{} ]
 @t{sd} level @t{-write_list} filename
 @t{sd} level @t{-write_full_list} filename
 @end display
@@ -434,8 +434,8 @@ has a hyphen in front of it.
 Examples:
 
 @display
-@t{sd plus -singlespace}
-@t{sdtty c3 -discard_after_error -active_phantoms}
+@t{sd -singlespace plus}
+@t{sdtty -discard_after_error -active_phantoms c3}
 @end display
 
 These option keywords can also be placed, without the preceding hyphens,
@@ -553,14 +553,14 @@ on its header line.
 To write sequences for a group that is learning C2, for example, run the
 program with
 @example
-        sd c2 -write_list my_group
+        sd -write_list my_group c2
 @end example
 
 Then delete from the file @file{my_group} those calls that the group has
 learned, i.e., those calls not to be avoided.
 When writing sequences, use the command
 @example
-        sd c2 -abridge my_group
+        sd -abridge my_group c2
 @end example
 
 As the group learns new C2 calls, delete the corresponding lines from
@@ -586,16 +586,16 @@ you might have for the way the program runs.
 Such a file might look like this:
 
 @example
-   @code{[Options]}
-   @code{discard_after_error}
-   @code{singlespace}
-   @code{}
-   @code{[Sessions]}
-   @code{sequence.C3          C3               12     NACC, June 1995}
-   @code{sequence.C4          C4               31     NACC, June 1995}
-   @code{workshop             C1               75     My wednesday group}
-   @code{a2stuff              A2               9      NESRDC/1995}
-   @code{a1stuff              A1               2      Lake Shore Farm Weekend}
+   [Options]
+   discard_after_error
+   singlespace
+   
+   [Sessions]
+   sequence.C3       C3           12     NACC, June 1995
+   sequence.C4       C4           31     NACC, June 1995
+   workshop          C1           75     My Wednesday group
+   a2stuff           A2           9      NESRDC/1995
+   a1stuff           A1           2      Lake Shore Farm Weekend
 @end example
 
 @menu
@@ -616,7 +616,7 @@ This example file shows 5 possible things you could work on.  You can select
 any one of them during a session.  When the program is started, it will
 display the 5 lines and ask you which one you want to use.  If
 you enter 0, or just press @key{<ENTER>}, the program will ignore
-the initialization file and proceed normally.  If you enter the
+the sessions and proceed normally.  If you enter the
 number of one of the lines of the file, the program will operate
 at that level (ignoring any level designator you might have given),
 and use the named output file and header comment.  It will also
@@ -625,14 +625,14 @@ For example, if you entered ``3'' after the file above is displayed,
 the program will operate at C1.  The output file will be ``workshop''
 instead of the default ``sequence.C1''.  Cards will be serialized
 starting at 75.  Each card will have a header comment saying
-``My wednesday group''.
+``My Wednesday group''.
 
 At the end of the session, the file will be updated with the
 next index number.  For example, if you wrote 12 sequences, they would
 be numbered 75 through 86, and the file would be rewritten as
 
 @example
-   @code{workshop             C1               87     My wednesday group}
+   workshop             C1               87     My Wednesday group
 @end example
 
 so that the next session for that group would start with sequence number 87.
@@ -655,7 +655,7 @@ you can delete it.  Type the negative of its line number.  In the
 above example, if you entered ``-4'', the line
 
 @example
-   @code{a2stuff              A2               9      NESRDC/1995}
+   a2stuff              A2               9      NESRDC/1995
 @end example
 
 would be deleted.  After doing this, the program terminates
@@ -674,13 +674,13 @@ Each line after the line @code{[Options]}, up until a blank line
 or the end of the file, contains a command line switch.  When the program
 is started, it will behave as though those switches had been given on
 the command line.  This makes it possible to encode your personal
-preferences so that the program will always use them.  Do @i{not}
+preferences so that the program will always use them.  Do @emph{not}
 place a hyphen in front of an option in the initialization file.
 
 For example, the line
 
 @example
-   @code{singlespace}
+   singlespace
 @end example
 
 would be used if you like your output single-spaced.
@@ -688,7 +688,7 @@ would be used if you like your output single-spaced.
 The line
 
 @example
-   @code{no_graphics}
+   no_graphics
 @end example
 
 would be used if your computer does not have the special graphics
@@ -701,9 +701,9 @@ You can edit the file with any editor or word processor.
 
 When @code{sd} or @code{sdtty} is installed, no initialization file exists,
 but the files @file{sample1.ini} and @file{sample2.ini} are provided for you
-in the working directory.  @file{Sample1.ini} shows an example of
+in the working directory.  The @file{sample1.ini} file shows an example of
 the ``session'' mechanism only, and @file{sample2.ini} show both mechanisms.
-@file{Sample2.ini} is in fact the same as the example shown previously.
+The @file{sample2.ini} file is the same as the example shown previously.
 You can copy either file to @file{sd.ini} and edit it if you wish.
 
 @node Calling, Resolving and Searching, The Initialization File, Top
@@ -987,12 +987,12 @@ In addition, @code{sdtty} allows more natural text entry.  You can type in
 
 Other examples of this phenomenon are
 @example
-   @code{switch to a magic diamond}
-   @code{unwrap the interlocked diamonds}
-   @code{hang a left}
-   @code{scoot and cross ramble}
-   @code{trans cross reactivate}
-   @code{revert cross flip chain thru cross nuclear reaction}
+   switch to a magic diamond
+   unwrap the interlocked diamonds
+   hang a left
+   scoot and cross ramble
+   trans cross reactivate
+   revert cross flip chain thru cross nuclear reaction
 @end example
 
 No matter how you entered it, the calls will be printed out with the words
@@ -1062,13 +1062,13 @@ type @code{random tandem swing thru} all on one line.
 
 For reasons of ambiguity in the language, many concepts may @i{not}
 be entered in this way.  The most notorious of these are the @code{so-and-so}
-concepts, such as @code{boys}.  You must type an <ENTER> after each such concept,
+concepts, such as @code{boys}.  You must type an @key{<ENTER>} after each such concept,
 even though the concept and the call that it modifies will appear
 on the same line in the finished text.
 
 Since it is difficult to remember which concepts must be typed on separate
 lines, @code{sdtty} always permits you to do so.  When in doubt, type concepts
-on separate lines with an <ENTER> after each one.  With practice, you will develop
+on separate lines with an @key{<ENTER>} after each one.  With practice, you will develop
 a feel for which things you can type naturally and which ones are difficult.
 
 Whether you typed concepts on separate lines or on one line, the result is
@@ -1076,15 +1076,15 @@ the same, and the output file will look the same.
 For example, the following are all legal and equivalent.
 
 @example
-   @code{reverse random tandem swing thru}
-   @code{}
-   @code{reverse random}
-   @code{tandem swing thru}
-   @code{}
-   @code{reverse}
-   @code{random}
-   @code{tandem}
-   @code{swing thru}
+   reverse random tandem swing thru
+   
+   reverse random
+   tandem swing thru
+   
+   reverse
+   random
+   tandem
+   swing thru
 @end example
 
 In the output file, they will all be shown as @code{reverse random tandem swing thru}.
@@ -1233,8 +1233,8 @@ That is, after printing the error message, the program will behave
 as though you had once again typed those concepts.  The assumption here
 is that only the call was mistaken, and you really wanted the concepts
 and do not wish to have to enter them again.  If you don't want those
-concepts, you can remove them one by one with the "undo" command.
-Or you can use the command "discard entered concepts" to get rid of
+concepts, you can remove them one by one with the ``undo'' command.
+Or you can use the command ``discard entered concepts'' to get rid of
 all of them at once.
 
 Some people may find this behavior objectionable.  You can make the
@@ -1426,28 +1426,28 @@ it will pick C4A or C4 calls.  If the level is A2, it will pick A1 or A2 calls.)
 These commands pick some call or calls that go into a specified setup.
 The commands are:
 @example
-   @code{create any lines}
-   @code{create waves}
-   @code{create 2fl}
-   @code{create lines in}
-   @code{create lines out}
-   @code{create inverted lines}
-   @code{create 3x1 lines}
-   @code{create any columns}
-   @code{create columns}
-   @code{create magic columns}
-   @code{create dpt}
-   @code{create cdpt}
-   @code{create trade by}
-   @code{create 8 chain}
-   @code{create any 1/4 tag}
-   @code{create 1/4 tag}
-   @code{create 3/4 tag}
-   @code{create 1/4 line}
-   @code{create 3/4 line}
-   @code{create diamonds}
-   @code{create any tidal setup}
-   @code{create tidal wave}
+   create any lines
+   create waves
+   create 2fl
+   create lines in
+   create lines out
+   create inverted lines
+   create 3x1 lines
+   create any columns
+   create columns
+   create magic columns
+   create dpt
+   create cdpt
+   create trade by
+   create 8 chain
+   create any 1/4 tag
+   create 1/4 tag
+   create 3/4 tag
+   create 1/4 line
+   create 3/4 line
+   create diamonds
+   create any tidal setup
+   create tidal wave
 @end example
 
 ``Any lines'' and ``any columns'' mean any 2x4 setup in which people
@@ -1777,7 +1777,7 @@ To write sequences for a group that is learning C2, for example, use the
 @code{Save Call List} command, turn off the @code{Include Lower Level
 Calls} check box, and write to a file, say @file{my_group}.  Use a text
 editor to delete from the file @file{my_group} those C2 calls that the
-group has learned, i.e., those calls @i{not} to be avoided.  Then, when
+group has learned, i.e., those calls @emph{not} to be avoided.  Then, when
 writing sequences, use the @code{Abridge} button and select the file
 @file{my_group}.  As the group learns new C2 calls, delete the
 corresponding lines from the file @file{my_group}.  That file always
@@ -1985,26 +1985,26 @@ On the PC, @code{Sdtty} recognizes a number of function keys.  These
 are equivalent to typing the following commands:
 
 @example
-@code{key       normal                     shift                  control}
-@code{}
-@code{F1     heads start                sides start            just as they are}
-@code{F2     two calls in succession    twice}
-@code{F3     pick random call           pick concept call      pick simple call}
-@code{F4     resolve                    reconcile              normalize}
-@code{F5     refresh display            keep picture           insert a comment}
-@code{F6     simple modifications       allow modifications}
-@code{F7     toggle concept levels      toggle active phantoms}
-@code{F8     <anything>                 <concept>}
-@code{F9     undo last call             abort the search}
-@code{F10    end this sequence          change output file}
-@code{F11    pick level call}
+key      normal                    shift                  control
+
+F1    heads start               sides start            just as they are
+F2    two calls in succession   twice
+F3    pick random call          pick concept call      pick simple call
+F4    resolve                   reconcile              normalize
+F5    refresh display           keep picture           insert a comment
+F6    simple modifications      allow modifications
+F7    toggle concept levels     toggle active phantoms
+F8    <anything>                <concept>
+F9    undo last call            abort the search
+F10   end this sequence         change output file
+F11   pick level call
 @end example
 
 All of these except @samp{<anything>} and @samp{<concept>} execute the command
 directly, that is, pressing the function key is equivalent to typing the indicated
-text and then pressing @key{Enter}.  The keys for @samp{<anything>} and
+text and then pressing @key{ENTER}.  The keys for @samp{<anything>} and
 @samp{<concept>} are simply equivalent to entering that text without pressing
-@key{Enter}.
+@key{ENTER}.
 
 @node Sdtty on the PC, Sdtty on Unix, Function Keys in Sdtty, Terminal Interface
 @section Sdtty on the PC
@@ -2129,7 +2129,7 @@ If you have a column of 6, and you want them to @samp{walk and dodge} in that
 setup, that is, the lead two dodge while the other 4 walk forward, use
 the @code{2X1} concept.  Use your own words when calling this.
 
-If you want people to do something (e.g. circulate) around the outside,
+If you want people to do something (e.g., @samp{circulate}) around the outside,
 you may need to use the @code{disconnected} concept.  For example, if
 you had waves with the boys on the ends, and you had just done a
 @samp{1/2, acey deucey}, the boys have a big diamond around the outside.
@@ -2225,14 +2225,14 @@ sides doing a @samp{ladies chain} or @samp{right and left thru} or
 something similar.  After they do such a call, they will remain in
 the center.  To have them do the next call (for example, @samp{pass the
 ocean} or @samp{star thru}), just use the @samp{centers} concept.
-If you want the @i{inactive} dancers to come in and do the next call,
+If you want the @emph{inactive} dancers to come in and do the next call,
 use the call @samp{centers back away, others come in and <ANYTHING>}.
 So, for example, you might enter:
 @example
-   @code{heads start}
-   @code{ladies chain}
-   @code{centers back away, others come in and <ANYTHING>}
-   @code{star thru}
+   heads start
+   ladies chain
+   centers back away, others come in and <ANYTHING>
+   star thru
 @end example
 You might read this as ``head ladies chain, then the sides move in and
 star thru''.
@@ -2243,11 +2243,11 @@ star thru''.
 These calls are intended for use in sequences that begin with heads
 or sides promenading halfway around the set.  The calls are
 @example
-   @code{promenade halfway, come in to the middle and <ANYTHING>}
+   promenade halfway, come in to the middle and <ANYTHING>
 @end example
 and
 @example
-   @code{promenade halfway, while the others <ANYTHING>}
+   promenade halfway, while the others <ANYTHING>
 @end example
 In each case, start the sequence with the @code{heads start} or @code{sides
 start} command, and then issue one of the calls listed above.  Ignore the
@@ -2266,12 +2266,12 @@ application of the @samp{ends} concept.  You must type it on one line,
 and you may not substitute another designator, such as @samp{sides}, for
 the word @samp{ends}.  So, for example, you might enter:
 @example
-   @code{heads start}
-   @code{swing thru}
-   @code{ends divide}
-   @code{ends}
-   @code{touch 1/4}
-   @code{6x2 acey deucey}
+   heads start
+   swing thru
+   ends divide
+   ends
+   touch 1/4
+   6x2 acey deucey
 @end example
 You might read this as ``heads swing thru, while the sides divide
 and touch 1/4''.
@@ -2284,7 +2284,7 @@ than column-like, orientation.  This situation arises, for example, when
 the starting setup is twin diamonds.  The Callerlab C1 and C2 definitions
 state that in this case the outsides counter rotate just as they are,
 without first quartering in some direction.  However, many high-level callers
-have adopted a definition that says that the outsides @i{always} quarter
+have adopted a definition that says that the outsides @emph{always} quarter
 right (or take whatever direction is given) before counter rotating.
 Sd uses this formulation.  To handle all the possibilities, there are 3
 varieties of the call
@@ -2374,10 +2374,10 @@ the collision after the first one, they can do it.
 
 The program doesn't like to do this.  Just calling @code{twice split trade
 circulate} won't work, because the program will have multiple dancers on
-the same spot after thie first one.  You can trick the program into doing
+the same spot after the first one.  You can trick the program into doing
 it anyway, by using the @code{so-and-so do your part} concept.  Enter something
 like @code{heads do your part, twice split trade circulate while the
-others twice split trade circulate}.  Exactly who has to be desginated
+others twice split trade circulate}.  Exactly who has to be designated
 depends on the the setup.
 
 You can also use this method to get everyone to do their part of
@@ -2431,7 +2431,7 @@ case that needs to be addressed.
 @item
 If the people who finished on the outside in a 2x2 started
 in a 2x2, they use the ``lines-to-lines/columns-to-columns'' rule,
-relative to what setup @i{they} thought they were in.
+relative to what setup @emph{they} thought they were in.
 
 If the concept was @i{concentric}, so these people started on
 the outside in an elongated 2x2, they can make a decision about
@@ -2443,17 +2443,17 @@ diamonds or an hourglass, they think they are in lines.
 If the concept was @i{cross concentric}, so these people started in the
 center in a 2x2, they must have the assistance of the original ends.
 The original setup must have been a 2x4, except for weird pinwheel-like
-setups noted below.  Hence it is @i{illegal} to call @i{cross concentric
+setups noted below.  Hence it is @emph{illegal} to call @i{cross concentric
 @w{square thru 2}} from a rigger in which the center box is facing couples
 and the wings have right hands and are expected to rear back.  The
 centers do not know whether they were in lines or columns because the
-ends are not in an acceptable setup.  The centers do @i{not} use the
+ends are not in an acceptable setup.  The centers do @emph{not} use the
 ``checkpoint elongate perpendicular to the 1x4 rule''---that rule does not
 apply here.  If the outsides are in a pinwheel, that is, occupying a 4x4
 matrix in an irregular way, each center
 makes the line vs.@: columns decision based on the end person in their own
 quadrant.  That is, the center person's own facing direction and that
-end person's @i{location,} but not that end person's facing direction.
+end person's @emph{location,} but not that end person's facing direction.
 
 @item
 If the people who finished on the outside in a 2x2 started
@@ -2472,15 +2472,15 @@ the center in a 1x4 or diamond, what they do depends on what setup the
 original ends began in.  If the original ends began in a 1x4 or diamond,
 the axis of that 1x4 or diamond is the same as the axis of the whole set.
 The original centers elongate their 2x2 perpendicular to that.  This rule
-applies, for example, when @samp{centers lockit; cross concentric recyle}
+applies, for example, when @samp{centers lockit; cross concentric recycle}
 is called from a tidal wave.
 
 If the concept was @i{cross concentric} and the original ends began in
-a 2x2, the original centers @i{ignore} the elongation of that 2x2.  Instead,
+a 2x2, the original centers @emph{ignore} the elongation of that 2x2.  Instead,
 they elongate their resulting 2x2 perpendicular to @i{their own axis}, that
 is, the axis of the 1x4 or diamond in which they began.  This rule applies,
-for example, when @samp{cross concentric recyle} or @samp{center 2 shazam;
-cross concentric diamond recyle} is called from a quarter-tag.
+for example, when @samp{cross concentric recycle} or @samp{center 2 shazam;
+cross concentric diamond recycle} is called from a quarter-tag.
 @end enumerate
 
 @node Two Calls, Assume Waves, Concentric, Concept Notes
@@ -2500,35 +2500,35 @@ might be appropriate.
 There are several concepts that you can use to tell the dancers how phantoms
 are facing.  They are
 @example
-   @code{assume waves}
-   @code{assume miniwaves}
-   @code{assume couples}
-   @code{assume two-faced lines}
-   @code{assume one-faced lines}
-   @code{assume inverted lines}
-   @code{assume inverted boxes}
-   @code{assume normal columns}
-   @code{assume magic columns}
-   @code{assume eight chain}
-   @code{assume trade by}
-   @code{assume dpt}
-   @code{assume cdpt}
-   @code{assume facing lines}
-   @code{assume back-to-back lines}
-   @code{assume general diamonds}
-   @code{assume general 1/4 tags}
-   @code{assume right 1/4 tags}
-   @code{assume left 1/4 tags}
-   @code{assume left 3/4 tags}
-   @code{assume right 3/4 tags}
-   @code{assume right 1/4 lines}
-   @code{assume left 1/4 lines}
-   @code{assume left 3/4 lines}
-   @code{assume right 3/4 lines}
-   @code{assume normal diamonds}
-   @code{assume facing diamonds}
-   @code{assume normal interlocked diamonds}
-   @code{assume facing interlocked diamonds}
+   assume waves
+   assume miniwaves
+   assume couples
+   assume two-faced lines
+   assume one-faced lines
+   assume inverted lines
+   assume inverted boxes
+   assume normal columns
+   assume magic columns
+   assume eight chain
+   assume trade by
+   assume dpt
+   assume cdpt
+   assume facing lines
+   assume back-to-back lines
+   assume general diamonds
+   assume general 1/4 tags
+   assume right 1/4 tags
+   assume left 1/4 tags
+   assume left 3/4 tags
+   assume right 3/4 tags
+   assume right 1/4 lines
+   assume left 1/4 lines
+   assume left 3/4 lines
+   assume right 3/4 lines
+   assume normal diamonds
+   assume facing diamonds
+   assume normal interlocked diamonds
+   assume facing interlocked diamonds
 @end example
 
 Additionally, there are two related concepts, @code{assume normal casts} and
@@ -2570,11 +2570,11 @@ direction of the phantom in-roller is unknown.
 For the concepts that name some kind of @dfn{diamonds} or @dfn{1/4 tags}, there
 are 5 types of setups that can be named.  They are
 @example
-   @code{diamonds}
-   @code{diamond spots}
-   @code{1/4-tags}
-   @code{3/4-tags}
-   @code{general 1/4-tags}
+   diamonds
+   diamond spots
+   1/4-tags
+   3/4-tags
+   general 1/4-tags
 @end example
 
 For example, there are concepts @code{split phantom diamonds}, @code{split phantom
@@ -2635,8 +2635,8 @@ Two of the concepts are not sufficiently explicit for this, and may not be used
 with @code{with active phantoms}.  They are
 
 @example
-   @code{assume general diamonds}
-   @code{assume general 1/4 tags}
+   assume general diamonds
+   assume general 1/4 tags
 @end example
 
 If you are going to use @code{with active phantoms}, you must give more detailed
@@ -2675,7 +2675,7 @@ call, based on the initial facing direction in waves.
 @node Assuming a Quarter-Tag, Diamond, Phantom Wave Concepts, Concept Notes
 @section Assuming a Quarter-Tag
 
-Callers sometimes wish to perform a generalized quarter-tag call (e.g.
+Callers sometimes wish to perform a generalized quarter-tag call (e.g.,
 @samp{scoot and little}) from a setup in which only the center wave
 contains real people, and the outsides need to be assumed.  For example,
 from an as-couples wave, one could wish to specify that the live dancers
@@ -2692,21 +2692,21 @@ creating, since you probably won't read the concept verbatim anyway.
 
 For example, from an as-couples wave, you could select:
 @example
-   @code{as couples}
-   @code{assume right 1/4 tags}
-   @code{scoot and little}
+   as couples
+   assume right 1/4 tags
+   scoot and little
 @end example
 Or, from parallel waves, you could select:
 @example
-   @code{tandem}
-   @code{assume general 1/4 tags}
-   @code{ping-pong circulate}
+   tandem
+   assume general 1/4 tags
+   ping-pong circulate
 @end example
 
 @node Diamond, Implied Piecewise, Assuming a Quarter-Tag, Concept Notes
 @section Diamond
 
-You should not need to slect @code{diamond} except when you actually
+You should not need to select @code{diamond} except when you actually
 want the diamond concept, as in @i{diamond single wheel} or @i{diamond swing
 thru}.  There are cases in which it may seem that the word @i{diamond}
 ought to be added after clicking on @code{interlocked} and/or
@@ -2734,7 +2734,7 @@ because the centers and ends will switch with each other multiple times.
 If you have any doubt about whether some instance of concept stacking is
 correct and will be understood by the dancers, do not use it.
 
-Furthermore, replacements and interruptions are @i{normal}, that is, they
+Furthermore, replacements and interruptions are @emph{normal}, that is, they
 do not carry any concepts that were on the call being replaced---only
 those on the entire operation.
 
@@ -2749,7 +2749,7 @@ Normally, the tandem twosome behavior is not re-evaluated after each
 part of the clean sweep.  But, since the third part was replaced with
 something else to which that concept did not apply, the setup is
 re-evaluated before doing the final part.  Note in particular that
-the replacement was @i{normal}---the call having a part replaced was a
+the replacement was @emph{normal}---the call having a part replaced was a
 @i{tandem twosome clean sweep 1/4}.  If we wanted the entire operation,
 including the replacement, to be tandem twosome (with no re-evaluation,
 of course) we might call:
@@ -2862,7 +2862,7 @@ Now it is commonly accepted practice to say @samp{boys trade} when the boys are
 looking out, and have them effectively trade the wave.  This is because
 the call @samp{trade} is a special case, not because calls in general can be
 done from that setup.  To see this, consider the call @code{roll away}.
-It, and two-person calls in general, are @i{not} legal unless the people are
+It, and two-person calls in general, are @emph{not} legal unless the people are
 adjacent.  The special property of the call @code{trade}, that it can be done
 by designated people who are not adjacent, is simply an idiosyncrasy that
 everyone knows.
@@ -2992,8 +2992,8 @@ We believe that these are the technically correct meanings of these phrases,
 and are consistent with common usage when that common usage is correctly
 applied.  For example,
 @example
-   @code{cast off 3/4}
-   @code{LIKE A shazam}
+   cast off 3/4
+   LIKE A shazam
 @end example
 is a commonly accepted and completely correct usage.
 
@@ -3002,8 +3002,8 @@ finish like a wheel the ocean}, in which the final cast off 3/4 of the
 chain reaction was ``pushy.''  While the plain English language meaning
 of that is clear, the way you must enter that to Sd is
 @example
-   @code{CROSS chain reaction}
-   @code{CENTERS LIKE A wheel the ocean}
+   CROSS chain reaction
+   CENTERS LIKE A wheel the ocean
 @end example
 You must, of course, verify that the casting direction is correct for
 smooth dancing of this figure.
@@ -3286,10 +3286,8 @@ change the version string at the top of the file.
 
 @bye
 
-@c We only use the first three letters of the month because
-@c makeinfo 1.55 bombs on longer strings.
 @c Local Variables:
 @c time-stamp-start: "Time-stamp: "
 @c time-stamp-end: "$"
-@c time-stamp-format: "%3b %d, %y"
+@c time-stamp-format: "%b %d, %y"
 @c End:

@@ -227,7 +227,7 @@ ls:
 
 pcdist: sd@PCVERSION@bn
 
-sd@PCVERSION@bn: sdtty mkcalls sd_calls.dat
+sd@PCVERSION@bn: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ readme relnotes oldnotes sample1.ini sample2.ini
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
 	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps

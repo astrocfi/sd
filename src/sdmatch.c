@@ -114,22 +114,27 @@ long_boolean verify_used_selector;
 
 /* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
 static Cstring startup_commands[] = {
-    "exit from the program",
-    "heads 1p2p",
-    "sides 1p2p",
-    "heads start",
-    "sides start",
-    "just as they are"
+   "exit from the program",
+   "heads 1p2p",
+   "sides 1p2p",
+   "heads start",
+   "sides start",
+   "just as they are",
+   "toggle concept levels",
+   "toggle active phantoms",
+   "change output file",
+   "change header comment",
+   (Cstring) 0
 };
 
 
 static Cstring n_4_patterns[] = {
-    "1/4",
-    "2/4",
-    "3/4",
-    "4/4",
-    "5/4",
-    (Cstring) 0
+   "1/4",
+   "2/4",
+   "3/4",
+   "4/4",
+   "5/4",
+   (Cstring) 0
 };
 
 

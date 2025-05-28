@@ -158,70 +158,45 @@ extern void normalize_concentric(
 
    if (synthesizer == schema_in_out_triple_squash) {
 
-      /* Do special stuff to put setups back properly for triple_lines schema. */
+      /* Do special stuff to put setups back properly for squashed schema. */
 
       if (inners[0].kind == s2x2) {
          /* Move people down to the closer parts of 2x2 setups. */
-         if (!(inners[0].people[2].id1 | inners[0].people[3].id1)) {
-            swap_people(&inners[0], 0, 3);
-            swap_people(&inners[0], 1, 2);
-         }
-         if (!(inners[1].people[0].id1 | inners[1].people[1].id1)) {
+         if (!(inners[1].people[2].id1 | inners[1].people[3].id1)) {
             swap_people(&inners[1], 0, 3);
             swap_people(&inners[1], 1, 2);
+         }
+         if (!(inners[0].people[0].id1 | inners[0].people[1].id1)) {
+            swap_people(&inners[0], 0, 3);
+            swap_people(&inners[0], 1, 2);
          }
 
          center_arity = 2;
          table_synthesizer = schema_in_out_triple;
       }
       else if (inners[0].kind == s1x4) {
-         setup temp = *outers;
-
          if (inners[0].rotation) {
             /* Move people down to the closer parts of 1x4 setups. */
-            if (!(inners[0].people[2].id1 | inners[0].people[3].id1)) {
-               swap_people(&inners[0], 0, 3);
-               swap_people(&inners[0], 1, 2);
-            }
-            if (!(inners[1].people[0].id1 | inners[1].people[1].id1)) {
+            if (!(inners[1].people[2].id1 | inners[1].people[3].id1)) {
                swap_people(&inners[1], 0, 3);
                swap_people(&inners[1], 1, 2);
             }
+            if (!(inners[0].people[0].id1 | inners[0].people[1].id1)) {
+               swap_people(&inners[0], 0, 3);
+               swap_people(&inners[0], 1, 2);
+            }
+         }
 
-            (void) copy_person(outers, 0, &inners[0], 0);
-            (void) copy_person(outers, 1, &inners[0], 1);
-            (void) copy_person(outers, 2, &inners[0], 2);
-            (void) copy_person(outers, 3, &inners[0], 3);
-            (void) copy_person(outers, 4, &inners[1], 2);
-            (void) copy_person(outers, 5, &inners[1], 3);
-            (void) copy_person(outers, 6, &inners[1], 0);
-            (void) copy_person(outers, 7, &inners[1], 1);
-            outers->rotation = 1;
-            outers->kind = s1x8;
-         }
-         else {
-            (void) copy_person(outers, 0, &inners[0], 0);
-            (void) copy_person(outers, 1, &inners[0], 1);
-            (void) copy_person(outers, 2, &inners[0], 3);
-            (void) copy_person(outers, 3, &inners[0], 2);
-            (void) copy_person(outers, 4, &inners[1], 2);
-            (void) copy_person(outers, 5, &inners[1], 3);
-            (void) copy_person(outers, 6, &inners[1], 1);
-            (void) copy_person(outers, 7, &inners[1], 0);
-            outers->rotation = 0;
-            outers->kind = s2x4;
-         }
-         inners[0] = temp;
-         i = (inners[0].rotation - outers->rotation) & 3;
-         center_arity = 1;
+         center_arity = 2;
+         table_synthesizer = schema_in_out_triple;
       }
       else if (inners[0].kind == s1x2 && inners[0].rotation == 0) {
          setup temp = *outers;
 
-         (void) copy_person(outers, 0, &inners[0], 0);
-         (void) copy_person(outers, 1, &inners[0], 1);
-         (void) copy_person(outers, 2, &inners[1], 1);
-         (void) copy_person(outers, 3, &inners[1], 0);
+         (void) copy_person(outers, 0, &inners[1], 0);
+         (void) copy_person(outers, 1, &inners[1], 1);
+         (void) copy_person(outers, 2, &inners[0], 1);
+         (void) copy_person(outers, 3, &inners[0], 0);
          outers->rotation = 0;
          outers->kind = s2x2;
          inners[0] = temp;
@@ -435,6 +410,23 @@ gotit:
    map_indices = lmap_ptr->maps;
 
    rot = ((-lmap_ptr->inner_rot) & 3) * 011;
+
+
+
+
+
+   if (table_synthesizer != schema_concentric_others) {   /* ****** This test is a crock!!!!! */
+      if (((result->rotation+outer_elongation) & 2) && lmap_ptr->center_arity == 2) {
+         setup tt = inners[0];
+         inners[0] = inners[1];
+         inners[1] = tt;
+      }
+   }
+
+
+
+
+
 
    for (k=0; k<lmap_ptr->center_arity; k++) {
       if (q & 2) {

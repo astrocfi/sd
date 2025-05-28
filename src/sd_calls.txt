@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.44"
+version "31.47"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -116,6 +116,11 @@ call "chase" c1
    setup 2x4 2x4 rotate
       array [C0E C1E C2E C3E 0 0 0 0]
 
+call "double pass" c4
+            left_means_mirror base_tag_call_3
+   setup 4x1 2x2
+      array [ZM0N ZM1N 0 0]
+
 call "tag the star" c4a
             left_means_mirror base_tag_call_2
    setup 2x2 2x2 restriction not_tboned
@@ -123,6 +128,14 @@ call "tag the star" c4a
             alternate_definition [singlefile] c4
    setup 4x1 2x2
       array [ACR2S CR3S 0 0]
+
+call "circle the tag" c4
+            left_means_mirror base_tag_call_2
+   setup 2x2 2x2 restriction not_tboned
+      array [0 0 C0E C1E]
+            alternate_definition [singlefile] c4
+   setup 4x1 2x2
+      array [C1E C2E 0 0]
 
 call "snap the tag" c4
             left_means_mirror base_tag_call_2
@@ -616,6 +629,16 @@ call "promenade halfway, while the others @0" mainstream
    seq cba []
    seq centers_mandatory_call []
 
+call "like a rigger" c4
+   setup 2x6 rigger
+      array [ZM6N ZM7N ZM0N ZM1N ZM3N ZM2N ZM2N ZM3N ZM4N ZM5N ZM7N ZM6N]
+   setup 6x2 rigger
+      array [ZM6N ZM7N ZM0N ZM1N ZM3N ZM2N ZM2N ZM3N ZM4N ZM5N ZM7N ZM6N]
+   setup 3x4 qtag
+      array [ZM0N ZM1N ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM4N ZM5N ZM6N ZM7N]
+   setup 4x3 qtag
+      array [ZM0N ZM1N ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM4N ZM5N ZM6N ZM7N]
+
 call "flip your lid" c3
    setup qtag qtag qualifier right_wave
       array [0 0   0 C4N C5N C2S C7S   0]
@@ -722,7 +745,8 @@ call "3/4 circle bring us together" c4a
    seq 3_4_sgl_bring_together [cpls_unless_single inherit_reverse]
 
 call "exchange the boxes @a" c3a
-            take_right_hands neednumber
+/*  We can't do "take_right_hands" yet. */
+            neednumber
    setup 2x4 2x4 nqualifier 1 none
       array [R1S L0S R3S L2S M3N M1N M2N M0N]
    setup 4x2 2x4 nqualifier 1 none
@@ -741,7 +765,7 @@ call "exchange the boxes @a" c3a
       array [L3S M2S M1S M0S M7S M6S M5S R4S]
 
 call "exchange the boxes" c3a
-            take_right_hands
+/*  We can't do "take_right_hands" yet. */
    setup 2x4 2x4
       array [M3N M2N M1N M0N R7N L6N R5N L4N]
    setup 4x2 2x4
@@ -1278,11 +1302,21 @@ call "cut the diamond" plus tag cutdiamond
       array [CR3S 0 AL1S 0]
    setup pmd 1x4 restriction forbidden diamond_like
       array [0 CR2E 0 AL2W]
+            alternate_definition [yoyo] c4
+   setup dmd dmd restriction forbidden diamond_like
+      array [CR3W 0 AL3E 0]
+   setup pmd dmd restriction forbidden diamond_like
+      array [0 CR2E 0 AL2W]
             alternate_definition [reverse] c3a
    setup dmd 1x4 rotate restriction forbidden diamond_like
       array [CR1N 0 AL1S 0]
    setup pmd 1x4 rotate restriction forbidden diamond_like
       array [0 CM2E 0 AM0E]
+            alternate_definition [reverse yoyo] c4
+   setup dmd dmd restriction forbidden diamond_like
+      array [CR1E 0 AL1W 0]
+   setup pmd dmd restriction forbidden diamond_like
+      array [0 CM0W 0 AM0E]
             alternate_definition [interlocked] c1
    setup qtag 2x4 rotate restriction forbidden diamond_like
       array [0 0 AL0S AL7S 0 0 CR7N CR0N]
@@ -2446,8 +2480,11 @@ call "single circle to a wave" plus  /* We need this as a standalone call, */
 
 call "circle to a 2-faced line" c3x
             reverse_means_mirror
-   setup 2x2 1x4
+   setup 2x2 1x4 restriction not_tboned
       array [0 0 C3S C2S]
+            alternate_definition [singlefile] c4
+   setup 4x1 1x4 rotate
+      array [C3E C2E 0 0]
 
 call "single circle to a line" c4
             reverse_means_mirror
@@ -4064,7 +4101,7 @@ call "dixie daisy" c4
    seq start_dixie [inherit_left inherit_singlefile]
    seq finish_dixie_daisy [inherit_left]
 
-call "pass the sea" a2
+call "pass the sea" a1
             rear_back_from_r_wave visible_fractions
    seq passthru []
    seq quarterin []
@@ -4546,12 +4583,20 @@ call "star to a wave" c4a
       array [ACR3W CR0W 0 0]
 
 call "travel thru" c3a
-            rear_back_from_r_wave left_means_mirror
-   setup 2x2 1x4 rotate
-      array [0 0 CR1N CR0N]
-            alternate_definition [singlefile] c4
-   setup 4x1 1x4
-      array [CR3E CR2E 0 0]
+            rear_back_from_r_wave visible_fractions left_means_mirror 3x3_is_inherited 4x4_is_inherited
+   seq passthru []
+   seq finishtravel [inherit_left inherit_3x3 inherit_4x4]
+
+call "_finish travel thru" dontshow tag finishtravel
+            left_means_mirror
+   setup 1x2 1x2 rotate restriction forbidden couples_only
+      array [CR0N CR1N]
+            alternate_definition [3x3] c4
+   setup 1x3 1x3 rotate restriction forbidden 3x3couples_only
+      array [CR0N CR1N CR2N]
+            alternate_definition [4x4] c4
+   setup 1x4 1x4 rotate restriction forbidden 4x4couples_only
+      array [CR0N CR1N CR2N CR3N]
 
 call "revolve to a wave" c3
             left_means_mirror
@@ -4561,9 +4606,12 @@ call "revolve to a wave" c3
    setup 4x1 1x4 rotate
       array [ZM0W CR1E CR2E CR3W]
 
-call "follow to a diamond" c3a
+call "follow to a @Idiamond" c3a
    setup 2x2 dmd rotate restriction resolve_ok wave_only
       array [C1E A3E A2N C2S]
+            alternate_definition [interlocked] c3
+   setup 2x4 qtag restriction forbidden wave_only
+      array [C3S A6S C2S A7S A4E C4W A5E C5W]
 
 call "cross follow to a diamond" c4
    setup 2x2 dmd rotate restriction resolve_ok wave_only
@@ -5575,7 +5623,7 @@ call "split swap" c2
    setup 2x4 2x4 rotate
       array [0 0 0 0 R0N R1N R2N R3N]
 
-call "arky star thru" a2
+call "arky star thru" c1
    setup 2x2 2x2
       array [0 0 L1W R0E]
 
@@ -5622,13 +5670,13 @@ call "cross and turn" c1
 call "circle to a wave" c2
             reverse_means_mirror
    setup 2x2 2x2 restriction not_tboned
-      array [0 0 0E 1E]
+      array [0 0 C0E C1E]
             alternate_definition [single] plus
    setup 2x1 1x2 rotate
-      array [CR1E 0]
+      array [C1E 0]
             alternate_definition [singlefile] c4
    setup 4x1 2x2
-      array [1E 2E 0 0]
+      array [C1E C2E 0 0]
             alternate_definition [3x3] c4
    setup 2x3 2x3
       array [0 0 0 0E 1E 2E]
@@ -5968,6 +6016,10 @@ call "straight connect" c4
       array [0   0    AM2W CM3E  0   0  CM1E AM0W]
    setup pqtag 2x4 restriction nice_diamonds
       array [ZM2N CR4S  0   0  AL3S ZM5N 0 0]
+
+call "straight wheel and deal" c4
+   setup 2x4 2x4 rotate restriction 2fl_only
+      array [CR0E CR7E AL0E AL7E ZM1W AL2E CR5E ZM6W]
 
 call "fiddle around" c3x
    setup 2x4 2x4 rotate restriction 2fl_only
@@ -6381,9 +6433,31 @@ call "scramble" c3
 call "ferris wheel" mainstream
    setup 2x4 2x4 rotate restriction forbidden 2fl_only
       array [CR0E CR7E AL0E AL7E AL6E AL1E CR6E CR1E]
-            alternate_definition [single] c3x
+            alternate_definition [single] c3a
    setup 2x2 1x4 rotate restriction resolve_ok wave_only
       array [CR0E AL0E AL1E CR1E]
+   setup 1x4 2x2 restriction forbidden couples_only
+      array [CR1S CR0S AL0S AL1S]
+            alternate_definition [3x3] c4
+   setup 2x6 3x4 rotate restriction forbidden 3x3couples_only
+      array [CR0E CR10E CR9E AL0E AL10E AL9E AL8E AL11E AL1E CR8E CR11E CR1E]
+   setup 3x4 2x6 rotate restriction forbidden 2fl_only
+      array [CR0E CR11E AL0E AL11E AL10E AL1E AL9E AL2E CR9E CR2E CR1E CR10E]
+            alternate_definition [4x4] c4
+   setup 2x8 4x4 restriction forbidden 4x4couples_only
+      array [CR0S CR14S CR13S CR12S AL0S AL14S AL13S AL12S AL10S AL15S AL3S AL1S CR10S CR15S CR3S CR1S]
+   setup 4x4 2x8 rotate restriction unusual 2fl_only   /* T-bone?  What the heck. */
+      array [AL15E AL14E AL13E AL1E AL12E AL3E CR12E AL2E CR3E CR2E CR1E CR13E CR0E CR15E AL0E CR14E]
+            alternate_definition [3x3 single] c4
+   setup 3x2 1x6 restriction forbidden wave_only
+      array [CR5S CR4S CR3S AL3S AL4S AL5S]
+   setup 1x6 2x3 restriction forbidden 3x3couples_only
+      array [CR2S CR1S CR0S AL0S AL1S AL2S]
+            alternate_definition [4x4 single] c4
+   setup 4x2 1x8 restriction forbidden wave_only
+      array [CR6S CR7S CR5S CR4S AL4S AL5S AL7S AL6S]
+   setup 1x8 2x4 restriction forbidden 4x4couples_only
+      array [CR3S CR2S CR0S CR1S AL0S AL1S AL3S AL2S]
 
 call "step lively" c4
             visible_fractions
@@ -6510,6 +6584,7 @@ call "_centers @b / ends move up" dontshow tag quarterdeucey4
    conc_diamond_line armturn_n4 [] spec_drop_in [inherit_12_matrix inherit_16_matrix suppress_elongation_warnings]
 
 call "@B the deucey" c3a
+      /* Actually, 3/4 the deucey is C4.  Too bad. */
             step_to_wave left_means_touch_or_check neednumber 12_matrix_is_inherited 16_matrix_is_inherited
    seq armturn_n4 [inherit_12_matrix inherit_16_matrix]
    seq check1x4 [inherit_12_matrix inherit_16_matrix]
@@ -7054,7 +7129,7 @@ call "swing to a column" c4a
    seq swingtocol2 [inherit_left]
 
 call "_grand chain 8 part 1" dontshow tag gc8p1
-            rear_back_from_r_wave rear_back_from_qtag 
+            rear_back_from_r_wave rear_back_from_qtag
    setup 2x4 2x4
       array [0 0 0 0 ZM3N ZM2N ZM1N ZM0N]
    setup 4x2 2x4
@@ -7467,8 +7542,8 @@ call "checkover" c3a
    array [0W 1W 6W 7W 0E 1E 6E 7E]
 
 call "turnover" c4
-   setup 2x2 1x4 rotate restriction wave_only
-      array [3S 3N 2N 2S]
+   setup 2x2 1x4 rotate restriction forbidden wave_only
+      array [CM3S AM3N AL2N CR2S]
 
 call "turn by" c4
    /* Do we actually allow this from a single 8-chain?  Isn't it the equivalent of a trade by,
@@ -7485,11 +7560,17 @@ call "turn by" c4
 
 call "triple play" c3a
    setup 4x2 2x4 restriction forbidden wave_only
-   array [1E 0W 2W 7W 0E 5E 7E 6W]
+      array [CC1E C0W C2W C7W A0E A5E A7E AA6W]
+            alternate_definition [magic] c3a
+   setup 4x2 2x4 restriction forbidden magic_only
+      array [CC1E CCA7E A5E C7W A0E C2W AAC0W AA6W]
 
-call "double play" c4
+call "double play" c3x
    setup 3x2 2x3 restriction forbidden wave_only
-   array [0E 1W 5W 0E 4E 5W]
+      array [CC0E C1W C5W A0E A4E AA5W]
+            alternate_definition [magic] c3x
+   setup 3x2 2x3 restriction forbidden magic_only
+      array [CC0E A4E C5W A0E C1W AA5W]
 
 /* We do not allow the 2x2 (box/split transfer) to be called "transfer the
    column".  It just looks stupid to have a card say "transfer the column"
@@ -8170,7 +8251,7 @@ call "wave the @6" c3
    seq finishwave []
 
 call "split grand chain 8" c2
-            sequence_starter
+            sequence_starter rear_back_from_r_wave
    setup 2x4 2x4
       array [0 0 0 0 0 L3S L0S 0]
    setup 4x2 2x4
@@ -8972,7 +9053,7 @@ call "create a column" c3x
 
 call "_twist part 1" dontshow tag twist1
    setup 2x4 2x4 rotate
-      array [6N R0E L7E 1S 2S 0 0 5N]
+      array [C6N CR0E AL7E A1S A2S 0 0 C5N]
 
 call "_twist part 2" dontshow tag twist2
    conc star_thru [or_anycall] nullcall []
@@ -10205,11 +10286,6 @@ call "_ends lead the way" dontshow tag elead_way
 call "lead the way" c4
             visible_fractions
    conc clead_way [] elead_way [conc_demand_columns endscando]
-
-/* Gotta do this right someday. */
-call "INVERT lead the way" c4
-            visible_fractions
-   conc elead_way [] clead_way [conc_demand_lines]
 
 call "6X2 acey deucey" a1
             fudge_to_q_tag
