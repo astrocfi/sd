@@ -3289,9 +3289,10 @@ extern void concentric_move(
       call_conc_option_state *option_ptr = doing_ends ? &outer_inner_options[0] : &outer_inner_options[k+1];
       uint32 modifiers1 = doing_ends ? localmodsout1 : localmodsin1;
       setup_command *cmdptr = (doing_ends ^ inverting) ? cmdout : cmdin;
-      uint32 ctr_use_flag = doing_ends ?
-         (CMD_MISC2__ANY_WORK|CMD_MISC2__ANY_WORK_INVERT) :
-         CMD_MISC2__ANY_WORK;
+      uint32 ctr_use_flag = CMD_MISC2__ANY_WORK;
+
+      if (doing_ends ^ (((save_cmd_misc2_flags & CMD_MISC2__ANY_WORK_CALL_CROSSED) != 0) ? 1 : 0))
+         ctr_use_flag |= CMD_MISC2__ANY_WORK_INVERT;
 
       current_options = save_state;
 
@@ -3551,6 +3552,13 @@ extern void concentric_move(
             else {
                if (!save_skippable_concept)
                   fail("Internal error in centers/ends work, please report this.");
+
+               /*
+               if (doing_ends)
+                  warn(warn__check_butterfly);
+               else
+                  warn(warn__check_galaxy);
+               */
 
                if (!begin_ptr->cmd.callspec)
                   fail("No callspec, centers/ends!!!!!!");

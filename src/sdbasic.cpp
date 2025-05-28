@@ -948,10 +948,6 @@ static const veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
 static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
 static const veryshort stharlinetranslateh[8] = {0, 1, 0, 0, 2, 3, 0, 0};
 static const veryshort stharlinetranslatev[8] = {0, 0, 0, 1, 0, 0, 2, 3};
-static const veryshort sdmdripoff56[8] = {0, 0, 1, 0, 2, 0, 3, 0};
-static const veryshort sdmdripoff65[8] = {0, 0, 1, 0, 0, 2, 3, 0};
-static const veryshort sdmdripoff95[8] = {3, 0, 0, 0, 1, 0, 0, 2};
-static const veryshort sdmdripoff59[8] = {3, 0, 0, 0, 1, 0, 2, 0};
 
 static const veryshort octtranslatev[80] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
@@ -995,11 +991,6 @@ static const veryshort hxwvdmdtranslate3012[20] = {
    3,  3,  3,  3,  0,  0,  0,  0,
    1,  1,  1,  1,  2,  2,  2,  2,
    3,  3,  3,  3};
-
-static const veryshort hx1x6translatev[15] = {
-   0,  6,  7,  0,  1,  0,
-   0,  2,  3,  4,  5,  0,
-   0,  6,  7};
 
 static const veryshort h1x6thartranslate[12] = {
    0,  0,  1,  0,  2,  3,

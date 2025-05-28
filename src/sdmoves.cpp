@@ -6314,8 +6314,8 @@ void really_inner_move(
 
    result->result_flags.misc |= imprecise_rotation_result_flagmisc;
    result->result_flags.misc |=
-      ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DID_Z_COMPRESSMASK) /
-       CMD_MISC2__DID_Z_COMPRESSBIT) *
+      ((ss->cmd.cmd_misc3_flags & CMD_MISC3__DID_Z_COMPRESSMASK) /
+       CMD_MISC3__DID_Z_COMPRESSBIT) *
       RESULTFLAG__DID_Z_COMPRESSBIT;
 
    // Reflect back if necessary.
@@ -7486,8 +7486,11 @@ void move(
       while (search_defn->schema == schema_by_array && search_defn->compound_part)
          search_defn = search_defn->compound_part;
 
+      ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__ANY_WORK_CALL_CROSSED;
       if ((ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG))) {
          switch (search_defn->schema) {
+         case schema_cross_concentric:
+            ss->cmd.cmd_misc2_flags |= CMD_MISC2__ANY_WORK_CALL_CROSSED;
          case schema_concentric:
          case schema_concentric_4_2:
          case schema_concentric_4_2_or_normal:
@@ -7557,7 +7560,8 @@ void move(
          }
       }
 
-      /* The "anyone work" stuff will need this. */
+      // The "anyone work" stuff will need this, along with the
+      // CMD_MISC2__ANY_WORK_CALL_CROSSED bit that we set above.
       if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) && (ss->cmd.skippable_heritflags == 0))
          ss->cmd.skippable_concept = ss->cmd.parseptr;
 

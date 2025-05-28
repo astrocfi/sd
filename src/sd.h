@@ -2366,10 +2366,8 @@ enum {
    // This mask embraces this whole mechanism, including the "invert" bit.
    CMD_MISC2__CTR_END_MASK      = 0x1FC00000U,
 
-   // This is a 2 bit field.
-   CMD_MISC2__DID_Z_COMPRESSMASK= 0x60000000U,
-   CMD_MISC2__DID_Z_COMPRESSBIT = 0x20000000U,
-   CMD_MISC2__DO_NOT_EXECUTE    = 0x80000000U
+   CMD_MISC2__DO_NOT_EXECUTE    = 0x20000000U,
+   CMD_MISC2__ANY_WORK_CALL_CROSSED=0x40000000U
 };
 
 
@@ -2401,7 +2399,11 @@ enum {
    CMD_MISC3__SAID_DIAMOND         = 0x00080000U,
    CMD_MISC3__SAID_Z               = 0x00100000U,
    CMD_MISC3__TRY_MIMIC_LINES      = 0x00200000U,
-   CMD_MISC3__TRY_MIMIC_COLS       = 0x00400000U
+   CMD_MISC3__TRY_MIMIC_COLS       = 0x00400000U,
+
+   // This is a 2 bit field.
+   CMD_MISC3__DID_Z_COMPRESSMASK   = 0x01800000U,
+   CMD_MISC3__DID_Z_COMPRESSBIT    = 0x00800000U,
 };
 
 enum normalize_action {

@@ -143,7 +143,7 @@ extern void remove_z_distortion(setup *ss) THROW_DECL
       (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
       fix_cw : fix_ccw;
 
-   ss->cmd.cmd_misc2_flags |= CMD_MISC2__DID_Z_COMPRESSBIT << (ss->rotation & 1);
+   ss->cmd.cmd_misc3_flags |= CMD_MISC3__DID_Z_COMPRESSBIT << (ss->rotation & 1);
    expand::compress_setup(fixer, ss);
    update_id_bits(ss);
 }

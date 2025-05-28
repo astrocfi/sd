@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.66
-@set title2 Database version = 38.66 format = 320
+@set title1 RELEASE NOTES FOR VERSION 38.67
+@set title2 Database version = 38.67 format = 320
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.67::
 * 38.66::
 * 38.65::
 * 38.64::
@@ -105,7 +106,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.66, Top, (dir)
+@node Intro, 38.67, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -116,11 +117,24 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2014 William B. Ackerman
 @sp 3
 @menu
-* 38.66::               Changes in the current version
+* 38.67::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.66, 38.65, Intro, Top
+@node 38.67, 38.66, Intro, Top
+@unnumberedsec Version 38.67 changes
+
+Several more @strong{... but <anything>} endings were added to calls that finish with the centers casting off 3/4.
+
+The @strong{1/2 drift apart} failure was fixed.
+
+The @strong{centers work 2/3, all 8 recycle} failure was fixed.
+
+The calls @strong{zig} and @strong{zag} were added.  These have the leads turn in the designated direction
+while the trailers do nothing.  They are legal from 3/4 tag formations, applying only to the outsides.
+
+@c ************
+@node 38.66, 38.65, 38.67, Top
 @unnumberedsec Version 38.66 changes
 
 @strong{6x2 acey deucey} and @strong{3x2 acey deucey} are now treated as instances of the "6x2" and "3x2" concepts.
