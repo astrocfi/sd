@@ -1797,6 +1797,17 @@ setup_attr setup_attrs[] = {
       id_bit_table_1x8,
       {  "a b d c g h f e",
          "a@b@d@c@g@h@f@e"}},
+   /* slittlestars */
+      {7,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      (cm_hunk *) 0,
+      {b_nothing,   b_nothing},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  (Cstring) 0,
+         (Cstring) 0}},
    /* s1x3dmd */
       { 7,
       &thing1x3dmd,
@@ -2961,6 +2972,7 @@ map_hunk *map_lists[][4] = {
    {0,         &mm_qtg_2, &mm_qtg_3, 0},          /* s_qtag */
    {0,         0,         0,         0},          /* s_bone */
    {&mm_1x8_1, &mm_1x8_2, &mm_1x8_3, 0},          /* s1x8 */
+   {0,         0,         0,         0},          /* slittlestars */
    {0,         0,         0,         0},          /* s1x3dmd */
    {0,         0,         0,         0},          /* s3x1dmd */
    {0,         &mm_spn_2, 0,         0},          /* s_spindle */

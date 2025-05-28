@@ -153,6 +153,9 @@ selector_item selector_list[] = {
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
    {"headliners",   "headliner",   "HEADLINERS",   "HEADLINER",   selector_sideliners},
    {"sideliners",   "sideliner",   "SIDELINERS",   "SIDELINER",   selector_headliners},
+   {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
+   {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
+   /* Start of unsymmetrical selectors. */
    {"near line",    "near line",   "NEAR LINE",    "NEAR LINE",   selector_uninitialized},
    {"far line",     "far line",    "FAR LINE",     "FAR LINE",    selector_uninitialized},
    {"near column",  "near column", "NEAR COLUMN",  "NEAR COLUMN", selector_uninitialized},
@@ -183,8 +186,6 @@ selector_item selector_list[] = {
    {"couples 2 and 3", "couple 2 and 3", "COUPLES 2 AND 3", "COUPLE 2 AND 3", selector_uninitialized},
    {"couples 3 and 4", "couple 3 and 4", "COUPLES 3 AND 4", "COUPLE 3 AND 4", selector_uninitialized},
    {"couples 1 and 4", "couple 1 and 4", "COUPLES 1 AND 4", "COUPLE 1 AND 4", selector_uninitialized},
-   {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
-   {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
 
@@ -2600,6 +2601,27 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             }
 
             if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
+            goto bad;
+         case sq_ctrs_sel:
+            k = 0xFF;     /* K was initialized to zero. */
+            /* FALL THROUGH!!!!!! */
+         case sq_ends_sel:
+            /* Now k=0 for "ends_sel", and 0xFF for "ctrs_sel". */
+            switch (ss->kind) {
+               case s2x4: k ^= 0x99; break;
+               case s_qtag: k ^= 0x33; break;
+               default: goto bad;
+            }
+            j = 1;
+            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++,k>>=1) {
+               if (selectp(ss, idx)) {
+                  if (!(k&1)) j = 0;
+               }
+               else {
+                  if (k&1) j = 0;
+               }
+            }
+            if (j) goto good;
             goto bad;
          case sq_all_sel:
             k = 1;     /* K was initialized to zero. */

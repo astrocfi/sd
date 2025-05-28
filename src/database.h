@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 84
+#define DATABASE_FORMAT_VERSION 85
 
 
 
@@ -70,7 +70,8 @@
 #define INHERITFLAG_TWISTED               0x00400000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
-   These flags go into the "callflags1" word of a callspec_block. */
+   These flags go into the "callflags1" word of a callspec_block,
+   and the "topcallflags1" word of the parse_state. */
 
 /* This is a 2 bit field -- VISIBLE_FRACTION_BIT tells where its low bit lies. */
 #define CFLAG1_VISIBLE_FRACTION_MASK      0x00000003UL
@@ -158,6 +159,7 @@ typedef enum {
    s_qtag,
    s_bone,
    s1x8,
+   slittlestars,
    s1x3dmd,
    s3x1dmd,
    s_spindle,
@@ -363,6 +365,8 @@ typedef enum {
    sq_ripple_one_end,
    sq_ripple_both_ends,
    sq_ripple_centers,
+   sq_ctrs_sel,
+   sq_ends_sel,
    sq_all_sel,
    sq_none_sel
 } search_qualifier;

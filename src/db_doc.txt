@@ -452,6 +452,17 @@ wingedstar16   |  0  |  1  |  2           5  |  6          14  | 13          10 
                                  |_____|           |_____|           |_____|
    
 
+                   _____             _____
+                  |     |           |     |
+                  |  0  |           |  1  |
+             _____|     |_____ _____|     |_____
+            |      \   /      |      \   /      |
+littlestars |  6           7  |  3           2  |    (internal use only!)
+            |_____ /   \ _____|_____ /   \ _____|
+                  |     |           |     |
+                  |  5  |           |  4  |
+                  |_____|           |_____|
+
 
                          _____
                _____    |     |    _____
@@ -2176,6 +2187,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    dmd_ctrs_1f,                  /* dmd, 1x4 - the centers (2 of them) are in a couple */
    said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */
+   centers_sel                   /* 2x4/qtag - the centers are selected and the ends are not. */
+   ends_sel                      /* 2x4/qtag - the ends are selected and the centers are not. */
    all_sel                       /* 1x1/1x2 - everyone in the setup is selected */
    none_sel                      /* 1x1/1x2 - no one in the setup is selected */
 

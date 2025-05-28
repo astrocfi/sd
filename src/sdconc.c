@@ -2738,6 +2738,12 @@ static Const fixer fgalch    = {s1x2, s_galaxy,    0, 0, 1,       &fgalch,    &f
 static Const fixer fspindlc  = {s1x2, s_spindle,   1, 0, 2,       &fspindlc,  &f1x3aad,   0,          0, 0,          0,    0,          0,          {{0, 6}, {2, 4}},   {{-1}}};
 static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          0,          {{1, 2}, {6, 5}},   {{-1}}};
 static Const fixer f2x3c     = {s1x2, s2x3,        1, 0, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          0,          {{0, 5}, {2, 3}},   {{-1}}};
+
+static Const fixer box3c     = {s1x2, s2x2,        0, 0, 1,       &box3c,     0,          0,          0, 0,          0,    0,          0,          {{0, 1}},   {{-1}}};
+static Const fixer box6c     = {s1x2, s2x2,        1, 0, 1,       &box6c,     0,          0,          0, 0,          0,    0,          0,          {{1, 2}},   {{-1}}};
+static Const fixer box9c     = {s1x2, s2x2,        1, 0, 1,       &box9c,     0,          0,          0, 0,          0,    0,          0,          {{0, 3}},   {{-1}}};
+static Const fixer boxcc     = {s1x2, s2x2,        0, 0, 1,       &boxcc,     0,          0,          0, 0,          0,    0,          0,          {{3, 2}},   {{-1}}};
+
 static Const fixer f1x2aad   = {s1x2, s_1x2dmd,    0, 0, 2,       &f1x2aad,   &f2x3c,     0,          0, 0,          0,    0,          0,          {{0, 1}, {4, 3}},   {{-1}}};
 static Const fixer f1x3bbd   = {s1x4, s1x3dmd,     0, 0, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  &fspindld,  {{1, 2, 5, 6}},     {{-1}}};
 static Const fixer fhrglassd = {s2x2, s_hrglass,   0, 2, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {{0, 1, 4, 5}},     {{-1}}};
@@ -2967,6 +2973,10 @@ static Const sel_item sel_table[] = {
    {LOOKUP_NONE,               s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s_1x2dmd,    033,    &f1x2aad,    (fixer *) 0, -1},
    {LOOKUP_NONE,               s2x3,        055,    &f2x3c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x2,        0x3,    &box3c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x2,        0x6,    &box6c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x2,        0x9,    &box9c,      (fixer *) 0, -1},
+   {LOOKUP_NONE,               s2x2,        0xC,    &boxcc,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s_qtag,      0xAA,   &fqtgj1,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s_qtag,      0x99,   &fqtgj2,     (fixer *) 0, -1},
    {LOOKUP_NONE,               nothing}};

@@ -17,6 +17,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pc.h>
+#include <keys.h>
 #include <gppconio.h>
 #include "sdui-ttu.h"
 
@@ -183,13 +185,13 @@ extern int get_char(void)
 
    do {
       fflush(stdout);
-      n = getch();
+      n = getxkey();
    } while (n == EOF);   /* busy wait (EOF means no character yet) */
 
    if (n == 0) {     /* Escape for function keys on some keyboards. */
       do {           /* Get the indicator character. */
          fflush(stdout);
-         n = getch();
+         n = getxkey();
       } while (n == EOF);
 
       if (n == 83)
@@ -213,24 +215,24 @@ extern int get_char(void)
       else
          n = ' ';
    }
-   else if (n == 339) /* Delete */
+   else if (n == K_Delete)           /* Delete */
       n = '\177';
-   else if (n >= 315 && n <= 324)
-      n += 128+1-315;     /* f1..f10 */
-   else if (n >= 389 && n <= 390)
-      n += 128+11-389;     /* f11..f12 */
-   else if (n >= 340 && n <= 349)
-      n += 144+1-340;     /* shift f1..f10 */
-   else if (n >= 391 && n <= 392)
-      n += 144+11-391;     /* shift f11..f12 */
-   else if (n >= 350 && n <= 359)
-      n += 160+1-350;     /* control f1..f10 */
-   else if (n >= 393 && n <= 394)
-      n += 160+11-393;     /* control f11..f12 */
-   else if (n >= 360 && n <= 369)
-      n += 176+1-360;     /* alt f1..f10 */
-   else if (n >= 395 && n <= 396)
-      n += 176+11-395;     /* alt f11..f12 */
+   else if (n >= K_F1 && n <= K_F10)
+      n += 128+1-K_F1;               /* F1..F10 */
+   else if (n >= K_F11 && n <= K_F12)
+      n += 128+11-K_F11;             /* F11..F12 */
+   else if (n >= K_Shift_F1 && n <= K_Shift_F10)
+      n += 144+1-K_Shift_F1;         /* shift F1..F10 */
+   else if (n >= K_Shift_F11 && n <= K_Shift_F12)
+      n += 144+11-K_Shift_F11;       /* shift F11..F12 */
+   else if (n >= K_Control_F1 && n <= K_Control_F10)
+      n += 160+1-K_Control_F1;       /* control F1..F10 */
+   else if (n >= K_Control_F11 && n <= K_Control_F12)
+      n += 160+11-K_Control_F11;     /* control F11..F12 */
+   else if (n >= K_Alt_F1 && n <= K_Alt_F10)
+      n += 176+1-K_Alt_F1;           /* alt F1..F10 */
+   else if (n >= K_Alt_F11 && n <= K_Alt_F12)
+      n += 176+11-K_Alt_F11;         /* alt F11..F12 */
    else if (n >= 128)
       n = ' ';
 

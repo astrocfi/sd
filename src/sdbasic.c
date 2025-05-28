@@ -406,6 +406,10 @@ static int linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
 static int galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
 static int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
 static int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
+static int lilstar1[8] = {0, 2, 0, 0, 3, 0, 0, 1};
+static int lilstar2[8] = {3, 0, 0, 1, 0, 2, 0, 0};
+static int lilstar3[8] = {0, 1, 0, 0, 2, 3, 0, 0};
+static int lilstar4[8] = {0, 0, 2, 3, 0, 0, 0, 1};
 
 
 static int qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
@@ -1534,7 +1538,8 @@ Private int divide_the_setup(
                      it.  And, incidentally, we allow a roll afterwards. */
 
                   if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG) && !assoc(b_1x1, ss, calldeflist))
-                     fail("People are too far away to work with each other on this call.");
+                     fail("People are too far apart to work with each other on this call.");
+
                   foo ^= elong;
                }
 
@@ -2348,6 +2353,7 @@ Private int divide_the_setup(
 
    recompute_anyway = (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) != 0;
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
+   ss->cmd.prior_elongation_bits = 0;
    divided_setup_move(ss, division_maps, phantest_ok, recompute_anyway, result);
    /* This left the RESULTFLAG__SPLIT_AXIS_MASK stuff correct, but we may still need to turn it off. */
    result->result_flags |= force_result_split_axis;
@@ -2452,6 +2458,7 @@ extern void basic_move(
    calldef_block *qq;
    callspec_block *callspec = ss->cmd.callspec;
    uint64 final_concepts = ss->cmd.cmd_final_flags;
+   long_boolean check_peeloff_migration = FALSE;
 
    /* We don't allow "central" or "invert" with array-defined calls.  We might allow "snag" or "mystic". */
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
@@ -3093,7 +3100,6 @@ extern void basic_move(
       uint32 vacate = 0;
 
       result->rotation = goodies->callarray_flags & CAF__ROT;
-
       collision_mask = 0;
       result_mask = 0;
       num = setup_attrs[ss->kind].setup_limits+1;
@@ -3116,12 +3122,13 @@ extern void basic_move(
          }
          else if (goodies->callarray_flags & CAF__NO_CUTTING_THROUGH) {
             if (result->kind == s1x4)
-               fail("Call can't be done around the outside of the set.");
-
-            for (i=0; i<4; i++) {
-               uint32 p = ss->people[i].id1;
-               if (p != 0 && ((p-i-1) & 2) == 0 && ((p ^ orig_elongation) & 1) == 0)
-                  fail("Call has outsides cutting through the middle of the set.");
+               check_peeloff_migration = TRUE;
+            else {
+               for (i=0; i<4; i++) {
+                  uint32 p = ss->people[i].id1;
+                  if (p != 0 && ((p-i-1) & 2) == 0 && ((p ^ orig_elongation) & 1) == 0)
+                     fail("Call has outsides cutting through the middle of the set.");
+               }
             }
          }
       }
@@ -3463,6 +3470,28 @@ extern void basic_move(
             else
                fail("Call went to improperly-formed setup.");
          }
+         else if (result->kind == slittlestars) {
+            if ((lilresult_mask[0] & 0xCC) == 0) {
+               result->kind = s2x2;
+               permuter = lilstar3;
+            }
+            else if ((lilresult_mask[0] & 0x33) == 0) {
+               result->kind = s1x4;
+               permuter = lilstar4;
+            }
+            else if ((lilresult_mask[0] & 0x2D) == 0) {
+               result->kind = s_trngl4;
+               permuter = lilstar1;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 0xD2) == 0) {
+               result->kind = s_trngl4;
+               permuter = lilstar2;
+               rotator = 3;
+            }
+            else
+               fail("Call went to improperly-formed setup.");
+         }
          else if (result->kind == sbigdmd) {
             if ((lilresult_mask[0] & 02222) == 0) {        /* All outside */
                result->kind = s_qtag;
@@ -3632,6 +3661,21 @@ extern void basic_move(
    un_mirror:
 
    canonicalize_rotation(result);
+
+   if (check_peeloff_migration) {
+      /* Check that the resultant 1x4 is parallel to the original 2x2 elongation,
+         and that everyone stayed on their own side of the split. */
+      if (((orig_elongation ^ result->rotation) & 1) == 0)
+         fail("People are too far apart to work with each other on this call.");
+
+      for (i=0; i<4; i++) {
+         int z = (i-result->rotation+1) & 2;
+         uint32 p = ss->people[i].id1;
+         if (     (((p ^ result->people[z].id1) & PID_MASK) != 0) &&
+                  (((p ^ result->people[z+1].id1) & PID_MASK) != 0))
+            fail("Call can't be done around the outside of the set.");
+      }
+   }
 
    /* We take out any elongation info that divided_setup_move may have put in
       and override it with the correct info. */

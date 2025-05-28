@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: October 6, 1996
+@set Time-stamp: October 25, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.77
+@set sd-version 31.78
 @set full-manual
 @c %**end of header
 @iftex
@@ -181,6 +181,8 @@ Call Notes
 * <ANYTHING> and circle::       <ANYTHING> and circle
 * Centers Back Away::           Centers Back Away
 * <ANYONE> Promenade::          <ANYONE> Promenade
+* Up to the Middle::            Up to the Middle
+* And N/4 More::                And N/4 More
 * Ends Divide::                 Ends Divide
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
@@ -2303,6 +2305,17 @@ The keys for @samp{<anything>} and
 @key{<ENTER>}.
 @end ifinfo
 
+The function key 
+@iftex
+@keycap{F8}
+@end iftex
+@ifinfo
+@key{<F8>}
+@end ifinfo
+is present only for compatibility with past usage.  It is almost never necessary
+to type ``<anything>''.  Instead, type the substituted call in
+brackets.  @xref{Call Variations}.
+
 @node Sdtty on the PC, Sdtty on Unix, Function Keys in Sdtty, Terminal Interface
 @section Sdtty on the PC
 
@@ -2455,6 +2468,8 @@ appropriate to get the dancers through the action that you intend.
 * <ANYTHING> and circle::       <ANYTHING> and circle
 * Centers Back Away::           Centers Back Away
 * <ANYONE> Promenade::          <ANYONE> Promenade
+* Up to the Middle::            Up to the Middle
+* And N/4 More::                And N/4 More
 * Ends Divide::                 Ends Divide
 * Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
@@ -2501,8 +2516,7 @@ look nicer by having the calls appear on the same line.  Do not use
 this after somethinge like @i{heads star thru}.  That is, do not enter:
 @example
    heads start
-   <anything> and spread
-   star thru
+   [star thru] and spread
 @end example
 That would attempt to have only the heads do both the @i{star thru}
 and the @i{spread}.  All 8 people must do the @i{spread}.  You
@@ -2518,10 +2532,8 @@ There is also a call @samp{<anything> and the <anyone> spread}, which
 does the @i{<anything>} followed by having the selected people @i{spread}.
 For example, you could enter
 @example
-   <anything> and the boys spread
-   motivate
+   [motivate] and the boys spread
 @end example
-This will be printed as @code{[motivate] and the boys spread}.
 
 There is also a call @samp{wheel and spread}, which is just a
 @i{wheel and deal} and @i{spread}.
@@ -2568,13 +2580,12 @@ So, for example, you might enter:
 @example
    heads start
    ladies chain
-   centers back away, others come in and <ANYTHING>
-   star thru
+   centers back away, others come in and [star thru]
 @end example
 You might read this as ``head ladies chain, then the sides move in and
 star thru''.
 
-@node <ANYONE> Promenade, Ends Divide, Centers Back Away, Call Notes
+@node <ANYONE> Promenade, Up to the Middle, Centers Back Away, Call Notes
 @section <ANYONE> Promenade
 
 These calls are intended for use in sequences that begin with heads
@@ -2589,10 +2600,56 @@ and
 In each case, start the sequence with the @code{heads start} or @code{sides
 start} command, and then issue one of the calls listed above.  Ignore the
 fact that the displayed setup will look strange before the promenade.
-You will be prompted for the @samp{<ANYTHING>} call, which will be
+In @code{Sdtty}, you can type the @samp{<ANYTHING>} call in brackets,
+as in @code{promenade halfway, while the others [square thru 4]}.
+The @samp{<ANYTHING>} call will be
 done by the appropriate people in the center of the set.
 
-@node Ends Divide, Little/Little More/Plenty, <ANYONE> Promenade, Call Notes
+@node Up to the Middle, And N/4 More, <ANYONE> Promenade, Call Notes
+@section Up to the Middle
+
+When the program starts a sequence with the @code{heads start} or
+@code{sides start} command, there is an implicit ``up to the middle''
+in the first action.  This only applies to the first call.  If a sequence
+starts with something else, such as @samp{4 ladies chain}, @samp{4 ladies chain 3/4},
+@samp{head/side ladies chain to the right}, or @samp{all 4 couples right and left thru},
+the result will be a squared set.  To do the next call, one typically needs to have
+the heads or sides go up to the middle.  Since this is not the first call, the
+program won't automatically do it, and you need to do it explicitly.
+
+There is a call ``@samp{<ANYONE> press ahead}'' for this purpose.  The call
+is officially on the C2 list, but @code{Sd} and @code{Sdtty} allow it at
+Mainstream.  Have the heads press ahead, or whatever is appropriate.
+If the heads and sides are not positioned consistently (as, for example,
+after an @samp{all 4 ladies chain 3/4}), use the designation @code{headliners}
+or @code{sideliners}.  These designations refer to the people currently facing
+head or side walls, respectively.  @code{Sd} and @code{Sdtty} recognize them
+at Mainstream.  When actually calling in such a situation, a common phrase to use
+is ``@samp{at the heads}'', as in ``@samp{all 4 ladies chain 3/4; at the heads,
+square thru 2}''.  The way this would be entered to the program is:
+@example
+@group
+   just as they are               (instead of heads or sides start)
+   all 4 ladies chain 3/4
+   headliners press ahead
+   centers square thru 2          (you must identify the centers)
+@end group
+@end example
+
+@node And N/4 More, Ends Divide, Up to the Middle, Call Notes
+@section And N/4 More
+
+The calls @samp{and 1/4 more} and @samp{and 1/2 more} are intended to
+be used after a courtesy turn, such as a @samp{right and left thru}.
+They cause the couples to turn, as a couple, that additional amount.
+Callers sometimes use phrases like ``courtesy turn full around'' to
+describe the action known to @code{Sd} as @samp{and 1/2 more}.
+
+There are also calls @samp{<ANYTHING> and 1/4 more} and @samp{<ANYTHING> and 1/2 more},
+which can be typed to @code{Sdtty} with the actual @samp{<ANYTHING>} call in brackets,
+as in @code{[right and left thru] and 1/2 more}.
+
+@node Ends Divide, Little/Little More/Plenty, And N/4 More, Call Notes
 @section Ends Divide
 
 This is a call that should be used when you want the outsides to move
@@ -2603,14 +2660,16 @@ application of the @samp{ends} concept.  You must type it on one line,
 and you may not substitute another designator, such as @samp{sides}, for
 the word @samp{ends}.  So, for example, you might enter:
 @example
+@group
    heads start
    swing thru
    ends divide
    ends touch 1/4
    6x2 acey deucey
+@end group
 @end example
-You might read this as ``heads swing thru, while the sides divide
-and touch 1/4''.
+You might read this as ``@samp{heads swing thru, while the sides divide
+and touch 1/4}''.
 
 @node Little/Little More/Plenty, Flip Back, Ends Divide, Call Notes
 @section Little, Little More, and Plenty

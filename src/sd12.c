@@ -40,13 +40,18 @@ static Const tgl_map map1b;
 static Const tgl_map map2b;
 static Const tgl_map map1i;
 static Const tgl_map map2i;
+static Const tgl_map map1j;
+static Const tgl_map map2j;
 
-/*                                  mapqt1                          mapcp1                   map241     map242   map24i   kind     other */
+/*                                  mapqt1                          mapcp1                        map241     map242   map24i   kind     other */
 static Const tgl_map map1b = {{4, 3, 2,   0, 7, 6,   1, 5}, {6,  8, 10,   14,  0,  2,   4, 12}, {6, 5, 4}, {2, 1, 0}, {3, 7}, s_c1phan, &map2b};
 static Const tgl_map map2b = {{5, 6, 7,   1, 2, 3,   0, 4}, {3, 15, 13,   11,  7,  5,   1,  9}, {7, 6, 5}, {3, 2, 1}, {0, 4}, s_qtag,   &map1b};
 /* Interlocked triangles: */
 static Const tgl_map map1i = {{0, 0, 0,   0, 0, 0,   0, 0}, {4,  8, 10,   12,  0,  2,   6, 14}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map2i};
 static Const tgl_map map2i = {{0, 0, 0,   0, 0, 0,   0, 0}, {1, 15, 13,   9,   7,  5,   3, 11}, {0, 0, 0}, {0, 0, 0}, {0, 0}, nothing,  &map1i};
+/* Interlocked triangles in quarter-tag: */
+static Const tgl_map map1j = {{4, 7, 2,   0, 3, 6,   1, 5}, {0,  0,  0,    0,  0,  0,   0, -1}, {0, 0, 0}, {0, 0, 0}, {0, 0}, s_qtag,   &map2j};
+static Const tgl_map map2j = {{5, 6, 3,   1, 2, 7,   0, 4}, {0,  0,  0,    0,  0,  0,   0, -1}, {0, 0, 0}, {0, 0, 0}, {0, 0}, s_qtag,   &map1j};
 
 
 Private void do_glorious_triangles(
@@ -119,6 +124,9 @@ Private void do_glorious_triangles(
          scatter(result, &res[1], &map_ptr->mapqt1[3], 2, 022);
       }
       else if (res[0].rotation == 2) {
+         if (map_ptr->mapcp1[7] < 0)
+            fail("Can't do shape-changer in interlocked triangles.");
+
          result->kind = s_c1phan;
          /* Restore the two people who don't move. */
          (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 0, r);
@@ -127,7 +135,8 @@ Private void do_glorious_triangles(
          scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
       }
       else {
-         if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
+         if (result->kind == nothing || map_ptr->mapcp1[7] < 0)
+            fail("Can't do shape-changer in interlocked triangles.");
 
          map_ptr = map_ptr->other;
 
@@ -152,7 +161,8 @@ Private void do_glorious_triangles(
       }
    }
    else if (res[0].kind == s1x3) {
-      if (result->kind == nothing) fail("Can't do shape-changer in interlocked triangles.");
+      if (result->kind == nothing || map_ptr->mapcp1[7] < 0)
+         fail("Can't do shape-changer in interlocked triangles.");
 
       result->kind = s2x4;
 
@@ -298,7 +308,7 @@ extern void triangle_move(
                20 - <anyone>-base
    Add 100 octal if interlocked triangles. */
 
-   if (indicator >= 6 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
+   if (indicator >= 4 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
       indicator |= 0100;     /* Interlocked triangles. */
       ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_INTLK;
    }
@@ -337,7 +347,7 @@ extern void triangle_move(
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
       ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
 
-      if (indicator >= 6) {
+      if ((indicator & 077) >= 6) {
          /* Indicator = 6 for wave-base, 7 for tandem-base, 20 for <anyone>-base. */
          wv_tand_base_move(ss, indicator, result);
       }
@@ -346,19 +356,19 @@ extern void triangle_move(
    
          if (ss->kind != s_qtag) fail("Must have diamonds.");
    
-         if (indicator == 5) {
+         if ((indicator & 077) == 5) {
             if (
                   (ss->people[0].id1 & d_mask) == d_east &&
                   (ss->people[1].id1 & d_mask) != d_west &&
                   (ss->people[4].id1 & d_mask) == d_west &&
                   (ss->people[5].id1 & d_mask) != d_east)
-               map_ptr = &map1b;
+               map_ptr = (indicator & 0100) ? &map1j : &map1b;
             else if (
                   (ss->people[0].id1 & d_mask) != d_east &&
                   (ss->people[1].id1 & d_mask) == d_west &&
                   (ss->people[4].id1 & d_mask) != d_west &&
                   (ss->people[5].id1 & d_mask) == d_east)
-               map_ptr = &map2b;
+               map_ptr = (indicator & 0100) ? &map2j : &map2b;
             else
                fail("Can't find designated point.");
          }
@@ -368,13 +378,13 @@ extern void triangle_move(
                   (ss->people[1].id1 & d_mask) != d_east &&
                   (ss->people[4].id1 & d_mask) == d_east &&
                   (ss->people[5].id1 & d_mask) != d_west)
-               map_ptr = &map1b;
+               map_ptr = (indicator & 0100) ? &map1j : &map1b;
             else if (
                   (ss->people[0].id1 & d_mask) != d_west &&
                   (ss->people[1].id1 & d_mask) == d_east &&
                   (ss->people[4].id1 & d_mask) != d_east &&
                   (ss->people[5].id1 & d_mask) == d_west)
-               map_ptr = &map2b;
+               map_ptr = (indicator & 0100) ? &map2j : &map2b;
             else
                fail("Can't find designated point.");
          }

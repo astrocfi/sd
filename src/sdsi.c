@@ -780,6 +780,8 @@ extern long_boolean open_session(int argc, char **argv)
    session = fopen(SESSION_FILENAME, "r");
 
    if (session) {
+      int insert_pos = 1;
+
       /* Search for the "[Options]" indicator. */
 
       for (;;) {
@@ -788,15 +790,31 @@ extern long_boolean open_session(int argc, char **argv)
       }
 
       for (;;) {
-         if (!fgets(line, MAX_FILENAME_LENGTH, session) || line[0] == '\n') break;
-         nargs++;
-         args = (char **) get_more_mem(args, nargs * sizeof(char *));
-         for (i=nargs-1 ; i>1 ; i--) args[i] = args[i-1];
-         j = strlen(line);
-         if (j>0) line[j-1] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
-         args[1] = (char *) get_mem(j+2);
-         args[1][0] = '-';    /* Put a '-' in front of it. */
-         (void) memcpy(&args[1][1], line, j+1);
+         int ccount = 0;
+
+         if (!fgets(&line[1], MAX_FILENAME_LENGTH, session) || line[1] == '\n') break;
+
+         j = strlen(&line[1]);
+         if (j>0) line[j] = '\0';   /* Strip off the <NEWLINE> -- we don't want it. */
+         line[0] = '-';             /* Put a '-' in front of it. */
+
+         for (;;) {
+            char token[MAX_FILENAME_LENGTH];
+            int newpos;
+
+            /* Break the line into tokens, and insert each as a command-line argument. */
+
+            if (sscanf(&line[ccount], "%s %n", token, &newpos) != 1) break;
+            ccount += newpos;
+
+            j = strlen(token)+1;
+            nargs++;
+            args = (char **) get_more_mem(args, nargs * sizeof(char *));
+            for (i=nargs-1 ; i>insert_pos ; i--) args[i] = args[i-1];
+            args[insert_pos] = (char *) get_mem(j);
+            (void) memcpy(args[insert_pos], token, j);
+            insert_pos++;
+         }
       }
 
       no_options: ;

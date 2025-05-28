@@ -355,6 +355,7 @@ char *estab[] = {
    "qtag",
    "bone",
    "1x8",
+   "littlestars",
    "1x3dmd",
    "3x1dmd",
    "spindle",
@@ -483,6 +484,8 @@ char *qualtab[] = {
    "ripple_one_end",
    "ripple_both_ends",
    "ripple_centers",
+   "centers_sel",
+   "ends_sel",
    "all_sel",
    "none_sel",
    ""};

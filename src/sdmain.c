@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.77"
+#define VERSION_STRING "31.78"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -509,7 +509,9 @@ Private long_boolean find_selector(selector_kind *sel)
          *sel = verify_options.who;
    }
    else if (interactivity != interactivity_normal) {
-      *sel = (selector_kind) generate_random_number(last_selector_kind)+1;
+       /* We don't generate unsymmetrical selectors when searching.  It generates
+           too many "couple #3 u-turn-back" calls. */
+      *sel = (selector_kind) generate_random_number(unsymm_selector_start-1)+1;
       hash_nonrandom_number(((int) (*sel)) - 1);
    }
    else if ((j = uims_do_selector_popup()) != 0)

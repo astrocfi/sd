@@ -21,10 +21,29 @@
 Copyright @copyright{} 1996 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.77
-         Database version = 31.77 format = 84.
+          RELEASE NOTES FOR SD VERSION 31.78
+         Database version = 31.78 format = 85.
        X11 UI version 1.17, SDTTY UI version 1.9.
 @end example
+
+****** Changes as of version 31.78 ******
+
+Various problems in the parser changes of version 31.77 were fixed.
+
+The bug arising from the line "sequence <filename>" in the "options" section
+of the initialization file was fixed.
+
+A number of improvements have been made in "ladies chain" types
+of calls.  All 4 ladies chain N/4 (from a squared set) has been added,
+along with head/side ladies chain to the right and head/side ladies chain 3/4.
+See the section ``Up to the Middle'' in the manual.
+
+The call "<ANYONE> cloverleaf while the others <ANYTHING>" has been added, and
+is at Mainstream.  It attempts to capture some of the common uses of this figure.
+It is in many cases identical to the A1 call "clover and <ANYTHING>".
+
+The calls "and 1/4 more" and "and 1/2 more" were moved to Mainstream to capture
+such things as the "courtesy turn full around" usage.
 
 ****** Changes as of version 31.77 ******
 

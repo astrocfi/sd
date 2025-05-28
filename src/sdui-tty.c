@@ -1011,6 +1011,8 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
    }
    else {
       parse_block *save1 = (parse_block *) 0;
+      uint32 save2;
+      long_boolean save2_active = FALSE;
       modifier_block *anythings = &user_match.match;
 
       /* This stuff is duplicated in verify_call in sdmatch.c . */
@@ -1037,6 +1039,8 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          if (anythings->kind == ui_call_select) {
             if (deposit_call(anythings->call_ptr)) return TRUE;
             save1 = *parse_state.concept_write_ptr;
+            if (!save2_active) save2 = parse_state.topcallflags1;
+            save2_active = TRUE;
             *reply_p = ui_call_select;
          }
          else if (anythings->kind == ui_concept_select) {
@@ -1047,6 +1051,8 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          user_match.match.call_conc_options = save_stuff;
          anythings = anythings->next;
       }
+
+      if (save2_active) parse_state.topcallflags1 = save2;
    }
 
    return FALSE;

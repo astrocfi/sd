@@ -884,6 +884,10 @@ typedef enum {
    selector_outerpairs,
    selector_headliners,
    selector_sideliners,
+   selector_all,
+   selector_none,
+   /* Start of unsymmetrical selectors. */
+#define unsymm_selector_start ((int) selector_nearline)
    selector_nearline,
    selector_farline,
    selector_nearcolumn,
@@ -907,11 +911,9 @@ typedef enum {
    selector_cpls1_2,
    selector_cpls2_3,
    selector_cpls3_4,
-   selector_cpls4_1,
-   selector_all,
-   selector_none
+   selector_cpls4_1
 } selector_kind;
-#define last_selector_kind ((int) selector_none)
+#define last_selector_kind ((int) selector_cpls4_1)
 
 typedef struct {
    Cstring name;
@@ -1587,7 +1589,7 @@ typedef struct {
    parse_block **concept_write_ptr;
    parse_block **concept_write_base;
    char specialprompt[MAX_TEXT_LINE_LENGTH];
-   int topcallflags1;
+   uint32 topcallflags1;
    call_list_kind call_list_to_use;
 } parse_state_type;
 
