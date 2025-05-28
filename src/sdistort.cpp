@@ -452,7 +452,8 @@ static void innards(
               (z[i].kind == s_normal_concentric && z[i].outer.skind == nothing))) {
             setup linetemp;
             setup qtagtemp;
-            setup_kind k = try_to_expand_dead_conc(z[i], linetemp, qtagtemp);
+            setup dmdtemp;
+            setup_kind k = try_to_expand_dead_conc(z[i], linetemp, qtagtemp, dmdtemp);
             if (k == s1x4) {
                if (x[i].kind == s_qtag)
                   z[i] = qtagtemp;
@@ -3962,7 +3963,7 @@ void tglmap::do_glorious_triangles(
       mapnums = map_ptr->mapcp1;
       startingrot = 2;
    }
-   else if (ss->kind == sbigdmd || ss->kind == s_rigger) {
+   else if (ss->kind == sbigdmd || ss->kind == s_rigger || ss->kind == sd2x7) {
       mapnums = map_ptr->mapbd1;
       startingrot = 1;
    }
@@ -4097,12 +4098,12 @@ void tglmap::do_glorious_triangles(
          goto noshapechange;
 
       if (res[0].rotation == 0) {
-
          if (ss->kind == sdeepbigqtg)
             fail("Sorry, can't do this.");
 
          if (startingrot == 1) {
             mapnums = map_ptr->map261;
+            if (ss->kind != sd2x7)
             result->kind = s2x6;
          }
          else {
@@ -4429,7 +4430,6 @@ extern void triangle_move(
          else if (indicator == 0102 && ss->kind == s_rigger) {
             tglmap::do_glorious_triangles(ss, tglmap::rgtglmap1, indicator, result);
             reinstate_rotation(ss, result);
-
             return;
          }
          else if (indicator & 0100)
@@ -4437,20 +4437,35 @@ extern void triangle_move(
 
          if (indicator_base == 2) {
             switch (ss->kind) {
-               case s_hrglass:
-                  // This is the schema for picking out the triangles in an hourglass.
-                  schema = schema_vertical_6;
-                  break;
-               case s_rigger:
-               case s_ptpd:
-                  schema = schema_concentric_6_2;
-                  break;
-               case s_qtag:
-                  schema = schema_concentric_6_2_tgl;
-                  break;
-               case sbigdmd:
-               default:
-                  fail("There are no 'inside' triangles.");
+            case s_hrglass:
+               // This is the schema for picking out the triangles in an hourglass.
+               schema = schema_vertical_6;
+               break;
+            case s_rigger:
+            case s_ptpd:
+               schema = schema_concentric_6_2;
+               break;
+            case sd2x7:
+               if (indicator & 0300) fail("Can't find the indicated triangles.");
+
+               const tglmap::tglmapkey *map_key_table;
+
+               if (global_livemask == 0x3C78UL)
+                  map_key_table = tglmap::d7tglmap1;
+               else if (global_livemask == 0x078FUL)
+                  map_key_table = tglmap::d7tglmap2;
+               else
+                  fail("Can't find the triangle.");
+
+               tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
+               reinstate_rotation(ss, result);
+               return;
+            case s_qtag:
+               schema = schema_concentric_6_2_tgl;
+               break;
+            case sbigdmd:
+            default:
+               fail("There are no 'inside' triangles.");
             }
 
             concentric_move(ss, &ss->cmd, (setup_command *) 0, schema,

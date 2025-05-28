@@ -497,7 +497,7 @@ bool process_accel_or_abbrev(modifier_block & mb, char linebuff[])
                         &user_match.match.call_conc_options);
       // Reject off-level concept accelerator key presses.
       if (!allowing_all_concepts &&
-          user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
+          user_match.match.concept_ptr->level > calling_level)
          return false;
       user_match.match.index = 0;
       break;
@@ -576,7 +576,7 @@ void matcher_initialize()
 
    for (p=concept_descriptor_table ; p->kind != end_marker ; p++) {
       concept_list_length++;
-      if (p->level <= higher_acceptable_level[calling_level])
+      if (p->level <= calling_level)
          level_concept_list_length++;
    }
 
@@ -595,7 +595,7 @@ void matcher_initialize()
       *item = concept_number;
       item++;
 
-      if (p->level <= higher_acceptable_level[calling_level]) {
+      if (p->level <= calling_level) {
          *level_item = concept_number;
          level_item++;
       }

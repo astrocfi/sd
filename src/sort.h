@@ -113,7 +113,7 @@
 //       line, so we repeat the process until we are off the end of
 //       the region.
 
-template < class C, class CMP > class SORT {
+template < typename C, typename CMP > class SORT {
  private:
    static void heapify(C *the_array, int lo, int hi)
       {

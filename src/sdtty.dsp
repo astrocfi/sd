@@ -140,9 +140,5 @@ SOURCE=".\sdui-tty.cpp"
 
 SOURCE=".\sdui-wincon.cpp"
 # End Source File
-# Begin Source File
-
-SOURCE=.\sdui.h
-# End Source File
 # End Target
 # End Project

@@ -930,6 +930,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       lim = 2;
       // !!!! FALL THROUGH !!!!
    case schema_partner_matrix:
+   case schema_partner_partial_matrix:
       // !!!! FELL THROUGH !!!!
       {
          left_half = last_datum;
@@ -1631,11 +1632,6 @@ static void build_database(abridge_mode_t abridge_mode)
 {
    int i, char_count;
    int local_callcount;
-   dance_level this_level;
-   dance_level acceptable_level = calling_level;
-
-   if (abridge_mode <= abridge_mode_deleting_abridge)
-      acceptable_level = higher_acceptable_level[calling_level];
 
    for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
       number_of_taggers[i] = 0;
@@ -1673,10 +1669,10 @@ static void build_database(abridge_mode_t abridge_mode)
          database_error_exit("database phase error 1");
       }
 
-      savetag = last_12;     /* Get tag, if any. */
+      savetag = last_12;     // Get tag, if any.
 
       read_halfword();       // Get level and 12 bits of "callflags2" stuff.
-      this_level = (dance_level) (last_datum & 0xF);
+      dance_level this_level = (dance_level) (last_datum & 0xF);
       uint32 saveflags2 = last_datum >> 4;
 
       read_fullword();       // Get top level flags, first word.
@@ -1725,7 +1721,7 @@ static void build_database(abridge_mode_t abridge_mode)
       //    That way, c3x calls will be included.  We will print a warning if they are used.
 
       if (this_level == calling_level ||
-          (abridge_mode != abridge_mode_writing && this_level <= acceptable_level)) {
+          (abridge_mode != abridge_mode_writing && this_level <= calling_level)) {
 
          // Process tag base calls specially.
          if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {

@@ -31,8 +31,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "36.81"
-#define TIME_STAMP "wba@alum.mit.edu  29 Aug 2006 $"
+#define VERSION_STRING "37.0"
+#define TIME_STAMP "wba@alum.mit.edu  18 Nov 2006 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -205,6 +205,8 @@ resolve_list_menu_item resolve_menu[] = {
    {"accept current choice",  resolve_command_accept},
    {"raise reconcile point",  resolve_command_raise_rec_point},
    {"lower reconcile point",  resolve_command_lower_rec_point},
+   {"grow reconcile region",  resolve_command_grow_rec_region},
+   {"shrink reconcile region",resolve_command_shrink_rec_region},
    {"write this sequence",    resolve_command_write_this},
    {(Cstring) 0}};
 

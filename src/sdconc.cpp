@@ -1122,7 +1122,7 @@ static calldef_schema concentrify(
          fail("Can't find centers and ends in this formation.");
       break;
    case schema_concentric_6_2_line:
-      if (ss->kind != s3x1dmd)
+      if (ss->kind != s3x1dmd && ss->kind != s_wingedstar && ss->kind != s_dead_concentric)
          analyzer_result = schema_concentric_6_2;
       break;
    case schema_concentric_2_6:
@@ -1366,6 +1366,14 @@ static calldef_schema concentrify(
          }
 
          break;
+      case schema_concentric_6_2_line:
+         setup linetemp;
+         setup qtagtemp;
+         setup dmdtemp;
+         try_to_expand_dead_conc(*ss, linetemp, qtagtemp, dmdtemp);
+         *ss = dmdtemp;
+         break;
+
       case schema_concentric_2_6:
          outers->rotation = ss->outer.srotation;
          inners[0].rotation = ss->outer.srotation;   // Yes, this looks wrong, but it isn't.
@@ -3515,27 +3523,6 @@ void merge_table::initialize()
 }
 
 
-const merge_table::concmerge_thing *merge_table::lookup(setup_kind res1k,
-                                                        setup_kind res2k,
-                                                        unsigned int rotreject,
-                                                        uint32 mask1,
-                                                        uint32 mask2)
-{
-   uint32 hash_num = ((res1k + (5*res2k)) * 25) & (NUM_MERGE_HASH_BUCKETS-1);
-
-   const concmerge_thing *result;
-
-   for (result = merge_hash_tables[hash_num] ; result ; result = result->next) {
-      if (res1k == result->k1 &&
-          res2k == result->k2 &&
-          (!(rotreject & result->rotmask)) &&
-          (mask1 & result->m1) == 0 &&
-          (mask2 & result->m2) == 0)
-         return result;
-   }
-   return (const concmerge_thing *) 0;
-}
-
 
 // This overwrites its first argument setup.
 extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL
@@ -3545,7 +3532,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
    setup outer_inners[2];
    setup *res1, *res2;
    uint32 rotmaskreject;
-   const merge_table::concmerge_thing *the_map;
    uint32 mask1, mask2;
    int reinstatement_rotation;
    bool rose_from_dead = false;
@@ -3678,200 +3664,235 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
 
    rotmaskreject = (1<<r);
    if (action != merge_without_gaps) rotmaskreject |= 0x10;
+   if (action == merge_without_gaps) rotmaskreject |= 0x400;
    if (action == merge_strict_matrix || action == merge_strict_matrix_but_colliding_merge) rotmaskreject |= 0x20;
    if (!perp_2x4_1x8) rotmaskreject |= 0x40;
    if (!perp_2x4_ptp) rotmaskreject |= 0x200;
    if (action == merge_c1_phantom_real) rotmaskreject |= 0x80;
    if (orig_action == merge_after_dyp) rotmaskreject |= 0x100;
 
-   the_map = merge_table::lookup(res1->kind,
-                                 res2->kind,
-                                 rotmaskreject,
-                                 mask1,
-                                 mask2);
+   {
+      setup_kind res1k = res1->kind;
+      setup_kind res2k = res2->kind;
+      unsigned int rotreject = rotmaskreject;
 
-   if (the_map) goto merge_concentric;
+      uint32 hash_num = ((res1k + (5*res2k)) * 25) & (merge_table::NUM_MERGE_HASH_BUCKETS-1);
 
-   if (res1->kind == s2x4 && res2->kind == s2x4 && (r&1)) {
-      bool going_to_stars;
-      bool going_to_o;
-      bool go_to_4x4_anyway;
-      bool conflict_at_4x4;
-      bool action_suggests_4x4;
+      const merge_table::concmerge_thing *the_map = merge_table::merge_hash_tables[hash_num];
 
-      conflict_at_4x4 = (
-         (res2->people[1].id1 & res1->people[6].id1) |
-         (res2->people[2].id1 & res1->people[1].id1) |
-         (res2->people[5].id1 & res1->people[2].id1) |
-         (res2->people[6].id1 & res1->people[5].id1)) != 0;
+      bool loop_is_still_active = true;
 
-      going_to_stars =
-         ((mask1 == 0x33) && (mask2 == 0xCC)) ||
-         ((mask1 == 0xCC) && (mask2 == 0x33));
-      going_to_o = ((mask1 | mask2) & 0x66) == 0;
-      go_to_4x4_anyway = (mask1 == 0x99) || (mask2 == 0x99);
+   herestheloop:
 
-      // This stuff affects tests t33, t35, and vg06.  The point is that,
-      // if we have two groups do calls in distorted setups out of a 4x4,
-      // and each group goes to what amounts to a 1x4 with a shear in the
-      // middle, then we want either stars or a C1 phantom, as needed.
-      // but if the two sets of people are more random (e.g. the messy
-      // couple up in vg06), we want a pinwheel (or whatever) on a 4x4.
-      // Of course, if the action is merge_strict_matrix, we always go to
-      // a 4x4 if possible.
+      if (!the_map) goto ran_off_end;
 
-      action_suggests_4x4 =
-         action == merge_strict_matrix ||
-         action == merge_strict_matrix_but_colliding_merge ||
-         (action == merge_without_gaps &&
-          ((mask1 != 0x33 && mask1 != 0xCC) || (mask2 != 0x33 && mask2 != 0xCC)));
+      if (res1k == the_map->k1 &&
+          res2k == the_map->k2 &&
+          (!(rotreject & the_map->rotmask)) &&
+          (mask1 & the_map->m1) == 0 &&
+          (mask2 & the_map->m2) == 0) {
 
-      if ((action_suggests_4x4 && !going_to_stars && !conflict_at_4x4) ||
-          go_to_4x4_anyway || going_to_o) {
-         static const veryshort matrixmap1[8] = {14, 3, 7, 5, 6, 11, 15, 13};
-         static const veryshort matrixmap2[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-         // Make this an instance of expand_setup.
-         result->kind = s4x4;
-         result->clear_people();
-         scatter(result, res1, matrixmap1, 7, 011);
-         install_scatter(result, 8, matrixmap2, res2, 0);
+         if (the_map->swap_setups & 1) {
+            setup *temp = res2;
+            res2 = res1;
+            res1 = temp;
+            r = -r;
+         }
+
+         goto merge_concentric;
       }
-      else {
-         static const veryshort phanmap1[8] = {4, 6, 11, 9, 12, 14, 3, 1};
-         static const veryshort phanmap2[8] = {0, 2, 7, 5, 8, 10, 15, 13};
-         uint32 t1 = mask2 & 0x33;
-         uint32 t2 = mask2 & 0xCC;
-         uint32 t3 = mask1 & 0x33;
-         uint32 t4 = mask1 & 0xCC;
 
-         result->kind = s_c1phan;
-         result->clear_people();
-         scatter(result, res1, phanmap1, 7, 011);
-         scatter(result, res2, phanmap2, 7, 0);
+   continue_the_loop:
 
-         // See if we have a "classical" C1 phantom setup, and give the appropriate warning.
-         if (action != merge_c1_phantom_real) {
-            if ((t1 | t3) == 0 || (t2 | t4) == 0)
-               warn(warn__check_c1_phan);
-            else if ((t1 | t4) == 0 || (t2 | t3) == 0)
-               warn(warn__check_c1_stars);
-            else
-               warn(warn__check_gen_c1_stars);
+      the_map = the_map->next;
+      goto herestheloop;
+
+   ran_off_end:
+
+      if (res1->kind == s2x4 && res2->kind == s2x4 && (r&1)) {
+         bool going_to_stars;
+         bool going_to_o;
+         bool go_to_4x4_anyway;
+         bool conflict_at_4x4;
+         bool action_suggests_4x4;
+
+         conflict_at_4x4 = (
+                            (res2->people[1].id1 & res1->people[6].id1) |
+                            (res2->people[2].id1 & res1->people[1].id1) |
+                            (res2->people[5].id1 & res1->people[2].id1) |
+                            (res2->people[6].id1 & res1->people[5].id1)) != 0;
+
+         going_to_stars =
+            ((mask1 == 0x33) && (mask2 == 0xCC)) ||
+            ((mask1 == 0xCC) && (mask2 == 0x33));
+         going_to_o = ((mask1 | mask2) & 0x66) == 0;
+         go_to_4x4_anyway = (mask1 == 0x99) || (mask2 == 0x99);
+
+         // This stuff affects tests t33, t35, and vg06.  The point is that,
+         // if we have two groups do calls in distorted setups out of a 4x4,
+         // and each group goes to what amounts to a 1x4 with a shear in the
+         // middle, then we want either stars or a C1 phantom, as needed.
+         // but if the two sets of people are more random (e.g. the messy
+         // couple up in vg06), we want a pinwheel (or whatever) on a 4x4.
+         // Of course, if the action is merge_strict_matrix, we always go to
+         // a 4x4 if possible.
+
+         action_suggests_4x4 =
+            action == merge_strict_matrix ||
+            action == merge_strict_matrix_but_colliding_merge ||
+            (action == merge_without_gaps &&
+             ((mask1 != 0x33 && mask1 != 0xCC) || (mask2 != 0x33 && mask2 != 0xCC)));
+
+         if ((action_suggests_4x4 && !going_to_stars && !conflict_at_4x4) ||
+             go_to_4x4_anyway || going_to_o) {
+            static const veryshort matrixmap1[8] = {14, 3, 7, 5, 6, 11, 15, 13};
+            static const veryshort matrixmap2[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+            // Make this an instance of expand_setup.
+            result->kind = s4x4;
+            result->clear_people();
+            scatter(result, res1, matrixmap1, 7, 011);
+            install_scatter(result, 8, matrixmap2, res2, 0);
+         }
+         else {
+            static const veryshort phanmap1[8] = {4, 6, 11, 9, 12, 14, 3, 1};
+            static const veryshort phanmap2[8] = {0, 2, 7, 5, 8, 10, 15, 13};
+            uint32 t1 = mask2 & 0x33;
+            uint32 t2 = mask2 & 0xCC;
+            uint32 t3 = mask1 & 0x33;
+            uint32 t4 = mask1 & 0xCC;
+
+            result->kind = s_c1phan;
+            result->clear_people();
+            scatter(result, res1, phanmap1, 7, 011);
+            scatter(result, res2, phanmap2, 7, 0);
+
+            // See if we have a "classical" C1 phantom setup, and give the appropriate warning.
+            if (action != merge_c1_phantom_real) {
+               if ((t1 | t3) == 0 || (t2 | t4) == 0)
+                  warn(warn__check_c1_phan);
+               else if ((t1 | t4) == 0 || (t2 | t3) == 0)
+                  warn(warn__check_c1_stars);
+               else
+                  warn(warn__check_gen_c1_stars);
+            }
+         }
+         goto final_getout;
+      }
+      else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 &&
+               (mask1 & 0xC) == 0 && (mask2 & 0xC) == 0) {
+         (void) copy_rot(res2, 0, res2, 0, 011);
+         (void) copy_rot(res2, 1, res2, 1, 011);
+         res2->rotation = 3;
+         the_map = &merge_table::map_tgl4l;
+         r = 1;
+         loop_is_still_active = false;
+         goto merge_concentric;
+      }
+      else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 &&
+               (mask1 & 0x3) == 0 && (mask2 & 0x3) == 0) {
+         res1->swap_people(0, 2);
+         res1->swap_people(1, 3);
+         res1->kind = s2x2;
+         canonicalize_rotation(res1);
+         res2->swap_people(0, 2);
+         res2->swap_people(1, 3);
+         the_map = &merge_table::map_tgl4b;
+         r = 0;
+         loop_is_still_active = false;
+         goto merge_concentric;
+      }
+      else if (res2->kind == s3x4 && res1->kind == s2x2 && ((mask2 & 06060) == 0)) {
+         the_map = &merge_table::map_2234b;
+         warn((mask2 & 06666) ? warn__check_4x4 : warn__check_butterfly);
+         loop_is_still_active = false;
+         goto merge_concentric;
+      }
+
+      // The only remaining hope is that the setups match and we can blindly combine them.
+      // Our 180 degree rotation wouldn't work for triangles.
+
+      brute_force_merge(res1, res2, action, result);
+      goto final_getout;
+
+   merge_concentric:
+
+      if (the_map->conc_type == schema_recenter) {
+         // ***** Special thing -- watch for collisions.
+
+         if (loop_is_still_active) {
+            for (i=0; i<=attr::slimit(res1); i++) {
+               if (res1->people[i].id1 != 0 && res2->people[the_map->innermap[i]].id1 != 0)
+                  goto continue_the_loop;
+            }
          }
       }
-      goto final_getout;
-   }
-   else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 &&
-            (mask1 & 0xC) == 0 && (mask2 & 0xC) == 0) {
-      (void) copy_rot(res2, 0, res2, 0, 011);
-      (void) copy_rot(res2, 1, res2, 1, 011);
-      res2->rotation = 3;
-      the_map = &merge_table::map_tgl4l;
-      r = 1;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 &&
-            (mask1 & 0x3) == 0 && (mask2 & 0x3) == 0) {
-      res1->swap_people(0, 2);
-      res1->swap_people(1, 3);
-      res1->kind = s2x2;
-      canonicalize_rotation(res1);
-      res2->swap_people(0, 2);
-      res2->swap_people(1, 3);
-      the_map = &merge_table::map_tgl4b;
-      r = 0;
-      goto merge_concentric;
-   }
-   else if (res2->kind == s3x4 && res1->kind == s2x2 && ((mask2 & 06060) == 0)) {
-      the_map = &merge_table::map_2234b;
-      warn((mask2 & 06666) ? warn__check_4x4 : warn__check_butterfly);
-      goto merge_concentric;
-   }
 
-   // The only remaining hope is that the setups match and we can blindly combine them.
-   // Our 180 degree rotation wouldn't work for triangles.
-
-   brute_force_merge(res1, res2, action, result);
-   goto final_getout;
-
- merge_concentric:
-
-   if (the_map->swap_setups & 1) {
-      setup *temp = res2;
-      res2 = res1;
-      res1 = temp;
-      r = -r;
-   }
-
-   rot = (r & 3) * 011;
-
-   int outer_elongation;
-
-   if (the_map->swap_setups & 8)
-      outer_elongation = 3;
-   else
-      outer_elongation = ((res2->rotation ^ (the_map->swap_setups >> 1)) & 1) + 1;
-
-   warn(the_map->warning);
-
-   if (the_map->conc_type == schema_nothing) {
-      *result = *res2;
-      goto merge_merge;
-   }
-   else if (the_map->conc_type == schema_by_array) {
-      *result = *res2;
-      result->kind = the_map->innerk;
-      canonicalize_rotation(result);
-      goto merge_merge;
-   }
-   else if (the_map->conc_type == schema_matrix) {
-      *result = *res2;
-      result->rotation += the_map->orot;
-      result->kind = the_map->innerk;
-      result->clear_people();
-      scatter(result, res2, the_map->outermap, attr::slimit(res2),
-              ((-the_map->orot) & 3) * 011);
-      r -= the_map->orot;
       rot = (r & 3) * 011;
-      goto merge_merge;
-   }
 
-   rot = 0;
-   res2->kind = the_map->outerk;
-   if (the_map->orot) {
-      res2->rotation++;
-      rot = 033;
-   }
-   outer_inners[0] = *res2;
-   outer_inners[0].clear_people();
-   gather(&outer_inners[0], res2, the_map->outermap, attr::slimit(res2), rot);
-   canonicalize_rotation(&outer_inners[0]);
+      int outer_elongation;
 
-   rot = 0;
-   res1->kind = the_map->innerk;
-   if (the_map->irot) {
-      res1->rotation++;
-      rot = 033;
-   }
-   outer_inners[1] = *res1;
-   outer_inners[1].clear_people();
-   gather(&outer_inners[1], res1, the_map->innermap, attr::slimit(res1), rot);
-   canonicalize_rotation(&outer_inners[1]);
-   normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, 0, result);
-   goto final_getout;
+      if (the_map->swap_setups & 8)
+         outer_elongation = 3;
+      else
+         outer_elongation = ((res2->rotation ^ (the_map->swap_setups >> 1)) & 1) + 1;
 
-   merge_merge:
+      warn(the_map->warning);
 
-   {
-      collision_collector CC(action >= merge_c1_phantom && !(the_map->swap_setups & 4));
-      CC.note_prefilled_result(result);
+      if (the_map->conc_type == schema_nothing || the_map->conc_type == schema_recenter) {
+         *result = *res2;
+      }
+      else if (the_map->conc_type == schema_by_array) {
+         *result = *res2;
+         result->kind = the_map->innerk;
+         canonicalize_rotation(result);
+      }
+      else if (the_map->conc_type == schema_matrix) {
+         *result = *res2;
+         result->rotation += the_map->orot;
+         result->kind = the_map->innerk;
+         result->clear_people();
+         scatter(result, res2, the_map->outermap, attr::slimit(res2),
+                 ((-the_map->orot) & 3) * 011);
+         r -= the_map->orot;
+         rot = (r & 3) * 011;
+      }
+      else {
+         rot = 0;
+         res2->kind = the_map->outerk;
+         if (the_map->orot) {
+            res2->rotation++;
+            rot = 033;
+         }
+         outer_inners[0] = *res2;
+         outer_inners[0].clear_people();
+         gather(&outer_inners[0], res2, the_map->outermap, attr::slimit(res2), rot);
+         canonicalize_rotation(&outer_inners[0]);
 
-      for (i=0; i<=attr::slimit(res1); i++) {
-         if (res1->people[i].id1)
-            CC.install_with_collision(result, the_map->innermap[i], res1, i, rot);
+         rot = 0;
+         res1->kind = the_map->innerk;
+         if (the_map->irot) {
+            res1->rotation++;
+            rot = 033;
+         }
+         outer_inners[1] = *res1;
+         outer_inners[1].clear_people();
+         gather(&outer_inners[1], res1, the_map->innermap, attr::slimit(res1), rot);
+         canonicalize_rotation(&outer_inners[1]);
+         normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, 0, result);
+         goto final_getout;
       }
 
-      CC.fix_possible_collision(result);
+      {
+         collision_collector CC(action >= merge_c1_phantom && !(the_map->swap_setups & 4));
+         CC.note_prefilled_result(result);
+
+         for (i=0; i<=attr::slimit(res1); i++) {
+            if (res1->people[i].id1)
+               CC.install_with_collision(result, the_map->innermap[i], res1, i, rot);
+         }
+
+         CC.fix_possible_collision(result);
+      }
    }
 
  final_getout:
@@ -4475,6 +4496,10 @@ extern void inner_selective_move(
    if (indicator == selective_key_plain ||
        indicator == selective_key_plain_from_id_bits ||
        indicator == selective_key_plain_no_live_subsets) {
+
+      if (selector_to_use == selector_ctrdmd)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+
       action = normalize_before_merge;
       if (others <= 0 && sizem1 == 3) {
          switch (selector_to_use) {
@@ -4908,7 +4933,7 @@ extern void inner_selective_move(
                   goto do_concentric_ends;
             }
          }
-         else if (ss->kind != s2x7) {    // Default action, but not if 2x7.
+         else if (ss->kind != s2x7 && ss->kind != sd2x7) {    // Default action, but not if 2x7 or d2x7.
             schema = schema_concentric_6_2;
             if (selector_to_use == selector_center6)
                goto do_concentric_ctrs;
@@ -5240,10 +5265,18 @@ back_here:
                lilss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
             if (key == LOOKUP_Z) {
-               if (thislivemask == 066)
-                  lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
-               else if (thislivemask == 033)
-                  lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
+               if (fixp->outk == sd2x7) {
+                  if (thislivemask == 0x060C)
+                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
+                  else if (thislivemask == 0x0C18)
+                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
+               }
+               else {
+                  if (thislivemask == 066)
+                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
+                  else if (thislivemask == 033)
+                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
+               }
             }
 
             update_id_bits(lilss);
@@ -5479,7 +5512,15 @@ back_here:
          // There don't seem to be any generally recognized words that one says
          // to cause this to happen.  We hope the dancers will know what to do.
 
-         if (feet_warning && fixp->outk != s4x4) warn(warn__adjust_to_feet);
+         // But if the overall call wasn't a shape-changer, *do* give the warning.
+         // That is, the call performed on the little setups was a shape-changer,
+         // but they nevertheless went back to spots in the same larger setup.
+         // Except in 4x4's.  They are just too unpredictable.  See t36t, t37t, t50t.
+
+         if (feet_warning &&
+             fixp->outk != s4x4 &&
+             (fixp->outk == kk || (fixp->outk != s3x4 && fixp->outk != sd2x7)))
+            warn(warn__adjust_to_feet);
 
        fooble:
 

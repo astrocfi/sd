@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <29 Aug 2006 wba>
+@c Time-stamp: <18 Nov 2006 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.81
-@set title2 Database version = 36.81 format = 252
+@set title1 RELEASE NOTES FOR VERSION 37.0
+@set title2 Database version = 37.0 format = 255
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.0::
 * 36.81::
 * 36.8::
 * 36.7::
@@ -51,7 +52,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.81, Top, (dir)
+@node Intro, 37.0, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -62,11 +63,51 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2006 William B. Ackerman
 @sp 3
 @menu
-* 36.81::               Changes in the current version
+* 37.0::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.81, 36.8, Intro, Top
+@node 37.0, 36.81, Intro, Top
+@unnumberedsec Version 37.0 changes
+
+The call @strong{invert} as a tagging call (as in @strong{invert your neighbor})
+was moved from C3X to C3A.
+
+There is actually a significant improvement to the reconciler.  Instead of just
+inserting calls at a specified point, it can replace a range of calls in the
+existing sequence.  In addition to the commands @strong{raise reconcile point}
+and @strong{lower reconcile point}, there are new commands @strong{grow reconcile region}
+and @strong{shrink reconcile region}.  These manipulate the size of the reconcile
+region.  When this region has a nonzero size, it is indicated by two dotted lines
+on the display.  The reconciler will search for a call or short sequence of calls that
+replace the region between the dotted lines.
+
+One can do @strong{triple diamonds circulate} without saying "diamond" a second time.
+
+The program is much better about not adding extra text such as
+@strong{interlocked diamonds, diamond circulate}.  It will still use it
+for things like @strong{interlocked diamonds, diamond as couples 1/4 right}.
+
+The call @strong{wheel and spread} now gives preference to a one-faced line
+as its starting setup when it is ambiguous.
+
+The call @strong{triple cross} can be done in certain parallelograms.
+
+The call @strong{single scoot and trade} now has 3 explicit parts.
+
+Certain obscure calls have been moved to the level C4X.  Calls on levels C3X and C4X
+are simply not allowed at levels C3 or C4.  The level must be set explicitly.
+
+It is now permissible for the 2nd and 4th parts of the call @strong{reset} to be
+be done as a partner hinge instead of an arm turn.
+
+The program has a somewhat better idea about what is supposed to happen on a
+@strong{run the wheel} in a distorted setup.
+
+The printing of commas in things like @strong{initially phantom tandem} is more sensible.
+
+@c ************
+@node 36.81, 36.8, 37.0, Top
 @unnumberedsec Version 36.81 changes
 
 The call @strong{invert} as a tagging call (as in @strong{invert your neighbor})

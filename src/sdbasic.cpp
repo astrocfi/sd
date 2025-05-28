@@ -4192,7 +4192,8 @@ foobar:
 
          setup linetemp;
          setup qtagtemp;
-         setup_kind k = try_to_expand_dead_conc(*ss, linetemp, qtagtemp);
+         setup dmdtemp;
+         setup_kind k = try_to_expand_dead_conc(*ss, linetemp, qtagtemp, dmdtemp);
 
          if (k == s1x4) {
             if ((!(newtb & 010) || assoc(b_1x8, &linetemp, calldeflist)) &&

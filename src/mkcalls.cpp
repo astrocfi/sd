@@ -126,6 +126,8 @@ int begin_sizes[] = {
    12,         /* b_6x2 */
    14,         /* b_2x7 */
    14,         /* b_7x2 */
+  14,          /* b_d2x7 */
+  14,          /* b_d7x2 */
    18,         /* b_2x9 */
    18,         /* b_9x2 */
    12,         /* b_d3x4 */
@@ -514,6 +516,8 @@ char *sstab[] = {
    "6x2",
    "2x7",
    "7x2",
+   "d2x7",
+   "d7x2",
    "2x9",
    "9x2",
    "d3x4",
@@ -686,6 +690,7 @@ char *estab[] = {
    "3x4",
    "2x6",
    "2x7",
+   "d2x5",
    "2x9",
    "d3x4",
    "???",
@@ -889,6 +894,7 @@ char *schematab[] = {
    "nulldefine_noroll",
    "matrix",
    "partnermatrix",
+   "partnerpartialmatrix",
    "rolldefine",
    "recenter",
    "seq",
@@ -965,6 +971,7 @@ char *qualtab[] = {
    "ctr_pts_lh",
    "extend_inroutl",
    "extend_inloutr",
+   "said_diamond",
    "said_triangle",
    "didnt_say_triangle",
    "occupied_as_stars",
@@ -1376,8 +1383,10 @@ char *predtab[] = {
    "1x2_beau_or_miniwave",
    "1x2_beau_miniwave_or_warn",
    "1x2_beau_miniwave_for_breaker",
+   "1x2_beau_miniwave_or_ok",
    "can_swing_left",
    "1x4_wheel_and_deal",
+   "1x4_wheel_and_deal_or_1fl",
    "1x6_wheel_and_deal",
    "1x8_wheel_and_deal",
    "cycle_and_wheel_1",
@@ -2716,6 +2725,7 @@ int main(int argc, char *argv[])
          break;
       case schema_matrix:
       case schema_partner_matrix:
+      case schema_partner_partial_matrix:
          matrixflags = 0;
 
          for (;;) {     // Get matrix call options.

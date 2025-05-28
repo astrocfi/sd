@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 252
+#define DATABASE_FORMAT_VERSION 255
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -251,12 +251,11 @@ enum {
 };
 
 
-// BEWARE!!  This list must track the table "leveltab" in mkcalls.c .
-// BEWARE!!  This list must track the table "getout_strings" in sdtables.c .
-// BEWARE!!  This list must track the table "old_filename_strings" in sdtables.c .
-// BEWARE!!  This list must track the table "filename_strings" in sdtables.c .
-// BEWARE!!  This list must track the table "level_threshholds" in sdtables.c .
-// BEWARE!!  This list must track the table "higher_acceptable_level" in sdtables.c .
+// BEWARE!!  This list must track the table "leveltab" in mkcalls.cpp .
+// BEWARE!!  This list must track the table "getout_strings" in sdtables.cpp .
+// BEWARE!!  This list must track the table "old_filename_strings" in sdtables.cpp .
+// BEWARE!!  This list must track the table "filename_strings" in sdtables.cpp .
+// BEWARE!!  This list must track the table "level_threshholds" in sdtop.cpp .
 
 enum dance_level {
    l_mainstream,
@@ -348,6 +347,7 @@ enum setup_kind {
    s3x4,
    s2x6,
    s2x7,
+   sd2x7,
    s2x9,
    s_d3x4,
    s1p5x8,   // internal use only
@@ -503,6 +503,8 @@ enum begin_kind {
    b_6x2,
    b_2x7,
    b_7x2,
+   b_d2x7,
+   b_d7x2,
    b_2x9,
    b_9x2,
    b_d3x4,
@@ -720,6 +722,7 @@ enum call_restriction {
    cr_ctr_pts_lh,          // Qualifier only.
    cr_extend_inroutl,      // Qualifier only.
    cr_extend_inloutr,      // Qualifier only.
+   cr_said_dmd,            // Qualifier only.
    cr_said_tgl,            // Qualifier only.
    cr_didnt_say_tgl,       // Qualifier only.
    cr_occupied_as_stars,   // Qualifier only.
@@ -917,6 +920,7 @@ enum calldef_schema {
    schema_nothing_noroll,
    schema_matrix,
    schema_partner_matrix,
+   schema_partner_partial_matrix,
    schema_roll,
    schema_recenter,
    schema_sequential,            // All after this point are sequential.

@@ -2834,7 +2834,7 @@ bool iofull::get_call_command(uims_reply *reply_p)
    else {
       // Reject off-level concept accelerator key presses.
       if (!allowing_all_concepts && my_reply == ui_concept_select &&
-          user_match.match.concept_ptr->level > higher_acceptable_level[calling_level])
+          user_match.match.concept_ptr->level > calling_level)
          goto startover;
 
       call_conc_option_state save_stuff = user_match.match.call_conc_options;

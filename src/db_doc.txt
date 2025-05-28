@@ -1251,6 +1251,20 @@ d2x5        |_____|     |     |_____|
                   |_____|_____|
 
 
+
+                          _____ _____
+              _____ _____|     |     |_____ _____
+             |     |     |  2  | 11  |     |     |
+             |  0  |  1  |_____|_____|  5  |  6  |
+d2x7         |_____|_____|     |     |_____|_____|
+             |     |     |  3  | 10  |     |     |
+             | 13  | 12  |_____|_____|  8  |  7  |
+             |_____|_____|     |     |_____|_____|
+                         |  4  |  9  |
+                         |_____|_____|
+
+
+
                          _____ _____
                         |     |     |
                         |  0  |  1  |
@@ -2648,6 +2662,11 @@ columns_miniwave
       person is a phantom) it issues the warning
       "If in doubt, assume a normal hinge." and returns TRUE.
 
+1x2_beau_miniwave_or_ok
+      This is the same as "1x2_beau_or_miniwave", except that, if it can't
+      decide what to do (no assumption, this person is a belle, and other
+      person is a phantom) it simply returns TRUE.
+
 can_swing_left
       applies to 1x3dmd only.  People are required to be in "normal"
       diamond-like orientation.  That is, the center 2 must be a line
@@ -2666,8 +2685,14 @@ can_swing_left
                setup 1x4 2x2 restriction forbidden couples_only
       It returns TRUE if this person is on the beau-side couple of the line.
       If this person is on the belle-side couple, it returns TRUE if the line
-      is two-faced, and FALSE if it is one-faced.  It raises an error if there
-      are no people on the other side and hence it can't tell.
+      is two-faced, and FALSE if it is one-faced.  If there are no people on
+      the other side and hence it can't tell, this raises a warning and returns
+      TRUE.
+
+1x4_wheel_and_deal_or_1fl
+      This is like 1x4_wheel_and_deal, but, in the case of belle-side people
+      for which it can't tell, it opts for a one-faced line and does not
+      raise a warning.
 
 1x6_wheel_and_deal
       applies to 1x6 or 2x6 lines only.  This implements the decision necessary

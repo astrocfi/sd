@@ -739,8 +739,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
    bool allow_deferred_concept = true;
    parse_block *deferred_concept = (parse_block *) 0;
    int deferred_concept_paren = 0;
-   int comma_after_next_concept = 0;    /* 1 for comma, 2 for the word "all". */
-   int did_comma = 0;                   /* Same as comma_after_next_concept. */
+   int comma_after_next_concept = 0;    // 1 for comma, 2 for the word "all", 5 to skip an extra if it's "tandem".
+   int did_comma = 0;                   // 1 for comma, 2 for the word "all", 5 to skip an extra if it's "tandem".
    bool did_concept = false;
    bool last_was_t_type = false;
    bool last_was_l_type = false;
@@ -773,7 +773,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          // This is a concept.
 
          bool force = false;
-         int request_comma_after_next_concept = 0;       // Same as comma_after_next_concept.
+         // 1 for comma, 2 for the word "all", 3 to skip an extra if it's "tandem".
+         int request_comma_after_next_concept = 0;
 
          // Some concepts look better with a comma after them.
 
@@ -1063,19 +1064,26 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                }
                else if (k == concept_so_and_so_only &&
                         ((selective_key) item->arg1) == selective_key_work_concept) {
-                  /* "<ANYONE> WORK" */
-                  /* This concept requires the word "all" after the following concept. */
+                  // "<ANYONE> WORK"
+                  // This concept requires the word "all" after the following concept.
                   request_comma_after_next_concept = 2;
+               }
+               else if (k == concept_c1_phantom &&
+                        comma_after_next_concept == 1 &&
+                        next_cptr &&
+                        (next_cptr->concept->kind == concept_tandem ||
+                         next_cptr->concept->kind == concept_frac_tandem)) {
+                  comma_after_next_concept = 5;
                }
 
                writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
                request_final_space = true;
             }
 
-            /* For some concepts, we still permit the "defer" stuff.  But don't do it
-               if others are doing the call, because that would lead to
-               "<anyone> work 1-1/2, swing thru" turning into
-               "<anyone> work swing thru 1-1/2". */
+            // For some concepts, we still permit the "defer" stuff.  But don't do it
+            // if others are doing the call, because that would lead to
+            // "<anyone> work 1-1/2, swing thru" turning into
+            // "<anyone> work swing thru 1-1/2".
 
             if ((k != concept_so_and_so_only || item->arg2) &&
                 k != concept_centers_or_ends &&
@@ -1092,7 +1100,11 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff(",");
             request_final_space = true;
          }
+         else if (comma_after_next_concept == 5) {
+            request_comma_after_next_concept = 1;
+         }
 
+         // 1 for comma, 2 for the word "all", 3 to skip an extra if it's "tandem".
          did_comma = comma_after_next_concept;
 
          if (comma_after_next_concept == 3)
@@ -1126,8 +1138,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          }
       }
       else {
-         /* This is a "marker", so it has a call, perhaps with a selector and/or number.
-            The call may be null if we are printing a partially entered line.  Beware. */
+         // This is a "marker", so it has a call, perhaps with a selector and/or number.
+         // The call may be null if we are printing a partially entered line.  Beware.
 
          parse_block *sub1_ptr;
          parse_block *sub2_ptr;
@@ -2198,7 +2210,7 @@ static selector_kind translate_selector_permutation2(uint32 x)
 // Otherwise, "1" bit says at
 // least one selector changed.  Zero means nothing changed.
 
-static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
+extern uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 {
    selector_kind z;
    uint32 retval = 0;
@@ -2281,12 +2293,73 @@ static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
    return retval;
 }
 
+// This alters the parse tree in configuration::next_config().command_root.
+extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, uint32 &global_status)
+{
+   // If the setup, population, and facing directions don't match, the
+   // call execution is problematical.  We don't translate selectors.
+   // The operator is responsible for what happens.
 
+   if (nuu->kind != old->kind) {
+      global_status |= 4;
+      return true;
+   }
+
+   uint32 mask = 0777777;
+   uint32 directions1 = 0;
+   uint32 directions2 = 0;
+   uint32 livemask1 = 0;
+   uint32 livemask2 = 0;
+
+   // Find out whether the formations agree, and gather the information
+   // that we need to translate the selectors.
+
+   for (int i=0; i<=attr::slimit(old); i++) {
+      uint32 q = old->people[i].id1;
+      uint32 p = nuu->people[i].id1;
+      uint32 oldmask = mask;
+      uint32 a = (p >> 6) & 3;
+      uint32 b = (q >> 6) & 3;
+
+      livemask1 <<= 1;
+      livemask2 <<= 1;
+      if (p) livemask1 |= 1;
+      if (q) livemask2 |= 1;
+      directions1 = (directions1<<2) | (p&3);
+      directions2 = (directions2<<2) | (q&3);
+
+      if ((p | q) == 0) continue;
+
+      mask |= (b|4) << (a*3 + 18);
+      oldmask ^= mask;     // The bits that changed.
+      // Demand that, if anything changed at all, some new field got
+      // set.  This has the effect of demanding that existing fields
+      // never change, and that only new fields are created or existing
+      // fields are rewritten with their original data.
+      if (oldmask != 0 && (mask & 04444000000) == 0)
+         mask |= 07777000000;  // Raise error.
+      mask &= id_fixer_array[(a<<2) | b];
+   }
+
+   if (directions1 != directions2 || livemask1 != livemask2) {
+      global_status |= 4;
+      return true;
+   }
+
+   // Everything matches.  Translate the selectors.
+
+   // If error happened, be sure everyone knows about it.
+   if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
+
+   global_status |=
+      translate_selector_fields(configuration::next_config().command_root,
+                                (mask << 1) | ((nuu->rotation ^ old->rotation) & 1));
+
+   return false;
+}
 
 void run_program()
 {
-   int i;
-
    global_age = 1;
    no_erase_before_this = 0;
    global_error_flag = (error_flag_type) 0;
@@ -2774,76 +2847,18 @@ void run_program()
                uint32 status = 0;
 
                while (clipboard_size != 0) {
-                  uint32 directions1, directions2, livemask1, livemask2;
-                  parse_block *saved_root;
                   setup *old = &configuration::current_config().state;
                   setup *nuu = &clipboard[clipboard_size-1].state;
-                  uint32 mask = 0777777;
 
                   configuration::next_config() = clipboard[clipboard_size-1];
 
                   // Save the entire parse tree, in case it gets damaged
                   // by an aborted selector replacement.
 
-                  saved_root = copy_parse_tree(configuration::next_config().command_root);
+                  parse_block *saved_root = copy_parse_tree(configuration::next_config().command_root);
 
-                  // If the setup, population, and facing directions don't match, the
-                  // call execution is problematical.  We don't translate selectors.
-                  // The operator is responsible for what happens.
-
-                  if (nuu->kind != old->kind) {
-                     status |= 4;
+                  if (fix_up_call_for_fidelity_test(old, nuu, status))
                      goto doitanyway;
-                  }
-
-                  directions1 = 0;
-                  directions2 = 0;
-                  livemask1 = 0;
-                  livemask2 = 0;
-
-                  // Find out whether the formations agree, and gather the information
-                  // that we need to translate the selectors.
-
-                  for (i=0; i<=attr::slimit(old); i++) {
-                     uint32 q = old->people[i].id1;
-                     uint32 p = nuu->people[i].id1;
-                     uint32 oldmask = mask;
-                     uint32 a = (p >> 6) & 3;
-                     uint32 b = (q >> 6) & 3;
-
-                     livemask1 <<= 1;
-                     livemask2 <<= 1;
-                     if (p) livemask1 |= 1;
-                     if (q) livemask2 |= 1;
-                     directions1 = (directions1<<2) | (p&3);
-                     directions2 = (directions2<<2) | (q&3);
-
-                     if ((p | q) == 0) continue;
-
-                     mask |= (b|4) << (a*3 + 18);
-                     oldmask ^= mask;     // The bits that changed.
-                     // Demand that, if anything changed at all, some new field got
-                     // set.  This has the effect of demanding that existing fields
-                     // never change, and that only new fields are created or existing
-                     // fields are rewritten with their original data.
-                     if (oldmask != 0 && (mask & 04444000000) == 0)
-                        mask |= 07777000000;  // Raise error.
-                     mask &= id_fixer_array[(a<<2) | b];
-                  }
-
-                  if (directions1 != directions2 || livemask1 != livemask2) {
-                     status |= 4;
-                     goto doitanyway;
-                  }
-
-                  // Everything matches.  Translate the selectors.
-
-                  // If error happened, be sure everyone knows about it.
-                  if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
-
-                  status |=
-                     translate_selector_fields(configuration::next_config().command_root,
-                                               (mask << 1) | ((nuu->rotation ^ old->rotation) & 1));
 
                   if (status & 2) {
                      reset_parse_tree(saved_root, configuration::next_config().command_root);

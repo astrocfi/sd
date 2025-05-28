@@ -175,10 +175,6 @@ SOURCE=.\sdtop.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\sdui.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\sdutil.cpp
 # End Source File
 # Begin Source File

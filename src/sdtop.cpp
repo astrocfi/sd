@@ -78,7 +78,6 @@ and the following external variables:
    written_history_items
    no_erase_before_this
    written_history_nopic
-   higher_acceptable_level
    the_topcallflags
    there_is_a_call
    base_calls
@@ -176,27 +175,6 @@ int no_erase_before_this;
    written_history_items, that's OK.  It just means that none of the lines had
    forced pictures. */
 int written_history_nopic;
-
-// This list tells what level calls will be put in the menu and hence made available.
-// In some cases, we make calls available that are higher than the requested level.
-// When we use such a call, a warning is printed.
-//
-// BEWARE!!  This list is keyed to the definition of "dance_level" in database.h .
-dance_level higher_acceptable_level[] = {
-   l_mainstream,
-   l_plus,
-   l_a1,
-   l_a2,
-   l_c1,
-   l_c2,
-   l_c3a,
-   l_c3x,     /* If c3 is given, we allow c3x. */
-   l_c3x,
-   l_c4a,
-   l_c4x,     /* If c4 is given, we allow c4x. */
-   l_c4x,
-   l_dontshow,
-   l_nonexistent_concept};
 
 // This list tells what level calls will be accepted for the "pick level call"
 // operation.  When doing a "pick level call, we don't actually require calls
@@ -358,7 +336,6 @@ void expand::expand_setup(const expand::thing *thing, setup *stuff) THROW_DECL
 extern void update_id_bits(setup *ss)
 {
    int i;
-   uint32 livemask, j;
    const id_bit_table *ptr;
    unsigned short int *face_list = (unsigned short int *) 0;
 
@@ -515,10 +492,9 @@ extern void update_id_bits(setup *ss)
       19, d_south, 10, d_north,
       ~0};
 
-   for (i=0,j=1,livemask=0 ; i<=attr::slimit(ss) ; i++,j<<=1) {
-      if (ss->people[i].id1) livemask |= j;
-      ss->people[i].id2 &= ~BITS_TO_CLEAR;
-   }
+   for (i=0 ; i<=attr::slimit(ss) ; i++) ss->people[i].id2 &= ~BITS_TO_CLEAR;
+
+   uint32 livemask = little_endian_live_mask(ss);
 
    ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
@@ -569,19 +545,39 @@ extern void update_id_bits(setup *ss)
    }
 
 
-   /* Some setups are only recognized for ID bits with certain patterns of population.
-       The bit tables make those assumptions, so we have to use the bit tables
-       only if those assumptions are satisfied. */
+   // Some setups are only recognized for ID bits with certain patterns of population.
+   //  The bit tables make those assumptions, so we have to use the bit tables
+   //  only if those assumptions are satisfied.
 
    switch (ss->kind) {
    case s2x5:
       // We recognize "centers" or "center 4" if they are a Z within the center 6.
       if (livemask == 0x3BDUL || livemask == 0x2F7UL)
          ptr = id_bit_table_2x5_z;
+      // We recognize "center 6"/"outer 2" and "center 2"/"outer 6" if the center 2x3
+      // is fully occupied.
+      else if (livemask == 0x3DEUL || livemask == 0x1EFUL)
+         ptr = id_bit_table_2x5_ctr6;
       break;
    case sd2x5:
+      // We recognize "center 6"/"outer 2" and "center 2"/"outer 6" if the center 2x3
+      // is fully occupied.
+      if (livemask == 0x3DEUL || livemask == 0x3BDUL)
+         ptr = id_bit_table_d2x5_ctr6;
       // We recognize "centers" or "center 4" if they are a Z within the center 6.
-      if (livemask != 0x37BUL && livemask != 0x1EFUL) ptr = (id_bit_table *) 0;
+      else if (livemask != 0x37BUL && livemask != 0x1EFUL)
+         ptr = (id_bit_table *) 0;
+      break;
+   case sd2x7:
+      // We recognize "centers" or "center 4" if they are a Z with outer wings.
+      if (livemask == 0x3C78UL || livemask == 0x0D9BUL)
+         ptr = id_bit_table_d2x7a;
+      else if (livemask == 0x366CUL || livemask == 0x078FUL)
+         ptr = id_bit_table_d2x7b;
+      // Otherwise, the center 6 must be fully occupied, and we
+      // recognize "center 6"/"outer 2" and "center 2"/"outer 6".
+      else if ((livemask & 0x0E1CUL) != 0x0E1CUL)
+         ptr = (id_bit_table *) 0;
       break;
    case s2x6:
       /* **** This isn't really right -- it would allow "outer pairs bingo".
@@ -3134,8 +3130,8 @@ bool check_for_concept_group(
    concept_kind k;
    parse_block *kk;
    bool retval = false;
-   parse_block *parseptr_skip;
-   parse_block *next_parseptr;
+   parse_block *parseptr_skip = (parse_block *) 0;
+   parse_block *next_parseptr = (parse_block *) 0;
 
    parse_block *first_arg = parseptrcopy;
 
@@ -3182,29 +3178,29 @@ bool check_for_concept_group(
 
    final_and_herit_flags junk_concepts;
    junk_concepts.clear_all_herit_and_final_bits();
-   bool skip_a_pair = false;
+   parse_block *skip_a_pair = (parse_block *) 0;
 
    if (k == concept_c1_phantom) {
       // Look for combinations like "phantom tandem".
-      next_parseptr = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+      parse_block *temp = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
-      if ((next_parseptr->concept->kind == concept_tandem ||
-           next_parseptr->concept->kind == concept_frac_tandem) &&
+      if ((temp->concept->kind == concept_tandem ||
+           temp->concept->kind == concept_frac_tandem) &&
           (junk_concepts.test_herit_and_final_bits()) == 0) {
-         skip_a_pair = true;
+         skip_a_pair = temp;
       }
    }
    else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
       // Look for combinations like "mystic triple boxes".
-      next_parseptr = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+      parse_block *temp = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
-      if ((next_parseptr->concept->kind == concept_multiple_lines ||
-           next_parseptr->concept->kind == concept_multiple_diamonds ||
-           next_parseptr->concept->kind == concept_multiple_formations ||
-           next_parseptr->concept->kind == concept_multiple_boxes) &&
-          next_parseptr->concept->arg4 == 3 &&
+      if ((temp->concept->kind == concept_multiple_lines ||
+           temp->concept->kind == concept_multiple_diamonds ||
+           temp->concept->kind == concept_multiple_formations ||
+           temp->concept->kind == concept_multiple_boxes) &&
+          temp->concept->arg4 == 3 &&
           (junk_concepts.test_herit_and_final_bits()) == 0) {
-         skip_a_pair = true;
+         skip_a_pair = temp;
       }
    }
    else if (k == concept_parallelogram ||
@@ -3213,30 +3209,28 @@ bool check_for_concept_group(
              parseptrcopy->concept->arg3 == 0 &&
              parseptrcopy->concept->arg4 == 0)) {
       // Look for combinations like "parallelogram split phantom waves".
-      next_parseptr =
-         process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+      parse_block *temp = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
 
-      if ((next_parseptr->concept->kind == concept_do_phantom_2x4 ||
-           next_parseptr->concept->kind == concept_do_phantom_boxes) &&
-          next_parseptr->concept->arg3 == MPKIND__SPLIT &&
+      if ((temp->concept->kind == concept_do_phantom_2x4 ||
+           temp->concept->kind == concept_do_phantom_boxes) &&
+          temp->concept->arg3 == MPKIND__SPLIT &&
           (junk_concepts.test_herit_and_final_bits()) == 0) {
-         skip_a_pair = true;
+         skip_a_pair = temp;
       }
    }
    else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
       // Look for combinations like "random/initially/echo/nth-part-work <concept>".
-      next_parseptr = parseptr_skip;
-      skip_a_pair = true;
+      skip_a_pair = parseptr_skip;
    }
    else if (k == concept_so_and_so_only &&
             ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
       // Look for combinations like "<anyone> work <concept>".
-      next_parseptr = parseptr_skip;
-      skip_a_pair = true;
+      skip_a_pair = parseptr_skip;
    }
 
    if (skip_a_pair) {
-      parseptrcopy = next_parseptr;
+      parseptrcopy = skip_a_pair;
+      next_parseptr = skip_a_pair;
       retval = true;
       goto try_again;
    }
@@ -3861,6 +3855,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          /* **** FELL THROUGH!!!!!! */
          if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED)) goto good;
          goto bad;
+      case cr_said_dmd:
+         if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_DIAMOND) goto good;
+         goto bad;
       case cr_didnt_say_tgl:
          tt.assump_negate = 1;
          /* **** FALL THROUGH!!!! */
@@ -4349,7 +4346,9 @@ extern void install_rot(setup *resultpeople, int resultplace, const setup *sourc
    uint32 newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) {
-      if (resultplace < 0) fail("This would go into an excessively large matrix.");
+      if (resultplace < 0) fail(resultplace == -2 ?
+                                "Can't do this shape-changing call with this concept." :
+                                "This would go into an excessively large matrix.");
 
       if (resultpeople->people[resultplace].id1 == 0) {
          resultpeople->people[resultplace].id1 = (newperson + rotamount) & ~064;
@@ -4404,18 +4403,22 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
       install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
 }
 
-extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout)
+extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout, setup & dmdout)
 {
    lineout = ss;
    lineout.rotation += lineout.inner.srotation;
    qtagout = ss;
    qtagout.rotation += qtagout.inner.srotation;
+   dmdout = ss;
+   dmdout.rotation += dmdout.inner.srotation;
 
    if (ss.inner.skind == s1x4) {
       static expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
       expand::expand_setup(&exp_conc_1x8, &lineout);
       static expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
       expand::expand_setup(&exp_conc_qtg, &qtagout);
+      static expand::thing exp_conc_dmd = {{1, 2, 5, 6}, 4, s1x4, s3x1dmd, 0};
+      expand::expand_setup(&exp_conc_dmd, &dmdout);
    }
    else if (ss.inner.skind == s2x2) {
       static expand::thing exp_conc_2x2a = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};

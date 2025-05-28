@@ -757,7 +757,6 @@ enum direction_kind {
 //         larger than 36 (NUM_CARDINALS-1) in the "number_fields" word.
 //
 //  (2) The "fraction" field of a "fraction_command".  This also takes four
-
 //         numbers, though there is no direct correspondence with the other
 //         usage described above.  The four numbers are the numerators and
 //         denominators of the starting and ending points of the desired part of
@@ -880,7 +879,7 @@ struct calldefn {
       struct {
          uint32 matrix_flags;
          matrix_def_block *matrix_def_list;
-      } matrix;         // if schema = schema_matrix or schema_partner_matrix
+      } matrix;         // if schema = schema_matrix, schema_partner_matrix, or schema_partner_partial_matrix
       struct {
          int howmanyparts;
          by_def_item *defarray;  // Dynamically allocated, there are "howmanyparts" of them.
@@ -1056,6 +1055,8 @@ enum resolve_command_kind {
    resolve_command_accept,
    resolve_command_raise_rec_point,
    resolve_command_lower_rec_point,
+   resolve_command_grow_rec_region,
+   resolve_command_shrink_rec_region,
    resolve_command_write_this,
    resolve_command_kind_enum_extent    // Not a resolve kind; indicates extent of the enum.
 };
@@ -1792,6 +1793,16 @@ class select {
       fx_f2x5c,
       fx_f2x5d,
       fx_fd2x5d,
+      fx_fd2x7d1,
+      fx_fd2x7d2,
+      fx_fd2x7d3,
+      fx_fd2x7d4,
+      fx_fd2x7q1,
+      fx_fd2x7q2,
+      fx_fd2x7q3,
+      fx_fd2x7q4,
+      fx_fd2x7za,
+      fx_fd2x7zb,
       fx_bghrgla,
       fx_bghrglb,
       fx_shsqtga,
@@ -1835,6 +1846,8 @@ class select {
       fx_d3x4ub2,
       fx_d3x4ub3,
       fx_d3x4ub4,
+      fx_d3x4ub5,
+      fx_d3x4ub6,
       fx_d3x4vl1,
       fx_d3x4vl2,
       fx_d3x4vl3,
@@ -2104,6 +2117,8 @@ class tglmap {
       tglmap1k,
       tglmap2k,
       tglmap2r,
+      tglmapd71,
+      tglmapd72,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
@@ -2157,6 +2172,8 @@ class tglmap {
    static const tglmapkey bdtglmap1[];
    static const tglmapkey bdtglmap2[];
    static const tglmapkey rgtglmap1[];
+   static const tglmapkey d7tglmap1[];
+   static const tglmapkey d7tglmap2[];
 };
 
 
@@ -2300,6 +2317,17 @@ struct coordrec {
 };
 
 
+// Beware!  There are >= tests lying around, so order is important.
+// In particular, sdconc (search for "brute_force_merge" has such tests.
+enum merge_action {
+   merge_strict_matrix,
+   merge_strict_matrix_but_colliding_merge,
+   merge_c1_phantom,
+   merge_c1_phantom_real,
+   merge_after_dyp,
+   merge_without_gaps
+};
+
 class merge_table {
 
  public:
@@ -2346,11 +2374,7 @@ class merge_table {
    static const concmerge_thing map_tgl4b;
    static const concmerge_thing map_2234b;
 
-   static const concmerge_thing *lookup(setup_kind res1k,
-                                        setup_kind res2k,
-                                        unsigned int rotreject,
-                                        uint32 mask1,
-                                        uint32 mask2);
+   friend void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL;
 
    static void initialize();             // In sdconc.
 };
@@ -3427,8 +3451,8 @@ enum {
    CMD_MISC__OFFSET_Z             = 0x00080000UL,
    CMD_MISC__SAID_SPLIT           = 0x00100000UL,
    CMD_MISC__SAID_TRIANGLE        = 0x00200000UL,
-   CMD_MISC__DO_AS_COUPLES        = 0x00400000UL,
-   // spare:                      = 0x00800000UL,
+   CMD_MISC__SAID_DIAMOND         = 0x00400000UL,
+   CMD_MISC__DO_AS_COUPLES        = 0x00800000UL,
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000UL,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000UL,
    CMD_MISC__MUST_SPLIT_VERT      = 0x04000000UL,
@@ -3449,7 +3473,8 @@ enum {
    CMD_MISC3__RESTRAIN_MODIFIERS   = 0x00000008UL,
    CMD_MISC3__META_NOCMD           = 0x00000010UL,
    CMD_MISC3__NO_CHECK_LEVEL       = 0x00000020UL,
-   CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL     // Some kind of "DYP" has happened, setups may be bizarre.
+   CMD_MISC3__DOING_YOUR_PART      = 0x00000040UL,    // Some kind of "DYP" has happened, setups may be bizarre.
+   CMD_MISC3__NEED_DIAMOND         = 0x00000080UL
 };
 
 
@@ -3556,17 +3581,6 @@ enum normalize_action {
    normalize_compress_bigdmd,
    normalize_recenter,
    normalize_never
-};
-
-// Beware!  There are >= tests lying around, so order is important.
-// In particular, sdconc (search for "brute_force_merge" has such tests.
-enum merge_action {
-   merge_strict_matrix,
-   merge_strict_matrix_but_colliding_merge,
-   merge_c1_phantom,
-   merge_c1_phantom_real,
-   merge_after_dyp,
-   merge_without_gaps
 };
 
 
@@ -3964,7 +3978,6 @@ extern SDLIB_API int history_allocation;                            /* in SDTOP 
 extern SDLIB_API int written_history_items;                         /* in SDTOP */
 extern SDLIB_API int no_erase_before_this;                          /* in SDTOP */
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
-extern SDLIB_API dance_level higher_acceptable_level[];             /* in SDTOP */
 extern SDLIB_API uint32 the_topcallflags;                           /* in SDTOP */
 extern SDLIB_API bool there_is_a_call;                              /* in SDTOP */
 
@@ -4092,6 +4105,10 @@ extern const coordrec press_qtag_4dmd2;
 extern const coordrec acc_crosswave;
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
+extern id_bit_table id_bit_table_2x5_ctr6[];                        /* in SDTABLES */
+extern id_bit_table id_bit_table_d2x7a[];                           /* in SDTABLES */
+extern id_bit_table id_bit_table_d2x7b[];                           /* in SDTABLES */
+extern id_bit_table id_bit_table_d2x5_ctr6[];                       /* in SDTABLES */
 extern id_bit_table id_bit_table_2x6_pg[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_bigdmd_wings[];                    /* in SDTABLES */
 extern id_bit_table id_bit_table_bigbone_wings[];                   /* in SDTABLES */
@@ -4450,6 +4467,293 @@ SDLIB_API void create_resolve_menu_title(
 void initialize_getout_tables();
 
 
+/* In SDTOP */
+
+extern void update_id_bits(setup *ss);
+
+// This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
+// Each person occupies 2 bits in the resultant masks.  The "livemask"
+// bits are both on if the person is live.
+extern void big_endian_get_directions(
+   setup *ss,
+   uint32 & directions,
+   uint32 & livemask);
+
+extern void touch_or_rear_back(
+   setup *scopy,
+   bool did_mirror,
+   int callflags1) THROW_DECL;
+
+extern void do_matrix_expansion(
+   setup *ss,
+   uint32 concprops,
+   bool recompute_id) THROW_DECL;
+
+void initialize_sdlib();
+
+extern void crash_print(const char *filename, int linenum) THROW_DECL;
+
+struct skipped_concept_info {
+   parse_block *old_retval;
+   parse_block *skipped_concept;
+   uint32 need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
+   uint32 heritflag;
+   parse_block *concept_with_root;
+   parse_block *result_of_skip;
+   parse_block **root_of_result_of_skip;
+};
+
+extern bool check_for_concept_group(
+   parse_block *parseptrcopy,
+   skipped_concept_info & retstuff,
+   bool want_result_root) THROW_DECL;
+
+NORETURN1 void fail(const char s[]) THROW_DECL NORETURN2;
+
+NORETURN1 void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
+
+NORETURN1 extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
+
+NORETURN1 extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
+
+NORETURN1 void specialfail(const char s[]) THROW_DECL NORETURN2;
+
+extern void warn(warning_index w);
+
+extern restriction_test_result verify_restriction(
+   setup *ss,
+   assumption_thing tt,
+   bool instantiate_phantoms,
+   bool *failed_to_instantiate) THROW_DECL;
+
+extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL;
+
+extern uint32 find_calldef(
+   callarray *tdef,
+   setup *scopy,
+   int real_index,
+   int real_direction,
+   int northified_index) THROW_DECL;
+
+extern void clear_result_flags(setup *z);
+
+inline uint32 rotperson(uint32 n, int amount)
+{ if (n == 0) return 0; else return (n + amount) & ~064; }
+
+inline uint32 rotcw(uint32 n)
+{ if (n == 0) return 0; else return (n + 011) & ~064; }
+
+inline uint32 rotccw(uint32 n)
+{ if (n == 0) return 0; else return (n + 033) & ~064; }
+
+
+inline uint32 little_endian_live_mask(const setup *ss)
+{
+   int i;
+   uint32 j, result;
+   for (i=0, j=1, result = 0; i<=attr::slimit(ss); i++, j<<=1) {
+      if (ss->people[i].id1) result |= j;
+   }
+   return result;
+}
+
+
+inline uint32 or_all_people(const setup *ss)
+{
+   uint32 result = 0;
+
+   for (int i=0 ; i<=attr::slimit(ss) ; i++)
+      result |= ss->people[i].id1;
+
+   return result;
+}
+
+
+inline void setup::clear_person(int place)
+{
+   people[place].id1 = 0;
+   people[place].id2 = 0;
+   people[place].id3 = 0;
+}
+
+inline void setup::suppress_roll(int place)
+{
+   if (people[place].id1)
+      people[place].id1 = (people[place].id1 & (~NROLL_MASK)) | ROLL_IS_M;
+}
+
+inline void setup::suppress_all_rolls()
+{
+   // If we can't determine the setup size, it will be -1,
+   // and the loop below will take no action.
+   for (int k=0; k<=attr::klimit(kind); k++)
+      suppress_roll(k);
+}
+
+
+inline void setup::swap_people(int oneplace, int otherplace)
+{
+   personrec temp = people[otherplace];
+   people[otherplace] = people[oneplace];
+   people[oneplace] = temp;
+}
+
+extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
+
+extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount);
+
+extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
+
+extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount) THROW_DECL;
+
+extern void scatter(setup *resultpeople, const setup *sourcepeople,
+                    const veryshort *resultplace, int countminus1, int rotamount) THROW_DECL;
+
+extern void gather(setup *resultpeople, const setup *sourcepeople,
+                   const veryshort *resultplace, int countminus1, int rotamount);
+
+extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
+                            const setup *sourcepeople, int rot) THROW_DECL;
+
+extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout, setup & dmdout);
+
+extern parse_block *process_final_concepts(
+   parse_block *cptr,
+   bool check_errors,
+   final_and_herit_flags *final_concepts,
+   bool forbid_unfinished_parse,
+   bool only_one) THROW_DECL;
+
+extern void really_skip_one_concept(
+   parse_block *incoming,
+   skipped_concept_info & retstuff) THROW_DECL;
+
+extern bool fix_n_results(int arity,
+                          int goal,
+                          bool reorder_setups_2_and_3,
+                          setup z[],
+                          uint32 & rotstates,
+                          uint32 & pointclip,
+                          uint32 fudgystupidrot) THROW_DECL;
+
+extern bool warnings_are_unacceptable(bool strict);
+
+extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
+     THROW_DECL;
+
+void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
+
+bool check_for_centers_concept(uint32 callflags1_to_examine,
+                               parse_block *parse_scan,
+                               setup_command *the_cmd) THROW_DECL;
+
+void toplevelmove() THROW_DECL;
+
+void finish_toplevelmove() THROW_DECL;
+
+SDLIB_API bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
+
+extern bool do_subcall_query(
+   int snumber,
+   parse_block *parseptr,
+   parse_block **newsearch,
+   bool this_is_tagger,
+   bool this_is_tagger_circcer,
+   call_with_name *orig_call);
+
+extern call_list_kind find_proper_call_list(setup *s);
+
+class fraction_info {
+ public:
+   fraction_info(int n) :
+      m_reverse_order(false),
+      m_instant_stop(99),  // If not 99, says to stop instantly after doing one part,
+                         // and to report (in RESULTFLAG__PART_COMPLETION_BITS bit)
+                         // whether that part was the last part.
+      m_do_half_of_last_part(0),
+      m_do_last_half_of_first_part(0),
+      m_highlimit(n),
+      m_start_point(0),
+      m_end_point(n-1),
+      m_fetch_index(0),
+      m_client_index(0),
+      m_fetch_total(n),
+      m_client_total(n),
+      m_subcall_incr(1)
+      {}
+
+   // This one is in sdmoves.cpp
+   void get_fraction_info(fraction_command frac_stuff,
+                          uint32 callflags1,
+                          revert_weirdness_type doing_weird_revert) THROW_DECL;
+
+   // This one is in sdmoves.cpp
+   uint32 get_fracs_for_this_part();
+
+   // This one is in sdmoves.cpp
+   bool query_instant_stop(uint32 & result_flag_wordmisc) const;
+
+   void demand_this_part_exists()  const THROW_DECL
+      {
+         if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
+            fail("The indicated part number doesn't exist.");
+      }
+
+   void fudge_client_total(int delta)
+      {
+         m_client_total += delta;
+         m_highlimit = m_client_total;
+         m_end_point = m_highlimit-1;
+      }
+
+   bool not_yet_in_active_section()
+      {
+         if (m_reverse_order) {
+            if (m_client_index > m_start_point) return true;
+         }
+         else {
+            if (m_client_index < m_start_point) return true;
+         }
+         return false;
+      }
+
+   bool ran_off_active_section()
+      {
+         if (m_reverse_order) {
+            if (m_client_index < m_end_point) return true;
+         }
+         else {
+            if (m_client_index > m_end_point) return true;
+         }
+         return false;
+      }
+
+   inline bool this_starts_at_beginning()
+      { return
+           m_start_point == 0 &&
+           !m_do_last_half_of_first_part &&
+           !m_reverse_order;
+      }
+
+ public:
+   bool m_reverse_order;
+   int m_instant_stop;
+   bool m_first_call;
+   uint32 m_do_half_of_last_part;
+   uint32 m_do_last_half_of_first_part;
+   int m_highlimit;
+ private:
+   int m_start_point;
+   int m_end_point;
+ public:
+   int m_fetch_index;
+   int m_client_index;
+   int m_fetch_total;
+   int m_client_total;
+   int m_subcall_incr;
+};
+
+
 /* In SDBASIC */
 
 class collision_collector {
@@ -4489,11 +4793,8 @@ public:
          }
       }
 
-   void note_prefilled_result(setup *result)
-      {
-         for (int i=0; i<=attr::slimit(result); i++)
-            if (result->people[i].id1) result_mask |= (1 << i);
-      }
+   void note_prefilled_result(const setup *result)
+      { result_mask = little_endian_live_mask(result); }
 
    void install_with_collision(
       setup *result, int resultplace,
@@ -4783,293 +5084,6 @@ extern void inner_selective_move(
    uint32 modsb1,
    setup *result) THROW_DECL;
 
-/* In SDTOP */
-
-extern void update_id_bits(setup *ss);
-
-// This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
-// Each person occupies 2 bits in the resultant masks.  The "livemask"
-// bits are both on if the person is live.
-extern void big_endian_get_directions(
-   setup *ss,
-   uint32 & directions,
-   uint32 & livemask);
-
-extern void touch_or_rear_back(
-   setup *scopy,
-   bool did_mirror,
-   int callflags1) THROW_DECL;
-
-extern void do_matrix_expansion(
-   setup *ss,
-   uint32 concprops,
-   bool recompute_id) THROW_DECL;
-
-void initialize_sdlib();
-
-extern void crash_print(const char *filename, int linenum) THROW_DECL;
-
-struct skipped_concept_info {
-   parse_block *old_retval;
-   parse_block *skipped_concept;
-   uint32 need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
-   uint32 heritflag;
-   parse_block *concept_with_root;
-   parse_block *result_of_skip;
-   parse_block **root_of_result_of_skip;
-};
-
-extern bool check_for_concept_group(
-   parse_block *parseptrcopy,
-   skipped_concept_info & retstuff,
-   bool want_result_root) THROW_DECL;
-
-NORETURN1 void fail(const char s[]) THROW_DECL NORETURN2;
-
-NORETURN1 void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
-
-NORETURN1 extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
-
-NORETURN1 extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
-
-NORETURN1 void specialfail(const char s[]) THROW_DECL NORETURN2;
-
-extern void warn(warning_index w);
-
-extern restriction_test_result verify_restriction(
-   setup *ss,
-   assumption_thing tt,
-   bool instantiate_phantoms,
-   bool *failed_to_instantiate) THROW_DECL;
-
-extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL;
-
-extern uint32 find_calldef(
-   callarray *tdef,
-   setup *scopy,
-   int real_index,
-   int real_direction,
-   int northified_index) THROW_DECL;
-
-extern void clear_result_flags(setup *z);
-
-inline uint32 rotperson(uint32 n, int amount)
-{ if (n == 0) return 0; else return (n + amount) & ~064; }
-
-inline uint32 rotcw(uint32 n)
-{ if (n == 0) return 0; else return (n + 011) & ~064; }
-
-inline uint32 rotccw(uint32 n)
-{ if (n == 0) return 0; else return (n + 033) & ~064; }
-
-
-inline uint32 little_endian_live_mask(const setup *ss)
-{
-   int i;
-   uint32 j, result;
-   for (i=0, j=1, result = 0; i<=attr::slimit(ss); i++, j<<=1) {
-      if (ss->people[i].id1) result |= j;
-   }
-   return result;
-}
-
-
-inline uint32 or_all_people(const setup *ss)
-{
-   uint32 result = 0;
-
-   for (int i=0 ; i<=attr::slimit(ss) ; i++)
-      result |= ss->people[i].id1;
-
-   return result;
-}
-
-
-inline void setup::clear_person(int place)
-{
-   people[place].id1 = 0;
-   people[place].id2 = 0;
-   people[place].id3 = 0;
-}
-
-inline void setup::suppress_roll(int place)
-{
-   if (people[place].id1)
-      people[place].id1 = (people[place].id1 & (~NROLL_MASK)) | ROLL_IS_M;
-}
-
-inline void setup::suppress_all_rolls()
-{
-   // If we can't determine the setup size, it will be -1,
-   // and the loop below will take no action.
-   for (int k=0; k<=attr::klimit(kind); k++)
-      suppress_roll(k);
-}
-
-
-inline void setup::swap_people(int oneplace, int otherplace)
-{
-   personrec temp = people[otherplace];
-   people[otherplace] = people[oneplace];
-   people[oneplace] = temp;
-}
-
-extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
-
-extern uint32 copy_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount);
-
-extern void install_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
-
-extern void install_rot(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace, int rotamount) THROW_DECL;
-
-extern void scatter(setup *resultpeople, const setup *sourcepeople,
-                    const veryshort *resultplace, int countminus1, int rotamount) THROW_DECL;
-
-extern void gather(setup *resultpeople, const setup *sourcepeople,
-                   const veryshort *resultplace, int countminus1, int rotamount);
-
-extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
-                            const setup *sourcepeople, int rot) THROW_DECL;
-
-extern setup_kind try_to_expand_dead_conc(const setup & ss, setup & lineout, setup & qtagout);
-
-extern parse_block *process_final_concepts(
-   parse_block *cptr,
-   bool check_errors,
-   final_and_herit_flags *final_concepts,
-   bool forbid_unfinished_parse,
-   bool only_one) THROW_DECL;
-
-extern void really_skip_one_concept(
-   parse_block *incoming,
-   skipped_concept_info & retstuff) THROW_DECL;
-
-extern bool fix_n_results(int arity,
-                          int goal,
-                          bool reorder_setups_2_and_3,
-                          setup z[],
-                          uint32 & rotstates,
-                          uint32 & pointclip,
-                          uint32 fudgystupidrot) THROW_DECL;
-
-extern bool warnings_are_unacceptable(bool strict);
-
-extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
-     THROW_DECL;
-
-void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
-
-bool check_for_centers_concept(uint32 callflags1_to_examine,
-                               parse_block *parse_scan,
-                               setup_command *the_cmd) THROW_DECL;
-
-void toplevelmove() THROW_DECL;
-
-void finish_toplevelmove() THROW_DECL;
-
-SDLIB_API bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
-
-extern bool do_subcall_query(
-   int snumber,
-   parse_block *parseptr,
-   parse_block **newsearch,
-   bool this_is_tagger,
-   bool this_is_tagger_circcer,
-   call_with_name *orig_call);
-
-extern call_list_kind find_proper_call_list(setup *s);
-
-class fraction_info {
- public:
-   fraction_info(int n) :
-      m_reverse_order(false),
-      m_instant_stop(99),  // If not 99, says to stop instantly after doing one part,
-                         // and to report (in RESULTFLAG__PART_COMPLETION_BITS bit)
-                         // whether that part was the last part.
-      m_do_half_of_last_part(0),
-      m_do_last_half_of_first_part(0),
-      m_highlimit(n),
-      m_start_point(0),
-      m_end_point(n-1),
-      m_fetch_index(0),
-      m_client_index(0),
-      m_fetch_total(n),
-      m_client_total(n),
-      m_subcall_incr(1)
-      {}
-
-   // This one is in sdmoves.cpp
-   void get_fraction_info(fraction_command frac_stuff,
-                          uint32 callflags1,
-                          revert_weirdness_type doing_weird_revert) THROW_DECL;
-
-   // This one is in sdmoves.cpp
-   uint32 get_fracs_for_this_part();
-
-   // This one is in sdmoves.cpp
-   bool query_instant_stop(uint32 & result_flag_wordmisc) const;
-
-   void demand_this_part_exists()  const THROW_DECL
-      {
-         if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
-            fail("The indicated part number doesn't exist.");
-      }
-
-   void fudge_client_total(int delta)
-      {
-         m_client_total += delta;
-         m_highlimit = m_client_total;
-         m_end_point = m_highlimit-1;
-      }
-
-   bool not_yet_in_active_section()
-      {
-         if (m_reverse_order) {
-            if (m_client_index > m_start_point) return true;
-         }
-         else {
-            if (m_client_index < m_start_point) return true;
-         }
-         return false;
-      }
-
-   bool ran_off_active_section()
-      {
-         if (m_reverse_order) {
-            if (m_client_index < m_end_point) return true;
-         }
-         else {
-            if (m_client_index > m_end_point) return true;
-         }
-         return false;
-      }
-
-   inline bool this_starts_at_beginning()
-      { return
-           m_start_point == 0 &&
-           !m_do_last_half_of_first_part &&
-           !m_reverse_order;
-      }
-
- public:
-   bool m_reverse_order;
-   int m_instant_stop;
-   bool m_first_call;
-   uint32 m_do_half_of_last_part;
-   uint32 m_do_last_half_of_first_part;
-   int m_highlimit;
- private:
-   int m_start_point;
-   int m_end_point;
- public:
-   int m_fetch_index;
-   int m_client_index;
-   int m_fetch_total;
-   int m_client_total;
-   int m_subcall_incr;
-};
-
-
 /* In SDUTIL */
 
 extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
@@ -5097,6 +5111,8 @@ extern void restore_parse_state();
 void string_copy(char **dest, Cstring src);
 void display_initial_history(int upper_limit, int num_pics);
 extern void initialize_parse();
+extern uint32 translate_selector_fields(parse_block *xx, uint32 mask);
+extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, uint32 &global_status);
 void run_program();
 
 /* In SDINIT */

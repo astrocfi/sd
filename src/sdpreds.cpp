@@ -1385,6 +1385,12 @@ static bool x12_beau_or_miniwave(setup *real_people, int real_index,
          return true;
       }
 
+      // But if this was "1x2_beau_miniwave_or_ok", and the other person is a phantom,
+      // we let it pass, and assume a miniwave.
+      if (extra_stuff[0] == 3 && !other_person) {
+         return true;
+      }
+
       if (extra_stuff[0] == 2 && !other_person) {
          return true;
       }
@@ -1456,8 +1462,6 @@ static bool x14_wheel_and_deal(setup *real_people, int real_index,
    else {
       // We are in the belle-side couple.  First, see if an assumption is guiding us.
 
-      int other_people;
-
       switch (real_people->cmd.cmd_assume.assumption) {
          case cr_2fl_only: return true;
          case cr_1fl_only: return false;
@@ -1466,13 +1470,13 @@ static bool x14_wheel_and_deal(setup *real_people, int real_index,
       // Find the two people in the other couple.
       // Just "or" them to be sure we get someone.  They are already known
       // to be facing consistently if they are both there.
-      other_people = real_people->people[real_index ^ 2].id1 |
-                     real_people->people[real_index ^ 3].id1;
+      int other_people = real_people->people[real_index ^ 2].id1 |
+                         real_people->people[real_index ^ 3].id1;
 
       // At least one of those people must exist.
       if (!other_people) {
-         warn(warn__opt_for_2fl);
-         return true;
+         if (extra_stuff[0] != 0) warn(warn__opt_for_2fl);
+         return extra_stuff[0] != 0;
       }
 
       // See if they face the same way as myself.  Note that the "2" bit of
@@ -2551,8 +2555,10 @@ predicate_descriptor pred_table[] = {
       {x12_beau_or_miniwave,           &iden_tab[0]},            // "1x2_beau_or_miniwave"
       {x12_beau_or_miniwave,           &iden_tab[1]},            // "1x2_beau_miniwave_or_warn"
       {x12_beau_or_miniwave,           &iden_tab[2]},            // "1x2_beau_miniwave_for_breaker"
+      {x12_beau_or_miniwave,           &iden_tab[3]},            // "1x2_beau_miniwave_or_ok"
       {can_swing_left,               (const long int *) 0},      // "can_swing_left"
-      {x14_wheel_and_deal,           (const long int *) 0},      // "1x4_wheel_and_deal"
+      {x14_wheel_and_deal,             &iden_tab[1]},            // "1x4_wheel_and_deal"
+      {x14_wheel_and_deal,             &iden_tab[0]},            // "1x4_wheel_and_deal_or_1fl"
       {x16_wheel_and_deal,           (const long int *) 0},      // "1x6_wheel_and_deal"
       {x18_wheel_and_deal,           (const long int *) 0},      // "1x8_wheel_and_deal"
       {cycle_and_wheel_1,            (const long int *) 0},      // "cycle_and_wheel_1"

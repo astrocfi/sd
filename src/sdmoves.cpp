@@ -351,7 +351,6 @@ extern bool divide_for_magic(
    warning_info saved_warnings;
    int i;
    uint32 division_code;
-   uint32 resflagsmisc = 0;
    uint32 directions;
    uint32 dblbitlivemask;
    const Nx1_checker *getin_search;
@@ -396,7 +395,7 @@ extern bool divide_for_magic(
    case s_qtag:
       // Indicate that we have done a diamond division
       // and the concept name needs to be changed.
-      resflagsmisc = RESULTFLAG__NEED_DIAMOND;
+      ss->cmd.cmd_misc3_flags |= CMD_MISC3__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
          division_code = MAPCODE(sdmd,2,MPKIND__MAGICDMD,1);
@@ -417,7 +416,7 @@ extern bool divide_for_magic(
       }
       break;
    case s_ptpd:
-      resflagsmisc = RESULTFLAG__NEED_DIAMOND;
+      ss->cmd.cmd_misc3_flags |= CMD_MISC3__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
          division_code = spcmap_ptp_magic;
@@ -539,7 +538,6 @@ extern bool divide_for_magic(
       to one whose name has the extra "diamond" word.  We do this by marking the
       setupflags word in the result. */
 
-   result->result_flags.misc |= resflagsmisc;
    return true;
 
  do_Nx1_search:
@@ -1330,6 +1328,7 @@ static const checkitem checktable[] = {
    {0x00950067, 0x28008200, s_dmdlndmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00550067, 0x08410200, s_qtag, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20046, 0x010C0862, sd2x7, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00950026, 0x20008200, s_1x2dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00D50026, 0x20008202, s1x3dmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -5351,6 +5350,7 @@ static void really_inner_move(setup *ss,
       break;
    case schema_matrix:
    case schema_partner_matrix:
+   case schema_partner_partial_matrix:
       {
          bool expanded = false;
          static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
@@ -5377,7 +5377,9 @@ static void really_inner_move(setup *ss,
             do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, true);
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_12_MATRIX);
          }
-         else if (ss->kind == s2x2 && (ss->cmd.prior_elongation_bits & 3) != 0) {
+         else if (ss->kind == s2x2 &&
+                  (ss->cmd.prior_elongation_bits & 3) != 0 &&
+                  the_schema != schema_partner_partial_matrix) {
             expanded = true;
             if (ss->cmd.prior_elongation_bits == 3)
                expand::expand_setup(&exp_from_2x2_stuff, ss);
@@ -5413,7 +5415,7 @@ static void really_inner_move(setup *ss,
 
          const uint32 *callstuff = base_block->items;
 
-         if (the_schema == schema_partner_matrix)
+         if (the_schema == schema_partner_matrix || the_schema == schema_partner_partial_matrix)
             partner_matrixmove(ss, flags, callstuff, result);
          else
             matrixmove(ss, flags, callstuff, result);
@@ -5648,8 +5650,19 @@ static void really_inner_move(setup *ss,
             /* ******* end of "punt_centers" junk. */
 
          }
-         else
-            do_sequential_call(ss, callspec, qtfudged, &mirror, extra_heritmask_bits, result);
+         else {
+            // Handle "mystic" before splitting the call into its parts.
+            // But not if fractions are being used.
+            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC && ss->cmd.cmd_fraction.is_null()) {
+               ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
+               setup_command conc_cmd = ss->cmd;
+
+               inner_selective_move(ss, &conc_cmd, &conc_cmd, selective_key_dyp,
+                                    1, 0, false, 0, selector_centers, 0, 0, result);
+            }
+            else
+               do_sequential_call(ss, callspec, qtfudged, &mirror, extra_heritmask_bits, result);
+         }
 
          if (the_schema == schema_split_sequential && result->kind == s2x6 &&
              ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) ==
@@ -5981,6 +5994,7 @@ static void move_with_real_call(
          case schema_by_array:
          case schema_matrix:
          case schema_partner_matrix:
+         case schema_partner_partial_matrix:
             // We allow the fractions "1/2" and "last 1/2" to be given.
             // Basic_move or matrixmove will handle them.
 
@@ -6069,12 +6083,12 @@ static void move_with_real_call(
          }
       }
 
-      /* If the "diamond" concept has been given and the call doesn't want it, we do
-         the "diamond single wheel" variety. */
+      // If the "diamond" concept has been given and the call doesn't want it, we do
+      // the "diamond single wheel" variety.
 
       if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_DIAMOND & ~callflagsh))  {
-         /* If the call is sequentially or concentrically defined, the top level flag is required
-         before the diamond concept can be inherited.  Since that flag is off, it is an error. */
+         // If the call is sequentially or concentrically defined, the top level flag is required
+         // before the diamond concept can be inherited.  Since that flag is off, it is an error.
          if (the_schema != schema_by_array)
             fail("Can't do this call with the \"diamond\" concept.");
 
@@ -6084,9 +6098,14 @@ static void move_with_real_call(
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
          if (ss->kind == sdmd) {
+            uint32 resflagsmisc = 0;
+            if (ss->cmd.cmd_misc3_flags & CMD_MISC3__NEED_DIAMOND)
+               resflagsmisc |= RESULTFLAG__NEED_DIAMOND;
+
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_DIAMOND);
             divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
                                phantest_ok, true, result);
+            result->result_flags.misc |= resflagsmisc;
             return;
          }
          else {
@@ -7053,9 +7072,14 @@ extern void move(
          else if (check_concepts.herit == INHERITFLAG_DIAMOND && check_concepts.final == 0) {
             ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_DIAMOND);
 
-            if (ss->kind == sdmd)
+            if (ss->kind == sdmd) {
+               uint32 resflagsmisc = 0;
+               if (ss->cmd.cmd_misc3_flags & CMD_MISC3__NEED_DIAMOND)
+                  resflagsmisc |= RESULTFLAG__NEED_DIAMOND;
                divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__DMD_STUFF,0),
                                   phantest_ok, true, result);
+               result->result_flags.misc |= resflagsmisc;
+            }
             else {
                // Divide into diamonds and try again.
                // (Note that we back up the concept pointer.)
@@ -7074,8 +7098,8 @@ extern void move(
 
    result->result_flags.misc |= resultflags_to_put_inmisc;
 
-   /* If execution of the call raised a request that we change a concept name from "magic" to
-      "magic diamond,", for example, do so. */
+   // If execution of the call raised a request that we change a concept name from "magic" to
+   // "magic diamond,", for example, do so.
 
    if (saved_magic_diamond &&
        (result->result_flags.misc & RESULTFLAG__NEED_DIAMOND) &&

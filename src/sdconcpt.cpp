@@ -4819,7 +4819,6 @@ static void do_concept_inner_outer(
    setup *result) THROW_DECL
 {
    uint32 livemask, misc2_zflag;
-   int i;
    calldef_schema sch;
    int rot = 0;
    int arg1 = parseptr->concept->arg1;
@@ -5026,45 +5025,40 @@ static void do_concept_inner_outer(
    case 6:
    case 8+6:
       // Center/outside triple Z's.
-
       sch = schema_in_out_triple_zcom;
-
-      for (i=0,livemask=0 ; i<=attr::slimit(ss) ; i++) {
-         livemask <<= 1;
-         if (ss->people[i].id1) livemask |= 1;
-      }
+      livemask = little_endian_live_mask(ss);
 
       switch (ss->kind) {
       case s3x6:
-         if ((livemask & 0630630) == 0) {
-            /* Of course, this is kind of stupid.  Why would you say "outer
-               triple Z's" if the outer Z's weren't recognizeable, and you
-               simply wanted them to be imputed from the center Z? */
+         if ((livemask & 0063063) == 0) {
+            // Of course, this is kind of stupid.  Why would you say "outer
+            // triple Z's" if the outer Z's weren't recognizable, and you
+            // simply wanted them to be imputed from the center Z?
             if (arg1 & 8)
-               warn(warn_same_z_shear);  /* Outer Z's are ambiguous --
-                                            make them look like inner ones. */
+               warn(warn_same_z_shear);  // Outer Z's are ambiguous --
+                                         // make them look like inner ones.
          }
 
          // Demand that the center Z be solidly filled.
 
-         switch (livemask & 0141141) {
-         case 0101101:   // Center Z is CW.
-            if ((livemask & 0210210) == 0) {
+         switch (livemask & 0414414) {
+         case 0404404:   // Center Z is CW.
+            if ((livemask & 0042042) == 0) {
                misc2_zflag = CMD_MISC2__IN_Z_CW;
                goto do_real_z_stuff;
             }
-            else if ((livemask & 0420420) == 0) {
+            else if ((livemask & 0021021) == 0) {
                misc2_zflag = CMD_MISC2__IN_AZ_CW;   // Z's are anisotropic.
                goto do_real_z_stuff;
             }
 
             break;
-         case 0041041:   // Center Z is CCW.
-            if ((livemask & 0420420) == 0) {
+         case 0410410:   // Center Z is CCW.
+            if ((livemask & 0021021) == 0) {
                misc2_zflag = CMD_MISC2__IN_Z_CCW;
                goto do_real_z_stuff;
             }
-            else if ((livemask & 0210210) == 0) {
+            else if ((livemask & 0042042) == 0) {
                misc2_zflag = CMD_MISC2__IN_AZ_CCW;   // Z's are anisotropic.
                goto do_real_z_stuff;
             }
@@ -5074,11 +5068,11 @@ static void do_concept_inner_outer(
          break;
       case swqtag:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
-         switch (livemask & 0x339) {
+         switch (livemask & 0x273) {
          case 0x231:   // Center Z is CW.
             misc2_zflag = CMD_MISC2__IN_Z_CW;
             goto do_real_z_stuff;
-         case 0x129:   // Center Z is CCW.
+         case 0x252:   // Center Z is CCW.
             misc2_zflag = CMD_MISC2__IN_Z_CCW;
             goto do_real_z_stuff;
          }
@@ -5086,15 +5080,25 @@ static void do_concept_inner_outer(
       case s2x5:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask) {
-         case 0x2F7:
+         case 0x3BD:
             misc2_zflag = CMD_MISC2__IN_Z_CW;
             goto do_real_z_stuff;
-         case 0x3BD:
+         case 0x2F7:
             misc2_zflag = CMD_MISC2__IN_Z_CCW;
             goto do_real_z_stuff;
          }
          break;
       case s2x7:
+         switch (livemask & 0x0E1C) {
+         case 0x0C18:
+            misc2_zflag = CMD_MISC2__IN_Z_CW;
+            goto do_real_z_stuff;
+         case 0x060C:
+            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+            goto do_real_z_stuff;
+         }
+         break;
+      case sd2x7:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask & 0x0E1C) {
          case 0x060C:
@@ -5108,7 +5112,7 @@ static void do_concept_inner_outer(
       case sd2x5:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask) {
-         case 0x3DE:
+         case 0x1EF:
             misc2_zflag = CMD_MISC2__IN_Z_CW;
             goto do_real_z_stuff;
          case 0x37B:
@@ -7239,6 +7243,31 @@ static void do_concept_concentric(
 {
    calldef_schema schema = (calldef_schema) parseptr->concept->arg1;
 
+   switch (schema) {
+   case schema_3x3k_concentric:
+   case schema_3x3k_cross_concentric:
+      switch (ss->kind) {
+      case s1x8: case s1x10:
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, false);
+         break;
+      case s2x4:
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, false);
+         break;
+      }
+      break;
+   case schema_4x4k_concentric:
+   case schema_4x4k_cross_concentric:
+      switch (ss->kind) {
+      case s1x8: case s1x10: case s1x12: case s1x14:
+         do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, false);
+         break;
+      case s2x4: case s2x6:
+         do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
+         break;
+      }
+      break;
+   }
+
    if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__META_NOCMD) &&
        (schema_attrs[schema].attrs & SCA_CROSS))
       warn(warn__meta_on_xconc);
@@ -7345,6 +7374,9 @@ extern bool do_big_concept(
    concept_kind this_kind = this_concept->kind;
    const concept_table_item *this_table_item = &concept_table[this_kind];
    const uint32 prop_bits = this_table_item->concept_prop;
+
+   if (this_concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
 
    // Take care of combinations like "mystic triple waves".
 
