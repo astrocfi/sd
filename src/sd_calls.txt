@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.27"
+version "39.28"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -20479,6 +20479,8 @@ call "_rotary nothing" dontshow tag rotary
       array [0 ZM7W 0 AL1N AL0N 0 ZM2W 0]
    setup 2x4 bone
       array [0 0 0 0 0 ZM2N ZM7N 0]
+   setup rigger 1x8
+      array [0 0 AL5E AL4E ZM7N ZM2N AL1E AL0E]
             alternate_definition [single] c3a
    setup 4x1 dmd
       array [0 ZM3N AL2E 0]
@@ -27330,16 +27332,13 @@ call "turn and weave" c4a
       array [CCAL3N AL0S AACR1N CR2S]
 
 call "_fold to face" dontshow tag foldtoface
-   // Just single wheel, of course, but we mark it unusual if in couple.
-   setup 1x2 1x2 rotate restriction unusual wave_only
-      predscantdocallinsetup
-         if 1x2_beau_miniwave_or_warn [CR0E AL0E]
-         if always [0 AL1E]
+   setup 1x2 1x2 rotate restriction forbidden wave_only
+      array [CR0E AL0E]
             alternate_definition [cross] c2
-   setup 1x4 2x2 restriction wave_only
+   setup 1x4 2x2 restriction forbidden wave_only
       array [CR1S CR1S AL0S AL0S]
             alternate_definition [interlocked] c3
-   setup 1x4 2x2 restriction 2fl_only
+   setup 1x4 2x2 restriction forbidden 2fl_only
       array [CR0S CR1S AL1S AL0S]
 
 call "_ramble part 1" dontshow tag ramble_1

@@ -1532,7 +1532,7 @@ extern void do_matrix_expansion(
 #ifdef WOULDLIKETODOTHISBUTCANT
             // If the occupation is such that one or the other orientations is
             // impossible, we use the other.  If that turns out to be impossible
-            // also, or the facing directions of the "points" are innapropriate
+            // also, or the facing directions of the "points" are inapropriate
             // for the twin qtag / twin diamond nature of the concept, an error
             // will be raised when the concept is executed.
             if ((livemask & 0x6060U) != 0) {

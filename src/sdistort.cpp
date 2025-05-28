@@ -1647,11 +1647,21 @@ extern void divided_setup_move(
    }
 
    setup z[16];
+
+   // Address the issue that the proper definition of "phantom waves", called from parallel waves
+   // (that is, just the centers two waves occupied) is *illegal* if the call is something like
+   // split recycle, sending each 2x4 pair of parallel waves into a 1x8.  The outer pair of waves
+   // has to go to an outer 1x8, split in a way that violates the Solomon rule.  Even if the outer
+   // formation is empty.  But, in two-couple calling, make it legal if the outer pair of waves is
+   // empty.  In that case, the strict definition of "phantom waves" is no longer enforced, and it
+   // becomes effectively an "assume waves".  Cf. t28t and pt00t.
+
    multiple_move_innards(
       ss, map_encoding, maps, recompute_id, t,
       noexpand_bits_to_set,
       (maps->map_kind == MPKIND__CONCPHAN &&
-       phancontrol == phantest_ctr_phantom_line && !vflags[0]),
+       !vflags[0] &&
+       (phancontrol == phantest_ctr_phantom_line || (phancontrol == phantest_first_or_both && two_couple_calling))),
       x, z, result, thing);
 
    // "Multiple_move_innards" has returned with the splitting info correct for the subcalls, but
@@ -1954,7 +1964,7 @@ static void phantom_2x4_move(
       break;
    case phantest_first_or_both:
       // This occurs on "phantom lines", for example, and is
-      // intended to give the smae error as above if only the center
+      // intended to give the same error as above if only the center
       // phantom lines are occupied.  But the headliners might
       // occupy just the center phantom lines while the sideliners
       // make full use of the concept, so, once again, we have to
