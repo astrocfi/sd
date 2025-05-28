@@ -2400,6 +2400,8 @@ extern void concentric_move(
       return;
    }
 
+   clean_up_unsymmetrical_setup(ss);
+
    if (analyzer == schema_concentric_no31dwarn) {
       analyzer = schema_concentric;
       enable_3x1_warn = false;
@@ -4613,6 +4615,7 @@ extern void inner_selective_move(
    selective_key orig_indicator = indicator;
    normalize_action action = normalize_before_isolated_call;
    bool force_matrix_merge = false;
+   bool inner_shape_change = false;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       clear_result_flags(result);
@@ -5526,9 +5529,11 @@ back_here:
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                }
 
+               inner_shape_change = true;
+
                if (!nextfixp) goto lose;
 
-               if (((fixp->rot ^ nextfixp->rot) & 3) == 0) {
+               if (((nextfixp->rot - fixp->rot) & 3) == 0) {
                   this_result->rotation--;
 
                   if (fixp->numsetups & 0x100) {
@@ -5538,6 +5543,11 @@ back_here:
                         lilresult[lilcount].rotation += 2;
                         canonicalize_rotation(&lilresult[lilcount]);
                      }
+                  }
+               }
+               else if (((nextfixp->rot - fixp->rot) & 3) == 3) {
+                  if (nextfixp->rot & 0x80000000) {
+                     this_result->rotation += 2;
                   }
                }
 
@@ -5597,7 +5607,10 @@ back_here:
                   }
                }
 
-               if (!nextfixp) {
+               if (nextfixp) {
+                  inner_shape_change = true;
+               }
+               else {
                   if (lilresult[0].kind == fixp->ink)
                      nextfixp = fixp;
                   else if (indicator == selective_key_disc_dist &&
@@ -5613,6 +5626,9 @@ back_here:
                         this_result->rotation = 3;
                      else
                         this_result->rotation = 1;
+
+                     if (nextfixp->rot & 0x80000000)
+                        this_result->rotation += 2;
                   }
                   else {
                      this_result->rotation = 2;
@@ -5741,6 +5757,9 @@ back_here:
    {
       merge_action ma = merge_c1_phantom;
 
+
+      if (ss->kind == s4x4 && indicator == selective_key_plain && !inner_shape_change)
+         ma = merge_strict_matrix;
       if (force_matrix_merge) {
          // If we are doing an "anyone truck" type of call from
          // a C1 phantom, go back to same.

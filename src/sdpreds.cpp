@@ -63,6 +63,11 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    uint32 p1, p2, p3;
    selector_kind s;
    int thing_to_test;
+   uint32 selected_person_mask = ~0UL;
+
+   uint32 directions;
+   uint32 livemask;
+   big_endian_get_directions(ss, directions, livemask);
 
    selector_used = true;
 
@@ -134,9 +139,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
  do_switch:
 
    switch (current_options.who) {
-      uint32 directions;
-      uint32 livemask;
-
    case selector_boys:
       if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return true;
       else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return false;
@@ -343,21 +345,111 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       }
 
       break;
+   case selector_the2x3:
+      switch (ss->kind) {
+      case s_spindle:
+         selected_person_mask = 0x77;
+         break;
+      case s_qtag:
+         selected_person_mask = 0xBB;
+         break;
+      case s4x4:
+         if (livemask == 0x0F03333FUL)
+            selected_person_mask = 0xE888;
+         else if (livemask == 0x3F0F0333UL)
+            selected_person_mask = 0x888E;
+         else if (livemask == 0x333F0F03UL)
+            selected_person_mask = 0x88E8;
+         else if (livemask == 0x03333F0FUL)
+            selected_person_mask = 0x8E88;
+         break;
+      }
+
+      break;
    case selector_thediamond:
-         if      ((pid2 & (ID2_THEDMD|ID2_NOTTHEDMD)) == ID2_THEDMD) return true;
-         else if ((pid2 & (ID2_THEDMD|ID2_NOTTHEDMD)) == ID2_NOTTHEDMD) return false;
+      p2 = pid2 & (ID2_CTRDMD|ID2_NCTRDMD);
+      if      (p2 == ID2_CTRDMD) return true;
+      else if (p2 == ID2_NCTRDMD) return false;
+
+      switch (ss->kind) {
+      case s1x3p1dmd:
+      case s3p1x1dmd:
+         selected_person_mask = 074;
+         break;
+      case s1x4p2dmd:
+      case s4p2x1dmd:
+         selected_person_mask = 0xD8;
+         break;
+      case splinepdmd:
+      case splinedmd:
+         selected_person_mask = 0xF0;
+         break;
+      case slinepdmd:
+      case slinedmd:
+         selected_person_mask = 0x0F;
+         break;
+      }
+
+      break;
+   case selector_theline:
+      switch (ss->kind) {
+      case s4x4:
+         if (livemask == 0x0F03333FUL)
+            selected_person_mask = 0x0A84;
+         else if (livemask == 0x3F0F0333UL)
+            selected_person_mask = 0xA840;
+         else if (livemask == 0x333F0F03UL)
+            selected_person_mask = 0x840A;
+         else if (livemask == 0x03333F0FUL)
+            selected_person_mask = 0x40A8;
+         break;
+      case splinepdmd:
+      case splinedmd:
+         if ((directions & livemask & 0x5500) == 0)
+            selected_person_mask = 0x0F;
+         break;
+      case slinepdmd:
+      case slinedmd:
+         if ((directions & livemask & 0x0055) == 0)
+            selected_person_mask = 0xF0;
+         break;
+      }
+
+      break;
+   case selector_thecolumn:
+      switch (ss->kind) {
+      case s4x4:
+         if (livemask == 0x0F03333FUL)
+            selected_person_mask = 0x0A84;
+         else if (livemask == 0x3F0F0333UL)
+            selected_person_mask = 0xA840;
+         else if (livemask == 0x333F0F03UL)
+            selected_person_mask = 0x840A;
+         else if (livemask == 0x03333F0FUL)
+            selected_person_mask = 0x40A8;
+         break;
+      case splinepdmd:
+      case splinedmd:
+         if (((directions ^ 0x5500) & livemask & 0x5500) == 0)
+            selected_person_mask = 0x0F;
+         break;
+      case slinepdmd:
+      case slinedmd:
+         if (((directions ^ 0x0055) & livemask & 0x0055) == 0)
+            selected_person_mask = 0xF0;
+         break;
+      }
+
       break;
    case selector_headliners:
-      if      ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEFRONT ||
-               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEBACK) return true;
-      else if ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACELEFT ||
-               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACERIGHT) return false;
+      p2 = pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT);
+      if      (p2 == ID3_FACEFRONT || p2 == ID3_FACEBACK) return true;
+      else if (p2 == ID3_FACELEFT || p2 == ID3_FACERIGHT) return false;
       break;
    case selector_sideliners:
-      if      ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACELEFT ||
-               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACERIGHT) return true;
-      else if ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEFRONT ||
-               (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEBACK) return false;
+      p2 = pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT);
+      if      (p2 == ID3_FACELEFT || p2 == ID3_FACERIGHT) return true;
+      else if (p2 == ID3_FACEFRONT || p2 == ID3_FACEBACK) return false;
       break;
    case selector_thosefacing:
       if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
@@ -365,19 +457,19 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       break;
    case selector_nearline:
       if      (pid3 & ID3_NEARLINE) return true;
-      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
+      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX|ID3_FARFOUR)) return false;
       break;
    case selector_farline:
       if      (pid3 & ID3_FARLINE) return true;
-      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
+      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX|ID3_NEARFOUR)) return false;
       break;
    case selector_nearcolumn:
       if      (pid3 & ID3_NEARCOL) return true;
-      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
+      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX|ID3_FARFOUR)) return false;
       break;
    case selector_farcolumn:
       if      (pid3 & ID3_FARCOL) return true;
-      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
+      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX|ID3_NEARFOUR)) return false;
       break;
    case selector_nearbox:
       if      (pid3 & ID3_NEARBOX) return true;
@@ -484,8 +576,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_firstthree:
    case selector_lastthree:
       if (ss->kind == s2x4) {
-         big_endian_get_directions(ss, directions, livemask);
-
          if (directions == (livemask & 0x55FF))
             thing_to_test = place & 3;        // Right column.
          else if (directions == (livemask & 0xFF55))
@@ -504,8 +594,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_leftmostthree:
    case selector_rightmostthree:
       if (ss->kind == s2x4) {
-         big_endian_get_directions(ss, directions, livemask);
-
          if (directions == (livemask & 0x00AA))
             thing_to_test = place & 3;        // Lines out.
          else if (directions == (livemask & 0xAA00))
@@ -520,7 +608,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_some:
       // We have to figure out how to group the people, based on unambiguous information from facing directions.
       thing_to_test = -1;
-      big_endian_get_directions(ss, directions, livemask);
 
       switch (attr::slimit(ss)) {
          uint32 A, B, C, D, E, F;
@@ -622,6 +709,11 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       fail("INTERNAL ERROR - selector failed to get initialized.");
    }
 
+   if (selected_person_mask != ~0UL) {
+      if (selected_person_mask & (1 << place)) return true;
+      else return false;
+   }
+
    fail("Can't decide who are selected.");
 
  eq_return:
@@ -680,6 +772,7 @@ static bool sum_mod_selected(setup *real_people, int real_index,
    int otherindex = (*extra_stuff) - real_index;
    int size = attr::slimit(real_people)+1;
    if (otherindex >= size) otherindex -= size;
+   else if (otherindex < 0) otherindex += size;
    return selectp(real_people, otherindex);
 }
 

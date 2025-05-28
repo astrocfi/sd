@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 270
+#define DATABASE_FORMAT_VERSION 273
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -318,6 +318,7 @@ enum setup_kind {
    s_1x2dmd,
    s_2x1dmd,
    s1x3p1dmd,
+   s3p1x1dmd,
    s_qtag,
    s_bone,
    s1x8,
@@ -374,7 +375,11 @@ enum setup_kind {
    s4ptpd,
    s_trngl8,
    s1x4p2dmd,
-   s1x5p1dmd,
+   s4p2x1dmd,
+   splinepdmd,
+   splinedmd,
+   slinepdmd,
+   slinedmd,
    s_hsqtag,
    s_dmdlndmd,
    s_hqtag,
@@ -406,6 +411,7 @@ enum setup_kind {
    s_hyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
+   sx1x6,     // Ditto.
    sx1x16,    // Ditto.
    shypergal, // Ditto.
    shyper4x8a,// Ditto.
@@ -432,7 +438,7 @@ enum setup_kind {
    sdblbone6,
    sbigdmd,
    sbigptpd,
-   sbig3x1dmd,
+   s5x1dmd,
    s1x5dmd,
    sbig3dmd,
    sbig4dmd,
@@ -622,8 +628,8 @@ enum begin_kind {
    b_pbigdmd,
    b_bigptpd,
    b_pbigptpd,
-   b_big3x1dmd,
-   b_pbig3x1dmd,
+   b_5x1dmd,
+   b_p5x1dmd,
    b_1x5dmd,
    b_p1x5dmd,
    b_big3dmd,

@@ -659,10 +659,6 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"3X1 TRIANGLES ARE TRIANGLESOME @9/@9 REVERSE DYNAMIC",concept_frac_tandem,F+D,l_c4,
     UC_none, 0, 0,                    0x0B0, tandem_key_3x1tgls},
 
-
-
-
-
    {"SPLIT PHANTOM COLUMNS",                 concept_do_phantom_2x4,          D, l_c3a,
     UC_spc, phantest_impossible,    0, MPKIND__SPLIT, 0},
    {"SPLIT PHANTOM LINES",                   concept_do_phantom_2x4,          D, l_c3a,
@@ -1792,6 +1788,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"@6 ARE @h NOSE",                        concept_so_and_so_nose,        F+D, l_c4,
     UC_none, true,  false},
    {"EMULATE",                               concept_emulate,                 D, l_c4,
+    UC_none},
+   {"MIMIC @6",                              concept_mimic,                 F+D, l_c4,
     UC_none},
    {"TRACE",                                 concept_trace,                   0, l_c3x,
     UC_none},

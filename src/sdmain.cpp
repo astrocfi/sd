@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2007  William B. Ackerman.
+//    Copyright (C) 1990-2008  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "37.5"
-#define TIME_STAMP "wba@alum.mit.edu  13 Oct 2007 $"
+#define VERSION_STRING "37.6"
+#define TIME_STAMP "wba@alum.mit.edu  30 Mar 2008 $"
 
 /* This defines the following functions:
    sd_version_string

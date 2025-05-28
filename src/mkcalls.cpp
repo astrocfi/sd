@@ -235,8 +235,8 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
-   12,         /* b_big3x1dmd */
-   12,         /* b_pbig3x1dmd */
+   12,         /* b_5x1dmd */
+   12,         /* b_p5x1dmd */
    12,         /* b_1x5dmd */
    12,         /* b_p1x5dmd */
    18,         /* b_big3dmd */
@@ -629,8 +629,8 @@ char *sstab[] = {
    "pbigdmd",
    "bigptpd",
    "pbigptpd",
-   "big3x1dmd",
-   "pbig3x1dmd",
+   "5x1dmd",
+   "p5x1dmd",
    "1x5dmd",
    "p1x5dmd",
    "big3dmd",
@@ -666,6 +666,7 @@ char *estab[] = {
    "1x2dmd",
    "2x1dmd",
    "1x3p1dmd",
+   "3p1x1dmd",
    "qtag",
    "bone",
    "1x8",
@@ -722,7 +723,11 @@ char *estab[] = {
    "4ptpd",
    "trngl8",
    "1x4p2dmd",
-   "1x5p1dmd",
+   "4p2x1dmd",
+   "plinepdmd",
+   "plinedmd",
+   "linepdmd",
+   "linedmd",
    "hsqtag",
    "dmdlndmd",
    "hqtag",
@@ -762,6 +767,7 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "???",
    "3x23",
    "3x43",
    "5x25",
@@ -780,7 +786,7 @@ char *estab[] = {
    "dblbone6",
    "bigdmd",
    "bigptpd",
-   "big3x1dmd",
+   "5x1dmd",
    "1x5dmd",
    "big3dmd",
    "big4dmd",
@@ -2161,14 +2167,14 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         dat = (dat * NDBROLL_BIT) | (tok_value << 4) | (stab * DBSTAB_BIT);
+         dat = (dat * NDBROLL_BIT) | (tok_value << 3) | (stab * DBSTAB_BIT);
 
          // We now have roll indicator and position, need to get direction.
          switch (tok_str[char_ct-1]) {
-         case 'N': case 'n': dat |= 010; break;
-         case 'E': case 'e': dat |= 001; break;
-         case 'S': case 's': dat |= 012; break;
-         case 'W': case 'w': dat |= 003; break;
+         case 'N': case 'n': dat |= 4; break;
+         case 'E': case 'e': dat |= 5; break;
+         case 'S': case 's': dat |= 6; break;
+         case 'W': case 'w': dat |= 7; break;
          default:
             errexit("Improper callarray direction specifier");
          }

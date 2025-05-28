@@ -55,6 +55,7 @@
    scatter
    gather
    install_scatter
+   clean_up_unsymmetrical_setup
    process_final_concepts
    really_skip_one_concept
    fix_n_results
@@ -326,7 +327,6 @@ void expand::expand_setup(const expand::thing & thing, setup *stuff) THROW_DECL
 extern void update_id_bits(setup *ss)
 {
    int i;
-   const id_bit_table *ptr;
    unsigned short int *face_list = (unsigned short int *) 0;
 
    static unsigned short int face_qtg[] = {
@@ -486,7 +486,7 @@ extern void update_id_bits(setup *ss)
 
    uint32 livemask = little_endian_live_mask(ss);
 
-   ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+   const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
    switch (ss->kind) {
    case s_qtag:
@@ -533,7 +533,6 @@ extern void update_id_bits(setup *ss)
             ss->people[i].id2 |= ID2_NOTFACING;
       }
    }
-
 
    // Some setups are only recognized for ID bits with certain patterns of population.
    //  The bit tables make those assumptions, so we have to use the bit tables
@@ -1248,6 +1247,10 @@ bool expand::compress_from_hash_table(setup *ss,
          // Do not compress qtag to 2x3 is switch is on.
          if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
             continue;
+
+         if (action != cptr->action_level && cptr->must_be_exact_level) {
+            continue;
+         }
 
          warn(cptr->norwarning);
          expand::compress_setup(*cptr, ss);
@@ -3428,7 +3431,7 @@ extern void fail(const char s[]) THROW_DECL
 
 extern void fail_no_retry(const char s[]) THROW_DECL
 {
-   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   strncpy(error_message1, s, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
    throw error_flag_type(error_flag_no_retry);
@@ -3437,9 +3440,9 @@ extern void fail_no_retry(const char s[]) THROW_DECL
 
 extern void fail2(const char s1[], const char s2[]) THROW_DECL
 {
-   (void) strncpy(error_message1, s1, MAX_ERR_LENGTH);
+   strncpy(error_message1, s1, MAX_ERR_LENGTH);
    error_message1[MAX_ERR_LENGTH-1] = '\0';
-   (void) strncpy(error_message2, s2, MAX_ERR_LENGTH);
+   strncpy(error_message2, s2, MAX_ERR_LENGTH);
    error_message2[MAX_ERR_LENGTH-1] = '\0';
    throw error_flag_type(error_flag_2_line);
 }
@@ -4415,14 +4418,14 @@ extern uint32 find_calldef(
          if ((*(predlistptr->pred->predfunc))
              (scopy, real_index, real_direction,
               northified_index, predlistptr->pred->extra_stuff)) {
-            calldef_array = predlistptr->arr;
+            calldef_array = predlistptr->array_pred_def;
             goto got_it;
          }
       }
       fail(tdef->stuff.prd.errmsg);
    }
    else
-      calldef_array = tdef->stuff.def;
+      calldef_array = tdef->stuff.array_no_pred_def;
 
 got_it:
 
@@ -4579,6 +4582,27 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
 {
    for (int j=0; j<num; j++)
       install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
+}
+
+extern bool clean_up_unsymmetrical_setup(setup *ss)
+{
+   static expand::thing thing_splinedmd_1x8 = {{0, 1, 3, 2, -1, -1, -1, -1}, 8, splinedmd, s1x8, 0};
+   static expand::thing thing_splinedmd_qtag = {{-1, -1, -1, -1, 3, 1, 2, 4}, 8, splinedmd, s_qtag, 0};
+   uint32 livemask = little_endian_live_mask(ss);
+
+   switch (ss->kind) {
+   case splinedmd:
+      if ((livemask & 0xF0) == 0) {
+         expand::expand_setup(thing_splinedmd_1x8, ss);
+         return true;
+      }
+      else if ((livemask & 0x0F) == 0) {
+         expand::expand_setup(thing_splinedmd_qtag, ss);
+         return true;
+      }
+   }
+
+   return false;
 }
 
 extern setup_kind try_to_expand_dead_conc(const setup & result,
@@ -5837,18 +5861,20 @@ void toplevelmove() THROW_DECL
                starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ? nearbit : farbit;
          }
       }
-      else if (starting_setup.kind == s1x8 && starting_setup.rotation & 1) {
+      else if ((starting_setup.kind == s1x8 || starting_setup.kind == s_ptpd) && starting_setup.rotation & 1) {
          uint32 nearbit = ID3_NEARFOUR;
          uint32 farbit = ID3_FARFOUR;
          uint32 tbonetest = or_all_people(&starting_setup);
 
-         if (!(tbonetest & 1)) {
-            nearbit |= ID3_NEARLINE;
-            farbit |= ID3_FARLINE;
-         }
-         else if (!(tbonetest & 010)) {
-            nearbit |= ID3_NEARCOL;
-            farbit |= ID3_FARCOL;
+         if (starting_setup.kind == s1x8) {
+            if (!(tbonetest & 1)) {
+               nearbit |= ID3_NEARLINE;
+               farbit |= ID3_FARLINE;
+            }
+            else if (!(tbonetest & 010)) {
+               nearbit |= ID3_NEARCOL;
+               farbit |= ID3_FARCOL;
+            }
          }
 
          for (i=0; i<8; i++) {
@@ -5860,17 +5886,32 @@ void toplevelmove() THROW_DECL
                     (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
          }
       }
-      else if (starting_setup.kind == s1x5p1dmd && starting_setup.rotation & 1) {
+      else if ((starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd) && starting_setup.rotation & 1) {
          uint32 nearbit = ID3_NEARFOUR;
          uint32 farbit = ID3_FARFOUR;
          uint32 waynearbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
          uint32 wayfarbit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+
+         uint32 lowpeople =
+            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
+            starting_setup.people[2].id1 | starting_setup.people[3].id1;
 
          if (starting_setup.rotation & 2) {
             nearbit = ID3_FARFOUR;
             farbit = ID3_NEARFOUR;
             waynearbit = ID3_FARTHEST1|ID3_NOTNEAREST1;
             wayfarbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+
+            if (!(lowpeople & 1))
+               farbit |= ID3_NEARLINE;
+            else if (!(lowpeople & 010))
+               farbit |= ID3_NEARCOL;
+         }
+         else {
+            if (!(lowpeople & 1))
+               farbit |= ID3_FARLINE;
+            else if (!(lowpeople & 010))
+               farbit |= ID3_FARCOL;
          }
 
          for (i=0; i<8; i++) {
@@ -5878,6 +5919,77 @@ void toplevelmove() THROW_DECL
                starting_setup.people[i].id3 |=
                   ((i & 4) ? nearbit : farbit) |
                   ((i == 0) ? wayfarbit : ((i == 6) ? waynearbit : (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
+         }
+      }
+      else if ((starting_setup.kind == slinepdmd || starting_setup.kind == slinedmd) && !(starting_setup.rotation & 1)) {
+         uint32 nearbit = ID3_NEARFOUR;
+         uint32 farbit = ID3_FARFOUR;
+
+         uint32 hipeople =
+            starting_setup.people[4].id1 | starting_setup.people[5].id1 |
+            starting_setup.people[6].id1 | starting_setup.people[7].id1;
+
+         if (starting_setup.rotation & 2) {
+            nearbit = ID3_FARFOUR;
+            farbit = ID3_NEARFOUR;
+
+            if (!(hipeople & 1))
+               farbit |= ID3_NEARLINE;
+            else if (!(hipeople & 010))
+               farbit |= ID3_NEARCOL;
+         }
+         else {
+            if (!(hipeople & 1))
+               farbit |= ID3_FARLINE;
+            else if (!(hipeople & 010))
+               farbit |= ID3_FARCOL;
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |= ((i & 4) ? farbit : nearbit);
+         }
+      }
+      else if (starting_setup.kind == s_trngl8 && !(starting_setup.rotation & 1)) {
+         uint32 nearbit = ID3_NEARFOUR;
+         uint32 farbit = ID3_FARFOUR;
+
+         uint32 lowpeople =
+            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
+            starting_setup.people[2].id1 | starting_setup.people[3].id1;
+         uint32 hipeople =
+            starting_setup.people[4].id1 | starting_setup.people[5].id1 |
+            starting_setup.people[6].id1 | starting_setup.people[7].id1;
+
+         if (starting_setup.rotation & 2) {
+            nearbit = ID3_FARFOUR;
+            farbit = ID3_NEARFOUR;
+
+            if (!(hipeople & 1))
+               farbit |= ID3_NEARLINE;
+            else if (!(hipeople & 010))
+               farbit |= ID3_NEARCOL;
+
+            if (!(lowpeople & 1))
+               nearbit |= ID3_FARCOL;
+            else if (!(lowpeople & 010))
+               nearbit |= ID3_FARLINE;
+         }
+         else {
+            if (!(lowpeople & 1))
+               nearbit |= ID3_NEARCOL;
+            else if (!(lowpeople & 010))
+               nearbit |= ID3_NEARLINE;
+
+            if (!(hipeople & 1))
+               farbit |= ID3_FARLINE;
+            else if (!(hipeople & 010))
+               farbit |= ID3_FARCOL;
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |= ((i & 4) ? farbit : nearbit);
          }
       }
       else if (starting_setup.kind == s_qtag && starting_setup.rotation & 1) {
@@ -5948,8 +6060,8 @@ void toplevelmove() THROW_DECL
             nearbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
          }
          else if (livemask == 0x8CEAUL) {
-            farbit = ID3_NEARLINE|ID3_NEARCOL|ID3_NEARFOUR;
-            nearbit = ID3_FARBOX|ID3_FARFOUR;
+            farbit = ID3_FARLINE|ID3_FARCOL|ID3_FARFOUR;
+            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
          }
 
          for (i=0; i<16; i++) {

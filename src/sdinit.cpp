@@ -275,8 +275,8 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    // since the test setups that we use might have people placed in such a way
    // that something like "1/2 truck" is illegal.
    if (test_call->the_defn.schema == schema_matrix &&
-       test_call->the_defn.stuff.matrix.matrix_def_list->items[0] !=
-       test_call->the_defn.stuff.matrix.matrix_def_list->items[1])
+       test_call->the_defn.stuff.matrix.matrix_def_list->matrix_def_items[0] !=
+       test_call->the_defn.stuff.matrix.matrix_def_list->matrix_def_items[1])
       goto accept;
 
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
@@ -728,7 +728,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
 
             for (j=0; j < this_start_size; j++) {
                read_halfword();
-               temp_predlist->arr[j] = (uint16) last_datum;
+               temp_predlist->array_pred_def[j] = (uint16) last_datum;
             }
 
             temp_predlist->next = this_predlist;
@@ -750,7 +750,7 @@ static void read_level_3_groups(calldef_block *where_to_put)
       else {
          for (j=0; j < this_start_size; j++) {
             read_halfword();
-            tp->stuff.def[j] = (uint16) last_datum;
+            tp->stuff.array_no_pred_def[j] = (uint16) last_datum;
          }
          read_halfword();
       }
@@ -886,11 +886,11 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
             if (firstpart) {
                read_halfword();
-               this_matrix_block->items[j] =
+               this_matrix_block->matrix_def_items[j] =
                   firstpart | ((last_datum & 0xFFFF) << 16);
             }
             else {
-               this_matrix_block->items[j] = 0;
+               this_matrix_block->matrix_def_items[j] = 0;
             }               
          }
 

@@ -2670,11 +2670,11 @@ extern void distorted_move(
          const expand::thing *p;
          static const expand::thing foo1 =
          {{-1, 2, -1, 3, -1, -1, 5, 4, -1, 6, -1, 7, -1, -1, 1, 0},
-          16, s4x4, spgdmdccw, 0, 0UL, 0UL,
+          16, s4x4, spgdmdccw, 0, 0UL, 0UL, false,
           warn__none, warn__none, simple_normalize, 0};
          static const expand::thing foo2 =
          {{-1, -1, 2, 1, -1, 4, -1, 3, -1, -1, 6, 5, -1, 0, -1, 7},
-          16, s4x4, spgdmdcw, 0, 0UL, 0UL,
+          16, s4x4, spgdmdcw, 0, 0UL, 0UL, false,
           warn__none, warn__none, simple_normalize, 0};
 
          if (livemask == 0xCACA)

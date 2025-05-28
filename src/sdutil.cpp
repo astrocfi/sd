@@ -507,22 +507,6 @@ static void printsetup(setup *x)
       do_write(str);
    else {
       switch (x->kind) {
-         /* For a while, we took out the table entry, and used this.
-            This was done so that the dots wouldn't be printed
-            in a squared set.  We have changed it back.
-      case s4x4:
-         // Look for squared-set formation, and, if so, don't draw
-         // the dots for the phantoms.
-         if (!(x->people[0].id1 | x->people[3].id1 |
-               x->people[4].id1 | x->people[7].id1 |
-               x->people[8].id1 | x->people[11].id1 |
-               x->people[12].id1 | x->people[15].id1))
-            do_write("6  n  o@@k  6  6  b@@j  6  6  c@@6  g  f");
-         else
-            do_write("m  n  o  a@@k  p  d  b@@j  l  h  c@@i  g  f  e");
-
-         break;
-         */
       case s_qtag:
          if ((x->people[0].id1 & x->people[1].id1 &
               x->people[4].id1 & x->people[5].id1 & 1) &&
@@ -600,6 +584,47 @@ static void printsetup(setup *x)
 
          do_write(str);
          break;
+      case s4p2x1dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 9e@@a b c d g f@@6 6 6 9h";
+            break;
+         case 1:
+            str = "6  a@@6  b@@6  c@@6  d@7h  6  e@76  g@@6  f";
+            break;
+         case 2:
+            str = "6 9h@@f g d c b a@@6 9e";
+            break;
+         default:
+            str = "6  f@@6  g@7e  6  h@76  d@@6  c@@6  b@@6  a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s3p1x1dmd:
+         // Stolen from s4p2x1dmd
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 9d@@a b c e@@6 6 9f";
+            break;
+         case 1:
+            str = "6  a@@6  b@@6  c@7f  6  d@76  e";
+            break;
+         case 2:
+            str = "9f@@e c b a@@9d";
+            break;
+         default:
+            str = "6  e@7d  6  f@76  c@@6  b@@6  a";
+            break;
+         }
+
+         do_write(str);
+         break;
       case s1x4p2dmd:
          offs = 0;
 
@@ -620,7 +645,7 @@ static void printsetup(setup *x)
 
          do_write(str);
          break;
-      case s1x5p1dmd:
+      case splinepdmd:
          offs = 0;
 
          switch (roti) {
@@ -635,6 +660,66 @@ static void printsetup(setup *x)
             break;
          default:
             str = " 5g@@ fh@@ 5e@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case splinedmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 9f@@a b c d e g@@6 6 6 6 9h";
+            break;
+         case 1:
+            str = "6  a@@6  b@@6  c@@6  d@@6  e@7h  6  f@76  g";
+            break;
+         case 2:
+            str = "9h@@g e d c b a@@9f";
+            break;
+         default:
+            str = "6  g@7f  6  h@76  e@@6  d@@6  c@@6  b@@6  a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slinedmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "e f h g@@6  8b@78a  6  c@76  8d";
+            break;
+         case 1:
+            str = "9a9e@969f@7d b@7969h@9c9g";
+            break;
+         case 2:
+            str = "6  8d@78c  6  a@76  8b@@g h f e";
+            break;
+         default:
+            str = "g9c@h@76 b d@7f@e9a";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slinepdmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "e f h g@@6 5c@@6 b d@@6 5a";
+            break;
+         case 1:
+            str = "6 6 6 e@6 b 6 f@7a 6 c@76 d 6 h@6 6 6 g";
+            break;
+         case 2:
+            str = "6 5a@@6 d b@@6 5c@@g h f e";
+            break;
+         default:
+            str = "g@h 6 d@76 c 6 a@7f 6 b@e";
             break;
          }
 

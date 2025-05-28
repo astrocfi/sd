@@ -184,7 +184,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 }
 
 
-extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL
+extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL
 {
    int globalrotation;
 
@@ -1330,7 +1330,11 @@ static const checkitem checktable[] = {
 
    {0x01150026, 0x20048202, s1x4dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00D50026, 0x24009102, s1x4p2dmd, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x22009022, s1x5p1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x22009022, splinepdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60055, 0x09000400, splinedmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00670046, 0x109408C1, slinedmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660062, 0x1810C244, slinepdmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00660095, 0x40050031, s_trngl8,  0, warn__none, (const coordrec *) 0, {127}},
 
    {0x00950062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00550062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1436,6 +1440,7 @@ static const checkitem checktable[] = {
    {0x01220004, 0x49002400, s1x10, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01620004, 0x49012400, s1x12, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01A20004, 0x49012404, s1x14, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x02E20004, 0x4B012404, s1x14, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01E20004, 0x49092404, s1x16, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00620022, 0x00088006, s2x4, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00220062, 0x10108004, s2x4, 1, warn__none, (const coordrec *) 0, {127}},
@@ -1474,8 +1479,8 @@ static const checkitem checktable[] = {
    {0x01220026, 0x41450430, sdblrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20026, 0x0800A404, sbigrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01220026, 0x4800A404, sbigrig, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01260055, 0x49002480, sbig3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E60055, 0x49002480, sbig3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01260055, 0x49002480, s5x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00E60055, 0x49002480, s5x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01150026, 0x20048212, s1x5dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01550026, 0x20048212, s1x5dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20026, 0x0808A006, swiderigger,0, warn__none, (const coordrec *) 0, {127}},
@@ -1492,9 +1497,11 @@ static const checkitem checktable[] = {
 
    {0x00220022, 0x00008004, s2x2, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A20004, 0x09000400, s1x6, 0, warn__none, (const coordrec *) 0, {127}},
-   // Colliding 1/2 circulate from as-couples T-bone.
+   // Two colliding 1/2 circulates from as-couples T-bone.
    {0x00930004, 0x21008400, s1x6, 0, warn__none, (const coordrec *) 0,
     {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0, 127}},
+   {0x00040093, 0x0A000280, s1x6, 1, warn__none, (const coordrec *) 0,
+    {0, -9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 127}},
    {0x00620004, 0x01000400, s1x4, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00040062, 0x08000200, s1x4, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00550026, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1518,8 +1525,11 @@ static const checkitem checktable[] = {
    {0}};
 
 
-checkitem c1fixup =
+static checkitem c1fixup =
 {0, 0, s_c1phan, 0, warn__none, (const coordrec *) 0, {127}};
+
+static checkitem s4p2x1fixup =
+{0, 0, s4p2x1dmd, 0, warn__none, (const coordrec *) 0, {127}};
 
 
 static void finish_matrix_call(
@@ -1538,6 +1548,7 @@ static void finish_matrix_call(
    result->clear_people();
 
    xmax = xpar = ymax = ypar = signature = 0;
+   int xatnonzeroy = -1000;
 
    for (i=0; i<nump; i++) {
 
@@ -1593,6 +1604,8 @@ static void finish_matrix_call(
       xpar |= (k & (~(k-1)));
       k = y | 4;
       ypar |= (k & (~(k-1)));
+
+      if (y != 0) xatnonzeroy = x;
    }
 
    ypar |= (xmax << 20) | (xpar << 16) | (ymax << 4);
@@ -1615,6 +1628,11 @@ static void finish_matrix_call(
       fail("Can't figure out result setup.");
 
  found_item:
+
+   // The tables for splinedmd and s4p2x1dmd have the same ypar and signature!
+   // Use the "xatnonzeroy" value to distinguish them.
+   if (p->new_setup == splinedmd && xatnonzeroy == 4)
+      p = &s4p2x1fixup;
 
    // Perform any required fixups, moving people around before
    // sending them to be placed in the final setup.  That final
@@ -1681,6 +1699,14 @@ static void finish_matrix_call(
 }
 
 
+static void set_matrix_info_from_calldef(matrix_rec & mi, uint32 datum)
+{
+   mi.deltax = (((datum >> 3) & 0x3F) - 16) << 1;
+   mi.deltay = (((datum >> 16) & 0x3F) - 16) << 1;
+   mi.deltarot = datum & 3;
+   mi.roll_stability_info = datum;
+}
+
 
 static void matrixmove(
    setup *ss,
@@ -1711,12 +1737,7 @@ static void matrixmove(
                fail("Can't determine sex of this person.");
          }
 
-         uint32 datum = callstuff[thisrec->girlbit];
-
-         thisrec->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
-         thisrec->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
-         thisrec->deltarot = datum & 3;
-         thisrec->roll_stability_info = datum;
+         set_matrix_info_from_calldef(*thisrec, callstuff[thisrec->girlbit]);
 
          if (flags & MTX_MIRROR_IF_RIGHT_OF_CTR) {
             int relative_delta_x = (thisrec->dir & 1) ? thisrec->nicey : thisrec->nicex;
@@ -1787,10 +1808,7 @@ static void do_part_of_pair(matrix_rec *thisrec, int base, const uint32 *callstu
       fail("Can't determine sex of this person.");
    uint32 datum = callstuff[base+thisrec->girlbit];
    if (datum == 0) failp(thisrec->id1, "can't do this call.");
-   thisrec->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
-   thisrec->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
-   thisrec->deltarot = datum & 3;
-   thisrec->roll_stability_info = datum;
+   set_matrix_info_from_calldef(*thisrec, datum);
    thisrec->realdone = true;
 }
 
@@ -2162,10 +2180,7 @@ static void process_matrix_chains(
                            if (mi->dir & 2) delx = -delx;
                            if ((mi->dir+1) & 2) dely = -dely;
 
-                           mi->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
-                           mi->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
-                           mi->deltarot = datum & 3;
-                           mi->roll_stability_info = datum;
+                           set_matrix_info_from_calldef(*mi, datum);
                            mi->realdone = true;
 
                            deltarot = (mj->dir - mi->dir + 2) & 3;
@@ -5518,7 +5533,7 @@ static void really_inner_move(setup *ss,
             if (!base_block) fail("Illegal concept for this call.");
          }
 
-         const uint32 *callstuff = base_block->items;
+         const uint32 *callstuff = base_block->matrix_def_items;
 
          if (the_schema == schema_partner_matrix || the_schema == schema_partner_partial_matrix)
             partner_matrixmove(ss, flags, callstuff, result);

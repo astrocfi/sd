@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <23 Jun 2007 wba>
+@c Time-stamp: <30 Mar 2008 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.5
-@set title2 Database version = 37.5 format = 270
+@set title1 RELEASE NOTES FOR VERSION 37.6
+@set title2 Database version = 37.6 format = 272
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.6::
 * 37.5::
 * 37.4::
 * 37.3::
@@ -57,7 +58,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.5, Top, (dir)
+@node Intro, 37.6, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -65,22 +66,41 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2007 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2008 William B. Ackerman
 @sp 3
 @menu
-* 37.5::               Changes in the current version
+* 37.6::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.5, 37.4, Intro, Top
-@unnumberedsec Version 37.5 changes
+@node 37.6, 37.5, Intro, Top
+@unnumberedsec Version 37.6 changes
 
-@c  =======/////////////=============*********Defer until done well:  1x5p1dmd, trngl8
-@c  =======/////////////=============*********Defer until done well:  "top hat"
+New concept: @strong{mimic}.  This is less complete than the full version in Sue Curtis's paper
+at @uref{http://www.lynette.org/mimic.pdf}.
+Note also that it does not use the "merge with phantoms from your setup
+only" rule for 4-person setups.
+When it has placed the phantoms, going into a 16-person setup, and divided that into two
+8-person setups, it keeps those 8-person setups distinct when merging.  However, it does not recognize,
+within the 8-person setups, whether the call was actually a 4-person call for the purpose
+of merging.
+So, for example, from back-to-back lines,
+@strong{mimic leads wheel the ocean} goes to waves, not a starting DPT.
+This concept is under discussion.
+
+Sd has some understanding of unsymmetrical setups involving, for example, a diamond and a line.
+This is not complete.
+
+The @strong{triple boxes working together deuces wild} bug was fixed.
+
+@c ************
+@node 37.5, 37.4, 37.6, Top
+@unnumberedsec Version 37.5 changes
 
 New concept: @strong{OX} (distorted column.)
 
-New concept: @strong{nose}.  This is less complete than the full version in Masahiro Kurasawa's paper.
+New concept: @strong{nose}.  This is less complete than the full version in Masahiro Kurasawa's paper
+at @uref{http://www.lynette.org/nose.pdf}.
 
 New call family: @strong{dixie tag}.
 

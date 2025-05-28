@@ -182,6 +182,14 @@ static collision_map collision_map_table[] = {
    {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},
     s_thar, s_thar, 0, warn__none, 0},
 
+   // Three collisions after 1/2 circulate from C1 phantoms, going to a collided 1x6 and thence a 1x8 or thar.
+   {6, 0x000000, 00707, 00202, {0, 1, 2, 6, 7, 8}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
+    sx1x6, s1x8, 0, warn__none, 0},
+   {6, 020207070, 07070, 02020, {3, 4, 5, 9, 10, 11}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
+    sx1x6, s1x8, 1, warn__none, 0},
+   {4, 020202020, 02222, 02222, {1, 4, 7, 10},         {0, 2, 5, 7},          {1, 3, 4, 6},
+    sx1x6, s_thar, 0, warn__none, 0},
+
    // Collision after circulate from lines all facing same way.
    {4, 0x000000, 0x0F, 0x0F,  {0, 1, 2, 3},         {0, 2, 4, 6},          {1, 3, 5, 7},
     s2x4,        s2x8,        0, warn__none, 0},
@@ -876,6 +884,20 @@ static const veryshort hthartranslate[32] = {
    0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  2,  3,
    0,  0,  0,  0,  0,  0,  4,  5,  0,  0,  0,  0,  0,  0,  6,  7};
 
+static const veryshort h1x6translatev[15] = {
+   0,  0,  0,  0, 1, 2,
+   0,  0,  0,  3, 4, 5,
+   0,  0,  0};
+
+static const veryshort hx1x6translatev[15] = {
+   0,  6,  7,  0,  1,  0,
+   0,  2,  3,  4,  5,  0,
+   0,  6,  7};
+
+static const veryshort h1x6thartranslate[12] = {
+   0,  0,  1,  0,  2,  3,
+   0,  4,  5,  0,  6,  7};
+
 static const veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
 static const veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
 static const veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
@@ -1246,7 +1268,7 @@ static uint32 do_roll(uint32 person_in, uint32 z, int direction)
    uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
    if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
    return (person_in & ~(NROLL_MASK | 077)) |
-      ((z + direction * 011) & 013) | rollstuff;
+      (((((z + direction) & 3) * 011) ^ 010) & 013) | rollstuff;
 }
 
 
@@ -1281,8 +1303,8 @@ static void special_4_way_symm(
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
 
-   static const veryshort table_1x16_from_xwv[8] = {
-      5, 6, 14, 15, 21, 22, 30, 31};
+   static const veryshort table_1x6_from_xwv[8] = {
+      0, 1, 4, 5, 6, 7, 10, 11};
 
    static const veryshort table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
@@ -1342,8 +1364,8 @@ static void special_4_way_symm(
       the_table = table_1x16;
       break;
    case s_crosswave:
-      result->kind = sx1x16;
-      the_table = table_1x16_from_xwv;
+      result->kind = sx1x6;
+      the_table = table_1x6_from_xwv;
       break;
    case s4dmd:
       result->kind = sx4dmd;
@@ -1374,7 +1396,7 @@ static void special_4_way_symm(
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
          uint32 z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 4) & 0x1F;
+         k = (z >> 3) & 0x3F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
          destination->people[real_index].id1 = do_roll(this_person.id1, z, real_direction);
@@ -1433,7 +1455,7 @@ static void special_triangle(
          }
 
          z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 4) & 0x1F;
+         k = (z >> 3) & 0x3F;
 
          if (real_direction & 2) {
             if (result_is_triangle) {
@@ -4630,6 +4652,11 @@ foobar:
                                                       or transformation, but did not
                                                       do the call.  Try again. */
 
+   // If doing an "own the anyone", we might have to fix up a bizarre unsymmetrical setup.
+
+   if (clean_up_unsymmetrical_setup(ss))
+      goto search_for_call_def;
+
    if (ss->kind == s_ntrgl6cw || ss->kind == s_ntrgl6ccw) {
       // If the problem was that we had a "nonisotropic triangle" setup
       // and neither the call definition nor the splitting can handle it,
@@ -4812,7 +4839,7 @@ foobar:
             northified_index = (real_index ^ d2);
             z = find_calldef((real_direction & 1) ? coldefinition : linedefinition,
                              ss, real_index, real_direction, northified_index);
-            k = ((z >> 4) & 0x1F) ^ (d2 >> 1);
+            k = ((z >> 3) & 0x3F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
             p1.people[k].id1 = do_roll(p1.people[k].id1, z, real_direction);
 
@@ -5152,7 +5179,7 @@ foobar:
 
                uint32 z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
 
-               uint32 where = (z >> 4) & 0x1F;
+               uint32 where = (z >> 3) & 0x3F;
 
                if (oddness != 0) {
                   if (where < oddness) {
@@ -5200,6 +5227,7 @@ foobar:
       if (!(goodies->callarray_flags & CAF__NO_COMPRESS) &&
           (result->kind == s_hyperglass ||
            result->kind == s_hyperbone ||
+           result->kind == sx1x6 ||
            result->kind == shypergal ||
            attr::slimit(ss) < attr::slimit(result))) {
          const veryshort *permuter = (const veryshort *) 0;
@@ -5341,6 +5369,32 @@ foobar:
             }
             else if ((lilresult_mask[0] & 0x3F9F3F9FUL) == 0) {
                permuter = hxwtranslatev+8;  // crosswave spots, horizontal.
+               result->kind = s_crosswave;
+            }
+            else
+               fail("Call went to improperly-formed setup.");
+            break;
+         case sx1x6:
+            if ((lilresult_mask[0] & 00707UL) == 0) {
+               permuter = h1x6translatev;  // 1x6 spots, vertical.
+               result->kind = s1x6;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 07070UL) == 0) {
+               permuter = h1x6translatev+3;  // 1x6 spots, horizontal.
+               result->kind = s1x6;
+            }
+            else if ((lilresult_mask[0] & 01111UL) == 0) {
+               permuter = h1x6thartranslate;   // thar spots.
+               result->kind = s_thar;
+            }
+            else if ((lilresult_mask[0] & 04141UL) == 0) {
+               permuter = hx1x6translatev;  // crosswave spots, vertical.
+               result->kind = s_crosswave;
+               rotator = 1;
+            }
+            else if ((lilresult_mask[0] & 01414UL) == 0) {
+               permuter = hx1x6translatev+3;  // crosswave spots, horizontal.
                result->kind = s_crosswave;
             }
             else

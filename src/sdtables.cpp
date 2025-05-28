@@ -228,7 +228,10 @@ selector_item selector_list[] = {
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
    {"near 4",       "near 4",      "NEAR 4",       "NEAR 4",      selector_uninitialized},
    {"far 4",        "far 4",       "FAR 4",        "FAR 4",       selector_uninitialized},
-   {"the diamond",  "the diamond", "the diamond",  "the diamond", selector_uninitialized},
+   {"the 2x3",      "the 2x3",     "THE 2X3",      "THE 2X3",     selector_uninitialized},
+   {"the diamond",  "the diamond", "THE DIAMOND",  "THE DIAMOND", selector_uninitialized},
+   {"the line",     "the line",    "THE LINE",     "THE LINE",    selector_uninitialized},
+   {"the column",   "the column",  "THE COLUMN",   "THE COLUMN",  selector_uninitialized},
    {"those facing the caller", "those facing the caller",
     "THOSE FACING THE CALLER", "THOSE FACING THE CALLER",         selector_uninitialized},
    {"those facing away from the caller", "those facing away from the caller",
@@ -426,258 +429,270 @@ const veryshort identity24[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 expand::thing expand::init_table[] = {
 
    {{5, 7, 0, 1, 3, 4},
-    6, s_short6, s_rigger, 1, 0UL, 0x44,
-    warn__none, warn__none, normalize_before_merge, 0},
-
-   {{0, 1, 3, 2, 5, 6, -1, -1},
-    8, s1x8, s1x4p2dmd, 0, 0UL, 0x90,
+    6, s_short6, s_rigger, 1, 0UL, 0x44, false,
     warn__none, warn__none, normalize_before_merge, 0},
 
    // This thing compresses a short6 to a 2x2.
    {{0, 2, 3, 5},
-    4, s2x2, s_short6, 0, 0UL, 022UL,
+    4, s2x2, s_short6, 0, 0UL, 022UL, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    // And this one compresses a bigptpd.
    {{2, 4, 3, 1, 8, 10, 9, 7},
-    8, s_ptpd, sbigptpd, 0, 0UL, 04141UL,
+    8, s_ptpd, sbigptpd, 0, 0UL, 04141UL, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{3, 11},
-    2, s1x2, sdblspindle, 0, 0UL, 0xF7F7UL,
+    2, s1x2, sdblspindle, 0, 0UL, 0xF7F7UL, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    // Unsymmetrical recenter items.
 
    {{10, 15, 3, 1, 2, 7, 4, 5, 6, 8, 9, 11},
-    12, s3x4, s4x4, 0, 0UL, 0x7001,
+    12, s3x4, s4x4, 0, 0UL, 0x7001, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{12, 13, 14, 0, 1, 3, 2, 7, 11, 9, 10, 15},
-    12, s3x4, s4x4, 0, 0UL, 0x0170,
+    12, s3x4, s4x4, 0, 0UL, 0x0170, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{6, 11, 15, 13, 14, 3, 0, 1, 2, 4, 5, 7},
-    12, s3x4, s4x4, 1, 0UL, 0x1700,
+    12, s3x4, s4x4, 1, 0UL, 0x1700, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{8, 9, 10, 12, 13, 15, 14, 3, 7, 5, 6, 11},
-    12, s3x4, s4x4, 1, 0UL, 0x0017,
+    12, s3x4, s4x4, 1, 0UL, 0x0017, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{10, 11, 5, 4, 6, 7, 8, 9},
-    8, s2x4, s3x4, 0, 0UL, 0x00F,
+    8, s2x4, s3x4, 0, 0UL, 0x00F, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 4, 5, 11, 10},
-    8, s2x4, s3x4, 0, 0UL, 0x3C0,
+    8, s2x4, s3x4, 0, 0UL, 0x3C0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 3, 2, 7, 8, 4, 9},
-    8, s1x8, s1x10, 0, 0UL, 0x060,
+    8, s1x8, s1x10, 0, 0UL, 0x060, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 9, 4, 5, 6, 8, 7},
-    8, s1x8, s1x10, 0, 0UL, 0x003,
+    8, s1x8, s1x10, 0, 0UL, 0x003, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 3, 2, 10, 11, 4, 5},
-    8, s1x8, s1x12, 0, 0UL, 0x3C0,
+    8, s1x8, s1x12, 0, 0UL, 0x3C0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{4, 5, 10, 11, 6, 7, 9, 8},
-    8, s1x8, s1x12, 0, 0UL, 0x00F,
+    8, s1x8, s1x12, 0, 0UL, 0x00F, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 4, 5, 6, 7, 8, 9},
-    8, s2x4, s2x6, 0, 0UL, 0xC03,
+    8, s2x4, s2x6, 0, 0UL, 0xC03, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 8, 9, 10, 11},
-    8, s2x4, s2x6, 0, 0UL, 0x0F0,
+    8, s2x4, s2x6, 0, 0UL, 0x0F0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
-    12, s2x6, s2x8, 0, 0UL, 0xC003,
+    12, s2x6, s2x8, 0, 0UL, 0xC003, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15},
-    12, s2x6, s2x8, 0, 0UL, 0x03C0,
+    12, s2x6, s2x8, 0, 0UL, 0x03C0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{15, 14, 12, 13, 8, 9, 11, 10},
-    8, s1x8, s2x8, 0, 0UL, 0x00FF,
+    8, s1x8, s2x8, 0, 0UL, 0x00FF, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 3, 2, 7, 6, 4, 5},
-    8, s1x8, s2x8, 0, 0UL, 0xFF00,
+    8, s1x8, s2x8, 0, 0UL, 0xFF00, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 4, 7, 8, 9},
-    8, s1x4p2dmd, s1x4dmd, 0, 0UL, 0x60,
+    8, s1x4p2dmd, s1x4dmd, 0, 0UL, 0x60, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{5, 6, 7, 8, 9, 2, 3, 4},
-    8, s1x4p2dmd, s1x4dmd, 2, 0UL, 0x03,
+    8, s1x4p2dmd, s1x4dmd, 2, 0UL, 0x03, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, -1, 1, -1, 2, -1, 3, -1, -1, 8, -1, 9, -1, 11, -1, 10},
-    16, s_c1phan, sbigdmd, 0, 0UL, 0x0F0,
+    16, s_c1phan, sbigdmd, 0, 0UL, 0x0F0, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{-1, 2, -1, 3, -1, 5, -1, 4, 6, -1, 7, -1, 8, -1, 9, -1},
-    16, s_c1phan, sbigdmd, 0, 0UL, 0xC03,
+    16, s_c1phan, sbigdmd, 0, 0UL, 0xC03, false,
     warn__none, warn__none, normalize_recenter, 0},
 
-   /* This makes it possible to do "own the <points>, trade by flip the diamond"
-      from point-to-point diamonds. */
+   {{0, 1, 3, 2, 5, 6, -1, -1},
+    8, s1x8, s1x4p2dmd, 0, 0UL, 0x90, false,
+    warn__none, warn__none, normalize_before_merge, 0},
+
+   {{0, 1, -1, 2, 5, -1, -1, -1},
+    8, s1x8, s4p2x1dmd, 0, 0UL, 0xD8, false,
+    warn__none, warn__none, normalize_before_merge, 0},
+
+   {{0, 1, 2, 5, 6, 3},
+    6, s1x6, s4p2x1dmd, 0, 0UL, 0x90, true,      // This one requires exact action.
+    warn__none, warn__none, normalize_to_6, 0},
+
+   {{0, 1, 2, 6, 4, 3},
+    6, s1x6, splinedmd, 0, 0UL, 0xA0, true,      // This one requires exact action.
+    warn__none, warn__none, normalize_to_6, 0},
+
+   // This makes it possible to do "own the <points>, trade by flip the diamond"
+   // from point-to-point diamonds.
    // These two must be in this order.
    {{0, 1, 2, 3, 4, 5, 6, 7},
-    8, s1x8, s_ptpd, 0, 0UL, 0xAA,
+    8, s1x8, s_ptpd, 0, 0UL, 0xAA, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
    {{0, -1, 2, 4, -1, 6},
-    8, s1x6, s_ptpd, 0, 0UL, 0xAA,
+    8, s1x6, s_ptpd, 0, 0UL, 0xAA, false,
     warn__none, warn__none, normalize_strict_matrix, 0},
 
    // These next 4 must be in this order.
    {{1, 2, 3, 5, 6, 7},
-    6, s_2x1dmd, s3x1dmd, 0, 0UL, 0x11,
+    6, s_2x1dmd, s3x1dmd, 0, 0UL, 0x11, false,
     warn__none, warn__none, normalize_to_6, 0},
    {{1, 2, 5, 6},
-    4, s1x4,     s3x1dmd, 0, 0UL, 0x99,
+    4, s1x4,     s3x1dmd, 0, 0UL, 0x99, false,
     warn__none, warn__none, normalize_to_4, 0},
    {{7, 2, 3, 6},
-    4, sdmd,     s3x1dmd, 1, 0UL, 0x33,
+    4, sdmd,     s3x1dmd, 1, 0UL, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
    {{2, 6},
-    2, s1x2,     s3x1dmd, 0, 0UL, 0xBB,
+    2, s1x2,     s3x1dmd, 0, 0UL, 0xBB, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{11, 5},
-    2, s1x2, s_hsqtag, 0, 0UL, 03737,
+    2, s1x2, s_hsqtag, 0, 0UL, 03737, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{10, 11, 4, 5},
-    4, sdmd, s_hsqtag, 1, 0UL, 01717,
+    4, sdmd, s_hsqtag, 1, 0UL, 01717, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{8, 2},
-    2, s1x2, s_dmdlndmd, 0, 0UL, 07373,
+    2, s1x2, s_dmdlndmd, 0, 0UL, 07373, false,
     warn__none, warn__none, normalize_to_2, 1},
 
    {{7, 8, 1, 2},
-    4, s1x4, s_dmdlndmd, 1, 0UL, 07171,
+    4, s1x4, s_dmdlndmd, 1, 0UL, 07171, false,
     warn__none, warn__none, normalize_to_4, 1},
 
    {{10, 11, 1, 2, 4, 5, 7, 8},
-    8, s_crosswave, s_dmdlndmd, 0, 0UL, 01111,
+    8, s_crosswave, s_dmdlndmd, 0, 0UL, 01111, false,
     warn__none, warn__none, simple_normalize, 1},
 
    {{1, 2, 3, 4, 5, 8, 9, 10, 11, 12},
-    10, s2x5, s2x7, 0, 0UL, 0x20C1,
+    10, s2x5, s2x7, 0, 0UL, 0x20C1, false,
     warn__none, warn__none, simple_normalize, 0},
    {{10, 3},
-    2, s1x2, s2x7, 1, 0UL, 0x3BF7,
+    2, s1x2, s2x7, 1, 0UL, 0x3BF7, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16},
-    14, s2x7, s2x9, 0, 0UL, 0x20301,
+    14, s2x7, s2x9, 0, 0UL, 0x20301, false,
     warn__none, warn__none, simple_normalize, 0},
    {{13, 4},
-    2, s1x2, s2x9, 1, 0UL, 0x3BF7,
+    2, s1x2, s2x9, 1, 0UL, 0x3BF7, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-    12, s2x6, sbigdhrgl, 0, ~0UL, 01414,
+    12, s2x6, sbigdhrgl, 0, ~0UL, 01414, false,
     warn__none, warn__none, normalize_before_isolated_call, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
 
    // These three must be in this order.
    {{0, 1, -1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 10, 11},
-    16, s2x8, sbigbone, 0, 0x3C3C, 01414,
+    16, s2x8, sbigbone, 0, 0x3C3C, 01414, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
    {{0, 1, -1, -1, 4, 5, 6, 7, -1, -1, 10, 11},
-    12, s2x6, sbigbone, 0, 01414, 01414,
+    12, s2x6, sbigbone, 0, 01414, 01414, false,
     warn__none, warn__none, normalize_after_disconnected, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
    {{0, 1, -1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 10, 11},
-    16, s2x8, sbigbone, 0, 0x3C3C, 01414,
+    16, s2x8, sbigbone, 0, 0x3C3C, 01414, false,
     warn__none, warn__none, normalize_strict_matrix, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
 
    {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-    12, s2x6, sbighrgl, 0, ~0UL, 01414,
+    12, s2x6, sbighrgl, 0, ~0UL, 01414, false,
     warn__none, warn__none, normalize_before_isolated_call, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
 
    /* If only the center diamond is present, turn it into a 3dmd.
             If only the "wings" are present, turn it into a 2x6. */
    {{-1, 2, -1, -1, -1, 3, -1, 8, -1, -1, -1, 9},
-    12, s3dmd, sbighrgl, 0, 0UL, 06363,
+    12, s3dmd, sbighrgl, 0, 0UL, 06363, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-    12, s2x6, sbigdmd, 0, 0UL, 01414,
+    12, s2x6, sbigdmd, 0, 0UL, 01414, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    /* If only the center 1x4 is present, turn it into a 3x4.
       If only the "wings" are present, turn it into a 2x6. */
    {{-1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 8, 9},
-    12, s3x4, sbigdmd, 1, 0UL, 06363,
+    12, s3x4, sbigdmd, 1, 0UL, 06363, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{0, -1, -1, 1, 3, -1, -1, 4},
-    8, s2x4, s_bone6, 0, 0UL, 044,
+    8, s2x4, s_bone6, 0, 0UL, 044, false,
     warn__none, warn__none, normalize_after_disconnected, 0},
 
    // These two must be in this order.
    {{0, -1, -1, 1, 4, -1, -1, 5},
-    8, s2x4, s_bone, 0, 0UL, 0xCC,
+    8, s2x4, s_bone, 0, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
    {{0, -1, -1, -1, -1, 1, 4, -1, -1, -1, -1, 5},
-    12, s2x6, s_bone, 0, 0UL, 0xCC,
+    12, s2x6, s_bone, 0, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_strict_matrix, 0},
 
    {{-1, -1, 7, 6, -1, -1, 3, 2},
-    8, s1x8, s_bone, 0, 0UL, 0x33,
+    8, s1x8, s_bone, 0, 0UL, 0x33, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{-1, 0, 1, -1, -1, 4, 5, -1},
-    8, s2x4, s_rigger, 0, 0UL, 0xCC,
+    8, s2x4, s_rigger, 0, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    // This makes it possible to do "ends explode" from a rigger.
    // These two must be in this order.
    {{6, 7, -1, -1, 2, 3, -1, -1},
-    8, s1x8, s_rigger, 0, 0UL, 0x33,
+    8, s1x8, s_rigger, 0, 0UL, 0x33, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
    {{6, 7, -1, 2, 3, -1},
-    8, s1x6, s_rigger, 0, 0UL, 0x33,
+    8, s1x6, s_rigger, 0, 0UL, 0x33, false,
     warn__none, warn__none, normalize_after_disconnected, 0},
 
    /* This makes it possible to do "own the <points>, trade by flip the diamond" from
       a single diamond. */
    /* We do NOT compress to a 1x2 -- see comment above. */
    {{0, 1, 2, 3},
-    4, s1x4, sdmd, 0, 0UL, 0xA,
+    4, s1x4, sdmd, 0, 0UL, 0xA, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    // **** Have downgraded these next two, so that points of hourglass can do
    // disconnected peel to diamond or 1/2 circulate.
 
    {{0, -1, -1, 1, 4, -1, -1, 5},
-    8, s2x4, s_dhrglass, 0, 0UL, 0xCC,
+    8, s2x4, s_dhrglass, 0, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
    {{5, -1, -1, 0, 1, -1, -1, 4},
-    8, s2x4, s_hrglass, 1, 0UL, 0xCC,
+    8, s2x4, s_hrglass, 1, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{0, 1, 2, 4, 5, 6},
-    6, s2x3, s_spindle, 0, 0UL, 0x88,
+    6, s2x3, s_spindle, 0, 0UL, 0x88, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{0, 1, 2, 4, 5, 6},
-    6, s_ntrgl6cw, s_nxtrglcw, 0, 0UL, 0x88,
+    6, s_ntrgl6cw, s_nxtrglcw, 0, 0UL, 0x88, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{0, 1, 2, 4, 5, 6},
-    6, s_ntrgl6ccw, s_nxtrglccw, 0, 0UL, 0x88,
+    6, s_ntrgl6ccw, s_nxtrglccw, 0, 0UL, 0x88, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    /* This makes it possible to do "own the <points>, trade by flip the diamond" from
@@ -687,182 +702,182 @@ expand::thing expand::init_table[] = {
       "heads pass the ocean; heads recycle while the sides star thru". */
    // s_qtg_2x4
    {{5, -1, -1, 0, 1, -1, -1, 4},
-    8, s2x4, s_qtag, 1, 0UL, 0xCC,
+    8, s2x4, s_qtag, 1, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_before_isolated_call, 0},
 
    {{5, 1},
-    2, s1x2, s_spindle, 1, 0UL, 0xDD,
+    2, s1x2, s_spindle, 1, 0UL, 0xDD, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    // s_1x2_dmd
    {{3, 1},
-    2, s1x2, sdmd, 1, 0UL, 0x5,
+    2, s1x2, sdmd, 1, 0UL, 0x5, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{1, 3},
-    2, s1x2, s1x4, 0, 0UL, 0x5,
+    2, s1x2, s1x4, 0, 0UL, 0x5, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{4, 1},
-    2, s1x2, s2x3, 1, 0UL, 055,
+    2, s1x2, s2x3, 1, 0UL, 055, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    // s_2x3_qtg
    {{5, 7, 0, 1, 3, 4},
-    6, s2x3, s_qtag, 1, 0UL, 0x44,
+    6, s2x3, s_qtag, 1, 0UL, 0x44, false,
     warn__none, warn__none, normalize_after_triple_squash, 0},
 
    {{10, 11, 4, 5},
-     4, s1x4, s3x4, 0, 0UL, 01717,
+     4, s1x4, s3x4, 0, 0UL, 01717, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{5, 1, 2, 4},
-    4, sdmd, s_2x1dmd, 1, 0UL, 011,
+    4, sdmd, s_2x1dmd, 1, 0UL, 011, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{1, 2, 4, 5},
-    4, sdmd, s_1x2dmd, 0, 0UL, 011,
+    4, sdmd, s_1x2dmd, 0, 0UL, 011, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{0, 1, 3, 4},
-    4, s1x4, s_2x1dmd, 0, 0UL, 044,
+    4, s1x4, s_2x1dmd, 0, 0UL, 044, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{1, 3, 5, 7},
-    4, s2x2, s_galaxy, 0, 0UL, 0x55,
+    4, s2x2, s_galaxy, 0, 0UL, 0x55, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{6, 7, 2, 3},
-    4, s1x4, s_crosswave, 1, 0UL, 0x33,
+    4, s1x4, s_crosswave, 1, 0UL, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{7, 3},
-    2, s1x2, s_crosswave, 1, 0UL, 0x77,
+    2, s1x2, s_crosswave, 1, 0UL, 0x77, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{0, 1, 4, 5},
-    4, s2x2, s_rigger, 0, 0UL, 0xCC,
+    4, s2x2, s_rigger, 0, 0UL, 0xCC, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{6, 7, 2, 3},
-    4, s1x4, s_bone, 0, 0UL, 0x33,
+    4, s1x4, s_bone, 0, 0UL, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{1, 2, 4, 5},
-    4, s1x4, s1x6, 0, 0UL, 011,
+    4, s1x4, s1x6, 0, 0UL, 011, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{3, 2, 7, 6},
-    4, s1x4, s1x8, 0, 0UL, 0x33,
+    4, s1x4, s1x8, 0, 0UL, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{2, 6},
-    2, s1x2, s1x8, 0, 0UL, 0xBB,
+    2, s1x2, s1x8, 0, 0UL, 0xBB, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    // This is s_2x2_2x4.
    {{1, 2, 5, 6},
-    4, s2x2, s2x4, 0, 0UL, 0x99,
+    4, s2x2, s2x4, 0, 0UL, 0x99, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{1, 3, 2, 5, 7, 6},
-    6, s1x6, s1x8, 0, 0UL, 0x11,
+    6, s1x6, s1x8, 0, 0UL, 0x11, false,
     warn__none, warn__none, normalize_to_6, 0},
 
    {{1, 2, 3, 5, 6, 7},
-    6, s_1x2dmd, s1x3dmd, 0, 0UL, 0x11,
+    6, s_1x2dmd, s1x3dmd, 0, 0UL, 0x11, false,
     warn__none, warn__none, normalize_to_6, 0},
 
    {{0, 1, 2, 4, 5, 6},
-    6, s1x6, s3x1dmd, 0, 0UL, 0x88,
+    6, s1x6, s3x1dmd, 0, 0UL, 0x88, false,
     warn__none, warn__none, normalize_to_6, 0},
 
    {{6, 7, 2, 3},
-    4, s1x4, s_qtag, 0, 0UL, 0x33,
+    4, s1x4, s_qtag, 0, 0UL, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{7, 3},
-    2, s1x2, s_qtag, 0, 0UL, 0x77,
+    2, s1x2, s_qtag, 0, 0UL, 0x77, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{3, 1},
-    2, s1x2, s_star, 1, 0UL, 0x5,
+    2, s1x2, s_star, 1, 0UL, 0x5, false,
     warn__none, warn__none, normalize_to_2, 0},
    {{0, 2},
-    2, s1x2, s_star, 0, 0UL, 0xA,
+    2, s1x2, s_star, 0, 0UL, 0xA, false,
     warn__none, warn__none, normalize_to_2, 0},
 
    {{9, 11, 13, 6, 2, 0, 1, 3, 5, 14, 10, 8},
-    12, s2x6, sdeepbigqtg, 1, 0UL, 0x9090,
+    12, s2x6, sdeepbigqtg, 1, 0UL, 0x9090, false,
     warn__none, warn__phantoms_thinner, simple_normalize, 0},
 
    {{2, 3, 7, 6, 5, 4, 10, 11, 15, 14, 13, 12},
-    12, sbigh, sdblxwave, 0, 0UL, 0x0303,
+    12, sbigh, sdblxwave, 0, 0UL, 0x0303, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_DBLX)},
 
    {{13, 14, 1, 2, 5, 6, 9, 10},
-    8, s_alamo, s4x4, 0, 0UL, 0x9999,
+    8, s_alamo, s4x4, 0, 0UL, 0x9999, false,
     warn__none, warn__none, normalize_never, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, -1,-1, 1, 2, -1, -1, 9},
-    8, s2x4, s4dmd, 1, 0x66, ~0UL,
+    8, s2x4, s4dmd, 1, 0x66, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
 
    {{0, 1, -1, -1, 2, 3, 5, 6, 7, 8, 9, -1, -1, 10, 11, 13, 14, 15},
-    18, s3x6, s4dmd, 0, 0014014, ~0UL,
+    18, s3x6, s4dmd, 0, 0014014, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
 
    {{-1, 0, 1, -1, -1, 2, 3, -1, 4, 5, 6, 7, -1, 8, 9, -1, -1, 10, 11, -1, 12, 13, 14, 15},
-    24, s3x8, s4dmd, 0, 0x099099, ~0UL,
+    24, s3x8, s4dmd, 0, 0x099099, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
 
    {{1, -1, -1, 2, 6, 7, 9, -1, -1, 10, 14, 15},
-    12, s3x4, s4dmd, 0, 00606, ~0UL,
+    12, s3x4, s4dmd, 0, 00606, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
 
    {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1},
-    12, s3x4, s4dmd, 0, 06060, ~0UL,
+    12, s3x4, s4dmd, 0, 06060, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
 
    {{-1, 2, 3, -1, -1, 6, 7, 8, -1, 11, 12, -1, -1, 15, 16, 17},
-    16, s4dmd, s3x6, 0, 0x1919, ~0UL,
+    16, s4dmd, s3x6, 0, 0x1919, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X6)},
 
    {{13, 14, 1, -1, -1, 10, 5, 6, 9, -1, -1, 2},
-    12, sdeepqtg, s4x4, 0, 03030, ~0UL,
+    12, sdeepqtg, s4x4, 0, 03030, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{-1, -1, 13, 14, 1, -1, -1, 10, -1, -1, 5, 6, 9, -1, -1, 2},
-    16, sdeepbigqtg, s4x4, 0, 0x6363, ~0UL,
+    16, sdeepbigqtg, s4x4, 0, 0x6363, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{-1, -1, 13, 10, -1, -1, 1, 14, -1, -1, 5, 2, -1, -1, 9, 6},
-    16, s_c1phan, s4x4, 0, 0x3333, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x3333, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{-1, 13, -1, 15, -1, 1, -1, 3, 2, -1, 7, -1, 6, -1, 11, -1},
-    16, s_c1phan, s4x4, 0, 0xAA55, ~0UL,
+    16, s_c1phan, s4x4, 0, 0xAA55, ~0UL, false,
     warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, -1, 15, -1, -1, 1, -1, 3, -1, 5, -1, 7, 6, -1, 11, -1},
-    16, s_c1phan, s4x4, 0, 0xA55A, ~0UL,
+    16, s_c1phan, s4x4, 0, 0xA55A, ~0UL, false,
     warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, -1, 15, -1, 14, -1, 3, -1, -1, 5, -1, 7, -1, 9, -1, 11},
-    16, s_c1phan, s4x4, 0, 0x55AA, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x55AA, ~0UL, false,
     warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{-1, 13, -1, 15, 14, -1, 3, -1, 2, -1, 7, -1, -1, 9, -1, 11},
-    16, s_c1phan, s4x4, 0, 0x5AA5, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x5AA5, ~0UL, false,
     warn__check_4x4_ctrbox, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4)},
 
    {{10, 13, -1, 15, 14, 1, 3, -1, 2, 5, -1, 7, 6, 9, 11, -1},
-    16, s_c1phan, s4x4, 0, 0x8484, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x8484, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -870,7 +885,7 @@ expand::thing expand::init_table[] = {
                                                          NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
                                                          NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
    {{10, 13, 15, -1, 14, 1, -1, 3, 2, 5, 7, -1, 6, 9, -1, 11},
-    16, s_c1phan, s4x4, 0, 0x4848, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x4848, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -878,7 +893,7 @@ expand::thing expand::init_table[] = {
                                                          NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
                                                          NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
    {{10, 13, 15, -1, 14, 1, 3, -1, 2, 5, 7, -1, 6, 9, 11, -1},
-    16, s_c1phan, s4x4, 0, 0x8888, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x8888, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -887,7 +902,7 @@ expand::thing expand::init_table[] = {
                                                          NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
 
    {{10, 13, -1, 15, 14, 1, -1, 3, 2, 5, -1, 7, 6, 9, -1, 11},
-    16, s_c1phan, s4x4, 0, 0x4444, ~0UL,
+    16, s_c1phan, s4x4, 0, 0x4444, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -897,7 +912,7 @@ expand::thing expand::init_table[] = {
 
 
    {{12, 13, 14, 0, -1, -1, -1, -1, 4, 5, 6, 8, -1, -1, -1, -1},
-    16, s4dmd, s4x4, 0, 0xF0F0, ~0UL,
+    16, s4dmd, s4x4, 0, 0xF0F0, ~0UL, false,
     warn__check_4x4_start, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                                          NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -906,48 +921,48 @@ expand::thing expand::init_table[] = {
                                                          NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
 
    {{0, 1, 2, 3, -1, -1, 4, 5, 6, 7, 8, 9, -1, -1, 10, 11},
-    16, s4dmd, s3x4, 0, 0x3030, ~0UL,
+    16, s4dmd, s3x4, 0, 0x3030, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X4) |
                                               NEEDMASK(CONCPROP__NEEDK_3X4_D3X4) |
                                               NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4)},
 
    {{0, 1, 4, 5, -1, 6, 7, 8, 9, 10, 13, 14, -1, 15, 16, 17},
-    16, s4dmd, s3x6, 0, 0x1010, ~0UL,
+    16, s4dmd, s3x6, 0, 0x1010, ~0UL, false,
     warn__check_centered_qtag, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X6)},
    {{1, 2, 5, 6, 8, 9, 10, 11, 13, 14, 17, 18, 20, 21, 22, 23},
-    16, s4dmd, s3x8, 0, 0UL, ~0UL,
+    16, s4dmd, s3x8, 0, 0UL, ~0UL, false,
     warn__check_centered_qtag, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
 
    {{1, 2, 3, 5, 7, 8, 9, 11},
-    8, s_spindle, s_d3x4, 0, 0UL, 02121,
+    8, s_spindle, s_d3x4, 0, 0UL, 02121, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X4_D3X4)},
    {{1, 2, 3, 7, 8, 9},
-    6, s2x3, s_d3x4, 0, 0UL, 06161,
+    6, s2x3, s_d3x4, 0, 0UL, 06161, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15},
-    12, sdeepqtg, sdeepbigqtg, 0, 0, 0x0303,
+    12, sdeepqtg, sdeepbigqtg, 0, 0, 0x0303, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{0, 1, -1, -1, 5, 6, 7, 8, -1, -1, 12, 13},
-    12, s2x6, sd2x7, 0, 01414UL, 0x0E1CUL,
+    12, s2x6, sd2x7, 0, 01414UL, 0x0E1CUL, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{8, 11, 1, 2, 5, 7},
-    6, s2x3, s3x4, 1, 0UL, 03131,
+    6, s2x3, s3x4, 1, 0UL, 03131, false,
     warn__none, warn__none, simple_normalize, 0},
    {{12, 14, 3, 1, 4, 6, 11, 9},
-    8, s2x4, s_c1phan, 1, 0UL, 0xA5A5,
+    8, s2x4, s_c1phan, 1, 0UL, 0xA5A5, false,
     warn__none, warn__none, simple_normalize, 0},
    {{0, 2, 7, 5, 8, 10, 15, 13},
-    8, s2x4, s_c1phan, 0, 0UL, 0x5A5A,
+    8, s2x4, s_c1phan, 0, 0UL, 0x5A5A, false,
     warn__none, warn__none, simple_normalize, 0},
    {{6, 11, 15, 13, 14, 3, 7, 5},
-    8, s2x4, s4x4, 1, 0UL, 0x1717,
+    8, s2x4, s4x4, 1, 0UL, 0x1717, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{10, 15, 3, 1, 2, 7, 11, 9},
-    8, s2x4, s4x4, 0, 0UL, 0x7171,
+    8, s2x4, s4x4, 0, 0UL, 0x7171, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                               NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -958,7 +973,7 @@ expand::thing expand::init_table[] = {
    // s_qtg_3x4
    /* ***** This is a kludge to make threesome work!!!! */
    {{1, 2, 4, 5, 7, 8, 10, 11},
-    8, s_qtag, s3x4, 0, 0UL, ~0UL,
+    8, s_qtag, s3x4, 0, 0UL, ~0UL, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4X4) |
                                               NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_BLOB) |
@@ -970,48 +985,48 @@ expand::thing expand::init_table[] = {
                                               NEEDMASK(CONCPROP__NEEDK_3X8) |
                                               NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4)},
    {{0, 1, 2, 4, 5, 6, 7, 9},
-    8, s_323, s_343, 0, 0UL, 0x108,
+    8, s_323, s_343, 0, 0UL, 0x108, false,
     warn__none, warn__none, simple_normalize, 0},
    {{1, 2, 3, 5, 7, 8, 9, 11},
-    8, s_323, s_525, 0, 0UL, 02121,
+    8, s_323, s_525, 0, 0UL, 02121, false,
     warn__none, warn__none, simple_normalize, 0},
    {{1, 2, 3, 5, 6, 8, 9, 10, 12, 13},
-    10, s_343, s_545, 0, 0UL, 0x891,
+    10, s_343, s_545, 0, 0UL, 0x891, false,
     warn__none, warn__none, simple_normalize, 0},
    {{0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13},
-    12, s_525, s_545, 0, 0UL, 0x1020,
+    12, s_525, s_545, 0, 0UL, 0x1020, false,
     warn__none, warn__none, simple_normalize, 0},
    {{0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13},
-    12, s_525, sh545, 0, 0UL, 0x1020,
+    12, s_525, sh545, 0, 0UL, 0x1020, false,
     warn__none, warn__none, simple_normalize, 0},
    {{0, -1, 1, -1, 2, 4, 5, 6, 19, 18, 10, -1, 11, -1, 12, 14, 15, 16, 9, 8},
-    20, s4x5, s3oqtg, 0, 0UL, 0x22088,
+    20, s4x5, s3oqtg, 0, 0UL, 0x22088, false,
     warn__none, warn__none, simple_normalize, 0},
    {{1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18},
-    16, s2x8, s2x10, 0, 0UL, 0x80601,
+    16, s2x8, s2x10, 0, 0UL, 0x80601, false,
     warn__none, warn__none, simple_normalize, 0},
    {{-1, 15, 16, 20, 21, -1, 0, 22, 23, 17, 14, 13, -1, 3, 4, 8, 9, -1, 12, 10, 11, 5, 2, 1},
-    24, s4x6, s_bigblob, 0, 0UL, 0x0C00C0,
+    24, s4x6, s_bigblob, 0, 0UL, 0x0C00C0, false,
     warn__none, warn__none, simple_normalize, 0},
    {{-1, 21, 22, 2, 3, -1, 6, 4, 5, 23, 20, 19, -1, 9, 10, 14, 15, -1, 18, 16, 17, 11, 8, 7},
-    24, s4x6, s_bigblob, 0, 0UL, 0x003003,
+    24, s4x6, s_bigblob, 0, 0UL, 0x003003, false,
     warn__none, warn__none, simple_normalize, 0},
    {{7, 6, 5, 4, 15, 14, 13, 12},
-    8, s2x4, sdeepbigqtg, 0, 0UL, 0xF0F,
+    8, s2x4, sdeepbigqtg, 0, 0UL, 0xF0F, false,
     warn__none, warn__none, simple_normalize, 0},
    {{5, 4, 3, 2, 11, 10, 9, 8},
-    8, s2x4, sdeepxwv, 1, 0UL, 0303,
+    8, s2x4, sdeepxwv, 1, 0UL, 0303, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_DEEPXWV)},
    {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15},
-    14, s1x14, s1x16, 0, 0UL, 0x101,
+    14, s1x14, s1x16, 0, 0UL, 0x101, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_1X16)},
    {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13},
-    12, s1x12, s1x14, 0, 0UL, 0x81,
+    12, s1x12, s1x14, 0, 0UL, 0x81, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_1X16)},
    {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11},
-    10, s1x10, s1x12, 0, 0UL, 0101,
+    10, s1x10, s1x12, 0, 0UL, 0101, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                               NEEDMASK(CONCPROP__NEEDK_END_1X4) |
@@ -1020,131 +1035,132 @@ expand::thing expand::init_table[] = {
                                               NEEDMASK(CONCPROP__NEEDK_1X12) |
                                               NEEDMASK(CONCPROP__NEEDK_1X16)},
    {{0, 1, 2, 3, 5, 14, 8, 9, 10, 11, 13, 6},
-    12, sbigrig, sbigbigx, 0, 0UL, 0x9090,
+    12, sbigrig, sbigbigx, 0, 0UL, 0x9090, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_QUAD_1X4)},
    {{3, 10, 6, 7, 9, 4, 0, 1},
-    8, s_rigger, sdeepxwv, 0, 0UL, 04444,
+    8, s_rigger, sdeepxwv, 0, 0UL, 04444, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_QUAD_1X4)},
 
    {{2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15},
-    12, sdeepxwv, sbigbigx, 0, 0UL, 0x303,
+    12, sdeepxwv, sbigbigx, 0, 0UL, 0x303, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_QUAD_1X4)},
 
    // order of these next 2 items must be as shown: must be 3x4, 1x6!!!!
    {{15, 16, 17, 6, 7, 8},
-    6,  s1x6, s3x6, 0, 0UL, 0077077,
+    6,  s1x6, s3x6, 0, 0UL, 0077077, false,
     warn__none, warn__none, simple_normalize, 0},
    {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17},
-    12, s3x4, s3x6, 0, 0UL, 0141141,
+    12, s3x4, s3x6, 0, 0UL, 0141141, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X6)},
 
    {{12, 13, 15, 14, 4, 5, 7, 6},
-    8, s1x8, s4dmd, 0, 0UL, 0x0F0F,
+    8, s1x8, s4dmd, 0, 0UL, 0x0F0F, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
    {{1, 2, 5, 6, 7, 9, 10, 13, 14, 15},
-    10, swqtag, s4dmd, 0, 0UL, 0x1919,
+    10, swqtag, s4dmd, 0, 0UL, 0x1919, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
    {{1, 2, 6, 7, 9, 10, 14, 15},
-    8, s_qtag, s4dmd, 0, 0UL, 0x3939,
+    8, s_qtag, s4dmd, 0, 0UL, 0x3939, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD) |
                                               NEEDMASK(CONCPROP__NEEDK_4DMD)},
    {{0, 1, 3, 4, 5, 6, 8, 9},
-    8, s_qtag, swqtag, 0, 0UL, 0x084,
+    8, s_qtag, swqtag, 0, 0UL, 0x084, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{5, 4, 3, 6, 7, 8, 14, 13, 12, 15, 16, 17},
-    12, s3dmd, sbig3dmd, 0, 0UL, 0007007,
+    12, s3dmd, sbig3dmd, 0, 0UL, 0007007, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{7, 6, 5, 4, 8, 9, 10, 11, 19, 18, 17, 16, 20, 21, 22, 23},
-    16, s4dmd, sbig4dmd, 0, 0UL, 0x00F00F,
+    16, s4dmd, sbig4dmd, 0, 0UL, 0x00F00F, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{7, 8, 9, 2, 3, 4},
-    6, s1x6, swqtag, 0, 0UL, 0x63,
+    6, s1x6, swqtag, 0, 0UL, 0x63, false,
     warn__none, warn__none, simple_normalize, 0},
 
    // Some things to compress an hqtag.
    {{0, 1, 2, 3, 14, 15, 8, 9, 10, 11, 6, 7},
-    12, sbigh, s_hqtag, 0, 0UL, 0x3030,
+    12, sbigh, s_hqtag, 0, 0UL, 0x3030, false,
     warn__none, warn__none, simple_normalize, 0},
    {{0, 4, 5, 11, -1, -1, 6, 7, 8, 12, 13, 3, -1, -1, 14, 15},
-    16, s4dmd, s_hqtag, 0, 0UL, 0x0606,
+    16, s4dmd, s_hqtag, 0, 0UL, 0x0606, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{0, 1, 3, 4, 5, 6, 8, 9},
-    8, s2x4, sdeep2x1dmd, 0, 0UL, 0x084,
+    8, s2x4, sdeep2x1dmd, 0, 0UL, 0x084, false,
     warn__none, warn__none, simple_normalize, 0},
    {{5, 4, 1, 3, 2, 11, 10, 7, 9, 8},
-    10, sdeep2x1dmd, sdeepxwv, 1, 0UL, 00101,
+    10, sdeep2x1dmd, sdeepxwv, 1, 0UL, 00101, false,
     warn__none, warn__none, simple_normalize, 0},
 
    {{1, 2, 3, 6, 7, 8},
-    6, s2x3, s2x5, 0, 0UL, 0x231,
+    6, s2x3, s2x5, 0, 0UL, 0x231, false,
     warn__none, warn__none, normalize_to_6, 0},
    {{4, 3, 2, 9, 8, 7},
-    6, s2x3, sd2x5, 1, 0UL, 0x063,
+    6, s2x3, sd2x5, 1, 0UL, 0x063, false,
     warn__none, warn__none, normalize_to_6, 0},
 
    {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18},
-    12, s2x6, s4x6, 0, 0UL, 0x03F03F,
+    12, s2x6, s4x6, 0, 0UL, 0x03F03F, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4X6) |
                                               NEEDMASK(CONCPROP__NEEDK_TWINDMD) |
                                               NEEDMASK(CONCPROP__NEEDK_TWINQTAG)},
    // order of these next 3 items must be as shown: must be 1x8, 3x6, 3x4!!!!
    {{20, 21, 23, 22, 8, 9, 11, 10},
-    8, s1x8, s3x8, 0, 0UL, 0x0FF0FF,
+    8, s1x8, s3x8, 0, 0UL, 0x0FF0FF, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
    {{1, 2, 3, 4, 5, 6, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 22, 23},
-    18, s3x6, s3x8, 0, 0UL, 0x181181,
+    18, s3x6, s3x8, 0, 0UL, 0x181181, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
    {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23},
-    12, s3x4, s3x8, 0, 0UL, 0x3C33C3,
+    12, s3x4, s3x8, 0, 0UL, 0x3C33C3, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3X8)},
    {{1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18},
-    16, s2x8, s2x10, 0, 0UL, ~0UL,
+    16, s2x8, s2x10, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X10)},
    {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22},
-    20, s2x10, s2x12, 0, 0UL, 0x801801,
+    20, s2x10, s2x12, 0, 0UL, 0x801801, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X12)},
    {{2, 3, 4, 5, 6, 7, 8, 9, 14, 15, 16, 17, 18, 19, 20, 21},
-    16, s2x8, s2x12, 0, 0UL, ~0UL,
+    16, s2x8, s2x12, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X12)},
    {{3, 4, 5, 6, 7, 8, 15, 16, 17, 18, 19, 20},
-    12, s2x6, s2x12, 0, 0UL, ~0UL,
+    12, s2x6, s2x12, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X12)},
    {{4, 5, 6, 7, 16, 17, 18, 19},
-    8, s2x4, s2x12, 0, 0UL, ~0UL,
+    8, s2x4, s2x12, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X12)},
    {{14, 1, 15, 10, 6, 9, 7, 2},
-    8, s_ptpd, s4ptpd,0, 0UL, 0x3939,
+    8, s_ptpd, s4ptpd,0, 0UL, 0x3939, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4D_4PTPD)},
    {{1, 2, 4, 3, 6, 7, 9, 8},
-    8, s1x8, s1x10, 0, 0UL, 0x21,
+    8, s1x8, s1x10, 0, 0UL, 0x21, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_1X10)},
+
    {{1, 8, 10, 11, 7, 2, 4, 5},
-    8, s_bone, sbigh, 0, 0UL, 01111,
+    8, s_bone, sbigh, 0, 0UL, 01111, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{1, 2, 3, 5, 7, 8, 9, 11},
-    8, s1x3dmd, sbigx, 0, 0UL, 02121,
+    8, s1x3dmd, sbigx, 0, 0UL, 02121, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    8, s_crosswave, sbigx, 0, 0UL, 0303,
+    8, s_crosswave, sbigx, 0, 0UL, 0303, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 5, 8, 9, 11},
-    6, s_1x2dmd, sbigx, 0, 0UL, 02323,
+    6, s_1x2dmd, sbigx, 0, 0UL, 02323, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 5, 4, 8, 9, 11, 10},
-    8, s1x8,    s1x12, 0, 0UL, ~0UL,
+    8, s1x8,    s1x12, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4) |
@@ -1153,88 +1169,93 @@ expand::thing expand::init_table[] = {
                                              NEEDMASK(CONCPROP__NEEDK_QUAD_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_1X16)},
    {{1, 4, 8, 9, 7, 10, 2, 3},
-    8, s_bone, sbigbone, 0, 0UL, 04141,
+    8, s_bone, sbigbone, 0, 0UL, 04141, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_END_2X2) |
                                              NEEDMASK(CONCPROP__NEEDK_CTR_1X4)},
    {{4, 5, 8, 9, 10, 11, 2, 3},
-    8, s_rigger, sbigrig, 0, 0UL, 0303,
+    8, s_rigger, sbigrig, 0, 0UL, 0303, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4},
-    12, sbigrig, sdblbone, 0, 0UL, 0x2121,
+    12, sbigrig, sdblbone, 0, 0UL, 0x2121, false,
     warn__none, warn__none, plain_normalize, 0},
    {{0, 1, 3, 2, 12, 13, 8, 9, 11, 10, 4, 5},
-    12, sbigbone, sdblrig, 0, 0UL, 0xC0C0,
+    12, sbigbone, sdblrig, 0, 0UL, 0xC0C0, false,
     warn__none, warn__none, plain_normalize, 0},
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    8, s3x1dmd, sbig3x1dmd, 0, 0UL, 0303,
+    8, s3x1dmd, s5x1dmd, 0, 0UL, 0303, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_DMD) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{2, 3, 4, 5, 8, 9, 10, 11},
-    8, s1x3dmd, s1x5dmd,    0, 0UL, 0303,
+    8, s1x3dmd, s1x5dmd,    0, 0UL, 0303, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_DMD) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
    {{1, 2, 3, 4, 6, 7, 8, 9},
-    8, s1x3dmd, s1x4dmd,    0, 0UL, 0x021,
+    8, s1x3dmd, s1x4dmd,    0, 0UL, 0x021, false,
     warn__none, warn__none, plain_normalize, 0},
    {{1, 4, 3, 2, 7, 10, 9, 8},
-    8, s_dhrglass,sbigdhrgl,0, 0UL, 04141,
+    8, s_dhrglass,sbigdhrgl,0, 0UL, 04141, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
    {{10, 1, 2, 9, 4, 7, 8, 3},
-    8, s_hrglass, sbighrgl, 1, 0UL, 04141,
+    8, s_hrglass, sbighrgl, 1, 0UL, 04141, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_END_2X2)},
+   {{8, 9, 2, 3},
+    4, sdmd, sbighrgl, 1, 0UL, 06363, false,
+    warn__none, warn__none, normalize_to_4, 0},
 
    {{10, 1, 2, 3, 4, 7, 8, 9},
-    8, s_qtag, sbigdmd, 1, 0UL, 04141,
+    8, s_qtag, sbigdmd, 1, 0UL, 04141, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_END_2X2) |
                                               NEEDMASK(CONCPROP__NEEDK_CTR_1X4)},
+
    // This one is troublesome.
    {{1, 2, 3, 4, 7, 8, 9, 10},
-    8, s2x4, s2x6, 0, 0UL, 04141,
+    8, s2x4, s2x6, 0, 0UL, 04141, false,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_2X6) |
                                               NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
                                               NEEDMASK(CONCPROP__NEEDK_END_2X2)},
 
    {{1, 9, 11, 8, 7, 3, 5, 2},
-    8, s_rigger, sdblbone6, 0, 0UL, 02121,
+    8, s_rigger, sdblbone6, 0, 0UL, 02121, false,
     warn__none, warn__none, plain_normalize, 0},
    {{11, 5},
-    2, s1x2, s3dmd, 0, 0UL, ~0UL,
+    2, s1x2, s3dmd, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3DMD)},
    {{0, 1, 2, 4, 5, 6, 7, 8, 10, 11},
-    10, s_343, s3dmd, 0, 0UL, ~0UL,
+    10, s_343, s3dmd, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3DMD)},
    {{0, 1, 2, 5, 6, 7, 8, 11},
-    8, s_323, s3dmd, 0, 0UL, ~0UL,
+    8, s_323, s3dmd, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3DMD)},
    {{9, 10, 11, 1, 3, 4, 5, 7},
-    8, s1x3dmd, s_3mdmd, 0, 0UL, 0505,
+    8, s1x3dmd, s_3mdmd, 0, 0UL, 0505, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3DMD)},
    {{0, 2, 4, 5, 6, 8, 10, 11},
-    8, s_bone, s_3mptpd, 0, 0UL, 01212,
+    8, s_bone, s_3mptpd, 0, 0UL, 01212, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_3DMD)},
    {{9, 10, 11, 1, 3, 4, 5, 7},
-    8,  s3x1dmd, s3dmd,  0, 0UL, 0505,
+    8,  s3x1dmd, s3dmd,  0, 0UL, 0505, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_END_DMD) |
                                              NEEDMASK(CONCPROP__NEEDK_CTR_DMD) |
                                              NEEDMASK(CONCPROP__NEEDK_3DMD)},
+
    {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14},
-    12, s2x6,    s2x8,   0, 0UL, 0x8181,
+    12, s2x6,    s2x8,   0, 0UL, 0x8181, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X8)},
    {{2, 3, 4, 5, 10, 11, 12, 13},
-    8,  s2x4,    s2x8,   0, 0UL, ~0UL,
+    8,  s2x4,    s2x8,   0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_2X8)},
    {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23},
-    16, s4x4, s_bigblob, 0, 0UL, ~0UL,
+    16, s4x4, s_bigblob, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_BLOB)},
    {{9, 8, 2, 7, 6, 5, 19, 18, 12, 17, 16, 15},
-    12, sbigdmd, s4x5, 0, 0UL, ~0UL,
+    12, sbigdmd, s4x5, 0, 0UL, ~0UL, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4X5)},
    {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15},
-    10, s2x5, s4x5, 0, 0UL, 0x07C1F,
+    10, s2x5, s4x5, 0, 0UL, 0x07C1F, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4X5)},
    {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17},
-    12, s3x4, s4x5, 1, 0UL, 0x8C631,
+    12, s3x4, s4x5, 1, 0UL, 0x8C631, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_4X5)},
 
    {{0}, 0, nothing, nothing}};
@@ -1892,6 +1913,8 @@ map::map_thing map::map_init_table[] = {
     s4x4,2,MPKIND__OVERLAP,0,     0,  s4x6,      0x000, 0},
    {{0, 1, 5, 11, 7, 8, 9, 10,         1, 2, 3, 4, 6, 7, 11, 5},
     s_qtag,2,MPKIND__OVERLAP,0,   0,  s3dmd,     0x000, 0},
+   {{0, 1, 2, 3, -1, -1, 5, 4,       -1, -1, 11, 10, 6, 7, 8, 9},
+    s_crosswave,2,MPKIND__OVERLAP,0, 0, sdeepxwv, 0x000, 0},
 
    // This helps with things like triple boxes working together rotary spin.
    // We may have been confused about what "step to a left-handed wave and cast off 3/4"
@@ -2642,6 +2665,7 @@ const map::map_thing map::spec_map_table[] = {
 
 
 static expand::thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, s_thar, s4x4, 0};
+static expand::thing rear_alamo_stuff = {{6, 7, 0, 1, 2, 3, 4, 5}, 8, s_thar, s_alamo, 0};
 static expand::thing rear_ohh_stuff = {{-1, 5, 4, -1, -1, 7, 6, -1, -1, 1, 0, -1, -1, 3, 2, -1}, 16, nothing, s_thar, 0};
 static expand::thing rear_bigd_stuff1 = {{-1, -1, 10, 11, 1, 0, -1, -1, 4, 5, 7, 6}, 12, nothing, s3x4, 1};
 static expand::thing rear_bigd_stuff2 = {{8, 9, 10, 11, -1, -1, 2, 3, 4, 5, -1, -1}, 12, nothing, s3x4, 1};
@@ -2972,8 +2996,11 @@ full_expand::thing touch_init_table3[] = {
    // Ends touch from diamonds to thar.
    {warn__none,       8, &step_8by_stuff,      s_qtag,    0xFFFFUL,     0x78D2UL, ~0UL},
 
-   // Touch from alamo 8-chain to thar.
+   // Touch from alamo (as 4x4) 8-chain to thar.
    {warn__none,       8, &rear_thar_stuff,     s4x4,  0x3C3C3C3CUL, 0x2034081CUL, ~0UL},
+
+   // Touch from genuine alamo 8-chain to thar.
+   {warn__none,       8, &rear_alamo_stuff,    s_alamo,   0xFFFFUL,     0x78D2UL, ~0UL},
 
    // Touch from "general lines with centers 1/4ed in" 2x4 to qtag.
    // Touch from "facing lines with centers 1/4ed in" 2x4 to thar.
@@ -3207,7 +3234,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     s1x8,     1, 0, 9, 1,  0x2F5, schema_concentric},
    {sbigrig,        schema_nothing, {4, 5, 10, 11,     0, 1, 3, 2, 6, 7, 9, 8},
              s2x2,     s1x8,     0, 0, 9, 1,  0x2FA, schema_concentric},
-   {sbig3x1dmd,     schema_nothing, {11, 4, 5, 10,     0, 1, 3, 2, 6, 7, 9, 8},
+   {s5x1dmd,        schema_nothing, {11, 4, 5, 10,     0, 1, 3, 2, 6, 7, 9, 8},
              sdmd,     s1x8,     1, 0, 9, 1,  0x2F5, schema_concentric},
    {s1x5dmd,        schema_nothing, {4, 5, 10, 11,     0, 1, 3, 2, 6, 7, 9, 8},
              sdmd,     s1x8,     0, 0, 9, 1,  0x2FA, schema_concentric},
@@ -3484,7 +3511,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s2x2,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
    {sbigrig,        schema_nothing, {0, 1, 3, 2, 9, 8, 6, 7,             11, 4, 5, 10},
              s1x4,     s2x2,     0, 1, 1, 2,  0x2F7, schema_in_out_triple},
-   {sbig3x1dmd,     schema_in_out_triple, {0, 1, 3, 2, 9, 8, 6, 7,         11, 4, 5, 10},
+   {s5x1dmd,        schema_in_out_triple, {0, 1, 3, 2, 9, 8, 6, 7,         11, 4, 5, 10},
              s1x4,     sdmd,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
    {s1x5dmd,        schema_in_out_triple, {0, 1, 3, 2, 9, 8, 6, 7,         4, 5, 10, 11},
              s1x4,     sdmd,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
@@ -3764,35 +3791,86 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_ptpd,     sbigptpd, 0,  0,    0x0E, 0x0, schema_nothing,          nothing,     nothing,  warn__none, 0, 0, {2, 4, 3, 1, 8, 10, 9, 7}, {0}},
 
    {s1x3p1dmd,     s1x8,  0,  0x0C, 0x0B, 0x0, schema_matrix,         s1x4p2dmd,     nothing,  warn__none, 2, 2, {1, 2, 6, 7, 3, 4}, {5, 6, -1, -1, 0, 1, 3, 2}},
-
    {s1x3p1dmd,     s1x8,  0,  0xC0, 0x0E, 0x0, schema_matrix,         s1x4p2dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 6, 7}, {0, 1, 3, 2, 5, 6, -1, -1}},
 
-   {s1x8,     s1x4p2dmd,  0xC0,  0, 0x0E, 0x0, schema_matrix,         s1x4p2dmd,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, 5, 6, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s1x8,     s1x5p1dmd,  0xF0,  0, 0x0E, 0x0, schema_matrix,         s1x5p1dmd,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s1x8,     s1x5p1dmd,  0,  0xF0, 0x0E, 0x0, schema_matrix,         s1x8,          nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 3, 2, -1, -1, -1, -1}},
+   {s1x4p2dmd, s4p2x1dmd,   0, 0xD8, 0x0E, 0x0, schema_matrix,        s1x4p2dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, -1, -1, 5, -1, -1}},
+   {s1x4p2dmd, s4p2x1dmd, 0xD8,   0, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, -1, -1, 5, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
-   {s_1x2dmd,      s1x8, 0,     0x44, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7}, {0, 1, -1, 2, 4, 5, -1, 6}},
-   {s_1x2dmd,      s1x8, 044,   0,    0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {1, 3, -1, 5, 7, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s_1x2dmd,  s_galaxy, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {0, -1, 3, 4, -1, 7}, {1, -1, 2, -1, 5, -1, 6, -1}},
-   {s_1x2dmd,      s2x4, 022,   0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 2, 3, 5},               {0, 3, 4, 7}},
-   {sdmd,          s2x4, 0,     0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
-   {sdmd,          s2x3, 0,      022, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
-   {s1x4,      s_galaxy, 0,     0xAA, 0x0C, 0x0, schema_concentric,     s1x4,        sdmd,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
-   {s2x4,        s_thar, 0x66,  0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 3, 4, 7}},
-   {s2x4,        s_thar, 0x66,  0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}},
-   {s2x3,        s_thar, 022,   0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 2, 3, 5}},
-   {s2x3,        s_thar, 022,   0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 2, 3, 5}},
-   {s1x2,       s1x3dmd, 0,     0x88, 0x0C, 0x0, schema_concentric_2_6, s1x2,        s1x6,     warn__none, 0, 0, {0, 1}, {0, 1, 2, 4, 5, 6}},
-   {s1x2,        s_hrglass, 0,  0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
-   {s1x2,        s_qtag, 0,     0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
-   {s_qtag,        s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}},
-   {s1x4,          s2x3, 0,      022, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
-   {s2x2,          s2x3, 0,      022, 0x0C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+   {s3p1x1dmd,     s1x8, 0x03, 0x4E, 0x0B, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 2, 2, {-1, -1, 6, 7, 3, 4}, {5, -1, -1, -1, 0, 1, -1, 2}},
+   {s3p1x1dmd,     s1x8, 0x03, 0xE4, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {-1, -1, 3, 4, 6, 7}, {0, 1, -1, 2, 5, -1, -1, -1}},
 
-   // **** It would seem that these next two maps could be combined into one,
-   // with m2=0.
-   {s_qtag,        s2x4, 0x33, 0x33,  0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s_qtag,        s2x4, 0x33, 0xCC,  0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x8,     s1x4p2dmd, 0xC0,    0, 0x0E, 0x0, schema_matrix,        s1x4p2dmd,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, 5, 6, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x8,     s4p2x1dmd, 0xE4,    0, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {0, 1, -1, 2, 5, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   {s1x6,     s4p2x1dmd,    0, 0xD8, 0x0E, 0x0, schema_matrix,        s1x8,          nothing,  warn__none, 0, 0, {1, 3, 2, 5, 7, 6}, {0, 1, 3, -1, -1, 4, -1, -1}},
+
+   {s1x8,     splinepdmd,  0xF0,   0, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x8,     splinedmd,  0xF0,    0, 0x0E, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   {splinedmd,  slinedmd,  0x0F,   0, 0x0D, 0x0, schema_matrix,       slinedmd,      nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 1, 2, 3, 0}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {splinedmd,  slinedmd,  0,   0xF0, 0x0D, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {7, 4, 5, 6, -1, -1, -1, -1}},
+
+   {s1x8,       s2x4,     0x30, 0x6F, 0x2D, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 1, {0, 1, 3, 2, -1, -1, 4, 6}, {-1, -1, -1, -1, 5, -1, -1, 7}},
+   {s1x8,       s2x4,     0x03, 0xF6, 0x2D, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 3, {-1, -1, 4, 6, 0, 1, 3, 2}, {5, -1, -1, 7, -1, -1, -1, -1}},
+   {s1x8,     splinepdmd,    0, 0xF0, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 3, 2, -1, -1, -1, -1}},
+   {s1x8,     splinedmd,     0, 0xF0, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 3, 2, -1, -1, -1, -1}},
+
+   {s2x4,     splinepdmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,     s_trngl8,        nothing,  warn__none, 0, 1, {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
+
+   {s_ptpd,   splinepdmd,    0, 0x0F, 0x0E, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 6, 7, 4, 5}},
+
+   {s_ptpd,   slinepdmd,     0, 0xF0, 0x0D, 0x0, schema_matrix,         s_ptpd,      nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {4, 5, 6, 7, -1, -1, -1, -1}},
+
+   {s_ptpd,   s_trngl8,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,      slinepdmd,      nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 2, 3}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+
+   {s_qtag,   splinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,         s_qtag,      nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 3, 1, 2, 4}},
+   {s_qtag,   slinedmd,      0, 0xF0, 0x0D, 0x0, schema_matrix,         s_qtag,      nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {4, 3, 1, 2, -1, -1, -1, -1}},
+   {s_qtag,   s_trngl8,   0x1E, 0xF0, 0x0D, 0x0, schema_matrix,      splinedmd,      nothing,  warn__none, 0, 3, {7, -1, -1, -1, -1, 5, 6, 4}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_qtag,   s_trngl8,   0xE1, 0x0F, 0x0D, 0x0, schema_matrix,       slinedmd,      nothing,  warn__none, 0, 0, {-1, 2, 3, 1, 0, -1, -1, -1}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+
+   {s2x3,    splinedmd,      0, 0x5F, 0x0E, 0x0, schema_matrix,         s4x4,        nothing,  warn__none, 0, 0, {10, 15, 3, 7, 11, 9}, {-1, -1, -1, -1, -1, 14, -1, 5}},
+
+   {splinepdmd, splinepdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,       s_ptpd,      nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {-1, -1, -1, -1, 6, 7, 4, 5}},
+   {splinedmd, splinedmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,         s_qtag,      nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 7, 5, 6, 0}, {-1, -1, -1, -1, 3, 1, 2, 4}},
+
+   {splinedmd, slinepdmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,     splinepdmd,      nothing,  warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
+
+   {splinepdmd, splinedmd,  0, 0xF0, 0x0E, 0x0, schema_matrix,        splinepdmd,    nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {splinepdmd, splinedmd, 0xF0,  0, 0x0E, 0x0, schema_matrix,        splinedmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {splinepdmd, slinepdmd,  0, 0xF0, 0x0D, 0x0, schema_matrix,        splinepdmd,    nothing,  warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {6, 7, 4, 5, -1, -1, -1, -1}},
+   {splinepdmd, slinedmd,   0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      splinedmd,    nothing,  warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {7, 4, 5, 6, -1, -1, -1, -1}},
+   {splinepdmd, slinedmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,      slinepdmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
+
+   {splinepdmd, slinepdmd,  0x0F,    0, 0x0D, 0x0, schema_matrix,       slinepdmd,   nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 2, 3, 0, 1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {splinedmd, slinepdmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,       slinedmd,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, 1, 2, 3, 0}, {-1, -1, -1, -1, 4, 5, 6, 7}},
+
+   {s1x8,        s_ptpd,  0xA0, 0x0A, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, 6, -1, 4, -1}, {0, -1, 3, -1, 6, 7, 4, 5}},
+   {s1x8,        s_ptpd,  0x0A, 0xA0, 0x0E, 0x0, schema_matrix,       splinepdmd,    nothing,  warn__none, 0, 2, {6, -1, 4, -1, 0, 1, 3, 2}, {6, 7, 4, 5, 0, -1, 3, -1}},
+
+   {s2x4,        s_ptpd,  0xF0, 0xF0, 0x0D, 0x0, schema_matrix,       slinepdmd,    nothing,  warn__none, 0, 1, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
+
+   {s_qtag,        s1x8,  0xE1, 0xF0, 0x0E, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 0, {-1, 5, 6, 4, 7, -1, -1, -1}, {0, 1, 3, 2, -1, -1, -1, -1}},
+   {s_qtag,        s1x8,  0x1E, 0x0F, 0x0E, 0x0, schema_matrix,       splinedmd,     nothing,  warn__none, 0, 2, {7, -1, -1, -1, -1, 5, 6, 4}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+
+   {s_1x2dmd,      s1x8,     0, 0x44, 0x0E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7}, {0, 1, -1, 2, 4, 5, -1, 6}},
+   {s_1x2dmd,      s1x8,   044,    0, 0x0E, 0x0, schema_matrix,         s1x8,        nothing,  warn__none, 0, 0, {1, 3, -1, 5, 7, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_1x2dmd,  s_galaxy,   022, 0xAA, 0x1E, 0x0, schema_matrix,         s_crosswave, nothing,  warn__none, 0, 0, {0, -1, 3, 4, -1, 7}, {1, -1, 2, -1, 5, -1, 6, -1}},
+   {s_1x2dmd,      s2x4,   022, 0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 2, 3, 5},               {0, 3, 4, 7}},
+   {sdmd,          s2x4,     0, 0x66, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 3, 4, 7}},
+   {sdmd,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+   {s1x4,      s_galaxy,     0, 0xAA, 0x0C, 0x0, schema_concentric,     s1x4,        sdmd,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
+   {s2x4,        s_thar,  0x66, 0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 3, 4, 7}},
+   {s2x4,        s_thar,  0x66, 0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 3, 4, 7}},
+   {s2x3,        s_thar,   022, 0x33, 0x0E, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 1, 0, {2, 3, 6, 7},               {0, 2, 3, 5}},
+   {s2x3,        s_thar,   022, 0xCC, 0x0D, 0x1, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 4, 5},               {0, 2, 3, 5}},
+   {s1x2,       s1x3dmd,     0, 0x88, 0x0C, 0x0, schema_concentric_2_6, s1x2,        s1x6,     warn__none, 0, 0, {0, 1}, {0, 1, 2, 4, 5, 6}},
+   {s1x2,        s_hrglass,  0, 0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
+   {s1x2,        s_qtag,     0, 0x88, 0x0C, 0x2, schema_concentric_2_6, s1x2,        s_short6, warn__none, 0, 1, {0, 1},                     {1, 2, 4, 5, 6, 0}},
+   {s_qtag,        s2x4,  0x33, 0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 3, 4, 7}},
+   {s1x4,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+   {s2x2,          s2x3,     0,  022, 0x0C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 3, 5}},
+
+   {s_qtag,        s2x4, 0x33,    0,  0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {6, 7, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
 
    // This one is for vi16t.
    {s2x4,          s3x4,    0, 00360, 0x0E, 0x2, schema_concentric,     s2x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7},   {0, 1, 2, 3, 6, 7, 8, 9}},
@@ -3803,8 +3881,49 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          s2x4, 0,     0x33, 0x0C, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 2, 3, 4, 5, 6, 7}},
    {s1x8,          s2x4, 0x33,  0x66, 0x0C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 3, 4, 7}},
 
-   {s1x8,          s2x4, 0x0F,  0xF0, 0xED, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {4, 5, 6, 7, -1, -1, -1, -1}},
-   {s1x8,          s2x4, 0xF0,  0x0F, 0xED, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 2, {0, 1, 3, 2, -1, -1, -1, -1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
+   {s1x8,          s2x4, 0x0F,  0xF0, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {4, 5, 6, 7, -1, -1, -1, -1}},
+   {s1x8,          s2x4, 0xF0,  0x0F, 0xAD, 0x0, schema_matrix,         s_trngl8, nothing,     warn__none, 0, 2, {0, 1, 3, 2, -1, -1, -1, -1}, {-1, -1, -1, -1, 4, 5, 6, 7}},
+   {s2x4,      s_trngl8, 0x0F,  0x0F, 0x0E, 0x0, schema_matrix,         s2x4,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 2, 3}},
+   {s1x8,      s_trngl8, 0xF0,  0xF0, 0x0D, 0x0, schema_matrix,         s1x8,     nothing,     warn__none, 0, 1, {0, 1, 2, 3, -1, -1, -1, -1}, {4, 5, 7, 6, -1, -1, -1, -1}},
+
+   {s2x4,      s_trngl8, 0xC3,  0x0F, 0x0D, 0x0, schema_matrix,     s_c1phan,     nothing,     warn__none, 0, 0, {-1, -1, 11, 9, 12, 14, -1, -1}, {-1, -1, -1, -1, 0, 2, 7, 5}},
+
+   {s_trngl8,  splinepdmd,   0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_trngl8,  splinepdmd,   0xF0, 0, 0x0D, 0x0, schema_matrix,    splinepdmd,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   {s_trngl8,  splinedmd, 0xF0, 0xF0, 0x07, 0x0, schema_matrix,          s1x8,    nothing,     warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 3, 2, -1, -1, -1, -1}},
+
+   {s_trngl8,  slinepdmd, 0x0F, 0x0F, 0x0B, 0x0, schema_matrix,          s2x4,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+
+   {s2x4,      splinedmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
+
+   {s_qtag,    s2x4,      0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
+
+   {s_qtag,    s2x4,      0x1E, 0x0F, 0x0D, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 2, {0, -1, -1, -1, -1, 2, 3, 1}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+
+   {s_trngl8,  slinedmd,  0x0F, 0,    0x07, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+
+   {s_trngl8,  slinedmd,  0x0F, 0x0F, 0x0B, 0x0, schema_matrix,          s2x4,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+
+   {slinepdmd, slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,     slinepdmd,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 4, 5, 6, 7}},
+   {slinepdmd, slinedmd,     0x0F, 0, 0x0E, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 6, 7}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   {s2x4,      slinedmd,     0xF0, 0, 0x0E, 0x0, schema_matrix,      slinedmd,    nothing,     warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s2x4,      slinedmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,      s2x4,        nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+   {s2x4,      slinepdmd,    0xF0, 0, 0x0E, 0x0, schema_matrix,     slinepdmd,    nothing,     warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   {s2x4,      slinepdmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,     s2x4,        nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
+
+   {s1x8,      slinepdmd,  0x0F, 0x0F, 0x0D, 0x0, schema_matrix,     s_trngl8,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s1x8,      slinedmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,     s_trngl8,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+
+   {s_trngl8,  slinepdmd,    0x0F, 0, 0x0E, 0x0, schema_matrix,      slinepdmd,   nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  splinedmd,    0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_trngl8,  splinedmd,    0xF0, 0, 0x0D, 0x0, schema_matrix,     splinedmd,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+
+
 
    // Need both of these because they won't canonicalize.
    {s1x8,          s1x8, 0xCC,  0x33, 0x0D, 0x1, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
@@ -4145,7 +4264,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,          s4x4, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {14, 3, 7, 5, 6, 11, 15, 13},{0}},
    {s2x4,      s_c1phan, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 2, 7, 5, 8, 10, 15, 13},{0}},
    {s2x4,      s_c1phan, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {4, 6, 11, 9, 12, 14, 3, 1},{0}},
-   {s1x6,       sbigx,    044,      0, 0x0E, 0x0, schema_nothing,      nothing,      nothing,  warn__none, 0, 0, {2, 3, -1, 8, 9, -1},        {0}},
+   {s1x6,       sbigx,    044,      0, 0x0E, 0x0, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {2, 3, -1, 8, 9, -1},        {0}},
    {s1x6,      s_1x2dmd, 044,    022, 0x1D, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},        {7, -1, 2, 3, -1, 6}},
    {s1x6,      s_1x2dmd, 044,    022, 0x1E, 0x0, schema_matrix,         s1x3dmd,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},        {0, -1, 3, 4, -1, 7}},
    {s1x6,       s1x3dmd, 022,   0xAA, 0x1E, 0x0, schema_matrix,         s1x8,       nothing,   warn__none, 0, 0, {1, -1, 2, 5, -1, 6},        {0, -1, 3, -1, 4, -1, 7, -1}},
@@ -5216,8 +5335,7 @@ static const coordrec thing1x3p1dmd = {s1x3p1dmd, 3,     // Used for both.
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x3dmd = {s1x3dmd, 3,   /* used for both --
-                                                symmetric and safe for press/truck */
+static const coordrec thing1x3dmd = {s1x3dmd, 3,   // Used for both -- symmetric and safe for press/truck.
    {-13,  -9,  -5,   0,  13,   9,   5,   0},
    {  0,   0,   0,   2,   0,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5229,8 +5347,7 @@ static const coordrec thing1x3dmd = {s1x3dmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3x1dmd = {s3x1dmd, 3,   /* used for both --
-                                                symmetric and safe for press/truck */
+static const coordrec thing3x1dmd = {s3x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
    {-10,  -6,  -2,   0,  10,   6,   2,   0},
    {  0,   0,   0,   5,   0,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5242,8 +5359,31 @@ static const coordrec thing3x1dmd = {s3x1dmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x1dmd = {s_2x1dmd, 3,   // used for both --
-                                              // symmetric and safe for press/truck
+static const coordrec thing4p2x1dmd = {s4p2x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+   {-10,  -6,  -2,   2,   4,  10,   6,   4},
+   {  0,   0,   0,   0,   5,   0,   0,  -5}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  4, -1, -1,
+      -1,  0,  1,  2,  3,  6,  5, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  7, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing3p1x1dmd = {s3p1x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+   { -6,  -2,   2,   4,   6,   4},
+   {  0,   0,   0,   5,   0,  -5}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  3, -1, -1,
+      -1, -1,  0,  1,  2,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing2x1dmd = {s_2x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
    { -6,  -2,   0,   6,   2,   0},
    {  0,   0,   5,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5554,7 +5694,7 @@ static const coordrec thingbigrig = {sbigrig, 4,
       -1, -1, -1, -1, -1, -1, -1, 11, 10, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbig3x1dmd = {sbig3x1dmd, 4,   // Used for both.
+static const coordrec thing5x1dmd = {s5x1dmd, 4,
    {-18, -14, -10,  -6,  -2,   0,  18,  14,  10,   6,   2,   0},
    {  0,   0,   0,   0,   0,   5,   0,   0,   0,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,  5, -1, -1, -1, -1, -1, -1, -1,
@@ -5562,7 +5702,7 @@ static const coordrec thingbig3x1dmd = {sbig3x1dmd, 4,   // Used for both.
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x5dmd = {s1x5dmd, 4,         // Used for both.
+static const coordrec thing1x5dmd = {s1x5dmd, 4,
    {-21, -17, -13,  -9,  -5,   0,  21,  17,  13,   9,   5,   0},
    {  0,   0,   0,   0,   0,   2,   0,   0,   0,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5570,7 +5710,7 @@ static const coordrec thing1x5dmd = {s1x5dmd, 4,         // Used for both.
       -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1, 
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x4dmd = {s1x4dmd, 4,         // Used for both.
+static const coordrec thing1x4dmd = {s1x4dmd, 4,
    {-17, -13,  -9,  -5,   0,  17,  13,   9,   5,   0},
    {  0,   0,   0,   0,   2,   0,   0,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5578,7 +5718,7 @@ static const coordrec thing1x4dmd = {s1x4dmd, 4,         // Used for both.
       -1, -1, -1, -1, -1, -1, -1, -1,  9, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x4p2dmd = {s1x4p2dmd, 4,     // Used for both.
+static const coordrec thing1x4p2dmd = {s1x4p2dmd, 4,
    {-13,  -9,  -5,  -1,  4,  13,   9,   4},
    {  0,   0,   0,   0,  2,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5586,13 +5726,61 @@ static const coordrec thing1x4p2dmd = {s1x4p2dmd, 4,     // Used for both.
       -1, -1, -1, -1, -1, -1, -1, -1, -1,  7, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x5p1dmd = {s1x5p1dmd, 4,     // Used for both.
+static const coordrec thinglinepdmd = {slinepdmd, 3,
+   {  0,  -2,   0,   2, -6,  -2,   6,   2},
+   { -6,  -2,   2,  -2,  6,   6,   6,   6}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  4,  5,  7,  6, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1, -1,  1,  3, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingplinepdmd = {splinepdmd, 4,
    {-13,  -9,  -5,  -1,  3,   8,  13,   8},
    {  0,   0,   0,   0,  0,   2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1,  0,  1,  2,  3,  4, -1,  5,  6, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  7, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingplinedmd = {splinedmd, 3,
+   {-10,  -6,  -2,   2,   6,   8,  10,   8},
+   {  0,   0,   0,   0,   0,   5,   0,  -5}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1,  5, -1,
+      -1,  0,  1,  2,  3,  4,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1,  7, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thinglinedmd = {slinedmd, 3,
+   { -5,   0,   5,   0,  -6,  -2,   6,   2},
+   { -2,   0,  -2,  -4,   4,   4,   4,   4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  4,  5,  7,  6, -1, -1,
+      -1, -1, -1, -1,  1, -1, -1, -1,
+      -1, -1,  0, -1,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingtrngl8 = {s_trngl8, 3,
+   {  0,   0,   0,   0,  -6,  -2,   2,   6},
+   { -8,  -4,   0,   4,   9,   9,   9,   9}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  4,  5,  6,  7, -1, -1,
+      -1, -1, -1, -1,  3, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1, -1, -1,  1, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
 
 static const coordrec thingbigx = {sbigx, 4,
    {-17, -13,  -9,  -5,   0,   0,  17,  13,   9,   5,   0,   0},
@@ -6400,7 +6588,7 @@ id_bit_table id_bit_table_butterfly[] = {
    NOBIT(0),
    NOBIT(ID2_CENTER | ID2_CTR4)};
 
-// If the population is a center box with outer pairs somewhere, this table is used.
+// If the population of a 4x4 is a center box with outer pairs somewhere, this table is used.
 id_bit_table id_bit_table_4x4_outer_pairs[] = {
    NOBIT(ID2_OUTRPAIRS),
    NOBIT(ID2_OUTRPAIRS),
@@ -6565,33 +6753,25 @@ id_bit_table id_bit_table_3dmd_in_out[] = {
    NOBIT(ID2_CENTER | ID2_CTR4 | ID2_CTR1X4),
    NOBIT(ID2_CENTER | ID2_CTR4 | ID2_CTR1X4)};
 
-static const id_bit_table id_bit_table_s1x3p1dmd[] = {
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD)};
+static const id_bit_table id_bit_table_s4p2x1dmd[] = {
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_NCTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_NCTR1X6)};
 
-static const id_bit_table id_bit_table_s1x4p2dmd[] = {
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD)};
-
-static const id_bit_table id_bit_table_s1x5p1dmd[] = {
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_NOTTHEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD),
-   NOBIT(ID2_THEDMD)};
+static const id_bit_table id_bit_table_splinedmd[] = {
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_NCTR1X6),
+   NOBIT(ID2_CTR1X6),
+   NOBIT(ID2_NCTR1X6)};
 
 static const id_bit_table id_bit_table_spindle[] = {
    NORTHBIT(ID2_CTR6 |ID2_OUTR6),
@@ -6817,17 +6997,17 @@ id_bit_table id_bit_table_3ptpd[] = {
    EASTBIT( ID2_CTR6|  ID2_CTRDMD)};
 
 static const id_bit_table id_bit_table_bone[] = {
-   NORTHBIT(ID2_END  |ID2_OUTRPAIRS|ID2_OUTR6),
-   NORTHBIT(ID2_END  |ID2_OUTRPAIRS|ID2_OUTR6),
-   EASTBIT(ID2_CENTER|ID2_CTR4     |ID2_OUTR6),
-   WESTBIT(ID2_CENTER|ID2_CTR4     |ID2_CTR2),
-   SOUTHBIT(ID2_END  |ID2_OUTRPAIRS|ID2_OUTR6),
-   SOUTHBIT(ID2_END  |ID2_OUTRPAIRS|ID2_OUTR6),
-   WESTBIT(ID2_CENTER|ID2_CTR4     |ID2_OUTR6),
-   EASTBIT(ID2_CENTER|ID2_CTR4     |ID2_CTR2)};
+   NORTHBIT(ID2_END  |ID2_NCTR1X4  |ID2_OUTRPAIRS|ID2_OUTR6),
+   NORTHBIT(ID2_END  |ID2_NCTR1X4  |ID2_OUTRPAIRS|ID2_OUTR6),
+   EASTBIT(ID2_CENTER|ID2_CTR1X4   |ID2_CTR4     |ID2_OUTR6),
+   WESTBIT(ID2_CENTER|ID2_CTR1X4   |ID2_CTR4     |ID2_CTR2),
+   SOUTHBIT(ID2_END  |ID2_NCTR1X4  |ID2_OUTRPAIRS|ID2_OUTR6),
+   SOUTHBIT(ID2_END  |ID2_NCTR1X4  |ID2_OUTRPAIRS|ID2_OUTR6),
+   WESTBIT(ID2_CENTER|ID2_CTR1X4   |ID2_CTR4     |ID2_OUTR6),
+   EASTBIT(ID2_CENTER|ID2_CTR1X4   |ID2_CTR4     |ID2_CTR2)};
 
 // Use this only if center 1x6 is fully occupied.
-id_bit_table id_bit_table_3x6_with_1x6[] = {
+const id_bit_table id_bit_table_3x6_with_1x6[] = {
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X6 | ID2_NCTR1X4),
@@ -7070,7 +7250,17 @@ const setup_attr setup_attrs[] = {
     {b_nothing, b_nothing},
     {0, 0},
     false, true,
-    id_bit_table_s1x3p1dmd,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {5,                     // s3p1x1dmd
+    &thing3p1x1dmd,
+    &thing3p1x1dmd,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, true,
+    (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
    {7,                      // s_qtag
@@ -7614,8 +7804,8 @@ const setup_attr setup_attrs[] = {
     {"6a696b696c696d@7m6n9o6p9h6g9f6e@76l696k696j696i",
      "5m@@la@@5n@@5o@@kb@@5p@@5h@@jc@@5g@@5f@@id@@5e"}},
    {7,                     // s_trngl8
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingtrngl8,
+    &thingtrngl8,
     {0, 0, 0, 0},
     {b_trngl8, b_ptrngl8},
     {0, 0},
@@ -7630,17 +7820,57 @@ const setup_attr setup_attrs[] = {
     {b_nothing, b_nothing},
     {0, 0},
     false, true,
-    id_bit_table_s1x4p2dmd,
+    (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
-   {7,                     // s1x5p1dmd
-    &thing1x5p1dmd,
-    &thing1x5p1dmd,
+   {7,                     // s4p2x1dmd
+    &thing4p2x1dmd,
+    &thing4p2x1dmd,
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
     false, true,
-    id_bit_table_s1x5p1dmd,
+    id_bit_table_s4p2x1dmd,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {7,                     // splinepdmd
+    &thingplinepdmd,
+    &thingplinepdmd,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, true,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {7,                     // splinedmd
+    &thingplinedmd,
+    &thingplinedmd,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, true,
+    id_bit_table_splinedmd,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {7,                     // slinepdmd
+    &thinglinepdmd,
+    &thinglinepdmd,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, true,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {7,                     // slinedmd
+    &thinglinedmd,
+    &thinglinedmd,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, true,
+    (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
    {11,                     // s_hsqtag
@@ -7953,6 +8183,16 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
+   {11,                     // sx1x6
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {0, 0},
+    false, false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
    {31,                     // sx1x16
     (const coordrec *) 0,
     (const coordrec *) 0,
@@ -8213,11 +8453,11 @@ const setup_attr setup_attrs[] = {
     id_bit_table_bigptpd,
     {"85f 8858 g@85e 8858 h@7c88d j88i@785b 8858 k@85a 8858 l",
      "65c@@abef@@65d@@65j@@lkhg@@65i"}},
-   {11,                     // sbig3x1dmd
-    &thingbig3x1dmd,
-    &thingbig3x1dmd,
+   {11,                     // s5x1dmd
+    &thing5x1dmd,
+    &thing5x1dmd,
     {0, 0, 0, 0},
-    {b_big3x1dmd, b_pbig3x1dmd},
+    {b_5x1dmd, b_p5x1dmd},
     {0, 0},
     false, false,
     (const id_bit_table *) 0,
@@ -8786,8 +9026,8 @@ int begin_sizes[] = {
    12,         /* b_pbigdmd */
    12,         /* b_bigptpd */
    12,         /* b_pbigptpd */
-   12,         /* b_big3x1dmd */
-   12,         /* b_pbig3x1dmd */
+   12,         /* b_5x1dmd */
+   12,         /* b_p5x1dmd */
    12,         /* b_1x5dmd */
    12,         /* b_p1x5dmd */
    18,         /* b_big3dmd */
@@ -8864,29 +9104,23 @@ select::fixer select::fixer_init_table[] = {
    {fx_fooEE, s1x3, s2x4,           0, 0, 2, {1, 2, 3, 5, 6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_1x4p2d, sdmd, s1x4p2dmd,     0, 0, 1, {3, 4, 6, 7},
-    fx0, fx0,                   fx_1x4p2l, fx0,             fx0, fx0,                   fx0, fx0},
+    fx0, fx0,                   fx_1x4p2l, fx0,       fx0, fx_4p2x1d,                   fx0, fx0},
    {fx_1x4p2l, s1x4, s1x8,          0, 0, 1, {2, 6, 5, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_1x5p1d, sdmd, s1x5p1dmd,     0, 0, 1, {4, 5, 6, 7},
-    fx0, fx0,                   fx_1x5p1l, fx0,             fx0, fx0,                   fx0, fx0},
-   {fx_1x5p1l, s1x4, s1x8,          0, 0, 1, {6, 7, 4, 5},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-
-
-   {fx_1x5p1z, sdmd, s1x5p1dmd, 0x80000002, 0, 1, {6, 7, 4, 5},
-    fx0, fx0,                   fx_1x5p1d, fx0,             fx0, fx0,                   fx0, fx0},
-
-
-
+   {fx_4p2x1d, sdmd, s4p2x1dmd,     1, 0, 1, {4, 6, 7, 3},
+    fx0, fx0,             fx0, fx_1x4p2l,                   fx0, fx_1x4p2d,             fx0, fx0},
    {fx_1x6lowf, s1x4, s1x6,         0, 0, 1, {0, 1, 5, 2},
-    fx0, fx0,                         fx0, fx0,     fx_1x3p1lowf, fx0,                   fx0, fx0},
+    fx0, fx0,                         fx0, fx0,    fx_1x3p1lowf, fx_3p1x1lowf,          fx0, fx0},
    {fx_1x6hif, s1x4, s1x6,          0, 0, 1, {2, 5, 3, 4},
-    fx0, fx0,                         fx0, fx0,     fx_1x3p1lhif, fx0,                   fx0, fx0},
+    fx0, fx0,                         fx0, fx0,    fx_1x3p1lhif, fx_3p1x1lhif,          fx0, fx0},
    {fx_1x3p1lowf, sdmd, s1x3p1dmd,  2, 0, 1, {4, 5, 2, 3},
-    fx0, fx0,            fx_1x6lowf, fx0,                   fx0, fx0,                   fx0, fx0},
+    fx0, fx0,            fx_1x6lowf, fx0,                   fx0, fx_3p1x1lowf,          fx0, fx0},
    {fx_1x3p1lhif, sdmd, s1x3p1dmd,  0, 0, 1, {2, 3, 4, 5},
-    fx0, fx0,             fx_1x6hif, fx0,                   fx0, fx0,                   fx0, fx0},
-
+    fx0, fx0,             fx_1x6hif, fx0,                   fx0, fx_3p1x1lhif,          fx0, fx0},
+   {fx_3p1x1lowf, sdmd, s3p1x1dmd, 0x800002AB, 0, 1, {3, 4, 5, 2},
+    fx0, fx0,                   fx0, fx_1x6lowf,            fx0, fx_1x3p1lowf,          fx0, fx0},
+   {fx_3p1x1lhif, sdmd, s3p1x1dmd,  1, 0, 1, {3, 4, 5, 2},
+    fx0, fx0,                   fx0, fx_1x6hif,             fx0, fx_1x3p1lhif,          fx0, fx0},
 
    {fx_n1x43, s1x2, s1x4,           0, 0, 1, {0, 1},
     fx0, fx_box9c,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -9459,23 +9693,20 @@ select::fixer select::fixer_init_table[] = {
     fx0,          fx0,          fx_f1x8endd,  fx_fxwve, fx0,     fx0,    fx_f2x4endd,  fx_f2x4endd},
    {fx_f1x8endo, s1x2, s1x8,        0, 0, 2,          {0, 1, 5, 4},
     fx0,  fx_fboneendo, fx0,          fx0, fx0,          fx0,    fx0,          fx0},
-   {fx_f1x8lowf, s1x4, s1x8,        0, 0, 1,  {0, 1, 2, 3},
-    fx0,          fx0,          fx_f1x8lowf, fx_f2x4far, fx_1x5p1z, fx0, fx_f2x4left,  fx_f2x4left},
-   {fx_f1x8hif, s1x4, s1x8,        0, 0, 1, {6, 7, 4, 5},
-    fx0,          fx0,          fx_f1x8hif,  fx_f2x4near, fx_1x5p1d,fx0, fx_f2x4right, fx_f2x4right},
+
    {fx_fbonectr, s1x4, s_bone,      0, 0, 1,    {6, 7, 2, 3},
     fx0,          fx0,          fx_fbonectr,  fx0, fx0,          fx0,    fx_bar55d,    fx_bar55d},
    {fx_fbonetgl, s_bone6, s_bone,   0, 0, 1,          {0, 1, 3, 4, 5, 7},
     fx0,          fx0,          fx_f1x8_77,   fx0, fx0,          fx0,    fx0,          fx0},
    {fx_frigtgl, s_short6, s_rigger,1, 0, 1,          {1, 2, 4, 5, 6, 0},
     fx0,          fx0,          fx0,          fx_f1x8_77, fx0,   fx0,    fx0,          fx0},
-   {fx_fboneendo, s1x2, s_bone,      1, 0, 2,          {0, 5, 1, 4},
+   {fx_fboneendo, s1x2, s_bone,     1, 0, 2,          {0, 5, 1, 4},
     fx0, fx_f1x8endo,  fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_frigendd, s1x4, s_rigger,    0, 0, 1,  {6, 7, 2, 3},
     fx0,          fx0,          fx_frigendd,  fx0, fx0,          fx0,    fx_f2x4endd,  fx_f2x4endd},
-   {fx_frigctr, s2x2, s_rigger,    0, 0, 1,   {0, 1, 4, 5},
+   {fx_frigctr, s2x2, s_rigger,     0, 0, 1,   {0, 1, 4, 5},
     fx0,          fx0,          fx_f1x8ctr,   fx0, fx0,          fx0,    fx_frigctr,   fx_frigctr},
-   {fx_f2x4ctr, s2x2, s2x4,        0, 0, 1,   {1, 2, 5, 6},
+   {fx_f2x4ctr, s2x2, s2x4,         0, 0, 1,   {1, 2, 5, 6},
     fx0,          fx0,          fx_fbonectr,  fx0, fx0,          fx0,    fx_f2x4ctr,   fx_f2x4ctr},
    {fx_f2x4lr, s2x2, s2x4,        1, 0, 1,          {3, 4, 5, 2},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
@@ -9484,11 +9715,62 @@ select::fixer select::fixer_init_table[] = {
    {fx_f4dmdiden, s4dmd, s4dmd,     0, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   // The next 30 or so are unsymmetrical.
+   // The next 50 or so are unsymmetrical.
+   {fx_1x5p1d, sdmd, splinepdmd,    0, 0, 0x101, {4, 5, 6, 7},
+    fx0, fx0,                   fx_f1x8hif, fx_trngl8a,     fx0, fx_5p1x1d,             fx0, fx0},
+   {fx_1x5p1e, s1x4, splinepdmd,    0, 0, 1, {0, 1, 3, 2},
+    fx0, fx0,                   fx0, fx_linpdma,    fx_fdmdlowf, fx0,                   fx0, fx0},
+   {fx_1x5p1z, sdmd, splinepdmd, 0x80000002, 0, 1, {6, 7, 4, 5},
+    fx0, fx0,                   fx_1x5p1d, fx0,             fx0, fx0,                   fx0, fx0},
+
+   {fx_5p1x1d, sdmd, splinedmd, 0x80000001, 0, 1, {5, 6, 7, 4},
+    fx0, fx0,                   fx_trngl8a, fx_f1x8hif,     fx0, fx_1x5p1d,             fx0, fx0},
+   {fx_plndmda, s1x4, splinedmd,    0, 0, 1, {0, 1, 3, 2},
+    fx0, fx0,                   fx0, fx_lndmda,             fx0, fx_fqtglowf,           fx0, fx0},
+   {fx_5p1x1z, sdmd, splinedmd, 0x80000003, 0, 1, {7, 4, 5, 6},
+    fx0, fx0,                   fx_5p1x1d, fx0,             fx0, fx0,                   fx0, fx0},
+
+   {fx_linpdma, s1x4, slinepdmd,    0, 0, 0x101, {4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx_1x5p1e,             fx0, fx_fdmdlowf,           fx0, fx0},
+   {fx_lndmda, s1x4, slinedmd,      0, 0, 0x101, {4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx_plndmda,    fx_fqtglowf, fx0,                   fx0, fx0},
+
+   {fx_linpdmd, sdmd, slinepdmd,          1, 0, 1, {2, 3, 0, 1},
+    fx0, fx0,           fx_f1x8lowf, fx_f2x4near,           fx0, fx_lndmd9,             fx0, fx0},
+
+   {fx_lndmd9, sdmd, slinedmd,            0, 0, 1, {0, 1, 2, 3},
+    fx0, fx0,           fx_f2x4near, fx_trngl8b,            fx0, fx_linpdmd,            fx0, fx0},
+   {fx_linpdm8, sdmd, slinepdmd, 0x80000003, 0, 1, {0, 1, 2, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_lndmd8, sdmd, slinedmd, 0x80000002,   0, 1, {2, 3, 0, 1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_trngl8a, s1x4, s_trngl8, 0x80000000, 0, 1, {4, 5, 7, 6},
+    fx0, fx0,                   fx0, fx_f1x8hif,      fx_5p1x1d, fx_1x5p1d,             fx0, fx0},
+   {fx_trngl8b, s1x4, s_trngl8,     1, 0, 1, {3, 2, 0, 1},
+    fx0, fx0,                   fx0, fx_f2x4near,    fx_linpdmd, fx_lndmd9,     fx_f2x4left, fx_f2x4left},
+
+   {fx_f1x8lowf, s1x4, s1x8,        0, 0, 1,  {0, 1, 2, 3},
+    fx0, fx0,                   fx0, fx_f2x4far,          fx_1x5p1z,fx_5p1x1z,  fx_f2x4left, fx_f2x4left},
+   {fx_f1x8hif,  s1x4, s1x8,        0, 0, 1, {6, 7, 4, 5},
+    fx0, fx0,                   fx0, fx_f2x4near,         fx_1x5p1d,fx_5p1x1d, fx_f2x4right, fx_f2x4right},
+   {fx_f1x8low6, s1x6, s1x8,        0, 0, 1, {0, 1, 3, 7, 6, 2},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,           fx_f2x4pos8, fx0},
+   {fx_f1x8hi6,  s1x6, s1x8,        0, 0, 1, {3, 2, 6, 4, 5, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,           fx_f2x4pos5, fx0},
+   {fx_fqtglowf, sdmd, s_qtag,      1, 0, 1, {0, 7, 5, 6},
+    fx0, fx0,                   fx0, fx_f1x8lowf,           fx0, fx0,                   fx0, fx0},
+   {fx_fqtghif,  sdmd, s_qtag,      1, 0, 1, {1, 2, 4, 3},
+    fx0, fx0,                   fx0, fx_f1x8hif,            fx0, fx0,                   fx0, fx0},
+   {fx_fdmdlowf, sdmd, s_ptpd,      0, 0, 1,  {0, 1, 2, 3},
+    fx0, fx0,                   fx_f1x8lowf, fx0,           fx0, fx0,                   fx0, fx0},
+   {fx_fdmdhif,  sdmd, s_ptpd,      0, 0, 1, {6, 7, 4, 5},
+    fx0, fx0,                   fx_f1x8hif, fx0,            fx0, fx0,                   fx0, fx0},
+
    {fx_f2x4far, s1x4, s2x4,         0, 0, 1, {0, 1, 3, 2},
-    fx0, fx0,                   fx_f2x4far, fx_f1x8hif,     fx0, fx0,                   fx_f2x4rl, fx_f2x4rl},
+    fx0, fx0,                   fx0, fx_f1x8hif,      fx_lndmd8, fx_linpdm8,             fx_f2x4rl, fx_f2x4rl},
    {fx_f2x4near, s1x4, s2x4,        0, 0, 1, {7, 6, 4, 5},
-    fx0, fx0,                   fx_f2x4near, fx_f1x8lowf,   fx0, fx0,                   fx_f2x4lr, fx_f2x4lr},
+    fx0, fx0,                   fx0, fx_f1x8lowf,     fx_lndmd9, fx_linpdmd,      fx_f2x4lr, fx_f2x4lr},
    {fx_f2x4pos1, s1x2, s2x4,        1, 0, 1, {0, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4pos2, s1x2, s2x4,        1, 0, 1, {1, 6},
@@ -9497,14 +9779,14 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4pos4, s1x2, s2x4,        1, 0, 1, {3, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_f2x4pos5, s1x2, s2x4,        1, 0, 3, {1, 6, 2, 5, 3, 4},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f2x4pos5, s2x3, s2x4,        0, 0, 1, {1, 2, 3, 4, 5, 6},
+    fx0, fx0,                   fx_f1x8hi6, fx0,            fx0, fx0,                   fx0, fx0},
    {fx_f2x4pos6, s1x2, s2x4,        1, 0, 3, {0, 7, 2, 5, 3, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4pos7, s1x2, s2x4,        1, 0, 3, {0, 7, 1, 6, 3, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_f2x4pos8, s1x2, s2x4,        1, 0, 3, {0, 7, 1, 6, 2, 5},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_f2x4pos8, s2x3, s2x4,        0, 0, 1, {0, 1, 2, 5, 6, 7},
+    fx0, fx0,                   fx_f1x8low6, fx0,           fx0, fx0,                   fx0, fx0},
    {fx_f2x4posa, s1x2, s2x4,        0, 0, 1, {0, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4posb, s1x2, s2x4,        0, 0, 1, {1, 2},
@@ -9869,12 +10151,19 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                           s2x4,   0x77,   fx_foo77,      fx0, -1},
    {LOOKUP_NONE,                           s2x4,   0xEE,   fx_fooEE,      fx0, -1},
    {LOOKUP_NONE,                      s1x4p2dmd,   0xD8,   fx_1x4p2d,     fx0, -1},
-   {LOOKUP_NONE,                      s1x5p1dmd,   0xF0,   fx_1x5p1d,     fx0, -1},
-
-   // Make these like fx_f1x8hif and fx_f1x8lowf
+   {LOOKUP_NONE,                      s4p2x1dmd,   0xD8,   fx_4p2x1d,     fx0, -1},
+   {LOOKUP_NONE,                      splinepdmd,  0xF0,   fx_1x5p1d,     fx0, -1},
+   {LOOKUP_NONE,                      splinepdmd,  0x0F,   fx_1x5p1e,     fx0, -1},
+   {LOOKUP_NONE,                      splinedmd,   0xF0,   fx_5p1x1d,     fx0, -1},
+   {LOOKUP_NONE,                      splinedmd,   0x0F,   fx_plndmda,    fx0, -1},
+   {LOOKUP_NONE,                       slinedmd,   0xF0,   fx_lndmda,     fx0, -1},
+   {LOOKUP_NONE,                       slinedmd,   0x0F,   fx_lndmd9,     fx0, -1},
+   {LOOKUP_NONE,                      slinepdmd,   0xF0,   fx_linpdma,     fx0, -1},
+   {LOOKUP_NONE,                      slinepdmd,   0x0F,   fx_linpdmd,     fx0, -1},
+   {LOOKUP_NONE,                      s_trngl8,    0xF0,   fx_trngl8a,    fx0, -1},
+   {LOOKUP_NONE,                      s_trngl8,    0x0F,   fx_trngl8b,    fx0, -1},
    {LOOKUP_NONE,               s1x6,         074,   fx_1x6hif,     fx0, -1},
    {LOOKUP_NONE,               s1x6,         047,   fx_1x6lowf,    fx0, -1},
-
    {LOOKUP_NONE,               s1x4,        0x3,    fx_n1x43,      fx0, -1},
    {LOOKUP_NONE,               s1x4,        0xC,    fx_n1x4c,      fx0, -1},
    {LOOKUP_NONE,               s1x4,        0x5,    fx_n1x45,      fx0, -1},
@@ -9947,6 +10236,12 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,               s1x8,        0x77,   fx_f1x8_77_3,  fx0, -1},
    {LOOKUP_NONE,               s1x8,        0x0F,   fx_f1x8lowf,   fx0, -1},
    {LOOKUP_NONE,               s1x8,        0xF0,   fx_f1x8hif,    fx0, -1},
+   {LOOKUP_NONE,               s1x8,        0xCF,   fx_f1x8low6,   fx0, -1},
+   {LOOKUP_NONE,               s1x8,        0xFC,   fx_f1x8hi6,    fx0, -1},
+   {LOOKUP_NONE,               s_qtag,      0xE1,   fx_fqtglowf,   fx0, -1},
+   {LOOKUP_NONE,               s_qtag,      0x1E,   fx_fqtghif,    fx0, -1},
+   {LOOKUP_NONE,               s_ptpd,      0x0F,   fx_fdmdlowf,   fx0, -1},
+   {LOOKUP_NONE,               s_ptpd,      0xF0,   fx_fdmdhif,    fx0, -1},
    {LOOKUP_NONE,               s_bone,      0x33,   fx_fboneendo,  fx0, -1},
    {LOOKUP_NONE,               s_ptpd,      0xAA,   fx_foozz,      fx0, -1},
    {LOOKUP_NONE,               sbigh,       00303,  fx_fdblbentcw, fx0, -1},

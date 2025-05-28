@@ -3834,7 +3834,6 @@ static void do_concept_emulate(
    }
 }
 
-
 static void do_concept_checkerboard(
    setup *ss,
    parse_block *parseptr,
@@ -5018,7 +5017,7 @@ static void do_concept_inner_outer(
             else                      fail("There are no triple columns here.");
          }
          goto ready;
-      case sbigh: case sbigx: case sbigrig: case s_hsqtag: case sbig3x1dmd: case s1x5dmd:
+      case sbigh: case sbigx: case sbigrig: case s_hsqtag: case s5x1dmd: case s1x5dmd:
          goto verify_clw;
       }
 
@@ -5152,7 +5151,7 @@ static void do_concept_inner_outer(
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
       case s_hsqtag: case s_hrglass: case s_dhrglass: case sbighrgl: case sbigdhrgl:
-      case sbig3x1dmd: case s1x5dmd:
+      case s5x1dmd: case s1x5dmd:
          goto ready;
       }
 
@@ -5617,7 +5616,7 @@ static void do_concept_multiple_formations(
 
       do_matrix_expansion(&tempsetup, need_prop, false);
 
-      if (tempsetup.kind != sbig3x1dmd && tempsetup.kind != s1x5dmd &&
+      if (tempsetup.kind != s5x1dmd && tempsetup.kind != s1x5dmd &&
           tempsetup.kind != s_hsqtag && tempsetup.kind != s_dmdlndmd)
          fail("Can't do this concept in this setup.");
       break;
@@ -5810,6 +5809,11 @@ static void do_concept_all_8(
       all 4 couples    : 0
       all 8            : 1
       all 8 (diamonds) : 2 */
+
+   // First, turn an alamo into squared-set spots.
+   if (ss->kind == s_alamo) {
+      do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
+   }
 
    if (key == 0) {
 
@@ -8100,6 +8104,8 @@ const concept_table_item concept_table[] = {
     do_concept_nose},                                       // concept_so_and_so_nose
    {CONCPROP__MATRIX_OBLIVIOUS,
     do_concept_emulate},                                    // concept_emulate
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__USE_SELECTOR,
+    mimic_move},                                            // concept_mimic
    {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,
     do_concept_standard},                                   // concept_standard
    {CONCPROP__MATRIX_OBLIVIOUS, do_concept_matrix},         // concept_matrix

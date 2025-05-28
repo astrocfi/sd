@@ -431,6 +431,7 @@ enum concept_kind {
    concept_nose,
    concept_so_and_so_nose,
    concept_emulate,
+   concept_mimic,
    concept_standard,
    concept_matrix,
    concept_double_offset,
@@ -696,7 +697,10 @@ enum selector_kind {
    selector_farbox,
    selector_nearfour,
    selector_farfour,
+   selector_the2x3,
    selector_thediamond,
+   selector_theline,
+   selector_thecolumn,
    selector_facingfront,
    selector_facingback,
    selector_facingleft,
@@ -822,8 +826,8 @@ struct callarray {
 
    union {
       // Dynamically allocated to whatever size is required.
-      uint16 def[4];        /* only if pred = false */
-      struct {              /* only if pred = true */
+      uint16 array_no_pred_def[4]; // Only if pred = false.
+      struct {                     // Only if pred = true.
          predptr_pair *predlist;
          // Dynamically allocated to whatever size is required.
          char errmsg[4];
@@ -867,7 +871,7 @@ struct matrix_def_block {
    matrix_def_block *next;
    uint32 alternate_def_flags;
    dance_level modifier_level;
-   uint32 items[2];     // Dynamically allocated to either 2 or 8.
+   uint32 matrix_def_items[2];     // Dynamically allocated to either 2 or 8.
 };
 
 struct calldefn {
@@ -1415,10 +1419,8 @@ enum {
    ID2_END        = 0x00001000UL,
    ID2_CTR4       = 0x00000800UL,
    ID2_OUTRPAIRS  = 0x00000400UL,
-   ID2_THEDMD     = 0x00000200UL,
-   ID2_NOTTHEDMD  = 0x00000100UL,
 
-   // 8 available codes.
+   // 10 available codes.
 
    // Various useful combinations.
 
@@ -1432,7 +1434,7 @@ enum {
    ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
    ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
    ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS|ID2_THEDMD|ID2_NOTTHEDMD
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS
 };
 
 
@@ -1693,8 +1695,7 @@ struct predicate_descriptor {
 struct predptr_pair {
    predicate_descriptor *pred;
    predptr_pair *next;
-   /* Dynamically allocated to whatever size is required. */
-   uint16 arr[4];
+   uint16 array_pred_def[4];   // Dynamically allocated to whatever size is required.
 };
 
 
@@ -1744,13 +1745,13 @@ class select {
       fx_fooEE,
       fx_1x4p2d,
       fx_1x4p2l,
-      fx_1x5p1d,
-      fx_1x5p1l,
-      fx_1x5p1z,
+      fx_4p2x1d,
       fx_1x6lowf,
       fx_1x6hif,
       fx_1x3p1lowf,
       fx_1x3p1lhif,
+      fx_3p1x1lowf,
+      fx_3p1x1lhif,
       fx_n1x43,
       fx_n1x4c,
       fx_n1x45,
@@ -2032,8 +2033,6 @@ class select {
       fx_fdrhgl1,
       fx_f1x8endd,
       fx_f1x8endo,
-      fx_f1x8lowf,
-      fx_f1x8hif,
       fx_fbonectr,
       fx_fbonetgl,
       fx_frigtgl,
@@ -2044,6 +2043,28 @@ class select {
       fx_f2x4lr,
       fx_f2x4rl,
       fx_f4dmdiden,
+      fx_1x5p1d,
+      fx_1x5p1e,
+      fx_1x5p1z,
+      fx_5p1x1d,
+      fx_plndmda,
+      fx_5p1x1z,
+      fx_linpdma,
+      fx_lndmda,
+      fx_linpdmd,
+      fx_lndmd9,
+      fx_linpdm8,
+      fx_lndmd8,
+      fx_trngl8a,
+      fx_trngl8b,
+      fx_f1x8lowf,
+      fx_f1x8hif,
+      fx_f1x8low6,
+      fx_f1x8hi6,
+      fx_fqtglowf,
+      fx_fqtghif,
+      fx_fdmdlowf,
+      fx_fdmdhif,
       fx_f2x4far,
       fx_f2x4near,
       fx_f2x4pos1,
@@ -3718,6 +3739,7 @@ class expand {
       int rot;
       uint32 lillivemask;    // Little-endian.
       uint32 biglivemask;    // Little-endian.
+      bool must_be_exact_level;
       warning_index expwarning;
       warning_index norwarning;
       normalize_action action_level;
@@ -4250,7 +4272,8 @@ extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABL
 extern id_bit_table id_bit_table_4dmd_cc_ee[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_wqtag_hollow[];                    /* in SDTABLES */
-extern id_bit_table id_bit_table_3x6_with_1x6[];                    /* in SDTABLES */
+extern const id_bit_table id_bit_table_3x6_with_1x6[];              /* in SDTABLES */
+
 extern const expand::thing s_qtg_2x4;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
@@ -4755,6 +4778,8 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
 
+extern bool clean_up_unsymmetrical_setup(setup *ss);
+
 extern setup_kind try_to_expand_dead_conc(const setup & result,
                                           const call_with_name *call,
                                           setup & lineout, setup & qtagout, setup & dmdout);
@@ -4979,7 +5004,7 @@ extern void basic_move(
 
 extern void canonicalize_rotation(setup *result) THROW_DECL;
 
-extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL;
+extern void reinstate_rotation(const setup *ss, setup *result) THROW_DECL;
 
 extern void remove_mxn_spreading(setup *ss) THROW_DECL;
 
@@ -5088,6 +5113,11 @@ extern void do_phantom_diag_qtg_concept(
    setup *result) THROW_DECL;
 
 extern void distorted_2x2s_move(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL;
+
+extern void mimic_move(
    setup *ss,
    parse_block *parseptr,
    setup *result) THROW_DECL;

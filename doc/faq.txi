@@ -495,6 +495,15 @@ a call is generally done in terms of fractions, not number of parts.
 the centers to obey that, so you use the @strong{centers work} meta-concept,
 followed by the concept (@strong{7/8}) that you want them to obey.
 
+@unnumberedsec What is the definition of E.R.A.?
+
+Notwithstanding contemporary social and political sensibilities,
+@code{Sd} considers the boys' part of this call to be a press back.  We
+apologize to, and sympathize with, the dancers at a recent C4 weekend
+who believed that everyone should should press ahead on this call.
+
+@code{Sd} also considers the boys' part of M.C.P. to be a press ahead.  Sorry.
+
 @unnumberedsec How can I do things like Centers Work As Couples, all Here Comes the Judge?
 
 The best way is to say @strong{centers are as couples here comes the

@@ -1,3 +1,5 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 // SD -- square dance caller's helper.
 //
 //    Copyright (C) 1990-2005  William B. Ackerman.
@@ -36,7 +38,7 @@
 #include "deploy.h"     // This takes the place of the Visual C++-generated resource.h.
 
 enum state_type {
-   CREATING_DIR,
+   MAYBE_CHOOSING_DIR,
    SAVING_OLD,
    SAVE_QUERYING,
    JUST_WRITING,
@@ -94,6 +96,11 @@ char *shortcut_list[] = {
    "Faq.lnk",
    (char *) 0};
 
+bool InstallDirExists;
+char szInstallDir[1000];
+char tempstring[1000];
+char szCurDir[1000];
+
 void do_install(HWND hwnd)
 {
    // This holds random file paths.
@@ -103,7 +110,8 @@ void do_install(HWND hwnd)
 
    char **file_ptr;
    for (file_ptr = file_list ; *file_ptr ; file_ptr++) {
-      lstrcpy(szStringBuf, "C:\\Sd\\");
+      lstrcpy(szStringBuf, szInstallDir);
+      lstrcat(szStringBuf, "\\");
       lstrcat(szStringBuf, *file_ptr);
 
       if (!CopyFile(*file_ptr, szStringBuf, false)) {
@@ -241,7 +249,75 @@ void do_install(HWND hwnd)
    ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
    SetDlgItemText(hwnd, IDOK, "Exit");
    state = FINISHED;
-   return;
+}
+
+void create_and_install(HWND hwnd)
+{
+   if (!CreateDirectory(szInstallDir, 0)) {
+      lstrcpy(tempstring, "ERROR!!  Can't create ");
+      lstrcat(tempstring, szInstallDir);
+      lstrcat(tempstring, ".\nThe installation has failed.");
+      SetDlgItemText(hwnd, IDC_MAINCAPTION, tempstring);
+      ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
+      SetDlgItemText(hwnd, IDOK, "Exit");
+      state = FAILED;
+   }
+   else {
+      do_install(hwnd);
+   }
+}
+
+void exists_check_and_install(HWND hwnd)
+{
+   char **file_ptr;
+
+   for (file_ptr = save_list ; *file_ptr ; file_ptr++) {
+      char szFilenameBuf[1000];
+      lstrcpy(szFilenameBuf, "C:\\Sd\\");
+      lstrcat(szFilenameBuf, *file_ptr);
+      if (GetFileAttributes(szFilenameBuf) != ~0UL) {
+         // We have a pre-existing program.  Try to get the database version.
+
+         char Buffer[200];
+         DWORD dwNumRead;
+
+         lstrcpy(szFilenameBuf, "The directory C:\\Sd exists, and has an Sd program.\n\n");
+
+         HANDLE hFile = CreateFile("C:\\Sd\\sd_calls.dat",
+                                   GENERIC_READ, FILE_SHARE_READ, 0,
+                                   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+
+         if (hFile != INVALID_HANDLE_VALUE &&
+             ReadFile(hFile, Buffer, 100, &dwNumRead, 0)) {
+            int size = (((WORD) Buffer[8]) << 8) | ((WORD) Buffer[9]);
+            Buffer[10+size] = 0;
+            Buffer[40] = 0;    // In case of disaster.
+            lstrcat(szFilenameBuf, "The database version appears to be ");
+            lstrcat(szFilenameBuf, &Buffer[10]);
+            lstrcat(szFilenameBuf, ".\n\n");
+         }
+
+         CloseHandle(hFile);
+
+         lstrcat(szFilenameBuf,
+                 "Press \"Save old version\" to save the existing "
+                 "software before loading the new.\n\n");
+         lstrcat(szFilenameBuf, "Press \"Overwrite\" to overwrite the existing software.");
+
+         SetDlgItemText(hwnd, IDC_MAINCAPTION, szFilenameBuf);
+         SetDlgItemText(hwnd, IDC_BUTTON1, "Save old version");
+         ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_SHOW);
+         SetFocus(GetDlgItem(hwnd, IDC_BUTTON1));
+         SetDlgItemText(hwnd, IDOK, "Overwrite");
+         state = SAVE_QUERYING;
+         return;
+      }
+   }
+
+   SetDlgItemText(hwnd, IDC_MAINCAPTION,
+                  "The directory C:\\Sd exists, but has no Sd program.\n\n"
+                  "Press OK to install Sd and Sdtty there.");
+   state = JUST_WRITING;
 }
 
 
@@ -256,17 +332,12 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
          case FINISHED:
             iMsg = WM_CLOSE;
             break;
-         case CREATING_DIR:
-            if (!CreateDirectory("C:\\Sd", 0)) {
-               SetDlgItemText(hwnd, IDC_MAINCAPTION, "ERROR!!  Can't create C:\\Sd.\n"
-                              "The installation has failed.");
-               ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
-               SetDlgItemText(hwnd, IDOK, "Exit");
-               state = FAILED;
-               return 0;
-            }
-
-            do_install(hwnd);
+         case MAYBE_CHOOSING_DIR:
+            // User declined to choose the directory.  Use the name in szFilenameBuf.
+            if (InstallDirExists)
+               exists_check_and_install(hwnd);
+            else
+               create_and_install(hwnd);
             return 0;
          case SAVE_QUERYING:    // In querying mode, the "OK" button means overwrite.
          case JUST_WRITING:
@@ -278,10 +349,58 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
          iMsg = WM_CLOSE;
       }
       else if (wParam == IDC_BUTTON1) {
-         if (state == SAVE_QUERYING) {
-            char szCurDir[1000];
-            GetCurrentDirectory(999, szCurDir);
+         if (state == MAYBE_CHOOSING_DIR) {
+            // User wants to choose the install directory.
 
+            OPENFILENAME ofn;
+            szInstallDir[0] = 0;
+            memset(&ofn, 0, sizeof(OPENFILENAME));
+            ofn.lStructSize = sizeof(OPENFILENAME);
+            ofn.lpstrInitialDir = "";
+            ofn.hwndOwner = hwnd;
+            ofn.lpstrFilter = 0;
+            ofn.lpstrFile = szInstallDir;
+            ofn.nMaxFile = _MAX_PATH;
+            ofn.lpstrFileTitle = 0;
+            ofn.nMaxFileTitle = 0;
+            ofn.Flags = OFN_OVERWRITEPROMPT | OFN_CREATEPROMPT | OFN_HIDEREADONLY;
+            ofn.lpstrDefExt = "";
+
+            if (!GetSaveFileName(&ofn)) {
+               SetDlgItemText(hwnd, IDC_MAINCAPTION, "ERROR!!  Can't get save location.\n"
+                              "The installation has failed.");
+               ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
+               SetDlgItemText(hwnd, IDOK, "Exit");
+               state = FAILED;
+               return 0;
+            }
+
+            // GetSaveFileName set the working directory.  We don't want that.  Set it back.
+            SetCurrentDirectory(szCurDir);
+
+            // Now see if this directory exists, and get permission to create.
+
+            lstrcpy(tempstring, "The directory ");
+            lstrcat(tempstring, szInstallDir);
+
+            DWORD sd_att = GetFileAttributes(szInstallDir);
+            if (sd_att != ~0UL && (sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
+               InstallDirExists = true;
+               lstrcat(tempstring, " exists.\n\n");
+               lstrcat(tempstring, "Press OK to install Sd and Sdtty there.");
+            }
+            else {
+               InstallDirExists = false;
+               lstrcat(tempstring, " does not exist.\n\n");
+               lstrcat(tempstring, "Press OK to create it and install Sd and Sdtty there.");
+            }
+
+            state = MAYBE_CHOOSING_DIR;
+            SetDlgItemText(hwnd, IDC_MAINCAPTION, tempstring);
+            SetDlgItemText(hwnd, IDOK, "OK");
+            ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_HIDE);
+         }
+         else if (state == SAVE_QUERYING) {
             // Put up the dialog box to get the save directory.
 
             char szSaveDir[1000];
@@ -335,7 +454,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             }
 
             do_install(hwnd);
-            return 0;
          }
 
          return 0;
@@ -357,6 +475,8 @@ int WINAPI WinMain(
    PSTR szCmdLine,
    int iCmdShow)
 {
+   GetCurrentDirectory(999, szCurDir);
+
    MSG Msg;
    static char szAppName[] = "deploy";
    WNDCLASSEX wndclass;
@@ -382,66 +502,27 @@ int WINAPI WinMain(
    ShowWindow(hwnd, iCmdShow);
    SetFocus(GetDlgItem(hwnd, IDOK));
 
-   DWORD sd_att = GetFileAttributes("C:\\Sd");
+   lstrcpy(szInstallDir, "C:\\Sd");
+
+   DWORD sd_att = GetFileAttributes(szInstallDir);
    if (sd_att != ~0UL && (sd_att & FILE_ATTRIBUTE_DIRECTORY)) {
-      char **file_ptr;
-
-      for (file_ptr = save_list ; *file_ptr ; file_ptr++) {
-         char szFilenameBuf[1000];
-         lstrcpy(szFilenameBuf, "C:\\Sd\\");
-         lstrcat(szFilenameBuf, *file_ptr);
-         sd_att = GetFileAttributes(szFilenameBuf);
-         if (sd_att != ~0UL) {
-            // We have a pre-existing program.  Try to get the database version.
-
-            char Buffer[200];
-            DWORD dwNumRead;
-
-            lstrcpy(szFilenameBuf, "The directory C:\\Sd exists, and has an Sd program.\n\n");
-
-            HANDLE hFile = CreateFile(
-               "C:\\Sd\\sd_calls.dat",
-               GENERIC_READ, FILE_SHARE_READ, 0,
-               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-
-            if (hFile != INVALID_HANDLE_VALUE &&
-                ReadFile(hFile, Buffer, 100, &dwNumRead, 0)) {
-               int size = (((WORD) Buffer[8]) << 8) | ((WORD) Buffer[9]);
-               Buffer[10+size] = 0;
-               Buffer[40] = 0;    // In case of disaster.
-               lstrcat(szFilenameBuf, "The database version appears to be ");
-               lstrcat(szFilenameBuf, &Buffer[10]);
-               lstrcat(szFilenameBuf, ".\n\n");
-            }
-
-            CloseHandle(hFile);
-
-            lstrcat(szFilenameBuf,
-                    "Press \"Save old version\" to save the existing "
-                    "software before loading the new.\n\n");
-            lstrcat(szFilenameBuf, "Press \"Overwrite\" to overwrite the existing software.");
-
-            SetDlgItemText(hwnd, IDC_MAINCAPTION, szFilenameBuf);
-            ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_SHOW);
-            SetFocus(GetDlgItem(hwnd, IDC_BUTTON1));
-            SetDlgItemText(hwnd, IDOK, "Overwrite");
-            state = SAVE_QUERYING;
-            goto getout;
-         }
-      }
-
+      InstallDirExists = true;
       SetDlgItemText(hwnd, IDC_MAINCAPTION,
-                     "The directory C:\\Sd exists, but has no Sd program.\n\n"
-                     "Press OK to install Sd and Sdtty there.");
-      state = JUST_WRITING;
-   getout: ;
+                     "The directory C:\\Sd exists.\n\n"
+                     "Press OK to install Sd and Sdtty there.\n\n"
+                     "Press Choose Directory to install in a different directory.");
    }
    else {
+      InstallDirExists = false;
       SetDlgItemText(hwnd, IDC_MAINCAPTION,
                      "The directory C:\\Sd does not exist.\n\n"
-                     "Press OK to create the directory and install Sd and Sdtty there.");
-      state = CREATING_DIR;
+                     "Press OK to create C:\\Sd and install Sd and Sdtty there.\n\n"
+                     "Press Choose Directory to install in a different directory.");
    }
+   SetDlgItemText(hwnd, IDOK, "OK");
+   SetDlgItemText(hwnd, IDC_BUTTON1, "Choose Directory");
+   ShowWindow(GetDlgItem(hwnd, IDC_BUTTON1), SW_SHOW);
+   state = MAYBE_CHOOSING_DIR;
 
    while (GetMessage(&Msg, NULL, 0, 0)) {
       TranslateMessage(&Msg);

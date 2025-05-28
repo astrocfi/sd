@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "37.5"
+version "37.6"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1368,13 +1368,28 @@ call "@6 break the alamo" c4
          if select_near_select [C4E A1W 0 0 A3W  C6E  0 0]
          if unselect           [C5S A0S 0 0 Z10N Z15N 0 0]
          if always             [0   0   0 0 0    0    0 0]
+   setup c1phan c1phan
+      preds "?"
+         if unselect           [0 0 C5S 0 0 0 0 A0S 0 0 Z10N 0 0 0 0 Z15N]
+         if person_select_sum9 [0 0 C4E 0 0 0 0 A1W 0 0 A3W  0 0 0 0 C6E]
+         if always             [0 0 0   0 0 0 0 0   0 0 0    0 0 0 0 0]
 
 call "adjust alamo to other pairing" mainstream
             dont_use_in_resolve
+/* taken out in favor of thing just below
    setup 4x4 4x4 plus_eighth_rotation
       array [0 14W 1N 0 0 2W 5N 0 0 6W 9N 0 0 10W 13N 0]
+*/
+
+   setup 4x4 alamo plus_eighth_rotation
+      array [0 1W 2N 0 0 3W 4N 0 0 5W 6N 0 0 7W 0N 0]
+
+
+
    setup alamo alamo plus_eighth_rotation
       array [7W 0N 1W 2N 3W 4N 5W 6N]
+   setup c1phan alamo plus_eighth_rotation
+      array [0 0 7W 6N 0 0 1W 0N 0 0 3W 2N 0 0 5W 4N]
 
 call "allemande left in the alamo style" mainstream
             dont_use_in_resolve imprecise_rotation
@@ -2540,7 +2555,7 @@ call "cast off 1/4" dontshow tag cast_off_14
    setup 1x8 2x4 rotate qualifier 4x4couples_only
       array [AL4S AL5S AL7S AL6S CR3N CR2N CR0N CR1N]
 
-// Used for "relay the shadow".  People do the miniwave cast without evan thinking about it.
+// Used for "relay the shadow".  People do the miniwave cast without even thinking about it.
 call "cast off @b, opt for normal, just do it" dontshow tag cast_off_n4_with_no_warn
             neednumber fractal_is_inherited yoyo_is_inherited yoyo_fractal_numbers
             fractional_numbers diamond_is_legal parallel_conc_end
@@ -4844,6 +4859,38 @@ call "@6 right loop 3" c2
             dont_use_in_resolve
    matrix use_selector [CR24S 16 CR24S 16]
 
+call "right loop 4" c2
+            dont_use_in_resolve
+   matrix [CR26S 16 CR26S 16]
+
+call "@6 right loop 4" c2
+            dont_use_in_resolve
+   matrix use_selector [CR26S 16 CR26S 16]
+
+call "right loop 5" c2
+            dont_use_in_resolve
+   matrix [CR28S 16 CR28S 16]
+
+call "@6 right loop 5" c2
+            dont_use_in_resolve
+   matrix use_selector [CR28S 16 CR28S 16]
+
+call "right loop 6" c2
+            dont_use_in_resolve
+   matrix [CR30S 16 CR30S 16]
+
+call "@6 right loop 6" c2
+            dont_use_in_resolve
+   matrix use_selector [CR30S 16 CR30S 16]
+
+call "right loop 7" c2
+            dont_use_in_resolve
+   matrix [CR32S 16 CR32S 16]
+
+call "@6 right loop 7" c2
+            dont_use_in_resolve
+   matrix use_selector [CR32S 16 CR32S 16]
+
 call "left loop 0" c2
             dont_use_in_resolve
    matrix [AL14S 16 AL14S 16]
@@ -4879,6 +4926,38 @@ call "left loop 3" c2
 call "@6 left loop 3" c2
             dont_use_in_resolve
    matrix use_selector [AL8S 16 AL8S 16]
+
+call "left loop 4" c2
+            dont_use_in_resolve
+   matrix [AL6S 16 AL6S 16]
+
+call "@6 left loop 4" c2
+            dont_use_in_resolve
+   matrix use_selector [AL6S 16 AL6S 16]
+
+call "left loop 5" c2
+            dont_use_in_resolve
+   matrix [AL4S 16 AL4S 16]
+
+call "@6 left loop 5" c2
+            dont_use_in_resolve
+   matrix use_selector [AL4S 16 AL4S 16]
+
+call "left loop 6" c2
+            dont_use_in_resolve
+   matrix [AL2S 16 AL2S 16]
+
+call "@6 left loop 6" c2
+            dont_use_in_resolve
+   matrix use_selector [AL2S 16 AL2S 16]
+
+call "left loop 7" c2
+            dont_use_in_resolve
+   matrix [AL0S 16 AL0S 16]
+
+call "@6 left loop 7" c2
+            dont_use_in_resolve
+   matrix use_selector [AL0S 16 AL0S 16]
 
 call "curve right" c3x
             dont_use_in_resolve
@@ -5101,7 +5180,7 @@ call "patch the @6" c3a
    // Selector identities *do not* get re-evaluated between parts of this
    // call, which makes it work.  Compare wave the <anyone>. */
    seq hinge [seq_never_re_evaluate allow_forced_mod inherit_diamond]
-   seq some_utb_in_roll_dir []
+   seq some_utb_in_roll_dir [roll_transparent]
 
 call "tap the @6" c4a
             visible_fractions twisted_is_inherited
@@ -5547,6 +5626,13 @@ call "@6 trade" mainstream
                                          ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
          if person_select_sum11         [CR11S CR10S CR9S CR8S CR7S CR6S
                                          AL5S AL4S AL3S AL2S  AL1S  AL0S]
+   setup 3x4 3x4
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N
+                                         ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
+         if select_near_select          [CR1S AL0S CR3S AL2S AL5S CR4S
+                                         AL7S CR6S AL9S CR8S CR11S AL10S]
+         if person_select_plus6         [0 0 0 0 0 AL11S 0 0 0 0 0 CR5S]
    setup 8x2 2x8
       preds "Can't find anyone to trade with."
          if unselect            [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N
@@ -5671,18 +5757,18 @@ call "_trade, allow t-bone, but @m" dontshow tag trade_w_tbone_but
 
 call "U-turn back" mainstream tag uturnback
             dont_use_in_nice_resolve one_person_call
-   /* This allows the ends to do it, no matter how they are facing,
-      and no matter how they are elongated.  If we didn't have this,
-      the 1x2 definition would be in danger of tripping us up on the
-      elongation warning before the 1x1 definition could save us.
-      We need the 1x2 definition in order to tell which way to turn. */
+   // This allows the ends to do it, no matter how they are facing,
+   // and no matter how they are elongated.  If we didn't have this,
+   // the 1x2 definition would be in danger of tripping us up on the
+   // elongation warning before the 1x1 definition could save us.
+   // We need the 1x2 definition in order to tell which way to turn.
    setup 2x2 2x2
       array [CR0S AL1S AL2S CR3S]
    setup 1x2 1x2
       array [CR0S AL1S]
-   setup 2x1 1x2   /* This makes sure that, in a T-boned 1x2, it doesn't get split
-                     into 1x1's, which would make it impossible for anyone to roll.
-                     This way, the person in couple-like orientation can roll. */
+   setup 2x1 1x2   // This makes sure that, in a T-boned 1x2, it doesn't get split
+                   // into 1x1's, which would make it impossible for anyone to roll.
+                   // By doing it this way, the person in couple-like orientation can roll.
       array [0S 1S]
    setup 1x1 1x1
       array [0S]
@@ -5700,11 +5786,15 @@ call "U-turn back" mainstream tag uturnback
       array [CR0S AL1S 2S AL3S CR4S 5S]
    setup p2x1dmd 2x1dmd
       array [0S 1S CR2S 3S 4S AL5S]
+   setup alamo alamo
+      array [0S 1S 2S 3S 4S 5S 6S 7S]
+   setup c1phan c1phan
+      array [0S 1S 2S 3S 4S 5S 6S 7S 8S 9S 10S 11S 12S 13S 14S 15S]
             alternate_definition [half] mainstream
    setup 1x2 1x2
       array [CR0E AL1W]
    setup 1x1 1x1
-      array [0]    /* so people in an elongated 1x2 will be able to do it. */
+      array [0]    // So people in an elongated 1x2 will be able to do it.
    setup star star
       array [CR0E 0 AL2W 0]
 
@@ -10438,6 +10528,11 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
    setup 4x4 thar qualifier num 3 none
       array [0 0 0 0 0 0 CR6W 0 0 0 0 0 0 CR3W 0 0]
 
+   setup alamo thar qualifier num 1 none
+      array [CR2E 0 0 0 0 CR7E 0 0]
+   setup alamo thar qualifier num 3 none
+      array [CR3W 0 0 0 0 CR6W 0 0]
+
    setup thar 4x4 qualifier num 1 right wave_only
       array [CR10E 0 0 0 0 CR1E 0 0]
    setup thar 4x4 qualifier num 3 right wave_only
@@ -12249,6 +12344,10 @@ call "reverse the pass 2/3" c3
    setup 2x2 2x2 restriction all_facing_same
       array [CM2S AM3S ZM1N ZM0N]
 
+//call "5/6 reverse the pass" c3
+//   setup 2x2 trngl4 restriction all_facing_same
+//      array [CM6S AM7S AL5W CR4E]
+
 call "zoom" mainstream tag zoom
             can_be_one_side_lateral
    setup 2x2 2x2 no_cutting_through restriction forbidden peelable_box
@@ -12655,6 +12754,35 @@ call "@6@C run by @9" c4x
          if person_select_plus7 [ZM0N ZM0N ZM2N ZM3N ZM4N ZM4N ZM6N ZM7N]
          if person_select_plus2 [ZM0N ZM1N ZM6N ZM3N ZM4N ZM5N ZM2N ZM7N]
          if always              [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup 1x8 1x8 qualifier num 5 none    // This one should be just one end (unsymmetrical).
+      preds "Can't tell who is running."
+         if select              [CR7S 0    0    0    AL3S 0    0    0]
+         if person_select_plus5 [ZM0N ZM1N ZM2N ZM1N ZM4N ZM5N ZM6N ZM5N]
+         if person_select_plus6 [ZM0N ZM1N ZM3N ZM3N ZM4N ZM5N ZM7N ZM7N]
+         if person_select_plus7 [ZM0N ZM0N ZM2N ZM3N ZM4N ZM4N ZM6N ZM7N]
+         if person_select_plus2 [ZM0N ZM1N ZM6N ZM3N ZM4N ZM5N ZM2N ZM7N]
+         if person_select_plus1 [ZM0N ZM1N ZM2N ZM2N ZM4N ZM5N ZM6N ZM6N]
+         if always              [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup 1x8 1x8 qualifier num 6 none    // This one should be just one end (unsymmetrical).
+      preds "Can't tell who is running."
+         if select              [CR5S 0    0    0    AL1S 0    0    0]
+         if person_select_plus5 [ZM0N ZM1N ZM2N ZM1N ZM4N ZM5N ZM6N ZM5N]
+         if person_select_plus6 [ZM0N ZM1N ZM3N ZM3N ZM4N ZM5N ZM7N ZM7N]
+         if person_select_plus7 [ZM0N ZM0N ZM2N ZM3N ZM4N ZM4N ZM6N ZM7N]
+         if person_select_plus2 [ZM0N ZM1N ZM6N ZM3N ZM4N ZM5N ZM2N ZM7N]
+         if person_select_plus1 [ZM0N ZM1N ZM2N ZM2N ZM4N ZM5N ZM6N ZM6N]
+         if person_select_plus3 [ZM0N ZM3N ZM2N ZM3N ZM4N ZM7N ZM6N ZM7N]
+         if always              [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup 1x8 1x8 qualifier num 7 none    // This one should be just one end (unsymmetrical).
+      preds "Can't tell who is running."
+         if select              [CR4S 0    0    0    AL0S 0    0    0]
+         if person_select_plus1 [0    0    0    ZM2N 0    0    0    ZM6N]
+         if person_select_plus2 [0    0    ZM6N 0    0    0    ZM2N 0]
+         if person_select_plus3 [0    ZM3N 0    0    0    ZM7N 0    0]
+         if person_select_plus4 [ZM1N 0    0    0    ZM5N 0    0    0]
+         if person_select_plus5 [0    0    0    ZM1N 0    0    0    ZM5N]
+         if person_select_plus6 [0    0    ZM3N 0    0    0    ZM7N 0]
+         if person_select_plus7 [0    ZM0N 0    0    0    ZM4N 0    0]
             alternate_definition [cross] c3
    setup 1x8 1x8 qualifier num 1 none
       preds "Can't tell who is running."
@@ -18961,6 +19089,8 @@ call "circulate" mainstream tag circulate
       array [CR0N CR1N CR3N AL3S AL1S AL0S 0 0 0 0 0 0]
    setup 6x2 1x8 rotate
       array [0 0 ZM2W 0 0 0 0 0 0 ZM6W 0 0]
+   setup 3x4 deepxwv rotate
+      array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM11W ZM10W ZM9W ZM8W ZM5W ZM4W]
             alternate_definition [16matrix] c3a
    simple_funny
    setup 4x4 4x4
@@ -19215,7 +19345,8 @@ call "circulate for coordinate" dontshow tag circ_for_coord
       array [0 0 0 AL3W 0 0 0 CR0E]
 
 call "1/2 circulate" mainstream   // This is here to make it not show a comma.
-   seq circulate [force_half]
+            bigmatrix_is_inherited
+   seq circulate [force_half inherit_bigmatrix]
 
 call "circulate 1-1/2" mainstream
             take_right_hands
@@ -21284,9 +21415,9 @@ call "quick change" c4
 
 call "deuces wild" c4
             half_is_inherited yoyo_is_inherited diamond_is_legal twisted_is_inherited funny_is_inherited
-   conc6p_or_normal trade_w_tbone [inherit_half inherit_yoyo inherit_twisted inherit_funny
+   conc6p_or_normal trade_w_tbone [inherit_half inherit_funny inherit_yoyo inherit_twisted
                                   inherit_diamond suppress_elongation_warnings]
-                    zoom [inherit_half inherit_diamond inherit_twisted endscando]
+                    zoom [inherit_half inherit_diamond inherit_twisted conc_force_spots endscando]
 
 call "nice and easy" c4
             yoyo_is_inherited diamond_is_legal funny_is_inherited
