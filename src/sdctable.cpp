@@ -2018,6 +2018,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, meta_key_finally},
    {"INITIALLY AND FINALLY",                 concept_meta,                  G+D, l_c3a,
     UC_none, meta_key_initially_and_finally},
+   {"ROUNDTRIP",                             concept_meta,                    D, l_c3x,
+    UC_none, meta_key_roundtrip},
    {"FINISH",                                concept_meta,                    D, l_c1,
     UC_none, meta_key_finish},
    {"LIKE A",                                concept_meta,                    D, l_c1,

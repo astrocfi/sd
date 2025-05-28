@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.40"
+version "38.41"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -6120,6 +6120,30 @@ call "@6 U-turn back" mainstream
             dont_use_in_resolve
    matrix use_selector [16S 16 16S 16]
 
+call "U-turn back in roll direction" mainstream
+            dont_use_in_resolve one_person_call
+   setup 2x2 2x2
+      preds "?"
+         if roll_is_cw  [CR0S CR1S CR2S CR3S]
+         if roll_is_ccw [AL0S AL1S AL2S AL3S]
+         if always      [  0S   1S   2S   3S]
+   setup 1x1 1x1
+      preds "?"
+         if roll_is_cw  [CR0S]
+         if roll_is_ccw [AL0S]
+         if always      [  0S]
+            alternate_definition [half] mainstream
+   setup 2x2 2x2
+      preds "?"
+         if roll_is_cw  [CR0E CR1E CR2E CR3E]
+         if roll_is_ccw [AL0W AL1W AL2W AL3W]
+         if always      [0 0 0 0]
+   setup 1x1 1x1
+      preds "?"
+         if roll_is_cw  [CR0E]
+         if roll_is_ccw [AL0W]
+         if always      [0]
+
 call "@6 U-turn back in roll direction" dontshow tag some_utb_in_roll_dir
             dont_use_in_resolve one_person_call
    setup 2x2 2x2
@@ -6904,6 +6928,9 @@ call "touch" mainstream tag touch
    setup 2x1 1x2
       array [CR1E 0]
 
+call "step to a wave" mainstream
+   alias touch
+
 call "touch 1/4" dontshow tag touch_1_4
             rear_back_from_r_wave left_means_mirror
    setup 2x1 1x2
@@ -7335,8 +7362,8 @@ call "wheel and deal" mainstream tag wheelanddeal
             left_means_mirror
    setup 1x4 2x2 restriction forbidden couples_only
       preds "???"
-         if 1x4_wheel_and_deal [CR1S CR0S AL0S AL1S]   /* 2FL, or beau side of 1FL */
-         if always             [0    0    AL3S AL2S]   /* belle side of 1FL */
+         if 1x4_wheel_and_deal [CR1S CR0S AL0S AL1S]   // 2FL, or beau side of 1FL
+         if always             [0    0    AL3S AL2S]   // belle side of 1FL
    setup 1x3 trngl qualifier 1fl_only restriction unusual alwaysfail
       array [CR3S AL4S AL5S]       // We flag it as "unusual" in a line of 3,
                                    // unless the caller says "2x1".
@@ -7722,13 +7749,16 @@ call "ah so" c1 tag ahso
       array [CR1S AL3S AL0S CR2S]
    setup 1x4 2x2 no_cutting_through qualifier magic_only
       array [CR1S AL0S AL3S CR2S]
-   /* Yes, it's legal from 3&1 lines.  Callerlab C1 definitions, page 6. */
-   setup 1x4 2x2 no_cutting_through restriction controversial alwaysfail
+   // Yes, it's legal from 3&1 lines.  Callerlab C1 definitions, page 6.
+   setup 1x4 2x2 no_cutting_through restriction unusual alwaysfail
       preds "Can't do this call."
          if miniwave_side_of_out_3n1_line [CR1S AL3S AL0S CR2S]
          if couple_side_of_out_3n1_line   [CR1S CR0S AL0S AL1S]
          if miniwave_side_of_in_3n1_line  [CR1S AL0S AL3S CR2S]
          if couple_side_of_in_3n1_line    [CR1S CR0S AL3S AL2S]
+   // And even legal from 2FL or 1FL!
+         if 1x4_wheel_and_deal [CR1S CR0S AL0S AL1S]   // 2FL, or beau side of 1FL
+         if always             [0    0    AL3S AL2S]   // belle side of 1FL
             alternate_definition [straight] c4
    setup 2x4 2x4 rotate restriction wave_only
       array [CR0E AL6E CR1E AL7E ZM1W CR3E AL4E ZM6W]
@@ -20541,10 +20571,14 @@ call "@N clear out" c4a
 
 call "_lift off but" dontshow tag liftoffbut
             reverse_means_mirror
+   // While an extremely strict reading of Vic Ceder's C3 definition (and the
+   // accepted definition before that) says that the center belle's last motion
+   // was slightly forward and hence it should be CM2S, in practice this person
+   // is still going around the corner.  So we mark it as unsupprted for roll.
    setup 2x4 2x4 rotate
-      array [0 0N 2S 0 0 0 0 0]
+      array [0 CM0N C2S 0 0 0 0 0]
    setup 4x2 2x4 rotate
-      array [7W 0 0 0 0 0 0 1W]
+      array [ZM7W 0 0 0 0 0 0 ZM1W]
 
 call "lift off" c3
             reverse_means_mirror last_part_visible

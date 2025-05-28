@@ -3321,16 +3321,6 @@ static void do_concept_crazy(
 
    setup tempsetup = *ss;
 
-   // If we didn't do this check, and we had a 1x4, the "do it on each side"
-   // stuff would just do it without splitting or thinking anything was unusual,
-   // while the "do it in the center" code would catch it at present, but might
-   // not in the future if we add the ability of the concentric schema to mean
-   // pick out the center 2 from a 1x4.  In any case, if we didn't do this
-   // check, "1/4 reverse crazy bingo" would be legal from a 2x2.
-
-   if (attr::klimit(tempsetup.kind) < 7)
-      fail("Need an 8-person setup for this.");
-
    int reverseness = parseptr->concept->arg1;
 
    if (tempsetup.cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE)) {
@@ -3466,6 +3456,15 @@ static void do_concept_crazy(
    if (parseptr->concept->arg3 == 1)   // Handle "crazy Z's".
       cmd.cmd_misc3_flags |= CMD_MISC3__IMPOSE_Z_CONCEPT;
 
+   // If we didn't check for an 8-person setup, and we had a 1x4, the "do it on each side"
+   // stuff would just do it without splitting or thinking anything was unusual,
+   // while the "do it in the center" code would catch it at present, but might
+   // not in the future if we add the ability of the concentric schema to mean
+   // pick out the center 2 from a 1x4.  In any case, if we didn't do this
+   // check, "1/4 reverse crazy bingo" would be legal from a 2x2.
+   // But the check is actually done a little below, after taking care of the
+   // "PRIOR_ELONG_BASE_FOR_TANDEM" stuff.
+
    for ( ; i<highlimit; i++) {
       tempsetup.cmd = cmd;    // Get a fresh copy of the command.
 
@@ -3480,20 +3479,47 @@ static void do_concept_crazy(
       }
 
       if ((i ^ reverseness) & 1) {
-         // Do it in the center.  The -1 for arg 4 makes it
-         // preserve roll information for the inactives.
-         // But we might be doing a "finally 1/2 crazy central little more".
-         // We need to clear the splitting bits when doing it in the center.
+         // Do it in the center.
+         selector_kind sel = selector_center4;
+
+         if (attr::klimit(tempsetup.kind) < 7) {
+            if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
+               warn(warn__crazy_tandem_interaction);
+               sel = selector_center2;
+            }
+            else
+               fail("Need an 8-person setup for this.");
+         }
+
+         // We might be doing a "finally 1/2 crazy central little more".
+         // So we need to clear the splitting bits when doing it in the center.
          tempsetup.cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+
+         // The -1 for arg 4 makes it preserve roll information for the inactives.
          selective_move(&tempsetup, parseptr, selective_key_plain,
-                        -1, 0, 0, selector_center4, false, result);
+                        -1, 0, 0, sel, false, result);
       }
       else {
          // Do it on each side.
-         tempsetup.cmd.cmd_misc_flags |= 
-            (tempsetup.rotation & 1) ?
-            CMD_MISC__MUST_SPLIT_VERT :
-            CMD_MISC__MUST_SPLIT_HORIZ;
+
+         if (attr::klimit(tempsetup.kind) < 7) {
+            if (tempsetup.kind == s2x2 && (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*3))) {
+               warn(warn__crazy_tandem_interaction);
+               tempsetup.cmd.cmd_misc_flags |= 
+                  (tempsetup.cmd.prior_elongation_bits & (PRIOR_ELONG_BASE_FOR_TANDEM*2)) ?
+                  CMD_MISC__MUST_SPLIT_VERT :
+                  CMD_MISC__MUST_SPLIT_HORIZ;
+            }
+            else
+               fail("Need an 8-person setup for this.");
+         }
+         else {
+            tempsetup.cmd.cmd_misc_flags |= 
+               (tempsetup.rotation & 1) ?
+               CMD_MISC__MUST_SPLIT_VERT :
+               CMD_MISC__MUST_SPLIT_HORIZ;
+         }
+
          move(&tempsetup, false, result);
       }
 
@@ -6169,6 +6195,17 @@ static void do_concept_meta(
        key != meta_key_echo && key != meta_key_rev_echo)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;   // We didn't do this before.
 
+   // Some meta-concepts take a number, which might be wired into the concept ("shifty"),
+   // or might be entered explicitly by the user ("shift <N>").
+
+   uint32 shiftynum =
+      (concept_table[parseptr->concept->kind].concept_prop & CONCPROP__USE_NUMBER) ?
+      parseptr->options.number_fields : parseptr->concept->arg2;
+
+   // Some meta-concepts have a numeric parameter, such as "multiple echo",
+   // or "do the first/last/middle M/N <concept>".
+   int concept_option_code = parseptr->concept->arg2;
+
    if (key == meta_key_finish) {
       if (corefracs.is_null())
          ss->cmd.cmd_fraction.flags = FRACS(CMD_FRAC_CODE_FROMTOREV,2,0);
@@ -6249,6 +6286,40 @@ static void do_concept_meta(
       normalize_setup(result, simple_normalize, false);
       return;
    }
+   else if (key == meta_key_roundtrip) {
+      // The "CMD_FRAC_THISISLAST" bit, if still set, might not tell the truth at this point.
+      ss->cmd.cmd_fraction.flags &= ~CMD_FRAC_THISISLAST;
+
+      if (ss->cmd.restrained_fraction.fraction)
+         fail("Fraction nesting is too complicated.");
+
+      // Handling nested roundtrips is both very complicated and very simple!
+
+      // Convert the various fraction codes to a universal form that is useful for this concept.
+
+      int NN = 0;
+      int KK = 0;
+
+      if (corefracs.is_null_with_masked_flags(CMD_FRAC_CODE_MASK, CMD_FRAC_CODE_FROMTOREV)) {
+         NN = nfield-1;
+         KK = kfield;
+      }
+      else if (!corefracs.is_null())
+         fail("Can't stack meta or fractional concepts.");
+
+      // The incoming CMD_FRAC_REVERSE bit is ignored, since this is a palindrome.
+
+      if (NN==0 && KK==0)
+         // We can do this with CMD_FRAC_CODE_ONLY, which may make other parts of the code happier.
+         result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_ONLY, 0, 0));
+      else
+         result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_CODE_FROMTOREV, NN+1, 0));
+
+      do_call_in_series_simple(result);
+      result->cmd = ss->cmd;
+      result->cmd.cmd_fraction.set_to_null_with_flags(FRACS(CMD_FRAC_REVERSE|CMD_FRAC_CODE_FROMTOREV, 2, KK));
+      goto finish_it;
+   }
 
    if (key != meta_key_skip_nth_part &&
        key != meta_key_revorder &&
@@ -6307,17 +6378,6 @@ static void do_concept_meta(
          break;
       }
    }
-
-   // Some meta-concepts take a number, which might be wired into the concept ("shifty"),
-   // or might be entered explicitly by the user ("shift <N>").
-
-   uint32 shiftynum =
-      (concept_table[parseptr->concept->kind].concept_prop & CONCPROP__USE_NUMBER) ?
-      parseptr->options.number_fields : parseptr->concept->arg2;
-
-   // Some meta-concepts have a numeric parameter, such as "multiple echo",
-   // or "do the first/last/middle M/N <concept>".
-   int concept_option_code = parseptr->concept->arg2;
 
    switch (key) {
       fraction_command frac_stuff;

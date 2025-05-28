@@ -3368,6 +3368,7 @@ extern void concentric_move(
             if ((begin_ptr->kind == s2x2 || begin_ptr->kind == s_short6) &&
                 cmdout &&
                 begin_outer_elongation > 0) {
+               // Needed by t49\3045.  Something about triple percolate.
                begin_ptr->cmd.prior_elongation_bits = begin_outer_elongation << 8;
             }
          }

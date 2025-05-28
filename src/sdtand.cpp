@@ -1917,6 +1917,12 @@ extern void tandem_couples_move(
          fail("Can't do this.");    // They will al be the same, because of fix_n_results.
    }
    else {
+      // If going to a 2x2, remember physical 2x4 elongation.  This may help in the case
+      // of certain semi-bogus "crazy" stuff.  We always set this to indicate east-west.
+      // Why?  Because we have dropped the orientation of the 2x4, and will reinstate it later.
+      // So it's always east-west in our present view.
+      if (ss->kind == s2x4 && tandstuff.m_virtual_setup.kind == s2x2)
+         tandstuff.m_virtual_setup.cmd.prior_elongation_bits |= PRIOR_ELONG_BASE_FOR_TANDEM;
       impose_assumption_and_move(&tandstuff.m_virtual_setup, &ttt[0]);
    }
 
@@ -2111,6 +2117,11 @@ extern void tandem_couples_move(
       else if (ss->kind == s1x4 && result->kind == s2x2) {
          result->result_flags.misc &= ~3;
          result->result_flags.misc |= (ss->rotation & 1) + 1;
+      }
+      else if (ss->kind == s2x2 && result->kind == s2x2) {
+         result->result_flags.misc &= ~3;
+         if (ss->cmd.prior_elongation_bits & 3)
+            result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
       }
 
       // In the usual case (not overlapped siamese) we just exit from the whole thing after one iteration.

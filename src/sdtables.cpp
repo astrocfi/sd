@@ -413,6 +413,7 @@ Cstring warning_strings[] = {
    /*  warn__brute_force_mxn     */   "*Check that you are satisfied, and that the dancers will be satisfied, that this usage is correct, effective, and unambiguous.",
    /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
+   /*  warn__crazy_tandem_interaction */  "*Using \"crazy\" on decomposed tandem-like operation.",
    /*  warn__diagnostic          */   "*This is a diagnostic warning and should never arise."};
 
 
@@ -9519,6 +9520,7 @@ const uint32 meta_key_props[] = {
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially
    MKP_RESTRAIN_1,                    // meta_key_finish
    MKP_RESTRAIN_1,                    // meta_key_revorder
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_roundtrip
    0,                                 // meta_key_like_a
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_finally
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_initially_and_finally

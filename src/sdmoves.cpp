@@ -3496,6 +3496,8 @@ extern int gcd(int a, int b)
 
       CMD_FRAC_CODE_FROMTOREV
                Do parts from N up through size-K, inclusive.
+               That is, skip N-1 parts at the start, do the main body in forward order,
+               and skip K parts at the end.
                For a 5-part call ABCDE:
                   FROMTOREV(K=0,N=1) means do whole thing
                   FROMTOREV(K=0,N=2) means do BCDE

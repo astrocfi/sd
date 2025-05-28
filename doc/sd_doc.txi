@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.40
-@set Time-stamp: Feb 21, 2011
+@set sd-version 38.41
+@set Time-stamp: May 6, 2011
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4740,6 +4740,10 @@ The @code{double echo} meta-concept is followed by two concepts.  It applies bot
 concepts first, then skips the first concept and applies the second only, and finally
 skips both concepts and just does the call.  @code{triple echo} and @code{quadruple echo} are
 similar.
+@item roundtrip
+The @code{roundtrip} concept is most simply explained by example:  @code{swing the fractions}
+is the same as @code{roundtrip remake}.  The @code{roundtrip} of a call is the call followed by the reverse
+order of the call without its last part.  The @code{roundtrip} of an N-part call has 2N-1 parts.
 @item finish
 @item like a
 @item like an

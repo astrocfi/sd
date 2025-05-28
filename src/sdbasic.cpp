@@ -2982,99 +2982,108 @@ static int divide_the_setup(
       // Tentatively choose a map.  We may change it later to "spcmap_2x2v".
       division_code = MAPCODE(s1x2,2,MPKIND__SPLIT,1);
 
-      if ((newtb & 011) == 011) {
-         // The situation is serious.  If the call has both 1x2 and 2x1 definitions,
-         // we can do it, by guessing correctly which way to divide the setup.
-         // Otherwise, if it has either a 1x2 or a 2x1 definition, but not both,
-         // we lose, because the call presumably wants to use same.
-         // But if the call has neither 1x2 nor 2x1 definitions, but does have
-         // a 1x1 definition, we can do it.  Just divide the setup arbitrarily.
-
-         // If the "lateral_to_selectees" flag is on (that is, the call is "run"),
-         // We decide what to do according to the direction of the selectees.
-         // There must be at least one, they must be collectively consistent.
-         // Otherwise, we look at the manner in which the setup is T-boned
-         // in order to figure out how to divide the setup.
-
-         if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) {
-            uint32 selmask = 0;
-
-            for (i=0 ; i<4 ; i++) if (selectp(ss, i)) selmask |= ss->people[i].id1;
-
-            if (selmask == 0 || (selmask & 011) == 011)
-               fail("People are not working with each other in a consistent way.");
-            else if (selmask & 1)
-               { division_code = spcmap_2x2v; }
-         }
-         else {
-            if ((((ss->people[0].id1 | ss->people[3].id1) & 011) != 011) &&
-                (((ss->people[1].id1 | ss->people[2].id1) & 011) != 011))
-               { division_code = spcmap_2x2v; }
-            else if ((((ss->people[0].id1 | ss->people[1].id1) & 011) == 011) ||
-                     (((ss->people[2].id1 | ss->people[3].id1) & 011) == 011))
-               fail("Can't figure out who should be working with whom.");
-         }
-
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) {
+         division_code = spcmap_2x2v;
+         goto divide_us_no_recompute;
+      }
+      else if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) {
          goto divide_us_no_recompute;
       }
       else {
-         /* People are not T-boned.  Check for a 2x1 or 1x2 definition.
-            If found, use it as a guide.  If both are present, we use
-            the setup elongation flag to tell us what to do.  In any
-            case, the setup elongation flag, if present, must not be
-            inconsistent with our decision. */
+         if ((newtb & 011) == 011) {
+            // The situation is serious.  If the call has both 1x2 and 2x1 definitions,
+            // we can do it, by guessing correctly which way to divide the setup.
+            // Otherwise, if it has either a 1x2 or a 2x1 definition, but not both,
+            // we lose, because the call presumably wants to use same.
+            // But if the call has neither 1x2 nor 2x1 definitions, but does have
+            // a 1x1 definition, we can do it.  Just divide the setup arbitrarily.
 
-         uint32 elong = 0;
+            // If the "lateral_to_selectees" flag is on (that is, the call is "run"),
+            // We decide what to do according to the direction of the selectees.
+            // There must be at least one, they must be collectively consistent.
+            // Otherwise, we look at the manner in which the setup is T-boned
+            // in order to figure out how to divide the setup.
 
-         // If this is "run" and people aren't T-boned, just ignore the 2x1 definition.
+            if (calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) {
+               uint32 selmask = 0;
 
-         if (!(calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) &&
-             assoc(b_2x1, ss, calldeflist))
-            elong |= (2 - (newtb & 1));
+               for (i=0 ; i<4 ; i++) if (selectp(ss, i)) selmask |= ss->people[i].id1;
 
-         if (assoc(b_1x2, ss, calldeflist)) {
-            // If "split_to_box" is on, prefer the 2x1 definition.
-            if (!(calldeflist->callarray_flags & CAF__SPLIT_TO_BOX) || elong == 0)
-               elong |= (1 + (newtb & 1));
-         }
-
-         if (elong == 0) {
-            // Neither 2x1 or 1x2 definition existed.  Check for 1x1.
-            // If found, any division axis will work.
-            if (assoc(b_1x1, ss, calldeflist))
-               goto divide_us_no_recompute;
-         }
-         else {
-            uint32 foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
-
-            if (foo == 0) {
-               fail("Can't figure out who should be working with whom.");
+               if (selmask == 0 || (selmask & 011) == 011)
+                  fail("People are not working with each other in a consistent way.");
+               else if (selmask & 1)
+               { division_code = spcmap_2x2v; }
             }
-            else if (foo == 3) {
-               // We are in trouble if CMD_MISC__NO_CHK_ELONG is off.
-               // But, if there was a 1x1 definition, we allow it anyway.
-               // This is what makes "you all" and "the K" legal from lines.
-               // The "U-turn-back" is done in a 2x2 that is elongated laterally.
-               // "U-turn-back" has a 1x2 definition (so that you can roll) but
-               // no 2x1 definition (because, from a 2x2, it might overtake the 1x2
-               // definition, in view of the fact that there is no definite priority
-               // for searching for definitions, which could make people unable to
-               // roll during certain phases of the moon.)  So, when we are having the
-               // ends U-turn-back while in parallel lines, their 1x2's appear to be
-               // illegally separated.  Since they could have done it in 1x1's,
-               // we allow it.  And, incidentally, we allow a roll afterwards.
-
-               if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG) &&
-                   !assoc(b_1x1, ss, calldeflist))
-                  fail("People are too far apart to work with each other on this call.");
-
-               foo ^= elong;
+            else {
+               if ((((ss->people[0].id1 | ss->people[3].id1) & 011) != 011) &&
+                   (((ss->people[1].id1 | ss->people[2].id1) & 011) != 011))
+               { division_code = spcmap_2x2v; }
+               else if ((((ss->people[0].id1 | ss->people[1].id1) & 011) == 011) ||
+                        (((ss->people[2].id1 | ss->people[3].id1) & 011) == 011))
+                  fail("Can't figure out who should be working with whom.");
             }
-
-            if (foo == 1)
-               division_code = spcmap_2x2v;
 
             goto divide_us_no_recompute;
+         }
+         else {
+            // People are not T-boned.  Check for a 2x1 or 1x2 definition.
+            // If found, use it as a guide.  If both are present, we use
+            // the setup elongation flag to tell us what to do.  In any
+            // case, the setup elongation flag, if present, must not be
+            // inconsistent with our decision.
+
+            uint32 elong = 0;
+
+            // If this is "run" and people aren't T-boned, just ignore the 2x1 definition.
+
+            if (!(calldeflist->callarray_flags & CAF__LATERAL_TO_SELECTEES) &&
+                assoc(b_2x1, ss, calldeflist))
+               elong |= (2 - (newtb & 1));
+
+            if (assoc(b_1x2, ss, calldeflist)) {
+               // If "split_to_box" is on, prefer the 2x1 definition.
+               if (!(calldeflist->callarray_flags & CAF__SPLIT_TO_BOX) || elong == 0)
+                  elong |= (1 + (newtb & 1));
+            }
+
+            if (elong == 0) {
+               // Neither 2x1 or 1x2 definition existed.  Check for 1x1.
+               // If found, any division axis will work.
+               if (assoc(b_1x1, ss, calldeflist))
+                  goto divide_us_no_recompute;
+            }
+            else {
+               uint32 foo = (ss->cmd.prior_elongation_bits | ~elong) & 3;
+
+               if (foo == 0) {
+                  fail("Can't figure out who should be working with whom.");
+               }
+               else if (foo == 3) {
+                  // We are in trouble if CMD_MISC__NO_CHK_ELONG is off.
+                  // But, if there was a 1x1 definition, we allow it anyway.
+                  // This is what makes "you all" and "the K" legal from lines.
+                  // The "U-turn-back" is done in a 2x2 that is elongated laterally.
+                  // "U-turn-back" has a 1x2 definition (so that you can roll) but
+                  // no 2x1 definition (because, from a 2x2, it might overtake the 1x2
+                  // definition, in view of the fact that there is no definite priority
+                  // for searching for definitions, which could make people unable to
+                  // roll during certain phases of the moon.)  So, when we are having the
+                  // ends U-turn-back while in parallel lines, their 1x2's appear to be
+                  // illegally separated.  Since they could have done it in 1x1's,
+                  // we allow it.  And, incidentally, we allow a roll afterwards.
+
+                  if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_CHK_ELONG) &&
+                      !assoc(b_1x1, ss, calldeflist))
+                     fail("People are too far apart to work with each other on this call.");
+
+                  foo ^= elong;
+               }
+
+               if (foo == 1)
+                  division_code = spcmap_2x2v;
+
+               goto divide_us_no_recompute;
+            }
          }
       }
 

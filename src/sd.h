@@ -1031,7 +1031,7 @@ class final_and_herit_flags {
 // about a call to be executed.
 
 // For the meaning of this, see the long block of comments before
-// "process_stupendously_new_fractions" in sdmoves.cpp.
+// "process_fractions" in sdmoves.cpp.
 // But note that much of that (the bit layout) is out of date.
 // The documentation of the codes is correct, but the "N" and "K" fields
 // are now 6 bits, in the "flags" word.  The fraction info has been moved
@@ -1569,6 +1569,10 @@ struct small_setup {
    int srotation;
 };
 
+
+enum {
+   PRIOR_ELONG_BASE_FOR_TANDEM = 0x00010000
+};
 
 struct setup_command {
    parse_block *parseptr;
@@ -2563,6 +2567,7 @@ enum warning_index {
    warn__brute_force_mxn,
    warn__two_faced,
    warn__cant_track_phantoms,
+   warn__crazy_tandem_interaction,
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
 };
@@ -3588,13 +3593,22 @@ struct concept_table_item {
    skippable_heritflags
       As above, when it's a simple modifier.
 
-   prior_elongation_bits;
+   prior_elongation_bits
       This tells, for a 2x2 setup prior to having a call executed, how that
       2x2 is elongated (due to these people being the outsides) in the east-west
       or north-south direction.  Since 2x2's are always totally canonical, the
       interpretation of the elongation direction is always absolute.  A 1 means
       the elongation is east-west.  A 2 means the elongation is north-south.
-      A zero means there was no elongation. */
+      A zero means there was no elongation.
+
+      The 0x40 bit of this is sometimes set, in sdconc.cpp, for a 1x2/1x4/1x6,
+      to indicate that these people are disconnected.  It is looked at in sdbasic.cpp.
+      Also, some stuff shifted left by 8 bits is sometimes put here by sdconc.cpp.
+      Needed by t49\3045.  Something about triple percolate.  This is indicated by
+      PRIOR_ELONG_BASE_FOR_PERCOLATE.    (Not actually implemented this way, pending investigation.)
+      Also, tandem operations may put elongation into a 2x2 to aid in semi-bogus
+      "crazy" stuff.  This is indicated by PRIOR_ELONG_BASE_FOR_TANDEM.
+*/
 
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
@@ -4090,6 +4104,7 @@ enum tandem_key {
    tandem_key_ys = 32
 };
 
+// BEWARE!!  This list is keyed to the table "meta_key_props" in sdtables.cpp .
 enum meta_key_kind {
    meta_key_random,
    meta_key_rev_random,   // Must follow meta_key_random.
@@ -4097,6 +4112,7 @@ enum meta_key_kind {
    meta_key_initially,
    meta_key_finish,
    meta_key_revorder,
+   meta_key_roundtrip,
    meta_key_like_a,
    meta_key_finally,
    meta_key_initially_and_finally,
