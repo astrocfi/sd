@@ -1924,7 +1924,7 @@ static void warn_unless_one_person_call(setup *ss, warning_index w)
 
 
 static bool handle_3x4_division(
-   setup *ss, uint32_t callflags1, uint32_t newtb, uint32_t livemask,
+   setup *ss, uint32_t callflags1, uint32_t callflagsf, uint32_t newtb, uint32_t livemask,
    uint32_t & division_code,            // We write over this.
    callarray *calldeflist, bool matrix_aware, setup *result)
 {
@@ -1947,8 +1947,10 @@ static bool handle_3x4_division(
        nxnbits == INHERITFLAGMXNK_1X3 ||
        nxnbits == INHERITFLAGMXNK_3X1) {
 
-      if ((!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
-          (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
+      if ((!(newtb & 001) || assoc(b_2x3, ss, calldeflist)) &&
+          (!(newtb & 010) ||
+           assoc(b_3x2, ss, calldeflist) ||
+           ((callflagsf & CFLAG2_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)))) {
          division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
          return true;
       }
@@ -2619,6 +2621,7 @@ static int divide_the_setup(
    uint32_t division_code = ~0U;
    uint32_t newtb = *newtb_p;
    uint32_t callflags1 = ss->cmd.callspec->the_defn.callflags1;
+   uint32_t callflagsf = ss->cmd.callspec->the_defn.callflagsf;
    final_and_herit_flags final_concepts = ss->cmd.cmd_final_flags;
    setup_command conc_cmd;
    uint32_t must_do_mystic = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
@@ -2790,8 +2793,12 @@ static int divide_the_setup(
       if (temp ||
           ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_12_MATRIX) ||
           (ss->cmd.cmd_misc_flags & (CMD_MISC__EXPLICIT_MATRIX|CMD_MISC__PHANTOMS))) {
+         // If the "CAN_DO_IN_Z" flag is on (e.g. peel off), we accept a 2x2 def'n as
+         // being as good as a 3x2 def'n.
          if ((!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
-             (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
+             (!(newtb & 001) ||
+              assoc(b_3x2, ss, calldeflist) ||
+              ((callflagsf & CFLAG2_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)))) {
             division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
             // See comment above about abomination.
             // If database said to split, don't give warning, unless said "3x3".
@@ -3472,7 +3479,7 @@ static int divide_the_setup(
       }
       break;
    case s3x4:
-      if (handle_3x4_division(ss, callflags1, newtb, livemask,
+      if (handle_3x4_division(ss, callflags1, callflagsf, newtb, livemask,
                               division_code, calldeflist, matrix_aware, result))
          goto divide_us_no_recompute;
       return 1;
@@ -3685,6 +3692,18 @@ static int divide_the_setup(
 
       break;
    case s2x3:
+      // If the "CAN_DO_IN_Z" flag is on (e.g. peel off), we accept a 2x2 def'n as
+      // being as good as a 3x2 def'n.
+      if ((!(newtb & 010)) && (callflagsf & CFLAG2_CAN_DO_IN_Z) && assoc(b_2x2, ss, calldeflist)) {
+         if ((livemask & 011) == 0)
+            division_code = MAPCODE(s2x2,1,MPKIND__OFFS_R_HALF,1);
+         else if ((livemask == 044) == 0)
+            division_code = MAPCODE(s2x2,1,MPKIND__OFFS_L_HALF,1);
+         else
+            break;
+         goto divide_us_no_recompute;
+      }
+
       // See if this call has applicable 1x2 or 2x1 definitions,
       // in which case split it 3 ways.
       if (((!(newtb & 010) || assoc(b_2x1, ss, calldeflist)) &&
@@ -6501,11 +6520,15 @@ foobar:
                   (coldefinition && (attr::klimit(coldefinition->get_end_setup()) == 3 ||
                                      (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)));
 
+               if (ss->cmd.callspec->the_defn.callflagsf & CFLAG2_CAN_DO_IN_Z)
+                   whuzzis2 = true;
+
                if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__ACTUAL_Z_CONCEPT) && whuzzis2) {
                   ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__REQUEST_Z;
                }
                else {
                   remove_z_distortion(ss);
+
                   if (!whuzzis2)
                      result->result_flags.misc |= RESULTFLAG__COMPRESSED_FROM_2X3;
                   newtb = or_all_people(ss);

@@ -194,6 +194,37 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
       }
       result->rotation &= 1;
    }
+   else if (result->kind == s3x5) {
+      if (result->rotation & 2) {
+         // Must turn this setup upside-down.
+         int offs = 7;
+
+         for (int i=0; i<offs; i++) {
+            result->swap_people(i, i+offs);
+            result->rotate_person(i, 022);
+            result->rotate_person(i+offs, 022);
+         }
+
+         result->rotate_person(offs*2, 022);
+      }
+      result->rotation &= 1;
+   }
+   else if (result->kind == s_434) {
+      if (result->rotation & 2) {
+         // Must turn this setup upside-down.
+
+         int offs = 5;
+
+         for (int i=0; i<offs; i++) {
+            result->swap_people(i, i+offs);
+            result->rotate_person(i, 022);
+            result->rotate_person(i+offs, 022);
+         }
+
+         result->rotate_person(offs*2, 022);
+      }
+      result->rotation &= 1;
+   }
    else if (((attr::slimit(result) & ~07776) == 1)) {
       // We have a setup of an even number of people.  We know how to canonicalize
       // this.  The resulting rotation should be 0 or 1.
@@ -523,17 +554,7 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
 
 extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL
 {
-   if (ss->kind == sfudgy2x3l) {
-      const expand::thing compressfudgy2x3l = {
-         {0, 1, -1, 4, 5, -1}, s2x3, sfudgy2x3l, 0};
-      expand::compress_setup(compressfudgy2x3l, ss);
-   }
-   else if (ss->kind == sfudgy2x3r) {
-      const expand::thing compressfudgy2x3r = {
-         {-1, 2, 3, -1, 6, 7}, s2x3, sfudgy2x3r, 0};
-      expand::compress_setup(compressfudgy2x3r, ss);
-   }
-   else if (ss->kind == sfudgy2x6l) {
+   if (ss->kind == sfudgy2x6l) {
       const expand::thing compressfudgy2x6l = {
          {0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, s2x6, sfudgy2x6l, 0};
       expand::compress_setup(compressfudgy2x6l, ss);
@@ -546,23 +567,14 @@ extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL
    else
       return;
 
-   warn(warn_verycontroversial);
+   warn(warn_other_axis);
 }
 
 
 // This turns s1p5x4/s1p5x8 things into sfudgy things.
 extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL
 {
-   if (ss->kind == s1p5x4) {
-      uint32_t mask = little_endian_live_mask(ss);
-      if (mask != 0 && (mask & 0xCC) == 0)
-         ss->kind = sfudgy2x3l;
-      else if (mask != 0 && (mask & 0x33) == 0)
-         ss->kind = sfudgy2x3r;
-      else
-         fail("Can't go into a 50% offset 1x4.");
-   }
-   else if (ss->kind == s1p5x8) {
+   if (ss->kind == s1p5x8) {
       uint32_t mask = little_endian_live_mask(ss);
       if (mask != 0 && (mask & 0xF0F0) == 0)
          ss->kind = sfudgy2x6l;
@@ -574,7 +586,7 @@ extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL
    else
       return;
 
-   warn(warn_verycontroversial);
+   warn(warn_other_axis);
 }
 
 
@@ -1200,9 +1212,6 @@ extern uint32_t do_call_in_series(
 
    if (tempsetup.kind == sfudgy2x6l || tempsetup.kind == sfudgy2x6r) {
       tempsetup.kind = s1p5x8;
-   }
-   else if (tempsetup.kind == sfudgy2x3l || tempsetup.kind == sfudgy2x3r) {
-      tempsetup.kind = s1p5x4;
    }
 
    if (tempsetup.kind == s2x2) {
@@ -2096,8 +2105,11 @@ static const checkitem checktable[] = {
    {0x00620026, 0x00008404, s_short6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00840026, 0x04000308, s_spindle, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00260084, 0x01000860, s_spindle, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00840046, 0x04210308, sd3x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00840044, 0x04210308, sd3x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00840044, 0x40270019, s3x5,    0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00440084, 0x40461031, s3x5,    1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00840046, 0x04210308, sd3x4,   0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   // This seems to mess up 3x5!
+   //   {0x00840044, 0x04210308, sd3x4,   0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    {0x00C40026, 0x06109384, sd4x5, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00C40046, 0x06109384, sd4x5, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2154,7 +2166,7 @@ static const checkitem checktable[] = {
    {0x00550063, 0x08400220, s_qtag, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00460062, 0x14100100, sd2x5, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00460062, 0x14100300, sd2x5, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20046, 0x010C0862, sd2x7, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00950026, 0x20008200, s_1x2dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2287,8 +2299,10 @@ static const checkitem checktable[] = {
    {0x01150026, 0x20048212, s1x5dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x01550026, 0x20048212, s1x5dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00E20026, 0x0808A006, swiderigger, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00460044, 0x41040010, s_323, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00660044, 0x41040410, s_343, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00460044, 0x41040010, s_323,   0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00660044, 0x41040410, s_343,   0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00660044, 0x10820841, s_434,   0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00440066, 0x04242100, s_434,   1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // Center 4 squeeze, gal -> 343.
    {0x00660066, 0x18100400, nothing, 0, warn__none, &galto343, (const int8_t *) 0},
@@ -2862,7 +2876,7 @@ static int matrixmove(
    }
 
    if (alldelta != 0) {
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED && !(flags & MTX_FIND_TRADERS))
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) && !(flags & MTX_FIND_TRADERS))
          fail("This call not allowed in distorted or virtual setup.");
 
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -9288,9 +9302,6 @@ void move(
    if (!suppress_fudgy_2x3_2x6_fixup) {
       if (result->kind == sfudgy2x6l || result->kind == sfudgy2x6r) {
          result->kind = s1p5x8;
-      }
-      else if (result->kind == sfudgy2x3l || result->kind == sfudgy2x3r) {
-         result->kind = s1p5x4;
       }
    }
    else if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__DISTORTED|CMD_MISC__OFFSET_Z|CMD_MISC__SAID_PG_OFFSET)) &&

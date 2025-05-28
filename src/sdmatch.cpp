@@ -1062,7 +1062,7 @@ void matcher_class::record_a_match()
       m_yielding_matches++;
 
    if (m_showing) {
-      if (verify_call()) gg77->iob88.show_match(-1);
+      if (verify_call()) gg77->iob88.show_match();
    }
 }
 

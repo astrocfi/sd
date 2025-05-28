@@ -453,7 +453,6 @@ struct concept_descriptor {
    uint32_t arg3;
    uint32_t arg4;
    uint32_t arg5;
-   mutable int frequency;  // For call/concept-use statistics.
    Cstring menu_name;
 };
 
@@ -581,7 +580,7 @@ enum warning_index {
    warn__dyp_resolve_ok,
    warn__unusual,
    warn_controversial,
-   warn_verycontroversial,
+   warn_other_axis,
    warn_no_internal_phantoms,
    warn_serious_violation,
    warn_suspect_destroyline,
@@ -685,7 +684,6 @@ enum error_flag_type {
                                      // in inappropriate context, text is in error_message1.
    error_flag_selector_changed,  // warn that selector was changed during clipboard paste.
    error_flag_formation_changed, // warn that formation changed during clipboard paste.
-   error_flag_OK_but_dont_erase  // We have finished a "frequency" operation -- don't clear the screen.
 };
 
 
@@ -1021,7 +1019,6 @@ struct calldefn {
    uint32_t callflags1;      // The CFLAG1_??? flags.
    heritflags callflagsherit; // The mask for the heritable flags.
    uint32_t callflagsf;    // The ESCAPE_WORD__???  and CFLAGH__??? flags.
-   mutable short int frequency;  // For call-use statistics.  Logically ought to be at the top level, but we hide it here.
    int8_t level;
    int8_t circcer_index;   // index into the circcer_calls table if this is a base_circ_call.
    calldef_schema schema;
@@ -2056,17 +2053,6 @@ enum start_select_kind {
    start_select_change_outfile,
    start_select_change_outprefix,
    start_select_change_title,
-
-   start_select_freq_show,
-   start_select_freq_show_level,
-   start_select_freq_show_nearlevel,
-   start_select_freq_show_sort,
-   start_select_freq_show_sort_level,
-   start_select_freq_show_sort_nearlevel,
-   start_select_freq_reset,
-   start_select_freq_start,
-   start_select_freq_delete,
-
    start_select_kind_enum_extent    // Not a start_select kind; indicates extent of the enum.
 };
 
@@ -2227,17 +2213,6 @@ enum command_kind {
    command_print_current,
    command_print_any,
    command_refresh,
-
-   command_freq_show,
-   command_freq_show_level,
-   command_freq_show_nearlevel,
-   command_freq_show_sort,
-   command_freq_show_sort_level,
-   command_freq_show_sort_nearlevel,
-   command_freq_reset,
-   command_freq_start,
-   command_freq_delete,
-
    command_resolve,            // Search commands start here.
    command_normalize,
    command_standardize,
@@ -2416,7 +2391,7 @@ public:
    void write_aproximately();
    void write_resolve_text(bool doing_file);
    void writestuff(const char *s);
-   void show_match_item(int frequency_to_show);
+   void show_match_item();
    void print_error_person(unsigned int person, bool example);  // In sdmain
    void printperson(uint32_t x);
    void printsetup(setup *x);
@@ -2479,7 +2454,7 @@ class iobase {
    virtual void reduce_line_count(int n) = 0;
    virtual void update_resolve_menu(command_kind goal, int cur, int max,
                                     resolver_display_state state) = 0;
-   virtual void show_match(int frequency_to_show) = 0;
+   virtual void show_match() = 0;
    virtual const char *version_string() = 0;
    virtual uims_reply_thing get_resolve_command() = 0;
    virtual bool choose_font() = 0;
@@ -2522,7 +2497,7 @@ class iofull : public iobase {
    void reduce_line_count(int n);
    void update_resolve_menu(command_kind goal, int cur, int max,
                             resolver_display_state state);
-   void show_match(int frequency_to_show);
+   void show_match();
    const char *version_string();
    uims_reply_thing get_resolve_command();
    bool choose_font();
@@ -3111,6 +3086,9 @@ class select {
       fx_fcpl23,
       fx_fcpl34,
       fx_fcpl41,
+      fx_f434a,
+      fx_f434b,
+      fx_f434c,
       fx_foo55d,
       fx_fgalctb,
       fx_f3x1ctl,
@@ -3506,6 +3484,8 @@ class tglmap {
       tglmapd25_16bi,
       tglmapd25_1ad,
       tglmapd25_35a,
+      tglmap434_73,
+      tglmap434_14,
       tglmap3223_2b,
       tglmap3223_1c,
       tglmap3223_3e,
@@ -3629,6 +3609,8 @@ class tglmap {
    static const tglmapkey s3223map3e[];
    static const tglmapkey s3223map09[];
    static const tglmapkey s3223map39[];
+   static const tglmapkey s434map73[];
+   static const tglmapkey s434map14[];
 };
 
 
@@ -6380,9 +6362,6 @@ extern bool sdtty_no_line_delete;                                   /* in SDUI-T
 
 
 extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
-extern SDLIB_API bool GLOB_doing_frequency;                   // in SDMATCH
-extern SDLIB_API char GLOB_stats_filename[MAX_TEXT_LINE_LENGTH];   // in SDMATCH
-extern SDLIB_API char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];   // in SDMATCH
 
 extern SDLIB_API int session_index;                           // in SDSI
 extern SDLIB_API bool rewrite_with_new_style_filename;        // in SDSI

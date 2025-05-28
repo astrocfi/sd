@@ -3179,6 +3179,7 @@ extern void concentric_move(
    calldef_schema analyzer_result;
    int rotate_back = 0;
    int i, k, klast;
+   bool ends_are_in_situ = false;
    int crossing;       // This is an int (0 or 1) rather than a bool,
                        // because we will index with it.
 
@@ -3864,8 +3865,39 @@ extern void concentric_move(
                divided_setup_move(begin_ptr, specialoffsetmapcode,
                                   phantest_only_one, true, result_ptr);
             }
-            else
+            else {
+               if (doing_ends && center_arity == 1 && !crossing &&
+                   (analyzer == schema_concentric || analyzer == schema_single_concentric)) {
+                  call_with_name *trythiscall = begin_ptr->cmd.callspec;
+
+                  if (!trythiscall)
+                     trythiscall = begin_ptr->cmd.parseptr->call;
+
+                  if (trythiscall &&
+                      trythiscall->the_defn.schema == schema_matrix &&
+                      !(trythiscall->the_defn.stuff.matrix.matrix_flags &
+                        (MTX_FIND_TRADERS | MTX_FIND_SQUEEZERS | MTX_FIND_SPREADERS))) {
+                     if (begin_ptr->kind == s1x2) {
+                        static const expand::thing fix_1x2 = {{0, 2}, s1x2, s1x4, 0, 0, 0};
+                        expand::expand_setup(fix_1x2, begin_ptr);
+                        ends_are_in_situ = true;
+                        begin_ptr->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;
+                     }
+                     else if (begin_ptr->kind == s2x2 && (begin_outer_elongation & 3) == 1) {
+                        expand::expand_setup(s_2x2_2x4_ends, begin_ptr);
+                        ends_are_in_situ = true;
+                        begin_ptr->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;
+                     }
+                     else if (begin_ptr->kind == s2x2 && (begin_outer_elongation & 3) == 2) {
+                        expand::expand_setup(s_2x2_2x4_endsb, begin_ptr);
+                        ends_are_in_situ = true;
+                        begin_ptr->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;
+                     }
+                  }
+               }
+
                impose_assumption_and_move(begin_ptr, result_ptr);
+            }
 
             if (doing_ends || suppress_overcasts)
                result_ptr->clear_all_overcasts();
@@ -4514,6 +4546,8 @@ extern void concentric_move(
                final_elongation = (outer_inners[0].result_flags.misc & 3);
 
             break;
+         case s1x2:
+            break;   // Nothing to deal with.
          default:
             if (analyzer != schema_concentric_diamond_line &&
                 analyzer != schema_conc_star &&
@@ -4564,8 +4598,15 @@ extern void concentric_move(
    if (analyzer == schema_concentric_zs)
       analyzer = schema_in_out_triple_zcom;
 
-   normalize_concentric(ss, analyzer, center_arity, outer_inners,
-                        final_elongation, matrix_concept, result);
+
+   if (ends_are_in_situ) {
+      *result = outer_inners[1];
+      merge_table::merge_setups(&outer_inners[0], merge_strict_matrix, result);
+   }
+   else {
+      normalize_concentric(ss, analyzer, center_arity, outer_inners,
+                           final_elongation, matrix_concept, result);
+   }
 
    getout:
 
@@ -5999,6 +6040,14 @@ extern void inner_selective_move(
             }
             else if ((bothlivemask & ~0x063) == 0x03180084) {
                LEdelta = 0x084; BEdelta = 0x084;
+            }
+            break;
+         case s_434:
+            if ((bothlivemask & ~0x18C) == 0x00630210) {
+               LEdelta = 0x210; BEdelta = 0x021;
+            }
+            else if ((bothlivemask & ~0x063) == 0x018C0210) {
+               LEdelta = 0x210; BEdelta = 0x021;
             }
             break;
          case s_rigger:
@@ -7474,6 +7523,14 @@ extern void inner_selective_move(
                }
                else if (thislivemask == 0x16B) {
                   map_key_table = tglmap::sd25map16b;
+               }
+            }
+            else if (kk == s_434 && tglindicator == (tglmap::TGL_TYPE_ANYBASE)) {
+               if (thislivemask == 0x273) {
+                  map_key_table = tglmap::s434map73;
+               }
+               else if (thislivemask == 0x39C) {
+                  map_key_table = tglmap::s434map14;
                }
             }
             else if (kk == s_3223 && tglindicator == (tglmap::TGL_TYPE_ANYBASE)) {

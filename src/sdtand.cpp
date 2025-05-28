@@ -2467,7 +2467,7 @@ extern void tandem_couples_move(
       reinstate_rotation(ss, result);
 
       if (fudgy2x3limit != 0 && ss->rotation != result->rotation)
-         warn(warn_controversial);
+         warn(warn_other_axis);
 
       // When we fudge wrongly-oriented triangles to a 2x4, we need
       // to say something.

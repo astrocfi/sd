@@ -60,9 +60,6 @@
    initialize_parse
    run_program
 and the following external variables:
-   GLOB_doing_frequency
-   GLOB_stats_filename
-   GLOB_decorated_stats_filename
    global_error_flag
    global_cache_failed_flag
    global_cache_miss_reason
@@ -96,9 +93,6 @@ ui_option_type ui_options;
 Cstring cardinals[NUM_CARDINALS+1];
 Cstring ordinals[NUM_CARDINALS+1];
 abridge_mode_t glob_abridge_mode;
-bool GLOB_doing_frequency;
-char GLOB_stats_filename[MAX_TEXT_LINE_LENGTH];
-char GLOB_decorated_stats_filename[MAX_TEXT_LINE_LENGTH];
 error_flag_type global_error_flag;
 bool global_cache_failed_flag;
 // Word 0 is the error code
@@ -1106,8 +1100,8 @@ void ui_utils::write_history_line(int history_index,
    if (this_item->test_one_warning_specific(warn__split_to_1x3s))
       this_item->clear_one_warning_specific(warn__split_to_1x6s);
 
-   // Or "controversial" and "seriously controversial".
-   if (this_item->test_one_warning_specific(warn_verycontroversial))
+   // Or "controversial" and "other axis".
+   if (this_item->test_one_warning_specific(warn_other_axis))
       this_item->clear_one_warning_specific(warn_controversial);
 
    // Or "really_no_eachsetup".
@@ -1302,7 +1296,6 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
       }
       else if (k > marker_end_of_list) {
          // This is a concept.
-         if (enable_file_writing) item->frequency++;
          bool force = false;
          // 1 for comma, 2 for the word "all", 3 to skip an extra if it's "tandem".
          int request_comma_after_next_concept = 0;
@@ -1778,7 +1771,6 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                np = selector_list[local_cptr->options.who.who[m_selector_recursion_level]].name;
             else {
                np = localcall->name;
-               if (enable_file_writing) localcall->the_defn.frequency++;
             }
 
             while (*np) {
@@ -2327,14 +2319,8 @@ void ui_utils::writestuff(const char *s)
    while (*s) writechar(*s++);
 }
 
-void ui_utils::show_match_item(int frequency_to_show)
+void ui_utils::show_match_item()
 {
-   if (frequency_to_show >= 0) {
-      char buffer[MAX_TEXT_LINE_LENGTH];
-      sprintf(buffer, "%-4d ", frequency_to_show);
-      writestuff(buffer);
-   }
-
    if (matcher_p->m_final_result.indent) writestuff("   ");
    writestuff(matcher_p->m_user_input);
    writestuff(matcher_p->m_full_extension);
@@ -3029,130 +3015,7 @@ extern bool fix_up_call_for_fidelity_test(const setup *old, const setup *nuu, ui
 }
 
 
-class freqitemforsorting {
-public:
-   static bool inorder(uint32_t a, uint32_t b)
-   { return a > b; }
-};
 
-
-typedef SORT<uint32_t, freqitemforsorting> freqtablesorter;
-
-
-void ui_utils::do_freq_reset()
-{
-   if (iob88.yesnoconfirm("Confirmation",
-                          "This will reset the frequency counters for the current session, so that they will start over"
-                          " at zero.  No other aspect of this session will change.",
-                          "Do you really want to do this?",
-                          true, false) == POPUP_ACCEPT) {
-      int i;
-
-      for (i=0 ; i<number_of_calls[call_list_any] ; i++)
-         main_call_lists[call_list_any][i]->the_defn.frequency = 0;
-
-      for (i=0 ; i<matcher_p->m_level_concept_list.the_list_size ; i++)
-         concept_descriptor_table[matcher_p->m_level_concept_list.the_list[i]].frequency = 0;
-   }
-}
-
-void ui_utils::do_freq_start()
-{
-   if (session_index <= 0) {
-      writestuff("Frequency counting must be associated with a session.");
-      newline();
-      return;
-   }
-
-   if (GLOB_doing_frequency) {
-      writestuff("You already have frequency counting enabled.");
-      newline();
-      return;
-   }
-
-   if (iob88.get_popup_string("*Enter new frequency file:", "",
-                              "Enter frequency file:", "", GLOB_stats_filename) == POPUP_ACCEPT_WITH_STRING)
-      start_stats_file_from_GLOB_stats_filename();
-   else
-      GLOB_stats_filename[0] = 0;    // Don't leave garbage in it.
-}
-
-void ui_utils::do_freq_delete()
-{
-   if (!GLOB_doing_frequency) {
-      writestuff("Frequency counting is not enabled.");
-      newline();
-      return;
-   }
-
-   if (iob88.yesnoconfirm("Confirmation",
-                          "This will delete the association of the current session with frequency counters,"
-                          " and delete the counter file itself.  No other aspect of this session will change.",
-                          "Do you really want to do this?",
-                          true, false) == POPUP_ACCEPT) {
-      GLOB_doing_frequency = false;
-      remove(GLOB_decorated_stats_filename);
-   }
-}
-
-
-
-void ui_utils::do_freq_show(int options)
-{
-   int freq_show_level_tolerance = options & 0xFFFF;
-
-   if (GLOB_doing_frequency) {
-      // Make the table to sort.
-      // format is
-      //    if call      frequency   complement of (index into actual call or concept list)
-      //        (1)         (15)                           (16)
-      // The reason for the complement is so that the sort will appear to be stable --
-      // items are in decreasing order, so that they are in listed with calls before concepts,
-      // in decreasing frequency, and in the order in the original lists.
-      uint32_t *table = new uint32_t[number_of_calls[call_list_any] + matcher_p->m_level_concept_list.the_list_size];
-      int i;
-      iob88.prepare_for_listing();
-      int how_much_in_table = 0;
-
-      for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
-         const call_with_name *this_call = main_call_lists[call_list_any][i];
-         if ((this_call->the_defn.level) < (int) calling_level-freq_show_level_tolerance) continue;
-         table[how_much_in_table++] = 0x80000000 | (this_call->the_defn.frequency << 16) | (0xFFFF & ~i);
-      }
-
-      for (i=0 ; i<matcher_p->m_level_concept_list.the_list_size ; i++) {
-         const concept_descriptor *this_concept =
-            &concept_descriptor_table[matcher_p->m_level_concept_list.the_list[i]];
-         table[how_much_in_table++] = (this_concept->frequency << 16) | (0xFFFF & ~i);
-      }
-
-      // Optionally sort the list.
-      if (options & 0x10000) {
-         freqtablesorter::heapsort(table, how_much_in_table);
-      }
-
-      for (i=0 ; i<how_much_in_table ; i++) {
-         if (matcher_p->m_showing_has_stopped) break;
-         matcher_p->m_final_result.indent = false;
-         matcher_p->m_user_input[0] = 0;
-         uint32_t table_item = table[i];
-
-         if (table_item & 0x80000000) {
-            const call_with_name *this_call = main_call_lists[call_list_any][~table_item & 0xFFFF];
-            strncpy(matcher_p->m_full_extension, this_call->menu_name, INPUT_TEXTLINE_SIZE);
-         }
-         else {
-            const concept_descriptor *this_concept =
-               &concept_descriptor_table[matcher_p->m_level_concept_list.the_list[~table_item & 0xFFFF]];
-            strncpy(matcher_p->m_full_extension, this_concept->menu_name, INPUT_TEXTLINE_SIZE);
-         }
-
-         iob88.show_match((table_item >> 16) & 0x7FFF);
-      }
-
-      delete [] table;
-   }
-}
 
 
 popup_return ui_utils::do_header_popup(char *dest)
@@ -3526,34 +3389,6 @@ void ui_utils::run_program(iobase & ggg)
       case start_select_change_title:
          do_header_popup(header_comment);
          goto new_sequence;
-
-      case start_select_freq_show:
-         do_freq_show(1000);    // Make sure everything gets shown.
-         goto new_sequence;
-      case start_select_freq_show_level:
-         do_freq_show(0);
-         goto new_sequence;
-      case start_select_freq_show_nearlevel:
-         do_freq_show(1);
-         goto new_sequence;
-      case start_select_freq_show_sort:
-         do_freq_show(0x10000 + 1000);    // Make sure everything gets shown.
-         goto new_sequence;
-      case start_select_freq_show_sort_level:
-         do_freq_show(0x10000 + 0);
-         goto new_sequence;
-      case start_select_freq_show_sort_nearlevel:
-         do_freq_show(0x10000 + 1);
-         goto new_sequence;
-      case start_select_freq_reset:
-         do_freq_reset();
-         goto new_sequence;
-      case start_select_freq_start:
-         do_freq_start();
-         goto new_sequence;
-      case start_select_freq_delete:
-         do_freq_delete();
-         goto new_sequence;
       case start_select_exit:
          goto normal_exit;
       }
@@ -3814,44 +3649,6 @@ void ui_utils::run_program(iobase & ggg)
             // We have to back up to BEFORE the item we just changed.
             if (written_history_items > config_history_ptr-1)
                written_history_items = config_history_ptr-1;
-            goto simple_restart;
-
-         case command_freq_show:
-            do_freq_show(1000);    // Make sure everything gets shown.
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_show_sort:
-            do_freq_show(0x10000 + 1000);    // Make sure everything gets shown.
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_show_nearlevel:
-            do_freq_show(1);
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_show_sort_nearlevel:
-            do_freq_show(0x10000 + 1);
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_show_level:
-            do_freq_show(0);
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_show_sort_level:
-            do_freq_show(0x10000 + 0);
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-
-         case command_freq_reset:
-            do_freq_reset();
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_start:
-            do_freq_start();
-            global_error_flag = error_flag_OK_but_dont_erase;
-            goto simple_restart;
-         case command_freq_delete:
-            do_freq_delete();
-            global_error_flag = error_flag_OK_but_dont_erase;
             goto simple_restart;
 
          case command_help:

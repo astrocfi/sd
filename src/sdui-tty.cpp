@@ -548,7 +548,7 @@ static bool prompt_for_more_output()
    }
 }
 
-void iofull::show_match(int frequency_to_show)
+void iofull::show_match()
 {
    if (get_utils_ptr()->matcher_p->m_showing_has_stopped) return;  // Showing has been turned off.
 
@@ -561,7 +561,7 @@ void iofull::show_match(int frequency_to_show)
       }
    }
 
-   get_utils_ptr()->show_match_item(frequency_to_show);
+   get_utils_ptr()->show_match_item();
 }
 
 

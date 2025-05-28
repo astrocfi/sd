@@ -552,6 +552,42 @@ extern void update_id_bits(setup *ss)
       4,  d_south, 6, d_north,
       UINT16_C(~0)};
 
+   static uint16_t face_434[] = {
+      1,  d_west, 0,  d_east,
+      2,  d_west, 1,  d_east,
+      3,  d_west, 2,  d_east,
+      10, d_west, 9,  d_east,
+      4,  d_west, 10, d_east,
+      7,  d_west, 8,  d_east,
+      6,  d_west, 7,  d_east,
+      5,  d_west, 6,  d_east,
+      UINT16_C(~0)};
+
+   static uint16_t face_3x5[] = {
+      1,  d_west, 0, d_east,
+      2,  d_west, 1, d_east,
+      3,  d_west, 2, d_east,
+      4,  d_west, 3, d_east,
+      13, d_west, 12, d_east,
+      14, d_west, 13, d_east,
+      6,  d_west, 14, d_east,
+      5,  d_west, 6,  d_east,
+      10, d_west, 11, d_east,
+      9,  d_west, 10, d_east,
+      8,  d_west, 9, d_east,
+      7,  d_west, 8, d_east,
+      0,  d_south, 12, d_north,
+      1,  d_south, 13, d_north,
+      2,  d_south, 14, d_north,
+      3,  d_south, 6,  d_north,
+      4,  d_south, 5,  d_north,
+      12, d_south, 11, d_north,
+      13, d_south, 10, d_north,
+      14, d_south, 9,  d_north,
+      6,  d_south, 8,  d_north,
+      5,  d_south, 7,  d_north,
+      UINT16_C(~0)};
+
    static uint16_t face_4x4[] = {
       13, d_west, 12,  d_east,
       14, d_west, 13,  d_east,
@@ -647,6 +683,10 @@ extern void update_id_bits(setup *ss)
       face_list = face_2x3; break;
    case s3x4:
       face_list = face_3x4; break;
+   case s3x5:
+      face_list = face_3x5; break;
+   case s_434:
+      face_list = face_434; break;
    case s4x4:
       face_list = face_4x4; break;
    case s_c1phan:
@@ -1074,8 +1114,6 @@ extern void touch_or_rear_back(
 
    if (!(callflags1 & (CFLAG1_STEP_REAR_MASK | CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)))
       return;
-
-   remove_z_distortion(scopy);
 
    big_endian_get_directions32(scopy, directions, livemask);
 

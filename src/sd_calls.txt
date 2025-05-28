@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.34"
+version "39.35"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -10616,13 +10616,9 @@ call "_short cycle 1" dontshow tag shortcycle1
    singleconc uturnaway [] nullcall []
 
 call "_peel for peel the top" dontshow tag peelforpeelthetop
-            split_large_setups
+            split_large_setups can_do_in_z
    setup 2x2 1x4 restriction wave_only
       array [AL0S CR2S ZM3N ZM1N]
-   setup 3x2 1x4 rotate qualifier true_Z_cw restriction wave_only
-      array [   0 ZM1W AL0E    0 CR2E ZM3W]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw restriction wave_only
-      array [ZM1W AL0E    0 CR2E ZM3W    0]
 
 call "peel the top" plus
             visible_fractions fractal_is_inherited gen_sting_is_inherited
@@ -10630,34 +10626,18 @@ call "peel the top" plus
    seq fanthetop [inherit_gensting inherit_fractal]
 
 call "trail the top" c4
-            split_large_setups
+            split_large_setups can_do_in_z
    setup 2x2 1x4 rotate restriction wave_only
       array [CR2S AL2N AL3N CR3S]
-   setup 3x2 1x4 qualifier true_Z_cw restriction wave_only
-      array [   0 CR1W CR0W    0 AL0E AL1E]
-   setup 3x2 1x4 qualifier true_Z_ccw restriction wave_only
-      array [CR1W CR0W    0 AL0E AL1E    0]
             alternate_definition [fractal] c4
    setup 2x2 1x4 rotate restriction wave_only
       array [CR2S AL2N AL1S CR1N]
-   setup 3x2 1x4 qualifier true_Z_cw restriction wave_only
-      array [   0 CR3E CR0W    0 AL0E AL3W]
-   setup 3x2 1x4 qualifier true_Z_ccw restriction wave_only
-      array [CR3E CR0W    0 AL0E AL3W    0]
             alternate_definition [generous] c3
    setup 2x2 dmd rotate restriction wave_only
       array [CR2S AL2N AL1W CR3W]
-   setup 3x2 dmd qualifier true_Z_cw restriction wave_only
-      array [   0 CR1N CR0W    0 AL0E AL3N]
-   setup 3x2 dmd qualifier true_Z_ccw restriction wave_only
-      array [CR1N CR0W    0 AL0E AL3N    0]
             alternate_definition [stingy] c3
    setup 2x2 dmd rotate restriction wave_only
       array [CR2S AL2N AL3E CR1E]
-   setup 3x2 dmd qualifier true_Z_cw restriction wave_only
-      array [   0 CR3S CR0W    0 AL0E AL1S]
-   setup 3x2 dmd qualifier true_Z_ccw restriction wave_only
-      array [CR3S CR0W    0 AL0E AL1S    0]
             alternate_definition [single] c4
    setup 1x2 1x2 rotate restriction wave_only
       array [CR1S AL1N]
@@ -11942,22 +11922,14 @@ call "criss cross scoot apart" c4
       array [CM3E AM1E CM0N AM0S]
 
 call "_peel for peel to a diamond" dontshow tag peelforpeeltoadiamond
-            split_if_z
+            split_if_z can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction resolve_ok peelable_box
       array [AL0S CR2S ZM3N ZM1N]
-   setup 3x2 1x4 rotate qualifier true_Z_cw restriction wave_only
-      array [   0 ZM1W AL0E    0 CR2E ZM3W]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw restriction wave_only
-      array [ZM1W AL0E    0 CR2E ZM3W    0]
 
 call "_trail for trail to a diamond" dontshow tag trailfortrailtodiamond
-            split_if_z
+            split_if_z can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction resolve_ok peelable_box
       array [CR2S AL0S ZM3N ZM1N]
-   setup 3x2 1x4 rotate qualifier true_Z_cw
-      array [   0 ZM1W CR2E    0 AL0E ZM3W]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
-      array [ZM1W CR2E 0    AL0E ZM3W 0]
 
 call "peel to a@I diamond" c2
    setup 2x2 2x2 qualifier alwaysfail
@@ -11996,13 +11968,9 @@ call "trail to a@I diamond" c2
    seq sglctrtogetherhinge [inherit_intlk inherit_gensting roll_transparent]
 
 call "peel off" plus tag peeloff
-            can_be_one_side_lateral split_if_z split_large_setups
+            can_be_one_side_lateral split_if_z split_large_setups can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [AL0S CR2S CR3S AL1S]
-   setup 3x2 1x4 rotate qualifier true_Z_cw
-      array [   0 AL1E AL0E    0 CR2E CR3E]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
-      array [AL1E AL0E 0    CR2E CR3E 0]
             alternate_definition [rewind] c4
    setup 1x4 2x2 qualifier couples_only
       array [CR0S CR3S AL1S AL2S]
@@ -12023,20 +11991,12 @@ call "peel off" plus tag peeloff
       array [CR7E CR6E CR4E CR5E AL0E AL1E AL3E AL2E]
 
 call "trail off" a2 tag trailoff
-            split_if_z split_large_setups
+            split_if_z split_large_setups can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [CR2S AL0S AL1S CR3S]
-   setup 3x2 1x4 rotate qualifier true_Z_cw
-      array [   0 CR3E CR2E    0 AL0E AL1E]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
-      array [CR3E CR2E 0    AL0E AL1E 0]
             alternate_definition [yoyo] c4
    setup 2x2 dmd no_cutting_through restriction peelable_box
       array [CR2S AL0S AL3E CR3W]
-   setup 3x2 dmd rotate qualifier true_Z_cw
-      array [   0 CR3S CR2E    0 AL0E AL3N]
-   setup 3x2 dmd rotate qualifier true_Z_ccw
-      array [CR3S CR2E 0    AL0E AL3N 0]
             alternate_definition [rewind] c4
    setup 1x4 2x2 qualifier couples_only
       array [CR1S CR2S AL0S AL3S]
@@ -12082,13 +12042,9 @@ call "_crossable peel off" dontshow tag crossable_peeloff
       array [CR6E CR7E CR5E CR4E AL0E AL1E AL3E AL2E]
 
 call "peel and trail" a2 tag peelntrail
-            split_if_z split_large_setups
+            split_if_z split_large_setups can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [AL0S CR2S AL1S CR3S]
-   setup 3x2 1x4 rotate qualifier true_Z_cw
-      array [   0 CR3E AL0E    0 CR2E AL1E]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
-      array [CR3E AL0E 0    CR2E AL1E 0]
             alternate_definition [generous] c3
    setup 2x2 dmd no_cutting_through restriction peelable_box
       array [AL0S CR2S AL3E CR3W]
@@ -12098,10 +12054,6 @@ call "peel and trail" a2 tag peelntrail
             alternate_definition [yoyo] c4
    setup 2x2 dmd no_cutting_through restriction peelable_box
       array [AL0S CR2S AL3E CR3W]
-   setup 3x2 dmd rotate qualifier true_Z_cw
-      array [   0 CR3S AL0E    0 CR2E AL3N]
-   setup 3x2 dmd rotate qualifier true_Z_ccw
-      array [CR3S AL0E 0    CR2E AL3N 0]
             alternate_definition [rewind] c4
    setup 1x4 2x2 qualifier wave_only
       array [CR0S CR2S AL1S AL3S]
@@ -12119,22 +12071,14 @@ call "trail and peel" c4 tag trailnpeel
       array [CR1S CR3S AL0S AL2S]
 
 call "more or less peel off" c4 tag moreorlesspeeloff
-            split_if_z
+            split_if_z can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [AL0E CR2W CR3E AL1W]
-   setup 3x2 1x4 rotate qualifier true_Z_cw
-      array [   0 AL1S AL0N    0 CR2S CR3N]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
-      array [AL1S AL0N 0    CR2S CR3N 0]
 
 call "less or more peel off" c4 tag lessormorepeeloff
-            split_if_z
+            split_if_z can_do_in_z
    setup 2x2 1x4 no_cutting_through restriction peelable_box
       array [AL0W CR2E CR3W AL1E]
-   setup 3x2 1x4 rotate qualifier true_Z_cw
-      array [   0 AL1N AL0S    0 CR2N CR3S]
-   setup 3x2 1x4 rotate qualifier true_Z_ccw
-      array [AL1N AL0S 0    CR2N CR3S 0]
 
 call "more or less peel and trail" c4
    setup 2x2 dmd no_cutting_through qualifier 2fl_only
@@ -21488,6 +21432,8 @@ call "_transfer and part 1" dontshow tag transf1
       array [0 CR4W 0 CR1W AL5E 0 AL0E 0 ZM2N 0 ZM3N 0 0 ZM6N 0 ZM7N]
    setup c1phan 4x4 qualifier tbone none restriction forbidden siamese_in_quad
       array [0 CR2W 0 CR1W AL9E 0 AL10E 0 0 ZM7N 0 ZM3N ZM11N 0 ZM15N 0]
+   setup p5x45 qtag
+      array [0 0 0 CR4W CR5W ZM2N ZM3N AL0E AL1E 0 0 0 ZM6N ZM7N]
             alternate_definition [1x3] c2
    setup 4x2 qtag rotate
       array [ZM5W ZM7W ZM0W CR2S AL6N ZM1W ZM3W ZM4W]

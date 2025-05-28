@@ -24,7 +24,7 @@ CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 # These are the library flags that we must use for the final bind of
 # "sdtty".
 SDTTY_LIBS = -L. -LC:\MinGW64\mingw32 -lsdlib
-SD_LIBS = C:\MinGW64\mingw32\i686-w64-mingw32\lib\libcomctl32.a -L. -LC:\MinGW64\mingw32 -lsdlib
+SD_LIBS = C:\MinGW64\i686-w64-mingw32\lib\libcomctl32.a -L. -LC:\MinGW64\mingw32 -lsdlib
 
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \

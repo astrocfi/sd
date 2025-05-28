@@ -1661,6 +1661,7 @@ extern void divided_setup_move(
    // empty.  In that case, the strict definition of "phantom waves" is no longer enforced, and it
    // becomes effectively an "assume waves".  Cf. t28t and pt00t.
 
+
    multiple_move_innards(
       ss, map_encoding, maps, recompute_id, t,
       noexpand_bits_to_set,
@@ -2828,8 +2829,7 @@ extern void distorted_2x2s_move(
             else if (((arg4 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
             else if (((arg4 ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
          }
-         else if (livemaskBE64 == 0xFFFF && (directionsBE64
- & 0xF0F0) == 0x00A0) {
+         else if (livemaskBE64 == 0xFFFF && (directionsBE64 & 0xF0F0) == 0x00A0) {
             if (     ((directionsBE64 ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj3;
             else if (((directionsBE64 ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj4;
             else if (((directionsBE64 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
@@ -3044,8 +3044,13 @@ extern void distorted_2x2s_move(
          result->clear_people();
          // The zero slot has other stuff.
          scatter(result, &stemp, map_z_restorer+1, arity*4-1, 0);
+         return;
       }
-      else if (result->result_flags.misc & RESULTFLAG__COMPRESSED_FROM_2X3)
+      if (result->result_flags.misc & RESULTFLAG__COMPRESSED_FROM_2X3)
+         fail("Can't do this call in this setup.");
+   }
+   else if (arity == 2 && result->kind == s1x8) {
+      if (result->result_flags.misc & RESULTFLAG__COMPRESSED_FROM_2X3)
          fail("Can't do this call in this setup.");
    }
 

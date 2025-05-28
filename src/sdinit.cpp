@@ -36,7 +36,6 @@
    conzept::translate_concept_names
    configuration::startinfolist
    configuration::initialize
-   start_stats_file_from_GLOB_stats_filename
    open_session
 and the following external variables:
    null_options
@@ -304,7 +303,7 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
    // since we don't know what the tagging call will be.
    if (test_call->the_defn.callflagsf &
-       (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT | CFLAG2_ACCEPT_IN_ALL_MENUS))
+       (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT))
       goto accept;
 
    // Do the call.  An error will signal and go to try_again.
@@ -554,7 +553,6 @@ static int session_line_state = 0;
 static char rewrite_filename_as_star[2] = { '\0' , '\0' };  // First char could be "*" or "+".
 static FILE *database_file;
 static FILE *abridge_file;
-static FILE *stats_file = (FILE *) 0;
 
 
 static uint32_t read_8_from_database()
@@ -1061,7 +1059,6 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       heritflags saveflagsherit = read_hugeword();
       read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
-      recursed_call_root->frequency = 0;
       recursed_call_root->level = 0;
       recursed_call_root->schema = call_schema;
       recursed_call_root->callflags1 = saveflags1;
@@ -1334,7 +1331,6 @@ extern int process_session_info(Cstring *error_msg)
       }
 
       Cstring breakpos = 0;
-      Cstring statspos = 0;
 
       if (!parse_level(session_levelstring, &breakpos)) {
          *error_msg = "Bad level given in session file.";
@@ -1345,8 +1341,6 @@ extern int process_session_info(Cstring *error_msg)
       // separated by a minus sign and/or colon.
       if (breakpos && *breakpos == '-') {
          int len = strlen(breakpos+1);
-         statspos = strchr(breakpos+1, ':');
-         if (statspos) len = statspos-breakpos-1;
 
          // If there is already a file name, the operator is overriding
          // the name from the session.  Use the override.  Don't take
@@ -1369,11 +1363,6 @@ extern int process_session_info(Cstring *error_msg)
                abridge_mode_none : abridge_mode_abridging;
          }
       }
-      else
-         statspos = breakpos;  // Maybe there is a stats name but not an abridge name.
-
-      if (GLOB_stats_filename[0] == 0 && statspos)
-         strncpy(GLOB_stats_filename, statspos+1, MAX_TEXT_LINE_LENGTH);
 
       if (num_fields_parsed == 4)
          strncpy(header_comment, line+ccount, MAX_TEXT_LINE_LENGTH);
@@ -1424,12 +1413,6 @@ static int write_back_session_line(FILE *wfile)
    if (glob_abridge_mode != abridge_mode_none && abridge_filename[0]) {
       strcat(level_and_abridge_name, "-");
       strcat(level_and_abridge_name, abridge_filename);
-   }
-
-   // Write the stats file name.
-   if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
-      strcat(level_and_abridge_name, ":");
-      strcat(level_and_abridge_name, GLOB_stats_filename);
    }
 
    if (header_comment[0])
@@ -1627,37 +1610,6 @@ static void rewrite_init_file()
    }
 }
 
-static void do_stats_file()
-{
-   // Write out the stats file if there is one.
-
-   if (GLOB_doing_frequency && GLOB_stats_filename[0]) {
-      stats_file = fopen(GLOB_decorated_stats_filename, "w");
-      int i;
-
-      if (stats_file) {     // If it's gone, don't do anything.
-         for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
-            if (main_call_lists[call_list_any][i]->the_defn.frequency > 0) {
-               fprintf(stats_file, "%-4d %s\n",
-                       main_call_lists[call_list_any][i]->the_defn.frequency,
-                       main_call_lists[call_list_any][i]->menu_name);
-            }
-         }
-
-         for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
-            if (concept_descriptor_table[i].frequency > 0) {
-               fprintf(stats_file, "%-4d %s\n",
-                       concept_descriptor_table[i].frequency,
-                       concept_descriptor_table[i].menu_name);
-            }
-         }
-
-         fclose(stats_file);
-      }
-   }
-}
-
-
 extern void general_final_exit(int code)
 {
    // If this is Sd, of course "ttu_initialize" won't have been called.
@@ -1670,7 +1622,6 @@ extern void general_final_exit(int code)
 
    if (glob_abridge_mode < abridge_mode_writing_only) {   // Not writing out a list, actually running the program.
       rewrite_init_file();
-      do_stats_file();
    }
 
    // If this is Sdtty, this next procedure will call "ttu_terminate".
@@ -1794,7 +1745,6 @@ static void build_database_1(abridge_mode_t abridge_mode)
          base_calls[savetag] = call_root;
       }
 
-      call_root->the_defn.frequency = 0;
       call_root->the_defn.level = (int) this_calls_level;
       call_root->the_defn.schema = call_schema;
       call_root->the_defn.callflags1 = saveflags1;
@@ -2031,8 +1981,6 @@ void conzept::translate_concept_names()
    for (i=0; conzept::unsealed_concept_descriptor_table[i].kind != marker_end_of_list; i++) {
       unsealed_concept_descriptor_table[i].menu_name =
          translate_menu_name(unsealed_concept_descriptor_table[i].name, &escape_bit_junk);
-
-      unsealed_concept_descriptor_table[i].frequency = 0;
    }
 
    // "Seal" the concept table.  It will be made visible outside of the
@@ -2125,23 +2073,12 @@ who_list who_uninit_thing(selector_uninitialized);
 int useful_concept_indices[UC_extent];
 
 
-void start_stats_file_from_GLOB_stats_filename()
-{
-   GLOB_doing_frequency = true;
-   strncpy(GLOB_decorated_stats_filename, GLOB_stats_filename, MAX_TEXT_LINE_LENGTH);
-   if (!strchr(GLOB_stats_filename, '.'))
-      strncat(GLOB_decorated_stats_filename, ".txt", MAX_FILENAME_LENGTH);
-}
-
-
 bool open_session(int argc, char **argv)
 {
    int i, j;
    uint32_t uj;
    int argno;
    char line[MAX_FILENAME_LENGTH+1];
-
-   GLOB_stats_filename[0] = 0;
 
    // Copy the arguments, so that we can grow the list if we see options in the init file.
 
@@ -2974,56 +2911,6 @@ bool open_session(int argc, char **argv)
 
    gg77->iob88.init_step(tick_end, 0);
    matcher_initialize();
-
-   // Read in the "stats" file.
-   // If the fopen fails, leave it at zero.  We won't read, but we will write it back with fresh data.
-   // If the given name doesn't have a suffix, use ".txt".
-   if (GLOB_stats_filename[0]) {
-      start_stats_file_from_GLOB_stats_filename();
-      stats_file = fopen(GLOB_decorated_stats_filename, "r");
-   }
-
-   if (stats_file) {
-      char stats_call[MAX_TEXT_LINE_LENGTH];
-
-      while (fgets(stats_call, 99, stats_file)) {
-         // Remove the newline character.
-         int ll;
-         while ((ll = strlen(stats_call)-1) >= 0 && stats_call[ll] == '\n')
-            stats_call[ll] = '\0';
-
-         int frequency, ccount;
-         char junk[MAX_TEXT_LINE_LENGTH];
-
-         if (sscanf(stats_call, "%d %n%s", &frequency, &ccount, junk) == 2) {
-
-            // Search through the call name list for this call.
-            // Why don't we use a more efficient search, based on the fact
-            // that the call list has been alphabetized?  Because it was
-            // alphabetized before the '@' escapes were expanded.  It
-            // is no longer in alphabetical order.
-            for (i=0 ; i<number_of_calls[call_list_any] ; i++) {
-               if (!strcmp(stats_call+ccount, main_call_lists[call_list_any][i]->menu_name)) {
-                  main_call_lists[call_list_any][i]->the_defn.frequency = frequency;
-                  break;
-               }
-            }
-
-            // If that failed, search for concepts.
-            if (i == number_of_calls[call_list_any]) {
-               for (i=0 ; concept_descriptor_table[i].kind != concept_diagnose ; i++) {
-                  if (!strcmp(stats_call+ccount, concept_descriptor_table[i].menu_name)) {
-                     concept_descriptor_table[i].frequency = frequency;
-                     break;
-                  }
-               }
-            }
-         }
-      }
-
-      if (fclose(stats_file))
-         gg77->iob88.fatal_error_exit(1, "Can't close stats file");
-   }
 
    // Make the status bar show that we are processing accelerators.
    gg77->iob88.init_step(do_accelerator, 0);

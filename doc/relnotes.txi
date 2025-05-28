@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.34
-@set title2 Database version = 39.34 format = 393
+@set title1 RELEASE NOTES FOR VERSION 39.35
+@set title2 Database version = 39.35 format = 396
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.35::
 * 39.34::
 * 39.33::
 * 39.32::
@@ -134,7 +135,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.34, Top, (dir)
+@node Intro, 39.35, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -145,11 +146,35 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.34::               Changes in the current version
+* 39.35::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.34, 39.33, Intro, Top
+@node 39.35, 39.34, Intro, Top
+@unnumberedsec Version 39.35 changes
+
+The ``Solomon Rule'' is not absolute.  There are cases of offset
+reinstatement the King Solomon might not approve of.  For example,
+from 2x6 parallelogram facing lines, @strong{parallelogram touch},
+going to a tidal wave, has been generally accepted for quite some
+time.  However, things like @strong{Z Pass The Ocean} from facing Z's
+(as in 1/2 @strong{E.R.A.} from appropriate facing lines) is illegal.
+
+Putting an offset back along the opposite axis is legal, even though
+it doesn't follow the definition of an offset concept, as long as such
+a concept is not invoked.  For example, from 2x6 parallelogram waves,
+@strong{Lockit} is legal.  (But @strong{Parallelogram Lockit} is not,
+since it violates the @strong{parallelogram} concept.
+
+Similarly, from the Z's that could be obtained with @strong{1/2 Press
+Ahead} from waves, @strong{Tandem 1/4 Right} is legal.
+
+The ``call frequency'' mechanism was removed.  It was a bad idea from
+the start.  Callers have to use their own judgement about how to use
+the lists effectively.
+
+@c ************
+@node 39.34, 39.33, 39.35, Top
 @unnumberedsec Version 39.34 changes
 
 The program can handle many triangles.

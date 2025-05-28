@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 393
+#define DATABASE_FORMAT_VERSION 396
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -433,7 +433,7 @@ enum {
    CFLAG2_NO_RAISE_OVERCAST         = 0x08000000U,
    CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U,
    CFLAG2_IS_STAR_CALL              = 0x20000000U,
-   CFLAG2_ACCEPT_IN_ALL_MENUS       = 0x40000000U
+   CFLAG2_CAN_DO_IN_Z               = 0x40000000U
    // 1 spare.
 };
 
@@ -600,8 +600,6 @@ enum setup_kind {
    s1p5x4,
    sfudgy2x6l,
    sfudgy2x6r,
-   sfudgy2x3l,
-   sfudgy2x3r,
    s2x8,
    s4x4,
    s1x10,
@@ -682,6 +680,8 @@ enum setup_kind {
    s_3223,
    s_525,
    s_545,
+   s3x5,
+   s_434,
    sh545,
    s_23232,
    s_3mdmd,
@@ -901,6 +901,10 @@ enum begin_kind {
    b_p525,
    b_545,
    b_p545,
+   b_3x5,
+   b_p3x5,
+   b_434,
+   b_p434,
    bh545,
    bhp545,
    b_23232,

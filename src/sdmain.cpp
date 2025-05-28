@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.34"
-#define TIME_STAMP "wba@alum.mit.edu Apr 8 2021 $"
+#define VERSION_STRING "39.35"
+#define TIME_STAMP "wba@alum.mit.edu Jun 19 2021 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -180,17 +180,6 @@ command_list_menu_item command_menu[] = {
    {"clipboard paste all",            command_paste_all_calls, -1},
    {"keep picture",                   command_save_pic, ID_COMMAND_KEEP_PICTURE},
    {"refresh display",                command_refresh, -1},
-
-   {"frequency show",                 command_freq_show, -1},
-   {"frequency show level",           command_freq_show_level, -1},
-   {"frequency show near level",      command_freq_show_nearlevel, -1},
-   {"frequency show sort",            command_freq_show_sort, -1},
-   {"frequency show sort level",      command_freq_show_sort_level, -1},
-   {"frequency show sort near level", command_freq_show_sort_nearlevel, -1},
-   {"frequency reset",                command_freq_reset, -1},
-   {"frequency start",                command_freq_start, -1},
-   {"frequency delete",               command_freq_delete, -1},
-
    {"resolve",                        command_resolve, ID_COMMAND_RESOLVE},
    {"normalize",                      command_normalize, ID_COMMAND_NORMALIZE},
    {"standardize",                    command_standardize, ID_COMMAND_STANDARDIZE},
@@ -271,17 +260,6 @@ startup_list_menu_item startup_menu[] = {
    {"change output file",          start_select_change_outfile, ID_COMMAND_CH_OUTFILE},
    {"change output prefix",        start_select_change_outprefix, -1},
    {"change title",                start_select_change_title, ID_COMMAND_CH_TITLE},
-
-   {"frequency show",              start_select_freq_show, -1},
-   {"frequency show level",        start_select_freq_show_level, -1},
-   {"frequency show near level",   start_select_freq_show_nearlevel, -1},
-   {"frequency show sort",         start_select_freq_show_sort, -1},
-   {"frequency show sort level",   start_select_freq_show_sort_level, -1},
-   {"frequency show sort near level", start_select_freq_show_sort_nearlevel, -1},
-   {"frequency reset",             start_select_freq_reset, -1},
-   {"frequency start",             start_select_freq_start, -1},
-   {"frequency delete",            start_select_freq_delete, -1},
-
    {(Cstring) 0}};
 
 int last_file_position = -1;
@@ -748,9 +726,6 @@ extern bool query_for_call()
          case error_flag_wrong_command:
             gg77->writestuff("You can't select that here.");
             break;
-         case error_flag_OK_but_dont_erase:
-            global_error_flag = error_flag_none;
-            break;
          }
 
          gg77->newline();
@@ -1051,7 +1026,6 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    verify_options.who.who[2] = selector_uninitialized;
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
-   GLOB_doing_frequency = false;
    history_allocation = 15;
    configuration::history = new configuration[history_allocation];
 

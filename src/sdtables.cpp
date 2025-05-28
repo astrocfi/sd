@@ -513,7 +513,7 @@ Cstring warning_strings[] = {
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
-   /*  warn_verycontroversial    */   "*Change offset to other axis, this may be seriously controversial.",
+   /*  warn_other_axis           */   "*Change offset to other axis, this may be controversial.",
    /*  warn_no_internal_phantoms */   "*Removing internal phantoms from result 1x4, this may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn_suspect_destroyline  */   "%This cycle and wheel is suspicious.",   // Won't get printed, will become an error.
@@ -2274,15 +2274,15 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 3, 2,                       11, 10, 8, 9},
     s1x4,2,MPKIND__OFFS_R_HALF,0, warn__none,  s1p5x8,    0x000, 0},
 
-   {{0, 1,                             5, 4},
-    s1x2,2,MPKIND__FUDGYOFFS_L_HALF,0, warn__none,  sfudgy2x3l, 0x000, 0},
-   {{7, 6,                             2, 3},
-    s1x2,2,MPKIND__FUDGYOFFS_R_HALF,0, warn__none,  sfudgy2x3r, 0x000, 0},
+   {{0, 1,                             4, 3},
+    s1x2,2,MPKIND__FUDGYOFFS_L_HALF,0, warn_other_axis,  s2x3, 0x000, 0},
+   {{5, 4,                             1, 2},
+    s1x2,2,MPKIND__FUDGYOFFS_R_HALF,0, warn_other_axis,  s2x3, 0x000, 0},
 
    {{7, 6,                             2, 3},
-    s1x2,2,MPKIND__OFFS_L_HALF,0, warn__none,  s1p5x4,    0x000, 0},
+    s1x2,2,MPKIND__OFFS_L_HALF,0, warn_other_axis,  s1p5x4,    0x000, 0},
    {{0, 1,                             5, 4},
-    s1x2,2,MPKIND__OFFS_R_HALF,0, warn__none,  s1p5x4,    0x000, 0},
+    s1x2,2,MPKIND__OFFS_R_HALF,0, warn_other_axis,  s1p5x4,    0x000, 0},
 
    {{15, 14, 12, 13,                   4, 5, 7, 6},
     s1x4,2,MPKIND__OFFS_L_FULL,0, warn__none,  s2x8,      0x000, 0},
@@ -2323,6 +2323,12 @@ map::map_thing map::map_init_table[] = {
     s1x4,2,MPKIND__OFFS_L_HALF,1, warn__none,  s2x6,      0x000, 0},
    {{11, 10, 8, 9,                     2, 3, 5, 4},
     s1x4,2,MPKIND__OFFS_R_HALF,1, warn__none,  s2x6,      0x000, 0},
+
+   // For these two, the bit in the rotation makes in not try to put the distortion back.
+   {{0, 1, 3, 4},
+    s2x2,1,MPKIND__OFFS_L_HALF,1, warn__none,  s2x3,      0x40000, 0},
+   {{1, 2, 4, 5},
+    s2x2,1,MPKIND__OFFS_R_HALF,1, warn__none,  s2x3,      0x40000, 0},
 
    {{4, 3,                             0, 1},
     s1x2,2,MPKIND__OFFS_L_HALF,1, warn__none,  s2x3,      0x000, 0},
@@ -6279,6 +6285,18 @@ static const coordrec thing3x3 = {s3x3, 0x23,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thing3x5 = {s3x5, 0x23,
+   { -8,  -4,   0,   4,   8,   8,   4,   8,   4,   0,  -4,  -8,  -8,  -4,   0},
+   {  4,   4,   4,   4,   4,   0,   0,  -4,  -4,  -4,  -4,  -4,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1,  2,  3,  4, -1,
+      -1, -1, 12, 13, 14,  6,  5, -1,
+      -1, -1, 11, 10,  9,  8,  7, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thingd2x5 = {sd2x5, 0x23,
    { -6,  -6,  -2,  -2,  -2,   6,   6,   2,   2,   2},
    {  2,  -2,   4,   0,  -4,  -2,   2,  -4,   0,   4}, {
@@ -7052,6 +7070,18 @@ static const coordrec thing23232 = {s_23232, 0x23,
       -1, -1, -1,  0, -1,  1, -1, -1,
       -1, -1,  2, 11,  3,  5,  4, -1,
       -1, -1, 10,  7,  9,  6,  8, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thing434 = {s_434, 0x23,
+   { -6,  -2,   2,   6,   4,   6,   2,  -2,  -6,  -4,   0},
+   {  4,   4,   4,   4,   0,  -4,  -4,  -4,  -4,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1,  2,  3, -1, -1,
+      -1, -1, -1,  9, 10,  4, -1, -1,
+      -1, -1,  8,  7,  6,  5, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -9149,7 +9179,7 @@ const setup_attr setup_attrs[] = {
     &thingd2x5,
     &thingd2x5,
     {0, 0, 0, 0},
-    {b_d2x5, b_5x2},
+    {b_d2x5, b_d5x2},
     {4, 3},
     SPROP_FIND_NEAR_PEOPLE,
     id_bit_table_d2x5,
@@ -9455,26 +9485,6 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"a  b  c  d  e  f  g  h@p  o  n  m  l  k  j  i",
      "pa@@ob@@nc@@md@@le@@kf@@jg@@ih"}},
-   {7,                      // sfudgy2x3l
-    (const coordrec *) 0,
-    (const coordrec *) 0,
-    {0, 0, 0, 0},
-    {b_nothing, b_nothing},
-    {0, 0},
-    0U,
-    (const id_bit_table *) 0,
-    {"a  b  c  d@h  g  f  e",
-     "ha@@gb@@fc@@ed"}},
-   {7,                      // sfudgy2x3r
-    (const coordrec *) 0,
-    (const coordrec *) 0,
-    {0, 0, 0, 0},
-    {b_nothing, b_nothing},
-    {0, 0},
-    0U,
-    (const id_bit_table *) 0,
-    {"a  b  c  d@h  g  f  e",
-     "ha@@gb@@fc@@ed"}},
    {15,                     // s2x8
     &thing2x8,
     &thing2x8,
@@ -10275,6 +10285,26 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {"   a  b  c  d  e@@   5 m  n  g  f@@   l  k  j  i  h",
      "l6a@76m@7k6b@76n@7j6c@76g@7i6d@76f@7h6e"}},
+   {14,                     // s_3x5
+    &thing3x5,
+    &thing3x5,
+    {0, 0, 0, 0},
+    {b_545, b_p545},
+    {5, 3},
+    SPROP_FIND_NEAR_PEOPLE,
+    (const id_bit_table *) 0,
+    {"a  b  c  d  e@@m  n  o  g  f@@l  k  j  i  h",
+     "l  m  a@@k  n  b@@j  o  c@@i  g  d@@h  f  e"}},
+   {10,                     // s_434
+    &thing434,
+    &thing434,
+    {0, 0, 0, 0},
+    {b_434, b_p434},
+    {0, 0},
+    SPROP_FIND_NEAR_PEOPLE,
+    (const id_bit_table *) 0,
+    {"a  b  c  d@@5 j  k  e@@i  h  g  f",
+     "i66a@765j@7h66b@765k@7g66c@765e@7f66d"}},
    {13,                     // sh545
     &thing_h545,
     &thing_h545,
@@ -11582,6 +11612,14 @@ select::fixer select::fixer_init_table[] = {
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_fcpl34,    fx0},
    {fx_fcpl41, s2x2, s4x4,     0x3C, 0, 1,          {9, 10, 5, 6},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_fcpl41,    fx0},
+
+   {fx_f434a, s1x2, s_434,     0, 0, 2,          {0, 1, 6, 5},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+   {fx_f434b, s1x2, s_434,     0, 0, 2,          {1, 2, 7, 6},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+   {fx_f434c, s1x2, s_434,     0, 0, 2,          {2, 3, 8, 7},
+    fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+
    {fx_foo55d, s1x4, s1x8,        0, 0, 1,    {0, 2, 4, 6},
     fx0,          fx0,          fx_foo55d,    fx0, fx_f1x3zzd,   fx0,    fx_bar55d,    fx_bar55d},
    {fx_fgalctb, s2x2, s_galaxy,    0, 0, 1,   {1, 3, 5, 7},
@@ -12452,6 +12490,9 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                           s4x4,   0x6006, fx_fcpl23,     fx0, -1},
    {LOOKUP_NONE,                           s4x4,   0x6600, fx_fcpl34,     fx0, -1},
    {LOOKUP_NONE,                           s4x4,   0x0660, fx_fcpl41,     fx0, -1},
+   {LOOKUP_NONE,                           s_434,   0x063, fx_f434a,      fx0, -1},
+   {LOOKUP_NONE,                           s_434,   0x0C6, fx_f434b,      fx0, -1},
+   {LOOKUP_NONE,                           s_434,   0x18C, fx_f434c,      fx0, -1},
    {LOOKUP_NONE,                           s_thar, 0x00CC, fx_ftharns,    fx0, -1},
    {LOOKUP_NONE,                           s_thar, 0x0033, fx_ftharew,    fx0, -1},
    {LOOKUP_NONE,                          s_alamo, 0x0033, fx_falamons,   fx0, -1},
@@ -12937,6 +12978,22 @@ const tglmap::map tglmap::init_table[] = {
     {0},
     {0}},
 
+   // Things in 434
+
+   {tglmap434_73, s_434, s2x4, tglmap434_73, 0, 0,
+    {9, 0, 1,   4, 5, 6},
+    {0},
+    {0},
+    {0},
+    {0}},
+
+   {tglmap434_14, s_434, s2x4, tglmap434_14, 0, 0,
+    {4, 2, 3,   9, 7, 8},
+    {0},
+    {0},
+    {0},
+    {0}},
+
    // Things in 3223
 
    {tglmap3223_2b, s_3223, nothing, tglmap3223_2b, 0, 0x10,
@@ -13130,6 +13187,9 @@ const tglmap::tglmapkey tglmap::sd25map66[2] = {tglmapd25_66, tglmapd25_66i};
 const tglmap::tglmapkey tglmap::sd25map16b[2] = {tglmapd25_16b, tglmapd25_16bi};
 const tglmap::tglmapkey tglmap::sd25map1ad[1] = {tglmapd25_1ad};
 const tglmap::tglmapkey tglmap::sd25map35a[1] = {tglmapd25_35a};
+
+const tglmap::tglmapkey tglmap::s434map73[1] = {tglmap434_73};
+const tglmap::tglmapkey tglmap::s434map14[1] = {tglmap434_14};
 
 const tglmap::tglmapkey tglmap::s3223map2b[2] = {tglmap3223_2b, tglmap3223_2bi};
 const tglmap::tglmapkey tglmap::s3223map1c[2] = {tglmap3223_1c, tglmap3223_1ci};

@@ -324,9 +324,9 @@ static void erase_questionable_stuff()
 }
 
 
-void iofull::show_match(int frequency_to_show)
+void iofull::show_match()
 {
-   get_utils_ptr()->show_match_item(frequency_to_show);
+   get_utils_ptr()->show_match_item();
 }
 
 

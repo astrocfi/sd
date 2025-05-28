@@ -435,6 +435,10 @@ const char *sstab[] = {
    "p5x25",
    "5x45",
    "p5x45",
+   "3x5",
+   "p3x5",
+   "434",
+   "p434",
    "5h45",
    "p5h45",
    "2x3232",
@@ -558,8 +562,6 @@ const char *estab[] = {
    "1p5x4",
    "???",
    "???",
-   "???",
-   "???",
    "2x8",
    "4x4",
    "1x10",
@@ -640,6 +642,8 @@ const char *estab[] = {
    "3x223",
    "5x25",
    "5x45",
+   "3x5",
+   "4x34",
    "5h45",
    "2x3232",
    "3mdmd",
@@ -1073,7 +1077,7 @@ const char *flagtab1f[] = {
    "dont_raise_overcast",
    "overcast_transparent",
    "is_star_call",
-   "accept_in_all_menus",
+   "can_do_in_z",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.
