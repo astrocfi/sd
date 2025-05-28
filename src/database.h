@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 362
+#define DATABASE_FORMAT_VERSION 363
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -232,6 +232,7 @@ enum base_call_index {
    base_call_circcer,
    base_call_turnstar_n,
    base_call_revert_if_needed,
+   base_call_extend,
    base_call_extend_n,
    num_base_call_indices    // Not an actual enumeration item.
 };

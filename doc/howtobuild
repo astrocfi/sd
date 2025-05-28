@@ -189,6 +189,7 @@ Copy these into an appropriate directory:
    \wba\sd\sd_vnnnn.zip
    \wba\sd\regress\r_vnnnn.zip
    \wba\sddoc\doc_vnnnn.zip
+   \wba\sddoc\sd_source.zip
    \wba\sddoc\pack.zip
    \wba\sddoc\install.exe
 

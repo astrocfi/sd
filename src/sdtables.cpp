@@ -3374,8 +3374,12 @@ static expand::thing step_3x4_stuff = {{11, 10, 0, 1, 3, 2, 5, 4, 6, 7, 9, 8}, s
 static expand::thing step_2x2v_stuff = {{1, 2, 3, 0}, s2x2, s1x4, 0};
 static expand::thing step_2x2h_stuff = {{0, 1, 2, 3}, s2x2, s1x4, 1};
 static expand::thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, s2x4, s2x4, 1};
+
 static expand::thing step_2x4nestuff = {{0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5, -1, 7, -1, 6, -1}, s_c1phan, s2x4, 0};
 static expand::thing step_2x4nwstuff = {{-1, 1, -1, 0, -1, 3, -1, 2, -1, 5, -1, 4, -1, 7, -1, 6}, s_c1phan, s2x4, 0};
+static expand::thing step_2x4eestuff = {{0, -1, 1, -1, 3, -1, 2, -1, -1, 5, -1, 4, -1, 7, -1, 6}, s_c1phan, s2x4, 0};
+static expand::thing step_2x4wwstuff = {{-1, 1, -1, 0, -1, 3, -1, 2, 4, -1, 5, -1, 7, -1, 6, -1}, s_c1phan, s2x4, 0};
+
 static expand::thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, s2x4, s1x8, 0};
 static expand::thing step_li6_stuff = {{1, 5, 3, 4, 2, 0}, s2x3, s1x6, 0};
 static expand::thing step_liphan_stuff = {{-1, 1, -1, 2, -1, 3, -1, 0}, s2x4, s1x4, 0};
@@ -3501,6 +3505,17 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  8, &step_2x4nwstuff,s2x4,        0xFFFFU,     0x278DU, ~0U},
    {warn__some_rear_back,  8, &step_2x4nwstuff,s2x4,        0xFFFFU,     0x2F85U, ~0U},
    {warn__some_rear_back,  8, &step_2x4nwstuff,s2x4,        0xFFFFU,     0x2D87U, ~0U},
+
+   // Undymmetrical versions of same.
+   {warn__some_rear_back,  8, &step_2x4eestuff,s2x4,        0xFFFFU,     0x528FU, ~0U},
+   {warn__some_rear_back,  8, &step_2x4eestuff,s2x4,        0xFFFFU,     0x728DU, ~0U},
+   {warn__some_rear_back,  8, &step_2x4eestuff,s2x4,        0xFFFFU,     0xF285U, ~0U},
+   {warn__some_rear_back,  8, &step_2x4eestuff,s2x4,        0xFFFFU,     0xD287U, ~0U},
+   {warn__some_rear_back,  8, &step_2x4wwstuff,s2x4,        0xFFFFU,     0x25F8U, ~0U},
+   {warn__some_rear_back,  8, &step_2x4wwstuff,s2x4,        0xFFFFU,     0x27D8U, ~0U},
+   {warn__some_rear_back,  8, &step_2x4wwstuff,s2x4,        0xFFFFU,     0x2F58U, ~0U},
+   {warn__some_rear_back,  8, &step_2x4wwstuff,s2x4,        0xFFFFU,     0x2D78U, ~0U},
+
    // Rear back from columns to end-to-end single 8-chains.
    {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFU,     0x55FFU, ~0U},
    // Rear back from columns of 6 to end-to-end single 8-chains.

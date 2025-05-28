@@ -5208,6 +5208,16 @@ static void do_concept_n_times(
       // We do *NOT* remember the yoyo/twisted expiration stuff.
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
 
+      // If doing a series of extends, and this is not first in the series, and
+      // the setup is a general 1/4 tag, it must be a 3/4 tag; it can't be a 1/4 tag.
+      if (!zzz.m_first_call && (result->kind == s_qtag || result->kind == sdmd)) {
+         if (result->cmd.callspec == base_calls[base_call_extend] ||
+             (result->cmd.parseptr && result->cmd.parseptr->call == base_calls[base_call_extend])) {
+            result->cmd.cmd_assume.assumption = cr_jright;
+            result->cmd.cmd_assume.assump_both = 1;
+         }
+      }
+
       do_call_in_series_simple(result);
 
       // Record the minimum in each direction.

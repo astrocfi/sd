@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.13"
+version "39.14"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -19575,15 +19575,15 @@ call "_extend 1/4 to 1/2" dontshow tag extend_1_to_2
 
 call "extend" mainstream tag extend
    // 0/4 tag to 1/4 tag
-   setup 4x1 dmd qualifier in 2fl_only restriction forbidden levelplus
+   setup 4x1 dmd qualifier in 2fl_only restriction unusual levelplus
       array [ZM0N ZM1N 0 0]
    // 1/2 tag to 3/4 tag
-   setup 2x2 dmd rotate qualifier miniwaves restriction forbidden levelplus
+   setup 2x2 dmd rotate qualifier miniwaves restriction unusual levelplus
       array [ZM0W ZM0W ZM1W ZM3W]
 
    // 3/4 tag to 4/4 tag -- test is not definitive, cf. test lg01t.
    // Baloney!  It's definitive now!  And lg01t works!
-   setup pmd 1x4 qualifier live out qtag_like restriction forbidden levelplus
+   setup pmd 1x4 qualifier live out qtag_like restriction unusual levelplus
       array [0 ZM3N ZM2N ZM3N]
    // 1/4 tag to 1/2 tag -- "live" demands that the test be definitive,
    // that is, that we have a live end to indicate that this is a 1/4 tag
@@ -20023,7 +20023,7 @@ call "@6 advance to a column" c4a
    //    "beaus advance to a column" from facing lines.
    // Also, when we do a "single advance to a column", we need this.
    seq circ_for_advance [inherit_magic]
-   seq ctrstrade_for_advance [inherit_magic]
+   seq ctrstrade_for_advance [inherit_magic roll_transparent]
    seq circ_for_advance [inherit_magic]
 
 call "beaus advance to a column" c4a
@@ -20033,7 +20033,7 @@ call "beaus advance to a column" c4a
    // The "inherit_nxn" is here to raise an error
    // if we don't say "initially".
    seq circ_for_advance [inherit_single inherit_nxn]
-   seq ctrstrade_for_advance [inherit_single]
+   seq ctrstrade_for_advance [inherit_single roll_transparent]
    seq circ_for_advance [inherit_single]
             first_part_visible singlefile_is_inherited single_is_inherited
             nxn_is_inherited bigmatrix_is_inherited
@@ -20047,7 +20047,7 @@ call "belles advance to a column" c4a
    // The "inherit_nxn" is here to raise an error
    // if we don't say "initially".
    seq circ_for_advance [inherit_single inherit_nxn]
-   seq ctrstrade_for_advance [inherit_single]
+   seq ctrstrade_for_advance [inherit_single roll_transparent]
    seq circ_for_advance [inherit_single]
             first_part_visible singlefile_is_inherited single_is_inherited
             nxn_is_inherited bigmatrix_is_inherited
@@ -20071,7 +20071,7 @@ call "finish advance to a column" c4a tag finadv
             A4S A5S A6S A7S AM3S AM2S AM1S AM0S]
             visible_fractions single_is_inherited magic_is_inherited
    seq circ_for_advance [inherit_single inherit_magic]
-   seq ctrstrade_for_advance [inherit_single inherit_magic]
+   seq ctrstrade_for_advance [inherit_single inherit_magic roll_transparent]
    seq circ_for_advance [inherit_single inherit_magic]
 
 call "_swing to a column centers part 1" dontshow tag touch_1_2_and_roll
