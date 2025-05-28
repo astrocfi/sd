@@ -63,11 +63,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    uint32 p1, p2, p3;
    selector_kind s;
    int thing_to_test;
-   uint32 selected_person_mask = ~0UL;
-
-   uint32 directions;
-   uint32 livemask;
-   big_endian_get_directions(ss, directions, livemask);
 
    selector_used = true;
 
@@ -126,7 +121,7 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
             case selector_center_box:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
-                  ID2_BITS_TO_CLEAR &
+                  BITS_TO_CLEAR &
                   ~(ID2_FACING|ID2_NOTFACING|ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE);
                goto do_switch;
             }
@@ -139,6 +134,9 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
  do_switch:
 
    switch (current_options.who) {
+      uint32 directions;
+      uint32 livemask;
+
    case selector_boys:
       if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return true;
       else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return false;
@@ -293,6 +291,34 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       else if (p2 == ID2_OUTR2) s = selector_veryends;
       else break;
       goto eq_return;
+#ifdef TGL_SELECTORS
+   case selector_wvbasetgl:
+      break;
+   case selector_tndbasetgl:
+      break;
+   case selector_insidetgl:
+      switch (ss->kind) {
+      case s_ptpd: case s_qtag: case s_rigger:
+         p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+         if      (p2 == ID2_CTR6)  return true;
+         else if (p2 == ID2_OUTR2) return false;
+         break;
+      }
+      break;
+   case selector_outsidetgl:
+      switch (ss->kind) {
+      case s_ptpd: case s_qtag: case s_bone: case s_spindle:
+         p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+         if      (p2 == ID2_CTR2)  return false;
+         else if (p2 == ID2_OUTR6) return true;
+         break;
+      }
+      break;
+   case selector_inpttgl:
+      break;
+   case selector_outpttgl:
+      break;
+#endif
    case selector_ctrdmd:
    case selector_notctrdmd:
       p2 = pid2 & (ID2_CTRDMD|ID2_NCTRDMD);
@@ -345,175 +371,61 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       }
 
       break;
-   case selector_the2x3:
-      switch (ss->kind) {
-      case s_spindle:
-         selected_person_mask = 0x77;
-         break;
-      case s_qtag:
-         selected_person_mask = 0xBB;
-         break;
-      case s4x4:
-         if (livemask == 0x0F03333FUL)
-            selected_person_mask = 0xE888;
-         else if (livemask == 0x3F0F0333UL)
-            selected_person_mask = 0x888E;
-         else if (livemask == 0x333F0F03UL)
-            selected_person_mask = 0x88E8;
-         else if (livemask == 0x03333F0FUL)
-            selected_person_mask = 0x8E88;
-         break;
-      }
-
-      break;
-   case selector_thediamond:
-      p2 = pid2 & (ID2_CTRDMD|ID2_NCTRDMD);
-      if      (p2 == ID2_CTRDMD) return true;
-      else if (p2 == ID2_NCTRDMD) return false;
-
-      switch (ss->kind) {
-      case s1x3p1dmd:
-      case s3p1x1dmd:
-         selected_person_mask = 074;
-         break;
-      case s1x4p2dmd:
-      case s4p2x1dmd:
-         selected_person_mask = 0xD8;
-         break;
-      case splinepdmd:
-      case splinedmd:
-         selected_person_mask = 0xF0;
-         break;
-      case slinepdmd:
-      case slinedmd:
-      case sboxpdmd:
-      case sboxdmd:
-         selected_person_mask = 0x0F;
-         break;
-      }
-
-      break;
-   case selector_theline:
-      switch (ss->kind) {
-      case s4x4:
-         if (livemask == 0x0F03333FUL)
-            selected_person_mask = 0x0A84;
-         else if (livemask == 0x3F0F0333UL)
-            selected_person_mask = 0xA840;
-         else if (livemask == 0x333F0F03UL)
-            selected_person_mask = 0x840A;
-         else if (livemask == 0x03333F0FUL)
-            selected_person_mask = 0x40A8;
-         break;
-      case splinepdmd:
-      case splinedmd:
-      case slinebox:
-         if ((directions & livemask & 0x5500) == 0)
-            selected_person_mask = 0x0F;
-         break;
-      case slinepdmd:
-      case slinedmd:
-         if ((directions & livemask & 0x0055) == 0)
-            selected_person_mask = 0xF0;
-         break;
-      }
-
-      break;
-   case selector_thecolumn:
-      switch (ss->kind) {
-      case s4x4:
-         if (livemask == 0x0F03333FUL)
-            selected_person_mask = 0x0A84;
-         else if (livemask == 0x3F0F0333UL)
-            selected_person_mask = 0xA840;
-         else if (livemask == 0x333F0F03UL)
-            selected_person_mask = 0x840A;
-         else if (livemask == 0x03333F0FUL)
-            selected_person_mask = 0x40A8;
-         break;
-      case splinepdmd:
-      case splinedmd:
-      case slinebox:
-         if (((directions ^ 0x5500) & livemask & 0x5500) == 0)
-            selected_person_mask = 0x0F;
-         break;
-      case slinepdmd:
-      case slinedmd:
-         if (((directions ^ 0x0055) & livemask & 0x0055) == 0)
-            selected_person_mask = 0xF0;
-         break;
-      }
-
-      break;
    case selector_headliners:
-      p2 = pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT);
-      if      (p2 == ID3_FACEFRONT || p2 == ID3_FACEBACK) return true;
-      else if (p2 == ID3_FACELEFT || p2 == ID3_FACERIGHT) return false;
+      if      ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEFRONT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEBACK) return true;
+      else if ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACELEFT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACERIGHT) return false;
       break;
    case selector_sideliners:
-      p2 = pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT);
-      if      (p2 == ID3_FACELEFT || p2 == ID3_FACERIGHT) return true;
-      else if (p2 == ID3_FACEFRONT || p2 == ID3_FACEBACK) return false;
+      if      ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACELEFT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACERIGHT) return true;
+      else if ((pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEFRONT ||
+               (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) == ID2_FACEBACK) return false;
       break;
    case selector_thosefacing:
       if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
       else if ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_NOTFACING) return false;
       break;
    case selector_nearline:
-      if      (pid3 & ID3_NEARLINE) return true;
-      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX|ID3_FARFOUR)) return false;
+      if      (pid2 & ID2_NEARLINE) return true;
+      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
       break;
    case selector_farline:
-      if      (pid3 & ID3_FARLINE) return true;
-      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX|ID3_NEARFOUR)) return false;
+      if      (pid2 & ID2_FARLINE) return true;
+      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
       break;
    case selector_nearcolumn:
-      if      (pid3 & ID3_NEARCOL) return true;
-      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX|ID3_FARFOUR)) return false;
+      if      (pid2 & ID2_NEARCOL) return true;
+      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
       break;
    case selector_farcolumn:
-      if      (pid3 & ID3_FARCOL) return true;
-      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX|ID3_NEARFOUR)) return false;
+      if      (pid2 & ID2_FARCOL) return true;
+      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
       break;
    case selector_nearbox:
-      if      (pid3 & ID3_NEARBOX) return true;
-      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
+      if      (pid2 & ID2_NEARBOX) return true;
+      else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
       break;
    case selector_farbox:
-      if      (pid3 & ID3_FARBOX) return true;
-      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
-      break;
-   case selector_nearfour:
-      if      (pid3 & ID3_NEARFOUR) return true;
-      else if (pid3 & ID3_FARFOUR) return false;
-      break;
-   case selector_farfour:
-      if      (pid3 & ID3_FARFOUR) return true;
-      else if (pid3 & ID3_NEARFOUR) return false;
+      if      (pid2 & ID2_FARBOX) return true;
+      else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
       break;
    case selector_facingfront:
-      if      (pid3 & ID3_FACEFRONT) return true;
-      else if (pid3 & (ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) return false;
+      if      (pid2 & ID2_FACEFRONT) return true;
+      else if (pid2 & (ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT)) return false;
       break;
    case selector_facingback:
-      if      (pid3 & ID3_FACEBACK) return true;
-      else if (pid3 & (ID3_FACEFRONT|ID3_FACELEFT|ID3_FACERIGHT)) return false;
+      if      (pid2 & ID2_FACEBACK) return true;
+      else if (pid2 & (ID2_FACEFRONT|ID2_FACELEFT|ID2_FACERIGHT)) return false;
       break;
    case selector_facingleft:
-      if      (pid3 & ID3_FACELEFT) return true;
-      else if (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACERIGHT)) return false;
+      if      (pid2 & ID2_FACELEFT) return true;
+      else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACERIGHT)) return false;
       break;
    case selector_facingright:
-      if      (pid3 & ID3_FACERIGHT) return true;
-      else if (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT)) return false;
-      break;
-   case selector_farthest1:
-      if      (pid3 & ID3_FARTHEST1) return true;
-      else if (pid3 & (ID3_NOTFARTHEST1)) return false;
-      break;
-   case selector_nearest1:
-      if      (pid3 & ID3_NEAREST1) return true;
-      else if (pid3 & (ID3_NOTNEAREST1)) return false;
+      if      (pid2 & ID2_FACERIGHT) return true;
+      else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT)) return false;
       break;
 
       // For the unsymmetrical selectors, we demand that the person not be virtual
@@ -580,6 +492,8 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_firstthree:
    case selector_lastthree:
       if (ss->kind == s2x4) {
+         big_endian_get_directions(ss, directions, livemask);
+
          if (directions == (livemask & 0x55FF))
             thing_to_test = place & 3;        // Right column.
          else if (directions == (livemask & 0xFF55))
@@ -598,6 +512,8 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_leftmostthree:
    case selector_rightmostthree:
       if (ss->kind == s2x4) {
+         big_endian_get_directions(ss, directions, livemask);
+
          if (directions == (livemask & 0x00AA))
             thing_to_test = place & 3;        // Lines out.
          else if (directions == (livemask & 0xAA00))
@@ -612,6 +528,7 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_some:
       // We have to figure out how to group the people, based on unambiguous information from facing directions.
       thing_to_test = -1;
+      big_endian_get_directions(ss, directions, livemask);
 
       switch (attr::slimit(ss)) {
          uint32 A, B, C, D, E, F;
@@ -713,11 +630,6 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       fail("INTERNAL ERROR - selector failed to get initialized.");
    }
 
-   if (selected_person_mask != ~0UL) {
-      if (selected_person_mask & (1 << place)) return true;
-      else return false;
-   }
-
    fail("Can't decide who are selected.");
 
  eq_return:
@@ -776,7 +688,6 @@ static bool sum_mod_selected(setup *real_people, int real_index,
    int otherindex = (*extra_stuff) - real_index;
    int size = attr::slimit(real_people)+1;
    if (otherindex >= size) otherindex -= size;
-   else if (otherindex < 0) otherindex += size;
    return selectp(real_people, otherindex);
 }
 
@@ -1101,9 +1012,6 @@ static bool cols_someone_in_front(setup *real_people, int real_index,
    }
 }
 
-// the "extra_stuff" argument is:
-//   1 for "x14_once_rem_miniwave"
-//   3 for "intlk_cast_normal_or_warn"
 /* ARGSUSED */
 static bool x14_once_rem_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
@@ -1250,11 +1158,10 @@ static bool some_side_of_2n1_line(setup *real_people, int real_index,
       ((real_people->people[2].id1 ^ real_people->people[4-k].id1) & DIR_MASK) == 0;
 }
 
-// the "extra_stuff" argument is:
-//   0 for "cast_pushy"
-//   1 for "cast_normal"
-//   3 for "cast_normal_or_warn"
-//   7 for "cast_normal_or_nowarn"
+/* the "extra_stuff" argument is:
+     0 for "cast_pushy"
+     1 for "cast_normal"
+     3 for "cast_normal_or_warn" */
 /* ARGSUSED */
 static bool cast_normal_or_whatever(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
@@ -1278,13 +1185,12 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
       case 2:
          return false;
       default:
-         if (extra_stuff[0] & 4)
-            return true;   // This is "cast_normal_or_nowarn".  Just do normal cast, don't complain.
-         else if (extra_stuff[0] & 2) {
+         if (extra_stuff[0] & 2) {
             // This is "cast_normal_or_warn".  Don't give the warning if person
             // would have known what to do anyway.
-            if (real_people->kind == s1x2 ||
-                (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
+            if (     real_people->kind == s1x2
+                     ||
+                     (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
                warn(warn__opt_for_normal_cast);
             return true;
          }
@@ -2180,24 +2086,6 @@ static bool check_facing_dmd_spot(setup *real_people, int real_index,
    return ((my_handedness ^ next_handedness) & (BIT_PERSON|3)) == extra_stuff[0];
 }
 
-/* ARGSUSED */
-static bool check_qtag_spot_facing_me(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
-{
-   if (real_index & 1) {
-      int my_handedness = real_people->people[real_index].id1 ^ real_index;
-      int next_index = (real_index + 1 - (my_handedness & 2)) & 3;
-      int next_handedness = real_people->people[next_index].id1 ^ next_index;
-      // We demand that the next person be real.
-      return (next_handedness & (BIT_PERSON|3)) == (extra_stuff[0] | BIT_PERSON);
-   }
-   else {
-      int center_xor = real_people->people[1].id1 ^ real_people->people[3].id1;
-      if ((center_xor & (BIT_PERSON|3)) != 2) return false;
-      return (int) (real_people->people[1].id1 & 3) == extra_stuff[0];
-   }
-}
-
 
 // -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person.
 
@@ -2365,13 +2253,25 @@ static bool x22_facing_other_sex(setup *real_people, int real_index,
 }
 
 
+static direction_kind direction_list[] = {
+   direction_left,
+   direction_right,
+   direction_in,
+   direction_out,
+   direction_back,
+   direction_zigzag,
+   direction_zagzig,
+   direction_zigzig,
+   direction_zagzag,
+   direction_no_direction};
+
 
 /* ARGSUSED */
 static bool directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
    direction_used = true;
-   return current_options.where == (direction_kind) extra_stuff[0];
+   return current_options.where == direction_list[extra_stuff[0]];
 }
 
 
@@ -2608,21 +2508,12 @@ predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[7]},            // "pair_person_select"
       {sum_mod_selected,               &iden_tab[5]},            // "person_select_sum5"
       {sum_mod_selected,               &iden_tab[8]},            // "person_select_sum8"
-      {sum_mod_selected,               &iden_tab[9]},            // "person_select_sum9"
       {sum_mod_selected,              &iden_tab[11]},            // "person_select_sum11"
       {sum_mod_selected,              &iden_tab[13]},            // "person_select_sum13"
       {sum_mod_selected,              &iden_tab[15]},            // "person_select_sum15"
-      {plus_mod_selected,             &iden_tab[1]},             // "person_select_plus1"
-      {plus_mod_selected,             &iden_tab[2]},             // "person_select_plus2"
-      {plus_mod_selected,             &iden_tab[3]},             // "person_select_plus3"
       {plus_mod_selected,             &iden_tab[4]},             // "person_select_plus4"
-      {plus_mod_selected,             &iden_tab[5]},             // "person_select_plus5"
       {plus_mod_selected,             &iden_tab[6]},             // "person_select_plus6"
-      {plus_mod_selected,             &iden_tab[7]},             // "person_select_plus7"
       {plus_mod_selected,             &iden_tab[8]},             // "person_select_plus8"
-      {plus_mod_selected,             &iden_tab[9]},             // "person_select_plus9"
-      {plus_mod_selected,             &iden_tab[10]},            // "person_select_plus10"
-      {plus_mod_selected,             &iden_tab[11]},            // "person_select_plus11"
       {plus_mod_selected,             &iden_tab[12]},            // "person_select_plus12"
       {sum_mod_selected_for_12p,      &iden_tab[15]},            // "person_select12_sum15"
       {select_with_special,           adj_4x4_tab},              // "select_w_adj_4x4"
@@ -2665,7 +2556,6 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[1]},            // "cast_normal"
       {cast_normal_or_whatever,        &iden_tab[0]},            // "cast_pushy"
       {cast_normal_or_whatever,        &iden_tab[3]},            // "cast_normal_or_warn"
-      {cast_normal_or_whatever,        &iden_tab[7]},            // "cast_normal_or_nowarn"
       {x14_once_rem_miniwave,          &iden_tab[3]},            // "intlk_cast_normal_or_warn"
       {opp_in_magic,                 (const long int *) 0},      // "lines_magic_miniwave"
       {same_in_magic,                (const long int *) 0},      // "lines_magic_couple"
@@ -2734,8 +2624,6 @@ predicate_descriptor pred_table[] = {
       {check_4x4_quad,                 &iden_tab[11]},           // "quad_person_ccw"
       {check_facing_dmd_spot,          &iden_tab[2]},            // "next_dmd_spot_is_facing"
       {check_facing_dmd_spot,          &iden_tab[0]},            // "next_dmd_spot_is_normal"
-      {check_qtag_spot_facing_me,      &iden_tab[1]},            // "next_qtag_spot_faces_me"
-      {check_qtag_spot_facing_me,      &iden_tab[3]},            // "next_qtag_spot_faces_away"
       {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
       {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
       {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"
@@ -2755,16 +2643,16 @@ predicate_descriptor pred_table[] = {
       {x12_with_other_sex,           girlstuff_no_rh},           // "x12_girl_with_boy"
       {x22_facing_other_sex,          boystuff_no_rh},           // "x22_boy_facing_girl"
       {x22_facing_other_sex,         girlstuff_no_rh},           // "x22_girl_facing_boy"
-      {directionp,           &iden_tab[direction_left]},         // "leftp"
-      {directionp,           &iden_tab[direction_right]},        // "rightp"
-      {directionp,           &iden_tab[direction_in]},           // "inp"
-      {directionp,           &iden_tab[direction_out]},          // "outp"
-      {directionp,           &iden_tab[direction_back]},         // "backp"
-      {directionp,           &iden_tab[direction_zigzag]},       // "zigzagp"
-      {directionp,           &iden_tab[direction_zagzig]},       // "zagzigp"
-      {directionp,           &iden_tab[direction_zigzig]},       // "zigzigp"
-      {directionp,           &iden_tab[direction_zagzag]},       // "zagzagp"
-      {directionp,           &iden_tab[direction_no_direction]}, // "no_dir_p"
+      {directionp,                     &iden_tab[0]},            // "leftp"
+      {directionp,                     &iden_tab[1]},            // "rightp"
+      {directionp,                     &iden_tab[2]},            // "inp"
+      {directionp,                     &iden_tab[3]},            // "outp"
+      {directionp,                     &iden_tab[4]},            // "backp"
+      {directionp,                     &iden_tab[5]},            // "zigzagp"
+      {directionp,                     &iden_tab[6]},            // "zagzigp"
+      {directionp,                     &iden_tab[7]},            // "zigzigp"
+      {directionp,                     &iden_tab[8]},            // "zagzagp"
+      {directionp,                     &iden_tab[9]},            // "no_dir_p"
       {dmd_ctrs_rh,                    &iden_tab[0]},            // "dmd_ctrs_rh"
       {dmd_ctrs_rh,                    &iden_tab[1]},            // "dmd_ctrs_lh"
       {trngl_pt_rh,                  (const long int *) 0},      // "trngl_pt_rh"

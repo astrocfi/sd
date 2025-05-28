@@ -45,7 +45,7 @@
     49  53  57  61  39  38  37  36
     48  52  56  60  35  34  33  32
 
-   sx4dmd or sx4dmdbone =
+   sx4dmd =
       4        8       15
    7     5     9    14    12
       6       10       13
@@ -103,9 +103,6 @@
                     ...
                     25
                     24
-
-s_tinyhyperbone -- like s_hyperbone, but all 4 trngl4's are on top of each other.
-
 */
 
 
@@ -181,18 +178,6 @@ static collision_map collision_map_table[] = {
    {4, 0x044044, 0x66, 0x66, {1, 2, 5, 6},         {6, 0, 3, 5},          {7, 1, 2, 4},
     s_crosswave, s_crosswave, 1, warn__ctrs_stay_in_ctr, 0}, // from inverted lines w/ centers out
 
-   // Collision after 1/2 circulate from C1 phantoms, going to a thar.
-   {4, 0x044044, 0x55, 0x55, {0, 2, 4, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},
-    s_thar, s_thar, 0, warn__none, 0},
-
-   // Three collisions after 1/2 circulate from C1 phantoms, going to a collided 1x6 and thence a 1x8 or thar.
-   {6, 0x000000, 00707, 00202, {0, 1, 2, 6, 7, 8}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
-    sx1x6, s1x8, 0, warn__none, 0},
-   {6, 020207070, 07070, 02020, {3, 4, 5, 9, 10, 11}, {0, 1, 2, 4, 7, 6},    {0, 3, 2, 4, 5, 6},
-    sx1x6, s1x8, 1, warn__none, 0},
-   {4, 020202020, 02222, 02222, {1, 4, 7, 10},         {0, 2, 5, 7},          {1, 3, 4, 6},
-    sx1x6, s_thar, 0, warn__none, 0},
-
    // Collision after circulate from lines all facing same way.
    {4, 0x000000, 0x0F, 0x0F,  {0, 1, 2, 3},         {0, 2, 4, 6},          {1, 3, 5, 7},
     s2x4,        s2x8,        0, warn__none, 0},
@@ -208,14 +193,10 @@ static collision_map collision_map_table[] = {
     s2x4,        s4x4,        0, warn__none, 0},
    {6, 0x0440EE, 0xEE, 0x44,  {1, 2, 3, 5, 6, 7},   {15, 14, 1, 7, 11, 9}, {15, 3, 1, 7, 6, 9},
     s2x4,        s4x4,        0, warn__none, 0},
-   // These are used for exchange the boxes 1/4 from magic columns, and for unwrap from interlocked diamonds.
+   // These are used for exchange the boxes 1/4 from magic columns.
    {6, 0x011077, 0x77, 0x11,  {0, 1, 2, 4, 5, 6},   {12, 15, 3, 2, 7, 11}, {10, 15, 3, 4, 7, 11},
     s2x4,        s4x4,        0, warn__none, 0},
    {6, 0x0880EE, 0xEE, 0x88,  {1, 2, 3, 5, 6, 7},   {15, 3, 0, 7, 11, 9},  {15, 3, 1, 7, 11, 8},
-    s2x4,        s4x4,        0, warn__none, 0},
-   {6, 0x0220BB, 0xBB, 0x22,  {0, 1, 3, 4, 5, 7},   {10, 13, 1, 2, 7, 9},  {10, 15, 1, 2, 5, 9},
-    s2x4,        s4x4,        0, warn__none, 0},
-   {6, 0x0440DD, 0xDD, 0x44,  {0, 2, 3, 4, 6, 7},   {10, 14, 1, 2, 11, 9}, {10, 3, 1, 2, 6, 9},
     s2x4,        s4x4,        0, warn__none, 0},
    // These arise in common spot circulate from columns in which the ends are trucked.
    {4, 0x0880CC, 0xCC, 0x88,  {2, 3, 6, 7},         {3, 0, 11, 9},         {3, 1, 11, 8},
@@ -398,16 +379,9 @@ static collision_map collision_map_table[] = {
 
    // These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey.
 
-   {6, 022,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
-    s_short6,    sdeep2x1dmd, 0, warn__none, 0x40000000},
-
-   {5, 022,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
+   {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 6, 7},          {1, 2, 5, 7},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 022,  067,  040,  {0, 1, 2, 4, 5},          {1, 2, 3, 7, 9},       {1, 2, 3, 7, 8},
-    s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 022,  076,  004,  {1, 2, 3, 4, 5},          {2, 3, 6, 7, 8},       {2, 4, 6, 7, 8},
-    s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {5, 022,  037,  010,  {0, 1, 2, 3, 4},          {1, 2, 3, 6, 7},       {1, 2, 3, 5, 7},
+   {4, 0x12, 0x36, 0x24, {1, 2, 4, 5},             {2, 3, 7, 9},          {2, 4, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
 
    {4, 0x012012, 0x36, 0x12, {1, 2, 4, 5},         {6, 0, 3, 4},          {7, 0, 2, 4},
@@ -533,9 +507,8 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
    for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
-      if (result->kind != c_map_ptr->initial_kind) continue;
-
-      bool yukk = ((lowbitmask == c_map_ptr->lmask)) &&
+      bool yukk = (result->kind == c_map_ptr->initial_kind) &&
+         ((lowbitmask == c_map_ptr->lmask)) &&
          (result_mask == c_map_ptr->rmask) &&
          (collision_mask == c_map_ptr->cmask);
 
@@ -544,6 +517,7 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
       // one genuine collision.
       if (!yukk &&
           (c_map_ptr->assume_key & 0x40000000) != 0 &&
+          result->kind == c_map_ptr->initial_kind &&
           (result_mask & ~c_map_ptr->rmask) == 0 &&
           ((result_mask | (result_mask << (MAX_PEOPLE/2))) & c_map_ptr->lmask) == lowbitmask &&
           (result_mask & c_map_ptr->cmask) == collision_mask) {
@@ -813,17 +787,12 @@ void mirror_this(setup *s) THROW_DECL
 
 
 static const veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-static const veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
-
-static const veryshort ftqthbv[8] = {0, 1, 6, 7, 8, 9, 14, 15};
-static const veryshort ftqthbh[12] = {12, 13, 2, 3, 4, 5, 10, 11, 12, 13, 2, 3};
-
 static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
-                                     10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
+                               10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
 static const veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
-                                      0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
+                                0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
 static const veryshort ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
-
+static const veryshort ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 static const veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
 static const veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
 
@@ -833,7 +802,6 @@ static const veryshort foobletch[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
 static const veryshort ftequalize[8] = {6, 0, 8, 13, 22, 16, 24, 29};
 static const veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
 static const veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
-static const veryshort ftlbigqtg[12] = {28, 7, 10, 11, 12, 23, 26, 27, 28, 7, 10, 11};
 static const veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static const veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
@@ -852,12 +820,15 @@ static const veryshort phantranslateh[16] = { 0, -1,  1,  1, -1,  3,  2,  2,
                                               4, -1,  5,  5, -1,  7,  6,  6};
 static const veryshort phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
                                              -1,  3,  2,  2,  4, -1,  5,  5};
+
+#ifdef BREAKS_CAST_BACK
+static const veryshort phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
+static const veryshort phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
+#endif
 static const veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
 static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
-static const veryshort sdmdripoff56[8] = {0, 0, 1, 0, 2, 0, 3, 0};
-static const veryshort sdmdripoff65[8] = {0, 0, 1, 0, 0, 2, 3, 0};
-static const veryshort sdmdripoff95[8] = {3, 0, 0, 0, 1, 0, 0, 2};
-static const veryshort sdmdripoff59[8] = {3, 0, 0, 0, 1, 0, 2, 0};
+
+
 
 static const veryshort octtranslatev[80] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
@@ -883,48 +854,14 @@ static const veryshort hxwtranslatev[40] = {
    0,  0,  0,  0,  0,  0,  2,  3,  0,  0,  0,  0,  0,  4,  5,  0,
    0,  0,  0,  0,  0,  0,  6,  7};
 
-static const veryshort hthartranslate[32] = {
-   0,  0,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  0,  2,  3,
-   0,  0,  0,  0,  0,  0,  4,  5,  0,  0,  0,  0,  0,  0,  6,  7};
-
-static const veryshort h1x6translatev[15] = {
-   0,  0,  0,  0, 1, 2,
-   0,  0,  0,  3, 4, 5,
-   0,  0,  0};
-
-static const veryshort hx1x6translatev[15] = {
-   0,  6,  7,  0,  1,  0,
-   0,  2,  3,  4,  5,  0,
-   0,  6,  7};
-
-static const veryshort h1x6thartranslate[12] = {
-   0,  0,  1,  0,  2,  3,
-   0,  4,  5,  0,  6,  7};
-
-static const veryshort dmdhyperv[15] = {0, 3, 0, 0, 0, 0,
-                                        0, 1, 0, 2, 0, 0,
-                                        0, 3, 0};
-
+static const veryshort dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
+static const veryshort dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
 static const veryshort linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
 static const veryshort linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
-
-static const veryshort hyperbonev[20] = {5, 0, 6, 7, -1, -1, -1, -1,
-                                         1, 4, 2, 3, -1, -1, -1, -1,
-                                         5, 0, 6, 7};
-
-static const veryshort tinyhyperbonet[20] = {-1, -1, -1, -1, -1, -1, -1, -1, 
-                                             -1, -1, -1, -1,  2,  3,  1,  0,
-                                             -1, -1, -1, -1};
-
-static const veryshort tinyhyperbonel[20] = {-1, -1,  3,  2, -1, -1, -1, -1, 
-                                             -1, -1,  1,  0, -1, -1, -1, -1, 
-                                             -1, -1,  3,  2};
-
-static const veryshort tinyhyperboneb[20] = { 3,  0, -1, -1, -1, -1, -1, -1,
-                                              1,  2, -1, -1, -1, -1, -1, -1,
-                                              3,  0, -1, -1};
-
-static const veryshort galhyperv[15] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+static const veryshort hyperboneh[16] = {-1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1, 5, 0, 6, 7};
+static const veryshort hyperbonev[16] = {5, 0, 6, 7, -1, -1, -1, -1, 1, 4, 2, 3, -1, -1, -1, -1};
+static const veryshort galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+static const veryshort galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
 static const veryshort qtghyperh[12] = {6, 7, 0, 0, 0, 1, 2, 3, 4, 0, 0, 5};
 static const veryshort qtghyperv[12] = {0, 0, 5, 6, 7, 0, 0, 0, 1, 2, 3, 4};
 static const veryshort starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
@@ -1063,7 +1000,6 @@ extern bool check_restriction(
    uint32 z, t;
    int idx;
    const veryshort *mp;
-   bool only_because_of_2faced = false;
    bool retval = true;   // True means we were not able to instantiate phantoms.
                          // It is only meaningful if instantiation was requested.
 
@@ -1072,46 +1008,15 @@ extern bool check_restriction(
    // If this successfully instantiates phantoms, it will clear retval.
    switch (verify_restriction(ss, restr, instantiate_phantoms, &retval)) {
    case restriction_passes:
-      if (restr.assumption == cr_wave_unless_say_2faced &&
-          (ss->cmd.cmd_misc3_flags & CMD_MISC3__TWO_FACED_CONCEPT)) {
-         // User said "two-faced", and the call is marked "wave_unless_say_2faced",
-         // but the "wave" test passed.  Have to do it this way.  See si03t.
-         assumption_thing second_restr = restr;
-         second_restr.assumption = cr_2fl_only;
-         bool junk;
-         restriction_test_result fff = verify_restriction(ss, second_restr, false, &junk);
-         if (fff != restriction_passes)
-            fail("Two-faced concept used when not in 2-faced line.");
-      }
       goto getout;
-   case restriction_fails_on_2faced:
-      {
-         // Test again; see whether we have a real 2-faced line.
-         assumption_thing second_restr = restr;
-         second_restr.assumption = cr_2fl_only;
-         bool junk;
-         restriction_test_result fff = verify_restriction(ss, second_restr, false, &junk);
-
-         if (ss->cmd.cmd_misc3_flags & CMD_MISC3__TWO_FACED_CONCEPT) {
-            if (fff != restriction_passes)
-               fail("Two-faced concept used when not in 2-faced line.");
-            goto getout;
-         }
-         else {
-            if (fff == restriction_passes) warn(warn__two_faced);
-            only_because_of_2faced = true;
-            goto restr_failed;
-         }
-      }
    case restriction_bad_level:
+      if (ss->cmd.cmd_misc3_flags & CMD_MISC3__NO_CHECK_LEVEL)
+         goto getout;
+
       if (allowing_all_concepts) {
          warn(warn__bad_call_level);
          goto getout;
       }
-      else if (flags == CAF__RESTR_UNUSUAL) 
-         // If it has been marked unusual below some level, just give that warning;
-         // don't complain about the level itself.
-         goto restr_failed;
       else
          fail("This call is not legal from this formation at this level.");
    case restriction_fails:
@@ -1198,11 +1103,7 @@ extern bool check_restriction(
          warn(warn__dyp_resolve_ok);
          break;
       case CAF__RESTR_UNUSUAL:
-         // want to suppress the "unusual" if it's already giving the "warn__two_faced".
-         if (only_because_of_2faced)
-            warn(warn__unusual_or_2faced);
-         else
-            warn(warn__unusual);
+         warn(warn__unusual);
          break;
       case CAF__RESTR_CONTROVERSIAL:
          warn(warn_controversial);
@@ -1235,9 +1136,9 @@ extern bool check_restriction(
 
    getout:
 
-   // One final check.  If there is an assumption in place that is inconsistent
-   // with the restriction being enforced, then it is an error, even though
-   // no live people violate the restriction.
+   /* One final check.  If there is an assumption in place that is inconsistent
+      with the restriction being enforced, then it is an error, even though
+      no live people violate the restriction. */
 
    switch (ss->cmd.cmd_assume.assumption) {
    case cr_qtag_like:
@@ -1288,7 +1189,7 @@ static uint32 do_roll(uint32 person_in, uint32 z, int direction)
    uint32 rollstuff = (z * (NROLL_BIT/NDBROLL_BIT)) & NROLL_MASK;
    if ((rollstuff+NROLL_BIT) & (NROLL_BIT*2)) rollstuff |= NROLL_BIT*4;
    return (person_in & ~(NROLL_MASK | 077)) |
-      (((((z + direction) & 3) * 011) ^ 010) & 013) | rollstuff;
+      ((z + direction * 011) & 013) | rollstuff;
 }
 
 
@@ -1323,8 +1224,8 @@ static void special_4_way_symm(
        0,  1,  2,  3,  4,  5,  6,  7,
       16, 17, 18, 19, 20, 21, 22, 23};
 
-   static const veryshort table_1x6_from_xwv[8] = {
-      0, 1, 4, 5, 6, 7, 10, 11};
+   static const veryshort table_1x16_from_xwv[8] = {
+      5, 6, 14, 15, 21, 22, 30, 31};
 
    static const veryshort table_4dmd[16] = {
       7, 5, 14, 12, 16, 17, 18, 19,
@@ -1332,9 +1233,6 @@ static void special_4_way_symm(
 
    static const veryshort table_hyperbone[8] = {
       13, 4, 6, 7, 5, 12, 14, 15};
-
-   static const veryshort table_tinyhyperbone[8] = {
-      3, 2, 0, 1, 11, 10, 8, 9};
 
    static const veryshort table_2x3_4dmd[6] = {
       6, 11, 13, 22, 27, 29};
@@ -1351,7 +1249,7 @@ static void special_4_way_symm(
    switch (result->kind) {
    case s2x2: case s_galaxy:
    case s_c1phan: case s4x4:
-   case s_hyperglass: case s_thar: case s_confused_dmd:
+   case s_hyperglass: case s_thar:
    case s_star: case s1x1: case s_alamo:
       break;
    case s1x4:
@@ -1387,8 +1285,8 @@ static void special_4_way_symm(
       the_table = table_1x16;
       break;
    case s_crosswave:
-      result->kind = sx1x6;
-      the_table = table_1x6_from_xwv;
+      result->kind = sx1x16;
+      the_table = table_1x16_from_xwv;
       break;
    case s4dmd:
       result->kind = sx4dmd;
@@ -1397,10 +1295,6 @@ static void special_4_way_symm(
    case s_bone:
       result->kind = s_hyperbone;
       the_table = table_hyperbone;
-      break;
-   case s_trngl4:
-      result->kind = s_tinyhyperbone;
-      the_table = table_tinyhyperbone;
       break;
    case s2x3:
       result->kind = sx4dmd;
@@ -1423,7 +1317,7 @@ static void special_4_way_symm(
          int real_direction = this_person.id1 & 3;
          int northified_index = (real_index + (((4-real_direction)*begin_size) >> 2)) % begin_size;
          uint32 z = find_calldef(tdef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 3) & 0x3F;
+         k = (z >> 4) & 0x1F;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
          destination->people[real_index].id1 = do_roll(this_person.id1, z, real_direction);
@@ -1455,7 +1349,7 @@ static void special_triangle(
 {
    int real_index;
    int numout = attr::slimit(result)+1;
-   bool is_triangle = scopy->kind == s_trngl || scopy->kind == s_trngl4;
+   bool is_triangle = (scopy->kind != s1x3);
    bool result_is_triangle = (result->kind == s_trngl || result->kind == s_trngl4);
 
    for (real_index=0; real_index<num; real_index++) {
@@ -1463,31 +1357,25 @@ static void special_triangle(
       destination->clear_person(real_index);
       newplacelist[real_index] = -1;
       if (this_person.id1) {
-         int k;
+         int northified_index, k;
          uint32 z;
-         int northified_index = real_index;
          int real_direction = this_person.id1 & 3;
 
-         if (real_direction & 2) {
-            if (is_triangle) {
-               northified_index += num;
-            }
-            else if (scopy->kind == s1x3) {
-               northified_index = 2-northified_index;
-            }
-            else {
-               int d2 = num >> 1;
-               northified_index = (northified_index + d2) % num;
-            }
+         if (is_triangle) {
+            int d2 = ((real_direction >> 1) & 1) ? num : 0;
+            northified_index = real_index + d2;
+         }
+         else {
+            northified_index = (real_direction & 2) ? 2-real_index : real_index;
          }
 
          z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         k = (z >> 3) & 0x3F;
+         k = (z >> 4) & 0x1F;
 
          if (real_direction & 2) {
             if (result_is_triangle) {
                k-=num;
-               if (k<0) k += (num << 1);
+               if (k<0) k+=(num+num);
             }
             else if (result->kind == s1x3)
                k = numout-1-k;
@@ -1627,10 +1515,7 @@ static bool handle_3x4_division(
             (!(newtb & 010) || assoc(b_2x1, ss, calldeflist))) ||
            assoc(b_1x1, ss, calldeflist))) {
          warn(warn__each1x2);
-         division_code = (livemask == 07272) ?
-            MAPCODE(s1x2,4,MPKIND__OFFS_L_HALF_STAGGER,1) :
-            MAPCODE(s1x2,4,MPKIND__OFFS_R_HALF_STAGGER,1);
-
+         division_code = (livemask == 07272) ? spcmap_lz12 : spcmap_rz12;
          return true;
       }
    }
@@ -1714,25 +1599,25 @@ static bool handle_3x4_division(
 
    if (ss->people[0].id1) {
       if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-      else copy_person(&sss, 0, ss, 0);
+      else (void) copy_person(&sss, 0, ss, 0);
       really_fudged = true;
    }
 
    if (ss->people[3].id1) {
       if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-      else copy_person(&sss, 1, ss, 3);
+      else (void) copy_person(&sss, 1, ss, 3);
       really_fudged = true;
    }
 
    if (ss->people[6].id1) {
       if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-      else copy_person(&sss, 4, ss, 6);
+      else (void) copy_person(&sss, 4, ss, 6);
       really_fudged = true;
    }
 
    if (ss->people[9].id1) {
       if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
-      else copy_person(&sss, 5, ss, 9);
+      else (void) copy_person(&sss, 5, ss, 9);
       really_fudged = true;
    }
 
@@ -1846,10 +1731,6 @@ static bool handle_4x4_division(
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
       switch (livemask) {
-      case 0xD2D2: finalrot++;   // The 8-way map can only take one occupation.
-      case 0x2D2D:
-         division_code = MAPCODE(s1x1,8,MPKIND__QTAG8_WITH_45_ROTATION,0);
-         return true;
       case 0x6666:
          division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,0);
          return true;
@@ -2271,8 +2152,6 @@ static int divide_the_setup(
       }
    }
 
-   bool specialpass;
-
    switch (ss->kind) {
       int tbi, tbo;
       bool temp;
@@ -2281,12 +2160,7 @@ static int divide_the_setup(
    case s_thar:
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
          fail("Can't split the setup.");
-      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_ALAMO,1);
-      goto divide_us_no_recompute;
-   case s_alamo:
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
-         fail("Can't split the setup.");
-      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES_ALAMO,0);
+      division_code = MAPCODE(s1x2,4,MPKIND__4_EDGES,1);
       goto divide_us_no_recompute;
    case s2x8:
       // The call has no applicable 2x8 or 8x2 definition.
@@ -2386,7 +2260,7 @@ static int divide_the_setup(
       // See if this call has applicable 2x8 definitions and matrix expansion is permitted.
       // If so, that is what we must do.
 
-      if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_EXPAND_MATRIX|CMD_MISC__MUST_SPLIT_MASK)) &&
+      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
           (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
          do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
@@ -2417,20 +2291,16 @@ static int divide_the_setup(
             if (!temp) warn(warn__split_to_2x3s);
             goto divide_us_no_recompute;
          }
-         else if ((!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
+         else if ((!(newtb & 010) ||
+                   assoc(b_1x3, ss, calldeflist) ||
+                   assoc(b_1x6, ss, calldeflist)) &&
+                  (!(newtb & 001) ||
+                   assoc(b_3x1, ss, calldeflist) ||
+                   assoc(b_6x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
             // See comment above about abomination.
             // If database said to split, don't give warning, unless said "3x3".
             if (!temp) warn(warn__split_to_1x6s);
-            goto divide_us_no_recompute;
-         }
-         else if ((!(newtb & 010) || assoc(b_1x3, ss, calldeflist)) &&
-                  (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
-            division_code = MAPCODE(s1x3,4,MPKIND__SPLIT_OTHERWAY_TOO,0);
-            // See comment above about abomination.
-            // If database said to split, don't give warning, unless said "3x3".
-            if (!temp) warn(warn__split_to_1x3s);
             goto divide_us_no_recompute;
          }
       }
@@ -2446,8 +2316,6 @@ static int divide_the_setup(
              assoc(b_2x1, ss, calldeflist) ||
              assoc(b_1x1, ss, calldeflist)) {
             division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
-            if (matrix_aware)                     // ***** Maybe this should be done more generally.
-               warn(warn__really_no_eachsetup);
             goto divide_us_no_recompute;
          }
       }
@@ -2475,10 +2343,6 @@ static int divide_the_setup(
          // Split into 6 stacked 1x2's.
          division_code = MAPCODE(s1x2,6,MPKIND__SPLIT,1);
          warn(warn__each1x2);
-         break;
-      case 0xDB6: case 0x6DB:
-         warn(warn__split_to_2x3s);
-         division_code = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
          break;
       }
 
@@ -2550,12 +2414,6 @@ static int divide_the_setup(
       case 0x0F0F:
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,0);
          break;
-      case 0xCCCC:
-         division_code = MAPCODE(s1x2,4,MPKIND__OFFS_L_HALF_STAGGER,0);
-         break;
-      case 0x3333:
-         division_code = MAPCODE(s1x2,4,MPKIND__OFFS_R_HALF_STAGGER,0);
-         break;
       }
 
       goto divide_us_no_recompute;
@@ -2593,7 +2451,7 @@ static int divide_the_setup(
                   (!(newtb & 001) || assoc(b_3x1, ss, calldeflist))) {
             division_code = MAPCODE(s1x3,4,MPKIND__SPLIT,0);
             // See comment above about abomination.
-            warn(warn__split_to_1x3s);
+            warn(warn__split_1x6);
             goto divide_us_no_recompute;
          }
       }
@@ -2756,12 +2614,10 @@ static int divide_the_setup(
          while (t) {
             if ((t->qualifierstuff & QUALBIT__NTBONE) &&
                 (((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_mwv) ||
-                 ((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_mwv_no_mirror) ||
                  ((t->qualifierstuff & QUALBIT__QUAL_CODE) == cr_dmd_ctrs_1f))) {
                looking_for_lateral_triangle_split = true;
                break;
             }
-
             t = t->next;
          }
 
@@ -2782,19 +2638,8 @@ static int divide_the_setup(
             division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0);
          else if ((livemask & 0x5555) == 0)
             division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,1);
-         else if (livemask == 0x0F0F || livemask == 0xF0F0) {
-            // Occupied as stars.  Check for a real 8-way split to 1x1's.
-            specialpass = false;
-            have_1x2 = assoc(b_1x2, ss, calldeflist, &specialpass);
-            have_2x1 = assoc(b_2x1, ss, calldeflist, &specialpass);
-            if (ss->cmd.cmd_assume.assumption != cr_none) specialpass = true;
-            if (have_1x2 || have_2x1) specialpass = true;
-            if (livemask == 0x0F0F) finalrot++;   // The 8-way map can only take one occupation.
-
-            // If the planets are auspicious, do a direct 8-way division.
-            if (!specialpass) division_code = MAPCODE(s1x1,8,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0);
-            else division_code = MAPCODE(s_star,4,MPKIND__4_QUADRANTS,0);
-         }
+         else if (livemask == 0x0F0F || livemask == 0xF0F0)
+            division_code = MAPCODE(s_star,4,MPKIND__4_QUADRANTS,0);
          else if ((livemask & 0x55AA) == 0 || (livemask & 0xAA55) == 0 ||
                   (livemask & 0x5AA5) == 0 || (livemask & 0xA55A) == 0) {
             setup scopy;
@@ -3054,22 +2899,12 @@ static int divide_the_setup(
       if (must_do_mystic)
          goto do_mystically;
 
-      specialpass = false;
-      have_1x2 = assoc(b_1x2, ss, calldeflist, &specialpass);
-      have_2x1 = assoc(b_2x1, ss, calldeflist, &specialpass);
-      if (ss->cmd.cmd_assume.assumption != cr_none) specialpass = true;
-      if (have_1x2 && have_2x1) specialpass = true;
-
-      if ((!(newtb & 010) || have_1x2) && (!(newtb & 1) || have_2x1)) {
-         if (!specialpass && (newtb & 011) != 011) {
-            division_code = MAPCODE(s1x2,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,1);
-            goto divide_us_no_recompute;
-         }
-         else
-            goto do_concentrically;
+      if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
+          (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
+         goto do_concentrically;
       }
       else if ((livemask & 0x55) == 0) {
-         // Check for stuff like "heads pass the ocean; side corners only slide thru".
+         /* Check for stuff like "heads pass the ocean; side corners only slide thru". */
          division_code = spcmap_qtag_f1;
          goto divide_us_no_recompute;
       }
@@ -3077,13 +2912,15 @@ static int divide_the_setup(
          division_code = spcmap_qtag_f2;
          goto divide_us_no_recompute;
       }
+
+      /* ******** Regression test OK to here.  The next thing doesn't work, because the
+         "do your part" junk doesn't work right!  This has been a known problem for some
+         time, of course.  It's about time it got fixed.  It appears to have been broken
+         as far back as 27.8. */
+
       else if ((livemask & 0x77) == 0) {
-         // Check for stuff like "center two slide thru".
+         /* Check for stuff like "center two slide thru". */
          division_code = spcmap_qtag_f0;
-         goto divide_us_no_recompute;
-      }
-      else if (assoc(b_1x1, ss, calldeflist, &specialpass) && !specialpass) {
-         division_code = MAPCODE(s1x1,8,MPKIND__QTAG8,0);
          goto divide_us_no_recompute;
       }
 
@@ -3285,13 +3122,6 @@ static int divide_the_setup(
       break;
    case s_trngl:
       if (assoc(b_2x2, ss, calldeflist)) {
-         if (calling_level < triangle_in_box_level) {
-            if (allowing_all_concepts)
-               warn(warn__bad_concept_level);
-            else
-               fail("This concept is not allowed at this level.");
-         }
-
          uint32 leading = final_concepts.final;
 
          if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) {
@@ -3333,7 +3163,7 @@ static int divide_the_setup(
          // if we divide a 1x6 into 1x3's.  We allow "swing thru" in a wave of
          // 3 or 4 people.  If the operator wants to do a swing thru with
          // all 6 people, use "grand swing thru".
-         warn(warn__split_to_1x3s);
+         warn(warn__split_1x6);
          goto divide_us_no_recompute;
       }
       break;
@@ -3540,11 +3370,12 @@ static int divide_the_setup(
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
           (ss->people[1].id1 | ss->people[2].id1 |
            ss->people[5].id1 | ss->people[6].id1) == 0) {
+         uint32 tbtest;
          setup sstest = *ss;
 
          expand::expand_setup(s_qtg_2x4, &sstest);
 
-         uint32 tbtest =
+         tbtest =
             sstest.people[0].id1 | sstest.people[1].id1 |
             sstest.people[4].id1 | sstest.people[5].id1;
 
@@ -3563,30 +3394,21 @@ static int divide_the_setup(
       // Look very carefully at how we split this, so we get the
       // RESULTFLAG__SPLIT_AXIS_MASK stuff right.
 
-      specialpass = false;
-      have_1x2 = assoc(b_1x2, ss, calldeflist, &specialpass);
-      have_2x1 = assoc(b_2x1, ss, calldeflist, &specialpass);
-      if (ss->cmd.cmd_assume.assumption != cr_none) specialpass = true;
-      if (have_1x2 && have_2x1) specialpass = true;
+      have_1x2 = assoc(b_1x2, ss, calldeflist);
+      have_2x1 = assoc(b_2x1, ss, calldeflist);
 
-      // This call does not have an applicable 2x2 definition.  Check for appropriate
-      // 1x2 or 2x1 definitions that call for a twofold split in each direction.  If so,
-      // do a direct fourfold split.  Do this only if the setup is not T-boned, so that
-      // it is clear that this is the right thing.  Also, don't do direct fourfold
-      // splits if "specialpass" was set, or both definitions existed, or if any
-      // assumption was used.  See t02t, t36t and t40t.
+      // See if this call has applicable 1x2 or 2x1 definitions, (but not 2x2),
+      // in a non-T-boned setup.  If so, split into boxes.  Furthermore,
+      // if the split could have been along either axis, we set both
+      // RESULTFLAG__SPLIT_AXIS_MASK bits.
 
-      if ((!(newtb & 1) && have_1x2) || (!(newtb & 010) && have_2x1)) {
-         if (!specialpass) division_code = MAPCODE(s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,1);
+      if (((newtb & 1) == 0 && have_1x2 != 0) || ((newtb & 010) == 0 && have_2x1 != 0))
          goto divide_us_no_recompute;
-      }
 
-      // The other way.  Do a direct fourfold split along one axis.
-
-      if ((!(newtb & 1) && have_2x1) || (!(newtb & 010) && have_1x2)) {
-         if (!specialpass) division_code = MAPCODE(s1x2,4,MPKIND__SPLIT,1);
+      // If the splitting is into 4 side-by-side 1x2 setups, just split into 2x2's --
+      // that will get the correct RESULTFLAG__SPLIT_AXIS_MASK bits.
+      if (((newtb & 1) == 0 && have_2x1 != 0) || ((newtb & 010) == 0 && have_1x2 != 0))
          goto divide_us_no_recompute;
-      }
 
       // If we are T-boned and have 1x2 or 2x1 definitions, we need to be careful.
 
@@ -3653,14 +3475,11 @@ static int divide_the_setup(
       }
 
       // We are not T-boned, and there is no 1x2 or 2x1 definition.
-      // The only possibility is that there is a 1x1 definition.
+      // The only possibility is that there is a 1x1 definition,
+      // in which case splitting into boxes will work.
 
-      if (assoc(b_1x1, ss, calldeflist)) {
-         // If the planets are auspicious, do a direct 8-way division.
-         // Otherwise, divide to two 2x2's, and the right things will happen.
-         if (!specialpass) division_code = MAPCODE(s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,0);
+      if (assoc(b_1x1, ss, calldeflist))
          goto divide_us_no_recompute;
-      }
 
       break;
    case s2x5:
@@ -3737,16 +3556,6 @@ static int divide_the_setup(
          division_code = MAPCODE(s1x2,2,MPKIND__NONISOTROP2,0);
          goto divide_us_no_recompute;
       }
-
-      break;
-   case sdmdpdmd:
-      // This is the only way we can divide it.
-      division_code = MAPCODE(sdmd,2,MPKIND__NONISOTROP2,0);
-      goto divide_us_no_recompute;
-   case s_trngl8:
-      // This is the only way we can divide it.
-      division_code = MAPCODE(s1x4,2,MPKIND__NONISOTROP2,0);
-      goto divide_us_no_recompute;
    }
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -3997,20 +3806,12 @@ static veryshort j23translatev[32] = {
    0,  0,  0,  1,  0,  2,  0,  0,  0,  0,  0,  0,  0,  0,  3,  0};
 
 static veryshort qdmtranslateh[32] = {
-   12, 13, 14, 15,  0,  1,  0,  0,   0,  0,  0,  0,  3,  0,  2,  0,
-   4,   5,  6,  7,  0,  9,  0,  8,   0,  0,  0,  0, 11,  0, 10,  0};
+   12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
+   4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
 
 static veryshort qdmtranslatev[32] = {
-   0,  0,  0,  0,  11, 0,  10, 0,    12, 13, 14, 15, 0,  1,  0,  0,
-   0,  0,  0,  0,  3,  0,  2,  0,     4,  5,  6,  7,  0,  9,  0,  8};
-
-static veryshort bonetranslateh[32] = {
-   0,  0,  6,  7,  0,  0,  0,  0,   0,  0,  0,  0,  1,  0,  0,  0,
-   0,  0,  2,  3,  0,  0,  0,  4,   0,  0,  0,  0,  5,  0, 10,  0};
-
-static veryshort bonetranslatev[32] = {
-   0,  0,  0,  0,  5,  0, 10,  0,   0,  0,  6,  7,  0,  0,  0,  0,
-   0,  0,  0,  0,  1,  0,  0,  0,   0,  0,  2,  3,  0,  0,  0,  4};
+   0,  0,  0,  0,  11, 0,  10, 0,  12, 13, 14, 15, 0,  1,  0,  0,
+   0,  0,  0,  0,  3,  0,  2,  0,  4,  5,  6,  7,  0,  9,  0,  8};
 
 static veryshort qtgtranslateh[40] = {
    -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, 6, 7, -1, 0, -1, -1,
@@ -4056,7 +3857,7 @@ extern void basic_move(
    int j, k;
    callarray *calldeflist;
    uint32 funny;
-   uint32 division_code = ~0UL;
+   uint32 division_code;
    callarray *linedefinition;
    callarray *coldefinition;
    uint32 matrix_check_flag = 0;
@@ -4284,6 +4085,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
+            goto divide_us;
          }
          break;
       case s1x12:
@@ -4291,6 +4093,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 1x4's in the appropriate way.
             division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
+            goto divide_us;
          }
          break;
       case s3dmd:
@@ -4298,7 +4101,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into diamonds in the appropriate way.
             division_code = MAPCODE(sdmd,3,MPKIND__SPLIT,1);
-
+            goto divide_us;
          }
          break;
       case s4dmd:
@@ -4306,6 +4109,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "16 matrix" was specified.  Split it into diamonds in the appropriate way.
             division_code = MAPCODE(sdmd,4,MPKIND__SPLIT,1);
+            goto divide_us;
          }
          break;
       case s2x6:
@@ -4313,6 +4117,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "12 matrix" was specified.  Split it into 2x2's in the appropriate way.
             division_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+            goto divide_us;
          }
          break;
       case s2x8:
@@ -4320,6 +4125,7 @@ foobar:
              (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
             // "16 matrix" was specified.  Split it into 2x2's in the appropriate way.
             division_code = MAPCODE(s2x2,4,MPKIND__SPLIT,0);
+            goto divide_us;
          }
          break;
       case s4x4:
@@ -4339,13 +4145,10 @@ foobar:
             }
             else
                division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+   
+            goto divide_us;
          }
          break;
-      }
-
-      if (division_code != ~0UL) {
-         warn(warn__really_no_eachsetup);   // This will shut off all future "do it in each XYZ" warnings.
-         goto divide_us;
       }
    }
 
@@ -4700,11 +4503,6 @@ foobar:
                                                       or transformation, but did not
                                                       do the call.  Try again. */
 
-   // If doing an "own the anyone", we might have to fix up a bizarre unsymmetrical setup.
-
-   if (clean_up_unsymmetrical_setup(ss))
-      goto search_for_call_def;
-
    if (ss->kind == s_ntrgl6cw || ss->kind == s_ntrgl6ccw) {
       // If the problem was that we had a "nonisotropic triangle" setup
       // and neither the call definition nor the splitting can handle it,
@@ -4845,8 +4643,8 @@ foobar:
       t.assump_negate = 0;
 
       if (t.assumption != cr_none)
-         check_restriction(ss, t, false,
-                           coldefinition->callarray_flags & CAF__RESTR_MASK);
+         (void) check_restriction(ss, t, false,
+                                  coldefinition->callarray_flags & CAF__RESTR_MASK);
 
       /* If we have linedefinition also, check for consistency. */
 
@@ -4887,7 +4685,7 @@ foobar:
             northified_index = (real_index ^ d2);
             z = find_calldef((real_direction & 1) ? coldefinition : linedefinition,
                              ss, real_index, real_direction, northified_index);
-            k = ((z >> 3) & 0x3F) ^ (d2 >> 1);
+            k = ((z >> 4) & 0x1F) ^ (d2 >> 1);
             install_person(&p1, k, ss, real_index);
             p1.people[k].id1 = do_roll(p1.people[k].id1, z, real_direction);
 
@@ -4995,8 +4793,7 @@ foobar:
          special_4_way_symm(linedefinition, ss, &newpersonlist, newplacelist,
                             lilresult_mask, result);
       }
-      else if (ss->kind == s_trngl || ss->kind == s_trngl4 || ss->kind == s1x3 ||
-               result->kind == s_trngl || result->kind == s_trngl4 || result->kind == s1x3) {
+      else if (ss->kind == s_trngl || ss->kind == s_trngl4 || ss->kind == s1x3) {
          if (inconsistent_rotation | inconsistent_setup)
             fail("This call is an inconsistent shape-changer.");
          special_triangle(coldefinition, linedefinition, ss, &newpersonlist, newplacelist,
@@ -5068,31 +4865,31 @@ foobar:
                   }
                }
                else if (result->kind == s_bone && other_kind == s_qtag) {
-                  result->kind = sx4dmdbone;
-                  tempkind = sx4dmdbone;
+                  result->kind = sx4dmd;
+                  tempkind = sx4dmd;
                   final_translatec = ftcbone;
 
                   if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftlbigqtg[0];
+                     final_translatel = &ftlqtg[0];
                      rotfudge_line = 3;
                   }
                   else {
-                     final_translatel = &ftlbigqtg[4];
+                     final_translatel = &ftlqtg[4];
                      rotfudge_line = 1;
                   }
                }
                else if (result->kind == s_qtag && other_kind == s_bone) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
-                  result->kind = sx4dmdbone;
-                  tempkind = sx4dmdbone;
+                  result->kind = sx4dmd;
+                  tempkind = sx4dmd;
                   rotfudge_col = 1;
                   final_translatel = ftcbone;
 
                   if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatec = &ftlbigqtg[4];
+                     final_translatec = &ftlqtg[4];
                   }
                   else {
-                     final_translatec = &ftlbigqtg[0];
+                     final_translatec = &ftlqtg[0];
                      rotfudge_line = 2;
                   }
                }
@@ -5175,20 +4972,6 @@ foobar:
                   rotfudge_line = 1;
                }
             }
-            else if (result->kind == s_qtag) {
-               result->kind = s_hyperbone;
-               tempkind = s_hyperbone;
-               final_translatec = ftqthbv;
-
-               if (goodies->callarray_flags & CAF__ROT) {
-                  final_translatel = &ftqthbh[0];
-                  rotfudge_line = 3;
-               }
-               else {
-                  final_translatel = &ftqthbh[4];
-                  rotfudge_line = 1;
-               }
-            }
             else
                fail("This call is an inconsistent shape-changer.");
          }
@@ -5227,7 +5010,7 @@ foobar:
 
                uint32 z = find_calldef(the_definition, ss, real_index, real_direction, northified_index);
 
-               uint32 where = (z >> 3) & 0x3F;
+               uint32 where = (z >> 4) & 0x1F;
 
                if (oddness != 0) {
                   if (where < oddness) {
@@ -5275,7 +5058,6 @@ foobar:
       if (!(goodies->callarray_flags & CAF__NO_COMPRESS) &&
           (result->kind == s_hyperglass ||
            result->kind == s_hyperbone ||
-           result->kind == sx1x6 ||
            result->kind == shypergal ||
            attr::slimit(ss) < attr::slimit(result))) {
          const veryshort *permuter = (const veryshort *) 0;
@@ -5303,10 +5085,22 @@ foobar:
                // T-boned reverse flip?  Probably not.
 
                if (tempkind != s4x4) fail("Galaxy call went to improperly-formed setup.");
+#ifdef BREAKS_CAST_BACK
+               /* See if people landed classical C1 phantom spots. */
+               if ((lilresult_mask[0] & 0x3333) == 0) {
+                  result->kind = s_c1phan;
+                  permuter = phan4x4xlatea;
+               }
+               else if ((lilresult_mask[0] & 0x5555) == 0) {
+                  result->kind = s_c1phan;
+                  permuter = phan4x4xlateb;
+               }
+
+#endif
             }
             break;
          case s_c1phan:
-            // See if people landed on 2x4 spots.
+            /* See if people landed on 2x4 spots. */
             if ((lilresult_mask[0] & 0x7B7B) == 0) {
                result->kind = s2x4;
                permuter = phantranslateh;
@@ -5327,47 +5121,15 @@ foobar:
             }
             break;
          case s_thar:
-            if ((lilresult_mask[0] & 0x66) == 0) {         // Check horiz dmd spots.
+            if ((lilresult_mask[0] & 0x66) == 0) {    /* Check horiz dmd spots. */
                result->kind = sdmd;
                permuter = sdmdtranslateh;
             }
-            else if ((lilresult_mask[0] & 0x99) == 0) {    // Check vert dmd spots.
+            else if ((lilresult_mask[0] & 0x99) == 0) {    /* Check vert dmd spots. */
                result->kind = sdmd;
                permuter = sdmdtranslatev;
                rotator = 1;
             }
-            else
-               fail("Call went to improperly-formed setup.");
-            break;
-         case s_confused_dmd:
-            if ((lilresult_mask[0] & 0x66) == 0) {         // Check horiz dmd spots.
-               result->kind = sdmd;
-               permuter = sdmdtranslateh;
-            }
-            else if ((lilresult_mask[0] & 0x99) == 0) {    // Check vert dmd spots.
-               result->kind = sdmd;
-               permuter = sdmdtranslatev;
-               rotator = 1;
-            }
-            else if (lilresult_mask[0] == 0x95) {    // Fudgy ripoff is happening; make the people
-               result->kind = sdmd;                  // who could be facing each other be close.
-               permuter = sdmdripoff95;
-               rotator = 1;
-            }
-            else if (lilresult_mask[0] == 0x59) {    // Ditto.
-               result->kind = sdmd;
-               permuter = sdmdripoff59;
-               rotator = 1;
-            }
-            else if (lilresult_mask[0] == 0x65) {    // Ditto.
-               result->kind = sdmd;
-               permuter = sdmdripoff65;
-            }
-            else if (lilresult_mask[0] == 0x56) {    // Ditto.
-               result->kind = sdmd;
-               permuter = sdmdripoff56;
-            }
-
             else
                fail("Call went to improperly-formed setup.");
             break;
@@ -5406,10 +5168,6 @@ foobar:
                permuter = hextranslatev+8;  // 1x16 spots, horizontal.
                result->kind = s1x16;
             }
-            else if ((lilresult_mask[0] & 0x3F3F3F3FUL) == 0) {
-               permuter = hthartranslate;   // thar spots.
-               result->kind = s_thar;
-            }
             else if ((lilresult_mask[0] & 0x9F3F9F3FUL) == 0) {
                permuter = hxwtranslatev;  // crosswave spots, vertical.
                result->kind = s_crosswave;
@@ -5417,32 +5175,6 @@ foobar:
             }
             else if ((lilresult_mask[0] & 0x3F9F3F9FUL) == 0) {
                permuter = hxwtranslatev+8;  // crosswave spots, horizontal.
-               result->kind = s_crosswave;
-            }
-            else
-               fail("Call went to improperly-formed setup.");
-            break;
-         case sx1x6:
-            if ((lilresult_mask[0] & 00707UL) == 0) {
-               permuter = h1x6translatev;  // 1x6 spots, vertical.
-               result->kind = s1x6;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 07070UL) == 0) {
-               permuter = h1x6translatev+3;  // 1x6 spots, horizontal.
-               result->kind = s1x6;
-            }
-            else if ((lilresult_mask[0] & 01111UL) == 0) {
-               permuter = h1x6thartranslate;   // thar spots.
-               result->kind = s_thar;
-            }
-            else if ((lilresult_mask[0] & 04141UL) == 0) {
-               permuter = hx1x6translatev;  // crosswave spots, vertical.
-               result->kind = s_crosswave;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 01414UL) == 0) {
-               permuter = hx1x6translatev+3;  // crosswave spots, horizontal.
                result->kind = s_crosswave;
             }
             else
@@ -5581,13 +5313,13 @@ foobar:
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 0xDFB3DFB3UL) == 0) {
-               result->kind = s_2stars;
-               // result->kind = s_bone;
+               //               result->kind = s_2stars;
+               result->kind = s_bone;
                permuter = starstranslateh;
             }
             else if ((lilresult_mask[0] & 0xB3DFB3DFUL) == 0) {
-               result->kind = s_2stars;
-               // result->kind = s_bone;
+               //               result->kind = s_2stars;
+               result->kind = s_bone;
                permuter = starstranslatev;
                rotator = 1;
             }
@@ -5600,19 +5332,6 @@ foobar:
                // Check vert hourglass spots.
                result->kind = s_hrglass;
                permuter = shrgltranslatev;
-               rotator = 1;
-            }
-            else
-               fail("Call went to improperly-formed setup.");
-            break;
-         case sx4dmdbone:
-            if ((lilresult_mask[0] & 0xEF73EF73UL) == 0) {
-               result->kind = s_bone;
-               permuter = bonetranslateh;
-            }
-            else if ((lilresult_mask[0] & 0x73EF73EFUL) == 0) {
-               result->kind = s_bone;
-               permuter = bonetranslatev;
                rotator = 1;
             }
             else
@@ -5661,7 +5380,7 @@ foobar:
 
             if ((lilresult_mask[0] & 05757) == 0 && tempkind == sdmd) {
                result->kind = sdmd;     /* Only centers present, and call wanted diamonds. */
-               permuter = dmdhyperv+3;
+               permuter = dmdhyperh;
             }
             else if ((lilresult_mask[0] & 07575) == 0 && tempkind == sdmd) {
                result->kind = sdmd;     /* Only centers present, and call wanted diamonds. */
@@ -5673,7 +5392,7 @@ foobar:
                result->kind = sdmd;     /* Setup is consistent with diamonds,
                                            though maybe centers are absent,
                                            but user specifically requested diamonds. */
-               permuter = dmdhyperv+3;
+               permuter = dmdhyperh;
             }
             else if ((lilresult_mask[0] & 06565) == 0 &&
                      (goodies->callarray_flags & CAF__REALLY_WANT_DIAMOND)) {
@@ -5697,7 +5416,7 @@ foobar:
             else if ((lilresult_mask[0] & 05656) == 0) {
                result->kind = sdmd;     /* Setup is consistent with diamonds,
                                            though maybe centers are absent. */
-               permuter = dmdhyperv+3;
+               permuter = dmdhyperh;
             }
             else if ((lilresult_mask[0] & 06565) == 0) {
                result->kind = sdmd;     /* Setup is consistent with diamonds,
@@ -5707,7 +5426,7 @@ foobar:
             }
             else if ((lilresult_mask[0] & 01212) == 0) {
                result->kind = s_hrglass;    /* Setup is an hourglass. */
-               permuter = galhyperv+3;
+               permuter = galhyperh;
             }
             else if ((lilresult_mask[0] & 02121) == 0) {
                result->kind = s_hrglass;    /* Setup is an hourglass. */
@@ -5739,52 +5458,11 @@ foobar:
          case s_hyperbone:
             if ((lilresult_mask[0] & 0x0F0F) == 0) {
                result->kind = s_bone;
-               permuter = hyperbonev+4;
+               permuter = hyperboneh;
             }
             else if ((lilresult_mask[0] & 0xF0F0) == 0) {
                result->kind = s_bone;
                permuter = hyperbonev;
-               rotator = 1;
-            }
-            else
-               fail("Call went to improperly-formed setup.");
-            break;
-         case s_tinyhyperbone:
-            if ((lilresult_mask[0] & 0x0FFF) == 0) {       // These 4 go to a trngl4
-               result->kind = s_trngl4;
-               permuter = tinyhyperbonet;
-               rotator = 3;
-            }
-            else if ((lilresult_mask[0] & 0xF0FF) == 0) {
-               result->kind = s_trngl4;
-               permuter = tinyhyperbonet+4;
-               rotator = 2;
-            }
-            else if ((lilresult_mask[0] & 0xFF0F) == 0) {
-               result->kind = s_trngl4;
-               permuter = tinyhyperbonet+8;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 0xFFF0) == 0) {
-               result->kind = s_trngl4;
-               permuter = tinyhyperbonet+12;
-            }
-            else if ((lilresult_mask[0] & 0xF3F3) == 0) {  // Next 2 go to a 1x4!
-               result->kind = s1x4;
-               permuter = tinyhyperbonel;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 0x3F3F) == 0) {
-               result->kind = s1x4;
-               permuter = tinyhyperbonel+4;
-            }
-            else if ((lilresult_mask[0] & 0xCFCF) == 0) {  // Next 2 go to a 2x2!
-               result->kind = s2x2;
-               permuter = tinyhyperboneb+4;
-            }
-            else if ((lilresult_mask[0] & 0xFCFC) == 0) {
-               result->kind = s2x2;
-               permuter = tinyhyperboneb;
                rotator = 1;
             }
             else
@@ -5896,7 +5574,7 @@ foobar:
       }
    }
 
-   // Install all the people.
+   /* Install all the people. */
 
    {
       // We create an especially glorious collision collector here, with all
@@ -5911,14 +5589,14 @@ foobar:
          personrec newperson = newpersonlist.people[real_index];
          if (newperson.id1) {
             if (funny) {
-               if (newperson.id1 != ~0UL) {  // We only handle people who haven't been erased.
+               if (newperson.id1 != ~0UL) {       /* We only handle people who haven't been erased. */
                   k = real_index;
-                  j = real_index;    // J will move twice as fast as k, looking for a loop not containing starting point.
+                  j = real_index;               /* j will move twice as fast as k, looking for a loop not containing starting point. */
                   do {
                      j = newplacelist[j];
-                     // If hit a phantom, we can't proceed.
+                     /* If hit a phantom, we can't proceed. */
                      if (!newpersonlist.people[j].id1) fail("Can't do 'funny' call with phantoms.");
-                     // If hit an erased person, we have clearly hit a loop not containing starting point.
+                     /* If hit an erased person, we have clearly hit a loop not containing starting point. */
                      else if (newpersonlist.people[j].id1 == ~0UL) break;
                      j = newplacelist[j];
                      if (!newpersonlist.people[j].id1) fail("Can't do 'funny' call with phantoms.");
@@ -5969,25 +5647,6 @@ foobar:
          warn(warn__not_funny);
 
       CC.fix_possible_collision(result);
-   }
-
-   // Fix up "dixie tag" result if fraction was 1/4.
-   if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__PARENT_COUNT_IS_ONE) &&
-       ss->cmd.callspec == base_calls[base_call_dixiehalftag] &&
-       result->kind == s2x2) {
-      // We just did a "dixie 1/2 tag" but will want to back up to the 1/4 position.
-      // Need to change handedness.
-      uint32 newtb = or_all_people(result);
-      if (!(newtb & 001)) {
-         result->swap_people(0, 1);
-         result->swap_people(2, 3);
-      }
-      else if (!(newtb & 010)) {
-         result->swap_people(0, 3);
-         result->swap_people(2, 1);
-      }
-      else
-         fail("Can't figure out what you want.");
    }
 
    fixup:

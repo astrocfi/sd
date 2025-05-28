@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 37.7
-@set Time-stamp: August 10, 2008
+@set sd-version 37.31
+@set Time-stamp: April 12, 2007
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -1552,6 +1552,9 @@ The people selector popup contains various asymmetric selectors such as
 the @code{<ANYONE> do your part} concept to call @i{near column
 pass thru}, etc.  The resultant setup must be reasonable---shape-changers
 on one side of the set may lead to problems.
+Most calls have not been checked for
+robustness in the presence of asymmetrical setups.  Use this with care!
+The resolver checks all eight people, so it should work.
 If you have not restored symmetry, resolves may be extraordinarily difficult
 to find.
 
@@ -4253,14 +4256,12 @@ in that family that is widely accepted.
 @item stagger
 @item big block          (any kind of lines)
 @item big block waves    (this means ``assume waves'')
-The preceding three encompass any kind of distortion in the lines or columns.
+These encompass any kind of distorted lines or columns.
 @item O
 @item butterfly
 @item mini-O
 @item mini-butterfly
 These are straightforward.
-@item OX
-This is an unsymmetrical distorted column that is part O and part `X' (butterfly.)
 @item stairstep C/L/W
 A ``stairstep'' is a 4x4 matrix occupied so that everyone has exactly
 one live person on their left or right.  It could typically be obtained
@@ -4338,7 +4339,7 @@ These are done from a 1x8 in which the two people at each end are ``bent''
 These are done from a variety of setups, in which the designated people
 form a recognizable ``double bent'' setup.
 @item bent C/L/W/B @r{(plural)}
-These are done from suitable setups, including unsymmetrical 4x4's occupied as ``clumps''.
+These are done from suitable setups.
 @item <ANYONE> in your trapezoid
 This is typically used in unsymmetrical setups.
 @item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
@@ -4523,7 +4524,6 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item <N/4> stable
 @item <ANYONE> are <N/4> stable
 @item emulate
-@item nose
 @item drag the <ANYONE>
 @item trace@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item outeracting
@@ -4889,7 +4889,7 @@ See @ref{Concentric}.
 @item grand working as centers
 @item grand working as ends
 @item grand working clockwise/counterclockwise
-@item <ANYONE> are centers of a double-offset 1T/3T/1L/3L/GT/D/DS
+@item <ANYONE> are centers of a double-offset 1T/3T/GT/D/DS
 @item inrigger
 @item outrigger
 @item leftrigger
@@ -4904,8 +4904,6 @@ See @ref{Concentric}.
 These are straightforward.  ``Mystic wing'' is right wing for the outer 4 and
 left wing for the center 4.  ``Other wing'' is right wing for the belles and
 left wing for the beaus.
-@item mimic
-This is experimental.
 @item common point galaxy
 @item common spot/point diamonds
 @item common spot/point hourglass
@@ -5728,10 +5726,6 @@ the tag to a diamond}.)  You will often need to use the
 @item near line / far line
 @item near column / far column
 @item near box / far box
-@item near 4 / far 4
-@item nearest person / farthest person
-@item the diamond
-Use this in an unsymmetrical setup when there is a diamond other than in the center.
 @item those facing the caller
 @item those facing away from the caller
 @item those facing the caller's left

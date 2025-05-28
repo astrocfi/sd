@@ -40,7 +40,7 @@ put a better (i.e. real cygwin) version in there.
 Go to sddoc directory and do:
 
     setmingw
-    settex     # Yes!  Still need this!
+    settex
     clean clean
     do_plain
     do_ps
@@ -73,12 +73,8 @@ Go to sddoc directory and do:
  8 Oct 05  -  20 Nov 05  #23
 20 Nov 05  -   7 Jul 06  #24
  7 Jul 06  -   8 Apr 07  #27
- 8 Apr 07  -  23 Jun 07  #28
-23 Jun 07  -  13 Oct 07  #31
-13 Oct 07  -  30 Mar 08  #33
-30 Mar 08  -   ?????     #32
-?????                    #34
-(#25, #26, #29, #30 are also available.)
+ 8 Apr 07  -             #28
+(#25 and #26 are also available.)
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++

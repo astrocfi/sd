@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2008  William B. Ackerman.
+//    Copyright (C) 1990-2007  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -46,7 +46,8 @@ struct resolve_rec {
    int size;
    int insertion_point;
    int insertion_width;
-   personrec permutepersoninfo[8];
+   int permute1[8];
+   int permute3[8];
    int rotchange;
 };
 
@@ -202,8 +203,7 @@ enum resolve_kind {
    resolve_revprom,
    resolve_sglfileprom,
    resolve_revsglfileprom,
-   resolve_circle,
-   resolve_circle_from_facing_lines
+   resolve_circle
 };
 
 // BEWARE!!  This list is keyed to the definition of "resolve_kind".
@@ -231,8 +231,7 @@ static const resolve_descriptor resolve_table[] = {
    {1, 0, first_part_none,  main_part_revprom},  // resolve_revprom
    {3, 0, first_part_none,  main_part_sglprom},  // resolve_sglfileprom
    {4, 0, first_part_none,  main_part_rsglprom}, // resolve_revsglfileprom
-   {2, 0, first_part_none,  main_part_circ},     // resolve_circle
-   {2, 0, first_part_none,  main_part_circ}};    // resolve_circle_from_facing_lines
+   {2, 0, first_part_none,  main_part_circ}};    // resolve_circle
 
 
 // Some resolves are only legal at certain levels, so there is a "level" field
@@ -248,10 +247,9 @@ enum level_abbreviation {
 struct resolve_tester {
    resolve_kind k;
    level_abbreviation level_needed;
-   // Notes for "distance" field:
    // Add 0x10 bit for singer-only; these must be last.
    // Also, last item in each table has 0x10 only.
-   // Add 0x20 bit -- same as 0x40 if distance is zero, otherwise OK.
+   // Add 0x20 bit to indicate that we demand only nonzero distances.
    // Add 0x40 bit to make the resolver never find this, though
    //    we will display it if user gets here.
    uint32 distance;
@@ -269,6 +267,13 @@ const resolve_tester null_resolve_thing = {
    resolve_none, MS, 0, {0,0,0,0,0,0,0,0}, 0};
 
 const resolve_tester *configuration::null_resolve_ptr = &null_resolve_thing;
+
+// Notes for "distance" field:
+// Add 0x10 bit for singer-only; these must be last.
+// Also, last item in each table has 0x10 only.
+// Add 0x20 bit to indicate that we demand only nonzero distances.
+// Add 0x40 bit to make the resolver never find this, though
+//    we will display it if user gets here.
 
 static const resolve_tester test_thar_stuff[] = {
    {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
@@ -299,7 +304,7 @@ static const resolve_tester test_rigger_stuff[] = {
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_4x4_stuff[] = {
-   // "Circle left/right", etc. from squared-set.
+   // "circle left/right", etc. from squared-set.
    {resolve_circle,         MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x33AA1188},
    {resolve_circle,         MS, 7,   {5, 2, 1, 14, 13, 10, 9, 6},  0x833AA118},
    {resolve_sglfileprom,    MS, 6,   {2, 1, 14, 13, 10, 9, 6, 5},  0x8833AA11},
@@ -382,24 +387,6 @@ static const resolve_tester test_4x4_stuff[] = {
    {resolve_la,             MS, 5,   {1, 14, 15, 12, 9, 6, 7, 4},  0x13133131},
    {resolve_none, MS, 0x10}};
 
-static const resolve_tester test_alamo_stuff[] = {
-   // "Circle left/right", etc.
-   {resolve_circle,         MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0x33AA1188},
-   {resolve_circle,         MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x833AA118},
-   {resolve_sglfileprom,    MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0x8833AA11},
-   {resolve_sglfileprom,    MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x18833AA1},
-   {resolve_revsglfileprom, MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0xAA118833},
-   {resolve_revsglfileprom, MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x3AA11883},
-
-   // Around the corner.
-   {resolve_rlg,            MS, 3,   {4, 3, 2, 1, 0, 7, 6, 5},  0x1A8138A3},
-   {resolve_la,             MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},  0xA8138A31},
-
-   // Facing directly.
-   {resolve_rlg,            MS, 2,   {3, 2, 1, 0, 7, 6, 5, 4},  0x8A31A813},
-   {resolve_la,             MS, 7,   {4, 3, 2, 1, 0, 7, 6, 5},  0x38A31A81},
-   {resolve_none, MS, 0x10}};
-
 static const resolve_tester test_4x6_stuff[] = {
    {resolve_rlg,            MS, 2,   {23, 6, 3, 2, 11, 18, 15, 14},0x8A31A813},
    {resolve_la,             MS, 7,   {14, 23, 6, 3, 2, 11, 18, 15},0x38A31A81},
@@ -439,7 +426,6 @@ static const resolve_tester test_galaxy_stuff[] = {
 static const resolve_tester test_qtag_stuff[] = {
    // From 1/4 tag.
    {resolve_dixie_grand,    DX, 2,   {5, 0, 2, 7, 1, 4, 6, 3},     0x8AAAA888},
-   {resolve_dixie_grand,    DX, 2,   {4, 1, 2, 7, 0, 5, 6, 3},     0x33AA1188},
    {resolve_ext_rlg,        MS, 5,   {7, 5, 4, 2, 3, 1, 0, 6},     0xA88A8AA8},
    {resolve_ext_la,         MS, 6,   {3, 2, 1, 0, 7, 6, 5, 4},     0xA8AA8A88},
    // From 3/4 tag.
@@ -593,7 +579,7 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_circ_la,        MS, 0,   {5, 7, 2, 4, 1, 3, 6, 0},     0xAAA8888A},
    {resolve_xby_rlg,        XB, 2,   {4, 2, 3, 1, 0, 6, 7, 5},     0x8A88A8AA},
    {resolve_xby_la,         XB, 5,   {3, 2, 0, 1, 7, 6, 4, 5},     0xA88A8AA8},
-   {resolve_bad_dixie_grand,DX, 0x47,{3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},
+   {resolve_bad_dixie_grand,DX, 0x27,{3, 6, 0, 5, 7, 2, 4, 1},     0xAA8888AA},
 
    // From T-bone setup, ends facing.
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x8A31A813},
@@ -604,8 +590,6 @@ static const resolve_tester test_2x4_stuff[] = {
    {resolve_rlg,            MS, 2,   {4, 3, 2, 1, 0, 7, 6, 5},     0x31311313},
    // LA from lines-out.  This has been decreed to be a horrible resolve.
    {resolve_la,             MS, 0x46,{4, 3, 2, 1, 0, 7, 6, 5},     0xA8888AAA},
-   // Same thing, other gender.
-   {resolve_rlg,            MS, 0x41,{3, 2, 1, 0, 7, 6, 5, 4},     0x8888AAAA},
    // From wacky T-bone.
    {resolve_la,             MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x38131A31},
 
@@ -616,15 +600,11 @@ static const resolve_tester test_2x4_stuff[] = {
    // "circle left/right" from pseudo squared-set, normal.
    {resolve_circle,         MS, 6,   {4, 3, 2, 1, 0, 7, 6, 5},     0x33AA1188},
    // "circle left/right" from pseudo squared-set, sashayed.
-   // If the circling distance is zero, that's fine.  Resolve is "at home".
    {resolve_circle,         MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x833AA118},
-
-   // "circle left/right" from lines-in, normal.  The circling distance will always be nonzero.
-   {resolve_circle_from_facing_lines,         MS, 7,   {5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},
-   // "circle left/right" from lines-in, sashayed.  If the circling distance is zero,
-   // we don't actively seek this, because they aren't really squared up.
-   {resolve_circle_from_facing_lines,         MS, 0x26,{4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},
-
+   // "circle left/right" from lines-in, sashayed.
+   {resolve_circle,         MS, 0x26,{4, 3, 2, 1, 0, 7, 6, 5},     0x8AAAA888},
+   // "circle left/right" from lines-in, normal.
+   {resolve_circle,         MS, 0x27,{5, 4, 3, 2, 1, 0, 7, 6},     0x88AAAA88},
    // From DPT.
    {resolve_dixie_grand,    DX, 2,   {5, 2, 4, 7, 1, 6, 0, 3},     0x33311113},
 
@@ -725,8 +705,6 @@ void configuration::calculate_resolve()
       testptr = test_rigger_stuff; break;
    case s_spindle:
       testptr = test_spindle_stuff; break;
-   case s_alamo:
-      testptr = test_alamo_stuff; break;
    default: goto no_resolve;
    }
 
@@ -757,6 +735,7 @@ void configuration::calculate_resolve()
       resolve_flag.the_item = testptr;
       resolve_flag.distance =
          ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
+      if (resolve_flag.distance == 0 && (testptr->distance & 0x20)) goto not_this_one;
       return;
 
       not_this_one: ;
@@ -778,13 +757,6 @@ void configuration::calculate_resolve()
 
 
 
-static void write_aproximately()
-{
-   if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
-      writestuff("approximately ");
-}
-
-
 // This assumes that "sequence_is_resolved" passes.
 void write_resolve_text(bool doing_file)
 {
@@ -799,24 +771,20 @@ void write_resolve_text(bool doing_file)
 
    if (doing_file && !ui_options.singlespace_mode) doublespace_file();
 
-   if (index == resolve_circle || index == resolve_circle_from_facing_lines) {
+   if (index == resolve_circle) {
       if (distance == 0) {
-         if (index == resolve_circle_from_facing_lines) {
-            writestuff("in resolved facing lines with ");
-            write_aproximately();
-            writestuff("zero circling distance");
-         }
-         else {
-            write_aproximately();
-            writestuff("at home");
-         }
+         if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
+            writestuff("approximately ");
+         writestuff("at home");
       }
       else {
          writestuff("circle left ");
-         write_aproximately();
+         if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
+            writestuff("approximately ");
          writestuff(resolve_distances[8 - distance]);
          writestuff(" or right ");
-         write_aproximately();
+         if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
+            writestuff("approximately ");
          writestuff(resolve_distances[distance]);
       }
    }
@@ -853,7 +821,8 @@ void write_resolve_text(bool doing_file)
       writestuff(resolve_main_parts[mainpart]);
 
       writestuff("  (");
-      write_aproximately();
+      if (configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)
+         writestuff("approximately ");
 
       if (distance == 0) {
          writestuff("at home)");
@@ -1083,22 +1052,9 @@ static bool inner_search(command_kind goal,
 
             if (index == resolve_none) goto not_a_solution_but_maybe_can_build_on_it;
 
-            // Some resolves are so bad we never search for them.
+            // Some resolves are so bad we never use them.
             // This is indicated by the 40 bit in the distance word.
             if (r.the_item->distance & 0x40) goto not_a_solution_but_maybe_can_build_on_it;
-
-            // Also, the 20 bit says that we don't actively search for this if the promenade distance is zero.
-            // The operator might want to accept a "circle left" type of resolve, but would not be very
-            // interested in a "circle left zero", because that would actually be a "you're home".  But,
-            // from facing lines, they aren't home.  The ends would need to quarter in.  If we find something
-            // in which the ends are quartered in, we will accept that whether the circling distance is zero
-            // or not.
-
-            if ((r.the_item->distance & 0x20) &&
-                (((ns->rotation << 1) +
-                  ((ns->people[r.the_item->locations[0]].id1 & 0700) >> 6) +
-                  r.the_item->distance) & 7) == 0)
-               goto not_a_solution_but_maybe_can_build_on_it;
 
             // Here we bias the search against resolves with circulates (which we
             // consider to be of lower quality) by only sometimes accepting them.
@@ -1355,8 +1311,10 @@ static bool inner_search(command_kind goal,
       new_resolve->size = configuration::history_ptr - history_insertion_point;
 
       if (goal == command_reconcile) {
-         for (j=0; j<8; j++)
-            new_resolve->permutepersoninfo[perm_array[j] >> 6] = ns->people[perm_indices[j]];
+         for (j=0; j<8; j++) {
+            new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & PID_MASK;
+            new_resolve->permute3[perm_array[j] >> 6] = ns->people[perm_indices[j]].id3 & ID3_PERM_ALLBITS;
+         }
 
          new_resolve->rotchange = ns->rotation - goal_rotation;
          new_resolve->insertion_point = insertion_depth;
@@ -1432,14 +1390,15 @@ static bool inner_search(command_kind goal,
             personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];
 
             if (t.id1) {
-               const personrec & thispermuteperson = new_resolve->permutepersoninfo[(t.id1 & PID_MASK) >> 6];
-
-               if (this_state.state.people[k].id1 != ((t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK)))
+               if (this_state.state.people[k].id1 !=
+                   ((t.id1 & ~PID_MASK) |
+                    new_resolve->permute1[(t.id1 & PID_MASK) >> 6]))
                   goto cant_consider_this_call;
                if (this_state.state.people[k].id2 != t.id2)
                   goto cant_consider_this_call;
                if (this_state.state.people[k].id3 !=
-                   ((t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS)))
+                   ((t.id3 & ~ID3_PERM_ALLBITS) |
+                    new_resolve->permute3[(t.id1 & PID_MASK) >> 6]))
                   goto cant_consider_this_call;
             }
             else {
@@ -1775,9 +1734,12 @@ uims_reply full_resolve()
                personrec & t = this_state->state.people[k];
 
                if (t.id1) {
-                  const personrec & thispermuteperson = this_resolve->permutepersoninfo[(t.id1 & PID_MASK) >> 6];
-                  t.id3 = (t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS);
-                  t.id1 = (t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK);
+                  t.id1 =
+                     (t.id1 & ~PID_MASK) |
+                     this_resolve->permute1[(t.id1 & PID_MASK) >> 6];
+                  t.id3 =
+                     (t.id3 & ~ID3_PERM_ALLBITS) |
+                     this_resolve->permute3[(t.id1 & PID_MASK) >> 6];
                }
             }
 
@@ -1999,7 +1961,7 @@ void create_resolve_menu_title(
 }
 
 
-void initialize_getout_tables()
+void initialize_getout_tables(void)
 {
    int i, j, k;
 

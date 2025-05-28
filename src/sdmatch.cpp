@@ -382,10 +382,9 @@ void do_accelerator_spec(Cstring inputline, bool is_accelerator)
 
       if (user_match.match.packed_next_conc_or_subcall ||
           user_match.match.packed_secondary_subcall) {
-         if (calling_level >= l_c4x)
-            gg->fatal_error_exit(1, "Target of accelerator or abbreviation is too complicated", inputline);
-
-         return;
+         gg->fatal_error_exit(1,
+                              "Target of accelerator or abbreviation is too complicated",
+                              inputline);
       }
    }
 
@@ -1789,7 +1788,7 @@ static void match_wildcard(
 
             for (i=1; i<=last_direction_kind; ++i) {
                current_result->match.call_conc_options.where = (direction_kind) i;
-               match_suffix_2(user, direction_names[i].name, &p2b, patxi);
+               match_suffix_2(user, direction_names[i], &p2b, patxi);
             }
 
             current_result->match.call_conc_options.where = save_where;
@@ -2269,7 +2268,7 @@ static void search_menu(uims_reply kind)
          menu_length = num_command_commands;
       }
       else if (static_call_menu == match_directions) {
-         menu = &direction_menu_list[1];
+         menu = &direction_names[1];
          menu_length = last_direction_kind;
       }
       else if (static_call_menu == match_number) {
