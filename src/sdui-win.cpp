@@ -944,7 +944,7 @@ static void Transcript_OnPaint(HWND hwnd)
 
                   ExtTextOut(PaintDC, x, Y, ETO_CLIPPED, &PaintStruct.rcPaint, cc, 1, 0);
 
-                  if (ui_options.no_color != 1)
+                  if (ui_options.color_scheme != no_color)
                      (void) SetTextColor(PaintDC, colorlist[c1 & 7]);
 
                   cc[0] = ui_options.pn1[c1 & 7];
@@ -955,7 +955,7 @@ static void Transcript_OnPaint(HWND hwnd)
 
                   /* Set back to plain "white". */
 
-                  if (ui_options.no_color != 1) {
+                  if (ui_options.color_scheme != no_color) {
                      if (!ui_options.no_intensify)
                         (void) SetTextColor(PaintDC, RGB(255, 255, 255));
                      else
@@ -1192,7 +1192,7 @@ int WINAPI WinMain(
    ui_options.no_intensify = 0;
    ui_options.reverse_video = 0;
    ui_options.pastel_color = 0;
-   ui_options.no_color = 0;
+   ui_options.color_scheme = color_by_gender;
    ui_options.no_sound = 0;
    ui_options.sequence_num_override = -1;
 
@@ -2284,8 +2284,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       4G - 4
    */
 
-   if (ui_options.no_color == 3) {
-      // corner colors
+   if (ui_options.color_scheme == color_by_corner) {
       colorlist = cornercolors;
       lpBi->bmiColors[1]  = lpBi->bmiColors[10];    // 1G = GRN
       lpBi->bmiColors[2]  = lpBi->bmiColors[12];    // 2G = BLU
@@ -2296,7 +2295,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       lpBi->bmiColors[11]  = lpBi->bmiColors[2];    // 3B = BLU
       lpBi->bmiColors[12]  = lpBi->bmiColors[3];    // 4B = YEL
    }
-   else if (ui_options.no_color == 2) {
+   else if (ui_options.color_scheme == color_by_couple) {
       // couple colors, rgby
       colorlist = couplecolors;
       lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
@@ -2308,7 +2307,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = BLU
       lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = YEL
    }
-   else if (ui_options.no_color == 4) {
+   else if (ui_options.color_scheme == color_by_couple_rgyb) {
       // couple colors, rgyb
       colorlist = couplecolors_rgyb;
       lpBi->bmiColors[1]  = lpBi->bmiColors[9];     // 1G = RED
@@ -2320,7 +2319,7 @@ extern long_boolean uims_open_session(int argc, char **argv)
       lpBi->bmiColors[11]  = lpBi->bmiColors[3];    // 3B = YEL
       lpBi->bmiColors[12]  = lpBi->bmiColors[4];    // 4B = BLU
    }
-   else if (ui_options.no_color == 1) {
+   else if (ui_options.color_scheme == no_color) {
       // monochrome colors (colorlist won't be used in this case)
       RGBQUAD t = lpBi->bmiColors[ui_options.reverse_video ? (ui_options.no_intensify ? 7 : 15) : 0];
 

@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.7d"
+version "34.7e"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -20342,6 +20342,11 @@ call "scoot and weave" a2
       array [AL0E AACR1W 0 0]
    setup pmd 1x4 qualifier left wave_only
       array [CR0W 0 0 CCAL1E]
+            alternate_definition [grand] c1
+   setup 3x2 1x6 restriction forbidden wave_only
+      array [CR0W CCAL1E CCAL5E AACR5W AACR1W AL0E]
+   setup 4x2 1x8 restriction forbidden wave_only
+      array [CR0W CCAL1E CCAL2E CCAL7E AACR7W AACR2W AACR1W AL0E]
             visible_fractions
    seq scootback []
    seq weave []
@@ -20434,7 +20439,7 @@ call "counter" c2 tag counter
         endscounter [inherit_left inherit_cross inherit_nxn inherit_fractal
                      conc_demand_columns conc_force_otherway endscando]
 
-call "cross counter" c2
+call "cross counter" c3a
             fudge_to_q_tag visible_fractions left_means_mirror
             intlk_is_inherited fractal_is_inherited
    conc ctrscrosscounter [inherit_intlk inherit_fractal]

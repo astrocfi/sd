@@ -199,9 +199,9 @@ extern void ttu_initialize()
    else {
       // If doing color_by_couple or color_by_corner, make the backround light
       // gray instead of white, because yellow doesn't show up well against white.
-      if (ui_options.no_color == 2 ||
-          ui_options.no_color == 3 ||
-          ui_options.no_color == 4 ||
+      if (ui_options.color_scheme == color_by_couple ||
+          ui_options.color_scheme == color_by_corner ||
+          ui_options.color_scheme == color_by_couple_rgyb ||
           ui_options.no_intensify)
          background_color = BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED;
       else
@@ -367,14 +367,14 @@ extern void put_line(const char the_line[])
 
             put_char(' ');
 
-            if (ui_options.no_color != 1) {
+            if (ui_options.color_scheme != no_color) {
                WORD color;
 
-               if (ui_options.no_color == 2)
+               if (ui_options.color_scheme == color_by_couple)
                   color = couple_colors[c1 & 7];
-               else if (ui_options.no_color == 4)
+               else if (ui_options.color_scheme == color_by_couple_rgyb)
                   color = couple_colors_rgyb[c1 & 7];
-               else if (ui_options.no_color == 3)
+               else if (ui_options.color_scheme == color_by_corner)
                   color = couple_colors[(c1 & 7) + 1];
                else
                   color =
@@ -389,7 +389,7 @@ extern void put_line(const char the_line[])
 
             // Set back to plain "white".
 
-            if (ui_options.no_color != 1)
+            if (ui_options.color_scheme != no_color)
                (void) SetConsoleTextAttribute(consoleStdout, text_color);
          }
          else

@@ -3,6 +3,7 @@
  * "curses" mechanism.
  * Time-stamp: <93/11/27 11:06:39 gildea>
  * Copyright 1993 Stephen Gildea
+ * Copyright 2001 Chris "Fen" Tamanaha	<tamanaha@coyotesys.com>
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -24,20 +25,24 @@
 
 
 #ifndef NO_CURSES
-#include <ncurses/ncurses_dll.h>
 #include <curses.h>
 #else
 #include <stdio.h>
 #endif
 #include <stdlib.h>
 #include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
-#include <unistd.h>    /* This too. */
+#include <unistd.h>    /*    This too. */
+#ifdef	__linux__
+#include <sys/ioctl.h> /*    And this under Linux. */
+#endif
 #include <signal.h>
 #include <string.h>
 #include "sd.h"
 
 
+#ifndef NO_CURSES
 static int curses_initialized = 0;
+#endif
 
 static int current_tty_mode = 0;
 
@@ -108,13 +113,14 @@ extern void ttu_initialize()
       to direct what it does.  So, if "no_console" is on,
       we take appropriate action. */
 
-   no_cursor |= no_console;
+   sdtty_no_cursor |= sdtty_no_console;
 
 #ifdef NO_CURSES
-   no_cursor = 1;
+   sdtty_no_cursor = 1;
 #else
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       initscr();    /* Initialize "curses". */
+      curses_initialized = 1;
       noecho();     /* Don't echo; we will do it ourselves. */
       cbreak();     /* Give us each keystroke; don't wait for entire line. */
       scrollok(stdscr, 1);    /* Permit screen to scroll when we write beyond the bottom.
@@ -151,7 +157,6 @@ extern void ttu_initialize()
    
       idlok(stdscr, no_line_delete ? FALSE : TRUE);
       keypad(stdscr, TRUE);
-      curses_initialized = 1;
    }
 #endif
 }
@@ -159,7 +164,7 @@ extern void ttu_initialize()
 extern void ttu_terminate()
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       if (curses_initialized) {
          endwin();
       }
@@ -175,7 +180,7 @@ extern void ttu_terminate()
 extern int get_lines_for_more()
 {
 #ifndef NO_CURSES
-   if (!no_cursor)
+   if (!sdtty_no_cursor)
       return LINES;
    else
       return sdtty_screen_height-1;
@@ -309,7 +314,7 @@ whereas the correct way to document this would have been
 extern void clear_line()
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       int y, x;
 
       getyx_correctly(&y, &x);
@@ -333,7 +338,7 @@ extern void clear_line()
 extern void rubout()
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       int y, x;
       getyx_correctly(&y, &x);
       if (x > 0) move(y, x-1);
@@ -351,7 +356,7 @@ extern void rubout()
 extern void erase_last_n(int n)
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       int y, x;
 
       getyx_correctly(&y, &x);
@@ -399,11 +404,11 @@ static Cstring couple_colors_rgyb[8] = {
 extern void put_line(const char the_line[])
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       addstr(the_line);
       refresh();
    }
-else
+#else
    if (0) {
    }
 #endif
@@ -420,33 +425,41 @@ else
 
             put_char(' ');
 
-            if (ui_options.no_color != 1) {
+            if (ui_options.color_scheme != no_color) {
                Cstring color;
 
-               if (ui_options.no_color == 2)
+               if (ui_options.color_scheme == color_by_couple)
                   color = couple_colors[c1 & 7];
-               else if (ui_options.no_color == 4)
+               else if (ui_options.color_scheme == color_by_couple_rgyb)
                   color = couple_colors_rgyb[c1 & 7];
-               else if (ui_options.no_color == 3)
+               else if (ui_options.color_scheme == color_by_corner)
                   color = couple_colors[(c1 & 7) + 1];
                else
                   color =
                      (ui_options.pastel_color ? pastel_person_colors : person_colors)[c1 & 1];
 
-
-                  color = person_colors[c1 & 1];
-
                (void) fputs("\033[1;", stdout);
                (void) fputs(color, stdout);
-               (void) fputs(";40m", stdout);
+
+               if (ui_options.reverse_video) {
+                  (void) fputs(";40m", stdout);
+               }
+               else {
+                  (void) fputs(";47m", stdout);
+               }
             }
 
             put_char(ui_options.pn1[c1 & 7]);
             put_char(ui_options.pn2[c1 & 7]);
             put_char(ui_options.direc[c2 & 017]);
 
-            if (ui_options.no_color != 1) {
-               (void) fputs("\033[0;37;40m", stdout);
+            if (ui_options.color_scheme != no_color) {
+               if (ui_options.reverse_video) {
+                  (void) fputs("\033[0;37;40m", stdout);
+               }
+               else {
+                  (void) fputs("\033[0;30;47m", stdout);
+               }
             }
          }
          else
@@ -461,7 +474,7 @@ else
 extern void put_char(int c)
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       addch(c);
       refresh();
    }
@@ -479,7 +492,7 @@ extern int get_char()
    int nc;
 
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       int c = getch();      /* A "curses" call. */
       /* Handle function keys. */
       nc = c >= 0410 ? c-0410+FKEY : c;
@@ -505,12 +518,12 @@ extern int get_char()
 
 extern void get_string(char *dest, int max)
 {
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
 #ifndef NO_CURSES
       // If NO_CURSES is on, we can't compile these lines.
       // But we'll never get here in that case.
       echo();
-      getstr(dest);
+      wgetnstr(stdscr, dest, max);
       noecho();
 #endif
    }
@@ -533,7 +546,7 @@ extern void get_string(char *dest, int max)
 extern void ttu_bell()
 {
 #ifndef NO_CURSES
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       beep();
    }
    else {
@@ -551,16 +564,56 @@ extern void ttu_bell()
 /* ARGSUSED */
 static void stop_handler(int n)
 {
+#ifndef NO_CURSES
+    if (!sdtty_no_cursor && curses_initialized) {
+	def_prog_mode();
+	endwin();
+    }
+    else {
+	csetmode(0);
+    }
+#else
+    csetmode(0);
+#endif
+
+    signal(SIGTSTP, SIG_DFL);
+    raise(SIGTSTP);			// resend the caught SIGTSTP
 }
 
 /* ARGSUSED */
 static void cont_handler(int n)
 {
+    initialize_signal_handlers();	// restore signal handlers
+
+#ifndef NO_CURSES
+    if (!sdtty_no_cursor && isendwin() ) {
+	refresh();
+    }
+    else {
+	refresh_input();
+    }
+#else
     refresh_input();
+#endif
+}
+
+static void term_handler(int n)
+{
+    uims_terminate();
+
+    if ( n == SIGQUIT ) {
+	abort();
+    }
+    else {
+	uims_final_exit(n);
+    }
 }
 
 void initialize_signal_handlers()
 {
-    signal(SIGTSTP, stop_handler);
+    signal(SIGINT,  term_handler);
+    signal(SIGQUIT, term_handler);
+    signal(SIGTERM, term_handler);
     signal(SIGCONT, cont_handler);
+    signal(SIGTSTP, stop_handler);
 }

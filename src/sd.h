@@ -92,6 +92,14 @@ struct uint64 {
 #define C_const
 
 
+enum color_scheme_type {
+   color_by_gender,
+   no_color,
+   color_by_couple,
+   color_by_corner,
+   color_by_couple_rgyb
+};
+
 struct ui_option_type {
    int no_graphics;       // 1 = "no_checkers"; 2 = "no_graphics"
    int no_intensify;
@@ -99,8 +107,7 @@ struct ui_option_type {
    int pastel_color;      // 1 = use pastel red/grn for color by gender;
                           // 0 = bold colors.  Color by couple or color by corner
                           // are always done with bold colors.
-   int no_color;          // 0 = default (by gender); 1 = none at all;
-                          // 2 = by_couple; 3 = by_corner; 4 = by_couple_rgyb
+   color_scheme_type color_scheme;
    int no_sound;
    int sequence_num_override;
    long_boolean singlespace_mode;
@@ -1428,7 +1435,7 @@ struct ctr_end_mask_rec {
 };
 
 
-const struct setup_attr {
+struct setup_attr {
    // This is the size of the setup MINUS ONE.
    C_const int setup_limits;
 

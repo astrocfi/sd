@@ -1180,13 +1180,13 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "bold_color") == 0)
             { ui_options.pastel_color = 0; continue; }
          else if (strcmp(&args[argno][1], "no_color") == 0)
-            { ui_options.no_color = 1; continue; }
+            { ui_options.color_scheme = no_color; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple") == 0)
-            { ui_options.no_color = 2; continue; }
+            { ui_options.color_scheme = color_by_couple; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple_rgyb") == 0)
-            { ui_options.no_color = 4; continue; }
+            { ui_options.color_scheme = color_by_couple_rgyb; continue; }
          else if (strcmp(&args[argno][1], "color_by_corner") == 0)
-            { ui_options.no_color = 3; continue; }
+            { ui_options.color_scheme = color_by_corner; continue; }
          else if (strcmp(&args[argno][1], "no_sound") == 0)
             { ui_options.no_sound = 1; continue; }
          else if (strcmp(&args[argno][1], "single_click") == 0)

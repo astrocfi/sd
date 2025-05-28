@@ -2209,7 +2209,7 @@ SDLIB_API void run_program()
       newline();
       writestuff("Copyright (c) 1996, Charles Petzold");
       newline();
-      writestuff("Copyright (c) 2001  Chris \"Fen\" Tamanaha");
+      writestuff("Copyright (c) 2001-2002  Chris \"Fen\" Tamanaha");
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();

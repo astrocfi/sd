@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
    ui_options.no_intensify = 0;
    ui_options.reverse_video = 1;
    ui_options.pastel_color = 1;
-   ui_options.no_color = 0;
+   ui_options.color_scheme = color_by_gender;
    ui_options.no_sound = 0;
    ui_options.sequence_num_override = -1;
 
