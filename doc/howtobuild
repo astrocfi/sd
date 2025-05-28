@@ -1,3 +1,7 @@
+create:    7z a -tzip foo.zip <files>
+look:      7z l foo.zip
+extract 1: 7z e foo.zip <file>
+
 ==============================================================
 *********** DO NOT RENAME THIS TO HOWTOBUILD.TXT **************
 Doing so might cause it to be included in the "do_pack" script.
@@ -24,7 +28,7 @@ Be sure the version numbers and dates are correct in:
     [sddoc] about.lst    (version # and year are visible)
     [sddoc] sd_doc.txi         (version # and date, with year (two places!), are visible)
     [sddoc] relnotes.txi       (version # and date, with year, are visible)
-                               als, database format version #,
+                               also, database format version #,
                                and UI version # are visible.
                                Also, check its claimed database format
                                version against database.h)

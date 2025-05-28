@@ -1203,6 +1203,31 @@ static uint32_t get_standard_people(setup *ss, selector_kind who,
 }
 
 
+mpkind par_split_table[16] = {
+   MPKIND__OFFS_R_ONEQ, MPKIND__OFFS_R_ONEQ_LAT, MPKIND__OFFS_L_ONEQ, MPKIND__OFFS_L_ONEQ_LAT,
+   MPKIND__OFFS_R_HALF, MPKIND__OFFS_R_HALF_LAT, MPKIND__OFFS_L_HALF, MPKIND__OFFS_L_HALF_LAT,
+   MPKIND__OFFS_R_THRQ, (mpkind) ~0U, MPKIND__OFFS_L_THRQ, (mpkind) ~0U,
+   MPKIND__OFFS_R_FULL, (mpkind) ~0U, MPKIND__OFFS_L_FULL, (mpkind) ~0U};
+
+mpkind par_intlk_table[16] = {
+   MPKIND__OFFS_R_ONEQ_INTLK, MPKIND__OFFS_R_ONEQ_LAT_INTLK, MPKIND__OFFS_L_ONEQ_INTLK, MPKIND__OFFS_L_ONEQ_LAT_INTLK,
+   MPKIND__OFFS_R_HALF_INTLK, MPKIND__OFFS_R_HALF_LAT_INTLK, MPKIND__OFFS_L_HALF_INTLK, MPKIND__OFFS_L_HALF_LAT_INTLK,
+   MPKIND__OFFS_R_THRQ_INTLK, (mpkind) ~0U, MPKIND__OFFS_L_THRQ_INTLK, (mpkind) ~0U,
+   MPKIND__OFFS_R_FULL_INTLK, (mpkind) ~0U, MPKIND__OFFS_L_FULL_INTLK, (mpkind) ~0U};
+
+mpkind par_concphan_table[16] = {
+   MPKIND__OFFS_R_ONEQ_CONCPHAN, MPKIND__OFFS_R_ONEQ_LAT_CONCPHAN, MPKIND__OFFS_L_ONEQ_CONCPHAN, MPKIND__OFFS_L_ONEQ_LAT_CONCPHAN,
+   MPKIND__OFFS_R_HALF_CONCPHAN, MPKIND__OFFS_R_HALF_LAT_CONCPHAN, MPKIND__OFFS_L_HALF_CONCPHAN, MPKIND__OFFS_L_HALF_LAT_CONCPHAN,
+   MPKIND__OFFS_R_THRQ_CONCPHAN, (mpkind) ~0U, MPKIND__OFFS_L_THRQ_CONCPHAN, (mpkind) ~0U,
+   MPKIND__OFFS_R_FULL_CONCPHAN, (mpkind) ~0U, MPKIND__OFFS_L_FULL_CONCPHAN, (mpkind) ~0U};
+
+mpkind par_plain_table[16] = {
+   MPKIND__OFFS_R_ONEQ, (mpkind) ~0U, MPKIND__OFFS_L_ONEQ, (mpkind) ~0U,
+   MPKIND__OFFS_R_HALF, (mpkind) ~0U, MPKIND__OFFS_L_HALF, (mpkind) ~0U,
+   MPKIND__OFFS_R_THRQ, (mpkind) ~0U, MPKIND__OFFS_L_THRQ, (mpkind) ~0U,
+   MPKIND__OFFS_R_FULL, (mpkind) ~0U, MPKIND__OFFS_L_FULL, (mpkind) ~0U};
+
+
 static void do_concept_parallelogram(
    setup *ss,
    parse_block *parseptr,
@@ -1265,41 +1290,48 @@ static void do_concept_parallelogram(
    bool no_overcast = false;
 
    int linesp;
-   mpkind mk;
+   mpkind mk;    // map code we will send to divided_setup_move
+   int mk4;      // amount of offset, in quarters
+   bool lateral = false;
+   bool left_offset = false;
 
    if (ss->kind == s2x6) {
       if ((global_livemask & ~01717) == 0 && (global_livemask & ~07474) != 0)
-         mk = MPKIND__OFFS_L_HALF;
+         left_offset = true;    // Left, half.
       else if ((global_livemask & ~07474) == 0 && (global_livemask & ~01717) != 0)
-         mk = MPKIND__OFFS_R_HALF;
+         ;                      // Right, half.
       else fail("Can't find a parallelogram.");
+      mk4 = 2;
       is_pgram = true;
    }
    else if (ss->kind == s2x5) {
       warn(warn__1_4_pgram);
       if ((global_livemask & ~0x1EF) == 0 && (global_livemask & ~0x3DE) != 0)
-         mk = MPKIND__OFFS_L_ONEQ;
+         left_offset = true;    // Left, quarter.
       else if ((global_livemask & ~0x3DE) == 0 && (global_livemask & ~0x1EF) != 0)
-         mk = MPKIND__OFFS_R_ONEQ;
+         ;                      // Right, quarter.
       else fail("Can't find a parallelogram.");
+      mk4 = 1;
       is_pgram = true;
    }
    else if (ss->kind == s2x7) {
       warn(warn__3_4_pgram);
       if ((global_livemask & ~0x078F) == 0 && (global_livemask & ~0x3C78) != 0)
-         mk = MPKIND__OFFS_L_THRQ;
+         left_offset = true;    // Left, 3/4.
       else if ((global_livemask & ~0x3C78) == 0 && (global_livemask & ~0x078F) != 0)
-         mk = MPKIND__OFFS_R_THRQ;
+         ;                      // Right, 3/4.
       else fail("Can't find a parallelogram.");
+      mk4 = 3;
       is_pgram = true;
    }
    else if (ss->kind == s2x8) {
       warn(warn__full_pgram);
       if ((global_livemask & ~0x0F0F) == 0 && (global_livemask & ~0xF0F0) != 0)
-         mk = MPKIND__OFFS_L_FULL;
+         left_offset = true;    // Left, full.
       else if ((global_livemask & ~0xF0F0) == 0 && (global_livemask & ~0x0F0F) != 0)
-         mk = MPKIND__OFFS_R_FULL;
+         ;                      // Right, full.
       else fail("Can't find a parallelogram.");
+      mk4 = 4;
       is_pgram = true;
    }
 
@@ -1323,10 +1355,11 @@ static void do_concept_parallelogram(
       // See whether people fit unambiguously
       // into one parallelogram or the other.
       if ((global_livemask & 003600360) == 0 && (global_livemask & 060036003) != 0)
-         mk = MPKIND__OFFS_L_HALF;
+         left_offset = true;    // Left, half.
       else if ((global_livemask & 060036003) == 0 && (global_livemask & 003600360) != 0)
-         mk = MPKIND__OFFS_R_HALF;
+         ;                      // Right, half.
       else fail("Can't find a parallelogram.");
+      mk4 = 2;
       warn(warn__pg_hard_to_see);
       no_overcast = true;
    }
@@ -1334,10 +1367,11 @@ static void do_concept_parallelogram(
       // See whether people fit unambiguously
       // into one parallelogram or the other.
       if ((global_livemask & 0x0C030) == 0 && (global_livemask & 0x80601) != 0)
-         mk = MPKIND__OFFS_L_ONEQ;
+         left_offset = true;    // Left, quarter.
       else if ((global_livemask & 0x80601) == 0 && (global_livemask & 0x0C030) != 0)
-         mk = MPKIND__OFFS_R_ONEQ;
+         ;                      // Right, quarter.
       else fail("Can't find a parallelogram.");
+      mk4 = 1;
       warn(warn__1_4_pgram);
       warn(warn__pg_hard_to_see);
       no_overcast = true;
@@ -1346,8 +1380,8 @@ static void do_concept_parallelogram(
       fail("Can't do parallelogram concept from this position.");
 
    if (kk == concept_do_phantom_2x4 &&
-       (ss->kind == s2x6 || ss->kind == s2x5 || ss->kind == s2x7 ||
-        ss->kind == s4x5 || ss->kind == s4x6)) {
+       (ss->kind == s2x5 || ss->kind == s2x6 || ss->kind == s2x7 ||
+        ss->kind == s2x8 || ss->kind == s4x5 || ss->kind == s4x6)) {
 
       no_overcast = true;
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -1356,7 +1390,7 @@ static void do_concept_parallelogram(
          ss->do_matrix_expansion(CONCPROP__NEEDK_4X5, false);
          if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
       }
-      if (ss->kind == s2x6) {
+      else if (ss->kind == s2x6) {
          ss->do_matrix_expansion(CONCPROP__NEEDK_4X6, false);
          if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
       }
@@ -1384,47 +1418,61 @@ static void do_concept_parallelogram(
             fail("The standard people are not facing consistently.");
       }
 
+      if ((global_tbonetest & 011) == 011) fail("Can't figure out how to divide.");
+
       if (linesp & 1) {
-         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+         if (global_tbonetest & 1) lateral = true;
       }
       else {
-         if (global_tbonetest & 010) fail("There are no columns of 4 here.");
+         if (global_tbonetest & 010) lateral = true;
       }
 
       if (linesp == 3)
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-      // Look for "parallelogram split phantom C/L/W"
+      // Look for "parallelogram split phantom C/L/W", in all forms,
       // or "parallelogram stagger/big block/O/butterfly".
 
       switch (next_parseptr->concept->arg3) {
-      case MPKIND__SPLIT:
-         map_code = MAPCODE(s2x4,2,mk,1);
-         break;
       case MPKIND__STAG:
-         if (mk == MPKIND__OFFS_L_HALF)
+         if (left_offset && mk4 == 2)
             map_code = spcmap_lh_stag;
-         else if (mk == MPKIND__OFFS_R_HALF)
+         else if (!left_offset && mk4 == 2)
             map_code = spcmap_rh_stag;
-         else if (mk == MPKIND__OFFS_L_ONEQ)
+         else if (left_offset && mk4 == 1)
             map_code = spcmap_lh_stag_1_4;
-         else if (mk == MPKIND__OFFS_R_ONEQ)
+         else if (!left_offset && mk4 == 1)
             map_code = spcmap_rh_stag_1_4;
          break;
       case MPKIND__O_SPOTS:
       case MPKIND__X_SPOTS:
-         if (mk == MPKIND__OFFS_L_HALF)
+         if (left_offset && mk4 == 2)
             map_code = spcmap_lh_ox;
-         else if (mk == MPKIND__OFFS_R_HALF)
+         else if (!left_offset && mk4 == 2)
             map_code = spcmap_rh_ox;
+         break;
+      case MPKIND__SPLIT:
+         mk = par_split_table[(mk4-1)*4 + (left_offset ? 2 : 0) + (lateral ? 1: 0)];
+         map_code = MAPCODE(s2x4,2,mk,1);
+         break;
+      case MPKIND__INTLK:
+         mk = par_intlk_table[(mk4-1)*4 + (left_offset ? 2 : 0) + (lateral ? 1: 0)];
+         map_code = MAPCODE(s2x4,2,mk,1);
+         break;
+      case MPKIND__CONCPHAN:
+         mk = par_concphan_table[(mk4-1)*4 + (left_offset ? 2 : 0) + (lateral ? 1: 0)];
+         map_code = MAPCODE(s2x4,2,mk,1);
          break;
       }
 
       phancontrol = (phantest_kind) next_parseptr->concept->arg1;
       ss->cmd.parseptr = next_parseptr->next;
    }
-   else
-      map_code = MAPCODE(s2x4,1,mk,1);   // Plain parallelogram.
+   else {
+      // Plain parallelogram.
+      mk = par_plain_table[(mk4-1)*4 + (left_offset ? 2 : 0)];
+      map_code = MAPCODE(s2x4,1,mk,1);   
+   }
 
    if (map_code == ~0U)
       fail("Can't do this concept with parallelogram.");
@@ -1445,6 +1493,8 @@ static void do_concept_parallelogram(
    whuzzisthingy zis;
    zis.k = kk;
    zis.rot = 0;
+
+   mk = left_offset ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF ;
 
    ss->clear_all_overcasts();
    divided_setup_move(ss, MAPCODE(s2x4,1,mk,1), phancontrol, true, result, 0, &zis);
@@ -4859,7 +4909,7 @@ static void do_concept_checkpoint(
 {
    int reverseness = parseptr->concept->arg1;
 
-   // Don't all this fancy stuff for "checkpoint it by it".
+   // Don't do all this fancy stuff for "checkpoint it by it".
    if (reverseness != 2) {
       if (process_brute_force_mxn(ss, parseptr, do_concept_checkpoint, result)) return;
 

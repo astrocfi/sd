@@ -4283,7 +4283,7 @@ static void do_inheritance(setup_command *cmd,
    hhhh |= INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_QUARTER;
    fix_gensting_weirdness(cmd, hhhh);
 
-   temp_concepts &= (~cmd->cmd_final_flags.herit) | hhhh | extra_heritmask_bits;
+   temp_concepts &= hhhh | extra_heritmask_bits;
 
    // Now turn on any "force" flags.  These are indicated by "modifiersh" on
    // and "callflagsh" off.

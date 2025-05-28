@@ -1374,13 +1374,14 @@ use Gcc.
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?
 
 @example
-  computer:             HP/Compaq Pavillion 15z-ab100
-  OS:                   Windows XP 10                commercial
+  computer:             HP FHD 15-dy2000
+  OS:                   Windows 11                   commercial
   editor:               GNU Emacs 21.1.1             free
-  development system:   MingW 4.2.1                  free
-  compiler/linker:      GCC 3.4.5                    free
-  compress utilities:   Winzip 8.1                   commercial
-                        Winzip Self Extractor 2.2    commercial
+  development systems   Visual Studio 2019           free with Windows
+     and                Mingw64                      free
+   (program is tested with both compilers)
+  compress utilities:   Info-Zip and/or 7-Zip                        free
+  compress self extractor  Iexpress                  free with Windows
                         gzip 1.2.4                   free
   document preprocessor:texinfo 1999-03-26.17        free
   Postscript formatter: MiKTeX 2.9                   free

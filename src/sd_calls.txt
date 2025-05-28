@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.71"
+version "39.72"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -22416,7 +22416,7 @@ call "single circle @eright@f @b" mainstream
 call "circle to a line" mainstream
             reverse_means_mirror
    setup 4x2 2x4 rotate
-      array [CR5W 0 CM3E 0 0 CM2E 0 CCAL4W]
+      array [CM5W 0 CM3E 0 0 CM2E 0 CCAL4W]
 
 call "expand the column" c3a
    setup 4x2 2x4 rotate
@@ -28985,16 +28985,16 @@ call "@1coordinate" plus
 call "@T coordinate" c2
             magic_is_inherited yoyo_is_inherited gen_sting_is_inherited
             twisted_is_inherited visible_fractions rectify_is_inherited
-   seq circulate [mandatory_anycall inherit_twisted inherit_rectify]
+   seq circulate [mandatory_anycall inherit_magic inherit_twisted inherit_rectify]
    seq circ_for_coord [force_half inherit_twisted inherit_magic inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3 [roll_transparent]
 
 call "@N coordinate" c2
-            yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited
+            magic_is_inherited yoyo_is_inherited gen_sting_is_inherited twisted_is_inherited
             visible_fractions rectify_is_inherited
-   seq circnullcall [or_anycall inherit_twisted]
-   seq circ_for_coord [force_half inherit_twisted inherit_rectify]
+   seq circnullcall [or_anycall inherit_magic inherit_twisted]
+   seq circ_for_coord [force_half inherit_magic inherit_twisted inherit_rectify]
    seq tripletrade_for_coord [inherit_yoyo inherit_gensting]
    seq coord3 [roll_transparent]
 

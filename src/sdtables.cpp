@@ -2433,30 +2433,140 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 2, 3, 23, 22, 21, 20,       11, 10, 9, 8, 12, 13, 14, 15},
     s2x4,2,MPKIND__OFFS_R_HALF,0, warn__none,  s3x8,      0x000, 0},
 
-   {{16, 17, 18, 19, 10, 11, 12, 13,   0, 1, 2, 3, 6, 7, 8, 9},
-    s2x4,2,MPKIND__OFFS_L_ONEQ,1, warn__none,  s4x5,      0x000, 0},
-   {{15, 16, 17, 18, 11, 12, 13, 14,   1, 2, 3, 4, 5, 6, 7, 8},
-    s2x4,2,MPKIND__OFFS_R_ONEQ,1, warn__none,  s4x5,      0x000, 0},
-
    {{17, 16, 14, 15, 10, 11, 13, 12,   0, 1, 3, 2, 7, 6, 4, 5},
     s1x8,2,MPKIND__OFFS_L_ONEQ,1, warn__none,  s2x10,     0x000, 0},
    {{19, 18, 16, 17, 12, 13, 15, 14,   2, 3, 5, 4, 9, 8, 6, 7},
     s1x8,2,MPKIND__OFFS_R_ONEQ,1, warn__none,  s2x10,     0x000, 0},
-
-   {{10, 9, 8, 7, -1, -1, -1, -1,      -1, -1, -1, -1, 3, 2, 1, 0},
-    s2x4,2,MPKIND__OFFS_L_THRQ,1, warn__none,  s2x7,      0x000, 0},
-   {{13, 12, 11, 10, -1, -1, -1, -1,   -1, -1, -1, -1, 6, 5, 4, 3},
-    s2x4,2,MPKIND__OFFS_R_THRQ,1, warn__none,  s2x7,      0x000, 0},
 
    {{18, 17, 15, 16, -1, 12, 14, 13,   -1, 0, 2, 1, 6, 5, 3, 4},
     s1x8,2,MPKIND__OFFS_L_THRQ,1, warn__none,  s2x12,     0x000, 0},
    {{-1, 23, 21, 22, 17, 18, 20, 19,   5, 6, 8, 7, -1, 11, 9, 10},
     s1x8,2,MPKIND__OFFS_R_THRQ,1, warn__none,  s2x12,     0x000, 0},
 
+
+
+
+
+
+
+
+
+
+
+   // Split maps -- 1.
+
+   {{16, 17, 18, 19, 10, 11, 12, 13,   0, 1, 2, 3, 6, 7, 8, 9},
+    s2x4,2,MPKIND__OFFS_L_ONEQ,1, warn__none,  s4x5,      0x000, 0},
+   {{15, 16, 17, 18, 11, 12, 13, 14,   1, 2, 3, 4, 5, 6, 7, 8},
+    s2x4,2,MPKIND__OFFS_R_ONEQ,1, warn__none,  s4x5,      0x000, 0},
+
+   {{1, 8, 17, 12, 13, 16, 9, 0,       3, 6, 19, 10, 11, 18, 7, 2},
+    s2x4,2,MPKIND__OFFS_L_ONEQ_LAT,1, warn__none,  s4x5,      0x5, 0},
+   {{2, 7, 16, 13, 14, 15, 8, 1,       4, 5, 18, 11, 12, 17, 6, 3},
+    s2x4,2,MPKIND__OFFS_R_ONEQ_LAT,1, warn__none,  s4x5,      0x5, 0},
+
+   // Split maps -- 2.
+
    {{20, 21, 22, 23, 12, 13, 14, 15,   0, 1, 2, 3, 8, 9, 10, 11},
     s2x4,2,MPKIND__OFFS_L_HALF,1, warn__none,  s4x6,      0x000, 0},
    {{18, 19, 20, 21, 14, 15, 16, 17,   2, 3, 4, 5, 6, 7, 8, 9},
     s2x4,2,MPKIND__OFFS_R_HALF,1, warn__none,  s4x6,      0x000, 0},
+
+   {{1, 10, 21, 14, 15, 20, 11, 0,     3, 8, 23, 12, 13, 22, 9, 2},
+    s2x4,2,MPKIND__OFFS_L_HALF_LAT,1, warn__none,  s4x6,      0x5, 0},
+   {{3, 8, 19, 16, 17, 18, 9, 2,       5, 6, 21, 14, 15, 20, 7, 4},
+    s2x4,2,MPKIND__OFFS_R_HALF_LAT,1, warn__none,  s4x6,      0x5, 0},
+
+   // Split maps -- 3.
+
+   {{10, 9, 8, 7, -1, -1, -1, -1,      -1, -1, -1, -1, 3, 2, 1, 0},
+    s2x4,2,MPKIND__OFFS_L_THRQ,1, warn__none,  s2x7,      0x000, 0},
+   {{13, 12, 11, 10, -1, -1, -1, -1,   -1, -1, -1, -1, 6, 5, 4, 3},
+    s2x4,2,MPKIND__OFFS_R_THRQ,1, warn__none,  s2x7,      0x000, 0},
+
+   // Split maps -- 4.
+
+   {{11, 10, 9, 8, -1, -1, -1, -1,      -1, -1, -1, -1, 3, 2, 1, 0},
+    s2x4,2,MPKIND__OFFS_L_FULL,1, warn__none,  s2x8,      0x000, 0},
+   {{15, 14, 13, 12, -1, -1, -1, -1,   -1, -1, -1, -1, 7, 6, 5, 4},
+    s2x4,2,MPKIND__OFFS_R_FULL,1, warn__none,  s2x8,      0x000, 0},
+
+   // Interlocked maps -- 1.
+
+   {{9, 8, 7, 6, 10, 11, 12, 13, 0, 1, 2, 3, 19, 18, 17, 16},
+    s2x4,2,MPKIND__OFFS_L_ONEQ_INTLK,1, warn__none,  s4x5,      0x000, 0},
+   {{8, 7, 6, 5, 11, 12, 13, 14, 1, 2, 3, 4, 18, 17, 16, 15},
+    s2x4,2,MPKIND__OFFS_R_ONEQ_INTLK,1, warn__none,  s4x5,      0x000, 0},
+
+   {{2, 7, 18, 11, 13, 16, 9, 0, 3, 6, 19, 10, 12, 17, 8, 1},
+    s2x4,2,MPKIND__OFFS_L_ONEQ_LAT_INTLK,1, warn__none,  s4x5,      0x5, 0},
+   {{3, 6, 17, 12, 14, 15, 8, 1, 4, 5, 18, 11, 13, 16, 7, 2},
+    s2x4,2,MPKIND__OFFS_R_ONEQ_LAT_INTLK,1, warn__none,  s4x5,      0x5, 0},
+
+   // Interlocked maps -- 2.
+
+   {{11, 10, 9, 8, 12, 13, 14, 15, 0, 1, 2, 3, 23, 22, 21, 20},
+    s2x4,2,MPKIND__OFFS_L_HALF_INTLK,1, warn__none,  s4x6,     0x000, 0}, 
+   {{9, 8, 7, 6, 14, 15, 16, 17, 2, 3, 4, 5, 21, 20, 19, 18},
+    s2x4,2,MPKIND__OFFS_R_HALF_INTLK,1, warn__none,  s4x6,     0x000, 0}, 
+
+   {{2, 9, 22, 13, 15, 20, 11, 0,     3, 8, 23, 12, 14, 21, 10, 1},
+    s2x4,2,MPKIND__OFFS_L_HALF_LAT_INTLK,1, warn__none,  s4x6,      0x5, 0},
+   {{4, 7, 20, 15, 17, 18, 9, 2,       5, 6, 21, 14, 16, 19, 8, 3},
+    s2x4,2,MPKIND__OFFS_R_HALF_LAT_INTLK,1, warn__none,  s4x6,      0x5, 0},
+
+   // Interlocked maps -- 3 (same as split).
+
+   {{10, 9, 8, 7, -1, -1, -1, -1,      -1, -1, -1, -1, 3, 2, 1, 0},
+    s2x4,2,MPKIND__OFFS_L_THRQ_INTLK,1, warn__none,  s2x7,      0x000, 0},
+   {{13, 12, 11, 10, -1, -1, -1, -1,   -1, -1, -1, -1, 6, 5, 4, 3},
+    s2x4,2,MPKIND__OFFS_R_THRQ_INTLK,1, warn__none,  s2x7,      0x000, 0},
+
+   // Interlocked maps -- 4 (same as split).
+
+   {{11, 10, 9, 8, -1, -1, -1, -1,      -1, -1, -1, -1, 3, 2, 1, 0},
+    s2x4,2,MPKIND__OFFS_L_FULL_INTLK,1, warn__none,  s2x8,      0x000, 0},
+   {{15, 14, 13, 12, -1, -1, -1, -1,   -1, -1, -1, -1, 7, 6, 5, 4},
+    s2x4,2,MPKIND__OFFS_R_FULL_INTLK,1, warn__none,  s2x8,      0x000, 0},
+
+   // Concphan maps -- 1.
+
+   {{0, 1, 2, 3, 10, 11, 12, 13, 9, 8, 7, 6, 19, 18, 17, 16},
+    s2x4,2,MPKIND__OFFS_L_ONEQ_CONCPHAN,1, warn__none,  s4x5,      0x000, 0},
+   {{1, 2, 3, 4, 11, 12, 13, 14, 8, 7, 6, 5, 18, 17, 16, 15},
+    s2x4,2,MPKIND__OFFS_R_ONEQ_CONCPHAN,1, warn__none,  s4x5,      0x000, 0},
+
+   {{3, 6, 19, 10, 13, 16, 9, 0, 2, 7, 18, 11, 12, 17, 8, 1},
+    s2x4,2,MPKIND__OFFS_L_ONEQ_LAT_CONCPHAN,1, warn__none,  s4x5,      0x5, 0},
+   {{4, 5, 18, 11, 14, 15, 8, 1, 3, 6, 17, 12, 13, 16, 7, 2},
+    s2x4,2,MPKIND__OFFS_R_ONEQ_LAT_CONCPHAN,1, warn__none,  s4x5,      0x5, 0},
+
+   // Concphan maps -- 2.
+
+   {{0, 1, 2, 3, 12, 13, 14, 15, 11, 10, 9, 8, 23, 22, 21, 20},
+    s2x4,2,MPKIND__OFFS_L_HALF_CONCPHAN,1, warn__none,  s4x6,     0x000, 0}, 
+   {{2, 3, 4, 5, 14, 15, 16, 17, 9, 8, 7, 6, 21, 20, 19, 18},
+    s2x4,2,MPKIND__OFFS_R_HALF_CONCPHAN,1, warn__none,  s4x6,     0x000, 0}, 
+
+   {{3, 8, 23, 12, 15, 20, 11, 0, 2, 9, 22, 13, 14, 21, 10, 1},
+    s2x4,2,MPKIND__OFFS_L_HALF_LAT_CONCPHAN,1, warn__none,  s4x6,      0x5, 0},
+   {{5, 6, 21, 14, 17, 18, 9, 2, 4, 7, 20, 15, 16, 19, 8, 3},
+    s2x4,2,MPKIND__OFFS_R_HALF_LAT_CONCPHAN,1, warn__none,  s4x6,      0x5, 0},
+
+   // Concphan maps -- 3.
+
+   {{0, 1, 2, 3, -1, -1, -1, -1,      -1, -1, -1, -1, 7, 8, 9, 10},
+    s2x4,2,MPKIND__OFFS_L_THRQ_CONCPHAN,1, warn__none,  s2x7,      0x000, 0},
+   {{3, 4, 5, 6, -1, -1, -1, -1,   -1, -1, -1, -1, 10, 11, 12, 13},
+    s2x4,2,MPKIND__OFFS_R_THRQ_CONCPHAN,1, warn__none,  s2x7,      0x000, 0},
+
+   // Concphan maps -- 4.
+
+   {{0, 1, 2, 3, -1, -1, -1, -1,      -1, -1, -1, -1, 8, 9, 10, 11},
+    s2x4,2,MPKIND__OFFS_L_FULL_CONCPHAN,1, warn__none,  s2x8,      0x000, 0},
+   {{4, 5, 6, 7, -1, -1, -1, -1,   -1, -1, -1, -1, 12, 13, 14, 15},
+    s2x4,2,MPKIND__OFFS_R_FULL_CONCPHAN,1, warn__none,  s2x8,      0x000, 0},
+
 
    {{2, -1, -1, -1, -1, 0, 1, 3,       -1, 4, 5, 7, 6, -1, -1, -1},
     s_qtag,2,MPKIND__OFFS_L_HALF,1, warn__none,  s_ptpd,  0x40005, 0},
@@ -4793,6 +4903,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              sdmd,     s2x2,     0, 0, 1, 1,  0x87A, schema_rev_checkpoint},
    {swhrglass,      schema_checkpoint, {7, 4, 2, 9,    0, 1, 5, 6},
              sdmd,     s2x2,     0, 0, 1, 1,  0xAFB, schema_rev_checkpoint},
+   {s1x6,           schema_checkpoint, {0, 2, 3, 5,    1, 4},
+             s1x4,     s1x2,     0, 0, 1, 1,  0x87A, schema_rev_checkpoint},
    {s1x8,           schema_checkpoint, {0, 2, 4, 6,    1, 3, 5, 7},
              s1x4,     s1x4,     0, 0, 1, 1,  0x87A, schema_rev_checkpoint},
    {s_dhrglass,     schema_checkpoint, {0, 3, 1, 4, 7, 5,    6, 2},
