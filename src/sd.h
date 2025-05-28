@@ -231,8 +231,8 @@ typedef struct {
              20 - far box
              10 - center 4
               4 - outside pairs
-              2 -
-              1 -
+              2 - facing the caller
+              1 - facing the back
 */
 
 #define ID2_HEADLINE 020000000000UL
@@ -260,7 +260,9 @@ typedef struct {
 #define ID2_FARLINE           040UL
 #define ID2_FARBOX            020UL
 #define ID2_CTR4              010UL
-#define ID2_OUTRPAIRS         004UL
+#define ID2_OUTRPAIRS          04UL
+#define ID2_FACEFRONT          02UL
+#define ID2_FACEBACK           01UL
 
 /* These are the bits that get filled in by "update_id_bits". */
 #define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE| \
@@ -270,7 +272,7 @@ ID2_CTR1X6|ID2_NCTR1X6|ID2_CTR4|ID2_OUTRPAIRS)
 
 
 /* These are the really global position bits.  They get filled in only at the top level. */
-#define GLOB_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|ID2_HEADLINE|ID2_SIDELINE)
+#define GLOB_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE)
 
 
 
@@ -670,17 +672,17 @@ typedef struct {
 } map_thing;
 
 typedef struct {
-   veryshort maps[20];
-   short inlimit;
-   short outlimit;
-   setup_kind bigsetup;
-   setup_kind insetup;
-   setup_kind outsetup;
-   int bigsize;
-   int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
-   int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
-   int mapelong;
-   int center_arity;
+   Const veryshort maps[20];
+   Const short inlimit;
+   Const short outlimit;
+   Const setup_kind bigsetup;
+   Const setup_kind insetup;
+   Const setup_kind outsetup;
+   Const int bigsize;
+   Const int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
+   Const int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
+   Const int mapelong;
+   Const int center_arity;
 } cm_thing;
 
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
@@ -874,6 +876,8 @@ typedef enum {
    selector_farcolumn,
    selector_nearbox,
    selector_farbox,
+   selector_facingfront,
+   selector_facingback,
    selector_all,
    selector_none
 } selector_kind;
@@ -1066,14 +1070,13 @@ typedef struct {
    int concsetup_outer_elongation;
 } setup;
 
-typedef long_boolean (*predicate_ptr)(
-   setup *real_people,
-   int real_index,
-   int real_direction,
-   int northified_index);
+typedef struct {
+   long_boolean (*predfunc) (setup *, int, int, int, short *);
+   short *extra_stuff;
+} predicate_descriptor;
 
 typedef struct predptr_pair_struct {
-   predicate_ptr pred;
+   predicate_descriptor *pred;
    struct predptr_pair_struct *next;
    /* Dynamically allocated to whatever size is required. */
    unsigned short arr[4];
@@ -1394,12 +1397,12 @@ typedef struct {
 } map_hunk;
 
 
-typedef struct {
-   uint32 mask_normal;
-   uint32 mask_6_2;
-   uint32 mask_2_6;
-   uint32 mask_ctr_dmd;
-   cm_thing *hunk[NUM_analyzer_KINDS];
+typedef Const struct {
+   Const uint32 mask_normal;
+   Const uint32 mask_6_2;
+   Const uint32 mask_2_6;
+   Const uint32 mask_ctr_dmd;
+   Const cm_thing *hunk[NUM_analyzer_KINDS];
 } cm_hunk;
 
 
@@ -1444,25 +1447,33 @@ typedef struct {
 
 #define CONCPROP__SECOND_CALL      0x00000001UL
 #define CONCPROP__USE_SELECTOR     0x00000002UL
-#define CONCPROP__NEED_4X4         0x00000004UL
-#define CONCPROP__NEED_2X8         0x00000008UL
-#define CONCPROP__NEED_2X6         0x00000010UL
-#define CONCPROP__NEED_4DMD        0x00000020UL
-#define CONCPROP__NEED_BLOB        0x00000040UL
-#define CONCPROP__NEED_4X6         0x00000080UL
-#define CONCPROP__NEED_3X8         0x00000100UL
-#define CONCPROP__NEED_3DMD        0x00000200UL
-#define CONCPROP__NEED_1X12        0x00000400UL
-#define CONCPROP__NEED_3X4         0x00000800UL
-#define CONCPROP__NEED_1X16        0x00001000UL
-#define CONCPROP__NEED_4X4_1X16    0x00002000UL
-#define CONCPROP__NEED_TRIPLE_1X4  0x00004000UL
-#define CONCPROP__NEED_CTR_1X4     0x00008000UL
-#define CONCPROP__NEED_END_1X4     0x00010000UL
-#define CONCPROP__NEED_CTR_2X2     0x00020000UL
-#define CONCPROP__NEED_END_2X2     0x00040000UL
-#define CONCPROP__SET_PHANTOMS     0x00080000UL
-#define CONCPROP__NO_STEP          0x00100000UL
+#define CONCPROP__SET_PHANTOMS     0x00000004UL
+#define CONCPROP__NO_STEP          0x00000008UL
+
+/* A bit mask for the "NEEDK" bits. */
+#define CONCPROP__NEED_MASK        0x000001F0UL
+
+#define CONCPROP__NEEDK_4X4        0x00000010UL
+#define CONCPROP__NEEDK_2X8        0x00000020UL
+#define CONCPROP__NEEDK_2X6        0x00000030UL
+#define CONCPROP__NEEDK_4DMD       0x00000040UL
+#define CONCPROP__NEEDK_BLOB       0x00000050UL
+#define CONCPROP__NEEDK_4X6        0x00000060UL
+#define CONCPROP__NEEDK_3X8        0x00000070UL
+#define CONCPROP__NEEDK_3DMD       0x00000080UL
+#define CONCPROP__NEEDK_1X12       0x00000090UL
+#define CONCPROP__NEEDK_3X4        0x000000A0UL
+#define CONCPROP__NEEDK_1X16       0x000000B0UL
+#define CONCPROP__NEEDK_4X4_1X16   0x000000C0UL
+#define CONCPROP__NEEDK_TWINDMD    0x000000D0UL
+#define CONCPROP__NEEDK_TWINQTAG   0x000000E0UL
+
+#define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL
+#define CONCPROP__NEED_TRIPLE_1X4  0x00010000UL
+#define CONCPROP__NEED_CTR_1X4     0x00020000UL
+#define CONCPROP__NEED_END_1X4     0x00040000UL
+#define CONCPROP__NEED_CTR_2X2     0x00080000UL
+#define CONCPROP__NEED_END_2X2     0x00100000UL
 #define CONCPROP__GET_MASK         0x00200000UL
 #define CONCPROP__STANDARD         0x00400000UL
 #define CONCPROP__USE_NUMBER       0x00800000UL
@@ -1472,7 +1483,6 @@ typedef struct {
 #define CONCPROP__SHOW_SPLIT       0x08000000UL
 #define CONCPROP__PERMIT_MYSTIC    0x10000000UL
 #define CONCPROP__PERMIT_REVERSE   0x20000000UL
-#define CONCPROP__NEED_ARG2_MATRIX 0x40000000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1608,19 +1618,19 @@ typedef struct {
    int full_list_size;
 } nice_setup_thing;
 
-typedef struct {
-   setup_kind result_kind;
-   int xfactor;
-   veryshort xca[24];
-   veryshort yca[24];
-   veryshort diagram[64];
+typedef Const struct {
+   Const setup_kind result_kind;
+   Const int xfactor;
+   Const veryshort xca[24];
+   Const veryshort yca[24];
+   Const veryshort diagram[64];
 } coordrec;
 
 typedef uint32 id_bit_table[4];
 
-typedef struct {
+typedef Const struct {
    /* This is the size of the setup MINUS ONE. */
-   int setup_limits;
+   Const int setup_limits;
 
    /* These "coordrec" items have the fudged coordinates that are used for doing
       press/truck calls.  For some setups, the coordinates of some people are
@@ -1647,7 +1657,7 @@ typedef struct {
 
    /* These show the beginning setups that we look for in a by-array call
       definition in order to do a call in this setup. */
-   begin_kind keytab[2];
+   Const begin_kind keytab[2];
 
    /* In the bounding boxes, we do not fill in the "length" of a diamond, nor
       the "height" of a qtag.  Everyone knows that the number must be 3, but it
@@ -1658,11 +1668,11 @@ typedef struct {
       tag setup is elongated, even though everyone knows that it is 4 wide and 3
       deep, and that it is generally recognized, by the mathematically erudite,
       that 4 is greater than 3. */
-   short int bounding_box[2];
+   Const short int bounding_box[2];
 
    /* This is true if the setup has 4-way symmetry.  Such setups will always be
       canonicalized so that their rotation field will be zero. */
-   long_boolean four_way_symmetry;
+   Const long_boolean four_way_symmetry;
 
    /* This is the bit table for filling in the "ID2" bits. */
    id_bit_table *id_bit_table_ptr;
@@ -1672,11 +1682,11 @@ typedef struct {
 } setup_attr;
 
 typedef struct zilch {
-   setup_kind outerk;
-   setup_kind innerk;
-   calldef_schema conc_type;
-   int center_arity;
-   cm_thing *value[4];
+   Const setup_kind outerk;
+   Const setup_kind innerk;
+   Const calldef_schema conc_type;
+   Const int center_arity;
+   Const cm_thing *value[4];
    struct zilch *next;
 } conc_initializer;
 
@@ -1917,11 +1927,7 @@ extern char *database_filename;                                     /* in SDSI *
 extern long_boolean selector_used;                                  /* in SDPREDS */
 extern long_boolean number_used;                                    /* in SDPREDS */
 extern long_boolean mandatory_call_used;                            /* in SDPREDS */
-extern long_boolean (*pred_table[])(                                /* in SDPREDS */
-   setup *real_people,
-   int real_index,
-   int real_direction,
-   int northified_index);
+extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 
 /* In SDMAIN */
 
@@ -2009,7 +2015,7 @@ extern uint32 uims_get_number_fields(int nnumbers);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_startup_command(void);
-extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p);
+extern long_boolean uims_get_call_command(uims_reply *reply_p);
 extern uims_reply uims_get_resolve_command(void);
 extern void uims_begin_search(command_kind goal);
 extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state);

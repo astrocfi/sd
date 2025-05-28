@@ -1451,10 +1451,10 @@ unselect_near_unselect
       of selectness and non-selectness.  See the descriptions of "select"
       and "select_near_select" above.
 
-once_rem_from_select
-      applies to 1x4 or 1x8 only.  Returns TRUE if the person once-removed
-      from the person under test is selected.  It does not examine the
-      selectedness of the person under test.  Returns FALSE otherwise.
+select_once_rem_from_select
+      applies to 1x4 or 1x8 only.  Returns TRUE if the test person and the
+      person once-removed from the test person are selected.
+      Returns FALSE otherwise.
       See the descriptions of "select" and "select_near_select" above.
 
 conc_from_select
@@ -2055,6 +2055,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    wave_only,                    /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
    1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center */
+   couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way */
    4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way */
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */

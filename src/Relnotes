@@ -1,7 +1,15 @@
-		   RELEASE NOTES FOR SD VERSION 31.65
-		 Database version = 31.64 format = 74.
+		   RELEASE NOTES FOR SD VERSION 31.66
+		 Database version = 31.66 format = 75.
                 X11 UI version 1.16, SDTTY UI version 1.7.
 
+
+****** Changes as of version 31.66 ******
+
+New designators: "those facing the caller" and "those facing away
+from the caller".
+
+Fixed an error that could, on some operating systems, cause the
+program to crash.
 
 ****** Changes as of version 31.64 ******
 

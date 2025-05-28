@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.65"
+#define VERSION_STRING "31.66"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -917,7 +917,7 @@ extern long_boolean query_for_call(void)
 
       check_menu:
 
-      if (uims_get_call_command(&parse_state.call_list_to_use, &local_reply)) goto recurse_entry;
+      if (uims_get_call_command(&local_reply)) goto recurse_entry;
 
       if (local_reply == ui_command_select) {
          if (uims_menu_index == (int) command_simple_mods) {

@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: April 7, 1996
+@set Time-stamp: May 2, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.65
+@set sd-version 31.66
 @set full-manual
 @c %**end of header
 @iftex
@@ -1075,8 +1075,8 @@ an easier way---you can type what you want directly.  That is, just type
 @code{quarter left} or @code{square thru 3}.  If you want to see the choices,
 type @code{quarter <DIRECTION>} or whatever, and then type a question mark.
 
-@table @code
-@item Directions
+
+@subsubheading Directions
 Calls that take a direction have the keyword @code{<DIRECTION>} in them in the
 menus, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTION>}.
 
@@ -1091,7 +1091,7 @@ for example, @code{pass in}.
 The menu lists all possible directions, including some that may not be possible
 in the given context.
 
-@item Numbers
+@subsubheading Numbers
 Calls that take a number have the keyword @code{<N>}, @code{<N/4>}, or @code{<Nth>}
 in them, like @code{eight chain <N>}, @code{invert the column <N/4>}, or
 @code{square thru, but on the <Nth> hand <ANYTHING>}.
@@ -1128,7 +1128,7 @@ you can type either @code{1/4 thru} or @code{quarter thru}.  No matter how you
 enter one of these calls, it will always be printed out in words, as in
 @code{three quarter thru} or @code{half chain and circulate in}.
 
-@item Person designators
+@subsubheading Person designators
 These work like the others in a straightforward way.  The calls appear in the menu
 with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.  In @code{sd},
 you click on that and then make a selection from a popup menu.  In @code{sdtty},
@@ -1152,7 +1152,7 @@ such as @code{boys} or @code{girls} can identify the same people unambiguously.
 If you want to designate the 4 people in the center of the set, use @code{center 4}.
 @code{Outer pairs} specifies the others.
 
-@item Tagging Calls
+@subsubheading Tagging Calls
 Calls that use tagging calls have the keyword @code{<ATC>} (for Any Tagging Call) in
 them, as in @code{<ATC> your neighbor} or @code{<ATC> chain thru and scatter reaction}.
 Specify these in the usual way.  In @code{sdtty} you can type the @code{<ATC>} directly
@@ -1163,7 +1163,7 @@ At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
 will be presented with another popup.  In @code{sdtty}, you can type in the
 entire call directly, as in @code{revert cross flip chain thru reactivate}.
 
-@item <ANYTHING> Calls
+@subsubheading <ANYTHING> Calls
 Calls that use the ``<ANYTHING>'' mechanism, such as @code{in roll motivate},
 have the keyword @code{<ANYTHING>} in them, as in @code{<ANYTHING> motivate}.
 In @code{sdtty}, you can type in the entire call directly.  In @code{sd},
@@ -1178,7 +1178,7 @@ be asked for a substitute call.  You can enter anything at this point,
 such as @code{swing the fractions}.  The result will appear in the transcript
 with brackets, as in @code{[swing the fractions] motivate}.
 
-@item Subcalls
+@subsubheading Subcalls
 Mandatory subcalls appear in the menu as the keyword @code{<ANYTHING>}, as
 in @code{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
 nice as for the keywords discussed previously.  It is not possible to type in the call
@@ -1200,7 +1200,7 @@ concepts and modifiers.  Whatever you enter will appear in brackets, as in
 These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
 are just one of many types of modifications.  @xref{Call Modifications}.
 
-@item Modifiers such as cross, left, split, grand, single, magic, and interlocked
+@subsubheading Modifiers such as cross, left, split, grand, single, magic, and interlocked
 As discussed above, the program considers these to be actual concepts,
 even though they aren't really.
 
@@ -1233,7 +1233,6 @@ or modifier.  Some calls happen to have the word @code{cross} as part of
 their names.  Examples are:  @code{cross and wheel}, @code{cross and turn},
 @code{cross your neighbor}, and @code{crossfire}.  Such calls appear in the
 menu just as they are spelled.
-@end table
 
 @node Call Menus, Scrolling, Call Variations, Entering Calls
 @subsection Call Menus
@@ -1939,8 +1938,10 @@ The keys for @samp{<anything>} and
 @section Sdtty on the PC
 
 @code{Sdtty} uses the @code{DPMI} memory manager.  If necessary, it uses its own
-copy of @code{DPMI}.  It can run under either standalone DOS or the
-@samp{MS-DOS Prompt} under Windows.
+copy of @code{DPMI}.  It can be started under either standalone DOS or the
+@samp{MS-DOS Prompt} under Windows.  It can also be started directly as a Windows
+application, even though it does not use the mouse while running.
+@xref{Making Sdtty Start Under Windows}.
 
 You need a 386 or higher processor and 2Mb of memory.
 A hard disk is recommended.  There
@@ -2031,7 +2032,7 @@ the calls that designate certain people.
 
 Callers often use phrases such as @samp{finish @dots{}} or @samp{like a @dots{}}
 in imprecise ways.  Sd uses a very precise definition
-for these phrases, and we urge you to use them only in this way.
+for these phrases.  @xref{Miscellaneous Concepts}.
 
 @node Using Off-Level Concepts, Call Notes, Linguistic Idiosyncrasies, Top
 @chapter Using Off-Level Concepts
@@ -3031,9 +3032,8 @@ saying @dfn{U turn back}, or @code{finish mix} or @code{like a mix} as ways
 of saying @dfn{centers trade}, would have to be considered rather peculiar.
 You must exercise your judgement when using these concepts.
 
-We believe that these are the technically correct meanings of these phrases,
-and are consistent with common usage when that common usage is correctly
-applied.  For example,
+We believe that this is consistent with common usage when that common usage
+is correctly applied.  For example,
 @example
    cast off 3/4
    LIKE A shazam
@@ -3663,24 +3663,68 @@ This is a recognized C3A concept.
 @node 12 Matrix and 16 Matrix, , Designating Certain People, Concept Notes
 @section 12 Matrix and 16 Matrix
 
-This discussion will be in terms of 12 matrices.  16 matrices are analogous.
+When the setup in which a call is to be performed is larger than 8 people
+due to the presence of phantoms, some modifier is usually required in order
+to acknowledge the existence of the phantoms' spots.  The rules governing
+the use of such modifiers are not very precisely defined, but Sd attempts to
+follow accepted usage.
 
-Definition: a @dfn{large setup} is a setup of more than 8 people.
-A @dfn{large call} is a call executed in such a setup.  There are very few
-large calls that don't have some kind of modifier like @samp{12 MATRIX}
-or @samp{3x3} in their name.
+These modifiers are @emph{not} required if some concept has been applied
+that takes a setup larger than 8 people and forms virtual setups
+of 8 or fewer people.  Examples of such concepts are @samp{triple boxes},
+@samp{parallelogram}, and @samp{split phantom waves}.  They are also not
+required for certain calls that can be done in a setup of any size, such
+as @samp{press}, @samp{truck}, and @samp{counter rotate}.
 
-General principle:  when in a large setup, so that phantoms are present,
-you must say something to acknowledge the existence of the phantoms, that
-is, to say that the phantoms' spots count.  This is necessary whether doing
-a large call, or splitting the large setup into smaller ones for doing small
-calls.  So, for example, if you are in a parallelogram, you can't just say
-the name of a large call.  You must say @samp{12 MATRIX} or @samp{2X6 MATRIX}.
+They @emph{are} required whenever a call that is not one of the special ones
+needs to be extended to more than 8 people, or a setup of more than 8 people
+needs to be split in order to execute a call in smaller setups.
 
-The explicit matrix concepts @samp{MxN MATRIX}, e.g., @samp{2X6 MATRIX}, legitimize
-the large setup, saying where the phantoms are, and making it possible to
-call large calls, or, if the call has no large version, to split the setup
-and do multiple instances of smaller versions.
+As an example of the former case, consider offset waves, that is, a 3x4 matrix
+with the outer waves not fully occupied.  If we use a concept like @samp{offset
+waves}, @samp{triple waves}, or @samp{triple waves working forward}, we can use
+a call directly.  However, if we want to call a 12-person call like
+@samp{circulate} or @samp{motivate}, we need to legitimize the phantom spots.
+By saying @code{12 MATRIX circulate} or @code{3x4 MATRIX circulate}, we
+indicate that the phantom spots actually count, and that we want a 12-person
+version of @samp{circulate}.  If we are in parallelogram waves, that is, a
+2x6 matrix, we can also say @code{12 MATRIX circulate} or @code{2x6 MATRIX
+circulate}.  (In this case there are 3 concentric circulate paths of 4
+people each.)  One could also say @code{12 MATRIX in roll circulate} from
+some 2x6 matrices.  Exactly what large setups a call can be done from
+depends on the call.
+
+Also, some calls, like @samp{circulate}, can be used with either @samp{12 MATRIX}
+or @samp{3x4 MATRIX}, while others require @samp{12 MATRIX}.  For example,
+@code{12 MATRIX motivate} is legal, but @code{3x4 MATRIX motivate} is not.
+The rationale is that @samp{12 MATRIX} and @samp{16 MATRIX} are call
+modifiers---@code{12 MATRIX circulate} and @code{12 MATRIX motivate} are
+calls that have definitions in this setup.  Concepts like @samp{3x4 MATRIX},
+@samp{4x4 MATRIX}, @samp{2x6 MATRIX}, and @samp{2x8 MATRIX} simply state
+how big the setup is.  The call @samp{circulate} is defined in such a way
+that it can be executed in a wide variety of sizes and shapes, simply by knowing
+the size and shape.  @samp{Motivate} is more restricted.  There are calls
+@code{12 MATRIX motivate} and @code{16 MATRIX motivate}, but there is no
+general rule for all matrices.
+
+The other case in which a matrix size modifier must be given arises when the
+setup must be split.  In setups of 8 or fewer people, it is well accepted that
+splitting occurs automatically when required.  For example, facing lines are
+split into facing couples when @samp{flutter wheel} is called.  This phenomenon
+does not automatically happen when the setup is larger than 8 spots.
+
+For example, from parallelogram columns, you can't just say @code{2x1 transfer
+the column}.  You must legitimize the phantom spots by giving a concept such
+as @samp{12 matrix} or @samp{2x6 matrix}.  The setup will then be split into
+two end-to-end 2x3's, in each of which the call will be performed.
+
+These concepts all have the additional
+property that they can expand a smaller setup as required, so, for example,
+@samp{12 MATRIX circulate} is legal in normal (2x4) columns.  It expands the setup
+to a 2x6 be placing pairs of phantoms on the ends.  (Special case: in a 2x4
+setup, the @samp{16 MATRIX} call modifier doesn't know whether to expand to a
+4x4 or a 2x8, so you may need to use @samp{4X4 MATRIX} or @samp{2X8 MATRIX} explicitly.
+In other cases, the expansion is clear.)
 
 Explicit matrix concepts can also be used to dictate the precise formation
 with phantoms when using tandem or as-couples concepts.  For example, from
@@ -3692,107 +3736,6 @@ setup), and @samp{4X4 MATRIX BOXES WORK SOLID} leads to a virtual 2x2.
 in which each diamond has all 4 people facing the same way,
 @samp{16 MATRIX OF PARALLEL DIAMONDS DIAMONDSOME} leads to a virtual 1x4
 in which both ends are phantoms.  @samp{DIAMONDSOME} leads to a virtual 1x2.
-
-The call size modifiers @samp{12 MATRIX} or @samp{16 MATRIX} legitimize the large setup
-(though they don't always state unambiguously where the phantoms are, which
-can lead to difficulty) and also select a large version of a call.  When
-this modifier is used, only large versions of the call may be
-performed---the setup will not be split for small versions.
-
-When we say that @samp{12 MATRIX} is a call size modifier, we mean that, for
-example, @samp{12 MATRIX relay the top} is a call.  @samp{3X4 MATRIX relay the top}
-is not a call.  It is a statement that the setup is a legitimate 3x4,
-and a request to do the call @samp{relay the top} in it, which is illegal.
-There are some calls, like circulate, that can be done either with
-explicit matrix concepts or with call size modifiers.
-
-In a great many instances explicit matrix concepts like @samp{2X6 MATRIX} or
-@samp{3X4 MATRIX} can be used interchangeably with the call size modifier
-@samp{12 MATRIX}.  For example, @samp{2X6 MATRIX in roll circulate} and
-@samp{12 MATRIX in roll circulate} are equivalent in 2x6 lines.
-@samp{3X4 MATRIX circulate}
-and @samp{12 MATRIX circulate} are equivalent in triple lines.  It should
-never be necessary to give both an explicit matrix concept and a call
-size modifier.
-
-The explicit matrix concepts and call size modifiers all have the additional
-property that they can expand a smaller setup as required, so, for example,
-@samp{12 MATRIX circulate} is legal in normal columns.
-(Special case: in a 2x4
-setup, the @samp{16 MATRIX} call modifier doesn't know whether to expand to a
-4x4 or a 2x8, so you may need to use @samp{4X4 MATRIX} or @samp{2X8 MATRIX} explicitly.
-In other cases, the expansion is clear.)
-
-
-For example, from triple waves,
-@code{12 MATRIX circulate}
-and
-@code{3X4 MATRIX circulate}
-are both legal and equivalent.
-
-From parallelogram waves,
-@code{12 MATRIX circulate}
-and
-@code{2X6 MATRIX circulate}
-are both legal and equivalent, as are
-@code{12 MATRIX in roll circulate}
-and
-@code{2X6 MATRIX in roll circulate}.
-
-@subsection Small Calls (defined for 8 or fewer people)
-
-If a call is defined for a setup of 8 or fewer people, and the setup is larger
-than 8 people, so you want the setup divided, you must give an explicit matrix
-concept such as @samp{2X6 MATRIX}.  This defines the formation, and tells people
-to divide the 12-person formation into the smaller formations required to do
-the call.  Do not say @samp{12 MATRIX}.  That designates a 12-person call, which
-this is not.
-
-So, from parallelogram columns,
-@code{2X6 MATRIX double play}
-is legal, while
-@code{12 MATRIX double play}
-and
-@code{double play}
-are not.  You may also say
-@code{12 MATRIX DIVIDED COLUMNS double play}.
-(The 12 MATRIX DIVIDED COLUMNS concept forms two 6-person setups.)
-
-The above examples will work from 2x4 columns also---it expands
-the matrix by placing phantoms outside.
-
-From triple waves, you may also say
-@code{3X4 MATRIX double play}
-or
-@code{12 MATRIX SPLIT PHANTOM COLUMNS double play}
-but not
-@code{12 MATRIX double play}.
-
-You may substitute calls like @samp{3x3 peel off} for @samp{double play} in the
-above.  Note that the @samp{MxN} concept identifies a variant of the call.
-It does not cause the matrix to be expanded or recognized.
-
-@subsection Large Calls (defined for more than 8 people)
-
-Most large calls are versions of calls that are normally done from small
-setups.  That large version must be identified with some modifier such as
-@samp{12 MATRIX}, or @samp{MxN}.  Furthermore, you must legitimize the phantoms by
-giving an appropriate modifier.  An explicit matrix concept such as
-@samp{2X6 MATRIX} will do, as will a call size modifier such as @samp{12 MATRIX}.
-
-From parallelogram columns, you may say
-@code{12 MATRIX circulate}
-or
-@code{2X6 MATRIX circulate}
-or
-@code{12 MATRIX 3X3 transfer the column}
-or
-@code{2X6 MATRIX 3X3 transfer the column}
-but not
-@code{3X3 transfer the column}.
-
-The above examples will work from 2x4 columns also---it expands
-the matrix by placing phantoms outside.
 
 @node Misc Advice, Customization, Concept Notes, Top
 @chapter Miscellaneous Advice and Warnings

@@ -589,7 +589,7 @@ Private void get_user_input(char *prompt, int which)
 
       if (nc >= 128) {
          if (nc == 129 && which == match_startup_commands) {
-            put_line("heads start\n");                               /* F1 */
+            put_line("heads start\n");                               /* F1 = heads start */
             current_text_line++;
             user_match.kind = ui_start_select;
             user_match.index = (int) start_select_heads_start;
@@ -597,10 +597,20 @@ Private void get_user_input(char *prompt, int which)
          }
          else if (nc == 130)
             function_key_expansion = "two calls in succession\n";    /* F2 */
-         else if (nc == 131)
-            function_key_expansion = "pick random call\n";           /* F3 */
-         else if (nc == 132)
-            function_key_expansion = "resolve\n";                    /* F4 */
+         else if (nc == 131 && which >= 0) {                         /* F3 = pick random call */
+            put_line("pick random call\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_random_call;
+            return;
+         }
+         else if (nc == 132 && which >= 0) {                         /* F4 = resolve */
+            put_line("resolve\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_resolve;
+            return;
+         }
          else if (nc == 133)
             function_key_expansion = "refresh display\n";            /* F5 */
          else if (nc == 134)
@@ -609,22 +619,40 @@ Private void get_user_input(char *prompt, int which)
             function_key_expansion = "toggle concept levels\n";      /* F7 */
          else if (nc == 136)
             function_key_expansion = "<anything>";                   /* F8 */
-         else if (nc == 137)
-            function_key_expansion = "undo last call\n";             /* F9 */
+         else if (nc == 137 || nc == 169) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
+            if (which >= 0) {
+               put_line("undo last call\n");
+               current_text_line++;
+               user_match.kind = ui_command_select;
+               user_match.index = -1-command_undo;
+               return;
+            }
+            else if (which == match_resolve_commands) {
+               put_line("abort the search\n");
+               current_text_line++;
+               user_match.kind = ui_resolve_select;
+               user_match.index = -1-resolve_command_abort;
+               return;
+            }
+         }
          else if (nc == 138)
             function_key_expansion = "write this sequence\n";        /* F10 */
-         else if (nc == 139)
-            function_key_expansion = "pick level call\n";            /* F11 */
-         else if (nc == 140 && which == match_resolve_commands) {
-            put_line("accept current choice\n");                     /* F12 */
+         else if (nc == 139 && which >= 0) {                         /* F11 = pick level call */
+            put_line("pick level call\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_level_call;
+            return;
+         }
+         else if (nc == 140 && which == match_resolve_commands) {    /* F12 = accept current choice */
+            put_line("accept current choice\n");
             current_text_line++;
             user_match.kind = ui_resolve_select;
             user_match.index = -1-resolve_command_accept;
             return;
          }
-
-         else if (nc == 161 && which == match_startup_commands) {
-            put_line("sides start\n");                               /* sF1 */
+         else if (nc == 161 && which == match_startup_commands) {    /* sF1 = sides start */
+            put_line("sides start\n");
             current_text_line++;
             user_match.kind = ui_start_select;
             user_match.index = (int) start_select_sides_start;
@@ -632,10 +660,20 @@ Private void get_user_input(char *prompt, int which)
          }
          else if (nc == 162)
             function_key_expansion = "twice\n";                      /* sF2 */
-         else if (nc == 163)
-            function_key_expansion = "pick concept call\n";          /* sF3 */
-         else if (nc == 164)
-            function_key_expansion = "reconcile\n";                  /* sF4 */
+         else if (nc == 163 && which >= 0) {                         /* sF3 = pick concept call */
+            put_line("pick concept call\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_concept_call;
+            return;
+         }
+         else if (nc == 164 && which >= 0) {                         /* sF4 = reconcile */
+            put_line("reconcile\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_reconcile;
+            return;
+         }
          else if (nc == 165)
             function_key_expansion = "keep picture\n";               /* sF5 */
          else if (nc == 166)
@@ -644,29 +682,37 @@ Private void get_user_input(char *prompt, int which)
             function_key_expansion = "toggle active phantoms\n";     /* sF7 */
          else if (nc == 168)
             function_key_expansion = "<concept>";                    /* sF8 */
-         else if (nc == 169 && which == match_resolve_commands) {
-            put_line("abort the search\n");                          /* sF9 */
-            current_text_line++;
-            user_match.kind = ui_resolve_select;
-            user_match.index = -1-resolve_command_abort;
-            return;
-         }
+                                                                     /* See above for sF9. */
          else if (nc == 170)
             function_key_expansion = "change output file\n";         /* sF10 */
-         else if (nc == 171)
-            function_key_expansion = "pick 8 person level call\n";   /* sF11 */
-
+         else if (nc == 171 && which >= 0) {                         /* sF11 = pick 8 person level call */
+            put_line("pick 8 person level call\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_8person_level_call;
+            return;
+         }
          else if (nc == 193 && which == match_startup_commands) {
-            put_line("just as they are\n");                          /* cF1 */
+            put_line("just as they are\n");                          /* cF1 = just as they are */
             current_text_line++;
             user_match.kind = ui_start_select;
             user_match.index = (int) start_select_as_they_are;
             return;
          }
-         else if (nc == 195)
-            function_key_expansion = "pick simple call\n";           /* cF3 */
-         else if (nc == 196)
-            function_key_expansion = "normalize\n";                  /* cF4 */
+         else if (nc == 195 && which >= 0) {                         /* cF3 = pick simple call */
+            put_line("pick simple call\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_simple_call;
+            return;
+         }
+         else if (nc == 196 && which >= 0) {                         /* cF4 = normalize */
+            put_line("normalize\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_normalize;
+            return;
+         }
          else if (nc == 197)
             function_key_expansion = "insert a comment\n";           /* cF5 */
 
@@ -840,16 +886,14 @@ extern uims_reply uims_get_startup_command(void)
 
 
 /* This returns TRUE if it fails, e.g. the user waves the mouse away. */
-extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
    char prompt_buffer[200];
    char *prompt_ptr;
    int banner_mode;
 
-   call_menu_ptr = call_menu;
-
    if (allowing_modifications)
-      *call_menu_ptr = call_list_any;
+      parse_state.call_list_to_use = call_list_any;
 
    prompt_ptr = prompt_buffer;
    prompt_buffer[0] = '\0';
@@ -895,20 +939,25 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
       }
 
       (void) strcat(prompt_buffer, "] ");
-      (void) strcat(prompt_buffer, call_menu_prompts[*call_menu_ptr]);
+      (void) strcat(prompt_buffer, call_menu_prompts[parse_state.call_list_to_use]);
    }
    else
-      prompt_ptr = call_menu_prompts[*call_menu_ptr];
+      prompt_ptr = call_menu_prompts[parse_state.call_list_to_use];
 
-   get_user_input(prompt_ptr, (int) *call_menu_ptr);
+   get_user_input(prompt_ptr, (int) parse_state.call_list_to_use);
 
    *reply_p = user_match.kind;
 
    uims_menu_index = user_match.index;
 
-   if (user_match.kind == ui_command_select)
+   if (user_match.kind == ui_command_select) {
       /* Translate the command. */
-      uims_menu_index = (int) command_command_values[user_match.index];
+
+      if (user_match.index < 0)
+         uims_menu_index = -1-user_match.index;   /* Special encoding from a function key. */
+      else
+         uims_menu_index = (int) command_command_values[user_match.index];
+   }
    else if (user_match.kind == ui_call_select) {
       modifier_block *mods;
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
@@ -968,7 +1017,7 @@ extern uims_reply uims_get_resolve_command(void)
       if (user_match.index < 0)
          uims_menu_index = -1-user_match.index;   /* Special encoding from a function key. */
       else
-         uims_menu_index = resolve_command_values[user_match.index];
+         uims_menu_index = (int) resolve_command_values[user_match.index];
    }
 
    return user_match.kind;

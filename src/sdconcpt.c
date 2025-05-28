@@ -69,6 +69,8 @@ typedef struct {
 } phan_map;
 
 Private phan_map map_c1_phan = {8, s2x4, {0, 2, 7, 5, 8, 10, 15, 13}, {4, 6, 11, 9, 12, 14, 3, 1}};
+Private phan_map map_pinwheel1 = {8, s2x4, {10, 15, -1, -1, 2, 7, -1, -1}, {14, 3, -1, -1, 6, 11, -1, -1}};
+Private phan_map map_pinwheel2 = {8, s2x4, {-1, -1, 3, 1, -1, -1, 11, 9}, {-1, -1, 7, 5, -1, -1, 15, 13}};
 Private phan_map map_o_spots = {8, s2x4, {10, -1, -1, 1, 2, -1, -1, 9}, {14, -1, -1, 5, 6, -1, -1, 13}};
 Private phan_map map_qt_phan = {8, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7}, {1, 4, -1, -1, 5, 0, -1, -1}};
 
@@ -120,7 +122,7 @@ Private void do_c1_phantom_move(
             break;
          default:
             /* This is plain "phantom tandem", or whatever.  Expansion to 4x4 is required. */
-            what_we_need = CONCPROP__NEED_4X4;
+            what_we_need = CONCPROP__NEEDK_4X4;
             break;
       }
 
@@ -169,6 +171,14 @@ Private void do_c1_phantom_move(
          /* Split into 4 horizontal strips. */
          divided_setup_move(ss, map_lists[s1x4][3]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
       }
+      else if (global_livemask == 0xCCCC) {   /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
+         map_ptr = &map_pinwheel1;
+         goto use_map;
+      }
+      else if (global_livemask == 0xAAAA) {   /* Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms. */
+         map_ptr = &map_pinwheel2;
+         goto use_map;
+      }
       else
          fail("Inappropriate setup for phantom concept.");
 
@@ -213,6 +223,8 @@ Private void do_c1_phantom_move(
    }
    else
       fail("Inappropriate setup for phantom concept.");
+
+   use_map:
 
    setup1 = *ss;
    setup2 = *ss;
@@ -1046,7 +1058,7 @@ Private void do_concept_do_divided_diamonds(
    if (ss->kind != s4x6 || (global_livemask & 0x02D02D) != 0)
       fail("Must have a divided diamond or 1/4 tag setup for this concept.");
 
-   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg2;
+   ss->cmd.cmd_misc_flags |= parseptr->concept->value.arg3;
    divided_setup_move(ss, parseptr->concept->value.maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
 }
 
@@ -4374,7 +4386,7 @@ concept_table_item concept_table[] = {
    /* concept_some_are_tandem */          {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                                          do_concept_tandem},
    /* concept_frac_tandem */              {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT,                                            do_concept_tandem},
    /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                   do_concept_tandem},
-   /* concept_gruesome_tandem */          {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                     do_concept_tandem},
+   /* concept_gruesome_tandem */          {CONCPROP__NEEDK_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                    do_concept_tandem},
    /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
    /* concept_sel_checkerboard */         {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,                                            do_concept_checkerboard},
    /* concept_reverse */                  {0,                                                                                      0},
@@ -4405,16 +4417,16 @@ concept_table_item concept_table[] = {
    /* concept_triangle */                 {0,                                                                                      0},
    /* concept_do_both_boxes */            {CONCPROP__NO_STEP,                                                                      do_concept_do_both_boxes},
    /* concept_once_removed */             {0,                                                                                      do_concept_once_removed},
-   /* concept_do_phantom_2x2 */           {CONCPROP__NEED_4X4 | Nostep_phantom,                                                    do_concept_do_phantom_2x2},
-   /* concept_do_phantom_boxes */         {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_do_phantom_boxes},
-   /* concept_do_phantom_diamonds */      {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_do_phantom_diamonds},
-   /* concept_do_phantom_1x6 */           {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x6},
-   /* concept_do_phantom_1x8 */           {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x8},
-   /* concept_do_phantom_2x4 */           {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,            do_phantom_2x4_concept},
-   /* concept_do_phantom_2x3 */           {CONCPROP__NEED_3X4 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_2x3},
-   /* concept_divided_2x4 */              {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x4},
-   /* concept_divided_2x3 */              {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x3},
-   /* concept_do_divided_diamonds */      {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | CONCPROP__GET_MASK | Nostandard_matrix_phantom,do_concept_do_divided_diamonds},
+   /* concept_do_phantom_2x2 */           {CONCPROP__NEEDK_4X4 | Nostep_phantom,                                                   do_concept_do_phantom_2x2},
+   /* concept_do_phantom_boxes */         {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_do_phantom_boxes},
+   /* concept_do_phantom_diamonds */      {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_do_phantom_diamonds},
+   /* concept_do_phantom_1x6 */           {CONCPROP__NEEDK_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x6},
+   /* concept_do_phantom_1x8 */           {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_1x8},
+   /* concept_do_phantom_2x4 */           {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,           do_phantom_2x4_concept},
+   /* concept_do_phantom_2x3 */           {CONCPROP__NEEDK_3X4 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_do_phantom_2x3},
+   /* concept_divided_2x4 */              {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_divided_2x4},
+   /* concept_divided_2x3 */              {CONCPROP__NEEDK_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      do_concept_divided_2x3},
+   /* concept_do_divided_diamonds */      {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | CONCPROP__GET_MASK | Nostandard_matrix_phantom,do_concept_do_divided_diamonds},
    /* concept_distorted */                {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_distorted},
    /* concept_single_diagonal */          {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_single_diagonal},
    /* concept_single_diagonal_sel */      {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},
@@ -4423,24 +4435,24 @@ concept_table_item concept_table[] = {
    /* concept_triple_lines */             {CONCPROP__NEED_TRIPLE_1X4 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,          do_concept_triple_lines},
    /* concept_triple_lines_tog */         {CONCPROP__NEED_TRIPLE_1X4 | Nostandard_matrix_phantom,                                  do_concept_triple_lines_tog},
    /* concept_triple_lines_tog_std */     {CONCPROP__NEED_TRIPLE_1X4 | Standard_matrix_phantom,                                    do_concept_triple_lines_tog},
-   /* concept_quad_lines */               {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_concept_quad_lines},
-   /* concept_quad_lines_tog */           {CONCPROP__NEED_4X4_1X16 | Nostandard_matrix_phantom,                                    do_concept_quad_lines_tog},
-   /* concept_quad_lines_tog_std */       {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_concept_quad_lines_tog},
-   /* concept_quad_boxes */               {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_quad_boxes},
-   /* concept_quad_boxes_together */      {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_quad_boxes_tog},
-   /* concept_triple_boxes */             {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom | CONCPROP__PERMIT_MYSTIC, do_concept_triple_boxes},
-   /* concept_triple_boxes_together */    {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_triple_boxes_tog},
-   /* concept_triple_diamonds */          {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds},
-   /* concept_triple_diamonds_together */ {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds_tog},
-   /* concept_quad_diamonds */            {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds},
-   /* concept_quad_diamonds_together */   {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds_tog},
+   /* concept_quad_lines */               {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom,                                     do_concept_quad_lines},
+   /* concept_quad_lines_tog */           {CONCPROP__NEEDK_4X4_1X16 | Nostandard_matrix_phantom,                                   do_concept_quad_lines_tog},
+   /* concept_quad_lines_tog_std */       {CONCPROP__NEEDK_4X4_1X16 | Standard_matrix_phantom,                                     do_concept_quad_lines_tog},
+   /* concept_quad_boxes */               {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_boxes},
+   /* concept_quad_boxes_together */      {CONCPROP__NEEDK_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_boxes_tog},
+   /* concept_triple_boxes */             {CONCPROP__NEEDK_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom | CONCPROP__PERMIT_MYSTIC, do_concept_triple_boxes},
+   /* concept_triple_boxes_together */    {CONCPROP__NEEDK_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_boxes_tog},
+   /* concept_triple_diamonds */          {CONCPROP__NEEDK_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_triple_diamonds},
+   /* concept_triple_diamonds_together */ {CONCPROP__NEEDK_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_triple_diamonds_tog},
+   /* concept_quad_diamonds */            {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_quad_diamonds},
+   /* concept_quad_diamonds_together */   {CONCPROP__NEEDK_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                   do_concept_quad_diamonds_tog},
    /* concept_in_out_line_3 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
    /* concept_in_out_line_4 */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__STANDARD | Nostep_phantom,                       do_concept_inner_outer},
    /* concept_in_out_box_3 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
    /* concept_in_out_box_4 */             {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_inner_outer},
-   /* concept_triple_diag */              {CONCPROP__NEED_BLOB | Nostep_phantom | CONCPROP__STANDARD,                              do_concept_triple_diag},
-   /* concept_triple_diag_together */     {CONCPROP__NEED_BLOB | Nostep_phantom | CONCPROP__GET_MASK,                              do_concept_triple_diag_tog},
-   /* concept_triple_twin */              {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       triple_twin_move},
+   /* concept_triple_diag */              {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__STANDARD,                             do_concept_triple_diag},
+   /* concept_triple_diag_together */     {CONCPROP__NEEDK_BLOB | Nostep_phantom | CONCPROP__GET_MASK,                             do_concept_triple_diag_tog},
+   /* concept_triple_twin */              {CONCPROP__NEEDK_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                      triple_twin_move},
    /* concept_misc_distort */             {CONCPROP__NO_STEP,                                                                      distorted_2x2s_move},
    /* concept_old_stretch */              {0/*CONCPROP__NO_STEP*/,                                                                 do_concept_old_stretch},
    /* concept_new_stretch */              {0/*CONCPROP__NO_STEP*/,                                                                 do_concept_new_stretch},

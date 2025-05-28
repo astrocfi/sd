@@ -26,7 +26,6 @@
 */
 
 #include "sd.h"
-extern void impose_assumption_and_move(setup *ss, setup *result);
 
 typedef struct {
    personrec real_front_people[MAX_PEOPLE];
@@ -949,6 +948,10 @@ extern void tandem_couples_move(
 
    tandstuff.np = np;
    tandstuff.virtual_setup.cmd = ss->cmd;
+
+   if (ss->cmd.cmd_assume.assumption == cr_wave_only && key == 1)
+      fail("Couples or tandem concept is inconsistent with phantom facing direction.");
+
    tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_none;
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    if (phantom == 2) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;

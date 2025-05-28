@@ -212,7 +212,7 @@ DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
 TARFLAGS = 
-DIST_TARFILE = sd-31.65.tar
+DIST_TARFILE = sd-31.66.tar
 COMPRESS = compress
 
 dist: dist-files
@@ -225,9 +225,9 @@ dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
 ls:
 	@echo $(DISTFILES)
 
-pcdist: sd3165bn
+pcdist: sd3166bn
 
-sd3165bn: sdtty.exe mkcalls.exe sd_calls.dat
+sd3166bn: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ readme relnotes oldnotes
 	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
 	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps
@@ -235,7 +235,7 @@ sd3165bn: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
 
-BIN_TARFILE = sd-31.65-.tar
+BIN_TARFILE = sd-31.66-.tar
 
 
 

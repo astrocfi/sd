@@ -496,91 +496,80 @@ Private void heapsort(int n)
 }
 
 
-Private void create_misc_call_lists(void)
+Private void create_misc_call_lists(call_list_kind cl)
 {
    int j;
    long_boolean accept_it;
    int i, callcount;
 
-   /* GCOL */
-
    callcount = 0;
 
    for (j=0; j<number_of_calls[call_list_any]; j++) {
+      callspec_block *callp = main_call_lists[call_list_any][j];
+      callspec_block *callq = callp;
+
       accept_it = FALSE;
-      if (main_call_lists[call_list_any][j]->schema != schema_by_array) accept_it = TRUE;
-      else if (main_call_lists[call_list_any][j]->callflags1 & CFLAG1_STEP_TO_WAVE) {
-         if (  assoc(b_4x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_4x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_2x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_2x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
-            accept_it = TRUE;
+
+      if (cl == call_list_gcol) {     /* GCOL */
+         if (callp->schema != schema_by_array) accept_it = TRUE;
+         else if (callp->callflags1 & CFLAG1_STEP_TO_WAVE) {
+            if (  assoc(b_4x2, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_4x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_2x2, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_2x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list))
+               accept_it = TRUE;
+         }
+         else {
+            if (  assoc(b_8x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_4x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_2x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_1x1, (setup *) 0, callp->stuff.arr.def_list->callarray_list))
+               accept_it = TRUE;
+         }
       }
-      else {
-         if (  assoc(b_8x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_4x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_2x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_1x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
-            accept_it = TRUE;
+      else {      /* QTAG */
+
+         /* Special stuff: We try to make "mix" not legal, while "swing and circle <N/4>" is legal. */
+/* Unfortunately, this makes lots of regression tests fail, because things that used to be parsible
+but not executable are now not parsable.  So we take it out.
+         if (callp->schema == schema_sequential && !(callp->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) && callp->stuff.def.howmanyparts >= 1) {
+            callq = base_calls[callp->stuff.def.defarray[0].call_id];
+         }
+*/
+         if (callq->schema != schema_by_array) accept_it = TRUE;
+         else if (callp->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
+            if (  assoc(b_4x2, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_4x1, (setup *) 0, callq->stuff.arr.def_list->callarray_list))
+               accept_it = TRUE;
+         }
+         else {
+            if (assoc(b_qtag, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_pqtag, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_dmd, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_pmd, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_1x2, (setup *) 0, callq->stuff.arr.def_list->callarray_list) ||
+                  assoc(b_2x1, (setup *) 0, callq->stuff.arr.def_list->callarray_list))
+               accept_it = TRUE;
+         }
       }
 
       if (accept_it) {
-         global_temp_call_list[callcount] = main_call_lists[call_list_any][j];
+         global_temp_call_list[callcount] = callp;
          callcount++;
       }
    }
 
    /* Create the call list itself. */
 
-   number_of_calls[call_list_gcol] = callcount;
-   main_call_lists[call_list_gcol] = (callspec_block **) get_mem(callcount * sizeof(callspec_block *));
+   number_of_calls[cl] = callcount;
+   main_call_lists[cl] = (callspec_block **) get_mem(callcount * sizeof(callspec_block *));
+
    for (i=0; i < callcount; i++) {
-      main_call_lists[call_list_gcol][i] = global_temp_call_list[i];
+      main_call_lists[cl][i] = global_temp_call_list[i];
    }
 
    /* Create the menu for it. */
-
-   uims_create_menu(call_list_gcol, global_temp_call_list);
-
-   /* QTAG */
-
-   callcount = 0;
-
-   for (j=0; j<number_of_calls[call_list_any]; j++) {
-      accept_it = FALSE;
-      if (main_call_lists[call_list_any][j]->schema != schema_by_array) accept_it = TRUE;
-      else if (main_call_lists[call_list_any][j]->callflags1 & CFLAG1_REAR_BACK_FROM_QTAG) {
-         if (  assoc(b_4x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_4x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
-            accept_it = TRUE;
-      }
-      else {
-         if (assoc(b_qtag, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_pqtag, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_dmd, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_pmd, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_1x2, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_2x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
-            accept_it = TRUE;
-      }
-
-      if (accept_it) {
-         global_temp_call_list[callcount] = main_call_lists[call_list_any][j];
-         callcount++;
-      }
-   }
-
-   /* Create the call list itself. */
-
-   number_of_calls[call_list_qtag] = callcount;
-   main_call_lists[call_list_qtag] = (callspec_block **) get_mem(callcount * sizeof(callspec_block *));
-   for (i=0; i < callcount; i++) {
-      main_call_lists[call_list_qtag][i] = global_temp_call_list[i];
-   }
-
-   /* Create the menu for it. */
-
-   uims_create_menu(call_list_qtag, global_temp_call_list);
+   uims_create_menu(cl, global_temp_call_list);
 }
 
 
@@ -727,7 +716,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
             /* "predptr_pair" will get us 4 items in the "arr" field; we are responsible all for the others. */
             temp_predlist = (predptr_pair *) get_mem(sizeof(predptr_pair) +
                     (this_start_size-4) * sizeof(unsigned short));
-            temp_predlist->pred = pred_table[last_datum];
+            temp_predlist->pred = &pred_table[last_datum];
             /* If this call uses a predicate that takes a selector, flag the call so that
                we will query the user for that selector. */
             if (last_datum < SELECTOR_PREDS)
@@ -1230,8 +1219,8 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    test_starting_setup(call_list_lwv,  &test_setup_lwv);          /* LWV */
    test_starting_setup(call_list_r2fl, &test_setup_r2fl);         /* R2FL */
    test_starting_setup(call_list_l2fl, &test_setup_l2fl);         /* L2FL */
-
-   create_misc_call_lists();
+   create_misc_call_lists(call_list_gcol);                        /* GCOL */
+   create_misc_call_lists(call_list_qtag);                        /* QTAG */
 
    /* This was global to the initialization, but it goes away also. */
    free_mem(global_temp_call_list);

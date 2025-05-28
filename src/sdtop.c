@@ -65,6 +65,8 @@ Private expand_thing exp_1x12_1x14_stuff   = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 1
 Private expand_thing exp_1x14_1x16_stuff   = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
 Private expand_thing exp_1x8_1x10_stuff    = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
 Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, nothing, s4x6, 0};
+Private expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, nothing, s4x6, 0};
+Private expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, nothing, s4x6, 1};
 Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
 Private expand_thing exp_2x4_4x4_stuff     = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
 Private expand_thing exp_4x4_blob_stuff    = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
@@ -603,11 +605,17 @@ extern void do_matrix_expansion(
    long_boolean recompute_id)
 {
    int i;
+   uint32 needprops = concprops & CONCPROP__NEED_MASK;
    expand_thing *eptr;
    setup stemp;
 
    for (;;) {
-      if (concprops & (CONCPROP__NEED_4X4 | CONCPROP__NEED_4X4_1X16 | CONCPROP__NEED_BLOB | CONCPROP__NEED_4X6)) {
+      if (     needprops == CONCPROP__NEEDK_4X4 ||
+               needprops == CONCPROP__NEEDK_4X4_1X16 ||
+               needprops == CONCPROP__NEEDK_BLOB ||
+               needprops == CONCPROP__NEEDK_4X6 ||
+               needprops == CONCPROP__NEEDK_TWINDMD ||
+               needprops == CONCPROP__NEEDK_TWINQTAG) {
          if (ss->kind == s2x4) {
             eptr = &exp_2x4_4x4_stuff; goto expand_me;
          }
@@ -623,7 +631,7 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X8 | CONCPROP__NEED_TRIPLE_1X4)) {
+      if (needprops == CONCPROP__NEEDK_3X4 || needprops == CONCPROP__NEEDK_3X8 || (concprops & CONCPROP__NEED_TRIPLE_1X4)) {
          if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
@@ -635,12 +643,12 @@ extern void do_matrix_expansion(
          }
       }
 
-      if (concprops & (CONCPROP__NEED_BLOB)) {
+      if (needprops == CONCPROP__NEEDK_BLOB) {
          if (ss->kind == s4x4) {
             eptr = &exp_4x4_blob_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_4DMD) {
+      else if (needprops == CONCPROP__NEEDK_4DMD) {
          uint32 livemask, j;
    
          switch (ss->kind) {
@@ -661,7 +669,7 @@ extern void do_matrix_expansion(
                }
          }
       }
-      else if (concprops & CONCPROP__NEED_3DMD) {
+      else if (needprops == CONCPROP__NEEDK_3DMD) {
          switch (ss->kind) {                /* Need to expand to real triple diamonds. */
             case s3x1dmd:
                eptr = &exp_3x1d_3d_stuff; goto expand_me;
@@ -669,7 +677,7 @@ extern void do_matrix_expansion(
                eptr = &exp_1x2_3d_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_2X8) {
+      else if (needprops == CONCPROP__NEEDK_2X8) {
          switch (ss->kind) {
             case s2x4:
                eptr = &exp_2x4_2x8_stuff; goto expand_me;
@@ -677,7 +685,7 @@ extern void do_matrix_expansion(
                eptr = &exp_2x6_2x8_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_3X8) {
+      else if (needprops == CONCPROP__NEEDK_3X8) {
          switch (ss->kind) {
             case s3x4:
                eptr = &exp_3x4_3x8_stuff; goto expand_me;
@@ -685,14 +693,27 @@ extern void do_matrix_expansion(
                eptr = &exp_1x8_3x8_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_2X6) {
+      else if (needprops == CONCPROP__NEEDK_2X6) {
          if (ss->kind == s2x4) {
             eptr = &exp_2x4_2x6_stuff; goto expand_me;
          }
       }
-      else if (concprops & CONCPROP__NEED_4X6) {
+      else if (needprops == CONCPROP__NEEDK_4X6) {
          if (ss->kind == s2x6) {
             eptr = &exp_2x6_4x6_stuff; goto expand_me;
+         }
+      }
+      else if (needprops == CONCPROP__NEEDK_TWINDMD || needprops == CONCPROP__NEEDK_TWINQTAG) {
+         if (ss->kind == s2x6) {
+            eptr = &exp_2x6_4x6_stuff; goto expand_me;
+         }
+         else if (ss->kind == s4x4) {
+            uint32 ctrs = ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
+
+            if (ctrs != 0 && (ctrs & 011) != 011) {
+               if (needprops == CONCPROP__NEEDK_TWINQTAG) ctrs ^= 1;
+               eptr = (ctrs & 1) ? &exp_4x4_4x6_stuff_b : &exp_4x4_4x6_stuff_a; goto expand_me;
+            }
          }
       }
       else if (concprops & CONCPROP__NEED_CTR_2X2) {
@@ -713,7 +734,7 @@ extern void do_matrix_expansion(
                eptr = &exp_bone_bigbone_stuff; goto expand_me;
          }
       }
-      else if (concprops & (CONCPROP__NEED_1X12)) {
+      else if (needprops == CONCPROP__NEEDK_1X12) {
          switch (ss->kind) {
             case s1x8:
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
@@ -768,7 +789,7 @@ extern void do_matrix_expansion(
                eptr = &exp_1x3d_bigx_stuff; goto expand_me;
          }
       }
-      else if (concprops & (CONCPROP__NEED_1X16 | CONCPROP__NEED_4X4_1X16)) {
+      else if (needprops == CONCPROP__NEEDK_1X16 || needprops == CONCPROP__NEEDK_4X4_1X16) {
          switch (ss->kind) {             /* Need to expand to a 1x16. */
             case s1x8:
                eptr = &exp_1x8_1x12_stuff; goto expand_me;
@@ -1415,8 +1436,14 @@ extern void toplevelmove(void)
    if (!(starting_setup.result_flags & RESULTFLAG__IMPRECISE_ROT)) {    /* Can't do it if rotation is not known. */
       if (setup_attrs[starting_setup.kind].setup_limits >= 0) {     /* Put in headliner/sideliner stuff if possible. */
          for (i=0; i<=setup_attrs[starting_setup.kind].setup_limits; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id2 |= ((starting_setup.people[i].id1 ^ starting_setup.rotation) & 1) ? ID2_SIDELINE : ID2_HEADLINE;
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               if ((starting_setup.people[i].id1 + starting_setup.rotation) & 1)
+                  starting_setup.people[i].id2 |= ID2_SIDELINE;
+               else if ((starting_setup.people[i].id1 + starting_setup.rotation) & 2)
+                  starting_setup.people[i].id2 |= ID2_HEADLINE|ID2_FACEFRONT;
+               else
+                  starting_setup.people[i].id2 |= ID2_HEADLINE|ID2_FACEBACK;
+            }
          }
       }
 

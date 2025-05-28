@@ -139,10 +139,10 @@ extern void normalize_concentric(
       they go to some setup for which their elongation is obvious, like a 1x4. */
 
    int i, j, q, k, rot;
-   veryshort *map_indices;
+   Const veryshort *map_indices;
    uint32 hash_num;
    conc_initializer *conc_hash_bucket;
-   cm_thing *lmap_ptr;
+   Const cm_thing *lmap_ptr;
    setup *inners = &outer_inners[1];
    setup *outers = &outer_inners[0];
    calldef_schema table_synthesizer = synthesizer;
@@ -380,7 +380,7 @@ extern void normalize_concentric(
                conc_hash_bucket->innerk == inners[0].kind &&
                conc_hash_bucket->center_arity == center_arity &&
                conc_hash_bucket->conc_type == table_synthesizer) {
-         cm_thing **map_ptr = conc_hash_bucket->value;
+         Const cm_thing **map_ptr = conc_hash_bucket->value;
          int index;
 
          if (inners[0].kind == s_trngl) {
@@ -538,8 +538,10 @@ Private void concentrify(
    int i, k, rot;
    analyzer_kind analyzer_index;
    cm_hunk *chunk;
-   cm_thing *lmap_ptr;
+   Const cm_thing *lmap_ptr;
 
+   *outer_elongation = 0;
+   *xconc_elongation = 0;
    clear_people(outers);
    clear_people(&inners[0]);
 
@@ -1350,7 +1352,7 @@ extern void concentric_move(
          result_outer.rotation = 0;
       }
       else if (analyzer == schema_concentric_diamond_line) {
-         if (ss->kind == s_wingedstar || ss->kind == s_wingedstar12 || ss->kind == s_wingedstar16) {
+         if (ss->kind == s_wingedstar || ss->kind == s_wingedstar12 || ss->kind == s_wingedstar16 || ss->kind == s3x1dmd) {
             result_outer.kind = s2x2;
             result_outer.rotation = 0;
             clear_people(&result_outer);
@@ -2676,6 +2678,13 @@ static Const fixer f1x8aad   = {s1x4, s1x8,        0, 1,       0,          0,   
 static Const fixer fxwv1d    = {sdmd, s_crosswave, 0, 1,       0,          0,          0,          0, &fxwv1d,    0,    0,          {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer fxwv2d    = {sdmd, s_crosswave, 0, 1,       0,          0,          0,          0, &fxwv2d,    0,    0,          {{0, 3, 4, 7}},     {{-1}}};
 static Const fixer fxwv3d    = {sdmd, s_crosswave, 1, 1,       0,          0,          0,          0, &fxwv3d,    0,    0,          {{2, 5, 6, 1}},     {{-1}}};
+
+
+static Const fixer fqtgj1    = {s1x2, s_qtag,      1, 2,       &fqtgj1,    0,          0,          0, 0,          0,    0,          {{1, 3}, {7, 5}},   {{-1}}};
+static Const fixer fqtgj2    = {s1x2, s_qtag,      1, 2,       &fqtgj2,    0,          0,          0, 0,          0,    0,          {{0, 7}, {3, 4}},   {{-1}}};
+static Const fixer fqtgjj1   = {s2x2, s_qtag,      0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj1,   {{7, 1, 3, 5}},   {{-1}}};
+static Const fixer fqtgjj2   = {s2x2, s_qtag,      0, 1,       0,          0,          0,          0, 0,          0,    &fqtgjj2,   {{0, 3, 4, 7}},   {{-1}}};
+
 static Const fixer fspindlc  = {s1x2, s_spindle,   1, 2,       &fspindlc,  &f1x3aad,   0,          0, 0,          0,    0,          {{0, 6}, {2, 4}},   {{-1}}};
 static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          {{1, 2}, {6, 5}},   {{-1}}};
 static Const fixer f2x3c     = {s1x2, s2x3,        1, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          {{0, 5}, {2, 3}},   {{-1}}};
@@ -2754,6 +2763,8 @@ static Const fixer f2x4far   = {s1x4, s2x4,        0, 1,       0,          0,   
 static Const fixer f2x4near  = {s1x4, s2x4,        0, 1,       0,          0,          &f2x4near,  0, 0,          0,    0,          {{7, 6, 4, 5}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
 static Const fixer f2x4left  = {s2x2, s2x4,        0, 1,       0,          0,          0,          0, 0,          0,    &f2x4left,  {{0, 1, 6, 7}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
 static Const fixer f2x4right = {s2x2, s2x4,        0, 1,       0,          0,          0,          0, 0,          0,    &f2x4right, {{2, 3, 4, 5}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
+static Const fixer f2x4dleft = {s2x2, s2x4,        0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dleft, {{0, 2, 5, 7}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
+static Const fixer f2x4dright= {s2x2, s2x4,        0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dright,{{1, 3, 4, 6}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
 static Const fixer f2x4endd  = {s2x2, s2x4,        0, 1,       0,          0,          &frigendd,  &frigendd, 0,  0,    &f2x4endd,  {{0, 3, 4, 7}},     {{-1}}};
 static Const fixer f2x4endo  = {s1x2, s2x4,        1, 2,       &f2x4endo,  &f1x8endo,  0,          0, 0,          0,    0,          {{0, 7}, {3, 4}},   {{-1}}};
 static Const fixer bar55d    = {s2x2, s2x4,        0, 1,       0,          0,          0,          0, 0,          0,    0,          {{1, 2, 5, 6}},     {{-1}}};
@@ -2854,7 +2865,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
 
    current_selector = saved_selector;
 
-   /* If this is "disconnected", we have to invert the selector. */
+   /* If this is "ignored", we have to invert the selector. */
    if (indicator == 8)
       selector_to_use = selector_list[selector_to_use].opposite;
 
@@ -3087,7 +3098,7 @@ back_here:
                   fixp = &d4x4d4;
             }
          }
-         else if (arg2 == 4) {
+         else if (arg2 == 4) {         /* Distorted box. */
             if (kk == s2x4 && thislivemask == 0xAA)
                fixp = &d2x4c1;
             else if (kk == s2x4 && thislivemask == 0x55)
@@ -3096,6 +3107,10 @@ back_here:
                fixp = &d2x4y1;
             else if (kk == s2x4 && thislivemask == 0xCC)
                fixp = &d2x4y2;
+            else if (kk == s_qtag && thislivemask == 0xAA)
+               fixp = &fqtgjj1;
+            else if (kk == s_qtag && thislivemask == 0x99)
+               fixp = &fqtgjj2;
          }
          else if (arg2 & 16) {
             /* These are "diagonal C/L/W" concepts. */
@@ -3207,6 +3222,10 @@ back_here:
                   fixp = &fppaad;
                else if (kk == s2x4 && thislivemask == 0x55)
                   fixp = &fpp55d;
+               else if (kk == s2x4 && thislivemask == 0xA5)  /* unsymmetrical */
+                  fixp = &f2x4dleft;
+               else if (kk == s2x4 && thislivemask == 0x5A)  /* unsymmetrical */
+                  fixp = &f2x4dright;
                else if (kk == s2x4 && thislivemask == 0x99)
                   fixp = &f2x4endd;
                else if (kk == s_qtag && thislivemask == 0x33)
@@ -3281,6 +3300,10 @@ back_here:
                   fixp = &f1x2aad;
                else if (kk == s2x3 && thislivemask == 055)
                   fixp = &f2x3c;
+               else if (kk == s_qtag && thislivemask == 0xAA)
+                  fixp = &fqtgj1;
+               else if (kk == s_qtag && thislivemask == 0x99)
+                  fixp = &fqtgj2;
             }
          }
 

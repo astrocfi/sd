@@ -71,7 +71,6 @@ typedef struct {
    long_boolean verify;        /* true => verify calls before showing */
    int space_ok;               /* space is a legitimate next input character */
    match_result result;        /* value of the first or exact matching pattern */
-   int call_menu;              /* The call menu (or special negative command) that we are searching */
 } match_state;
 
 enum {
@@ -86,7 +85,6 @@ enum {
 
 
 /* These are provided by sdmatch.c */
-extern call_list_kind *call_menu_ptr;
 extern match_state static_ss;
 extern match_result result_for_verify;
 extern long_boolean verify_used_number;

@@ -20,7 +20,6 @@
    match_user_input
 
 and the following external variables:
-   call_menu_ptr
    elide_blanks
 */
 
@@ -36,7 +35,6 @@ and the following external variables:
 #include <time.h>
 #endif
 
-call_list_kind *call_menu_ptr;
 int elide_blanks = 0;
 
 static callspec_block *empty_menu[] = {NULLCALLSPEC};
@@ -61,6 +59,7 @@ typedef struct pat2_blockstruct {
 static modifier_block *modifier_active_list = (modifier_block *) 0;
 static modifier_block *modifier_inactive_list = (modifier_block *) 0;
 
+static int static_call_menu;              /* The call menu (or special negative command) that we are searching */
 
 
 Private modifier_block *get_modifier_block(void)
@@ -235,7 +234,7 @@ static call_list_kind savecl;
  * current context.
  */
 
-Private long_boolean verify_call(call_list_kind *clp, Const match_result *result)
+Private long_boolean verify_call(Const match_result *result)
 {
    uint32 bits0, bits1;
    int old_history_ptr;
@@ -255,7 +254,7 @@ Private long_boolean verify_call(call_list_kind *clp, Const match_result *result
 
    parse_mark = mark_parse_blocks();
    save_parse_state();
-   savecl = *clp;
+   savecl = parse_state.call_list_to_use;
 
    /* Create a temporary error handler. */
 
@@ -333,9 +332,9 @@ Private long_boolean verify_call(call_list_kind *clp, Const match_result *result
       foobar = foobar->next;
    }
 
-   if (deposit_call(main_call_lists[savecl][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
+   if (deposit_call(main_call_lists[parse_state.call_list_to_use][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
 
-   *clp = savecl;         /* deposit_concept screwed it up */
+   parse_state.call_list_to_use = savecl;         /* deposit_concept screwed it up */
 
    /* If the parse stack is nenempty, a subsidiary call is needed and hasn't been filled in.
       Therefore, the parse tree is incomplete.  We can print such parse trees, but we
@@ -446,7 +445,7 @@ static void record_a_match(Const match_result *result)
       static_ss.yielding_matches++;
 
    if (static_ss.showing) {
-      if (verify_call(call_menu_ptr, result))
+      if (verify_call(result))
          (*static_ss.sf)(static_ss.full_input, static_ss.extension, result);
    }
 }
@@ -984,14 +983,14 @@ static void search_menu(uims_reply kind)
    result.yield_depth = 0;
 
    if (kind == ui_call_select) {
-      menu_length = number_of_calls[static_ss.call_menu];
+      menu_length = number_of_calls[static_call_menu];
 
       for (i = 0; i < menu_length; i++) {
          if (static_ss.verify && verify_has_stopped) break;  /* Don't waste time after user stops us. */
-         *call_menu_ptr = static_ss.call_menu;
+         parse_state.call_list_to_use = static_call_menu;
          result.index = i;
-         result.yield_depth = (call_menu_lists[static_ss.call_menu][i]->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
-         match_pattern(call_menu_lists[static_ss.call_menu][i]->name, &result, (concept_descriptor *) 0);
+         result.yield_depth = (call_menu_lists[static_call_menu][i]->callflags1 & CFLAG1_YIELD_IF_AMBIGUOUS) ? 1 : 0;
+         match_pattern(call_menu_lists[static_call_menu][i]->name, &result, (concept_descriptor *) 0);
       }
    }
    else if (kind == ui_concept_select) {
@@ -1009,7 +1008,7 @@ static void search_menu(uims_reply kind)
       for (i = 0; i < menu_length; i++) {
          concept_descriptor *this_concept = &concept_descriptor_table[*item];
          concept_descriptor *grand_concept = (concept_descriptor *) 0;
-         *call_menu_ptr = static_ss.call_menu;
+         parse_state.call_list_to_use = static_call_menu;
          result.index = *item;
          result.yield_depth = (this_concept->miscflags & 2) ? 1 : 0;
 
@@ -1020,8 +1019,8 @@ static void search_menu(uims_reply kind)
          item++;
       }
    }
-   else if (static_ss.call_menu >= match_taggers && static_ss.call_menu <= match_taggers+3) {
-      int tagclass = static_ss.call_menu - match_taggers;
+   else if (static_call_menu >= match_taggers && static_call_menu <= match_taggers+3) {
+      int tagclass = static_call_menu - match_taggers;
       result.tagger = tagclass << 5;
 
       for (i = 0; i < number_of_taggers[tagclass]; i++) {
@@ -1029,7 +1028,7 @@ static void search_menu(uims_reply kind)
          match_pattern(tagger_calls[tagclass][i]->name, &result, (concept_descriptor *) 0);
       }
    }
-   else if (static_ss.call_menu == match_circcer) {
+   else if (static_call_menu == match_circcer) {
       result.circcer = 0;
 
       for (i = 0; i < number_of_circcers; i++) {
@@ -1039,7 +1038,7 @@ static void search_menu(uims_reply kind)
    }
    else {
       if (kind == ui_command_select) {
-         if (static_ss.call_menu == match_resolve_extra_commands) {
+         if (static_call_menu == match_resolve_extra_commands) {
             menu = extra_resolve_commands;
             menu_length = num_extra_resolve_commands;
          }
@@ -1048,20 +1047,20 @@ static void search_menu(uims_reply kind)
             menu_length = num_command_commands;
          }
       }
-      else if (static_ss.call_menu == match_directions) {
+      else if (static_call_menu == match_directions) {
          menu = &direction_names[1];
          menu_length = last_direction_kind;
       }
-      else if (static_ss.call_menu == match_selectors) {
+      else if (static_call_menu == match_selectors) {
          menu = &selector_menu_list[1];
          menu_length = last_selector_kind;
       }
-      else if (static_ss.call_menu == match_startup_commands) {
+      else if (static_call_menu == match_startup_commands) {
          kind = ui_start_select;
          menu = startup_commands;
          menu_length = NUM_START_SELECT_KINDS;
       }
-      else if (static_ss.call_menu == match_resolve_commands) {
+      else if (static_call_menu == match_resolve_commands) {
          kind = ui_resolve_select;
          menu = resolve_command_strings;
          menu_length = number_of_resolve_commands;
@@ -1168,13 +1167,13 @@ extern int match_user_input(
    static_ss.result.exact = FALSE;
    static_ss.space_ok = FALSE;
    static_ss.verify = show_verify;
-   static_ss.call_menu = which_commands;
+   static_call_menu = which_commands;
 
    if (extension) { /* needed if no matches or user input is empty */
        extension[0] = 0;
    }
 
-   if (static_ss.call_menu >= 0) {
+   if (static_call_menu >= 0) {
       if (!commands_last_option)
          search_menu(ui_command_select);
   
@@ -1186,13 +1185,13 @@ extern int match_user_input(
 
       /* ******* This is sleazy!!!!! */
       if (static_ss.result.need_big_menu)
-         *call_menu_ptr = call_list_any;
+         parse_state.call_list_to_use = call_list_any;
    }  
    else {
       search_menu(ui_special_concept);
       /* During a resolve, we allow various other commands. */
-      if (static_ss.call_menu == match_resolve_commands) {
-         static_ss.call_menu = match_resolve_extra_commands;
+      if (static_call_menu == match_resolve_commands) {
+         static_call_menu = match_resolve_extra_commands;
          search_menu(ui_command_select);
       }
    }

@@ -1029,7 +1029,7 @@ extern uims_reply uims_get_startup_command(void)
 }
 
 
-extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
    /* Check for mode changes. */
 
@@ -1039,12 +1039,12 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
    check_menu:
 
    if (allowing_modifications)
-      *call_menu = call_list_any;
+      parse_state.call_list_to_use = call_list_any;
 
-   if (last_mode != mode_normal || current_call_list != *call_menu) {
+   if (last_mode != mode_normal || current_call_list != parse_state.call_list_to_use) {
       /* Entering normal from startup/resolve, or call menu has changed -- must put up correct menu. */
-      dialog_signal(call_list_menu_signal_keys[*call_menu]);
-      current_call_list = *call_menu;
+      dialog_signal(call_list_menu_signal_keys[parse_state.call_list_to_use]);
+      current_call_list = parse_state.call_list_to_use;
    }
 
    last_mode = mode_normal;

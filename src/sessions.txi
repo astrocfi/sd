@@ -329,7 +329,7 @@ Enter startup command> @kbd{heads start}          <-- we're off and running
 When we specified session 3, sdtty got 4 pieces of information out of
 the session file:
 
-@table @code
+@itemize @bullet
 @item
 The file name.  In this case, it is @file{workshop}, instead of the
 @file{sequence.C1} that would normally be used.
@@ -341,7 +341,7 @@ a number.
 @item
 The title.  In this case, it is ``My wednesday group''.  This title
 will be written at the top of every card.
-@end table
+@end itemize
 
 So we are now running with the Wednesday C1 workshop session, about to
 write sequence number 75.  Let's write a short opening ``biggie'' sequence,
@@ -531,13 +531,13 @@ with sequence number 2.
 
 There are two reasons we might want to delete a session:
 
-@table @code
+@itemize @bullet
 @item
 We don't need it any more.
 @item
 It was part of the demonstration file, and we want to use
 our own sessions.
-@end table
+@end itemize
 
 For example, we have now learned how to create and use sessions.
 The demonstration file that came with @file{sample1.ini} is no longer

@@ -161,6 +161,14 @@ selector_item selector_list[] = {
    {"far column",   "far column",  "FAR COLUMN",   "FAR COLUMN",  selector_uninitialized},
    {"near box",     "near box",    "NEAR BOX",     "NEAR BOX",    selector_uninitialized},
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
+
+   {"those facing the caller", "those facing the caller",
+   "THOSE FACING THE CALLER", "THOSE FACING THE CALLER",         selector_uninitialized},
+
+   {"those facing away from the caller", "those facing away from the caller",
+   "THOSE FACING AWAY FROM THE CALLER", "THOSE FACING AWAY FROM THE CALLER",
+                                                                  selector_uninitialized},
+
    {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
    {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
@@ -337,7 +345,7 @@ Private restriction_thing ptpd_3        = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, 
 Private restriction_thing dmd_q         = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing qtag_d        = {4, {4, 2, 3, 6, 7}, {4, 0, 1, 4, 5},                {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing dmd_d         = {4, {2, 0, 2}, {2, 1, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
-Private restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 7}, {4, 1, 3, 5, 6},                {0},       {0},       FALSE, chk_dmd_qtag};
+Private restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 6}, {4, 1, 3, 5, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing all_4_ns      = {4, {4, 0, 1, 2, 3}, {0},                            {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing all_4_ew      = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
 Private restriction_thing all_8_ns      = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
@@ -2184,6 +2192,19 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             rr = get_restriction_thing(ss->kind, tt);
             if (rr) goto check_stuff;
             goto good;                 /* We don't understand the setup -- we'd better accept it. */
+         case sq_couples_only:     /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
+            switch (ss->cmd.cmd_assume.assumption) {
+               case cr_1fl_only:
+                  goto good;
+               case cr_wave_only:
+               case cr_magic_only:
+                  goto bad;
+            }
+
+            tt.assumption = cr_couples_only;
+            rr = get_restriction_thing(ss->kind, tt);
+            if (rr) goto check_stuff;
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_3x3couples_only:     /* 1x3/1x6/2x6/1x12 - each group of 3 people are facing the same way */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2802,7 +2823,7 @@ extern uint32 find_calldef(
    if (tdef->callarray_flags & CAF__PREDS) {
       predlistptr = tdef->stuff.prd.predlist;
       while (predlistptr != (predptr_pair *) 0) {
-         if ((*(predlistptr->pred))(scopy, real_index, real_direction, northified_index)) {
+         if ((*(predlistptr->pred->predfunc))(scopy, real_index, real_direction, northified_index, predlistptr->pred->extra_stuff)) {
             calldef_array = predlistptr->arr;
             goto got_it;
          }

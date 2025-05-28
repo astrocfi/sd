@@ -350,14 +350,14 @@ SDTTY_OBJ="$(SDTTY_OBJ_PC)"
 # DOS can't handle long command lines
 SDTTY_OBJS="@pcfiles.lnk"
 CC=gcc
-CDEBUGFLAGS=-O
+CDEBUGFLAGS="-O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts"
 DEFS=
 TTY_FLAGS=
 TTY_LIBS=-lpc
 X11_LIBS=
 LN_S="ln -s"
 SET_MAKE="MAKE=make"	STRIP="	strip \$@"
-AOUT2EXE="	aout2exe \$@"
+COFF2EXE="	coff2exe \$@"
 DEFAULT_TARGET=alltty
 # ****** End of PC section ******
 
@@ -1116,7 +1116,7 @@ trap 'rm -f Makefile; exit 1' 1 2 15
 VERSION='$VERSION'
 PCVERSION='$PCVERSION'
 STRIP='$STRIP'
-AOUT2EXE='$AOUT2EXE'
+COFF2EXE='$COFF2EXE'
 CC='$CC'
 CPP='$CPP'
 SYSTEM='$SYSTEM'
@@ -1188,7 +1188,7 @@ $extrasub
 s%@VERSION@%$VERSION%g
 s%@PCVERSION@%$PCVERSION%g
 s%@STRIP@%$STRIP%g
-s%@AOUT2EXE@%$AOUT2EXE%g
+s%@COFF2EXE@%$COFF2EXE%g
 s%@CC@%$CC%g
 s%@CPP@%$CPP%g
 s%@SYSTEM@%$SYSTEM%g

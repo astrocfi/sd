@@ -1,4 +1,4 @@
-static char *time_stamp = "sdui-x11.c Time-stamp: <95/11/09 17:48:56 gildea>";
+static char *time_stamp = "sdui-x11.c Time-stamp: <96/05/01 12:49:02 gildea>";
 /* 
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
@@ -611,7 +611,7 @@ Private XtResource command_resources[] = {
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
     MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
     MENU("title", cmd_list[cmd_button_change_title], "Change title"),
-    MENU("getout", cmd_list[cmd_button_getout], "End this sequence"),
+    MENU("getout", cmd_list[cmd_button_getout], "Write this sequence"),
     MENU("resolve", cmd_list[cmd_button_resolve], "Resolve"),
     MENU("reconcile", cmd_list[cmd_button_reconcile], "Reconcile"),
     MENU("anything", cmd_list[cmd_button_anything], "Pick random call"),
@@ -760,6 +760,7 @@ uims_process_command_line(int *argcp, char **argvp[])
    program_name = argv[0];
    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
 			       fallback_resources, NULL, 0);
+   ui_started = TRUE;
    XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
 			      top_level_resources, XtNumber(top_level_resources),
 			      NULL, 0);
@@ -1087,7 +1088,6 @@ extern void uims_preinitialize(void)
     XtOverrideTranslations(conceptlist, list_trans);
 
     XtRealizeWidget(conceptpopup);
-   ui_started = TRUE;
 }
 
 Private void
@@ -1354,7 +1354,7 @@ extern uims_reply uims_get_startup_command(void)
 }
 
 
-extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+extern long_boolean uims_get_call_command(uims_reply *reply_p)
 {
    int local_reply;
    int banner_mode;
@@ -1379,7 +1379,7 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
    }
 
    if (allowing_modifications)
-      *call_menu = call_list_any;
+      parse_state.call_list_to_use = call_list_any;
 
    if (visible_mode != mode_normal) {
       if (visible_mode == mode_resolve) {
@@ -1391,8 +1391,8 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
       visible_mode = mode_normal;
       visible_call_menu = call_list_none; /* no call menu visible */
    }
-   if (visible_call_menu != *call_menu)
-      set_call_menu (*call_menu, *call_menu);
+   if (visible_call_menu != parse_state.call_list_to_use)
+      set_call_menu (parse_state.call_list_to_use, parse_state.call_list_to_use);
 
    inside_what = inside_get_command;
    local_reply = read_user_gesture(xtcontext);

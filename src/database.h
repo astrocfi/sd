@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 74
+#define DATABASE_FORMAT_VERSION 75
 
 
 
@@ -351,6 +351,7 @@ typedef enum {
    sq_wave_only,
    sq_1fl_only,
    sq_2fl_only,
+   sq_couples_only,
    sq_3x3couples_only,
    sq_4x4couples_only,
    sq_magic_only,

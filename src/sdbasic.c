@@ -85,7 +85,7 @@ extern void mirror_this(setup *s)
          place = cptr->diagram[28 - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
          if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
-            fail("Don't recognize ending setup for this call, not able to do it mirror.");
+            fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
          n = temp.people[i].id1;
          t = (- (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
@@ -103,7 +103,7 @@ extern void mirror_this(setup *s)
          place = cptr->diagram[28 - ((y >> 2) << cptr->xfactor) + (x >> 2)];
 
          if ((place < 0) || (cptr->xca[place] != x) || (cptr->yca[place] != y))
-            fail("Don't recognize ending setup for this call, not able to do it mirror.");
+            fail("Don't recognize ending setup for this call; not able to do it mirror.");
 
          n = temp.people[i].id1;
          t = (- (n & (STABLE_VBIT*3))) & (STABLE_VBIT*3);
@@ -1172,7 +1172,7 @@ Private int divide_the_setup(
          if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
-            do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
+            do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, TRUE);
             if (ss->kind != s2x8) fail("Failed to expand to 2X8.");  /* Should never fail, but we don't want a loop. */
             return 2;        /* And try again. */
          }
@@ -1249,7 +1249,7 @@ Private int divide_the_setup(
          if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
-            do_matrix_expansion(ss, CONCPROP__NEED_1X16, TRUE);
+            do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, TRUE);
             if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  /* Should never fail, but we don't want a loop. */
             return 2;        /* And try again. */
          }
@@ -1292,7 +1292,7 @@ Private int divide_the_setup(
          if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_1x12, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_12x1, ss, calldeflist))) {
-            do_matrix_expansion(ss, CONCPROP__NEED_1X12, TRUE);
+            do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, TRUE);
             if (ss->kind != s1x12) fail("Failed to expand to 1X12.");  /* Should never fail, but we don't want a loop. */
             return 2;        /* And try again. */
          }
@@ -1304,7 +1304,7 @@ Private int divide_the_setup(
          if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
                (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
-            do_matrix_expansion(ss, CONCPROP__NEED_1X16, TRUE);
+            do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, TRUE);
             if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  /* Should never fail, but we don't want a loop. */
             return 2;        /* And try again. */
          }
@@ -2022,7 +2022,7 @@ Private int divide_the_setup(
          if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
                (!(newtb & 010) || assoc(b_1x12, ss, calldeflist) || assoc(b_1x16, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_12x1, ss, calldeflist) || assoc(b_16x1, ss, calldeflist))) {
-            do_matrix_expansion(ss, CONCPROP__NEED_1X12, TRUE);
+            do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, TRUE);
             if (ss->kind != s1x12) fail("Failed to expand to 1X12.");  /* Should never fail, but we don't want a loop. */
             return 2;                        /* And try again. */
          }
@@ -2091,7 +2091,7 @@ Private int divide_the_setup(
             if (must_do_concentric)
                fail("Can't do \"snag/mystic\" with this call.");
 
-            do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
+            do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, TRUE);
             if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
             return 2;                        /* And try again. */
          }
@@ -2823,15 +2823,15 @@ extern void basic_move(
                if (search_concepts & INHERITFLAG_12_MATRIX) {
                   do_matrix_expansion(
                      ss,
-                     (ss->kind == s2x4) ? CONCPROP__NEED_2X6 : CONCPROP__NEED_TRIPLE_1X4,
+                     (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEED_TRIPLE_1X4,
                      TRUE);
 
                   if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12) fail("Can't expand to a 12 matrix.");
                   matrix_check_flag = INHERITFLAG_12_MATRIX;
                }
                else if (search_concepts & INHERITFLAG_16_MATRIX) {
-                  if (ss->kind == s2x6) do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
-                  else if (ss->kind != s2x4) do_matrix_expansion(ss, CONCPROP__NEED_1X16, TRUE);
+                  if (ss->kind == s2x6) do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, TRUE);
+                  else if (ss->kind != s2x4) do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, TRUE);
                   /* Take no action (and hence cause an error) if the setup was a 2x4.  If someone wants to say
                      "16 matrix 4x4 peel off" from normal columns, that person needs more help than we can give. */
 

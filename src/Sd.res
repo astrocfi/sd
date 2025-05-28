@@ -44,7 +44,7 @@
 *command.comment: Insert a comment
 *command.outfile: Change output file
 *command.title: Change title
-*command.getout: End this sequence
+*command.getout: Write this sequence
 *command.resolve: Resolve
 *command.reconcile: Reconcile
 *command.anything: Pick random call
