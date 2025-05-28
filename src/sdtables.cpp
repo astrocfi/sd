@@ -3055,6 +3055,12 @@ map::map_thing map::map_init_table[] = {
     s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s2x4, 0x000, 0},
    {{5, 4,                  2, 3,                  7, 6,                  0, 1},
     s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,1, warn__none, s2x4, 0x000, 0},
+
+   {{0, 1,                  2, 3,                  5, 4,                  7, 6},
+    s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,0, warn__none, s2x4, 0x000, 0},
+   {{7, 6,                  1, 0,                  2, 3,                  4, 5},
+    s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,1, warn__none, s2x4, 0x000, 0xA0A0},
+
    {{3,                     2,                     0,                     1},
     s1x1,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, warn__none, sdmd, 0x000, 0},
    {{3,                     2,                     0,                     1},

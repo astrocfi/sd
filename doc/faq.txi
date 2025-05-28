@@ -1355,14 +1355,14 @@ to fix this bug.
 The bug was subsequently observed with version 5 also, creating a
 serious problem, since those are the only Microsoft compilers that I
 have.  (I also use Microsoft Visual Studio 2015, but not for
-productiono builds.)  As of Sd version 35, Gcc is used for the
+production builds.)  As of Sd version 35, Gcc is used for the
 compilation of Sd/Sdtty for Windows.  It has always been used for the
 Linux release, of course.
 
 No version of Sd or Sdtty suffering from this Microsoft compiler bug was
 ever released---the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
-of the program could be getting compiled incorrectly.  So productiono builds
+of the program could be getting compiled incorrectly.  So production builds
 use Gcc.
 
 @unnumberedsec So what software is used in the preparation of Sd and Sdtty?

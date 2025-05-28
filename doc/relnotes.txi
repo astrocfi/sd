@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.53
-@set title2 Database version = 39.53 format = 400
+@set title1 RELEASE NOTES FOR VERSION 39.54
+@set title2 Database version = 39.54 format = 400
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.54::
 * 39.53::
 * 39.52::
 * 39.51::
@@ -153,7 +154,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.53, Top, (dir)
+@node Intro, 39.54, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -164,11 +165,21 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2023 William B. Ackerman
 @sp 3
 @menu
-* 39.53::               Changes in the current version
+* 39.54::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.53, 39.52, Intro, Top
+@node 39.54, 39.53, Intro, Top
+@unnumberedsec Version 39.54 changes
+
+Handling of @strong{1/2 hinge} from thars was improved.
+
+@strong{zoom} is now legal in T-boned boxes.
+
+Some cases of @strong{3x1} were improved.
+
+@c ************
+@node 39.53, 39.52, 39.54, Top
 @unnumberedsec Version 39.53 changes
 
 Some bugs with @strong{fractal}, exemplified by

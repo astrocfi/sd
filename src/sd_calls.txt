@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.53"
+version "39.54"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3945,7 +3945,7 @@ call "hinge (special)" dontshow tag hinge_for_nicely
       predscantdocallinsetup
          if miniwave_side_of_in_3n1_line  [AL0W CR1E CR2E AL1W]
          if couple_side_of_in_3n1_line    [CR0E CR1E AL2W AL1W]
-            alternate_definition [3x1] c4   /* Same as 1x3. */
+            alternate_definition [3x1] c4   // Same as 1x3.
    setup 1x4 2x3
       predscantdocallinsetup
          if miniwave_side_of_in_3n1_line  [AL0W CR1E CR2E AL1W]
@@ -4317,6 +4317,16 @@ call "switch the wave" a2
             alternate_definition [4x4] c4
    setup 1x8 1x8 restriction forbidden wave_only
       array [CR6S AL0S AL1S CR7S AL2S CR4S CR5S AL3S]
+            alternate_definition [1x3] c4
+   setup 1x4 1x4
+      predscantdocallinsetup
+         if miniwave_side_of_in_3n1_line  [AL0S CR2S AL2S AL0S]
+         if couple_side_of_in_3n1_line    [CR1S CR3S AL3S AL1S]
+            alternate_definition [3x1] c4   // Same as 1x3.
+   setup 1x4 1x4
+      predscantdocallinsetup
+         if miniwave_side_of_in_3n1_line  [AL0S CR2S AL2S AL0S]
+         if couple_side_of_in_3n1_line    [CR1S CR3S AL3S AL1S]
             alternate_definition [straight] c4
    setup 2x4 2x4 restriction wave_only
       array [CR2S AL0S CR3S AL1S ZM2N CR4S AL7S ZM1N]
@@ -4421,8 +4431,8 @@ call "cross roll to a wave" c1
       array [CR0E CR1E AL1W AL0W]
    setup 1x4 2x2 no_cutting_through qualifier magic_only
       array [CR0E CR1E AL1W AL0W]
-   /* If the above clauses fail, we know there will be a collision,
-      so we create an expanded setup. */
+   // If the above clauses fail, we know there will be a
+   // collision, so we create an expanded setup.
    setup 1x4 2x4 rotate no_cutting_through
       predscantdo
          if x14_once_rem_couple [CR6N CR0N AL1S AL7S]
@@ -4438,6 +4448,16 @@ call "cross roll to a wave" c1
             alternate_definition [4x4] c4
    setup 1x8 1x8 restriction forbidden 4x4_2fl_only
       array [CR1S CR2S CR4S CR7S AL5S AL6S AL0S AL3S]
+            alternate_definition [1x3] c4
+   setup 1x4 1x4
+      predscantdocallinsetup
+         if miniwave_side_of_out_3n1_line [CR3S AL0S CR1S AL2S]
+         if couple_side_of_out_3n1_line   [CR0S CR3S AL2S AL1S]
+            alternate_definition [3x1] c4   // Same as 1x3.
+   setup 1x4 1x4
+      predscantdocallinsetup
+         if miniwave_side_of_out_3n1_line [CR3S AL0S CR1S AL2S]
+         if couple_side_of_out_3n1_line   [CR0S CR3S AL2S AL1S]
 
 call "run wild" c4a
             grand_is_inherited nxn_is_inherited mxn_is_inherited
@@ -15122,7 +15142,7 @@ call "5/6 reverse the pass" c3
 
 call "zoom" mainstream tag zoom
             can_be_one_side_lateral
-   setup 2x2 2x2 no_cutting_through qualifier ntbone none restriction controversial peelable_box
+   setup 2x2 2x2 no_cutting_through restriction controversial peelable_box
       array [AL3N CR2N ZM1N ZM0N]
    setup 2x1 1x2 restriction controversial alwaysfail
       array [ZM1N 0N]
@@ -25809,6 +25829,26 @@ call "the K" c2 tag the_k
             half_is_inherited yoyo_is_inherited gen_sting_is_inherited
    singleconc_together trade [inherit_half inherit_yoyo inherit_gensting]
                        uturnaway [inherit_half conc_force_spots]
+   // More stuff for 3x3 etc.
+   setup 1x4 1x4 restriction wave_only
+      array [0 0 0 0]  // If you haven't gotten it by now,
+                       // you're not going to get it.
+            alternate_definition [3x3] c4
+   setup 1x6 1x6 restriction forbidden wave_only
+      array [AL0S CR5S AL1S CR3S AL2S CR4S]
+            alternate_definition [4x4] c4
+   setup 1x8 1x8 restriction forbidden wave_only
+      array [AL0S CR6S CR7S AL1S CR4S AL2S AL3S CR5S]
+            alternate_definition [1x3] c4
+   setup 1x4 1x4
+      predscantdocallinsetup
+         if miniwave_side_of_in_3n1_line [AL1S CR0S AL3S CR2S]
+         if couple_side_of_in_3n1_line   [AL0S AL1S CR2S AL3S]
+            alternate_definition [3x1] c4   // Same as 1x3.
+   setup 1x4 1x4
+      predscantdocallinsetup
+         if miniwave_side_of_in_3n1_line [AL1S CR0S AL3S CR2S]
+         if couple_side_of_in_3n1_line   [AL0S AL1S CR2S AL3S]
 
 call "the K but @m" c3a tag the_k_but
    singleconc_together nullsecond [mandatory_secondary_call]

@@ -637,11 +637,16 @@ static void multiple_move_innards(
          map_kind = MPKIND__4_QUADRANTS_WITH_45_ROTATION;
       }
       else if (map_kind == MPKIND__4_EDGES) {
-         if ((vert & 1) || (z[0].rotation & 1)) {
-            z[1].rotation += 2;
-            z[3].rotation += 2;
+         if (((z[0].rotation ^ z[1].rotation) & 1) == 1) {
+            map_kind = MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR;
          }
-         map_kind = MPKIND__4_QUADRANTS;
+         else {
+            if ((vert & 1) || (z[0].rotation & 1)) {
+               z[1].rotation += 2;
+               z[3].rotation += 2;
+            }
+            map_kind = MPKIND__4_QUADRANTS;
+         }
       }
       else
          fail("Can't handle this rotation.");
@@ -838,6 +843,10 @@ static void multiple_move_innards(
                if (!(rotstate & 0x0F0))
                   fail("Can't do this orientation changer.");
                map_kind = (map_kind == MPKIND__SPLIT) ? MPKIND__HET_SPLIT : MPKIND__HET_CONCPHAN;
+            }
+            else if (arity == 4 && map_kind == MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR) {
+               if (!(rotstate & 0x0F0))
+                  fail("Can't do this orientation changer.");
             }
             else if (arity == 4 && map_kind == MPKIND__DMD_STUFF) {
                if (!(rotstate & 0x0F0))
