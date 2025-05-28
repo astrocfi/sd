@@ -1,4 +1,4 @@
-This is Sd for POSIX.1/X11 systems.  Time-stamp: <92/11/22 21:56:06 gildea>
+This is Sd for POSIX.1/X11 systems.  Time-stamp: <92/11/30 19:56:16 gildea>
 
 ABOUT SD:
 
@@ -103,10 +103,10 @@ Sd*text*font: -misc-fixed-medium-r-normal--13-*-*-*-c-70-iso8859-1
 
 CUSTOMIZATION:
 
-The file Sd.ad is a sample user resource file for the program.  It
+The file Sd.res is a sample user resource file for the program.  It
 contains values for a number of parameters, including most of the
 text on the screen which is not fetched from the calls database.
-Install Sd.ad as $HOME/Sd to use these resources.
+Install Sd.res as $HOME/Sd to use these resources.
 
 People who have many user resource files for different applications
 may wish to store them in a directory other than their home directory.
@@ -125,7 +125,7 @@ whatever your X startup file is called).  You will have to re-run xrdb
 after editing your .Xresources file.  You should add "Sd" to the front
 of any lines you move to your .Xresources file.
 
-All values in the distributed Sd.ad file except the colors are the
+All values in the distributed Sd.res file except the colors are the
 defaults and are in the file for illustration only.  You can remove
 them if you wish your installed user resource file to contain only the
 resources you change.
@@ -149,9 +149,15 @@ are introduced in new minor versions.
 
 If you customize any part of Sd for your own use, or fix bugs, please
 assign the result a new version by appending to the current version.
-For example, you might create version "25.6.joe1".  The version string
-is defined in sdmain.c.  Do not increment the major or minor version;
-that is reserved to the developers.
+This will help in keeping track of bug reports.  The version string is
+defined near the top of the file sdmain.c.  For example, you might
+set it to "25.6.joe1" for your private version.  By leaving the
+original two numbers, we can correlate possible problems with the
+fileset on which the private version was based.
+
+The calls database also has a version.  Unlike the program version,
+the major and minor parts of the database version must be numeric,
+and there can be no additional parts.
 
 GETTING SD:
 

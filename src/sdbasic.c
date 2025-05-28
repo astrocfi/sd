@@ -112,19 +112,29 @@ static collision_map collision_map_table[] = {
    /* These items handle columns with people wedged everywhere, and hence handle unwraps of facing diamonds etc. */
    {4, 0x055055, 0x55, 0x55, {0, 2, 4, 6},         {12, 14, 2, 11},       {10, 3, 4, 6},          s2x4,        s4x4,        0},
    {4, 0x0AA0AA, 0xAA, 0xAA, {1, 3, 5, 7},         {13, 0, 7, 9},         {15, 1, 5, 8},          s2x4,        s4x4,        0},
+
+
+
    /* These items handle the situation from a 2FL/intlkd box circ/split box trade circ. */
+/* Not sure what that comment meant, but we are trying to handle colliding 2FL-type circulates */
+   {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x4,        s2x8,        0},
+   {2, 0x000000, 0x0C, 0x0C, {2, 3},               {4, 6},                {5, 7},                 s2x4,        s2x8,        0},
+   {2, 0x000000, 0x30, 0x30, {5, 4},               {11, 9},               {10, 8},                s2x4,        s2x8,        0},
+   {2, 0x000000, 0xC0, 0xC0, {7, 6},               {15, 13},              {14, 12},               s2x4,        s2x8,        0},
+/* The preceding lines used to be these, which seems quite wrong:
    {2, 0x000000, 0x03, 0x03, {0, 1},               {0, 2},                {1, 3},                 s2x4,        s2x4,        0},
    {2, 0x000000, 0x0C, 0x0C, {2, 3},               {0, 2},                {1, 3},                 s2x4,        s2x4,        0},
    {2, 0x000000, 0x30, 0x30, {5, 4},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0},
    {2, 0x000000, 0xC0, 0xC0, {7, 6},               {7, 5},                {6, 4},                 s2x4,        s2x4,        0},
+*/
+
+
+
    /* These items handle various types of "1/2 circulate" calls from 2x2's. */
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 sdmd,        s1x4,        0},   /* from couples out if it went to diamond */
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from couples out if it went to line */
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 sdmd,        s1x4,        1},   /* from couples in if it went to diamond */
    {2, 0x000000, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from couples in if it went to line */
-/*    What is this????  Isn't it incorrect??
-   {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},
-*/
    {2, 0x000000, 0x06, 0x06, {1, 2},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from "head pass thru, all split circulate" */
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0},   /* from "head pass thru, all split circulate" */
    /* These items handle "1/2 split trade circulate" from 2x2's. */
@@ -797,6 +807,18 @@ static void check_column_restriction(setup *ss, call_restriction restr, unsigned
                if (k & ~i & 2)
                   goto cdef_failed;
                break;
+            case cr_magic_only:
+               k = 0;         /* check for magic columns */
+               i = 2;
+               if (ss->people[0].id1) { k |=  ss->people[0].id1; i &=  ss->people[0].id1; }
+               if (ss->people[1].id1) { k |= ~ss->people[1].id1; i &= ~ss->people[1].id1; }
+               if (ss->people[2].id1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
+               if (ss->people[3].id1) { k |= ~ss->people[3].id1; i &= ~ss->people[3].id1; }
+               if (ss->people[4].id1) { k |=  ss->people[4].id1; i &=  ss->people[4].id1; }
+               if (ss->people[5].id1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
+               if (k & ~i & 2)
+                  goto cdef_failed;
+               break;
             case cr_peelable_box:
                /* check for a "peelable" 2x3 column */
                q2 = 3; q3 = 3;
@@ -808,6 +830,19 @@ static void check_column_restriction(setup *ss, call_restriction restr, unsigned
                if (t = ss->people[4].id1) { q7 &= t; q6 &= (t^2); }
                if (t = ss->people[5].id1) { q7 &= t; q6 &= (t^2); }
                if ((((~q2)&3) && ((~q3)&3)) || (((~q7)&3) && ((~q6)&3)))
+                  goto cdef_failed;
+               break;
+         }
+      case s_qtag:
+         switch (restr) {
+            case cr_wave_only:
+               k = 0;         /* check for wave across the center */
+               i = 2;
+               if (t = ss->people[2].id1) { k |=  t; i &=  t; }
+               if (t = ss->people[3].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[6].id1) { k |= ~t; i &= ~t; }
+               if (t = ss->people[7].id1) { k |=  t; i &=  t; }
+               if (k & ~i & 2)
                   goto cdef_failed;
                break;
          }

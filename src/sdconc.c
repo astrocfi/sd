@@ -1243,12 +1243,18 @@ extern void concentric_move(
                throwing away the outsides completely.  If this was an
                "on your own", it may be possible to put things back together.
                This is what makes "1P2P; pass thru; ENDS leads latch on;
-               ON YOUR OWN disband & snap the lock" work. */
+               ON YOUR OWN disband & snap the lock" work.  But if we try to glue
+               these setups together, "fix_n_results" will raise an error, since
+               it won't know whether to leave room for the phantoms. */
 
-            *result = result_inner[0];
-            /* **** We should actually call normalize_concentric.  In fact, we should
-               actually just fall into normal code.  However, normalize_concentric is,
-               by its own admission, rather inept at dealing with these sorts of things. */
+            *result = result_inner[0];   /* This gets all the inner people. */
+            result->kind = s_normal_concentric;
+            result->inner.skind = result_inner[0].kind;
+            result->inner.srotation = result_inner[0].rotation;
+            result->outer.skind = nothing;
+            result->outer.srotation = 0;
+            result->outer_elongation = 0;
+            canonicalize_rotation(result);
             return;
          }
       }
@@ -1286,7 +1292,22 @@ extern void concentric_move(
          result_inner[0].rotation = result_outer.rotation;
       }
       else {
-         fail("Can't figure out ending setup for concentric call -- no centers.");
+         /* The centers are just gone!  It is quite possible that "fix_n_results"
+            may be able to repair this damage by copying some info from another setup.
+            Missing centers are not as serious as missing ends, because they won't
+            lead to indecision about whether to leave space for the phantoms. */
+
+         int j;
+         result->kind = s_normal_concentric;
+         result->outer.skind = result_outer.kind;
+         result->outer.srotation = result_outer.rotation;
+         result->inner.skind = nothing;
+         result->inner.srotation = 0;
+         result->outer_elongation = 0;
+
+         for (j=0; j<12; j++) (void) copy_person(result, j+12, &result_outer, j);
+         canonicalize_rotation(result);
+         return;
       }
    }
 
@@ -1467,10 +1488,13 @@ extern void merge_setups(setup *ss, setup *result)
    res2 = &res2copy;
 
    canonicalize_rotation(res1);    /* Do we really need to do this before normalize_setup? */
-   canonicalize_rotation(res2);
    normalize_setup(res1, normalize_before_merge);
-   normalize_setup(res2, normalize_before_merge);
    canonicalize_rotation(res1);    /* We definitely need to do it now -- a 2x2 might have been created. */
+
+   tryagain:
+
+   canonicalize_rotation(res2);
+   normalize_setup(res2, normalize_before_merge);
    canonicalize_rotation(res2);
 
    /* Canonicalize the setups according to their kind.  This is a bit sleazy, since
@@ -1486,8 +1510,17 @@ extern void merge_setups(setup *ss, setup *result)
       You get the idea. */
 
    if (res2->kind < res1->kind) {
-      res2 = ss;
-      res1 = &res2copy;
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+   }
+
+   /* If one of the setups was a "concentric" setup in which there are no ends, we can still handle it. */
+
+   if (res2->kind == s_normal_concentric) {
+      res2->kind = res2->inner.skind;
+      res2->rotation = res2->inner.srotation;
+      goto tryagain;    /* Need to recanonicalize setup order. */
    }
 
    result->rotation = res2->rotation;

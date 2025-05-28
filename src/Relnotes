@@ -1,37 +1,48 @@
-		    RELEASE NOTES FOR VERSION 27.3
-
-========================================================================
-To remove from SRC's database:  3x3/4x4 peel/trail off, peel/trail the deal,
-loop & tag.  Beau hop.  Turn to a line, turn and deal, triple turn,
-circle to a wave, follow your leader.  Walk and dodge, bend the line,
-crossfire, shake and/or rattle, wheel thru, wheel the ocean/sea
-========================================================================
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-You must inspect all uses of couples/tandem, whether or not fractional
-twosome was used.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-This release should be considered flaky.  It is not suitable for general use.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		    RELEASE NOTES FOR VERSION 27.6
+       Database version = 27.7, format = 31, X11 UI version 1.11.
 
 Finally fixed (????) stuff like "centers [2/3 recycle] the difference"
-from a grand wave.  This also makes the evil example in the documentation
-work.
+from a grand wave.  This also makes the evil example in the documentation,
+[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY [2/3 recycle]
+the difference] cover up, work.  (I recently called that example to a
+C4 group.  They got through it, but did not seem very happy about it.)
+
+Fixed an error in the "wave_only" restriction from 2x3 columns, so
+3x3 couple up should work.
+
+Fixed a bug in the table directing the transformation of a 4x4 into
+quadruple diamonds.  This would only occur if people were all in the outer
+columns, and a concept like "quadruple diamonds" or "split phantom diamonds"
+was used, which requires the people to consider themselves points of those
+diamonds.  This would have resulted in an incorrect sequence.  We apologize
+for any behind-the-microphone embarrassment that this may have caused.
 
 Fixed another evil case of knowing where the phantoms went on things like
 "split phantom lines tag chain thru reaction".
 
+Tightened up the program's understanding or nonunderstanding of where
+phantoms went.  It is no longer possible to call "split phantom lines
+hocus pocus" from columns.  It used to do it wrong, by not leaving space
+for the phantoms.  It now refuses, because it doesn't know which way the
+phantoms oriented their setup, and hence it doesn't know whether to leave
+room for them.  It is true that many humans would claim that this is legal,
+and that one does have to leave room for the phantoms no matter which way
+they are facing, due to the "double O circulate" theorem.  However, the
+program does not know that theorem.
+
 New MxN calls: various fractions of peel/trail off, peel/trail the deal,
-including 3X3 and 4X4.  3X3 and 4X4 loop and tag, beau/belle hop, turn/wheel to a line,
-turn/wheel and deal, triple turn/wheel, circle to a wave, follow your leader,
-walk and dodge, couple up, bend/retreat the line, crossfire, shake and/or rattle,
-wheel thru, wheel the ocean/sea.
+including 3X3 and 4X4.  3X3 and 4X4 loop and tag, beau/belle hop, turn/wheel
+to a line, turn/wheel and deal, triple turn/wheel, circle to a wave, follow
+your leader, walk and dodge, couple up, bend/retreat the line, crossfire,
+shake and/or rattle, wheel thru, wheel the ocean/sea.
 
 The ability to expand the matrix from a 2x4 to a 2x6 or 2x8 when executing a
 call that requires same was implemented.  It is now possible to do 12 matrix
 circulate or 3X3/4X4 follow your leader from a 2x4.
 
-Other new calls: Soft touch, about.
+Other new calls: Soft touch, about, diamond inlet/outlet/recycle, 3/4 wheel
+the ocean/sea/to a diamond.  Magic versions of various 3x1 transfer things.
+Lots of other minor maintenance.
 
 New concepts: Triple/quadruple lines/columns working together/apart.
 These take a 1x12 or 1x16 setup.  Also, plain triple/quadruple
@@ -114,5 +125,3 @@ resources file for Sd.  See README for the new documentation.
 ===============================================================================
 
 See the file relnotes.archive for notes relating to older versions.
-
-

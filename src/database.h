@@ -272,7 +272,9 @@ typedef enum {
 typedef enum {
    cr_none,
    cr_alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
-   cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4 - waves; 1x8 - a grand wave; 2x2 - real box; qtag - wave in center; 4x2 or 3x2 - column */
+   cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4 - waves; 1x8 - a grand wave; 2x2 - real box;
+                                       qtag - wave in center; pqtag - wave in center (use only if center people have no legal
+                                       move from pqtag, only from qtag); 4x2 or 3x2 - column */
    cr_wave_unless_say_2faced,
    cr_all_facing_same,              /* 2x2, 2x3, or 2x4 - all people facing the same way. */
    cr_1fl_only,                     /* 1x4 - a 1FL; 2x3 or 2x4 - 1FL's */
@@ -284,7 +286,7 @@ typedef enum {
    cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
    cr_awkward_centers,              /* 1x4 or 1x2 - centers must not have left hands with each other */
    cr_nice_diamonds,                /* qtag or ptpd - diamonds have consistent handedness */
-   cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 4x2 - magic column */
+   cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column */
    cr_peelable_box,                 /* 2x2 or 3x2 or 4x2 - all people in each column are facing same way */
    cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
    cr_not_tboned,                   /* 2x2 - people must not be T-boned */

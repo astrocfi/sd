@@ -426,8 +426,8 @@ static String fallback_resources[] = {
     "*confirmpopup.WinGravity: 10", /* StaticGravity */
     "*confirm*label.borderWidth: 2",
     "*concept*items.borderWidth: 2",
-    "*concept.hSpace: 10",	/* slack so don't move off accidentally */
-    "*concept.vSpace: 10",
+    "*concept.hSpace: 20",	/* slack so don't move off accidentally */
+    "*concept.vSpace: 20",
     "*selector.choose*borderWidth: 0", /* prettier this way */
     "*Dialog.value*Translations: #override <Key>Return: accept_string()\n",
     "*comment.label: You can insert a comment:",

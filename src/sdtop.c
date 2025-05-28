@@ -45,7 +45,7 @@ typedef struct {
 static expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s_4dmd, 0};
 static expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s_4dmd, 0};
 static expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s_3x1dmd, s_3dmd, 0};
-static expand_thing exp_4x4_4dm_stuff_a = {{8, 9, 10, 6, 11, 13, 12, 15, 0, 1, 2, 14, 3, 5, 4, 7}, 16, nothing, s_4dmd, 1};
+static expand_thing exp_4x4_4dm_stuff_a = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s_4dmd, 1};
 static expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s_4dmd, 0};
 static expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
 static expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
@@ -785,13 +785,13 @@ static void normalize_c1_phan(setup *stuff)
 
 
 
-/* The "level" argument tells how hard we work to remove the outside phantoms.
+/* The "nlevel" argument tells how hard we work to remove the outside phantoms.
    When merging the results of "on your own" or "own the so-and-so",
-   we set level=normalize_before_merge to work very hard at stripping away
+   we set nlevel=normalize_before_merge to work very hard at stripping away
    outside phantoms, so that we can see more readily how to put things together.
    When preparing for an isolated call, we work at it a little, so
-   level=normalize_before_isolated_call.   For normal usage, level=simple_normalize. */
-extern void normalize_setup(setup *ss, normalize_level level)
+   nlevel=normalize_before_isolated_call.   For normal usage, nlevel=simple_normalize. */
+extern void normalize_setup(setup *ss, normalize_level nlevel)
 {
    /* Normalize setup by removing outboard phantoms. */
 
@@ -854,7 +854,7 @@ extern void normalize_setup(setup *ss, normalize_level level)
       a quarter tag, we reduce the setup all the way down to a line.  Normally we
       wouldn't do this, lest we lose phantoms when gluing setups together. */
 
-   if (level >= normalize_before_merge) {
+   if (nlevel >= normalize_before_merge) {
       /* This reduction is necessary to make "ends only rotate 1/4" work from a DPT, yielding a rigger. */
       if ((ss->kind == s2x4) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
          ss->kind = s2x2;
@@ -872,7 +872,7 @@ extern void normalize_setup(setup *ss, normalize_level level)
       }
    }
 
-   if (level >= normalize_before_isolated_call) {
+   if (nlevel >= normalize_before_isolated_call) {
       if (ss->kind == s_qtag) {
          if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
             ss->kind = s1x4;

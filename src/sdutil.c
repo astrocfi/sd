@@ -2151,6 +2151,33 @@ extern long_boolean fix_n_results(int arity, setup z[])
       to 1x4's. */
 
    for (i=0; i<arity; i++) {
+      if (z[i].kind == s_normal_concentric) {
+         /* We definitely have a problem.  A common way for this to happen is if a concentric call
+            was done and there were no ends, so we don't know what the setup really is.  Example:
+            from normal columns, do a split phantom lines hocus-pocus.  Do we leave space for the
+            phantoms?  Humans would probably say yes because they know where the phantoms went, but
+            this program has no idea in general.  If a call is concentrically executed and the
+            outsides are all phantoms, we don't know what the setup is.  Concentric_move signifies
+            this by creating a "concentric" setup with "nothing" for the outer setup.  So we raise
+            an error that is somewhat descriptive. */
+         if (z[i].outer.skind == nothing)
+            fail("Can't do this: don't know where the phantoms went.");
+         else if (z[i].inner.skind == nothing && z[i].outer.skind == s_1x2) {
+            /* We can fix this up.  Just turn it into a 1x4 with the ends missing.
+            (If a diamond is actually required, that will get fixed up below.)
+            The test case for this is split phantom lines cross to a diamond from 2FL. */
+
+            z[i].kind = s1x4;
+            z[i].rotation = z[i].outer.srotation;
+            copy_person(&z[i], 0, &z[i], 12);
+            copy_person(&z[i], 2, &z[i], 13);
+            clear_person(&z[i], 1);
+            clear_person(&z[i], 3);
+         }
+         else
+            fail("Don't recognize ending setup for this call.");
+      }
+
       if (z[i].kind != nothing) {
          canonicalize_rotation(&z[i]);
 

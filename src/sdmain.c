@@ -19,7 +19,7 @@
     The version of this file is as shown immediately below.  This string
     gets displayed at program startup. */
 
-#define VERSION_STRING "27.4"
+#define VERSION_STRING "27.7"
 
 /* This defines the following functions:
    main
@@ -59,7 +59,7 @@ and the following external variables:
 #include "paths.h"
    
 
-static void display_help()
+static void display_help(void)
 {
     printf("Usage: sd [flags ...] level\n");
     printf("  legal flags:\n");
@@ -882,7 +882,7 @@ void main(int argc, char *argv[])
 {
    int argno;
 
-   if (strcmp(argv[1], "-help") == 0)
+   if (argc >= 2  && strcmp(argv[1], "-help") == 0)
        display_help();		/* does not return */
 
    /* This lets the X user interface intercept command line arguments that it is

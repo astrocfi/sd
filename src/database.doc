@@ -1560,35 +1560,70 @@ trngl_pt_rh
 Still to do:
 
 q_tag_front
-      Applies to a qtag only.  (Remember that we use the term "qtag"
-      independently of actual facing direction -- it applies to 3/4 tags,
-      1/4-lines, diamonds, etc.  Part of the purpose of this predicate
-      is to distinguish among these cases.)  This is strict relative to the
-      people it tests.  For a person in the center line, this returns TRUE
-      if the subject's partner is alive and facing in the opposite direction,
-      and FALSE otherwise.  That is, it performs a strict test for the
-      subject being in a miniwave, which presumably means the setup is a
-      1/4-tag as opposed to a 1/4-line.  For a person on the outside,
-      this returns TRUE only if the two people in the center line who are
-      closest to the subject are both alive and in a miniwave with each
-      other, and the end of that line is facing the subject.  It returns
-      FALSE otherwise.  For example, for an outside beau in a 1/4-tag or
-      1/4-line, it returns TRUE only if the setup is a left-handed 1/4-tag,
-      and FALSE if it is right-handed or is a 1/4-line.  It only examines
-      the two center people close to the subject (the ones in the subject's
-      single 1/4-tag) in making this determination.  When applying the test
-      to an outside, the subject's own facing direction is not important.
-      For example, in a right-hand 3/4-tag, this will return TRUE for an
-      outside beau and FALSE for an outside belle.  In diamonds of any
-      consistent handedness, this returns TRUE for a trailing point and
-      FALSE for a leading point.
+      Applies only to a qtag in which the center people are in some kind of
+      line.  (Remember that we use the term "qtag" independently of actual
+      facing direction -- hence it applies to 3/4 tags, 1/4-lines, diamonds,
+      etc.  Part of the purpose of this predicate is to distinguish among
+      these cases.)  Hence you must use this only with a starting setup of
+      "qtag", or with a starting setup of "pqtag" as long as it doesn't
+      specify a legal move for persons 2, 3, 6, or 7.
+
+      This is strict relative to the people it tests.  For a person in the
+      center line, this returns TRUE if the subject's partner is alive and
+      facing in the opposite direction, and FALSE otherwise.  That is, it
+      performs a strict test for the subject being in a miniwave, which
+      presumably means the setup is a 1/4-tag or diamonds as opposed to a
+      1/4-line or interlocked diamonds.  For a person on the outside, this
+      returns TRUE only if the two people in the center line who are closest
+      to the subject (in the subject's single 1/4-tag or diamond) are both
+      alive and in a miniwave with each other, and the end of that line is
+      facing the subject.  It returns FALSE otherwise.  For example, for an
+      outside beau in a 1/4-tag or 1/4-line, it returns TRUE only if the
+      setup is a left-handed 1/4-tag, and FALSE if it is right-handed or is
+      a 1/4-line.  It only examines the two center people close to the
+      subject (the ones in the subject's single 1/4-tag or diamond) in
+      making this determination.  When applying the test to an outside, the
+      subject's own facing direction is not important.  For example, in a
+      right-hand 3/4-tag, this will return TRUE for an outside beau and
+      FALSE for an outside belle.  In diamonds of any consistent handedness,
+      this returns TRUE for a trailing point and FALSE for a leading point.
+      For facing diamonds it does the opposite.
 
 q_tag_back
-
-
+      This is just like "q_tag_front" except that, for the outsides, it
+      returns TRUE only if the two people in the center line who are closest
+      to the subject are both alive and in a miniwave with each other, and
+      the end of that line is facing the away from subject.  It returns
+      FALSE otherwise.  For example, for an outside beau in a 1/4-tag or
+      1/4-line, it returns TRUE only if the setup is a right-handed 1/4-tag,
+      and FALSE if it is left-handed or is a 1/4-line. 
 
 q_line_front
+      This is just like "q_tag_front" except that it tests for a 1/4-line
+      or interlocked diamonds.  For a person in the center line, this returns
+      TRUE if the subject's partner is alive and facing in the same
+      direction, and FALSE otherwise.  That is, it performs a strict test for
+      the subject being in a couple, which presumably means the setup is a
+      1/4-line or interlocked diamonds as opposed to a 1/4-tag or plain
+      diamonds.  For a person on the outside, this returns TRUE only if the
+      two people in the center line who are closest to the subject (in the
+      subject's single 1/4-tag or diamond) are both alive and in a couple
+      with each other, and the end of that line is facing the subject.  It
+      returns FALSE otherwise.  For example, for an outside beau in a 1/4-tag
+      or 1/4-line, it returns TRUE only if the setup is a left-handed
+      1/4-line, and FALSE if it is right-handed or is a 1/4-tag.  In
+      interlocked diamonds of any consistent handedness, this returns TRUE
+      for a trailing point and FALSE for a leading point.  For facing
+      interlocked diamonds it does the opposite.
+
 q_line_back
+      This is just like "q_line_front" except that, for the outsides, it
+      returns TRUE only if the two people in the center line who are closest
+      to the subject are both alive and in a couple with each other, and
+      the end of that line is facing the away from subject.  It returns
+      FALSE otherwise.  For example, for an outside beau in a 1/4-tag or
+      1/4-line, it returns TRUE only if the setup is a right-handed 1/4-line,
+      and FALSE if it is left-handed or is a 1/4-tag. 
 
                            APPENDIX B -- ESCAPE CODES IN CALL NAMES
 

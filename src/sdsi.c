@@ -225,7 +225,11 @@ extern void open_file(void)
 
 extern long_boolean probe_file(char filename[])
 {
-   if (!access(filename, W_OK))
+   /* If the file does not exist, we allow it, even though creation may
+      not be possible because of directory permissions.  It is unfortunate
+      that there is no feasible way to determine whether a given pathname
+      could be opened for writing. */
+   if (access(filename, F_OK) || !access(filename, W_OK))
       return (TRUE);
    else
       return (FALSE);
