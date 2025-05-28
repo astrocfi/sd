@@ -34,11 +34,6 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
-extern map_thing map_diag23a;
-extern map_thing map_diag23b;
-extern map_thing map_diag23c;
-extern map_thing map_diag23d;
-
 
 
 uint32 global_tbonetest;
@@ -2206,10 +2201,10 @@ Private void do_concept_checkerboard(
    parse_block *parseptr,
    setup *result)
 {
-   static veryshort mape[16] = {0, 2, 4, 6, 1, 3, 5, 7};
-   static veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2};
-   static veryshort mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6};
-   static veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6};
+   static veryshort mape[16] = {0, 2, 4, 6, 1, 3, 5, 7, 0, 1, 4, 5, 2, 3, 6, 7};
+   static veryshort mapl[16] = {7, 1, 3, 5, 0, 6, 4, 2, 7, 6, 3, 2, 0, 1, 4, 5};
+   static veryshort mapb[16] = {1, 3, 5, 7, 0, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, -1};
+   static veryshort mapd[16] = {7, 1, 3, 5, 0, 2, 4, 6, -1, -1, -1, -1, -1, -1, -1, -1};
 
    int i, rot, offset;
    setup a1;
@@ -2219,7 +2214,7 @@ Private void do_concept_checkerboard(
 
    clear_people(result);
 
-   if (parseptr->concept->value.arg2) {
+   if (parseptr->concept->value.arg2 == 1) {
       /* This is "shadow <setup>" */
 
       setup_command subsid_cmd;
@@ -2238,22 +2233,42 @@ Private void do_concept_checkerboard(
       /* This is "checker <setup>" */
 
       if (ss->kind != s2x4) fail("Must have a 2x4 setup for 'checker' concept.");
-   
-      if ((ss->people[0].id1 & d_mask) == d_north && (ss->people[1].id1 & d_mask) != d_north &&
-            (ss->people[2].id1 & d_mask) == d_north && (ss->people[3].id1 & d_mask) != d_north &&
-            (ss->people[4].id1 & d_mask) == d_south && (ss->people[5].id1 & d_mask) != d_south &&
-            (ss->people[6].id1 & d_mask) == d_south && (ss->people[7].id1 & d_mask) != d_south)
-         offset = 0;
-      else if ((ss->people[0].id1 & d_mask) != d_north && (ss->people[1].id1 & d_mask) == d_north &&
-            (ss->people[2].id1 & d_mask) != d_north && (ss->people[3].id1 & d_mask) == d_north &&
-            (ss->people[4].id1 & d_mask) != d_south && (ss->people[5].id1 & d_mask) == d_south &&
-            (ss->people[6].id1 & d_mask) != d_south && (ss->people[7].id1 & d_mask) == d_south)
-         offset = 4;
-      else
-         fail("Can't identify checkerboard people.");
+
+      if (parseptr->concept->value.arg2 & 8) {
+         /* This is "so-and-so preferred for the trade, checkerboard". */
+         if (global_selectmask == 0x55)
+            offset = 0;
+         else if (global_selectmask == 0xAA)
+            offset = 4;
+         else if (global_selectmask == 0x33)
+            offset = 8;
+         else if (global_selectmask == 0xCC)
+            offset = 12;
+         else fail("Can't select these people.");
+      }
+      else {
+         if ((ss->people[0].id1 & d_mask) == d_north && (ss->people[1].id1 & d_mask) != d_north &&
+               (ss->people[2].id1 & d_mask) == d_north && (ss->people[3].id1 & d_mask) != d_north &&
+               (ss->people[4].id1 & d_mask) == d_south && (ss->people[5].id1 & d_mask) != d_south &&
+               (ss->people[6].id1 & d_mask) == d_south && (ss->people[7].id1 & d_mask) != d_south)
+            offset = 0;
+         else if ((ss->people[0].id1 & d_mask) != d_north && (ss->people[1].id1 & d_mask) == d_north &&
+               (ss->people[2].id1 & d_mask) != d_north && (ss->people[3].id1 & d_mask) == d_north &&
+               (ss->people[4].id1 & d_mask) != d_south && (ss->people[5].id1 & d_mask) == d_south &&
+               (ss->people[6].id1 & d_mask) != d_south && (ss->people[7].id1 & d_mask) == d_south)
+            offset = 4;
+         else
+            fail("Can't identify checkerboard people.");
+      }
    
       /* Move the people who simply trade, filling in their roll info. */
    
+      if (      (ss->people[mape[0+offset]].id1 & d_mask) != d_north ||
+                (ss->people[mape[1+offset]].id1 & d_mask) != d_north ||
+                (ss->people[mape[2+offset]].id1 & d_mask) != d_south ||
+                (ss->people[mape[3+offset]].id1 & d_mask) != d_south)
+            fail("Selected people are not facing out.");
+
       (void) copy_rot(result, mape[0+offset], ss, mape[1+offset], 022);
       if (result->people[mape[0+offset]].id1) result->people[mape[0+offset]].id1 = (result->people[mape[0+offset]].id1 & (~ROLL_MASK)) | ROLLBITL;
       (void) copy_rot(result, mape[1+offset], ss, mape[0+offset], 022);
@@ -2276,6 +2291,8 @@ Private void do_concept_checkerboard(
             map_ptr = mapd;
             break;
       }
+
+      if (map_ptr[offset] < 0) fail("Can't select these people.");
    
       for (i=0; i<4; i++) (void) copy_person(&a1, i, ss, map_ptr[i+offset]);
    }
@@ -3325,19 +3342,18 @@ Private void do_concept_all_8(
 
       /* This is "all 4 couples". */
 
-      if (
-            ss->kind != s4x4 ||
+      if (  ss->kind != s4x4 ||
             (( ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
                ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1) != 0) ||
-            (ss->people[ 1].id1 != 0 && ((ss->people[ 1].id1 ^ d_west) & d_mask) != 0) ||
-            (ss->people[ 2].id1 != 0 && ((ss->people[ 2].id1 ^ d_west) & d_mask) != 0) ||
-            (ss->people[ 5].id1 != 0 && ((ss->people[ 5].id1 ^ d_north) & d_mask) != 0) ||
-            (ss->people[ 6].id1 != 0 && ((ss->people[ 6].id1 ^ d_north) & d_mask) != 0) ||
-            (ss->people[ 9].id1 != 0 && ((ss->people[ 9].id1 ^ d_east) & d_mask) != 0) ||
-            (ss->people[10].id1 != 0 && ((ss->people[10].id1 ^ d_east) & d_mask) != 0) ||
-            (ss->people[13].id1 != 0 && ((ss->people[13].id1 ^ d_south) & d_mask) != 0) ||
-            (ss->people[14].id1 != 0 && ((ss->people[14].id1 ^ d_south) & d_mask) != 0))
-         fail("Must be in a squared set.");
+            (((ss->people[ 1].id1 ^ ss->people[ 2].id1) & d_mask) != 0) ||
+            (((ss->people[ 5].id1 ^ ss->people[ 6].id1) & d_mask) != 0) ||
+            (((ss->people[ 9].id1 ^ ss->people[10].id1) & d_mask) != 0) ||
+            (((ss->people[13].id1 ^ ss->people[14].id1) & d_mask) != 0) ||
+            (ss->people[ 1].id1 != 0 && ((ss->people[ 1].id1) & 1) == 0) ||
+            (ss->people[ 5].id1 != 0 && ((ss->people[ 5].id1) & 1) != 0) ||
+            (ss->people[ 9].id1 != 0 && ((ss->people[ 9].id1) & 1) == 0) ||
+            (ss->people[13].id1 != 0 && ((ss->people[13].id1) & 1) != 0))
+         fail("Must be in squared set spots.");
 
       divided_setup_move(ss, map_lists[s2x2][1]->f[MPKIND__ALL_8][0], phantest_ok, TRUE, result);
 
@@ -4200,10 +4216,62 @@ extern long_boolean do_big_concept(
    setup *result)
 {
    void (*concept_func)(setup *, parse_block *, setup *);
-   parse_block *this_concept_parse_block = ss->cmd.parseptr;
+   parse_block *orig_concept_parse_block = ss->cmd.parseptr;
+   parse_block *this_concept_parse_block = orig_concept_parse_block;
    concept_descriptor *this_concept = this_concept_parse_block->concept;
    concept_kind this_kind = this_concept->kind;
    concept_table_item *this_table_item = &concept_table[this_kind];
+   parse_block artificial_parse_block;
+   uint32 extra_mods;
+
+   /* Most concepts simply have no understanding of, or tolerance for, modifiers
+      like "interlocked" in front of them.  So, in the general case, we check for
+      those modifiers and raise an error if any are on.  Hence, most of the concept
+      procedures don't check for these modifiers, we guarantee that they are off.
+      (There are other modifiers bits than those listed here.  They are never
+      tolerated under any circumstances by any concept, and have already been
+      checked.)
+
+      Now there are two contexts in which we allow modifiers:
+
+         Some concepts (e.g. [reverse] crazy) are explictly coded to allow,
+         and check for, modifier bits.  Those are marked with the
+         "CONCPROP__PERMIT_REVERSE" bit (misnamed -- this bit enables all of
+         the bits shown, not just reverse).  For those concepts, we don't do
+         the check, and the concept code is responsible for being sure that
+         everything is legal.
+
+         Some concepts (e.g. [interlocked] phantom lines) desire to allow the
+         user to type a modifier on one line and then enter another concept,
+         and have us figure out what concept was really chosen.  To handle
+         these, we look through a table of such pairs. */
+
+   /* If "CONCPROP__PERMIT_REVERSE" is on, let anything pass. */
+
+   extra_mods = ss->cmd.cmd_final_flags & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|FINAL__SPLIT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK);
+
+   if (extra_mods && !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE)) {
+      /* This can only be legal if we find a translation in the table. */
+
+      concept_fixer_thing *p;
+
+      for (p=concept_fixer_table ; p->newmods ; p++) {
+         if (p->newmods == extra_mods && &concept_descriptor_table[p->before] == this_concept) {
+            this_concept = &concept_descriptor_table[p->after];
+            artificial_parse_block = *this_concept_parse_block;
+            artificial_parse_block.concept = this_concept;
+            this_concept_parse_block = &artificial_parse_block;
+            this_kind = this_concept->kind;
+            this_table_item = &concept_table[this_kind];
+            ss->cmd.cmd_final_flags &= ~extra_mods;   /* Take out those mods. */
+            goto found_new_concept;
+         }
+      }
+
+      fail("Illegal modifier before a concept.");
+
+      found_new_concept: ;
+   }
 
    /* We know the following about the incoming setup:
       ss->cmd.parseptr has the stuff, including the concept we are going to try to do.
@@ -4244,12 +4312,8 @@ extern long_boolean do_big_concept(
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
       fail("\"Matrix\" concept must be followed by applicable concept.");
 
-   if ((ss->cmd.cmd_final_flags & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE)) &&
-         !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE))
-      fail("Illegal modifier before a concept.");
-
    concept_func = this_table_item->concept_action;
-   ss->cmd.parseptr = this_concept_parse_block->next;
+   ss->cmd.parseptr = ss->cmd.parseptr->next;
 
    /* When we invoke one of the functions, we will have:
       2ndarg = the concept we are doing
@@ -4277,7 +4341,7 @@ extern long_boolean do_big_concept(
       int livemask = 0;
 
       /* Skip to the phantom-line (or whatever) concept by going over the "standard" and skipping comments. */
-      substandard_concptptr = process_final_concepts(this_concept_parse_block->next, TRUE, &junk_concepts);
+      substandard_concptptr = process_final_concepts(orig_concept_parse_block->next, TRUE, &junk_concepts);
    
       /* If we hit "matrix", do a little extra stuff and continue. */
 
@@ -4433,6 +4497,7 @@ concept_table_item concept_table[] = {
    /* concept_some_are_frac_tandem */     {CONCPROP__USE_NUMBER | CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,                   do_concept_tandem},
    /* concept_gruesome_tandem */          {CONCPROP__NEED_2X8 | CONCPROP__SET_PHANTOMS | CONCPROP__SHOW_SPLIT,                     do_concept_tandem},
    /* concept_checkerboard */             {0,                                                                                      do_concept_checkerboard},
+   /* concept_sel_checkerboard */         {CONCPROP__USE_SELECTOR | CONCPROP__GET_MASK,                                            do_concept_checkerboard},
    /* concept_reverse */                  {0,                                                                                      0},
    /* concept_left */                     {0,                                                                                      0},
    /* concept_grand */                    {0,                                                                                      0},
@@ -4453,8 +4518,8 @@ concept_table_item concept_table[] = {
    /* concept_4x4 */                      {0,                                                                                      0},
    /* concept_create_matrix */            {CONCPROP__NEED_ARG2_MATRIX | Nostep_phantom,                                            do_concept_expand_some_matrix},
    /* concept_funny */                    {0,                                                                                      0},
-   /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},
-   /* concept_selbasedtrngl */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},
+   /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_REVERSE,                      triangle_move},
+   /* concept_selbasedtrngl */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_REVERSE | CONCPROP__USE_SELECTOR, triangle_move},
    /* concept_split */                    {0,                                                                                      0},
    /* concept_each_1x4 */                 {CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,                       do_concept_do_each_1x4},
    /* concept_diamond */                  {0,                                                                                      0},

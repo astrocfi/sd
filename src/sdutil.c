@@ -1058,10 +1058,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             next_cptr = subsidiary_ptr;
          }
-         else if (k == concept_selbasedtrngl) {
-            writestuff_with_decorations(local_cptr, (Const char *) 0);
-            request_final_space = TRUE;
-         }
          else if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
 
             /* These concepts want to take special action if there are no following concepts and
@@ -1131,9 +1127,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                request_final_space = TRUE;
             }
          }
-         else if (k == concept_nth_part &&
-                  (local_cptr->concept->value.arg1 != 9 && local_cptr->concept->value.arg1 != 10)) {
+         else if (k == concept_nth_part && local_cptr->concept->value.arg1 == 8) {
             request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
+            writestuff_with_decorations(local_cptr, (Const char *) 0);
+         }
+         else if ((k == concept_so_and_so_only) && local_cptr->concept->value.arg1 == 11) {
+            request_comma_after_next_concept = TRUE;   /* "<ANYONE> WORK <concept>" */
             writestuff_with_decorations(local_cptr, (Const char *) 0);
          }
          else if (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) {
@@ -1142,19 +1141,11 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff_with_decorations(local_cptr, (Const char *) 0);
             request_final_space = TRUE;
          }
-         else if ((k == concept_meta) && local_cptr->concept->value.arg1 == 3) {
-            writestuff("INITIALLY");
-            request_comma_after_next_concept = TRUE;
-            request_final_space = TRUE;
-         }
-         else if ((k == concept_meta) && local_cptr->concept->value.arg1 == 7) {
-            writestuff("FINALLY");
-            request_comma_after_next_concept = TRUE;
-            request_final_space = TRUE;
-         }
-         else if ((k == concept_so_and_so_only) && local_cptr->concept->value.arg1 == 11) {
-            request_comma_after_next_concept = TRUE;   /* "<ANYONE> WORK <concept>" */
+         else if ((k == concept_meta) && (local_cptr->concept->value.arg1 == 3 || local_cptr->concept->value.arg1 == 7)) {
+            /* Initially/finally. */
             writestuff_with_decorations(local_cptr, (Const char *) 0);
+            request_comma_after_next_concept = TRUE;
+            request_final_space = TRUE;
          }
          else {
             writestuff_with_decorations(local_cptr, (Const char *) 0);

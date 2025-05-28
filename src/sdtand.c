@@ -252,7 +252,10 @@ Private tm_thing maps_isearch_tglsome[] = {
    {{0, 1, 4, 5},     {7, -1, 3, -1},   {6, -1, 2, -1},   {0},                0x31,     0xDD,         4, 0,  0,  0, 0,  sdmd,  s_spindle},
    {{5, 3, 1, 7},     {6, -1, 2, -1},   {0, -1, 4, -1},   {0},                0x13,     0x77,         4, 0,  0,  0, 0,  sdmd,  s_dhrglass},
    {{6, 0, 2, 4},     {-1, 3, -1, 7},   {-1, 1, -1, 5},   {0},                0x08,        0,         4, 0,  0,  0, 0,  sdmd,  s_hrglass},
+
    {{0, 3, 4, 7},     {-1, 2, -1, 6},   {-1, 1, -1, 5},   {0},                0x80,        0,         4, 0,  0,  0, 0,  sdmd,  s_galaxy},
+   {{2, 5, 6, 1},     {-1, 4, -1, 0},   {-1, 3, -1, 7},   {0},                0x08,     0xBB,         4, 1,  0,  0, 0,  sdmd,  s_galaxy},
+
    {{1, 7, 9, 15},    {-1, 11, -1, 3},  {-1, 5, -1, 13},  {0},                0x08,   0x0000,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
    {{0, 4, 8, 12},    {-1, 2, -1, 10},  {-1, 6, -1, 14},  {0},                0xC4,   0x5454,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
    {{3, 5, 11, 13},   {7, -1, 15, -1},  {1, -1, 9, -1},   {0},                0x13,   0x8A8A,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
@@ -670,9 +673,22 @@ extern void tandem_couples_move(
       else if (key == 26 || key == 27) {
          if (ss->kind == s_hrglass) {
             uint32 tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+
             if ((tbonetest & 011) == 011 || ((key ^ tbonetest) & 1))
                fail("Can't find the indicated triangles.");
+
             special_mask = 0x44;   /* The triangles have to be these. */
+         }
+         else if (ss->kind == s_galaxy) {
+            uint32 tbonetest = ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1;
+
+            if ((tbonetest & 011) == 011)
+               fail("Can't find the indicated triangles.");
+
+            if ((key ^ tbonetest) & 1)
+               special_mask = 0x44;
+            else
+               special_mask = 0x11;
          }
          else if (ss->kind == s_c1phan) {
             uint32 tbonetest = 0;
@@ -692,27 +708,27 @@ extern void tandem_couples_move(
       }
       else if ((key == 20 || key == 21) && ss->kind == s_qtag) {
          if (key == 21) {
-            if (     (ss->people[0].id1 & d_mask) != d_west &&
-                     (ss->people[1].id1 & d_mask) == d_east &&
-                     (ss->people[4].id1 & d_mask) != d_east &&
-                     (ss->people[5].id1 & d_mask) == d_west)
-               special_mask = 0x22;
-            else if ((ss->people[0].id1 & d_mask) == d_west &&
-                     (ss->people[1].id1 & d_mask) != d_east &&
-                     (ss->people[4].id1 & d_mask) == d_east &&
-                     (ss->people[5].id1 & d_mask) != d_west)
-               special_mask = 0x11;
-         }
-         else {
             if (     (ss->people[0].id1 & d_mask) == d_east &&
                      (ss->people[1].id1 & d_mask) != d_west &&
                      (ss->people[4].id1 & d_mask) == d_west &&
                      (ss->people[5].id1 & d_mask) != d_east)
-               special_mask = 0x11;
+               special_mask = 0x22;
             else if ((ss->people[0].id1 & d_mask) != d_east &&
                      (ss->people[1].id1 & d_mask) == d_west &&
                      (ss->people[4].id1 & d_mask) != d_west &&
                      (ss->people[5].id1 & d_mask) == d_east)
+               special_mask = 0x11;
+         }
+         else {
+            if (     (ss->people[0].id1 & d_mask) != d_west &&
+                     (ss->people[1].id1 & d_mask) == d_east &&
+                     (ss->people[4].id1 & d_mask) != d_east &&
+                     (ss->people[5].id1 & d_mask) == d_west)
+               special_mask = 0x11;
+            else if ((ss->people[0].id1 & d_mask) == d_west &&
+                     (ss->people[1].id1 & d_mask) != d_east &&
+                     (ss->people[4].id1 & d_mask) == d_east &&
+                     (ss->people[5].id1 & d_mask) != d_west)
                special_mask = 0x22;
          }
 
@@ -863,6 +879,18 @@ extern void tandem_couples_move(
          else
             fail("Can't find these triangles.");
       }
+      else if (ss->kind == s_galaxy) {
+         if (special_mask == 0x44) {
+            ewmask = allmask;
+            nsmask = 0;
+         }
+         else if (special_mask == 0x11) {
+            ewmask = 0;
+            nsmask = allmask;
+         }
+         else
+            fail("Can't find these triangles.");
+      }
       else if (special_mask == 0x44 || special_mask == 0x1212 || special_mask == 0x22 || special_mask == 0x11) {
          ewmask = 0;
          nsmask = allmask;
@@ -871,8 +899,6 @@ extern void tandem_couples_move(
          ewmask = allmask;
          nsmask = 0;
       }
-      else if (ss->kind == s_galaxy)
-         fail("Sorry, don't know who is lateral.");
       else if (ss->kind == s_c1phan)
          fail("Sorry, don't know who is lateral.");
       else {

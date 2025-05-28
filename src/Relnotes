@@ -1,7 +1,23 @@
-		   RELEASE NOTES FOR SD VERSION 31.60
-		 Database version = 31.59 format = 72.
+		   RELEASE NOTES FOR SD VERSION 31.61
+		 Database version = 31.61 format = 72.
                 X11 UI version 1.16, SDTTY UI version 1.6.
 
+
+****** Changes as of version 31.61 ******
+
+The section of the manual describing concepts has been extensively
+rewritten.  It now contains a complete list of all available concepts.
+
+New concept: "<anyone> lead for a", used with a call like cast a
+shadow or link up, is done from a promemade-like setup.  The
+program will assume that you had the dancers promenade approximately
+halfway around the set before calling this.
+
+It can now identify interlocked triangles in galaxies,
+hourglasses, and "C1 phantom" setups.
+
+New concepts: <anyone> preferred for trade,
+checkerboard/checkerbox/checkerdiamond.
 
 ****** Changes as of version 31.59 ******
 

@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.59"
+version "31.61"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -1958,7 +1958,7 @@ call "_centers arm turn @b / ends turn back" dontshow tag ctrarmturn_n4_utb
    singleconc armturn_n4 [] uturnback []
 
 call "_centers arm turn 1/4 / ends turn back" dontshow tag ctrarmturn_14_utb
-   singleconc armturn_14 [] uturnback []
+   singleconc_together armturn_14 [] uturnback []
 
 call "_centers arm turn 1/4 / ends turn away" dontshow tag ctrarmturn_14_utaway
    singleconc armturn_14 [] uturnaway []
@@ -2364,7 +2364,7 @@ call "pass @h" a1
 call "pass in" dontshow tag pass_in
    setup 2x4 2x4
       array [0 0 0 0 AL3W AL2W CR1E CR0E]
-   setup 2x2 2x2
+   setup 2x2 2x2 no_cutting_through restriction not_tboned
       array [0 0 AL1W CR0E]
 
 call "_face out" dontshow tag face_out
@@ -2379,10 +2379,23 @@ call "_pass out" dontshow tag pass_out
    seq face_out []
 
 call "_quarter in" dontshow tag quarterin
+   /* We put in a 2x2 definition here so that the ends can do it
+      when they are in line-like elongation.  If we just had the
+      1x2 version, the ends' 2x2 setup would be divided into 1x2's,
+      and the elongation would be improper for this splitting, so
+      an error would be raised.  By putting in the 2x2 version,
+      we are saying that the ends really can quarter in, even though
+      the person they are quartering toward is a long distance away.
+      This makes the last part of "load the boat" work. */
+   setup 2x2 2x2
+      array [CR0E AL1W AL2W CR3E]
    setup 1x2 1x2
       array [CR0E AL1W]
 
 call "_quarter out" dontshow tag quarterout
+   /* See above. */
+   setup 2x2 2x2
+      array [AL0W CR1E CR2E AL3W]
    setup 1x2 1x2
       array [AL0W CR1E]
 
@@ -4617,10 +4630,10 @@ call "@B mix" c3a
             left_means_mirror neednumber grand_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left]
    seq ctrcrossrun [inherit_grand]
-   seq maybegrandslip [inherit_grand]
+   seq maybegrandslip [inherit_grand roll_transparent]
 
 call "_centers crossback/ends two o's" dontshow tag crossbackandtwoos
-   conc crossback [] maybe_magic_box_circ [conc_force_otherway endscando]
+   conc crossback [] two_o_circs [conc_force_otherway endscando]
 
 call "_start settle back" dontshow tag settle_back1
    seq zoom [force_half]
@@ -4707,6 +4720,10 @@ call "cross follow to a diamond" c4
 call "criss cross follow to a diamond" c4
    setup 2x2 dmd rotate restriction resolve_ok wave_only
       array [C3E A1E C2S A2N]
+
+call "scatter follow to a diamond" c4
+   setup 2x4 qtag restriction forbidden wave_only
+      array [C2S C3S A7S A6S A4E C4W A5E C5W]
 
 call "@eright@f roll the" c3x
             left_means_mirror
@@ -6627,14 +6644,11 @@ call "_chisel1" dontshow tag chisel1
 call "_chisel2" dontshow tag chisel2
    conc pass_out [] pass_in [conc_demand_lines conc_force_columns endscando]
 
-call "_chisel3" dontshow tag chisel3
-   crossconc quarterin [conc_demand_columns] quarterin [conc_force_lines]
-
 call "chisel thru" c2
             visible_fractions
    seq chisel1 []
    seq chisel2 []
-   seq chisel3 [allow_plain_mod]
+   seq pass_in [allow_plain_mod]
 
 call "_pass the next person" dontshow tag passthenext
             parallel_conc_end
@@ -7025,7 +7039,7 @@ call "_outpost part 1" dontshow tag outpost1
          if outposter_is_ccw [CR6N AL5S AL7S AL0S    0 CR1N CR3N CR4N]
 
 call "_outpost part 3" dontshow tag outpost3
-   conc ahso [] maybe_magic_box_circ [conc_demand_columns conc_force_otherway endscando]
+   conc ahso [] two_o_circs [conc_demand_columns conc_force_otherway endscando]
 
 call "outpost" c4
             left_means_mirror visible_fractions
@@ -8336,11 +8350,6 @@ call "_1/2 box circulate in miniwaves" dontshow tag halfboxcirc_miniwaves
    setup 2x2 dmd rotate qualifier miniwaves  /* A restriction would be better, but this is good enough. */
       array [CR0N AL0S ZM1W ZM3W]
 
-call "_box circulate and trade" dontshow tag box_circ_and_trade
-            visible_fractions yoyo_is_inherited
-   seq box_circ []
-   seq trade [inherit_yoyo]
-
 call "double down" c4
             take_right_hands
    setup 2x4 2x4
@@ -8454,7 +8463,7 @@ call "hocus pocus" c2
             magic_is_inherited yoyo_is_inherited
    /* Inheriting yoyo to the ends' part of course makes it illegal to call
       just "yoyo hocus pocus".  We have to say "centers work yoyo, hocus pocus". */
-   conc trade [inherit_yoyo] maybe_magic_box_circ [inherit_yoyo inherit_magic conc_force_otherway endscando]
+   conc trade [inherit_yoyo] two_o_circs [inherit_yoyo inherit_magic conc_force_otherway endscando]
 
 call "_wheel and" dontshow tag wheel
             reverse_means_mirror
@@ -9674,6 +9683,11 @@ call "hinge the @Clock" c3a tag hinge_the_lock
    seq hinge []
    seq lockit [inherit_cross]
 
+call "@0 the @Clock" c3a
+            cross_is_inherited visible_fractions dont_use_in_resolve
+   seq nullcall [mandatory_anycall]
+   seq lockit [inherit_cross]
+
 call "hinge the top" c3a
             visible_fractions
    seq hinge []
@@ -9762,6 +9776,26 @@ call "_centers bits and pieces" dontshow tag c_bits_pieces
    seq c_bits_pieces1 []
    seq ahso []
 
+call "_two o circs" dontshow tag two_o_circs
+   /* For magic hocus-pocus.  Unfortunately, the sleazy way we do this
+      does not allow us to specify roll information reliably, so we have
+      taken it out.  Someday, of course, we will code hocus pocus correctly.
+      So little time; so much to do. */
+            parallel_conc_end
+   simple_funny
+   setup 2x2 2x2
+      array [C1S A0S Z1N Z0N]
+            alternate_definition [magic] c3
+   /* This is cross back. */
+   simple_funny
+   setup 2x2 2x2 restriction wave_only
+      array [C0S A1S Z0N Z1N]
+
+call "_two o circs and trade" dontshow tag two_o_circs_and_trade
+            visible_fractions yoyo_is_inherited
+   seq two_o_circs []
+   seq trade [inherit_yoyo]
+
 call "bits and pieces" c4a
             visible_fractions yoyo_is_inherited
    /* Inheriting yoyo to the centers will make it fail, of course.  This is
@@ -9769,7 +9803,7 @@ call "bits and pieces" c4a
    /* We no longer put "conc_demand_lines" on the outsides part.  This allows
       reverse order to work.  The trade part will complain anyway if the elongation
       isn't right. */
-   conc c_bits_pieces [inherit_yoyo] box_circ_and_trade [inherit_yoyo conc_force_otherway endscando]
+   conc c_bits_pieces [inherit_yoyo] two_o_circs_and_trade [inherit_yoyo endscando]
 
 call "_fascinate part 1" dontshow tag fascinate1
    conc nat34thru [] box_circ_15 [conc_demand_lines]

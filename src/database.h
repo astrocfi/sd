@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 72
+#define DATABASE_FORMAT_VERSION 73
 
 
 
@@ -450,8 +450,10 @@ typedef enum {
    schema_in_out_triple_squash,
    schema_in_out_triple,
    schema_in_out_quad,
-   schema_lateral_6,       /* Not for public use! */
-   schema_vertical_6,      /* Not for public use! */
+   schema_lateral_6,             /* Not for public use! */
+   schema_vertical_6,            /* Not for public use! */
+   schema_intlk_lateral_6,       /* Not for public use! */
+   schema_intlk_vertical_6,      /* Not for public use! */
    schema_sequential,
    schema_split_sequential,
    schema_by_array,

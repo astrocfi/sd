@@ -71,8 +71,9 @@ is to receive instruction from a qualified teacher/coach, and to practice.
 @unnumberedsec Quality and Correctness
 
 Quality, correctness, and reliability are fundamental and extremely important
-design goals of Sd and Sdtty.  Before any version is released, it must pass
-very rigorous diagnostic tests.
+design objectives of Sd and Sdtty.  Before any version is released, it passes
+very rigorous diagnostic tests.  The goal is to make a program that never
+make mistakes.
 
 @unnumberedsec Authenticity of Calls and Concepts
 
@@ -81,8 +82,18 @@ the source for call and concept names and definitions wherever possible.
 Where this is not possible, either because Callerlab does not publish
 lists or definitions at all levels, or because a definition is unclear
 in some area, we have used other well-respected encyclopedias, along with our
-best attempts to make things clear and sensible.  Particularly at high
-levels, it is not always possible to do this to everyone's satisfaction.
+best attempts to make things clear and sensible.  Particularly at extremely
+high challenge levels, where there are no standardization bodies to rein in
+callers' tendencies to change the definitions or usage of calls, concepts,
+and fundamental assumptions, it is not always possible to do this to
+everyone's satisfaction.
+
+Spelling variations that would be insignificant in normal calling become
+a serious problem for computer programs.  We have attempted to use the
+spelling in official lists where possible, but sometimes even these
+lists are careless.  In such cases, we have attempted to correct the errors
+where possible, using a variety of sources.  Priority is given to those
+sources that have shown the greatest care in their editing.
 
 @unnumberedsec Variations of the Program
 @end ifset
@@ -94,19 +105,11 @@ Sd is the name of the program that uses menus and a @dfn{graphical user
 interface}.  Calls are selected by clicking with the mouse on the chosen
 menu item.  The principal version of Sd runs on Unix-like systems with
 the X Window System interface.  Sd is also available for Domain/OS on
-Apollo systems, and on the Macintosh.  It is not yet available for PC
-compatibles.
+Apollo systems.  It is not yet available for PC compatibles.
 
 Sdtty is the name of the program that uses a character-oriented keyboard
 interface.  Calls are selected by typing their names.  Sdtty runs on
 Unix-like systems and under DOS on PC compatibles.
-
-@ifset full-manual
-The Macintosh interface is basically similar to the X Window System
-interface; details specific to the Macintosh are provided in an overview
-chapter (@pxref{Macintosh Overview}) and in brief
-notes in other chapters.
-@end ifset
 
 @menu
 * Documentation::               Documentation
@@ -141,11 +144,11 @@ printed from the file @file{sd_doc.ps}.
 
 You can obtain Sdtty for DOS on PC-compatible computers,
 on a 3.5-inch HD disk, with printed documentation.
-The price is $4 (price valid for 1995).
+The price is $4 (price valid for 1996).
 @ifset full-manual
 @xref{Author Contact}.
 @end ifset
-If you want sources, or a different format instead, please say so.
+If you want a different format instead, please say so.
 
 To install the program from a floppy disk to a PC-compatible, change
 to the desired directory on your hard drive,
@@ -322,12 +325,7 @@ for their help, encouragement, suggestions, contributions of calls,
 feedback, testing, and many other contributions.
 
 The non-windowed interface for @code{sdtty} (@pxref{Terminal Interface})
-and the user interface for the Macintosh
-(@pxref{Macintosh Overview})
-were written by Alan Snyder.
-The section on building Sd for the Macintosh
-in the @file{INSTALL} file
-was written by Sue Curtis.
+was written by Alan Snyder.
 
 We received helpful feedback and testing from Robert French, Judy
 Anderson, Bill van Melle, Lois Lew, Ron Nicholson, Dave Decot,

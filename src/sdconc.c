@@ -73,6 +73,8 @@ Private char *conc_error_messages[] = {
    "Can't find phantom lines/columns/boxes in this formation.",        /* analyzer_QUAD_LINE */
    "Wrong formation.",                                                 /* analyzer_VERTICAL6 */
    "Wrong formation.",                                                 /* analyzer_LATERAL6 */
+   "Wrong formation.",                                                 /* analyzer_INTLK_VERTICAL6 */
+   "Wrong formation.",                                                 /* analyzer_INTLK_LATERAL6 */
    "Wrong formation.",                                                 /* analyzer_OTHERS */
    "Can't find concentric diamonds.",                                  /* analyzer_CONC_DIAMONDS */
    "Can't find center line and outer diamond."                         /* analyzer_DIAMOND_LINE */
@@ -350,7 +352,10 @@ extern void normalize_concentric(
          i = 0;
       }
 
-      if (table_synthesizer != schema_in_out_triple && table_synthesizer != schema_in_out_quad) {
+      if (     table_synthesizer != schema_in_out_triple &&
+               table_synthesizer != schema_in_out_quad &&
+               table_synthesizer != schema_intlk_vertical_6 &&
+               table_synthesizer != schema_intlk_lateral_6) {
          /* Nonexistent center or ends have been taken care of.  Now figure out how to put
             the setups together. */
    
@@ -375,15 +380,25 @@ extern void normalize_concentric(
                conc_hash_bucket->center_arity == center_arity &&
                conc_hash_bucket->conc_type == table_synthesizer) {
          cm_thing **map_ptr = conc_hash_bucket->value;
+         int index;
 
-         if (outer_elongation < 0) {
-            /* We need to find out whether it would have made a difference
-               when picking out the map. */
-      
-            if (map_ptr[(i&1)] != map_ptr[(i&1) + 2]) goto elongation_loss;
+         if (inners[0].kind == s_trngl) {
+            /* For triangles, we use the "2" bit of the rotation, demanding that it be even. */
+            if (i&1) goto elongation_loss;
+            index = (i&2) >> 1;
+         }
+         else {
+            index = i&1;
+
+            if (outer_elongation < 0) {
+               /* We need to find out whether it would have made a difference
+                  when picking out the map. */
+
+               if (map_ptr[(i&1)] != map_ptr[(i&1) + 2]) goto elongation_loss;
+            }
          }
 
-         lmap_ptr = map_ptr[(i&1) + (((outer_elongation ^ outers->rotation) & 1) << 1)];
+         lmap_ptr = map_ptr[index + (((outer_elongation ^ outers->rotation) & 1) << 1)];
 
          goto gotit;
       }
@@ -402,19 +417,12 @@ gotit:
    /* Find out whether inners need to be flipped around. */
    q = i + lmap_ptr->inner_rot - lmap_ptr->outer_rot;
 
-   if (q & 1)
-      fail("Sorry, there is a bug in normalize_concentric.");
+   if (q & 1) fail("Sorry, bug 1 in normalize_concentric.");
 
    result->kind = lmap_ptr->bigsetup;
    result->rotation = outers->rotation + lmap_ptr->outer_rot;
 
    map_indices = lmap_ptr->maps;
-
-   rot = ((-lmap_ptr->inner_rot) & 3) * 011;
-
-
-
-
 
    if (table_synthesizer != schema_concentric_others) {   /* ****** This test is a crock!!!!! */
       if (((result->rotation+outer_elongation) & 2) && lmap_ptr->center_arity == 2) {
@@ -424,19 +432,25 @@ gotit:
       }
    }
 
-
-
-
-
-
    for (k=0; k<lmap_ptr->center_arity; k++) {
+      uint32 rr = lmap_ptr->inner_rot;
+
+      /* Need to flip alternating triangles upside down. */
+      if (lmap_ptr->insetup == s_trngl && (k&1)) rr ^= 2;
+
       if (q & 2) {
          inners[k].rotation += 2;
          canonicalize_rotation(&inners[k]);
       }
 
+      if (k != 0) {
+         if (((inners[k].rotation ^ inners[k-1].rotation ^ lmap_ptr->inner_rot ^ rr) & 3) != 0)
+            fail("Sorry, bug 2 in normalize_concentric.");
+      }
+
+
       for (j=0; j<lmap_ptr->inlimit; j++)
-         (void) install_rot(result, *map_indices++, &inners[k], j, rot);
+         (void) install_rot(result, *map_indices++, &inners[k], j, ((-rr) & 3) * 011);
    }
 
    rot = ((-lmap_ptr->outer_rot) & 3) * 011;
@@ -455,12 +469,9 @@ gotit:
       case schema_single_concentric:
       case schema_single_cross_concentric:
          fail("Can't figure out this single concentric result.");
-      case schema_conc_star:
-      case schema_conc_star12:
-      case schema_conc_star16:
-      case schema_in_out_triple:
-      case schema_in_out_quad:
-      case schema_in_out_triple_squash:
+      case schema_concentric:
+         break;
+      default:
          fail("Can't figure out this concentric result.");
    }
 
@@ -538,6 +549,10 @@ Private void concentrify(
          analyzer_index = analyzer_LATERAL6; break;
       case schema_vertical_6:
          analyzer_index = analyzer_VERTICAL6; break;
+      case schema_intlk_lateral_6:
+         analyzer_index = analyzer_INTLK_LATERAL6; break;
+      case schema_intlk_vertical_6:
+         analyzer_index = analyzer_INTLK_VERTICAL6; break;
       case schema_checkpoint:
       case schema_ckpt_star:
          analyzer_index = analyzer_CHECKPT; break;
@@ -750,14 +765,17 @@ Private void concentrify(
 
    for (i=0; i<lmap_ptr->outlimit; i++) (void) copy_rot(outers, i, ss, lmap_ptr->maps[i+lmap_ptr->inlimit*lmap_ptr->center_arity], rot);
 
-   rot = lmap_ptr->inner_rot * 011;
-
    for (k=0; k<lmap_ptr->center_arity; k++) {
+      uint32 rr = lmap_ptr->inner_rot;
+
+      /* Need to flip alternating triangles upside down. */
+      if (lmap_ptr->insetup == s_trngl && (k&1)) rr ^= 2;
+
       clear_people(&inners[k]);
       inners[k].kind = lmap_ptr->insetup;
-      inners[k].rotation = (-lmap_ptr->inner_rot) & 3;
+      inners[k].rotation = (-rr) & 3;
 
-      for (i=0; i<lmap_ptr->inlimit; i++) (void) copy_rot(&inners[k], i, ss, lmap_ptr->maps[i+k*lmap_ptr->inlimit], rot);
+      for (i=0; i<lmap_ptr->inlimit; i++) (void) copy_rot(&inners[k], i, ss, lmap_ptr->maps[i+k*lmap_ptr->inlimit], rr * 011);
    }
 
    /* Set the outer elongation to whatever elongation the outsides really had, as indicated
@@ -2647,6 +2665,7 @@ extern void so_and_so_only_move(
           9  - <> ignored .... while the others ...., which doesn't exist
           10 - <> work <concept>, with the others not doing any call, which doesn't exist
           11 - <> work <concept> (the others do the call, but without the concept)
+          12 - <> lead for a .... (as in cast a shadow from a promenade)
 
 /* arg2 = 0 - not doing distorted setup, this is the usual case, people work in the
                   actual setup that they have
@@ -2710,10 +2729,74 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
       }
    }
 
+   current_selector = saved_selector;
+
+   if (indicator == 12) {
+      /* This is "so-and-so lead for a cast a shadow". */
+
+      uint32 dirmask;
+
+      the_setups[0] = *ss;        /* Use this all over again. */
+      clear_people(&the_setups[0]);
+      the_setups[0].kind = s2x4;
+
+      for (i=0, dirmask=0; i<8; i++) {
+         dirmask <<= 2;
+         dirmask |= ss->people[i].id1 & 3;
+      }
+
+      if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0xCC &&dirmask == 0xAF05) {
+         (void) copy_rot(&the_setups[0], 0, ss, 6, 011);
+         (void) copy_rot(&the_setups[0], 1, ss, 7, 011);
+         (void) copy_rot(&the_setups[0], 2, ss, 1, 022);
+         (void) copy_rot(&the_setups[0], 3, ss, 0, 022);
+         (void) copy_rot(&the_setups[0], 4, ss, 2, 011);
+         (void) copy_rot(&the_setups[0], 5, ss, 3, 011);
+         (void) copy_rot(&the_setups[0], 6, ss, 5, 022);
+         (void) copy_rot(&the_setups[0], 7, ss, 4, 022);
+      }
+      else if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0xCC &&dirmask == 0x05AF) {
+         (void) copy_rot(&the_setups[0], 0, ss, 4, 022);
+         (void) copy_rot(&the_setups[0], 1, ss, 5, 022);
+         (void) copy_rot(&the_setups[0], 2, ss, 7, 033);
+         (void) copy_rot(&the_setups[0], 3, ss, 6, 033);
+         (void) copy_rot(&the_setups[0], 4, ss, 0, 022);
+         (void) copy_rot(&the_setups[0], 5, ss, 1, 022);
+         (void) copy_rot(&the_setups[0], 6, ss, 3, 033);
+         (void) copy_rot(&the_setups[0], 7, ss, 2, 033);
+      }
+      else if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0x33 &&dirmask == 0xAF05) {
+         (void) copy_rot(&the_setups[0], 0, ss, 0, 0);
+         (void) copy_rot(&the_setups[0], 1, ss, 1, 0);
+         (void) copy_rot(&the_setups[0], 2, ss, 3, 011);
+         (void) copy_rot(&the_setups[0], 3, ss, 2, 011);
+         (void) copy_rot(&the_setups[0], 4, ss, 4, 0);
+         (void) copy_rot(&the_setups[0], 5, ss, 5, 0);
+         (void) copy_rot(&the_setups[0], 6, ss, 7, 011);
+         (void) copy_rot(&the_setups[0], 7, ss, 6, 011);
+         the_setups[0].rotation++;
+      }
+      else if ((ss->kind == s_crosswave || ss->kind == s_thar) && ssmask == 0x33 &&dirmask == 0x05AF) {
+         (void) copy_rot(&the_setups[0], 0, ss, 6, 011);
+         (void) copy_rot(&the_setups[0], 1, ss, 7, 011);
+         (void) copy_rot(&the_setups[0], 2, ss, 0, 022);
+         (void) copy_rot(&the_setups[0], 3, ss, 1, 022);
+         (void) copy_rot(&the_setups[0], 4, ss, 2, 011);
+         (void) copy_rot(&the_setups[0], 5, ss, 3, 011);
+         (void) copy_rot(&the_setups[0], 6, ss, 5, 022);
+         (void) copy_rot(&the_setups[0], 7, ss, 4, 022);
+         the_setups[0].rotation++;
+      }
+      else
+         fail("Can't do this in this setup or with these people designated.");
+
+      move(&the_setups[0], FALSE, result);
+      result->result_flags |= RESULTFLAG__IMPRECISE_ROT;
+      return;
+   }
+
    /* We are now finished with special properties of "ignored". */
    if (indicator == 8) indicator = 6;
-
-   current_selector = saved_selector;
 
    /* See if the user requested "centers" (or the equivalent people under some other
       designation), and just do it with the concentric_move stuff if so.

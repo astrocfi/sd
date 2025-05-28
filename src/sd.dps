@@ -1166,7 +1166,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_1 ;
-                     SIZE = ((5 44) (52 44) (100 44)) chars ;
+                     SIZE = ((5 45) (52 45) (100 45)) chars ;
                      END )
                END
             ROW:
@@ -1176,7 +1176,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_2 ;
-                     SIZE = ((5 44) (52 44) (100 44)) chars ;
+                     SIZE = ((5 45) (52 45) (100 45)) chars ;
                      END )
                END )
          END

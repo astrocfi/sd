@@ -437,6 +437,8 @@ char *schematab[] = {
    "in_out_quad",
    "???",
    "???",
+   "???",
+   "???",
    "seq",
    "splitseq",
    "setup",

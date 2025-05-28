@@ -705,6 +705,7 @@ typedef enum {
    concept_some_are_frac_tandem,
    concept_gruesome_tandem,
    concept_checkerboard,
+   concept_sel_checkerboard,
    concept_reverse,
    concept_left,
    concept_grand,
@@ -1372,6 +1373,8 @@ typedef enum {
    analyzer_QUAD_LINE,
    analyzer_VERTICAL6,
    analyzer_LATERAL6,
+   analyzer_INTLK_VERTICAL6,
+   analyzer_INTLK_LATERAL6,
    analyzer_OTHERS,
    analyzer_CONC_DIAMONDS,
    analyzer_DIAMOND_LINE,
@@ -1671,10 +1674,18 @@ typedef struct zilch {
    struct zilch *next;
 } conc_initializer;
 
+typedef struct {
+   uint32 newmods;
+   int before;    /* These are indices into concept_descriptor_table. */
+   int after;
+} concept_fixer_thing;
+
+
 #define zig_zag_level l_a2
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
 #define phantom_tandem_level l_c4a
+#define intlk_triangle_level l_c2
 
 typedef struct {           /* This is done to preserve the encapsulation of type "jmp_buf".                  */
    jmp_buf the_buf;        /*   We are going to use pointers to these things.  If we simply used             */
@@ -1731,6 +1742,7 @@ extern callspec_block **main_call_lists[NUM_CALL_LIST_KINDS];       /* in SDCTAB
 extern int number_of_calls[NUM_CALL_LIST_KINDS];                    /* in SDCTABLE */
 extern dance_level calling_level;                                   /* in SDCTABLE */
 extern concept_descriptor concept_descriptor_table[];               /* in SDCTABLE */
+extern concept_fixer_thing concept_fixer_table[];                   /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_4x4;                       /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_3x4;                       /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_2x8;                       /* in SDCTABLE */
@@ -1833,6 +1845,10 @@ extern map_thing map_qtag_f1;                                       /* in SDTABL
 extern map_thing map_qtag_f2;                                       /* in SDTABLES */
 extern map_thing map_diag2a;                                        /* in SDTABLES */
 extern map_thing map_diag2b;                                        /* in SDTABLES */
+extern map_thing map_diag23a;                                       /* in SDTABLES */
+extern map_thing map_diag23b;                                       /* in SDTABLES */
+extern map_thing map_diag23c;                                       /* in SDTABLES */
+extern map_thing map_diag23d;                                       /* in SDTABLES */
 extern map_thing map_f2x8_4x4;                                      /* in SDTABLES */
 extern map_thing map_w4x4_4x4;                                      /* in SDTABLES */
 extern map_thing map_f2x8_2x8;                                      /* in SDTABLES */

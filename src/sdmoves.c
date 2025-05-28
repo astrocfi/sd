@@ -330,6 +330,24 @@ extern void do_call_in_series(
       switch (sss->kind) {
          case s1x4: case sdmd: case s2x2:
             current_elongation = tempsetup.result_flags & 3;
+
+            /* If just the ends were doing this, and it had some
+               "force_lines" type of directive, honor same. */
+
+            if (     (qqqq.cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) &&
+                     (qqqq.cmd.cmd_misc_flags & (DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS))) {
+               int i;
+               uint32 tb = 0;
+
+               for (i=0; i<4; i++) tb |= tempsetup.people[i].id1;
+               if ((tb & 011) == 011) fail("Can't figure out where people finish.");
+
+               if (qqqq.cmd.cmd_misc_flags & DFM1_CONC_FORCE_COLUMNS)
+                  tb++;
+
+               current_elongation = (tb & 1) + 1;
+            }
+
             break;
 
          /* Otherwise (perhaps the setup was a star) we have no idea how to elongate the setup. */
@@ -1613,6 +1631,9 @@ Private void do_sequential_call(
    int end_point;  /* Where we end, in the absence of special stuff. */
    int highlimit;
    long_boolean distribute = FALSE;
+   /* This tells whether the setup was genuinely elongated when it came in.  We keep track of pseudo-elongation
+      during the call even when it wasn't, but sometimes we really need to know. */
+   long_boolean setup_is_elongated = (ss->kind == s2x2 || ss->kind == s_short6) && ss->cmd.prior_elongation_bits != 0;
    int subpart_count = 0;
    uint32 restrained_fraction = 0;
 
@@ -1877,7 +1898,8 @@ do_plain_call:
       }
 
       if (!first_call) {
-         result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+         if (!setup_is_elongated)
+            result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;  /* Stop checking unless we are really serious. */
          result->cmd.cmd_assume.assumption = cr_none;
       }
 
@@ -2781,10 +2803,6 @@ extern void move(
          instance) rather than passing them as explicit arguments.  By saving them and restoring
          them in this way, we make things like "checkpoint bounce the beaus by bounce the belles" work. */
 
-
-
-
-
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
          if (parseptrcopy->call->schema != schema_concentric) {
             punt_centers_use_concept(ss, result);
@@ -2793,11 +2811,6 @@ extern void move(
 
          ss->cmd.skippable_concept = ss->cmd.parseptr;
       }
-
-
-
-
-
 
       current_selector = parseptrcopy->selector;
       current_direction = parseptrcopy->direction;
@@ -2827,7 +2840,11 @@ extern void move(
 
       result->result_flags = 0;
 
-      if ((check_concepts & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE)) == 0) {
+
+      /* ***** We used to have FINAL__SPLIT in the list below, but it caused "matrix split, tandem step thru" to fail.
+         This needs to be reworked. */
+
+      if ((check_concepts & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
    
