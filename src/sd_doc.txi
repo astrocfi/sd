@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: July 28, 1996
+@set Time-stamp: August 3, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.73
+@set sd-version 31.74
 @set full-manual
 @c %**end of header
 @iftex

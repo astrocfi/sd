@@ -1260,6 +1260,10 @@ Private cm_thing map2x2_2x2h = {{6, 1, 2, 5,    7, 0, 3, 4},              4, 4, 
 Private cm_thing maplatgal = {{7, 0, 1, 3, 4, 5,    6, 2},                6, 2, s_galaxy,       s_short6, s1x2,     8,  1, 1, 0, 1};
 Private cm_thing map1x4_dmd = {{2, 3, 6, 7,    0, 1, 4, 5},               4, 4, s1x3dmd,        sdmd,     s1x4,     8,  0, 0, 0, 1};
 Private cm_thing oddmap1x4_dmd = {{7, 2, 3, 6,    0, 1, 4, 5},            4, 4, s3x1dmd,        sdmd,     s1x4,     8,  1, 0, 0, 1};
+
+Private cm_thing map1x2_1x4    = {{2, 5,    0, 1, 3, 4},                  2, 4, s1x6,           s1x2,     s1x4,     6,  0, 0, 0, 1};
+Private cm_thing oddmap1x2_1x4 = {{5, 2,    0, 1, 3, 4},                  2, 4, s_1x2dmd,       s1x2,     s1x4,     6,  1, 0, 0, 1};
+
 Private cm_thing oddmap1x6_1x2 = {{7, 3,    0, 1, 2, 4, 5, 6},            2, 6, s1x3dmd,        s1x2,     s1x6,     8,  1, 0, 0, 1};
 Private cm_thing map1x2_2x1dmd = {{1, 2, 3, 5, 6, 7,    0, 4},            6, 2, s3x1dmd,        s_2x1dmd, s1x2,     8,  0, 0, 0, 1};
 Private cm_thing oddmap1x2_2x1dmd = {{6, 7, 1, 2, 3, 5,    0, 4},         6, 2, s_crosswave,    s_2x1dmd, s1x2,     8,  1, 0, 0, 1};
@@ -1338,6 +1342,10 @@ conc_initializer conc_init_table[] = {
    {s1x2,        s1x4,     schema_concentric,        1, {0,               &oddmap1x4_1x2,      0,                &oddmap1x4_1x2}},
 
    {s2x2,        s1x2,     schema_concentric,        1, {&map1x2_2x2,     &oddmap1x2_2x2v,     &map1x2_2x2v,     &oddmap1x2_2x2}},
+
+/* outerk        innerk          conc_type     center_arity    maps */
+   {s1x4,        s1x2,     schema_concentric,        1, {&map1x2_1x4,     &oddmap1x2_1x4,      &map1x2_1x4,      &oddmap1x2_1x4}},
+
 
    {s1x4,        sdmd,     schema_concentric,        1, {&map1x4_dmd,     &oddmap1x4_dmd,      &map1x4_dmd,      &oddmap1x4_dmd}},
    {s1x4,        s_star,   schema_concentric,        1, {&map1x4_star,    &oddmap1x4_star,     &map1x4_star,     &oddmap1x4_star}},

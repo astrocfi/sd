@@ -2053,6 +2053,50 @@ done_with_big_cycle:
 }
 
 
+/* Check for a schema that we weren't sure about, and fix it up. */
+
+Private calldef_schema fixup_conc_schema(callspec_block *callspec, uint32 final_concepts, setup *ss)
+{
+   calldef_schema the_schema;
+
+   the_schema = callspec->schema;
+
+   if (the_schema == schema_maybe_single_concentric) {
+      if (final_concepts & INHERITFLAG_SINGLE)
+         the_schema = schema_single_concentric;
+      else
+         the_schema = schema_concentric;
+   }
+   else if (the_schema == schema_maybe_grand_single_concentric) {
+      if (final_concepts & INHERITFLAG_GRAND) {
+         if (final_concepts & INHERITFLAG_SINGLE)
+            the_schema = schema_grand_single_concentric;
+         else
+            fail("You must not use \"grand\" without \"single\".");
+      }
+      else {
+         if (final_concepts & INHERITFLAG_SINGLE)
+            the_schema = schema_single_concentric;
+         else
+            the_schema = schema_concentric;
+      }
+   }
+   else if (the_schema == schema_maybe_single_cross_concentric)
+      the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
+   else if (the_schema == schema_maybe_4x2_concentric)
+      the_schema = (setup_attrs[ss->kind].setup_limits == 5) ? schema_concentric_4_2 : schema_concentric;
+   else if (the_schema == schema_maybe_matrix_conc_star) {
+      if (final_concepts & INHERITFLAG_12_MATRIX)
+         the_schema = schema_conc_star12;
+      else if (final_concepts & INHERITFLAG_16_MATRIX)
+         the_schema = schema_conc_star16;
+      else
+         the_schema = schema_conc_star;
+   }
+
+   return the_schema;
+}
+
 
 /* This leaves the split axis result bits in absolute orientation. */
 
@@ -2094,6 +2138,8 @@ Private void move_with_real_call(
 that probably need to be put in. */
 
 
+   the_schema = fixup_conc_schema(callspec, final_concepts, ss);
+
    /* Check for "central" concept and its ilk, and pick up correct definition. */
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
@@ -2104,7 +2150,7 @@ that probably need to be put in. */
          This allows horrible "ends trade" on "invert acey deucey", for example,
          since "acey deucey" has that flag set for the trade that the centers do. */
 
-      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) && callspec->schema == schema_concentric &&
+      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) && the_schema == schema_concentric &&
             (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
@@ -2120,7 +2166,7 @@ that probably need to be put in. */
       switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
          case CMD_MISC2__CENTRAL_PLAIN:
             /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
-            if (callspec->schema != schema_sequential) {
+            if (the_schema != schema_sequential) {
                uint32 temp_concepts, forcing_concepts;
                by_def_item *defptr;
                uint32 inv_bits = ss->cmd.cmd_misc2_flags & (CMD_MISC2__CTR_END_INV_CONC | CMD_MISC2__CTR_END_INVERT);
@@ -2136,7 +2182,7 @@ that probably need to be put in. */
                else
                   defptr = &callspec->stuff.conc.innerdef;
 
-               if (callspec->schema != schema_concentric)
+               if (the_schema != schema_concentric)
                   fail("Can't do \"central\" with this call.");
 
                if (final_concepts &
@@ -2160,6 +2206,7 @@ that probably need to be put in. */
                ss->cmd.cmd_final_flags = final_concepts;
                ss->cmd.callspec = callspec;
                ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;   /* We are done. */
+               the_schema = fixup_conc_schema(callspec, final_concepts, ss);
             }
 
             break;
@@ -2172,43 +2219,6 @@ that probably need to be put in. */
    if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
       imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
 
-   the_schema = callspec->schema;
-
-   /* Check for a schema that we weren't sure about, and fix it up. */
-
-   if (the_schema == schema_maybe_single_concentric) {
-      if (final_concepts & INHERITFLAG_SINGLE)
-         the_schema = schema_single_concentric;
-      else
-         the_schema = schema_concentric;
-   }
-   else if (the_schema == schema_maybe_grand_single_concentric) {
-      if (final_concepts & INHERITFLAG_GRAND) {
-         if (final_concepts & INHERITFLAG_SINGLE)
-            the_schema = schema_grand_single_concentric;
-         else
-            fail("You must not use \"grand\" without \"single\".");
-      }
-      else {
-         if (final_concepts & INHERITFLAG_SINGLE)
-            the_schema = schema_single_concentric;
-         else
-            the_schema = schema_concentric;
-      }
-   }
-   else if (the_schema == schema_maybe_single_cross_concentric)
-      the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
-   else if (the_schema == schema_maybe_4x2_concentric)
-      the_schema = (setup_attrs[ss->kind].setup_limits == 5) ? schema_concentric_4_2 : schema_concentric;
-   else if (the_schema == schema_maybe_matrix_conc_star) {
-      if (final_concepts & INHERITFLAG_12_MATRIX)
-         the_schema = schema_conc_star12;
-      else if (final_concepts & INHERITFLAG_16_MATRIX)
-         the_schema = schema_conc_star16;
-      else
-         the_schema = schema_conc_star;
-   }
-
    /* We of course don't allow "mystic" or "snag" for things that are
       *CROSS* concentrically defined. */
 
@@ -2220,6 +2230,7 @@ that probably need to be put in. */
          case schema_single_concentric_together:
          case schema_cross_concentric:
          case schema_single_cross_concentric:
+         case schema_concentric_4_2:
          case schema_by_array:
             break;
          default:
@@ -2385,39 +2396,7 @@ that probably need to be put in. */
 
          callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
          callflags1 = callspec->callflags1;
-         the_schema = callspec->schema;
-
-         if (the_schema == schema_maybe_single_concentric) {
-            if (final_concepts & INHERITFLAG_SINGLE)
-               the_schema = schema_single_concentric;
-            else
-               the_schema = schema_concentric;
-         }
-         else if (the_schema == schema_maybe_grand_single_concentric) {
-            if (final_concepts & INHERITFLAG_GRAND) {
-               if (final_concepts & INHERITFLAG_SINGLE)
-                  the_schema = schema_grand_single_concentric;
-               else
-                  fail("You must not use \"grand\" without \"single\".");
-            }
-            else {
-               if (final_concepts & INHERITFLAG_SINGLE)
-                  the_schema = schema_single_concentric;
-               else
-                  the_schema = schema_concentric;
-            }
-         }
-         else if (the_schema == schema_maybe_single_cross_concentric)
-            the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
-         else if (the_schema == schema_maybe_4x2_concentric)
-            the_schema = (setup_attrs[ss->kind].setup_limits == 5) ? schema_concentric_4_2 : schema_concentric;
-         else if (the_schema == schema_maybe_matrix_conc_star)
-            if (final_concepts & INHERITFLAG_12_MATRIX)
-               the_schema = schema_conc_star12;
-            else if (final_concepts & INHERITFLAG_16_MATRIX)
-               the_schema = schema_conc_star16;
-            else
-               the_schema = schema_conc_star;
+         the_schema = fixup_conc_schema(callspec, final_concepts, ss);
       }
    }
 
@@ -2524,8 +2503,10 @@ that probably need to be put in. */
 
       for (j=0; j<=setup_attrs[ss->kind].setup_limits; j++) tbonetest |= ss->people[j].id1;
       if (!(tbonetest & 011)) {
+/*      this make "ends start, bits and pieces" fail in diamonds.
          if (ss->cmd.cmd_frac_flags)
             fail("Can't fractionalize a call if no one is doing it.");
+*/
          if (the_schema != schema_by_array) {    /* If it's by array, we go ahead anyway. */
             result->kind = nothing;
             return;

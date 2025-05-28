@@ -1032,8 +1032,8 @@ typedef struct {
 } setup;
 
 typedef struct {
-   long_boolean (*predfunc) (setup *, int, int, int, Const short *);
-   Const short *extra_stuff;
+   long_boolean (*predfunc) (setup *, int, int, int, Const long int *);
+   Const long int *extra_stuff;
 } predicate_descriptor;
 
 typedef struct predptr_pair_struct {
@@ -2020,7 +2020,7 @@ extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
 extern void warn(warning_index w);
 extern call_list_kind find_proper_call_list(setup *s);
-extern Const short *get_rh_test(setup_kind kind);
+extern Const long int *get_rh_test(setup_kind kind);
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec);
 extern uint32 find_calldef(
    callarray *tdef,

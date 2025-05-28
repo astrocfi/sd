@@ -204,7 +204,10 @@ static collision_map collision_map_table[] = {
    {4, 0x0AA0AA, 0xAA, 0xAA, {1, 3, 5, 7},         {13, 0, 7, 9},         {15, 1, 5, 8},          s2x4,        s4x4,        0, warn__none},
    /* These items handle columns with people wedged in clumps, and hence handle gravitate from lefties etc. */
    {4, 0x033033, 0x33, 0x33, {0, 1, 4, 5},         {12, 13, 2, 7},        {10, 15, 4, 5},         s2x4,        s4x4,        0, warn__none},
-   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {14, 0, 11, 9},         {3, 1, 6, 8},          s2x4,        s4x4,        0, warn__none},
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {14, 0, 11, 9},        {3, 1, 6, 8},           s2x4,        s4x4,        0, warn__none},
+   /* Collision on ends of an "erase". */
+   {1, 0x000000, 0x02, 0x02, {1},                  {3},                   {2},                    s1x2,        s1x4,        0, warn__none},
+   {1, 0x000000, 0x01, 0x01, {0},                  {0},                   {1},                    s1x2,        s1x4,        0, warn__none},
 
    /* These items handle the situation from a 2FL/intlkd box circ/split box trade circ. */
 /* Not sure what that comment meant, but we are trying to handle colliding 2FL-type circulates */
@@ -1856,6 +1859,15 @@ Private int divide_the_setup(
             if ((!((tbi & 010) | (tbo & 001)) || assoc(b_1x2, ss, calldeflist)) &&
                      (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist)))
                goto do_concentrically;
+         }
+
+         if (livemask == 0xCC &&      /* Turn a bone with only the center line occupied into a 1x8. */
+               (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
+               (!(newtb & 1) || assoc(b_8x1, ss, calldeflist))) {
+            ss->kind = s1x8;
+            swap_people(ss, 2, 7);
+            swap_people(ss, 3, 6);
+            return 2;                        /* And try again. */
          }
          break;
       case s_ptpd:

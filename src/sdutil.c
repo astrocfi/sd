@@ -2035,17 +2035,17 @@ extern call_list_kind find_proper_call_list(setup *s)
 }
 
 
-static Const short spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
-static Const short short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
-static Const short dmd1[] = {d_east, d_west, 1, 3, -1};
-static Const short line1[] = {d_north, d_south, 1, 3, -1};
-static Const short lines1[] = {d_north, d_south, 1, 2, 6, 5, -1};
-static Const short qtag1[] = {d_north, d_south, 3, 2, 6, 7, -1};
-static Const short ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
+static Const long int spindle1[] = {d_east, d_west, 0, 6, 1, 5, 2, 4, -1};
+static Const long int short1[] = {d_north, d_south, 0, 2, 5, 3, -1};
+static Const long int dmd1[] = {d_east, d_west, 1, 3, -1};
+static Const long int line1[] = {d_north, d_south, 1, 3, -1};
+static Const long int lines1[] = {d_north, d_south, 1, 2, 6, 5, -1};
+static Const long int qtag1[] = {d_north, d_south, 3, 2, 6, 7, -1};
+static Const long int ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
 
             
 
-extern Const short *get_rh_test(setup_kind kind)
+extern Const long int *get_rh_test(setup_kind kind)
 {
    switch (kind) {
       case s_spindle: return spindle1;
@@ -2055,7 +2055,7 @@ extern Const short *get_rh_test(setup_kind kind)
       case s2x4:      return lines1;
       case s_qtag:    return qtag1;
       case s_ptpd:    return ptpd1;
-      default:        return (Const short *) 0;
+      default:        return (Const long int *) 0;
    }
 }
 
@@ -2688,9 +2688,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_dmd_ctrs_1f:
             {
                search_qualifier kkk;      /* gets set to the qualifier corresponding to what we have. */
-               Const short *p1;
-               short d1;
-               short d2;
+               Const long int *p1;
+               long int d1;
+               long int d2;
                uint32 z = 0;
                long_boolean b1 = TRUE;
                long_boolean b2 = TRUE;

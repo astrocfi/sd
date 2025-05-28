@@ -999,6 +999,7 @@ extern void concentric_move(
       uint32 modifiers1;
       uint32 ctr_use_flag;
       setup_command *cmdptr;
+      uint32 check;
 
       long_boolean doing_ends = (k<0) || (k==center_arity);
 
@@ -1009,6 +1010,19 @@ extern void concentric_move(
 
       ctr_use_flag = doing_ends ? (CMD_MISC2__CTR_USE|CMD_MISC2__CTR_USE_INVERT) : CMD_MISC2__CTR_USE;
 
+#ifdef PEELCHAINTHRUFAILS
+      check = 0;    /* See if anyone is present. */
+      for (i=0; i<=setup_attrs[begin_ptr->kind].setup_limits; i++) check |= begin_ptr->people[i].id1;
+
+      if (check == 0) {
+         result_ptr->kind = nothing;
+         result_ptr->result_flags = 0;
+
+         if (doing_ends)
+            localmodsout1 |= DFM1_CONC_FORCE_SPOTS;      /* ????? */
+      }
+      else
+#endif
       if (cmdptr) {
          if (doing_ends) {
 
@@ -1731,6 +1745,7 @@ static concmerge_thing map_13dspn = {schema_rev_checkpoint, s2x2,        sdmd,  
 static concmerge_thing map_13dptp = {schema_rev_checkpoint, s2x2,        sdmd,    0, {1, 7, 5, 3}, {0, 3, 4, 7}};
 static concmerge_thing map_14spn  = {schema_rev_checkpoint, s2x2,        s1x4,    0, {0, 2, 4, 6}, {0, 2, 4, 6}};
 static concmerge_thing map_24spn  = {schema_concentric,     s2x2,        sdmd,    0, {0, 3, 4, 7}, {7, 1, 3, 5}};
+static concmerge_thing map_spnspn = {schema_concentric,     s2x2,        sdmd,    0, {0, 2, 4, 6}, {7, 1, 3, 5}};
 static concmerge_thing map_24qtv  = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {0, 2, 4, 6}};
 static concmerge_thing map_1418a  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_dm3dm  = {schema_nothing,        s3dmd,       nothing, 0, {0}, {5, 1, 11, 7}};
@@ -2200,6 +2215,19 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    else if (res2->kind == s2x4 && res1->kind == s_spindle && (r&1) && ((mask1 & 0x55) == 0) && ((mask2 & 0x66) == 0)) {
       outer_elongation = res2->rotation & 1;
       the_map = &map_24spn;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_spindle && res1->kind == s_spindle && (r&1) && ((mask1 & 0x55) == 0) && ((mask2 & 0xAA) == 0)) {
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_spnspn;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_spindle && res1->kind == s_spindle && (r&1) && ((mask1 & 0xAA) == 0) && ((mask2 & 0x55) == 0)) {
+      setup *temp = res2;
+      res2 = res1;
+      res1 = temp;
+      outer_elongation = res2->rotation & 1;
+      the_map = &map_spnspn;
       goto merge_concentric;
    }
    else if (res2->kind == s_rigger && res1->kind == s1x8 && r == 0 && ((mask1 & 0xCC) == 0)) {
