@@ -2294,11 +2294,9 @@ Private void do_concept_fan_or_yoyo(
    if (parseptr->concept->value.arg1 != 0) {
       uint32 saved_number_fields = current_number_fields;
       selector_kind saved_selector = current_selector;
-      int saved_tagger = current_tagger;
       direction_kind saved_direction = current_direction;
 
       current_selector = parseptrcopy->selector;
-      current_tagger = parseptrcopy->tagger;
       current_direction = parseptrcopy->direction;
       current_number_fields = parseptrcopy->number;
 
@@ -2312,7 +2310,6 @@ Private void do_concept_fan_or_yoyo(
       tempsetup = *result;
 
       current_selector = saved_selector;
-      current_tagger = saved_tagger;
       current_direction = saved_direction;
       current_number_fields = saved_number_fields;
    }

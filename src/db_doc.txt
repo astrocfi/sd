@@ -2107,18 +2107,18 @@ inherit_single
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
 @B        - put number here, expressed as N/4 written in words: "quarter", "half", "three quarter"
-@c ... @d - text to remove if this call was invoked with a "must_be_tag_call"
-                  substitution.
-@e ... @f - text to change to "left" if this call has "left" modifier.
-                      Must use @g also if this appears.
-@g        - at beginning of call name: an @e...@f sequence will occur.
-                      If @i and @g are both used, @i must be first.
+@c ... @d - no longer used
 @h        - put direction here.
-@i        - at beginning of call name: an @j...@l sequence will occur.
-                      If @i and @g are both used, @i must be first.
+@e ... @f - text to change to "left" if this call has "left" modifier.
 @j ... @l - text to add if this call has "cross" modifier.  Presumably
                   has the word "cross" in it.
-                      Must use @i also if this appears.
+@C          equivalent to "@jcross @l".
+@J ... @L - text to add if this call has "magic" modifier.  Presumably
+                  has the word "magic" in it.
+@M          equivalent to "@Jmagic @L".
+@E ... @F - text to add if this call has "interlocked" modifier.  Presumably
+                  has the word "interlocked" in it.
+@I          equivalent to "@Einterlocked @F".
 @k        - put selector here, but use singular name, as in "beau tie".
 @m        - put mandatory secondary call substitution here.
 @n ... @o - text to ADD if optional secondary substitution has been made,

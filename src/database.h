@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 52
+#define DATABASE_FORMAT_VERSION 54
 
 
 
@@ -72,18 +72,18 @@
    If the definitions in sd.h find themselves using an undefined spare bit,
    we know we are in serious trouble. */
 
-#define INHERITSPARE_1                    0x00100000
-#define INHERITSPARE_2                    0x00200000
-#define INHERITSPARE_3                    0x00400000
-#define INHERITSPARE_4                    0x00800000
-#define INHERITSPARE_5                    0x01000000
-#define INHERITSPARE_6                    0x02000000
-#define INHERITSPARE_7                    0x04000000
-#define INHERITSPARE_8                    0x08000000
-#define INHERITSPARE_9                    0x10000000
-#define INHERITSPARE_10                   0x20000000
-#define INHERITSPARE_11                   0x40000000
-#define INHERITSPARE_12                   0x80000000
+#define CFLAGH__REQUIRES_TAG_CALL         0x00100000
+#define CFLAGH__REQUIRES_SELECTOR         0x00200000
+#define CFLAGH__REQUIRES_DIRECTION        0x00400000
+#define INHERITSPARE_1                    0x00800000
+#define INHERITSPARE_2                    0x01000000
+#define INHERITSPARE_3                    0x02000000
+#define INHERITSPARE_4                    0x04000000
+#define INHERITSPARE_5                    0x08000000
+#define INHERITSPARE_6                    0x10000000
+#define INHERITSPARE_7                    0x20000000
+#define INHERITSPARE_8                    0x40000000
+#define INHERITSPARE_9                    0x80000000
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
@@ -95,29 +95,25 @@
 #define CFLAG1_SPLIT_LIKE_DIXIE_STYLE     0x00000010
 #define CFLAG1_PARALLEL_CONC_END          0x00000020
 #define CFLAG1_TAKE_RIGHT_HANDS           0x00000040
-#define CFLAG1_IS_TAG_CALL                0x00000080
-#define CFLAG1_IS_STAR_CALL               0x00000100
-#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000200
-#define CFLAG1_FUDGE_TO_Q_TAG             0x00000400
-#define CFLAG1_STEP_TO_WAVE               0x00000800
-#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00001000
-#define CFLAG1_REAR_BACK_FROM_QTAG        0x00002000
-#define CFLAG1_DONT_USE_IN_RESOLVE        0x00004000
-#define CFLAG1_REQUIRES_SELECTOR          0x00008000
+#define CFLAG1_IS_STAR_CALL               0x00000080
+#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000100
+#define CFLAG1_FUDGE_TO_Q_TAG             0x00000200
+#define CFLAG1_STEP_TO_WAVE               0x00000400
+#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00000800
+#define CFLAG1_REAR_BACK_FROM_QTAG        0x00001000
+#define CFLAG1_DONT_USE_IN_RESOLVE        0x00002000
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
-#define CFLAG1_NUMBER_MASK                0x00070000
-#define CFLAG1_NUMBER_BIT                 0x00010000
-#define CFLAG1_SEQUENCE_STARTER           0x00080000
-#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00100000
-#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00200000
-#define CFLAG1_REQUIRES_DIRECTION         0x00400000
-#define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00800000
-#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x01000000
-#define CFLAG1_NO_CUTTING_THROUGH         0x02000000
-#define CFLAG1_NO_ELONGATION_ALLOWED      0x04000000
-#define CFLAG1_REQUIRES_TAG_CALL          0x08000000
-#define CFLAG1_IS_BASE_TAG_CALL           0x10000000
-
+#define CFLAG1_NUMBER_MASK                0x0001C000
+#define CFLAG1_NUMBER_BIT                 0x00004000
+#define CFLAG1_SEQUENCE_STARTER           0x00020000
+#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00040000
+#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00080000
+#define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00100000
+#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x00200000
+#define CFLAG1_NO_CUTTING_THROUGH         0x00400000
+#define CFLAG1_NO_ELONGATION_ALLOWED      0x00800000
+#define CFLAG1_IS_BASE_TAG_CALL           0x01000000
+#define CFLAG1_YIELD_IF_AMBIGUOUS         0x02000000
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 

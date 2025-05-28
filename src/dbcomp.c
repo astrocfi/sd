@@ -498,7 +498,6 @@ char *flagtab1[] = {
    "split_like_dixie_style",
    "parallel_conc_end",
    "take_right_hands",
-   "is_tag_call",
    "is_star_call",
    "split_large_setups",
    "fudge_to_q_tag",
@@ -506,20 +505,18 @@ char *flagtab1[] = {
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
    "dont_use_in_resolve",
-   "needselector",         /* This actually never appears in the text -- it is automatically added. */
    "neednumber",
    "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
    "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
    "finish_means_skip_first_part",
-   "need_direction",       /* This actually never appears in the text -- it is automatically added. */
    "left_means_touch_or_check",
    "can_be_fan_or_yoyo",
    "no_cutting_through",
    "no_elongation_allowed",
-   "need_tag_call",        /* This actually never appears in the text -- it is automatically added. */
    "base_tag_call",
+   "yield_if_ambiguous",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -766,7 +763,8 @@ tagtabitem tagtabinit[] = {
       {0, "nullcall"},    /* Must be #1 -- the database initializer uses call #1 for any mandatory
                                     modifier, e.g. "clover and [anything]" is executed as
                                     "clover and [call #1]". */
-      {0, "armturn_34"}};   /* Must be #2 -- this is used for "yo-yo". */
+      {0, "armturn_34"},    /* Must be #2 -- this is used for "yo-yo". */
+      {0, "(base ATC call)"}};   /* Must be #3. */
 
 int eof;
 int chars_left;
@@ -786,7 +784,7 @@ char *return_ptr;
 int callcount;
 int filecount;
 int dumbflag;
-unsigned int call_flags;
+unsigned int call_flagsh;
 unsigned int call_flags1;
 unsigned int call_tag;
 char call_name[80];
@@ -1068,7 +1066,7 @@ static void write_defmod_flags(void)
             uint32 bit = 1 << i;
 
             /* Don't check that left/reverse flags -- they are complicated, so there is no "force" word for them. */
-            if (bit & ~(call_flags | INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+            if (bit & ~(call_flagsh | INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use an \"inherit\" flag unless corresponding top level flag is on");
 
             rrh |= bit;
@@ -1077,7 +1075,7 @@ static void write_defmod_flags(void)
             uint32 bit = 1 << i;
 
             /* Don't check that left/reverse flags -- they are complicated, so there is no "force" word for them. */
-            if (bit & call_flags & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+            if (bit & call_flagsh & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                errexit("Can't use a \"force\" flag unless corresponding top level flag is off");
 
             rrh |= bit;
@@ -1216,7 +1214,7 @@ static void write_call_header(calldef_schema schema)
    write_halfword(0x2000 | call_tag);
    write_halfword(call_level);
    write_fullword(call_flags1);
-   write_fullword(call_flags);
+   write_fullword(call_flagsh);
    write_halfword((call_namelen << 8) | (unsigned int) schema);
 
    for (j=0; j<call_namelen; j++)
@@ -1482,7 +1480,7 @@ extern void dbcompile(void)
    if (!tagtab)
       errexit("Out of memory!!!!!!");
 
-   memcpy(tagtab, tagtabinit, sizeof(tagtabinit));   /* initialize first two entries in tagtab */
+   memcpy(tagtab, tagtabinit, sizeof(tagtabinit));   /* initialize first few entries in tagtab */
 
    filecount = 0;
 
@@ -1523,7 +1521,7 @@ extern void dbcompile(void)
 
          strcpy(call_name, tok_str);
          call_namelen = char_ct;
-         call_flags = 0;
+         call_flagsh = 0;
          call_flags1 = 0;
          call_tag = 0;
 
@@ -1547,7 +1545,7 @@ extern void dbcompile(void)
                else if (strcmp(tok_str, "need_three_numbers") == 0)
                   call_flags1 |= (3*CFLAG1_NUMBER_BIT);
                else if ((iii = search(flagtabh)) >= 0)
-                  call_flags |= (1 << iii);
+                  call_flagsh |= (1 << iii);
                else
                   break;
             }
@@ -1598,7 +1596,7 @@ extern void dbcompile(void)
                   matrixflags |= (1 << bit);
                }
    
-               if (matrixflags & MTX_USE_SELECTOR) call_flags1 |= CFLAG1_REQUIRES_SELECTOR;
+               if (matrixflags & MTX_USE_SELECTOR) call_flagsh |= CFLAGH__REQUIRES_SELECTOR;
                write_call_header(ccc);
                write_halfword(matrixflags >> 8);
                write_halfword(matrixflags);

@@ -37,6 +37,7 @@
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
+   uims_do_tagger_popup
    uims_get_number_fields
    uims_do_modifier_popup
    uims_reduce_line_count
@@ -233,7 +234,7 @@ dialog_get_string(int task, char *junk, int *count)
 }
 
 
-void winning_fill_text(dp_$string_desc_t *q, char k[])
+Private void winning_fill_text(dp_$string_desc_t *q, Cstring k)
 {
    char *p;
 
@@ -535,7 +536,7 @@ extern void uims_postinitialize(void)
       dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(number_of_taggers * sizeof(dp_$string_desc_t));
 
       for (k=0; k<number_of_taggers; k++) {
-         p = tagger_calls[k]->name;
+         p = tagger_calls[k]->menu_name;
          j = 0;
          while (p[j]) j++;
          popup_list[k].max_len = j;
@@ -804,6 +805,8 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
    dialog_read(&my_task);
 
    uims_menu_cross = FALSE;
+   uims_menu_magic = FALSE;
+   uims_menu_intlk = FALSE;
    uims_menu_left = FALSE;
 
    switch (my_task) {
@@ -1135,10 +1138,10 @@ extern int uims_do_tagger_popup(void)
 
    if (task == task$tagger_menu) {
       dialog_get_menu_item(task$tagger_menu, &num);
-      return(num);
+      return num;
    }
    else
-      return(0);
+      return 0;
 }
 
 
@@ -1171,7 +1174,7 @@ extern uint32 uims_get_number_fields(int nnumbers)
 }
 
 
-extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind)
+extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
 {
    int task;
    char tempstring_text[80];

@@ -39,6 +39,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
+   uims_do_tagger_popup
    uims_get_number_fields
    uims_do_modifier_popup
    uims_add_new_line
@@ -69,7 +70,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/AsciiText.h>
 
-typedef Const char *Cstring;
+Private Cstring *tagger_menu_list;
 
 Private Widget toplevel, cmdmenu, conceptspecialmenu;
 Private Widget conceptpopup, conceptlist;
@@ -331,6 +332,8 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
  
 	uims_menu_index = item->list_index; /* extern var <- menu item no. */
          uims_menu_cross = FALSE;
+         uims_menu_magic = FALSE;
+         uims_menu_intlk = FALSE;
          uims_menu_left = FALSE;
 
         if (local_reply == ui_command_select) {
@@ -562,6 +565,7 @@ typedef struct _SdResources {
     String quantifier_title;
     String selector_title;
     String direction_title;
+    String tagger_title;
 } SdResources;
 
 Private SdResources sd_resources;
@@ -634,6 +638,7 @@ Private XtResource outfile_resources[] = {
 Private XtResource choose_resources[] = {
     MENU("who", selector_title, "  Who?  "),
     MENU("direction", direction_title, "Direction?"),
+    MENU("tagger", tagger_title, "Tagging call?"),
     MENU("howMany", quantifier_title, "How many?")
 };
 
@@ -714,11 +719,11 @@ uims_process_command_line(int *argcp, char **argvp[])
 extern void
 uims_preinitialize(void)
 {
-    char icon_name[25];
-    String title;
-    Widget box, leftarea, rightarea, startupmenu, infopanes, confirmbox;
-    Widget cmdbox, speconsbox, conceptbox;
-    XtTranslations list_trans, unmap_no_trans;
+   char icon_name[25];
+   String title;
+   Widget box, leftarea, rightarea, startupmenu, infopanes, confirmbox;
+   Widget cmdbox, speconsbox, conceptbox;
+   XtTranslations list_trans, unmap_no_trans;
 
     /* add level name to icon */
     XtVaGetValues(toplevel, XtNiconName, &title, NULL);
@@ -730,157 +735,153 @@ uims_preinitialize(void)
     list_trans = XtParseTranslationTable(list_translations);
 
     box=XtVaCreateManagedWidget("frame", panedWidgetClass, toplevel,
-				XtNorientation, XtEhorizontal,
-				NULL);
+               XtNorientation, XtEhorizontal,
+               NULL);
 
-    leftarea =
-	XtVaCreateManagedWidget("leftmenus", panedWidgetClass, box, NULL);
+    leftarea = XtVaCreateManagedWidget("leftmenus", panedWidgetClass, box, NULL);
 
-    rightarea =
-	XtVaCreateManagedWidget("rightmenus", panedWidgetClass, box, NULL);
+    rightarea = XtVaCreateManagedWidget("rightmenus", panedWidgetClass, box, NULL);
 
-    infopanes =
-	XtVaCreateManagedWidget("infopanes", panedWidgetClass, box, NULL);
+    infopanes = XtVaCreateManagedWidget("infopanes", panedWidgetClass, box, NULL);
 
     /* the sole purpose of this box is to keep the cmdmenu from resizing
        itself.  If the window manager resizes us at startup, sizing won't
        happen until after the window gets mapped, and thus the command menu
        would have the shorter startup list and be the wrong size. */
     cmdbox = XtVaCreateManagedWidget("cmdbox", panedWidgetClass,
-				     leftarea, NULL);
+               leftarea, NULL);
 
-    cmdmenu = XtVaCreateManagedWidget("command", listWidgetClass,
-				      cmdbox, NULL);
+    cmdmenu = XtVaCreateManagedWidget("command", listWidgetClass, cmdbox, NULL);
     XtOverrideTranslations(cmdmenu, list_trans);
     XtGetApplicationResources(cmdmenu, (XtPointer) &sd_resources,
-			      command_resources,
-			      XtNumber(command_resources), NULL, 0);
+               command_resources,
+               XtNumber(command_resources), NULL, 0);
     /* This widget is never realized.  It is just a place to hang
        resources off of. */
     startupmenu = XtVaCreateWidget("startup", labelWidgetClass, cmdbox, NULL);
     XtGetApplicationResources(startupmenu, (XtPointer) &sd_resources,
-			      startup_resources,
-			      XtNumber(startup_resources), NULL, 0);
+               startup_resources,
+               XtNumber(startup_resources), NULL, 0);
 
     /* Keeps the conceptspecialmenu from resizing itself.  See cmdbox above. */
     speconsbox = XtVaCreateManagedWidget("speconsbx", panedWidgetClass,
-					 leftarea, NULL);
+               leftarea, NULL);
     conceptspecialmenu =
-	XtVaCreateManagedWidget("conceptspecial", listWidgetClass,
-				speconsbox, NULL);
+         XtVaCreateManagedWidget("conceptspecial", listWidgetClass,
+               speconsbox, NULL);
     XtAddCallback(conceptspecialmenu, XtNcallback,
-		  command_or_menu_chosen, (XtPointer) ui_special_concept);
+               command_or_menu_chosen, (XtPointer) ui_special_concept);
     XtOverrideTranslations(conceptspecialmenu, list_trans);
 
     callbox = XtVaCreateManagedWidget("callbox", panedWidgetClass,
-				       rightarea, NULL);
+               rightarea, NULL);
 
     calltitle = XtVaCreateManagedWidget("calltitle", labelWidgetClass,
-					 callbox, NULL);
+               callbox, NULL);
 
     /* Viewports may have vertical scrollbar, and it must be visible */
     lview =
-	XtVaCreateManagedWidget("lma", viewportWidgetClass, leftarea, 
-				XtNallowVert, True,
-				XtNforceBars, True,
-				NULL);
+         XtVaCreateManagedWidget("lma", viewportWidgetClass, leftarea, 
+               XtNallowVert, True,
+               XtNforceBars, True,
+               NULL);
     callview =
-	XtVaCreateManagedWidget("rma", viewportWidgetClass, callbox,
-				XtNallowVert, True,
-				XtNforceBars, True,
-				NULL);
+         XtVaCreateManagedWidget("rma", viewportWidgetClass, callbox,
+               XtNallowVert, True,
+               XtNforceBars, True,
+               NULL);
 
     conceptmenu =
-	XtVaCreateManagedWidget("conceptmenu", listWidgetClass, lview,
-				XtNdefaultColumns, 1, NULL);
+         XtVaCreateManagedWidget("conceptmenu", listWidgetClass, lview,
+               XtNdefaultColumns, 1, NULL);
     XtAddCallback(conceptmenu, XtNcallback,
-		  command_or_menu_chosen, (XtPointer)ui_concept_select);
+               command_or_menu_chosen, (XtPointer)ui_concept_select);
     XtOverrideTranslations(conceptmenu, list_trans);
 
     callmenu =
-	XtVaCreateManagedWidget("callmenu", listWidgetClass, callview,
-				XtNdefaultColumns, 1, NULL);
+         XtVaCreateManagedWidget("callmenu", listWidgetClass, callview,
+               XtNdefaultColumns, 1, NULL);
     XtAddCallback(callmenu, XtNcallback,
-		  command_or_menu_chosen, (XtPointer)ui_call_select);
+               command_or_menu_chosen, (XtPointer)ui_call_select);
     XtOverrideTranslations(callmenu, list_trans);
 
     /* make it managed now so sizing gets done */
     resolvewin = XtVaCreateManagedWidget("resolvebox", panedWidgetClass,
-					 rightarea, NULL);
+               rightarea, NULL);
 
     resolvetitle = XtVaCreateManagedWidget("resolvetitle", labelWidgetClass,
-					   resolvewin, NULL);
+               resolvewin, NULL);
 
     resolvemenu = XtVaCreateManagedWidget("resolve", listWidgetClass,
-					  resolvewin, NULL);
+               resolvewin, NULL);
     XtAddCallback(resolvemenu, XtNcallback,
-		  command_or_menu_chosen, (XtPointer)ui_resolve_select);
+               command_or_menu_chosen, (XtPointer)ui_resolve_select);
     XtOverrideTranslations(resolvemenu, list_trans);
     XtGetApplicationResources(resolvemenu, (XtPointer) &sd_resources,
-			      resolve_resources,
-			      XtNumber(resolve_resources), NULL, 0);
+               resolve_resources,
+               XtNumber(resolve_resources), NULL, 0);
     XawListChange(resolvemenu, sd_resources.resolve_list, NUM_RESOLVE_COMMAND_KINDS,
-		  0, TRUE);
+               0, TRUE);
 
     /* Text label is long enough to make widget wide enough.
        Keyed to MAX_PRINT_LENGTH in sdutil.c.
        The two extra chars are for the text area scrollbar, what a kludge. */
     statuswin = XtVaCreateManagedWidget("enabledmods", labelWidgetClass,
-					infopanes,
-					XtNlabel,
-	     "XX-123456789-123456789-123456789-123456789-123456789-123456789",
-					NULL);
+               infopanes,
+               XtNlabel,
+               "XX-123456789-123456789-123456789-123456789-123456789-123456789",
+               NULL);
     XtGetApplicationResources(statuswin, (XtPointer) &sd_resources,
-			      enabledmods_resources,
-			      XtNumber(enabledmods_resources), NULL, 0);
+               enabledmods_resources,
+               XtNumber(enabledmods_resources), NULL, 0);
 
     txtwin = XtVaCreateManagedWidget("text", asciiTextWidgetClass, infopanes,
-				     /* set to known string so can append */
-				     XtNstring, "",
-				     NULL);
+               /* set to known string so can append */
+               XtNstring, "",
+               NULL);
 
     /* confirmation popup */
 
     XtAppAddActions(xtcontext, actionTable, XtNumber(actionTable));
 
     confirmpopup = XtVaCreatePopupShell("confirmpopup",
-					transientShellWidgetClass, toplevel,
-					XtNallowShellResize, True, NULL);
+               transientShellWidgetClass, toplevel,
+               XtNallowShellResize, True, NULL);
 
     XtGetApplicationResources(confirmpopup, (XtPointer) &sd_resources,
-			      confirm_resources, XtNumber(confirm_resources),
-			      NULL, 0);
+               confirm_resources, XtNumber(confirm_resources),
+               NULL, 0);
     XtOverrideTranslations(confirmpopup,
-			   XtParseTranslationTable(confirm_translations));
+               XtParseTranslationTable(confirm_translations));
 
     /* this creates a margin which makes the popup prettier */
     confirmbox = XtVaCreateManagedWidget("confirm", boxWidgetClass,
-					 confirmpopup, NULL);
+               confirmpopup, NULL);
 
     confirmlabel = XtVaCreateManagedWidget("label", labelWidgetClass,
-					   confirmbox, NULL);
+               confirmbox, NULL);
 
     XtRealizeWidget(confirmpopup); /* makes XtPopup faster to do this now */
 
     /* menu choose popup */
 
     choosepopup = XtVaCreatePopupShell("selector", transientShellWidgetClass,
-				       toplevel,
-				       XtNallowShellResize, True, NULL);
+               toplevel,
+               XtNallowShellResize, True, NULL);
     XtOverrideTranslations(choosepopup,
-			   XtParseTranslationTable(choose_translations));
+               XtParseTranslationTable(choose_translations));
 
     choosebox = XtVaCreateManagedWidget("choose", boxWidgetClass,
-					choosepopup, NULL);
+               choosepopup, NULL);
 
     chooselabel = XtVaCreateManagedWidget("label", labelWidgetClass,
-					  choosebox, NULL);
+               choosebox, NULL);
     XtGetApplicationResources(chooselabel, (XtPointer) &sd_resources,
-			      choose_resources, XtNumber(choose_resources),
-			      NULL, 0);
+               choose_resources, XtNumber(choose_resources),
+               NULL, 0);
 
     chooselist = XtVaCreateManagedWidget("items", listWidgetClass, choosebox,
-					 XtNcolumnSpacing, 0, NULL);
+               XtNcolumnSpacing, 0, NULL);
     XtAddCallback(chooselist, XtNcallback, choose_pick, (XtPointer)NULL);
     XtOverrideTranslations(chooselist, list_trans);
 
@@ -889,20 +890,20 @@ uims_preinitialize(void)
     /* comment popup */
 
     commentpopup = XtVaCreatePopupShell("commentpopup",
-					transientShellWidgetClass, toplevel, 
-					XtNallowShellResize, True, NULL);
+               transientShellWidgetClass, toplevel, 
+               XtNallowShellResize, True, NULL);
     unmap_no_trans = XtParseTranslationTable(unmap_no_translation);
     XtOverrideTranslations(commentpopup, unmap_no_trans);
 
     commentbox = XtVaCreateManagedWidget("comment", dialogWidgetClass,
-					 commentpopup,
-					 /* create an empty value area */
-					 XtNvalue, "", NULL);
+               commentpopup,
+               /* create an empty value area */
+               XtNvalue, "", NULL);
 
     XawDialogAddButton(commentbox, "abort", dialog_callback,
-		       (XtPointer)POPUP_DECLINE);
+               (XtPointer)POPUP_DECLINE);
     XawDialogAddButton(commentbox, "ok", dialog_callback,
-		       (XtPointer)POPUP_ACCEPT_WITH_STRING);
+               (XtPointer)POPUP_ACCEPT_WITH_STRING);
 
     XtRealizeWidget(commentpopup); /* makes XtPopup faster to do this now */
 
@@ -910,12 +911,12 @@ uims_preinitialize(void)
     /* outfile popup */
 
     outfilepopup = XtVaCreatePopupShell("outfilepopup",
-					transientShellWidgetClass, toplevel,
-					XtNallowShellResize, True,
-					NULL);
+               transientShellWidgetClass, toplevel,
+               XtNallowShellResize, True,
+               NULL);
     XtGetApplicationResources(outfilepopup, (XtPointer) &sd_resources,
-			      outfile_resources, XtNumber(outfile_resources),
-			      NULL, 0);
+               outfile_resources, XtNumber(outfile_resources),
+               NULL, 0);
     XtOverrideTranslations(outfilepopup, unmap_no_trans);
 
     outfilebox = XtVaCreateManagedWidget("outfile", dialogWidgetClass,
@@ -998,7 +999,7 @@ uims_preinitialize(void)
 }
 
 Private void
-add_call_to_menu(Cstring **menu, int call_menu_index, int menu_size, Const char callname[])
+add_call_to_menu(Cstring **menu, int call_menu_index, int menu_size, Cstring callname)
 {
     if (call_menu_index == 0) {	/* first item in this menu; set it up */
 	*menu = get_mem((unsigned int)(menu_size+1) * sizeof(String *));
@@ -1103,6 +1104,12 @@ extern void
 uims_postinitialize(void)
 {
     int i;
+
+   /* Create the tagger list. */
+   tagger_menu_list = (Cstring *) get_mem((number_of_taggers) * sizeof(char *));
+
+   for (i=0; i<number_of_taggers; i++)
+      tagger_menu_list[i] = tagger_calls[i]->menu_name;
 
     /* initialize our special empty call menu */
     call_menu_lists[call_list_empty] = empty_menu;
@@ -1319,8 +1326,7 @@ uims_do_abort_popup(void)
 }
 
 
-extern int
-uims_do_modifier_popup(char callname[], modify_popup_kind kind)
+extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
 {
    char modifier_question[150];
    char *line_format = "Internal error: unknown modifier kind.";
@@ -1425,7 +1431,7 @@ uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_st
 
 
 Private int
-choose_popup(String label, String names[])
+choose_popup(String label, Cstring names[])
 {
     Dimension labelwidth, listwidth;
     Dimension listintwid;
@@ -1435,7 +1441,7 @@ choose_popup(String label, String names[])
     /* we clobber this each time */
     XtVaSetValues(chooselist, XtNinternalWidth, stdlistintwid, NULL);
 
-    XawListChange(chooselist, names, 0, 0, TRUE);
+    XawListChange(chooselist, (char **) names, 0, 0, TRUE);
 
     /* set the width of the box to the width of the widest child */
 
@@ -1476,6 +1482,15 @@ uims_do_direction_popup(void)
 {
     /* We skip the zeroth direction, which is direction_uninitialized. */
     int t = choose_popup(sd_resources.direction_title, &direction_names[1]);
+    if (t==0) return POPUP_DECLINE;
+    return t;
+}    
+
+
+extern int
+uims_do_tagger_popup(void)
+{
+    int t = choose_popup(sd_resources.tagger_title, tagger_menu_list);
     if (t==0) return POPUP_DECLINE;
     return t;
 }    

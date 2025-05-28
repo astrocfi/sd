@@ -1064,7 +1064,7 @@ Private void rollmove(
       if (ss->people[i].id1) {
          rot = 0;
          st = ((uint32) stb_z)*DBSTAB_BIT; 
-         if (!(callspec->callflags1 & CFLAG1_REQUIRES_SELECTOR) || selectp(ss, i)) {
+         if (!(callspec->callflagsh & CFLAGH__REQUIRES_SELECTOR) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_MASK) {
                case ROLLBITL: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
                case ROLLBITM: break;
@@ -1390,7 +1390,7 @@ that probably need to be put in. */
    /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
 
    if (final_concepts & FINAL__MUST_BE_TAG) {
-      if (!(callspec->callflags1 & CFLAG1_IS_TAG_CALL) ||
+      if (!(callspec->callflags1 & CFLAG1_IS_BASE_TAG_CALL) ||
             ((callspec->callflags1 & CFLAG1_NUMBER_MASK) && current_number_fields != 2))
          fail("Only a tagging call is allowed here.");
    }
@@ -2104,10 +2104,6 @@ extern void move(
 
    new_final_concepts |= ss->cmd.cmd_final_flags;         /* Include any old ones we had. */
 
-   /* These are the concepts that we are interested in. */
-
-   check_concepts = new_final_concepts & ~FINAL__MUST_BE_TAG;
-
    if (parseptrcopy->concept->kind <= marker_end_of_list) {
       uint32 saved_number_fields = current_number_fields;
       selector_kind saved_selector = current_selector;
@@ -2137,6 +2133,10 @@ extern void move(
    }
    else {
       /* We now know that there are "non-final" (virtual setup) concepts present. */
+
+      /* These are the concepts that we are interested in. */
+
+      check_concepts = new_final_concepts & ~FINAL__MUST_BE_TAG;
 
       result->result_flags = 0;
 

@@ -41,6 +41,8 @@
    phantom_concept_index
    left_concept_index
    cross_concept_index
+   magic_concept_index
+   intlk_concept_index
    general_concept_offset
    general_concept_size
    concept_offset_tables
@@ -458,6 +460,7 @@ concept_descriptor concept_descriptor_table[] = {
 /* 4-person distorted concepts */
 
 #define d4__1_size 9
+#define d4__1_magic 3
    {"SPLIT",                                 concept_split,                 FALSE, l_mainstream},
    {"ONCE REMOVED",                          concept_once_removed,          FALSE, l_c2,         {0, 0}},
    {"ONCE REMOVED DIAMONDS",                 concept_once_removed,          FALSE, l_c3,         {0, 1}},
@@ -495,6 +498,7 @@ concept_descriptor concept_descriptor_table[] = {
 #define mm__1_size 59
 #define mm__1_left 0
 #define mm__1_cross 2
+#define mm__1_intlk 9
 #define mm__1_phan 12
    {"LEFT",                                  concept_left,                  FALSE, l_mainstream},
    {"REVERSE",                               concept_reverse,               FALSE, l_mainstream},
@@ -889,6 +893,8 @@ nice_setup_thing nice_setup_thing_4x6 = {
 int phantom_concept_index = mm_1_offset + mm__1_phan;
 int left_concept_index = mm_1_offset + mm__1_left;
 int cross_concept_index = mm_1_offset + mm__1_cross;
+int magic_concept_index = d4_1_offset + d4__1_magic;
+int intlk_concept_index = mm_1_offset + mm__1_intlk;
 
 
 Private int phantoml_sizes[]  = {pl__1_size, pl__2_size, pl__3_size,             -1};

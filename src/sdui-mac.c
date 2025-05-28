@@ -233,6 +233,8 @@ get_call_command(call_list_kind *call_menu)
     get_user_command((int) *call_menu);
     uims_menu_index = user_match.index;
     uims_menu_cross = user_match.cross;
+    uims_menu_magic = user_match.magic;
+    uims_menu_intlk = user_match.interlocked;
     uims_menu_left = user_match.left;
     
     /*

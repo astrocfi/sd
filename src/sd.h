@@ -80,6 +80,8 @@ typedef char veryshort;
 
 typedef unsigned long int uint32;
 
+typedef Const char *Cstring;
+
 #include <setjmp.h>
 #include "database.h"
 
@@ -509,8 +511,8 @@ typedef struct glowk {
 } calldef_block;
 
 typedef struct {
-   uint32 callflags1;
-   uint32 callflagsh;
+   uint32 callflags1;    /* The CFLAG1_??? flags. */
+   uint32 callflagsh;    /* The heritable flags + the ESCAPE_WORD__???  and CFLAGH__??? flags. */
    int age;
    calldef_schema schema;
    union {
@@ -533,7 +535,7 @@ typedef struct {
    /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
       If there are no escapes, this just points to the stuff below.  If escapes are present,
       it points to allocated storage elsewhere.  Either way, it persists throughout the program. */
-   Const char *menu_name;
+   Cstring menu_name;
    /* Dynamically allocated to whatever size is required, will have trailing null.
       This is the name as it appeared in the database, with "@" escapes. */
    char name[4];
@@ -716,7 +718,7 @@ typedef enum {
 } concept_kind;
 
 typedef struct {
-   Const char *name;
+   Cstring name;
    Const concept_kind kind;
    Const long_boolean dup;
    Const dance_level level;
@@ -728,7 +730,7 @@ typedef struct {
       Const int arg4;
       Const int arg5;
    } value;
-   Const char *menu_name;
+   Cstring menu_name;
 } concept_descriptor;
 
 /* BEWARE!!  This list must track the arrays "selector_names" and "selector_singular" in sdutil.c .
@@ -1126,16 +1128,30 @@ typedef enum {
 #define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
 
 
-/* These flags go along for the ride, in some parts of the code, in the same word
-   as the heritable flags, but are not part of the inheritance mechanism.  We use
-   symbols that have been graciously provided for us from database.h to tell us
-   what bits may be safely used next to the heritable flags. */
+/* These flags go along for the ride, in some parts of the code (BUT NOT
+   THE CALLFLAGSH WORD OF A CALLSPEC!), in the same word as the heritable flags,
+   but are not part of the inheritance mechanism.  We use symbols that have been
+   graciously provided for us from database.h to tell us what bits may be safely
+   used next to the heritable flags. */
 
 #define FINAL__SPLIT                      INHERITSPARE_1
 #define FINAL__SPLIT_SQUARE_APPROVED      INHERITSPARE_2
 #define FINAL__SPLIT_DIXIE_APPROVED       INHERITSPARE_3
 #define FINAL__MUST_BE_TAG                INHERITSPARE_4
 #define FINAL__TRIANGLE                   INHERITSPARE_5
+
+/* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsh
+   word of a callspec, in the same word as the heritable flags, but are not
+   part of the inheritance mechanism.  We use symbols that have been graciously
+   provided for us from database.h to tell us what bits may be safely used next
+   to the heritable flags.  Note that these bits overlap the FINAL__?? bits above.
+   These are used in the callflagsh word of a callspec.  The FINAL__?? bits are
+   used elsewhere.  They don't mix. */
+
+#define ESCAPE_WORD__LEFT                 INHERITSPARE_1
+#define ESCAPE_WORD__CROSS                INHERITSPARE_2
+#define ESCAPE_WORD__MAGIC                INHERITSPARE_3
+#define ESCAPE_WORD__INTLK                INHERITSPARE_4
 
 typedef uint32 final_set;
 
@@ -1437,11 +1453,12 @@ extern char error_message2[MAX_ERR_LENGTH];                         /* in SDUTIL
 extern uint32 collision_person1;                                    /* in SDUTIL */
 extern uint32 collision_person2;                                    /* in SDUTIL */
 extern long_boolean enable_file_writing;                            /* in SDUTIL */
-extern char *cardinals[];                                           /* in SDUTIL */
-extern char *ordinals[];                                            /* in SDUTIL */
-extern char *selector_names[];                                      /* in SDUTIL */
-extern char *direction_names[];                                     /* in SDUTIL */
-extern char *warning_strings[];                                     /* in SDUTIL */
+extern Cstring cardinals[];                                         /* in SDUTIL */
+extern Cstring ordinals[];                                          /* in SDUTIL */
+extern Cstring selector_names[];                                    /* in SDUTIL */
+extern Cstring selector_singular[];                                 /* in SDUTIL */
+extern Cstring direction_names[];                                   /* in SDUTIL */
+extern Cstring warning_strings[];                                   /* in SDUTIL */
 
 extern uint32 global_tbonetest;                                     /* in SDCONCPT */
 extern uint32 global_livemask;                                      /* in SDCONCPT */
@@ -1471,11 +1488,13 @@ extern nice_setup_thing nice_setup_thing_4x6;                       /* in SDCTAB
 extern int phantom_concept_index;                                   /* in SDCTABLE */
 extern int left_concept_index;                                      /* in SDCTABLE */
 extern int cross_concept_index;                                     /* in SDCTABLE */
+extern int magic_concept_index;                                     /* in SDCTABLE */
+extern int intlk_concept_index;                                     /* in SDCTABLE */
 extern int general_concept_offset;                                  /* in SDCTABLE */
 extern int general_concept_size;                                    /* in SDCTABLE */
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
 extern int *concept_size_tables[];                                  /* in SDCTABLE */
-extern Const char *concept_menu_strings[];                          /* in SDCTABLE */
+extern Cstring concept_menu_strings[];                              /* in SDCTABLE */
 
 extern char *getout_strings[];                                      /* in SDTABLES */
 extern char *filename_strings[];                                    /* in SDTABLES */
@@ -1575,6 +1594,8 @@ extern int global_age;                                              /* in SDMAIN
 extern parse_state_type parse_state;                                /* in SDMAIN */
 extern int uims_menu_index;                                         /* in SDMAIN */
 extern long_boolean uims_menu_cross;                                /* in SDMAIN */
+extern long_boolean uims_menu_magic;                                /* in SDMAIN */
+extern long_boolean uims_menu_intlk;                                /* in SDMAIN */
 extern long_boolean uims_menu_left;                                 /* in SDMAIN */
 extern char database_version[81];                                   /* in SDMAIN */
 extern int whole_sequence_low_lim;                                  /* in SDMAIN */
@@ -1588,7 +1609,6 @@ extern long_boolean using_active_phantoms;                          /* in SDMAIN
 extern long_boolean resolver_is_unwieldy;                           /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern selector_kind current_selector;                              /* in SDMAIN */
-extern int current_tagger;                                          /* in SDMAIN */
 extern direction_kind current_direction;                            /* in SDMAIN */
 extern uint32 current_number_fields;                                /* in SDMAIN */
 extern warning_info no_search_warnings;                             /* in SDMAIN */
@@ -1685,7 +1705,7 @@ extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
 extern int uims_do_tagger_popup(void);
-extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind);
+extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind);
 extern uint32 uims_get_number_fields(int nnumbers);
 extern void uims_reduce_line_count(int n);
 extern void uims_add_new_line(char the_line[]);
@@ -1714,7 +1734,7 @@ extern void nonreturning fail(Const char s[]);
 extern void nonreturning fail2(Const char s1[], Const char s2[]);
 extern void nonreturning specialfail(Const char s[]);
 extern Const char *get_escape_string(char c);
-extern void string_copy(char **dest, char src[]);
+extern void string_copy(char **dest, Cstring src);
 extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);
 extern void warn(warning_index w);

@@ -66,22 +66,28 @@ Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(6), SB}, {SOUT(5), HG}, {N
    simply re-uses the stored string where it can, and allocates fresh memory
    if a substitution took place. */
 
-static Const char *translate_menu_name(Const char *orig_name)
+Private Const char *translate_menu_name(Const char *orig_name, uint32 *escape_bits_p)
 {
    int j;
    char c;
    int namelength;
    long_boolean atsign = FALSE;
-   Const char *name_ptr = orig_name;
 
    /* See if the name has an 'at' sign, in which case we have to modify it to
-      get the actual menu text. */
+      get the actual menu text.  Also, find out what escape flags we need to set. */
 
    namelength = 0;
    for (;;) {
-      c = name_ptr[namelength++];
+      c = orig_name[namelength++];
       if (!c) break;
-      else if (c == '@') atsign = TRUE;
+      else if (c == '@') {
+         atsign = TRUE;
+         c = orig_name[namelength++];
+         if (c == 'e') *escape_bits_p |= ESCAPE_WORD__LEFT;
+         else if (c == 'j' || c == 'C') *escape_bits_p |= ESCAPE_WORD__CROSS;
+         else if (c == 'J' || c == 'M') *escape_bits_p |= ESCAPE_WORD__MAGIC;
+         else if (c == 'E' || c == 'I') *escape_bits_p |= ESCAPE_WORD__INTLK;
+      }
    }
 
    if (atsign) {
@@ -96,22 +102,22 @@ static Const char *translate_menu_name(Const char *orig_name)
       for (j = 0; j < namelength; j++) {
          char *p;
 
-         c = name_ptr[j];
+         c = orig_name[j];
 
          if (c == '@') {
-            Const char *q = get_escape_string(name_ptr[++j]);
+            Const char *q = get_escape_string(orig_name[++j]);
             if (q && *q) {
                while (*q) temp_ptr[templength++] = *q++;
                continue;
             }
             else if (q) {
-               /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-               while (name_ptr[j] != '@') j++;
+               /* Skip over @7...@8, @n .. @o, @j .. @l, and @J...@L stuff. */
+               while (orig_name[j] != '@') j++;
                j++;
             }
 
             /* Be sure we don't leave two consecutive blanks in the text. */
-            if (name_ptr[j+1] == ' ' && templength != 0 && temp_ptr[templength-1] == ' ') j++;
+            if (orig_name[j+1] == ' ' && templength != 0 && temp_ptr[templength-1] == ' ') j++;
          }
          else
             temp_ptr[templength++] = c;
@@ -124,16 +130,8 @@ static Const char *translate_menu_name(Const char *orig_name)
       return new_ptr;
    }
    else
-      return name_ptr;
+      return orig_name;
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -143,6 +141,8 @@ Private parse_block *parse_mark;
 Private int call_index;
 Private callspec_block *test_call;
 Private long_boolean crossiness;
+Private long_boolean magicness;
+Private long_boolean intlkness;
 
 
 Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
@@ -198,10 +198,28 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
       /* Now try giving the "cross" modifier. */
 
-      if (test_call->name[0] == '@' && test_call->name[1] == 'i') {
+      if (test_call->callflagsh & ESCAPE_WORD__CROSS) {
          if (!crossiness) {
             crossiness = TRUE;
             goto try_another_cross;
+         }
+      }
+
+      /* Now try giving the "magic" modifier. */
+
+      if (test_call->callflagsh & ESCAPE_WORD__MAGIC) {
+         if (!magicness) {
+            magicness = TRUE;
+            goto try_another_magic;
+         }
+      }
+
+      /* Now try giving the "interlocked" modifier. */
+
+      if (test_call->callflagsh & ESCAPE_WORD__INTLK) {
+         if (!intlkness) {
+            intlkness = TRUE;
+            goto try_another_intlk;
          }
       }
 
@@ -220,6 +238,14 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
       "no one advance to a column" are illegal.  If "beaus" doesn't work, we will
       try "ends" (for the call "fold"), "all", and finally "none" (for the call
       "run"), before giving up. */
+
+   intlkness = FALSE;
+
+   try_another_intlk:
+
+   magicness = FALSE;
+
+   try_another_magic:
 
    crossiness = FALSE;
 
@@ -249,8 +275,18 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    if (test_call->schema == schema_roll) goto accept;
 
+   /* We also accept "<ATC> your neighbor" calls, since we don't know what the
+      tagging call will be. */
+   if (test_call->callflagsh & CFLAGH__REQUIRES_TAG_CALL) goto accept;
+
    if (crossiness)
       (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+
+   if (magicness)
+      (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
+
+   if (intlkness)
+      (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
 
    (void) deposit_call(test_call);
    toplevelmove();
@@ -312,34 +348,71 @@ Private callspec_block **the_array;
 
 Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 {
-   char *m, *n;
+   char *m = x->name;
+   char *n = y->name;
 
-   m = x->name;
-   n = y->name;
    for (;;) {
-      if (*m == '@') {
+
+      /* First, skip over everything that we need to, in both m and n.  This includes blanks, hyphens, and
+         insignificant escape sequences.
+         Not sure about the continuing accuracy or helpfulness of the comments just below. */
+
+      /* We need to ignore blanks; otherwise "@6 run" will come out at the beginning of the list instead of under "r". */
+      /* And hyphens too, so that "1-3-2 quarter the alter" will be listed under "q" (or whatever) rather than "-". */
+
+      /* The current order is:
+         <ATC>
+         <ANYONE>
+         <N> */
+
+      if (*m == ' ' || *m == '-') m++;
+      else if (*n == ' ' || *n == '-') n++;  
+      else if (*m == '@' && m[1] != 'v' && m[1] != '6' && m[1] != 'k' && m[1] != '9') {
          /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-         if (m[1] == '7' || m[1] == 'n' || m[1] == 'j') {
+         if (m[1] == '7' || m[1] == 'n' || m[1] == 'j' || m[1] == 'J' || m[1] == 'E') {
             while (*++m != '@');
          }
-         m += 2;   
+         m += 2;
       }
-      else if (*n == '@') {
-         if (n[1] == '7' || n[1] == 'n' || n[1] == 'j') {
+      else if (*n == '@' && n[1] != 'v' && n[1] != '6' && n[1] != 'k' && n[1] != '9') {
+         if (n[1] == '7' || n[1] == 'n' || n[1] == 'j' || n[1] == 'J' || n[1] == 'E') {
             while (*++n != '@');
          }
          n += 2;
       }
-      /* We need to ignore blanks too, otherwise "@6 run" will come out at the beginning of the list instead of under "r". */
-      else if (*m == ' ') m++;
-      else if (*n == ' ') n++;
-      /* And hyphens too, so that "1-3-2 quarter the alter" will be listed under "q" rather than "-". */
-      else if (*m == '-') m++;
-      else if (*n == '-') n++;
-      else if (!*m) return(TRUE);
-      else if (!*n) return(FALSE);
-      else if (*m < *n) return(TRUE);
-      else if (*m > *n) return(FALSE);
+      else if (*m == '@' && m[1] == 'v') {
+         if (*n == '@' && n[1] == 'v') {
+            m += 2;      /* Comparing two "<ATC>"'s. */
+            n += 2;
+         }
+         else return TRUE;     /* Comparing an "<ATC>" with something later. */
+      }
+      else if (*m == '@' && (m[1] == '6' || m[1] == 'k')) {
+         if (*n == '@' && (n[1] == '6' || n[1] == 'k')) {
+            m += 2;      /* Comparing two "<ANYONE>"'s. */
+            n += 2;
+         }
+         else if (*n == '@' && n[1] == 'v') {
+            return FALSE;      /* Comparing an "<ANYONE>" with something earlier. */
+         }
+         else return TRUE;     /* Comparing an "<ANYONE>" with something later. */
+      }
+      else if (*m == '@' && m[1] == '9') {
+         if (*n == '@' && n[1] == '9') {
+            m += 2;      /* Comparing two "<N>"'s. */
+            n += 2;
+         }
+         else if (*n == '@' && (n[1] == 'v' || n[1] == '6' || n[1] == 'k')) {
+            return FALSE;      /* Comparing an "<N>" with something earlier. */
+         }
+         else return TRUE;     /* Comparing an "<N>" with something later. */
+      }
+      else if (*n == '@' && (n[1] == 'v' || n[1] == '6' || n[1] == 'k' || n[1] == '9')) {
+         return FALSE;
+      }
+      else if (!*m) return TRUE;
+      else if (!*n) return FALSE;
+      else if (*m != *n) return (*m < *n);
       else
          { m++; n++; }
    }
@@ -629,7 +702,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
             /* If this call uses a predicate that takes a selector, flag the call so that
                we will query the user for that selector. */
             if (last_datum < SELECTOR_PREDS)
-               call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
+               call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
             for (j=0; j < this_start_size; j++) {
                read_halfword();
                temp_predlist->arr[j] = last_datum;
@@ -686,7 +759,6 @@ Private void build_database(call_list_mode_t call_list_mode)
    calldef_schema call_schema;
    int local_callcount;
    char *np, c;
-   int savetag, saveflags1, saveflags;
    dance_level savelevel;
    callspec_block **local_call_list;
 
@@ -708,6 +780,8 @@ Private void build_database(call_list_mode_t call_list_mode)
    local_callcount = 0;
 
    for (;;) {
+      int savetag, saveflags1, saveflagsh;
+
       if ((last_datum & 0xE000) == 0) break;
 
       if ((last_datum & 0xE000) != 0x2000) {
@@ -723,7 +797,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       saveflags1 = last_datum;
 
       read_fullword();       /* Get top level flags, second word. */
-      saveflags = last_datum;
+      saveflagsh = last_datum;
 
       read_halfword();       /* Get char count and schema. */
       call_schema = (calldef_schema) (last_datum & 0xFF);
@@ -736,6 +810,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       /* We subtract 3 because 4 chars are already present, but we need one extra for the pad. */
 
       call_root = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
+      call_root->menu_name = (Cstring) 0;
       np = call_root->name;
 
       if (savetag) {
@@ -744,14 +819,24 @@ Private void build_database(call_list_mode_t call_list_mode)
       }
 
       if (savelevel == calling_level || (call_list_mode != call_list_mode_writing && savelevel < calling_level)) {
-         if (local_callcount >= abs_max_calls)
-            database_error("Too many base calls -- mkcalls made an error.");
-         local_call_list[local_callcount++] = call_root;
+         /* Process tag base calls specially. */
+         if (saveflags1 & CFLAG1_IS_BASE_TAG_CALL) {
+         
+            number_of_taggers++;
+         
+            tagger_calls = get_more_mem(tagger_calls, number_of_taggers*sizeof(callspec_block *));
+            tagger_calls[number_of_taggers-1] = call_root;
+         }
+         else {
+            if (local_callcount >= abs_max_calls)
+               database_error("Too many base calls -- mkcalls made an error.");
+            local_call_list[local_callcount++] = call_root;
+         }
       }
 
       call_root->age = 0;
       call_root->callflags1 = saveflags1;
-      call_root->callflagsh = saveflags;
+      call_root->callflagsh = saveflagsh;
       /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */
       if (calling_level == l_dontshow) call_root->callflags1 |= CFLAG1_VISIBLE_FRACTIONS | CFLAG1_FIRST_PART_VISIBLE;
 
@@ -770,9 +855,11 @@ Private void build_database(call_list_mode_t call_list_mode)
       while (c = *np++) {
          if (c == '@') {
             if ((c = *np++) == '6' || c == 'k')
-               call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
+               call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
             else if (c == 'h')
-               call_root->callflags1 |= CFLAG1_REQUIRES_DIRECTION;
+               call_root->callflagsh |= CFLAGH__REQUIRES_DIRECTION;
+            else if (c == 'v')
+               call_root->callflagsh |= CFLAGH__REQUIRES_TAG_CALL;
          }
       }
 
@@ -795,7 +882,7 @@ Private void build_database(call_list_mode_t call_list_mode)
                   read_halfword();
                }
 
-               call_root->callflags1 |= CFLAG1_REQUIRES_SELECTOR;
+               call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
                continue;
             }
          case schema_partner_matrix:
@@ -923,6 +1010,7 @@ Private void build_database(call_list_mode_t call_list_mode)
 extern void initialize_menus(call_list_mode_t call_list_mode)
 {
    uint32 arithtest = 2081607680;
+   uint32 escape_bit_junk;
    int i;
 
    /* This "if" should never get executed.  We expect compilers to optimize
@@ -962,10 +1050,20 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       phrases, suitable for external display on menus, instead of "@" escapes. */
 
    for (i=0; i<number_of_calls[call_list_any]; i++)
-      main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name);
+      main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name, &main_call_lists[call_list_any][i]->callflagsh);
+
+   for (i=0; i<number_of_taggers; i++)
+      tagger_calls[i]->menu_name = translate_menu_name(tagger_calls[i]->name, &tagger_calls[i]->callflagsh);
+
+   /* Do the base calls (calls that are used in definitions of other calls).  These may have
+      already been done, if they were on the level. */
+   for (i=1; i <= highest_base_call; i++) {
+      if (!base_calls[i]->menu_name)
+         base_calls[i]->menu_name = translate_menu_name(base_calls[i]->name, &base_calls[i]->callflagsh);
+   }
 
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++)
-      concept_descriptor_table[i].menu_name = translate_menu_name(concept_descriptor_table[i].name);
+      concept_descriptor_table[i].menu_name = translate_menu_name(concept_descriptor_table[i].name, &escape_bit_junk);
 
    the_array = main_call_lists[call_list_any];
    heapsort(number_of_calls[call_list_any]);

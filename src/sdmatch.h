@@ -27,17 +27,22 @@
  */
 
 typedef struct {
-   long_boolean valid;   /* set to TRUE if a match was found */
-   long_boolean exact;   /* set to TRUE if an exact match was found */
+   long_boolean valid;       /* set to TRUE if a match was found */
+   long_boolean exact;       /* set to TRUE if an exact match was found */
    uims_reply kind;
    int index;
-   selector_kind who;    /* matches <anyone> */
-   direction_kind where; /* matches <direction> */
-   long_boolean left;    /* matches "left" */
-   long_boolean cross;   /* matches "cross" */
-   int number_fields;    /* matches all the number fields */
-   int howmanynumbers;   /* tells how many there are */
-   int space_ok;         /* space is a legitimate next input character */
+   selector_kind who;        /* matches <anyone> */
+   direction_kind where;     /* matches <direction> */
+   uint32 tagger;            /* matches <atc> */
+   long_boolean left;        /* matches "left" */
+   long_boolean cross;       /* matches "cross" */
+   long_boolean magic;       /* matches "magic" */
+   long_boolean interlocked; /* matches "interlocked" */
+   uint32 number_fields;     /* matches all the number fields */
+   int howmanynumbers;       /* tells how many there are */
+   int space_ok;             /* space is a legitimate next input character */
+   int callflags1;           /* contains the "yield_if_ambiguous" flag */
+   int yielding_matches;     /* how many matches have that flag on */
 } match_result;
 
 typedef void (*show_function)(char *user_input, Const char *extension, Const match_result *mr);
@@ -46,7 +51,8 @@ enum {
     match_startup_commands = -1,
     match_resolve_commands = -2,
     match_selectors = -3,
-    match_directions = -4
+    match_directions = -4,
+    match_taggers = -5
 };
 
 extern void
@@ -60,7 +66,7 @@ match_user_input(
     char *user_input,
     int which_commands,
     match_result *mr,
-    char **command_list,      /* Text of commands to search for (Mac and Unix versions differ). */
+    Cstring *command_list,    /* Text of commands to search for (Mac and Unix versions differ). */
     int num_commands,         /* How many items in above list. */
     char *extension,
     show_function sf,

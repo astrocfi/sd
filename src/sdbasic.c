@@ -882,8 +882,8 @@ Private void special_4_way_symm(
    int begin_size;
    int real_index;
    int real_direction, northified_index;
-   uint32 z;
-   int k, zzz, result_size, result_quartersize;
+   uint32 z, zzz;
+   int k, result_size, result_quartersize;
    int *the_table = (int *) 0;
 
    switch (result->kind) {
@@ -2345,54 +2345,59 @@ extern void basic_move(
                result))
          goto un_mirror;
 
-      /* Now check for 12 matrix or 16 matrix things. */
-      switch (ss->kind) {
-         case s3x4:
-            if (search_concepts == INHERITFLAG_12_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
-               /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-               division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
-               final_concepts &= ~search_concepts;
-               goto divide_us;
-            }
-            break;
-         case s2x6:
-            if (search_concepts == INHERITFLAG_12_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
-               /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-               division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
-               final_concepts &= ~search_concepts;
-               goto divide_us;
-            }
-            break;
-         case s2x8:
-            if (search_concepts == INHERITFLAG_16_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
-               /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-               division_maps = (*map_lists[s2x2][3])[MPKIND__SPLIT][0];
-               final_concepts &= ~search_concepts;
-               goto divide_us;
-            }
-            break;
-         case s4x4:
-            if (search_concepts == INHERITFLAG_16_MATRIX && (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT)) {
-               /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-               /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look at
-                  the call definition (the "assoc" stuff), we assume the call wants lines, since
-                  it seems that that is true for all calls that have the "12_16_matrix_means_split" property. */
+      /* Now check for 12 matrix or 16 matrix things.  If the call has the "12_16_matrix_means_split" flag, and that
+         (plus possible 3x3/4x4 stuff) was what we were looking for, remove those flags and split the setup. */
 
-               if (tbonetest & 1)
-                  division_maps = &map_4x4v;
-               else
-                  division_maps = (*map_lists[s1x4][3])[MPKIND__SPLIT][1];
 
-               final_concepts &= ~search_concepts;
-               goto divide_us;
-            }
-            break;
+      if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
+         uint32 z = search_concepts & ~(INHERITFLAG_3X3 | INHERITFLAG_4X4);
+
+         switch (ss->kind) {
+            case s3x4:
+               if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+                  /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
+                  division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
+                  goto divide_us;
+               }
+               break;
+            case s2x6:
+               if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+                  /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
+                  division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
+                  goto divide_us;
+               }
+               break;
+            case s2x8:
+               if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+                  /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
+                  division_maps = (*map_lists[s2x2][3])[MPKIND__SPLIT][0];
+                  goto divide_us;
+               }
+               break;
+            case s4x4:
+               if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
+                  /* "16 matrix" was specified.  Split it into 1x4's in the appropriate way. */
+                  /* But which way is appropriate?  A 4x4 is ambiguous.  Being too lazy to look at
+                     the call definition (the "assoc" stuff), we assume the call wants lines, since
+                     it seems that that is true for all calls that have the "12_16_matrix_means_split" property. */
+   
+                  if (tbonetest & 1)
+                     division_maps = &map_4x4v;
+                  else
+                     division_maps = (*map_lists[s1x4][3])[MPKIND__SPLIT][1];
+   
+                  goto divide_us;
+               }
+               break;
+         }
+
       }
 
       goto try_to_find_deflist;
 
       divide_us:
 
+      final_concepts &= ~search_concepts;
       ss->cmd.cmd_final_flags = final_concepts;
       divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
       goto un_mirror;
@@ -2524,20 +2529,77 @@ extern void basic_move(
       would be split into 2x3's in the code below, if a 2x3 definition existed
       for the call.  This would mean that, if we said "2x6 matrix circulate",
       we would split the setup and do the circulate in each 2x3, which is not
-      what people want. */
+      what people want.
 
-   if (matrix_check_flag == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-      if (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12) matrix_check_flag |= INHERITFLAG_12_MATRIX;
-      else matrix_check_flag |= INHERITFLAG_16_MATRIX;
+      What actually goes on here is even more complicated now.  We want to allow the
+      concept "12 matrix" to cause division of the set.  This means that we not only
+      allow an explicit matrix ("2x6 matrix") to be treated as a "12 matrix", the way
+      we always have, but we allow it to go the other way.  That is, under certain
+      conditions we will turn a "12 matrix" to get turned into an explicit matrix
+      concept.  We do this special action only when all else has failed. */
 
-      /* Now search again. */
+   /* First, we do this only once.  Because of all the goto's that we execute as we
+      try various things, there is danger of looping.  To make sure that this happens
+      only once, we set "matrix_check_flag" nonzero when we do it, and only do it if
+      that flag is zero. */
 
-      for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
-         if (qq->modifier_seth == (matrix_check_flag | search_concepts)) {
-            if (qq->modifier_level > calling_level && !allowing_all_concepts)
-               fail("Use of this modifier on this call is not allowed at this level.");
-            calldeflist = qq->callarray_list;
-            goto use_this_calldeflist;
+   if (matrix_check_flag == 0) {
+      uint32 search_stuff;
+
+      if (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12) matrix_check_flag = INHERITFLAG_12_MATRIX;
+      else if (ss->kind == s2x8 || ss->kind == s4x4 || ss->kind == s1x16) matrix_check_flag = INHERITFLAG_16_MATRIX;
+
+      /* But we might not have set "matrix_check_flag" nonzero!  How are we going to prevent looping?
+         The answer is that we won't execute the goto unless we did set set it nonzero. */
+
+      if (!(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && calldeflist == 0 && (matrix_check_flag & ~search_concepts) == 0) {
+
+         /* Here is where we do the very special stuff.  We turn a "12 matrix" concept into an explicit matrix.
+            Note that we only do it if we would have lost anyway about 25 lines below (note that "calldeflist"
+            is zero, and the search again stuff won't be executed unless CMD_MISC__EXPLICIT_MATRIX is on,
+            which it isn't.)  So we turn on the CMD_MISC__EXPLICIT_MATRIX bit, and we turn off the
+            INHERITFLAG_12_MATRIX or INHERITFLAG_16_MATRIX bit. */
+
+         if (matrix_check_flag == 0) {
+            /* We couldn't figure out from the setup what the matrix is, so we have to expand it. */
+
+            if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
+               if (search_concepts & INHERITFLAG_12_MATRIX) {
+                  if (ss->kind == s2x4) do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
+                  else do_matrix_expansion(ss, CONCPROP__NEED_3X4_1X12, TRUE);
+
+                  if (ss->kind != s2x6 && ss->kind != s3x4 && ss->kind != s1x12) fail("Can't expand to a 12 matrix.");
+                  matrix_check_flag = INHERITFLAG_12_MATRIX;
+               }
+               else if (search_concepts & INHERITFLAG_16_MATRIX) {
+                  if (ss->kind == s2x6) do_matrix_expansion(ss, CONCPROP__NEED_2X8, TRUE);
+                  else if (ss->kind != s2x4) do_matrix_expansion(ss, CONCPROP__NEED_1X16, TRUE);
+                  /* Take no action (and hence cause an error) if the setup was a 2x4.  If someone wants to say
+                     "16 matrix 4x4 peel off" from normal columns, that person needs more help than we can give. */
+
+                  if (ss->kind != s2x8 && ss->kind != s4x4 && ss->kind != s1x16) fail("Can't expand to a 16 matrix."); 
+                  matrix_check_flag = INHERITFLAG_16_MATRIX;
+               }
+            }
+         }
+
+         search_concepts &= ~matrix_check_flag;
+         ss->cmd.cmd_final_flags &= ~matrix_check_flag;
+         search_stuff = search_concepts;
+         ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
+      }
+      else {
+         search_stuff = matrix_check_flag | search_concepts;
+      }
+
+      if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0) {
+         for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
+            if (qq->modifier_seth == search_stuff) {
+               if (qq->modifier_level > calling_level && !allowing_all_concepts)
+                  fail("Use of this modifier on this call is not allowed at this level.");
+               calldeflist = qq->callarray_list;
+               goto use_this_calldeflist;
+            }
          }
       }
    }
@@ -2548,8 +2610,9 @@ extern void basic_move(
    /* We need to divide the setup. */
 
    j = divide_the_setup(ss, &newtb, calldeflist, orig_elongation, &desired_elongation, result);
-   if (j == 1) goto un_mirror;
-   else if (j == 2) goto search_for_call_def;        /* Try again. */
+   if (j == 1) goto un_mirror;                     /* It divided and did the call.  We are done. */
+   else if (j == 2) goto search_for_call_def;      /* It did some necessary expansion or transformation,
+                                                      but did not do the call.  Try again. */
 
    /* If we get here, linedefinition and coldefinition are both zero, and we will fail. */
 

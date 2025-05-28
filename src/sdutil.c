@@ -65,6 +65,7 @@ and the following external variables:
    cardinals
    ordinals
    selector_names
+   selector_singular
    direction_names
    warning_strings
 */
@@ -112,13 +113,12 @@ uint32 collision_person1;
 uint32 collision_person2;
 long_boolean enable_file_writing;
 
-char *cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (char *) 0};
-char *ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (char *) 0};
+Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (char *) 0};
+Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (char *) 0};
 
 /* BEWARE!!  These two lists are keyed to the definition of "selector_kind" in sd.h,
    and to the necessary stuff in SDUI. */
-/* This one is external, so that the user interface can use it for popup text. */
-char *selector_names[] = {
+Cstring selector_names[] = {
    "???",
    "boys",
    "girls",
@@ -154,7 +154,7 @@ char *selector_names[] = {
    "no one",
    NULL};         /* The X11 interface uses this when making the popup text. */
 
-Private char *selector_singular[] = {
+Cstring selector_singular[] = {
    "???",
    "boy",
    "girl",
@@ -192,7 +192,7 @@ Private char *selector_singular[] = {
 /* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
    and to the necessary stuff in SDUI. */
 /* This one is external, so that the user interface can use it for popup text. */
-char *direction_names[] = {
+Cstring direction_names[] = {
    "???",
    "left",
    "right",
@@ -212,7 +212,7 @@ char *direction_names[] = {
    and the "suppress_elongation_warnings" flag was on. */
 /* A "=" as the first character means that this warning is cleared if it arises during some kind of
    "do your part" call. */
-char *warning_strings[] = {
+Cstring warning_strings[] = {
    /*  warn__none                */   " Unknown warning????",
    /*  warn__do_your_part        */   "*Do your part.",
    /*  warn__tbonephantom        */   " This is a T-bone phantom setup call.  Everyone will do their own part.",
@@ -511,7 +511,9 @@ extern Const char *get_escape_string(char c)
          return "<N/4>";
       case 'u':
          return "<Nth>";
-      case '7': case 'n': case 'j':
+      case 'v':
+         return "<ATC>";
+      case '7': case 'n': case 'j': case 'J': case 'E':
          return "";
       default:
          return (char *) 0;
@@ -519,23 +521,19 @@ extern Const char *get_escape_string(char c)
 }
 
 
-extern void string_copy(char **dest, char src[])
+extern void string_copy(char **dest, Cstring src)
 {
-   char *f = src;
+   Cstring f = src;
    char *t = *dest;
 
    while (*t++ = *f++);
    *dest = t-1;
 }
 
-/* There are 2 (and only 2) bits that are meaningful in the argument to "print_recurse":
+/* There is 1 (and only 1) bit that is meaningful in the argument to "print_recurse":
          PRINT_RECURSE_STAR
-         DFM1_MUST_BE_TAG_CALL
-   The first of these means to print an asterisk for a call that is missing in the
-   current type-in state.  The other two mean that we are printing a subcall, and
-   that the indicated invocation flag is on.  These control the elision of stuff
-   like "1/2", so that we will say "[vertical tag] back to a wave" instead of
-   "[vertical 1/2 tag] back to a wave". */
+   This means to print an asterisk for a call that is missing in the
+   current type-in state. */
 
 /* We define this one to be some bit that won't conflict with the other two.
    The simplest way to do that is to use some other "DFM1" bit.  We pick on poor
@@ -549,6 +547,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    parse_block *next_cptr;
    long_boolean use_left_name = FALSE;
    long_boolean use_cross_name = FALSE;
+   long_boolean use_magic_name = FALSE;
+   long_boolean use_intlk_name = FALSE;
    long_boolean comma_after_next_concept = FALSE;
 
    static_cptr = thing;
@@ -575,25 +575,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
          long_boolean request_final_space = FALSE;
          long_boolean request_comma_after_next_concept = FALSE;
-         concept_kind kk = k;
-         parse_block *cc = static_cptr;
-
-         /* We turn off the funny name elision if concepts are present,
-            except for "cross" and "left", since we want "[cross flip] your neighbor"
-            and "[LEFT tag the star] your neighbor" to work. */
-
-         for (;;) {
-            if (kk <= marker_end_of_list) {
-               break;
-            }
-            else if (kk != concept_left && kk != concept_cross) {
-               print_recurse_arg &= ~DFM1_MUST_BE_TAG_CALL;
-               break;
-            }
-            cc = cc->next;
-            if (!cc) break;
-            kk = cc->concept->kind;
-         }
 
          next_cptr = static_cptr->next;    /* Now it points to the thing after this concept. */
 
@@ -677,7 +658,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff(",");
             request_final_space = TRUE;
          }
-         else if (static_cptr && (k == concept_left || k == concept_cross)) {
+         else if (static_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
 
             /* These concepts want to take special action if there are no following concepts and
                certain escape characters are found in the name of the following call. */
@@ -693,11 +674,32 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             if (tptr) {
                target_call = tptr->call;
    
-               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (target_call->name[0] == '@')) {
+               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (
+                     target_call->callflagsh & (ESCAPE_WORD__LEFT | ESCAPE_WORD__MAGIC | ESCAPE_WORD__CROSS | ESCAPE_WORD__INTLK))) {
                   if (k == concept_left) {
                      /* See if this is a call whose name naturally changes when the "left" concept is used. */
-                     if (target_call->name[1] == 'g') {
+                     if (target_call->callflagsh & ESCAPE_WORD__LEFT) {
                         use_left_name = TRUE;
+                     }
+                     else {
+                        writestuff(item->name);
+                        request_final_space = TRUE;
+                     }
+                  }
+                  else if (k == concept_magic) {
+                     /* See if this is a call that wants the "magic" modifier to be moved inside its name. */
+                     if (target_call->callflagsh & ESCAPE_WORD__MAGIC) {
+                        use_magic_name = TRUE;
+                     }
+                     else {
+                        writestuff(item->name);
+                        request_final_space = TRUE;
+                     }
+                  }
+                  else if (k == concept_interlocked) {
+                     /* See if this is a call that wants the "interlocked" modifier to be moved inside its name. */
+                     if (target_call->callflagsh & ESCAPE_WORD__INTLK) {
+                        use_intlk_name = TRUE;
                      }
                      else {
                         writestuff(item->name);
@@ -706,7 +708,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                   else {
                      /* See if this is a call that wants the "cross" modifier to be moved inside its name. */
-                     if (target_call->name[1] == 'i') {
+                     if (target_call->callflagsh & ESCAPE_WORD__CROSS) {
                         use_cross_name = TRUE;
                      }
                      else {
@@ -780,7 +782,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          long_boolean pending_subst2, subst2_in_use, this_is_subst2;
 
          selector_kind i16junk = static_cptr->selector;
-         int tagjunk = static_cptr->tagger;
          direction_kind idirjunk = static_cptr->direction;
          uint32 number_list = static_cptr->number;
          unsigned int next_recurse1_arg = 0;
@@ -846,23 +847,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             if (enable_file_writing) localcall->age = global_age;
             np = localcall->name;
 
-            /* Fix up elision of stuff.  If a call with "is_tag_call" on invokes a call
-               with "must_be_tag_call", we do not use the "must_be_tag_call" flag to cause
-               elision of "1/2" in things like "1/2 flip".  Instead, we simply pass on the
-               state of the "must_be_tag_call" that we inherited.  This makes "revert the [1/2 tag]"
-               or "[reflected [1/2 flip]] stimulate" not elide the "1/2", while
-               "revert the [flip] your neighbor" does elide it. */
-
-            if (localcall->callflags1 & CFLAG1_IS_TAG_CALL) {
-               if (!(print_recurse_arg & DFM1_MUST_BE_TAG_CALL)) {
-                  next_recurse1_arg &= ~DFM1_MUST_BE_TAG_CALL;
-                  next_recurse2_arg &= ~DFM1_MUST_BE_TAG_CALL;
-               }
-            }
-
-            /* Skip any "@g" or "@i" marker (we already acted on it.) */
-            if ((*np == '@') && ((np[1] == 'g') || (np[1] == 'i'))) np += 2;
-
             while (*np) {
                if (*np == '@') {
                   savec = np[1];
@@ -876,7 +860,36 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(selector_singular[i16junk]);
                         if (np[2] && np[2] != ' ' && np[2] != ']')
                            writestuff(" ");
-                        np += 2;       /* skip the digit */
+                        np += 2;       /* skip the indicator */
+                        break;
+                     case 'v':
+                        write_blank_if_needed();
+
+                        /* Find the base tag call that this is invoking. */
+
+                        search = save_cptr->next;
+                        while (search) {
+                           subsidiary_ptr = search->subsidiary_root;
+                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_IS_BASE_TAG_CALL)) {
+                              print_recurse(subsidiary_ptr, 0);
+                              goto did_tagger;
+                           }
+                           search = search->next;
+                        }
+
+                        /* We didn't find the tagger.  It must not have been entered into the parse tree.
+                           See if we can get it from the "tagger" field. */
+
+                        if (save_cptr->tagger > 0)
+                           writestuff(tagger_calls[save_cptr->tagger-1]->menu_name);
+                        else
+                           writestuff("NO TAGGER???");
+
+                        did_tagger:
+
+                        if (np[2] && np[2] != ' ' && np[2] != ']')
+                           writestuff(" ");
+                        np += 2;       /* skip the indicator */
                         break;
                      case 'h':                   /* Need to plug in a direction. */
                         write_blank_if_needed();
@@ -907,17 +920,42 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         }
                         np += 2;
                         break;
-                     case 'l': case '8': case 'o':    /* Just skip these -- they end stuff that we could have elided but didn't. */
+                     case 'C':
+                        if (use_cross_name) {
+                           if (lastchar == ']') writestuff(" ");
+                           writestuff("cross ");
+                        }
                         np += 2;
                         break;
-                     case 'c':
-                        if (print_recurse_arg & DFM1_MUST_BE_TAG_CALL) {
+                     case 'J':
+                        if (!use_magic_name) {
                            np += 2;
                            while (*np != '@') np++;
                         }
-                        else {
-                           if ((lastchar == ' ' || lastchar == '[') && (np[2] == ' ')) np++;
+                        np += 2;
+                        break;
+                     case 'M':
+                        if (use_magic_name) {
+                           if (lastchar == ']') writestuff(" ");
+                           writestuff("magic ");
                         }
+                        np += 2;
+                        break;
+                     case 'E':
+                        if (!use_intlk_name) {
+                           np += 2;
+                           while (*np != '@') np++;
+                        }
+                        np += 2;
+                        break;
+                     case 'I':
+                        if (use_intlk_name) {
+                           if (lastchar == ']') writestuff(" ");
+                           writestuff("interlocked ");
+                        }
+                        np += 2;
+                        break;
+                     case 'l': case 'L': case 'F': case '8': case 'o':    /* Just skip these -- they end stuff that we could have elided but didn't. */
                         np += 2;
                         break;
                      case 'n': case 'p': case 'r': case 'm': case 't':
@@ -999,7 +1037,14 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             search = save_cptr->next;
             while (search) {
                subsidiary_ptr = search->subsidiary_root;
-               if (subsidiary_ptr) {
+               /* If we have a subsidiary_ptr, handle the replacement that is indicated.
+                  BUT:  if the call shown in the subsidiary_ptr is a base tag call, don't
+                  do anything -- such substitutions were already taken care of.
+                     BUT:  only check if there is actually a call there. */
+
+               if (subsidiary_ptr &&
+                           (!(subsidiary_ptr->call) ||    /* If no call pointer, it isn't a tag base call. */
+                           !(subsidiary_ptr->call->callflags1 & CFLAG1_IS_BASE_TAG_CALL))) {
                   switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
                      case 2:
@@ -1043,7 +1088,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                               writestuff("BUT REPLACE ");
                            else
                               writestuff("AND REPLACE ");
-                           writestuff(localcall->name);
+                           writestuff(localcall->menu_name);
                            writestuff(" WITH [");
                         }
    

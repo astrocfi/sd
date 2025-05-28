@@ -1,6 +1,20 @@
-		   RELEASE NOTES FOR SD VERSION 30.82
-		 Database version = 30.82 format = 51,
+		   RELEASE NOTES FOR SD VERSION 30.83
+		 Database version = 30.83 format = 51,
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.83 ******
+
++++++++ WARNING!!!!!! +++++++
+
+This is very experimental.  It has a very incomplete version of
+some MAJOR changes in the way tagging calls are done.  If your
+name is Lynette Bellini, you know what they are.  If not, you
+should *NOT* use this program.
+
+"Magic" and "interlocked" are also handled as described below for
+"cross" and "left".  So you can type in "switch to a magic diamond"
+directly.  We apologize for the bad grammar in the phrase "switch
+to a interlocked diamond."  No, we aren't going to fix it.
 
 ****** Changes as of version 30.82 ******
 
@@ -17,6 +31,7 @@ of calls were obtained by typing those concepts in front of the
 call in the usual way, even in cases in which the word naturally
 belonged in a different position in the call.  For example, one
 would type
+
    cross
    scoot reaction
 or
@@ -25,6 +40,7 @@ or
 or
    cross
    transaction
+
 and the program would print out "scoot cross reaction", "hang
 a left", or "trans cross chain reaction" as required.  It is now
 possible to type these calls in directly with the desired word order.

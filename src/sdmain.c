@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.82"
+#define VERSION_STRING "30.83"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -77,6 +77,8 @@ and the following external variables:
    parse_state
    uims_menu_index
    uims_menu_cross
+   uims_menu_magic
+   uims_menu_intlk
    uims_menu_left
    database_version
    whole_sequence_low_lim
@@ -89,7 +91,6 @@ and the following external variables:
    using_active_phantoms
    resolver_is_unwieldy
    current_selector
-   current_tagger
    current_direction
    current_number_fields
    no_search_warnings
@@ -140,6 +141,8 @@ int global_age;
 parse_state_type parse_state;
 int uims_menu_index;
 long_boolean uims_menu_cross;
+long_boolean uims_menu_magic;
+long_boolean uims_menu_intlk;
 long_boolean uims_menu_left;
 char database_version[81];
 int whole_sequence_low_lim;
@@ -153,7 +156,6 @@ long_boolean using_active_phantoms = FALSE;
 long_boolean resolver_is_unwieldy = FALSE;
 long_boolean diagnostic_mode = FALSE;
 selector_kind current_selector;
-int current_tagger;
 direction_kind current_direction;
 uint32 current_number_fields;
 warning_info no_search_warnings = {{0, 0}};
@@ -477,12 +479,30 @@ extern long_boolean deposit_call(callspec_block *call)
    int i;
    selector_kind sel = selector_uninitialized;
    direction_kind dir = direction_uninitialized;
+   int tagg = -1;
    int number_list = 0;
    int howmanynums = (call->callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
+   /* Put in tagging call index if required. */
+
+   if (call->callflagsh & CFLAGH__REQUIRES_TAG_CALL) {
+      if (interactivity == interactivity_database_init)
+         tagg = 1;   /* This may not be right. */
+      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
+         tagg = 1;
+         hash_nonrandom_number(tagg - 1);
+      }
+      else if (interactivity != interactivity_normal) {
+         tagg = generate_random_number(number_of_taggers)+1;
+         hash_nonrandom_number(tagg - 1);
+      }
+      else if ((tagg = uims_do_tagger_popup()) == 0)
+         return TRUE;
+   }
+
    /* Put in selector, direction, and/or number as required. */
 
-   if (call->callflags1 & CFLAG1_REQUIRES_SELECTOR) {
+   if (call->callflagsh & CFLAGH__REQUIRES_SELECTOR) {
       int j;
 
       if (interactivity == interactivity_database_init)
@@ -501,7 +521,7 @@ extern long_boolean deposit_call(callspec_block *call)
          sel = (selector_kind) j;
    }
 
-   if (call->callflags1 & CFLAG1_REQUIRES_DIRECTION) {
+   if (call->callflagsh & CFLAGH__REQUIRES_DIRECTION) {
       int j;
 
       if (interactivity == interactivity_database_init)
@@ -551,11 +571,31 @@ extern long_boolean deposit_call(callspec_block *call)
    new_block->selector = sel;
    new_block->direction = dir;
    new_block->number = number_list;
+   new_block->tagger = -1;
+
+   /* Filling in the tagger requires recursion! */
+
+   if (tagg > 0) {
+      parse_block **savecwp = parse_state.concept_write_ptr;
+
+      new_block->tagger = tagg;
+      new_block->concept = &marker_concept_mod;
+      new_block->next = get_parse_block();
+      new_block->next->concept = &marker_concept_mod;
+      new_block->next->call = base_calls[3];
+
+      if (tagg <= 0 || tagg > number_of_taggers) fail("bad tagger index???");
+
+      parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
+      if (deposit_call(tagger_calls[tagg-1]))
+         longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
+      parse_state.concept_write_ptr = savecwp;
+   }
 
    parse_state.topcallflags1 = call->callflags1;
    *parse_state.concept_write_ptr = new_block;
 
-   return(FALSE);
+   return FALSE;
 }
 
 
@@ -834,6 +874,8 @@ extern long_boolean query_for_call(void)
       }
 
       uims_menu_cross = FALSE;
+      uims_menu_magic = FALSE;
+      uims_menu_intlk = FALSE;
       uims_menu_left = FALSE;
    }
 
@@ -929,6 +971,10 @@ extern long_boolean query_for_call(void)
 
       if (uims_menu_cross)
          (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+      if (uims_menu_magic)
+         (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
+      if (uims_menu_intlk)
+         (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
       if (uims_menu_left)
          (void) deposit_concept(&concept_descriptor_table[left_concept_index], 0);
 
@@ -1034,7 +1080,7 @@ Private int mark_aged_calls(
          }
 
          if (hibit < j) {
-            main_call_lists[call_list_any][i]->callflagsh |= 0x80000000;
+            BOGUS USE OF CALLFLAGSH! main_call_lists[call_list_any][i]->callflagsh |= 0x80000000;
             remainder--;
          }
       }
@@ -1497,7 +1543,7 @@ void main(int argc, char *argv[])
                /* Clear all the marks. */
       
                for (i=0; i<number_of_calls[call_list_any]; i++) {
-                  main_call_lists[call_list_any][i]->callflagsh &= ~0x80000000;
+                  BOGUS USE OF CALLFLAGSH! main_call_lists[call_list_any][i]->callflagsh &= ~0x80000000;
                }
       
                deficit = mark_aged_calls(0, calls_to_mark, 31);
@@ -1515,7 +1561,7 @@ void main(int argc, char *argv[])
                /* Print the marked calls. */
             
                for (i=0; i<number_of_calls[call_list_any]; i++) {
-                  if (main_call_lists[call_list_any][i]->callflagsh & 0x80000000) {
+                  BOGUS USE OF CALLFLAGSH! if (main_call_lists[call_list_any][i]->callflagsh & 0x80000000) {
                      writestuff(main_call_lists[call_list_any][i]->name);
                      writestuff(", ");
                   }
@@ -1714,7 +1760,7 @@ extern void get_real_subcall(
       and we don't want the unmodifiable nullcall that the ends are supposed to
       do getting modified, do we? */
 
-   if (!(item->modifiers1 & DFM1_CALL_MOD_MASK))
+   if (!(item->modifiers1 & (DFM1_CALL_MOD_MASK | DFM1_MUST_BE_TAG_CALL)))
       return;
 
    /* See if we had something from before.  This avoids embarassment if a call is actually
@@ -1810,50 +1856,34 @@ extern void get_real_subcall(
    tempstringptr = tempstring_text;
    *tempstringptr = 0;           /* Null string, just to be safe. */
 
+   /* If doing a new-style tagger, just get the call. */
+
+   if (snumber == 0 && (number & DFM1_MUST_BE_TAG_CALL))
+      ;
+
    /* If the replacement is mandatory, or we are not interactive,
       don't present the popup.  Just get the replacement call. */
 
-   if (interactivity != interactivity_normal)
+   else if (interactivity != interactivity_normal)
       ;
    else if (snumber == 2 || snumber == 6) {
       string_copy(&tempstringptr, "SUBSIDIARY CALL");
    }
    else {
 
-      /* Need to present the popup to the operator and find out whether modification
-         is desired. */
+      /* Need to present the popup to the operator and find out whether modification is desired. */
 
       modify_popup_kind kind;
-      char *p;
-      char *q;
-      char nice_call_name[MAX_TEXT_LINE_LENGTH];
-
-      p = base_calls[item->call_id]->name;
-      q = nice_call_name;
-
-      for (;;) {
-         char c = *p++;
-         if (c == '@') {
-            /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-            if (*p == '7' || *p == 'n' || *p == 'j') {
-               while (*p++ != '@');
-            }
-
-            p++;
-         }
-         else if ((*q++ = c) == 0)
-            break;
-      }
 
       if (number & DFM1_MUST_BE_TAG_CALL) kind = modify_popup_only_tag;
       else kind = modify_popup_any;
 
-      if (debug_popup || uims_do_modifier_popup(nice_call_name, kind)) {
+      if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->menu_name, kind)) {
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
       
          string_copy(&tempstringptr, "REPLACEMENT FOR THE ");
-         string_copy(&tempstringptr, nice_call_name);
+         string_copy(&tempstringptr, base_calls[item->call_id]->menu_name);
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */
@@ -1882,8 +1912,26 @@ extern void get_real_subcall(
    parse_state.call_list_to_use = call_list_any;
    parse_state.specialprompt = tempstring_text;
 
-   if (query_for_call())
-      longjmp(longjmp_ptr->the_buf, 5);     /* User clicked on something unusual like "exit" or "undo". */
+   /* Search for special case of "must_be_tag_call" with no other modification bits.
+      That means it is a new-style tagging call. */
+
+   if (snumber == 0 && (number & DFM1_MUST_BE_TAG_CALL)) {
+#ifdef dontneedthisanymore
+      /* We'd better check this -- we wouldn't want a crash arising from something careless. */
+      if (parseptr->tagger <= 0 || parseptr->tagger > number_of_taggers) fail("bad tagger index???");
+
+      *parse_state.concept_write_ptr = (parse_block *) 0;   /* We should actually re-use anything there. */
+      if (deposit_call(tagger_calls[parseptr->tagger-1]))
+         longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
+      parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
+#else
+      longjmp(longjmp_ptr->the_buf, 5);
+#endif
+   }
+   else {
+      if (query_for_call())
+         longjmp(longjmp_ptr->the_buf, 5);     /* User clicked on something unusual like "exit" or "undo". */
+   }
 
    *concptrout = (*newsearch)->subsidiary_root;
    *callout = NULLCALLSPEC;              /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */

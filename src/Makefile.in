@@ -111,6 +111,8 @@ dbcomp.o: database.h
 
 $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
 
+$(SDTTY_OBJ): sdmatch.h
+
 configure: configure.in
 	-autoconf
 

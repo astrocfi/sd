@@ -50,6 +50,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
+   uims_do_tagger_popup
    uims_get_number_fields
    uims_do_modifier_popup
    uims_add_new_line
@@ -389,54 +390,7 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
    }
    match_counter--;
    put_line(user_input_str);
-
-#ifdef do_we_need_this
-   p = extension;
-   q = temp;
-
-   for (;;) {
-      c = *p++;
-      if (c == '@') {
-         c = *p++;
-
-         if (c == '0' || c == 'm') {
-            z = "<ANYTHING>"; goto pack_special_stuff;
-         }
-         else if (c == '6' || c == 'k') {
-            z = "<ANYONE>"; goto pack_special_stuff;
-         }
-         else if (c == 'h') {
-            z = "<DIRECTION>"; goto pack_special_stuff;
-         }
-         else if (c == '9') {
-            z = "<N>"; goto pack_special_stuff;
-         }
-         else if (c == 'a' || c == 'b' || c == 'B') {
-            z = "<N/4>"; goto pack_special_stuff;
-         }
-         else if (c == 'u') {
-            z = "<Nth>"; goto pack_special_stuff;
-         }
-      }
-      else
-         *q++ = c;
-
-      if (!c) break;
-      continue;
-
-      pack_special_stuff:
-
-      for (;;) {
-         c = *z++;
-         *q++ = c;
-         if (!c) break;
-      }
-   }
-
-   put_line(temp);
-#else
    put_line((char *) extension);
-#endif
    put_line("\n");
    current_text_line++;
 }
@@ -457,7 +411,7 @@ Private match_result user_match;
    corresponds to the special commands defined in sdmatch.h .  There
    are NUM_SPECIAL_COMMANDS of those items. */
 
-static char *command_list[] = {
+static Cstring command_list[] = {
     "exit the program",
     "undo last call",
     "abort this sequence",
@@ -532,10 +486,9 @@ get_user_input(char *prompt, int which)
             continue;
         }
 
-        matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
-
         if (c == ' ') {
             /* extend only to one space, inclusive */
+            matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
             p = extended_input;
             if (*p) {
                 while (*p) {
@@ -557,7 +510,8 @@ get_user_input(char *prompt, int which)
                 bell();
         }
         else if ((c == '\n') || (c == '\r')) {
-            if ((matches == 1) || user_match.exact) {
+            matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
+            if (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact) {
                 p = extended_input;
                 while (*p)
                     pack_and_echo_character(*p++);
@@ -588,6 +542,7 @@ get_user_input(char *prompt, int which)
             current_text_line++;   /* Count that line for erasure. */
         }
         else if (c == '\t' || c == '\033') {
+            matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
             p = extended_input;
             if (*p) {
                 while (*p)
@@ -605,15 +560,12 @@ get_user_input(char *prompt, int which)
             clear_line();           /* Clear the current line */
             put_line(user_input_prompt);    /* Redisplay the prompt. */
         }
-        else if (isprint(c)) {
+        else if (isprint(c))
             pack_and_echo_character(c);
-        }
-        else if (diagnostic_mode) {
+        else if (diagnostic_mode)
             goto diagnostic_error;
-        }
-        else {
+        else
             bell();
-        }
     }
 
     diagnostic_error:
@@ -679,6 +631,8 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
 
         uims_menu_index = user_match.index;
         uims_menu_cross = user_match.cross;
+        uims_menu_magic = user_match.magic;
+        uims_menu_intlk = user_match.interlocked;
         uims_menu_left = user_match.left;
 
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
@@ -791,8 +745,7 @@ uims_do_abort_popup(void)
     return confirm("Do you really want to abort it? ");
 }
 
-extern int
-uims_do_modifier_popup(char callname[], modify_popup_kind kind)
+extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
 {
     char *line_format = "Internal error: unknown modifier kind.\n";
     char tempstuff[200];
@@ -898,6 +851,29 @@ uims_do_direction_popup(void)
         get_user_input("Enter direction> ", (int) match_directions);
         return user_match.index+1;
     }
+}    
+
+extern int
+uims_do_tagger_popup(void)
+{
+   if (user_match.valid && (user_match.tagger > 0)) {
+     uint32 n;
+     int j = 0;
+
+      while ((user_match.tagger & 0xFF000000) == 0) {
+         user_match.tagger <<= 8;
+         j++;
+      }
+
+      n = user_match.tagger >> 24;
+      user_match.tagger &= 0x00FFFFFF;
+      while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
+      return n;
+   }
+   else {
+      get_user_input("Enter tagger> ", (int) match_taggers);
+      return user_match.index+1;
+   }
 }    
 
 
