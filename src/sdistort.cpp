@@ -305,7 +305,11 @@ const map::map_thing *map::get_map_from_code(uint32 map_encoding)
 }
 
 
-static void multiple_move_innards(
+
+// Unless "special_exit" is on, the returned value should be ignored.
+// If "special_exit" is on, The request is to leave individual results in the "z" array.
+// The returned value will be true if it cannot honor that request.
+static bool multiple_move_innards(
    setup_command *sscmd,
    uint32 map_encoding,
    const map::map_thing *maps,
@@ -316,7 +320,8 @@ static void multiple_move_innards(
    setup *x,
    setup *z,
    setup *result,
-   whuzzisthingy *thing = (whuzzisthingy *) 0) THROW_DECL
+   whuzzisthingy *thing = (whuzzisthingy *) 0,
+   bool special_exit = false) THROW_DECL
 {
    int i, j;
    uint32 rotstate, pointclip;
@@ -532,7 +537,7 @@ static void multiple_move_innards(
       static const veryshort butterfly_fixer[] = {15, 3, 7, 11};
       scatter(result, &z[1], butterfly_fixer, 3, 0);
       result->result_flags = z[1].result_flags;
-      return;
+      return false;
    }
 
    // These two special map kinds involve different setups, so "fix_n_results" can't be used.
@@ -551,7 +556,7 @@ static void multiple_move_innards(
                         z, rotstate, pointclip, rot)) {
          result->kind = nothing;
          clear_result_flags(result);
-         return;
+         return false;
       }
 
       // We still might have all setups dead concentric.  Try to fix that.
@@ -1199,6 +1204,7 @@ static void multiple_move_innards(
    getout:
 
    canonicalize_rotation(result);
+   return false;
 }
 
 

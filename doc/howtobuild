@@ -41,6 +41,7 @@ cygwinB19.dll into the \bin directory.
 Go to sddoc directory and do:
 
     setmingw
+    settex
     clean clean
     do_plain
     do_ps
@@ -117,6 +118,8 @@ Go to sddoc directory and do:
    mingw all
    mingw cleanup   // optional: remove .o files etc. after building
    mingw savesource    // This packs the "official" source distribution.
+
+   // Test that Sd comes up.
 
    // Do regression test if desired.
    // Be sure to test resolver:
