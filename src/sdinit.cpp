@@ -161,10 +161,10 @@ void start_sel_dir_num_iterator()
 }
 
 
-long_boolean iterate_over_sel_dir_num(
-   long_boolean enable_selector_iteration,
-   long_boolean enable_direction_iteration,
-   long_boolean enable_number_iteration)
+bool iterate_over_sel_dir_num(
+   bool enable_selector_iteration,
+   bool enable_direction_iteration,
+   bool enable_number_iteration)
 {
    // Try different selectors first.
 
@@ -174,31 +174,31 @@ long_boolean iterate_over_sel_dir_num(
       switch (selector_for_initialize) {
       case selector_beaus:
          selector_for_initialize = selector_ends;
-         return TRUE;
+         return true;
       case selector_ends:
          selector_for_initialize = selector_leads;
-         return TRUE;
+         return true;
       case selector_leads:
          // This will select just one end of each wave in parallel waves or a tidal wave,
          // so "prefer the <anyone> out roll circulate" will work.
          selector_for_initialize = selector_sideboys;
-         return TRUE;
+         return true;
       case selector_sideboys:
          selector_for_initialize = selector_everyone;
-         return TRUE;
+         return true;
       case selector_everyone:
          // This will select #1 and #2 in columns,
          // so "<anyone> mark time" will work.
          selector_for_initialize = selector_headcorners;
-         return TRUE;
+         return true;
       case selector_headcorners:
          // This will select the ends of each wave in a tidal wave,
          // so "relay the shadow but <anyone> criss cross it" will work.
          selector_for_initialize = selector_boys;
-         return TRUE;
+         return true;
       case selector_boys:
          selector_for_initialize = selector_none;
-         return TRUE;
+         return true;
       }
    }
 
@@ -212,7 +212,7 @@ long_boolean iterate_over_sel_dir_num(
          // This allows "spin the windmill, outsides (no direction)" from facing lines.
          direction_for_initialize = direction_no_direction;
          selector_for_initialize = selector_beaus;
-         return TRUE;
+         return true;
       }
    }
 
@@ -233,11 +233,11 @@ long_boolean iterate_over_sel_dir_num(
          number_for_initialize++;
          selector_for_initialize = selector_beaus;
          direction_for_initialize = direction_right;
-         return TRUE;
+         return true;
       }
    }
 
-   return FALSE;
+   return false;
 }
 
 
@@ -279,10 +279,10 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
    start_sel_dir_num_iterator();
  try_another_selector:
 
-   selector_used = FALSE;
-   direction_used = FALSE;
-   number_used = FALSE;
-   mandatory_call_used = FALSE;
+   selector_used = false;
+   direction_used = false;
+   number_used = false;
+   mandatory_call_used = false;
 
    configuration::history_ptr = 1;
 
@@ -337,7 +337,7 @@ static void test_starting_setup(call_list_kind cl, const setup *test_setup)
       // Or a bad choice of selector or number may be the cause.
       // Try different selectors first.
 
-      if (iterate_over_sel_dir_num(TRUE, TRUE, TRUE))
+      if (iterate_over_sel_dir_num(true, true, true))
          goto try_another_selector;
 
       // Now try giving the "cross" modifier.
@@ -1040,7 +1040,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    Returns FALSE if error occurs.  No action taken in that case. */
 
 
-extern long_boolean install_outfile_string(char newstring[])
+extern bool install_outfile_string(char newstring[])
 {
    char test_string[MAX_FILENAME_LENGTH];
    bool file_is_ok;
@@ -1086,17 +1086,17 @@ extern long_boolean install_outfile_string(char newstring[])
          if (test_string[0] == '+' || (filetest = fopen(junk2, "r")) == 0) break;
          (void) fclose(filetest);
          if (letter[0] == 'z'+1) letter[0] = 'A';
-         else if (letter[0] == 'Z'+1) return FALSE;
+         else if (letter[0] == 'Z'+1) return false;
          (void) strncpy(junk2, junk, 10);
          (void) strncat(junk2, letter, 4);     /* Try appending a letter. */
          letter[0]++;
       }
 
       (void) strncpy(outfile_string, junk2, MAX_FILENAME_LENGTH);
-      outfile_special = FALSE;
+      outfile_special = false;
       last_file_position = -1;
       rewrite_filename_as_star[0] = test_string[0];
-      return TRUE;
+      return true;
    }
 
    // Now see if we can write to it.
@@ -1119,10 +1119,10 @@ extern long_boolean install_outfile_string(char newstring[])
       j = strlen(outfile_string);
       outfile_special = (j>0 && outfile_string[j-1] == ':');
       last_file_position = -1;
-      return TRUE;
+      return true;
    }
    else
-      return FALSE;
+      return false;
 }
 
 
@@ -1360,7 +1360,7 @@ extern int process_session_info(Cstring *error_msg)
    else {
       // We are creating a new session to be appended to the file.
       sequence_number = 1;
-      need_new_header_comment = TRUE;
+      creating_new_session = true;
    }
 
    return 0;
@@ -1970,11 +1970,11 @@ extern bool open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "no_warnings") == 0)
             { ui_options.nowarn_mode = true; continue; }
          else if (strcmp(&args[argno][1], "concept_levels") == 0)
-            { allowing_all_concepts = TRUE; continue; }
+            { allowing_all_concepts = true; continue; }
          else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
-            { allowing_minigrand = TRUE; continue; }
+            { allowing_minigrand = true; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
-            { using_active_phantoms = TRUE; continue; }
+            { using_active_phantoms = true; continue; }
          else if (strcmp(&args[argno][1], "discard_after_error") == 0)
             { retain_after_error = false; continue; }
          else if (strcmp(&args[argno][1], "retain_after_error") == 0)
@@ -1998,6 +1998,7 @@ extern bool open_session(int argc, char **argv)
    }
 
    free(args);
+   general_initialize();
 
    /* If we have a calling level at this point, fill in the output file name.
       If we do not have a calling level, we will either get it from the session
@@ -2121,9 +2122,10 @@ extern bool open_session(int argc, char **argv)
       strcat(cachename, "cache");
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
-                                    sourcenames, cachename, 6, binaryfileflags);
+                                    sourcenames, database_input_files,
+                                    cachename, 6, binaryfileflags);
 
-      int *mapped_cache = cache_stuff.open_and_map(database_input_files);
+      int *mapped_cache = cache_stuff.map_address();
 
       database_file = database_input_files[0];
       abridge_file = database_input_files[1];
@@ -2331,7 +2333,8 @@ extern bool open_session(int argc, char **argv)
          for (cl = call_list_1x8; cl < call_list_extent ; cl = (call_list_kind) (cl+1))
             cache_menu_words += number_of_calls[cl]+1;    // Extra 1 for the menu size
 
-         int *cache_write_segment = cache_stuff.map_for_writing(cache_menu_words*4);
+         cache_stuff.map_for_writing(cache_menu_words*4);
+         int *cache_write_segment = cache_stuff.map_address();
 
          if (cache_write_segment) {
             // Write the header.
@@ -2384,8 +2387,8 @@ extern bool open_session(int argc, char **argv)
    gg->init_step(do_accelerator, 0);
 
    {
-      long_boolean save_allow = allowing_all_concepts;
-      allowing_all_concepts = TRUE;
+      bool save_allow = allowing_all_concepts;
+      allowing_all_concepts = true;
 
       // Process the keybindings for user-definable calls, concepts, and commands.
 

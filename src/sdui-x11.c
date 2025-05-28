@@ -140,7 +140,7 @@ extern char *uims_version_string(void)
 }
 
 
-static long_boolean ui_task_in_progress = FALSE;
+static bool ui_task_in_progress = false;
 
 /*
  * Since callbacks and actions can't return values, narrow the use of
@@ -152,7 +152,7 @@ static int callback_value_storage; /* used only by two routines below */
 static void
 callback_return(int return_value)
 {
-    ui_task_in_progress = FALSE;
+    ui_task_in_progress = false;
     callback_value_storage = return_value;
 }
 
@@ -179,7 +179,7 @@ read_user_gesture(XtAppContext app)
 {
     XEvent event;
 
-    ui_task_in_progress = TRUE;
+    ui_task_in_progress = true;
 
     /* allow only new user events to generate actions */
     action_event_serial = NextRequest(XtDisplay(toplevel));
@@ -746,8 +746,8 @@ CONST static char *fallback_resources[] = {
     NULL};
 
 static char *program_name = NULL;	/* argv[0]: our name */
-static long_boolean window_is_mapped = FALSE;
-static long_boolean ui_started = FALSE;
+static bool window_is_mapped = false;
+static bool ui_started = false;
 
 /*
  * The main program calls this before doing anything else, so we can
@@ -787,7 +787,7 @@ uims_process_command_line(int *argcp, char **argvp[])
    program_name = argv[0];
    toplevel = XtAppInitialize(&xtcontext, "Sd", NULL, 0, argcp, argv,
 			       fallback_resources, NULL, 0);
-   ui_started = TRUE;
+   ui_started = true;
    XtGetApplicationResources(toplevel, (XtPointer) &sd_resources,
 			      top_level_resources, XtNumber(top_level_resources),
 			      NULL, 0);
@@ -1251,7 +1251,7 @@ extern void uims_postinitialize(void)
     XSetWMProtocols(XtDisplay(toplevel), XtWindow(toplevel), &wm_delete_window, 1);
 
     XtMapWidget(toplevel);
-    window_is_mapped = TRUE;
+    window_is_mapped = true;
 }
 
 
@@ -1367,7 +1367,7 @@ extern uims_reply uims_get_startup_command(void)
 }
 
 
-extern long_boolean uims_get_call_command(uims_reply *reply_p)
+extern bool uims_get_call_command(uims_reply *reply_p)
 {
    int local_reply;
    int banner_mode;
@@ -1453,16 +1453,16 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       /* If user gave a call, deposit same. */
 
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
-      if (deposit_call(save_call, &null_options)) return TRUE;
+      if (deposit_call(save_call, &null_options)) return true;
    }
    else if (*reply_p == ui_concept_select) {
       /* A concept is required.  Its index has been stored in uims_menu_index. */
 
       if (deposit_concept(&concept_descriptor_table[uims_menu_index]))
-         return TRUE;
+         return true;
    }
 
-   return FALSE;
+   return false;
 }
 
 
@@ -1751,7 +1751,7 @@ extern int uims_do_tagger_popup(int tagger_class)
 }
 
 
-extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
+extern uint32 uims_get_number_fields(int nnumbers, bool forbid_zero)
 {
    int i;
    uint32 number_list = 0;

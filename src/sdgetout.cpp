@@ -16,7 +16,6 @@
    write_resolve_text
    full_resolve
    configuration::concepts_in_place
-   reconcile_command_ok
    resolve_command_ok
    nice_setup_command_ok
    create_resolve_menu_title
@@ -193,8 +192,8 @@ static resolve_descriptor resolve_table[] = {
    {2,  first_part_none,  main_part_circ}};    /* resolve_circle */
 
 
-/* This assumes that "sequence_is_resolved" passes. */
-void write_resolve_text(long_boolean doing_file)
+// This assumes that "sequence_is_resolved" passes.
+void write_resolve_text(bool doing_file)
 {
    resolve_indicator & r = configuration::current_resolve();
    int distance = r.distance;
@@ -356,7 +355,7 @@ static bool inner_search(command_kind goal,
    try {
       /* Throw away garbage from last attempt. */
       release_parse_blocks_to_mark(inner_parse_mark);
-      testing_fidelity = FALSE;
+      testing_fidelity = false;
       configuration::history_ptr = history_save;
       attempt_count++;
 
@@ -389,7 +388,7 @@ static bool inner_search(command_kind goal,
       if (configuration::history_ptr != history_insertion_point || goal == command_reconcile)
          initialize_parse();
       else
-         (void) restore_parse_state();
+         restore_parse_state();
 
       /* Generate the concepts and call. */
 
@@ -715,7 +714,7 @@ static bool inner_search(command_kind goal,
          like "heads" or "boys" it will likely fail this test until we get around to
          doing something clever.  Oh well.) */
 
-      testing_fidelity = TRUE;
+      testing_fidelity = true;
 
       for (j=0; j<new_resolve->insertion_point; j++) {
          int k;
@@ -762,7 +761,7 @@ static bool inner_search(command_kind goal,
          configuration::history_ptr++;
       }
 
-      testing_fidelity = FALSE;
+      testing_fidelity = false;
 
       /* One more check.  If this was a "reconcile", demand that we have an acceptable resolve.
          How could the permutation be acceptable but not lead to an acceptable resolve?  Because,
@@ -843,15 +842,107 @@ static bool inner_search(command_kind goal,
 }
 
 
-uims_reply full_resolve(void)
+static bool reconcile_command_ok()
+{
+   int k;
+   int dirmask = 0;
+   personrec *current_people = configuration::current_config().state.people;
+   setup_kind current_kind = configuration::current_config().state.kind;
+   current_reconciler = (reconcile_descriptor *) 0;
+
+   /* Since we are going to go back 1 call, demand we have at least 3. ***** */
+   /* Also, demand no concepts already in place. */
+   if ((configuration::history_ptr < 3) || configuration::concepts_in_place()) return false;
+
+   for (k=0; k<8; k++)
+      dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
+
+   if (current_kind == s2x4) {
+      if (dirmask == 0xA00A)
+         current_reconciler = &promperm;         /* L2FL, looking for promenade. */
+      else if (dirmask == 0x0AA0)
+         current_reconciler = &rpromperm;        /* R2FL, looking for reverse promenade. */
+      else if (dirmask == 0x6BC1)
+         current_reconciler = &homeperm;         /* pseudo-squared-set, looking for circle left/right. */
+      else if (dirmask == 0xFF55)
+         current_reconciler = &sglperm;          /* Lcol, looking for single file promenade. */
+      else if (dirmask == 0x55FF)
+         current_reconciler = &sglperm;          /* Rcol, looking for reverse single file promenade. */
+      else if (dirmask == 0xBC16)
+         current_reconciler = &sglperm;          /* L Tbone, looking for single file promenade. */
+      else if (dirmask == 0x16BC)
+         current_reconciler = &sglperm;          /* R Tbone, looking for reverse single file promenade. */
+      else if (dirmask == 0x2288)
+         current_reconciler = &rlgperm;          /* Rwave, looking for RLG (with possible extend or circulate). */
+      else if (dirmask == 0x8822)
+         current_reconciler = &laperm;           /* Lwave, looking for LA (with possible extend or circulate). */
+   }
+   else if (current_kind == s_qtag) {
+      if (dirmask == 0x08A2)
+         current_reconciler = &qtagperm;         /* Rqtag, looking for RLG. */
+      else if (dirmask == 0x78D2)
+         current_reconciler = &qtagperm;         /* diamonds with points facing, looking for RLG. */
+   }
+   else if (current_kind == s_crosswave || current_kind == s_thar) {
+      if (dirmask == 0x278D)
+         current_reconciler = &crossplus;        /* crossed waves or thar, looking for RLG, allow slip the clutch. */
+      else if (dirmask == 0x8D27)
+         current_reconciler = &crossplus;        /* crossed waves or thar, looking for LA, allow slip the clutch. */
+      else if (dirmask == 0xAF05)
+         current_reconciler = &crossperm;        /* crossed waves or thar, looking for promenade. */
+   }
+
+   if (current_reconciler)
+      return true;
+   else
+      return false;
+}
+
+extern int resolve_command_ok(void)
+{
+   return attr::klimit(configuration::current_config().state.kind) == 7;
+}
+
+extern int nice_setup_command_ok(void)
+{
+   int i, k;
+   bool setup_ok = false;
+   setup_kind current_kind = configuration::current_config().state.kind;
+
+   // Decide which arrays we will use, depending on the current setting of the
+   // "allow all concepts" flag, and see if we are in one of the known setups
+   // and there are concepts available for that setup.
+
+   for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
+      /* Select the correct concept array. */
+      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->zzzfull_list : nice_setup_info[k].thing->zzzon_level_list;
+
+      // Note how many concepts are in it.  If there are zero in some of them,
+      // we may still be able to proceed, but we must have concepts available
+      // for the current setup.
+
+      for (i=0 ; ; i++) {
+         if (nice_setup_info[k].array_to_use_now[i] == UC_none) break;
+      }
+
+      nice_setup_info[k].number_available_now = i;
+
+      if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = true;
+   }
+
+   return setup_ok || configuration::concepts_in_place();
+}
+
+
+uims_reply full_resolve()
 {
    int j, k;
    uims_reply reply;
    int current_resolve_index, max_resolve_index;
-   long_boolean show_resolve;
+   bool show_resolve;
    personrec *current_people = configuration::current_config().state.people;
    int current_depth = 0;
-   long_boolean find_another_resolve = TRUE;
+   bool find_another_resolve = true;
    resolver_display_state big_state; /* for display to the user */
 
    /* Allocate or reallocate the huge_history_save save array if needed. */
@@ -902,7 +993,7 @@ uims_reply full_resolve(void)
             perm_array[j] = current_people[current_reconciler->perm[j]].id1 & PID_MASK;
 
          current_depth = 1;
-         find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
+         find_another_resolve = false;       /* We initially don't look for resolves; we wait for the user
                                                 to set the depth. */
          break;
       case command_normalize:
@@ -917,13 +1008,13 @@ uims_reply full_resolve(void)
    huge_history_ptr = configuration::history_ptr;
    save_parse_state();
 
-   (void) restore_parse_state();
+   restore_parse_state();
    current_resolve_index = 0;
-   show_resolve = TRUE;
+   show_resolve = true;
    max_resolve_index = 0;
    avoid_list_size = 0;
 
-   if (search_goal == command_reconcile) show_resolve = FALSE;
+   if (search_goal == command_reconcile) show_resolve = false;
 
    start_pick();   /* This sets interactivity, among other stuff. */
 
@@ -935,7 +1026,7 @@ uims_reply full_resolve(void)
          gg->update_resolve_menu
             (search_goal, current_resolve_index, max_resolve_index, resolver_display_searching);
 
-         (void) restore_parse_state();
+         restore_parse_state();
 
          if (inner_search(search_goal, &all_resolves[max_resolve_index], current_depth)) {
             // Search succeeded, save it.
@@ -958,7 +1049,7 @@ uims_reply full_resolve(void)
          for (j=0; j<=configuration::history_ptr+1; j++)
             configuration::history[j] = huge_history_save[j];
 
-         find_another_resolve = FALSE;
+         find_another_resolve = false;
       }
       else {
          /* Just display the sequence with the current resolve inserted. */
@@ -1053,7 +1144,7 @@ uims_reply full_resolve(void)
          newline();
          writestuff("     resolve is:");
          newline();
-         write_resolve_text(FALSE);
+         write_resolve_text(false);
          newline();
          newline();
       }
@@ -1061,7 +1152,7 @@ uims_reply full_resolve(void)
       gg->update_resolve_menu
          (search_goal, current_resolve_index, max_resolve_index, big_state);
 
-      show_resolve = TRUE;
+      show_resolve = true;
 
       for (;;) {          /* We ignore any "undo" or "erase" clicks. */
          reply = gg->get_resolve_command();
@@ -1082,7 +1173,7 @@ uims_reply full_resolve(void)
                all_resolves = t;
             }
 
-            find_another_resolve = TRUE;             /* will get it next time around */
+            find_another_resolve = true;             /* will get it next time around */
             break;
          case resolve_command_goto_next:
             if (current_resolve_index < max_resolve_index)
@@ -1095,12 +1186,12 @@ uims_reply full_resolve(void)
          case resolve_command_raise_rec_point:
             if (current_depth < huge_history_ptr-2)
                current_depth++;
-            show_resolve = FALSE;
+            show_resolve = false;
             break;
          case resolve_command_lower_rec_point:
             if (current_depth > 0)
                current_depth--;
-            show_resolve = FALSE;
+            show_resolve = false;
             break;
          case resolve_command_abort:
             written_history_items = -1;
@@ -1158,97 +1249,6 @@ static void display_reconcile_history(int current_depth, int n)
    gg->add_new_line("", 0);   // Write a blank line.
 }
 
-
-extern int reconcile_command_ok()
-{
-   int k;
-   int dirmask = 0;
-   personrec *current_people = configuration::current_config().state.people;
-   setup_kind current_kind = configuration::current_config().state.kind;
-   current_reconciler = (reconcile_descriptor *) 0;
-
-   /* Since we are going to go back 1 call, demand we have at least 3. ***** */
-   /* Also, demand no concepts already in place. */
-   if ((configuration::history_ptr < 3) || configuration::concepts_in_place()) return FALSE;
-
-   for (k=0; k<8; k++)
-      dirmask = (dirmask << 2) | (current_people[k].id1 & 3);
-
-   if (current_kind == s2x4) {
-      if (dirmask == 0xA00A)
-         current_reconciler = &promperm;         /* L2FL, looking for promenade. */
-      else if (dirmask == 0x0AA0)
-         current_reconciler = &rpromperm;        /* R2FL, looking for reverse promenade. */
-      else if (dirmask == 0x6BC1)
-         current_reconciler = &homeperm;         /* pseudo-squared-set, looking for circle left/right. */
-      else if (dirmask == 0xFF55)
-         current_reconciler = &sglperm;          /* Lcol, looking for single file promenade. */
-      else if (dirmask == 0x55FF)
-         current_reconciler = &sglperm;          /* Rcol, looking for reverse single file promenade. */
-      else if (dirmask == 0xBC16)
-         current_reconciler = &sglperm;          /* L Tbone, looking for single file promenade. */
-      else if (dirmask == 0x16BC)
-         current_reconciler = &sglperm;          /* R Tbone, looking for reverse single file promenade. */
-      else if (dirmask == 0x2288)
-         current_reconciler = &rlgperm;          /* Rwave, looking for RLG (with possible extend or circulate). */
-      else if (dirmask == 0x8822)
-         current_reconciler = &laperm;           /* Lwave, looking for LA (with possible extend or circulate). */
-   }
-   else if (current_kind == s_qtag) {
-      if (dirmask == 0x08A2)
-         current_reconciler = &qtagperm;         /* Rqtag, looking for RLG. */
-      else if (dirmask == 0x78D2)
-         current_reconciler = &qtagperm;         /* diamonds with points facing, looking for RLG. */
-   }
-   else if (current_kind == s_crosswave || current_kind == s_thar) {
-      if (dirmask == 0x278D)
-         current_reconciler = &crossplus;        /* crossed waves or thar, looking for RLG, allow slip the clutch. */
-      else if (dirmask == 0x8D27)
-         current_reconciler = &crossplus;        /* crossed waves or thar, looking for LA, allow slip the clutch. */
-      else if (dirmask == 0xAF05)
-         current_reconciler = &crossperm;        /* crossed waves or thar, looking for promenade. */
-   }
-
-   if (current_reconciler)
-      return TRUE;
-   else
-      return FALSE;
-}
-
-extern int resolve_command_ok(void)
-{
-   return attr::klimit(configuration::current_config().state.kind) == 7;
-}
-
-extern int nice_setup_command_ok(void)
-{
-   int i, k;
-   long_boolean setup_ok = FALSE;
-   setup_kind current_kind = configuration::current_config().state.kind;
-
-   // Decide which arrays we will use, depending on the current setting of the
-   // "allow all concepts" flag, and see if we are in one of the known setups
-   // and there are concepts available for that setup.
-
-   for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
-      /* Select the correct concept array. */
-      nice_setup_info[k].array_to_use_now = (allowing_all_concepts) ? nice_setup_info[k].thing->zzzfull_list : nice_setup_info[k].thing->zzzon_level_list;
-
-      // Note how many concepts are in it.  If there are zero in some of them,
-      // we may still be able to proceed, but we must have concepts available
-      // for the current setup.
-
-      for (i=0 ; ; i++) {
-         if (nice_setup_info[k].array_to_use_now[i] == UC_none) break;
-      }
-
-      nice_setup_info[k].number_available_now = i;
-
-      if (nice_setup_info[k].kind == current_kind && nice_setup_info[k].number_available_now != 0) setup_ok = TRUE;
-   }
-
-   return setup_ok || configuration::concepts_in_place();
-}
 
 /*
  * Create a string representing the search state.  Search_goal indicates which user command

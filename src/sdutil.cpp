@@ -18,7 +18,6 @@
    unparse_call_name
    print_recurse
    clear_screen
-   write_header_stuff
    writechar
    newline
    open_text_line
@@ -46,7 +45,7 @@ and the following external variables:
    retain_after_error
    outfile_string
    header_comment
-   need_new_header_comment
+   creating_new_session
    sequence_number
    starting_sequence_number
    old_filename_strings
@@ -82,7 +81,7 @@ bool wrote_a_sequence = false;
 bool retain_after_error = false;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH];
-long_boolean need_new_header_comment = FALSE;
+bool creating_new_session = false;
 int sequence_number = -1;
 int starting_sequence_number;
 
@@ -196,6 +195,7 @@ Cstring concept_key_table[] = {
 
 static Cstring sessions_init_table[] = {
    "[Options]",
+   "new_style_filename",
    "",
    "[Sessions]",
    "+                    C1               1      Sample",
@@ -203,7 +203,11 @@ static Cstring sessions_init_table[] = {
    "[Accelerators]",
    (char *) 0};
 
-
+static Cstring abbreviations_table[] = {
+   "[Abbreviations]",
+   "u       U-turn back",
+   "rlt     right and left thru",
+   (char *) 0};
 
 
 /* These variables are are global to this file. */
@@ -751,15 +755,15 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          comma_after_next_concept = 0;
       }
       else if (k > marker_end_of_list) {
-         /* This is a concept. */
+         // This is a concept.
 
-         long_boolean force = FALSE;
-         int request_comma_after_next_concept = 0;           /* Same as comma_after_next_concept. */
+         bool force = false;
+         int request_comma_after_next_concept = 0;       // Same as comma_after_next_concept.
 
-         /* Some concepts look better with a comma after them. */
+         // Some concepts look better with a comma after them.
 
          if (item->concparseflags & CONCPARSE_PARSE_F_TYPE) {
-            /* This is an "F" type concept. */
+            // This is an "F" type concept.
             comma_after_next_concept = 1;
             last_was_t_type = false;
             force = did_concept && !last_was_l_type;
@@ -767,18 +771,18 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             did_concept = true;
          }
          else if (item->concparseflags & CONCPARSE_PARSE_L_TYPE) {
-            /* This is an "L" type concept. */
+            // This is an "L" type concept.
             last_was_t_type = false;
             last_was_l_type = true;
          }
          else if (item->concparseflags & CONCPARSE_PARSE_G_TYPE) {
-            /* This is a "leading T/trailing L" type concept, also known as a "G" concept. */
+            // This is a "leading T/trailing L" type concept, also known as a "G" concept.
             force = last_was_t_type && !last_was_l_type;;
             last_was_t_type = false;
             last_was_l_type = true;
          }
          else {
-            /* This is a "T" type concept. */
+            // This is a "T" type concept.
             if (did_concept && k != concept_tandem_in_setup) comma_after_next_concept = 1;
             force = last_was_t_type && !last_was_l_type;
             last_was_t_type = true;
@@ -790,7 +794,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          if (force && did_comma == 0 && k != concept_tandem_in_setup) writestuff(", ");
          else if (request_final_space) writestuff(" ");
 
-         next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
+         next_cptr = local_cptr->next;    // Now it points to the thing after this concept.
 
          request_final_space = false;
 
@@ -978,10 +982,10 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                final_and_herit_flags junk_concepts;
                junk_concepts.clear_all_herit_and_final_bits();
 
-               /* Skip all final concepts, then demand that what remains is a marker
-                  (as opposed to a serious concept), and that a real call
-                  has been entered, and that its name starts with "@g". */
-               tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts, false, __FILE__, __LINE__);
+               // Skip all final concepts, then demand that what remains is a marker
+               // (as opposed to a serious concept), and that a real call
+               // has been entered, and that its name starts with "@g".
+               tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, __FILE__, __LINE__);
 
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
@@ -1130,17 +1134,17 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             search = save_cptr->next;
             while (search) {
                parse_block *subsidiary_ptr = search->subsidiary_root;
-               long_boolean this_is_subst1 = FALSE;
-               long_boolean this_is_subst2 = FALSE;
+               bool this_is_subst1 = false;
+               bool this_is_subst2 = false;
                if (subsidiary_ptr) {
                   switch (search->replacement_key) {
                      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
-                        this_is_subst1 = TRUE;
+                        this_is_subst1 = true;
                         break;
                      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
-                        this_is_subst2 = TRUE;
+                        this_is_subst2 = true;
                         break;
                   }
 
@@ -1254,17 +1258,27 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
-                  case 'h':                   /* Need to plug in a direction. */
+                  case 'h':                   // Need to plug in a direction.
                      write_blank_if_needed();
                      writestuff(direction_names[idirjunk]);
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
                   case '9': case 'a': case 'b': case 'B': case 'D': case 'u':
-                     /* Need to plug in a number. */
+                     // Need to plug in a number.
                      write_blank_if_needed();
-                     write_nice_number(savec, number_list & 0xF);
-                     number_list >>= 4;    /* Get ready for next number. */
+
+                     // Watch for "zero and a half".
+                     if (savec == '9' && (number_list & 0xF) == 0 &&
+                         np[0] == '-' && np[1] == '1' &&
+                         np[2] == '/' && np[3] == '2') {
+                        writestuff("1/2");
+                        np += 4;
+                     }
+                     else
+                        write_nice_number(savec, number_list & 0xF);
+
+                     number_list >>= 4;    // Get ready for next number.
                      break;
                   case 'e':
                      if (use_left_name) {
@@ -1286,7 +1300,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         writestuff("cross");
                      }
                      break;
-                  case 'S':                   /* Look for star turn replacement. */
+                  case 'S':                   // Look for star turn replacement.
                      if (save_cptr->options.star_turn_option < 0) {
                         writestuff(", don't turn the star");
                      }
@@ -1553,11 +1567,11 @@ void clear_screen()
    open_text_line();
 }
 
-void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
+static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
 {
    if (!ui_options.diagnostic_mode) {
-      /* log creation version info */
-      if (with_ui_version) {     /* This is the "pretty" form that we display while running. */
+      // Log creation version info.
+      if (with_ui_version) {     // This is the "pretty" form that we display while running.
          writestuff("Sd ");
          writestuff(sd_version_string());
          writestuff(" : db");
@@ -1565,7 +1579,7 @@ void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
          writestuff(" : ui");
          writestuff(gg->version_string());
       }
-      else {                     /* This is the "compact" form that goes into the file. */
+      else {                     // This is the "compact" form that goes into the file.
          writestuff("Sd");
          writestuff(sd_version_string());
          writestuff(":db");
@@ -1777,7 +1791,7 @@ parse_block *get_parse_block()
    item->call_to_print = (call_with_name *) 0;
    item->options = null_options;
    item->replacement_key = 0;
-   item->no_check_call_level = 0;
+   item->no_check_call_level = false;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
@@ -1792,17 +1806,17 @@ static parse_block *saved_command_root;
 
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head)
 {
-   parse_block *new_item, *old_item;
+   parse_block *new_item = final_head;
+   parse_block *old_item = original_tree;
 
-   new_item = final_head;
-   old_item = original_tree;
    for (;;) {
+      if (!new_item || !old_item) crash_print(__FILE__, __LINE__);
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->call_to_print = old_item->call_to_print;
       new_item->options = old_item->options;
 
-      /* Chop off branches that don't belong. */
+      // Chop off branches that don't belong.
 
       if (!old_item->subsidiary_root)
          new_item->subsidiary_root = (parse_block *) 0;
@@ -1834,7 +1848,7 @@ extern void save_parse_state()
    could have happened will add to the tree but never delete anything.)  This way,
    after we have saved and restored things, they are all in their original,
    locations, so that the pointers in the parse stack will still be valid. */
-extern long_boolean restore_parse_state()
+extern void restore_parse_state()
 {
    parse_state = saved_parse_state;
 
@@ -1842,8 +1856,6 @@ extern long_boolean restore_parse_state()
       reset_parse_tree(saved_command_root, configuration::next_config().command_root);
    else
       configuration::next_config().command_root = 0;
-
-   return FALSE;
 }
 
 
@@ -1882,7 +1894,7 @@ void display_initial_history(int upper_limit, int num_pics)
    for (j=1; j<=written_history_items; j++) {
       int compilerbug = ((int) ((unsigned int) (written_history_nopic-j)) ^
                  ((unsigned int) (upper_limit-num_pics-j)));
-      if (compilerbug < 0 && ~configuration::history[j].draw_pic) {
+      if (compilerbug < 0 && !configuration::history[j].draw_pic) {
          written_history_items = j-1;
          break;
       }
@@ -1899,7 +1911,7 @@ void display_initial_history(int upper_limit, int num_pics)
    else {
       /* We lose, there is nothing we can use. */
       clear_screen();
-      write_header_stuff(TRUE, 0);
+      write_header_stuff(true, 0);
       newline();
       newline();
       startpoint = 1;
@@ -1930,7 +1942,7 @@ extern void initialize_parse()
    parse_state.call_list_to_use = parse_state.base_call_list_to_use;
    configuration::next_config().init_centersp_specific();
    configuration::init_warnings();
-   configuration::next_config().draw_pic = FALSE;
+   configuration::next_config().draw_pic = false;
 
    if (written_history_items > configuration::history_ptr)
       written_history_items = configuration::history_ptr;
@@ -1942,31 +1954,30 @@ extern void initialize_parse()
 
 
 
-static void do_change_outfile(long_boolean signal)
+static void do_change_outfile(bool signal)
 {
    char newfile_string[MAX_FILENAME_LENGTH];
 
-   if (gg->do_outfile_popup(newfile_string)) {
-      if (newfile_string[0]) {
-         char confirm_message[MAX_FILENAME_LENGTH+25];
-         char *final_message;
+   if (gg->do_outfile_popup(newfile_string) == POPUP_ACCEPT_WITH_STRING &&
+       newfile_string[0]) {
+      char confirm_message[MAX_FILENAME_LENGTH+25];
+      char *final_message;
 
-         if (install_outfile_string(newfile_string)) {
-            (void) strncpy(confirm_message, "Output file changed to \"", 25);
-            (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
-            (void) strncat(confirm_message, "\"", 2);
-            final_message = confirm_message;
-         }
-         else
-            final_message = "No write access to that file, no action taken.";
+      if (install_outfile_string(newfile_string)) {
+         strncpy(confirm_message, "Output file changed to \"", 25);
+         strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
+         strncat(confirm_message, "\"", 2);
+         final_message = confirm_message;
+      }
+      else
+         final_message = "No write access to that file, no action taken.";
 
-         if (signal) {
-            specialfail(final_message);
-         }
-         else {
-            writestuff(final_message);
-            newline();
-         }
+      if (signal) {
+         specialfail(final_message);
+      }
+      else {
+         writestuff(final_message);
+         newline();
       }
    }
 }
@@ -1974,14 +1985,14 @@ static void do_change_outfile(long_boolean signal)
 
 
 // Returns TRUE if it successfully backed up one parse block.
-static long_boolean backup_one_item()
+static bool backup_one_item()
 {
 
    // User wants to undo a call.  The concept parse list is not set up
    // for easy backup, so we search forward from the beginning.
 
    parse_block **this_ptr = parse_state.concept_write_base;
-   if (!this_ptr || !*this_ptr) return FALSE;
+   if (!this_ptr || !*this_ptr) return false;
 
    if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
       this_ptr = &((*this_ptr)->next);
@@ -2002,7 +2013,7 @@ static long_boolean backup_one_item()
             parse_state.parse_stack_index--;
 
          *last_ptr = (parse_block *) 0;
-         return TRUE;
+         return true;
       }
 
       if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
@@ -2010,14 +2021,13 @@ static long_boolean backup_one_item()
 
    // We did not find our place.
 
-   return FALSE;
+   return false;
 }
 
 
 // Returns true if sequence was written.
 static bool write_sequence_to_file() THROW_DECL
 {
-   int getout_ind;
    char date[MAX_TEXT_LINE_LENGTH];
    char second_header[MAX_TEXT_LINE_LENGTH];
    char seqstring[20];
@@ -2025,7 +2035,7 @@ static bool write_sequence_to_file() THROW_DECL
 
    // Put up the getout popup to see if the user wants to enter a header string.
 
-   getout_ind = gg->do_getout_popup(second_header);
+   popup_return getout_ind = gg->do_getout_popup(second_header);
 
    // Some user interfaces (those with icons) may have an icon to abort the
    // sequence, rather than just decline the comment.  Such an action comes
@@ -2039,12 +2049,12 @@ static bool write_sequence_to_file() THROW_DECL
 
    clear_screen();
    open_file();
-   enable_file_writing = TRUE;
+   enable_file_writing = true;
    doublespace_file();
    get_date(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff(FALSE, configuration::current_config().state.result_flags);
+   write_header_stuff(false, configuration::current_config().state.result_flags);
    newline();
 
    if (!configuration::sequence_is_resolved()) {
@@ -2096,10 +2106,10 @@ static bool write_sequence_to_file() THROW_DECL
    }
 
    if (configuration::sequence_is_resolved())
-      write_resolve_text(TRUE);
+      write_resolve_text(true);
 
    newline();
-   enable_file_writing = FALSE;
+   enable_file_writing = false;
    newline();
 
    close_file();     // This will signal a "specialfail" if a file error occurs.
@@ -2362,16 +2372,17 @@ void run_program()
    show_banner:
 
       writestuff("Version ");
-      write_header_stuff(TRUE, 0);
+      write_header_stuff(true, 0);
       newline();
       writestuff("Output file is \"");
       writestuff(outfile_string);
       writestuff("\"");
       newline();
 
-      if (need_new_header_comment) {
-         (void) gg->do_header_popup(header_comment);
-         need_new_header_comment = FALSE;
+      if (creating_new_session) {
+         do_change_outfile(false);
+         gg->do_header_popup(header_comment);
+         creating_new_session = false;
       }
 
    new_sequence:
@@ -2503,6 +2514,11 @@ void run_program()
                if (fputs("\n", session) == EOF) goto copy_failed;
             }
 
+            for (q = abbreviations_table ; *q ; q++) {
+               if (fputs(*q, session) == EOF) goto copy_failed;
+               if (fputs("\n", session) == EOF) goto copy_failed;
+            }
+
             if (fputs("\n", session) == EOF) goto copy_failed;
             (void) fclose(session);
             writestuff("The file has been initialized, and will take effect the next time the program is started.");
@@ -2519,11 +2535,10 @@ void run_program()
             goto new_sequence;
          }
       case start_select_change_outfile:
-         do_change_outfile(FALSE);
+         do_change_outfile(false);
          goto new_sequence;
       case start_select_change_header_comment:
          (void) gg->do_header_popup(header_comment);
-         need_new_header_comment = FALSE;
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
@@ -2753,7 +2768,7 @@ void run_program()
                doitanyway:
 
                   interactivity = interactivity_no_query_at_all;
-                  testing_fidelity = TRUE;
+                  testing_fidelity = true;
 
                   // Create a temporary error handler.
 
@@ -2765,7 +2780,7 @@ void run_program()
                   catch(error_flag_type) {
                      // The call failed.
                      interactivity = interactivity_normal;
-                     testing_fidelity = FALSE;
+                     testing_fidelity = false;
                      reset_parse_tree(saved_root, configuration::next_config().command_root);
                      specialfail("The pasted call has failed.  "
                                  "You can give the command 'delete one call from clipboard' "
@@ -2773,7 +2788,7 @@ void run_program()
                   }
 
                   interactivity = interactivity_normal;
-                  testing_fidelity = FALSE;
+                  testing_fidelity = false;
                   clipboard_size--;
                   if ((command_kind) uims_menu_index == command_paste_one_call) break;
                }
@@ -2840,7 +2855,7 @@ void run_program()
             reply_pending = false;
             goto start_cycle;
          case command_save_pic:
-            configuration::current_config().draw_pic = TRUE;
+            configuration::current_config().draw_pic = true;
             // We have to back up to BEFORE the item we just changed.
             if (written_history_items > configuration::history_ptr-1)
                written_history_items = configuration::history_ptr-1;
@@ -2913,7 +2928,7 @@ void run_program()
                specialfail(help_string);
             }
          case command_change_outfile:
-            do_change_outfile(TRUE);
+            do_change_outfile(true);
             goto start_cycle;
          case command_change_header:
             {
@@ -2941,7 +2956,7 @@ void run_program()
             if (!configuration::sequence_is_resolved()) {
                if (gg->do_write_anyway_popup() != POPUP_ACCEPT)
                   specialfail("This sequence is not resolved.");
-               configuration::current_config().draw_pic = TRUE;
+               configuration::current_config().draw_pic = true;
             }
 
             if (!write_sequence_to_file())
@@ -2991,7 +3006,7 @@ void run_program()
                }
 
                allowing_modifications = 0;
-               configuration::next_config().draw_pic = FALSE;
+               configuration::next_config().draw_pic = false;
                parse_state.concept_write_base = &configuration::next_config().command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;

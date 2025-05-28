@@ -27,12 +27,12 @@ and the following external variables:
 #include "sd.h"
 
 
-/* These variables are external. */
+// These variables are external.
 
-long_boolean selector_used;
-long_boolean direction_used;
-long_boolean number_used;
-long_boolean mandatory_call_used;
+bool selector_used;
+bool direction_used;
+bool number_used;
+bool mandatory_call_used;
 
 
 /* If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
@@ -54,7 +54,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
    uint32 permpid1, pid2, p1, p2;
    selector_kind s;
 
-   selector_used = TRUE;
+   selector_used = true;
 
    /* Pull out the cases that do not require the person to be real. */
 
@@ -441,12 +441,12 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 
 
 static const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-static const long int dbl_tab01[4] = {0, 1, FALSE, TRUE};
+static const long int dbl_tab01[4] = {0, 1, false, true};
 static const long int x22tabtand[3] = {3, 0, 1};
 static const long int x22tabface[3] = {3, 2, 1};
 static const long int x24tabtand[3] = {7, 0, 1};
 static const long int x24tabface[3] = {7, 2, 1};
-static const long int dbl_tab21[4] = {2, 1, TRUE, FALSE};
+static const long int dbl_tab21[4] = {2, 1, true, false};
 
 static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
 static const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
@@ -1963,7 +1963,7 @@ static direction_kind direction_list[] = {
 static bool directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
-   direction_used = TRUE;
+   direction_used = true;
    return current_options.where == direction_list[extra_stuff[0]];
 }
 
@@ -1987,17 +1987,17 @@ static bool dmd_ctrs_rh(setup *real_people, int real_index,
    }
 
    assumption_thing tt;
-   long_boolean booljunk;
+   bool booljunk;
 
    tt.assumption = cr_dmd_ctrs_mwv;
    tt.assump_col = 0;
    tt.assump_both = 1;
    tt.assump_negate = 0;
    tt.assump_live = 0;
-   if (verify_restriction(real_people, tt, FALSE, &booljunk) == restriction_passes)
+   if (verify_restriction(real_people, tt, false, &booljunk) == restriction_passes)
       return *extra_stuff == 0;
    tt.assump_both = 2;
-   if (verify_restriction(real_people, tt, FALSE, &booljunk) == restriction_passes)
+   if (verify_restriction(real_people, tt, false, &booljunk) == restriction_passes)
       return *extra_stuff != 0;
 
    fail("Can't determine handedness.");

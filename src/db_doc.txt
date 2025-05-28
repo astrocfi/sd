@@ -2963,6 +2963,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    2fl_only           R/Q           1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
                                     1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
+                                    bigdmd - 2FL in center;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
                                     trngl - all 3 facing the same way.
                                     thar/crosswave - same handedness 2FL's.
@@ -2971,9 +2972,22 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     "left/right/in/out" mofifiers:
 
                                     1x4/2x4/3x4 - R/L gives handedness of 2FL
-                                    qtag - applies to center 2FL
+                                    qtag/bigdmd - applies to center 2FL
                                     4x2 - I/O means starting/completed DPT
                                     thar/crosswave - R/L 2FL's
+
+   2fl_per_1x4        R/Q           2x4 or 1x8 - this is equivalent to "2fl_only"
+                                    on each 1x4, but does not require the handedness
+                                    to be consistent.  This should not need to be
+                                    invoked explicitly in the database.  If a call
+                                    defined on a 1x4 has the "2fl_only" restriction
+                                    or qualifier, it will automatically be turned into
+                                    this, so that unsymmetrical formations will be
+                                    handled correctly.
+
+   ctr_2fl_only       R/Q           3x4 - this is like "2fl_only", but is applied
+                                    only to the center 1x4.  The "left" and "right"
+                                    modifiers may be used.
 
    3x3_2fl_only       R/Q           1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other.
                                     As a qualifier, this can take the "live" modifier.
@@ -3295,6 +3309,17 @@ need_two_numbers
 need_three_numbers
 need_four_numbers
 sequence_starter
+      This call may be used as a sequence starter, as in "heads start; spin
+      the pulley".  The selected people will have moved into the center and
+      then the call will be executed on the entire setup.  This flag is not
+      needed for ordinary 4-person calls--"heads start; pass the ocean" works
+      just fine.
+sequence_starter_only
+      Like the above, but the call is not legal if invoked other than as a
+      sequence starter.  This is to prevent "heads single rotate 1/4 while
+      the others swing thru" from invoking the definition that is used for
+      rotate from a squared set.
+
 split_like_square_thru
 split_like_dixie_style
 

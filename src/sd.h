@@ -68,7 +68,69 @@
 
 #include "database.h"
 
-#define MAX_PEOPLE 24
+/* We customize the necessary declarations for functions
+   that don't return.  Alas, this requires something in front
+   and something in back. */
+
+#if defined(__GNUC__)
+#define NORETURN1
+#define NORETURN2 __attribute__ ((noreturn))
+#elif defined(WIN32)
+// This declspec only works for VC++ version 6.
+#define NORETURN1 /*__declspec(noreturn)*/
+#define NORETURN2
+#else
+#define NORETURN1
+#define NORETURN2
+#endif
+
+// We used to do some stuff to cater to compiler vendors (e.g. Sun
+// Microsystems) that couldn't be bothered to do the "const" attribute
+// correctly.  We no longer have any patience with such things.
+//
+// So we used to have a line that said "#define Const const".  But not
+// any longer.  If your compiler doesn't handle "const" correctly (or
+// any other aspect of ANSI C++, for that matter), that's too bad.
+
+
+// We would like "veryshort" to be a signed char, but not all
+// compilers are fully ANSI compliant.  The IBM AIX compiler, for
+// example, considers char to be unsigned.  The switch
+// "NO_SIGNED_CHAR" alerts us to that fact.  The configure script has
+// checked this for us.
+//
+// Baloney!  We no longer use a configure script.  We are aware of the
+// fact that there is a whole "industry" dedicated to the job of
+// figuring out what hideous brokenness any given Unix system is
+// inflicting on us today, but we have no patience for that kind of
+// crap.  If your compiler or OS can't handle this, tough.
+#ifdef NO_SIGNED_CHAR
+typedef short veryshort;
+#else
+typedef char veryshort;
+#endif
+
+/* We would like to think that we will always be able to count on compilers to do the
+   right thing with "int" and "long int" and so on.  What we would really like is
+   for compilers to be counted on to make "int" at least 32 bits, because we need
+   32 bits in many places.  However, some compilers don't, so we have to use
+   "long int" or "unsigned long int".  We think that all compilers we deal with
+   will do the right thing with that, but, just in case, we use a typedef.
+
+   The type "uint32" must be an unsigned integer of at least 32 bits.
+   The type "uint16" must be an unsigned integer of at least 16 bits.
+
+   Note also:  There are many places in the program (not just in database.h and sd.h)
+   where the suffix "UL" is put on constants that are intended to be of type "uint32".
+   If "uint32" is changed to anything other than "unsigned long int", it may be
+   necessary to change all of those. */
+
+typedef unsigned long int uint32;
+typedef unsigned short int uint16;
+typedef unsigned char uint8;
+typedef const char *Cstring;
+
+enum { MAX_PEOPLE = 24 };
 
 
 enum error_flag_type {
@@ -112,7 +174,7 @@ enum error_flag_type {
 // they would sacrifice transparency: with the direct initializers, you can
 // look at the struct definition in sd.h and look at the initializer in
 // sdtables.cpp and know for sure, without worrying about what clever things
-// the constructor might do, what constant belongs in which field.
+// the constructor might do, which constant belongs in which field.
 //
 // Because we are initializing things in ways that C++ frowns on, the
 // C++ compiler punishes us by not letting us declare fields "const".
@@ -190,7 +252,7 @@ class ui_option_type {
    int use_escapes_for_drawing_people;
 
    /* These could get changed if the user requests special naming.  See "alternate_glyphs_1"
-      in the command-line switch parser in sdsi.c. */
+      in the command-line switch parser in sdsi.cpp. */
    char *pn1;             // 1st char (1/2/3/4) of what we use to print person.
    char *pn2;             // 2nd char (B/G) of what we use to print person.
    char *direc;           // 3rd char (direction arrow) of what we use to print person.
@@ -289,6 +351,7 @@ enum concept_kind {
    concept_triple_boxes,
    concept_triple_boxes_together,
    concept_triple_diamonds,
+   concept_triple_formations,
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
@@ -746,7 +809,7 @@ struct parse_block {
    call_conc_option_state options;// number, selector, direction, etc.
    short replacement_key;         // this is the "DFM1_CALL_MOD_MASK" stuff
                                   // (shifted down) for a modification block
-   short no_check_call_level;     // if nonzero, don't check whether this call
+   bool no_check_call_level;      // if true, don't check whether this call
                                   // is at the level
 };
 
@@ -1633,6 +1696,7 @@ class select {
       fx_fdhrgld1,
       fx_fdhrgld2,
       fx_f2x4endo,
+      fx_f4x4endo,
       fx_bar55d,
       fx_fppaad,
       fx_fpp55d,
@@ -2348,7 +2412,7 @@ struct nice_setup_info_item {
 };
 
 // Values returned by the various popup routines.
-enum {
+enum popup_return {
    POPUP_DECLINE = 0,
    POPUP_ACCEPT  = 1,
    POPUP_ACCEPT_WITH_STRING = 2
@@ -2494,7 +2558,9 @@ enum {
    RESULTFLAG__NO_REEVALUATE        = 0x02000000UL,
    RESULTFLAG__IMPRECISE_ROT        = 0x04000000UL,
    RESULTFLAG__PLUSEIGHTH_ROT       = 0x08000000UL,
-   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000UL
+   RESULTFLAG__DID_SHORT6_2X3       = 0x10000000UL,
+   RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000UL,
+   RESULTFLAG__INVADED_SPACE        = 0x40000000UL
 };
 
 struct comment_block {
@@ -2746,7 +2812,7 @@ class configuration {
  public:
    parse_block *command_root;
    setup state;
-   long_boolean draw_pic;
+   bool draw_pic;
    int text_line;          // How many lines of text existed after this item was written,
                            // only meaningful if "written_history_items" is >= this index.
 
@@ -2798,7 +2864,7 @@ class configuration {
    inline static void initialize_history(int c) {
       history_ptr = 1;
       history[1].startinfoindex = c;
-      history[1].draw_pic = FALSE;
+      history[1].draw_pic = false;
       whole_sequence_low_lim =
          (startinfolist[c].into_the_middle) ? 2 : 1;
    }
@@ -3427,7 +3493,7 @@ extern int random_number;                                     // in SDSI
 extern SDLIB_API char *database_filename;                     // in SDSI
 extern SDLIB_API char *new_outfile_string;                    // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI
-extern long_boolean outfile_special;                          // in SDSI
+extern bool outfile_special;                                  // in SDSI
 
 extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API match_result GLOB_match;                     // in SDMATCH
@@ -3461,7 +3527,7 @@ extern SDLIB_API resolve_list_menu_item resolve_menu[];             /* in SDMAIN
 extern SDLIB_API startup_list_menu_item startup_menu[];             /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern SDLIB_API char *sd_version_string();                         /* In SDMAIN */
-extern SDLIB_API long_boolean query_for_call();                     /* In SDMAIN */
+extern SDLIB_API bool query_for_call();                             /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
 extern int sdtty_no_cursor;                                         /* in SDUI-TTY */
@@ -3506,9 +3572,9 @@ class iobase {
    virtual bool print_this() = 0;
    virtual bool print_any() = 0;
    virtual bool help_manual() = 0;
-   virtual int do_outfile_popup(char dest[]) = 0;
-   virtual int do_header_popup(char dest[]) = 0;
-   virtual int do_getout_popup(char dest[]) = 0;
+   virtual popup_return do_outfile_popup(char dest[]) = 0;
+   virtual popup_return do_header_popup(char dest[]) = 0;
+   virtual popup_return do_getout_popup(char dest[]) = 0;
    virtual int do_write_anyway_popup() = 0;
    virtual int do_delete_clipboard_popup() = 0;
    virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
@@ -3519,8 +3585,8 @@ class iobase {
    virtual int do_circcer_popup() = 0;
    virtual int do_tagger_popup(int tagger_class) = 0;
    virtual int do_modifier_popup(Cstring callname, modify_popup_kind kind) = 0;
-   virtual int do_comment_popup(char dest[]) = 0;
-   virtual uint32 get_number_fields(int nnumbers, long_boolean forbid_zero) = 0;
+   virtual popup_return do_comment_popup(char dest[]) = 0;
+   virtual uint32 get_number_fields(int nnumbers, bool forbid_zero) = 0;
    virtual bool get_call_command(uims_reply *reply_p) = 0;
    virtual void set_pick_string(const char *string) = 0;
    virtual void display_help() = 0;
@@ -3548,9 +3614,9 @@ class iofull : public iobase {
    bool print_this();
    bool print_any();
    bool help_manual();
-   int do_outfile_popup(char dest[]);
-   int do_header_popup(char dest[]);
-   int do_getout_popup(char dest[]);
+   popup_return do_outfile_popup(char dest[]);
+   popup_return do_header_popup(char dest[]);
+   popup_return do_getout_popup(char dest[]);
    int do_write_anyway_popup();
    int do_delete_clipboard_popup();
    void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
@@ -3562,8 +3628,8 @@ class iofull : public iobase {
    int do_tagger_popup(int tagger_class);
    int do_modifier_popup(Cstring callname, modify_popup_kind kind);
    void set_pick_string(const char *string);
-   int do_comment_popup(char dest[]);
-   uint32 get_number_fields(int nnumbers, long_boolean forbid_zero);
+   popup_return do_comment_popup(char dest[]);
+   uint32 get_number_fields(int nnumbers, bool forbid_zero);
    bool get_call_command(uims_reply *reply_p);
    void display_help();
    void terminate(int code);
@@ -3587,11 +3653,11 @@ extern SDLIB_API int written_history_items;                         /* in SDTOP 
 extern SDLIB_API int written_history_nopic;                         /* in SDTOP */
 extern SDLIB_API dance_level higher_acceptable_level[];             /* in SDTOP */
 extern SDLIB_API uint32 the_topcallflags;                           /* in SDTOP */
-extern SDLIB_API long_boolean there_is_a_call;                      /* in SDTOP */
+extern SDLIB_API bool there_is_a_call;                              /* in SDTOP */
 
 extern SDLIB_API call_with_name **base_calls;                       /* in SDTOP */
 extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP */
-extern SDLIB_API long_boolean enable_file_writing;                  /* in SDTOP */
+extern SDLIB_API bool enable_file_writing;                          /* in SDTOP */
 extern SDLIB_API Cstring cardinals[];                               /* in SDTOP */
 extern SDLIB_API Cstring ordinals[];                                /* in SDTOP */
 extern SDLIB_API Cstring direction_names[];                         /* in SDTOP */
@@ -3620,19 +3686,19 @@ extern SDLIB_API uint32 number_of_taggers[NUM_TAGGER_CLASSES];      /* in SDTOP 
 extern SDLIB_API uint32 number_of_circcers;                         /* in SDTOP */
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
 extern SDLIB_API call_conc_option_state current_options;            /* in SDTOP */
-extern SDLIB_API long_boolean allowing_all_concepts;                /* in SDTOP */
-extern SDLIB_API long_boolean allowing_minigrand;                   /* in SDTOP */
-extern SDLIB_API long_boolean using_active_phantoms;                /* in SDTOP */
+extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
+extern SDLIB_API bool allowing_minigrand;                           /* in SDTOP */
+extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API const call_conc_option_state null_options;         /* in SDTOP */
 extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP */
-extern SDLIB_API long_boolean verify_used_number;                   /* in SDTOP */
-extern SDLIB_API long_boolean verify_used_direction;                /* in SDTOP */
-extern SDLIB_API long_boolean verify_used_selector;                 /* in SDTOP */
+extern SDLIB_API bool verify_used_number;                           /* in SDTOP */
+extern SDLIB_API bool verify_used_direction;                        /* in SDTOP */
+extern SDLIB_API bool verify_used_selector;                         /* in SDTOP */
 extern SDLIB_API int uims_menu_index;                               /* in SDTOP */
 extern SDLIB_API int last_direction_kind;                           /* in SDTOP */
 extern SDLIB_API interactivity_state interactivity;                 /* in SDTOP */
 extern SDLIB_API char database_version[81];                         /* in SDTOP */
-extern SDLIB_API long_boolean testing_fidelity;                     /* in SDTOP */
+extern SDLIB_API bool testing_fidelity;                             /* in SDTOP */
 extern SDLIB_API dance_level level_threshholds[];                   /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int hashed_randoms;                                /* in SDTOP */
@@ -3653,7 +3719,7 @@ extern SDLIB_API bool wrote_a_sequence;                             /* in SDUTIL
 extern bool retain_after_error;                                     /* in SDUTIL */
 extern SDLIB_API char outfile_string[MAX_FILENAME_LENGTH];          /* in SDUTIL */
 extern SDLIB_API char header_comment[MAX_TEXT_LINE_LENGTH];         /* in SDUTIL */
-extern SDLIB_API long_boolean need_new_header_comment;              /* in SDUTIL */
+extern SDLIB_API bool creating_new_session;                         /* in SDUTIL */
 extern SDLIB_API int sequence_number;                               /* in SDUTIL */
 extern SDLIB_API int starting_sequence_number;                      /* in SDUTIL */
 extern SDLIB_API Cstring old_filename_strings[];                    /* in SDUTIL */
@@ -3677,10 +3743,10 @@ extern short int *concept_sublists[call_list_extent];               /* in SDTOP 
 extern int good_concept_sublist_sizes[call_list_extent];            /* in SDTOP */
 extern short int *good_concept_sublists[call_list_extent];          /* in SDTOP */
 
-extern long_boolean selector_used;                                  /* in SDPREDS */
-extern long_boolean direction_used;                                 /* in SDPREDS */
-extern long_boolean number_used;                                    /* in SDPREDS */
-extern long_boolean mandatory_call_used;                            /* in SDPREDS */
+extern bool selector_used;                                          /* in SDPREDS */
+extern bool direction_used;                                         /* in SDPREDS */
+extern bool number_used;                                            /* in SDPREDS */
+extern bool mandatory_call_used;                                    /* in SDPREDS */
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 extern int selector_preds;                                          /* in SDPREDS */
 
@@ -3996,6 +4062,8 @@ enum specmapkind {
    spcmap_wblob_1x4b,
    spcmap_wblob_1x4c,
    spcmap_wblob_1x4d,
+   spcmap_bigbone_cw,
+   spcmap_bigbone_ccw,
    NUM_SPECMAP_KINDS   // End mark; not really in the enumeration.
 };
 
@@ -4035,10 +4103,9 @@ extern bool selectp(setup *ss, int place) THROW_DECL;
 
 /* In SDGETOUT */
 
-SDLIB_API void write_resolve_text(long_boolean doing_file);
+SDLIB_API void write_resolve_text(bool doing_file);
 SDLIB_API uims_reply full_resolve();
 extern int concepts_in_place();
-extern int reconcile_command_ok();
 extern int resolve_command_ok();
 extern int nice_setup_command_ok();
 SDLIB_API void create_resolve_menu_title(
@@ -4119,10 +4186,10 @@ extern void mirror_this(setup *s) THROW_DECL;
 
 extern void do_stability(uint32 *personp, stability stab, int turning) THROW_DECL;
 
-extern long_boolean check_restriction(
+extern bool check_restriction(
    setup *ss,
    assumption_thing restr,
-   long_boolean instantiate_phantoms,
+   bool instantiate_phantoms,
    uint32 flags) THROW_DECL;
 
 extern void basic_move(
@@ -4139,21 +4206,21 @@ extern void canonicalize_rotation(setup *result) THROW_DECL;
 
 extern void reinstate_rotation(setup *ss, setup *result) THROW_DECL;
 
-extern long_boolean divide_for_magic(
+extern bool divide_for_magic(
    setup *ss,
    uint32 heritflags_to_check,
    setup *result) THROW_DECL;
 
-extern long_boolean do_simple_split(
+extern bool do_simple_split(
    setup *ss,
    split_command_kind split_command,
    setup *result) THROW_DECL;
 
 extern void do_call_in_series(
    setup *sss,
-   long_boolean dont_enforce_consistent_split,
-   long_boolean roll_transparent,
-   long_boolean normalize,
+   bool dont_enforce_consistent_split,
+   bool roll_transparent,
+   bool normalize,
    bool qtfudged) THROW_DECL;
 
 extern void brute_force_merge(const setup *res1, const setup *res2,
@@ -4182,7 +4249,7 @@ extern uint32 process_new_fractions(
    bool allow_improper = false,
    bool *improper_p = 0) THROW_DECL;
 
-extern long_boolean fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
+extern bool fill_active_phantoms_and_move(setup *ss, setup *result) THROW_DECL;
 
 extern void move_perhaps_with_active_phantoms(setup *ss, setup *result) THROW_DECL;
 
@@ -4199,8 +4266,6 @@ extern void prepare_for_call_in_series(setup *result, setup *ss);
 
 extern void minimize_splitting_info(setup *ss, uint32 other_info);
 
-extern void initialize_map_tables();
-
 extern void remove_z_distortion(setup *ss) THROW_DECL;
 
 extern void remove_tgl_distortion(setup *ss) THROW_DECL;
@@ -4209,7 +4274,7 @@ extern void divided_setup_move(
    setup *ss,
    uint32 map_encoding,
    phantest_kind phancontrol,
-   long_boolean recompute_id,
+   bool recompute_id,
    setup *result) THROW_DECL;
 
 extern void overlapped_setup_move(
@@ -4258,6 +4323,8 @@ extern void do_concept_wing(
    parse_block *parseptr,
    setup *result) THROW_DECL;
 
+extern void initialize_commonspot_tables();
+
 extern void common_spot_move(
    setup *ss,
    parse_block *parseptr,
@@ -4276,7 +4343,7 @@ extern void triangle_move(
 
 /* In SDCONCPT */
 
-extern long_boolean do_big_concept(
+extern bool do_big_concept(
    setup *ss,
    setup *result) THROW_DECL;
 
@@ -4285,12 +4352,12 @@ extern long_boolean do_big_concept(
 extern void tandem_couples_move(
    setup *ss,
    selector_kind selector,
-   int twosome,           /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
-   int fraction,          /* number, if doing fractional twosome/solid */
-   int phantom,           /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
+   int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
+   int fraction,          // number, if doing fractional twosome/solid
+   int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
    uint32 mxn_bits,
-   long_boolean phantom_pairing_ok,
+   bool phantom_pairing_ok,
    setup *result) THROW_DECL;
 
 extern void initialize_tandem_tables();
@@ -4304,7 +4371,7 @@ extern void concentric_move(
    calldef_schema analyzer,
    uint32 modifiersin1,
    uint32 modifiersout1,
-   long_boolean recompute_id,
+   bool recompute_id,
    uint32 specialoffsetmapcode,
    setup *result) THROW_DECL;
 
@@ -4339,7 +4406,7 @@ extern void selective_move(
    uint32 arg2,
    uint32 override_selector,
    selector_kind selector_to_use,
-   long_boolean concentric_rules,
+   bool concentric_rules,
    setup *result) THROW_DECL;
 
 extern void inner_selective_move(
@@ -4351,6 +4418,7 @@ extern void inner_selective_move(
                 //  0 - only selectees do the call, others can't roll
                 //  1 - both sets
    uint32 arg2,
+   bool demand_both_setups_live,
    uint32 override_selector,
    selector_kind selector_to_use,
    uint32 modsa1,
@@ -4374,7 +4442,7 @@ extern void touch_or_rear_back(
 extern void do_matrix_expansion(
    setup *ss,
    uint32 concprops,
-   long_boolean recompute_id) THROW_DECL;
+   bool recompute_id) THROW_DECL;
 
 void initialize_sdlib();
 
@@ -4401,8 +4469,8 @@ extern void warn(warning_index w);
 extern restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
-   long_boolean instantiate_phantoms,
-   long_boolean *failed_to_instantiate) THROW_DECL;
+   bool instantiate_phantoms,
+   bool *failed_to_instantiate) THROW_DECL;
 
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL;
 
@@ -4451,7 +4519,7 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
 
 extern parse_block *process_final_concepts(
    parse_block *cptr,
-   long_boolean check_errors,
+   bool check_errors,
    final_and_herit_flags *final_concepts,
    bool forbid_unfinished_parse,
    const char *filename,
@@ -4463,9 +4531,9 @@ extern parse_block *really_skip_one_concept(
    uint32 *need_to_restrain_p,   // 1=(if not doing echo), 2=(yes, always)
    parse_block ***parseptr_skip_p) THROW_DECL;
 
-extern long_boolean fix_n_results(int arity, int goal, setup z[],
-                                  uint32 & rotstates,
-                                  uint32 & pointclip) THROW_DECL;
+extern bool fix_n_results(int arity, int goal, setup z[],
+                          uint32 & rotstates,
+                          uint32 & pointclip) THROW_DECL;
 
 extern bool warnings_are_unacceptable(bool strict);
 
@@ -4478,12 +4546,12 @@ void finish_toplevelmove() THROW_DECL;
 
 SDLIB_API bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key);
 
-extern long_boolean do_subcall_query(
+extern bool do_subcall_query(
    int snumber,
    parse_block *parseptr,
    parse_block **newsearch,
-   long_boolean this_is_tagger,
-   long_boolean this_is_tagger_circcer,
+   bool this_is_tagger,
+   bool this_is_tagger_circcer,
    call_with_name *orig_call);
 
 extern call_list_kind find_proper_call_list(setup *s);
@@ -4491,25 +4559,25 @@ extern call_list_kind find_proper_call_list(setup *s);
 class fraction_info {
  public:
    fraction_info(int n) :
-      reverse_order(FALSE),
-      instant_stop(99),  // If not 99, says to stop instantly after doing one part,
+      m_reverse_order(false),
+      m_instant_stop(99),  // If not 99, says to stop instantly after doing one part,
                          // and to report (in RESULTFLAG__PART_COMPLETION_BITS bit)
                          // whether that part was the last part.
-      do_half_of_last_part(0),
-      do_last_half_of_first_part(0),
-      highlimit(n),
-      start_point(0),
-      end_point(n-1),
-      fetch_index(0),
-      client_index(0),
-      fetch_total(n),
-      client_total(n),
-      subcall_incr(1)
+      m_do_half_of_last_part(0),
+      m_do_last_half_of_first_part(0),
+      m_highlimit(n),
+      m_start_point(0),
+      m_end_point(n-1),
+      m_fetch_index(0),
+      m_client_index(0),
+      m_fetch_total(n),
+      m_client_total(n),
+      m_subcall_incr(1)
       {}
 
    void demand_this_part_exists() THROW_DECL
       {
-         if (fetch_index >= fetch_total || fetch_index < 0)
+         if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
             fail("The indicated part number doesn't exist.");
       }
 
@@ -4523,56 +4591,56 @@ class fraction_info {
 
    void fudge_client_total(int delta)
       {
-         client_total += delta;
-         highlimit = client_total;
-         end_point = highlimit-1;
+         m_client_total += delta;
+         m_highlimit = m_client_total;
+         m_end_point = m_highlimit-1;
       }
 
    bool not_yet_in_active_section()
       {
-         if (reverse_order) {
-            if (client_index > start_point) return true;
+         if (m_reverse_order) {
+            if (m_client_index > m_start_point) return true;
          }
          else {
-            if (client_index < start_point) return true;
+            if (m_client_index < m_start_point) return true;
          }
          return false;
       }
 
    bool ran_off_active_section()
       {
-         if (reverse_order) {
-            if (client_index < end_point) return true;
+         if (m_reverse_order) {
+            if (m_client_index < m_end_point) return true;
          }
          else {
-            if (client_index > end_point) return true;
+            if (m_client_index > m_end_point) return true;
          }
          return false;
       }
 
    inline bool this_starts_at_beginning()
       { return
-           start_point == 0 &&
-           !do_last_half_of_first_part &&
-           !reverse_order;
+           m_start_point == 0 &&
+           !m_do_last_half_of_first_part &&
+           !m_reverse_order;
       }
 
  public:
-   long_boolean reverse_order;
-   int instant_stop;
-   long_boolean first_call;
-   uint32 do_half_of_last_part;
-   uint32 do_last_half_of_first_part;
-   int highlimit;
+   bool m_reverse_order;
+   int m_instant_stop;
+   bool m_first_call;
+   uint32 m_do_half_of_last_part;
+   uint32 m_do_last_half_of_first_part;
+   int m_highlimit;
  private:
-   int start_point;
-   int end_point;
+   int m_start_point;
+   int m_end_point;
  public:
-   int fetch_index;
-   int client_index;
-   int fetch_total;
-   int client_total;
-   int subcall_incr;
+   int m_fetch_index;
+   int m_client_index;
+   int m_fetch_total;
+   int m_client_total;
+   int m_subcall_incr;
 };
 
 
@@ -4589,7 +4657,6 @@ void write_history_line(int history_index,
 void unparse_call_name(Cstring name, char *s, call_conc_option_state *options);
 void print_recurse(parse_block *thing, int print_recurse_arg);
 void clear_screen();
-void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
 extern void writechar(char src);
 SDLIB_API void newline();
 extern void open_text_line();
@@ -4601,7 +4668,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree);
 parse_block *get_parse_block();
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head);
 extern void save_parse_state();
-extern long_boolean restore_parse_state();
+extern void restore_parse_state();
 void string_copy(char **dest, Cstring src);
 void display_initial_history(int upper_limit, int num_pics);
 extern void initialize_parse();
@@ -4612,11 +4679,11 @@ void run_program();
 
 SDLIB_API bool parse_level(Cstring s);
 void start_sel_dir_num_iterator();
-long_boolean iterate_over_sel_dir_num(
-   long_boolean enable_selector_iteration,
-   long_boolean enable_direction_iteration,
-   long_boolean enable_number_iteration);
-long_boolean install_outfile_string(char newstring[]);
+bool iterate_over_sel_dir_num(
+   bool enable_selector_iteration,
+   bool enable_direction_iteration,
+   bool enable_number_iteration);
+bool install_outfile_string(char newstring[]);
 SDLIB_API bool get_first_session_line();
 SDLIB_API bool get_next_session_line(char *dest);
 void prepare_to_read_menus();
@@ -4635,33 +4702,33 @@ void matcher_initialize();
 SDLIB_API void matcher_setup_call_menu(call_list_kind cl);
 SDLIB_API int match_user_input(
    int which_commands,
-   long_boolean show,
-   long_boolean show_verify,
-   long_boolean only_want_extension);
+   bool show,
+   bool show_verify,
+   bool only_want_extension);
 
 /* In SDPICK */
 
 bool in_exhaustive_search();
 void reset_internal_iterators();
-selector_kind do_selector_iteration(long_boolean allow_iteration);
+selector_kind do_selector_iteration(bool allow_iteration);
 direction_kind do_direction_iteration();
 void do_number_iteration(int howmanynumbers,
                          uint32 odd_number_only,
-                         long_boolean allow_iteration,
+                         bool allow_iteration,
                          uint32 *number_list);
 bool do_tagger_iteration(uint32 tagclass,
                          uint32 *tagg,
                          uint32 numtaggers,
                          call_with_name **tagtable);
 void do_circcer_iteration(uint32 *circcp);
-const conzept::concept_descriptor *pick_concept(long_boolean already_have_concept_in_place);
+const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_place);
 call_with_name *do_pick();
 resolve_goodness_test get_resolve_goodness_info();
 bool pick_allow_multiple_items();
 void start_pick();
 void end_pick();
-long_boolean forbid_call_with_mandatory_subcall();
-long_boolean allow_random_subcall_pick();
+bool forbid_call_with_mandatory_subcall();
+bool allow_random_subcall_pick();
 
 /* In SDUI */
 
@@ -4736,6 +4803,6 @@ SDLIB_API void write_file(char line[]);
 
 /* in SDMAIN */
 
-SDLIB_API long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options);
-SDLIB_API long_boolean deposit_concept(const conzept::concept_descriptor *conc);
+SDLIB_API bool deposit_call(call_with_name *call, const call_conc_option_state *options);
+SDLIB_API bool deposit_concept(const conzept::concept_descriptor *conc);
 SDLIB_API int sdmain(int argc, char *argv[]);

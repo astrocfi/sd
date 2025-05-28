@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8p"
-#define TIME_STAMP "wba@alum.mit.edu  15 May 2003 $"
+#define VERSION_STRING "34.8q"
+#define TIME_STAMP "wba@alum.mit.edu  29 June 2003 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -218,12 +218,12 @@ int last_file_position = -1;
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_call)
+static bool find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **tagger_call)
 {
    uint32 numtaggers = number_of_taggers[tagclass];
    call_with_name **tagtable = tagger_calls[tagclass];
 
-   if (numtaggers == 0) return TRUE;   /* We can't possibly do this. */
+   if (numtaggers == 0) return true;   /* We can't possibly do this. */
 
    if (interactivity == interactivity_normal) {
       if (user_match.valid &&
@@ -231,7 +231,7 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
          *tagg = user_match.match.call_conc_options.tagger;
          user_match.match.call_conc_options.tagger = 0;
       }
-      else if ((*tagg = gg->do_tagger_popup(tagclass)) == 0) return TRUE;
+      else if ((*tagg = gg->do_tagger_popup(tagclass)) == 0) return true;
 
       if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
       if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
@@ -258,7 +258,7 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
    }
    else {
       if (do_tagger_iteration(tagclass, tagg, numtaggers, tagtable))
-         return TRUE;  /* There simply are no acceptable taggers. */
+         return true;  /* There simply are no acceptable taggers. */
    }
 
    /* At this point, tagg contains 8 bits:
@@ -267,35 +267,35 @@ static long_boolean find_tagger(uint32 tagclass, uint32 *tagg, call_with_name **
 
    *tagger_call = tagtable[(*tagg & 0x1F)-1];
 
-   return FALSE;
+   return false;
 }
 
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_circcer(uint32 *circcp)
+/* Returns true if it fails, meaning that the user waved the mouse away. */
+static bool find_circcer(uint32 *circcp)
 {
-   if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
+   if (number_of_circcers == 0) return true;   // We can't possibly do this.
 
    if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
       if ((*circcp = gg->do_circcer_popup()) == 0)
-         return TRUE;
+         return true;
    }
    else if (interactivity == interactivity_database_init) {
-      *circcp = 1;   /* This may not be right. */
+      *circcp = 1;   // This may not be right.
    }
    else {
       do_circcer_iteration(circcp);
    }
 
-   return FALSE;
+   return false;
 }
 
 
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_selector(selector_kind *sel_p, long_boolean is_for_call)
+/* Returns true if it fails, meaning that the user waved the mouse away. */
+static bool find_selector(selector_kind *sel_p, bool is_for_call)
 {
    if (interactivity == interactivity_normal) {
       int j;
@@ -306,19 +306,19 @@ static long_boolean find_selector(selector_kind *sel_p, long_boolean is_for_call
          user_match.match.call_conc_options.who = selector_uninitialized;
       }
       else if ((j = gg->do_selector_popup()) == 0)
-         return TRUE;
+         return true;
 
       *sel_p = (selector_kind) j;
    }
    else
       *sel_p = do_selector_iteration(is_for_call);
 
-   return FALSE;
+   return false;
 }
 
 
-/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_direction(direction_kind *dir_p)
+/* Returns true if it fails, meaning that the user waved the mouse away. */
+static bool find_direction(direction_kind *dir_p)
 {
    if (interactivity == interactivity_normal) {
       int j;
@@ -329,31 +329,31 @@ static long_boolean find_direction(direction_kind *dir_p)
          user_match.match.call_conc_options.where = direction_uninitialized;
       }
       else if ((j = gg->do_direction_popup()) == 0)
-         return TRUE;
+         return true;
 
       *dir_p = (direction_kind) j;
    }
    else
       *dir_p = do_direction_iteration();
 
-   return FALSE;
+   return false;
 }
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-static long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero,
-   uint32 odd_number_only, long_boolean allow_iteration, uint32 *number_list)
+static bool find_numbers(int howmanynumbers, bool forbid_zero,
+   uint32 odd_number_only, bool allow_iteration, uint32 *number_list)
 {
    if (interactivity == interactivity_normal) {
       *number_list = gg->get_number_fields(howmanynumbers, forbid_zero);
 
       if ((*number_list) == ~0UL)
-         return TRUE;           /* User waved the mouse away. */
+         return true;           /* User waved the mouse away. */
    }
    else
       do_number_iteration(howmanynumbers, odd_number_only, allow_iteration, number_list);
 
-   return FALSE;
+   return false;
 }
 
 
@@ -366,7 +366,7 @@ static long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero,
    can cause failure during a search.
    If not interactive, stuff will be chosen by random number. */
 
-extern long_boolean deposit_call(call_with_name *call, const call_conc_option_state *options)
+extern bool deposit_call(call_with_name *call, const call_conc_option_state *options)
 {
    parse_block *new_block;
    call_with_name *tagger_call;
@@ -387,7 +387,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
        interactivity != interactivity_verify &&
        interactivity != interactivity_database_init) {
       if (in_exhaustive_search()) {
-         return TRUE;
+         return true;
       }
    }
 
@@ -399,26 +399,29 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
                 CFLAGH__TAG_CALL_RQ_BIT) - 1,
                &tagg,
                &tagger_call))
-         return TRUE;
+         return true;
    }
 
    /* Or circulating call index. */
 
    if (call->the_defn.callflagsf & CFLAGH__CIRC_CALL_RQ_BIT) {
-      if (find_circcer(&circc)) return TRUE;
+      if (find_circcer(&circc)) return true;
    }
 
    /* Put in selector, direction, and/or number as required. */
 
    if (call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) {
-      if (find_selector(&sel, TRUE)) return TRUE;
+      if (find_selector(&sel, true)) return true;
    }
 
    if (call->the_defn.callflagsf & CFLAGH__REQUIRES_DIRECTION)
-      if (find_direction(&dir)) return TRUE;
+      if (find_direction(&dir)) return true;
 
    if (howmanynums != 0)
-      if (find_numbers(howmanynums, FALSE, call->the_defn.callflagsf & CFLAGH__ODD_NUMBER_ONLY, TRUE, &number_list)) return TRUE;
+      if (find_numbers(howmanynums, false,
+                       call->the_defn.callflagsf & CFLAGH__ODD_NUMBER_ONLY, true,
+                       &number_list))
+         return true;
 
    new_block = get_parse_block();
    new_block->concept = &conzept::mark_end_of_list;
@@ -479,7 +482,7 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    parse_state.topcallflags1 = call->the_defn.callflags1;
    *parse_state.concept_write_ptr = new_block;
 
-   return FALSE;
+   return false;
 }
 
 
@@ -491,18 +494,18 @@ extern long_boolean deposit_call(call_with_name *call, const call_conc_option_st
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(const conzept::concept_descriptor *conc)
+extern bool deposit_concept(const conzept::concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
    uint32 number_list = 0;
    int howmanynumbers = 0;
 
-   /* We hash the actual concept pointer, as though it were an integer index. */
+   // We hash the actual concept pointer, as though it were an integer index.
    hash_nonrandom_number((int) conc);
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
-      if (find_selector(&sel, FALSE)) return TRUE;
+      if (find_selector(&sel, false)) return true;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -511,7 +514,7 @@ extern long_boolean deposit_concept(const conzept::concept_descriptor *conc)
       howmanynumbers = 2;
 
    if (howmanynumbers != 0) {
-      if (find_numbers(howmanynumbers, TRUE, 0, FALSE, &number_list)) return TRUE;
+      if (find_numbers(howmanynumbers, true, 0, false, &number_list)) return true;
    }
 
    new_block = get_parse_block();
@@ -537,14 +540,14 @@ extern long_boolean deposit_concept(const conzept::concept_descriptor *conc)
 
    parse_state.call_list_to_use = call_list_any;
 
-   /* Advance the write pointer. */
+   // Advance the write pointer.
    parse_state.concept_write_ptr = &(new_block->next);
 
-   return FALSE;
+   return false;
 }
 
 
-static void print_error_person(unsigned int person, long_boolean example)
+static void print_error_person(unsigned int person, bool example)
 {
    char person_string[3];
 
@@ -568,7 +571,7 @@ static void print_error_person(unsigned int person, long_boolean example)
 /* False result means OK.  Otherwise, user clicked on something special,
    such as "abort" or "undo", and the reply tells what it was. */
 
-extern long_boolean query_for_call()
+extern bool query_for_call()
 {
    uims_reply local_reply;
    error_flag_type old_error_flag;
@@ -615,7 +618,7 @@ extern long_boolean query_for_call()
             newline();
             writestuff("     resolve is:");
             newline();
-            write_resolve_text(FALSE);
+            write_resolve_text(false);
             newline();
          }
       }
@@ -644,16 +647,16 @@ extern long_boolean query_for_call()
             // Very special message -- no text here, two people collided
             // and they are stored in collision_person1 and collision_person2.
             writestuff("Some people (");
-            print_error_person(collision_person1, FALSE);
+            print_error_person(collision_person1, false);
             writestuff(" and ");
-            print_error_person(collision_person2, TRUE);
+            print_error_person(collision_person2, true);
             writestuff(") on same spot.");
             break;
          case error_flag_cant_execute:
             // Very special message -- given text is to be prefixed with description
             // of the perpetrator, who is stored in collision_person1.
             writestuff("Some person (");
-            print_error_person(collision_person1, TRUE);
+            print_error_person(collision_person1, true);
             writestuff(") ");
             writestuff(error_message1);
             break;
@@ -787,7 +790,7 @@ extern long_boolean query_for_call()
             goto redisplay;
          default:
             global_reply = local_reply;     /* Save this -- top level will need it. */
-            return TRUE;
+            return true;
          }
       }
    }
@@ -800,8 +803,8 @@ extern long_boolean query_for_call()
       const conzept::concept_descriptor *concept_to_use = pick_concept(concepts_deposited != 0);
 
       if (concept_to_use) {
-         /* We give 0 for the number fields.  It gets taken care of later,
-            perhaps not the best way. */
+         // We give 0 for the number fields.  It gets taken care of later,
+         // perhaps not the best way.
          (void) deposit_concept(concept_to_use);
          concepts_deposited++;
          local_reply = ui_concept_select;
@@ -816,7 +819,7 @@ extern long_boolean query_for_call()
    }
    else if (local_reply != ui_call_select) {
       global_reply = local_reply;     /* Save this -- top level will need it. */
-      return TRUE;
+      return true;
    }
 
    /* We have a call.  Get the actual call and deposit it into the parse tree,
@@ -865,7 +868,7 @@ extern long_boolean query_for_call()
    /* Advance the write pointer. */
    parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
 
-   return FALSE;
+   return false;
 }
 
 
@@ -946,9 +949,9 @@ extern int sdmain(int argc, char *argv[])
       general_final_exit(0);
    }
 
-   enable_file_writing = FALSE;
+   enable_file_writing = false;
    interactivity = interactivity_database_init;
-   testing_fidelity = FALSE;
+   testing_fidelity = false;
    header_comment[0] = 0;
    abridge_filename[0] = 0;
    verify_options.who = selector_uninitialized;
@@ -956,10 +959,6 @@ extern int sdmain(int argc, char *argv[])
    verify_options.howmanynumbers = 0;
    history_allocation = 15;
    configuration::history = (configuration *) get_mem(history_allocation * sizeof(configuration));
-
-   /* Do general initializations, which currently consist only of
-      seeding the random number generator. */
-   general_initialize();
 
    // Read the command line arguments and process the initialization file.
    // This will return TRUE if we are to cease execution immediately.

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -12,67 +12,6 @@
 
     This is for version 34. */
 
-
-/* We customize the necessary declarations for functions
-   that don't return.  Alas, this requires something in front
-   and something in back. */
-
-#if defined(__GNUC__)
-#define NORETURN1
-#define NORETURN2 __attribute__ ((noreturn))
-#elif defined(WIN32)
-// This declspec only works for VC++ version 6.
-#define NORETURN1 /*__declspec(noreturn)*/
-#define NORETURN2
-#else
-#define NORETURN1
-#define NORETURN2
-#endif
-
-/* We used to do some stuff to cater to compiler vendors
-   (e.g. Sun Microsystems) that couldn't be bothered to
-   do the "const" attribute correctly.  We no longer have
-   any patience with such things. */
-
-// So we used to have a line that said "#define Const const".
-// If your compiler doesn't handle "const" correctly (or any
-// other aspect of ANSI C++, for that matter, that's too bad.
-
-
-
-// We would like "veryshort" to be a signed char, but not all compilers are fully ANSI compliant.
-// The IBM AIX compiler, for example, considers char to be unsigned.  The switch "NO_SIGNED_CHAR"
-// alerts us to that fact.  The configure script has checked this for us.
-#ifdef NO_SIGNED_CHAR
-typedef short veryshort;
-#else
-typedef char veryshort;
-#endif
-
-/* We would like to think that we will always be able to count on compilers to do the
-   right thing with "int" and "long int" and so on.  What we would really like is
-   for compilers to be counted on to make "int" at least 32 bits, because we need
-   32 bits in many places.  However, some compilers don't, so we have to use
-   "long int" or "unsigned long int".  We think that all compilers we deal with
-   will do the right thing with that, but, just in case, we use a typedef.
-
-   The type "uint32" must be an unsigned integer of at least 32 bits.
-   The type "uint16" must be an unsigned integer of at least 16 bits.
-
-   Note also:  There are many places in the program (not just in database.h and sd.h)
-   where the suffix "UL" is put on constants that are intended to be of type "uint32".
-   If "uint32" is changed to anything other than "unsigned long int", it may be
-   necessary to change all of those. */
-
-typedef unsigned long int uint32;
-typedef unsigned short int uint16;
-typedef unsigned char uint8;
-typedef int long_boolean;
-typedef const char *Cstring;
-
-#define TRUE 1
-#define FALSE 0
-
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
    It is used only to make sure that the "mkcalls" program that compiled
@@ -82,7 +21,7 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 207
+#define DATABASE_FORMAT_VERSION 211
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -218,45 +157,42 @@ enum {
    CFLAG1_IS_STAR_CALL              = 0x00000080UL,
    CFLAG1_YOYO_FRACTAL_NUM          = 0x00000100UL,
    CFLAG1_FUDGE_TO_Q_TAG            = 0x00000200UL,
-
-   // This is a three bit field.
-   CFLAG1_STEP_REAR_MASK            = 0x00001C00UL,
-   // Here are the encodings that can be inside:
-   CFLAG1_STEP_TO_WAVE              = 0x00000400UL,
+   CFLAG1_STEP_REAR_MASK            = 0x00001C00UL, // 3 bit field
+   CFLAG1_STEP_TO_WAVE              = 0x00000400UL, // the encodings inside
    CFLAG1_REAR_BACK_FROM_R_WAVE     = 0x00000800UL,
    CFLAG1_STEP_TO_NONPHAN_BOX       = 0x00000C00UL,
    CFLAG1_REAR_BACK_FROM_QTAG       = 0x00001000UL,
    CFLAG1_STEP_TO_WAVE_4_PEOPLE     = 0x00001400UL,
    CFLAG1_REAR_BACK_FROM_EITHER     = 0x00001800UL,
-
-   CFLAG1_SEQUENCE_STARTER          = 0x00002000UL,
+   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00002000UL,
    CFLAG1_NUMBER_MASK               = 0x0001C000UL, // 3 bit field
    CFLAG1_NUMBER_BIT                = 0x00004000UL, // its low bit
    CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK = 0x00020000UL,
    CFLAG1_LEFT_ONLY_IF_HALF         = 0x00040000UL,
-   CFLAG1_DISTRIBUTE_REPETITIONS    = 0x00080000UL,
-   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00100000UL,
-   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00200000UL,
-   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00400000UL,
-   CFLAG1_SPLIT_IF_Z                = 0x00800000UL,
-   CFLAG1_BASE_TAG_CALL_MASK        = 0x07000000UL, // 3 bit field
-   CFLAG1_BASE_TAG_CALL_BIT         = 0x01000000UL, // its low bit
-   CFLAG1_BASE_CIRC_CALL            = 0x08000000UL,
-   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x10000000UL,
-   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x20000000UL,
-   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x40000000UL,
-   CFLAG1_NO_ELONGATION_ALLOWED     = 0x80000000UL
+   CFLAG1_SEQUENCE_STARTER          = 0x00080000UL,
+   CFLAG1_SEQUENCE_STARTER_ONLY     = 0x00100000UL,
+   CFLAG1_DONT_USE_IN_RESOLVE       = 0x00200000UL,
+   CFLAG1_DONT_USE_IN_NICE_RESOLVE  = 0x00400000UL,
+   CFLAG1_SPLIT_LARGE_SETUPS        = 0x00800000UL,
+   CFLAG1_SPLIT_IF_Z                = 0x01000000UL,
+   CFLAG1_BASE_TAG_CALL_MASK        = 0x0E000000UL, // 3 bit field
+   CFLAG1_BASE_TAG_CALL_BIT         = 0x02000000UL, // its low bit
+   CFLAG1_BASE_CIRC_CALL            = 0x10000000UL,
+   CFLAG1_ENDS_TAKE_RIGHT_HANDS     = 0x20000000UL,
+   CFLAG1_FUNNY_MEANS_THOSE_FACING  = 0x40000000UL,
+   CFLAG1_SPLIT_LIKE_SQUARE_THRU    = 0x80000000UL
 };
 
 // These are the continuation of the "CFLAG1" bits, that have to overflow into this word.
 // They must lie in the top 8 bits for now.
 enum {
-   CFLAG2_IMPRECISE_ROTATION        = 0x01000000UL,
-   CFLAG2_CAN_BE_FAN                = 0x02000000UL,
-   CFLAG2_EQUALIZE                  = 0x04000000UL,
-   CFLAG2_ONE_PERSON_CALL           = 0x08000000UL,
-   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x10000000UL,
-   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x20000000UL
+   CFLAG2_NO_ELONGATION_ALLOWED     = 0x01000000UL,
+   CFLAG2_IMPRECISE_ROTATION        = 0x02000000UL,
+   CFLAG2_CAN_BE_FAN                = 0x04000000UL,
+   CFLAG2_EQUALIZE                  = 0x08000000UL,
+   CFLAG2_ONE_PERSON_CALL           = 0x10000000UL,
+   CFLAG2_YIELD_IF_AMBIGUOUS        = 0x20000000UL,
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x40000000UL
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
@@ -673,6 +609,7 @@ enum call_restriction {
    cr_1fl_only,
    cr_2fl_only,
    cr_2fl_per_1x4,
+   cr_ctr_2fl_only,
    cr_3x3_2fl_only,
    cr_4x4_2fl_only,
    cr_leads_only,          // Restriction only.
@@ -807,6 +744,7 @@ enum calldef_schema {
    schema_maybe_nxn_1331_cols_concentric,
    schema_1331_concentric,
    schema_1313_concentric,       // Not for public use!
+   schema_1221_concentric,
    schema_concentric_diamond_line,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
@@ -872,7 +810,7 @@ enum calldef_schema {
    schema_select_sideliners,
    schema_select_original_rims,
    schema_select_original_hubs,
-   schema_select_those_facing,
+   schema_select_those_facing_both_live,
    schema_select_ctr2,
    schema_select_ctr4,
    schema_select_ctr6,

@@ -80,10 +80,6 @@ and the following external variables:
 #include <time.h>
 #include <ctype.h>  /* for tolower */
 
-#if defined(_XOPEN_SOURCE)
-#define HAVE_RAND48
-#endif
-
 #include "sd.h"
 #include "paths.h"
 
@@ -113,7 +109,7 @@ int random_number;
 char *database_filename = DATABASE_FILENAME;
 char *new_outfile_string = (char *) 0;
 char abridge_filename[MAX_TEXT_LINE_LENGTH];
-long_boolean outfile_special = FALSE;
+bool outfile_special = false;
 
 static bool file_error;
 static FILE *fildes;
@@ -123,30 +119,21 @@ static char fail_message[MAX_ERR_LENGTH];
 
 extern void general_initialize(void)
 {
-/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
-#ifdef HAVE_RAND48
-   srand48((long int) time((time_t *)0));
-   //   srand48((long int) 10000);
-#else
-   srand((unsigned int) time((time_t *)0));
-   //   srand((unsigned int) 10000);
-#endif
+   // If doing a resolve test, use a deterministic seed.
+   // But make it depend on something the operator said.
+   // That way, one can run two usefully independent tests
+   // on a multiprocessor, by giving them slightly
+   // different timeouts.
+   unsigned int seed = (ui_options.resolve_test_minutes != 0) ?
+      ui_options.resolve_test_minutes : time((time_t *)0);
+   srand(seed);
 }
 
 
 extern int generate_random_number(int modulus)
 {
-   int j;
-
-/* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
-#ifdef HAVE_RAND48
-   random_number = (int) lrand48();
-#else
    random_number = (int) rand();
-#endif
-
-   j = random_number % modulus;
-   return j;
+   return random_number % modulus;
 }
 
 

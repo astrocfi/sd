@@ -106,16 +106,16 @@ struct pat2_block {
    pat2_block *cdr;
    const conzept::concept_descriptor *special_concept;
    match_result *folks_to_restore;
-   long_boolean demand_a_call;
-   long_boolean anythingers;
+   bool demand_a_call;
+   bool anythingers;
 
    pat2_block(Cstring carstuff, pat2_block *cdrstuff = (pat2_block *) 0) :
       car(carstuff),
       cdr(cdrstuff),
       special_concept((conzept::concept_descriptor *) 0),
       folks_to_restore((match_result *) 0),
-      demand_a_call(FALSE),
-      anythingers(FALSE)
+      demand_a_call(false),
+      anythingers(false)
    {}
 };
 
@@ -144,12 +144,12 @@ static match_result *current_result;
 static match_result active_result;
 
 
-static int GLOB_only_extension;         // Only want extension, short-circuit the search.
+static bool GLOB_only_extension;        // Only want extension, short-circuit the search.
 static int GLOB_user_bracket_depth;
 static int GLOB_match_count;            /* the number of matches so far */
 static int GLOB_exact_count;            /* the number of exact matches so far */
-static long_boolean GLOB_showing;       /* we are only showing the matching patterns */
-static long_boolean GLOB_verify;        /* true => verify calls before showing */
+static bool GLOB_showing;               /* we are only showing the matching patterns */
+static bool GLOB_verify;                /* true => verify calls before showing */
 static int GLOB_lowest_yield_depth;
 
 
@@ -172,10 +172,10 @@ static int translate_keybind_spec(char key_name[])
 {
    int key_length;
    int d1, d2, digits;
-   long_boolean shift = FALSE;
-   long_boolean ctl = FALSE;
-   long_boolean alt = FALSE;
-   long_boolean ctlalt = FALSE;
+   bool shift = false;
+   bool ctl = false;
+   bool alt = false;
+   bool ctlalt = false;
 
    /* Compress hyphens out, and canonicalize to lower case. */
    for (d1=key_length=0 ; key_name[d1] ; d1++) {
@@ -185,10 +185,10 @@ static int translate_keybind_spec(char key_name[])
    if (key_length < 2) return -1;
 
    switch (key_name[0]) {
-   case 's': shift = TRUE; break;
-   case 'c':   ctl = TRUE; break;
+   case 's': shift = true; break;
+   case 'c':   ctl = true; break;
    case 'a':
-   case 'm':   alt = TRUE; break;
+   case 'm':   alt = true; break;
    }
 
    switch (key_name[1]) {
@@ -366,7 +366,7 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
    else {
       strcpy(GLOB_user_input, &qq[ccount]);
       GLOB_user_input_size = strlen(GLOB_user_input);
-      int matches = match_user_input(menu_type, FALSE, FALSE, FALSE);
+      int matches = match_user_input(menu_type, false, false, false);
       user_match = GLOB_match;
 
       if ((matches != 1 && matches - GLOB_yielding_matches != 1 && !user_match.exact)) {
@@ -897,13 +897,13 @@ static bool verify_call()
 
  try_another_selector:
 
-   selector_used = FALSE;
-   direction_used = FALSE;
-   number_used = FALSE;
-   mandatory_call_used = FALSE;
-   verify_used_number = FALSE;
-   verify_used_selector = FALSE;
-   verify_used_direction = FALSE;
+   selector_used = false;
+   direction_used = false;
+   number_used = false;
+   mandatory_call_used = false;
+   verify_used_number = false;
+   verify_used_selector = false;
+   verify_used_direction = false;
 
    // Do the call.  An error will signal and go to failed.
 
@@ -912,7 +912,7 @@ static bool verify_call()
       parse_block *save1 = (parse_block *) 0;
       modifier_block *anythings = &GLOB_match.match;
 
-      (void) restore_parse_state();
+      restore_parse_state();
 
       /* This stuff is duplicated in uims_get_call_command in sdui-tty.c . */
 
@@ -989,7 +989,7 @@ static bool verify_call()
 
    accept:
 
-   (void) restore_parse_state();
+   restore_parse_state();
    release_parse_blocks_to_mark(parse_mark);
 
    configuration::history_ptr = old_history_ptr;
@@ -1225,7 +1225,7 @@ Theorem B (prefix match):
          AND
    pat2 is not nil
          AND
-   pat2->demand_a_call = FALSE   (don't really need this, since it's doing nothing!)
+   pat2->demand_a_call = false   (don't really need this, since it's doing nothing!)
          AND
    pat2->folks_to_restore = nil
          AND
@@ -1757,7 +1757,7 @@ static void match_wildcard(
          if (*user == '[') {
             pat2_block p3b("]", &p2b);
             p3b.folks_to_restore = current_result;
-            p3b.demand_a_call = TRUE;
+            p3b.demand_a_call = true;
             p3b.anythingers = (key == 'T');
 
             scan_concepts_and_calls(user, "[", &p3b,
@@ -1968,12 +1968,12 @@ static void match_wildcard(
       {
          char *p = GLOB_full_extension;
          int idx = patxi;
-         long_boolean fixing_an_a = TRUE;
+         bool fixing_an_a = true;
 
          for (i=0 ; i<2 ; i++) {
             idx--;
             if (idx < 0) { idx = GLOB_user_input_size-1 ; p = GLOB_user_input; }
-            if (p[idx] != "a "[i]) { fixing_an_a = FALSE; break; }
+            if (p[idx] != "a "[i]) { fixing_an_a = false; break; }
          }
 
          if (fixing_an_a || (user && user[-1] == 'a' && user[-2] == ' '))
@@ -2350,9 +2350,9 @@ static void search_menu(uims_reply kind)
 
 int match_user_input(
    int which_commands,
-   long_boolean show,
-   long_boolean show_verify,
-   long_boolean only_want_extension)
+   bool show,
+   bool show_verify,
+   bool only_want_extension)
 {
    // Reclaim all old modifier blocks.
 

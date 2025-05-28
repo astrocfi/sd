@@ -133,7 +133,7 @@ static void do_concept_tandem(
       }
 
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX))
-         do_matrix_expansion(ss, orig_bits, FALSE);
+         do_matrix_expansion(ss, orig_bits, false);
 
       // Put in the "VERIFY" bits stating just what type of setup to expect.
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS | parseptr->next->concept->arg1;
@@ -170,7 +170,7 @@ static void do_concept_tandem(
      parseptr->concept->arg3 & 0xF,         // normal/phantom/gruesome etc.
      (tandem_key) parseptr->concept->arg4,  // key
      mxnflags,
-     FALSE,
+     false,
      result);
 }
 
@@ -191,7 +191,7 @@ static void do_c1_phantom_move(
    // so we check that there weren't any.
 
    junk_concepts.clear_all_herit_and_final_bits();
-   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
+   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
 
    if (next_parseptr->concept->kind == concept_tandem ||
        next_parseptr->concept->kind == concept_frac_tandem) {
@@ -252,7 +252,7 @@ static void do_c1_phantom_move(
       }
       else {
          if (what_we_need != 0)
-            do_matrix_expansion(ss, what_we_need, TRUE);
+            do_matrix_expansion(ss, what_we_need, true);
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
       }
 
@@ -306,11 +306,11 @@ static void do_c1_phantom_move(
 
       if (global_livemask == 0x5C5C || global_livemask == 0xA3A3) {
          // Split into 4 vertical strips.
-         divided_setup_move(ss, spcmap_4x4v, phantest_ok, TRUE, result);
+         divided_setup_move(ss, spcmap_4x4v, phantest_ok, true, result);
       }
       else if (global_livemask == 0xC5C5 || global_livemask == 0x3A3A) {
          // Split into 4 horizontal strips.
-         divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, TRUE, result);
+         divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, true, result);
       }
       else
          fail("Inappropriate setup for phantom concept.");
@@ -379,8 +379,8 @@ static void do_c1_phantom_move(
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    setup2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
-   move(&setup1, FALSE, &the_setups[0]);
-   move(&setup2, FALSE, &the_setups[1]);
+   move(&setup1, false, &the_setups[0]);
+   move(&setup2, false, &the_setups[1]);
 
    *result = the_setups[1];
    result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
@@ -401,7 +401,7 @@ static void do_concept_single_diagonal(
 
    selective_move(ss, parseptr, selective_key_disc_dist, 0,
                   parseptr->concept->arg1,
-                  global_livemask & 0x9999, selector_uninitialized, FALSE, result);
+                  global_livemask & 0x9999, selector_uninitialized, false, result);
 }
 
 
@@ -437,7 +437,7 @@ static void do_concept_double_diagonal(
       else
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_COLS;
 
-      divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+      divided_setup_move(ss, map_code, phantest_ok, true, result);
 
       // I wish this weren't so sleazy, but a new concentricity schema seems excessive.
 
@@ -465,7 +465,7 @@ static void do_concept_double_diagonal(
       if (parseptr->concept->arg1 == 3)
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-      divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+      divided_setup_move(ss, map_code, phantest_ok, true, result);
 
       // I wish this weren't so sleazy, but a new concentricity schema seems excessive.
 
@@ -496,7 +496,7 @@ static void do_concept_double_diagonal(
       if (parseptr->concept->arg1 == 3)
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-      divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+      divided_setup_move(ss, map_code, phantest_ok, true, result);
    }
 }
 
@@ -553,7 +553,7 @@ static void do_concept_double_offset(
          break;
    }
 
-   divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_code, phantest_ok, true, result);
 }
 
 
@@ -634,7 +634,7 @@ static void do_concept_quad_lines(
    if (arg1 == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
-   divided_setup_move(ss, the_map, phantest_ok, TRUE, result);
+   divided_setup_move(ss, the_map, phantest_ok, true, result);
    result->rotation -= rot;   // Flip the setup back.
 }
 
@@ -1002,7 +1002,7 @@ static void do_concept_parallelogram(
       else
          fail("Can't find parallelogram diamonds.");
 
-      divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+      divided_setup_move(ss, map_code, phantest_ok, true, result);
 
       // The split-axis bits are gone.  If someone needs them, we have work to do.
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -1016,7 +1016,7 @@ static void do_concept_parallelogram(
    final_and_herit_flags junk_concepts;
    junk_concepts.clear_all_herit_and_final_bits();
 
-   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
+   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
 
    const parse_block *standard_concept = (parse_block *) 0;
 
@@ -1025,7 +1025,7 @@ static void do_concept_parallelogram(
        junk_concepts.test_herit_and_final_bits() == 0) {
       standard_concept = next_parseptr;
       junk_concepts.clear_all_herit_and_final_bits();
-      next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts, true, __FILE__, __LINE__);
+      next_parseptr = process_final_concepts(next_parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
    }
 
    // The only concepts we are interested in are "split phantom 2x4"
@@ -1089,11 +1089,11 @@ static void do_concept_parallelogram(
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       if (ss->kind == s2x5) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, FALSE);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, false);
          if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
       }
       if (ss->kind == s2x6) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, FALSE);
+         do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
          if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
       }
 
@@ -1150,7 +1150,7 @@ static void do_concept_parallelogram(
    else if (kk == concept_do_phantom_boxes &&
             ss->kind == s2x6) {     // Only allow 50% offset.
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, FALSE);
+      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
       if (ss->kind != s2x8) fail("Not in proper setup for this concept.");
 
       if (standard_concept) fail("Don't use \"standard\" with split phantom boxes.");
@@ -1159,10 +1159,10 @@ static void do_concept_parallelogram(
       map_code = MAPCODE(s2x4,2,mkbox,0);
    }
    else if (kk == concept_triple_boxes &&
-            next_parseptr->concept->arg1 == MPKIND__SPLIT &&
+            next_parseptr->concept->arg2 == MPKIND__SPLIT &&
             ss->kind == s2x6) {     // Only allow 50% offset.
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, FALSE);
+      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
       if (ss->kind != s2x8) fail("Not in proper setup for this concept.");
 
       if (standard_concept) fail("Don't use \"standard\" with triple boxes.");
@@ -1173,7 +1173,7 @@ static void do_concept_parallelogram(
    else
       map_code = MAPCODE(s2x4,1,mk,0);   // Plain parallelogram.
 
-   divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_code, phantest_ok, true, result);
 
    // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -1387,7 +1387,7 @@ static void do_concept_triple_boxes_tog(
       if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
       if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
 
-      /* Look at the center 4 people and put each one in the correct group. */
+      // Look at the center 4 people and put each one in the correct group.
 
       m1 = 0xC3; m2 = 0xFF;
       cstuff <<= 2;
@@ -1397,21 +1397,77 @@ static void do_concept_triple_boxes_tog(
       if (((ss->people[8].id1 + 6) ^ cstuff) & 8) { m1 |= 0x10 ; m2 &= ~0x40; };
       if (((ss->people[9].id1 + 6) ^ cstuff) & 8) { m1 |= 0x20 ; m2 &= ~0x80; };
    }
-   else if (cstuff == 6) {   /* Working together. */
+   else if (cstuff == 6) {   // Working together.
       m1 = 0xE7; m2 = 0x7E;
    }
-   else if (cstuff == 7) {   /* Working apart. */
+   else if (cstuff == 7) {   // Working apart.
       m1 = 0xDB; m2 = 0xBD;
    }
-   else if (cstuff == 8) {   /* Working clockwise. */
+   else if (cstuff == 8) {   // Working clockwise.
       m1 = 0xF3; m2 = 0x3F;
    }
-   else {                    /* Working counterclockwise. */
+   else {                    // Working counterclockwise.
       m1 = 0xCF; m2 = 0xFC;
    }
 
    masks[0] = m1; masks[1] = m2;
    overlapped_setup_move(ss, MAPCODE(s2x4,2,MPKIND__OVERLAP,0), masks, result);
+}
+
+
+static void do_triple_formation(
+   setup *ss,
+   parse_block *parseptr,
+   uint32 code,
+   setup *result) THROW_DECL
+{
+   // Concepts that use this must have:
+   // arg2 = a map_kind, typically MPKIND_SPLIT.  It may be MPKIND_CONCPHAN
+   //   for "concentric triple boxes".  among other things, this will force
+   //   the use of "divided_setup_move" to force spots or whatever.
+   // arg3 = assumption stuff to put into misc bits:
+   //
+   //   CMD_MISC__VERIFY_DMD_LIKE   "diamonds" -- require diamond-like, i.e.
+   //      centers in some kind of line, ends are line-like.
+   //   CMD_MISC__VERIFY_1_4_TAG    "1/4 tags" -- centers in some kind of line,
+   //      ends are a couple looking in (includes 1/4 line, etc.)
+   //      If this isn't specific enough for you, use the "ASSUME LEFT 1/4 LINES" concept,
+   //      or whatever.
+   //   CMD_MISC__VERIFY_3_4_TAG    "3/4 tags" -- centers in some kind of line,
+   //      ends are a couple looking out (includes 3/4 line, etc.)
+   //      If this isn't specific enough for you, use the "ASSUME LEFT 3/4 LINES" concept,
+   //      or whatever.
+   //   CMD_MISC__VERIFY_REAL_1_4_LINE  "1/4 lines" -- centers in 2FL.
+   //   CMD_MISC__VERIFY_REAL_3_4_LINE  "3/4 lines" -- centers in 2FL.
+   //   CMD_MISC__VERIFY_QTAG_LIKE  "general 1/4 tags" -- all facing same orientation --
+   //      centers in some kind of line, ends are column-like.
+   //   0                           "diamond spots" -- any facing direction is allowed.
+
+   ss->cmd.cmd_misc_flags |= parseptr->concept->arg3;
+
+   // Mystic only allowed with "triple boxes", not "concentric triple boxes".
+
+   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) &&
+       parseptr->concept->arg2 != MPKIND__SPLIT)
+      fail("Mystic not allowed with this concept.");
+
+   // If concept was "matrix triple boxes", we can't use the elegant "concentric" method.
+   if (parseptr->concept->arg2 == MPKIND__SPLIT &&
+       !(ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT))
+      concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple,
+                      0, DFM1_CONC_CONCENTRIC_RULES,
+                      true, ~0UL, result);
+   else {
+      // Gotta do this by hand.  Sigh.
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) {
+         ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_SPLIT;
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC)
+            ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_INVERT;
+         ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__CENTRAL_MYSTIC|CMD_MISC2__INVERT_MYSTIC);
+      }
+
+      divided_setup_move(ss, code, phantest_ok, true, result);
+   }
 }
 
 
@@ -1425,17 +1481,17 @@ static void do_concept_triple_lines(
    than through global_tbonetest. */
 
 {
-   uint32 the_map;
+   uint32 code;
    int arg1 = parseptr->concept->arg1;
 
    if (ss->kind == s3x4)
-      the_map = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
+      code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
    else if (ss->kind == s1x12)
-      the_map = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
+      code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
    else if (ss->kind == sbigh)
-      the_map = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,1);
+      code = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,1);
    else if (ss->kind == sbigx)
-      the_map = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,0);
+      code = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,0);
    else
       fail("Must have triple 1x4's for this concept.");
 
@@ -1462,7 +1518,7 @@ static void do_concept_triple_lines(
       }
    }
 
-   divided_setup_move(ss, the_map, phantest_ok, TRUE, result);
+   do_triple_formation(ss, parseptr, code, result);
 }
 
 
@@ -1552,7 +1608,7 @@ static void do_concept_triple_diag(
                                          spcmap_blob_1x4d, spcmap_blob_1x4b};
 
    divided_setup_move(ss, maps_3diag[q + ((cstuff ^ global_tbonetest) & 1)],
-                      phantest_ok, TRUE, result);
+                      phantest_ok, true, result);
 }
 
 
@@ -1631,10 +1687,10 @@ static void do_concept_grand_working(
 
    if (ss->kind == s2x4 &&
        ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_12_MATRIX))
-      do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, FALSE);
+      do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, false);
    else if ((ss->kind == s2x4 || ss->kind == s2x6) &&
             ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_16_MATRIX))
-      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, FALSE);
+      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
 
    if (ss->kind == s2x4) {
       if (cstuff < 4) {      /* Working forward/back/right/left. */
@@ -1915,7 +1971,7 @@ static void do_concept_do_phantom_2x2(
    if (ss->kind != s4x4) fail("Must have a 4x4 setup for this concept.");
    divided_setup_move(ss, parseptr->concept->arg1,
                       (phantest_kind) parseptr->concept->arg2,
-                      TRUE, result);
+                      true, result);
 }
 
 
@@ -1948,7 +2004,7 @@ static void do_concept_do_triangular_boxes(
    if (division_map_code == ~0UL)
       fail("Must have a 3x4, 4x4, or 4x5 setup for this concept.");
 
-   divided_setup_move(ss, division_map_code, phant, TRUE, result);
+   divided_setup_move(ss, division_map_code, phant, true, result);
 }
 
 
@@ -1960,7 +2016,7 @@ static void do_concept_do_phantom_boxes(
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
 
    divided_setup_move(ss, MAPCODE(s2x4,2,parseptr->concept->arg3,0),
-                      (phantest_kind) parseptr->concept->arg1, TRUE, result);
+                      (phantest_kind) parseptr->concept->arg1, true, result);
 }
 
 
@@ -1971,22 +2027,7 @@ static void do_concept_do_phantom_diamonds(
 {
    uint32 code;
 
-   /* The values of arg2 are:
-      CMD_MISC__VERIFY_DMD_LIKE   "diamonds" -- require diamond-like, i.e.
-         centers in some kind of line, ends are line-like.
-      CMD_MISC__VERIFY_1_4_TAG    "1/4 tags" -- centers in some kind of line,
-         ends are a couple looking in (includes 1/4 line, etc.)
-         If this isn't specific enough for you, use the "ASSUME LEFT 1/4 LINES" concept,
-         or whatever.
-      CMD_MISC__VERIFY_3_4_TAG    "3/4 tags" -- centers in some kind of line,
-         ends are a couple looking out (includes 3/4 line, etc.)
-         If this isn't specific enough for you, use the "ASSUME LEFT 3/4 LINES" concept,
-         or whatever.
-      CMD_MISC__VERIFY_REAL_1_4_LINE  "1/4 lines" -- centers in 2FL.
-      CMD_MISC__VERIFY_REAL_3_4_LINE  "3/4 lines" -- centers in 2FL.
-      CMD_MISC__VERIFY_QTAG_LIKE  "general 1/4 tags" -- all facing same orientation --
-         centers in some kind of line, ends are column-like.
-      0                           "diamond spots" -- any facing direction is allowed. */
+   // See "do_triple_formation" for meaning of arg3.
 
    if (ss->kind == s4dmd)
       code = MAPCODE(s_qtag,2,parseptr->concept->arg3,0);
@@ -1997,7 +2038,7 @@ static void do_concept_do_phantom_diamonds(
 
    ss->cmd.cmd_misc_flags |= parseptr->concept->arg2;
 
-   divided_setup_move(ss, code, (phantest_kind) parseptr->concept->arg1, TRUE, result);
+   divided_setup_move(ss, code, (phantest_kind) parseptr->concept->arg1, true, result);
 }
 
 
@@ -2006,7 +2047,7 @@ static void do_concept_do_divided_diamonds(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   // See "do_concept_do_phantom_diamonds" for meaning of arg2.
+   // See "do_triple_formation" for meaning of arg3.
 
    if (ss->kind != s4x6 || (global_livemask & 0x02D02D) != 0)
       fail("Must have a divided diamond or 1/4 tag setup for this concept.");
@@ -2020,7 +2061,7 @@ static void do_concept_do_divided_diamonds(
                       parseptr->concept->arg4 ?
                       MAPCODE(s_ptpd,2,MPKIND__SPLIT,1) :
                       MAPCODE(s_qtag,2,MPKIND__SPLIT,1),
-                      (phantest_kind) parseptr->concept->arg1, TRUE, result);
+                      (phantest_kind) parseptr->concept->arg1, true, result);
 }
 
 
@@ -2170,7 +2211,7 @@ static void do_concept_dblbent(
    case 3: ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES; break;
    }
 
-   divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_code, phantest_ok, true, result);
 
    if (otherfolksptr) {
       if (otherfolksptr->kind != result->kind ||
@@ -2370,7 +2411,7 @@ static void do_concept_once_removed(
 
  doit:
 
-   divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_code, phantest_ok, true, result);
 }
 
 
@@ -2396,7 +2437,7 @@ static void do_concept_old_stretch(
    setup *result) THROW_DECL
 {
    uint32 mxnbits = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK);
-   long_boolean mxnstuff = mxnbits == INHERITFLAGMXNK_1X3 || mxnbits == INHERITFLAGMXNK_3X1;
+   bool mxnstuff = mxnbits == INHERITFLAGMXNK_1X3 || mxnbits == INHERITFLAGMXNK_3X1;
 
    move(ss, false, result);
 
@@ -2496,7 +2537,7 @@ static void do_concept_new_stretch(
 
       final_and_herit_flags junk_concepts;
       junk_concepts.clear_all_herit_and_final_bits();
-      parse_block *next_parseptr = process_final_concepts(parseptr->next, FALSE,
+      parse_block *next_parseptr = process_final_concepts(parseptr->next, false,
                                                           &junk_concepts, true, __FILE__, __LINE__);
 
       if ((next_parseptr->concept->kind != concept_randomtrngl &&
@@ -2550,7 +2591,7 @@ static void do_concept_new_stretch(
    else
       fail("Stretched setup call didn't start in appropriate setup.");
 
-   divided_setup_move(&tempsetup, maps, phantest_ok, TRUE, result);
+   divided_setup_move(&tempsetup, maps, phantest_ok, true, result);
 }
 
 
@@ -2591,7 +2632,7 @@ static void do_concept_assume_waves(
 {
    assumption_thing t;
    assumption_thing *e = &ss->cmd.cmd_assume;   /* Existing assumption. */
-   long_boolean no_phan_error = FALSE;
+   bool no_phan_error = false;
    setup sss;
    int i;
 
@@ -2609,9 +2650,9 @@ static void do_concept_assume_waves(
       If user specifically said there are phantoms, we believe it. */
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
-      no_phan_error = TRUE;
+      no_phan_error = true;
       for (i=0; i<=attr::slimit(ss); i++) {
-         if (!ss->people[i].id1) no_phan_error = FALSE;
+         if (!ss->people[i].id1) no_phan_error = false;
       }
    }
 
@@ -2793,7 +2834,7 @@ static void do_concept_assume_waves(
 
    fudge_from_1x4:
 
-   no_phan_error = FALSE;    /* There really were phantoms after all. */
+   no_phan_error = false;    // There really were phantoms after all.
 
    (void) copy_person(ss, 6, ss, 0);
    (void) copy_person(ss, 7, ss, 1);
@@ -3038,7 +3079,7 @@ static void do_concept_crazy(
          // Do it in the center.  The -1 for arg 4 makes it
          // preserve roll information for the inactives.
          selective_move(&tempsetup, parseptr, selective_key_plain,
-                        -1, 0, 0, selector_center4, FALSE, result);
+                        -1, 0, 0, selector_center4, false, result);
       }
       else {
          // Do it on each side.
@@ -3046,7 +3087,7 @@ static void do_concept_crazy(
             tempsetup.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
          else
             tempsetup.cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-         move(&tempsetup, FALSE, result);
+         move(&tempsetup, false, result);
       }
 
       finalresultflags |= result->result_flags;
@@ -3104,7 +3145,7 @@ static void do_concept_phan_crazy(
       // setup is not a 4x4, we try to make a 2x8.  If that fails,
       // there will be trouble ahead.
       if (tempsetup.kind != s4x4)
-         do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_2X8, FALSE);
+         do_matrix_expansion(&tempsetup, CONCPROP__NEEDK_2X8, false);
    }
 
    int rot = tempsetup.rotation & 1;
@@ -3210,11 +3251,11 @@ static void do_concept_phan_crazy(
              tempsetup.kind != s2x8 && tempsetup.kind != s4x4)
             fail("Can't do crazy offset with this shape-changer.");
          concentric_move(&tempsetup, (setup_command *) 0, &tempsetup.cmd,
-                         schema_in_out_quad, 0, 0, TRUE, specialmapcode, result);
+                         schema_in_out_quad, 0, 0, true, specialmapcode, result);
          result->rotation -= spec_conc_rot;
       }
       else                              // Do it on each side.
-         divided_setup_move(&tempsetup, offsetmapcode, phanstuff, TRUE, result);
+         divided_setup_move(&tempsetup, offsetmapcode, phanstuff, true, result);
 
       finalresultflags |= result->result_flags;
       tempsetup = *result;
@@ -3244,7 +3285,7 @@ static void do_concept_fan(
    const parse_block *parseptrcopy;
    call_with_name *callspec;
 
-   parseptrcopy = process_final_concepts(parseptr->next, TRUE, &new_final_concepts, true, __FILE__, __LINE__);
+   parseptrcopy = process_final_concepts(parseptr->next, true, &new_final_concepts, true, __FILE__, __LINE__);
 
    if (new_final_concepts.test_herit_and_final_bits() ||
        parseptrcopy->concept->kind > marker_end_of_list)
@@ -3261,7 +3302,7 @@ static void do_concept_fan(
    if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
        (callspec->the_defn.callflags1 & CFLAG1_STEP_REAR_MASK) == CFLAG1_STEP_TO_WAVE) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
-      touch_or_rear_back(ss, FALSE, callspec->the_defn.callflags1);
+      touch_or_rear_back(ss, false, callspec->the_defn.callflags1);
    }
 
    tempsetup = *ss;
@@ -3283,7 +3324,7 @@ static void do_concept_fan(
 
    tempsetup.cmd.prior_elongation_bits = 0;
    tempsetup.cmd.prior_expire_bits = 0;
-   move(&tempsetup, FALSE, result);
+   move(&tempsetup, false, result);
    finalresultflags |= result->result_flags;
    result->result_flags = finalresultflags & ~3;
 }
@@ -3296,12 +3337,12 @@ static void do_concept_stable(
    setup *result) THROW_DECL
 {
    uint32 directions[32];
-   long_boolean selected[32];
+   bool selected[32];
    setup_kind kk;
    int n, i, rot, howfar, orig_rotation;
 
-   long_boolean fractional = parseptr->concept->arg2;
-   long_boolean everyone = !parseptr->concept->arg1;
+   bool fractional = parseptr->concept->arg2 != 0;
+   bool everyone = parseptr->concept->arg1 == 0;
    selector_kind saved_selector = current_options.who;
 
    current_options.who = parseptr->options.who;
@@ -3375,10 +3416,11 @@ static void do_concept_emulate(
 
    setup a1 = *ss;
 
-   move(&a1, FALSE, &res1);
+   move(&a1, false, &res1);
 
-   *result = res1;      /* Get all the other fields. */
+   *result = res1;      // Get all the other fields.
 
+   result->result_flags |= RESULTFLAG__FORCE_SPOTS_ALWAYS;
    result->kind = ss->kind;
    result->rotation = ss->rotation;
 
@@ -3395,8 +3437,8 @@ static void do_concept_emulate(
          for (j=0; j<=m; j++) {
             uint32 q = res1.people[j].id1;
             if ((q & BIT_PERSON) && ((q ^ p) & XPID_MASK) == 0) {
-               result->people[i].id1 &= ~077;
-               result->people[i].id1 |= (rotperson(q, rot) & 077);
+               result->people[i].id1 &= ~(NROLL_MASK | STABLE_MASK | 0x3F);
+               result->people[i].id1 |= rotperson(q, rot) & (NROLL_MASK | STABLE_MASK | 0x3F);
                goto did_it;
             }
          }
@@ -3455,7 +3497,7 @@ static void do_concept_checkerboard(
       subsid_cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
       subsid_cmd.cmd_final_flags.clear_all_herit_and_final_bits();
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0,
-                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, TRUE, ~0UL, result);
+                      DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, true, ~0UL, result);
       return;
    }
 
@@ -3614,7 +3656,7 @@ static void do_concept_checkerboard(
    a1.rotation = 0;
    a1.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
-   move(&a1, FALSE, &res1);
+   move(&a1, false, &res1);
 
    // Look at the rotation coming out of the move.  If the setup is 1x4, we require it to be
    // even (checkerboard lockit not allowed).  Otherwise, allow any rotation.  This means
@@ -3683,10 +3725,10 @@ static void do_concept_checkpoint(
 
    if (reverseness)
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint,
-                      0, 0, TRUE, ~0UL, result);
+                      0, 0, true, ~0UL, result);
    else
       concentric_move(ss, &subsid_cmd, &ss->cmd, schema_checkpoint,
-                      0, DFM1_CONC_FORCE_OTHERWAY, TRUE, ~0UL, result);
+                      0, DFM1_CONC_FORCE_OTHERWAY, true, ~0UL, result);
 }
 
 
@@ -3700,17 +3742,17 @@ static void copy_cmd_preserve_elong_and_expire(setup *ss, setup *result, bool on
 }
 
 
-static long_boolean do_call_under_repetition(
+static bool do_call_under_repetition(
    fraction_info *yyy,
    int & fetch_number,
    setup *ss,
    setup *result) THROW_DECL
 {
-   if (yyy->reverse_order) {
-      if (yyy->fetch_index < 0) return TRUE;
+   if (yyy->m_reverse_order) {
+      if (yyy->m_fetch_index < 0) return true;
    }
    else {
-      if (yyy->fetch_index >= yyy->fetch_total) return TRUE;
+      if (yyy->m_fetch_index >= yyy->m_fetch_total) return true;
    }
 
    yyy->demand_this_part_exists();
@@ -3722,16 +3764,16 @@ static long_boolean do_call_under_repetition(
 
    /* We don't supply these; they get filled in by the call. */
    result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
-   if (!yyy->first_call) {
+   if (!yyy->m_first_call) {
       result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
       result->cmd.cmd_assume.assumption = cr_none;
    }
 
    // Move this stuff out, after the increment.
 
-   if (yyy->do_half_of_last_part != 0 &&
-       yyy->fetch_index+1 == yyy->highlimit)
-      result->cmd.cmd_frac_flags = yyy->do_half_of_last_part;
+   if (yyy->m_do_half_of_last_part != 0 &&
+       yyy->m_fetch_index+1 == yyy->m_highlimit)
+      result->cmd.cmd_frac_flags = yyy->m_do_half_of_last_part;
    else if (result->cmd.restrained_fraction) {
       result->cmd.cmd_frac_flags = result->cmd.restrained_fraction;
       result->cmd.restrained_fraction = 0;
@@ -3739,14 +3781,14 @@ static long_boolean do_call_under_repetition(
    else
       result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  /* No fractions to constituent call. */
 
-   fetch_number = yyy->fetch_index;
-   return FALSE;
+   fetch_number = yyy->m_fetch_index;
+   return false;
 }
 
 
 static void do_call_in_series_simple(setup *result) THROW_DECL
 {
-   do_call_in_series(result, FALSE, FALSE, TRUE, FALSE);
+   do_call_in_series(result, false, false, true, false);
 }
 
 
@@ -3763,7 +3805,7 @@ static void do_concept_sequential(
                             weirdness_off);
    }
 
-   zzz.first_call = zzz.reverse_order ? FALSE : TRUE;
+   zzz.m_first_call = !zzz.m_reverse_order;
 
    prepare_for_call_in_series(result, ss);
 
@@ -3778,7 +3820,7 @@ static void do_concept_sequential(
       if (fetch_number != 0) result->cmd.parseptr = parseptr->subsidiary_root;
 
       do_call_in_series_simple(result);
-      zzz.first_call = FALSE;
+      zzz.m_first_call = false;
 
       // If we are being asked to do just one part of a call,
       // exit now.  Also, fill in bits in result->result_flags.
@@ -3788,8 +3830,8 @@ static void do_concept_sequential(
    go_to_next_cycle:
 
       // Increment for next cycle.
-      zzz.fetch_index += zzz.subcall_incr;
-      zzz.client_index += zzz.subcall_incr;
+      zzz.m_fetch_index += zzz.m_subcall_incr;
+      zzz.m_client_index += zzz.m_subcall_incr;
    }
 }
 
@@ -3825,7 +3867,7 @@ static void do_concept_special_sequential(
          result->cmd.cmd_frac_flags = FRACS(CMD_FRAC_CODE_FROMTO,stopindex-1,0) |
             CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
          result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
-         do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+         do_call_in_series(result, true, false, true, false);
       }
 
       // Do the replacement call.
@@ -3838,7 +3880,7 @@ static void do_concept_special_sequential(
       // Give this call a clean start with respect to expiration stuff.
       uint32 suspended_expiration_bits = result->result_flags & RESULTFLAG__EXPIRATION_BITS;
       result->result_flags &= ~RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+      do_call_in_series(result, true, false, true, false);
 
       // Put back the expiration bits for the resumed call.
       result->result_flags &= ~RESULTFLAG__EXPIRATION_BITS;
@@ -3851,7 +3893,7 @@ static void do_concept_special_sequential(
       result->cmd.cmd_frac_flags = FRACS(CMD_FRAC_CODE_FROMTOREV,stopindex+1,0) |
          CMD_FRAC_BREAKING_UP | CMD_FRAC_NULL_VALUE;
       result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+      do_call_in_series(result, true, false, true, false);
    }
    else if (parseptr->concept->arg1 == 2) {
       // This is "start with (call)", which is the same as "replace the 1st part".
@@ -3867,7 +3909,7 @@ static void do_concept_special_sequential(
       tttt = *ss;
       if (!(tttt.result_flags & RESULTFLAG__NO_REEVALUATE))
          update_id_bits(&tttt);           /* So you can use "leads run", etc. */
-      move(&tttt, FALSE, result);
+      move(&tttt, false, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize, false);
 
@@ -3881,7 +3923,7 @@ static void do_concept_special_sequential(
          CMD_FRAC_CODE_FROMTOREV |
          (CMD_FRAC_PART_BIT*2) |
          CMD_FRAC_NULL_VALUE;
-      move(&tttt, FALSE, result);
+      move(&tttt, false, result);
       finalresultflags |= result->result_flags;
       normalize_setup(result, simple_normalize, false);
 
@@ -3977,7 +4019,7 @@ static void do_concept_n_times(
                          3*CFLAG1_VISIBLE_FRACTION_BIT,
                          weirdness_off);
 
-   zzz.first_call = zzz.reverse_order ? FALSE : TRUE;
+   zzz.m_first_call = !zzz.m_reverse_order;
 
    *result = *ss;
    result->result_flags = 0;
@@ -3999,7 +4041,7 @@ static void do_concept_n_times(
 
       // Record the minimum in each direction.
       minimize_splitting_info(&offline_split_info, result->result_flags);
-      zzz.first_call = FALSE;
+      zzz.m_first_call = false;
 
       // If we are being asked to do just one part of a call,
       // exit now.  Also, fill in bits in result->result_flags.
@@ -4009,8 +4051,8 @@ static void do_concept_n_times(
    go_to_next_cycle:
 
       // Increment for next cycle.
-      zzz.fetch_index += zzz.subcall_incr;
-      zzz.client_index += zzz.subcall_incr;
+      zzz.m_fetch_index += zzz.m_subcall_incr;
+      zzz.m_client_index += zzz.m_subcall_incr;
    }
 
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -4062,7 +4104,7 @@ static void do_concept_trace(
       a[i].cmd.cmd_assume.assumption = cr_none;
       gather(&a[i], ss, tracearray, 3, 0);
       update_id_bits(&a[i]);
-      move(&a[i], FALSE, &res[i]);
+      move(&a[i], false, &res[i]);
       tracearray += 4;
    }
 
@@ -4212,7 +4254,7 @@ static void do_concept_outeracting(
    else
       fail("Incorrect facing directions.");
 
-   divided_setup_move(&temp, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, TRUE, result);
+   divided_setup_move(&temp, MAPCODE(s2x2,2,MPKIND__SPLIT,0), phantest_ok, true, result);
 }
 
 
@@ -4223,7 +4265,7 @@ static void do_concept_quad_boxes(
 {
    if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
    divided_setup_move(ss, MAPCODE(s2x2,4,parseptr->concept->arg1,0),
-                      phantest_ok, TRUE, result);
+                      phantest_ok, true, result);
 }
 
 
@@ -4539,9 +4581,9 @@ static void do_concept_inner_outer(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (arg1 & 8)
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, TRUE, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, true, ~0UL, result);
    else
-      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, TRUE, ~0UL, result);
+      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, true, ~0UL, result);
 
    result->rotation -= rot;   // Flip the setup back.
    return;
@@ -4567,7 +4609,7 @@ static void do_concept_do_both_boxes(
    setup *result) THROW_DECL
 {
    if (ss->kind == s2x4)
-      divided_setup_move(ss, parseptr->concept->arg1, phantest_ok, TRUE, result);
+      divided_setup_move(ss, parseptr->concept->arg1, phantest_ok, true, result);
    else if (ss->kind == s3x4 && parseptr->concept->arg3)
       // distorted_2x2s_move will notice that concept is funny and will do the right thing.
       distorted_2x2s_move(ss, parseptr, result);
@@ -4673,7 +4715,7 @@ static void do_concept_do_each_1x4(
 
    split_big:
 
-   divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_code, phantest_ok, true, result);
 }
 
 
@@ -4683,29 +4725,7 @@ static void do_concept_triple_boxes(
    setup *result) THROW_DECL
 {
    if (ss->kind != s2x6) fail("Must have a 2x6 setup for this concept.");
-
-   // Mystic only allowed with "triple boxes", not "concentric triple boxes".
-
-   if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) &&
-       parseptr->concept->arg1 != MPKIND__SPLIT)
-      fail("Mystic not allowed with this concept.");
-
-   // If concept was "matrix triple boxes", disable the elegant "concentric" method.
-   if (parseptr->concept->arg1 == MPKIND__SPLIT &&
-       !(ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT))
-      concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple, 0, 0, TRUE, ~0UL, result);
-   else {
-      // Gotta do this by hand.  Sigh.
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) {
-         ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_SPLIT;
-         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_MYSTIC)
-            ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_INVERT;
-         ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__CENTRAL_MYSTIC|CMD_MISC2__INVERT_MYSTIC);
-      }
-
-      divided_setup_move(ss, MAPCODE(s2x2,3,parseptr->concept->arg1,0),
-                         phantest_ok, TRUE, result);
-   }
+   do_triple_formation(ss, parseptr, MAPCODE(s2x2,3,parseptr->concept->arg2,0), result);
 }
 
 
@@ -4717,7 +4737,7 @@ static void do_concept_centers_and_ends(
 {
    selective_move(ss, parseptr, selective_key_plain, 1, 0, 0,
                   (selector_kind) parseptr->concept->arg1,
-                  parseptr->concept->arg2, result);
+                  parseptr->concept->arg2 != 0, result);
 }
 
 
@@ -4728,7 +4748,7 @@ static void do_concept_centers_or_ends(
 {
    selective_move(ss, parseptr, selective_key_plain, 0, 0, 0,
                   (selector_kind) parseptr->concept->arg1,
-                  parseptr->concept->arg2, result);
+                  parseptr->concept->arg2 != 0, result);
 }
 
 
@@ -4774,7 +4794,7 @@ static void do_concept_mini_but_o(
    // Adding 2 to the lookup key makes it check for columns.
    selective_move(ss, parseptr, selective_key_mini_but_o, 0,
                   is_an_o ? LOOKUP_MINI_O+2 : LOOKUP_MINI_B+2,
-                  mask, selector_none, FALSE, result);
+                  mask, selector_none, false, result);
 
    result->rotation -= rot;   // Flip the setup back.
    return;
@@ -4789,9 +4809,8 @@ static void so_and_so_only_move(
 {
    selective_move(ss, parseptr, (selective_key) parseptr->concept->arg1,
                   parseptr->concept->arg2, parseptr->concept->arg3,
-                  0, parseptr->options.who, FALSE, result);
+                  0, parseptr->options.who, false, result);
 }
-
 
 
 static void do_concept_triple_diamonds(
@@ -4800,8 +4819,6 @@ static void do_concept_triple_diamonds(
    setup *result) THROW_DECL
 {
    uint32 code;
-
-   /* See "do_concept_do_phantom_diamonds" for meaning of arg2. */
 
    switch (ss->kind) {
    case s3dmd:
@@ -4816,8 +4833,30 @@ static void do_concept_triple_diamonds(
       fail("Must have a triple diamond or 1/4 tag setup for this concept.");
    }
 
-   ss->cmd.cmd_misc_flags |= parseptr->concept->arg2;
-   divided_setup_move(ss, code, phantest_ok, TRUE, result);
+   do_triple_formation(ss, parseptr, code, result);
+}
+
+
+static void do_concept_triple_formations(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   // Meaning of arg3 is:
+   //   0 - triple lines or boxes
+   //   1 - triple lines or diamonds
+   //   2 - triple boxes or diamonds
+
+   switch (parseptr->concept->arg3) {
+   case 0:
+      if (ss->kind == sbigbone || ss->kind == sbigrig)
+         do_triple_formation(ss, parseptr, ~0UL, result);
+      else
+         fail("Can't do this concept in this setup.");
+      break;
+   default:
+      fail("Can't do this concept in this setup.");
+   }
 }
 
 
@@ -4828,7 +4867,7 @@ static void do_concept_quad_diamonds(
 {
    uint32 code;
 
-   /* See "do_concept_do_phantom_diamonds" for meaning of arg2. */
+   // See "do_triple_formation" for meaning of arg2.
 
    switch (ss->kind) {
    case s4dmd:
@@ -4844,7 +4883,7 @@ static void do_concept_quad_diamonds(
    }
 
    ss->cmd.cmd_misc_flags |= parseptr->concept->arg2;
-   divided_setup_move(ss, code, phantest_ok, TRUE, result);
+   divided_setup_move(ss, code, phantest_ok, true, result);
 }
 
 
@@ -4908,7 +4947,7 @@ static void do_concept_ferris(
       if ((ss->kind != s2x4) || ((global_tbonetest & 1) != 0))
          fail("Must have lines to do this concept.");
 
-      long_boolean retvaljunk;
+      bool retvaljunk;
       assumption_thing t;
       t.assumption = cr_2fl_only;
       t.assump_col = 0;
@@ -4917,11 +4956,11 @@ static void do_concept_ferris(
       t.assump_live = 0;
       t.assump_negate = 0;
 
-      if (verify_restriction(ss, t, FALSE, &retvaljunk) == restriction_passes)
+      if (verify_restriction(ss, t, false, &retvaljunk) == restriction_passes)
          map_ptr = &mapf1;
       else {
          t.assump_both = 2;    // left 2FL
-         if (verify_restriction(ss, t, FALSE, &retvaljunk) == restriction_passes)
+         if (verify_restriction(ss, t, false, &retvaljunk) == restriction_passes)
             map_ptr = &mapf2;
       }
    }
@@ -4933,7 +4972,7 @@ static void do_concept_ferris(
       fail("Illegal modifier before \"ferris\" or \"release\".");
 
    expand::expand_setup(map_ptr, ss);
-   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, FALSE, ~0UL, result);
+   concentric_move(ss, &ss->cmd, &ss->cmd, schema_in_out_triple_squash, 0, 0, false, ~0UL, result);
 }
 
 
@@ -4980,7 +5019,7 @@ static void do_concept_overlapped_diamond(
    }
 
    expand::expand_setup(scatterlist, ss);
-   divided_setup_move(ss, mapcode, phantest_ok, TRUE, result);
+   divided_setup_move(ss, mapcode, phantest_ok, true, result);
 
    if (result->kind == s2x2)
       return;
@@ -5038,7 +5077,7 @@ static void do_concept_all_8(
             (ss->people[13].id1 != 0 && ((ss->people[13].id1) & 1) != 0))
          fail("Must be in squared set spots.");
 
-      divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
+      divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, true, result);
    }
    else {
 
@@ -5067,11 +5106,11 @@ static void do_concept_all_8(
       }
 
       if (ss->kind == s_thar) {
-         /* Either one is legal in a thar. */
+         // Either one is legal in a thar.
          if (key == 1)
-            divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
+            divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, true, result);
          else
-            divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
+            divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__ALL_8,0), phantest_ok, true, result);
 
          /* The above stuff did an "elongate perpendicular to the long axis of the 1x4 or diamond"
             operation, also known as an "ends' part of concentric" operation.  Some people believe
@@ -5095,7 +5134,7 @@ static void do_concept_all_8(
          fail("Must be in a thar.");   /* Can't do "all 8 (diamonds)" from squared-set spots. */
       else if (ss->kind == s_crosswave) {
          ss->kind = s_thar;
-         divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
+         divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, true, result);
       }
       else if (ss->kind == s4x4) {
          uint32 t1, t2, tl, tc;
@@ -5134,7 +5173,7 @@ static void do_concept_all_8(
             face your partner and all 8 square chain thru to a wave".  We are just being as conservative
             as possible while allowing those cases that are commonly used. */
 
-         divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, TRUE, result);
+         divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, true, result);
       }
       else
          fail("Must be in a thar or squared-set spots.");
@@ -5337,7 +5376,7 @@ static void do_concept_meta(
       uint32 index;
       uint32 shortenhighlim;
       uint32 code_to_use_for_only;
-      long_boolean doing_just_one;
+      bool doing_just_one;
 
    case meta_key_revorder:
       result->cmd.cmd_frac_flags ^= CMD_FRAC_REVERSE;
@@ -5579,25 +5618,25 @@ static void do_concept_meta(
                                                denom<<1,
                                                corefracs,
                                                0,
-                                               FALSE, &ijunk);
+                                               false, &ijunk);
 
          uint32 bfracs = process_new_fractions(numer<<1,
                                                numer+denom,
                                                corefracs,
                                                0,
-                                               FALSE, &ijunk);
+                                               false, &ijunk);
 
          bfracs = process_new_fractions(numer+denom,
                                         denom<<1,
                                         bfracs,
                                         1,
-                                        FALSE, &ijunk);
+                                        false, &ijunk);
 
          uint32 cfracs = process_new_fractions(denom-numer,
                                                denom<<1,
                                                corefracs,
                                                1,
-                                               FALSE, &ijunk);
+                                               false, &ijunk);
 
          // First part without.
          result->cmd = nocmd;
@@ -5619,13 +5658,13 @@ static void do_concept_meta(
       else {
          uint32 first_fracs = process_new_fractions(numer, denom,
                                                     corefracs, reverse_stuff,
-                                                    FALSE, &ijunk);
+                                                    false, &ijunk);
 
          uint32 last_fracs = process_new_fractions(denom-numer,
                                                    denom,
                                                    corefracs,
                                                    reverse_stuff^1,
-                                                   FALSE, &ijunk);
+                                                   false, &ijunk);
 
          if (reverse_stuff) {
             result->cmd = nocmd;
@@ -5945,7 +5984,7 @@ static void do_concept_meta(
 
       index = 0;
       shortenhighlim = 0;
-      doing_just_one = FALSE;
+      doing_just_one = false;
       code_to_use_for_only = CMD_FRAC_CODE_ONLY;
 
       // We allow picking a specific part, and we allow "finishing" from a specific
@@ -5956,14 +5995,14 @@ static void do_concept_meta(
             CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE)) {
          index = nfield - 1;
-         doing_just_one = TRUE;
+         doing_just_one = true;
       }
       else if ((corefracs &
            (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
             CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLYREV | CMD_FRAC_NULL_VALUE)) {
          index = nfield - 1;
-         doing_just_one = TRUE;
+         doing_just_one = true;
          code_to_use_for_only = CMD_FRAC_CODE_ONLYREV;
          fail("Sorry, can't do this.");
       }
@@ -6021,7 +6060,7 @@ static void do_concept_meta(
 
          result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
 
-         do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+         do_call_in_series(result, true, false, true, false);
 
          if (result->result_flags & RESULTFLAG__SECONDARY_DONE) {
             index = 0;
@@ -6142,7 +6181,7 @@ static void do_concept_replace_nth_part(
       result->cmd.cmd_frac_flags = newfracs;
       // This seems to make t50 work.
       result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+      do_call_in_series(result, true, false, true, false);
    }
 
    // Do the interruption/replacement call.
@@ -6156,7 +6195,7 @@ static void do_concept_replace_nth_part(
    // Give this call a clean start with respect to expiration stuff.
    uint32 suspended_expiration_bits = result->result_flags & RESULTFLAG__EXPIRATION_BITS;
    result->result_flags &= ~RESULTFLAG__EXPIRATION_BITS;
-   do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+   do_call_in_series(result, true, false, true, false);
 
    // Put back the expiration bits for the resumed call.
    result->result_flags &= ~RESULTFLAG__EXPIRATION_BITS;
@@ -6184,7 +6223,7 @@ static void do_concept_replace_nth_part(
    result->cmd.cmd_frac_flags = frac_key;
    // This seems to make t50 work.
    result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
-   do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+   do_call_in_series(result, true, false, true, false);
 }
 
 
@@ -6246,7 +6285,7 @@ static void do_concept_interlace(
          // This seems to make t50 work.
          result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
 
-         do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+         do_call_in_series(result, true, false, true, false);
          calla_expiration_bits = result->result_flags;
 
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -6282,7 +6321,7 @@ static void do_concept_interlace(
             // This seems to make t50 work.
             result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
 
-            do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+            do_call_in_series(result, true, false, true, false);
             return;
          }
 
@@ -6292,7 +6331,7 @@ static void do_concept_interlace(
          // This seems to make t50 work.
          result->cmd.prior_expire_bits |= result->result_flags & RESULTFLAG__EXPIRATION_BITS;
 
-         do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
+         do_call_in_series(result, true, false, true, false);
          callb_expiration_bits = result->result_flags;
 
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -6393,9 +6432,9 @@ static void do_concept_fractional(
       else {
          prepare_for_call_in_series(result, ss);
          result->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | CMD_FRAC_NULL_VALUE;
-         do_call_in_series(result, FALSE, FALSE,
+         do_call_in_series(result, false, false,
             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
-            FALSE);
+            false);
 
          copy_cmd_preserve_elong_and_expire(ss, result);
          result->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | new_fracs;
@@ -6409,9 +6448,9 @@ static void do_concept_fractional(
             result->cmd.cmd_frac_flags &= 0xFFFF;   // Do the whole 3/5.
          }
 
-         do_call_in_series(result, FALSE, FALSE,
+         do_call_in_series(result, false, false,
             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
-            FALSE);
+            false);
       }
    }
    else {
@@ -6479,7 +6518,7 @@ static void do_concept_so_and_so_begin(
 
    // The selected people execute the first part of the call.
 
-   move(&setup1, FALSE, &the_setups[0]);
+   move(&setup1, false, &the_setups[0]);
    the_setups[1] = setup2;
 
    // Give the people who didn't move the same result flags as those who did.
@@ -6510,7 +6549,7 @@ static void do_concept_so_and_so_begin(
    // Set the fractionalize field to execute the rest of the call.
    the_setups[1].cmd.cmd_frac_flags =
       CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | passed_bits;
-   move(&the_setups[1], FALSE, result);
+   move(&the_setups[1], false, result);
    finalresultflags |= result->result_flags;
    normalize_setup(result, simple_normalize, false);
    result->result_flags = finalresultflags & ~3;
@@ -6594,7 +6633,7 @@ static void do_concept_concentric(
       case s_ptpd: map_code = MAPCODE(sdmd,2,MPKIND__SPLIT,0); break;
       case s1x4: case sdmd:
          concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
-                         DFM1_CONC_CONCENTRIC_RULES, TRUE, ~0UL, result);
+                         DFM1_CONC_CONCENTRIC_RULES, true, ~0UL, result);
          return;
       default:
          fail("Can't figure out how to do single concentric here.");
@@ -6602,11 +6641,11 @@ static void do_concept_concentric(
       
       // Reset it to execute this same concept again, until it doesn't have to split any more.
       ss->cmd.parseptr = parseptr;
-      divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+      divided_setup_move(ss, map_code, phantest_ok, true, result);
       break;
    default:
       concentric_move(ss, &ss->cmd, &ss->cmd, schema, 0,
-                      DFM1_CONC_CONCENTRIC_RULES, TRUE, ~0UL, result);
+                      DFM1_CONC_CONCENTRIC_RULES, true, ~0UL, result);
 
       // 8-person concentric operations do not show the split.
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -6650,7 +6689,7 @@ static void do_concept_matrix(
 }
 
 
-extern long_boolean do_big_concept(
+extern bool do_big_concept(
    setup *ss,
    setup *result) THROW_DECL
 {
@@ -6735,7 +6774,7 @@ extern long_boolean do_big_concept(
       2ndarg = the concept we are doing
       1starg->cmd.parseptr = the next concept after that */
 
-   if (concept_func == 0) return FALSE;
+   if (concept_func == 0) return false;
 
    if (this_concept->level > calling_level) warn(warn__bad_concept_level);
 
@@ -6761,7 +6800,7 @@ extern long_boolean do_big_concept(
 
       junk_concepts.clear_all_herit_and_final_bits();
       substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
-                                                     TRUE,
+                                                     true,
                                                      &junk_concepts, true, __FILE__, __LINE__);
    
       // If we hit "matrix", do a little extra stuff and continue.
@@ -6770,7 +6809,7 @@ extern long_boolean do_big_concept(
           substandard_concptptr->concept->kind == concept_matrix) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
          substandard_concptptr = process_final_concepts(substandard_concptptr->next,
-                                                        TRUE,
+                                                        true,
                                                         &junk_concepts, true, __FILE__, __LINE__);
       }
 
@@ -6799,7 +6838,7 @@ extern long_boolean do_big_concept(
             from the arg2 word. */
          if (prop_bits & CONCPROP__NEED_ARG2_MATRIX)
             prop_bits |= substandard_concptptr->concept->arg2;
-         do_matrix_expansion(ss, prop_bits, FALSE);
+         do_matrix_expansion(ss, prop_bits, false);
       }
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
@@ -6827,7 +6866,7 @@ extern long_boolean do_big_concept(
       if (!tbonetest) {
          result->result_flags = 0;
          result->kind = nothing;
-         return TRUE;
+         return true;
       }
    
       if ((tbonetest & 011) != 011)
@@ -6846,7 +6885,7 @@ extern long_boolean do_big_concept(
       remove_tgl_distortion(result);
       /* Beware -- result is not necessarily canonicalized. */
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;  /* **** For now. */
-      return TRUE;
+      return true;
    }
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
@@ -6854,7 +6893,7 @@ extern long_boolean do_big_concept(
       // If the "arg2_matrix" bit is on, pick up additional
       // matrix descriptor bits from the arg2 word.
       if (prop_bits & CONCPROP__NEED_ARG2_MATRIX) prop_bits |= this_concept->arg2;
-      do_matrix_expansion(ss, prop_bits, FALSE);
+      do_matrix_expansion(ss, prop_bits, false);
    }
 
    // We can no longer do any matrix expansion, unless this is "phantom" and "tandem",
@@ -6876,7 +6915,7 @@ extern long_boolean do_big_concept(
    if (this_table_item->concept_prop & (CONCPROP__STANDARD | CONCPROP__GET_MASK)) {
       int i;
       uint32 j;
-      long_boolean doing_select;
+      bool doing_select;
       selector_kind saved_selector = current_options.who;
 
       if (attr::slimit(ss) < 0) fail("Can't do this concept in this setup.");
@@ -6885,7 +6924,7 @@ extern long_boolean do_big_concept(
       global_livemask = 0;
       global_selectmask = 0;
       global_tboneselect = 0;
-      doing_select = this_table_item->concept_prop & CONCPROP__USE_SELECTOR;
+      doing_select = (this_table_item->concept_prop & CONCPROP__USE_SELECTOR) != 0;
 
       if (doing_select) {
          current_options.who = this_concept_parse_block->options.who;
@@ -6909,7 +6948,7 @@ extern long_boolean do_big_concept(
       if (!global_tbonetest) {
          result->result_flags = 0;
          result->kind = nothing;
-         return TRUE;
+         return true;
       }
    }
 
@@ -6918,7 +6957,7 @@ extern long_boolean do_big_concept(
    /* Beware -- result is not necessarily canonicalized. */
    if (!(this_table_item->concept_prop & CONCPROP__SHOW_SPLIT))
       result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
-   return TRUE;
+   return true;
 }
 
 
@@ -7027,7 +7066,7 @@ concept_table_item concept_table[] = {
     do_concept_double_diagonal},                            // concept_double_diagonal
    {CONCPROP__GET_MASK,
     do_concept_parallelogram},                              // concept_parallelogram
-   {CONCPROP__NEEDK_TRIPLE_1X4 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,
+   {CONCPROP__NEEDK_TRIPLE_1X4 | Standard_matrix_phantom,
     do_concept_triple_lines},                               // concept_triple_lines
    {CONCPROP__NEED_ARG2_MATRIX | Nostandard_matrix_phantom,
     do_concept_multiple_lines_tog},                         // concept_multiple_lines_tog
@@ -7049,6 +7088,8 @@ concept_table_item concept_table[] = {
     do_concept_triple_boxes_tog},                           // concept_triple_boxes_together
    {CONCPROP__NEEDK_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,
     do_concept_triple_diamonds},                            // concept_triple_diamonds
+   {CONCPROP__NO_STEP | Nostandard_matrix_phantom,
+    do_concept_triple_formations},                          // concept_triple_formations
    {CONCPROP__NEEDK_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,
     do_concept_triple_diamonds_tog},                        // concept_triple_diamonds_together
    {CONCPROP__NEEDK_4D_4PTPD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,

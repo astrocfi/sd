@@ -105,7 +105,7 @@ void reset_internal_iterators()
    circcer_iterator = 0;
 }
 
-selector_kind do_selector_iteration(long_boolean allow_iteration)
+selector_kind do_selector_iteration(bool allow_iteration)
 {
    static selector_kind selector_iterator_table[] = {
       selector_boys,
@@ -121,7 +121,7 @@ selector_kind do_selector_iteration(long_boolean allow_iteration)
    if (interactivity == interactivity_database_init ||
        interactivity == interactivity_verify) {
       if (verify_options.who == selector_uninitialized) {
-         verify_used_selector = TRUE;
+         verify_used_selector = true;
          return selector_for_initialize;
       }
       else
@@ -166,7 +166,7 @@ direction_kind do_direction_iteration()
    if (interactivity == interactivity_database_init ||
        interactivity == interactivity_verify) {
       if (verify_options.where == direction_uninitialized) {
-         verify_used_direction = TRUE;
+         verify_used_direction = true;
          return direction_for_initialize;
       }
       else
@@ -208,7 +208,7 @@ direction_kind do_direction_iteration()
 
 void do_number_iteration(int howmanynumbers,
                          uint32 odd_number_only,
-                         long_boolean allow_iteration,
+                         bool allow_iteration,
                          uint32 *number_list)
 {
    int i;
@@ -225,7 +225,7 @@ void do_number_iteration(int howmanynumbers,
             // This makes "N-N-N-N change the web" and "N-N-N-N
             // relay the top" work.
             this_num = (i==1) ? 1 : number_for_initialize;
-            verify_used_number = TRUE;
+            verify_used_number = true;
          }
          else {
             this_num = verify_options.number_fields & 0xF;
@@ -370,9 +370,9 @@ void do_circcer_iteration(uint32 *circcp)
    did.  If the iterators are nonzero, we will just repeat that call.
    Otherwise, we will advance it to the next and use that call. */
 
-const conzept::concept_descriptor *pick_concept(long_boolean already_have_concept_in_place)
+const conzept::concept_descriptor *pick_concept(bool already_have_concept_in_place)
 {
-   long_boolean do_concept = FALSE;
+   bool do_concept = false;
 
    if (interactivity != interactivity_picking)
       return (conzept::concept_descriptor *) 0;
@@ -460,7 +460,7 @@ const conzept::concept_descriptor *pick_concept(long_boolean already_have_concep
       switch (search_goal) {
       case command_concept_call:
          if (!already_have_concept_in_place)
-            { do_concept = TRUE; break; }
+            { do_concept = true; break; }
          /* FALL THROUGH!!!!! */
       case command_resolve:
       case command_random_call:
@@ -598,21 +598,15 @@ void end_pick()
 
 // When doing a pick, this predicate says that any call that takes a
 // mandatory subcall is simply rejected.
-long_boolean forbid_call_with_mandatory_subcall()
+bool forbid_call_with_mandatory_subcall()
 {
-   if (pick_type_table[current_pick_type].exhaustive_search)
-      return TRUE;
-   else
-      return FALSE;
+   return pick_type_table[current_pick_type].exhaustive_search;
 }
 
 // When we are doing the special scans in the resolver, we don't geneerate
 // random subcalls -- we just leave the default call in place.
 // Only when in the random search do we generate random subcalls.
-long_boolean allow_random_subcall_pick()
+bool allow_random_subcall_pick()
 {
-   if (current_pick_type == pick_in_random_search)
-      return TRUE;
-   else
-      return FALSE;
+   return current_pick_type == pick_in_random_search;
 }

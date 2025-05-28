@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -343,7 +343,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
 
    if (doing_escape) {
       nLen++;
-      matches = match_user_input(nLastOne, FALSE, FALSE, FALSE);
+      matches = match_user_input(nLastOne, false, false, false);
       user_match = GLOB_match;
       p = GLOB_echo_stuff;
       if (*p) {
@@ -379,7 +379,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
                lstrcpy(GLOB_user_input, szLocalString);
                GLOB_user_input_size = lstrlen(GLOB_user_input);
                // This will call show_match with each match.
-               (void) match_user_input(nLastOne, TRUE, cCurChar == '?', FALSE);
+               (void) match_user_input(nLastOne, true, cCurChar == '?', false);
                question_stuff_to_erase = my_mark;
                // Restore the scroll position so that the user will see the start,
                // not the end, of what we displayed.
@@ -403,7 +403,7 @@ static void check_text_change(HWND hListbox, HWND hEditbox, bool doing_escape)
             // **** do we think nLen has the right stuff here?
             GLOB_user_input_size = lstrlen(GLOB_user_input);
             // Extend only to one space or hyphen, inclusive.
-            matches = match_user_input(nLastOne, FALSE, FALSE, TRUE);
+            matches = match_user_input(nLastOne, false, false, true);
             user_match = GLOB_match;
             p = GLOB_echo_stuff;
 
@@ -1048,10 +1048,12 @@ static void Transcript_OnScroll(HWND hwnd, HWND hwndCtl, UINT code, int pos)
 
 
 
-/* Process get-text dialog box messages */
+// Process get-text dialog box messages.
 
-static int PopupStatus;
-static char szPrompt[MAX_TEXT_LINE_LENGTH];
+static popup_return PopupStatus;
+static char szPrompt1[MAX_TEXT_LINE_LENGTH];
+static char szPrompt2[MAX_TEXT_LINE_LENGTH];
+static char szSeed[MAX_TEXT_LINE_LENGTH];
 static char szTextEntryResult[MAX_TEXT_LINE_LENGTH];
 LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -1061,12 +1063,14 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
    case WM_INITDIALOG:
       /* If we did this, it would set the actual window title
          SetWindowText(hDlg, "FOOBAR!"); */
-      SetDlgItemText(hDlg, IDC_FILE_TEXT, szPrompt);
+      SetDlgItemText(hDlg, IDC_FILE_TEXT1, szPrompt1);
+      SetDlgItemText(hDlg, IDC_FILE_TEXT2, szPrompt2);
+      SendDlgItemMessage(hDlg, IDC_FILE_EDIT, WM_SETTEXT, 0, (LPARAM) szSeed);
       return TRUE;
    case WM_COMMAND:
       switch (LOWORD(wParam)) {
       case IDC_FILE_ACCEPT:
-         Len = SendDlgItemMessage (hDlg, IDC_FILE_EDIT, EM_LINELENGTH, 0, 0L);
+         Len = SendDlgItemMessage(hDlg, IDC_FILE_EDIT, EM_LINELENGTH, 0, 0L);
          if (Len > MAX_TEXT_LINE_LENGTH - 1)
             Len = MAX_TEXT_LINE_LENGTH - 1;
 
@@ -1094,13 +1098,17 @@ LRESULT WINAPI TEXT_ENTRY_DIALOG_WndProc(HWND hDlg, UINT Message, WPARAM wParam,
 }
 
 
-static int do_general_text_popup(Cstring prompt, char dest[])
+static popup_return do_general_text_popup(Cstring prompt1, Cstring prompt2,
+                                          Cstring seed, char dest[])
 {
-   lstrcpy(szPrompt, prompt);
+   strncpy(szPrompt1, prompt1, MAX_TEXT_LINE_LENGTH);
+   strncpy(szPrompt2, prompt2, MAX_TEXT_LINE_LENGTH);
+   strncpy(szSeed, seed, MAX_TEXT_LINE_LENGTH);
    DialogBox(GLOBhInstance, MAKEINTRESOURCE(IDD_TEXT_ENTRY_DIALOG),
              hwndMain, (DLGPROC) TEXT_ENTRY_DIALOG_WndProc);
    if (PopupStatus == POPUP_ACCEPT_WITH_STRING)
       lstrcpy(dest, szTextEntryResult);
+   else dest[0] = 0;
    return PopupStatus;
 }
 
@@ -1414,7 +1422,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          }
       }
 
-      matches = match_user_input(nLastOne, FALSE, FALSE, FALSE);
+      matches = match_user_input(nLastOne, false, false, false);
       user_match = GLOB_match;
 
       /* We forbid a match consisting of two or more "direct parse" concepts, such as
@@ -1682,6 +1690,12 @@ void MainWindow_OnMenuSelect(HWND hwnd, HMENU hmenu, int item, HMENU hmenuPopup,
 }
 
 
+void MainWindow_OnSetFocus(HWND hwnd, HWND hwndOldFocus)
+{
+   SetFocus(hwndList);    // Is this right?
+}
+
+
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
    switch (iMsg) {
@@ -1690,9 +1704,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       HANDLE_MSG(hwnd, WM_SIZE, MainWindow_OnSize);
       HANDLE_MSG(hwnd, WM_COMMAND, MainWindow_OnCommand);
       HANDLE_MSG(hwnd, WM_MENUSELECT, MainWindow_OnMenuSelect);
-   case WM_SETFOCUS:
-      SetFocus(hwndList);    // Is this right?
-      return 0;
+      HANDLE_MSG(hwnd, WM_SETFOCUS, MainWindow_OnSetFocus);
    case WM_CLOSE:
 
       // We get here if the user presses alt-F4 and we haven't bound it to anything,
@@ -2035,12 +2047,103 @@ static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
    return TRUE;
 }
 
+struct { int id; const char *message; } dialog_help_list[] = {
+   // These two must be first, so that the level-vs-session stuff
+   // will come out right.
+   {IDC_START_LIST,
+    "Double-click a level to choose it and start Sd."},
+   {IDC_START_LIST,
+    "Double-click a session to choose it and start Sd.\n"
+    "Double-click \"(no session)\" if you don't want to run under any session at this time.\n"
+    "Double-click \"(create a new session)\" if you want to add a new session to the list.\n"
+    "You will be asked about the particulars for that new session."},
+   {IDC_START_CANCEL,
+    "This exits Sd immediately."},
+   {IDC_START_ACCEPT,
+    "This accepts whatever session is highlighted (and whatever other\n"
+    "things you may have set), and starts Sd."},
+   {IDC_START_DELETE_SESSION_CHECKED,
+    "If you check this box and choose a session,\n"
+    "that session will be PERMANENTLY DELETED instead of being used,\n"
+    "and the program will exit immediately.  You should then restart the program."},
+   {IDC_OUTPUT_NAME,
+    "You normally don't need this, since sessions already have output file names.\n"
+    "If running without a session, you might want to enter something here.\n"
+    "(If you don't, it will default to a name like \"sequence_C1.txt\".)\n"
+    "If creating a new session, it will ask you for the file name, so you don't\n"
+    "need to do anything here.  You can, in any case, use the \"change output file\"\n"
+    "command to change the file name later."},
+   {IDC_SEQ_NUM_OVERRIDE, 
+    "Sessions generally keep track of sequence (card) numbers,\n"
+    "so you usually don't need this.  If you specify a number here\n"
+    "and then choose a session, that session's numbering will be premanently changed."},
+   {IDC_SEQ_NUM_OVERRIDE_SPIN, 
+    "Sessions generally keep track of sequence (card) numbers,\n"
+    "so you usually don't need this.  If you specify a number here\n"
+    "and then choose a session, that session's numbering will be premanently changed."},
+   {IDC_DEFAULT,
+    "Leave this checked, unless you want an alternative database, for experts only."},
+   {IDC_USERDEFINED,
+    "This selects an alternative calls database, for experts only."},
+   {IDC_DATABASE_NAME,
+    "Enter the name of the alternative calls database, for experts only."},
+   {IDC_NORMAL,
+    "Unless you are reading or writing an abridgement file (for preparing\n"
+    "material for a group that knows only part of a dance level), leave this checked."},
+   {IDC_WRITE_LIST,
+    "If you want to make an abridgement list (for preparing material for a group\n"
+    "that knows only part of a dance level), check this, set the file name if desired,\n"
+    "choose \"no session\", and choose the level you want to abridge.\n"
+    "The abrigement list will be written to that file, and the program\n"
+    "will exit immediately.  As the group learns calls, delete them\n"
+    "from the abridgement file with a text editor.  To write material for the group,\n"
+    "check the \"use abridged list\" box below when you run the program."},
+   {IDC_ABRIDGE,
+    "After an abridgement list has been prepared (and the calls that the group knows\n"
+    "have been deleted from it with a text editor), check this box, and set the file\n"
+    "name if desired, to write material for the group.  This is most conveniently done\n"
+    "when using a session.  If you do this once, and choose a session, that file name\n"
+    "will be remembered along with the other information for the session.\n"
+    "The abridgement file name for a session is shown in the list above right after the\n"
+    "level, separated from it with a hyphen."},
+   {IDC_CANCEL_ABRIDGE,
+    "Use this when you want to continue using a session, but no longer want an abridgement\n"
+    "file name associated with it.  Check the box, and choose the session.  The association\n"
+    "of the abridgement file with that session will be permanently removed."},
+   {IDC_ABRIDGE_NAME,
+    "Set this to the desired abridgement file name if the default name \"abridge.txt\" is\n"
+    "not suitable.  This would be true, for example, if you have two sessions associated\n"
+    "with different abridgement files."},
+   {-1, ""}
+};
+
+
 
 LRESULT WINAPI Startup_Dialog_WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+   LPHELPINFO lpHelpInfo;
+   int i = 1;
+
    switch (message) {
       HANDLE_MSG(hwnd, WM_INITDIALOG, Startup_OnInitDialog);
       HANDLE_MSG(hwnd, WM_COMMAND, Startup_OnCommand);
+   case WM_HELP:
+      lpHelpInfo = (LPHELPINFO) lParam;
+
+      // Search for a help message.  But first, if we are doing the
+      // "level" menu instead of the "session" menu, use a different message.
+      // We do this by starting the search at 1 under normal circumstances,
+      // but starting it at 0 when we want to pick up the "level" message.
+
+      if (dialog_menu_type == dialog_level) i = 0;
+
+      for ( ; dialog_help_list[i].id >= 0 ; i++) {
+         if (lpHelpInfo->iCtrlId == dialog_help_list[i].id) {
+            MessageBox(hwnd, dialog_help_list[i].message, "Help", MB_OK);
+            return TRUE;
+         }
+      }
+      return FALSE;
    default:
       return FALSE;      /* We do *NOT* call the system default handler. */
    }
@@ -2629,7 +2732,7 @@ bool iofull::get_call_command(uims_reply *reply_p)
          goto startover;
 
       call_conc_option_state save_stuff = user_match.match.call_conc_options;
-      there_is_a_call = FALSE;
+      there_is_a_call = false;
       my_retval = deposit_call_tree(&user_match.match, (parse_block *) 0, 2);
       user_match.match.call_conc_options = save_stuff;
       if (there_is_a_call) {
@@ -2663,40 +2766,55 @@ uims_reply iofull::get_resolve_command()
 
 
 
-int iofull::do_comment_popup(char dest[])
+popup_return iofull::do_comment_popup(char dest[])
 {
-   if (do_general_text_popup("Enter comment:", dest) == POPUP_ACCEPT_WITH_STRING)
+   if (do_general_text_popup("Enter comment:", "", "", dest) == POPUP_ACCEPT_WITH_STRING)
       return POPUP_ACCEPT_WITH_STRING;
    else
       return POPUP_DECLINE;
 }
 
 
-int iofull::do_outfile_popup(char dest[])
+popup_return iofull::do_outfile_popup(char dest[])
 {
-   char myPrompt[MAX_TEXT_LINE_LENGTH];
-
-   wsprintf(myPrompt, "Sequence output file is \"%s\". Enter new name:", outfile_string);
-   return do_general_text_popup(myPrompt, dest);
+   char buffer[MAX_TEXT_LINE_LENGTH];
+   sprintf(buffer, "Current sequence output file is \"%s\".", outfile_string);
+   return do_general_text_popup(buffer,
+                                "Enter new name (or '+' to base it on today's date):",
+                                outfile_string,
+                                dest);
 }
 
 
-int iofull::do_header_popup(char dest[])
+popup_return iofull::do_header_popup(char dest[])
 {
    char myPrompt[MAX_TEXT_LINE_LENGTH];
 
    if (header_comment[0])
-      wsprintf(myPrompt, "Current title is \"%s\". Enter new title:", header_comment);
+      sprintf(myPrompt, "Current title is \"%s\".", header_comment);
    else
-      wsprintf(myPrompt, "Enter new title:");
+      myPrompt[0] = 0;
 
-   return do_general_text_popup(myPrompt, dest);
+   return do_general_text_popup(myPrompt, "Enter new title:", "", dest);
 }
 
 
-int iofull::do_getout_popup (char dest[])
+popup_return iofull::do_getout_popup (char dest[])
 {
-   return do_general_text_popup("Sequence title:", dest);
+   char buffer[MAX_TEXT_LINE_LENGTH+MAX_FILENAME_LENGTH];
+
+   if (header_comment[0]) {
+      sprintf(buffer, "Session title is \"%s\".", header_comment);
+      return
+         do_general_text_popup(buffer,
+                               "You can give an additional comment for just this sequence:",
+                               "",
+                               dest);
+   }
+   else {
+      sprintf(buffer, "Output file is \"%s\".", outfile_string);
+      return do_general_text_popup(buffer, "Sequence comment:", "", dest);
+   }
 }
 
 
@@ -2859,7 +2977,7 @@ int iofull::do_tagger_popup(int tagger_class)
 }
 
 
-uint32 iofull::get_number_fields(int nnumbers, long_boolean forbid_zero)
+uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
 {
    int i;
    uint32 number_fields = user_match.match.call_conc_options.number_fields;

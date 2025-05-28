@@ -1079,7 +1079,7 @@ expand::thing expand::init_table[] = {
 // the code number for it.  The maps themselves are in tables
 // "map_init_table" and "spec_map_table" in this file.
 // The procedure "get_map_from_code" takes the code number and finds
-// the indicated map in the tables.  The principle users of maps are
+// the indicated map in the tables.  The principal users of maps are
 // "divided_setup_move" and "overlapped_setup_move".  They are simply
 // given the map code, and they call "get_map_from_code" to get the
 // map itself.  There are few other places that call "get_map_from_code"
@@ -2256,7 +2256,11 @@ const map::map_thing map::spec_map_table[] = {
    {{3, 5, 17, 15, 18, 20, 22, 1,         6, 8, 10, 13, 15, 17, 5, 3},
     s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4c},
    {{21, 23, 11, 9, 12, 14, 16, 19,       0, 2, 4, 7, 9, 11, 23, 21},
-    s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4d}};
+    s2x4,2,MPKIND__NONE,1,        0,  s_bigblob, 0x005, 0, spcmap_wblob_1x4d},
+   {{0, 1, 2, 3, 9, 8, 7, 6},
+    s1x2,4,MPKIND__NONE,0,        0,  sbigbone, 0x000, 0, spcmap_bigbone_cw},
+   {{11, 10, 2, 3, 9, 8, 4, 5},
+    s1x2,4,MPKIND__NONE,0,        0,  sbigbone, 0x000, 0, spcmap_bigbone_ccw}};
 
 
 static expand::thing rear_thar_stuff = {{9, 10, 13, 14, 1, 2, 5, 6}, 8, s_thar, s4x4, 0};
@@ -2598,8 +2602,6 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s2x2,     0, 1, 1, 2,  0x2FD, schema_concentric_others},
    {s2x6,           schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,           9, 2, 3, 8},
              s2x2,     s2x2,     1, 1, 2, 2,  0x2FB, schema_in_out_triple},
-   {sbigbone,       schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,           2, 3, 8, 9},
-             s2x2,     s1x4,     1, 0, 1, 2,  0x2FD, schema_in_out_triple},
    {sbigdmd,        schema_concentric, {0, 1, 10, 11, 4, 5, 6, 7,           8, 9, 2, 3},
              s2x2,     s1x4,     0, 1, 2, 2,  0x2F7, schema_in_out_triple},
    {s_hrglass,      schema_concentric, {5, 0, 1, 4,       6, 3, 2, 7},
@@ -2642,8 +2644,13 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     sdmd,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
    {s1x3dmd,         schema_concentric, {-1, -1, 1, 0, 5, 4, -1, -1,        2, 3, 6, 7},
              s1x4,     sdmd,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
-   {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,       7, 11, 1, 5},
+   {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,         7, 11, 1, 5},
              sdmd,     sdmd,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
+
+   // A new one, 13 July 2003.
+   {s_dhrglass,      schema_in_out_triple, {-1, 0, 6, 5, 2, 1, -1, 4,       -1, 7, -1, 3},
+             sdmd,     s1x4,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
+
    {s4dmd,          schema_in_out_quad, {11, 12, 0, 13, 8, 5, 3, 4,
                          1, 2, 6, 7, 9, 10, 14, 15},
              sdmd,     s_qtag,   1, 0, 1, 2,  0x0FD, schema_in_out_quad},
@@ -2692,6 +2699,11 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    // is currently unused.
    {s4x6,           schema_concentric, {17, -1, 0, -1, 12, -1, 5,-1,    10, 9, 8, 7, 22, 21, 20, 19},
              sdmd,     s2x4,     1, 0, 1, 2,  0x2FD, schema_in_out_quad},
+
+   {s4x6,           schema_concentric, {15, 20, 9, 2, 3, 8, 21, 14,
+                                        5, 6, 23, 7, 12, 13, 16, 22, 17, 18, 11, 19, 0, 1, 4, 10},
+             s2x4,     s4x4,     1, 0, 1, 1,  0x2FD, schema_concentric},
+
    {sbigrig,        schema_concentric, {0, 1, 3, 2, 9, 8, 6, 7,    -1, 11, 4, -1, -1, 5, 10, -1},
              s1x4,     s2x4,     0, 1, 1, 2,  0x2F7, schema_in_out_quad},
    {s4x6,           schema_concentric, {18, 11, 10, 19, 22, 7, 6, 23,    15, 20, 9, 2, 3, 8, 21, 14},
@@ -2976,6 +2988,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s1x4,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
    {sbigh,          schema_in_out_triple, {3, 2, 0, 1, 6, 7, 9, 8,         4, 5, 10, 11},
              s1x4,     s1x4,     1, 0, 1, 2,  0x0FD, schema_in_out_triple},
+   {sbigbone,       schema_concentric, {11, 0, 1, 10, 7, 4, 5, 6,          2, 3, 8, 9},
+             s2x2,     s1x4,     1, 0, 1, 2,  0x2FD, schema_in_out_triple},
    {sbigbone,       schema_in_out_triple, {0, 1, 10, 11, 4, 5, 6, 7,       2, 3, 8, 9},
              s2x2,     s1x4,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
    {sbigrig,        schema_in_out_triple, {0, 1, 3, 2, 9, 8, 6, 7,         4, 5, 10, 11},
@@ -4415,6 +4429,14 @@ static const coordrec thingbigbone = {sbigbone, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thingbigrig = {sbigrig, 4,
+   {-18, -14, -10,  -6,  -2,   2,  18,  14,  10,   6,   2,  -2},
+   {  0,   0,   0,   0,   2,   2,   0,   0,   0,   0,  -2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2,  3,  4,  5,  9,  8,  7,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, 11, 10, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thingbigx = {sbigx, 4,
    {-17, -13,  -9,  -5,   0,   0,  17,  13,   9,   5,   0,   0},
    {  0,   0,   0,   0,   6,   2,   0,   0,   0,   0,  -6,  -2}, {
@@ -4845,20 +4867,34 @@ static const id_bit_table id_bit_table_bigbone[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
-/* This table is only accepted if the population is a distorted tidal line (2-4-2). */
+// This table is only accepted if the population is a distorted tidal line (2-4-2).
 id_bit_table id_bit_table_bigbone_wings[] = {
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
+   EASTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
+   WESTBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
+
+static const id_bit_table id_bit_table_bigrig[] = {
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT( ID2_CENTER|ID2_CTR4),
+   NOBIT( ID2_CENTER|ID2_CTR4),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT(0),
+   NOBIT( ID2_CENTER|ID2_CTR4),
+   NOBIT( ID2_CENTER|ID2_CTR4)};
 
 /* If the population is a "common spot hourglass", the richer table below is used instead. */
 static const id_bit_table id_bit_table_bighrgl[] = {
@@ -6556,13 +6592,13 @@ const setup_attr setup_attrs[] = {
     {"6666e p@6666f o@abcd6 6lkji@76666g n@6666h m",
      "65a@65b@65c@65d@hgfe@mnop@65l@65k@65j@65i"}},
    {11,                     // sbigrig
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingbigrig,
+    &thingbigrig,
     {0, 0, 0, 0},
     {b_bigrig, b_pbigrig},
     {0, 0},
     false,
-    (const id_bit_table *) 0,
+    id_bit_table_bigrig,
     {"6666e f@7abcd6 6jihg@76666l k",
      "5a@5b@5c@5d@le@kf@5j@5i@5h@5g"}},
    {11,                     // sbighrgl
@@ -7405,9 +7441,10 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2x4ee, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x4ee,    fx0,          {1, 2, 3, 5, 6, 7}},
    {fx_f2x4bb, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x4bb,    fx0,          {0, 1, 3, 4, 5, 7}},
    {fx_f2x4dd, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x4dd,    fx0,          {0, 2, 3, 4, 6, 7}},
-   {fx_fdhrgld1, s1x2, s_dhrglass,  0, 1, 2,       fx_fdhrgld1,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 7, 4}},
-   {fx_fdhrgld2, s1x2, s_dhrglass,  0, 1, 2,       fx_fdhrgld2,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 1, 5, 7}},
-   {fx_f2x4endo, s1x2, s2x4,        1, 0, 2,       fx_f2x4endo,  fx_f1x8endo,  fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 7, 3, 4}},
+   {fx_fdhrgld1, s1x2, s_dhrglass,  0, 1, 2,     fx_fdhrgld1,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 7, 4}},
+   {fx_fdhrgld2, s1x2, s_dhrglass,  0, 1, 2,     fx_fdhrgld2,  fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 1, 5, 7}},
+   {fx_f2x4endo, s1x2, s2x4,        1, 0, 2,     fx_f2x4endo,  fx_f1x8endo,  fx_f4x4endo,  fx0, fx0,          fx0,    fx0,          fx0,          {0, 7, 3, 4}},
+   {fx_f4x4endo, s1x4, s4x4,        1, 0, 2,     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {12, 10, 8, 9, 0, 1, 4, 2}},
    {fx_bar55d, s2x2, s2x4,        0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 5, 6}},
    {fx_fppaad, s1x2, s2x4,        0, 0, 2,       fx_fppaad,    fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 3, 7, 5}},
    {fx_fpp55d, s1x2, s2x4,        0, 0, 2,       fx_fpp55d,    fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 2, 6, 4}},

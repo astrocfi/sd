@@ -266,6 +266,8 @@ extern void exit(int code);
 
    The type "uint32" must be an unsigned integer of at least 32 bits. */
 
+typedef unsigned long int uint32;
+
 /* These things come from mkcalls.c for the standalone compiler, or from
    sdtables.c or sdui-mac.c for the built-in compiler. */
 extern int begin_sizes[];
@@ -775,6 +777,7 @@ char *schematab[] = {
    "maybe_nxn_1331_cols_conc",
    "1331_conc",
    "???",
+   "1221_conc",
    "conc_diamond_line",
    "conc_diamonds",
    "crossconc_diamonds",
@@ -840,7 +843,7 @@ char *schematab[] = {
    "select_sideliners",
    "select_original_rims",
    "select_original_hubs",
-   "select_those_facing",
+   "select_those_facing_both_sets_live",
    "select_center2",
    "select_center4",
    "select_center6",
@@ -875,6 +878,7 @@ char *qualtab[] = {
    "1fl_only",
    "2fl_only",
    "2fl_per_1x4",
+   "ctr_2fl_only",
    "3x3_2fl_only",
    "4x4_2fl_only",
    "leads_only",
@@ -1041,13 +1045,14 @@ char *flagtab1[] = {
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
-   "sequence_starter",
+   "distribute_repetitions",
    "neednumber",
    "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
    "need_four_numbers",
    "left_means_touch_or_check",
    "left_only_if_half",
-   "distribute_repetitions",
+   "sequence_starter",
+   "sequence_starter_only",
    "dont_use_in_resolve",
    "dont_use_in_nice_resolve",
    "split_large_setups",
@@ -1059,9 +1064,9 @@ char *flagtab1[] = {
    "ends_take_right_hands",
    "funny_means_those_facing",
    "split_like_square_thru",
-   "no_elongation_allowed",
-   "imprecise_rotation",       // The overflow (into CFLAG2_) items start here.
-   "can_be_fan",               //    There is space for 8 of them.  So there are 3 left.
+   "no_elongation_allowed",    // The overflow (into CFLAG2_) items start here.
+   "imprecise_rotation",       //    There is space for 8 of them.  So there is 1 left.
+   "can_be_fan",
    "equalize",
    "one_person_call",
    "yield_if_ambiguous",
@@ -1806,9 +1811,8 @@ static void write_fullword(uint32 n)
 #define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
 
 
-static long_boolean do_heritflag_merge(uint32 *dest, uint32 source)
+static bool do_heritflag_merge(uint32 *dest, uint32 source)
 {
-
    if (source & INHERITFLAG_REVERTMASK) {
       /* If the source is a revert/reflect bit, things are complicated. */
       if (!(*dest & INHERITFLAG_REVERTMASK)) {
@@ -1817,49 +1821,49 @@ static long_boolean do_heritflag_merge(uint32 *dest, uint32 source)
       else if (source == INHERITFLAGRVRTK_REVERT && *dest == INHERITFLAGRVRTK_REFLECT) {
          *dest &= ~INHERITFLAG_REVERTMASK;
          *dest |= INHERITFLAGRVRTK_RFV;
-         return FALSE;
+         return false;
       }
       else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_REVERT) {
          *dest &= ~INHERITFLAG_REVERTMASK;
          *dest |= INHERITFLAGRVRTK_RVF;
-         return FALSE;
+         return false;
       }
       else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_REFLECT) {
          *dest &= ~INHERITFLAG_REVERTMASK;
          *dest |= INHERITFLAGRVRTK_RFF;
-         return FALSE;
+         return false;
       }
       else if (source == INHERITFLAGRVRTK_REVERT && *dest == INHERITFLAGRVRTK_RVF) {
          *dest &= ~INHERITFLAG_REVERTMASK;
          *dest |= INHERITFLAGRVRTK_RVFV;
-         return FALSE;
+         return false;
       }
       else if (source == INHERITFLAGRVRTK_REFLECT && *dest == INHERITFLAGRVRTK_RFV) {
          *dest &= ~INHERITFLAG_REVERTMASK;
          *dest |= INHERITFLAGRVRTK_RFVF;
-         return FALSE;
+         return false;
       }
       else
-         return TRUE;
+         return true;
    }
 
    /* Check for plain redundancy.  If this is a bit in one of the complex
       fields, this simple test may not catch the error, but the next one will. */
 
    if ((*dest & source))
-      return TRUE;
+      return true;
 
    if (((*dest & FORBID1) && (source & FORBID1)) ||
        ((*dest & FORBID2) && (source & FORBID2)) ||
        ((*dest & FORBID3) && (source & FORBID3)) ||
        ((*dest & FORBID4) && (source & FORBID4)))
-      return TRUE;
+      return true;
 
    good:
 
    *dest |= source;
 
-   return FALSE;
+   return false;
 }
 
 

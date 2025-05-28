@@ -202,7 +202,7 @@ BEGIN
 END
 
 IDD_START_DIALOG DIALOG DISCARDABLE  5, 5, 373, 286
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 CAPTION "Sd startup"
 FONT 10, "Courier"
@@ -249,15 +249,16 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,143,183,92,10
 END
 
-IDD_TEXT_ENTRY_DIALOG DIALOG DISCARDABLE  86, 105, 208, 83
+IDD_TEXT_ENTRY_DIALOG DIALOG DISCARDABLE  86, 105, 208, 92
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Text entry"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_FILE_EDIT,9,31,190,12,ES_AUTOHSCROLL
-    LTEXT           "",IDC_FILE_TEXT,9,14,190,9
-    PUSHBUTTON      "Cancel",IDC_FILE_CANCEL,141,63,50,14
-    DEFPUSHBUTTON   "Accept",IDC_FILE_ACCEPT,76,63,50,14
+    LTEXT           "",IDC_FILE_TEXT1,9,14,190,12
+    LTEXT           "",IDC_FILE_TEXT2,9,26,190,12
+    EDITTEXT        IDC_FILE_EDIT,9,40,190,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Cancel",IDC_FILE_CANCEL,141,72,50,14
+    DEFPUSHBUTTON   "Accept",IDC_FILE_ACCEPT,76,72,50,14
 END
 
 IDD_PRINTING_DIALOG DIALOG DISCARDABLE  32, 32, 186, 95
@@ -306,6 +307,7 @@ BEGIN
     ID_FILE_PRINTTHIS       "Print the file you have been working on."
     ID_FILE_PRINTFILE       "Print any other file."
     ID_FILE_ABOUTSD         "Display program information and copyright."
+    ID_HELP_SDHELP          "Browse the Sd manual, in html format, using your selected browser."
     ID_FILE_EXIT            "Exit from the program."
     ID_COMMAND_UNDO         "Undo last call or concept, or exit from current search."
     ID_COMMAND_ABORTTHISSEQUENCE 
