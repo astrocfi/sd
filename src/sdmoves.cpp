@@ -1343,8 +1343,8 @@ extern uint32 do_call_in_series(
 }
 
 // For each person, we remember the 3 best candidates with whom that person might Jaywalk.
-enum { NUMBER_OF_JAYWALK_CANDIDATES = 3,
-       NUMBER_OF_JAYWALK_VERT_CAND = 2 };
+enum { NUMBER_OF_JAYWALK_CANDIDATES = 4,
+       NUMBER_OF_JAYWALK_VERT_CAND = 3 };
 
 struct jaywalkpersonstruct {
    int jp;           // Person with whom to Jay Walk.
@@ -1372,10 +1372,6 @@ struct matrix_rec {
    int deltax;         // How this person will move, relative to his own facing
    int deltay;         //   direction, when call is finally executed.
    int nearestdrag;    // Something having to do with "drag".
-   int leftidx;        // X-increment of leftmost valid jaywalkee.
-   int leftidxjdist;   // Jdist for same.
-   int rightidx;       // X-increment of rightmost valid jaywalkee.
-   int rightidxjdist;  // Jdist for same.
    int deltarot;       // How this person will turn.
    uint32 roll_stability_info; // This person's slide, roll, & stability info, from call def'n.
    int orig_source_idx;
@@ -2387,15 +2383,13 @@ static void make_matrix_chains(
 
             // We know the jaywalkers can see each other.
 
-            int lateraldist = (mi->dir & 1) ? dely : delx;
-            if ((mi->dir + 1) & 2) lateraldist = -lateraldist;
+            int latdist = (mi->dir & 1) ? dely : delx;
+            if ((mi->dir + 1) & 2) latdist = -latdist;
 
             // Compute the Euclidean distance as a measure of badness.
             // (Actually, the square of the distance.)
 
-            int euc_distance = lateraldist;
-            if (euc_distance < 0) euc_distance = -euc_distance;
-            euc_distance = euc_distance*euc_distance + vertdist*vertdist;
+            int euc_distance = latdist*latdist + vertdist*vertdist;
 
             // Find out whether this candidate is one of the best, and, if so,
             // where she should be in the list.
@@ -2408,7 +2402,7 @@ static void make_matrix_chains(
 
             if (k < NUMBER_OF_JAYWALK_CANDIDATES-1) {
                mi->jpersons[k+1].jp = j;
-               mi->jpersons[k+1].jp_lateral = lateraldist;
+               mi->jpersons[k+1].jp_lateral = latdist;
                mi->jpersons[k+1].jp_vertical = vertdist;
                mi->jpersons[k+1].jp_eucdist = euc_distance;
             }
@@ -2467,7 +2461,194 @@ static void make_matrix_chains(
 }
 
 
-static void process_matrix_chains(
+static int jaywalk_recurse(
+   matrix_rec matrix_info[],
+   int start_index,
+   int nump,
+   uint32 flags) THROW_DECL
+{
+   int i, j, k;
+   matrix_rec best_info[9];
+   int best_cost;
+
+   // Pre-clean: Clear out any links that aren't bidirectional.
+   // First, mark all targets.
+
+   for (i=0; i<nump; i++)
+      matrix_info[i].jaywalktargetmask = 0;
+
+   for (i=0; i<nump; i++) {
+      matrix_rec *mi = &matrix_info[i];
+      if ((flags & MTX_IGNORE_NONSELECTEES) && !mi->sel) continue;
+
+      for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+         j = mi->jpersons[k].jp;
+         if (j >= 0)
+            matrix_info[j].jaywalktargetmask |= 1 << i;
+      }
+   }
+
+   // Delete target pointers that aren't bidirectional.
+
+   for (i=0; i<nump; i++) {
+      matrix_rec *mi = &matrix_info[i];
+      if ((flags & MTX_IGNORE_NONSELECTEES) && !mi->sel) continue;
+
+      for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+         j = mi->jpersons[k].jp;
+         if (j<0) break;
+         if (!(mi->jaywalktargetmask & (1<<j))) {
+            // Delete this pointer from i to j, since no pointer from j to i exists.
+            matrix_info[j].jaywalktargetmask &= ~(1 << i);
+            for ( ; k<NUMBER_OF_JAYWALK_CANDIDATES-1 ; k++)
+               mi->jpersons[k] = mi->jpersons[k+1];
+            mi->jpersons[NUMBER_OF_JAYWALK_CANDIDATES-1].jp = -1;
+         }
+      }
+
+      // If selected person has no jaywalkee, it is an error.
+      if (mi->jpersons[0].jp < 0)
+         return -i-1;
+   }
+
+   // Find first index with multiple choices.
+   for (i=start_index; i<nump; i++) {
+      matrix_rec *mi = &matrix_info[i];
+      if ((flags & MTX_IGNORE_NONSELECTEES) && !mi->sel) continue;
+
+      int choice_count = 0;
+
+      for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+         if (mi->jpersons[k].jp >= 0) choice_count++;
+      }
+
+      if (choice_count >= 2) {
+         int cost_or_error_code;
+         bool found_a_solution = false;
+
+         for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
+            int target = mi->jpersons[k].jp;
+            if (target >= 0) {
+
+               // This person wants to jay walk with someone.  First, save a temporary
+               // copy of the whole matrix_info array;
+
+               matrix_rec temp_info[9];
+
+               for (j=0; j<nump; j++) temp_info[j] = matrix_info[j];
+
+               // Alter the temporary array so that this person has only that one choice.
+
+               temp_info[i].jpersons[0] = mi->jpersons[k];
+               for (j=1 ; j<NUMBER_OF_JAYWALK_CANDIDATES ; j++)
+                  temp_info[i].jpersons[j].jp = -1;
+
+               // The array is badly messed up, but the next pre-clean will fix them.
+               // Recurse.  A returned value <0 says that this choice doesn't work.
+               cost_or_error_code = jaywalk_recurse(temp_info, i+1, nump, flags);
+
+               if (cost_or_error_code >= 0) {
+                  // Found a solution.  Save the best solution.
+                  if (!found_a_solution || cost_or_error_code < best_cost) {
+                     for (j=0; j<nump; j++) best_info[j] = temp_info[j];
+                     best_cost = cost_or_error_code;
+                  }
+
+                  found_a_solution = true;
+               }
+            }
+         }
+
+         // Finished the K scan.  Did any recursion find anything?
+         // (If more than 1 thing was found, they were compared, and we have the best.)
+
+         if (found_a_solution) {
+            for (j=0; j<nump; j++) matrix_info[j] = best_info[j];
+            return best_cost;
+         }
+         else {
+            // No recursion worked; return last error code from a failed recursion.  It is negative.
+            return cost_or_error_code;
+         }
+      }
+   }
+
+   // If did the whole scan without needing further recursion, the current
+   // configuration is a solution.  By leaving it in matrix_info, it gets returned.
+   // Calculate its cost.
+
+   int this_cost = 0;
+
+   for (j=0; j<nump; j++) {
+      matrix_rec *mj = &matrix_info[j];
+      if ((flags & MTX_IGNORE_NONSELECTEES) && !mj->sel) continue;
+      this_cost += mj->jpersons[0].jp_eucdist;
+   }
+
+   return this_cost;
+}
+
+static void process_jaywalk_chains(
+   matrix_rec matrix_info[],
+   int nump,
+   const uint32 *callstuff,
+   uint32 flags) THROW_DECL
+{
+   int i, j;
+
+   int errnum = jaywalk_recurse(matrix_info, 0, nump, flags);
+   if (errnum < 0)
+      failp(matrix_info[-errnum-1].id1, "can't find person to jaywalk with.");
+
+   for (i=0; i<nump; i++) {
+      matrix_rec *mi = &matrix_info[i];
+      if ((flags & MTX_IGNORE_NONSELECTEES) && !mi->sel) continue;
+      j = mi->jpersons[0].jp;
+      matrix_rec *mj = &matrix_info[j];
+      int delx = mj->x - mi->x;
+      int dely = mj->y - mi->y;
+      int deltarot;
+
+      uint32 datum = callstuff[mi->girlbit];
+      if (datum == 0) failp(mi->id1, "can't do this call.");
+
+      if (mi->dir & 2) delx = -delx;
+      if ((mi->dir+1) & 2) dely = -dely;
+
+      set_matrix_info_from_calldef(*mi, datum);
+      mi->realdone = true;
+
+      deltarot = (mj->dir - mi->dir + 2) & 3;
+
+      if (deltarot) {
+         // This person went "around the corner" due to facing
+         // direction of other dancer.
+         if (mi->deltarot ||
+             ((mi->roll_stability_info/DBSTAB_BIT) & STB_MASK) !=
+             STB_NONE+STB_REVERSE) {   // Looking for "Z".
+            // Call definition also had turning, as in "jay slide thru".
+            // Just erase the stability info.
+            mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
+         }
+         else {
+            mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
+            mi->roll_stability_info |= DBSTAB_BIT * STB_A;
+            if ((deltarot & 3) == 1)
+               mi->roll_stability_info |= DBSTAB_BIT * STB_REVERSE;
+         }
+      }
+
+      mi->deltarot += deltarot;
+      mi->deltarot &= 3;
+
+      if (mi->dir & 1) { mi->deltax += dely; mi->deltay = +delx; }
+      else             { mi->deltax += delx; mi->deltay = +dely; }
+   }
+}
+
+
+
+static void process_nonjaywalk_chains(
    matrix_rec matrix_info[],
    int nump,
    const uint32 *callstuff,
@@ -2475,191 +2656,18 @@ static void process_matrix_chains(
    int filter) THROW_DECL    // 1 for E/W chains, 0 for N/S chains.
 {
    bool another_round = true;
-   bool picking_end_jaywalkers = false;
-   int i, j, k, l;
+   int i;
 
    // Pick out pairs of people and move them.
 
    while (another_round) {
       another_round = false;
 
-      if (flags & MTX_FIND_JAYWALKERS) {
-         // Clear out any bits that aren't bidirectional.
-         // First, mark all targets.
-         // But first, clear the target mask words.
-
-         for (i=0; i<nump; i++)
-            matrix_info[i].jaywalktargetmask = 0;
-
-         for (i=0; i<nump; i++) {
-            matrix_rec *mi = &matrix_info[i];
-            if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
-
-            for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
-               j = mi->jpersons[k].jp;
-               if (j >= 0)
-                  matrix_info[j].jaywalktargetmask |= 1 << i;
-            }
-         }
-
-         // Delete target pointers that aren't bidirectional.
-
-         for (i=0; i<nump; i++) {
-            matrix_rec *mi = &matrix_info[i];
-            if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
-
-            for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
-               j = mi->jpersons[k].jp;
-               if (j<0) break;
-               if (!(mi->jaywalktargetmask & (1<<j))) {
-                  // Delete this pointer from i to j, since no pointer from j to i exists.
-                  matrix_info[j].jaywalktargetmask &= ~(1 << i);
-                  for ( ; k<NUMBER_OF_JAYWALK_CANDIDATES-1 ; k++)
-                     mi->jpersons[k] = mi->jpersons[k+1];
-                  mi->jpersons[NUMBER_OF_JAYWALK_CANDIDATES-1].jp = -1;
-               }
-            }
-
-            // If selected person has no jaywalkee, it is an error.
-            if (mi->jpersons[0].jp < 0)
-               failp(mi->id1, "can't find person to jaywalk with.");
-         }
-      }
-
       for (i=0; i<nump; i++) {
          matrix_rec *mi = &matrix_info[i];
 
          if (!mi->done) {
-            if (flags & MTX_FIND_JAYWALKERS) {
-               // If no jbits, person wasn't selected.
-               if (mi->jaywalktargetmask != 0) {
-                  if (picking_end_jaywalkers) {
-                     for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
-                        j = mi->jpersons[k].jp;
-                        if (j<0) break;
-                        matrix_rec *mj = &matrix_info[j];
-
-                        // Look for people who have been identified
-                        // as extreme jaywalkers with each other.
-                        // But only if they are not facing the same direction.
-                        if ((mi->dir ^ mj->dir) != 0 &&
-                            ((j == mi->leftidx && i == mj->rightidx) ||
-                            (j == mi->rightidx && i == mj->leftidx))) {
-                           // Delete all of i's jaywalk candidates except j.
-                           mi->jpersons[0] = mi->jpersons[k];
-                           for (l=1 ; l<NUMBER_OF_JAYWALK_CANDIDATES ; l++)
-                              mi->jpersons[l].jp = -1;
-                           // The symmetry operation will delete the extra
-                           // candidates from j.
-                           another_round = true;  // We will move them on a future iteration.
-                        }
-                     }
-                  }
-                  else {
-                     // Fill in jaywalkee indices with record-holding lateral distance.
-                     mi->leftidx = -1;
-                     mi->rightidx = -1;
-
-                     for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
-                        j = mi->jpersons[k].jp;
-                        if (j<0) break;
-
-                        matrix_rec *mj = &matrix_info[j];
-
-                        int jdist = mi->jpersons[k].jp_lateral;
-
-                        // jdist = apparent abs x-coord of j in i's coord sys.
-                        if (mi->leftidx >= 0) {
-                           if (jdist > mi->leftidxjdist) {
-                              mi->leftidx = j;
-                              mi->leftidxjdist = jdist;
-                           }
-                        }
-                        else {
-                           mi->leftidx = j;
-                           mi->leftidxjdist = jdist;
-                        }
-
-                        if (mi->rightidx >= 0) {
-                           if (jdist < mi->rightidxjdist) {
-                              mi->rightidx = j;
-                              mi->rightidxjdist = jdist;
-                           }
-                        }
-                        else {
-                           mi->rightidx = j;
-                           mi->rightidxjdist = jdist;
-                        }
-
-                        // Look for special case of two people uniquely selecting each other.
-                        if (mi->jpersons[0].jp == j && mi->jpersons[1].jp < 0 &&
-                            mj->jpersons[0].jp == i && mj->jpersons[1].jp < 0) {
-                           int delx = mj->x - mi->x;
-                           int dely = mj->y - mi->y;
-                           int deltarot;
-
-                           uint32 datum = callstuff[mi->girlbit];
-                           if (datum == 0) failp(mi->id1, "can't do this call.");
-
-                           another_round = true;
-
-                           if (mi->dir & 2) delx = -delx;
-                           if ((mi->dir+1) & 2) dely = -dely;
-
-                           set_matrix_info_from_calldef(*mi, datum);
-                           mi->realdone = true;
-
-                           deltarot = (mj->dir - mi->dir + 2) & 3;
-
-                           if (deltarot) {
-                              // This person went "around the corner" due to facing
-                              // direction of other dancer.
-                              if (mi->deltarot ||
-                                  ((mi->roll_stability_info/DBSTAB_BIT) & STB_MASK) !=
-                                  STB_NONE+STB_REVERSE) {   // Looking for "Z".
-                                 // Call definition also had turning, as in "jay slide thru".
-                                 // Just erase the stability info.
-                                 mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
-                              }
-                              else {
-                                 mi->roll_stability_info &= ~(DBSTAB_BIT * STB_MASK);
-                                 mi->roll_stability_info |= DBSTAB_BIT * STB_A;
-                                 if ((deltarot & 3) == 1)
-                                    mi->roll_stability_info |= DBSTAB_BIT * STB_REVERSE;
-                              }
-                           }
-
-                           mi->deltarot += deltarot;
-                           mi->deltarot &= 3;
-
-                           if (mi->dir & 1) { mi->deltax += dely; mi->deltay = +delx; }
-                           else             { mi->deltax += delx; mi->deltay = +dely; }
-
-                           mi->done = true;
-                        }
-                        else if (mi->jpersons[0].jp == j && mi->jpersons[1].jp < 0) {
-                           // Take care of anyone who has unambiguous jaywalkee.  Get that
-                           // jaywalkee's attention by stripping off all his other bits.
-
-                           for (k=0 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++) {
-                              l = mj->jpersons[k].jp;
-                              if (l<0) break;
-                              if (l == i) break;
-                           }
-
-                           if (k<NUMBER_OF_JAYWALK_CANDIDATES)
-                              mj->jpersons[0] = mj->jpersons[k];
-
-                           for (k=1 ; k<NUMBER_OF_JAYWALK_CANDIDATES ; k++)
-                              mj->jpersons[k].jp = -1;
-
-                           another_round = true;   // We will move them on a future iteration.
-                        }
-                     }
-                  }
-               }
-            }
-            else if (mi->nextse) {
+            if (mi->nextse) {
                // This person might be ready to be paired up with someone.
                if (mi->nextnw)
                   // This person has neighbors on both sides.  Can't do anything yet.
@@ -2706,21 +2714,8 @@ static void process_matrix_chains(
             }
          }
       }
-
-      // If anything happened, don't pick jaywalkers next time around.
-
-      if (another_round) picking_end_jaywalkers = false;
-
-      // If doing a jaywalk, and nothing was processed, the leftest/rightest stuff
-      // is filled in, and we should check same.
-
-      if ((flags & MTX_FIND_JAYWALKERS) && !another_round && !picking_end_jaywalkers) {
-         picking_end_jaywalkers = true;
-         another_round = true;     // Do another round this way.
-      }
    }
 }
-
 
 
 
@@ -2763,11 +2758,13 @@ static void partner_matrixmove(
    make_matrix_chains(matrix_info, nump, false, flags, 1);
    if (flags & MTX_FIND_SQUEEZERS)
       make_matrix_chains(matrix_info, nump, true, flags, 1);
-   process_matrix_chains(matrix_info, nump, callstuff, flags, 1);
 
-   // If jaywalking, don't do it again.
+   if (flags & MTX_FIND_JAYWALKERS) {
+      process_jaywalk_chains(matrix_info, nump, callstuff, flags);
+   }
+   else {
+      process_nonjaywalk_chains(matrix_info, nump, callstuff, flags, 1);
 
-   if (!(flags & MTX_FIND_JAYWALKERS)) {
       // Now clean off the pointers in preparation for the second pass.
 
       for (i=0; i<nump; i++) {
@@ -2783,7 +2780,7 @@ static void partner_matrixmove(
       make_matrix_chains(matrix_info, nump, false, flags, 0);
       if (flags & MTX_FIND_SQUEEZERS)
          make_matrix_chains(matrix_info, nump, true, flags, 0);
-      process_matrix_chains(matrix_info, nump, callstuff, flags, 0);
+      process_nonjaywalk_chains(matrix_info, nump, callstuff, flags, 0);
    }
 
    // Scan for people who ought to have done something but didn't.
@@ -2915,7 +2912,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    // Make the lateral chains first.
 
    make_matrix_chains(matrix_info, nump, false, MTX_STOP_AND_WARN_ON_TBONE, 1);
-   process_matrix_chains(matrix_info, nump, (uint32 *) 0, flags, 1);
+   process_nonjaywalk_chains(matrix_info, nump, (uint32 *) 0, flags, 1);
 
    /* Now clean off the pointers in preparation for the second pass. */
 
@@ -2930,7 +2927,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    // Vertical chains next.
 
    make_matrix_chains(matrix_info, nump, false, MTX_STOP_AND_WARN_ON_TBONE, 0);
-   process_matrix_chains(matrix_info, nump, (uint32 *) 0, flags, 0);
+   process_nonjaywalk_chains(matrix_info, nump, (uint32 *) 0, flags, 0);
 
    // Scan for people who ought to have done something but didn't.
 
@@ -3291,21 +3288,33 @@ static void rollmove(
 }
 
 
+static uint32 fix_gensting_weirdness(const setup_command *cmd, uint32 callflagsh)
+{
+   if (cmd->cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCK_STINGY) {
+      // User gave "stingy".  Because we are cheating with these bits, special action is needed.
+      if (callflagsh & INHERITFLAG_YOYOETCK_GENEROUS)
+         callflagsh |= INHERITFLAG_YOYOETCK_STINGY;
+   }
+   return callflagsh;
+}
+
+
+
 static void do_inheritance(setup_command *cmd,
                            const calldefn *parent_call,
                            const by_def_item *defptr,
                            uint32 extra_heritmask_bits) THROW_DECL
 {
-   /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that
-      they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
-      flag controls both "INHERITFLAG_REVERSE" and "INHERITFLAG_LEFT", turning the former
-      into the latter.  This makes reverse circle by, touch by, and clean sweep work. */
+   // Strip out those concepts that do not have the "dfm__xxx" flag set saying that
+   // they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
+   // flag controls both "INHERITFLAG_REVERSE" and "INHERITFLAG_LEFT", turning the former
+   // into the latter.  This makes reverse circle by, touch by, and clean sweep work.
 
-   /* If this subcall has "inherit_reverse" or "inherit_left" given, but the top-level call
-      doesn't permit the corresponding flag to be given, we should turn any "reverse" or
-      "left" modifier that was given into the other one, and cause that to be inherited.
-      This is what turns, for example, part 3 of "*REVERSE* clean sweep" into a "*LEFT*
-      1/2 tag". */
+   // If this subcall has "inherit_reverse" or "inherit_left" given, but the top-level call
+   // doesn't permit the corresponding flag to be given, we should turn any "reverse" or
+   // "left" modifier that was given into the other one, and cause that to be inherited.
+   // This is what turns, for example, part 3 of "*REVERSE* clean sweep" into a "*LEFT*
+   // 1/2 tag".
 
    uint32 callflagsh = parent_call->callflagsh;
    uint32 temp_concepts = cmd->cmd_final_flags.herit;
@@ -3321,37 +3330,23 @@ static void do_inheritance(setup_command *cmd,
    // But we don't check "callflagsh", since, if it is off, we will force the bit
    // immediately below.
 
-   // But "half" and "lasthalf" are ALWAYS inherited.  (They can be forced, too.)
+   // Fix special case of yoyo/generous/stingy.  HALF and LASTHALF are always considered to be heritable.
+   uint32 hhhh = fix_gensting_weirdness(cmd, defptr->modifiersh | INHERITFLAG_HALF | INHERITFLAG_LASTHALF);
 
-   temp_concepts &= (~cmd->cmd_final_flags.herit |
-                     defptr->modifiersh |
-                     extra_heritmask_bits |
-                     INHERITFLAG_HALF |
-                     INHERITFLAG_LASTHALF);
-
-   // Fix special case of yoyo/generous/stingy.
-   if ((cmd->cmd_final_flags.herit & INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCMASK) {
-      // Incoming concept was "stingy",  Need to check just that bit in defptr->modifiersh.
-      if (defptr->modifiersh & INHERITFLAG_YOYOETCK_GENEROUS)
-         // Inheritance of stingy/generous was on; set both bits.
-         temp_concepts |= INHERITFLAG_YOYOETCMASK;
-      else
-         // Inheritance of stingy/generous was off; clear both bits.
-         temp_concepts &= ~INHERITFLAG_YOYOETCMASK;
-   }
+   temp_concepts &= (~cmd->cmd_final_flags.herit | hhhh | extra_heritmask_bits);
 
    // Now turn on any "force" flags.  These are indicated by "modifiersh" on
    // and "callflagsh" off.
 
    if (temp_concepts & defptr->modifiersh & ~callflagsh & (INHERITFLAG_HALF | INHERITFLAG_LASTHALF))
-      fail("Can't do this with this fraction.");   /* "force_half" was used when we already had "half" coming in. */
+      fail("Can't do this with this fraction.");   // "force_half" was used when we already had "half" coming in.
 
    if (((INHERITFLAG_REVERSE | INHERITFLAG_LEFT) & callflagsh) == 0)
-      /* If neither of the "reverse_means_mirror" or "left_means_mirror" bits is on,
-         we allow forcing of left or reverse. */
+      // If neither of the "reverse_means_mirror" or "left_means_mirror" bits is on,
+      // we allow forcing of left or reverse.
       temp_concepts |= forcing_concepts;
    else
-      /* Otherwise, we only allow the other bits. */
+      // Otherwise, we only allow the other bits.
       temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
 
    cmd->cmd_final_flags.herit = (heritflags) temp_concepts;
@@ -5960,6 +5955,8 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
    return the_schema;   // Won't actually happen.
 }
 
+
+
 void really_inner_move(
    setup *ss,
    bool qtfudged,
@@ -5979,7 +5976,8 @@ void really_inner_move(
    selector_kind special_selector = selector_none;
    selective_key special_indicator = selective_key_plain;
    uint32 special_modifiers = 0;
-   uint32 callflagsh = callspec->callflagsh;
+   // These two are always heritable.
+   uint32 callflagsh = callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF;
 
    // If the "matrix" concept is on and we get here,
    // that is, we haven't acted on a "split" command, it is illegal.
@@ -6228,13 +6226,11 @@ void really_inner_move(
       uint32 extra_heritmask_bits = 0;
 
       {
-         uint32 unaccepted_flags =
-            ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF));
+         // Fix special case of yoyo/generous/stingy.
+         uint32 hhhh = fix_gensting_weirdness(&ss->cmd, callflagsh);
 
-         // Another special case:  Inheritance of yoyo/stingy/generous is weird.
-         if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCMASK &&
-             (callflagsh & INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCK_GENEROUS)
-            unaccepted_flags &= ~INHERITFLAG_YOYOETCMASK;
+         uint32 unaccepted_flags =
+            ss->cmd.cmd_final_flags.test_heritbits(~hhhh);
 
          // Special case:  Some calls do not specify "magic" inherited
          // to their children, but can nevertheless be executed magically.
@@ -6527,6 +6523,7 @@ fraction_command::includes_first_part_enum fraction_command::includes_first_part
 }
 
 
+
 // This leaves the split axis result bits in absolute orientation.
 
 static void move_with_real_call(
@@ -6577,7 +6574,8 @@ static void move_with_real_call(
       split_command_kind force_split = split_command_none;
       bool mirror = false;
       uint32 callflags1 = this_defn->callflags1;
-      uint32 callflagsh = this_defn->callflagsh;
+      // These two are always heritable.
+      uint32 callflagsh = this_defn->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF;
       uint32 callflagsf = this_defn->callflagsf;
 
       calldef_schema the_schema =
@@ -6639,11 +6637,12 @@ static void move_with_real_call(
          // Now we demand that, if a concept was given, the call had the
          // appropriate flag set saying that the concept is legal and will
          // be inherited to the children.  Unless it is defined by array.
-         if (the_schema != schema_by_array &&
-             (ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|
-                                                       INHERITFLAG_HALF|
-                                                       INHERITFLAG_LASTHALF))))
-            fail("Can't do this call with this concept.");
+         if (the_schema != schema_by_array) {
+            callflagsh = fix_gensting_weirdness(&ss->cmd, callflagsh);
+
+            if (ss->cmd.cmd_final_flags.test_heritbits(~callflagsh))
+               fail("Can't do this call with this concept.");
+         }
 
          if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER &&
              !(ss->cmd.cmd_misc3_flags & CMD_MISC3__DONE_WITH_REST_SUPER)) {
@@ -6963,7 +6962,7 @@ static void move_with_real_call(
          If so, be sure the setup is divided into 1x4's or diamonds.
          But don't do it if something like "magic" is still unprocessed. */
 
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
+      if ((ss->cmd.cmd_final_flags.test_heritbits(~callflagsh)) == 0) {
          // Some schemata change if the given number is odd.  For touch by N x <call>.
          if (current_options.howmanynumbers != 0 && (current_options.number_fields & 1)) {
             if (the_schema == schema_single_concentric_together_if_odd)

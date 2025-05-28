@@ -281,9 +281,9 @@ class final_and_herit_flags {
    // This tests a single bit.  It returns an int rather than a bool
    // in case the client wants to combine the result with other
    // stuff for greater efficiency.
-   inline uint32 test_heritbit(heritflags y) { return herit & y; }
+   inline uint32 test_heritbit(heritflags y) const { return herit & y; }
    // This tests against a word, presumably containing a mask of 2 or more bits.
-   inline uint32 test_heritbits(uint32 y) { return herit & y; }
+   inline uint32 test_heritbits(uint32 y) const { return herit & y; }
    // This clears a single bit.
    inline void clear_heritbit(heritflags y) { herit = (heritflags) (herit & ~y); }
    // This clears a mask of bits.  Bits that are ON in the argument

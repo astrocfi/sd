@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.84
-@set Time-stamp: December 8, 2015
+@set sd-version 38.85
+@set Time-stamp: January 1, 2016
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.

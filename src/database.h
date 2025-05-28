@@ -281,6 +281,7 @@ enum heritflags {
    // These 3 things are the choices available inside.
    // Warning!  We sort of cheat on inheritance.  The low bit ("yoyo") means inherit yoyo,
    // and the high bit ("generous") means inherit both generous and stingy.
+   // The local function "fix_gensting_weirdness", in sdmoves.cpp, deals with this.
    INHERITFLAG_YOYOETCK_YOYO    = 0x00080000U,
    INHERITFLAG_YOYOETCK_GENEROUS= 0x00100000U,
    INHERITFLAG_YOYOETCK_STINGY  = 0x00180000U,

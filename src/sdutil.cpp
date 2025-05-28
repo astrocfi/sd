@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2015  William B. Ackerman.
+//    Copyright (C) 1990-2016  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -3025,7 +3025,7 @@ void ui_utils::run_program(iobase & ggg)
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2015 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2016 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

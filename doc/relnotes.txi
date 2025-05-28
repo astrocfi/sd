@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <12 Apr 2015 wba>
+@c Time-stamp: <1 Jan 2016 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.84
-@set title2 Database version = 38.84 format = 328
+@set title1 RELEASE NOTES FOR VERSION 38.85
+@set title2 Database version = 38.85 format = 328
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.85::
 * 38.84::
 * 38.83::
 * 38.82::
@@ -123,7 +124,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.84, Top, (dir)
+@node Intro, 38.85, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -131,14 +132,22 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2015 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2016 William B. Ackerman
 @sp 3
 @menu
-* 38.84::               Changes in the current version
+* 38.85::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.84, 38.83, Intro, Top
+@node 38.85, 38.84, Intro, Top
+@unnumberedsec Version 38.85 changes
+
+Fixed obscure case of @strong{jay walk} (or @strong{jay <anycall>}).  In some cases, this call can be very complex.  An example is @strong{boys jay walk} from a normal starting DPT.
+
+Made improvements to @strong{swing-o-late}, @strong{alter and circulate}, @strong{counter}.
+
+@c ************
+@node 38.84, 38.83, 38.85, Top
 @unnumberedsec Version 38.84 changes
 
 Fixed a number of minor problems, relating to
