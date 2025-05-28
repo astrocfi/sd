@@ -5,9 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@c ***NOTE***  The month must be just 3 letters.  Otherwise, making "sd_doc.txt" fails.
-@set Time-stamp: Nov 7, 1995
-@set sd-version 31.50
+@set Time-stamp: November 8, 1995
+@set sd-version 31.51
 @set full-manual
 @c %**end of header
 @iftex

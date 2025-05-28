@@ -1167,6 +1167,7 @@ typedef enum {
    For other replies, it is one of the following constants: */
 
 /* BEWARE!!  This list must track the array "startup_commands" in sdmatch.c . */
+/* BEWARE!!  This list must track the array "startup_resources" in sdui-x11.c . */
 /* BEWARE!!  If change this next definition, be sure to update the definition of
    "startinfolist" in sdtables.c, and also necessary stuff in the user interfaces.
    The latter includes the definition of "start_choices" in sd.dps
@@ -1242,6 +1243,7 @@ typedef enum {
 
 /* For ui_resolve_select: */
 /* BEWARE!!  This list must track the array "resolve_commands" in sdmatch.c . */
+/* BEWARE!!  This list must track the array "resolve_resources" in sdui-x11.c . */
 typedef enum {
    resolve_command_abort,
    resolve_command_find_another,

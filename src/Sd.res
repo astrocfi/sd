@@ -30,6 +30,10 @@
 *startup.headsStart: Heads start
 *startup.sidesStart: Sides start
 *startup.asTheyAre: Just as they are
+*startup.toggleConcLevels: Toggle concept levels
+*startup.toggleActPhan: Toggle active phantoms
+*startup.changeOutFile: Change output file
+*startup.changeHeader: Change header comment
 *command.exit: Exit the program
 *command.undo: Undo last call
 *command.abort: Abort this sequence

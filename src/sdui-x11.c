@@ -583,15 +583,23 @@ Private SdResources sd_resources;
     {name, "Menu", XtRString, sizeof(String), \
      XtOffsetOf(SdResources, loc), XtRString, default}
 
+/* The following arrays must be coordinated with the Sd program */
+
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
 Private XtResource startup_resources[] = {
     MENU("exit", start_list[start_select_exit], "Exit from the program"),
     MENU("heads1P2P", start_list[start_select_h1p2p], "Heads 1P2P"),
     MENU("sides1P2P", start_list[start_select_s1p2p], "Sides 1P2P"),
     MENU("headsStart", start_list[start_select_heads_start], "Heads start"),
     MENU("sidesStart", start_list[start_select_sides_start], "Sides start"),
-    MENU("asTheyAre", start_list[start_select_as_they_are], "Just as they are")
+    MENU("asTheyAre", start_list[start_select_as_they_are], "Just as they are"),
+    MENU("toggleConcLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
+    MENU("toggleActPhan", start_list[start_select_toggle_act], "Toggle active phantoms"),
+    MENU("changeOutFile", start_list[start_select_change_outfile], "Change output file"),
+    MENU("changeHeader", start_list[start_select_change_header_comment], "Change header comment")
 };
 
+/* BEWARE!!  This list is keyed to the definition of "cmd_button_kind" above. */
 Private XtResource command_resources[] = {
     MENU("exit", cmd_list[cmd_button_quit], "Exit the program"),
     MENU("undo", cmd_list[cmd_button_undo], "Undo last call"),

@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <95/11/06 21:53:21 gildea>
+# Time-stamp: <95/11/08 15:49:59 gildea>
 
 srcdir = @srcdir@
 # VPATH is for GNU make
@@ -208,7 +208,7 @@ MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
             sdsi-mac.c sdui-mac.c
 PCFILES = pcfiles.lnk makefile.pc
-DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(MACFILES) $(PCFILES)
+DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
 TARFLAGS = @TARFLAGS@
@@ -220,7 +220,7 @@ dist: dist-files
 	$(RM) $(DIST_TARFILE).Z
 	$(COMPRESS) $(DIST_TARFILE)
 
-dist-files: configure INSTALL README sd_doc.txt sd_doc.PS pc-files
+dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
 
 ls:
 	@echo $(DISTFILES)
@@ -237,10 +237,13 @@ BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
 
 @BINDIST_RULE@
 
-$(BIN_TARFILE).Z: Makefile sd sdtty mkcalls sd_calls.dat README sd_doc.txt sd_doc.PS
-	$(TAR) $(TARFLAGS) $(BIN_TARFILE) README Relnotes oldnotes COPYING sample1.ini sample2.ini \
+TARFILES = README Relnotes oldnotes \
+	 COPYING sample1.ini sample2.ini \
 	 sd_calls.txt sd_calls.dat db_doc.txt \
 	 sd sdtty mkcalls Sd.res sd_doc.txt sd_doc.PS
+
+$(BIN_TARFILE).Z: Makefile $(TARFILES)
+	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES)
 	$(RM) $@
 	-$(COMPRESS) $(BIN_TARFILE)
 
