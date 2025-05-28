@@ -105,7 +105,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, char *p
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
 static match_state static_ss;
-Const match_result *result_for_verify;
+match_result *result_for_verify;
 long_boolean verify_used_number;
 long_boolean verify_used_selector;
 

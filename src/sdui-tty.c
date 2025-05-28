@@ -1121,6 +1121,10 @@ extern int uims_do_tagger_popup(int tagger_class)
    retval = user_match.tagger >> 24;
    user_match.tagger &= 0x00FFFFFF;
    while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
+
+   if (interactivity == interactivity_verify)
+      result_for_verify->tagger = user_match.tagger;
+
    return retval;
 }
 

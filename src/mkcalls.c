@@ -255,10 +255,20 @@ db_gets(char *s, int n)
 void
 db_putc(char ch)
 {
+/* There is a gross bug in the DJGPP library.  When figuring the return value,
+   fputc sign-extends the input datum and returns that as an int.  This means
+   that, if we try to write 0xFF, we get back -1, which is the error condition.
+   So we have to use errno as the sole means of telling whether an error occurred. */
+#if defined(MSDOS)
    errno = 0;
    (void) fputc(ch, db_output);
    if (errno)
       db_output_error();
+#else
+   if (fputc(ch, db_output) == EOF) {
+       db_output_error();
+   }
+#endif
 }
 
 

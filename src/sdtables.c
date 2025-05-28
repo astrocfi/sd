@@ -440,13 +440,13 @@ Private coordrec nicethingptpd = {s_ptpd, 3,       /* "true" coordinates */
 
 Private coordrec thingbigdmd = {sbigdmd, 3,   /* used for both -- symmetric and safe for press/truck */
    { -9,  -5,   0,   0,   5,   9,   9,   5,   0,   0,  -5,  -9},
-   {  5,   5,   6,   2,   5,   5,  -5,  -5,  -6,  -2,  -5,  -5}, {
+   {  2,   2,   6,   2,   2,   2,  -2,  -2,  -6,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
-      -1,  0,  1, -1,  2,  4,  5, -1,
-      -1, -1, -1, -1,  3, -1, -1, -1,
-      -1, -1, -1, -1,  9, -1, -1, -1,
-      -1, 11, 10, -1,  8,  7,  6, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1,  0,  1, -1,  3,  4,  5, -1,
+      -1, 11, 10, -1,  9,  7,  6, -1,
+      -1, -1, -1, -1,  8, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
@@ -621,7 +621,7 @@ Private coordrec thingbigh = {sbigh, 3,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
 Private coordrec thingbigbone = {sbigbone, 3,
-   {-13,  -9,  -6,  -2,   9,  13,  13,   9,   6,   2,  -9, -13},
+   {-14, -10,  -6,  -2,  10,  14,  14,  10,   6,   2, -10, -14},
    {  2,   2,   0,   0,   2,   2,  -2,  -2,   0,   0,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -986,10 +986,10 @@ Private cm_thing map_3box4v    =     {{0, 1, 3, 2, 9, 8, 6, 7,
 
 
 
-
-
 Private cm_thing map_4box    =       {{0, 1, 14, 15, 6, 7, 8, 9,
                                            2, 3, 4, 5, 10, 11, 12, 13},   4, 8, s2x8,           s2x2,     s2x4,     16, 0, 0, 0, 2};
+Private cm_thing map_4boxv   =       {{18, 11, 10, 19, 22, 7, 6, 23,
+                                           15, 20, 9, 2, 3, 8, 21, 24},   4, 8, s4x6,           s2x2,     s2x4,     16, 1, 1, 1, 2};
 Private cm_thing map1x4_boxes =      {{6, 7, 2, 3,
                                              -1, 0, 1, -1, -1, 4, 5, -1}, 4, 8, s_bone,         s1x4,     s2x4,      8, 0, 0, 0, 1};
 Private cm_thing map1x4_2x4 =        {{10, 11, 4, 5,
@@ -1148,7 +1148,7 @@ conc_initializer conc_init_table[] = {
    {s1x4,        s2x2,     schema_in_out_triple,     2, {&map_3boxb,      &map_3boxbr,         &map_3lb,         &map_3lbr}},
    {s2x2,        s1x4,     schema_in_out_triple,     2, {&map_3boxr,      &map_3box4,          &map_3boxrv,      &map_3box4v}},
    {s2x4,        s1x4,     schema_in_out_quad,       2, {0,               0,                   &map_4line,       0}},
-   {s2x4,        s2x2,     schema_in_out_quad,       2, {&map_4box,       0,                   0,                0}},
+   {s2x4,        s2x2,     schema_in_out_quad,       2, {&map_4box,       0,                   &map_4boxv,                0}},
    {s1x6,        s1x2,     schema_concentric,        1, {&map1x6_1x2,     &oddmap1x6_1x2,      &map1x6_1x2,      &oddmap1x6_1x2}},
    {s_bone6,     s1x2,     schema_concentric,        1, {&mapbone6_1x2,   &mapbone6_1x2v,      &mapbone6_1x2,    &mapbone6_1x2v}},
    {s2x3,        s1x2,     schema_concentric,        1, {&map2x3_1x2,     &oddmap2x3_1x2,      &map2x3_1x2,      &oddmap2x3_1x2}},

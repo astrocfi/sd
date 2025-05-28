@@ -66,7 +66,8 @@ enum {
 
 /* These are provided by sdmatch.c */
 extern call_list_kind *call_menu_ptr;
-extern Const match_result *result_for_verify;
+/* This used to be Const, isn't any more. */
+extern match_result *result_for_verify;
 extern long_boolean verify_used_number;
 extern long_boolean verify_used_selector;
 extern long_boolean verify_has_stopped;

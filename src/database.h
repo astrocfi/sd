@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 67
+#define DATABASE_FORMAT_VERSION 68
 
 
 
@@ -137,6 +137,7 @@
 #define MTX_IGNORE_NONSELECTEES    0x08
 #define MTX_MUST_FACE_SAME_WAY     0x10
 #define MTX_FIND_JAYWALKERS        0x20
+#define MTX_BOTH_SELECTED_OK       0x40
 
 
 /* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */

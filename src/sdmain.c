@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.47"
+#define VERSION_STRING "31.48"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -46,7 +46,7 @@
    not by any utility.  Furthermore, we do not believe that it is proper for
    source control utilities to alter the text in a source file. */
 
-static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  27 Oct 95 $";
+static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  02 Nov 95 $";
 
 /* This defines the following functions:
    sd_version_string

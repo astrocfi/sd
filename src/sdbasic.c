@@ -903,7 +903,7 @@ Private void special_4_way_symm(
    int begin_size;
    int real_index;
    int real_direction, northified_index;
-   uint32 z, zzz;
+   uint32 z;
    int k, result_size, result_quartersize;
    int *the_table = (int *) 0;
 
@@ -954,8 +954,9 @@ Private void special_4_way_symm(
          k = (z >> 4) & 017;
          if (the_table) k = the_table[k];
          k = (k + real_direction*result_quartersize) % result_size;
-         zzz = (z+real_direction*011) & 013;
-         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) | zzz | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
+               (z+real_direction*011) & 013 |
+               ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
 
          if (this_person.id1 & STABLE_ENAB) {
             do_stability(&newpersonlist[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z + result->rotation));
@@ -977,13 +978,10 @@ Private void special_triangle(
    callarray *ldef,
    setup *scopy,
    personrec newpersonlist[],
-   int newplacelist[])
-
+   int newplacelist[],
+   setup *result)
 {
    int real_index;
-   int real_direction, d2, northified_index;
-   uint32 z;
-   int k;
 
    for (real_index=0; real_index<3; real_index++) {
       personrec this_person = scopy->people[real_index];
@@ -991,14 +989,19 @@ Private void special_triangle(
       newpersonlist[real_index].id2 = 0;
       newplacelist[real_index] = -1;
       if (this_person.id1) {
-         real_direction = this_person.id1 & 3;
-         d2 = ((this_person.id1 >> 1) & 1) * 3;
-         northified_index = (real_index + d2);
-         z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
-         k = (((z >> 4) & 017) - d2);
+         int real_direction = this_person.id1 & 3;
+         int d2 = ((this_person.id1 >> 1) & 1) * 3;
+         int northified_index = (real_index + d2);
+         uint32 z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
+         int k = (((z >> 4) & 017) - d2);
          if (k < 0) k += 6;
-         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) | ((z + real_direction * 011) & 013) | ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
-         newpersonlist[real_index].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
+         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
+               ((z + real_direction * 011) & 013) |
+               ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+
+         if (this_person.id1 & STABLE_ENAB)
+            do_stability(&newpersonlist[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z+result->rotation));
+
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
       }
@@ -1016,7 +1019,6 @@ Private void special_1x3(
    int newplacelist[],
    int lilresult_mask[],
    setup *result)
-
 {
    int real_index;
    int num = 3;
@@ -1037,7 +1039,7 @@ Private void special_1x3(
                ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
 
          if (this_person.id1 & STABLE_ENAB)
-            do_stability(&newpersonlist[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z + real_direction - real_direction + result->rotation));
+            do_stability(&newpersonlist[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z+result->rotation));
 
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
@@ -3073,7 +3075,7 @@ extern void basic_move(
       }
       else if (ss->kind == s_trngl) {
          if (inconsistent_rotation | inconsistent_setup) fail("This call is an inconsistent shape-changer.");
-         special_triangle(coldefinition, linedefinition, ss, newpersonlist, newplacelist);
+         special_triangle(coldefinition, linedefinition, ss, newpersonlist, newplacelist, result);
 
          /* Check whether the call went into the other triangle.  If so, it
             must have done so completely. */

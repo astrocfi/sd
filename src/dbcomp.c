@@ -696,6 +696,7 @@ char *matrixcallflagtab[] = {
    "ignore_nonselectees",
    "must_face_same_way",
    "find_jaywalkers",
+   "both_selected_ok",
    ""};
 
 /* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
@@ -851,7 +852,7 @@ int error_is_fatal;
 int tok_value;
 int letcount;
 toktype tok_kind;
-char tok_str[80];
+char tok_str[100];
 int char_ct;
 
 char line[200];
@@ -863,7 +864,7 @@ int dumbflag;
 uint32 call_flagsh;
 uint32 call_flags1;
 uint32 call_tag;
-char call_name[80];
+char call_name[100];
 int call_namelen;
 int call_level;
 int call_startsetup;
@@ -978,7 +979,7 @@ static void get_tok_or_eof(void)
                if (get_char())
                   errexit("End of file inside symbol\n");
             }
-            if (char_ct > 80)
+            if (char_ct > 100)
                errexit("String too long\n");
 
             tok_str[char_ct++] = ch;
@@ -989,14 +990,14 @@ static void get_tok_or_eof(void)
 
          /* Pack a null. */
 
-         if (char_ct > 80)
+         if (char_ct > 100)
             errexit("String too long\n");
 
          tok_str[char_ct] = '\0';
          break;
       default:
          for (;;) {
-            if (char_ct > 80)
+            if (char_ct > 100)
                errexit("Symbol too long\n");
 
             tok_str[char_ct++] = ch;
@@ -1013,7 +1014,7 @@ static void get_tok_or_eof(void)
 
          /* Pack a null. */
 
-         if (char_ct > 80)
+         if (char_ct > 100)
             errexit("Symbol too long\n");
 
          tok_str[char_ct] = '\0';
@@ -1675,7 +1676,7 @@ extern void dbcompile(void)
 
                if (matrixflags & MTX_USE_SELECTOR) call_flagsh |= CFLAGH__REQUIRES_SELECTOR;
                write_call_header(ccc);
-               write_halfword(matrixflags >> 8);
+               write_halfword(matrixflags >> 16);
                write_halfword(matrixflags);
                write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
                break;

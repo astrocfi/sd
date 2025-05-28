@@ -575,7 +575,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[s_galaxy].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00950063) && ((signature & (~0x08400320)) == 0)) {
+   else if ((ypar == 0x00950062 || ypar == 0x00550062) && ((signature & (~0x091002C0)) == 0)) {
       checkptr = setup_attrs[sbigdmd].setup_coords;
       goto doit;
    }
@@ -600,6 +600,20 @@ Private void finish_matrix_call(
       goto doit;
    }
    else if ((ypar == 0x00670055) && ((signature & (~0x01000420)) == 0)) {
+      checkptr = setup_attrs[s_qtag].setup_coords;
+      goto doit;
+   }
+   else if ((ypar == 0x00620026) && ((signature & (~0x01008404)) == 0)) {
+      /* Fudge this to a 1/4 tag.  Someone did a truck-like operation from a rigger,
+         for example, after a sets in motion. */
+
+      for (i=0; i<nump; i++) {
+         if      (matrix_info[i].x == -2 && matrix_info[i].y ==  2) { matrix_info[i].x = -4; matrix_info[i].y =  5; }
+         else if (matrix_info[i].x ==  2 && matrix_info[i].y ==  2) { matrix_info[i].x =  5; matrix_info[i].y =  5; }
+         else if (matrix_info[i].x ==  2 && matrix_info[i].y == -2) { matrix_info[i].x =  4; matrix_info[i].y = -5; }
+         else if (matrix_info[i].x == -2 && matrix_info[i].y == -2) { matrix_info[i].x = -5; matrix_info[i].y = -5; }
+      }
+
       checkptr = setup_attrs[s_qtag].setup_coords;
       goto doit;
    }
@@ -736,7 +750,7 @@ Private void finish_matrix_call(
       checkptr = setup_attrs[sbigh].setup_coords;
       goto doit;
    }
-   else if ((ypar == 0x00D30026) && ((signature & (~0x01800440)) == 0)) {
+   else if ((ypar == 0x00E20026) && ((signature & (~0x01440430)) == 0)) {
       checkptr = setup_attrs[sbigbone].setup_coords;
       goto doit;
    }
@@ -771,7 +785,7 @@ doit:
          install_person(result, place, people, i);
          result->people[place].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
       }
-      
+
       return;
 
 doitrot:
@@ -785,7 +799,7 @@ doitrot:
          install_rot(result, place, people, i, 033);
          result->people[place].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
       }
-      
+
       return;
 }
 
@@ -847,9 +861,14 @@ Private void do_pair(
 {
    int base;
    int datum;
-   int flags;
+   uint32 flags;
 
    flags = callspec->stuff.matrix.flags;
+
+   if ((!(flags & (MTX_IGNORE_NONSELECTEES | MTX_BOTH_SELECTED_OK))) && qqq->sel)
+      fail("Two adjacent selected people.");
+
+   /* We know that either ppp is actually selected, or we are not using selectors. */
 
    if ((filter ^ ppp->dir) & 1) {
       base = (ppp->dir & 2) ? 6 : 4;
@@ -874,7 +893,7 @@ Private void do_pair(
 
    if ((filter ^ qqq->dir) & 1) {
       base = (qqq->dir & 2) ? 0 : 2;
-      if (flags & MTX_IGNORE_NONSELECTEES) base |= 4;
+      if ((flags & MTX_IGNORE_NONSELECTEES) || qqq->sel) base |= 4;
       base ^= flip;
 
       /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
@@ -1126,18 +1145,12 @@ Private void do_matrix_chains(
                   if (mi->tbstopnw) warn(warn__not_tbone_person);
 
                   if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   ) {
-                     if ((!(flags & MTX_IGNORE_NONSELECTEES)) && mi->nextse->sel) {
-                        fail("Two adjacent selected people.");
-                     }
-                     else {
+                     /* Do this pair.  First, chop the pair off from anyone else. */
 
-                        /* Do this pair.  First, chop the pair off from anyone else. */
-
-                        if (mi->nextse->nextse) mi->nextse->nextse->nextnw = 0;
-                        mi->nextse->nextse = 0;
-                        another_round = TRUE;
-                        do_pair(mi, mi->nextse, callspec, 0, filter);
-                     }
+                     if (mi->nextse->nextse) mi->nextse->nextse->nextnw = 0;
+                     mi->nextse->nextse = 0;
+                     another_round = TRUE;
+                     do_pair(mi, mi->nextse, callspec, 0, filter);
                   }
                }
             }
@@ -1147,17 +1160,12 @@ Private void do_matrix_chains(
                if (mi->tbstopse) warn(warn__not_tbone_person);
 
                if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   ) {
-                  if ((!(flags & MTX_IGNORE_NONSELECTEES)) && mi->nextnw->sel) {
-                     fail("Two adjacent selected people.");
-                  }
-                  else {
-                     /* Do this pair.  First, chop the pair off from anyone else. */
+                  /* Do this pair.  First, chop the pair off from anyone else. */
 
-                     if (mi->nextnw->nextnw) mi->nextnw->nextnw->nextse = 0;
-                     mi->nextnw->nextnw = 0;
-                     another_round = TRUE;
-                     do_pair(mi, mi->nextnw, callspec, 2, filter);
-                  }
+                  if (mi->nextnw->nextnw) mi->nextnw->nextnw->nextse = 0;
+                  mi->nextnw->nextnw = 0;
+                  another_round = TRUE;
+                  do_pair(mi, mi->nextnw, callspec, 2, filter);
                }
             }
             else {

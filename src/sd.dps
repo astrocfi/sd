@@ -185,7 +185,7 @@ APPLICATION_INTERFACE sd_dialog
    start_choices := ENUM:
       COMP => <RETURN> ;
       CHANGES_ONLY = false ;
-      CHOICES = (start$h1p2p start$s1p2p start$hstart start$sstart start$as_they_are)
+      CHOICES = (start$h1p2p start$s1p2p start$hstart start$sstart start$as_they_are start$toggle_conc start$toggle_act start$change_outfile start$change_header_comment)
       END
 
    task$selector_menu := ENUM: COMP => <RETURN>; CHANGES_ONLY = false; END
@@ -819,11 +819,15 @@ USER_INTERFACE sd_dialog
             TITLE_BAR = on ;
             TITLE_STRING = "HOW WOULD YOU LIKE TO START?" ;
             ENTRIES =
-               ("Heads 1P2P"           => start$h1p2p
-                "Sides 1P2P"           => start$s1p2p
-                "Heads start"          => start$hstart
-                "Sides start"          => start$sstart
-                "From squared set"     => start$as_they_are) ;
+               ("Heads 1P2P"             => start$h1p2p
+                "Sides 1P2P"             => start$s1p2p
+                "Heads start"            => start$hstart
+                "Sides start"            => start$sstart
+                "From squared set"       => start$as_they_are
+                "Toggle concept levels"  => start$toggle_conc
+                "Toggle active phantoms" => start$toggle_act
+                "Change output file"     => start$change_outfile
+                "Change header comment"  => start$change_header_comment) ;
             HELP_TEXT = "You are about to start a sequence."
                        &"Select the initial call or designation." ;
             END )

@@ -93,11 +93,6 @@ Private tm_thing maps_isearch_twosome[] = {
    {{6, 7, 0, 2, 3, 5},             {-1, -1, 1, -1, -1, 4},       {0}, {0},  0x410,     0x33,         6, 0,  0,  0, 0,  s_2x1dmd, s_qtag},
    {{2, 4, 5, 0},                   {-1, 3, -1, 1},               {0}, {0},      0,      033,         4, 1,  0,  0, 0,  sdmd, s_2x1dmd},
    {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,      033,         4, 0,  0,  0, 0,  sdmd, s_1x2dmd},
-
-
-
-
-
    /* Next one is for centers in tandem in lines, making a virtual bone6. */
    {{0, 3, 5, 4, 7, 6},             {-1, -1, 2, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_bone6, s2x4},
    /* Next two are for certain ends in tandem in an H, making a virtual bone6. */
@@ -108,6 +103,15 @@ Private tm_thing maps_isearch_twosome[] = {
    /* Next two are for certain center column people in tandem in a 1/4 tag, making a virtual short6. */
    {{3, 2, 4, 5, 6, 0},             {1, -1, -1, 7, -1, -1},       {0}, {0},  0x041,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
    {{1, 2, 4, 5, 6, 7},             {-1, -1, 3, -1, -1, 0},       {0}, {0},  0x410,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
+
+
+
+/* new */
+   /* Next two are for certain center column people in tandem in a spindle, making a virtual short6. */
+   {{2, 3, 5, 6, 7, 0},             {-1, -1, 4, -1, -1, 1},       {0}, {0},      0,     0x33,         6, 1,  0,  0, 0,  s_short6, s_spindle},
+   {{1, 3, 4, 6, 7, 0},             {2, -1, -1, 5, -1, -1},       {0}, {0},      0,     0x66,         6, 1,  0,  0, 0,  s_short6, s_spindle},
+
+
    /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
    {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0x66,         6, 0,  0,  0, 0,  s2x3,  s2x4},
@@ -134,7 +138,8 @@ Private tm_thing maps_isearch_twosome[] = {
 
    {{15, 3, 5, 9},                  {13, 1, 7, 11},               {0}, {0},   0x44,   0x0A0A,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* These do C1-phantom-like stuff from fudgy 4x4 */
    {{10, 3, 7, 6},                  {15, 14, 2, 11},              {0}, {0},   0x11,   0x8484,         4, 0,  0,  0, 0,  s2x2,  s4x4},         /* They must follow the pair just above. */
-   {{6, 0, 3, 5},                   {7, 1, 2, 4},                 {0}, {0},   0x55,     0377,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
+   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s_short6, s_rigger},
+   {{6, 0, 3, 5},                   {7, 1, 2, 4},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  sdmd,  s_rigger},
    {{6, 5, 3, 4},                   {7, 0, 2, 1},                 {0}, {0},   0x11,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_rigger},     /* must be after "2x4_4" */
    {{5, 6, 4, 3},                   {0, 7, 1, 2},                 {0}, {0},   0x44,     0xCC,         4, 0,  0,  0, 0,  s1x4,  s_bone},
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x11,     0063,         4, 0,  0,  0, 0,  sdmd,  s_crosswave},  /* crosswave*/  

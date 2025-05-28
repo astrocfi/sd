@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set Time-stamp: Oct 27, 1995
-@set sd-version 31.47
+@set Time-stamp: Nov 3, 1995
+@set sd-version 31.48
 @set full-manual
 @c %**end of header
 @iftex
@@ -2185,12 +2185,17 @@ this call.  It is nonsensical in other contexts.
 @node Spread, <ANYTHING> and circle, C1 Single Rotate, Call Notes
 @section Spread
 
-The term @dfn{spread} can mean different things and so is two calls in
+The term @dfn{spread} can mean different things and so is three calls in
 this program.
-Use the call @samp{spread} after @i{follow your neighbor}.
+
+Use the call @samp{spread} after calls such as @i{follow your neighbor}.
+
 Use the call @samp{@dots{} and spread} after @i{wheel and deal},
 or after starting a sequence with something like @samp{heads star thru}.
 You can also use the call @samp{wheel and spread}.
+
+Use the call @samp{<ANYONE> spread} from columns, to get the designated
+people to slide away from their partner into a 4x4 matrix.
 
 @node <ANYTHING> and circle, Centers Back Away, Spread, Call Notes
 @section <ANYTHING> and circle
