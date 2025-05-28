@@ -884,6 +884,16 @@ Private id_bit_table id_bit_table_dmd[] = {
    {ID2_END,                  ID2_END,                 ID2_END,                ID2_END},
    {ID2_TRAILER|ID2_CENTER,   ID2_BELLE|ID2_CENTER,    ID2_LEAD|ID2_CENTER,    ID2_BEAU|ID2_CENTER}};
 
+Private id_bit_table id_bit_table_bone6[] = {
+   {ID2_LEAD,                 ID2_BEAU,                ID2_TRAILER,            ID2_BELLE},
+   {ID2_LEAD,                 ID2_BEAU,                ID2_TRAILER,            ID2_BELLE},
+   /* We mark triangle points as trailers, in case we need to identify them in a 2x2 box,
+       as in "leads start wheel the ocean". */
+   {ID2_BEAU|ID2_TRAILER,     ID2_TRAILER,             ID2_BELLE|ID2_TRAILER,  ID2_LEAD},
+   {ID2_TRAILER,              ID2_BELLE,               ID2_LEAD,               ID2_BEAU},
+   {ID2_TRAILER,              ID2_BELLE,               ID2_LEAD,               ID2_BEAU},
+   {ID2_BELLE|ID2_TRAILER,    ID2_LEAD,                ID2_BEAU|ID2_TRAILER,   ID2_TRAILER}};
+
 Private id_bit_table id_bit_table_1x8[] = {
    {  ID2_BEAU    |ID2_OUTR6|ID2_OUTR2| ID2_NCTR1X6|ID2_NCTR1X4|ID2_OUTRPAIRS,
       ID2_TRAILER |ID2_OUTR6|ID2_OUTR2| ID2_NCTR1X6|ID2_NCTR1X4|ID2_OUTRPAIRS,
@@ -1954,7 +1964,7 @@ setup_attr setup_attrs[] = {
       {b_bone6,     b_pbone6},
       { 0, 0},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_bone6,
       {  "a        b@    fc@e        d@",
          "ea@  f@  c@db@"}},
    /* s_short6 */

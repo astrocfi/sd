@@ -1981,6 +1981,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    uint32 mask1, mask2, result_mask;
    concmerge_thing *the_map;
    int outer_elongation = 0;
+   int reinstatement_rotation = 0;
 
    res2copy = *result;
    res1 = ss;
@@ -2042,10 +2043,13 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
    if (res1->kind == nothing) {
       *result = *res2;
-      return;
+      goto final_getout;
    }
-   else if ((res1->kind == s2x4) && (res2->kind == s2x4) && (r&1)) {
-      offs = r * 2;
+   else if (res1->kind == s2x4 && res2->kind == s2x4 && (r&1)) {
+      long_boolean going_to_stars;
+      long_boolean going_to_o;
+      long_boolean conflict_at_4x4;
+      uint32 t1, t2, t3, t4;
 
       /* It used to be that we used an algorithm, shown below, to decide whether to opt for C1 pahntoms
          or a 4x4 matrix.  That algorithm said that one opted for C1 phantoms if each incoming 2x4
@@ -2083,12 +2087,23 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       /* Even later-breaking news:  If the poeple would go to stars, do so, even if "strict_matrix"
          was specified.  To go to a 4x4 would be impossible. */
 
-      if (   (    action == merge_strict_matrix && 
-                  ((mask1 != 0x33) || (mask2 != 0xCC))
-                                 &&
-                  ((mask1 != 0xCC) || (mask2 != 0x33)))
-                           ||
-               ((mask1 | mask2) & 0x66) == 0) {
+      offs = r * 2;
+
+      t1 = res2->people[0].id1 | res2->people[1].id1 | res2->people[4].id1 | res2->people[5].id1;
+      t2 = res2->people[2].id1 | res2->people[3].id1 | res2->people[6].id1 | res2->people[7].id1;
+      t3 = res1->people[2^offs].id1 | res1->people[3^offs].id1 | res1->people[6^offs].id1 | res1->people[7^offs].id1;
+      t4 = res1->people[0^offs].id1 | res1->people[1^offs].id1 | res1->people[4^offs].id1 | res1->people[5^offs].id1;
+
+      conflict_at_4x4 = (
+         (res2->people[1].id1 & res1->people[4^offs].id1) |
+         (res2->people[2].id1 & res1->people[3^offs].id1) |
+         (res2->people[5].id1 & res1->people[0^offs].id1) |
+         (res2->people[6].id1 & res1->people[7^offs].id1)) != 0;
+
+      going_to_stars = ((mask1 == 0x33) && (mask2 == 0xCC)) || ((mask1 == 0xCC) && (mask2 == 0x33));
+      going_to_o = ((mask1 | mask2) & 0x66) == 0;
+
+      if (   (action == merge_strict_matrix && !going_to_stars && !conflict_at_4x4) || going_to_o) {
          result->kind = s4x4;
          clear_people(result);
          scatter(result, res2, matrixmap, 7, 0);
@@ -2102,29 +2117,27 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          install_rot(result, 11, res1, 7^offs, rot);
       }
       else {
-         uint32 t1, t2, t3, t4;
-
          result->kind = s_c1phan;
 
-         t1  = copy_person(result, 0,  res2, 0);
-         t1 |= copy_person(result, 2,  res2, 1);
-         t1 |= copy_person(result, 8,  res2, 4);
-         t1 |= copy_person(result, 10, res2, 5);
+         (void) copy_rot(result, 0,  res2, 0, 0);
+         (void) copy_rot(result, 2,  res2, 1, 0);
+         (void) copy_rot(result, 8,  res2, 4, 0);
+         (void) copy_rot(result, 10, res2, 5, 0);
 
-         t3  = copy_rot(result, 4,  res1, 2^offs, rot);
-         t3 |= copy_rot(result, 6,  res1, 3^offs, rot);
-         t3 |= copy_rot(result, 12, res1, 6^offs, rot);
-         t3 |= copy_rot(result, 14, res1, 7^offs, rot);
+         (void) copy_rot(result, 4,  res1, 2^offs, rot);
+         (void) copy_rot(result, 6,  res1, 3^offs, rot);
+         (void) copy_rot(result, 12, res1, 6^offs, rot);
+         (void) copy_rot(result, 14, res1, 7^offs, rot);
 
-         t2  = copy_person(result, 7,  res2, 2);
-         t2 |= copy_person(result, 5,  res2, 3);
-         t2 |= copy_person(result, 15, res2, 6);
-         t2 |= copy_person(result, 13, res2, 7);
+         (void) copy_rot(result, 7,  res2, 2, 0);
+         (void) copy_rot(result, 5,  res2, 3, 0);
+         (void) copy_rot(result, 15, res2, 6, 0);
+         (void) copy_rot(result, 13, res2, 7, 0);
 
-         t4  = copy_rot(result, 11, res1, 0^offs, rot);
-         t4 |= copy_rot(result, 9,  res1, 1^offs, rot);
-         t4 |= copy_rot(result, 3,  res1, 4^offs, rot);
-         t4 |= copy_rot(result, 1,  res1, 5^offs, rot);
+         (void) copy_rot(result, 11, res1, 0^offs, rot);
+         (void) copy_rot(result, 9,  res1, 1^offs, rot);
+         (void) copy_rot(result, 3,  res1, 4^offs, rot);
+         (void) copy_rot(result, 1,  res1, 5^offs, rot);
 
          /* See if we have a "classical" C1 phantom setup, and give the appropriate warning. */
          if (action != merge_c1_phantom_nowarn) {
@@ -2136,7 +2149,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
                warn(warn__check_gen_c1_stars);
          }
       }
-      return;
+      goto final_getout;
    }
    else if (res1->kind == s_crosswave && res2->kind == s_crosswave && (r&1)) {
       result->kind = s_crosswave;
@@ -2159,7 +2172,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
          install_rot(result, 2, res1, 3^offs, rot);
          install_rot(result, 1, res1, 4^offs, rot);
          install_rot(result, 6, res1, 7^offs, rot);
-         return;
+         goto final_getout;
       }
    }
    else if (res2->kind == s_crosswave && res1->kind == s1x4 && (r&1)) {
@@ -2198,7 +2211,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
       result->rotation += r;
       canonicalize_rotation(result);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s2x4 && res1->kind == s2x2) {
       result->kind = s2x4;
@@ -2214,7 +2227,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 6, res1, 3);
 
       canonicalize_rotation(result);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s4x4 && res1->kind == s2x4) {
       *result = *res2;
@@ -2232,7 +2245,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
       result->rotation += r;
       canonicalize_rotation(result);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s2x6 && res1->kind == s2x2) {
       *result = *res2;
@@ -2244,7 +2257,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 3, res1, 1);
       install_person(result, 8, res1, 2);
       install_person(result, 9, res1, 3);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s4x4 && res1->kind == s2x2) {
       *result = *res2;
@@ -2256,7 +2269,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 3, res1, 1);
       install_person(result, 7, res1, 2);
       install_person(result, 11, res1, 3);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s3x1dmd && res1->kind == s1x4 && (r&1) && ((mask1 & 0xA) == 0)) {
       the_map = &map_3d1x4;
@@ -2409,8 +2422,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_qt24;
       goto merge_concentric;
    }
-
-
    else if (res2->kind == s_thar && res1->kind == s2x4 && (r&1) && ((mask1 & 0x66) == 0) && ((mask2 & 0xCC) == 0)) {
       setup *temp = res2;
       res2 = res1;
@@ -2427,9 +2438,6 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       the_map = &map_th224;
       goto merge_concentric;
    }
-
-
-
    else if (res2->kind == s_hrglass && res1->kind == s_qtag && (r&1) && ((mask1 & 0x88) == 0) && ((mask2 & 0xBB) == 0)) {
       warn(warn__check_galaxy);
       outer_elongation = res2->rotation & 1;
@@ -2474,7 +2482,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_rot(result, 1, res2, 2^offs, rot);
       install_rot(result, 4, res2, 1^offs, rot);
       install_rot(result, 5, res2, 6^offs, rot);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 && ((mask1 & 0xAA) == 0)) {
       the_map = &map_pp18;
@@ -2647,7 +2655,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       (void) copy_person(result, 6, res1, 3);
       result->rotation += r;
       canonicalize_rotation(result);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s_bone && res1->kind == s2x2 && action != merge_strict_matrix && (mask2 & 0xCC) == 0) {
       the_map = &map_bn22;
@@ -2666,7 +2674,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 3, res1, 2);
       install_person(result, 7, res1, 5);
       canonicalize_rotation(result);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s1x3dmd && res1->kind == s2x3 && action != merge_strict_matrix && r==0 && (mask2 & 0x66) == 0) {
       swap_people(res2, 0, 7);
@@ -2683,7 +2691,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 2, res2, 2);
       install_person(result, 4, res2, 4);
       install_person(result, 6, res2, 6);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s2x4 && res1->kind == s_bone && r == 0 && (mask2 & 0x66) == 0) {
       *result = *res1;
@@ -2692,7 +2700,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 1, res2, 3);
       install_person(result, 4, res2, 4);
       install_person(result, 5, res2, 7);
-      return;
+      goto final_getout;
    }
    else if (res2->kind == s2x6 && res1->kind == s_qtag && (r&1) && (mask1 & 0x33) == 0 && (mask2 & 0x30C) == 0) {
       the_map = &map_26qt;
@@ -2764,7 +2772,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
    if (collision_mask) fix_collision(0, collision_mask, collision_index, result_mask, FALSE, FALSE, result);
 
-   return;
+   goto final_getout;
 
    merge_concentric:
 
@@ -2790,7 +2798,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    gather(&outer_inners[1], res1, the_map->innermap, setup_attrs[res1->kind].setup_limits, rot);
    canonicalize_rotation(&outer_inners[1]);
    normalize_concentric(the_map->conc_type, 1, outer_inners, outer_elongation, result);
-   return;
+   goto final_getout;
 
    merge_otherwise:
 
@@ -2801,7 +2809,10 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
       install_rot(result, the_map->innermap[i], res1, i^offs, rot);
 
-   return;
+   final_getout:
+
+   result->rotation += reinstatement_rotation;
+   canonicalize_rotation(result);
 }
 
 

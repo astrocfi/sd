@@ -808,7 +808,8 @@ Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
-         northified_index == 0)
+         northified_index == 0 ||
+         (real_people->kind == s2x2 && northified_index == 3))
       return TRUE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
       return FALSE;

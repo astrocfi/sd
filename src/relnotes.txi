@@ -21,8 +21,8 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.85
-         Database version = 31.85 format = 92
+          RELEASE NOTES FOR SD VERSION 31.86
+         Database version = 31.86 format = 92
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
 

@@ -3667,8 +3667,6 @@ Private void do_concept_all_8(
          fail("Must be in a thar or squared-set spots.");
    }
 
-   check_col_ending:
-
    /* If this ended in a thar, we accept it.  If not, we have the usual lines-to-lines/
       columns-to-columns problem.  We don't know whether to enforce column spots, line spots,
       perpendicular to the lines they had after stepping to a wave (if indeed they did so;

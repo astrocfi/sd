@@ -3205,9 +3205,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       rr = get_restriction_thing(ss->kind, tt);
       if (!rr) goto good;                 /* We don't understand the setup -- we'd better accept it. */
-
-      check_stuff:
-
       if (verify_restriction(ss, rr, tt, FALSE, &booljunk)) goto good;
 
       bad: ;

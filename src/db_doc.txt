@@ -1807,10 +1807,10 @@ columns_miniwave
       or is T-boned.
 
 1x2_beau_or_miniwave
-      applies to 1x2 lines only.  Returns TRUE if this person is a beau,
-      or else this belle is in a miniwave with the other person.
-      Returns FALSE if this belle is in a couple with the other person.
-      Raises an error if this belle can't tell.
+      applies to 1x2 lines or 2x2 non-T-boned boxes only.  Returns TRUE
+      if this person is a beau, or else this belle is in a miniwave with
+      the other person.  Returns FALSE if this belle is in a couple with
+      the other person.  Raises an error if this belle can't tell.
 
 1x2_beau_miniwave_or_warn
       This is the same as "1x2_beau_or_miniwave", except that, if it can't

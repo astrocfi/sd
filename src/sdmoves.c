@@ -67,8 +67,6 @@ extern void canonicalize_rotation(setup *result)
       result->rotation = 0;
    }
    else if (result->kind == s_dead_concentric) {
-      int i;
-
       if (result->inner.skind == s_normal_concentric || result->inner.skind == s_dead_concentric)
          fail("Recursive concentric?????.");
 

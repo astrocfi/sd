@@ -145,8 +145,6 @@ extern void mirror_this(setup *s)
          return;
       }
       else if (s->kind == s_dead_concentric) {
-         int i;
-
          if (s->inner.skind == s_normal_concentric || s->inner.skind == s_dead_concentric)
             fail("Recursive concentric?????.");
 
@@ -409,8 +407,10 @@ static int qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static int qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static int galtranslateh[16] = {-1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6, -1, -1, -1,  1};
 static int galtranslatev[16] = {-1, -1, -1,  1, -1,  3,  4,  2, -1, -1, -1,  5, -1,  7,  0,  6};
+#ifdef BREAKS_CAST_BACK
 static int phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
 static int phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
+#endif
 static int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
 static int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
 static int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};

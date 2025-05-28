@@ -30,7 +30,7 @@
 #define BASE_CALL_CAST_3_4    2
 #define BASE_CALL_ENDS_SHADOW 3
 #define BASE_CALL_CHREACT_1   4
-#define BASE_CALL_MKAEPASS_1  5
+#define BASE_CALL_MAKEPASS_1  5
 /* The next 4 must be consecutive. */
 #define BASE_CALL_TAGGER0     6
 #define BASE_CALL_TAGGER1     7
