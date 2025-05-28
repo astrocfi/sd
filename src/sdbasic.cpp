@@ -2146,17 +2146,28 @@ static bool handle_4x4_division(
 
    if ((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
        (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
-      if ((!(newtb & 010) || assoc(b_4x2, ss, calldeflist)) &&
-          (!(newtb & 001) || assoc(b_2x4, ss, calldeflist))) {
+      if (((newtb & 8) == 0 || assoc(b_4x2, ss, calldeflist)) &&
+          ((newtb & 1) == 0 || assoc(b_2x4, ss, calldeflist))) {
          // Split to left and right halves.
          finalrot++;
          division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
          return true;
       }
-      else if ((!(newtb & 001) || assoc(b_4x2, ss, calldeflist)) &&
-               (!(newtb & 010) || assoc(b_2x4, ss, calldeflist))) {
+      else if (((newtb & 1) == 0 || assoc(b_4x2, ss, calldeflist)) &&
+               ((newtb & 8) == 0 || assoc(b_2x4, ss, calldeflist))) {
          // Split to bottom and top halves.
          division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
+         return true;
+      }
+      else if (((newtb & 8) == 0 || assoc(b_4x1, ss, calldeflist)) &&
+               ((newtb & 1) == 0 || assoc(b_1x4, ss, calldeflist))) {
+         finalrot++;
+         division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+         return true;
+      }
+      else if (((newtb & 1) == 0 || assoc(b_4x1, ss, calldeflist)) && 
+               ((newtb & 8) == 0 || assoc(b_1x4, ss, calldeflist))) {
+         division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
          return true;
       }
    }

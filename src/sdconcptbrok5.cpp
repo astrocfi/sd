@@ -5096,6 +5096,21 @@ static void do_concept_special_sequential(
 
    if (parseptr->concept->arg1 == part_key_paranoid) {
 
+      /* bugs from discord
+          RWV: 1/4 stable (trade; checkerboard swing thru)
+          RWV: 1/4 stable paranoid nothing
+          RWV: finally stable paranoid swing the fractions !!!!!
+          RWV: finally stable paranoid swing thru
+          RWV: finally paranoid paranoid swing the fractions
+          RWV: finally assume waves paranoid swing the fractions
+      */
+      /* ideas for poster
+         finally tandem paranoid swing thru
+         4/5 reverse order paranoid swing the fractions
+      */
+
+
+
       // This is "paranoid".
 
       struct paranoid_thing {
@@ -5104,15 +5119,17 @@ static void do_concept_special_sequential(
          uint32_t psaved_last_flagmisc;
          fraction_info pzzz;
 
-         paranoid_thing(setup *result) : presult(result), pzzz(2)
+         paranoid_thing(setup *result) : pzzz(2), presult(result)
          {};
 
          void do_subject_call() {
             psaved_last_flagmisc = presult->result_flags.misc &
                (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
             presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+
             if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
                presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
+
             do_call_in_series_simple(presult);
             presult->result_flags.misc |= psaved_last_flagmisc;
          }
@@ -5124,8 +5141,7 @@ static void do_concept_special_sequential(
             psaved_last_flagmisc = presult->result_flags.misc &
                (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
             presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
-               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
+            presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
             do_call_in_series_simple(presult);
             presult->result_flags.misc |= psaved_last_flagmisc;
          }
@@ -5152,6 +5168,9 @@ static void do_concept_special_sequential(
       if (!ss->cmd.cmd_fraction.is_null() &&
           !(ss->cmd.cmd_misc3_flags & CMD_MISC3__PUT_FRAC_ON_FIRST))
          fail("Can't stack meta or fractional concepts.");
+
+      uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
+         parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
 
       if (ss->cmd.cmd_fraction.flags & CMD_FRAC_REVERSE)
          P.pzzz.m_reverse_order = true;
@@ -5181,9 +5200,8 @@ static void do_concept_special_sequential(
 
             P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
 
-            if ((ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE) ||   // User said "finally or secondly".
-                ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0)) // User said "last 1/2".
-                result->cmd.cmd_fraction.set_to_null();
+            if (ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE)
+               result->cmd.cmd_fraction.flags = 0;
          }
 
       try_this:
@@ -5229,6 +5247,9 @@ static void do_concept_special_sequential(
 
       uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
          parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
+
+      call_with_name *save_subject_call = ss->cmd.parseptr->call;
+      who_list saved_selector = current_options.who;
 
       fraction_info zzz(2);
 

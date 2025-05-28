@@ -6653,29 +6653,7 @@ void toplevelmove() THROW_DECL
    if (written_history_items > config_history_ptr)
       written_history_items = config_history_ptr;
 
-   starting_setup.cmd.cmd_misc_flags = 0;
-   starting_setup.cmd.cmd_misc2_flags = 0;
-   starting_setup.cmd.cmd_misc3_flags = 0;
-   starting_setup.cmd.do_couples_her8itflags = 0ULL;
-   starting_setup.cmd.cmd_fraction.set_to_null();
-   starting_setup.cmd.cmd_assume.assumption = cr_none;
-   starting_setup.cmd.cmd_assume.assump_cast = 0;
-   starting_setup.cmd.prior_elongation_bits = 0;
-   starting_setup.cmd.prior_expire_bits = 0;
-   starting_setup.cmd.skippable_concept = (parse_block *) 0;
-   starting_setup.cmd.skippable_heritflags = 0ULL;
-   starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0ULL;
-   starting_setup.cmd.restrained_concept = (parse_block *) 0;
-   starting_setup.cmd.restrained_super8flags = 0ULL;
-   starting_setup.cmd.restrained_super9flags = 0ULL;
-   starting_setup.cmd.restrained_do_as_couples = false;
-   starting_setup.cmd.restrained_miscflags = 0;
-   starting_setup.cmd.restrained_misc2flags = 0;
-   starting_setup.cmd.restrained_selector_decoder[0] = 0;
-   starting_setup.cmd.restrained_selector_decoder[1] = 0;
-   starting_setup.cmd.restrained_fraction.flags = 0;
-   starting_setup.cmd.restrained_fraction.fraction = 0;
-   starting_setup.cmd.cmd_final_flags.clear_all_herit_and_final_bits();
+   starting_setup.cmd.initialize();
 
    newhist.init_warnings_specific();
 

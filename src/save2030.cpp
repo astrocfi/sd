@@ -5096,6 +5096,17 @@ static void do_concept_special_sequential(
 
    if (parseptr->concept->arg1 == part_key_paranoid) {
 
+      /* bugs from discord
+          RWV: 1/4 stable (trade; checkerboard swing thru)
+          RWV: 1/4 stable paranoid nothing
+          RWV: finally stable paranoid swing the fractions !!!!!
+          RWV: finally stable paranoid swing thru
+          RWV: finally paranoid paranoid swing the fractions
+          RWV: finally assume waves paranoid swing the fractions
+      */
+
+
+
       // This is "paranoid".
 
       struct paranoid_thing {
@@ -5104,29 +5115,32 @@ static void do_concept_special_sequential(
          uint32_t psaved_last_flagmisc;
          fraction_info pzzz;
 
-         paranoid_thing(setup *result) : presult(result), pzzz(2)
+         paranoid_thing(setup *result) : pzzz(2), presult(result)
          {};
 
          void do_subject_call() {
             psaved_last_flagmisc = presult->result_flags.misc &
                (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
             presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+
             if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
                presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
+
             do_call_in_series_simple(presult);
             presult->result_flags.misc |= psaved_last_flagmisc;
          }
 
-         void do_the_utb() {
+         void do_the_utb(uint32_t fraction_to_provide) {
             presult->cmd.initialize();
             presult->cmd.parseptr = (parse_block *) 0;
             presult->cmd.callspec = the_utb;
             psaved_last_flagmisc = presult->result_flags.misc &
                (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
-               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
-            do_call_in_series_simple(presult);
+
+            //            presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
+            //            do_call_in_series_simple(presult);
+         }
+         void bbb() {
             presult->result_flags.misc |= psaved_last_flagmisc;
          }
       };
@@ -5153,57 +5167,130 @@ static void do_concept_special_sequential(
           !(ss->cmd.cmd_misc3_flags & CMD_MISC3__PUT_FRAC_ON_FIRST))
          fail("Can't stack meta or fractional concepts.");
 
-      if (ss->cmd.cmd_fraction.flags & CMD_FRAC_REVERSE)
-         P.pzzz.m_reverse_order = true;
-
-      P.pzzz.m_first_call = !P.pzzz.m_reverse_order;
-
-      prepare_for_call_in_series(result, ss);
+      uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
+         parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
 
       if (ss->cmd.cmd_fraction.flags == 0) {
-         // Pure fractionalization (or nothing) coming in.
+         // Pure fractionalization (or nothing) coming in.  This is supposedly easy.
+         int sn = 2 * ss->cmd.cmd_fraction.start_numer();
+         int sd = ss->cmd.cmd_fraction.start_denom();
+         int en = 2 * ss->cmd.cmd_fraction.end_numer();
+         int ed = ss->cmd.cmd_fraction.end_denom();
 
-         P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
+         prepare_for_call_in_series(result, ss);
 
          P.psaved_last_flagmisc = result->result_flags.misc &
             (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
 
-         result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-         goto try_this;
+         if (en > ed) {
+            // This has at least some of the U-turn back.
+            // Does it have any of the subject call?
+
+            if (sn < sd) {
+               // Yes -- do the subject call.
+
+               result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+               result->cmd.cmd_fraction.repackage(sn, sd, 1, 1);
+               do_call_in_series_simple(result);
+            }
+
+            // Second thing -- U-turn back.
+
+            P.do_the_utb(0);
+            result->cmd.cmd_fraction.repackage(sn>sd ? sn-sd : 0, sd, en-ed, ed);
+            do_call_in_series_simple(result);
+            P.bbb();
+         }
+         else {
+            // This has only the subject caall.
+
+            result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+            result->cmd.cmd_fraction.repackage(sn, sd, en, ed);
+            do_call_in_series_simple(result);
+            result->result_flags.misc |= P.psaved_last_flagmisc;
+         }
       }
       else {
-         // Special part-analyzing thing coming in.
+         // Special part-analyzing thing coming in.  This is harder.
+
+         P.pzzz.m_first_call = !P.pzzz.m_reverse_order;
+
+         prepare_for_call_in_series(result, ss);
+
          // Find out whether we are doing something like "initially stable paranoid swing thru",
          // with an intervening concept, or just "initially paranoid swing thru".
 
          if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__PARTS_OVER_THIS_CONCEPT)) {
-            // Yes, so the part number applies to the "paranoid" concept itself.
+            // Yes, so the part number applies to the paranoid" concept itself.
 
-            P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
+            uint32_t nvalue = (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
+            uint32_t kvalue = (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
 
-            if ((ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE) ||   // User said "finally or secondly".
-                ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0)) // User said "last 1/2".
-                result->cmd.cmd_fraction.set_to_null();
+            if (ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE) {
+               if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
+                   nvalue == 1 && kvalue == 1 ||
+                   (ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV &&
+                   nvalue == 2 ||
+                   (ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY &&
+                   nvalue == 1) {
+                  // Doing the subject call.
+                  P.psaved_last_flagmisc = result->result_flags.misc &
+                     (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+                  result->cmd.cmd_fraction.flags = 0;
+                  do_call_in_series_simple(result);
+                  result->result_flags.misc |= P.psaved_last_flagmisc;
+               }
+               else if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_FROMTOREV &&
+                        nvalue == 2 && kvalue == 0 ||
+                        (ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLYREV &&
+                        nvalue == 1 ||
+                        (ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY &&
+                        nvalue == 2) {
+                  // Doing the U-Turn Back.
+                  P.do_the_utb(result->cmd.cmd_fraction.fraction);   // Preserve old value.
+
+                  result->cmd.cmd_fraction.flags = 0;
+                  do_call_in_series_simple(result);
+                  P.bbb();
+               }
+               else
+                  fail("Sorry, can't do this.");
+
+               // Repair the damage.
+
+               result->cmd.callspec = save_subject_call;
+               ss->cmd.parseptr->call = save_subject_call;
+               ss->cmd.parseptr->call_to_print = save_subject_call;
+               current_options.who = saved_selector;
+               return;
+            }
          }
-
-      try_this:
-
-         setup_command save_cmd;
 
          for (;;) {
             if (P.pzzz.not_yet_in_active_section()) goto paranoid_next_cycle;
             if (P.pzzz.ran_off_active_section()) break;
 
-            save_cmd = result->cmd;
-
             if (P.pzzz.m_fetch_index == 0) {
-               P.do_subject_call();
+               // First thing -- do the subject call.
+
+               P.psaved_last_flagmisc = result->result_flags.misc &
+                  (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+               result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+
+               if (!(result->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
+                  result->cmd.cmd_fraction.fraction = P.pzzz.get_fracs_for_this_part();
+
+               do_call_in_series_simple(result);
+               result->result_flags.misc |= P.psaved_last_flagmisc;
             }
             else {
-               P.do_the_utb();
-            }
+               // Second thing -- do a UTB
+               P.do_the_utb(P.pzzz.get_fracs_for_this_part());
 
-            result->cmd = save_cmd;
+               result->cmd.cmd_fraction.fraction = P.pzzz.get_fracs_for_this_part();
+               do_call_in_series_simple(result);
+               P.bbb();
+            }
 
             if (P.pzzz.query_instant_stop(result->result_flags.misc)) break;
 
@@ -5229,6 +5316,9 @@ static void do_concept_special_sequential(
 
       uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
          parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
+
+      call_with_name *save_subject_call = ss->cmd.parseptr->call;
+      who_list saved_selector = current_options.who;
 
       fraction_info zzz(2);
 

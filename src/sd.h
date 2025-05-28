@@ -250,8 +250,6 @@ enum concept_kind {
    concept_so_and_so_stable,
    concept_frac_stable,
    concept_so_and_so_frac_stable,
-   concept_paranoid,
-   concept_so_and_so_paranoid,
    concept_nose,
    concept_so_and_so_nose,
    concept_emulate,
@@ -274,8 +272,11 @@ enum concept_kind {
    concept_n_times,
    concept_sequential,
    concept_special_sequential,
+   concept_special_sequential_sel,
    concept_special_sequential_num,
    concept_special_sequential_4num,
+   concept_special_sequential_no_2nd,
+   concept_special_sequential_sel_no_2nd,
    concept_meta,
    concept_meta_one_arg,
    concept_meta_two_args,
@@ -1119,18 +1120,18 @@ enum {
 // are now 6 bits, in the "flags" word.
 
 enum {
-   CMD_FRAC_PART_BIT        = 00001U,  // This is "N".
-   CMD_FRAC_PART_MASK       = 00077U,
-   CMD_FRAC_PART2_BIT       = 00100U,  // This is "K".
-   CMD_FRAC_PART2_MASK      = 07700U,
+   CMD_FRAC_PART_BIT        = 0x00000001U,  // This is "N", 1-based.
+   CMD_FRAC_PART_MASK       = 0x0000003FU,
+   CMD_FRAC_PART2_BIT       = 0x00000040U,  // This is "K", 1-based.
+   CMD_FRAC_PART2_MASK      = 0x00000FC0U,
 
    CMD_FRAC_IMPROPER_BIT    = 0x00200000U,
    CMD_FRAC_THISISLAST      = 0x00400000U,
    CMD_FRAC_REVERSE         = 0x00800000U,
-   CMD_FRAC_CODE_MASK       = 0x07000000U,    // This is a 3 bit field.  Could easily be increased.
+   CMD_FRAC_CODE_MASK       = 0x07000000U,    // This is a 3 bit field.  Could be increased to 4.
 
    // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
-   // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
+   // We require that the PART_MASK field (N) be nonzero (we use 1-based part numbering)
    // when these are in use.  If the PART_MASK field is zero, the code must be zero
    // (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
 
@@ -1747,6 +1748,32 @@ struct setup_command {
    parse_block *skippable_concept;
    heritflags skippable_heritflags;
    heritflags cmd_heritflags_to_save_from_mxn_expansion;
+
+   void initialize() {
+      cmd_misc_flags = 0;
+      cmd_misc2_flags = 0;
+      cmd_misc3_flags = 0;
+      do_couples_her8itflags = 0ULL;
+      cmd_fraction.set_to_null();
+      cmd_assume.assumption = cr_none;
+      cmd_assume.assump_cast = 0;
+      prior_elongation_bits = 0;
+      prior_expire_bits = 0;
+      skippable_concept = (parse_block *) 0;
+      skippable_heritflags = 0ULL;
+      cmd_heritflags_to_save_from_mxn_expansion = 0ULL;
+      restrained_concept = (parse_block *) 0;
+      restrained_super8flags = 0ULL;
+      restrained_super9flags = 0ULL;
+      restrained_do_as_couples = false;
+      restrained_miscflags = 0;
+      restrained_misc2flags = 0;
+      restrained_selector_decoder[0] = 0;
+      restrained_selector_decoder[1] = 0;
+      restrained_fraction.flags = 0;
+      restrained_fraction.fraction = 0;
+      cmd_final_flags.clear_all_herit_and_final_bits();
+   }
 
    void promote_restrained_fraction() {
       if (restrained_fraction.fraction != 0) {
@@ -4517,7 +4544,7 @@ enum {
    CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400U,    // Treat "<anything> motivate" as plain motivate.
    CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800U,
    CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000U,
-   // spare:                       = 0x00002000U,
+   CMD_MISC3__PARTS_OVER_THIS_CONCEPT = 0x00002000U,
    CMD_MISC3__STOP_OVERCAST_CHECK  = 0x00004000U,    // Off at start of utterance, gets turned on after first part.
                                                      // This is how we enforce the "no overcast warnings for actions
                                                      // internal to a compound call" rule.
@@ -4770,7 +4797,8 @@ enum part_key_kind {
    part_key_use,
    part_key_half_and_half,
    part_key_frac_and_frac,
-   part_key_use_last_part
+   part_key_use_last_part,
+   part_key_paranoid
 };
 
 // BEWARE!!  This list is keyed to the table "meta_key_props" in sdtables.cpp .
@@ -5563,7 +5591,7 @@ class fraction_info {
    // This one is in sdmoves.cpp
    bool query_instant_stop(uint32_t & result_flag_wordmisc) const;
 
-   void demand_this_part_exists()  const THROW_DECL
+   void demand_this_part_exists() const THROW_DECL
       {
          if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
             fail("The indicated part number doesn't exist.");
@@ -5576,7 +5604,7 @@ class fraction_info {
          m_end_point = m_highlimit-1;
       }
 
-   bool not_yet_in_active_section()
+   bool not_yet_in_active_section() const
       {
          if (m_reverse_order) {
             if (m_client_index > m_start_point) return true;
@@ -5587,7 +5615,7 @@ class fraction_info {
          return false;
       }
 
-   bool ran_off_active_section()
+   bool ran_off_active_section() const
       {
          if (m_reverse_order) {
             if (m_client_index < m_end_point) return true;
@@ -5598,7 +5626,7 @@ class fraction_info {
          return false;
       }
 
-   inline bool this_starts_at_beginning()
+   inline bool this_starts_at_beginning() const
       { return
            m_start_point == 0 &&
            !m_do_last_half_of_first_part &&

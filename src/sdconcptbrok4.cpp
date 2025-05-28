@@ -5095,51 +5095,7 @@ static void do_concept_special_sequential(
    //    part_key_paranoid      (8) - paranoid
 
    if (parseptr->concept->arg1 == part_key_paranoid) {
-
       // This is "paranoid".
-
-      struct paranoid_thing {
-         setup *presult;
-         call_with_name *the_utb;
-         uint32_t psaved_last_flagmisc;
-         fraction_info pzzz;
-
-         paranoid_thing(setup *result) : presult(result), pzzz(2)
-         {};
-
-         void do_subject_call() {
-            psaved_last_flagmisc = presult->result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
-               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
-            do_call_in_series_simple(presult);
-            presult->result_flags.misc |= psaved_last_flagmisc;
-         }
-
-         void do_the_utb() {
-            presult->cmd.initialize();
-            presult->cmd.parseptr = (parse_block *) 0;
-            presult->cmd.callspec = the_utb;
-            psaved_last_flagmisc = presult->result_flags.misc &
-               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
-            presult->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-            if (!(presult->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
-               presult->cmd.cmd_fraction.fraction = pzzz.get_fracs_for_this_part();
-            do_call_in_series_simple(presult);
-            presult->result_flags.misc |= psaved_last_flagmisc;
-         }
-      };
-
-      paranoid_thing P(result);
-
-      if (parseptr->concept->arg2) current_options.who = parseptr->options.who;
-
-      P.the_utb = result->cmd.callspec = (parseptr->concept->arg2) ?
-         base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
-
-      call_with_name *save_subject_call = ss->cmd.parseptr->call;
-      who_list saved_selector = current_options.who;
 
       if (process_brute_force_mxn(ss, parseptr, do_concept_special_sequential, result))
          return;
@@ -5153,65 +5109,112 @@ static void do_concept_special_sequential(
           !(ss->cmd.cmd_misc3_flags & CMD_MISC3__PUT_FRAC_ON_FIRST))
          fail("Can't stack meta or fractional concepts.");
 
-      if (ss->cmd.cmd_fraction.flags & CMD_FRAC_REVERSE)
-         P.pzzz.m_reverse_order = true;
+      uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
+         parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
 
-      P.pzzz.m_first_call = !P.pzzz.m_reverse_order;
-
-      prepare_for_call_in_series(result, ss);
+      uint32_t saved_last_flagmisc;
+      call_with_name *save_subject_call = ss->cmd.parseptr->call;
+      who_list saved_selector = current_options.who;
 
       if (ss->cmd.cmd_fraction.flags == 0) {
-         // Pure fractionalization (or nothing) coming in.
+         // Pure fractionalization (or nothing) coming in.  This is supposedly easy.
+         int sn = 2 * ss->cmd.cmd_fraction.start_numer();
+         int sd = ss->cmd.cmd_fraction.start_denom();
+         int en = 2 * ss->cmd.cmd_fraction.end_numer();
+         int ed = ss->cmd.cmd_fraction.end_denom();
 
-         P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
+         prepare_for_call_in_series(result, ss);
 
-         P.psaved_last_flagmisc = result->result_flags.misc &
+         saved_last_flagmisc = result->result_flags.misc &
             (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
 
-         result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
-         goto try_this;
-      }
-      else {
-         // Special part-analyzing thing coming in.
-         // Find out whether we are doing something like "initially stable paranoid swing thru",
-         // with an intervening concept, or just "initially paranoid swing thru".
+         if (en > ed) {
+            // This has at least some of the U-turn back.
+            // Does it have any of the subject call?
 
-         if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__PARTS_OVER_THIS_CONCEPT)) {
-            // Yes, so the part number applies to the "paranoid" concept itself.
+            if (sn < sd) {
+               // Yes -- do the subject call.
 
-            P.pzzz.get_fraction_info(ss->cmd.cmd_fraction, 7, weirdness_off, (parse_block **) 0);
+               result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+               result->cmd.cmd_fraction.repackage(sn, sd, 1, 1);
+               do_call_in_series_simple(result);
+            }
 
-            if ((ss->cmd.cmd_fraction.fraction == FRAC_FRAC_NULL_VALUE) ||   // User said "finally or secondly".
-                ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0)) // User said "last 1/2".
-                result->cmd.cmd_fraction.set_to_null();
+            // Second thing -- U-turn back.
+
+            result->cmd.initialize();
+            result->cmd.parseptr = (parse_block *) 0;
+
+            // Set up for doing the U-Turn Back.
+            result->cmd.callspec = (parseptr->concept->arg2) ?
+               base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
+
+            if (parseptr->concept->arg2) current_options.who = parseptr->options.who;
+            saved_last_flagmisc = result->result_flags.misc &
+               (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+            result->cmd.cmd_fraction.repackage(sn>sd ? sn-sd : 0, sd, en-ed, ed);
+         }
+         else {
+            // This has only the subject caall.
+
+            result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+            result->cmd.cmd_fraction.repackage(sn, sd, en, ed);
          }
 
-      try_this:
+         do_call_in_series_simple(result);
+         result->result_flags.misc |= saved_last_flagmisc;
+      }
+      else {
+         // Special part-analyzing thing coming in.  This is harder.
 
-         setup_command save_cmd;
+         fraction_info zzz(2);
+
+         zzz.m_first_call = !zzz.m_reverse_order;
 
          for (;;) {
-            if (P.pzzz.not_yet_in_active_section()) goto paranoid_next_cycle;
-            if (P.pzzz.ran_off_active_section()) break;
+            if (zzz.not_yet_in_active_section()) goto paranoid_next_cycle;
+            if (zzz.ran_off_active_section()) break;
 
-            save_cmd = result->cmd;
+            if (zzz.m_fetch_index == 0) {
+               // First thing -- do the subject call.
 
-            if (P.pzzz.m_fetch_index == 0) {
-               P.do_subject_call();
+               prepare_for_call_in_series(result, ss);
+
+               saved_last_flagmisc = result->result_flags.misc &
+                  (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+               result->cmd.cmd_fraction.flags &= ~CMD_FRAC_REVERSE;
+
+               if (!(result->cmd.cmd_fraction.flags & CMD_FRAC_BREAKING_UP))
+                  result->cmd.cmd_fraction.fraction = zzz.get_fracs_for_this_part();
+
+               do_call_in_series_simple(result);
+               result->result_flags.misc |= saved_last_flagmisc;
             }
             else {
-               P.do_the_utb();
+               // Second thing -- do a UTB
+
+               result->cmd.initialize();
+               result->cmd.parseptr = (parse_block *) 0;
+
+               // Set up for doing the U-Turn Back.
+               result->cmd.callspec = (parseptr->concept->arg2) ?
+                  base_calls[base_call_anyoneuturnback] : base_calls[base_call_uturnback];
+
+               if (parseptr->concept->arg2) current_options.who = parseptr->options.who;
+               saved_last_flagmisc = result->result_flags.misc &
+                  (RESULTFLAG__DID_LAST_PART|RESULTFLAG__PARTS_ARE_KNOWN);
+               result->cmd.cmd_fraction.fraction = zzz.get_fracs_for_this_part();
+               do_call_in_series_simple(result);
+               result->result_flags.misc |= saved_last_flagmisc;
             }
 
-            result->cmd = save_cmd;
-
-            if (P.pzzz.query_instant_stop(result->result_flags.misc)) break;
+            if (zzz.query_instant_stop(result->result_flags.misc)) break;
 
          paranoid_next_cycle:
 
             // Increment for next cycle.
-            P.pzzz.m_fetch_index += P.pzzz.m_subcall_incr;
-            P.pzzz.m_client_index += P.pzzz.m_subcall_incr;
+            zzz.m_fetch_index += zzz.m_subcall_incr;
+            zzz.m_client_index += zzz.m_subcall_incr;
          }
       }
 
@@ -5229,6 +5232,9 @@ static void do_concept_special_sequential(
 
       uint32_t incoming_numerical_arg = (parseptr->concept->arg1 == part_key_frac_and_frac) ?
          parseptr->options.number_fields : NUMBER_FIELDS_2_1_2_1;
+
+      call_with_name *save_subject_call = ss->cmd.parseptr->call;
+      who_list saved_selector = current_options.who;
 
       fraction_info zzz(2);
 
@@ -7518,15 +7524,6 @@ static void do_concept_meta(
       yescmd.cmd_misc3_flags |= CMD_MISC3__PUT_FRAC_ON_FIRST;
       yescmd.parseptr->more_finalherit_flags.set_finalbit(FINAL__UNDER_RANDOM_META);
 
-      // This makes "paranoid", if used directly after this concept, pass this concept
-      // (initially, thirdly, etc.) on to the subject call.  So "secondly paranoid swing
-      // the fractions" will pick out the second part of swing the fractions.  If the
-      // flag is off, which will happen if there is an intervening concept, this concept
-      // will be taken directly by the "paranoid" concept.  So "secondly stable paranoid
-      // swing the fractions" will make the second part of the "paranoid" concept itself
-      // be picked out for application of "stable".
-      yescmd.cmd_misc3_flags |= CMD_MISC3__PARTS_OVER_THIS_CONCEPT;
-
       // This makes it complain about things like "initially stable cross concentric mix".
       nocmd.cmd_misc3_flags |= CMD_MISC3__META_NOCMD;
 
@@ -8056,6 +8053,7 @@ static void do_concept_meta(
             result->cmd.cmd_fraction.set_to_null_with_flags(
                FRACS(CMD_FRAC_CODE_ONLY,shiftynum,0) | CMD_FRAC_BREAKING_UP);
             result->result_flags.misc |= RESULTFLAG__EXPIRATION_ENAB;
+
             do_call_in_series_and_update_bits(result);
 
             // Is this the right thing to do?
@@ -9769,12 +9767,6 @@ extern bool do_big_concept(
          return true;
       }
    }
-
-   // We want the "paranoid" concept to know, if it was called with a concept
-   // like "initially", whether some other concept (like "stable") intervened.
-   if (!(this_kind == concept_special_sequential_no_2nd ||
-         this_kind == concept_special_sequential_sel_no_2nd))
-      ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__PARTS_OVER_THIS_CONCEPT;
 
    (*concept_func)(ss, this_concept_parse_block, result);
    remove_tgl_distortion(result);

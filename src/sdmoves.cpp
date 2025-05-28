@@ -4540,43 +4540,19 @@ void reduce_fraction(int &a, int &b)
 }
 
 
-/* The fraction stuff is encoded into 6 hexadecimal digits, which we will call
-   digits 3 through 8:
+/* The cmd_fraction.fraction word:
+      The lowest 12 bits give denominator (high 6 bits) and numerator (low 6 bits)
+                  of the end point of the call, always in reduced-fraction form.
+                  The default is [1,1] (that is, 000001 000001) meaning to end
+                  at 1.0000, that is, the end.
+      The next 12 bits give denominator (high 6 bits) and numerator (low 6 bits)
+                  of the start point of the call, always in reduced-fraction form.
+                  The default is [0,1] (that is, 000001 000000) meaning to start
+                  at 0.0000, that is, the beginning.
 
-      Late-breaking news:  digit 2 is now used.  The bit 0x01000000 means
-      "this is 'initially' or 'finally', and I promise to invoke all parts
-      of the call, even though I appear at present to be invoking just a
-      subset."  It is used to allow 'initially' and 'finally' to be stacked
-      with themselves.
+   The default configuration is 000001 000000 000001 000001, that is, 0x00040041,
+   also known as FRAC_FRAC_NULL_VALUE.
 
-      digit 3 - the code (3 bits) and the reversal bit (1 bit)
-                  Note that the code*2 is what is visible in this digit.
-                  If this digit is odd, the reversal bit is on.  The code
-                  indicates what kind of special job we are doing.
-      digit 4 - the selected part, called "N".  Think of this as being 1-based,
-                  even though the part numbering stuff that comes out of this
-                  procedure will be zero-based.  This will always be nonzero
-                  when some nontrivial job is being done.  the meaning of the
-                  codes has been defined so that no job ever requires N to be zero.
-                  The only time N is zero is when we are not doing anything, in
-                  which case the code is zero.  Code = N = 0 means no special
-                  job is being done.  (Though reversal and nontrivial fractions
-                  may still be present.)
-      digits 5 and 6 - the numerator and denominator, respectively, of the
-                  start point of the call, always in reduced-fraction form.
-                  The default is [0,1] meaning to start at 0.0000, that is, the
-                  beginning.
-      digits 7 and 8 - the numerator and denominator, respectively, of the
-                  end point of the call, always in reduced-fraction form.
-                  The default is [1,1] meaning to end at 1.0000, that is, the
-                  end.
-
-   The default configuration is 000111 hex, meaning do not reverse, go from
-   0.0000 to 1.0000, and don't do any special job.  A word of zero means the same
-   thing, and the fraction flag word is initialized to 0 if no fractions are being
-   used.  This makes it easier to tell whether any fractions are being used.
-   The zero is changed to 000111 hex at the start of any fraction-manipulation
-   operation.
 
    The meaning of all this stuff is as follows:
 
