@@ -154,6 +154,8 @@ enum concept_kind {
    concept_twinorbit,
    concept_rotary,
    concept_scatter,
+   concept_intpgram,
+   concept_trap,
    concept_zoomroll,
    LAST_SIMPLE_HERIT_CONCEPT = concept_zoomroll,
 
@@ -5449,7 +5451,8 @@ bool fix_n_results(
    uint32_t & rotstates,
    uint32_t & pointclip,
    uint32_t fudgystupidrot,
-   bool allow_hetero_and_notify = false) THROW_DECL;
+   bool allow_hetero_and_notify = false,
+   bool ignore_mismatched_rotations = false) THROW_DECL;
 
 bool warnings_are_unacceptable(bool strict);
 

@@ -300,6 +300,8 @@ heritflags simple_herit_bits_table[] = {
    INHERITFLAG_TWINORBIT,
    INHERITFLAG_ROTARY,
    INHERITFLAG_SCATTER,
+   INHERITFLAG_INTPGRAM,
+   INHERITFLAG_TRAP,
    INHERITFLAG_ZOOMROLL
 };
 
@@ -5470,7 +5472,8 @@ bool fix_n_results(
    uint32_t & rotstates,
    uint32_t & pointclip,
    uint32_t fudgystupidrot,
-   bool allow_hetero_and_notify /* = false */) THROW_DECL
+   bool allow_hetero_and_notify /* = false */,
+   bool ignore_mismatched_rotations /* = false */) THROW_DECL
 {
    int i;
 
@@ -5699,7 +5702,7 @@ bool fix_n_results(
    }
 
    if (arity == 1 && kk != s_trngl && kk != s_trngl4) rotstates &= 0x3;
-   if (!rotstates) goto lose;
+   if (rotstates == 0 && !ignore_mismatched_rotations) goto lose;
 
    // Now deal with any setups that we may have deferred.
 

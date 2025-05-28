@@ -637,7 +637,8 @@ static void multiple_move_innards(
          map_kind = MPKIND__4_QUADRANTS_WITH_45_ROTATION;
       }
       else if (map_kind == MPKIND__4_EDGES) {
-         if (((z[0].rotation ^ z[1].rotation) & 1) == 1) {
+         if (((z[0].rotation ^ z[1].rotation) & 1) == 1 ||
+             maps->outer_kind == s_thar) {
             map_kind = MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR;
          }
          else {
@@ -712,7 +713,7 @@ static void multiple_move_innards(
       }
    }
 
-   // If did a "colliding call like circulate in a 2x2, going to parallel waves
+   // If did a "colliding" call like circulate in a 2x2, going to parallel waves
    // with just one wave occupied, strip the 2x4 down to a 1x4.
    if (map_kind == MPKIND__REMOVED && arity == 2 && !(sscmd->cmd_misc_flags & CMD_MISC__PHANTOMS) &&
             z[0].kind == s2x4 && z[1].kind == s2x4 &&
@@ -783,7 +784,12 @@ static void multiple_move_innards(
 
       if (fix_n_results(arity,
                         (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
-                        z, rotstate, pointclip, rot & 0xF, true)) {
+                        z,
+                        rotstate,
+                        pointclip,
+                        rot & 0xF,
+                        true,
+                        map_kind == MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR)) {
          if (map_kind != MPKIND__SPLIT)
             fail("This is an inconsistent shape or orientation changer.");
          map_kind = MPKIND__HET_SPLIT;
@@ -836,7 +842,7 @@ static void multiple_move_innards(
       }
 
       if (!hetero_mapkind(map_kind) && (arity != 2 || (setup_attrs[z[0].kind].setup_props & SPROP_NO_SYMMETRY) == 0)) {
-         if ((rotstate & 0xF03) == 0) {
+         if (map_kind != MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR && (rotstate & 0xF03) == 0) {
             // Rotations are alternating.  Aside from the two map kinds just below,
             // we demand funnymap on.  These are the maps that want alternating rotations.
             if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__CONCPHAN) {
@@ -844,20 +850,16 @@ static void multiple_move_innards(
                   fail("Can't do this orientation changer.");
                map_kind = (map_kind == MPKIND__SPLIT) ? MPKIND__HET_SPLIT : MPKIND__HET_CONCPHAN;
             }
-            else if (arity == 4 && map_kind == MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR) {
-               if (!(rotstate & 0x0F0))
-                  fail("Can't do this orientation changer.");
-            }
             else if (arity == 4 && map_kind == MPKIND__DMD_STUFF) {
-               if (!(rotstate & 0x0F0))
-                  fail("Can't do this orientation changer.");
-
                if (vert) {
                   z[1].rotation += 2;
                   canonicalize_rotation(&z[1]);
                   z[3].rotation += 2;
                   canonicalize_rotation(&z[3]);
                }
+
+               if (!(rotstate & 0x0F0))
+                  fail("Can't do this orientation changer.");
 
                map_kind = MPKIND__NONISOTROPDMD;
             }
@@ -1373,7 +1375,8 @@ static void multiple_move_innards(
    insize = attr::klimit(final_map->inner_kind)+1;
 
    // The low 2 bits of the ten thousands digit give additional rotation info.
-   result->rotation = (z[0].rotation + (final_map->rot >> 16) - final_map->rot) & 3;
+   result->rotation = (map_kind == MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR) ? 0 :
+      ((z[0].rotation + (final_map->rot >> 16) - final_map->rot) & 3);
 
    if (map_kind == MPKIND__HET_SPLIT || map_kind == MPKIND__HET_TWICEREM || map_kind == MPKIND__HET_CONCPHAN) {
 
@@ -1402,8 +1405,8 @@ static void multiple_move_innards(
       // All other maps are comparatively straightforward.  Action is only required
       // if the actual setups are stacked vertically and are rotated.
 	
-      if (vert && (z[0].rotation & 1)) {
-         //dont do this if MPKIND__NONISOTROPDMD and final_map->rot & 100
+      if (vert && (z[0].rotation & 1) && map_kind != MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR) {
+         // Don't do this if MPKIND__NONISOTROPDMD and final_map->rot & 100
          if (z[0].rotation == z[1].rotation || map_kind != MPKIND__SPLIT) {    // **** New code.
             if (((final_map->rot+1) & 2) == 0) {
                for (i=0; i<arity; i++) {
@@ -1484,14 +1487,31 @@ static void multiple_move_innards(
    vrot = final_map->per_person_rot;
 
    for (j=0,rot=final_map->rot ; j<arity ; j++,rot>>=2) {
-      if ((j&1) && hetero_mapkind(final_map->map_kind))
-         insize = attr::klimit((setup_kind) (final_map->rot >> 24))+1;
-      else
-         insize = attr::klimit(final_map->inner_kind)+1;
+      if (final_map->map_kind == MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR && z[0].eighth_rotation == 1) {
+         // Special handling of thars under 45 degree rotations.
 
-      for (i=0 ; i<insize ; i++) {
-         install_rot(result, *getptr++, &z[j], i, 011*((rot+vrot) & 3));
-         vrot >>= 2;
+         for (i=0 ; i<insize ; i++) {
+            int q = *getptr++;
+            if (z[j].rotation != 0) {
+               q++;
+               if ((q&3)==0) q-= 4;
+               install_rot(result, q, &z[j], i, j&1 ? 022 : 011);
+            }
+            else {
+               install_rot(result, q, &z[j], i, j&1 ? 011 : 0);
+            }
+         }
+      }
+      else {
+         if ((j&1) && hetero_mapkind(final_map->map_kind))
+            insize = attr::klimit((setup_kind) (final_map->rot >> 24))+1;
+         else
+            insize = attr::klimit(final_map->inner_kind)+1;
+
+         for (i=0 ; i<insize ; i++) {
+            install_rot(result, *getptr++, &z[j], i, 011*((rot+vrot) & 3));
+            vrot >>= 2;
+         }
       }
    }
 

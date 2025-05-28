@@ -6198,8 +6198,16 @@ static void do_concept_do_both_boxes(
    else if (ss->kind == s3x4 && parseptr->concept->arg3)
       // distorted_2x2s_move will notice that concept is funny and will do the right thing.
       distorted_2x2s_move(ss, parseptr, result);
+   else if (ss->kind == s2x6 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_3X3) {
+      ss->cmd.cmd_final_flags.herit |= parseptr->concept->arg3 ? INHERITFLAG_INTPGRAM : INHERITFLAG_TRAP;
+      move(ss, false, result);
+   }
+   else if (ss->kind == s2x8 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_NXNMASK) == INHERITFLAGNXNK_4X4) {
+      ss->cmd.cmd_final_flags.herit |= parseptr->concept->arg3 ? INHERITFLAG_INTPGRAM : INHERITFLAG_TRAP;
+      move(ss, false, result);
+   }
    else
-      fail("Need a 2x4 setup to do this concept.");
+      fail("Not in proper setup for this concept.");
 }
 
 
@@ -9724,7 +9732,6 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_crossover
    {0, 0},                                                  // concept_inroll
    {0, 0},                                                  // concept_outroll
-   {0, 0},                                                  // concept_zoomroll
    {0, 0},                                                  // concept_splittrade
    {0, 0},                                                  // concept_bias
    {0, 0},                                                  // concept_biastrade
@@ -9732,6 +9739,9 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_twinorbit
    {0, 0},                                                  // concept_rotary
    {0, 0},                                                  // concept_scatter
+   {0, 0},                                                  // concept_intpgram,
+   {0, 0},                                                  // concept_trap,
+   {0, 0},                                                  // concept_zoomroll
    {0, 0},                                                  // concept_12_matrix
    {0, 0},                                                  // concept_16_matrix
    {0, 0},                                                  // concept_revert

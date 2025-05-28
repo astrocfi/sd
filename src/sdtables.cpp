@@ -3056,10 +3056,13 @@ map::map_thing map::map_init_table[] = {
    {{5, 4,                  2, 3,                  7, 6,                  0, 1},
     s1x2,4,MPKIND__SPLIT_OTHERWAY_TOO,1, warn__none, s2x4, 0x000, 0},
 
-   {{0, 1,                  2, 3,                  5, 4,                  7, 6},
-    s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,0, warn__none, s2x4, 0x000, 0},
-   {{7, 6,                  1, 0,                  2, 3,                  4, 5},
-    s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,1, warn__none, s2x4, 0x000, 0xA0A0},
+   {{13, 15,                1, 3,                 7, 5,                  11, 9},
+    s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,0, warn__none,s_c1phan, 0x000, 0},
+   {{13, 15,                1, 3,                 7, 5,                  11, 9},
+    s1x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,1, warn__none,s_c1phan, 0x000, 0},
+
+   {{-1, 11, -1, 8, -1, 15, -1, 12,          -1, 0, -1, 3, -1, 4, -1, 7},
+    s2x2,4,MPKIND__SPLIT_SPLIT_ANISOTROPIC_THAR,1, warn__none,  s4x4, 0x0CC, 0},
 
    {{3,                     2,                     0,                     1},
     s1x1,4,MPKIND__SPLIT_WITH_45_ROTATION_OTHERWAY_TOO,0, warn__none, sdmd, 0x000, 0},
@@ -4160,6 +4163,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     s2x4,     0, 0, 9, 1,  0xAFE, schema_concentric},
    {s2x6,           schema_nothing, {1, 2, 3, 4, 7, 8, 9, 10,   0, 5, 6, 11},
              s2x4,     s2x2,     0, 0, 9, 1,  0xAFE, schema_concentric},
+   {s2x6,           schema_nothing, {1, 2, 3, 4, 7, 8, 9, 10,   11, 0, 5, 6},
+             s2x4,     s2x2,     0, 1, 9, 1,  0xAF7, schema_concentric},
    {s3dmd,          schema_3x3_concentric, {9, 10, 11, 3, 4, 5,    0, 1, 2, 6, 7, 8},
              s1x6,     s2x3,     0, 0, 2, 1,  0x8FB, schema_concentric},
    // Took out the analyzer part of this -- it is wrong and is doing damage.

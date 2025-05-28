@@ -8400,7 +8400,7 @@ static void move_with_real_call(
             break;
          case schema_single_concentric:
          case schema_single_cross_concentric:
-            if (!ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_INTLK))
+            if (!ss->cmd.cmd_final_flags.bool_test_heritbits(callflagsh|INHERITFLAG_INTLK))
                force_split = split_command_1x4_dmd;
             break;
          case schema_single_concentric_together_if_odd:
