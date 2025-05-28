@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2024  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1215,6 +1215,9 @@ extern void do_stability(uint32_t *personp,
                          int turning,
                          bool mirror) THROW_DECL
 {
+   // This is the amount the person turned for stability calculation.  Applying that
+   // turning to the person's position in the result setup has already been done; we
+   // are just calculating stability info here.
    turning &= 3;
 
    switch (field & STB_MASK) {
@@ -1226,11 +1229,21 @@ extern void do_stability(uint32_t *personp,
       if (turning != 0)
          fail("Person turned but was marked 'Z' stability.");
       break;
-   case STB_A:
-      turning -= 4;
+   case STB_A:                            // Call literally said "A"
+      if (!mirror) {
+         turning -= 4;
+      }
+      else {
+         if (turning == 0) turning = 4;   // But meant "C"
+      }
       break;
-   case STB_A+STB_REVERSE:
-      if (turning == 0) turning = 4;
+   case STB_A+STB_REVERSE:                // Call literally said "C"
+      if (!mirror) {
+         if (turning == 0) turning = 4;
+      }
+      else {
+         turning -= 4;                    // But meant "A"
+      }
       break;
    case STB_AC:
       // Turn one quadrant anticlockwise.
@@ -1290,27 +1303,26 @@ extern void do_stability(uint32_t *personp,
       return;
    }
 
-   // Now turning has the number of quadrants the person turned, clockwise or anticlockwise.
-
-   if (mirror) turning = -turning;
+   // Now turning has the number of quadrants the person turned.
+   // -4 for all the way around CCW; +4 for all the way around CW.
 
    int absturning_in_eighths = turning * 2;     // Measured in eighths!
    if (absturning_in_eighths < 0) absturning_in_eighths = -absturning_in_eighths;
 
    int abs_overturning_in_eighths = absturning_in_eighths -
-      ((*personp & STABLE_RMASK) / STABLE_RBIT);
+      ((*personp & STABLE_REMMASK) / STABLE_REMBIT);
 
    if (abs_overturning_in_eighths <= 0)
-      *personp -= absturning_in_eighths*STABLE_RBIT;
+      *personp -= absturning_in_eighths*STABLE_REMBIT;  // We haven't run over; just reduce REM
    else {
       if (turning < 0) {
-         *personp =
-            (*personp & ~(STABLE_RMASK|STABLE_VLMASK)) |
+         *personp =            // We have run over, to the left.  Clear REM and set VL.
+            (*personp & ~(STABLE_REMMASK|STABLE_VLMASK)) |
             ((*personp + (STABLE_VLBIT * abs_overturning_in_eighths)) & STABLE_VLMASK);
       }
       else {
-         *personp =
-            (*personp & ~(STABLE_RMASK|STABLE_VRMASK)) |
+         *personp =            // We have run over, to the right.  Clear REM and set VR.
+            (*personp & ~(STABLE_REMMASK|STABLE_VRMASK)) |
             ((*personp + (STABLE_VRBIT * abs_overturning_in_eighths)) & STABLE_VRMASK);
       }
    }
@@ -2623,7 +2635,7 @@ static int divide_the_setup(
       ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK|INHERITFLAG_MXNMASK);
 
    // It will be helpful to have a mask of where the live people are.
-   uint32_t livemask = little_endian_live_mask(ss);
+   uint32_t livemask = ss->little_endian_live_mask();
 
    // Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
    // We first limit it to just the few setups for which it can possibly be legal, to make
@@ -2760,7 +2772,7 @@ static int divide_the_setup(
       if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_EXPAND_MATRIX|CMD_MISC__MUST_SPLIT_MASK)) &&
           (!(newtb & 010) || assoc(b_2x8, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_8x2, ss, calldeflist))) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_2X8, true);
          // Should never fail, but we don't want a loop.
          if (ss->kind != s2x8) fail("Failed to expand to 2X8.");
          return 2;        // And try again.
@@ -2896,7 +2908,7 @@ static int divide_the_setup(
                assoc(b_2x2, ss, calldeflist) ||
                assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist)) {
          // Need to turn it into a mundane matrix setup.
-         do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_4X6, false);
          normalize_setup(ss, plain_normalize, qtag_no_compress);
          // Check that it did something.  (Otherwise, divide_us_no_recompute will raise an error.)
          if (ss->kind == s2x4 || ss->kind == s4x4 || ss->kind == s4x6)
@@ -3006,7 +3018,7 @@ static int divide_the_setup(
       if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
             (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
             (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, true);
          if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  // Should never fail, but we don't want a loop.
          return 2;        // And try again.
       }
@@ -3081,7 +3093,7 @@ static int divide_the_setup(
       if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
           (!(newtb & 010) || assoc(b_1x12, ss, calldeflist)) &&
           (!(newtb & 001) || assoc(b_12x1, ss, calldeflist))) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, true);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_1X12, true);
          if (ss->kind != s1x12) fail("Failed to expand to 1X12.");  // Should never fail, but we don't want a loop.
          return 2;        // And try again.
       }
@@ -3099,7 +3111,7 @@ static int divide_the_setup(
       if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
             (!(newtb & 010) || assoc(b_1x16, ss, calldeflist)) &&
             (!(newtb & 001) || assoc(b_16x1, ss, calldeflist))) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, true);
          if (ss->kind != s1x16) fail("Failed to expand to 1X16.");  // Should never fail, but we don't want a loop.
          return 2;        // And try again.
       }
@@ -3923,7 +3935,7 @@ static int divide_the_setup(
       if (  !(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX) &&
             (!(newtb & 010) || assoc(b_1x12, ss, calldeflist) || assoc(b_1x16, ss, calldeflist)) &&
             (!(newtb & 1) || assoc(b_12x1, ss, calldeflist) || assoc(b_16x1, ss, calldeflist))) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_1X12, true);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_1X12, true);
          if (ss->kind != s1x12) fail("Failed to expand to 1X12.");  /* Should never fail, but we don't want a loop. */
          return 2;                        /* And try again. */
       }
@@ -4030,7 +4042,7 @@ static int divide_the_setup(
          if (must_do_mystic)
             fail("Can't do \"snag/mystic\" with this call.");
 
-         do_matrix_expansion(ss, CONCPROP__NEEDK_2X6, true);
+         ss->do_matrix_expansion(CONCPROP__NEEDK_2X6, true);
 
          // Should never fail, but we don't want a loop.
          if (ss->kind != s2x6) fail("Failed to expand to 2X6.");
@@ -6232,7 +6244,7 @@ extern void basic_move(
             // directions of the live people.  Demand that it be unambiguous.
 
             uint32_t directions, livemask;
-            big_endian_get_directions32(ss, directions, livemask);
+            ss->big_endian_get_directions32(directions, livemask);
             int i1 = -1;
 
             for (int i=0 ; i<4 ; i++) {
@@ -6705,8 +6717,7 @@ foobar:
 
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
                if ((search_concepts_without_funny & INHERITFLAG_12_MATRIX) != 0ULL) {
-                  do_matrix_expansion(
-                     ss,
+                  ss->do_matrix_expansion(
                      (ss->kind == s2x4) ? CONCPROP__NEEDK_2X6 : CONCPROP__NEEDK_TRIPLE_1X4,
                      true);
 
@@ -6716,11 +6727,11 @@ foobar:
                }
                else if ((search_concepts_without_funny & INHERITFLAG_16_MATRIX) != 0ULL) {
                   if (ss->kind == s2x6)
-                     do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, true);
+                     ss->do_matrix_expansion(CONCPROP__NEEDK_2X8, true);
                   else if (ss->kind == s_alamo)
-                     do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, true);
+                     ss->do_matrix_expansion(CONCPROP__NEEDK_4X4, true);
                   else if (ss->kind != s2x4)
-                     do_matrix_expansion(ss, CONCPROP__NEEDK_1X16, true);
+                     ss->do_matrix_expansion(CONCPROP__NEEDK_1X16, true);
 
                   // Take no action (and hence cause an error) if the setup was a 2x4.
                   // If someone wants to say "16 matrix 4x4 peel off" from normal columns,

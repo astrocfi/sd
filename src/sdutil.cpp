@@ -44,9 +44,7 @@
    doublespace_file
    ui_utils::writestuff
    parse_block::clear
-   parse_block::get_block
-   parse_block::get_parse_block_mark
-   parse_block::release_parse_blocks_to_mark
+   release_parse_blocks_to_mark
    parse_block::final_cleanup
    copy_parse_tree
    reset_parse_tree
@@ -1069,6 +1067,12 @@ void ui_utils::write_history_line(int history_index,
       }
    }
 
+   if (thing)
+      thing->setup_for_print =
+         &(&configuration::history[history_index == 0 ?
+                                   config_history_ptr :
+                                   history_index-1])->state;
+
    print_recurse(thing, 0);
 
    final:
@@ -1285,6 +1289,10 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
          writestuff("{ ");
          writestuff(fubb->txt);
          writestuff(" } ");
+         // When advancing, take the setup along.
+         // We have test vg05t to credit for this.
+         if (local_cptr->next)
+            local_cptr->next->setup_for_print = local_cptr->setup_for_print;
          local_cptr = local_cptr->next;
          request_final_space = false;
          last_was_t_type = false;
@@ -1476,9 +1484,23 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_some_vs_others &&
                      (selective_key) item->arg1 != selective_key_own) {
-               selector_kind opp = fix_short_other_selector(local_cptr->options.who.who[0]);
                writestuff(" WHILE THE ");
-               writestuff((opp == selector_uninitialized) ?
+               selector_kind opp = fix_short_other_selector(local_cptr->options.who.who[0]);
+               uint32_t junk, population;
+               bool pgram = false;
+               if (local_cptr->setup_for_print) {
+                  local_cptr->setup_for_print->big_endian_get_directions32(junk, population);
+                  pgram|= local_cptr->setup_for_print->kind == s2x6 && (population == 0x0FF0FF || population == 0xFF0FF0);
+                  pgram|= local_cptr->setup_for_print->kind == sbigdmd && (population == 0x0FF0FF || population == 0xFF0FF0);
+                  pgram|= local_cptr->setup_for_print->kind == s1x8;
+                  pgram|= local_cptr->setup_for_print->kind == s_crosswave;
+                  pgram|= local_cptr->setup_for_print->kind == s_rigger;
+                  pgram|= local_cptr->setup_for_print->kind == s_qtag;
+                  pgram|= local_cptr->setup_for_print->kind == s_bone;
+               }
+
+               writestuff((opp == selector_uninitialized ||
+                           (!pgram && opp == selector_outerpairs)) ?
                           ((Cstring) "OTHERS") :
                           selector_list[opp].name_uc);
             }
@@ -1820,7 +1842,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   case 'N':
                      write_blank_if_needed();
 
-                     /* Find the base circ call that this is invoking. */
+                     // Find the base circ call that this is invoking.
 
                      search = save_cptr->next;
                      while (search) {
@@ -2331,6 +2353,7 @@ parse_block *parse_block::parse_inactive_list = (parse_block *) 0;
 void parse_block::initialize(const concept_descriptor *cc)
 {
    more_finalherit_flags.clear_all_herit_and_final_bits();
+   setup_for_print = (setup *) 0;
    concept = cc;
    call = (call_with_name *) 0;
    call_to_print = (call_with_name *) 0;
@@ -2387,6 +2410,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
    for (;;) {
       new_item->concept = original_tree->concept;
       new_item->call = original_tree->call;
+      new_item->setup_for_print = original_tree->setup_for_print;
       new_item->call_to_print = original_tree->call_to_print;
       new_item->options = original_tree->options;
       new_item->replacement_key = original_tree->replacement_key;

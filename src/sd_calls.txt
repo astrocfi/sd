@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.62"
+version "39.63"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -24680,11 +24680,11 @@ call "_hubs trade part 2" dontshow tag hubs_trade_2
    select_original_hubs box_circulate_maybe_diamond [inherit_rectify or_anycall] nullcall []
 
 call "_rims trade @0 part 2" dontshow tag rims_trade_2_any
-            yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
    select_original_rims nullcall [mandatory_anycall] nullcall []
 
 call "_hubs trade @0 part 2" dontshow tag hubs_trade_2_any
-            yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
+            visible_fractions yoyo_is_inherited gen_sting_is_inherited bigmatrix_is_inherited
    select_original_hubs nullcall [mandatory_anycall] nullcall []
 
 call "rims trade @2back@3" c2
@@ -29099,7 +29099,7 @@ call "@N set your pace" c4    /* We leave the word "set" in for stuff like
    seq pace3 []
 
 call "_percolate part 3" dontshow tag percolate3
-            left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
+            visible_fractions left_means_mirror fractal_is_inherited yoyo_is_inherited gen_sting_is_inherited
    // Inheriting generous/stingy here makes it illegal unless you say "boys (or whatever) work generous, percolate."
    conc nicely [inherit_left inherit_fractal inherit_gensting]
         natturnthru [allow_forced_mod inherit_fractal inherit_yoyo inherit_gensting endscando

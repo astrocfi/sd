@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2023  William B. Ackerman.
+//    Copyright (C) 1990-2024  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -439,7 +439,7 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
    if (!(ss->result_flags.misc & RESULTFLAG__DID_MXN_EXPANSION))
       return;
 
-   uint32_t livemasklittle = little_endian_live_mask(ss);
+   uint32_t livemasklittle = ss->little_endian_live_mask();
 
    static const expand::thing *unwind_2x6_table[] = {
       &exp52, &exp25, &exp72, &exp27,
@@ -573,7 +573,7 @@ extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL
 extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL
 {
    if (ss->kind == s1p5x8) {
-      uint32_t mask = little_endian_live_mask(ss);
+      uint32_t mask = ss->little_endian_live_mask();
       if (mask != 0 && (mask & 0xF0F0) == 0)
          ss->kind = sfudgy2x6l;
       else if (mask != 0 && (mask & 0x0F0F) == 0)
@@ -724,7 +724,7 @@ static bool do_1x3_type_expansion(setup *ss, heritflags heritflags_to_check) THR
    const Nx1_checker *getin_search;
    uint32_t full_occupation = (uint32_t) ((1U << ((attr::klimit(ss->kind)+1) << 1)) - 1);
 
-   big_endian_get_directions32(ss, directions, dblbitlivemask);
+   ss->big_endian_get_directions32(directions, dblbitlivemask);
 
    if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X3) {
@@ -5384,7 +5384,7 @@ bool fill_active_phantoms_and_move(setup *ss, setup *result, bool suppress_fudgy
    ss->cmd.cmd_assume.assumption = cr_none;
    // Fill in the geometrical bits (beau/lead/center/etc) for the newly created phantoms,
    // but not the boy/girl/couple-number stuff.
-   update_id_bits(ss);
+   ss->update_id_bits();
    move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
 
    // Take out the phantoms.
@@ -6097,7 +6097,7 @@ static void do_sequential_call(
       }
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
-      touch_or_rear_back(ss, *mirror_p, callflags1);
+      ss->touch_or_rear_back(*mirror_p, callflags1);
    }
 
    // If a restrained concept is in place, it is waiting for the call to be pulled apart
@@ -6254,7 +6254,7 @@ static void do_sequential_call(
 
       // We also re-evaluate if the invocation flag "seq_re_evaluate" is on.
 
-      if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) update_id_bits(result);
+      if (recompute_id || (this_mod1 & DFM1_SEQ_RE_EVALUATE)) result->update_id_bits();
 
       // If this subcall invocation involves inserting or shifting the numbers, do so.
 
@@ -6520,8 +6520,8 @@ static void do_sequential_call(
       if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) == 0 &&
           attr::slimit(result) >= 0 &&
           (result->people[0].id3 & ID3_ABSOLUTE_PROXIMITY_BITS) != 0) {
-         clear_absolute_proximity_and_facing_bits(result);
-         put_in_absolute_proximity_and_facing_bits(result);
+         result->clear_absolute_proximity_and_facing_bits();
+         result->put_in_absolute_proximity_and_facing_bits();
       }
 
       // Increment for next cycle.
@@ -6614,7 +6614,7 @@ static bool do_misc_schema(
       }
       else {
          // We have to do this -- the schema means the *current* centers.
-         update_id_bits(ss);
+         ss->update_id_bits();
          *special_selectorp = (the_schema == schema_select_ctr2) ?
             selector_center2 : selector_center4;
          *special_modifiersp = innerdef->modifiers1;
@@ -6623,7 +6623,7 @@ static bool do_misc_schema(
    }
    else if (the_schema == schema_select_ctr6) {
       // We have to do this -- the schema means the *current* centers.
-      update_id_bits(ss);
+      ss->update_id_bits();
       *special_selectorp = selector_center6;
       *special_modifiersp = innerdef->modifiers1;
       return true;
@@ -6836,7 +6836,7 @@ static bool do_misc_schema(
          normalize_strongly = true;
 
          if (ss->kind == s2x4)
-            do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
+            ss->do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
 
          if (ss->kind == s4x4) {
 
@@ -6869,9 +6869,9 @@ static bool do_misc_schema(
             fail("You must specify a matrix.");
 
          if (ss->kind == s2x6)
-            do_matrix_expansion(ss, CONCPROP__NEEDK_4X6, false);
+            ss->do_matrix_expansion(CONCPROP__NEEDK_4X6, false);
          else
-            do_matrix_expansion(ss, CONCPROP__NEEDK_3X4_D3X4, false);
+            ss->do_matrix_expansion(CONCPROP__NEEDK_3X4_D3X4, false);
 
          break;
       case schema_4x4_lines_concentric:
@@ -6881,7 +6881,7 @@ static bool do_misc_schema(
             fail("You must specify a matrix.");
 
          if (ss->kind == s2x4)
-            do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
+            ss->do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
 
          break;
       }
@@ -7267,7 +7267,7 @@ void really_inner_move(
       ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_FUNNY;
 
       // We have to do this -- we need to know who is facing *now*.
-      update_id_bits(ss);
+      ss->update_id_bits();
       foo1 = ss->cmd;
       special_selector = selector_thosefacing;
       goto do_special_select_stuff;
@@ -7389,7 +7389,7 @@ void really_inner_move(
 
          if (ss->kind == s_qtag &&
              ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_12_MATRIX)) {
-            do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, true);
+            ss->do_matrix_expansion(CONCPROP__NEEDK_3X4, true);
             ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_12_MATRIX);
          }
          else if (ss->kind == s2x2 &&
@@ -7497,7 +7497,7 @@ void really_inner_move(
 
                // Expand to 4x6 matrix and try again.
                the_setups[i] = tempsetup;
-               do_matrix_expansion(&the_setups[i], CONCPROP__NEEDK_4X6, false);
+               the_setups[i].do_matrix_expansion(CONCPROP__NEEDK_4X6, false);
 
                matrixmovewrapper(&the_setups[i], the_schema, flags, callstuff, i == which_to_mirror, &the_results[i]);
             }
@@ -7521,7 +7521,7 @@ void really_inner_move(
             uint32_t livemask;
 
             result->result_flags.misc &= ~3;
-            big_endian_get_directions32(result, dirjunk, livemask);
+            result->big_endian_get_directions32(dirjunk, livemask);
 
             if (result->kind == s4x4 && (livemask & 0x3F3F3F3F) == 0) {
                result->result_flags.misc |= 3;
@@ -7774,7 +7774,7 @@ void really_inner_move(
          if (the_schema == schema_split_sequential && result->kind == s2x6 &&
              ((ss->cmd.cmd_final_flags.herit & INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_1X3 ||
               (ss->cmd.cmd_final_flags.herit & INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X1)) {
-            switch(little_endian_live_mask(result)) {
+            switch(result->little_endian_live_mask()) {
             case 02727:
                expand::compress_setup(exp27, result);
                break;
@@ -8391,7 +8391,7 @@ static void move_with_real_call(
                }
 
                ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
-               touch_or_rear_back(ss, mirror, callflags1);
+               ss->touch_or_rear_back(mirror, callflags1);
 
                // But, if the "left_means_touch_or_check" flag is set,
                // we only wanted the "left" flag for the purpose of what
@@ -8453,7 +8453,7 @@ static void move_with_real_call(
          case schema_single_concentric_together:
          case schema_single_cross_concentric_together:
             if (ss->kind == s2x6) {
-               uint32_t mask = little_endian_live_mask(ss);
+               uint32_t mask = ss->little_endian_live_mask();
                if (mask == 01717 || mask == 07474)
                   force_split = split_command_1x4_dmd;
             }
@@ -8630,7 +8630,7 @@ static void move_with_real_call(
          uint64_t nxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK);
          uint64_t mxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK);
          int limits = attr::slimit(ss);
-         uint32_t mask = little_endian_live_mask(ss);
+         uint32_t mask = ss->little_endian_live_mask();
 
          // ***** This of course needs a lot more work.
          if (ss->kind == s_galaxy || ss->kind == s_hrglass || ss->kind == s_crosswave)

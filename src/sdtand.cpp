@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2024  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -284,9 +284,14 @@ static tm_thing maps_isearch_twosome[] = {
    // reorientation that sometimes happens when coming out of a 2x2.
 
    {{0, 1, 3, 5,                     -1, 2, -1, 4},                    02020ULL,    0066,         4, 0,  s2x2,  s2x3},
+   {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0ULL,    0033,         4, 1,  s2x2,  s2x3},
    {{0, 2, 4, 5,                     1, -1, 3, -1},                    00202ULL,    0033,         4, 0,  s2x2,  s2x3},
    {{1, 3, 5, 0,                     2, -1, 4, -1},                        0ULL,    0066,         4, 1,  s2x2,  s2x3},
-   {{2, 4, 5, 0,                     -1, 3, -1, 1},                        0ULL,    0033,         4, 1,  s2x2,  s2x3},
+   {{0, 1, 4, 5,                     -1, 2, 3, -1},                    00220ULL,    0036,         4, 0,  s2x2,  s2x3},
+   {{0, 2, 3, 5,                     1, -1, -1, 4},                    02002ULL,    0063,         4, 0,  s2x2,  s2x3},
+   {{2, 3, 5, 0,                     -1, -1, 4, 1},                        0ULL,    0063,         4, 1,  s2x2,  s2x3},
+   {{1, 4, 5, 0,                     2, 3, -1, -1},                        0ULL,    0036,         4, 1,  s2x2,  s2x3},
+
    // Next 2 are for similar situations, in "nonisotropic triangles".
    // We do not have the 3rd or 4th maps in the class, because they apply only
    // to unwinding, and we never unwind to these setups.  That's why
@@ -467,6 +472,7 @@ static tm_thing maps_isearch_threesome[] = {
    {{10, 8, 4, 7,          -1, 11, -1, 5,        -1, 1, -1, 2},              0ULL,     0000,      4, 0,  s1x4,  s3x4},
 
    {{0, 3, 6, 7,           1, -1, 5, -1,         2, -1, 4, -1},          00202ULL,     0x77,      4, 0,  s2x2,  s2x4},
+   {{0, 3, 4, 7,           1, -1, -1, 6,         2, -1, -1, 5},          00202ULL,     0x07,      4, 0,  s2x2,  s2x4},
    {{0, 1, 4, 7,           -1, 2, -1, 6,         -1, 3, -1, 5},          02020ULL,     0xEE,      4, 0,  s2x2,  s2x4},
    {{3, 6, 7, 0,           -1, 5, -1, 1,         -1, 4, -1, 2},              0ULL,     0x77,      4, 1,  s2x2,  s2x4},
    {{1, 4, 7, 0,           2, -1, 6, -1,         3, -1, 5, -1},              0ULL,     0xEE,      4, 1,  s2x2,  s2x4},
@@ -1293,7 +1299,7 @@ bool tandrec::pack_us(
 
             if (!(sgllow & 1)) {
                if (fraction_in_use)
-                  ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
+                  ptr->id1 |= STABLE_ENAB | (STABLE_REMBIT * fraction);
                else if (dynamic_in_use)
                   ptr->id1 |= STABLE_ENAB;
 
@@ -1389,7 +1395,7 @@ extern void tandem_couples_move(
    uint32_t prior = ss->cmd.prior_elongation_bits;
 
    uint64_t livemask64, directions64;
-   big_endian_get_directions64(ss, directions64, livemask64);
+   ss->big_endian_get_directions64(directions64, livemask64);
 
    if (ss->rotation & 1) {
       if (((prior+1) & 2) != 0)
@@ -1479,12 +1485,24 @@ extern void tandem_couples_move(
                if (transformed_key == tandem_key_tand) directions64 ^= 0x555ULL;
 
                if (((directions64 ^ 0x0A8ULL) & livemask64)== 0ULL ||
-                   ((directions64 ^ 0xA02ULL) & livemask64)== 0ULL)
+                   ((directions64 ^ 0xA02ULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0xA28ULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x082ULL) & livemask64)== 0ULL)
                   special_mask |= 044;
 
                if (((directions64 ^ 0x2A0ULL) & livemask64)== 0ULL ||
-                   ((directions64 ^ 0x80AULL) & livemask64)== 0ULL)
+                   ((directions64 ^ 0x80AULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x28AULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x820ULL) & livemask64)== 0ULL)
                   special_mask |= 011;
+
+               if (((directions64 ^ 0xA20ULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x08AULL) & livemask64)== 0ULL)
+                  special_mask |= 014;
+
+               if (((directions64 ^ 0x282ULL) & livemask64)== 0ULL ||
+                   ((directions64 ^ 0x828ULL) & livemask64)== 0ULL)
+                  special_mask |= 041;
 
                if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directions64 ^ 0x02AULL) & livemask64)== 0ULL)
                   special_mask |= 011;
@@ -1498,7 +1516,9 @@ extern void tandem_couples_move(
                if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directions64 ^ 0xA80ULL) & livemask64)== 0ULL)
                   special_mask |= 011;
 
-               if (special_mask != 011 && special_mask != 044) special_mask = 0;
+               if (special_mask != 011 && special_mask != 044 &&
+                   special_mask != 014 && special_mask != 041)
+                  special_mask = 0;
             }
          }
          else if (mxn_bits == INHERITFLAGMXNK_3X1 || mxn_bits == INHERITFLAGMXNK_1X3) {
@@ -1515,6 +1535,14 @@ extern void tandem_couples_move(
                    ((directions64 ^ 0x802AULL) & livemask64) == 0ULL)
                   special_mask |= 0x11;
 
+               if (((directions64 ^ 0xA880ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x022AULL) & livemask64) == 0ULL)
+                  special_mask |= 0x18;
+
+               if (((directions64 ^ 0x80A8ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x2A02ULL) & livemask64) == 0ULL)
+                  special_mask |= 0x81;
+
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions64 ^ 0x00AAULL) & livemask64) == 0ULL)
                   special_mask |= 0x11;
 
@@ -1527,7 +1555,9 @@ extern void tandem_couples_move(
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directions64 ^ 0xAA00ULL) & livemask64) == 0ULL)
                   special_mask |= 0x11;
 
-               if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
+               if (special_mask != 0x11 && special_mask != 0x88 &&
+                   special_mask != 0x18 && special_mask != 0x81)
+                  special_mask = 0;
             }
             else if (ss->kind == s3x4 && livemask64 == 0xC3FC3FULL) {
                // Don't look at facing directions; there's only one way it can be.
@@ -1556,11 +1586,15 @@ extern void tandem_couples_move(
             }
             else if (ss->kind == s1x8) {
                if (((directions64 ^ 0x08A2ULL) & livemask64) == 0ULL ||
-                   ((directions64 ^ 0xA208ULL) & livemask64) == 0ULL)
+                   ((directions64 ^ 0xA208ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x0808ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0xA2A2ULL) & livemask64) == 0ULL)
                   special_mask |= 0x44;
 
                if (((directions64 ^ 0x2A80ULL) & livemask64) == 0ULL ||
-                   ((directions64 ^ 0x802AULL) & livemask64) == 0ULL)
+                   ((directions64 ^ 0x802AULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x8080ULL) & livemask64) == 0ULL ||
+                   ((directions64 ^ 0x2A2AULL) & livemask64) == 0ULL)
                   special_mask |= 0x11;
 
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directions64 ^ 0x00AAULL) & livemask64) == 0ULL)
@@ -2278,7 +2312,7 @@ extern void tandem_couples_move(
        tandstuff.m_virtual_setup[0].kind == s_ntrgl6ccw)
       tandstuff.m_virtual_setup[0].cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
 
-   update_id_bits(&tandstuff.m_virtual_setup[0]);
+   tandstuff.m_virtual_setup[0].update_id_bits();
    tandstuff.m_virtual_setup[0].cmd.cmd_misc_flags |= CMD_MISC__REDUCED_BY_TANDEM;
 
    int tttcount = 1;
@@ -2287,7 +2321,7 @@ extern void tandem_couples_move(
       tttcount = -1;
       uint32_t rotstate, pointclip;
 
-      update_id_bits(&tandstuff.m_virtual_setup[1]);
+      tandstuff.m_virtual_setup[1].update_id_bits();
 
       for (int k=0 ; k<tandstuff.m_people_per_group ; k++) {
          for (int j=0 ; j<=attr::klimit(incoming_map->insetup) ; j++) {
@@ -2317,6 +2351,7 @@ extern void tandem_couples_move(
       tandstuff.m_virtual_setup[0].cmd.cmd_misc3_flags |= CMD_MISC3__NO_FUDGY_2X3_FIX;
       if (tandstuff.m_virtual_setup[0].kind == s1p5x4)
          tandstuff.m_maybe_raise_phantom_warning = false;
+      canonicalize_rotation(&tandstuff.m_virtual_setup[0]);
       impose_assumption_and_move(&tandstuff.m_virtual_setup[0], &ttt[0], true);
    }
 
@@ -2567,7 +2602,7 @@ extern void tandem_couples_move(
       // as honorary 1x8's, as do 1x6's, 1x4's and 1x2's.  They will all merge just fine, even when
       // done in a haphazard fashion.
       for (i=0 ; i<=tttcount ; i++) {
-         uint32_t the_mask = little_endian_live_mask(&ttt[i]);
+         uint32_t the_mask = ttt[i].little_endian_live_mask();
 
          if (ttt[i].kind == s2x4) {
             if (ttt[i].rotation & 1) {
@@ -2806,7 +2841,7 @@ static void fixup_mimic(setup *result, const uint16_t split_info[2],
       0x1000400, 0x0001001, 0x0010004, 0x0010010,
       0x0001001, 0x1000400, 0x0100100, 0x0100040};
 
-   uint32_t finals = little_endian_live_mask(result);
+   uint32_t finals = result->little_endian_live_mask();
    setup temp1 = *result;
    uint32_t row_column_census = 0;
 
@@ -3225,7 +3260,7 @@ void mimic_move(
 
    uint32_t directions;
    uint32_t livemask;
-   big_endian_get_directions32(ss, directions, livemask);
+   ss->big_endian_get_directions32(directions, livemask);
    directions &= 0x55555555;
 
    if (livemask != (uint32_t) (1U << ((attr::slimit(ss)<<1)+2)) - 1)
@@ -3510,7 +3545,7 @@ void mimic_move(
                tt.kind = s1x1;
                tt.rotation = 0;
                copy_person(&tt, 0, ss, i);
-               update_id_bits(&tt);
+               tt.update_id_bits();
                setup uu;
                small_mimic_move(&tt, MI, ~0U, &uu);
                if (uu.kind != s1x1) fail("Catch me.");
@@ -3840,7 +3875,7 @@ bool process_brute_force_mxn(
    const tm_thing *map_ptr;
    uint32_t directions;
    uint32_t livemask;
-   big_endian_get_directions32(ss, directions, livemask);
+   ss->big_endian_get_directions32(directions, livemask);
 
    int rotfix = 0;
    const tm_thing *getout_map;
@@ -4067,7 +4102,7 @@ bool process_brute_force_mxn(
    ttt.m_virtual_setup[0].cmd.cmd_final_flags.clear_heritbits(
       ss->cmd.cmd_final_flags.herit & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK));
 
-   update_id_bits(&ttt.m_virtual_setup[0]);
+   ttt.m_virtual_setup[0].update_id_bits();
    backstop(&ttt.m_virtual_setup[0], parseptr, &ttt.virtual_result);
    normalize_setup(&ttt.virtual_result, normalize_before_merge, qtag_compress);
 

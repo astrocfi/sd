@@ -526,8 +526,8 @@ extern void normalize_concentric(
       setup *i0p = &inners[0];
       setup *i1p = &inners[1];
 
-      uint32_t mask0 = little_endian_live_mask(i0p);
-      uint32_t mask1 = little_endian_live_mask(i1p);
+      uint32_t mask0 = i0p->little_endian_live_mask();
+      uint32_t mask1 = i1p->little_endian_live_mask();
 
       // Convert from the outsides of a qtag to the outsides of a 2x4.
       // The mask check is so that we won't ever get into a situation in which
@@ -536,8 +536,8 @@ extern void normalize_concentric(
       if (i0p->kind == s_qtag && i1p->kind == s_qtag && ((mask0 | mask1) & 0xCC) == 0) {
          expand::compress_from_hash_table(i0p, plain_normalize, mask0, false);
          expand::compress_from_hash_table(i1p, plain_normalize, mask1, false);
-         mask0 = little_endian_live_mask(i0p);
-         mask1 = little_endian_live_mask(i1p);
+         mask0 = i0p->little_endian_live_mask();
+         mask1 = i1p->little_endian_live_mask();
       }
 
       bool originals_were_on_left = false;
@@ -547,7 +547,7 @@ extern void normalize_concentric(
       // in order to check for moving to the far side.
 
       if (ss) {
-         uint32_t ssmask = little_endian_live_mask(ss);
+         uint32_t ssmask = ss->little_endian_live_mask();
          if (ss->kind == s3x4) {
             if ((ssmask & 0x30C) == 0) originals_were_on_left = true;
             else if ((ssmask & 0x0C3) == 0) originals_were_on_right = true;
@@ -1650,10 +1650,10 @@ static calldef_schema concentrify(
    }
 
    // No concentric operation can operate on C1 phantoms, but a few can operate on a 4x4.
-   if (ss->kind == s_c1phan) do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, false);
+   if (ss->kind == s_c1phan) ss->do_matrix_expansion(CONCPROP__NEEDK_4X4, false);
 
    // It will be helpful to have a mask of where the live people are.
-   uint32_t livemask = little_endian_live_mask(ss);
+   uint32_t livemask = ss->little_endian_live_mask();
 
    // Need to do this now, so that the "schema_concentric_big2_6" stuff below will be triggered.
    if (analyzer_result == schema_concentric_6p_or_normal_or_2x6_2x3) {
@@ -1777,7 +1777,7 @@ static calldef_schema concentrify(
       else if (ss->kind == s_ptpd) {
          // Check for point-to-point diamonds all facing toward other diamond.
          uint32_t dir, live;
-         big_endian_get_directions32(ss, dir, live);
+         ss->big_endian_get_directions32(dir, live);
          if (((dir ^ 0x55FF) & live) == 0)
             analyzer_result = schema_concentric_2_6;
          else
@@ -2988,8 +2988,8 @@ static bool fix_empty_inners(
       // The centers are just gone!
 
       // First, look for special case of outers are a 4x4 or galaxy with no one in the center.
-      if ((result_outer->kind == s4x4 && (little_endian_live_mask(result_outer) & 0x8888) == 0) ||
-          (result_outer->kind == s_galaxy && (little_endian_live_mask(result_outer) & 0xAA) == 0)) {
+      if ((result_outer->kind == s4x4 && (result_outer->little_endian_live_mask() & 0x8888) == 0) ||
+          (result_outer->kind == s_galaxy && (result_outer->little_endian_live_mask() & 0xAA) == 0)) {
          *result = *result_outer;
          return true;
       }
@@ -3359,7 +3359,7 @@ extern void concentric_move(
         scrnxn == INHERITFLAGMXNK_1X3 ||
         scrnxn == INHERITFLAGMXNK_3X1 ||
         scrnxn == INHERITFLAGNXNK_3X3))
-      do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, true);
+      ss->do_matrix_expansion(CONCPROP__NEEDK_3X4, true);
 
    for (i=0; i<32; i++) {
       orig_inners_start_directions[i] =
@@ -3744,7 +3744,7 @@ extern void concentric_move(
          if (recompute_id &&
              !(save_cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) &&
              !(ss->result_flags.misc & RESULTFLAG__REALLY_NO_REEVALUATE))
-            update_id_bits(begin_ptr);
+            begin_ptr->update_id_bits();
 
          // Inherit certain assumptions to the child setups.  This is EXTREMELY incomplete.
 
@@ -3867,7 +3867,7 @@ extern void concentric_move(
          else if (doing_ends &&
                   analyzer_result == schema_concentric &&
                   begin_ptr->kind == s4x4 &&
-                  (little_endian_live_mask(begin_ptr) & 0x9999) == 0) {
+                  (begin_ptr->little_endian_live_mask() & 0x9999) == 0) {
             // Make two 2x4's.
             setup setup1 = *begin_ptr;
             setup setup2 = *begin_ptr;
@@ -4775,7 +4775,7 @@ extern void concentric_move(
    else if (analyzer == schema_in_out_triple && center_arity == 2 &&
             result->kind == s2x9 && (result->result_flags.misc & RESULTFLAG__EXPAND_TO_2X3)) {
       static const expand::thing fix_2x9 = {{0, 1, 3, 4, 5, 7, 8, 9, 10, 12, 13, 14, 16, 17}, s2x7, s2x9, 0};
-      if ((little_endian_live_mask(result) & 0104104) == 0)
+      if ((result->little_endian_live_mask() & 0104104) == 0)
          expand::compress_setup(fix_2x9, result);
    }
    result->rotation += rotate_back;
@@ -4910,8 +4910,8 @@ void merge_table::merge_setups(setup *ss,
          res1 = temp;
       }
 
-      uint32_t mask1 = little_endian_live_mask(res1);
-      uint32_t mask2 = little_endian_live_mask(res2);
+      uint32_t mask1 = res1->little_endian_live_mask();
+      uint32_t mask2 = res2->little_endian_live_mask();
 
       if (res1->kind == s_qtag && res2->kind == s2x3 && !(mask1 & 0xCC)) {
          expand::compress_from_hash_table(res1, plain_normalize, mask1, false);
@@ -4967,7 +4967,7 @@ void merge_table::merge_setups(setup *ss,
    }
 
    if (rose_from_dead && res1->kind == s1x4 && res2->kind == s4x4) {
-      uint32_t mask = little_endian_live_mask(res2);
+      uint32_t mask = res2->little_endian_live_mask();
 
       if (res1->rotation == 0 && (mask & 0x8E8E) == 0) {
          expand::expand_setup(s_4x4_4dmb, res2);
@@ -5016,8 +5016,8 @@ void merge_table::merge_setups(setup *ss,
       res2->eighth_rotation = 0;
       canonicalize_rotation(res1);
       canonicalize_rotation(res2);
-      uint32_t mask1 = little_endian_live_mask(res1);
-      uint32_t mask2 = little_endian_live_mask(res2);
+      uint32_t mask1 = res1->little_endian_live_mask();
+      uint32_t mask2 = res2->little_endian_live_mask();
 
       r = res1->rotation & 3;
       rot = r * 011;
@@ -5359,7 +5359,7 @@ void infer_assumption(setup *ss)
 
    if (ss->cmd.cmd_assume.assumption == cr_none && sizem1 >= 0) {
       uint32_t directions, livemask;
-      big_endian_get_directions32(ss, directions, livemask);
+      ss->big_endian_get_directions32(directions, livemask);
       if (livemask == (uint32_t) (1<<((sizem1+1)<<1))-1) {
          assumption_thing tt;
          tt.assump_col = 0;
@@ -6505,7 +6505,7 @@ extern void inner_selective_move(
 
       const int8_t *map_prom;
       uint32_t dirmask, junk;
-      big_endian_get_directions32(ss, dirmask, junk);
+      ss->big_endian_get_directions32(dirmask, junk);
 
       if (ss->kind == s2x4 && orig_indicator == selective_key_promenade_and_lead_for_a) {
          if (bigend_ssmask == 0xCC) {
@@ -6663,7 +6663,7 @@ extern void inner_selective_move(
       for (i=0 ; i<8 ; i++)
          copy_rot(&the_setups[0], i, ss, map_prom[i], map_prom[i+8]);
 
-      update_id_bits(&the_setups[0]);
+      the_setups[0].update_id_bits();
       move(&the_setups[0], false, result);
       result->result_flags.misc |= RESULTFLAG__IMPRECISE_ROT;
       return;
@@ -7390,8 +7390,8 @@ extern void inner_selective_move(
    saved_warnings = configuration::save_warnings();
 
    // It will be helpful to have masks of where the live people are.
-   livemask[0] = little_endian_live_mask(&the_setups[0]);
-   livemask[1] = little_endian_live_mask(&the_setups[1]);
+   livemask[0] = the_setups[0].little_endian_live_mask();
+   livemask[1] = the_setups[1].little_endian_live_mask();
 
    // If one of the calls is something like "girls zoom" (indicated with the "one_side_lateral"
    // flag), from a normal starting DPT, we treat it as if we had said
@@ -7517,7 +7517,7 @@ extern void inner_selective_move(
                        schema == schema_select_ctr4 ||
                        schema == schema_select_ctr6) && others <= 0)) {
                // Everyone.
-               update_id_bits(this_one);
+               this_one->update_id_bits();
                this_one->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
                switch (local_selector) {
                case selector_center_wave: case selector_center_wave_of_6:
@@ -7761,7 +7761,7 @@ extern void inner_selective_move(
                   // Still need to check whether we are both, or neither.  That would be an error.
                   this_one->rotation += rotfix;   // Just flip the setup around and recanonicalize.
                   canonicalize_rotation(this_one);
-                  thislivemask = little_endian_live_mask(this_one);
+                  thislivemask = this_one->little_endian_live_mask();
                }
 
                // Now rotfix is 1 to select the triangles whose bases are
@@ -7912,7 +7912,7 @@ extern void inner_selective_move(
                         setup tt = *this_one;
                         tt.kind = s1x1;
                         tt.rotation = 0;
-                        update_id_bits(&tt);
+                        tt.update_id_bits();
                         copy_person(&tt, 0, this_one, i);
                         setup uu;
                         move(&tt, false, &uu);
@@ -7989,7 +7989,7 @@ extern void inner_selective_move(
             if (key == LOOKUP_Z)
                lilss->cmd.cmd_misc2_flags |= CMD_MISC2__REQUEST_Z;
 
-            update_id_bits(lilss);
+            lilss->update_id_bits();
             impose_assumption_and_move(lilss, lilres);
 
             // There are a few cases in which we handle shape-changers in a distorted setup.
@@ -8457,8 +8457,8 @@ extern void inner_selective_move(
          ma = merge_after_dyp;
       else if (indicator == selective_key_work_concept && cmd1->parseptr && cmd1->parseptr->concept &&
                cmd1->parseptr->concept->kind == concept_tandem) {
-         livemask[0] = little_endian_live_mask(&the_results[0]);
-         livemask[1] = little_endian_live_mask(&the_results[1]);
+         livemask[0] = the_results[0].little_endian_live_mask();
+         livemask[1] = the_results[1].little_endian_live_mask();
          if (the_results[0].kind == s2x8 && the_results[1].kind == s2x4 &&
              (livemask[0] & 0x3C3C) == 0 &&
              (livemask[1] & 0x99) == 0) {

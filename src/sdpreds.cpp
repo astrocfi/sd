@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2024  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -58,7 +58,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 
    uint32_t directions;
    uint32_t livemask;
-   big_endian_get_directions32(ss, directions, livemask);
+   ss->big_endian_get_directions32(directions, livemask);
 
    selector_used = true;
    selector_kind local_selector = current_options.who.who[0];
