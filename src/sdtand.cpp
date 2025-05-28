@@ -717,6 +717,8 @@ const siamese_item siamese_table_of_2[] = {
 
    {slinebox,    0x000000FFU, 0x0FU,   warn__none},  // unsymm
    {slinebox,    0x00FF0000U, 0xF0U,   warn__none},  // unsymm
+   {sdbltrngl4,  0x000000FFU, 0x33U,   warn__none},  // unsymm
+   {sdbltrngl4,  0x00FF0000U, 0xCCU,   warn__none},  // unsymm
 
    {s4x4,        0x0000AAAAU, 0x0A0AU, warn__none},
    {s4x4,        0x0000CCCCU, 0x8484U, warn__none},
@@ -778,7 +780,7 @@ const siamese_item siamese_table_of_2[] = {
 const siamese_item siamese_table_of_3[] = {
    {s2x6,        0x01C70E38U, 0xE38U,  warn__none},
    {s2x6,        0x0E3801C7U, 0x1C7U,  warn__none},
-   {nothing,     0,            0,        warn__none}};
+   {nothing,     0,            0,      warn__none}};
 
 const siamese_item siamese_table_of_4[] = {
    {s2x8,        0x0F0FF0F0U, 0xF0F0U, warn__none},

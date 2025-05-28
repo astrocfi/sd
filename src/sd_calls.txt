@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.04"
+version "39.05"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -14595,18 +14595,22 @@ call "5/6 reverse the pass" c3
 
 call "zoom" mainstream tag zoom
             can_be_one_side_lateral
-   setup 2x2 2x2 no_cutting_through restriction forbidden peelable_box
+   setup 2x2 2x2 no_cutting_through restriction controversial peelable_box
       array [AL3N CR2N ZM1N ZM0N]
    setup 2x1 1x2 restriction controversial alwaysfail
       array [ZM1N 0N]
             alternate_definition [half] mainstream
-   setup 2x2 1x4 no_cutting_through restriction forbidden peelable_box
+   setup 2x2 1x4 no_cutting_through restriction controversial peelable_box
       array [AL0S CR2S ZM3N ZM1N]
             alternate_definition [lasthalf] mainstream
    setup 1x4 2x2 restriction forbidden miniwaves
       array [CR0S ZM0N AL1S ZM1N]
+   setup dmd 2x2 restriction forbidden diamond_like
+      array [CR0S 0 AL1S 0]
+   setup pmd 2x2 restriction forbidden diamond_like
+      array [0 ZM1N 0 ZM2N]
             alternate_definition [twisted] c4
-   setup 2x2 1x4 no_cutting_through restriction forbidden peelable_box
+   setup 2x2 1x4 no_cutting_through restriction controversial peelable_box
       array [AAL1W CCR3E CM2E AM0W]
             alternate_definition [half rewind] c4
    setup 1x4 2x2 restriction forbidden miniwaves

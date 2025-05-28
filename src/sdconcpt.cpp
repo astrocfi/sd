@@ -2992,15 +2992,23 @@ static void do_concept_old_stretch(
        parseptr->more_finalherit_flags.test_finalbit(FINAL__UNDER_RANDOM_META) != 0) {
 
       if (!mxnstuff) {
-
-         // We don't check if this was 3x1 -- too complicated for now.
+         // We don't do the splitting check if this was 3x1 -- too complicated for now.
 
          uint32 field_to_check = (result->rotation & 1);
          // Short6 is geometrically strange.  Maybe ought to check bounding box instead?
          if (result->kind == s_short6)
             field_to_check ^= 1;
 
-         if (result->result_flags.split_info[field_to_check] == 0) {
+         // Because of obscure issues relating to whether "swing thru" in a 1x6 is grand (it isn't)
+         // or done in each 1x3 (it is) we can get into messy situations deciding how the setup was
+         // split.  2 1x3's?  3 1x2's?  Search the calls database for "each_1x3" to get an idea of
+         // what is going on.  So the information we depend on in order to check the stretching
+         // direction might not be present.  The warning "Do the call in each 1x3" will tell us
+         // if this is happening.
+
+         bool b = configuration::test_one_warning(warn__split_to_1x3s_always);
+
+         if (!b && result->result_flags.split_info[field_to_check] == 0) {
             // It failed.  We will try again with a forced split.
             // This means that, if we said "stretch counter rotate" from waves, we will try
             // again with the 2x2 version of the call, that is, split counter rotate.
@@ -3070,6 +3078,9 @@ static void do_concept_old_stretch(
          else if (result->kind == s1x8) {
             result->swap_people(3, 6);
             result->swap_people(2, 7);
+         }
+         else if (result->kind == s1x6) {
+            result->swap_people(2, 5);
          }
          else if (result->kind == s_qtag) {
             result->swap_people(3, 7);

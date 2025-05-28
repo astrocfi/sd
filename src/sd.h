@@ -3970,6 +3970,8 @@ class configuration {
       { next_config().set_one_warning_specific(i); }
    inline static void clear_one_warning(warning_index i)
       { next_config().clear_one_warning_specific(i); }
+   inline static bool test_one_warning(warning_index i)
+      { return next_config().test_one_warning_specific(i); }
    inline static void set_multiple_warnings(const warning_info & rhs)
       { next_config().warnings.setmultiple(rhs); }
    inline static void clear_multiple_warnings(const warning_info & rhs)
