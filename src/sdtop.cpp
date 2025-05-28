@@ -859,7 +859,7 @@ static restr_initializer restr_init_table0[] = {
    {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {0, 2, 1},          {0}, {0}, FALSE, chk_spec_directions},
 
    {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},                              {0}, {0}, {0}, TRUE, chk_wave},
-   {s1x8, cr_1fl_only, 8, {0, 1, 2, 3, 4, 5, 6, 7},                               {1}, {0}, {0}, TRUE,  chk_groups},
+   {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, TRUE,  chk_groups},
    {s1x8, cr_all_facing_same, 8, {0, 1, 2, 3, 4, 5, 6, 7},                        {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x8, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave},
    {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                        {2}, {0}, {0}, TRUE,  chk_groups},
@@ -886,7 +886,7 @@ static restr_initializer restr_init_table0[] = {
    {s1x8, cr_all_ew, 4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, FALSE, chk_dmd_qtag},
    {s1x6, cr_miniwaves, 2, {0, 2, 4, 1, 5, 3},                                    {3}, {0}, {0}, TRUE,  chk_anti_groups},
    {s1x6, cr_wave_only, 6, {0, 1, 2, 5, 4, 3},                                    {0}, {0}, {0}, TRUE,  chk_wave},
-   {s1x6, cr_1fl_only, 6, {0, 1, 2, 3, 4, 5},                                     {1}, {0}, {0}, TRUE,  chk_groups},
+   {s1x6, cr_1fl_only, 3, {0, 3, 1, 4, 2, 5},                                     {2}, {0}, {0}, TRUE,  chk_groups},
    {s1x6, cr_all_facing_same, 6, {0, 1, 2, 3, 4, 5},                              {1}, {0}, {0}, TRUE,  chk_groups},
    {s1x6, cr_3x3_2fl_only, 6, {0, 3, 1, 4, 2, 5},                                 {0}, {0}, {0}, FALSE, chk_wave},
    {s1x6, cr_3x3couples_only, 3, {0, 3, 1, 4, 2, 5},                              {2}, {0}, {0}, TRUE,  chk_groups},
@@ -2746,6 +2746,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             to split into 2x2's, let it pass. */
 
          if (key == b_2x2) goto good;
+         else if (key == b_1x4) tt.assumption = cr_miniwaves;
          break;
       }
 

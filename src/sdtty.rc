@@ -32,6 +32,9 @@ IDI_ICON1               ICON    DISCARDABLE     "sdtty.ico"
 IDI_ICON2               ICON    DISCARDABLE     "sd.ico"
 IDI_ICON3               ICON    DISCARDABLE     "sdry.ico"
 IDI_ICON4               ICON    DISCARDABLE     "sdby.ico"
+IDI_ICON5               ICON    DISCARDABLE     "sdbg.ico"
+IDI_ICON6               ICON    DISCARDABLE     "sdgy.ico"
+IDI_ICON7               ICON    DISCARDABLE     "sdcpl.ico"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////

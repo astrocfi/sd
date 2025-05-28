@@ -383,7 +383,8 @@ typedef enum {
    normalize_to_2,
    normalize_after_triple_squash,
    normalize_before_merge,
-   normalize_compress_bigdmd
+   normalize_compress_bigdmd,
+   normalize_recenter
 } normalize_action;
 
 typedef enum {

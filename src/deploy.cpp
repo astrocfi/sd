@@ -55,10 +55,6 @@ char *file_list[] = {
    "sdlib.dll",
    "sd_calls.txt",
    "sd_calls.dat",
-   "sd.ico",
-   "sdby.ico",
-   "sdry.ico",
-   "sdtty.ico",
    "SD.lnk",
    "SDTTY.lnk",
    "SD nocheckers.lnk",
@@ -68,7 +64,7 @@ char *file_list[] = {
    "sample2.ini",
    "sample3.ini",
    "readme",
-   (char) 0};
+   (char *) 0};
 
 char *save_list[] = {
    "sd.exe",
@@ -77,7 +73,7 @@ char *save_list[] = {
    "sdlib.dll",
    "sd_calls.txt",
    "sd_calls.dat",
-   (char) 0};
+   (char *) 0};
 
 char *shortcut_list[] = {
    "SD.lnk",
@@ -85,7 +81,7 @@ char *shortcut_list[] = {
    "SD nocheckers.lnk",
    "SD couple.lnk",
    "Edit sd.ini.lnk",
-   (char) 0};
+   (char *) 0};
 
 void do_install(HWND hwnd)
 {

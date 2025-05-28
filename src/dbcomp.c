@@ -571,6 +571,7 @@ char *schematab[] = {
    "matrix",
    "partnermatrix",
    "rolldefine",
+   "recenter",
    "seq",
    "splitseq",
    "seq_with_fraction",
@@ -2168,51 +2169,50 @@ extern void dbcompile(void)
             errexit("Simple_funny or lateral_to_selectees out of place");
 
          switch (ccc) {
-            case schema_by_array:
-               write_array_def(funnyflag);
-               goto startagain;
-            case schema_nothing:
-               write_call_header(ccc);
-               break;
-            case schema_matrix:
-            case schema_partner_matrix:
-               matrixflags = 0;
+         case schema_by_array:
+            write_array_def(funnyflag);
+            goto startagain;
+         case schema_nothing:
+         case schema_roll:
+         case schema_recenter:
+            write_call_header(ccc);
+            break;
+         case schema_matrix:
+         case schema_partner_matrix:
+            matrixflags = 0;
 
-               for (;;) {     /* Get matrix call options. */
-                  get_tok();
-                  if (tok_kind != tok_symbol) break;
-                  if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
-                  matrixflags |= (1 << bit);
+            for (;;) {     /* Get matrix call options. */
+               get_tok();
+               if (tok_kind != tok_symbol) break;
+               if ((bit = search(matrixcallflagtab)) < 0) errexit("Unknown matrix call flag");
+               matrixflags |= (1 << bit);
+            }
+
+            write_call_header(ccc);
+            write_fullword(matrixflags);
+            write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
+            break;
+         case schema_sequential:
+         case schema_sequential_with_fraction:
+         case schema_sequential_with_split_1x8_id:
+         case schema_split_sequential:
+            write_call_header(ccc);
+            write_seq_stuff();
+
+            for (;;) {               /* Write a level 2 seqdefine group. */
+               get_tok_or_eof();
+               if (eof) break;
+               if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
+                  /* Write a level 2 seqdefine group. */
+                  write_seq_stuff();
                }
-
-               write_call_header(ccc);
-               write_fullword(matrixflags);
-               write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
-               break;
-            case schema_roll:
-               write_call_header(ccc);
-               break;
-            case schema_sequential:
-            case schema_sequential_with_fraction:
-            case schema_sequential_with_split_1x8_id:
-            case schema_split_sequential:
-               write_call_header(ccc);
-               write_seq_stuff();
-
-               for (;;) {               /* Write a level 2 seqdefine group. */
-                  get_tok_or_eof();
-                  if (eof) break;
-                  if ((tok_kind == tok_symbol) && (!strcmp(tok_str, "seq"))) {
-                     /* Write a level 2 seqdefine group. */
-                     write_seq_stuff();
-                  }
-                  else
-                     break;       /* Must have seen next 'call' indicator. */
-               }
-               goto startagain;
-            default:
-               write_conc_stuff(ccc);
-               break;
+               else
+                  break;       /* Must have seen next 'call' indicator. */
+            }
+            goto startagain;
+         default:
+            write_conc_stuff(ccc);
+            break;
          }
       }
       else

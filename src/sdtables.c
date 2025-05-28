@@ -674,6 +674,56 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
 
 expand_thing expand_init_table[] = {
 
+   /* Unsymmetrical recenter items. */
+
+   {{10, 15, 3, 1, 2, 7, 4, 5, 6, 8, 9, 11},
+    12, s3x4, s4x4, 0, 0UL, 0x7001,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{12, 13, 14, 0, 1, 3, 2, 7, 11, 9, 10, 15},
+    12, s3x4, s4x4, 0, 0UL, 0x0170,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{6, 11, 15, 13, 14, 3, 0, 1, 2, 4, 5, 7},
+    12, s3x4, s4x4, 1, 0UL, 0x1700,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{8, 9, 10, 12, 13, 15, 14, 3, 7, 5, 6, 11},
+    12, s3x4, s4x4, 1, 0UL, 0x0017,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{10, 11, 5, 4, 6, 7, 8, 9},
+    8, s2x4, s3x4, 0, 0UL, 0x00F,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 4, 5, 11, 10},
+    8, s2x4, s3x4, 0, 0UL, 0x3C0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 4, 5, 6, 7, 8, 9},
+    8, s2x4, s2x6, 0, 0UL, 0xC03,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 8, 9, 10, 11},
+    8, s2x4, s2x6, 0, 0UL, 0x0F0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
+    12, s2x6, s2x8, 0, 0UL, 0xC003,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 4, 5, 10, 11, 12, 13, 14, 15},
+    12, s2x6, s2x8, 0, 0UL, 0x03C0,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{15, 14, 12, 13, 8, 9, 11, 10},
+    8, s1x8, s2x8, 0, 0UL, 0x00FF,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 3, 2, 7, 6, 4, 5},
+    8, s1x8, s2x8, 0, 0UL, 0xFF00,
+    warn__none, warn__none, normalize_recenter, 0},
+
    /* This makes it possible to do "own the <points>, trade by flip the diamond"
       from point-to-point diamonds. */
    {{0, 1, 2, 3, 4, 5, 6, 7},

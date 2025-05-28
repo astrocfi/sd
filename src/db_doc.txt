@@ -2599,6 +2599,16 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    all_facing_same                  1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
                                     all people in the setup facing the same way */
    1fl_only                         1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
+
+
+                                    NO!!!!  Changed the above to
+
+   1fl_only                         1x3/1x4/1x6/1x8 - a 1FL of 3 or 4 people.  In a 1x6 or
+                                    1x8, this is two of same.  That is, in a 1x8, it is
+                                    4 people facing consistently, and another 4 facing
+                                    consistently.
+
+
                                     2x3/2x4 - individual 1FL's
                                     thar - crossed 2FL's of opposite handedness,
                                        ready to move along

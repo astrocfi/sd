@@ -82,7 +82,7 @@ typedef Const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 151
+#define DATABASE_FORMAT_VERSION 152
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -753,6 +753,7 @@ typedef enum {
    schema_matrix,
    schema_partner_matrix,
    schema_roll,
+   schema_recenter,
    schema_sequential,            /* All after this point are sequential. */
    schema_split_sequential,
    schema_sequential_with_fraction,

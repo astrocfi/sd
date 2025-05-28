@@ -3403,7 +3403,7 @@ extern void impose_assumption_and_move(setup *ss, setup *result)
 
 
 
-Private void do_sequential_call(
+static void do_sequential_call(
    setup *ss,
    Const callspec_block *callspec,
    long_boolean qtfudged,
@@ -4075,13 +4075,6 @@ done_with_big_cycle:
       }
    }
 
-   // If the setup expanded from an 8-person setup to a "bigdmd", and we can
-   // compress it back, do so.  This takes care of certain type of "triple diamonds
-   // working together exchange the diamonds 1/2" situations.
-
-   if (result->kind == sbigdmd && setup_attrs[ss->kind].setup_limits == 7)
-      normalize_setup(result, normalize_compress_bigdmd);
-
    // Pick up the concentricity command stuff from the last thing we did,
    // but take out the effect of "splitseq".
 
@@ -4458,9 +4451,45 @@ that probably need to be put in. */
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
       switch (the_schema) {
-         case schema_by_array:
-            /* We allow the fractions "1/2" and "last 1/2" to be given.
-               Basic_move will handle them. */
+      case schema_by_array:
+         /* We allow the fractions "1/2" and "last 1/2" to be given.
+            Basic_move will handle them. */
+         if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
+            ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
+         }
+         else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
+            ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
+         }
+         else
+            fail("This call can't be fractionalized this way.");
+
+         break;
+      case schema_nothing: case schema_matrix:
+      case schema_recenter:
+      case schema_partner_matrix: case schema_roll:
+         fail("This call can't be fractionalized.");
+         break;
+      case schema_sequential:
+      case schema_sequential_with_fraction:
+      case schema_split_sequential:
+      case schema_sequential_with_split_1x8_id:
+         if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) &&
+             !(ss->cmd.cmd_frac_flags & CMD_FRAC_FORCE_VIS))
+            fail("This call can't be fractionalized.");
+         break;
+      default:
+
+         /* Must be some form of concentric.  We allow visible fractions,
+            and take no action in that case.  This means that any fractions
+            will be sent to constituent calls. */
+
+         if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
+
+            /* Otherwise, we allow the fraction "1/2" to be given, if the top-level
+               heritablilty flag allows it.  We turn the fraction into a "final concept". */
+
             if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
                ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
                ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
@@ -4469,44 +4498,12 @@ that probably need to be put in. */
                ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
                ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
             }
-            else
+            else {
                fail("This call can't be fractionalized this way.");
-
-            break;
-         case schema_nothing: case schema_matrix: case schema_partner_matrix: case schema_roll:
-            fail("This call can't be fractionalized.");
-            break;
-         case schema_sequential:
-         case schema_sequential_with_fraction:
-         case schema_split_sequential:
-         case schema_sequential_with_split_1x8_id:
-            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) && !(ss->cmd.cmd_frac_flags & CMD_FRAC_FORCE_VIS))
-               fail("This call can't be fractionalized.");
-            break;
-         default:
-
-            /* Must be some form of concentric.  We allow visible fractions, and take no action in that case.
-               This means that any fractions will be sent to constituent calls. */
-
-            if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
-
-               /* Otherwise, we allow the fraction "1/2" to be given, if the top-level heritablilty
-                  flag allows it.  We turn the fraction into a "final concept". */
-
-               if (ss->cmd.cmd_frac_flags == CMD_FRAC_HALF_VALUE) {
-                  ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-                  ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_HALF;
-               }
-               else if (ss->cmd.cmd_frac_flags == CMD_FRAC_LASTHALF_VALUE) {
-                  ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
-                  ss->cmd.cmd_final_flags.her8it |= INHERITFLAG_LASTHALF;
-               }
-               else {
-                  fail("This call can't be fractionalized this way.");
-               }
             }
+         }
 
-            break;
+         break;
       }
    }
 
@@ -4938,6 +4935,15 @@ that probably need to be put in. */
       result->result_flags =
          (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_FIELDMASK;
       break;
+   case schema_recenter:
+      if ((ss->cmd.cmd_final_flags.her8it & (~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
+          ss->cmd.cmd_final_flags.final)
+         fail("Illegal concept for this call.");
+      *result = *ss;
+      normalize_setup(result, normalize_recenter);
+      if (ss->kind == result->kind)
+         fail("This setup can't be recentered.");
+      break;
    case schema_matrix:
       /* The "reverse" concept might mean mirror, as in "reverse truck". */
 
@@ -5044,7 +5050,6 @@ that probably need to be put in. */
 
       if (the_schema >= schema_sequential) {
          uint32 misc2 = ss->cmd.cmd_misc2_flags;
-
 
          if ((misc2 & CMD_MISC2__CENTRAL_SNAG) &&
              ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) == 0 ||
@@ -5406,6 +5411,17 @@ that probably need to be put in. */
       }
       break;
    }
+
+
+
+   // If the setup expanded from an 8-person setup to a "bigdmd", and we can
+   // compress it back, do so.  This takes care of certain type of "triple diamonds
+   // working together exchange the diamonds 1/2" situations.
+
+   if (result->kind == sbigdmd /* && setup_attrs[ss->kind].setup_limits == 7 */)
+      normalize_setup(result, normalize_compress_bigdmd);
+
+
 
    goto foobarf;
 

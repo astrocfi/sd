@@ -32,7 +32,7 @@
     General Public License if you distribute the file.
 */
 
-version "32.93"
+version "32.94"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -40,6 +40,10 @@ call "nothing" mainstream tag nullcall
 
 call "_secondary nothing" dontshow tag nullsecond
    nulldefine
+
+call "recenter" c3
+            dont_use_in_resolve
+   recenter
 
 /* We make these distinct calls so they won't get confused
    with any other call that gets replaced. */
@@ -149,6 +153,9 @@ call "chase" c1 tag chase_the_half_tag
             left_means_mirror split_large_setups base_tag_call_3
    setup 2x2 2x2
       array [C1S C2S 0 0]
+            alternate_definition [single] c4
+   setup 2x1 1x2 rotate
+      array [0 CR1E]
             alternate_definition [singlefile] c4
    setup 4x1 2x2
       array [0 0 C2S C3S]
@@ -5862,8 +5869,8 @@ call "vertical turn and deal" c4a
 
 call "chase the @a tag" c1
             neednumber left_means_mirror
-            nxn_is_inherited bigmatrix_is_inherited revert_is_inherited
-   seq chase_the_half_tag [inherit_left inherit_nxn inherit_bigmatrix]
+            single_is_inherited nxn_is_inherited bigmatrix_is_inherited revert_is_inherited
+   seq chase_the_half_tag [inherit_left inherit_single inherit_nxn inherit_bigmatrix]
    seq revert_if_needed [inherit_revert]
    seq extend_n [inherit_nxn inherit_bigmatrix]
 
@@ -9751,7 +9758,7 @@ call "centers@C run" mainstream tag ctrrun
             alternate_definition [half] c1
    setup 1x4 2x2
       array [ZM3N AL0W ZM2N CR1E]
-            alternate_definition [cross] a1
+            alternate_definition [cross] mainstream
    setup 1x4 1x4
       array [ZM1N CR2S ZM3N AL0S]
    setup 4x1 1x4
@@ -11518,6 +11525,10 @@ call "mini shake" c4x
             left_means_mirror
    setup 2x2 2x2
       array [CR1W CR2W AL1W CR0E]
+
+call "divide and pair" c4x
+   setup 4x2 2x4 rotate
+      array [0 AL6S AL1S AL7N CR4S CR2N CR5N 0]
 
 call "_centers bail out" dontshow tag ctrs_bail_out
             visible_fractions singlefile_is_inherited
@@ -18864,6 +18875,10 @@ call "_cross and wheel part 3" dontshow tag crossnwheel3
       array [CR0S ZM0N AL1S ZM1N]
    setup 1x4 2x2 qualifier 1fl_only
       array [CR0S ZM3N AL1S ZM2N]
+   setup dmd 2x2 restriction forbidden diamond_like
+      array [CR0S 0 AL1S 0]
+   setup pmd 2x2 restriction forbidden diamond_like
+      array [0 ZM1N 0 ZM2N]
             alternate_definition [grand] c2
    setup 1x4 2x2 qualifier miniwaves           /* same as above */
       array [CR0S ZM0N AL1S ZM1N]
@@ -18874,12 +18889,14 @@ call "_cross and wheel part 3" dontshow tag crossnwheel3
       array [CR0S ZM0N ZM1N AL2S ZM2N ZM1N]
 
 call "cross and wheel" c2 tag crossnwheel
-            visible_fractions grand_is_inherited single_is_inherited nxn_is_inherited mxn_is_inherited
+            visible_fractions grand_is_inherited
+            single_is_inherited nxn_is_inherited mxn_is_inherited
    seq hinge [cpls_unless_single]
    seq crossnwheel3 [cpls_unless_single inherit_grand inherit_single]
 
 call "cross trade and wheel" c2
-            visible_fractions grand_is_inherited single_is_inherited nxn_is_inherited mxn_is_inherited
+            visible_fractions grand_is_inherited
+            single_is_inherited nxn_is_inherited mxn_is_inherited
    seq hinge [cpls_unless_single]
    /* Inheriting 1x3 etc. here makes it illegal.  You must say "random 3x1". */
    seq crosstradewheel2 [inherit_grand inherit_single inherit_nxn inherit_mxn roll_transparent]
@@ -19414,8 +19431,8 @@ call "_ends reciprocate" dontshow tag endrecip
    seq touch_3_4 [inherit_left inherit_fractal]
 
 call "reciprocate" c4
-            left_means_mirror fractal_is_inherited
-   conc ctrwindmill [inherit_left inherit_fractal]
+            left_means_mirror yoyo_is_inherited fractal_is_inherited
+   conc ctrwindmill [inherit_left inherit_yoyo inherit_fractal]
         endrecip [inherit_left inherit_fractal conc_demand_columns conc_force_columns endscando]
 
 call "_ctrs scamper" dontshow tag ctrs_scamper

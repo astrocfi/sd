@@ -4,16 +4,18 @@
 //
 #define IDR_MENU1                       101
 #define IDD_ABOUTBOX                    102
-#define IDI_ICON1                       103
-#define IDD_TEXTENTRY                   104
-#define IDD_START_DIALOG                105
-#define IDD_TEXT_ENTRY_DIALOG           107
-#define IDD_PRINTING_DIALOG             108
-#define IDI_ICON2                       109
-#define IDB_BITMAP1                     110
+#define IDD_TEXTENTRY                   103
+#define IDD_START_DIALOG                104
+#define IDD_TEXT_ENTRY_DIALOG           106
+#define IDD_PRINTING_DIALOG             107
+#define IDB_BITMAP1                     108
+#define IDI_ICON1                       109
+#define IDI_ICON2                       110
 #define IDI_ICON3                       111
 #define IDI_ICON4                       112
 #define IDI_ICON5                       113
+#define IDI_ICON6                       114
+#define IDI_ICON7                       115
 #define IDC_FILENAME                    1000
 #define IDC_FILE_ACCEPT                 1003
 #define IDC_FILE_EDIT                   1004
@@ -95,7 +97,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        114
+#define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40056
 #define _APS_NEXT_CONTROL_VALUE         1039
 #define _APS_NEXT_SYMED_VALUE           101

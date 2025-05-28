@@ -148,7 +148,7 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 32.93:   Copyright © 1990-1999 All rights reserved.",
+    CTEXT           "SD Version 32.94:   Copyright © 1990-1999 All rights reserved.",
                     IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
@@ -236,7 +236,9 @@ IDI_ICON1               ICON    DISCARDABLE     "sd.ico"
 IDI_ICON2               ICON    DISCARDABLE     "sdtty.ico"
 IDI_ICON3               ICON    DISCARDABLE     "sdry.ico"
 IDI_ICON4               ICON    DISCARDABLE     "sdby.ico"
-IDI_ICON5               ICON    DISCARDABLE     "sdcpl.ico"
+IDI_ICON5               ICON    DISCARDABLE     "sdbg.ico"
+IDI_ICON6               ICON    DISCARDABLE     "sdgy.ico"
+IDI_ICON7               ICON    DISCARDABLE     "sdcpl.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

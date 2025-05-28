@@ -415,6 +415,15 @@ Private int get_hash(Cstring string, int *bucket_p)
 }
 
 
+static void hash_me(int bucket, int i)
+{
+   call_hash_list_sizes[bucket]++;
+   call_hash_lists[bucket] = (short *)
+      get_more_mem(call_hash_lists[bucket],
+                   call_hash_list_sizes[bucket] * sizeof(short));
+   call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+}
+
 
 /* Call MATCHER_INITIALIZE first.
    This function sets up the concept list.  The concepts are found
@@ -597,66 +606,52 @@ extern void matcher_initialize(void)
 
          if (name[0] == '@') {
             if (name[1] == '6' || name[1] == 'k') {
-               /* This is a call like "<anyone> run".  Put it into every bucket that could match a selector. */
+               // This is a call like "<anyone> run".  Put it into every bucket
+               // that could match a selector. */
    
-               for (j=0 ; j<selector_hash_list_size ; j++) {
-                  bucket = selector_hash_list[j];
-                  call_hash_list_sizes[bucket]++;
-                  call_hash_lists[bucket] = (short *)
-                     get_more_mem(call_hash_lists[bucket],
-                                  call_hash_list_sizes[bucket] * sizeof(short));
-                  call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
-               }
+               for (j=0 ; j<selector_hash_list_size ; j++)
+                  hash_me(selector_hash_list[j], i);
+
                continue;
             }
             else if (name[1] == 'v' || name[1] == 'w' || name[1] == 'x' || name[1] == 'y') {
                /* This is a call like "<atc> your neighbor".
                   Put it into every bucket that could match a tagger. */
    
-               for (j=0 ; j<tagger_hash_list_size ; j++) {
-                  bucket = tagger_hash_list[j];
-                  call_hash_list_sizes[bucket]++;
-                  call_hash_lists[bucket] = (short *)
-                     get_more_mem(call_hash_lists[bucket],
-                                  call_hash_list_sizes[bucket] * sizeof(short));
-                  call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
-               }
+               for (j=0 ; j<tagger_hash_list_size ; j++)
+                  hash_me(tagger_hash_list[j], i);
+
                continue;
             }
             else if (name[1] == '0' || name[1] == 'm') {
-                /* We act as though any string starting with "[" hashes to BRACKET_HASH. */
-               call_hash_list_sizes[BRACKET_HASH]++;
-               call_hash_lists[BRACKET_HASH] = (short *)
-                  get_more_mem(call_hash_lists[BRACKET_HASH],
-                               call_hash_list_sizes[BRACKET_HASH] * sizeof(short));
-               call_hash_lists[BRACKET_HASH][call_hash_list_sizes[BRACKET_HASH]-1] = i;
+               // We act as though any string starting with "[" hashes to BRACKET_HASH.
+               hash_me(BRACKET_HASH, i);
                continue;
             }
+            else if (name[1] == 'e') {
+               // If this is "@e", hash it to both "left" and to whatever naturally follows.
+               (void) get_hash("left", &bucket);
+               hash_me(bucket, i);
+               name += 2;
+               goto doitagain;
+            }
             else if (!get_escape_string(name[1])) {
-               /* If this escape is something like "@2", as in "@2scoot and plenty", ignore it.  Hash it under "scoot and plenty". */
-                  name += 2;
-                  goto doitagain;
+               // If this escape is something like "@2", as in "@2scoot and plenty",
+               // ignore it.  Hash it under "scoot and plenty".
+               name += 2;
+               goto doitagain;
             }
          }
 
          if (get_hash(name, &bucket)) {
-            call_hash_list_sizes[bucket]++;
-            call_hash_lists[bucket] = (short *)
-               get_more_mem(call_hash_lists[bucket],
-                            call_hash_list_sizes[bucket] * sizeof(short));
-            call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
+            hash_me(bucket, i);
             continue;
          }
 
          /* If we get here, this call needs to be put into the extra bucket at the end,
             and also into EVERY OTHER BUCKET!!!! */
-         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++) {
-            call_hash_list_sizes[bucket]++;
-            call_hash_lists[bucket] = (short *)
-               get_more_mem(call_hash_lists[bucket],
-                            call_hash_list_sizes[bucket] * sizeof(short));
-            call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
-         }
+         for (bucket=0 ; bucket < NUM_NAME_HASH_BUCKETS+1 ; bucket++)
+            hash_me(bucket, i);
       }
 
       /* Now do the concepts from the big list. */

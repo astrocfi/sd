@@ -803,118 +803,120 @@ Private void read_in_call_definition(void)
    read_halfword();
 
    switch (call_root->schema) {
-      case schema_nothing:
-         break;
-      case schema_roll:
-         break;
-      case schema_matrix:
-         lim = 2;
-         /* !!!! FALL THROUGH !!!! */
-      case schema_partner_matrix:
-         /* !!!! FELL THROUGH !!!! */
-         left_half = last_datum;
+   case schema_nothing:
+   case schema_roll:
+   case schema_recenter:
+      break;
+   case schema_matrix:
+      lim = 2;
+      /* !!!! FALL THROUGH !!!! */
+   case schema_partner_matrix:
+      /* !!!! FELL THROUGH !!!! */
+      left_half = last_datum;
+      read_halfword();
+      call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
+
+      if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR)
+         call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+      if (call_root->stuff.matrix.flags & MTX_USE_NUMBER)
+         call_root->callflags1 |= CFLAG1_NUMBER_BIT;
+
+      call_root->stuff.matrix.stuff = (uint32 *) get_mem(sizeof(uint32)*8);
+
+      for (j=0; j<lim; j++) {
+         uint32 firstpart;
+
          read_halfword();
-         call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
 
-         if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR)
-            call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
-         if (call_root->stuff.matrix.flags & MTX_USE_NUMBER)
-            call_root->callflags1 |= CFLAG1_NUMBER_BIT;
+         firstpart = last_datum & 0xFFFF;
 
-         call_root->stuff.matrix.stuff = (uint32 *) get_mem(sizeof(uint32)*8);
-
-         for (j=0; j<lim; j++) {
-            uint32 firstpart;
-
+         if (firstpart) {
             read_halfword();
-
-            firstpart = last_datum & 0xFFFF;
-
-            if (firstpart) {
-               read_halfword();
-               call_root->stuff.matrix.stuff[j] = firstpart | ((last_datum & 0xFFFF) << 16);
-            }
-            else {
-               call_root->stuff.matrix.stuff[j] = 0;
-            }               
+            call_root->stuff.matrix.stuff[j] = firstpart | ((last_datum & 0xFFFF) << 16);
          }
+         else {
+            call_root->stuff.matrix.stuff[j] = 0;
+         }               
+      }
 
-         read_halfword();
-         break;
-      case schema_by_array:
-         {
-            calldef_block *zz, *yy;
+      read_halfword();
+      break;
+   case schema_by_array:
+      {
+         calldef_block *zz, *yy;
 
-            zz = (calldef_block *) get_mem(sizeof(calldef_block));
+         zz = (calldef_block *) get_mem(sizeof(calldef_block));
+         zz->next = 0;
+         zz->modifier_seth = 0;
+         zz->modifier_level = l_mainstream;
+         call_root->stuff.arr.def_list = zz;
+
+         read_level_3_groups(zz);    /* The first group. */
+
+         while ((last_datum & 0xE000) == 0x4000) {
+            yy = (calldef_block *) get_mem(sizeof(calldef_block));
+            zz->next = yy;
+            zz = yy;
+            zz->modifier_level = (dance_level) (last_datum & 0xFF);
             zz->next = 0;
-            zz->modifier_seth = 0;
-            zz->modifier_level = l_mainstream;
-            call_root->stuff.arr.def_list = zz;
-
-            read_level_3_groups(zz);    /* The first group. */
-
-            while ((last_datum & 0xE000) == 0x4000) {
-               yy = (calldef_block *) get_mem(sizeof(calldef_block));
-               zz->next = yy;
-               zz = yy;
-               zz->modifier_level = (dance_level) (last_datum & 0xFF);
-               zz->next = 0;
-               read_fullword();
-               zz->modifier_seth = last_datum;
-               read_halfword();
-               read_level_3_groups(zz);
-            }
+            read_fullword();
+            zz->modifier_seth = last_datum;
+            read_halfword();
+            read_level_3_groups(zz);
          }
-         break;
-      case schema_sequential:
-      case schema_split_sequential:
-      case schema_sequential_with_fraction:
-      case schema_sequential_with_split_1x8_id:
-         {
-            by_def_item templist[100];
-            int next_definition_index = 0;
+      }
+      break;
+   case schema_sequential:
+   case schema_split_sequential:
+   case schema_sequential_with_fraction:
+   case schema_sequential_with_split_1x8_id:
+      {
+         by_def_item templist[100];
+         int next_definition_index = 0;
 
-            /* Demand a level 2 group. */
-            if ((last_datum & 0xE000) != 0x4000)
-               database_error("database phase error 6");
-
-            while ((last_datum & 0xE000) == 0x4000) {
-               check_tag(last_12);
-               templist[next_definition_index].call_id = (uint16) last_12;
-               read_fullword();
-               templist[next_definition_index].modifiers1 = last_datum;
-               read_fullword();
-               templist[next_definition_index++].modifiersh = last_datum;
-               read_halfword();
-            }
-
-            call_root->stuff.def.howmanyparts = next_definition_index;
-            call_root->stuff.def.defarray = (by_def_item *) get_mem((next_definition_index) * sizeof(by_def_item));
-
-            while (--next_definition_index >= 0)
-               call_root->stuff.def.defarray[next_definition_index] = templist[next_definition_index];
-         }
-         break;
-      default:          /* These are all the variations of concentric. */
          /* Demand a level 2 group. */
          if ((last_datum & 0xE000) != 0x4000)
-            database_error("database phase error 7");
+            database_error("database phase error 6");
 
-         check_tag(last_12);
-         call_root->stuff.conc.innerdef.call_id = (uint16) last_12;
-         read_fullword();
-         call_root->stuff.conc.innerdef.modifiers1 = last_datum;
-         read_fullword();
-         call_root->stuff.conc.innerdef.modifiersh = last_datum;
-         read_halfword();
-         check_tag(last_12);
-         call_root->stuff.conc.outerdef.call_id = (uint16) last_12;
-         read_fullword();
-         call_root->stuff.conc.outerdef.modifiers1 = last_datum;
-         read_fullword();
-         call_root->stuff.conc.outerdef.modifiersh = last_datum;
-         read_halfword();
-         break;
+         while ((last_datum & 0xE000) == 0x4000) {
+            check_tag(last_12);
+            templist[next_definition_index].call_id = (uint16) last_12;
+            read_fullword();
+            templist[next_definition_index].modifiers1 = last_datum;
+            read_fullword();
+            templist[next_definition_index++].modifiersh = last_datum;
+            read_halfword();
+         }
+
+         call_root->stuff.def.howmanyparts = next_definition_index;
+         call_root->stuff.def.defarray =
+            (by_def_item *) get_mem((next_definition_index) * sizeof(by_def_item));
+
+         while (--next_definition_index >= 0)
+            call_root->stuff.def.defarray[next_definition_index] =
+               templist[next_definition_index];
+      }
+      break;
+   default:          /* These are all the variations of concentric. */
+      /* Demand a level 2 group. */
+      if ((last_datum & 0xE000) != 0x4000)
+         database_error("database phase error 7");
+
+      check_tag(last_12);
+      call_root->stuff.conc.innerdef.call_id = (uint16) last_12;
+      read_fullword();
+      call_root->stuff.conc.innerdef.modifiers1 = last_datum;
+      read_fullword();
+      call_root->stuff.conc.innerdef.modifiersh = last_datum;
+      read_halfword();
+      check_tag(last_12);
+      call_root->stuff.conc.outerdef.call_id = (uint16) last_12;
+      read_fullword();
+      call_root->stuff.conc.outerdef.modifiers1 = last_datum;
+      read_fullword();
+      call_root->stuff.conc.outerdef.modifiersh = last_datum;
+      read_halfword();
+      break;
    }
 }
 
