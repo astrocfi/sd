@@ -8,7 +8,6 @@ REM
 REM This uses the files sd.exe, sdtty.exe, mkcalls.exe, sdlib.dll,
 REM         sd_calls.txt, and sd_calls.dat, readme,
 REM         SD.lnk, SDTTY.lnk, SD nocheckers.lnk, SD couple.lnk, edit sd.ini.lnk,
-REM         sd.ico, sdtty.ico, sdry.ico, sdby.ico, sdcpl.ico,
 REM         sample1.ini, sample2.ini, sample3.ini.
 REM
 del install.exe

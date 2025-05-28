@@ -2,7 +2,7 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 25 July 1999.
+        Last modified 20 December 1999.
 
 -----------------------------------------------------------------
 
@@ -115,7 +115,6 @@ Go to sddoc directory and do:
     do_ps
     do_pdf
     do_html
-    do_download-pc
     do_download-unix   (at MPG, if HP-UX release is desired, see below)
     do_hpux            (at MPG, if HP-UX release is desired, see below)
 
@@ -127,7 +126,6 @@ This creates these files, all in the sddoc directory:
     ps.txt        |   These files get mailed
     pdf.txt       |   to update the web page.
     html.txt      |
-    dnp.txt       |
     dnu.txt       |   (HP-UX only)
     hpux.txt      /   (HP-UX only)
 

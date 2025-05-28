@@ -1,14 +1,17 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename appnote1.info
-@settitle Sd Application note 1
+@settitle Sd Application Note 1
 @iftex
 @headings off
 @oddheading @| @| @thispage
 @evenheading @thispage @| @|
 @end iftex
 @c %**end of header
+@ifclear html
+@center @strong{SD APPLICATION NOTE 1}
+@sp 1
+@end ifclear
 Copyright @copyright{} 1998 William B. Ackerman
-@unnumberedsec SD APPLICATION NOTE 1
 @sp 1
 @center RIMS / HUBS TRADE BACK
 @center and

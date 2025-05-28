@@ -4,11 +4,6 @@
 ..\sd\sdlib.dll
 ..\sd\sd_calls.txt
 ..\sd\sd_calls.dat
-..\sd\sd.ico
-..\sd\sdtty.ico
-..\sd\sdry.ico
-..\sd\sdby.ico
-..\sd\sdcpl.ico
 ..\sd\SD.lnk
 ..\sd\SDTTY.lnk
 "..\sd\SD nocheckers.lnk"

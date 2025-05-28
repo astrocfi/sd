@@ -429,10 +429,10 @@ extern void normalize_concentric(
       table_synthesizer = schema_concentric;
 
       break;
+      //   case schema_conc_bar: if (center_arity == 1) fix_missing_centers(inners, outers, s1x4, s2x3, center_arity, TRUE); break;
    case schema_conc_bar12:
-      if (center_arity == 2) {
+      if (center_arity == 2)
          fix_missing_centers(inners, outers, s_star, s2x3, center_arity, TRUE);
-      }
 
       break;
    case schema_conc_bar16:
@@ -874,30 +874,25 @@ Private calldef_schema concentrify(
          ss->outer.srotation = 0;
       }
 
-      outers->rotation = ss->outer.srotation;
-      inners[0].rotation = ss->outer.srotation;   /* Yes, this looks wrong, but it isn't. */
-
       switch (analyzer_result) {
+      case schema_conc_bar:
       case schema_concentric_diamond_line:
-         /* **** I don't think we need this any more. */
-#ifdef NEVERRRR
-         if (ss->inner.skind == sdmd && ss->inner.srotation == ss->outer.srotation) {
-            static Const veryshort map321[4] = {13, 0, 15, 2};
-            static Const veryshort map123[4] = {12, 1, 14, 3};
-
-            inners[0].kind = s1x4;
-            outers->kind = sdmd;
-            gather(&inners[0], ss, map321, 3, 0);
-            gather(outers, ss, map123, 3, 0);
-
-            if (ss->outer.skind == s1x4) {
-               *outer_elongation = (ss->outer.srotation & 1) + 1;
-               goto finish;
-            }
+         if (ss->inner.skind == nothing && ss->outer.skind == s2x3) {
+            inners[0].kind = s_star;
+            inners[0].rotation = 0;
+            outers->kind = s2x3;
+            for (i=0; i<12; i++)
+               (void) copy_person(outers, i, ss, i+12);
+            *outer_elongation = ss->concsetup_outer_elongation;
+            if ((ss->outer.srotation & 1) && (*outer_elongation) != 0) *outer_elongation ^= 3;
+            goto finish;
          }
-#endif
+
          break;
       case schema_concentric:
+         outers->rotation = ss->outer.srotation;
+         inners[0].rotation = ss->outer.srotation;   // Yes, this looks wrong, but it isn't.
+
          if (ss->outer.skind == nothing) {
             inners[0].kind = ss->inner.skind;
             inners[0].rotation = ss->inner.srotation;
@@ -917,19 +912,23 @@ Private calldef_schema concentrify(
 
             /* ***** Claim these two won't happen, because of dhrglass and 1x3dmd! */
 
-               /* We allow a diamond inside a box with wrong elongation (if elongation were good, it would be an hourglass.) */
+            /* We allow a diamond inside a box with wrong elongation
+               (if elongation were good, it would be an hourglass.) */
             if (ss->outer.skind == s2x2) {
                *outer_elongation = ss->concsetup_outer_elongation;
                if (ss->outer.srotation & 1) *outer_elongation ^= 3;
                goto finish;
             }
-            /* And a diamond inside a line with wrong elongation (if elongation were good, it would be a 3x1 diamond.) */
+            /* And a diamond inside a line with wrong elongation
+               (if elongation were good, it would be a 3x1 diamond.) */
             if (ss->outer.skind == s1x4) {
                *outer_elongation = (ss->outer.srotation & 1) + 1;
                goto finish;
             }
          }
-         else if (ss->inner.skind == s1x2 && ss->outer.skind == s1x6 && ss->inner.srotation != ss->outer.srotation) {
+         else if (ss->inner.skind == s1x2 &&
+                  ss->outer.skind == s1x6 &&
+                  ss->inner.srotation != ss->outer.srotation) {
             static Const veryshort map44[4] = {12, 13, 15, 16};
 
             inners[0].kind = sdmd;
@@ -1035,7 +1034,8 @@ Private calldef_schema concentrify(
       }
    }
 
-/* ***** More stuff we need:  if analyzer = 3x1_cols or 3x1_lines, maybe check center 6 of qtag and spindle.
+   /* ***** More stuff we need:  if analyzer = 3x1_cols or 3x1_lines,
+      maybe check center 6 of qtag and spindle.
     Or maybe this is all a crock. */
 
 #ifdef NOTANYMORE
@@ -1928,7 +1928,7 @@ extern void concentric_move(
          fail("Outsides must be as if in lines at start of this call.");
    }
 
-   if ((DFM1_CONC_DEMAND_COLUMNS & localmods1) && (orig_outers_start_kind == s2x2)) {
+   if ((DFM1_CONC_DEMAND_COLUMNS & localmods1) && orig_outers_start_kind == s2x2) {
       if (begin_outer_elongation <= 0 || begin_outer_elongation > 2 ||
             (orig_outers_start_dirs & (8 >> 3*(begin_outer_elongation - 1))))
          fail("Outsides must be as if in columns at start of this call.");
@@ -2138,16 +2138,26 @@ extern void concentric_move(
    }
    else if (result_inner[0].kind == nothing) {
       /* If the schema is one of the special ones, we will know what to do. */
-      if (  analyzer == schema_conc_star ||
-            analyzer == schema_ckpt_star ||
-            analyzer == schema_conc_star12 ||
-            analyzer == schema_conc_star16 ||
-            analyzer == schema_in_out_triple_squash ||
-            analyzer == schema_in_out_triple ||
-            analyzer == schema_in_out_quad ||
-            analyzer == schema_in_out_12mquad) {
-                  ;        /* Take no action. */
+      if (analyzer == schema_conc_star ||
+          analyzer == schema_ckpt_star ||
+          analyzer == schema_conc_star12 ||
+          analyzer == schema_conc_star16 ||
+          analyzer == schema_in_out_triple_squash ||
+          analyzer == schema_in_out_triple ||
+          analyzer == schema_in_out_quad ||
+          analyzer == schema_in_out_12mquad) {
+         /* Take no action. */
       }
+      else if (analyzer == schema_conc_bar &&
+               result_outer.kind == s2x3 &&
+               orig_outers_start_kind == s2x2) {
+         // Fix some quarter the deucey stuff.
+         clear_people(&result_inner[0]);
+         result_inner[0].result_flags = 0;
+         result_inner[0].kind = s1x4;
+         result_inner[0].rotation = result_outer.rotation;
+      }
+
       /* If the ends are a 2x2, we just set the missing centers to a 2x2.
          The ends had better know their elongation, of course.  It shouldn't
          matter to the ends whether the phantoms in the center did something

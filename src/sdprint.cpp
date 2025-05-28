@@ -47,10 +47,13 @@ static DOCINFO di;
 static BOOL bUserAbort;
 static HWND hDlgPrint;
 static PRINTDLG pd;
+static char szPrintDir[_MAX_PATH];
 
 
 void windows_init_printer_font(HWND hwnd, HDC hdc)
 {
+   szPrintDir[0] = '\0';     // Initialize the default directory for "print any file".
+
    // We need to figure out the "logical size" that will give a 14 point
    // font.  And we haven't opened the printer, so we have to do it in terms
    // of the display.  The LOGPIXELSY number for the display will give "logical
@@ -356,6 +359,7 @@ extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance
 }
 
 
+
 extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
 {
    char szCurDir[_MAX_PATH];
@@ -369,7 +373,10 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
    szFileToPrint[0] = 0;
    ZeroMemory(&ofn, sizeof(OPENFILENAME));
    ofn.lStructSize = sizeof(OPENFILENAME);
-   ofn.lpstrInitialDir = "";
+   if (szPrintDir[0])
+      ofn.lpstrInitialDir = szPrintDir;
+   else      
+      ofn.lpstrInitialDir = "";
    ofn.hwndOwner = hwnd;
    ofn.lpstrFilter = 0;
    ofn.lpstrFile = szFileToPrint;
@@ -383,7 +390,8 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
       return;     // Take no action if we didn't get a file name.
 
    // GetOpenFileName changed the working directory.
-   // We don't want that.  Set it back.
+   // We don't want that.  Set it back, after saving it for next print command.
+   (void) GetCurrentDirectory(_MAX_PATH, szPrintDir);
    (void) SetCurrentDirectory(szCurDir);
 
    PrintFile(szFileToPrint, hwnd, szMainTitle, hInstance);

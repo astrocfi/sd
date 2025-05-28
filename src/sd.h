@@ -104,37 +104,35 @@ typedef struct {
       the elongation is east-west.  A 2 means the elongation is north-south.
       A zero means there was no elongation. */
 
+static const uint32 CMD_FRAC_NULL_VALUE      = 0x00000111UL;
+static const uint32 CMD_FRAC_HALF_VALUE      = 0x00000112UL;
+static const uint32 CMD_FRAC_LASTHALF_VALUE  = 0x00001211UL;
 
-#define CMD_FRAC_NULL_VALUE      0x00000111
-#define CMD_FRAC_HALF_VALUE      0x00000112
-#define CMD_FRAC_LASTHALF_VALUE  0x00001211
-
-#define CMD_FRAC_PART_BIT        0x00010000
-#define CMD_FRAC_PART_MASK       0x000F0000
-#define CMD_FRAC_REVERSE         0x00100000
-/* This is a 3 bit field. */
-#define CMD_FRAC_CODE_MASK       0x00E00000
+static const uint32 CMD_FRAC_PART_BIT        = 0x00010000UL;
+static const uint32 CMD_FRAC_PART_MASK       = 0x000F0000UL;
+static const uint32 CMD_FRAC_REVERSE         = 0x00100000UL;
+static const uint32 CMD_FRAC_CODE_MASK       = 0x00E00000;    // This is a 3 bit fieldUL.
 
 /* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
    We require that the PART_MASK field be nonzero (we use 1-based part numbering)
    when these are in use.  If the PART_MASK field is zero, the code must be zero
    (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use. */
 
-#define CMD_FRAC_CODE_ONLY           0x00000000
-#define CMD_FRAC_CODE_ONLYREV        0x00200000
-#define CMD_FRAC_CODE_FROMTO         0x00400000
-#define CMD_FRAC_CODE_FROMTOREV      0x00600000
-#define CMD_FRAC_CODE_FROMTOREVREV   0x00800000
-#define CMD_FRAC_CODE_FROMTOMOST     0x00A00000
-#define CMD_FRAC_CODE_LATEFROMTOREV  0x00C00000
+static const uint32 CMD_FRAC_CODE_ONLY           = 0x00000000UL;
+static const uint32 CMD_FRAC_CODE_ONLYREV        = 0x00200000UL;
+static const uint32 CMD_FRAC_CODE_FROMTO         = 0x00400000UL;
+static const uint32 CMD_FRAC_CODE_FROMTOREV      = 0x00600000UL;
+static const uint32 CMD_FRAC_CODE_FROMTOREVREV   = 0x00800000UL;
+static const uint32 CMD_FRAC_CODE_FROMTOMOST     = 0x00A00000UL;
+static const uint32 CMD_FRAC_CODE_LATEFROMTOREV  = 0x00C00000UL;
 
-#define CMD_FRAC_PART2_BIT       0x01000000
-#define CMD_FRAC_PART2_MASK      0x07000000
-#define CMD_FRAC_IMPROPER_BIT    0x08000000
-#define CMD_FRAC_BREAKING_UP     0x10000000
-#define CMD_FRAC_FORCE_VIS       0x20000000
-#define CMD_FRAC_LASTHALF_ALL    0x40000000
-#define CMD_FRAC_FIRSTHALF_ALL   0x80000000
+static const uint32 CMD_FRAC_PART2_BIT       = 0x01000000UL;
+static const uint32 CMD_FRAC_PART2_MASK      = 0x07000000UL;
+static const uint32 CMD_FRAC_IMPROPER_BIT    = 0x08000000UL;
+static const uint32 CMD_FRAC_BREAKING_UP     = 0x10000000UL;
+static const uint32 CMD_FRAC_FORCE_VIS       = 0x20000000UL;
+static const uint32 CMD_FRAC_LASTHALF_ALL    = 0x40000000UL;
+static const uint32 CMD_FRAC_FIRSTHALF_ALL   = 0x80000000UL;
 
 
 /* These flags go along for the ride, in some parts of the code (BUT NOT
@@ -143,12 +141,12 @@ typedef struct {
    graciously provided for us from database.h to tell us what bits may be safely
    used next to the heritable flags. */
 
-#define FINAL__SPLIT                      CFLAGHSPARE_1
-#define FINAL__SPLIT_SQUARE_APPROVED      CFLAGHSPARE_2
-#define FINAL__SPLIT_DIXIE_APPROVED       CFLAGHSPARE_3
-#define FINAL__MUST_BE_TAG                CFLAGHSPARE_4
-#define FINAL__TRIANGLE                   CFLAGHSPARE_5
-#define FINAL__LEADTRIANGLE               CFLAGHSPARE_6
+#define FINAL__SPLIT                             CFLAGHSPARE_1
+static const uint32 FINAL__SPLIT_SQUARE_APPROVED      = CFLAGHSPARE_2;
+static const uint32 FINAL__SPLIT_DIXIE_APPROVED       = CFLAGHSPARE_3;
+static const uint32 FINAL__MUST_BE_TAG                = CFLAGHSPARE_4;
+static const uint32 FINAL__TRIANGLE                   = CFLAGHSPARE_5;
+static const uint32 FINAL__LEADTRIANGLE               = CFLAGHSPARE_6;
 
 /* Flags that reside in the "cmd_misc_flags" word of a setup BEFORE a call is executed.
 
@@ -250,30 +248,30 @@ typedef struct {
 
 /* Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100. */
 
-static Const uint32 CMD_MISC__EXPLICIT_MIRROR    = 0x00000100UL;
-static Const uint32 CMD_MISC__MATRIX_CONCEPT     = 0x00000200UL;
+static const uint32 CMD_MISC__EXPLICIT_MIRROR    = 0x00000100UL;
+static const uint32 CMD_MISC__MATRIX_CONCEPT     = 0x00000200UL;
 /* This is a 4 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
-static Const uint32 CMD_MISC__VERIFY_MASK        = 0x00003C00UL;
-static Const uint32 CMD_MISC__EXPLICIT_MATRIX    = 0x00004000UL;
-static Const uint32 CMD_MISC__NO_EXPAND_MATRIX   = 0x00008000UL;
-static Const uint32 CMD_MISC__DISTORTED          = 0x00010000UL;
-static Const uint32 CMD_MISC__OFFSET_Z           = 0x00020000UL;
-static Const uint32 CMD_MISC__SAID_SPLIT         = 0x00040000UL;
-static Const uint32 CMD_MISC__SAID_TRIANGLE      = 0x00080000UL;
-static Const uint32 CMD_MISC__PUT_FRAC_ON_FIRST  = 0x00100000UL;
-static Const uint32 CMD_MISC__DO_AS_COUPLES      = 0x00200000UL;
-static Const uint32 CMD_MISC__RESTRAIN_CRAZINESS = 0x00400000UL;
-static Const uint32 CMD_MISC__RESTRAIN_MODIFIERS = 0x00800000UL;
-static Const uint32 CMD_MISC__NO_CHECK_MOD_LEVEL = 0x01000000UL;
+static const uint32 CMD_MISC__VERIFY_MASK        = 0x00003C00UL;
+static const uint32 CMD_MISC__EXPLICIT_MATRIX    = 0x00004000UL;
+static const uint32 CMD_MISC__NO_EXPAND_MATRIX   = 0x00008000UL;
+static const uint32 CMD_MISC__DISTORTED          = 0x00010000UL;
+static const uint32 CMD_MISC__OFFSET_Z           = 0x00020000UL;
+static const uint32 CMD_MISC__SAID_SPLIT         = 0x00040000UL;
+static const uint32 CMD_MISC__SAID_TRIANGLE      = 0x00080000UL;
+static const uint32 CMD_MISC__PUT_FRAC_ON_FIRST  = 0x00100000UL;
+static const uint32 CMD_MISC__DO_AS_COUPLES      = 0x00200000UL;
+static const uint32 CMD_MISC__RESTRAIN_CRAZINESS = 0x00400000UL;
+static const uint32 CMD_MISC__RESTRAIN_MODIFIERS = 0x00800000UL;
+static const uint32 CMD_MISC__NO_CHECK_MOD_LEVEL = 0x01000000UL;
 #define             CMD_MISC__MUST_SPLIT_HORIZ     0x02000000UL
 #define             CMD_MISC__MUST_SPLIT_VERT      0x04000000UL
-static Const uint32 CMD_MISC__NO_CHK_ELONG       = 0x08000000UL;
-static Const uint32 CMD_MISC__PHANTOMS           = 0x10000000UL;
-static Const uint32 CMD_MISC__NO_STEP_TO_WAVE    = 0x20000000UL;
-static Const uint32 CMD_MISC__ALREADY_STEPPED    = 0x40000000UL;
-static Const uint32 CMD_MISC__DOING_ENDS         = 0x80000000UL;
+static const uint32 CMD_MISC__NO_CHK_ELONG       = 0x08000000UL;
+static const uint32 CMD_MISC__PHANTOMS           = 0x10000000UL;
+static const uint32 CMD_MISC__NO_STEP_TO_WAVE    = 0x20000000UL;
+static const uint32 CMD_MISC__ALREADY_STEPPED    = 0x40000000UL;
+static const uint32 CMD_MISC__DOING_ENDS         = 0x80000000UL;
 
-static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
+static const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
    Zero means no verification. */
@@ -341,19 +339,19 @@ static Const uint32 CMD_MISC__MUST_SPLIT_MASK    = (CMD_MISC__MUST_SPLIT_HORIZ|C
 /*     The low 12 bits are used for encoding the schema if
        CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on */
 
-static Const uint32 CMD_MISC2__IN_Z_CW           = 0x00001000UL;
-static Const uint32 CMD_MISC2__IN_Z_CCW          = 0x00002000UL;
-static Const uint32 CMD_MISC2__IN_AZ_CW          = 0x00004000UL;
-static Const uint32 CMD_MISC2__IN_AZ_CCW         = 0x00008000UL;
-static Const uint32 CMD_MISC2__IN_Z_MASK         = 0x0000F000UL;
-static Const uint32 CMD_MISC2__DID_Z_COMPRESSION = 0x00010000UL;
+static const uint32 CMD_MISC2__IN_Z_CW           = 0x00001000UL;
+static const uint32 CMD_MISC2__IN_Z_CCW          = 0x00002000UL;
+static const uint32 CMD_MISC2__IN_AZ_CW          = 0x00004000UL;
+static const uint32 CMD_MISC2__IN_AZ_CCW         = 0x00008000UL;
+static const uint32 CMD_MISC2__IN_Z_MASK         = 0x0000F000UL;
+static const uint32 CMD_MISC2__DID_Z_COMPRESSION = 0x00010000UL;
 
-static Const uint32 CMD_MISC2__MYSTIFY_SPLIT     = 0x00020000UL;
-static Const uint32 CMD_MISC2__MYSTIFY_INVERT    = 0x00040000UL;
+static const uint32 CMD_MISC2__MYSTIFY_SPLIT     = 0x00020000UL;
+static const uint32 CMD_MISC2__MYSTIFY_INVERT    = 0x00040000UL;
 
-static Const uint32 CMD_MISC2__ANY_WORK          = 0x00080000UL;
-static Const uint32 CMD_MISC2__ANY_SNAG          = 0x00100000UL;
-static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL;
+static const uint32 CMD_MISC2__ANY_WORK          = 0x00080000UL;
+static const uint32 CMD_MISC2__ANY_SNAG          = 0x00100000UL;
+static const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL;
 
 
 /* Here are the inversion bits for the basic operations. */
@@ -372,7 +370,7 @@ static Const uint32 CMD_MISC2__ANY_WORK_INVERT   = 0x00200000UL;
 #define             CMD_MISC2__SAID_INVERT         0x10000000UL
 /* This mask embraces this whole mechanism, including the "invert" bit. */
 #define             CMD_MISC2__CTR_END_MASK        0x1FC00000UL
-static Const uint32 CMD_MISC2_RESTRAINED_SUPER   = 0x20000000UL;
+static const uint32 CMD_MISC2_RESTRAINED_SUPER   = 0x20000000UL;
 
 typedef enum {
    simple_normalize,
@@ -491,7 +489,7 @@ typedef enum {
 
 typedef struct milch {
    uint32 code;
-   Const map_thing *the_map;
+   const map_thing *the_map;
    struct milch *next;
 } mapcoder;
 
@@ -594,15 +592,15 @@ extern id_bit_table id_bit_table_3dmd_ctr1x6[];                     /* in SDTABL
 extern id_bit_table id_bit_table_3dmd_ctr1x4[];                     /* in SDTABLES */
 extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABLES */
 extern cm_thing conc_init_table[];                                  /* in SDTABLES */
-extern Const fixer fdhrgl;                                          /* in SDTABLES */
-extern Const fixer f323;                                            /* in SDTABLES */
-extern Const fixer f2x4far;                                         /* in SDTABLES */
-extern Const fixer f2x4near;                                        /* in SDTABLES */
-extern Const fixer f4dmdiden;                                       /* in SDTABLES */
-extern Const fixer fixmumble;                                       /* in SDTABLES */
-extern Const fixer fixfrotz;                                        /* in SDTABLES */
-extern Const fixer fixwhuzzis;                                      /* in SDTABLES */
-extern Const fixer fixgizmo;                                        /* in SDTABLES */
+extern const fixer fdhrgl;                                          /* in SDTABLES */
+extern const fixer f323;                                            /* in SDTABLES */
+extern const fixer f2x4far;                                         /* in SDTABLES */
+extern const fixer f2x4near;                                        /* in SDTABLES */
+extern const fixer f4dmdiden;                                       /* in SDTABLES */
+extern const fixer fixmumble;                                       /* in SDTABLES */
+extern const fixer fixfrotz;                                        /* in SDTABLES */
+extern const fixer fixwhuzzis;                                      /* in SDTABLES */
+extern const fixer fixgizmo;                                        /* in SDTABLES */
 
 
 extern expand_thing comp_qtag_2x4_stuff;                            /* in SDTOP */
@@ -637,28 +635,28 @@ extern full_expand_thing touch_init_table3[];
 #define NEEDMASK(K) (1<<((K)/(CONCPROP__NEED_LOBIT)))
 extern expand_thing expand_init_table[];
 
-extern Const coordrec tgl3_0;                                       /* in SDTABLES */
-extern Const coordrec tgl3_1;                                       /* in SDTABLES */
-extern Const coordrec tgl4_0;                                       /* in SDTABLES */
-extern Const coordrec tgl4_1;                                       /* in SDTABLES */
-extern Const coordrec squeezethingglass;                            /* in SDTABLES */
-extern Const coordrec squeezethinggal;                              /* in SDTABLES */
-extern Const coordrec squeezethingqtag;                             /* in SDTABLES */
-extern Const coordrec squeezething4dmd;                             /* in SDTABLES */
-extern Const coordrec squeezefinalglass;                            /* in SDTABLES */
-extern Const coordrec press_4dmd_4x4;                               /* in SDTABLES */
-extern Const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
-extern Const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
-extern Const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
-extern Const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
-extern Const coordrec acc_crosswave;                                /* in SDTABLES */
-extern Const tgl_map *c1tglmap1[];                                  /* in SDTABLES */
-extern Const tgl_map *c1tglmap2[];                                  /* in SDTABLES */
-extern Const tgl_map *qttglmap1[];                                  /* in SDTABLES */
-extern Const tgl_map *qttglmap2[];                                  /* in SDTABLES */
-extern Const tgl_map *bdtglmap1[];                                  /* in SDTABLES */
-extern Const tgl_map *bdtglmap2[];                                  /* in SDTABLES */
-extern Const tgl_map *rgtglmap1[];                                  /* in SDTABLES */
+extern const coordrec tgl3_0;                                       /* in SDTABLES */
+extern const coordrec tgl3_1;                                       /* in SDTABLES */
+extern const coordrec tgl4_0;                                       /* in SDTABLES */
+extern const coordrec tgl4_1;                                       /* in SDTABLES */
+extern const coordrec squeezethingglass;                            /* in SDTABLES */
+extern const coordrec squeezethinggal;                              /* in SDTABLES */
+extern const coordrec squeezethingqtag;                             /* in SDTABLES */
+extern const coordrec squeezething4dmd;                             /* in SDTABLES */
+extern const coordrec squeezefinalglass;                            /* in SDTABLES */
+extern const coordrec press_4dmd_4x4;                               /* in SDTABLES */
+extern const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
+extern const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
+extern const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
+extern const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
+extern const coordrec acc_crosswave;                                /* in SDTABLES */
+extern const tgl_map *c1tglmap1[];                                  /* in SDTABLES */
+extern const tgl_map *c1tglmap2[];                                  /* in SDTABLES */
+extern const tgl_map *qttglmap1[];                                  /* in SDTABLES */
+extern const tgl_map *qttglmap2[];                                  /* in SDTABLES */
+extern const tgl_map *bdtglmap1[];                                  /* in SDTABLES */
+extern const tgl_map *bdtglmap2[];                                  /* in SDTABLES */
+extern const tgl_map *rgtglmap1[];                                  /* in SDTABLES */
 extern sel_item sel_init_table[];                                   /* in SDTABLES */
 extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_spndle_once_rem;                               /* in SDTABLES */
@@ -873,7 +871,7 @@ extern void new_divided_setup_move(
 
 extern void divided_setup_move(
    setup *ss,
-   Const map_thing *maps,
+   const map_thing *maps,
    phantest_kind phancontrol,
    long_boolean recompute_id,
    setup *result);
@@ -881,7 +879,7 @@ extern void divided_setup_move(
 extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
    uint32 *masks, setup *result);
 
-extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
+extern void overlapped_setup_move(setup *ss, const map_thing *maps,
    uint32 *masks, setup *result);
 
 extern void do_phantom_2x4_concept(
@@ -903,7 +901,7 @@ extern void phantom_2x4_move(
    setup *ss,
    int lineflag,
    phantest_kind phantest,
-   Const map_thing *maps,
+   const map_thing *maps,
    setup *result);
 
 extern void distorted_2x2s_move(
@@ -1033,8 +1031,8 @@ extern void do_matrix_expansion(
    uint32 concprops,
    long_boolean recompute_id);
 
-NORETURN1 extern void fail2(Const char s1[], Const char s2[]) NORETURN2;
-NORETURN1 extern void failp(uint32 id1, Const char s[]) NORETURN2;
+NORETURN1 extern void fail2(const char s1[], const char s2[]) NORETURN2;
+NORETURN1 extern void failp(uint32 id1, const char s[]) NORETURN2;
 extern void warn(warning_index w);
 
 extern restriction_test_result verify_restriction(

@@ -1,0 +1,192 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename appnote2.info
+@settitle Sd Application Note 2
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@end iftex
+@c %**end of header
+@ifclear html
+@center @strong{SD APPLICATION NOTE 2}
+@sp 1
+@end ifclear
+Copyright @copyright{} 1999 William B. Ackerman
+@sp 1
+@center RIPPLE THE WAVE
+@center and
+@center ROLLING RIPPLE
+@sp 1
+These are surprisingly versatile calls.  @samp{Ripple the wave} is done from
+a wave or line, and designates a person or two people.  It may also
+give a number.  Without the number, the call is @samp{<anyone> ripple the wave}.
+(It is called that even if the line isn't a wave.)
+With a number, it is @samp{<anyone> ripple <N>}.
+
+Typically just one person
+is designated in each 4-person wave (as in @samp{side girls ripple the wave}),
+and that person is an end.  That person does trades with people until he or she
+reaches the far end of the wave.  If the designee is an end, that is 3 trades.
+If the designee is a center, he or she will work toward the center, and will
+do 2 trades.  Nondesignated people don't do anything except when a designated
+person is trading with them.
+
+It is possible to designate both ends (their second trade will be with each other)
+or both centers (they will start by trading with each other.)  Other combinations
+won't work.
+@sp 1
+@example
+@group
+     2B^   2GV   3G^   3BV             3G^   2BV   3B^   2GV
+
+     1B^   1GV   4G^   4BV             4G^   1BV   4B^   1GV
+
+                      girls ripple the wave
+@end group
+@end example
+@sp 1
+Instead of having to say something like @code{head boys} to identify one
+person in each wave, you may be able to use more dancer-friendly designators like
+@sp 1
+@example
+@group
+   end boys
+   end girls
+   center boys
+   center girls
+   lead ends
+   lead centers
+   trailing ends
+   trailing centers
+@end group
+@end example
+@sp 1
+@noindent When a number is given, the designee does just that many trades:
+@sp 1
+@example
+@group
+     2G^   3GV   2B^   3BV             3G^   2BV   2G^   3BV
+
+     1B^   4BV   1G^   4GV             1B^   4GV   4B^   1GV
+
+                        end girls ripple 2
+@end group
+@end example
+@sp 1
+@noindent You can give fractional numbers to get interesting results:
+@sp 1
+@example
+@group
+                                                     2G>
+                                      3G^   2BV
+     2G^   3GV   2B^   3BV                           3B<
+
+     1B^   4BV   1G^   4GV               1B>
+                                                  4B^   1GV
+                                         4G<
+
+                      end girls ripple 2-1/2
+@end group
+@end example
+@sp 1
+@example
+@group
+                                     2B>   3G>
+
+     3G^   2BV   3B^   2GV           2G<   3B<
+
+     4G^   1BV   4B^   1GV           1B>   4G>
+
+                                     1G<   4B<
+
+                     girls ripple 2-1/2
+@end group
+@end example
+@sp 1
+@example
+@group
+                                        2G<
+                                  2B^         3BV
+     3G^   2BV   3B^   2GV              3G>
+
+     4G^   1BV   4B^   1GV              1G<
+                                  1B^         4BV
+                                        4G>
+
+                  end girls ripple 1-1/2
+@end group
+@end example
+@sp 1
+The call @samp{rolling ripple} takes more than one number.  The designee does
+a normal ripple of the first amount.  Then, whoever is standing on the spot(s)
+that the designee(s) originally started on does a ripple of the second amount.
+If there are more numbers the action continues, from the same spot(s) each time.
+@sp 1
+@example
+@group
+     2B^   2GV   3G^   3BV             2G^   2BV   3B^   3GV
+
+     1B^   1GV   4G^   4BV             1G^   1BV   4B^   4GV
+
+                    boys rolling ripple 3 x 2
+@end group
+@end example
+@sp 1
+@example
+@group
+     4B^   3BV   1G^   2GV             2G^   4BV   1G^   3BV
+
+     4G^   3GV   1B^   2BV             1B^   3GV   2B^   4GV
+
+                 end girls rolling ripple 3 x 1
+@end group
+@end example
+@sp 1
+@example
+@group
+     4B^   3BV   1G^   2GV             4B^   2GV   1G^   3BV
+
+     4G^   3GV   1B^   2BV             1B^   3GV   4G^   2BV
+
+                center boys rolling ripple 2 x 1
+@end group
+@end example
+@sp 1
+@example
+@group
+                                        2B<
+                                  2G^         3GV
+     2B^   2GV   3G^   3BV              3B>
+
+     1B^   1GV   4G^   4BV              1B<
+                                  1G^         4GV
+                                        4B>
+
+                 boys rolling ripple 3 x 1-1/2
+@end group
+@end example
+@sp 1
+@example
+@group
+                                         2G>
+                                                  4B^   3BV
+     4B^   3BV   1G^   2GV               1G<
+
+     4G^   3GV   1B^   2BV                           3G>
+                                      1B^   2BV
+                                                     4G<
+
+                end girls rolling ripple 3 x 2-1/2
+@end group
+@end example
+@sp 1
+@example
+@group
+     4B^   3BV   1G^   2GV             2G^   1GV   3B^   4BV
+
+     4G^   3GV   1B^   2BV             2B^   1BV   3G^   4GV
+
+                end girls rolling ripple 3 x 2 x 1
+@end group
+@end example
+@bye

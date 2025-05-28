@@ -2160,6 +2160,7 @@ Private void do_concept_once_removed(
    else {
 
       // We allow "3x1" or "1x3".  That's all.
+      // Well, we also allow "3x3" etc.
 
       switch (ss->cmd.cmd_final_flags.her8it & (INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK)) {
       case 0:
@@ -2176,6 +2177,26 @@ Private void do_concept_once_removed(
             goto doit;
          case s_qtag:
             division_maps = &map_2x3_rmvs;
+            goto doit;
+         default:
+            fail("Can't do this concept in this formation.");
+         }
+         break;
+      case INHERITFLAGNXNK_3X3:
+         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_12_MATRIX;
+         switch (ss->kind) {
+         case s1x12:
+            the_map = MAPCODE(s1x6,2,MPKIND__REMOVED, 0);
+            goto doit;
+         default:
+            fail("Can't do this concept in this formation.");
+         }
+         break;
+      case INHERITFLAGNXNK_4X4:
+         ss->cmd.cmd_final_flags.her8it &= ~INHERITFLAG_16_MATRIX;
+         switch (ss->kind) {
+         case s1x16:
+            the_map = MAPCODE(s1x8,2,MPKIND__REMOVED, 0);
             goto doit;
          default:
             fail("Can't do this concept in this formation.");

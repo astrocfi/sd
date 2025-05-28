@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 5, 1999
-@set sd-version 32.93
+@set Time-stamp: December 18, 1999
+@set sd-version 32.95
 @set full-manual
 @c %**end of header
 @iftex
@@ -41,10 +41,11 @@
 Copyright @copyright{} 1992-1999 William B. Ackerman and Stephen Gildea
 
 @ignore
-Permission is granted to process this file through TeX and print the
-results, provided the printed document carries copying permission notice
-identical to this one except for the removal of this paragraph (this
-paragraph not being relevant to the printed manual).
+Permission is granted to process this file through TeX or other text
+processors and print the results, provided the printed document carries
+copying permission notice identical to this one except for the removal
+of this paragraph (this paragraph not being relevant to the printed
+manual).
 
 @end ignore
 Permission is granted to make and distribute verbatim copies of this manual
@@ -140,6 +141,7 @@ Calling
 * Entering Concepts::           Entering Concepts
 * Supercalls::                  Supercalls
 * Call Modifications::          Call Modifications
+* Recentering the Setup::       Recentering the Setup
 * Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
 
@@ -292,6 +294,7 @@ generate a sequence of calls of your choosing.
 * Entering Concepts::           Entering Concepts
 * Supercalls::                  Supercalls
 * Call Modifications::          Call Modifications
+* Recentering the Setup::       Recentering the Setup
 * Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
 @end menu
@@ -945,7 +948,7 @@ Supercalls in which the @samp{[anything]} call is at the end, like @samp{busy
 [anything]}, @samp{transfer and [anything]}, @samp{eight by [anything]}, and
 @samp{dodge [anything]} are much more likely to be executed successfully.
 
-@node Call Modifications, Retaining Concepts After an Error, Supercalls, Calling
+@node Call Modifications, Recentering the Setup, Supercalls, Calling
 @section Call Modifications
 
 Some calls can be modified in a natural way, such as @samp{catch [fan the top] 3},
@@ -1013,7 +1016,20 @@ cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
 [2/3 recycle] the difference] cover up} things may be quite difficult.
 How (and whether) you choose to read such a card is up to you.
 
-@node Retaining Concepts After an Error, Asymmetric Selectors, Call Modifications, Calling
+@node Recentering the Setup, Retaining Concepts After an Error, Call Modifications, Calling
+@section Recentering the Setup
+
+When writing unsymmetrical material, one sometimes moves the entire square
+into a position that is not centered on its original location.  In such a
+situation, it is sometimes useful to tell the dancers to forget that original
+location and consider their present location to be the entire setup.  @code{Sd}
+has a pseudo-call @samp{recenter} that can be used for this purpose.  It
+recenters the setup, that is, throws away unsymmetrical phantoms.  Its level
+has been set to C1.  It is not a real call, of course.  There is no standard
+convention for what you have to say to the dancers when you want to perform
+this operation.
+
+@node Retaining Concepts After an Error, Asymmetric Selectors, Recentering the Setup, Calling
 @section Retaining Concepts After an Error
 
 When an error occurs in the execution of a call, @code{Sd} has an option

@@ -2,7 +2,7 @@
 
 /* calls database source for Sd -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     All rights reserved.  Permission is granted to compile this file,
     or a modification thereof, for use with the calling program
@@ -20,9 +20,10 @@
 
     -----------------------------------------------------------------
 
-    The version of this file is as shown immediately below.  This
-    string gets encoded into the database file and then displayed
-    at program startup, as the "db" part of the complete version.
+    The version of this file is as shown below.  This string gets
+    encoded into the database file and then displayed at program
+    startup, and written to every sequence, as the "db" part of the
+    complete version.
 
     ATTENTION!  If you modify the database, we recommend that
     you change the version string below to identify the change.
@@ -32,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "32.94"
+version "32.95"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -41,7 +42,7 @@ call "nothing" mainstream tag nullcall
 call "_secondary nothing" dontshow tag nullsecond
    nulldefine
 
-call "recenter" c3
+call "recenter" c1
             dont_use_in_resolve
    recenter
 
@@ -2648,6 +2649,11 @@ call "flip the diamond" plus tag flipdiamond
       array [CR1S 0 AL3S 0]
    setup pmd 1x4 restriction forbidden diamond_like
       array [0 CR2E 0 AL2W]
+            alternate_definition [straight] c4
+   setup qtag 2x4 rotate restriction forbidden diamond_like
+      array [0 0 AL0S CR0N 0 0 CR7N AL7S]
+   setup pqtag 2x4 rotate restriction forbidden diamond_like
+      array [ZM1W CR1E 0 0 AL2E ZM2W 0 0]
             alternate_definition [reverse] c3a
    setup dmd 1x4 rotate restriction forbidden diamond_like
       array [CR1N 0 AL1S 0]
@@ -2688,6 +2694,11 @@ call "cut the diamond" plus tag cutdiamond
       array [CR3S 0 AL1S 0]
    setup pmd 1x4 restriction forbidden diamond_like
       array [0 CR2E 0 AL2W]
+            alternate_definition [straight] c4
+   setup qtag 2x4 rotate restriction forbidden diamond_like
+      array [0 0 AL0S CR0N 0 0 CR7N AL7S]
+   setup pqtag 2x4 rotate restriction forbidden diamond_like
+      array [ZM1W CR2E 0 0 AL1E ZM2W 0 0]
             alternate_definition [yoyo] c4
    setup dmd dmd restriction forbidden diamond_like
       array [CR3W 0 AL3E 0]
@@ -5319,12 +5330,12 @@ call "wheel and deal" mainstream tag wheelanddeal
    setup 2x4 2x4 rotate restriction 2fl_only
       array [CR0E CR7E AL0E AL7E ZM1W AL2E CR5E ZM6W]
             alternate_definition [1x2] c4
-   setup 1x6 2x3                       /* will use qualifier "3x3_2fl_only" to get other stuff??? */
+   setup 1x6 2x3            // will use qualifier "3x3_2fl_only" to get other stuff???
       preds "Can't do this call."
          if miniwave_side_of_2n1_line [CR0S CR0S AL0S AL2S AL2S CR2S]
          if couple_side_of_2n1_line   [CR1S AL1S AL0S AL1S CR1S CR2S]
             alternate_definition [2x1] c4    /* Same as 1x2. */
-   setup 1x6 2x3                       /* will use qualifier "3x3_2fl_only" to get other stuff??? */
+   setup 1x6 2x3            // will use qualifier "3x3_2fl_only" to get other stuff???
       preds "Can't do this call."
          if miniwave_side_of_2n1_line [CR0S CR0S AL0S AL2S AL2S CR2S]
          if couple_side_of_2n1_line   [CR1S AL1S AL0S AL1S CR1S CR2S]
@@ -6205,7 +6216,7 @@ call "@6 rolling ripple 2 x @9" c3a
          array                     [R2S CCAL3S L0S AACR1S]
    setup 1x4 1x4 restriction unusual wave_only qualifier num 1 ripple_any_centers
       preds "These people can't ripple."
-         if select                 [     0 CCAL2N 0      AACR0S]
+         if select                 [     0 CCAL2N 0      AACR0N]
          if unselect_near_select   [  ZM0N      0   ZM2N      0]
          if unselect_near_unselect [CCAL3N  CCR1N AACR1N  AAL3N]
    setup 1x4 1x4 restriction unusual wave_only qualifier num 2 ripple_any_centers
@@ -6256,6 +6267,15 @@ call "@6 rolling ripple 3 x @9-1/2" c3a
          array                     [L1W L0S R1E R2S]
    setup 1x4 2x2 restriction unusual wave_only qualifier num 2 ripple_both_ends
          array                     [R3W L3E L2E R2W]
+
+call "@6 rolling ripple 3 x 2 x 1" c3a
+   setup 1x4 1x4 restriction unusual wave_only qualifier ripple_one_end
+      preds "These people can't ripple."
+         if select                 [R2S  0        L0S  0]
+         if unselect_near_select   [0    AAAACR3S 0    CCCCAL1S]
+         if unselect_near_unselect [CR2S CCAL3S   AL0S AACR1S]
+   setup 1x4 1x4 restriction unusual wave_only qualifier ripple_both_ends
+         array                     [R0N L1N L2N R3N]
 
 call "peel the deal" c4a
    setup 2x2 1x4 restriction peelable_box
@@ -6350,8 +6370,8 @@ call "crossfire" plus
    setup pmd 2x2
       array [0 CM3S 0 AM0S]
             alternate_definition [yoyo] c4
-   /* Of course, when we start getting serious, everyone steps forward,
-      and rolling is problematical. */
+   // Of course, when we start getting serious,
+   // everyone steps forward, and rolling is problematical.
    setup 1x4 2x2 qualifier wave_only
       array [C1S C3W A0S A2E]
    setup dmd 2x2
@@ -6384,52 +6404,6 @@ call "crossfire" plus
             alternate_definition [8x8] c4
    setup 1x16 2x8 rotate restriction forbidden 4x4couples_only
       array [C0E C1E C2E C3E C4E C5E C6E C7E A15E A14E A13E A12E A11E A10E A9E A8E]
-/*
-            alternate_definition [1x3] c4
-   setup 2x4 2x4 rotate
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [C0E A5E C2E A7E A4E C3E A4E C3E]
-         if couple_side_of_out_3n1_line   [C0E C1E A6E A7E A6E A5E C2E C1E]
-   setup 1x4 2x3 rotate
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [C1E A3E A4E C2E]
-         if couple_side_of_out_3n1_line   [C0E C1E A5E A4E]
-            alternate_definition [3x1] c4
-   setup 2x4 2x4 rotate
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [C0E A5E C2E A7E A4E C3E A4E C3E]
-         if couple_side_of_out_3n1_line   [C0E C1E A6E A7E A6E A5E C2E C1E]
-   setup 1x4 2x3 rotate
-      preds "Can't do this."
-         if miniwave_side_of_out_3n1_line [C1E A3E A4E C2E]
-         if couple_side_of_out_3n1_line   [C0E C1E A5E A4E]
-            alternate_definition [1x2] c4
-   setup 2x3 2x3 rotate
-      preds "Can't do this."
-         if miniwave_side_of_2n1_line [C0E C1E A5E A3E A3E C2E]
-         if couple_side_of_2n1_line   [C0E A4E A5E A4E C2E C1E]
-   setup 1x6 short6 rotate qualifier ctrwv_end2fl
-      preds "Can't do this."
-         if miniwave_side_of_2n1_line [  0 C3E A4E   0 A2E C1E]
-         if couple_side_of_2n1_line   [C5E   0   0 A0E   0   0]
-   setup 1x6 bone6 qualifier ctr2fl_endwv
-      preds "Can't do this."
-         if miniwave_side_of_2n1_line [C5S   0   0 A2S   0   0]
-         if couple_side_of_2n1_line   [  0 A4S A0S   0 C3S C1S]
-            alternate_definition [2x1] c4
-   setup 2x3 2x3 rotate
-      preds "Can't do this."
-         if miniwave_side_of_2n1_line [C0E C1E A5E A3E A3E C2E]
-         if couple_side_of_2n1_line   [C0E A4E A5E A4E C2E C1E]
-   setup 1x6 short6 rotate qualifier ctrwv_end2fl
-      preds "Can't do this."
-         if miniwave_side_of_2n1_line [  0 C3E A4E   0 A2E C1E]
-         if couple_side_of_2n1_line   [C5E   0   0 A0E   0   0]
-   setup 1x6 bone6 qualifier ctr2fl_endwv
-      preds "Can't do this."
-         if miniwave_side_of_2n1_line [C5S   0   0 A2S   0   0]
-         if couple_side_of_2n1_line   [  0 A4S A0S   0 C3S C1S]
-*/
 
 call "cross sashay" c4
    setup 1x4 2x2 restriction wave_only
@@ -6946,10 +6920,11 @@ call "_step and fold with c3b interlock" dontshow tag stepnfold_c3b_intlk
 
 call "@v back to a wave" c1
             visible_fractions left_means_mirror
-            singlefile_is_inherited nxn_is_inherited bigmatrix_is_inherited
+            singlefile_is_inherited single_is_inherited nxn_is_inherited bigmatrix_is_inherited
             revert_is_inherited fast_is_inherited
-   seq real_base_0 [inherit_left inherit_singlefile inherit_nxn inherit_bigmatrix inherit_revert]
-   seq boxyscootback [inherit_nxn inherit_fast]
+   seq real_base_0 [inherit_left inherit_singlefile inherit_single
+                   inherit_nxn inherit_bigmatrix inherit_revert]
+   seq boxyscootback [inherit_single inherit_nxn inherit_fast]
 
 /* We leave this one in because it is a genuine call without the "back to a wave" words. */
 /* In fact, it could be argued that "flip back to a wave" is not only archaic, but it is
@@ -7292,8 +7267,8 @@ call "pair the line" c4
    setup 4x2 2x4 rotate
       array [   0 CR5E CR2E    0 0 AL1E AL6E 0]
             alternate_definition [straight] c4
-   /* This may not be what you are expecting, but "straight" doesn't mean
-      "go to your opposite's spot".  It means "matrix cross over circulate". */
+   // "Straight" doesn't mean "go to your opposite's spot".
+   // It means "matrix cross over circulate".
    setup 2x4 2x6 rotate qualifier wave_only   /* Goes to Z's. */
       array [CR11E CR10E AL1E AL0E ZM2W AL4E CR7E ZM9W]
    setup 2x4 2x6 rotate qualifier 2fl_only    /* Goes to Z's. */
@@ -12023,9 +11998,13 @@ call "_finish follow and cross" dontshow tag rfinfollx
    /* This is just acey-deucey, but we take no chances with weird setups. */
    conc trade [] circulate [conc_demand_lines conc_force_lines]
 
-call "_finish follow and criss/cross" dontshow tag finfollx
+call "follow the deucey" c4x tag finfollx
             cross_is_inherited
    seq followthru [inherit_cross]
+   seq rfinfollx []
+
+call "cross the deucey" c4x
+   seq followthru [force_cross]
    seq rfinfollx []
 
 call "follow and cross" c4

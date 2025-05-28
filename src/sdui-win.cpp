@@ -1805,8 +1805,6 @@ static int startup_retval;
 /* These have the fatal error. */
 static char session_error_msg1[200], session_error_msg2[200];
 
-static HWND hDialogWindow;
-
 /* Process Startup dialog box messages. */
 
 static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
@@ -1816,6 +1814,17 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    Cstring session_error_msg;
 
    switch (id) {
+   case IDC_START_LIST:
+
+      // See if user has double-clicked in the list box.
+      // We don't try to respond to single clicks.  It's too much
+      // work to distinguish them from selection changes due to
+      // the cursor arrow keys.
+
+      if (codeNotify == (UINT) LBN_DBLCLK)
+            goto accept_listbox;
+
+      break;
    case IDC_WRITE_LIST:
    case IDC_WRITE_FULL_LIST:
    case IDC_ABRIDGED:
@@ -1853,6 +1862,7 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
          the level.  So we may have to go back to the second stage.
          The variable "doing_level_dialog" tells what we were getting. */
 
+   accept_listbox:
       startup_retval = 0;
       i = SendDlgItemMessage(hwnd, IDC_START_LIST, LB_GETCURSEL, 0, 0L);
 
@@ -1959,10 +1969,9 @@ static void Startup_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
    }
 }
 
+
 static BOOL Startup_OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
-   hDialogWindow = hwnd;
-
    /* Select the default radio buttons. */
 
    CheckRadioButton(hwnd, IDC_NORMAL, IDC_ABRIDGED, IDC_NORMAL);

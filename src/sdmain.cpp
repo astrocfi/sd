@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "32.94"
-#define TIME_STAMP "wba@an.hp.com  13 Dec 99 $"
+#define VERSION_STRING "32.95"
+#define TIME_STAMP "wba@an.hp.com  18 Dec 99 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -117,13 +117,17 @@ Private void display_help(void)
    printf("-no_checkers                do not use large \"checkers\" for setup display\n");
    printf("-no_graphics                do not use special characters for setup display\n");
    printf("-reverse_video              (Sd only) display transcript in white-on-black\n");
+   printf("-normal_video               (Sdtty only) display transcript in black-on-white\n");
    printf("-no_color                   do not display people in color\n");
+   printf("-bold_color                 use bold colors when not coloring by couple or corner\n");
    printf("-pastel_color               use pastel colors when not coloring by couple or corner\n");
    printf("-color_by_couple            display color according to couple number\n");
    printf("-color_by_corner            similar to color_by_couple, but make corners match\n");
    printf("-no_sound                   do not make any noise when an error occurs\n");
    printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
    printf("-singlespace                single space the output file\n");
+   printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
+   printf("-concept_levels             allow concepts from any level\n");
    printf("-no_warnings                do not display or print any warning messages\n");
    printf("-retain_after_error         retain pending concepts after error\n");
    printf("-active_phantoms            use active phantoms for \"assume\" operations\n");

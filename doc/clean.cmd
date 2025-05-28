@@ -20,6 +20,8 @@ del sessions_toc.html
 del sessions.txt
 del relnotes.html
 del relnotes.txt
+del appnote*.html
+del appnote*.txt
 del demo.html
 del demo.txt
 REM del sample.html     This is a derived object, but don't delete it just yet
@@ -62,6 +64,7 @@ del sd_doc.info
 del demo.info
 del sessions.info
 del relnotes.info
+del appnote*.info
 del textdoc.tar
 del psdoc.tar
 del pdfdoc.tar
