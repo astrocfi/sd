@@ -381,6 +381,22 @@ static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                
 static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for magic columns or inverted lines */
 static restriction_thing cmagic_thar     = {8, {0, 1, 3, 2, 5, 4, 6, 7},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE,  chk_wave};          /* check for thar of opposite-handedness waves */
 
+/* check for a reasonable "quick step" or "triple cross" setup */
+static restriction_thing cqbox2x4 = {0, {3, 0, 1, 2}, {3, 4, 5, 6},
+                                     {3, 1, 2, 3}, {3, 5, 6, 7}, FALSE, chk_qbox};
+
+/* check for a reasonable "magic quick step" or "make magic" setup */
+static restriction_thing cqmbox2x4 = {0, {3, 1, 2, 7}, {3, 3, 5, 6},
+                                      {3, 1, 2, 4}, {3, 0, 5, 6}, FALSE, chk_qbox};
+
+/* check for a reasonable columns-of-3 "quick step" setup */
+static restriction_thing cqbox2x3 = {0, {2, 0, 1}, {2, 3, 4},
+                                     {2, 1, 2}, {2, 4, 5}, FALSE, chk_qbox};
+
+/* check for a reasonable columns-of-3 "magic quick step" setup */
+static restriction_thing cqmbox2x3 = {0, {2, 1, 5}, {2, 2, 4},
+                                      {2, 1, 3}, {2, 0, 4}, FALSE, chk_qbox};
+
 static restriction_thing cwave_sh6     = {6, {1, 0, 3, 2, 5, 4},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for centers tandem in wave */
 static restriction_thing bone6_1x4     = {6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for ends tandem in wave */
 
@@ -437,11 +453,28 @@ static restriction_thing box_in_or_out = {1, {0, 0, 2, 2},                {0, 2,
 static restriction_thing ind_in_out_2x2= {0, {3, 2, 1, 0},                {0},                            {0}, {0}, FALSE, chk_indep_box};
 static restriction_thing ind_in_out_2x4= {0, {3, 2, 3, 2, 1, 0, 1, 0},    {0},                            {0}, {0}, FALSE, chk_indep_box};
 static restriction_thing box_magic     = {1, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
-static restriction_thing s4x4_wave     = {1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
-                                               {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
-static restriction_thing s4x4_2fl     = {1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},  
-                                               {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+/* check for 4 waves of consistent handedness and consistent headliner-ness. */
+static restriction_thing s4x4_wave     = {1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
+                                               {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},
+                            {0}, {0}, TRUE,  chk_box};
+
+/* check for 4 2-faced lines of consistent handedness and consistent headliner-ness. */
+static restriction_thing s4x4_2fl     = {1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
+                                               {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},
+                            {0}, {0}, TRUE,  chk_box};
+
+/* check for 2x2 made of miniwaves everywhere, any orientation, any handedness. */
+static restriction_thing s2x2_mwv     = {2, {1, 0, 3, 2},
+                                         {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl};
+
+/* check for 2x2 made of couples everywhere, any orientation, in or out. */
+static restriction_thing s2x2_cpl     = {0, {1, 0, 3, 2},
+                                         {3, 2, 1, 0}, {0}, {0}, FALSE, chk_box_dbl};
+
+/* check for 2x2 made of tandems everywhere, any orientation, any handedness. */
+static restriction_thing s2x2_peel    = {0, {3, 2, 1, 0},
+                                         {1, 0, 3, 2}, {0}, {0}, FALSE, chk_box_dbl};
 
 static restriction_thing cwave_qtg     = {4, {2, 3, 7, 6},                                           {0}, {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 static restriction_thing wave_qtag     = {4, {6, 7, 3, 2},                                           {0}, {0}, {0}, TRUE,  chk_wave};           /* check for wave across the center */
@@ -468,18 +501,33 @@ static restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 6}, {4, 1, 3, 5, 7},  
 static restriction_thing dmd3_d        = {0, {6, 3, 4, 5, 9, 10, 11}, {6, 0, 1, 2, 6, 7, 8}, {0},       {0},       FALSE, chk_dmd_qtag};
 static restriction_thing dmd4_d        = {8, {8, 4, 5, 6, 7, 12, 13, 14, 15}, {8, 0, 1, 2, 3, 8, 9, 10, 11}, {0},       {0},       FALSE, chk_dmd_qtag};
 
-static restriction_thing all_4_ns      = {4, {4, 0, 1, 2, 3}, {0},                            {0},       {0},       FALSE, chk_dmd_qtag};
+static restriction_thing dmd_pq =
+{0, {4, 0, 1, 2, 3}, {0},  {1, 0},  {1, 2},  FALSE, chk_dmd_qtag};
+static restriction_thing qtag_pq =
+{0, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {2, 0, 1}, {2, 4, 5}, FALSE, chk_dmd_qtag};
+static restriction_thing ptpd_pq =
+{0, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag};
+static restriction_thing dmd3_pq =
+{0, {0}, {12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, {3, 0, 1, 2}, {3, 6, 7, 8}, FALSE, chk_dmd_qtag};
+static restriction_thing dmd4_pq =
+{0, {0}, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {4, 0, 1, 2, 3}, {4, 8, 9, 10, 11}, FALSE, chk_dmd_qtag};
 
 
-static restriction_thing dmd_p        = {4, {4, 0, 1, 2, 3}, {0},  {1, 0},  {1, 2},  FALSE, chk_dmd_qtag};
 
 
 
-static restriction_thing all_4_ew      = {4, {0}, {4, 0, 1, 2, 3},                            {0},       {0},       FALSE, chk_dmd_qtag};
-static restriction_thing all_8_ns      = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {0},       {0},       FALSE, chk_dmd_qtag};
-static restriction_thing all_8_ew      = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {0},       {0},       FALSE, chk_dmd_qtag};
-static restriction_thing all_16_ns     = {4, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, {0}, FALSE, chk_dmd_qtag};
-static restriction_thing all_16_ew     = {4, {0}, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_dmd_qtag};
+static restriction_thing all_4_ns =
+{4, {4, 0, 1, 2, 3}, {0},  {0},  {0},  FALSE, chk_dmd_qtag};
+static restriction_thing all_4_ew =
+{4, {0}, {4, 0, 1, 2, 3}, {0}, {0}, FALSE, chk_dmd_qtag};
+static restriction_thing all_8_ns =
+{4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, {0}, FALSE, chk_dmd_qtag};
+static restriction_thing all_8_ew =
+{4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0}, {0}, FALSE, chk_dmd_qtag};
+/*  This isn't used
+static restriction_thing all_16_ew =
+{4, {0}, {16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_dmd_qtag};
+*/
 
 static restriction_thing r1qt          = {4, {6, 7, 3, 2},             {4, 4, 0, 5, 1},                   {0}, {0}, TRUE, chk_qtag};
 static restriction_thing r3qt          = {4, {6, 7, 3, 2},             {4, 0, 4, 1, 5},                   {0}, {0}, TRUE, chk_qtag};
@@ -611,6 +659,9 @@ static restr_initializer restr_init_table0[] = {
    {s1x2, cr_couples_only, &all_same_2},
    {s1x2, cr_all_facing_same, &all_same_2},
    {s1x2, cr_miniwaves, &all_diff_2},
+   {s2x2, cr_couples_only, &s2x2_cpl},
+   {s2x2, cr_miniwaves, &s2x2_mwv},
+   {s2x2, cr_peelable_box, &s2x2_peel},
    {s3x4, cr_wave_only, &wave_3x4},
    {s3x4, cr_2fl_only, &two_faced_3x4},
    {s_thar, cr_wave_only, &wave_thar},
@@ -630,6 +681,10 @@ static restr_initializer restr_init_table0[] = {
    {nothing}};
 
 static restr_initializer restr_init_table1[] = {
+   {s2x4, cr_quarterbox_or_col, &cqbox2x4},
+   {s2x4, cr_quarterbox_or_magic_col, &cqmbox2x4},
+   {s2x3, cr_quarterbox_or_col, &cqbox2x3},
+   {s2x3, cr_quarterbox_or_magic_col, &cqmbox2x3},
    {s2x3, cr_wave_only, &cwave_2x3},
    {s2x3, cr_magic_only, &cmagic_2x3},
    {s2x3, cr_peelable_box, &peelable_3x2},
@@ -673,27 +728,24 @@ static restr_initializer restr_init_table2[] = {
    {s_qtag, cr_ijleft, &ijleft_qtag},
    {s_qtag, cr_ijright, &ijright_qtag},
    {s_qtag, cr_diamond_like, &qtag_d},
-   {s_qtag, cr_qtag_like, &all_8_ns},
-   {s_qtag, cr_pu_qtag_like, &all_8_ew},
-   {s_qtag, cr_gen_n_4_tag, &qtag_gq},
+   {s_qtag, cr_qtag_like, &qtag_gq},
+   {s_qtag, cr_pu_qtag_like, &qtag_pq},
+   {s3dmd, cr_diamond_like, &dmd3_d},
+   {s3dmd, cr_qtag_like, &dmd3_gq},
+   {s3dmd, cr_pu_qtag_like, &dmd3_pq},
    {s4dmd, cr_jleft, &jleft_4dmd},
    {s4dmd, cr_jright, &jright_4dmd},
    {s4dmd, cr_diamond_like, &dmd4_d},
-   {s3dmd, cr_diamond_like, &dmd3_d},
-   {s4dmd, cr_qtag_like, &all_16_ns},
-   {s4dmd, cr_pu_qtag_like, &all_16_ew},
-   {s4dmd, cr_gen_n_4_tag, &dmd4_gq},
-   {s3dmd, cr_gen_n_4_tag, &dmd3_gq},
+   {s4dmd, cr_qtag_like, &dmd4_gq},
+   {s4dmd, cr_pu_qtag_like, &dmd4_pq},
    {sdmd, cr_jright, &jright_dmd},
    {sdmd, cr_diamond_like, &dmd_d},
-   {sdmd, cr_qtag_like, &all_4_ew},
-   {sdmd, cr_pu_qtag_like, &dmd_p},
-   {sdmd, cr_gen_n_4_tag, &dmd_gq},
+   {sdmd, cr_qtag_like, &dmd_gq},
+   {sdmd, cr_pu_qtag_like, &dmd_pq},
    {s_ptpd, cr_jright, &jright_ptpd},
    {s_ptpd, cr_diamond_like, &ptpd_d},
-   {s_ptpd, cr_qtag_like, &all_8_ew},
-   {s_ptpd, cr_pu_qtag_like, &all_8_ns},
-   {s_ptpd, cr_gen_n_4_tag, &ptpd_gq},
+   {s_ptpd, cr_qtag_like, &ptpd_gq},
+   {s_ptpd, cr_pu_qtag_like, &ptpd_pq},
    {s2x2, cr_wave_only, &box_wave},
    {s2x2, cr_all_facing_same, &box_1face},
    {s2x2, cr_2fl_only, &box_1face},
@@ -2583,6 +2635,18 @@ extern long_boolean verify_restriction(
       }
 
       goto good;
+   case chk_box_dbl:   /* Check everyone's lateral partner, independently of headlinerness. */
+      for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+         uint32 u;
+
+         if ((t = ss->people[idx].id1) & 010) p = rr->map1;
+         else if ((t = ss->people[idx].id1) & 1) p = rr->map2;
+         else continue;
+
+         if ((u = ss->people[p[idx]].id1) && ((t ^ u ^ rr->size) & 3)) goto bad;
+      }
+
+      goto good;
    case chk_indep_box:
       qa0 = (tt.assump_both << 1) & 2;
       qa1 = tt.assump_both & 2;
@@ -2710,10 +2774,36 @@ extern long_boolean verify_restriction(
          if ((t = ss->people[rr->map2[j]].id1) != 0)  { qa2 &= t; qa3 &= t^2; }
       }
 
-      if ((((~qa0)&3) == 0 || ((~qa1)&3) == 0) && (((~qa2)&3) == 0 || ((~qa3)&3) == 0))
-         goto good;
+      if ((((~qa0)&3) && ((~qa1)&3)) ||
+          (((~qa2)&3) && ((~qa3)&3)))
+         goto bad;
 
-      goto bad;
+      goto good;
+   case chk_qbox:
+
+      qa0 = 0;
+      qa1 = ~0;
+
+      for (idx=0; idx<rr->map1[0]; idx++) {
+         if ((t = ss->people[rr->map1[idx+1]].id1) & 1) qa0 |= t;
+      }
+
+      for (idx=0; idx<rr->map2[0]; idx++) {
+         if ((t = ss->people[rr->map2[idx+1]].id1) & 1) qa0 |= ~t;
+      }
+
+      for (idx=0; idx<rr->map3[0]; idx++) {
+         if ((t = ss->people[rr->map3[idx+1]].id1) & 1) qa1 &= t;
+      }
+
+      for (idx=0; idx<rr->map4[0]; idx++) {
+         if ((t = ss->people[rr->map4[idx+1]].id1) & 1) qa1 &= ~t;
+      }
+
+      if (qa0 & ~qa1 & 2)
+         goto bad;
+
+      goto good;
    case chk_dmd_qtag:
       qa0 = 0;
       qa1 = 0;
@@ -3021,17 +3111,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          switch (ss->kind) {
          case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
          case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
-            goto fix_col_line_stuff;
          case s2x2:
-            if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u^2; }
-            if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u^2; }
-            if ((i & 2) && !(k & 1)) goto good;
-            k = 1;
-            i = 2;
-            if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u^2; }
-            if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u^2; }
-            if ((i & 2) && (k & 1)) goto good;
-            goto bad;
+            goto fix_col_line_stuff;
          default:
             goto good;                 /* We don't understand the setup --
                                           we'd better accept it. */
@@ -3078,17 +3159,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          switch (ss->kind) {
          case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
          case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
-            goto fix_col_line_stuff;
          case s2x2:
-            if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
-            if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
-            if ((i & 2) && !(k & 1)) goto good;
-            k = 1;
-            i = 2;
-            if ((t = ss->people[0].id1) & (u = ss->people[3].id1)) { k &= t&u; i &= t^u; }
-            if ((t = ss->people[1].id1) & (u = ss->people[2].id1)) { k &= t&u; i &= t^u; }
-            if ((i & 2) && (k & 1)) goto good;
-            goto bad;
+            goto fix_col_line_stuff;
          default:
             goto good;                 /* We don't understand the setup --
                                           we'd better accept it. */
@@ -3122,7 +3194,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto bad;
          }
          else
-            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+            goto good;        /* We don't understand the setup -- we'd better accept it. */
       case cr_ctr2fl_endwv:
          /* Note that this qualifier is kind of strict.  We won't permit the call "with
                confidence" do be done unless everyone can trivially determine which
@@ -3209,16 +3281,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
          else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
          goto bad;
-      case cr_gen_n_4_tag:
-         switch (ss->cmd.cmd_assume.assumption) {
-         case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
-            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1)
-               goto good;
-            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2)
-               goto good;
-         }
-
-         goto check_tt;
       case cr_dmd_same_pt:                   /* dmd or pdmd - centers would circulate
                                                 to same point */
          if (((ss->people[1].id1 & 01011) == d_east) &&         /* faces either east or west */
@@ -3242,6 +3304,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_diamond_like: case cr_pu_qtag_like:
             goto bad;
+         case cr_jleft: case cr_jright: case cr_ijleft: case cr_ijright:
+            if (ss->cmd.cmd_assume.assump_both == 2 && tt.assump_both == 1)
+               goto good;
+            if (ss->cmd.cmd_assume.assump_both == 1 && tt.assump_both == 2)
+               goto good;
          }
          goto check_tt;
       case cr_diamond_like:
@@ -3305,7 +3372,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             goto bad;
          goto good;
       case cr_occupied_as_qtag:
-         if (ss->kind != s3x4 || (ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto bad;
+         if (ss->kind != s3x4 ||
+             (ss->people[0].id1 | ss->people[3].id1 |
+              ss->people[6].id1 | ss->people[9].id1)) goto bad;
          goto good;
       case cr_occupied_as_3x1tgl:
          if (ss->kind == s_qtag) goto good;
@@ -3429,7 +3498,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          switch (ss->kind) {
          case s1x4: k ^= 0x5; break;
          case s2x4: k ^= 0x99; break;
-         case s_qtag: k ^= 0x33; break;
+         case s_qtag: case s_bone: k ^= 0x33; break;
          case s_rigger: k ^= 0xCC; break;
          default: k = ~1;  /* Will force an error later, unless splitting. */
          }

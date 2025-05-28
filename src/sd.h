@@ -672,7 +672,7 @@ typedef struct {
       } arr;            /* if schema = schema_by_array */
       struct {
          uint32 flags;
-         uint16 stuff[8];
+         uint32 *stuff;
       } matrix;         /* if schema = schema_matrix or schema_partner_matrix */
       struct {
          int howmanyparts;
@@ -1202,16 +1202,15 @@ typedef struct {
 /* Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
    We require that the PART_MASK field be nonzero (we use 1-based part numbering)
    when these are in use.  If the PART_MASK field is zero, the code must be zero
-   (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use.
+   (that is, CMD_FRAC_CODE_ONLY), and this stuff is not in use. */
 
-   The PART2_MASK is unused (and zero) except for codes FROMTO, FROMTOREV and FROMTOPOST. */
-
-#define CMD_FRAC_CODE_ONLY       0x00000000
-#define CMD_FRAC_CODE_ONLYREV    0x00200000
-#define CMD_FRAC_CODE_FROMTO     0x00400000
-#define CMD_FRAC_CODE_FROMTOREV  0x00600000
-#define CMD_FRAC_CODE_FROMTOMOST 0x00800000
-#define CMD_FRAC_CODE_PREBEYOND  0x00A00000
+#define CMD_FRAC_CODE_ONLY           0x00000000
+#define CMD_FRAC_CODE_ONLYREV        0x00200000
+#define CMD_FRAC_CODE_FROMTO         0x00400000
+#define CMD_FRAC_CODE_FROMTOREV      0x00600000
+#define CMD_FRAC_CODE_FROMTOREVREV   0x00800000
+#define CMD_FRAC_CODE_FROMTOMOST     0x00A00000
+#define CMD_FRAC_CODE_LATEFROMTOREV  0x00C00000
 
 #define CMD_FRAC_PART2_BIT       0x01000000
 #define CMD_FRAC_PART2_MASK      0x07000000
@@ -1737,6 +1736,8 @@ typedef enum {    /* These control error messages that arise when we divide a se
 } phantest_kind;
 
 typedef enum {
+   /* Warning!!!!  Order is important!  See all the stupid ways these are used
+      in sdconc.c . */
    selective_key_dyp,
    selective_key_own,
    selective_key_plain,
@@ -1776,9 +1777,11 @@ typedef enum {
    chk_groups,
    chk_anti_groups,
    chk_box,
+   chk_box_dbl,
    chk_indep_box,
    chk_dmd_qtag,
    chk_qtag,
+   chk_qbox,
    chk_peelable,
    chk_spec_directions
 } chk_type;
@@ -1819,6 +1822,7 @@ typedef struct fixerjunk {
 #define LOOKUP_OFFS_CLW 0x20
 #define LOOKUP_DISC     0x40
 #define LOOKUP_IGNORE   0x80
+#define LOOKUP_Z        0x100
 
 
 typedef struct dirbtek {
@@ -2291,6 +2295,7 @@ extern long_boolean mandatory_call_used;                            /* in SDPRED
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
 extern int selector_preds;                                          /* in SDPREDS */
 
+extern  expand_thing comp_qtag_2x4_stuff;                           /* in SDTOP */
 extern  expand_thing exp_2x3_qtg_stuff;                             /* in SDTOP */
 extern  expand_thing exp_4x4_4x6_stuff_a;                           /* in SDTOP */
 extern  expand_thing exp_4x4_4x6_stuff_b;                           /* in SDTOP */

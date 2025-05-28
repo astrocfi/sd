@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 6, 1998
-@set sd-version 32.4
+@set Time-stamp: December 26, 1998
+@set sd-version 32.5
 @set full-manual
 @c %**end of header
 @iftex
@@ -1274,6 +1274,8 @@ something like:
    catch [erase] 2
    slant [swing thru] and [turn and deal]
    fascinating [ah so]
+   [jay walk] and plenty, turn the star 3/4, interrupt
+                before the star turns with [trade circulate]
 @end group
 @end example
 @noindent The subcall in brackets may be any combination of concepts and calls,
@@ -1284,8 +1286,10 @@ and these may be nested.  As an example of this, you can type:
                 [[reflected flip your neighbor] and spread] 3]
 @end example
 @noindent
-(The second example above doesn't fit on one line in this manual, but you would
-type it on one line.)
+(Two of the examples above don't fit on one line in this manual, but you would
+type them on one line.)
+
+@noindent
 @strong{The brackets are required.}  Without them, the program couldn't
 tell the difference between
 @example
@@ -1691,7 +1695,7 @@ in the same call.
 
 In most cases, @code{simple modifications} is probably the right thing.
 
-For the most common cases of modifications, you don't need to do it this way,
+For all but the most extreme cases of modifications, you don't need to do it this way,
 because the ``@code{<ANYTHING>}'' mechanism can be used instead.  Just type the
 call with the replacement call in brackets, as in
 @example
@@ -3616,7 +3620,7 @@ These are done from triple diamonds in which the points are offset.
 @item double bent tidal C/L/W @r{(singular)}
 These are done from a 1x8 in which the two people at each end are ``bent''
 90 degrees from the center 4.
-@item <ANYONE> in your distorted C/L/W/B/D @r{(singular)}
+@item <ANYONE> in your distorted C/L/W/B/D/Z @r{(singular)}
 @item <ANYONE> in your offset C/L/W @r{(singular)}
 These are done from a variety of setups, in which the designated people
 form a recognizable distorted or offset setup.  Reasonable shape-changers are allowed.

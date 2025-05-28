@@ -12,20 +12,24 @@ Be sure the version numbers and dates are correct in:
     sdmain.c           (version # is visible)
     sd_calls.txt       (version # is visible)
     sd_doc.txi         (version # and date are visible)
-    relnotes.txi       (version # and date are visible)
-    download-pc.html   (version # is visible)
+    relnotes.txi       (version #, database format version #,
+                           and date are visible.  Also, check
+                           its claimed database format version
+                           against database.h)
+    download-pc.html   (version # and date are visible)
     download-unix.html (version # of HP-UX release is visible)
 
 -----------------------------------------------------------------
 
                     TESTING AND PRODUCTION BUILD
 
-Build and test the optimized version from GCC:
-    setopt
-    [del *.o if necessary to force build]
-    make
-    cd regress
-    doit
+This is not done any more .....
+###   Build and test the optimized version from GCC:
+###       setopt
+###       [del *.o if necessary to force build]
+###       make
+###       cd regress
+###       doit
 
 Build and test the optimized version from DJGPP:
     setdjgpp
@@ -34,17 +38,19 @@ Build and test the optimized version from DJGPP:
     cd regress
     doit
 
-Now give the command "do_binaryw" to save the DJGPP build for Windows 3.1.
+Now give the command "do_binaryw" (in sddoc) to save the DJGPP build for Windows 3.1.
 
 Build and test the optimized version from MSVC++:
+    Delete any upper-case MKCALLS.EXE and SDTTY.EXE left over from DJGPP,
+    so that MSVC++ will create them in lower case.
     Set project configuration to both "sdtty release" and "mkcalls release",
-    issuing "build" or "build all" in each case.
+    issuing "build / rebuild all" in each case.
 
 BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "do_binary" RELEASE!!!
-BUILD BOTH SDTTY AND MKCALLS UNDER MCVC++.
+BUILD BOTH SDTTY AND MKCALLS UNDER MSVC++.
 
 Now run mkcalls (MSVC++ doesn't do that, not that it matters),
-and give the command "do_binary" to save the MSVC++ build.
+and give the command "do_binary" (in sddoc) to save the MSVC++ build.
 
 -----------------------------------------------------------------
 
@@ -55,14 +61,19 @@ In \wba\sddoc:       save _vnnnn
 In \wba\sd\regress:  save _vnnnn
 
 Copy these onto archival disks.  All sources can fit onto 2 disks.
+If taking stuff to MPG at this point, be sure to take "install.exe"
+and "installw.exe" also.
 
     At MPG, if desired to send sources:
                 tarball _vnnnn
 
 -----------------------------------------------------------------
 
+BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
+
 Go to sddoc directory and do:
 
+    clean clean
     do_binary    (with MSVC build)
     do_binaryw   (with djgpp build)
     do_plain

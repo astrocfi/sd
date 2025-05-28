@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.4
-@set title2 Database version = 32.4 format = 141
+@set title1 RELEASE NOTES FOR SD VERSION 32.5
+@set title2 Database version = 32.5 format = 144
 @set title3 X11 UI version 1.17, SDTTY UI version 1.11
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.5::
 * 32.4::
 * 32.3::
 * 32.2::
@@ -57,7 +58,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.4, Top, (dir)
+@node Intro, 32.5, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -68,11 +69,61 @@ The file @file{oldnotes} has notes relating to still older versions.
 @noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
 @sp 3
 @menu
-* 32.4::               Changes in the current version
+* 32.5::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.4, 32.3, Intro, Top
+@node 32.5, 32.4, Intro, Top
+@unnumberedsec Version 32.5 changes
+
+The missing @code{CWSDPMI} memory manager has been restored to the
+Windows 3.1/DOS version of the program.  It is not needed for
+Windows 95, 98, or NT.
+
+@code{Sdtty} now handles control-C correctly on Windows 95, 98, or NT.
+You can safely bind control-C to @samp{interlocked phantom columns},
+or whatever else you want.  Typing control-C will not automatically stop
+the program.  If you need to stop the program, type @key{break} or
+control-@key{break}, or use the task manager to perform an
+``end task'' operation.
+
+New concept: <anyone> in your Z.
+
+It is now possible to enter fairly complex variations of @samp{plenty}, with
+modifications to the star turns and similar things.  For example, you can
+directly type @samp{[jay walk] and plenty, turn the star 3/4, interrupt before
+the star turns with [trade circulate]}.  For more complex variations, such as
+turning the star 3 but interrupting after the first 2, you still must use the
+``allow modifications'' mechanism.
+
+The program recognizes a few more resolves.
+
+The program can now handle fractional stable and fractional twosome
+concepts on matrix calls.  For example, from a completed DPT setup,
+you can call @samp{tandem 1/4 twosome belles shove off}.
+
+The call @samp{fold} has been made legal for the ends, if they
+are as if leads in lines, from generalized diamonds or a ``dog-bone''
+setup.
+
+An embarrassing bug with the @samp{diamond} concept was fixed.
+We apologize for any bogus cards that were created.
+
+The interpretation of things like @samp{initially twice} or @samp{random twice}
+has been changed, in accordance with what appears to be the emerging consensus
+on this.  The subject call is ``flattened''.  That is, @samp{initially twice mix}
+has three parts---@samp{centers cross run}, @samp{centers cross run}, and
+@samp{centers trade}.  @samp{Initially as couples initially twice mix} will do
+an as couples centers cross run, a normal centers cross run, and a normal centers trade.
+
+The usual number of radical changes were made in the internal mechanism of the
+program, making it more elegant, general, and powerful.  The usual number of
+ad-hoc kludges were replaced with more powerful and general mechanisms.  The
+particular areas revamped in this release were the ``qualifiers'' and ``restrictions''
+in the database.  The fractionalization mechanism was not changed this time.
+
+@c ************
+@node 32.4, 32.3, 32.5, Top
 @unnumberedsec Version 32.4 changes
 
 It is once again possible to exit from a multiple-screen listing from

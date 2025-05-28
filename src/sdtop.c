@@ -31,6 +31,7 @@
    toplevelmove
    finish_toplevelmove
 and the following external variables:
+   comp_qtag_2x4_stuff
    exp_2x3_qtg_stuff
    exp_4x4_4x6_stuff_a
    exp_4x4_4x6_stuff_b
@@ -58,7 +59,7 @@ typedef struct grilch {
 
 
 
-static expand_thing comp_qtag_2x4_stuff   = {{5, -1, -1, 0, 1, -1, -1, 4}, 8, s2x4, nothing, 1};
+       expand_thing comp_qtag_2x4_stuff   = {{5, -1, -1, 0, 1, -1, -1, 4}, 8, s2x4, s_qtag, 1};
 static expand_thing comp_dhrg_2x4_stuff   = {{0, -1, -1, 1, 4, -1, -1, 5}, 8, s2x4, nothing, 0};
 static expand_thing exp_1x8_rig_stuff     = {
    {6, 7, -1, -1, 2, 3, -1, -1}, 8, s1x8, s_rigger, 0};
@@ -152,8 +153,14 @@ static expand_thing exp_dxwv_bbx_stuff    = {
 static expand_thing exp_dxwv_rig_stuff    = {
    {3, 10, 6, 7, 9, 4, 0, 1}, 8, s_rigger, sdeepxwv, 0};
 
-static expand_thing exp_dxwv_2x4_stuff    = {
+static expand_thing exp_dxwv_2x4_stuff = {
    {5, 4, 3, 2, 11, 10, 9, 8}, 8, s2x4, sdeepxwv, 1};
+
+static expand_thing exp_dbqtg_2x4_stuff = {
+   {7, 6, 5, 4, 15, 14, 13, 12}, 8, s2x4, sdeepbigqtg, 0};
+
+static expand_thing exp_dbqtg_2x6_stuff = {
+   {9, 11, 13, 6, 2, 0, 1, 3, 5, 14, 10, 8}, 12, s2x6, sdeepbigqtg, 1};
 
 static expand_thing exp_brig_bbx_stuff    = {
    {0, 1, 2, 3, 5, 14, 8, 9, 10, 11, 13, 6}, 12, sbigrig, sbigbigx, 0};
@@ -1334,6 +1341,19 @@ extern void normalize_setup(setup *ss, normalize_action action)
       else if (!(ss->people[0].id1 | ss->people[1].id1 |
             ss->people[6].id1 | ss->people[7].id1))
          compress_setup(&exp_dxwv_2x4_stuff, ss);
+   }
+
+   if (ss->kind == sdeepbigqtg) {
+      if (!(ss->people[0].id1 | ss->people[1].id1 |
+            ss->people[2].id1 | ss->people[3].id1 |
+            ss->people[8].id1 | ss->people[9].id1 |
+            ss->people[10].id1 | ss->people[11].id1))
+         compress_setup(&exp_dbqtg_2x4_stuff, ss);
+      else if (!(ss->people[4].id1 | ss->people[7].id1 |
+                 ss->people[12].id1 | ss->people[15].id1)) {
+         warn(warn__phantoms_thinner);
+         compress_setup(&exp_dbqtg_2x6_stuff, ss);
+      }
    }
 
    if (ss->kind == sbigx) {

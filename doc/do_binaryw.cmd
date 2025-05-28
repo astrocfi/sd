@@ -13,7 +13,8 @@ REM         and the shortcut setup command files
 del installw.lzh
 lha a installw ..\sd\sdtty.exe ..\sd\mkcalls.exe
 lha a installw ..\sd\sd_calls.txt ..\sd\sd_calls.dat
-lha a installw ..\sd\SDTTY.lnk ..\sd\SDTTY.pif ..\sd\SDTTY.ico
+lha a installw ..\sd\SDTTY.lnk ..\sd\SDTTY.ico
+lha a installw ..\sd\SDTTY.pif ..\sd\cwsdpmi.exe
 lha a installw Do_desk.cmd Do_prog.cmd Do_start.cmd
 lha a installw sample1.ini sample2.ini sample3.ini readme
 lha s installw

@@ -341,6 +341,8 @@ char *sstab[] = {
    "12x2",
    "deepqtg",
    "pdeepqtg",
+   "deepbiqtg",
+   "pdeepbigqtg",
    "deepxwv",
    "pdeepxwv",
    "3oqtg",
@@ -466,6 +468,7 @@ char *estab[] = {
    "2x10",
    "2x12",
    "deepqtg",
+   "deepbigqtg",
    "deepxwv",
    "3oqtg",
    "thar",
@@ -658,7 +661,6 @@ char *qualtab[] = {
    "quarterbox_or_magic_col",
    "???",
    "???",
-   "gen_n_4_tag",
    "???",
    "???",
    "???",
@@ -1102,6 +1104,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
                                 for part 2 of chain reaction. */
       {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info
                                 for part 2 of make a pass. */
+      {0, "scootbacktowave"},
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
       {0, "trade"},
@@ -1648,12 +1651,7 @@ static void write_callarray(int num, int doing_matrix)
          else if (letcount-p != 1)
             errexit("Improper callarray specifier");
 
-         if (doing_matrix) {
-            dat = (dat << 12) | (tok_value << 7);
-         }
-         else {
-            dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
-         }
+         dat = (dat * DBROLL_BIT) | (tok_value << 4) | (((uint32) stab) * DBSTAB_BIT);
 
          /* We now have roll indicator and position, need to get direction. */
          switch (tok_str[char_ct-1]) {
@@ -1665,12 +1663,10 @@ static void write_callarray(int num, int doing_matrix)
                errexit("Improper callarray direction specifier");
          }
 
-         if (doing_matrix) {
-            dat &= ~0x7C;
-            dat |= (get_num("Improper y coordinate") & 0x1F) << 2;
-         }
-
          write_halfword(dat);
+
+         if (doing_matrix)
+            write_halfword(get_num("Improper y coordinate"));
       }
       else
          errexit("Improper callarray element");

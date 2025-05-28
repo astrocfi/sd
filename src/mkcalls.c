@@ -138,6 +138,8 @@ int begin_sizes[] = {
    24,         /* b_12x2 */
    12,         /* b_deepqtg */
    12,         /* b_pdeepqtg */
+   16,         /* b_deepbigqtg */
+   16,         /* b_pdeepbigqtg */
    12,         /* b_deepxwv */
    12,         /* b_pdeepxwv */
    20,         /* b_3oqtg */

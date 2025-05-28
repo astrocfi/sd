@@ -2171,6 +2171,7 @@ Private void do_concept_assume_waves(
    setup *result)
 {
    assumption_thing t;
+   assumption_thing *e = &ss->cmd.cmd_assume;   /* Existing assumption. */
    long_boolean no_phan_error = FALSE;
    setup sss;
    int i;
@@ -2178,9 +2179,9 @@ Private void do_concept_assume_waves(
    /* "Assume normal casts" is special. */
 
    if (parseptr->concept->value.arg1 == cr_alwaysfail) {
-      if (ss->cmd.cmd_assume.assump_cast)
+      if (e->assump_cast)
          fail("Redundant or conflicting assumptions.");
-      ss->cmd.cmd_assume.assump_cast = 1;
+      e->assump_cast = 1;
       move(ss, FALSE, result);
       return;
    }
@@ -2202,49 +2203,41 @@ Private void do_concept_assume_waves(
    t.assumption = (call_restriction) parseptr->concept->value.arg1;
    t.assump_col = parseptr->concept->value.arg2;
    t.assump_both = parseptr->concept->value.arg3;
-   t.assump_cast = ss->cmd.cmd_assume.assump_cast;
+   t.assump_cast = e->assump_cast;
    t.assump_live = 0;
    t.assump_negate = 0;
 
    /* Need to check any pre-existing assumption. */
 
-   if (ss->cmd.cmd_assume.assumption == cr_none) ;   /* If no pre-existing assumption, OK. */
+   if (e->assumption == cr_none) ;   /* If no pre-existing assumption, OK. */
    else {     /* We have something, and must check carefully. */
       /* First, an exact match is allowed. */
-      if (ss->cmd.cmd_assume.assumption == t.assumption &&
-          ss->cmd.cmd_assume.assump_col == t.assump_col &&
-          ss->cmd.cmd_assume.assump_both == t.assump_both) ;
+      if (e->assumption == t.assumption &&
+          e->assump_col == t.assump_col &&
+          e->assump_both == t.assump_both) ;
 
       /* We also allow certain tightenings of existing assumptions. */
 
-      else if ((t.assumption == cr_jleft ||
-                t.assumption == cr_jright) &&
-               ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
-                (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0) ||
-                (ss->cmd.cmd_assume.assumption == cr_real_1_4_tag && t.assump_both == 2) ||
-                (ss->cmd.cmd_assume.assumption == cr_real_3_4_tag && t.assump_both == 1) ||
-                (ss->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
-                 ss->cmd.cmd_assume.assump_both == 1 && t.assump_both == 2) ||
-                (ss->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
-                 ss->cmd.cmd_assume.assump_both == 2 && t.assump_both == 1))) ;
-      else if ((t.assumption == cr_ijleft ||
-                t.assumption == cr_ijright) &&
-               ((ss->cmd.cmd_assume.assumption == cr_diamond_like && t.assump_col == 4) ||
-                (ss->cmd.cmd_assume.assumption == cr_qtag_like && t.assump_col == 0) ||
-                (ss->cmd.cmd_assume.assumption == cr_real_1_4_line && t.assump_both == 2) ||
-                (ss->cmd.cmd_assume.assumption == cr_real_3_4_line && t.assump_both == 1) ||
-                (ss->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
-                 ss->cmd.cmd_assume.assump_both == 1 && t.assump_both == 2) ||
-                (ss->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
-                 ss->cmd.cmd_assume.assump_both == 2 && t.assump_both == 1))) ;
-      else if ((t.assumption == cr_real_1_4_tag  ||
-                t.assumption == cr_real_1_4_line) &&
-               ss->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
-               ss->cmd.cmd_assume.assump_both == 1) ;
-      else if ((t.assumption == cr_real_3_4_tag  ||
-                t.assumption == cr_real_3_4_line) &&
-               ss->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
-               ss->cmd.cmd_assume.assump_both == 2) ;
+      else if ((t.assumption == cr_jleft || t.assumption == cr_jright) &&
+               ((e->assumption == cr_diamond_like && t.assump_col == 4) ||
+                (e->assumption == cr_qtag_like &&
+                 t.assump_col == 0 &&
+                 (e->assump_both == 0 || e->assump_both == (t.assump_both ^ 3))) ||
+                (e->assumption == cr_real_1_4_tag && t.assump_both == 2) ||
+                (e->assumption == cr_real_3_4_tag && t.assump_both == 1))) ;
+      else if ((t.assumption == cr_ijleft || t.assumption == cr_ijright) &&
+               ((e->assumption == cr_diamond_like && t.assump_col == 4) ||
+                (e->assumption == cr_qtag_like &&
+                 t.assump_col == 0 &&
+                 (e->assump_both == 0 || e->assump_both == (t.assump_both ^ 3))) ||
+                (e->assumption == cr_real_1_4_line && t.assump_both == 2) ||
+                (e->assumption == cr_real_3_4_line && t.assump_both == 1))) ;
+      else if ((t.assumption == cr_real_1_4_tag || t.assumption == cr_real_1_4_line) &&
+               e->assumption == cr_qtag_like &&
+               e->assump_both == 1) ;
+      else if ((t.assumption == cr_real_3_4_tag || t.assumption == cr_real_3_4_line) &&
+               e->assumption == cr_qtag_like &&
+               e->assump_both == 2) ;
       else
          fail("Redundant or conflicting assumptions.");
    }
@@ -2548,7 +2541,7 @@ Private void do_concept_crazy(
       pick out the center 2 from a 1x4.  In any case, if we didn't do this
       check, "1/4 reverse crazy bingo" would be legal from a 2x2. */
 
-   if (setup_attrs[tempsetup.kind].setup_limits != 7)
+   if (setup_attrs[tempsetup.kind].setup_limits < 7)
       fail("Need an 8-person setup for this.");
 
    if (parseptr->concept->value.arg2)
@@ -2600,10 +2593,12 @@ Private void do_concept_crazy(
    for ( ; i<highlimit; i++) {
       tempsetup.cmd = cmd;    /* Get a fresh copy of the command. */
 
+      update_id_bits(&tempsetup);
+
       if ((i ^ reverseness) & 1) {
          /* Do it in the center. */
-         concentric_move(&tempsetup, &tempsetup.cmd, (setup_command *) 0,
-                  schema_concentric, 0, 0, TRUE, result);
+         selective_move(&tempsetup, parseptr, selective_key_plain,
+                        0, 0, 0, selector_center4, FALSE, result);
       }
       else {
          /* Do it on each side. */
@@ -4491,8 +4486,11 @@ Private void do_concept_meta(
 {
    parse_block *parseptr_skip;
    parse_block fudgyblock;
-   meta_key_kind key = parseptr->concept->value.arg1;
    setup_command nocmd, yescmd;
+   concept_kind subject_concept;
+   parse_block *subject_concptr;
+   int subject_is_n_times = 0;
+   meta_key_kind key = parseptr->concept->value.arg1;
 
    prepare_for_call_in_series(result, ss);
 
@@ -4590,8 +4588,6 @@ Private void do_concept_meta(
    if (key != meta_key_skip_nth_part &&
        key != meta_key_shift_n && key != meta_key_shifty &&
        key != meta_key_shift_half && key != meta_key_shift_n_half) {
-      concept_kind k;
-      parse_block *parseptrcopy;
 
       /* Scan the modifiers, remembering them and their end point.  The reason for this is to
          avoid getting screwed up by a comment, which counts as a modifier.  YUK!!!!!!
@@ -4599,33 +4595,54 @@ Private void do_concept_meta(
          worth it, and isn't worth holding up "random left" for.  In any case, the stupid
          handling of comments will go away soon. */
    
-      parseptrcopy = really_skip_one_concept(ss->cmd.parseptr, &k, &parseptr_skip);
-      yescmd.parseptr = parseptrcopy;
+      subject_concptr = really_skip_one_concept(
+         ss->cmd.parseptr, &subject_concept, &parseptr_skip);
+      yescmd.parseptr = subject_concptr;
 
-      if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL)
-         nocmd.parseptr = parseptrcopy->subsidiary_root;
+      if (concept_table[subject_concept].concept_prop & CONCPROP__SECOND_CALL)
+         nocmd.parseptr = subject_concptr->subsidiary_root;
       else
          nocmd.parseptr = parseptr_skip;
+
+      if (subject_concept == concept_twice || subject_concept == concept_n_times) {
+         if (subject_concptr->concept->value.arg1)
+            subject_is_n_times = subject_concptr->options.number_fields;
+         else
+            subject_is_n_times = subject_concptr->concept->value.arg2;
+      }
+
+      /* Just do "initially" and random/piecewise for now. */
+
+      if (key == meta_key_initially/* || key == meta_key_finally*/ ||
+          key == meta_key_random || key == meta_key_rev_random ||
+          key == meta_key_piecewise) {
+         if (subject_is_n_times != 0) {
+            if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+               goto didnt_do_it;
+         }
+      }
    
       /* We don't do this for echo with supercalls, because echo doesn't pull parts
          apart, and supercalls don't work with multiple-part calls as the target
          for which they are restraining the concept.
          For some reason, we treat "finish" the same as supercalls for this. */
-      if (k == concept_crazy || k == concept_frac_crazy || 
-          k == concept_twice || k == concept_n_times ||
-          ((k == concept_supercall || k == concept_fractional ||
-            (k == concept_meta && parseptrcopy->concept->value.arg1 == meta_key_finish)) &&
+      if (subject_concept == concept_crazy || subject_concept == concept_frac_crazy || 
+          subject_concept == concept_twice || subject_concept == concept_n_times ||
+          ((subject_concept == concept_supercall || subject_concept == concept_fractional ||
+            (subject_concept == concept_meta &&
+             subject_concptr->concept->value.arg1 == meta_key_finish)) &&
            (key != meta_key_rev_echo && key != meta_key_echo))) {
          yescmd.cmd_misc_flags |= CMD_MISC__RESTRAIN_CRAZINESS;
          yescmd.restrained_concept = &fudgyblock;
          yescmd.parseptr = parseptr_skip;
-         fudgyblock = *parseptrcopy;
+         fudgyblock = *subject_concptr;
       }
+       didnt_do_it: ;
    }
 
    switch (key) {
-      uint32 code;
       int shiftynum;
+      uint32 revrand;
       uint32 frac_flags;
       uint32 save_elongation;
       uint32 save_expire;
@@ -4662,9 +4679,6 @@ Private void do_concept_meta(
 
       /* Some form of shift <N>. */
 
-      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
-         fail("Can't stack meta or fractional concepts.");
-
       shiftynum = 1;
 
       if (key == meta_key_shift_n || key == meta_key_shift_n_half) {
@@ -4672,12 +4686,28 @@ Private void do_concept_meta(
          if (key == meta_key_shift_n_half) shiftynum++;
       }
 
+      /* We allow "reverse order". */
+
+      if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_REVERSE) != CMD_FRAC_NULL_VALUE)
+         fail("Can't stack meta or fractional concepts.");
+
       /* Do the last (shifted) part. */
 
       if (key == meta_key_shift_half || key == meta_key_shift_n_half) {
+         if (ss->cmd.cmd_frac_flags & CMD_FRAC_REVERSE)
+            fail("Fractional shift doesn't have parts.");
+
          result->cmd.cmd_frac_flags =
             CMD_FRAC_BREAKING_UP |
-            CMD_FRAC_CODE_PREBEYOND |
+            CMD_FRAC_CODE_LATEFROMTOREV |
+            (shiftynum * CMD_FRAC_PART_BIT) |
+            CMD_FRAC_NULL_VALUE;
+      }
+      else if (ss->cmd.cmd_frac_flags & CMD_FRAC_REVERSE) {
+         result->cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP |
+            CMD_FRAC_REVERSE |
+            CMD_FRAC_CODE_FROMTOREVREV |
             (shiftynum * CMD_FRAC_PART_BIT) |
             CMD_FRAC_NULL_VALUE;
       }
@@ -4695,15 +4725,18 @@ Private void do_concept_meta(
       /* Do the initial part up to the shift point. */
 
       if (key == meta_key_shift_half || key == meta_key_shift_n_half)
-         code = CMD_FRAC_CODE_FROMTOMOST;
+         result->cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOMOST |
+            (shiftynum * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
+      else if (ss->cmd.cmd_frac_flags & CMD_FRAC_REVERSE) {
+         result->cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_REVERSE |
+            (shiftynum * CMD_FRAC_PART2_BIT) | CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE;
+      }
       else
-         code = CMD_FRAC_CODE_FROMTO;
-
-      result->cmd.cmd_frac_flags =
-         CMD_FRAC_BREAKING_UP |
-         code |
-         (shiftynum * CMD_FRAC_PART_BIT) |
-         CMD_FRAC_NULL_VALUE;
+         result->cmd.cmd_frac_flags =
+            CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTO |
+            (shiftynum * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
 
       goto do_less;
 
@@ -4780,6 +4813,38 @@ Private void do_concept_meta(
 
       /* This is "initially": we select the first part with the concept,
          and then the rest of the call without the concept. */
+
+      if (subject_is_n_times != 0) {
+         if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+            /* YOW!!!!!  We are doing "initially twice", and we have been
+               requested to do just one part of the call.  We have to "flatten"
+               the call and make the result of that flattening visible to
+               whoever is calling us. */
+            /* We know that we did *not* put on the concept restraint. */
+
+            if (subject_is_n_times != 2) 
+               fail("Sorry, can't do this initially N-times stuff.");
+
+            if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
+                                           CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE)) {
+               /* Asked to do part 1 of "initially twice <call>".  Just do part 1
+                  of the call. */
+               result->cmd = nocmd;
+               goto do_less;
+            }
+            else if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV |
+                                                CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE)) {
+               /* Asked to do everything after part 1 of "initially twice <call>".
+                  Just do the whole call! */
+               result->cmd = nocmd;
+               result->cmd.cmd_frac_flags = (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV |
+                                                CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE);
+               goto do_less;
+            }
+            else
+               fail("Sorry, can't do this initially twice stuff.");
+         }
+      }
 
       if (ss->cmd.cmd_frac_flags == (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
                                      CMD_FRAC_PART_BIT | CMD_FRAC_NULL_VALUE)) {
@@ -4937,7 +5002,6 @@ Private void do_concept_meta(
             with the concept. */
 
          /* Change it to do all but first and last. */
-         /* **** changing from K=0/N=2 to K=1/N=2 */
 
          result->cmd = nocmd;
          result->cmd.cmd_frac_flags += CMD_FRAC_PART2_BIT;
@@ -4976,6 +5040,65 @@ Private void do_concept_meta(
       /* Otherwise, this is the "random", "reverse random", or "piecewise" concept.
          Repeatedly execute parts of the call, skipping the concept where required. */
 
+      revrand = key-meta_key_random;  /* Here is where we make use of actual
+                                         numerical assignments. */
+
+      /* First, check for special case of selecting a specific part of "random twice". */
+
+      if (subject_is_n_times != 0) {
+         if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+            /* YOW!!!!!  We are doing "random twice", and we have been
+               requested to do just one part of the call.  We have to "flatten"
+               the call and make the result of that flattening visible to
+               whoever is calling us. */
+
+            /* We know that we did *not* put on the concept restraint. */
+
+            if ((ss->cmd.cmd_frac_flags & ~CMD_FRAC_PART_MASK) ==
+                (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE)) {
+               /* Asked to do part N of "random twice <call>".
+                  Just do the appropriate part of the call. */
+               uint32 partnum = (ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
+               uint32 yy, xx, newpart, residue;
+
+               yy = subject_is_n_times;
+
+               if ((revrand & ~1) == 0) yy++;
+
+               if (revrand != 0) partnum += yy-1;
+
+               xx = partnum / yy;
+               residue = partnum - xx * yy;
+               newpart = xx;
+
+               if ((revrand & ~1) == 0) {
+                  newpart <<= 1;
+                  if (revrand != 0) newpart--;
+                  if (residue != 0) newpart++;
+               }
+
+               result->cmd = nocmd;
+               result->cmd.cmd_frac_flags =
+                  (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
+                   CMD_FRAC_PART_BIT*newpart | CMD_FRAC_NULL_VALUE);
+               do_call_in_series_simple(result);
+
+               /* If the subject call says it wasn't finished, we aren't finished.
+                  If it says it was finished, we may or may not be, depending on
+                  whether we did the last expansion of that part.  If we didn't
+                  do the last expansion, turn off the "last part" flag. */
+
+               if ((residue != yy-1) &&
+                   (((revrand & ~1) != 0) || (residue != 0)))
+                  result->result_flags &= ~RESULTFLAG__DID_LAST_PART;
+
+               goto get_out;
+            }
+            else
+               fail("Sorry, can't do this random twice stuff with \"initially\".");
+         }
+      }
+
       index = 0;
       doing_just_one = FALSE;
 
@@ -4993,9 +5116,6 @@ Private void do_concept_meta(
       frac_flags = ss->cmd.cmd_frac_flags;
 
       do {
-         uint32 revrand = key-meta_key_random;  /* Here is where we make use of actual
-                                                   numerical assignments. */
-
          index++;
          save_elongation = result->cmd.prior_elongation_bits;   /* Save it temporarily. */
          save_expire = result->cmd.prior_expire_bits;           /* Save it temporarily. */
@@ -6059,10 +6179,15 @@ concept_table_item concept_table[] = {
     so_and_so_only_move},                                   /* concept_some_vs_others */
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_stable},                                     /* concept_stable */
-   /* concept_so_and_so_stable */         {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,             do_concept_stable},
-   /* concept_frac_stable */              {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,               do_concept_stable},
-   /* concept_so_and_so_frac_stable */    {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,   do_concept_stable},
-   /* concept_emulate */                  {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_emulate},
+   {CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_stable},                                     /* concept_so_and_so_stable */
+   {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_stable},                                     /* concept_frac_stable */
+   {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER |
+    CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_stable},                                     /* concept_so_and_so_frac_stable */
+   {CONCPROP__MATRIX_OBLIVIOUS,
+    do_concept_emulate},                                    /* concept_emulate */
    {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,
     do_concept_standard},                                   /* concept_standard */
    {CONCPROP__MATRIX_OBLIVIOUS, do_concept_matrix},         /* concept_matrix */
@@ -6070,9 +6195,12 @@ concept_table_item concept_table[] = {
     do_concept_double_offset},                              /* concept_double_offset */
    {CONCPROP__SECOND_CALL | CONCPROP__PERMIT_REVERSE,
     do_concept_checkpoint},                                 /* concept_checkpoint */
-   /* concept_on_your_own */              {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              on_your_own_move},
-   /* concept_trace */                    {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,                                              do_concept_trace},
-   /* concept_outeracting */              {CONCPROP__NO_STEP,                                                                      do_concept_outeracting},
+   {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,
+    on_your_own_move},                                      /* concept_on_your_own */
+   {CONCPROP__SECOND_CALL | CONCPROP__NO_STEP,
+    do_concept_trace},                                      /* concept_trace */
+   {CONCPROP__NO_STEP,
+    do_concept_outeracting},                                /* concept_outeracting */
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK,
     do_concept_ferris},                                     /* concept_ferris */
    {CONCPROP__NO_STEP, do_concept_overlapped_diamond},      /* concept_overlapped_diamond */
@@ -6080,16 +6208,22 @@ concept_table_item concept_table[] = {
    {CONCPROP__SECOND_CALL, do_concept_centers_and_ends},    /* concept_centers_and_ends */
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_twice},                                      /* concept_twice */
-   /* concept_n_times */                  {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,               do_concept_twice},
-   /* concept_sequential */               {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,              do_concept_sequential},
-   /* concept_special_sequential */       {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,              do_concept_special_sequential},
-   /* concept_meta */                     {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,           do_concept_meta},
+   {CONCPROP__USE_NUMBER | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_twice},                                      /* concept_n_times */
+   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_sequential},                                 /* concept_sequential */
+   {CONCPROP__SECOND_CALL | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_special_sequential},                         /* concept_special_sequential */
+   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
+    do_concept_meta},                                       /* concept_meta */
    {CONCPROP__USE_NUMBER | CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_REVERSE,
     do_concept_meta},                                       /* concept_meta_one_arg */
    {CONCPROP__USE_SELECTOR | CONCPROP__SHOW_SPLIT,
     do_concept_so_and_so_begin},                            /* concept_so_and_so_begin */
-   /* concept_replace_nth_part */         {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                    do_concept_replace_nth_part},
-   /* concept_replace_last_part */        {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,                                           do_concept_replace_nth_part},
+   {CONCPROP__USE_NUMBER | CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+    do_concept_replace_nth_part},                           /* concept_replace_nth_part */
+   {CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
+    do_concept_replace_nth_part},                           /* concept_replace_last_part */
    {CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS |
     CONCPROP__SECOND_CALL | CONCPROP__SHOW_SPLIT,
     do_concept_replace_nth_part},                           /* concept_interrupt_at_fraction */

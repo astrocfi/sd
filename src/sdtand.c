@@ -69,8 +69,10 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0, 2, 6, 4, 9, 11, 15, 13,      1, 3, 7, 5, 8, 10, 14, 12},            0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s1x8,  s1x16},
    {{15, 14, 12, 13, 8, 9, 11, 10,   0, 1, 3, 2, 7, 6, 4, 5},                    0,     0000,         8, 0,  0,  0, 0,  s1x8,  s2x8},
    {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                          0,     0000,         6, 0,  0,  0, 0,  s1x6,  s2x6},
+
    {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},                0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12,      0, 1, 2, 4, 6, 11, 15, 13},                 0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
+
    /* When the map following this one gets fixed and uncommented, this one will have to appear first, of course.  Actually, it's
       trickier than that.  The whole issue of 3x4 vs. qtag operation needs to be straightened out. */
    {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},               0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
@@ -178,6 +180,11 @@ Private tm_thing maps_isearch_twosome[] = {
    {{2, 1, 0,                        3, -1, -1},                                 0,      0xC,         3, 1,  0,  0, 0,  s1x3,  s_trngl4},
    {{0, 1, 3,                        -1, -1, 2},                                 0,      0xC,         3, 3,  0,  0, 0,  s1x3,  s_trngl4},
    {{0, 3, 2,                        -1, 1, -1},                                 0,     0000,         3, 0,  0,  0, 0,  s1x3,  sdmd},
+
+   /* This map must be very late, after the two that do 2x4->4x4
+      and the one that does 2x4->2x8. */
+   {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},            0x4141,   0xF0F0,         8, 1,  0,  0, 0,  s2x4,  sdeepbigqtg},
+
    {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
 
 
@@ -384,6 +391,12 @@ siamese_item siamese_table[] = {
    {s_bone,      0x000000FFUL, 0xCCUL,   warn__ctrscpls_endstand},
    {s_crosswave, 0x00FF0000UL, 0xCCUL,   warn__ctrscpls_endstand},
    {s_crosswave, 0x000000FFUL, 0x33UL,   warn__ctrstand_endscpls},
+   {sdeepbigqtg, 0xFFFF0000UL, 0x0F0FUL, warn__none},
+   {sdeepbigqtg, 0x0000FFFFUL, 0xF0F0UL, warn__none},
+   {sdeepbigqtg, 0x3535CACAUL, 0xC5C5UL, warn__none},
+   {sdeepbigqtg, 0xCACA3535UL, 0x3A3AUL, warn__none},
+   {sdeepbigqtg, 0xC5C53A3AUL, 0x3535UL, warn__none},
+   {sdeepbigqtg, 0x3A3AC5C5UL, 0xCACAUL, warn__none},
    {nothing,     0,            0,        warn__none}};
 
 
@@ -559,7 +572,7 @@ Private void pack_us(
             andpeople &= fb[j].id1;
          }
 
-         if (key == 18) {
+         if (key == tandem_key_skew) {
             /* If this is skew/skewsome, we require people paired in the appropriate way.
                This means [fb[0], fb[3]] must match, [fb[1], fb[2]] must match, and
                [fb[0], fb[1]] must not match. */
@@ -579,8 +592,12 @@ Private void pack_us(
                ANY PERSON AT ALL to be a phantom, even if paired with another phantom,
                except in the special case of a virtual 2x3. */
 
-            if (!(andpeople & BIT_PERSON) && (orpeople || tandstuff->virtual_setup.kind != s2x3))
-               fail("Use \"phantom\" concept in front of this concept.");
+            if (!(andpeople & BIT_PERSON)) {
+               if (orpeople ||
+                   (tandstuff->virtual_setup.kind != s2x3 &&
+                    key != tandem_key_siam))
+                  fail("Use \"phantom\" concept in front of this concept.");
+            }
          }
 
          if (orpeople) {
@@ -933,11 +950,11 @@ extern void tandem_couples_move(
             we just use whatever selector was given. */
          fail("Can't find these triangles.");
    }
-   else if (key == 17) {
+   else if (key == tandem_key_diamond) {
       np = 4;
       our_map_table = maps_isearch_dmdsome;
    }
-   else if (key == 16 || key == 18) {
+   else if (key == tandem_key_box || key == tandem_key_skew) {
       np = 4;
       our_map_table = maps_isearch_boxsome;
    }
@@ -1003,11 +1020,11 @@ extern void tandem_couples_move(
    if (fractional && fraction > 4)
       fail("Can't do fractional twosome more than 4/4.");
 
-   if (key == 16 || key == 18) {
+   if (key == tandem_key_box || key == tandem_key_skew) {
       ewmask = allmask;
       nsmask = 0;
    }
-   else if (key == 17) {
+   else if (key == tandem_key_diamond) {
       if (ss->kind == s_ptpd || ss->kind == s3ptpd || ss->kind == s4ptpd || ss->kind == sdmd) {
          ewmask = allmask;
          nsmask = 0;
@@ -1205,7 +1222,9 @@ extern void tandem_couples_move(
       }
    }
 
+   /*
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   */
    if (phantom == 3) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    pack_us(ss->people, map, fraction, twosome, key, &tandstuff);
 

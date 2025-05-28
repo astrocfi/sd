@@ -14,7 +14,7 @@
  *
  * By Stephen Gildea <gildea@lcs.mit.edu> February 1993
  *
- * Uses console I/O package with djgpp, a port of gcc to DOS on IBM PC.
+ * Uses "console application" mechanism of Visual C++.
  */
 
 #include <windows.h>
@@ -78,6 +78,28 @@ extern void ttu_set_window_title(char s[])
 }
 
 
+BOOL WINAPI control_c_handler(DWORD ControlInfo)
+{
+   if (ControlInfo == CTRL_C_EVENT) {
+      DWORD numRead;
+      INPUT_RECORD inputRecord;
+
+      inputRecord.EventType = KEY_EVENT;
+      inputRecord.Event.KeyEvent.bKeyDown = TRUE;
+      inputRecord.Event.KeyEvent.wRepeatCount = 1;
+      inputRecord.Event.KeyEvent.wVirtualKeyCode = 'C';
+      inputRecord.Event.KeyEvent.wVirtualScanCode = 46;
+      inputRecord.Event.KeyEvent.uChar.AsciiChar = 'c';
+      inputRecord.Event.KeyEvent.dwControlKeyState = LEFT_CTRL_PRESSED;
+      WriteConsoleInput(consoleStdin, &inputRecord, 1, &numRead);
+      return TRUE;
+   }
+   else {
+      return FALSE;
+   }
+}
+
+
 extern void ttu_initialize(void)
 {
    if (no_console) return;
@@ -129,7 +151,10 @@ extern void ttu_initialize(void)
       (void) SetConsoleTextAttribute(consoleStdout,
                                      FOREGROUND_BLUE | FOREGROUND_GREEN |
                                      FOREGROUND_RED | FOREGROUND_INTENSITY);
+
+   (void) SetConsoleCtrlHandler(&control_c_handler, TRUE);
 }
+
 
 extern void ttu_terminate(void)
 {
@@ -138,6 +163,7 @@ extern void ttu_terminate(void)
    if (!no_console) {
       (void) SetConsoleTextAttribute(consoleStdout, globalconsoleInfo.wAttributes);
       (void) SetConsoleMode(consoleStdin, oldMode);
+      (void) SetConsoleCtrlHandler(&control_c_handler, FALSE);
    }
 }
 

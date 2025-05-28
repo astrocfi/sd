@@ -504,6 +504,25 @@ extern long_boolean do_simple_split(
       mapcode = prefer_1x4 ?
          MAPCODE(s1x4,2,MPKIND__SPLIT,1) : MAPCODE(s2x2,2,MPKIND__SPLIT,0);
       break;
+   case s2x6:
+      if (prefer_1x4 == 1) {
+         if (ss->people[0].id1 & ss->people[1].id1 &
+             ss->people[2].id1 & ss->people[3].id1 &
+             ss->people[6].id1 & ss->people[7].id1 &
+             ss->people[8].id1 & ss->people[9].id1) {
+            mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_L_HALF, 1);
+            break;
+         }
+         else if (ss->people[2].id1 & ss->people[3].id1 &
+                  ss->people[4].id1 & ss->people[5].id1 &
+                  ss->people[8].id1 & ss->people[9].id1 &
+                  ss->people[10].id1 & ss->people[11].id1) {
+            mapcode = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF, 1);
+            break;
+         }
+      }
+
+      fail("Can't figure out how to split this call.");
    case s1x8:
       mapcode = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
       if (prefer_1x4 == 2) recompute_id = FALSE;
@@ -579,7 +598,7 @@ extern void do_call_in_series(
       else
          prefer_1x4 = (~qqqq.rotation) & 1;
 
-      if (prefer_1x4 && qqqq.kind != s2x4)
+      if (prefer_1x4 && qqqq.kind != s2x4 && qqqq.kind != s2x6)
          fail("Can't figure out how to split multiple part call.");
 
       if (do_simple_split(&qqqq, prefer_1x4, &tempsetup))
@@ -777,7 +796,7 @@ typedef struct gloop {
    int leftidx;            /* X-increment of leftmost valid jaywalkee. */
    int rightidx;           /* X-increment of rightmost valid jaywalkee. */
    int deltarot;           /* How this person will turn. */
-   int rollinfo;           /* How this person's roll info will be set. */
+   int roll_stability_info;/* This person's roll & stability info, from call def'n. */
    struct gloop *nextse;   /* Points to next person south (dir even) or east (dir odd.) */
    struct gloop *nextnw;   /* Points to next person north (dir even) or west (dir odd.) */
    long_boolean tbstopse;  /* True if nextse/nextnw is zero because the next spot */
@@ -869,7 +888,7 @@ Private int start_matrix_call(
          matrix_info[nump].deltay = 0;
          matrix_info[nump].nearest = 100000;
          matrix_info[nump].deltarot = 0;
-         matrix_info[nump].rollinfo = ROLLBITM;
+         matrix_info[nump].roll_stability_info = (ROLLBITM / ROLL_BIT) * DBROLL_BIT;
          matrix_info[nump].tbstopse = FALSE;
          matrix_info[nump].tbstopnw = FALSE;
          nump++;
@@ -970,6 +989,7 @@ static coordrec acc_crosswave = {s_crosswave, 3,
 Private void finish_matrix_call(
    matrix_rec matrix_info[],
    int nump,
+   long_boolean do_roll_stability,
    setup *people,
    setup *result)
 {
@@ -981,7 +1001,6 @@ Private void finish_matrix_call(
    xmax = xpar = ymax = ypar = signature = 0;
 
    for (i=0; i<nump; i++) {
-      people->people[i].id1 = (rotperson(people->people[i].id1, matrix_info[i].deltarot*011) & (~ROLL_MASK)) | matrix_info[i].rollinfo;
 
       /* If this person's position has low bit on, that means we consider his coordinates
          not sufficiently well-defined that we will allow him to do any pressing or
@@ -1507,36 +1526,75 @@ Private void finish_matrix_call(
    fail("Can't handle this result matrix.");
 
  doit:
-      doffset = 32 - (1 << (checkptr->xfactor-1));
 
-      result->kind = checkptr->result_kind;
-      for (i=0; i<nump; i++) {
-         place = checkptr->diagram[doffset - ((matrix_info[i].y >> 2) << checkptr->xfactor) + (matrix_info[i].x >> 2)];
-         if (place < 0) fail("Person has moved into a grossly ill-defined location.");
-         if ((checkptr->xca[place] != matrix_info[i].x) || (checkptr->yca[place] != matrix_info[i].y))
-            fail("Person has moved into a slightly ill-defined location.");
-         install_person(result, place, people, i);
-         result->people[place].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
+   doffset = 32 - (1 << (checkptr->xfactor-1));
+
+   for (i=0; i<nump; i++) {
+      people->people[i].id1 =
+         rotperson(people->people[i].id1, matrix_info[i].deltarot*011);
+
+      place = checkptr->diagram[doffset -
+                               ((matrix_info[i].y >> 2) << checkptr->xfactor) +
+                               (matrix_info[i].x >> 2)];
+      if (place < 0) fail("Person has moved into a grossly ill-defined location.");
+
+      if ((checkptr->xca[place] != matrix_info[i].x) ||
+          (checkptr->yca[place] != matrix_info[i].y))
+      fail("Person has moved into a slightly ill-defined location.");
+
+      install_person(result, place, people, i);
+
+      if (do_roll_stability) {
+         result->people[place].id1 &= ~ROLL_MASK;
+         result->people[place].id1 |=
+            ((matrix_info[i].roll_stability_info * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+
+         if (result->people[place].id1 & STABLE_ENAB)
+            do_stability(
+               &result->people[place].id1,
+               (stability) ((matrix_info[i].roll_stability_info/DBSTAB_BIT) & 0xF),
+               matrix_info[i].deltarot);
       }
+   }
 
-      return;
+   result->kind = checkptr->result_kind;
+   return;
 
  doitrot:
-      result->kind = checkptr->result_kind;
-      result->rotation = 1;
 
-      doffset = 32 - (1 << (checkptr->xfactor-1));
+   result->rotation = 1;
+   doffset = 32 - (1 << (checkptr->xfactor-1));
 
-      for (i=0; i<nump; i++) {
-         place = checkptr->diagram[doffset - ((matrix_info[i].x >> 2) << checkptr->xfactor) + ((-matrix_info[i].y) >> 2)];
-         if (place < 0) fail("Person has moved into a grossly ill-defined location.");
-         if ((checkptr->xca[place] != -matrix_info[i].y) || (checkptr->yca[place] != matrix_info[i].x))
-            fail("Person has moved into a slightly ill-defined location.");
-         install_rot(result, place, people, i, 033);
-         result->people[place].id1 &= ~STABLE_MASK;   /* For now, can't do fractional stable on this kind of call. */
+   for (i=0; i<nump; i++) {
+      people->people[i].id1 =
+         rotperson(people->people[i].id1, matrix_info[i].deltarot*011);
+
+      place = checkptr->diagram[doffset -
+                               ((matrix_info[i].x >> 2) << checkptr->xfactor) +
+                               ((-matrix_info[i].y) >> 2)];
+      if (place < 0) fail("Person has moved into a grossly ill-defined location.");
+
+      if ((checkptr->xca[place] != -matrix_info[i].y) ||
+          (checkptr->yca[place] != matrix_info[i].x))
+         fail("Person has moved into a slightly ill-defined location.");
+
+      install_rot(result, place, people, i, 033);
+
+      if (do_roll_stability) {
+         result->people[place].id1 &= ~ROLL_MASK;
+         result->people[place].id1 |=
+            ((matrix_info[i].roll_stability_info * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+
+         if (result->people[place].id1 & STABLE_ENAB)
+            do_stability(
+               &result->people[place].id1,
+               (stability) ((matrix_info[i].roll_stability_info/DBSTAB_BIT) & 0xF),
+               matrix_info[i].deltarot);
       }
+   }
 
-      return;
+   result->kind = checkptr->result_kind;
+   return;
 }
 
 
@@ -1563,7 +1621,7 @@ Private void matrixmove(
          /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
             or if the two data are identical so the sex doesn't matter. */
          if ((this->girlbit | this->boybit) == 0 &&
-             (callspec->stuff.matrix.stuff[0] != callspec->stuff.matrix.stuff[1])) {
+             callspec->stuff.matrix.stuff[0] != callspec->stuff.matrix.stuff[1]) {
             if (flags & MTX_USE_VEER_DATA)
                fail("Can't determine lateral direction of this person.");
             else
@@ -1572,8 +1630,8 @@ Private void matrixmove(
 
          datum = callspec->stuff.matrix.stuff[this->girlbit];
 
-         this->deltax = ( ((datum >> 7) & 0x1F) - 16) << 1;
-         this->deltay = ( ((datum >> 2) & 0x1F) - 16) << 1;
+         this->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
+         this->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
 
          if (flags & MTX_USE_NUMBER) {
             int count = current_options.number_fields & 0xF;
@@ -1582,7 +1640,7 @@ Private void matrixmove(
          }
 
          this->deltarot = datum & 3;
-         this->rollinfo = (datum >> 12) * ROLLBITR;
+         this->roll_stability_info = datum;
          alldelta |= this->deltax | this->deltay;
       }
    }
@@ -1598,7 +1656,7 @@ Private void matrixmove(
       /* This call split the setup in every possible way. */
       result->result_flags |= RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
-   finish_matrix_call(matrix_info, nump, &people, result);
+   finish_matrix_call(matrix_info, nump, TRUE, &people, result);
    reinstate_rotation(ss, result);
 
    /* If the call just kept a 2x2 in place, and they were the outsides, make
@@ -1620,20 +1678,19 @@ Private void matrixmove(
 
 Private void do_part_of_pair(matrix_rec *this, int base, Const callspec_block *callspec)
 {
-   int datum;
+   uint32 datum;
 
    /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
       or if the two data are identical so the sex doesn't matter. */
    if ((this->girlbit | this->boybit) == 0 &&
-       (callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1]))
+       callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1])
       fail("Can't determine sex of this person.");
-
    datum = callspec->stuff.matrix.stuff[base+this->girlbit];
    if (datum == 0) failp(this->id1, "can't do this call.");
-   this->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
-   this->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
+   this->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
+   this->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
    this->deltarot = datum & 3;
-   this->rollinfo = (datum >> 12) * ROLLBITR;
+   this->roll_stability_info = datum;
    this->realdone = TRUE;
 }
 
@@ -1865,6 +1922,7 @@ Private void process_matrix_chains(
                                   (1UL<<i) == mj->jbits) {
                            int delx = mj->x - mi->x;
                            int dely = mj->y - mi->y;
+                           int deltarot;
 
                            uint32 datum = callspec->stuff.matrix.stuff[mi->girlbit];
                            if (datum == 0) failp(mi->id1, "can't do this call.");
@@ -1874,13 +1932,35 @@ Private void process_matrix_chains(
                            if (mi->dir & 2) delx = -delx;
                            if ((mi->dir+1) & 2) dely = -dely;
 
-                           mi->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
-                           mi->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
+                           mi->deltax = (((datum >> 4) & 0x1F) - 16) << 1;
+                           mi->deltay = (((datum >> 16) & 0x1F) - 16) << 1;
                            mi->deltarot = datum & 3;
-                           mi->rollinfo = (datum >> 12) * ROLLBITR;
+                           mi->roll_stability_info = datum;
                            mi->realdone = TRUE;
 
-                           mi->deltarot += (mj->dir - mi->dir + 2);
+                           deltarot = mj->dir - mi->dir + 2;
+
+                           if (deltarot) {
+                              /* This person went "around the corner" due to facing
+                                 direction of other dancer. */
+                              if (mi->deltarot ||
+                                  (stability) ((mi->roll_stability_info/DBSTAB_BIT) & 0xF) != stb_z) {
+
+
+                                 /* Call definition also had turning, as in "jay slide thru".
+                                    Just erase the stability info. */
+                                 mi->roll_stability_info &= ~(DBSTAB_BIT * 0xF);
+                              }
+                              else {
+                                 mi->roll_stability_info &= ~(DBSTAB_BIT * 0xF);
+                                 if ((deltarot & 3) == 1)
+                                    mi->roll_stability_info |= (DBSTAB_BIT * stb_c);
+                                 else
+                                    mi->roll_stability_info |= (DBSTAB_BIT * stb_a);
+                              }
+                           }
+
+                           mi->deltarot += deltarot;
                            mi->deltarot &= 3;
 
                            if (mi->dir & 1) { mi->deltax += dely; mi->deltay = +delx; }
@@ -2021,7 +2101,7 @@ Private void partner_matrixmove(
       }
    }
 
-   finish_matrix_call(matrix_info, nump, &people, result);
+   finish_matrix_call(matrix_info, nump, TRUE, &people, result);
    reinstate_rotation(ss, result);
    result->result_flags = 0;
 }
@@ -2149,12 +2229,11 @@ extern void anchor_someone_and_move(
 
       after_matrix_info[i].deltax = deltax[j];
       after_matrix_info[i].deltay = deltay[j];
-      after_matrix_info[i].rollinfo = people.people[i].id1 & ROLL_MASK;
       after_matrix_info[i].dir = 0;
    }
 
    clear_people(result);
-   finish_matrix_call(after_matrix_info, nump, &people, result);
+   finish_matrix_call(after_matrix_info, nump, FALSE, &people, result);
    reinstate_rotation(&saved_start_people, result);
    result->result_flags = 0;
 }
@@ -2715,6 +2794,30 @@ extern int gcd(int a, int b)
                   FROMTOREV(K=3,N=2) means do B
                   FROMTOREV(K=4,N=1) means do A
 
+      CMD_FRAC_CODE_FROMTOREVREV
+               Do parts from size-N-1 up through size-K, inclusive.
+               Do N-K parts -- the last N parts, but omitting the last K parts.
+               For a 5-part call ABCDE:
+                  FROMTOREVREV(K=0,N=5) means do whole thing
+                  FROMTOREVREV(K=0,N=4) means do BCDE
+                  FROMTOREVREV(K=0,N=1) means do E
+                  FROMTOREVREV(K=1,N=5) means do ABCD
+                  FROMTOREVREV(K=1,N=4) means do BCD
+                  FROMTOREVREV(K=3,N=4) means do B
+                  FROMTOREVREV(K=4,N=5) means do A
+
+      CMD_FRAC_CODE_FROMTOMOST
+                  Same as FROMTO, but leave early from the last part.
+                  Do just the first half of it.
+                  For a 5-part call ABCDE:
+                  FROMTO(K=1,N=4) means do BC and the first half of D
+
+      CMD_FRAC_CODE_LATEFROMTOREV
+                  Same as FROMTOREV, but get a late start on the first part.
+                  Do just the last half of it.
+               For a 5-part call ABCDE:
+                  LATEFROMTOREV(K=1,N=2) means do the last half of B, then CD
+
    The output of this procedure, after digesting the above, is a "fraction_info"
    structure, whose important items are:
 
@@ -2825,7 +2928,8 @@ extern void get_fraction_info(
       divisor = (test_num == 0) ? gcd(subcall_index, s_denom) : gcd(s_denom, subcall_index);
       s_denom /= divisor;
       subcall_index /= divisor;
-      last_half_stuff = subcall_index - test_num * s_denom;   /* We will need this is we have to reverse the order. */
+      last_half_stuff = subcall_index - test_num * s_denom;   /* We will need this if we have
+                                                                 to reverse the order. */
       zzz->do_last_half_of_first_part = (last_half_stuff << 12) | (s_denom << 8) | 0x11;
       if (zzz->do_last_half_of_first_part != CMD_FRAC_LASTHALF_VALUE)
          warn(warn_hairy_fraction);
@@ -2877,7 +2981,8 @@ extern void get_fraction_info(
    }
 
    if (this_part != 0) {
-      int highdel, lowdel;
+      int highdel;
+      uint32 kvalue = ((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
 
       /* In addition to everything else, we are picking out a specific part
          of whatever series we have decided upon. */
@@ -2913,34 +3018,27 @@ extern void get_fraction_info(
          /* We are doing parts from (K+1) through N. */
 
          if (zzz->reverse_order) {
-            highdel = highlimit-(subcall_index-this_part+1);
-            lowdel = 0-((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
+            highdel = subcall_index-this_part+1;
 
-            if (highdel > 0   )
+            if (highdel < highlimit   )
                fail("This call can't be fractionalized this way.");
 
-            highlimit -= highdel;
-            subcall_index += lowdel;
-         }
-         else {
-            highdel = highlimit-subcall_index-this_part;
-            lowdel = (frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
-            if (highdel < 0)
-               fail("This call can't be fractionalized this way.");
+            highlimit = highdel;
+            subcall_index -= kvalue;
 
-            highlimit -= highdel;
-            subcall_index += lowdel;
-         }
-
-         /* Be sure that enough parts are visible, and that we are within bounds. */
-
-         if (zzz->reverse_order) {
             if (subcall_index > available_fractions)
                fail("This call can't be fractionalized.");
             if (subcall_index > total)
                fail("The indicated part number doesn't exist.");
          }
          else {
+            highdel = highlimit-subcall_index-this_part;
+            if (highdel < 0)
+               fail("This call can't be fractionalized this way.");
+
+            highlimit -= highdel;
+            subcall_index += kvalue;
+
             if (highlimit > available_fractions || subcall_index > available_fractions)
                fail("This call can't be fractionalized.");
             if (highlimit > total || subcall_index > total)
@@ -2953,14 +3051,13 @@ extern void get_fraction_info(
          /* We are doing parts from N through (end-K). */
 
          if (zzz->reverse_order) {
-            highdel = 0-((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
-            lowdel = 1-this_part;
+            int lowdel = 1-this_part;
 
-            highlimit -= highdel;
+            highlimit += kvalue;
             subcall_index += lowdel;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
-               If lowhdel is zero, we weren't cutting the upper limit, so it's
+               If lowdel is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
             if (subcall_index > total)
@@ -2971,16 +3068,51 @@ extern void get_fraction_info(
                fail("This call can't be fractionalized.");
          }
          else {
-            highdel = ((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
-            lowdel = (this_part-1);
-            highlimit -= highdel;
-            subcall_index += lowdel;
+            highlimit -= kvalue;
+            subcall_index += this_part-1;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
-               If highdel is zero, we weren't cutting the upper limit, so it's
+               If kvalue is zero, we weren't cutting the upper limit, so it's
                allowed to be beyond the limit of part visibility. */
 
-            if ((highlimit > available_fractions && highdel != 0) ||
+            if ((highlimit > available_fractions && kvalue != 0) ||
+                subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (highlimit > total || subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+         }
+
+         break;
+      case CMD_FRAC_CODE_FROMTOREVREV:
+
+         /* We are doing parts from (end-N+1 through (end-K). */
+
+         if (zzz->reverse_order) {
+            int highdel = subcall_index+1-highlimit-this_part;
+
+            highlimit += kvalue;
+            subcall_index -= highdel;
+
+            /* Be sure that enough parts are visible, and that we are within bounds.
+               If lowhdel is zero, we weren't cutting the upper limit, so it's
+               allowed to be beyond the limit of part visibility. */
+
+            if (subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+
+            if ((subcall_index >= available_fractions && highdel != 0) ||
+                highlimit > available_fractions)
+               fail("This call can't be fractionalized.");
+         }
+         else {
+            subcall_index = highlimit-this_part;
+            highlimit -= kvalue;
+
+            /* Be sure that enough parts are visible, and that we are within bounds.
+               If kvalue is zero, we weren't cutting the upper limit, so it's
+               allowed to be beyond the limit of part visibility. */
+
+            if ((highlimit > available_fractions && kvalue != 0) ||
                 subcall_index > available_fractions)
                fail("This call can't be fractionalized.");
             if (highlimit > total || subcall_index > total)
@@ -2990,63 +3122,85 @@ extern void get_fraction_info(
          break;
       case CMD_FRAC_CODE_FROMTOMOST:
 
-         /* We are doing parts from (part2+1) through N, but only doing half of part N. */
+         /* We are doing parts from (K+1) through N, but only doing half of part N. */
 
          if (zzz->reverse_order) {
-            highdel = highlimit-(subcall_index-this_part+1);
-            lowdel = 0-((frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT);
+            highdel = (subcall_index-this_part+1);
 
-            if (highdel > 0   )
+            if (highdel < highlimit)
                fail("This call can't be fractionalized this way.");
 
-            highlimit -= highdel;
-            subcall_index += lowdel;
-            fail("Sorry, no reverse-order fromtomost.");
+            highlimit = highdel;
+            subcall_index -= kvalue;
+            zzz->do_last_half_of_first_part = CMD_FRAC_HALF_VALUE;
+
+            if (subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (subcall_index > total)
+               fail("The indicated part number doesn't exist.");
+            /* Be sure that we actually do the part that we take half of. */
+            if (subcall_index < highlimit)
+               fail("This call can't be fractionalized this way.");
          }
          else {
             highdel = highlimit-subcall_index-this_part;
-            lowdel = (frac_flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
             if (highdel < 0)
                fail("This call can't be fractionalized this way.");
 
             highlimit -= highdel;
-            subcall_index += lowdel;
+            subcall_index += kvalue;
             zzz->do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+
+            if (highlimit > available_fractions || subcall_index > available_fractions)
+               fail("This call can't be fractionalized.");
+            if (highlimit > total || subcall_index > total)
+               fail("The indicated part number doesn't exist.");
             /* Be sure that we actually do the part that we take half of. */
             if (subcall_index >= highlimit)
                fail("This call can't be fractionalized this way.");
          }
 
-         /* Be sure that enough parts are visible, and that we are within bounds. */
+         break;
+      case CMD_FRAC_CODE_LATEFROMTOREV:
+
+         /* Like FROMTOREV, but get a late start on the first part. */
 
          if (zzz->reverse_order) {
-            if (subcall_index > available_fractions)
-               fail("This call can't be fractionalized.");
+            int lowdel = 1-this_part;
+
+            highlimit += kvalue;
+            subcall_index += lowdel;
+            zzz->do_half_of_last_part = CMD_FRAC_LASTHALF_VALUE;
+
+            /* Be sure that enough parts are visible, and that we are within bounds.
+               If lowdel is zero, we weren't cutting the upper limit, so it's
+               allowed to be beyond the limit of part visibility. */
+
             if (subcall_index > total)
                fail("The indicated part number doesn't exist.");
+
+            if ((subcall_index >= available_fractions && lowdel != 0) ||
+                highlimit > available_fractions)
+               fail("This call can't be fractionalized.");
+            /* Be sure that we actually do the part that we take half of. */
+            if (subcall_index < highlimit)
+               fail("This call can't be fractionalized this way.");
          }
          else {
-            if (highlimit > available_fractions || subcall_index > available_fractions)
+            highlimit -= kvalue;
+            subcall_index += this_part-1;
+            zzz->do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
+
+            /* Be sure that enough parts are visible, and that we are within bounds.
+               If kvalue is zero, we weren't cutting the upper limit, so it's
+               allowed to be beyond the limit of part visibility. */
+
+            if ((highlimit > available_fractions && kvalue != 0) ||
+                subcall_index > available_fractions)
                fail("This call can't be fractionalized.");
             if (highlimit > total || subcall_index > total)
                fail("The indicated part number doesn't exist.");
-         }
-
-         break;
-      case CMD_FRAC_CODE_PREBEYOND:
-         /* We are doing the last half of part N, and all parts strictly after N. */
-         subcall_index += zzz->reverse_order ? (1-this_part) : (this_part-1);
-
-         if (zzz->reverse_order) {
-            zzz->do_half_of_last_part = CMD_FRAC_HALF_VALUE;
-            fail("This call can't be fractionalized with this fraction.");  /* **** for now. */
-         }
-         else {
-            zzz->do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
-            /* Be sure that enough parts are visible. */
-            if (subcall_index > available_fractions)
-               fail("This call can't be fractionalized.");
-            if (subcall_index > total) fail("The indicated part number doesn't exist.");
+            /* Be sure that we actually do the part that we take half of. */
             if (subcall_index >= highlimit)
                fail("This call can't be fractionalized with this fraction.");
          }
@@ -3161,11 +3315,11 @@ extern void impose_assumption_and_move(setup *ss, setup *result)
       case CMD_MISC__VERIFY_DMD_LIKE:      t.assumption = cr_diamond_like;  break;
       case CMD_MISC__VERIFY_QTAG_LIKE:     t.assumption = cr_qtag_like;     break;
       case CMD_MISC__VERIFY_1_4_TAG:
-         t.assumption = cr_gen_n_4_tag;
+         t.assumption = cr_qtag_like;
          t.assump_both = 1;
          break;
       case CMD_MISC__VERIFY_3_4_TAG:
-         t.assumption = cr_gen_n_4_tag;
+         t.assumption = cr_qtag_like;
          t.assump_both = 2;
          break;
       case CMD_MISC__VERIFY_REAL_1_4_TAG:  t.assumption = cr_real_1_4_tag;  break;
@@ -3579,6 +3733,24 @@ Private void do_sequential_call(
             result->cmd.cmd_assume.assump_cast = 0;
             result->cmd.cmd_assume.assump_live = 0;
             result->cmd.cmd_assume.assump_negate = 0;
+
+            /* If we just put in an "assume 1/4 tag" type of thing, we presumably
+               did a "scoot back to a wave" as part of a "scoot reaction".  Now, if
+               there were phantoms in the center after the call, the result could
+               have gotten changed (by the normalization stuff deep within
+               "fix_n_results" or whatever) to a 2x4.  However, if we are doing a
+               scoot reaction, we really want the 1/4 tag.  So change it back.
+               It happens that code in "divide_the_setup" would do this anyway,
+               but we don't like assumptions in place on setups for which they
+               are meaningless. */
+
+            if (fix_next_assump_both == 2 &&
+                (fix_next_assumption == cr_jleft || fix_next_assumption == cr_jright) &&
+                result->kind == s2x4 &&
+                (result->people[1].id1 | result->people[2].id1 |
+                 result->people[5].id1 | result->people[6].id1) == 0) {
+               expand_setup(&comp_qtag_2x4_stuff, result);
+            }
          }
       }
 
@@ -3623,13 +3795,40 @@ Private void do_sequential_call(
                            result->cmd.cmd_assume.assumption == cr_ijright) &&
                       result->cmd.cmd_assume.assump_both == 2)
                      ||
-                     (result->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
+                     (result->cmd.cmd_assume.assumption == cr_qtag_like &&
                       result->cmd.cmd_assume.assump_both == 1)
                      ||
                      result->cmd.cmd_assume.assumption == cr_real_1_4_tag
                      ||
                      result->cmd.cmd_assume.assumption == cr_real_1_4_line)
                fix_next_assumption = cr_ckpt_miniwaves;
+         }
+         else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
+            if (result->kind == s2x4 &&
+                !(result->cmd.cmd_final_flags.her8it & INHERITFLAG_YOYO)) {
+               if ((result->people[0].id1 & d_mask) == d_north ||
+                   (result->people[1].id1 & d_mask) == d_south ||
+                   (result->people[2].id1 & d_mask) == d_north ||
+                   (result->people[3].id1 & d_mask) == d_south ||
+                   (result->people[4].id1 & d_mask) == d_south ||
+                   (result->people[5].id1 & d_mask) == d_north ||
+                   (result->people[6].id1 & d_mask) == d_south ||
+                   (result->people[7].id1 & d_mask) == d_north) {
+                  fix_next_assumption = cr_jleft;               
+                  fix_next_assump_both = 2;
+               }
+               else if ((result->people[0].id1 & d_mask) == d_south ||
+                        (result->people[1].id1 & d_mask) == d_north ||
+                        (result->people[2].id1 & d_mask) == d_south ||
+                        (result->people[3].id1 & d_mask) == d_north ||
+                        (result->people[4].id1 & d_mask) == d_north ||
+                        (result->people[5].id1 & d_mask) == d_south ||
+                        (result->people[6].id1 & d_mask) == d_north ||
+                        (result->people[7].id1 & d_mask) == d_south) {
+                  fix_next_assumption = cr_jright;               
+                  fix_next_assump_both = 2;
+               }
+            }
          }
          else if (result->cmd.callspec == base_calls[base_call_makepass_1]) {
 
@@ -3648,7 +3847,7 @@ Private void do_sequential_call(
                       result->cmd.cmd_assume.assump_both == 2) ||
                      result->cmd.cmd_assume.assumption == cr_real_1_4_line)
                fix_next_assumption = cr_ctr_miniwaves;
-            else if (result->cmd.cmd_assume.assumption == cr_gen_n_4_tag &&
+            else if (result->cmd.cmd_assume.assumption == cr_qtag_like &&
                      result->cmd.cmd_assume.assump_both == 1 &&
                      oldk == s_qtag &&
                      (result->people[2].id1 & d_mask & ~2) == d_north &&

@@ -387,7 +387,6 @@ Private void innards(
          z[1].rotation += 2;
          z[3].rotation += 2;
          break;
-      case MPKIND__DMD_STUFF:
       case MPKIND__ALL_8:
       case MPKIND__NONISOTROPIC:
          /* These particular maps misrepresent the rotation of subsetup 2, so
@@ -398,6 +397,12 @@ Private void innards(
             /* These misrepresent both setups 2 and 3. */
             if (arity == 4 && map_kind == MPKIND__NONISOTROPIC) z[2].rotation += 2;
          }
+         break;
+      case MPKIND__DMD_STUFF:
+         if (!(rotstate & 0x00F))
+            fail("Can't do this orientation changer.");
+         if ((z[0].rotation&3) != 0)
+            z[1].rotation += 2;
          break;
    }
 
@@ -2824,6 +2829,13 @@ Private void do_glorious_triangles(
       result->result_flags = 0;
       return;
    }
+
+   /* The low digit of rotstate (should have just low 2 bits on) tells
+      what possible rotation states could exist with all setups in
+      same parity.  The next digit tells what possible states  of z0
+      exist with alternating parity.  The highest bit deals with triangles
+      rotating by 90 degrees from one setup to the next, or something
+      like that. */
 
    if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 

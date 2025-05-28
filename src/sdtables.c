@@ -2556,6 +2556,11 @@ static Const fixer f1x10ndse =  {s1x8, s1x10,      0, 0, 1,       0,          0,
 
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
+static Const fixer z1x4u     = {s1x4, s1x4,        0, 0, 1,       0,          0,          &z1x4u,     0, 0,          0,    0,          0,          {0, 1, 2, 3}};
+
+static Const fixer z2x3a     = {s2x3, s2x3,        0, 0, 1,       0,          0,          &z1x4u, &z1x4u, 0,         0,    &z2x3a,     0,          {0, 1, 2, 3, 4, 5}};
+static Const fixer z2x3b     = {s2x3, s2x3,        0, 0, 1,       0,          0,          &z1x4u, &z1x4u, 0,         0,    &z2x3b,     0,          {0, 1, 2, 3, 4, 5}};
+
 static Const fixer f2x4endd  = {s2x2, s2x4,        0, 1, 1,       0,          0,          &frigendd,  &frigendd, 0,  0,    &f2x4endd,  &fqtgend,   {0, 3, 4, 7}};
 static Const fixer f2x477    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    &f2x477,    0,          {0, 1, 2, 4, 5, 6}};
 static Const fixer f2x4ee    = {s2x3, s2x4,        0, 1, 1,       0,          0,          0,          0, 0,          0,    &f2x4ee,    0,          {1, 2, 3, 5, 6, 7}};
@@ -2570,6 +2575,8 @@ static Const fixer fpp55d    = {s1x2, s2x4,        0, 0, 2,       &fpp55d,    0,
 
 
 sel_item sel_init_table[] = {
+   {LOOKUP_Z,                  s2x3,        066,    &z2x3a,      (fixer *) 0, -1},
+   {LOOKUP_Z,                  s2x3,        033,    &z2x3b,      (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_rigger,    0x99,   &distrig3,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_rigger,    0x66,   &distrig4,   (fixer *) 0, -1},
    {LOOKUP_DIST_DMD,           s_rigger,    0x55,   &distrig7,   (fixer *) 0, -1},
@@ -3505,6 +3512,17 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  "   a        b@f  e  d  c@@i  j  k  l@   h        g",
          "    i  f@h          a@    j  e@@    k  d@g          b@    l  c"}},
+   /* sdeepbigqtg */
+      {15,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      0, 0, 0, 0,
+      {b_deepbigqtg,      b_pdeepbigqtg},
+      { 4, 6},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "   a        b@   c        d@h  g  f  e@@m  n  o  p@   l        k@   j        i",
+         "         m  h@j l          c a@         n  g@@         o  f@i k          d b@         p  e"}},
    /* sdeepxwv */
       {11,
       &thingdeepxwv,
@@ -3923,6 +3941,8 @@ int begin_sizes[] = {
    24,         /* b_12x2 */
    12,         /* b_deepqtg */
    12,         /* b_pdeepqtg */
+   16,         /* b_deepbigqtg */
+   16,         /* b_pdeepbigqtg */
    12,         /* b_deepxwv */
    12,         /* b_pdeepxwv */
    20,         /* b_3oqtg */
@@ -4157,8 +4177,8 @@ Private map_thing map_3x8_3x4           = {{0, 1, 2, 3, 23, 22, 16, 17, 18, 19, 
                                                                    4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 11, 10},        MPKIND__SPLIT,       0, 2,  s3x8,   s3x4,      0x000, 0};
 Private map_thing map_4x6_3x4           = {{2, 9, 20, 15, 16, 19, 17, 18, 11, 0, 1, 10,
                                                                    5, 6, 23, 12, 13, 22, 14, 21, 8, 3, 4, 7},        MPKIND__SPLIT,       0, 2,  s4x6,   s3x4,      0x005, 0};
-Private map_thing map_par_rig           = {{-1, -1, 6, 7, -1, -1, 11, 10,
-                                                                   -1, -1, 5, 4, -1, -1, 0, 1},                      MPKIND__SPLIT,       6, 2,  s2x6,   s_rigger,      0x000, 1};
+Private map_thing map_par_rig           = {{6, 13, 9, 11, 12, 7, 0, 2,
+                                            4, 15, 8, 10, 14, 5, 1, 3},                                              MPKIND__SPLIT,       0, 2,  sdeepbigqtg, s_rigger,      0x005, 0};
 Private map_thing map_4x6_2x6           = {{18, 19, 20, 21, 22, 23, 12, 13, 14, 15, 16, 17,
                                                                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},            MPKIND__SPLIT,       0, 2,  s4x6,   s2x6,      0x000, 1};
 

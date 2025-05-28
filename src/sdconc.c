@@ -3271,18 +3271,11 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
          if (kjunk == concept_supercall)
             fail("A concept is required.");
       }
-      else if (setupcount == 0 && (cmd2word & CMD_MISC2__ANY_SNAG)) {
-         if (this_one->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
-         else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
-            this_one->cmd.cmd_frac_flags = CMD_FRAC_LASTHALF_VALUE;
-         else
-            this_one->cmd.cmd_frac_flags |= CMD_FRAC_FIRSTHALF_ALL;
-      }
-      else if (setupcount == 0 &&
-               (cmd2word &
-                (CMD_MISC2__SAID_INVERT|CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) ==
-               CMD_MISC2__CENTRAL_SNAG) {
+      else if (setupcount == 0 && 
+               ((cmd2word & CMD_MISC2__ANY_SNAG) ||
+                (cmd2word &
+                 (CMD_MISC2__SAID_INVERT|CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) ==
+                CMD_MISC2__CENTRAL_SNAG)) {
          if (this_one->cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
             this_one->cmd.cmd_frac_flags = CMD_FRAC_HALF_VALUE;
          else if (this_one->cmd.cmd_frac_flags == (CMD_FRAC_REVERSE | CMD_FRAC_NULL_VALUE))
@@ -3429,7 +3422,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result)
       2/18/34 - distorted column (same as above)
       3/19/35 - distorted wave   (same as above)
       4       - distorted box
-      5       - distorted diamond */
+      5       - distorted diamond
+      6       - Z */
 
 
 extern void selective_move(
@@ -3994,7 +3988,9 @@ back_here:
             }
          }
 
-         if (arg2 == 5)
+         if (arg2 == 6)
+            key = LOOKUP_Z;
+         else if (arg2 == 5)
             key = LOOKUP_DIST_DMD;
          else if (arg2 == 4)
             key = LOOKUP_DIST_BOX;
@@ -4102,17 +4098,24 @@ back_here:
             if (indicator == selective_key_disc_dist)
                lilss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
+            if (key == LOOKUP_Z) {
+               if (thislivemask == 066)
+                  lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
+               else if (thislivemask == 033)
+                  lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
+            }
+
             update_id_bits(lilss);
             impose_assumption_and_move(lilss, lilres);
 
             /* There are a few cases in which we handle shape-changers in a distorted setup.
                Print a warning if so.  Of course, it may not be allowed, in which case an
-               error will occur later.
-               But we won't give the warning if we went to a 4x4, so we just set a flag.  See below. */
+               error will occur later.  But we won't give the warning if we went to a 4x4,
+               so we just set a flag.  See below. */
 
-            if (arg2 != 0) {
-               if (     lilss->kind != lilres->kind ||
-                        lilss->rotation != lilres->rotation)
+            if (arg2 != 0 && key != LOOKUP_Z) {
+               if (lilss->kind != lilres->kind ||
+                   lilss->rotation != lilres->rotation)
                   feet_warning = TRUE;
             }
          }
@@ -4182,7 +4185,8 @@ back_here:
 
          if (lilresult[0].rotation != 0) {
             if (setup_attrs[fixp->ink].setup_limits == 5) {
-               if (lilresult[0].kind == s1x6)
+               if (lilresult[0].kind == s1x6 ||
+                   (lilresult[0].kind == s1x4 && key == LOOKUP_Z))
                   nextfixp = fixp->next1x4rot;
                else if (lilresult[0].kind == s2x3)
                   nextfixp = fixp->next2x2v;

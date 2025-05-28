@@ -732,7 +732,7 @@ extern long_boolean check_restriction(
    long_boolean instantiate_phantoms,
    uint32 flags)
 {
-   uint32 q0, q1, q2, q3, q4, q5, q6, q7;
+   uint32 q0, q1, q2, q3;
    uint32 i, k, z, t;
    int idx;
    Const veryshort *mp;
@@ -761,7 +761,8 @@ extern long_boolean check_restriction(
       /* If this finds the restriction satisfied AND successfully instantiates
          phantoms, it will clear retval. */
 
-      if (verify_restriction(ss, restr_thing_ptr, restr, instantiate_phantoms, &retval)) goto getout;
+      if (verify_restriction(ss, restr_thing_ptr, restr, instantiate_phantoms, &retval))
+         goto getout;
       goto restr_failed;
    }
 
@@ -795,89 +796,28 @@ extern long_boolean check_restriction(
       /* Restriction is "column-like". */
 
       switch (ss->kind) {
-         case s2x4:
-            switch (restr.assumption) {
-               /* These ignore any people in line-like orientation. */
-               case cr_quarterbox_or_col:
-                  k = 0;         /* check for a reasonable "quick step" or "triple cross" setup */
-                  i = 2;
-                  if (ss->people[0].id1 & 1) { k |=  ss->people[0].id1;                          }
-                  if (ss->people[1].id1 & 1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1 & 1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1 & 1) {                          i &=  ss->people[3].id1; }
-                  if (ss->people[4].id1 & 1) { k |= ~ss->people[4].id1;                          }
-                  if (ss->people[5].id1 & 1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1 & 1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1 & 1) {                          i &= ~ss->people[7].id1; }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
-               case cr_quarterbox_or_magic_col:
-                  k = 0;         /* check for a reasonable "magic quick step" or "make magic" setup */
-                  i = 2;
-                  if (ss->people[0].id1 & 1) {                          i &= ~ss->people[0].id1; }
-                  if (ss->people[1].id1 & 1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1 & 1) { k |=  ss->people[2].id1; i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1 & 1) { k |= ~ss->people[3].id1;                          }
-                  if (ss->people[4].id1 & 1) {                          i &=  ss->people[4].id1; }
-                  if (ss->people[5].id1 & 1) { k |= ~ss->people[5].id1; i &= ~ss->people[5].id1; }
-                  if (ss->people[6].id1 & 1) { k |= ~ss->people[6].id1; i &= ~ss->people[6].id1; }
-                  if (ss->people[7].id1 & 1) { k |=  ss->people[7].id1;                          }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
+      case s1x2:
+         switch (restr.assumption) {
+         case cr_opposite_sex:
+            i = 0;
+            k = 0;
+            if (ss->people[0].id1) {
+               i = ss->people[0].id1;
+               if (!(i & (ID1_PERM_BOY | ID1_PERM_GIRL)))
+                  goto restr_failed;
             }
-            break;
-         case s2x3:
-            switch (restr.assumption) {
-               case cr_quarterbox_or_col:
-                  k = 0;         /* check for a reasonable columns-of-3 "quick step" setup */
-                  i = 2;
-                  if (ss->people[0].id1) { k |=  ss->people[0].id1;                          }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) {                          i &=  ss->people[2].id1; }
-                  if (ss->people[3].id1) { k |= ~ss->people[3].id1;                          }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
-                  if (ss->people[5].id1) {                          i &= ~ss->people[5].id1; }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
-               case cr_quarterbox_or_magic_col:
-                  k = 0;         /* check for a reasonable columns-of-3 "magic quick step" setup */
-                  i = 2;
-                  if (ss->people[0].id1) {                          i &= ~ss->people[0].id1; }
-                  if (ss->people[1].id1) { k |=  ss->people[1].id1; i &=  ss->people[1].id1; }
-                  if (ss->people[2].id1) { k |= ~ss->people[2].id1;                          }
-                  if (ss->people[3].id1) {                          i &=  ss->people[3].id1; }
-                  if (ss->people[4].id1) { k |= ~ss->people[4].id1; i &= ~ss->people[4].id1; }
-                  if (ss->people[5].id1) { k |=  ss->people[5].id1;                          }
-                  if (k & ~i & 2)
-                     goto restr_failed;
-                  break;
-            }
-            break;
-         case s1x2:
-            switch (restr.assumption) {
-               case cr_opposite_sex:
-                  i = 0;
-                  k = 0;
-                  if (ss->people[0].id1) {
-                     i = ss->people[0].id1;
-                     if (!(i & (ID1_PERM_BOY | ID1_PERM_GIRL)))
-                        goto restr_failed;
-                  }
 
-                  if (ss->people[1].id1) {
-                     k = ss->people[1].id1;
-                     if (!(k & (ID1_PERM_BOY | ID1_PERM_GIRL)))
-                        goto restr_failed;
-                  }
-
-                  if ((i&k) & (ID1_PERM_BOY | ID1_PERM_GIRL))
-                     goto restr_failed;
-                  break;
+            if (ss->people[1].id1) {
+               k = ss->people[1].id1;
+               if (!(k & (ID1_PERM_BOY | ID1_PERM_GIRL)))
+                  goto restr_failed;
             }
+
+            if ((i&k) & (ID1_PERM_BOY | ID1_PERM_GIRL))
+               goto restr_failed;
             break;
+         }
+         break;
       }
    }
    else {
@@ -890,87 +830,50 @@ extern long_boolean check_restriction(
       static Const veryshort mapwk24[5] = {4, 1, 2, 6, 5};
 
       switch (restr.assumption) {
-         case cr_awkward_centers:       /* check for centers not having left hands */
-            switch (ss->kind) {
-               case s2x4: mp = mapwk24; goto check_wk;
-               case s1x8: mp = mapwkg8; goto check_wk;
-               case s1x6: mp = mapwkg6; goto check_wk;
-               case s1x4: mp = mapwkg4; goto check_wk;
-               case s1x2: mp = mapwkg2; goto check_wk;
-            }
-            break;
-         case cr_ends_are_peelable:
-            /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
-            if (ss->kind == s2x4) {
-               q1 = 0; q0 = 0; q5 = 0; q4 = 0;
-               if ((t = ss->people[0].id1) != 0) { q1 |= t; q0 |= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q5 |= t; q4 |= (t^2); }
-               if ((t = ss->people[4].id1) != 0) { q5 |= t; q4 |= (t^2); }
-               if ((t = ss->people[7].id1) != 0) { q1 |= t; q0 |= (t^2); }
-               if (((q1&3) && (q0&3)) || ((q5&3) && (q4&3)))
-                  goto restr_failed;
-            }
-            break;
-         case cr_explodable:
-            if (ss->kind == s1x4) {
-               t = ss->people[1].id1;
-               z = ss->people[3].id1;
-               if ((z & t) && ((z ^ t) & 2)) goto restr_failed;
-            }
-            break;
-         case cr_rev_explodable:
-            if (ss->kind == s1x4) {
-               t = ss->people[0].id1;
-               z = ss->people[2].id1;
-               if ((z & t) && ((z ^ t) & 2)) goto restr_failed;
-            }
-            break;
-      }
-
-      if (ss->kind == s2x2) {
-         switch (restr.assumption) {
-            case cr_not_tboned:
-               /* check for a box that is not T-boned */
-               if (((ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1) & 011) == 011)
-                  goto restr_failed;
-               break;
-            case cr_couples_only:
-               /* check for everyone as a couple */
-               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-               if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                  goto restr_failed;
-               break;
-            case cr_miniwaves:
-               /* check for everyone in miniwaves */
-               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-               if ((t = ss->people[0].id1) != 0) { q0 |= t;     q2 &= t;     q1 |= (t^2); q3 &= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q0 |= (t^2); q7 &= t;     q1 |= t;     q6 &= (t^2); }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t;     q7 &= (t^2); q4 |= (t^2); q6 &= t; }
-               if ((t = ss->people[3].id1) != 0) { q5 |= (t^2); q2 &= (t^2); q4 |= t;     q3 &= t; }
-               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                  goto restr_failed;
-               break;
-            case cr_peelable_box:
-               /* check for a "peelable" (everyone in genuine tandem somehow) box */
-               q0 = 0; q1 = 0; q2 = 3; q3 = 3;
-               q4 = 0; q5 = 0; q7 = 3; q6 = 3;
-               if ((t = ss->people[0].id1) != 0) { q0 |= t; q2 &= t; q1 |= (t^2); q3 &= (t^2); }
-               if ((t = ss->people[1].id1) != 0) { q5 |= t; q2 &= t; q4 |= (t^2); q3 &= (t^2); }
-               if ((t = ss->people[2].id1) != 0) { q5 |= t; q7 &= t; q4 |= (t^2); q6 &= (t^2); }
-               if ((t = ss->people[3].id1) != 0) { q0 |= t; q7 &= t; q1 |= (t^2); q6 &= (t^2); }
-               if (((q0&3) && ((~q2)&3) && (q1&3) && ((~q3)&3)) ||
-                   ((q5&3) && ((~q7)&3) && (q4&3) && ((~q6)&3)))
-                  goto restr_failed;
-               break;
+      case cr_awkward_centers:       /* check for centers not having left hands */
+         switch (ss->kind) {
+         case s2x4: mp = mapwk24; goto check_wk;
+         case s1x8: mp = mapwkg8; goto check_wk;
+         case s1x6: mp = mapwkg6; goto check_wk;
+         case s1x4: mp = mapwkg4; goto check_wk;
+         case s1x2: mp = mapwkg2; goto check_wk;
          }
+         break;
+      case cr_ends_are_peelable:
+         /* check for ends in a "peelable" (everyone in genuine tandem somehow) box */
+         if (ss->kind == s2x4) {
+            q1 = 0; q0 = 0; q3 = 0; q2 = 0;
+            if ((t = ss->people[0].id1) != 0) { q1 |= t; q0 |= (t^2); }
+            if ((t = ss->people[3].id1) != 0) { q3 |= t; q2 |= (t^2); }
+            if ((t = ss->people[4].id1) != 0) { q3 |= t; q2 |= (t^2); }
+            if ((t = ss->people[7].id1) != 0) { q1 |= t; q0 |= (t^2); }
+            if (((q1&3) && (q0&3)) || ((q3&3) && (q2&3)))
+               goto restr_failed;
+         }
+         break;
+      case cr_explodable:
+         if (ss->kind == s1x4) {
+            t = ss->people[1].id1;
+            z = ss->people[3].id1;
+            if ((z & t) && ((z ^ t) & 2)) goto restr_failed;
+         }
+         break;
+      case cr_rev_explodable:
+         if (ss->kind == s1x4) {
+            t = ss->people[0].id1;
+            z = ss->people[2].id1;
+            if ((z & t) && ((z ^ t) & 2)) goto restr_failed;
+         }
+         break;
+      case cr_not_tboned:
+         q0 = 0;
+
+         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++)
+            q0 |= ss->people[idx].id1;
+
+         if ((q0 & 011) == 011) goto restr_failed;
+
+         break;
       }
    }
 
@@ -1004,9 +907,9 @@ extern long_boolean check_restriction(
       case CAF__RESTR_FORBID:
          fail("This call is not legal from this formation.");
       case 99:
-         if (restr.assumption == cr_gen_n_4_tag && restr.assump_both == 1)
+         if (restr.assumption == cr_qtag_like && restr.assump_both == 1)
             fail("People are not facing as in 1/4 tags.");
-         else if (restr.assumption == cr_gen_n_4_tag && restr.assump_both == 2)
+         else if (restr.assumption == cr_qtag_like && restr.assump_both == 2)
             fail("People are not facing as in 3/4 tags.");
          else if (restr.assumption == cr_wave_only && restr.assump_col == 0)
             fail("People are not in waves.");
@@ -1028,7 +931,7 @@ extern long_boolean check_restriction(
       no live people violate the restriction. */
 
    switch (ss->cmd.cmd_assume.assumption) {
-   case cr_gen_n_4_tag: case cr_qtag_like:
+   case cr_qtag_like:
       switch (restr.assumption) {
       case cr_diamond_like: case cr_pu_qtag_like:
          fail("An assumed facing direction for phantoms is illegal for this call.");
@@ -1037,14 +940,14 @@ extern long_boolean check_restriction(
       break;
    case cr_diamond_like:
       switch (restr.assumption) {
-      case cr_gen_n_4_tag: case cr_qtag_like: case cr_pu_qtag_like:
+      case cr_qtag_like: case cr_pu_qtag_like:
          fail("An assumed facing direction for phantoms is illegal for this call.");
          break;
       }
       break;
    case cr_pu_qtag_like:
       switch (restr.assumption) {
-      case cr_gen_n_4_tag: case cr_qtag_like: case cr_diamond_like:
+      case cr_qtag_like: case cr_diamond_like:
          fail("An assumed facing direction for phantoms is illegal for this call.");
          break;
       }
@@ -2793,27 +2696,28 @@ Private int divide_the_setup(
          if (must_do_mystic)
             goto do_mystically;
 
-         /* See long comment above for s1x8.  The test cases for this are "own the <points>, trade
-            by flip the diamond", and "own the <points>, flip the diamond by flip the diamond". */
+         /* See long comment above for s1x8.  The test cases for this are
+            "own the <points>, trade by flip the diamond", and
+            "own the <points>, flip the diamond by flip the diamond". */
 
          if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
-                  (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
-            setup sstest = *ss;
+             (ss->people[1].id1 | ss->people[2].id1 |
+              ss->people[5].id1 | ss->people[6].id1) == 0) {
             uint32 tbtest;
+            setup sstest = *ss;
 
-            sstest.kind = s_qtag;   /* It makes assoc happier if we do this now. */
-            (void) copy_rot(&sstest, 1, &sstest, 0, 011);
-            (void) copy_rot(&sstest, 0, &sstest, 7, 011);
-            (void) copy_rot(&sstest, 5, &sstest, 4, 011);
-            (void) copy_rot(&sstest, 4, &sstest, 3, 011);
-            clear_person(&sstest, 3);
-            clear_person(&sstest, 7);
-            sstest.rotation--;
-            tbtest = sstest.people[0].id1 | sstest.people[1].id1 | sstest.people[4].id1 | sstest.people[5].id1;
+            expand_setup(&comp_qtag_2x4_stuff, &sstest);
 
-            if (
-                  (!(tbtest & 010) || assoc(b_qtag, &sstest, calldeflist) || assoc(b_pmd, &sstest, calldeflist)) &&
-                  (!(tbtest & 001) || assoc(b_pqtag, &sstest, calldeflist) || assoc(b_dmd, &sstest, calldeflist))) {
+            tbtest =
+               sstest.people[0].id1 | sstest.people[1].id1 |
+               sstest.people[4].id1 | sstest.people[5].id1;
+
+            if ((!(tbtest & 010) ||
+                 assoc(b_qtag, &sstest, calldeflist) ||
+                 assoc(b_pmd, &sstest, calldeflist)) &&
+                (!(tbtest & 001) ||
+                 assoc(b_pqtag, &sstest, calldeflist) ||
+                 assoc(b_dmd, &sstest, calldeflist))) {
                *ss = sstest;
                *newtb_p = tbtest;
                return 2;                        /* And try again. */

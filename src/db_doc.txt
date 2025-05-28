@@ -739,6 +739,28 @@ deepqtg     |_____|_____|_____|_____|
 
 
 
+                _____       _____
+               |     |     |     |
+               |  0  |     |  1  |
+               |_____|     |_____|
+               |     |     |     |
+               |  2  |     |  3  |
+             __|__ __|__ __|__ __|__
+            |     |     |     |     |
+            |  7  |  6  |  5  |  4  |
+deepbigqtg  |_____|_____|_____|_____|
+            |     |     |     |     |
+            | 12  | 13  | 14  | 15  |
+            |_____|_____|_____|_____|
+               |     |     |     |
+               | 11  |     | 10  |
+               |_____|     |_____|
+               |     |     |     |
+               |  9  |     |  8  |
+               |_____|     |_____|
+
+
+
                          _____ _____
                         |     |     |
                         |  2  | 11  |
@@ -2571,8 +2593,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     left hands with each other
    diamond_like,                    dmd, qtag or ptpd - points look sideways, and centers
                                     are line-like
-   qtag_like,                       dmd, qtag or ptpd - points look in or out, and centers
-                                    are line-like
+   qtag_like,                       dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
+                                    and centers are line-like
    pu_qtag_like,                    dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
                                     and centers are column-like
    nice_diamonds,                   dmd, qtag or ptpd - diamond(s) have consistent handedness,
@@ -2653,6 +2675,21 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                              outer disconnected wave.
    diamond_like,                    Same as corresponding restriction, above.
    qtag_like,                       Same as corresponding restriction, above.
+                                    We additionally allow the "in" or "out" modifiers, to
+                                    demand 1/4 tag or 3/4 tag, respectively.
+                                    Also, if "in" or "out" is given, the "live" modifier
+                                    requires at least one live end to make the distinction
+                                    definitive.  It does not require all live people.
+                       NOTE that "gen_n_4_tag" is identical to "qtag_like"
+   gen_n_4_tag                      dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
+                                    in which the ends could individually be facing either
+                                    in or out, and the centers form some kind of line.
+                                    Modifier "in" or "out" applies to ends, and tests for
+                                    1/4 tag or 3/4 tag, respectively.  If "in" or "out"
+                                    is given, the "live" modifier makes it demand at least
+                                    one live end, so that the in/out test is definitive.
+                                    It does not test for all live people the way it does
+                                    in some other cases.
    pu_qtag_like,                    Same as corresponding restriction, above.  Right/left refer
                                        to points.  The "live" modifier demands that there be
                                        be at least one definitive person to test right or left.
@@ -2669,15 +2706,6 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    miniwaves,                       Same as corresponding restriction, above.
    not_miniwaves,                   True if all people are live, and the miniwaves restriction,
                                     above, FAILS.
-   gen_n_4_tag                      dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
-                                    in which the ends could individually be facing either
-                                    in or out, and the centers form some kind of line.
-                                    Modifier "in" or "out" applies to ends, and tests for
-                                    1/4 tag or 3/4 tag, respectively.  If "in" or "out"
-                                    is given, the "live" modifier makes it demand at least
-                                    one live end, so that the in/out test is definitive.
-                                    It does not test for all live people the way it does
-                                    in some other cases.
    dmd_same_point,                  dmd - centers would circulate to same point
    dmd_facing,                      dmd - diamond is fully occupied and fully facing
    true_Z_cw, true_Z_ccw,           2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.
@@ -2744,11 +2772,13 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     and at least one center must be column-like.
    col_ends_looking_in              2x4 columns - the ends are #4
    ripple stuff .......
-   people_1_and_5_real           /* 1x8 (or any applicable setup) people #1 and #5 are real */
-   centers_sel                   /* 1x4/2x4/qtag - the centers are selected and the ends are not. */
-   ends_sel                      /* 1x4/2x4/qtag - the ends are selected and the centers are not. */
-   all_sel                       /* 1x1/1x2 - everyone in the setup is selected */
-   none_sel                      /* 1x1/1x2 - no one in the setup is selected */
+   people_1_and_5_real              1x8 (or any applicable setup) people #1 and #5 are real.
+   centers_sel                      1x4/2x4/qtag/bone - the centers are selected
+                                    and the ends are not.
+   ends_sel                         1x4/2x4/qtag/bone - the ends are selected
+                                    and the centers are not.
+   all_sel                          1x1/1x2 - everyone in the setup is selected.
+   none_sel                         1x1/1x2 - no one in the setup is selected.
 
 
                            APPENDIX D -- TOP LEVEL FLAGS

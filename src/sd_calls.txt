@@ -32,7 +32,7 @@
     General Public License if you distribute the file.
 */
 
-version "32.4"
+version "32.5"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1800,6 +1800,24 @@ call "flip the 3x1 triangle" c4a
          if one_cw_person  [   0 AL0E    0    0 CR2E    0]
          if always         [ZM1W    0    0 AL1W    0    0]
 
+call "flip the Z" c4
+            split_large_setups
+   setup 3x2 1x4 array [0 0 0 0 0 0]
+            alternate_definition [reverse] c4
+   setup 3x2 1x4 rotate qualifier true_Z_cw
+      array [   0 AL0E CR3E    0 CR2E ZM3W]
+   setup 3x2 1x4 rotate qualifier true_Z_ccw
+      array [ZM1W AL0E 0    AL1E CR2E 0]
+
+call "cut the Z" c4
+            split_large_setups
+   setup 3x2 1x4 array [0 0 0 0 0 0]
+            alternate_definition [reverse] c4
+   setup 3x2 1x4 rotate qualifier true_Z_cw
+      array [   0 CR2E CR3E    0 AL0E ZM3W]
+   setup 3x2 1x4 rotate qualifier true_Z_ccw
+      array [ZM1W CR2E 0    AL1E AL0E 0]
+
 call "reshape the triangle" c2
    simple_funny
    setup trngl trngl
@@ -3181,53 +3199,53 @@ call "spin the yoyo" c4
 
 call "jay walk" c1 tag jaywalk
    partnermatrix find_jaywalkers
-      [16N 16 16N 16 0 0 0 0 0 0]
+      [ZM16N 16 ZM16N 16 0 0 0 0 0 0]
 
 call "@6 jay walk" c1
    partnermatrix use_selector ignore_nonselectees find_jaywalkers
-      [16N 16 16N 16 0 0 0 0 0 0]
+      [ZM16N 16 ZM16N 16 0 0 0 0 0 0]
 
 call "jay touch 1/4" c3a
    partnermatrix find_jaywalkers
-      [16E 16 16E 16 0 0 0 0 0 0]
+      [CR16E 16 CR16E 16 0 0 0 0 0 0]
 
 call "@6 jay touch 1/4" c3a
    partnermatrix use_selector ignore_nonselectees find_jaywalkers
-      [16E 16 16E 16 0 0 0 0 0 0]
+      [CR16E 16 CR16E 16 0 0 0 0 0 0]
 
 call "jay slide thru" c3a
    partnermatrix find_jaywalkers
-      [16E 16 16W 16 0 0 0 0 0 0]
+      [CR16E 16 AL16W 16 0 0 0 0 0 0]
 
 call "@6 jay slide thru" c3a
    partnermatrix use_selector ignore_nonselectees find_jaywalkers
-      [16E 16 16W 16 0 0 0 0 0 0]
+      [CR16E 16 AL16W 16 0 0 0 0 0 0]
 
 /* This will allow nonsensical uses.  That's too bad.  Use of "<so-and-so> spread" to
    go from columns to blocks (or whatever) violates the definition of the call anyway. */
 call "@6 spread" c1
    partnermatrix use_selector tbone_is_ok both_selected_ok
-      [M16N 16 M16N 16 M16N 16 M16N 16 M14N 16 M14N 16 M18N 16 M18N 16]
+      [ZM16N 16 ZM16N 16 ZM16N 16 ZM16N 16 ZM14N 16 ZM14N 16 ZM18N 16 ZM18N 16]
 
 call "@6 shove off" c3a
    partnermatrix use_selector stop_and_warn_on_tbone
-      [M18N 16 M18N 16 M14N 16 M14N 16 L14S 16 L14S 16 R18S 16 R18S 16]
+      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 AL14S 16 AL14S 16 CR18S 16 CR18S 16]
 
 call "@6 1/2 shove off" c3a
    partnermatrix use_selector stop_and_warn_on_tbone
-      [M17N 16 M17N 16 M15N 16 M15N 16 L15W 16 L15W 16 R17E 16 R17E 16]
+      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 AL15W 16 AL15W 16 CR17E 16 CR17E 16]
 
 call "@6 tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [M18N 16 M18N 16 M14N 16 M14N 16 M14N 16 0 0 M18N 16]
+      [ZM18N 16 ZM18N 16 ZM14N 16 ZM14N 16 ZM14N 16 0 0 ZM18N 16]
 
 call "@6 1/2 tow truck" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [M17N 16 M17N 16 M15N 16 M15N 16 M15N 16 0 0 M17N 16]
+      [ZM17N 16 ZM17N 16 ZM15N 16 ZM15N 16 ZM15N 16 0 0 ZM17N 16]
 
 call "@6 run the wheel (matrix)" c3x
    partnermatrix use_selector stop_and_warn_on_tbone
-      [R18W 16 R18W 16 L14E 16 L14E 16 R16W 14 R16W 14 L16E 14 L16E 14]
+      [CR18W 16 CR18W 16 AL14E 16 AL14E 16 CR16W 14 CR16W 14 AL16E 14 AL16E 14]
 
 /* This is somewhat pathetic, but people have used this call with "own the anyone",
    in which the phantoms that remained when the other people left the room were
@@ -3258,36 +3276,36 @@ call "@6 run the wheel" c3x
 
 call "bridge the gap" c4a
    partnermatrix tbone_is_ok
-      [M14N 18 M14N 18 L14S 18 L14S 18 0 0 0 0]
+      [ZM14N 18 ZM14N 18 AL14S 18 AL14S 18 0 0 0 0]
 
 call "@6 right anchor 1/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 R18E 18 R18E 18 R16E 16 R16E 16]
+      [0 0 0 0 CR18E 18 CR18E 18 CR16E 16 CR16E 16]
 
 call "@6 left anchor 1/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 L16W 16 L16W 16 L14W 18 L14W 18]
+      [0 0 0 0 AL16W 16 AL16W 16 AL14W 18 AL14W 18]
 
 call "@6 right anchor 1/2" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 R20S 16 R20S 16 R16S 16 R16S 16]
+      [0 0 0 0 CR20S 16 CR20S 16 CR16S 16 CR16S 16]
 
 call "@6 left anchor 1/2" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 L16S 16 L16S 16 L12S 16 L12S 16]
+      [0 0 0 0 AL16S 16 AL16S 16 AL12S 16 AL12S 16]
 
 call "@6 right anchor 3/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 R18W 14 R18W 14 R16W 16 R16W 16]
+      [0 0 0 0 CR18W 14 CR18W 14 CR16W 16 CR16W 16]
 
 call "@6 left anchor 3/4" c4a
    partnermatrix use_selector ignore_nonselectees must_face_same_way
-      [0 0 0 0 L16E 16 L16E 16 L14E 14 L14E 14]
+      [0 0 0 0 AL16E 16 AL16E 16 AL14E 14 AL14E 14]
 
 call "@6 squeeze" c1
             dont_use_in_resolve
    partnermatrix use_selector ignore_nonselectees stop_and_warn_on_tbone find_squeezers
-      [0 0 0 0 R20S 16 R20S 16 L12S 16 L12S 16]
+      [0 0 0 0 CR20S 16 CR20S 16 AL12S 16 AL12S 16]
 
 call "@6 start a squeeze" c1
             dont_use_in_resolve
@@ -3301,31 +3319,31 @@ call "@6 start a squeeze" c1
 call "@6 like a squeeze" c1    /* Not right!  Testing purposes only! */
             dont_use_in_resolve
    partnermatrix use_selector ignore_nonselectees stop_and_warn_on_tbone find_spreaders
-      [0 0 0 0 M14N 16 M14N 16 M18N 16 M18N 16]
+      [0 0 0 0 ZM14N 16 ZM14N 16 ZM18N 16 ZM18N 16]
 
 call "@6 quarter right" mainstream
             dont_use_in_resolve
-   matrix use_selector [R16E 16 R16E 16]
+   matrix use_selector [CR16E 16 CR16E 16]
 
 call "@6 quarter left" mainstream
             dont_use_in_resolve
-   matrix use_selector [L16W 16 L16W 16]
+   matrix use_selector [AL16W 16 AL16W 16]
 
 call "@6 1/4 right" mainstream
             dont_use_in_resolve
-   matrix use_selector [R16E 16 R16E 16]
+   matrix use_selector [CR16E 16 R16E 16]
 
 call "@6 1/4 left" mainstream
             dont_use_in_resolve
-   matrix use_selector [L16W 16 L16W 16]
+   matrix use_selector [AL16W 16 AL16W 16]
 
 call "@6 face right" mainstream
             dont_use_in_resolve
-   matrix use_selector [R16E 16 R16E 16]
+   matrix use_selector [CR16E 16 CR16E 16]
 
 call "@6 face left" mainstream
             dont_use_in_resolve
-   matrix use_selector [L16W 16 L16W 16]
+   matrix use_selector [AL16W 16 AL16W 16]
 
 call "@6 U-turn back" mainstream tag some_utb
             dont_use_in_resolve
@@ -3333,159 +3351,159 @@ call "@6 U-turn back" mainstream tag some_utb
 
 call "press ahead" mainstream
             dont_use_in_resolve
-   matrix [M16N 18 M16N 18]
+   matrix [ZM16N 18 ZM16N 18]
 
 call "@6 press ahead" mainstream
             dont_use_in_resolve
-   matrix use_selector [M16N 18 M16N 18]
+   matrix use_selector [ZM16N 18 ZM16N 18]
 
 call "1/2 press ahead" mainstream
             dont_use_in_resolve
-   matrix [M16N 17 M16N 17]
+   matrix [ZM16N 17 ZM16N 17]
 
 call "@6 1/2 press ahead" mainstream
             dont_use_in_resolve
-   matrix use_selector [M16N 17 M16N 17]
+   matrix use_selector [ZM16N 17 ZM16N 17]
 
 call "press right" mainstream
             dont_use_in_resolve
-   matrix [M18N 18 M18N 18]
+   matrix [ZM18N 18 ZM18N 18]
 
 call "@6 press right" mainstream
             dont_use_in_resolve
-   matrix use_selector [M18N 18 M18N 18]
+   matrix use_selector [ZM18N 18 ZM18N 18]
 
 call "press left" mainstream
             dont_use_in_resolve
-   matrix [M14N 18 M14N 18]
+   matrix [ZM14N 18 ZM14N 18]
 
 call "@6 press left" mainstream
             dont_use_in_resolve
-   matrix use_selector [M14N 18 M14N 18]
+   matrix use_selector [ZM14N 18 ZM14N 18]
 
 call "truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix [M14N 16 M18N 16]
+   matrix [ZM14N 16 ZM18N 16]
 
 call "@6 truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix use_selector [M14N 16 M18N 16]
+   matrix use_selector [ZM14N 16 ZM18N 16]
 
 call "1/2 truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix [M15N 16 M17N 16]
+   matrix [ZM15N 16 ZM17N 16]
 
 call "@6 1/2 truck" c2
             dont_use_in_resolve reverse_means_mirror
-   matrix use_selector [M15N 16 M17N 16]
+   matrix use_selector [ZM15N 16 ZM17N 16]
 
 call "reverse truck" c2
             dont_use_in_resolve
-   matrix [M18N 16 M14N 16]
+   matrix [ZM18N 16 ZM14N 16]
 
 call "@6 reverse truck" c2
             dont_use_in_resolve
-   matrix use_selector [M18N 16 M14N 16]
+   matrix use_selector [ZM18N 16 ZM14N 16]
 
 call "1/2 reverse truck" c2
             dont_use_in_resolve
-   matrix [M17N 16 M15N 16]
+   matrix [ZM17N 16 ZM15N 16]
 
 call "@6 1/2 reverse truck" c2
             dont_use_in_resolve
-   matrix use_selector [M17N 16 M15N 16]
+   matrix use_selector [ZM17N 16 ZM15N 16]
 
 call "E.R.A." c4
             dont_use_in_resolve
-   matrix [M16N 14 M16N 18]
+   matrix [ZM16N 14 ZM16N 18]
 
 call "@6 E.R.A." c4
             dont_use_in_resolve
-   matrix use_selector [M16N 14 M16N 18]
+   matrix use_selector [ZM16N 14 ZM16N 18]
 
 call "1/2 E.R.A." c4
             dont_use_in_resolve
-   matrix [M16N 15 M16N 17]
+   matrix [ZM16N 15 ZM16N 17]
 
 call "@6 1/2 E.R.A." c4
             dont_use_in_resolve
-   matrix use_selector [M16N 15 M16N 17]
+   matrix use_selector [ZM16N 15 ZM16N 17]
 
 call "M.C.P." c4
             dont_use_in_resolve
-   matrix [M16N 18 M16N 14]
+   matrix [ZM16N 18 ZM16N 14]
 
 call "@6 M.C.P." c4
             dont_use_in_resolve
-   matrix use_selector [M16N 18 M16N 14]
+   matrix use_selector [ZM16N 18 ZM16N 14]
 
 call "1/2 M.C.P." c4
             dont_use_in_resolve
-   matrix [M16N 17 M16N 15]
+   matrix [ZM16N 17 ZM16N 15]
 
 call "@6 1/2 M.C.P." c4
             dont_use_in_resolve
-   matrix use_selector [M16N 17 M16N 15]
+   matrix use_selector [ZM16N 17 ZM16N 15]
 
 call "@6 leap frog" c4
             dont_use_in_resolve
-   matrix use_selector [M16N 20 M16N 20]
+   matrix use_selector [ZM16N 20 ZM16N 20]
 
 call "@6 right loop 0" c2
             dont_use_in_resolve
-   matrix use_selector [R18S 16 R18S 16]
+   matrix use_selector [CR18S 16 CR18S 16]
 
 call "@6 right loop 1" c2
             dont_use_in_resolve
-   matrix use_selector [R20S 16 R20S 16]
+   matrix use_selector [CR20S 16 CR20S 16]
 
 call "@6 right loop 2" c2
             dont_use_in_resolve
-   matrix use_selector [R22S 16 R22S 16]
+   matrix use_selector [CR22S 16 CR22S 16]
 
 call "@6 right loop 3" c2
             dont_use_in_resolve
-   matrix use_selector [R24S 16 R24S 16]
+   matrix use_selector [CR24S 16 CR24S 16]
 
 call "@6 left loop 0" c2
             dont_use_in_resolve
-   matrix use_selector [L14S 16 L14S 16]
+   matrix use_selector [AL14S 16 AL14S 16]
 
 call "@6 left loop 1" c2
             dont_use_in_resolve
-   matrix use_selector [L12S 16 L12S 16]
+   matrix use_selector [AL12S 16 AL12S 16]
 
 call "@6 left loop 2" c2
             dont_use_in_resolve
-   matrix use_selector [L10S 16 L10S 16]
+   matrix use_selector [AL10S 16 AL10S 16]
 
 call "@6 left loop 3" c2
             dont_use_in_resolve
-   matrix use_selector [L8S 16 L8S 16]
+   matrix use_selector [AL8S 16 AL8S 16]
 
 call "curve right" c3x
             dont_use_in_resolve
-   matrix [R18E 18 R18E 18]
+   matrix [CR18E 18 CR18E 18]
 
 call "@6 curve right" c3x
             dont_use_in_resolve
-   matrix use_selector [R18E 18 R18E 18]
+   matrix use_selector [CR18E 18 CR18E 18]
 
 call "curve left" c3x
             dont_use_in_resolve
-   matrix [L14W 18 L14W 18]
+   matrix [AL14W 18 AL14W 18]
 
 call "@6 curve left" c3x
             dont_use_in_resolve
-   matrix use_selector [L14W 18 L14W 18]
+   matrix use_selector [AL14W 18 AL14W 18]
 
 call "plus @9" c4
             dont_use_in_resolve
-   matrix use_veer_data use_number [M15N 16 M17N 16]
+   matrix use_veer_data use_number [ZM15N 16 ZM17N 16]
 
 call "@6 plus @9" c4
             dont_use_in_resolve
-   matrix use_selector use_veer_data use_number [M15N 16 M17N 16]
+   matrix use_selector use_veer_data use_number [ZM15N 16 ZM17N 16]
 
 call "@6 roll" plus tag anyoneroll
    rolldefine
@@ -6902,6 +6920,14 @@ call "_ @6@C fold" dontshow tag full_fold
    setup 4x1 3x4
       preds "Can't tell who is designated."
          if unselect [0 ZM11N 0 ZM5N]
+   setup bone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [CR0S AL1S ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pbone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup qtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pqtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    CR1S ZM2N ZM3N AL4S 0 ZM6N ZM7N]
             alternate_definition [cross] mainstream
    setup 1x4 3x4
       preds "Can't tell who is designated."
@@ -6910,6 +6936,14 @@ call "_ @6@C fold" dontshow tag full_fold
    setup 4x1 3x4
       preds "Can't tell who is designated."
          if unselect_once_rem_from_select [0 ZM11N 0 ZM5N]
+   setup bone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [CR1S AL0S ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pbone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup qtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pqtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    CR4S ZM2N ZM3N AL1S 0 ZM6N ZM7N]
 
 call "_fudge 1 after fold" dontshow tag fold_fudge1
             split_large_setups
@@ -6931,6 +6965,14 @@ call "_fudge 1 after fold" dontshow tag fold_fudge1
       array [ZM0N 0 ZM1N ZM2N 0 ZM3N ZM4N 0 ZM5N ZM6N 0 ZM7N ZM8N 0 ZM9N ZM10N 0 ZM11N]
    setup 4x4 2x4 rotate qualifier lateral_columns_empty
       array [ZM0W ZM1W ZM2W ZM1W ZM3W ZM3W ZM4W ZM2W ZM4W ZM5W ZM6W ZM5W ZM7W ZM7W ZM0W ZM6W]
+   setup bone bone
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pbone bone
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup qtag qtag
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pqtag qtag
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
 
 call "_fudge 2 after fold" dontshow tag fold_fudge2
             split_large_setups
@@ -6954,6 +6996,14 @@ call "_fudge 2 after fold" dontshow tag fold_fudge2
       preds "?"
          if columns_someone_in_front [ZM0N ZM0N ZM1N ZM2N ZM3N ZM3N]
          if always                   [ZM0N ZM1N ZM1N ZM2N ZM2N ZM3N]
+   setup bone bone
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pbone bone
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup qtag qtag
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+   setup pqtag qtag
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
 
 /* This is the call that fudges the result back to a box instead of leaving
    a "Z".  This is what dancers below C1 or so will typically do. */
@@ -6974,6 +7024,14 @@ call "@6@C fold" c1
    setup 4x1 3x4
       preds "Can't tell who is designated."
          if unselect_near_select [0 ZM11N 0 ZM5N]
+   setup bone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [CR0S AL1S ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pbone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup qtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pqtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    CR1S ZM2N ZM3N AL4S 0 ZM6N ZM7N]
             alternate_definition [cross] c1
    setup 1x4 3x4
       preds "Can't tell who is designated."
@@ -6982,6 +7040,14 @@ call "@6@C fold" c1
    setup 4x1 3x4
       preds "Can't tell who is designated."
          if unselect_once_rem_from_select [0 ZM11N 0 ZM5N]
+   setup bone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [CR1S AL0S ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pbone qtag qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup qtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    0    ZM2N ZM3N 0    0 ZM6N ZM7N]
+   setup pqtag bone qualifier ends_sel restriction controversial alwaysfail
+      array [0    CR4S ZM2N ZM3N AL1S 0 ZM6N ZM7N]
 
 call "loop the loop" c4x
    setup 1x4 2x3 rotate
@@ -9715,7 +9781,7 @@ call "@0 like a couple up" c3a
 
 call "_divide and move along" dontshow tag div_move_along
    setup 2x2 2x2 other_elongate
-      array [0S 1S 2N 3N]
+      array [AL0S CR1S CAL2N ACR3N]
 
 call "_real leads divide and move along" dontshow tag real_leads_div_move_along
             parallel_conc_end
@@ -10585,7 +10651,7 @@ call "mayday" c4x
       array [3E 1N 4S 6S 0 0 0 0]
 
 call "detach" c4x
-   conc efinplenty [] zing [conc_demand_lines conc_force_otherway endscando]
+   conc ctr_rot_roll [] zing [conc_demand_lines conc_force_otherway endscando]
 
 call "_start trap it @b" dontshow tag trap_1_4
             neednumber
@@ -11800,12 +11866,12 @@ call "extend" mainstream tag extend
       array [ZM0N ZM1N 0 0]
    setup 2x2 dmd rotate qualifier miniwaves /* 1/2 tag to 3/4 tag */
       array [ZM0W ZM0W ZM1W ZM3W]
-   setup pmd 1x4 qualifier out gen_n_4_tag  /* 3/4 tag to 4/4 tag --
+   setup pmd 1x4 qualifier out qtag_like    /* 3/4 tag to 4/4 tag --
                                                test is not definitive,
                                                cf. test lg01t. */
       array [0 ZM3N ZM2N ZM3N]
-   setup pmd 2x2 qualifier live in gen_n_4_tag   /* 1/4 tag to 1/2 tag --
-                                                    demand the test be definitive. */
+   setup pmd 2x2 qualifier live in qtag_like /* 1/4 tag to 1/2 tag --
+                                                demand the test be definitive. */
       preds "???"
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
          if always      [ZM3N 0 0 ZM2N]
@@ -11814,7 +11880,7 @@ call "extend" mainstream tag extend
    setup 1x2 1x2 rotate qualifier miniwaves /* Lone miniwave: step thru. */
       array [ZM0W ZM0W]
             alternate_definition [cross] c3x
-   setup pmd 2x2 qualifier live in gen_n_4_tag   /* 1/4 tag to 1/2 tag */
+   setup pmd 2x2 qualifier live in qtag_like   /* 1/4 tag to 1/2 tag */
       preds "???"
          if dmd_ctrs_rh [ZM3N ZM2N 0 0]
          if always      [ZM0N 0 0 ZM1N]
@@ -12141,7 +12207,8 @@ call "_swing to a column centers part 1" dontshow tag touch_1_2_and_roll
 
 call "_swing to a column part 1" dontshow tag swingtocol1
             left_means_mirror
-   conc touch_1_2_and_roll [inherit_left] div_move_along [conc_demand_columns conc_force_otherway]
+   conc touch_1_2_and_roll [inherit_left]
+        div_move_along [conc_demand_columns conc_force_otherway]
 
 call "_swing to a column part 1" dontshow tag swingtocol2
             left_means_mirror
@@ -12159,6 +12226,9 @@ call "swing to a column" c4a
 
 call "_grand chain 8 part 1" dontshow tag gc8p1
             rear_back_from_r_wave rear_back_from_qtag left_means_mirror
+            funny_means_those_facing
+   setup 2x1 1x2
+      array [ZM1N 0]
    setup 2x4 2x4
       array [0 0 0 0 ZM3N ZM2N ZM1N ZM0N]
    setup 4x2 2x4
@@ -12166,6 +12236,8 @@ call "_grand chain 8 part 1" dontshow tag gc8p1
          if columns_tandem     [ZM0N ZM2N 0    0 0 0    ZM5N ZM7N]
          if columns_antitandem [ZM1N 0    ZM3N 0 0 ZM4N 0    ZM6N]
             alternate_definition [twisted] c4
+   setup 2x1 1x2 rotate
+      array [CM1N 0]
    setup 8x1 2x4
       array [CM7E 0 0 CM6E 0 CM4E CM5E 0]
    setup 4x2 2x4 rotate
@@ -12197,9 +12269,10 @@ call "_finish grand chain 8" dontshow tag gc8p2
       array [AL1E 0 AL3E 0 AL5E 0 AL7E 0 0 CAL8W 0 CAL10W 0 CAL12W 0 CAL14W]
 
 call "grand chain 8" c2
-            first_part_visible left_means_mirror twisted_is_inherited nxn_is_inherited bigmatrix_is_inherited
-   seq gc8p1 [inherit_left inherit_twisted inherit_nxn inherit_bigmatrix]
-   seq gc8p2 [inherit_left inherit_nxn inherit_bigmatrix]
+            first_part_visible left_means_mirror twisted_is_inherited
+            nxn_is_inherited bigmatrix_is_inherited funny_is_inherited
+   seq gc8p1 [inherit_left inherit_twisted inherit_nxn inherit_bigmatrix inherit_funny]
+   seq gc8p2 [inherit_left inherit_nxn inherit_bigmatrix inherit_funny]
 
 call "_centers finish grand chain 8" dontshow tag ctrfingc8
    setup 2x2 2x2
@@ -14929,7 +15002,7 @@ call "_fudgy boxy scoot back" dontshow tag fudgyboxyscootback
    setup 2x2 2x2 restriction unusual alwaysfail
       array [CR0S AL1S AL2E CR3W]
 
-call "scoot back to a wave" c1
+call "scoot back to a wave" c1 tag scootbacktowave
    setup 2x2 dmd rotate restriction forbidden wave_only
       array [CR0E AL0E AL3E CR1E]
    setup pmd 2x2 qualifier right dmd_ctrs_mwv
@@ -15701,10 +15774,20 @@ call "chain reaction@S but @0" a1
    because we might change it to a revert the tag reaction, which has another
    cast off 3/4. */
 
-call "scoot@C reaction@S" c3a
+/*
+call "_old scoot@C reaction@S" c3a
             cross_is_inherited yoyo_is_inherited
    seq fudgyboxyscootback [inherit_yoyo]
    seq wvchreact_1 [inherit_cross]
+   seq wvchreact_2 []
+   seq turndmdn_endstrade [insert_number 1]
+   seq finishwithplainmod []
+*/
+
+call "scoot@C reaction@S" c3a
+            first_part_visible cross_is_inherited yoyo_is_inherited
+   seq scootbacktowave [inherit_yoyo]
+   seq chreact_1 [inherit_cross]
    seq wvchreact_2 []
    seq turndmdn_endstrade [insert_number 1]
    seq finishwithplainmod []
@@ -15808,15 +15891,15 @@ call "reactivate to a diamond" c4
    seq reactivate2dmd []
 
 call "scoot@C reactivate" c3
-            cross_is_inherited yoyo_is_inherited
-   seq fudgyboxyscootback [inherit_yoyo]
-   seq wvchreact_1 [inherit_cross]
+            first_part_visible cross_is_inherited yoyo_is_inherited
+   seq scootbacktowave [inherit_yoyo]
+   seq chreact_1 [inherit_cross]
    seq reactivate2 []
 
 call "scoot@C reactivate to a diamond" c4
-            cross_is_inherited yoyo_is_inherited
-   seq fudgyboxyscootback [inherit_yoyo]
-   seq wvchreact_1 [inherit_cross]
+            first_part_visible cross_is_inherited yoyo_is_inherited
+   seq scootbacktowave [inherit_yoyo]
+   seq chreact_1 [inherit_cross]
    seq reactivate2dmd []
 
 call "scatter scoot@C reactivate" c3
@@ -15981,9 +16064,8 @@ call "nuclear reaction" c3
    seq ctr_rot []
 
 call "scoot@C nuclear reaction" c3x
-            cross_is_inherited yoyo_is_inherited
-   seq fudgyboxyscootback [inherit_yoyo]
-   seq backemup []
+            first_part_visible cross_is_inherited yoyo_is_inherited
+   seq scootbacktowave [inherit_yoyo]
    seq makepass_1 [inherit_cross]
    seq nuclear_nucleus []
    seq ctr_rot []
@@ -16810,12 +16892,13 @@ call "_centers finish plenty" dontshow tag cfinplenty
    setup 2x2 1x4 qualifier in_or_out
       array [AL1S CR2S ZM3N ZM0N]
 
-call "_ends finish plenty" dontshow tag efinplenty
+call "_counter rotate and roll" dontshow tag ctr_rot_roll
+            visible_fractions
    seq ctr_rot []
    seq roll []
 
 call "_finish plenty" dontshow tag finishplenty
-   conc cfinplenty [] efinplenty [conc_force_otherway endscando]
+   conc cfinplenty [] ctr_rot_roll [conc_force_otherway endscando]
 
 call "_finish little more" dontshow tag finlilmore
    conc box_circulate_maybe_diamond [] ctr_rot [conc_force_otherway]
@@ -16865,16 +16948,76 @@ call "plenty@S" c1 tag plenty
    seq turnstar2 [allow_forced_mod]
    seq finishplenty []
 
-call "plenty, ends go as you are@S" c1 tag plenty_ends_as_are
+call "plenty, ends go as you are@S" c1
             intlk_is_inherited visible_fractions
    seq little_ends_as_are [inherit_intlk]
    seq turnstar2 [allow_forced_mod]
    seq finishplenty []
 
-call "plenty, ends face @h@S" c1 tag plenty_ends_face_dir
+call "plenty, ends face @h@S" c1
             intlk_is_inherited visible_fractions
    seq little_ends_face_dir [inherit_intlk]
    seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "plenty, replace the star turns with @m" c1
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq little [inherit_left inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "plenty, ends go as you are, replace the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq little_ends_as_are [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "plenty, ends face @h, replace the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq little_ends_face_dir [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "plenty@S, interrupt before the star turns with @m" c1
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq little [inherit_left inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "plenty, ends go as you are@S, interrupt before the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq little_ends_as_are [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "plenty, ends face @h@S, interrupt before the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq little_ends_face_dir [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "plenty@S, interrupt after the star turns with @m" c1
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq little [inherit_left inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "plenty, ends go as you are@S, interrupt after the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq little_ends_as_are [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "plenty, ends face @h@S, interrupt after the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq little_ends_face_dir [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
    seq finishplenty []
 
 call "@2scoot @3and little" c1
@@ -16913,14 +17056,87 @@ call "@2scoot @3and plenty@S" c1
    seq plenty [inherit_left inherit_intlk]
 
 call "@2scoot @3and plenty, ends go as you are@S" c1
-            left_means_mirror intlk_is_inherited yoyo_is_inherited
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
    seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
-   seq plenty_ends_as_are [inherit_intlk]
+   seq little_ends_as_are [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
 
 call "@2scoot @3and plenty, ends face @h@S" c1
-            left_means_mirror intlk_is_inherited yoyo_is_inherited
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
    seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
-   seq plenty_ends_face_dir [inherit_intlk]
+   seq little_ends_face_dir [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, replace the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little [inherit_left inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, ends go as you are, replace the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little_ends_as_are [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, ends face @h, replace the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little_ends_face_dir [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@2scoot @3and plenty@S, interrupt before the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little [inherit_left inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, ends go as you are@S, interrupt before the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little_ends_as_are [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, ends face @h@S, interrupt before the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little_ends_face_dir [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@2scoot @3and plenty@S, interrupt after the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little [inherit_left inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, ends go as you are@S, interrupt after the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little_ends_as_are [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@2scoot @3and plenty, ends face @h@S, interrupt after the star turns with @m" c1
+            left_means_mirror intlk_is_inherited yoyo_is_inherited visible_fractions
+   seq rtqtagscootback [or_anycall inherit_left inherit_intlk inherit_yoyo]
+   seq little_ends_face_dir [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
 
 call "@0 and little" c1
             left_means_mirror intlk_is_inherited
@@ -16953,19 +17169,94 @@ call "@0 and little more, ends face @h" c2
    seq lilmore_ends_face_dir [inherit_intlk]
 
 call "@0 and plenty@S" c1
-            left_means_mirror intlk_is_inherited
+            left_means_mirror intlk_is_inherited visible_fractions
    seq nullcall [mandatory_anycall]
-   seq plenty [inherit_left inherit_intlk]
+   seq little [inherit_left inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
 
 call "@0 and plenty, ends go as you are@S" c1
-            intlk_is_inherited
+            intlk_is_inherited visible_fractions
    seq nullcall [mandatory_anycall]
-   seq plenty_ends_as_are [inherit_intlk]
+   seq little_ends_as_are [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
 
 call "@0 and plenty, ends face @h@S" c1
-            intlk_is_inherited
+            intlk_is_inherited visible_fractions
    seq nullcall [mandatory_anycall]
-   seq plenty_ends_face_dir [inherit_intlk]
+   seq little_ends_face_dir [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@0 and plenty, replace the star turns with @m" c1
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little [inherit_left inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@0 and plenty, ends go as you are, replace the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little_ends_as_are [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@0 and plenty, ends face @h, replace the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little_ends_face_dir [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@0 and plenty@S, interrupt before the star turns with @m" c1
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little [inherit_left inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@0 and plenty, ends go as you are@S, interrupt before the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little_ends_as_are [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@0 and plenty, ends face @h@S, interrupt before the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little_ends_face_dir [inherit_intlk]
+   seq nullsecond [mandatory_secondary_call]
+   seq turnstar2 [allow_forced_mod]
+   seq finishplenty []
+
+call "@0 and plenty@S, interrupt after the star turns with @m" c1
+            left_means_mirror intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little [inherit_left inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@0 and plenty, ends go as you are@S, interrupt after the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little_ends_as_are [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
+
+call "@0 and plenty, ends face @h@S, interrupt after the star turns with @m" c1
+            intlk_is_inherited visible_fractions
+   seq nullcall [mandatory_anycall]
+   seq little_ends_face_dir [inherit_intlk]
+   seq turnstar2 [allow_forced_mod]
+   seq nullsecond [mandatory_secondary_call]
+   seq finishplenty []
 
 call "_start good and plenty" dontshow tag start_good_and
    conc recoil [] dblcirc [conc_demand_lines conc_force_lines]
@@ -17554,17 +17845,18 @@ call "_ends scamper" dontshow tag ends_scamper
    seq div_move_along []
    seq touch_1_4 [inherit_left]
 
-/*  YOW!!!!!!  We have a problem!
-call "divide" mainstream tag divide
-      / * ***** make sure we do a "fudge to 3/4 tag" * /
-      / * Note that this is illegal unless just the ends (under some designation) are told to do it. * /
+call "divide" mainstream
+      /* ***** make sure we do a "fudge to 3/4 tag" */
+      /* Note that this is illegal unless just the ends (under some designation)
+         are told to do it. */
    conc boguscall [] div_move_along [conc_demand_columns conc_force_lines endscando suppress_elongation_warnings]
 
 call "divide and @0" mainstream
-      / * ***** make sure we do a "fudge to 3/4 tag" * /
-      / * Note that this is illegal unless just the ends (under some designation) are told to do it. * /
+      /* ***** make sure we do a "fudge to 3/4 tag" */
+      /* Note that this is illegal unless just the ends (under some designation)
+         are told to do it. */
    conc boguscall [] ends_div_do_something [conc_demand_columns conc_force_otherway endscando suppress_elongation_warnings]
-*/
+
 
 call "_ends divide and @0" dontshow tag ends_div_do_something
    seq div_move_along [seq_re_enable_elongation_check]

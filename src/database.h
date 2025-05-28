@@ -23,7 +23,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 141
+#define DATABASE_FORMAT_VERSION 144
 
 /* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
 typedef enum {
@@ -34,6 +34,7 @@ typedef enum {
    base_call_ends_shadow,
    base_call_chreact_1,
    base_call_makepass_1,
+   base_call_scoottowave,
    base_call_backemup,
    base_call_circulate,
    base_call_trade,
@@ -314,6 +315,7 @@ typedef enum {
    s2x10,
    s2x12,
    sdeepqtg,
+   sdeepbigqtg,
    sdeepxwv,
    s3oqtg,
    s_thar,
@@ -435,6 +437,8 @@ typedef enum {
    b_12x2,
    b_deepqtg,
    b_pdeepqtg,
+   b_deepbigqtg,
+   b_pdeepbigqtg,
    b_deepxwv,
    b_pdeepxwv,
    b_3oqtg,
@@ -600,7 +604,6 @@ typedef enum {
    cr_quarterbox_or_magic_col, /* Restriction only. */
    cr_all_ns,              /* Restriction only. */
    cr_all_ew,              /* Restriction only. */
-   cr_gen_n_4_tag,         /* Restriction only. */
    cr_real_1_4_tag,        /* Restriction only. */
    cr_real_3_4_tag,        /* Restriction only. */
    cr_real_1_4_line,       /* Restriction only. */

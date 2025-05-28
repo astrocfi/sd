@@ -300,8 +300,8 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
       since the test setups that we use might have people placed in such a way
       that something like "1/2 truck" is illegal. */
 
-   if (  test_call->schema == schema_matrix &&
-         test_call->stuff.matrix.stuff[0] != test_call->stuff.matrix.stuff[1])
+   if (test_call->schema == schema_matrix &&
+       test_call->stuff.matrix.stuff[0] != test_call->stuff.matrix.stuff[1])
       goto accept;
 
    /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
@@ -806,14 +806,31 @@ Private void read_in_call_definition(void)
          left_half = last_datum;
          read_halfword();
          call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
-         if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR) call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
-         if (call_root->stuff.matrix.flags & MTX_USE_NUMBER) call_root->callflags1 |= CFLAG1_NUMBER_BIT;
-         read_halfword();
+
+         if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR)
+            call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+         if (call_root->stuff.matrix.flags & MTX_USE_NUMBER)
+            call_root->callflags1 |= CFLAG1_NUMBER_BIT;
+
+         call_root->stuff.matrix.stuff = (uint32 *) get_mem(sizeof(uint32)*8);
 
          for (j=0; j<lim; j++) {
-            call_root->stuff.matrix.stuff[j] = (uint16) (last_datum & 0xFFFF);
+            uint32 firstpart;
+
             read_halfword();
+
+            firstpart = last_datum & 0xFFFF;
+
+            if (firstpart) {
+               read_halfword();
+               call_root->stuff.matrix.stuff[j] = firstpart | ((last_datum & 0xFFFF) << 16);
+            }
+            else {
+               call_root->stuff.matrix.stuff[j] = 0;
+            }               
          }
+
+         read_halfword();
          break;
       case schema_by_array:
          {
