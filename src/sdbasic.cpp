@@ -469,10 +469,13 @@ static collision_map collision_map_table[] = {
     s2x2,        s2x4,        1, warn__none, 0},
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},
     s2x2,        s2x4,        1, warn__none, 0},
+   // These 2 in particular are what make a crossfire from waves go to a 2x4 instead of a 2x3.
+   // If they are changed to give a 2x3, test lg02 fails on a "single presto" from a tidal wave.
    {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},
     s2x2,        s2x4,        0, warn__none, 0},
    {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},
     s2x2,        s2x4,        0, warn__none, 0},
+
    // Same, but with missing people.
    {1, 0x004004, 0x04, 0x04, {2},                  {2},                   {3},
     s2x2,        s2x4,        1, warn__none, 0},
@@ -2925,8 +2928,8 @@ static int divide_the_setup(
           (livemask == 0xAAAA || livemask == 0x5555)) {
          finalrot = newtb & 1;
          division_code = (livemask & 1) ?
-            MAPCODE(s_trngl4,2,MPKIND__SPLIT,0) :
-            MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
+            HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x8) :
+            HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x2);
          goto divide_us_no_recompute;
       }
 
@@ -2967,13 +2970,17 @@ static int divide_the_setup(
                break;    // Can't do it.
 
             if ((livemask & 0xAAAA) == 0)
-               division_code = MAPCODE(s_trngl4,2,MPKIND__SPLIT,0);
+               division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x8);
             else if ((livemask & 0x5555) == 0)
-               division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0);
+               division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x2);
             else if ((livemask & 0xA55A) == 0)
-               division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP3,0);
+               division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x0);
             else if ((livemask & 0x5AA5) == 0)
-               division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP2,0);
+               division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0xA);
+            else if ((livemask & 0x55AA) == 0)
+               division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x5);
+            else if ((livemask & 0xAA55) == 0)
+               division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,0,s_trngl4,0x7);
          }
          else if ((livemask & 0xAAAA) == 0)
             division_code = MAPCODE(s1x2,4,MPKIND__4_QUADRANTS,0);
@@ -3181,7 +3188,7 @@ static int divide_the_setup(
                                          FINAL__SPLIT_DIXIE_APPROVED)) ||
           assoc(b_trngl4, ss, calldeflist) ||
           assoc(b_ptrngl4, ss, calldeflist)) {
-         division_code = MAPCODE(s_trngl4,2,MPKIND__SPLIT, 1);
+         division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0xD);
          goto divide_us_no_recompute;
       }
 
@@ -3329,7 +3336,7 @@ static int divide_the_setup(
 
       break;
    case s_bone:
-      division_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,1);
+      division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0x7);
 
       // If being forced to split in an impossible way, it's an error.
       if (((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) && (ss->rotation & 1)) ||
@@ -3466,7 +3473,7 @@ static int divide_the_setup(
    case s_short6:
       if (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist) ||
           assoc(b_1x1, ss, calldeflist) || assoc(b_2x2, ss, calldeflist)) {
-         division_code = MAPCODE(s_trngl,2,MPKIND__SPLIT,1);
+         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x008);
          goto divide_us_no_recompute;
       }
 
@@ -3488,15 +3495,15 @@ static int divide_the_setup(
       if (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist) ||
           assoc(b_1x1, ss, calldeflist) || assoc(b_2x2, ss, calldeflist)) {
          division_code = (ss->kind == s_ntrgl6cw) ?
-            MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,0):
-            MAPCODE(s_trngl,2,MPKIND__SPLIT,0);
+            HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,0,s_trngl,0x2) :
+            HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,0,s_trngl,0x8);
          goto divide_us_no_recompute;
       }
       break;
    case s_bone6:
       if (assoc(b_trngl, ss, calldeflist) || assoc(b_ptrngl, ss, calldeflist) ||
           assoc(b_1x1, ss, calldeflist) || assoc(b_2x2, ss, calldeflist)) {
-         division_code = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1);
+         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x7);
          goto divide_us_no_recompute;
       }
 
@@ -3998,18 +4005,25 @@ static int divide_the_setup(
       if ((assoc(b_1x2, ss, calldeflist) ||
            assoc(b_2x1, ss, calldeflist) ||
            assoc(b_1x1, ss, calldeflist))) {
-         division_code = MAPCODE(s1x2,2,MPKIND__NONISOTROP2,0);
+         division_code = HETERO_MAPCODE(s1x2,2,MPKIND__HET_SPLIT,0,s1x2,0x1);
          goto divide_us_no_recompute;
       }
 
       break;
    case sdmdpdmd:
       // This is the only way we can divide it.
-      division_code = MAPCODE(sdmd,2,MPKIND__NONISOTROP2,0);
+      division_code = HETERO_MAPCODE(sdmd,2,MPKIND__HET_SPLIT,0,sdmd,0x1);
       goto divide_us_no_recompute;
    case s_trngl8:
       // This is the only way we can divide it.
-      division_code = MAPCODE(s1x4,2,MPKIND__NONISOTROP2,0);
+      division_code = HETERO_MAPCODE(s1x4,2,MPKIND__HET_SPLIT,0,s1x4,0x1);
+      goto divide_us_no_recompute;
+   case slinebox:
+      // This is the only way we can divide it.
+      division_code = HETERO_MAPCODE(s1x4,2,MPKIND__HET_SPLIT,0,s2x2,0x0);
+      goto divide_us_no_recompute;
+   case sdbltrngl4:
+      division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0x5);
       goto divide_us_no_recompute;
    }
 

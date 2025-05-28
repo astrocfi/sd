@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 326
+#define DATABASE_FORMAT_VERSION 327
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -588,6 +588,9 @@ enum setup_kind {
    slinepdmd,
    slinedmd,
    slinebox,
+   sline2box,
+   sline6box,
+   sdbltrngl4,
    sboxdmd,
    sboxpdmd,
    sdmdpdmd,
@@ -663,7 +666,8 @@ enum setup_kind {
    sdblbone,
    sdblrig,
    s_dead_concentric,
-   s_normal_concentric
+   s_normal_concentric,
+   NUM_SETUP_KINDS   // End mark; not really in the enumeration.
 };
 
 // These are the "beginning setups" that can appear in the call data base.

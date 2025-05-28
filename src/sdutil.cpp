@@ -773,6 +773,66 @@ void ui_utils::printsetup(setup *x)
 
          do_write(str);
          break;
+      case sline2box:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 c d e@7a b@76 6 h g f";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ hc@@ gd@@ fe@";
+            break;
+         case 2:
+            str = "f g h@76 6 6 b a@7e d c";
+            break;
+         default:
+            str = " ef@@ dg@@ ch@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sline6box:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 6 6 g@7a b c d e f@76 6 6 6 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ 5e@@ 5f@@ hg@";
+            break;
+         case 2:
+            str = "h@76 f e d c b a@7g";
+            break;
+         default:
+            str = " gh@@ 5f@@ 5e@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case sdbltrngl4:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 c 6 6 g@7a b 6 e f@76 6 d 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ dc@@ 5e@@ 5f@@ hg";
+            break;
+         case 2:
+            str = "h 6 6 d@76 f e 6 b a@7g 6 6 c";
+            break;
+         default:
+            str = " gh@@ 5f@@ 5e@@ cd@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
       case sboxdmd:
          offs = 0;
 

@@ -5174,6 +5174,8 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 // diamond points, and changes the diamond points to ends of lines.
 // It's not clear that this is the wisest way to do this.
 
+// If the result is empty, put "nothing" into all of the z items.
+
 bool fix_n_results(
    int arity,
    int goal,
@@ -5181,7 +5183,8 @@ bool fix_n_results(
    setup z[],
    uint32 & rotstates,
    uint32 & pointclip,
-   uint32 fudgystupidrot) THROW_DECL
+   uint32 fudgystupidrot,
+   bool allow_hetero_and_notify /* = false */) THROW_DECL
 {
    int i;
 
@@ -5363,7 +5366,7 @@ bool fix_n_results(
                   kk = s1x6;
                }
                else
-                  goto lose;
+                  goto maybelose;
             }
          }
 
@@ -5485,7 +5488,7 @@ bool fix_n_results(
       }
       else if (dmdflag && z[i].kind == s1x4) {
          // Turn the 1x4 into a diamond.
-         if (z[i].people[0].id1 | z[i].people[2].id1) goto lose;
+         if (z[i].people[0].id1 | z[i].people[2].id1) goto maybelose;
          expand::compress_setup(s_1x4_dmd, &z[i]);
          pointclip |= 1 << i;
       }
@@ -5522,7 +5525,11 @@ bool fix_n_results(
       rotstates = 0x001;
    }
 
-   if (kk == nothing) return true;
+   if (kk == nothing) {
+      for (i=0; i<arity; i++)
+         z[i].kind = nothing;
+      return false;
+   }
 
    // If something wasn't sure whether it was points of a diamond or
    // ends of a 1x4, that's OK if something else had a clue.
@@ -5589,6 +5596,12 @@ bool fix_n_results(
    }
 
    return false;
+
+   maybelose:
+
+   if (allow_hetero_and_notify)
+      // It's a major problem, but we have been told to allow it.
+      return true;
 
    lose:
 
@@ -6291,9 +6304,17 @@ void toplevelmove() THROW_DECL
             }
          }
       }
-      else if ((starting_setup.kind == splinepdmd ||
-                starting_setup.kind == splinedmd ||
-                starting_setup.kind == slinebox) &&
+      else if ((starting_setup.kind == s_rigger) && starting_setup.rotation & 1) {
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               starting_setup.people[i].id3 |=
+                  (((0x1E >> i) & 1) ? ID3_NEARFOUR : ID3_FARFOUR) |
+                  (((0x0C >> i) & 1) ? ID3_NEARTWO : ID3_FARSIX) |
+                  (((0xC0 >> i) & 1) ? ID3_FARTWO : ID3_NEARSIX);
+            }
+         }
+      }
+      else if ((starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd) &&
                starting_setup.rotation & 1) {
          uint32 near4bit = ID3_NEARFOUR;
          uint32 far4bit = ID3_FARFOUR;
@@ -6337,8 +6358,96 @@ void toplevelmove() THROW_DECL
                   ((i >= 4) ? near4bit : far4bit) |
                   ((i >= 3) ? near5bit : far3bit) |
                   ((i >= 2) ? near6bit : far2bit) |
-                  ((i != 0) ? ((i == 6 && (starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd)) ?
-                    near1bit : no1bit) : far1bit);
+                  ((i != 0) ? (i == 6 ? near1bit : no1bit) : far1bit);
+         }
+      }
+      else if ((starting_setup.kind == slinebox || starting_setup.kind == sline2box ||
+                starting_setup.kind == sline6box || starting_setup.kind == sdbltrngl4) &&
+               starting_setup.rotation & 1) {
+         // All 4 of these setups can respond to near/far 1/2/4/6.
+         // Additionally, sline6box can respond to 3 and 5.
+         // And slinebox responds to 3.
+         uint32 near1bit = ID3_FARTHEST1;
+         uint32 far7bit = ID3_NOTFARTHEST1;
+         uint32 near2bit = ID3_FARTWO;
+         uint32 far6bit = ID3_NEARSIX;
+         uint32 near3bit = ID3_FARTHREE;
+         uint32 far5bit = ID3_NEARFIVE;
+         uint32 near4bit = ID3_FARFOUR;
+         uint32 far4bit = ID3_NEARFOUR;
+         uint32 near5bit = ID3_FARFIVE;
+         uint32 far3bit = ID3_NEARTHREE;
+         uint32 near6bit = ID3_FARSIX;
+         uint32 far2bit = ID3_NEARTWO;
+         uint32 farboxbit = ID3_NEARBOX;
+
+         uint32 linepeople =
+            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
+            starting_setup.people[2].id1 | starting_setup.people[3].id1;
+
+         if (starting_setup.rotation & 2) {
+            near1bit = ID3_NEAREST1;
+            far7bit = ID3_NOTNEAREST1;
+            near2bit = ID3_NEARTWO;
+            far6bit = ID3_FARSIX;
+            near3bit = ID3_NEARTHREE;
+            far5bit = ID3_FARFIVE;
+            near4bit = ID3_NEARFOUR;
+            far4bit = ID3_FARFOUR;
+            near5bit = ID3_NEARFIVE;
+            far3bit = ID3_FARTHREE;
+            near6bit = ID3_NEARSIX;
+            far2bit = ID3_FARTWO;
+            farboxbit = ID3_FARBOX;
+
+            if (!(linepeople & 1))
+               near4bit |= ID3_NEARLINE;
+            else if (!(linepeople & 010))
+               near4bit |= ID3_NEARCOL;
+         }
+         else {
+            if (!(linepeople & 1))
+               near4bit |= ID3_FARLINE;
+            else if (!(linepeople & 010))
+               near4bit |= ID3_FARCOL;
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               // These apply to all 4 setups.
+               starting_setup.people[i].id3 |=
+                  ((i < 2) ? near2bit : far6bit) |
+                  ((i < 1) ? near1bit : far7bit);
+
+               // These are setup-specific.  The intention was to make all this
+               // code simple and elegant.  And see what happened.
+               switch (starting_setup.kind) {
+               case slinebox:
+                  starting_setup.people[i].id3 |=
+                     ((i < 3) ? near3bit : far5bit) |
+                     ((i < 4) ? near4bit : far4bit|farboxbit) |
+                     ((i != 6 && i != 5) ? near6bit : far2bit);
+                  break;
+               case sline2box:
+                  starting_setup.people[i].id3 |=
+                     ((i != 4 && i != 5 && i != 3 && i != 6) ? near4bit : far4bit|farboxbit) |
+                     ((i != 4 && i != 5) ? near6bit : far2bit);
+                  break;
+               case sline6box:
+                  starting_setup.people[i].id3 |=
+                     ((i < 6) ? near6bit : far2bit) |
+                     ((i < 5) ? near5bit : far3bit) |
+                     ((i < 4) ? near4bit : far4bit) |
+                     ((i < 3) ? near3bit : far5bit);
+                  break;
+               default:   // sdbltrngl4
+                  starting_setup.people[i].id3 |=
+                     ((i < 6) ? near6bit : far2bit) |
+                     ((i < 5) ? near5bit : far3bit) |
+                     ((i < 4) ? near4bit : far4bit);
+                  break;
+               }
+            }
          }
       }
       else if ((starting_setup.kind == slinepdmd || starting_setup.kind == slinedmd) && !(starting_setup.rotation & 1)) {
@@ -6375,18 +6484,20 @@ void toplevelmove() THROW_DECL
          uint32 far4bit = ID3_FARFOUR;
          uint32 near3bit = ID3_NEARTHREE;
          uint32 far5bit = ID3_FARFIVE;
+         uint32 farboxbit = ID3_FARBOX;
 
          if (starting_setup.rotation & 2) {
             near4bit = ID3_FARFOUR;
             far4bit = ID3_NEARFOUR;
             near3bit = ID3_FARTHREE;
             far5bit = ID3_NEARFIVE;
+            farboxbit = ID3_NEARBOX;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
                starting_setup.people[i].id3 |=
-                  ((i >= 4) ? far4bit : near4bit) |
+                  ((i >= 4) ? far4bit|farboxbit : near4bit) |
                   ((i >= 4 || i == 2) ? far5bit : near3bit);
          }
       }
@@ -6394,15 +6505,17 @@ void toplevelmove() THROW_DECL
                !(starting_setup.rotation & 1)) {
          uint32 near4bit = ID3_NEARFOUR;
          uint32 far4bit = ID3_FARFOUR;
+         uint32 farboxbit = ID3_FARBOX;
 
          if (starting_setup.rotation & 2) {
             near4bit = ID3_FARFOUR;
             far4bit = ID3_NEARFOUR;
+            farboxbit = ID3_NEARBOX;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i & 4) ? far4bit : near4bit);
+               starting_setup.people[i].id3 |= ((i & 4) ? far4bit|farboxbit : near4bit);
          }
       }
       else if (starting_setup.kind == s_trngl8 && !(starting_setup.rotation & 1)) {

@@ -1894,9 +1894,9 @@ static void do_concept_multiple_lines(
             code = MAPCODE(s1x4,4,MPKIND__SPLIT,0);
          }
          else if (ss->kind == sbigbigh)
-            code = MAPCODE(s1x4,4,MPKIND__NONISOTROP2,1);
+            code = HETERO_MAPCODE(s1x4,4,MPKIND__HET_SPLIT,1,s1x4,0x1);
          else if (ss->kind == sbigbigx)
-            code = MAPCODE(s1x4,4,MPKIND__NONISOTROP2,0);
+            code = HETERO_MAPCODE(s1x4,4,MPKIND__HET_SPLIT,0,s1x4,0x4);
          else
             fail("Must have quadruple 1x4's for this concept.");
       }
@@ -1907,9 +1907,9 @@ static void do_concept_multiple_lines(
       else if (ss->kind == s1x12)
          code = MAPCODE(s1x4,3,MPKIND__SPLIT,0);
       else if (ss->kind == sbigh)
-         code = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,1);
+         code = HETERO_MAPCODE(s1x4,3,MPKIND__HET_SPLIT,1,s1x4,0x1);
       else if (ss->kind == sbigx)
-         code = MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,0);
+         code = HETERO_MAPCODE(s1x4,3,MPKIND__HET_SPLIT,0,s1x4,0x4);
       else
          fail("Must have triple 1x4's for this concept.");
 
@@ -2496,12 +2496,20 @@ static void do_concept_do_phantom_diamonds(
 {
    uint32 code;
 
-   // See "do_triple_formation" for meaning of arg3.
+   // Arg2 is assumption stuff, described in "do_triple_formation".
+   // Arg3 is an MPKIND: SPLIT, INTLK, or CONCPHAN.
+
+   mpkind map_kind = (mpkind) parseptr->concept->arg3;
+   mpkind het_map_kind = (map_kind == MPKIND__CONCPHAN) ? MPKIND__HET_CONCPHAN : map_kind;
 
    if (ss->kind == s4dmd)
-      code = MAPCODE(s_qtag,2,parseptr->concept->arg3,0);
+      code = MAPCODE(s_qtag,2,map_kind,0);
    else if (ss->kind == s4ptpd)
-      code = MAPCODE(s_ptpd,2,parseptr->concept->arg3,0);
+      code = MAPCODE(s_ptpd,2,map_kind,0);
+   else if (ss->kind == s_4mdmd)
+      code = HETERO_MAPCODE(s_qtag,2,het_map_kind,0,s_ptpd,0);
+   else if (ss->kind == s_4mptpd)
+      code = HETERO_MAPCODE(s_ptpd,2,het_map_kind,0,s_qtag,0);
    else
       fail("Must have a quadruple diamond/quarter-tag setup for this concept.");
 
@@ -2789,10 +2797,10 @@ static void do_concept_once_removed(
          map_code = MAPCODE(s2x4,3,MPKIND__TWICE_REMOVED,0);
          break;
       case s_ptpd:
-         map_code = MAPCODE(s2x2,3,MPKIND__SPEC_TWICEREM,0);
+         map_code = HETERO_MAPCODE(s2x2,3,MPKIND__HET_TWICEREM,0,s1x2,0);
          break;
-      case s_bone:      /* Figure this out -- it is special. */
-      case s_rigger:    /* Figure this out -- it is special. */
+      case s_bone:      // Figure these out -- they are special.  Really?  What calls could you do?
+      case s_rigger:
       default:
          fail("Can't do 'twice removed' from this setup.");
       }
@@ -2914,13 +2922,16 @@ static void do_concept_once_removed(
          map_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROPREM,1);
          break;
       case s_spindle:
-         map_code = MAPCODE(sdmd,2,MPKIND__SPEC_ONCEREM,0);
+         map_code = HETERO_MAPCODE(s2x2,2,MPKIND__HET_CO_ONCEREM,0,sdmd,0);
          break;
       case s1x3dmd:
-         map_code = MAPCODE(s1x4,2,MPKIND__SPEC_ONCEREM,0);
+         map_code = HETERO_MAPCODE(s1x4,2,MPKIND__HET_CO_ONCEREM,0,sdmd,0);
          break;
       case s_qtag:
          map_code = MAPCODE(sdmd,2,MPKIND__REMOVED,1);
+         break;
+      case sdbltrngl4:
+         map_code = HETERO_MAPCODE(sdmd,2,MPKIND__HET_ONCEREM,0,s_trngl4,0x4);
          break;
       default:
          fail("Can't do 'once removed' from this setup.");
@@ -3161,12 +3172,12 @@ static void do_concept_new_stretch(
    }
    else if (tempsetup.kind == s_bone6) {
       tempsetup.swap_people(2, 5);
-      maps = MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1);
+      maps = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x7);
    }
    else if (tempsetup.kind == s_rigger) {
       tempsetup.swap_people(0, 1);
       tempsetup.swap_people(4, 5);
-      maps = MAPCODE(s_trngl4,2,MPKIND__SPLIT,1);
+      maps = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0xD);
    }
    else if (tempsetup.kind == s3x4 && little_endian_live_mask(&tempsetup) == 07171) {
       tempsetup.swap_people(5, 11);
@@ -5842,7 +5853,7 @@ static void do_concept_do_each_1x4(
          break;
          // Future project:  do this for lots of interesting things in 4x5 or 4x6.
       case s_trngl8:
-         map_code = MAPCODE(s1x4,2,MPKIND__NONISOTROP2,0);
+         map_code = HETERO_MAPCODE(s1x4,2,MPKIND__HET_SPLIT,0,s1x4,0x1);
          tbonetest_fixer = 0xF;
          goto split_big;
       case s3x4:
@@ -6003,9 +6014,9 @@ static void do_concept_multiple_diamonds(
       case s3ptpd:
          code = MAPCODE(sdmd,3,MPKIND__SPLIT,0); break;
       case s_3mdmd:
-         code = MAPCODE(sdmd,3,MPKIND__NONISOTROPIC,1); break;
+         code = HETERO_MAPCODE(sdmd,3,MPKIND__HET_SPLIT,1,sdmd,0x1); break;
       case s_3mptpd:
-         code = MAPCODE(sdmd,3,MPKIND__NONISOTROPIC,0); break;
+         code = HETERO_MAPCODE(sdmd,3,MPKIND__HET_SPLIT,1,sdmd,0x4); break;
       default:
          fail("Must have a triple diamond or 1/4 tag setup for this concept.");
       }
@@ -6021,9 +6032,9 @@ static void do_concept_multiple_diamonds(
       case s4ptpd:
          code = MAPCODE(sdmd,4,MPKIND__SPLIT,0); break;
       case s_4mdmd:
-         code = MAPCODE(sdmd,4,MPKIND__NONISOTROP2,1); break;
+         code = HETERO_MAPCODE(sdmd,4,MPKIND__HET_SPLIT,1,sdmd,0x1); break;
       case s_4mptpd:
-         code = MAPCODE(sdmd,4,MPKIND__NONISOTROP2,0); break;
+         code = HETERO_MAPCODE(sdmd,4,MPKIND__HET_SPLIT,0,sdmd,0x4); break;
       default:
          fail("Must have a quadruple diamond or 1/4 tag setup for this concept.");
       }

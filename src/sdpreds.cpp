@@ -519,11 +519,11 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       break;
    case selector_nearbox:
       if      (pid3 & ID3_NEARBOX) return true;
-      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX)) return false;
+      else if (pid3 & (ID3_FARLINE|ID3_FARCOL|ID3_FARBOX|ID3_FARFOUR)) return false;
       break;
    case selector_farbox:
       if      (pid3 & ID3_FARBOX) return true;
-      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX)) return false;
+      else if (pid3 & (ID3_NEARLINE|ID3_NEARCOL|ID3_NEARBOX|ID3_NEARFOUR)) return false;
       break;
    case selector_nearfour:
       if      (pid3 & ID3_NEARFOUR) return true;
@@ -695,6 +695,22 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
                else if (B == C && A != B) thing_to_test = 0x6;
                break;
             }
+         }
+         else if (allow_some == 3 && (ss->kind == s1x6 || ss->kind == s2x3)) {
+            if (livemask == 0xFCC) {
+               directions >>= 6;
+               place += 3;
+            }
+            else if (livemask != 0x33F)
+               break;    // Will fail.
+
+            // Have 3x1 triangle of some sort.
+            if ((directions & 3) == ((directions>>2) & 3) &&
+                (directions & 3) == ((directions>>4) & 3))
+               // All 3 facing same way.
+               return (place >= 3 && place < 6);
+            else
+               break;    // Will fail.
          }
 
          if (thing_to_test != -1) return ((thing_to_test >> (place % 3)) & 1) != 0;

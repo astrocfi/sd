@@ -840,8 +840,6 @@ class select {
       fx_foo33t,
       fx_fooccd,
       fx_foo33d,
-      fx_foo5a,
-      fx_fooa5,
       fx_foo55,
       fx_fooaa,
       fx_foo11,
@@ -1173,6 +1171,23 @@ class select {
       fx_1x5p1e,
       fx_1x5p1f,
       fx_1x5p1g,
+      fx_l2b1,
+      fx_l2b2,
+      fx_l2b3,
+      fx_l2b4,
+      fx_l2b5,
+      fx_l6b1,
+      fx_l6b2,
+      fx_l6b3,
+      fx_l6b4,
+      fx_dbt1,
+      fx_dbt2,
+      fx_dbt3,
+      fx_dbt4,
+      fx_dbt1a,
+      fx_dbt2a,
+      fx_dbt1b,
+      fx_dbt2b,
       fx_1x5p1y,
       fx_1x5p1z,
       fx_5p1x1d,
@@ -1232,8 +1247,12 @@ class select {
       fx23232x,
       fx_f1x8lowf,
       fx_f1x8hif,
+      fx_f1x8low2,
+      fx_f1x8hi2,
       fx_f1x8low6,
       fx_f1x8hi6,
+      fx_f1x8lodbt4,
+      fx_f1x8hidbt4,
       fx_fqtglowf,
       fx_fqtghif,
       fx_fdmdlowf,
@@ -1252,6 +1271,8 @@ class select {
       fx_f2x4pos6,
       fx_f2x4pos7,
       fx_f2x4pos8,
+      fx_f2x4pos02,
+      fx_f2x4pos13,
       fx_f2x4posa,
       fx_f2x4posb,
       fx_f2x4posc,
@@ -2867,10 +2888,6 @@ enum mpkind {
    MPKIND__MAGIC,
    MPKIND__INTLKDMD,
    MPKIND__MAGICINTLKDMD,
-   MPKIND__NONISOTROPIC,
-   MPKIND__NONISOTROP1,
-   MPKIND__NONISOTROP2,
-   MPKIND__NONISOTROP3,
    MPKIND__NONISOTROPREM,
    MPKIND__OFFS_L_ONEQ,
    MPKIND__OFFS_R_ONEQ,
@@ -2932,12 +2949,23 @@ enum mpkind {
    MPKIND__BENT8SE,
    MPKIND__BENT8SW,
    MPKIND__BENT8NW,
-   MPKIND__SPEC_ONCEREM,
-   MPKIND__SPEC_TWICEREM,
+   MPKIND__HET_SPLIT,
+   MPKIND__HET_CONCPHAN,
+   MPKIND__HET_ONCEREM,
+   MPKIND__HET_CO_ONCEREM,   // exactly colocated
+   MPKIND__HET_TWICEREM,
    MPKIND__TRIPLETRADEINWINGEDSTAR6,
    MPKIND__OFFSET_UPWARD_1,
    NUM_PLAINMAP_KINDS   // End mark; not really in the enumeration.
 };
+
+
+inline bool hetero_mapkind(mpkind k)
+{
+   return (k == MPKIND__HET_SPLIT || k == MPKIND__HET_CONCPHAN || k == MPKIND__HET_CO_ONCEREM ||
+           k == MPKIND__HET_ONCEREM || k == MPKIND__HET_TWICEREM);
+}
+
 
 // See sdtables.cpp (search for "map_thing") for extensive discussion
 // of how these maps, and their code numbers, are handled.
@@ -2957,8 +2985,13 @@ class map {
       int arity;
       mpkind map_kind;
       int vert;
-      short int warncode;
+      warning_index warncode;
       setup_kind outer_kind;
+      // Rotation, 2 bits per inner setup, in low 16 bits.
+      // For the heterogeneous maps this has the secondary inner_kind in the high 8 bits.
+      // The other bits have a few things:
+      //   0x30000 -- add to final rotation
+      //   0x40000 -- get out immediately; don't use getout map
       uint32 rot;
       uint32 per_person_rot;
       uint32 code;
@@ -3094,8 +3127,36 @@ enum specmapkind {
    NUM_SPECMAP_KINDS   // End mark; not really in the enumeration.
 };
 
-#define MAPCODE(setupkind,num,mapkind,vert) ((((int)(setupkind)) << 12) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (vert) | 0x80000000)
+// Code format for special maps is just the specmapkind number, which is clear in the left half.
+// Code format for normal maps is the following, which has stuff in the left half because the
+//    setupkind is nonzero:
+//
+//    Non-hetero normal maps (all those without "HET" in the name):
+//
+//     |    setupkind     |             0             |    mapkind   |    arity-1   | v |
+//     ----------------------------------------------------------------------------------
+//     |         9        |            10             |       8      |       3      | 1 |
+//
+//    Hetero normal maps:
+//
+//     |    setupkind     | delta R | secondary setup |    mapkind   |    arity-1   | v |
+//     ----------------------------------------------------------------------------------
+//     |         8        |    4    |       8         |       8      |       3      | 1 |
 
+// Code in sdinit.cpp checks that mapkinds will fit into 8 bits and setups also into 8 bits.
+// If setups require going to 9, we could probably arrange for the setups that can appear as
+// secondary setups (they are always small setups) could be guaranteed to pack into 8 bits,
+// with 9 bits for the primary setup field.
+
+#define MAPCODE(setupkind,num,mapkind,vert) ( \
+   (((int)(setupkind)) << 24) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (vert) )
+
+// The heterogeneous mapcodes, maps are selected on all the usual things, plus the secondary setup kind.
+// (The secondary setup kind is stored in the high 8 bits of the "rot" field.)
+// The secondary setup is in the high 9 bits of the 19 bits available for the setup.  (10 bits are plenty.  I think.)
+#define HETERO_MAPCODE(setupkind,num,mapkind,vert,secondary,seconddelr) ( \
+   ((seconddelr) << 20) | (((int)(secondary)) << 12) | \
+   (((int)(setupkind)) << 24) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (vert) )
 
 struct clw3_thing {
    setup_kind k;
@@ -3330,6 +3391,9 @@ parse_block *process_final_concepts(
    bool forbid_unfinished_parse,
    bool only_one) THROW_DECL;
 
+// Normally, this always returns false, and clients don't look at the result.
+// But if "allow_hetero_and_notify" is on, this will return true if the given
+// setups are different, rather than the normal action of throwing an error.
 bool fix_n_results(
    int arity,
    int goal,
@@ -3337,7 +3401,8 @@ bool fix_n_results(
    setup z[],
    uint32 & rotstates,
    uint32 & pointclip,
-   uint32 fudgystupidrot) THROW_DECL;
+   uint32 fudgystupidrot,
+   bool allow_hetero_and_notify = false) THROW_DECL;
 
 bool warnings_are_unacceptable(bool strict);
 

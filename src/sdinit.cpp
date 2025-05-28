@@ -1206,6 +1206,8 @@ extern void prepare_to_read_menus()
       gg77->iob88.fatal_error_exit(1, "Too many levels", "program has been compiled incorrectly.");
    else if (NUM_QUALIFIERS > 253)
       gg77->iob88.fatal_error_exit(1, "Insufficient qualifier space", "program has been compiled incorrectly.");
+   else if (NUM_SETUP_KINDS > 254)  // Need to pack setups in the MAPCODE and HETERO_MAPCODE mechanism.
+      gg77->iob88.fatal_error_exit(1, "Insufficient setupkind space", "program has been compiled incorrectly.");
    else if (NUM_PLAINMAP_KINDS > 252)
       gg77->iob88.fatal_error_exit(1, "Insufficient mapkind space", "program has been compiled incorrectly.");
    else if (sizeof(uint32) > sizeof(void *)) // Need this because of horrible cheating we do with main_call_lists.

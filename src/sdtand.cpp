@@ -419,9 +419,15 @@ static tm_thing maps_isearch_threesome[] = {
    //       maps                                                      ilatmaskH/L    olatmask   limit rot insetup outsetup
 
    {{0,                    1,                    2},                        0,02,        07,      1, 0,  s1x1,  s1x3},
-   {{0,                    1,                    2},                         0,0,        07,      1, 1,  s1x1,  s1x3},
+   {{0,                    1,                    2},                        0,00,        07,      1, 1,  s1x1,  s1x3},
    {{0, 5,                 1, 4,                 2, 3},                    0,022,       077,      2, 0,  s1x2,  s1x6},
-   {{0, 5,                 1, 4,                 2, 3},                      0,0,       077,      2, 1,  s1x2,  s2x3},
+   {{0, 5,                 1, 4,                 2, 3},                    0,000,       077,      2, 1,  s1x2,  s2x3},
+
+   {{1, 5,                 -1, 4,                -1, 3},                   0,002,       070,      2, 1,  s1x2,  s2x3},
+   {{1, 5,                 -1, 4,                -1, 3},                   0,000,       070,      2, 1,  s1x2,  s2x3},
+   {{0, 4,                 1, -1,                2, -1},                   0,020,       007,      2, 1,  s1x2,  s2x3},
+   {{0, 4,                 1, -1,                2, -1},                   0,000,       007,      2, 1,  s1x2,  s2x3},
+
    {{0, 3, 8, 11,     1, 4, 7, 10,     2, 5, 6, 9},                      0,02222,     07777,      4, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0,     4, 7, 10, 1,     5, 6, 9, 2},                          0,0,     07777,      4, 1,  s2x2,  s2x6},
 
@@ -2078,7 +2084,9 @@ extern void tandem_couples_move(
          }
       }
 
-      if (fix_n_results(tttcount+1, -1, false, ttt, rotstate, pointclip, 0) || !(rotstate & 0xF03))
+      fix_n_results(tttcount+1, -1, false, ttt, rotstate, pointclip, 0);
+
+      if (ttt[0].kind == nothing || !(rotstate & 0xF03))
          fail("Can't do this.");
 
       result->result_flags = get_multiple_parallel_resultflags(ttt, tttcount+1);

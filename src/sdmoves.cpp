@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2015  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1800,6 +1800,10 @@ static const checkitem checktable[] = {
    {0x00A20026, 0x090C0422, slinebox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00570066, 0x18118A04, sboxdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00260084, 0x20080861, sboxpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+
+   {0x00840026, 0x06021308, sline2box, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40026, 0x20120809, sline6box, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x09048424, sdbltrngl4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
 
    {0x01620026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x01220026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -7282,7 +7286,7 @@ static void move_with_real_call(
             // specified and the call has the special flag.  This is for recycle.
             if (this_defn->compound_part->schema != schema_sequential ||
                 !(this_defn->compound_part->callflagsf & CFLAG2_NO_SEQ_IF_NO_FRAC) ||
-                !ss->cmd.cmd_fraction.is_null()) {
+                !ss->cmd.cmd_fraction.is_null() || ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_HALF)) {
                this_defn = this_defn->compound_part;
                goto try_next_callspec;
             }

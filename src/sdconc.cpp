@@ -2800,10 +2800,18 @@ static bool fix_empty_inners(
       clear_result_flags(result_inner);
    }
    else if (center_arity == 1) {
-      // The centers are just gone!  It is quite possible that "fix_n_results"
-      // may be able to repair this damage by copying some info from another setup.
-      // Missing centers are not as serious as missing ends, because they won't
-      // lead to indecision about whether to leave space for the phantoms.
+      // The centers are just gone!
+
+      // First, look for special case of outers are a 4x4 with no one in the center.
+      if (result_outer->kind == s4x4 && (little_endian_live_mask(result_outer) & 0x8888) == 0) {
+         *result = *result_outer;
+         return true;
+      }
+
+      // It is quite possible that "fix_n_results" may be able to repair this damage by
+      // copying some info from another setup.  Missing centers are not as serious as
+      // missing ends, because they won't lead to indecision about whether to leave
+      // space for the phantoms.
 
       int j;
       *result = *result_outer;   // This gets the result_flags.
@@ -3882,10 +3890,8 @@ extern void concentric_move(
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad ||
        analyzer == schema_concentric_others) {
-      if (fix_n_results(center_arity, -1, false, &outer_inners[1], rotstate, pointclip, 0)) {
-         outer_inners[1].kind = nothing;
-      }
-      else if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
+      fix_n_results(center_arity, -1, false, &outer_inners[1], rotstate, pointclip, 0);
+      if (outer_inners[1].kind != nothing && !(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
       // Try to turn inhomogeneous diamond/wave combinations into all diamonds,
       // if the waves are missing their centers or ends.  If the resulting diamonds
@@ -3927,6 +3933,8 @@ extern void concentric_move(
             analyzer == schema_3x3k_concentric) {
       // Put all 3, or all 4, results into the same formation.
       fix_n_results(center_arity+1, -1, false, outer_inners, rotstate, pointclip, 0);
+      if (outer_inners[0].kind == nothing)
+         fail("This is an inconsistent shape or orientation changer.");
    }
 
    // If the call was something like "ends detour", the concentricity info was left in the
@@ -4591,7 +4599,7 @@ void merge_table::merge_setups(setup *ss,
    }
    else {
       if (res1->eighth_rotation != res2->eighth_rotation)
-            fail("Rotation is inconsistent.");
+         fail("Rotation is inconsistent.");
 
       reinstatement_rotation = res2->rotation;
       reinstatement_eighth = res2->eighth_rotation;
@@ -6619,7 +6627,9 @@ extern void inner_selective_move(
             goto fooble;
          }
 
-         if (fix_n_results(numsetups, -1, false, lilresult, rotstate, pointclip, 0)) goto lose;
+         fix_n_results(numsetups, -1, false, lilresult, rotstate, pointclip, 0);
+
+         if (lilresult[0].kind == nothing) goto lose;
          if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
          this_result->clear_people();

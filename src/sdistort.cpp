@@ -118,7 +118,11 @@ void map::initialize()
    }
 
    for (map_thing *tab2p = map_init_table ; tab2p->inner_kind != nothing ; tab2p++) {
-      uint32 code = MAPCODE(tab2p->inner_kind,tab2p->arity,tab2p->map_kind,tab2p->vert);
+      uint32 code = hetero_mapkind(tab2p->map_kind) ?
+         HETERO_MAPCODE(tab2p->inner_kind,tab2p->arity,tab2p->map_kind,tab2p->vert,
+                        (setup_kind) (tab2p->rot >> 24), (tab2p->rot & 0xF)) :
+         MAPCODE(tab2p->inner_kind,tab2p->arity,tab2p->map_kind,tab2p->vert);
+
       tab2p->code = code;
       uint32 hash_num =
          (((code+(code>>8)) * ((unsigned int) 035761254233)) >> 13) &
@@ -309,7 +313,9 @@ extern void remove_tgl_distortion(setup *ss) THROW_DECL
 
 const map::map_thing *map::get_map_from_code(uint32 map_encoding)
 {
-   if (map_encoding & 0x80000000) {
+   if (map_encoding >= 0x10000) {
+      // Normal maps will be at least that big, because they have the setup kind
+      // in the left side, and setup kinds (other than "nothing") are nonzero.
       uint32 hash_num =
          (((map_encoding+(map_encoding>>8)) * ((unsigned int) 035761254233)) >> 13) &
          (NUM_MAP_HASH_BUCKETS-1);
@@ -327,10 +333,7 @@ const map::map_thing *map::get_map_from_code(uint32 map_encoding)
 
 
 
-// Unless "special_exit" is on, the returned value should be ignored.
-// If "special_exit" is on, The request is to leave individual results in the "z" array.
-// The returned value will be true if it cannot honor that request.
-static bool multiple_move_innards(
+static void multiple_move_innards(
    setup *ss,
    uint32 map_encoding,
    const map::map_thing *maps,
@@ -341,8 +344,7 @@ static bool multiple_move_innards(
    setup *x,
    setup *z,
    setup *result,
-   whuzzisthingy *thing = (whuzzisthingy *) 0,
-   bool special_exit = false) THROW_DECL
+   whuzzisthingy *thing = (whuzzisthingy *) 0) THROW_DECL
 {
    int i, j;
    uint32 rotstate, pointclip;
@@ -365,11 +367,6 @@ static bool multiple_move_innards(
    uint32 mysticflag = sscmd->cmd_misc2_flags;
 
    switch (map_kind) {
-   case MPKIND__NONISOTROP1:
-   case MPKIND__NONISOTROP2:
-   case MPKIND__NONISOTROP3:
-      map_kind = MPKIND__SPLIT;
-      break;
    case MPKIND__NONISOTROPREM:
       map_kind = MPKIND__REMOVED;
       break;
@@ -653,7 +650,7 @@ static bool multiple_move_innards(
       static const veryshort butterfly_fixer[] = {15, 3, 7, 11};
       scatter(result, &z[1], butterfly_fixer, 3, 0);
       result->result_flags = z[1].result_flags;
-      return false;
+      return;
    }
 
    // If "all 8" results in a 2x2 and a 1x4, "fix_n_results" won't be able to handle it.
@@ -662,14 +659,14 @@ static bool multiple_move_innards(
    if (arity == 2 && eighth_rot_flag == 0 && map_kind == MPKIND__ALL_8) {
       if (z[0].kind == s2x2 && z[1].kind == s1x4 && z[1].rotation == 0) {
          normalize_concentric((const setup *) 0, schema_concentric, 1, z, 1, 0, result);
-         return false;
+         return;
       }
       else if (z[0].kind == s1x4 && z[1].kind == s2x2 && z[0].rotation == 1) {
          z[2] = z[0];
          z[0] = z[1];
          z[1] = z[2];
          normalize_concentric((const setup *) 0, schema_concentric, 1, z, 2, 0, result);
-         return false;
+         return;
       }
    }
 
@@ -704,21 +701,29 @@ static bool multiple_move_innards(
       map_kind == MPKIND__4_QUADRANTS_WITH_45_ROTATION ||
       map_kind == MPKIND__TRIPLETRADEINWINGEDSTAR6;
 
-   // These two special map kinds involve different setups, so "fix_n_results" can't be used.
-   if (map_kind != MPKIND__SPEC_ONCEREM && map_kind != MPKIND__SPEC_TWICEREM) {
+   // These special map kinds involve different setups, so "fix_n_results" can't be used.
+   if (!hetero_mapkind(map_kind)) {
 
       // If the starting map is of kind MPKIND__NONE, we will be in serious trouble unless
       // the final setups are of the same kind as those shown in the map.  Fix_n_results
       // has a tendency to try to turn diamonds into 1x4's whenever it can, that is,
       // whenever the centers are empty.  We tell it not to do that if it will cause problems.
 
+      // This uses the "allow_hetero_and_notify" mechanism.
+
       if (fix_n_results(arity,
                         (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
                         map_kind == MPKIND__SPLIT && (arity != 4 || maps->inner_kind != s1x2),
-                        z, rotstate, pointclip, rot)) {
+                        z, rotstate, pointclip, rot & 0xF, true)) {
+         if (map_kind != MPKIND__SPLIT)
+            fail("This is an inconsistent shape or orientation changer.");
+         map_kind = MPKIND__HET_SPLIT;
+      }
+
+      if (z[0].kind == nothing) {
          result->kind = nothing;
          clear_result_flags(result);
-         return false;
+         return;
       }
 
       // We still might have all setups dead concentric.  Try to fix that.
@@ -748,14 +753,19 @@ static bool multiple_move_innards(
          }
       }
 
-      if (arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4)) {
+      if (map_kind == MPKIND__SPLIT && arity == 2 && (z[0].kind == s_trngl || z[0].kind == s_trngl4) &&
+          (z[0].kind != z[1].kind || z[0].rotation != z[1].rotation)) {
+         map_kind = MPKIND__HET_SPLIT;
+      }
+
+      if (!hetero_mapkind(map_kind) && (arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4))) {
          if ((rotstate & 0xF03) == 0) {
             // Rotations are alternating.  Aside from the two map kinds just below,
             // we demand funnymap on.  These are the maps that want alternating rotations.
             if (map_kind == MPKIND__SPLIT || map_kind == MPKIND__CONCPHAN) {
                if (!(rotstate & 0x0F0))
                   fail("Can't do this orientation changer.");
-               map_kind = MPKIND__NONISOTROP2;   // See t60 and rf01.
+               map_kind = (map_kind == MPKIND__SPLIT) ? MPKIND__HET_SPLIT : MPKIND__HET_CONCPHAN;
             }
             else if (arity == 4 && map_kind == MPKIND__DMD_STUFF) {
                if (!(rotstate & 0x0F0))
@@ -781,6 +791,34 @@ static bool multiple_move_innards(
          }
       }
    }
+   else if (arity == 2) {
+      // Incoming map is hetero.  Need to do a quick check for empty setups and replace
+      // same with the other setup.  This is nowhere near as sophisticated as what goes
+      // on in "fix_n_results".  That routine does way too much complicated stuff, that
+      // would mess up the hetero situation.
+      //
+      // Only do this for arity=2; otherwise it gets into twice-removed maps in which
+      // changing the setups is extremely problematical.  This is a quick-and-dirty
+      // transformation.
+      //
+      // See test t38.
+
+      if (z[0].kind == nothing) {
+         if (z[1].kind == nothing) {
+            result->kind = nothing;
+            clear_result_flags(result);
+            return;
+         }
+         else {
+            z[0] = z[1];
+            z[0].clear_people();
+         }
+      }
+      else if (z[1].kind == nothing) {
+         z[1] = z[0];
+         z[1].clear_people();
+      }
+   }
 
    // Set the final result_flags to the OR of everything that happened.
    // The elongation stuff doesn't matter --- if the result is a 2x2
@@ -790,19 +828,28 @@ static bool multiple_move_innards(
 
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
 
-   if (map_kind == MPKIND__SPEC_ONCEREM) {
+   // Deal with the map kinds that take two different inner setup kinds.
+
+   if (map_kind == MPKIND__HET_CO_ONCEREM) {
+      // Exactly colocated.
       warn(warn__colocated_once_rem);
+      no_reuse_map = true;
+   }
 
-      if (z[0].kind == s2x2 || z[1].kind == s1x4) {
-         setup temp = z[1];
-         z[1] = z[0];
-         z[0] = temp;
+   if (map_kind == MPKIND__HET_ONCEREM) {
+      if (z[0].kind == z[1].kind && z[0].rotation == z[1].rotation) {
+         map_kind = MPKIND__REMOVED;     // Not heterogeneous after all.
       }
 
-      if (z[0].rotation != 0 || z[1].rotation != 0 ||
-          ((z[0].kind != sdmd || z[1].kind != s2x2) && (z[0].kind != s1x4 || z[1].kind != sdmd))) {
-         map_kind = MPKIND__NONE;   // This will raise an error.
+      no_reuse_map = true;
+   }
+   else if (map_kind == MPKIND__HET_SPLIT) {
+      if (z[0].kind == z[1].kind && z[0].rotation == z[1].rotation &&
+          z[0].kind != s_trngl && z[0].kind != s_trngl4) {  // Maps containing triangles are always hetero.
+         map_kind = MPKIND__SPLIT;     // Not heterogeneous after all.
       }
+
+      no_reuse_map = true;
    }
 
    for (i=0; i<arity; i++) {
@@ -820,9 +867,9 @@ static bool multiple_move_innards(
 
    // Some maps (the ones used in "triangle peel and trail") do not want the result
    // to be reassembled, so we get out now.  These maps are indicated by arity = 1
-   // and warncode = 1.
+   // and the 0x40000 bit in the rotation field.
 
-   if (arity == 1 && maps->warncode == 1) {
+   if (arity == 1 && (maps->rot & 0x40000)) {
       *result = z[0];
       goto getout;
    }
@@ -850,8 +897,7 @@ static bool multiple_move_innards(
       uint32 r = z[0].rotation & 3;
 
       if (z[0].kind == s_trngl) {
-         if (map_kind == MPKIND__SPLIT) {
-            if (((r+vert) & 2) != 0) map_kind = MPKIND__NONISOTROP1;
+         if (map_kind == MPKIND__HET_SPLIT) {
          }
          else if ((r & ~2) == 0 && vert == 0 && (map_kind == MPKIND__OFFS_R_HALF || map_kind == MPKIND__OFFS_L_HALF)) {
          }
@@ -859,8 +905,7 @@ static bool multiple_move_innards(
             fail("Can't do this orientation changer.");
       }
       else if (z[0].kind == s_trngl4) {
-         if (map_kind == MPKIND__SPLIT) {
-            if (((r+vert) & 2) != 0) map_kind = MPKIND__NONISOTROP1;
+         if (map_kind == MPKIND__HET_SPLIT) {
          }
          else if (map_kind == MPKIND__REMOVED) {
             if ((z[0].rotation & 2) == 0) map_kind = MPKIND__NONISOTROPREM;
@@ -1149,7 +1194,10 @@ static bool multiple_move_innards(
       }
    }
 
-   final_mapcode = MAPCODE(z[0].kind,arity,map_kind,(z[0].rotation ^ vert) & 1);
+   final_mapcode = hetero_mapkind(map_kind) ?
+      HETERO_MAPCODE(z[0].kind,arity,map_kind,(z[0].rotation ^ vert) & 1,
+                     z[1].kind,((z[1].rotation & 3) << 2) | (z[0].rotation & 3)) :
+         MAPCODE(z[0].kind,arity,map_kind,(z[0].rotation ^ vert) & 1);
 
  got_mapcode:
 
@@ -1229,14 +1277,12 @@ static bool multiple_move_innards(
 
    insize = attr::klimit(final_map->inner_kind)+1;
 
-   result->rotation = (z[0].rotation & 1) - (final_map->rot & 1);
+   // The low 2 bits of the ten thousands digit give additional rotation info.
+   result->rotation = (z[0].rotation + (final_map->rot >> 16) - final_map->rot) & 3;
 
-   if (map_kind == MPKIND__NONISOTROP2) {
+   if (map_kind == MPKIND__HET_SPLIT || map_kind == MPKIND__HET_TWICEREM || map_kind == MPKIND__HET_CONCPHAN) {
 
-      // The NONISOTROP2 maps are very complicated.
-
-      if (final_map->rot & 0x1000)
-         result->rotation += 2;
+      // These maps are very complicated.
 
       if (vert) {
          if (result->rotation & 2) {
@@ -1263,26 +1309,23 @@ static bool multiple_move_innards(
 	
       if (vert && (z[0].rotation & 1)) {
          //dont do this if MPKIND__NONISOTROPDMD and final_map->rot & 100
-         if (((final_map->rot+1) & 2) == 0) {
-            for (i=0; i<arity; i++) {
-               z[i].rotation += 2;
-               canonicalize_rotation(&z[i]);
+         if (z[0].rotation == z[1].rotation || map_kind != MPKIND__SPLIT) {    // **** New code.
+            if (((final_map->rot+1) & 2) == 0) {
+               for (i=0; i<arity; i++) {
+                  z[i].rotation += 2;
+                  canonicalize_rotation(&z[i]);
+               }
+            }
+
+            if (((final_map->rot) & 0x200) == 0) {
+               if ((final_map->rot & 1) == 0)
+                  result->rotation += 2;
             }
          }
-
-         if ((final_map->rot & 1) == 0)
-            result->rotation += 2;
       }
    }
 
-   // A few maps require that a warning be given.
-   // Code 1 is used elsewhere, for "triangle peel and trail".
-   if (final_map->warncode == 2) warn(warn__offset_gone);
-   if (final_map->warncode == 3) warn(warn__overlap_gone);
-   if (final_map->warncode == 4) warn(warn__check_hokey_4x4);
-   if (final_map->warncode == 5) warn(warn_pg_in_2x6);
-   if (final_map->warncode == 6) warn(warn__phantoms_thinner);
-   if (final_map->warncode == 7) warn(warn_partial_solomon);
+   warn(final_map->warncode);
 
  finish:
 
@@ -1346,8 +1389,10 @@ static bool multiple_move_innards(
    vrot = final_map->per_person_rot;
 
    for (j=0,rot=final_map->rot ; j<arity ; j++,rot>>=2) {
-      if (j == 1 && final_map->map_kind == MPKIND__SPEC_TWICEREM)
-         insize = attr::klimit((setup_kind) *getptr++)+1;
+      if (j == 1 && final_map->map_kind == MPKIND__HET_TWICEREM) {
+         // Need secondary insize.
+         insize = attr::klimit((setup_kind) (final_map->rot >> 24))+1;
+      }
 
       for (i=0 ; i<insize ; i++) {
          install_rot(result, *getptr++, &z[j], i, 011*((rot+vrot) & 3));
@@ -1389,7 +1434,7 @@ static bool multiple_move_innards(
    getout:
 
    canonicalize_rotation(result);
-   return false;
+   return;
 }
 
 
@@ -1405,7 +1450,6 @@ extern void divided_setup_move(
    int i, j;
    int vflags[16];
    setup x[16];
-   setup_kind kn_twicerem;
 
    const map::map_thing *maps = map::get_map_from_code(map_encoding);
 
@@ -1414,6 +1458,7 @@ extern void divided_setup_move(
 
    assumption_thing t = ss->cmd.cmd_assume;
    setup_kind kn = maps->inner_kind;
+   setup_kind kn_secondary = (setup_kind) (maps->rot >> 24);  // Only meaningful for maps with secondary setup.
    int insize = attr::klimit(kn)+1;
    const veryshort *getptr = maps->maps;
    uint32 rot = maps->rot;
@@ -1428,9 +1473,8 @@ extern void divided_setup_move(
    for (j=0,frot=rot; j<arity; j++,frot>>=2) {
       vflags[j] = 0;
 
-      if (j == 1 && maps->map_kind == MPKIND__SPEC_TWICEREM) {
-         kn_twicerem = (setup_kind) *getptr++;
-         insize = attr::klimit(kn_twicerem)+1;
+      if (j == 1 && hetero_mapkind(maps->map_kind)) {
+         insize = attr::klimit(kn_secondary)+1;
       }
 
       for (i=0; i<insize; i++) {
@@ -1485,11 +1529,11 @@ extern void divided_setup_move(
    for (j=0; j<arity; j++)
       x[j].kind = (vflags[j]) ? kn : nothing;
 
-   if (maps->map_kind == MPKIND__SPEC_ONCEREM)
-      x[1].kind = (setup_kind) maps->maps[insize*2];
-   else if (maps->map_kind == MPKIND__SPEC_TWICEREM) {
-      x[1].kind = kn_twicerem;
-      x[2].kind = kn_twicerem;
+   if (hetero_mapkind(maps->map_kind)) {
+      x[1].kind = kn_secondary;
+
+      if (maps->map_kind == MPKIND__HET_TWICEREM)
+         x[2].kind = kn_secondary;
    }
 
    if (t.assumption == cr_couples_only || t.assumption == cr_miniwaves) {
@@ -1532,8 +1576,8 @@ extern void divided_setup_move(
    // the incoming rotation into account.
 
    if (maps->map_kind == MPKIND__SPLIT ||
+       maps->map_kind == MPKIND__HET_SPLIT ||
        maps->map_kind == MPKIND__SPLIT_OTHERWAY_TOO ||
-       maps->map_kind == MPKIND__NONISOTROP1 ||
        (arity == 2 &&
         (maps->map_kind == MPKIND__OFFS_L_HALF ||
          maps->map_kind == MPKIND__OFFS_R_HALF ||
@@ -4519,7 +4563,9 @@ void tglmap::do_glorious_triangles(
    move(&a1, false, &res[0]);
    move(&a2, false, &res[1]);
 
-   if (fix_n_results(2, -1, false, res, rotstate, pointclip, 0)) {
+   fix_n_results(2, -1, false, res, rotstate, pointclip, 0);
+
+   if (res[0].kind == nothing) {
       result->kind = nothing;
       clear_result_flags(result);
       return;

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2009  William B. Ackerman.
+//    Copyright (C) 1990-2015  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -548,6 +548,9 @@ const char *estab[] = {
    "linepdmd",
    "linedmd",
    "linebox",
+   "line2box",
+   "line6box",
+   "dbltrgngl4",
    "boxdmd",
    "boxpdmd",
    "dmdpdmd",
