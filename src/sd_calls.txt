@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.48"
+version "31.50"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -4942,20 +4942,32 @@ call "square thru @9 to a wave" c1
    seq touch [inherit_left]
    seq crosslockit [repeat_nm1]
 
-call "_square thru 2" dontshow tag square_thru_2
+call "square thru 2" dontshow tag square_thru_2
             split_like_square_thru
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM0W CM1E]
 
-call "_square thru 3" dontshow tag square_thru_3
+call "square thru 3" dontshow tag square_thru_3
             split_like_square_thru
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM3S CM2S]
 
-call "_square thru 4" dontshow tag square_thru_4
+call "square thru 4" dontshow tag square_thru_4
             split_like_square_thru
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM2E CM3W]
+
+call "split square thru 2" dontshow tag splitsq2
+   setup 2x2 2x2
+      preds "???"
+         if x22_couple [0 0 ZM1N ZM0N]
+         if always     [0 0 AM0W CM1E]
+
+call "split square thru 4" dontshow tag splitsq4
+   setup 2x2 2x2
+      preds "???"
+         if x22_couple [0 0 ZM3S ZM2S]
+         if always     [0 0 AM2E CM3W]
 
 call "_funny square thru main" dontshow tag funnysquaremain
             left_means_mirror
@@ -6331,18 +6343,18 @@ call "criss cross @9 steps at a time" c3x
 
 call "barge thru" c4
             visible_fractions split_like_square_thru
-   seq square_thru_2 []
-   seq trade_by []
+   seq square_thru_2 [allow_forced_mod]
+   seq trade_by [allow_forced_mod]
 
 call "square the barge" c4
             split_like_square_thru
-   seq square_thru_4 []
-   seq trade_by []
+   seq square_thru_4 [allow_forced_mod]
+   seq trade_by [allow_forced_mod]
 
 call "square the barge 3/4" c4
             split_like_square_thru
-   seq square_thru_3 []
-   seq trade_by []
+   seq square_thru_3 [allow_forced_mod]
+   seq trade_by [allow_forced_mod]
 
 call "wipe out" c4a
    setup 2x4 2x4
@@ -6395,11 +6407,26 @@ call "ends bend" a1 tag endsbend
    setup 4x2 2x4 rotate
       array [0 M6W M1W 0 0 M2W M5W 0]
 
+call "_square the bases part 1" dontshow tag sqbases1
+   conc square_thru_3 [] pass_in [conc_demand_lines conc_force_otherway]
+
 call "square the bases" c1
+   seq sqbases1 []
+   seq splitsq2 [allow_forced_mod]
+   seq trade_by [allow_forced_mod]
+
+call "square the bases plus 2" c4
+   seq sqbases1 []
+   seq splitsq4 [allow_forced_mod]
+   seq trade_by [allow_forced_mod]
+
+/* ****  We need these two calls to make regression tests win,
+   until we figure out the really right way to do this. */
+call "square the bases (old)" c1
    setup 2x4 2x4 rotate
    array [0 0 0 0 AM5E AL3W CR4W CM2E]
 
-call "square the bases plus 2" c3x
+call "square the bases plus 2 (old)" c4
    setup 2x4 2x4 rotate
    array [0 0 0 0 AAL7E AM1W CM6W CCR0E]
 
@@ -7621,7 +7648,7 @@ call "cross chain and roll" c1
    setup 4x2 2x4
       array [L2W 0 L3E 0 0 L4E 0 L5W]
 
-call "checkover" c3a
+call "checkover" c1
    setup 4x2 2x4 restriction unusual wave_only
    array [0W 1W 6W 7W 0E 1E 6E 7E]
 

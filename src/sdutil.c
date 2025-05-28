@@ -901,9 +901,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   (     k == concept_nth_part &&
                                              /* "SKIP THE <Nth> PART" or "SHIFT <N>" */
                               (item->value.arg1 == 9 || item->value.arg1 == 10)) ||
-                  (    (k == concept_so_and_so_only ||           /* The arg1 test picks out "do your part". */
-                        k == concept_some_vs_others) &&
-                     item->value.arg1 < 2)) {
+                  /* The arg1 test picks out "do your part" or "ignore". */
+                  (     (k == concept_so_and_so_only || k == concept_some_vs_others)
+                                    &&
+                        (item->value.arg1 < 2 || item->value.arg1 == 8))) {
             /* This is an "F" type concept. */
             comma_after_next_concept = TRUE;
             last_was_t_type = FALSE;
@@ -930,7 +931,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   k == concept_fan ||
                   k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT ||    /* INVERT */
                   k == concept_nth_part && item->value.arg1 == 8 ||
-                  k == concept_so_and_so_only && item->value.arg1 == 9 ||
+                  k == concept_so_and_so_only && item->value.arg1 == 11 ||
                   k == concept_c1_phantom ||
                   k == concept_yoyo) {
             /* This is an "L" type concept. */
@@ -1137,7 +1138,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_comma_after_next_concept = TRUE;
             request_final_space = TRUE;
          }
-         else if ((k == concept_so_and_so_only) && local_cptr->concept->value.arg1 == 9) {
+         else if ((k == concept_so_and_so_only) && local_cptr->concept->value.arg1 == 11) {
             request_comma_after_next_concept = TRUE;   /* "<ANYONE> WORK <concept>" */
             writestuff_with_decorations(local_cptr, (Const char *) 0);
          }

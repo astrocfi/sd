@@ -1,5 +1,5 @@
 #!/bin/sh
-# From configure.in Time-stamp: 95/03/27 17:01:31 gildea
+# From configure.in Time-stamp: 95/04/26 16:12:34 gildea
 
 # configure script for Sd (square dance caller's helper)
 #
@@ -752,7 +752,7 @@ if test -n "$withval"; then
 test -n "$silent" || echo "checking system type"
 SYSTEM=`config.guess | sed -e 's/.*-//' -e 's/\..*//'`
 
-BINDIST_RULE="bindist: $(BIN_TARFILE).Z"
+BINDIST_RULE='bindist: $(BIN_TARFILE).Z'
 
 case "$CC" in
     gcc*)
@@ -997,8 +997,8 @@ fi
 
 TTY_FLAGS="$CFLAGS"
 TTY_LIBS="$LIBS"
-SDTTY_OBJ="$(SDTTY_OBJ_UNIX)"
-SDTTY_OBJS="$(SD_OBJS) $(SDTTY_OBJ)"
+SDTTY_OBJ='$(SDTTY_OBJ_UNIX)'
+SDTTY_OBJS='$(SD_OBJS) $(SDTTY_OBJ)'
 
 test -n "$silent" || echo "checking for ln -s"
 rm -f conftestdata

@@ -2411,7 +2411,7 @@ typedef struct fixerjunk {
    Const struct fixerjunk *nextdmd;
    Const struct fixerjunk *nextdmdrot;
    Const struct fixerjunk *next2x2;
-   int nonrot[4][4];
+   int nonrot[4][6];
    int yesrot[4][4];
 } fixer;
 
@@ -2521,6 +2521,7 @@ static Const fixer f1x8endd  = {s1x4, s1x8,        0, 1,       0,          0,   
 static Const fixer f1x8endo  = {s1x2, s1x8,        0, 2,       &f1x8endo,  &fboneendo, 0,          0, 0,          0,    0,          {{0, 1}, {5, 4}},   {{-1}}};
 static Const fixer fbonectr  = {s1x4, s_bone,      0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &bar55d,    {{6, 7, 2, 3}},     {{-1}}};
 static Const fixer fboneendd = {s2x2, s_bone,      0, 1,       0,          0,          &f1x8endd,  0, 0,          0,    &fboneendd, {{0, 1, 4, 5}},     {{-1}}};
+static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 1,       0,          0,          0,          0, 0,          0,    0,          {{0, 1, 3, 4, 5, 7}}, {{-1}}};
 static Const fixer fboneendo = {s1x2, s_bone,      1, 2,       &fboneendo, &f1x8endo,  0,          0, 0,          0,    0,          {{0, 5}, {1, 4}},   {{-1}}};
 static Const fixer frigendd  = {s1x4, s_rigger,    0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  {{6, 7, 2, 3}},     {{-1}}};
 static Const fixer frigctr   = {s2x2, s_rigger,    0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   {{0, 1, 4, 5}},     {{-1}}};
@@ -2545,16 +2546,18 @@ extern void so_and_so_only_move(
    setup *result)
 {
 
-/* arg1 = 0 - <> do your part
-          1 - <> do your part while the others ....
-          2 - own the <>, with the others not doing any call, which doesn't exist
-          3 - own the <>, .... by ....
-          4 - <>
-          5 - <> while the others ....
-          6 - <> disconnected
-          7 - <> disconnected .... while the others ....
-          8 - <> work <concept>, with the others not doing any call, which doesn't exist
-          9 - <> work <concept> (the others do the call, but without the concept)
+/* arg1 = 0  - <> do your part
+          1  - <> do your part while the others ....
+          2  - own the <>, with the others not doing any call, which doesn't exist
+          3  - own the <>, .... by ....
+          4  - <>
+          5  - <> while the others ....
+          6  - <> disconnected   or   <> distorted
+          7  - <> disconnected .... while the others ....
+          8  - <> ignored
+          9  - <> ignored .... while the others ...., which doesn't exist
+          10 - <> work <concept>, with the others not doing any call, which doesn't exist
+          11 - <> work <concept> (the others do the call, but without the concept)
 
 /* arg2 = 0 - not doing distorted setup, this is the usual case, people work in the
                   actual setup that they have
@@ -2610,10 +2613,16 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
          else if (selectp(ss, i))
             q = 1;
 
+         /* Indicator 8 is "<> ignored" -- like "<> disconnected, but inverted. */
+         if (indicator == 8) q ^= 1;
+
          ssmask |= q;
          clear_person(&the_setups[q], i);
       }
    }
+
+   /* We are now finished with special properties of "ignored". */
+   if (indicator == 8) indicator = 6;
 
    current_selector = saved_selector;
 
@@ -2622,7 +2631,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
       The concentric_move stuff is much more sophisticated about a lot of things than
       what we would otherwise do. */
 
-   if (indicator == 4 || indicator == 8) {
+   if (indicator == 4 || indicator == 10) {
       cm_hunk *chunk = setup_attrs[ss->kind].conctab;
       uint32 mask = ~(~0 << (sizem1+1));
 
@@ -2697,7 +2706,7 @@ back_here:
       the_setups[setupcount].cmd = ss->cmd;
       the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       if (setupcount == 1) {
-         if (indicator == 8) {
+         if (indicator == 10) {
             parse_block *parseptrcopy = skip_one_concept(parseptr->next);
             the_setups[setupcount].cmd.parseptr = parseptrcopy->next;
          }
@@ -2705,7 +2714,7 @@ back_here:
             the_setups[setupcount].cmd.parseptr = parseptr->subsidiary_root;
       }
 
-      if (indicator >= 4 && indicator != 8) {
+      if (indicator >= 4 && indicator != 10) {
          Const fixer *fixp = (Const fixer *) 0;
          int lilcount;
          int numsetups;
@@ -2822,6 +2831,15 @@ back_here:
                   fixp = &f1x8endd;
                else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x33)
                   fixp = &fboneendd;
+
+
+
+
+               else if (the_setups[setupcount].kind == s_bone && thislivemask == 0xBB)
+                  fixp = &fbonetgl;
+
+
+
                else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
                   fixp = &fppaad;
                else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
@@ -3001,7 +3019,7 @@ back_here:
                fixp = fixp->nextdmd;
             else if (lilresult[0].kind == s2x2)
                fixp = fixp->next2x2;
-            else
+            else if (lilresult[0].kind != fixp->ink || fixp->rot != 0)
                fixp = 0;    /* Raise an error. */
 
             if (!fixp) goto lose;
@@ -3072,7 +3090,7 @@ back_here:
 
    crossconc = 0;
 
-   if (indicator == 8) goto forward_here;
+   if (indicator == 10) goto forward_here;
 
    concentric_move(ss, &ss->cmd, subsid_cmd_p,
             schema, 0, 0, result);
@@ -3082,7 +3100,7 @@ back_here:
 
    crossconc = 1;
 
-   if (indicator == 8) goto forward_here;
+   if (indicator == 10) goto forward_here;
 
    concentric_move(ss, subsid_cmd_p, &ss->cmd,
             schema, 0, 0, result);

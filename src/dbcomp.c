@@ -843,6 +843,8 @@ int tagtabmax = 100;              /* Amount of space allocated for tagtab; must 
 tagtabitem *tagtab;      /* The dynamically allocated tag list. */
 
 
+int errnum1 = -1;   /* These may get set >= when raising a fatal error. */
+int errnum2 = -1;
 int eof;
 int chars_left;
 char *lineptr;
@@ -909,6 +911,9 @@ static void errexit(char s[])
          do_printf("|\n");
       }
    }
+
+   if (errnum1 >= 0 || errnum2 >= 0)
+      do_printf("Error data are:   %d   %d\n", errnum1, errnum2);
 
    if (error_is_fatal) {
       free(tagtab);
@@ -1279,8 +1284,12 @@ static void write_callarray(int num, int doing_matrix)
          errexit("Improper callarray element");
    }
 
-   if (count < num) errexit("Callarray list is too short for this call");
-   else if (count > num) errexit("Callarray list is too long for this call");
+   if (count != num) {
+      errnum1 = count;
+      errnum2 = num;
+      if (count < num) errexit("Callarray list is too short for this call");
+      else             errexit("Callarray list is too long for this call");
+   }
 }
 
 

@@ -4,8 +4,10 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set Time-stamp: Nov 3, 1995
-@set sd-version 31.48
+@c
+@c ***NOTE***  The month must be just 3 letters.  Otherwise, making "sd_doc.txt" fails.
+@set Time-stamp: Nov 7, 1995
+@set sd-version 31.50
 @set full-manual
 @c %**end of header
 @iftex
@@ -2824,15 +2826,22 @@ something similar.
 @node Designating Certain People, Finish and Like a, Precede it or Follow it, Concept Notes
 @section Designating Certain People
 
-There are five closely related concepts here.  You must have a clear
+There are six related concepts here.  You must have a clear
 understanding of how the program treats them in order to use them effectively.
 Compared to the natural and fluent way most dancers and callers use these
 ideas, the program may seem idiosyncratic and ignorant in its handling of them.
 @xref{Linguistic Idiosyncrasies}.
 
-The five concepts are @code{so-and-so}, @code{so-and-so disconnected},
-@code{so-and-so in your distorted setup},
-@code{so-and-so do your part}, and @code{own the so-and-so}.
+The six concepts are
+
+@example
+   so-and-so
+   so-and-so disconnected
+   so-and-so in your distorted setup
+   so-and-so do your part
+   ignore the so-and-so
+   own the so-and-so
+@end example
 
 In general, be aware that the choice of words and punctuation that the program
 uses for these concepts is determined by the need to avoid ambiguity, and may
@@ -2968,9 +2977,25 @@ as @code{do your part, <so-and-so> <call> while the others <other call>}.
 You must still enter it as shown above, with the designator first and
 the phrase @samp{do your part} second.
 
+@subsection Ignore the So-And-So
+
+The concept is:
+
+@example
+   @code{ignore the <so-and-so>, <call>}
+@end example
+
+This means that the designated people do nothing, while the others do
+the call in the disconnected setup around them.  From the standpoint
+of the non-designated people, the spots occupied by the designated
+people do not exist.
+
+This concept has been set at C1.  You can use it at lower levels if
+you issue the @code{toggle concept levels} command.
+
 @subsection Own the So-And-So
 
-The concepts are:
+The concept is:
 
 @example
    @code{own the <so-and-so>, <call> by <other call>}
