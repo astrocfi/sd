@@ -1272,11 +1272,6 @@ static bool plus_mod_real(setup *real_people, int real_index,
 }
 
 
-static const int32_t l_4x3_tab[12] = {
-   -99, -99, -99, -99, 3, 2, 4, 5, 11, 10, 0, 1};
-
-static const int32_t r_4x3_tab[12] = {
-   10, 11, 5, 4, 6, 7, -99, -99, -99, -99, 9, 8};
 
 /* ARGSUSED */
 static bool semi_squeezer_select(setup *real_people, int real_index,

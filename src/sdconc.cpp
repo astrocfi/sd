@@ -3050,6 +3050,16 @@ static void inherit_conc_assumptions(
             this_assumption->assump_both ^= 3;
             goto got_new_assumption;
 
+         case cr_qtag_like:
+            // Outsides facing in (B=1) or out (B=2), centers in unknown line,
+            // though we don't casre about that just now.
+            if (((this_assumption->assump_both + 1) & 2) != 0) {   // 1 or 2
+               this_assumption->assumption = cr_li_lo;
+               goto got_new_assumption;
+            }
+            else
+               break;
+
          case cr_real_1_4_tag:
          case cr_real_1_4_line:
             this_assumption->assumption = cr_li_lo;
@@ -5706,6 +5716,8 @@ extern void inner_selective_move(
    uint32_t mask = ~(~0 << (sizem1+1));
    const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
    selector_kind local_selector = selector_to_use.who[0];
+   bool special_unsym_dyp = false;
+
    if (local_selector == selector_outsides)
       local_selector = selector_ends;
 
@@ -7116,8 +7128,54 @@ extern void inner_selective_move(
    livemask[0] = little_endian_live_mask(&the_setups[0]);
    livemask[1] = little_endian_live_mask(&the_setups[1]);
 
-   // Iterate 1 or 2 times, depending on whether the "other" people do a call.
+   // If one of the calls is something like "girls zoom" (indicated with the "one_side_lateral"
+   // flag), from a normal starting DPT, we treat it as if we had said
+   // "girls do your part zoom".  This effectively fills in the rest of the setup
+   // so that they know how to do the call.  Similarly for things like "zing"
+   // and "peel off".  Also, "spread" is marked this way, so we can say
+   // "boys spread" from a BBGG wave.  And "counter rotate" too, but for a different reason.
+   // ("Counter rotate" doesn't want to get mired down in all the "lilsetup" nonsense.
+   // "Counter rotate" knows how to do the call all by itself.)
+   // In any case, if either call is one of these, change to DYP.
 
+   // So we do a prescan, iterating 1 or 2 times, depending on whether the "other" people do a call.
+   for (setupcount=0; setupcount <= others ; setupcount++) {
+      setup_kind kk = the_setups[setupcount].kind;
+      setup_command *cmdp = (setupcount == 1) ? cmd2 : cmd1;
+      uint32_t thislivemask = livemask[setupcount];
+
+      if (indicator == selective_key_plain) {
+         const call_with_name *callspec = cmdp->callspec;
+
+         if (!callspec &&
+             cmdp->parseptr &&
+             cmdp->parseptr->concept &&
+             cmdp->parseptr->concept->kind <= marker_end_of_list)
+            callspec = cmdp->parseptr->call;
+
+         if (callspec) {
+            // If this has a "one_side_lateral" flag with a suitable setup,
+            // change to "Do Your Part".  But not if it's a counter rotate --
+            // those will be taken care of elsewhere, and may or may not involve
+            // turning into a DYP operation.
+
+            if ((callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL) &&
+                callspec->the_defn.schema != schema_counter_rotate &&
+                ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
+                 (kk == s1x6 && (thislivemask == 033)) ||
+                 (kk == s_spindle12 && ((thislivemask & 0xE7) == 0)) ||
+                 (kk == s_trngl4 && two_couple_calling && (thislivemask == 0x0C)) ||
+                 (kk == s2x2 && two_couple_calling &&
+                  (thislivemask == 0x3 || thislivemask == 0x6 || thislivemask == 0xC || thislivemask == 0x9)) ||
+                 (kk == s2x6 && (thislivemask == 00303 || thislivemask == 06060)))) {
+               indicator = selective_key_dyp;
+               special_unsym_dyp = true;
+            }
+         }
+      }
+   }
+
+   // Iterate 1 or 2 times, depending on whether the "other" people do a call.
    for (setupcount=0; ; setupcount++) {
 
       // Not clear that this is really right.
@@ -7129,7 +7187,6 @@ extern void inner_selective_move(
       setup *this_result = &the_results[setupcount];
       setup_kind kk = this_one->kind;
       setup_command *cmdp = (setupcount == 1) ? cmd2 : cmd1;
-      bool special_unsym_dyp = false;
 
       process_number_insertion((setupcount == 1) ? modsb1 : modsa1);
       this_one->cmd = ss->cmd;
@@ -7138,35 +7195,6 @@ extern void inner_selective_move(
       this_one->cmd.cmd_final_flags = cmdp->cmd_final_flags;
 
       this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-
-      // If the call is something like "girls zoom" (indicated with the "one_side_lateral"
-      // flag), from a normal starting DPT, we treat it as if we had said
-      // "girls do your part zoom".  This effectively fills in the rest of the setup
-      // so that they know how to do the call.  Similarly for things like "zing"
-      // and "peel off".  Also, "spread" is marked this way, so we can say
-      // "boys spread" from a BBGG wave.
-
-      if (indicator == selective_key_plain &&
-          ((kk == s2x4 && (thislivemask == 0xCC || thislivemask == 0x33)) ||
-           (kk == s1x6 && (thislivemask == 033)) ||
-           (kk == s_spindle12 && ((thislivemask & 0xE7) == 0)) ||
-           (kk == s_trngl4 && two_couple_calling && (thislivemask == 0x0C)) ||
-           (kk == s2x2 && two_couple_calling && (thislivemask == 0x3 || thislivemask == 0x6 ||
-                                                 thislivemask == 0xC || thislivemask == 0x9)) ||
-           (kk == s2x6 && (thislivemask == 00303 || thislivemask == 06060)))) {
-         const call_with_name *callspec = this_one->cmd.callspec;
-
-         if (!callspec &&
-             this_one->cmd.parseptr &&
-             this_one->cmd.parseptr->concept &&
-             this_one->cmd.parseptr->concept->kind <= marker_end_of_list)
-            callspec = this_one->cmd.parseptr->call;
-
-         if (callspec && (callspec->the_defn.callflagsf & CFLAG2_CAN_BE_ONE_SIDE_LATERAL)) {
-            indicator = selective_key_dyp;
-            special_unsym_dyp = true;
-         }
-      }
 
       if (indicator == selective_key_snag_anyone) {
          // Snag the <anyone>.
@@ -7489,6 +7517,18 @@ extern void inner_selective_move(
 
          const select::fixer *fixp =
             select::hash_lookup(kk, thislivemask, allow_phantoms, key, arg2, this_one);
+
+         if ((!fixp || (fixp->numsetups & 0xFF) != 1) &&
+             this_one->cmd.parseptr &&
+             this_one->cmd.parseptr->call &&
+             (this_one->cmd.parseptr->call->the_defn.schema == schema_matrix ||
+              this_one->cmd.parseptr->call->the_defn.schema == schema_partner_matrix ||
+              this_one->cmd.parseptr->call->the_defn.schema == schema_partner_partial_matrix ||
+              this_one->cmd.parseptr->call->the_defn.schema == schema_counter_rotate)) {
+            // Do it as though we had said "do your part".
+            move(this_one, false, this_result);
+            goto done_with_this_one;
+         }
 
          if (!fixp) {
             // These two have a looser livemask criterion.

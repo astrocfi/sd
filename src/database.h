@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 390
+#define DATABASE_FORMAT_VERSION 391
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -457,7 +457,8 @@ enum {
    MTX_ADD_2N                 = 0x8000,
    MTX_INCLUDE_PHANTOMS       = 0x10000,
    MTX_NOT_TRUE_INVADER       = 0x20000,
-   MTX_SELECTOR_IS_TRAILERS   = 0x40000
+   MTX_SELECTOR_IS_TRAILERS   = 0x40000,
+   MTX_DO_HALF_OF_CTR_ROT     = 0x80000
 };
 
 
@@ -1304,7 +1305,7 @@ enum calldef_schema {
    schema_matrix,
    schema_partner_matrix,
    schema_partner_partial_matrix,
-   schema_global_matrix,
+   schema_counter_rotate,
    schema_roll,
    schema_recenter,
    schema_sequential,            // All after this point are sequential.

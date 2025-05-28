@@ -1686,6 +1686,8 @@ public:
 struct setup_command {
    parse_block *parseptr;
    call_with_name *callspec;
+   call_conc_option_state options;
+
    final_and_herit_flags cmd_final_flags;
    fraction_command cmd_fraction;
    uint32_t cmd_misc_flags;
@@ -2572,6 +2574,8 @@ extern SDLIB_API int number_of_calls[call_list_extent];
 
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API bool two_couple_calling;                           /* in SDTOP */
+extern SDLIB_API bool expanding_database;                           /* in SDTOP */
+extern SDLIB_API int trace_progress;                                /* in SDTOP */
 extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
 extern SDLIB_API int config_history_ptr;                            /* in SDTOP */
@@ -4711,8 +4715,8 @@ enum revert_weirdness_type {
 
 enum split_command_kind {
    split_command_none,
-   split_command_1x4,
-   split_command_1x8,
+   split_command_1x4_dmd,
+   split_command_1x8_ptpd,
    split_command_2x3,
 };
 
@@ -4764,10 +4768,6 @@ extern const ctr_end_mask_rec masks_for_3dmd_ctr2;                  /* in SDTABL
 extern const ctr_end_mask_rec masks_for_3dmd_ctr4;                  /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_bigh_ctr4;                  /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_4x4;                        /* in SDTABLES */
-
-extern const coordrec tgl3_0;                                       /* in SDTABLES */
-extern const coordrec tgl3_1;                                       /* in SDTABLES */
-extern const coordrec tgl4_upside_down;                             /* in SDTABLES */
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x5_ctr6[];                        /* in SDTABLES */

@@ -6348,7 +6348,7 @@ static void do_concept_do_each_1x4(
    if (arg2 == 0 && arg1 != 0 && ((arg1 ^ global_tbonetest) & 1) == 0)
       fail("People are not in the required line, column or wave.");
 
-   do_simple_split(ss, (arg2 != 2) ? split_command_1x4 : split_command_none, result);
+   do_simple_split(ss, (arg2 != 2) ? split_command_1x4_dmd : split_command_none, result);
    return;
 
    split_big:
@@ -6725,7 +6725,7 @@ static void do_concept_overlapped_diamond(
    if (attr::slimit(ss) == 7) {
       // Reset it to execute this same concept again, until it doesn't have to split any more.
       ss->cmd.parseptr = parseptr;
-      if (do_simple_split(ss, split_command_1x4, result))
+      if (do_simple_split(ss, split_command_1x4_dmd, result))
          fail("Not in correct setup for overlapped diamond/line concept.");
       return;
    }

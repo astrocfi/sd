@@ -279,6 +279,8 @@ bool allow_bend_home_getout = false;
 bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
 bool two_couple_calling = false;
+bool expanding_database = false;
+int trace_progress = 0;
 bool allowing_all_concepts = false;
 int allowing_modifications = 0;
 
@@ -772,7 +774,7 @@ extern void update_id_bits(setup *ss)
    case sbigh:
       // If it's a "double bent tidal line", we can recognize the "center 4"
       // and "outer pairs".
-      if (livemask != 06363U || livemask != 07474U) ptr = id_bit_table_bigh_dblbent;
+      if (livemask == 06363U || livemask == 07474U) ptr = id_bit_table_bigh_dblbent;
       // Otherwise, we recognize only the center 1x4, and only if it is full.
       else if ((livemask & 06060U) != 06060U) ptr = (id_bit_table *) 0;
       break;

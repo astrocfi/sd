@@ -1173,6 +1173,18 @@ extern uint32_t do_call_in_series(
    // one field being zero and the other nonzero), we continue to split
    // along the same axis.
 
+   // We also do this to make split counter rotate work.
+   /*   if (qqqq.cmd.callspec == base_calls[base_call_ctrrot] && (qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
+      if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_HORIZ) {
+         saved_result_flags.split_info[0] = 1;
+         saved_result_flags.split_info[1] = 0;
+      }
+      else if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_VERT) {
+         saved_result_flags.split_info[0] = 0;
+         saved_result_flags.split_info[1] = 1;
+      }
+      }   */
+
    // We want one field nonzero and the other zero.
 
    if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
@@ -1706,6 +1718,13 @@ static const coordrec s3dmdtoqtg1 = {s_qtag, 0x123,
 static const coordrec s3dmdtoqtg2 = {s_qtag, 0x123,
    { -5,   2,   6,   2,   5,  -2,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}};
+
+static const coordrec halfcircto1x6h = {s1x6, 0x123,
+   { -9,  -6,  -2,   9,   6,   2},
+   {  0,   0,   0,   0,   0,   0}};
+static const coordrec halfcircto1x6v = {s1x6, 0x123,
+   { -9,  -5,  -2,   9,   5,   2},
+   {  0,   0,   0,   0,   0,   0}};
 
 static const coordrec alamoto2x4 = {s2x4, 0x23,
    { -5,  -2,   2,   5,   5,   2,  -2,  -5},
@@ -2315,7 +2334,6 @@ static const checkitem checktable[] = {
    {0x00A600A6, 0x09006602, nothing,  0, warn__none, &x1x6thing, (const int8_t *) 0},
    {0x00A600E6, 0x09006602, nothing,  1, warn__none, &x1x6_1x8,  (const int8_t *) 0},
    {0x00E600A6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
-   {0x006600E6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
    {0x00E600E6, 0x09006602, nothing,  0, warn__none, &x1x8thing, (const int8_t *) 0},
    {0x00E60066, 0x09006602, nothing,  0, warn__none, &x1x4_1x8,  (const int8_t *) 0},
    {0x006600A6, 0x09004600, nothing,  1, warn__none, &x1x4_1x6,  (const int8_t *) 0},
@@ -2326,7 +2344,6 @@ static const checkitem checktable[] = {
 
    {0x00220022, 0x00008004, s2x2, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20004, 0x09000400, s1x6, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x000400A2, 0x08004200, s1x6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // Two colliding 1/2 circulates from as-couples T-bone.
    //   {0x00930004, 0x21008400, nothing, 0, warn__none, &halfcircto1x6h, (const int8_t *) 0},
@@ -2426,6 +2443,19 @@ static int finish_matrix_call(
             trucking.  He is only allowed to turn.  That is, we will require deltax and
             deltay to be zero.  An example of this situation is the points of a galaxy. */
 
+         /* ****** This seems to be too restrictive.  There may have been good reason for doing this
+            at one time, but now it makes all press and truck calls illegal in C1 phantoms.  The
+            table for C1 phantoms has been carefully chosen to make things legal only within one's
+            own miniwave, but it requires odd numbers.  Perhaps we need to double the resolution
+            of things in matrix_info[i].x or y, but that should wait until after version 28
+            is released. */
+
+         /* So this is patched out.  The same problem holds for bigdmds.
+            if (((matrix_info[i].x | matrix_info[i].y) & 1) &&
+            (matrix_info[i].deltax | matrix_info[i].deltay))
+            fail("Someone's ending position is not well defined.");
+         */
+
          alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
 
          if (the_schema == schema_counter_rotate) {
@@ -2475,17 +2505,15 @@ static int finish_matrix_call(
             }
 
             int repetition_count = 1;
-
             if ((ss->cmd.callspec->the_defn.callflags1 & CFLAG1_NUMBER_MASK) != 0 &&
                 current_options.howmanynumbers == 1) {
                repetition_count = current_options.number_fields;
-            }
-
-            if (flags & MTX_DO_HALF_OF_CTR_ROT) {
-               // This is "counter rotate N/8".
-               if ((repetition_count & 1) != 0)
-                  go_one_eighth_clockwise = true;
-               repetition_count >>= 1;
+               if (flags & MTX_DO_HALF_OF_CTR_ROT) {
+                  // This is "counter rotate N/8".
+                  repetition_count >>= 1;
+                  if ((current_options.number_fields & 1) != 0)
+                     go_one_eighth_clockwise = true;
+               }
             }
 
             previous_grab = grab;
@@ -2689,11 +2717,6 @@ static int matrixmove(
 
    if (the_schema == schema_counter_rotate) {
       flags |= MTX_INCLUDE_PHANTOMS;
-   }
-
-   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__ACTUAL_Z_CONCEPT) {
-      remove_z_distortion(ss);
-      result->result_flags.misc |= RESULTFLAG__COMPRESSED_FROM_2X3;
    }
 
    nump = start_matrix_call(ss, matrix_info, the_schema, 0, flags, &people);
@@ -6272,8 +6295,7 @@ static void do_sequential_call(
       fix_next_assump_col = 0;
       fix_next_assump_both = 0;
 
-      if (this_schema == schema_split_sequential &&
-          (result->cmd.cmd_final_flags.herit & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) == 0ULL) {
+      if (this_schema == schema_split_sequential) {
          //         result->cmd.cmd_misc_flags &= ~(CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
          switch (result->kind) {
          case s2x4: case s1x8: case s_qtag: case s_ptpd: case s3x4: case s_bone: case s_rigger: case s_bone6:
@@ -7163,11 +7185,24 @@ void really_inner_move(
          fail("This setup can't be recentered.");
       break;
    case schema_counter_rotate:
+      // Do we have to split this?  Code stolen from 1201 or so.
+
+      // ***** Better still, just do this:
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0) {
          if (!do_simple_split(ss, split_command_none, result))
             return;
       }
 
+         /*
+      if (ss->kind == s2x4 && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) != 0 && ss->rotation == 0) {
+         if (!do_simple_split(ss, split_command_none, result))
+            return;
+      }
+      else if (ss->kind == s2x4 && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) != 0 && ss->rotation == 1) {
+         if (!do_simple_split(ss, split_command_none, result))
+            return;
+      }
+         */
       // FALL THROUGH!
    case schema_matrix:
    case schema_partner_matrix:
@@ -7260,12 +7295,12 @@ void really_inner_move(
          matrix_def_block *base_block = callspec->stuff.matrix.matrix_def_list;
 
          if (the_schema == schema_counter_rotate && ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_HALF);
+            base_block->alternate_def_flags |= INHERITFLAG_HALF;
             flags |= MTX_DO_HALF_OF_CTR_ROT;
          }
 
          for ( ;; ) {
-            if (base_block->alternate_def_flags == ss->cmd.cmd_final_flags.herit)
+            if ((base_block->alternate_def_flags == ss->cmd.cmd_final_flags.herit))
                break;
             base_block = base_block->next;
             if (!base_block) fail("Illegal concept for this call.");
@@ -7333,9 +7368,6 @@ void really_inner_move(
             result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
             merge_table::merge_setups(&the_results[1], merge_c1_phantom, result);
          }
-
-         // Be sure we bring back the CMD_MISC3__DID_Z_COMPRESSMASK info.
-         ss->cmd.cmd_misc3_flags = the_setups[0].cmd.cmd_misc3_flags;
 
          if (expanded) {
             // If the outsides invaded space, but only did so perpendicular to the
@@ -8462,6 +8494,13 @@ static void move_with_real_call(
             }
             else
                fail("Can't split this setup.");
+
+            /*
+            if (mask == 0x4B4B || mask == 0xB4B4)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+            else
+               fail("Can't split this setup.");
+            */
          }
          else if (ss->kind == s2x6) {
             if (mask == 0xDB6 || mask == 0x6DB)
@@ -8844,7 +8883,7 @@ void move(
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
       skipped_concept_info foo(ss->cmd.parseptr);
 
-      if (foo.m_heritflag != 0ULL) {
+      if (!foo.m_heritflag == 0ULL) {
          parseptrcopy = foo.m_concept_with_root;
          ss->cmd.skippable_heritflags = foo.m_heritflag;
       }

@@ -1173,6 +1173,18 @@ extern uint32_t do_call_in_series(
    // one field being zero and the other nonzero), we continue to split
    // along the same axis.
 
+   // We also do this to make split counter rotate work.
+   /*   if (qqqq.cmd.callspec == base_calls[base_call_ctrrot] && (qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
+      if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_HORIZ) {
+         saved_result_flags.split_info[0] = 1;
+         saved_result_flags.split_info[1] = 0;
+      }
+      else if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_VERT) {
+         saved_result_flags.split_info[0] = 0;
+         saved_result_flags.split_info[1] = 1;
+      }
+      }   */
+
    // We want one field nonzero and the other zero.
 
    if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
@@ -1706,6 +1718,13 @@ static const coordrec s3dmdtoqtg1 = {s_qtag, 0x123,
 static const coordrec s3dmdtoqtg2 = {s_qtag, 0x123,
    { -5,   2,   6,   2,   5,  -2,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}};
+
+//static const coordrec halfcircto1x6h = {s1x6, 0x123,
+//   { -9,  -6,  -2,   9,   6,   2},
+//   {  0,   0,   0,   0,   0,   0}};
+//static const coordrec halfcircto1x6v = {s1x6, 0x123,
+//   { -9,  -5,  -2,   9,   5,   2},
+//   {  0,   0,   0,   0,   0,   0}};
 
 static const coordrec alamoto2x4 = {s2x4, 0x23,
    { -5,  -2,   2,   5,   5,   2,  -2,  -5},
@@ -2315,7 +2334,6 @@ static const checkitem checktable[] = {
    {0x00A600A6, 0x09006602, nothing,  0, warn__none, &x1x6thing, (const int8_t *) 0},
    {0x00A600E6, 0x09006602, nothing,  1, warn__none, &x1x6_1x8,  (const int8_t *) 0},
    {0x00E600A6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
-   {0x006600E6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
    {0x00E600E6, 0x09006602, nothing,  0, warn__none, &x1x8thing, (const int8_t *) 0},
    {0x00E60066, 0x09006602, nothing,  0, warn__none, &x1x4_1x8,  (const int8_t *) 0},
    {0x006600A6, 0x09004600, nothing,  1, warn__none, &x1x4_1x6,  (const int8_t *) 0},
@@ -2326,7 +2344,6 @@ static const checkitem checktable[] = {
 
    {0x00220022, 0x00008004, s2x2, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20004, 0x09000400, s1x6, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x000400A2, 0x08004200, s1x6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // Two colliding 1/2 circulates from as-couples T-bone.
    //   {0x00930004, 0x21008400, nothing, 0, warn__none, &halfcircto1x6h, (const int8_t *) 0},
@@ -2425,6 +2442,19 @@ static int finish_matrix_call(
             not sufficiently well-defined that we will allow him to do any pressing or
             trucking.  He is only allowed to turn.  That is, we will require deltax and
             deltay to be zero.  An example of this situation is the points of a galaxy. */
+
+         /* ****** This seems to be too restrictive.  There may have been good reason for doing this
+            at one time, but now it makes all press and truck calls illegal in C1 phantoms.  The
+            table for C1 phantoms has been carefully chosen to make things legal only within one's
+            own miniwave, but it requires odd numbers.  Perhaps we need to double the resolution
+            of things in matrix_info[i].x or y, but that should wait until after version 28
+            is released. */
+
+         /* So this is patched out.  The same problem holds for bigdmds.
+            if (((matrix_info[i].x | matrix_info[i].y) & 1) &&
+            (matrix_info[i].deltax | matrix_info[i].deltay))
+            fail("Someone's ending position is not well defined.");
+         */
 
          alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
 
@@ -2563,6 +2593,15 @@ static int finish_matrix_call(
 
    // First, take care of simple things from the table.
 
+
+   if (!expanding_database && trace_progress == 11) {
+      trace_progress++;
+      //      char junk[200];
+      //      sprintf(junk, "MATRIXMOVE[11] AFTER 0x%08X 0x%08X\n",
+      //              ypar, signature);
+      //      fail_no_retry(junk);
+   }
+
    const checkitem *p;
 
    for (p = checktable ; p->ypar ; p++) {
@@ -2614,6 +2653,26 @@ static int finish_matrix_call(
    result->eighth_rotation = go_one_eighth_clockwise ? 1 : 0;
    result->kind = checkptr->result_kind;
 
+   if (!expanding_database && trace_progress == 12) {
+      trace_progress++;
+      /*
+      char junk[200];
+      sprintf(junk, "MATRIXMOVE[12] %d %d 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
+              result->kind, result->rotation,
+              result->people[0].id1 & 0xFF,
+              result->people[1].id1 & 0xFF,
+              result->people[2].id1 & 0xFF,
+              result->people[3].id1 & 0xFF,
+              result->people[4].id1 & 0xFF,
+              result->people[5].id1 & 0xFF,
+              result->people[6].id1 & 0xFF,
+              result->people[7].id1 & 0xFF);
+      fail_no_retry(junk);
+      */
+   }
+
+
+
    collision_collector CC(allow_collisions);
 
    for (i=0; i<nump; i++) {
@@ -2658,6 +2717,28 @@ static int finish_matrix_call(
 
    // Pass the "action" in case it's merge_c1_phantom_real_couples.
    CC.fix_possible_collision(result, action);
+
+
+   if (!expanding_database && trace_progress == 13) {
+      trace_progress++;
+      /*
+      char junk[200];
+      sprintf(junk, "MATRIXMOVE[13] %d %d 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
+              result->kind, result->rotation,
+              result->people[0].id1 & 0xFF,
+              result->people[1].id1 & 0xFF,
+              result->people[2].id1 & 0xFF,
+              result->people[3].id1 & 0xFF,
+              result->people[4].id1 & 0xFF,
+              result->people[5].id1 & 0xFF,
+              result->people[6].id1 & 0xFF,
+              result->people[7].id1 & 0xFF);
+      fail_no_retry(junk);
+      */
+   }
+
+
+
    return alldelta;
 }
 
@@ -2683,6 +2764,24 @@ static int matrixmove(
    matrix_rec matrix_info[matrix_info_capacity+1];
    selector_kind saved_selector = current_options.who.who[0];
    int i, nump;
+
+
+   if (!expanding_database && trace_progress == 10) {
+      trace_progress++;
+      /*      char junk[200];
+      sprintf(junk, "MATRIXMOVE[10] %d %d 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\n",
+              ss->kind, ss->rotation,
+              ss->people[0].id1 & 0xFF,
+              ss->people[1].id1 & 0xFF,
+              ss->people[2].id1 & 0xFF,
+              ss->people[3].id1 & 0xFF,
+              ss->people[4].id1 & 0xFF,
+              ss->people[5].id1 & 0xFF,
+              ss->people[6].id1 & 0xFF,
+              ss->people[7].id1 & 0xFF);
+      fail_no_retry(junk);
+      */
+   }
 
    if (flags & MTX_SELECTOR_IS_TRAILERS)
       current_options.who.who[0] = selector_trailers;
@@ -6301,6 +6400,14 @@ static void do_sequential_call(
          }
       }
 
+      // This will get a counter rotate in a qtag.
+      if (!expanding_database && trace_progress == 0 && zzz.m_fetch_index == 1) {
+         trace_progress++;
+         //         char junk[200];
+         //         sprintf(junk, "BEFORE STUFFINSIDE[1] %d/%d.", result->kind, this_item->call_id);
+         //         fail_no_retry(junk);
+      }
+
       do_stuff_inside_sequential_call(
          result, this_mod1,
          &fix_next_assumption,
@@ -7091,6 +7198,15 @@ void really_inner_move(
       if (mirror) { mirror_this(ss); mirror = false; }
    }
 
+   if (!expanding_database && trace_progress == 7) {
+      trace_progress++;
+      /*
+      char junk[200];
+      sprintf(junk, "REALLY_INNER_MOVE[7] %d %d.", ss->kind, the_schema);
+      fail_no_retry(junk);
+      */
+   }
+
    setup_command foo1;
 
    if ((callflags1 & CFLAG1_FUNNY_MEANS_THOSE_FACING) &&
@@ -7163,11 +7279,24 @@ void really_inner_move(
          fail("This setup can't be recentered.");
       break;
    case schema_counter_rotate:
+      // Do we have to split this?  Code stolen from 1201 or so.
+
+      // ***** Better still, just do this:
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0) {
          if (!do_simple_split(ss, split_command_none, result))
             return;
       }
 
+         /*
+      if (ss->kind == s2x4 && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_HORIZ) != 0 && ss->rotation == 0) {
+         if (!do_simple_split(ss, split_command_none, result))
+            return;
+      }
+      else if (ss->kind == s2x4 && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_VERT) != 0 && ss->rotation == 1) {
+         if (!do_simple_split(ss, split_command_none, result))
+            return;
+      }
+         */
       // FALL THROUGH!
    case schema_matrix:
    case schema_partner_matrix:
@@ -7252,7 +7381,7 @@ void really_inner_move(
          ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX|INHERITFLAG_12_MATRIX);
 
          if (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META))
-            fail("Illegal concept for this call.");
+            fail_no_retry("Illegal concept for this call.");
 
          uint32_t flags = callspec->stuff.matrix.matrix_flags;
          if ((flags & MTX_ONLY_IN) && current_options.where != direction_in) fail("Can't use this selector.");
@@ -7260,18 +7389,47 @@ void really_inner_move(
          matrix_def_block *base_block = callspec->stuff.matrix.matrix_def_list;
 
          if (the_schema == schema_counter_rotate && ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_HALF);
+            // **** Patching this out -- it has been implicated in the
+            //   "SPLIT PHANTOM 1/4 TAGS turn the key" bug.
+            //            base_block->alternate_def_flags |= INHERITFLAG_HALF;
             flags |= MTX_DO_HALF_OF_CTR_ROT;
          }
+
+         /*
+         if (!expanding_database && trace_progress == 8) {
+            trace_progress++;
+            char junk[200];
+            sprintf(junk, "REALLY_INNER_MOVE[8], CASE %d %d 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X 0x%08X.",
+                    ss->kind,
+                    the_schema,
+                    ss->cmd.cmd_misc_flags,
+                    (uint32_t) callspec->stuff.matrix.matrix_flags,
+                    (uint32_t) ss->cmd.cmd_final_flags.final,
+                    (uint32_t) (ss->cmd.cmd_final_flags.herit >> 32),
+                    (uint32_t) (ss->cmd.cmd_final_flags.herit & 0xFFFFFFFFULL),
+                    (uint32_t) base_block,
+                    (uint32_t) base_block->next,
+                    (uint32_t) (base_block->alternate_def_flags >> 32),
+                    (uint32_t) (base_block->alternate_def_flags & 0xFFFFFFFFULL));
+            fail_no_retry(junk);
+         }
+         */
 
          for ( ;; ) {
             if (base_block->alternate_def_flags == ss->cmd.cmd_final_flags.herit)
                break;
             base_block = base_block->next;
-            if (!base_block) fail("Illegal concept for this call.");
+            if (!base_block) fail_no_retry("Illegal concept for this call.");
          }
 
          const uint32_t *callstuff = base_block->matrix_def_items;
+
+         if (!expanding_database && trace_progress == 9) {
+            trace_progress++;
+            // char junk[200];
+            // sprintf(junk, "REALLY_INNER_MOVE[9], deep %d %d 0x%08X.", ss->kind, the_schema, ss->cmd.cmd_misc_flags);
+            // fail_no_retry(junk);
+         }
 
          setup the_setups[2], the_results[2];
          the_setups[0] = *ss;              // centers if doing mystic, else everyone.
@@ -7748,6 +7906,12 @@ static void move_with_real_call(
    // (that is, nothing interesting will be found in parseptr -- it might be
    // useful to check that someday) and we just have the callspec and the final
    // concepts.
+   if (!expanding_database && trace_progress == 2) {
+      trace_progress++;
+      //      char junk[200];
+      //      sprintf(junk, "MOVE_WITH_REAL_CALL[2] %d.", ss->kind);
+      //      fail_no_retry(junk);
+   }
 
    if (ss->kind == nothing) {
       if (!ss->cmd.cmd_fraction.is_null())
@@ -7771,6 +7935,13 @@ static void move_with_real_call(
    call_conc_option_state saved_options = current_options;
    setup saved_ss = *ss;
 
+   if (!expanding_database && trace_progress == 3) {
+      trace_progress++;
+      //      char junk[200];
+      //      sprintf(junk, "MOVE_WITH_REAL_CALL[3] %d.", ss->kind);
+      //      fail_no_retry(junk);
+   }
+
  try_next_callspec:
 
    // Now try doing the call with this call definition.
@@ -7792,6 +7963,14 @@ static void move_with_real_call(
 
       calldef_schema the_schema =
          get_real_callspec_and_schema(ss, herit_concepts, this_defn->schema);
+
+
+      if (!expanding_database && trace_progress == 4) {
+         trace_progress++;
+         //         char junk[200];
+         //         sprintf(junk, "MOVE_WITH_REAL_CALL[4] %d %d.", ss->kind, the_schema);
+         //         fail_no_retry(junk);
+      }
 
       // If allowing modifications, the array version isn't what we want.
       if (the_schema == schema_by_array &&
@@ -8281,6 +8460,13 @@ static void move_with_real_call(
          }
       }
 
+      if (!expanding_database && trace_progress == 5) {
+         trace_progress++;
+         //         char junk[200];
+         //         sprintf(junk, "MOVE_WITH_REAL_CALL[5] %d %d %d.", ss->kind, the_schema, force_split);
+         //         fail_no_retry(junk);
+      }
+
       if (force_split != split_command_none)
          if (!do_simple_split(ss, force_split, result)) return;
 
@@ -8462,6 +8648,13 @@ static void move_with_real_call(
             }
             else
                fail("Can't split this setup.");
+
+            /*
+            if (mask == 0x4B4B || mask == 0xB4B4)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+            else
+               fail("Can't split this setup.");
+            */
          }
          else if (ss->kind == s2x6) {
             if (mask == 0xDB6 || mask == 0x6DB)
@@ -8529,6 +8722,15 @@ static void move_with_real_call(
       // Otherwise, there seem to be too many dangling loose ends in the logic.
       if ((callflags1 & CFLAG1_SEQUENCE_STARTER_PROM) != 0 && config_history_ptr != 1)
          fail("You must specify who is to do it.");
+
+      if (!expanding_database && trace_progress == 6) {
+         trace_progress++;
+         /*
+         char junk[200];
+         sprintf(junk, "MOVE_WITH_REAL_CALL[6] %d %d.", ss->kind, the_schema);
+         fail_no_retry(junk);
+         */
+      }
 
       really_inner_move(ss, qtfudged, this_defn, the_schema, callflags1, callflagsf,
                         0, did_4x4_expansion, imprecise_rotation_result_flagmisc, mirror, result);
@@ -8640,6 +8842,13 @@ void move(
    setup *result,
    bool suppress_fudgy_2x3_2x6_fixup /*= false*/) THROW_DECL
 {
+   if (!expanding_database && trace_progress == 1) {
+      trace_progress++;
+      //      char junk[200];
+      //      sprintf(junk, "MOVE[1] %d.", ss->kind);
+      //      fail_no_retry(junk);
+   }
+
    // Need this to check for dixie tag 1/4.
    if (current_options.number_fields == 1)
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__PARENT_COUNT_IS_ONE;

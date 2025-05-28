@@ -81,9 +81,6 @@
    touch_init_table3
    conc_tables::conc_init_table
    merge_table::merge_init_table
-   tgl3_0
-   tgl3_1
-   tgl4_upside_down
    id_bit_table_2x5_z
    id_bit_table_2x5_ctr6
    id_bit_table_d2x7a
@@ -1530,6 +1527,10 @@ expand::thing expand::expand_init_table[] = {
     warn__none, warn__none, plain_normalize, 0},
    {{13, 14, 2, 3, 5, 6, 10, 11},
     s_crosswave, sx1x8, 1, 0U, 0x9393, false,
+    warn__none, warn__none, plain_normalize, 0},
+
+   {{0, 1, 3, 2, 7, 8, 10, 9},
+    s1x8, s1x6_1x8, 0, 0U, 0x0870, false,
     warn__none, warn__none, plain_normalize, 0},
 
    {{2, 3, 5, 8, 9, 11},
@@ -5723,46 +5724,6 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {nothing, nothing}};
 
 
-
-// These are used in mirror_this, for handling difficult triangles.
-
-const coordrec tgl3_0 = {s_trngl, 0x23,
-   {  0,  -2,   2},
-   {  0,   4,   4}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1,  1,  2, -1, -1, -1,
-      -1, -1, -1, -1,  0, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec tgl3_1 = {s_trngl, 0x23,
-   {  0,   4,   4},
-   {  0,   2,  -2}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1,  0,  1, -1, -1,
-      -1, -1, -1, -1, -1,  2, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec tgl4_upside_down = {s_trngl4, 0x23,
-   { -4,   0,   4,   4},
-   {  0,   0,   2,  -2}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1,  0,  1,  2, -1, -1,
-      -1, -1, -1, -1, -1,  3, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-
 // These are used in setup_coords.
 
 static const coordrec thing1x1 = {s1x1, 0x23,
@@ -7293,6 +7254,18 @@ static const coordrec thingdbltrngl4 = {sdbltrngl4, 0x24,
       -1, -1, -1, -1, -1,  0,  1,  2,  4,  5,  6, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1,  3, -1, -1,  7, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingtrngl = {s_trngl, 0x23,
+   {  0,  -2,   2},
+   { -2,   2,   2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  1,  2, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
 
 static const coordrec thingtrngl4 = {s_trngl4, 0x23,
    {  0,   0,  -2,   2},
@@ -8877,8 +8850,8 @@ const setup_attr setup_attrs[] = {
     {"5 b@a  c@5 d@",
      (Cstring) 0}},
    {2,                      // s_trngl
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingtrngl,
+    &thingtrngl,
     {0, 0, 0, 0},
     {b_trngl, b_ptrngl},
     {0, 0},
@@ -10830,7 +10803,7 @@ const schema_attr schema_attrs[] = {
    {SCA_SNAGOK,
     schema_nothing},                     // schema_partner_partial_matrix
    {0,
-    schema_nothing},                     // schema_global_matrix
+    schema_nothing},                     // schema_counter_rotate
    {0,
     schema_nothing},                     // schema_roll
    {0,

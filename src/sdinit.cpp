@@ -298,7 +298,7 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
       goto accept;
 
    // Accept counter rotate.
-   if (test_call->the_defn.schema == schema_global_matrix)
+   if (test_call->the_defn.schema == schema_counter_rotate)
       goto accept;
 
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
@@ -910,7 +910,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
    case schema_recenter:
       break;
    case schema_matrix:
-   case schema_global_matrix:
+   case schema_counter_rotate:
       lim = 2;
       // !!!! FALL THROUGH !!!!
    case schema_partner_matrix:
@@ -2821,6 +2821,8 @@ bool open_session(int argc, char **argv)
             SOUT = (d_south|PERSON_MOVED|ROLL_IS_L)
          };
 
+         expanding_database = true;
+
          // RH tidal wave
          test_starting_setup(call_list_1x8,
                              setup(s1x8, 0,
@@ -2946,6 +2948,8 @@ bool open_session(int argc, char **argv)
          }
          else
             global_cache_failed_flag = true;
+
+         expanding_database = false;
       }
 
       // Repair the damage to the call lists, that is, turn them from

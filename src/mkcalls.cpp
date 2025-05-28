@@ -813,7 +813,7 @@ const char *schematab[] = {
    "matrix",
    "partnermatrix",
    "partnerpartialmatrix",
-   "globalmatrix",
+   "counter_rotate",
    "rolldefine",
    "recenter",
    "seq",
@@ -1390,6 +1390,7 @@ const char *matrixcallflagtab[] = {
    "include_phantoms",
    "not_true_invader",
    "selector_is_trailers",
+   "do_half_of_ctr_rot",
    ""};
 
 // BEWARE!!  This list must track the array "pred_table" in sdpreds.cpp .
@@ -2960,7 +2961,7 @@ int main(int argc, char *argv[])
       case schema_matrix:
       case schema_partner_matrix:
       case schema_partner_partial_matrix:
-      case schema_global_matrix:
+      case schema_counter_rotate:
          matrixflags = 0;
 
          for (;;) {     // Get matrix call options.
@@ -2973,7 +2974,7 @@ int main(int argc, char *argv[])
          write_fullword(matrixflags);
 
          for ( ;; ) {
-            write_callarray((ccc == schema_matrix || ccc == schema_global_matrix) ? 2 : 16, true);
+            write_callarray((ccc == schema_matrix || ccc == schema_counter_rotate) ? 2 : 16, true);
             get_tok_or_eof();
 
             if (tok_kind != tok_symbol || strcmp(tok_str, "alternate_definition"))

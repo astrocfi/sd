@@ -1019,7 +1019,6 @@ extern bool do_simple_split(
    case s3x4:
       if (split_command == split_command_2x3) {
          mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,1);
-         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_12_MATRIX);
          break;
       }
       else if (split_command == split_command_none) {
@@ -1049,7 +1048,7 @@ extern bool do_simple_split(
          mapcode = MAPCODE(s2x3,2,MPKIND__SPLIT,0);
          break;
       }
-      else if (split_command == split_command_1x4_dmd) {
+      else if (split_command == split_command_1x4) {
          if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_3X1 ||
              ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_1X3 ||
              ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_2X1 ||
@@ -1079,23 +1078,17 @@ extern bool do_simple_split(
       break;
    case s1x8:
       mapcode = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
-      if (split_command == split_command_1x8_ptpd) recompute_id = false;
+      if (split_command == split_command_1x8) recompute_id = false;
       break;
    case s4x4:
-      mapcode = MAPCODE(s2x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0);
-      break;
-   case s_bone:
-      mapcode = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0x7);
-      break;
-   case s_rigger:
-      mapcode = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_SPLIT,1,s_trngl4,0xD);
+         mapcode = MAPCODE(s2x2,4,MPKIND__SPLIT_OTHERWAY_TOO,0);
       break;
    case s_qtag:
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
       break;
    case s_ptpd:
+      if (split_command == split_command_1x8) recompute_id = false;
       mapcode = MAPCODE(sdmd,2,MPKIND__SPLIT,0);
-      if (split_command == split_command_1x8_ptpd) recompute_id = false;
       break;
    default:
       return true;
@@ -1127,20 +1120,20 @@ extern bool do_simple_split(
 // This returns the "force" flags that it extracted from the call.
 
 extern uint32_t do_call_in_series(
-   setup *ss,
+   setup *sss,
    bool dont_enforce_consistent_split,
    bool normalize,
    bool qtfudged) THROW_DECL
 {
    uint32_t retval = 0;
    uint32_t current_elongation = 0;
-   resultflag_rec saved_result_flags = ss->result_flags;
+   resultflag_rec saved_result_flags = sss->result_flags;
 
    // Start the expiration mechanism, but only if we are really doing a call.
-   if (ss->cmd.callspec)
-      ss->cmd.prior_expire_bits |= ss->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
+   if (sss->cmd.callspec)
+      sss->cmd.prior_expire_bits |= sss->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
 
-   setup qqqq = *ss;
+   setup qqqq = *sss;
 
    // Check for a concept that will need to be re-evaluated under "twice".
    // The test for this is [waves] initially twice initially once removed
@@ -1173,7 +1166,7 @@ extern uint32_t do_call_in_series(
    // one field being zero and the other nonzero), we continue to split
    // along the same axis.
 
-   // We want one field nonzero and the other zero.
+    // We want one field nonzero and the other zero.
 
    if ((qqqq.cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) &&
        !dont_enforce_consistent_split &&
@@ -1193,8 +1186,7 @@ extern uint32_t do_call_in_series(
          fail("Can't figure out how to split multiple part call.");
 
       if (do_simple_split(&qqqq,
-                          prefer_1x4 ? split_command_1x4_dmd :
-                          ((qqqq.kind == s3x4) ? split_command_2x3 : split_command_none),
+                          prefer_1x4 ? split_command_1x4 : split_command_none,
                           &tempsetup))
          fail("Can't figure out how to split this multiple part call.");
 
@@ -1211,7 +1203,7 @@ extern uint32_t do_call_in_series(
    }
 
    if (tempsetup.kind == s2x2) {
-      switch (ss->kind) {
+      switch (sss->kind) {
          case s1x4: case s_star: case sdmd: case s2x2:
             current_elongation = tempsetup.result_flags.misc & 3;
 
@@ -1219,20 +1211,20 @@ extern uint32_t do_call_in_series(
                "force_lines" type of directive, honor same. */
 
             if (qqqq.cmd.cmd_misc3_flags & CMD_MISC3__DOING_ENDS) {
-               if (ss->kind == s2x2 &&
+               if (sss->kind == s2x2 &&
                    (qqqq.cmd.cmd_misc_flags &
                     (DFM1_CONC_DEMAND_LINES | DFM1_CONC_DEMAND_COLUMNS))) {
 
                   int i;
                   uint32_t tb = 0;
 
-                  for (i=0; i<4; i++) tb |= ss->people[i].id1;
+                  for (i=0; i<4; i++) tb |= sss->people[i].id1;
                   if ((tb & 011) == 011) fail("Can't figure out where people started.");
 
                   if (qqqq.cmd.cmd_misc_flags & DFM1_CONC_DEMAND_LINES)
                      tb++;
 
-                  if (ss->cmd.prior_elongation_bits & ((tb & 1) + 1))
+                  if (sss->cmd.prior_elongation_bits & ((tb & 1) + 1))
                      fail("Ends aren't starting in required position.");
                }
 
@@ -1249,12 +1241,12 @@ extern uint32_t do_call_in_series(
                   current_elongation = (tb & 1) + 1;
                }
                else if (qqqq.cmd.cmd_misc_flags & (DFM1_CONC_FORCE_OTHERWAY)) {
-                  if ((ss->cmd.prior_elongation_bits+1) & 2)
-                     current_elongation = (ss->cmd.prior_elongation_bits & 3) ^ 3;
+                  if ((sss->cmd.prior_elongation_bits+1) & 2)
+                     current_elongation = (sss->cmd.prior_elongation_bits & 3) ^ 3;
                }
                else if (qqqq.cmd.cmd_misc_flags & (DFM1_CONC_FORCE_SPOTS)) {
-                  if ((ss->cmd.prior_elongation_bits+1) & 2)
-                     current_elongation = ss->cmd.prior_elongation_bits & 3;
+                  if ((sss->cmd.prior_elongation_bits+1) & 2)
+                     current_elongation = sss->cmd.prior_elongation_bits & 3;
                }
 
                retval = qqqq.cmd.cmd_misc_flags;
@@ -1271,11 +1263,11 @@ extern uint32_t do_call_in_series(
       }
    }
 
-   uint32_t save_expire = ss->cmd.prior_expire_bits;
-   *ss = tempsetup;
-   ss->cmd.prior_expire_bits = save_expire;
-   ss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   // But pick these up from the call.
-   ss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;     // But not this one!
+   uint32_t save_expire = sss->cmd.prior_expire_bits;
+   *sss = tempsetup;
+   sss->cmd.prior_expire_bits = save_expire;
+   sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   // But pick these up from the call.
+   sss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;     // But not this one!
 
    /* Remove outboard phantoms.
       It used to be that normalize_setup was not called
@@ -1303,12 +1295,12 @@ extern uint32_t do_call_in_series(
       Only "1x12 matrix" turns on CMD_MISC__EXPLICIT_MATRIX.  Plain "12 matrix will appear
       in the "new_final_concepts" word. */
 
-   if (normalize) normalize_setup(ss, plain_normalize, qtag_compress);
+   if (normalize) normalize_setup(sss, plain_normalize, qtag_compress);
 
    /* To be safe, we should take away the "did last part" bit for the second call,
       but we are fairly sure it won't be on. */
 
-   ss->cmd.prior_elongation_bits = current_elongation;
+   sss->cmd.prior_elongation_bits = current_elongation;
 
    /* The computation of the new result flags is complex, since we are trying
       to accumulate results over a series of calls.  To that end, the incoming contents
@@ -1339,10 +1331,10 @@ extern uint32_t do_call_in_series(
       It follows from this that the correct way to "seed" the result_flags word
       at the start of a series is by initializing it to a huge split_info field. */
 
-   ss->result_flags = saved_result_flags;
+   sss->result_flags = saved_result_flags;
 
-   ss->result_flags.misc &= ~RESULTFLAG__PART_COMPLETION_BITS;
-   ss->result_flags.misc |= tempsetup.result_flags.misc;
+   sss->result_flags.misc &= ~RESULTFLAG__PART_COMPLETION_BITS;
+   sss->result_flags.misc |= tempsetup.result_flags.misc;
 
    // Here is where we implement the policy that the internal boundaries between subcalls
    // are not checked for overcast.  But there is an exception:  If a subcall is marked
@@ -1352,18 +1344,18 @@ extern uint32_t do_call_in_series(
    // and is subject to checking.
 
    if (!(qqqq.cmd.cmd_misc3_flags & (CMD_MISC3__ROLL_TRANSP|CMD_MISC3__ROLL_TRANSP_IF_Z)))
-      ss->result_flags.misc |= RESULTFLAG__STOP_OVERCAST_CHECK;
+      sss->result_flags.misc |= RESULTFLAG__STOP_OVERCAST_CHECK;
 
-   ss->result_flags.misc &= ~3;
+   sss->result_flags.misc &= ~3;
 
-   ss->cmd.cmd_heritflags_to_save_from_mxn_expansion = tempsetup.result_flags.res_heritflags_to_save_from_mxn_expansion;
-   ss->result_flags.misc |= current_elongation;
-   ss->result_flags.copy_split_info(tempsetup.result_flags);
+   sss->cmd.cmd_heritflags_to_save_from_mxn_expansion = tempsetup.result_flags.res_heritflags_to_save_from_mxn_expansion;
+   sss->result_flags.misc |= current_elongation;
+   sss->result_flags.copy_split_info(tempsetup.result_flags);
 
-   canonicalize_rotation(ss);
+   canonicalize_rotation(sss);
    // If doing the special counter rotate 3/8 stuff, the result has all the information it needs.
-   if (qqqq.kind != s4x4 || qqqq.eighth_rotation == 0 || ss->kind != s2x4 || ss->eighth_rotation != 0)
-      minimize_splitting_info(ss, saved_result_flags);
+   if (qqqq.kind != s4x4 || qqqq.eighth_rotation == 0 || sss->kind != s2x4 || sss->eighth_rotation != 0)
+      minimize_splitting_info(sss, saved_result_flags);
 
    return retval;
 }
@@ -1437,7 +1429,6 @@ enum { matrix_info_capacity = MAX_PEOPLE };
 static int start_matrix_call(
    const setup *ss,
    matrix_rec matrix_info[],
-   calldef_schema the_schema,
    int base,
    uint32_t flags,
    setup *people)
@@ -1451,10 +1442,6 @@ static int start_matrix_call(
 
    const coordrec *nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
    const coordrec *thingyptr = setup_attrs[ss->kind].setup_coords;
-
-   if (the_schema == schema_counter_rotate) {
-      thingyptr = nicethingyptr;
-   }
 
    if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
       thingyptr = nicethingyptr;
@@ -1706,6 +1693,13 @@ static const coordrec s3dmdtoqtg1 = {s_qtag, 0x123,
 static const coordrec s3dmdtoqtg2 = {s_qtag, 0x123,
    { -5,   2,   6,   2,   5,  -2,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}};
+
+static const coordrec halfcircto1x6h = {s1x6, 0x123,
+   { -9,  -6,  -2,   9,   6,   2},
+   {  0,   0,   0,   0,   0,   0}};
+static const coordrec halfcircto1x6v = {s1x6, 0x123,
+   { -9,  -5,  -2,   9,   5,   2},
+   {  0,   0,   0,   0,   0,   0}};
 
 static const coordrec alamoto2x4 = {s2x4, 0x23,
    { -5,  -2,   2,   5,   5,   2,  -2,  -5},
@@ -1982,15 +1976,12 @@ static const int8_t s1x6correction_b[] =
    {0, -9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 127};
 
 static const checkitem checktable[] = {
-   {0x00220026, 0x01008004, s_trngl, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00440026, 0x04020101, s_trngl4, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00620046, 0x10808404, s_3223, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A60026, 0x08080104, s_nxtrglcw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A60026, 0x0C008002, s_nxtrglccw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00630095, 0x00840050, spgdmdcw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00630095, 0x10800A00, spgdmdccw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20026, 0x08008404, s_rigger, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x002600A2, 0x0800C004, s_rigger, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00770077, 0x00418004, s_galaxy, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    // Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle.
    {0x00840066, 0x0C000108, nothing, 0, warn__check_galaxy, &spec_spin_gal, (const int8_t *) 0},
@@ -2051,7 +2042,6 @@ static const checkitem checktable[] = {
 
    // This must precede the "squeezefinalglass" stuff.
    {0x00620026, 0x01080002, s_bone6, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00260062, 0x10100200, s_bone6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // People 1/2 pressed ahead from quadruple 3/4 tags.  Fudge to a 4x4.
    {0x00B10071, 0x01806000, nothing, 0, warn__none, &press_4dmd_4x4, (const int8_t *) 0},
@@ -2092,15 +2082,12 @@ static const checkitem checktable[] = {
 
    {0x00950066, 0x28008200, s_crosswave, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20026, 0x01040420, s_bone, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x002600A2, 0x08000680, s_bone, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // Pressed in from a bigh.
    {0x00930026, 0x01000440, nothing, 0, warn__none, &bightobone, (const int8_t *) 0},
 
    {0x00260062, 0x08008004, s_short6, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00620026, 0x00008404, s_short6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00840026, 0x04000308, s_spindle, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00260084, 0x01000860, s_spindle, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00840046, 0x04210308, sd3x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00840044, 0x04210308, sd3x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
@@ -2156,7 +2143,6 @@ static const checkitem checktable[] = {
 
    {0x00670055, 0x01000420, s_qtag, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550067, 0x08410200, s_qtag, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00550063, 0x08400220, s_qtag, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00460062, 0x14100100, sd2x5, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2164,7 +2150,6 @@ static const checkitem checktable[] = {
    {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00950026, 0x20008200, s_1x2dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00D50026, 0x20008202, s1x3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x002600D5, 0x03001080, s1x3dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A30055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A60055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A70055, 0x09000420, swqtag, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2173,24 +2158,19 @@ static const checkitem checktable[] = {
    {0x00770073, 0x0001A015, nothing, 0, warn__none, &galtodeep2x1, (const int8_t *) 0},
    {0x00730077, 0x00408304, nothing, 1, warn__none, &galtodeep2x1, (const int8_t *) 0},
    {0x00A60055, 0x09000480, s3x1dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x005500A6, 0x28004200, s3x1dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A60044, 0x09040400, s_wingedstar, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A30055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A70055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x005500A7, 0x20006200, s3dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00770055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00550077, 0x28006200, s3dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00730055, 0x29008480, s3dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00E30055, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00B30055, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00B10051, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A30055, 0x0940A422, s4dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00930066, 0x121008C4, s2x2dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00660093, 0x04820909, s2x2dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00910066, 0x121008C4, s2x2dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00530046, 0x121008C4, s2x2dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00530066, 0x121008C4, s2x2dmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00660053, 0x04020109, s2x2dmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00D50057, 0x20008202, s_3mdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00B50057, 0x20008202, s_3mdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00B70057, 0x41022480, s_3mptpd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2209,7 +2189,6 @@ static const checkitem checktable[] = {
    {0x01130066, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x01130026, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550057, 0x20000620, s_hrglass, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00570067, 0x09400020, s_hrglass, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.
    {0x00840066, 0x00202208, nothing, 0, warn__none, &spndltohrgl, (const int8_t *) 0},
@@ -2221,7 +2200,6 @@ static const checkitem checktable[] = {
 
    {0x00A70026, 0x20040220, s_dhrglass, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00930026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x002600A2, 0x10104200, s_ptpd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00910026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00530026, 0x01108080, s_ptpd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00620044, 0x11800C40, s3x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2315,7 +2293,6 @@ static const checkitem checktable[] = {
    {0x00A600A6, 0x09006602, nothing,  0, warn__none, &x1x6thing, (const int8_t *) 0},
    {0x00A600E6, 0x09006602, nothing,  1, warn__none, &x1x6_1x8,  (const int8_t *) 0},
    {0x00E600A6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
-   {0x006600E6, 0x09006602, nothing,  0, warn__none, &x1x6_1x8,  (const int8_t *) 0},
    {0x00E600E6, 0x09006602, nothing,  0, warn__none, &x1x8thing, (const int8_t *) 0},
    {0x00E60066, 0x09006602, nothing,  0, warn__none, &x1x4_1x8,  (const int8_t *) 0},
    {0x006600A6, 0x09004600, nothing,  1, warn__none, &x1x4_1x6,  (const int8_t *) 0},
@@ -2326,7 +2303,6 @@ static const checkitem checktable[] = {
 
    {0x00220022, 0x00008004, s2x2, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20004, 0x09000400, s1x6, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x000400A2, 0x08004200, s1x6, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // Two colliding 1/2 circulates from as-couples T-bone.
    //   {0x00930004, 0x21008400, nothing, 0, warn__none, &halfcircto1x6h, (const int8_t *) 0},
@@ -2339,7 +2315,6 @@ static const checkitem checktable[] = {
    {0x00620004, 0x01000400, s1x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00040062, 0x08000200, s1x4, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550026, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
-   {0x00260055, 0x01000080, sdmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00000005, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550004, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00440004, 0x00020001, s1x3, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2376,22 +2351,9 @@ void initialize_matrix_position_tables()
 }
 
 
-static void set_matrix_info_from_calldef(matrix_rec & mi, uint32_t datum)
-{
-   mi.deltax = (uncompress_position_number(datum) - 16);
-   mi.deltay = (((datum >> 16) & 0x3F) - 16);   // This part isn't compressed.
-   mi.deltarot += datum & 3;
-   mi.roll_stability_info = datum;   // For slide, roll, and stability.
-}
-
-
 static int finish_matrix_call(
-   setup *ss,
    matrix_rec matrix_info[],
    int nump,
-   calldef_schema the_schema,
-   uint32_t flags,
-   const uint32_t *callstuff,
    bool do_roll_stability,
    collision_severity allow_collisions,
    bool allow_fudging,
@@ -2406,157 +2368,65 @@ static int finish_matrix_call(
 
    xmax = xpar = ymax = ypar = signature = alldelta = 0;
    int xatnonzeroy = -1000;
-   int previous_grab = 0;    // s_trngl4 stuff will need this.
-   bool go_one_eighth_clockwise = false;
-   uint32_t people_needing_grab_info = 0UL;  // Little-endian, of course.
-   uint32_t grab_directions = 0UL;           // 1 for CW, 2 for CCW
 
-   // If doing a schema_counter_rotate, we may need two passes.  In the first,
-   // we do all the processing for people whose counter rotate direction can be determined.
+   for (i=0; i<nump; i++) {
+      if (!matrix_info[i].id1) continue;
+      /* If this person's position has low bit on, that means we consider his coordinates
+         not sufficiently well-defined that we will allow him to do any pressing or
+         trucking.  He is only allowed to turn.  That is, we will require deltax and
+         deltay to be zero.  An example of this situation is the points of a galaxy. */
 
-   for (int pass = 0 ; pass < 2 ; pass++) {
-      if (pass >= 1 && (the_schema != schema_counter_rotate || people_needing_grab_info == 0)) continue;
+      /* ****** This seems to be too restrictive.  There may have been good reason for doing this
+         at one time, but now it makes all press and truck calls illegal in C1 phantoms.  The
+         table for C1 phantoms has been carefully chosen to make things legal only within one's
+         own miniwave, but it requires odd numbers.  Perhaps we need to double the resolution
+         of things in matrix_info[i].x or y, but that should wait until after version 28
+         is released. */
 
-      for (i=0; i<nump; i++) {
-         // Yes, even phantoms participate in a counter rotate.  Otherwise, just skip this person.
-         if (matrix_info[i].id1 == 0 && the_schema != schema_counter_rotate) continue;
+      /* So this is patched out.  The same problem holds for bigdmds.
+         if (((matrix_info[i].x | matrix_info[i].y) & 1) &&
+             (matrix_info[i].deltax | matrix_info[i].deltay))
+            fail("Someone's ending position is not well defined.");
+      */
 
-         /* If this person's position has low bit on, that means we consider his coordinates
-            not sufficiently well-defined that we will allow him to do any pressing or
-            trucking.  He is only allowed to turn.  That is, we will require deltax and
-            deltay to be zero.  An example of this situation is the points of a galaxy. */
+      alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
 
-         alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
-
-         if (the_schema == schema_counter_rotate) {
-            int grab;
-
-            if (pass == 0) {
-               // Process people that we can process.
-               int effective_dir = matrix_info[i].dir;
-               if (matrix_info[i].id1 == 0) {
-                  if (ss && ss->cmd.cmd_assume.assumption == cr_qtag_like && ss->cmd.cmd_assume.assump_both == 2) {
-                     effective_dir = (matrix_info[i].nicey > 0) ? 0 : 2;
-                  }
-                  else if (ss && ss->cmd.cmd_assume.assumption == cr_qtag_like && ss->cmd.cmd_assume.assump_both == 1) {
-                     effective_dir = (matrix_info[i].nicey > 0) ? 2 : 0;
-                  }
-                  else {
-                     // Or defer them to pass 2 if we can't.
-                     people_needing_grab_info |= 1UL << i;
-                     continue;
-                  }
-               }
-
-               grab = (effective_dir & 1) ? -matrix_info[i].y : matrix_info[i].x;
-               if (effective_dir & 2) grab = -grab;
-            }
-            else {
-               // Process the leftovers from pass 1.
-               if ((people_needing_grab_info & (1UL << i)) == 0)
-                  continue;
-
-               if (grab_directions == 1)
-                  grab = -1;
-               else if (grab_directions == 2)
-                  grab = +1;
-               else
-                  continue;   // Can't figure this person out.  Just drop her.
-            }
-
-            // It can be argued that the "center" (position 1) of a trngl4
-            // can't actually counter rotate.  But in practice, this will only be legal
-            // if the other 3 people in the group are moving in a consistent way, and,
-            // in that case, the center person's turning direction should be clear.
-            // So we take the person from slot 0;
-
-            if (ss->kind == s_trngl4 && i == 1 && grab == 0) {
-               grab = previous_grab;
-            }
-
-            int repetition_count = 1;
-
-            if ((ss->cmd.callspec->the_defn.callflags1 & CFLAG1_NUMBER_MASK) != 0 &&
-                current_options.howmanynumbers == 1) {
-               repetition_count = current_options.number_fields;
-            }
-
-            if (flags & MTX_DO_HALF_OF_CTR_ROT) {
-               // This is "counter rotate N/8".
-               if ((repetition_count & 1) != 0)
-                  go_one_eighth_clockwise = true;
-               repetition_count >>= 1;
-            }
-
-            previous_grab = grab;
-            matrix_info[i].deltarot = 0;
-
-            if (grab > 0) {
-               // Move this person CCW.
-               // Need to go 1 more if doing 1/8 rotation.
-               for (int j = 0 ; j < (go_one_eighth_clockwise ? (repetition_count+1) : repetition_count) ; j++) {
-                  matrix_info[i].dir = (matrix_info[i].dir-1) & 3;
-                  int savex = matrix_info[i].x;
-                  matrix_info[i].x = -matrix_info[i].y;
-                  matrix_info[i].y = savex;
-                  set_matrix_info_from_calldef(matrix_info[i], callstuff[1]);
-                  grab_directions |= 2;
-               }
-            }
-            else if (grab < 0) {
-               // Move this person CW.
-               for (int j = 0 ; j < repetition_count ; j++) {
-                  matrix_info[i].dir = (matrix_info[i].dir+1) & 3;
-                  int savex = matrix_info[i].x;
-                  matrix_info[i].x = matrix_info[i].y;
-                  matrix_info[i].y = -savex;
-                  set_matrix_info_from_calldef(matrix_info[i], callstuff[0]);
-                  grab_directions |= 1;
-               }
-            }
-            else {
-               fail("Person is on a center line.");
-            }
-         }
-         else {
-            switch (matrix_info[i].dir) {
-            case 0:
-               matrix_info[i].x += matrix_info[i].deltax;
-               matrix_info[i].y += matrix_info[i].deltay;
-               break;
-            case 1:
-               matrix_info[i].x += matrix_info[i].deltay;
-               matrix_info[i].y -= matrix_info[i].deltax;
-               break;
-            case 2:
-               matrix_info[i].x -= matrix_info[i].deltax;
-               matrix_info[i].y -= matrix_info[i].deltay;
-               break;
-            case 3:
-               matrix_info[i].x -= matrix_info[i].deltay;
-               matrix_info[i].y += matrix_info[i].deltax;
-               break;
-            }
-         }
-
-         x = matrix_info[i].x;
-         y = matrix_info[i].y;
-
-         // Compute new max, parity, and signature info.
-
-         if ((x < 0) || ((x == 0) && (y < 0))) { x = -x; y = -y; }
-         signature |= 1 << ((31000 + 12*x - 11*y) % 31);
-         if (y < 0) y = -y;
-         /* Now x and y have both had absolute values taken. */
-         if (x > xmax) xmax = x;
-         if (y > ymax) ymax = y;
-         k = x | 4;
-         xpar |= (k & (~(k-1)));
-         k = y | 4;
-         ypar |= (k & (~(k-1)));
-
-         if (y != 0) xatnonzeroy = x;
+      switch (matrix_info[i].dir) {
+      case 0:
+         matrix_info[i].x += matrix_info[i].deltax;
+         matrix_info[i].y += matrix_info[i].deltay;
+         break;
+      case 1:
+         matrix_info[i].x += matrix_info[i].deltay;
+         matrix_info[i].y -= matrix_info[i].deltax;
+         break;
+      case 2:
+         matrix_info[i].x -= matrix_info[i].deltax;
+         matrix_info[i].y -= matrix_info[i].deltay;
+         break;
+      case 3:
+         matrix_info[i].x -= matrix_info[i].deltay;
+         matrix_info[i].y += matrix_info[i].deltax;
+         break;
       }
+
+      x = matrix_info[i].x;
+      y = matrix_info[i].y;
+
+      // Compute new max, parity, and signature info.
+
+      if ((x < 0) || ((x == 0) && (y < 0))) { x = -x; y = -y; }
+      signature |= 1 << ((31000 + 12*x - 11*y) % 31);
+      if (y < 0) y = -y;
+      /* Now x and y have both had absolute values taken. */
+      if (x > xmax) xmax = x;
+      if (y > ymax) ymax = y;
+      k = x | 4;
+      xpar |= (k & (~(k-1)));
+      k = y | 4;
+      ypar |= (k & (~(k-1)));
+
+      if (y != 0) xatnonzeroy = x;
    }
 
    ypar |= (xmax << 20) | (xpar << 16) | (ymax << 4);
@@ -2606,12 +2476,10 @@ static int finish_matrix_call(
    warn(p->warning);
 
    const coordrec *checkptr = (p->new_checkptr) ? p->new_checkptr :
-      (the_schema == schema_counter_rotate) ?
-      setup_attrs[p->new_setup].nice_setup_coords:
       setup_attrs[p->new_setup].setup_coords;
 
    result->rotation = p->new_rot & 3;
-   result->eighth_rotation = go_one_eighth_clockwise ? 1 : 0;
+   result->eighth_rotation = 0;
    result->kind = checkptr->result_kind;
 
    collision_collector CC(allow_collisions);
@@ -2662,6 +2530,15 @@ static int finish_matrix_call(
 }
 
 
+static void set_matrix_info_from_calldef(matrix_rec & mi, uint32_t datum)
+{
+   mi.deltax = (uncompress_position_number(datum) - 16);
+   mi.deltay = (((datum >> 16) & 0x3F) - 16);   // This part isn't compressed.
+   mi.deltarot = datum & 3;
+   mi.roll_stability_info = datum;   // For slide, roll, and stability.
+}
+
+
 static void mirror_slide_roll(matrix_rec *ppp)
 {
    // Switch the roll direction.
@@ -2674,7 +2551,6 @@ static void mirror_slide_roll(matrix_rec *ppp)
 
 static int matrixmove(
    setup *ss,
-   calldef_schema the_schema,
    uint32_t flags,
    const uint32_t *callstuff,
    setup *result) THROW_DECL
@@ -2687,16 +2563,7 @@ static int matrixmove(
    if (flags & MTX_SELECTOR_IS_TRAILERS)
       current_options.who.who[0] = selector_trailers;
 
-   if (the_schema == schema_counter_rotate) {
-      flags |= MTX_INCLUDE_PHANTOMS;
-   }
-
-   if (ss->cmd.cmd_misc3_flags & CMD_MISC3__ACTUAL_Z_CONCEPT) {
-      remove_z_distortion(ss);
-      result->result_flags.misc |= RESULTFLAG__COMPRESSED_FROM_2X3;
-   }
-
-   nump = start_matrix_call(ss, matrix_info, the_schema, 0, flags, &people);
+   nump = start_matrix_call(ss, matrix_info, 0, flags, &people);
 
    for (i=0; i<nump; i++) {
       matrix_rec *thisrec = &matrix_info[i];
@@ -2705,7 +2572,7 @@ static int matrixmove(
          // This is legal if girlbit or boybit is on (in which case we use
          // the appropriate datum) or if the two data are identical so
          // the sex doesn't matter.
-         if ((thisrec->girlbit | thisrec->boybit) == 0 && (flags & (MTX_FIND_TRADERS|MTX_INCLUDE_PHANTOMS)) == 0 &&
+         if ((thisrec->girlbit | thisrec->boybit) == 0 && !(flags & MTX_FIND_TRADERS) &&
              callstuff[0] != callstuff[1]) {
             if (flags & MTX_USE_VEER_DATA)
                fail("Can't determine lateral direction of this person.");
@@ -2713,7 +2580,6 @@ static int matrixmove(
                fail("Can't determine sex of this person.");
          }
 
-         thisrec->deltarot = 0;
          set_matrix_info_from_calldef(*thisrec, callstuff[thisrec->girlbit]);
 
          if (flags & MTX_MIRROR_IF_RIGHT_OF_CTR) {
@@ -2857,7 +2723,7 @@ static int matrixmove(
 
    current_options.who.who[0] = saved_selector;
 
-   int alldelta = finish_matrix_call(ss, matrix_info, nump, the_schema, flags, callstuff, true, collision_severity_no,
+   int alldelta = finish_matrix_call(matrix_info, nump, true, collision_severity_no,
                                      true, merge_strict_matrix, &people, result);
 
    if (ss->kind == s2x2 && result->kind == s2x4) {
@@ -2890,14 +2756,7 @@ static int matrixmove(
 
    switch (ss->kind) {
    case s2x2: case s_short6:
-      // If counter rotating, switch the elongation.
-      if (the_schema == schema_counter_rotate && ((ss->cmd.prior_elongation_bits+1)&2)) {
-         result->result_flags.misc |= (ss->cmd.prior_elongation_bits^3) & 3;
-      }
-      else {
-         result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
-      }
-
+      result->result_flags.misc |= ss->cmd.prior_elongation_bits & 3;
       break;
    case s1x2: case s1x4: case sdmd:
       result->result_flags.misc |= 2 - (ss->rotation & 1);
@@ -2917,7 +2776,6 @@ static void do_part_of_pair(matrix_rec *thisrec, int base, const uint32_t *calls
       fail("Can't determine sex of this person.");
    uint32_t datum = callstuff[base+thisrec->girlbit];
    if (datum == 0) failp(thisrec->id1, "can't do this call.");
-   thisrec->deltarot = 0;
    set_matrix_info_from_calldef(*thisrec, datum);
    thisrec->realdone = true;
 }
@@ -3334,7 +3192,6 @@ static void process_jaywalk_chains(
       if (mi->dir & 2) delx = -delx;
       if ((mi->dir+1) & 2) dely = -dely;
 
-      mi->deltarot = 0;
       set_matrix_info_from_calldef(*mi, datum);
       mi->realdone = true;
 
@@ -3440,7 +3297,6 @@ static void process_nonjaywalk_chains(
 
 static int partner_matrixmove(
    setup *ss,
-   calldef_schema the_schema,
    uint32_t flags,
    const uint32_t *callstuff,
    setup *result) THROW_DECL
@@ -3471,7 +3327,7 @@ static int partner_matrixmove(
       }
    }
 
-   nump = start_matrix_call(ss, matrix_info, the_schema, 0, flags, &people);
+   nump = start_matrix_call(ss, matrix_info, 0, flags, &people);
 
    // Make the lateral chains first.
 
@@ -3512,7 +3368,7 @@ static int partner_matrixmove(
       }
    }
 
-   int alldelta = finish_matrix_call(ss, matrix_info, nump, the_schema, flags, (const uint32_t *) 0, true, collision_severity_no,
+   int alldelta = finish_matrix_call(matrix_info, nump, true, collision_severity_no,
                                      true, merge_strict_matrix, &people, result);
    reinstate_rotation(ss, result);
 
@@ -3561,7 +3417,7 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       setup people;
       matrix_rec matrix_info[matrix_info_capacity+1];
 
-      int nump = start_matrix_call(res1, matrix_info, schema_matrix, 0, 0, &people);
+      int nump = start_matrix_call(res1, matrix_info, 0, 0, &people);
 
       if (r) {
          for (i=0 ; i<nump ; i++) {
@@ -3572,12 +3428,12 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
          }
       }
 
-      nump = start_matrix_call(res2, matrix_info, schema_matrix, nump, 0, &people);
+      nump = start_matrix_call(res2, matrix_info, nump, 0, &people);
 
       // Note that, because we set deltarot above, we must NOT turn on the
       // "do_roll_stability" argument here.  It would treat the rotation
       // as though the person had actually done a call.
-      finish_matrix_call((setup *) 0, matrix_info, nump, schema_matrix, 0, (const uint32_t *) 0, false, allow_collisions,
+      finish_matrix_call(matrix_info, nump, false, allow_collisions,
                          action > merge_for_own, action, &people, result);
       return;
    }
@@ -3625,7 +3481,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
       fudged_start = true;
    }
 
-   int nump = start_matrix_call(&scopy, matrix_info, schema_matrix, 0,
+   int nump = start_matrix_call(&scopy, matrix_info, 0,
       MTX_USE_SELECTOR | MTX_STOP_AND_WARN_ON_TBONE, &people);
    current_options.who = saved_selector;
 
@@ -3668,7 +3524,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
 
    // Now figure out where the people who moved really are.
 
-   int second_nump = start_matrix_call(result, second_matrix_info, schema_matrix, 0,
+   int second_nump = start_matrix_call(result, second_matrix_info, 0,
                                        MTX_STOP_AND_WARN_ON_TBONE, &second_people);
 
    int final_2nd_nump = second_nump;
@@ -3722,8 +3578,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    }
 
    ss->rotation += result->rotation;
-   finish_matrix_call(ss, second_matrix_info, final_2nd_nump, schema_matrix, 0, (const uint32_t *) 0, true,
-                      collision_severity_no, true, merge_strict_matrix, &second_people, result);
+   finish_matrix_call(second_matrix_info, final_2nd_nump, true, collision_severity_no, true, merge_strict_matrix, &second_people, result);
    reinstate_rotation(ss, result);
    clear_result_flags(result);
 }
@@ -3874,7 +3729,7 @@ static bool try_this_split(uint32_t splitting_indicator,
    if (result->kind == s1p5x8) result->kind = s2x8;
    else if (result->kind == s1p5x4) result->kind = s2x4;
 
-   nump = start_matrix_call(result, after_matrix_info, schema_matrix, 0, 0, &after_people);
+   nump = start_matrix_call(result, after_matrix_info, 0, 0, &after_people);
 
    for (i=0 ; i<nump ; i++) {
       if (result->rotation) {
@@ -3917,8 +3772,8 @@ static bool try_this_split(uint32_t splitting_indicator,
       after_matrix_info[i].dir = 0;
    }
 
-   finish_matrix_call((setup *) 0, after_matrix_info, nump, schema_matrix, 0, (const uint32_t *) 0, false,
-                      collision_severity_no, true, merge_strict_matrix, &after_people, result);
+   finish_matrix_call(after_matrix_info, nump, false, collision_severity_no,
+                      true, merge_strict_matrix, &after_people, result);
    return true;
 }
 
@@ -3945,7 +3800,7 @@ static bool try_split_and_move(setup *ss, parse_block *parseptr, uint32_t divisi
 
    if (maybe_throw_this == error_flag_none) {
       uint32_t splitting_indicator = (result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0];
-      int nump = start_matrix_call(ss, before_matrix_info, schema_matrix, 0, MTX_USE_SELECTOR, before_people_p);
+      int nump = start_matrix_call(ss, before_matrix_info, 0, MTX_USE_SELECTOR, before_people_p);
       if (try_this_split(splitting_indicator,
                          setup_attrs[ss->kind].bounding_box,
                          nump,
@@ -4000,7 +3855,7 @@ extern void anchor_someone_and_move(
    move(ss, false, result);
    uint32_t splitting_indicator = (result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0];
 
-   int nump = start_matrix_call(&saved_start_people, before_matrix_info, schema_matrix, 0, MTX_USE_SELECTOR, &before_people);
+   int nump = start_matrix_call(&saved_start_people, before_matrix_info, 0, MTX_USE_SELECTOR, &before_people);
    if (try_this_split(splitting_indicator,
                       setup_attrs[ss->kind].bounding_box,
                       nump,
@@ -5594,15 +5449,6 @@ void do_stuff_inside_sequential_call(
             *fix_next_assumption_p = cr_wave_only;
             *fix_next_assump_col_p = 0;
          }
-         else if (result->cmd.callspec == base_calls[base_call_trade] &&
-                  (result->kind == s_qtag) &&
-                  old_assumption == cr_qtag_like &&
-                  old_assump_col == 0 &&
-                  ((old_assump_both + 1) & 2) != 0) {
-            *fix_next_assumption_p = cr_qtag_like;
-            *fix_next_assump_col_p = 0;
-            *fix_next_assump_both_p = old_assump_both ^ 3;
-         }
          else if (result->cmd.callspec == base_calls[base_call_check_cross_counter]) {
             // Just pass everything directly -- this call does nothing.
             *fix_next_assumption_p = old_assumption;
@@ -5961,7 +5807,6 @@ static void do_sequential_call(
       uint32_t saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
       heritflags herit_bits_to_clear = 0ULL;
-      setup_command foo1, foo2;
 
       /* Now the "index" values (zzz.m_fetch_index and zzz.m_client_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
@@ -5998,6 +5843,8 @@ static void do_sequential_call(
       }
 
       zzz.demand_this_part_exists();
+
+      setup_command foo1, foo2;
 
       {
          setup_command foobar = ss->cmd;
@@ -6271,35 +6118,6 @@ static void do_sequential_call(
       fix_next_assumption = cr_none;
       fix_next_assump_col = 0;
       fix_next_assump_both = 0;
-
-      if (this_schema == schema_split_sequential &&
-          (result->cmd.cmd_final_flags.herit & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) == 0ULL) {
-         //         result->cmd.cmd_misc_flags &= ~(CMD_MISC__MUST_SPLIT_HORIZ|CMD_MISC__MUST_SPLIT_VERT);
-         switch (result->kind) {
-         case s2x4: case s1x8: case s_qtag: case s_ptpd: case s3x4: case s_bone: case s_rigger: case s_bone6:
-            if ((result->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_VERT) {
-               result->result_flags.split_info[0] = 0;
-               result->result_flags.split_info[1] = 1;
-            }
-            else if ((result->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_HORIZ) {
-               result->result_flags.split_info[0] = 1;
-               result->result_flags.split_info[1] = 0;
-            }
-
-            break;
-         case s_short6:
-            if ((result->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_VERT) {
-               result->result_flags.split_info[0] = 1;
-               result->result_flags.split_info[1] = 0;
-            }
-            else if ((result->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == CMD_MISC__MUST_SPLIT_HORIZ) {
-               result->result_flags.split_info[0] = 0;
-               result->result_flags.split_info[1] = 1;
-            }
-
-            break;
-         }
-      }
 
       do_stuff_inside_sequential_call(
          result, this_mod1,
@@ -7006,18 +6824,16 @@ static void matrixmovewrapper(setup *ss,
                               setup *result)
 {
    int alldelta = (the_schema == schema_partner_matrix || the_schema == schema_partner_partial_matrix) ?
-      partner_matrixmove(ss, the_schema, flags, callstuff, result) :
-      matrixmove(ss, the_schema, flags, callstuff, result);
+      partner_matrixmove(ss, flags, callstuff, result) :
+      matrixmove(ss, flags, callstuff, result);
 
    // If the invocation of this call is "roll transparent", restore roll info
    // from before the call for those people that are marked as roll-neutral.
    fix_roll_transparency_stupidly(ss, result);
 
-   if (alldelta == 0) {
+   if (alldelta == 0)
       // No one moves, so it's maximally split.  And it isn't a space-invader.
-      if (the_schema != schema_counter_rotate)   // But on a counter rotate everyone mixes around.
-         result->result_flags.maximize_split_info();
-   }
+      result->result_flags.maximize_split_info();
    else if (!(flags & MTX_NOT_TRUE_INVADER))
       result->result_flags.misc |= RESULTFLAG__INVADED_SPACE;
 
@@ -7077,10 +6893,6 @@ void really_inner_move(
             break;
          }
 
-         if (the_schema == schema_counter_rotate && result->result_flags.misc != 0) {
-            result->result_flags.misc ^= 3;   // Counter rotate requires the other way.
-         }
-
          return;
       }
    }
@@ -7102,38 +6914,6 @@ void really_inner_move(
       foo1 = ss->cmd;
       special_selector = selector_thosefacing;
       goto do_special_select_stuff;
-   }
-
-   // If we have been told to counter rotate in triangles, and the setup isn't triangles.  Split it.
-   if (the_schema == schema_counter_rotate && (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_TRIANGLE)) {
-      uint32_t division_code = ~0U;
-
-      if (ss->kind == s_bone6) {
-         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x7);
-      }
-      else if (ss->kind == s_short6) {
-         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,1,s_trngl,0x8);
-      }
-      else if (ss->kind == s_ntrgl6cw) {
-         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,0,s_trngl,0x2);
-      }
-      else if (ss->kind == s_ntrgl6ccw) {
-         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_SPLIT,0,s_trngl,0x8);
-      }
-      else if (ss->kind == s_nftrgl6cw) {
-         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_OFFS_R_HALF,0,s_trngl,0x2);
-      }
-      else if (ss->kind == s_nftrgl6ccw) {
-         division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_OFFS_L_HALF,0,s_trngl,0x8);
-      }
-
-      if (division_code != ~0U) {
-         ss->cmd.prior_elongation_bits = 0;
-         ss->cmd.prior_expire_bits = 0;
-         divided_setup_move(ss, division_code, phantest_ok,
-                            (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0, result);
-         goto foobarf;
-      }
    }
 
    switch (the_schema) {
@@ -7162,17 +6942,11 @@ void really_inner_move(
       if (ss->kind == result->kind)
          fail("This setup can't be recentered.");
       break;
-   case schema_counter_rotate:
-      if ((ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0) {
-         if (!do_simple_split(ss, split_command_none, result))
-            return;
-      }
-
-      // FALL THROUGH!
+   case schema_global_matrix:
+      fail("Sorry.");
    case schema_matrix:
    case schema_partner_matrix:
    case schema_partner_partial_matrix:
-      // FELL THROUGH!
       {
          selector_kind local_selector = current_options.who.who[0];
 
@@ -7228,8 +7002,7 @@ void really_inner_move(
                   // meaningful if the setup is known to be distorted.
                   (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED) &&
                   (ss->cmd.prior_elongation_bits & 3) != 0 &&
-                  the_schema != schema_partner_partial_matrix &&
-                  the_schema != schema_counter_rotate) {
+                  the_schema != schema_partner_partial_matrix) {
             expanded = true;
             if (ss->cmd.prior_elongation_bits == 3)
                expand::expand_setup(exp_from_2x2_stuff, ss);
@@ -7245,8 +7018,7 @@ void really_inner_move(
             ss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;
          }
 
-         if (the_schema != schema_counter_rotate)   // Counter rotate in a Z is done just as it is.
-            remove_z_distortion(ss);
+         remove_z_distortion(ss);
 
          // Not sure what this is about.  How can these flags appear?
          ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX|INHERITFLAG_12_MATRIX);
@@ -7259,13 +7031,8 @@ void really_inner_move(
          if ((flags & MTX_ONLY_OUT) && current_options.where != direction_out) fail("Can't use this selector.");
          matrix_def_block *base_block = callspec->stuff.matrix.matrix_def_list;
 
-         if (the_schema == schema_counter_rotate && ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_HALF);
-            flags |= MTX_DO_HALF_OF_CTR_ROT;
-         }
-
          for ( ;; ) {
-            if (base_block->alternate_def_flags == ss->cmd.cmd_final_flags.herit)
+            if ((base_block->alternate_def_flags == ss->cmd.cmd_final_flags.herit))
                break;
             base_block = base_block->next;
             if (!base_block) fail("Illegal concept for this call.");
@@ -7333,9 +7100,6 @@ void really_inner_move(
             result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
             merge_table::merge_setups(&the_results[1], merge_c1_phantom, result);
          }
-
-         // Be sure we bring back the CMD_MISC3__DID_Z_COMPRESSMASK info.
-         ss->cmd.cmd_misc3_flags = the_setups[0].cmd.cmd_misc3_flags;
 
          if (expanded) {
             // If the outsides invaded space, but only did so perpendicular to the
@@ -7936,7 +7700,7 @@ static void move_with_real_call(
                         the_schema == schema_select_ctr4) {
                   // Just leave the definition in place.  We will split the 8-person setup
                   // into two 4-person setups, and then pick out the center 2 from them.
-                  force_split = split_command_1x4_dmd;
+                  force_split = split_command_1x4;
                }
                else
                   fail("Can't do \"central\" with this call.");
@@ -7963,7 +7727,7 @@ static void move_with_real_call(
          case schema_matrix:
          case schema_partner_matrix:
          case schema_partner_partial_matrix:
-         case schema_counter_rotate:
+         case schema_global_matrix:
             // We allow the fractions "1/2" and "last 1/2" to be given.
             // Basic_move or matrixmove will handle them.
 
@@ -8231,36 +7995,36 @@ static void move_with_real_call(
          case schema_concentric_2_4_or_single:
             // If this is going to be turned into a schema_single_concentric, split it now.
             if (ss->kind == s1x8)
-               force_split = split_command_1x4_dmd;
+               force_split = split_command_1x4;
             break;
          case schema_single_concentric:
          case schema_single_cross_concentric:
-            force_split = split_command_1x4_dmd;
+            force_split = split_command_1x4;
             break;
          case schema_single_concentric_together_if_odd:
          case schema_single_cross_concentric_together_if_odd:
-            force_split = split_command_1x4_dmd;
+            force_split = split_command_1x4;
             break;
          case schema_single_concentric_together:
          case schema_single_cross_concentric_together:
             if (ss->kind == s2x6) {
                uint32_t mask = little_endian_live_mask(ss);
                if (mask == 01717 || mask == 07474)
-                  force_split = split_command_1x4_dmd;
+                  force_split = split_command_1x4;
             }
             // FALL THROUGH!!!!!
          case schema_concentric_6p_or_sgltogether:
             // FELL THROUGH!!
             switch (ss->kind) {
             case s2x8: case s1x8: case s_ptpd:
-               force_split = (ss->kind == s2x8) ? split_command_1x8_ptpd : split_command_1x4_dmd;
+               force_split = (ss->kind == s2x8) ? split_command_1x8 : split_command_1x4;
             case s2x4:
                // If this is "crazy" or "central" (i.e. some split bit is on)
                // and the schema is something like "schema_single_concentric_together"
                // (e.g. the call is "you all"), and the setup is a 2x4, we force a split
                // into 1x4's.  If that makes the call illegal, that's too bad.
                if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
-                  force_split = split_command_1x4_dmd;
+                  force_split = split_command_1x4;
             }
             break;
          case schema_sgl_in_out_triple_squash:
@@ -8274,7 +8038,7 @@ static void move_with_real_call(
          case schema_select_original_hubs:
             switch (ss->kind) {
             case s1x8: case s_ptpd:
-               force_split = split_command_1x8_ptpd;     // This tells it not to recompute ID.
+               force_split = split_command_1x8;     // This tells it not to recompute ID.
                break;
             }
             break;
@@ -8413,53 +8177,35 @@ static void move_with_real_call(
       // We may need to undo this.
 
       // If this is the "split sequential" schema and we have not already done so,
-      // cause splitting to take place.  The MUST_SPLIT bits might already be present due to
-      // some concept like central or crazy, or because an earlier step involved splitting
-      // and we have to continue to honor that split direction.
+      // cause splitting to take place.
 
-      if (the_schema == schema_split_sequential && (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) == 0) {
+      if (the_schema == schema_split_sequential) {
          uint64_t nxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK);
          uint64_t mxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK);
          int limits = attr::slimit(ss);
          uint32_t mask = little_endian_live_mask(ss);
-
-         // ***** This of course needs a lot more work.
-         if (ss->kind == s_galaxy || ss->kind == s_hrglass || ss->kind == s_crosswave)
-            fail("Can't split the setup.");
 
          if ((limits == 7 && nxnflags != INHERITFLAGNXNK_3X3 && nxnflags != INHERITFLAGNXNK_4X4) ||
              (limits == 11 && (mxnflags == INHERITFLAGMXNK_1X3 ||
                                mxnflags == INHERITFLAGMXNK_3X1 ||
                                nxnflags == INHERITFLAGNXNK_3X3)) ||
              ((limits == 15 && nxnflags == INHERITFLAGNXNK_4X4))) {
-            // Set the split info based on the short axis -- 2x4 splits into 2x2's,
-            // qtag splits into single diamonds, etc.
-            // Setups for which that won't work (e.g. galaxies) have presumably been taken care of above.
-            ss->cmd.cmd_misc_flags |= (ss->rotation & 1) ? CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
+            if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
+               ss->cmd.cmd_misc_flags |= (ss->rotation & 1) ?
+                  CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
+            }
          }
          else if (ss->kind == s3x4) {
-            warn(warn__each2x2);
-            if (mask == 07474) {
-               divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__OFFS_L_HALF,0), phantest_ok, true, result);
-               return;
-            }
-            else if (mask == 06363) {
-               divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__OFFS_R_HALF,0), phantest_ok, true, result);
-               return;
-            }
+            // These setups and populations (clumps in a 3x4 or 4x4, Z's in a 2x6)
+            // don't require and 3x3-like modifiers.
+            if (mask == 0xF3C || mask == 0xCF3)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
             else
                fail("Can't split this setup.");
          }
          else if (ss->kind == s4x4) {
-            warn(warn__each2x2);
-            if (mask == 0x4B4B) {
-               divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__OFFS_L_FULL,0), phantest_ok, true, result);
-               return;
-            }
-            else if (mask == 0xB4B4) {
-               divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__OFFS_R_FULL,0), phantest_ok, true, result);
-               return;
-            }
+            if (mask == 0x4B4B || mask == 0xB4B4)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
             else
                fail("Can't split this setup.");
          }
@@ -8844,7 +8590,7 @@ void move(
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
       skipped_concept_info foo(ss->cmd.parseptr);
 
-      if (foo.m_heritflag != 0ULL) {
+      if (!foo.m_heritflag == 0ULL) {
          parseptrcopy = foo.m_concept_with_root;
          ss->cmd.skippable_heritflags = foo.m_heritflag;
       }
@@ -8981,7 +8727,6 @@ void move(
 
       ss->cmd.parseptr = parseptrcopy;
       ss->cmd.callspec = this_call;
-      ss->cmd.options = parseptrcopy->options;
       current_options = parseptrcopy->options;
 
       if (((dance_level) this_call->the_defn.level) > calling_level &&
