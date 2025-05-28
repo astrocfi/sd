@@ -3634,8 +3634,6 @@ static veryshort starstranslatev[32] = {
    -1, -1, -1, -1, -1, 1, -1, -1, -1, -1, 2, 3, -1, -1, 4, -1};
 
 
-
-
 /* For this routine, we know that callspec is a real call, with an array definition schema.
    Also, result->people have been cleared. */
 
@@ -3738,88 +3736,88 @@ extern void basic_move(
 
    if (newtb) {
       switch (ss->kind) {
-         case s2x2:
-            // Now we do a special check for split-square-thru or
-            // split-dixie-style types of things.
+      case s2x2:
+         // Now we do a special check for split-square-thru or
+         // split-dixie-style types of things.
 
-            if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
-               uint32 i1, i2, p1, p2;
+         if (ss->cmd.cmd_final_flags.test_finalbits(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
+            uint32 i1, i2, p1, p2;
 
-               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-               // Find out who are facing each other directly and will therefore start.
+            // Find out who are facing each other directly and will therefore start.
 
-               if (((ss->people[2].id1 & d_mask) == d_west) &&
-                   ((ss->people[3].id1 & d_mask) == d_east))
-                  i1 = 0;
-               else if (((ss->people[3].id1 & d_mask) == d_north) &&
-                        ((ss->people[0].id1 & d_mask) == d_south))
-                  i1 = 1;
-               else if (((ss->people[0].id1 & d_mask) == d_east) &&
-                        ((ss->people[1].id1 & d_mask) == d_west))
-                  i1 = 2;
-               else if (((ss->people[1].id1 & d_mask) == d_south) &&
-                        ((ss->people[2].id1 & d_mask) == d_north))
-                  i1 = 3;
-               else
-                  fail("People are not in correct position for split call.");
+            if (((ss->people[2].id1 & d_mask) == d_west) &&
+                ((ss->people[3].id1 & d_mask) == d_east))
+               i1 = 0;
+            else if (((ss->people[3].id1 & d_mask) == d_north) &&
+                     ((ss->people[0].id1 & d_mask) == d_south))
+               i1 = 1;
+            else if (((ss->people[0].id1 & d_mask) == d_east) &&
+                     ((ss->people[1].id1 & d_mask) == d_west))
+               i1 = 2;
+            else if (((ss->people[1].id1 & d_mask) == d_south) &&
+                     ((ss->people[2].id1 & d_mask) == d_north))
+               i1 = 3;
+            else
+               fail("People are not in correct position for split call.");
 
-               i2 = (i1 + 1) & 3;
-               p1 = ss->people[i1].id1;
-               p2 = ss->people[i2].id1;
+            i2 = (i1 + 1) & 3;
+            p1 = ss->people[i1].id1;
+            p2 = ss->people[i2].id1;
 
-               /* Demand that the other people are facing the shoulders of the people who start. */
-               if (((p1 & (BIT_PERSON | 3)) != (i1 ^ (BIT_PERSON | 2))) || ((p2 ^ p1) & d_mask))
-                  fail("People are not in correct position for split call.");
+            /* Demand that the other people are facing the shoulders of the people who start. */
+            if (((p1 & (BIT_PERSON | 3)) != (i1 ^ (BIT_PERSON | 2))) || ((p2 ^ p1) & d_mask))
+               fail("People are not in correct position for split call.");
 
-               // Now do the required transformation, if it is a "split square thru" type.
-               // For "split dixie style" stuff, do nothing -- the database knows what to do.
+            // Now do the required transformation, if it is a "split square thru" type.
+            // For "split dixie style" stuff, do nothing -- the database knows what to do.
 
-               if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
-                  swap_people(ss, i1, i2);
-                  copy_rot(ss, i1, ss, i1, 033);
-                  copy_rot(ss, i2, ss, i2, 011);
+            if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
+               swap_people(ss, i1, i2);
+               copy_rot(ss, i1, ss, i1, 033);
+               copy_rot(ss, i2, ss, i2, 011);
 
-                  // Repair the damage.
-                  newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-               }
+               // Repair the damage.
+               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
             }
-            break;
-         case s_trngl4:
-            // The same, with twisted.
+         }
+         break;
+      case s_trngl4:
+         // The same, with twisted.
 
-            if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED) &&
-                (ss->cmd.cmd_final_flags.test_finalbits(
-                       FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
-               ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED) &&
+             (ss->cmd.cmd_final_flags.test_finalbits(
+                                                     FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))) {
+            ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-               if (  ((ss->people[0].id1 & d_mask) != d_north) ||
-                     ((ss->people[1].id1 & d_mask) != d_south) ||
-                     ((ss->people[2].id1 & d_mask) != d_south) ||
-                     ((ss->people[3].id1 & d_mask) != d_south))
-                  fail("People are not in correct position for split call.");
+            if (  ((ss->people[0].id1 & d_mask) != d_north) ||
+                  ((ss->people[1].id1 & d_mask) != d_south) ||
+                  ((ss->people[2].id1 & d_mask) != d_south) ||
+                  ((ss->people[3].id1 & d_mask) != d_south))
+               fail("People are not in correct position for split call.");
 
-               /* Now do the required transformation, if it is a "split square thru" type.
-                  For "split dixie style" stuff, do nothing -- the database knows what to do. */
+            /* Now do the required transformation, if it is a "split square thru" type.
+               For "split dixie style" stuff, do nothing -- the database knows what to do. */
 
-               if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
-                  copy_rot(ss, 0, ss, 0, 011);
-                  copy_rot(ss, 1, ss, 1, 011);
-                  copy_rot(ss, 2, ss, 2, 011);
-                  copy_rot(ss, 3, ss, 3, 033);
-                  ss->rotation--;
-                  ss->kind = s1x4;
-                  canonicalize_rotation(ss);
+            if (!(ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED))) {
+               copy_rot(ss, 0, ss, 0, 011);
+               copy_rot(ss, 1, ss, 1, 011);
+               copy_rot(ss, 2, ss, 2, 011);
+               copy_rot(ss, 3, ss, 3, 033);
+               ss->rotation--;
+               ss->kind = s1x4;
+               canonicalize_rotation(ss);
 
-                  /* Repair the damage. */
-                  newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-               }
+               /* Repair the damage. */
+               newtb = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
             }
-            break;
-         case s_qtag:
-            if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
-               fail("Can't do this call from arbitrary 3x4 setup.");
-            break;
+         }
+         break;
+      case s_qtag:
+         if (fudged && !(callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG))
+            fail("Can't do this call from arbitrary 3x4 setup.");
+         break;
       }
    }
 
@@ -4027,6 +4025,11 @@ foobar:
                   *ss = stemp;
                }
             }
+
+            newtb = 0;
+
+            for (j=0; j<=attr::klimit(ss->kind); j++)
+               newtb |= ss->people[j].id1;
          }
          else if (ss->inner.skind == s2x2) {
             stemp.kind = s2x4;
@@ -4045,7 +4048,7 @@ foobar:
             *ss = stemp;
             newtb = 0;
 
-            for (j=0; j<=attr::klimit(ss->inner.skind); j++)
+            for (j=0; j<=attr::klimit(ss->kind); j++)
                newtb |= ss->people[j].id1;
          }
       }
@@ -4474,6 +4477,8 @@ foobar:
 
       goodies = coldefinition;
    }
+
+   if (!goodies) crash_print();
 
    result->kind = (setup_kind) goodies->end_setup;
 

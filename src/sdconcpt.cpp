@@ -3397,7 +3397,7 @@ static void do_concept_emulate(
       if (p & BIT_PERSON) {
          for (j=0; j<=m; j++) {
             uint32 q = res1.people[j].id1;
-            if (((q ^ p) & XPID_MASK) == 0) {
+            if ((q & BIT_PERSON) && ((q ^ p) & XPID_MASK) == 0) {
                result->people[i].id1 &= ~077;
                result->people[i].id1 |= (rotperson(q, rot) & 077);
                goto did_it;

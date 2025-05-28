@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8e"
+#define VERSION_STRING "34.8h"
 #define TIME_STAMP "wba@alum.mit.edu  27 January 2003 $"
 
 /* This defines the following functions:
@@ -607,7 +607,7 @@ extern long_boolean query_for_call()
       if (global_error_flag < error_flag_wrong_command ||
           global_error_flag == error_flag_selector_changed ||
           global_error_flag == error_flag_formation_changed) {
-         display_initial_history(configuration::history_ptr, (diagnostic_mode ? 1 : 2));
+         display_initial_history(configuration::history_ptr, (ui_options.diagnostic_mode ? 1 : 2));
 
          if (configuration::sequence_is_resolved()) {
             newline();
@@ -708,7 +708,7 @@ extern long_boolean query_for_call()
       else {
          // No partially entered concepts.  Just do the sequence number.
 
-         if (!diagnostic_mode) {
+         if (!ui_options.diagnostic_mode) {
             char indexbuf[200];
             (void) sprintf (indexbuf, "%2d: ", configuration::history_ptr-configuration::whole_sequence_low_lim+2);
             writestuff(indexbuf);
@@ -876,6 +876,9 @@ ui_option_type::ui_option_type() :
    singlespace_mode(FALSE),
    nowarn_mode(FALSE),
    accept_single_click(FALSE),
+   diagnostic_mode(FALSE),
+   resolve_test_minutes(0),
+   singing_call_mode(0),
    use_escapes_for_drawing_people(0),
    pn1("11223344"),
    pn2("BGBGBGBG"),

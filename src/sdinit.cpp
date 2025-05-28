@@ -1183,7 +1183,7 @@ extern long_boolean get_first_session_line()
       return TRUE;
 
    // Or if the file didn't exist, or we are in diagnostic mode.
-   if (!init_file || diagnostic_mode) return TRUE;
+   if (!init_file || ui_options.diagnostic_mode) return TRUE;
 
    // Search for the "[Sessions]" indicator.
 
@@ -1999,6 +1999,12 @@ extern long_boolean open_session(int argc, char **argv)
                   gg->bad_argument("Bad number", args[argno+1], 0);
             }
          }
+         else if (strcmp(&args[argno][1], "resolve_test") == 0) {
+            if (argno+1 < nargs) {
+               if (sscanf(args[argno+1], "%d", &ui_options.resolve_test_minutes) != 1)
+                  gg->bad_argument("Bad number", args[argno+1], 0);
+            }
+         }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
             { ui_options.no_intensify = 1; continue; }
          else if (strcmp(&args[argno][1], "reverse_video") == 0)
@@ -2026,7 +2032,7 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "no_graphics") == 0)
             { ui_options.no_graphics = 2; continue; }
          else if (strcmp(&args[argno][1], "diagnostic") == 0)
-            { diagnostic_mode = TRUE; continue; }
+            { ui_options.diagnostic_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)
             { ui_options.singlespace_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "no_warnings") == 0)

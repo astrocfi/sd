@@ -2145,8 +2145,10 @@ extern void distorted_2x2s_move(
       break;
    case 8:
       // The concept is CW or CCW jay.  Arg4 tells which.
-      if (this_concept->arg4) map_ptr = mapk2;
-      else map_ptr = mapk1;
+
+      if (ss->kind != s_qtag) fail("Must have quarter-tag setup for this concept.");
+
+      map_ptr = (this_concept->arg4) ? mapk2 : mapk1;
       break;
    case 1:
       // The concept is some variety of jay.
@@ -2170,37 +2172,33 @@ extern void distorted_2x2s_move(
       }
       break;
    case 2:
-      switch (ss->kind) {     // The concept is twin parallelograms.
-      case s3x4:
-         {
-            static const veryshort map_p1[16] =
-            {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
-            static const veryshort map_p2[16] =
-            {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+      // The concept is twin parallelograms.
 
-            if (     (livemask & 06060) == 0) map_ptr = map_p1;
-            else if ((livemask & 01414) == 0) map_ptr = map_p2;
-         }
-         break;
-      default:
-         fail("Must have 3x4 setup for this concept.");
+      if (ss->kind != s3x4) fail("Must have 3x4 setup for this concept.");
+
+      {
+         static const veryshort map_p1[16] =
+         {2, 3, 11, 10, 5, 4, 8, 9, -1, -1, -1, -1, -1, -1, -1, -1};
+         static const veryshort map_p2[16] =
+         {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
+
+         if (     (livemask & 06060) == 0) map_ptr = map_p1;
+         else if ((livemask & 01414) == 0) map_ptr = map_p2;
       }
       break;
    case 3:
-      switch (ss->kind) {   /* The concept is interlocked boxes or interlocked parallelograms */
-      case s3x4:
-         {
-            static const veryshort map_b1[16] =
-            {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
-            static const veryshort map_b2[16] =
-            {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
+      // The concept is interlocked boxes or interlocked parallelograms.
 
-            if (     (livemask & 05050) == 0) map_ptr = map_b1;
-            else if ((livemask & 02424) == 0) map_ptr = map_b2;
-         }
-         break;
-      default:
-         fail("Must have 3x4 setup for this concept.");
+      if (ss->kind != s3x4) fail("Must have 3x4 setup for this concept.");
+
+      {
+         static const veryshort map_b1[16] =
+         {1, 3, 4, 11, 10, 5, 7, 9, 1, 3, 5, 10, 11, 4, 7, 9};
+         static const veryshort map_b2[16] =
+         {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
+
+         if (     (livemask & 05050) == 0) map_ptr = map_b1;
+         else if ((livemask & 02424) == 0) map_ptr = map_b2;
       }
       break;
    case 4:

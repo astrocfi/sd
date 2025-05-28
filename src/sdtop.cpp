@@ -21,6 +21,7 @@
    do_matrix_expansion
    initialize_sdlib
    check_for_concept_group
+   crash_print
    fail
    fail_no_retry
    fail2
@@ -98,8 +99,6 @@ and the following external variables:
    circcer_calls
    number_of_taggers
    number_of_circcers
-   diagnostic_mode
-   singing_call_mode
    parse_state
    current_options
    uims_menu_index
@@ -259,8 +258,6 @@ call_with_name **tagger_calls[NUM_TAGGER_CLASSES];
 call_with_name **circcer_calls;
 uint32 number_of_taggers[NUM_TAGGER_CLASSES];
 uint32 number_of_circcers;
-long_boolean diagnostic_mode = FALSE;
-int singing_call_mode = 0;
 parse_state_type parse_state;
 call_conc_option_state current_options;
 int uims_menu_index;
@@ -2363,7 +2360,7 @@ static void initialize_concept_sublists()
 
    // Decide whether we allow the "diagnose" concept, by deciding
    // when we will stop the concept list scan.
-   if (diagnostic_mode) end_marker = marker_end_of_list;
+   if (ui_options.diagnostic_mode) end_marker = marker_end_of_list;
 
    // First, just count up all the available concepts.
 
@@ -2644,6 +2641,8 @@ extern bool check_for_concept_group(
 
  try_again:
 
+   if (!parseptrcopy) crash_print();
+
    parseptr_skip = parseptrcopy->next;
 
    if (parseptrcopy->concept) {
@@ -2756,6 +2755,43 @@ extern bool check_for_concept_group(
 
    return retval;
 }
+
+
+
+static void debug_print_parse_block(int level, const parse_block *p, char *tempstring_text, int &n)
+{
+   for ( ; p ; p = p->next) {
+      if (level > 0) n += sprintf(tempstring_text+n, "(%d) ", level);
+      if (p->concept) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept->name);
+      if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
+      n += sprintf(tempstring_text+n, "  opt %d %d %d %d %d \n",
+             p->options.who,
+             p->options.where,
+             p->options.howmanynumbers,
+             p->options.number_fields,
+             p->options.tagger);
+      if (p->subsidiary_root)
+         debug_print_parse_block(level+1, p->subsidiary_root, tempstring_text, n);
+   }
+}
+
+extern void crash_print() THROW_DECL
+{
+   char tempstring_text[10000];  // If this isn't big enough, I guess we lose.
+
+   int n = sprintf(tempstring_text, "++++++++ CRASH - PLEASE REPORT THIS ++++++++\n");
+
+   int hsize = configuration::history_ptr+1;
+   for (int jjj = 2 ; jjj <= hsize ; jjj++) {
+      debug_print_parse_block(0, configuration::history[jjj].command_root, tempstring_text, n);
+   }
+
+   gg->serious_error_print(tempstring_text);
+   fail("Crash.");
+}
+
+
+
 
 
 extern void fail(const char s[]) THROW_DECL
@@ -3696,6 +3732,8 @@ extern uint32 find_calldef(
    int real_direction,
    int northified_index) THROW_DECL
 {
+   if (!tdef) crash_print();
+
    unsigned short *calldef_array;
    uint32 z;
 
@@ -4812,8 +4850,8 @@ void configuration::calculate_resolve()
    int i;
    uint32 singer_offset = 0;
 
-   if (singing_call_mode == 1) singer_offset = 0600;
-   else if (singing_call_mode == 2) singer_offset = 0200;
+   if (ui_options.singing_call_mode == 1) singer_offset = 0600;
+   else if (ui_options.singing_call_mode == 2) singer_offset = 0200;
 
    switch (state.kind) {
    case s2x4:
@@ -4890,7 +4928,7 @@ void configuration::calculate_resolve()
           !((++testptr)->distance & 0x10) ||
           // Even if it has the mark, do it if this is a singer
           // and it isn't really the end of the table.
-          (singing_call_mode != 0 && testptr->k != resolve_none));
+          (ui_options.singing_call_mode != 0 && testptr->k != resolve_none));
 
    // Too bad.
 
@@ -5572,9 +5610,9 @@ extern long_boolean do_subcall_query(
    else if (interactivity != interactivity_normal)
       ;
    else if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT))
-      (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
+      (void) sprintf(tempstring_text, "SUBSIDIARY CALL");
    else if (snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT))
-      (void) sprintf (tempstring_text, "SECOND SUBSIDIARY CALL");
+      (void) sprintf(tempstring_text, "SECOND SUBSIDIARY CALL");
    else {
 
       /* Need to present the popup to the operator and find out whether modification is desired. */
@@ -5597,7 +5635,7 @@ extern long_boolean do_subcall_query(
          /* User accepted the modification.
             Set up the prompt and get the concepts and call. */
 
-         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
+         (void) sprintf(tempstring_text, "REPLACEMENT FOR THE %s", pretty_call_name);
       }
       else {
          /* User declined the modification.  Create a null entry so that we don't query again. */

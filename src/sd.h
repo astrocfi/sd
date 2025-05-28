@@ -128,6 +128,9 @@ class ui_option_type {
    long_boolean singlespace_mode;
    long_boolean nowarn_mode;
    long_boolean accept_single_click;
+   long_boolean diagnostic_mode;
+   int resolve_test_minutes;
+   int singing_call_mode;
 
    /* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
       for drawing people, so that it can fill in funny characters, or draw in color.
@@ -3502,6 +3505,7 @@ class iobase {
    virtual int do_write_anyway_popup() = 0;
    virtual int do_delete_clipboard_popup() = 0;
    virtual void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0) = 0;
+   virtual void serious_error_print(Cstring s1) = 0;
    virtual void create_menu(call_list_kind cl) = 0;
    virtual int do_selector_popup() = 0;
    virtual int do_direction_popup() = 0;
@@ -3543,6 +3547,7 @@ class iofull : public iobase {
    int do_write_anyway_popup();
    int do_delete_clipboard_popup();
    void fatal_error_exit(int code, Cstring s1=0, Cstring s2=0);
+   void serious_error_print(Cstring s1);
    void create_menu(call_list_kind cl);
    int do_selector_popup();
    int do_direction_popup();
@@ -3606,8 +3611,6 @@ extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES]; /* in SDTOP 
 extern SDLIB_API call_with_name **circcer_calls;                    /* in SDTOP */
 extern SDLIB_API uint32 number_of_taggers[NUM_TAGGER_CLASSES];      /* in SDTOP */
 extern SDLIB_API uint32 number_of_circcers;                         /* in SDTOP */
-extern SDLIB_API long_boolean diagnostic_mode;                      /* in SDTOP */
-extern SDLIB_API int singing_call_mode;                             /* in SDTOP */
 extern SDLIB_API parse_state_type parse_state;                      /* in SDTOP */
 extern SDLIB_API call_conc_option_state current_options;            /* in SDTOP */
 extern SDLIB_API long_boolean allowing_all_concepts;                /* in SDTOP */
@@ -4363,6 +4366,8 @@ extern void do_matrix_expansion(
    long_boolean recompute_id) THROW_DECL;
 
 void initialize_sdlib();
+
+extern void crash_print() THROW_DECL;
 
 extern bool check_for_concept_group(
    parse_block *parseptrcopy,

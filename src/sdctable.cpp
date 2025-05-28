@@ -74,7 +74,7 @@ conzept::concept_descriptor conzept::special_magic = {
 conzept::concept_descriptor conzept::special_interlocked = {
    "INTERLOCKED DIAMOND,", concept_interlocked,       L+D, l_c1, UC_none, 1};
 conzept::concept_descriptor conzept::mark_end_of_list = {
-   "????",                 marker_end_of_list,            0, l_dontshow, UC_none};
+   "(end)",                 marker_end_of_list,            0, l_dontshow, UC_none};
 conzept::concept_descriptor conzept::marker_decline = {
    "decline???",           concept_mod_declined,          0, l_dontshow, UC_none};
 conzept::concept_descriptor conzept::marker_concept_mod = {

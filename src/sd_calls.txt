@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8g"
+version "34.8h"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -9083,7 +9083,7 @@ call "peel off" plus tag peeloff
    setup 3x2 1x4 rotate qualifier true_Z_ccw
       array [AL1E AL0E 0    CR2E CR3E 0]
             alternate_definition [single] c4
-   setup 1x2 1x2 rotate
+   setup 1x2 1x2
       array [AL0S CR1S]
             alternate_definition [3x3] c4
    setup 3x2 1x6 rotate restriction peelable_box

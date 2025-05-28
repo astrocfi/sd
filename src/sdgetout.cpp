@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2003  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -241,7 +241,7 @@ void write_resolve_text(long_boolean doing_file)
       /* In a singer, "pass thru, allemande left", "trade by, allemande left", or
          "cross by, allemande left" can be just "swing and promenade". */
 
-      if (singing_call_mode != 0 &&
+      if (ui_options.singing_call_mode != 0 &&
           (index == resolve_pth_la ||
            index == resolve_tby_la ||
            index == resolve_xby_la)) {
@@ -259,7 +259,7 @@ void write_resolve_text(long_boolean doing_file)
             writestuff(", ");
       }
 
-      if (singing_call_mode != 0 && mainpart == main_part_rlg) {
+      if (ui_options.singing_call_mode != 0 && mainpart == main_part_rlg) {
          mainpart = main_part_swing;
          distance ^= 4;
       }
@@ -307,6 +307,12 @@ static bool inner_search(command_kind goal,
 {
    int i, j;
    uint32 directions, p, q;
+   int CLOCKS_TO_RESOLVE;
+
+   if (ui_options.resolve_test_minutes != 0)
+      CLOCKS_TO_RESOLVE = ui_options.resolve_test_minutes * 50 * CLOCKS_PER_SEC;
+   else
+      CLOCKS_TO_RESOLVE = 5*CLOCKS_PER_SEC;
 
    history_insertion_point = huge_history_ptr;
 
@@ -363,7 +369,7 @@ static bool inner_search(command_kind goal,
       // every 256 tries, so that we won't waste a lot of time in the "clock" library
       // call.  (We have no idea how long that call takes.)
 
-      if (!(attempt_count & 255) && ((int) (clock()-attempt_start_time)) > 5*CLOCKS_PER_SEC) {
+      if (!(attempt_count & 255) && ((int) (clock()-attempt_start_time)) > CLOCKS_TO_RESOLVE) {
          // Too many tries -- too bad.
          configuration::history_ptr = huge_history_ptr;
 
@@ -452,6 +458,8 @@ static bool inner_search(command_kind goal,
       // of a compiler bug.  We no longer take pity on buggy compilers.
 
       setup *ns = &configuration::next_config().state;
+
+      if (ui_options.resolve_test_minutes != 0) goto what_a_loss;
 
       switch (goal) {
       case command_resolve:
@@ -570,7 +578,7 @@ static bool inner_search(command_kind goal,
 
             // Test for relative phase of boys and girls.
             // "accept_extend" tells how accurate the placement must be.
-            switch (singing_call_mode) {
+            switch (ui_options.singing_call_mode) {
             case 1: p2 -= 0200; break;
             case 2: p2 -= 0600; break;
             }

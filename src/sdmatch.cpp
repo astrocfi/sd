@@ -583,7 +583,7 @@ void matcher_initialize()
 
    /* Decide whether we allow the "diagnose" concept, by deciding
       when we will stop the concept list scan. */
-   if (diagnostic_mode) end_marker = marker_end_of_list;
+   if (ui_options.diagnostic_mode) end_marker = marker_end_of_list;
 
    (void) memset(fcn_key_table_normal, 0,
                  sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));

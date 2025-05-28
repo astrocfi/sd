@@ -653,7 +653,7 @@ static long_boolean get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         match_lines = diagnostic_mode ? 1000000 : get_lines_for_more();
+         match_lines = ui_options.diagnostic_mode ? 1000000 : get_lines_for_more();
          match_counter = match_lines-1; /* last line used for "--More--" prompt */
          showing_has_stopped = FALSE;
          (void) match_user_input(which, TRUE, c == '?', FALSE);
@@ -684,7 +684,7 @@ static long_boolean get_user_input(char *prompt, int which)
          }
          else if (GLOB_space_ok && matches > 1)
             pack_and_echo_character(c);
-         else if (diagnostic_mode)
+         else if (ui_options.diagnostic_mode)
             goto diagnostic_error;
          else
             uims_bell();
@@ -758,7 +758,7 @@ static long_boolean get_user_input(char *prompt, int which)
             return FALSE;
          }
 
-         if (diagnostic_mode)
+         if (ui_options.diagnostic_mode)
             goto diagnostic_error;
 
          /* Tell how bad it is, then redisplay current line. */
@@ -784,14 +784,14 @@ static long_boolean get_user_input(char *prompt, int which)
             while (*p)
                pack_and_echo_character(*p++);
          }
-         else if (diagnostic_mode)
+         else if (ui_options.diagnostic_mode)
             goto diagnostic_error;
          else
             uims_bell();
       }
       else if (isprint(c))
          pack_and_echo_character(c);
-      else if (diagnostic_mode)
+      else if (ui_options.diagnostic_mode)
          goto diagnostic_error;
       else
          uims_bell();
@@ -883,7 +883,7 @@ long_boolean iofull::get_call_command(uims_reply *reply_p)
    /* Put any necessary special things into the prompt. */
 
    int banner_mode = (allowing_minigrand << 8) |
-      (singing_call_mode << 6) |
+      (ui_options.singing_call_mode << 6) |
       (using_active_phantoms << 4) |
       (allowing_all_concepts << 2) |
       (allowing_modifications);
@@ -1061,7 +1061,7 @@ static int confirm(char *question)
 
       if (c < 128) put_char(c);
 
-      if (diagnostic_mode) {
+      if (ui_options.diagnostic_mode) {
          (void) fputs("\nParsing error during diagnostic.\n", stdout);
          (void) fputs("\nParsing error during diagnostic.\n", stderr);
          general_final_exit(1);
@@ -1324,6 +1324,14 @@ void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
 
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);
+}
+
+
+void iofull::serious_error_print(Cstring s1)
+{
+   fprintf(stderr, "%s\n", s1);
+   fprintf(stderr, "Press 'enter' to resume.\n");
+   get_char();
 }
 
 

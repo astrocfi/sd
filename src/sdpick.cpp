@@ -396,7 +396,7 @@ const conzept::concept_descriptor *pick_concept(long_boolean already_have_concep
          doing concepts.  But "any" setup always allows more calls, so we are safe. */
 
       resolve_scan_start_point =
-         (diagnostic_mode) ?
+         (ui_options.diagnostic_mode) ?
          0 :
          generate_random_number(number_of_calls[parse_state.call_list_to_use]);
       resolve_scan_current_point = resolve_scan_start_point-1;

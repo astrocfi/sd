@@ -246,7 +246,7 @@ static void UpdateStatusBar(Cstring szFirstPane)
 
    if (allowing_modifications || allowing_all_concepts ||
        using_active_phantoms || allowing_minigrand ||
-       singing_call_mode || ui_options.nowarn_mode) {
+       ui_options.singing_call_mode || ui_options.nowarn_mode) {
       (void) SendMessage(hwndStatusBar, SB_SETPARTS, 7, (LPARAM) StatusBarDimensions);
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 1,
@@ -260,8 +260,8 @@ static void UpdateStatusBar(Cstring szFirstPane)
                   (LPARAM) (using_active_phantoms ? "act phan" : ""));
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 4,
-                  (LPARAM) ((singing_call_mode == 2) ? "rev singer" :
-                            (singing_call_mode ? "singer" : "")));
+                  (LPARAM) ((ui_options.singing_call_mode == 2) ? "rev singer" :
+                            (ui_options.singing_call_mode ? "singer" : "")));
 
       SendMessage(hwndStatusBar, SB_SETTEXT, 5,
                   (LPARAM) (ui_options.nowarn_mode ? "no warn" : ""));
@@ -2971,6 +2971,12 @@ void iofull::fatal_error_exit(int code, Cstring s1, Cstring s2)
    MessageBox(hwndMain, s1, "Error", MB_OK | MB_ICONEXCLAMATION);
    session_index = 0;  // Prevent attempts to update session file.
    general_final_exit(code);
+}
+
+
+void iofull::serious_error_print(Cstring s1)
+{
+   MessageBox(hwndMain, s1, "Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
 

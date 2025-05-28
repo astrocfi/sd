@@ -596,7 +596,7 @@ void write_history_line(int history_index,
 
    // Do not put index numbers into output file -- user may edit it later.
 
-   if (!enable_file_writing && !diagnostic_mode) {
+   if (!enable_file_writing && !ui_options.diagnostic_mode) {
       i = history_index-configuration::whole_sequence_low_lim+1;
       if (i > 0) {
          char indexbuf[10];
@@ -1553,7 +1553,7 @@ void clear_screen()
 
 void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
 {
-   if (!diagnostic_mode) {
+   if (!ui_options.diagnostic_mode) {
       /* log creation version info */
       if (with_ui_version) {     /* This is the "pretty" form that we display while running. */
          writestuff("Sd ");
@@ -2050,9 +2050,9 @@ static long_boolean write_sequence_to_file() THROW_DECL
       newline();
    }
 
-   if (singing_call_mode != 0) {
+   if (ui_options.singing_call_mode != 0) {
       writestuff(
-         (singing_call_mode == 2) ?
+         (ui_options.singing_call_mode == 2) ?
          "             Singing call reverse progression" :
          "             Singing call progression");
       newline();
@@ -2254,7 +2254,7 @@ void run_program()
    interactivity = interactivity_normal;
    clear_screen();
 
-   if (!diagnostic_mode) {
+   if (!ui_options.diagnostic_mode) {
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
@@ -2344,7 +2344,7 @@ void run_program()
             did not specify "retain_after_error", or if the special "heads into the middle and ..."
             operation is in place. */
 
-         if (!diagnostic_mode && 
+         if (!ui_options.diagnostic_mode && 
              retain_after_error &&
              ((configuration::history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
              backup_one_item()) {
@@ -2434,16 +2434,16 @@ void run_program()
          ui_options.accept_single_click = !ui_options.accept_single_click;
          goto new_sequence;
       case start_select_toggle_singer:
-         if (singing_call_mode != 0)
-            singing_call_mode = 0;    /* Turn it off. */
+         if (ui_options.singing_call_mode != 0)
+            ui_options.singing_call_mode = 0;    /* Turn it off. */
          else
-            singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
+            ui_options.singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
          goto new_sequence;
       case start_select_toggle_singer_backward:
-         if (singing_call_mode != 0)
-            singing_call_mode = 0;    /* Turn it off. */
+         if (ui_options.singing_call_mode != 0)
+            ui_options.singing_call_mode = 0;    /* Turn it off. */
          else
-            singing_call_mode = 2;
+            ui_options.singing_call_mode = 2;
          goto new_sequence;
       case start_select_select_print_font:
          if (!gg->choose_font()) {

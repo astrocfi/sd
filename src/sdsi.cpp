@@ -88,98 +88,17 @@ and the following external variables:
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <string.h>
 #include <time.h>
 #include <ctype.h>  /* for tolower */
 
-/* We take pity on those poor souls who are compelled to use XOPEN,
-   an otherwise fine standard, that doesn't put prototypes
-   into stdlib.h. */
-
 #if defined(_XOPEN_SOURCE)
-   /* We have taken the liberty of translating the prototypes
-      appearing in the XOPEN manual into ANSI C.  We can't
-      imagine why anyone would ever use the prototypes
-      in the prehistoric nomenclature. */
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void srand48(long int);
-extern long int lrand48(void);
-#ifdef __cplusplus
-}
-#endif
-#endif
-
-#if defined(_SYS5_SOURCE) || defined(_XOPEN_SOURCE) || defined(_AES_SOURCE) || defined(sun)
 #define HAVE_RAND48
 #endif
 
-/* We also take pity on those poor souls who are compelled to use
-   compilation systems that claim to be POSIX compliant, but
-   aren't really, and do not have unistd.h. */
-
-#if defined(_POSIX_SOURCE) || defined(sun)
-#define POSIX_STYLE
-#endif
-
-#ifdef POSIX_STYLE
-#include <unistd.h>
-#endif
-
-/* Or those who are otherwise compelled to use
-    troglodyte development environments.
-    gcc -traditional doesn't define __STDC__ */
-
-#if __STDC__ || defined(sun)
-#include <stdlib.h>
-#else
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void free(void *ptr);
-extern char *malloc(unsigned int siz);
-extern char *realloc(char *oldp, unsigned int siz);
-extern void srand48(long int);
-extern long int lrand48(void);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
 #if defined(WIN32)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void srand(long int);
-extern long int rand(void);
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#if !defined(sun) && (!__STDC__ || defined(MSDOS))
-extern char *strerror(int);
-#endif
-
-/* Despite all our efforts, some systems just can't be bothered ... */
-#ifndef SEEK_SET
-#define SEEK_SET 0
-#endif
-#ifndef SEEK_END
-#define SEEK_END 2
-#endif
-
-/* I think we have everything now.  Isn't portability fun?  Before people
-   started taking these standards as semi-seriously as they do now, it was
-   MUCH HARDER to make a program portable than what you just saw. */
-
-#ifdef WIN32
 #define SDLIB_API __declspec(dllexport)
 #else
 #define SDLIB_API
@@ -227,9 +146,11 @@ extern void general_initialize(void)
 {
 /* Sorry, plain POSIX doesn't have the nice rand48 stuff. */
 #ifdef HAVE_RAND48
-   srand48((long int) time((time_t *)0));
+   //   srand48((long int) time((time_t *)0));
+   srand48((long int) 10000);
 #else
-   srand((unsigned int) time((time_t *)0));
+   //   srand((unsigned int) time((time_t *)0));
+   srand((unsigned int) 10000);
 #endif
 }
 
