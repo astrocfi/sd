@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -284,6 +286,8 @@ char *sstab[] = {
    "pbone",
    "rigger",
    "prigger",
+   "2stars",
+   "p2stars",
    "spindle",
    "pspindle",
    "hrglass",
@@ -355,6 +359,12 @@ char *sstab[] = {
    "p3ptpd",
    "4ptpd",
    "p4ptpd",
+   "5x25",
+   "p5x25",
+   "3mdmd",
+   "p3mdmd",
+   "3mptpd",
+   "p3mptpd",
    "bigh",
    "pbigh",
    "bigx",
@@ -395,6 +405,7 @@ char *estab[] = {
    "bone",
    "1x8",
    "littlestars",
+   "2stars",
    "1x3dmd",
    "3x1dmd",
    "spindle",
@@ -444,6 +455,9 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "5x25",
+   "3mdmd",
+   "3mptpd",
    "bigh",
    "bigx",
    "bigrig",
@@ -479,12 +493,15 @@ char *schematab[] = {
    "maybe_nxn_1331_lines_conc",
    "maybe_nxn_1331_cols_conc",
    "1331_conc",
+   "???",
    "conc_diamond_line",
    "conc_diamonds",
    "crossconc_diamonds",
    "conc_or_diamond_line",
    "conc6_2",
    "conc2_6",
+   "conc2_4",
+   "???",
    "conc2_6_or_2_4",
    "conc6p",
    "conc6p_or_normal",
@@ -546,6 +563,8 @@ char *qualtab[] = {
    "4x4couples_only",
    "magic_only",
    "in_or_out",
+   "independent_in_or_out",
+   "centers_in_or_out",
    "miniwaves",
    "not_miniwaves",
    "as_couples_miniwaves",
@@ -562,10 +581,6 @@ char *qualtab[] = {
    "ctr2fl_endwv",
    "split_dixie",
    "not_split_dixie",
-   "8_chain",
-   "trade_by",
-   "facing_in",
-   "facing_out",
    "all_ctrs_rh",
    "all_ctrs_lh",
    "dmd_ctrs_rh",
@@ -577,6 +592,7 @@ char *qualtab[] = {
    "ctr_pts_lh",
    "said_triangle",
    "didnt_say_triangle",
+   "occupied_as_stars",
    "occupied_as_h",
    "occupied_as_qtag",
    "occupied_as_3x1tgl",
@@ -584,7 +600,8 @@ char *qualtab[] = {
    "col_ends_looking_in",
    "ripple_one_end",
    "ripple_both_ends",
-   "ripple_centers",
+   "ripple_both_centers",
+   "ripple_any_centers",
    "people_1_and_5_real",
    "centers_sel",
    "ends_sel",
@@ -641,6 +658,8 @@ char *crtab[] = {
    "???",
    "???",
    "in_or_out",
+   "???",
+   "???",
    ""};
 
 /* This table is keyed to the constants "DFM1_***".  These are the general
@@ -705,7 +724,8 @@ char *flagtab1[] = {
    "base_tag_call_3",
    "base_circ_call",
    "ends_take_right_hands",
-   "???",                  /* Filled in during initialization. */
+   "funny_means_those_facing",
+   "one_person_call",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -731,7 +751,9 @@ char *flagtabh[] = {
    "3x1_is_inherited",
    "3x3_is_inherited",
    "4x4_is_inherited",
+   "5x5_is_inherited",
    "6x6_is_inherited",
+   "7x7_is_inherited",
    "8x8_is_inherited",
    "singlefile_is_inherited",
    "half_is_inherited",
@@ -762,7 +784,9 @@ char *altdeftabh[] = {
    "3x1",
    "3x3",
    "4x4",
+   "5x5",
    "6x6",
+   "7x7",
    "8x8",
    "singlefile",
    "half",
@@ -794,7 +818,9 @@ char *defmodtabh[] = {
    "inherit_3x1",
    "inherit_3x3",
    "inherit_4x4",
+   "inherit_5x5",
    "inherit_6x6",
+   "inherit_7x7",
    "inherit_8x8",
    "inherit_singlefile",
    "inherit_half",
@@ -829,7 +855,9 @@ char *forcetabh[] = {
    "force_3x1",
    "force_3x3",
    "force_4x4",
+   "force_5x5",
    "force_6x6",
+   "force_7x7",
    "force_8x8",
    "force_singlefile",
    "force_half",
@@ -938,6 +966,14 @@ char *predtab[] = {
    "judge_is_left_1x3",
    "socker_is_right_1x3",
    "socker_is_left_1x3",
+   "judge_is_right_1x6",
+   "judge_is_left_1x6",
+   "socker_is_right_1x6",
+   "socker_is_left_1x6",
+   "judge_is_right_1x8",
+   "judge_is_left_1x8",
+   "socker_is_right_1x8",
+   "socker_is_left_1x8",
    "inroller_is_cw",
    "magic_inroller_is_cw",
    "outroller_is_cw",
@@ -962,6 +998,9 @@ char *predtab[] = {
    "next_magic62spot_is_tboned",
    "next_galaxyspot_is_tboned",
    "column_double_down",
+   "apex_test_1",
+   "apex_test_2",
+   "apex_test_3",
    "boyp",
    "girlp",
    "boyp_rh_slide_thru",
@@ -1005,29 +1044,32 @@ char *predtab[] = {
    its own copy of the table, containing pointers to the actual call
    descriptors. */
 
-/* BEWARE!!  These must track the definitions of BASE_CALL_??? in database.h ,
-   and constant N_INITIAL_TAGS must be the number of items in this list. */
-tagtabitem tagtabinit[] = {
-      {1, "+++"},            /* Must be unused -- call #0 signals end of list in sequential encoding. */
-      {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1 for any mandatory
-                                    modifier, e.g. "clover and [anything]" is executed as
-                                    "clover and [call #1]". */
+/* BEWARE!!  These must track the enumeration "base_call_index" in database.h */
+tagtabitem tagtabinit[num_base_call_indices] = {
+      {1, "+++"},            /* Must be unused -- call #0 signals end of list
+                                in sequential encoding. */
+      {0, "nullcall"},       /* Must be #1 -- the database initializer uses call #1
+                                for any mandatory modifier, e.g. "clover and [anything]"
+                                is executed as "clover and [call #1]". */
       {0, "nullsecond"},     /* Base call for mandatory secondary modification. */
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
-      {0, "chreact_1"},      /* This is used for propagating the hinge info for part 2 of chain reaction. */
-      {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info for part 2 of make a pass. */
+      {0, "chreact_1"},      /* This is used for propagating the hinge info
+                                for part 2 of chain reaction. */
+      {0, "makepass_1"},     /* This is used for propagating the cast off 3/4 info
+                                for part 2 of make a pass. */
       {0, "backemup"},       /* This is used for remembering the handedness. */
       {0, "circulate"},
-      {0, "tagnullcall0"},   /* These 4 must be consecutive. */
+      {0, "trade"},
+      /* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
+      {0, "tagnullcall0"},
       {0, "tagnullcall1"},
       {0, "tagnullcall2"},
       {0, "tagnullcall3"},
       {0, "circnullcall"},
       {0, "turnstarn"}};
-#define N_INITIAL_TAGS 15
 
-int tagtabsize = N_INITIAL_TAGS;  /* Number of items we currently have in tagtab -- we initially have 7; see below. */
+int tagtabsize = num_base_call_indices;  /* Number of items we currently have in tagtab. */
 int tagtabmax = 100;              /* Amount of space allocated for tagtab; must be >= tagtabsize at all times, obviously. */
 tagtabitem *tagtab;               /* The dynamically allocated tag list. */
 
@@ -1847,7 +1889,7 @@ extern void dbcompile(void)
    uint32 funnyflag;
 
    tagtabmax = 100; /* try to make it reentrant */
-   tagtabsize = N_INITIAL_TAGS;
+   tagtabsize = num_base_call_indices;
    lineno = 0;
    chars_left = 0;
    error_is_fatal = 1;

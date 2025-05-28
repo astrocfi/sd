@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -648,7 +650,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"WAVE-BASED TRIANGLES ARE THREESOME @b SOLID",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 26}},
    {"TANDEM-BASED TRIANGLES ARE THREESOME @b SOLID", concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 27}},
    {"@k-BASED TRIANGLES ARE THREESOME @b SOLID", concept_some_are_frac_tandem,F+D, l_c4,         {0, 0, 0,                    0x130, 30}},
-   {"3X1 TRIANGLES ARE TRIANGLESOMESOME @b SOLID",   concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 31}},
+   {"3X1 TRIANGLES ARE TRIANGLESOME @b SOLID",       concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 31}},
    {"Y-SOME @b SOLID",                               concept_frac_tandem,     F+D, l_c4,         {0, 0, 0,                    0x030, 32}},
 
 /* distorted concepts */
@@ -796,7 +798,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 78
+#define mm__1_size 79
 #define mm__1_left 0
 #define mm__1_cross 2
 #define mm__1_grand 5
@@ -854,11 +856,12 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"ASSUME NORMAL CASTS",                   concept_assume_waves,              D, l_c3,         {0, cr_alwaysfail, 0, 0}},
    {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,           D, l_c3},
    {"INVERT",                                concept_snag_mystic,             L+D, l_c4,         {0, CMD_MISC2__CTR_END_INVERT}},
-   {"INVERT CENTRAL",                        concept_central,                   D, l_c4,         {0, CMD_MISC2__CENTRAL_PLAIN | CMD_MISC2__CTR_END_INV_CONC}},
    {"CENTRAL",                               concept_central,                   D, l_c3,         {0, CMD_MISC2__CENTRAL_PLAIN}},
+   {"INVERT CENTRAL",                        concept_central,                   D, l_c4,         {0, CMD_MISC2__CENTRAL_PLAIN | CMD_MISC2__CTR_END_INV_CONC}},
    {"SNAG",                                  concept_snag_mystic,               D, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG}},
-   {"MYSTIC",                                concept_snag_mystic,               D, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC}},
    {"INVERT SNAG",                           concept_snag_mystic,             F+D, l_c4,         {0, CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__CTR_END_INV_CONC}},
+   {"SNAG THE @6",                           concept_so_and_so_only,          L+D, l_c4,         {0, 17, 0}},
+   {"MYSTIC",                                concept_snag_mystic,               D, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC}},
    {"INVERT MYSTIC",                         concept_snag_mystic,             F+D, l_c4,         {0, CMD_MISC2__CENTRAL_MYSTIC | CMD_MISC2__CTR_END_INV_CONC}},
    {"FAN",                                   concept_fan,                     L+D, l_c3},
    {"YOYO",                                  concept_yoyo,                    L+D, l_c4},
@@ -881,7 +884,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"FERRIS",                                concept_ferris,                    D, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                    D, l_c3a,        {0, 1}},
 /* -------- column break -------- */
-#define mm__2_size 78
+#define mm__2_size 80
    {"CENTERS",                               concept_centers_or_ends,           D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,           D, l_mainstream, {0, selector_ends,    FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,          0, l_mainstream, {0, selector_centers, FALSE}},
@@ -949,6 +952,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"FINISH",                                concept_meta,                      D, l_c2,         {0, 4}},
    {"LIKE A",                                concept_meta,                      D, l_c2,         {0, 6}},
    {"LIKE AN",                               concept_meta,                      D, l_c2,         {0, 6}},
+   {"ECHO",                                  concept_meta,                    G+D, l_c4,         {0, 12}},
    {"SHIFTY",                                concept_meta,                      D, l_c4,         {0, 11}},
    {"SHIFT @9",                              concept_nth_part,                F+D, l_c4,         {0, 10}},
    {"@6 START",                              concept_so_and_so_begin,         F+D, l_c1,         {0, 0}},
@@ -962,7 +966,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"INTERRUPT AFTER @9/@9",                 concept_interrupt_at_fraction,     0, l_c1,         {0, 2}},
    {"SANDWICH",                              concept_sandwich,                  0, l_c3,         {0, 3}},
 /* -------- column break -------- */
-#define mm__3_size 67
+#define mm__3_size 69
 #define mm__3_3x3 59
 #define mm__3_4x4 60
    {"INSIDE TRIANGLES",                      concept_randomtrngl,               D, l_c1,         {0, 2}},
@@ -1026,7 +1030,9 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"3X1",                                   concept_3x1,                     L+D, l_c2},
    {"3X3",                                   concept_3x3,                     L+D, l_c3x},
    {"4X4",                                   concept_4x4,                     L+D, l_c3x},
+   {"5X5",                                   concept_5x5,                     L+D, l_c3x},
    {"6X6",                                   concept_6x6,                     L+D, l_c3x},
+   {"7X7",                                   concept_7x7,                     L+D, l_c3x},
    {"8X8",                                   concept_8x8,                     L+D, l_c3x},
          {"", concept_comment, 0, l_nonexistent_concept},
    {"ALL 4 COUPLES",                         concept_all_8,                     D, l_a2,         {0, 0}},
@@ -1035,7 +1041,7 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
 
 /* general concepts */
 
-#define gg_2x8_matrix 23
+#define gg_2x8_matrix 25
    {"CENTERS",                               concept_centers_or_ends,         U+D, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,         U+D, l_mainstream, {0, selector_ends, FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,        U+D, l_mainstream, {0, selector_centers, FALSE}},
@@ -1056,8 +1062,10 @@ and whether we want "distorted" 1/4 tags in 4x4 of more general population,
    {"INTERLOCKED",                           concept_interlocked,           L+U+D, l_c1},
    {"12 MATRIX",                             concept_12_matrix,               U+D, l_c3x},
    {"16 MATRIX",                             concept_16_matrix,               U+D, l_c3x},
+   {"1x10 MATRIX",                           concept_create_matrix,             D, l_c3x,        {0, s1x10, CONCPROP__NEEDK_1X10}},
    {"1X12 MATRIX",                           concept_create_matrix,             D, l_c3x,        {0, s1x12, CONCPROP__NEEDK_1X12}},
    {"1X16 MATRIX",                           concept_create_matrix,             D, l_c3x,        {0, s1x16, CONCPROP__NEEDK_1X16}},
+   {"2X5 MATRIX",                            concept_create_matrix,             D, l_c3x,        {0, s2x5,  0}},  /* If it isn't already in a 2x5, we lose. */
    {"2X6 MATRIX",                            concept_create_matrix,             D, l_c3x,        {0, s2x6,  CONCPROP__NEEDK_2X6}},
    {"2X8 MATRIX",                            concept_create_matrix,             D, l_c3x,        {0, s2x8,  CONCPROP__NEEDK_2X8}},
    {"3X4 MATRIX",                            concept_create_matrix,             D, l_c3x,        {0, s3x4,  CONCPROP__NEEDK_3X4}},

@@ -446,7 +446,7 @@ Be sure to include the version number.
 @c don't use mailto URL's to try to cut down on spam
 @display
 William Ackerman
-wba@@apollo.hp.com
+wba@@an.hp.com
 
 @ifclear html
 Stephen Gildea

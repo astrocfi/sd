@@ -32,6 +32,7 @@
 #include <signal.h>
 #include <string.h>
 
+extern int diagnostic_mode;    /* We need this. */
 #include "sdui-ttu.h"
 
 
@@ -82,7 +83,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
  */   
 
 
-extern void ttu_process_command_line(int *argcp, char **argv)
+extern int ttu_process_command_line(int *argcp, char **argv)
 {
    int i;
    int argno = 1;
@@ -94,9 +95,18 @@ extern void ttu_process_command_line(int *argcp, char **argv)
          no_cursor = 1;
       else if (strcmp(argv[argno], "-no_graphics") == 0) ;   /* ignore this */
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {   /* ignore this */
-         (*argcp) -= 2;      /* Remove two arguments from the list. */
-         for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
-         continue;
+         goto remove_two;
+      }
+      else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
+         journal_file = fopen(argv[argno+1], "w");
+
+         if (!journal_file) {
+            printf("Can't open journal file\n");
+            perror(argv[argno+1]);
+            return 1;
+         }
+
+         goto remove_two;
       }
       else {
          argno++;
@@ -105,7 +115,16 @@ extern void ttu_process_command_line(int *argcp, char **argv)
 
       (*argcp)--;      /* Remove this argument from the list. */
       for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
+      continue;
+
+      remove_two:
+
+      (*argcp) -= 2;      /* Remove two arguments from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
+      continue;
    }
+
+   return 0;
 }
 
 
@@ -113,6 +132,7 @@ extern void ttu_display_help(void)
 {
    printf("-no_line_delete             do not use the \"line delete\" function for screen management\n");
    printf("-no_cursor                  do not use screen management functions at all\n");
+   printf("-journal <filename>         echo input commands to journal file\n");
 }
 
 extern void ttu_initialize(void)
@@ -163,6 +183,7 @@ extern void ttu_initialize(void)
 
 extern void ttu_terminate(void)
 {
+   if (journal_file) (void) fclose(journal_file);
 #ifndef NO_CURSES
    if (!no_cursor) {
       if (curses_initialized) {

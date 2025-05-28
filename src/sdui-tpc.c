@@ -1,3 +1,5 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /*
  * sdui-tpc.c - helper functions for Mac tty interface for port to DOS.
  * Time-stamp: <93/07/19 19:38:40 wba>
@@ -17,9 +19,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <pc.h>
-#include <keys.h>
-#include <gppconio.h>
+#ifdef DJGPP
+#include "pc.h"
+#include "keys.h"
+#include "gppconio.h"
+#else
+#include <termios.h>   /* We use this stuff if "-no_cursor" was specified. */
+#include <unistd.h>    /* This too. */
+#endif
+extern int diagnostic_mode;    /* We need this. */
 #include "sdui-ttu.h"
 
 
@@ -27,11 +35,41 @@
 static int screen_height = 25;
 static int no_cursor = 0;
 static char *text_ptr;           /* End of text buffer; where we are packing. */
-static char text_buffer[10000];  /* This is *NOT* normally padded with a null.  It only gets padded
-                                             when we need to display it. */
+static char text_buffer[10000];  /* This is *NOT* normally padded with a null.
+                                    It only gets padded when we need to display it. */
 static int lines_in_buffer;  /* Number of "newline" characters in the buffer. */
 
-extern void ttu_process_command_line(int *argcp, char **argv)
+#ifndef DJGPP
+static int current_tty_mode = 0;
+
+static void csetmode(int mode)             /* 1 means raw, no echo, one character at a time;
+                                                0 means normal. */
+{
+    static cc_t orig_eof = '\004';
+    struct termios term;
+    int fd;
+
+    if (mode == current_tty_mode) return;
+
+    fd = fileno(stdin);
+
+    (void) tcgetattr(fd, &term);
+    if (mode == 1) {
+         orig_eof = term.c_cc[VEOF]; /* VMIN may clobber */
+	term.c_cc[VMIN] = 1;	/* 1 char at a time */
+	term.c_cc[VTIME] = 0;	/* no time limit on input */
+	term.c_lflag &= ~(ICANON|ECHO);
+    } else {
+	term.c_cc[VEOF] = orig_eof;
+	term.c_lflag |= ICANON|ECHO;
+    }
+    (void) tcsetattr(fd, TCSADRAIN, &term);
+    current_tty_mode = mode;
+}
+#endif
+
+
+extern int ttu_process_command_line(int *argcp, char **argv)
 {
    int i;
    int argno = 1;
@@ -45,9 +83,18 @@ extern void ttu_process_command_line(int *argcp, char **argv)
          triangles = 0;
       else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
          screen_height = atoi(argv[argno+1]);
-         (*argcp) -= 2;      /* Remove two arguments from the list. */
-         for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
-         continue;
+         goto remove_two;
+      }
+      else if (strcmp(argv[argno], "-journal") == 0 && argno+1 < (*argcp)) {
+         journal_file = fopen(argv[argno+1], "w");
+
+         if (!journal_file) {
+            printf("Can't open journal file\n");
+            perror(argv[argno+1]);
+            return 1;
+         }
+
+         goto remove_two;
       }
       else {
          argno++;
@@ -56,12 +103,23 @@ extern void ttu_process_command_line(int *argcp, char **argv)
 
       (*argcp)--;      /* Remove this argument from the list. */
       for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
+      continue;
+
+      remove_two:
+
+      (*argcp) -= 2;      /* Remove two arguments from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
+      continue;
    }
 
    /* If no "-no_graphics" switch was given, switch over
       to the "pointy triangles" for drawing pictures. */
+#ifdef DJGPP
    if (triangles)
       ui_directions = "?\020?\021????\036?\037?????";
+#endif
+
+   return 0;
 }
 
 extern void ttu_display_help(void)
@@ -69,17 +127,25 @@ extern void ttu_display_help(void)
    printf("-lines <N>                  assume this many lines on the screen\n");
    printf("-no_cursor                  do not use screen management functions\n");
    printf("-no_graphics                do not use special characters for showing facing directions\n");
+   printf("-journal <filename>         echo input commands to journal file\n");
 }
 
 extern void ttu_initialize(void)
 {
+#ifdef DJGPP
    gppconio_init();
+#endif
+
    text_ptr = text_buffer;
    lines_in_buffer = 0;
 }
 
 extern void ttu_terminate(void)
 {
+   if (journal_file) (void) fclose(journal_file);
+#ifndef DJGPP
+   csetmode(0);   /* Restore normal input mode. */
+#endif
 }
 
 extern int get_lines_for_more(void)
@@ -89,9 +155,13 @@ extern int get_lines_for_more(void)
 
 extern void clear_line(void)
 {
+#ifdef DJGPP
    int yp = wherey();
    gotoxy(1, yp);
    clreol();
+#else
+   printf(" XXX\n");
+#endif
 }
 
 extern void rubout(void)
@@ -101,6 +171,7 @@ extern void rubout(void)
 
 extern void erase_last_n(int n)
 {
+#ifdef DJGPP
    char *p = text_buffer;
    int c = 0;
 
@@ -132,6 +203,7 @@ extern void erase_last_n(int n)
       printf("%s", text_buffer);
    }
    /* Otherwise, we take no action at all. */
+#endif
 }
 
 static void pack_in_buffer(char c)
@@ -179,8 +251,22 @@ extern void put_char(int c)
 
 
 extern int get_char(void)
+#ifndef DJGPP
+{
+   int c;
+
+   csetmode(1);         /* Raw, no echo, single-character mode. */
+
+   for ( ;; ) {
+      c = getchar();
+      if (c != '\r') return c;
+   }
+}
+#else
 {
    int n;
+
+   if (diagnostic_mode) return getchar();
 
    do {
       fflush(stdout);
@@ -239,15 +325,32 @@ extern int get_char(void)
 
    return n;
 }
+#endif
 
 extern void get_string(char *dest)
 {
-    gets(dest);
+   int size;
+#ifndef DJGPP
+   csetmode(0);         /* Regular full-line mode with system echo. */
+#endif
+   (void) gets(dest);
+   size = strlen(dest);
+   if (size > 0 && dest[size-1] == '\n') {
+      size--;
+      dest[size] = '\000';
+   }
+
+   /* Some libraries (Cygnus GCC) have been observed putting a
+      control-M at the ends (although it does remove the control-J.) */
+   if (size > 0 && dest[size-1] == '\r') {
+      size--;
+      dest[size] = '\000';
+   }
 }
 
 extern void bell(void)
 {
-    (void) putchar('\007');
+   (void) putchar('\007');
 }
 
 extern void initialize_signal_handlers(void)

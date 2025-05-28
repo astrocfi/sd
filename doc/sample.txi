@@ -1,5 +1,5 @@
-\input texinfo @c %**start of header -*-texinfo-*-
-@setfilename demo.info
+\input whatever @c %**start of header -*-texinfo-*-
+@setfilename sample.info
 @settitle Sd - Sample
 @iftex
 @headings off

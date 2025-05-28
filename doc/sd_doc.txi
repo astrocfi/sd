@@ -1,12 +1,12 @@
-\input texinfo @c %**start of header -*-texinfo-*-
+\input whatever @c %**start of header -*-texinfo-*-
 @c user documentation for Sd (square dance caller's helper)
 @c See the file INSTALL for how to format and view.
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: February 7, 1998
-@set sd-version 31.93
+@set Time-stamp: May 30, 1998
+@set sd-version 31.95
 @set full-manual
 @c %**end of header
 @iftex
@@ -182,7 +182,6 @@ Call Notes
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
-* Snag Circulate::              Snag Circulate
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
@@ -1132,16 +1131,21 @@ something like:
 @group
    clover and [tandem shazam]
    [flip the diamond] and roll
+   busy [lockit]
+   catch [erase] 2
+   slant [swing thru] and [turn and deal]
+   fascinating [ah so]
 @end group
 @end example
 @noindent The subcall in brackets may be any combination of concepts and calls,
 and these may be nested.  As an example of this, you can type:
 @example
-clover and [3/4 stable left catch
+   [[vertical tag your neighbor] and spread] percolate
+   clover and [3/4 stable left catch
                 [[reflected flip your neighbor] and spread] 3]
 @end example
 @noindent
-(The above example doesn't fit on one line in this manual, but you would
+(The second example above doesn't fit on one line in this manual, but you would
 type it on one line.)
 @strong{The brackets are required.}  Without them, the program couldn't
 tell the difference between
@@ -1159,18 +1163,54 @@ could type
 @example
 @kbd{clover and <anything>} @key{ENTER}
 @end example
-and then type
+@noindent and then type
 @example
 @kbd{square thru 2} @key{ENTER}.
 @end example
 
-When using @code{Sd}, the second way is the only way---click on the call, and then select the subcall.
+When using @code{Sd} with the menu-and-mouse interface, the second way is the
+only way---click on the call, and then select the subcall.
 
-If the call takes two subcalls, as in @code{slant <ANYTHING> and <ANYTHING>}, you
-must type the second ``@code{<ANYTHING>}'' literally and then enter the second
-call.  Only the first ``@code{<ANYTHING>}'' subcall may be typed in directly in
-brackets.
-
+@strong{Important note:} Nesting these subcalls too deeply can make the program
+run very slowly.  You should not type more than two consecutive left brackets.
+If you need to nest things more deeply than that, use the word ``@code{<ANYTHING>}'',
+and type the subcall when the program asks for it.  For example, suppose we wanted
+to enter:
+@example
+@group
+   [[[trans cross reactivate to a diamond] chain thru] and
+            anything] percolate, boys to a wave
+@end group
+@end example
+@noindent (Berkshires C4 weekend, May 1996.)  (As if that weren't complicated enough,
+note that the word ``anything'' in the above call is the literal ``anything'' concept,
+not the @code{<ANYTHING>} mechanism of @code{Sdtty}.)
+This is too complicated to type directly.  We would instead type:
+@example
+@group
+<anything> percolate, boys to a wave
+@end group
+@end example
+@noindent The subcall we want is now @code{[[trans cross reactivate to a diamond] chain thru]
+and anything}.  When asked for the subcall, we type:
+@example
+@group
+<anything> and anything
+@end group
+@end example
+@noindent The subcall we want is now @code{[trans cross reactivate to a diamond] chain thru}.
+When asked for the subcall, we could type that directly, or we could type:
+@example
+@group
+<anything> chain thru
+@end group
+@end example
+@noindent and then type:
+@example
+@group
+trans cross reactivate to a diamond
+@end group
+@end example
 These ``mandatory'' subcalls, with the keyword @code{<ANYTHING>} in the menu,
 are just one of many types of modifications.  @xref{Call Modifications}, for
 some other types of modifications.
@@ -1466,12 +1506,10 @@ call with the replacement call in brackets, as in
 @example
 @group
    busy [lockit]
-   catch [erase] 2
-   [[vertical tag your neighbor] and spread] percolate
    fascinating [ah so]
 @end group
 @end example
-@noindent This is discussed in @ref{Call Variations}.
+@noindent @xref{Call Variations} for more details about this.
 
 When either level of modifications is selected in @code{Sd},
 the status line above
@@ -2208,7 +2246,6 @@ This section documents these calls.
 * Grand Chain 8::               Grand Chain 8
 * Percolate and Cover Up::      Percolate, Perk Up, and Cover Up
 * Countershake::                Countershake
-* Snag Circulate::              Snag Circulate
 * Bridge the Gap::              Bridge the Gap
 * Hocus Pocus::                 Hocus Pocus
 * Funny Square Thru::           Funny Square Thru
@@ -2229,7 +2266,7 @@ the preceding call.  This is known to work for the common calls such as
 @i{recycle}, but may do something tasteless if used with an unusual call.
 
 @node <ANYONE> roll, C1 Single Rotate, Sweeping Direction, Call Notes
-@section @code{<ANYTHING> and the <ANYONE> roll}
+@section ANYTHING and the ANYONE roll
 
 The call @samp{<anything> and the <anyone> roll} re-evaluates people's
 positions before deciding who should roll.  So, for example, if you say
@@ -2241,7 +2278,7 @@ and the new centers roll}.  Of course, if you have the girls roll there
 will be no problem.
 
 @node C1 Single Rotate, Spread, <ANYONE> roll, Call Notes
-@section C1 @i{Single Rotate}
+@section C1 Single Rotate
 
 @samp{Single rotate while the others} is intended to be called to the
 heads or sides from a squared set.  It performs the common C1 usage of
@@ -2296,7 +2333,7 @@ For example, you could enter
 special case call on the Plus list.)
 
 @node <ANYTHING> and circle, Centers Back Away, Spread, Call Notes
-@section @code{<ANYTHING> and circle}
+@section @code{ANYTHING and circle}
 
 Callers use the @code{<ANYTHING> and circle} construction with either
 an 8-person call to be done by everyone, or a 4-person call to be done
@@ -2340,7 +2377,7 @@ You might read this as ``head ladies chain, then the sides move in and
 star thru.''
 
 @node <ANYONE> Promenade, Up to the Middle, Centers Back Away, Call Notes
-@section @code{<ANYONE> Promenade}
+@section @code{ANYONE Promenade}
 
 These calls are intended for use in sequences that begin with heads
 or sides promenading halfway around the set.  The calls are
@@ -2394,7 +2431,7 @@ square thru 2.''  The way this would be entered to the program is as follows:
 @end example
 
 @node <ANYONE> Cloverleaf, And N/4 More, Up to the Middle, Call Notes
-@section @code{<ANYONE> Cloverleaf}
+@section @code{ANYONE Cloverleaf}
 
 The call @samp{cloverleaf} is expected to be done from a completed
 double pass thru setup, and has everyone doing the call.
@@ -2485,7 +2522,7 @@ of calls, and is a recognized C1 call.  You should use this name rather
 than the potentially misleading @samp{flip back to a wave}.
 
 @node Face <DIRECTION>, Grand Chain 8, Flip Back, Call Notes
-@section Face <DIRECTION>
+@section Face DIRECTION
 
 The call @samp{face <DIRECTION>} does not appear to be a genuine
 Callerlab-sanctioned call.  It is intended to be used, for example,
@@ -2519,7 +2556,7 @@ and @samp{cover up (centers and ends)} when using the @samp{central} concept.
 @code{Sd} will, of course, check that the facing directions are such that
 the dancers would have stayed in the center had all 8 people done the call.
 
-@node Countershake, Snag Circulate, Percolate and Cover Up, Call Notes
+@node Countershake, Bridge the Gap, Percolate and Cover Up, Call Notes
 @section Countershake
 
 The centers and ends each have 3 parts on this call, but they are
@@ -2535,15 +2572,7 @@ lines of 3.  @code{Sd} has another call, @samp{countershake (matrix)} that
 can handle the occasional uses that violate the definition, such as
 @samp{3x3} in a 2x6 matrix.  It is not fractionalizable.
 
-@node Snag Circulate, Bridge the Gap, Countershake, Call Notes
-@section Snag Circulate
-
-The @samp{snag} concept, meaning to have the centers do just half of the
-call, does not work with the call @samp{circulate}, because that
-call is not defined in the database as having centers' and ends' parts.
-Hence, the separate call @samp{snag circulate} has been provided.
-
-@node Bridge the Gap, Hocus Pocus, Snag Circulate, Call Notes
+@node Bridge the Gap, Hocus Pocus, Countershake, Call Notes
 @section Bridge the Gap
 
 The call @samp{bridge the gap} is defined as a ``space invader'' call.
@@ -3294,6 +3323,7 @@ This inverts the centers' and ends' parts of the call.
 @item invert central
 @item snag
 @item invert snag
+@item snag the <ANYONE>
 @item mystic
 @item invert mystic
 These are straightforward.
@@ -3662,8 +3692,10 @@ program will issue a warning.  Using the @code{each wave} concept will prevent
 the warning.  In either case, the exact words you would use whan calling the card
 are up to you.
 
+@item 1x10 matrix
 @item 1x12 matrix
 @item 1x16 matrix
+@item 2x5 matrix
 @item 2x6 matrix
 @item 2x8 matrix
 @item 3x4 matrix
@@ -4229,7 +4261,7 @@ accept @code{centers} or @code{center 6} for this, since those terms are not
 well-defined in this situation.
 @end table
 
-@subsection @code{<ANYONE>}
+@subsection @code{ANYONE}
 
 The concepts are
 
@@ -4275,7 +4307,7 @@ Incidentally, this is why concepts are capitalized.  Otherwise, the line
 The Sd program is designed to make it possible to determine unambiguously, by looking at
 the printout, how an action arose.
 
-@subsection @code{<ANYONE> Disconnected}
+@subsection @code{ANYONE Disconnected}
 
 The concepts are
 
@@ -4295,7 +4327,7 @@ whichever set of people occupied the centermost spots prior to the call will
 occupy the center of the result, in accordance with accepted usage for
 this concept.
 
-@subsection @code{<ANYONE> in your Distorted} @i{Setup}
+@subsection @code{ANYONE in your Distorted Setup}
 
 The concepts are
 
@@ -4326,7 +4358,7 @@ geometrically distorted in shape, not just disconnected.  Do not say
 This concept has been set at C2.  You can use it at lower levels if
 you issue the @code{toggle concept levels} command.
 
-@subsection @code{<ANYONE> Do Your Part}
+@subsection @code{ANYONE Do Your Part}
 
 The concepts are
 
@@ -4359,7 +4391,7 @@ as @code{do your part, <ANYONE> <call> while the others <other call>}.
 You must still enter it as shown above, with the designator first and
 the phrase @samp{do your part} second.
 
-@subsection @code{Ignore the <ANYONE>}
+@subsection @code{Ignore the ANYONE}
 
 The concept is
 
@@ -4375,7 +4407,7 @@ people do not exist.
 This concept has been set at C1.  You can use it at lower levels if
 you issue the @code{toggle concept levels} command.
 
-@subsection @code{Own the <ANYONE>}
+@subsection @code{Own the ANYONE}
 
 The concept is
 
@@ -4389,7 +4421,7 @@ is, instead of a C1 phantom setup, a 4x4 matrix may result.
 This is a recognized C3A concept.
 
 @node Anyone Start, 12 Matrix and 16 Matrix, Designating Certain People, Concept Notes
-@section @code{<ANYONE> Start}
+@section @code{ANYONE Start}
 
 It is often useful to designate that certain people are to start a call,
 with everyone joining in after the first part.

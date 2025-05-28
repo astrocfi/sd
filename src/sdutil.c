@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -123,8 +125,8 @@ long_boolean enable_file_writing;
 long_boolean singlespace_mode;
 long_boolean nowarn_mode;
 
-Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
-Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
+Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", (Cstring) 0};
+Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th", "13th", "14th", "15th", (Cstring) 0};
 
 /* BEWARE!!  This list is keyed to the definition of "selector_kind" in sd.h . */
 selector_item selector_list[] = {
@@ -168,6 +170,7 @@ selector_item selector_list[] = {
 #endif
    {"headliners",   "headliner",   "HEADLINERS",   "HEADLINER",   selector_sideliners},
    {"sideliners",   "sideliner",   "SIDELINERS",   "SIDELINER",   selector_headliners},
+   {"those facing", "those facing","THOSE FACING", "THOSE FACING",selector_uninitialized},
    {"everyone",     "everyone",    "EVERYONE",     "EVERYONE",    selector_uninitialized},
    {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
    /* Start of unsymmetrical selectors. */
@@ -294,18 +297,21 @@ Cstring warning_strings[] = {
    /*  warn__bad_call_level      */   "*This call is not really legal at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast.",
-   /*  warn__opt_for_normal_hinge */  "*If in doubt, assume a normal hinge.",
+   /*  warn__opt_for_normal_hinge*/   "*If in doubt, assume a normal hinge.",
    /*  warn__opt_for_2fl         */   "*If in doubt, assume a two-faced line.",
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
+   /*  warn_phantoms_thinner     */   "*Phantoms may have gotten thinner -- go to outer triple boxes.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
    /*  warn_interlocked_to_6     */   "*This went from 4 interlocked groups to 6.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
+   /*  warn_big_outer_triangles  */   "*The outside triangles are very large.",
    /*  warn_hairy_fraction       */   " Fraction is very complicated.",
    /*  warn_bad_collision        */   "*This collision may be controversial.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
+   /*  warn_pg_in_2x6            */   "*Offset the resulting 2x6 by 50%, or 3 positions.",
    /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial."};
 
@@ -348,6 +354,7 @@ static restriction_thing thar_1fl      = {8, {0, 3, 1, 2, 6, 5, 7, 4},          
 
 static restriction_thing cwave_2x4     = {8, {0, 4, 1, 5, 2, 6, 3, 7},                               {0}, {0}, {0}, TRUE, chk_wave};            /* check for real columns */
 static restriction_thing cwave_2x3     = {6, {0, 3, 1, 4, 2, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for real columns of 6 */
+static restriction_thing cwave_2x5     = {10, {0, 5, 1, 6, 2, 7, 3, 8, 4, 9},                        {0}, {0}, {0}, TRUE, chk_wave};            /* check for real 10-matrix columns */
 static restriction_thing cwave_2x6     = {12, {0, 6, 1, 7, 2, 8, 3, 9, 4, 10, 5, 11},                {0}, {0}, {0}, TRUE, chk_wave};            /* check for real 12-matrix columns */
 static restriction_thing cwave_2x8     = {16, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15},{0}, {0}, {0}, TRUE, chk_wave};            /* check for real 16-matrix columns */
 static restriction_thing cmagic_2x3    = {6, {0, 1, 2, 3, 4, 5},                {0},                      {0}, {0}, TRUE, chk_wave};            /* check for magic columns of 3 */
@@ -356,11 +363,14 @@ static restriction_thing cmagic_2x4    = {8, {0, 1, 3, 2, 5, 4, 6, 7},          
 static restriction_thing cwave_sh6     = {6, {1, 0, 3, 2, 5, 4},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for centers tandem in wave */
 static restriction_thing bone6_1x4     = {6, {0, 1, 2, 3, 4, 5},                                     {0}, {0}, {0}, TRUE, chk_wave};            /* check for ends tandem in wave */
 
-static restriction_thing lio_2x4       = {8, {4, 0, 5, 1, 6, 2, 7, 3},             {0},                   {0}, {0}, TRUE, chk_wave};            /* check for lines in or lines out */
-static restriction_thing invert_1x4    = {4, {0, 1, 2, 3},                   {0},                         {0}, {0}, TRUE, chk_wave};            /* check for single inverted line */
+static restriction_thing lio_2x4       = {8, {4, 0, 5, 1, 6, 2, 7, 3},             {0},                   {0}, {0}, TRUE,  chk_wave};           /* check for lines in or lines out */
+static restriction_thing clio_2x4      = {4, {5, 1, 6, 2},                         {0},                   {0}, {0}, FALSE, chk_wave};
+static restriction_thing ccio_2x4      = {4, {1, 2, 6, 5},                         {0},                   {0}, {0}, FALSE, chk_wave};
+static restriction_thing invert_1x4    = {4, {0, 1, 2, 3},                   {0},                         {0}, {0}, TRUE,  chk_wave};           /* check for single inverted line */
 
 static restriction_thing peelable_3x2  = {3, {0, 1, 2},                   {3, 4, 5},                      {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x3 column */
 static restriction_thing peelable_4x2  = {4, {0, 1, 2, 3},                {4, 5, 6, 7},                   {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x4 column */
+static restriction_thing peelable_5x2  = {5, {0, 1, 2, 3, 4},             {5, 6, 7, 8, 9},                {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x5 column */
 static restriction_thing peelable_6x2  = {6, {0, 1, 2, 3, 4, 5},          {6, 7, 8, 9, 10, 11},           {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x6 column */
 static restriction_thing peelable_8x2  = {8, {0, 1, 2, 3, 4, 5, 6, 7},    {8, 9, 10, 11, 12, 13, 14, 15}, {0}, {0}, FALSE, chk_peelable};       /* check for a "peelable" 2x8 column */
 
@@ -403,6 +413,8 @@ static restriction_thing mnwv_1x8      = {2, {0, 2, 4, 6, 1, 3, 5, 7},          
 static restriction_thing box_wave      = {0, {2, 0, 0, 2},                {0, 0, 2, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "real" (walk-and-dodge type) box */
 static restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0, 0, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for a "one-faced" (reverse-the-pass type) box */
 static restriction_thing box_in_or_out = {0, {0, 0, 2, 2},                {0, 2, 2, 0},                   {0}, {0}, TRUE,  chk_box};            /* check for facing couples or back-to-back couples */
+static restriction_thing ind_in_out_2x2= {0, {3, 2, 1, 0},                {0},                            {0}, {0}, FALSE, chk_indep_box};
+static restriction_thing ind_in_out_2x4= {0, {3, 2, 3, 2, 1, 0, 1, 0},    {0},                            {0}, {0}, FALSE, chk_indep_box};
 static restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
 static restriction_thing s4x4_wave     = {0,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
                                                {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},          {0}, {0}, TRUE,  chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
@@ -509,6 +521,8 @@ static restr_initializer restr_init_table[] = {
    {s2x3, cr_magic_only, &cmagic_2x3},
    {s2x4, cr_magic_only, &cmagic_2x4},
    {s2x4, cr_li_lo, &lio_2x4},
+   {s2x4, cr_ctrs_in_out, &clio_2x4},
+   {s2x4, cr_indep_in_out, &ind_in_out_2x4},
    {s2x4, cr_all_facing_same, &all_same_8},
    {s2x4, cr_1fl_only, &one_faced_2x4},
    {s2x4, cr_couples_only, &cpls_2x4},
@@ -616,6 +630,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
          case s2x4:
             if (t.assumption == cr_li_lo)
                restr_thing_ptr = &wave_2x4;
+            else if (t.assumption == cr_ctrs_in_out)
+               restr_thing_ptr = &ccio_2x4;
             else if (t.assumption == cr_2fl_only)
                restr_thing_ptr = &two_faced_2x4;
             else if (t.assumption == cr_wave_only)
@@ -644,6 +660,12 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
                restr_thing_ptr = &peelable_6x2;
             else if (t.assumption == cr_couples_only)
                restr_thing_ptr = &cpls_6x2;
+            break;
+         case s2x5:
+            if (t.assumption == cr_wave_only)
+               restr_thing_ptr = &cwave_2x5;
+            else if (t.assumption == cr_peelable_box)
+               restr_thing_ptr = &peelable_5x2;
             break;
          case s2x8:
             if (t.assumption == cr_wave_only)
@@ -693,6 +715,9 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
                   break;
                case cr_trailers_only: case cr_leads_only: case cr_li_lo:
                   restr_thing_ptr = &box_in_or_out;
+                  break;
+               case cr_indep_in_out:
+                  restr_thing_ptr = &ind_in_out_2x2;
                   break;
                case cr_magic_only:
                   restr_thing_ptr = &box_magic;
@@ -905,14 +930,12 @@ extern void writestuff(Const char s[])
 
 Private void write_nice_number(char indicator, uint32 num)
 {
-   char nn;
    num &= 0xF;
 
    switch (indicator) {
       case '9': case 'a': case 'b': case 'B': case 'D':
-         nn = '0' + num;
          if (indicator == '9')
-            writechar(nn);
+            writestuff(cardinals[num]);
          else if (indicator == 'B' || indicator == 'D') {
             if (num == 1)
                writestuff("quarter");
@@ -923,7 +946,7 @@ Private void write_nice_number(char indicator, uint32 num)
             else if (num == 4)
                writestuff("four quarter");
             else {
-               writechar(nn);
+               writestuff(cardinals[num]);
                writestuff("/4");
             }
          }
@@ -932,7 +955,7 @@ Private void write_nice_number(char indicator, uint32 num)
          else if (num == 4 && indicator == 'a')
             writestuff("full");
          else {
-            writechar(nn);
+            writestuff(cardinals[num]);
             writestuff("/4");
          }
          break;
@@ -1472,7 +1495,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             by atsign-escapes.  If we succeed at this, we will clear "pending_subst".
             In addition to all of this, there may be any number of forcible replacements. */
 
-         if (localcall) {      /* Call = NIL means we are echoing input and user hasn't entered call yet. */
+         /* Call = NIL means we are echoing input and user hasn't entered call yet. */
+
+         if (localcall) {
             char *np = localcall->name;
 
             if (enable_file_writing) localcall->age = global_age;
@@ -1484,249 +1509,203 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   char savec = *np++;
 
                   switch (savec) {
-                     case '6': case 'k':
-                        write_blank_if_needed();
-                        if (savec == '6')
-                           writestuff(selector_list[i16junk].name);
-                        else
-                           writestuff(selector_list[i16junk].sing_name);
-                        if (np[0] && np[0] != ' ' && np[0] != ']')
-                           writestuff(" ");
-                        break;
-                     case 'v': case 'w': case 'x': case 'y':
-                        write_blank_if_needed();
-                        /* Find the base tag call that this is invoking. */
-#ifdef SCREWED_UP_REVERTS
-                        search = save_cptr->next;
-                        while (search) {
-                           parse_block *subsidiary_ptr = search->subsidiary_root;
-                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
-                              parse_block *search2;
-                              parse_block *subsidiary_ptr2 = subsidiary_ptr;
+                  case '6': case 'k':
+                     write_blank_if_needed();
+                     if (savec == '6')
+                        writestuff(selector_list[i16junk].name);
+                     else
+                        writestuff(selector_list[i16junk].sing_name);
+                     if (np[0] && np[0] != ' ' && np[0] != ']')
+                        writestuff(" ");
+                     break;
+                  case 'v': case 'w': case 'x': case 'y':
+                     write_blank_if_needed();
+                     /* Find the base tag call that this is invoking. */
 
-                              for (;;) {
-                                 parse_block *search3;
-                                 parse_block *subsidiary_ptr3;
-
-                                 for (search3 = subsidiary_ptr2->next ; search3 ; search3 = search3->next) {
-                                    subsidiary_ptr3 = search3->subsidiary_root;
-
-                                    if (subsidiary_ptr3 && subsidiary_ptr3->call && (subsidiary_ptr3->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
-                                       if (subsidiary_ptr3->concept->kind == concept_another_call_next_mod)
-                                          goto search_again;
-                                       else if (subsidiary_ptr2 == subsidiary_ptr) {
-                                          print_recurse(subsidiary_ptr, 0);
-                                          goto did_tagger;
-                                       }
-                                       else {
-                                          search2->subsidiary_root = subsidiary_ptr3;
-                                          search3->subsidiary_root = subsidiary_ptr;
-                                          print_recurse(subsidiary_ptr2, 0);
-                                          search2->subsidiary_root = subsidiary_ptr2;
-                                          search3->subsidiary_root = subsidiary_ptr3;
-                                          goto did_tagger;
-                                       }
-                                    }
-                                 }
-
-                                 break;    /* Can't seem to find anything. */
-
-                                 search_again:
-                                 search2 = search3;
-                                 subsidiary_ptr2 = subsidiary_ptr3;
-                              }
-
-                              print_recurse(subsidiary_ptr, 0);
-                              goto did_tagger;
-                           }
-                           search = search->next;
+                     search = save_cptr->next;
+                     while (search) {
+                        parse_block *subsidiary_ptr = search->subsidiary_root;
+                        if (subsidiary_ptr &&
+                            subsidiary_ptr->call &&
+                            (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
+                           print_recurse(subsidiary_ptr, 0);
+                           goto did_tagger;
                         }
+                        search = search->next;
+                     }
 
-                        /* We didn't find the tagger.  It must not have been entered into the parse tree.
-                           See if we can get it from the "tagger" field. */
+                     /* We didn't find the tagger.  It must not have been entered into
+                           the parse tree.  See if we can get it from the "tagger" field. */
 
-                        if (save_cptr->options.tagger > 0)
-                           writestuff(tagger_calls[save_cptr->options.tagger >> 5][(save_cptr->options.tagger & 0x1F)-1]->menu_name);
-                        else
-                           writestuff("NO TAGGER???");
+                     if (save_cptr->options.tagger != 0)
+                        writestuff(tagger_calls
+                                   [save_cptr->options.tagger >> 5]
+                                   [(save_cptr->options.tagger & 0x1F)-1]->menu_name);
+                     else
+                        writestuff("NO TAGGER???");
 
-                        did_tagger:
-#else
-                        search = save_cptr->next;
-                        while (search) {
-                           parse_block *subsidiary_ptr = search->subsidiary_root;
-                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
-                              print_recurse(subsidiary_ptr, 0);
-                              goto did_tagger;
-                           }
-                           search = search->next;
+                  did_tagger:
+
+                     if (np[0] && np[0] != ' ' && np[0] != ']')
+                        writestuff(" ");
+                     break;
+                  case 'N':
+                     write_blank_if_needed();
+
+                     /* Find the base circ call that this is invoking. */
+
+                     search = save_cptr->next;
+                     while (search) {
+                        parse_block *subsidiary_ptr = search->subsidiary_root;
+                        if (subsidiary_ptr &&
+                            subsidiary_ptr->call &&
+                            (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
+                           print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
+                           goto did_circcer;
                         }
+                        search = search->next;
+                     }
 
-                        /* We didn't find the tagger.  It must not have been entered into the parse tree.
-                           See if we can get it from the "tagger" field. */
-
-                        if (save_cptr->options.tagger > 0)
-                           writestuff(tagger_calls[save_cptr->options.tagger >> 5][(save_cptr->options.tagger & 0x1F)-1]->menu_name);
-                        else
-                           writestuff("NO TAGGER???");
-
-                        did_tagger:
-#endif
-                        if (np[0] && np[0] != ' ' && np[0] != ']')
-                           writestuff(" ");
-                        break;
-                     case 'N':
-                        write_blank_if_needed();
-
-                        /* Find the base circ call that this is invoking. */
-
-                        search = save_cptr->next;
-                        while (search) {
-                           parse_block *subsidiary_ptr = search->subsidiary_root;
-                           if (subsidiary_ptr && subsidiary_ptr->call && (subsidiary_ptr->call->callflags1 & CFLAG1_BASE_CIRC_CALL)) {
-                              print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
-                              goto did_circcer;
-                           }
-                           search = search->next;
-                        }
-
-                        /* We didn't find the circcer.  It must not have been entered into the parse tree.
+                     /* We didn't find the circcer.  It must not have been entered into the parse tree.
                            See if we can get it from the "circcer" field. */
 
-                        if (save_cptr->options.circcer > 0)
-                           writestuff(circcer_calls[(save_cptr->options.circcer)-1]->menu_name);
-                        else
-                           writestuff("NO CIRCCER???");
+                     if (save_cptr->options.circcer > 0)
+                        writestuff(circcer_calls[(save_cptr->options.circcer)-1]->menu_name);
+                     else
+                        writestuff("NO CIRCCER???");
 
-                        did_circcer:
+                  did_circcer:
 
-                        if (np[0] && np[0] != ' ' && np[0] != ']')
-                           writestuff(" ");
-                        break;
-                     case 'h':                   /* Need to plug in a direction. */
+                     if (np[0] && np[0] != ' ' && np[0] != ']')
+                        writestuff(" ");
+                     break;
+                  case 'h':                   /* Need to plug in a direction. */
+                     write_blank_if_needed();
+                     writestuff(direction_names[idirjunk]);
+                     if (np[0] && np[0] != ' ' && np[0] != ']')
+                        writestuff(" ");
+                     break;
+                  case '9': case 'a': case 'b': case 'B': case 'D': case 'u':
+                     /* Need to plug in a number. */
+                     write_blank_if_needed();
+                     write_nice_number(savec, number_list);
+                     number_list >>= 4;    /* Get ready for next number. */
+                     break;
+                  case 'e':
+                     if (use_left_name) {
+                        while (*np != '@') np++;
+                        if (lastchar == ']') writestuff(" ");
+                        writestuff("left");
+                        np += 2;
+                     }
+                     break;
+                  case 'j':
+                     if (!use_cross_name) {
+                        while (*np != '@') np++;
+                        np += 2;
+                     }
+                     break;
+                  case 'C':
+                     if (use_cross_name) {
                         write_blank_if_needed();
-                        writestuff(direction_names[idirjunk]);
-                        if (np[0] && np[0] != ' ' && np[0] != ']')
-                           writestuff(" ");
-                        break;
-                     case '9': case 'a': case 'b': case 'B': case 'D': case 'u':    /* Need to plug in a number. */
-                        write_blank_if_needed();
-                        write_nice_number(savec, number_list);
-                        number_list >>= 4;    /* Get ready for next number. */
-                        break;
-                     case 'e':
-                        if (use_left_name) {
-                           while (*np != '@') np++;
-                           if (lastchar == ']') writestuff(" ");
-                           writestuff("left");
-                           np += 2;
-                        }
-                        break;
-                     case 'j':
-                        if (!use_cross_name) {
-                           while (*np != '@') np++;
-                           np += 2;
-                        }
-                        break;
-                     case 'C':
-                        if (use_cross_name) {
-                           write_blank_if_needed();
-                           writestuff("cross");
-                        }
-                        break;
-                     case 'S':                   /* Look for star turn replacement. */
-                        if (save_cptr->options.star_turn_option < 0) {
-                           writestuff(", don't turn the star");
-                        }
-                        else if (save_cptr->options.star_turn_option != 0) {
-                           writestuff(", turn the star ");
-                           write_nice_number('b', save_cptr->options.star_turn_option);
-                        }
-                        break;
-                     case 'J':
-                        if (!use_magic_name) {
-                           while (*np != '@') np++;
-                           np += 2;
-                        }
-                        break;
-                     case 'M':
-                        if (use_magic_name) {
-                           if (lastchar != ' ' && lastchar != '[') writechar(' ');
-                           writestuff("magic");
-                        }
-                        break;
-                     case 'E':
-                        if (!use_intlk_name) {
+                        writestuff("cross");
+                     }
+                     break;
+                  case 'S':                   /* Look for star turn replacement. */
+                     if (save_cptr->options.star_turn_option < 0) {
+                        writestuff(", don't turn the star");
+                     }
+                     else if (save_cptr->options.star_turn_option != 0) {
+                        writestuff(", turn the star ");
+                        write_nice_number('b', save_cptr->options.star_turn_option);
+                     }
+                     break;
+                  case 'J':
+                     if (!use_magic_name) {
+                        while (*np != '@') np++;
+                        np += 2;
+                     }
+                     break;
+                  case 'M':
+                     if (use_magic_name) {
+                        if (lastchar != ' ' && lastchar != '[') writechar(' ');
+                        writestuff("magic");
+                     }
+                     break;
+                  case 'E':
+                     if (!use_intlk_name) {
+                        while (*np != '@') np++;
+                        np += 2;
+                     }
+                     break;
+                  case 'I':
+                     if (use_intlk_name) {
+                        if (lastchar == 'a' && lastlastchar == ' ')
+                           writestuff("n ");
+                        else if (lastchar != ' ' && lastchar != '[')
+                           writechar(' ');
+                        writestuff("interlocked");
+                     }
+                     break;
+                  case 'l': case 'L': case 'F': case '8': case 'o':
+                     /* Just skip these -- they end stuff that we could have
+                        elided but didn't. */
+                     break;
+                  case 'n': case 'p': case 'r': case 'm': case 't':
+                     if (subst2_in_use) {
+                        if (savec == 'p' || savec == 'r') {
                            while (*np != '@') np++;
                            np += 2;
                         }
-                        break;
-                     case 'I':
-                        if (use_intlk_name) {
-                           if (lastchar == 'a' && lastlastchar == ' ')
-                              writestuff("n ");
-                           else if (lastchar != ' ' && lastchar != '[')
-                              writechar(' ');
-                           writestuff("interlocked");
+                     }
+                     else {
+                        if (savec == 'n') {
+                           while (*np != '@') np++;
+                           np += 2;
                         }
-                        break;
-                     case 'l': case 'L': case 'F': case '8': case 'o':    /* Just skip these -- they end stuff that we could have elided but didn't. */
-                        break;
-                     case 'n': case 'p': case 'r': case 'm': case 't':
-                        if (subst2_in_use) {
-                           if (savec == 'p' || savec == 'r') {
-                              while (*np != '@') np++;
-                              np += 2;
-                           }
-                        }
-                        else {
-                           if (savec == 'n') {
-                              while (*np != '@') np++;
-                              np += 2;
-                           }
-                        }
+                     }
    
-                        if (pending_subst2 && savec != 'p' && savec != 'n') {
-                           write_blank_if_needed();
-                           writestuff("[");
-                           print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
+                     if (pending_subst2 && savec != 'p' && savec != 'n') {
+                        write_blank_if_needed();
+                        writestuff("[");
+                        print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
          
-                           pending_subst2 = FALSE;
-                        }
+                        pending_subst2 = FALSE;
+                     }
          
-                        break;
-                     case 'O':
-                        if (print_recurse_arg & PRINT_RECURSE_CIRC) {
+                     break;
+                  case 'O':
+                     if (print_recurse_arg & PRINT_RECURSE_CIRC) {
+                        while (*np != '@') np++;
+                        np += 2;
+                     }
+
+                     break;
+                  default:
+                     if (subst1_in_use) {
+                        if (savec == '2' || savec == '4') {
                            while (*np != '@') np++;
                            np += 2;
                         }
-
-                        break;
-                     default:
-                        if (subst1_in_use) {
-                           if (savec == '2' || savec == '4') {
-                              while (*np != '@') np++;
-                              np += 2;
-                           }
+                     }
+                     else {
+                        if (savec == '7') {
+                           while (*np != '@') np++;
+                           np += 2;
                         }
-                        else {
-                           if (savec == '7') {
-                              while (*np != '@') np++;
-                              np += 2;
-                           }
-                        }
+                     }
          
-                        if (pending_subst1 && savec != '4' && savec != '7') {
-                           write_blank_if_needed();
-                           writestuff("[");
-                           print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
+                     if (pending_subst1 && savec != '4' && savec != '7') {
+                        write_blank_if_needed();
+                        writestuff("[");
+                        print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
          
-                           pending_subst1 = FALSE;
-                        }
+                        pending_subst1 = FALSE;
+                     }
          
-                        break;
+                     break;
                   }
                }
                else {
@@ -1768,7 +1747,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                               !(cc->callflags1 & (CFLAG1_BASE_TAG_CALL_MASK)) &&
                                  (
                                     !(cc->callflags1 & (CFLAG1_BASE_CIRC_CALL)) ||
-                                    search->call != base_calls[BASE_CALL_CIRCCER]
+                                    search->call != base_calls[base_call_circcer]
                                  )
                            )) {
 
@@ -1795,44 +1774,46 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                   else {
                      switch (search->replacement_key) {
-                        case 1:
-                        case 2:
-                        case 3:
-                           /* This is a natural replacement.  It may already have been taken care of. */
-                           if (pending_subst1 || search->replacement_key == 3) {
-                              write_blank_if_needed();
-                              if (search->replacement_key == 3)
-                                 writestuff("but [");
-                              else
-                                 writestuff("[modification: ");
-                              print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                              writestuff("]");
-                           }
-                           break;
-                        case 5:
-                        case 6:
-                           /* This is a secondary replacement.  It may already have been taken care of. */
-                           if (pending_subst2) {
-                              write_blank_if_needed();
-                              writestuff("[modification: ");
-                              print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                              writestuff("]");
-                           }
-                           break;
-                        default:
-                           /* This is a forced replacement. */
+                     case 1:
+                     case 2:
+                     case 3:
+                        /* This is a natural replacement.  It may already
+                           have been taken care of. */
+                        if (pending_subst1 || search->replacement_key == 3) {
                            write_blank_if_needed();
-                           first_replace++;
-                           if (first_replace == 1)
-                              writestuff("BUT REPLACE ");
+                           if (search->replacement_key == 3)
+                              writestuff("but [");
                            else
-                              writestuff("AND REPLACE ");
-
-                           print_call_name(replaced_call, search);
-                           writestuff(" WITH [");
+                              writestuff("[modification: ");
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                            writestuff("]");
-                           break;
+                        }
+                        break;
+                     case 5:
+                     case 6:
+                        /* This is a secondary replacement.  It may already
+                           have been taken care of. */
+                        if (pending_subst2) {
+                           write_blank_if_needed();
+                           writestuff("[modification: ");
+                           print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
+                           writestuff("]");
+                        }
+                        break;
+                     default:
+                        /* This is a forced replacement. */
+                        write_blank_if_needed();
+                        first_replace++;
+                        if (first_replace == 1)
+                           writestuff("BUT REPLACE ");
+                        else
+                           writestuff("AND REPLACE ");
+
+                        print_call_name(replaced_call, search);
+                        writestuff(" WITH [");
+                        print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
+                        break;
                      }
                   }
                }
@@ -2356,18 +2337,18 @@ static Const long int ptpd1[] = {d_east, d_west, 1, 3, 7, 5, -1};
 extern Const long int *get_rh_test(setup_kind kind)
 {
    switch (kind) {
-      case s_spindle: return spindle1;
-      case s_short6:  return short1;
-      case sdmd:      return dmd1;
-      case s_trngl:   return trgl1;
-      case s_trngl4:  return trgl41;
-      case s_bone6:   return bone61;
-      case s1x4:      return line1;
-      case s2x4:      return lines1;
-      case s2x3:      return lines2x3;
-      case s_qtag:    return qtag1;
-      case s_ptpd:    return ptpd1;
-      default:        return (Const long int *) 0;
+   case s_spindle: return spindle1;
+   case s_short6:  return short1;
+   case sdmd:      return dmd1;
+   case s_trngl:   return trgl1;
+   case s_trngl4:  return trgl41;
+   case s_bone6:   return bone61;
+   case s1x4:      return line1;
+   case s2x4:      return lines1;
+   case s2x3:      return lines2x3;
+   case s_qtag:    return qtag1;
+   case s_ptpd:    return ptpd1;
+   default:        return (Const long int *) 0;
    }
 }
 
@@ -2508,6 +2489,22 @@ extern long_boolean verify_restriction(
          }
 
          goto good;
+      case chk_indep_box:
+         qa0 = (tt.assump_both << 1) & 2;
+         qa1 = tt.assump_both & 2;
+         qa2 = 0;
+         qa3 = 0;
+
+         for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+            if ((t = ss->people[idx].id1) != 0) {
+               qa2 |= t + rr->map1[idx];
+               qa3 |= t + rr->map1[idx] + 2;
+            }
+         }
+
+         if (((qa0 & qa2) | (qa1 & qa3)) != 0) goto bad;
+
+         goto good;
       case chk_groups:
          limit = rr->map2[0];
    
@@ -2548,7 +2545,7 @@ extern long_boolean verify_restriction(
                      if (!t) {
                         if (phantom_count >= 16) fail("Too many phantoms.");
                         pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                        pq->id2 = 0;
+                        pq->id2 = 0UL;
                      }
                      else if (t & BIT_ACT_PHAN)
                         fail("Active phantoms may only be used once.");
@@ -2599,7 +2596,7 @@ extern long_boolean verify_restriction(
                      if (!t) {
                         if (phantom_count >= 16) fail("Too many phantoms.");
                         pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
-                        pq->id2 = 0;
+                        pq->id2 = 0UL;
                      }
                      else if (t & BIT_ACT_PHAN)
                         fail("Active phantoms may only be used once.");
@@ -2739,7 +2736,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    for (p = spec; p; p = p->next) {
       uint32 i, k, t, u, v, w, mask;
       assumption_thing tt;
-      int idx;
+      int idx, plaini;
       restriction_thing *rr;
       search_qualifier this_qualifier;
 
@@ -2773,8 +2770,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       if ((p->qualifierstuff & (QUALBIT__TBONE|QUALBIT__NTBONE)) != 0) {
          u = 0;
 
-         for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++)
-            u |= ss->people[i].id1;
+         for (plaini=0; plaini<=setup_attrs[ss->kind].setup_limits; plaini++)
+            u |= ss->people[plaini].id1;
 
          if ((u & 011) == 011) {
             /* They are T-boned.  The "QUALBIT__NTBONE" bit says to reject. */
@@ -2787,7 +2784,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       }
 
       this_qualifier = (search_qualifier) (p->qualifierstuff & QUALBIT__QUAL_CODE);
-      if (this_qualifier == sq_none) goto good;
+
+      if (this_qualifier == sq_none) {
+         if ((p->qualifierstuff / QUALBIT__LIVE) & 1) {   /* All live people were demanded. */
+            for (plaini=0; plaini<=setup_attrs[ss->kind].setup_limits; plaini++) {
+               if ((ss->people[plaini].id1) == 0) goto bad;
+            }
+         }
+
+         goto good;
+      }
 
       /* Note that we have to examine setups larger than the setup the
          qualifier is officially defined for.  If a qualifier were defined
@@ -2807,31 +2813,40 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
 
       switch (this_qualifier) {
-         case sq_wave_only:       /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
-            goto do_wave_stuff;
-         case sq_magic_only:      /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only:
-               case cr_2fl_only:
-               case cr_wave_only:
-                  goto bad;
-            }
+      case sq_wave_only:
+         goto do_wave_stuff;
+      case sq_magic_only:
+         switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:
+         case cr_2fl_only:
+         case cr_wave_only:
+            goto bad;
+         }
 
-            tt.assumption = cr_magic_only;
-            goto fix_col_line_stuff;
-         case sq_facing_in:
-            tt.assump_both = 1;   /* To get facing-in only. */
-            tt.assumption = cr_li_lo;
-            goto fix_col_line_stuff;
-         case sq_facing_out:
-            tt.assump_both = 2;   /* To get facing-out only. */
-            tt.assumption = cr_li_lo;
-            goto fix_col_line_stuff;
-         case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
+         tt.assumption = cr_magic_only;
+         goto fix_col_line_stuff;
+      case sq_in_or_out:                    /* 2x2 - all facing in or all facing out */
             switch (ss->kind) {                /* 2x4 - this means lines in/out or 8ch/tby */
                case s1x2: case s1x4: case s2x2: case s2x4:
                   tt.assumption = cr_li_lo;
                   goto fix_col_line_stuff;
+               default:
+                  goto good;           /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_independent_in_or_out:
+            switch (ss->kind) {
+               case s2x2: case s2x4:
+                  tt.assumption = cr_indep_in_out;
+                  goto fix_col_line_stuff;
+               default:
+                  goto good;           /* We don't understand the setup -- we'd better accept it. */
+            }
+         case sq_centers_in_or_out:            /* 2x4 - centers all facing in or all facing out */
+            switch (ss->kind) {
+               case s2x4:
+                  tt.assumption = cr_ctrs_in_out;
+                  if (!((ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1)&010)) tt.assump_col = 1;
+                  goto check_tt;
                default:
                   goto good;           /* We don't understand the setup -- we'd better accept it. */
             }
@@ -2997,13 +3012,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_true_Z_cw: case sq_true_Z_ccw:
             mask = 0;
 
-            for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
-               if (ss->people[i].id1) mask |= k;
+            for (plaini=0, k=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, k<<=1) {
+               if (ss->people[plaini].id1) mask |= k;
             }
 
             if (ss->kind == s2x3) {
                /* In this case, we actually check the shear direction of the Z. */
-               if (mask == ((this_qualifier == sq_true_Z_cw) ? 066 : 033)) goto good;
+               if (mask == ((this_qualifier == sq_true_Z_cw) ? 066U : 033U)) goto good;
                goto bad;
             }
 
@@ -3024,22 +3039,28 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             mask = 0;
             t = 0;
 
-            for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
-               if (ss->people[i].id1) { mask |= k; t |= ss->people[i].id1; }
+            for (plaini=0, k=1; plaini<=setup_attrs[ss->kind].setup_limits; plaini++, k<<=1) {
+               if (ss->people[plaini].id1) { mask |= k; t |= ss->people[plaini].id1; }
             }
 
-            if (        ss->kind == s3x4 && (t & 1) == 0 &&
-                        (  (mask & 04646) == 0 || (mask & 04532) == 0 || (mask & 03245) == 0 ||
-                           (mask & 02525) == 0 || (mask & 03232) == 0 || (mask & 04651) == 0 || (mask & 05146) == 0))
+            if (ss->kind == s3x4 && (t & 1) == 0 &&
+                ((mask & 04646) == 0 ||
+                 (mask & 04532) == 0 || (mask & 03245) == 0 ||
+                 (mask & 02525) == 0 || (mask & 03232) == 0 ||
+                 (mask & 04651) == 0 || (mask & 05146) == 0))
                goto good;
-            else if (   ss->kind == s3x6 && (t & 1) == 0 &&
-                        ((mask & 0222222) == 0))
+            else if (ss->kind == s3x6 && (t & 1) == 0 &&
+                     ((mask & 0222222) == 0))
                goto good;
-            else if (   ss->kind == s4x4 && (t & 1) == 0 &&
-                        ((mask & 0xE8E8) == 0 || (mask & 0xA3A3) == 0 || (mask & 0x5C5C) == 0))
+            else if (ss->kind == s4x4 && (t & 1) == 0 &&
+                     ((mask & 0xE8E8) == 0 ||
+                      (mask & 0xA3A3) == 0 || (mask & 0x5C5C) == 0 ||
+                      (mask & 0xA857) == 0 || (mask & 0x57A8) == 0))
                goto good;
-            else if (   ss->kind == s4x4 && (t & 010) == 0 &&
-                        ((mask & 0x8E8E) == 0 || (mask & 0x3A3A) == 0 || (mask & 0xC5C5) == 0))
+            else if (ss->kind == s4x4 && (t & 010) == 0 &&
+                     ((mask & 0x8E8E) == 0 ||
+                      (mask & 0x3A3A) == 0 || (mask & 0xC5C5) == 0 ||
+                      (mask & 0x857A) == 0 || (mask & 0x7A85) == 0))
                goto good;
             else if (ss->kind == s4x6 && (t & 010) == 0) goto good;
             else if (ss->kind == s3x8 && (t & 001) == 0) goto good;
@@ -3109,18 +3130,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                 (ss->people[3].id1 & d_mask) == d_west)
                goto good;
             goto bad;
-         case sq_8_chain:                   /* 4x1/2x1/4x2 - setup is (single) 8-chain */
-         case sq_trade_by:                  /* 4x1/2x1/4x2 - setup is (single) trade-by */
-            tt.assumption = cr_li_lo;
-            tt.assump_col = 1;
-            tt.assump_both = (this_qualifier == sq_trade_by) ? 2 : 1;
-
-            switch (ss->kind) {
-               case s1x2: case s1x4: case s2x4:
-                  goto check_tt;
-               default:
-                  goto bad;
-            }
          case sq_qtag_like:
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_diamond_like:
@@ -3171,9 +3180,23 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto bad;
             goto good;
          case sq_occupied_as_h:
-            if (ss->kind != s3x4 || (ss->people[1].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[8].id1)) goto bad;
+            if (ss->kind != s3x4 ||
+                (ss->people[1].id1 | ss->people[2].id1 |
+                 ss->people[7].id1 | ss->people[8].id1)) goto bad;
             goto good;
-         case sq_occupied_as_qtag:
+      case sq_occupied_as_stars:
+         if (ss->kind != s_c1phan ||
+             ((ss->people[0].id1 | ss->people[1].id1 |
+               ss->people[2].id1 | ss->people[3].id1 |
+               ss->people[8].id1 | ss->people[9].id1 |
+               ss->people[10].id1 | ss->people[11].id1) &&
+              (ss->people[4].id1 | ss->people[5].id1 |
+               ss->people[6].id1 | ss->people[7].id1 |
+               ss->people[12].id1 | ss->people[13].id1 |
+               ss->people[14].id1 | ss->people[15].id1)))
+            goto bad;
+         goto good;
+      case sq_occupied_as_qtag:
             if (ss->kind != s3x4 || (ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto bad;
             goto good;
          case sq_occupied_as_3x1tgl:
@@ -3194,8 +3217,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_dmd_ctrs_1f:
             {
                Const long int *p1;
-               long int d1;
-               long int d2;
+               uint32 d1, d2;
                uint32 z = 0;
                long_boolean b1 = TRUE;
                long_boolean b2 = TRUE;
@@ -3287,7 +3309,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             if ((t = ss->people[4].id1) && (t & d_mask) != d_west) goto bad;
             if ((t = ss->people[7].id1) && (t & d_mask) != d_east) goto bad;
             goto good;
-         case sq_ripple_centers:
+         case sq_ripple_both_centers:
+            k ^= (0xAAA ^ 0xA82);
+            /* FALL THROUGH!!!!!! */
+         case sq_ripple_any_centers:
+            /* FELL THROUGH!!!!!! */
             k ^= (0xA82 ^ 0x144);
             /* FALL THROUGH!!!!!! */
          case sq_ripple_one_end:
@@ -3693,8 +3719,16 @@ extern parse_block *process_final_concepts(
             bit_to_set.herit = INHERITFLAG_4X4;
             bit_to_forbid.herit = MXN_BITS;
             break;
+         case concept_5x5:
+            bit_to_set.herit = INHERITFLAG_5X5;
+            bit_to_forbid.herit = MXN_BITS;
+            break;
          case concept_6x6:
             bit_to_set.herit = INHERITFLAG_6X6;
+            bit_to_forbid.herit = MXN_BITS;
+            break;
+         case concept_7x7:
+            bit_to_set.herit = INHERITFLAG_7X7;
             bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_8x8:
@@ -3772,7 +3806,10 @@ extern parse_block *skip_one_concept(parse_block *incoming)
    else {
       concept_kind k = retval->concept->kind;
 
-      if (k <= marker_end_of_list || concept_table[k].concept_action == 0)
+      if (k <= marker_end_of_list)
+         fail("A concept is required.");
+
+      if (concept_table[k].concept_action == 0)
          fail("Sorry, can't do this with this concept.");
 
       if ((concept_table[k].concept_prop & CONCPROP__SECOND_CALL) && retval->concept->kind != concept_special_sequential)
@@ -3791,6 +3828,7 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
 {
    int i;
    long_boolean lineflag = FALSE;
+   long_boolean dmdflag = FALSE;
    long_boolean miniflag = FALSE;
    int deadconcindex = -1;
    setup_kind kk = nothing;
@@ -3840,36 +3878,51 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
       }
 
       if (z[i].kind != nothing) {
-         uint32 zrot;
+         int zrot;
 
          canonicalize_rotation(&z[i]);
 
          if (z[i].kind == s1x2)
             miniflag = TRUE;
-         else if ((z[i].kind == s1x4 || z[i].kind == sdmd) && (z[i].people[1].id1 | z[i].people[3].id1) == 0)
+         else if ((z[i].kind == s1x4 || z[i].kind == sdmd) &&
+                  (z[i].people[1].id1 | z[i].people[3].id1) == 0)
             lineflag = TRUE;
          else {
             if (kk == nothing) kk = z[i].kind;
 
             if (kk != z[i].kind) {
-               /* We may have a minor problem -- a 2x4 with just the ends present might want to be a qtag instead. */
-               if (     ((kk == s2x4 && z[i].kind == s_qtag) || (kk == s_qtag && z[i].kind == s2x4)) &&
-                        ((rr ^ z[i].rotation) & 1)) {
-                  if (kk == s2x4) { kk = s_qtag ; rr ^= 1; }
-                  continue;
+               /* We may have a minor problem -- differently oriented
+                  2x4's and qtag's with just the ends present might want to be
+                  like each other.  We will turn them into qtags.
+                  Or 1x4's with just the centers present might want
+                  to become diamonds. */
+
+               if ((rr ^ z[i].rotation) & 1) {
+                  if (((kk == s2x4 && z[i].kind == s_qtag) ||
+                       (kk == s_qtag && z[i].kind == s2x4))) {
+                     if (kk == s2x4) { kk = s_qtag ; rr ^= 1; }
+                     continue;
+                  }
+                  else if (((kk == s1x4 && z[i].kind == sdmd) ||
+                            (kk == sdmd && z[i].kind == s1x4))) {
+                     dmdflag = TRUE;
+                     continue;
+                  }
                }
-               else
-                  goto lose;
+
+               goto lose;
             }
          }
 
          /* If the setups are "trngl" or "trngl4", the rotations have
             to alternate by 180 degrees. */
 
+         zrot = z[i].rotation;
+
          if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
-            zrot = (z[i].rotation ^ (i << 1));
-         else
-            zrot = z[i].rotation;
+            zrot ^= (i << 1);
+
+         zrot &= 3;
 
          if (rr < 0) rr = zrot;
          if (rr != zrot) goto lose;
@@ -3905,6 +3958,10 @@ which we believe is equivalent to the following.
    }
 
    /* Now deal with any setups that we may have deferred. */
+
+   if (dmdflag) {
+      if (kk == s1x4) { kk = sdmd ; rr ^= 1; }
+   }
 
    for (i=0; i<arity; i++) {
       if (     z[i].kind == s_dead_concentric ||
@@ -3949,9 +4006,10 @@ which we believe is equivalent to the following.
       }
       else if (z[i].kind == s2x4 && kk == s_qtag) {
          /* Turn the 2x4 into a qtag. */
-         if (z[i].people[1].id1 | z[i].people[2].id1 | z[i].people[5].id1 | z[i].people[6].id1) goto lose;
+         if (z[i].people[1].id1 | z[i].people[2].id1 |
+             z[i].people[5].id1 | z[i].people[6].id1) goto lose;
 
-         z[i].kind = kk;
+         z[i].kind = s_qtag;
          z[i].rotation++;
          (void) copy_rot(&z[i], 5, &z[i], 0, 033);
          (void) copy_rot(&z[i], 0, &z[i], 3, 033);
@@ -3959,6 +4017,16 @@ which we believe is equivalent to the following.
          (void) copy_rot(&z[i], 4, &z[i], 7, 033);
          clear_person(&z[i], 3);
          clear_person(&z[i], 7);
+         canonicalize_rotation(&z[i]);
+      }
+      else if (dmdflag && z[i].kind == s1x4) {
+         /* Turn the 1x4 into a diamond. */
+         if (z[i].people[0].id1 | z[i].people[2].id1) goto lose;
+
+         z[i].kind = sdmd;
+         z[i].rotation--;
+         (void) copy_rot(&z[i], 1, &z[i], 1, 011);
+         (void) copy_rot(&z[i], 3, &z[i], 3, 011);
          canonicalize_rotation(&z[i]);
       }
    }
@@ -3990,6 +4058,11 @@ which we believe is equivalent to the following.
 
       z[i].kind = kk;
 
+      if (kk == s_dead_concentric || kk == s_normal_concentric) {
+         z[i].inner.skind = z[deadconcindex].inner.skind;
+         z[i].inner.srotation = z[deadconcindex].inner.srotation;
+      }
+
       if (z[i].kind == s_trngl || z[i].kind == s_trngl4)
          z[i].rotation = (rr ^ (i << 1));
       else
@@ -4000,6 +4073,6 @@ which we believe is equivalent to the following.
 
    lose:
 
-   fail("This is a ridiculously inconsistent shape or orientation changer!!");
+   fail("This is an inconsistent shape or orientation changer!!");
    /* NOTREACHED */
 }

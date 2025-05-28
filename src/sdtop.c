@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -32,7 +34,8 @@ and the following external variables:
    exp_2x3_qtg_stuff
    exp_4x4_4x6_stuff_a
    exp_4x4_4x6_stuff_b
-   exp_3x4_4x5_stuff    <--- make this private !!!!
+   exp_4x4_4dm_stuff_a
+   exp_4x4_4dm_stuff_b
    exp_c1phan_4x4_stuff1
    exp_c1phan_4x4_stuff2
 */
@@ -73,22 +76,26 @@ Private expand_thing exp_dmd_2x1d_stuff    = {{5, 1, 2, 4},       4, sdmd,     s
 Private expand_thing exp_dmd_1x2d_stuff    = {{1, 2, 4, 5},       4, sdmd,     s_1x2dmd, 0};
 Private expand_thing exp_2x2_gal_stuff     = {{1, 3, 5, 7}, 4, s2x2, s_galaxy, 0};
 Private expand_thing exp_3x4_4dm_stuff     = {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s3x4, s4dmd, 0};
+Private expand_thing exp_2x4_4dm_stuff     = {{10, -1,-1, 1, 2, -1, -1, 9}, 8, s2x4, s4dmd, 1};
 Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
 Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_qtag, s4dmd, 0};
 Private expand_thing exp_ptp_4ptp_stuff    = {{14, 1, 15, 10, 6, 9, 7, 2}, 8, s_ptpd, s4ptpd, 0};
 Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
+Private expand_thing exp_1x3d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s1x3dmd, s_3mdmd, 0};
 Private expand_thing exp_1x2_3d_stuff      = {{11, 5}, 2, s1x2, s3dmd, 0};
-Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
-Private expand_thing exp_4x4_4dm_stuff_b   = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
+        expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, -1, 3, -1, -1, -1, 8, 9, 10, -1, 11, -1, -1, -1}, 16, nothing, s4dmd, 1};
+        expand_thing exp_4x4_4dm_stuff_b   = {{3, -1, -1, -1, 8, 9, 10, -1, 11, -1, -1, -1, 0, 1, 2, -1}, 16, nothing, s4dmd, 0};
 Private expand_thing exp_2x4_2x6_stuff     = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
 Private expand_thing exp_2x2_2x4_stuff     = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
 Private expand_thing exp_1x4_1x8_stuff     = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
 Private expand_thing exp_1x4_1x6_stuff     = {{1, 2, 4, 5}, 4, s1x4, s1x6, 0};
 Private expand_thing exp_1x2_1x4_stuff     = {{1, 3}, 2, s1x2, s1x4, 0};
+Private expand_thing exp_1x2_dmd_stuff     = {{3, 1}, 2, s1x2, sdmd, 1};
 Private expand_thing exp_1x4_bone_stuff    = {{6, 7, 2, 3}, 4, s1x4, s_bone, 0};
 Private expand_thing exp_1x2_1x8_stuff     = {{2, 6}, 2, s1x2, s1x8, 0};
 Private expand_thing exp_1x2_2x3_stuff     = {{4, 1}, 2, s1x2, s2x3, 1};
 Private expand_thing exp_2x3_3x4_stuff     = {{8, 11, 1, 2, 5, 7}, 6, s2x3, s3x4, 1};
+Private expand_thing exp_1x4_3x4_stuff     = {{10, 11, 4, 5}, 4, s1x4, s3x4, 0};
 Private expand_thing exp_2x3_d3x4_stuff    = {{1, 2, 3, 7, 8, 9}, 6, s2x3, s_d3x4, 0};
 Private expand_thing exp_spindle_d3x4_stuff= {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
 Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
@@ -98,6 +105,13 @@ Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, not
 Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
 Private expand_thing exp_3x4_3x6_stuff     = {{1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}, 12, s3x4, s3x6, 0};
 Private expand_thing exp_3x6_3x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 13, 14, 15, 16, 17, 18, 21, 22, 23}, 18, s3x6, s3x8, 0};
+
+
+
+Private expand_thing exp_2x10_2x12_stuff     = {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}, 20, s2x10, s2x12, 0};
+Private expand_thing exp_2x8_2x10_stuff     = {{1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 18}, 16, s2x8, s2x10, 0};
+
+
 Private expand_thing exp_1x8_3x8_stuff     = {{20, 21, 23, 22, 8, 9, 11, 10}, 8, s1x8, s3x8, 0};
 Private expand_thing exp_qtag_bigdmd_stuff = {{10, 1, 2, 3, 4, 7, 8, 9}, 8, s_qtag, sbigdmd, 1};
 Private expand_thing exp_hrgl_bighrgl_stuff = {{10, 1, 2, 9, 4, 7, 8, 3}, 8, s_hrglass, sbighrgl, 1};
@@ -116,7 +130,7 @@ Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 2
         expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, s4x4, s4x6, 0};
         expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, s4x4, s4x6, 1};
 Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, s2x4, s2x8, 0};
-        expand_thing exp_3x4_4x5_stuff     = {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17}, 12, s3x4, s4x5, 1};
+Private expand_thing exp_3x4_4x5_stuff     = {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17}, 12, s3x4, s4x5, 1};
 Private expand_thing exp_2x5_4x5_stuff     = {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15}, 10, s2x5, s4x5, 0};
 Private expand_thing exp_2x4_4x4_stuff1    = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
 Private expand_thing exp_2x4_4x4_stuff2    = {{6, 11, 15, 13, 14, 3, 7, 5}, 8, s2x4, s4x4, 1};
@@ -162,6 +176,52 @@ extern void update_id_bits(setup *ss)
    int i;
    uint32 livemask, j;
    id_bit_table *ptr;
+   unsigned short int *face_list = (unsigned short int *) 0;
+
+   static unsigned short int face_qtg[] = {
+      3, d_west, 7, d_east,
+      2, d_west, 3, d_east,
+      7, d_west, 6, d_east,
+      1, d_west, 0, d_east,
+      4, d_west, 5, d_east,
+      1, d_south, 3, d_north,
+      3, d_south, 4, d_north,
+      0, d_south, 7, d_north,
+      7, d_south, 5, d_north,
+      ~0};
+
+   static unsigned short int face_2x4[] = {
+      3, d_west, 2, d_east,
+      2, d_west, 1, d_east,
+      1, d_west, 0, d_east,
+      4, d_west, 5, d_east,
+      5, d_west, 6, d_east,
+      6, d_west, 7, d_east,
+      0, d_south, 7, d_north,
+      1, d_south, 6, d_north,
+      2, d_south, 5, d_north,
+      3, d_south, 4, d_north,
+      ~0};
+
+   static unsigned short int face_2x3[] = {
+      2, d_west, 1, d_east,
+      1, d_west, 0, d_east,
+      3, d_west, 4, d_east,
+      4, d_west, 5, d_east,
+      0, d_south, 5, d_north,
+      1, d_south, 4, d_north,
+      2, d_south, 3, d_north,
+      ~0};
+
+   static unsigned short int face_1x8[] = {
+      1, d_west, 0, d_east,
+      2, d_west, 3, d_east,
+      4, d_west, 5, d_east,
+      7, d_west, 6, d_east,
+      3, d_west, 1, d_east,
+      5, d_west, 7, d_east,
+      6, d_west, 2, d_east,
+      ~0};
 
    for (i=0,j=1,livemask=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++,j<<=1) {
       if (ss->people[i].id1) livemask |= j;
@@ -169,6 +229,39 @@ extern void update_id_bits(setup *ss)
    }
 
    ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+
+   switch (ss->kind) {
+   case s_qtag:
+      face_list = face_qtg; break;
+   case s2x4:
+      face_list = face_2x4; break;
+   case s1x8:
+      face_list = face_1x8; break;
+   case s2x3:
+      face_list = face_2x3; break;
+   }
+
+   if (face_list) {
+      for ( ; *face_list != ((unsigned short) ~0) ; ) {
+         short idx1 = *face_list++;
+
+         if ((ss->people[idx1].id1 & d_mask) == *face_list++) {
+            short idx2 = *face_list++;
+            if ((ss->people[idx2].id1 & d_mask) == *face_list++) {
+               ss->people[idx1].id2 |= ID2_FACING;
+               ss->people[idx2].id2 |= ID2_FACING;
+            }
+         }
+         else
+            face_list += 2;
+      }
+
+      for (i=0 ; i<=setup_attrs[ss->kind].setup_limits ; i++) {
+         if (ss->people[i].id1 && !(ss->people[i].id2 & ID2_FACING))
+            ss->people[i].id2 |= ID2_NOTFACING;
+      }
+   }
+
 
    /* Some setups are only recognized for ID bits with certain patterns of population.
        The bit tables make those assumptions, so we have to use the bit tables
@@ -736,6 +829,11 @@ extern void do_matrix_expansion(
                      eptr = &exp_3x4_4dm_stuff; goto expand_me;
                   }
                   break;
+               case s2x4:
+                  if (!(ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1)) {
+                     eptr = &exp_2x4_4dm_stuff; goto expand_me;
+                  }
+                  break;
                case s4x4:
                   for (i=0, j=1, livemask=0; i<16; i++, j<<=1) {
                      if (ss->people[i].id1) livemask |= j;
@@ -754,6 +852,8 @@ extern void do_matrix_expansion(
             switch (ss->kind) {                /* Need to expand to real triple diamonds. */
                case s3x1dmd:
                   eptr = &exp_3x1d_3d_stuff; goto expand_me;
+               case s1x3dmd:
+                  eptr = &exp_1x3d_3d_stuff; goto expand_me;
                case s1x2:
                   eptr = &exp_1x2_3d_stuff; goto expand_me;
             }
@@ -837,6 +937,12 @@ extern void do_matrix_expansion(
             switch (ss->kind) {
                case s3x1dmd:
                   eptr = &exp_3x1d_3d_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_1X10:
+            switch (ss->kind) {
+               case s1x8:
+                  eptr = &exp_1x8_1x10_stuff; goto expand_me;
             }
             break;
          case CONCPROP__NEEDK_1X12:
@@ -987,22 +1093,22 @@ extern void normalize_setup(setup *ss, normalize_action action)
          compress_setup(&exp_dhrgl_bigdhrgl_stuff, ss);
    }
 
-   if (ss->kind == s1x16) {         /* This might leave a 1x14, which might be reduced further. */
+   if (ss->kind == s1x16) {    /* This might leave a 1x14, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[8].id1))
          compress_setup(&exp_1x14_1x16_stuff, ss);
    }
 
-   if (ss->kind == s1x14) {         /* This might leave a 1x12, which might be reduced further. */
+   if (ss->kind == s1x14) {    /* This might leave a 1x12, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[7].id1))
          compress_setup(&exp_1x12_1x14_stuff, ss);
    }
 
-   if (ss->kind == s1x12) {         /* This might leave a 1x10, which might be reduced further. */
+   if (ss->kind == s1x12) {    /* This might leave a 1x10, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[6].id1))
          compress_setup(&exp_1x10_1x12_stuff, ss);
    }
 
-   if (ss->kind == s1x10) {         /* This might leave a 1x8, which might be reduced further. */
+   if (ss->kind == s1x10) {    /* This might leave a 1x8, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[5].id1))
          compress_setup(&exp_1x8_1x10_stuff, ss);
    }
@@ -1015,6 +1121,20 @@ extern void normalize_setup(setup *ss, normalize_action action)
       else if (!(ss->people[6].id1 | ss->people[7].id1 | ss->people[18].id1 | ss->people[19].id1)) {
          compress_setup(&exp_4x6_blob_stuffb, ss);
       }
+   }
+
+   if (ss->kind == s2x12) {
+      /* This might leave a 2x10, which might be reduced further. */
+     if (!(ss->people[0].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[23].id1)) {
+         compress_setup(&exp_2x10_2x12_stuff, ss);
+     }
+   }
+
+   if (ss->kind == s2x10) {
+      /* This might leave a 2x8, which might be reduced further. */
+     if (!(ss->people[0].id1 | ss->people[9].id1 | ss->people[10].id1 | ss->people[19].id1)) {
+         compress_setup(&exp_2x8_2x10_stuff, ss);
+     }
    }
 
    if (ss->kind == s4x6) {
@@ -1057,6 +1177,10 @@ extern void normalize_setup(setup *ss, normalize_action action)
       if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1))
          compress_setup(&exp_3x1d_3d_stuff, ss);
    }
+   else if (ss->kind == s_3mdmd) {
+      if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1))
+         compress_setup(&exp_1x3d_3d_stuff, ss);
+   }
    else if (ss->kind == s4dmd) {
       if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[5].id1 |
                ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[13].id1))
@@ -1095,28 +1219,32 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
    }
    else if (ss->kind == s3x8) {
-      if (!(   ss->people[0].id1  | ss->people[1].id1  | ss->people[6].id1  | ss->people[7].id1 |
-               ss->people[20].id1 | ss->people[21].id1 | ss->people[9].id1  | ss->people[8].id1 |
-               ss->people[19].id1 | ss->people[18].id1 | ss->people[13].id1 | ss->people[12].id1)) {
+      if (!(ss->people[0].id1  | ss->people[1].id1  | ss->people[6].id1  |
+            ss->people[7].id1 |  ss->people[20].id1 | ss->people[21].id1 |
+            ss->people[9].id1  | ss->people[8].id1  | ss->people[19].id1 |
+            ss->people[18].id1 | ss->people[13].id1 | ss->people[12].id1)) {
          compress_setup(&exp_3x4_3x8_stuff, ss);
       }
-      else if (!(   ss->people[0].id1  | ss->people[7].id1 |
-                    ss->people[20].id1 | ss->people[8].id1 |
-                    ss->people[19].id1 | ss->people[12].id1)) {
+      else if (!(ss->people[0].id1 | ss->people[7].id1  | ss->people[20].id1 |
+                 ss->people[8].id1 | ss->people[19].id1 | ss->people[12].id1)) {
          compress_setup(&exp_3x6_3x8_stuff, ss);
       }
-      else if (!(   ss->people[0].id1  | ss->people[1].id1  | ss->people[2].id1  | ss->people[3].id1 |
-                    ss->people[4].id1  | ss->people[4].id1  | ss->people[6].id1  | ss->people[7].id1 |
-                    ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1 |
-                    ss->people[16].id1 | ss->people[17].id1 | ss->people[18].id1 | ss->people[19].id1)) {
+      else if (!(ss->people[0].id1  | ss->people[1].id1  | ss->people[2].id1  |
+                 ss->people[3].id1  | ss->people[4].id1  | ss->people[4].id1  |
+                 ss->people[6].id1  | ss->people[7].id1  | ss->people[12].id1 |
+                 ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1 |
+                 ss->people[16].id1 | ss->people[17].id1 | ss->people[18].id1 |
+                 ss->people[19].id1)) {
          compress_setup(&exp_1x8_3x8_stuff, ss);
       }
    }
 
-   if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[11].id1))
+   if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[5].id1 |
+                             ss->people[6].id1 | ss->people[11].id1))
       compress_setup(&exp_2x4_2x6_stuff, ss);
 
-   if (ss->kind == s_qtag && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+   if (ss->kind == s_qtag && (!(ss->people[0].id1 | ss->people[1].id1 |
+                                ss->people[4].id1 | ss->people[5].id1))) {
       if (action >= normalize_to_2 && !(ss->people[2].id1 | ss->people[6].id1)) {
          ss->kind = s1x2;
          (void) copy_person(ss, 0, ss, 7);
@@ -1210,6 +1338,10 @@ extern void normalize_setup(setup *ss, normalize_action action)
       else if ((ss->kind == s_2x1dmd) && (!(ss->people[0].id1 | ss->people[3].id1))) {
          compress_setup(&exp_dmd_2x1d_stuff, ss);
       }
+      else if ((ss->kind == s3x4) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 |
+                                        ss->people[6].id1 | ss->people[7].id1 | ss->people[8].id1 | ss->people[9].id1))) {
+         compress_setup(&exp_1x4_3x4_stuff, ss);
+      }
    }
 
    if (action >= normalize_to_2) {
@@ -1218,6 +1350,9 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
       else if (ss->kind == s1x4 && !(ss->people[0].id1 | ss->people[2].id1)) {
          compress_setup(&exp_1x2_1x4_stuff, ss);
+      }
+      else if (ss->kind == sdmd && !(ss->people[0].id1 | ss->people[2].id1)) {
+         compress_setup(&exp_1x2_dmd_stuff, ss);
       }
    }
 

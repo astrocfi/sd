@@ -1,79 +1,782 @@
-		   RELEASE NOTES FOR SD VERSION 31.72
-		 Database version = 31.72 format = 79.
-                X11 UI version 1.17, SDTTY UI version 1.9.
+\input whatever @c %**start of header -*-texinfo-*-
+@setfilename relnotes.info
+@settitle Sd Release Notes
+@c Time-stamp: <1998-05-28 10:20:00 wba>
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@finalout
+@end iftex
+@c %**end of header
+
+@set title1 RELEASE NOTES FOR SD VERSION 31.95
+@set title2 Database version = 31.95 format = 125
+@set title3 X11 UI version 1.17, SDTTY UI version 1.9
+
+@node Top, Intro, (dir), (dir)
+
+@menu
+This file documents the user-visible changes in the current and recent
+versions of the Sd program.
+
+* Intro::               Information about the current version
+
+Changes as of the following versions:
+* 31.95::
+* 31.94::
+* 31.93::
+* 31.92::
+* 31.91::
+* 31.90::
+* 31.89::
+* 31.88::
+* 31.87::
+* 31.85::
+* 31.84::
+* 31.83::
+* 31.82::
+* 31.81::
+* 31.80::
+* 31.78::
+* 31.77::
+* 31.76::
+* 31.75::
+* 31.73::
+* 31.72::
+
+* Older::               Changes for older versions, 31.67 back to 30.74
+
+The file @file{oldnotes} has notes relating to still older versions.
+@end menu
+
+@node Intro, 31.95, Top, (dir)
+
+@center @titlefont{@value{title1}}@*
+@center @value{title2}@*
+@center @value{title3}@*
+
+@w{ }@c the @* above makes the @sp below fail without this line  1998-05
+@sp 2
+@noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
+@sp 3
+@menu
+* 31.95::               Changes in the current version
+@end menu
+
+@c ************
+@node 31.95, 31.94, Intro, Top
+@unnumberedsec Changes as of version 31.95
+
+The program can handle mixed-orientation triple formations.  For
+example, from a tidal wave, you can have the centers @samp{lockit},
+and then call @samp{triple waves switch to a diamond}.
+
+New concept: @samp{snag the <anyone>}.
+
+The code for @samp{snag} and @samp{<anyone> work <concept>} was
+overhauled.  It should be much better at doing really obscure
+cases now.  The special call @samp{snag circulate} was removed.
+The @samp{snag} concept simply does the right thing.
+
+@c ************
+@node 31.94, 31.93, 31.95, Top
+@unnumberedsec Changes as of version 31.94
+
+Many of the usual sorts of improvements were put in, in
+response to user requests.  It is not possible to list
+all the ramifications of them, except to say that the program
+is less likely to refuse to do obscure things.  It has a
+better understanding of call fractionalization and of where
+people are and how to put them back together.
+
+The @samp{initially invert counteract} bug was fixed.
+The @samp{stretch twist the line} bug was fixed.
+The @samp{stretch dixie diamond} bug was fixed.
+The @samp{own the boys (reach out ; concentric lockit) by touch and go 1/4 by [ah so]} bug was fixed.
+
+A rather obscure person-disappearance bug was fixed.  An incredibly
+obscure (it required @samp{sextuple columns working right} to provoke
+it) memory corruption bug was fixed.
+
+The definition of @samp{regroup} was changed in accordance with the
+recent Callerlab definition change.  The ends are now permitted to be
+looking in.
+
+New call: @samp{change the apex <M/4> x <N/4>}.  New concept: @samp{echo}.
+
+When one does @samp{split phantom columns zip code 1-1/2} from
+facing lines, so that the @samp{nothing} in the center is done
+by phantoms, they sort of stay in a 2x2 box.  A warning is printed,
+and the final setup is a 2x6.
+
+New calls: 6 or 8 person @samp{here comes the judge} or
+@samp{sock it to me}.  You may specify these with with @code{12 matrix}/@code{16 matrix},
+or with an explicit matrix size designator (e.g. @code{2x6 matrix}), or
+with a concept that explicitly designates long lines (e.g. @code{twin
+phantom lines of 6}.)
+
+New selector:  @code{those facing}.  Also, the @code{funny} concept, for
+certain calls such as @samp{slide thru}, simply means @code{those facing}.
+So you can do @samp{funny slide thru} large numbers of times.  You must
+enter this as, for example, @samp{9 times funny slide thru}.
+
+@c ************
+@node 31.93, 31.92, 31.94, Top
+@unnumberedsec Changes as of version 31.93
+
+The parser is about 15 times faster on very difficult phrases, such as
+@code{[[right and left thru] and roll] coordinate}.
+
+Because of an ambiguity, it was necessary to remove the ``space invader''
+versions of @code{right anchor <N/4>} and @code{left anchor <N/4>}, when
+no person designator is given.  If you want the ``space invader'' versions
+of these calls, you must use a person designator, even if that is @code{everyone}.
+Without a person designator, these are ``breathing'' calls that are suitable
+for use in distorted setups, as in @code{trapezoid left anchor 3/4}.
+
+@c ************
+@node 31.92, 31.91, 31.93, Top
+@unnumberedsec Changes as of version 31.92
+
+The unpleasantness of the parser in 31.91 has been fixed---you can type
+things like @code{ping pong circulate} directly.
+
+Apostrophe and comma are optional.
+
+You can get a u-turn back by typing u <space> <enter>.
+
+The resolver is much more thorough in searching for single call
+resolves that give RLG, LA, or promenade endings.
+
+The mechanism by which the resolver avoids presenting the same resolve
+twice sometimes mistakenly thought that it had already presented a
+resolve that it hadn't.  As a consequence, the program occasionally
+missed a perfectly good resolve.  This has been fixed.
+
+You can type the call @code{eight by} as either @code{eight by} or @code{8 by}.
+
+You can now type in star modifications directly, as in
+@code{chain reaction, turn the star 1/2}
+or
+@code{chain reaction, don't turn the star}
+(You may also use the @code{simple modifications} or @code{allow modifications}
+stuff, but you should hardly ever need to use those any more.)
+
+For the call tag the star, you *must* type it directly.  Do not type
+@code{allow modifications} and then @code{tag the star the yellow brick road},
+expecting to be queried for modified star turns.
+
+In text that Sd displays or writes out to the transcript file,
+the concepts @code{twice}, @code{N times}, and @code{1-M/N} will
+be placed after the call.  @emph{You still enter concepts, as before,
+in front of the call.}
+
+The spelling of @code{wheel fan & cross thru} has been changed to @code{wheel fan and cross thru}.
+We apologize for jerking people around, but this makes it consistent with all other
+``and'' calls.  There are now no calls with an ampersand in their names.
 
 
-****** Changes as of version 31.73 ******
+@c ************
+@node 31.91, 31.90, 31.92, Top
+@unnumberedsec Changes as of version 31.91
 
-The concept formerly called "diagonal" has been changed
-to "diagonal box" in accordance with current usage.
+This is an interim release, fixing a few embarrassing bugs.  Major
+functionality improvements that are being worked on are not yet in place.
+They will be coming out soon.
 
-****** Changes as of version 31.72 ******
+The function key control-F6 really, really, really gives the @samp{centers}
+concept.
+
+The definitions of @samp{scoot and weave} and @samp{turn and weave} were
+fixed to handle the turning motions correctly.  We thank Kerry Hodnett
+for pointing out this problem.
+
+The problem with @samp{outer 6 invert the column 1/3} was fixed.
+
+For most calls with star turns, you can type a modification to the star turn amount
+directly.  Say @samp{motivate, don't turn the star} or @samp{motivate, turn the star 3/4}.
+This doesn't yet work with @samp{tag the star}.
+Also, if you want more esoteric things, like @samp{turn the star 3 but interrupt
+after 2 with a bias motivate}, you still need to use the @code{allow modifications}
+mechanism.
+
+There is a new section of the manual, ``Interruptions and Interlace'',
+describing some esoteric aspects of calls like @samp{exchange the diamonds}.
+
+It is legal to omit the typing of apostrophe or comma.  This means that
+you can type @code{chain reaction turn the star 1/2} or @code{ends go as you
+are turntable} or @code{lockers choice} or "tag the star ers delight".
+
+It is also legal to type a space where a hyphen would normally be
+required.  This means that you can type "swing o late" or "tandem based
+triangles".  Use this cautiously!!  Because of word completion, Sd may
+complete more of the call than you were expecting when you type a space.
+
+[The above problem was fixed in version 31.92.]
+
+The calls @samp{triple scoot}, @samp{partner tag}, and @samp{remake the thar}
+were moved from the Plus to the A1 lists, in accordance with the recent
+Callerlab resolution.
+
+
+@c ************
+@node 31.90, 31.89, 31.91, Top
+@unnumberedsec Changes as of version 31.90
+
+An enormous number of improvements were made, far too many to
+list here.  Many are minor, many are significant.  Most of these
+were made possible by analysis of C4 material generously provided
+by Lynette Bellini.
+
+New call:
+@example
+@group
+cast a shadow, very centers cast 3/4
+@end group
+@end example
+
+New concepts:
+@example
+@group
+REPLACE THE LAST PART
+INTERRUPT BEFORE THE LAST PART
+Y'S ARE SOLID
+Y-SOME
+Y's ARE SOLID N/4 Y-SOME
+Y-SOME N/4 SOLID
+@end group
+@end example
+
+In the concepts BOXES/DIAMONDS/TRIANGLES WORK solid / N-some /
+fractional solid / fractional N-some, the word @i{WORK} has been
+changed to @i{ARE}.  We realize that callers often use the word
+"work" in things like "triangles work solid 1/4 threesome",
+but this change makes the program's naming more consistent,
+and avoids any possibility of ambiguity.  There is a meta-concept
+<ANYONE> WORK <concept>, that is essentially equivalent to
+"OWN the <ANYONE> for <concept> <call> BY <call>.  We want to give
+the user complete and unambiguous control over which concept
+is used.
+
+The calls that used the phrase "(by parts)" in their name have had
+that phrase changed to just "(parts)".  Those calls are: recycle,
+cross cycle, scoot and weave, and couple up.
+
+The program's interpretation of the splitting of a 2x4 for the concepts
+CENTRAL or CRAZY has been made more regular.  The rule is that, if
+it is at all possible to divide the 2x4 into 2x2's, the program, and
+presumably the dancers, do so, even if such a division does not lead to
+the most common application of the call.  The 2x4 is split into 1x4's
+only if the call is impossible in 2x2's.  So, for example, @samp{1/2 crazy
+switch to a diamond} from parallel waves initially splits the setup into
+waves, as it has always done.  The difference is in calls like @samp{tickle}
+and the centers part of @samp{counter}.  On a @samp{1/2 crazy tickle}
+from parallel waves, the first action is done in each box, resulting in
+a tidal wave.  then the centers do it again.  On a @samp{central counter}
+from parallel waves, each box does a @samp{cast off 3/4} followed by
+a @samp{lockit}.  On @samp{central interlocked counter} or @samp{central
+cross counter}, the initial division is into each wave, since the call
+is impossible otherwise.
+
+The definition of crossfire has been changed so that the original ends
+can roll.  The definition of this call does not involve an extend.
+It involves the original centers walking straight ahead to meet the
+original ends.  Since the latter did not move forward, they do not lose
+their roll status from the cross fold.
+
+The program can directly parse calls that take two subcalls in brackets,
+as in @samp{slant [swing thru] and [turn and deal]} or @samp{[slip] the
+windmill, outsides [ramble]}.
+
+@samp{Dixie grand} is now a call, as well as being a recognized getout.
+After doing this call, the dancers will be in an alamo ring.  You may
+need to give the pseudo-call @samp{adjust alamo to other pairing} before
+doing the next call.
+
+In @code{Sdtty} for PC's, function key control-F6 is a shortcut for
+the @samp{centers} concept.
+
+The call @samp{<anything> and the <anyone> roll} re-evaluates people's
+positions before deciding who should roll.  So, for example, if you say
+@samp{[swing thru] and the centers roll}, it will be the @emph{new} centers
+that will roll.  You may need to make that clear to the dancers by
+saying something like @samp{the new centers roll}
+
+The program now understands the number zero.  It can do things like
+@samp{take 0}, @samp{loop and tag 0/4}, @samp{0 steps at a time},
+and @samp{track 0}.
+
+The word order @samp{reverse N/4 crazy} is no longer accepted.  It appears
+that some people believe that this word order is just a short notation
+for ``reverse order N/4 crazy.''  If you want @samp{reverse order N/4 crazy},
+say so.  If you want @samp{N/4 reverse crazy}, say so.
+
+
+@c ************
+@node 31.89, 31.88, 31.90, Top
+@unnumberedsec Changes as of version 31.89
+
+The program can do singing call progressions.  There are two new
+commands, available only at the start of a sequence (that is, when
+you could say @samp{heads start}):
+
+@example
+@group
+toggle singing call
+toggle reverse singing call
+@end group
+@end example
+
+The "reverse" singing call option chooses a reverse ("right hand lady")
+progression.
+
+
+It has a much more sophisticated way of checking for
+getouts, and can see many more of them than previously.
+
+
+It has an improved understanding of how 12 matrix, 16 matrix, 3x3,
+and 4x4 interact.
+
+
+Plus several dozen minor improvements in the database, the program's
+awareness of where people are, and so on.
+
+
+@c ************
+@node 31.88, 31.87, 31.89, Top
+@unnumberedsec Changes as of version 31.88
+
+The changes described below (for version 31.87) for
+@samp{percolate (centers and ends)}
+and @samp{cover up (centers and ends)} were added for
+@samp{perk up (centers and ends)} as well.
+
+An error in @samp{sidetrack} from a 1x8 column was fixed.
+
+
+@c ************
+@node 31.87, 31.85, 31.88, Top
+@unnumberedsec Changes as of version 31.87
+
+When the @samp{<anyone> work} concept is used, as in @samp{boys work
+tandem swing thru}, the program will put in the word @samp{all}, along
+with a comma.  It will come out like @samp{boys work tandem, all swing thru}.
+You do not type in the comma or the word @samp{all}.
+
+Some of the obscure nuances of @samp{countershake}, like
+@samp{3x3 countershake} from a 2x6 matrix, have been dealt with
+by creating a call @samp{countershake (matrix)}.  The default
+call (without the word @samp{matrix}) is completely fractionalizable.
+See the manual for details.
+
+@samp{Cover up} and @samp{percolate} can be used with the @samp{central}
+concept from some formations.  The calls @samp{cover up (centers and ends)} and
+@samp{percolate (centers and ends)} have been created for this purpose.
+See the manual for details.
+
+The call "scoot and counter", if done from a left-handed 1/4 tag, will
+have the outsides use a right hand at the end.  This appears to be
+somewhat more in keeping with common usage than using a left hand,
+though the situation is not really clear.  The Callerlab definition
+still prohibits this, and Sd did prior to this release.  You were
+always permitted to say "left scoot and counter", and this is still
+permitted.
+
+The "anchor the <anyone>" concept has been improved to handle 2-person calls
+in a more general way.  It should now handle all 2 and 4 person calls.
+
+
+
+@c ************
+@node 31.85, 31.84, 31.87, Top
+@unnumberedsec Changes as of version 31.85
+
+There is a rudimentary understanding of the "anchor the <anyone>" concept.
+
+The handling of fractional, interruptible, crazy, random,
+initially, and finally has been completely revamped.  The program
+has a much simpler and more logical internal structure now.  It
+should do a much better job of handling things like
+"random finish 2/3 reverse order hot foot spin".
+
+
+The program has a much better understanding of the individual "O" circulates
+that the outsides do on a "hocus pocus".  However, you must use the special
+call "hocus pocus (fractions)" to get this.  See the discussion in the manual.
+
+
+The definition of "crossfire" has been changed to bring it up to date
+with the nuances of this call.
+
+
+It was discovered that the program had been cheating on "change the web",
+turning the star only one position instead of the five positions that
+the definition mandates.  This shocking and scandalous situation has
+been rectified.
+
+
+@c ************
+@node 31.84, 31.83, 31.85, Top
+@unnumberedsec Changes as of version 31.84
+
+The mechanism for deciding when to step to a wave or rear back
+from one has been improved, hopefully making it better able
+to reflect the way real dancers think about this issue.
+
+The level "c4x" has been added, and the interpretation of level "c3x"
+has been changed.  These levels are for calls that might not be considered
+really legitimate, but that are nevertheless used.  In the case of
+c3x, these calls are not on the official list.  In the case
+of c4x, these calls don't appear to be commonly used, according to
+informal lists.
+
+It is generally NOT NECESSARY to run the program at either of these
+levels.  When you run at c3, c3x calls may be used.
+When you run at c4, c4x calls may be used.  Whenever such a call is
+used, a warning is printed.  (If you explicitly run the program at
+c3x or c4x, you may use the calls without getting a warning.)
+
+Examples of c3x calls are:
+@example
+@group
+<ATC> nuclear reaction
+change lanes
+<anyone> run the wheel
+snake
+trixie
+settle back
+hang loose
+@end group
+@end example
+
+Examples of c4x calls are:
+@example
+@group
+disperse
+mayday
+loop the loop
+trap it
+@end group
+@end example
+
+The above lists are intended to be illustrative, not exhaustive.
+
+
+@c ************
+@node 31.83, 31.82, 31.84, Top
+@unnumberedsec Changes as of version 31.83
+
+A number of questionable or controversial calls now print warnings
+when they are used.  For example, @samp{explode the line} from a
+2-faced line is marked as a violation of the definition of the call.
+
+New concepts:
+
+@example
+@group
+as couples in a 1/4 tag
+as couples in a 3/4 tag
+as couples in a 1/4 line
+as couples in a 3/4 line
+@end group
+@end example
+
+A number of minor bugs and inconveniences were fixed.
+
+
+@c ************
+@node 31.82, 31.81, 31.83, Top
+@unnumberedsec Changes as of version 31.82
+
+There is added detail in the manual describing subtleties of @samp{<anyone> start}
+and @samp{initially <anyone>}.  Please see the section ``Anyone Start'', at
+approximately page 90.
+
+
+A number of minor improvements were made in various calls, such as:
+@example
+@group
+   Load the Boat (can be done from inverted lines)
+   Rip the Line (allow T-boned centers)
+   [Cross] Pair the Line (allow T-boned centers)
+   Explode and Reverse Explode (follow Callerlab definitions better)
+@end group
+@end example
+
+
+The behavior of the "cross concentric" concept has been modified slightly
+to bring it into conformance with modern usage.  When a cross concentric
+call takes a 1x4 to a 2x2 (e.g. recycle), the original center 1x4 will elongate
+their final 2x2 on the outside perpendicular to *THEIR OWN* original 1x4 axis,
+not the elongation of the entire setup.  The difference arises when the setup
+is a wave between two miniwaves (e.g. centers lockit from a tidal wave).
+A cross concentric recycle will have the original centers elongate perpendicular
+to their original center wave.  The resulting setup will be a "split square thru"
+type of setup.  See the excellent article on this topic in the April 1996 issue
+of the Zip Coder magazine.
+
+Some people do not agree with this.  In fact, it is contrary to an example
+diagram in the Callerlab C2 definitions, though the text of those definitions
+is not clear as to whether elongation is being measured relative to the whole
+setup or just the centers or ends.
+
+When this different behavior occurs, the program will print a warning:
+
+@example
+@group
+   "New ends should opt for setup perpendicular to their original (center)
+   line.  Beware:  This may be controversial."
+@end group
+@end example
+
+Proceed with caution in this area.  If you do not agree with this, do not use it.
+If you require the old behavior, enter a "stable concentric quarter right" after
+the cross concentric call to move the outsides to the other position.
+
+@c ************
+@node 31.81, 31.80, 31.82, Top
+@unnumberedsec Changes as of version 31.81
+
+IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
+
+The word "<concept>" has been removed from the names of the two concepts:
+@example
+@group
+   do the <Nth> part                @r{and}
+   <anyone> work
+@end group
+@end example
+You just type them that way, as in:
+@example
+@group
+   centers work tandem acey deucey     @r{or}
+   do the 2nd part tandem remake
+@end group
+@end example
+They will be printed in the transcript the same as before:
+@example
+@group
+   centers work tandem, acey deucey    @r{or}
+   do the 2nd part tandem, remake
+@end group
+@end example
+The difference is that you NEVER type the word "<concept>".
+
+
+New designators:
+@example
+   lead ends
+   lead centers
+   trailing ends
+   trailing centers
+@end example
+These can be used, for example, to designate people for calls like "ripple".
+
+The program is much better at handling various types of perpendicular 1x2
+setups of the sort that arise in fractional exchange the diamonds or
+fractional ripples.  For example, it can do "<so-and-so> ripple 2-1/2"
+from a parallelogram.
+
+@c ************
+@node 31.80, 31.78, 31.81, Top
+@unnumberedsec Changes as of version 31.80
+
+The handling of Quarter the Deucey, Spin Chain the Star, and variants thereof
+has been changed.  After the first part, the end looking out has only one
+remaining part, which is a circulate to the other end of the wave.  This
+person formerly did two parts -- a half circulate as if in a Relay the Top,
+and then the other half of the circulate.  This makes a difference if
+"Finally Stable" is used.  The correct ending position for "Finally Stable
+Quarter the Deucey" has both ends facing out, as if in lines.  We thank
+Dave Hodson and Leon Eskenazi for pointing out this problem.
+
+
+@c ************
+@node 31.78, 31.77, 31.80, Top
+@unnumberedsec Changes as of version 31.78
+
+Various problems in the parser changes of version 31.77 were fixed.
+
+The bug arising from the line "sequence <filename>" in the "options" section
+of the initialization file was fixed.
+
+A number of improvements have been made in "ladies chain" types
+of calls.  All 4 ladies chain N/4 (from a squared set) has been added,
+along with head/side ladies chain to the right and head/side ladies chain 3/4.
+See the section ``Up to the Middle'' in the manual.
+
+The call "<ANYONE> cloverleaf while the others <ANYTHING>" has been added, and
+is at Mainstream.  It attempts to capture some of the common uses of this figure.
+It is in many cases identical to the A1 call "clover and <ANYTHING>".
+
+The calls "and 1/4 more" and "and 1/2 more" were moved to Mainstream to capture
+such things as the "courtesy turn full around" usage.
+
+
+@c ************
+@node 31.77, 31.76, 31.78, Top
+@unnumberedsec Changes as of version 31.77
+
+There is a *MAJOR* improvement in the parser.  (That's the part of the
+program that analyzes the line that you type and figures out the logical
+structure of what you are trying to say.)  All the calls that have "<ANYTHING>"
+in them, like "clover and <ANYTHING>", the ones that print out with brackets
+around the "<ANYTHING>" calls, can now be typed in directly.  You just type
+@samp{clover and [swap around]} or @samp{[follow your neighbor] and spread} or
+@samp{catch [2/3 recycle] 3} or @samp{[shakedown] and roll} or
+@samp{clover and [3/4 stable left catch [[reflected flip your neighbor] and spread] 3]}
+or whatever you have in mind.  (Good luck calling that last one!)
+
+THE BRACKETS ARE NECESSARY!!!  Without them, it would be impossible
+to distinguish between
+@example
+         clover and [[swap around] and roll]
+@r{and}
+         [clover and [swap around]] and roll
+@end example
+
+The calls like "trade motivate" (a modified version of the circulate
+for calls that start with a circulate) have had their name changed in the
+menus.  They are now "<ANYCIRC> motivate".  There are also calls
+"<ANYTHING> motivate" (along with their more mundane friends like
+"clover and <ANYTHING>" and "<ANYTHING> and spread".  The former calls
+are entered, as before, without brackets:  Just type @samp{in roll perk up}
+or whatever.  The latter are entered with brackets.  Type @samp{[2/3 recycle]
+motivate} or @samp{clover and [swap around]} or whatever.  Because both types
+of calls can be typed directly, there is hardly ever any need to type words
+like "<ANYTHING>" or "<ANYCIRC>".  However, we thought you'd like to know
+that we have changed the names to avoid any ambiguity.
+
+@c ************
+@node 31.76, 31.75, 31.77, Top
+@unnumberedsec Changes as of version 31.76
+
+The "straight" and "twisted" concepts are implemented.  Of course,
+"straight" things have existed on a case-by-case basis for some time,
+but now you can say, for example, "straight yoyo crossfire" instead of
+"yoyo straight fire" if you wish.
+
+@c ************
+@node 31.75, 31.73, 31.76, Top
+@unnumberedsec Changes as of version 31.75
+
+The program has a significantly improved notion of how to do
+the call @samp{squeeze}.
+
+@c ************
+@node 31.73, 31.72, 31.75, Top
+@unnumberedsec Changes as of version 31.73
+
+The program's ability to handle calls in alamo rings is somewhat
+improved.  See the discussion of the call @code{adjust alamo to other pairing}
+under ``Call Notes'' in the manual.
+
+The concept formerly called @samp{diagonal} has been changed
+to @samp{diagonal box} in accordance with current usage.
+
+The call @samp{... and spread} is obsolete.  Just use @samp{spread},
+for both the @i{follow your neighbor} type and the @i{heads star thru}
+type.  There are also calls @samp{<anything> and spread} and
+@samp{<anything> and the <anyone> spread}.  Use the latter to have specified
+adjacent people spread, after, for example, a @i{motivate}.
+
+@c ************
+@node 31.72, Older, 31.73, Top
+@unnumberedsec Changes as of version 31.72
+
+*********************************************************
+
+IMPORTANT NOTICE   IMPORTANT NOTICE   IMPORTANT NOTICE
+
+Version 31.72 behaves differently from previous versions.  If an error
+occurs on a call/concept combination (for example, you type @code{triple boxes
+switch the wave}), the concept and call will both be discarded.  Previously,
+the concept (@code{triple boxes}) remained in place.  You would have had to type
+@code{undo} if you wanted to get rid of the concept.
+
+The old behavior was misguided and horrible.  If you are accustomed to
+typing @code{undo} after an error involving a concept, you may find the
+change disconcerting, since @code{undo} will now delete the entire previous
+line.  You should either get accustomed to the new behavior as soon as
+possible, or follow the directions below for making the program use
+the old behavior.  This involves either typing the command
+@code{toggle retain after error} when the program starts, or putting
+the line @code{retain_after_error} in the @code{[Options]}
+section of your @file{sd.ini} file.
+
+*********************************************************
 
 The operation of ignoring blanks (previously set with the
-"ignoreblanks" line in the "sd.ini" file or in the command line)
-is now controlled with a "toggle" command.  The command is
+@code{ignoreblanks} line in the @file{sd.ini} file or in the command line)
+is now controlled with a @code{toggle} command.  The command is
 
-    toggle ignoreblanks
+@example
+toggle ignoreblanks
+@end example
 
 It is normally off.  It can still be turned on automatically
-at program startup, as before, through the "sd.ini" file or the
+at program startup, as before, through the @file{sd.ini} file or the
 command line.  See the reference manual for further details.
 
-
 The operation of discarding or retaining entered concepts after
-an error occurs (previously set with the "discard_after_error"
-line in the "sd.ini" file or in the command line) is now
-controlled with a "toggle" command.  The command is
+an error occurs (previously set with the @code{discard_after_error}
+line in the @file{sd.ini} file or in the command line) is now
+controlled with a @code{toggle} command.  The command is
 
-    toggle retain after error
+@example
+toggle retain after error
+@end example
 
-The name of this has been changed from "discard" to "retain".
+The name of this has been changed from @code{discard} to @code{retain}.
 It is still normally off, but that means that the program normally
 discards, rather than retaining.  Hence, the default behavior has
 changed.  In the absence of any special action, the program will
 DISCARD entered concepts.  Previously, it retained them.  To get the
 old behavior, that is, to retain entered concepts, you must use the
-"toggle retain after error" command.  It can also be turned on
-automatically at program startup, through the "sd.ini" file or the
-command line.  The line in the "sd.ini" file to do this is
-"retain_after_error".  The command line switch is "-retain_after_error".
-The old command "discard_after_error" are maintained for compatibility,
+@code{toggle retain after error} command.  It can also be turned on
+automatically at program startup, through the @file{sd.ini} file or the
+command line.  The line in the @code{[options]} section of
+@file{sd.ini} file to do this is
+@code{retain_after_error}.  The command line switch is @code{-retain_after_error}.
+The old command @code{discard_after_error} are maintained for compatibility,
 but they have no effect.  See the reference manual for further details.
 
-   [Incidentally, the act of making the program retain concepts
-   after an error occurs was put in about a year and a half ago,
-   at the strong urging of someone who (a) does not use this program,
-   and (b) has since then been a strong advocate and distributor of
-   a competing program.  Hence the only person who ever requested
-   this "feature" never got the "benefit" of it.  I disliked it
-   right from the start, and almost immediately added the
-   "discard_after_error" switch to turn it off.]
+@c ************
+@node Older, , 31.72, Top
+@unnumberedsec Changes for older versions
 
 ****** Changes as of version 31.67 ******
 
-The function key shift-F12 means "find another" when resolving
+The function key shift-F12 means @code{find another} when resolving
 or searching.
 
 Many more concepts can now be typed directly, on the same line
 as the call that they modify.  The only concepts that can't are
-those concepts, like "checkpoint", that take two calls.
+those concepts, like @code{checkpoint}, that take two calls.
 
-So, for example, you can type (at C3A or higher, where "3/4 mix" is
+So, for example, you can type (at C3A or higher, where @code{3/4 mix} is
 a legal call):
 
+@example
 2/3 3/4 mix
+@end example
 
 If you want 3/4 of a mix, that is, the centers cross run and then the
-new centers hinge, you must tpye the "3/4" concept by itself:
+new centers hinge, you must type the @code{3/4} concept by itself:
 
+@example
+@group
 3/4
 mix
+@end group
+@end example
 
 ****** Changes as of version 31.66 ******
 
-New designators: "those facing the caller" and "those facing away
-from the caller".
+New designators: @code{those facing the caller} and @code{those facing away
+from the caller}.
 
 Fixed an error that could, on some operating systems, cause the
 program to crash.
@@ -82,15 +785,15 @@ program to crash.
 
 The sdtty parser can now optionally accept calls that have been typed
 in without the usual blanks that separate words.  That is, you can type
-things like "inroll circulate" if you wish.  You can even type
-"tandemreverserandomstablespinthetop" if you wish.  This also allows
-you to omit hyphens, as in "tandembased triangles", or to type a blank
-where a hyphen would normally be required, as in "tandem based triangles".
-The command-line switch "-ignoreblanks" enables this "feature".  You can
-put the line "ignoreblanks" into your "sd.ini" file to have sdtty
+things like @code{inroll circulate} if you wish.  You can even type
+@code{tandemreverserandomstablespinthetop} if you wish.  This also allows
+you to omit hyphens, as in @code{tandembased triangles}, or to type a blank
+where a hyphen would normally be required, as in @code{tandem based triangles}.
+The command-line switch @code{-ignoreblanks} enables this ``feature''.  You can
+put the line @code{ignoreblanks} into your @file{sd.ini} file to have sdtty
 automatically use this feature.
 
-The call "(nothing)" has been changed to "nothing".  That is, the
+The call @code{(nothing)} has been changed to @code{nothing}.  That is, the
 parentheses have been removed from this call.
 
 ****** Changes as of version 31.63 ******
@@ -99,35 +802,35 @@ The section of the manual describing concepts has been extensively
 rewritten.  It now contains a complete list of all available concepts.
 Please read that section.  It begins at approximately page 49.
 
-The command "end this sequence" has been changed to "write this
-sequence".  The old name still exists for compatibility, but
-may be withdrawn in the future.  The command "write this sequence"
-can be issued during a resolve.  It is equivalent to "accept current
-choice" followed by "write this sequence", that is, it immediately
+The command @code{end this sequence} has been changed to @code{write this
+sequence}.  The old name still exists for compatibility, but
+may be withdrawn in the future.  The command @code{write this sequence}
+can be issued during a resolve.  It is equivalent to @code{accept current
+choice} followed by @code{write this sequence}, that is, it immediately
 writes the card with the currently displayed resolve.
 
 The problems that made it impossible to run sdtty on a PC by
-using the "MS-DOS" prompt under Windows appears to be fixed.
-You can now click on the "MS-DOS" prompt, change to the directory
+using the ``MS-DOS'' prompt under Windows appears to be fixed.
+You can now click on the ``MS-DOS'' prompt, change to the directory
 in which sdtty is stored, and run it.  You can also run it the old
 way, by leaving Windows.  Double-click the button in the upper left
 corner of the program manager window.
 
-+++ The changes described below for the specification of file names
-+++ are described in much more detail in the file "sessions", which
-+++ is distributed with the program.
+The changes described below for the specification of file names
+are described in much more detail in the file @file{sessions}, which
+is distributed with the program.
 
-You can specify a file name of "*" or "+" (that's right, just an
-asterisk or plus sign) in either the "change output file" operation
-or in the "sdi.ini" file.  When such a file name is given, Sd will
+You can specify a file name of @file{*} or @file{+} (that's right, just an
+asterisk or plus sign) in either the @code{change output file} operation
+or in the @file{sdi.ini} file.  When such a file name is given, Sd will
 generate a file name containing the current date and level, and use
 that name instead of the asterisk or plus sign.  Typical file names
-will look like "15feb96.C3A" or "15feb96a.C3A".
+will look like @file{15feb96.C3A} or @file{15feb96a.C3A}.
 
-If the given file name was "*", the generated name will be unique
+If the given file name was @file{*}, the generated name will be unique
 for each session of using the program.  If, for example, the name
-"15feb96.C3A" already exists, the program will put a letter after
-the date, as in "15feb96a.C3A", until it finds an unused name.
+@file{15feb96.C3A} already exists, the program will put a letter after
+the date, as in @file{15feb96a.C3A}, until it finds an unused name.
 This way, the program will never write over an existing file, and
 no sequences should ever get lost.  This will be useful for people
 who process the output file with a word processing program.  It
@@ -136,30 +839,33 @@ processor, any further sequences that Sdtty adds to it will not be
 recognized by the word processor, and so it is important that Sdtty
 never add sequences to an existing file.
 
-If the given file name was "+", the generated name will not necessarily
+If the given file name was @file{+}, the generated name will not necessarily
 be unique, and Sdtty may use a file that already exists.  In that case,
 sequences will be appended to the end of the file.  Existing sequences
 will not be lost, assuming that no word processing program interferes.
 
 The intention of this feature is that it be used with the initialization
-file.  If your initialization file "sd.ini" contains:
+file.  If your initialization file @file{sd.ini} contains:
 
+@example
+@group
 sequence.C3A         C3A             12      NACC, June 1995
 *                    C1              36      Cambridge
 *                    A2               9      NESRDC/1995
+@end group
+@end example
 
 (note that some file names are given as asterisks), then, whenever you
 start with one of these sessions, a generated file name will be used.
 For example, if you specify session choice number 2, the level will
-be C1, the file will be something like "15feb96.C1", and the title
-on each card will be "Cambridge".
+be C1, the file will be something like @file{15feb96.C1}, and the title
+on each card will be @code{Cambridge}.
 
 When choices are added to the initialization file (by typing a number
 one higher than the last existing choice), the file name is still
-set to "sequence.C1" or whatever.  After creating the new choice,
-you may use the "change output file" command to set it to asterisk
+set to @file{sequence.C1} or whatever.  After creating the new choice,
+you may use the @code{change output file} command to set it to asterisk
 or plus sign.  Just type an asterisk or plus sign as the new file name.
-
 
 ****** Changes as of version 31.62 ******
 
@@ -172,13 +878,13 @@ The section of the manual describing concepts has been extensively
 rewritten.  It now contains a complete list of all available concepts.
 Please read that section.  It begins at approximately page 55.
 
-New concept: "<anyone> lead for a", used with a call like cast a
+New concept: @code{<anyone> lead for a}, used with a call like cast a
 shadow or link up, is done from a promemade-like setup.  The
 program will assume that you had the dancers promenade approximately
 halfway around the set before calling this.
 
 It can now identify interlocked triangles in galaxies,
-hourglasses, and "C1 phantom" setups.
+hourglasses, and @samp{C1 phantom} setups.
 
 New concepts: <anyone> preferred for trade,
 checkerboard/checkerbox/checkerdiamond.
@@ -191,75 +897,71 @@ C3A and C3B lists.
 ****** Changes as of version 31.58 ******
 
 If the name of the file to which sequences are written ends
-with a colon, as in "LPT:", the program will assume that it
+with a colon, as in @file{LPT:}, the program will assume that it
 is a special device such as a printer, and will simply write
 sequences to it without doing any checking of the previous
 contents.  This should cause each sequence to be printed
 immediately after it is created.
 
 Special file names of this type may be set with the
-"change output file" command, and may be placed in the
-filename field of the "sd.ini" session file.
+@code{change output file} command, and may be placed in the
+filename field of the @file{sd.ini} session file.
 
 ****** Changes as of version 31.56 ******
 
 There are now two types of information that get printed at
-the top of a sequence:  the "title", and the "comment".
+the top of a sequence:  the @code{title}, and the @code{comment}.
 
 The title is something that is expected to remain unchanged
 for all the sequences of a dance or series.  It is typically
-something like "Pace Spectacular, 1995".  The title is what
-the initialization file provides.  The command "change title"
+something like @code{Pace Spectacular, 1995}.  The title is what
+the initialization file provides.  The command @code{change title}
 can change it.  Once changed, it stays changed, and the new
 title is written back to the initialization file.
 
 The comment is something that is expected to be particular
 to the individual sequence.  It might be something like
-"hard" or "lots of phantoms".  The program will prompt you
+@code{hard} or @code{lots of phantoms}.  The program will prompt you
 for this at the end of each sequence, when you type or click
-"end this sequence".  It is not automatically remembered
+@code{end this sequence}.  It is not automatically remembered
 from one sequence to the next.
 
-The command previously known as "change header comment"
-has been changed to "change title".
+The command previously known as @code{change header comment}
+has been changed to @code{change title}.
 
-
-
-New "pick" command:  "pick 8 person level call".  This is like
-"pick level call", except that only 8-person calls are chosen.
+New @code{pick} command:  @code{pick 8 person level call}.  This is like
+@code{pick level call}, except that only 8-person calls are chosen.
 The function key <shift-F11> selects this function.
 These commands are only available in sdtty at present.
-
-
 
 New designators: center diamond, center 1x4, center 1x6.  These allow
 unambiguous selection in certain setups like 1x3 diamonds, 3x1 diamonds,
 and a wave between to perpendicular miniwaves.
 
-
 New concepts: <so-and-so> are couples/tandems of three,
-or couples/tandem threesome, etc.  The "center 1x6" designators
+or couples/tandem threesome, etc.  The @code{center 1x6} designators
 are sometimes useful here.
 
 New concepts: diagonal lines/waves/columns of 3.  These are done in
 blocks, and create a virtual 6-person setup.
 
-Also, the concepts formerly known as "two diagonal lines/waves/columns"
-is now just "diagonal lines/waves/columns".  These are done in 4x6
+Also, the concepts formerly known as ``two diagonal lines/waves/columns''
+are now just ``diagonal lines/waves/columns''.  These are done in 4x6
 setups.
-
 
 ****** Changes as of version 31.50 ******
 
 The database has been updated to reflect the 1995 changes in the
-Callerlab C1 and C2 lists.  However, "like a ripple" is not supported.
+Callerlab C1 and C2 lists.  However, @code{like a ripple} is not supported.
 
 ****** Changes as of version 31.48 ******
 
-In a "rigger" setup, such as obtained after "sets in motion"
+In a @code{rigger} setup, such as obtained after @code{sets in motion}
 from certain setups, it is possible to have the outside people
 use truck/loop/shove-off calls to come in to the center:
 
+@example
+@group
  1G^   4GV   4B^   3B^
 
  1BV   2BV   2G^   3GV
@@ -278,12 +980,14 @@ use truck/loop/shove-off calls to come in to the center:
  3G^   3BV   1B^   1GV
 
        4B^   2G^
-
-
+@end group
+@end example
 
 New call:  <anyone> spread.  This is done from columns,
 to make a butterfly, blocks, or whatever:
 
+@example
+@group
  1B^   1GV
 
  2G^   2BV
@@ -301,28 +1005,25 @@ to make a butterfly, blocks, or whatever:
   .    4B^    .    4GV
 
  3G^    .    3BV    .
-
-
+@end group
+@end example
 
 ****** Changes as of version 31.46 ******
 
 New concepts:  center or outside triple lines/waves/column/boxes,
 and center or outside phantom lines/waves/columns/boxes.
 
-The "triple" lines/waves/columns/boxes concepts refer to 12-spot setups
+The ``triple'' lines/waves/columns/boxes concepts refer to 12-spot setups
 of some kind, and pick out two outer 4-person setups or one inner 4-person
 setup.
 
-The "phantom" lines/waves/columns/boxes concepts refer to 16-spot setups
+The ``phantom'' lines/waves/columns/boxes concepts refer to 16-spot setups
 of some kind, and pick out two outer 4-person setups or one inner 8-person
 setup.  For example, in a 2x8, "outside phantom boxes" refers to two boxes
 that can each do a 4-person call.  "Center phantom boxes" refers to the two
 center boxes together, doing an 8-person call.
 
 These concepts handle fairly general types of shape-changers.
-
-
-
 
 The database has been updated to reflect the 1995 changes in the
 Callerlab A1 and A2 lists.  Arky star thru was moved to C1, pending
@@ -344,25 +1045,25 @@ Note that "ends divide" is the name of the call.  It is not an
 application of the "ends" concept.  You must type it on one line,
 and you may not substitute another designator, such as "sides", for
 the word "ends".  So, for example, you might type or click:
-    heads start
-    swing thru
-    ends divide
-    ends
-    touch 1/4
-    6x2 acey deucey
+
+@example
+@group
+heads start
+swing thru
+ends divide
+ends
+touch 1/4
+6x2 acey deucey
+@end group
+@end example
+
 You might read this as "heads swing thru, while the sides divide
 and touch 1/4".
-
-
 
 It is now considerably better about handling the "invert" concept
 and its interactions with "central", "snag", and "mystic".
 
-
-
 It now does "colliding" cycle and wheel.
-
-
 
 It handles "little" with a direction (or no direction) given for
 the ends.  In addition to "little, ends go as you are", there is
@@ -372,16 +1073,11 @@ is not accepted by the program, even though it is generally considered
 correct usage at C1.  You must say "little, ends go as you are".
 The calls "plenty" and "little more" are also handled similarly.
 
-
-
 The program tries to do a more sensible job of printing commas
 after concepts.
 
-
-
 New concept:  distorted blocks -- This is "C1 blocks" with some people
 out of position.
-
 
 ****** Changes as of version 31.42 ******
 
@@ -418,19 +1114,23 @@ or "random twice swing thru" all on one line.  You can still enter them
 on multiple lines if you wish.  So the following are all legal and
 equivalent things:
 
-     reverse random tandem swing thru
-
-     reverse random
-     tandem
-     swing thru
-
-     reverse random
-     tandem swing thru
-
-     reverse
-     random
-     tandem
-     swing thru
+@example
+@group
+reverse random tandem swing thru
+ 
+reverse random
+tandem
+swing thru
+ 
+reverse random
+tandem swing thru
+ 
+reverse
+random
+tandem
+swing thru
+@end group
+@end example
 
 similarly, things like "single cross concentric" may be entered as
 separate commands.
@@ -466,7 +1166,9 @@ centers of a left-hand-wave do a single wheel.
 There is a new command-line switch: "-singlespace".  You can use this
 when the program is invoked, as in
 
-         sdtty c1 -singlespace
+@example
+sdtty c1 -singlespace
+@end example
 
 This will cause the printed sequences to be single spaced, for those
 who wish to print on smaller cards.  You can put this switch in the
@@ -477,13 +1179,19 @@ who wish to print on smaller cards.  You can put this switch in the
 There is a new command-line switch: "-discard_after_error".  You can use this
 when the program is invoked, as in
 
-         sdtty c1 -discard_after_error
-
+@example
+sdtty c1 -discard_after_error
+@end example
+                    
 This will cause all entered concepts to be thrown away when an error
 occurs.  If this switch is not used, entered concepts remain.
 For example, if we enter
-         trapezoid
-         flip the diamond
+@example
+@group
+trapezoid
+flip the diamond
+@end group
+@end example
 an error message will be printed.  Under normal circumstances, the
 "trapezoid" concept will remain in place, that is, the program will
 act as though you had typed "trapezoid" -- it will only throw away
@@ -498,14 +1206,14 @@ You can put this switch in the "sd.ini" file (see below).
 There is a new command-line switch: "-active_phantoms".  You can use this
 when the program is invoked, as in
 
-         sdtty c1 -active_phantoms
+@example
+sdtty c1 -active_phantoms
+@end example
 
 This will cause the program be use active phantoms, just as though you
 had given the "toggle active phantoms" command.
 
 You can put this switch in the "sd.ini" file (see below).
-
-
 
 The initialization file "sd.ini" can take an "[Options]" section.
 Command switches following the line "[Options]" will be treated
@@ -513,32 +1221,34 @@ axactly as though they had been given as command line options.
 There are no hyphens in front of switches in this file.
 For example, if the file "sd.ini" contains this:
 
+@example
+@group
 [Options]
 singlespace
 discard_after_error
-
+@end group
+@end example
+          
 then the printed sequences will be single spaced, and entered
 concepts will be discarded whenever an error occurs.
-
-
 
 New concepts:  "ends concentric" and "centers and ends concentric".
 These are analogues of the "ends" and "centers and ends" concepts,
 except that the ends will apply the concentric rule when doing
 their call.
 
-
-
 New concept:  <anyone> work <concept>.  You actually type the word
 "<concept>" (or let the completing reader do it for you), but
 type the people you want for the "anyone".  For example, you
 could type
-  boys work <concept>
-  once removed
-  hocus pocus
+@example
+@group
+boys work <concept>
+once removed
+hocus pocus
+@end group
+@end example
 on three separate lines.
-
-
 
 ****** Changes as of version 31.3 ******
 
@@ -549,22 +1259,22 @@ numbers on the cards.  For details, see the section
 an example usage of this feature by copying the file "sample1.ini"
 (that comes with the distribution) into the file "sd.ini".
 
-
-
 The program is much better about having certain people
 do a call.  For example, from diamonds in which the girls are
 the centers, you can say
 
-   BOYS counter rotate      (use the "BOYS" concept)
-      or
-   GIRLS mix                (use the "GIRLS" concept)
-      or
-   BOYS counter rotate WHILE THE GIRLS mix
-            (use the "BOYS (while the others)" concept)
+@example
+@group
+BOYS counter rotate      (use the "BOYS" concept)
+   or
+GIRLS mix                (use the "GIRLS" concept)
+   or
+BOYS counter rotate WHILE THE GIRLS mix
+         (use the "BOYS (while the others)" concept)
+@end group
+@end example
 
 The "disconnected" concept is also much improved.
-
-
 
 Sdtty now uses an "intelligent question mark" mechanism.
 When a question mark is typed, all calls are tested in
@@ -576,8 +1286,6 @@ be used sensibly in the current setup.
 
 To get the old behavior, type exclamation point instead of
 question mark.
-
-
 
 ****** Changes as of version 31.2 ******
 
@@ -592,8 +1300,6 @@ The availability of these special characters on PC-like computers
 is not universal.  If your computer does not have them, you can
 suppress their use by giving the switch "-no_graphics" on the
 command line when sdtty is invoked, as in "sdtty c3 -no_graphics".
-
-
 
 There is now a version of the "fold" call that more faithfully
 represents what the call means at levels below challenge.  The
@@ -610,12 +1316,8 @@ Note that, when the level is below C1, only the "fold (and adjust)" call
 is available, and, because of completion, just typing "fold" will get
 this call.
 
-
-
 The call "peel the top" can be used after the ends of a wave do either
 kind of fold.
-
-
 
 ****** Changes as of version 31.01 ******
 
@@ -626,8 +1328,6 @@ So you can type, for example, "grand swing thru".
 You can also type it the old way:
 "grand", <enter>, and "swing thru".  On sd, you still must click on
 the concept "grand" followed by the call "swing thru".
-
-
 
 ****** Changes as of version 31.0 ******
 
@@ -705,9 +1405,13 @@ there are some loose ends that have not been cleaned up.  Users
 are earnestly requested not to call things like "chase the line 3/4".
 
 New concepts: MYSTIC and INVERT MYSTIC work with the following:
-   TRIPLE BOXES
-   TRIPLE LINES/WAVES/COLUMNS
-   PHANTOM LINES/WAVES/COLUMNS
+@example
+@group
+TRIPLE BOXES
+TRIPLE LINES/WAVES/COLUMNS
+PHANTOM LINES/WAVES/COLUMNS
+@end group
+@end example
 
 INNER/OUTER TRIANGLES WORK SOLID/THREESOME or fractional quarter
 solid/threesome, etc.
@@ -761,6 +1465,8 @@ call in the usual way, even in cases in which the word naturally
 belonged in a different position in the call.  For example, one
 would type
 
+@example
+@group
    cross
    scoot reaction
 or
@@ -769,6 +1475,9 @@ or
 or
    cross
    transaction
+@end group
+@end example
+
 
 and the program would print out "scoot cross reaction", "hang
 a left", or "trans cross chain reaction" as required.  It is now
@@ -795,9 +1504,13 @@ New concepts: overlapped diamonds, overlapped lines, and overlapped waves.
 Overlapped waves of course has an implicit "assume waves" in it.
 
 Calls done correctly (I hope):
-   straight away but [anything]
-   quick [anything]
-   stroll [anything]
+@example
+@group
+straight away but [anything]
+quick [anything]
+stroll [anything]
+@end group
+@end example
 
 New calls: explode the top, turning the star unusual amounts.
 
@@ -837,7 +1550,7 @@ the column" to "invert the column N/4".  You can also say just "invert the
 column".  The same change was made to "exchange the boxes/diamonds N/4".
 
 New calls:  [criss-cross] shadow the column, spin chain the star,
-   [cross] trade your neighbor <direction>, splash <direction>.
+[cross] trade your neighbor <direction>, splash <direction>.
 
 ****** Changes as of version 30.78 ******
 
@@ -852,9 +1565,13 @@ The "fractional" concept, as in "3/5 swing the fractions", is now
 entered just as the fraction, for example, "3/5".  The word "(fractional)"
 is no longer used.  To avoid ambiguity in the transcript, a comma will
 be placed after the fraction, as in
-         1/4, stable change the wave
+@example
+1/4, stable change the wave
+@end example
 not to be confused with
-         1/4 stable change the wave
+@example
+1/4 stable change the wave
+@end example
 
 Furthermore, the concept formerly known as "do it twice" is now just
 called "twice".  It, too, will have a comma after it in the transcript
@@ -967,28 +1684,40 @@ In general, "stretch", "central", and "crazy" work much better than formerly.
 
 The "so-and-so do something" concepts have been extensively rewritten.
 There are four related concepts:
-    "<so-and-so> only"
-    "<so-and-so> disconnected"
-    "<so-and-so> do your part"
-    "own the <so-and-so>"
+@example
+@group
+ "<so-and-so> only"
+ "<so-and-so> disconnected"
+ "<so-and-so> do your part"
+ "own the <so-and-so>"
+@end group
+@end example
 Briefly, they mean the following:
-    "<so-and-so> only" means that the designees work among themselves
-         in whatever undistorted setups they can find.
-    "<so-and-so> disconnected" means that the designees work in whatever
-         setup they find after removing the non-designees.
-    "<so-and-so> do your part" means that the designees work in the
-         original setup, with the non-designees replaced by phantoms.
-    "own the <so-and-so>" is like "do your part", except that strict
-         matrix positioning is used.
+@example
+@group
+ "<so-and-so> only" means that the designees work among themselves
+      in whatever undistorted setups they can find.
+ "<so-and-so> disconnected" means that the designees work in whatever
+      setup they find after removing the non-designees.
+ "<so-and-so> do your part" means that the designees work in the
+      original setup, with the non-designees replaced by phantoms.
+ "own the <so-and-so>" is like "do your part", except that strict
+      matrix positioning is used.
 Please read the section "so-and-so only" in the manual for details.
          [Superseded at version 30.78.]
+@end group
+@end example
 
 Note that the prior inability to have, for example, the girls hinge from
 a BGGBBGGB grand wave to make point-to-point diamonds, is now fixed.
 It can be done in any of the following ways:
-   each 1x4 centers hinge
-   girls only hinge
-   girls disconnected hinge
+@example
+@group
+each 1x4 centers hinge
+girls only hinge
+girls disconnected hinge
+@end group
+@end example
 
 A warning is printed for non-interacting use of "multiple formations working",
 "interlocked phantom setups", and "phantom setups" concepts.  That is,
@@ -1023,9 +1752,13 @@ to say things like "random stable crazy mix".  In such a case, the two parts
 of the "mix" are irrelevant.  The "crazy mix" has 4 parts.
 
 Note that
-      1/4 stable random crazy
+@example
+1/4 stable random crazy
+@end example
 and
-      random 1/4 stable crazy
+@example
+random 1/4 stable crazy
+@end example
 are very different.
 
 The "centers and ends/two calls in succession/undo/undo" bug was fixed.
@@ -1043,14 +1776,18 @@ A few function keys have been defined for the PC.  Pressing the following
 keys is equivalent to entering the indicated text.  Future versions of the
 program will have the ability to have a customization file indicate what
 keys are bound to what strings.
-           f1 => "split phantom lines"
-   shift   f1 => "interlocked phantom lines"
-   control f1 => "phantom lines"
-           f2 => "split phantom columns"
-   shift   f2 => "interlocked phantom columns"
-   control f2 => "phantom columns"
-           f3 => "allow modifications"
-           f4 => "<anything>"
+@example
+@group
+        f1 => "split phantom lines"
+shift   f1 => "interlocked phantom lines"
+control f1 => "phantom lines"
+        f2 => "split phantom columns"
+shift   f2 => "interlocked phantom columns"
+control f2 => "phantom columns"
+        f3 => "allow modifications"
+        f4 => "<anything>"
+@end group
+@end example
 
 The bug that made it crash if an extremely long line was typed to sdtty
 has been fixed.  We thank Lynette Bellini's cat for finding this bug.
@@ -1074,6 +1811,8 @@ further discussion of the linguistic implications of these.
 
 Please read the new section "linguistic idiosyncrasies" in the manual.
 
-===============================================================================
+*********************************************************
 
-See the file "oldnotes" for notes relating to older versions.
+See the file @file{oldnotes} for notes relating to older versions.
+
+@bye

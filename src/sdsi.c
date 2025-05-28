@@ -1,3 +1,5 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1995  William B. Ackerman.
@@ -282,7 +284,7 @@ extern void get_date(char dest[])
 extern void open_file(void)
 {
    int this_file_position;
-#if defined(MSDOS)
+#if defined(MSDOS) || defined(__i386)
    int i;
 #endif
 
@@ -312,7 +314,7 @@ extern void open_file(void)
    deal with Un*x, which is merely one of the most monumentally stupid
    pieces of OS system design ever to plague this galaxy. */
 
-#if !defined(MSDOS)
+#if !defined(MSDOS) && !defined(__i386)
 
    if (!(fildes = fopen(outfile_string, "a"))) {
       (void) strncpy(fail_errstring, get_errstring(), MAX_ERR_LENGTH);
@@ -512,7 +514,7 @@ extern void open_file(void)
 
 extern void write_file(char line[])
 {
-   int size;
+   uint32 size;
    char nl = '\n';
 
    if (file_error) return;    /* Don't keep trying after a failure. */

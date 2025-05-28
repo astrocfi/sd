@@ -1,7 +1,9 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /*
    sdmatch.c - command matching support
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -264,7 +266,8 @@ extern void matcher_initialize(void)
    /* Initialize the hash buckets for call names. */
 
    {
-      int i, j, k, bucket;
+      int i, j, bucket;
+      uint32 ku;
       int *item;
 
       /* First, do the selectors.  Before that, be sure "<anyone>" is hashed. */
@@ -327,10 +330,10 @@ extern void matcher_initialize(void)
 
       tagger_hash_list[0] = bucket;
 
-      for (i=0; i<4; i++) {
-         for (k=0; k<number_of_taggers[i]; k++) {
-            if (!get_hash(tagger_calls[i][k]->name, &bucket)) {
-               fprintf(stderr, "Can't hash tagger %d %d!\n", i, k);
+      for (i=0; i<NUM_TAGGER_CLASSES; i++) {
+         for (ku=0; ku<number_of_taggers[i]; ku++) {
+            if (!get_hash(tagger_calls[i][ku]->name, &bucket)) {
+               fprintf(stderr, "Can't hash tagger %d %d!\n", i, (int) ku);
                exit_program(2);
             }
    
@@ -339,7 +342,9 @@ extern void matcher_initialize(void)
             }
    
             tagger_hash_list_size++;
-            tagger_hash_list = (short *) get_more_mem(tagger_hash_list, tagger_hash_list_size * sizeof(short));
+            tagger_hash_list =
+              (short *) get_more_mem(tagger_hash_list,
+                                     tagger_hash_list_size * sizeof(short));
             tagger_hash_list[tagger_hash_list_size-1] = bucket;
    
             already_in3: ;
@@ -375,12 +380,15 @@ extern void matcher_initialize(void)
                continue;
             }
             else if (name[1] == 'v' || name[1] == 'w' || name[1] == 'x' || name[1] == 'y') {
-               /* This is a call like "<atc> your neighbor".  Put it into every bucket that could match a tagger. */
+               /* This is a call like "<atc> your neighbor".
+                  Put it into every bucket that could match a tagger. */
    
                for (j=0 ; j<tagger_hash_list_size ; j++) {
                   bucket = tagger_hash_list[j];
                   call_hash_list_sizes[bucket]++;
-                  call_hash_lists[bucket] = (short *) get_more_mem(call_hash_lists[bucket], call_hash_list_sizes[bucket] * sizeof(short));
+                  call_hash_lists[bucket] =
+                    (short *) get_more_mem(call_hash_lists[bucket],
+                                           call_hash_list_sizes[bucket] * sizeof(short));
                   call_hash_lists[bucket][call_hash_list_sizes[bucket]-1] = i;
                }
                continue;
@@ -617,7 +625,7 @@ Private long_boolean verify_call(void)
             save1->concept = &marker_concept_mod;
             save1->next = tt;
             tt->concept = &marker_concept_mod;
-            tt->call = base_calls[1];   /* "nothing" */
+            tt->call = base_calls[base_call_null];
             tt->replacement_key = 2;    /* "mandatory_anycall" */
             parse_state.concept_write_ptr = &tt->subsidiary_root;
             save1 = (parse_block *) 0;
@@ -1262,6 +1270,7 @@ Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int pat
    Cstring prefix;
    Cstring *number_table;
    int i;
+   uint32 iu;
    pat2_block p2b;
    char crossname[80];
    char *crossptr;
@@ -1368,9 +1377,9 @@ Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int pat
 #endif
                current_result->match.call_conc_options.tagger |= tagclass << 5;
          
-               for (i=0; i<number_of_taggers[tagclass]; ++i) {
+               for (iu=0; iu<number_of_taggers[tagclass]; iu++) {
                   current_result->match.call_conc_options.tagger++;
-                  match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxi);
+                  match_suffix_2(user, tagger_calls[tagclass][iu]->name, &p2b, patxi);
                }
       
                current_result->match.call_conc_options.tagger = save_tagger;
@@ -1382,8 +1391,8 @@ Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int pat
                char circname[80];
                uint32 save_circcer = current_result->match.call_conc_options.circcer;
       
-               for (i=0; i<number_of_circcers; ++i) {
-                  char *fromptr = circcer_calls[i]->name;
+               for (iu=0; iu<number_of_circcers; ++iu) {
+                  char *fromptr = circcer_calls[iu]->name;
                   char *toptr = circname;
                   char c;
                   do {
@@ -1407,11 +1416,11 @@ Private void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int pat
             }
             break;
          case '9':
-            if (*user < '0' || *user > '8') return;
+            if (*user < '0' || *user > '9') return;
             number_table = cardinals;
             goto do_number_stuff;
          case 'u':
-            if (*user < '0' || *user > '8') return;
+            if (*user < '0' || *user > '9') return;
             number_table = ordinals;
             goto do_number_stuff;
          case 'a': case 'b': case 'B': case 'D':
@@ -1635,6 +1644,7 @@ Private void match_pattern(Cstring pattern, concept_descriptor *this_is_grand)
 Private void search_menu(uims_reply kind)
 {
    int i;
+   uint32 iu;
    Cstring *menu;
 
    everyones_real_result.valid = TRUE;
@@ -1684,21 +1694,22 @@ Private void search_menu(uims_reply kind)
          item++;
       }
    }
-   else if (static_call_menu >= match_taggers && static_call_menu <= match_taggers+3) {
+   else if (static_call_menu >= match_taggers &&
+            static_call_menu < match_taggers+NUM_TAGGER_CLASSES) {
       int tagclass = static_call_menu - match_taggers;
       everyones_real_result.match.call_conc_options.tagger = tagclass << 5;
 
-      for (i = 0; i < number_of_taggers[tagclass]; i++) {
+      for (iu = 0; iu < number_of_taggers[tagclass]; iu++) {
          everyones_real_result.match.call_conc_options.tagger++;
-         match_pattern(tagger_calls[tagclass][i]->name, (concept_descriptor *) 0);
+         match_pattern(tagger_calls[tagclass][iu]->name, (concept_descriptor *) 0);
       }
    }
    else if (static_call_menu == match_circcer) {
       everyones_real_result.match.call_conc_options.circcer = 0;
 
-      for (i = 0; i < number_of_circcers; i++) {
+      for (iu = 0; iu < number_of_circcers; iu++) {
          everyones_real_result.match.call_conc_options.circcer++;
-         match_pattern(circcer_calls[i]->name, (concept_descriptor *) 0);
+         match_pattern(circcer_calls[iu]->name, (concept_descriptor *) 0);
       }
    }
    else {

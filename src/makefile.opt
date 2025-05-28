@@ -12,7 +12,7 @@ srcdir = .
 CC = gcc
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = 
+DEFS =
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -22,9 +22,9 @@ DEFS =
 # this may compromise the ability to debug the program.  In this case, you may
 # need to choose different options, typically "-g", for debugging.
 # Consult your system, compiler, and debugger vendor for further information.
-CDEBUGFLAGS = -O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
+CDEBUGFLAGS =-O2 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 
-CFLAGS = $(DEFS) $(CDEBUGFLAGS)
+CFLAGS =$(DEFS) $(CDEBUGFLAGS)
 
 # These are the "-I"  and "-D" flags that we must use for the compilation
 # of the X11 user interface (sdui-x11.c).
@@ -40,14 +40,14 @@ X11_LIBS =
 
 # These are the library flags that we must use for the final bind of
 # "sdtty".
-TTY_LIBS = -lpc
+TTY_LIBS =
 
-SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
+SD_SRCS = sdmain.c sdutil.c sdbasic.c sdinit.c \
           sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c sd12.c sd16.c \
           sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
           sdsi.c
 
-SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
+SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o sd12.o sd16.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
           sdsi.o
@@ -55,15 +55,14 @@ SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
 
-# This has all special source files for sdtty,
-# for making the distribution and running lint.
+# This has all special source files for sdtty and
+# making the distribution.
 SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
 SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
 SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
 # This has the special object files used for building this version of sdtty.
 SDTTY_OBJ = $(SDTTY_OBJ_PC)
-
-SDTTY_OBJS = @pcfiles.lnk
+SDTTY_OBJS = $(SD_OBJS) $(SDTTY_OBJ_PC)
 
 MKCALLS_SRCS = mkcalls.c dbcomp.c
 MKCALLS_OBJS = mkcalls.o dbcomp.o
@@ -73,28 +72,22 @@ OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
 
 all: alltty
 allx11: sd sd_calls.dat
-alltty: sdtty sd_calls.dat
-everything: allx11 sdtty
+alltty: sdtty.exe sd_calls.dat
+everything: allx11 sdtty.exe
 
 LDPRELIBS = 
-LDPOSTLIBS = 
+LDPOSTLIBS = lib\crt0.o lib\libc.a
 
 sd: $(SD_OBJS) $(SDX11_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
 
-mkcalls: $(MKCALLS_OBJS)
+mkcalls.exe: $(MKCALLS_OBJS)
 	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
-	strip $@
-	coff2exe $@
 
-# The coff2exe program is for djgpp on DOS
-
-sdtty: $(SD_OBJS) $(SDTTY_OBJ)
+sdtty.exe: $(SD_OBJS) $(SDTTY_OBJ)
 	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
-	strip $@
-	coff2exe $@
 
-sd_calls.dat: sd_calls.txt mkcalls
+sd_calls.dat: sd_calls.txt mkcalls.exe
 	./mkcalls $(srcdir)/sd_calls.txt
 
 .c.o:
@@ -137,7 +130,7 @@ sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
 # additional suffixes used for the documentation
 .SUFFIXES: .dvi .info .txt .txinfo
 
-RM = rm -f
+RM = del
 
 MAKEINFO = makeinfo --no-split
 MAKE_ASCII = makeinfo --no-split --no-headers
@@ -189,10 +182,8 @@ docclean:
 	-$(RM) *.aux *.log *.toc *.dvi
 	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
-clean:: docclean
 clean::
-	-$(RM) *.o sd sdtty mkcalls sd_calls.dat
-	-$(RM) lint.out
+	-$(RM) *.o sd.exe sdtty.exe mkcalls.exe sd_calls.dat
 
 distclean: clean
 	-$(RM) sequence.*
@@ -201,11 +192,6 @@ distclean: clean
 
 realclean: distclean
 	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
-
-LINT = /usr/lang/alint
-
-lint:
-	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
 
 DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
             relnotes.ps relnotes.txt \
@@ -217,7 +203,6 @@ MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
             macmatch.c macmenu.c macpref.c macrec.c macsel.c macstart.c \
             macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
             sdsi-mac.c sdui-mac.c
-PCFILES = pcfiles.lnk makefile.pc
 DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
@@ -236,15 +221,14 @@ dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS \
 ls:
 	@echo $(DISTFILES)
 
-pcdist: install
+pcdist: install.exe
 
-install: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme oldnotes
-	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
-	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps relnotes.txt relnotes.ps
-	lha a $@ sd_calls.txt sd_calls.dat
-	lha a $@ sd_doc.txt sd_doc.ps
-	lha s $@
+install.exe: sdtty.exe mkcalls.exe sd_calls.dat
+	lha a $* sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
+	lha a $* sd_calls.txt sd_calls.dat
+	lha a $* readme oldnotes
+	lha a $* sample1.ini sample2.ini
+	lha s $*
 
 BIN_TARFILE = sd-31.79-.tar
 
@@ -263,10 +247,6 @@ $(BIN_TARFILE).Z: Makefile $(TARFILES2) $(TARFILES1)
 	-$(COMPRESS) < $(BIN_TARFILE) > $@
 
 pc-files: $(PCFILES)
-
-pcfiles.lnk: Makefile.in
-	rm -f $@
-	for obj in $(SD_OBJS) $(SDTTY_OBJ_PC); do echo $$obj; done >> $@
 
 LN = ln -s
 

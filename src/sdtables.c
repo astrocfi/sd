@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -32,14 +34,9 @@
    setup_attrs
    begin_sizes
    startinfolist
-   map_b6_trngl
-   map_s6_trngl
-   map_bone_trngl4
    map_p8_tgl4
    map_spndle_once_rem
    map_1x3dmd_once_rem
-   map_phan_trngl4a
-   map_phan_trngl4b
    map_lh_zzztgl
    map_rh_zzztgl
    map_2x2v
@@ -63,6 +60,8 @@
    map_4x4v
    map_blocks
    map_trglbox
+   map_2x3_0134
+   map_2x3_1245
    map_1x8_1x6
    map_rig_1x6
    map_4x6_2x4
@@ -383,6 +382,18 @@ Private coordrec thing_d3x4 = {s_d3x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+Private coordrec thing_525 = {s_525, 3,
+   { -8,  -4,   0,   4,   8,   2,   8,   4,   0,  -4,  -8,  -2},
+   {  4,   4,   4,   4,   4,   0,  -4,  -4,  -4,  -4,  -4,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1,  2,  3,  4, -1,
+      -1, -1, -1, 11,  5, -1, -1, -1,
+      -1, -1, 10,  9,  8,  7,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 Private coordrec thinggal = {s_galaxy, 3,
    { -7,  -2,   0,   2,   7,   2,   0,  -2},
    {  0,   2,   7,   2,   0,  -2,  -7,  -2}, {
@@ -451,6 +462,18 @@ static coordrec thingbone = {s_bone, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1,  0,  6,  7,  3,  2,  1, -1,
       -1,  5, -1, -1, -1, -1,  4, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static coordrec thingbone6 = {s_bone6, 3,
+   { -6,   6,   2,   6,  -6,  -2},
+   {  2,   2,   0,  -2,  -2,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  5,  2,  1, -1, -1,
+      -1, -1,  4, -1, -1,  3, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
@@ -864,6 +887,18 @@ static id_bit_table id_bit_table_2x4[] = {
    SEBITS(ID2_CENTER|ID2_CTR4),
    SWBITS(ID2_END)};
 
+static id_bit_table id_bit_table_2x5[] = {
+   NORTHBIT(0),
+   NORTHBIT(0),
+   NORTHBIT(0),
+   NORTHBIT(0),
+   NORTHBIT(0),
+   SOUTHBIT(0),
+   SOUTHBIT(0),
+   SOUTHBIT(0),
+   SOUTHBIT(0),
+   SOUTHBIT(0)};
+
 /* This table is only accepted if the population is a parallelogram. */
 static id_bit_table id_bit_table_2x6[] = {
    NWBITS(ID2_OUTRPAIRS),
@@ -941,6 +976,16 @@ static id_bit_table id_bit_table_qtag[] = {
    NOBIT(ID2_END    | ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_CTR6  | ID2_OUTR6),
    NOBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR2 | ID2_OUTR6),
    NOBIT(ID2_CENTER | ID2_CTR4      | ID2_CTR1X4  | ID2_CTR6  | ID2_CTR2)};
+
+static id_bit_table id_bit_table_2stars[] = {
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_CTR2),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_OUTR6),
+   NOBIT(ID2_CTR2)};
 
 static id_bit_table id_bit_table_ptpd[] = {
    {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
@@ -1337,33 +1382,34 @@ static id_bit_table id_bit_table_bone[] = {
 
 
 
-#define Z analyzer_NORMAL
-#define DL analyzer_DIAMOND_LINE
-#define CD analyzer_CONC_DIAMONDS
-#define OT analyzer_OTHERS
-#define IL analyzer_INTLK_LATERAL6
-#define IV analyzer_INTLK_VERTICAL6
-#define L6 analyzer_LATERAL6
-#define V6 analyzer_VERTICAL6
-#define QL analyzer_QUAD_LINE
-#define TL analyzer_TRIPLE_LINE
-#define GS analyzer_GRANDSINGLE
-#define SI analyzer_SINGLE
-#define S6 analyzer_STAR16
-#define S2 analyzer_STAR12
-#define B6 analyzer_BAR16
-#define B2 analyzer_BAR12
-#define G3 analyzer_3X3_CONC
-#define C4 analyzer_4X4_COLS_CONC
-#define L4 analyzer_4X4_LINES_CONC
-#define BA analyzer_BAR
-#define OO analyzer_O
-#define T6 analyzer_6X2_TGL
-#define X6P analyzer_6P
-#define X62 analyzer_6X2
-#define X26 analyzer_2X6
-#define X24 analyzer_2X4
-#define CK analyzer_CHECKPT
+#define Z schema_concentric
+#define DL schema_concentric_diamond_line
+#define CD schema_concentric_diamonds
+#define OT schema_concentric_others
+#define IL schema_intlk_lateral_6
+#define IV schema_intlk_vertical_6
+#define L6 schema_lateral_6
+#define V6 schema_vertical_6
+#define QL schema_in_out_quad
+#define TL schema_in_out_triple
+#define GS schema_grand_single_concentric
+#define SI schema_single_concentric
+#define S6 schema_conc_star16
+#define S2 schema_conc_star12
+#define B6 schema_conc_bar16
+#define B2 schema_conc_bar12
+#define G3 schema_3x3_concentric
+#define C4 schema_4x4_cols_concentric
+#define L4 schema_4x4_lines_concentric
+#define BA schema_conc_bar
+#define OO schema_conc_o
+#define T6 schema_concentric_6_2_tgl
+#define X6P schema_concentric_6p
+#define X62 schema_concentric_6_2
+#define X26 schema_concentric_2_6
+#define B26 schema_concentric_big2_6
+#define X24 schema_concentric_2_4
+#define CK schema_checkpoint
 
 
 
@@ -1657,6 +1703,7 @@ cm_thing conc_init_table[] = {
    {s3x4,         X26, {11, 5,    9, 10, 0, 3, 4, 6},      2, 6, s1x2,     s2x3,     12, 0, 1, 2, 1,  0x0F5, schema_concentric},
    {s1x8,         X26, {2, 6,    0, 1, 3, 4, 5, 7},        2, 6, s1x2,     s1x6,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
    {s_dhrglass,   X26, {7, 3,    0, 1, 2, 4, 5, 6},        2, 6, s1x2,     s_bone6,  8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s_3mdmd,      B26, {7, 1,    0, 2, 5, 6, 8, 11},       2, 6, s1x2,     s_bone6, 12,  1, 0, 1, 1,  0x0FD, schema_concentric_big2_6},
    {s_bone,       X26, {7, 3,    0, 1, 2, 4, 5, 6},        2, 6, s1x2,     s_bone6,  8,  0, 0, 1, 1,  0x0FA, schema_concentric},
    {s_qtag,       X26, {7, 3,    5, 6, 0, 1, 2, 4},        2, 6, s1x2,     s_short6, 8,  0, 1, 1, 1,  0x0FD, schema_concentric},
    {s_hrglass,    X26, {7, 3,    5, 6, 0, 1, 2, 4},        2, 6, s1x2,     s_short6, 8,  1, 1, 1, 1,  0x0FE, schema_concentric},
@@ -1694,35 +1741,34 @@ cm_thing conc_init_table[] = {
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 setup_attr setup_attrs[] = {
    /* nothing */
-      {-1,                          /* setup_limits */
-      (coordrec *) 0,               /* setup_coords */
-      (coordrec *) 0,               /* nice_setup_coords */
-
-      0, 0, 0, 0,                   /* concentric masks:
-                                       mask_normal,
-                                       mask_6_2,
-                                       mask_2_6, and
-                                       mask_ctr_dmd */
-      {b_nothing,   b_nothing},     /* keytab */
-      { 0, 0},                      /* bounding_box */
-      FALSE,                        /* four_way_symmetry */
-      (id_bit_table *) 0,           /* id_bit_table_ptr */
-      {  (Cstring) 0,               /* print_strings */
-         (Cstring) 0}},
+   {-1,                           /* setup_limits */
+    (coordrec *) 0,               /* setup_coords */
+    (coordrec *) 0,               /* nice_setup_coords */
+    0, 0, 0, 0,                   /* concentric masks:
+                                     mask_normal,
+                                     mask_6_2,
+                                     mask_2_6, and
+                                     mask_ctr_dmd */
+    {b_nothing,   b_nothing},     /* keytab */
+    { 0, 0},                      /* bounding_box */
+    FALSE,                        /* four_way_symmetry */
+    (id_bit_table *) 0,           /* id_bit_table_ptr */
+    {  (Cstring) 0,               /* print_strings */
+       (Cstring) 0}},
    /* s1x1 */
-      { 0,
-      &thing1x1,
-      &thing1x1,
-      0, 0, 0, 0,
-      {b_1x1,       b_1x1},
-      { 1, 1},
-      TRUE,
-      (id_bit_table *) 0,
-      {  "a@",
-         (Cstring) 0}},
+   { 0,
+     &thing1x1,
+     &thing1x1,
+     0, 0, 0, 0,
+     {b_1x1,       b_1x1},
+     { 1, 1},
+     TRUE,
+     (id_bit_table *) 0,
+     {  "a@",
+        (Cstring) 0}},
    /* s1x2 */
-      { 1,
-      &thing1x2,
+   { 1,
+     &thing1x2,
       &thing1x2,
       0, 0, 0, 0,
       {b_1x2,       b_2x1},
@@ -1810,8 +1856,8 @@ setup_attr setup_attrs[] = {
          (Cstring) 0}},
    /* s_bone6 */
       { 5,
-      (coordrec *) 0,
-      (coordrec *) 0,
+      &thingbone6,
+      &thingbone6,
       0, 0, 0, 0,
       {b_bone6,     b_pbone6},
       { 0, 0},
@@ -1918,6 +1964,20 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  (Cstring) 0,
          (Cstring) 0}},
+   /* s_2stars */
+      {7,
+      (coordrec *) 0,
+      (coordrec *) 0,
+       /*
+         0x33, 0xDD, 0x11, 0,
+       */
+      0, 0, 0, 0,
+      {b_2stars,   b_p2stars},
+      { 0, 0},
+      FALSE,
+      id_bit_table_2stars,
+      {  "   a     b@g hd c@   f     e",
+         "   g@f a@   h@@   d@e b@   c"}},
    /* s1x3dmd */
       { 7,
       &thing1x3dmd,
@@ -1928,7 +1988,7 @@ setup_attr setup_attrs[] = {
       FALSE,
       id_bit_table_1x3dmd,
       {  "               d@a b c      g f e@               h",
-         "   a@@   b@@   c@@h  d@@   g@@   f@@   e@"}},
+         "   a@@   b@@   c@@ hd@@   g@@   f@@   e@"}},
    /* s3x1dmd */
       { 7,
       &thing3x1dmd,
@@ -2014,7 +2074,7 @@ setup_attr setup_attrs[] = {
       {b_2x5,       b_5x2},
       { 5, 2},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_2x5,
       {  "a  b  c  d  e@@j  i  h  g  f",
          "j  a@@i  b@@h  c@@g  d@@f  e"}},
    /* s_rigger */
@@ -2469,6 +2529,39 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  (Cstring) 0,
          (Cstring) 0}},
+   /* s_525 */
+      { 11,
+      &thing_525,
+      &thing_525,
+      0, 0, 0, 0,
+      {b_525,      b_p525},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "   a  b  c  d  e@@            l  f@@   k  j  i  h  g",
+         "k    a@@j    b@    l@i    c@    f@h    d@@g    e"}},
+   /* s_3mdmd */
+      { 11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      0, 0, 0, 0,
+      {b_3mdmd,      b_p3mdmd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "   a                     c@               b@j k l      f e d@               h@   i                     g",
+         "      j@i        a@      k@@      l@@    hb@@      f@@      e@g        c@      d"}},
+   /* s_3mptpd */
+      { 11,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      0, 0, 0, 0,
+      {b_3mptpd,      b_p3mptpd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "                  b@     a                     c@j      k l f e      d@     i                     g@                  h",
+         "      j@@    ia@@      k@@      l@h        b@      f@@      e@@    gc@@      d"}},
    /* sbigh */
       {11,
       &thingbigh,
@@ -2544,7 +2637,7 @@ setup_attr setup_attrs[] = {
       {0, 0},
       FALSE,
       id_bit_table_bigdmd,
-      {  "          c@a b        e f@          d@@          j@l k        h g@          i",
+      {  "           c@a b        e f@           d@@           j@l k        h g@           i",
          "   l      a@   k      b@i j d c@   h      e@   g      f"}},
    /* sbigptpd */
       {11,
@@ -2612,6 +2705,8 @@ int begin_sizes[] = {
    8,          /* b_pbone */
    8,          /* b_rigger */
    8,          /* b_prigger */
+   8,          /* b_2stars */
+   8,          /* b_p2stars */
    8,          /* b_spindle */
    8,          /* b_pspindle */
    8,          /* b_hrglass */
@@ -2683,6 +2778,12 @@ int begin_sizes[] = {
    12,         /* b_p3ptpd */
    16,         /* b_4ptpd */
    16,         /* b_p4ptpd */
+   12,         /* b_525 */
+   12,         /* b_p525 */
+   12,         /* b_3mdmd */
+   12,         /* b_p3mdmd */
+   12,         /* b_3mptpd */
+   12,         /* b_p3mptpd */
    12,         /* b_bigh */
    12,         /* b_pbigh */
    12,         /* b_bigx */
@@ -2812,15 +2913,19 @@ startinfo startinfolist[] = {
                                                                                                                                                                      V    V
                                              map1                             map2                        map3 map4   map_kind     warncode  arity outer   inner    rot  vert */
 
-        map_thing map_b6_trngl          = {{5, 4, 0,                          2, 1, 3},                              MPKIND__SPLIT,       0, 2,  s_bone6, s_trngl,  0x207, 0};
-        map_thing map_s6_trngl          = {{4, 5, 3,                          1, 2, 0},                              MPKIND__SPLIT,       0, 2,  s_short6, s_trngl, 0x108, 1};
-        map_thing map_bone_trngl4       = {{7, 6, 5, 0,                       3, 2, 1, 4},                           MPKIND__SPLIT,       0, 2,  s_bone, s_trngl4,  0x207, 0};
 Private map_thing map_rig_trngl4        = {{6, 7, 0, 5,                       2, 3, 4, 1},                           MPKIND__SPLIT,       0, 2,  s_rigger,s_trngl4, 0x10D, 0};
+
+Private map_thing map_s6_trngl          = {{4, 5, 3,                          1, 2, 0},                              MPKIND__SPLIT,       0, 2,  s_short6, s_trngl, 0x108, 1, MAPCODE(s_trngl,2,MPKIND__SPLIT,1)};
+
+
+Private map_thing map_phan_trngl4b      = {{12, 14, 0, 2,                     4, 6, 8, 10},                          MPKIND__SPLIT,       0, 2,  s_c1phan,s_trngl4, 0x108, 0, MAPCODE(s_trngl4,2,MPKIND__SPLIT,0)};
+
+
+
+
         map_thing map_p8_tgl4           = {{0, 2, 7, 5,                       4, 6, 3, 1},                           MPKIND__REMOVED,     0, 2,  s_ptpd, s_trngl4,  0x10D, 0};
         map_thing map_spndle_once_rem   = {{7, 1, 3, 5,                       0, 2, 4, 6, (int) s2x2},               MPKIND__SPEC_ONCEREM,0, 2,  s_spindle, sdmd,   0x000, 0};
         map_thing map_1x3dmd_once_rem   = {{0, 2, 4, 6,                       1, 3, 5, 7, (int) sdmd},               MPKIND__SPEC_ONCEREM,0, 2,  s1x3dmd, s1x4,     0x000, 0};
-        map_thing map_phan_trngl4a      = {{1, 3, 15, 13,                     9, 11, 7, 5},                          MPKIND__SPLIT,       0, 2,  s_c1phan,s_trngl4, 0x202, 0};
-        map_thing map_phan_trngl4b      = {{12, 14, 0, 2,                     4, 6, 8, 10},                          MPKIND__SPLIT,       0, 2,  s_c1phan,s_trngl4, 0x108, 0};
         map_thing map_lh_zzztgl         = {{11, 7, 2, 4,                      3, 15, 10, 12},                        MPKIND__OFFS_L_HALF, 4, 2,  s4x4,   s_trngl4,  0x00D, 1};
         map_thing map_rh_zzztgl         = {{7, 11, 8, 9,                      15, 3, 0, 1},                          MPKIND__OFFS_R_HALF, 4, 2,  s4x4,   s_trngl4,  0x007, 1};
         map_thing map_2x2v              = {{0, 3,                             1, 2},                                 MPKIND__SPLIT,       0, 2,  s2x2,   s1x2,      0x005, 0};
@@ -2843,6 +2948,10 @@ Private map_thing map_rig_trngl4        = {{6, 7, 0, 5,                       2,
         map_thing map_4x4v     = {{12, 10, 8, 9,         13, 15, 6, 11,       14, 3, 5, 7,      0, 1, 4, 2},         MPKIND__SPLIT,       0, 4,  s4x4,   s1x4,      0x055, 0};
         map_thing map_blocks   = {{12, 14, 7, 9,         13, 0, 2, 11,        15, 1, 4, 6,      10, 3, 5, 8},        MPKIND__NONE,        0, 4,  s4x4,   s2x2,      0x000, 0};
         map_thing map_trglbox  = {{12, 14, 15, 9,        13, 0, 2, 3,         7, 1, 4, 6,       10, 11, 5, 8},       MPKIND__NONE,        0, 4,  s4x4,   s2x2,      0x000, 0};
+
+        map_thing map_2x3_0134  = {{4, 3,                0, 1},                                                      MPKIND__NONE,        0, 2,  s2x3,   s1x2,      0x000, 1};
+        map_thing map_2x3_1245  = {{5, 4,                1, 2},                                                      MPKIND__NONE,        0, 2,  s2x3,   s1x2,      0x000, 1};
+
 Private map_thing map_4x4_1x4  = {{8, 6, 4, 5,           9, 11, 2, 7,         10, 15, 1, 3,     12, 13, 0, 14},      MPKIND__SPLIT,       0, 4,  s4x4,   s1x4,      0x000, 1};
 Private map_thing map_1x16_1x4 = {{0, 1, 3, 2,           4, 5, 7, 6,          15, 14, 12, 13,   11, 10, 8, 9},       MPKIND__SPLIT,       0, 4,  s1x16,  s1x4,      0x000, 0};
 Private map_thing map_1x12_1x3 = {{0, 1, 2,              3, 4, 5,             11, 10, 9,        8, 7, 6},            MPKIND__SPLIT,       0, 4,  s1x12,  s1x3,      0x000, 0};
@@ -2875,18 +2984,25 @@ Private map_thing map_bone_rig          = {{-1, 0, 7, 5, -1, 6,               1,
 Private map_thing map_2x4_1x4           = {{7, 6, 4, 5,                       0, 1, 3, 2},                           MPKIND__SPLIT,       0, 2,  s2x4,   s1x4,      0x000, 1};
 Private map_thing map_qtg_dmd           = {{0, 7, 5, 6,                       1, 2, 4, 3},                           MPKIND__SPLIT,       0, 2,  s_qtag, sdmd,      0x005, 0};
 Private map_thing map_ptp_dmd           = {{0, 1, 2, 3,                       6, 7, 4, 5},                           MPKIND__SPLIT,       0, 2,  s_ptpd, sdmd,      0x000, 0};
-
+Private map_thing map_2stars            = {{6, 0, 7, 5,                       3, 1, 2, 4},                           MPKIND__SPLIT,       0, 2,  s_2stars, s_star,  0x000, 0};
 
 Private map_thing map_3x8_3x4           = {{0, 1, 2, 3, 23, 22, 16, 17, 18, 19, 20, 21,
                                                                    4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 11, 10},        MPKIND__SPLIT,       0, 2,  s3x8,   s3x4,      0x000, 0};
 Private map_thing map_4x6_3x4           = {{2, 9, 20, 15, 16, 19, 17, 18, 11, 0, 1, 10,
                                                                    5, 6, 23, 12, 13, 22, 14, 21, 8, 3, 4, 7},        MPKIND__SPLIT,       0, 2,  s4x6,   s3x4,      0x005, 0};
+Private map_thing map_par_rig           = {{-1, -1, 6, 7, -1, -1, 11, 10,
+                                                                   -1, -1, 5, 4, -1, -1, 0, 1},                      MPKIND__SPLIT,       6, 2,  s2x6,   s_rigger,      0x000, 1};
 Private map_thing map_4x6_2x6           = {{18, 19, 20, 21, 22, 23, 12, 13, 14, 15, 16, 17,
                                                                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},            MPKIND__SPLIT,       0, 2,  s4x6,   s2x6,      0x000, 1};
 Private map_thing map_3dmd_dmd          = {{0, 10, 8, 9,           1, 5, 7, 11,           2, 3, 6, 4},               MPKIND__SPLIT,       0, 3,  s3dmd,  sdmd,      0x015, 0};
 Private map_thing map_3ptp_dmd          = {{9, 0, 10, 8,           11, 1, 5, 7,           4, 2, 3, 6},               MPKIND__SPLIT,       0, 3,  s3ptpd, sdmd,      0x000, 0};
+
         map_thing map_4x6_2x4  = {{1, 10, 19, 16, 17, 18, 11, 0,   3, 8, 21, 14, 15, 20, 9, 2,
                                                                    5, 6, 23, 12, 13, 22, 7, 4},                      MPKIND__SPLIT,       0, 3,  s4x6,   s2x4,      0x015, 0};
+
+Private map_thing map_2x12_2x4  = {{0, 1, 2, 3, 20, 21, 22, 23,    4, 5, 6, 7, 16, 17, 18, 19,
+                                                                   8, 9, 10, 11, 12, 13, 14, 15},                    MPKIND__SPLIT,       0, 3,  s2x12,  s2x4,      0x000, 0};
+
 Private map_thing map_hv_qtg_2          = {{0, 1, 15, 14, 10, 11, 12, 13,     2, 3, 4, 5, 8, 9, 7, 6},               MPKIND__SPLIT,       0, 2,  s4dmd,  s_qtag,    0x000, 0};
 Private map_thing map_vv_qtg_2          = {{9, 20, 16, 19, 18, 11, 1, 10,     6, 23, 13, 22, 21, 8, 4, 7},           MPKIND__SPLIT,       0, 2,  s4x6,   s_qtag,    0x005, 0};
 Private map_thing map_spin_3x4          = {{1, 11, 8, -1, 9, 10, 0, -1,       3, 4, 6, -1, 7, 5, 2, -1},             MPKIND__SPLIT,       0, 2,  s3x4,   s_spindle, 0x005, 0};
@@ -3010,6 +3126,20 @@ map_thing map_init_table2[] = {
    {{1, 9, 8, 12, 13, 21, 20, 0},                                             MPKIND_DBLBENTCW,    0, 1,  s4x6,        s2x4, 0x000, 0, MAPCODE(s2x4,1,MPKIND_DBLBENTCW,    0)},
    {{17, 9, 8, 4, 5, 21, 20, 16},                                             MPKIND_DBLBENTCCW,   0, 1,  s4x6,        s2x4, 0x000, 0, MAPCODE(s2x4,1,MPKIND_DBLBENTCCW,   0)},
 
+   {{0, 1, 3, 2,            4, 5, 10, 11,          9, 8, 6, 7},               MPKIND__NONISOTROPIC,0, 3,  sbigh,       s1x4, 0x011, 0, MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,1)},
+   {{0, 1, 3, 2,            4, 5, 10, 11,          9, 8, 6, 7},               MPKIND__NONISOTROPIC,0, 3,  sbigx,       s1x4, 0x004, 0, MAPCODE(s1x4,3,MPKIND__NONISOTROPIC,0)},
+   {{0, 10, 8, 9,           11, 1, 5, 7,           2, 3, 6, 4},               MPKIND__NONISOTROPIC,0, 3,  s_3mdmd,     sdmd, 0x011, 0, MAPCODE(sdmd,3,MPKIND__NONISOTROPIC,1)},
+   {{9, 0, 10, 8,           1, 5, 7, 11,           4, 2, 3, 6},               MPKIND__NONISOTROPIC,0, 3,  s_3mptpd,    sdmd, 0x004, 0, MAPCODE(sdmd,3,MPKIND__NONISOTROPIC,0)},
+
+   {{5, 4, 0,                          2, 1, 3},                              MPKIND__SPLIT,       0, 2,  s_bone6, s_trngl,  0x207, 0, MAPCODE(s_trngl,2,MPKIND__NONISOTROP1,1)},
+   {{7, 6, 5, 0,                       3, 2, 1, 4},                           MPKIND__SPLIT,       0, 2,  s_bone, s_trngl4,  0x207, 0, MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,1)},
+
+   {{1, 3, 15, 13,                     9, 11, 7, 5},                          MPKIND__SPLIT,       0, 2,  s_c1phan,s_trngl4, 0x202, 0, MAPCODE(s_trngl4,2,MPKIND__NONISOTROP1,0)},
+
+
+
+
+
    {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},            MPKIND__STAG,        0, 2,  s4x4,        s2x4, 0x000, 1, MAPCODE(s2x4,2,MPKIND__STAG,        0)},
    {{10, 13, 3, 0, 2, 5, 11, 8,        12, 15, 14, 1, 4, 7, 6, 9},            MPKIND__STAG,        0, 2,  s4x4,        s2x4, 0x000, 1, MAPCODE(s2x4,2,MPKIND__STAG,        1)},
    {{12, 14, 1, 7, 4, 6, 9, 15,        13, 0, 2, 3, 5, 8, 10, 11},            MPKIND__STAG,        0, 2,  s4x4,      s_qtag, 0x000, 1, MAPCODE(s_qtag,2,MPKIND__STAG,      0)},
@@ -3036,6 +3166,7 @@ map_thing map_init_table2[] = {
    {{2, 3,                 5, 4,                 7, 6,               0, 1},   MPKIND__4_EDGES,     0, 4,  s_thar,      s1x2, 0x011, 0, MAPCODE(s1x2,4,MPKIND__4_EDGES,     1)},
    {{0, 2,                 4, 6,                 10, 8,              14, 12}, MPKIND__4_QUADRANTS, 0, 4,  s_c1phan,    s1x2, 0x044, 0, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS, 0)},
    {{1, 3,                 7, 5,                 11, 9,              13, 15}, MPKIND__4_QUADRANTS, 0, 4,  s_c1phan,    s1x2, 0x011, 0, MAPCODE(s1x2,4,MPKIND__4_QUADRANTS, 1)},
+   {{0, 1, 2, 3,        7, 4, 5, 6,        10, 11, 8, 9,    13, 14, 15, 12},  MPKIND__4_QUADRANTS, 0, 4,  s_c1phan,  s_star, 0x000, 0, MAPCODE(s_star,4,MPKIND__4_QUADRANTS, 0)},
 
    {{-1, 0, 1, 2, 11, 12, 13, 14,      3, 4, 5, 6, -1, 8, 9, 10},             MPKIND__OFFS_L_HALF_SPECIAL, 0, 2,  s2x8,   s2x4,      0x000, 0, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF_SPECIAL, 0)},
    {{1, 2, 3, 4, 13, 14, 15, -1,       5, 6, 7, -1, 9, 10, 11, 12},           MPKIND__OFFS_R_HALF_SPECIAL, 0, 2,  s2x8,   s2x4,      0x000, 0, MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF_SPECIAL, 0)},
@@ -3047,6 +3178,9 @@ map_thing map_init_table2[] = {
    {{2, 3, 4, 5, 8, 9, 10, 11},                                               MPKIND__OFFS_R_HALF, 0, 1,  s2x6,   s2x4,      0x000, 0, MAPCODE(s2x4,1,MPKIND__OFFS_R_HALF, 0)},
    {{0, 1, 2, 3, 8, 9, 10, 11},                                               MPKIND__OFFS_L_FULL, 0, 1,  s2x8,   s2x4,      0x000, 0, MAPCODE(s2x4,1,MPKIND__OFFS_L_FULL, 0)},
    {{4, 5, 6, 7, 12, 13, 14, 15},                                             MPKIND__OFFS_R_FULL, 0, 1,  s2x8,   s2x4,      0x000, 0, MAPCODE(s2x4,1,MPKIND__OFFS_R_FULL, 0)},
+
+   {{-1, -1, 0, 1, 2, 3, -1, -1, 5, 6, 7, 8},                                 MPKIND__OFFS_L_HALF, 5, 1,  s2x5,   s2x6,      0x000, 0, MAPCODE(s2x6,1,MPKIND__OFFS_L_HALF, 0)},
+   {{1, 2, 3, 4, -1, -1, 6, 7, 8, 9, -1, -1},                                 MPKIND__OFFS_R_HALF, 5, 1,  s2x5,   s2x6,      0x000, 0, MAPCODE(s2x6,1,MPKIND__OFFS_R_HALF, 0)},
 
    {{0, 1, 2, 3, 4, 5, 6, 7},                                                 MPKIND__OFFS_L_HALF, 2, 1,  s1x8,   s1x8,      0x000, 0, MAPCODE(s1x8,1,MPKIND__OFFS_L_HALF, 0)},
    {{0, 1, 2, 3, 4, 5, 6, 7},                                                 MPKIND__OFFS_R_HALF, 2, 1,  s1x8,   s1x8,      0x000, 0, MAPCODE(s1x8,1,MPKIND__OFFS_R_HALF, 0)},
@@ -3161,9 +3295,13 @@ map_thing map_init_table2[] = {
    {{0, 2, 4, 6, 9, 11, 13, 15,        1, 3, 5, 7, 8, 10, 12, 14},            MPKIND__REMOVED,     0, 2,  s2x8,   s2x4,      0x000, 0, MAPCODE(s2x4,2,MPKIND__REMOVED,     0)},
    {{10, 15, 3, 1, 4, 5, 6, 8,         12, 13, 14, 0, 2, 7, 11, 9},           MPKIND__REMOVED,     0, 2,  s4x4,   s2x4,      0x000, 1, MAPCODE(s2x4,2,MPKIND__REMOVED,     1)},
    {{4, 7, 22, 13, 15, 20, 17, 18, 11, 0, 2, 9,
-                            5, 6, 23, 12, 14, 21, 16, 19, 10, 1, 3, 8},       MPKIND__REMOVED,     0, 2,  s4x6,   s3x4,      0x005, 0, MAPCODE(s3x4,2,MPKIND__REMOVED,     1)},
+     5, 6, 23, 12, 14, 21, 16, 19, 10, 1, 3, 8},       MPKIND__REMOVED,     0, 2,  s4x6,   s3x4,      0x005, 0, MAPCODE(s3x4,2,MPKIND__REMOVED,     1)},
+   {{7, 22, 15, 20, 18, 11, 2, 9,
+     6, 23, 14, 21, 19, 10, 3, 8},                     MPKIND__REMOVED,     0, 2,  s4x6, s_qtag,      0x005, 0, MAPCODE(s_qtag,2,MPKIND__REMOVED,     1)},
    {{2, 7, 5, 0,                       6, 3, 1, 4},                           MPKIND__REMOVED,     0, 2,  s_bone, s_trngl4,  0x207, 0, MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)},
+   {{0, 1,     2, 3,        4, 9,      8, 7,       6, 5},                     MPKIND__SPLIT,       0, 5,  s1x10,  s1x2,      0x000, 0, MAPCODE(s1x2,5,MPKIND__SPLIT,       0)},
    {{0, 1,     2, 3,        4, 5,      11, 10,     9, 8,     7, 6},           MPKIND__SPLIT,       0, 6,  s1x12,  s1x2,      0x000, 0, MAPCODE(s1x2,6,MPKIND__SPLIT,       0)},
+   {{0, 9,     1, 8,        2, 7,      3, 6,       4, 5},                     MPKIND__SPLIT,       0, 5,  s2x5,   s1x2,      0x155, 0, MAPCODE(s1x2,5,MPKIND__SPLIT,       1)},
    {{0, 11,    1, 10,       2, 9,      3, 8,       4, 7,     5, 6},           MPKIND__SPLIT,       0, 6,  s2x6,   s1x2,      0x555, 0, MAPCODE(s1x2,6,MPKIND__SPLIT,       1)},
    {{0, 9, 14, 15,          1, 8, 13, 16,          2, 7, 12, 17,
                             3, 6, 11, 18,          4, 5, 10, 19},             MPKIND__SPLIT,       0, 5,  s4x5,   s1x4,      0x155, 0, MAPCODE(s1x4,5,MPKIND__SPLIT,       1)},
@@ -3181,9 +3319,9 @@ map_thing *split_lists[][6] = {
    {&map_2x4_2x2,  &map_2x4_2x2r, &map_2x6_2x2,  &map_2x6_2x2r, &map_2x8_2x2,  0},          /* s2x2 */
    {&map_1x8_1x4,  &map_2x4_1x4,  &map_1x12_1x4, &map_3x4_1x4,  &map_1x16_1x4, &map_4x4_1x4},  /* s1x4 */
    {&map_ptp_dmd,  &map_qtg_dmd,  &map_3ptp_dmd, &map_3dmd_dmd, &map_4ptp_dmd, &map_4dmd_dmd},  /* sdmd */
-   {0,             0,             0,             0,             0,             0},          /* s_star */
-   {0,             0,             0,             0,             0,             0},          /* s_trngl */
-   {0,             &map_rig_trngl4, 0,           0,             0,             0},          /* s_trngl4 */
+   {&map_2stars,   0,             0,             0,             0,             0},          /* s_star */
+   {0,             &map_s6_trngl, 0,             0,             0,             0},          /* s_trngl */
+   {&map_phan_trngl4b, &map_rig_trngl4, 0,       0,             0,             0},          /* s_trngl4 */
    {&map_bone_rig, 0,             0,             0,             0,             0},          /* s_bone6 */
    {&map_short6_2, 0,             0,             0,             0,             0},          /* s_short6 */
    {&map_1x12_1x6, &map_2x6_1x6,  0,             &map_3x6_1x6,  0,             &map_4x6_1x6}, /* s1x6 */
@@ -3192,8 +3330,9 @@ map_thing *split_lists[][6] = {
    {0,             0,             0,             0,             0,             0},          /* s_2x1dmd */
    {&map_hv_qtg_2, &map_vv_qtg_2, 0,             0,             0,             0},          /* s_qtag */
    {0,             0,             0,             0,             0,             0},          /* s_bone */
-   {&map_1x16_1x8, &map_2x8_1x8,  &map_3x8_1x8,  0,             0,             0},          /* s1x8 */
+   {&map_1x16_1x8, &map_2x8_1x8,  0,             &map_3x8_1x8,  0,             0},          /* s1x8 */
    {0,             0,             0,             0,             0,             0},          /* slittlestars */
+   {0,             0,             0,             0,             0,             0},          /* s_2stars */
    {0,             0,             0,             0,             0,             0},          /* s1x3dmd */
    {0,             0,             0,             0,             0,             0},          /* s3x1dmd */
    {0,             &map_spin_3x4, 0,             0,             0,             0},          /* s_spindle */
@@ -3201,8 +3340,8 @@ map_thing *split_lists[][6] = {
    {0,             0,             0,             0,             0,             0},          /* s_dhrglass */
    {0,             0,             0,             0,             0,             0},          /* s_hyperglass */
    {0,             0,             0,             0,             0,             0},          /* s_crosswave */
-   {&map_hv_2x4_2, &map_split_f,  0,             &map_4x6_2x4,  0,             0},          /* s2x4 */
+   {&map_hv_2x4_2, &map_split_f,  &map_2x12_2x4, &map_4x6_2x4,  0,             0},          /* s2x4 */
    {0,             0,             0,             0,             0,             0},          /* s2x5 */
-   {0,             0,             0,             0,             0,             0},          /* s_rigger */
+   {0,             &map_par_rig,  0,             0,             0,             0},          /* s_rigger */
    {&map_3x8_3x4,  &map_4x6_3x4,  0,             0,             0,             0},          /* s3x4 */
    {0,             &map_4x6_2x6,  0,             0,             0,             0}};         /* s2x6 */

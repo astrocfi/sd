@@ -1,6 +1,8 @@
+/*-*-mode:C;c-basic-offset:3;indent-tabs-mode:nil;eval:(modify-syntax-entry ?\_ "w");-*-*/
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -193,8 +195,14 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
                /* When testing columns, we use an additional selector.  The way
                   the test setups are arranged, these effectively select #1 and #2 in the
                   column.  They make "<anyone> mark time" work. */
+               /* Also, for tidal waves, we select boys.  That makes "relay the
+                  shadow but <anyone> criss cross it" work. */
                if (test_setup == &test_setup_rcol || test_setup == &test_setup_lcol) {
                   selector_for_initialize = selector_headcorners;
+                  goto try_another_selector;
+               }
+               else if (test_setup == &test_setup_1x8 || test_setup == &test_setup_l1x8) {
+                  selector_for_initialize = selector_boys;
                   goto try_another_selector;
                }
          }
@@ -740,7 +748,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
             /* If this call uses a predicate that takes a selector, flag the call so that
                we will query the user for that selector. */
 
-            if (last_datum < selector_preds)
+            if ((int) last_datum < selector_preds)
                call_root->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
 
             for (j=0; j < this_start_size; j++) {
@@ -913,7 +921,7 @@ Private void build_database(call_list_mode_t call_list_mode)
    if (call_list_mode == call_list_mode_none)
       acceptable_level = higher_acceptable_level[calling_level];
 
-   for (i=0 ; i<4 ; i++) {
+   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
       number_of_taggers[i] = 0;
       tagger_calls[i] = (callspec_block **) 0;
    }
@@ -1049,7 +1057,8 @@ Private void build_database(call_list_mode_t call_list_mode)
                /* But anything that invokes a tagging call goes into each list, inheriting its own class. */
                int xxx;
 
-               for (xxx=1 ; xxx<4 ; xxx++) {
+               /* Iterate over all tag classes except class 0. */
+               for (xxx=1 ; xxx<NUM_TAGGER_CLASSES ; xxx++) {
                   callspec_block *new_call = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
                   (void) memcpy(new_call, call_root, sizeof(callspec_block) + char_count - 3);
                   /* Fix it up. */
@@ -1097,6 +1106,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
 {
    uint32 arithtest = 2081607680;
    uint32 escape_bit_junk;
+   uint32 uj;
    int i, j;
 
    /* This "if" should never get executed.  We expect compilers to optimize
@@ -1119,7 +1129,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    else if (NUM_WARNINGS > (WARNING_WORDS << 5)) {
       init_error("insufficient warning bit space -- program has been compiled incorrectly.");
       final_exit(1);
-     }
+   }
 
    /* Read in the calls database, then start the user interface package,
       whatever that might be, and finally create all the call menus.
@@ -1140,25 +1150,31 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       phrases, suitable for external display on menus, instead of "@" escapes. */
 
    for (i=0; i<number_of_calls[call_list_any]; i++)
-      main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name, &main_call_lists[call_list_any][i]->callflagsf);
+      main_call_lists[call_list_any][i]->menu_name =
+         translate_menu_name(main_call_lists[call_list_any][i]->name,
+                             &main_call_lists[call_list_any][i]->callflagsf);
 
-   for (i=0 ; i<4 ; i++) {
-      for (j=0; j<number_of_taggers[i]; j++)
-         tagger_calls[i][j]->menu_name = translate_menu_name(tagger_calls[i][j]->name, &tagger_calls[i][j]->callflagsf);
+   for (i=0 ; i<NUM_TAGGER_CLASSES ; i++) {
+      for (uj=0; uj<number_of_taggers[i]; uj++)
+         tagger_calls[i][uj]->menu_name =
+            translate_menu_name(tagger_calls[i][uj]->name, &tagger_calls[i][uj]->callflagsf);
    }
 
-   for (j=0; j<number_of_circcers; j++)
-      circcer_calls[j]->menu_name = translate_menu_name(circcer_calls[j]->name, &circcer_calls[j]->callflagsf);
+   for (uj=0; uj<number_of_circcers; uj++)
+      circcer_calls[uj]->menu_name =
+         translate_menu_name(circcer_calls[uj]->name, &circcer_calls[uj]->callflagsf);
 
    /* Do the base calls (calls that are used in definitions of other calls).  These may have
       already been done, if they were on the level. */
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]->menu_name)
-         base_calls[i]->menu_name = translate_menu_name(base_calls[i]->name, &base_calls[i]->callflagsf);
+         base_calls[i]->menu_name =
+            translate_menu_name(base_calls[i]->name, &base_calls[i]->callflagsf);
    }
 
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++)
-      concept_descriptor_table[i].menu_name = translate_menu_name(concept_descriptor_table[i].name, &escape_bit_junk);
+      concept_descriptor_table[i].menu_name =
+         translate_menu_name(concept_descriptor_table[i].name, &escape_bit_junk);
 
    the_array = main_call_lists[call_list_any];
    heapsort(number_of_calls[call_list_any]);

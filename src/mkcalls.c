@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -89,6 +91,8 @@ int begin_sizes[] = {
    8,          /* b_pbone */
    8,          /* b_rigger */
    8,          /* b_prigger */
+   8,          /* b_2stars */
+   8,          /* b_p2stars */
    8,          /* b_spindle */
    8,          /* b_pspindle */
    8,          /* b_hrglass */
@@ -160,6 +164,12 @@ int begin_sizes[] = {
    12,         /* b_p3ptpd */
    16,         /* b_4ptpd */
    16,         /* b_p4ptpd */
+   12,         /* b_525 */
+   12,         /* b_p525 */
+   12,         /* b_3mdmd */
+   12,         /* b_p3mdmd */
+   12,         /* b_3mptpd */
+   12,         /* b_p3mptpd */
    12,         /* b_bigh */
    12,         /* b_pbigh */
    12,         /* b_bigx */
@@ -214,7 +224,7 @@ static char db_input_filename[FILENAME_LEN];
 static char db_output_filename[FILENAME_LEN];
 
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
    if (argc == 2)
        strncpy(db_input_filename, argv[1], FILENAME_LEN);
@@ -248,7 +258,7 @@ void main(int argc, char *argv[])
    }
 
    dbcompile();
-   exit(0);
+   return 0;
 }
 
 

@@ -1,3 +1,5 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1998  William B. Ackerman.
@@ -21,8 +23,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.93"
-#define TIME_STAMP "wba@apollo.hp.com  8 Feb 98 $"
+#define VERSION_STRING "31.95"
+#define TIME_STAMP "wba@an.hp.com  28 May 98 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -148,9 +150,9 @@ Private void display_help(void)
 int abs_max_calls;
 int max_base_calls;
 callspec_block **base_calls;        /* Gets allocated as array of pointers in sdinit. */
-int number_of_taggers[4];
-callspec_block **tagger_calls[4];
-int number_of_circcers;
+uint32 number_of_taggers[NUM_TAGGER_CLASSES];
+callspec_block **tagger_calls[NUM_TAGGER_CLASSES];
+uint32 number_of_circcers;
 callspec_block **circcer_calls;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH];
@@ -523,17 +525,20 @@ extern long_boolean restore_parse_state(void)
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-Private long_boolean find_tagger(int tagclass, int *tagg, callspec_block **tagger_call)
+Private long_boolean find_tagger(uint32 tagclass, uint32 *tagg, callspec_block **tagger_call)
 {
-   if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
+   uint32 numtaggers = number_of_taggers[tagclass];
+   callspec_block **tagtable = tagger_calls[tagclass];
+
+   if (numtaggers == 0) return TRUE;   /* We can't possibly do this. */
 
    if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
       if ((*tagg = uims_do_tagger_popup(tagclass)) == 0) return TRUE;
       if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
-      if ((*tagg & 0x1F) > number_of_taggers[tagclass]) fail("bad tagger index???");
+      if ((*tagg & 0x1F) > numtaggers) fail("bad tagger index???");
    }
    else {
-      int tag;
+      uint32 tag;
 
       if (interactivity == interactivity_database_init) {
          tag = 0;   /* This may not be right. */
@@ -547,28 +552,28 @@ Private long_boolean find_tagger(int tagclass, int *tagg, callspec_block **tagge
                over the space of all calls when things like this happen.
                We also reject any that are marked not to be used in resolve. */
 
-            while (     tag < number_of_taggers[tagclass] &&
-                        (  (tagger_calls[tagclass][tag]->callflags1 &
+            while (     tag < numtaggers &&
+                        (  (tagtable[tag]->callflags1 &
                                  (CFLAG1_DONT_USE_IN_RESOLVE|
                                  CFLAG1_NUMBER_MASK)) ||
-                           (tagger_calls[tagclass][tag]->callflagsf &
+                           (tagtable[tag]->callflagsf &
                                  (CFLAGH__TAG_CALL_RQ_MASK|
                                  CFLAGH__CIRC_CALL_RQ_BIT|
                                  CFLAGH__REQUIRES_SELECTOR|
                                  CFLAGH__REQUIRES_DIRECTION))))
                tag++;
 
-            if (tag == number_of_taggers[tagclass] && tagger_iterator == 0)
+            if (tag == numtaggers && tagger_iterator == 0)
                return TRUE;  /* There simply are no acceptable taggers. */
 
             if ((selector_iterator | direction_iterator | number_iterator) == 0) {
                tagger_iterator = tag+1;
 
-               while (     tagger_iterator < number_of_taggers[tagclass] &&
-                           (  (tagger_calls[tagclass][tagger_iterator]->callflags1 &
+               while (     tagger_iterator < numtaggers &&
+                           (  (tagtable[tagger_iterator]->callflags1 &
                                     (CFLAG1_DONT_USE_IN_RESOLVE|
                                     CFLAG1_NUMBER_MASK)) ||
-                              (tagger_calls[tagclass][tagger_iterator]->callflagsf &
+                              (tagtable[tagger_iterator]->callflagsf &
                                     (CFLAGH__TAG_CALL_RQ_MASK|
                                     CFLAGH__CIRC_CALL_RQ_BIT|
                                     CFLAGH__REQUIRES_SELECTOR|
@@ -576,29 +581,29 @@ Private long_boolean find_tagger(int tagclass, int *tagg, callspec_block **tagge
                   tagger_iterator++;
 
                /* See if we have exhausted all possible taggers. */
-               if (tagger_iterator == number_of_taggers[tagclass])
+               if (tagger_iterator == numtaggers)
                   tagger_iterator = 0;
             }
          }
          else {
-            tag = generate_random_number(number_of_taggers[tagclass]);
+            tag = generate_random_number(numtaggers);
          }
 
          hash_nonrandom_number(tag);
       }
 
       /* We don't generate "dont_use_in_resolve" taggers in any random search. */
-      if (tagger_calls[tagclass][tag]->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
+      if (tagtable[tag]->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
          fail("This shouldn't get printed.");
 
       *tagg = (tagclass << 5) | (tag+1);
    }
 
    /* At this point, tagg contains 8 bits:
-         3 bits of tagger list (zero-based - 0/1/2/3)
+         3 bits of tagger list (zero-based - 0..NUM_TAGGER_CLASSES-1)
          5 bits of tagger within that list (1-based). */
 
-   *tagger_call = tagger_calls[tagclass][(*tagg & 0x1F)-1];
+   *tagger_call = tagtable[(*tagg & 0x1F)-1];
 
    return FALSE;
 }
@@ -606,7 +611,7 @@ Private long_boolean find_tagger(int tagclass, int *tagg, callspec_block **tagge
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-Private long_boolean find_circcer(int *circcp)
+Private long_boolean find_circcer(uint32 *circcp)
 {
    if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
 
@@ -762,7 +767,7 @@ Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, 
    if (interactivity == interactivity_normal) {
       *number_list = uims_get_number_fields(howmanynumbers, forbid_zero);
 
-      if ((*number_list) == ~0)
+      if ((*number_list) == ~0UL)
          return TRUE;           /* User waved the mouse away. */
    }
    else {
@@ -833,10 +838,10 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
 {
    parse_block *new_block;
    callspec_block *tagger_call;
-   int tagg = 0;
+   uint32 tagg = 0;
    selector_kind sel = selector_uninitialized;
    direction_kind dir = direction_uninitialized;
-   int circc = -1;    /* Circulator index (1-based). */
+   uint32 circc = 0;    /* Circulator index (1-based). */
    uint32 number_list = 0;
    int howmanynums = (call->callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
@@ -881,7 +886,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
 
    /* Filling in the tagger requires recursion! */
 
-   if (tagg > 0) {
+   if (tagg != 0) {
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.tagger = tagg;
@@ -891,7 +896,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
 
       /* Deposit the index of the base tagging call.  This will of course be replaced. */
 
-      new_block->next->call = base_calls[BASE_CALL_TAGGER0];
+      new_block->next->call = base_calls[base_call_tagger0];
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
       if (deposit_call(tagger_call, &null_options))
@@ -901,7 +906,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
 
    /* Filling in the circcer does too, but it isn't serious. */
 
-   if (circc > 0) {
+   if (circc != 0) {
       parse_block **savecwp = parse_state.concept_write_ptr;
 
       new_block->options.circcer = circc;
@@ -911,7 +916,7 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
 
       /* Deposit the index of the base circcing call.  This will of course be replaced. */
 
-      new_block->next->call = base_calls[BASE_CALL_CIRCCER];
+      new_block->next->call = base_calls[base_call_circcer];
 
       if (circc > number_of_circcers) fail("bad circcer index???");
 
@@ -1643,7 +1648,7 @@ Private long_boolean write_sequence_to_file(void)
 }
 
 
-void main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
    int i;
 
@@ -1660,7 +1665,7 @@ void main(int argc, char *argv[])
    verify_options.howmanynumbers = 0;
 
    if (argc >= 2 && strcmp(argv[1], "-help") == 0)
-       display_help();		/* does not return */
+      display_help();		/* does not return */
 
    /* Do general initializations, which currently consist only of
       seeding the random number generator. */

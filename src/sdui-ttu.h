@@ -18,8 +18,9 @@
    which way a person is facing.  It must point to a string in stable storage. */
 extern char *ui_directions;
 
-/* Process any command line arguments that we need. */
-extern void ttu_process_command_line(int *argcp, char **argv);
+/* Process any command line arguments that we need.
+   Returns nonzero if it failed -- error message has already been printed. */
+extern int ttu_process_command_line(int *argcp, char **argv);
 
 /* Print the help message appropriate for the switches that we support. */
 extern void ttu_display_help(void);
@@ -35,6 +36,7 @@ extern void ttu_terminate(void);
    with the "screen" size. */
 
 extern int get_lines_for_more(void);
+extern FILE *journal_file;
 
 /* Clear the current line, leave cursor at left edge. */
 extern void clear_line(void);

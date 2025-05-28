@@ -1,6 +1,8 @@
+/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
+
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -21,27 +23,50 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 120
+#define DATABASE_FORMAT_VERSION 125
+
+/* BEWARE!!  These must track the items in "tagtabinit" in dbcomp.c . */
+typedef enum {
+   base_call_unused,
+   base_call_null,
+   base_call_null_second,
+   base_call_cast_3_4,
+   base_call_ends_shadow,
+   base_call_chreact_1,
+   base_call_makepass_1,
+   base_call_backemup,
+   base_call_circulate,
+   base_call_trade,
+      /* the next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
+   base_call_tagger0,
+   base_call_tagger1_noref,
+   base_call_tagger2_noref,
+   base_call_tagger3_noref,
+   base_call_circcer,
+   base_call_turnstar_n
+} base_call_index;
+#define num_base_call_indices (((int) base_call_turnstar_n)+1)
 
 
+/* Number of items in the above list. */
+#ifdef DONTUSETHESEANYMORE
+#define NUM_BASE_CALLS 16
 
-
-/* BEWARE!!  These must track the items in tagtabinit in dbcomp.c . */
+#define BASE_CALL_NULL        1
 #define BASE_CALL_NULL_SECOND 2
 #define BASE_CALL_CAST_3_4    3
 #define BASE_CALL_ENDS_SHADOW 4
-#define BASE_CALL_CHREACT_1   5
-#define BASE_CALL_MAKEPASS_1  6
 #define BASE_CALL_BACKEMUP    7
 #define BASE_CALL_CIRCULATE   8
-/* The next 4 must be consecutive. */
-#define BASE_CALL_TAGGER0     9
-#define BASE_CALL_TAGGER1    10
-#define BASE_CALL_TAGGER2    11
-#define BASE_CALL_TAGGER3    12
-#define BASE_CALL_CIRCCER    13
-#define BASE_CALL_TURNSTAR_N 14
-
+#define BASE_CALL_TRADE       9
+/* The next "NUM_TAGGER_CLASSES" (that is, 4) must be a consecutive group. */
+#define BASE_CALL_TAGGER0    10
+#define BASE_CALL_TAGGER1    11
+#define BASE_CALL_TAGGER2    12
+#define BASE_CALL_TAGGER3    13
+#define BASE_CALL_CIRCCER    14
+#define BASE_CALL_TURNSTAR_N 15
+#endif
 
 /* BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
    "forcetabh", and "altdeftabh" in dbcomp.c .  These are the infamous
@@ -69,16 +94,19 @@
 #define INHERITFLAG_3X1                   0x00008000UL
 #define INHERITFLAG_3X3                   0x00010000UL
 #define INHERITFLAG_4X4                   0x00020000UL
-#define INHERITFLAG_6X6                   0x00040000UL
-#define INHERITFLAG_8X8                   0x00080000UL
-#define INHERITFLAG_SINGLEFILE            0x00100000UL
-#define INHERITFLAG_HALF                  0x00200000UL
-#define INHERITFLAG_YOYO                  0x00400000UL
-#define INHERITFLAG_STRAIGHT              0x00800000UL
-#define INHERITFLAG_TWISTED               0x01000000UL
-#define INHERITFLAG_LASTHALF              0x02000000UL   
+#define INHERITFLAG_5X5                   0x00040000UL
+#define INHERITFLAG_6X6                   0x00080000UL
+#define INHERITFLAG_7X7                   0x00100000UL
+#define INHERITFLAG_8X8                   0x00200000UL
+#define INHERITFLAG_SINGLEFILE            0x00400000UL
+#define INHERITFLAG_HALF                  0x00800000UL
+#define INHERITFLAG_YOYO                  0x01000000UL
+#define INHERITFLAG_STRAIGHT              0x02000000UL
+#define INHERITFLAG_TWISTED               0x04000000UL
+#define INHERITFLAG_LASTHALF              0x08000000UL
 
-#define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_6X6 | INHERITFLAG_8X8)
+#define MXN_BITS (INHERITFLAG_1X2 | INHERITFLAG_2X1 | INHERITFLAG_2X2 | INHERITFLAG_1X3 | INHERITFLAG_3X1 | \
+            INHERITFLAG_3X3 | INHERITFLAG_4X4 | INHERITFLAG_5X5 | INHERITFLAG_6X6 | INHERITFLAG_7X7 | INHERITFLAG_8X8)
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block,
@@ -119,6 +147,8 @@
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
 #define CFLAG1_BASE_CIRC_CALL             0x08000000UL
 #define CFLAG1_ENDS_TAKE_RIGHT_HANDS      0x10000000UL
+#define CFLAG1_FUNNY_MEANS_THOSE_FACING   0x20000000UL
+#define CFLAG1_ONE_PERSON_CALL            0x40000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -140,15 +170,15 @@
    nontrivial qualifiers).  The high 9 bits are as follows. */
 
 /* These two must be consecutive for encoding in the "assump_both" field. */
-#define QUALBIT__LEFT           0x8000
-#define QUALBIT__RIGHT          0x4000
-#define QUALBIT__LIVE           0x2000
-#define QUALBIT__TBONE          0x1000
-#define QUALBIT__NTBONE         0x0800
+#define QUALBIT__LEFT           0x8000U
+#define QUALBIT__RIGHT          0x4000U
+#define QUALBIT__LIVE           0x2000U
+#define QUALBIT__TBONE          0x1000U
+#define QUALBIT__NTBONE         0x0800U
 /* A 4 bit field.  If nonzero, there is a number requirement, and the field is that number plus 1. */
-#define QUALBIT__NUM_MASK       0x0780
-#define QUALBIT__NUM_BIT        0x0080
-#define QUALBIT__QUAL_CODE      0x007F
+#define QUALBIT__NUM_MASK       0x0780U
+#define QUALBIT__NUM_BIT        0x0080U
+#define QUALBIT__QUAL_CODE      0x007FU
 
 
 
@@ -206,6 +236,7 @@ typedef enum {
    s_bone,
    s1x8,
    slittlestars,
+   s_2stars,
    s1x3dmd,
    s3x1dmd,
    s_spindle,
@@ -255,6 +286,9 @@ typedef enum {
    sx1x16,
    sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
    swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
+   s_525,
+   s_3mdmd,
+   s_3mptpd,
    sbigh,
    sbigx,
    sbigrig,
@@ -301,6 +335,8 @@ typedef enum {
    b_pbone,
    b_rigger,
    b_prigger,
+   b_2stars,
+   b_p2stars,
    b_spindle,
    b_pspindle,
    b_hrglass,
@@ -372,6 +408,12 @@ typedef enum {
    b_p3ptpd,
    b_4ptpd,
    b_p4ptpd,
+   b_525,
+   b_p525,
+   b_3mdmd,
+   b_p3mdmd,
+   b_3mptpd,
+   b_p3mptpd,
    b_bigh,
    b_pbigh,
    b_bigx,
@@ -432,6 +474,8 @@ typedef enum {
    sq_4x4couples_only,
    sq_magic_only,
    sq_in_or_out,
+   sq_independent_in_or_out,
+   sq_centers_in_or_out,
    sq_miniwaves,
    sq_not_miniwaves,
    sq_as_couples_miniwaves,
@@ -448,10 +492,6 @@ typedef enum {
    sq_ctr2fl_endwv,
    sq_split_dixie,
    sq_not_split_dixie,
-   sq_8_chain,
-   sq_trade_by,
-   sq_facing_in,
-   sq_facing_out,
    sq_all_ctrs_rh,
    sq_all_ctrs_lh,
    sq_dmd_ctrs_rh,
@@ -463,6 +503,7 @@ typedef enum {
    sq_ctr_pts_lh,
    sq_said_tgl,
    sq_didnt_say_tgl,
+   sq_occupied_as_stars,
    sq_occupied_as_h,
    sq_occupied_as_qtag,
    sq_occupied_as_3x1tgl,
@@ -470,7 +511,8 @@ typedef enum {
    sq_col_ends_lookin_in,
    sq_ripple_one_end,
    sq_ripple_both_ends,
-   sq_ripple_centers,
+   sq_ripple_both_centers,
+   sq_ripple_any_centers,
    sq_people_1_and_5_real,
    sq_ctrs_sel,
    sq_ends_sel,
@@ -528,7 +570,9 @@ typedef enum {
    cr_jright,
    cr_ijleft,
    cr_ijright,
-   cr_li_lo
+   cr_li_lo,
+   cr_ctrs_in_out,
+   cr_indep_in_out
 } call_restriction;
 
 /* BEWARE!!  This list must track the array "schematab" in dbcomp.c . */
@@ -554,12 +598,15 @@ typedef enum {
    schema_maybe_nxn_1331_lines_concentric,
    schema_maybe_nxn_1331_cols_concentric,
    schema_1331_concentric,
+   schema_1313_concentric,       /* Not for public use! */
    schema_concentric_diamond_line,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
    schema_concentric_or_diamond_line,
    schema_concentric_6_2,
    schema_concentric_2_6,
+   schema_concentric_2_4,
+   schema_concentric_big2_6,     /* Not for public use! */
    schema_concentric_2_6_or_2_4,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,

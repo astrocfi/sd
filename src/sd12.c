@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1997  William B. Ackerman.
+    Copyright (C) 1990-1998  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -362,13 +362,18 @@ extern void triangle_move(
                20 - <anyone>-base
    Add 100 octal if interlocked triangles. */
 
-   if (indicator >= 2 && indicator <= 21 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
-      indicator |= 0100;     /* Interlocked triangles. */
-      ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_INTLK;
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_MODIFIERS) {
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_MODIFIERS;
    }
+   else {
+      if (indicator >= 2 && indicator <= 21 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
+         indicator |= 0100;     /* Interlocked triangles. */
+         ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_INTLK;
+      }
 
-   if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
-      fail("Illegal modifier for this concept.");
+      if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
+         fail("Illegal modifier for this concept.");
+   }
 
    indicator_base = indicator & 077;
 

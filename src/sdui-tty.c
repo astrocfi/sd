@@ -1,9 +1,13 @@
+/*-*-mode:C;c-basic-offset:3;indent-tabs-mode:nil;eval:(modify-syntax-entry ?\_ "w");-*-*/
+
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
  * Time-stamp: <96/05/22 17:17:53 wba>
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
+ *
+ * Copyright (c) 1994-1998 William B. Ackerman
  *
  * Permission to use, copy, modify, and distribute this software for
  * any purpose is hereby granted without fee, provided that the above
@@ -30,7 +34,7 @@
  */
 
 #define UI_VERSION_STRING "1.9"
-#define UI_TIME_STAMP "wba@apollo.hp.com  16 Jun 96 $"
+#define UI_TIME_STAMP "wba@an.hp.com  18 Apr 98 $"
 
 /* This file defines the following functions:
    uims_version_string
@@ -82,6 +86,10 @@ and the following data that are used by sdmatch.c :
    resolve_command_strings
    num_extra_resolve_commands
    extra_resolve_commands
+
+and the following other variable:
+
+   journal_file
 */
 
 #ifndef THINK_C
@@ -116,7 +124,9 @@ static Const char id[] = "@(#)$He" "ader: Sd: sdui-tty.c " UI_VERSION_STRING "  
  * We return the "0.6tty" part.
  */
 
-Private char version_mem[12];
+FILE *journal_file = (FILE *) 0;
+
+static char version_mem[12];
 
 extern char *uims_version_string(void)
 {
@@ -206,7 +216,8 @@ static char *call_menu_prompts[NUM_CALL_LIST_KINDS];
 extern void uims_process_command_line(int *argcp, char ***argvp)
 {
 #ifdef UNIX_STYLE
-   ttu_process_command_line(argcp, *argvp);
+   if (ttu_process_command_line(argcp, *argvp))
+      exit_program(1);
 #else
    *argcp = ccommand(argvp); /* pop up window to get command line arguments */
 #endif
@@ -833,6 +844,12 @@ Private void get_user_input(char *prompt, int which)
                pack_and_echo_character(*p++);
 
             put_line("\n");
+
+            if (journal_file) {
+               fputs(static_ss.full_input, journal_file);
+               fputc('\n', journal_file);
+            }
+
             /* Include the input line in our count, so we will erase it
                if we are trying to make the VT-100 screen look nice. */
             current_text_line++;
@@ -951,9 +968,7 @@ static long_boolean deposit_call_tree(modifier_block *anythings, parse_block *sa
       save1->next = tt;
       save1->concept = &marker_concept_mod;
       tt->concept = &marker_concept_mod;
-      tt->call = (key == 6) ?
-         base_calls[2]:   /* "_secondary nothing" */
-         base_calls[1];   /* "nothing" */
+      tt->call = base_calls[(key == 6) ? base_call_null_second: base_call_null];
       tt->replacement_key = key;
       parse_state.concept_write_ptr = &tt->subsidiary_root;
    }
@@ -1156,11 +1171,13 @@ Private int confirm(char *question)
         if ((c=='n') || (c=='N')) {
             put_line("no\n");
             current_text_line++;
+            if (journal_file) fputc('n', journal_file);
             return POPUP_DECLINE;
         }
         if ((c=='y') || (c=='Y')) {
             put_line("yes\n");
             current_text_line++;
+            if (journal_file) fputc('y', journal_file);
             return POPUP_ACCEPT;
         }
         put_char(c);
@@ -1313,9 +1330,10 @@ extern int uims_do_tagger_popup(int tagger_class)
 
    if (interactivity == interactivity_verify) {
       user_match.match.call_conc_options.tagger = verify_options.tagger;
-      if (user_match.match.call_conc_options.tagger == 0) user_match.match.call_conc_options.tagger = (tagger_class << 5) + 1;
+      if (user_match.match.call_conc_options.tagger == 0)
+        user_match.match.call_conc_options.tagger = (tagger_class << 5) + 1;
    }
-   else if (!user_match.valid || (user_match.match.call_conc_options.tagger <= 0)) {
+   else if (!user_match.valid || (user_match.match.call_conc_options.tagger == 0)) {
       match_result saved_match = user_match;
       get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class);
       saved_match.match.call_conc_options.tagger = user_match.match.call_conc_options.tagger;
@@ -1376,7 +1394,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
             char buffer[200];
             get_string_input("How many? ", buffer);
             if (buffer[0] == '!' || buffer[0] == '?') {
-               put_line("Type a number between 0 and 8\n");
+               put_line("Type a number between 0 and 15\n");
                current_text_line++;
             }
             else if (!buffer[0]) return ~0;
@@ -1393,7 +1411,7 @@ extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)
       }
 
       if (forbid_zero && this_num == 0) return ~0;
-      if (this_num > 8) return ~0;    /* User gave bad answer. */
+      if (this_num > 15) return ~0;    /* User gave bad answer. */
       number_list |= (this_num << (i*4));
    }
 
@@ -1420,16 +1438,14 @@ uims_add_new_line(char the_line[])
  * n = 0 means to erase the entire buffer.
  */
 
-extern void
-uims_reduce_line_count(int n)
+extern void uims_reduce_line_count(int n)
 {
-    text_output_trim(n);
+   text_output_trim(n);
 }
 
-extern void
-uims_terminate(void)
+extern void uims_terminate(void)
 {
-    ttu_terminate();
+   ttu_terminate();
 }
 
 /*
