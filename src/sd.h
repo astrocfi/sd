@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2009  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -688,6 +688,12 @@ enum selector_kind {
    selector_farcolumn,
    selector_nearbox,
    selector_farbox,
+   selector_lineleft,
+   selector_lineright,
+   selector_columnleft,
+   selector_columnright,
+   selector_boxleft,
+   selector_boxright,
    selector_nearfour,
    selector_farfour,
    selector_neartwo,
@@ -1435,7 +1441,13 @@ enum {
    d_north = BIT_PERSON | 010U,
    d_south = BIT_PERSON | 012U,
    d_east  = BIT_PERSON | 001U,
-   d_west  = BIT_PERSON | 003U
+   d_west  = BIT_PERSON | 003U,
+
+   // If a real person and a person under test are XOR'ed, the result AND'ed
+   // with this constant, and the low bits of that result examined, it will tell
+   // whether the person under test is real and facing in the same direction
+   // (result = 0), the opposite direction (result == 2), or whatever.
+   DIR_MASK = (BIT_PERSON | 3)
 };
 
 // Bits that go into the "id2" field.
@@ -1476,24 +1488,35 @@ enum {
    ID2_FACEBACK   = 0x00000100U,
    ID2_FACELEFT   = 0x00000080U,
    ID2_FACERIGHT  = 0x00000040U,
-
-   // 6 available codes.
+   ID2_LEFTCOL    = 0x00000020U,
+   ID2_LEFTLINE   = 0x00000010U,
+   ID2_LEFTBOX    = 0x00000008U,
+   ID2_RIGHTCOL   = 0x00000004U,
+   ID2_RIGHTLINE  = 0x00000002U,
+   ID2_RIGHTBOX   = 0x00000001U,
 
    // Various useful combinations.
 
-   ID2_DIR_BITS_TO_CLEAR = ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT,
+   ID2_ABSOLUTE_PROXIMITY_BITS =
+      ID2_LEFTCOL|ID2_LEFTLINE|ID2_LEFTBOX|
+      ID2_RIGHTCOL|ID2_RIGHTLINE|ID2_RIGHTBOX,
+
+   ID2_ABSOLUTE_FACING_BITS = ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT,
 
    // These bits are not a property just of the person and his position
    // in the formation -- they depend on other people's facing direction.
    ID2_BITS_NOT_INTRINSIC = ID2_FACING | ID2_NOTFACING,
 
-   // These happen to be all the bits currently in this word.
-   ID2_BITS_TO_CLEAR =
-   ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE|
-   ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
-   ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
-   ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS
+   ID2_BITS_TO_CLEAR_FOR_PHANTOM_SELECTOR =
+      ID2_CENTER|ID2_END|
+      ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
+      ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
+      ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS,
+
+   ID2_BITS_TO_CLEAR_FOR_UPDATE =
+      ID2_BITS_NOT_INTRINSIC |
+      ID2_BITS_TO_CLEAR_FOR_PHANTOM_SELECTOR |
+      ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE
 };
 
 
@@ -1527,12 +1550,7 @@ enum {
    ID3_NEARSIX      = 0x00002000U,
    ID3_FARSIX       = 0x00001000U,
 
-   ID3_LESS_BITS_TO_CLEAR =
-   ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|
-   ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR|
-   ID3_NEARTHREE|ID3_NEARFIVE|ID3_FARTHREE|ID3_FARFIVE|
-   ID3_FARTHEST1|ID3_NOTFARTHEST1|ID3_NEAREST1|ID3_NOTNEAREST1|
-   ID3_NEARTWO|ID3_FARTWO|ID3_NEARSIX|ID3_FARSIX,
+   // 2 available codes.
 
    ID3_PERM_NSG     = 0x00000200U,  // Not side girl
    ID3_PERM_NSB     = 0x00000100U,  // Not side boy
@@ -1546,8 +1564,17 @@ enum {
    ID3_PERM_GIRL    = 0x00000001U,  // Girl
    ID3_PERM_ALLBITS = 0x000003FFU,
 
-   // These are the standard definitions for the 8 people in the square.
+   ID3_ABSOLUTE_PROXIMITY_BITS =
+      ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|
+      ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR|
+      ID3_NEARTHREE|ID3_NEARFIVE|ID3_FARTHREE|ID3_FARFIVE|
+      ID3_FARTHEST1|ID3_NOTFARTHEST1|ID3_NEAREST1|ID3_NOTNEAREST1|
+      ID3_NEARTWO|ID3_FARTWO|ID3_NEARSIX|ID3_FARSIX,
 
+   // These are the bits that never change.
+   ID3_PERM_ALL_ID = ID3_PERM_HEAD|ID3_PERM_SIDE|ID3_PERM_BOY|ID3_PERM_GIRL,
+
+   // These are the standard definitions for the 8 people in the square.
    ID3_B1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHG|ID3_PERM_HCOR|ID3_PERM_HEAD|ID3_PERM_BOY,
    ID3_G1 = ID3_PERM_NSG|ID3_PERM_NSB|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_HEAD|ID3_PERM_GIRL,
    ID3_B2 = ID3_PERM_NSG|ID3_PERM_NHG|ID3_PERM_NHB|ID3_PERM_SCOR|ID3_PERM_SIDE|ID3_PERM_BOY,
@@ -2373,10 +2400,8 @@ class tglmap {
       tglmap2r,
       tglmapd71,
       tglmapd72,
-      tglmap1cw,
-      tglmap1ccw,
-      tg8map1cw,
-      tg8map1ccw,
+      tg6mapcw,
+      tg6mapccw,
       tglmaps6,
       tglmapb6,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
@@ -2425,8 +2450,6 @@ class tglmap {
    // In sdtables.
    static const tglmapkey t6cwtglmap1[];
    static const tglmapkey t6ccwtglmap1[];
-   static const tglmapkey t8cwtglmap1[];
-   static const tglmapkey t8ccwtglmap1[];
    static const tglmapkey s6tglmap1[];
    static const tglmapkey b6tglmap1[];
    static const tglmapkey c1tglmap1[];
@@ -2520,6 +2543,7 @@ enum warning_index {
    warn__check_3dmd_is_wide,
    warn__check_centered_qtag,
    warn__check_pgram,
+   warn__check_hokey_thar,
    warn__ctrs_stay_in_ctr,
    warn__meta_on_xconc,
    warn__check_c1_stars,
@@ -3769,8 +3793,8 @@ enum {
    CMD_MISC__DISTORTED            = 0x00040000U,
    CMD_MISC__OFFSET_Z             = 0x00080000U,
    CMD_MISC__SAID_SPLIT           = 0x00100000U,
-   CMD_MISC__SAID_TRIANGLE        = 0x00200000U,
-   CMD_MISC__SAID_DIAMOND         = 0x00400000U,
+   //   CMD_MISC__                = 0x00200000U,    // Unused
+   //   CMD_MISC__                = 0x00400000U,    // Unused
    CMD_MISC__SAID_PG_OFFSET       = 0x00800000U,  // Explicitly said it, so space-invasion rules don't apply.
    CMD_MISC__NO_CHECK_MOD_LEVEL   = 0x01000000U,
    CMD_MISC__MUST_SPLIT_HORIZ     = 0x02000000U,
@@ -3887,7 +3911,10 @@ enum {
                                                       // internal to a compound call" rule.
    CMD_MISC3__ROLL_TRANSP          = 0x00008000U,
    CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000U,
-   CMD_MISC3__SUPERCALL            = 0x00020000U
+   CMD_MISC3__SUPERCALL            = 0x00020000U,
+   CMD_MISC3__SAID_TRIANGLE        = 0x00040000U,
+   CMD_MISC3__SAID_DIAMOND         = 0x00080000U,
+   CMD_MISC3__SAID_Z               = 0x00100000U
 };
 
 enum normalize_action {
@@ -4829,7 +4856,7 @@ extern const clw3_thing clw3_table[];                               /* in SDTABL
 
 /* In SDPREDS */
 
-extern bool selectp(setup *ss, int place, int allow_some = 0) THROW_DECL;
+extern bool selectp(const setup *ss, int place, int allow_some = 0) THROW_DECL;
 
 /* In SDGETOUT */
 
@@ -4850,6 +4877,9 @@ void initialize_getout_tables();
 /* In SDTOP */
 
 extern void update_id_bits(setup *ss);
+extern void clear_bits_for_update(setup *ss);
+extern void clear_absolute_proximity_bits(setup *ss);
+extern void clear_absolute_proximity_and_facing_bits(setup *ss);
 
 // This gets a ===> BIG-ENDIAN <=== mask of people's facing directions.
 // Each person occupies 2 bits in the resultant masks.  The "livemask"

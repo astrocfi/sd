@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2010  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -26,6 +26,14 @@
    expand::compress_setup
    expand::expand_setup
    update_id_bits
+   clear_bits_for_update
+   clear_absolute_proximity_bits
+   clear_absolute_proximity_and_facing_bits
+   expand::initialize
+   full_expand::initialize_touch_tables
+   full_expand::search_table_1
+   full_expand::search_table_2
+   full_expand::search_table_3
    big_endian_get_directions
    touch_or_rear_back
    do_matrix_expansion
@@ -161,7 +169,7 @@ char error_message2[MAX_ERR_LENGTH];
 uint32 collision_person1;
 uint32 collision_person2;
 parse_block *last_magic_diamond;
-configuration *configuration::history = (configuration *) 0; /* Will be allocated in sdmain */
+configuration *configuration::history = (configuration *) 0; // Will be allocated in sdmain.
 int configuration::history_ptr;
 int history_allocation;
 
@@ -196,15 +204,15 @@ dance_level level_threshholds[] = {
    l_mainstream,
    l_plus,
    l_a1,
-   l_a1,      /* If a2 is given, an a1 call is OK. */
+   l_a1,      // If a2 is given, an a1 call is OK.
    l_c1,
    l_c2,
    l_c3a,
-   l_c3a,     /* If c3 is given, a c3a call is OK. */
-   l_c3a,     /* If c3x is given, a c3a call is OK. */
-   l_c3x,     /* If c4a is given, a c3x call is OK. */
-   l_c3x,     /* If c4 is given, a c3x call is OK. */
-   l_c3x,     /* If c4x is given, a c3x call is OK. */
+   l_c3a,     // If c3 is given, a c3a call is OK.
+   l_c3a,     // If c3x is given, a c3a call is OK.
+   l_c3x,     // If c4a is given, a c3x call is OK.
+   l_c3x,     // If c4 is given, a c3x call is OK.
+   l_c3x,     // If c4x is given, a c3x call is OK.
    l_dontshow,
    l_nonexistent_concept};
 
@@ -228,7 +236,7 @@ Cstring getout_strings[] = {
 
 uint32 the_topcallflags;
 bool there_is_a_call;
-call_with_name **base_calls;        /* Gets allocated as array of pointers in sdinit. */
+call_with_name **base_calls;        // Gets allocated as array of pointers in sdinit.
 
 ui_option_type ui_options;
 int configuration::whole_sequence_low_lim;
@@ -430,6 +438,26 @@ extern void update_id_bits(setup *ss)
       6, d_west, 2, d_east,
       ~0};
 
+   static unsigned short int face_3x4[] = {
+      1,  d_west, 0, d_east,
+      2,  d_west, 1, d_east,
+      3,  d_west, 2, d_east,
+      11, d_west, 10, d_east,
+      5,  d_west, 11, d_east,
+      4,  d_west, 5, d_east,
+      8,  d_west, 9, d_east,
+      7,  d_west, 8, d_east,
+      6,  d_west, 7, d_east,
+      0,  d_south, 10, d_north,
+      1,  d_south, 11, d_north,
+      2,  d_south, 5, d_north,
+      3,  d_south, 4, d_north,
+      10, d_south, 9, d_north,
+      11, d_south, 8, d_north,
+      5,  d_south, 7, d_north,
+      4,  d_south, 6, d_north,
+      ~0};
+
    static unsigned short int face_4x4[] = {
       13, d_west, 12,  d_east,
       14, d_west, 13,  d_east,
@@ -455,6 +483,17 @@ extern void update_id_bits(setup *ss)
       11, d_south,  6, d_north,
       7,  d_south,  5, d_north,
       2,  d_south,  4, d_north,
+      ~0};
+
+   static unsigned short int face_c1phan[] = {
+      2,  d_west,   0, d_east,
+      5,  d_west,   7, d_east,
+      8,  d_west,  10, d_east,
+      15, d_west,  13, d_east,
+      1,  d_south,  3, d_north,
+      4,  d_south,  6, d_north,
+      11, d_south,  9, d_north,
+      14, d_south, 12, d_north,
       ~0};
 
    static unsigned short int face_4x5[] = {
@@ -491,7 +530,7 @@ extern void update_id_bits(setup *ss)
       19, d_south, 10, d_north,
       ~0};
 
-   for (i=0 ; i<=attr::slimit(ss) ; i++) ss->people[i].id2 &= ~ID2_BITS_TO_CLEAR;
+   clear_bits_for_update(ss);
 
    uint32 livemask = little_endian_live_mask(ss);
 
@@ -512,8 +551,15 @@ extern void update_id_bits(setup *ss)
       face_list = face_2x2; break;
    case s2x3:
       face_list = face_2x3; break;
+   case s3x4:
+      face_list = face_3x4; break;
    case s4x4:
       face_list = face_4x4; break;
+   case s_c1phan:
+      // This doesn't get all legal cases, but ...
+      if ((livemask & 0x5555) == 0 || (livemask & 0xAAAA) == 0 || (livemask & 0xA55A) == 0 || (livemask & 0x5AA5) == 0)
+         face_list = face_c1phan;
+      break;
    case s4x5:
       face_list = face_4x5; break;
    case s2x6:
@@ -711,8 +757,8 @@ extern void update_id_bits(setup *ss)
       else if ((livemask & 0xC0C0U) != 0xC0C0U) ptr = (id_bit_table *) 0;
       break;
    case s3ptpd:
-      /* If the center diamond is full and the inboard points of each outer diamond
-         is present, we can do a "triple trade". */
+      // If the center diamond is full and the inboard points of each outer diamond
+      // is present, we can do a "triple trade".
       if (livemask == 06666U || livemask == 06363U || livemask == 07272U)
          ptr = id_bit_table_3ptpd;
       break;
@@ -730,6 +776,29 @@ extern void update_id_bits(setup *ss)
    }
 }
 
+
+extern void clear_bits_for_update(setup *ss)
+{
+   for (int i=0; i<MAX_PEOPLE; i++) {
+      ss->people[i].id2 &= ~ID2_BITS_TO_CLEAR_FOR_UPDATE;
+   }
+}
+
+extern void clear_absolute_proximity_bits(setup *ss)
+{
+   for (int i=0; i<MAX_PEOPLE; i++) {
+      ss->people[i].id2 &= ~ID2_ABSOLUTE_PROXIMITY_BITS;
+      ss->people[i].id3 &= ~ID3_ABSOLUTE_PROXIMITY_BITS;
+   }
+}
+
+extern void clear_absolute_proximity_and_facing_bits(setup *ss)
+{
+   for (int i=0; i<MAX_PEOPLE; i++) {
+      ss->people[i].id2 &= ~(ID2_ABSOLUTE_FACING_BITS|ID2_ABSOLUTE_PROXIMITY_BITS);
+      ss->people[i].id3 &= ~ID3_ABSOLUTE_PROXIMITY_BITS;
+   }
+}
 
 
 full_expand::thing *full_expand::touch_hash_table1[full_expand::NUM_TOUCH_HASH_BUCKETS];
@@ -1308,14 +1377,11 @@ extern void do_matrix_expansion(
    uint32 needpropbits = NEEDMASK(needprops);
 
    for (;;) {
-      int i;
       uint32 livemask = little_endian_live_mask(ss);
 
       // Search for simple things in the hash table.
 
-      if (expand::expand_from_hash_table(ss,
-                                         needpropbits,
-                                         livemask))
+      if (expand::expand_from_hash_table(ss, needpropbits, livemask))
          goto expanded;
 
       if (ss->kind == s4x4) {
@@ -1408,10 +1474,8 @@ extern void do_matrix_expansion(
 
       expanded:
 
-      // Most global selectors are disabled if we expanded the matrix.
-
-      for (i=0; i<MAX_PEOPLE; i++)
-         ss->people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
+      // Can't ask for things like "near box" if we expanded the matrix.
+      clear_absolute_proximity_bits(ss);
 
       // Put in position-identification bits (leads/trailers/beaus/belles/centers/ends etc.)
       if (recompute_id) update_id_bits(ss);
@@ -1898,8 +1962,20 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {4, 0, 4, 1, 5}, {0}, {0}, true, chk_qtag},
    {s_alamo, cr_couples_only, 2, {0, 2, 5, 7, 1, 3, 4, 6},
     {4}, {0}, {0}, false, chk_groups_cpls_in_tbone},
-   {s_alamo, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
+   {s_alamo, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},  // Line-like, miniwaves of alternating handedness.
     /* NOTE THE 4 --> */{4}, {0}, {0}, true, chk_wave},
+   {s_alamo, cr_li_lo, 8, {0, 1, 3, 2, 5, 4, 6, 7},       // Column-like, each pair facing or back-to-back.
+    {0}, {0}, {0}, false, chk_wave},
+   {s4x4, cr_li_lo, 8, {13, 14, 2, 1, 6, 5, 9, 10},  // Same, on "O" spots.
+    {0}, {0}, {0}, false, chk_wave},
+   {s_alamo, cr_1fl_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},
+    {0}, {0}, {0}, false, chk_wave},
+   {s4x4, cr_1fl_only, 8, {13, 5, 14, 6, 1, 9, 2, 10},  // Same, on "O" spots.
+    {0}, {0}, {0}, false, chk_wave},
+   {s_alamo, cr_miniwaves, 8, {0, 1, 2, 3, 5, 4, 7, 6},
+    {0}, {0}, {0}, false, chk_wave},
+   {s4x4, cr_miniwaves, 8, {13, 14, 1, 2, 6, 5, 10, 9},  // Same, on "O" spots.
+    {0}, {0}, {0}, false, chk_wave},
    {s_trngl, cr_wave_only, 2, {1, 2},
     {0}, {0}, {0}, true, chk_wave},
    {s_trngl, cr_miniwaves, 2, {1, 2},
@@ -3628,10 +3704,15 @@ extern callarray *assoc(
          }
 
          switch (ssK) {
-         case s1x2: case s1x4: case s2x2: case s2x3: case s2x4:
+         case s1x2: case s1x4: case s2x2: case s2x3: case s2x4: case s_alamo:
             goto fix_col_line_stuff;
+         case s4x4:
+            // Check for special case of 4x4 occupied on "O" spots--cr_li_lo has a meaning here.
+            if (little_endian_live_mask(ss) == 0x6666)
+               goto fix_col_line_stuff;
+         // FALL THROUGH!!!!
          default:
-            goto good;           /* We don't understand the setup -- we'd better accept it. */
+            goto good;           // We don't understand the setup -- we'd better accept it.
          }
       case cr_opposite_sex:
          switch (ssK) {
@@ -3648,7 +3729,7 @@ extern callarray *assoc(
          case s2x2: case s2x4:
             goto fix_col_line_stuff;
          default:
-            goto good;           /* We don't understand the setup -- we'd better accept it. */
+            goto good;           // We don't understand the setup -- we'd better accept it.
          }
       case cr_ctrs_in_out:
          switch (ssK) {
@@ -3658,7 +3739,7 @@ extern callarray *assoc(
                tt.assump_col = 1;
             goto check_tt;
          default:
-            goto good;           /* We don't understand the setup -- we'd better accept it. */
+            goto good;           // We don't understand the setup -- we'd better accept it.
          }
 
       case cr_all_facing_same:
@@ -3734,8 +3815,7 @@ extern callarray *assoc(
          case s2x2: case s_alamo:
             goto fix_col_line_stuff;
          default:
-            goto good;                 /* We don't understand the setup --
-                                          we'd better accept it. */
+            goto good;           // We don't understand the setup -- we'd better accept it.
          }
       case cr_3x3couples_only:      // 1x3/1x6/2x3/2x6/1x12 - each group of 3 people
                                     // are facing the same way
@@ -3780,11 +3860,15 @@ extern callarray *assoc(
          switch (ssK) {
          case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
          case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
-         case s2x2: case s_thar:
+         case s2x2: case s_thar: case s_alamo:
             goto fix_col_line_stuff;
+         case s4x4:
+            // Check for special case of 4x4 occupied on "O" spots--cr_miniwaves has a meaning here.
+            if (little_endian_live_mask(ss) == 0x6666)
+               goto fix_col_line_stuff;
+         // FALL THROUGH!!!!
          default:
-            goto good;                 /* We don't understand the setup --
-                                          we'd better accept it. */
+            goto good;           // We don't understand the setup -- we'd better accept it.
          }
       case cr_tgl_tandbase:
          tt.assumption = cr_tgl_tandbase;
@@ -4022,14 +4106,14 @@ extern callarray *assoc(
          if (ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT_DIXIE_APPROVED)) goto good;
          goto bad;
       case cr_said_dmd:
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_DIAMOND) goto good;
+         if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_DIAMOND) goto good;
          goto bad;
       case cr_didnt_say_tgl:
          tt.assump_negate = 1;
          /* **** FALL THROUGH!!!! */
       case cr_said_tgl:
          /* **** FELL THROUGH!!!!!! */
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto good;
+         if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_TRIANGLE) goto good;
          goto bad;
       case cr_occupied_as_h:
          if (ssK != s3x4 ||
@@ -5922,10 +6006,7 @@ void toplevelmove() THROW_DECL
    current_options = null_options;
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
-   for (i=0; i<MAX_PEOPLE; i++) {
-      starting_setup.people[i].id2 &= ~ID2_DIR_BITS_TO_CLEAR;
-      starting_setup.people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
-   }
+   clear_absolute_proximity_and_facing_bits(&starting_setup);
 
    if (!(starting_setup.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
       // Can't do it if rotation is not known.
@@ -5962,6 +6043,15 @@ void toplevelmove() THROW_DECL
                       ID3_NEARTWO : ID3_FARSIX) |
                      (((i + (starting_setup.rotation << 1) + 5) & 6) == 6 ?
                       ID3_FARTWO : ID3_NEARSIX);
+
+                  uint32 leftbit = (starting_setup.people[i].id1 & 1) ?
+                     ID2_LEFTCOL : ID2_LEFTLINE;
+
+                  uint32 rightbit = (starting_setup.people[i].id1 & 1) ?
+                     ID2_RIGHTCOL : ID2_RIGHTLINE;
+
+                  starting_setup.people[i].id2 |= ((i & 4) ?
+                      leftbit : rightbit);
             }
          }
          else {
@@ -5977,48 +6067,67 @@ void toplevelmove() THROW_DECL
 
                   starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ?
                      nearbit : farbit;
+
+                  starting_setup.people[i].id2 |= ((i + (starting_setup.rotation << 1)+2) & 4) ?
+                      ID2_RIGHTBOX : ID2_LEFTBOX;
                }
             }
          }
       }
-      else if ((starting_setup.kind == s1x8 || starting_setup.kind == s_ptpd) && starting_setup.rotation & 1) {
-         uint32 or_all = or_all_people(&starting_setup);
-         uint32 near4bit = ID3_NEARFOUR;
-         uint32 far4bit = ID3_FARFOUR;
-         uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
-         uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
-         uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
+      else if ((starting_setup.kind == s1x8 || starting_setup.kind == s_ptpd)) {
+         if (starting_setup.rotation & 1) {
+            uint32 or_all = or_all_people(&starting_setup);
+            uint32 near4bit = ID3_NEARFOUR;
+            uint32 far4bit = ID3_FARFOUR;
+            uint32 near1bit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+            uint32 far1bit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+            uint32 no1bit = ID3_NOTNEAREST1|ID3_NOTFARTHEST1;
 
-         if (starting_setup.kind == s1x8) {
-            if (!(or_all & 1)) {
-               near4bit |= ID3_NEARLINE;
-               far4bit |= ID3_FARLINE;
+            if (starting_setup.kind == s1x8) {
+               if (!(or_all & 1)) {
+                  near4bit |= ID3_NEARLINE;
+                  far4bit |= ID3_FARLINE;
+               }
+               else if (!(or_all & 010)) {
+                  near4bit |= ID3_NEARCOL;
+                  far4bit |= ID3_FARCOL;
+               }
             }
-            else if (!(or_all & 010)) {
-               near4bit |= ID3_NEARCOL;
-               far4bit |= ID3_FARCOL;
+
+            for (i=0; i<8; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  if (starting_setup.kind == s1x8) {
+                     starting_setup.people[i].id3 |=
+                        (((i + 2) & 6) == 6 ? ID3_NEARTWO : ID3_FARSIX) |
+                        (((i + 6) & 6) == 6 ? ID3_FARTWO : ID3_NEARSIX);
+                  }
+
+                  if (i & 4) {
+                     starting_setup.people[i].id3 |=
+                        near4bit | ID3_NEARFIVE |
+                        ((i == 6) ? ID3_FARFIVE : ID3_NEARTHREE) |
+                        ((i == 4) ? near1bit : no1bit);
+                  }
+                  else {
+                     starting_setup.people[i].id3 |=
+                        far4bit | ID3_FARFIVE |
+                        ((i == 2) ? ID3_NEARFIVE : ID3_FARTHREE) |
+                        ((i == 0) ? far1bit : no1bit);
+                  }
+               }
             }
          }
+         else if (starting_setup.kind == s1x8) {
+            for (i=0; i<8; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  uint32 leftbit = (starting_setup.people[i].id1 & 1) ?
+                     ID2_LEFTCOL : ID2_LEFTLINE;
 
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               if (starting_setup.kind == s1x8) {
-                  starting_setup.people[i].id3 |=
-                     (((i + 2) & 6) == 6 ? ID3_NEARTWO : ID3_FARSIX) |
-                     (((i + 6) & 6) == 6 ? ID3_FARTWO : ID3_NEARSIX);
-               }
+                  uint32 rightbit = (starting_setup.people[i].id1 & 1) ?
+                     ID2_RIGHTCOL : ID2_RIGHTLINE;
 
-               if (i & 4) {
-                  starting_setup.people[i].id3 |=
-                     near4bit | ID3_NEARFIVE |
-                     ((i == 6) ? ID3_FARFIVE : ID3_NEARTHREE) |
-                     ((i == 4) ? near1bit : no1bit);
-               }
-               else {
-                  starting_setup.people[i].id3 |=
-                     far4bit | ID3_FARFIVE |
-                     ((i == 2) ? ID3_NEARFIVE : ID3_FARTHREE) |
-                     ((i == 0) ? far1bit : no1bit);
+                  starting_setup.people[i].id2 |= (i & 4) ?
+                     rightbit : leftbit;
                }
             }
          }
@@ -6341,14 +6450,8 @@ void finish_toplevelmove() THROW_DECL
 {
    configuration & newhist = configuration::next_config();
 
-   // Remove outboard phantoms from the resulting setup.
-   normalize_setup(&newhist.state, plain_normalize, false);
-
-   for (int i=0; i<MAX_PEOPLE; i++) {
-      newhist.state.people[i].id2 &= ~ID2_DIR_BITS_TO_CLEAR;
-      newhist.state.people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
-   }
-
+   normalize_setup(&newhist.state, plain_normalize, true);   // Remove outboard phantoms from the resulting setup.
+   clear_absolute_proximity_and_facing_bits(&newhist.state);
    newhist.calculate_resolve();
 }
 
@@ -6356,13 +6459,13 @@ void finish_toplevelmove() THROW_DECL
 // This stuff is duplicated in verify_call in sdmatch.c .
 bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
 {
-   /* First, if we have already deposited a call, and we see more stuff, it must be
-      concepts or calls for an "anything" subcall. */
+   // First, if we have already deposited a call, and we see more stuff, it must be
+   // concepts or calls for an "anything" subcall.
 
    if (save1) {
       parse_block *tt = parse_block::get_block();
-      /* Run to the end of any already-deposited things.  This could happen if the
-         call takes a tagger -- it could have a search chain before we even see it. */
+      // Run to the end of any already-deposited things.  This could happen if the
+      // call takes a tagger -- it could have a search chain before we even see it.
       while (save1->next) save1 = save1->next;
       save1->next = tt;
       save1->concept = &conzept::marker_concept_mod;

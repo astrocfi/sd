@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <14 Nov 2012 wba>
+@c Time-stamp: <30 Mar 2013 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.49
-@set title2 Database version = 38.49 format = 313
+@set title1 RELEASE NOTES FOR VERSION 38.50
+@set title2 Database version = 38.50 format = 314
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.50::
 * 38.49::
 * 38.48::
 * 38.47::
@@ -88,7 +89,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.49, Top, (dir)
+@node Intro, 38.50, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -99,11 +100,50 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2012 William B. Ackerman
 @sp 3
 @menu
-* 38.49::               Changes in the current version
+* 38.50::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.49, 38.48, Intro, Top
+@node 38.50, 38.49, Intro, Top
+@unnumberedsec Version 38.50 changes
+
+New call: @strong{top it off}, listed as Plus.  From a tidal wave, all
+trade, center 6 arm turn 3/4 while the outer 2 counter rotate to become
+ends of center line then outside person facing out does a U-turn back.
+
+You must workshop this call before using it.  Whether it will get adopted as a legitimate call is unknown.
+
+The call @strong{wheel and spread} is now flagged as "controversial".  There's actually no such call.
+
+The roll direction for the belle in @strong{cross and turn} is now dependent on roll direction.
+
+Improved ability to do @strong{<ANYONE> trade}.
+
+Improved ability to roll after @strong{Swing the Fractions}.
+
+Slightly improved ability to do things at a 45 degree angle.
+
+@strong{Scoot and Ramble} has 2 parts.  @strong{Ramble} also has 2 parts.
+
+Improved ability to do @strong{Crazy Z's}.
+
+Improved ability to do triangles.
+
+New designators: @strong{line/column/box on the caller's left/right}, analogous to @strong{near line}, etc.
+
+From a "star promenade", @strong{press ahead} and @strong{1/2 press ahead} both go to a "C1 phantom" setup.  The result is the same whether or not "1/2" is used.
+
+Improvements in the ability to do @strong{dixie grand} from various arrangements of alamo rings or "O" spots. 
+
+If writing an abridgement file at C4, calls at C4A will be listed also.
+That is, the students will be assumed to know C3X, but not C4A.  C4A
+calls will have to be deleted from the abridgement file, same as C4
+calls.  This may not be the final correct solution to this problem.
+
+There were the usual other minor improvements.
+
+@c ************
+@node 38.49, 38.48, 38.50, Top
 @unnumberedsec Version 38.49 changes
 
 The action of the people who spread to become ends of lines on @strong{relay the shadow} is a @strong{hinge}.  It is not an arm turn, nor a cast off 1/4.  Furthermore, it is not legal to apply @strong{fractal} to it if the people are not in a miniwave.  The Callerlab definition describes it as a @strong{single hinge}, but Sd relaxes that to a @strong{hinge}.  The antique definition of this call is quite different, of course.

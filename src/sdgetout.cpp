@@ -446,6 +446,8 @@ static const resolve_tester test_c1phan_stuff[] = {
    // From phantoms, all promenade.
    {resolve_prom,           MS, 7,   {11, 9, 7, 5, 3, 1, 15, 13},  0x118833AA},
    {resolve_prom,           MS, 7,   {10, 8, 6, 4, 2, 0, 14, 12},  0x8833AA11},
+   {resolve_revprom,        MS, 7,   {9, 11, 5, 7, 1, 3, 13, 15},  0x33AA1188},
+   {resolve_revprom,        MS, 7,   {8, 10, 4, 6, 0, 2, 12, 14},  0xAA118833},
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_galaxy_stuff[] = {

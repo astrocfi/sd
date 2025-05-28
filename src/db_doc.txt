@@ -1336,6 +1336,17 @@ bigbigh     |_____|  4  |  5  |  6  |  7  | 15  | 14  | 13  | 12  |_____|
 
 
 
+x1x8  (4 way symmetry, all the way into the center, like a thar)
+          4
+          5
+          6
+          7
+   0 1 2 3 11 10 9 8
+          15
+          14
+          13
+          12
+
                                      _____
                                     |     |
                                     |  4  |
@@ -3497,6 +3508,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     4 people facing consistently, and another 4 facing
                                     consistently.
 
+                                    Alamo (column-like) - "DPT around the corner".
+                                    4x4, "O" spots, column-like - same as alamo.
+
                                     2x3/2x4 - individual 1FL's.  In these cases, when used as a qualifier,
                                     the "in" and "out" modifiers may be used.
 
@@ -3554,9 +3568,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    couples_only       R/Q           1x2/1x4/1x8/1x16/3x4 (lines), 2x4/2x6/2x8 (lines or cols),
                                        2x2, qtag, bone, trngl, alamo - people are paired
                                        in genuine couples, not miniwaves.
-                                       For qtags, and bones, this applies
-                                       just to the centers.  For triangles, it applies
-                                       just to the base.  In an alamo, this applies to
+                                       For qtags, and bones, this applies just to the centers.
+                                       For triangles, it applies just to the base.  In an alamo, this applies to
                                        the "natural" pairs.  To check for the "1/8 rotated"
                                        pairs, use "magic_only".
                                        As a qualifier, the "live" modifier is supported,
@@ -3565,6 +3578,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    miniwaves          R/Q           1x2/1x4/1x6/1x8, 2x4 (lines/cols), dmd, 2x2,
                                        qtag, bone, ptpd, trngl - people are paired
                                        in miniwaves of various handedness.
+                                       Alamo (column-like) - alternate facing groups and back-to-back groups,
+                                           that is, a "straight ahead DPT".
+                                       4x4, "O" spots, column-like - same as alamo.
                                        For diamonds, qtags, and bones, this applies
                                        just to the centers.  For triangles, it applies
                                        just to the base.
@@ -3670,6 +3686,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        4x2/4x1/2x1 - [single] 8 chain or trade by
                                        (one or the other; we don't care which unless this
                                        has additional modifiers like "in" or "out".)
+                                       Alamo (column-like) - each pair either facing each other or
+                                       back-to-back.  (For line-like alamo, use magic_only.)
+                                       4x4, "O" spots, column-like - same as alamo.
                                        The 2x2/2x4/4x2 versions of these require that people
                                        not be T-boned -- they must face in or out as couples.
                                        To allow each person to be independent,
@@ -3684,7 +3703,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    magic_only         R/Q           3x2 or 4x2 - magic column; 2x4 - inverted lines;
                                        1x4 - single inverted line; 2x2 - inverted box.
                                        Thar/crosswave - two waves of opposite handedness.
-                                       Alamo - miniwave boxes of opposite handedness.
+                                       Alamo (line-like) - miniwave boxes of opposite handedness.
+                                       (For column-like alamo, use in_or_out.)
                                        Hourglass - the diamond is facing.  Points are not checked.
                                        "Right/left/in/out" and "live" may be used when
                                        it is a qualifier --

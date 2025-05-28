@@ -1346,7 +1346,7 @@ static int start_matrix_call(
          matrix_info[nump].mirror_this_op = false;
 
          if (flags & MTX_USE_SELECTOR)
-            matrix_info[nump].sel = selectp(people, nump);
+            matrix_info[nump].sel = selectp(ss, i);
          else
             matrix_info[nump].sel = false;
 
@@ -1399,7 +1399,7 @@ struct checkitem {
    uint32 new_rot;     // 0x100 bit means this fudging is severe.
    warning_index warning;
    const coordrec *new_checkptr;
-   veryshort fixer[32];
+   veryshort fixer[33];
 };
 
 
@@ -1443,6 +1443,31 @@ static const checkitem checktable[] = {
    {0x00230053, 0x00220009, s2x4,  ~0, 1, warn__none, (const coordrec *) 0,
     {2, -5, 2, -6, 1, -2, 2, -2, 1, 2, 2, 2, 2, 5, 2, 6,
      -2, 5, -2, 6, -1, 2, -2, 2, -1, -2, -2, -2, -2, -5, -2, -6}},
+
+   // 1/2 press ahead from LH star promenade.
+   {0x00930093, 0x41020080, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+    { -2, 9, -3, 13,    -2, 5, -3, 9,
+      9, 2, 15, 4,      5, 2, 11, 4,
+      2, -9, 4, -14,    2, -5, 4, -10,
+      -9, -2, -14, -7,  -5, -2, -10, -7, 127}},
+   // 1/2 press ahead from RH star promenade.  Have to list them separately, because can only have 8 specifiers.
+   {0x00930093, 0x00140041, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+    { -9, 2, -6, 4,     -5, 2, -2, 4,
+      2, 9, 4, 7,       2, 5, 4, 3,
+      9, -2, 7, -5,     5, -2, 3, -5,
+      -2, -9, -5, -6,   -2, -5, -5, -2, 127}},
+   // Full press ahead from LH star promenade.  Goes to same setup as 1/2 press ahead.
+   {0x00950095, 0x00810404, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+    { -4, 9, -3, 13,    -4, 5, -3, 9,
+      9, 4, 15, 4,      5, 4, 11, 4,
+      4, -9, 4, -14,    4, -5, 4, -10,
+      -9, -4, -14, -7,  -5, -4, -10, -7, 127}},
+   // As above, RH.
+   {0x00950095, 0x11000800, s_c1phan, ~0, 0, warn__check_c1_phan, (const coordrec *) 0,
+    { -9, 4, -6, 4,     -5, 4, -2, 4,
+      4, 9, 4, 7,       4, 5, 4, 3,
+      9, -4, 7, -5,     5, -4, 3, -5,
+      -4, -9, -5, -6,   -4, -5, -5, -2, 127}},
 
    // Next 2 items: fudge to a galaxy.  The points got here by pressing and trucking.
    // Don't need to tell them to check a galaxy -- it's pretty obvious.
@@ -1663,6 +1688,14 @@ static const checkitem checktable[] = {
    {0x00860044, 0x41250410, s_545, ~0, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00860044, 0x41250018, sh545, ~0, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00840004, 0x00000008, sh545, ~0, 0, warn__none, (const coordrec *) 0, {127}},
+
+   {0x00A600A6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00A600E6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00E600A6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00E600E6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x006600A6, 0x09004400, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x006600E6, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   {0x00E60066, 0x09006602, sx1x8, ~0, 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
 
    {0x00860022, 0x02080300, s_ntrglccw,~0, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00860022, 0x04001202, s_ntrglcw, ~0, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1921,7 +1954,8 @@ static void finish_matrix_call(
       if (place < 0) fail("Person has moved into a grossly ill-defined location.");
 
       if ((checkptr->xca[place] != mx) || (checkptr->yca[place] != my))
-         fail("Person has moved into a slightly ill-defined location.");
+         if (checkptr->result_kind != sx1x8)   // Know that these maps are OK, and some fudging took place.
+            fail("Person has moved into a slightly ill-defined location.");
 
       int rot = ((mp->deltarot-result->rotation) & 3)*011;
       CC.install_with_collision(result, place, people, i, rot);
@@ -3388,6 +3422,8 @@ extern bool get_real_subcall(
 static void divide_diamonds(setup *ss, setup *result) THROW_DECL
 {
    uint32 ii;
+
+   if (ss->kind == s3x4) expand::compress_setup(s_qtg_3x4, ss);
 
    if (ss->kind == s_qtag) ii = MAPCODE(sdmd,2,MPKIND__SPLIT,1);
    else if (ss->kind == s_ptpd) ii = MAPCODE(sdmd,2,MPKIND__SPLIT,0);

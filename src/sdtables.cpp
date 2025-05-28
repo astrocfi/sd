@@ -246,6 +246,18 @@ selector_item selector_list[] = {
    {"far column",   "far column",  "FAR COLUMN",   "FAR COLUMN",  selector_uninitialized},
    {"near box",     "near box",    "NEAR BOX",     "NEAR BOX",    selector_uninitialized},
    {"far box",      "far box",     "FAR BOX",      "FAR BOX",     selector_uninitialized},
+   {"line on the caller's left", "line on the caller's left",
+    "LINE ON THE CALLER'S LEFT", "LINE ON THE CALLER'S LEFT", selector_uninitialized},
+   {"line on the caller's right", "line on the caller's right",
+    "LINE ON THE CALLER'S RIGHT", "LINE ON THE CALLER'S RIGHT", selector_uninitialized},
+   {"column on the caller's left", "column on the caller's left",
+    "COLUMN ON THE CALLER'S LEFT", "COLUMN ON THE CALLER'S LEFT", selector_uninitialized},
+   {"column on the caller's right", "column on the caller's right",
+    "COLUMN ON THE CALLER'S RIGHT", "COLUMN ON THE CALLER'S RIGHT", selector_uninitialized},
+   {"box on the caller's left", "box on the caller's left",
+    "BOX ON THE CALLER'S LEFT", "BOX ON THE CALLER'S LEFT", selector_uninitialized},
+   {"box on the caller's right", "box on the caller's right",
+    "BOX ON THE CALLER'S RIGHT", "BOX ON THE CALLER'S RIGHT", selector_uninitialized},
    {"near 4",       "near 4",      "NEAR 4",       "NEAR 4",      selector_farfour},
    {"far 4",        "far 4",       "FAR 4",        "FAR 4",       selector_nearfour},
    {"near 2",       "near 2",      "NEAR 2",       "NEAR 2",      selector_farsix},
@@ -360,6 +372,7 @@ Cstring warning_strings[] = {
    /*  warn__check_3dmd_is_wide  */   "*The people in the corners need to spread out to outer triple diamonds.",
    /*  warn__check_centered_qtag */   "*Each 8-person twin general 1/4 tag is centered, with the outsides directly adjacent.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
+   /*  warn__check_hokey_thar     */   "*Fudge to a thar -- the dancers might not like this.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
    /*  warn__meta_on_xconc       */   "*Misleading meta-concept combination.",
    /*  warn__check_c1_stars      */   " Check 'stars'.",
@@ -1266,6 +1279,14 @@ expand::thing expand::init_table[] = {
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_TRIPLE_1X4) |
                                              NEEDMASK(CONCPROP__NEEDK_END_1X4)},
+
+   {{1, 2, 6, 7, 9, 10, 14, 15},
+    s_crosswave, sx1x8, 0, 0U, 0x3939, false,
+    warn__none, warn__none, plain_normalize, 0},
+   {{13, 14, 2, 3, 5, 6, 10, 11},
+    s_crosswave, sx1x8, 1, 0U, 0x9393, false,
+    warn__none, warn__none, plain_normalize, 0},
+
    {{2, 3, 5, 8, 9, 11},
     s_1x2dmd, sbigx, 0, 0U, 02323, false,
     warn__none, warn__none, plain_normalize, NEEDMASK(CONCPROP__NEEDK_CTR_1X4) |
@@ -3449,11 +3470,9 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s1x8,     0, 0, 2, 2,  0x2FB, schema_in_out_quad},
    {s3x8,           schema_nothing, {19, 20, 0, 1, 21, 18,    13, 9, 6, 7, 8, 12,    22, 23, 10, 11},
              s2x3,     s1x4,     1, 0, 1, 2,  0x2FD, schema_in_out_triple},
-   /* No!  This conflicts with the next one.  Replace the missing center z peel the top
-      in t46t when this gets fixed.
    {s_343,          schema_nothing, {7, 6, 5, -1, -1, -1, -1, -1, -1, 2, 1, 0,    8, 9, 3, 4},
              s2x3,     s1x4,     0, 0, 2, 2,  0x2FB, schema_in_out_triple},
-   */
+
    {s_crosswave,    schema_nothing, {-1, 0, -1, -1, 1, -1,    -1, 5, -1, -1, 4, -1,    6, 7, 2, 3},
              s2x3,     s1x4,     1, 1, 1, 2,  0x2FB, schema_in_out_triple},
    {s3ptpd,         schema_in_out_triple, {9, 0, 10, 8, 4, 2, 3, 6,    11, 1, 5, 7},
@@ -3532,6 +3551,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     s2x4,     1, 0, 9, 1,  0x2FD, schema_concentric},
    {s2x6,           schema_nothing, {2, 3, 8, 9,    0, 1, 4, 5, 6, 7, 10, 11},
              s2x2,     s2x4,     0, 0, 9, 1,  0x2FE, schema_concentric},
+   {s2x6,           schema_nothing, {1, 2, 3, 4, 7, 8, 9, 10,   0, 5, 6, 11},
+             s2x4,     s2x2,     0, 0, 9, 1,  0x2FE, schema_concentric},
    {s3dmd,          schema_3x3_concentric, {9, 10, 11, 3, 4, 5,    0, 1, 2, 6, 7, 8},
              s1x6,     s2x3,     0, 0, 2, 1,  0x0FB, schema_concentric},
    // Took out the analyzer part of this -- it is wrong and is doing damage.
@@ -3889,6 +3910,33 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
                                            10, 7, 4, 5, 6, 9,
                                            12, 17, 2, 3, 8, 11},
              s2x3,     s2x3,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
+
+   {s3x4,           schema_in_out_triple_zcom, {-1, -1, -1, 0, 10, 9,
+                                                6, 4, 3, -1, -1, -1,
+                                                8, 11, 1, 2, 5, 7},
+             s2x3,     s2x3,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
+
+   {sd3x4,          schema_in_out_triple_zcom, {-1, -1, -1, 0, 11, 10,
+                                                6, 5, 4, -1, -1, -1,
+                                                1, 2, 3, 7, 8, 9},
+             s2x3,     s2x3,     1, 0, 1, 2,  0x0FD, schema_in_out_triple},
+
+
+   // Two ways the outsides can surround the center z in a 4x5.
+   // Not competely satisfactory, but it will have to do.
+   {s4x5,           schema_in_out_triple_zcom, {14, 13, 12, 10, 11,
+                                                0, 1, 2, 4, 3,
+                                                8, 7, 6, 18, 17, 16},
+             s1x5,     s2x3,     0, 0, 2, 2,  0x0FE, schema_in_out_triple},
+   {s4x5,           schema_in_out_triple_zcom, {14, 15, 0, 9,
+                                                10, 19, 4, 5,
+                                                8, 7, 6, 18, 17, 16},
+             s1x4,     s2x3,     1, 0, 1, 2,  0x0FD, schema_in_out_triple},
+
+   {s_545,          schema_nothing, {11, 10, 9, 7, 8,
+                                     0, 1, 2, 4, 3,
+                                     12, 13, 5, 6},
+             s1x5,     s1x4,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
    {swqtag,         schema_in_out_triple, {7, 8,     3, 2,
                                           6, 9, 0, 1, 4, 5},
              s1x2,     s2x3,     0, 1, 1, 2,  0x100, schema_nothing},
@@ -4142,7 +4190,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 //    1 bit - swap setups;
 //    2 bit - change elongation;
 //    4 bit - no take right hands
-//    8 bit - force outer_elong to 3, so people will go to corners of 4x4
+//    8 bit - force outer_elong to 3, so people will go to corners of 4x4;
+// 0x10 bit - reject map if it leads to a collision;
 
 
 //                             rotmask |     | swap_setups
@@ -4407,15 +4456,20 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
    {s2x4,      slinepdmd,     0, 0x0F, 0x0E, 0x0, schema_matrix,     s2x4,        nothing,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {-1, -1, -1, -1, 0, 1, 3, 2}},
 
-   {s1x8,      slinepdmd,  0x0F, 0x0F, 0x0D, 0x0, schema_matrix,     s_trngl8,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
-   {s1x8,      slinedmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,     s_trngl8,    nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s1x8,      slinepdmd,  0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    s_trngl8,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
+   {s1x8,      slinedmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    s_trngl8,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 4, 5, 7, 6}},
 
-   {s1x8,      sdmdpdmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,    splinedmd,    nothing,     warn__none, 0, 3, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 5, 6, 7, 4}},
-   {s1x8,      sdmdpdmd,   0xF0, 0xF0, 0x0D, 0x0, schema_matrix,   splinepdmd,    nothing,     warn__none, 0, 1, {0, 1, 3, 2, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
+   {s1x8,      sdmdpdmd,   0x0F, 0x0F, 0x0D, 0x0, schema_matrix,   splinedmd,     nothing,     warn__none, 0, 3, {-1, -1, -1, -1, 0, 1, 3, 2}, {-1, -1, -1, -1, 5, 6, 7, 4}},
+   {s1x8,      sdmdpdmd,   0xF0, 0xF0, 0x0D, 0x0, schema_matrix,  splinepdmd,     nothing,     warn__none, 0, 1, {0, 1, 3, 2, -1, -1, -1, -1}, {6, 7, 4, 5, -1, -1, -1, -1}},
 
-   {s_trngl8,  slinepdmd,    0x0F, 0, 0x0E, 0x0, schema_matrix,      slinepdmd,   nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, 4, 5, 6, 7}},
-   {s_trngl8,  splinedmd,    0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,    nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
-   {s_trngl8,  splinedmd,    0xF0, 0, 0x0D, 0x0, schema_matrix,     splinedmd,    nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  slinepdmd,    0x0F, 0, 0x0E, 0x0, schema_matrix,    slinepdmd,     nothing,     warn__none, 0, 0, {-1, -1, -1, -1, 4, 5, 7, 6}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s_trngl8,  splinedmd,    0, 0xF0, 0x0D, 0x0, schema_matrix,     s_trngl8,     nothing,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, 3, -1, -1, -1, -1}},
+   {s_trngl8,  splinedmd,    0xF0, 0, 0x0D, 0x0, schema_matrix,    splinedmd,     nothing,     warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   // When all else fails, go to a sx1x8 (gigantic thar).
+   {s1x8,          s1x8,        0, 0, 0x0D, 0x0, schema_matrix,        sx1x8,     nothing,     warn__none, 0, 1, {0, 1, 3, 2, 8, 9, 11, 10},      {12, 13, 15, 14, 4, 5, 7, 6}},
+   // Go to a thar.
+   {s1x8,          s1x8, 0x33,  0x33, 0x0D, 0x0, schema_matrix,       s_thar,     nothing,     warn__none, 0, 1, {-1, -1, 1, 0, -1, -1, 5, 4},               {-1, -1, 7, 6, -1, -1, 3, 2}},
 
    // Need both of these because they won't canonicalize.
    {s1x8,          s1x8, 0xCC,  0x33, 0x0D, 0x1, schema_concentric,     s1x4,        s1x4,     warn__none, 0, 0, {3, 2, 7, 6},               {0, 1, 4, 5}},
@@ -4423,7 +4477,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
    // Even newer!  This one works for "do your part".
    // This allows [diamonds] point DYP spin the top while ctrs dmd circ.
-   {s1x8,          s2x4, 0x55,  0x66, 0x0D, 0x0, schema_matrix,         s_qtag,   nothing,     warn__none, 0, 1, {-1, 6, -1, 7, -1, 2, -1, 3},{5, -1, -1, 0, 1, -1, -1, 4}},
+   {s1x8,          s2x4, 0x55,  0x66, 0x0D, 0x0, schema_matrix,       s_qtag,     nothing,     warn__none, 0, 1, {-1, 6, -1, 7, -1, 2, -1, 3},{5, -1, -1, 0, 1, -1, -1, 4}},
 
    // These two need to be in this order for now.  Cf ng33t.
    // Note that this map now won't be triggered for "do your part".
@@ -4577,7 +4631,17 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x3,         s3dmd, 0,    07070, 0x0E, 0x0, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},         {0, 1, 2, 6, 7, 8}},
    {sdmd,          s4x4, 0,   0x8E8E, 0x0E, 0x0, schema_matrix,         s_hsqtag,    nothing,  warn__none, 0, 1, {10, 11, 4, 5}, {0, -1, -1, -1, 9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1}},
    {sdmd,          s3x4, 0,    04040, 0x0E, 0x0, schema_matrix,         s_hsqtag,    nothing,  warn__none, 0, 1, {10, 11, 4, 5}, {3, 2, 1, 0, 4, -1, 9, 8, 7, 6, 10, -1}},
-   {s1x4,          s3x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
+
+   {s1x4,          s3x4, 0,        0, 0x0E, 0x10, schema_matrix,        s3x6,        nothing,  warn__none, 0, 0, {16, 17, 7, 8},             {0, -1, -1, 5, 6, -1, 9, -1, -1, 14, 15, -1}},
+   {s1x4,          s3x4, 0,        0, 0x0E, 0x10, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {10, 11, 4, 5},             {0}},
+
+   {s1x4,          s3x4, 0,    04646, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 1, {8, 9, 3, 4},             {7, -1, -1, 0, 1, -1, 2, -1, -1, 5, 6, -1}},
+
+
+   {s1x4,         sd3x4, 0,    01616, 0x0E, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 0, {16, 17, 7, 8},             {0, -1, -1, -1, 5, 6, 9, -1, -1, -1, 14, 15}},
+
+
+
    {sdmd,       s_hsqtag, 0,       0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {4, 5, 10, 11},             {0}},
    {s1x4,       s_hsqtag, 0,   04040, 0x0D, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5}, {9, 8, 7, 6, 10, -1, 3, 2, 1, 0, 4, -1}},
    {s1x4,       s_dmdlndmd, 0,     0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {1, 2, 7, 8},             {0}},
@@ -4616,6 +4680,12 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,          s4x4, 0,   0xEEEE, 0x0C, 0x8, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 1, {0, 1, 2, 3},{0, 4, 8, 12}},
 
    {s2x3,          s4x5, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {8, 7, 6, 18, 17, 16},{0}},
+
+   {s1x4,          s4x5, 0,  0xF83E0, 0xAE, 0x0, schema_matrix,         s_545,       nothing,  warn__none, 0, 0, {12, 13, 5, 6},               {0, 1, 2, 3, 4, -1, -1, -1, -1, -1, 7, 8, 9, 10, 11, -1, -1, -1, -1, -1}},
+
+   {s1x4,          s4x5, 0,  0x739CE, 0xAD, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},               {9, -1, -1, -1, 0, 1, -1, -1, -1, 8, 3, -1, -1, -1, 6, 7, -1, -1, -1, 2}},
+   {s1x4,          s4x5, 0,  0x739CE, 0xAE, 0x0, schema_matrix,         sbigh,       nothing,  warn__none, 0, 0, {4, 5, 10, 11},               {0, -1, -1, -1, 9, 8, -1, -1, -1, 1, 6, -1, -1, -1, 3, 2, -1, -1, -1, 7}},
+
    {s1x4,          s3x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {16, 17, 7, 8},{0}},
    {s_short6,   s1x8,    0,     0xEE, 0x0E, 0x0, schema_matrix,         s_galaxy,    nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7},       {0, -1, -1, -1, 4, -1, -1, -1}},
    {s_short6,   s1x6,    0,      066, 0x0E, 0x0, schema_matrix,         s_galaxy,    nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7},       {0, -1, -1, 4, -1, -1}},
@@ -4704,8 +4774,6 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x4,   s_crosswave, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 6, 7},               {0}},
    {s_crosswave,   s2x4, 0xCC,  0x99, 0x0C, 0x1, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {1, 2, 5, 6},               {0, 1, 4, 5}},
    {s2x2,   s_crosswave, 0,     0xCC, 0x0C, 0x0, schema_concentric,     s2x2,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
-
-
    {s2x5,         s_323, 0x1CE,    0, 0x0D, 0x0, schema_matrix,         s_23232,     nothing,  warn__none, 0, 1, {2, -1, -1, -1, 4, 8, -1, -1, -1, 10},   {7, 11, 0, 3, 1, 5, 6, 9}},
 
 
@@ -4747,6 +4815,9 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x2,         s3dmd, 0,    07272, 0x0C, 0x0, schema_matrix,         s4x4,        nothing,  warn__check_butterfly, 0, 0, {15, 3, 7, 11},             {12, -1, 0, -1, -1, -1, 4, -1, 8, -1, -1, -1}},
    {s1x6,        sd3x4, 0,    01616, 0x0C, 0x0, schema_concentric,     s1x6,        s2x3,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},      {4, 5, 6, 10, 11, 0}},
    {s2x3,        sd3x4, 0,    01616, 0x0C, 0x0, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},      {4, 5, 6, 10, 11, 0}},
+
+   {s1x4,        sd3x4, 0,    01616, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 1, {8, 9, 3, 4},      {7, -1, -1, -1, 0, 1, 2, -1, -1, -1, 5, 6}},
+
 
    // These next two must be in this sequence.
    {s1x2,          s3x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5},{0}},
@@ -5403,6 +5474,18 @@ static const coordrec thingalamo = {s_alamo, 3,
       -1, -1, -1,  5,  4, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingx1x8 = {sx1x8, 3,
+   {-14, -10,  -6,  -2,   0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   0},
+   {  0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   0, -14, -10,  -6,  -2}, {
+      -1, -1, -1, -1,  4, -1, -1, -1,
+      -1, -1, -1, -1,  5, -1, -1, -1,
+      -1, -1, -1, -1,  6, 11, -1, -1,   // Note funny placement of 11.
+       0,  1,  2,  3,  7, 10,  9,  8,
+      -1, -1, -1, -1, 15, -1, -1, -1,
+      -1, -1, -1, -1, 14, -1, -1, -1,
+      -1, -1, -1, -1, 13, -1, -1, -1,
+      -1, -1, -1, -1, 12, -1, -1, -1}};
 
 static const coordrec thingxwv = {s_crosswave, 3,
    { -9,  -5,   0,   0,   9,   5,   0,   0},
@@ -7069,14 +7152,14 @@ id_bit_table id_bit_table_3x4_offset[] = {
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTR6 | ID2_CTR4      | ID2_CTR1X4),
-   NOBIT(ID2_CTR2  | ID2_CTR4      | ID2_CTR1X4),
+   NOBIT(ID2_OUTR6                 | ID2_CTR1X4),
+   NOBIT(ID2_CTR2                  | ID2_CTR1X4),
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_OUTRPAIRS | ID2_NCTR1X4),
-   NOBIT(ID2_OUTR6 | ID2_CTR4      | ID2_CTR1X4),
-   NOBIT(ID2_CTR2  | ID2_CTR4      | ID2_CTR1X4)};
+   NOBIT(ID2_OUTR6                 | ID2_CTR1X4),
+   NOBIT(ID2_CTR2                  | ID2_CTR1X4)};
 
 // Else if the "corners" are sensibly occupied, use this.
 id_bit_table id_bit_table_3x4_corners[] = {
@@ -7096,17 +7179,17 @@ id_bit_table id_bit_table_3x4_corners[] = {
 // Else if the setup is occupied as Z's, use this.
 id_bit_table id_bit_table_3x4_zs[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
-   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
-   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
    NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR1X4  | ID2_CTR4),
+   NOBIT(ID2_CTR1X4|ID2_CTR2),
    NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
-   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
-   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4),
+   NOBIT(ID2_NCTR1X4),
    NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
    NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR1X4  | ID2_CTR4)};
+   NOBIT(ID2_CTR1X4|ID2_CTR2)};
 
 // If all else fails, use this.
 static const id_bit_table id_bit_table_3x4[] = {
@@ -8947,14 +9030,14 @@ const setup_attr setup_attrs[] = {
     {(Cstring) 0,
      (Cstring) 0}},
    {15,                     // sx1x8
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingx1x8,
+    &thingx1x8,
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
-    false, false,
+    true, false,
     (const id_bit_table *) 0,
-    {(Cstring) 0,
+    {"6666e@6666f@6666g@6666h@abcd6lkji@6666p@6666o@6666n@6666m",
      (Cstring) 0}},
    {31,                     // sx1x16
     (const coordrec *) 0,
@@ -11272,14 +11355,14 @@ const tglmap::map tglmap::init_table[] = {
     {0},
     {0}},
 
-   {tglmaps6, s_bone6, nothing, tglmap1cw, 0, 1,
+   {tglmaps6, s_bone6, nothing, tg6mapcw, 0, 1,
     {5, 4, 0,   2, 1, 3,   -1, -1},   // qt1 -- come out if rotate 180.
     {0},
     {1, 2, 0,   4, 5, 3,   -1, -1},   // bd1 -- go in with this, come out if no rotate.
     {0},
     {0}},
 
-   {tglmapb6, s_short6, nothing, tglmap1ccw, 0, 1,
+   {tglmapb6, s_short6, nothing, tg6mapccw, 0, 1,
     {1, 2, 0,   4, 5, 3,   -1, -1},   // qt1 -- come out if rotate 180.
     {0},
     {5, 4, 0,   2, 1, 3,   -1, -1},   // bd1 -- go in with this, come out if no rotate.
@@ -11309,42 +11392,26 @@ const tglmap::map tglmap::init_table[] = {
    // The "4" bit says this is one of these not-mirror-symmetric setups.
    // The "8" bit says this is an 8-person version.
 
-   {tglmap1cw, s_ntrgl6ccw, nothing, tglmap1ccw, 0, 5,
+   {tg6mapcw, s_ntrgl6ccw, nothing, tg6mapccw, 0, 5,
     {5, 0, 1,   2, 3, 4,     -1, -1},   // qt1 -- come out if rotate 180.
     {0, 4, 5,   3, 1, 2,     -1, -1},   // cp1 -- go in with this, come out if no rotate.
     {0},
     {5, 4, 0,   2, 1, 3,     -1, -1},   // 241 -- come out to bone6
     {1, 2, 0,   4, 5, 3,     -1, -1}},  // 261 -- come out to short6
 
-   {tglmap1ccw, s_ntrgl6cw, nothing, tglmap1cw, 0, 7,
+   {tg6mapccw, s_ntrgl6cw, nothing, tg6mapcw, 0, 7,
     {3, 1, 2,   0, 4, 5,     -1, -1},
     {2, 3, 4,   5, 0, 1,     -1, -1},
     {0},
     {5, 4, 0,   2, 1, 3,     -1, -1},
     {1, 2, 0,   4, 5, 3,     -1, -1}},
 
-   {tg8map1cw, s_nxtrglccw, nothing, tg8map1ccw, 0, 0xD,
-    {6, 0, 1,   2, 4, 5,       3, 7},   // qt1 -- come out if rotate 180.
-    {0, 5, 6,   4, 1, 2,       3, 7},   // cp1 -- go in with this, come out if no rotate.
-    {0},
-    {2, 3, 1,   6, 7, 5,       4, 0},   // 241 -- come out to ptpd
-    {3, 4, 1,   7, 0, 5,       6, 2}},  // 261 -- come out to rigger
-
-   {tg8map1ccw, s_nxtrglcw, nothing, tg8map1cw, 0, 0xF,
-    {4, 1, 2,   0, 5, 6,       3, 7},
-    {2, 4, 5,   6, 0, 1,       3, 7},
-    {0},
-    {2, 3, 1,   6, 7, 5,       0, 4},   // 241 -- come out to ptpd
-    {3, 4, 1,   7, 0, 5,       2, 6}},  // 261 -- come out to rigger
-
    {tgl0}
 };
 
 
-const tglmap::tglmapkey tglmap::t6cwtglmap1[1] = {tglmap1cw};
-const tglmap::tglmapkey tglmap::t6ccwtglmap1[1] = {tglmap1ccw};
-const tglmap::tglmapkey tglmap::t8cwtglmap1[1] = {tg8map1cw};
-const tglmap::tglmapkey tglmap::t8ccwtglmap1[1] = {tg8map1ccw};
+const tglmap::tglmapkey tglmap::t6cwtglmap1[1] = {tg6mapcw};
+const tglmap::tglmapkey tglmap::t6ccwtglmap1[1] = {tg6mapccw};
 
 const tglmap::tglmapkey tglmap::s6tglmap1[1] = {tglmaps6};
 const tglmap::tglmapkey tglmap::b6tglmap1[1] = {tglmapb6};

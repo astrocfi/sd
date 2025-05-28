@@ -1714,8 +1714,11 @@ static void build_database_1(abridge_mode_t abridge_mode)
       //    The latter is c3x if the desired level is c3, or c4x if the desired level is c4.
       //    That way, c3x calls will be included.  We will print a warning if they are used.
 
-      if (this_level == calling_level ||
-          (abridge_mode != abridge_mode_writing && this_level <= calling_level)) {
+      dance_level acceptable_level = calling_level;
+      if (calling_level == l_c4) acceptable_level = l_c4a;
+
+      if (this_level <= calling_level &&
+          (abridge_mode != abridge_mode_writing || this_level >= acceptable_level)) {
 
          // Process tag base calls specially.
          if (call_root->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK) {

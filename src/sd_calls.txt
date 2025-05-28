@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2012  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.49"
+version "38.50"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1391,14 +1391,19 @@ call "remake the thar" a1
    setup pcrosswave thar restriction forbidden wave_only
       array [0 0 5W 4W 0 0 5E 4E]
 
-call "all 8 spin the top" plus
+call "all 8 fan the top" dontshow tag all8fanthetop
             step_to_wave
    setup thar thar restriction forbidden wave_only
-      array [L3W L6E 0 0 R3E R6W 0 0]
+      array [CR2E CR7W 0 0 AL2W AL7E 0 0]
    setup crosswave thar restriction forbidden wave_only
-      array [L3W L6E 0 0 R3E R6W 0 0]
+      array [CR2E CR7W 0 0 AL2W AL7E 0 0]
    setup pcrosswave thar restriction forbidden wave_only
-      array [0 0 L5W L0E 0 0 R5E R0W]
+      array [0 0 CR4E CR1W 0 0 AL4W AL1E]
+
+call "all 8 spin the top" plus
+            step_to_wave visible_fractions
+   seq trade []
+   seq all8fanthetop []
 
 call "@b top" a1
             visible_fractions neednumber imprecise_rotation step_to_wave
@@ -1542,6 +1547,27 @@ call "split ping-pong circulate" c3x
       array [ZM1N CR2S 0 0]
    setup pmd dmd qualifier left wave_only
       array [ZM3N 0 0 AL2S]
+
+call "_top it off part 3" dontshow tag topitoff_part3
+   conc nullcall [] fincoupleup []
+
+call "_top it off part 2" dontshow tag topitoff_part2
+            yoyo_is_inherited gen_sting_is_inherited
+   conc6_2 boxy_cast_off_34 [] hinge []
+
+call "@2top @3it off" plus tag topitoff
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+            first_part_visible
+   seq trade [inherit_yoyo inherit_gensting or_anycall]
+   seq topitoff_part2 [inherit_yoyo inherit_gensting inherit_fractal]
+   seq topitoff_part3 [roll_transparent]
+
+call "@0 it off" c1
+            dont_use_in_resolve first_part_visible
+            yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq nullcall [mandatory_anycall]
+   seq topitoff_part2 [inherit_yoyo inherit_gensting inherit_fractal]
+   seq topitoff_part3 [roll_transparent]
 
 call "fall into a column" c4a
             fudge_to_q_tag
@@ -4508,6 +4534,7 @@ call "rotary spin the windmill" c2
    seq finish_windmill [insert_number 2]
 
 call "partner tag" a1 tag partnertag
+            left_means_mirror
    setup 1x2 1x2
       array [CM1E AM0W]
             alternate_definition [funny] c2
@@ -5549,7 +5576,7 @@ call "shazam" c2
             visible_fractions diamond_is_legal fractal_is_inherited gen_sting_is_inherited rewind_is_inherited
    // Don't inherit rewind to subcalls -- they are self-rewinds anyway.
    seq armturn_n4 [allow_forced_mod inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq uturnback [allow_forced_mod inherit_diamond]
+   seq uturnflow [allow_forced_mod inherit_diamond]
 
 call "_hinge and then trade" dontshow tag hinge_then_trade
             left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
@@ -6059,6 +6086,14 @@ call "@6 trade" mainstream
          if select_near_select          [CR1S AL0S CR3S AL2S AL5S CR4S
                                          AL7S CR6S AL9S CR8S CR11S AL10S]
          if person_select_plus6         [0 0 0 0 0 AL11S 0 0 0 0 0 CR5S]
+   setup 4x3 3x4
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N
+                                         ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
+         if select_4x3_on_left          [0    0    0     0     AL3S AL2S
+                                         AL4S AL5S AL11S AL10S AL0S AL1S]
+         if select_4x3_on_right         [CR10S CR11S CR5S CR4S CR6S CR7S
+                                         0     0     0    0    CR9S CR8S]
    setup 8x2 2x8
       preds "Can't find anyone to trade with."
          if unselect            [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N
@@ -6236,7 +6271,7 @@ call "@6 U-turn back" mainstream
             dont_use_in_resolve
    matrix use_selector [16S 16 16S 16]
 
-call "U-turn back in roll direction" mainstream
+call "U-turn back in roll direction" mainstream tag uturnflow
             dont_use_in_resolve one_person_call
    setup 2x2 2x2
       preds "?"
@@ -7708,7 +7743,7 @@ call "shuffle and wheel" c4
       array [0 0 0 0 ZFM1W AL2E ZGM3W ZGM4W]
 
 call "_spread after wheel" dontshow tag spread_after_wheel
-   setup 2x2 1x4 qualifier all_facing_same
+   setup 2x2 1x4 qualifier all_facing_same restriction controversial alwaysfail
       array [ZM0N ZM2N ZM3N ZM1N]
    setup trngl 1x3 qualifier 2fl_only
       array [ZM1N ZM0N ZM2N 0 0 0]
@@ -10670,10 +10705,25 @@ call "dixie grand" plus
       array [0 2E 2E 0 0 1S 1S 0]
    setup 2x4 alamo plus_eighth_rotation qualifier tbone none
       array [0 0 0 0 7S 0 0 0E]
-   setup alamo alamo plus_eighth_rotation
+   // This selects people in an "around the corner" DPT.
+   setup alamo alamo plus_eighth_rotation qualifier 1fl_only
+      array [0 0 6S 0W 0 0 7N 1E]
+   // Same, in 4x4 "O" spots.
+   setup 4x4 alamo plus_eighth_rotation qualifier 1fl_only
+      array [0 6S 0W 0 0 0 0 0 0 7N 1E 0 0 0 0 0]
+   // This selects people in a "straight ahead" DPT.
+   setup alamo alamo plus_eighth_rotation qualifier miniwaves
+      array [0 0 7S 7S 0 0 0E 0E]
+   // Same, in 4x4 "O" spots.
+   setup 4x4 alamo plus_eighth_rotation qualifier miniwaves
+      array [0 7S 7S 0 0 0 0 0 0 0E 0E 0 0 0 0 0]
+   // This selects people in an 8-chain or trade by; everyone starts.
+   setup alamo alamo plus_eighth_rotation qualifier in_or_out
       array [0 0 6S 7S 0 0 0E 1E]
-   setup 4x4 alamo plus_eighth_rotation
+   // Same, in 4x4 "O" spots.
+   setup 4x4 alamo plus_eighth_rotation qualifier in_or_out
       array [0 6S 7S 0 0 0 0 0 0 0E 1E 0 0 0 0 0]
+
    setup hrglass alamo plus_eighth_rotation qualifier right magic_only
       array [0 0 0 0 0 0 0E 0]
    setup phrglass alamo plus_eighth_rotation qualifier right magic_only
@@ -11512,11 +11562,13 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR6N 0 CR0N 0 0 CR3N 0 CR5N]
    setup 2x4 qtag rotate plus_eighth_rotation qualifier num 3 right wave_only
       array [CR5N 0 CR6N 0 0 CR0N 0 CR3N]
-
    setup qtag 2x4 rotate plus_eighth_rotation qualifier num 3 right wave_only
       array [CR7N 0 0 CR0N 0 CR2N CR5N 0]
    setup qtag 2x4 plus_eighth_rotation qualifier num 1 right wave_only
       array [CR0N 0 0 CR2N 0 CR5N CR7N 0]
+
+   setup c1phan thar plus_eighth_rotation qualifier num 1 none
+      array [CR0N 0 CR1S 0 0 0 0 0 CR4S 0 CR5N 0 0 0 0 0]
 
             alternate_definition [lasthalf] c1
    setup 2x4 qtag plus_eighth_rotation qualifier num 1 right wave_only
@@ -11546,41 +11598,6 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [0 0 0 CR2E 0 0 0 0]
    setup pdhrglass dhrglass qualifier num 3 none
       array [0 0 0 CR6W 0 0 0 0]
-
-
-   // Need a lot more of these....
-   // Not so!  It's taken care of (fortunately!) by yoyo_fractal_numbers.
-/*
-            alternate_definition [generous] c3x
-   setup 1x2 1x2 qualifier num 1 right wave_only
-      array [CR1S 0]
-   setup 1x2 1x2 rotate qualifier num 2 right wave_only
-      array [CR1S 0]
-   setup 1x2 1x2 qualifier num 3 right wave_only
-      array [ZM0N 0]
-
-   setup 1x4 1x4 qualifier num 1 left wave_only
-      array [0 CR3S ZM2N 0]
-   setup 1x4 dmd qualifier num 2 left wave_only
-      array [0 CR3W ZM2N 0]
-   setup 1x4 1x4 qualifier num 3 left wave_only
-      array [0 CR1N ZM2N 0]
-
-            alternate_definition [stingy] c3x
-   setup 1x2 1x2 qualifier num 1 right wave_only
-      array [ZM0N 0]
-   setup 1x2 1x2 rotate qualifier num 2 right wave_only
-      array [CR0N 0]
-   setup 1x2 1x2 qualifier num 3 right wave_only
-      array [CR1S 0]
-
-   setup 1x4 1x4 qualifier num 1 left wave_only
-      array [0 ZM1N ZM2N 0]
-   setup 1x4 dmd qualifier num 2 left wave_only
-      array [0 CR1E ZM2N 0]
-   setup 1x4 1x4 qualifier num 3 left wave_only
-      array [0 CR3S ZM2N 0]
-*/
 
 call "_ @D by the right for about" dontshow tag odd_frac_by_right_for_about
             left_means_mirror neednumber
@@ -11622,14 +11639,16 @@ call "_half by the right" dontshow tag 1_2_by_right
    setup pqtag qtag
       array [ZM0N ZM1N 0 0 ZM4N ZM5N 0 0]
    setup 4x4 4x4
-      array [0 0 0 0 0 0 CR5S 0 0 0 0 0 0 CR14S 0 0]
+      array [0 0 0 0 0 CR2E CR5S 0 0 0 0 0 0 CR14S CR1W 0]
    setup alamo alamo
-      array [CR1S 0 0 0 0 CR4S 0 0]
+      array [CR1S CR2W 0 0 CR3E CR4S 0 0]
    setup thar thar restriction wave_only
       array [CR1S CR5S 0 0 ZM4N CR4S 0 0]
             alternate_definition [half] mainstream
    setup 1x4 2x2 qualifier right wave_only
       array [CR0E 0 0 CR1E]
+   setup 2x2 1x4 rotate qualifier right wave_only
+      array [CR0N 0 0 CR3N]
    setup 1x4 dmd qualifier left wave_only
       array [0 CR1E ZM2N 0]
             alternate_definition [lasthalf] mainstream
@@ -11775,9 +11794,9 @@ call "_half by the left" dontshow tag 1_2_by_left
    setup pwqtag wqtag
          array [ZM0N ZM1N ZM2N 0 ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N]
    setup 4x4 4x4
-      array [0 0 0 0 0 0 AL9W 0 0 0 0 0 0 AL10E 0 0]
+      array [0 0 0 0 0 AL6S AL9W 0 0 0 0 0 0 AL10E AL13S 0]
    setup alamo alamo
-      array [AL7E 0 0 0 0 AL6W 0 0]
+      array [AL7E AL0S 0 0 AL5S AL6W 0 0]
    setup thar thar restriction wave_only
       array [ZM0N AL0S 0 0 AL5S AL1S 0 0]
             alternate_definition [half] mainstream
@@ -11785,6 +11804,8 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [0 AL0W AL1W 0]
    setup 1x4 dmd qualifier right wave_only
       array [ZM0N 0 0 AL1W]
+   setup 2x2 1x4 rotate qualifier left wave_only
+      array [0 AL0S AL3S 0]
    setup 2x4 2x4 qualifier live tbone none restriction unusual alwaysfail
       array [ZM0N 0 0 0 0 0 0 ZM7N]
    setup 4x2 bone qualifier live tbone none restriction unusual alwaysfail
@@ -11815,6 +11836,12 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM0N AL0S AL1S AL4S AL5S AL2S]
    setup 1x8 1x8 qualifier wave_only
       array [ZM0N AL0S AL3S AL1S AL5S AL7S AL2S AL6S]
+// new stuff
+   setup short6 short6
+      array [ZM0N ZM1N AL0S AL5S ZM4N ZM5N]
+   setup pshort6 short6
+      array [0    ZM1N    0 AL2S ZM4N AL0S]
+// end of new stuff
    setup dhrglass 1x3dmd
       array [0 0 0 0 0 0 AL1S 0]
    setup pdhrglass 1x3dmd
@@ -11830,6 +11857,15 @@ call "_half by the left" dontshow tag 1_2_by_left
       array [ZM4W 0 AL5S 0 AL0S 0]
    setup 1x8 spindle qualifier right wave_only
       array [ZM7N 0 0 AL0W 0 AL2W AL1W 0]
+// new stuff
+
+   setup short6 1x6 rotate
+      array [0    ZM0W AL1S AL5S ZM3W 0]
+   setup pshort6 2x1dmd
+      array [0    ZM2N 0    AL3W ZM5W AL1W]
+
+
+// end of new stuff
             alternate_definition [lasthalf grand] plus
    setup 1x6 2x3 qualifier left wave_only
       array [0 AL0W 0 AL2W 0 AL1W]
@@ -12105,33 +12141,32 @@ call "swing the fractions" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1 roll_transparent]
             // Try again, allowing exquisite fractions (mostly.)
             left_means_mirror yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting]
-   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 6]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting roll_transparent]
+   seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 6 roll_transparent]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting roll_transparent]
    seq turn_by_right_by_eighths [inherit_left inherit_yoyo inherit_gensting inherit_fractal insert_number 2 roll_transparent]
 
 call "swing the fractions 3/5" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
             visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting inherit_diamond]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3
-                         roll_transparent]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_gensting inherit_diamond roll_transparent]
+   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
 
 call "swing the fractions 4/5" c1
             left_means_mirror diamond_is_legal yoyo_is_inherited gen_sting_is_inherited
             fractal_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 1]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting]
-   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3]
-   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
+   seq odd_frac_by_right [inherit_left inherit_diamond inherit_gensting inherit_fractal insert_number 3 roll_transparent]
+   seq 1_2_by_left_for_swing_fractions [inherit_left inherit_diamond inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand swing the fractions" c1
             dont_use_in_nice_resolve
@@ -12139,10 +12174,10 @@ call "any hand swing the fractions" c1
       array [4S 0S 0 0 5S 1S 0 0]
             fractal_is_inherited visible_fractions
    seq cast_off_n4 [inherit_fractal insert_number 1]
-   seq maybegrandslip_notc3 []
-   seq cast_off_n4 [inherit_fractal insert_number 3]
-   seq maybegrandslip_notc3 []
-   seq cast_off_n4 [inherit_fractal insert_number 1]
+   seq maybegrandslip_notc3 [roll_transparent]
+   seq cast_off_n4 [inherit_fractal insert_number 3 roll_transparent]
+   seq maybegrandslip_notc3 [roll_transparent]
+   seq cast_off_n4 [inherit_fractal insert_number 1 roll_transparent]
 
 // Quarter cross and three quarter cross.
 // Quarter mix and three quarter mix.
@@ -12150,37 +12185,37 @@ call "any hand swing the fractions" c1
 call "@D cross" c3x
             left_means_mirror neednumber grand_is_inherited bigmatrix_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left inherit_bigmatrix]
-   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand]
+   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand roll_transparent]
 
 call "@D mix" c3a
             left_means_mirror neednumber grand_is_inherited bigmatrix_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left inherit_gensting inherit_bigmatrix]
-   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand]
+   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand roll_transparent]
    seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand @D cross" c3x
             dont_use_in_nice_resolve neednumber grand_is_inherited
             fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq cast_off_n4_odd [inherit_fractal inherit_gensting]
-   seq ctrrun [force_cross inherit_grand]
+   seq ctrrun [force_cross inherit_grand roll_transparent]
 
 call "any hand @D mix" c3a
             dont_use_in_nice_resolve
             neednumber grand_is_inherited yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq cast_off_n4_odd [inherit_fractal inherit_gensting]
-   seq ctrrun [force_cross inherit_grand]
+   seq ctrrun [force_cross inherit_grand roll_transparent roll_transparent]
    seq maybegrandslip [inherit_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "any hand grand @D cross" c3x
             dont_use_in_nice_resolve neednumber fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq cast_off_n4_odd [inherit_fractal inherit_gensting]
-   seq ctrrun [force_cross force_grand]
+   seq ctrrun [force_cross force_grand roll_transparent]
 
 call "any hand grand @D mix" c3a
             dont_use_in_nice_resolve neednumber yoyo_is_inherited
             fractal_is_inherited gen_sting_is_inherited visible_fractions
    seq cast_off_n4_odd [inherit_fractal inherit_gensting]
-   seq ctrrun [force_cross force_grand]
+   seq ctrrun [force_cross force_grand roll_transparent]
    seq maybegrandslip [force_grand inherit_yoyo inherit_gensting roll_transparent]
 
 call "_centers crossback/ends two o's" dontshow tag crossbackandtwoos
@@ -25278,12 +25313,12 @@ call "good and plenty@S" c4x
    seq finishplenty []
 
 call "@2scoot @3and@C ramble" c1
-            intlk_is_inherited cross_is_inherited yoyo_is_inherited gen_sting_is_inherited first_part_visible
+            intlk_is_inherited cross_is_inherited yoyo_is_inherited gen_sting_is_inherited visible_fractions
    seq qtagscootback [or_anycall inherit_intlk inherit_yoyo inherit_gensting]
    seq ramble [inherit_intlk inherit_cross]
 
 call "@0 and@C ramble" c1
-            cross_is_inherited
+            cross_is_inherited visible_fractions
    seq nullcall [mandatory_anycall]
    seq ramble [inherit_cross]
 

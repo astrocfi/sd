@@ -3499,6 +3499,7 @@ static void do_concept_crazy(
 
       if ((i ^ reverseness) & 1) {
          // Do it in the center.
+         // If this is crazy Z's, CMD_MISC3__IMPOSE_Z_CONCEPT will be on, and the selector will be changed later.
          selector_kind sel = selector_center4;
 
          if (attr::klimit(tempsetup.kind) < 7) {
@@ -5180,6 +5181,8 @@ static void do_concept_inner_outer(
    int rot = 0;
    int arg1 = parseptr->concept->arg1;
 
+   // 8 bit of arg1 means doing outer formations.
+
    switch (arg1 & 0x70) {
    case 0:      // triple CLWBDZ
    case 0x20:   // triple twin CLW
@@ -5386,6 +5389,22 @@ static void do_concept_inner_outer(
       livemask = little_endian_live_mask(ss);
 
       switch (ss->kind) {
+      case s3x4:
+         if (arg1 & 8) break;   // Can't say "outside triple Z's", only "center Z".
+
+         // Demand that the center Z be solidly filled.
+
+         switch (livemask & 04646) {
+         case 04242:   // Center Z is CW.
+            misc2_zflag = CMD_MISC2__IN_Z_CW;
+            goto do_real_z_stuff;
+            break;
+         case 04444:   // Center Z is CCW.
+            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+            goto do_real_z_stuff;
+            break;
+         }
+         break;
       case s3x6:
          if ((livemask & 0063063) == 0) {
             // Of course, this is kind of stupid.  Why would you say "outer
@@ -5477,7 +5496,36 @@ static void do_concept_inner_outer(
             goto do_real_z_stuff;
          }
          break;
+      case s4x5:
+         if (arg1 & 8) break;   // Can't say "outside triple Z's".
+
+         // Demand that the center Z be solidly filled.
+
+         switch (livemask & 0x701C0) {
+         case 0x300C0:
+            misc2_zflag = CMD_MISC2__IN_Z_CW;
+            goto do_real_z_stuff;
+         case 0x60180:
+            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+            goto do_real_z_stuff;
+         }
+         break;
+      case sd3x4:
+         if (arg1 & 8) break;   // Can't say "outside triple Z's".
+
+         // Demand that the center Z be solidly filled.
+
+         switch (livemask & 0x38E) {
+         case 0x30C:
+            misc2_zflag = CMD_MISC2__IN_Z_CW;
+            goto do_real_z_stuff;
+         case 0x186:
+            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+            goto do_real_z_stuff;
+         }
+         break;
       }
+
       fail("Can't find the indicated formation.");
    }
 
@@ -8054,7 +8102,7 @@ static void do_concept_concentric(
       divided_setup_move(ss, map_code, phantest_ok, true, result);
       break;
    case schema_intermediate_diamond: case schema_outside_diamond:
-      ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+      ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
       concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0,
                       DFM1_CONC_CONCENTRIC_RULES, true, false, ~0U, result);
 
@@ -8158,11 +8206,11 @@ extern bool do_big_concept(
        this_kind == concept_once_removed ||
        this_kind == concept_concentric) {
       if (this_concept->arg3 == CMD_MISC__VERIFY_DMD_LIKE)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
    }
    else if (this_kind == concept_do_phantom_diamonds) {
       if (this_concept->arg2 == CMD_MISC__VERIFY_DMD_LIKE)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
    }
 
    // Take care of combinations like "mystic triple waves".

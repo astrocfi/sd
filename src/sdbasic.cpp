@@ -104,7 +104,7 @@
            10
             9
 
-   sx1x8 =
+   sx1x8 =   (actually, this is now a legitimate setup)
                4
                5
                6
@@ -910,7 +910,8 @@ static const veryshort ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
 
 static const veryshort ftcspn[8] = {6, 11, 13, 17, 22, 27, 29, 1};
 static const veryshort ftcbone[8] = {6, 13, 18, 19, 22, 29, 2, 3};
-
+static const veryshort ftc2x1dmd[6] = {1, 2, 4, 7, 8, 10};
+static const veryshort ftl2x1dmd[9] = {10, 1, 2, 4, 7, 8, 10, 1, 2};
 static const veryshort qhypergall[8] = {1, 8, 10, -1, 9, 0, 2, -1};
 static const veryshort qhypergalc[8] = {-1, 3, 7, -1, -1, 11, 15, -1};
 
@@ -999,6 +1000,10 @@ static const veryshort hx1x6translatev[15] = {
 static const veryshort h1x6thartranslate[12] = {
    0,  0,  1,  0,  2,  3,
    0,  4,  5,  0,  6,  7};
+
+static const veryshort h1x6translate2x1d[12] = {
+   0,  0,  1,  0,  2,  0,
+   0,  3,  4,  0,  5,  0};
 
 static const veryshort h1x8thartranslate9999[16] = {
    0,  0,  1,  0,  0,  2,  3,  0,
@@ -3537,7 +3542,7 @@ static int divide_the_setup(
 
          uint32 leading = final_concepts.final;
 
-         if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) {
+         if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_TRIANGLE) {
             if (final_concepts.test_finalbit(FINAL__TRIANGLE))
                fail("'Triangle' concept is redundant.");
          }
@@ -4790,6 +4795,22 @@ static uint32 do_actual_array_call(
                      rotfudge_line = 1;
                   }
                }
+               else if (result->kind == s_2x1dmd && other_kind == s1x6) {
+                  // was sx4dmdbone
+                  // Thing to look at is line 4755
+                  result->kind = sx1x6;
+                  tempkind = sx1x6;
+                  final_translatec = ftc2x1dmd;
+
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatel = &ftl2x1dmd[0];
+                     rotfudge_line = 3;
+                  }
+                  else {
+                     final_translatel = &ftl2x1dmd[3];
+                     rotfudge_line = 1;
+                  }
+               }
                else
                   fail("T-bone call went to a weird setup.");
             }
@@ -5114,6 +5135,10 @@ static uint32 do_actual_array_call(
             else if ((lilresult_mask[0] & 07070U) == 0) {
                permuter = h1x6translatev+3;  // 1x6 spots, horizontal.
                result->kind = s1x6;
+            }
+            else if ((lilresult_mask[0] & 05151U) == 0) {
+               permuter = h1x6translate2x1d;  // 2x1 diamond
+               result->kind = s_2x1dmd;
             }
             else if ((lilresult_mask[0] & 01111U) == 0) {
                permuter = h1x6thartranslate;   // thar spots.

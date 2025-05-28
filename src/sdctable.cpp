@@ -1212,7 +1212,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"OUTSIDE TRIPLE DIAMONDS",               concept_in_out_nostd,            D, l_c3a,
     UC_none, 8+5, CONCPROP__NEEDK_END_DMD, CMD_MISC__VERIFY_DMD_LIKE},
    {"CENTER Z",                              concept_in_out_nostd,            D, l_c3a,
-    UC_none, 6, CONCPROP__NEEDK_3X6, 0},
+    UC_none, 6, 0, 0},
    {"OUTSIDE TRIPLE Z's",                    concept_in_out_nostd,            D, l_c3a,
     UC_none, 8+6, CONCPROP__NEEDK_3X6, 0},
    {"CENTER TIDAL COLUMN",                   concept_in_out_nostd,            D, l_c4a,

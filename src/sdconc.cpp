@@ -397,7 +397,7 @@ bool conc_tables::synthesize_this(
          for (int k=0; k<lmap_ptr->center_arity; k++) {
             int k_reorder = reverse_centers_order ? lmap_ptr->center_arity-k-1 : k;
             for (int j=0; j<inlim; j++) {
-               if (inners[k_reorder].people[j^inners_xorstuff].id1 &&
+               if (inners[k_reorder].people[(j+inners_xorstuff)%inlim].id1 &&
                    !(lmap_ptr->used_mask_synthesize & synth_mask))
                   goto not_this_one;
                synth_mask <<= 1;
@@ -1428,6 +1428,7 @@ extern void normalize_concentric(
           table_synthesizer != schema_4x4_in_out_triple &&
           table_synthesizer != schema_in_out_quad &&
           table_synthesizer != schema_in_out_12mquad &&
+          table_synthesizer != schema_concentric_zs &&
           table_synthesizer != schema_concentric_big2_6 &&
           table_synthesizer != schema_concentric_6_2_tgl &&
           table_synthesizer != schema_intlk_vertical_6 &&
@@ -1562,6 +1563,7 @@ static calldef_schema concentrify(
    int & crossing,   // This is int (0 or 1), not bool.
    int & inverting,  // This too.
    bool enable_3x1_warn,
+   bool impose_z_on_centers,
    setup inners[],
    setup *outers,
    int *center_arity_p,
@@ -2084,8 +2086,12 @@ static calldef_schema concentrify(
       analyzer_result = schema_concentric_2_6;
    else if (analyzer_result == schema_1221_concentric)
       analyzer_result = schema_concentric_6p;
-   else if (analyzer_result == schema_in_out_triple_zcom)
-      analyzer_result = schema_in_out_triple;
+   else if (analyzer_result == schema_in_out_triple_zcom) {
+      if (impose_z_on_centers)
+         analyzer_result = schema_concentric_zs;
+      else if (ss->kind != s3x4 && ss->kind != s4x5/* && ss->kind != s2x5*/ && ss->kind != sd3x4)
+         analyzer_result = schema_in_out_triple;
+   }
    else if (analyzer_result == schema_checkpoint_spots)
       analyzer_result = schema_checkpoint;
 
@@ -2166,6 +2172,8 @@ static calldef_schema concentrify(
             fail("Can't find concentric diamonds.");
          case schema_concentric_zs:
             fail("Can't find concentric Z's.");
+         case schema_in_out_triple_zcom:
+            fail("Can't find center Z.");
          case schema_concentric_diamond_line:
             fail("Can't find center line and outer diamond.");
          default:
@@ -3082,8 +3090,11 @@ extern void concentric_move(
 
    int inverting = 0;
 
+   bool imposing_z = cmdin && ((cmdin->cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) != 0);
+
    // This reads and writes to "analyzer" and "inverting", and writes to "crossing".
    analyzer_result = concentrify(ss, analyzer, crossing, inverting, enable_3x1_warn,
+                                 imposing_z,
                                  begin_inner, &begin_outer, &center_arity,
                                  &begin_outer_elongation, &begin_xconc_elongation);
 
@@ -3276,8 +3287,7 @@ extern void concentric_move(
          // Check for operating on a Z.
 
          if (begin_ptr->kind == s2x3 &&
-             ((!doing_ends && analyzer == schema_concentric) ||
-              analyzer == schema_concentric_zs)) {
+             ((!doing_ends && analyzer == schema_concentric) || analyzer == schema_concentric_zs)) {
             uint32 mask = doing_ends ? eemask : ccmask;
             if (mask == 066) {
                begin_ptr->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
@@ -3620,8 +3630,42 @@ extern void concentric_move(
          if (modifiers1 & DFM1_SUPPRESS_ROLL)
             result_ptr->suppress_all_rolls(false);
 
-         if (demand_no_z_stuff && (result_ptr->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK))
-            fail("Can't do this call from a \"Z\".");
+         uint32 z_compress_direction =
+            (result_ptr->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK) /
+            RESULTFLAG__DID_Z_COMPRESSBIT;
+
+         if (z_compress_direction) {
+            if (demand_no_z_stuff && !(begin_ptr->cmd.cmd_misc3_flags & CMD_MISC3__SAID_Z))
+               fail("Can't do this call from a \"Z\".");
+
+            if (result_ptr->kind == s2x2) {
+               const expand::thing *fixp;
+               uint32 rotfix = z_compress_direction-1;   // This is 0 for E-W or 1 for N-S
+               result_ptr->rotation -= rotfix;
+               canonicalize_rotation(result_ptr);
+
+               if (orig_z_bits & CMD_MISC2__IN_Z_CW)
+                  fixp = &fix_cw;
+               else if (orig_z_bits & CMD_MISC2__IN_Z_CCW)
+                  fixp = &fix_ccw;
+               else if (orig_z_bits & CMD_MISC2__IN_AZ_CW)
+                  fixp = doing_ends ? &fix_cw : &fix_ccw;
+               else if (orig_z_bits & CMD_MISC2__IN_AZ_CCW)
+                  fixp = doing_ends ? &fix_ccw : &fix_cw;
+               else
+                  fail("Internal error: Can't figure out how to unwind anisotropic Z's.");
+
+               expand::expand_setup(*fixp, result_ptr);
+               result_ptr->rotation += rotfix;
+            }
+            else
+               fail("Can't do this shape-changer in a 'Z'.");
+         }
+
+         if (analyzer == schema_in_out_triple_zcom) {
+            orig_z_bits = ss->cmd.cmd_misc2_flags;
+            analyzer = schema_in_out_triple;
+         }
 
          remove_mxn_spreading(result_ptr);
          remove_tgl_distortion(result_ptr);
@@ -3630,40 +3674,6 @@ extern void concentric_move(
             mirror_this(result_ptr);
 
          current_options = save_state;
-
-         if (analyzer == schema_in_out_triple_zcom || analyzer == schema_concentric_zs) {
-            if (analyzer == schema_in_out_triple_zcom) orig_z_bits = ss->cmd.cmd_misc2_flags;
-
-            uint32 z_compress_direction =
-               (result_ptr->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK) /
-               RESULTFLAG__DID_Z_COMPRESSBIT;
-            if (z_compress_direction) {
-               if (result_ptr->kind == s2x2) {
-                  const expand::thing *fixp;
-                  uint32 rotfix = z_compress_direction-1;   // This is 0 for E-W or 1 for N-S
-                  result_ptr->rotation -= rotfix;
-                  canonicalize_rotation(result_ptr);
-
-                  if (orig_z_bits & CMD_MISC2__IN_Z_CW)
-                     fixp = &fix_cw;
-                  else if (orig_z_bits & CMD_MISC2__IN_Z_CCW)
-                     fixp = &fix_ccw;
-                  else if (orig_z_bits & CMD_MISC2__IN_AZ_CW)
-                     fixp = doing_ends ? &fix_cw : &fix_ccw;
-                  else if (orig_z_bits & CMD_MISC2__IN_AZ_CCW)
-                     fixp = doing_ends ? &fix_ccw : &fix_cw;
-                  else
-                     fail("Internal error: Can't figure out how to unwind anisotropic Z's.");
-
-                  expand::expand_setup(*fixp, result_ptr);
-                  result_ptr->rotation += rotfix;
-               }
-               else
-                  fail("Can't do this shape-changer in a 'Z'.");
-            }
-
-            if (analyzer == schema_in_out_triple_zcom) analyzer = schema_in_out_triple;
-         }
 
          if (doing_ends)
             saved_end_warnings.setmultiple(configuration::save_warnings());
@@ -3774,7 +3784,12 @@ extern void concentric_move(
    // based on the call they did, how it got divided up, whether it had the "parallel_conc_end"
    // flag on, etc.
 
-   if (analyzer == schema_in_out_triple ||
+   if (analyzer == schema_in_out_triple_zcom) analyzer = schema_concentric_zs;
+   else if (analyzer == schema_in_out_triple && imposing_z) analyzer = schema_concentric;
+
+   if (analyzer == schema_concentric ||
+       analyzer == schema_in_out_triple ||
+       analyzer == schema_concentric_zs ||
        analyzer == schema_sgl_in_out_triple ||
        analyzer == schema_3x3_in_out_triple ||
        analyzer == schema_4x4_in_out_triple ||
@@ -3831,7 +3846,6 @@ extern void concentric_move(
       // Put all 3, or all 4, results into the same formation.
       fix_n_results(center_arity+1, -1, false, outer_inners, rotstate, pointclip, 0);
    }
-
 
    // If the call was something like "ends detour", the concentricity info was left in the
    // cmd_misc_flags during the execution of the call, so we have to pick it up to make sure
@@ -4033,6 +4047,7 @@ extern void concentric_move(
        analyzer != schema_4x4_in_out_triple &&
        analyzer != schema_in_out_quad &&
        analyzer != schema_in_out_12mquad &&
+       analyzer != schema_concentric_zs &&
        analyzer != schema_intermediate_diamond &&
        analyzer != schema_outside_diamond &&
        analyzer != schema_conc_o &&
@@ -4279,6 +4294,9 @@ extern void concentric_move(
 
    // Now lossage in "final_elongation" may have been repaired.  If it is still
    // negative, there may be trouble ahead.
+
+   if (analyzer == schema_concentric_zs)
+      analyzer = schema_in_out_triple_zcom;
 
    normalize_concentric(ss, analyzer, center_arity, outer_inners,
                         final_elongation, matrix_concept, result);
@@ -5367,6 +5385,8 @@ extern void inner_selective_move(
    bool force_matrix_merge = false;
    bool inner_shape_change = false;
    bool doing_special_promenade_thing = false;
+   uint32 mask = ~(~0 << (sizem1+1));
+   const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       clear_result_flags(result);
@@ -5379,7 +5399,7 @@ extern void inner_selective_move(
        indicator == selective_key_plain_no_live_subsets) {
 
       if (selector_to_use == selector_ctrdmd || selector_to_use == selector_thediamond)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_DIAMOND;
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
 
       action = normalize_before_merge;
       if (others <= 0 && sizem1 == 3) {
@@ -5406,13 +5426,29 @@ extern void inner_selective_move(
       others = 1;
    }
 
+   if (sizem1 < 0) fail("Can't identify people in this setup.");
+
+   // Special case for picking out center Z for crazy Z's.
+   if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) &&
+       attr::slimit(ss) > 7 &&
+       indicator == selective_key_plain &&
+       selector_to_use == selector_center4 &&
+       others <= 0) {
+      ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+      if (ss->kind == s4x5)
+         override_selector = 0x701C0;
+      else {
+         concentric_move(ss, cmd1, cmd2, schema_in_out_triple_zcom, modsa1, modsb1, true, enable_3x1_warn, ~0U, result);
+         return;
+      }
+   }
+
    saved_selector = current_options.who;
    current_options.who = selector_to_use;
 
    the_setups[0] = *ss;              // designees
    the_setups[1] = *ss;              // non-designees
-
-   if (sizem1 < 0) fail("Can't identify people in this setup.");
 
    for (i=0, bigend_ssmask=0, bigend_llmask=0, livemask[0] = 0, livemask[1] = 0, j=1;
         i<=sizem1;
@@ -5459,7 +5495,7 @@ extern void inner_selective_move(
 
    current_options.who = saved_selector;
 
-   if (demand_both_setups_live && (livemask[0] == 0 ||livemask[1] == 0))
+   if (demand_both_setups_live && (livemask[0] == 0 || livemask[1] == 0))
       fail("Can't do this call in this formation.");
 
    // If this is "ignored", we invert the selector
@@ -5704,9 +5740,6 @@ extern void inner_selective_move(
       result->result_flags.misc |= RESULTFLAG__IMPRECISE_ROT;
       return;
    }
-
-   uint32 mask = ~(~0 << (sizem1+1));
-   const ctr_end_mask_rec *ctr_end_masks_to_use = &dead_masks;
 
    // Look for special case of user saying something like "heads bring us together" from squared-set spots.
    // Just do it, as though sequence had started that way.
@@ -5966,8 +5999,18 @@ extern void inner_selective_move(
                if (selector_to_use == selector_outer6)
                   goto do_concentric_ends;
             }
+            else if (orig_indicator == selective_key_plain &&
+                     !cmd2 &&
+                     selector_to_use != selector_thosefacing &&
+                     (bigend_ssmask == 02121 || bigend_ssmask == 01111) &&
+                     bigend_ssmask == (bigend_llmask & 03131)) {
+               // Look for center Z.  See comment below for 4x5.
+               schema = schema_select_ctr4;
+               action = normalize_to_4;
+               goto back_here;
+            }
          }
-         else if (ss->kind == sd3x4) {    /* **** BUG  what a crock -- fix this right. */
+         else if (ss->kind == sd3x4) {
             if (bigend_llmask == 03535) {    // Spindle occupation.
                schema = schema_concentric_6_2;
                if (selector_to_use == selector_center6)
@@ -5975,6 +6018,31 @@ extern void inner_selective_move(
                if (selector_to_use == selector_outer2 || selector_to_use == selector_veryends)
                   goto do_concentric_ends;
             }
+            else if (orig_indicator == selective_key_plain &&
+                     !cmd2 &&
+                     selector_to_use != selector_thosefacing &&
+
+                     (bigend_ssmask == 0x618 || bigend_ssmask == 0x30C) &&
+                     bigend_ssmask == (bigend_llmask & 0x71C)) {
+               // Look for center Z.  See comment below for 4x5.
+               schema = schema_select_ctr4;
+               action = normalize_to_4;
+               goto back_here;
+            }
+         }
+         else if (ss->kind == s4x5 &&
+                  orig_indicator == selective_key_plain &&
+                  !cmd2 &&
+                  selector_to_use != selector_thosefacing &&
+                  (bigend_ssmask == 0x0300C || bigend_ssmask == 0x01806) &&
+                  bigend_ssmask == (bigend_llmask & 0x0380E)) {
+            // Look for center Z.  But if the selected people are "those facing", we can't just
+            // do the call in a 2x3, because there are missing people.  In that case, just ignore this,
+            // and the situation will be taken care of by the normal "back_here" code, eventually leading
+            // to the call being done in 2 1x2 setups.
+            schema = schema_select_ctr4;
+            action = normalize_to_4;
+            goto back_here;
          }
          else if (ss->kind == swqtag) {
             // Check for center 6 in "hollow" occupation.
@@ -6806,12 +6874,14 @@ extern void inner_selective_move(
 
    // If the setup is bigger than 8 people, concentric_move won't be able to handle it.
    // The only hope is that we are just having the center 2 or center 4 do something.
-   // Except for 2x5 or d2x5.  In those cases we presume that the centers make a Z,
+   // There are a few exceptions.  In those cases we presume that the centers make a Z,
    // and that concentric_move will handle it.
 
    if (attr::slimit(ss) > 7 &&
        ss->kind != sd2x5 &&
        ss->kind != s2x5 &&
+       //       ss->kind != sd3x4 &&
+       //       ss->kind != s4x5 &&
        indicator == selective_key_plain &&
        others <= 0)
       goto back_here;

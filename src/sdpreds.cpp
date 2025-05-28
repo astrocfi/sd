@@ -46,19 +46,7 @@ bool number_used;
 bool mandatory_call_used;
 
 
-enum {
-   // If a real person and a person under test are XOR'ed, the result AND'ed
-   // with this constant, and the low bits of that result examined, it will tell
-   // whether the person under test is real and facing in the same direction
-   // (result = 0), the opposite direction (result == 2), or whatever.
-   DIR_MASK = (BIT_PERSON | 3),
-   // These are the bits that never change.
-   ID3_PERM_ALL_ID = ID3_PERM_HEAD|ID3_PERM_SIDE|ID3_PERM_BOY|ID3_PERM_GIRL
-};
-
-
-
-extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
+extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
 {
    uint32 p1, p2, p3;
    selector_kind s;
@@ -125,9 +113,7 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
             case selector_center_col_of_6:
             case selector_center_box:
             case selector_outerpairs:
-               pid2 = ptr[place][0] &
-                  ID2_BITS_TO_CLEAR &
-                  ~(ID2_FACING|ID2_NOTFACING|ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE);
+               pid2 = ptr[place][0] & ID2_BITS_TO_CLEAR_FOR_PHANTOM_SELECTOR;
                goto do_switch;
             }
          }
@@ -245,7 +231,10 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       goto eq_return;
    case selector_center2:
    case selector_outer6:
-      if (ss->kind == s1x6) {
+      if (ss->kind == s3x4 && current_options.who == selector_center2) {
+         return (pid2 & ID2_CTR2) != 0;  // This one is always valid, even if we don't know who the "outer 6" are.
+      }
+      else if (ss->kind == s1x6) {
          p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
          if      (p2 == ID2_CTR2)      s = selector_center2;
          else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
@@ -350,9 +339,11 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       }
       else {
          if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-         else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return false;
          else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
+         else if ((pid2 & (ID2_CTR1X4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
+         else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return false;
          else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return false;
+         else if ((pid2 & (ID2_CTR1X4|ID2_OUTRPAIRS)) == ID2_CTR1X4) return false;
       }
 
       break;
@@ -457,12 +448,12 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
 
       break;
    case selector_headliners:
-      p2 = pid2 & ID2_DIR_BITS_TO_CLEAR;
+      p2 = pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT);
       if      (p2 == ID2_FACEFRONT || p2 == ID2_FACEBACK) return true;
       else if (p2 == ID2_FACELEFT || p2 == ID2_FACERIGHT) return false;
       break;
    case selector_sideliners:
-      p2 = pid2 & ID2_DIR_BITS_TO_CLEAR;
+      p2 = pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT|ID2_FACERIGHT);
       if      (p2 == ID2_FACELEFT || p2 == ID2_FACERIGHT) return true;
       else if (p2 == ID2_FACEFRONT || p2 == ID2_FACEBACK) return false;
       break;
@@ -485,6 +476,30 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_facingright:
       if      (pid2 & ID2_FACERIGHT) return true;
       else if (pid2 & (ID2_FACEFRONT|ID2_FACEBACK|ID2_FACELEFT)) return false;
+      break;
+   case selector_lineleft:
+      if      (pid2 & ID2_LEFTLINE) return true;
+      else if (pid2 & ID2_RIGHTLINE) return false;
+      break;
+   case selector_lineright:
+      if      (pid2 & ID2_RIGHTLINE) return true;
+      else if (pid2 & ID2_LEFTLINE) return false;
+      break;
+   case selector_columnleft:
+      if      (pid2 & ID2_LEFTCOL) return true;
+      else if (pid2 & ID2_RIGHTCOL) return false;
+      break;
+   case selector_columnright:
+      if      (pid2 & ID2_RIGHTCOL) return true;
+      else if (pid2 & ID2_LEFTCOL) return false;
+      break;
+   case selector_boxleft:
+      if      (pid2 & ID2_LEFTBOX) return true;
+      else if (pid2 & ID2_RIGHTBOX) return false;
+      break;
+   case selector_boxright:
+      if      (pid2 & ID2_RIGHTBOX) return true;
+      else if (pid2 & ID2_LEFTBOX) return false;
       break;
    case selector_nearline:
       if      (pid3 & ID3_NEARLINE) return true;
@@ -709,6 +724,12 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
             case s_ptpd:
                if (B == D) thing_to_test = 0xA;
                break;
+            case s_bone:
+               if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x3;
+               break;
+            case s_rigger:
+               if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x3;
+               break;
             }
          }
          else if (allow_some == 3) {
@@ -847,6 +868,12 @@ static bool plus_mod_selected(setup *real_people, int real_index,
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
 }
+
+static const int32 l_4x3_tab[12] = {
+   -99, -99, -99, -99, 3, 2, 4, 5, 11, 10, 0, 1};
+
+static const int32 r_4x3_tab[12] = {
+   10, 11, 5, 4, 6, 7, -99, -99, -99, -99, 9, 8};
 
 static const int32 adj_4x4_tab[16] =
 {14, 3, 7, 1, 5, 4, 8, 2, 6, 11, 15, 9, 13, 12, 0, 10};
@@ -2785,6 +2812,8 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected,             &iden_tab[11]},            // "person_select_plus11"
       {plus_mod_selected,             &iden_tab[12]},            // "person_select_plus12"
       {sum_mod_selected_for_12p,      &iden_tab[15]},            // "person_select12_sum15"
+      {select_with_special,           l_4x3_tab},                // "select_4x3_on_left"
+      {select_with_special,           r_4x3_tab},                // "select_4x3_on_right"
       {select_with_special,           adj_4x4_tab},              // "select_w_adj_4x4"
       {select_with_special,           or_4x4_tab},               // "select_w_or_4x4"
       {select_with_special,           ctr_4x4_tab},              // "select_w_ctr_4x4"

@@ -636,6 +636,11 @@ const siamese_item siamese_table_of_2[] = {
    {s3x4,        0x0BAE0000U, 0x08A2U, warn__none},
    {s3x4,        0x00000BAEU, 0x030CU, warn__none},
 
+   {s3x4,        0x0C30030CU, 0x030CU, warn__none},
+   {s3x4,        0x030C0C30U, 0x0C30U, warn__none},
+   {s3x4,        0x0C3000C3U, 0x00C3U, warn__none},
+   {s3x4,        0x00C30C30U, 0x0C30U, warn__none},
+
    {s_qtag,      0x003300CCU, 0xCCU,   warn__ctrscpls_endstand},
    {s_qtag,      0x00CC0033U, 0x33U,   warn__ctrstand_endscpls},
    {s4dmd,       0x0F0FF0F0U, 0xF0F0U, warn__ctrscpls_endstand},
@@ -1894,7 +1899,7 @@ extern void tandem_couples_move(
 
    if (tandstuff.m_virtual_setup.kind == s_ntrgl6cw ||
        tandstuff.m_virtual_setup.kind == s_ntrgl6ccw)
-      tandstuff.m_virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__SAID_TRIANGLE;
+      tandstuff.m_virtual_setup.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
 
    update_id_bits(&tandstuff.m_virtual_setup);
 

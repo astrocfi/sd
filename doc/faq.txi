@@ -115,6 +115,49 @@ look like "Sdtty C3 AACE (12:22)"  The first number in parentheses gives the num
 with which the current run started, and the second number shows the current sequence
 number.  In this example, 10 sequences have been written during the current run.
 
+@unnumberedsec How do I use the ``reconcile'' command?
+
+The @strong{reconcile} operation is like resolving, but it
+puts the generated calls someplace other than at the end of the
+sequence.  This is useful if you have a clever getout at the end of the
+sequence, and you want it to be the resolve, but people don't have their
+partners and corners.  This lets you retroactively modify the sequence
+so that the clever getout will work.
+
+Note first that this operation may only be invoked when the setup is
+suitable waves, two-faced lines, or a circle, so that it can figure out whether you want
+a, @i{right and left grand}, @i{left allemande},  @i{promenade}, or at-home getout.
+If the setup is an 8-chain, it can't tell.  In that case, either
+do a @strong{touch} or a @strong{left touch}, to tell the program that you really
+want a @i{right and left grand} or @i{allemande left}, respectively.
+Then, after the reconcile operation is complete, you can erase that extra call.
+
+The reconcile operation is very similar in behavior to resolve, except
+that the program needs to know the insertion point.  Rather than
+searching for the first resolve as soon as you give the command, the
+reconcile operation lets you set the insertion point before searching.
+Select @strong{raise reconcile point} or @strong{lower reconcile point} to
+set it.  A dotted line will be displayed showing where in the sequence
+the generated calls will be placed.  When this is in the right place,
+select @strong{find another} to find the first reconcile.  You can
+change the insertion point at any time.
+
+Reconciles are extremely difficult to find---much harder than resolves.
+To avoid frustration, make the insertion point be at a place where the
+setup is very simple and a large number of calls are legal.  We recommend
+making the insertion point be at a place where the setup is in waves.
+Remember that, if the insertion point is at an hourglass, the program
+has to find a random sequence of up to three calls that goes from an hourglass
+to another hourglass while miraculously performing the required
+permutation.
+
+@unnumberedsec I wish the pictures didn't go away when the transcript is printed.
+
+At any point in a sequence you can give the @strong{keep picture} command.  The picture at that point
+will be preserved, both in the working display, and in the final file.  The glyphs in the file might
+not look very nice, especially if a variable-width font is used, but it should be enough to tell
+whether the dancers are in the right formation.
+
 @unnumberedsec Entering complex calls is confusing!
 
 If in doubt about how to enter some complex call, type part of the call
