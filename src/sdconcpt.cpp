@@ -3943,7 +3943,6 @@ static void do_concept_checkpoint(
    setup *result)
 {
    int reverseness = parseptr->concept->arg1;
-   setup_command subsid_cmd;
 
    if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE)) {
       if (reverseness) fail("Redundant 'REVERSE' modifiers.");
@@ -3955,20 +3954,37 @@ static void do_concept_checkpoint(
    if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
       fail("Illegal modifier before \"checkpoint\".");
 
-   subsid_cmd = ss->cmd;
+   setup_command this_cmd = ss->cmd;
+
+   if (this_cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST) {
+      // Curried meta-concept, as in "finally checkpoint recycle
+      // by 1/4 thru".  Take the fraction info off the first
+      // call.  In this example, the 1/4 thru is affected but the
+      // recycle is not.
+      this_cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
+      this_cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+   }
+   else {
+      // If not under a meta-concept, we don't allow fractionalization.
+      // You can't do 1/2 of the moving of the checkpointers to the outside.
+      if (this_cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
+         fail("Can't do this.");
+   }
+
+   setup_command subsid_cmd = ss->cmd;
    subsid_cmd.parseptr = parseptr->subsidiary_root;
 
-   /* The "dfm_conc_force_otherway" flag forces Callerlab interpretation:
-      If checkpointers go from 2x2 to 2x2, this is clear.
-      If checkpointers go from 1x4 to 2x2, "dfm_conc_force_otherway" forces
-         the Callerlab rule in preference to the "parallel_concentric_end" property
-         on the call. */
+   // The "dfm_conc_force_otherway" flag forces Callerlab interpretation:
+   // If checkpointers go from 2x2 to 2x2, this is clear.
+   // If checkpointers go from 1x4 to 2x2, "dfm_conc_force_otherway" forces
+   //    the Callerlab rule in preference to the "parallel_concentric_end" property
+   //    on the call.
 
    if (reverseness)
-      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint,
+      concentric_move(ss, &this_cmd, &subsid_cmd, schema_rev_checkpoint,
                       0, 0, true, ~0UL, result);
    else
-      concentric_move(ss, &subsid_cmd, &ss->cmd, schema_checkpoint,
+      concentric_move(ss, &subsid_cmd, &this_cmd, schema_checkpoint,
                       0, DFM1_CONC_FORCE_OTHERWAY, true, ~0UL, result);
 }
 

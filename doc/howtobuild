@@ -199,7 +199,7 @@ windows> use reflection garbage to connect to an-cs1
       goblin> rm sd/*
       goblin> rmdir sd
       goblin> scp linux.tar.gz ackerman@scotch.ics.uci.edu:linux.tar.gz
-            (pass=12b0z0s)
+            (pass=and9user)
       goblin> exit
    an-cs1> exit
 windows> exit
@@ -285,19 +285,13 @@ sd_source                          *
 install                                  *
 
 
-
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!! NEW STUFF, DAMMIT!!!!
-
 windows> pscp -l wba -pw and9user pack.zip an-cs1:pack.zip
 
 windows> use reflection garbage to connect to an-cs1
    an-cs1> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
-            (pass=12b0z0s)
+            (pass=and9user)
    an-cs1> ssh -l ackerman scotch.ics.uci.edu
-            (pass=12b0z0s)
+            (pass=and9user)
           # dir will appear to be /home/ackerman,
           # is actually /home/lynette/public-html/sd,
           # which is where the web pages are.

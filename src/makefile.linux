@@ -58,7 +58,9 @@ TTY_FLAGS =
 # before them, just can't get their act together.
 # At least Linux knows where to find the library -- we don't have
 # to give the library pathname.
-TTY_LIBS = -static -lcurses
+#
+# 5 Jan 2005:  Gcc 3.2.3 under Red Hat now requires libgpm.
+TTY_LIBS = -static -lcurses -lgpm
 
 SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \

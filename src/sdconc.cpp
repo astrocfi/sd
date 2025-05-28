@@ -1690,14 +1690,14 @@ static bool fix_empty_outers(
    setup *result_inner,
    setup *result)
 {
-   /* If the schema is one of the special ones, we will know what to do. */
+   // If the schema is one of the special ones, we will know what to do.
    if (analyzer == schema_conc_star ||
        analyzer == schema_ckpt_star ||
        analyzer == schema_conc_star12 ||
        analyzer == schema_conc_star16) {
 
-      /* This is what makes 12 matrix relay the top work when everyone is
-            in the stars. */
+      // This is what makes 12 matrix relay the top work when everyone is
+      // in the stars.
 
       result_outer->kind = s1x4;
       clear_people(result_outer);
@@ -1716,6 +1716,12 @@ static bool fix_empty_outers(
       clear_result_flags(result_outer);
       result_outer->result_flags.misc |= 1;
       result_outer->rotation = 1;
+   }
+   else if (analyzer == schema_checkpoint) {
+      result_outer->kind = s2x2;
+      clear_people(result_outer);
+      clear_result_flags(result_outer);
+      result_outer->rotation = 0;
    }
    else if (analyzer == schema_in_out_triple_squash) {
       result_outer->kind = s2x2;
@@ -3717,6 +3723,12 @@ extern void on_your_own_move(
    clear_person(&setup1, 6);
    setup1.cmd = ss->cmd;
    setup1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
+   if (setup1.cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST) {
+      // Curried meta-concept.  Take the fraction info off the first call.
+      setup1.cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
+      setup1.cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+   }
+
    move(&setup1, false, &res1);
 
    setup2 = *ss;              // Get inners only.
@@ -3724,9 +3736,10 @@ extern void on_your_own_move(
    clear_person(&setup2, 3);
    clear_person(&setup2, 4);
    clear_person(&setup2, 7);
-   setup1.cmd = ss->cmd;
+   setup2.cmd = ss->cmd;
    setup2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED | CMD_MISC__PHANTOMS;
    setup2.cmd.parseptr = parseptr->subsidiary_root;
+
    move(&setup2, false, result);
 
    outer_inners[0] = res1;
@@ -5282,6 +5295,15 @@ back_here:
          if (mirror) {
             mirror_this(this_one);
             this_one->cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
+         }
+
+         if (others > 0 && setupcount == 0) {
+            if (this_one->cmd.cmd_misc_flags & CMD_MISC__PUT_FRAC_ON_FIRST) {
+               // Curried meta-concept.  Take the fraction info off the first call.
+               // This should only be legal for "own the <anyone>".
+               this_one->cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
+               this_one->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+            }
          }
 
          move(this_one, false, this_result);

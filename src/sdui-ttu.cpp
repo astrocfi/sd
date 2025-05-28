@@ -42,7 +42,7 @@
 
 
 #ifndef NO_CURSES
-static int curses_initialized = 0;
+static bool curses_initialized = false;
 #endif
 
 static int current_tty_mode = 0;
@@ -136,7 +136,7 @@ extern void ttu_initialize()
 #else
    if (!sdtty_no_cursor) {
       initscr();    /* Initialize "curses". */
-      curses_initialized = 1;
+      curses_initialized = true;
       noecho();     /* Don't echo; we will do it ourselves. */
       cbreak();     /* Give us each keystroke; don't wait for entire line. */
       scrollok(stdscr, 1);    /* Permit screen to scroll when we write beyond the bottom.

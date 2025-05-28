@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <23 Dec 2004 wba>
+@c Time-stamp: <9 Jan 2005 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.53
-@set title2 Database version = 36.53 format = 227
+@set title1 RELEASE NOTES FOR SD VERSION 36.54
+@set title2 Database version = 36.54 format = 227
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.54::
 * 36.53::
 * 36.52::
 * 36.5::
@@ -56,7 +57,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.53, Top, (dir)
+@node Intro, 36.54, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -67,11 +68,51 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 36.53::               Changes in the current version
+* 36.54::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.53, 36.52, Intro, Top
+@node 36.54, 36.53, Intro, Top
+@unnumberedsec Version 36.54 changes
+
+The program handles "curried metaconcepts".  This means that one can
+do things like @strong{finally checkpoint recycle by 1/4 thru}.  The
+@strong{checkpoint} concept normally takes two subject calls--@strong{recycle}
+and @strong{1/4 thru} in this case.  When the concept is used under a metaconcept
+(@strong{finally} in this case), the metaconcept applies only to the second
+call.  The first call is treated as though it is an integral part of the
+concept.  That is, the concept is treated as though it were @strong{checkpoint
+recycle by}.  (The act of putting an argument into a two-argument function,
+thereby turning it into a one-argument function, is known in logic theory
+as "currying".)  So the whole utterance is treated as though it were
+@strong{finally (checkpoint recycle by) 1/4 thru}.  Everyone casts 1/4 by the
+right, followed by @strong{checkpoint recycle by turn 1/2 by the left}.
+
+The concepts with which this works are @strong{checkpoint}, @strong{on your own},
+and @strong{own the <anyone>}.
+
+A bug causing phantom spots to disappear in certain cases of
+@strong{spin chain the line} was fixed.
+
+The program can now handle @strong{clover and <anything>} or
+@strong{wheel and <anything>} from alamo rings in which couples
+facing out can be identified.
+
+A bug in @strong{<anything> the windmill} was fixed.
+
+The program handles "1/2 crazy Z's" correctly.
+
+The program is more accurate in the handling of the designators "center
+line" and "center 1x4".
+
+Some changes were made in the way the "curses" package is used, because
+of a possible bug in which the "---more---" mechanism doesn't work properly
+when a question mark is typed.
+
+The linux version now compiled with Gcc 3.2.3, and uses "libgpm".
+
+@c ************
+@node 36.53, 36.52, 36.54, Top
 @unnumberedsec Version 36.53 changes
 
 New designators: @strong{center column/line/wave of 6}.  These are

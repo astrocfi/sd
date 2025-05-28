@@ -646,7 +646,7 @@ static bool get_user_input(char *prompt, int which)
             user_input[GLOB_user_input_size] = '\0';
             GLOB_user_input[GLOB_user_input_size] = '\0';
             function_key_expansion = (char *) 0;
-            rubout(); /* Update the display. */
+            rubout();    // Update the display with the character erased.
          }
          continue;
       }
@@ -654,8 +654,14 @@ static bool get_user_input(char *prompt, int which)
          put_char(c);
          put_line("\n");
          current_text_line++;
-         match_lines = ui_options.diagnostic_mode ? 1000000 : get_lines_for_more();
-         match_counter = match_lines-1; /* last line used for "--More--" prompt */
+         match_lines = get_lines_for_more();
+         // There might be a bug in the curses library that makes it report a
+         // huge screen height, leading to a "runaway" listing of the calls
+         // when '?' is typed.  So we watch for anomalous values.
+         if (match_lines < 2) match_lines = 2;
+         else if (match_lines > 50) match_lines = 25;
+         if (ui_options.diagnostic_mode) match_lines = 1000000;
+         match_counter = match_lines-1;    // Last line used for "--More--" prompt.
          showing_has_stopped = false;
          (void) match_user_input(which, true, c == '?', false);
          put_line("\n");     // Write a blank line.

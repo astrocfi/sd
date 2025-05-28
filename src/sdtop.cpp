@@ -1688,6 +1688,10 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {4, 4, 0, 5, 1}, {0}, {0}, true, chk_qtag},
    {s_qtag, cr_real_3_4_line, 4, {6, 3, 7, 2},
     {4, 0, 4, 1, 5}, {0}, {0}, true, chk_qtag},
+   {s_alamo, cr_couples_only, 2, {0, 2, 5, 7, 1, 3, 4, 6},
+    {4}, {0}, {0}, false, chk_groups},
+   {s_alamo, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
+    /* NOTE THE 4 --> */{4}, {0}, {0}, true, chk_wave},
    {s_trngl, cr_wave_only, 2, {1, 2},
     {0}, {0}, {0}, true, chk_wave},
    {s_trngl, cr_miniwaves, 2, {1, 2},
@@ -3473,7 +3477,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          switch (ssK) {
          case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
          case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
-         case s2x2:
+         case s2x2: case s_alamo:
             goto fix_col_line_stuff;
          default:
             goto good;                 /* We don't understand the setup --
@@ -4066,7 +4070,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case s1x12: case s1x14: case s1x16:
       case s2x2: case s4x4: case s_thar: case s_crosswave: case s_qtag:
       case s3x1dmd: case s_2x1dmd: case sbigdmd:
-      case s_trngl: case s_bone:
+      case s_trngl: case s_bone: case s_alamo:
          /* FELL THROUGH!!! */
          goto check_tt;
       case sdmd: case s_ptpd:
@@ -4566,6 +4570,10 @@ extern parse_block *really_skip_one_concept(
          fail("Sorry, can't do this with this concept.");
 
       if ((concept_table[kk].concept_prop & CONCPROP__SECOND_CALL) &&
+          parseptrcopy->concept->kind != concept_checkpoint &&
+          parseptrcopy->concept->kind != concept_on_your_own &&
+          (parseptrcopy->concept->kind != concept_some_vs_others ||
+           parseptrcopy->concept->arg1 != selective_key_own) &&
           parseptrcopy->concept->kind != concept_special_sequential)
          fail("Can't use a concept that takes a second call.");
    }

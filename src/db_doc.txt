@@ -3110,11 +3110,13 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    trailers_only      R/Q           as above, people are trailers.
 
    couples_only       R/Q           1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
-                                       qtag, bone, trngl - people are paired
+                                       qtag, bone, trngl, alamo - people are paired
                                        in genuine couples, not miniwaves.
                                        For qtags, and bones, this applies
                                        just to the centers.  For triangles, it applies
-                                       just to the base.
+                                       just to the base.  In an alamo, this applies to
+                                       the "natural" pairs.  To check for the "1/8 rotated"
+                                       pairs, use "magic_only".
                                        As a qualifier, the "live" modifier is supported,
                                        but it might not work for 2x2 -- check!
 
@@ -3232,6 +3234,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    magic_only         R/Q           3x2 or 4x2 - magic column; 2x4 - inverted lines;
                                        1x4 - single inverted line; 2x2 - inverted box
                                        thar/crosswave - two waves of opposite handedness.
+                                       alamo - miniwave boxes of opposite handedness.
                                        "Right/left/in/out" and "live" may be used when
                                        it is a qualifier --
                                           2x4 - I/O refers to centers

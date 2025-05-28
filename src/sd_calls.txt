@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.53a"
+version "36.54"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -3867,7 +3867,7 @@ call "_centers @0 the windmill" dontshow tag ctr_any_windmill
 call "_outsides face @h" dontshow tag set_windmill_direction
    conc nullcall [] quarter_maybe [endscando]
 
-call "_finish spin the windmill, circ @9 times" dontshow tag finish_windmill
+call "_finish spin the windmill, circ @9" dontshow tag finish_windmill
             neednumber left_means_mirror yoyo_is_inherited fractal_is_inherited
    conc ctrwindmill [inherit_left inherit_yoyo inherit_fractal]
         circ_n_times [conc_demand_lines conc_force_lines endscando]
@@ -3882,14 +3882,19 @@ call "_finish nothing the windmill, circ @9" dontshow tag finish_nothing_windmil
    conc cast_off_n4_with_warn [inherit_fractal insert_number 3]
         circ_n_times [conc_demand_lines conc_force_lines endscando]
 
-call "_finish spin the windmill, circ @9-1/2 times" dontshow tag finish_windmill_and_a_half
+call "_finish spin the windmill, circ @9-1/2" dontshow tag finish_windmill_and_a_half
             neednumber left_means_mirror yoyo_is_inherited fractal_is_inherited
    conc ctrwindmill [inherit_left inherit_yoyo inherit_fractal]
         circ_n_times_and_a_half [conc_demand_lines conc_force_lines endscando]
 
-call "_finish @0 the windmill, circ @9-1/2 times" dontshow tag finish_any_windmill_and_a_half
-            neednumber
-   conc ctr_any_windmill []
+call "_finish @0 the windmill, circ @9-1/2" dontshow tag finish_any_windmill_and_a_half
+            neednumber fractal_is_inherited
+   conc ctr_any_windmill [inherit_fractal]
+        circ_n_times_and_a_half [conc_demand_lines conc_force_lines endscando]
+
+call "_finish nothing the windmill, circ @9-1/2" dontshow tag finish_nothing_windmill_and_a_half
+            neednumber fractal_is_inherited
+   conc cast_off_n4_with_warn [inherit_fractal insert_number 3]
         circ_n_times_and_a_half [conc_demand_lines conc_force_lines endscando]
 
 call "spin the windmill, outsides @h" a2
@@ -3914,9 +3919,15 @@ call "spin the windmill, outsides @h and go @9 positions" a2
    seq finish_windmill [inherit_left inherit_yoyo]
 
 call "@0 the windmill, outsides @h and go @9 positions" c1
-            sequence_starter neednumber
+   // This one if the <anything> is a 4-person call for the centers.
+            sequence_starter fractal_is_inherited neednumber
    seq set_windmill_direction []
-   seq finish_any_windmill []
+   seq finish_any_windmill [inherit_fractal]
+   // This one if the <anything> is an 8-person call.
+            sequence_starter fractal_is_inherited
+   seq nullcall [mandatory_anycall]
+   seq set_windmill_direction []
+   seq finish_nothing_windmill [inherit_fractal]
 
 call "spin the windmill, outsides @h and go @9-1/2 positions" a2
             sequence_starter neednumber left_means_mirror yoyo_is_inherited
@@ -3924,9 +3935,15 @@ call "spin the windmill, outsides @h and go @9-1/2 positions" a2
    seq finish_windmill_and_a_half [inherit_left inherit_yoyo]
 
 call "@0 the windmill, outsides @h and go @9-1/2 positions" c1
-            sequence_starter neednumber
+   // This one if the <anything> is a 4-person call for the centers.
+            sequence_starter fractal_is_inherited neednumber
    seq set_windmill_direction []
-   seq finish_any_windmill_and_a_half []
+   seq finish_any_windmill_and_a_half [inherit_fractal]
+   // This one if the <anything> is an 8-person call.
+            sequence_starter fractal_is_inherited
+   seq nullcall [mandatory_anycall]
+   seq set_windmill_direction []
+   seq finish_nothing_windmill_and_a_half [inherit_fractal]
 
 call "spin the windmill, outsides @m" a2
             sequence_starter left_means_mirror yoyo_is_inherited fractal_is_inherited
@@ -10495,7 +10512,7 @@ call "spin chain the line" c3a
    seq ctrs_cast_3_4_with_warn []
 
 call "_spin chain the line part 2" dontshow tag spinchainpart2
-   checkpoint slip [] cast_off_34 [conc_force_lines suppress_elongation_warnings]
+   checkpoint slip [] cast_off_34 [conc_force_otherway suppress_elongation_warnings]
 
 call "swing chain the line" c4
             step_to_wave yoyo_is_inherited can_be_fan left_means_touch_or_check first_part_visible
@@ -18467,9 +18484,15 @@ call "_8by" dontshow tag 8by
    seq passthru [inherit_left inherit_twisted]
    seq courtesy_and_roll [inherit_left inherit_twisted]
 
+call "_final wheel and @0" dontshow tag final_wheel_and_anything
+            dont_use_in_resolve reverse_means_mirror
+   conc nullcall [mandatory_anycall]
+        wheel [inherit_reverse conc_demand_columns conc_force_columns]
+
 call "wheel and @0" c1
-            reverse_means_mirror dont_use_in_resolve
-   conc nullcall [mandatory_anycall] wheel [inherit_reverse conc_demand_columns conc_force_columns]
+            dont_use_in_resolve reverse_means_mirror
+   seq prepare_to_clover_no_sel []
+   seq final_wheel_and_anything [inherit_reverse]
 
 call "buckle and @0" c4a
             dont_use_in_resolve
@@ -18577,16 +18600,16 @@ call "clover and nothing" dontshow tag final_clover_and_nothing
    conc nullcall []
         clover [inherit_cross conc_demand_columns conc_force_columns]
 
-// This moves the clovering people to the outside.  It has to
-// identify, for example, a "heads pass thru" setup in which
-// the centers are the ones doing the cloverleaf.  If so, it
-// effectively does a slim down.
+// This moves the clovering/wheeling people to the outside.
+// It has to identify, for example, a "heads pass thru" setup
+// in which the centers are the ones doing the cloverleaf.
+// If so, it effectively does a slim down.
 call "_prepare to cloverleaf, no sel" dontshow tag prepare_to_clover_no_sel
    // If all are in column orientation, the ends better be looking out.
    setup 4x2 2x4 qualifier ntbone none
       array [   0 ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N    0]
    // If all couples are facing out, the ends cloverleaf,
-   // but it's actually illegal.
+   // though it's actually illegal.
    setup 4x2 2x4 qualifier out conc_cpls_same restriction serious_violation alwaysfail
       array [0 0 0 ZM3N ZM4N 0 0 0]
    setup 2x4 2x4 qualifier out conc_cpls_same restriction serious_violation alwaysfail
@@ -18611,6 +18634,12 @@ call "_prepare to cloverleaf, no sel" dontshow tag prepare_to_clover_no_sel
       array [   0 ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N    0]
    setup 2x4 2x4 qualifier tbone none
       array [   0 ZM1N ZM2N    0    0 ZM5N ZM6N    0]
+   // From an alamo ring, find the people looking out.
+   setup alamo 4x4 qualifier couples_only
+      array [ZM13N ZM14N 0 0 ZM7N ZM11N 0 0]
+   // Maybe they are rotated!
+   setup alamo 4x4 qualifier magic_only plus_eighth_rotation
+      array [10W 13N 0 0 7W 7N 0 0]
    // The weird cases.
    setup rigger qtag
       array [ZM0N ZM1N ZM2N ZM3N    0    0 ZM6N ZM7N]

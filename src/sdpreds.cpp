@@ -320,10 +320,6 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       else if (p2 == ID2_NCTRDMD) s = selector_notctrdmd;
       else break;
       goto eq_return;
-   case selector_ctr_1x4:
-      if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
-      else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
-      break;
    case selector_ctr_1x6:
    case selector_center_wave_of_6:
    case selector_center_line_of_6:
@@ -335,20 +331,15 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
       else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
       break;
+   case selector_ctr_1x4:
    case selector_center_wave:
    case selector_center_line:
    case selector_center_col:
-      if (ss->kind == s3x1dmd) {
-         if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
-         else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
-         break;
-      }
-      if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
+      if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
       else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
-      // Warning!  Fall through!
+      break;
    case selector_center4:
    case selector_center_box:
-      // Warning!  Fell through!
       if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return true;
       else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
       else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return true;
@@ -367,6 +358,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
          else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return false;
       }
+
       break;
    case selector_headliners:
       if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return true;
@@ -491,6 +483,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          goto first_last_test;
       }
       break;
+
    case selector_leftmostone:
    case selector_rightmostone:
    case selector_leftmosttwo:
@@ -512,6 +505,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          goto first_last_test;
       }
       break;
+
    default:
       fail("INTERNAL ERROR - selector failed to get initialized.");
    }
