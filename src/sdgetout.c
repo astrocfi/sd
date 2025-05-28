@@ -650,12 +650,12 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
       if (concept_descriptor_table[c].kind == concept_tandem) {
          if (history[history_ptr].state.kind == s4x4)
-            deposit_concept(&concept_descriptor_table[phantom_concept_index], 0);
+            deposit_concept(&concept_descriptor_table[phantom_concept_index]);
          else
-            deposit_concept(&concept_descriptor_table[matrix_2x8_concept_index], 0);
+            deposit_concept(&concept_descriptor_table[matrix_2x8_concept_index]);
       }
 
-      deposit_concept(&concept_descriptor_table[c], 0);
+      deposit_concept(&concept_descriptor_table[c]);
    }
    
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */

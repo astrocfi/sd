@@ -1059,26 +1059,9 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       if (deposit_call(save_call)) return TRUE;
    }
    else if (*reply_p == ui_concept_select) {
-      /* If user gave a concept, pick up any needed numeric modifiers. */
+      /* A concept is required.  Its index has been stored in uims_menu_index. */
 
-      uint32 concept_number_fields = 0;
-      int howmanynumbers = 0;
-      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
-
-      if (props & CONCPROP__USE_NUMBER)
-         howmanynumbers = 1;
-      if (props & CONCPROP__USE_TWO_NUMBERS)
-         howmanynumbers = 2;
-
-      if (howmanynumbers != 0) {
-         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
-            return TRUE;           /* User waved the mouse away. */
-      }
-
-      /* A concept is required.  Its index has been stored in uims_menu_index,
-         and the "concept_number_fields" is ready. */
-
-      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index]))
          return TRUE;
    }
 
@@ -1251,24 +1234,19 @@ extern int uims_do_neglect_popup(char dest[])
 
 extern int uims_do_selector_popup(void)
 {
-   if (interactivity == interactivity_verify) {
-      return (int) selector_for_initialize;
-   }
-   else {
-      int task;
-      int num;
+   int task;
+   int num;
 
-      dialog_signal(selector_enabler);
-      dialog_read(&task);
-      dialog_signal(selector_disabler);
+   dialog_signal(selector_enabler);
+   dialog_read(&task);
+   dialog_signal(selector_disabler);
 
-      if (task == task$selector_menu) {
-         dialog_get_menu_item(task$selector_menu, &num);
-         return num;
-      }
-      else
-         return 0;
+   if (task == task$selector_menu) {
+      dialog_get_menu_item(task$selector_menu, &num);
+      return num;
    }
+   else
+      return 0;
 }
 
 
@@ -1331,34 +1309,27 @@ extern int uims_do_tagger_popup(int tagger_class)
 extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
-   unsigned int number_list = 0;
+   uint32 number_list = 0;
 
+   dialog_signal(quantifier_enabler);
 
-   if (interactivity == interactivity_verify) {
-      for (i=0 ; i<nnumbers ; i++)
-         number_list |= (number_for_initialize << (i*4));
-   }
-   else {
-      dialog_signal(quantifier_enabler);
+   for (i=0 ; i<nnumbers ; i++) {
+      int task;
    
-      for (i=0 ; i<nnumbers ; i++) {
-         int task;
-      
-         dialog_read(&task);
-      
-         if (task == task$quantifier_menu) {
-            unsigned int num;
-            dialog_get_menu_item(task$quantifier_menu, (int *) &num);
-            number_list |= (num << (i*4));
-         }
-         else {
-            dialog_signal(quantifier_disabler);
-            return 0;    /* User waved the mouse away. */
-         }
+      dialog_read(&task);
+   
+      if (task == task$quantifier_menu) {
+         unsigned int num;
+         dialog_get_menu_item(task$quantifier_menu, (int *) &num);
+         number_list |= (num << (i*4));
       }
-   
-      dialog_signal(quantifier_disabler);
+      else {
+         dialog_signal(quantifier_disabler);
+         return 0;    /* User waved the mouse away. */
+      }
    }
+
+   dialog_signal(quantifier_disabler);
 
    return number_list;
 }

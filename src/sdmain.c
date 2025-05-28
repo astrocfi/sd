@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.66"
+#define VERSION_STRING "31.67"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -87,6 +87,9 @@ and the following external variables:
    testing_fidelity
    selector_for_initialize
    number_for_initialize
+   verify_options
+   verify_used_number
+   verify_used_selector
    allowing_modifications
    allowing_all_concepts
    using_active_phantoms
@@ -159,6 +162,9 @@ interactivity_state interactivity = interactivity_normal;
 long_boolean testing_fidelity = FALSE;
 selector_kind selector_for_initialize;
 int number_for_initialize;
+call_conc_option_state verify_options;
+long_boolean verify_used_number;
+long_boolean verify_used_selector;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
@@ -233,7 +239,7 @@ Private void initialize_concept_sublists(void)
    for (       concept_index = 0, concepts_at_level = 0;
                concept_descriptor_table[concept_index].kind != end_marker;
                concept_index++) {
-      if (!(concept_descriptor_table[concept_index].miscflags & 1) && concept_descriptor_table[concept_index].level <= calling_level)
+      if (!(concept_descriptor_table[concept_index].concparseflags & CONCPARSE_MENU_DUP) && concept_descriptor_table[concept_index].level <= calling_level)
          concepts_at_level++;
    }
 
@@ -251,7 +257,7 @@ Private void initialize_concept_sublists(void)
                   concept_index++) {
          concept_descriptor *p = &concept_descriptor_table[concept_index];
 
-         if (!(p->miscflags & 1) && p->level <= calling_level) {
+         if (!(p->concparseflags & CONCPARSE_MENU_DUP) && p->level <= calling_level) {
             uint32 setup_mask = ~0;      /* Default is to accept the concept. */
 
             /* This concept is legal at this level.  see if it is appropriate for this setup.
@@ -505,6 +511,75 @@ extern long_boolean restore_parse_state(void)
 
 
 
+/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+Private long_boolean find_selector(selector_kind *sel)
+{
+   int j;
+
+   if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
+      if (verify_options.who == selector_uninitialized) {
+         *sel = selector_for_initialize;
+         verify_used_selector = 1;
+      }
+      else
+         *sel = verify_options.who;
+   }
+   else if (interactivity != interactivity_normal) {
+      *sel = (selector_kind) generate_random_number(last_selector_kind)+1;
+      hash_nonrandom_number(((int) (*sel)) - 1);
+   }
+   else if ((j = uims_do_selector_popup()) != 0)
+      *sel = (selector_kind) j;
+   else
+      return TRUE;
+
+   return FALSE;
+}
+
+
+
+/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+Private long_boolean find_numbers(int howmanynumbers, uint32 *number_list)
+{
+   if (interactivity == interactivity_normal) {
+      *number_list = uims_get_number_fields(howmanynumbers);
+
+      if ((*number_list) == 0)
+         return TRUE;           /* User waved the mouse away. */
+   }
+   else {
+      int i;
+
+      *number_list = 0;
+
+      for (i=0 ; i<howmanynumbers ; i++) {
+         uint32 this_num;
+
+         if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
+            if (verify_options.howmanynumbers == 0) {
+               this_num = number_for_initialize;
+               verify_used_number = 1;
+            }
+            else {
+               this_num = verify_options.number_fields & 0xF;
+               verify_options.number_fields >>= 4;
+               verify_options.howmanynumbers--;
+            }
+         }
+         else {
+            this_num = generate_random_number(4)+1;
+            hash_nonrandom_number(this_num-1);
+         }
+
+         *number_list |= (this_num << (i*4));
+      }
+   }
+
+   return FALSE;
+}
+
+
+
 /* Deposit a call into the parse state.  A returned value of TRUE
    means that the user refused to click on a required number or selector,
    and so we have taken no action.  This can only occur if interactive.
@@ -513,13 +588,12 @@ extern long_boolean restore_parse_state(void)
 extern long_boolean deposit_call(callspec_block *call)
 {
    parse_block *new_block;
-   int i;
    int tagclass;
    selector_kind sel = selector_uninitialized;
    direction_kind dir = direction_uninitialized;
    int tagg = -1;
    int circc = -1;
-   int number_list = 0;
+   uint32 number_list = 0;
    int howmanynums = (call->callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
    /* Put in tagging call index if required. */
@@ -566,18 +640,7 @@ extern long_boolean deposit_call(callspec_block *call)
    /* Put in selector, direction, and/or number as required. */
 
    if (call->callflagsh & CFLAGH__REQUIRES_SELECTOR) {
-      int j;
-
-      if (interactivity == interactivity_database_init)
-         sel = selector_for_initialize;
-      else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
-         sel = (selector_kind) generate_random_number(last_selector_kind)+1;
-         hash_nonrandom_number(((int) sel) - 1);
-      }
-      else if ((j = uims_do_selector_popup()) == 0)
-         return TRUE;
-      else
-         sel = (selector_kind) j;
+      if (find_selector(&sel)) return TRUE;
    }
 
    if (call->callflagsh & CFLAGH__REQUIRES_DIRECTION) {
@@ -596,24 +659,7 @@ extern long_boolean deposit_call(callspec_block *call)
    }
 
    if (howmanynums != 0) {
-      if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
-         for (i=0 ; i<howmanynums ; i++) {
-            int this_num;
-
-            if (interactivity == interactivity_database_init)
-               this_num = number_for_initialize;
-            else {
-               this_num = generate_random_number(4)+1;
-               hash_nonrandom_number(this_num-1);
-            }
-
-            number_list |= (this_num << (i*4));
-         }
-      }
-      else {
-         number_list = uims_get_number_fields(howmanynums);
-         if (number_list == 0) return TRUE;     /* User waved the mouse away. */
-      }
+      if (find_numbers(howmanynums, &number_list)) return TRUE;
    }
 
    new_block = get_parse_block();
@@ -686,27 +732,18 @@ extern long_boolean deposit_call(callspec_block *call)
    necessary stuff will be chosen by random number.  If it is off, the appropriate
    numbers (as indicated by the "CONCPROP__USE_NUMBER" stuff) must be provided. */
 
-extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fields)
+extern long_boolean deposit_concept(concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
-   int number_list = number_fields;
+   uint32 number_list = 0;
    int howmanynumbers = 0;
 
    /* We hash the actual concept pointer, as though it were an integer index. */
    hash_nonrandom_number((int) conc);
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
-      int j;
-
-      if (interactivity != interactivity_normal) {
-         sel = (selector_kind) generate_random_number(last_selector_kind)+1;
-         hash_nonrandom_number(((int) sel) - 1);
-      }
-      else if ((j = uims_do_selector_popup()) != 0)
-         sel = (selector_kind) j;
-      else
-         return TRUE;
+      if (find_selector(&sel)) return TRUE;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -714,15 +751,8 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_TWO_NUMBERS)
       howmanynumbers = 2;
 
-   if (interactivity != interactivity_normal && howmanynumbers != 0) {
-      number_list = generate_random_number(4)+1;
-      hash_nonrandom_number(number_list-1);
-
-      if (howmanynumbers == 2) {
-         int j = generate_random_number(4)+1;
-         hash_nonrandom_number(j-1);
-         number_list |= j << 4;
-      }
+   if (howmanynumbers != 0) {
+      if (find_numbers(howmanynumbers, &number_list)) return TRUE;
    }
 
    new_block = get_parse_block();
@@ -1025,7 +1055,7 @@ extern long_boolean query_for_call(void)
 
                /* We give 0 for the number fields.  It gets taken care of later, perhaps
                   not the best way. */
-               (void) deposit_concept(&concept_descriptor_table[uims_menu_index], 0);
+               (void) deposit_concept(&concept_descriptor_table[uims_menu_index]);
             }
          }
       }
@@ -1386,6 +1416,9 @@ void main(int argc, char *argv[])
    parse_active_list = (parse_block *) 0;
    parse_inactive_list = (parse_block *) 0;
    header_comment[0] = '\0';
+   verify_options.who = selector_uninitialized;
+   verify_options.number_fields = 0;
+   verify_options.howmanynumbers = 0;
 
    if (argc >= 2 && strcmp(argv[1], "-help") == 0)
        display_help();		/* does not return */
@@ -1639,7 +1672,7 @@ void main(int argc, char *argv[])
    /* Check for first call given to heads or sides only. */
    
    if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
-      deposit_concept(&centers_concept, 0);
+      deposit_concept(&centers_concept);
    
    /* Come here to get a concept or call or whatever from the user. */
    

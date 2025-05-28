@@ -35,13 +35,9 @@
     General Public License if you distribute the file.
 */
 
-version "31.66"
+version "31.67"
 
 call "nothing" mainstream tag nullcall
-            dont_use_in_resolve
-   nulldefine
-
-call "(nothing)" mainstream
             dont_use_in_resolve
    nulldefine
 
@@ -3647,7 +3643,7 @@ call "swing about" c4
 
 /* quarter about and three quarter about */
 
-call "@B about" c4
+call "@D about" c4
    /* This is similarly a right-hand-unless-the-caller-says-left call.  Note its
       grammatical similarity to the other calls that have the same property:
       quarter thru, quarter cross, and quarter mix. */
@@ -4421,7 +4417,7 @@ call "_natural 3/4 and 3/4" dontshow tag nat34_34
    setup 2x2 dmd rotate restriction wave_only
       array [CCCAL1W AAACR3W AL2N CR2S]
 
-call "_ @B by the right" dontshow tag odd_frac_by_right
+call "_ @D by the right" dontshow tag odd_frac_by_right
             left_means_mirror neednumber diamond_is_legal
 
    setup 2x4 2x4 rotate nqualifier 1 right_wave
@@ -4484,7 +4480,7 @@ call "_ @B by the right" dontshow tag odd_frac_by_right
    setup pqtag qtag nqualifier 3 none
       array [CR6W CR3W 0 0 0 0 0 0]
 
-call "_ @B by the right for about" dontshow tag odd_frac_by_right_for_about
+call "_ @D by the right for about" dontshow tag odd_frac_by_right_for_about
             left_means_mirror neednumber step_to_wave
    setup 2x2 1x4 rotate restriction forbidden wave_only nqualifier 1 right_wave
       array [CR0N 0 0 CR3N]
@@ -4612,7 +4608,7 @@ call "swing thru" mainstream
 
 /* quarter thru and three quarter thru */
 
-call "@B thru" a1
+call "@D thru" a1
             step_to_wave left_means_mirror neednumber grand_is_inherited diamond_is_legal visible_fractions
    seq odd_frac_by_right [inherit_left inherit_diamond]
    seq 1_2_by_left [inherit_left inherit_grand inherit_diamond roll_transparent]
@@ -4647,14 +4643,14 @@ call "swing the fractions" c1
 
 /* quarter cross and three quarter cross */
 
-call "@B cross" c3x
+call "@D cross" c3x
             left_means_mirror neednumber grand_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left]
    seq ctrcrossrun [inherit_grand]
 
 /* quarter mix and three quarter mix */
 
-call "@B mix" c3a
+call "@D mix" c3a
             left_means_mirror neednumber grand_is_inherited visible_fractions
    seq odd_frac_by_right [inherit_left]
    seq ctrcrossrun [inherit_grand]
@@ -5331,9 +5327,14 @@ call "_beaus kickoff" dontshow tag beaukick
       array [CR1W AM0W]
 
 call "@6@C run" mainstream
+   lateral_to_selectees
    setup 1x2 1x2
       preds "Can't have both people run."
          if select_near_unselect [CR1S AL0S]
+         if unselect_near_select [ZM1N ZM0N]
+         if unselect_near_unselect [ZM0N ZM1N]
+   setup 2x1 1x2
+      preds "Can't have both people run."
          if unselect_near_select [ZM1N ZM0N]
          if unselect_near_unselect [ZM0N ZM1N]
             alternate_definition [cross] mainstream
@@ -5972,7 +5973,7 @@ call "_everyone wheel" dontshow tag everyonewheel
    setup 2x4 2x4
       array [AL3S AL2S AL1S AL0S 0 0 0 0]
 
-call "_ @B wheel" dontshow tag oddfracwheel
+call "_ @D wheel" dontshow tag oddfracwheel
             reverse_means_mirror neednumber parallel_conc_end
    setup 1x2 1x2 rotate restriction forbidden couples_only nqualifier 1 none
       array [AL1S AL0S]
@@ -6063,17 +6064,17 @@ call "wheel to a diamond" c4
    seq everyonewheel [inherit_reverse]
    seq finwheeltodiamond [inherit_reverse]
 
-call "@B wheel the ocean" c3a
+call "@D wheel the ocean" c3a
             reverse_means_mirror neednumber 3x3_is_inherited 3x1_is_inherited 4x4_is_inherited visible_fractions
    seq oddfracwheel [inherit_reverse inherit_3x3 inherit_3x1 inherit_4x4]
    seq finwheelocean [inherit_reverse inherit_3x3 inherit_3x1 inherit_4x4]
 
-call "@B wheel the sea" c3a
+call "@D wheel the sea" c3a
             reverse_means_mirror neednumber 3x3_is_inherited 3x1_is_inherited 4x4_is_inherited visible_fractions
    seq oddfracwheel [inherit_reverse inherit_3x3 inherit_3x1 inherit_4x4]
    seq finwheelsea [inherit_reverse inherit_3x3 inherit_3x1 inherit_4x4]
 
-call "@B wheel to a diamond" c4
+call "@D wheel to a diamond" c4
             reverse_means_mirror neednumber visible_fractions
    seq oddfracwheel [inherit_reverse]
    seq finwheeltodiamond [inherit_reverse]

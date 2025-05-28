@@ -285,7 +285,7 @@ Private void wv_tand_base_move(
          fail("Can't do this concept in this setup.");
    }
 
-   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, result);
+   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, TRUE, result);
 }
 
 
@@ -343,7 +343,7 @@ extern void triangle_move(
 
       /* For galaxies, the schema is now in terms of the absolute orientation. */
 
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, TRUE, result);
    }
    else {
       /* Set this so we can do "peel and trail" without saying "triangle" again. */
@@ -414,7 +414,7 @@ extern void triangle_move(
                   fail("There are no 'inside' triangles.");
             }
    
-            concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, result);
+            concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, TRUE, result);
          }
          else {
             switch (ss->kind) {
@@ -428,7 +428,7 @@ extern void triangle_move(
                   fail("There are no 'outside' triangles.");
             }
    
-            concentric_move(ss, (setup_command *) 0, &ss->cmd, schema, 0, 0, result);
+            concentric_move(ss, (setup_command *) 0, &ss->cmd, schema, 0, 0, TRUE, result);
          }
       }
    }

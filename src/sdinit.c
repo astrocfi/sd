@@ -283,13 +283,13 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    if (test_call->callflagsh & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
 
    if (crossiness)
-      (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+      (void) deposit_concept(&concept_descriptor_table[cross_concept_index]);
 
    if (magicness)
-      (void) deposit_concept(&concept_descriptor_table[magic_concept_index], 0);
+      (void) deposit_concept(&concept_descriptor_table[magic_concept_index]);
 
    if (intlkness)
-      (void) deposit_concept(&concept_descriptor_table[intlk_concept_index], 0);
+      (void) deposit_concept(&concept_descriptor_table[intlk_concept_index]);
 
    if (deposit_call(test_call)) goto try_again;
    toplevelmove();

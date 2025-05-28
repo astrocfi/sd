@@ -1,7 +1,7 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <94/11/10 17:17:53 wba>
+ * Time-stamp: <96/05/22 17:17:53 wba>
  * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
@@ -29,12 +29,12 @@
  * version.
  */
 
-#define UI_VERSION_STRING "1.7"
+#define UI_VERSION_STRING "1.8"
 
 /* See comments in sdmain.c regarding this string. */
 static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    UI_VERSION_STRING
-   "  wba@apollo.hp.com  28 May 95 $";
+   "  wba@apollo.hp.com  22 May 96 $";
 
 /* This file defines the following functions:
    uims_version_string
@@ -378,16 +378,6 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
    current_text_line++;
 }
 
-/*
- * The searching functions indicate their results by setting the variables
- * last_match and exact_match.  Last_match indicates the last matching item
- * (if there is one or more matching item).  Exact_match is set if
- * an item matches the input string exactly.  Hopefully, if there is more than
- * one item that matches exactly, they are all equivalent.
- */
-
-Private match_result user_match;
-
 
 /* BEWARE!!  These two lists must stay in step. */
 
@@ -611,12 +601,27 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_resolve;
             return;
          }
-         else if (nc == 133)
-            function_key_expansion = "refresh display\n";            /* F5 */
-         else if (nc == 134)
-            function_key_expansion = "simple modifications\n";       /* F6 */
-         else if (nc == 135)
-            function_key_expansion = "toggle concept levels\n";      /* F7 */
+         else if (nc == 133 && which >= 0) {                         /* F5 = refresh display */
+            put_line("refresh display\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_refresh;
+            return;
+         }
+         else if (nc == 134 && which >= 0) {                         /* F6 = simple modifications */
+            put_line("simple modifications\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_simple_mods;
+            return;
+         }
+         else if (nc == 135 && which >= 0) {                         /* F7 = toggle concept levels */
+            put_line("toggle concept levels\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_toggle_conc_levels;
+            return;
+         }
          else if (nc == 136)
             function_key_expansion = "<anything>";                   /* F8 */
          else if (nc == 137 || nc == 169) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
@@ -674,17 +679,37 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_reconcile;
             return;
          }
-         else if (nc == 165)
-            function_key_expansion = "keep picture\n";               /* sF5 */
-         else if (nc == 166)
-            function_key_expansion = "allow modifications\n";        /* sF6 */
-         else if (nc == 167)
-            function_key_expansion = "toggle active phantoms\n";     /* sF7 */
+         else if (nc == 165 && which >= 0) {                         /* sF5 = keep picture */
+            put_line("keep picture\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_save_pic;
+            return;
+         }
+         else if (nc == 166 && which >= 0) {                         /* sF6 = allow modifications */
+            put_line("allow modifications\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_all_mods;
+            return;
+         }
+         else if (nc == 167 && which >= 0) {                         /* sF7 = toggle active phantoms */
+            put_line("toggle active phantoms\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_toggle_act_phan;
+            return;
+         }
          else if (nc == 168)
             function_key_expansion = "<concept>";                    /* sF8 */
                                                                      /* See above for sF9. */
-         else if (nc == 170)
-            function_key_expansion = "change output file\n";         /* sF10 */
+         else if (nc == 170 && which >= 0) {                         /* sF10 = change output file */
+            put_line("change output file\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_change_outfile;
+            return;
+         }
          else if (nc == 171 && which >= 0) {                         /* sF11 = pick 8 person level call */
             put_line("pick 8 person level call\n");
             current_text_line++;
@@ -692,8 +717,15 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_8person_level_call;
             return;
          }
-         else if (nc == 193 && which == match_startup_commands) {
-            put_line("just as they are\n");                          /* cF1 = just as they are */
+         else if (nc == 172 && which == match_resolve_commands) {    /* sF12 = find another */
+            put_line("find another\n");
+            current_text_line++;
+            user_match.kind = ui_resolve_select;
+            user_match.index = -1-resolve_command_find_another;
+            return;
+         }
+         else if (nc == 193 && which == match_startup_commands) {    /* cF1 = just as they are */
+            put_line("just as they are\n");
             current_text_line++;
             user_match.kind = ui_start_select;
             user_match.index = (int) start_select_as_they_are;
@@ -713,9 +745,13 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_normalize;
             return;
          }
-         else if (nc == 197)
-            function_key_expansion = "insert a comment\n";           /* cF5 */
-
+         else if (nc == 197 && which >= 0) {                         /* cF5 = insert a comment */
+            put_line("insert a comment\n");
+            current_text_line++;
+            user_match.kind = ui_command_select;
+            user_match.index = -1-command_create_comment;
+            return;
+         }
          else continue;      /* Ignore the function key. */
       }
 
@@ -961,45 +997,20 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
    else if (user_match.kind == ui_call_select) {
       modifier_block *mods;
       callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
+      call_conc_option_state save_stuff = user_match.call_conc_options;
 
       for (mods = user_match.newmodifiers ; mods ; mods = mods->next) {
-         concept_descriptor *cp = mods->this_modifier;
-         uint32 concept_number_fields = 0;
-         int howmanynumbers = 0;
-         uint32 props = concept_table[cp->kind].concept_prop;
-
-         if (props & CONCPROP__USE_NUMBER)
-            howmanynumbers = 1;
-         if (props & CONCPROP__USE_TWO_NUMBERS)
-            howmanynumbers = 2;
-
-         if (howmanynumbers != 0) {
-            if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
-               return TRUE;           /* User waved the mouse away. */
-         }
-
-         if (deposit_concept(cp, concept_number_fields)) return TRUE;
+         user_match.call_conc_options = mods->call_conc_options;
+         if (deposit_concept(mods->this_modifier)) return TRUE;
       }
+
+      user_match.call_conc_options = save_stuff;
 
       if (deposit_call(save_call)) return TRUE;
    }
    else if (user_match.kind == ui_concept_select) {
       concept_descriptor *cp = &concept_descriptor_table[uims_menu_index];
-      uint32 concept_number_fields = 0;
-      int howmanynumbers = 0;
-      uint32 props = concept_table[cp->kind].concept_prop;
-
-      if (props & CONCPROP__USE_NUMBER)
-         howmanynumbers = 1;
-      if (props & CONCPROP__USE_TWO_NUMBERS)
-         howmanynumbers = 2;
-
-      if (howmanynumbers != 0) {
-         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
-            return TRUE;           /* User waved the mouse away. */
-      }
-
-      if (deposit_concept(cp, concept_number_fields)) return TRUE;
+      if (deposit_concept(cp)) return TRUE;
    }
 
    return FALSE;
@@ -1188,29 +1199,21 @@ extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolv
     current_text_line++;
 }
 
+volatile uint32 popup_retval;     /* Just love that HP-UX C compiler!!!!! */
+
 extern int uims_do_selector_popup(void)
 {
-   uint32 retval;
-
-   if (interactivity == interactivity_verify) {
-      if (result_for_verify.who == selector_uninitialized) {
-         verify_used_selector = 1;
-         return (int) selector_for_initialize;
-      }
-      else
-         return result_for_verify.who;
-   }
-   else if (user_match.valid && (user_match.who > selector_uninitialized)) {
-      retval = (int) user_match.who;
-      user_match.who = selector_uninitialized;
-      return retval;
+   if (user_match.valid && (user_match.call_conc_options.who > selector_uninitialized)) {
+      popup_retval = (int) user_match.call_conc_options.who;
+      user_match.call_conc_options.who = selector_uninitialized;
+      return popup_retval;
    }
    else {
       match_result saved_match = user_match;
       get_user_input("Enter who> ", (int) match_selectors);
-      retval = user_match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
+      popup_retval = user_match.index+1;      /* We skip the zeroth selector, which is selector_uninitialized. */
       user_match = saved_match;
-      return retval;
+      return popup_retval;
    }
 }
 
@@ -1218,9 +1221,9 @@ extern int uims_do_direction_popup(void)
 {
    int n;
 
-   if (user_match.valid && (user_match.where > direction_uninitialized)) {
-      n = (int) user_match.where;
-      user_match.where = direction_uninitialized;
+   if (user_match.valid && (user_match.call_conc_options.where > direction_uninitialized)) {
+      n = (int) user_match.call_conc_options.where;
+      user_match.call_conc_options.where = direction_uninitialized;
       return n;
    }
    else {
@@ -1239,27 +1242,27 @@ extern int uims_do_tagger_popup(int tagger_class)
    int j = 0;
 
    if (interactivity == interactivity_verify) {
-      user_match.tagger = result_for_verify.tagger;
-      if (user_match.tagger == 0) user_match.tagger = (tagger_class << 5) + 1;
+      user_match.call_conc_options.tagger = verify_options.tagger;
+      if (user_match.call_conc_options.tagger == 0) user_match.call_conc_options.tagger = (tagger_class << 5) + 1;
    }
-   else if (!user_match.valid || (user_match.tagger <= 0)) {
+   else if (!user_match.valid || (user_match.call_conc_options.tagger <= 0)) {
       match_result saved_match = user_match;
       get_user_input("Enter tagging call> ", ((int) match_taggers) + tagger_class);
-      saved_match.tagger = user_match.tagger;
+      saved_match.call_conc_options.tagger = user_match.call_conc_options.tagger;
       user_match = saved_match;
    }
 
-   while ((user_match.tagger & 0xFF000000UL) == 0) {
-      user_match.tagger <<= 8;
+   while ((user_match.call_conc_options.tagger & 0xFF000000UL) == 0) {
+      user_match.call_conc_options.tagger <<= 8;
       j++;
    }
 
-   retval = user_match.tagger >> 24;
-   user_match.tagger &= 0x00FFFFFF;
-   while (j-- != 0) user_match.tagger >>= 8;   /* Shift it back. */
+   retval = user_match.call_conc_options.tagger >> 24;
+   user_match.call_conc_options.tagger &= 0x00FFFFFF;
+   while (j-- != 0) user_match.call_conc_options.tagger >>= 8;   /* Shift it back. */
 
    if (interactivity == interactivity_verify)
-      result_for_verify.tagger = user_match.tagger;
+      verify_options.tagger = user_match.call_conc_options.tagger;
 
    return retval;
 }
@@ -1270,17 +1273,17 @@ extern int uims_do_circcer_popup(void)
    uint32 retval;
 
    if (interactivity == interactivity_verify) {
-      retval = result_for_verify.circcer;
+      retval = verify_options.circcer;
       if (retval == 0) retval = 1;
    }
-   else if (user_match.valid && (user_match.circcer > 0)) {
-      retval = user_match.circcer;
-      user_match.circcer = 0;
+   else if (user_match.valid && (user_match.call_conc_options.circcer > 0)) {
+      retval = user_match.call_conc_options.circcer;
+      user_match.call_conc_options.circcer = 0;
    }
    else {
       match_result saved_match = user_match;
       get_user_input("Enter circulate replacement> ", (int) match_circcer);
-      retval = user_match.circcer;
+      retval = user_match.call_conc_options.circcer;
       user_match = saved_match;
    }
 
@@ -1291,46 +1294,29 @@ extern int uims_do_circcer_popup(void)
 extern uint32 uims_get_number_fields(int nnumbers)
 {
    int i;
-   uint32 number_fields;
-   int howmanynumbers;
+   uint32 number_fields = user_match.call_conc_options.number_fields;
+   int howmanynumbers = user_match.call_conc_options.howmanynumbers;
    uint32 number_list = 0;
-   long_boolean valid = 1;
-
-   if (interactivity == interactivity_verify) {
-      number_fields = result_for_verify.number_fields;
-      howmanynumbers = result_for_verify.howmanynumbers;
-   }
-   else {
-      number_fields = user_match.number_fields;
-      howmanynumbers = user_match.howmanynumbers;
-      valid = user_match.valid;
-   }
 
    for (i=0 ; i<nnumbers ; i++) {
       uint32 this_num;
 
-      if (valid && (howmanynumbers >= 1)) {
+      if (user_match.valid && (howmanynumbers >= 1)) {
          this_num = number_fields & 0xF;
          number_fields >>= 4;
          howmanynumbers--;
       }
       else {
-         if (interactivity == interactivity_verify) {
-            this_num = number_for_initialize;
-            verify_used_number = 1;
-         }
-         else {
-            for (;;) {
-               char buffer[200];
-               get_string_input("How many? ", buffer);
-               if (buffer[0] == '!' || buffer[0] == '?') {
-                  put_line("Type a number between 1 and 8\n");
-                  current_text_line++;
-               }
-               else {
-                  this_num = atoi(buffer);
-                  break;
-               }
+         for (;;) {
+            char buffer[200];
+            get_string_input("How many? ", buffer);
+            if (buffer[0] == '!' || buffer[0] == '?') {
+               put_line("Type a number between 1 and 8\n");
+               current_text_line++;
+            }
+            else {
+               this_num = atoi(buffer);
+               break;
             }
          }
       }

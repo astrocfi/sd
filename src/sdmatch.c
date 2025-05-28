@@ -89,9 +89,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, int pat
 /* This is statically used by the match_wildcard and match_suffix_2 procedures. */
 
 match_state static_ss;
-match_result result_for_verify;
-long_boolean verify_used_number;
-long_boolean verify_used_selector;
+match_result user_match;
 
 
 /* The following arrays must be coordinated with the Sd program */
@@ -162,7 +160,7 @@ matcher_initialize(long_boolean show_commands_last)
       if (p->kind == end_marker) {
          break;
       }
-      else if (p->kind == concept_comment || (p->miscflags & 1)) {
+      else if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP)) {
          continue;
       }
 
@@ -184,7 +182,7 @@ matcher_initialize(long_boolean show_commands_last)
       if (p->kind == end_marker) {
          break;
       }
-      if (p->kind == concept_comment || (p->miscflags & 1)) {
+      if (p->kind == concept_comment || (p->concparseflags & CONCPARSE_MENU_DUP)) {
          continue;
       }
 
@@ -239,7 +237,7 @@ Private long_boolean verify_call(Const match_result *result)
    uint32 bits0, bits1;
    int old_history_ptr;
    long_boolean resultval;
-   modifier_block *foobar;
+   modifier_block *mods;
    real_jmp_buf my_longjmp_buffer;
 
    /* If we are not verifying, or the menu we are examining is not the call menu,
@@ -318,19 +316,20 @@ Private long_boolean verify_call(Const match_result *result)
 
    /* Do the call.  An error will signal and go to try_again. */
 
-   result_for_verify = *result;
-
    selector_used = FALSE;
    number_used = FALSE;
    mandatory_call_used = FALSE;
    verify_used_number = FALSE;
    verify_used_selector = FALSE;
 
-   foobar = static_ss.newmodifiers;
-   while (foobar) {
-      (void) deposit_concept(foobar->this_modifier, 0);
-      foobar = foobar->next;
+   (void) restore_parse_state();
+
+   for (mods = static_ss.newmodifiers ; mods ; mods = mods->next) {
+      verify_options = mods->call_conc_options;
+      if (deposit_concept(mods->this_modifier)) goto try_again;
    }
+
+   verify_options = result->call_conc_options;
 
    if (deposit_call(main_call_lists[parse_state.call_list_to_use][result->index])) goto try_again;     /* Deposit_call returns true if something goes wrong. */
 
@@ -425,6 +424,8 @@ static void record_a_match(Const match_result *result)
 
       while (foobar && foobar->current_modifier) {
          modifier_block *foo = get_modifier_block();
+
+         foo->call_conc_options = foobar->modifier_parent->call_conc_options;
          foo->this_modifier = foobar->current_modifier;
          foo->next = static_ss.newmodifiers;
          static_ss.newmodifiers = foo;
@@ -625,23 +626,23 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
       part that matches the user input.  That is why we test
       "static_ss.showing" and "(user == 0)". */
 
-   if ((key == '6' || key == 'k') && (result->who == selector_uninitialized)) {
+   if ((key == '6' || key == 'k') && (result->call_conc_options.who == selector_uninitialized)) {
       if (user == 0) return;
       new_result = *result;
       for (i=1; i<=last_selector_kind; ++i) {
-         new_result.who = (selector_kind) i;
+         new_result.call_conc_options.who = (selector_kind) i;
          match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxi, &new_result);
       }
    }
-   else if (key == 'h' && (result->where == direction_uninitialized)) {
+   else if (key == 'h' && (result->call_conc_options.where == direction_uninitialized)) {
       if (user == 0) return;
       new_result = *result;
       for (i=1; i<=last_direction_kind; ++i) {
-         new_result.where = (direction_kind) i;
+         new_result.call_conc_options.where = (direction_kind) i;
          match_suffix_2(user, direction_names[i], &p2b, patxi, &new_result);
       }
    }
-   else if ((key == 'v' || key == 'w' || key == 'x' || key == 'y') && (result->tagger & 0xFF000000UL) == 0) {
+   else if ((key == 'v' || key == 'w' || key == 'x' || key == 'y') && (result->call_conc_options.tagger & 0xFF000000UL) == 0) {
       /* We allow recursion 4 levels deep.  In fact, we consider it
          inappropriate to stack revert/reflect things.  There are special
          calls "revert, then reflect", etc. for this purpose. */
@@ -655,8 +656,8 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
          escape letter, since the escape letters are not always correct for recursive
          invocations of "revert" things. */
 
-      if (new_result.tagger & 0xFF) {
-         tagclass = (new_result.tagger >> 5) & 3;
+      if (new_result.call_conc_options.tagger & 0xFF) {
+         tagclass = (new_result.call_conc_options.tagger >> 5) & 3;
       }
       else {
          tagclass = 0;
@@ -665,15 +666,15 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
          else if (key == 'y') tagclass = 3;
       }
 
-      new_result.tagger <<= 8;
-      new_result.tagger |= tagclass << 5;
+      new_result.call_conc_options.tagger <<= 8;
+      new_result.call_conc_options.tagger |= tagclass << 5;
 
       for (i=0; i<number_of_taggers[tagclass]; ++i) {
-         new_result.tagger++;
+         new_result.call_conc_options.tagger++;
          match_suffix_2(user, tagger_calls[tagclass][i]->name, &p2b, patxi, &new_result);
       }
    }
-   else if ((key == 'N') && result->circcer == 0) {
+   else if ((key == 'N') && result->call_conc_options.circcer == 0) {
       char circname[80];
 
       if (user == 0) return;
@@ -696,7 +697,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
                *toptr++ = c;
          } while (c);
 
-         new_result.circcer++;
+         new_result.call_conc_options.circcer++;
          match_suffix_2(user, circname, &p2b, patxi, &new_result);
       }
    }
@@ -790,62 +791,65 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, int patx
    else if (key == '9') {
       if (user == 0) return;
       new_result = *result;
-      new_result.howmanynumbers++;
+      new_result.call_conc_options.howmanynumbers++;
 
       for (i=1;; i++) {
           prefix = cardinals[i-1];
           if (prefix == NULL) {
               break;
           }
-          new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
+          new_result.call_conc_options.number_fields += 1 << ((new_result.call_conc_options.howmanynumbers-1)*4);
           match_suffix_2(user, prefix, &p2b, patxi, &new_result);
       }
    }
    else if (key == 'u') {
       if (user == 0) return;
       new_result = *result;
-      new_result.howmanynumbers++;
+      new_result.call_conc_options.howmanynumbers++;
 
       for (i=1;; i++) {
           prefix = ordinals[i-1];
           if (prefix == NULL) {
               break;
           }
-          new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
+          new_result.call_conc_options.number_fields += 1 << ((new_result.call_conc_options.howmanynumbers-1)*4);
           match_suffix_2(user, prefix, &p2b, patxi, &new_result);
       }
    }
-   else if (key == 'a' || key == 'b' || key == 'B') {
+   else if (key == 'a' || key == 'b' || key == 'B' || key == 'D') {
       if (user == 0) return;
       new_result = *result;
 
-      new_result.howmanynumbers++;
+      new_result.call_conc_options.howmanynumbers++;
 
       for (i=1;; i++) {
-          prefix = n_4_patterns[i-1];
-          if (prefix == NULL) {
-              break;
-          }
-          new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-          match_suffix_2(user, prefix, &p2b, patxi, &new_result);
+         prefix = n_4_patterns[i-1];
+         if (prefix == NULL) break;
+         new_result.call_conc_options.number_fields += 1 << ((new_result.call_conc_options.howmanynumbers-1)*4);
+         if (key != 'D' || (i&1) != 0)
+            match_suffix_2(user, prefix, &p2b, patxi, &new_result);
       }
 
       /* special case: allow "quarter" for 1/4 */
-      new_result.number_fields = result->number_fields + (1 << ((new_result.howmanynumbers-1)*4));
+      new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (1 << ((new_result.call_conc_options.howmanynumbers-1)*4));
       match_suffix_2(user, "quarter", &p2b, patxi, &new_result);
 
       /* special case: allow "half" or "1/2" for 2/4 */
-      new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
-      match_suffix_2(user, "half", &p2b, patxi, &new_result);
-      match_suffix_2(user, "1/2", &p2b, patxi, &new_result);
+      if (key != 'D') {
+         new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (2 << ((new_result.call_conc_options.howmanynumbers-1)*4));
+         match_suffix_2(user, "half", &p2b, patxi, &new_result);
+         match_suffix_2(user, "1/2", &p2b, patxi, &new_result);
+      }
 
       /* special case: allow "three quarter" for 3/4 */
-      new_result.number_fields = result->number_fields + (3 << ((new_result.howmanynumbers-1)*4));
+      new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (3 << ((new_result.call_conc_options.howmanynumbers-1)*4));
       match_suffix_2(user, "three quarter", &p2b, patxi, &new_result);
 
       /* special case: allow "full" for 4/4 */
-      new_result.number_fields = result->number_fields + (4 << ((new_result.howmanynumbers-1)*4));
-      match_suffix_2(user, "full", &p2b, patxi, &new_result);
+      if (key != 'D') {
+         new_result.call_conc_options.number_fields = result->call_conc_options.number_fields + (4 << ((new_result.call_conc_options.howmanynumbers-1)*4));
+         match_suffix_2(user, "full", &p2b, patxi, &new_result);
+      }
    }
 }
 
@@ -862,6 +866,10 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, int pat
    new_result.modifier_parent = result;
    new_result.current_modifier = grand_concept;
    new_result.need_big_menu = TRUE;
+   new_result.call_conc_options.who = selector_uninitialized;
+   new_result.call_conc_options.where = direction_uninitialized;
+   new_result.call_conc_options.number_fields = 0;
+   new_result.call_conc_options.howmanynumbers = 0;
 
    /* scan concepts */
 
@@ -880,7 +888,7 @@ static void match_grand(Cstring user, concept_descriptor *grand_concept, int pat
    for (i = 0; i < menu_length; i++) {
       concept_descriptor *this_concept = &concept_descriptor_table[*item];
 
-      if (this_concept->miscflags & 4) {
+      if (this_concept->concparseflags & CONCPARSE_PARSE_DIRECT) {
          new_result.index = *item;
          new_result.yield_depth = result->yield_depth + 1;
          p2b.car = this_concept->name;
@@ -971,15 +979,15 @@ static void search_menu(uims_reply kind)
    result.valid = TRUE;
    result.exact = FALSE;
    result.kind = kind;
-   result.who = selector_uninitialized;
-   result.where = direction_uninitialized;
-   result.tagger = 0;
-   result.circcer = 0;
+   result.call_conc_options.who = selector_uninitialized;
+   result.call_conc_options.where = direction_uninitialized;
+   result.call_conc_options.number_fields = 0;
+   result.call_conc_options.howmanynumbers = 0;
+   result.call_conc_options.tagger = 0;
+   result.call_conc_options.circcer = 0;
    result.current_modifier = (concept_descriptor *) 0;
    result.modifier_parent = (match_result *) 0;
    result.need_big_menu = FALSE;
-   result.number_fields = 0;
-   result.howmanynumbers = 0;
    result.yield_depth = 0;
 
    if (kind == ui_call_select) {
@@ -1010,9 +1018,9 @@ static void search_menu(uims_reply kind)
          concept_descriptor *grand_concept = (concept_descriptor *) 0;
          parse_state.call_list_to_use = static_call_menu;
          result.index = *item;
-         result.yield_depth = (this_concept->miscflags & 2) ? 1 : 0;
+         result.yield_depth = (this_concept->concparseflags & CONCPARSE_YIELD_IF_AMB) ? 1 : 0;
 
-         if (this_concept->miscflags & 4)
+         if (this_concept->concparseflags & CONCPARSE_PARSE_DIRECT)
             grand_concept = this_concept;
 
          match_pattern(this_concept->name, &result, grand_concept);
@@ -1021,18 +1029,18 @@ static void search_menu(uims_reply kind)
    }
    else if (static_call_menu >= match_taggers && static_call_menu <= match_taggers+3) {
       int tagclass = static_call_menu - match_taggers;
-      result.tagger = tagclass << 5;
+      result.call_conc_options.tagger = tagclass << 5;
 
       for (i = 0; i < number_of_taggers[tagclass]; i++) {
-         result.tagger++;
+         result.call_conc_options.tagger++;
          match_pattern(tagger_calls[tagclass][i]->name, &result, (concept_descriptor *) 0);
       }
    }
    else if (static_call_menu == match_circcer) {
-      result.circcer = 0;
+      result.call_conc_options.circcer = 0;
 
       for (i = 0; i < number_of_circcers; i++) {
-         result.circcer++;
+         result.call_conc_options.circcer++;
          match_pattern(circcer_calls[i]->name, &result, (concept_descriptor *) 0);
       }
    }

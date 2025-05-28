@@ -1429,26 +1429,9 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
       if (deposit_call(save_call)) return TRUE;
    }
    else if (*reply_p == ui_concept_select) {
-      /* If user gave a concept, pick up any needed numeric modifiers. */
+      /* A concept is required.  Its index has been stored in uims_menu_index. */
 
-      uint32 concept_number_fields = 0;
-      int howmanynumbers = 0;
-      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
-
-      if (props & CONCPROP__USE_NUMBER)
-         howmanynumbers = 1;
-      if (props & CONCPROP__USE_TWO_NUMBERS)
-         howmanynumbers = 2;
-
-      if (howmanynumbers != 0) {
-         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
-            return TRUE;           /* User waved the mouse away. */
-      }
-
-      /* A concept is required.  Its index has been stored in uims_menu_index,
-         and the "concept_number_fields" is ready. */
-
-      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index]))
          return TRUE;
    }
 
@@ -1724,22 +1707,15 @@ choose_popup(String label, Cstring names[])
     return do_popup(choosepopup);
 }
 
-extern int
-uims_do_selector_popup(void)
+extern int uims_do_selector_popup(void)
 {
-   if (interactivity == interactivity_verify) {
-      return (int) selector_for_initialize;
-   }
-   else {
-       /* We skip the zeroth selector, which is selector_uninitialized. */
-       int t = choose_popup(sd_resources.selector_title, &selector_menu_list[1]);
-       if (t==0) return POPUP_DECLINE;
-       return t;
-   }
+   /* We skip the zeroth selector, which is selector_uninitialized. */
+   int t = choose_popup(sd_resources.selector_title, &selector_menu_list[1]);
+   if (t==0) return POPUP_DECLINE;
+   return t;
 }    
 
-extern int
-uims_do_direction_popup(void)
+extern int uims_do_direction_popup(void)
 {
     /* We skip the zeroth direction, which is direction_uninitialized. */
     int t = choose_popup(sd_resources.direction_title, &direction_names[1]);

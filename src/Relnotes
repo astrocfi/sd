@@ -1,7 +1,27 @@
-		   RELEASE NOTES FOR SD VERSION 31.66
-		 Database version = 31.66 format = 75.
-                X11 UI version 1.16, SDTTY UI version 1.7.
+		   RELEASE NOTES FOR SD VERSION 31.67
+		 Database version = 31.67 format = 75.
+                X11 UI version 1.16, SDTTY UI version 1.8.
 
+
+****** Changes as of version 31.67 ******
+
+The function key shift-F12 means "find another" when resolving
+or searching.
+
+Many more concepts can now be typed directly, on the same line
+as the call that they modify.  The only concepts that can't are
+those concepts, like "checkpoint", that take two calls.
+
+So, for example, you can type (at C3A or higher, where "3/4 mix" is
+a legal call):
+
+2/3 3/4 mix
+
+If you want 3/4 of a mix, that is, the centers cross run and then the
+new centers hinge, you must tpye the "3/4" concept by itself:
+
+3/4
+mix
 
 ****** Changes as of version 31.66 ******
 

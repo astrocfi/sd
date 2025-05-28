@@ -30,6 +30,7 @@
 
 typedef struct glozk {
    concept_descriptor *this_modifier;
+   call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    struct glozk *next;            /* next concept, or, if this is end mark, points to substitution list */
    struct glozk *gc_ptr;          /* used for reclaiming dead blocks */
 } modifier_block;
@@ -39,16 +40,11 @@ typedef struct filch {
    long_boolean exact;       /* set to TRUE if an exact match was found */
    uims_reply kind;
    int index;
-   selector_kind who;        /* matches <anyone> */
-   direction_kind where;     /* matches <direction> */
-   uint32 tagger;            /* matches <atc> */
-   uint32 circcer;           /* matches <anything> as in <anything> motivate */
+   call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    Const struct filch *modifier_parent;
    modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
    concept_descriptor *current_modifier;
    long_boolean need_big_menu;
-   uint32 number_fields;     /* matches all the number fields */
-   int howmanynumbers;       /* tells how many there are */
    int space_ok;             /* space is a legitimate next input character */
    int yield_depth;          /* if nonzero, this yields by that amount */
    int yielding_matches;     /* how many matches have that flag on */
@@ -86,11 +82,10 @@ enum {
 
 /* These are provided by sdmatch.c */
 extern match_state static_ss;
-extern match_result result_for_verify;
-extern long_boolean verify_used_number;
-extern long_boolean verify_used_selector;
-extern long_boolean verify_has_stopped;
+extern match_result user_match;
 
+/* This is provided by sdui-XXX.c */
+extern long_boolean verify_has_stopped;
 
 /* The following items are PROVIDED by the main program (that is, the user
    interface part of it) and IMPORTED by sdmatch.c */

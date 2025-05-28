@@ -81,6 +81,8 @@
    map_4x6_2x4
    map_hv_qtg_2
    map_vv_qtg_2
+   map_ov_hrg_1
+   map_ov_gal_1
    map_tgl4_1
    map_tgl4_2
    map_2x6_2x3
@@ -1788,7 +1790,7 @@ setup_attr setup_attrs[] = {
       &nicethingglass,
       &concthing_hrglass,
       {b_hrglass,   b_phrglass},
-      { 0, 4},
+      { 0, 0},
       FALSE,
       id_bit_table_hrglass,
       {  "   a  b@      d@g        c@      h@   f  e",
@@ -2495,7 +2497,8 @@ Private map_thing map_3dmd_dmd = {{0, 10, 8, 9,                    1, 5, 7, 11, 
         map_thing map_vv_qtg_2          = {{9, 20, 16, 19, 18, 11, 1, 10,     6, 23, 13, 22, 21, 8, 4, 7},           MPKIND__SPLIT,       2,  s4x6,   s_qtag,    0x005, 0};
 Private map_thing map_spin_3x4          = {{1, 11, 8, -1, 9, 10, 0, -1,       3, 4, 6, -1, 7, 5, 2, -1},             MPKIND__SPLIT,       2,  s3x4,   s_spindle, 0x005, 0};
 Private map_thing map_hrgl_ptp          = {{-1, -1, 2, 1, -1, -1, 0, 3,       -1, -1, 4, 7, -1, -1, 6, 5},           MPKIND__SPLIT,       2,  s_ptpd, s_hrglass, 0x000, 0};
-Private map_thing map_ov_hrg_1          = {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},           MPKIND__OVERLAP,     2,  s_qtag, s_hrglass, 0x005, 0};
+        map_thing map_ov_hrg_1          = {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},           MPKIND__OVERLAP,     2,  s_qtag, s_hrglass, 0x005, 0};
+        map_thing map_ov_gal_1          = {{-1, 0, -1, 1, -1, 6, -1, 7,       -1, 2, -1, 3, -1, 4, -1, 5},           MPKIND__OVERLAP,     2,  s2x4,   s_galaxy,  0x000, 0};
 Private map_thing map_1x6_1x3           = {{0, 1, 2,                          5, 4, 3},                              MPKIND__SPLIT,       2,  s1x6,   s1x3,      0x000, 0};
 Private map_thing map_1x8_1x4           = {{0, 1, 2, 3,                       6, 7, 4, 5},                           MPKIND__SPLIT,       2,  s1x8,   s1x4,      0x000, 0};
 Private map_thing map_1x12_1x4          = {{0, 1, 3, 2,            4, 5, 10, 11,          9, 8, 6, 7,            0}, MPKIND__SPLIT,       3,  s1x12,  s1x4,      0x000, 0};
@@ -2747,7 +2750,7 @@ Private map_hunk mm_spn_2 = {{{0, 0},
 
 Private map_hunk mm_hrg_2 = {{{0, 0},
                     {&map_hrgl_ptp, 0},
-                             {0, 0},  {0, &map_ov_hrg_1},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
 Private map_hunk mm_12d_2 = {{{0, 0},
                     {&map_bone_12d, &map_bigd_12d},

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@
 #include "sd.h"
 
 
-
 Private void innards(
    setup *ss,
    Const map_thing *maps,
@@ -44,7 +43,6 @@ Private void innards(
 {
    int i, j;
    Const map_thing *final_map;
-   map_hunk *hunk;
    setup z[4];
 
    int rot = maps->rot;
@@ -181,6 +179,23 @@ Private void innards(
          which the setups are adjoined, taking setup rotation into account.  "After_distance"
          is the height of the ending setups in that direction. */
 
+      /* Check for special case of matrix stuff going to hourglasses or galaxies.
+         We are not prepared to say how wide these setups are, but, if only the center
+         diamond/box is occupied, we can do it. */
+
+      if (arity == 2 && map_kind == MPKIND__SPLIT && before_distance == 2) {
+         if (z[0].kind == s_hrglass && z[0].rotation == 1) {
+            map_kind = MPKIND__OVERLAP;
+            final_map = &map_ov_hrg_1;
+            goto got_map;
+         }
+         else if (z[0].kind == s_galaxy && z[0].rotation == 0) {
+            map_kind = MPKIND__OVERLAP;
+            final_map = &map_ov_gal_1;
+            goto got_map;
+         }
+      }
+
       if (before_distance == 0 || after_distance == 0) fail("Can't use matrix with this concept or setup.");
 
       /* Could this happen?  Could we really be trying to get out with a different
@@ -244,6 +259,8 @@ Private void innards(
       final_map = &map_tgl4_2;
    }
    else {
+      map_hunk *hunk = map_lists[z[0].kind][arity-1];
+
       switch (map_kind) {
          case MPKIND__O_SPOTS:
             warn(warn__to_o_spots);
@@ -259,10 +276,11 @@ Private void innards(
             break;
       }
 
-      final_map = 0;
-      hunk = map_lists[z[0].kind][arity-1];
       if (hunk) final_map = hunk->f[map_kind][(z[0].rotation & 1)];
+      else final_map = 0;
    }
+
+   got_map:
 
    result->rotation = z[0].rotation;
 

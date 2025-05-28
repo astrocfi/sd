@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: May 2, 1996
+@set Time-stamp: May 22, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.66
+@set sd-version 31.67
 @set full-manual
 @c %**end of header
 @iftex
@@ -1897,7 +1897,7 @@ printing device.  The @code{refresh display} command cleans that up.
 @section Function Keys in Sdtty
 
 On the PC, @code{Sdtty} recognizes a number of function keys.  These
-are equivalent to typing the following commands:
+perform the following commands:
 
 @example
 key      normal                    shift                  control
@@ -1913,7 +1913,7 @@ F8   <anything>               <concept>
 F9   undo last call           abort the search
 F10  write this sequence      change output file
 F11  pick level call          pick 8 person level call
-F12  accept current choice
+F12  accept current choice    find another
 @end example
 
 All of these except @samp{<anything>} and @samp{<concept>} execute the command

@@ -685,11 +685,11 @@ Private void write_nice_number(char indicator, uint32 num)
    char nn;
 
    switch (indicator) {
-      case '9': case 'a': case 'b': case 'B':
+      case '9': case 'a': case 'b': case 'B': case 'D':
          nn = '0' + num;
          if (indicator == '9')
             writechar(nn);
-         else if (indicator == 'B') {
+         else if (indicator == 'B' || indicator == 'D') {
             if (num == 1)
                writestuff("quarter");
             else if (num == 2)
@@ -730,7 +730,7 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
    while (*f) {
       if (f[0] == '@') {
          switch (f[1]) {
-            case 'a': case 'b': case 'B': case 'u': case '9':
+            case 'a': case 'b': case 'B': case 'D': case 'u': case '9':
                write_nice_number(f[1], index & 0xF);
                f += 2;
                index >>= 4;
@@ -825,7 +825,7 @@ extern Const char *get_escape_string(char c)
          return "<DIRECTION>";
       case '9':
          return "<N>";
-      case 'a': case 'b': case 'B':
+      case 'a': case 'b': case 'B': case 'D':
          return "<N/4>";
       case 'u':
          return "<Nth>";
@@ -1335,7 +1335,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
                         break;
-                     case '9': case 'a': case 'b': case 'B': case 'u':    /* Need to plug in a number. */
+                     case '9': case 'a': case 'b': case 'B': case 'D': case 'u':    /* Need to plug in a number. */
                         write_blank_if_needed();
                         write_nice_number(savec, number_list & 0xF);
                         number_list >>= 4;    /* Get ready for next number. */

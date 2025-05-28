@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1548,6 +1548,11 @@ def2:
          get_tok();
          if (tok_kind != tok_symbol) errexit("Missing indicator");
       }
+      else if (!strcmp(tok_str, "lateral_to_selectees")) {
+         callarray_flags1 = CAF_LATERAL_TO_SELECTEES;
+         get_tok();
+         if (tok_kind != tok_symbol) errexit("Missing indicator");
+      }
 
       if (strcmp(tok_str, "setup") != 0)
          errexit("Need \"setup\" indicator");
@@ -1653,12 +1658,17 @@ extern void dbcompile(void)
             }
          }
 
-         /* Process the actual definition.  First, check for the "simple_funny" indicator. */
+         /* Process the actual definition.  First, check for the "simple_funny" or "lateral_to_selectees" indicator. */
 
          funnyflag = 0;
 
          if (!strcmp(tok_str, "simple_funny")) {
             funnyflag = CAF__FACING_FUNNY;
+            get_tok();
+            if (tok_kind != tok_symbol) errexit("Missing indicator");
+         }
+         else if (!strcmp(tok_str, "lateral_to_selectees")) {
+            funnyflag = CAF_LATERAL_TO_SELECTEES;
             get_tok();
             if (tok_kind != tok_symbol) errexit("Missing indicator");
          }
@@ -1671,7 +1681,7 @@ extern void dbcompile(void)
          ccc = (calldef_schema) iii;
 
          if (funnyflag != 0 && ccc != schema_by_array)
-            errexit("Simple_funny out of place");
+            errexit("Simple_funny or lateral_to_selectees out of place");
 
          switch (ccc) {
             case schema_by_array:

@@ -2670,6 +2670,7 @@ that probably need to be put in. */
                the_schema,
                innerdef->modifiers1,
                outerdef->modifiers1,
+               TRUE,
                result);
 
             if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {

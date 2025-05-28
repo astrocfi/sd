@@ -1452,7 +1452,7 @@ unselect_near_unselect
       and "select_near_select" above.
 
 select_once_rem_from_select
-      applies to 1x4 or 1x8 only.  Returns TRUE if the test person and the
+      applies to 1x4, 1x8, or 2x4 only.  Returns TRUE if the test person and the
       person once-removed from the test person are selected.
       Returns FALSE otherwise.
       See the descriptions of "select" and "select_near_select" above.
@@ -1465,13 +1465,13 @@ conc_from_select
       descriptions of "select" and "select_near_select" above.
 
 select_once_rem_from_unselect
-      applies to 1x4 only.  Returns TRUE if the person under test is
+      applies to 1x4, 1x8, or 2x4 only.  Returns TRUE if the person under test is
       selected and the person once-removed from that person is not
       selected.  Returns FALSE otherwise.  See the descriptions of "select"
       and "select_near_select" above.
 
 unselect_once_rem_from_select
-      applies to 1x4 only.  Returns TRUE if the person under test is
+      applies to 1x4, 1x8, or 2x4 only.  Returns TRUE if the person under test is
       not selected and the person once-removed from that person is
       selected.  Returns FALSE otherwise.  See the descriptions of "select"
       and "select_near_select" above.
@@ -2388,6 +2388,7 @@ inherit_single
 @a        - put number here, expressed as N/4, but say "full" instead of 4/4.
 @b        - put number here, expressed as N/4.
 @B        - put number here, expressed as N/4 written in words: "quarter", "half", "three quarter"
+@D        - like "B", but only od numbers are allowed.
 @c ... @d - no longer used
 @h        - put direction here.
 @e ... @f - text to change to "left" if this call has "left" modifier.

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -290,7 +290,11 @@ Private long_boolean select_once_rem_from_select(setup *real_people, int real_in
    if (!selectp(real_people, real_index)) return FALSE;
    if (current_selector == selector_all) return TRUE;
 
-   return      (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
+   if (real_people->kind == s2x4)
+      return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 2);
+   else
+      return   (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 3);
 
 
@@ -310,7 +314,11 @@ Private long_boolean select_once_rem_from_unselect(setup *real_people, int real_
    if (!selectp(real_people, real_index)) return FALSE;
    if (current_selector == selector_all) return FALSE;
 
-   return      !(real_people->people[real_index ^ 3].id1 & BIT_PERSON) ||
+   if (real_people->kind == s2x4)
+      return   !(real_people->people[real_index ^ 2].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 2);
+   else
+      return   !(real_people->people[real_index ^ 3].id1 & BIT_PERSON) ||
                !selectp(real_people, real_index ^ 3);
 }
 
@@ -321,7 +329,11 @@ Private long_boolean unselect_once_rem_from_select(setup *real_people, int real_
    if (selectp(real_people, real_index)) return FALSE;
    if (current_selector == selector_none) return FALSE;
 
-   return      (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
+   if (real_people->kind == s2x4)
+      return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 2);
+   else
+      return   (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 3);
 }
 

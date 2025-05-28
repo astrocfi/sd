@@ -549,23 +549,24 @@ Private void do_concept_parallelogram(
    parse_block *parseptr,
    setup *result)
 {
-   map_thing *map_ptr;
+   map_thing **map_ptr;
+   map_hunk *bletch = map_lists[s2x4][0];
 
    if (ss->kind == s2x6) {
-      if (global_livemask == 07474) map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_R_HALF][0];
-      else if (global_livemask == 01717) map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_L_HALF][0];
+      if (global_livemask == 07474) map_ptr = bletch->f[MPKIND__OFFS_R_HALF];
+      else if (global_livemask == 01717) map_ptr = bletch->f[MPKIND__OFFS_L_HALF];
       else fail("Can't find a parallelogram.");
    }
    else if (ss->kind == s2x8) {
       warn(warn__full_pgram);
-      if (global_livemask == 0xF0F0) map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_R_FULL][0];
-      else if (global_livemask == 0x0F0F) map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_L_FULL][0];
+      if (global_livemask == 0xF0F0) map_ptr = bletch->f[MPKIND__OFFS_R_FULL];
+      else if (global_livemask == 0x0F0F) map_ptr = bletch->f[MPKIND__OFFS_L_FULL];
       else fail("Can't find a parallelogram.");
    }
    else
       fail("Can't do parallelogram concept from this position.");
 
-   divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
+   divided_setup_move(ss, map_ptr[0], phantest_ok, TRUE, result);
 }
 
 
@@ -1987,7 +1988,7 @@ Private void do_concept_crazy(
       if ((i ^ reverseness) & 1) {
          /* Do it in the center. */
          concentric_move(&tempsetup, &tempsetup.cmd, (setup_command *) 0,
-                  schema_concentric, 0, 0, result);
+                  schema_concentric, 0, 0, TRUE, result);
       }
       else {
          /* Do it on each side. */
@@ -2158,7 +2159,7 @@ Private void do_concept_checkerboard(
       subsid_cmd = ss->cmd;
       subsid_cmd.parseptr = (parse_block *) 0;
       subsid_cmd.callspec = base_calls[BASE_CALL_ENDS_SHADOW];
-      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0, DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, result);
+      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_concentric, 0, DFM1_CONC_DEMAND_LINES | DFM1_CONC_FORCE_COLUMNS, TRUE, result);
       return;
    }
    else {
@@ -2283,7 +2284,7 @@ Private void do_concept_checkpoint(
          fail("Redundant 'REVERSE' modifiers.");
       ss->cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
       subsid_cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
-      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint, 0, 0, result);
+      concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint, 0, 0, TRUE, result);
    }
    else {
       /* The "dfm_conc_force_otherway" flag forces Callerlab interpretation:
@@ -2291,7 +2292,7 @@ Private void do_concept_checkpoint(
          If checkpointers go from 1x4 to 2x2, "dfm_conc_force_otherway" forces
             the Callerlab rule in preference to the "parallel_concentric_end" property
             on the call. */
-      concentric_move(ss, &subsid_cmd, &ss->cmd, schema_checkpoint, 0, DFM1_CONC_FORCE_OTHERWAY, result);
+      concentric_move(ss, &subsid_cmd, &ss->cmd, schema_checkpoint, 0, DFM1_CONC_FORCE_OTHERWAY, TRUE, result);
    }
 }
 
@@ -2869,9 +2870,9 @@ Private void do_concept_inner_outer(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (parseptr->concept->value.arg1 & 8)
-      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, TRUE, result);
    else
-      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, result);
+      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, TRUE, result);
 
    result->rotation -= rot;   /* Flip the setup back. */
 }
@@ -3900,7 +3901,7 @@ Private void do_concept_fractional(
 
    ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | (s_numer<<12) | (s_denom<<8) | (e_numer<<4) | e_denom;
    ss->cmd.parseptr = parseptr->next;
-   ss->cmd.callspec = NULLCALLSPEC;
+   ss->cmd.callspec = (callspec_block *) 0;
    ss->cmd.cmd_final_flags = 0;
 
    if (parseptr->concept->value.arg1 == 2) {
@@ -4042,7 +4043,7 @@ Private void do_concept_concentric(
             case s_ptpd: mf = &sc_ptp; break;
             case s1x4: case sdmd:
                concentric_move(ss, &ss->cmd, &ss->cmd,
-                     schema, 0, DFM1_CONC_CONCENTRIC_RULES, result);
+                     schema, 0, DFM1_CONC_CONCENTRIC_RULES, TRUE, result);
                return;
             default:
                fail("Can't figure out how to do single concentric here.");
@@ -4053,7 +4054,7 @@ Private void do_concept_concentric(
          break;
       default:
          concentric_move(ss, &ss->cmd, &ss->cmd,
-               schema, 0, DFM1_CONC_CONCENTRIC_RULES, result);
+               schema, 0, DFM1_CONC_CONCENTRIC_RULES, TRUE, result);
          /* 8-person concentric operations do not show the split. */
          result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
          break;
@@ -4431,7 +4432,7 @@ concept_table_item concept_table[] = {
    /* concept_single_diagonal */          {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_single_diagonal},
    /* concept_single_diagonal_sel */      {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},
    /* concept_double_diagonal */          {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_double_diagonal},
-   /* concept_parallelogram */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_parallelogram},
+   /* concept_parallelogram */            {CONCPROP__GET_MASK,                                                                     do_concept_parallelogram},
    /* concept_triple_lines */             {CONCPROP__NEED_TRIPLE_1X4 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,          do_concept_triple_lines},
    /* concept_triple_lines_tog */         {CONCPROP__NEED_TRIPLE_1X4 | Nostandard_matrix_phantom,                                  do_concept_triple_lines_tog},
    /* concept_triple_lines_tog_std */     {CONCPROP__NEED_TRIPLE_1X4 | Standard_matrix_phantom,                                    do_concept_triple_lines_tog},

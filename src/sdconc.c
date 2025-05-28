@@ -841,6 +841,7 @@ extern void concentric_move(
    calldef_schema analyzer,
    defmodset modifiersin1,
    defmodset modifiersout1,
+   long_boolean recompute_id,
    setup *result)
 {
    defmodset localmods1, localmodsin1, localmodsout1;
@@ -1073,7 +1074,8 @@ extern void concentric_move(
          }
    
          current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & modifiers1) / DFM1_NUM_SHIFT_BIT) * 4;
-         update_id_bits(begin_ptr);
+
+         if (recompute_id) update_id_bits(begin_ptr);
    
          /* Inherit certain assumptions to the child setups.  This is EXTREMELY incomplete. */
 
@@ -2773,6 +2775,95 @@ static Const fixer fpp55d    = {s1x2, s2x4,        0, 2,       &fpp55d,    0,   
 
 
 
+typedef enum {
+   LOOKUP_NONE,
+   LOOKUP_DIST_DMD,
+   LOOKUP_DIST_BOX,
+   LOOKUP_DIST_CLW,
+   LOOKUP_DIAG_CLW,
+   LOOKUP_DISC
+} lookup_key;
+
+
+typedef struct {
+   lookup_key key;
+   setup_kind kk;
+   uint32 thislivemask;
+   Const fixer *fixp;
+   Const fixer *fixp2;
+   int use_fixp2;
+} sel_item;
+
+sel_item sel_table[] = {
+   {LOOKUP_DIST_DMD, s_rigger,    0x99,   &distrig3,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_rigger,    0x66,   &distrig4,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_rigger,    0x55,   &distrig7,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_rigger,    0xAA,   &distrig8,   (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_galaxy,    0x66,   &dgald1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_galaxy,    0xCC,   &dgald2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_galaxy,    0x33,   &dgald3,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s_galaxy,    0x99,   &dgald4,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s2x4,        0xAA,   &d2x4d1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s2x4,        0x55,   &d2x4d2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_DMD, s4x4,        0x8181, &d4x4d1,     &d4x4d2,     0},
+   {LOOKUP_DIST_DMD, s4x4,        0x1818, &d4x4d3,     &d4x4d4,     4},
+   {LOOKUP_DIST_BOX, s2x4,        0xAA,   &d2x4c1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX, s2x4,        0x55,   &d2x4c2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX, s2x4,        0x33,   &d2x4y1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX, s2x4,        0xCC,   &d2x4y2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX, s_qtag,      0xAA,   &fqtgjj1,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX, s_qtag,      0x99,   &fqtgjj2,    (fixer *) 0, -1},
+   {LOOKUP_DIAG_CLW, s4x4,        0x0909, &d4x4l1,     &d4x4l2,     0},
+   {LOOKUP_DIAG_CLW, s4x4,        0x9090, &d4x4l3,     &d4x4l4,     4},
+   {LOOKUP_DIST_CLW, s_rigger,    0x99,   &distrig1,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_rigger,    0x66,   &distrig2,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_rigger,    0x55,   &distrig5,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_rigger,    0xAA,   &distrig6,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_bone,      0x55,   &distbone1,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_bone,      0x99,   &distbone2,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_bone,      0x66,   &distbone5,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_bone,      0xAA,   &distbone6,  (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_hrglass,   0xAA,   &disthrg1,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_hrglass,   0x99,   &disthrg2,   (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_galaxy,    0x66,   &dgalw1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_galaxy,    0xCC,   &dgalw2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_galaxy,    0x33,   &dgalw3,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s_galaxy,    0x99,   &dgalw4,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s2x4,        0x33,   &d2x4w1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s2x4,        0xCC,   &d2x4w2,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s2x4,        0xAA,   &d2x4x1,     (fixer *) 0, -1},
+   {LOOKUP_DIST_CLW, s2x4,        0x55,   &d2x4x2,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0xAA,   &f1x8aad,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x55,   &foo55d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x99,   &foo99d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x66,   &foo66d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x8,        0x33,   &f1x8endd,   (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_bone,      0x33,   &fboneendd,  (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_bone,      0xBB,   &fbonetgl,   (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_rigger,    0x77,   &frigtgl,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_qtag,      0x33,   &fqtgend,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_ptpd,      0xAA,   &foozzd,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_ptpd,      0x55,   &fptpzzd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s3x1dmd,     0x99,   &f3x1zzd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s3x1dmd,     0xAA,   &f3x1yyd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x3dmd,     0x99,   &f1x3zzd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x3dmd,     0xAA,   &f1x3yyd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s1x3dmd,     0x66,   &f1x3bbd,    (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_crosswave, 0x55,   &fxwv1d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_crosswave, 0x99,   &fxwv2d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_crosswave, 0x66,   &fxwv3d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_crosswave, 0x33,   &fxwve,      (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_spindle,   0x55,   &fspindld,   (fixer *) 0, -1},
+   {LOOKUP_DISC,     s_spindle,   0xAA,   &fspindlbd,  (fixer *) 0, -1},
+   {LOOKUP_DISC,     s2x4,        0xAA,   &fppaad,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s2x4,        0x55,   &fpp55d,     (fixer *) 0, -1},
+   {LOOKUP_DISC,     s2x4,        0xA5,   &f2x4dleft,  (fixer *) 0, -1},
+   {LOOKUP_DISC,     s2x4,        0x5A,   &f2x4dright, (fixer *) 0, -1},
+   {LOOKUP_DISC,     s2x4,        0x99,   &f2x4endd,   (fixer *) 0, -1},
+   {LOOKUP_NONE,     nothing}};
+
+
+
 /* This does the various types of "so-and-so do this, perhaps while the others do that" concepts. */
 
 extern void selective_move(
@@ -3056,123 +3147,56 @@ back_here:
          Const fixer *fixp = (Const fixer *) 0;
          int lilcount;
          int numsetups;
-         long_boolean feet_warning = FALSE;
+         lookup_key key;
          setup lilsetup[4], lilresult[4];
+         long_boolean feet_warning = FALSE;
 
-         if (arg2 == 5) {
-            /* Search for distorted diamond. */
-            if (kk == s_rigger && thislivemask == 0x99)
-               fixp = &distrig3;
-            else if (kk == s_rigger && thislivemask == 0x66)
-               fixp = &distrig4;
-            else if (kk == s_rigger && thislivemask == 0x55)
-               fixp = &distrig7;
-            else if (kk == s_rigger && thislivemask == 0xAA)
-               fixp = &distrig8;
-            else if (kk == s_galaxy && thislivemask == 0x66)
-               fixp = &dgald1;
-            else if (kk == s_galaxy && thislivemask == 0xCC)
-               fixp = &dgald2;
-            else if (kk == s_galaxy && thislivemask == 0x33)
-               fixp = &dgald3;
-            else if (kk == s_galaxy && thislivemask == 0x99)
-               fixp = &dgald4;
-            else if (kk == s2x4 && thislivemask == 0xAA)
-               fixp = &d2x4d1;
-            else if (kk == s2x4 && thislivemask == 0x55)
-               fixp = &d2x4d2;
-            else if (kk == s4x4 && thislivemask == 0x8181) {
-               /* We make an extremely trivial test here to see which way the distortion goes.
-                  It will be checked thoroughly later. */
-               if (this_one->people[0].id1 & 1)
-                  fixp = &d4x4d1;
-               else
-                  fixp = &d4x4d2;
-            }
-            else if (kk == s4x4 && thislivemask == 0x1818) {
-               /* We make an extremely trivial test here to see which way the distortion goes.
-                  It will be checked thoroughly later. */
-               if (this_one->people[4].id1 & 1)
-                  fixp = &d4x4d3;
-               else
-                  fixp = &d4x4d4;
-            }
-         }
-         else if (arg2 == 4) {         /* Distorted box. */
-            if (kk == s2x4 && thislivemask == 0xAA)
-               fixp = &d2x4c1;
-            else if (kk == s2x4 && thislivemask == 0x55)
-               fixp = &d2x4c2;
-            else if (kk == s2x4 && thislivemask == 0x33)
-               fixp = &d2x4y1;
-            else if (kk == s2x4 && thislivemask == 0xCC)
-               fixp = &d2x4y2;
-            else if (kk == s_qtag && thislivemask == 0xAA)
-               fixp = &fqtgjj1;
-            else if (kk == s_qtag && thislivemask == 0x99)
-               fixp = &fqtgjj2;
-         }
-         else if (arg2 & 16) {
-            /* These are "diagonal C/L/W" concepts. */
-            if (kk == s4x4 && thislivemask == 0x0909) {
-               /* We make an extremely trivial test here to see which way the distortion goes.
-                  It will be checked thoroughly later. */
+         /* Check for special cases of no one or everyone. */
 
-               if ((this_one->people[0].id1 ^ arg2) & 1)
-                  fixp = &d4x4l2;
-               else
-                  fixp = &d4x4l1;
+         if (indicator < 6) {
+            if (thislivemask == 0) {               /* No one. */
+               the_results[setupcount].kind = nothing;
+               the_results[setupcount].result_flags = 0;
+               continue;
             }
-            else if (kk == s4x4 && thislivemask == 0x9090) {
-               /* We make an extremely trivial test here to see which way the distortion goes.
-                  It will be checked thoroughly later. */
+            else if (thislivemask == ((1 << (setup_attrs[kk].setup_limits+1)) - 1) || otherlivemask == 0) {   /* Everyone. */
+               move(this_one, FALSE, &the_results[setupcount]);
+               continue;
+            }
+         }
 
-               if ((this_one->people[4].id1 ^ arg2) & 1)
-                  fixp = &d4x4l4;
-               else
-                  fixp = &d4x4l3;
+         if (arg2 == 5)
+            key = LOOKUP_DIST_DMD;
+         else if (arg2 == 4)
+            key = LOOKUP_DIST_BOX;
+         else if (arg2 & 16)
+            key = LOOKUP_DIAG_CLW;
+         else if (arg2 != 0)
+            key = LOOKUP_DIST_CLW;
+         else if (indicator >= 6)
+            key = LOOKUP_DISC;
+         else
+            key = LOOKUP_NONE;
+
+         if (key != LOOKUP_NONE) {
+            sel_item *p;
+
+            for (p = sel_table ; p->kk != nothing ; p++) {
+               if (p->key == key && p->kk == kk && p->thislivemask == thislivemask) {
+                  fixp = p->fixp;
+
+                  /* We make an extremely trivial test here to see which way the distortion goes.
+                     It will be checked thoroughly later. */
+
+                  if (p->use_fixp2 >= 0 && ((this_one->people[p->use_fixp2].id1 ^ arg2) & 1))
+                     fixp = p->fixp2;
+
+                  goto blah;
+               }
             }
          }
-         else if (arg2 != 0) {
-            /* Search for distorted column/line/wave. */
-            if (kk == s_rigger && thislivemask == 0x99)
-               fixp = &distrig1;
-            else if (kk == s_rigger && thislivemask == 0x66)
-               fixp = &distrig2;
-            else if (kk == s_rigger && thislivemask == 0x55)
-               fixp = &distrig5;
-            else if (kk == s_rigger && thislivemask == 0xAA)
-               fixp = &distrig6;
-            else if (kk == s_bone && thislivemask == 0x55)
-               fixp = &distbone1;
-            else if (kk == s_bone && thislivemask == 0x99)
-               fixp = &distbone2;
-            else if (kk == s_bone && thislivemask == 0x66)
-               fixp = &distbone5;
-            else if (kk == s_bone && thislivemask == 0xAA)
-               fixp = &distbone6;
-            else if (kk == s_hrglass && thislivemask == 0xAA)
-               fixp = &disthrg1;
-            else if (kk == s_hrglass && thislivemask == 0x99)
-               fixp = &disthrg2;
-            else if (kk == s_galaxy && thislivemask == 0x66)
-               fixp = &dgalw1;
-            else if (kk == s_galaxy && thislivemask == 0xCC)
-               fixp = &dgalw2;
-            else if (kk == s_galaxy && thislivemask == 0x33)
-               fixp = &dgalw3;
-            else if (kk == s_galaxy && thislivemask == 0x99)
-               fixp = &dgalw4;
-            else if (kk == s2x4 && thislivemask == 0x33)
-               fixp = &d2x4w1;
-            else if (kk == s2x4 && thislivemask == 0xCC)
-               fixp = &d2x4w2;
-            else if (kk == s2x4 && thislivemask == 0xAA)
-               fixp = &d2x4x1;
-            else if (kk == s2x4 && thislivemask == 0x55)
-               fixp = &d2x4x2;
-         }
-         else {
+
+         if (arg2 == 0) {
             /* A few operations are independent of whether we said "disconnected",
                because the people are connected anyway. */
    
@@ -3188,89 +3212,23 @@ back_here:
                fixp = &f3x1ctl;
             else if (kk == s2x4 && thislivemask == 0x66)
                fixp = &f2x4ctr;
-            else if (kk == s2x4 && thislivemask == 0x0F)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0x0F)
                fixp = &f2x4far;
-            else if (kk == s2x4 && thislivemask == 0xF0)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0xF0)
                fixp = &f2x4near;
             else if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
                fixp = &f2x4far;
             else if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)
                fixp = &f2x4near;
-            else if (kk == s2x4 && thislivemask == 0xC3)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0xC3)
                fixp = &f2x4left;
-            else if (kk == s2x4 && thislivemask == 0x3C)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0x3C)
                fixp = &f2x4right;
             else if (indicator >= 6) {
-               /* Search for "disconnected" stuff. */
-               if (kk == s1x8 && thislivemask == 0xAA)
-                  fixp = &f1x8aad;
-               else if (kk == s1x8 && thislivemask == 0x55)
-                  fixp = &foo55d;
-               else if (kk == s1x8 && thislivemask == 0x99)
-                  fixp = &foo99d;
-               else if (kk == s1x8 && thislivemask == 0x66)
-                  fixp = &foo66d;
-               else if (kk == s1x8 && thislivemask == 0x33)
-                  fixp = &f1x8endd;
-               else if (kk == s_bone && thislivemask == 0x33)
-                  fixp = &fboneendd;
-               else if (kk == s_bone && thislivemask == 0xBB)
-                  fixp = &fbonetgl;
-               else if (kk == s_rigger && thislivemask == 0x77)
-                  fixp = &frigtgl;
-               else if (kk == s2x4 && thislivemask == 0xAA)
-                  fixp = &fppaad;
-               else if (kk == s2x4 && thislivemask == 0x55)
-                  fixp = &fpp55d;
-               else if (kk == s2x4 && thislivemask == 0xA5)  /* unsymmetrical */
-                  fixp = &f2x4dleft;
-               else if (kk == s2x4 && thislivemask == 0x5A)  /* unsymmetrical */
-                  fixp = &f2x4dright;
-               else if (kk == s2x4 && thislivemask == 0x99)
-                  fixp = &f2x4endd;
-               else if (kk == s_qtag && thislivemask == 0x33)
-                  fixp = &fqtgend;
-               else if (kk == s_ptpd && thislivemask == 0xAA)
-                  fixp = &foozzd;
-               else if (kk == s_ptpd && thislivemask == 0x55)
-                  fixp = &fptpzzd;
-               else if (kk == s3x1dmd && thislivemask == 0x99)
-                  fixp = &f3x1zzd;
-               else if (kk == s3x1dmd && thislivemask == 0xAA)
-                  fixp = &f3x1yyd;
-               else if (kk == s1x3dmd && thislivemask == 0x99)
-                  fixp = &f1x3zzd;
-               else if (kk == s1x3dmd && thislivemask == 0xAA)
-                  fixp = &f1x3yyd;
-               else if (kk == s1x3dmd && thislivemask == 0x66)
-                  fixp = &f1x3bbd;
-               else if (kk == s_crosswave && thislivemask == 0x55)
-                  fixp = &fxwv1d;
-               else if (kk == s_crosswave && thislivemask == 0x99)
-                  fixp = &fxwv2d;
-               else if (kk == s_crosswave && thislivemask == 0x66)
-                  fixp = &fxwv3d;
-               else if (kk == s_crosswave && thislivemask == 0x33)
-                  fixp = &fxwve;
-               else if (kk == s_spindle && thislivemask == 0x55)
-                  fixp = &fspindld;
-               else if (kk == s_spindle && thislivemask == 0xAA)
-                  fixp = &fspindlbd;
+               /* Do nothing. */
             }
             else {
-               /* Search for "so-and-so only" stuff. */
-               if (thislivemask == 0) {
-                  /* Check for special case of no one. */
-                  the_results[setupcount].kind = nothing;
-                  the_results[setupcount].result_flags = 0;
-                  continue;
-               }
-               else if (thislivemask == ((1 << (setup_attrs[kk].setup_limits+1)) - 1) || otherlivemask == 0) {
-                  /* And special case of everyone. */
-                  move(this_one, FALSE, &the_results[setupcount]);
-                  continue;
-               }
-               else if (kk == s2x4 && thislivemask == 0x33)
+                    if (kk == s2x4 && thislivemask == 0x33)
                   fixp = &foo33;
                else if (kk == s2x4 && thislivemask == 0xCC)
                   fixp = &foocc;
@@ -3309,6 +3267,8 @@ back_here:
 
          if (!fixp)
             fail("Can't do this with these people designated.");
+
+         blah:
 
          numsetups = fixp->numsetups & 0xFF;
 
@@ -3502,7 +3462,7 @@ back_here:
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
    concentric_move(ss, &ss->cmd, subsid_cmd_p, schema,
-            0, (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0), result);
+            0, (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0), TRUE, result);
    return;
 
    do_concentric_ends:
@@ -3514,7 +3474,7 @@ back_here:
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
    concentric_move(ss, subsid_cmd_p, &ss->cmd, schema,
-            0, (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0), result);
+            0, (concentric_rules ? DFM1_CONC_CONCENTRIC_RULES : 0), TRUE, result);
    return;
 
    forward_here:

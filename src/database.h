@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 75
+#define DATABASE_FORMAT_VERSION 76
 
 
 
@@ -342,6 +342,7 @@ typedef enum {
 #define CAF__RESTR_RESOLVE_OK 0x30
 #define CAF__PREDS 0x40
 #define CAF__NO_CUTTING_THROUGH 0x80
+#define CAF_LATERAL_TO_SELECTEES 0x100
 
 /* These qualifiers are "overloaded" -- their meaning depends on the starting setup. */
 /* BEWARE!!  This list must track the array "qualtab" in dbcomp.c . */

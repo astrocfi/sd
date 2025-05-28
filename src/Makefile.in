@@ -1,5 +1,5 @@
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <96/01/19 13:27:26 gildea>
+# Time-stamp: <96/05/05 10:50:56 gildea>
 
 srcdir = @srcdir@
 # VPATH is for GNU make
@@ -160,6 +160,12 @@ TXI2HTML = texi2html
 sd_doc.ps: sd_doc.dvi
 	$(DVIPS) -o $@ $?
 
+sessions.ps: sessions.dvi
+	$(DVIPS) -o $@ $?
+
+demo.ps: demo.dvi
+	$(DVIPS) -o $@ $?
+
 sd_doc_toc.html:
 	$(TXI2HTML) -split_node -menu sd_doc.txinfo
 
@@ -220,7 +226,8 @@ dist: dist-files
 	$(RM) $(DIST_TARFILE).Z
 	$(COMPRESS) $(DIST_TARFILE)
 
-dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
+dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS \
+            demo.ps demo.txt sessions.ps sessions.txt pc-files
 
 ls:
 	@echo $(DISTFILES)
@@ -248,7 +255,7 @@ TARFILES2 = sd sdtty mkcalls \
 $(BIN_TARFILE).Z: Makefile $(TARFILES2) $(TARFILES1)
 	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES1) $(TARFILES2)
 	$(RM) $@
-	-$(COMPRESS) $(BIN_TARFILE)
+	-$(COMPRESS) < $(BIN_TARFILE) > $@
 
 pc-files: $(PCFILES)
 

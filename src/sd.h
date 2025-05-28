@@ -817,16 +817,23 @@ typedef enum {
    concept_diagnose
 } concept_kind;
 
+
+/* These bits appear in the "concparseflags" word. */
+/* This is a duplicate, and exists only to make menus nicer.  Ignore it
+   when scanning in parser. */
+#define CONCPARSE_MENU_DUP       0x00000001UL
+/* If the parse turns out to be ambiguous, don't use this one -- yield to the other one. */
+#define CONCPARSE_YIELD_IF_AMB   0x00000002UL
+/* Parse directly.  It directs the parser to allow this concept (and similar concepts)
+   and the following call to be typed on one line.  One needs to be very careful
+   about avoiding ambiguity when setting this flag. */
+#define CONCPARSE_PARSE_DIRECT   0x00000004UL
+
+
 typedef struct {
    Cstring name;
    Const concept_kind kind;
-   Const uint32 miscflags;
-      /* 1 bit -> this is a duplicate in menu;
-         2 bit -> yield if ambiguous.
-         4 bit -> parse directly.  It directs the
-            parser to allow this concept (and similar concepts) and the following call to
-            be typed on one line.  One needs to be very careful about avoiding ambiguity
-            when setting this flag. */
+   Const uint32 concparseflags;   /* See above. */
    Const dance_level level;
    Const struct {
       Const map_thing *maps;
@@ -1593,6 +1600,15 @@ typedef enum {
    interactivity_in_random_search
 } interactivity_state;
 
+typedef struct {
+   selector_kind who;        /* matches <anyone> */
+   direction_kind where;     /* matches <direction> */
+   uint32 tagger;            /* matches <atc> */
+   uint32 circcer;           /* matches <anything> as in <anything> motivate */
+   uint32 number_fields;     /* matches all the number fields */
+   int howmanynumbers;       /* tells how many there are */
+} call_conc_option_state;
+
 typedef enum {
    call_list_mode_none,
    call_list_mode_writing,
@@ -1842,6 +1858,8 @@ extern map_thing map_3x4_2x3;                                       /* in SDTABL
 extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
 extern map_thing map_hv_qtg_2;                                      /* in SDTABLES */
 extern map_thing map_vv_qtg_2;                                      /* in SDTABLES */
+extern map_thing map_ov_hrg_1;                                      /* in SDTABLES */
+extern map_thing map_ov_gal_1;                                      /* in SDTABLES */
 extern map_thing map_tgl4_1;                                        /* in SDTABLES */
 extern map_thing map_tgl4_2;                                        /* in SDTABLES */
 extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
@@ -1908,6 +1926,9 @@ extern interactivity_state interactivity;                           /* in SDMAIN
 extern long_boolean testing_fidelity;                               /* in SDMAIN */
 extern selector_kind selector_for_initialize;                       /* in SDMAIN */
 extern int number_for_initialize;                                   /* in SDMAIN */
+extern call_conc_option_state verify_options;                       /* in SDMAIN */
+extern long_boolean verify_used_number;                             /* in SDMAIN */
+extern long_boolean verify_used_selector;                           /* in SDMAIN */
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 extern long_boolean using_active_phantoms;                          /* in SDMAIN */
@@ -1939,7 +1960,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
 extern long_boolean restore_parse_state(void);
 extern long_boolean deposit_call(callspec_block *call);
-extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fields);
+extern long_boolean deposit_concept(concept_descriptor *conc);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
 extern long_boolean get_real_subcall(
@@ -2219,6 +2240,7 @@ extern void concentric_move(
    calldef_schema analyzer,
    defmodset modifiersin1,
    defmodset modifiersout1,
+   long_boolean recompute_id,
    setup *result);
 
 extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number);

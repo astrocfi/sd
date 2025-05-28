@@ -1416,16 +1416,31 @@ Private int divide_the_setup(
 
             if (assoc(b_2x1, ss, calldeflist)) {
                if (assoc(b_1x2, ss, calldeflist)) {
-                  /* The call has both definitions.  We look at the manner in
-                     which the setup is T-boned in order to figure out how
-                     to divide the setup. */
+                  /* The call has both definitions.
+                     If the "lateral_to_selectees" flag is on (that is, the call is "run"),
+                        We decide what to do according to the direction of the selectees.
+                        There must be at least one, they must be collectively consistent.
+                     Otherwise, we look at the manner in which the setup is T-boned
+                        in order to figure out how to divide the setup. */
 
-                  if ((((ss->people[0].id1 | ss->people[3].id1) & 011) != 011) &&
-                        (((ss->people[1].id1 | ss->people[2].id1) & 011) != 011))
-                     division_maps = &map_2x2v;
-                  else if ((((ss->people[0].id1 | ss->people[1].id1) & 011) == 011) ||
-                        (((ss->people[2].id1 | ss->people[3].id1) & 011) == 011))
-                     fail("Can't figure out who should be working with whom.");
+                  if (calldeflist->callarray_flags & CAF_LATERAL_TO_SELECTEES) {
+                     uint32 selmask = 0;
+
+                     for (i=0 ; i<4 ; i++) if (selectp(ss, i)) selmask |= ss->people[i].id1;
+
+                     if (selmask == 0 || (selmask & 011) == 011)
+                        fail("People are not working with each other in a consistent way.");
+                     else if (selmask & 1)
+                        division_maps = &map_2x2v;
+                  }
+                  else {
+                     if ((((ss->people[0].id1 | ss->people[3].id1) & 011) != 011) &&
+                           (((ss->people[1].id1 | ss->people[2].id1) & 011) != 011))
+                        division_maps = &map_2x2v;
+                     else if ((((ss->people[0].id1 | ss->people[1].id1) & 011) == 011) ||
+                           (((ss->people[2].id1 | ss->people[3].id1) & 011) == 011))
+                        fail("Can't figure out who should be working with whom.");
+                  }
 
                   goto divide_us_no_recompute;
                }
@@ -1453,13 +1468,13 @@ Private int divide_the_setup(
 
             unsigned long int elong = 0;
 
-            if (assoc(b_2x1, ss, calldeflist)) {
-               elong |= (2 -  (newtb & 1));
-            }
+            /* If this is "run" and people aren't T-boned, just ignore the 2x1 definition. */
 
-            if (assoc(b_1x2, ss, calldeflist)) {
+            if (!(calldeflist->callarray_flags & CAF_LATERAL_TO_SELECTEES) && assoc(b_2x1, ss, calldeflist))
+               elong |= (2 -  (newtb & 1));
+
+            if (assoc(b_1x2, ss, calldeflist))
                elong |= (1 + (newtb & 1));
-            }
 
             if (elong == 0) {
                /* Neither 2x1 or 1x2 definition existed.  Check for 1x1.
@@ -2079,6 +2094,11 @@ Private int divide_the_setup(
          if (final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             goto divide_us_no_recompute;
 
+         /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope. */
+
+         if (calldeflist->callarray_flags & CAF_LATERAL_TO_SELECTEES)
+            goto divide_us_no_recompute;
+
          /* See if this call has applicable 2x6 or 2x8 definitions and matrix expansion is permitted.
             If so, that is what we must do.  But if it has a 4x4 definition also, it is ambiguous,
             so we can't do it. */
@@ -2363,7 +2383,7 @@ Private int divide_the_setup(
    do_concentrically:
 
    conc_cmd = ss->cmd;
-   concentric_move(ss, &conc_cmd, &conc_cmd, schema_concentric, 0, 0, result);
+   concentric_move(ss, &conc_cmd, &conc_cmd, schema_concentric, 0, 0, FALSE, result);
    return 1;
 }
 
