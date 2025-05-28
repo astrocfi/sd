@@ -30,8 +30,6 @@
 
 
 #include "sd.h"
-extern map_thing map_tgl4_1;
-extern map_thing map_tgl4_2;
 
 
 Private void innards(
@@ -123,9 +121,10 @@ Private void innards(
          z[3].rotation += 2;
          break;
       case MPKIND__DMD_STUFF:
+      case MPKIND__ALL_8:
          /* These particular maps misrepresent the rotation of subsetup 2, so
             we have to repair things when a shape-changer is called. */
-         z[1].rotation += 2;
+         if ((z[0].rotation&3) != 0) z[1].rotation += 2;
          break;
    }
 

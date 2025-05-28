@@ -1,10 +1,9 @@
 # Generated automatically from Makefile.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <93/12/05 18:21:33 gildea>
+# Time-stamp: <94/01/20 10:59:00 gildea>
 
 srcdir = .
 # VPATH is for GNU make
-VPATH = .
 
 # This gives the compiler name and any switches that it needs to make
 # it operate the way we want (ANSI language, standards conformance,
@@ -125,7 +124,7 @@ info: sd_doc.info
 dvi: sd_doc.dvi
 ps: sd_doc.ps
 
-sd_doc.dvi sd_doc.info sd_doc.txt: sd_doc.txinfo readme.txinfo install.txinfo
+sd_doc.dvi sd_doc.info sd_doc.txt: sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
 
 # additional suffixes used for the documentation
 .SUFFIXES: .dvi .info .txt .txinfo
@@ -153,7 +152,7 @@ sd_doc.ps: sd_doc.dvi
 
 # Stephen's fancy way of producing a pretty, compact PostScript file.
 # You don't want to know.
-sd_doc.PS: sd_doc.txinfo readme.txinfo install.txinfo
+sd_doc.PS: sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo
 	if [ -r make-ps ]; then make-ps; \
 	else make sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
 
@@ -165,21 +164,21 @@ README: readme.txinfo
 
 
 docclean:
-	$(RM) *.aux *.log *.toc *.dvi
-	$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
+	-$(RM) *.aux *.log *.toc *.dvi
+	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
 
 clean:: docclean
 clean::
-	$(RM) *.o sd sdtty mkcalls
-	$(RM) sd_calls.dat sd.tar sd.tar.Z
-	$(RM) lint.out
+	-$(RM) *.o sd sdtty mkcalls
+	-$(RM) sd_calls.dat sd.tar sd.tar.Z
+	-$(RM) lint.out
 
 distclean: clean
-	$(RM) sequence.*
-	$(RM) *~ core
+	-$(RM) sequence.*
+	-$(RM) *~ core
 
 realclean: distclean
-	$(RM) *.info *.PS sd_doc.txt sd_doc.ps
+	-$(RM) *.info *.PS sd_doc.txt sd_doc.ps
 
 LINT = /usr/lang/alint
 
@@ -188,7 +187,7 @@ lint:
 
 DISTTXT = README INSTALL Relnotes oldnotes COPYING \
             Imakefile Makefile.in configure configure.in Sd.res sd_calls.txt \
-            db_doc.txt sd_doc.txinfo readme.txinfo install.txinfo \
+            db_doc.txt sd_doc.txinfo readme.txinfo install.txinfo gpl.txinfo \
             sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
 MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
@@ -210,12 +209,11 @@ dist-files: configure INSTALL README sd_doc.txt sd_doc.PS pc-files
 ls:
 	@echo $(DISTFILES)
 
-bnarc:
-	lharc a sd300bn readme install relnotes oldnotes copying \
-	 sd_calls.txt sd_calls.dat db_doc.txt \
-	 sdtty.exe mkcalls.exe go32.exe \
-	 sd_doc.txt sd_doc.ps
-	lharc s sd300bn
+sd300bn: sdtty.exe mkcalls.exe sd_calls.dat
+	lha a $@ readme relnotes oldnotes
+	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
+	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
+	lha s $@
 
 pc-files: pcfiles.lnk makefile.pc
 

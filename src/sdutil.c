@@ -846,6 +846,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         number_list >>= 4;    /* Get ready for next number. */
                         np += 2;              /* skip the indicator */
                         break;
+                     case 'u':     /* Need to plug in an ordinal number. */
+                        write_blank_if_needed();
+                        writestuff(ordinals[(number_list & 0xF)-1]);
+                        number_list >>= 4;    /* Get ready for next number. */
+                        np += 2;              /* skip the indicator */
+                        break;
                      case 'e':
                         if (use_left_name) {
                            np += 2;

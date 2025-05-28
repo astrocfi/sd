@@ -1,5 +1,5 @@
-		   RELEASE NOTES FOR SD VERSION 30.6
-		 Database version = 30.6 format = 44,
+		   RELEASE NOTES FOR SD VERSION 30.7
+		 Database version = 30.7 format = 44,
     X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
 
 Took out the words "end-to-end" for those versions of concepts like
@@ -12,7 +12,12 @@ usual phantom concepts, as well as with "split" and "each 1x4".  It may
 also be used with "standard", as in "heads ARE STANDARD IN MATRIX SPLIT
 PHANTOM LINES slim down".
 
-New calls: [cross] kick by <n>.
+New calls: [cross] kick by <n>.  Double/triple star thru.  Square thru
+etc. to a wave.  Square thru but on the <Nth> hand (courtesy of Dave
+Decot).  Drop in/out are now legal from facing diamonds.  Many
+minor improvements.
+
+New concepts: all 4 couples and all 8.  Inner dual boxes.
 
 I have yielded to massive pressure and allowed "bigblock" and "stagger" to
 be applicable to any kind of distorted lines or columns respectively.

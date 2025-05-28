@@ -486,6 +486,7 @@ typedef enum {
    MPKIND__X_SPOTS,
    MPKIND__4_QUADRANTS,
    MPKIND__4_EDGES,
+   MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
    MPKIND__STAG
 } mpkind;
@@ -590,6 +591,7 @@ typedef enum {
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
+   concept_inner_boxes,
    concept_triple_diag,
    concept_triple_diag_together,
    concept_triple_twin,
@@ -618,6 +620,7 @@ typedef enum {
    concept_on_your_own,
    concept_trace,
    concept_ferris,
+   concept_all_8,
    concept_centers_and_ends,
    concept_twice,
    concept_sequential,
@@ -1087,7 +1090,8 @@ typedef enum {
 typedef enum {
    merge_strict_matrix,
    merge_c1_phantom,
-   merge_c1_phantom_nowarn
+   merge_c1_phantom_nowarn,
+   merge_without_gaps
 } merge_action;
 
 typedef struct {
@@ -1327,6 +1331,8 @@ extern map_thing map_3x4_2x3;                                       /* in SDTABL
 extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
 extern map_thing map_hv_qtg_2;                                      /* in SDTABLES */
 extern map_thing map_vv_qtg_2;                                      /* in SDTABLES */
+extern map_thing map_tgl4_1;                                        /* in SDTABLES */
+extern map_thing map_tgl4_2;                                        /* in SDTABLES */
 extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
@@ -1534,6 +1540,8 @@ extern void initialize_getout_tables(void);
 
 extern void mirror_this(setup *s);
 extern void do_stability(unsigned int *personp, stability stab, int turning);
+extern void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags);
+extern void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags);
 extern void basic_move(
    setup *ss,
    int tbonetest,

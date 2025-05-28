@@ -178,6 +178,7 @@ Private resolve_tester test_8ch_pthla   = {0202, 0102, 0200, 0176, 0102, 0076, l
 Private resolve_tester test_tby_la      = {0176, 0676, 0200, 0202, 0676, 0702, l_mainstream,      resolve_la, 7};               /* LA from trade-by. */
 Private resolve_tester test_tby_tbyla   = {0176, 0476, 0200, 0202, 0476, 0502, l_mainstream,      resolve_tby_la, 0};           /* trade-by-LA from trade-by. */
 Private resolve_tester test_tbone_la    = {0207, 0707, 0167, 0207, 0667, 0707, l_mainstream,      resolve_la, 7};               /* LA from T-bone setup, ends facing. */
+Private resolve_tester test_sqo_la      = {0207, 0707, 0173, 0207, 0673, 0707, l_mainstream,      resolve_la, 7};               /* LA from squared set, back-to-back. */
 Private resolve_tester test_dpt_dix     = {0700, 0600, 0476, 0700, 0600, 0600, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from DPT. */
 Private resolve_tester test_qtag_dix    = {0700, 0476, 0502, 0700, 0300, 0502, dixie_grand_level, resolve_dixie_grand, 2};      /* dixie grand from 1/4 tag. */
 Private resolve_tester test_3tag_rg     = {0176, 0676, 0200, 0202, 0700, 0702, l_mainstream,      resolve_rlg, 4};              /* RLG from 3/4 tag. */
@@ -299,6 +300,7 @@ extern resolve_indicator resolve_p(setup *s)
             case 0101:
                switch ((s->people[5].id1 - s->people[2].id1) & 0777) {
                   case 0676: testptr = &test_8ch_la; goto check_me;
+                  case 0667: testptr = &test_sqo_la; goto check_me;
                }
                break;
             case 0010:

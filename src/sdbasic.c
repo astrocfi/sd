@@ -21,11 +21,12 @@
 /* This defines the following functions:
    mirror_this
    do_stability
+   check_line_restriction
+   check_column_restriction
    basic_move
 */
 
 #include "sd.h"
-extern map_thing map_tgl4_1;
 
 
 /* This file uses a few bogus setups.  They are never allowed to escape:
@@ -273,6 +274,8 @@ Private void fix_collision(
 
 Private int identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 Private int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+Private int ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
+Private int ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
 Private int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 Private int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
 Private int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
@@ -2950,8 +2953,26 @@ extern void basic_move(
                else
                   fail("T-bone call went to a weird setup.");
             }
-            else
-               fail("T-bone call went to a weird setup.");
+            else {
+               if (result->kind == s4x4 && linedefinition->end_setup == s2x4) {
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatel = &ftc4x4[8];   /* Shouldn't really happen -- can't specify rotation if end=4x4. */
+                     rotfudge_line = 2;
+                  }
+                  else
+                     final_translatel = &ftc4x4[0];
+               }
+               else if (result->kind == s_c1phan && linedefinition->end_setup == s2x4) {
+                  if (goodies->callarray_flags & CAF__ROT) {
+                     final_translatel = &ftcphan[8];   /* Shouldn't really happen -- can't specify rotation if end=4x4. */
+                     rotfudge_line = 2;
+                  }
+                  else
+                     final_translatel = &ftcphan[0];
+               }
+               else
+                  fail("T-bone call went to a weird setup.");
+            }
          }
          else if (inconsistent_rotation) {
             if (result->kind == s2x4) {
