@@ -3246,6 +3246,8 @@ extern void concentric_move(
    setup_kind orig_outers_start_kind;
    uint32_t orig_outers_start_dirs;
    uint32_t orig_outers_start_directions[32];
+   // We might need this for tricky counter rotate 1/8.
+   uint64_t orig_outers_herit_bits;
 
    // The original info about the people who will FINISH on the outside.
    setup_kind final_outers_start_kind;
@@ -3400,6 +3402,7 @@ extern void concentric_move(
    }
 
    // Get initial info for the original ends.
+   orig_outers_herit_bits = begin_outer.cmd.cmd_final_flags.herit;
    orig_outers_start_dirs = 0;
    for (i=0, k=1, eemask=0;
         i<=attr::klimit(begin_outer.kind);
@@ -4573,9 +4576,27 @@ extern void concentric_move(
                         final_elongation ^= 3;
                      }
                   }
-                  final_elongation ^= 3;
-               }
 
+                  // If people are counter-rotating clockwise 1/8, the previous code
+                  // will have them not counter-rotate at all, but will just report an
+                  // 1/8 rotation in the result.  So, in that case, we do *NOT* flip the
+                  // final_elongation state.  But if they are counter-rotating
+                  // counterclockwise 1/8, the previous code will have them counter
+                  // rotate 1/4 and then undo 1/8.  So we *DO^ flip the final_elongation
+                  // state.  The test is made by examining person 2: if facing North or
+                  // East, flip it.  We only need to check that person.  If the
+                  // direction isn't consistent among all of them, the call can't be
+                  // done anyway.  Test is t12t.
+                  if (orig_outers_start_kind == s2x2 &&
+                      begin_outer.cmd.callspec == base_calls[base_call_ctrrot] &&
+                      (orig_outers_herit_bits & INHERITFLAG_HALF) != 0)
+                  {
+                     if ((outer_inners[0].people[2].id1 & 2) == 0)
+                        final_elongation ^= 3;
+                  }
+                  else
+                     final_elongation ^= 3;
+               }
             }
             else if (DFM1_CONC_FORCE_SPOTS & localmods1) {
                // It's OK the way it is.

@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.50
-@set title2 Database version = 39.50 format = 400
+@set title1 RELEASE NOTES FOR VERSION 39.51
+@set title2 Database version = 39.51 format = 400
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.51::
 * 39.50::
 * 39.49::
 * 39.48::
@@ -150,7 +151,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.50, Top, (dir)
+@node Intro, 39.51, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -161,16 +162,29 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2023 William B. Ackerman
 @sp 3
 @menu
-* 39.50::               Changes in the current version
+* 39.51::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.50, 39.49, Intro, Top
+@node 39.51, 39.50, Intro, Top
+@unnumberedsec Version 39.51 changes
+
+The program can do better with @strong{counter rotate} 1/8.
+@sp 1
+It is not legal to do a @strong{trade} with a phantom, unless some concept
+has been given that legitimizes phantoms.
+@sp 1
+A bug in @strong{1/2 centers trade} was fixed.
+@sp 1
+The program can do better with @strong{coordinate to a diamond} in T-bone setups.
+
+@c ************
+@node 39.50, 39.49, 39.51, Top
 @unnumberedsec Version 39.50 changes
 
 Handling of @strong{3x2 acey deucey} was improved.
-
-Plain @strong{chisel thru but <anything> is disallowed.
+@sp 1
+Plain @strong{chisel thru but <anything>} is disallowed.
 
 @c ************
 @node 39.49, 39.48, 39.50, Top

@@ -1795,6 +1795,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s1x3dmd, cr_spd_base_mwv, 4, {1, 2, 6, 5, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_wingedstar, cr_spd_base_mwv, 4, {1, 2, 6, 5, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_pts_mwv, 2, {0, 2, -1},

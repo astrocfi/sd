@@ -436,6 +436,9 @@ static collision_map collision_map_table[] = {
    {2, 0x00000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},
     s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
 
+   {6, 0x00000033, 0xBB, 0x88, {0, 1, 3, 4, 5, 7},   {0, 1, 3, 4, 5, 6},   {0, 1, 2, 4, 5, 7},
+    s_rigger,        s_rigger,        0, warn__none, 0},          // Ends 1/2 trade in lines.
+
    // These items handle single-spot collisions in a 1x4 from a T-boned 2x2.
    {3, 0x00000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},
     s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.

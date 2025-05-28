@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2023  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1436,6 +1436,17 @@ static const coordrec squeezething4dmd = {s4dmd, 0x23,
    {-10,  -5,   5,  10,  14,  10,   6,   2,  10,   5,  -5, -10, -14, -10,  -6,  -2},
    {  6,   6,   6,   6,   0,   0,   0,   0,  -6,  -6,  -6,  -6,   0,   0,   0,   0}, {0}};
 
+static const coordrec supernicethingqtag = {s_qtag, 0x23,   /* really precise coordinates */
+   { -2,   2,   6,   2,   2,  -2,  -6,  -2},
+   {  4,   4,   0,   0,  -4,  -4,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1, -1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
 
 enum { matrix_info_capacity = MAX_PEOPLE };
 
@@ -1457,8 +1468,11 @@ static int start_matrix_call(
    const coordrec *nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
    const coordrec *thingyptr = setup_attrs[ss->kind].setup_coords;
 
-   if (the_schema == schema_counter_rotate) {
-      thingyptr = nicethingyptr;
+   // For trade, we use the accurate info.  You're not allowed to press or truck
+   // across the points of an hourglass, but you are allowed to trade.
+   if (the_schema == schema_counter_rotate || (flags & MTX_FIND_TRADERS) != 0) {
+      thingyptr = (ss->kind == s_qtag) ?
+         &supernicethingqtag : nicethingyptr;
    }
 
    if (flags & (MTX_FIND_SQUEEZERS|MTX_FIND_SPREADERS)) {
@@ -1555,6 +1569,42 @@ struct checkitem {
 };
 
 
+static const coordrec spec_qtag = {s_qtag, 0x23,
+   { -2,   2,   5,   1,   2,  -2,  -5,  -1},
+   {  6,   6,   0,   0,  -6,  -6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1, -1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spec_rigger = {s_rigger, 0x23,
+   { -2,   2,   5,   5,   2,  -2,  -5,  -5},
+   {  2,   2,   0,   0,  -2,  -2,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  6,  7,  0,  1,  3,  2, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spec_4x4 = {s4x4, 0x23,
+   {  6,   6,   6,   2,   6,   2,  -2,   2,  -6,  -6,  -6,  -2,  -6,  -2,   2,  -2},
+   {  6,   2,  -2,   2,  -5,  -5,  -5,  -2,  -5,  -2,   2,  -2,   5,   5,   5,   2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, 12, 13, 14,  0, -1, -1,
+      -1, -1, 10, 15,  3,  1, -1, -1,
+      -1, -1,  9, 11,  7,  2, -1, -1,
+      -1, -1,  8,  6,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec spec_qtag1 = {s_qtag, 0x23,
    { -4,   4,   6,   2,   4,  -4,  -6,  -2},
    {  6,   6,   0,   0,  -6,  -6,   0,   0}, {
@@ -1564,6 +1614,18 @@ static const coordrec spec_qtag1 = {s_qtag, 0x23,
       -1, -1,  6,  7,  3,  2, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1,  5, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spec_ptpd = {s_ptpd, 0x23,
+   {-12,  -8,  -1,  -8,  12,   8,   1,   8},
+   {  0,   2,   0,  -2,   0,  -2,   0,   2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  6, -1,  7,  4,
+      -1, -1,  3, -1, -1, -1,  5, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
@@ -1889,6 +1951,18 @@ static const int8_t qtagto3x4correction[] =
 static const int8_t s3x6correction[] =
 {2, 5, 2, 4,     -2, 5, -2, 4,      2, -5, 2, -4,    -2, -5, -2, -4, 127};
 
+static const int8_t qtagcorrection[] =
+{0, -3, 0, -5,    0, 3, 0, 5, 127};
+
+static const int8_t ptpdcorrection[] =
+{-2, 2, -2, 8,    2, 2, 2, 8,    2, -2, 2, -8,    -2, -2, -2, -8,    0, 3, 0, 12,   0, -3, 0, -12, 127};
+
+static const int8_t qrigcorrection[] =
+{0, -3, 0, -5,    0, 3, 0, 5, 127};
+
+static const int8_t q4x4correction[] =
+{-2, 3, -2, 5,    2, -3, 2, -5,    -2, -3, -2, -5,    2, 3, 2, 5, 127};
+
 static const coordrec qtagto4x5 = {s4x5, 0x123,
    { -8,  -4,   0,   4,   8,   8,   5,   0,  -5,  -8,   8,   4,   0,  -4,  -8,  -8,  -5,   0,   5,   8},
    {  6,   9,   6,   9,   6,   2,   4,   2,   5,   2,  -6,  -9,  -6,  -9,  -6,  -2,  -4,  -2,  -5,  -2}};
@@ -1996,6 +2070,10 @@ static const checkitem checktable[] = {
    {0x00630095, 0x10800A00, spgdmdccw, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00A20026, 0x08008404, s_rigger, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x002600A2, 0x0800C004, s_rigger, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00260033, 0x20008004, nothing, 0x201, warn__none, &spec_rigger, qrigcorrection},
+   {0x00620033, 0x04488006, nothing, 0x200, warn__none, &spec_4x4, q4x4correction},
+   {0x00660033, 0x20180002, nothing, 0x201, warn__none, &spec_qtag, qtagcorrection},
+   {0x00260033, 0x20108004, nothing, 0x201, warn__none, &spec_ptpd, ptpdcorrection},
    {0x00770077, 0x00418004, s_galaxy, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    // Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle.
    {0x00840066, 0x0C000108, nothing, 0, warn__check_galaxy, &spec_spin_gal, (const int8_t *) 0},
@@ -2217,6 +2295,7 @@ static const checkitem checktable[] = {
    {0x01130066, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x01130026, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550057, 0x20000620, s_hrglass, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00670057, 0x00400620, s_hrglass, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00570067, 0x09400020, s_hrglass, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
 
    // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.
@@ -2349,6 +2428,7 @@ static const checkitem checktable[] = {
    {0x00620004, 0x01000400, s1x4, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00040062, 0x08000200, s1x4, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550026, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+   {0x00510004, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00260055, 0x01000080, sdmd, 1, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00000005, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00550004, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
@@ -2421,14 +2501,15 @@ static int finish_matrix_call(
    uint32_t people_needing_grab_info = 0UL;  // Little-endian, of course.
    uint32_t grab_directions = 0UL;           // 1 for CW, 2 for CCW
 
-   // If doing a schema_counter_rotate, we may need two passes.  In the first,
-   // we do all the processing for people whose counter rotate direction can be determined.
+   // If doing a schema_counter_rotate, we may need two passes.  In the first, we do all
+   // the processing for people whose counter rotate direction can be determined.
 
    for (int pass = 0 ; pass < 2 ; pass++) {
       if (pass >= 1 && (the_schema != schema_counter_rotate || people_needing_grab_info == 0)) continue;
 
       for (i=0; i<nump; i++) {
-         // Yes, even phantoms participate in a counter rotate.  Otherwise, just skip this person.
+         // Yes, even phantoms participate in a counter rotate.
+         // Otherwise, just skip this person.
          if (matrix_info[i].id1 == 0 && the_schema != schema_counter_rotate) continue;
 
          alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
@@ -2611,7 +2692,7 @@ static int finish_matrix_call(
    warn(p->warning);
 
    const coordrec *checkptr = (p->new_checkptr) ? p->new_checkptr :
-      (the_schema == schema_counter_rotate) ?
+      (the_schema == schema_counter_rotate || (flags & MTX_FIND_TRADERS) != 0) ?
       setup_attrs[p->new_setup].nice_setup_coords:
       setup_attrs[p->new_setup].setup_coords;
 
@@ -2738,10 +2819,13 @@ static int matrixmove(
          }
 
          if (flags & MTX_FIND_TRADERS) {
-            const coordrec *checkptr = setup_attrs[ss->kind].setup_coords;
+            const coordrec *checkptr = (ss->kind == s_qtag) ?
+               &supernicethingqtag :
+               setup_attrs[ss->kind].nice_setup_coords;
             int32_t d = thisrec->dir;
-            // These numbers are -1, 0, or +1.  They tell how far to move to get the next person
-            // to this person's own left.  Negatives of these to get people to the right.
+            // These numbers are -1, 0, or +1.  They tell how far to move (in the actual
+            // "absolute" setup) to get the next person to this person's own left.
+            // Negatives of these get people to this person's own right.
             int dyleft = (d&1) * ((d<<30)>>30);
             d += 3;
             int dxleft = (d&1) * ((d<<30)>>30);
@@ -2751,10 +2835,15 @@ static int matrixmove(
             int yposition[2];
             bool passed_a_gap[2];
 
-            // This is 0 for the search to the left, then 1 for the search to the right.
+            // Search farther and farther to this person's own left, for the person they
+            // are to trade with.  Then do it again to their right, Record the nearest
+            // one in each case, of course.
+
             for (int searchdir=0; searchdir<2; searchdir++) {
+               int actualdel = 1 - searchdir*2;
+               // Search to left is searchdir=0, actualdel=1.
+               // Then search to right is searchdir=1, actualdel=-1.
                bool gap = false;
-               int actualdel = 1 - searchdir*2;   // This is -1 for left, +1 for right.
                dircount[searchdir] = 0;
                int tx = thisrec->x;
                int ty = thisrec->y;
@@ -2771,7 +2860,7 @@ static int matrixmove(
                      // keep looking in the same direction, with step size reduced to 1,
                      // until we find a valid spot or go past 10.
                      failcount++;
-                     if (failcount > 6)
+                     if (failcount > 8)
                         break;   // We really can't find a spot.
                      gap = true;
                      tx -= dxleft * actualdel * 3;  // Sleazy way to make the next step size be 1.
@@ -2806,8 +2895,13 @@ static int matrixmove(
             }
 
             // One of the directions must have an odd count, the other an even count.
+            //
+            // Most exceptions allow the next definition to be tried (and "<anyone trade>"
+            // has a subsequent definition.)  But if there simply is no unambiguous
+            // selected person to trade with, this call simply can't be done, and the
+            // "array" definition can't help.
             if (((dircount[0] + dircount[1]) & 1) == 0)
-               fail("Can't find trade target.");
+               fail_no_retry("Can't find trade target.");
 
             int whichway = (dircount[0] & 1) ? 0 : 1;   // 0 if left, 1 if right.
 
@@ -2819,12 +2913,13 @@ static int matrixmove(
 
             if (ss->cmd.cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF)) {
                absdelx >>= 1;
+               absdely = (thisrec->dir & 2) != 0 ? 3 : -3;
                thisrec->deltarot = 3 - (whichway << 1);
             }
 
             thisrec->roll_stability_info = callstuff[whichway];
 
-            // This suff is absolute, but later code wants it relative and will convert
+            // This stuff is absolute, but later code wants it relative and will convert
             // to absolute, so we have to unwind that.
             switch (thisrec->dir) {
             case 0:

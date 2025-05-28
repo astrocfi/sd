@@ -4115,10 +4115,10 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    dmd_pts_1f              Q        qtag, dmd - the points are facing the same way.
 
-   spd_base_mwv            Q        spindle, 1x3dmd - for a spindle, it is like "dmd_ctrs_mwv"
-                                    above, but tests only the outer 4 of the center 2x3.
-                                    The very center 2 are ignored.  For a 1x3dmd, does an
-                                    analogous thing with pairs (1,2) and (5,6).
+   spd_base_mwv            Q        spindle, 1x3dmd, wingedstar - for a spindle, it is like
+                                    "dmd_ctrs_mwv" above, but tests only the outer 4 of the
+                                    center 2x3.  The very center 2 are ignored.  For a 1x3dmd,
+                                    does an analogous thing with pairs (1,2) and (5,6).
 
    ctr_pts_rh, ctr_pts_lh  Q        qtag, 2x1dmd, hrglass, dhrglass, bone, bone6,
                                        short6, star - the "points of the centers"
