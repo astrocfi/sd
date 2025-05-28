@@ -492,7 +492,7 @@ Cstring command_commands[] = {
    "abort this sequence",
    "insert a comment",
    "change output file",
-   "change header comment",
+   "change title",
    "end this sequence",
    "keep picture",
    "refresh display",
@@ -920,11 +920,11 @@ extern int uims_do_header_popup(char dest[])
 {
    if (header_comment[0]) {
       char buffer[MAX_TEXT_LINE_LENGTH];
-      (void) sprintf(buffer, "Current header comment is \"%s\".\n", header_comment);
+      (void) sprintf(buffer, "Current title is \"%s\".\n", header_comment);
       put_line(buffer);
       current_text_line++;
    }
-   return get_popup_string("Enter new header", dest);
+   return get_popup_string("Enter new title", dest);
 }
 
 extern int uims_do_getout_popup(char dest[])

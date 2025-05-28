@@ -123,7 +123,7 @@ static Cstring startup_commands[] = {
    "toggle concept levels",
    "toggle active phantoms",
    "change output file",
-   "change header comment",
+   "change title",
    (Cstring) 0
 };
 

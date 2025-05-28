@@ -18,7 +18,7 @@ APPLICATION_INTERFACE sd_dialog
       COMP => <RETURN>
       END
 
-   task$change_header := NULL:
+   task$change_title := NULL:
       COMP => <RETURN>
       END
 
@@ -705,10 +705,10 @@ USER_INTERFACE sd_dialog
                              &"name of the output file." ;
                   END
                header_icon := NICE_ICON:
-                  TASK = task$change_header ;
-                  STRING = "Change header comment" ;
-                  HELP_TEXT = "Select HEADER to change the"
-                             &"head comment printed on each sequence." ;
+                  TASK = task$change_title ;
+                  STRING = "Change title" ;
+                  HELP_TEXT = "Select TITLE to change the"
+                             &"title printed on each sequence." ;
                   END
                getout_icon := NICE_ICON:
                   TASK = getout_task ;
@@ -823,7 +823,7 @@ USER_INTERFACE sd_dialog
                 "Toggle concept levels"  => start$toggle_conc
                 "Toggle active phantoms" => start$toggle_act
                 "Change output file"     => start$change_outfile
-                "Change header comment"  => start$change_header_comment) ;
+                "Change title"           => start$change_header_comment) ;
             HELP_TEXT = "You are about to start a sequence."
                        &"Select the initial call or designation." ;
             END )
@@ -880,12 +880,12 @@ USER_INTERFACE sd_dialog
    header_popup := POPUP:
       [m1] => <header_popup popdown; header_abort_task comp> ;
       leave => <header_popup popdown; header_abort_task comp> ;
-      HELP_TEXT = "Type a header to appear on all sequences, then press <return>."
+      HELP_TEXT = "Type a title to appear on all sequences, then press <return>."
                  &"Move the mouse away to abandon the change and continue the sequence." ;
       CONTENTS = NICE_ROW:
          ORIENTATION = vertical ;
          CONTENTS = (
-            NICE_HEADER: TEXT = "New header comment."; END
+            NICE_HEADER: TEXT = "New title."; END
             NICE_STRING_FIELD:
                TASK = header_task ;
                SIZE = (35 1) chars ;
@@ -1197,7 +1197,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$distort_concept_menu_1 ;
-                     SIZE = ((5 19) (35 19) (100 19)) chars ;
+                     SIZE = ((5 21) (35 21) (100 21)) chars ;
                      END )
                END
             ROW:
@@ -1208,7 +1208,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$distort_concept_menu_2 ;
-                     SIZE = ((5 19) (35 19) (100 19)) chars ;
+                     SIZE = ((5 21) (35 21) (100 21)) chars ;
                      END )
                END
             ROW:
@@ -1219,7 +1219,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$distort_concept_menu_3 ;
-                     SIZE = ((5 19) (35 19) (100 19)) chars ;
+                     SIZE = ((5 21) (35 21) (100 21)) chars ;
                      END )
                END )
          END

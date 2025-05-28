@@ -159,6 +159,30 @@ CD \SD
 A:INSTALL
 @end example
 
+On Windows 95, you need to perform some additional steps.  After
+installing the files as shown above, click on "start", "run",
+and type
+
+@example
+CD \SD
+GO.BAT
+@end example
+
+When it says "finished", get rid of the window by double-clicking it.
+Now when you select "start" and "programs", there should be a
+subdirectory called "sd".  If you click on it, it will list the
+various levels.  Click on the desired level, and it should start.
+
+When you use Sdtty on a PC, you must not have the "NOEMS" option set
+in the system configuration.  Computers sometimes have a line like this
+in the \CONFIG.SYS file:
+
+@example
+DEVICE=C:\WINDOWS\EMM386.EXE X=A000-C7FF NOEMS 
+@end example
+
+You must remove the "NOEMS".
+
 Sd is also available via anonymous FTP from the directory
 @file{misc/sd/} on host ftp.x.org.
 FTP is the Internet file transfer protocol.
@@ -197,12 +221,6 @@ The file
 @file{<A HREF="ftp://ftp.x.org/misc/sd/Manifest">Manifest</A>}
 @end ifset
 contains a description of all the files in this directory.
-
-There is not yet a pre-built version for Macintosh; you have to compile
-it yourself.
-See ``Building on the Mac'' in the @file{INSTALL} file.
-Binaries for the Macintosh and other systems may become
-available later.  See the FTP site for availability.
 
 You must transfer the files in FTP's binary mode.
 

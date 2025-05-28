@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: December 19, 1995
-@set sd-version 31.56
+@set Time-stamp: January 1, 1996
+@set sd-version 31.57
 @set full-manual
 @c %**end of header
 @iftex
@@ -2864,6 +2864,48 @@ The six concepts are
 In general, be aware that the choice of words and punctuation that the program
 uses for these concepts is determined by the need to avoid ambiguity, and may
 not be the words that you should use when calling.
+
+Also, the program is very fussy about using the designators correctly.  A large
+number of designators are provided to help you with this.  In addition to the usual
+@code{heads}, @code{sides}, @code{boys}, @code{girsl}, @code{head corners},
+@code{centers}, @code{ends}, @code{center 2}, @code{center 6}, @code{outer 2}, and
+@code{outer 6}, there are some that are designed for difficult situations.
+
+@table @code
+@item center 4
+This is intended for use in a parallelogram or offset lines
+or columns.  It designates the center triple box, or center triple
+line/column, respectively.  Just saying @code{centers} will not be
+effective here.
+
+@item outer pairs
+This designates the people that are not in the @code{center 4}.
+In a parallelogram, it designates the pairs of people in the outer triple
+boxes (the ``wings'').  In offset lines or columns, it designates
+the the pairs of people in the outer triple lines or columns.
+
+@item center diamond
+This is intended for use in a setup with a wave between, and
+perpendicular to, two miniwaves.  (This is the setup that results
+from a @code{1/2 circulate} from waves.)  In this setup, @code{centers}
+means the center @emph{wave}.  If you want the center diamond instead, you
+must say so.
+
+@item center 1x4
+This is intended for use in things like 3x1 diamonds.  (This is the setup
+that results from a @code{1/2 acey deucey} from waves.)  In this setup,
+@code{centers} means the center @emph{diamond}.  If you want the center wave
+instead, you must say @code{center 1x4}.  The program uses the designator
+@code{center 1x4} as a catch-all for the center line or the center column.
+When reading the card, you probably ought to be more specific.
+
+@item center 1x6
+This is similar, but refers to a line or column of 6.  It is intended
+for use in things like 3x1 diamonds, when you want the center wave of 6
+to do, for example, a @code{grand swing thru}.  The program will not
+accept @code{centers} or @code{center 6} for this, since those terms are not
+well-defined in this situation.
+@end table
 
 @subsection So-And-So
 

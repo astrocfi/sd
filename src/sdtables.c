@@ -23,6 +23,7 @@
    filename_strings
    level_threshholds
    menu_names
+   id_bit_table_3x4_h
    map_spec_star12
    map_spec_star12v
    map_spec_star16
@@ -890,19 +891,38 @@ Private id_bit_table id_bit_table_bigdmd[] = {
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
    {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS}};
 
+/* This is the "standard" bit table for a 3x4.  It is used when the population
+   is offset lines.  It recognizes "outer pairs". */
 Private id_bit_table id_bit_table_3x4[] = {
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS, ID2_OUTRPAIRS},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4},
-   {ID2_CTR4,      ID2_CTR4,      ID2_CTR4,      ID2_CTR4}};
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4, ID2_OUTRPAIRS | ID2_NCTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4},
+   {ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4,       ID2_CTR4 | ID2_CTR1X4}};
+
+/* This is the "H" bit table for a 3x4.  It is used when the population
+   is an "H".  It recognizes center 2/outer 6, and a center 1x4.
+   Note that this table is external. */
+id_bit_table id_bit_table_3x4_h[] = {
+   {ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4},
+   {0, 0, 0, 0},
+   {0, 0, 0, 0},
+   {ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4},
+   {ID2_OUTR6 | ID2_CTR1X4,  ID2_OUTR6 | ID2_CTR1X4,  ID2_OUTR6 | ID2_CTR1X4,  ID2_OUTR6 | ID2_CTR1X4},
+   {ID2_CTR2 | ID2_CTR1X4,   ID2_CTR2 | ID2_CTR1X4,   ID2_CTR2 | ID2_CTR1X4,   ID2_CTR2 | ID2_CTR1X4},
+   {ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4},
+   {0, 0, 0, 0},
+   {0, 0, 0, 0},
+   {ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4, ID2_OUTR6 | ID2_NCTR1X4},
+   {ID2_OUTR6 | ID2_CTR1X4,  ID2_OUTR6 | ID2_CTR1X4,  ID2_OUTR6 | ID2_CTR1X4,  ID2_OUTR6 | ID2_CTR1X4},
+   {ID2_CTR2 | ID2_CTR1X4,   ID2_CTR2 | ID2_CTR1X4,   ID2_CTR2 | ID2_CTR1X4,   ID2_CTR2 | ID2_CTR1X4}};
 
 Private id_bit_table id_bit_table_spindle[] = {
    {ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6,    ID2_CTR6|ID2_OUTR6},
@@ -991,6 +1011,44 @@ Private id_bit_table id_bit_table_3x1dmd[] = {
       ID2_CTR6|  ID2_OUTR6| ID2_CTR4|      ID2_CENTER|              ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4,
       ID2_CTR6|  ID2_OUTR6| ID2_CTR4|      ID2_CENTER|              ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4,
       ID2_CTR6|  ID2_OUTR6| ID2_CTR4|      ID2_CENTER|              ID2_NCTR1X6| ID2_CTRDMD  | ID2_NCTR1X4}};
+
+Private id_bit_table id_bit_table_3dmd[] = {
+   {  ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD},
+   {  ID2_OUTR6| ID2_CTRDMD,
+      ID2_OUTR6| ID2_CTRDMD,
+      ID2_OUTR6| ID2_CTRDMD,
+      ID2_OUTR6| ID2_CTRDMD},
+   {  ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD},
+   {0, 0, 0, 0},
+   {0, 0, 0, 0},
+   {  ID2_CTR2|  ID2_CTRDMD,
+      ID2_CTR2|  ID2_CTRDMD,
+      ID2_CTR2|  ID2_CTRDMD,
+      ID2_CTR2|  ID2_CTRDMD},
+   {  ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD},
+   {  ID2_OUTR6| ID2_CTRDMD,
+      ID2_OUTR6| ID2_CTRDMD,
+      ID2_OUTR6| ID2_CTRDMD,
+      ID2_OUTR6| ID2_CTRDMD},
+   {  ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD,
+      ID2_OUTR6| ID2_NCTRDMD},
+   {0, 0, 0, 0},
+   {0, 0, 0, 0},
+   {  ID2_CTR2|  ID2_CTRDMD,
+      ID2_CTR2|  ID2_CTRDMD,
+      ID2_CTR2|  ID2_CTRDMD,
+      ID2_CTR2|  ID2_CTRDMD}};
 
 Private id_bit_table id_bit_table_bone[] = {
    {ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_LEAD,    ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BEAU,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_TRAILER,  ID2_END|ID2_OUTRPAIRS|ID2_OUTR6|ID2_BELLE},
@@ -1157,7 +1215,7 @@ Private cm_thing map2x2_2x2h = {{6, 1, 2, 5,    7, 0, 3, 4},              4, 4, 
 Private cm_thing maplatgal = {{7, 0, 1, 3, 4, 5,    6, 2},                6, 2, s_galaxy,       s_short6, s1x2,     8,  1, 1, 0, 1};
 Private cm_thing map1x4_dmd = {{2, 3, 6, 7,    0, 1, 4, 5},               4, 4, s1x3dmd,        sdmd,     s1x4,     8,  0, 0, 0, 1};
 Private cm_thing oddmap1x4_dmd = {{7, 2, 3, 6,    0, 1, 4, 5},            4, 4, s3x1dmd,        sdmd,     s1x4,     8,  1, 0, 0, 1};
-Private cm_thing oddmap1x6_1x2 = {{3, 7,    0, 1, 2, 4, 5, 6},            2, 6, s1x3dmd,        s1x2,     s1x6,     8,  1, 0, 0, 1};
+Private cm_thing oddmap1x6_1x2 = {{7, 3,    0, 1, 2, 4, 5, 6},            2, 6, s1x3dmd,        s1x2,     s1x6,     8,  1, 0, 0, 1};
 
 Private cm_thing map1x2_2x1dmd = {{1, 2, 3, 5, 6, 7,    0, 4},            6, 2, s3x1dmd,        s_2x1dmd, s1x2,     8,  0, 0, 0, 1};
 Private cm_thing oddmap1x2_2x1dmd = {{6, 7, 1, 2, 3, 5,    0, 4},         6, 2, s_crosswave,    s_2x1dmd, s1x2,     8,  1, 0, 0, 1};
@@ -1260,181 +1318,195 @@ conc_initializer conc_init_table[] = {
 /* BEWARE!!  These lists are keyed to the enumeration "analyzer_kind" :
 
     analyzer_NORMAL
-    |       analyzer_CHECKPT
-    |       |       analyzer_2X6
-    |       |       |       analyzer_6X2
-    |       |       |       |       analyzer_4X2
-    |       |       |       |       |       analyzer_6X2_TGL
-    |       |       |       |       |       |       analyzer_STAR12
-    |       |       |       |       |       |       |       analyzer_STAR16
-    |       |       |       |       |       |       |       |       analyzer_SINGLE
-    |       |       |       |       |       |       |       |       |       analyzer_GRANDSINGLE
-    |       |       |       |       |       |       |       |       |       |       analyzer_TRIPLE_LINE
-    |       |       |       |       |       |       |       |       |       |       |       analyzer_QUAD_LINE
-    |       |       |       |       |       |       |       |       |       |       |       |       analyzer_VERTICAL6
-    |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_LATERAL6
-    |       |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_OTHERS
-    |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_CONC_DIAMONDS
-    |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_DIAMOND_LINE */
+    |    analyzer_CHECKPT
+    |    |    analyzer_2X6
+    |    |    |    analyzer_6X2
+    |    |    |    |    analyzer_4X2
+    |    |    |    |    |    analyzer_6X2_TGL
+    |    |    |    |    |    |    analyzer_STAR12
+    |    |    |    |    |    |    |    analyzer_STAR16
+    |    |    |    |    |    |    |    |    analyzer_SINGLE
+    |    |    |    |    |    |    |    |    |    analyzer_GRANDSINGLE
+    |    |    |    |    |    |    |    |    |    |    analyzer_TRIPLE_LINE
+    |    |    |    |    |    |    |    |    |    |    |    analyzer_QUAD_LINE
+    |    |    |    |    |    |    |    |    |    |    |    |    analyzer_VERTICAL6
+    |    |    |    |    |    |    |    |    |    |    |    |    |    analyzer_LATERAL6
+    |    |    |    |    |    |    |    |    |    |    |    |    |    |    analyzer_OTHERS
+    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    analyzer_CONC_DIAMONDS
+    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    analyzer_DIAMOND_LINE
+    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    analyzer_CTR_DMD
+    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    |    | */
 
-Private cm_hunk concthing_1x4 = {0x5, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_1x2,
-                                                                            0,      0,      0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_1x4 = {0x5, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   &map1x2_1x2,
+                                                 0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_dmd = {0x5, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_1x2,
-                                                                            0,      0,      0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_dmd = {0x5, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   &oddmap1x2_1x2,
+                                                 0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_2x1dmd = {0, 0, 0,
-   {0,      0,      0,      0,      &oddmap1x4_1x2,
-                                            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_2x1dmd = {0, 0, 0, 0,
+   {0,   0,   0,   0,   &oddmap1x4_1x2,
+                             0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_qtag = {0x33, 0xDD, 0x11,
+Private cm_hunk concthing_qtag = {0x33, 0xDD, 0x11, 0,
    {&map2x2_1x4h,
-            0,      &oddmapshort6_1x2v,
-                            &oddmap1x2_2x3,
-                                    0,      &map1x2_intgl,
-                                                    0,      0,      0,      0,      0,      0,      0,      0,      &mapqtag_other,
-                                                                                                                            0,      0}};
+         0,   &oddmapshort6_1x2v,
+                   &oddmap1x2_2x3,
+                        0,   &map1x2_intgl,
+                                  0,   0,   0,   0,   0,   0,   0,   0,   &mapqtag_other,
+                                                                               0,   0,   0}};
 
-Private cm_hunk concthing_bone = {0x33, 0, 0x11,
+Private cm_hunk concthing_bone = {0x33, 0, 0x11, 0,
    {&map2x2_1x4v,
-            &map1x2_bone6_rc,
-                    &mapbone6_1x2,
-                            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+         &map1x2_bone6_rc,
+              &mapbone6_1x2,
+                   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_rigger = {0xCC, 0xDD, 0,
+Private cm_hunk concthing_rigger = {0xCC, 0xDD, 0, 0,
    {&map1x4_2x2,
-            &oddmap1x2_short6_rc,
-                    0,      &oddmap1x2_short6,
-                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+         &oddmap1x2_short6_rc,
+              0,   &oddmap1x2_short6,
+                        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_spindle = {0, 0xEE, 0x44,
-   {0,      &map2x2_dmd_rc,
-                    &mapshort6_1x2h,
-                            &map1x2_2x3,
-                                    0,      0,      0,      0,      0,      &mapgnd1x2_1x2r,
-                                                                                    0,      0,      0,      0,      &mapspin_other,
-                                                                                                                            0,      0}};
+Private cm_hunk concthing_spindle = {0, 0xEE, 0x44, 0,
+   {0,   &map2x2_dmd_rc,
+              &mapshort6_1x2h,
+                   &map1x2_2x3,
+                        0,   0,   0,   0,   0,   &mapgnd1x2_1x2r,
+                                                      0,   0,   0,   0,   &mapspin_other,
+                                                                               0,   0,   0}};
 
-Private cm_hunk concthing_hrglass = {0x33, 0xDD, 0x11,
+Private cm_hunk concthing_hrglass = {0x33, 0xDD, 0x11, 0,
    {&map2x2_dmd,
-            0,      &mapshort6_1x2v,
-                            &oddmap1x2_bone6,
-                                    0,      0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_bone6,
-                                                                                                            0,      0,      0,      0}};
+         0,   &mapshort6_1x2v,
+                   &oddmap1x2_bone6,
+                        0,   0,   0,   0,   0,   0,   0,   0,   &oddmap1x2_bone6,
+                                                                     0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_dhrglass = {0x33, 0, 0x11,
+Private cm_hunk concthing_dhrglass = {0x33, 0, 0x11, 0,
    {&map2x2_dmdv,
-            &map1x2_2x3_rc,
-                    &mapbone6_1x2v,
-                            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+         &map1x2_2x3_rc,
+              &mapbone6_1x2v,
+                   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_xwave = {0x33, 0x77, 0x11,
+Private cm_hunk concthing_xwave = {0x33, 0x77, 0x11, 0,
    {&oddmap1x4_1x4,
-            0,      &oddmap2x1dmd_1x2,
-                            &oddmap1x2_2x1dmd,
-                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &mapdmd_dmd,
-                                                                                                                                    &mappts_line}};
+         0,   &oddmap2x1dmd_1x2,
+                   &oddmap1x2_2x1dmd,
+                        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &mapdmd_dmd,
+                                                                                    &mappts_line,
+                                                                                         0}};
 
-Private cm_hunk concthing_1x8 = {0x33, 0x77, 0x22,
+Private cm_hunk concthing_1x8 = {0x33, 0x77, 0x22, 0,
    {&map1x4_1x4,
-            &map1x4_1x4_rc,
-                    &map1x6_1x2,
-                            &map1x2_1x6,
-                                    0,      0,      0,      0,      0,      &mapgnd1x2_1x2,    
-                                                                                    0,      0,      0,      0,      &map1x8_other,
-                                                                                                                            0,      0}};
+         &map1x4_1x4_rc,
+              &map1x6_1x2,
+                   &map1x2_1x6,
+                        0,   0,   0,   0,   0,   &mapgnd1x2_1x2,    
+                                                      0,   0,   0,   0,   &map1x8_other,
+                                                                               0,   0,   0}};
 
-Private cm_hunk concthing_2x4 = {0x66, 0, 0,
+Private cm_hunk concthing_2x4 = {0x66, 0, 0, 0,
    {&map2x2_2x2v,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map2x4_other,
-                                                                                                                            0,      0}};
+         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map2x4_other,
+                                                                               0,   0,   0}};
 
-Private cm_hunk concthing_3x4 = {0, 0, 0x041,
-   {0,      0,      &oddmap2x3_1x2,
-                            0,      0,      0,      &map2x3_2x3,
-                                                            0,      0,      0,      &map_3line,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_3x4 = {0, 0, 0x041, 0,
+   {0,   0,   &oddmap2x3_1x2,
+                   0,   0,   0,   &map2x3_2x3,
+                                       0,   0,   0,   &map_3line,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_1x12 = {0, 0, 0x041,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3linel,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_3dmd = {0, 0, 0x041, 0,    /* This one may only be used when the outer two diamonds have no centers,
+                                                         that is, it is a 1x2 between 1x3's.  There is code to check for this. */
+   {0,   0,   &map2x3_1x2,
+                   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_bigx = {0, 0, 0x041,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3linex,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_1x12 = {0, 0, 0x041, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3linel,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_bigh = {0, 0, 0x041,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3lineh,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_bigx = {0, 0, 0x041, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3linex,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_bigbone = {0, 0, 0x104,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3boxb,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_bigh = {0, 0, 0x041, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3lineh,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_bigrig = {0, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3boxr,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_bigbone = {0, 0, 0x104, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3boxb,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_bigdmd = {0, 0, 0x104,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3lb,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_bigrig = {0, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3boxr,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_2x6 = {0, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3box,
-                                                                                            0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_bigdmd = {0, 0, 0x104, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3lb,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_2x8 = {0, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_4box,
-                                                                                                    0,      0,      0,      0,      0}};
+Private cm_hunk concthing_2x6 = {0, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_3box,
+                                                           0,   0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_4x4 = {0, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      &map2x4_2x4v,
-                                                                    0,      0,      &map_cbox4,
-                                                                                            &map_4line,
-                                                                                                    0,      0,      0,      0,      0}};
+Private cm_hunk concthing_2x8 = {0, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_4box,
+                                                                0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_ptpd = {0, 0x77, 0x22,
-   {0,      &map2x2_1x4_rc,
-                    &oddmapshort6_1x2h,
-                            &map1x2_bone6,
-                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+Private cm_hunk concthing_4x4 = {0, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   &map2x4_2x4v,
+                                            0,   0,   &map_cbox4,
+                                                           &map_4line,
+                                                                0,   0,   0,   0,   0,   0}};
 
-Private cm_hunk concthing_1x3dmd = {0x33, 0x77, 0x11,
+Private cm_hunk concthing_ptpd = {0, 0x77, 0x22, 0,
+   {0,   &map2x2_1x4_rc,
+              &oddmapshort6_1x2h,
+                   &map1x2_bone6,
+                        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
+
+Private cm_hunk concthing_1x3dmd = {0x33, 0x77, 0x11, 0,
    {&map1x4_dmd,
-            &map1x4_dmd_rc,
-                    &oddmap1x6_1x2,
-                            &map1x2_1x2dmd,
-                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map1x3dmd_line}};
+         &map1x4_dmd_rc,
+              &oddmap1x6_1x2,
+                   &map1x2_1x2dmd,
+                        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map1x3dmd_line,
+                                                                                         0}};
 
-Private cm_hunk concthing_3x1dmd = {0x33, 0xEE, 0,
+
+Private cm_hunk concthing_3x1dmd = {0x33, 0xEE, 0, 0,
    {&oddmap1x4_dmd,
-            0,      &map2x1dmd_1x2,
-                            &oddmap1x2_1x6,
-                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &mapdmd_line}};
+         0,   &map2x1dmd_1x2,
+                   &oddmap1x2_1x6,
+                        0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &mapdmd_line,
+                                                                                         0}};
 
-Private cm_hunk concthing_wstar = {0x33, 0, 0,
+Private cm_hunk concthing_wstar = {0x33, 0, 0, 0,
    {&map1x4_star,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_s_dmd_line}};
+         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map_s_dmd_line,
+                                                                                         0}};
 
-Private cm_hunk concthing_wstar12 = {0, 0, 0,
-   {0,      0,      0,      0,      0,      0,      &map_spec_star12,
-                                                            0,      0,      0,      0,      0,      0,      0,      0,      0,      &oddmap_s_short_1x6}};
+Private cm_hunk concthing_wstar12 = {0, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   &map_spec_star12,
+                                       0,   0,   0,   0,   0,   0,   0,   0,   0,   &oddmap_s_short_1x6,
+                                                                                         0}};
 
-Private cm_hunk concthing_wstar16 = {0, 0, 0,
-   {0,      0,      0,      0,      0,      0,      0,      &map_spec_star16,
-                                                                    0,      0,      0,      0,      0,      0,      0,      0,      &map_s_spindle_1x8}};
+Private cm_hunk concthing_wstar16 = {0, 0, 0, 0,
+   {0,   0,   0,   0,   0,   0,   0,   &map_spec_star16,
+                                            0,   0,   0,   0,   0,   0,   0,   0,   &map_s_spindle_1x8,
+                                                                                         0}};
 
-Private cm_hunk concthing_gal = {0x55, 0, 0,
+Private cm_hunk concthing_gal = {0x55, 0, 0, 0,
    {&mapstar_2x2,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_short6,
-                                                                                                            &maplatgal,
-                                                                                                                    0,      0,      0}};
+         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   &map1x2_short6,
+                                                                     &maplatgal,
+                                                                          0,   0,   0,   0}};
 
-Private cm_hunk concthing_thar = {0x55, 0, 0,
+Private cm_hunk concthing_thar = {0x55, 0, 0, 0,
    {&mapstar_star,
-            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}};
 
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
@@ -1571,6 +1643,28 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  "   b@a  c@f  d@   e@",
          "   fa@e      b@   dc@"}},
+   /* s1x6 */
+      { 5,
+      &thing1x6,
+      &thing1x6,
+      (cm_hunk *) 0,
+      {b_1x6,       b_6x1},
+      { 6, 1},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c  f  e  d@",
+         "a@b@c@f@e@d@"}},
+   /* s2x3 */
+      { 5,
+      &thing2x3,
+      &thing2x3,
+      (cm_hunk *) 0,
+      {b_2x3,       b_3x2},
+      { 3, 2},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "a  b  c@f  e  d@",
+         "f  a@e  b@d  c@"}},
    /* s_1x2dmd */
       { 5,
       (coordrec *) 0,
@@ -1615,6 +1709,39 @@ setup_attr setup_attrs[] = {
       id_bit_table_bone,
       {  "a                   b@    g h d c@f                   e",
          "fa@  g@  h@  d@  c@eb"}},
+   /* s1x8 */
+      { 7,
+      &thing1x8,
+      &thing1x8,
+      &concthing_1x8,
+      {b_1x8,       b_8x1},
+      { 8, 1},
+      FALSE,
+      id_bit_table_1x8,
+      {  "a b d c g h f e",
+         "a@b@d@c@g@h@f@e"}},
+   /* s1x3dmd */
+      { 7,
+      &thing1x3dmd,
+      &thing1x3dmd,
+      &concthing_1x3dmd,
+      {b_1x3dmd,    b_p1x3dmd},
+      { 0, 0},
+      FALSE,
+      id_bit_table_1x3dmd,
+      {  "               d@a b c      g f e@               h",
+         "   a@@   b@@   c@@h  d@@   g@@   f@@   e@"}},
+   /* s3x1dmd */
+      { 7,
+      &thing3x1dmd,
+      &thing3x1dmd,
+      &concthing_3x1dmd,
+      {b_3x1dmd,    b_p3x1dmd},
+      { 0, 0},
+      FALSE,
+      id_bit_table_3x1dmd,
+      {  "             d@@a b c g f e@@             h",
+         "      a@@      b@@      c@h        d@      g@@      f@@      e"}},
    /* s_spindle */
       { 7,
       &thingspindle,
@@ -1670,17 +1797,6 @@ setup_attr setup_attrs[] = {
       id_bit_table_crosswave,
       {  "          c@          d@ab        fe@          h@          g",
          "      a@      b@@ghdc@@      f@      e"}},
-   /* s1x8 */
-      { 7,
-      &thing1x8,
-      &thing1x8,
-      &concthing_1x8,
-      {b_1x8,       b_8x1},
-      { 8, 1},
-      FALSE,
-      id_bit_table_1x8,
-      {  "a b d c g h f e",
-         "a@b@d@c@g@h@f@e"}},
    /* s2x4 */
       { 7,
       &thing2x4,
@@ -1703,28 +1819,6 @@ setup_attr setup_attrs[] = {
       id_bit_table_rigger,
       {  "        a b@gh         dc@        f e",
          "  g@  h@fa@eb@  d@  c"}},
-   /* s2x3 */
-      { 5,
-      &thing2x3,
-      &thing2x3,
-      (cm_hunk *) 0,
-      {b_2x3,       b_3x2},
-      { 3, 2},
-      FALSE,
-      (id_bit_table *) 0,
-      {  "a  b  c@f  e  d@",
-         "f  a@e  b@d  c@"}},
-   /* s1x6 */
-      { 5,
-      &thing1x6,
-      &thing1x6,
-      (cm_hunk *) 0,
-      {b_1x6,       b_6x1},
-      { 6, 1},
-      FALSE,
-      (id_bit_table *) 0,
-      {  "a  b  c  f  e  d@",
-         "a@b@c@f@e@d@"}},
    /* s3x4 */
       {11,
       &thing3x4,
@@ -1868,37 +1962,15 @@ setup_attr setup_attrs[] = {
       id_bit_table_ptpd,
       {  "    b           h@a    c   g    e@    d           f",
          "  a@@db@@  c@@  g@@fh@@  e"}},
-   /* s1x3dmd */
-      { 7,
-      &thing1x3dmd,
-      &thing1x3dmd,
-      &concthing_1x3dmd,
-      {b_1x3dmd,    b_p1x3dmd},
-      { 0, 0},
-      FALSE,
-      id_bit_table_1x3dmd,
-      {  "               d@a b c      g f e@               h",
-         "   a@@   b@@   c@@h  d@@   g@@   f@@   e@"}},
-   /* s3x1dmd */
-      { 7,
-      &thing3x1dmd,
-      &thing3x1dmd,
-      &concthing_3x1dmd,
-      {b_3x1dmd,    b_p3x1dmd},
-      { 0, 0},
-      FALSE,
-      id_bit_table_3x1dmd,
-      {  "             d@@a b c g f e@@             h",
-         "      a@@      b@@      c@h        d@      g@@      f@@      e"}},
    /* s3dmd */
       {11,
       &thing3dmd,
       &thing3dmd,
-      (cm_hunk *) 0,
+      &concthing_3dmd,
       {b_3dmd,      b_p3dmd},
       { 0, 0},
       FALSE,
-      (id_bit_table *) 0,
+      id_bit_table_3dmd,
       {  "   a      b      c@@j k l f e d@@   i      h      g",
          "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"}},
    /* s4dmd */
@@ -2573,31 +2645,31 @@ Private map_thing mapovbox1    = {{0, 1, 2, 3, 1, 2, 3, 0},                     
                     |        |        |        |        |        |        |        |        |        |        |        |        |        |        |        stag
                     |        |        |        |        |        |        |        |        |        |        |        |        |        |        |        |
                     |        |        |        |        |        |        |        |        |        |        |        |        |        |        |        | */
-Private map_hunk mm_1x8_1 = {{0, 0},
+Private map_hunk mm_1x8_1 = {{{0, 0},
                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_lh_s1x8_0, 0},
                                                                           {&map_rh_s1x8_0, 0},
                                                                                    {&map_lf_s1x8_0, 0},
                                                                                             {&map_rf_s1x8_0, 0},
-                                                                                                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                                                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x4_1 = {{0, 0},
+Private map_hunk mm_2x4_1 = {{{0, 0},
                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_lh_s2x4_0, &map_lh_s2x4_1},
                                                                           {&map_rh_s2x4_0, &map_rh_s2x4_1},
                                                                                    {&map_lf_s2x4_0, &map_lf_s2x4_1},
                                                                                             {&map_rf_s2x4_0, &map_rf_s2x4_1},
-                                                                                                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                                                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x1_2 = {{0, 0},
+Private map_hunk mm_1x1_2 = {{{0, 0},
                     {&map_1x2_1x1, &map_1x2_1x1},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x2_2 = {{0, 0},
+Private map_hunk mm_1x2_2 = {{{0, 0},
                     {&map_1x4_1x2, &map_2x2h},
                              {&map_1x2_rmv, &map_1x2_rmvr},
                                       {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_dmd1, &map_dmd2},
-                                                                                                                                                           {0, 0}};
+                                                                                                                                                           {0, 0}}};
 
-Private map_hunk mm_2x2_2 = {{0, 0},
+Private map_hunk mm_2x2_2 = {{{0, 0},
                     {&map_2x4_2x2, &map_2x4_2x2r},
                              {&map_2x2_rmv, 0},
                                       {&map_ov_s2x2_1, &map_ov_s2x2r_1},
@@ -2607,54 +2679,54 @@ Private map_hunk mm_2x2_2 = {{0, 0},
                                                                                             {&map_rf_s2x2_2, &map_rf_s2x2_3},
                                                                                                      {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_all_8_b1, &map_all_8_b2},
                                                                                                                                                   {&mapovbox1, 0},
-                                                                                                                                                           {0, 0}};
+                                                                                                                                                           {0, 0}}};
 
-Private map_hunk mm_dmd_2 = {{0, 0},
+Private map_hunk mm_dmd_2 = {{{0, 0},
                     {&map_ptp_dmd, &map_qtg_dmd},
                              {&map_dmd_rmv, &map_dmd_rmvr},
                                       {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_all_8_d1, &map_all_8_d2},
                                                                                                                                                   {&mapovdmd1, &mapovdmd2},
-                                                                                                                                                           {0, 0}};
+                                                                                                                                                           {0, 0}}};
 
-Private map_hunk mm_3x4_2 = {{0, 0},
+Private map_hunk mm_3x4_2 = {{{0, 0},
                     {&map_3x8_3x4, &map_4x6_3x4},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_tgl_2 = {{0, 0},
+Private map_hunk mm_tgl_2 = {{{0, 0},
                     {0, &map_s6_trngl},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_tg4_2 = {{0, 0},
+Private map_hunk mm_tg4_2 = {{{0, 0},
                     {0, &map_rig_trngl4},
                              {0, &map_s8_tgl4},
                                       {0, 0},  {0, 0},  {0, 0},  {&map_lh_bigd, 0},
                                                                           {&map_rh_bigd, 0},
-                                                                                   {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                                   {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_qtg_2 = {{0, 0},
+Private map_hunk mm_qtg_2 = {{{0, 0},
                     {&map_hv_qtg_2, &map_vv_qtg_2},
                              {0, 0},  {&map_ov_qtag_0, 0},
                                                {&map_intlk_phantom_dmd, 0},
                                                         {&map_phantom_dmd, 0},
-                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_spn_2 = {{0, 0},
+Private map_hunk mm_spn_2 = {{{0, 0},
                     {0, &map_spin_3x4},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_hrg_2 = {{0, 0},
+Private map_hunk mm_hrg_2 = {{{0, 0},
                     {&map_hrgl_ptp, 0},
-                             {0, 0},  {0, &map_ov_hrg_1},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, &map_ov_hrg_1},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_12d_2 = {{0, 0},
+Private map_hunk mm_12d_2 = {{{0, 0},
                     {&map_bone_12d, &map_bigd_12d},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x3_2 = {{0, 0},
+Private map_hunk mm_1x3_2 = {{{0, 0},
                     {&map_1x6_1x3, &map_2x3_1x3},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x4_2 = {{0, 0},
+Private map_hunk mm_1x4_2 = {{{0, 0},
                     {&map_1x8_1x4, &map_2x4_1x4},
                              {&map_1x4_rmv, &map_1x4_rmvr},
                                       {0, 0},  {0, 0},  {0, 0},  {&map_lh_s1x4_2, &map_lh_s1x4_3},
@@ -2663,20 +2735,20 @@ Private map_hunk mm_1x4_2 = {{0, 0},
                                                                                             {&map_rf_s1x4_2, &map_rf_s1x4_3},
                                                                                                      {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_all_8_1, &map_all_8_2},
                                                                                                                                                   {&mapovline1, &mapovline2},
-                                                                                                                                                           {0, 0}};
+                                                                                                                                                           {0, 0}}};
 
-Private map_hunk mm_1x8_2 = {{0, 0},
+Private map_hunk mm_1x8_2 = {{{0, 0},
                     {&map_1x16_1x8, &map_2x8_1x8},
                              {0, 0},  {&map_ov_s1x8_0, 0},
                                                {&map_intlk_phan_grand, 0},
                                                         {&map_conc_phan_grand, 0},
-                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x8_3 = {{0, 0},
+Private map_hunk mm_1x8_3 = {{{0, 0},
                     {0, 0},  {0, 0},  {&map_ov_s1x8_1, 0},
-                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x4_2 = {{0, 0},
+Private map_hunk mm_2x4_2 = {{{0, 0},
                     {&map_hv_2x4_2, &map_split_f},
                              {&map_2x4_rmv, &map_2x4_rmvr},
                                       {&map_ov_2x4_0, &map_ov_2x4_1},
@@ -2686,69 +2758,69 @@ Private map_hunk mm_2x4_2 = {{0, 0},
                                                                           {&map_rh_s2x4_2, &map_rh_s2x4_3},
                                                                                    {0, 0},  {0, 0},  {&map_o_s2x4_3, &map_o_s2x4_2},
                                                                                                               {&map_x_s2x4_3, &map_x_s2x4_2},
-                                                                                                                       {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_staggerv, 0}};
+                                                                                                                       {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_staggerv, 0}}};
 
-Private map_hunk mm_2x6_2 = {{0, 0},
+Private map_hunk mm_2x6_2 = {{{0, 0},
                     {0, &map_4x6_2x6},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x3_2 = {{0, 0},
+Private map_hunk mm_2x3_2 = {{{0, 0},
                     {&map_2x6_2x3, &map_3x4_2x3},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x3_3 = {{0, 0},
+Private map_hunk mm_2x3_3 = {{{0, 0},
                     {0, 0},  {0, 0},  {0, &map_ov_2x3_3},
-                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x6_2 = {{0, 0},
+Private map_hunk mm_1x6_2 = {{{0, 0},
                     {&map_1x12_1x6, &map_2x6_1x6},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x2_3 = {{0, 0},
+Private map_hunk mm_1x2_3 = {{{0, 0},
                     {&map_1x6_1x2, &map_2x3_1x2},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x2_3 = {{0, 0},
+Private map_hunk mm_2x2_3 = {{{0, 0},
                     {&map_2x6_2x2, &map_2x6_2x2r},
                              {0, 0},  {&map_ov_s2x2_2, 0},
                                                {0, 0},  {&map_conc_tb, &map_conc_tbr},
-                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_dmd_3 = {{0, 0},
+Private map_hunk mm_dmd_3 = {{{0, 0},
                     {0, &map_3dmd_dmd},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_qtg_3 = {{0, 0},
+Private map_hunk mm_qtg_3 = {{{0, 0},
                     {0, 0},  {0, 0},  {&map_ov_qtag_2, 0},
-                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x4_3 = {{0, 0},
+Private map_hunk mm_1x4_3 = {{{0, 0},
                     {&map_1x12_1x4, &map_3x4_1x4},
                              {0, 0},  {&map_ov_1x4_2, &map_ov_1x4_3},
-                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x4_3 = {{0, 0},
+Private map_hunk mm_2x4_3 = {{{0, 0},
                     {0, &map_4x6_2x4},
                              {0, 0},  {&map_ov_2x4_2, &map_ov_2x4_3},
-                                      {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                               {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x2_4 = {{0, 0},
+Private map_hunk mm_1x2_4 = {{{0, 0},
                     {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {&map_4quads1, &map_4quads2},
                                                                                                                                 {&map_4edges1, &map_4edges2},
-                                                                                                                                         {0, 0},  {0, 0},  {0, 0}};
+                                                                                                                                         {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_2x2_4 = {{0, 0},
+Private map_hunk mm_2x2_4 = {{{0, 0},
                     {&map_2x8_2x2, 0},
                              {0, 0},  {0, 0},  {0, 0},  {&map_conc_qb, 0},
-                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                                                                 {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_dmd_4 = {{0, 0},
+Private map_hunk mm_dmd_4 = {{{0, 0},
                     {0, &map_4dmd_dmd},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
-Private map_hunk mm_1x4_4 = {{0, 0},
+Private map_hunk mm_1x4_4 = {{{0, 0},
                     {&map_1x16_1x4, &map_4x4_1x4},
-                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}}};
 
 /*
  * The following conditional code is used to turn off the following
@@ -2790,20 +2862,22 @@ map_hunk *map_lists[][4] = {
    {0,         &mm_tg4_2, 0,         0},          /* s_trngl4 */
    {0,         0,         0,         0},          /* s_bone6 */
    {0,         0,         0,         0},          /* s_short6 */
+   {0,         &mm_1x6_2, 0,         0},          /* s1x6 */
+   {0,         &mm_2x3_2, &mm_2x3_3, 0},          /* s2x3 */
    {0,         &mm_12d_2, 0,         0},          /* s_1x2dmd */
    {0,         0,         0,         0},          /* s_2x1dmd */
    {0,         &mm_qtg_2, &mm_qtg_3, 0},          /* s_qtag */
    {0,         0,         0,         0},          /* s_bone */
+   {&mm_1x8_1, &mm_1x8_2, &mm_1x8_3, 0},          /* s1x8 */
+   {0,         0,         0,         0},          /* s1x3dmd */
+   {0,         0,         0,         0},          /* s3x1dmd */
    {0,         &mm_spn_2, 0,         0},          /* s_spindle */
    {0,         &mm_hrg_2, 0,         0},          /* s_hrglass */
    {0,         0,         0,         0},          /* s_dhrglass */
    {0,         0,         0,         0},          /* s_hyperglass */
    {0,         0,         0,         0},          /* s_crosswave */
-   {&mm_1x8_1, &mm_1x8_2, &mm_1x8_3, 0},          /* s1x8 */
    {&mm_2x4_1, &mm_2x4_2, &mm_2x4_3, 0},          /* s2x4 */
    {0,         0,         0,         0},          /* s_rigger */
-   {0,         &mm_2x3_2, &mm_2x3_3, 0},          /* s2x3 */
-   {0,         &mm_1x6_2, 0,         0},          /* s1x6 */
    {0,         &mm_3x4_2, 0,         0},          /* s3x4 */
    {0,         &mm_2x6_2, 0,         0},          /* s2x6 */
    {0,         0,         0,         0},          /* s1p5x8 */
@@ -2817,8 +2891,6 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s_c1phan */
    {0,         0,         0,         0},          /* s_bigblob */
    {0,         0,         0,         0},          /* s_ptpd */
-   {0,         0,         0,         0},          /* s1x3dmd */
-   {0,         0,         0,         0},          /* s3x1dmd */
    {0,         0,         0,         0},          /* s3dmd */
    {0,         0,         0,         0},          /* s4dmd */
    {0,         0,         0,         0},          /* s_wingedstar */

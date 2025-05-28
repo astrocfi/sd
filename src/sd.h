@@ -655,6 +655,9 @@ typedef enum {
    MPKIND__DMD_STUFF,
    MPKIND__STAG
 } mpkind;
+#define NUM_mpkind_KINDS (((int) MPKIND__STAG)+1)
+
+
 
 typedef struct {
    Const veryshort maps[32];
@@ -742,6 +745,7 @@ typedef enum {
    concept_do_divided_diamonds,
    concept_distorted,
    concept_single_diagonal,
+   concept_single_diagonal_sel,
    concept_double_diagonal,
    concept_parallelogram,
    concept_triple_lines,
@@ -1101,6 +1105,7 @@ typedef enum {
    warn__overlap_gone,
    warn__to_o_spots,
    warn__to_x_spots,
+   warn__check_butterfly,
    warn__some_rear_back,
    warn__not_tbone_person,
    warn__check_c1_phan,
@@ -1363,17 +1368,22 @@ typedef enum {
    analyzer_LATERAL6,
    analyzer_OTHERS,
    analyzer_CONC_DIAMONDS,
-   analyzer_DIAMOND_LINE
+   analyzer_DIAMOND_LINE,
+   analyzer_CTR_DMD
 } analyzer_kind;
-#define NUM_analyzer_KINDS (((int) analyzer_DIAMOND_LINE)+1)
+#define NUM_analyzer_KINDS (((int) analyzer_CTR_DMD)+1)
 
 
-typedef map_thing *map_hunk[][2];
+typedef struct {
+   map_thing *f[NUM_mpkind_KINDS][2];
+} map_hunk;
+
 
 typedef struct {
    uint32 mask_normal;
    uint32 mask_6_2;
    uint32 mask_2_6;
+   uint32 mask_ctr_dmd;
    cm_thing *hunk[NUM_analyzer_KINDS];
 } cm_hunk;
 
@@ -1746,6 +1756,7 @@ extern Cstring getout_strings[];                                    /* in SDTABL
 extern Cstring filename_strings[];                                  /* in SDTABLES */
 extern dance_level level_threshholds[];                             /* in SDTABLES */
 extern Cstring menu_names[];                                        /* in SDTABLES */
+extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABLES */
 extern cm_thing map_spec_star12;                                    /* in SDTABLES */
 extern cm_thing map_spec_star12v;                                   /* in SDTABLES */
 extern cm_thing map_spec_star16;                                    /* in SDTABLES */

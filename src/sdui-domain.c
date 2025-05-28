@@ -875,7 +875,7 @@ Private long_boolean get_mouse_action(uims_reply *reply_p)
          uims_menu_index = command_change_outfile;
          *reply_p = ui_command_select;
          return FALSE;
-      case task$change_header:
+      case task$change_title:
          uims_menu_index = command_change_header;
          *reply_p = ui_command_select;
          return FALSE;

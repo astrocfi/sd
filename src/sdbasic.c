@@ -134,8 +134,9 @@ typedef struct {
 
 Private collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
-   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines out */
    {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines in */
+   {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines out */
+   {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},           s1x4,        s1x8,        0, warn__none},   /* more of same */
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none},   /* from trade by */
    {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},     s_crosswave, s3x1dmd,     1, warn__none},   /* from 3&1 lines w/ centers in */
    {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s3x1dmd,     0, warn__none},   /* from 3&1 lines w/ centers out */
@@ -1102,7 +1103,7 @@ Private int divide_the_setup(
       case s_thar:
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
             fail("Can't split the setup.");
-         division_maps = (*map_lists[s1x2][3])[MPKIND__4_EDGES][1];
+         division_maps = map_lists[s1x2][3]->f[MPKIND__4_EDGES][1];
          goto divide_us_no_recompute;
       case s2x8:
          /* The call has no applicable 2x8 or 8x2 definition. */
@@ -1114,7 +1115,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_2x4, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x2, ss, calldeflist))) {
-               division_maps = (*map_lists[s2x4][1])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s2x4][1]->f[MPKIND__SPLIT][0];
                /* I consider it an abomination to call such a thing as "2x8 matrix
                   swing-o-late" from 2x8 lines, expecting people to do the call
                   in split phantom boxes, or "2x8 matrix grand mix", expecting
@@ -1129,7 +1130,7 @@ Private int divide_the_setup(
             else if (
                   (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
-               division_maps = (*map_lists[s1x8][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s1x8][1]->f[MPKIND__SPLIT][1];
                /* See comment above about abomination. */
                warn(warn__split_to_1x8s);
                goto divide_us_no_recompute;
@@ -1143,15 +1144,15 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 0xF0F0:    /* a parallelogram */
-               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_R_FULL][1];
+               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_R_FULL][1];
                warn(warn__each1x4);
                break;
             case 0x0F0F:    /* a parallelogram */
-               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_L_FULL][1];
+               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_L_FULL][1];
                warn(warn__each1x4);
                break;
             case 0xC3C3:    /* the outer quadruple boxes */
-               division_maps = (*map_lists[s2x2][3])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s2x2][3]->f[MPKIND__SPLIT][0];
                warn(warn__each2x2);
                break;
             default:
@@ -1182,7 +1183,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
-               division_maps = (*map_lists[s2x3][1])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s2x3][1]->f[MPKIND__SPLIT][0];
                /* See comment above about abomination. */
                if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_2x3s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
@@ -1190,7 +1191,7 @@ Private int divide_the_setup(
             else if (
                   (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
-               division_maps = (*map_lists[s1x6][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s1x6][1]->f[MPKIND__SPLIT][1];
                /* See comment above about abomination. */
                if (!(callflags1 & CFLAG1_SPLIT_LARGE_SETUPS)) warn(warn__split_to_1x6s);  /* If database said to split, don't give warning. */
                goto divide_us_no_recompute;
@@ -1204,15 +1205,15 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 07474:    /* a parallelogram */
-               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_R_HALF][1];
+               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_R_HALF][1];
                warn(warn__each1x4);
                break;
             case 01717:    /* a parallelogram */
-               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_L_HALF][1];
+               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_L_HALF][1];
                warn(warn__each1x4);
                break;
             case 06363: case 06060: case 00303: case 04141: case 02222:    /* the outer triple boxes */
-               division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s2x2][2]->f[MPKIND__SPLIT][0];
                warn(warn__each2x2);
                break;
             default:
@@ -1226,10 +1227,10 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 0xF0F0:
-               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_L_HALF][0];
+               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_L_HALF][0];
                break;
             case 0x0F0F:
-               division_maps = (*map_lists[s1x4][1])[MPKIND__OFFS_R_HALF][0];
+               division_maps = map_lists[s1x4][1]->f[MPKIND__OFFS_R_HALF][0];
                break;
             default:
                fail("You must specify a concept.");
@@ -1256,7 +1257,7 @@ Private int divide_the_setup(
          if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) {
             if (  (!(newtb & 010) || assoc(b_1x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x1, ss, calldeflist))) {
-               division_maps = (*map_lists[s1x6][1])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s1x6][1]->f[MPKIND__SPLIT][0];
                /* See comment above about abomination. */
                warn(warn__split_to_1x6s);
                goto divide_us_no_recompute;
@@ -1273,7 +1274,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_1x8, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_8x1, ss, calldeflist))) {
-               division_maps = (*map_lists[s1x8][1])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s1x8][1]->f[MPKIND__SPLIT][0];
                /* See comment above about abomination. */
                warn(warn__split_to_1x8s);
                goto divide_us_no_recompute;
@@ -1310,19 +1311,19 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_2x6, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_6x2, ss, calldeflist))) {
-               division_maps = (*map_lists[s2x6][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s2x6][1]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
             else if (
                   (!(newtb & 010) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x2, ss, calldeflist))) {
-               division_maps = (*map_lists[s3x4][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
             else if (
                   (!(newtb & 010) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist))) {
-               division_maps = (*map_lists[s3x4][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
          }
@@ -1332,7 +1333,7 @@ Private int divide_the_setup(
             if (
                   (!(newtb & 010) || assoc(b_3x4, ss, calldeflist) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_4x3, ss, calldeflist) || assoc(b_2x3, ss, calldeflist))) {
-               division_maps = (*map_lists[s3x4][1])[MPKIND__SPLIT][0];
+               division_maps = map_lists[s3x4][1]->f[MPKIND__SPLIT][0];
                goto divide_us_no_recompute;
             }
          }
@@ -1345,9 +1346,9 @@ Private int divide_the_setup(
             from any population at all. */
 
          if ((livemask & 0xAAAA) == 0)
-            division_maps = (*map_lists[s1x2][3])[MPKIND__4_QUADRANTS][0];
+            division_maps = map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][0];
          else if ((livemask & 0x5555) == 0)
-            division_maps = (*map_lists[s1x2][3])[MPKIND__4_QUADRANTS][1];
+            division_maps = map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][1];
          else if (   (livemask & 0x55AA) == 0 ||
                      (livemask & 0xAA55) == 0 ||
                      (livemask & 0x5AA5) == 0 ||
@@ -1360,8 +1361,8 @@ Private int divide_the_setup(
 
             ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
             scopy = *ss;    /* "Move" can write over its input. */
-            divided_setup_move(ss, (*map_lists[s1x2][3])[MPKIND__4_QUADRANTS][0], phantest_ok, FALSE, &the_results[0]);
-            divided_setup_move(&scopy, (*map_lists[s1x2][3])[MPKIND__4_QUADRANTS][1], phantest_ok, FALSE, &the_results[1]);
+            divided_setup_move(ss, map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][0], phantest_ok, FALSE, &the_results[0]);
+            divided_setup_move(&scopy, map_lists[s1x2][3]->f[MPKIND__4_QUADRANTS][1], phantest_ok, FALSE, &the_results[1]);
             *result = the_results[1];
             result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
             merge_setups(&the_results[0], merge_c1_phantom, result);
@@ -1377,10 +1378,10 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 01717:
-               division_maps = (*map_lists[s_trngl4][1])[MPKIND__OFFS_L_HALF][0];
+               division_maps = map_lists[s_trngl4][1]->f[MPKIND__OFFS_L_HALF][0];
                break;
             case 07474:
-               division_maps = (*map_lists[s_trngl4][1])[MPKIND__OFFS_R_HALF][0];
+               division_maps = map_lists[s_trngl4][1]->f[MPKIND__OFFS_R_HALF][0];
                break;
             default:
                fail("You must specify a concept.");
@@ -1398,7 +1399,7 @@ Private int divide_the_setup(
          *desired_elongation_p = orig_elongation;
 
          /* Tentatively choose a map.  We may change it later to "map_2x2v". */
-         division_maps = (*map_lists[s1x2][1])[MPKIND__SPLIT][1];
+         division_maps = map_lists[s1x2][1]->f[MPKIND__SPLIT][1];
 
          if ((newtb & 011) == 011) {
             /* The situation is serious.  If the call has both 1x2 and 2x1 definitions,
@@ -1535,7 +1536,7 @@ Private int divide_the_setup(
             if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
                   (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
                   (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
-               division_maps = (*map_lists[s2x3][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s2x3][1]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
 
@@ -1576,7 +1577,7 @@ Private int divide_the_setup(
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
                   if (!matrix_aware) warn(warn__each2x2);
-                  division_maps = (*map_lists[s2x2][1])[(livemask == 0xF3C) ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF][0];
+                  division_maps = map_lists[s2x2][1]->f[(livemask == 0xF3C) ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF][0];
                   goto divide_us_no_recompute;
                case 0xEBA: case 0xD75:
                   /* We are in "Z"'s.  See if we can do the call in 1x2, 2x1, or 1x1 setups.
@@ -1603,7 +1604,7 @@ Private int divide_the_setup(
                         assoc(b_2x1, ss, calldeflist) ||
                         assoc(b_1x1, ss, calldeflist))) {
                if (!matrix_aware) warn(warn__each1x4);
-               division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s1x4][2]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
 
@@ -1616,7 +1617,7 @@ Private int divide_the_setup(
                   (  assoc(b_1x2, ss, calldeflist) ||
                      assoc(b_2x1, ss, calldeflist) ||
                      assoc(b_1x1, ss, calldeflist))) {
-               division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s1x4][2]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
 
@@ -1674,7 +1675,7 @@ Private int divide_the_setup(
 
          switch (livemask) {
             case 0x6666:
-               division_maps = (*map_lists[s1x2][3])[MPKIND__4_EDGES][0];
+               division_maps = map_lists[s1x2][3]->f[MPKIND__4_EDGES][0];
                goto divide_us_no_recompute;
             case 0x7171:
                division_maps = &map_4x4_ns;
@@ -1746,7 +1747,7 @@ Private int divide_the_setup(
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
                   if (!matrix_aware) warn(warn__each2x2);
-                  division_maps = (*map_lists[s2x2][1])[(livemask == 0x4B4B) ? MPKIND__OFFS_L_FULL : MPKIND__OFFS_R_FULL][0];
+                  division_maps = map_lists[s2x2][1]->f[(livemask == 0x4B4B) ? MPKIND__OFFS_L_FULL : MPKIND__OFFS_R_FULL][0];
                   goto divide_us_no_recompute;
                }
          }
@@ -1775,7 +1776,7 @@ Private int divide_the_setup(
                /* Without a lot of examination of facing directions, and whether the call has 1x2 vs. 2x1
                   definitions, and all that, we don't know which axis to use when dividing it.  But any
                   division into 2 2x4's is safe, and code elsewhere will make the tricky decisions later. */
-               division_maps = (*map_lists[s2x4][1])[MPKIND__SPLIT][1];
+               division_maps = map_lists[s2x4][1]->f[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
          }
@@ -1783,7 +1784,7 @@ Private int divide_the_setup(
          fail("You must specify a concept.");
       case s_qtag:
          if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist) || assoc(b_1x4, ss, calldeflist)) {
-            division_maps = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
+            division_maps = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
 
@@ -1838,7 +1839,7 @@ Private int divide_the_setup(
          break;
       case s_ptpd:
          if (assoc(b_dmd, ss, calldeflist) || assoc(b_pmd, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
-            division_maps = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
+            division_maps = map_lists[sdmd][1]->f[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
@@ -1848,12 +1849,12 @@ Private int divide_the_setup(
          /* See if this call has applicable 1x2 or 2x1 definitions, in which case split it 3 ways. */
 
          if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
-            division_maps = (*map_lists[s1x2][2])[MPKIND__SPLIT][1];
+            division_maps = map_lists[s1x2][2]->f[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
          /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
          if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
-            division_maps = (*map_lists[s1x3][1])[MPKIND__SPLIT][1];
+            division_maps = map_lists[s1x3][1]->f[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
          break;
@@ -1968,14 +1969,14 @@ Private int divide_the_setup(
       case s1x6:
          /* See if this call has a 1x2, 2x1, or 1x1 definition, in which case split it 3 ways. */
          if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
-            division_maps = (*map_lists[s1x2][2])[MPKIND__SPLIT][0];
+            division_maps = map_lists[s1x2][2]->f[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
          break;
       case s1x2:
          /* See if the call has a 1x1 definition, in which case split it and do each part. */
          if (assoc(b_1x1, ss, calldeflist)) {
-            division_maps = (*map_lists[s1x1][1])[MPKIND__SPLIT][0];
+            division_maps = map_lists[s1x1][1]->f[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
          break;
@@ -1994,7 +1995,7 @@ Private int divide_the_setup(
          }
          break;
       case s1x8:
-         division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
+         division_maps = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
 
          /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
          if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist)) {
@@ -2067,7 +2068,7 @@ Private int divide_the_setup(
 
          break;
       case s2x4:
-         division_maps = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];    /* The map we will probably use. */
+         division_maps = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];    /* The map we will probably use. */
 
          /* See if this call is being done "split" as in "split square thru" or "split dixie style",
             in which case split into boxes. */
@@ -2105,7 +2106,7 @@ Private int divide_the_setup(
 
          if ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_4x1, ss, calldeflist))) {
-            division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][1];
+            division_maps = map_lists[s1x4][1]->f[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
 
@@ -2229,7 +2230,7 @@ Private int divide_the_setup(
             if (*desired_elongation_p == 3)
                *desired_elongation_p = 0;
 
-            division_maps = (*map_lists[s1x2][1])[MPKIND__SPLIT][0];
+            division_maps = map_lists[s1x2][1]->f[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
 
@@ -2598,21 +2599,21 @@ extern void basic_move(
             case s3x4:
                if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                   /* "12 matrix" was specified.  Split it into 1x4's in the appropriate way. */
-                  division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
+                  division_maps = map_lists[s1x4][2]->f[MPKIND__SPLIT][1];
                   goto divide_us;
                }
                break;
             case s2x6:
                if (z == INHERITFLAG_12_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                   /* "12 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-                  division_maps = (*map_lists[s2x2][2])[MPKIND__SPLIT][0];
+                  division_maps = map_lists[s2x2][2]->f[MPKIND__SPLIT][0];
                   goto divide_us;
                }
                break;
             case s2x8:
                if (z == INHERITFLAG_16_MATRIX || (z == 0 && (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))) {
                   /* "16 matrix" was specified.  Split it into 2x2's in the appropriate way. */
-                  division_maps = (*map_lists[s2x2][3])[MPKIND__SPLIT][0];
+                  division_maps = map_lists[s2x2][3]->f[MPKIND__SPLIT][0];
                   goto divide_us;
                }
                break;
@@ -2626,7 +2627,7 @@ extern void basic_move(
                   if (tbonetest & 1)
                      division_maps = &map_4x4v;
                   else
-                     division_maps = (*map_lists[s1x4][3])[MPKIND__SPLIT][1];
+                     division_maps = map_lists[s1x4][3]->f[MPKIND__SPLIT][1];
    
                   goto divide_us;
                }

@@ -250,18 +250,18 @@ extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *r
    switch (ss->kind) {
       case s2x4:
          if (prefer_1x4)
-            divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+            divided_setup_move(ss, map_lists[s1x4][1]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
          else
-            divided_setup_move(ss, (*map_lists[s2x2][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+            divided_setup_move(ss, map_lists[s2x2][1]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
          return FALSE;
       case s1x8:
-         divided_setup_move(ss, (*map_lists[s1x4][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+         divided_setup_move(ss, map_lists[s1x4][1]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
          return FALSE;
       case s_qtag:
-         divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+         divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
          return FALSE;
       case s_ptpd:
-         divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+         divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
          return FALSE;
       default:
          return TRUE;
@@ -1331,10 +1331,10 @@ Private uint32 get_mods_for_subcall(uint32 new_final_concepts, uint32 this_modh,
 Private void divide_diamonds(setup *ss, setup *result)
 {
    if (ss->kind == s_qtag) {
-      divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
+      divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
    }
    else if (ss->kind == s_ptpd) {
-      divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
+      divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
    }
    else
       fail("Must have diamonds for this concept.");
@@ -2224,7 +2224,7 @@ that probably need to be put in. */
 
       if (ss->kind == sdmd) {
          ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
-         divided_setup_move(ss, (*map_lists[s1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+         divided_setup_move(ss, map_lists[s1x2][1]->f[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
          return;
       }
       else {
@@ -2404,10 +2404,10 @@ that probably need to be put in. */
       /* We can't handle the mirroring, so undo it. */
       if (mirror) { mirror_this(ss); mirror = FALSE; }
 
-      if (ss->kind == s2x4) split_map = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
-      else if (ss->kind == s1x8) split_map = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
-      else if (ss->kind == s_ptpd) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
-      else if (ss->kind == s_qtag) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
+      if (ss->kind == s2x4) split_map = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];
+      else if (ss->kind == s1x8) split_map = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
+      else if (ss->kind == s_ptpd) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][0];
+      else if (ss->kind == s_qtag) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
       else if (ss->kind == s2x2) {
          /* "Split" was given while we are already in a 2x2?  The only way that
             can be legal is if the word "split" was meant as a modifier for "split square thru"
@@ -2875,10 +2875,10 @@ extern void move(
    
          ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_SPLIT;
 
-         if (ss->kind == s2x4) split_map = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
-         else if (ss->kind == s1x8) split_map = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
-         else if (ss->kind == s_ptpd) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
-         else if (ss->kind == s_qtag) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
+         if (ss->kind == s2x4) split_map = map_lists[s2x2][1]->f[MPKIND__SPLIT][0];
+         else if (ss->kind == s1x8) split_map = map_lists[s1x4][1]->f[MPKIND__SPLIT][0];
+         else if (ss->kind == s_ptpd) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][0];
+         else if (ss->kind == s_qtag) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
          else fail("Can't do split concept in this setup.");
 
          ss->cmd.cmd_final_flags &= ~FINAL__SPLIT;
@@ -2898,7 +2898,7 @@ extern void move(
             ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
 
             if (ss->kind == sdmd)
-               divided_setup_move(ss, (*map_lists[s1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+               divided_setup_move(ss, map_lists[s1x2][1]->f[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
             else {
                /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
                ss->cmd.parseptr = parseptr;

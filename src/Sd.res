@@ -33,7 +33,7 @@
 *startup.toggleConceptLevels: Toggle concept levels
 *startup.toggleActivePhantoms: Toggle active phantoms
 *startup.changeOutputFile: Change output file
-*startup.changeHeaderComment: Change header comment
+*startup.changeTitle: Change title
 *command.exit: Exit the program
 *command.undo: Undo last call
 *command.abort: Abort this sequence
@@ -43,7 +43,7 @@
 *command.activephantoms: Toggle active phantoms
 *command.comment: Insert a comment
 *command.outfile: Change output file
-*command.header: Change header comment
+*command.title: Change title
 *command.getout: End this sequence
 *command.resolve: Resolve
 *command.reconcile: Reconcile
@@ -80,7 +80,7 @@
 *Dialog.value*Translations: #override <Key>Return: accept_string()
 *comment.label: You can insert a comment:
 *outfilepopup.format: Sequence output file is "%s".  Enter new name:
-*headerpopup.format: Current header comment is "%s".  Enter new comment:
+*titlepopup.format: Current title is "%s".  Enter new title:
 *getout.label: Comment for this sequence:
 *neglect.label: Percentage (integer) of neglected calls:
 *abort.label: Abort

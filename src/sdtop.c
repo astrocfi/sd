@@ -45,6 +45,7 @@ typedef struct {
 Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
 Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_qtag, s4dmd, 0};
 Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
+Private expand_thing exp_1x2_3d_stuff      = {{11, 5}, 2, s1x2, s3dmd, 0};
 Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
 Private expand_thing exp_4x4_4dm_stuff_b   = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
 Private expand_thing exp_2x4_2x6_stuff     = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
@@ -108,22 +109,40 @@ extern void update_id_bits(setup *ss)
       ss->people[i].id2 &= ~BITS_TO_CLEAR;
    }
 
+   ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+
+   /* Some setups are only recognized for ID bits with certain patterns of population.
+       The bit tables make those assumptions, so we have to use the bit tables
+       only if those assumptions are satisfied. */
+
    switch (ss->kind) {
       case s2x6:
          /* **** This isn't really right -- it would allow "outer pairs bingo".
             We really should only allow 2-person calls, unless we say
             "outer triple boxes".  So we're not completely sure what the right thing is. */
-         if (livemask != 0x3CFUL && livemask != 0xF3CUL) return;
+         if (livemask != 0x3CFUL && livemask != 0xF3CUL) ptr = (id_bit_table *) 0;
          break;
       case sbigdmd:
-         if (livemask != 0xF3CUL && livemask != 0x3CFUL) return;
+         if (livemask != 0xF3CUL && livemask != 0x3CFUL) ptr = (id_bit_table *) 0;
          break;
       case s3x4:
-         if (livemask != 0xF3CUL && livemask != 0xCF3UL) return;
+
+         /* There are two different things we can recognize from here.
+            If the setup is populated as an "H", we use a special table
+            (*NOT* the usual one picked up from the setup_attrs list)
+            that knows about the center 2 and the outer 6 and all that.
+            If the setup is populated as offset lines/columns/whatever,
+            we use the table from the setup_attrs list, that knows about
+            the "outer pairs". */
+
+         if (livemask == 0xE79UL) ptr = id_bit_table_3x4_h;
+         else if (livemask != 0xF3CUL && livemask != 0xCF3UL) ptr = (id_bit_table *) 0;
+         break;
+      case s3dmd:    /* Must have all points, and centers of center diamond only, occupied. */
+         if (livemask != 0x9E7UL) ptr = (id_bit_table *) 0;
          break;
    }
 
-   ptr = setup_attrs[ss->kind].id_bit_table_ptr;
    if (!ptr) return;
 
    for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
@@ -611,8 +630,11 @@ extern void do_matrix_expansion(
          }
       }
       else if (concprops & CONCPROP__NEED_3DMD) {
-         if (ss->kind == s3x1dmd) {         /* Need to expand to real triple diamonds. */
-            eptr = &exp_3x1d_3d_stuff; goto expand_me;
+         switch (ss->kind) {                /* Need to expand to real triple diamonds. */
+            case s3x1dmd:
+               eptr = &exp_3x1d_3d_stuff; goto expand_me;
+            case s1x2:
+               eptr = &exp_1x2_3d_stuff; goto expand_me;
          }
       }
       else if (concprops & CONCPROP__NEED_2X8) {
@@ -1134,11 +1156,6 @@ extern void normalize_setup(setup *ss, normalize_action action)
          (void) copy_person(ss, 2, ss, 5);
          (void) copy_person(ss, 3, ss, 7);
       }
-      else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[5].id1 | ss->people[7].id1))) {
-         ss->kind = s1x2;
-         (void) copy_person(ss, 0, ss, 2);
-         (void) copy_person(ss, 1, ss, 6);
-      }
       else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
          ss->kind = s1x4;
          (void) copy_person(ss, 0, ss, 1);
@@ -1221,7 +1238,7 @@ In any case, let's try it without this.
             canonicalize_rotation(ss);
          }
       }
-      if (ss->kind == sdmd) {
+      else if (ss->kind == sdmd) {
          /* This makes it possible to do "own the <points>, trade by flip the diamond" from
             a single diamond. */
          if (!(ss->people[1].id1 | ss->people[3].id1)) {
@@ -1262,6 +1279,22 @@ In any case, let's try it without this.
          }
          else if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1)) {
             ss->kind = s2x6;     /* That's all! */
+         }
+      }
+      else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         if (!(ss->people[3].id1 | ss->people[7].id1)) {
+            ss->kind = s1x2;
+            (void) copy_person(ss, 0, ss, 2);
+            (void) copy_person(ss, 1, ss, 6);
+         }
+         else {
+            ss->kind = sdmd;
+            ss->rotation++;
+            (void) copy_rot(ss, 0, ss, 3, 033);
+            (void) copy_rot(ss, 1, ss, 6, 033);
+            (void) copy_rot(ss, 3, ss, 2, 033);
+            (void) copy_rot(ss, 2, ss, 7, 033);
+            canonicalize_rotation(ss);
          }
       }
       else if (ss->kind == s_ptpd) {

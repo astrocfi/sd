@@ -458,15 +458,16 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* distorted concepts */
 
-#define dd__1_size 20
-#define dd__1_pofl 19
+#define dd__1_size 21
+#define dd__1_pofl 20
    {"BIGBLOCK",                              concept_do_phantom_2x4,        0, l_c3a,        {&map_stagger, phantest_only_one, 1, MPKIND__NONE}},
    {"STAIRSTEP LINES",                       concept_do_phantom_2x4,        0, l_c4,         {&map_ladder, phantest_only_one, 1, MPKIND__NONE}},
    {"LADDER LINES",                          concept_do_phantom_2x4,        0, l_c4,         {&map_stairst, phantest_only_one, 1, MPKIND__NONE}},
    {"OFFSET LINES",                          concept_distorted,             0, l_c2,         {0, disttest_offset, 1}},
    {"Z LINES",                               concept_distorted,             0, l_c3,         {0, disttest_z, 1}},
    {"DISTORTED LINES",                       concept_distorted,             0, l_c3,         {0, disttest_any, 1}},
-   {"@6 IN A DIAGONAL LINE",                 concept_single_diagonal,       0, l_c1,         {0, 1}},
+   {"DIAGONAL LINE",                         concept_single_diagonal,       0, l_c1,         {0, 1}},
+   {"@6 IN A DIAGONAL LINE",                 concept_single_diagonal_sel,   0, l_c1,         {0, 8+1}},
    {"DIAGONAL LINES",                        concept_double_diagonal,       0, l_c3x,        {0, 1, 0}},
    {"DIAGONAL LINES OF 3",                   concept_double_diagonal,       0, l_c1,         {0, 1, 1}},
    {"DISTORTED TIDAL LINE",                  concept_distorted,             0, l_c3,         {0, disttest_any, 8+1}},
@@ -481,14 +482,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"PHANTOM LADDER LINES",                  concept_do_phantom_2x4,        0, l_c4,         {&map_stairst, phantest_both, 1, MPKIND__NONE}},
    {"PHANTOM OFFSET LINES",                  concept_do_phantom_2x4,        0, l_c4a,        {&map_offset, phantest_both, 1, MPKIND__NONE}},
 /* -------- column break -------- */
-#define dd__2_size 20
+#define dd__2_size 21
    {"BIGBLOCK WAVES",                        concept_do_phantom_2x4,        0, l_c3a,        {&map_stagger, phantest_only_one, 3, MPKIND__NONE}},
    {"STAIRSTEP WAVES",                       concept_do_phantom_2x4,        0, l_c4,         {&map_ladder, phantest_only_one, 3, MPKIND__NONE}},
    {"LADDER WAVES",                          concept_do_phantom_2x4,        0, l_c4,         {&map_stairst, phantest_only_one, 3, MPKIND__NONE}},
    {"OFFSET WAVES",                          concept_distorted,             0, l_c2,         {0, disttest_offset, 3}},
    {"Z WAVES",                               concept_distorted,             0, l_c3,         {0, disttest_z, 3}},
    {"DISTORTED WAVES",                       concept_distorted,             0, l_c3,         {0, disttest_any, 3}},
-   {"@6 IN A DIAGONAL WAVE",                 concept_single_diagonal,       0, l_c1,         {0, 3}},
+   {"DIAGONAL WAVE",                         concept_single_diagonal,       0, l_c1,         {0, 3}},
+   {"@6 IN A DIAGONAL WAVE",                 concept_single_diagonal_sel,   0, l_c1,         {0, 8+3}},
    {"DIAGONAL WAVES",                        concept_double_diagonal,       0, l_c3x,        {0, 3, 0}},
    {"DIAGONAL WAVES OF 3",                   concept_double_diagonal,       0, l_c1,         {0, 3, 1}},
    {"DISTORTED TIDAL WAVE",                  concept_distorted,             0, l_c3,         {0, disttest_any, 8+3}},
@@ -503,16 +505,17 @@ concept_descriptor concept_descriptor_table[] = {
    {"PHANTOM LADDER WAVES",                  concept_do_phantom_2x4,        0, l_c4,         {&map_stairst, phantest_both, 3, MPKIND__NONE}},
    {"PHANTOM OFFSET WAVES",                  concept_do_phantom_2x4,        0, l_c4a,        {&map_offset, phantest_both, 3, MPKIND__NONE}},
 /* -------- column break -------- */
-#define dd__3_size 20
-#define dd__3_pob 14
-#define dd__3_pofc 19
+#define dd__3_size 21
+#define dd__3_pob 15
+#define dd__3_pofc 20
    {"STAGGER",                               concept_do_phantom_2x4,        0, l_c2,         {&map_stagger, phantest_only_one, 0, MPKIND__NONE}},
    {"STAIRSTEP COLUMNS",                     concept_do_phantom_2x4,        0, l_c4,         {&map_stairst, phantest_only_one, 0, MPKIND__NONE}},
    {"LADDER COLUMNS",                        concept_do_phantom_2x4,        0, l_c4,         {&map_ladder, phantest_only_one, 0, MPKIND__NONE}},
    {"OFFSET COLUMNS",                        concept_distorted,             0, l_c2,         {0, disttest_offset, 0}},
    {"Z COLUMNS",                             concept_distorted,             0, l_c3,         {0, disttest_z, 0}},
    {"DISTORTED COLUMNS",                     concept_distorted,             0, l_c3,         {0, disttest_any, 0}},
-   {"@6 IN A DIAGONAL COLUMN",               concept_single_diagonal,       0, l_c1,         {0, 0}},
+   {"DIAGONAL COLUMN",                       concept_single_diagonal,       0, l_c1,         {0, 0}},
+   {"@6 IN A DIAGONAL COLUMN",               concept_single_diagonal_sel,   0, l_c1,         {0, 8+0}},
    {"DIAGONAL COLUMNS",                      concept_double_diagonal,       0, l_c3x,        {0, 0, 0}},
    {"DIAGONAL COLUMNS OF 3",                 concept_double_diagonal,       0, l_c1,         {0, 0, 1}},
    {"DISTORTED TIDAL COLUMN",                concept_distorted,             0, l_c3,         {0, disttest_any, 8+0}},

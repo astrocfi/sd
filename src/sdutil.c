@@ -223,6 +223,7 @@ Cstring warning_strings[] = {
    /*  warn__overlap_gone        */   " The overlap goes away.",
    /*  warn__to_o_spots          */   " Go back to 'O' spots.",
    /*  warn__to_x_spots          */   " Go back to butterfly spots.",
+   /*  warn__check_butterfly     */   " Check a butterfly.",
    /*  warn__some_rear_back      */   " Some people rear back.",
    /*  warn__not_tbone_person    */   " Work with the person to whom you are not T-boned.",
    /*  warn__check_c1_phan       */   " Check a 'C1 phantom' setup.",

@@ -76,6 +76,7 @@ Private char *conc_error_messages[] = {
    "Wrong formation.",                                                 /* analyzer_OTHERS */
    "Can't find concentric diamonds.",                                  /* analyzer_CONC_DIAMONDS */
    "Can't find center line and outer diamond."                         /* analyzer_DIAMOND_LINE */
+   "Can't find center diamond."                                        /* analyzer_CTR_DMD */
 };
 
 
@@ -522,7 +523,8 @@ Private void concentrify(
    int *xconc_elongation)    /* If cross concentric, set to elongation of original ends. */
 
 {
-   int i, k, rot, analyzer_index;
+   int i, k, rot;
+   analyzer_kind analyzer_index;
    cm_hunk *chunk;
    cm_thing *lmap_ptr;
 
@@ -1642,6 +1644,7 @@ typedef struct {
 
 static concmerge_thing map_1618   = {schema_concentric_2_6, s1x6,        s1x2,    0, {0, 1, 3, 4, 5, 7}, {0, 1}};
 static concmerge_thing map_1418   = {schema_concentric,     s1x4,        s1x4,    0, {0, 1, 4, 5}, {0, 1, 2, 3}};
+static concmerge_thing map_123d   = {schema_concentric,     s2x3,        s1x2,    0, {0, 1, 2, 6, 7, 8}, {0, 1}};
 static concmerge_thing map_2218   = {schema_concentric,     s1x4,        s2x2,    0, {1, 3, 5, 7}, {0, 1, 2, 3}};
 static concmerge_thing map_2218p  = {schema_concentric,     s1x4,        s2x2,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
 static concmerge_thing map_2218q  = {schema_concentric,     s1x4,        s2x2,    0, {0, 1, 4, 5}, {0, 1, 2, 3}};
@@ -1649,9 +1652,16 @@ static concmerge_thing map_223x1  = {schema_concentric,     sdmd,        s2x2,  
 static concmerge_thing map_1424   = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {0, 1, 2, 3}};
 static concmerge_thing map_qt24   = {schema_concentric,     s2x2,        s1x4,    0, {0, 3, 4, 7}, {6, 7, 2, 3}};
 static concmerge_thing map_s612   = {schema_concentric_2_6, s_short6,    s1x2,    1, {1, 2, 4, 5, 6, 0}, {0, 1}};
+static concmerge_thing map_13dspn = {schema_rev_checkpoint, s2x2,        sdmd,    0, {0, 2, 4, 6}, {0, 3, 4, 7}};
+static concmerge_thing map_13dptp = {schema_rev_checkpoint, s2x2,        sdmd,    0, {1, 7, 5, 3}, {0, 3, 4, 7}};
+static concmerge_thing map_14spn  = {schema_rev_checkpoint, s2x2,        s1x4,    0, {0, 2, 4, 6}, {0, 2, 4, 6}};
+static concmerge_thing map_dm3dm  = {schema_nothing,        s3dmd,       nothing, 0, {0}, {5, 1, 11, 7}};
+static concmerge_thing map_2234b  = {schema_nothing,        s4x4,        nothing, 0, {0}, {15, 3, 7, 11}};
+static concmerge_thing map_3d1x4  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 3, 0, 7}};
 static concmerge_thing map_2614   = {schema_nothing,        sbigdmd,     nothing, 0, {0}, {3, 2, 9, 8}};
 static concmerge_thing map_2624   = {schema_nothing,        s2x6,        nothing, 0, {0}, {1, 2, 3, 4, 7, 8, 9, 10}};
 static concmerge_thing map_26qt   = {schema_nothing,        sbigdmd,     nothing, 0, {0}, {8, 9, 0, 0, 2, 3, 0, 0}};
+static concmerge_thing map_13d_23 = {schema_nothing,        s_spindle,   nothing, 0, {0}, {0, 1, 2, 4, 5, 6}};
 static concmerge_thing map_gal22  = {schema_nothing,        s_galaxy,    nothing, 0, {0}, {1, 3, 5, 7}};
 static concmerge_thing map_18bn   = {schema_nothing,        s1x8,        nothing, 0, {0}, {0, 0, 7, 6, 0, 0, 3, 2}};
 static concmerge_thing map_34qt   = {schema_nothing,        s3x4,        nothing, 0, {0}, {1, 2, 4, 5, 7, 8, 10, 11}};
@@ -1667,6 +1677,7 @@ static concmerge_thing map_2418   = {schema_nothing,        s_ptpd,      nothing
 static concmerge_thing map_13d14  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_12d14  = {schema_nothing,        s1x8,        nothing, 0, {0}, {3, 2, 7, 6}};
 static concmerge_thing map_31d18  = {schema_nothing,        s3x1dmd,     nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
+static concmerge_thing map_13d18  = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {0, 1, 0, 2, 0, 5, 0, 6}};
 static concmerge_thing map_pp18   = {schema_nothing,        s_ptpd,      nothing, 0, {0}, {0, 0, 2, 0, 4, 0, 6, 0}};
 static concmerge_thing map_13d12d = {schema_nothing,        s1x3dmd,     nothing, 0, {0}, {1, 2, 3, 5, 6, 7}};
 static concmerge_thing map_rig1x8 = {schema_nothing,        s_rigger,    nothing, 0, {0}, {6, 7, 0, 0, 2, 3, 0, 0}};
@@ -1944,6 +1955,11 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       install_person(result, 9, res1, 3);
       return;
    }
+   else if (res2->kind == s3x1dmd && res1->kind == s1x4 && (r&1) &&
+            (!(res1->people[1].id1 | res1->people[3].id1))) {
+      the_map = &map_3d1x4;
+      goto merge_concentric;
+   }
    else if (res2->kind == s_qtag && res1->kind == s1x2 &&
             (!(res2->people[3].id1 | res2->people[7].id1))) {
       outer_elongation = res2->rotation & 1;
@@ -1953,6 +1969,39 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    else if (res2->kind == s1x8 && res1->kind == s2x2 &&
             (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[6].id1 | res2->people[7].id1))) {
       the_map = &map_2218q;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s3x4 && res1->kind == s2x2 &&
+            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[5].id1 |
+               res2->people[7].id1 | res2->people[8].id1 | res2->people[10].id1 | res2->people[11].id1))) {
+      clear_person(res2, 12);     /* Put them in the corners of a butterfly. */
+      clear_person(res2, 13);
+      clear_person(res2, 14);
+      clear_person(res2, 15);
+      swap_people(res2, 0, 3);
+      swap_people(res2, 3, 12);
+      swap_people(res2, 4, 6);
+      swap_people(res2, 8, 9);
+      the_map = &map_2234b;
+      warn(warn__check_butterfly);
+      r = 0;       /* It will get canonicalized. */
+      rot = 0;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s3dmd && res1->kind == s2x2 &&
+            (!(res2->people[1].id1 | res2->people[3].id1 | res2->people[4].id1 | res2->people[5].id1 |
+               res2->people[7].id1 | res2->people[9].id1 | res2->people[10].id1 | res2->people[11].id1))) {
+      clear_person(res2, 12);     /* Put them in the corners of a butterfly. */
+      clear_person(res2, 13);
+      clear_person(res2, 14);
+      clear_person(res2, 15);
+      swap_people(res2, 0, 2);
+      swap_people(res2, 2, 12);
+      swap_people(res2, 4, 6);
+      the_map = &map_2234b;
+      warn(warn__check_butterfly);
+      r = 0;       /* It will get canonicalized. */
+      rot = 0;
       goto merge_concentric;
    }
    else if (res2->kind == s3x1dmd && res1->kind == s2x2 &&
@@ -1973,6 +2022,16 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    else if (res2->kind == s1x8 && res1->kind == s1x4 &&
             (!(res2->people[2].id1 | res2->people[3].id1 | res2->people[6].id1 | res2->people[7].id1))) {
       the_map = &map_1418;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s3dmd && res1->kind == s1x2 &&
+            (   !(res2->people[3].id1 | res2->people[4].id1 | res2->people[5].id1 |
+                  res2->people[9].id1 | res2->people[10].id1 | res2->people[11].id1))) {
+      the_map = &map_123d;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s3dmd && res1->kind == sdmd && (r&1)) {
+      the_map = &map_dm3dm;
       goto merge_concentric;
    }
    else if (res2->kind == s1x8 && res1->kind == s1x2 &&
@@ -2014,6 +2073,30 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    }
    else if (res2->kind == s1x3dmd && res1->kind == s_1x2dmd && r == 0) {
       the_map = &map_13d12d;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_ptpd && res1->kind == s1x3dmd && r == 0 &&
+            (!(res1->people[1].id1 | res1->people[2].id1 | res1->people[5].id1 | res1->people[6].id1 |
+               res2->people[0].id1 | res2->people[2].id1 | res2->people[4].id1 | res2->people[6].id1))) {
+      the_map = &map_13dptp;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_spindle && res1->kind == s1x3dmd && r == 0 &&
+            (!(res1->people[1].id1 | res1->people[2].id1 | res1->people[5].id1 | res1->people[6].id1 |
+               res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
+      the_map = &map_13dspn;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s1x3dmd && res1->kind == s1x8 && r == 0 &&
+            (!(res1->people[0].id1 | res1->people[2].id1 | res1->people[4].id1 | res1->people[6].id1 |
+               res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
+      the_map = &map_13d18;
+      goto merge_concentric;
+   }
+   else if (res2->kind == s_spindle && res1->kind == s1x8 && r == 0 &&
+            (!(res1->people[1].id1 | res1->people[3].id1 | res1->people[5].id1 | res1->people[7].id1 |
+               res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
+      the_map = &map_14spn;
       goto merge_concentric;
    }
    else if (res2->kind == s_rigger && res1->kind == s1x8 && r == 0 &&
@@ -2163,19 +2246,12 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
    }
    else if (res2->kind == s1x3dmd && res1->kind == s2x3 && action != merge_strict_matrix && r==0 &&
             (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1))) {
-      result->kind = s_spindle;
-      (void) copy_person(result, 7, res2, 0);
-      (void) copy_person(result, 1, res2, 3);
-      (void) copy_person(result, 3, res2, 4);
-      (void) copy_person(result, 5, res2, 7);
-      (void) copy_person(result, 0, res1, 0);
-      (void) copy_person(result, 2, res1, 2);
-      (void) copy_person(result, 4, res1, 3);
-      (void) copy_person(result, 6, res1, 5);
-      install_person(result, 1, res1, 1);
-      install_person(result, 5, res1, 4);
-      canonicalize_rotation(result);
-      return;
+      swap_people(res2, 0, 7);
+      swap_people(res2, 1, 3);
+      swap_people(res2, 3, 4);
+      swap_people(res2, 0, 5);
+      the_map = &map_13d_23;
+      goto merge_concentric;
    }
    else if (res2->kind == s_ptpd && res1->kind == s1x8 && r == 0 &&
             (!(res2->people[1].id1 | res2->people[3].id1 | res2->people[5].id1 | res2->people[7].id1))) {
@@ -2294,10 +2370,10 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
 
    res2->kind = the_map->innerk;
    *result = *res2;
+   canonicalize_rotation(result);
    offs = ((setup_attrs[res1->kind].setup_limits+1) * r) >> 2;
-
    for (i=0; i<=setup_attrs[res1->kind].setup_limits; i++)
-      install_rot(result, the_map->outermap[i],  res1, i^offs,  rot);
+      install_rot(result, the_map->outermap[i], res1, i^offs, rot);
 
    return;
 }
@@ -2427,10 +2503,11 @@ static Const fixer f1x8aa;
 static Const fixer f1x8ctr;
 static Const fixer foozz;
 static Const fixer f1x8aad;
-static Const fixer foo55d;
 static Const fixer foo99d;
 static Const fixer foo66d;
 static Const fixer f2x4endd;
+static Const fixer fspindld;
+static Const fixer fspindlbd;
 static Const fixer f1x8endd;
 static Const fixer bar55d;
 static Const fixer f3x4rzz;
@@ -2468,11 +2545,9 @@ static Const fixer f3x4lzz   = {s1x2, s2x6,        0, 2,       &f3x4lzz,   &f3x4
 static Const fixer f3x4rzz   = {s1x2, s2x6,        0, 0x100+2, &f3x4rzz,   &f3x4left,  0,          0, 0,          0,    0,          {{4, 5}, {11, 10}}, {{-1}}};
 static Const fixer f3x1zzd   = {sdmd, s3x1dmd,     0, 1,       0,          0,          0,          0, &f3x1zzd,   0,    0,          {{0, 3, 4, 7}},     {{-1}}};
 static Const fixer f1x3zzd   = {sdmd, s1x3dmd,     0, 1,       0,          0,          &f1x8ctr,   0, &f1x3zzd,   0,    0,          {{0, 3, 4, 7}},     {{-1}}};
-
 static Const fixer f3x1yyd   = {sdmd, s3x1dmd,     0, 1,       0,          0,          &f1x8aad,   0, &f3x1yyd,   0,    0,          {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f1x3yyd   = {sdmd, s1x3dmd,     0, 1,       0,          0,          &f1x8ctr,   0, &f1x3yyd,   0,    0,          {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f1x8aad   = {s1x4, s1x8,        0, 1,       0,          0,          &f1x8aad,   0, &f3x1zzd,   0,    &foozzd,    {{1, 3, 5, 7}},     {{-1}}};
-
 static Const fixer fxwv1d    = {sdmd, s_crosswave, 0, 1,       0,          0,          0,          0, &fxwv1d,    0,    0,          {{0, 2, 4, 6}},     {{-1}}};
 static Const fixer fxwv2d    = {sdmd, s_crosswave, 0, 1,       0,          0,          0,          0, &fxwv2d,    0,    0,          {{0, 3, 4, 7}},     {{-1}}};
 static Const fixer fxwv3d    = {sdmd, s_crosswave, 1, 1,       0,          0,          0,          0, &fxwv3d,    0,    0,          {{2, 5, 6, 1}},     {{-1}}};
@@ -2480,8 +2555,10 @@ static Const fixer fspindlc  = {s1x2, s_spindle,   1, 2,       &fspindlc,  &f1x3
 static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          {{1, 2}, {6, 5}},   {{-1}}};
 static Const fixer f2x3c     = {s1x2, s2x3,        1, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          {{0, 5}, {2, 3}},   {{-1}}};
 static Const fixer f1x2aad   = {s1x2, s_1x2dmd,    0, 2,       &f1x2aad,   &f2x3c,     0,          0, 0,          0,    0,          {{0, 1}, {4, 3}},   {{-1}}};
-static Const fixer fspindld  = {s2x2, s_spindle,   0, 1,       0,          0,          0,          0, 0,          0,    &fspindld,  {{0, 2, 4, 6}},     {{-1}}};
-static Const fixer fspindlbd = {sdmd, s_spindle,   0, 1,       0,          0,          0,          0, &fspindlbd, 0,    0,          {{7, 1, 3, 5}},     {{-1}}};
+static Const fixer f1x3bbd   = {s1x4, s1x3dmd,     0, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  {{1, 2, 5, 6}},     {{-1}}};
+static Const fixer fspindld  = {s2x2, s_spindle,   0, 1,       0,          0,          &f1x3bbd,   0, 0,          0,    &fspindld,  {{0, 2, 4, 6}},     {{-1}}};
+static Const fixer fptpzzd   = {s1x4, s_ptpd,      0, 1,       0,          0,          &fptpzzd,   0, &fspindlbd, 0,    0,          {{0, 2, 4, 6}},     {{-1}}};
+static Const fixer fspindlbd = {sdmd, s_spindle,   0, 1,       0,          0,          &fptpzzd,   0, &fspindlbd, 0,    0,          {{7, 1, 3, 5}},     {{-1}}};
 static Const fixer d2x4b1    = {s2x2, s4x4,        0, 1,       0,          0,          0,          0, 0,          0,    0,          {{13, 7, 5, 15}},   {{-1}}};
 static Const fixer d2x4b2    = {s2x2, s4x4,        0, 1,       0,          0,          0,          0, 0,          0,    0,          {{11, 14, 3, 6}},   {{-1}}};
 static Const fixer d2x4w1    = {s1x4, s2x4,        0, 1,       0,          0,          &d2x4w1,    0, 0,          0,    &d2x4b1,    {{0, 1, 4, 5}},     {{-1}}};
@@ -2514,7 +2591,12 @@ static Const fixer distrig8  = {sdmd, s_rigger,    0, 1,       0,          0,   
 static Const fixer distrig6  = {s1x4, s_rigger,    0, 1,       0,          0,          &distrig6,  0, &distrig8,  0,    0,          {{7, 5, 3, 1}},     {{-1}}};
 static Const fixer disthrg1  = {s1x4, s_hrglass,   1, 1,       0,          0,          &disthrg1,  0, 0,          0,    0,          {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer disthrg2  = {s1x4, s_hrglass,   1, 1,       0,          0,          &disthrg2,  0, 0,          0,    0,          {{0, 3, 4, 7}},     {{-1}}};
-static Const fixer foo55d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo55d,    0, 0,          0,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
+
+
+                                                                                                            /* think this VVVVV is wrong! */
+static Const fixer foo55d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo55d,    0, &f1x3zzd,    0,    &bar55d,    {{0, 2, 4, 6}},     {{-1}}};
+
+
 static Const fixer fgalctb   = {s2x2, s_galaxy,    0, 1,       0,          0,          0,          0, 0,          0,    &fgalctb,   {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f3x1ctl   = {s1x4, s3x1dmd,     0, 1,       0,          0,          &f3x1ctl,   0, 0,          0,    &fgalctb,   {{1, 2, 5, 6}},     {{-1}}};
 static Const fixer foo99d    = {s1x4, s1x8,        0, 1,       0,          0,          &foo99d,    0, 0,          0,    &f2x4endd,  {{0, 3, 4, 7}},     {{-1}}};
@@ -2532,6 +2614,7 @@ static Const fixer frigtgl   = {s_short6, s_rigger,1, 1,       0,          0,   
 static Const fixer fboneendo = {s1x2, s_bone,      1, 2,       &fboneendo, &f1x8endo,  0,          0, 0,          0,    0,          {{0, 5}, {1, 4}},   {{-1}}};
 static Const fixer frigendd  = {s1x4, s_rigger,    0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  {{6, 7, 2, 3}},     {{-1}}};
 static Const fixer frigctr   = {s2x2, s_rigger,    0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   {{0, 1, 4, 5}},     {{-1}}};
+static Const fixer fxwvctrd  = {sdmd, s_crosswave, 0, 1,       0,          0,          0,          0, &fxwvctrd,  0,    0,          {{1, 3, 5, 7}},     {{-1}}};
 static Const fixer f2x4ctr   = {s2x2, s2x4,        0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &f2x4ctr,   {{1, 2, 5, 6}},     {{-1}}};
 static Const fixer f2x4far   = {s1x4, s2x4,        0, 1,       0,          0,          &f2x4far,   0, 0,          0,    0,          {{0, 1, 3, 2}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
 static Const fixer f2x4near  = {s1x4, s2x4,        0, 1,       0,          0,          &f2x4near,  0, 0,          0,    0,          {{7, 6, 4, 5}},     {{-1}}};    /* unsymmetrical */                                                                                                                 
@@ -2692,6 +2775,7 @@ volatile   int setupcount;    /* ******FUCKING DEBUGGER BUG!!!!!! */
 
 back_here:
 
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
    normalize_setup(&the_setups[0], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
    normalize_setup(&the_setups[1], (indicator == 4) ? normalize_before_merge : normalize_before_isolated_call);
    saved_warnings = history[history_ptr+1].warnings;
@@ -2709,16 +2793,18 @@ back_here:
    for (setupcount=0; setupcount<=others; setupcount++) {
       uint32 thislivemask = livemask[setupcount];
       uint32 otherlivemask = livemask[setupcount^1];
+      setup *this_one = &the_setups[setupcount];
+      setup_kind kk = this_one->kind;
 
-      the_setups[setupcount].cmd = ss->cmd;
-      the_setups[setupcount].cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+      this_one->cmd = ss->cmd;
+      this_one->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       if (setupcount == 1) {
          if (indicator == 10) {
             parse_block *parseptrcopy = skip_one_concept(parseptr->next);
-            the_setups[setupcount].cmd.parseptr = parseptrcopy->next;
+            this_one->cmd.parseptr = parseptrcopy->next;
          }
          else
-            the_setups[setupcount].cmd.parseptr = parseptr->subsidiary_root;
+            this_one->cmd.parseptr = parseptr->subsidiary_root;
       }
 
       if (indicator >= 4 && indicator != 10) {
@@ -2730,147 +2816,153 @@ back_here:
 
          if (arg2 == 5) {
             /* Search for distorted diamond. */
-            if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x99)
+            if (kk == s_rigger && thislivemask == 0x99)
                fixp = &distrig3;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x66)
+            else if (kk == s_rigger && thislivemask == 0x66)
                fixp = &distrig4;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x55)
+            else if (kk == s_rigger && thislivemask == 0x55)
                fixp = &distrig7;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0xAA)
+            else if (kk == s_rigger && thislivemask == 0xAA)
                fixp = &distrig8;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0x66)
+            else if (kk == s_galaxy && thislivemask == 0x66)
                fixp = &dgald1;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0xCC)
+            else if (kk == s_galaxy && thislivemask == 0xCC)
                fixp = &dgald2;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0x33)
+            else if (kk == s_galaxy && thislivemask == 0x33)
                fixp = &dgald3;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0x99)
+            else if (kk == s_galaxy && thislivemask == 0x99)
                fixp = &dgald4;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
+            else if (kk == s2x4 && thislivemask == 0xAA)
                fixp = &d2x4d1;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
+            else if (kk == s2x4 && thislivemask == 0x55)
                fixp = &d2x4d2;
          }
          else if (arg2 == 4) {
-            if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
+            if (kk == s2x4 && thislivemask == 0xAA)
                fixp = &d2x4c1;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
+            else if (kk == s2x4 && thislivemask == 0x55)
                fixp = &d2x4c2;
          }
          else if (arg2 != 0) {
             /* Search for distorted column/line/wave. */
-            if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x99)
+            if (kk == s_rigger && thislivemask == 0x99)
                fixp = &distrig1;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x66)
+            else if (kk == s_rigger && thislivemask == 0x66)
                fixp = &distrig2;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x55)
+            else if (kk == s_rigger && thislivemask == 0x55)
                fixp = &distrig5;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0xAA)
+            else if (kk == s_rigger && thislivemask == 0xAA)
                fixp = &distrig6;
-            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x55)
+            else if (kk == s_bone && thislivemask == 0x55)
                fixp = &distbone1;
-            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x99)
+            else if (kk == s_bone && thislivemask == 0x99)
                fixp = &distbone2;
-            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x66)
+            else if (kk == s_bone && thislivemask == 0x66)
                fixp = &distbone5;
-            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0xAA)
+            else if (kk == s_bone && thislivemask == 0xAA)
                fixp = &distbone6;
-            else if (the_setups[setupcount].kind == s_hrglass && thislivemask == 0xAA)
+            else if (kk == s_hrglass && thislivemask == 0xAA)
                fixp = &disthrg1;
-            else if (the_setups[setupcount].kind == s_hrglass && thislivemask == 0x99)
+            else if (kk == s_hrglass && thislivemask == 0x99)
                fixp = &disthrg2;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0x66)
+            else if (kk == s_galaxy && thislivemask == 0x66)
                fixp = &dgalw1;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0xCC)
+            else if (kk == s_galaxy && thislivemask == 0xCC)
                fixp = &dgalw2;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0x33)
+            else if (kk == s_galaxy && thislivemask == 0x33)
                fixp = &dgalw3;
-            else if (the_setups[setupcount].kind == s_galaxy && thislivemask == 0x99)
+            else if (kk == s_galaxy && thislivemask == 0x99)
                fixp = &dgalw4;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x33)
+            else if (kk == s2x4 && thislivemask == 0x33)
                fixp = &d2x4w1;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xCC)
+            else if (kk == s2x4 && thislivemask == 0xCC)
                fixp = &d2x4w2;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
+            else if (kk == s2x4 && thislivemask == 0xAA)
                fixp = &d2x4x1;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
+            else if (kk == s2x4 && thislivemask == 0x55)
                fixp = &d2x4x2;
          }
          else {
             /* A few operations are independent of whether we said "disconnected",
                because the people are connected anyway. */
    
-            if (the_setups[setupcount].kind == s1x8 && thislivemask == 0xCC)
+            if (kk == s1x8 && thislivemask == 0xCC)
                fixp = &f1x8ctr;
-            else if (the_setups[setupcount].kind == s_qtag && thislivemask == 0xCC)
+            else if (kk == s_qtag && thislivemask == 0xCC)
                fixp = &fqtgctr;
-            else if (the_setups[setupcount].kind == s_bone && thislivemask == 0xCC)
+            else if (kk == s_bone && thislivemask == 0xCC)
                fixp = &fbonectr;
-            else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x33)
+            else if (kk == s_rigger && thislivemask == 0x33)
                fixp = &frigctr;
-            else if (the_setups[setupcount].kind == s3x1dmd && thislivemask == 0x66)
+            else if (kk == s_crosswave && thislivemask == 0xAA)
+               fixp = &fxwvctrd;
+            else if (kk == s3x1dmd && thislivemask == 0x66)
                fixp = &f3x1ctl;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x66)
+            else if (kk == s2x4 && thislivemask == 0x66)
                fixp = &f2x4ctr;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x0F)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0x0F)  /* unsymmetrical */
                fixp = &f2x4far;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xF0)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0xF0)  /* unsymmetrical */
                fixp = &f2x4near;
-            else if (the_setups[setupcount].kind == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
+            else if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
                fixp = &f2x4far;
-            else if (the_setups[setupcount].kind == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)
+            else if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4 && (thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)
                fixp = &f2x4near;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xC3)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0xC3)  /* unsymmetrical */
                fixp = &f2x4left;
-            else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x3C)  /* unsymmetrical */
+            else if (kk == s2x4 && thislivemask == 0x3C)  /* unsymmetrical */
                fixp = &f2x4right;
             else if (indicator >= 6) {
                /* Search for "disconnected" stuff. */
-               if (the_setups[setupcount].kind == s1x8 && thislivemask == 0xAA)
+               if (kk == s1x8 && thislivemask == 0xAA)
                   fixp = &f1x8aad;
-               else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x55)
+               else if (kk == s1x8 && thislivemask == 0x55)
                   fixp = &foo55d;
-               else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x99)
+               else if (kk == s1x8 && thislivemask == 0x99)
                   fixp = &foo99d;
-               else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x66)
+               else if (kk == s1x8 && thislivemask == 0x66)
                   fixp = &foo66d;
-               else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x33)
+               else if (kk == s1x8 && thislivemask == 0x33)
                   fixp = &f1x8endd;
-               else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x33)
+               else if (kk == s_bone && thislivemask == 0x33)
                   fixp = &fboneendd;
-               else if (the_setups[setupcount].kind == s_bone && thislivemask == 0xBB)
+               else if (kk == s_bone && thislivemask == 0xBB)
                   fixp = &fbonetgl;
-               else if (the_setups[setupcount].kind == s_rigger && thislivemask == 0x77)
+               else if (kk == s_rigger && thislivemask == 0x77)
                   fixp = &frigtgl;
-               else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xAA)
+               else if (kk == s2x4 && thislivemask == 0xAA)
                   fixp = &fppaad;
-               else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x55)
+               else if (kk == s2x4 && thislivemask == 0x55)
                   fixp = &fpp55d;
-               else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x99)
+               else if (kk == s2x4 && thislivemask == 0x99)
                   fixp = &f2x4endd;
-               else if (the_setups[setupcount].kind == s_qtag && thislivemask == 0x33)
+               else if (kk == s_qtag && thislivemask == 0x33)
                   fixp = &fqtgend;
-               else if (the_setups[setupcount].kind == s_ptpd && thislivemask == 0xAA)
+               else if (kk == s_ptpd && thislivemask == 0xAA)
                   fixp = &foozzd;
-               else if (the_setups[setupcount].kind == s3x1dmd && thislivemask == 0x99)
+               else if (kk == s_ptpd && thislivemask == 0x55)
+                  fixp = &fptpzzd;
+               else if (kk == s3x1dmd && thislivemask == 0x99)
                   fixp = &f3x1zzd;
-               else if (the_setups[setupcount].kind == s3x1dmd && thislivemask == 0xAA)
+               else if (kk == s3x1dmd && thislivemask == 0xAA)
                   fixp = &f3x1yyd;
-               else if (the_setups[setupcount].kind == s1x3dmd && thislivemask == 0x99)
+               else if (kk == s1x3dmd && thislivemask == 0x99)
                   fixp = &f1x3zzd;
-               else if (the_setups[setupcount].kind == s1x3dmd && thislivemask == 0xAA)
+               else if (kk == s1x3dmd && thislivemask == 0xAA)
                   fixp = &f1x3yyd;
-               else if (the_setups[setupcount].kind == s_crosswave && thislivemask == 0x55)
+               else if (kk == s1x3dmd && thislivemask == 0x66)
+                  fixp = &f1x3bbd;
+               else if (kk == s_crosswave && thislivemask == 0x55)
                   fixp = &fxwv1d;
-               else if (the_setups[setupcount].kind == s_crosswave && thislivemask == 0x99)
+               else if (kk == s_crosswave && thislivemask == 0x99)
                   fixp = &fxwv2d;
-               else if (the_setups[setupcount].kind == s_crosswave && thislivemask == 0x66)
+               else if (kk == s_crosswave && thislivemask == 0x66)
                   fixp = &fxwv3d;
-               else if (the_setups[setupcount].kind == s_crosswave && thislivemask == 0x33)
+               else if (kk == s_crosswave && thislivemask == 0x33)
                   fixp = &fxwve;
-               else if (the_setups[setupcount].kind == s_spindle && thislivemask == 0x55)
+               else if (kk == s_spindle && thislivemask == 0x55)
                   fixp = &fspindld;
-               else if (the_setups[setupcount].kind == s_spindle && thislivemask == 0xAA)
+               else if (kk == s_spindle && thislivemask == 0xAA)
                   fixp = &fspindlbd;
             }
             else {
@@ -2881,40 +2973,40 @@ back_here:
                   the_results[setupcount].result_flags = 0;
                   continue;
                }
-               else if (thislivemask == ((1 << (setup_attrs[the_setups[setupcount].kind].setup_limits+1)) - 1) || otherlivemask == 0) {
+               else if (thislivemask == ((1 << (setup_attrs[kk].setup_limits+1)) - 1) || otherlivemask == 0) {
                   /* And special case of everyone. */
-                  move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
+                  move(this_one, FALSE, &the_results[setupcount]);
                   continue;
                }
-               else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x33)
+               else if (kk == s2x4 && thislivemask == 0x33)
                   fixp = &foo33;
-               else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0xCC)
+               else if (kk == s2x4 && thislivemask == 0xCC)
                   fixp = &foocc;
-               else if (the_setups[setupcount].kind == s2x4 && thislivemask == 0x99)
+               else if (kk == s2x4 && thislivemask == 0x99)
                   fixp = &f2x4endo;
-               else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0xAA)
+               else if (kk == s1x8 && thislivemask == 0xAA)
                   fixp = &f1x8aa;
-               else if (the_setups[setupcount].kind == s3x4 && thislivemask == 0x0C3)
+               else if (kk == s3x4 && thislivemask == 0x0C3)
                   fixp = &f3x4left;
-               else if (the_setups[setupcount].kind == s3x4 && thislivemask == 0x30C)
+               else if (kk == s3x4 && thislivemask == 0x30C)
                   fixp = &f3x4right;
-               else if (the_setups[setupcount].kind == s2x6 && thislivemask == 0x0C3)
+               else if (kk == s2x6 && thislivemask == 0x0C3)
                   fixp = &f3x4lzz;
-               else if (the_setups[setupcount].kind == s2x6 && thislivemask == 0xC30)
+               else if (kk == s2x6 && thislivemask == 0xC30)
                   fixp = &f3x4rzz;
-               else if (the_setups[setupcount].kind == s1x8 && thislivemask == 0x33)
+               else if (kk == s1x8 && thislivemask == 0x33)
                   fixp = &f1x8endo;
-               else if (the_setups[setupcount].kind == s_bone && thislivemask == 0x33)
+               else if (kk == s_bone && thislivemask == 0x33)
                   fixp = &fboneendo;
-               else if (the_setups[setupcount].kind == s_ptpd && thislivemask == 0xAA)
+               else if (kk == s_ptpd && thislivemask == 0xAA)
                   fixp = &foozz;
-               else if (the_setups[setupcount].kind == s_spindle && thislivemask == 0x55)
+               else if (kk == s_spindle && thislivemask == 0x55)
                   fixp = &fspindlc;
-               else if (the_setups[setupcount].kind == s1x3dmd && thislivemask == 0x66)
+               else if (kk == s1x3dmd && thislivemask == 0x66)
                   fixp = &f1x3aad;
-               else if (the_setups[setupcount].kind == s_1x2dmd && thislivemask == 033)
+               else if (kk == s_1x2dmd && thislivemask == 033)
                   fixp = &f1x2aad;
-               else if (the_setups[setupcount].kind == s2x3 && thislivemask == 055)
+               else if (kk == s2x3 && thislivemask == 055)
                   fixp = &f2x3c;
             }
          }
@@ -2926,13 +3018,13 @@ back_here:
 
          for (lilcount=0; lilcount<numsetups; lilcount++) {
             uint32 tbone = 0;
-            lilsetup[lilcount].cmd = the_setups[setupcount].cmd;
+            lilsetup[lilcount].cmd = this_one->cmd;
             lilsetup[lilcount].cmd.cmd_assume.assumption = cr_none;
             lilsetup[lilcount].kind = fixp->ink;
             lilsetup[lilcount].rotation = 0;
 
             for (k=0; k<=setup_attrs[fixp->ink].setup_limits; k++)
-               tbone |= copy_rot(&lilsetup[lilcount], k, &the_setups[setupcount], fixp->nonrot[lilcount][k], 011*((-fixp->rot) & 3));
+               tbone |= copy_rot(&lilsetup[lilcount], k, this_one, fixp->nonrot[lilcount][k], 011*((-fixp->rot) & 3));
 
             if (arg2     == 2 && (tbone & 010) != 0) fail("There is no column of 4 here.");
             if ((arg2|2) == 3 && (tbone & 001) != 0) fail("There is no line of 4 here.");
@@ -3044,10 +3136,10 @@ back_here:
 
          if (feet_warning && fixp->outk != s4x4) warn(warn__adjust_to_feet);
 
-         reinstate_rotation(&the_setups[setupcount], &the_results[setupcount]);
+         reinstate_rotation(this_one, &the_results[setupcount]);
       }
       else
-         move(&the_setups[setupcount], FALSE, &the_results[setupcount]);
+         move(this_one, FALSE, &the_results[setupcount]);
    }
 
    if (!others) {      /* The non-designees did nothing. */
@@ -3094,8 +3186,9 @@ back_here:
 
    if (indicator == 10) goto forward_here;
 
-   concentric_move(ss, &ss->cmd, subsid_cmd_p,
-            schema, 0, 0, result);
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+   concentric_move(ss, &ss->cmd, subsid_cmd_p, schema, 0, 0, result);
    return;
 
    do_concentric_ends:
@@ -3104,14 +3197,17 @@ back_here:
 
    if (indicator == 10) goto forward_here;
 
-   concentric_move(ss, subsid_cmd_p, &ss->cmd,
-            schema, 0, 0, result);
+   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
+   concentric_move(ss, subsid_cmd_p, &ss->cmd, schema, 0, 0, result);
    return;
 
    forward_here:
 
    {
       cm_hunk *chunk = setup_attrs[ss->kind].conctab;
+
+      if (!chunk) goto back_here;    /* I don't think this can actually happen. */
 
       switch (schema) {
          case schema_concentric_2_6:

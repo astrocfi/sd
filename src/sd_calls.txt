@@ -1,6 +1,6 @@
 /* calls database source for Sd -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1996  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.56"
+version "31.57"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -2806,20 +2806,32 @@ call "strut @eright@f" c3
             alternate_definition [single] c3
    setup 4x1 1x4 rotate
       array [ZM3W CR2E 0 0]
+   setup pmd dmd
+      array [ZM3N 0 0 0]
+   setup dmd dmd
+      array [0 0 0 CR2S]
 
 call "strut right and left" c4
    setup 4x2 1x8 rotate
       array [ZM1W CR7E 0 0 0 0 CR4E ZM2W]
-            alternate_definition [single] c3
+            alternate_definition [single] c4
    setup 4x1 1x4 rotate
       array [ZM1W CR2E 0 0]
+   setup pmd dmd
+      array [ZM1N 0 0 0]
+   setup dmd dmd
+      array [0 0 0 CR2S]
 
 call "strut left and right" c4
    setup 4x2 1x8 rotate
       array [ZM6W AL0E 0 0 0 0 AL3E ZM5W]
-            alternate_definition [single] c3
+            alternate_definition [single] c4
    setup 4x1 1x4 rotate
       array [ZM3W AL0E 0 0]
+   setup pmd dmd
+      array [ZM3N 0 0 0]
+   setup dmd dmd
+      array [0 0 0 AL0S]
 
 call "pass and roll" a2
             rear_back_from_r_wave left_means_mirror
@@ -7464,10 +7476,10 @@ call "criss cross double your pleasure" c3x
 
 call "mini pleasure" c4
    setup 4x2 qtag rotate restriction forbidden wave_only
-      array [4W 2E 1E 7E 3E 0E 6E 5W]
+      array [CR4W CM2E CR1E AM7E CM3E AL0E CM6E AL5W]
             alternate_definition [cross] c4
    setup 4x2 qtag rotate
-      array [4W 2E 1E 3E 7E 0E 6E 5W]
+      array [CR4W CM2E CR1E CM3E AM7E AL0E CM6E AL5W]
 
 call "cheerio" c4a
    setup 4x2 2x4 rotate
@@ -7478,10 +7490,10 @@ call "cheerio" c4a
 
 call "something new" c3a
    setup 4x2 qtag rotate
-      array [6W 7E 0E 1E 0E 1E 3E 2W]
+      array [ZM6W CR7E CR0E CR1E AL0E AL1E AL3E ZM2W]
             alternate_definition [magic] c3
    setup 4x2 qtag rotate
-      array [2W 7E 1E 1E 0E 0E 3E 6W]
+      array [ZM2W CR7E AL1E CR1E AL0E CR0E AL3E ZM6W]
 
 call "_jam thru part 2" dontshow tag jam_thru_2
    setup 4x2 2x4 rotate
@@ -8335,22 +8347,28 @@ call "_box circulate and trade" dontshow tag box_circ_and_trade
    seq box_circ []
    seq trade [inherit_yoyo]
 
-call "double down" c3x
+call "double down" c4
+            take_right_hands
    setup 2x4 2x4
       preds "Can't tell which way my adjacent end is facing."
-         if inner_active_lines [0 7S 4S 0 2S 3S 0S 1S]
-         if outer_active_lines [3S 2S 1S 0S 0 2N 1N 0]
+         if inner_active_lines [0    AM7S CM4S 0    AL2S CR3S AL0S CR1S]
+         if outer_active_lines [CR3S CR2S AL1S AL0S 0    ZM2N ZM1N 0]
    setup 4x2 2x4
       preds "Can't tell which way my adjacent end is facing."
-         if column_double_down [6S 2N 3N 5S 2S 4N 5N 1S]
-            alternate_definition [cross] c3x
+         if column_double_down [CR6S ZM2N ZM3N CM5S AM2S ZM4N ZM5N AL1S]
+            alternate_definition [cross] c4
    setup 2x4 2x4
       preds "Can't tell which way my adjacent end is facing."
-         if inner_active_lines [0 7S 4S 0 2S 3S 0S 1S]
-         if outer_active_lines [2S 3S 0S 1S 0 3N 0N 0]
+         if inner_active_lines [0    AM7S CM4S 0    AL2S CR3S AL0S CR1S]
+         if outer_active_lines [CR2S CR3S AL0S AL1S 0    ZM3N ZM0N 0]
    setup 4x2 2x4
       preds "Can't tell which way my adjacent end is facing."
-         if column_double_down [6S 5N 4N 5S 2S 3N 2N 1S]
+         if column_double_down [CR6S ZM5N ZM4N CM5S AM2S ZM3N ZM2N AL1S]
+            alternate_definition [half] c4
+   setup 2x4 hyperglass
+      preds "Can't tell which way my adjacent end is facing."
+         if inner_active_lines [0    AL2S CR5S 0    ZM5N 0    0    ZM2N]
+         if outer_active_lines [CR3E CR4E AL4W AL3W 0    ZM7N ZM1N 0]
 
 call "_finish clear out" dontshow tag finclearout
    setup 2x4 2x4

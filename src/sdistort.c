@@ -232,7 +232,7 @@ Private void innards(
 
       final_map = 0;
       hunk = map_lists[z[0].kind][arity-1];
-      if (hunk) final_map = (*hunk)[map_kind][(z[0].rotation & 1)];
+      if (hunk) final_map = hunk->f[map_kind][(z[0].rotation & 1)];
    }
 
    if (arity == 2) {
@@ -599,7 +599,7 @@ extern void do_phantom_2x4_concept(
          }
 
          rot = 0;
-         maps = (*map_lists[s1x8][1])[parseptr->concept->value.arg3][0];
+         maps = map_lists[s1x8][1]->f[parseptr->concept->value.arg3][0];
          if (!maps) fail("This concept not allowed in this setup.");
          break;
       case s4x4:
@@ -639,8 +639,8 @@ extern void do_phantom_2x4_concept(
                else                      fail("There are no split phantom columns here.");
             }
 
-            if (global_livemask == 07474) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_R_HALF][1];
-            else if (global_livemask == 01717) maps = (*map_lists[s2x4][1])[MPKIND__OFFS_L_HALF][1];
+            if (global_livemask == 07474) maps = map_lists[s2x4][1]->f[MPKIND__OFFS_R_HALF][1];
+            else if (global_livemask == 01717) maps = map_lists[s2x4][1]->f[MPKIND__OFFS_L_HALF][1];
             else fail("Must have a parallelogram for this.");
 
             warn(warn__split_phan_in_pgram);
@@ -1209,8 +1209,8 @@ extern void distorted_move(
    
          /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
    
-         if (livemask == 0xB4B4) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_L_FULL][1]; goto do_divided_call; }
-         else if (livemask == 0x4B4B) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_R_FULL][1]; goto do_divided_call; }
+         if (livemask == 0xB4B4) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_L_FULL][1]; goto do_divided_call; }
+         else if (livemask == 0x4B4B) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_R_FULL][1]; goto do_divided_call; }
          else {
             if (!search_row(4, &the_map[0], &the_map[7], list_10_6_5_4, ss)) zlines = FALSE;
             if (!search_row(4, &the_map[1], &the_map[6], list_11_13_7_2, ss)) zlines = FALSE;
@@ -1232,8 +1232,8 @@ extern void distorted_move(
    
          /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
          
-         if (livemask == 07474) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_L_HALF][1]; goto do_divided_call; }
-         else if (livemask == 06363) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_R_HALF][1]; goto do_divided_call; }
+         if (livemask == 07474) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_L_HALF][1]; goto do_divided_call; }
+         else if (livemask == 06363) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_R_HALF][1]; goto do_divided_call; }
    
          /* Search for the live people. */
          
@@ -1374,7 +1374,7 @@ extern void triple_twin_move(
       else fail("Can't find triple twin lines.");
    }
    
-   divided_setup_move(ss, (*map_lists[s2x4][2])[MPKIND__SPLIT][1],
+   divided_setup_move(ss, map_lists[s2x4][2]->f[MPKIND__SPLIT][1],
          phantest_not_just_centers, TRUE, result);
 }
 

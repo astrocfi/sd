@@ -1,6 +1,6 @@
-# Generated automatically from makefile.pc.in by configure.
+# Generated automatically from Makefile.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <95/11/08 15:49:59 gildea>
+# Time-stamp: <95/11/14 17:30:03 gildea>
 
 srcdir = .
 # VPATH is for GNU make
@@ -198,7 +198,7 @@ LINT = /usr/lang/alint
 lint:
 	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
 
-DISTTXT = README INSTALL Relnotes oldnotes COPYING sample1.ini sample2.ini \
+DISTTXT = README INSTALL Relnotes oldnotes COPYING sample1.ini sample2.ini demo \
             Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
             db_doc.txt sd_doc.PS sd_doc.txt
 DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
@@ -212,7 +212,7 @@ DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
 TARFLAGS = 
-DIST_TARFILE = sd-31.52.tar
+DIST_TARFILE = sd-31.57.tar
 COMPRESS = compress
 
 dist: dist-files
@@ -225,22 +225,25 @@ dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
 ls:
 	@echo $(DISTFILES)
 
-pcdist: sd3152bn
+pcdist: sd3157bn
 
-sd3152bn: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme relnotes oldnotes sample1.ini sample2.ini
+sd3157bn: sdtty.exe mkcalls.exe sd_calls.dat
+	lha a $@ readme relnotes oldnotes
+	lha a $@ sdtty.exe mkcalls.exe go32.exe
+	lha a $@ sample1.ini sample2.ini demo sd95.exe go.bat
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
-	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
+	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
 
-BIN_TARFILE = sd-31.52-.tar
+BIN_TARFILE = sd-31.57-.tar
 
 
 
 TARFILES = README Relnotes oldnotes \
-	 COPYING sample1.ini sample2.ini \
+	 sd sdtty mkcalls \
+	 sample1.ini sample2.ini demo \
 	 sd_calls.txt sd_calls.dat db_doc.txt \
-	 sd sdtty mkcalls Sd.res sd_doc.txt sd_doc.PS
+	 Sd.res sd_doc.txt sd_doc.PS
 
 $(BIN_TARFILE).Z: Makefile $(TARFILES)
 	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES)

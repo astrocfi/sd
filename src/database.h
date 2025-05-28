@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 71
+#define DATABASE_FORMAT_VERSION 72
 
 
 
@@ -175,20 +175,22 @@ typedef enum {
    s_trngl4,
    s_bone6,
    s_short6,
+   s1x6,
+   s2x3,
    s_1x2dmd,
    s_2x1dmd,
    s_qtag,
    s_bone,
+   s1x8,
+   s1x3dmd,
+   s3x1dmd,
    s_spindle,
    s_hrglass,
    s_dhrglass,
    s_hyperglass,
    s_crosswave,
-   s1x8,
    s2x4,
    s_rigger,
-   s2x3,
-   s1x6,
    s3x4,
    s2x6,
    s1p5x8,    /* internal use only */
@@ -202,8 +204,6 @@ typedef enum {
    s_c1phan,
    s_bigblob,
    s_ptpd,
-   s1x3dmd,
-   s3x1dmd,
    s3dmd,
    s4dmd,
    s_wingedstar,

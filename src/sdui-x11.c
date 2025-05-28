@@ -87,7 +87,7 @@ Private Widget statuswin, txtwin;
 Private Widget resolvewin, resolvetitle, resolvemenu;
 Private Widget confirmpopup, confirmlabel;
 Private Widget choosepopup, choosebox, chooselabel, chooselist;
-Private Widget commentpopup, commentbox, outfilepopup, outfilebox, headerpopup, headerbox;
+Private Widget commentpopup, commentbox, outfilepopup, outfilebox, titlepopup, titlebox;
 Private Widget getoutpopup, getoutbox;
 #ifdef NEGLECT
 Private Widget neglectpopup, neglectbox;
@@ -106,7 +106,7 @@ typedef enum {
    cmd_button_active_phantoms,
    cmd_button_create_comment,
    cmd_button_change_outfile,
-   cmd_button_change_header,
+   cmd_button_change_title,
    cmd_button_getout,
    cmd_button_resolve,
    cmd_button_reconcile,
@@ -316,7 +316,7 @@ static int button_translations[] = {
    SPECIAL_ALLOW_ACT_PHANTOMS,            /* cmd_button_active_phantoms */
    command_create_comment,                /* cmd_button_create_comment */
    command_change_outfile,                /* cmd_button_change_outfile */
-   command_change_header,                 /* cmd_button_change_header */
+   command_change_header,                 /* cmd_button_change_title */
    command_getout,                        /* cmd_button_getout */
    command_resolve,                       /* cmd_button_resolve */
    command_reconcile,                     /* cmd_button_reconcile */
@@ -563,7 +563,7 @@ typedef struct _SdResources {
     String modify_circ_format;
     String modify_line_two;
     String outfile_format;
-    String header_format;
+    String title_format;
     String modifications_allowed[12];
     String start_list[NUM_START_SELECT_KINDS];
     String cmd_list[NUM_CMD_BUTTON_KINDS];
@@ -596,7 +596,7 @@ Private XtResource startup_resources[] = {
     MENU("toggleConceptLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
     MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
     MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
-    MENU("changeHeaderComment", start_list[start_select_change_header_comment], "Change header comment")
+    MENU("changeTitle", start_list[start_select_change_header_comment], "Change title")
 };
 
 /* BEWARE!!  This list is keyed to the definition of "cmd_button_kind" above. */
@@ -610,7 +610,7 @@ Private XtResource command_resources[] = {
     MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
     MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
-    MENU("header", cmd_list[cmd_button_change_header], "Change header comment"),
+    MENU("title", cmd_list[cmd_button_change_title], "Change title"),
     MENU("getout", cmd_list[cmd_button_getout], "End this sequence"),
     MENU("resolve", cmd_list[cmd_button_resolve], "Resolve"),
     MENU("reconcile", cmd_list[cmd_button_reconcile], "Reconcile"),
@@ -661,8 +661,8 @@ Private XtResource outfile_resources[] = {
 };
 
 Private XtResource header_resources[] = {
-    MENU("format", header_format,
-	 "Current header comment is \"%s\".  Enter new comment:"),
+    MENU("format", title_format,
+	 "Current title is \"%s\".  Enter new title:"),
 };
 
 Private XtResource choose_resources[] = {
@@ -995,31 +995,31 @@ uims_preinitialize(void)
     XtRealizeWidget(outfilepopup); /* makes XtPopup faster to do this now */
 
 
-    /* header popup */
+    /* title popup */
 
-    headerpopup = XtVaCreatePopupShell("headerpopup",
+    titlepopup = XtVaCreatePopupShell("titlepopup",
                transientShellWidgetClass, toplevel,
                XtNallowShellResize, True,
                NULL);
-    XtGetApplicationResources(headerpopup, (XtPointer) &sd_resources,
+    XtGetApplicationResources(titlepopup, (XtPointer) &sd_resources,
                header_resources, XtNumber(header_resources),
                NULL, 0);
-    XtOverrideTranslations(headerpopup, unmap_no_trans);
+    XtOverrideTranslations(titlepopup, unmap_no_trans);
 
-    headerbox = XtVaCreateManagedWidget("header", dialogWidgetClass,
-					 headerpopup,
+    titlebox = XtVaCreateManagedWidget("title", dialogWidgetClass,
+					 titlepopup,
 					 /* create an empty value area */
 					 XtNvalue, "",
 					 /* to make it wide enough */
-					 XtNlabel, "Current header comment is 'dummy header comment'.  Enter new comment:",
+					 XtNlabel, "Current title is 'dummy title'.  Enter new title:",
 					 NULL);
 
-    XawDialogAddButton(headerbox, "abort", dialog_callback,
+    XawDialogAddButton(titlebox, "abort", dialog_callback,
 		       (XtPointer)POPUP_DECLINE);
-    XawDialogAddButton(headerbox, "ok", dialog_callback,
+    XawDialogAddButton(titlebox, "ok", dialog_callback,
 		       (XtPointer)POPUP_ACCEPT_WITH_STRING);
 
-    XtRealizeWidget(headerpopup); /* makes XtPopup faster to do this now */
+    XtRealizeWidget(titlepopup); /* makes XtPopup faster to do this now */
 
 
     /* getout popup */
@@ -1540,13 +1540,13 @@ extern int uims_do_outfile_popup(char dest[])
 
 extern int uims_do_header_popup(char dest[])
 {
-   char header_question[MAX_TEXT_LINE_LENGTH];
+   char title_question[MAX_TEXT_LINE_LENGTH];
 
-   (void) sprintf(header_question,
-         sd_resources.header_format, header_comment);
-   XtVaSetValues(headerbox, XtNlabel, header_question, NULL);
+   (void) sprintf(title_question,
+         sd_resources.title_format, header_comment);
+   XtVaSetValues(titlebox, XtNlabel, title_question, NULL);
 
-   return get_popup_string(headerpopup, headerbox, dest);
+   return get_popup_string(titlepopup, titlebox, dest);
 }
 
 
