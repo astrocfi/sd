@@ -9651,7 +9651,7 @@ call "_natural 3/4 and 3/4" dontshow tag nat34_34
       array [CCCAL1W AAACR3W AL2N CR2S]
 
 call "_ @D by the right" dontshow tag odd_frac_by_right
-            left_means_mirror neednumber split_large_setups
+            left_means_mirror neednumber
             fractal_is_inherited yoyo_fractal_numbers diamond_is_legal
    setup 1x4 dmd qualifier num 1 left wave_only
       array [0 CR1E ZM2N 0]
@@ -9723,11 +9723,6 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR1E CR5E CR3E 0 0 0]
    setup 3x2 1x6 qualifier num 3 right wave_only
       array [CR0W CR2W CR4W 0 0 0]
-
-   setup 4x2 1x8 qualifier num 1 right wave_only
-      array [CR1E CR2E CR7E CR4E 0 0 0 0]
-   setup 4x2 1x8 qualifier num 3 right wave_only
-      array [CR0W CR3W CR6W CR5W 0 0 0 0]
 
    setup 2x2 1x4 rotate qualifier num 1 right wave_only
       array [CR0N 0 0 CR3N]
@@ -10312,14 +10307,14 @@ call "any hand swing the fractions" c1
 // Quarter mix and three quarter mix.
 
 call "@D cross" c3x
-            left_means_mirror neednumber grand_is_inherited bigmatrix_is_inherited visible_fractions
-   seq odd_frac_by_right [inherit_left inherit_bigmatrix]
-   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand]
+            left_means_mirror neednumber grand_is_inherited visible_fractions
+   seq odd_frac_by_right [inherit_left]
+   seq ctrxrun_in_rw [inherit_left inherit_grand]
 
 call "@D mix" c3a
-            left_means_mirror neednumber grand_is_inherited bigmatrix_is_inherited yoyo_is_inherited visible_fractions
-   seq odd_frac_by_right [inherit_left inherit_bigmatrix]
-   seq ctrxrun_in_rw [inherit_left inherit_bigmatrix inherit_grand]
+            left_means_mirror neednumber grand_is_inherited yoyo_is_inherited visible_fractions
+   seq odd_frac_by_right [inherit_left]
+   seq ctrxrun_in_rw [inherit_left inherit_grand]
    seq maybegrandslip_in_lw [inherit_left inherit_grand inherit_yoyo roll_transparent]
 
 call "any hand @D cross" c3x
@@ -11759,18 +11754,6 @@ call "_centers cross run in right wave" dontshow tag ctrxrun_in_rw
       array [ZM1N CR2S CR7S AL0S ZM5N AL6S AL3S CR4S]
    setup 8x1 1x8 restriction unusual alwaysfail
       array [ZM1N    0    0    0 ZM5N    0    0    0]
-            alternate_definition [12matrix grand] c4
-   setup 1x12 1x12
-      array [ZM1N CR3S AL0S CR5S AL2S CR10S ZM7N AL9S CR6S AL11S CR8S AL4S]
-   setup 12x1 1x12 restriction unusual alwaysfail
-      array [ZM1N    0    0    0    0     0 ZM5N    0    0     0    0    0]
-            alternate_definition [16matrix grand] c4
-   setup 1x16 1x16
-      array [ZM1N  CR3S AL0S  CR5S  AL2S  CR7S  AL4S CR14S
-             ZM9N AL11S CR8S AL13S CR10S AL15S CR12S  AL6S]
-   setup 16x1 1x16 restriction unusual alwaysfail
-      array [ZM1N     0    0     0     0     0     0     0
-             ZM5N     0    0     0     0     0     0     0]
             alternate_definition [grand half] c3a
    setup 1x6 2x3
       array [ZM5N CR1E AL0W ZM3N AL1W CR2E]
@@ -18274,7 +18257,7 @@ call "circulate for coordinate" dontshow tag circ_for_coord
    setup 2x1 1x2 rotate restriction unusual alwaysfail
       array [CM1N 0]
 
-call "1/2 circulate" mainstream
+call "1/2 circulate" mainstream tag half_circ
    seq circulate [force_half]
 
 call "circulate 1-1/2" mainstream

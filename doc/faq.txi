@@ -1068,18 +1068,13 @@ on the command line or in a script or Windows shortcut, or put the line
 
 I'm glad you asked.  The Microsoft compiler is not of acceptably high
 quality for the compilation of Sd and Sdtty.  Microsoft may know how to
-write software that aggressively propagates email viruses
-(@uref{http://www.securityworld.com/community/hottopics/lovebugvirus.html,here}),
-and they may know how to write software that deletes competitors'
-products (@uref{http://www.dotcomeon.com/bluemountain.html,here}), and
-they may know how to write software that makes competing web browsers
-look defective
-(@uref{http://news.zdnet.com/2100-3513_22-5218163.html,here}), but they
-don't know how, or can't be bothered, to write compilers that generate
-correct code.  Compilations of Sd and Sdtty have been observed to crash
-on ``snag bits and pieces'' from waves.  At first this was believed to
-occur only with Visual C++ version 6, service pack 3, which caused me to
-revert to version 5.
+write software that aggressively propagates email viruses, and they may
+know how to write software that deletes competitors' products, and they
+may know how to write software that makes competing web browsers look
+defective, but they don't know how to write compilers.  Compilations of
+Sd and Sdtty have been observed to crash on ``snag bits and pieces''
+from waves.  At first this was believed to occur only with Visual C++
+version 6, service pack 3, which caused me to revert to version 5.
 
 The bug was eventually tracked down to incorrect restoration of the ECX
 register upon exit from a ``switch'' statement.  Bugs of this type, in
@@ -1099,7 +1094,7 @@ have.  As of Sd version
 always been used for the Linux release, of course.
 
 No version of Sd or Sdtty suffering from this Microsoft compiler bug was
-ever released---the code was modified to avoid the bug.  But that is not
+ever released--the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
 of the program could be getting compiled incorrectly.
 
@@ -1122,7 +1117,7 @@ of the program could be getting compiled incorrectly.
   postscript viewer:    GSView 2.7                   free
                         Ghostscript 5.50             free
   PDF viewer:           Acrobat 4.0                  free
-  HTML viewer:          Firefox 1.0                  free
+  HTML viewer:          Netscape 4.76                free
   Zip disk software:    Iomega 2.8.0.2               commercial
   mailer for upload:    Netscape 4.76                free
 @end example
