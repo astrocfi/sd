@@ -288,7 +288,7 @@ extern void open_file(void)
 
    file_error = FALSE;
 
-   /* If this is a "special" file (indicatyed by ending with a colon),
+   /* If this is a "special" file (indicated by ending with a colon),
       we simply open it and write. */
 
    if (outfile_special) {

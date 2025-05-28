@@ -1,6 +1,6 @@
-# Generated automatically from Makefile.in by configure.
+# Generated automatically from makefile.pc.in by configure.
 # Makefile for Sd (square dance caller's helper)
-# Time-stamp: <95/11/14 17:30:03 gildea>
+# Time-stamp: <96/01/19 13:27:26 gildea>
 
 srcdir = .
 # VPATH is for GNU make
@@ -212,7 +212,7 @@ DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
 
 TAR = tar
 TARFLAGS = 
-DIST_TARFILE = sd-31.57.tar
+DIST_TARFILE = sd-31.59.tar
 COMPRESS = compress
 
 dist: dist-files
@@ -225,9 +225,9 @@ dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS pc-files
 ls:
 	@echo $(DISTFILES)
 
-pcdist: sd3157bn
+pcdist: sd3159bn
 
-sd3157bn: sdtty.exe mkcalls.exe sd_calls.dat
+sd3159bn: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ readme relnotes oldnotes
 	lha a $@ sdtty.exe mkcalls.exe go32.exe
 	lha a $@ sample1.ini sample2.ini demo sd95.exe go.bat
@@ -235,18 +235,18 @@ sd3157bn: sdtty.exe mkcalls.exe sd_calls.dat
 	lha a $@ sd_doc.txt sd_doc.ps
 	lha s $@
 
-BIN_TARFILE = sd-31.57-.tar
+BIN_TARFILE = sd-31.59-.tar
 
 
 
-TARFILES = README Relnotes oldnotes \
-	 sd sdtty mkcalls \
+TARFILES1 = README Relnotes oldnotes
+TARFILES2 = sd sdtty mkcalls \
 	 sample1.ini sample2.ini demo \
 	 sd_calls.txt sd_calls.dat db_doc.txt \
 	 Sd.res sd_doc.txt sd_doc.PS
 
-$(BIN_TARFILE).Z: Makefile $(TARFILES)
-	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES)
+$(BIN_TARFILE).Z: Makefile $(TARFILES2) $(TARFILES1)
+	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES1) $(TARFILES2)
 	$(RM) $@
 	-$(COMPRESS) $(BIN_TARFILE)
 
