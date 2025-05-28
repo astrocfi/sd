@@ -190,7 +190,7 @@ direction_kind do_direction_iteration()
 
          /* See if we have exhausted all possible directions.
             We only look for "left" and "right" in the first scan. */
-         if (     direction_iterator_table[direction_iterator] == 
+         if (     direction_iterator_table[direction_iterator] ==
                   ((current_pick_type == pick_plain_scan_nice_only) ?
                    direction_in :
                    direction_uninitialized))
@@ -526,7 +526,7 @@ call_with_name *do_pick()
       special precautions against an infinite loop.  Second, and more importantly, if we
       just called the random number generator again, it would screw up the hash numbers,
       which would make the uniquefication fail, so we could see the same thing twice. */
-   
+
    if ((search_goal == command_level_call || search_goal == command_8person_level_call) &&
        ((dance_level) result->the_defn.level) < level_threshholds[calling_level])
       fail_no_retry("Level reject.");

@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8m"
+version "34.8p"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -604,13 +604,17 @@ call "out roll@O circulate@P" a2
             alternate_definition [12matrix] c3
    setup 2x6 2x6
       preds "???"
-         if outroller_is_cw_2x6 [   0 CR2S CR3S CR4S CR5S AL0S AL7S AL8S AL9S AL10S AL11S     0]
-         if always              [CR5S AL0S AL1S AL2S AL3S    0    0 CR6S CR7S  CR8S  CR9S CR10S]
+         if outroller_is_cw_2x6 [   0 CR2S CR3S CR4S  CR5S  AL0S
+                                 AL7S AL8S AL9S AL10S AL11S    0]
+         if always              [CR5S AL0S AL1S AL2S AL3S     0
+                                    0 CR6S CR7S CR8S CR9S CR10S]
             alternate_definition [16matrix] c3
    setup 2x8 2x8
       preds "???"
-         if outroller_is_cw_2x8 [   0 CR2S CR3S CR4S CR5S CR6S CR7S AL0S AL9S AL10S AL11S AL12S AL13S AL14S AL15S     0]
-         if always              [CR7S AL0S AL1S AL2S AL3S AL4S AL5S    0    0 CR8S  CR9S  CR10S CR11S CR12S CR13S CR14S]
+         if outroller_is_cw_2x8 [   0  CR2S  CR3S  CR4S  CR5S  CR6S  CR7S  AL0S
+                                 AL9S AL10S AL11S AL12S AL13S AL14S AL15S     0]
+         if always              [CR7S AL0S  AL1S  AL2S  AL3S  AL4S  AL5S      0
+                                    0 CR8S  CR9S  CR10S CR11S CR12S CR13S CR14S]
             alternate_definition [magic] c3
    setup 2x4 2x4
       preds "???"
@@ -2495,7 +2499,11 @@ call "_centers hinge" dontshow tag ctrhinge
             left_means_mirror
    conc hinge [inherit_left] nullcall []
 
-call "_single centers hinge" dontshow tag sglctrhinge_with_warn
+call "_single centers hinge" dontshow tag sglctrhinge
+            left_means_mirror intlk_is_inherited
+   singleconc hinge_with_warn [inherit_intlk inherit_left] nullcall []
+
+call "_single centers together hinge" dontshow tag sglctrtogetherhinge
             left_means_mirror intlk_is_inherited
    singleconc_together hinge_with_warn [inherit_intlk inherit_left] nullcall []
 
@@ -3758,84 +3766,6 @@ call "rotary spin the windmill" c2
    seq passthru [inherit_left inherit_magic inherit_twisted]
    seq rotary [inherit_left]
    seq finish_windmill [insert_number 2]
-
-call "sock it to me" c2
-   setup 1x4 1x4
-      preds "Can't find an unambiguous socker."
-         if socker_is_left  [CR2S AL0S AL3S AL1S]
-         if socker_is_right [0    CR3S 0    CR2S]
-   setup 1x3 1x3
-      preds "Can't find an unambiguous socker."
-         if socker_is_left_1x3  [CR2S AL0S AL1S]
-         if socker_is_right_1x3 [0    CR2S 0]
-            alternate_definition [12matrix] c3
-   setup 1x6 1x6
-      preds "Can't find an unambiguous socker."
-         if socker_is_left_1x6  [CR3S AL0S AL1S AL4S AL5S AL2S]
-         if socker_is_right_1x6 [0    CR2S CR5S 0    CR3S CR4S]
-            alternate_definition [16matrix] c3
-   setup 1x8 1x8
-      preds "Can't find an unambiguous socker."
-         if socker_is_left_1x8  [CR4S AL0S AL3S AL1S AL5S AL7S AL2S AL6S]
-         if socker_is_right_1x8 [0    CR3S CR6S CR2S 0    CR4S CR7S CR5S]
-            alternate_definition [half] c2
-   setup 1x4 2x3
-      preds "Can't find an unambiguous socker."
-         if socker_is_left  [CR1E AL5W AL3W AL4W]
-         if socker_is_right [0    CR1E 0    CR2E]
-   setup 1x3 trngl
-      preds "Can't find an unambiguous socker."
-         if socker_is_left_1x3  [CR3E AL5W AL4W]
-         if socker_is_right_1x3 [0    CR2E 0]
-
-call "here comes the judge" c2
-   setup 1x4 1x4
-      preds "Can't find an unambiguous judge."
-         if judge_is_right [CR1S CR3S AL0S CR2S]
-         if judge_is_left  [0    AL0S 0    AL1S]
-   setup 1x3 1x3
-      preds "Can't find an unambiguous judge."
-         if judge_is_right_1x3 [CR1S CR2S AL0S]
-         if judge_is_left_1x3  [0    AL0S 0]
-            alternate_definition [12matrix] c3
-   setup 1x6 1x6
-      preds "Can't find an unambiguous judge."
-         if judge_is_right_1x6 [CR1S CR2S CR5S AL0S CR3S CR4S]
-         if judge_is_left_1x6  [0    AL0S AL1S 0    AL5S AL2S]
-            alternate_definition [16matrix] c3
-   setup 1x8 1x8
-      preds "Can't find an unambiguous judge."
-         if judge_is_right_1x8 [CR1S CR3S CR6S CR2S AL0S CR4S CR7S CR5S]
-         if judge_is_left_1x8  [0    AL0S AL3S AL1S 0    AL7S AL2S AL6S]
-            alternate_definition [half] c2
-   setup 1x4 2x3
-      preds "Can't find an unambiguous judge."
-         if judge_is_right [CR5E CR4E AL1W CR3E]
-         if judge_is_left  [0    AL0W 0    AL1W]
-   setup 1x3 trngl
-      preds "Can't find an unambiguous judge."
-         if judge_is_right_1x3 [CR5E CR4E AL3W]
-         if judge_is_left_1x3  [0    AL1W 0]
-
-call "_finish sock it to the wave" dontshow tag fin_sockit
-   setup 1x4 1x4
-      preds "Can't find an unambiguous socker."
-         if socker_is_left  [CR2S ZM0N AL3S ZM1N]
-         if socker_is_right [0    ZM3N 0    ZM2N]
-
-call "_finish here comes the wave" dontshow tag fin_judge
-   setup 1x4 1x4
-      preds "Can't find an unambiguous judge."
-         if judge_is_right [CR1S ZM3N AL0S ZM2N]
-         if judge_is_left  [0    ZM0N 0    ZM1N]
-
-call "sock it to the wave" c4
-   seq sglctrhinge_with_warn []
-   seq fin_sockit []
-
-call "here comes the wave" c4
-   seq sglctrhinge_with_warn []
-   seq fin_judge []
 
 call "partner tag" a1 tag partnertag
    setup 1x2 1x2
@@ -6746,9 +6676,10 @@ call "vertical turn and deal" c4a
    this for the other common word order "chase the N/4 tag". */
 
 call "chase the @a tag" c3
-            neednumber left_means_mirror
+            neednumber left_means_mirror singlefile_is_inherited
             single_is_inherited nxn_is_inherited bigmatrix_is_inherited revert_is_inherited
-   seq chase_the_half_tag [inherit_left inherit_single inherit_nxn inherit_bigmatrix]
+   seq chase_the_half_tag [inherit_left inherit_singlefile
+                           inherit_single inherit_nxn inherit_bigmatrix]
    seq revert_if_needed [inherit_revert inherit_nxn]
    seq extend_n [inherit_nxn inherit_bigmatrix]
 
@@ -9032,6 +8963,10 @@ call "reach out" c3a
    setup 2x2 1x4 restriction wave_only
       array [CM3S AM1S CR2S AL0S]
 
+call "scatter reach out" c4
+   setup 2x4 1x8 restriction wave_only
+      array [CM5S CM7S AM3S AM1S CR4S AL6S CR2S AL0S]
+
 call "REWIND reach out" c4
    setup 1x4 2x2
       array [CR3S CR1S AL2S AL0S]
@@ -9107,12 +9042,12 @@ call "_trail for trail to a diamond" dontshow tag trailfortrailtodiamond
 call "peel to a@I diamond" c2
             intlk_is_inherited
    seq peelforpeeltoadiamond []
-   seq sglctrhinge_with_warn [inherit_intlk roll_transparent]
+   seq sglctrtogetherhinge [inherit_intlk roll_transparent]
 
 call "trail to a@I diamond" c2
             intlk_is_inherited
    seq trailfortrailtodiamond []
-   seq sglctrhinge_with_warn [inherit_intlk roll_transparent]
+   seq sglctrtogetherhinge [inherit_intlk roll_transparent]
 
 call "peel off" plus tag peeloff
             split_if_z
@@ -12491,15 +12426,20 @@ call "_ @D wheel" dontshow tag oddfracwheel
    setup 1x8 2x4 qualifier num 3 none
       array [AL0E AL7E 0 0 0 0 0 0]
             alternate_definition [single] c4
-   setup 1x2 1x2 qualifier num 1 none
-      array [0 AL1W]
-   setup 1x2 1x2 qualifier num 3 none
-      array [AL0E 0]
+   setup 1x1 1x1 qualifier num 1 none
+      array [AL0W]
+   setup 1x1 1x1 qualifier num 3 none
+      array [AL0E]
             alternate_definition [3x3] c4
-   setup 1x6 2x3 rotate restriction forbidden 3x3couples_only qualifier num 1 none
-      array [0 0 0 AL0S AL1S AL2S]
-   setup 1x6 2x3 rotate restriction forbidden 3x3couples_only qualifier num 3 none
-      array [AL5N AL4N AL3N 0 0 0]
+   setup 1x3 1x3 rotate restriction forbidden 3x3couples_only qualifier num 1 none
+      array [AL2S AL1S AL0S]
+   setup 1x3 1x3 rotate restriction forbidden 3x3couples_only qualifier num 3 none
+      array [AL0N AL1N AL0N]
+            alternate_definition [4x4] c4
+   setup 1x4 1x4 rotate restriction forbidden 4x4couples_only qualifier num 1 none
+      array [AL2S AL3S AL0S AL1S]
+   setup 1x4 1x4 rotate restriction forbidden 4x4couples_only qualifier num 3 none
+      array [AL0N AL1N AL2N AL3N]
             alternate_definition [3x1] c4
    setup 1x4 2x3 rotate qualifier num 1 none
       preds "Can't find couples of 3."
@@ -12509,7 +12449,7 @@ call "_ @D wheel" dontshow tag oddfracwheel
       preds "Can't find couples of 3."
          if couple_side_of_out_3n1_line   [AL5N AL4N 0 0]
          if miniwave_side_of_out_3n1_line [AL4N 0    0 AL3N]
-            alternate_definition [1x3] c4    /* Same as 3x1. */
+            alternate_definition [1x3] c4    // Same as 3x1.
    setup 1x4 2x3 rotate qualifier num 1 none
       preds "Can't find couples of 3."
          if couple_side_of_out_3n1_line   [0 0    AL0S AL1S]
@@ -12518,11 +12458,6 @@ call "_ @D wheel" dontshow tag oddfracwheel
       preds "Can't find couples of 3."
          if couple_side_of_out_3n1_line   [AL5N AL4N 0 0]
          if miniwave_side_of_out_3n1_line [AL4N 0    0 AL3N]
-            alternate_definition [4x4] c4
-   setup 1x8 2x4 rotate restriction forbidden 4x4couples_only qualifier num 1 none
-      array [0 0 0 0 AL0S AL1S AL3S AL2S]
-   setup 1x8 2x4 rotate restriction forbidden 4x4couples_only qualifier num 3 none
-      array [AL7N AL6N AL4N AL5N 0 0 0 0]
 
 call "_finish wheel the ocean" dontshow tag finwheelocean
             reverse_means_mirror split_large_setups
@@ -12535,6 +12470,9 @@ call "_finish wheel the ocean" dontshow tag finwheelocean
             alternate_definition [grand] c4
    setup 4x2 2x4
       array [ZM0N 0 0 0 ZM4N ZM3N ZM2N ZM1N]
+            alternate_definition [singlefile] c4
+   setup 4x1 2x2
+      array [ZM0N ZM1N 0 0]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
       array [ZM0W 0]
@@ -12570,6 +12508,9 @@ call "_finish wheel the sea" dontshow tag finwheelsea
             alternate_definition [grand] c4
    setup 4x2 2x4
       array [ZM7N 0 0 0 0 ZM4N ZM5N ZM6N]
+            alternate_definition [singlefile] c4
+   setup 4x1 2x2
+      array [ZM3N ZM2N 0 0]
             alternate_definition [single] c4
    setup 2x1 1x2 rotate
       array [ZM1W 0]
@@ -12660,22 +12601,22 @@ call "wheel to an hourglass" c4
    seq finwheeltohrglass [inherit_reverse]
 
 call "@D wheel the ocean" c3a
-            reverse_means_mirror grand_is_inherited neednumber single_is_inherited
-            nxn_is_inherited mxn_is_inherited
+            reverse_means_mirror grand_is_inherited neednumber singlefile_is_inherited
+            single_is_inherited nxn_is_inherited mxn_is_inherited
             bigmatrix_is_inherited visible_fractions
    seq oddfracwheel [inherit_reverse inherit_grand inherit_single
-      inherit_nxn inherit_mxn inherit_bigmatrix]
+                     inherit_singlefile inherit_nxn inherit_mxn inherit_bigmatrix]
    seq finwheelocean [inherit_reverse inherit_grand inherit_single
-      inherit_nxn inherit_mxn inherit_bigmatrix]
+                      inherit_singlefile inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "@D wheel the sea" c3a
-            reverse_means_mirror grand_is_inherited neednumber single_is_inherited
-            nxn_is_inherited mxn_is_inherited
+            reverse_means_mirror grand_is_inherited neednumber singlefile_is_inherited
+            single_is_inherited nxn_is_inherited mxn_is_inherited
             bigmatrix_is_inherited visible_fractions
    seq oddfracwheel [inherit_reverse inherit_grand inherit_single
-      inherit_nxn inherit_mxn inherit_bigmatrix]
+                     inherit_singlefile inherit_nxn inherit_mxn inherit_bigmatrix]
    seq finwheelsea [inherit_reverse inherit_grand inherit_single
-      inherit_nxn inherit_mxn inherit_bigmatrix]
+                    inherit_singlefile inherit_nxn inherit_mxn inherit_bigmatrix]
 
 call "@D wheel to a@I diamond" c4
             reverse_means_mirror neednumber intlk_is_inherited single_is_inherited
@@ -12701,6 +12642,9 @@ call "chase @eright@f" plus
       // The original beau cannot roll.  It is box circulate two positions.
       // Callerlab plus definitions, page 1.
       array [CM2S CR3N 0 0]
+            alternate_definition [singlefile] c4
+   setup 4x1 2x2
+      array [0 0 CM3S CR0N]
             alternate_definition [2x2] c4
    setup 2x4 2x4
       array [CM5S CM4S CR6N CR7N 0 0 0 0]
@@ -13021,10 +12965,10 @@ call "set back" c4a
 call "trade the diamond" c3
             left_means_mirror visible_fractions
    seq trade_duck []
-   seq sglctrhinge_with_warn [inherit_left]  /* Can't modify -- dancers wouldn't know
+   seq sglctrtogetherhinge [inherit_left]  /* Can't modify -- dancers wouldn't know
                              whether we meant this one */
    seq diamondcirc [allow_forced_mod]
-   seq sglctrhinge_with_warn [inherit_left]  /* Or this one */
+   seq sglctrtogetherhinge [inherit_left]  /* Or this one */
 
 call "you all" c4 tag youall
             left_means_mirror
@@ -14103,10 +14047,10 @@ call "criss cross the deucey" c3 tag xxduck
 call "criss cross the diamond" c4
             visible_fractions
    seq xxduck []
-   seq sglctrhinge_with_warn []  /* Can't modify -- dancers wouldn't know
+   seq sglctrtogetherhinge []  /* Can't modify -- dancers wouldn't know
                                     whether we meant this one */
    seq diamondcirc [allow_forced_mod]
-   seq sglctrhinge_with_warn []  /* Or this one */
+   seq sglctrtogetherhinge []  /* Or this one */
 
 call "easy does it" c4a
    setup 2x4 2x4 rotate restriction peelable_box
@@ -14576,7 +14520,74 @@ call "pass the top" c4a
    setup 2x4 2x4
    array [0 0 0 0 AM1S CM7N CCAM0S CM2S]
 
+call "sock it to me" c2
+   setup 2x4 2x4 qualifier socker_is_cw
+      array [0 CR2S CR3S 0 AL5S AL6S AL7S CR4S]
+   setup 2x4 2x4 qualifier socker_is_ccw
+      array [CR3S AL0S AL1S AL2S 0 CR4S CR5S 0]
+   setup 1x4 1x4
+      preds "Can't find an unambiguous socker."
+         if socker_is_left  [CR2S AL0S AL3S AL1S]
+         if socker_is_right [0    CR3S 0    CR2S]
+   setup 1x3 1x3
+      preds "Can't find an unambiguous socker."
+         if socker_is_left_1x3  [CR2S AL0S AL1S]
+         if socker_is_right_1x3 [0    CR2S 0]
+            alternate_definition [12matrix] c3
+   setup 1x6 1x6
+      preds "Can't find an unambiguous socker."
+         if socker_is_left_1x6  [CR3S AL0S AL1S AL4S AL5S AL2S]
+         if socker_is_right_1x6 [0    CR2S CR5S 0    CR3S CR4S]
+            alternate_definition [16matrix] c3
+   setup 1x8 1x8
+      preds "Can't find an unambiguous socker."
+         if socker_is_left_1x8  [CR4S AL0S AL3S AL1S AL5S AL7S AL2S AL6S]
+         if socker_is_right_1x8 [0    CR3S CR6S CR2S 0    CR4S CR7S CR5S]
+            alternate_definition [half] c2
+   setup 1x4 2x3
+      preds "Can't find an unambiguous socker."
+         if socker_is_left  [CR1E AL5W AL3W AL4W]
+         if socker_is_right [0    CR1E 0    CR2E]
+   setup 1x3 trngl
+      preds "Can't find an unambiguous socker."
+         if socker_is_left_1x3  [CR3E AL5W AL4W]
+         if socker_is_right_1x3 [0    CR2E 0]
+
+call "here comes the judge" c2
+   setup 2x4 2x4 qualifier judge_is_cw
+      array [CR1S CR2S CR3S AL0S 0 AL6S AL7S 0]
+   setup 2x4 2x4 qualifier judge_is_ccw
+      array [0 AL0S AL1S 0 AL7S CR4S CR5S CR6S]
+   setup 1x4 1x4
+      preds "Can't find an unambiguous judge."
+         if judge_is_right [CR1S CR3S AL0S CR2S]
+         if judge_is_left  [0    AL0S 0    AL1S]
+   setup 1x3 1x3
+      preds "Can't find an unambiguous judge."
+         if judge_is_right_1x3 [CR1S CR2S AL0S]
+         if judge_is_left_1x3  [0    AL0S 0]
+            alternate_definition [12matrix] c3
+   setup 1x6 1x6
+      preds "Can't find an unambiguous judge."
+         if judge_is_right_1x6 [CR1S CR2S CR5S AL0S CR3S CR4S]
+         if judge_is_left_1x6  [0    AL0S AL1S 0    AL5S AL2S]
+            alternate_definition [16matrix] c3
+   setup 1x8 1x8
+      preds "Can't find an unambiguous judge."
+         if judge_is_right_1x8 [CR1S CR3S CR6S CR2S AL0S CR4S CR7S CR5S]
+         if judge_is_left_1x8  [0    AL0S AL3S AL1S 0    AL7S AL2S AL6S]
+            alternate_definition [half] c2
+   setup 1x4 2x3
+      preds "Can't find an unambiguous judge."
+         if judge_is_right [CR5E CR4E AL1W CR3E]
+         if judge_is_left  [0    AL0W 0    AL1W]
+   setup 1x3 trngl
+      preds "Can't find an unambiguous judge."
+         if judge_is_right_1x3 [CR5E CR4E AL3W]
+         if judge_is_left_1x3  [0    AL1W 0]
+
 call "_finish in roll to a wave" dontshow tag fin_inroll
+   // This is just "in roll circulate" with the centers stable.
    setup 2x4 2x4 qualifier inroller_is_cw
       array [CR1S ZM2N ZM3N    0    0 ZM6N ZM7N ZM0N]
    setup 2x4 2x4 qualifier inroller_is_ccw
@@ -14601,6 +14612,7 @@ call "_finish in roll to a wave" dontshow tag fin_inroll
          if always               [   0 ZM2N ZM4N AL5S ZM3N ZM6N ZM0N    0]
 
 call "_finish out roll to a wave" dontshow tag fin_outroll
+   // This is just "out roll circulate" with the centers stable.
    setup 2x4 2x4 qualifier outroller_is_cw
       array [   0 ZM2N ZM3N AL0S AL5S ZM6N ZM7N    0]
    setup 2x4 2x4 qualifier outroller_is_ccw
@@ -14635,20 +14647,114 @@ call "_finish zoom roll to a wave" dontshow tag fin_zoomroll
          if magic_outroller_is_cw [   0 ZM7N ZM1N CR4N AL2S ZM3N ZM5N    0]
          if always                [AL7N ZM2N ZM4N    0    0 ZM6N ZM0N CR1S]
 
+call "_finish sock it to the wave" dontshow tag fin_sockit
+   // This is just "sock it to me" with the centers stable.
+   setup 2x4 2x4 qualifier socker_is_cw
+      array [0 ZM2N ZM3N 0 AL5S ZM6N ZM7N CR4S]
+   setup 2x4 2x4 qualifier socker_is_ccw
+      array [CR3S ZM0N ZM1N AL2S 0 ZM4N ZM5N 0]
+   setup pqtag c1phan qualifier socker_is_cw
+      array [CR12S 0 ZM8N ZM10N 0 AL14S ZM0N ZM2N]
+   setup qtag c1phan qualifier socker_is_cw
+      array [    0 0 ZM8N ZM10N 0     0 ZM0N ZM2N]
+   setup pqtag c1phan // qualifier socker_is_ccw
+      array [0 CR9S ZM5N ZM7N AL11S 0 ZM13N ZM15N]
+   setup qtag c1phan  //qualifier socker_is_ccw
+      array [0    0 ZM5N ZM7N     0 0 ZM13N ZM15N]
+   // Catch the hard cases.
+   setup 1x4 1x4
+      preds "Can't find an unambiguous socker."
+         if socker_is_left  [CR2S ZM0N AL3S ZM1N]
+         if socker_is_right [0    ZM3N 0    ZM2N]
+
+call "_finish here comes the wave" dontshow tag fin_judge
+   // This is just "here comes the judge" with the centers stable.
+   setup 2x4 2x4 qualifier judge_is_cw
+      array [CR1S ZM2N ZM3N AL0S 0 ZM6N ZM7N 0]
+   setup 2x4 2x4 qualifier judge_is_ccw
+      array [0 ZM0N ZM1N 0 AL7S ZM4N ZM5N CR6S]
+   setup pqtag c1phan qualifier judge_is_cw
+      array [0 CR6S ZM8N ZM10N AL4S 0 ZM0N ZM2N]
+   setup qtag c1phan qualifier judge_is_cw
+      array [0    0 ZM8N ZM10N    0 0 ZM0N ZM2N]
+   setup pqtag c1phan qualifier judge_is_ccw
+      array [CR3S 0 ZM5N ZM7N 0 AL1S ZM13N ZM15N]
+   setup qtag c1phan qualifier judge_is_ccw
+      array [   0 0 ZM5N ZM7N 0    0 ZM13N ZM15N]
+   // Catch the hard cases.
+   setup 1x4 1x4
+      preds "Can't find an unambiguous judge."
+         if judge_is_right [CR1S ZM3N AL0S ZM2N]
+         if judge_is_left  [0    ZM0N 0    ZM1N]
+
+call "_start here comes the diamond" dontshow tag start_judge
+   // This is just "here comes the judge" with those *going into the center* stable.
+   setup 2x4 2x4 qualifier judge_is_cw
+      array [ZM1N ZM2N CR3S AL0S 0 ZM6N AL7S 0]
+   setup 2x4 2x4 qualifier judge_is_ccw
+      array [0 AL0S ZM1N 0 AL7S CR4S ZM5N ZM6N]
+   setup rigger ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N AL6S CR4S ZM5N ZM3N 0 AL0S]
+   setup prigger ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N    0    0 ZM5N ZM3N 0    0]
+   setup bone ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N AL6S 0 ZM5N ZM3N CR2S AL0S]
+   setup pbone ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N    0    0 ZM5N ZM3N 0    0]
+   setup 1x4 1x4
+      preds "Can't find an unambiguous judge."
+         if judge_is_right [ZM1N ZM3N AL0S CR2S]
+         if judge_is_left  [0    AL0S 0    ZM1N]
+
+call "_start sock it to the diamond" dontshow tag start_sockit
+   // This is just "sock it to me" with those *going into the center* stable.
+   setup 2x4 2x4 qualifier socker_is_cw
+      array [0 ZM2N CR3S 0 ZM5N ZM6N AL7S CR4S]
+   setup 2x4 2x4 qualifier socker_is_ccw
+      array [CR3S AL0S ZM1N ZM2N 0 CR4S ZM5N 0]
+   setup rigger ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N 0 CR4S ZM5N ZM3N CR2S AL0S]
+   setup prigger ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N 0    0 ZM5N ZM3N    0    0]
+   setup bone ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N AL6S CR4S ZM5N ZM3N CR2S 0]
+   setup pbone ptpd restriction controversial alwaysfail
+      array [ZM1N ZM7N 0    0 ZM5N ZM3N    0    0]
+   setup 1x4 1x4
+      preds "Can't find an unambiguous socker."
+         if socker_is_left  [CR2S AL0S ZM3N ZM1N]
+         if socker_is_right [0    ZM3N 0    CR2S]
+
 call "in roll to a wave" c4
             magic_is_inherited
-   seq sglctrhinge_with_warn []
+   seq sglctrhinge []
    seq fin_inroll [roll_transparent inherit_magic]
 
 call "out roll to a wave" c4
             magic_is_inherited
-   seq sglctrhinge_with_warn []
+   seq sglctrhinge []
    seq fin_outroll [roll_transparent inherit_magic]
 
 call "zoom roll to a wave" c4
             magic_is_inherited
-   seq sglctrhinge_with_warn []
+   seq sglctrhinge []
    seq fin_zoomroll [roll_transparent inherit_magic]
+
+call "sock it to the wave" c4
+   seq sglctrhinge []
+   seq fin_sockit []
+
+call "here comes the wave" c4
+   seq sglctrhinge []
+   seq fin_judge []
+
+call "sock it to the diamond" c4
+   seq start_sockit []
+   seq sglctrhinge []
+
+call "here comes the diamond" c4
+   seq start_judge []
+   seq sglctrhinge []
 
 call "_outpost part 1" dontshow tag outpost1
             left_means_mirror
@@ -17502,12 +17608,12 @@ call "_lift off but" dontshow tag liftoffbut
       array [7W 0 0 0 0 0 0 1W]
 
 call "lift off" c3
-            reverse_means_mirror
+            reverse_means_mirror last_part_visible
    seq liftoffbut [inherit_reverse]
    seq circulate [allow_plain_mod]
 
 call "lift off but @0" c3
-            reverse_means_mirror
+            reverse_means_mirror last_part_visible
    seq liftoffbut [inherit_reverse]
    seq nullcall [mandatory_anycall]
 
@@ -19620,7 +19726,7 @@ call "_mini busy 1" dontshow tag mini_busy_1
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM11N ZM10N]
 
 call "_mini busy 2" dontshow tag mini_busy_2
-   in_out_triple_squash plain_tag [] sglctrhinge_with_warn []
+   in_out_triple_squash plain_tag [] sglctrtogetherhinge []
 
 call "_mini busy 3" dontshow tag mini_busy_3
    conc flipdiamond [] quarterin [conc_demand_lines conc_force_spots]
@@ -19742,6 +19848,11 @@ call "_finish make a pass but @0" dontshow tag finmakepassbut
 call "make a pass but @0" c4a
             visible_fractions cross_is_inherited
    seq makepass_1 [inherit_cross]
+   seq finmakepassbut []
+
+call "cross make a pass but @0" c4a
+            visible_fractions
+   seq makepass_1 [force_cross]
    seq finmakepassbut []
 
 call "straight away part 1" dontshow tag straightaway1
@@ -22730,7 +22841,7 @@ call "turn on" c4
             visible_fractions funny_is_inherited single_is_inherited
             nxn_is_inherited
    seq splitctrrot [inherit_funny inherit_single inherit_nxn]
-   /* 3x3 and 4x4 are presumably illegal here, so this must be "initially 3x3". */
+   // 3x3 and 4x4 are presumably illegal here, so this must be "initially 3x3".
    seq extend [inherit_single inherit_nxn]
 
 call "tickle" c4 tag tickle
@@ -22750,12 +22861,12 @@ call "_shake it part 2d @h" dontshow tag shake_it_2d
 call "_shake it part 2 and @0" dontshow tag shake_it_2
    select_leads nullcall [] nullcall [mandatory_anycall]
 
-call "shake it @h" c3
+call "shake it @h" c4x
             dont_use_in_resolve
    seq shake_it_1 []
    seq shake_it_2d []
 
-call "shake it and @0" c3
+call "shake it and @0" c4x
             dont_use_in_resolve left_means_mirror
    seq shake_it_1 [inherit_left]
    seq shake_it_2 []
@@ -22765,12 +22876,14 @@ call "_maybe extend for walk the clover" dontshow tag maybe_extend
       array [ZM0N ZM1N ZM2N ZM3N    0    0 ZM6N ZM7N]
    setup 2x4 qtag qualifier wave_only
       array [ZM0N ZM0N ZM1N ZM1N ZM2N ZM3N ZM7N ZM6N]
+   setup 2x4 2x4 rotate qualifier tbone none
+      array [ZM7W ZM7W ZM0W ZM0W 0 0 0 0]
+   setup 4x2 2x4 rotate qualifier tbone none
+      array [ZM6W 0 ZM1W 0 0 ZM2W 0 ZM5W]
    setup 2x4 2x4
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 4x2 qtag rotate qualifier ntbone out in_or_out
       array [0 ZM6W 0 ZM0W ZM1W 0 ZM3W 0]
-   setup 4x2 2x4
-      array [ZM0N ZM0N ZM1N ZM1N ZM2N ZM3N ZM7N ZM6N]
    setup bone bone
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup pbone bone
@@ -22781,11 +22894,27 @@ call "central walk the clover" c4 tag cwalkclv
    seq armturn_n4 [insert_number 1]
    seq walkndodge []
 
+call "central walk the clover but @0" c4 tag cwalkclv_but
+            visible_fractions step_to_wave left_means_mirror
+   seq armturn_n4 [insert_number 1]
+   seq nullcall [mandatory_anycall]
+
 call "walk the@C clover" c4
             left_means_mirror cross_is_inherited
    seq maybe_extend []
    seq walk_clover_for_central [inherit_left inherit_cross]
 
+call "walk the@C clover but @0" c4
+            left_means_mirror cross_is_inherited
+   seq maybe_extend []
+   seq walk_clover_for_central_but [inherit_left inherit_cross]
+
 call "walk the@C clover, for central" dontshow tag walk_clover_for_central
             left_means_mirror cross_is_inherited
-   conc cwalkclv [inherit_left] clover [inherit_cross conc_demand_columns conc_force_otherway]
+   conc cwalkclv [inherit_left]
+        clover [inherit_cross conc_demand_columns conc_force_otherway]
+
+call "walk the@C clover, for central but @0" dontshow tag walk_clover_for_central_but
+            left_means_mirror cross_is_inherited
+   conc cwalkclv_but [inherit_left]
+        clover [inherit_cross conc_demand_columns conc_force_otherway]

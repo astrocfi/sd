@@ -223,6 +223,9 @@ extern long_boolean divide_for_magic(
    static const expand::thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0, 0, 05656};
    static const expand::thing exp65  = {{0, 1, 3, 5, 6, 7, 9, 11},  8, s2x4, s2x6, 0, 0, 06565};
 
+   static const expand::thing exp12m = {{9, 10, 1, 3, 4, 7},        6, s_2x1dmd, s3dmd, 0, 0, 02626};
+   static const expand::thing exp21m = {{8, 11, 0, 2, 5, 6},        6, s2x3, s3dmd, 1, 0, 05151};
+
    static const expand::thing exp31  = {{1, 2, 5, 7, 8, 11},        6, s2x3, s2x6, 0, 0, 03131};
    static const expand::thing exp13  = {{2, 4, 5, 8, 10, 11},       6, s2x3, s2x6, 0, 0, 01313};
    static const expand::thing exp15  = {{2, 3, 5, 8, 9, 11},        6, s2x3, s2x6, 0, 0, 01515};
@@ -486,7 +489,7 @@ extern long_boolean divide_for_magic(
                goto do_3x3;
             }
             else if (directions == 07725 || directions == 05200) {
-               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ? 
+               expand::expand_setup((heritflags_to_check == INHERITFLAGMXNK_2X1) ?
                                     &exp52 : &exp25,
                                     ss);
                goto do_3x3;
@@ -620,6 +623,10 @@ extern long_boolean divide_for_magic(
       }
       else if (livemask == 03535) expand::compress_setup(&expg35, result);
       else if (livemask == 05656) expand::compress_setup(&expg56, result);
+   }
+   else if (result->kind == s3dmd) {
+      if      (livemask == exp12m.biglivemask) expand::compress_setup(&exp12m, result);
+      else if (livemask == exp21m.biglivemask) expand::compress_setup(&exp21m, result);
    }
    else if (result->kind == s3x4) {
       if (livemask == 03333) expand::compress_setup(&s_qtg_3x4, result);
@@ -1089,13 +1096,13 @@ static const checkitem checktable[] = {
      -5, -4, -6, -4, -5, 4, -6, 4, 5, -4, 6, -4, 5, 4, 6, 4}},
    // Next three: The points did a 1/2 press ahead from triple diamonds.  Fudge to a qtag.
    {0x00630055, 0x01420421, s_qtag, 0, warn__none, (const coordrec *) 0,
-    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5, 
+    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5,
      -2, -5, -5, -5, -5, -5, -5, -5, 2, -5, 4, -5, 5, -5, 4, -5}},
    {0x00530051, 0x01420421, s_qtag, 0, warn__none, (const coordrec *) 0,
-    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5, 
+    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5,
      -2, -5, -5, -5, -5, -5, -5, -5, 2, -5, 4, -5, 5, -5, 4, -5}},
    {0x00510051, 0x01420421, s_qtag, 0, warn__none, (const coordrec *) 0,
-    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5, 
+    {-2, 5, -4, 5, -5, 5, -4, 5, 2, 5, 5, 5, 5, 5, 5, 5,
      -2, -5, -5, -5, -5, -5, -5, -5, 2, -5, 4, -5, 5, -5, 4, -5}},
    // The centers did a 1/2 truck from a 3x6.  Fudge to point-to-point diamonds.
    {0x00A20026, 0x09080002, nothing, 0, warn__none, &truck_to_ptpd, {127}},
@@ -1211,7 +1218,7 @@ static const checkitem checktable[] = {
    {0x01130066, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01130026, 0x09406600, sbigbigh, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00550057, 0x20000620, s_hrglass, 0, warn__none, (const coordrec *) 0, {127}},
-   // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.  
+   // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.
    {0x00840066, 0x00202208, s_hrglass, 0, warn__none, (const coordrec *) 0,
     {-4, 6, -4, 5, 4, 6, 5, 5, 4, -6, 4, -5, -4, -6, -5, -5, 8, 0, 5, 0, -8, 0, -5, 0, 127}},
    {0x00A70026, 0x20040220, s_dhrglass, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1251,7 +1258,7 @@ static const checkitem checktable[] = {
    {0x00910022, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
    // Pressed out from a bone.
    {0x00A20066, 0x01840421, sbigh, 0, warn__none, (const coordrec *) 0,
-    {-10, 6, -9, 6, -10, 2, -9, 2, -10, -6, -9, -6, -10, -2, -9, -2, 
+    {-10, 6, -9, 6, -10, 2, -9, 2, -10, -6, -9, -6, -10, -2, -9, -2,
      10, 6, 9, 6, 10, 2, 9, 2, 10, -6, 9, -6, 10, -2, 9, -2}},
    {0x00E20026, 0x01440430, sbigbone, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00460044, 0x41040010, s_323, 0, warn__none, (const coordrec *) 0, {127}},
@@ -2542,7 +2549,7 @@ extern bool get_real_subcall(
             // and the reply was no.
             if (!subsidiary_ptr)
                goto ret_false;
-            
+
             cmd_out->parseptr = subsidiary_ptr;
 
             if (this_is_tagger_circcer) {
@@ -2728,7 +2735,7 @@ static int gcd(int a, int b)
                   do parts from K+1 up through N, inclusive,
                   that is, K+1, K+2, K+3, .... N.  Relative to the region.
                   K is the "secondary part number".  If K=0, this does N parts:
-                  from the beginning of the region up through N, inclusive.                  
+                  from the beginning of the region up through N, inclusive.
                   For a 5-part call ABCDE:
                   FROMTO(K=0,N=1) means do A
                   FROMTO(K=0,N=4) means do ABCD
@@ -3386,7 +3393,7 @@ static void do_stuff_inside_sequential_call(
       if (result->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
          fail("Can't fractionalize this call this way.");
 
-      result->cmd.cmd_frac_flags = 
+      result->cmd.cmd_frac_flags =
          CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_PART_BIT*2 | CMD_FRAC_NULL_VALUE;
    }
 
@@ -3477,7 +3484,7 @@ static void do_stuff_inside_sequential_call(
                 (result->people[5].id1 & d_mask) == d_north ||
                 (result->people[6].id1 & d_mask) == d_south ||
                 (result->people[7].id1 & d_mask) == d_north) {
-               *fix_next_assumption_p = cr_jleft;               
+               *fix_next_assumption_p = cr_jleft;
                *fix_next_assump_both_p = 2;
             }
             else if ((result->people[0].id1 & d_mask) == d_south ||
@@ -3488,7 +3495,7 @@ static void do_stuff_inside_sequential_call(
                      (result->people[5].id1 & d_mask) == d_south ||
                      (result->people[6].id1 & d_mask) == d_north ||
                      (result->people[7].id1 & d_mask) == d_south) {
-               *fix_next_assumption_p = cr_jright;               
+               *fix_next_assumption_p = cr_jright;
                *fix_next_assump_both_p = 2;
             }
          }
@@ -4432,18 +4439,18 @@ static long_boolean do_misc_schema(
       case schema_in_out_triple:
       case schema_in_out_quad:
          normalize_strongly = TRUE;
-   
+
          if (ss->kind == s2x4)
             do_matrix_expansion(ss, CONCPROP__NEEDK_4X4, FALSE);
-   
+
          if (ss->kind == s4x4) {
-   
+
             /* We need to orient the setup so that it is vertical with respect
                to the way we want to pick out the outer 1x4's. */
-   
+
             uint32 t1 = ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1;
             uint32 t2 = ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1;
-   
+
             if (t1 && !t2)      rot = 1;              /* It has to be left-to-right. */
             else if (t2 && !t1) ;                     /* It has to be top-to-bottom. */
             else if (t2 && t1) fail("Can't pick out outside lines.");
@@ -4456,7 +4463,7 @@ static long_boolean do_misc_schema(
                /* Otherwise, it either needs a vertical orientaion, or only the center 2x2 is occupied,
                   in which case it doesn't matter. */
             }
-   
+
             ss->rotation += rot;
             canonicalize_rotation(ss);
          }
@@ -5086,7 +5093,7 @@ static void really_inner_move(setup *ss,
          else
             do_sequential_call(ss, callspec, qtfudged, &mirror, extra_heritmask_bits, result);
 
-         if (the_schema == schema_split_sequential && result->kind == s2x6 && 
+         if (the_schema == schema_split_sequential && result->kind == s2x6 &&
              ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) ==
               INHERITFLAGMXNK_1X3 ||
               (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) ==
@@ -5588,23 +5595,23 @@ static void move_with_real_call(
                   mirror_this(ss);
                   mirror = true;
                }
-      
+
                ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  /* Can only do it once. */
                touch_or_rear_back(ss, mirror, callflags1);
-      
+
                // But, if the "left_means_touch_or_check" flag is set,
                // we only wanted the "left" flag for the purpose of what
                // "touch_or_rear_back" just did.  So, in that case,
                // we turn off the "left" flag and set things back to normal.
-      
+
                if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                   if (mirror) mirror_this(ss);
                   mirror = false;
                }
             }
-   
+
             /* Actually, turning off the "left" flag is more global than that. */
-   
+
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
                ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
             }

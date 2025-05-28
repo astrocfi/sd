@@ -1637,7 +1637,6 @@ static C_const inroll_action outroller_2x8          = {inroll_directions_2x8,   
 
 
 
-/* ARGSUSED */
 static bool in_out_roll_select(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
 {
@@ -1694,20 +1693,17 @@ static bool in_out_roll_select(setup *real_people, int real_index,
             (cw_end == no_roll_direction && ccw_end == 0))
       return false;
    else {
-      char *errmsg;
-      switch (code&3) {
-         case 0: errmsg = "Can't find end looking in.";        break;
-         case 1: errmsg = "Can't find end looking out.";       break;
-         case 2: errmsg = "Can't find magic end looking in.";  break;
-         case 3: errmsg = "Can't find magic end looking out."; break;
-      }
-      fail(errmsg);
+      static const char * const errmsg[4] = {
+         "Can't find end looking in.",
+         "Can't find end looking out.",
+         "Can't find magic end looking in.",
+         "Can't find magic end looking out."};
+      fail(errmsg[code&3]);
       return false;
    }
 }
 
 
-/* ARGSUSED */
 static bool outposter_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
@@ -2181,7 +2177,7 @@ static bool q_tag_check(setup *real_people, int real_index,
 }
 
 
-// BEWARE!!  This list must track the array "predtab" in dbcomp.c
+// BEWARE!!  This list must track the array "predtab" in mkcalls.cpp
 
 /* The first several of these take a predicate.
    Any call that uses one of these predicates will have its "need_a_selector"

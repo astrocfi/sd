@@ -1,16 +1,28 @@
-// If this is for Windows, use the mapped file mechanism.
-// Hopefully the Linux mapped file mechanism will also be used soon.
+// This is mapcachefile.cpp.
+//
+//    Copyright (C) 2003  William B. Ackerman.
+
+// If this is for Windows or Linux, use the mapped file mechanism.
 // Otherwise, read and write files the old-fashioned way.
+
+// NOTE: This should be a static library, not a DLL.  DLL's don't properly
+// return opened POSIX file descriptors to the callee.  If this is statically
+// part of a DLL, but is not exported from the DLL, that's OK.
+
+#include "mapcachefile.h"
+#include <string.h>
+#include <sys/stat.h>
 
 #if defined(WIN32)
 // This shuts off a lot of obscure stuff and makes the compilation go faster.
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#elif defined(__linux__)
+#include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 #endif
-
-#include "mapcachefile.h"
-#include <string.h>
-#include <sys/stat.h>
 
 // Mapped file format:
 // 5 words (or so) of header.
@@ -22,14 +34,12 @@
 //   Those last 2 words are repeated if multiple source files are used.
 // Followed by whatever the client wants.
 
-// NOTE: This should be a static library, not a DLL.  DLL's don't properly
-// return opened POSIX file descriptors to the callee.  If this is statically
-// part of a DLL, but is not exported from the DLL, that's OK.
-
 struct MAPPED_CACHE_INNARDS {
 #if defined(WIN32)
    HANDLE mapfilemaphandle;
    HANDLE mapfilehandle;
+#elif defined(__linux__)
+   int mapfd;
 #else
    FILE *mapfiledesc;
 #endif
@@ -121,7 +131,7 @@ int *MAPPED_CACHE_FILE::open_and_map(FILE * * srcfiles)
          // will cause it to have bogus data for the stat information.
          // On a future run, if the source file's stat information has
          // been repaired, we will see a mismatch and recompute things
-         // one more time.
+         // one more time, but after that it may be OK.
          cantopen = true;
          innards->source_stats[i].st_size = ~0;
          innards->source_stats[i].st_mtime = ~0;
@@ -148,16 +158,27 @@ int *MAPPED_CACHE_FILE::open_and_map(FILE * * srcfiles)
    innards->map_address = (int *) MapViewOfFile(innards->mapfilemaphandle,
                                                 FILE_MAP_READ, 0, 0, 0);
    if (!innards->map_address) return (int *) 0;
+#elif defined(__linux__)
+   innards->mapfd = open(innards->mapfilename, O_RDONLY);
+   if (innards->mapfd < 0) return (int *) 0;
+   if ((int) read(innards->mapfd, &innards->filewords, 4) != 4) return (int *) 0;
+   innards->filewords >>= 2;
+
+   innards->map_address = (int *) mmap(0, innards->filewords<<2, PROT_READ,
+                                       MAP_SHARED, innards->mapfd, 0);
+
+   if (((int) innards->map_address) < 0) innards->map_address = (int *) 0;
+   if (!innards->map_address) return (int *) 0;
 #else
    innards->mapfiledesc = fopen(innards->mapfilename, "rb");
 
    if (!innards->mapfiledesc) return (int *) 0;
-   if (fread(&innards->filewords, 4, 1, innards->mapfiledesc) != 1) return (int *) 0;
+   if ((int) fread(&innards->filewords, 4, 1, innards->mapfiledesc) != 1) return (int *) 0;
    innards->filewords >>= 2;
 
    innards->map_address = new int [innards->filewords];
    if (!innards->map_address) return (int *) 0;
-   if (fread(innards->map_address+1, 4, innards->filewords-1, innards->mapfiledesc) !=
+   if ((int) fread(innards->map_address+1, 4, innards->filewords-1, innards->mapfiledesc) !=
        innards->filewords-1)
       return (int *) 0;
 #endif
@@ -185,6 +206,8 @@ int *MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesize)
 {
    if (!innards->properly_opened) return (int *) 0;
 
+   clientmapfilesize += innards->header_size_in_words * sizeof(int);
+
 #if defined(WIN32)
    if (innards->map_address) {
       // We thought the cache was OK, but the client
@@ -192,23 +215,16 @@ int *MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesize)
       FlushViewOfFile(innards->map_address, 0);
       UnmapViewOfFile(innards->map_address);
    }
-#endif
 
    // Close the handles that we had, because they were read-only.
-#if defined(WIN32)
+
    if (innards->mapfilehandle && (int) innards->mapfilehandle != ~0)
       CloseHandle(innards->mapfilehandle);
    if (innards->mapfilemaphandle)
       CloseHandle(innards->mapfilemaphandle);
-#else
-   if (innards->mapfiledesc) fclose(innards->mapfiledesc);
-#endif
-
-   clientmapfilesize += innards->header_size_in_words * sizeof(int);
 
    // Open the map file again, this time for writing.
 
-#if defined(WIN32)
    innards->mapfilehandle = CreateFile(innards->mapfilename, GENERIC_READ|GENERIC_WRITE,
                           0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
 
@@ -221,8 +237,39 @@ int *MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesize)
 
    innards->map_address = (int *) MapViewOfFile(innards->mapfilemaphandle,
                                                 FILE_MAP_WRITE, 0, 0, 0);
+#elif defined(__linux__)
+   if (innards->map_address) munmap(innards->map_address, innards->filewords<<2);
+   if (innards->mapfd > 0) close(innards->mapfd);
+   innards->map_address = (int *) 0;
+   innards->filewords = (clientmapfilesize+3) >> 2;
+   innards->mapfd = open(innards->mapfilename, O_WRONLY|O_CREAT|O_TRUNC,
+                         S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
+   if (innards->mapfd < 0) return (int *) 0;
 
+   // We need to write to the file -- we can't just map a size and have the
+   // file pages come into existence.
+
+   {
+      char *buffer = new char [1024];
+      int bytesleft = innards->filewords<<2;
+      while (bytesleft > 0) {
+         int size = 1024;
+         if (size > bytesleft) size = bytesleft;
+         write(innards->mapfd, buffer, size);
+         bytesleft -= size;
+      }
+      delete [] buffer;
+   }
+
+   // Now we need to close it, and open it again.
+   close(innards->mapfd);
+   innards->mapfd = open(innards->mapfilename, O_RDWR);
+   if (innards->mapfd < 0) return (int *) 0;
+   innards->map_address = (int *) mmap(0, innards->filewords<<2, PROT_READ|PROT_WRITE,
+                                       MAP_SHARED, innards->mapfd, 0);
+   if (((int) innards->map_address) < 0) innards->map_address = (int *) 0;
 #else
+   if (innards->mapfiledesc) fclose(innards->mapfiledesc);
    if (innards->map_address) delete [] innards->map_address;
    innards->map_address = (int *) 0;
    innards->filewords = (clientmapfilesize+3) >> 2;
@@ -250,24 +297,27 @@ int *MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesize)
 
 MAPPED_CACHE_FILE::~MAPPED_CACHE_FILE()
 {
-#if defined(WIN32)
    if (innards->properly_opened) {
+#if defined(WIN32)
       if (FlushViewOfFile(innards->map_address, 0) &&
           UnmapViewOfFile(innards->map_address)) {
          CloseHandle(innards->mapfilehandle);
          CloseHandle(innards->mapfilemaphandle);
       }
-   }
+#elif defined(__linux__)
+      if (innards->map_address) munmap(innards->map_address,
+                                       innards->filewords<<2);
+      if (innards->mapfd > 0) close(innards->mapfd);
 #else
-   if (innards->properly_opened) {
       if (innards->map_address) {
          fwrite(innards->map_address, 4, innards->filewords, innards->mapfiledesc);
          delete [] innards->map_address;
       }
 
       if (innards->mapfiledesc) fclose(innards->mapfiledesc);
-   }
 #endif
+   }
+
    delete [] innards->source_stats;
    delete [] innards->mapfilename;
    delete innards;

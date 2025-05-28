@@ -1025,7 +1025,7 @@ expand::thing expand::init_table[] = {
    {{1, 2, 3, 4, 7, 8, 9, 10},
     8, s2x4, s2x6, 0, 0UL, 04141,
     warn__none, warn__none, simple_normalize, NEEDMASK(CONCPROP__NEEDK_2X6) |
-                                              NEEDMASK(CONCPROP__NEEDK_CTR_2X2) | 
+                                              NEEDMASK(CONCPROP__NEEDK_CTR_2X2) |
                                               NEEDMASK(CONCPROP__NEEDK_END_2X2)},
    {{11, 5},
     2, s1x2, s3dmd, 0, 0UL, ~0UL,
@@ -1850,6 +1850,9 @@ map::map_thing map::map_init_table[] = {
 
    {{-1, 0, 7, 5, -1, 6,               1, -1, 2, -1, 4, 3},
     s_bone6,2,MPKIND__SPLIT,0,    0,  s_rigger,  0x000, 0},
+
+   {{-1, 0, 7, 6, 5, -1, -1, -1,       1, -1, -1, -1, -1, 4, 3, 2},
+    s_bone,2,MPKIND__SPLIT,0,     0,  s_rigger,  0x000, 0},
 
    {{0, 1, 3, 2, 7, 6, 4, 5,           15, 14, 12, 13, 8, 9, 11, 10},
     s1x8,2,MPKIND__SPLIT,0,       0,  s1x16,      0x000, 0},
@@ -4572,7 +4575,7 @@ static const id_bit_table id_bit_table_dblspindle[] = {
 /* This table is accepted in any circumstances. */
 /* Note that the people marked "ID2_END" won't actually identify
    themselves as ends.  That is just to make "center 4" work. */
-static const id_bit_table id_bit_table_2x6[] = {  
+static const id_bit_table id_bit_table_2x6[] = {
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_CTR4),
@@ -4601,7 +4604,7 @@ id_bit_table id_bit_table_2x6_pg[] = {
    SEBITS(ID2_OUTRPAIRS),
    SWBITS(ID2_OUTRPAIRS)};
 
-static const id_bit_table id_bit_table_2x8[] = {  
+static const id_bit_table id_bit_table_2x8[] = {
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_END),
    NORTHBIT(ID2_END),
@@ -4784,7 +4787,7 @@ static const id_bit_table id_bit_table_323[] = {
    WESTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
 
 /* If the population is "common spot diamonds", the richer table below is used instead. */
-static const id_bit_table id_bit_table_bigdmd[] = {  
+static const id_bit_table id_bit_table_bigdmd[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR1X4  | ID2_OUTR6),
@@ -4799,7 +4802,7 @@ static const id_bit_table id_bit_table_bigdmd[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
 /* This table is only accepted if the population is "common spot diamonds". */
-id_bit_table id_bit_table_bigdmd_wings[] = {  
+id_bit_table id_bit_table_bigdmd_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
@@ -4813,7 +4816,7 @@ id_bit_table id_bit_table_bigdmd_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
 
-static const id_bit_table id_bit_table_bigptpd[] = {  
+static const id_bit_table id_bit_table_bigptpd[] = {
    NOBIT(ID2_OUTR6),
    NOBIT(ID2_OUTR6),
    NOBIT(ID2_OUTR6),
@@ -4828,7 +4831,7 @@ static const id_bit_table id_bit_table_bigptpd[] = {
    NOBIT(ID2_OUTR6)};
 
 /* If the population is a distorted tidal line (2-4-2), the richer table below is used instead. */
-static const id_bit_table id_bit_table_bigbone[] = {  
+static const id_bit_table id_bit_table_bigbone[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR1X4  | ID2_OUTR6),
@@ -4843,7 +4846,7 @@ static const id_bit_table id_bit_table_bigbone[] = {
    NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
 /* This table is only accepted if the population is a distorted tidal line (2-4-2). */
-id_bit_table id_bit_table_bigbone_wings[] = {  
+id_bit_table id_bit_table_bigbone_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
@@ -4858,7 +4861,7 @@ id_bit_table id_bit_table_bigbone_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
 
 /* If the population is a "common spot hourglass", the richer table below is used instead. */
-static const id_bit_table id_bit_table_bighrgl[] = {  
+static const id_bit_table id_bit_table_bighrgl[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTRDMD  | ID2_OUTR6),
@@ -4873,7 +4876,7 @@ static const id_bit_table id_bit_table_bighrgl[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTR6)};
 
 /* This table is only accepted if the population is a "common spot hourglass". */
-id_bit_table id_bit_table_bighrgl_wings[] = {  
+id_bit_table id_bit_table_bighrgl_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTRDMD  | ID2_OUTR6),
@@ -4888,7 +4891,7 @@ id_bit_table id_bit_table_bighrgl_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6)};
 
 /* If the population is a "common spot distorted hourglass", the richer table below is used instead. */
-static const id_bit_table id_bit_table_bigdhrgl[] = {  
+static const id_bit_table id_bit_table_bigdhrgl[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTRDMD  | ID2_CTR2),
@@ -4903,7 +4906,7 @@ static const id_bit_table id_bit_table_bigdhrgl[] = {
    NOBIT(ID2_NCTRDMD | ID2_OUTR6)};
 
 /* This table is only accepted if the population is a "common spot distorted hourglass". */
-id_bit_table id_bit_table_bigdhrgl_wings[] = {  
+id_bit_table id_bit_table_bigdhrgl_wings[] = {
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_OUTRPAIRS | ID2_NCTRDMD | ID2_OUTR6),
    NOBIT(ID2_CTR4      | ID2_CTRDMD  | ID2_CTR2),
@@ -7245,10 +7248,10 @@ select::fixer select::fixer_init_table[] = {
    {fx_d4x4d2, sdmd, s4x4,        0, 0, 1,       fx0,          fx0,          fx_d4x4l2, fx_d4x4l3, fx_d4x4d2, fx_d4x4d3, fx0,       fx0,          {8, 15, 0, 7}},
    {fx_d4x4d3, sdmd, s4x4,        1, 0, 1,       fx0,          fx0,          fx_d4x4l3, fx_d4x4l2, fx_d4x4d3, fx_d4x4d2, fx0,       fx0,          {12, 3, 4, 11}},
    {fx_d4x4d4, sdmd, s4x4,        0, 0, 1,       fx0,          fx0,          fx_d4x4l4, fx_d4x4l1, fx_d4x4d4, fx_d4x4d1, fx0,       fx0,          {12, 3, 4, 11}},
-   {fx_dqtgdbb1, 
+   {fx_dqtgdbb1,
    s1x4, s2x3,   0x110, 0, 1,          fx0, fx0,                   fx0, fx0,
    fx0, fx0,                      fx0, fx0,          {0, 1, 3, 4}},
-   {fx_dqtgdbb2, 
+   {fx_dqtgdbb2,
    s1x4, s2x3,   0x330, 0, 1,          fx0, fx0,                   fx0, fx0,
    fx0, fx0,                      fx0, fx0,          {5, 4, 2, 1}},
    {fx_hrgminb, s2x3, s_hrglass,  0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 3, 1, 4, 7, 5}},
@@ -7265,25 +7268,25 @@ select::fixer select::fixer_init_table[] = {
    {fx_f3x1ctl, s1x4, s3x1dmd,     0, 0, 1,       fx0,          fx0,          fx_f3x1ctl,   fx0, fx0,          fx0,    fx_fgalctb,   fx_fgalctb,   {1, 2, 5, 6}},
    {fx_f2x2pl,  s2x2, s2x2,        0, 0, 1,         fx0, fx0,             fx_f1x4pl, fx_f1x4pl,
    fx_fdmdpl, fx_fdmdpl,    fx_f2x2pl, fx_f2x2pl,         {0, 1, 2, 3}},
-   {fx_f1x4pl, 
+   {fx_f1x4pl,
    s1x4, s1x4,        0, 0, 1,         fx0, fx0,             fx_f1x4pl, fx_f1x4pl,
    fx_fdmdpl, fx_fdmdpl,    fx_f2x2pl, fx_f2x2pl,         {0, 1, 2, 3}},
-   {fx_fdmdpl, 
+   {fx_fdmdpl,
    sdmd, sdmd,        0, 0, 1,         fx0, fx0,             fx_f1x4pl, fx_f1x4pl,
    fx_fdmdpl, fx_fdmdpl,    fx_f2x2pl, fx_f2x2pl,         {0, 1, 2, 3}},
-   {fx_f1x2pl, 
+   {fx_f1x2pl,
    s1x2, s1x2,        0, 0, 1,   fx_f1x2pl, fx_f1x2pl,             fx0, fx0,
  fx0, fx0,                        fx0, fx0,               {0, 1}},
-   {fx_f3x1d_2, 
+   {fx_f3x1d_2,
    s1x2, s3x1dmd,     1, 0, 1,         fx0, fx0,                   fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {3, 7}},
-   {fx_f1x8_88, 
+   {fx_f1x8_88,
    s1x2, s1x8,        0, 0, 1,  fx_f1x8_88, fx_f3x1d_2,            fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {3, 7}},
-   {fx_f1x8_22, 
+   {fx_f1x8_22,
    s1x2, s1x8,        0, 0, 1,  fx_f1x8_22, fx_f3x1d_2,            fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {1, 5}},
-   {fx_f1x8_11, 
+   {fx_f1x8_11,
    s1x2, s1x8,        0, 0, 1,  fx_f1x8_11, fx_f3x1d_2,            fx0, fx0,
  fx0, fx0,                        fx0, fx0,          {0, 4}},
    {fx_fdqtagzzz, s2x3, s_qtag,      1, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0, {1, 3, 4, 5, 7, 0}},
@@ -7300,22 +7303,22 @@ select::fixer select::fixer_init_table[] = {
    {fx_fxwve, s1x4, s_crosswave, 0, 0, 1,       fx0,          fx0,          fx_fxwve,     fx_f1x8endd, fx0,  fx0,    fx_f2x4endd,  fx_f2x4endd,  {0, 1, 4, 5}},
    {fx_fboneendd, s2x2, s_bone,      0, 1, 1,       fx0,          fx0,          fx_f1x8endd,  fx0, fx0,          fx0,    fx_fboneendd, fx_fqtgend,   {0, 1, 4, 5}},
    {fx_fqtgend, s2x2, s_qtag,      0, 2, 1,       fx0,          fx0,          fx_f1x8endd,  fx0, fx0,          fx0,    fx_fqtgend,   fx_fboneendd, {0, 1, 4, 5}},
-   {fx_f1x6endd, 
+   {fx_f1x6endd,
    s1x4, s1x6,        0, 0, 1,         fx0, fx0,           fx_f1x6endd, fx_f1x2dd,
    fx0, fx0,                      fx0, fx0,          {0, 1, 3, 4}},
-   {fx_f1x2dd, 
+   {fx_f1x2dd,
    s1x4, s_1x2dmd,    0, 0, 1,         fx0, fx0,             fx_f1x2dd, fx_f1x6endd,
    fx0, fx0,                fx_f2x3od, fx_fbn6ndd,   {0, 1, 3, 4}},
-   {fx_fbn6ndd, 
+   {fx_fbn6ndd,
    s2x2, s_bone6,     0, 1, 1,         fx0, fx0,                   fx0, fx0,
    fx0, fx0,               fx_fbn6ndd, fx_f2x3od,    {0, 1, 3, 4}},
-   {fx_f2x3od, 
+   {fx_f2x3od,
    s2x2, s2x3,        0, 1, 1,         fx0, fx0,             fx_f1x2dd, fx_f1x6endd,
    fx0, fx0,                fx_f2x3od, fx_fbn6ndd,   {0, 2, 3, 5}},
-   {fx_fdmded, 
+   {fx_fdmded,
    s1x2, sdmd,        0, 1, 1,   fx0, fx0,                   fx0, fx0,
    fx0, fx0,                fx0, fx0,   {0, 2}},
-   {fx_f1x4ed, 
+   {fx_f1x4ed,
    s1x2, s1x4,        0, 1, 1,   fx_f1x4ed, fx_fdmded,       fx0, fx0,
    fx0, fx0,                fx0, fx0,   {0, 2}},
    {fx_fdrhgl1, s2x2, s_dhrglass,  0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_fdrhgl1,   fx_fqtgend,   {0, 1, 4, 5}},
@@ -7395,7 +7398,7 @@ select::fixer select::fixer_init_table[] = {
    {fx_fhrgl1, sdmd, s_2x1dmd,   1, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,           fx0,          {2, 3, 5, 0}},
    {fx_fhrgl2, sdmd, s_2x1dmd,   0, 0, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,           fx0,          {0, 2, 3, 5}},
    {fx_fhrgle, s2x2, s_hrglass,   0, 2, 1,       fx0,          fx0,          fx_frigendd,  fx_frigendd, fx_fhrgl1, fx_fhrgl2, fx_fhrgle, fx_fqtgend, {0, 1, 4, 5}},
-   {fx_fptpdid, 
+   {fx_fptpdid,
    s_ptpd, s_ptpd,    0, 1, 1,         fx0, fx0,                   fx0, fx0,
    fx0, fx0,                      fx0, fx0,          {0, 1, 2, 3, 4, 5, 6, 7}},
    {fx_f2x477, s2x3, s2x4,        0, 1, 1,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx_f2x477,    fx0,          {0, 1, 2, 4, 5, 6}},

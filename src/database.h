@@ -82,9 +82,9 @@ typedef const char *Cstring;
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 206
+#define DATABASE_FORMAT_VERSION 207
 
-// BEWARE!!  These must track the items in "tagtabinit" in dbcomp.cpp .
+// BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
    base_call_unused,
    base_call_null,
@@ -123,9 +123,9 @@ enum base_call_index {
 
 
 // BEWARE!!  This list must track the tables "flagtabh", "defmodtabh",
-// "forcetabh", and "altdeftabh" in dbcomp.cpp .  The "K" items also track
+// "forcetabh", and "altdeftabh" in mkcalls.cpp .  The "K" items also track
 // the tables "mxntabforce", "nxntabforce", "nxntabplain", "mxntabplain",
-// "reverttabplain", and "reverttabforce" in dbcomp.cpp .
+// "reverttabplain", and "reverttabforce" in mkcalls.cpp .
 //
 // These are the infamous "heritable flags".  They are used in generally
 // corresponding ways in the "callflagsh" word of a top level callspec_block,
@@ -203,7 +203,7 @@ enum heritflags {
 // It also means that a short6 is to be fudged to a 2x3.  See the call
 // "quick step part 1".
 
-// BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
+// BEWARE!!  This list must track the table "flagtab1" in mkcalls.c .
 // These flags go into the "callflags1" word of a callspec_block,
 // and the "topcallflags1" word of the parse_state.
 
@@ -259,7 +259,7 @@ enum {
    CFLAG2_DO_EXCHANGE_COMPRESS      = 0x20000000UL
 };
 
-// Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.cpp .
+// Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .
 
 enum {
    MTX_USE_SELECTOR           = 0x01,
@@ -296,7 +296,7 @@ enum {
 };
 
 
-/* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */
+/* BEWARE!!  This list must track the table "leveltab" in mkcalls.c . */
 /* BEWARE!!  This list must track the table "getout_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "old_filename_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "filename_strings" in sdtables.c . */
@@ -322,7 +322,7 @@ enum dance_level {
 
 /* These are the states that people can be in, and the "ending setups" that can appear
    in the call data base. */
-/* BEWARE!!  This list must track the array "estab" in dbcomp.cpp . */
+/* BEWARE!!  This list must track the array "estab" in mkcalls.cpp . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.cpp . */
 /* BEWARE!!  The procedure "merge_setups" canonicalizes pairs of setups by their
    order in this list, and will break if it is re-ordered randomly.  See the comments
@@ -452,7 +452,7 @@ enum setup_kind {
 };
 
 /* These are the "beginning setups" that can appear in the call data base. */
-/* BEWARE!!  This list must track the array "sstab" in dbcomp.cpp . */
+/* BEWARE!!  This list must track the array "sstab" in mkcalls.cpp . */
 /* BEWARE!!  This list must track the array "begin_sizes" in mkcalls.cpp . */
 /* BEWARE!!  This list must track the array "begin_sizes" in sdtables.cpp . */
 
@@ -662,7 +662,7 @@ enum {
    CAF__PLUSEIGHTH_ROTATION = 0x10000
 };
 
-// BEWARE!!  This list must track the array "qualtab" in dbcomp.cpp
+// BEWARE!!  This list must track the array "qualtab" in mkcalls.cpp
 enum call_restriction {
    cr_none,                // Qualifier only.
    cr_alwaysfail,          // Restriction only.
@@ -752,6 +752,10 @@ enum call_restriction {
    cr_inroller_is_ccw,
    cr_outroller_is_cw,
    cr_outroller_is_ccw,
+   cr_judge_is_cw,
+   cr_judge_is_ccw,
+   cr_socker_is_cw,
+   cr_socker_is_ccw,
    cr_levelplus,
    cr_levela1,
    cr_levela2,
@@ -776,7 +780,7 @@ enum call_restriction {
    NUM_QUALIFIERS          // Not really in the enumeration.
 };
 
-// BEWARE!!  This list must track the array "schematab" in dbcomp.cpp .
+// BEWARE!!  This list must track the array "schematab" in mkcalls.cpp .
 // Also, "schema_sequential" must be the start of all the sequential ones.
 enum calldef_schema {
    schema_concentric,
@@ -950,8 +954,8 @@ enum calldef_schema {
 */
 
 
-/* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
-/* BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in dbcomp.c . */
+/* BEWARE!!  This list must track the table "defmodtab1" in mkcalls.cpp . */
+/* BEWARE!!  The "SEQ" stuff must track the table "seqmodtab1" in mkcalls.cpp . */
 /* BEWARE!!  The union of all of these flags, which is encoded in DFM1_CONCENTRICITY_FLAG_MASK,
    must coexist with the CMD_MISC__ flags defined in sd.h .  Note that the bit definitions
    of those flags start where these end.  Keep it that way.  If any flags are added here,
@@ -988,7 +992,7 @@ enum {
    DFM1_SEQ_REPEAT_NM1               = 0x00000040UL,
    DFM1_SEQ_NORMALIZE                = 0x00000080UL,
 
-   // BEWARE!!  The following ones must track the table "defmodtab1" in dbcomp.cpp
+   // BEWARE!!  The following ones must track the table "defmodtab1" in mkcalls.cpp
    // Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item.
 
    // This is a 3 bit field -- CALL_MOD_BIT tells where its low bit lies.

@@ -336,7 +336,7 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
                           does, using call to "get_escape_string". */
             break;
          }
-         
+
          f += 2;
       }
       else
@@ -469,7 +469,7 @@ static void printsetup(setup *x)
    printarg = x;
    modulus = attr::slimit(x)+1;
    roti = x->rotation & 3;
-   
+
    newline();
 
    personstart = 0;
@@ -614,7 +614,7 @@ void write_history_line(int history_index,
    }
 
    thing = this_item->command_root;
-   
+
    // Need to check for the special case of starting a sequence with heads or sides.
    // If this is the first line of the history, and we started with heads of sides,
    // change the name of this concept from "centers" to the appropriate thing.
@@ -628,7 +628,7 @@ void write_history_line(int history_index,
          thing = thing->next;
       }
    }
-   
+
    print_recurse(thing, 0);
 
    final:
@@ -970,19 +970,19 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                                k == concept_magic ||
                                k == concept_grand ||
                                k == concept_interlocked)) {
-   
+
                // These concepts want to take special action if there are no following
                // concepts and certain escape characters are found in the name of
                // the following call.
-   
+
                final_and_herit_flags junk_concepts;
                junk_concepts.clear_all_herit_and_final_bits();
-               
+
                /* Skip all final concepts, then demand that what remains is a marker
                   (as opposed to a serious concept), and that a real call
                   has been entered, and that its name starts with "@g". */
                tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts, false, __FILE__, __LINE__);
-   
+
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
 
@@ -1159,7 +1159,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                search = search->next;
             }
          }
-   
+
          pending_subst1 = subst1_in_use;
          pending_subst2 = subst2_in_use;
 
@@ -1355,7 +1355,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            np += 2;
                         }
                      }
-   
+
                      if (savec != 'p' && savec != 'n') {
                         if (pending_subst2) {
                            write_blank_if_needed();
@@ -1369,7 +1369,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("[???]");
                         }
                      }
-         
+
                      break;
                   case 'O':
                      if (print_recurse_arg & PRINT_RECURSE_CIRC) {
@@ -1391,7 +1391,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            np += 2;
                         }
                      }
-         
+
                      if (savec != '4' && savec != '7') {
                         if (pending_subst1) {
                            write_blank_if_needed();
@@ -1406,7 +1406,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff("[???]");
                         }
                      }
-         
+
                      break;
                   }
                }
@@ -1428,7 +1428,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          /* Now if "pending_subst" is still on, we have to do by hand what should have been
             a natural replacement.  In any case, we have to find forcible replacements and
             report them. */
-   
+
          if (k == concept_another_call_next_mod) {
             int first_replace = 0;
 
@@ -2127,7 +2127,7 @@ static uint32 id_fixer_array[16] = {
    07777522525, 07777453232, 07777314646, 07777265151,
    07777255225, 07777324532, 07777463146, 07777512651,
    07777252552, 07777323245, 07777464631, 07777515126};
-  
+
 
 static selector_kind translate_selector_permutation1(uint32 x)
 {
@@ -2310,7 +2310,7 @@ void run_program()
    try {
       if (global_error_flag) {
          // The call we were trying to do has failed.  Abort it and display the error message.
-   
+
          if (interactivity == interactivity_database_init ||
              interactivity == interactivity_verify)
             gg->fatal_error_exit(1, "Unknown error context", error_message1);
@@ -2339,14 +2339,14 @@ void run_program()
                reply_pending = true;
             goto start_with_pending_reply;
          }
-   
+
          /* Try to remove the call from the current parse tree, but leave everything else
             in place.  This will fail if the parse tree, or our place on it, is too
             complicated.  Also, we do not do it if in diagnostic mode, or if the user
             did not specify "retain_after_error", or if the special "heads into the middle and ..."
             operation is in place. */
 
-         if (!ui_options.diagnostic_mode && 
+         if (!ui_options.diagnostic_mode &&
              retain_after_error &&
              ((configuration::history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
              backup_one_item()) {
@@ -2373,9 +2373,9 @@ void run_program()
          (void) gg->do_header_popup(header_comment);
          need_new_header_comment = FALSE;
       }
-   
+
    new_sequence:
-   
+
       // Here to start a fresh sequence.  If first time, or if we got here
       // by clicking on "abort", the screen has been cleared.  Otherwise,
       // it shows the last sequence that we wrote.
@@ -2384,7 +2384,7 @@ void run_program()
       // But if we have stuff in the clipboard, we save everything.
 
       if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
-   
+
       /* Update the console window title. */
 
       {
@@ -2528,7 +2528,7 @@ void run_program()
       case start_select_exit:
          goto normal_exit;
       }
-   
+
       // We now know that uims_menu_index is in the range 1 to 5, that is,
       // start_select_h1p2p ... start_select_as_they_are.  We will put
       // that into the startinfo stuff in the history.
@@ -2542,9 +2542,9 @@ void run_program()
       written_history_items = -1;
 
       global_error_flag = (error_flag_type) 0;
-   
+
       /* Come here to read a bunch of concepts and a call and add an item to the history. */
-   
+
    start_cycle:
 
       reply_pending = false;
@@ -2585,14 +2585,14 @@ void run_program()
       initialize_parse();
 
       // Check for first call given to heads or sides only.
-   
+
       if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
          deposit_concept(&conzept::centers_concept);
-   
+
       // Come here to get a concept or call or whatever from the user.
-   
+
       // Display the menu and make a choice!!!!
-   
+
    simple_restart:
 
       if ((!reply_pending) && (!query_for_call())) {
@@ -2607,7 +2607,7 @@ void run_program()
          configuration::history_ptr++;         // Call successfully completed; save it.
          goto start_cycle;
       }
-   
+
       // If get here, query_for_call exitted without completing its parse,
       // because the operator selected something like "quit", "undo",
       // or "resolve", or because we have such a command already pending.
@@ -2918,7 +2918,7 @@ void run_program()
          case command_change_header:
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
-         
+
                if (gg->do_header_popup(newhead_string)) {
                   (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
@@ -3006,7 +3006,7 @@ void run_program()
       }
 
       goto normal_exit;
-   }      
+   }
    catch(error_flag_type sss) {
       global_error_flag = sss;
       goto got_an_exception;

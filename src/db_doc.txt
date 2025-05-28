@@ -743,7 +743,7 @@ hyperbone   |_____| 14  | 15           7  |  6  |_____|
 
 
 
-                   _____ _____ _____ 
+                   _____ _____ _____
                   |     |     |     |
                   |  0  |  1  |  2  |
                   |_____|_____|_____|
@@ -2897,7 +2897,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    alwaysfail,                      any setup - this always fails (presumably to give
                                     some warning)
-   wave_only      R/Q               1x2 - a miniwave; 1x3-1x16 - [grand] wave;
+   wave_only         R/Q            1x2 - a miniwave; 1x3-1x16 - [grand] wave;
                                     2x3 - two "waves" -- people not in tandem with each other;
                                     2x4/3x4/2x6/2x8 - consistent waves the long way;
                                     4x4 - consistent waves either way, but not T-boned;
@@ -2943,13 +2943,13 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
    wave_unless_say_2faced           not implemented
 
-   all_facing_same R/Q              1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
+   all_facing_same    R/Q           1x2/2x1/2x2/2x3/3x2/2x4/4x2/1x4/4x1/1x6/6x1/1x8/8x1
                                     all people in the setup facing the same way.
                                     As a qualifier, this can take the "live" modifier.
 
    1fl_only                         1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same;
                                     NO!!!!  Changed the above to
-   1fl_only        R/Q              1x3/1x4/1x6/1x8 - a 1FL of 3 or 4 people.  In a 1x6 or
+   1fl_only           R/Q           1x3/1x4/1x6/1x8 - a 1FL of 3 or 4 people.  In a 1x6 or
                                     1x8, this is two of same.  That is, in a 1x8, it is
                                     4 people facing consistently, and another 4 facing
                                     consistently.
@@ -2960,7 +2960,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
                                     As a qualifier, this can take the "live" modifier.
 
-   2fl_only        R/Q              1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
+   2fl_only           R/Q           1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's;
                                     1x8 - a grand 2FL; 4x1 - single DPT or single CDPT;
                                     qtag - 2FL in center; 2x2 - "1-faced" box;
                                     4x4 - consistent 2FL's; 4x2 columns - a DPT or CDPT;
@@ -2975,31 +2975,34 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     4x2 - I/O means starting/completed DPT
                                     thar/crosswave - R/L 2FL's
 
-   3x3_2fl_only    R/Q              1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other.
+   3x3_2fl_only       R/Q           1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other.
                                     As a qualifier, this can take the "live" modifier.
 
-   4x4_2fl_only    R/Q              1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other.
+   4x4_2fl_only       R/Q           1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other.
                                     As a qualifier, this can take the "live" modifier.
 
-   3x3couples_only R/Q              1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are
+   3x3couples_only    R/Q           1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are
                                        facing the same way and are line-like.
                                     As a qualifier, this can take the "live" modifier.
 
-   4x4couples_only R/Q              1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are
+   4x4couples_only    R/Q           1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are
                                        facing the same way and are line-like.
                                     As a qualifier, this can take the "live" modifier.
 
-   leads_only      R/Q              2x2 - all people are leads, and not T-boned
+   leads_only         R/Q           2x2 - all people are leads, and not T-boned
                                     As a qualifier, this can take the "live" modifier.
-   trailers_only   R/Q              as above, people are trailers.
+   trailers_only      R/Q           as above, people are trailers.
 
-   couples_only    R/Q              1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
+   couples_only       R/Q           1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
                                        qtag, bone, trngl - people are paired
                                        in genuine couples, not miniwaves.
                                        For qtags, and bones, this applies
                                        just to the centers.  For triangles, it applies
                                        just to the base.
-   miniwaves       R/Q              1x2/1x4/1x6/1x8, 2x4 (lines/cols), dmd, 2x2,
+                                       As a qualifier, the "live" modifier is supported,
+                                       but it might not work for 2x2 -- check!
+
+   miniwaves          R/Q           1x2/1x4/1x6/1x8, 2x4 (lines/cols), dmd, 2x2,
                                        qtag, bone, ptpd, trngl - people are paired
                                        in miniwaves of various handedness.
                                        For diamonds, qtags, and bones, this applies
@@ -3008,13 +3011,16 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        So this includes waves, inverted lines, columns,
                                        magic columns, diamonds, wave-based triangles...
 
-   awkward_centers,                 1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have
-                                       left hands with each other
+   not_miniwaves      Q             True if all people are live, and the miniwaves
+                                      qualifier would fail.
 
-   diamond_like    R/Q              dmd, qtag or ptpd - points look sideways, and centers
+   awkward_centers    R             1x2, 1x4, 1x6, 2x4, or 1x8 - centers must not have
+                                       left hands with each other.
+
+   diamond_like       R/Q           dmd, qtag or ptpd - points look sideways, and centers
                                        are line-like.
 
-   qtag_like       R/Q              dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
+   qtag_like          R/Q           dmd/qtag/ptpd/3dmd/4dmd - points look in or out,
                                        and centers are line-like.  When used as a qualifier,
                                     we additionally allow the "in" or "out" modifiers, to
                                     demand 1/4 tag or 3/4 tag, respectively.
@@ -3024,7 +3030,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     NOTE that "gen_n_4_tag" is identical to "qtag_like"
 
 
-   gen_n_4_tag     Q                dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
+   gen_n_4_tag        Q             dmd/qtag/3dmd/4dmd - this is a "general 1/4 tag",
                                     in which the ends could individually be facing either
                                     in or out, and the centers form some kind of line.
                                     Modifier "in" or "out" applies to ends, and tests for
@@ -3034,7 +3040,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     It does not test for all live people the way it does
                                     in some other cases.
 
-   pu_qtag_like    R/Q              dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
+   pu_qtag_like       R/Q           dmd/qtag/ptpd/3dmd/4dmd - points look sideways,
                                        and centers are column-like.
                                        When used as a qualifier, right/left refer
                                        to points.  The "live" modifier demands that there be
@@ -3042,8 +3048,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        It does not demand all people live.  It is meaningless
                                        if left or right isn't specified.
 
-   regular_tbone                    2x2/1x4/2x4 - demands that the box (or each box, if this is
-                                       a 2x4) be a "regular T-bone".  It must be locally
+   regular_tbone                    2x2/1x4/2x4 - demands that the box (or each box, if this
+                                       is a 2x4) be a "regular T-bone".  It must be locally
                                        symmetric, 2 people looking in and 2 looking out.
                                        That is, it must be the usual
                                        "split circulate and roll" formation.
@@ -3053,14 +3059,20 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        Also, the ends must be column-like and the centers
                                        must be line-like.
 
-   nice_diamonds   R/Q              dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+                                       When used as a qualifier, the "live" modifier demands
+                                       that all people be present.  The "in" or "out"
+                                       modifiers may be used only with 1x4 setups.
+                                       They control the ends of the 1x4, who must be
+                                       looking into or out of the 1x4 column.
+
+   nice_diamonds      R/Q           dmd, qtag, ptpd, or c1phan - diamond(s) are actual
                                        diamonds, and have consistent handedness.
                                        "Right/left" and "live" may be used when it
                                        is a qualifier -- right/left demand that handedness.
                                        When used in a c1phan, the expectation is that
                                        people are in stars.
 
-   dmd_facing      R/Q              dmd, qtag, ptpd, or c1phan - diamond(s) are actual
+   dmd_facing         R/Q           dmd, qtag, ptpd, or c1phan - diamond(s) are actual
                                        diamonds, are facing, and have consistent handedness.
                                        "Right/left" and "live" may be used when it
                                        is a qualifier -- right/left demand that handedness
@@ -3069,32 +3081,39 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        people are in stars, and "right"/"left" are
                                        meaningless.
 
-   conc_cpls_same  R/Q              2x4 - centers and ends are couples, T-boned to each
+   conc_cpls_same     R/Q           2x4 - centers and ends are couples, T-boned to each
                                        other, but all looking in or all looking out.
                                        If "in" is given, it is a "heads nothing" setup.
                                        If "out" is given, it is the opposite.
 
-   conc_cpls_diff  R/Q              2x4 - centers and ends are couples, T-boned to each
+   conc_cpls_diff     R/Q           2x4 - centers and ends are couples, T-boned to each
                                        other, and centers and ends are different.
                                        "In" and "out" refer to the ends.  So "in"
                                        specifies a "heads pass thru" setup.
 
-   nice_wv_triangles R/Q            short6, bone6, trngl - triangle(s) are wave-based and
+   nice_wv_triangles  R/Q           short6, bone6, trngl - triangle(s) are wave-based and
                                        of consistent handedness.
                                        "Right/left" and "live" may be used when it
                                        is a qualifier.
    nice_tnd_triangles               as above, triangles are tandem-based.
 
-   in_or_out,                       2x2/2x4 - all facing in or all facing out of box of 4.
+   in_or_out          R/Q           2x2/2x4 - all facing in or all facing out of box of 4.
                                        2x3 - facing lines or back-to-back lines
                                        4x2/4x1/2x1 - [single] 8 chain or trade by
-                                       (one or the other; we don't care which)
+                                       (one or the other; we don't care which unless this
+                                       is a qualifier with additional modifiers.)
                                        The 2x2/2x4/4x2 versions of these require that people
                                        not be T-boned -- they must face in or out as couples.
-                                       To allow each person to be independent, use the qualifier
-                                       (but not restriction) "independent_in_or_out".
+                                       To allow each person to be independent,
+                                       use the qualifier (but not restriction)
+                                       "independent_in_or_out".
 
-   magic_only        R/Q            3x2 or 4x2 - magic column; 2x4 - inverted lines;
+                                       When used as a qualifier, the "live" modifier demands
+                                       that all people be present.  The "in" or "out"
+                                       modifier may be used to specify, for example,
+                                       an 8 chain or a trade by.
+
+   magic_only         R/Q           3x2 or 4x2 - magic column; 2x4 - inverted lines;
                                        1x4 - single inverted line; 2x2 - inverted box
                                        thar/crosswave - two waves of opposite handedness.
                                        "Right/left/in/out" and "live" may be used when
@@ -3107,17 +3126,23 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    explodable,                      1x4 - centers facing the same way
    reverse_explodable,              1x4 - ends facing the same way
 
-   peelable_box,                    2x2, 3x2, 4x2, 5x2, 6x2 or 8x2 - all people in each
+   inroller_is_cw     Q             2x4 or qtag - the inrollers are in clockwise position
+   inroller_is_ccw    Q             2x4 or qtag - the inrollers are in counterclockwise
+                                       position
+   outroller_is_cw    Q             2x4 or qtag - the outrollers are in clockwise position
+   outroller_is_ccw   Q             2x4 or qtag - the outrollers are in counterclockwise
+                                       position
+
+   peelable_box                     2x2, 3x2, 4x2, 5x2, 6x2 or 8x2 - all people in each
                                        column are facing same way
                                     2x4 - everyone is in real tandem with person front or back
-   ends_are_peelable,               2x4 - ends are a box with each person in genuine tandem
+   ends_are_peelable                2x4 - ends are a box with each person in genuine tandem
 
-   siamese_in_quad                  Any 2x4 or 4x2 - the people in each quadrant, if they
+   siamese_in_quad    R/Q           Any 2x4 or 4x2 - the people in each quadrant, if they
                                        exist, face the same way.  C1 phantom - the same.
-                                       Restriction or qualifier.
-   not_tboned_in_quad               Any 2x4 or 4x2 - the people in each quadrant, if they
-                                       exist, face the same or opposite.  C1 phantom - the same.
-                                       Restriction or qualifier.
+   not_tboned_in_quad R/Q           Any 2x4 or 4x2 - the people in each quadrant, if they
+                                       exist, face the same or opposite.
+                                       C1 phantom - the same.
 
    not_tboned,                      2x2 - people must not be T-boned
    opposite_sex,                    2x1 - people must be opposite sexes facing each other
@@ -3130,21 +3155,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
 
                            APPENDIX C -- QUALIFIERS
 
-   none,                            any setup - this always passes (presumably to 
+   none,                            any setup - this always passes (presumably to
                                        use some special indicator like "num" or "live".
-
-
-   couples_only,                    Same as corresponding restriction, above.
-                                    The "live" modifier might not work for 2x2 -- check!
-
-
-
-
-   regular_tbone                    Same as corresponding restriction, above.
-                                       The "live" modifier demands that there all people
-                                       be present.  The "in" or "out" modifiers may be used
-                                       only with 1x4 setups.  They control the ends of the
-                                       1x4.  They must looking into or out of the 1x4 column.
 
    gen_qbox                         2x4/4x2 - demands that everyone be column-like.  This is
                                        intended to be used with the "left" or "right" modifiers.
@@ -3156,9 +3168,6 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        demand that they be column-like.  Hence, a 1/4 box,
                                        3/4 box, column, or magic column will satisfy this,
                                        as long as the centers have the indicated handedness.
-   in_or_out,                       Same as corresponding restriction, above, with "live".
-                                       This can take the "live" and/or "in" or "out" mofifiers
-                                       to specify, for example, an 8 chain or a trade by.
 
    centers_in_or_out      Really ought to document this!   Live
 
@@ -3167,30 +3176,29 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     and it just tests that each person is a leader or trailer
                                     in his 2x2.  This should be used with the "in" or "out"
                                     mofifier, of course.
-   miniwaves,                       Same as corresponding restriction, above.
-   not_miniwaves,                   True if all people are live, and the miniwaves restriction,
-                                    above, FAILS.
-
 
    dmd_intlk          Really ought to document this!   Live
    dmd_not_intlk      Really ought to document this!   Live
 
+   dmd_same_point          Q        dmd - centers would circulate to same point.
 
-   dmd_same_point,                  dmd - centers would circulate to same point
+   true_Z_cw, true_Z_ccw   Q        2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.
+                                       In a 2x3 setup it also demands that the shear
+                                       direction be as shown.  In the larger setups either
+                                       qualifier passes the test for any shear direction.
 
-   true_Z_cw, true_Z_ccw,           2x3, 3x4, 2x6, 4x6, 3x8 - each 2x3 setup is a genuine Z.
-                                    In a 2x3 setup it also demands that the shear direction
-                                    be as shown.  In the larger setups either qualifier
-                                    passes the test for any shear direction.
-   true_PG_cw, true_PG_ccw,         2x6, 4x6, 2x12 - each 2x6 setup is a genuine parallelogram.
-                                    In a 2x6 setup it also demands that the shear direction
-                                    be as shown.  In the larger setups either qualifier
-                                    passes the test for any shear direction.
-   lateral_columns_empty,           3x4, 4x4, 4x6, 3x8 - everyone is oriented consistently,
-                                    4 (or 8) wide and however many deep.  Within each 4-wide
-                                    and 2-or-3-deep subsetup, either the center two columns,
-                                    or two columns that are once removed from each other,
-                                    are unoccupied. */
+   true_PG_cw, true_PG_ccw Q        2x6, 4x6, 2x12 - each 2x6 setup is a genuine
+                                       parallelogram. In a 2x6 setup it also demands that
+                                       the shear direction be as shown.  In the larger
+                                       setups either qualifier passes the test
+                                       for any shear direction.
+
+   lateral_columns_empty   Q        3x4, 4x4, 4x6, 3x8 - everyone is oriented consistently,
+                                       4 (or 8) wide and however many deep.  Within each
+                                       4-wide and 2-or-3-deep subsetup, either the center
+                                       two columns, or two columns that are once removed
+                                       from each other, are unoccupied.
+
    ctrwv_end2fl,                    crosswave - center line is wave, end line is 2fl.
                                        1x6 - these are "out 2&1 lines" with the outer pairs
                                        in couples.  1x8 - the outer pairs are couples and the

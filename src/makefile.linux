@@ -16,7 +16,7 @@ DEFS = -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
 # this may compromise the ability to debug the program.  In this case, you may
 # need to choose different options, typically "-g", for debugging.
 # Consult your system, compiler, and debugger vendor for further information.
-CDEBUGFLAGS = -O2
+CDEBUGFLAGS = -O4
 
 CFLAGS =$(CDEBUGFLAGS) $(DEFS)
 
@@ -70,12 +70,12 @@ TTY_LIBS = -static -lcurses
 SD_SRCS = sdmain.cpp sdutil.cpp sdbasic.cpp sdinit.cpp \
           sdtables.cpp sdctable.cpp sdtop.cpp sdconcpt.cpp sdpreds.cpp \
           sdgetout.cpp sdmoves.cpp sdtand.cpp sdconc.cpp sdistort.cpp \
-          sdpick.cpp sdsi.cpp
+          sdpick.cpp sdsi.cpp mapcachefile.cpp
 
 SD_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
           sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
           sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
-          sdpick.o sdsi.o
+          sdpick.o sdsi.o mapcachefile.o
 
 SDX11_SRC = sdui-x11.c
 SDX11_OBJ = sdui-x11.o
@@ -125,9 +125,15 @@ sdui-x11.o: sdui-x11.c
 sdui-ttu.o: sdui-ttu.cpp
 	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $<
 
+# Miscellaneous file dependencies.
+
 mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
 
 mkcalls.o: database.h
+
+sdinit.cpp: mapcachefile.h sort.h
+
+mapcachefile.cpp: mapcachefile.h
 
 $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJS): sd.h database.h
 

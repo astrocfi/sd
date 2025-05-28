@@ -11,7 +11,7 @@
 @c %**end of header
 
 @set title1 RELEASE NOTES FOR SD VERSION 34.8
-@set title2 Database version = 34.8 format = 206
+@set title2 Database version = 34.8 format = 207
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)

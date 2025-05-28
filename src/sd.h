@@ -23,7 +23,7 @@
 // "SDLIB_API" symbol do nothing.
 
 #if defined(WIN32)
-#if defined(SDLIB_EXPORTS) 
+#if defined(SDLIB_EXPORTS)
 #define SDLIB_API __declspec(dllexport)
 #else
 #define SDLIB_API __declspec(dllimport)
@@ -2799,7 +2799,7 @@ class configuration {
       history_ptr = 1;
       history[1].startinfoindex = c;
       history[1].draw_pic = FALSE;
-      whole_sequence_low_lim = 
+      whole_sequence_low_lim =
          (startinfolist[c].into_the_middle) ? 2 : 1;
    }
    inline bool nontrivial_startinfo_specific() { return startinfoindex != 0; }
@@ -3328,25 +3328,6 @@ enum phantest_kind {
 enum disttest_kind {
    disttest_t, disttest_nil, disttest_only_two,
    disttest_any, disttest_offset, disttest_z};
-
-enum chk_type {
-   chk_none,
-   chk_wave,
-   chk_groups,
-   chk_anti_groups,
-   chk_box,
-   chk_box_dbl,
-   chk_indep_box,
-   chk_star,
-   chk_dmd_qtag,
-   chk_dmd_qtag_new,
-   chk_qtag,
-   chk_qbox,
-   chk_peelable,
-   chk_spec_directions,
-   chk_sex,
-   chk_inroller
-};
 
 
 enum restriction_test_result {

@@ -1170,6 +1170,25 @@ class restriction_tester {
 
 private:
 
+   enum chk_type {
+      chk_none,
+      chk_wave,
+      chk_groups,
+      chk_anti_groups,
+      chk_box,
+      chk_box_dbl,
+      chk_indep_box,
+      chk_star,
+      chk_dmd_qtag,
+      chk_dmd_qtag_new,
+      chk_qtag,
+      chk_qbox,
+      chk_peelable,
+      chk_spec_directions,
+      chk_sex,
+      chk_inroller
+   };
+
    // We make this a struct inside the class, rather than having its
    // fields just comprise the class itself (note that there are no
    // fields in this class, and it is never instantiated) so that
@@ -1251,33 +1270,83 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {003, 001, 003, 001, 001, 003, 0, 0},
     {0}, {0}, false,  chk_inroller},
 
+   {s2x4, cr_judge_is_cw,   0,    {7, 3, 0, 4, 0, 4, 3, 7},
+    {012, 010, 012, 010, 010, 012, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s2x4, cr_judge_is_ccw,   0,    {0, 4, 7, 3, 7, 3, 0, 4},
+    {012, 010, 012, 010, 010, 012, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s2x4, cr_socker_is_cw,   0,    {3, 7, 4, 0, 4, 0, 3, 7},
+    {012, 010, 012, 010, 010, 012, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s2x4, cr_socker_is_ccw,   0,    {4, 0, 3, 7, 3, 7, 4, 0},
+    {012, 010, 012, 010, 010, 012, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+
+   {s_qtag, cr_judge_is_cw,   0,    {0, 4, 1, 5, 1, 5, 0, 4},
+    {003, 001, 003, 001, 001, 003, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s_qtag, cr_judge_is_ccw,   0,    {1, 5, 0, 4, 0, 4, 1, 5},
+    {003, 001, 003, 001, 001, 003, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s_qtag, cr_socker_is_cw,   0,    {4, 0, 5, 1, 5, 1, 0, 4},
+    {003, 001, 003, 001, 001, 003, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+   {s_qtag, cr_socker_is_ccw,   0,    {5, 1, 4, 0, 4, 0, 1, 5},
+    {003, 001, 003, 001, 001, 003, 0, 0},
+    {0}, {0}, false,  chk_inroller},
+
    {s1x2, cr_opposite_sex, 2, {0}, {0}, {0}, {1}, false, chk_sex},
-   {s4x4,      cr_wave_only,    1,   {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
-                                 {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, true,  chk_box},
-   {s4x4,      cr_2fl_only,     1,    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
-                                 {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2}, {0}, {0}, true,  chk_box},
-   {s_qtag,    cr_qtag_mwv,     8, {0, 1, 3, 2, 5, 4, 6, 7, -1}, {0, 2, 0},       {0}, {0}, false, chk_spec_directions},
-   {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1}, {0, 2, 0},       {0}, {0}, false, chk_spec_directions},
-   {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},    {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
-   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
-   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},             {1, 0}, {1, 2},              false, chk_star},
-   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},      {2, 3, 6}, {2, 2, 7},         false, chk_star},
-   {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},          {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
-   {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},                {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},                {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
-   {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},          {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},  {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1}, {0, 2, 0},   {0}, {0}, false, chk_spec_directions},
-   {s4x6,      cr_dmd_ctrs_mwv, 8, {1, 10, 4, 7, 22, 13, 19, 16, -1}, {1, 3, 0},  {0}, {0}, false, chk_spec_directions},
-   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},    {0, 2, 0},          {0}, {0}, false, chk_spec_directions},
-   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1}, {0, 2, 0},     {0}, {0}, false, chk_spec_directions},
-   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},          {1, 3, 0},          {0}, {0}, false, chk_spec_directions},
-   {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {1, 3, 1},          {0}, {0}, false, chk_spec_directions},
-   {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},                 {0, 2, 1},          {0}, {0}, false, chk_spec_directions},
+   {s4x4,      cr_wave_only,    1,
+    {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},
+    {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0}, {0}, {0}, true,  chk_box},
+   {s4x4,      cr_2fl_only,     1,
+    {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},
+    {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2}, {0}, {0}, true,  chk_box},
+   {s_qtag,    cr_qtag_mwv,     8, {0, 1, 3, 2, 5, 4, 6, 7, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_qtag_mag_mwv, 8, {0, 1, 2, 3, 5, 4, 7, 6, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_spindle, cr_dmd_ctrs_mwv, 6, {0, 6, 1, 5, 2, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_short6,  cr_dmd_ctrs_mwv, 4, {0, 2, 5, 3, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},
+    {1, 0}, {1, 2},              false, chk_star},
+   {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},
+    {2, 3, 6}, {2, 2, 7},         false, chk_star},
+   {s_trngl,   cr_dmd_ctrs_mwv, 2, {1, 2, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_trngl4,  cr_dmd_ctrs_mwv, 6, {2, 3, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_bone6,   cr_dmd_ctrs_mwv, 4, {0, 4, 1, 3, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s1x4,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s2x4,      cr_dmd_ctrs_mwv, 4, {1, 2, 6, 5, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s2x3,      cr_dmd_ctrs_mwv, 2, {1, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s4x6,      cr_dmd_ctrs_mwv, 8, {1, 10, 4, 7, 22, 13, 19, 16, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {swqtag,    cr_dmd_ctrs_mwv, 6, {3, 2, 9, 4, 7, 8, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {sdeep2x1dmd, cr_dmd_ctrs_mwv, 8, {0, 1, 3, 4, 6, 5, 9, 8, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_ptpd,    cr_dmd_ctrs_mwv, 4, {1, 3, 7, 5, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
+    {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
+   {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
+    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
 
    {s1x8, cr_wave_only, 8, {0, 1, 3, 2, 6, 7, 5, 4},                              {0}, {0}, {0}, true, chk_wave},
    {s1x8, cr_1fl_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},                               {2}, {0}, {0}, true,  chk_groups},
@@ -1754,7 +1823,7 @@ restriction_test_result verify_restriction(
    int szlim;
 
    switch (rr->check) {
-   case chk_spec_directions:
+   case restriction_tester::chk_spec_directions:
       qa1 = 0;
       qa0 = 3 & (~tt.assump_both);
 
@@ -1782,7 +1851,7 @@ restriction_test_result verify_restriction(
       }
 
       goto bad;
-   case chk_wave:
+   case restriction_tester::chk_wave:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -1857,7 +1926,7 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case chk_box:
+   case restriction_tester::chk_box:
       p = rr->map1;
       q = rr->map2;
 
@@ -1896,11 +1965,11 @@ restriction_test_result verify_restriction(
                if (!ss->people[i].id1) {
                   if (phantom_count >= 16)
                      fail("Too many phantoms.");
-      
+
                   pdir = (qa0&1) ?
                      (d_east ^ ((rr->map2[i] ^ qa2) & 2)) :
                      (d_north ^ ((rr->map1[i] ^ qa0) & 2));
-      
+
                   ss->people[i].id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[i].id2 = 0;
                }
@@ -1913,7 +1982,8 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case chk_box_dbl:   // Check everyone's lateral partner, independently of headlinerness.
+   case restriction_tester::chk_box_dbl:
+      // Check everyone's lateral partner, independently of headlinerness.
       for (idx=0 ; idx<=attr::slimit(ss) ; idx++) {
          uint32 u;
 
@@ -1931,7 +2001,7 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case chk_indep_box:
+   case restriction_tester::chk_indep_box:
       qa0 = (tt.assump_both << 1) & 2;
       qa1 = tt.assump_both & 2;
       qa2 = 0;
@@ -1947,9 +2017,9 @@ restriction_test_result verify_restriction(
       if (((qa0 & qa2) | (qa1 & qa3)) != 0) goto bad;
 
       goto good;
-   case chk_groups:
+   case restriction_tester::chk_groups:
       limit = rr->map2[0];
-   
+
       for (idx=0; idx<limit; idx++) {
          qa0 = 0; qa1 = 0;
 
@@ -1980,10 +2050,10 @@ restriction_test_result verify_restriction(
 
                for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
                   int p = rr->map1[idx+i];
-   
+
                   personrec *pq = &ss->people[p];
                   t = pq->id1;
-      
+
                   if (!t) {
                      if (phantom_count >= 16) fail("Too many phantoms.");
                      pq->id1 = pdir | BIT_ACT_PHAN | ((phantom_count++) << 6);
@@ -1998,7 +2068,7 @@ restriction_test_result verify_restriction(
          }
       }
       goto good;
-   case chk_anti_groups:
+   case restriction_tester::chk_anti_groups:
       limit = rr->map2[0];
 
       map1item = rr->map1;
@@ -2040,7 +2110,7 @@ restriction_test_result verify_restriction(
                   int p = rr->map1[idx+i];
                   personrec *pq = &ss->people[p];
                   t = pq->id1;
-      
+
                   if (!t) {
                      if (phantom_count >= 16) fail("Too many phantoms.");
                      pq->id1 = (i ? qdir : pdir) | BIT_ACT_PHAN | ((phantom_count++) << 6);
@@ -2055,7 +2125,7 @@ restriction_test_result verify_restriction(
          }
       }
       goto good;
-   case chk_peelable:
+   case restriction_tester::chk_peelable:
       qa0 = 3; qa1 = 3;
       qa2 = 3; qa3 = 3;
 
@@ -2069,7 +2139,7 @@ restriction_test_result verify_restriction(
          goto bad;
 
       goto good;
-   case chk_qbox:
+   case restriction_tester::chk_qbox:
       qa0 = 0;
       qa1 = ~0;
 
@@ -2093,7 +2163,7 @@ restriction_test_result verify_restriction(
          goto bad;
 
       goto good;
-   case chk_star:
+   case restriction_tester::chk_star:
       qa0 = tt.assump_both;
       qa1 = ~(tt.assump_both << 1);
 
@@ -2117,8 +2187,8 @@ restriction_test_result verify_restriction(
          goto bad;
 
       goto good;
-   case chk_dmd_qtag:
-   case chk_dmd_qtag_new:
+   case restriction_tester::chk_dmd_qtag:
+   case restriction_tester::chk_dmd_qtag_new:
       qa0 = qa1 = qa2 = qa3 = 0;
 
       for (idx=0; idx<rr->map1[0]; idx++)
@@ -2140,7 +2210,7 @@ restriction_test_result verify_restriction(
       if ((qa1 & 001) != 0 || (qa0 & 010) != 0)
          goto bad;
 
-      if (rr->check == chk_dmd_qtag) {
+      if (rr->check == restriction_tester::chk_dmd_qtag) {
          if (tt.assump_both) {
             // The "live" modifier means that we need a definitive person
             // to distinguish "in" or "out".
@@ -2171,7 +2241,7 @@ restriction_test_result verify_restriction(
       }
 
       goto good;
-   case chk_qtag:
+   case restriction_tester::chk_qtag:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -2215,14 +2285,14 @@ restriction_test_result verify_restriction(
 
             for (i=0; i<rr->size; i++) {
                int p = rr->map1[i];
-   
+
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16) fail("Too many phantoms.");
-   
+
                   ss->people[p].id1 =           (i&1) ?
                      ((i&2) ? qdirodd : qdir) :
                      ((i&2) ? pdirodd : pdir);
-   
+
                   ss->people[p].id1 |= BIT_ACT_PHAN | ((phantom_count++) << 6);
                   ss->people[p].id2 = 0;
                }
@@ -2232,7 +2302,7 @@ restriction_test_result verify_restriction(
 
             for (i=0; i<rr->map2[0]; i++) {
                int p = rr->map2[i+1];
-   
+
                if (!ss->people[p].id1) {
                   if (phantom_count >= 16) fail("Too many phantoms.");
                   ss->people[p].id1 = (i&1) ? d_south : d_north;
@@ -2247,7 +2317,7 @@ restriction_test_result verify_restriction(
 
       goto good;
 
-   case chk_sex:
+   case restriction_tester::chk_sex:
       qaa[0] = tt.assump_both;
       qaa[1] = tt.assump_both << 1;
 
@@ -2269,15 +2339,20 @@ restriction_test_result verify_restriction(
 
       goto good;
 
-   case chk_inroller:
+   case restriction_tester::chk_inroller:
 
-      if (ss->kind == s2x4) {
+      // This "size" field tells whether this is an inroll/outroll
+      // type (size != 0) or a judge/socker type (size == 0).
+
+      if (ss->kind == s2x4 && rr->size != 0) {
          // For these assumptions, finding a single usable person
          // will suffice to determine the outcome.
          // Now it happens that, if assump_both has something,
          // we could determine the handedness, and hence the
          // in/out roll direction, without even one person.
          // But we won't be called if there isn't even one person.
+         // ***** Not so!  We might be called with one person in the
+         // center, but no ends.  Too bad.
          switch (ss->cmd.cmd_assume.assumption) {
          case cr_wave_only:
             if ((ss->people[0].id1 & 013) == (uint32) rr->map2[1] ||
@@ -2430,7 +2505,7 @@ static void initialize_concept_sublists()
 
             break;
          case concept_once_removed:
-            if (p->arg1 == 0) 
+            if (p->arg1 == 0)
                good_setup_mask = MASK_GOODRMVD;
 
             break;
@@ -2664,7 +2739,7 @@ extern bool check_for_concept_group(
       *k_p = k;
 
       if (k == concept_crazy ||
-          k == concept_frac_crazy || 
+          k == concept_frac_crazy ||
           k == concept_n_times_const ||
           k == concept_n_times)
          *need_to_restrain_p |= 2;
@@ -2860,7 +2935,7 @@ extern void warn(warning_index w)
    configuration::set_one_warning(w);
 }
 
-           
+
 extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
 {
    for (callarray *p = spec ; p ; p = p->next) {
@@ -2987,7 +3062,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          default:
             goto good;           /* We don't understand the setup -- we'd better accept it. */
          }
-      case cr_opposite_sex: 
+      case cr_opposite_sex:
          switch (ssK) {
          case s1x2:
             goto fix_col_line_stuff;
@@ -3441,6 +3516,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_inroller_is_ccw:
       case cr_outroller_is_cw:
       case cr_outroller_is_ccw:
+      case cr_judge_is_cw:
+      case cr_judge_is_ccw:
+      case cr_socker_is_cw:
+      case cr_socker_is_ccw:
          /* **** FELL THROUGH!!!!!! */
          goto check_tt;
       case cr_ctr_pts_rh:
@@ -3468,7 +3547,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
             uint32 t2;
             long_boolean b1 = TRUE;
             long_boolean b2 = TRUE;
-            
+
             switch (ssK) {
             case s_qtag:
             case s_hrglass:
@@ -4468,7 +4547,7 @@ extern long_boolean fix_n_results(int arity, int goal, setup z[],
 
       canonicalize_rotation(&z[i]);
    }
-  
+
    if (deadconcindex >= 0) {
       kk = z[deadconcindex].kind;
       rotstates = 0x001;
@@ -4988,7 +5067,7 @@ bool expand::compress_from_hash_table(setup *ss,
          // Do not compress qtag to 2x3 is switch is on.
          if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
             continue;
-         
+
          warn(cptr->norwarning);
          expand::compress_setup(cptr, ss);
          return true;
@@ -5067,7 +5146,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          }
 
          did_something = true;
-         goto startover; 
+         goto startover;
       }
    }
 
@@ -5086,7 +5165,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
    // If we compressed a "swqtag" to a "q_tag", take no further action.
    // Do not further compress to a 2x3.
    if (oldk == swqtag && ss->kind == s_qtag) goto kinda_done;
-   goto startover; 
+   goto startover;
 
  difficult:
 
@@ -5100,7 +5179,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
             ss->people[23].id1 | ss->people[12].id1)) {
          expand::compress_setup(&s_4x4_4x6a, ss);
          did_something = true;
-         goto startover; 
+         goto startover;
       }
    }
 
@@ -5144,7 +5223,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          ss->people[6].id1 | ss->people[9].id1)) {
       expand::compress_setup(&s_qtg_3x4, ss);
       did_something = true;
-      goto startover; 
+      goto startover;
    }
 
    if (action >= normalize_to_4 &&
@@ -5155,7 +5234,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          ss->kind = s_hrglass;
          expand::compress_setup(&s_1x2_hrgl, ss);
          did_something = true;
-         goto startover; 
+         goto startover;
       }
       else if ((livemask & 0x33) == 0)  {
          // If normalizing before a merge (which might be from a "disconnected"),
@@ -5167,7 +5246,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
          ss->kind = s_hrglass;
          expand::compress_setup(t, ss);
          did_something = true;
-         goto startover; 
+         goto startover;
       }
    }
 
@@ -5335,7 +5414,7 @@ void toplevelmove() THROW_DECL
 
             if (part0item->call_id == base_call_null &&
                 (part0item->modifiers1 & DFM1_CALL_MOD_MASK) == DFM1_CALL_MOD_MAND_ANYCALL &&
-                get_real_subcall(parse_scan, 
+                get_real_subcall(parse_scan,
                                  part0item,
                                  &starting_setup.cmd,
                                  seqdef,

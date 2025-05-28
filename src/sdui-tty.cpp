@@ -1,4 +1,4 @@
-/* 
+/*
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
  * Time-stamp: <96/05/22 17:17:53 wba>
@@ -177,7 +177,7 @@ static void get_string_input(char prompt[], char dest[], int max)
  * exit before doing anything else with the user interface, but this
  * must be made anyway.
  */
- 
+
 void iofull::process_command_line(int *argcp, char ***argvp)
 {
    int argno = 1;
@@ -395,12 +395,12 @@ bool iofull::init_step(init_callback_state s, int n)
 }
 
 
- 
+
 /*
  * Create a menu containing number_of_calls[cl] items.
  * Use the "menu_names" array to create a
  * title line for the menu.  The string is in static storage.
- * 
+ *
  * This will be called once for each value in the enumeration call_list_kind.
  */
 

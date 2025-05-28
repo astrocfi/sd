@@ -77,7 +77,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{10, 15, 3, -2, 2, 7, 6, -2,     -1, -1, 14, -1, -1, -1, 11, -1},            0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
 
    {{7, 22, 15, 20, 18, 11, 2, 9,    6, 23, 14, 21, 19, 10, 3, 8},               0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
-   {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17, 
+   {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17,
                       0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},                 0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
    {{0, 2, 4, 6, 8, 10, 13, 15, 17, 19, 21, 23,
                       1, 3, 5, 7, 9, 11, 12, 14, 16, 18, 20, 22},         0x555555, 0xFFFFFF,        12, 0,  0,  0, 0,  s2x6,  s2x12},
@@ -103,7 +103,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 6, 8, 10, 12,             -1, -1, 4, -1, -1, 14},                     0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
 
    {{0, 2, 4, 6, 9, 11, 13, 15,      1, 3, 5, 7, 8, 10, 12, 14},            0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
-   {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22, 
+   {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22,
                       1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23},         0x555555, 0xFFFFFF,        12, 0,  0,  0, 0,  s3x4,  s3x8},
    {{2, 3, 5, 6, 7, 0,               -1, -1, 4, -1, -1, 1},                      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_crosswave},
    {{0, 1, 3, 4, 5, 6,               -1, -1, 2, -1, -1, 7},                      0,        0,         6, 0,  0,  0, 0,  s_1x2dmd, s_crosswave},
@@ -596,7 +596,7 @@ static void unpack_us(
             personrec fb[8];
 
             /* Unpack tandem/couples person. */
-   
+
             for (j=0 ; j<tandstuff->np ; j++) {
                fb[j] = tandstuff->real_saved_people[j][ii];
                if (fb[j].id1) fb[j].id1 =
@@ -806,6 +806,12 @@ extern void tandem_couples_move(
    long_boolean phantom_pairing_ok,
    setup *result) THROW_DECL
 {
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
+      result->result_flags = 0;
+      result->kind = nothing;
+      return;
+   }
+
    selector_kind saved_selector;
    tandrec tandstuff;
    tm_thing *map;
@@ -889,16 +895,16 @@ extern void tandem_couples_move(
 
                if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directionsr ^ 0x02A) & livemaskr) == 0)
                   special_mask |= 011;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_2X1 && ((directionsr ^ 0xA80) & livemaskr) == 0)
                   special_mask |= 044;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directionsr ^ 0x02A) & livemaskr) == 0)
                   special_mask |= 044;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_1X2 && ((directionsr ^ 0xA80) & livemaskr) == 0)
                   special_mask |= 011;
-   
+
                if (special_mask != 011 && special_mask != 044) special_mask = 0;
             }
          }
@@ -911,23 +917,23 @@ extern void tandem_couples_move(
                if (((directionsr ^ 0x02A8) & livemaskr) == 0 ||
                    ((directionsr ^ 0xA802) & livemaskr) == 0)
                   special_mask |= 0x88;
-   
+
                if (((directionsr ^ 0x2A80) & livemaskr) == 0 ||
                    ((directionsr ^ 0x802A) & livemaskr) == 0)
                   special_mask |= 0x11;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x11;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x88;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x88;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x11;
-   
+
                if (special_mask != 0x11 && special_mask != 0x88) special_mask = 0;
             }
             else if (ss->kind == s3x4 && livemaskr == 0xC3FC3F) {
@@ -966,16 +972,16 @@ extern void tandem_couples_move(
 
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x11;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_3X1 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x44;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0x00AA) & livemaskr) == 0)
                   special_mask |= 0x44;
-   
+
                if (mxn_bits == INHERITFLAGMXNK_1X3 && ((directionsr ^ 0xAA00) & livemaskr) == 0)
                   special_mask |= 0x11;
-   
+
                if (special_mask != 0x11 && special_mask != 0x44) special_mask = 0;
             }
             else if (ss->kind == s3x1dmd) {
@@ -1177,7 +1183,7 @@ extern void tandem_couples_move(
          }
       }
    }
-   
+
    current_options.who = saved_selector;
 
    if (!allmask) {

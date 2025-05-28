@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "34.8m"
-#define TIME_STAMP "wba@alum.mit.edu  1 May 2003 $"
+#define VERSION_STRING "34.8p"
+#define TIME_STAMP "wba@alum.mit.edu  15 May 2003 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -48,25 +48,31 @@ and the following external variables:
 #include "resource.h"
 
 
-/* We cause this string (that is, the concatentation of these strings) to appear
-   in the binary image of the program, so that the "what" and "ident" utilities
-   can print the version.
+// We cause this string (that is, the concatentation of these strings) to appear
+// in the binary image of the program, so that the "what" and "ident" utilities
+// can print the version.
 
-   We do not endorse those programs, or any probabilistic identification
-   mechanism -- we are simply trying to be helpful to those people who use them.
-   It is regrettable that those two identification mechanisms are different
-   and superficially incompatible, and that many existing programs only comply
-   with one or the other of them, but not both.  By choosing the contents of
-   the string carefully, we believe we comply with both.
+// We do not endorse those programs, or any probabilistic identification
+// mechanism -- we are simply trying to be helpful to those people who use them.
+// It is regrettable that those two identification mechanisms are different
+// and superficially incompatible, and that many existing programs only comply
+// with one or the other of them, but not both.  By choosing the contents of
+// the string carefully, we believe we comply with both.
 
-   We specifically break up the "Header" word to prevent utilities like RCS or
-   SCCS, if anyone should use them to store this source file, from attempting
-   to modify this.  Version control for this program is performed manually,
-   not by any utility.  Furthermore, we do not believe that it is proper for
-   source control utilities to alter the text in a source file. */
+// We specifically break up the "Header" word to prevent utilities like RCS or
+// SCCS, if anyone should use them to store this source file, from attempting
+// to modify this.  Version control for this program is performed manually,
+// not by any utility.  In particular, we do not believe that it is proper for
+// source control utilities to alter the text in a source file.
+
+// (Actually, we are fucking sick and tired of totally brain-dead garbage left
+// over from that piece-of-crap operating system that was conceived 30 years
+// ago for the purpose of writing a spacewar game.  We wish Unix would come
+// at least into the 20th century, if not the 21st, and that the retro mindset
+// that it created not continue to plague the computer world 30 years later.)
 
 static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
-   
+
 
 extern char *sd_version_string()
 {
@@ -661,7 +667,7 @@ extern long_boolean query_for_call()
             writestuff("You can't select that here.");
             break;
          }
-      
+
          newline();
          newline();
       }
@@ -827,31 +833,31 @@ extern long_boolean query_for_call()
 
    if (parse_state.parse_stack_index != 0) {
       /* Set stuff up for reading second call and its concepts. */
-   
+
       /* Create a new parse block, point concept_write_ptr at its contents. */
       /* Fill in the pointer to the second parse block. */
-   
+
       parse_state.concept_write_ptr = parse_state.parse_stack[--parse_state.parse_stack_index].concept_write_save_ptr;
 
       (*parse_state.concept_write_ptr)->subsidiary_root = (parse_block *) 0;
       parse_state.concept_write_base = &(*parse_state.concept_write_ptr)->subsidiary_root;
       parse_state.concept_write_ptr = parse_state.concept_write_base;
       *parse_state.concept_write_ptr = (parse_block *) 0;
-   
+
       parse_state.call_list_to_use = call_list_any;
-   
+
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
-         case concept_centers_and_ends:
-            (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
-            break;
-         case concept_on_your_own:
-            (void) strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
-            break;
-         default:
-            (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
-            break;
+      case concept_centers_and_ends:
+         (void) strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
+         break;
+      case concept_on_your_own:
+         (void) strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
+         break;
+      default:
+         (void) strncpy(parse_state.specialprompt, "ENTER SECOND CALL", MAX_TEXT_LINE_LENGTH);
+         break;
       }
-   
+
       parse_state.topcallflags1 = 0;          /* Erase anything we had -- it is meaningless now. */
       goto recurse_entry;
    }

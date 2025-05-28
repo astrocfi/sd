@@ -2638,7 +2638,7 @@ extern void concentric_move(
 
             parse_block *z1 = save_skippable;
             while (z1->concept->kind > marker_end_of_list) z1 = z1->next;
-            
+
             call_with_name *savecall = z1->call;
             call_with_name *savecall_to_print = z1->call_to_print;
             short savelevelcheck = z1->no_check_call_level;
@@ -2896,60 +2896,60 @@ extern void concentric_move(
          goto getout;
    }
 
-   /* The time has come to compute the elongation of the outsides in the final setup.
-      This gets complicated if the outsides' final setup is a 2x2.  Among the
-      procedures we could use are:
-         (1) if the call is "checkpoint", go to spots with opposite elongation
-            from the original outsides' elongation.  This is the "Hodson checkpoint
-            rule", named after the caller who first used a consistent, methodical,
-            and universal rule for the checkpoint concept.
-         (2) if the call is "concentric", use the Hodson rule if the original setup
-            was a 1x4 or diamond, or the "lines-to-lines, columns-to-columns" rule
-            if the original setup was a 2x2.
-         (3) if we have various definition flags, such as "force_lines" or
-            "force_otherway", obey them.
-      We will use information from several sources in carrying out these rules.
-      The concentric concept will signify itself by turning on the "lines_lines"
-      flag.  The checkpoint concept will signify itself by turning on the
-      "force_otherway" flag.  The "parallel_conc_end" flag in the outsides' setup
-      indicates that, if "concentric" or "checkpoint" are NOT being used, the call
-      wants the outsides to maintain the same elongation as they had at the beginning.
-      This is what makes "ends hinge" and "ends recycle" do their respective
-      right things when called from a grand wave. */
+   // The time has come to compute the elongation of the outsides in the final setup.
+   // This gets complicated if the outsides' final setup is a 2x2.  Among the
+   // procedures we could use are:
+   //    (1) if the call is "checkpoint", go to spots with opposite elongation
+   //    // from the original outsides' elongation.  This is the "Hodson checkpoint
+   //    // rule", named after the caller who first used a consistent, methodical,
+   //    // and universal rule for the checkpoint concept.
+   //    (2) if the call is "concentric", use the Hodson rule if the original setup
+   //    // was a 1x4 or diamond, or the "lines-to-lines, columns-to-columns" rule
+   //    // if the original setup was a 2x2.
+   //    (3) if we have various definition flags, such as "force_lines" or
+   //    // "force_otherway", obey them.
+   // We will use information from several sources in carrying out these rules.
+   // The concentric concept will signify itself by turning on the "lines_lines"
+   // flag.  The checkpoint concept will signify itself by turning on the
+   // "force_otherway" flag.  The "parallel_conc_end" flag in the outsides' setup
+   // indicates that, if "concentric" or "checkpoint" are NOT being used, the call
+   // wants the outsides to maintain the same elongation as they had at the beginning.
+   // This is what makes "ends hinge" and "ends recycle" do their respective
+   // right things when called from a grand wave.
 
-   /* Default: the ends just keep their original elongation.  This will often
-      mean that they stay on their spots. */
+   // Default: the ends just keep their original elongation.  This will often
+   // mean that they stay on their spots.
 
    final_elongation = crossing ? begin_xconc_elongation : begin_outer_elongation;
 
-   /* Note: final_elongation might be -1 now, meaning that the people on the outside
-      cannot determine their elongation from the original setup.  Unless their
-      final setup is one that does not require knowing the value of final_elongation,
-      it is an error.
-      It might also have the "CONTROVERSIAL_CONC_ELONG" bit set, meaning that we should
-      raise a warning if we use it. */
+   // Note: final_elongation might be -1 now, meaning that the people on the outside
+   // cannot determine their elongation from the original setup.  Unless their
+   // final setup is one that does not require knowing the value of final_elongation,
+   // it is an error.
+   // It might also have the "CONTROVERSIAL_CONC_ELONG" bit set, meaning that we should
+   // raise a warning if we use it.
 
-   /* At this point, "final_elongation" actually has the INITIAL elongation of the
-      people who finished on the outside.  That is, if they went from a wave or diamond
-      to a 2x2, it has the elongation of their initial wave or diamond points.
+   // At this point, "final_elongation" actually has the INITIAL elongation of the
+   // people who finished on the outside.  That is, if they went from a wave or diamond
+   // to a 2x2, it has the elongation of their initial wave or diamond points.
 
-      Exception: if the schema was conc_6_2 or conc_6_2_tri, and the centers are in a bone6,
-      "final_elongation" has the elongation of that bone6.
+   // Exception: if the schema was conc_6_2 or conc_6_2_tri, and the centers are in a bone6,
+   // "final_elongation" has the elongation of that bone6.
 
-      The elongation bits in their setup tells how they "naturally" wanted to end,
-      based on the call they did, how it got divided up, whether it had the "parallel_conc_end"
-      flag on, etc.
+   // The elongation bits in their setup tells how they "naturally" wanted to end,
+   // based on the call they did, how it got divided up, whether it had the "parallel_conc_end"
+   // flag on, etc.
 
-      We will use both pieces of information to figure out how to elongate the outsides at
-      the conclusion of the call.  For example, if the word "concentric" was not spoken,
-      we will just use their "natural" elongation from the setup.  This is what makes
-      "ends hinge" work from a grand wave.  If the word "concentric" was spoken, their
-      natural elongation is discarded, and we will set them perpendicular to their
-      original 1x4 or diamond, using the value in "final_elongation"  If invocation
-      flags like "force lines" or "force columns" are present, we will use those.
+   // We will use both pieces of information to figure out how to elongate the outsides at
+   // the conclusion of the call.  For example, if the word "concentric" was not spoken,
+   // we will just use their "natural" elongation from the setup.  This is what makes
+   // "ends hinge" work from a grand wave.  If the word "concentric" was spoken, their
+   // natural elongation is discarded, and we will set them perpendicular to their
+   // original 1x4 or diamond, using the value in "final_elongation"  If invocation
+   // flags like "force lines" or "force columns" are present, we will use those.
 
-      When we are done, our final judgement will be put back into the variable
-      "final_elongation". */
+   // When we are done, our final judgement will be put back into the variable
+   // "final_elongation".
 
    if (analyzer != schema_in_out_triple &&
        analyzer != schema_in_out_triple_squash &&
@@ -2982,27 +2982,27 @@ extern void concentric_move(
          switch (final_outers_start_kind) {
          case s1x4: case sdmd:
 
-            /* Outers' call has gone from a 1x4 or diamond to a 2x2.  The rules are:
-               (1) The "force_columns" or "force_lines" flag in the invocation takes
-                  precedence over anything else.
-               (2) If the "concentric rules" flag is on (that flag is a euphemism for "the
-                  concentric or checkpoint concept is explicitly in use here"), we set the
-                  elongation perpendicular to the original 1x4 or diamond.
-               (3) If the "force_otherway" invocation flag is on, meaning the database
-                  really wants us to, we set the elongation perpendicular to the original
-                  1x4 or diamond.
-               (4) If the "force_spots" invocation flag is on, meaning the database
-                  really wants us to, we set the elongation parallel to the original
-                  1x4 or diamond.
-               (5) Otherwise, we set the elongation to the natural elongation that the
-                  people went to.  This uses the result of the "par_conc_end" flag for
-                  1x4/dmd -> 2x2 calls, or the manner in which the setup was divided
-                  for calls that were put together from 2-person calls, or whatever.
-                  (For 1x4->2x2 calls, the "par_conc_end" flag means the call prefers
-                  the SAME elongation in the resulting 2x2.)  The default, absent
-                  this flag, is to change the elongation.  In any case, the result
-                  of all that has been encoded into the elongation of the 2x2 setup
-                  that the people went to; we just have to obey. */
+            // Outers' call has gone from a 1x4 or diamond to a 2x2.  The rules are:
+            // (1) The "force_columns" or "force_lines" flag in the invocation takes
+            //    precedence over anything else.
+            // (2) If the "concentric rules" flag is on (that flag is a euphemism for "the
+            //    concentric or checkpoint concept is explicitly in use here"), we set the
+            //    elongation perpendicular to the original 1x4 or diamond.
+            // (3) If the "force_otherway" invocation flag is on, meaning the database
+            //    really wants us to, we set the elongation perpendicular to the original
+            //    1x4 or diamond.
+            // (4) If the "force_spots" invocation flag is on, meaning the database
+            //    really wants us to, we set the elongation parallel to the original
+            //    1x4 or diamond.
+            // (5) Otherwise, we set the elongation to the natural elongation that the
+            //    people went to.  This uses the result of the "par_conc_end" flag for
+            //    1x4/dmd -> 2x2 calls, or the manner in which the setup was divided
+            //    for calls that were put together from 2-person calls, or whatever.
+            //    (For 1x4->2x2 calls, the "par_conc_end" flag means the call prefers
+            //    the SAME elongation in the resulting 2x2.)  The default, absent
+            //    this flag, is to change the elongation.  In any case, the result
+            //    of all that has been encoded into the elongation of the 2x2 setup
+            //    that the people went to; we just have to obey.
 
             if ((DFM1_CONC_FORCE_LINES & localmods1) && final_outers_finish_dirs) {
                if ((final_outers_finish_dirs & 011) == 011)
@@ -3014,15 +3014,20 @@ extern void concentric_move(
                   fail("Can't force ends to be as in columns - they are T-boned.");
                final_elongation = ((~final_outers_finish_dirs) & 1) + 1;
             }
-            else if ((DFM1_CONC_CONCENTRIC_RULES | DFM1_CONC_FORCE_OTHERWAY) & localmods1) {
+            else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {
                warn(concwarntable[crossing]);
                final_elongation ^= 3;
             }
+            else if (DFM1_CONC_FORCE_OTHERWAY & localmods1) {
+               // But we don't obey this flag unless we did the whole call.
+               if (begin_outer.cmd.cmd_frac_flags == CMD_FRAC_NULL_VALUE)
+                  final_elongation ^= 3;
+            }
             else if (DFM1_CONC_FORCE_SPOTS & localmods1) {
-               /* It's OK the way it is. */
+               // It's OK the way it is.
             }
             else {
-               /* Get the elongation from the result setup, if possible. */
+               // Get the elongation from the result setup, if possible.
 
                int newelong = result_outer.result_flags & 3;
 
@@ -3067,30 +3072,30 @@ extern void concentric_move(
 
          case s2x2:
 
-            /* If call went from 2x2 to 2x2, the rules are:
-
-               First, check for "force_columns" or "force_lines" in the invocation.
-               This is not a property of the call that we did, but of the way its parent
-               (or the concept) invoked it.
-
-               Second, check for "force_spots" or "force_otherway" in the invocation.
-               This is not a property of the call that we did, but of the way its parent
-               (or the concept) invoked it.
-
-               Third, check for "lines_lines" in the invocation.  This is not a property
-               of the call that we did, but of the way its parent (or the concept) invoked it.
-               If the concept was "concentric", it will be on, of course.
-
-               Finally, check the elongation bits in the result flags left over
-               from the call.  These tell whether to work to spots, or antispots,
-               or whatever, based what the call was, and whether it, or various
-               sequential parts of it, had the "parallel_conc_end" flag on.
-               If there are no elongation bits, we simply don't know what to do.
-
-               Note that the "ends do thus-and-so" concept does NOT set the
-               lines_lines flag in the invocation, so we work to spots unless
-               the call says "parallel_conc_end".  Counter-rotate, for example,
-               says "parallel_conc_end", so it works to antispots. */
+            // If call went from 2x2 to 2x2, the rules are:
+            //
+            // First, check for "force_columns" or "force_lines" in the invocation.
+            // This is not a property of the call that we did, but of the way its parent
+            // (or the concept) invoked it.
+            //
+            // Second, check for "force_spots" or "force_otherway" in the invocation.
+            // This is not a property of the call that we did, but of the way its parent
+            // (or the concept) invoked it.
+            //
+            // Third, check for "lines_lines" in the invocation.  This is not a property
+            // of the call that we did, but of the way its parent (or the concept) invoked it.
+            // If the concept was "concentric", it will be on, of course.
+            //
+            // Finally, check the elongation bits in the result flags left over
+            // from the call.  These tell whether to work to spots, or antispots,
+            // or whatever, based what the call was, and whether it, or various
+            // sequential parts of it, had the "parallel_conc_end" flag on.
+            // If there are no elongation bits, we simply don't know what to do.
+            //
+            // Note that the "ends do thus-and-so" concept does NOT set the
+            // lines_lines flag in the invocation, so we work to spots unless
+            // the call says "parallel_conc_end".  Counter-rotate, for example,
+            // says "parallel_conc_end", so it works to antispots.
 
             if ((DFM1_CONC_FORCE_LINES & localmods1) && final_outers_finish_dirs) {
                if ((final_outers_finish_dirs & 011) == 011)
@@ -3198,8 +3203,8 @@ extern void concentric_move(
       rotate_back++;
    }
 
-   /* Now lossage in "final_elongation" may have been repaired.  If it is still
-      negative, there may be trouble ahead. */
+   // Now lossage in "final_elongation" may have been repaired.  If it is still
+   // negative, there may be trouble ahead.
 
    outer_inners[0] = result_outer;
    outer_inners[1] = result_inner[0];
@@ -3211,13 +3216,13 @@ extern void concentric_move(
 
    getout:
 
-   /* Tentatively clear the splitting info. */
+   // Tentatively clear the splitting info.
 
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
 
    if (analyzer == schema_concentric && center_arity == 1) {
-      /* Set the result fields to the minimum of the result fields of the
-         two components.  Start by setting to the outers, then bring in the inners. */
+      // Set the result fields to the minimum of the result fields of the
+      // two components.  Start by setting to the outers, then bring in the inners.
 
       result->result_flags |= result_outer.result_flags & RESULTFLAG__SPLIT_AXIS_FIELDMASK;
       minimize_splitting_info(result, result_inner[0].result_flags);
@@ -3274,7 +3279,7 @@ struct concmerge_thing {
 
 static const concmerge_thing map_tgl4l  = {
    nothing, nothing, 0, 0, 0, 0x0, schema_by_array,       s1x4,        nothing,
-   warn__none, 0, 0, {0, 1, -1, -1},             {0}}; 
+   warn__none, 0, 0, {0, 1, -1, -1},             {0}};
 static const concmerge_thing map_tgl4b  = {
    nothing, nothing, 0, 0, 0, 0x0, schema_by_array,       s2x2,        nothing,
    warn__none, 0, 0, {-1, -1, 2, 3},             {0}};
@@ -4327,7 +4332,7 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          if (kjunk == concept_supercall)
             fail("A concept is required.");
       }
-      else if (setupcount == 0 && 
+      else if (setupcount == 0 &&
                ((cmd2word & CMD_MISC2__ANY_SNAG) ||
                 (cmd2word &
                  (CMD_MISC2__SAID_INVERT|CMD_MISC2__CENTRAL_SNAG|CMD_MISC2__INVERT_SNAG)) ==

@@ -266,7 +266,7 @@ void open_file()
    // We need to find out whether there are garbage characters (e.g. ^Z)
    // near the end of the existing file, and remove same.  Such things
    // have been known to be placed in files by some programs running on PC's.
-   // 
+   //
    // Furthermore, some PC print software stops printing when it encounters
    // one, so we have to get rid of it.
 
@@ -442,7 +442,7 @@ void open_file()
       }
 
       this_file_position = ftell(fildes);
-   
+
       if ((last_file_position != -1) && (last_file_position != this_file_position)) {
          writestuff("Warning -- file has been modified since last sequence.");
          newline();

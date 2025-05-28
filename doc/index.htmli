@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Sd - A Square Dance Caller's Helper</title>
+<link rev="made" href="mailto:wba@alum.mit.edu">
+<meta name="description"
+content="Sd is a square dance caller's helper.&nbsp
+This computer program does the checker pushing for callers
+writing sequences for modern square dancing.">
+<meta name="keywords"
+content="challenge western modern square dance dancing calls caller calling
+helper computer program simulator checker, sdtty">
+</head>
+
+<body bgcolor="#ccccff">
+<!-- This look and the implementation invented by Stephen Gildea.
+     Credit me if you copy it! -->
+<table cellspacing="0" cellpadding="4" border="0" width="100%">
+<tr><!-- top border -->
+<td bgcolor="#9999ff" colspan="5"><font size="-5">&nbsp;</font></td></tr>
+<tr>
+<td bgcolor="#9999ff"><font size="-5">&nbsp;</font></td>
+<td bgcolor="#ff9900" colspan="3"><font size="-5">&nbsp;</font></td>
+<td bgcolor="#9999ff"><font size="-5">&nbsp;</font></td></tr>
+<tr>
+<td bgcolor="#9999ff">&nbsp;</td>
+<td bgcolor="#ff9900">&nbsp;</td>
+<td bgcolor="#ffffdd">
+<!-- start of body text -->
+<h1 align="center">Sd - A Square Dance Caller's Helper</h1>
+<table align="center"><tr><td>
+<!--Begin poster-child. -->
+<!--VVVVVVVVVVVVVVVVVVV -->
+<!--^^^^^^^^^^^^^^^^^^^ -->
+<!--Begin poster-child. -->
+<PRE>
+                                            2G&#62;   1G&#62;
+                   2BV   1BV
+                      3G&#62;                   2B&#60;   1B&#60;
+                2G&#62;         4G&#60;     --&#62;
+                      1G&#60;                   3B&#62;   4B&#62;
+                   3B^   4B^
+                                            3G&#60;   4G&#60;
+
+          1/2 REVERSE CRAZY YOYO scoot chain thru to a wave
+</PRE>
+<!--End poster-child. -->
+<!--VVVVVVVVVVVVVVVVVVV -->
+<!--^^^^^^^^^^^^^^^^^^^ -->
+<!--End poster-child. -->
+</td></tr></table>
+<p align="center">
+Sd: a checker-moving program that is <strong>powerful</strong>,
+<strong>sophisticated</strong>, <strong>accurate</strong> and
+<strong>reliable</strong>.
+</p>
+<br>
+<p align="center">
+<strong>The current version of Sd/Sdtty is 34.2</strong>, released on July 30, 2000.
+<p>
+This version no longer needs the special "helper" calls like "recycle (parts)"
+or "scoot and weave (parts)".  Just type the plain call name in all cases.
+<p>
+<dl>
+<dt>
+<font size="+1"><a href="sample.html">Show off!</a></font></dt>
+<dd>
+A sample of fun things Sd can do.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1"><a href="intro.html">Background</a></font></dt>
+<dd>
+Background and availability info.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1"><a href="download-pc.html">Get <strong>Sd</strong> now!</a></font></dt>
+<dd>
+Be running the latest, fully-functional version
+<a href="download-pc.html">on your own PC</a>
+in minutes.
+<br>
+Or download the program or documentation
+<a href="download-unix.html">for Unix</a>.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1"><a href="readings.html">Documentation</a></font></dt>
+<dd>
+Browse or download documents about Sd,
+including the entire <a href="manual/">users manual</a>.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1">Mailing List</font></dt>
+<dd>
+To add yourself to the mailing list to receive announcements
+of new versions, send a message to
+<a href="mailto:sd-request@lists.best.com">&lt;sd-request@lists.best.com&gt;</a>.
+Put the single lower-case word "subscribe" in the message body.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1"><a href="tip.html">Tip of the Day</a></font></dt>
+<dd>
+A short hint or discussion about some point of using Sd.&nbsp;
+A new tip daily.
+</dd>
+</dl>
+<p>
+Want to report a bug or share a tip?&nbsp;
+Email
+<a href="mailto:wba@alum.mit.edu">&lt;wba@alum.mit.edu&gt;</a>.
+<hr>
+For general info on square dancing, see the
+<a href="http://www.doSAdo.com/">Western Square Dancing</a>
+site.
+<br>
+<em>Time-stamp: "3 February 2000"</em>
+<!-- end of body text -->
+</td>
+<td bgcolor="#ff9900">&nbsp;</td>
+<td bgcolor="#9999ff">&nbsp;</td>
+</tr>
+<tr><!-- bottom border -->
+<td bgcolor="#9999ff"><font size="-5">&nbsp;</font></td>
+<td bgcolor="#ff9900" colspan="3"><font size="-5">&nbsp;</font></td>
+<td bgcolor="#9999ff"><font size="-5">&nbsp;</font></td></tr>
+<tr>
+<td bgcolor="#9999ff" colspan="5"><font size="-5">&nbsp;</font></td></tr>
+</table>
+</body>
+</html>
+<!--
+Local variables:
+time-stamp-format: "%:d %:b %:y"
+time-stamp-line-limit: -20
+End:
+ -->

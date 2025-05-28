@@ -1,5 +1,5 @@
 static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gildea>";
-/* 
+/*
  * sdui-x11.c - Sd User Interface for X11
  * Copyright 1990,1991,1992,1993 Stephen Gildea and William B. Ackerman
  *
@@ -297,7 +297,7 @@ do_popup(Widget popup_shell)
 	XtDispatchEvent(&event);
     } while (event.type != ReparentNotify);
     return value;
-}    
+}
 
 static String empty_string = "";
 static Cstring *concept_popup_list = NULL;
@@ -350,7 +350,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
     unhighlight_lists();        /* do here in case spurious event */
     if (inside_what == inside_get_command) {
         uims_reply local_reply = (uims_reply) client_data;
- 
+
 	uims_menu_index = item->list_index; /* extern var <- menu item no. */
 
         if (local_reply == ui_command_select) {
@@ -368,7 +368,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
             unsigned int row, col;
             unsigned int maxrow, maxcolumn, entries;
             int value;
-      
+
             menu = uims_menu_index;
 
             /* determine menu size */
@@ -379,10 +379,10 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
                 if (maxrow < concept_size_tables[menu][i])
                     maxrow = concept_size_tables[menu][i];
             entries = maxcolumn*maxrow;
-        
+
             concept_popup_list =
                 get_more_mem(concept_popup_list, entries*sizeof(String *));
-        
+
             /* fill in the entries */
             i=0;
             for (row=0; row<maxrow; row++) {
@@ -395,11 +395,11 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
                     i++;
                 }
             }
-        
+
             XawListChange(conceptlist, (char **) concept_popup_list, entries, 0, TRUE);
             XtVaSetValues(conceptlist, XtNdefaultColumns, maxcolumn, NULL);
             value = do_popup(conceptpopup);
-        
+
             if (value == 0)
                 goto try_again;   /* User moved mouse away. */
 
@@ -427,7 +427,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
 /* undo action timeout proc.  Gets called after the UNDO entry
    has flashed for an appropriate amount of time. */
 /* ARGSUSED */
-static void 
+static void
 cmdmenu_unhighlight(XtPointer client_data, XtIntervalId *intrvl)
 {
     XawListUnhighlight(cmdmenu);
@@ -868,7 +868,7 @@ extern void uims_preinitialize(void)
 
     /* Viewports may have vertical scrollbar, and it must be visible */
     lview =
-         XtVaCreateManagedWidget("lma", viewportWidgetClass, leftarea, 
+         XtVaCreateManagedWidget("lma", viewportWidgetClass, leftarea,
                XtNallowVert, True,
                XtNforceBars, True,
                NULL);
@@ -977,7 +977,7 @@ extern void uims_preinitialize(void)
     /* comment popup */
 
     commentpopup = XtVaCreatePopupShell("commentpopup",
-               transientShellWidgetClass, toplevel, 
+               transientShellWidgetClass, toplevel,
                XtNallowShellResize, True, NULL);
     unmap_no_trans = XtParseTranslationTable(unmap_no_translation);
     XtOverrideTranslations(commentpopup, unmap_no_trans);
@@ -1192,7 +1192,7 @@ widen_viewport(Widget vw, Widget childw)
 	return;
     }
 
-    XtVaGetValues(scrollbar, 
+    XtVaGetValues(scrollbar,
 		  XtNwidth, &scrollwidth,
 		  XtNborderWidth, &scrollborder,
 		  NULL);
@@ -1724,7 +1724,7 @@ extern int uims_do_selector_popup(void)
    int t = choose_popup(sd_resources.selector_title, selector_menu_list);
    if (t==0) return POPUP_DECLINE;
    return t;
-}    
+}
 
 extern int uims_do_direction_popup(void)
 {
@@ -1732,7 +1732,7 @@ extern int uims_do_direction_popup(void)
     int t = choose_popup(sd_resources.direction_title, &direction_names[1]);
     if (t==0) return POPUP_DECLINE;
     return t;
-}    
+}
 
 
 extern int uims_do_circcer_popup(void)
@@ -1740,7 +1740,7 @@ extern int uims_do_circcer_popup(void)
     int t = choose_popup(sd_resources.circcer_title, circcer_menu_list);
     if (t==0) return POPUP_DECLINE;
     return t;
-}    
+}
 
 
 extern int uims_do_tagger_popup(int tagger_class)
@@ -1748,7 +1748,7 @@ extern int uims_do_tagger_popup(int tagger_class)
     int t = choose_popup(sd_resources.tagger_title, tagger_menu_list[tagger_class]);
     if (t==0) return POPUP_DECLINE;
     return (tagger_class << 5) | t;
-}    
+}
 
 
 extern uint32 uims_get_number_fields(int nnumbers, long_boolean forbid_zero)

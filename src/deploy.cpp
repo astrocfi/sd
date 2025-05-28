@@ -11,9 +11,9 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     sdui-win.c - SD -- Microsoft Windows User Interface
-  
+
     Copyright (C) 1995, Robert E. Cays
-  
+
     Permission to use, copy, modify, and distribute this software for
     any purpose is hereby granted without fee, provided that the above
     copyright notice and this permission notice appear in all copies.
@@ -21,7 +21,7 @@
     software for any purpose.  It is provided "as is" WITHOUT ANY
     WARRANTY, without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.
-  
+
     This is for version 32. */
 
 
@@ -108,7 +108,7 @@ void do_install(HWND hwnd)
    for (file_ptr = file_list ; *file_ptr ; file_ptr++) {
       lstrcpy(szStringBuf, "C:\\Sd\\");
       lstrcat(szStringBuf, *file_ptr);
-                  
+
       if (!CopyFile(*file_ptr, szStringBuf, false)) {
          int foo = GetLastError();
          lstrcpy(szStringBuf, "ERROR!!  Can't copy file   ");
@@ -171,7 +171,7 @@ void do_install(HWND hwnd)
       lstrcpy(szSecondBuf, szShortcutBuf);
       lstrcat(szSecondBuf, "\\");
       lstrcat(szSecondBuf, *file_ptr);
-                  
+
       if (!CopyFile(*file_ptr, szSecondBuf, false)) {
          int foo = GetLastError();
          lstrcpy(szStringBuf, "ERROR!!  Can't copy file   ");

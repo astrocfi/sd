@@ -1330,7 +1330,7 @@ static void phantom_2x4_move(
    vpeople = *ss;
    clear_people(&hpeople);
    clear_people(&vpeople);
-   
+
    for (i=0; i<16; i++) {
       if ((ss->people[i].id1 ^ lineflag) & 1)
          hflag |= copy_person(&hpeople, i, ss, i);
@@ -1548,7 +1548,7 @@ extern void do_phantom_stag_qtg_concept(
    canonicalize_rotation(ss);
 
    divided_setup_move(
-      ss, 
+      ss,
       MAPCODE(s_qtag,2,MPKIND__STAG,1),
       (phantest_kind) parseptr->concept->arg1,
       TRUE,
@@ -1645,7 +1645,7 @@ static long_boolean full_search(
             fill_count++;
          }
       }
-   
+
       /* Now check that the map has exactly num_to_find people.
          But if no_err_print was on, we don't print an error -- we just report as our
          return value whether there were exactly two people, regardless of consecutivity. */
@@ -1668,7 +1668,7 @@ static long_boolean full_search(
    }
 
    return retval;
-}                        
+}
 
 
 static const veryshort list_2x8[16] = {
@@ -2215,14 +2215,14 @@ extern void distorted_2x2s_move(
       {
          setup rotss = *ss;
          veryshort the_map[16];
-         
+
          int rows = 1;
          int columns = 1;
-         
+
          map_ptr = the_map;
          rotss.rotation++;
          canonicalize_rotation(&rotss);
-      
+
          // Search for the live people, in rows first.
 
          if (!full_search(4, 4, TRUE, 2, the_map, list_foo_in, list_4x4_out, ss))
@@ -2242,7 +2242,7 @@ extern void distorted_2x2s_move(
             *ss = rotss;
             map_ptr = &the_map[8];
          }
-         
+
          for (i=0 ; i<2 ; i++) {
             gather(&inputs[i], ss, &map_ptr[i*4], 3, 011);
             inputs[i].kind = s2x2;
@@ -2260,7 +2260,7 @@ extern void distorted_2x2s_move(
          result->rotation = results[0].rotation;
          result->result_flags = results[0].result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
          reinstate_rotation(ss, result);
-         
+
          if (columns) {
             result->rotation--;
             canonicalize_rotation(result);
@@ -2418,7 +2418,7 @@ extern void distorted_move(
             zlines = FALSE;
             rot = 0;
             rotz = 0;
-            result->kind = s2x8;      
+            result->kind = s2x8;
          }
          else
             fail("Must have 2x8 setup for this concept.");
@@ -2647,20 +2647,20 @@ extern void distorted_move(
          /* **** This is all sort of a crock.  Here we are picking out the "winning" method
             for doing distorted/offset/Z lines and columns.  Below, we do it by the old way,
             which allows T-bone setups. */
-      
+
          /* If any people are T-boned, we must invoke the other method and hope for the best.
             ***** We will someday do it right. */
-            
+
          if ((global_tbonetest & 011) == 011) {
             if (disttest != disttest_offset)
                fail("Sorry, can't apply this concept when people are T-boned.");
-      
+
             phantom_2x4_move(ss, linesp & 1, phantest_only_one,
                              MAPCODE(s2x4,2,MPKIND__OFFS_BOTH_FULL, 1),
                              result);
             return;
          }
-   
+
          /* Look for butterfly or "O" spots occupied. */
 
          if (livemask == 0x6666 || livemask == 0x9999) {
@@ -2676,14 +2676,14 @@ extern void distorted_move(
             disttest = disttest_offset;
             goto do_divided_call;
          }
-   
+
          if ((linesp ^ global_tbonetest) & 1) {
             rotate_back = 1;
             ss->rotation++;
             canonicalize_rotation(ss);
             livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
          }
-   
+
          // Check for special case of offset lines/columns, and do it
          // the elegant way (handling shape-changers) if so.
 
@@ -2717,10 +2717,10 @@ extern void distorted_move(
          else {
             if (global_tbonetest & 010) fail("There are no columns of 4 here.");
          }
-         
+
          rot = 0;
          rotz = 0;
-         result->kind = ss->kind;      
+         result->kind = ss->kind;
 
          if (ss->kind == s3x4) {
             // Check for special case of offset lines/columns, and do it
@@ -2812,7 +2812,6 @@ extern void distorted_move(
    result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
    reinstate_rotation(ss, result);
    goto getout;
-   
 
    do_offset_call:
 
@@ -3843,7 +3842,7 @@ extern void common_spot_move(
                      // They didn't match.  Maybe some people had collided in one setup
                      // but not the other.  Find where they might have gone.
                      if (the_results[0].kind == s4x4) {
-                        int j = (the_results[0].people[k].id1 & 1) ? 
+                        int j = (the_results[0].people[k].id1 & 1) ?
                            (partner_tab_4x4[(k+4) & 15] + 12) & 15 :
                            partner_tab_4x4[k];
 
@@ -3969,7 +3968,7 @@ void tglmap::do_glorious_triangles(
       result->kind = ss->kind;
       result->rotation = 0;
       /* Restore the two people who don't move. */
-      (void) copy_person(result, mapnums[6], &idle, 0);   
+      (void) copy_person(result, mapnums[6], &idle, 0);
       (void) copy_person(result, mapnums[7], &idle, 1);
       r = startingrot * 011;
       scatter(result, &res[0], mapnums, 2, r);
@@ -4029,7 +4028,7 @@ void tglmap::do_glorious_triangles(
             // Restore the two people who don't move.
             (void) copy_rot(result, map_ptr->mapcp1[6], &idle, 0, r);
             (void) copy_rot(result, map_ptr->mapcp1[7], &idle, 1, r);
-   
+
             // Copy the triangles.
             scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
             scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
@@ -4169,7 +4168,7 @@ static void wv_tand_base_move(
          schema = (indicator & 0100) ? schema_intlk_lateral_6 : schema_lateral_6;
       else
          schema = (indicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
-   
+
       // For galaxies, the schema is now in terms of the absolute orientation.
       // We know that the original setup rotation was canonicalized.
       break;
@@ -4181,7 +4180,7 @@ static void wv_tand_base_move(
 
       if ((tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
          goto losing;
-   
+
       schema = (indicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
       break;
    case s_c1phan:
@@ -4331,9 +4330,9 @@ extern void triangle_move(
          // Indicator = 5 for in point, 4 for out point.
 
          int t = 0;
-   
+
          if (ss->kind != s_qtag) fail("Must have diamonds.");
-   
+
          if (indicator_base == 5) {
             if ((ss->people[0].id1 & d_mask) == d_east) t |= 1;
             if ((ss->people[4].id1 & d_mask) == d_west) t |= 1;
@@ -4346,7 +4345,7 @@ extern void triangle_move(
             if ((ss->people[1].id1 & d_mask) == d_east) t |= 2;
             if ((ss->people[5].id1 & d_mask) == d_west) t |= 2;
          }
-   
+
          const tglmap::tglmapkey *map_key_table;
 
          if (t == 1)
@@ -4362,7 +4361,7 @@ extern void triangle_move(
       else {
 
          // Indicator = 2 for inside, 3 for outside.
-   
+
          // Only a few cases allow interlocked.
 
          if (indicator_base == 2 && ss->kind == sbigdmd) {
@@ -4406,7 +4405,7 @@ extern void triangle_move(
                default:
                   fail("There are no 'inside' triangles.");
             }
-   
+
             concentric_move(ss, &ss->cmd, (setup_command *) 0, schema,
                             0, 0, TRUE, ~0UL, result);
          }
@@ -4427,7 +4426,7 @@ extern void triangle_move(
             default:
                fail("There are no 'outside' triangles.");
             }
-   
+
             concentric_move(ss, (setup_command *) 0, &ss->cmd, schema,
                             0, 0, TRUE, ~0UL, result);
          }

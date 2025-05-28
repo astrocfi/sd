@@ -22,7 +22,7 @@
  * The author makes no representations about the suitability of this
  * software for any purpose.  It is provided "as is" WITHOUT ANY
  * WARRANTY, without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  
+ * FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
 
@@ -276,7 +276,7 @@ static int translate_keybind_spec(char key_name[])
       else if (key_length == 3 && ctlalt) {
          return CTLALTDIG+digits;
       }
-      else { 
+      else {
          return -1;
       }
    }
@@ -430,7 +430,7 @@ void do_accelerator_spec(Cstring qq, bool is_accelerator)
          gg->fatal_error_exit(1, "Anomalous abbreviation", qq);
 
       abbrev_block *newthing = (abbrev_block *) get_mem(sizeof(abbrev_block));
-      newthing->key = (char *) get_mem(strlen(key_org)+1); 
+      newthing->key = (char *) get_mem(strlen(key_org)+1);
       strcpy((char *) newthing->key, key_org);
       newthing->value = user_match.match;
       newthing->next = *table_thing;
@@ -586,7 +586,7 @@ void matcher_initialize()
                  sizeof(modifier_block *) * (FCN_KEY_TAB_LAST-FCN_KEY_TAB_LOW+1));
 
    // Count the number of concepts to put in the lists.
-   
+
    concept_list_length = 0;
    level_concept_list_length = 0;
 
@@ -690,17 +690,17 @@ void matcher_initialize()
                sprintf(errbuf, "Can't hash tagger %d %d!", i, (int) ku);
                gg->fatal_error_exit(2, errbuf);
             }
-   
+
             for (j=0; j<tagger_hash_list_size; j++) {
                if (tagger_hash_list[j] == bucket) goto already_in3;
             }
-   
+
             tagger_hash_list_size++;
             tagger_hash_list = (short *)
                get_more_mem(tagger_hash_list,
                             tagger_hash_list_size * sizeof(short));
             tagger_hash_list[tagger_hash_list_size-1] = bucket;
-   
+
             already_in3: ;
          }
       }
@@ -726,7 +726,7 @@ void matcher_initialize()
             case '6': case 'k':
                // This is a call like "<anyone> run".  Put it into every bucket
                // that could match a selector.
-   
+
                for (j=0 ; j<selector_hash_list_size ; j++)
                   hash_me(selector_hash_list[j], i);
 
@@ -734,7 +734,7 @@ void matcher_initialize()
             case 'v': case 'w': case 'x': case 'y':
                // This is a call like "<atc> your neighbor".
                // Put it into every bucket that could match a tagger.
-   
+
                for (j=0 ; j<tagger_hash_list_size ; j++)
                   hash_me(tagger_hash_list[j], i);
 
@@ -1050,7 +1050,7 @@ static void copy_sublist(const match_result *outbar, modifier_block *tails)
  * current pattern.  Special case: if user input is empty, extension is
  * not set.
  */
-    
+
 static void record_a_match(void)
 {
    int old_yield = GLOB_lowest_yield_depth;
@@ -1344,10 +1344,10 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
 
          if (p == '@') {
             match_wildcard(user, pat1, pat2, patxi, pat2_concept);
-   
+
             if (user==0) {
                // User input has run out, just looking for more wildcards.
-   
+
                Cstring ep = get_escape_string(*pat1++);
 
                if (ep && *ep) {
@@ -1380,10 +1380,10 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                            if (key == 'T') goto yes;
                            goto cont;
                         }
-   
+
                         if (user[i-1] != tolower(ep[i])) return;
                      }
-   
+
                      user += strlen((char *) ep)-1;
 
                      if (key == 'T' && (!user || foobar(user))) goto yes;
@@ -1422,16 +1422,16 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
          else {
             if (user==0) {
                // User input has run out, just looking for more wildcards.
-   
+
                if (p) {
                   // There is more pattern.
                   GLOB_full_extension[patxi++] = tolower(p);
                }
                else {
                   // Reached the end of the pattern.
-   
+
                   GLOB_full_extension[patxi] = '\0';
-   
+
                   if (!pat2) {
                      record_a_match();
                      break;
@@ -1648,7 +1648,7 @@ static void scan_concepts_and_calls(
                 this_call->name[0] == '@' &&
                 (this_call->name[1] == '0' || this_call->name[1] == 'T') &&
                 GLOB_user_input[0] == '[') {   // ***** This is probably wrong!!!!
-       
+
                int full_bracket_depth = GLOB_user_bracket_depth + GLOB_extended_bracket_depth;
 
                if (local_result.recursion_depth < full_bracket_depth) {
@@ -1771,12 +1771,12 @@ static void match_wildcard(
       case 'h':
          if (current_result->match.call_conc_options.where == direction_uninitialized) {
             direction_kind save_where = current_result->match.call_conc_options.where;
-      
+
             for (i=1; i<=last_direction_kind; ++i) {
                current_result->match.call_conc_options.where = (direction_kind) i;
                match_suffix_2(user, direction_names[i], &p2b, patxi);
             }
-      
+
             current_result->match.call_conc_options.where = save_where;
             return;
          }
@@ -1795,12 +1795,12 @@ static void match_wildcard(
             else if (key == 'y') tagclass = 3;
 
             current_result->match.call_conc_options.tagger = tagclass << 5;
-         
+
             for (iu=0; iu<number_of_taggers[tagclass]; iu++) {
                current_result->match.call_conc_options.tagger++;
                match_suffix_2(user, tagger_calls[tagclass][iu]->name, &p2b, patxi);
             }
-      
+
             current_result->match.call_conc_options.tagger = 0;
             return;
          }
@@ -1809,7 +1809,7 @@ static void match_wildcard(
          if (current_result->match.call_conc_options.circcer == 0) {
             char circname[80];
             uint32 save_circcer = current_result->match.call_conc_options.circcer;
-      
+
             for (iu=0; iu<number_of_circcers; ++iu) {
                char *fromptr = circcer_calls[iu]->name;
                char *toptr = circname;
@@ -1825,11 +1825,11 @@ static void match_wildcard(
                   else
                      *toptr++ = c;
                } while (c);
-         
+
                current_result->match.call_conc_options.circcer++;
                match_suffix_2(user, circname, &p2b, patxi);
             }
-      
+
             current_result->match.call_conc_options.circcer = save_circcer;
             return;
          }
@@ -1848,7 +1848,7 @@ static void match_wildcard(
              *user == 't' || *user == 'f') {
             save_howmanynumbers = current_result->match.call_conc_options.howmanynumbers;
             save_number_fields = current_result->match.call_conc_options.number_fields;
-      
+
             current_result->match.call_conc_options.howmanynumbers++;
 
             for (i=0 ; (prefix = n_4_patterns[i]) ; i++) {
@@ -1857,12 +1857,12 @@ static void match_wildcard(
                current_result->match.call_conc_options.number_fields +=
                   1 << (save_howmanynumbers*4);
             }
-         
+
             /* special case: allow "quarter" for 1/4 */
             current_result->match.call_conc_options.number_fields =
                save_number_fields + (1 << (save_howmanynumbers*4));
             match_suffix_2(user, "quarter", &p2b, patxi);
-         
+
             /* special case: allow "half" or "1/2" for 2/4 */
             if (key != 'D') {
                current_result->match.call_conc_options.number_fields =
@@ -1870,19 +1870,19 @@ static void match_wildcard(
                match_suffix_2(user, "half", &p2b, patxi);
                match_suffix_2(user, "1/2", &p2b, patxi);
             }
-         
+
             /* special case: allow "three quarter" for 3/4 */
             current_result->match.call_conc_options.number_fields =
                save_number_fields + (3 << (save_howmanynumbers*4));
             match_suffix_2(user, "three quarter", &p2b, patxi);
-         
+
             /* special case: allow "full" for 4/4 */
             if (key != 'D') {
                current_result->match.call_conc_options.number_fields =
                   save_number_fields + (4 << (save_howmanynumbers*4));
                match_suffix_2(user, "full", &p2b, patxi);
             }
-      
+
             current_result->match.call_conc_options.howmanynumbers = save_howmanynumbers;
             current_result->match.call_conc_options.number_fields = save_number_fields;
             return;
@@ -1900,21 +1900,21 @@ static void match_wildcard(
          bool saved_indent = current_result->indent;
          save_number_fields = current_result->match.call_conc_options.star_turn_option;
          current_result->indent = true;
-         
+
          current_result->match.call_conc_options.star_turn_option = -1;
          match_suffix_2(user, ", don't turn the star", &p2b, patxi);
-   
+
          current_result->match.call_conc_options.star_turn_option = 1;
          match_suffix_2(user, ", turn the star 1/4", &p2b, patxi);
          current_result->match.call_conc_options.star_turn_option = 2;
          match_suffix_2(user, ", turn the star 1/2", &p2b, patxi);
          current_result->match.call_conc_options.star_turn_option = 3;
          match_suffix_2(user, ", turn the star 3/4", &p2b, patxi);
-         
+
          current_result->match.call_conc_options.star_turn_option = save_number_fields;
          current_result->indent = saved_indent;
       }
-      
+
       return;
    case 'j':
       crossptr = crossname;
@@ -2040,7 +2040,7 @@ static void match_wildcard(
  * If the input is equivalent to a prefix of the pattern,
  * a match is recorded in the search state.
  */
- 
+
 static void match_pattern(Cstring pattern)
 {
    pat2_block p2b(pattern);
@@ -2190,7 +2190,7 @@ static void search_menu(uims_reply kind)
          item = level_concept_list;
          menu_length = level_concept_list_length;
       }
-   
+
       if (input_is_null)
          GLOB_match_count += menu_length;
       else {
@@ -2289,7 +2289,7 @@ static void search_menu(uims_reply kind)
    }
 }
 
-    
+
 
 
 /*
@@ -2387,7 +2387,7 @@ int match_user_input(
       search_menu(ui_call_select);
       search_menu(ui_concept_select);
       search_menu(ui_command_select);
-   }  
+   }
    else
       search_menu(ui_special_concept);
 

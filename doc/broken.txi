@@ -1,0 +1,732 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename relnotes.info
+@settitle Sd Release Notes
+@c Time-stamp: <18 July 2002 wba>
+@iftex
+@headings off
+@oddheading @| @| @thispage
+@evenheading @thispage @| @|
+@finalout
+@end iftex
+@c %**end of header
+
+@set title1 RELEASE NOTES FOR SD VERSION 34.7
+@set title2 Database version = 34.7 format = 200
+@set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
+
+@node Top, Intro, (dir), (dir)
+
+@menu
+This file documents the user-visible changes in the current and recent
+versions of the Sd program.
+
+* Intro::               Information about the current version
+
+Changes as of the following versions:
+* 34.7::
+* 34.6::
+* 34.5::
+* 34.4::
+* 34.31::
+* 34.3::
+* what the fuck::
+* 34.2::
+* 34.0::
+* 33.15::
+* 33.0::
+* 32.95::
+* 32.9::
+* 32.81::
+* 32.67::
+* 32.65::
+* 32.6::
+
+The files @file{relnotes98.txi} and @file{oldnotes} have
+notes relating to even older versions.
+@end menu
+
+@node Intro, 34.7, Top, (dir)
+
+@center @titlefont{@value{title1}}@*
+@center @value{title2}@*
+@center @value{title3}@*
+
+@w{ }@c the @* above makes the @sp below fail without this line  1998-05
+@sp 2
+@noindent Copyright @copyright{} 1996-2002 William B. Ackerman
+@sp 3
+@menu
+* 34.7::               Changes in the current version
+@end menu
+
+@c ************
+@node 34.7, 34.6, Intro, Top
+@unnumberedsec Version 34.7 changes
+
+The program can write the output file with extension @file{.txt}
+if it is given the command line argument ``-new_style_filename''.
+Such files will have names like @file{sequence_C1.txt} or
+@file{01sep02_C1.txt}.  You can also get this behavior by adding
+the line ''new_style_filename'' to the ``[options]'' section of
+the sd.ini file, so that it looks like this:
+
+@example
+@group
+[Options]
+new_style_filename
+@end group
+@end example
+
+Having a file name of this form should make the output files
+able to be read and printed by common text editors and word processors,
+and sent as email attachments.
+
+The command line argument ``-old_style_filename'' will force the
+old behavior, in which the file name is @file{sequence.C1} or
+@file{01sep02.C1}.  The default behavior is presently old style,
+and hence ``-old_style_filename'' is not needed.  The default may
+change in the future.
+
+New style file names do not operate with the version of Sdtty
+that runs on DOS or Windows 3.1.  These operating systems
+can't handle names longer than 12 characters.  In fact,
+the version of Sdtty that runs on DOS or Windows 3.1 will
+probably not be supported after version 34.7.
+
+The program can now recognize ``abbreviations'', in addition to
+``accelerator keys''.  An accelerator key is a single function key
+(or control or meta key) that causes an action to take place.  An
+abbreviation is a made of normal letters.  For example, one can
+make ``pth'' an abbreviation for ``pass thru''.
+
+Abbreviations are defined in the initialization file, in a manner
+very similar to accelerators.  Create an ``[Abbreviations]'' section
+in your initialization file, looking something like this:
+
+@example
+@group
+[Abbreviations]
+utb     U-turn back
+pth     pass thru
+@end group
+@end example
+
+The lines of the abbreviations section are very similar to those of the
+accelerators section, except that the first item on the line is an
+arbitrary word instead of an encoding for a special key press.  Whenever
+that word is typed in as the only thing on its line, the call or concept
+will be activated.  The word typed in must be by itself on the line, and
+may not be further abbreviated.  That is, the normal action of the
+parser, to figure out what call or concept is wanted based on the
+smallest possible initial part of the call or concept, does not operate
+here.  You must type the abbreviation exactly as it appears in the
+initialization file.  You can't type ``ut'' for ``utb'' with the above
+example.  But you could have defined
+
+@example
+@group
+[Abbreviations]
+u     U-turn back
+p     pass thru
+@end group
+@end example
+
+to get these calls with a single letter.
+
+You can't type @kbd{boys u}, because the abbreviation must be the only
+thing on the line that you type.  But you could define abbreviations
+
+@example
+@group
+bu    boys U-turn back
+gu    girls U-turn back
+@end group
+@end example
+
+The transcript file will always show the fully expanded text,
+not the abbreviation.
+
+We thank Rich Reel for pointing out how useful abbreviations
+are, and how simple they are to implement.
+
+The ability to display colors has been improved.  When a color scheme
+involving yellow is selected, and the background is white, it uses a
+dark yellow for better contrast.  As a result of this, the standard
+shortcut icons for Sd were changed to use a white background (normal
+video) by default.  They had previously used a black background (reverse
+video) whenever yellow was involved.
+
+This changes the default behavior for the startup shortcuts such as ``Sd
+Couple''.  If you have been using such a shortcut and prefer the black
+background, you can edit the shortcut (right-click it, and select
+``properties'') to add ``-reverse_video'' to the command line.  If there
+are problems, please let me know.
+
+Typing ``undo'' when at the start of a sequence (or pressing an appropriate
+accelerator key, such as @key{F9}) will erase the ``heads start'' or
+whatever startup command had been issued.
+
+New concept: @kbd{add}, which is a synonym for @kbd{follow it by}.
+
+New meta-concepts: @kbd{first M/N}, @kbd{middle M/N} and @kbd{last M/N}.
+These are followed by a concept, and cause the indicated fraction of
+the call to be performed with the concept, and the rest to be executed
+normally.  For example, @kbd{middle 1/3 tandem remake the wave} does
+the first part normally, the second part tandem, and the last part normally.
+Whether these are precisely the words you should use is up to you.
+
+New meta-concept: @kbd{initially and finally}.  This causes the following
+concept to be applied to both the first and laast parts of the call,
+as in @kbd{initially and finally tandem remake the wave}.
+
+The syntax of the ``anythinger's'' mechanism has been reworked.
+The program now considers the ``er's'' word to be properly
+part of the call name.  Hence it will print out things like
+@kbd{[remake the wave] er's motivate} instead of just
+@kbd{[remake the wave] motivate}.  You may type in
+the ``er's'' word or not, as you choose.  If you type it,
+the apostrophe is of course optional.
+
+The syntax of the @kbd{use} concept has been reworked.
+Its name is simply @kbd{use}.  Since it takes two calls,
+you must press
+@key{ENTER}
+after typing it, to separate it from the two calls.
+@example
+@group
+   @kbd{thirdly use               @key{ENTER}
+   ah so                     @key{ENTER}
+   swing the fractions       @key{ENTER}}
+@end group
+@end example
+
+There is also a concept @kbd{use for the <Nth> part}.  It is entered
+thusly:
+@example
+@group
+   @kbd{use for the 3rd part      @key{ENTER}
+   ah so                     @key{ENTER}
+   swing the fractions       @key{ENTER}}
+@end group
+@end example
+
+It will appear in the transcript as ``use ah so for the 3rd part:
+swing the fractions''.
+
+The concepts @kbd{right wing} and @kbd{left wing} have been added.
+They are at level c3x.  These may not be really correct.  Use them with care.
+
+The calls @kbd{eight chain <N>}, @kbd{spin chain thru}, and
+@kbd{fan the top} are now in the Plus program, in
+accordance with a recent Callerlab vote.
+
+The calls @kbd{triple scoot} and @kbd{grand follow your neighbor} are
+now in the A1 program, in accordance with a recent Callerlab vote.
+
+The call @kbd{press} has been on Mainstream for quite some time,
+for purely pragmatic reasons.  It is going to stay there, notwithstanding
+a recent Callerlab vote moving it down from C2 to to C1.
+
+The call @kbd{relocate}, for general setups, and the concept
+@kbd{reverse crazy} have been moved from C3A to C2, in accordance with
+a recent Callerlab vote.
+
+The program now recognizes that, at Mainstream, the call @kbd{extend}
+is restricted.
+
+The call @kbd{turn and flip} was removed from the C4 level and moved
+to C4X.  We apologize to a certain caller.
+
+The call @kbd{[anything] and circle <N/4>} can now take either a
+4-person or an 8-person call.
+
+The program now recognizes the extension @kbd{link up but [anything]},
+analogous to @kbd{busy [anything]}.  Its level is c3x.
+
+It can correctly roll after @kbd{hinge by}.
+
+Fractional @kbd{exchange the boxes} in columns handles
+collisions properly now.
+
+The identities of the dancers are re-evaluated during the call
+@kbd{tap the <anyone>}.  This may have an effect if there are
+interruptions or other interesting things.  There is a call
+@kbd{tap the original <anyone>} that you may use when you don't
+want identities to be re-evaluated.
+
+The roll direction after @kbd{cross chain thru} is now set so that, if
+one rolls, the result is the same as if @kbd{cross chain and roll} had
+been called.  This is dictated by Callerlab.  We take no responsibility
+for the fact that it makes no sense in terms of any plausible turning
+motion the dancers would have been going through as they did the call.
+
+Users are reminded that the roll direction after @kbd{spin chain and
+exchange the gears} does not strictly follow the Callerlab definition.
+This is discussed further in the ``call notes'' section of the manual.
+
+The program now understands the handedness rules regarding @kbd{scoot
+and little}, @kbd{scoot and plenty}, and @kbd{scoot and rally}.  It is
+not necessary to say ``left'' when calling these from a left-handed
+setup, though you may.  On the plain calls @kbd{little}, @kbd{plenty},
+and @kbd{rally}, the outsides will always quarter right, regardless of
+the handeness of the wave behind them, unless you say ``left'', or say
+``go as you are'', or give some other direction.
+
+The program can have people @kbd{cross fold} from a parallelogram.
+For example, from parallelogram lines back-to-back, you can have the
+people in the outer triple boxes do a cross fold, creating an 8-chain
+formation.  The designator to use for these people is ``outer pairs'',
+if simpler things like ``girls'' won't work.  We don't recommend actually
+saying ``outer pairs'' --- it is simply the notation that the program uses.
+
+The program handles @kbd{triple waves switch to a Z} correctly.
+
+New calls: @kbd{square around}, @kbd{right and left by}, and
+@kbd{<anything> by}.  These of course include ``by by'' and ``by by by''.
+
+New concepts: @kbd{concentric Z's}, @kbd{cross concentric Z's}.
+Of course, you never need to type the apostrophe.
+
+A bug in the listing of possible calls and concepts when ``!'' or ``?''
+is typed has been fixed.  It should now list lots of things.
+
+A compilation of Sd using Microsoft Visual C++ version 6, service pack 5,
+has failed the regression tests.  (Specifically, it crashes on "snag bits
+and pieces" from parallel waves.)
+
+This bug was reported to Microsoft on 17 December 2001.
+
+C++ Version 6 has been involved in incorrect compilations before.
+(See the release notes for Sd version 32.65.)  The
+resolve command of Sd behaved incorrectly at one point, using Visual C++
+version 6, service pack 2.  The bug was reported to Microsoft.  Service
+Pack 3 was subsequently distributed, and appeared to fix the resolver
+bug.  This incident nevertheless resulted in a decision to continue
+using Visual C++ version 5, even though Microsoft considers it
+obsolete, apparently because it does not support the ``robust component
+development'' of version 6.  Why they believe that component development
+is more robust with a broken compiler is a mystery.
+
+No compilation of Sd or Sdtty with any version of gcc is known to have
+generated incorrect code.
+
+It is certainly true that Visual C++ version 5 has a number of glaring bugs,
+such as
+@itemize @bullet
+@item
+inability to terminate properly when the computer is shut down
+@item
+inability to place breakpoints in an incremental debug build after
+a release build
+@item
+inability to step over stack-checking code in a procedure prologue
+@item
+frequent inability to display enumeration data symbolically when debugging
+@end itemize
+
+but these are just inconveniences to me.  The compiled code under
+version 5 appears to run correctly.
+
+Users may take comfort from the fact that all Windows releases of Sd
+and Sdtty have been compiled with Visual C++ version 5.  No released
+version has ever been compiled with C++ version 6, and none ever will be.
+
+It took several hours to find the bug.  Here it is:
+
+@sp 1
+@example
+@group
+ switch (this_call->the_defn.schema) @{
+
+     mov   edi, DWORD PTR [eax+16]
+     cmp   edi, 64       ; 00000040H
+     ja    $punt$7186
+     xor   ecx, ecx    // Using ECX as the switch index.
+                       // It should be restored from [ESP+220].
+     // Load 0 or 1 from switch table.
+     mov   cl, BYTE PTR $L7773[edi]
+     // Indirect jump to one of two places.
+     jmp   DWORD PTR $L7774[ecx*4]
+$L7756:
+     // Restore never happened!
+     mov   ecx, DWORD PTR _parseptrcopy$[esp+220]
+     // Because it jumped here!
+$L7196:
+
+ case schema_concentric:
+ case schema_concentric_6_2:
+ case schema_concentric_2_6:
+    etc......
+ @}
+
+// Jump table created for the "switch" statement.
+$L7774:
+     DD    $L7196     // Wrong place!  Doesn't restore ECX!
+     DD    $punt$7186
+// Index table created for the "switch" statement.
+$L7773:
+     DB    0
+     DB    1
+     DB    1          // etc.  there are 64 items.
+@end group
+@end example
+
+@c ************
+@node 34.6, 34.5, 34.7, Top
+@unnumberedsec Version 34.6 changes
+
+New concepts: @kbd{offset 1/4 tag} and @kbd{offset 3/4 tag}.
+These are done from a suitably populated 4x4.  The offset amount is presumed to be 50%.
+The ``shear line'' of the setup lies between the two single 1/4 tags.
+
+New concept: @kbd{use (call) for the <Nth> part}.
+
+New concept: @kbd{use (call) in}.  This is intended to be used in
+applications like @samp{reverse random use acey deucey in swing the fractions}.
+
+The preceding two concepts are actually entered that way, with the word
+``call'' in parentheses.  Command completion makes the typing easier
+than it might seem.  After entering the concept, follow the prompts.
+The concept will be printed in the transcript in a more sensible way.
+
+The @kbd{magic} concept is now permitted only for simple magic
+columns at C1.  Other applications of @kbd{magic} (magic lines,
+magic diamonds, etc.) are legal only at C3B.  We thank the dancers
+at the 2001 National Square Dance Convention C3A hall for pointing
+this out, and apologize for the bug.
+
+New calls: @kbd{unwrap the boxes/stars/diamonds to a normal column,
+follow the <anyone>}.  These are used from fully offset formations,
+such as 16-matrix ``clumps''.
+
+The program can handle simple cases of setups tilted at a 45 degree
+angle.  For example, it is possible to do a @kbd{swing the fractions}
+interrupted at the half way point with a @kbd{6x2 acey deucey}.
+Please be careful with this; it is not very robust.
+
+@c ************
+@node 34.5, 34.4, 34.6, Top
+@unnumberedsec Version 34.5 changes
+
+New concepts: @code{twin phantom point-to-point diamonds} and
+@code{twin phantom point-to-point diamond spots}.
+
+New concept: @code{offset split phantom boxes}.
+
+New concept: @code{parallelogram triple boxes}.
+
+As usual, we do not take a position on the tastefulness of
+various new concepts or their applications.
+
+New concepts: @code{center tidal C/L/W}.
+These may be useful for things like @code{own the <anyone>,
+center tidal wave grand swing thru by 3x1 triangle circulate}.
+
+The program can now do a better job of having people coming to
+the same spot after fractional @code{exchange the triangles}.
+
+The program now does a better job of telling when the outsides
+can circulate or half circulate.
+
+New calls:  @code{flip back, to a wave} and @code{<ATC> back to a wave, to a wave}.
+The program will insert commas as shown, to make the meaning clear.
+We do not take a position on whether @code{flip back to a wave} is ambiguous,
+or what it means.
+
+@c ************
+@node 34.4, 34.31, 34.5, Top
+@unnumberedsec Version 34.4 changes
+
+New concepts: @code{twin phantom point-to-point diamonds} and
+@code{twin phantom point-to-point diamond spots}.
+
+New concept: @code{common spot point-to-point diamonds}.
+This is done from the setup that would be obtained after
+certain fractional exchanges from point-to-point diamonds.
+Note that @code{switch to a diamond} and @code{diamond circulate}
+never produce this setup -- the Callerlab C1 definitions specifically
+state that the colliding people center themselves.
+
+The program can now handle parallelogram diamonds.  That is,
+from parallelogram waves, you can do @code{switch to a diamond}.
+
+New concept: @code{parallelogram diamonds}.  This is used no matter
+what the facing directions are.
+
+The program can now handle "nonisotropic triangles".  For example,
+from columns, ignore the last person and have the other 6 1/2 press ahead.
+
+The program can now do @code{counter rotate} in triangles correctly.
+For example, from point-to-point diamonds, @code{outside triangles
+counter rotate} will do the right thing.
+
+The program can now do @code{convert the triangle} from tandem-based
+triangles.
+
+The program has an improved ability to go to arbitrarily occupied
+stars as the result of phantom calls.
+
+@c ************
+@node 34.31, 34.3, 34.4, Top
+@unnumberedsec Version 34.31 changes
+
+A serious defect in processing menu clicks in @code{Sd} version 34.3
+was fixed.  It did not affect @code{Sdtty}.
+
+@c ************
+@node 34.3, what the fuck, 34.31, Top
+@unnumberedsec Version 34.3 changes
+
+Improved the ``crazy offset C/L/W'' concept.  It can handle shape-changers,
+under reasonable circumstances, up to a point.  The program can also do
+``crazy diaagonal boxes''.
+
+The program can handle ``equalizing'' cases of @samp{transfer and <anything>},
+@samp{busy <anything>}, and @samp{open up and <anything>},
+as per the article by Linda Kendall in the December, 2000 issue of Zip Coder.
+
+New concepts:  staggered C/L/W of 3.  Use this with ``ignore''.
+
+New concepts:  bent C/L/W/B (plural), from suitable formations.
+
+New concepts:  <anyone> in your double bent C/L/W.
+
+We allow "mini-grand" getouts, if the ``toggle minigrand getouts'' command
+has been given, or the command-line switch ``-minigrand_getouts'' was given,
+or the command ``minigrand_getouts '' appeared in the initialization file.
+When this has been done, the resolver will include such getouts in its
+search.  A ``mini-grand'' is ``right and left grand, but on the third hand,
+promenade home.''  We do not take a position on the tastefulness of these
+getouts.
+
+The ``funny'' concept is handled better internally, giving greater power
+in the database language.
+
+Fixed a bug in jay walk ``around the corner'' in C1 phantom setups.  For example,
+after Heads Spin the Top, Extend, Girls Hinge, one can now do Heads Jay Walk in a
+completely natural way.
+
+Fixed a bug in phantom 1/2 circulate.  We thank the contributors to the
+``challenge-sd'' mailing list for raising this issue.
+
+@c ************
+@node what the fuck, 34.2, 34.3, Top
+@unnumberedsec concepts vs. compound calls
+
+One sometimes has the following confusing thing happen.  You want to
+do a @kbd{shadow box couple up}, so you type:
+
+@example
+@group
+   shadow box [couple up]
+@end group
+@end example
+
+and all you get is
+
+@example
+@group
+   shadow box [couple up]  (129 matches, type ! or ? for list)
+@end group
+@end example
+
+so you do so, and get
+
+@example
+@group
+shadow box [couple up] and a quarter more
+shadow box [couple up] and cross
+shadow box [couple up] and roll
+shadow box [couple up] and sweep <N/4>
+shadow box [couple up] and the <ANYONE> roll
+shadow box [couple up] and <N/4> more
+shadow box [couple up] by golly
+shadow box [couple up] er's cover up but <ANYTHING>
+shadow box [couple up] like a couple up
+shadow box [couple up] the k but <ANYTHING>
+shadow box [couple up] the key
+shadow box [couple up] the windmill, outsides <ANYTHING>
+shadow box [couple up] with the flow
+@end group
+@end example
+
+and you wonder ``Why won't it let me do a normal one?''
+
+The issue is whether @kbd{shadow box} is a concept or
+a call with a subcall.  If it's a concept, you should just
+type @kbd{shadow box couple up}, and if it's a call that takes
+a subcall, you should use brackets.  How do you know?
+
+That isn't easy to answer.  Where to draw the line isn't well
+established, so @kbd{Sd} makes decisions that may seem arbitrary.
+There is no way to avoid this.  Most things are obvious, of
+course, like the @kbd{as couples} concept.  And it should be fairly
+obvious from usage that @kbd{breaker [2/3 recycle]} is a call with
+a modifier.  Why is that obvious?  Because @kbd{breaker N} is a call,
+and it is obvious that @kbd{breaker [anything]} just has the
+@kbd{anything} replace some pre-existing part of the call.
+
+Of course, anything that takes the modifier other than at the
+end, must be a call with a modifier, since concepts are always
+typed first.  Hence @kbd{[anything] and roll} always uses brackets.
+
+So, if you are having trouble of this sort, try adding brackets
+or leaving them out.
+
+@kbd{Shadow box} is a concept, so the brackets are
+not used.  Most cases like this are concepts.  The possibly tricky
+cases that are calls with subcalls are:
+
+@example
+stroll [anything]
+dodge [anything]
+soft [anything]
+vertical [anything]
+explode and [anything]
+track and [anything]
+splash [anything]
+quick [anything]
+clover and [anything]
+wheel and [anything]
+buckle and [anything]
+eight by [anything]
+slant [anything]
+rolling / veering / flowing [anything]
+@end example
+
+@c ************
+@node 34.2, 34.0, what the fuck, Top
+@unnumberedsec Version 34.2 changes
+
+The call and concept lists have been updated to reflect the recent changes
+to the C3B list.
+
+@example
+@group
+Dropped:    shove off
+            kick by
+            in style
+            revert
+@end group
+@end example
+@example
+@group
+Added:      track <N>
+            cross extend
+            change lanes
+            various split phantom diamonds and 1/4 tags, so all
+                 split phantom formations are now legal at C3B
+            chase the <N/4> tag
+            <ATC> (chain thru) (and scatter) (cross) nuclear reaction
+@end group
+@end example
+
+The program now recognizes that the legality of some calls in some formations
+depends on the level.  For example, the facing version of recycle is legal only
+at A2 and above, and split recycle is legal only at C1 and above.
+
+The manner in which concepts like @samp{yoyo} and @samp{twisted} are handled
+was reworked.  Things like @samp{interlace finally yoyo swing thru with yoyo mix}
+will now work properly.
+
+The usual several dozen other improvements were made in the program's
+power and flexibility.  For example, it now recognizes about 100 formations
+and about 150 resolves.
+
+Two new Windows shortcuts were created, called ``SD plain'' and ``SDTTY plain''.
+You can, as usual, copy these to the start menu and/or desktop.
+
+These shortcuts run the respective programs with no color or special graphics of
+any kind.  When ``SDTTY plain'' is used, it is possible to copy text and diagrams into
+the Windows clipboard, from which it can be pasted into email messages or other
+documents.  To do this, right-click the icon at the left of the window title bar.
+This will bring up the system menu.  Choose ``Edit'' and ``Mark''.
+
+It is now possible to specify the initial sequence number that is
+printed at the top of each card.  This can even be done when not using a
+session from the initialization file.  In @code{Sdtty}, give the
+command-line argument ``-sequence_num'' followed by the number.  In
+@code{Sd}, it can be done this way, or it can be specified in the
+startup screen.  If a sequence number is specified when using a session,
+that number permanently overrides the number in the initialization file.
+
+The documentation is now available at all times when running @code{Sd}.  Typing
+``help manual'', from either @code{Sdtty} or @code{Sd}, will bring up the
+manual under the default Web browser.
+
+We thank a famous C4 caller for providing a wealth of new, creative, and
+different research material.
+
+@c ************
+@node 34.0, 33.15, 34.2, Top
+@unnumberedsec Version 34.0 changes
+
+A major redesign of the internal workings has been completed.  The database
+can now provide multiple definitions for a call.  As a result, all of the former
+``(parts)'' or ``(matrix)'' calls, and others like them, have been removed.
+In particular, the following calls have been removed:
+
+@c ************
+@node 33.15, 33.0, 34.0, Top
+@unnumberedsec Version 33.15 changes
+
+The function key control-F11 has been set to perform the @samp{standardize} operation.
+
+@c ************
+@node 33.0, 32.95, 33.15, Top
+@unnumberedsec Version 33.0 changes
+
+The call previously known as just @samp{mixed up} has been changed to
+@samp{mixed up square thru}.
+
+@c ************
+@node 32.95, 32.9, 33.0, Top
+@unnumberedsec Version 32.95 changes
+
+The program has been tested successfully for year 2000 compliance.
+
+@c ************
+@node 32.9, 32.81, 32.95, Top
+@unnumberedsec Version 32.9 changes
+
+The installation program was improved.  If a previous version of @code{Sd} is
+found in the folder @file{C:\Sd}, you are asked whether to save that version,
+and you are allowed to choose the folder in which to place the saved copy.
+
+@c ************
+@node 32.81, 32.67, 32.9, Top
+@unnumberedsec Version 32.81 changes
+
+A bug was fixed in the definition of @samp{little more}.  This is a two-part
+call.  The first part is just a @samp{little}, which has the centers
+step and fold while the ends both 1/4 right and counter rotate.
+The second part has the centers circulate while the ends do nothing.
+While people might prefer a different apportioning of the centers'
+and ends' parts for various reasons, this is the way it is defined in
+the Callerlab C2 definitions, the Ceder Chest, and the Ben Rubright
+Pocket Reference.
+
+@c ************
+@node 32.67, 32.65, 32.81, Top
+@unnumberedsec Version 32.67 changes
+
+A bug that caused a failure in tip #8 in the C4 hall at the 1999 National
+Advanced and Challenge Convention was fixed.  We apologize for any
+inconvenience that this may have caused.
+
+@c ************
+@node 32.65, 32.6, 32.67, Top
+@unnumberedsec Version 32.65 changes
+
+There were no profound changes in the ``dancing'' behavior of the
+program, but there were, as usual, numerous minor changes.  Most of the
+significant changes were in the internal organization, to prepare for
+the upcoming release of @code{Sd} for Windows.
+
+@c ************
+@node 32.6, , 32.65, Top
+@unnumberedsec Version 32.6 changes
+
+Foobar.
+
+@bye

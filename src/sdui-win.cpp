@@ -11,10 +11,10 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
     sdui-win.cpp - SD -- Microsoft Windows User Interface
-  
+
     Copyright (C) 1995  Robert E. Cays
     Copyright (C) 1996  Charles Petzold
-  
+
     Permission to use, copy, modify, and distribute this software for
     any purpose is hereby granted without fee, provided that the above
     copyright notice and this permission notice appear in all copies.
@@ -22,7 +22,7 @@
     software for any purpose.  It is provided "as is" WITHOUT ANY
     WARRANTY, without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.
-  
+
     This is for version 34. */
 
 
@@ -583,7 +583,7 @@ static int LookupKeystrokeBinding(
       else if (wParam == VK_ESCAPE) {
          PostMessage(hwndMain, WM_COMMAND, ESCAPE_INDEX, (LPARAM) hwndList);
          return 2;
-      } 
+      }
       else if (wParam == VK_TAB)
          // This is being handled as a "WM_KEYDOWN" message.
          return 2;
@@ -1451,7 +1451,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
       // But if the user clicked on "accept", or did an acceptable single- or
       // double-click of a menu item, that item is clearly what she wants, so
       // we use it.
- 
+
       i = SendMessage(hwndList, LB_GETITEMDATA, nMenuIndex, (LPARAM) 0);
       user_match.match.index = LOWORD(i);
       user_match.match.kind = (uims_reply) HIWORD(i);
