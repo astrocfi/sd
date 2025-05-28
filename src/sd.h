@@ -337,6 +337,7 @@ public:
                                   // (shifted down) for a modification block
    bool no_check_call_level;      // if true, don't check whether this call
                                   // is at the level
+   bool say_and;                  // Used by "randomize" -- put "AND" in front of this
 
    // We allow static instantiation of these things with just
    // the "concept" field filled in.
@@ -344,7 +345,7 @@ public:
    // Which of course means we need to provide the default constructor too.
    parse_block() { initialize((concept_descriptor *) 0); }
 
-   void initialize(const concept_descriptor *cc);
+   void initialize(const concept_descriptor *cc);     // In sdutil.cpp
 
    // In case someone runs a some kind of global memory leak detector, this releases all blocks.
    static void final_cleanup();
@@ -2738,6 +2739,7 @@ enum meta_key_kind {
    meta_key_shift_n,
    meta_key_echo,
    meta_key_rev_echo,   // Must follow meta_key_echo.
+   meta_key_randomize,
    meta_key_shift_half
 };
 
@@ -3275,6 +3277,7 @@ struct skipped_concept_info {
 
    skipped_concept_info() : m_nocmd_misc3_bits(0) {}
    skipped_concept_info(parse_block *incoming) THROW_DECL;    // In SDTOP
+   parse_block *get_next() { return (m_heritflag != 0) ? m_concept_with_root : m_result_of_skip; }
 };
 
 extern bool check_for_concept_group(

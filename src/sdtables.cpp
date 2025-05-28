@@ -10258,6 +10258,7 @@ const uint32 meta_key_props[] = {
    0,                                 // meta_key_shift_n
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_echo
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_echo
+   MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_randomize
    0};                                // meta_key_shift_half
 
 

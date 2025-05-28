@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.91
-@set Time-stamp: February 13, 2017
+@set sd-version 38.92
+@set Time-stamp: March 3, 2017
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4636,6 +4636,9 @@ to dictate where the ends should finish.
 @item shadow line
 @item shadow box
 @item shadow diamond
+@item paranoid
+@item <ANYONE> are paranoid
+The designated people (or everyone) turns back at the conclusion of the call.  If a designator such as @code{centers} is used, it is evaluated after the call.
 @item anchor the <ANYONE>
 These are straightforward.
 @item <ANYONE> work
@@ -4766,6 +4769,12 @@ The @code{double echo} meta-concept is followed by two concepts.  It applies bot
 concepts first, then skips the first concept and applies the second only, and finally
 skips both concepts and just does the call.  @code{triple echo} and @code{quadruple echo} are
 similar.
+@item randomize between
+This is followed by two concepts, and then a call.  The parts of the
+call are performed alternately with the first concept and the second concept.
+@item triple randomize among
+As above but three concepts are given.   The parts of the
+call are performed with the first, second, and third concept, in repeating sequence.
 @item roundtrip
 The @code{roundtrip} concept is most simply explained by example:  @code{swing the fractions}
 is the same as @code{roundtrip remake}.  The @code{roundtrip} of a call is the call followed by the reverse

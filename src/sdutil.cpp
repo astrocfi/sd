@@ -1225,7 +1225,9 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
          }
 
          // We never put a comma before things like "in a 1/4 tag".
-         if (force && did_comma == 0 && k != concept_tandem_in_setup) writestuff(", ");
+         if (local_cptr->say_and)
+            writestuff(" AND ");
+         else if (force && did_comma == 0 && k != concept_tandem_in_setup) writestuff(", ");
          else if (request_final_space) writestuff(" ");
 
          parse_block *next_cptr = local_cptr->next;    // Now it points to the thing after this concept.
@@ -1549,7 +1551,8 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = true;
          }
          else if (comma_after_next_concept == 1) {
-            writestuff(",");
+            if (!(next_cptr && next_cptr->say_and))
+               writestuff(",");
             request_final_space = true;
          }
          else if (comma_after_next_concept == 5) {
@@ -2230,6 +2233,7 @@ void parse_block::initialize(const concept_descriptor *cc)
    options = null_options;
    replacement_key = 0;
    no_check_call_level = false;
+   say_and = false;
    subsidiary_root = (parse_block *) 0;
    next = (parse_block *) 0;
 }
@@ -3791,9 +3795,6 @@ void ui_utils::run_program(iobase & ggg)
                help_string[MAX_ERR_LENGTH-1] = '\0';
                specialfail(help_string);
             }
-         case command_randomize_couple_colors:
-            randomize_couple_colors();
-            goto start_cycle;
          case command_change_outfile:
             do_change_outfile(true);
             goto start_cycle;

@@ -3483,63 +3483,67 @@ bool check_for_concept_group(
        (get_meta_key_props(this_concept) & MKP_RESTRAIN_1))
       retstuff.m_need_to_restrain |= 1;
 
-   // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
-   // Similarly with "parallelogram split phantom C/L/W/B" or
-   // "offset C/L/W split phantom C/L/W/B".     <-- this one not done.
-
-   final_and_herit_flags junk_concepts;
-   junk_concepts.clear_all_herit_and_final_bits();
    parse_block *skip_a_pair = (parse_block *) 0;
+   final_and_herit_flags junk_concepts;
 
-   if (k == concept_c1_phantom) {
-      // Look for combinations like "phantom tandem".
-      parse_block *temp = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+   junk_concepts.clear_all_herit_and_final_bits();
+   parse_block *temp = process_final_concepts(parseptrcopy, false, &junk_concepts, false, false);
 
-      if ((temp->concept->kind == concept_tandem ||
-           temp->concept->kind == concept_frac_tandem) &&
-          (!junk_concepts.test_for_any_herit_or_final_bit())) {
+   if (temp != parseptrcopy &&
+       junk_concepts.test_heritbits(~(INHERITFLAG_GRAND|INHERITFLAG_SINGLE|INHERITFLAG_CROSS)) == 0 &&
+       temp->concept->kind == concept_concentric) {
          skip_a_pair = temp;
-      }
    }
-   else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
-      // Look for combinations like "mystic triple boxes".
-      parse_block *temp = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
+   else {
+      junk_concepts.clear_all_herit_and_final_bits();
+      temp = process_final_concepts(parseptr_skip, false, &junk_concepts, false, false);
 
-      if ((temp->concept->kind == concept_multiple_lines ||
-           temp->concept->kind == concept_multiple_diamonds ||
-           temp->concept->kind == concept_multiple_formations ||
-           temp->concept->kind == concept_multiple_boxes) &&
-          temp->concept->arg4 == 3 &&
-          (!junk_concepts.test_for_any_herit_or_final_bit())) {
-         skip_a_pair = temp;
+      if (k == concept_c1_phantom) {
+         // Look for combinations like "phantom tandem".
+         // If skipping "phantom", maybe it's "phantom tandem", so we need to skip both.
+         if ((temp->concept->kind == concept_tandem ||
+              temp->concept->kind == concept_frac_tandem) &&
+             (!junk_concepts.test_for_any_herit_or_final_bit())) {
+            skip_a_pair = temp;
+         }
       }
-   }
-   else if (k == concept_parallelogram ||
-            (k == concept_distorted &&
-             parseptrcopy->concept->arg1 == disttest_offset &&
-             parseptrcopy->concept->arg3 == 0 &&
-             parseptrcopy->concept->arg4 == 0)) {
-      // Look for combinations like "parallelogram split phantom waves".
-      parse_block *temp = process_final_concepts(parseptr_skip, false, &junk_concepts, true, false);
-
-      if ((temp->concept->kind == concept_do_phantom_2x4 ||
-           temp->concept->kind == concept_do_phantom_boxes) &&
-          temp->concept->arg3 == MPKIND__SPLIT &&
-          (!junk_concepts.test_for_any_herit_or_final_bit())) {
-         skip_a_pair = temp;
+      else if (k == concept_snag_mystic && (this_concept->arg1 & CMD_MISC2__CENTRAL_MYSTIC)) {
+         // Look for combinations like "mystic triple boxes".
+         if ((temp->concept->kind == concept_multiple_lines ||
+              temp->concept->kind == concept_multiple_diamonds ||
+              temp->concept->kind == concept_multiple_formations ||
+              temp->concept->kind == concept_multiple_boxes) &&
+             temp->concept->arg4 == 3 &&
+             (!junk_concepts.test_for_any_herit_or_final_bit())) {
+            skip_a_pair = temp;
+         }
       }
-   }
-   else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
-      // Look for combinations like "random/initially/echo/nth-part-work <concept>".
-      skip_a_pair = parseptr_skip;
-   }
-   else if (k == concept_so_and_so_only &&
-            ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
-      // Look for combinations like "<anyone> work <concept>".
-      skip_a_pair = parseptr_skip;
-   }
-   else if (k == concept_matrix) {
-      skip_a_pair = parseptr_skip;
+      else if (k == concept_parallelogram ||
+               (k == concept_distorted &&
+                parseptrcopy->concept->arg1 == disttest_offset &&
+                parseptrcopy->concept->arg3 == 0 &&
+                (parseptrcopy->concept->arg4 & ~0xF) == DISTORTKEY_DIST_CLW*16)) {
+         // Look for combinations like "parallelogram split phantom C/L/W/B".
+         // Similarly with "offset C/L/W split phantom C/L/W/B".
+         if ((temp->concept->kind == concept_do_phantom_2x4 ||
+              temp->concept->kind == concept_do_phantom_boxes) &&
+             temp->concept->arg3 == MPKIND__SPLIT &&
+             (!junk_concepts.test_for_any_herit_or_final_bit())) {
+            skip_a_pair = temp;
+         }
+      }
+      else if (get_meta_key_props(this_concept) & MKP_RESTRAIN_2) {
+         // Look for combinations like "random/initially/echo/nth-part-work <concept>".
+         skip_a_pair = parseptr_skip;
+      }
+      else if (k == concept_so_and_so_only &&
+               ((selective_key) parseptrcopy->concept->arg1) == selective_key_work_concept) {
+         // Look for combinations like "<anyone> work <concept>".
+         skip_a_pair = parseptr_skip;
+      }
+      else if (k == concept_matrix) {
+         skip_a_pair = parseptr_skip;
+      }
    }
 
    if (skip_a_pair) {

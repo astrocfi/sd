@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.91"
+version "38.92"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -4620,6 +4620,24 @@ call "_slither as subcall" dontshow tag slither
    // Now, after the plain call has failed, we do the good stuff.
    // First, make sure we aren't in a diamond.  The "singleconc"
    // schema wouldn't mind, but we do.
+            alternate_definition [1x3] c4
+   setup 1x6 1x6 qualifier wave_only
+      array [ZM0N ZM5N ZM1N ZM3N ZM2N ZM4N]
+   setup 1x6 1x6 qualifier 3x3_2fl_only
+      array [ZM0N ZM2N ZM4N ZM3N ZM5N ZM1N]
+   setup 1x4 1x4
+      predscantdo
+         if miniwave_side_of_in_3n1_line [ZM1N ZM0N ZM3N ZM2N]
+         if couple_side_of_in_3n1_line   [ZM0N ZM1N ZM2N ZM3N]
+            alternate_definition [3x1] c4    // Same as 1x3.
+   setup 1x6 1x6 qualifier wave_only
+      array [ZM0N ZM5N ZM1N ZM3N ZM2N ZM4N]
+   setup 1x6 1x6 qualifier 3x3_2fl_only
+      array [ZM0N ZM2N ZM4N ZM3N ZM5N ZM1N]
+   setup 1x4 1x4
+      predscantdo
+         if miniwave_side_of_in_3n1_line [ZM1N ZM0N ZM3N ZM2N]
+         if couple_side_of_in_3n1_line   [ZM0N ZM1N ZM2N ZM3N]
             twisted_is_inherited
    seq checkline [roll_transparent]
    seq spiffy_slither [inherit_twisted]
@@ -21190,7 +21208,7 @@ call "_horseshoe centers" dontshow tag partnertag_w_cross
       predscantdo
          if miniwave_side_of_in_3n1_line [AM0W CM2E CM2E AM0W]
          if couple_side_of_in_3n1_line   [CM1E CM3E AM3W AM1W]
-            alternate_definition [3x1] c4    /* Same as 1x3. */
+            alternate_definition [3x1] c4    // Same as 1x3.
    setup 1x4 1x4
       predscantdo
          if miniwave_side_of_in_3n1_line [AM0W CM2E CM2E AM0W]

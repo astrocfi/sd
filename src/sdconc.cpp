@@ -3649,6 +3649,7 @@ extern void concentric_move(
                z1->call = savecall;
                z1->call_to_print = savecall_to_print;
                z1->no_check_call_level = savelevelcheck;
+
                if (maybe_throw_this != error_flag_none)
                   throw maybe_throw_this;
             }

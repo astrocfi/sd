@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.91"
-#define TIME_STAMP "wba@alum.mit.edu February 13 2017 $"
+#define VERSION_STRING "38.92"
+#define TIME_STAMP "wba@alum.mit.edu March 3 2017 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -162,7 +162,6 @@ command_list_menu_item command_menu[] = {
    {"discard entered concepts",       command_erase, ID_COMMAND_DISCARD_CONCEPT},
    {"abort this sequence",            command_abort, ID_COMMAND_ABORTTHISSEQUENCE},
    {"insert a comment",               command_create_comment, ID_COMMAND_COMMENT},
-   {"randomize couple colors",        command_randomize_couple_colors, ID_COMMAND_RANDOMIZE_COLORS},
    {"change output file",             command_change_outfile, ID_COMMAND_CH_OUTFILE},
    {"change output prefix",           command_change_outprefix, -1},
    {"change title",                   command_change_title, ID_COMMAND_CH_TITLE},

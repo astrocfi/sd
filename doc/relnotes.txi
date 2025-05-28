@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <13 Feb 2017 wba>
+@c Time-stamp: <3 Mar 2017 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.91
-@set title2 Database version = 38.91 format = 338
+@set title1 RELEASE NOTES FOR VERSION 38.92
+@set title2 Database version = 38.92 format = 338
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.92::
 * 38.91::
 * 38.90::
 * 38.89::
@@ -130,7 +131,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.91, Top, (dir)
+@node Intro, 38.92, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -141,11 +142,31 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2017 William B. Ackerman
 @sp 3
 @menu
-* 38.91::               Changes in the current version
+* 38.92::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.91, 38.90, Intro, Top
+@node 38.92, 38.91, Intro, Top
+@unnumberedsec Version 38.92 changes
+
+The @strong{randomize couple colors} command may only be given at the start of a sequence, that is, just before the @strong{heads starts}, or whatever, command.  You can't change the colors of the icons in the middle of a sequence.  As a reminder, random couple coloring is enabled with the @strong{-hide_couple_numbers} switch at startup.
+
+New meta-concept: @strong{randomize between}.  This is followed by two concepts (or compound concepts like @strong{phantom tandem} or @strong{parallelogram split phantom lines}), followed by more text (which might involve still more concepts).  The parts of the subject call will be performed alternately with the first concept and the second one.  You do not need to press <enter> between concepts.  Do not type any special punctuation or "and"; just type the concepts, as in
+
+@strong{randomize between cross concentric as couples flip back}
+
+The program will figure out the concept groups and put in the necessary delimiters for you, as in
+
+@strong{RANDOMIZE BETWEEN CROSS CONCENTRIC AND AS COUPLES, flip back}
+
+If you don't agree with where Sd thinks the concept boundaries are, don't call it.
+
+Another meta-concept: @strong{triple randomize among}.  This takes three concepts and cycles through them in sequence over the parts of the call.
+
+New concepts: @strong{paranoid} and @strong{<anyone> are paranoid}.  The designated people (or everyone) turns back at the conclusion of the call.  If a designator such as @strong{centers} is used, it is evaluated after the call.
+
+@c ************
+@node 38.91, 38.90, 38.92, Top
 @unnumberedsec Version 38.91 changes
 
 It can now do @strong{ends promenade N/4} (in the sense of @strong{heads promenade halfway, come into the middle and ...}) when in a "rigger", 1/8, or 1x8-with-centers-lockit setup.
@@ -158,7 +179,7 @@ It can handle fractions given to @strong{echo} constructions.  For example, @str
 @node 38.90, 38.89, 38.91, Top
 @unnumberedsec Version 38.90 changes
 
-Improved ability to get out of thars, the importance of which is increased wit the addition of @strong{flip the galaxy} and @strong{cut the galaxy} at C1.
+Improved ability to get out of thars, the importance of which is increased with the addition of @strong{flip the galaxy} and @strong{cut the galaxy} at C1.
 
 Allow @strong{ripple} in 3-person lines.
 
