@@ -2,26 +2,37 @@
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 3 Mar 1999.
+        Last modified 25 July 1999.
 
 -----------------------------------------------------------------
 
                     UPDATING VERSION NUMBERS
 
 Be sure the version numbers and dates are correct in:
-    sdmain.c           (version # is visible)
-    sd_calls.txt       (version # is visible)
-    sd_doc.txi         (version # and date are visible)
-    relnotes.txi       (version #, database format version #,
-                           and date are visible.  Also, check
-                           its claimed database format version
-                           against database.h)
-    download-pc.html   (version # and date are visible)
-    download-unix.html (version # of HP-UX release is visible)
+    [sd]    sdmain.c     (version # is visible)
+    [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
+    [sd]    sd_calls.txt (version # is visible)
+    [sddoc] title.lst    (version # is visible)
+    [sddoc] about.lst    (version # is visible)
+    [sddoc] sd_doc.txi         (version # and date are visible)
+    [sddoc] relnotes.txi       (version #, database format version #,
+                               UI version #, and date are visible.
+                               Also, check its claimed database format
+                               version against database.h)
+    [sddoc] download-pc.html   (version # and date are visible)
+    [sddoc] download-unix.html (version # of HP-UX release is visible)
 
 -----------------------------------------------------------------
 
-                    TESTING AND PRODUCTION BUILD
+                       BEFORE STARTING
+
+Do "clean clean" in sddoc.  This deletes all the derived documentation
+files, the self-extracting .exe files, and the ".zip" and ".msg"
+files used for uploading to the web.
+
+-----------------------------------------------------------------
+
+               TESTING AND PRODUCTION BUILD - DJGPP
 
 This is not done any more .....
 ###   Build and test the optimized version from GCC:
@@ -31,6 +42,7 @@ This is not done any more .....
 ###       cd regress
 ###       del *.tmp
 ###       doit
+If this is done, do not distribute this.  It stinks.
 
 Build and test the optimized version from DJGPP:
     setdjgpp
@@ -40,24 +52,34 @@ Build and test the optimized version from DJGPP:
     del *.tmp
     doit
 
-Now give the command "do_binaryw" (in sddoc) to save the DJGPP build for Windows 3.1.
+BE SURE THAT MKCALLS GOT BUILT BY DJGPP!!!
 
-Build and test the optimized version from MSVC++:
+Now give the command "do_binary3" (in sddoc) to save the DJGPP build for Windows 3.1.
+
+               TESTING AND PRODUCTION BUILD - MSVC++
+
+EXIT FROM THIS SHELL!!!!!  The environment from "setdjgpp" must be destroyed.
+
     Delete any upper-case MKCALLS.EXE and SDTTY.EXE left over from DJGPP,
-    so that MSVC++ will create them in lower case.
-    Set project configuration to both "sdtty release" and "mkcalls release",
-    issuing "build / rebuild all" in each case.
+    so that MSVC++ will create them in lower case.  This also prevents
+    distribution of the wrong stuff.
+
+    Set project configuration to "sdtty release", "sd release", and
+    "mkcalls release", issuing "build / rebuild all" in each case.
 
 Then do the usual:
     cd regress
     del *.tmp
     doit
 
-BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "do_binary" RELEASE!!!
-BUILD BOTH SDTTY AND MKCALLS UNDER MSVC++.
+BE SURE THAT MKCALLS GOT BUILT BY MSVC++!!
+
+BE SURE THAT THIS WAS THE LAST BUILD BEFORE MAKING NORMAL "new_binary" RELEASE!!!
+BUILD SD, SDTTY, AND MKCALLS UNDER MSVC++.
 
 Now run mkcalls (MSVC++ doesn't do that, not that it matters),
-and give the command "do_binary" (in sddoc) to save the MSVC++ build.
+and give the command "new_binary" (in sddoc) to save the MSVC++
+builds of Sdtty and Sd
 
 -----------------------------------------------------------------
 
@@ -79,12 +101,13 @@ release at home, just continue.
 
 BE SURE THAT THE ENVIRONMENT FROM "SETDJGPP" IS NOT IN EFFECT AT THIS POINT!
 
+Presumably "do_binary3" and "new_binary" have been done
+at this point, so that these files exist:
+      install3.exe,  bin3.{txt}    (DJGPP build of sdtty)
+      install.exe,  bin.{txt}      (VC++ build of sdtty and sd)
+
 Go to sddoc directory and do:
 
-    clean clean
-    do_binaryw   (with DJGPP build)
-    do_binary    (with MSVC build)
-    do_binarys   (with MSVC build)
     do_plain
     do_ps
     do_pdf
@@ -95,53 +118,55 @@ Go to sddoc directory and do:
 
 This creates these files, all in the sddoc directory:
 
-    bin.zip    /  bin.txt       \
-    binw.zip   /  binw.txt      |
-    bins.zip   /  bins.txt      |
-    plain.zip  /  plain.txt     |
-    ps.zip     /  ps.txt        |   These files get mailed
-    pdf.zip    /  pdf.txt       |   to update the web page.
-    html.zip   /  html.txt      |
-    dnp.zip    /  dnp.txt       |
-    dnu.zip    /  dnu.txt       |   (HP-UX only)
-    hpux.zip   /  hpux.txt      /   (HP-UX only)
+    bin.txt       \
+    binw.txt      |
+    bin3.txt      |
+    plain.txt     |
+    ps.txt        |   These files get mailed
+    pdf.txt       |   to update the web page.
+    html.txt      |
+    dnp.txt       |
+    dnu.txt       |   (HP-UX only)
+    hpux.txt      /   (HP-UX only)
 
     install.exe     \
-    installw.exe     |
-    textdoc.exe      |    These files are used locally for
-    pdfdoc.exe       |    installation or copying onto diskettes.
+    install3.exe     |
+    installw.exe     |    These files are used locally for
+    textdoc.exe      |    installation or copying onto diskettes.
+    pdfdoc.exe       |
     psdoc.exe       /
 
 -----------------------------------------------------------------
 
-If the files for mailing need to be transported on diskettes,
-copy the .zip files, and then unzip them to .txt files.
+To print the Postscript files:
 
-They take 4 disks.
-
-bin.zip + plain.zip + html.zip + dnp.zip   --> 1 disk
-ps.zip                                     --> 1 disk
-    do "split pdf.zip pdf"
-pdf1                                       --> 1 disk
-pdf2 + pdf.cmd                             --> 1 disk
+The best way is to ftp them to hpanr0, then do
+lp -dlp194 -opostscript -odouble whatever.ps
 
 -----------------------------------------------------------------
 
 To mail files for web update:
 
-  * unzip them to .txt files if they were transported on diskettes.
+  * Copy the various files from the ZIP disk on which they were
+    transported.
 
-  * Start cc:Mail
+  * It is best if the .txt files are are copied from the ZIP disk
+    to the \temp directory.  (It's hard to convince the mailer that
+    the computer's directory structure contains directories other
+    than \temp.  I have no idea why, except that, being software
+    bastardized by Hewlett-Packard, this sort of stupidity isn't
+    all that surprising.)
 
-  * Alt-MM    double click "Any Name or Post Office"
+  * Start cc:Mail, and then, for each file, do this:
 
-  * <TAB>  downarrow to "ftp-update@gildea.com"  <RET>
+  * Alt-MM    Click the "address" button.  Double click "Any Name
+        or Post Office"
+
+  * <TAB> <down arrow>  This will highlight "ftp-update@gildea.com"  <RET>
 
   * Alt-D
 
-  * Alt-CF <TAB> <TAB>  downarrow to "sddoc"  <RET>
-
-  * <shift-TAB>  downarrow to desired file, e.g. "bin.txt"  <RET>
+  * Alt-AF  Try to navigate the stupid mailer to the desired file.  <RET>
 
   * Wait for attachment to appear, then verify date & time in
          upper right corner, and verify address.
@@ -149,8 +174,6 @@ To mail files for web update:
   * Check off the file name.
 
   * Alt-MS
-
-  * <RET>
 
 -----------------------------------------------------------------
 

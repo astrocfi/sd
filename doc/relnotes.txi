@@ -10,9 +10,9 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 32.6
-@set title2 Database version = 32.6 format = 144
-@set title3 X11 UI version 1.17, SDTTY UI version 1.11
+@set title1 RELEASE NOTES FOR SD VERSION 32.8
+@set title2 Database version = 32.8 format = 147
+@set title3 X11 UI version 1.17, SDTTY UI version 1.11, SD UI version 4.8
 
 @node Top, Intro, (dir), (dir)
 
@@ -23,6 +23,9 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 32.8::
+* 32.67::
+* 32.65::
 * 32.6::
 * 32.5::
 * 32.4::
@@ -59,7 +62,7 @@ Changes as of the following versions:
 The file @file{oldnotes} has notes relating to still older versions.
 @end menu
 
-@node Intro, 32.6, Top, (dir)
+@node Intro, 32.8, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -67,14 +70,157 @@ The file @file{oldnotes} has notes relating to still older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996, 1997, 1998 William B. Ackerman
+@noindent Copyright @copyright{} 1996-1999 William B. Ackerman
 @sp 3
 @menu
-* 32.6::               Changes in the current version
+* 32.8::               Changes in the current version
 @end menu
 
 @c ************
-@node 32.6, 32.5, Intro, Top
+@node 32.8, 32.67, Intro, Top
+@unnumberedsec Version 32.8 changes
+
+This release contains @code{Sd} as well as @code{Sdtty} for Windows.
+The installation procedure has been radically revised to be more
+user-friendly, particularly with respect to placing shortcut icons
+in the appropriate places.
+
+As a consequence of this, the programs are always installed to the
+folder @file{C:\Sd}.
+
+
+There are many more options to control the appearance of the dancer
+display in @code{Sdtty} or the transcript window of @code{Sd}.
+They are:
+@example
+@group
+   pastel_color
+   bold_color
+   reverse_video
+   normal_video
+   color_by_couple
+   color_by_corner
+   no_checkers
+@end group
+@end example
+
+@noindent See the manual for details.
+
+
+The resolver was redesigned.  It now makes a much more serious
+attempt to find short resolves, even if they contain concepts.
+At C2 and above, it also attempts to show resolves with short promenade
+distances before those with long distances.
+
+Because of this, it silently defers many ``low quality'' resolves early in
+the search, saving them for later.  It may report failure several times
+before finding a resolve.  Just keep typing ``find another'' (or pressing
+function key @key{F12}).  It is simply rejecting the resolves that you
+would have rejected explicitly.  If it can't find what it
+considers really good resolves, it will go back to the ones that it
+threw away and show them to you.
+
+@c ************
+@node 32.67, 32.65, 32.8, Top
+@unnumberedsec Version 32.67 changes
+
+A bug that caused a failure in tip #8 in the C4 hall at the 1999 National
+Advanced and Challenge Convention was fixed.  We apologize for any
+inconvenience that this may have caused.
+
+A bug that caused certain types of 3x1 and 1x3 calls to fail to
+``compress'' was fixed.
+
+When an unresolved sequence is written out, a final picture is drawn,
+whether the ``keep picture'' command had been given or not.
+
+The call "hocus pocus (fractions)" has been changed to "hocus pocus
+(parts)".  Sorry, but it makes it consistent with all other similar
+calls.
+
+The syntax of the names of ``accelerator'' keys in the initialization
+file has been relaxed.  You can use either ``m'' (for meta) or ``a''
+(for alt) to mean the same thing.  This modifier key is called meta on
+some keyboards and alt on others.  It's the same thing.  Also, you may
+put hyphens into the key name, and put it in upper or lower case.  The
+command value (the rest of the line) must be in lower case.  Also, if a
+key is both meta/alt and control, you may list them in either order.
+
+@noindent Hence
+@example
+@group
+   C-M-B     phantom boxes
+   C-A-B     phantom boxes
+   M-C-B     phantom boxes
+   A-C-B     phantom boxes
+@end group
+@end example
+@noindent mean the same thing.
+
+@c ************
+@node 32.65, 32.6, 32.67, Top
+@unnumberedsec Version 32.65 changes
+
+There were no profound changes in the ``dancing'' behavior of the
+program, but there were, as usual, numerous minor changes.  Most of the
+significant changes were in the internal organization, to prepare for
+the upcoming release of @code{Sd} for Windows.
+
+The menus were reordered to put @code{<anything>}, @code{<anyone>}, and
+similar things at the end rather than the beginning.  The menu (that is,
+what you see when you type a question mark to @code{Sdtty}, or what you
+see on the screen in @code{Sd}) should look a lot more sensible now.
+
+The ``deleteword'' function has been moved from ``cv'' to ``cw''.
+Sorry.  This was done to make accelerator keys more in line with Windows
+conventions.
+
+If you have an ``[Accelerators]'' section in your initialization file, you
+will need the lines
+@example
+@group
+   cu     deleteline
+   cw     deleteword
+   f8     quoteanything
+@end group
+@end example
+
+@noindent to get the default behavior.  This file ``sample3.ini'' has been modified
+to contain this.  When in doubt, refer to that file.  You should copy
+the new bindings from that file if you have your own initialization file
+with an ``[Accelerators]'' section.  You can, of course, bind keys
+any way that you want.
+
+I recommend not binding anything to Alt-F4, Alt-F, the up/down arrow
+keys, or the page up/page down keys.  Alt-F4 is generally used to exit
+from programs, and Alt-F is an accelerator used to bring down the
+``file'' menu without using the mouse.  The up/down arrow keys and page
+up/down keys (``e6'', ``e8'', ``e1'' and ``e2'' in the sd.ini file) will
+scroll the menu.
+
+I also recommend not binding anything to the left or right cursor keys,
+or the ``home'' or ``end'' keys when in normal calling operation, since
+they facilitate editing of the input text.  When in startup or resolve
+(search) mode, binding these keys is not a problem, since input usually
+does not come from type-in.  For example, in resolve mode, right arrow
+means find another resolve, which is probably more useful than
+anything one could do in the type-in window.
+
+If you do not have an initialization file, or it does not have
+an ``[Accelerators]'' section, you do not need to do anything.
+
+The compiler used for development and manufacture of @code{Sd} and
+@code{Sdtty} was upgraded to Microsoft Visual C++ version 6.  This
+proved to be a mistake.  Version 6 has an optimizer bug that causes it
+to fail to generate the exit code for a loop in the resolver.  Compilers
+that generate incorrect code are not acceptable, so Visual C++ version 6
+was removed and version 5 was reinstalled.  Microsoft has been informed
+of the bug, as have all of my colleagues in the software development
+field.  Until this bug is fixed, I recommend that software developers
+refrain from using version 6.
+
+@c ************
+@node 32.6, 32.5, 32.65, Top
 @unnumberedsec Version 32.6 changes
 
 The last few versions wrote out their transcript files in "Unix" format,
@@ -86,7 +232,7 @@ We apologize for any unprintable cards that may have been generated.
 The program can use a different color scheme when displaying the dancers
 on the computer screen.  If the line ``color_by_couple'' is given in the
 ``[Options]'' section of the initialization file, each of the four couples
-will we displayed in a different color.  You can of course turn the colors
+will be displayed in a different color.  You can of course turn the colors
 off completely with the line ``no_color''.
 
 The programmable keys have been made more general.  The behavior of

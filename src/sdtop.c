@@ -485,6 +485,7 @@ static expand_thing rear_bone_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, 8, s_bone, s_r
 static expand_thing rear_rig_stuffa = {{1, 2, 3, 4, 5, 6, 7, 0}, 8, s_rigger, s2x4, 0};
 static expand_thing rear_rig_stuffb = {{3, 6, 4, 5, 7, 2, 0, 1}, 8, s_rigger, s1x8, 0};
 static expand_thing rear_rig_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, 8, s_rigger, s_bone, 0};
+static expand_thing rear_funnydmd   = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_qtag, s2x4, 1};
 static expand_thing rear_tgl4a_stuff = {{2, 3, 0, 1}, 4, nothing, s2x2, 0};
 static expand_thing rear_tgl4b_stuff = {{2, 3, 1, 0}, 4, nothing, s1x4, 1};
 
@@ -548,6 +549,7 @@ static expand_thing step_qtgctr_stuff = {{7, 0, 2, 1, 3, 4, 6, 5}, 8, nothing, s
 static full_expand_thing step_8ch_pair      = {warn__none,       0, &step_8ch_stuff};
 static full_expand_thing rear_1x2_pair      = {warn__rear_back,  8, &step_1x2_stuff};
 static full_expand_thing rear_bone_pair     = {warn__some_rear_back, 0, &rear_bone_stuffb};
+static full_expand_thing rear_2x2_pair      = {warn__rear_back,  8, &step_2x2v_stuff};
 static full_expand_thing step_2x2v_pair     = {warn__none,    16+2, &step_2x2v_stuff};
 static full_expand_thing step_2x2h_pair     = {warn__none,    16+1, &step_2x2h_stuff};
 static full_expand_thing step_dmd_pair      = {warn__some_touch, 0, &step_dmd_stuff};
@@ -571,14 +573,25 @@ static full_expand_thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFUL,     0x2288UL, ~0UL},      /* Rear back from parallel waves to an 8 chain. */
    {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFUL,     0x55FFUL, ~0UL},      /* Rear back from columns to end-to-end single 8-chains. */
    {warn__some_rear_back,  8, &step_qbox_stuff, s2x4,       0xFFFFUL,     0x57FDUL, ~0UL},      /* Centers rear back from 1/4-box to triangles. */
-   {warn__some_rear_back,  0, &rear_3n1a_stuff, s2x4,       0xFFFFUL,     0x2A80UL, ~0UL},      /* Some people rear back from 3&1 line to triangles. */
-   {warn__some_rear_back,  0, &rear_3n1b_stuff, s2x4,       0xFFFFUL,     0xA208UL, ~0UL},      /* Some people rear back from 3&1 line to triangles. */
-   {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFUL,       0x28UL, ~0UL},      /* Rear back from a right-hand box to a single 8 chain. */
+   /* Some people rear back from 3&1 line to triangles. */
+   {warn__some_rear_back,  0, &rear_3n1a_stuff, s2x4,       0xFFFFUL,     0x2A80UL, ~0UL},
+   /* Some people rear back from 3&1 line to triangles. */
+   {warn__some_rear_back,  0, &rear_3n1b_stuff, s2x4,       0xFFFFUL,     0xA208UL, ~0UL},
+   /* Rear back from a right-hand box to a single 8 chain. */
+   {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFUL,       0x28UL, ~0UL},
    {warn__awful_rear_back, 0, &rear_hrbox_stuff, s2x2,        0xFFUL,       0x5FUL, ~0UL},
-   {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
-   {warn__some_rear_back,  0, &rear_rig_stuffb,s_rigger,    0xFFFFUL,     0x55F5UL, 0xF5F5UL},  /* Centers rear back from a "rigger" to grand 8-chain or whatever. */
-   {warn__rear_back,       0, &rear_rig_stuffc,s_rigger,    0xFFFFUL,     0x58F2UL, 0xFFFFUL},  /* All rear back from a "rigger" to a "bone". */
-   {warn__some_rear_back,  0, &rear_bigd_stuff1,sbigdmd,  0x0FF0FFUL,   0x0520F8UL, ~0UL},      /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
+
+   /* Centers rear back from appropriate "diamonds" to T-boned pairs facing. */
+   {warn__some_rear_back,  0, &rear_funnydmd,  s_qtag,    0xFFFFUL,     0x78D2UL, ~0UL},
+
+   /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
+   {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFUL,     0x0802UL, 0x0F0FUL},
+   /* Centers rear back from a "rigger" to grand 8-chain or whatever. */
+   {warn__some_rear_back,  0, &rear_rig_stuffb,s_rigger,    0xFFFFUL,     0x55F5UL, 0xF5F5UL},
+   /* All rear back from a "rigger" to a "bone". */
+   {warn__rear_back,       0, &rear_rig_stuffc,s_rigger,    0xFFFFUL,     0x58F2UL, 0xFFFFUL},
+   /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
+   {warn__some_rear_back,  0, &rear_bigd_stuff1,sbigdmd,  0x0FF0FFUL,   0x0520F8UL, ~0UL},
    {warn__some_rear_back,  0, &rear_bigd_stuff1,sbigdmd,  0x0FF0FFUL,   0x082028UL, ~0UL},
    {warn__some_rear_back,  0, &rear_bigd_stuff2,sbigdmd,  0xFF0FF0UL,   0x2F0850UL, ~0UL},      /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
    {warn__some_rear_back,  0, &rear_bigd_stuff2,sbigdmd,  0xFF0FF0UL,   0x280820UL, ~0UL},
@@ -809,6 +822,12 @@ extern void touch_or_rear_back(
       if (scopy->kind == s1x2 && livemask != 0) {
          if (((directions ^ 0x2UL) & livemask) == 0) {
             tptr = &rear_1x2_pair;
+            goto found_tptr;
+         }
+      }
+      if (scopy->kind == s1x4 && livemask != 0) {
+         if (((directions ^ 0x28UL) & livemask) == 0) {
+            tptr = &rear_2x2_pair;
             goto found_tptr;
          }
       }

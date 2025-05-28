@@ -984,19 +984,39 @@ Private calldef_schema concentrify(
    if ((ss->kind == s3x4 || ss->kind == s3dmd) && (analyzer_result == schema_conc_12 || analyzer_result == schema_conc_star12 || analyzer_result == schema_conc_bar12))
       analyzer_result = schema_3x3_concentric;
 
-   if (analyzer_result == schema_4x4_cols_concentric || analyzer_result == schema_4x4_lines_concentric) {
+   if (analyzer_result == schema_4x4_cols_concentric ||
+       analyzer_result == schema_4x4_lines_concentric) {
 
-      /* There is a minor kludge in the tables.  For "4x4_cols" and "4x4_lines", the tables don't
-         know anything about people's facing direction, so the two analyzers are used to split vertically
-         or laterally.  Therefore, we translate, based on facing direction. */
+      /* There is a minor kludge in the tables.  For "4x4_cols" and "4x4_lines",
+         the tables don't know anything about people's facing direction,
+         so the two analyzers are used to split vertically or laterally.
+         Therefore, we translate, based on facing direction. */
 
       if (ss->kind == s4x4) {
-         uint32 tbone =    ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1 |
-                           ss->people[9].id1 | ss->people[10].id1 | ss->people[13].id1 | ss->people[14].id1 |
-                           ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
-         if ((tbone & 011) == 011) fail("Can't do this from T-bone setup.");
-         if (tbone & 1)
-            analyzer_result = (analyzer_result == schema_4x4_cols_concentric) ? schema_4x4_lines_concentric : schema_4x4_cols_concentric;
+         uint32 tbone1 =
+            ss->people[1].id1 | ss->people[2].id1 | ss->people[9].id1 | ss->people[10].id1 |
+            ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
+
+         uint32 tbone2 =
+            ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1 |
+            ss->people[3].id1 | ss->people[7].id1 | ss->people[11].id1 | ss->people[15].id1;
+
+         if (analyzer_result == schema_4x4_cols_concentric) {
+            if (!(tbone2 & 011) && (tbone1 & 001))
+               analyzer_result = schema_4x4_lines_concentric;
+            else if (!(tbone1 & 010) && (tbone2 & 001))
+               analyzer_result = schema_4x4_lines_concentric;
+            else if (tbone2 & 001)
+               fail("Can't do this from T-bone setup.");
+         }
+         else {
+            if (!(tbone1 & 011) && (tbone2 & 001))
+               analyzer_result = schema_4x4_cols_concentric;
+            else if (!(tbone2 & 010) && (tbone1 & 001))
+               analyzer_result = schema_4x4_cols_concentric;
+            else if (tbone1 & 001)
+               fail("Can't do this from T-bone setup.");
+         }
       }
    }
 

@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1995  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,8 +69,9 @@ and the following external variables:
    startup_commands
    no_graphics
    no_intensify
+   reverse_video
+   pastel_color
    no_color
-   color_by_couple
    no_sound
    random_number
    hashed_randoms
@@ -198,10 +197,14 @@ command_kind *command_command_values;
 int number_of_resolve_commands;
 Cstring *resolve_command_strings;
 resolve_command_kind *resolve_command_values;
-int no_graphics = 0;
+int no_graphics = 0;     /* 1 = "no_checkers"; 2 = "no_graphics" */
 int no_intensify = 0;
-int no_color = 0;
-int color_by_couple = 0;
+int reverse_video = 0;   /* 0 = black-on-white (default); 1 = white-on-black */
+int pastel_color = 0;    /* 1 = use pastel red/grn for color by gender;
+                            0 = bold colors.  Color by couple or color by corner
+                            are always done with bold colors. */
+int no_color = 0;        /* 0 = default (by gender); 1 = none at all;
+                            2 = by_couple; 3 = by_corner */
 int no_sound = 0;
 int random_number;
 int hashed_randoms;
@@ -1161,14 +1164,28 @@ extern long_boolean open_session(int argc, char **argv)
          }
          else if (strcmp(&args[argno][1], "no_intensify") == 0)
             { no_intensify = 1; continue; }
+         else if (strcmp(&args[argno][1], "reverse_video") == 0)
+            { reverse_video = 1; continue; }
+         else if (strcmp(&args[argno][1], "normal_video") == 0)
+            { reverse_video = 0; continue; }
+         else if (strcmp(&args[argno][1], "pastel_color") == 0)
+            { pastel_color = 1; continue; }
+         else if (strcmp(&args[argno][1], "bold_color") == 0)
+            { pastel_color = 0; continue; }
          else if (strcmp(&args[argno][1], "no_color") == 0)
             { no_color = 1; continue; }
          else if (strcmp(&args[argno][1], "color_by_couple") == 0)
-            { color_by_couple = 1; continue; }
+            { no_color = 2; continue; }
+         else if (strcmp(&args[argno][1], "color_by_corner") == 0)
+            { no_color = 3; continue; }
          else if (strcmp(&args[argno][1], "no_sound") == 0)
             { no_sound = 1; continue; }
-         else if (strcmp(&args[argno][1], "no_graphics") == 0)
+         else if (strcmp(&args[argno][1], "single_click") == 0)
+            { accept_single_click = TRUE; continue; }
+         else if (strcmp(&args[argno][1], "no_checkers") == 0)
             { no_graphics = 1; continue; }
+         else if (strcmp(&args[argno][1], "no_graphics") == 0)
+            { no_graphics = 2; continue; }
          else if (strcmp(&args[argno][1], "diagnostic") == 0)
             { diagnostic_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "singlespace") == 0)

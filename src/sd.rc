@@ -30,18 +30,78 @@ IDR_MENU1 MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "Print &Display",              ID_FILE_PRINTDISPLAY
-        MENUITEM "Print &File",                 ID_FILE_PRINTFILE
+        MENUITEM "Don't use this",              ID_FILE_PRINTDISPLAY
+        MENUITEM "Don't use this",              ID_FILE_PRINTFILE
         MENUITEM "&About Sd",                   ID_FILE_ABOUTSD
         MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
+    END
+    POPUP "&Edit text"
+    BEGIN
+        MENUITEM "Copy text",                   ID_COMMAND_COPY_TEXT
+        MENUITEM "Cut text",                    ID_COMMAND_CUT_TEXT
+        MENUITEM "Paste text",                  ID_COMMAND_PASTE_TEXT
     END
     POPUP "&Command"
     BEGIN
         MENUITEM "&Undo last call",             ID_COMMAND_UNDO
         MENUITEM "&Abort this sequence",        ID_COMMAND_ABORTTHISSEQUENCE
         MENUITEM "&End this sequence",          ID_COMMAND_ENDTHISSEQUENCE
+        MENUITEM "&Write this sequence",        ID_COMMAND_ENDTHISSEQUENCE
         MENUITEM "&Resolve",                    ID_COMMAND_RESOLVE
+        MENUITEM "Insert a comment",            ID_COMMAND_COMMENT
+        MENUITEM "Toggle concept levels",       ID_COMMAND_TOGGLE_CONC
+        MENUITEM "Toggle active phantoms",      ID_COMMAND_TOGGLE_PHAN
+        MENUITEM "Discard entered concepts",    ID_COMMAND_DISCARD_CONCEPT
+        MENUITEM "Change output file",          ID_COMMAND_CH_OUTFILE
+        MENUITEM "Change title",                ID_COMMAND_CH_TITLE
+        MENUITEM "Clipboard cut",               ID_COMMAND_CLIPBOARD_CUT
+        MENUITEM "Clipboard delete all",        ID_COMMAND_CLIPBOARD_DEL_ALL
+        MENUITEM "Clipboard delete one",        ID_COMMAND_CLIPBOARD_DEL_ONE
+        MENUITEM "Clipboard paste one",         ID_COMMAND_CLIPBOARD_PASTE_ONE
+
+        MENUITEM "Clipboard paste all",         ID_COMMAND_CLIPBOARD_PASTE_ALL
+
+        MENUITEM "Keep picture",                ID_COMMAND_KEEP_PICTURE
+        MENUITEM "Normalize",                   ID_COMMAND_NORMALIZE
+        MENUITEM "Standardize",                 ID_COMMAND_STANDARDIZE
+        MENUITEM "Reconcile",                   ID_COMMAND_RECONCILE
+    END
+    POPUP "&Pick"
+    BEGIN
+        MENUITEM "&Normalize",                  ID_COMMAND_NORMALIZE
+        MENUITEM "Rec&oncile",                  ID_COMMAND_RECONCILE
+        MENUITEM "S&tandardize",                ID_COMMAND_STANDARDIZE
+        MENUITEM "&Random call",                ID_COMMAND_PICK_RANDOM
+        MENUITEM "&Simple call",                ID_COMMAND_PICK_SIMPLE
+        MENUITEM "&Concept call",               ID_COMMAND_PICK_CONCEPT
+        MENUITEM "&Level call",                 ID_COMMAND_PICK_LEVEL
+        MENUITEM "&8 person level call",        ID_COMMAND_PICK_8P_LEVEL
+    END
+    POPUP "C&reate setup"
+    BEGIN
+        MENUITEM "&Waves",                      ID_COMMAND_CREATE_WAVES
+        MENUITEM "&2-faced lines",              ID_COMMAND_CREATE_2FL
+        MENUITEM "Lines &in",                   ID_COMMAND_CREATE_LINESIN
+        MENUITEM "Lines &out",                  ID_COMMAND_CREATE_LINESOUT
+        MENUITEM "In&verted lines",             ID_COMMAND_CREATE_INVLINES
+        MENUITEM "&3 && 1 lines",               ID_COMMAND_CREATE_3N1LINES
+        MENUITEM "&Any lines",                  ID_COMMAND_CREATE_ANYLINES
+        MENUITEM "Colum&ns",                    ID_COMMAND_CREATE_COLUMNS
+        MENUITEM "&Magic columns",              ID_COMMAND_CREATE_MAGCOL
+        MENUITEM "&DPT",                        ID_COMMAND_CREATE_DPT
+        MENUITEM "CD&PT",                       ID_COMMAND_CREATE_CDPT
+        MENUITEM "&8 chain",                    ID_COMMAND_CREATE_8CH
+        MENUITEM "&Trade by",                   ID_COMMAND_CREATE_TRBY
+        MENUITEM "An&y columns",                ID_COMMAND_CREATE_ANYCOLS
+        MENUITEM "Tida&l wave",                 ID_COMMAND_CREATE_GWV
+        MENUITEM "Any tidal setup",             ID_COMMAND_CREATE_ANY_TIDAL
+        MENUITEM "Diamonds",                    ID_COMMAND_CREATE_DMD
+        MENUITEM "1/4 tag",                     ID_COMMAND_CREATE_QTAG
+        MENUITEM "3/4 tag",                     ID_COMMAND_CREATE_3QTAG
+        MENUITEM "1/4 line",                    ID_COMMAND_CREATE_QLINE
+        MENUITEM "3/4 line",                    ID_COMMAND_CREATE_3QLINE
+        MENUITEM "Any 1/4 tag",                 ID_COMMAND_CREATE_ANY_QTAG
     END
 END
 
@@ -87,14 +147,14 @@ BEGIN
                     IDC_STATIC,43,9,159,8
     CTEXT           "This program may be freely distributed.",IDC_STATIC,43,
                     19,159,8
-    CTEXT           "SD Version 32.6:    Copyright © 1990-1999 All rights reserved.",
-                    IDC_STATIC,15,32,195,8
+    CTEXT           "SD Version 32.8:    Copyright © 1990-1999 All rights reserved.",
+                    IDC_STATIC,13,32,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     42,130,8
     CTEXT           "Parser Version 1.6:    Copyright © 1992-1993 All rights reserved.",
                     IDC_STATIC,12,52,201,8
     CTEXT           "Alan Snyder",IDC_STATIC,93,62,39,8
-    CTEXT           "GUI Version 4.0:    Copyright © 1995 All rights reserved.",
+    CTEXT           "GUI Version 4.8:    Copyright © 1995 All rights reserved.",
                     IDC_STATIC,24,72,176,8
     CTEXT           "Robert E. Cays",IDC_STATIC,88,82,48,8
     DEFPUSHBUTTON   "OK",IDOK,96,96,32,14,WS_GROUP
@@ -109,20 +169,21 @@ BEGIN
     GROUPBOX        "Choose a session",IDC_START_CAPTION,6,1,360,157,
                     WS_TABSTOP
     LISTBOX         IDC_START_LIST,6,14,360,144,WS_VSCROLL
-    DEFPUSHBUTTON   "Accept",IDC_START_ACCEPT,17,222,50,14
+    DEFPUSHBUTTON   "Accept",IDC_START_ACCEPT,17,222,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDC_START_CANCEL,69,222,50,14
     GROUPBOX        "Output file name",IDC_STATIC,17,255,102,23,BS_CENTER
     EDITTEXT        IDC_OUTPUT_NAME,17,266,102,12,ES_AUTOHSCROLL
     GROUPBOX        "Calls Database",IDC_STATIC,136,200,102,49,BS_CENTER
-    CONTROL         "Default",IDC_DEFAULT,"Button",BS_AUTORADIOBUTTON,150,
-                    212,78,12
+    CONTROL         "Default",IDC_DEFAULT,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,150,212,78,12
     CONTROL         "User Selected",IDC_USERDEFINED,"Button",
                     BS_AUTORADIOBUTTON,150,227,78,12
     GROUPBOX        "Database file name",IDC_STATIC,136,255,102,23,BS_CENTER
-    EDITTEXT        IDC_DATABASE_NAME,136,266,102,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DATABASE_NAME,136,266,102,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
     GROUPBOX        "Call List Options",IDC_STATIC,255,170,102,79,BS_CENTER
     CONTROL         "Normal operation",IDC_NORMAL,"Button",
-                    BS_AUTORADIOBUTTON,269,185,78,12
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,269,185,78,12
     CONTROL         "Save list",IDC_WRITE_LIST,"Button",BS_AUTORADIOBUTTON,
                     269,200,78,12
     CONTROL         "Save full list",IDC_WRITE_FULL_LIST,"Button",
@@ -131,20 +192,11 @@ BEGIN
                     BS_AUTORADIOBUTTON,269,230,78,12
     GROUPBOX        "Call list file name",IDC_STATIC,255,255,102,23,
                     BS_CENTER
-    EDITTEXT        IDC_CALL_LIST_NAME,255,266,102,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CALL_LIST_NAME,255,266,102,12,ES_AUTOHSCROLL | 
+                    WS_DISABLED
     CONTROL         "Delete this session",IDC_START_DELETE_SESSION_CHECKED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,143,183,92,10
     LTEXT           "",IDC_START_COMMENTARY,12,180,115,8,NOT WS_GROUP
-END
-
-IDD_CALLS_DIALOG DIALOG DISCARDABLE  8, 22, 226, 315
-STYLE WS_CHILD | WS_VISIBLE | WS_BORDER
-FONT 8, "MS Sans Serif"
-BEGIN
-    EDITTEXT        IDC_CALL_EDIT,4,18,218,12,ES_AUTOHSCROLL
-    LISTBOX         IDC_CALL_LIST,4,35,218,265,WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "Accept",IDC_CALL_ACCEPT,87,297,50,14
-    LTEXT           "Calls",IDC_CALL_TITLE,4,4,85,8
 END
 
 IDD_TEXT_ENTRY_DIALOG DIALOG DISCARDABLE  86, 105, 208, 83
@@ -155,7 +207,7 @@ BEGIN
     EDITTEXT        IDC_FILE_EDIT,9,31,190,12,ES_AUTOHSCROLL
     LTEXT           "",IDC_FILE_TEXT,9,14,190,9
     PUSHBUTTON      "Cancel",IDC_FILE_CANCEL,141,63,50,14
-    PUSHBUTTON      "Accept",IDC_FILE_ACCEPT,76,63,50,14
+    DEFPUSHBUTTON   "Accept",IDC_FILE_ACCEPT,76,63,50,14
 END
 
 
@@ -168,6 +220,108 @@ END
 // remains consistent on all systems.
 IDI_ICON1               ICON    DISCARDABLE     "sd.ico"
 IDI_ICON2               ICON    DISCARDABLE     "sdtty.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP  DISCARDABLE     "sd.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_PRINTDISPLAY    "Don't use this"
+    ID_FILE_PRINTFILE       "Don't use this"
+    ID_FILE_ABOUTSD         "Display program information and copyright."
+    ID_FILE_EXIT            "Exit from the program."
+    ID_COMMAND_UNDO         "Undo last call or concept, or exit from current search."
+    ID_COMMAND_ABORTTHISSEQUENCE 
+                            "Stop the current sequence WITHOUT WRITING IT OUT; start over."
+    ID_COMMAND_ENDTHISSEQUENCE 
+                            "Write this (resolved) sequence to the file, and start the next one."
+    ID_COMMAND_RESOLVE      "Search for resolves for the current sequence."
+    ID_COMMAND_COMMENT      "This lets you type a ""comment"" that will appear in the transcript."
+    ID_COMMAND_CH_OUTFILE   "Change the filename for the finished transcript file."
+    ID_COMMAND_TOGGLE_CONC  "Toggles (turn on or off) the ability to use concepts that aren't legal at this level."
+    ID_COMMAND_TOGGLE_PHAN  "Toggles the presence of ""active phantoms"".  Do you really want to do this?"
+    ID_COMMAND_DISCARD_CONCEPT 
+                            "Erase whatever concepts you had entered prior to entering a call."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_COMMAND_CH_TITLE     "Change the title that is printed at the top of all cards."
+    ID_COMMAND_CLIPBOARD_CUT 
+                            "Remove (cut) the last call, and move it to the clipboard."
+    ID_COMMAND_CLIPBOARD_DEL_ALL 
+                            "Throw away the entire clipbaord.  Its contents are lost."
+    ID_COMMAND_CLIPBOARD_DEL_ONE 
+                            "Throw away the first call on the clipboard, leaving all the rest."
+    ID_COMMAND_CLIPBOARD_PASTE_ONE 
+                            "Move the first call on the clipboard back to the active sequence."
+    ID_COMMAND_CLIPBOARD_PASTE_ALL 
+                            "Move the entire contents of the clipboard back to the active sequence."
+    ID_COMMAND_KEEP_PICTURE "Cause the current picture (setup diagram) to be printed on the card."
+    ID_COMMAND_NORMALIZE    "Search for a call or calls that leave an 8-person setup with no phantoms"
+    ID_COMMAND_STANDARDIZE  "Search for a call or calls that leave a setup that isn't T-boned."
+    ID_COMMAND_RECONCILE    "Search for a call or calls, not at the end of the sequence, that makes it resolve."
+    ID_COMMAND_PICK_RANDOM  "Search for any legal call or concept/call combination."
+    ID_COMMAND_PICK_SIMPLE  "Search for any legal call, but with no concepts."
+    ID_COMMAND_PICK_CONCEPT "Search for any concept/call combination."
+    ID_COMMAND_PICK_LEVEL   "Search for any call that is interesting at this level."
+    ID_COMMAND_PICK_8P_LEVEL 
+                            "Search for an 8-person call that is interesting at this level."
+    ID_COMMAND_CREATE_WAVES "Search for calls that create a setup of parallel waves."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_COMMAND_CREATE_QTAG  "Search for calls that create a setup of a 1/4 tag."
+    ID_COMMAND_CREATE_3QTAG "Search for calls that create a setup of a 3/4 tag."
+    ID_COMMAND_CREATE_QLINE "Search for calls that create a setup of a 1/4 line."
+    ID_COMMAND_CREATE_3QLINE 
+                            "Search for calls that create a setup of a 3/4 line."
+    ID_COMMAND_CREATE_ANY_QTAG 
+                            "Search for calls that create a setup of any general 1/4 tag."
+    ID_COMMAND_COPY_TEXT    "Copy contents of input box to Windows clipboard."
+    ID_COMMAND_CUT_TEXT     "Cut contents of input box to Windows clipboard."
+    ID_COMMAND_PASTE_TEXT   "Paste text from Windows clipboard into input box."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_COMMAND_CREATE_2FL   "Search for calls that create a setup of parallel 2-faced lines."
+    ID_COMMAND_CREATE_LINESIN 
+                            "Search for calls that create a setup of lines facing."
+    ID_COMMAND_CREATE_LINESOUT 
+                            "Search for calls that create a setup of lines back-to-back."
+    ID_COMMAND_CREATE_INVLINES 
+                            "Search for calls that create a setup of parallel inverted lines."
+    ID_COMMAND_CREATE_3N1LINES 
+                            "Search for calls that create a setup of any parallel 3&1 lines."
+    ID_COMMAND_CREATE_ANYLINES 
+                            "Search for calls that create a setup of any parallel lines."
+    ID_COMMAND_CREATE_COLUMNS 
+                            "Search for calls that create a setup of right- or left-handed columns."
+    ID_COMMAND_CREATE_MAGCOL 
+                            "Search for calls that create a setup of magic columns."
+    ID_COMMAND_CREATE_GWV   "Search for calls that create a setup of a right- or left-handed tidal wave."
+    ID_COMMAND_CREATE_DPT   "Search for calls that create a setup of a starting DPT."
+    ID_COMMAND_CREATE_CDPT  "Search for calls that create a setup of a completed DPT."
+    ID_COMMAND_CREATE_8CH   "Search for calls that create a setup of an 8-chain."
+    ID_COMMAND_CREATE_TRBY  "Search for calls that create a setup of a trade-by."
+    ID_COMMAND_CREATE_ANYCOLS 
+                            "Search for calls that create a setup of any general columns."
+    ID_COMMAND_CREATE_ANY_TIDAL 
+                            "Search for calls that create a setup of any tidal line or column."
+    ID_COMMAND_CREATE_DMD   "Search for calls that create a setup of any parallel diamonds."
+END
+
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

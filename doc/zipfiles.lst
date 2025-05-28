@@ -1,0 +1,14 @@
+..\sd\sd.exe
+..\sd\sdtty.exe
+..\sd\mkcalls.exe
+..\sd\sd_calls.txt
+..\sd\sd_calls.dat
+..\sd\sdtty.ico
+..\sd\SD.lnk
+..\sd\SDTTY.lnk
+"..\sd\Edit sd.ini.lnk"
+sample1.ini
+sample2.ini
+sample3.ini
+readme
+deploy.cmd

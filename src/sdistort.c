@@ -1291,8 +1291,10 @@ Private long_boolean search_row(
 
    lose:
 
-   if (n < 0) return FALSE;
-   fail("Can't identify distorted line or column.");
+   if (n >= 0)
+      fail("Can't identify distorted line or column.");
+
+   return FALSE;
 }
 
 
@@ -2351,6 +2353,24 @@ common_spot_map cmaps[] = {
          {       0,       0, d_north, d_north,       0,       0, d_south, d_south},
          {      -1,      -1,       5,       7,      -1,      -1,      13,      15},
          {       0,       0, d_south, d_south,       0,       0, d_north, d_north}},
+
+   /* Common spot lines from a 2x8        Occupied as     ^V..^V..
+                                                          ..^V..^V   (or other way)
+      they become 2-faced lines */
+
+   {8, s2x8, s2x4, 0, 0,
+         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,      -1,       5,      -1,       8,      -1,      13,      -1},
+         { d_north,       0, d_south,       0, d_south,       0, d_north,       0},
+         {       1,      -1,       4,      -1,       9,      -1,      12,      -1},
+         { d_south,       0, d_north,       0, d_north,       0, d_south,       0}},
+
+   {8, s2x8, s2x4, 0, 0,
+         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,       2,      -1,       7,      -1,      10,      -1,      15},
+         {       0, d_north,       0, d_south,       0, d_south,       0, d_north},
+         {      -1,       3,      -1,       6,      -1,      11,      -1,      14},
+         {       0, d_south,       0, d_north,       0, d_north,       0, d_south}},
 
    /* Common spot lines from a 2x8        Occupied as     ^V^V....
                                                           ....^V^V   (or other way)

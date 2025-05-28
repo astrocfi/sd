@@ -1,4 +1,4 @@
-pushd \wba\sd\vc\sdtty
+pushd \wba\sd\vc\sd\sdtty
 copy \wba\sd\sd_calls.dat .
 copy \wba\sd\sd.ini .
 popd

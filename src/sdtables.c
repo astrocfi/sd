@@ -1,8 +1,6 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -110,6 +108,7 @@
    map_rh_c1phanb
    map_rh_s2x3_3
    map_rh_s2x3_2
+   map_d1x10
    map_lz12
    map_rz12
    map_dmd_1x1
@@ -134,67 +133,69 @@
 */
 
 #include "sd.h"
+#include "resource.h"
 
 command_list_menu_item command_menu[] = {
-   {"exit the program",               command_quit},
-   {"quit the program",               command_quit},
-   {"simple modifications",           command_simple_mods},
-   {"allow modifications",            command_all_mods},
-   {"toggle concept levels",          command_toggle_conc_levels},
-   {"toggle active phantoms",         command_toggle_act_phan},
-   {"toggle retain after error",      command_toggle_retain_after_error},
-   {"toggle nowarn mode",             command_toggle_nowarn_mode},
-   {"undo last call",                 command_undo},
-   {"discard entered concepts",       command_erase},
-   {"abort this sequence",            command_abort},
-   {"insert a comment",               command_create_comment},
-   {"change output file",             command_change_outfile},
-   {"change title",                   command_change_header},
-   {"write this sequence",            command_getout},
-   {"end this sequence",              command_getout},
-   {"cut to clipboard",               command_cut_to_clipboard},
-   {"clipboard cut",                  command_cut_to_clipboard},
-   {"delete entire clipboard",        command_delete_entire_clipboard},
-   {"clipboard delete all",           command_delete_entire_clipboard},
-   {"delete one call from clipboard", command_delete_one_call_from_clipboard},
-   {"clipboard delete one",           command_delete_one_call_from_clipboard},
-   {"paste one call",                 command_paste_one_call},
-   {"clipboard paste one",            command_paste_one_call},
-   {"paste all calls",                command_paste_all_calls},
-   {"clipboard paste all",            command_paste_all_calls},
-   {"keep picture",                   command_save_pic},
-   {"refresh display",                command_refresh},
-   {"resolve",                        command_resolve},
-   {"normalize",                      command_normalize},
-   {"standardize",                    command_standardize},
-   {"reconcile",                      command_reconcile},
-   {"pick random call",               command_random_call},
-   {"pick simple call",               command_simple_call},
-   {"pick concept call",              command_concept_call},
-   {"pick level call",                command_level_call},
-   {"pick 8 person level call",       command_8person_level_call},
-   {"create any lines",               command_create_any_lines},
-   {"create waves",                   command_create_waves},
-   {"create 2fl",                     command_create_2fl},
-   {"create lines in",                command_create_li},
-   {"create lines out",               command_create_lo},
-   {"create inverted lines",          command_create_inv_lines},
-   {"create 3x1 lines",               command_create_3and1_lines},
-   {"create any columns",             command_create_any_col},
-   {"create columns",                 command_create_col},
-   {"create magic columns",           command_create_magic_col},
-   {"create dpt",                     command_create_dpt},
-   {"create cdpt",                    command_create_cdpt},
-   {"create trade by",                command_create_tby},
-   {"create 8 chain",                 command_create_8ch},
-   {"create any 1/4 tag",             command_create_any_qtag},
-   {"create 1/4 tag",                 command_create_qtag},
-   {"create 3/4 tag",                 command_create_3qtag},
-   {"create 1/4 line",                command_create_qline},
-   {"create 3/4 line",                command_create_3qline},
-   {"create diamonds",                command_create_dmd},
-   {"create any tidal setup",         command_create_any_tidal},
-   {"create tidal wave",              command_create_tidal_wave},
+   {"exit the program",               command_quit, ID_FILE_EXIT},
+   {"quit the program",               command_quit, -1},
+   {"simple modifications",           command_simple_mods, -1},
+   {"allow modifications",            command_all_mods, -1},
+   {"toggle concept levels",          command_toggle_conc_levels, ID_COMMAND_TOGGLE_CONC},
+   {"toggle active phantoms",         command_toggle_act_phan, ID_COMMAND_TOGGLE_PHAN},
+   {"toggle retain after error",      command_toggle_retain_after_error, -1},
+   {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
+   {"toggle singleclick mode",        command_toggle_singleclick_mode, -1},
+   {"undo last call",                 command_undo, ID_COMMAND_UNDO},
+   {"discard entered concepts",       command_erase, ID_COMMAND_DISCARD_CONCEPT},
+   {"abort this sequence",            command_abort, ID_COMMAND_ABORTTHISSEQUENCE},
+   {"insert a comment",               command_create_comment, ID_COMMAND_COMMENT},
+   {"change output file",             command_change_outfile, ID_COMMAND_CH_OUTFILE},
+   {"change title",                   command_change_header, ID_COMMAND_CH_TITLE},
+   {"write this sequence",            command_getout, -1},
+   {"end this sequence",              command_getout, ID_COMMAND_ENDTHISSEQUENCE},
+   {"cut to clipboard",               command_cut_to_clipboard, -1},
+   {"clipboard cut",                  command_cut_to_clipboard, ID_COMMAND_CLIPBOARD_CUT},
+   {"delete entire clipboard",        command_delete_entire_clipboard, -1},
+   {"clipboard delete all",           command_delete_entire_clipboard, ID_COMMAND_CLIPBOARD_DEL_ALL},
+   {"delete one call from clipboard", command_delete_one_call_from_clipboard, -1},
+   {"clipboard delete one",           command_delete_one_call_from_clipboard, ID_COMMAND_CLIPBOARD_DEL_ONE},
+   {"paste one call",                 command_paste_one_call, -1},
+   {"clipboard paste one",            command_paste_one_call, ID_COMMAND_CLIPBOARD_PASTE_ONE},
+   {"paste all calls",                command_paste_all_calls, ID_COMMAND_CLIPBOARD_PASTE_ALL},
+   {"clipboard paste all",            command_paste_all_calls, -1},
+   {"keep picture",                   command_save_pic, ID_COMMAND_KEEP_PICTURE},
+   {"refresh display",                command_refresh, -1},
+   {"resolve",                        command_resolve, ID_COMMAND_RESOLVE},
+   {"normalize",                      command_normalize, ID_COMMAND_NORMALIZE},
+   {"standardize",                    command_standardize, ID_COMMAND_STANDARDIZE},
+   {"reconcile",                      command_reconcile, ID_COMMAND_RECONCILE},
+   {"pick random call",               command_random_call, ID_COMMAND_PICK_RANDOM},
+   {"pick simple call",               command_simple_call, ID_COMMAND_PICK_SIMPLE},
+   {"pick concept call",              command_concept_call, ID_COMMAND_PICK_CONCEPT},
+   {"pick level call",                command_level_call, ID_COMMAND_PICK_LEVEL},
+   {"pick 8 person level call",       command_8person_level_call, ID_COMMAND_PICK_8P_LEVEL},
+   {"create waves",                   command_create_waves, ID_COMMAND_CREATE_WAVES},
+   {"create 2fl",                     command_create_2fl, ID_COMMAND_CREATE_2FL},
+   {"create lines in",                command_create_li, ID_COMMAND_CREATE_LINESIN},
+   {"create lines out",               command_create_lo, ID_COMMAND_CREATE_LINESOUT},
+   {"create inverted lines",          command_create_inv_lines, ID_COMMAND_CREATE_INVLINES},
+   {"create 3x1 lines",               command_create_3and1_lines, ID_COMMAND_CREATE_3N1LINES},
+   {"create any lines",               command_create_any_lines, ID_COMMAND_CREATE_ANYLINES},
+   {"create columns",                 command_create_col, ID_COMMAND_CREATE_COLUMNS},
+   {"create magic columns",           command_create_magic_col, ID_COMMAND_CREATE_MAGCOL},
+   {"create dpt",                     command_create_dpt, ID_COMMAND_CREATE_DPT},
+   {"create cdpt",                    command_create_cdpt, ID_COMMAND_CREATE_CDPT},
+   {"create 8 chain",                 command_create_8ch, ID_COMMAND_CREATE_8CH},
+   {"create trade by",                command_create_tby, ID_COMMAND_CREATE_TRBY},
+   {"create any columns",             command_create_any_col, ID_COMMAND_CREATE_ANYCOLS},
+   {"create tidal wave",              command_create_tidal_wave, ID_COMMAND_CREATE_GWV},
+   {"create any tidal setup",         command_create_any_tidal, ID_COMMAND_CREATE_ANY_TIDAL},
+   {"create diamonds",                command_create_dmd, ID_COMMAND_CREATE_DMD},
+   {"create 1/4 tag",                 command_create_qtag, ID_COMMAND_CREATE_QTAG},
+   {"create 3/4 tag",                 command_create_3qtag, ID_COMMAND_CREATE_3QTAG},
+   {"create 1/4 line",                command_create_qline, ID_COMMAND_CREATE_QLINE},
+   {"create 3/4 line",                command_create_3qline, ID_COMMAND_CREATE_3QLINE},
+   {"create any 1/4 tag",             command_create_any_qtag, ID_COMMAND_CREATE_ANY_QTAG},
    {(Cstring) 0}};
 
 resolve_list_menu_item resolve_menu[] = {
@@ -211,7 +212,7 @@ resolve_list_menu_item resolve_menu[] = {
    {"write this sequence",    resolve_command_write_this},
    {(Cstring) 0}};
 
-/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sd.h . */
+/* BEWARE!!  This list is keyed to the definition of "start_select_kind" in sdui.h . */
 Cstring startup_commands[] = {
    "exit from the program",
    "heads 1p2p",
@@ -223,6 +224,7 @@ Cstring startup_commands[] = {
    "toggle active phantoms",
    "toggle retain after error",
    "toggle nowarn mode",
+   "toggle singleclick mode",
    "toggle singing call",
    "toggle reverse singing call",
    "initialize session file",
@@ -1049,9 +1051,9 @@ dance_level higher_acceptable_level[] = {
 Cstring concept_key_table[] = {
    /* These are the standard bindings. */
    "cu     deleteline",
-   "cv     deleteword",
-   "e6     lineup",                 /* up arrow */
-   "e8     linedown",               /* down arrow */
+   "cx     deleteword",
+   "e6     lineup",
+   "e8     linedown",
    "e1     pageup",
    "e2     pagedown",
    "+f1    heads start",
@@ -1063,11 +1065,8 @@ Cstring concept_key_table[] = {
    "sf3    pick concept call",
    "cf3    pick simple call",
    "f4     resolve",
-   "e4     resolve",            /* home */
    "sf4    reconcile",
    "cf4    normalize",
-   "af4    exit the program",
-   "+af4   exit from the program",
    "f5     refresh display",
    "sf5    keep picture",
    "cf5    insert a comment",
@@ -1090,8 +1089,6 @@ Cstring concept_key_table[] = {
    "*sf9   abort the search",
    "f10    write this sequence",
    "*f10   write this sequence",
-   "e3     write this sequence",    /* end */
-   "*e3    write this sequence",    /* end */
    "sf10   change output file",
    "+sf10  change output file",
    "f11    pick level call",
@@ -1111,12 +1108,12 @@ Cstring menu_names[] = {
    "???",
    "???",
    "(any setup)",
-   "grand wave",
-   "left grand wave",
+   "tidal wave",
+   "left tidal wave",
    "dpt",
    "cdpt",
-   "column",
-   "left column",
+   "columns",
+   "left columns",
    "8 chain",
    "trade by",
    "facing lines",
@@ -1125,7 +1122,7 @@ Cstring menu_names[] = {
    "left waves",
    "2-faced lines",
    "left 2-faced lines",
-   "grand column",
+   "tidal column",
    "diamond/qtag"};
 
 
@@ -2040,21 +2037,26 @@ cm_thing conc_init_table[] = {
              6, 12, s1x6,    s2x6,     18, 0, 0, 1, 1,  0x2FB, schema_concentric},
 
 
-   {s4x4,           Z, {11, 15, 3, 7,
-                           12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s2x2,     s2x4,     16, 1, 0, 2, 1,  0x2F7, schema_concentric},
-   {s4x4,           Z, {15, 3, 7, 11,
-                           12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s2x2,     s2x4,     16, 0, 0, 2, 1,  0x2FB, schema_concentric},
-   {s2x6,           Z, {9, 2, 3, 8,
-                           0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x2,     s2x4,     12, 1, 0, 9, 1,  0x2FD, schema_concentric},
-   {s2x6,           Z, {2, 3, 8, 9,
-                           0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x2,     s2x4,     12, 0, 0, 9, 1,  0x2FE, schema_concentric},
-   {s3dmd,         G3, {9, 10, 11, 3, 4, 5,                                             /* This was 2FE VVV */
-                                  0, 1, 2, 6, 7, 8},       6, 6, s1x6,     s2x3,     12, 0, 0, 2, 1,  0x0FB, schema_concentric},
-   {s3x8,          G3, {21, 22, 23, 9, 10, 11,
-                                  19, 20, 0, 7, 8, 12},    6, 6, s1x6,     s2x3,     24, 0, 1, 1, 1,  0x0F7, schema_concentric},
+   {s4x4,           Z, {11, 15, 3, 7,    12, 13, 14, 0, 4, 5, 6, 8},
+             4, 8, s2x2,     s2x4,     16, 1, 0, 2, 1,  0x2F7, schema_concentric},
+   {s4x4,           Z, {15, 3, 7, 11,    12, 13, 14, 0, 4, 5, 6, 8},
+             4, 8, s2x2,     s2x4,     16, 0, 0, 2, 1,  0x2FB, schema_concentric},
 
-   {s4dmd,         C4, {12, 13, 15, 14, 4, 5, 7, 6,
-                          0, 1, 2, 3, 8, 9, 10, 11},       8, 8, s1x8,     s2x4,     16, 0, 0, 2, 1,  0x0FB, schema_concentric},
+   {s2x6,           Z, {9, 2, 3, 8,      0, 1, 4, 5, 6, 7, 10, 11},
+             4, 8, s2x2,     s2x4,     12, 1, 0, 9, 1,  0x2FD, schema_concentric},
+   {s2x6,           Z, {2, 3, 8, 9,      0, 1, 4, 5, 6, 7, 10, 11},
+             4, 8, s2x2,     s2x4,     12, 0, 0, 9, 1,  0x2FE, schema_concentric},
+
+   {s3dmd,         G3, {9, 10, 11, 3, 4, 5,          0, 1, 2, 6, 7, 8},
+             6, 6, s1x6,     s2x3,     12, 0, 0, 2, 1,  0x0FB, schema_concentric},
+   {s3x8,          G3, {21, 22, 23, 9, 10, 11,       19, 20, 0, 7, 8, 12},
+             6, 6, s1x6,     s2x3,     24, 0, 1, 1, 1,  0x0F7, schema_concentric},
+
+   {s4dmd,         C4, {12, 13, 15, 14, 4, 5, 7, 6,      0, 1, 2, 3, 8, 9, 10, 11},
+             8, 8, s1x8,     s2x4,     16, 0, 0, 2, 1,  0x0FB, schema_concentric},
+   {s4dmd,         L4, {12, 13, 15, 14, 4, 5, 7, 6,      0, 1, 2, 3, 8, 9, 10, 11},
+             8, 8, s1x8,     s2x4,     16, 0, 0, 2, 1,  0x100, XXX},
+
 
    {sbigrig,        Z, {11, 4, 5, 10,
                            0, 1, 3, 2, 6, 7, 9, 8},        4, 8, s2x2,     s1x8,     12, 1, 0, 9, 1,  0x2F5, schema_concentric},
@@ -2151,14 +2153,21 @@ cm_thing conc_init_table[] = {
    {s_short6,       Z, {5, 0, 2, 3,    4, 1},              4, 2, s2x2,     s1x2,     6,  1, 1, 2, 1,  0x0FA, schema_concentric},
    {s_short6,       Z, {5, 3, 0, 2,    4, 1},              2, 2, s1x2,     s1x2,     6,  0, 1, 2, 2,  0x2F5, schema_concentric_others},
 
-   {s2x4,          OT, {1, 2, 6, 5,    0, 3, 4, 7},        2, 4, s1x2,     s2x2,     8,  0, 0, 1, 2,  0x100, schema_nothing},
-   {s_galaxy,      IL, {0, 3, 5, 4, 7, 1,    6, 2},        3, 2, s_trngl,  s1x2,     8,  3, 1, 1, 2,  0x0FE, schema_intlk_lateral_6},
-   {s_hrglass,     IV, {7, 0, 1, 3, 4, 5,    6, 2},        3, 2, s_trngl,  s1x2,     8,  0, 0, 1, 2,  0x0FE, schema_intlk_vertical_6},
-   {s_galaxy,      IV, {2, 5, 7, 6, 1, 3,    0, 4},        3, 2, s_trngl,  s1x2,     8,  2, 0, 1, 2,  0x0FD, schema_intlk_vertical_6},
-   {s_galaxy,      L6, {7, 0, 1, 3, 4, 5,    6, 2},        6, 2, s_short6, s1x2,     8,  1, 1, 1, 1,  0x100, schema_nothing},
-   {s_galaxy,      V6, {1, 2, 3, 5, 6, 7,    0, 4},        6, 2, s_short6, s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s2x4,          OT, {1, 2, 6, 5,    0, 3, 4, 7},
+             2, 4, s1x2,     s2x2,     8,  0, 0, 1, 2,  0x100, schema_nothing},
+   {s_galaxy,      IL, {0, 3, 5, 4, 7, 1,    6, 2},
+             3, 2, s_trngl,  s1x2,     8,  3, 1, 1, 2,  0x0FE, schema_intlk_lateral_6},
+   {s_hrglass,     IV, {7, 0, 1, 3, 4, 5,    6, 2},
+             3, 2, s_trngl,  s1x2,     8,  0, 0, 1, 2,  0x0FE, schema_intlk_vertical_6},
+   {s_galaxy,      IV, {2, 5, 7, 6, 1, 3,    0, 4},
+             3, 2, s_trngl,  s1x2,     8,  2, 0, 1, 2,  0x0FD, schema_intlk_vertical_6},
+   {s_galaxy,      L6, {7, 0, 1, 3, 4, 5,    6, 2},
+             6, 2, s_short6, s1x2,     8,  1, 1, 1, 1,  0x100, schema_nothing},
+   {s_galaxy,      V6, {1, 2, 3, 5, 6, 7,    0, 4},
+             6, 2, s_short6, s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
    /* This next one is duplicate!  It has to be! */
-   {s_hrglass,     V6, {5, 0, 3, 1, 4, 7,    6, 2},        6, 2, s_bone6,  s1x2,     8,  1, 0, 1, 1,  0x100, schema_nothing},
+   {s_hrglass,     V6, {5, 0, 3, 1, 4, 7,    6, 2},
+             6, 2, s_bone6,  s1x2,     8,  1, 0, 1, 1,  0x100, schema_nothing},
 
 
    {s2x8,          QL, {0, 1, 14, 15, 6, 7, 8, 9,       2, 3, 4, 5, 10, 11, 12, 13},
@@ -2225,112 +2234,177 @@ cm_thing conc_init_table[] = {
 
 
    {s4x4,          TL, {8, 6, 4, 5, 12, 13, 0, 14,
-                                       15, 3, 7, 11},      4, 4, s1x4,     s2x2,     12, 0, 0, 2, 2,  0x0FB, TL},
-   {s1x8,          GS, {2, 6, 3, 7, 1, 5,    0, 4},        2, 2, s1x2,     s1x2,     8,  0, 0, 1, 3,  0x0FA, schema_grand_single_concentric},
-   {s_spindle,     GS, {5, 1, 6, 0, 4, 2,    7, 3},        2, 2, s1x2,     s1x2,     8,  1, 0, 1, 3,  0x0F5, schema_grand_single_concentric},
-   {s1x6,          GS, {2, 5, 1, 4,    0, 3},              2, 2, s1x2,     s1x2,     6,  0, 0, 1, 2,  0x0FA, schema_grand_single_concentric},
-   {s1x4,          SI, {1, 3,          0, 2},              2, 2, s1x2,     s1x2,     4,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {sdmd,          SI, {3, 1,          0, 2},              2, 2, s1x2,     s1x2,     4,  1, 0, 1, 1,  0x0F5, schema_concentric},
+                                       15, 3, 7, 11},
+             4, 4, s1x4,     s2x2,     12, 0, 0, 2, 2,  0x0FB, TL},
+   {s1x8,          GS, {2, 6, 3, 7, 1, 5,    0, 4},
+             2, 2, s1x2,     s1x2,     8,  0, 0, 1, 3,  0x0FA, schema_grand_single_concentric},
+   {s_spindle,     GS, {5, 1, 6, 0, 4, 2,    7, 3},
+             2, 2, s1x2,     s1x2,     8,  1, 0, 1, 3,  0x0F5, schema_grand_single_concentric},
+   {s1x6,          GS, {2, 5, 1, 4,    0, 3},
+             2, 2, s1x2,     s1x2,     6,  0, 0, 1, 2,  0x0FA, schema_grand_single_concentric},
+   {s1x4,          SI, {1, 3,          0, 2},
+             2, 2, s1x2,     s1x2,     4,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {sdmd,          SI, {3, 1,          0, 2},
+             2, 2, s1x2,     s1x2,     4,  1, 0, 1, 1,  0x0F5, schema_concentric},
    {s_wingedstar16,S6, {2, 3, 5, 4, 6, 7, 14, 15, 13, 12, 10, 11,
-                           0, 1, 8, 9},                    4, 4, s_star,   s1x4,     16, 0, 0, 1, 3,  0x0FA, schema_conc_star16},
+                           0, 1, 8, 9},
+             4, 4, s_star,   s1x4,     16, 0, 0, 1, 3,  0x0FA, schema_conc_star16},
 
-   {s4x4,          L4, {10, 15, 3, 1, 2, 7, 11, 9,
-                           12, 13, 14, 0, 4, 5, 6, 8},     8, 8, s2x4,     s2x4,     16, 0, 0, 2, 1,  0x0FB, schema_concentric},
-   {s4x4,          C4, {6, 11, 15, 13, 14, 3, 7, 5,
-                           8, 9, 10, 12, 0, 1, 2, 4},      8, 8, s2x4,     s2x4,     16, 1, 1, 2, 1,  0x100, XXX},
-   {s4x6,          L4, {10, 9, 8, 7, 22, 21, 20, 19,                                 /* This used to be 2FD, need this for 4x4 countershake from blocks */
-                           17, 18, 11, 0, 5, 6, 23, 12},   8, 8, s2x4,     s2x4,     16, 0, 1, 2, 1,  0x0F7, schema_concentric},
-   {s4x6,          C4, {10, 9, 8, 7, 22, 21, 20, 19,
-                           17, 18, 11, 0, 5, 6, 23, 12},   8, 8, s2x4,     s2x4,     16, 0, 1, 2, 1,  0x100, XXX},
-
-   {s_wingedstar12,S2, {2, 3, 4, 11, 10, 5, 8, 9,
-                           0, 1, 6, 7},                    4, 4, s_star,   s1x4,     12, 0, 0, 1, 2,  0x0FA, schema_conc_star12},
-
-                /* elong used to be 1, changed to 2 to make 12 matrix relay the diamond work.  V  */
-   {s3x4,          G3, {8, 11, 1, 2, 5, 7,
-                           9, 10, 0, 3, 4, 6},             6, 6, s2x3,     s2x3,     12, 1, 1, 2, 1,  0x0FA, schema_concentric},
-   {s_d3x4,        G3, {1, 2, 3, 7, 8, 9,
-                           10, 11, 0, 4, 5, 6},            6, 6, s2x3,     s2x3,     12, 0, 1, 2, 1,  0x0F5, schema_concentric},
+   {s4x4,          L4, {10, 15, 3, 1, 2, 7, 11, 9,      12, 13, 14, 0, 4, 5, 6, 8},
+             8, 8, s2x4,     s2x4,     16, 0, 0, 2, 1,  0x0FB, schema_concentric},
+   {s4x4,          C4, {6, 11, 15, 13, 14, 3, 7, 5,     8, 9, 10, 12, 0, 1, 2, 4},
+             8, 8, s2x4,     s2x4,     16, 1, 1, 2, 1,  0x100, XXX},
+   {s4x6,          L4, {10, 9, 8, 7, 22, 21, 20, 19,    17, 18, 11, 0, 5, 6, 23, 12},
+             /* This used to be 2FD, need this for 4x4 countershake from blocks */
+             8, 8, s2x4,     s2x4,     16, 0, 1, 2, 1,  0x0F7, schema_concentric},
+   {s4x6,          C4, {10, 9, 8, 7, 22, 21, 20, 19,    17, 18, 11, 0, 5, 6, 23, 12},
+             8, 8, s2x4,     s2x4,     16, 0, 1, 2, 1,  0x100, XXX},
+   {s_wingedstar12,S2, {2, 3, 4, 11, 10, 5, 8, 9,       0, 1, 6, 7},
+             4, 4, s_star,   s1x4,     12, 0, 0, 1, 2,  0x0FA, schema_conc_star12},
+   {s3x4,          G3, {8, 11, 1, 2, 5, 7,              9, 10, 0, 3, 4, 6},
+    /* elong used to be 1, changed to 2 to make 12 matrix relay the diamond work.
+                                                 V */
+             6, 6, s2x3,     s2x3,     12, 1, 1, 2, 1,  0x0FA, schema_concentric},
+   {s_d3x4,        G3, {1, 2, 3, 7, 8, 9,               10, 11, 0, 4, 5, 6},
+             6, 6, s2x3,     s2x3,     12, 0, 1, 2, 1,  0x0F5, schema_concentric},
 
    {s_barredstar16,B6, {15, 1, 16, 12, 17, 2, 8, 11, 7, 3, 6, 10,
-                           13, 14, 0, 4, 5, 9},            4, 6, s_star,   s2x3,    18,  0, 1, 2, 3,  0x0F5, schema_conc_bar16},
+                           13, 14, 0, 4, 5, 9},
+             4, 6, s_star,   s2x3,    18,  0, 1, 2, 3,  0x0F5, schema_conc_bar16},
    {s2x8,          B6, {1, 2, 13, 14, 3, 4, 11, 12, 5, 6, 9, 10,
-                           0, 7, 8, 15},                   4, 4, s2x2,     s2x2,    16,  0, 0, 1, 3,  0x100, schema_nothing},
-   {s_barredstar12,B2, {12, 1, 13, 9, 6, 2, 5, 8,
-                           10, 11, 0, 3, 4, 7},            4, 6, s_star,   s2x3,    14,  0, 1, 2, 2,  0x0F5, schema_conc_bar12},
-   {s2x6,          B2, {1, 2, 9, 10, 3, 4, 7, 8,
-                           0, 5, 6, 11},                   4, 4, s2x2,     s2x2,    12,  0, 0, 1, 2,  0x100, schema_nothing},
-   {s_barredstar,  BA, {9, 1, 4, 6,    7, 8, 0, 2, 3, 5},  4, 6, s_star,   s2x3,    10,  0, 1, 2, 1,  0x0F7, schema_concentric},
+                           0, 7, 8, 15},
+             4, 4, s2x2,     s2x2,    16,  0, 0, 1, 3,  0x100, XXX},
+   {s_barredstar12,B2, {12, 1, 13, 9, 6, 2, 5, 8,       10, 11, 0, 3, 4, 7},
+             4, 6, s_star,   s2x3,    14,  0, 1, 2, 2,  0x0F5, schema_conc_bar12},
+   {s2x6,          B2, {1, 2, 9, 10, 3, 4, 7, 8,        0, 5, 6, 11},
+             4, 4, s2x2,     s2x2,    12,  0, 0, 1, 2,  0x100, XXX},
+   {s_barredstar,  BA, {9, 1, 4, 6,                     7, 8, 0, 2, 3, 5},
+             4, 6, s_star,   s2x3,    10,  0, 1, 2, 1,  0x0F7, schema_concentric},
 
 
    /* these 2 are sort of duplicates */
-   {s2x4,          BA, {1, 2, 5, 6,    0, 3, 4, 7},        4, 4, s2x2,     s2x2,     8,  0, 0, 1, 1,  0x100, schema_nothing},
-   {s2x4,           Z, {1, 2, 5, 6,    0, 3, 4, 7},        4, 4, s2x2,     s2x2,     8,  0, 0, 1, 1,  0x0FE, schema_concentric},
+   {s2x4,          BA, {1, 2, 5, 6,    0, 3, 4, 7},
+             4, 4, s2x2,     s2x2,     8,  0, 0, 1, 1,  0x100, XXX},
+   {s2x4,           Z, {1, 2, 5, 6,    0, 3, 4, 7},
+             4, 4, s2x2,     s2x2,     8,  0, 0, 1, 1,  0x0FE, schema_concentric},
 
    {s_qtag,        OO, {6, 7, 2, 3,    -1, -1, -1, -1, -1, 4, 5, -1,
-                           -1, -1, -1, -1, -1, 0, 1, -1},  4,16, s1x4,     s4x4,     8,  0, 0, 1, 1,  0x0FB, schema_conc_o},
+                           -1, -1, -1, -1, -1, 0, 1, -1},
+             4,16, s1x4,     s4x4,     8,  0, 0, 1, 1,  0x0FB, schema_conc_o},
    {s4x4,          OO, {15, 3, 7, 11,    -1, 1, 2, -1, -1, 5, 6, -1,
-                           -1, 9, 10, -1, -1, 13, 14, -1}, 4,16, s2x2,     s4x4,     16, 0, 0, 1, 1,  0x0CF, schema_conc_o},
+                           -1, 9, 10, -1, -1, 13, 14, -1},
+             4,16, s2x2,     s4x4,     16, 0, 0, 1, 1,  0x0CF, schema_conc_o},
    {s2x4,          OO, {1, 2, 5, 6,    -1, 3, 4, -1, -1, -1, -1, -1,
-                           -1, 7, 0, -1, -1, -1, -1, -1},  4,16, s2x2,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
+                           -1, 7, 0, -1, -1, -1, -1, -1},
+             4,16, s2x2,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
    {s_hrglass,     OO, {6, 3, 2, 7,    -1, -1, -1, -1, -1, 4, 5, -1,
-                           -1, -1, -1, -1, -1, 0, 1, -1},  4,16, sdmd,     s4x4,     8,  0, 0, 1, 1,  0x0FB, schema_conc_o},
+                           -1, -1, -1, -1, -1, 0, 1, -1},
+             4,16, sdmd,     s4x4,     8,  0, 0, 1, 1,  0x0FB, schema_conc_o},
    {s_dhrglass,    OO, {6, 3, 2, 7,    -1, 1, 4, -1, -1, -1, -1, -1,
-                           -1, 5, 0, -1, -1, -1, -1, -1},  4,16, sdmd,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
+                           -1, 5, 0, -1, -1, -1, -1, -1},
+             4,16, sdmd,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
    {s_bone,        OO, {6, 7, 2, 3,    -1, 1, 4, -1, -1, -1, -1, -1,
-                           -1, 5, 0, -1, -1, -1, -1, -1},  4,16, s1x4,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
-   {s_qtag,        T6, {0, 1, 3, 4, 5, 7,    6, 2},        6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x100, schema_nothing},
+                           -1, 5, 0, -1, -1, -1, -1, -1},
+             4,16, s1x4,     s4x4,     8,  0, 0, 1, 1,  0x0FE, schema_conc_o},
+   {s_qtag,        T6, {0, 1, 3, 4, 5, 7,    6, 2},
+             6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x100, XXX},
 
-   {s2x3,         X6P, {4, 1,    0, 2, 3, 5},              2, 4, s1x2,     s2x2,     6,  1, 0, 1, 1,  0x0FD, schema_concentric},
-   {s2x3,         X24, {4, 1,    0, 2, 3, 5},              2, 4, s1x2,     s2x2,     6,  1, 0, 1, 1,  0x0FD, schema_concentric},
-   {s_2x1dmd,     X6P, {0, 1, 3, 4,    5, 2},              4, 2, s1x4,     s1x2,     6,  0, 1, 1, 1,  0x0F5, schema_concentric},
-   {s3x1dmd,      X62, {0, 1, 2, 4, 5, 6,    7, 3},        6, 2, s1x6,     s1x2,     8,  0, 1, 1, 1,  0x0F5, schema_concentric},
-   {s_crosswave,  X62, {6, 7, 1, 2, 3, 5,    0, 4},        6, 2, s_2x1dmd, s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s1x3dmd,      X62, {1, 2, 3, 5, 6, 7,    0, 4},        6, 2, s_1x2dmd, s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s2x3,         X6P, {4, 1,    0, 2, 3, 5},
+             2, 4, s1x2,     s2x2,     6,  1, 0, 1, 1,  0x0FD, schema_concentric},
+   {s2x3,         X24, {4, 1,    0, 2, 3, 5},
+             2, 4, s1x2,     s2x2,     6,  1, 0, 1, 1,  0x0FD, schema_concentric},
+   {s_2x1dmd,     X6P, {0, 1, 3, 4,    5, 2},
+             4, 2, s1x4,     s1x2,     6,  0, 1, 1, 1,  0x0F5, schema_concentric},
+   {s3x1dmd,      X62, {0, 1, 2, 4, 5, 6,    7, 3},
+             6, 2, s1x6,     s1x2,     8,  0, 1, 1, 1,  0x0F5, schema_concentric},
+   {s_crosswave,  X62, {6, 7, 1, 2, 3, 5,    0, 4},
+             6, 2, s_2x1dmd, s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s1x3dmd,      X62, {1, 2, 3, 5, 6, 7,    0, 4},
+             6, 2, s_1x2dmd, s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
    /* This next one is duplicated!!!!  It has to be!!!  I wish I knew where. */
-   {s_hrglass,    X62, {5, 0, 3, 1, 4, 7,    6, 2},        6, 2, s_bone6,  s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s_ptpd,       X62, {1, 7, 6, 5, 3, 2,    0, 4},        6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s1x8,         X62, {1, 3, 2, 5, 7, 6,    0, 4},        6, 2, s1x6,     s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_rigger,     X62, {5, 7, 0, 1, 3, 4,    6, 2},        6, 2, s_short6, s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s_qtag,       X62, {5, 7, 0, 1, 3, 4,    6, 2},        6, 2, s2x3,     s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s_spindle,    X62, {0, 1, 2, 4, 5, 6,    7, 3},        6, 2, s2x3,     s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_crosswave,  X26, {7, 3,    0, 1, 2, 4, 5, 6},        2, 6, s1x2,     s_2x1dmd, 8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s3x1dmd,      X26, {2, 6,    0, 1, 3, 4, 5, 7},        2, 6, s1x2,     s_2x1dmd, 8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s1x3dmd,      X26, {7, 3,    0, 1, 2, 4, 5, 6},        2, 6, s1x2,     s1x6,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s_ptpd,       X26, {2, 6,    3, 0, 1, 7, 4, 5},        2, 6, s1x2,     s_short6, 8,  0, 1, 2, 1,  0x0F7, schema_concentric},
-   {s3x4,         X26, {11, 5,    9, 10, 0, 3, 4, 6},      2, 6, s1x2,     s2x3,     12, 0, 1, 2, 1,  0x0F5, schema_concentric},
-   {s1x8,         X26, {2, 6,    0, 1, 3, 4, 5, 7},        2, 6, s1x2,     s1x6,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_dhrglass,   X26, {7, 3,    0, 1, 2, 4, 5, 6},        2, 6, s1x2,     s_bone6,  8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s_3mdmd,      B26, {7, 1,    0, 2, 5, 6, 8, 11},       2, 6, s1x2,     s_bone6, 12,  1, 0, 1, 1,  0x0FD, B26},
-   {s4dmd,        B26, {15, 7,   0, 3, 6, 8, 11, 14},      2, 6, s1x2,     s_bone6, 16,  0, 0, 1, 1,  0x0FE, B26},
-   {s_bone,       X26, {7, 3,    0, 1, 2, 4, 5, 6},        2, 6, s1x2,     s_bone6,  8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_qtag,       X26, {7, 3,    5, 6, 0, 1, 2, 4},        2, 6, s1x2,     s_short6, 8,  0, 1, 1, 1,  0x0FD, schema_concentric},
-   {s_hrglass,    X26, {7, 3,    5, 6, 0, 1, 2, 4},        2, 6, s1x2,     s_short6, 8,  1, 1, 1, 1,  0x0FE, schema_concentric},
-   {s_spindle,    X26, {5, 1,    6, 7, 0, 2, 3, 4},        2, 6, s1x2,     s_short6, 8,  1, 1, 2, 1,  0x0FB, schema_concentric},
-   {s3dmd,        X26, {11, 5,    0, 1, 2, 6, 7, 8},       2, 6, s1x2,     s2x3,     12, 0, 0, 9, 1,  0x100, schema_nothing},
-   {s_323,        X26, {7, 3,     0, 1, 2, 4, 5, 6},       2, 6, s1x2,     s2x3,      8, 0, 0, 2, 1,  0x0FA, schema_concentric},
-   {s1x3dmd,       CK, {0, 3, 4, 7,    1, 2, 5, 6},        4, 4, sdmd,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
-   {s_ptpd,        CK, {0, 2, 4, 6,    1, 7, 5, 3},        4, 4, s1x4,     s2x2,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
-   {s1x8,          CK, {0, 2, 4, 6,    1, 3, 5, 7},        4, 4, s1x4,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
-   {s_dhrglass,    CK, {0, 3, 1, 4, 7, 5,    6, 2},        6, 2, s2x3,     s1x2,     8,  0, 0, 1, 1,  0x100, schema_nothing},
-   {s_spindle,     CK, {7, 1, 3, 5,    0, 2, 4, 6},        4, 4, sdmd,     s2x2,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
-   {s_rigger,      CK, {5, 6, 0, 1, 2, 4,    7, 3},        6, 2, s_short6, s1x2,     8,  1, 0, 1, 1,  0x100, schema_nothing},
-   {s_bone,        CK, {0, 1, 3, 4, 5, 7,    6, 2},        6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x100, schema_nothing},
-   {s_thar,         Z, {1, 3, 5, 7,    0, 2, 4, 6},        4, 4, s_star,   s_star,   8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_galaxy,       Z, {1, 3, 5, 7,    0, 2, 4, 6},        4, 4, s2x2,     s_star,   8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_hrglass,    X62, {5, 0, 3, 1, 4, 7,    6, 2},
+             6, 2, s_bone6,  s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s_ptpd,       X62, {1, 7, 6, 5, 3, 2,    0, 4},
+             6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s1x8,         X62, {1, 3, 2, 5, 7, 6,    0, 4},
+             6, 2, s1x6,     s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_rigger,     X62, {5, 7, 0, 1, 3, 4,    6, 2},
+             6, 2, s_short6, s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s_qtag,       X62, {5, 7, 0, 1, 3, 4,    6, 2},
+             6, 2, s2x3,     s1x2,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s_spindle,    X62, {0, 1, 2, 4, 5, 6,    7, 3},
+             6, 2, s2x3,     s1x2,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_crosswave,  X26, {7, 3,    0, 1, 2, 4, 5, 6},
+             2, 6, s1x2,     s_2x1dmd, 8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s3x1dmd,      X26, {2, 6,    0, 1, 3, 4, 5, 7},
+             2, 6, s1x2,     s_2x1dmd, 8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s1x3dmd,      X26, {7, 3,    0, 1, 2, 4, 5, 6},
+             2, 6, s1x2,     s1x6,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s_ptpd,       X26, {2, 6,    3, 0, 1, 7, 4, 5},
+             2, 6, s1x2,     s_short6, 8,  0, 1, 2, 1,  0x0F7, schema_concentric},
+   {s3x4,         X26, {11, 5,    9, 10, 0, 3, 4, 6},
+             2, 6, s1x2,     s2x3,     12, 0, 1, 2, 1,  0x0F5, schema_concentric},
+   {s1x8,         X26, {2, 6,    0, 1, 3, 4, 5, 7},
+             2, 6, s1x2,     s1x6,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_dhrglass,   X26, {7, 3,    0, 1, 2, 4, 5, 6},
+             2, 6, s1x2,     s_bone6,  8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s_3mdmd,      B26, {7, 1,    0, 2, 5, 6, 8, 11},
+             2, 6, s1x2,     s_bone6, 12,  1, 0, 1, 1,  0x0FD, B26},
+   {s4dmd,        B26, {15, 7,   0, 3, 6, 8, 11, 14},
+             2, 6, s1x2,     s_bone6, 16,  0, 0, 1, 1,  0x0FE, B26},
+   {s_bone,       X26, {7, 3,    0, 1, 2, 4, 5, 6},
+             2, 6, s1x2,     s_bone6,  8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_qtag,       X26, {7, 3,    5, 6, 0, 1, 2, 4},
+             2, 6, s1x2,     s_short6, 8,  0, 1, 1, 1,  0x0FD, schema_concentric},
+   {s_hrglass,    X26, {7, 3,    5, 6, 0, 1, 2, 4},
+             2, 6, s1x2,     s_short6, 8,  1, 1, 1, 1,  0x0FE, schema_concentric},
+   {s_spindle,    X26, {5, 1,    6, 7, 0, 2, 3, 4},
+             2, 6, s1x2,     s_short6, 8,  1, 1, 2, 1,  0x0FB, schema_concentric},
+   {s3dmd,        X26, {11, 5,    0, 1, 2, 6, 7, 8},
+             2, 6, s1x2,     s2x3,     12, 0, 0, 9, 1,  0x100, XXX},
+   {s_323,        X26, {7, 3,     0, 1, 2, 4, 5, 6},
+             2, 6, s1x2,     s2x3,      8, 0, 0, 2, 1,  0x0FA, schema_concentric},
+   {s1x3dmd,       CK, {0, 3, 4, 7,    1, 2, 5, 6},
+             4, 4, sdmd,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
+   {s_ptpd,        CK, {0, 2, 4, 6,    1, 7, 5, 3},
+             4, 4, s1x4,     s2x2,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
+   {s1x8,          CK, {0, 2, 4, 6,    1, 3, 5, 7},
+             4, 4, s1x4,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
+   {s_dhrglass,    CK, {0, 3, 1, 4, 7, 5,    6, 2},
+             6, 2, s2x3,     s1x2,     8,  0, 0, 1, 1,  0x100, XXX},
+   {s_spindle,     CK, {7, 1, 3, 5,    0, 2, 4, 6},
+             4, 4, sdmd,     s2x2,     8,  0, 0, 1, 1,  0x0FA, schema_rev_checkpoint},
+   {s_rigger,      CK, {5, 6, 0, 1, 2, 4,    7, 3},
+             6, 2, s_short6, s1x2,     8,  1, 0, 1, 1,  0x100, XXX},
+   {s_bone,        CK, {0, 1, 3, 4, 5, 7,    6, 2},
+             6, 2, s_bone6,  s1x2,     8,  0, 0, 1, 1,  0x100, XXX},
+   {s_thar,         Z, {1, 3, 5, 7,    0, 2, 4, 6},
+             4, 4, s_star,   s_star,   8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_galaxy,       Z, {1, 3, 5, 7,    0, 2, 4, 6},
+             4, 4, s2x2,     s_star,   8,  0, 0, 1, 1,  0x0FA, schema_concentric},
    /* Next two are duplicate */
-   {s_wingedstar,   Z, {2, 3, 6, 7,    0, 1, 4, 5},        4, 4, s_star,   s1x4,     8,  0, 0, 1, 1,  0x2FA, schema_conc_star},
-   {s_wingedstar,   Z, {2, 3, 6, 7,    0, 1, 4, 5},        4, 4, s_star,   s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s3x1dmd,        Z, {7, 2, 3, 6,    0, 1, 4, 5},        4, 4, sdmd,     s1x4,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s1x3dmd,        Z, {2, 3, 6, 7,    0, 1, 4, 5},        4, 4, sdmd,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_crosswave,    Z, {6, 7, 2, 3,    0, 1, 4, 5},        4, 4, s1x4,     s1x4,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
-   {s1x8,           Z, {3, 2, 7, 6,    0, 1, 4, 5},        4, 4, s1x4,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_dhrglass,     Z, {6, 3, 2, 7,    0, 1, 4, 5},        4, 4, sdmd,     s2x2,     8,  0, 0, 1, 1,  0x0FE, schema_concentric},
-   {s_hrglass,      Z, {6, 3, 2, 7,    0, 1, 4, 5},        4, 4, sdmd,     s2x2,     8,  0, 0, 2, 1,  0x0FB, schema_concentric},
-   {s_rigger,       Z, {0, 1, 4, 5,    6, 7, 2, 3},        4, 4, s2x2,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
-   {s_bone,         Z, {6, 7, 2, 3,    0, 1, 4, 5},        4, 4, s1x4,     s2x2,     8,  0, 0, 1, 1,  0x0FE, schema_concentric},
-   {s_qtag,         Z, {6, 7, 2, 3,    0, 1, 4, 5},        4, 4, s1x4,     s2x2,     8,  0, 0, 2, 1,  0x0FB, schema_concentric},
-
+   {s_wingedstar,   Z, {2, 3, 6, 7,    0, 1, 4, 5},
+             4, 4, s_star,   s1x4,     8,  0, 0, 1, 1,  0x2FA, schema_conc_star},
+   {s_wingedstar,   Z, {2, 3, 6, 7,    0, 1, 4, 5},
+             4, 4, s_star,   s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s3x1dmd,        Z, {7, 2, 3, 6,    0, 1, 4, 5},
+             4, 4, sdmd,     s1x4,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s1x3dmd,        Z, {2, 3, 6, 7,    0, 1, 4, 5},
+             4, 4, sdmd,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_crosswave,    Z, {6, 7, 2, 3,    0, 1, 4, 5},
+             4, 4, s1x4,     s1x4,     8,  1, 0, 1, 1,  0x0F5, schema_concentric},
+   {s1x8,           Z, {3, 2, 7, 6,    0, 1, 4, 5},
+             4, 4, s1x4,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_dhrglass,     Z, {6, 3, 2, 7,    0, 1, 4, 5},
+             4, 4, sdmd,     s2x2,     8,  0, 0, 1, 1,  0x0FE, schema_concentric},
+   {s_hrglass,      Z, {6, 3, 2, 7,    0, 1, 4, 5},
+             4, 4, sdmd,     s2x2,     8,  0, 0, 2, 1,  0x0FB, schema_concentric},
+   {s_rigger,       Z, {0, 1, 4, 5,    6, 7, 2, 3},
+             4, 4, s2x2,     s1x4,     8,  0, 0, 1, 1,  0x0FA, schema_concentric},
+   {s_bone,         Z, {6, 7, 2, 3,    0, 1, 4, 5},
+             4, 4, s1x4,     s2x2,     8,  0, 0, 1, 1,  0x0FE, schema_concentric},
+   {s_qtag,         Z, {6, 7, 2, 3,    0, 1, 4, 5},
+             4, 4, s1x4,     s2x2,     8,  0, 0, 2, 1,  0x0FB, schema_concentric},
 
    {nothing,        Z, {0},                                0, 0, nothing,  nothing},
 };
@@ -2391,7 +2465,8 @@ static Const fixer box6c;
 static Const fixer box9c;
 static Const fixer fdrhgl_bb;
 static Const fixer frigctr;
-
+static Const fixer f2x4right;
+static Const fixer f2x4left;
 
 /*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
@@ -2620,8 +2695,10 @@ static Const fixer fdrhgl1   = {s2x2, s_dhrglass,  0, 1, 1,       0,          0,
 static Const fixer f1x8endd  = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8endd,  &fxwve, 0,     0,    &f2x4endd,  &f2x4endd,  {0, 1, 4, 5}};
 static Const fixer f1x8endo  = {s1x2, s1x8,        0, 0, 2,       &f1x8endo,  &fboneendo, 0,          0, 0,          0,    0,          0,          {0, 1, 5, 4}};
 
-static Const fixer f1x8lowf  = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8lowf,  0, 0,          0,    0,          0,          {0, 1, 2, 3}};
-static Const fixer f1x8hif   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8hif,   0, 0,          0,    0,          0,          {6, 7, 4, 5}};
+static Const fixer f1x8lowf  = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8lowf, &f2x4far, 0,    0,    &f2x4left,  &f2x4left,  {0, 1, 2, 3}};
+static Const fixer f1x8hif   = {s1x4, s1x8,        0, 0, 1,       0,          0,          &f1x8hif,  &f2x4near, 0,   0,    &f2x4right, &f2x4right, {6, 7, 4, 5}};
+
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
 static Const fixer fbonectr  = {s1x4, s_bone,      0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &bar55d,    &bar55d,    {6, 7, 2, 3}};
 static Const fixer fbonetgl  = {s_bone6, s_bone,   0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 3, 4, 5, 7}};
@@ -2630,12 +2707,19 @@ static Const fixer fboneendo = {s1x2, s_bone,      1, 0, 2,       &fboneendo, &f
 static Const fixer frigendd  = {s1x4, s_rigger,    0, 0, 1,       0,          0,          &frigendd,  0, 0,          0,    &f2x4endd,  &f2x4endd,  {6, 7, 2, 3}};
 static Const fixer frigctr   = {s2x2, s_rigger,    0, 0, 1,       0,          0,          &f1x8ctr,   0, 0,          0,    &frigctr,   &frigctr,   {0, 1, 4, 5}};
 static Const fixer f2x4ctr   = {s2x2, s2x4,        0, 0, 1,       0,          0,          &fbonectr,  0, 0,          0,    &f2x4ctr,   &f2x4ctr,   {1, 2, 5, 6}};
+
+
+static Const fixer f2x4lr    = {s2x2, s2x4,        1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {3, 4, 5, 2}};
+static Const fixer f2x4rl    = {s2x2, s2x4,        1, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {1, 6, 7, 0}};
+
+
 /* These 26 are unsymmetrical. */
-       Const fixer f2x4far   = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4far,   0, 0,          0,    0,          0,          {0, 1, 3, 2}};
-       Const fixer f2x4near  = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4near,  0, 0,          0,    0,          0,          {7, 6, 4, 5}};
+       Const fixer f2x4far   = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4far, &f1x8hif, 0,     0,    &f2x4rl,   &f2x4rl,     {0, 1, 3, 2}};
+       Const fixer f2x4near  = {s1x4, s2x4,        0, 0, 1,       0,          0,          &f2x4near, &f1x8lowf, 0,   0,    &f2x4lr,   &f2x4lr,     {7, 6, 4, 5}};
 
        Const fixer f4dmdiden = {s4dmd, s4dmd,      0, 0, 1,       0,          0,          0,          0, 0,          0,    0,          0,          {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}};
 
+/*                              ink   outk       rot  el numsetup 1x2         1x2rot      1x4    1x4rot dmd         dmdrot 2x2      2x2v             nonrot  */
 
 static Const fixer f2x4pos1  = {s1x2, s2x4,        1, 0, 1,       &f2x4pos1,  0,         0,           0, 0,          0,    0,          0,          {0, 7}};
 static Const fixer f2x4pos2  = {s1x2, s2x4,        1, 0, 1,       &f2x4pos2,  0,         0,           0, 0,          0,    0,          0,          {1, 6}};
@@ -2658,8 +2742,8 @@ static Const fixer f2x4poss  = {s1x2, s2x4,        0, 0, 2,       &f2x4poss,  0,
 static Const fixer f2x4posy  = {s1x2, s2x4,        0, 0, 3,       &f2x4posy,  0,         0,           0, 0,          0,    0,          0,          {0, 1, 2, 3, 6, 5}};
 static Const fixer f2x4posz  = {s1x2, s2x4,        0, 0, 3,       &f2x4posz,  0,         0,           0, 0,          0,    0,          0,          {1, 2, 7, 6, 5, 4}};
 
-static Const fixer f2x4left  = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4left,  &f2x4left,  {0, 1, 6, 7}};
-static Const fixer f2x4right = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4right, &f2x4right, {2, 3, 4, 5}};
+static Const fixer f2x4left  = {s2x2, s2x4,        0, 0, 1,       0,          0,     &f1x8lowf, &f2x4far, 0,         0,    &f2x4left,  &f2x4left,  {0, 1, 6, 7}};
+static Const fixer f2x4right = {s2x2, s2x4,        0, 0, 1,       0,          0,     &f1x8hif,  &f2x4near, 0,        0,    &f2x4right, &f2x4right, {2, 3, 4, 5}};
 static Const fixer f2x4dleft = {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dleft, &f2x4dleft, {0, 2, 5, 7}};
 static Const fixer f2x4dright= {s2x2, s2x4,        0, 0, 1,       0,          0,          0,          0, 0,          0,    &f2x4dright,&f2x4dright,{1, 3, 4, 6}};
 
@@ -2892,8 +2976,8 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s1x8,        0x33,   &f1x8endo,   (fixer *) 0, -1},
 
    {LOOKUP_NONE,               s1x8,        0x77,   &f1x8_77_3,  (fixer *) 0, -1},
-   {LOOKUP_NONE,               s1x8,        0x0F,   &f1x8lowf,   (fixer *) 0, -1},   /* Unsymmetrical */
-   {LOOKUP_NONE,               s1x8,        0xF0,   &f1x8hif,    (fixer *) 0, -1},   /* Unsymmetrical */
+   {LOOKUP_NONE,               s1x8,        0x0F,   &f1x8lowf,   (fixer *) 0, -1},   /* Unsymm */
+   {LOOKUP_NONE,               s1x8,        0xF0,   &f1x8hif,    (fixer *) 0, -1},   /* Unsymm */
 
    {LOOKUP_NONE,               s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
    {LOOKUP_NONE,               s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
@@ -2923,6 +3007,15 @@ sel_item sel_init_table[] = {
    {LOOKUP_NONE,               s2x3,         066,   &f2x3j2,     (fixer *) 0, -1},
    {LOOKUP_NONE,               nothing}};
 
+
+/* In the print_strings tables below, characters have the following meanings:
+   a-z  draw a person, this will be 4 characters wide in ASCII
+   6    blank person space, whether in ASCII (4 blanks) or checkers
+   5    1/2 person space (2 blanks if in ASCII)
+   9    3/4 person space (3 blanks if in ASCII)
+   8    1/2 person space with checkers, but only one blank (not 2) if ASCII
+   @7   only 1/2 line feed if using checkers, must be careful not to overlap
+*/
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
 setup_attr setup_attrs[] = {
@@ -2972,8 +3065,8 @@ setup_attr setup_attrs[] = {
       { 3, 1},
       FALSE,
       (id_bit_table *) 0,
-      {  (Cstring) 0,
-         (Cstring) 0}},
+      {  "a  b  c@",
+         "a@b@c@"}},
    /* s2x2 */
       { 3,
       &thing2x2,
@@ -3005,8 +3098,8 @@ setup_attr setup_attrs[] = {
       { 0, 2},
       FALSE,
       id_bit_table_dmd,
-      {  "     b@a      c@     d@",
-         "   a@@d  b@@   c@"}},
+      {  "6 b@7a 6 c@76 d@",
+         " 5a@@ db@@ 5c@"}},
    /* s_star */
       { 3,
       (coordrec *) 0,
@@ -3016,7 +3109,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       (id_bit_table *) 0,
-      {  "   b@a  c@   d@",
+      {  "5 b@a  c@5 d@",
          (Cstring) 0}},
    /* s_trngl */
       { 2,
@@ -3049,8 +3142,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_bone6,
-      {  "a        b@    fc@e        d@",
-         "ea@  f@  c@db@"}},
+      {  "a6 6b@76f c@7e6 6d@",
+         "ea@5f@5c@db@"}},
    /* s_short6 */
       { 5,
       &thingshort6,
@@ -3060,8 +3153,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_short6,
-      {  "   b@a  c@f  d@   e@",
-         "   fa@e      b@   dc@"}},
+      {  "5 b@a  c@f  d@5 e@",
+         "5 fa@e 6 b@5 dc@"}},
    /* s1x6 */
       { 5,
       &thing1x6,
@@ -3093,8 +3186,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "           c@a  b      e  d@           f@",
-         "   a@@   b@@f  c@@   e@@   d@"}},
+      {  "6  6 c@7a  b 6 e  d@76  6 f@",
+         "5 a@@5 b@@f  c@@5 e@@5 d@"}},
    /* s_2x1dmd */
       { 5,
       (coordrec *) 0,
@@ -3104,8 +3197,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "         c@@a  b  e  d@@         f",
-         "      a@@      b@f        c@      e@@      d"}},
+      {  "6  5 c@@a  b  e  d@@6  5 f",
+         "6  a@@6  b@7f  6  c@76  e@@6  d"}},
    /* s_qtag */
       { 7,
       &thingqtag,
@@ -3126,8 +3219,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_bone,
-      {  "a                   b@    g h d c@f                   e",
-         "fa@  g@  h@  d@  c@eb"}},
+      {  "a6 6 6 6b@76g h d c@7f6 6 6 6e",
+         "fa@5g@5h@5d@5c@eb"}},
    /* s1x8 */
       { 7,
       &thing1x8,
@@ -3162,8 +3255,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_2stars,
-      {  "   a     b@g hd c@   f     e",
-         "   g@f a@   h@@   d@e b@   c"}},
+      {  "  8a6 b@g8hd8c@  8f6 e",
+         "9g@f8a@9h@@9d@e8b@9c"}},
    /* s1x3dmd */
       { 7,
       &thing1x3dmd,
@@ -3173,8 +3266,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_1x3dmd,
-      {  "               d@a b c      g f e@               h",
-         "   a@@   b@@   c@@ hd@@   g@@   f@@   e@"}},
+      {  "6 6 6 d@7a b c 6 g f e@76 6 6 h",
+         " 5a@@ 5b@@ 5c@@ hd@@ 5g@@ 5f@@ 5e@"}},
    /* s3x1dmd */
       { 7,
       &thing3x1dmd,
@@ -3184,8 +3277,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_3x1dmd,
-      {  "             d@@a b c g f e@@             h",
-         "      a@@      b@@      c@h        d@      g@@      f@@      e"}},
+        {  "6 6 9d@@a b c g f e@@6 6 9h",  /* not quite symmetrical, unfortunately. */
+         "6  a@@6  b@@6  c@7h  6  d@76  g@@6  f@@6  e"}},
    /* s_spindle */
       { 7,
       &thingspindle,
@@ -3195,8 +3288,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_spindle,
-      {  "    a b c@h              d@    g f e",
-         "  h@ga@fb@ec@  d"}},
+      {  "6a b c@7h6 6 6d@76g f e",
+         "5h@ga@fb@ec@5d"}},
    /* s_hrglass */
       { 7,
       &thingglass,
@@ -3206,8 +3299,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_hrglass,
-      {  "   a  b@      d@g        c@      h@   f  e",
-         "     g@f      a@   hd@e      b@     c"}},
+      {  "9a5b@56d@7g66c@756h@9f5e",
+         "6 g@7f 6 a@5 hd@e 6 b@76 c"}},
    /* s_dhrglass */
       { 7,
       &thingdglass,
@@ -3217,8 +3310,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_dhrglass,
-      {  "a      d      b@     g      c@f      h      e",
-         "f  a@@   g@@h  d@@   c@@e  b"}},
+      {  "a 6 d 6 b@6 g 6 c@f 6 h 6 e",
+         "f  a@@5 g@@h  d@@5 c@@e  b"}},
    /* s_hyperglass */
       {11,
       (coordrec *) 0,
@@ -3239,8 +3332,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_crosswave,
-      {  "          c@          d@ab        fe@          h@          g",
-         "      a@      b@@ghdc@@      f@      e"}},
+      {  "66  c@66  d@7ab  6  fe@766  h@66  g",
+         "65a@65b@@ghdc@@65f@65e"}},
    /* s2x4 */
       { 7,
       &thing2x4,
@@ -3272,8 +3365,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_rigger,
-      {  "        a b@gh         dc@        f e",
-         "  g@  h@fa@eb@  d@  c"}},
+      {  "66a b@7gh6 6dc@766f e",
+         "5g@5h@fa@eb@5d@5c"}},
    /* s3x4 */
       {11,
       &thing3x4,
@@ -3305,8 +3398,8 @@ setup_attr setup_attrs[] = {
       { 5, 3},
       FALSE,
       id_bit_table_d3x4,
-      {  "a              e@   b  c  d@l              f@   j  i  h@k              g",
-         "k  l  a@@   j  b@@   i  c@@   h  d@@g  f  e"}},
+      {  "a6 6 6e@758b  c  d@7l6 6 6f@758j  i  h@7k6 6 6g",
+         "k  l  a@@5 j  b@@5 i  c@@5 h  d@@g  f  e"}},
    /* s1p5x8 */
       {15,
       (coordrec *) 0,
@@ -3393,7 +3486,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       (id_bit_table *) 0,
-      {  "   b        e@a  c  h  f@   d        g@@   o        l@n  p  k  i@   m        j",
+      {  (Cstring) 0,
          (Cstring) 0}},
    /* s_hyperbone */
       {15,
@@ -3415,7 +3508,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       (id_bit_table *) 0,
-      {  "            a  b@@      v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@      p  o  k  j@@            n  m",
+      {  "6  6  a  b@@6  v  w  c  d@@t  u  x  f  e  g@@s  q  r  l  i  h@@6  p  o  k  j@@6  6  n  m",
          (Cstring) 0}},
    /* s_ptpd */
       { 7,
@@ -3426,8 +3519,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_ptpd,
-      {  "    b           h@a    c   g    e@    d           f",
-         "  a@@db@@  c@@  g@@fh@@  e"}},
+      {  "6b6   6h@7a6c   g6e@76d6   6f",
+         "5a@@db@@5c@@5g@@fh@@5e"}},
    /* s3dmd */
       {11,
       &thing3dmd,
@@ -3437,8 +3530,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_3dmd,
-      {  "   a      b      c@@j k l f e d@@   i      h      g",
-         "      j@i        a@      k@@      l@h        b@      f@@      e@g        c@      d"}},
+      {  "5 a 6 b 6 c@@j k l f e d@@5 i 6 h 6 g",
+         "6  j@7i  6  a@76  k@@6  l@7h  6  b@76  f@@6  e@7g  6  c@76  d"}},
    /* s4dmd */
       {15,
       &thing4dmd,
@@ -3448,8 +3541,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_4dmd,
-      {  "   a      b      c      d@@m n o p h g f e@@   l      k      j      i",
-         "      m@l        a@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@i        d@      e"}},
+      {  "5 a 6 b 6 c 6 d@@m n o p h g f e@@5 l 6 k 6 j 6 i",
+         "6  m@7l  6  a@76  n@@6  o@7k  6  b@76  p@@6  h@7j  6  c@76  g@@6  f@7i  6  d@76  e"}},
    /* s3ptpd */
       { 11,
       (coordrec *) 0,
@@ -3459,8 +3552,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "    a           b           c@j    k   l    f   e    d@    i           h           g",
-         "  j@@ia@@  k@@  l@@hb@@  f@@  e@@gc@@  d"}},
+      {  "6a696b696c@7j6k9l6f9e6d@76i696h696g",
+         "5j@@ia@@5k@@5l@@hb@@5f@@5e@@gc@@5d"}},
    /* s4ptpd */
       { 15,
       (coordrec *) 0,
@@ -3470,8 +3563,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "    a           b           c           d@m    n   o    p   h    g   f    e@    l           k           j           i",
-         "  m@@la@@  n@@  o@@kb@@  p@@  h@@jc@@  g@@  f@@id@@  e"}},
+      {  "6a696b696c696d@7m6n9o6p9h6g9f6e@76l696k696j696i",
+         "5m@@la@@5n@@5o@@kb@@5p@@5h@@jc@@5g@@5f@@id@@5e"}},
    /* s_wingedstar */
       { 7,
       (coordrec *) 0,
@@ -3481,8 +3574,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "             d@a b c  g f e@             h",
-         "   a@@   b@@   c@h  d@   g@@   f@@   e"}},
+      {  "665   d@a b c  g f e@665   h",
+         "9a@@9b@@9c@h5d@9g@@9f@@9e"}},
    /* s_wingedstar12 */
       {11,
       (coordrec *) 0,
@@ -3492,8 +3585,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "             d       f@a b c  e k  i h g@             l       j",
-         "   a@@   b@@   c@l  d@   e@   k@j  f@   i@@   h@@   g"}},
+      {  "665   d6   f@a b c  e k  i h g@665   l6   j",
+         "9a@@9b@@9c@l5d@9e@9k@j5f@9i@@9h@@9g"}},
    /* s_wingedstar16 */
       {15,
       (coordrec *) 0,
@@ -3503,8 +3596,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "             d       h       m@a b c  f g  o n  k j i@             e       p       l",
-         "   a@@   b@@   c@e  d@   f@   g@p  h@   o@   n@l  m@   k@@   j@@   i"}},
+      {  "665   d6   h6   m@a b c  f g  o n  k j i@665   e6   p6   l",
+         "9a@@9b@@9c@e5d@9f@9g@p5h@9o@9n@l5m@9k@@9j@@9i"}},
    /* s_barredstar */
       { 9,
       (coordrec *) 0,
@@ -3514,8 +3607,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  " a          c@        b@i j  e d@        g@ h          f",
-         "h  i  a@@      j@   g  b@      e@@f  d  c"}},
+      {  " a 66 c@ 65 b@i j  e d@ 65 g@ h 66 f",
+         "h  i  a@@6  j@5 g  b@6  e@@f  d  c"}},
    /* s_barredstar12 */
       {13,
       (coordrec *) 0,
@@ -3525,8 +3618,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  " a                     d@        b       c@l m  n g  f e@        j       i@ k                     h",
-         "k  l  a@      m@   j  b@      n@@      g@   i  c@      f@@h  e  d"}},
+      {  " a6  6 6  6d@6 5 b 6  c@l m  n g  f e@6 5 j 6  i@ k6  6 6  6h",
+         "k  l  a@6  m@5 j  b@6  n@@6  g@5 i  c@6  f@@h  e  d"}},
    /* s_barredstar16 */
       {17,
       (coordrec *) 0,
@@ -3536,8 +3629,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  " a                                e@        b       c       d@o p  q r  i h  g f@        m       l       k@ n                                j",
-         "n  o  a@      p@   m  b@      q@      r@   l  c@      i@@      h@   k  d@      g@@j  f  e"}},
+      {  " a6  6 6  6 6  6e@6 5 b 6  c 6  d@o p  q r  i h  g f@6 5 m 6  l 6  k@ n6  6 6  6 6  6j",
+         "n  o  a@6  p@5 m  b@6  q@6  r@5 l  c@6  i@@6  h@5 k  d@6  g@@j  f  e"}},
    /* s_galaxy */
       { 7,
       &thinggal,
@@ -3547,7 +3640,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       id_bit_table_gal,
-      {  "     c@   bd@a      e@   hf@     g",
+      {  "68c@58bd@7a688e@758hf@68g",
          (Cstring) 0}},
    /* s3x6 */
       {17,
@@ -3636,8 +3729,8 @@ setup_attr setup_attrs[] = {
       { 4, 4},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a        b@f  e  d  c@@i  j  k  l@   h        g",
-         "    i  f@h          a@    j  e@@    k  d@g          b@    l  c"}},
+      {  "5 a  6  b@f  e  d  c@@i  j  k  l@5 h  6  g",
+         "6i  f@7h6  6a@76j  e@@6k  d@7g6  6b@76l  c"}},
    /* sdeepbigqtg */
       {15,
       (coordrec *) 0,
@@ -3647,8 +3740,8 @@ setup_attr setup_attrs[] = {
       { 4, 6},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a        b@   c        d@h  g  f  e@@m  n  o  p@   l        k@   j        i",
-         "         m  h@j l          c a@         n  g@@         o  f@i k          d b@         p  e"}},
+      {  "5 a  6  b@5 c  6  d@h  g  f  e@@m  n  o  p@5 l  6  k@5 j  6  i",
+         "6 6m  h@7j l6  6c a@76 6n  g@@6 6o  f@7i k6  6d b@6 6p  e"}},
    /* sdeepxwv */
       {11,
       &thingdeepxwv,
@@ -3658,8 +3751,8 @@ setup_attr setup_attrs[] = {
       { 6, 4},
       FALSE,
       id_bit_table_deepxwv,
-      {  "        c l@@        d k@ab         hg@        e j@@        f i",
-         "      a@      b@fedc@ijkl@      h@      g@"}},
+      {  "66c l@@66d k@7ab6 6hg@766e j@@66f i",
+         "65a@65b@fedc@ijkl@65h@65g@"}},
    /* s3oqtg */
       {19,
       &thing3oqtg,
@@ -3669,8 +3762,8 @@ setup_attr setup_attrs[] = {
       { 7, 4},
       FALSE,
       (id_bit_table *) 0,
-      {  "      a        b        c@@r  s  t  g  f  e  d@@n  o  p  q  j  i  h@@      m        l        k",
-         "      n  r@@m  o  s  a@@      p  t@@l  q  b  g@@      j  f@@k  i  e  c@@      h  d"}},
+      {  "6  a  6  b  6  c@@r  s  t  g  f  e  d@@n  o  p  q  j  i  h@@6  m  6  l  6  k",
+         "6  n  r@@m  o  s  a@@6  p  t@@l  q  b  g@@6  j  f@@k  i  e  c@@6  h  d"}},
    /* s_thar */
       { 7,
       &thingthar,
@@ -3680,7 +3773,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       (id_bit_table *) 0,
-      {  "      c@      d@abfe@      h@      g",
+      {  "66c@66d@ab6fe@66h@66g",
          (Cstring) 0}},
    /* s_alamo */
       { 7,
@@ -3757,8 +3850,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_323,
-      {  "   a  b  c@@      h  d@@   g  f  e",
-         "g    a@    h@f    b@    d@e    c"}},
+      {  "   a  b  c@@   5 h  d@@   g  f  e",
+         "g6a@76h@7f6b@76d@7e6c"}},
    /* s_343 */
       { 9,
       &thing_343,
@@ -3768,8 +3861,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "      a  b  c@@   i  j  e  d@@      h  g  f",
-         "    i@h    a@    j@g    b@    e@f    c@    d"}},
+      {  "   5 a  b  c@@   i  j  e  d@@   5 h  g  f",
+         "6i@7h6a@76j@7g6b@76e@7f6c@76d"}},
    /* s_525 */
       { 11,
       &thing_525,
@@ -3779,8 +3872,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a  b  c  d  e@@            l  f@@   k  j  i  h  g",
-         "k    a@@j    b@    l@i    c@    f@h    d@@g    e"}},
+      {  "   a  b  c  d  e@@   6  5 l  f@@   k  j  i  h  g",
+         "k6a@@j6b@76l@7i6c@76f@7h6d@@g6e"}},
    /* s_545 */
       { 13,
       &thing_545,
@@ -3790,8 +3883,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a  b  c  d  e@@      m  n  g  f@@   l  k  j  i  h",
-         "l    a@    m@k    b@    n@j    c@    g@i    d@    f@h    e"}},
+      {  "   a  b  c  d  e@@   5 m  n  g  f@@   l  k  j  i  h",
+         "l6a@76m@7k6b@76n@7j6c@76g@7i6d@76f@7h6e"}},
    /* sh545 */
       { 13,
       &thing_h545,
@@ -3801,8 +3894,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a  b  c  d  e@@   m     n  g     f@@   l  k  j  i  h",
-         "lma@@k    b@    n@j    c@    g@i    d@@hfe"}},
+      {  "   a  b  c  d  e@@   m  5 n  g 5  f@@   l  k  j  i  h",
+         "lma@@k6b@76n@7j6c@76g@7i6d@@hfe"}},
    /* s_3mdmd */
       { 11,
       &thing3mdmd,
@@ -3812,8 +3905,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a                     c@               b@j k l      f e d@               h@   i                     g",
-         "      j@i        a@      k@@      l@@    hb@@      f@@      e@g        c@      d"}},
+      {  "5 a6666     c@7666   b@7j k l6  f e d@7666   h@75 i6666     g",
+         "6  j@7i6    a@76  k@@6  l@@5  hb@@6  f@@6  e@7g6    c@76  d"}},
    /* s_3mptpd */
       { 11,
       &thing3mptpd,
@@ -3823,8 +3916,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "                  b@     a                     c@j      k l f e      d@     i                     g@                  h",
-         "      j@@    ia@@      k@@      l@h        b@      f@@      e@@    gc@@      d"}},
+      {  "6665    b@76 a6666     c@7j6  k l f e6  d@76 i6666     g@76665    h",
+         "6  j@@5  ia@@6  k@@6  l@7h6    b@76  f@@6  e@@5  gc@@6  d"}},
    /* s_4mdmd */
       { 15,
       (coordrec *) 0,
@@ -3834,8 +3927,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "   a                                   d@               b           c@m n o      p h      g f e@               k           j@   l                                   i",
-         "      m@l        a@      n@@      o@@    kb@@      p@@      h@@    jc@@      g@@      f@i        d@      e"}},
+      {  "5 a6666666       d@7666   b66   c@7m n o 6 p h 6 g f e@7666   k66   j@75 l6666666       i",
+         "6  m@7l  6  a@76  n@@6  o@@5  kb@@6  p@@6  h@@5  jc@@6  g@@6  f@7i  6  d@76  e"}},
    /* s_4mptpd */
       { 15,
       (coordrec *) 0,
@@ -3845,8 +3938,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "                  b      c@     a                               d@m      n o p h g f      e@     l                               i@                  k      j",
-         "      m@@    la@@      n@@      o@k        b@      p@@      h@j        c@      g@@      f@@    id@@      e"}},
+      {  "6 6 6 5 b 6 c@76 a 6 6 6 6 6 6 d@7m 6 n o p h g f 6 e@76 l 6 6 6 6 6 6 i@76 6 6 5 k 6 j",
+         "6  m@@5  la@@6  n@@6  o@7k  6  b@76  p@@6  h@7j  6  c@76  g@@6  f@@5  id@@6  e"}},
    /* sbigh */
       {11,
       &thingbigh,
@@ -3856,8 +3949,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "a                   j@b                   i@    e f l k@c                   h@d                   g",
-         "dcba@      e@      f@      l@      k@ghij"}},
+      {  "a6666   j@b6666   i@76e f l k@7c6666   h@d6666   g",
+         "dcba@65e@65f@65l@65k@ghij"}},
    /* sbigx */
       {11,
       &thingbigx,
@@ -3867,8 +3960,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "                e@                f@abcd    jihg@                l@                k",
-         "      a@      b@      c@      d@klfe@      j@      i@      h@      g"}},
+      {  "6666e@6666f@7abcd6jihg@76666l@6666k",
+         "65a@65b@65c@65d@klfe@65j@65i@65h@65g"}},
    /* sbigbigh */
       {15,
       &thingbigbigh,
@@ -3878,8 +3971,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "a                                l@b                                k@    efghponm@c                                j@d                                i",
-         "dcba@      e@      f@      g@      h@      p@      o@      n@      m@ijkl"}},
+      {  "a66666666l@b66666666k@76efghponm@7c66666666j@d66666666i",
+         "dcba@65e@65f@65g@65h@65p@65o@65n@65m@ijkl"}},
    /* sbigbigx */
       {15,
       &thingbigbigx,
@@ -3889,8 +3982,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "                e p@                f o@abcd        lkji@                g n@                h m",
-         "      a@      b@      c@      d@hgfe@mnop@      l@      k@      j@      i"}},
+      {  "6666e p@6666f o@abcd6 6lkji@76666g n@6666h m",
+         "65a@65b@65c@65d@hgfe@mnop@65l@65k@65j@65i"}},
    /* sbigrig */
       {11,
       (coordrec *) 0,
@@ -3900,8 +3993,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       (id_bit_table *) 0,
-      {  "                e f@abcd         jihg@                l k",
-         "  a@  b@  c@  d@le@kf@  j@  i@  h@  g"}},
+      {  "6666e f@7abcd6 6jihg@76666l k",
+         "5a@5b@5c@5d@le@kf@5j@5i@5h@5g"}},
    /* sbighrgl */
       {11,
       (coordrec *) 0,   /* FIX */
@@ -3911,8 +4004,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_bighrgl,
-      {  "          c@a b      e f@        jd@l k      h g@          i",
-         "   l  a@@   k  b@      j@i        c@      d@   h  e@@   g  f"}},
+      {  "6 6 c@7a b 6 e f@6 5 jd@l k 6 h g@76 6 i",
+         "9l5a@@9k5b@56j@7i66c@756d@9h5e@@9g5f"}},
    /* sbigdhrgl */
       {11,
       (coordrec *) 0,   /* FIX */
@@ -3922,8 +4015,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_bigdhrgl,
-      {  "a  b      c      e  f@           j      d@l  k      i      h  g",
-         "l  a@@k  b@@   j@@i  c@@   d@@h  e@@g  f"}},
+      {  "a  b 6 c 6 e  f@6  6 j 6 d@l  k 6 i 6 h  g",
+         "l  a@@k  b@@5 j@@i  c@@5 d@@h  e@@g  f"}},
    /* sbigbone */
       {11,
       &thingbigbone,
@@ -3933,8 +4026,8 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       FALSE,
       id_bit_table_bigbone,
-      {  "a  b                   e  f@          c d j i@l  k                   h  g",
-         "la@kb@  c@  d@  j@  i@he@gf"}},
+      {  "a  b6666   e  f@766  c d j i@7l  k6666   h  g",
+         "la@kb@5c@5d@5j@5i@he@gf"}},
    /* sbigdmd */
       {11,
       &thingbigdmd,
@@ -3944,8 +4037,8 @@ setup_attr setup_attrs[] = {
       {0, 0},
       FALSE,
       id_bit_table_bigdmd,
-      {  "           c@a b        e f@           d@@           j@l k        h g@           i",
-         "   l      a@   k      b@i j d c@   h      e@   g      f"}},
+      {  "6 6  c@7a b  6  e f@76 6  d@@6 6  j@7l k  6  h g@76 6  i",
+         "5 l6  a@5 k6  b@i j d c@5 h6  e@5 g6  f"}},
    /* sbigptpd */
       {11,
       (coordrec *) 0,
@@ -3955,8 +4048,8 @@ setup_attr setup_attrs[] = {
       {0, 0},
       FALSE,
       id_bit_table_bigptpd,
-      {  "   f       g@   e       h@c  d j  i@   b       k@   a       l",
-         "      c@@abef@@      d@@      j@@lkhg@@      i"}},
+      {  "85f 8858 g@85e 8858 h@7c88d j88i@785b 8858 k@85 a 8858 l",
+         "65c@@abef@@65d@@65j@@lkhg@@65i"}},
    /* s_dead_concentric */
       {-1,
       (coordrec *) 0,
@@ -4407,7 +4500,7 @@ Private map_thing map_wblob_1x4b        = {{21, 23, 11, 9, 12, 14, 16, 19,    0,
 Private map_thing map_wblob_1x4c        = {{3, 5, 17, 15, 18, 20, 22, 1,      6, 8, 10, 13, 15, 17, 5, 3},           MPKIND__NONE,        0, 2,  s_bigblob,   s2x4, 0x005, 0};
 Private map_thing map_wblob_1x4d        = {{21, 23, 11, 9, 12, 14, 16, 19,    0, 2, 4, 7, 9, 11, 23, 21},            MPKIND__NONE,        0, 2,  s_bigblob,   s2x4, 0x005, 0};
 
-
+        map_thing map_d1x10    = {{0, 1, 3, 2,    8, 7, 5, 6},                                                       MPKIND__NONE,        0, 2,  s1x10,   s1x4,      0x000, 0};
 
         map_thing map_lz12     = {{10, 9,                1, 11,                5, 7,                 3, 4},          MPKIND__NONE,        0, 4,  s3x4,   s1x2,      0x055, 0};
         map_thing map_rz12     = {{0, 10,                11, 8,                2, 5,                 4, 6},          MPKIND__NONE,        0, 4,  s3x4,   s1x2,      0x055, 0};

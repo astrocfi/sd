@@ -60,6 +60,7 @@ and the following external variables:
    longjmp_ptr
    history
    history_allocation
+   journal_file
    history_ptr
    written_history_items
    written_history_nopic
@@ -73,6 +74,7 @@ and the following external variables:
    enable_file_writing
    singlespace_mode
    nowarn_mode
+   accept_single_click
    cardinals
    ordinals
    selector_list
@@ -105,6 +107,7 @@ real_jmp_buf *longjmp_ptr;
 configuration *history = (configuration *) 0; /* allocated in sdmain */
 int history_allocation = 0; /* How many items are currently allocated in "history". */
 int history_ptr;
+FILE *journal_file = (FILE *) 0;
 
 /* This tells how much of the history text written to the UI is "safe".  If this
    is positive, the history items up to that number, inclusive, have valid
@@ -132,6 +135,7 @@ uint32 collision_person2;
 long_boolean enable_file_writing;
 long_boolean singlespace_mode;
 long_boolean nowarn_mode;
+long_boolean accept_single_click;
 
 Cstring cardinals[] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", (Cstring) 0};
 Cstring ordinals[] = {"0th", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th", "13th", "14th", "15th", (Cstring) 0};
@@ -494,6 +498,8 @@ static restriction_thing wave_3x1d     = {6, {0, 1, 2, 6, 5, 4},                
 
 static restriction_thing miniwave_ptpd = {2, {1, 7, 3, 5},                                           {2}, {0}, {0}, TRUE,  chk_anti_groups};    /* check for miniwaves in center of each diamond */
 
+static restriction_thing gen_qbox      = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 1, 2}, {2, 5, 6}, FALSE, chk_dmd_qtag};
+
 static restriction_thing dmd_gq        = {4, {0}, {4, 0, 1, 2, 3},                            {1, 0},    {1, 2},    FALSE, chk_dmd_qtag};
 static restriction_thing qtag_gq       = {4, {8, 0, 1, 2, 3, 4, 5, 6, 7}, {0},                {2, 4, 5}, {2, 0, 1}, FALSE, chk_dmd_qtag};
 static restriction_thing ptpd_gq       = {4, {0}, {8, 0, 1, 2, 3, 4, 5, 6, 7},                {2, 0, 6}, {2, 2, 4}, FALSE, chk_dmd_qtag};
@@ -751,6 +757,7 @@ static restr_initializer restr_init_table2[] = {
    {s_ptpd, cr_diamond_like, &ptpd_d},
    {s_ptpd, cr_qtag_like, &ptpd_gq},
    {s_ptpd, cr_pu_qtag_like, &ptpd_pq},
+   {s2x4, cr_gen_qbox, &gen_qbox},
    {s2x2, cr_wave_only, &box_wave},
    {s2x2, cr_all_facing_same, &box_1face},
    {s2x2, cr_2fl_only, &box_1face},
@@ -981,7 +988,8 @@ static char current_line[MAX_TEXT_LINE_LENGTH];
 static int text_line_count = 0;
 
 static long_boolean usurping_writechar = FALSE;
-static long_boolean no_auto_line_breaks = FALSE;
+static int drawing_picture = 0;
+static int squeeze_this_newline = 0;
 
 
 
@@ -1010,7 +1018,9 @@ Private void writechar(char src)
    *destcurr = (lastchar = src);
    if (src == ' ' && destcurr != current_line) lastblank = destcurr;
 
-   if (destcurr < &current_line[MAX_PRINT_LENGTH] || usurping_writechar || no_auto_line_breaks)
+   /* If drawing a picture, don't do automatic line breaks. */
+
+   if (destcurr < &current_line[MAX_PRINT_LENGTH] || usurping_writechar || drawing_picture)
       destcurr++;
    else {
       /* Line overflow.  Try to write everything up to the last
@@ -1070,11 +1080,24 @@ extern void newline(void)
 
    *destcurr = '\0';
 
+   /* There will be no special "5" or "6" characters in pictures (drawing_picture&1) if:
+
+      Enable_file_writing is on (we don't write the special stuff to a file,
+         of course, and we don't even write it to the transcript when showing the
+         final card)
+
+      Use_escapes_for_drawing_people is 0 or 1 (so we don't do it for Sdtty under
+         DJGPP or GCC (0), or for Sdtty under Windows (1))
+
+      No_graphics != 0 (so we only do it if showing full checkers in Sd) */
+
+
    if (enable_file_writing)
       write_file(current_line);
 
    text_line_count++;
-   uims_add_new_line(current_line);
+   uims_add_new_line(current_line,
+                     enable_file_writing ? 0 : (drawing_picture | (squeeze_this_newline << 1)));
    open_text_line();
 }
 
@@ -1191,6 +1214,7 @@ extern void doublespace_file(void)
 
 extern void exit_program(int code)
 {
+   if (journal_file) (void) fclose(journal_file);
    uims_terminate();
    final_exit(code);
 }
@@ -1938,27 +1962,21 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                if (!subsidiary_ptr) continue;
                cc = subsidiary_ptr->call_to_print;
 
-               if (     !cc ||    /* If no call pointer, it isn't a tag base call. */
-                           (
-                              !(cc->callflags1 & (CFLAG1_BASE_TAG_CALL_MASK)) &&
-                                 (
-                                    !(cc->callflags1 & (CFLAG1_BASE_CIRC_CALL)) ||
-                                    search->call_to_print != base_calls[base_call_circcer]
-                                 )
-                           )) {
-
-
+               if (!cc ||    /* If no call pointer, it isn't a tag base call. */
+                   (!(cc->callflags1 & CFLAG1_BASE_TAG_CALL_MASK) &&
+                    (!(cc->callflags1 & CFLAG1_BASE_CIRC_CALL) ||
+                     search->call_to_print != base_calls[base_call_circcer]))) {
                   callspec_block *replaced_call = search->call_to_print;
 
                   /* Need to check for case of replacing one star turn with another. */
 
                   if ((first_replace == 0) &&
-                        (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) &&
-                              ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
-                              subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
-                              cc &&
-                              ((cc->callflags1 & CFLAG1_IS_STAR_CALL) ||
-                              cc->schema == schema_nothing)) {
+                      (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) &&
+                      ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
+                       subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
+                      cc &&
+                      ((cc->callflags1 & CFLAG1_IS_STAR_CALL) ||
+                       cc->schema == schema_nothing)) {
                      first_replace++;
 
                      if (cc->schema == schema_nothing)
@@ -1973,8 +1991,8 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                      case 1:
                      case 2:
                      case 3:
-                        /* This is a natural replacement.  It may already
-                           have been taken care of. */
+                        /* This is a natural replacement.
+                           It may already have been taken care of. */
                         if (pending_subst1 || search->replacement_key == 3) {
                            write_blank_if_needed();
                            if (search->replacement_key == 3)
@@ -1987,8 +2005,8 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 5:
                      case 6:
-                        /* This is a secondary replacement.  It may already
-                           have been taken care of. */
+                        /* This is a secondary replacement.
+                           It may already have been taken care of. */
                         if (pending_subst2) {
                            write_blank_if_needed();
                            writestuff("[modification: ");
@@ -2005,7 +2023,13 @@ extern void print_recurse(parse_block *thing, int print_recurse_arg)
                         else
                            writestuff("AND REPLACE ");
 
-                        writestuff_with_decorations(&search->options, replaced_call->name);
+                        /* Star turn calls can have funny names like "nobox". */
+
+                        writestuff_with_decorations(
+                           &search->options,
+                           (replaced_call->callflags1 & CFLAG1_IS_STAR_CALL) ?
+                           "turn the star @b" : replaced_call->name);
+
                         writestuff(" WITH [");
                         print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
                         writestuff("]");
@@ -2043,8 +2067,23 @@ static char peoplenames2[] = "BGBGBGBG";
 static char directions[] = "?>?<????^?V?????";
 
 /* This gets set if a user interface (e.g. sdui-tty/sdui-win) wants escape sequences
-   for drawing people, so that it can fill in funny characters, or draw in color. */
-long_boolean use_escapes_for_drawing_people = FALSE;
+   for drawing people, so that it can fill in funny characters, or draw in color.
+   This applies only to calls to uims_add_new_line with a nonzero second argument.
+
+   0 means don't use any funny stuff.  The text strings transmitted when drawing
+   setups are completely plain ASCII.
+
+   1 means use escapes for the people themselves (13 octal followed by a byte of
+   person identifier followed by a byte of direction) byt don't use the special
+   spacing characters.  All spacing and formatting is done with spaces.
+
+   2 means use escapes and other special characters.  Whenever the second arg to
+   uims_add_new_line is nonzero, then in addition to the escape sequences for the
+   people themselves, we have an escape sequence for a phantom, and certain
+   characters have special meaning:  5 means space 1/2 of a glyph width, etc.
+   See the definition of newline for details. */
+
+int use_escapes_for_drawing_people = 0;
 
 /* These could get changed if the user requests special naming.  See "alternate_glyphs_1"
    in the command-line switch parser in sdsi.c. */
@@ -2056,7 +2095,7 @@ char *direc = directions;
 Private void printperson(uint32 x)
 {
    if (x & BIT_PERSON) {
-      if (enable_file_writing || !use_escapes_for_drawing_people) {
+      if (enable_file_writing || use_escapes_for_drawing_people == 0) {
          /* We never write anything other than standard ASCII to the transcript file. */
          writechar(' ');
          writechar(pn1[(x >> 6) & 7]);
@@ -2074,8 +2113,12 @@ Private void printperson(uint32 x)
          writechar((char) ((x & 017) | 040));
       }
    }
-   else
-      writestuff("  . ");
+   else {
+      if (enable_file_writing || use_escapes_for_drawing_people <= 1)
+         writestuff("  . ");
+      else
+         writechar('\014');  /* If we have full ("checker") escape sequences, use this. */
+   }
 }
 
 /* These static variables are used by printsetup/print_4_person_setup/do_write. */
@@ -2091,11 +2134,38 @@ Private void do_write(Cstring s)
 
    for (;;) {
       if (!(c=(*s++))) return;
-      else if (c == '@') newline();
-      else if (c == ' ') writestuff(" ");
+      else if (c == '@') {
+         if (*s == '7') {
+            s++;
+            squeeze_this_newline = 1;
+            newline();
+            squeeze_this_newline = 0;
+         }
+         else {
+            newline();
+         }
+      }
       else if (c >= 'a' && c <= 'x')
-         printperson(rotperson(printarg->people[personstart + ((c-'a'-offs) % modulus)].id1, ri));
-      else writestuff("?");
+         printperson(rotperson(printarg->people[personstart + ((c-'a'-offs)%modulus)].id1, ri));
+      else {
+         /* We need to do the mundane translation of "5" and "6" if the result
+            isn't going to be used by something that uses same. */
+         if (enable_file_writing || use_escapes_for_drawing_people <= 1 || no_graphics != 0) {
+            if (c == '6')
+               writestuff("    ");    /* space equivalent to 1 full glyph. */
+            else if (c == '9')
+               writestuff("   ");     /* space equivalent to 3/4 glyph. */
+            else if (c == '5')
+               writestuff("  ");      /* space equivalent to 1/2 glyph. */
+            else if (c == '8')
+               writestuff(" ");       /* Like 5, but one space less if doing ASCII.
+                                         (Exactly same as 5 if doing checkers. */
+            else
+               writechar(c);
+         }
+         else
+            writechar(c);
+      }
    }
 }
 
@@ -2115,11 +2185,11 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
       if (elong < 0)
          str = "ab@dc@";
       else if (elong == 1)
-         str = "a    b@d    c@";
+         str = "a6b@d6c@";
       else if (elong == 2)
          str = "ab@@@dc@";
       else
-         str = "a    b@@@d    c@";
+         str = "a6b@@@d6c@";
    }
    else
       str = setup_attrs[s->skind].print_strings[roti & 1];
@@ -2140,7 +2210,7 @@ Private void printsetup(setup *x)
 {
    Cstring str;
 
-   no_auto_line_breaks = TRUE;
+   drawing_picture = 1;
    printarg = x;
    modulus = setup_attrs[x->kind].setup_limits+1;
    roti = x->rotation & 3;
@@ -2169,45 +2239,72 @@ Private void printsetup(setup *x)
    else {
       switch (x->kind) {
          case s_qtag:
-            if ((x->people[0].id1 & x->people[1].id1 & x->people[4].id1 & x->people[5].id1 & 1) &&
-                  (x->people[2].id1 & x->people[3].id1 & x->people[6].id1 & x->people[7].id1 & 010)) {
+            if ((x->people[0].id1 & x->people[1].id1 &
+                 x->people[4].id1 & x->people[5].id1 & 1) &&
+                (x->people[2].id1 & x->people[3].id1 &
+                 x->people[6].id1 & x->people[7].id1 & 010)) {
                /* People are in diamond-like orientation. */
                if (x->rotation & 1)
-                  do_write("      g@f        a@      h@@      d@e        b@      c");
-               else {
-                  do_write("   a     b@@g h d c@@   f     e");
-               }
+                  do_write("6  g@7f  6  a@76  h@@6  d@7e  6  b@76  c");
+               else
+                  do_write("5 a6 b@@g h d c@@5 f6 e");
             }
             else {
                /* People are not.  Probably 1/4-tag-like orientation. */
                if (x->rotation & 1)
-                  do_write("      g@f  h  a@e  d  b@      c");
-               else {
-                  do_write("      a  b@@g  h  d  c@@      f  e");
-               }
+                  do_write("6  g@f  h  a@e  d  b@6  c");
+               else
+                  do_write("6  a  b@@g  h  d  c@@6  f  e");
             }
             break;
+         case s_c1phan:
+            /* Look for nice "classic C1 phantom" occupations, and  draw
+               tighter diagram, if using checkers, if so. */
+            if (!(x->people[0].id1 | x->people[2].id1 |
+                  x->people[4].id1 | x->people[6].id1 |
+                  x->people[8].id1 | x->people[10].id1 |
+                  x->people[12].id1 | x->people[14].id1))
+               str = "8  b@786       h  f@78  d@7@868         l@7n  p@7868         j";
+            else if (!(x->people[1].id1 | x->people[3].id1 |
+                       x->people[5].id1 | x->people[7].id1 |
+                       x->people[9].id1 | x->people[11].id1 |
+                       x->people[13].id1 | x->people[15].id1))
+               str = "868         e@7a  c@7868         g@7@8  o@786       k  i@78  m";
+            else
+               str = "58b66e@a88c  h88f@58d66g@@58o66l@n88p  k88i@58m66j";
+
+            do_write(str);
+            break;
          case s_dead_concentric:
+            drawing_picture = 0;
             writestuff(" centers only:");
             newline();
+            drawing_picture = 1;
             print_4_person_setup(0, &(x->inner), -1);
             break;
          case s_normal_concentric:
+            drawing_picture = 0;
             writestuff(" centers:");
             newline();
+            drawing_picture = 1;
             print_4_person_setup(0, &(x->inner), -1);
+            drawing_picture = 0;
             writestuff(" ends:");
             newline();
+            drawing_picture = 1;
             print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
             break;
          default:
+            drawing_picture = 0;
             writestuff("???? UNKNOWN SETUP ????");
+            newline();
+            drawing_picture = 1;
       }
    }
 
    newline();
+   drawing_picture = 0;
    newline();
-   no_auto_line_breaks = FALSE;
 }
 
 
@@ -3520,6 +3617,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       case cr_qtag_mwv:
       case cr_qtag_mag_mwv:
       case cr_dmd_ctrs_1f:
+      case cr_gen_qbox:
          goto check_tt;
       case cr_ctr_pts_rh:
       case cr_ctr_pts_lh:
@@ -4513,5 +4611,5 @@ extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[], uint32 
    lose:
 
    fail("This is an inconsistent shape or orientation changer!!");
-   /* NOTREACHED */
+   return FALSE;
 }

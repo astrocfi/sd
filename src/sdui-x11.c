@@ -617,6 +617,7 @@ Private XtResource startup_resources[] = {
     MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
     MENU("toggleRetain_after_error", start_list[start_select_toggle_retain], "Toggle retain after error"),
     MENU("toggleNowarnMode", start_list[start_select_toggle_nowarn_mode], "Toggle nowarn mode"),
+    MENU("toggleSingleClickMode", start_list[start_select_toggle_singleclick_mode], "Toggle singleclick mode"),
     MENU("toggleSinger", start_list[start_select_toggle_singer], "Toggle singing call"),
     MENU("toggleReverseSinger", start_list[start_select_toggle_singer_backward], "Toggle singing call with backward progression"),
     MENU("initSessionFile", start_list[start_select_init_session_file], "Initialize session file"),
@@ -1845,8 +1846,7 @@ Private XawTextBlock text_block;
  * the_line does not have the trailing Newline in it and
  * is volatile, so we must copy it if we need it to stay around.
  */
-extern void
-uims_add_new_line(char the_line[])
+extern void uims_add_new_line(char the_line[], int drawing_picture)
 {
     XawTextPosition prev_size = line_count ? line_indexes[line_count-1] : 0;
     XawTextPosition line_len, new_size;

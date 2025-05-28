@@ -1531,7 +1531,7 @@ Private long_boolean in_out_roll_select(setup *real_people, int real_index,
          (ccw_end == yes_roll_direction && cw_end != yes_roll_direction) ||
          /* or if cw_end exists and is improper, and ccw_end is a phantom */
          (cw_end == no_roll_direction && ccw_end == 0))
-      return(FALSE);
+      return FALSE;
    else {
       char *errmsg;
       switch (code&3) {
@@ -1541,7 +1541,7 @@ Private long_boolean in_out_roll_select(setup *real_people, int real_index,
          case 3: errmsg = "Can't find magic end looking out."; break;
       }
       fail(errmsg);
-      /* NOTREACHED */
+      return FALSE;
    }
 }
 
@@ -1650,7 +1650,7 @@ Private long_boolean check_tbone(setup *real_people, int real_index,
       }
    }
    fail("Can't determine where to go or which way to face.");
-   /* NOTREACHED */
+   return FALSE;
 }
 
 static Const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
@@ -1827,7 +1827,7 @@ Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
    }
 
    fail("Can't determine handedness.");
-   /* NOTREACHED */
+   return FALSE;
 }
 
 /* ARGSUSED */
@@ -1840,7 +1840,7 @@ Private long_boolean trngl_pt_rh(setup *real_people, int real_index,
       return FALSE;
 
    fail("Can't determine handedness of triangle point.");
-   /* NOTREACHED */
+   return FALSE;
 }
 
 typedef struct {

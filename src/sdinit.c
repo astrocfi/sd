@@ -1,5 +1,3 @@
-/* -*- mode:C; c-basic-offset:3; indent-tabs-mode:nil; -*- */
-
 /* SD -- square dance caller's helper.
 
     Copyright (C) 1990-1998  William B. Ackerman.
@@ -15,6 +13,7 @@
     This is for version 32. */
 
 /* This defines the following functions:
+   build_database
    initialize_menus
 */
 
@@ -381,15 +380,11 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
    char *n = y->name;
 
    for (;;) {
-      char mc = *m;
-      char nc = *n;
+      int mc;
+      int nc;
 
-      /* First, skip over everything that we need to, in both m and n.  This includes blanks, hyphens, and
-         insignificant escape sequences.
-         Not sure about the continuing accuracy or helpfulness of the comments just below. */
-
-      /* We need to ignore blanks; otherwise "@6 run" will come out at the beginning of the list instead of under "r". */
-      /* And hyphens too, so that "1-3-2 quarter the alter" will be listed under "q" (or whatever) rather than "-". */
+      /* First, skip over everything that we need to, in both m and n.
+         This includes blanks, hyphens, and insignificant escape sequences. */
 
       /* The current order is:
          <ATC>        (-8)
@@ -401,10 +396,11 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
          <N/4>        (-2)
          <Nth>        (-1) */
 
-      /* First, skip blanks and hyphens, in both m and n. */
+      mc = *m;
+
+      /* First, skip blanks and hyphens. */
 
       if (mc == ' ' || mc == '-') { m++; continue; }
-      else if (nc == ' ' || nc == '-') { n++; continue; }
 
       /* Next, skip elided stuff in the "m" stream. */
 
@@ -413,21 +409,21 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
 
          switch (mc) {
             case 'v': case 'w': case 'x': case 'y':
-               mc = -8; break;
+               mc = 500-8; break;
             case 'h':
-               mc = -7; break;
+               mc = 500-7; break;
             case '6': case 'k':
-               mc = -6; break;
+               mc = 500-6; break;
             case 'N':
-               mc = -5; break;
+               mc = 500-5; break;
             case '0': case 'm':
-               mc = -4; break;
+               mc = 500-4; break;
             case '9':
-               mc = -3; break;
+               mc = 500-3; break;
             case 'a': case 'b': case 'B': case 'D':
-               mc = -2; break;
+               mc = 500-2; break;
             case 'u':
-               mc = -1; break;
+               mc = 500-1; break;
             case '7': case 'n': case 'j': case 'J': case 'E':
                /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                while (*m++ != '@');
@@ -437,29 +433,36 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
                continue;
          }
       }
+      else if (mc >= 'A' && mc <= 'Z')
+         mc += 'a'-'A';     /* Canonicalize to lower case. */
 
-      /* And in the "n" stream. */
+      /* Now do the "n" stream. */
 
-      if (nc == '@') {
-         nc = *++n;
 
-         switch (nc) {
+      for (;;) {
+         nc = *n;
+         if (nc == ' ' || nc == '-') { n++; continue; }
+
+         if (nc == '@') {
+            nc = *++n;
+
+            switch (nc) {
             case 'v': case 'w': case 'x': case 'y':
-               nc = -8; break;
+               nc = 500-8; break;
             case 'h':
-               nc = -7; break;
+               nc = 500-7; break;
             case '6': case 'k':
-               nc = -6; break;
+               nc = 500-6; break;
             case 'N':
-               nc = -5; break;
+               nc = 500-5; break;
             case '0': case 'm':
-               nc = -4; break;
+               nc = 500-4; break;
             case '9':
-               nc = -3; break;
+               nc = 500-3; break;
             case 'a': case 'b': case 'B': case 'D':
-               nc = -2; break;
+               nc = 500-2; break;
             case 'u':
-               nc = -1; break;
+               nc = 500-1; break;
             case '7': case 'n': case 'j': case 'J': case 'E':
                /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
                while (*n++ != '@');
@@ -467,8 +470,13 @@ Private long_boolean callcompare(callspec_block *x, callspec_block *y)
             default:
                n++;
                continue;
+            }
          }
-      }
+         else if (nc >= 'A' && nc <= 'Z')
+            nc += 'a'-'A';     /* Canonicalize to lower case. */
+
+         break;
+      } 
 
       if (!mc) return TRUE;
       else if (!nc) return FALSE;
@@ -780,7 +788,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 Private void check_tag(int tag)
 {
    if (tag >= max_base_calls)
-      database_error("Too many tagged calls -- mkcalls made an error.");
+      database_error("Too many tagged calls -- mkcalls made an error");
    if (tag > highest_base_call) highest_base_call = tag;
 }
 
@@ -1103,7 +1111,7 @@ extern void build_database(call_list_mode_t call_list_mode)
                circcer_calls[number_of_circcers-1] = call_root;
             }
             if (local_callcount >= abs_max_calls)
-               database_error("Too many base calls -- mkcalls made an error.");
+               database_error("Too many base calls -- mkcalls made an error");
             local_call_list[local_callcount++] = call_root;
          }
       }

@@ -15,7 +15,8 @@ call make_text sessions_toc.html html.msg
 echo cd ../demo>> html.msg
 call make_text demo.html html.msg
 pgp -sta +clearsig=on +armor=on html.msg -u wba -o html.txt
-zip html html.txt
+del html.msg
+REM zip html html.txt
 REM
 REM         The file "html.zip" may now be unzipped to "html.txt",
 REM            which can then be mailed, creating these files:

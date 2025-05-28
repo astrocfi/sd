@@ -8,20 +8,13 @@
 <body bgcolor="#ffffdd">
 <h1 align=center>Sd - Downloading for PC Compatibles</h1>
 <p>
-Only Sdtty is available for PC compatibles, not Sd.&nbsp;
+Both Sd and Sdtty are available for PC compatibles.&nbsp;
 (Note: <a href="intro.html">summary of availability</a>.)&nbsp;
-It runs under Windows 95, Windows 98, Windows NT, Windows 3.1, or DOS.
-<p>
-<strong>IMPORTANT NOTICE:</strong><br>
-There has been a change in file organization, in order to
-permit people to download just the documentation formats
-that they want.  The file "<code>INSTALL.EXE</code>" used to contain
-the program, database, and documentation.  It now contains only
-the program and database.  If you want the documentation, download
-one of the other files.
+They run under Windows 95, Windows 98, Windows NT, Windows 3.1, or DOS.
+If you are running Windows 3.1 or DOS, only Sdtty is available .
 <p>
 You can download the file "<code>INSTALL.EXE</code>" from this Web page
-onto your computer.&nbsp;
+onto your computer.  It contains both Sd and Sdtty.&nbsp;
 You can also download the documentation files shown below.
 All of these files are the same as the files that you would get if you
 obtained the program from us on a floppy disk.
@@ -30,19 +23,21 @@ convenient form, that you can browse or download from the
 <a href="readings.html">Documentation</a> page.
 <ol>
 <li>
-First, be sure that the folder into which you want to download the
-file(s) exists.&nbsp;  This folder is typically "<code>C:\SD</code>".&nbsp;
-If you haven't already created it, create it with these commands at the Command (MSDOS) Prompt:
+Download the file(s) from your Web browser into that folder.&nbsp;
+The current version is 32.8, released on July 25, 1999.
 <p>
-<samp>
- &gt; C:<br>
- &gt; MD \SD<br>
- &gt; CD \SD
-</samp>
-<p>
-<li>
-Then download the file(s) from your Web browser into that folder.&nbsp;
-The current version is 32.6, released on February 24, 1999.
+<strong>WARNING WARNING WARNING WARNING:</strong><br>
+The new installation procedure for Sd and Sdtty is much more
+user-friendly than before, but it always installs into the folder
+C:\sd.  (Software that can install to other folders and still make
+correct shortcut icons costs $250.)  If you have a different calling
+program in that directory (e.g. SRC Sd), it and its database will be
+overwritten.  Users wishing to have both Sd/Sdtty and SRC Sd installed
+on their computer will need to ensure that the directory containing
+SRC Sd has some other name.  I do not know how serious or widespread
+this problem will be.  If this creates difficulties for you, please
+let me (wba@an.hp.com) know.  Do not download this program if you want
+to keep SRC Sd and you do not understand this issue.
 <p>
 <strong>IMPORTANT NOTICE:</strong><br>
 This version is significantly changed from versions prior to 32.0.
@@ -59,35 +54,37 @@ file.  Choose the correct one from the list below.
 <hr>
 <ul>
 <li>Download <a href="http://www.gildea.com/ftp/sd/install.exe">install.exe</a>
-which has Sdtty for PC compatibles running Windows 95, 98, or NT.
-<li>Download <a href="http://www.gildea.com/ftp/sd/installw.exe">installw.exe</a>
-which has Sdtty for PC compatibles running DOS or Windows 3.1
+which has Sd and Sdtty for PC compatibles running Windows 95, 98, or NT.
+<li>Download <a href="http://www.gildea.com/ftp/sd/install3.exe">install3.exe</a>
+which has Sdtty for PC compatibles running DOS or Windows 3.1.
 </ul>
 <hr>
+You can also download the documentation files in "bulk" form to your computer.
+<p>
 <ul>
 <li>Download <a href="http://www.gildea.com/ftp/sd/textdoc.exe">textdoc.exe</a>
-which has all 4 documents in plain text form.
+which has all documentation in plain text form.
 <li>Download <a href="http://www.gildea.com/ftp/sd/psdoc.exe">psdoc.exe</a>
-which has all 4 documents in postscript form.
+which has all documentation in postscript form.
 <li>Download <a href="http://www.gildea.com/ftp/sd/pdfdoc.exe">pdfdoc.exe</a>
-which has all 4 documents in Acrobat form.
+which has all documentation in Acrobat form.
 </ul>
 <hr>
 <li>
 After downloading, you should have a file named <code>INSTALL.EXE</code>
-or <code>INSTALLW.EXE</code>
-(and whatever documentation files you downloaded) in the folder in
-which you want Sdtty installed.&nbsp;
-Do the actual installation by typing this at the Command Prompt:
+or <code>INSTALL3.EXE</code>
+(and whatever documentation files you downloaded).
+Do the actual installation by launching that file.
+This will unpack and install the program and database
+into the folder C:\sd.
 <p>
-<pre>
- &gt; install        (or installw)
-</pre>
+<li>
+A Windows explorer will appear, containing useful shortcuts.  You can copy
+any or all of them to the Desktop and/or Start Menu.  Use the right mouse button
+for the copy, and click on "Copy Here" when asked.
 <p>
-This command will unpack and install the program and database
-into that folder.
-<p>
-Doing any or all of these:
+<li>
+Launching any or all of these:
 <p>
 <pre>
  &gt; textdoc
@@ -102,37 +99,16 @@ You may now delete the <code>.EXE</code> files or move them to a
 floppy as a backup.
 <p>
 <li>
-If you are installing Sd for the first time,
-you will probably want to perform
-a simple operation to make it possible to start the program by
-clicking an icon.&nbsp;
-Instructions for doing this operation are described in the
-<a href="manual/">manual</a>.
-If you have Windows 95, 98, or NT 4.0 or later, all you need to do is
-(still at the Command Prompt) type one of
-<p>
-<pre>
- &gt; do_desk             (to put the icon on your Desktop),       or
- &gt; do_start            (to put the icon in the Start Menu),     or
- &gt; do_prog             (to put the icon in the Programs Menu)
-</pre>
-<p>
-<li>
 If you are upgrading from a previous version,
 <a href="relnotes.html">read the Release Notes</a>.
 </ol>
 <p>
 You can also order a diskette and nicely printed documentation from the
 authors.
-<p>
-<strong>IMPORTANT NOTICE:</strong><br>
-Versions 31.72 and later behave differently from previous versions,
-in a way that can cause frustration.&nbsp;  Please read the
-<a href="relnotes.html">release notes</a>.
 <hr>
-See also <a href="download-unix.html">Downloading Sd for Workstations</a>.<br>
+See also <a href="download-unix.html">Downloading Sd for Unix</a>.<br>
 Up to <a href="./">Sd home page</a>.<br>
-<em>Time-stamp: "20 November 1997"</em>
+<em>Time-stamp: "22 May 1999"</em>
 </body>
 </html>
 <!--

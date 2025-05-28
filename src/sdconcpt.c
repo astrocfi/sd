@@ -86,7 +86,7 @@ Private void do_c1_phantom_move(
    uint64 junk_concepts;
    setup setup1, setup2;
    setup the_setups[2];
-   phan_map *map_ptr;
+   phan_map *map_ptr = (phan_map *) 0;
 
    /* See if this is a "phantom tandem" (or whatever) by searching ahead, skipping comments of course.
       This means we must skip modifiers too, so we check that there weren't any. */
@@ -185,14 +185,10 @@ Private void do_c1_phantom_move(
 
       /* Check for a 3x4 occupied as a distorted "pinwheel", and treat it as phantoms. */
 
-      if (global_livemask == 04747) {
+      if (global_livemask == 04747)
          map_ptr = &map_pinwheel3;
-         goto use_map;
-      }
-      else if (global_livemask == 05656) {
+      else if (global_livemask == 05656)
          map_ptr = &map_pinwheel4;
-         goto use_map;
-      }
    }
 #endif
    else if (ss->kind == s4x4) {
@@ -262,10 +258,11 @@ Private void do_c1_phantom_move(
       result->kind = s2x4;
       return;
    }
-   else
-      fail("Inappropriate setup for phantom concept.");
 
    use_map:
+
+   if (!map_ptr)
+      fail("Inappropriate setup for phantom concept.");
 
    setup1 = *ss;
    setup2 = *ss;
@@ -2737,7 +2734,7 @@ Private void do_concept_fan(
 
    callspec = parseptrcopy->call;
 
-   if (!callspec || !(callspec->callflags1 & CFLAG1_CAN_BE_FAN))
+   if (!callspec || !(callspec->callflagsf & CFLAG2_CAN_BE_FAN))
       fail("Can't do \"fan\" with this call.");
 
    /* Step to a wave if necessary.  This is actually only needed for the "yoyo" concept.
@@ -3934,7 +3931,9 @@ Private void do_concept_do_each_1x4(
    parse_block *parseptr,
    setup *result)
 {
-   uint32 map_code;
+
+   map_thing *division_maps;
+   uint32 map_code = ~0UL;
    int arg1 = parseptr->concept->value.arg1;
    int arg2 = parseptr->concept->value.arg2;
 
@@ -4008,6 +4007,12 @@ Private void do_concept_do_each_1x4(
                goto split_big;
             }
             break;
+         case s1x10:
+            if (global_livemask == 0x1EF) {
+               division_maps = &map_d1x10;
+               goto split_big;
+            }
+            break;
       }
 
       fail("Need a 2x4 or 1x8 setup for this concept.");
@@ -4020,7 +4025,10 @@ Private void do_concept_do_each_1x4(
 
    split_big:
 
-   new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
+   if (map_code == ~0UL)
+      divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
+   else
+      new_divided_setup_move(ss, map_code, phantest_ok, TRUE, result);
 }
 
 
@@ -4628,6 +4636,8 @@ Private void do_concept_meta(
       uint32 save_elongation;
       uint32 save_expire;
       uint32 index;
+      uint32 shortenhighlim;
+      uint32 code_to_use_for_only;
       long_boolean doing_just_one;
 
    case meta_key_skip_nth_part:
@@ -4990,14 +5000,16 @@ Private void do_concept_meta(
          Repeatedly execute parts of the call, skipping the concept where required. */
 
       index = 0;
+      shortenhighlim = 0;
       doing_just_one = FALSE;
+      code_to_use_for_only = CMD_FRAC_CODE_ONLY;
 
       /* We allow picking a specific part, and we allow "finishing" from a specific
          part, but we allow nothing else. */
 
       if ((ss->cmd.cmd_frac_flags &
            (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
-            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | 0xFFFF)) ==
+            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | CMD_FRAC_NULL_VALUE)) {
          index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
          doing_just_one = TRUE;
@@ -5005,13 +5017,24 @@ Private void do_concept_meta(
       else if ((ss->cmd.cmd_frac_flags &
            (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
             CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | CMD_FRAC_PART2_MASK | 0xFFFF)) ==
+          (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLYREV | CMD_FRAC_NULL_VALUE)) {
+         index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
+         doing_just_one = TRUE;
+         code_to_use_for_only = CMD_FRAC_CODE_ONLYREV;
+         fail("Sorry, can't do this.");
+      }
+      else if ((ss->cmd.cmd_frac_flags &
+           (CMD_FRAC_BREAKING_UP | CMD_FRAC_IMPROPER_BIT |
+            CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK | 0xFFFF)) ==
           (CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_FROMTOREV | CMD_FRAC_NULL_VALUE)) {
          index = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT) - 1;
+         shortenhighlim = ((ss->cmd.cmd_frac_flags & CMD_FRAC_PART2_MASK));
       }
       else if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
          fail("Can't stack meta or fractional concepts.");
 
-      frac_flags = ss->cmd.cmd_frac_flags & ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK);
+      frac_flags = ss->cmd.cmd_frac_flags &
+         ~(CMD_FRAC_CODE_MASK|CMD_FRAC_PART_MASK|CMD_FRAC_PART2_MASK);
 
       do {
          /* Here is where we make use of actual numerical assignments. */
@@ -5043,8 +5066,8 @@ Private void do_concept_meta(
             (if that is the subject concept) that fractions are allowed, and they
             are to be applied to the first call only. */
          result->cmd.cmd_misc_flags |= CMD_MISC__PUT_FRAC_ON_FIRST;
-         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
-            (index * CMD_FRAC_PART_BIT) | frac_flags;
+         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | code_to_use_for_only |
+            (index * CMD_FRAC_PART_BIT) | frac_flags | shortenhighlim;
 
          /* If the call that we are doing has the RESULTFLAG__NO_REEVALUATE flag
             on (meaning we don't re-evaluate under *any* circumstances, particularly
@@ -5176,13 +5199,15 @@ Private void do_concept_replace_nth_part(
    case 0:
       goto nolastpart;
    case 1:
-      frac_key = CMD_FRAC_REVERSE | CMD_FRAC_CODE_ONLY | CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
+      frac_key = CMD_FRAC_REVERSE | CMD_FRAC_CODE_ONLY | 
+         CMD_FRAC_PART_BIT*1 | CMD_FRAC_NULL_VALUE;
       break;
    case 2: case 3:
       frac_key = (newfracs<<8) | 0x0011;
       break;
    default:
-      frac_key = CMD_FRAC_CODE_FROMTOREV | ((parseptr->options.number_fields+1) * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
+      frac_key = CMD_FRAC_CODE_FROMTOREV |
+         ((parseptr->options.number_fields+1) * CMD_FRAC_PART_BIT) | CMD_FRAC_NULL_VALUE;
       break;
    }
 
@@ -5236,7 +5261,8 @@ Private void do_concept_interlace(
          result->cmd = ss->cmd;
          result->cmd.prior_elongation_bits = save_elongation;
          result->cmd.prior_expire_bits = save_expire;
-         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | (indexa * CMD_FRAC_PART_BIT) | a_frac_flags;
+         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
+            (indexa * CMD_FRAC_PART_BIT) | a_frac_flags;
          if (!(result->result_flags & RESULTFLAG__NO_REEVALUATE))
             update_id_bits(result);
          result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
@@ -5265,7 +5291,8 @@ Private void do_concept_interlace(
          result->cmd = ss->cmd;
          result->cmd.prior_elongation_bits = save_elongation;
          result->cmd.prior_expire_bits = save_expire;
-         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY | (indexb * CMD_FRAC_PART_BIT) | b_frac_flags;
+         result->cmd.cmd_frac_flags = CMD_FRAC_BREAKING_UP | CMD_FRAC_CODE_ONLY |
+            (indexb * CMD_FRAC_PART_BIT) | b_frac_flags;
          result->cmd.parseptr = parseptr->subsidiary_root;
          do_call_in_series(result, TRUE, FALSE, TRUE, FALSE);
          if (!(result->result_flags & RESULTFLAG__PARTS_ARE_KNOWN))

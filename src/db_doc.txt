@@ -2700,6 +2700,16 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        be at least one definitive person to test right or left.
                                        It does not demand all people live.  It is meaningless
                                        if left or right isn't specified.
+   gen_qbox                         2x4/4x2 - demands that everyone be column-like.  This is
+                                       intended to be used with the "left" or "right" modifiers.
+                                       It demands that the center 4 have that handedness.  When
+                                       the "live" modifier is used, it additionally demands that
+                                       there be at least one center, so that a definitive test
+                                       of the handedness can be made.  This qualifier does not
+                                       test the facing direction of the ends, other than to
+                                       demand that they be column-like.  Hence, a 1/4 box,
+                                       3/4 box, column, or magic column will satisfy this,
+                                       as long as the centers have the indicated handedness.
    in_or_out,                       Same as corresponding restriction, above.
                                        This can take the "live" and/or "in" or "out" mofifiers
                                        to specify, for example, an 8 chain or a trade by.

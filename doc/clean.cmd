@@ -36,6 +36,8 @@ del textdoc.exe
 del pdfdoc.exe
 del install.exe
 del installw.exe
+del install3.exe
+del installs.exe
 del *.gz
 del *.dvi
 :plainstuff
@@ -43,6 +45,7 @@ rem
 rem      This is the stuff we want to clean all the time.  It's just temporary junk.
 rem      Well, it's also the "txt" or "zip" files that we mail to upload.
 rem
+del html.txt
 del ps.txt
 del plain.txt
 del pdf.txt
@@ -54,6 +57,19 @@ del plain.zip
 del pdf.zip
 del dnu.zip
 del dnp.zip
+del sd_doc.info
+del demo.info
+del sessions.info
+del relnotes.info
+del textdoc.tar
+del psdoc.tar
+del pdfdoc.tar
+del sd_toc.pso
+del bin.msg
+del binw.msg
+del bins.msg
+del bins.txt
+del bins.zip
 del html.msg
 del ps.msg
 del plain.msg

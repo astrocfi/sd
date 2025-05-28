@@ -35,9 +35,9 @@ echo cd ../sessions>> pdf.msg
 echo uufile>> pdf.msg
 uuencode sessions.pdf|uufix>> pdf.msg
 pgp -sta +clearsig=on +armor=on pdf.msg -u wba -o pdf.txt
-zip pdf pdf.txt
+del pdf.msg
+REM zip pdf pdf.txt
 REM
-REM         The file "pdf.zip" may now be unzipped to "pdf.txt",
-REM            which can then be mailed.
+REM         The file "pdf.txt" may now be mailed.
 REM
 REM         The file "pdfdoc.exe" may also be copied to diskettes.

@@ -2,7 +2,7 @@
 
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-1998  William B. Ackerman.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -601,6 +601,7 @@ char *qualtab[] = {
    "diamond_like",
    "qtag_like",
    "pu_qtag_like",
+   "gen_qbox",
    "nice_diamonds",
    "magic_only",
    "in_or_out",
@@ -722,15 +723,15 @@ char *flagtab1[] = {
    "step_to_wave",
    "rear_back_from_r_wave",
    "rear_back_from_qtag",
-   "dont_use_in_resolve",
+   "left_means_touch_or_check",
    "neednumber",
    "need_two_numbers",     /* The constant "need_three_numbers" is elsewhere. */
    "need_four_numbers",
    "sequence_starter",
    "split_like_square_thru",
    "distribute_repetitions",
-   "left_means_touch_or_check",
-   "can_be_fan",
+   "dont_use_in_resolve",
+   "dont_use_in_nice_resolve",
    "yield_if_ambiguous",
    "no_elongation_allowed",
    "base_tag_call_0",
@@ -741,7 +742,8 @@ char *flagtab1[] = {
    "funny_means_those_facing",
    "one_person_call",
    "preserve_z_stuff",
-   "fractal_numbers",
+   "yoyo_fractal_numbers",
+   "can_be_fan",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
@@ -1089,6 +1091,11 @@ tagtabitem tagtabinit[num_base_call_indices] = {
                                 for any mandatory modifier, e.g. "clover and [anything]"
                                 is executed as "clover and [call #1]". */
       {0, "nullsecond"},     /* Base call for mandatory secondary modification. */
+
+
+      {0, "real_base_0"},
+
+
       {0, "armturn_34"},     /* This is used for "yo-yo". */
       {0, "endsshadow"},     /* This is used for "shadow <setup>". */
       {0, "chreact_1"},      /* This is used for propagating the hinge info
@@ -2108,8 +2115,11 @@ extern void dbcompile(void)
             }
             else {
                if ((iii = search(flagtab1)) >= 0) {
-                  if (iii >= 32)
+                  if (iii >= 32) {
                      call_flags2 |= (1 << (iii-32));
+                     if (call_flags2 & ~0xFF)
+                        errexit("Too many secondary flags");
+                  }
                   else
                      call_flags1 |= (1 << iii);
                }

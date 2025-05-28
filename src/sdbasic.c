@@ -352,9 +352,14 @@ static collision_map collision_map_table[] = {
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},                 s1x4,        s1x4,        0, warn__none, 0},   /* from "head pass thru, all split circulate" */
    {3, 0x000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},              s1x4,        s1x4,        0, warn__none, 0},   /* from nasty T-bone */
    {3, 0x000000, 0x0D, 0x01, {0, 2, 3},            {0, 2, 3},             {1, 2, 3},              s1x4,        s1x4,        0, warn__none, 0},   /* from nasty T-bone */
-   /* These items handle "1/2 split trade circulate" from 2x2's.  They also do "switch to a diamond" when the ends come to the same spot in the center. */
+   /* These items handle "1/2 split trade circulate" from 2x2's.
+      They also do "switch to a diamond" when the ends come to the same spot in the center. */
    {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn_bad_collision, 0},
    {3, 0x002002, 0x07, 0x02, {0, 2, 1},            {0, 2, 1},             {0, 2, 3},              sdmd,        sdmd,        0, warn_bad_collision, 0},
+
+   {1, 0x008008, 0x08, 0x08, {3},            {3},             {2},                                sdmd,        s1x4,        1, warn_bad_collision, 0},
+   {1, 0x002002, 0x02, 0x02, {1},            {0},             {1},                                sdmd,        s1x4,        1, warn_bad_collision, 0},
+
    /* These items handle various types of "circulate" calls from 2x2's. */
    {2, 0x009009, 0x09, 0x09, {0, 3},               {7, 5},                {6, 4},                 s2x2,        s2x4,        1, warn_bad_collision, 0},   /* from box facing all one way */
    {2, 0x006006, 0x06, 0x06, {1, 2},               {0, 2},                {1, 3},                 s2x2,        s2x4,        1, warn_bad_collision, 0},   /* we need all four cases */
@@ -771,9 +776,13 @@ extern long_boolean check_restriction(
 
    /* Now check all the other stuff. */
 
-   /* This next restriction is independent of whether we are line-like or column-like. */
-
-   if (restr.assumption == cr_siamese_in_quad) {
+   switch (restr.assumption) {
+   case cr_real_1_4_tag: case cr_real_3_4_tag:
+   case cr_real_1_4_line: case cr_real_3_4_line:
+      /* These are not legal if they weren't handled already. */
+      goto restr_failed;
+   case cr_siamese_in_quad:
+      /* This is independent of whether we are line-like or column-like. */
       for (idx=0 ; idx<4 ; idx++) {
          int ii;
          int perquad = (setup_attrs[ss->kind].setup_limits+1) >> 2;
@@ -793,6 +802,7 @@ extern long_boolean check_restriction(
 
          if ((q0&3) && (q1&3) && (q2&3) && (q3&3)) goto restr_failed;
       }
+      break;
    }
 
    if (restr.assump_col & 1) {
@@ -2007,19 +2017,18 @@ Private int divide_the_setup(
                "matrix aware" (it knows that 1x4's are what it wants) or if the facing directions
                are such that that would win anyway. */
 
-            if (  !forbid_little_stuff &&
+            if (!forbid_little_stuff &&
 /*                  !assoc(b_2x2, ss, calldeflist) &&*/
-                  (
-                     assoc(b_1x1, ss, calldeflist)
-                           ||
-                     ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-                      (!(newtb & 001) || assoc(b_2x1, ss, calldeflist)))
-                           ||
-                     (matrix_aware &&
-                        (  assoc(b_1x2, ss, calldeflist) ||
-                           assoc(b_2x1, ss, calldeflist)))
-                  )
-            ) {
+                (assoc(b_1x1, ss, calldeflist) ||
+                 ((!(newtb & 010) ||
+                   assoc(b_1x2, ss, calldeflist) ||
+                   assoc(b_1x4, ss, calldeflist)) &&
+                  (!(newtb & 001) ||
+                   assoc(b_2x1, ss, calldeflist) ||
+                   assoc(b_4x1, ss, calldeflist))) ||
+                 (matrix_aware &&
+                  (assoc(b_1x2, ss, calldeflist) ||
+                   assoc(b_2x1, ss, calldeflist))))) {
                division_code = MAPCODE(s1x4,3,MPKIND__SPLIT,1);
                goto divide_us_no_recompute;
             }
@@ -2184,20 +2193,36 @@ Private int divide_the_setup(
                   assoc(b_qtag, ss, calldeflist) ||
                   assoc(b_pqtag, ss, calldeflist);
 
-            if (  !forbid_little_stuff &&
-/*
-                  (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
-                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-*/
-                  !assoc(b_2x2, ss, calldeflist) &&
-                  (  assoc(b_1x2, ss, calldeflist) ||
-                     assoc(b_2x1, ss, calldeflist) ||
-                     assoc(b_1x1, ss, calldeflist))) {
-               /* Without a lot of examination of facing directions, and whether the call has 1x2 vs. 2x1
-                  definitions, and all that, we don't know which axis to use when dividing it.  But any
-                  division into 2 2x4's is safe, and code elsewhere will make the tricky decisions later. */
-               division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
-               goto divide_us_no_recompute;
+            if (!forbid_little_stuff && !assoc(b_2x2, ss, calldeflist) &&
+                (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) {
+               if (
+                   /*
+                     (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+                   */
+                   (assoc(b_1x2, ss, calldeflist) ||
+                    assoc(b_2x1, ss, calldeflist) ||
+                    assoc(b_1x1, ss, calldeflist))) {
+                  /* Without a lot of examination of facing directions, and whether
+                  the call has 1x2 vs. 2x1 definitions, and all that, we don't know
+                  which axis to use when dividing it.  But any division into 2 2x4's
+                  is safe, and code elsewhere will make the tricky decisions later. */
+                  division_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
+                  goto divide_us_no_recompute;
+               }
+               else if (
+                        (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+                        ((!(newtb & 010) || assoc(b_1x4, ss, calldeflist)) &&
+                         (!(newtb & 001) || assoc(b_4x1, ss, calldeflist)))) {
+                  division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
+                  goto divide_us_no_recompute;
+               }
+               else if (
+                        (callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+                        ((!(newtb & 001) || assoc(b_1x4, ss, calldeflist)) &&
+                         (!(newtb & 010) || assoc(b_4x1, ss, calldeflist)))) {
+                  division_maps = &map_4x4v;
+                  goto divide_us_no_recompute;
+               }
             }
          }
 

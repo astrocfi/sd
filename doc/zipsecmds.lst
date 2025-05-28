@@ -1,0 +1,8 @@
+-setup
+-t \wba\sddoc\title.lst
+-i ..\sd\sd.ico
+-a \wba\sddoc\about.lst
+-win32
+-le
+-st "Sd Setup"
+-c deploy.cmd
