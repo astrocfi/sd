@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.4"
+#define VERSION_STRING "31.44"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -104,8 +104,6 @@ and the following external variables:
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
-extern long_boolean need_new_header_comment;
-extern void uims_display_help(void);
 #include "paths.h"
    
 
@@ -180,10 +178,15 @@ static long_boolean reply_pending;
 static int error_flag;
 static parse_block *parse_active_list;
 static parse_block *parse_inactive_list;
+/* These two direct the generation of random concepts when we are searching.
+   We make an attempt to generate somewhat plausible concepts, depending on the
+   setup we are in.  If we just generated evenly weighted concepts from the entire
+   concept list, we would hardly ever get a legal one. */
 static int concept_sublist_sizes[NUM_CALL_LIST_KINDS];
 static short int *concept_sublists[NUM_CALL_LIST_KINDS];
 static int resolve_scan_start_point;
 static int resolve_scan_current_point;
+static command_kind search_goal;
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -201,24 +204,25 @@ Private concept_descriptor centers_concept = {"centers????", concept_centers_or_
 
                      lout, lin, tby
                            |
-                           |+- 8ch, Lcol, col
-            2fl, Lwv, wv -+||
+                           |+- 8ch, Lcol, Rcol
+          R2fl, Lwv, Rwv -+||
                           |||+- cdpt, dpt, L1x8
         qtag, gcol, L2fl-+||||
-                         |||||+- 1x8, any, junk
+                         |||||+- R1x8, any, junk
                          ||||||       */
 #define MASK_CTR_2      0600016
 #define MASK_QUAD_D     0200016
 #define MASK_CPLS       0547476
 #define MASK_TAND       0770362
 #define MASK_SIAM       0400002
+#define MASK_2X4        0177762
+
 
 Private void initialize_concept_sublists(void)
 {
    int concept_index;
    int concepts_at_level;
    call_list_kind test_call_list_kind;
-   unsigned long int setup_mask;
    concept_kind end_marker = concept_diagnose;
 
    /* Decide whether we allow the "diagnose" concept, by deciding
@@ -236,62 +240,74 @@ Private void initialize_concept_sublists(void)
 
    concept_sublists[call_list_any] = (short int *) get_mem(concepts_at_level*sizeof(short int));
 
-   /* Make the concept sublists, one per setup. */
-   /* Note that the "assume_waves" concept is very dangerous.  We never allow it. */
+   /* Make the concept sublists, one per setup.  We do them in downward order, with "any setup" last.
+      This is because we put our results into the "any setup" slot while we are working, and then
+      copy them to the correct slot for each setup other than "any". */
 
-   for (test_call_list_kind = call_list_qtag; test_call_list_kind > call_list_any; test_call_list_kind--) {
+   for (test_call_list_kind = call_list_qtag; test_call_list_kind >= call_list_any; test_call_list_kind--) {
       for (       concept_index = 0, concepts_at_level = 0;
                   concept_descriptor_table[concept_index].kind != end_marker;
                   concept_index++) {
          concept_descriptor *p = &concept_descriptor_table[concept_index];
 
-         if (!(p->miscflags & 1) && p->level <= calling_level && p->kind != concept_assume_waves) {
-            setup_mask = ~0;
+         if (!(p->miscflags & 1) && p->level <= calling_level) {
+            uint32 setup_mask = ~0;      /* Default is to accept the concept. */
+
             /* This concept is legal at this level.  see if it is appropriate for this setup.
                If we don't know, the default value of setup_mask will make it legal. */
+
             switch (p->kind) {
                case concept_centers_or_ends: case concept_centers_and_ends:
-                  if (p->value.arg1 >= 2) {
+                  if (p->value.arg1 >= 2 && p->value.arg1 < 7) {
                      setup_mask = MASK_CTR_2;    /* This is a 6 and 2 type of concept. */
                   }
                   break;
-               case concept_tandem: case concept_some_are_tandem:
-                  if (!(p->value.arg2 | p->value.arg3)) {
-                     switch (p->value.arg4) {
-                        case 0:     /* tandem */
-                           setup_mask = MASK_TAND; break;
-                        case 1:     /* couples */
-                           setup_mask = MASK_CPLS; break;
-                        default:    /* siamese */
-                           setup_mask = MASK_SIAM; break;
-                     }
+               case concept_tandem:
+               case concept_some_are_tandem:
+               case concept_frac_tandem:
+               case concept_some_are_frac_tandem:
+                  switch (p->value.arg4) {
+                     case 0:     /* tandem */
+                        setup_mask = MASK_TAND; break;
+                     case 1:     /* couples */
+                        setup_mask = MASK_CPLS; break;
+                     case 2:     /* siamese */
+                        setup_mask = MASK_SIAM; break;
+                     default:
+                        setup_mask = 0; break;    /* Don't waste time on the others. */
                   }
                   break;
-               case concept_quad_diamonds: case concept_quad_diamonds_together:
+               case concept_quad_diamonds:
+               case concept_quad_diamonds_together:
+               case concept_do_phantom_diamonds:
                   setup_mask = MASK_QUAD_D;
+                  break;
+               case concept_do_phantom_2x4:
+               case concept_divided_2x4:
+               case concept_quad_lines:
+               case concept_quad_lines_tog_std:
+               case concept_quad_lines_tog:
+                  setup_mask = MASK_2X4; break;   /* Can actually improve on this. */
+               case concept_assume_waves:
+                  /* We never allow the "assume_waves" concept.  In the early days,
+                     it was actually dangerous.  It isn't dangerous any more,
+                     but it's a fairly stupid thing to generate in a search. */
+                  setup_mask = 0;
                   break;
             }
 
-            if ((1 << ((int) test_call_list_kind)) & setup_mask)
+            if ((1 << (((int) test_call_list_kind) - ((int) call_list_empty))) & setup_mask)
                concept_sublists[call_list_any][concepts_at_level++] = concept_index;
          }
       }
 
       concept_sublist_sizes[test_call_list_kind] = concepts_at_level;
-      concept_sublists[test_call_list_kind] = (short int *) get_mem(concepts_at_level*sizeof(short int));
-      (void) memcpy(concept_sublists[test_call_list_kind], concept_sublists[call_list_any], concepts_at_level*sizeof(short int));
+
+      if (test_call_list_kind != call_list_any) {
+         concept_sublists[test_call_list_kind] = (short int *) get_mem(concepts_at_level*sizeof(short int));
+         (void) memcpy(concept_sublists[test_call_list_kind], concept_sublists[call_list_any], concepts_at_level*sizeof(short int));
+      }
    }
-
-   for (       concept_index = 0, concepts_at_level = 0;
-               concept_descriptor_table[concept_index].kind != end_marker;
-               concept_index++) {
-      concept_descriptor *p = &concept_descriptor_table[concept_index];
-
-      if (!(p->miscflags & 1) && p->level <= calling_level && p->kind != concept_assume_waves)
-         concept_sublists[call_list_any][concepts_at_level++] = concept_index;
-   }
-
-   concept_sublist_sizes[call_list_any] = concepts_at_level;
 }
 
 
@@ -507,11 +523,6 @@ extern long_boolean deposit_call(callspec_block *call)
          tagg = 1;   /* This may not be right. */
          tagg |= tagclass << 5;
       }
-      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
-         tagg = 1;
-         hash_nonrandom_number(tagg - 1);
-         tagg |= tagclass << 5;
-      }
       else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
          tagg = generate_random_number(number_of_taggers[tagclass])+1;
          hash_nonrandom_number(tagg - 1);
@@ -528,10 +539,6 @@ extern long_boolean deposit_call(callspec_block *call)
 
       if (interactivity == interactivity_database_init) {
          circc = 1;   /* This may not be right. */
-      }
-      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
-         circc = 1;
-         hash_nonrandom_number(circc - 1);
       }
       else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
          circc = generate_random_number(number_of_circcers)+1;
@@ -553,10 +560,6 @@ extern long_boolean deposit_call(callspec_block *call)
 
       if (interactivity == interactivity_database_init)
          sel = selector_for_initialize;
-      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
-         sel = selector_centers;
-         hash_nonrandom_number(((int) sel) - 1);
-      }
       else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
          sel = (selector_kind) generate_random_number(last_selector_kind)+1;
          hash_nonrandom_number(((int) sel) - 1);
@@ -572,10 +575,6 @@ extern long_boolean deposit_call(callspec_block *call)
 
       if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
          dir = direction_right;   /* This may not be right. */
-      else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
-         dir = direction_right;
-         hash_nonrandom_number(((int) dir) - 1);
-      }
       else if (interactivity != interactivity_normal) {
          dir = (direction_kind) generate_random_number(last_direction_kind)+1;
          hash_nonrandom_number(((int) dir) - 1);
@@ -593,10 +592,6 @@ extern long_boolean deposit_call(callspec_block *call)
 
             if (interactivity == interactivity_database_init)
                this_num = number_for_initialize;
-            else if (interactivity == interactivity_starting_first_scan || interactivity == interactivity_in_first_scan) {
-               this_num = 1;
-               hash_nonrandom_number(this_num-1);
-            }
             else {
                this_num = generate_random_number(4)+1;
                hash_nonrandom_number(this_num-1);
@@ -688,6 +683,9 @@ extern long_boolean deposit_concept(concept_descriptor *conc, uint32 number_fiel
    int number_list = number_fields;
    int howmanynumbers = 0;
 
+   /* We hash the actual concept pointer, as though it were an integer index. */
+   hash_nonrandom_number((int) conc);
+
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       int j;
 
@@ -776,6 +774,7 @@ extern long_boolean query_for_call(void)
    uims_reply local_reply;
    callspec_block *result;
    int old_error_flag;
+   int concepts_deposited = 0;
 
    recurse_entry:
 
@@ -796,7 +795,7 @@ extern long_boolean query_for_call(void)
          3 - collision error, message is that people collided, they are in collision_person1 and collision_person2.
          4 - "resolve" or similar command was called in inappropriate context, text is in error_message1.
          5 - clicked on something inappropriate in subcall reader.
-         6 - unable-to-execute error, person is in collision_person1.
+         6 - unable-to-execute error, person is in collision_person1, text is in error_message1.
          7 - wants to display stale call statistics. */
 
       if (error_flag == 7) {
@@ -857,9 +856,10 @@ extern long_boolean query_for_call(void)
                   /* very special message -- no text here, someone can't execute the
                      call, and he is stored in collision_person1. */
   
-            writestuff("Some people (");
+            writestuff("Some person (");
             print_error_person(collision_person1, TRUE);
-            writestuff(") can't execute their part of this call.");
+            writestuff(") ");
+            writestuff(error_message1);
          }
          else           /* Must be 5, special signal for aborting out of subcall reader. */
             writestuff("You can't select that here.");
@@ -943,20 +943,47 @@ extern long_boolean query_for_call(void)
 
       /* We are operating in automatic mode.
          We must insert a concept or a call.  Decide which.
-         We only insert a comment if in random search, and then only occasionally. */
+         We only insert a concept if in random search, and then only occasionally. */
 
-      if (interactivity == interactivity_in_random_search && generate_random_concept_p()) {
-         int j = generate_random_number(concept_sublist_sizes[parse_state.call_list_to_use]);
-         hash_nonrandom_number(j);
-         local_reply = ui_concept_select;
-         uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
+      local_reply = ui_call_select;
 
-         /* We give 0 for the number fields.  It gets taken care of later, perhaps
-            not the best way. */
-         (void) deposit_concept(&concept_descriptor_table[uims_menu_index], 0);
+      if (interactivity == interactivity_in_random_search) {
+         long_boolean force_random = FALSE;
+
+         switch (search_goal) {
+            case command_concept_call:
+               if (concepts_deposited == 0) { force_random = TRUE; break; }
+               /* FALL THROUGH!!!!! */
+            case command_random_call:
+            case command_standardize:
+               force_random = generate_random_number(8) <
+                     ((search_goal == command_standardize) ? STANDARDIZE_CONCEPT_PROBABILITY : CONCEPT_PROBABILITY);
+
+               /* Since we are not going to use the random number in a one-to-one way, we run the risk
+                  of not having hashed_randoms uniquely represent what is happening.  To remedy
+                  the problem, we hash just the yes-no result of our decision. */
+
+               hash_nonrandom_number(force_random);
+               break;
+         }
+
+         if (force_random) {
+            int j = concept_sublist_sizes[parse_state.call_list_to_use];
+
+            if (j != 0) {    /* If no concepts are available (perhaps some clown has
+                                selected "pick concept call" at mainstream) we don't
+                                insert a concept. */
+               j = generate_random_number(j);
+               local_reply = ui_concept_select;
+               uims_menu_index = concept_sublists[parse_state.call_list_to_use][j];
+               concepts_deposited++;
+      
+               /* We give 0 for the number fields.  It gets taken care of later, perhaps
+                  not the best way. */
+               (void) deposit_concept(&concept_descriptor_table[uims_menu_index], 0);
+            }
+         }
       }
-      else
-         local_reply = ui_call_select;
    }
 
    if (local_reply == ui_concept_select) {
@@ -967,7 +994,7 @@ extern long_boolean query_for_call(void)
       return TRUE;
    }
 
-   /* We have a call.  Get the actual call and deposit it into the concept list, if we haven't already. */
+   /* We have a call.  Get the actual call and deposit it into the parse tree, if we haven't already. */
 
    if (interactivity == interactivity_starting_first_scan) {
       /* Note that this random number will NOT be hashed. */
@@ -1003,6 +1030,7 @@ extern long_boolean query_for_call(void)
          just called the random number generator again, it would screw up the hash numbers,
          which would make the uniquefication fail, so we could see the same thing twice. */
    
+      if (search_goal == command_level_call && ((dance_level) result->level) < level_threshholds[calling_level]) fail("Level reject.");
       if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
       if (deposit_call(result)) goto recurse_entry;
    }
@@ -1247,6 +1275,7 @@ void main(int argc, char *argv[])
    initialize_tandem_tables();
    initialize_getout_tables();
    initialize_restr_tables();
+   initialize_conc_tables();
    
    initialize_menus(call_list_mode);    /* This sets up max_base_calls. */
 
@@ -1455,7 +1484,7 @@ void main(int argc, char *argv[])
    reply_pending = FALSE;
 
    if (reply == ui_command_select) {
-      switch (uims_menu_index) {
+      switch ((command_kind) uims_menu_index) {
          case command_quit:
             if (uims_do_abort_popup() != POPUP_ACCEPT) goto simple_restart;
             goto normal_exit;
@@ -1600,51 +1629,6 @@ void main(int argc, char *argv[])
                   goto start_cycle;
             }
 #endif
-         case command_resolve: case command_reconcile: case command_anything: case command_nice_setup:
-            {
-               search_kind goal;
-         
-               switch (uims_menu_index) {
-                  case command_resolve:
-                     goal = search_resolve;
-                     break;
-                  case command_reconcile:
-                     goal = search_reconcile;
-                     break;
-                  case command_anything:
-                     goal = search_anything;
-                     break;
-                  case command_nice_setup:
-                     goal = search_nice_setup;
-                     break;
-               }
-            
-               reply = full_resolve(goal);
-         
-               /* If full_resolve refused to operate (for example, we clicked on "reconcile"
-                  when in an hourglass), it returned "ui_search_accept", which will cause
-                  us simply to go to start_cycle. */
-            
-               /* If user clicked on something random, treat it as though he clicked on "accept"
-                  followed by whatever it was. */
-            
-               if (reply == ui_command_select) {
-                  switch (uims_menu_index) {
-                     case command_quit: case command_abort: case command_getout:
-                     case command_resolve: case command_reconcile: case command_anything: case command_nice_setup:
-                        allowing_modifications = 0;
-                        history[history_ptr+1].draw_pic = FALSE;
-                        parse_state.concept_write_base = &history[history_ptr+1].command_root;
-                        parse_state.concept_write_ptr = parse_state.concept_write_base;
-                        *parse_state.concept_write_ptr = (parse_block *) 0;
-                        reply_pending = TRUE;
-                        /* Going to start_with_pending_reply will make sure written_history_items does not exceed history_ptr. */
-                        goto start_with_pending_reply;
-                  }
-               }
-      
-               goto start_cycle;
-            }
          case command_getout:
             /* Check that it is really resolved. */
 
@@ -1653,8 +1637,44 @@ void main(int argc, char *argv[])
             if (!write_sequence_to_file())
                goto start_cycle; /* user cancelled action */
             goto new_sequence;
-         default:
-            goto normal_exit;
+         default:     /* Should be some kind of search command. */
+            if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;   /* It wasn't.  We have a serious problem. */
+            search_goal = (command_kind) uims_menu_index;
+            reply = full_resolve(search_goal);
+
+            /* If full_resolve refused to operate (for example, we clicked on "reconcile"
+               when in an hourglass), it returned "ui_search_accept", which will cause
+               us simply to go to start_cycle. */
+
+            /* If user clicked on something random, treat it as though he clicked on "accept"
+               followed by whatever it was.  This includes "quit", "abort", "end this sequence",
+               and any further search commands.  So a search command (e.g. "pick random call")
+               will cause the last search result to be accepted, and begin another search on top
+               of that result. */
+
+            if (reply == ui_command_select) {
+
+               switch ((command_kind) uims_menu_index) {
+                  case command_quit:
+                  case command_abort:
+                  case command_getout:
+                     break;
+                  default:
+                     if (((command_kind) uims_menu_index) < command_resolve) goto start_cycle;
+                     break;
+               }
+
+               allowing_modifications = 0;
+               history[history_ptr+1].draw_pic = FALSE;
+               parse_state.concept_write_base = &history[history_ptr+1].command_root;
+               parse_state.concept_write_ptr = parse_state.concept_write_base;
+               *parse_state.concept_write_ptr = (parse_block *) 0;
+               reply_pending = TRUE;
+               /* Going to start_with_pending_reply will make sure written_history_items does not exceed history_ptr. */
+               goto start_with_pending_reply;
+            }
+
+            goto start_cycle;
       }
    }
    else
@@ -1833,6 +1853,14 @@ extern void get_real_subcall(
       }
    }
 
+   number = item->modifiers1;
+   snumber = (number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
+
+   /* Note whether we are using any mandatory substitutions, so that the menu
+      initialization will always accept this call. */
+
+   if (snumber == 2 || snumber == 6) mandatory_call_used = TRUE;
+
    /* Now we know that the list doesn't say anything about this call.  Perhaps we should
       query the user for a replacement and add something to the list.  First, decide whether
       we should consider doing so.  If we are initializing the
@@ -1860,9 +1888,6 @@ extern void get_real_subcall(
 
    /* Depending on what type of substitution is involved and what the "allowing modifications"
       level is, we may choose not to query about this subcall, but just return the default. */
-
-   number = item->modifiers1;
-   snumber = (number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
 
    switch (snumber) {
       case 1:   /* or_anycall */

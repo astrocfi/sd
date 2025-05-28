@@ -20,12 +20,14 @@
 
 /* This defines the following functions:
    mirror_this
+   fix_collision
    do_stability
    check_restriction
    basic_move
 */
 
 #include "sd.h"
+
 
 
 /* This file uses a few bogus setups.  They are never allowed to escape:
@@ -212,22 +214,21 @@ Private collision_map collision_map_table[] = {
    /* These items handle more 2x2 stuff, including the "special drop in" that makes chain reaction/motivate etc. work. */
    {2, 0x005005, 0x05, 0x05, {0, 2},               {7, 2},                {6, 3},                 s2x2,        s2x4,        1, warn__none},
    {2, 0x00A00A, 0x0A, 0x0A, {1, 3},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none},
-   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},                 s2x2,        s2x4,        1, warn__none},
-   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},                 s2x2,        s2x4,        1, warn__none},
+   {2, 0x000000, 0x05, 0x05, {0, 2},               {0, 5},                {1, 4},                 s2x2,        s2x4,        0, warn__none},
+   {2, 0x000000, 0x0A, 0x0A, {1, 3},               {2, 7},                {3, 6},                 s2x2,        s2x4,        0, warn__none},
    /* Same spot as points of diamonds. */
    {6, 0x022022, 0xEE, 0x22, {1, 2, 3, 5, 6, 7},   {0, 2, 3, 7, 8, 9},    {1, 2, 3, 6, 8, 9},     s_qtag,      sbigdmd,     1, warn__none},
    {6, 0x011011, 0xDD, 0x11, {0, 2, 3, 4, 6, 7},   {11, 2, 3, 4, 8, 9},   {10, 2, 3, 5, 8, 9},    s_qtag,      sbigdmd,     1, warn__none},
    {-1}};
 
 
-Private void fix_collision(
-   setup *ss,
+extern void fix_collision(
+   uint32 explicit_mirror_flag,
    int collision_mask,
    int collision_index,
    int result_mask,
    long_boolean mirror,
    setup *result)
-
 {
    uint32 lowbitmask, flip;
    int i, temprot;
@@ -238,7 +239,7 @@ Private void fix_collision(
    clear_people(result);
 
    lowbitmask = 0;
-   for (i=0; i<24; i++) {
+   for (i=0; i<MAX_PEOPLE; i++) {
       lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
    }
 
@@ -259,7 +260,7 @@ Private void fix_collision(
 
    win:
 
-   if (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MIRROR)
+   if (explicit_mirror_flag & CMD_MISC__EXPLICIT_MIRROR)
       warn(warn__take_left_hands);
    else
       warn(warn__take_right_hands);
@@ -1064,12 +1065,35 @@ Private int divide_the_setup(
    uint32 callflags1 = ss->cmd.callspec->callflags1;
    final_set final_concepts = ss->cmd.cmd_final_flags;
    uint32 force_result_split_axis = 0;
+   setup_command conc_cmd;
+   uint32 must_do_concentric = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
+   long_boolean matrix_aware =
+         (ss->cmd.callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+         (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX);
 
    /* It will be helpful to have a mask of where the
       live people are. */
 
    for (i=0, j=1, livemask = 0; i<=setup_attrs[ss->kind].setup_limits; i++, j<<=1) {
       if (ss->people[i].id1) livemask |= j;
+   }
+
+   /* Take care of "snag" and "mystic".  "Central" is illegal, and was already caught.
+      We first limit it to just the few setups for which it can possibly be legal, to make
+      it easier to test later. */
+
+   if (must_do_concentric) {
+      switch (ss->kind) {
+         case s_rigger:
+         case s_qtag:
+         case s_bone:
+         case s1x8:
+         case s2x4:
+         case s_crosswave:
+            break;
+         default:
+            fail("Can't do \"snag/mystic\" with this call.");
+      }
    }
 
    switch (ss->kind) {
@@ -1479,6 +1503,9 @@ Private int divide_the_setup(
             goto divide_us_no_recompute;
          }
 
+         if (must_do_concentric)
+            goto do_concentrically;
+
          {
             int tinytb = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
 
@@ -1486,12 +1513,8 @@ Private int divide_the_setup(
                facing appropriately.  Then do it concentrically. */
 
             if ((!(tinytb & 010) || assoc(b_1x2, ss, calldeflist)) &&
-                  (!(tinytb & 1) || assoc(b_2x1, ss, calldeflist))) {
-               setup_command foo;
-               foo = ss->cmd;
-               concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
-               return 1;
-            }
+                  (!(tinytb & 1) || assoc(b_2x1, ss, calldeflist)))
+               goto do_concentrically;
          }
          break;
       case s3x4:
@@ -1550,7 +1573,7 @@ Private int divide_the_setup(
                            !assoc(b_1x2, ss, calldeflist) &&
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
-                  warn(warn__each2x2);
+                  if (!matrix_aware) warn(warn__each2x2);
                   division_maps = (*map_lists[s2x2][1])[(livemask == 0xF3C) ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF][0];
                   goto divide_us_no_recompute;
                case 0xEBA: case 0xD75:
@@ -1558,8 +1581,8 @@ Private int divide_the_setup(
                      We do not allow 2x2 definitions. */
                   if (  !forbid_little_stuff &&
                         !assoc(b_2x2, ss, calldeflist) &&
-                        (  assoc(b_1x2, ss, calldeflist) ||
-                           assoc(b_2x1, ss, calldeflist) ||
+                        (     ((!(newtb & 001) || assoc(b_1x2, ss, calldeflist)) &&
+                               (!(newtb & 010) || assoc(b_2x1, ss, calldeflist)))      ||
                            assoc(b_1x1, ss, calldeflist))) {
                      warn(warn__each1x2);
                      division_maps = (livemask == 0xEBA) ? &map_lz12 : &map_rz12;
@@ -1567,17 +1590,30 @@ Private int divide_the_setup(
                   }
             }
 
-            /* A little more checking, that a "switch" statement can't do. */
-            if ((livemask & 0x3CF) == 0 || (livemask & 0xC30) == 0) {
-               /* We are in either the outer 2 triple lines or the center triple line.
-                  See if we can do the call in 1x4 or smaller setups. */
-               if (  forbid_little_stuff ||
-                     (  !assoc(b_1x4, ss, calldeflist) &&
-                        !assoc(b_4x1, ss, calldeflist) &&
-                        !assoc(b_1x2, ss, calldeflist) &&
-                        !assoc(b_2x1, ss, calldeflist) &&
-                        !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
-               warn(warn__each1x4);
+            /* Check for everyone in either the outer 2 triple lines or the center triple line,
+               and able to do the call in 1x4 or smaller setups. */
+
+            if (((livemask & 0x3CF) == 0 || (livemask & 0xC30) == 0) &&
+                     !forbid_little_stuff &&
+                     (  assoc(b_1x4, ss, calldeflist) ||
+                        assoc(b_4x1, ss, calldeflist) ||
+                        assoc(b_1x2, ss, calldeflist) ||
+                        assoc(b_2x1, ss, calldeflist) ||
+                        assoc(b_1x1, ss, calldeflist))) {
+               if (!matrix_aware) warn(warn__each1x4);
+               division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
+
+            /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
+               If so, divide the 3x4 into 3 1x4's. */
+
+            if (  !forbid_little_stuff &&
+                  matrix_aware &&
+                  !assoc(b_2x2, ss, calldeflist) &&
+                  (  assoc(b_1x2, ss, calldeflist) ||
+                     assoc(b_2x1, ss, calldeflist) ||
+                     assoc(b_1x1, ss, calldeflist))) {
                division_maps = (*map_lists[s1x4][2])[MPKIND__SPLIT][1];
                goto divide_us_no_recompute;
             }
@@ -1689,10 +1725,7 @@ Private int divide_the_setup(
                break;
 
             case 0x4B4B: case 0xB4B4:
-               /* See comment above, for 3x4.  This stuff is not done correctly, since it can't
-                  handle sequential stuff that goes through intermediate setups of different shape.
-                  For example, we can't do a square thru in each clump.  All this should be done
-                  elsewhere, I'm not sure where. */
+               /* See comment above, for 3x4. */
                {
                   long_boolean forbid_little_stuff =
                         assoc(b_2x4, ss, calldeflist) ||
@@ -1704,17 +1737,45 @@ Private int divide_the_setup(
                         assoc(b_qtag, ss, calldeflist) ||
                         assoc(b_pqtag, ss, calldeflist);
 
-
                   /* We are in "clumps".  See if we can do the call in 2x2 or smaller setups. */
                   if (  forbid_little_stuff ||
                         (  !assoc(b_2x2, ss, calldeflist) &&
                            !assoc(b_1x2, ss, calldeflist) &&
                            !assoc(b_2x1, ss, calldeflist) &&
                            !assoc(b_1x1, ss, calldeflist))) fail("Don't know how to do this call in this setup.");
-                  warn(warn__each2x2);
+                  if (!matrix_aware) warn(warn__each2x2);
                   division_maps = (*map_lists[s2x2][1])[(livemask == 0x4B4B) ? MPKIND__OFFS_L_FULL : MPKIND__OFFS_R_FULL][0];
                   goto divide_us_no_recompute;
                }
+         }
+
+         {
+            /* Setup is randomly populated.  See if we have 1x2/1x1 definitions, but no 2x2.
+               If so, divide the 3x4 into 3 1x4's. */
+
+            long_boolean forbid_little_stuff =
+                  assoc(b_2x4, ss, calldeflist) ||
+                  assoc(b_4x2, ss, calldeflist) ||
+                  assoc(b_2x3, ss, calldeflist) ||
+                  assoc(b_3x2, ss, calldeflist) ||
+                  assoc(b_dmd, ss, calldeflist) ||
+                  assoc(b_pmd, ss, calldeflist) ||
+                  assoc(b_qtag, ss, calldeflist) ||
+                  assoc(b_pqtag, ss, calldeflist);
+
+            if (  !forbid_little_stuff &&
+                  (ss->cmd.callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
+                  (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
+                  !assoc(b_2x2, ss, calldeflist) &&
+                  (  assoc(b_1x2, ss, calldeflist) ||
+                     assoc(b_2x1, ss, calldeflist) ||
+                     assoc(b_1x1, ss, calldeflist))) {
+               /* Without a lot of examination of facing directions, and whether the call has 1x2 vs. 2x1
+                  definitions, and all that, we don't know which axis to use when dividing it.  But any
+                  division into 2 2x4's is safe, and code elsewhere will make the tricky decisions later. */
+               division_maps = (*map_lists[s2x4][1])[MPKIND__SPLIT][1];
+               goto divide_us_no_recompute;
+            }
          }
 
          fail("You must specify a concept.");
@@ -1727,12 +1788,12 @@ Private int divide_the_setup(
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
             fail("Can't split the setup.");
 
+         if (must_do_concentric)
+            goto do_concentrically;
+
          if ((!(newtb & 010) || assoc(b_1x2, ss, calldeflist)) &&
                   (!(newtb & 1) || assoc(b_2x1, ss, calldeflist))) {
-            setup_command foo;
-            foo = ss->cmd;
-            concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
-            return 1;
+            goto do_concentrically;
          }
          else if ((livemask & 0x55) == 0) {    /* Check for stuff like "heads pass the ocean; side corners */
             division_maps = &map_qtag_f1;      /* only slide thru". */
@@ -1761,17 +1822,16 @@ Private int divide_the_setup(
             goto divide_us_no_recompute;
          }
 
+         if (must_do_concentric)
+            goto do_concentrically;
+
          {
             int tbi = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
             int tbo = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
 
             if ((!((tbi & 010) | (tbo & 001)) || assoc(b_1x2, ss, calldeflist)) &&
-                     (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist))) {
-               setup_command foo;
-               foo = ss->cmd;
-               concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
-               return 1;
-            }
+                     (!((tbi & 001) | (tbo & 010)) || assoc(b_2x1, ss, calldeflist)))
+               goto do_concentrically;
          }
          break;
       case s_ptpd:
@@ -1932,11 +1992,18 @@ Private int divide_the_setup(
          }
          break;
       case s1x8:
+         division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
+
          /* See if the call has a 1x4, 4x1, 1x2, 2x1, or 1x1 definition, in which case split it and do each part. */
-         if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist) ||
-                  assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) ||
+         if (     assoc(b_1x4, ss, calldeflist) || assoc(b_4x1, ss, calldeflist)) {
+            goto divide_us_no_recompute;
+         }
+
+         if (must_do_concentric)
+            goto do_concentrically;
+
+         if (     assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) ||
                   assoc(b_1x1, ss, calldeflist)) {
-            division_maps = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
             goto divide_us_no_recompute;
          }
 
@@ -1989,13 +2056,12 @@ Private int divide_the_setup(
             the people in the outer, disconnected, 1x4 work with each other across the set, which
             we do not want. */
 
+         if (must_do_concentric)
+            goto do_concentrically;
+
          if (!assoc(b_4x1, ss, calldeflist) && !assoc(b_1x4, ss, calldeflist) &&
-               (assoc(b_2x1, ss, calldeflist) || assoc(b_1x2, ss, calldeflist) || assoc(b_1x1, ss, calldeflist))) {
-            setup_command foo;
-            foo = ss->cmd;
-            concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
-            return 1;
-         }
+               (assoc(b_2x1, ss, calldeflist) || assoc(b_1x2, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)))
+            goto do_concentrically;
 
          break;
       case s2x4:
@@ -2015,6 +2081,10 @@ Private int divide_the_setup(
                !assoc(b_4x4, ss, calldeflist) &&
                (!(newtb & 010) || assoc(b_2x6, ss, calldeflist) || assoc(b_2x8, ss, calldeflist)) &&
                (!(newtb & 1) || assoc(b_6x2, ss, calldeflist) || assoc(b_8x2, ss, calldeflist))) {
+
+            if (must_do_concentric)
+               fail("Can't do \"snag/mystic\" with this call.");
+
             do_matrix_expansion(ss, CONCPROP__NEED_2X6, TRUE);
             if (ss->kind != s2x6) fail("Failed to expand to 2X6.");  /* Should never fail, but we don't want a loop. */
             return 2;                        /* And try again. */
@@ -2040,6 +2110,9 @@ Private int divide_the_setup(
          /* See if this call has applicable 2x2 definition, in which case split into boxes. */
 
          if (temp_for_2x2 && assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
+
+         if (must_do_concentric)
+            goto do_concentrically;
 
          /* See long comment above for s1x8.  The test cases for this are "own the <points>, trade
             by flip the diamond", and "own the <points>, flip the diamond by flip the diamond". */
@@ -2109,12 +2182,10 @@ Private int divide_the_setup(
 
             if (((tbi & 011) != 011) && ((tbo & 011) != 011)) {
                if ((!(tbo & 010) || have_2x1 != 0) && (!(tbo & 1) || have_1x2 != 0)) {
-                  setup_command foo;
                   if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
                      fail("Can't split the setup.");
-                  foo = ss->cmd;
-                  concentric_move(ss, &foo, &foo, schema_concentric, 0, 0, result);
-                  return 1;
+
+                  goto do_concentrically;
                }
 
                /* Or if we have a 1x1 definition, we can divide it.  Otherwise, we lose. */
@@ -2194,6 +2265,9 @@ Private int divide_the_setup(
    return 0;    /* We did nothing.  An error will presumably result. */
 
    divide_us_no_recompute:
+
+   if (must_do_concentric)
+      fail("Can't do \"snag/mystic\" with this call.");
 
    recompute_anyway = (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) != 0;
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
@@ -2279,6 +2353,12 @@ Private int divide_the_setup(
    }
 
    return 1;
+
+   do_concentrically:
+
+   conc_cmd = ss->cmd;
+   concentric_move(ss, &conc_cmd, &conc_cmd, schema_concentric, 0, 0, result);
+   return 1;
 }
 
 
@@ -2319,6 +2399,14 @@ extern void basic_move(
    calldef_block *qq;
    callspec_block *callspec = ss->cmd.callspec;
    final_set final_concepts = ss->cmd.cmd_final_flags;
+
+   /* We don't allow "central" or "invert" with array-defined calls.  We might allow "snag" or "mystic". */
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
+      switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
+         case 0: case CMD_MISC2__CENTRAL_PLAIN:
+            fail("Can't do \"central\" or \"invert\" with this call.");
+      }
+   }
 
    result->result_flags = 0;   /* Do this now, in case we bail out.  Note also that
       this means the RESULTFLAG__SPLIT_AXIS_MASK stuff will be clear for the normal case.
@@ -2469,8 +2557,12 @@ extern void basic_move(
 
    for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
       if (qq->modifier_seth == search_concepts) {
-         if (qq->modifier_level > calling_level && !allowing_all_concepts)
-            fail("Use of this modifier on this call is not allowed at this level.");
+         if (qq->modifier_level > calling_level) {
+            if (allowing_all_concepts)
+               warn(warn__bad_modifier_level);
+            else
+               fail("Use of this modifier on this call is not allowed at this level.");
+         }
          calldeflist = qq->callarray_list;
          break;
       }
@@ -2483,6 +2575,8 @@ extern void basic_move(
       but wants us to divide the setup magically or interlockedly.  Or a similar thing with 12 matrix. */
 
    if (!calldeflist) {
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+         fail("Can't do \"snag/mystic\" with this call.");
 
       /* First, check for "magic" and "interlocked" stuff, and do those divisions if so. */
       if (divide_for_magic(
@@ -2494,7 +2588,6 @@ extern void basic_move(
 
       /* Now check for 12 matrix or 16 matrix things.  If the call has the "12_16_matrix_means_split" flag, and that
          (plus possible 3x3/4x4 stuff) was what we were looking for, remove those flags and split the setup. */
-
 
       if (callspec->callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) {
          uint32 z = search_concepts & ~(INHERITFLAG_3X3 | INHERITFLAG_4X4);
@@ -2561,9 +2654,13 @@ extern void basic_move(
    linedefinition = (callarray *) 0;
    coldefinition = (callarray *) 0;
 
-   /* If we have to split the setup for "crazy", "central", or "splitseq", we specifically refrain
-      from finding a call definition. */
-   if (calldeflist && !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)) {
+   /* If we have to split the setup for "crazy", "central", or "splitseq", we
+      specifically refrain from finding a call definition.  The same is true if
+      we have "snag" or "mystic". */
+
+   if (     calldeflist &&
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT) &&
+            !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
       begin_kind key1 = setup_attrs[ss->kind].keytab[0];
       begin_kind key2 = setup_attrs[ss->kind].keytab[1];
 
@@ -2601,13 +2698,13 @@ extern void basic_move(
       /* Raise a warning if the "split" concept was explicitly used but the
          call would have naturally split that way anyway. */
 
-/* ******* we have patched this out, because we aren't convinced that it really
-   works.  How do we make it not complain on "split sidetrack" even though some
-   parts of the call, like the "zig-zag", would complain?  And how do we account
-   for the fact that it is observed not to raise the warning on split sidetrack
-   even though we don't understand why?  By the way, uncertainty about this is what
-   led us to make this a warning.  It was originally an error.  Which is correct?
-   It is probably best to leave it as a warning of the "don't use in resolve" type.
+      /* ******* we have patched this out, because we aren't convinced that it really
+         works.  How do we make it not complain on "split sidetrack" even though some
+         parts of the call, like the "zig-zag", would complain?  And how do we account
+         for the fact that it is observed not to raise the warning on split sidetrack
+         even though we don't understand why?  By the way, uncertainty about this is what
+         led us to make this a warning.  It was originally an error.  Which is correct?
+         It is probably best to leave it as a warning of the "don't use in resolve" type.
 
       if (ss->setupflags & CMD_MISC__SAID_SPLIT) {
          switch (ss->kind) {
@@ -2626,7 +2723,7 @@ extern void basic_move(
                break;
          }
       }
-*/
+      */
 
       if (final_concepts & FINAL__TRIANGLE)
          fail("Triangle concept not allowed here.");
@@ -2650,7 +2747,6 @@ extern void basic_move(
 
       goto do_the_call;
    }
-
 
    try_to_find_deflist:
 
@@ -2683,14 +2779,17 @@ extern void basic_move(
       allow an explicit matrix ("2x6 matrix") to be treated as a "12 matrix", the way
       we always have, but we allow it to go the other way.  That is, under certain
       conditions we will turn a "12 matrix" to get turned into an explicit matrix
-      concept.  We do this special action only when all else has failed. */
+      concept.  We do this special action only when all else has failed.
 
-   /* First, we do this only once.  Because of all the goto's that we execute as we
+      We do this only once.  Because of all the goto's that we execute as we
       try various things, there is danger of looping.  To make sure that this happens
       only once, we set "matrix_check_flag" nonzero when we do it, and only do it if
-      that flag is zero. */
+      that flag is zero.
 
-   if (matrix_check_flag == 0) {
+      We don't do this if "snag" or "mystic" was given.  In those cases, we know exactly
+      why there is no definition, and we need to call "divide_the_setup" to fix it. */
+
+   if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
       uint32 search_stuff;
 
       if (ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s1x12) matrix_check_flag = INHERITFLAG_12_MATRIX;
@@ -2742,8 +2841,12 @@ extern void basic_move(
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) && matrix_check_flag != 0) {
          for (qq = callspec->stuff.arr.def_list; qq; qq = qq->next) {
             if (qq->modifier_seth == search_stuff) {
-               if (qq->modifier_level > calling_level && !allowing_all_concepts)
-                  fail("Use of this modifier on this call is not allowed at this level.");
+               if (qq->modifier_level > calling_level) {
+                  if (allowing_all_concepts)
+                     warn(warn__bad_modifier_level);
+                  else
+                     fail("Use of this modifier on this call is not allowed at this level.");
+               }
                calldeflist = qq->callarray_list;
                goto use_this_calldeflist;
             }
@@ -2766,6 +2869,10 @@ extern void basic_move(
    /* We are about to do the call by array! */
 
    do_the_call:
+
+   /* This shouldn't happen, but we are being very careful here. */
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+      fail("Can't do \"snag/mystic\" with this call.");
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
@@ -3463,7 +3570,7 @@ extern void basic_move(
       if (!funny_ok1 || !funny_ok2) warn(warn__not_funny);
    }
    else {
-      if (collision_mask) fix_collision(ss, collision_mask, collision_index, result_mask, mirror, result);
+      if (collision_mask) fix_collision(ss->cmd.cmd_misc_flags, collision_mask, collision_index, result_mask, mirror, result);
    }
 
    fixup:

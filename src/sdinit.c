@@ -161,7 +161,11 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
    longjmp_ptr = &my_longjmp_buffer;          /* point the global pointer at it. */
    if (setjmp(my_longjmp_buffer.the_buf)) {
 
-      /* A call failed.  A bad choice of selector or number may be the cause.
+      /* A call failed.  If the call had some mandatory substitution, pass it anyway. */
+
+      if (mandatory_call_used) goto accept;
+
+      /* Or a bad choice of selector or number may be the cause.
          Try different selectors first. */
 
       if (selector_used) {
@@ -261,6 +265,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    selector_used = FALSE;
    number_used = FALSE;
+   mandatory_call_used = FALSE;
 
    history_ptr = 1;
 
@@ -978,6 +983,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       }
 
       call_root->age = 0;
+      call_root->level = (int) savelevel;
       call_root->callflags1 = saveflags1;
       call_root->callflagsh = saveflagsh;
       /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */

@@ -22,7 +22,6 @@
    general_initialize
    generate_random_number
    hash_nonrandom_number
-   generate_random_concept_p
    get_mem
    get_mem_gracefully
    get_more_mem
@@ -212,19 +211,6 @@ extern int generate_random_number(int modulus)
 extern void hash_nonrandom_number(int number)
 {
    hashed_randoms = hashed_randoms*37+number;
-}
-
-
-extern long_boolean generate_random_concept_p(void)
-{
-   int i = generate_random_number(8) < CONCEPT_PROBABILITY;
-
-   /* Since we are not going to use the random number in a one-to-one way, we run the risk
-      of not having hashed_randoms uniquely represent what is happening.  To remedy
-      the problem, we hash just the yes-no result of our decision. */
-
-   hash_nonrandom_number(i);
-   return i;
 }
 
 

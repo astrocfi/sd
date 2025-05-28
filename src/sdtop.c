@@ -34,16 +34,16 @@ typedef struct {
    setup_kind inner_kind;
    setup_kind outer_kind;
    int rot;
-   } expand_thing;
+} expand_thing;
 
 typedef struct {
    warning_index warning;
    int forbidden_elongation;
    expand_thing *expand_lists;
-   } full_expand_thing;
+} full_expand_thing;
 
 Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
-Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s4dmd, 0};
+Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_qtag, s4dmd, 0};
 Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
 Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
 Private expand_thing exp_4x4_4dm_stuff_b   = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
@@ -62,6 +62,8 @@ Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 2
 Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, nothing, s2x8, 0};
 Private expand_thing exp_2x4_4x4_stuff     = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
 Private expand_thing exp_4x4_blob_stuff    = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
+Private expand_thing exp_4dmd_3x4_stuff    = {{0, 1, 2, 3, 4, 4, 4, 4, 6, 7, 8, 9}, 12, s4dmd, s3x4, 0};
+Private expand_thing exp_4dmd_4x4_stuff    = {{12, 13, 14, 0, 1, 1, 1, 1, 4, 5, 6, 8}, 12, s4dmd, s4x4, 0};
 
 
 
@@ -360,15 +362,15 @@ extern void touch_or_rear_back(
             }
             break;
          case s2x4:
-            if ((livemask == 0xFFFFUL) && (directions == 0x77DDUL))
+            if (livemask == 0xFFFFUL && directions == 0x77DDUL)
                tptr = &step_8ch_pair;         /* Check for stepping to parallel waves from an 8 chain. */
-            else if ((livemask == 0xFFFFUL) && (directions == 0xAA00UL))
+            else if (livemask == 0xFFFFUL && directions == 0xAA00UL)
                tptr = &step_li_pair;          /* Check for stepping to a grand wave from lines facing. */
-            else if ((livemask == 0xFFFFUL) && ((directions == 0xDD77UL) || (directions == 0x5FF5UL)))
-               tptr = &step_tby_pair;         /* Check for stepping to a 1/4 tag or 3/4 tag from a DPT or trade-by. */
-            else if ((livemask == 0xFFFFUL) && (directions == 0x963CUL))
+            else if (livemask == 0xFFFFUL && (directions & 0x7D7DUL) == 0x5D75UL)
+               tptr = &step_tby_pair;         /* Check for stepping to some kind of 1/4 tag from a DPT or trade-by or whatever. */
+            else if (livemask == 0xFFFFUL && directions == 0x963CUL)
                tptr = &step_2x4_rig_pair;         /* Check for stepping to rigger from suitable T-bone. */
-            else if ((livemask == 0xC3C3UL) && (directions == 0x8200UL))
+            else if (livemask == 0xC3C3UL && directions == 0x8200UL)
                tptr = &step_2x4_rig_pair;        /* Same, with missing people. */
             else if ((livemask == 0x3C3CUL) && (directions == 0x143CUL))
                tptr = &step_2x4_rig_pair;        /* Same, with missing people. */
@@ -535,11 +537,23 @@ extern void do_matrix_expansion(
          else if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
          }
+         else if (ss->kind == s4dmd) {
+            if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
+                     ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1)) {
+               eptr = &exp_4dmd_4x4_stuff; warn(warn__check_4x4); goto expand_me;
+            }
+         }
       }
 
       if (concprops & (CONCPROP__NEED_3X4 | CONCPROP__NEED_3X8 | CONCPROP__NEED_3X4_1X12)) {
          if (ss->kind == s_qtag) {
             eptr = &exp_qtg_3x4_stuff; goto expand_me;
+         }
+         else if (ss->kind == s4dmd) {
+            if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
+                     ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1)) {
+               eptr = &exp_4dmd_3x4_stuff; goto expand_me;
+            }
          }
       }
    
@@ -785,82 +799,13 @@ Private void normalize_4x6(setup *stuff)
 Private void normalize_4dmd(setup *stuff)
 
 {
-   setup temp;
-
    if (!(stuff->people[0].id1 | stuff->people[3].id1 | stuff->people[4].id1 | stuff->people[5].id1 |
             stuff->people[8].id1 | stuff->people[11].id1 | stuff->people[12].id1 | stuff->people[13].id1)) {
-
-      /* Danger!  If the people were in side-by-side quarter-tags, turning this into
-         a single quarter-tag would require that the outsides slide together.  That
-         would be wrong.  The bug show up in cases like
-            1P2P; pass the ocean; swing and mix; follow thru; truck twice;
-            split phantom twin boxes sets in motion.
-         So, if people do not have diamond-like orientation, we go into an "H".
-         However, it should be noted that this leads to the following situation:
-         From waves, split phantom lines 3/4 flip the line also goes to an "H".
-         Is that correct?  We seem to have to put up with it. */
-
-      if (!(((stuff->people[6].id1 | stuff->people[7].id1 | stuff->people[14].id1 | stuff->people[15].id1) & 1) |
-            ((stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[9].id1 | stuff->people[10].id1) & 010))) {
-         temp = *stuff;
-
-         stuff->kind = s_qtag;
-         (void) copy_person(stuff, 0, &temp, 1);
-         (void) copy_person(stuff, 1, &temp, 2);
-         (void) copy_person(stuff, 2, &temp, 6);
-         (void) copy_person(stuff, 3, &temp, 7);
-         (void) copy_person(stuff, 4, &temp, 9);
-         (void) copy_person(stuff, 5, &temp, 10);
-         (void) copy_person(stuff, 6, &temp, 14);
-         (void) copy_person(stuff, 7, &temp, 15);
-      }
-      else {
-         temp = *stuff;
-         clear_people(stuff);
-
-         stuff->kind = s3x4;
-         (void) copy_person(stuff, 0, &temp, 1);
-         (void) copy_person(stuff, 3, &temp, 2);
-         (void) copy_person(stuff, 4, &temp, 6);
-         (void) copy_person(stuff, 5, &temp, 7);
-         (void) copy_person(stuff, 6, &temp, 9);
-         (void) copy_person(stuff, 9, &temp, 10);
-         (void) copy_person(stuff, 10, &temp, 14);
-         (void) copy_person(stuff, 11, &temp, 15);
-      }
+      compress_setup(&exp_qtg_4dm_stuff, stuff);
    }
    else if (!(stuff->people[0].id1 | stuff->people[1].id1 | stuff->people[2].id1 | stuff->people[3].id1 |
             stuff->people[8].id1 | stuff->people[9].id1 | stuff->people[10].id1 | stuff->people[11].id1)) {
       compress_setup(&exp_1x8_4dm_stuff, stuff);
-   }
-   else if (!(stuff->people[4].id1 | stuff->people[5].id1 | stuff->people[6].id1 | stuff->people[7].id1 |
-            stuff->people[12].id1 | stuff->people[13].id1 | stuff->people[14].id1 | stuff->people[15].id1)) {
-      temp = *stuff;
-      clear_people(stuff);
-
-      stuff->kind = s4x4;
-      (void) copy_person(stuff, 12, &temp, 0);
-      (void) copy_person(stuff, 13, &temp, 1);
-      (void) copy_person(stuff, 14, &temp, 2);
-      (void) copy_person(stuff, 0, &temp, 3);
-      (void) copy_person(stuff, 4, &temp, 8);
-      (void) copy_person(stuff, 5, &temp, 9);
-      (void) copy_person(stuff, 6, &temp, 10);
-      (void) copy_person(stuff, 8, &temp, 11);
-
-      canonicalize_rotation(stuff);
-
-/* or should this be changed to:
-      stuff->kind = s3x4;
-      (void) copy_person(stuff, 0, &temp, 0);
-      (void) copy_person(stuff, 1, &temp, 1);
-      (void) copy_person(stuff, 2, &temp, 2);
-      (void) copy_person(stuff, 3, &temp, 3);
-      (void) copy_person(stuff, 6, &temp, 8);
-      (void) copy_person(stuff, 7, &temp, 9);
-      (void) copy_person(stuff, 8, &temp, 10);
-      (void) copy_person(stuff, 9, &temp, 11);
-????? */
    }
 }
 
@@ -1035,12 +980,33 @@ extern void normalize_setup(setup *ss, normalize_action action)
          (void) copy_person(ss, 2, ss, 4);
          (void) copy_person(ss, 3, ss, 5);
       }
+      else if ((ss->kind == s_bone) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         ss->kind = s1x4;
+         (void) copy_person(ss, 0, ss, 6);
+         (void) copy_person(ss, 1, ss, 7);
+      }
       else if ((ss->kind == s_crosswave) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1))) {
          ss->kind = s1x2;
          ss->rotation++;
          (void) copy_rot(ss, 0, ss, 3, 033);
          (void) copy_rot(ss, 1, ss, 7, 033);
          canonicalize_rotation(ss);
+      }
+      else if ((ss->kind == s_crosswave) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         ss->kind = s1x4;
+         ss->rotation++;
+         (void) copy_rot(ss, 0, ss, 2, 033);
+         (void) copy_rot(ss, 1, ss, 3, 033);
+         (void) copy_rot(ss, 2, ss, 6, 033);
+         (void) copy_rot(ss, 3, ss, 7, 033);
+         canonicalize_rotation(ss);
+      }
+      else if ((ss->kind == s_qtag) && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
+         ss->kind = s1x4;
+         (void) copy_person(ss, 0, ss, 6);
+         (void) copy_person(ss, 1, ss, 7);
+         (void) copy_person(ss, 2, ss, 2);
+         (void) copy_person(ss, 3, ss, 3);
       }
       else if ((ss->kind == s_galaxy) && (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1))) {
          ss->kind = s2x2;
@@ -1053,6 +1019,22 @@ extern void normalize_setup(setup *ss, normalize_action action)
          ss->kind = s1x2;
          (void) copy_person(ss, 0, ss, 2);
          (void) copy_person(ss, 1, ss, 6);
+      }
+      else if ((ss->kind == s3x1dmd) && (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1))) {
+         ss->kind = s1x4;
+         (void) copy_person(ss, 0, ss, 1);
+         (void) copy_person(ss, 1, ss, 2);
+         (void) copy_person(ss, 2, ss, 5);
+         (void) copy_person(ss, 3, ss, 6);
+      }
+      else if ((ss->kind == s1x3dmd) && (!(ss->people[0].id1 | ss->people[4].id1))) {
+         ss->kind = s_1x2dmd;
+         (void) copy_person(ss, 0, ss, 1);
+         (void) copy_person(ss, 1, ss, 2);
+         (void) copy_person(ss, 2, ss, 3);
+         (void) copy_person(ss, 3, ss, 5);
+         (void) copy_person(ss, 4, ss, 6);
+         (void) copy_person(ss, 5, ss, 7);
       }
    }
 

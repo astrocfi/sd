@@ -185,13 +185,15 @@ get_char_input(void)
       function_key_expansion = "undo last call\n";             /* F9 */
    else if (c == 138)
       function_key_expansion = "end this sequence\n";          /* F10 */
+   else if (c == 139)
+      function_key_expansion = "pick level call\n";            /* F11 */
 
    else if (c == 161)
       function_key_expansion = "sides start\n";                /* sF1 */
    else if (c == 162)
       function_key_expansion = "twice\n";                      /* sF2 */
    else if (c == 163)
-      function_key_expansion = "normalize\n";                  /* sF3 */
+      function_key_expansion = "pick concept call\n";          /* sF3 */
    else if (c == 164)
       function_key_expansion = "reconcile\n";                  /* sF4 */
    else if (c == 165)
@@ -206,6 +208,15 @@ get_char_input(void)
       function_key_expansion = "abort the search\n";           /* sF9 */
    else if (c == 170)
       function_key_expansion = "change output file\n";         /* sF10 */
+
+   else if (c == 193)
+      function_key_expansion = "just as they are\n";           /* cF1 */
+   else if (c == 195)
+      function_key_expansion = "pick simple call\n";           /* cF3 */
+   else if (c == 196)
+      function_key_expansion = "normalize\n";                  /* cF4 */
+   else if (c == 197)
+      function_key_expansion = "insert a comment\n";           /* cF5 */
 
    else if (c >= 128)
       c = ' ';
@@ -465,28 +476,54 @@ Private match_result user_match;
 #define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
 #define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
 
-int num_command_commands = 19;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 45;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 
 Cstring command_commands[] = {
-    "simple modifications",
-    "allow modifications",
-    "toggle concept levels",
-    "toggle active phantoms",
-    "exit the program",
-    "quit the program",
-    "undo last call",
-    "discard entered concepts",
-    "abort this sequence",
-    "insert a comment",
-    "change output file",
-    "change header comment",
-    "end this sequence",
-    "resolve",
-    "reconcile",
-    "pick random call",
-    "normalize",
-    "keep picture",
-    "refresh display"
+   "simple modifications",
+   "allow modifications",
+   "toggle concept levels",
+   "toggle active phantoms",
+   "exit the program",
+   "quit the program",
+   "undo last call",
+   "discard entered concepts",
+   "abort this sequence",
+   "insert a comment",
+   "change output file",
+   "change header comment",
+   "end this sequence",
+   "keep picture",
+   "refresh display",
+   "resolve",
+   "normalize",
+   "standardize",
+   "reconcile",
+   "pick random call",
+   "pick simple call",
+   "pick concept call",
+   "pick level call",
+   "create any lines",
+   "create waves",
+   "create 2fl",
+   "create lines in",
+   "create lines out",
+   "create inverted lines",
+   "create 3x1 lines",
+   "create any columns",
+   "create columns",
+   "create magic columns",
+   "create dpt",
+   "create cdpt",
+   "create trade by",
+   "create 8 chain",
+   "create any 1/4 tag",
+   "create 1/4 tag",
+   "create 3/4 tag",
+   "create 1/4 line",
+   "create 3/4 line",
+   "create diamonds",
+   "create any tidal setup",
+   "create tidal wave"
 };
 
 static command_kind command_command_values[] = {
@@ -503,12 +540,38 @@ static command_kind command_command_values[] = {
    command_change_outfile,
    command_change_header,
    command_getout,
-   command_resolve,
-   command_reconcile,
-   command_anything,
-   command_nice_setup,
    command_save_pic,
-   command_refresh
+   command_refresh,
+   command_resolve,
+   command_normalize,
+   command_standardize,
+   command_reconcile,
+   command_random_call,
+   command_simple_call,
+   command_concept_call,
+   command_level_call,
+   command_create_any_lines,
+   command_create_waves,
+   command_create_2fl,
+   command_create_li,
+   command_create_lo,
+   command_create_inv_lines,
+   command_create_3and1_lines,
+   command_create_any_col,
+   command_create_col,
+   command_create_magic_col,
+   command_create_dpt,
+   command_create_cdpt,
+   command_create_tby,
+   command_create_8ch,
+   command_create_any_qtag,
+   command_create_qtag,
+   command_create_3qtag,
+   command_create_qline,
+   command_create_3qline,
+   command_create_dmd,
+   command_create_any_tidal,
+   command_create_tidal_wave
 };
 
 
@@ -819,7 +882,7 @@ extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply 
 
 extern uims_reply uims_get_resolve_command(void)
 {
-   get_user_input("Enter resolve command> ", (int) match_resolve_commands);
+   get_user_input("Enter search command> ", (int) match_resolve_commands);
    uims_menu_index = resolve_command_values[user_match.index];
    return user_match.kind;
 }
@@ -945,8 +1008,7 @@ extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
  * command (resolve, reconcile, nice setup, pick random call).
  */
 
-extern void
-uims_begin_search(search_kind goal)
+extern void uims_begin_search(command_kind goal)
 {
 }
 
@@ -980,8 +1042,7 @@ uims_end_reconcile_history(void)
     return FALSE;
 }
 
-extern void
-uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state)
+extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state)
 {
     char title[MAX_TEXT_LINE_LENGTH];
 

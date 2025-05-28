@@ -106,6 +106,9 @@ typedef int long_boolean;
 
 /* Probability (out of 8) that a concept will be placed on a randomly generated call. */
 #define CONCEPT_PROBABILITY 2
+/* We use lots more concepts for "standardize", since it is much less likely (though
+   by no means impossible) that a plain call will do the job. */
+#define STANDARDIZE_CONCEPT_PROBABILITY 6
 
 /* Absolute maximum length we can handle in text operations, including
    writing to file.  If a call gets more complicated than this, stuff
@@ -389,42 +392,57 @@ typedef struct {
 
 /* The following are used for the "centers/ends work <concept>" mechanism:
 
-   CMD_MISC2__CTR_USE is on if there is such an operation in place.
-   We will make the centers or ends (depending on CMD_MISC2__CTR_USE_INVERT)
-   use the next concept while the others skip that concept.  The schema,
-   which is one of schema_concentric_2_6, schema_concentric_6_2,
-   schema_concentric, or schema_single_concentric, is in the low 16 bits.
+      CMD_MISC2__CTR_USE is on if there is such an operation in place.
+      We will make the centers or ends (depending on CMD_MISC2__CTR_USE_INVERT)
+      use the next concept while the others skip that concept.  The schema,
+      which is one of schema_concentric_2_6, schema_concentric_6_2,
+      schema_concentric, or schema_single_concentric, is in the low 16 bits.
 
-   CMD_MISC2__CTR_USE_INVERT is only meaningful if the CMD_MISC2__CTR_USE is on.
-   It says that the ends are doing the concept, instead of the centers.
+      CMD_MISC2__CTR_USE_INVERT is only meaningful if the CMD_MISC2__CTR_USE is on.
+      It says that the ends are doing the concept, instead of the centers.
 
-   CMD_MISC2__INVERT_CENTRAL is only meaningful if the CMD_MISC2__CENTRAL_MASK is
-   in use.  It means that the "inverted" version of the concept is in use, e.g.
-   "invert snag".
+      CMD_MISC2__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
+      of the subsidiary setups because a concept like "mystic triple boxes" is in use.
+      It is removed immediately by "divided_setup_move" after use.
 
-   CMD_MISC2__CENTRAL_MASK, when nonzero, says that one of the "central", "snag",
-   or "mystic" concepts is in use.  They are all closely related.
+      CMD_MISC2__MYSTIFY_INVERT is only meaningful when CMD_MISC2__MYSTIFY_SPLIT is on.
+      It says that the concept is actually "invert mystic triple boxes" or whatever.
 
-   CMD_MISC2__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
-   of the subsidiary setups because a concept like "mystic triple boxes" is in use.
-   It is removed immediately by "divided_setup_move" after use.
+   The following are used for what we call the "center/end" mechanism.  This
+   mechanism is used for the "invert" (centers and ends) concept, as well as
+   "central", "snag", and "mystic" and inverts thereof.
 
-   CMD_MISC2__MYSTIFY_INVERT is only meaningful when CMD_MISC2__MYSTIFY_SPLIT is on.
-   It says that the concept is actually "invert mystic triple boxes" or whatever.
+      CMD_MISC2__CTR_END_INV_CONC is only meaningful if the CMD_MISC2__CTR_END_KMASK is
+      nonzero.  It means that the "inverted" version of the concept is in use, that is,
+      "invert central", "invert snag", or "invert mystic".
+
+      CMD_MISC2__CTR_END_KMASK, when nonzero, says that one of the "central", "snag",
+      or "mystic" concepts is in use.  They are all closely related.
+
+      CMD_MISC2__CTR_END_INVERT means that the call is being inverted.  It is
+      orthogonal to such issues as "snag" and "invert snag".  "Invert snag invert
+      strike out" means that the physical ends do only half, and everyone do
+      an invert strike out.  That is, the ends hinge but do not step & fold,
+      while the centers detour.
+
+      CMD_MISC2__CTR_END_MASK embraces all of the bits of the "center/end" mechanism.
 */
 
 /*     these bits used for encoding the schema
                                      0x0000FFFFUL */
 #define CMD_MISC2__CTR_USE           0x00010000UL
 #define CMD_MISC2__CTR_USE_INVERT    0x00020000UL
-
 #define CMD_MISC2__MYSTIFY_SPLIT     0x00400000UL
 #define CMD_MISC2__MYSTIFY_INVERT    0x00800000UL
-#define CMD_MISC2__INVERT_CENTRAL    0x01000000UL
-/* This is a 2 bit field.  For codes inside same, see "CMD_MISC2__CENTRAL_PLAIN" below. */
-#define CMD_MISC2__CENTRAL_MASK      0x06000000UL
 
-/* Here are the encodings that can go into the CMD_MISC2__CENTRAL_MASK field.
+
+#define CMD_MISC2__CTR_END_INV_CONC  0x01000000UL
+/* This is a 2 bit field.  For codes inside same, see "CMD_MISC2__CENTRAL_PLAIN" below. */
+#define CMD_MISC2__CTR_END_KMASK     0x06000000UL
+#define CMD_MISC2__CTR_END_INVERT    0x08000000UL
+#define CMD_MISC2__CTR_END_MASK      0x0F000000UL
+
+/* Here are the encodings that can go into the CMD_MISC2__CTR_END_KMASK field.
    Zero means none of these concepts is in use. */
 #define CMD_MISC2__CENTRAL_PLAIN     0x02000000UL
 #define CMD_MISC2__CENTRAL_SNAG      0x04000000UL
@@ -457,7 +475,7 @@ typedef struct {
    RESULTFLAG__DID_LAST_PART means that, when a sequentially defined call was executed
    with the "cmd_frac_flags" word nonzero, so that just one part was done,
    that part was the last part.  Hence, if we are doing a call with some "piecewise"
-   or "random" concept, we do that parts of the call one at a time, with appropriate
+   or "random" concept, we do the parts of the call one at a time, with appropriate
    concepts on each part, until it comes back with this flag set.  This is used with
    RESULTFLAG__PARTS_ARE_KNOWN.
 
@@ -567,7 +585,8 @@ typedef struct glowk {
 typedef struct {
    uint32 callflags1;    /* The CFLAG1_??? flags. */
    uint32 callflagsh;    /* The heritable flags + the ESCAPE_WORD__???  and CFLAGH__??? flags. */
-   int age;
+   short int age;
+   short int level;
    calldef_schema schema;
    union {
       struct {
@@ -627,8 +646,7 @@ typedef struct {
 } map_thing;
 
 typedef struct {
-   veryshort mapin[8];
-   veryshort mapout[12];
+   veryshort maps[20];
    short inlimit;
    short outlimit;
    setup_kind bigsetup;
@@ -638,6 +656,7 @@ typedef struct {
    int inner_rot;    /* 1 if inner setup is rotated CCW relative to big setup */
    int outer_rot;    /* 1 if outer setup is rotated CCW relative to big setup */
    int mapelong;
+   int center_arity;
 } cm_thing;
 
 /* BEWARE!!  This list must track the array "concept_table" in sdconcpt.c . */
@@ -680,15 +699,7 @@ typedef enum {
    concept_3x1,
    concept_3x3,
    concept_4x4,
-   concept_1x12_matrix,
-   concept_1x16_matrix,
-   concept_2x6_matrix,
-   concept_2x8_matrix,
-   concept_3x4_matrix,
-   concept_4x4_matrix,
-   concept_3x8_matrix,
-   concept_4x6_matrix,
-   concept_4dmd_matrix,
+   concept_create_matrix,
    concept_funny,
    concept_randomtrngl,
    concept_selbasedtrngl,
@@ -726,7 +737,10 @@ typedef enum {
    concept_triple_diamonds_together,
    concept_quad_diamonds,
    concept_quad_diamonds_together,
-   concept_inner_boxes,
+   concept_in_out_line_3,
+   concept_in_out_line_4,
+   concept_in_out_box_3,
+   concept_in_out_box_4,
    concept_triple_diag,
    concept_triple_diag_together,
    concept_triple_twin,
@@ -791,7 +805,7 @@ typedef struct {
    Cstring menu_name;
 } concept_descriptor;
 
-/* BEWARE!!  This list must track the arrays "selector_names" and "selector_singular" in sdutil.c .
+/* BEWARE!!  This list must track the arrays "selector_list" in sdutil.c .
    It must also track the DITL "Select Dancers" in *.rsrc in the Macintosh system. */
 typedef enum {
    selector_uninitialized,
@@ -829,6 +843,14 @@ typedef enum {
    selector_none
 } selector_kind;
 #define last_selector_kind ((int) selector_none)
+
+typedef struct {
+   Cstring name;
+   Cstring sing_name;
+   Cstring name_uc;
+   Cstring sing_name_uc;
+   selector_kind opposite;
+} selector_item;
 
 /* BEWARE!!  This list must track the array "direction_names" in sdutil.c .
    It must also track the DITL "which direction" in *.rsrc in the Macintosh system. */
@@ -1060,11 +1082,13 @@ typedef enum {
    warn__check_c1_phan,
    warn__check_dmd_qtag,
    warn__check_2x4,
+   warn__check_4x4,
    warn__check_pgram,
    warn__dyp_resolve_ok,
    warn__ctrs_stay_in_ctr,
    warn__check_c1_stars,
    warn__bigblock_feet,
+   warn__adjust_to_feet,
    warn__some_touch,
    warn__split_to_2x4s,
    warn__split_to_2x3s,
@@ -1075,6 +1099,7 @@ typedef enum {
    warn__split_phan_in_pgram,
    warn__bad_interlace_match,
    warn__not_on_block_spots,
+   warn__bad_modifier_level,
    warn__did_not_interact,
    warn__opt_for_normal_cast
 } warning_index;
@@ -1159,6 +1184,11 @@ typedef enum {
 #define NUM_START_SELECT_KINDS (((int) start_select_as_they_are)+1)
 
 /* For ui_command_select: */
+/* BEWARE!!  This next definition must be keyed to stuff in sdgetout.c or 
+   the UI, particularly the array "title_string". */
+/* BEWARE!!  The order is slightly significant -- all search-type commands
+   are >= command_resolve, and all "create some setup" commands
+   are >= command_create_any_lines.  Certain tests are made easier by this. */
 typedef enum {
    command_quit,
    command_undo,
@@ -1168,17 +1198,43 @@ typedef enum {
    command_change_outfile,
    command_change_header,
    command_getout,
-   command_resolve,
-   command_reconcile,
-   command_anything,
-   command_nice_setup,
 #ifdef NEGLECT
    command_neglect,
 #endif
    command_save_pic,
-   command_refresh
+   command_refresh,
+   command_resolve,            /* Search commands start here */
+   command_normalize,
+   command_standardize,
+   command_reconcile,
+   command_random_call,
+   command_simple_call,
+   command_concept_call,
+   command_level_call,
+   command_create_any_lines,   /* Create setup commands start here */
+   command_create_waves,
+   command_create_2fl,
+   command_create_li,
+   command_create_lo,
+   command_create_inv_lines,
+   command_create_3and1_lines,
+   command_create_any_col,
+   command_create_col,
+   command_create_magic_col,
+   command_create_dpt,
+   command_create_cdpt,
+   command_create_tby,
+   command_create_8ch,
+   command_create_any_qtag,
+   command_create_qtag,
+   command_create_3qtag,
+   command_create_qline,
+   command_create_3qline,
+   command_create_dmd,
+   command_create_any_tidal,
+   command_create_tidal_wave
 } command_kind;
-#define NUM_COMMAND_KINDS (((int) command_refresh)+1)
+#define NUM_COMMAND_KINDS (((int) command_create_tidal_wave)+1)
 
 /* For ui_resolve_select: */
 /* BEWARE!!  This list must track the array "resolve_commands" in sdmatch.c . */
@@ -1257,20 +1313,24 @@ typedef struct flonk {
 typedef uint32 defmodset;
 
 
-/* BEWARE!!  This list must track the "concthing" arrays . */
-/* BEWARE!!  This list must track the array "conc_error_messages" . */
+/* BEWARE!!  This list must track the "concthing" arrays in sdtables.c . */
+/* BEWARE!!  This list must track the array "conc_error_messages" in sdconc.c . */
 typedef enum {
    analyzer_NORMAL,
    analyzer_CHECKPT,
    analyzer_2X6,
    analyzer_6X2,
+   analyzer_4X2,
    analyzer_6X2_TGL,
    analyzer_STAR12,
    analyzer_STAR16,
    analyzer_SINGLE,
+   analyzer_GRANDSINGLE,
    analyzer_TRIPLE_LINE,
+   analyzer_QUAD_LINE,
    analyzer_VERTICAL6,
    analyzer_LATERAL6,
+   analyzer_OTHERS,
    analyzer_CONC_DIAMONDS,
    analyzer_DIAMOND_LINE
 } analyzer_kind;
@@ -1325,6 +1385,11 @@ typedef struct {
       parser to allow this concept (and similar concepts) and the following call to
       be typed on one line.  One needs to be very careful about avoiding ambiguity
       when setting this flag.
+
+   CONCPROP__NEED_ARG2_MATRIX means that the "arg2" word of the concept_descriptor
+      block contains additional bits of the "CONCPROP__NEED_3X8" kind to be sent to
+      "do_matrix_expansion".  This is done so that concepts with different matrix
+      expansion bits can share the same concept type.
 */
 
 
@@ -1356,6 +1421,7 @@ typedef struct {
 #define CONCPROP__PERMIT_MYSTIC    0x01000000UL
 #define CONCPROP__PERMIT_REVERSE   0x02000000UL
 #define CONCPROP__PARSE_DIRECTLY   0x04000000UL
+#define CONCPROP__NEED_ARG2_MATRIX 0x08000000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1479,15 +1545,6 @@ typedef struct {
    setup the_setup;
 } startinfo;
 
-/* BEWARE!!  This next two definitions are keyed to stuff in SDRESOLVE or 
-   the UI, particularly the array "title_string". */
-typedef enum {
-   search_anything,
-   search_nice_setup,
-   search_resolve,
-   search_reconcile
-} search_kind;
-
 typedef enum {
    resolver_display_ok,
    resolver_display_searching,
@@ -1563,6 +1620,15 @@ typedef struct {
    Cstring print_strings[2];
 } setup_attr;
 
+typedef struct zilch {
+   setup_kind outerk;
+   setup_kind innerk;
+   calldef_schema conc_type;
+   int center_arity;
+   cm_thing *value[4];
+   struct zilch *next;
+} conc_initializer;
+
 #define zig_zag_level l_a2
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
@@ -1602,8 +1668,7 @@ extern long_boolean enable_file_writing;                            /* in SDUTIL
 extern long_boolean singlespace_mode;                               /* in SDUTIL */
 extern Cstring cardinals[];                                         /* in SDUTIL */
 extern Cstring ordinals[];                                          /* in SDUTIL */
-extern Cstring selector_names[];                                    /* in SDUTIL */
-extern Cstring selector_singular[];                                 /* in SDUTIL */
+extern selector_item selector_list[];                               /* in SDUTIL */
 extern Cstring direction_names[];                                   /* in SDUTIL */
 extern int last_direction_kind;                                     /* in SDUTIL */
 extern Cstring warning_strings[];                                   /* in SDUTIL */
@@ -1645,10 +1710,19 @@ extern int general_concept_size;                                    /* in SDCTAB
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
 extern int *concept_size_tables[];                                  /* in SDCTABLE */
 extern Cstring concept_menu_strings[];                              /* in SDCTABLE */
-
-extern char *getout_strings[];                                      /* in SDTABLES */
-extern char *filename_strings[];                                    /* in SDTABLES */
-extern char *menu_names[];                                          /* in SDTABLES */
+extern Cstring getout_strings[];                                    /* in SDTABLES */
+extern Cstring filename_strings[];                                  /* in SDTABLES */
+extern dance_level level_threshholds[];                             /* in SDTABLES */
+extern Cstring menu_names[];                                        /* in SDTABLES */
+extern cm_thing map_spec_star12;                                    /* in SDTABLES */
+extern cm_thing map_spec_star12v;                                   /* in SDTABLES */
+extern cm_thing map_spec_star16;                                    /* in SDTABLES */
+extern cm_thing map_spec_star16v;                                   /* in SDTABLES */
+extern cm_thing map2x4_2x4;                                         /* in SDTABLES */
+extern cm_thing map2x4_2x4v;                                        /* in SDTABLES */
+extern cm_thing mapgnd1x2_1x2;                                      /* in SDTABLES */
+extern cm_thing mapgnd1x2_1x2r;                                     /* in SDTABLES */
+extern conc_initializer conc_init_table[];                          /* in SDTABLES */
 extern setup_attr setup_attrs[];                                    /* in SDTABLES */
 extern int begin_sizes[];                                           /* in SDTABLES */
 extern startinfo startinfolist[];                                   /* in SDTABLES */
@@ -1738,6 +1812,7 @@ extern int number_of_circcers;                                      /* in SDMAIN
 extern callspec_block **circcer_calls;                              /* in SDMAIN */
 extern char outfile_string[];                                       /* in SDMAIN */
 extern char header_comment[];                                       /* in SDMAIN */
+extern long_boolean need_new_header_comment;                        /* in SDMAIN */
 extern int sequence_number;                                         /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
@@ -1771,9 +1846,10 @@ extern int random_number;                                           /* in SDSI *
 extern int hashed_randoms;                                          /* in SDSI */
 extern char *database_filename;                                     /* in SDSI */
 
-extern long_boolean selector_used;                                  /* in PREDS */
-extern long_boolean number_used;                                    /* in PREDS */
-extern long_boolean (*pred_table[])(                                /* in PREDS */
+extern long_boolean selector_used;                                  /* in SDPREDS */
+extern long_boolean number_used;                                    /* in SDPREDS */
+extern long_boolean mandatory_call_used;                            /* in SDPREDS */
+extern long_boolean (*pred_table[])(                                /* in SDPREDS */
    setup *real_people,
    int real_index,
    int real_direction,
@@ -1815,7 +1891,6 @@ extern void initialize_menus(call_list_mode_t call_list_mode);
 extern void general_initialize(void);
 extern int generate_random_number(int modulus);
 extern void hash_nonrandom_number(int number);
-extern long_boolean generate_random_concept_p(void);
 extern void *get_mem(uint32 siz);
 extern void *get_mem_gracefully(uint32 siz);
 extern void *get_more_mem(void *oldp, uint32 siz);
@@ -1847,6 +1922,8 @@ extern long_boolean close_call_list_file(void);
 /* In SDUI */
 
 extern void uims_process_command_line(int *argcp, char ***argvp);
+extern void uims_display_help(void);
+extern char *uims_version_string(void);
 extern void uims_preinitialize(void);
 extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[]);
 extern void uims_postinitialize(void);
@@ -1867,12 +1944,11 @@ extern void uims_add_new_line(char the_line[]);
 extern uims_reply uims_get_startup_command(void);
 extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p);
 extern uims_reply uims_get_resolve_command(void);
-extern void uims_begin_search(search_kind goal);
-extern void uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state);
+extern void uims_begin_search(command_kind goal);
+extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state);
 extern int uims_begin_reconcile_history(int currentpoint, int maxpoint);
 extern int uims_end_reconcile_history(void);
 extern void uims_terminate(void);
-extern char *uims_version_string(void);
 extern void uims_database_tick_max(int n);
 extern void uims_database_tick(int n);
 extern void uims_database_tick_end(void);
@@ -1891,6 +1967,7 @@ extern void doublespace_file(void);
 extern void exit_program(int code);
 extern void nonreturning fail(Const char s[]);
 extern void nonreturning fail2(Const char s1[], Const char s2[]);
+extern void nonreturning failp(uint32 id1, Const char s[]);
 extern void nonreturning specialfail(Const char s[]);
 extern Const char *get_escape_string(char c);
 extern void string_copy(char **dest, Cstring src);
@@ -1926,19 +2003,29 @@ extern long_boolean fix_n_results(int arity, setup z[]);
 
 extern resolve_indicator resolve_p(setup *s);
 extern void write_resolve_text(long_boolean doing_file);
-extern uims_reply full_resolve(search_kind goal);
+extern uims_reply full_resolve(command_kind goal);
 extern int concepts_in_place(void);
 extern int reconcile_command_ok(void);
 extern int resolve_command_ok(void);
 extern int nice_setup_command_ok(void);
-extern void create_resolve_menu_title(search_kind goal, int cur, int max, resolver_display_state state, char *title);
+extern void create_resolve_menu_title(command_kind goal, int cur, int max, resolver_display_state state, char *title);
 extern void initialize_getout_tables(void);
 
 /* In SDBASIC */
 
 extern void mirror_this(setup *s);
+
+extern void fix_collision(
+   uint32 explicit_mirror_flag,
+   int collision_mask,
+   int collision_index,
+   int result_mask,
+   long_boolean mirror,
+   setup *result);
+
 extern void do_stability(uint32 *personp, stability stab, int turning);
 extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, uint32 flags);
+
 extern void basic_move(
    setup *ss,
    int tbonetest,
@@ -1998,7 +2085,7 @@ extern void phantom_2x4_move(
 
 extern void distorted_2x2s_move(
    setup *ss,
-   concept_descriptor *this_concept,
+   parse_block *parseptr,
    setup *result);
 
 extern void distorted_move(
@@ -2029,10 +2116,7 @@ extern void triangle_move(
 
 /* In SDCONCPT */
 
-extern void move_perhaps_with_active_phantoms(
-   setup *ss,
-   restriction_thing *restr_thing_ptr,
-   setup *result);
+extern void impose_assumption_and_move(setup *ss, setup *result);
 
 extern long_boolean do_big_concept(
    setup *ss,
@@ -2065,6 +2149,8 @@ extern void concentric_move(
    setup *result);
 
 extern uint32 get_multiple_parallel_resultflags(setup outer_inners[], int number);
+
+extern void initialize_conc_tables(void);
 
 extern void normalize_concentric(
    calldef_schema synthesizer,

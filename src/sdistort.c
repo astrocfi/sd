@@ -31,7 +31,7 @@
 
 
 #include "sd.h"
-
+extern void impose_assumption_and_move(setup *ss, setup *result);
 
 
 Private void innards(
@@ -79,35 +79,7 @@ Private void innards(
             x[i].cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
          }
 
-         if (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
-            assumption_thing t;
-            restriction_thing *restr_thing_ptr;
-
-            /* **** actually, we want to allow the case of "assume waves" already in place. */
-            if (x[i].cmd.cmd_assume.assumption != cr_none)
-               fail("Redundant or conflicting assumptions.");
-
-            t.assump_col = 0;
-            t.assump_both = 0;
-            t.assump_cast = x[i].cmd.cmd_assume.assump_cast;
-
-            switch (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
-               case CMD_MISC__VERIFY_WAVES:     t.assumption = cr_wave_only;    break;
-               case CMD_MISC__VERIFY_DMD_LIKE:  t.assumption = cr_diamond_like; break;
-               case CMD_MISC__VERIFY_QTAG_LIKE: t.assumption = cr_qtag_like;    break;
-               case CMD_MISC__VERIFY_1_4_TAG:   t.assumption = cr_gen_1_4_tag;  break;
-               case CMD_MISC__VERIFY_3_4_TAG:   t.assumption = cr_gen_3_4_tag;  break;
-               default:
-                  fail("Unknown assumption verify code.");
-            }
-
-            x[i].cmd.cmd_assume = t;
-            restr_thing_ptr = check_restriction(&x[i], t, 99);
-            x[i].cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
-            move_perhaps_with_active_phantoms(&x[i], restr_thing_ptr, &z[i]);
-         }
-         else
-            move(&x[i], FALSE, &z[i]);
+         impose_assumption_and_move(&x[i], &z[i]);
 
          if (mirror)
             mirror_this(&z[i]);
@@ -704,9 +676,53 @@ extern void do_phantom_2x4_concept(
 }
 
 
+/* This returns true if the two live people were consecutive, meaning this is a true Z line/column. */
+Private long_boolean search_row(
+   int n,
+   int *x1,
+   int *x2,
+   Const int row[8],
+   Const setup *s)
+{
+   int i, z, fill_count;
+   long_boolean win;
+   int nn = n;
+   if (n < 0) nn = -n;     /* Negative means we handle errors differently. */
+
+   fill_count = 0;
+   z = 2;                       /* counts downward as we see consecutive people */
+   win = FALSE;
+   for (i=0; i<nn; i++)
+      if (!s->people[row[i]].id1)           /* live person here? */
+         z = 2;                 /* no, reset the consecutivity counter */
+      else {
+         z--;                   /* yes, count -- if get two in a row, turn "win" on */
+         if (z == 0) win = TRUE;
+         /* then push this index onto the map, check for no more than 2 */
+         switch (++fill_count) {
+            case 1: *x1 = row[i]; break;
+            case 2: *x2 = row[i]; break;
+            default: goto lose;
+         }
+      }
+   
+   /* Now check that the map has exactly 2 (or 1 if nn==2) people.
+      But if n was negative, we don't print an error -- we just report as our
+      return value whether there were exactly two people, regardless of consecutivity. */
+
+   if (n < 0) return (fill_count == 2);
+   else if (fill_count == 2 || (nn == 2 && fill_count == 1)) return win;
+
+   lose:
+
+   if (n < 0) return FALSE;
+   fail("Can't identify distorted line or column.");
+}
+
+
 extern void distorted_2x2s_move(
    setup *ss,
-   concept_descriptor *this_concept,
+   parse_block *parseptr,
    setup *result)
 {
    /* maps for 4x4 Z's */
@@ -782,6 +798,8 @@ extern void distorted_2x2s_move(
    setup res1, res2;
    Const int *map_ptr;
 
+   concept_descriptor *this_concept = parseptr->concept;
+
    /* Check for special case of "interlocked parallelogram", which doesn't look like the
       kind of concept we are expecting. */
 
@@ -794,13 +812,13 @@ extern void distorted_2x2s_move(
       misc_indicator = this_concept->value.arg1;
    }
 
-   /* misc_indicator    concept                                                      */
-   /*      0         some kind of "Z"                                                */
-   /*      1         some kind of "Jay"                                              */
-   /*      2       twin parallelograms (the physical setup is like offset lines)     */
-   /*      3       interlocked boxes/Pgrams (the physical setup is like Z's)         */
-   /*      4         some kind of parallelogram (as from "heads travel thru")        */
-   /* Concept is Jay, "Z", or offset parallelogram/interlocked boxes.                */
+   /* misc_indicator    concept
+           0         some kind of "Z"
+           1         some kind of "Jay"
+           2       twin parallelograms (the physical setup is like offset lines)
+           3       interlocked boxes/Pgrams (the physical setup is like Z's)
+           4         some kind of parallelogram (as from "heads travel thru")
+           5       distorted blocks */
 
    /* table_offset is 0, 8, or 12.  It selects the appropriate part of the maps. */
    /* For "Z"      :   0 == normal, 8 == interlocked. */
@@ -966,6 +984,82 @@ extern void distorted_2x2s_move(
          }
          else goto lose;
          break;
+      case 5:
+         if (ss->kind != s4x4)
+            fail("Must have 4x4 matrix for this concept.");
+
+         {
+            setup rotss = *ss;
+            int the_map[16];
+            int rot, rotz;
+         
+            int *map_ptr = the_map;
+            int rows = 1;
+            int columns = 1;
+         
+            rotss.rotation++;
+            canonicalize_rotation(&rotss);
+      
+            /* Search for the live people, in rows first. */
+
+            if (!search_row(-4, &the_map[0], &the_map[3], list_10_6_5_4,   ss)) rows = 0;
+            if (!search_row(-4, &the_map[4], &the_map[7], list_11_13_7_2,  ss)) rows = 0;
+            if (!search_row(-4, &the_map[1], &the_map[2], list_12_17_3_1,  ss)) rows = 0;
+            if (!search_row(-4, &the_map[5], &the_map[6], list_14_15_16_0, ss)) rows = 0;
+
+            /* Now search in columns, and store the result starting at 8. */
+
+            if (!search_row(-4, &the_map[8],  &the_map[11], list_10_6_5_4,   &rotss)) columns = 0;
+            if (!search_row(-4, &the_map[12], &the_map[15], list_11_13_7_2,  &rotss)) columns = 0;
+            if (!search_row(-4, &the_map[9],  &the_map[10], list_12_17_3_1,  &rotss)) columns = 0;
+            if (!search_row(-4, &the_map[13], &the_map[14], list_14_15_16_0, &rotss)) columns = 0;
+
+            /* At this point, exactly one of "rows" and "columns" should be equal to 1. */
+
+            if (rows+columns != 1)
+               fail("Can't identify distorted blocks.");
+
+            if (columns) {
+               *ss = rotss;
+               map_ptr = &the_map[8];
+            }
+         
+            rot = 011;
+            rotz = 033;
+            result->kind = s4x4;
+         
+            for (i=0; i<4; i++) (void) copy_rot(&a1, i, ss, map_ptr[i], rot);
+            a1.kind = s2x2;
+            a1.rotation = 0;
+            a1.cmd = ss->cmd;
+            a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+            update_id_bits(&a1);
+            move(&a1, FALSE, &res1);
+            if (res1.kind != s2x2 || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
+         
+            for (i=0; i<4; i++) (void) copy_rot(&a2, i, ss, map_ptr[i+4], rot);
+            a2.kind = s2x2;
+            a2.rotation = 0;
+            a2.cmd = ss->cmd;
+            a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+            update_id_bits(&a2);
+            move(&a2, FALSE, &res2);
+            if (res2.kind != s2x2 || (res2.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
+         
+            result->rotation = res1.rotation;
+            for (i=0; i<4; i++) (void) copy_rot(result, map_ptr[i], &res1, i, rotz);
+            for (i=0; i<4; i++) (void) copy_rot(result, map_ptr[i+4], &res2, i, rotz);
+            result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_MASK;
+            reinstate_rotation(ss, result);
+         
+            if (columns) {
+               result->rotation--;
+               canonicalize_rotation(result);
+            }
+
+            return;
+
+         }
    }
 
    if (map_ptr[table_offset] < 0) goto lose;
@@ -1002,48 +1096,10 @@ extern void distorted_2x2s_move(
    }
 
    result->result_flags = res1.result_flags | res2.result_flags;
+   reinstate_rotation(ss, result);
    return;
 
    lose: fail("Can't find the indicated formation.");
-}
-
-
-/* This returns true if the two live people were consecutive, meaning this is a true Z line/column. */
-Private long_boolean search_row(
-   int n,
-   int *x1,
-   int *x2,
-   Const int row[8],
-   Const setup *s)
-{
-   int i, z, fill_count;
-   long_boolean win;
-
-   fill_count = 0;
-   z = 2;                       /* counts downward as we see consecutive people */
-   win = FALSE;
-   for (i=0; i<n; i++)
-      if (!s->people[row[i]].id1)           /* live person here? */
-         z = 2;                 /* no, reset the consecutivity counter */
-      else {
-         z--;                   /* yes, count -- if get two in a row, turn "win" on */
-         if (z == 0) win = TRUE;
-         /* then push this index onto the map, check for no more than 2 */
-         fill_count++;
-         switch (fill_count) {
-            case 1: *x1 = row[i]; break;
-            case 2: *x2 = row[i]; break;
-            default: goto lose;
-         }
-      }
-   
-   /* Now check that the map has exactly 2 people. */
-   
-   if (fill_count == 2) return win;
-
-   lose:
-
-   fail("Can't identify distorted line or column.");
 }
 
 
@@ -1061,10 +1117,12 @@ extern void distorted_move(
       disttest_offset - user claims this is offset lines/columns
       disttest_z      - user claims this is Z lines/columns
       disttest_any    - user claims this is distorted lines/columns
-   arg2 =
+   arg2 & 7 =
       0 - user claims this is some kind of columns
       1 - user claims this is some kind of lines
       3 - user claims this is waves
+   arg2 & 8 != 0:
+      user claims this is a single tidal (grand) setup
 
    Global_tbonetest has the OR of all the people, or all the standard people if
       this is "standard", so it is what we look at to interpret the
@@ -1075,9 +1133,11 @@ extern void distorted_move(
    static int list_1_13_10[3] = {1, 11, 8};
    static int list_2_5_7[3] = {2, 5, 7};
    static int list_3_4_6[3] = {3, 4, 6};
+   static int list_2x8[16] = {0, 15, 1, 14, 3, 12, 2, 13, 7, 8, 6, 9, 4, 11, 5, 10};
 
    int the_map[8];
    int i, rot, rotz;
+   setup_kind k;
    setup a1;
    setup res1;
 
@@ -1087,92 +1147,113 @@ extern void distorted_move(
    int linesp = parseptr->concept->value.arg2;
    long_boolean zlines = TRUE;
 
-   if (ss->kind == s4x4) {
-      /* **** This is all sort of a crock.  Here we are picking out the "winning" method for
-        doing distorted/offset/Z lines and columns.  Below, we do it by the old way, which allows
-        T-bone setups. */
-   
-      /* If any people are T-boned, we must invoke the other method and hope for the best.
-         ***** We will someday do it right. */
-         
-      if ((global_tbonetest & 011) == 011) {
-         if (disttest != disttest_offset)
-            fail("Sorry, can't apply this concept when people are T-boned.");
-   
-         phantom_2x4_move(ss, linesp & 1, phantest_only_one, &(map_offset), result);
-         return;
-      }
+   if (linesp & 8) {
+      k = s1x8;
 
-      if (livemask == 0x6666 || livemask == 0x9999) {
-         if (!((linesp ^ global_tbonetest) & 1)) {    /* What a crock -- this is all backwards. */
-            rotate_back = 1;                          /* (Well, actually everything else is backwards.) */
+      if (ss->kind == s2x8) {
+         if (linesp & 1) {
+            if (global_tbonetest & 1) fail("There is no tidal line here.");
+         }
+         else {
+            if (global_tbonetest & 010) fail("There is no tidal column here.");
+         }
+   
+         /* Search for the live people. */
+         
+         for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
+         
+         zlines = FALSE;
+         rot = 0;
+         rotz = 0;
+         result->kind = s2x8;      
+      }
+      else
+         fail("Must have 2x8 setup for this concept.");
+   }
+   else {
+      k = s2x4;
+
+      if (ss->kind == s4x4) {
+         /* **** This is all sort of a crock.  Here we are picking out the "winning" method for
+           doing distorted/offset/Z lines and columns.  Below, we do it by the old way, which allows
+           T-bone setups. */
+      
+         /* If any people are T-boned, we must invoke the other method and hope for the best.
+            ***** We will someday do it right. */
+            
+         if ((global_tbonetest & 011) == 011) {
+            if (disttest != disttest_offset)
+               fail("Sorry, can't apply this concept when people are T-boned.");
+      
+            phantom_2x4_move(ss, linesp & 1, phantest_only_one, &(map_offset), result);
+            return;
+         }
+   
+         if (livemask == 0x6666 || livemask == 0x9999) {
+            if (!((linesp ^ global_tbonetest) & 1)) {    /* What a crock -- this is all backwards. */
+               rotate_back = 1;                          /* (Well, actually everything else is backwards.) */
+               ss->rotation++;
+               canonicalize_rotation(ss);
+            }
+            map_ptr = &map_o_s2x4_3;
+            disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
+            goto do_divided_call;
+         }
+   
+         if ((linesp ^ global_tbonetest) & 1) {
+            rotate_back = 1;
             ss->rotation++;
             canonicalize_rotation(ss);
+            livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
          }
-         map_ptr = &map_o_s2x4_3;
-         disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
-         goto do_divided_call;
-      }
-
-      if ((linesp ^ global_tbonetest) & 1) {
-         rotate_back = 1;
-         ss->rotation++;
-         canonicalize_rotation(ss);
-         livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
-      }
-
-      /* Search for the live people.
-         Must scan sideways for each Y value, looking for exactly 2 people
-         If any of the scans returns false, meaning that the 2 people are not adjacent,
-         set zlines to false. */
-
-      /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
-
-      if (livemask == 0xB4B4) {
-         map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_L_FULL][1];
-         goto do_divided_call;
-      }
-      else if (livemask == 0x4B4B) {
-         map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_R_FULL][1];
-         goto do_divided_call;
-      }
-      else {
-         if (!search_row(4, &the_map[0], &the_map[7], list_10_6_5_4, ss)) zlines = FALSE;
-         if (!search_row(4, &the_map[1], &the_map[6], list_11_13_7_2, ss)) zlines = FALSE;
-         if (!search_row(4, &the_map[2], &the_map[5], list_12_17_3_1, ss)) zlines = FALSE;
-         if (!search_row(4, &the_map[3], &the_map[4], list_14_15_16_0, ss)) zlines = FALSE;
-      }
    
-      rot = 011;
-      rotz = 033;
-      result->kind = s4x4;
-   }
-   else if (ss->kind == s3x4) {
-      if (linesp & 1) {
-         if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+         /* Search for the live people.
+            Must scan sideways for each Y value, looking for exactly 2 people
+            If any of the scans returns false, meaning that the 2 people are not adjacent,
+            set zlines to false. */
+   
+         /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
+   
+         if (livemask == 0xB4B4) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_L_FULL][1]; goto do_divided_call; }
+         else if (livemask == 0x4B4B) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_R_FULL][1]; goto do_divided_call; }
+         else {
+            if (!search_row(4, &the_map[0], &the_map[7], list_10_6_5_4, ss)) zlines = FALSE;
+            if (!search_row(4, &the_map[1], &the_map[6], list_11_13_7_2, ss)) zlines = FALSE;
+            if (!search_row(4, &the_map[2], &the_map[5], list_12_17_3_1, ss)) zlines = FALSE;
+            if (!search_row(4, &the_map[3], &the_map[4], list_14_15_16_0, ss)) zlines = FALSE;
+         }
+      
+         rot = 011;
+         rotz = 033;
+         result->kind = s4x4;
       }
-      else {
-         if (global_tbonetest & 010) fail("There are no columns of 4 here.");
+      else if (ss->kind == s3x4) {
+         if (linesp & 1) {
+            if (global_tbonetest & 1) fail("There are no lines of 4 here.");
+         }
+         else {
+            if (global_tbonetest & 010) fail("There are no columns of 4 here.");
+         }
+   
+         /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
+         
+         if (livemask == 07474) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_L_HALF][1]; goto do_divided_call; }
+         else if (livemask == 06363) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_R_HALF][1]; goto do_divided_call; }
+   
+         /* Search for the live people. */
+         
+         if (!search_row(3, &the_map[0], &the_map[7], list_0_12_11, ss)) zlines = FALSE;
+         if (!search_row(3, &the_map[1], &the_map[6], list_1_13_10, ss)) zlines = FALSE;
+         if (!search_row(3, &the_map[2], &the_map[5], list_2_5_7, ss)) zlines = FALSE;
+         if (!search_row(3, &the_map[3], &the_map[4], list_3_4_6, ss)) zlines = FALSE;
+         
+         rot = 0;
+         rotz = 0;
+         result->kind = s3x4;      
       }
-
-      /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
-      
-      if (livemask == 07474) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_L_HALF][1]; goto do_divided_call; }
-      else if (livemask == 06363) { map_ptr = (*map_lists[s2x4][0])[MPKIND__OFFS_R_HALF][1]; goto do_divided_call; }
-
-      /* Search for the live people. */
-      
-      if (!search_row(3, &the_map[0], &the_map[7], list_0_12_11, ss)) zlines = FALSE;
-      if (!search_row(3, &the_map[1], &the_map[6], list_1_13_10, ss)) zlines = FALSE;
-      if (!search_row(3, &the_map[2], &the_map[5], list_2_5_7, ss)) zlines = FALSE;
-      if (!search_row(3, &the_map[3], &the_map[4], list_3_4_6, ss)) zlines = FALSE;
-      
-      rot = 0;
-      rotz = 0;
-      result->kind = s3x4;      
+      else
+         fail("Must have 3x4 or 4x4 setup for this concept.");
    }
-   else
-      fail("Must have 3x4 or 4x4 setup for this concept.");
 
    /* Now see if the concept was correctly named. */
 
@@ -1191,29 +1272,18 @@ extern void distorted_move(
 
    for (i=0; i<8; i++) (void) copy_rot(&a1, i, ss, the_map[i], rot);
 
-   a1.kind = s2x4;
+   a1.kind = k;
    a1.rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+
+   if ((linesp & 7) == 3)
+      a1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
    update_id_bits(&a1);
+   impose_assumption_and_move(&a1, &res1);
 
-   if (linesp == 3) {
-      if (a1.cmd.cmd_assume.assumption != cr_none)
-         fail("Redundant or conflicting assumptions.");
-
-      a1.cmd.cmd_assume.assump_col = 0;
-      a1.cmd.cmd_assume.assump_both = 0;
-      a1.cmd.cmd_assume.assumption = cr_wave_only;
-
-      move_perhaps_with_active_phantoms(
-            &a1,
-            check_restriction(&a1, a1.cmd.cmd_assume, 99),
-            &res1);
-   }
-   else
-      move(&a1, FALSE, &res1);
-
-   if (res1.kind != s2x4 || (res1.rotation & 1)) fail("Can only do non-shape-changing 2x4 -> 2x4 calls in Z or distorted setups.");
+   if (res1.kind != k || (res1.rotation & 1)) fail("Can only do non-shape-changing calls in Z or distorted setups.");
    result->rotation = res1.rotation;
    for (i=0; i<8; i++) (void) copy_rot(result, the_map[i], &res1, i, rotz);
    result->result_flags = res1.result_flags & ~RESULTFLAG__SPLIT_AXIS_MASK;
@@ -1225,7 +1295,7 @@ extern void distorted_move(
    if (disttest != disttest_offset)
       fail("You must specify offset lines/columns when in this setup.");
 
-   if (parseptr->concept->value.arg2 == 3)
+   if ((linesp & 7) == 3)
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);

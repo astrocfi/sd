@@ -77,6 +77,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
 
 Private Cstring *tagger_menu_list[4];
 Private Cstring *circcer_menu_list;
+Private Cstring *selector_menu_list;
 
 Private Widget toplevel, cmdmenu, conceptspecialmenu;
 Private Widget conceptpopup, conceptlist;
@@ -319,8 +320,8 @@ static int button_translations[] = {
    command_getout,                        /* cmd_button_getout */
    command_resolve,                       /* cmd_button_resolve */
    command_reconcile,                     /* cmd_button_reconcile */
-   command_anything,                      /* cmd_button_anything */
-   command_nice_setup,                    /* cmd_button_nice_setup */
+   command_random_call,                   /* cmd_button_anything */
+   command_normalize,                     /* cmd_button_nice_setup */
 #ifdef NEGLECT
    command_neglect,                       /* cmd_button_neglect */
 #endif
@@ -1198,9 +1199,17 @@ uims_postinitialize(void)
    circcer_menu_list = (Cstring *) get_mem((number_of_circcers+1) * sizeof(char *));
 
    for (k=0; k<number_of_circcers; k++)
-      circcer_menu_list[k] = tagger_calls[i][k]->menu_name;
+      circcer_menu_list[k] = circcer_calls[k]->menu_name;
 
    circcer_menu_list[number_of_circcers] = (Cstring) 0;
+
+   /* And the selector list. */
+   selector_menu_list = (Cstring *) get_mem((last_selector_kind+2) * sizeof(char *));
+
+   for (k=0; k<last_selector_kind+1; k++)
+      selector_menu_list[k] = selector_list[k].name;
+
+   selector_menu_list[last_selector_kind+1] = (Cstring) 0;
 
     /* initialize our special empty call menu */
     call_menu_lists[call_list_empty] = empty_menu;
@@ -1609,15 +1618,14 @@ update_display(Widget w)
 }
 
 static int first_reconcile_history;
-static search_kind reconcile_goal;
+static command_kind reconcile_goal;
 
 /*
  * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
  * command (resolve, reconcile, nice setup, pick random call).
  */
 
-extern void
-uims_begin_search(search_kind goal)
+extern void uims_begin_search(command_kind goal)
 {
     reconcile_goal = goal;
     first_reconcile_history = TRUE;
@@ -1657,8 +1665,7 @@ uims_end_reconcile_history(void)
     return FALSE;
 }
 
-extern void
-uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state)
+extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state)
 {
     char title[MAX_TEXT_LINE_LENGTH];
 
@@ -1715,7 +1722,7 @@ uims_do_selector_popup(void)
    }
    else {
        /* We skip the zeroth selector, which is selector_uninitialized. */
-       int t = choose_popup(sd_resources.selector_title, &selector_names[1]);
+       int t = choose_popup(sd_resources.selector_title, &selector_menu_list[1]);
        if (t==0) return POPUP_DECLINE;
        return t;
    }

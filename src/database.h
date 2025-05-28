@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 62
+#define DATABASE_FORMAT_VERSION 66
 
 
 
@@ -142,6 +142,7 @@
 /* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */
 /* BEWARE!!  This list must track the table "getout_strings" in sdtables.c . */
 /* BEWARE!!  This list must track the table "filename_strings" in sdtables.c . */
+/* BEWARE!!  This list must track the table "level_threshholds" in sdtables.c . */
 
 typedef enum {
    l_mainstream, l_plus,
@@ -174,6 +175,7 @@ typedef enum {
    s_bone6,
    s_short6,
    s_1x2dmd,
+   s_2x1dmd,
    s_qtag,
    s_bone,
    s_rigger,
@@ -215,7 +217,6 @@ typedef enum {
    sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
    swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
    sbigdmd,
-   sminirigger,  /* Used internally by concentric stuff. */
    s_normal_concentric
 } setup_kind;
 
@@ -245,6 +246,8 @@ typedef enum {
    b_pshort6,
    b_1x2dmd,
    b_p1x2dmd,
+   b_2x1dmd,
+   b_p2x1dmd,
    b_qtag,
    b_pqtag,
    b_bone,
@@ -356,6 +359,8 @@ typedef enum {
    sq_dmd_ctrs_rh,
    sq_dmd_ctrs_lh,
    sq_dmd_ctrs_1f,
+   sq_ctr_pts_rh,
+   sq_ctr_pts_lh,
    sq_said_tgl,
    sq_didnt_say_tgl
 } search_qualifier;
@@ -403,15 +408,20 @@ typedef enum {
    schema_concentric,
    schema_cross_concentric,
    schema_single_concentric,
+   schema_grand_single_concentric,
    schema_single_cross_concentric,
    schema_single_concentric_together,
    schema_maybe_single_concentric,
    schema_maybe_single_cross_concentric,
+   schema_maybe_grand_single_concentric,
    schema_concentric_diamond_line,
    schema_concentric_diamonds,
    schema_cross_concentric_diamonds,
    schema_concentric_6_2,
    schema_concentric_2_6,
+   schema_concentric_4_2,
+   schema_maybe_4x2_concentric,
+   schema_concentric_others,
    schema_concentric_6_2_tgl,
    schema_conc_star,
    schema_conc_star12,
@@ -420,7 +430,9 @@ typedef enum {
    schema_checkpoint,
    schema_rev_checkpoint,
    schema_ckpt_star,
-   schema_conc_triple_lines,
+   schema_in_out_triple_squash,
+   schema_in_out_triple,
+   schema_in_out_quad,
    schema_lateral_6,       /* Not for public use! */
    schema_vertical_6,      /* Not for public use! */
    schema_sequential,

@@ -26,26 +26,27 @@
 */
 
 #include "sd.h"
+extern void impose_assumption_and_move(setup *ss, setup *result);
 
 typedef struct {
    personrec real_front_people[MAX_PEOPLE];
    personrec real_back_people[MAX_PEOPLE];
    personrec real_second_people[MAX_PEOPLE];
    personrec real_third_people[MAX_PEOPLE];
+   int saved_originals[MAX_PEOPLE];
    setup virtual_setup;
    setup virtual_result;
    int vertical_people[MAX_PEOPLE];    /* 1 if original people were near/far; 0 if lateral */
-   int twosomep[MAX_PEOPLE];           /* 0: solid / 1: twosome / 2: solid-to-twosome / 3: twosome-to-solid */
    uint32 single_mask;
    long_boolean no_unit_symmetry;
    int np;
 } tandrec;
 
 typedef struct {
-   int map1[8];
-   int map2[8];
-   int map3[8];
-   int map4[8];
+   int map1[12];
+   int map2[12];
+   int map3[12];
+   int map4[12];
    uint32 ilatmask;           /* lateral pairs in inside numbering -- only "1" bits used! (except triangles) */
    uint32 olatmask;
    int limit;
@@ -65,8 +66,8 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0, 2, 5, 7},                   {1, 3, 4, 6},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0},                   {3, 4, 6, 1},                 {0}, {0},      0,     0xFF,         4, 1,  0,  0, 0,  s2x2,  s2x4},
    {{3, 2},                         {0, 1},                       {0}, {0},      0,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x2},
-   {{0, 3},                         {1, 2},                       {0}, {0},      0,     0017,         2, 1,  0,  0, 0,  s1x2,  s2x2},
-   {{0, 3},                         {1, 2},                       {0}, {0},    0x5,     0017,         2, 0,  0,  0, 0,  s1x2,  s1x4},
+   {{0, 3},                         {1, 2},                       {0}, {0},      0,      0xF,         2, 1,  0,  0, 0,  s1x2,  s2x2},
+   {{0, 3},                         {1, 2},                       {0}, {0},    0x5,      0xF,         2, 0,  0,  0, 0,  s1x2,  s1x4},
    {{0},                            {1},                          {0}, {0},    0x1,     0003,         1, 0,  0,  0, 0,  s1x1,  s1x2},
    {{0},                            {1},                          {0}, {0},      0,     0003,         1, 1,  0,  0, 0,  s1x1,  s1x2},
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s1x4,  s1x8},
@@ -79,12 +80,24 @@ Private tm_thing maps_isearch_twosome[] = {
    /* When the map following this one gets fixed and uncommented, this one will have to appear first, of course.  Actually, it's
       trickier than that.  The whole issue of 3x4 vs. qtag operation needs to be straightened out. */
    {{7, 22, 15, 20, 18, 11, 2, 9},  {6, 23, 14, 21, 19, 10, 3, 8},{0}, {0},      0, 0xFCCFCC,         8, 1,  0,  0, 0,  s_qtag,s4x6},
-/*    Can't do this yet because maps can have only 8 items each.
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17},
                      {0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},  {0}, {0},      0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
-*/
    {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s2x3,  s3x4},
    {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
+   {{0, 2, 4, 6, 9, 11, 13, 15, 17, 19, 20, 22},
+                     {1, 3, 5, 7, 8, 10, 12, 14, 16, 18, 21, 23}, {0}, {0}, 0x555555, 0xFFFFFF,      12, 0,  0,  0, 0,  s3x4,  s3x8},
+   {{2, 3, 5, 6, 7, 0},             {-1, -1, 4, -1, -1, 1},       {0}, {0},      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_crosswave},
+   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},      0,     0x33,         6, 1,  0,  0, 0,  s_2x1dmd, s_hrglass},
+   {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0x33,         6, 0,  0,  0, 0,  s_2x1dmd, s3x1dmd},
+   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0x66,         6, 0,  0,  0, 0,  s_2x1dmd, s3x1dmd},
+   {{6, 7, 0, 2, 3, 5},             {-1, -1, 1, -1, -1, 4},       {0}, {0},  0x410,     0x33,         6, 0,  0,  0, 0,  s_2x1dmd, s_qtag},
+   {{2, 4, 5, 0},                   {-1, 3, -1, 1},               {0}, {0},      0,      033,         4, 1,  0,  0, 0,  sdmd, s_2x1dmd},
+   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,      033,         4, 0,  0,  0, 0,  sdmd, s_1x2dmd},
+
+
+
+
+
    /* Next one is for centers in tandem in lines, making a virtual bone6. */
    {{0, 3, 5, 4, 7, 6},             {-1, -1, 2, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_bone6, s2x4},
    /* Next two are for certain ends in tandem in an H, making a virtual bone6. */
@@ -97,7 +110,7 @@ Private tm_thing maps_isearch_twosome[] = {
    {{1, 2, 4, 5, 6, 7},             {-1, -1, 3, -1, -1, 0},       {0}, {0},  0x410,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
    /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
    {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s2x3,  s2x4},
-   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0146,         6, 0,  0,  0, 0,  s2x3,  s2x4},
+   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0x66,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    /* Next three are for various people as couples in a C1 phantom or 1/4 tag, making virtual columns of 6. */
    {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
@@ -108,8 +121,9 @@ Private tm_thing maps_isearch_twosome[] = {
    {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_ptpd},
    {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_bone},
    {{0, 2, 5, 7, 9, 11, 12, 14},    {1, 3, 4, 6, 8, 10, 13, 15},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s_qtag,s4dmd},
-   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
-
+   {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0xFF,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
+   {{0, 7, 2, 4, 5, 6},             {-1, 1, -1, -1, 3, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x1dmd, s_galaxy},
+   {{2, 1, 4, 6, 7, 0},             {-1, 3, -1, -1, 5, -1},       {0}, {0},      0,     0xAA,         6, 1,  0,  0, 0,  s_2x1dmd, s_galaxy},
    {{3, 7, 9, 13},                  {1, 5, 11, 15},               {0}, {0},   0x44,   0xA0A0,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
    {{0, 6, 10, 12},                 {2, 4, 8, 14},                {0}, {0},   0x11,   0x0505,         4, 0,  0,  0, 0,  s2x2,  s_c1phan},
 
@@ -129,10 +143,12 @@ Private tm_thing maps_isearch_twosome[] = {
    {{4, 5, 3, 2},                   {0, -1, 1, -1},               {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s_bone6},
    /* Next one is for so-and-so in tandem in a short6, making a virtual line of 4. */
    {{1, 0, 4, 5},                   {-1, 2, -1, 3},               {0}, {0},      0,     0055,         4, 1,  0,  0, 0,  s1x4,  s_short6},
+   {{1, 3, 4, 5},                   {-1, 2, -1, 0},               {0}, {0},   0x44,     0000,         4, 1,  0,  0, 0,  sdmd,  s_short6},
+   {{5, 1, 3, 4},                   {0, -1, 2, -1},               {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  sdmd,  s2x3},
    /* Next three are for so-and-so as couples in a line of 8, making a virtual line of 6. */
    {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s1x6,  s1x8},
-   {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       {0}, {0},  0x104,     0252,         6, 0,  0,  0, 0,  s1x6,  s1x8},
-   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s1x6,  s1x8},
+   {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       {0}, {0},  0x104,     0xAA,         6, 0,  0,  0, 0,  s1x6,  s1x8},
+   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0x33,         6, 0,  0,  0, 0,  s1x6,  s1x8},
    /* Next two are for so-and-so as couples in a line of 6, making a virtual line of 4. */
    {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s1x4,  s1x6},
    {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s1x4,  s1x6},
@@ -320,7 +336,6 @@ Private void initialize_one_table(tm_thing *map_start, int np)
 
       /* We can't encode the virtual person number in the required 3-bit field if this is > 8. */
       if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1) uims_database_error("Tandem table initialization failed: limit wrong.\n", (Cstring) 0);
-      if (map_search->limit > 8) uims_database_error("Tandem table initialization failed: limit too big.\n", (Cstring) 0);
       if (map_search->olatmask != osidemask) uims_database_error("Tandem table initialization failed: Smask.\n", (Cstring) 0);
    }
 }
@@ -354,26 +369,23 @@ Private void unpack_us(
    for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=2, o>>=2) {
       uint32 z = rotperson(tandstuff->virtual_result.people[i].id1, r);
 
-      if (m & 1) {
-         /* Unpack single person. */
-         if (z != 0) {
-            personrec f;
-            int ii = (z & 0700) >> 6;
-            f = tandstuff->real_front_people[ii];
+      if (z != 0) {
+         int ii = (z >> 6) & 7;
+
+         if (m & 1) {
+            /* Unpack single person. */
+
+            personrec f = tandstuff->real_front_people[ii];
             if (f.id1) f.id1 = (f.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
             result->people[map_ptr->map1[i]] = f;
          }
-      }
-      else {
-         /* Unpack tandem/couples person. */
-         personrec f, b, b2, b3;
-
-         if (z != 0) {
-            int ii = (z >> 6) & 7;
-            f = tandstuff->real_front_people[ii];
-            b = tandstuff->real_back_people[ii];
-            b2 = tandstuff->real_second_people[ii];
-            b3 = tandstuff->real_third_people[ii];
+         else {
+            /* Unpack tandem/couples person. */
+   
+            personrec f = tandstuff->real_front_people[ii];
+            personrec b = tandstuff->real_back_people[ii];
+            personrec b2 = tandstuff->real_second_people[ii];
+            personrec b3 = tandstuff->real_third_people[ii];
 
             if (f.id1) f.id1 = (f.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
             if (b.id1) b.id1 = (b.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
@@ -433,15 +445,15 @@ Private void pack_us(
 {
    int i;
    uint32 m, sgl;
+   int virt_index = -1;
 
    tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
    for (i=0, m=map_ptr->ilatmask, sgl=map_ptr->insinglemask; i<map_ptr->limit; i++, m>>=2, sgl>>=2) {
       personrec f, b, b2, b3;
-
       personrec *ptr = &tandstuff->virtual_setup.people[i];
-
+      uint32 vp1, vp2;
       int vert = (1 + map_ptr->rot + m) & 3;
 
       f = s[map_ptr->map1[i]];
@@ -449,8 +461,8 @@ Private void pack_us(
       if (!tandstuff->no_unit_symmetry) vert &= 1;
 
       if (sgl & 1) {
-         ptr->id1 = (f.id1 & ~0700) | (i << 6) | BIT_TANDVIRT;
-         ptr->id2 = f.id2;
+         vp1 = f.id1;
+         vp2 = f.id2;
          b.id1 = ~0UL;
       }
       else {
@@ -494,8 +506,6 @@ Private void pack_us(
          u1 = f.id1 | b.id1 | b2.id1 | b3.id1;
 
          if (u1) {
-            uint32 vp1, vp2;
-         
             if (twosome >= 2 && (u1 & STABLE_MASK))
                fail("Sorry, can't nest fractional stable/twosome.");
 
@@ -559,29 +569,43 @@ Private void pack_us(
                if ((b3.id1 ^ u1) & 077)
                   fail("People not facing same way for tandem or as couples.");
             }
-
-            ptr->id1 = (vp1 & ~0700) | (i << 6) | BIT_TANDVIRT;
-            ptr->id2 = vp2;
-
-            if (twosome >= 2)
-               ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
          }
-         else {
-            ptr->id1 = 0;
-            ptr->id2 = 0;
-         }
-      
-         tandstuff->vertical_people[i] = vert;   /* 1 if original people were near/far; 0 if lateral */
-         tandstuff->twosomep[i] = twosome;
+         else
+            vp1 = 0;
       }
 
-      if (map_ptr->rot & 1)   /* Compensate for above rotation. */
-         (void) copy_rot(&tandstuff->virtual_setup, i, &tandstuff->virtual_setup, i, 033);
+      if (vp1) {
 
-      tandstuff->real_front_people[i] = f;
-      tandstuff->real_back_people[i] = b;
-      tandstuff->real_second_people[i] = b2;
-      tandstuff->real_third_people[i] = b3;
+         /* Create a virtual person number.  Only 8 are allowed, because of the tightness in the
+            person representation.  That shouldn't be a problem, since each virtual person came
+            from a group of real people that had at least one live person.  Unless active phantoms
+            have been created, that is. */
+
+         if ((++virt_index) >= 8) fail("Sorry, too many tandem or as couples people.");
+
+         ptr->id1 = (vp1 & ~0700) | (virt_index << 6) | BIT_TANDVIRT;
+         ptr->id2 = vp2;
+
+         if (!(sgl & 1)) {
+            if (twosome >= 2)
+               ptr->id1 |= STABLE_ENAB | (STABLE_RBIT * fraction);
+
+            tandstuff->vertical_people[virt_index] = vert;   /* 1 if original people were near/far; 0 if lateral */
+         }
+
+         if (map_ptr->rot & 1)   /* Compensate for setup rotation. */
+            ptr->id1 = rotccw(ptr->id1);
+
+         tandstuff->real_front_people[virt_index] = f;
+         tandstuff->real_back_people[virt_index] = b;
+         tandstuff->real_second_people[virt_index] = b2;
+         tandstuff->real_third_people[virt_index] = b3;
+         tandstuff->saved_originals[virt_index] = ptr->id1 + tandstuff->virtual_setup.rotation;
+      }
+      else {
+         ptr->id1 = 0;
+         ptr->id2 = 0;
+      }
    }
 }
 
@@ -613,7 +637,6 @@ extern void tandem_couples_move(
    uint32 orbitmask;
    uint32 sglmask, sglmask2;
    uint32 livemask, livemask2;
-   setup saved_originals;
    long_boolean fractional = FALSE;
    tm_thing *our_map_table;
 
@@ -889,23 +912,12 @@ extern void tandem_couples_move(
    tandstuff.virtual_setup.cmd = ss->cmd;
    tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_none;
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   if (phantom == 2) tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    pack_us(ss->people, map, fraction, twosome, key, &tandstuff);
+
    update_id_bits(&tandstuff.virtual_setup);
-   saved_originals = tandstuff.virtual_setup;    /* Move will clobber the incoming setup.  This bug caused
-                                                    embarrassment at an ATA dance, April 3, 1993. */
 
-   if (phantom == 2) {
-      tandstuff.virtual_setup.cmd.cmd_assume.assump_col = 0;
-      tandstuff.virtual_setup.cmd.cmd_assume.assump_both = 0;
-      tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_wave_only;
-
-      move_perhaps_with_active_phantoms(
-            &tandstuff.virtual_setup,
-            check_restriction(&tandstuff.virtual_setup, tandstuff.virtual_setup.cmd.cmd_assume, 99),
-            &tandstuff.virtual_result);
-   }
-   else
-      move(&tandstuff.virtual_setup, FALSE, &tandstuff.virtual_result);
+   impose_assumption_and_move(&tandstuff.virtual_setup, &tandstuff.virtual_result);
 
    if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");
@@ -938,8 +950,7 @@ extern void tandem_couples_move(
                   fail("fractional twosome not supported for this call.");
             }
 
-            orbit = p - saved_originals.rotation +
-                  tandstuff.virtual_result.rotation - saved_originals.people[vpi].id1;
+            orbit = p + tandstuff.virtual_result.rotation - tandstuff.saved_originals[vpi];
 
             if (twosome == 2) {
                orbit -= ((p & (STABLE_VBIT*3)) / STABLE_VBIT);

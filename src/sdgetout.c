@@ -126,11 +126,18 @@ static setup_kind goal_kind;
 static int goal_directions[8];
 static reconcile_descriptor *current_reconciler;
 
-static char *title_string[] = {
-   "Anything: ",
-   "Normalize: ",
+/* BEWARE!!  This must be keyed to the enumeration "command_kind" in sd.h . */
+static Cstring title_string[] = {
    "Resolve: ",
-   "Reconcile: "};
+   "Normalize: ",
+   "Standardize: ",
+   "Reconcile: ",
+   "Pick Random Call: ",
+   "Pick Simple Call: ",
+   "Pick Concept Call: ",
+   "Pick Level Call: ",
+   "Create Setup: ",
+};
 
 Private void display_reconcile_history(int current_depth, int n);
 
@@ -521,17 +528,18 @@ Private int history_save;               /* Where we are inserting calls now.  Th
                                           forward as we build multiple-call resolves. */
        
 
-Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, int insertion_point)
+Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, int insertion_point)
 {
    long_boolean retval;
    int i, j;
    setup *ns;
+   uint32 directions, p, q;
    warning_info bad_warnings;
    real_jmp_buf my_longjmp_buffer;
 
    history_insertion_point = huge_history_ptr;
 
-   if (goal == search_reconcile) {
+   if (goal == command_reconcile) {
       history_insertion_point -= insertion_point;    /* strip away the extra calls */
 
       goal_kind = history[history_insertion_point].state.kind;
@@ -559,7 +567,11 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       we will only use one canned value for it, so we could miss a single call resolve
       on this first pass if that call involves an interesting number, etc. */
 
-   if (goal == search_resolve || goal == search_reconcile)
+   if (     goal == command_resolve ||
+            goal == command_reconcile ||
+            goal == command_normalize ||
+            goal == command_standardize ||
+            goal >= command_create_any_lines)
       interactivity = interactivity_starting_first_scan;
    else
       interactivity = interactivity_in_random_search;
@@ -601,7 +613,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 
    /* Now clear any concepts if we are not on the first call of the series. */
    
-   if (history_ptr != history_insertion_point || goal == search_reconcile)
+   if (history_ptr != history_insertion_point || goal == command_reconcile)
       initialize_parse();
    else
       (void) restore_parse_state();
@@ -612,8 +624,8 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 
    /* Put in a special initial concept if needed to normalize. */
 
-   if (goal == search_nice_setup && !concepts_in_place()) {
-      int k, l;
+   if (goal == command_normalize && !concepts_in_place()) {
+      int k, l, c;
 
       for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
          if (nice_setup_info[k].kind == history[history_ptr].state.kind) {
@@ -627,20 +639,19 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 
       found_k_and_l:
 
-      l = generate_random_number(l);
-      hash_nonrandom_number(l);
+      c = nice_setup_info[k].array_to_use_now[generate_random_number(l)];
 
       /* If the concept is a tandem or as couples type, we really want "phantom"
          or "2x8 matrix"" in front of it. */
 
-      if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]].kind == concept_tandem) {
+      if (concept_descriptor_table[c].kind == concept_tandem) {
          if (history[history_ptr].state.kind == s4x4)
             deposit_concept(&concept_descriptor_table[phantom_concept_index], 0);
          else
             deposit_concept(&concept_descriptor_table[matrix_2x8_concept_index], 0);
       }
 
-      deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]], 0);
+      deposit_concept(&concept_descriptor_table[c], 0);
    }
    
    /* Select the call.  Selecting one that says "don't use in resolve" will signal and go to try_again. */
@@ -676,7 +687,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 
    ns = &history[history_ptr+1].state;
 
-   if (goal == search_resolve) {
+   if (goal == command_resolve) {
       resolve_kind r = history[history_ptr+1].resolve_flag.kind;
 
       /* Here we bias the search against resolves with circulates (which we
@@ -695,14 +706,32 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       if (r == resolve_none || (attempt_count & resolve_table[r].how_bad))
          goto what_a_loss;
    }
-   else if (goal == search_nice_setup) {
+   else if (goal == command_normalize) {
       /* We accept any setup with 8 people in it.  This could conceivably give
          somewhat unusual setups like dogbones or riggers, but they might be
          sort of interesting if they arise.  (Actually, it is highly unlikely,
          given the concepts that we use.) */
       if (setup_attrs[ns->kind].setup_limits != 7) goto what_a_loss;
    }
-   else if (goal == search_reconcile) {
+   else if (goal == command_standardize) {
+      uint32 tb = 0;
+      uint32 tbtb = 0;
+
+      for (i=0 ; i<8 ; i++) {
+         tb |= ns->people[i].id1;
+         tbtb |= ns->people[i].id1 ^ ((i & 2) << 2);
+      }
+
+      if (ns->kind == s2x4 || ns->kind == s1x8) {
+         if ((tb & 011) == 011) goto what_a_loss;
+      }
+      else if (ns->kind == s_qtag) {
+         if ((tb & 01) != 0 && (tbtb & 010) != 0) goto what_a_loss;
+      }
+      else
+         goto what_a_loss;
+   }
+   else if (goal == command_reconcile) {
       if (ns->kind != goal_kind) goto what_a_loss;
       for (j=0; j<8; j++)
          if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
@@ -744,6 +773,84 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
             goto what_a_loss;
          }
    }
+   else if (goal >= command_create_any_lines) {
+      directions = 0;
+      for (i=0 ; i<8 ; i++) {
+         directions <<= 2;
+         directions |= ns->people[i].id1 & 3;
+      }
+
+      switch (goal) {
+         case command_create_any_lines:
+            if (ns->kind != s2x4 || (directions & 0x5555) != 0) goto what_a_loss;
+            break;
+         case command_create_any_col:
+            if (ns->kind != s2x4 || (directions & 0x5555) != 0x5555) goto what_a_loss;
+            break;
+         case command_create_any_qtag:
+            if (ns->kind != s_qtag || (directions & 0x5555) != 0) goto what_a_loss;
+            break;
+         case command_create_any_tidal:
+            if (ns->kind != s1x8) goto what_a_loss;
+            break;
+         case command_create_waves:
+            if (ns->kind != s2x4 || (directions != 0x2288 && directions != 0x8822)) goto what_a_loss;
+            break;
+         case command_create_2fl:
+            if (ns->kind != s2x4 || (directions != 0x0AA0 && directions != 0xA00A)) goto what_a_loss;
+            break;
+         case command_create_inv_lines:
+            if (ns->kind != s2x4 || (directions != 0x2882 && directions != 0x8228)) goto what_a_loss;
+            break;
+         case command_create_3and1_lines:
+            p = (directions ^ (directions >> 6)) & 0x202;
+            q = ((directions ^ (directions >> 2)) >> 2) & 0x202;
+            if (ns->kind != s2x4 || (directions & 0x5555) != 0 || (p | q) == 0 || p == q) goto what_a_loss;
+            break;
+         case command_create_tidal_wave:
+            if (ns->kind != s1x8 || (directions != 0x2882 && directions != 0x8228)) goto what_a_loss;
+            break;
+         case command_create_col:
+            if (ns->kind != s2x4 || (directions != 0x55FF && directions != 0xFF55)) goto what_a_loss;
+            break;
+         case command_create_magic_col:
+            if (ns->kind != s2x4 || (directions != 0x7DD7 && directions != 0xD77D)) goto what_a_loss;
+            break;
+         case command_create_qtag:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0xA000 || ((directions & 0x0F0F) != 0x0802 && (directions & 0x0F0F) != 0x0208)) goto what_a_loss;
+            break;
+         case command_create_3qtag:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0x00A0 || ((directions & 0x0F0F) != 0x0802 && (directions & 0x0F0F) != 0x0208)) goto what_a_loss;
+            break;
+         case command_create_qline:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0xA000 || ((directions & 0x0F0F) != 0x0A00 && (directions & 0x0F0F) != 0x000A)) goto what_a_loss;
+            break;
+         case command_create_3qline:
+            if (ns->kind != s_qtag || (directions & 0xF0F0) != 0x00A0 || ((directions & 0x0F0F) != 0x0A00 && (directions & 0x0F0F) != 0x000A)) goto what_a_loss;
+            break;
+         case command_create_dmd:
+            if (ns->kind != s_qtag || (directions & 0x5555) != 0x5050) goto what_a_loss;
+            break;
+         case command_create_li:
+            if (ns->kind != s2x4 || directions != 0xAA00) goto what_a_loss;
+            break;
+         case command_create_lo:
+            if (ns->kind != s2x4 || directions != 0x00AA) goto what_a_loss;
+            break;
+         case command_create_dpt:
+            if (ns->kind != s2x4 || directions != 0x5FF5) goto what_a_loss;
+            break;
+         case command_create_cdpt:
+            if (ns->kind != s2x4 || directions != 0xF55F) goto what_a_loss;
+            break;
+         case command_create_tby:
+            if (ns->kind != s2x4 || directions != 0xDD77) goto what_a_loss;
+            break;
+         case command_create_8ch:
+            if (ns->kind != s2x4 || directions != 0x77DD) goto what_a_loss;
+            break;
+      }
+   }
 
    /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
       sure, we have to examine all future calls (for a reconcile -- for other stuff
@@ -768,7 +875,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
    history_ptr++;
    new_resolve->size = history_ptr - history_insertion_point;
 
-   if (goal == search_reconcile) {
+   if (goal == command_reconcile) {
       for (j=0; j<8; j++) {
          new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID_BITS_1;
          new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id2 & ID_BITS_2;
@@ -844,7 +951,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       However, it does little harm to leave this test in place, and it might avoid future
       problems if rotation-sensitive resolves are ever re-introduced. */
 
-   if (goal == search_reconcile && history[history_ptr].resolve_flag.kind == resolve_none)
+   if (goal == command_reconcile && history[history_ptr].resolve_flag.kind == resolve_none)
       goto try_again;   /* Sorry. */
 
    /* We win.  Really save it and exit.  History_ptr has been clobbered. */
@@ -876,7 +983,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
          there is no point in trying to build on the setup at which we have arrived.
          Also, if the setup has gotten bigger, do not proceed. */
 
-      if (goal == search_nice_setup) {
+      if (goal == command_normalize) {
          int k;
 
          if (setup_attrs[ns->kind].setup_limits > setup_attrs[history[history_ptr].state.kind].setup_limits)
@@ -909,7 +1016,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
 }
 
 
-extern uims_reply full_resolve(search_kind goal)
+extern uims_reply full_resolve(command_kind goal)
 {
    int j, k;
    uims_reply reply;
@@ -949,11 +1056,15 @@ extern uims_reply full_resolve(search_kind goal)
    /* See if we are in a reasonable position to do the search. */
 
    switch (goal) {
-      case search_resolve:
+      case command_resolve:
          if (!resolve_command_ok())
             specialfail("Not in acceptable setup for resolve.");
          break;
-      case search_reconcile:
+      case command_standardize:
+         if (!resolve_command_ok())
+            specialfail("Not in acceptable setup for standardize.");
+         break;
+      case command_reconcile:
          if (!reconcile_command_ok())
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
@@ -964,9 +1075,7 @@ extern uims_reply full_resolve(search_kind goal)
          find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
                                                 to set the depth. */
          break;
-      case search_anything:
-         break;
-      case search_nice_setup:
+      case command_normalize:
          if (!nice_setup_command_ok())
             specialfail("Sorry, can't do this: concepts are already selected, or no applicable concepts are available.");
          break;
@@ -985,7 +1094,7 @@ extern uims_reply full_resolve(search_kind goal)
    avoid_list_size = 0;
 
    uims_begin_search(goal);
-   if (goal == search_reconcile)
+   if (goal == command_reconcile)
       show_resolve = FALSE;
 
    for (;;) {
@@ -1259,10 +1368,7 @@ extern int reconcile_command_ok(void)
 
 extern int resolve_command_ok(void)
 {
-   setup_kind current_kind = history[history_ptr].state.kind;
-   return current_kind == s2x4 ||
-          current_kind == s1x8 ||
-          current_kind == s_qtag;
+   return setup_attrs[history[history_ptr].state.kind].setup_limits == 7;
 }
 
 extern int nice_setup_command_ok(void)
@@ -1302,13 +1408,14 @@ extern int nice_setup_command_ok(void)
  * if not, whether the most recent search failed.
  */
 
-extern void create_resolve_menu_title(search_kind goal, int cur, int max, resolver_display_state state, char *title)
+extern void create_resolve_menu_title(command_kind goal, int cur, int max, resolver_display_state state, char *title)
 {
    char junk[MAX_TEXT_LINE_LENGTH];
-   char *titleptr;
+   char *titleptr = title;
+   if (goal > command_create_any_lines) goal = command_create_any_lines;
 
-   titleptr = title;
-   string_copy(&titleptr, title_string[goal]);
+   string_copy(&titleptr, title_string[goal-command_resolve]);
+
    if (max > 0) {
       add_resolve_indices(junk, cur, max);
       string_copy(&titleptr, junk);

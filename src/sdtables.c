@@ -21,7 +21,17 @@
 /* This defines the following external variables:
    getout_strings
    filename_strings
+   level_threshholds
    menu_names
+   map_spec_star12
+   map_spec_star12v
+   map_spec_star16
+   map_spec_star16v
+   map2x4_2x4
+   map2x4_2x4v
+   mapgnd1x2_1x2
+   mapgnd1x2_1x2r
+   conc_init_table
    setup_attrs
    begin_sizes
    startinfolist
@@ -99,27 +109,7 @@
 */
 
 #include "sd.h"
-extern  cm_hunk concthing_1x4;
-extern  cm_hunk concthing_dmd;
-extern  cm_hunk concthing_qtag;
-extern  cm_hunk concthing_bone;
-extern  cm_hunk concthing_rigger;
-extern  cm_hunk concthing_spindle;
-extern  cm_hunk concthing_hrglass;
-extern  cm_hunk concthing_dhrglass;
-extern  cm_hunk concthing_xwave;
-extern  cm_hunk concthing_1x8;
-extern  cm_hunk concthing_2x4;
-extern  cm_hunk concthing_3x4;
-extern  cm_hunk concthing_4x4;
-extern  cm_hunk concthing_ptpd;
-extern  cm_hunk concthing_1x3dmd;
-extern  cm_hunk concthing_3x1dmd;
-extern  cm_hunk concthing_wstar;
-extern  cm_hunk concthing_wstar12;
-extern  cm_hunk concthing_wstar16;
-extern  cm_hunk concthing_gal;
-extern  cm_hunk concthing_thar;
+
 
 
 /* These are used in setup_coords. */
@@ -632,8 +622,8 @@ Private coordrec thingblob = {s_bigblob, 3,
 
 
 
-/* BEWARE!!  This list is keyed to the definition of "level" in sd.h . */
-char *getout_strings[] = {
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+Cstring getout_strings[] = {
    "Mainstream",
    "Plus",
    "A1",
@@ -648,8 +638,8 @@ char *getout_strings[] = {
    "all",
    ""};
 
-/* BEWARE!!  This list is keyed to the definition of "level" in sd.h . */
-char *filename_strings[] = {
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+Cstring filename_strings[] = {
    ".MS",
    ".Plus",
    ".A1",
@@ -664,8 +654,24 @@ char *filename_strings[] = {
    ".all",
    ""};
 
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+dance_level level_threshholds[] = {
+   l_mainstream,
+   l_plus,
+   l_a1,
+   l_a1,
+   l_c1,
+   l_c2,
+   l_c3a,
+   l_c3a,
+   l_c3a,
+   l_c3x,
+   l_c3x,
+   l_dontshow,
+   l_nonexistent_concept};
+
 /* BEWARE!!  This list is keyed to the definition of "call_list_kind" in sd.h . */
-char *menu_names[] = {
+Cstring menu_names[] = {
    "???",
    "???",
    "(any setup)",
@@ -890,8 +896,372 @@ Private id_bit_table id_bit_table_bone[] = {
 
 
 
+/*                                                                                                           center_arity -------|
+                                                                                                             mapelong --------|  |
+                                                                                                            outer_rot -----|  |  |
+                                                                                                     inner_rot ---------|  |  |  |
+                                                               outlimit -----|                          bigsize ----|   |  |  |  |
+                                          maps                   inlimit -|  |  bigsetup      insetup  outsetup     |   |  |  |  |   */
+
+Private cm_thing map_3line    =      {{0, 1, 3, 2, 9, 8, 6, 7,
+                                                      10, 11, 4, 5},      4, 4, s3x4,           s1x4,     s1x4,     12, 0, 0, 1, 2};
+Private cm_thing map_3lb      =      {{11, 0, 1, 10, 7, 4, 5, 6,
+                                                      8, 9, 2, 3},        4, 4, sbigdmd,        s2x2,     s1x4,     12, 1, 1, 1, 2};
+Private cm_thing map_4line    =      {{12, 13, 0, 14, 8, 6, 4, 5,
+                                           10, 15, 3, 1, 2, 7, 11, 9},    4, 8, s4x4,           s1x4,     s2x4,     16, 0, 0, 1, 2};
+Private cm_thing map_3box    =       {{0, 1, 10, 11, 4, 5, 6, 7,
+                                                      2, 3, 8, 9},        4, 4, s2x6,           s2x2,     s2x2,     12, 0, 0, 0, 2};
+Private cm_thing map_3boxv   =       {{11, 0, 1, 10, 7, 4, 5, 6,
+                                                      9, 2, 3, 8},        4, 4, s2x6,           s2x2,     s2x2,     12, 1, 1, 0, 2};
+Private cm_thing map_4box    =       {{0, 1, 14, 15, 6, 7, 8, 9,
+                                           2, 3, 4, 5, 10, 11, 12, 13},   4, 8, s2x8,           s2x2,     s2x4,     16, 0, 0, 0, 2};
+Private cm_thing map1x4_boxes =      {{6, 7, 2, 3,
+                                             -1, 0, 1, -1, -1, 4, 5, -1}, 4, 8, s_bone,         s1x4,     s2x4,      8, 0, 0, 0, 1};
+Private cm_thing map1x4_2x4 =        {{10, 11, 4, 5,
+                                               0, 1, 2, 3, 6, 7, 8, 9},   4, 8, s3x4,           s1x4,     s2x4,     12, 0, 0, 0, 1};
+Private cm_thing oddmap1x4_2x4 =     {{8, 9, 2, 3,
+                                               0, 1, 4, 5, 6, 7, 10, 11}, 4, 8, sbigdmd,        s1x4,     s2x4,     12, 1, 0, 0, 1};
+Private cm_thing map1x2_1x2 =        {{1, 3,          0, 2},              2, 2, s1x4,           s1x2,     s1x2,     4,  0, 0, 0, 1};
+Private cm_thing oddmap1x2_1x2 =     {{3, 1,          0, 2},              2, 2, sdmd,           s1x2,     s1x2,     4,  1, 0, 0, 1};
+/* The map "oddmapdmd_dmd", with its loss of elongation information for the outer diamond, is necessary to make the call
+   "with confidence" work from the setup formed by having the centers partner tag in left-hand waves.  This means that certain
+   Bakerisms involving concentric diamonds, in which each diamond must remember its own elongation, are not possible.  Too bad. */
+Private cm_thing oddmapdmd_dmd =     {{1, 3, 5, 7,    6, 0, 2, 4},        4, 4, s_crosswave,    sdmd,     sdmd,     8,  0, 1, 9, 1};
+Private cm_thing mapdmd_dmd =        {{1, 3, 5, 7,    0, 2, 4, 6},        4, 4, s_crosswave,    sdmd,     sdmd,     8,  0, 0, 9, 1};
+Private cm_thing oddmapdmd_1x4 =     {{1, 2, 5, 6,    7, 0, 3, 4},        4, 4, s3x1dmd,        s1x4,     sdmd,     8,  0, 1, 9, 1};
+Private cm_thing mapdmd_1x4 =        {{1, 2, 5, 6,    0, 3, 4, 7},        4, 4, s3x1dmd,        s1x4,     sdmd,     8,  0, 0, 9, 1};
+Private cm_thing oddmap_s_dmd_1x4 =  {{1, 2, 5, 6,    7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 1, 9, 1};
+Private cm_thing map_s_dmd_1x4 =     {{1, 2, 5, 6,    0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 9, 1};
+Private cm_thing map_cs_1x4_dmd =    {{0, 3, 4, 7,    1, 2, 5, 6},        4, 4, s_wingedstar,   sdmd,     s1x4,     8,  0, 0, 9, 1};
+Private cm_thing oddmap_s_star_1x4 = {{1, 2, 5, 6,    7, 0, 3, 4},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 1, 9, 1};
+Private cm_thing map_s_star_1x4 =    {{1, 2, 5, 6,    0, 3, 4, 7},        4, 4, s_wingedstar,   s1x4,     s_star,   8,  0, 0, 9, 1};
+Private cm_thing oddmap_s_short_1x6 = {{1, 2, 4, 7, 8, 10,
+                                                11, 0, 3, 5, 6, 9},       6, 6, s_wingedstar12, s1x6,     s_short6, 12, 0, 1, 9, 1};
+Private cm_thing map_s_spindle_1x8 = {{1, 2, 6, 5, 9, 10, 14, 13,
+                                        3, 7, 12, 8, 11, 15, 4, 0},       8, 8, s_wingedstar16, s1x8,    s_spindle, 16, 0, 0, 9, 1};
+        cm_thing map_spec_star12 =   {{2, 3, 4, 11, 10, 5, 8, 9,
+                                                       0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 0, 0, 0, 2};
+        cm_thing map_spec_star12v =  {{11, 2, 3, 4, 9, 10, 5, 8,
+                                                       0, 1, 6, 7},       4, 4, s_wingedstar12, s_star,   s1x4,     12, 1, 0, 0, 2};
+        cm_thing map_spec_star16 =   {{2, 3, 5, 4, 6, 7, 14, 15, 13, 12, 10, 11,
+                                                      0, 1, 8, 9},        4, 4, s_wingedstar16, s_star,   s1x4,     16, 0, 0, 0, 3};
+        cm_thing map_spec_star16v =  {{4, 2, 3, 5, 15, 6, 7, 14, 11, 13, 12, 10,
+                                                      0, 1, 8, 9},        4, 4, s_wingedstar16, s_star,   s1x4,     16, 1, 0, 0, 3};
+Private cm_thing mapdmd_2x2h =       {{1, 3, 5, 7,    0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  0, 0, 9, 1};
+Private cm_thing mapdmd_2x2v =       {{7, 1, 3, 5,    0, 2, 4, 6},        4, 4, s_galaxy,       s2x2,     sdmd,     8,  1, 0, 9, 1};
+Private cm_thing map2x3_1x2 =        {{11, 5,    0, 1, 2, 6, 7, 8},       2, 6, s3dmd,          s1x2,     s2x3,     12, 0, 0, 9, 1};
+Private cm_thing map1x4_1x4 =        {{3, 2, 7, 6,    0, 1, 4, 5},        4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0, 1};
+Private cm_thing oddmap1x4_1x4 =     {{6, 7, 2, 3,    0, 1, 4, 5},        4, 4, s_crosswave,    s1x4,     s1x4,     8,  1, 0, 0, 1};
+Private cm_thing oddmap1x4_1x2 =     {{0, 1, 3, 4,    5, 2},              4, 2, s_2x1dmd,       s1x4,     s1x2,     6,  0, 1, 0, 1};
+Private cm_thing map2x3_2x3 = {{8, 11, 1, 2, 5, 7,    9, 10, 0, 3, 4, 6}, 6, 6, s3x4,           s2x3,     s2x3,     12, 1, 1, 1, 1};
+        cm_thing map2x4_2x4 = {{10, 15, 3, 1, 2, 7, 11, 9,    12, 13, 14, 0, 4, 5, 6, 8}, 8, 8, s4x4, s2x4, s2x4,   16, 0, 0, 1, 1};
+        cm_thing map2x4_2x4v = {{6, 11, 15, 13, 14, 3, 7, 5,    8, 9, 10, 12, 0, 1, 2, 4}, 8, 8, s4x4, s2x4, s2x4,  16, 1, 1, 1, 1};
+Private cm_thing map1x2_bone6 = {{1, 7, 6, 5, 3, 2,    0, 4},             6, 2, s_ptpd,         s_bone6,  s1x2,     8,  0, 0, 0, 1};
+Private cm_thing map1x6_1x2 = {{2, 6,    0, 1, 3, 4, 5, 7},               2, 6, s1x8,           s1x2,     s1x6,     8,  0, 0, 0, 1};
+Private cm_thing mapbone6_1x2 = {{7, 3,    0, 1, 2, 4, 5, 6},             2, 6, s_bone,         s1x2,     s_bone6,  8,  0, 0, 0, 1};
+Private cm_thing map1x4_1x4_rc = {{0, 2, 4, 6,    1, 3, 5, 7},            4, 4, s1x8,           s1x4,     s1x4,     8,  0, 0, 0, 1};
+Private cm_thing map1x4_dmd_rc = {{0, 3, 4, 7,    1, 2, 5, 6},            4, 4, s1x3dmd,        sdmd,     s1x4,     8,  0, 0, 0, 1};
+Private cm_thing map1x2_bone6_rc = {{0, 1, 3, 4, 5, 7,    6, 2},          6, 2, s_bone,         s_bone6,  s1x2,     8,  0, 0, 0, 1};
+Private cm_thing map1x2_2x3_rc =   {{0, 3, 1, 4, 7, 5,    6, 2},          6, 2, s_dhrglass,     s2x3,     s1x2,     8,  0, 0, 0, 1};
+Private cm_thing map2x2_dmd_rc = {{7, 1, 3, 5,    0, 2, 4, 6},            4, 4, s_spindle,      sdmd,     s2x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap2x2_dmd_rc = {{7, 1, 3, 5,    6, 0, 2, 4},         4, 4, s_spindle,      sdmd,     s2x2,     8,  0, 1, 0, 1};
+Private cm_thing map2x2_1x4_rc = {{0, 2, 4, 6,    1, 7, 5, 3},            4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap2x2_1x4_rc = {{0, 2, 4, 6,    3, 1, 7, 5},         4, 4, s_ptpd,         s1x4,     s2x2,     8,  0, 1, 9, 1};
+Private cm_thing map1x2_2x3 = {{0, 1, 2, 4, 5, 6,    7, 3},               6, 2, s_spindle,      s2x3,     s1x2,     8,  0, 0, 0, 1};
+Private cm_thing map1x2_short6 = {{1, 2, 3, 5, 6, 7,    0, 4},            6, 2, s_galaxy,       s_short6, s1x2,     8,  0, 0, 0, 1};
+Private cm_thing map1x2_intgl = {{0, 1, 3, 4, 5, 7,    6, 2},             6, 2, s_qtag,         s_bone6,  s1x2,     8,  0, 0, 0, 1};
+Private cm_thing mapshort6_1x2h = {{5, 1,    6, 7, 0, 2, 3, 4},           2, 6, s_spindle,      s1x2,     s_short6, 8,  1, 1, 1, 1};
+Private cm_thing mapshort6_1x2v = {{7, 3,    5, 6, 0, 1, 2, 4},           2, 6, s_hrglass,      s1x2,     s_short6, 8,  1, 1, 0, 1};
+Private cm_thing mapbone6_1x2v =  {{7, 3,    0, 1, 2, 4, 5, 6},           2, 6, s_dhrglass,     s1x2,     s_bone6,  8,  1, 0, 0, 1};
+Private cm_thing mapstar_2x2 = {{1, 3, 5, 7,    0, 2, 4, 6},              4, 4, s_galaxy,       s2x2,     s_star,   8,  0, 0, 0, 1};
+Private cm_thing mapstar_star = {{1, 3, 5, 7,    0, 2, 4, 6},             4, 4, s_thar,         s_star,   s_star,   8,  0, 0, 0, 1};
+Private cm_thing map1x2_1x6 = {{1, 3, 2, 5, 7, 6,    0, 4},               6, 2, s1x8,           s1x6,     s1x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap1x2_1x6 = {{0, 1, 2, 4, 5, 6,    7, 3},            6, 2, s3x1dmd,        s1x6,     s1x2,     8,  0, 1, 0, 1};
+
+        cm_thing mapgnd1x2_1x2 = {{1, 3, 2, 6, 7, 5,    0, 4},            2, 2, s1x8,           s1x2,     s1x2,     8,  0, 0, 0, 3};
+        cm_thing mapgnd1x2_1x2r = {{6, 0, 5, 1, 4, 2,    7, 3},           2, 2, s_spindle,      s1x2,     s1x2,     8,  1, 0, 0, 3};
+Private cm_thing mapqtag_other = {{6, 7, 3, 2,    0, 1, 4, 5},            2, 4, s_qtag,         s1x2,     s2x2,     8,  0, 0, 1, 2};
+        cm_thing map1x8_other  = {{1, 3, 2, 6, 7, 5,    0, 4},            2, 2, s1x8,           s1x2,     s1x2,     8,  0, 0, 0, 3};
+        cm_thing mapspin_other = {{6, 0, 5, 1, 4, 2,    7, 3},            2, 2, s_spindle,      s1x2,     s1x2,     8,  1, 0, 0, 3};
+Private cm_thing map2x4_other  = {{1, 2, 6, 5,    0, 3, 4, 7},            2, 4, s2x4,           s1x2,     s2x2,     8,  0, 0, 0, 2};
+        cm_thing specialmapqtag_other = {{6, 7, 3, 2,      5, 0, 1, 4},   2, 4, s_qtag,         s1x2,     s2x2,     8,  0, 1, 0, 2};
+        cm_thing specialmap2x4_other  = {{6, 5, 1, 2,      7, 0, 3, 4},   2, 4, s2x4,           s1x2,     s2x2,     8,  0, 1, 0, 2};
+
+Private cm_thing map1x4_2x2 = {{0, 1, 4, 5,    6, 7, 2, 3},               4, 4, s_rigger,       s2x2,     s1x4,     8,  0, 0, 0, 1};
+Private cm_thing oddmap1x4_2x2 = {{5, 0, 1, 4,    6, 7, 2, 3},            4, 4, s_rigger,       s2x2,     s1x4,     8,  1, 0, 0, 1};
+Private cm_thing map1x4_star = {{2, 3, 6, 7,    0, 1, 4, 5},              4, 4, s_wingedstar,   s_star,   s1x4,     8,  0, 0, 0, 1};
+Private cm_thing oddmap1x4_star = {{7, 2, 3, 6,    0, 1, 4, 5},           4, 4, s_wingedstar,   s_star,   s1x4,     8,  1, 0, 0, 1};
+Private cm_thing map2x2_dmd = {{6, 3, 2, 7,    0, 1, 4, 5},               4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 0, 1, 1};
+Private cm_thing map2x2_dmdv = {{6, 3, 2, 7,    0, 1, 4, 5},              4, 4, s_dhrglass,     sdmd,     s2x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap2x2_dmd = {{6, 3, 2, 7,    5, 0, 1, 4},            4, 4, s_hrglass,      sdmd,     s2x2,     8,  0, 1, 9, 1};
+Private cm_thing oddmap2x2_dmdv = {{6, 3, 2, 7,    5, 0, 1, 4},           4, 4, s_dhrglass,     sdmd,     s2x2,     8,  0, 1, 9, 1};
+Private cm_thing map2x2_1x4h = {{6, 7, 2, 3,    0, 1, 4, 5},              4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 0, 1, 1};
+Private cm_thing oddmap2x2_1x4h = {{6, 7, 2, 3,    5, 0, 1, 4},           4, 4, s_bone,         s1x4,     s2x2,     8,  0, 1, 9, 1};
+Private cm_thing mapstar_1x4 =    {{1, 2, 5, 6,    0, 3, 4, 7},           4, 4, s3x1dmd,        s1x4,     s_star,   12, 0, 0, 9, 1};
+Private cm_thing oddmapstar_1x4 = {{1, 2, 5, 6,    7, 0, 3, 4},           4, 4, s3x1dmd,        s1x4,     s_star,   12, 0, 1, 9, 1};
+Private cm_thing mapstar_dmd ={{1, 3, 5, 7,    0, 2, 4, 6},               4, 4, s_crosswave,    sdmd,     s_star,   8,  0, 0, 9, 1};
+Private cm_thing oddmapstar_dmd =  {{1, 3, 5, 7,    6, 0, 2, 4},          4, 4, s_crosswave,    sdmd,     s_star,   8,  0, 1, 9, 1};
+Private cm_thing map2x2_1x4v = {{6, 7, 2, 3,    0, 1, 4, 5},              4, 4, s_bone,         s1x4,     s2x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap2x2_1x4v = {{6, 7, 2, 3,    5, 0, 1, 4},           4, 4, s_qtag,         s1x4,     s2x2,     8,  0, 1, 9, 1};
+Private cm_thing map2x2_2x2v = {{1, 2, 5, 6,    0, 3, 4, 7},              4, 4, s2x4,           s2x2,     s2x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap2x2_2x2h = {{1, 2, 5, 6,    7, 0, 3, 4},           4, 4, s2x4,           s2x2,     s2x2,     8,  0, 1, 9, 1};
+Private cm_thing oddmap2x2_2x2v = {{6, 1, 2, 5,    0, 3, 4, 7},           4, 4, s2x4,           s2x2,     s2x2,     8,  1, 0, 9, 1};
+Private cm_thing map2x2_2x2h = {{6, 1, 2, 5,    7, 0, 3, 4},              4, 4, s2x4,           s2x2,     s2x2,     8,  1, 1, 9, 1};
+Private cm_thing maplatgal = {{7, 0, 1, 3, 4, 5,    6, 2},                6, 2, s_galaxy,       s_short6, s1x2,     8,  1, 1, 0, 1};
+Private cm_thing map1x4_dmd = {{2, 3, 6, 7,    0, 1, 4, 5},               4, 4, s1x3dmd,        sdmd,     s1x4,     8,  0, 0, 0, 1};
+Private cm_thing oddmap1x4_dmd = {{7, 2, 3, 6,    0, 1, 4, 5},            4, 4, s3x1dmd,        sdmd,     s1x4,     8,  1, 0, 0, 1};
+Private cm_thing oddmap1x6_1x2 = {{3, 7,    0, 1, 2, 4, 5, 6},            2, 6, s1x3dmd,        s1x2,     s1x6,     8,  1, 0, 0, 1};
+
+Private cm_thing map1x2_2x1dmd = {{1, 2, 3, 5, 6, 7,    0, 4},            6, 2, s3x1dmd,        s_2x1dmd, s1x2,     8,  0, 0, 0, 1};
+Private cm_thing oddmap1x2_2x1dmd = {{6, 7, 1, 2, 3, 5,    0, 4},         6, 2, s_crosswave,    s_2x1dmd, s1x2,     8,  1, 0, 0, 1};
+Private cm_thing map1x2_1x2dmd =    {{1, 2, 3, 5, 6, 7,    0, 4},         6, 2, s1x3dmd,        s_1x2dmd, s1x2,     8,  0, 0, 0, 1};
+
+Private cm_thing oddmap1x2_1x2dmd = {{0, 1, 3, 4, 5, 7,    6, 2},         6, 2, s_crosswave,    s_1x2dmd, s1x2,     8,  0, 1, 0, 1};
+
+Private cm_thing map2x1dmd_1x2 = {{2, 6,    0, 1, 3, 4, 5, 7},            2, 6, s3x1dmd,        s1x2,     s_2x1dmd, 8,  0, 0, 0, 1};
+Private cm_thing oddmap2x1dmd_1x2 = {{7, 3,    0, 1, 2, 4, 5, 6},         2, 6, s_crosswave,    s1x2,     s_2x1dmd, 8,  1, 0, 0, 1};
 
 
+Private cm_thing oddmap1x2_bone6 = {{5, 0, 3, 1, 4, 7,    6, 2},          6, 2, s_hrglass,      s_bone6,  s1x2,     8,  1, 0, 0, 1};
+Private cm_thing oddmap1x2_2x3 = {{5, 7, 0, 1, 3, 4,    6, 2},            6, 2, s_qtag,         s2x3,     s1x2,     8,  1, 0, 0, 1};
+Private cm_thing oddmap1x2_short6 = {{5, 7, 0, 1, 3, 4,    6, 2},         6, 2, s_rigger,       s_short6, s1x2,     8,  1, 0, 0, 1};
+Private cm_thing oddmap2x3_1x2 = {{11, 5,    9, 10, 0, 3, 4, 6},          2, 6, s3x4,           s1x2,     s2x3,     12, 0, 1, 0, 1};
+Private cm_thing oddmapshort6_1x2h = {{2, 6,    3, 0, 1, 7, 4, 5},        2, 6, s_ptpd,         s1x2,     s_short6, 8,  0, 1, 1, 1};
+Private cm_thing oddmapshort6_1x2v = {{7, 3,    5, 6, 0, 1, 2, 4},        2, 6, s_qtag,         s1x2,     s_short6, 8,  0, 1, 0, 1};
+Private cm_thing oddmapbigdmd_1x2v = {{9, 3,
+                            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},        2,12, sbigdmd,        s1x2,     sbigdmd, 12,  1, 0, 1, 1};
+Private cm_thing oddmap1x2_short6_rc = {{5, 6, 0, 1, 2, 4,    7, 3},      6, 2, s_rigger,       s_short6, s1x2,     8,  1, 0, 0, 1};
+Private cm_thing map2x4_2x2 = {{2, 3, 8, 9,
+                                          0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 0, 0, 9, 1};
+Private cm_thing oddmap2x4_2x2 = {{9, 2, 3, 8,
+                                          0, 1, 4, 5, 6, 7, 10, 11},      4, 8, s2x6,           s2x2,     s2x4,     12, 1, 0, 9, 1};
+Private cm_thing map2x4_2x2v = {{15, 3, 7, 11,
+                                          12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 0, 0, 9, 1};
+Private cm_thing oddmap2x4_2x2v = {{11, 15, 3, 7,
+                                          12, 13, 14, 0, 4, 5, 6, 8},     4, 8, s4x4,           s2x2,     s2x4,     16, 1, 0, 9, 1};
+Private cm_thing map1x8_2x2 = {{0, 1, 4, 5,
+                                          -1, -1, 7, 6, -1, -1, 3, 2},    4, 8, s_rigger,       s2x2,     s1x8,     12, 0, 0, 9, 1};
+Private cm_thing oddmap1x8_2x2 = {{5, 0, 1, 4,
+                                          -1, -1, 7, 6, -1, -1, 3, 2},    4, 8, s_rigger,       s2x2,     s1x8,     12, 1, 0, 9, 1};
+Private cm_thing map1x3dmd_line = {{1, 2, 5, 6,    0, 3, 4, 7},           4, 4, s1x3dmd,        s1x4,     sdmd,     8,  0, 0, 0, 1};
+Private cm_thing mapdmd_line = {{1, 2, 5, 6,    0, 3, 4, 7},              4, 4, s3x1dmd,        s1x4,     sdmd,     8,  0, 0, 0, 1};
+/* This one allows "finish" when the center "line" is actually a diamond whose centers are empty.
+   This can happen because of the preference given for lines over diamonds at the conclusion of certain calls. */
+Private cm_thing mappts_line = {{1, -1, 5, -1,    0, 2, 4, 6},            4, 4, s_crosswave,    s1x4,     sdmd,     8,  0, 0, 0, 1};
+Private cm_thing map_s_dmd_line = {{1, 2, 5, 6,    0, 3, 4, 7},           4, 4, s_wingedstar,   s1x4,     sdmd,     8,  0, 0, 0, 1};
+
+
+conc_initializer conc_init_table[] = {
+/* outerk        innerk          conc_type     center_arity    maps */
+   {s2x2,        s1x4,     schema_rev_checkpoint,    1, {&map2x2_1x4_rc,  &oddmap2x2_1x4_rc,   &map2x2_1x4_rc,   &oddmap2x2_1x4_rc}},
+   {s2x2,        sdmd,     schema_rev_checkpoint,    1, {&map2x2_dmd_rc,  &oddmap2x2_dmd_rc,   &map2x2_dmd_rc,   &oddmap2x2_dmd_rc}},
+   {s1x4,        s1x4,     schema_rev_checkpoint,    1, {&map1x4_1x4_rc,  0,                   &map1x4_1x4_rc,   0}},
+   {s1x4,        sdmd,     schema_rev_checkpoint,    1, {&map1x4_dmd_rc,  0,                   &map1x4_dmd_rc,   0}},
+   {s1x4,        sdmd,     schema_ckpt_star,         1, {&map_cs_1x4_dmd, 0,                   &map_cs_1x4_dmd,  0}},
+   {sdmd,        s1x4,     schema_conc_star,         1, {&map_s_dmd_1x4,  &oddmap_s_dmd_1x4,   &map_s_dmd_1x4,   &oddmap_s_dmd_1x4}},
+   {s_star,      s1x4,     schema_conc_star,         1, {&map_s_star_1x4, &oddmap_s_star_1x4,  &map_s_star_1x4,  &oddmap_s_star_1x4}},
+   {s1x4,        s_star,   schema_conc_star,         1, {&map1x4_star,    &oddmap1x4_star,     &map1x4_star,     &oddmap1x4_star}},
+   {s_short6,    s1x6,     schema_conc_star12,       1, {0,               &oddmap_s_short_1x6, 0,                0}},
+   {s_spindle,   s1x8,     schema_conc_star16,       1, {0,               0,                   &map_s_spindle_1x8, 0}},
+   {s1x4,        s_star,   schema_conc_star12,       2, {&map_spec_star12,&map_spec_star12v,   &map_spec_star12, &map_spec_star12v}},
+   {s1x4,        s_star,   schema_conc_star16,       3, {&map_spec_star16,&map_spec_star16v,   &map_spec_star16, &map_spec_star16v}},
+   {s1x2,      s1x2, schema_grand_single_concentric, 3, {&mapgnd1x2_1x2,  &mapgnd1x2_1x2r,     &mapgnd1x2_1x2,   &mapgnd1x2_1x2r}},
+   {s1x2,        s1x2,     schema_concentric_others, 3, {&map1x8_other,   &mapspin_other,      &map1x8_other,    &mapspin_other}},
+   {s2x2,        s1x2,     schema_concentric_others, 2, {0,               &specialmapqtag_other, 0,              &specialmap2x4_other}},
+   {s1x4,        s1x4,     schema_in_out_triple,     2, {0,               0,                   &map_3line,       0}},
+   {s2x2,        s2x2,     schema_in_out_triple,     2, {&map_3box,       0,                   &map_3boxv,       0}},
+   {s1x4,        s2x2,     schema_in_out_triple,     2, {0,               0,                   &map_3lb,         0}},
+   {s2x4,        s1x4,     schema_in_out_quad,       2, {0,               0,                   &map_4line,       0}},
+   {s2x4,        s2x2,     schema_in_out_quad,       2, {&map_4box,       0,                   0,                0}},
+   {s1x6,        s1x2,     schema_concentric,        1, {&map1x6_1x2,     &oddmap1x6_1x2,      &map1x6_1x2,      &oddmap1x6_1x2}},
+   {s_bone6,     s1x2,     schema_concentric,        1, {&mapbone6_1x2,   &mapbone6_1x2v,      &mapbone6_1x2,    &mapbone6_1x2v}},
+   {s2x3,        s1x2,     schema_concentric,        1, {&map2x3_1x2,     &oddmap2x3_1x2,      &map2x3_1x2,      &oddmap2x3_1x2}},
+   {s2x3,        s2x3,     schema_concentric,        1, {&map2x3_2x3,     0,                   &map2x3_2x3,      0}},
+   {s2x4,        s1x4,     schema_concentric,        1, {&map1x4_boxes,   &oddmap1x4_2x4,      &map1x4_2x4,      0}},
+   {s2x4,        s2x2,     schema_concentric,        1, {&map2x4_2x2,     &oddmap2x4_2x2,      &map2x4_2x2v,     &oddmap2x4_2x2v}},
+   {s1x8,        s2x2,     schema_concentric,        1, {&map1x8_2x2,     &oddmap1x8_2x2,      &map1x8_2x2,      &oddmap1x8_2x2}},
+   {s2x4,        s2x4,     schema_concentric,        1, {&map2x4_2x4,     0,                   &map2x4_2x4,      0}},
+   {s1x4,        s1x4,     schema_concentric,        1, {&map1x4_1x4,     &oddmap1x4_1x4,      &map1x4_1x4,      &oddmap1x4_1x4}},
+   {s1x2,        s1x4,     schema_concentric,        1, {0,               &oddmap1x4_1x2,      0,                &oddmap1x4_1x2}},
+   {s1x4,        sdmd,     schema_concentric,        1, {&map1x4_dmd,     &oddmap1x4_dmd,      &map1x4_dmd,      &oddmap1x4_dmd}},
+   {s1x4,        s_star,   schema_concentric,        1, {&map1x4_star,    &oddmap1x4_star,     &map1x4_star,     &oddmap1x4_star}},
+   {s1x4,        s2x2,     schema_concentric,        1, {&map1x4_2x2,     &oddmap1x4_2x2,      &map1x4_2x2,      &oddmap1x4_2x2}},
+   {s1x2,        s1x2,     schema_concentric,        1, {&map1x2_1x2,     &oddmap1x2_1x2,      &map1x2_1x2,      &oddmap1x2_1x2}},
+   {s1x2,        s2x3,     schema_concentric,        1, {&map1x2_2x3,     &oddmap1x2_2x3,      &map1x2_2x3,      &oddmap1x2_2x3}},
+   {s1x2,        s_bone6,  schema_concentric,        1, {&map1x2_bone6,   &oddmap1x2_bone6,    &map1x2_bone6,    &oddmap1x2_bone6}},
+   {s1x2,        s_short6, schema_concentric,        1, {&map1x2_short6,  &oddmap1x2_short6,   &map1x2_short6,   &oddmap1x2_short6}},
+   {s1x2,        s1x6,     schema_concentric,        1, {&map1x2_1x6,     &oddmap1x2_1x6,      &map1x2_1x6,      &oddmap1x2_1x6}},
+   {s_short6,    s1x2,     schema_concentric,        1, {&mapshort6_1x2v, &oddmapshort6_1x2v,  &mapshort6_1x2h,  &oddmapshort6_1x2h}},
+   {sbigdmd,     s1x2,     schema_concentric,        1, {0,               &oddmapbigdmd_1x2v,  0,                0}},
+   {s1x2,        s_2x1dmd, schema_concentric,        1, {&map1x2_2x1dmd,  &oddmap1x2_2x1dmd,   &map1x2_2x1dmd,   &oddmap1x2_2x1dmd}},
+   {s1x2,        s_1x2dmd, schema_concentric,        1, {&map1x2_1x2dmd,  &oddmap1x2_1x2dmd,   &map1x2_1x2dmd,   &oddmap1x2_1x2dmd}},
+   {s_2x1dmd,    s1x2,     schema_concentric,        1, {&map2x1dmd_1x2,  &oddmap2x1dmd_1x2,   &map2x1dmd_1x2,   &oddmap2x1dmd_1x2}},
+   {s2x2,        s2x2,     schema_concentric,        1, {&map2x2_2x2v,    &oddmap2x2_2x2v,     &map2x2_2x2h,     &oddmap2x2_2x2h}},
+   {s2x2,        s1x4,     schema_concentric,        1, {&map2x2_1x4v,    &oddmap2x2_1x4v,     &map2x2_1x4h,     &oddmap2x2_1x4h}},
+   {s2x2,        sdmd,     schema_concentric,        1, {&map2x2_dmdv,    &oddmap2x2_dmd,      &map2x2_dmd,      &oddmap2x2_dmdv}},
+   {sdmd,        sdmd,     schema_concentric,        1, {&mapdmd_dmd,     &oddmapdmd_dmd,      &mapdmd_dmd,      &oddmapdmd_dmd}},
+   {sdmd,        s1x4,     schema_concentric,        1, {&mapdmd_1x4,     &oddmapdmd_1x4,      &mapdmd_1x4,      &oddmapdmd_1x4}},
+   {sdmd,        s2x2,     schema_concentric,        1, {&mapdmd_2x2h,    &mapdmd_2x2v,        &mapdmd_2x2h,     &mapdmd_2x2v}},
+   {s_star,      sdmd,     schema_concentric,        1, {&mapstar_dmd,    &oddmapstar_dmd,     &mapstar_dmd,     &oddmapstar_dmd}},
+   {s_star,      s1x4,     schema_concentric,        1, {&mapstar_1x4,    &oddmapstar_1x4,     &mapstar_1x4,     &oddmapstar_1x4}},
+   {s_star,      s_star,   schema_concentric,        1, {&mapstar_star,   0,                   &mapstar_star,    0}},
+   {s_star,      s2x2,     schema_concentric,        1, {&mapstar_2x2,    0,                   &mapstar_2x2,     0}},
+   {nothing}};
+
+
+/* BEWARE!!  These lists are keyed to the enumeration "analyzer_kind" :
+
+    analyzer_NORMAL
+    |       analyzer_CHECKPT
+    |       |       analyzer_2X6
+    |       |       |       analyzer_6X2
+    |       |       |       |       analyzer_4X2
+    |       |       |       |       |       analyzer_6X2_TGL
+    |       |       |       |       |       |       analyzer_STAR12
+    |       |       |       |       |       |       |       analyzer_STAR16
+    |       |       |       |       |       |       |       |       analyzer_SINGLE
+    |       |       |       |       |       |       |       |       |       analyzer_GRANDSINGLE
+    |       |       |       |       |       |       |       |       |       |       analyzer_TRIPLE_LINE
+    |       |       |       |       |       |       |       |       |       |       |       analyzer_QUAD_LINE
+    |       |       |       |       |       |       |       |       |       |       |       |       analyzer_VERTICAL6
+    |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_LATERAL6
+    |       |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_OTHERS
+    |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_CONC_DIAMONDS
+    |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       |       analyzer_DIAMOND_LINE */
+
+Private cm_hunk concthing_1x4 = {0x5, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_1x2,
+                                                                            0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_dmd = {0x5, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_1x2,
+                                                                            0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_2x1dmd = {0, 0, 0,
+   {0,      0,      0,      0,      &oddmap1x4_1x2,
+                                            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_qtag = {0x33, 0xDD, 0x11,
+   {&map2x2_1x4h,
+            0,      &oddmapshort6_1x2v,
+                            &oddmap1x2_2x3,
+                                    0,      &map1x2_intgl,
+                                                    0,      0,      0,      0,      0,      0,      0,      0,      &mapqtag_other,
+                                                                                                                            0,      0}};
+
+Private cm_hunk concthing_bone = {0x33, 0, 0x11,
+   {&map2x2_1x4v,
+            &map1x2_bone6_rc,
+                    &mapbone6_1x2,
+                            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_rigger = {0xCC, 0xDD, 0,
+   {&map1x4_2x2,
+            &oddmap1x2_short6_rc,
+                    0,      &oddmap1x2_short6,
+                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_spindle = {0, 0xEE, 0x44,
+   {0,      &map2x2_dmd_rc,
+                    &mapshort6_1x2h,
+                            &map1x2_2x3,
+                                    0,      0,      0,      0,      0,      &mapgnd1x2_1x2r,
+                                                                                    0,      0,      0,      0,      &mapspin_other,
+                                                                                                                            0,      0}};
+
+Private cm_hunk concthing_hrglass = {0x33, 0xDD, 0x11,
+   {&map2x2_dmd,
+            0,      &mapshort6_1x2v,
+                            &oddmap1x2_bone6,
+                                    0,      0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_bone6,
+                                                                                                            0,      0,      0,      0}};
+
+Private cm_hunk concthing_dhrglass = {0x33, 0, 0x11,
+   {&map2x2_dmdv,
+            &map1x2_2x3_rc,
+                    &mapbone6_1x2v,
+                            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_xwave = {0x33, 0x77, 0x11,
+   {&oddmap1x4_1x4,
+            0,      &oddmap2x1dmd_1x2,
+                            &oddmap1x2_2x1dmd,
+                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &mapdmd_dmd,
+                                                                                                                                    &mappts_line}};
+
+Private cm_hunk concthing_1x8 = {0x33, 0x77, 0x22,
+   {&map1x4_1x4,
+            &map1x4_1x4_rc,
+                    &map1x6_1x2,
+                            &map1x2_1x6,
+                                    0,      0,      0,      0,      0,      &mapgnd1x2_1x2,    
+                                                                                    0,      0,      0,      0,      &map1x8_other,
+                                                                                                                            0,      0}};
+
+Private cm_hunk concthing_2x4 = {0x66, 0, 0,
+   {&map2x2_2x2v,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map2x4_other,
+                                                                                                                            0,      0}};
+
+Private cm_hunk concthing_3x4 = {0, 0, 0x041,
+   {0,      0,      &oddmap2x3_1x2,
+                            0,      0,      0,      &map2x3_2x3,
+                                                            0,      0,      0,      &map_3line,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_2x6 = {0, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_3box,
+                                                                                            0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_2x8 = {0, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_4box,
+                                                                                                    0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_4x4 = {0, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      &map2x4_2x4v,
+                                                                    0,      0,      0,      &map_4line,
+                                                                                                    0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_ptpd = {0, 0x77, 0x22,
+   {0,      &map2x2_1x4_rc,
+                    &oddmapshort6_1x2h,
+                            &map1x2_bone6,
+                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
+
+Private cm_hunk concthing_1x3dmd = {0x33, 0x77, 0x11,
+   {&map1x4_dmd,
+            &map1x4_dmd_rc,
+                    &oddmap1x6_1x2,
+                            &map1x2_1x2dmd,
+                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map1x3dmd_line}};
+
+Private cm_hunk concthing_3x1dmd = {0x33, 0xEE, 0,
+   {&oddmap1x4_dmd,
+            0,      &map2x1dmd_1x2,
+                            &oddmap1x2_1x6,
+                                    0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &mapdmd_line}};
+
+Private cm_hunk concthing_wstar = {0x33, 0, 0,
+   {&map1x4_star,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_s_dmd_line}};
+
+Private cm_hunk concthing_wstar12 = {0, 0, 0,
+   {0,      0,      0,      0,      0,      0,      &map_spec_star12,
+                                                            0,      0,      0,      0,      0,      0,      0,      0,      0,      &oddmap_s_short_1x6}};
+
+Private cm_hunk concthing_wstar16 = {0, 0, 0,
+   {0,      0,      0,      0,      0,      0,      0,      &map_spec_star16,
+                                                                    0,      0,      0,      0,      0,      0,      0,      0,      &map_s_spindle_1x8}};
+
+Private cm_hunk concthing_gal = {0x55, 0, 0,
+   {&mapstar_2x2,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_short6,
+                                                                                                            &maplatgal,
+                                                                                                                    0,      0,      0}};
+
+Private cm_hunk concthing_thar = {0x55, 0, 0,
+   {&mapstar_star,
+            0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0}};
 
 
 /* BEWARE!!  This list is keyed to the definition of "setup_kind" in database.h . */
@@ -916,7 +1286,7 @@ setup_attr setup_attrs[] = {
       { 1, 1},
       TRUE,
       (id_bit_table *) 0,
-      {  (Cstring) 0,
+      {  "a@",
          (Cstring) 0}},
    /* s1x2 */
       { 1,
@@ -982,7 +1352,7 @@ setup_attr setup_attrs[] = {
       { 0, 0},
       TRUE,
       (id_bit_table *) 0,
-      {  (Cstring) 0,
+      {  "   b@a  c@   d@",
          (Cstring) 0}},
    /* s_trngl */
       { 2,
@@ -1039,6 +1409,17 @@ setup_attr setup_attrs[] = {
       (id_bit_table *) 0,
       {  "           c@a  b      e  d@           f@",
          "   a@@   b@@f  c@@   e@@   d@"}},
+   /* s_2x1dmd */
+      { 5,
+      (coordrec *) 0,
+      (coordrec *) 0,
+      &concthing_2x1dmd,
+      {b_2x1dmd,    b_p2x1dmd},
+      { 0, 0},
+      FALSE,
+      (id_bit_table *) 0,
+      {  "         c@@a  b  e  d@@         f",
+         "      a@@      b@f        c@      e@@      d"}},
    /* s_qtag */
       { 7,
       &thingqtag,
@@ -1089,7 +1470,7 @@ setup_attr setup_attrs[] = {
       &nicethingglass,
       &concthing_hrglass,
       {b_hrglass,   b_phrglass},
-      { 0, 0},
+      { 0, 4},
       FALSE,
       id_bit_table_hrglass,
       {  "   a  b@      d@g        c@      h@   f  e",
@@ -1186,7 +1567,7 @@ setup_attr setup_attrs[] = {
       {11,
       &thing2x6,
       &thing2x6,
-      (cm_hunk *) 0,
+      &concthing_2x6,
       {b_2x6,       b_6x2},
       { 6, 2},
       FALSE,
@@ -1208,7 +1589,7 @@ setup_attr setup_attrs[] = {
       {15,
       &thing2x8,
       &thing2x8,
-      (cm_hunk *) 0,
+      &concthing_2x8,
       {b_2x8,       b_8x2},
       { 8, 2},
       FALSE,
@@ -1324,7 +1705,7 @@ setup_attr setup_attrs[] = {
       FALSE,
       id_bit_table_1x3dmd,
       {  "               d@a b c      g f e@               h",
-         "   a@@   b@@   c@h  d@   g@@   f@@   e"}},
+         "   a@@   b@@   c@@h  d@@   g@@   f@@   e@"}},
    /* s3x1dmd */
       { 7,
       &thing3x1dmd,
@@ -1490,17 +1871,6 @@ setup_attr setup_attrs[] = {
       id_bit_table_bigdmd,
       {  "          c@a b        e f@          d@@          j@l k        h g@          i",
          "   l      a@   k      b@i j d c@   h      e@   g      f"}},
-   /* sminirigger */
-      {5,
-      (coordrec *) 0,
-      (coordrec *) 0,
-      (cm_hunk *) 0,
-      {b_nothing,   b_nothing},
-      { 0, 0},
-      FALSE,
-      (id_bit_table *) 0,
-      {  (Cstring) 0,
-         (Cstring) 0}},
    /* s_normal_concentric */
       {-1,
       (coordrec *) 0,
@@ -1537,6 +1907,8 @@ int begin_sizes[] = {
    6,          /* b_pshort6 */
    6,          /* b_1x2dmd */
    6,          /* b_p1x2dmd */
+   6,          /* b_2x1dmd */
+   6,          /* b_p2x1dmd */
    8,          /* b_qtag */
    8,          /* b_pqtag */
    8,          /* b_bone */
@@ -1718,41 +2090,41 @@ startinfo startinfolist[] = {
                                                                                                                                                                    V    V
                                              map1                             map2                        map3 map4   map_kind          arity  outer   inner      rot  vert */
 
-        map_thing map_b6_trngl          = {{5, 4, 0,                        2, 1, 3},                                MPKIND__SPLIT,       2,  s_bone6, s_trngl,  0x207, 0};
-        map_thing map_s6_trngl          = {{4, 5, 3,                        1, 2, 0},                                MPKIND__SPLIT,       2,  s_short6, s_trngl, 0x108, 1};
-        map_thing map_bone_trngl4       = {{7, 6, 5, 0,                     3, 2, 1, 4},                             MPKIND__SPLIT,       2,  s_bone, s_trngl4,  0x207, 0};
-        map_thing map_rig_trngl4        = {{6, 7, 0, 5,                     2, 3, 4, 1},                             MPKIND__SPLIT,       2,  s_rigger,s_trngl4, 0x10D, 0};
-        map_thing map_s8_tgl4           = {{2, 7, 5, 0,                     6, 3, 1, 4},                             MPKIND__REMOVED,     2,  s_bone, s_trngl4,  0x207, 0};
-        map_thing map_p8_tgl4           = {{0, 2, 7, 5,                     4, 6, 3, 1},                             MPKIND__REMOVED,     2,  s_ptpd, s_trngl4,  0x10D, 0};
-        map_thing map_2x2v              = {{0, 3,                           1, 2},                                   MPKIND__SPLIT,       2,  s2x2,   s1x2,      0x005, 0};
-        map_thing map_2x4_magic         = {{0, 6, 3, 5,                     7, 1, 4, 2},                             MPKIND__NONE,        2,  s2x4,   s1x4,      0x000, 0};
-        map_thing map_qtg_magic         = {{0, 2, 5, 3,                     1, 7, 4, 6},                             MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
-        map_thing map_qtg_intlk         = {{0, 3, 5, 6,                     1, 2, 4, 7},                             MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
-        map_thing map_qtg_magic_intlk   = {{0, 2, 5, 7,                     1, 3, 4, 6},                             MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
-        map_thing map_ptp_magic         = {{6, 1, 4, 3,                     0, 7, 2, 5},                             MPKIND__NONE,        2,  s_ptpd, sdmd,      0x000, 0};
-        map_thing map_ptp_intlk         = {{0, 1, 6, 3,                     2, 7, 4, 5},                             MPKIND__NONE,        2,  s_ptpd, sdmd,      0x000, 0};
-        map_thing map_ptp_magic_intlk   = {{2, 1, 4, 3,                     0, 7, 6, 5},                             MPKIND__NONE,        2,  s_ptpd, sdmd,      0x000, 0};
-        map_thing map_2x4_diagonal      = {{2, 3, 6, 7,                     0, 1, 4, 5},                             MPKIND__NONE,        2,  s2x4,   s2x2,      0x000, 0};
-        map_thing map_2x4_int_pgram     = {{1, 3, 5, 7,                     0, 2, 4, 6},                             MPKIND__NONE,        2,  s2x4,   s2x2,      0x000, 0};
-        map_thing map_2x4_trapezoid     = {{1, 2, 4, 7,                     0, 3, 5, 6},                             MPKIND__NONE,        2,  s2x4,   s2x2,      0x000, 0};
-        map_thing map_3x4_2x3_intlk     = {{2, 5, 7, 9, 10, 0,              3, 4, 6, 8, 11, 1},                      MPKIND__NONE,        2,  s3x4,   s2x3,      0x005, 0};
-        map_thing map_3x4_2x3_conc      = {{3, 4, 6, 9, 10, 0,              2, 5, 7, 8, 11, 1},                      MPKIND__NONE,        2,  s3x4,   s2x3,      0x005, 0};
-        map_thing map_4x4_ns            = {{12, 13, 0, 14,                  8, 6, 4, 5},                             MPKIND__NONE,        2,  s4x4,   s1x4,      0x000, 1};
-        map_thing map_4x4_ew            = {{0, 1, 4, 2,                     12, 10, 8, 9},                           MPKIND__NONE,        2,  s4x4,   s1x4,      0x005, 1};
-        map_thing map_phantom_box       = {{0, 1, 6, 7, 8, 9, 14, 15,       2, 3, 4, 5, 10, 11, 12, 13},             MPKIND__CONCPHAN,    2,  s2x8,   s2x4,      0x000, 0};
-        map_thing map_intlk_phantom_box = {{0, 1, 4, 5, 10, 11, 14, 15,     2, 3, 6, 7, 8, 9, 12, 13},               MPKIND__INTLK,       2,  s2x8,   s2x4,      0x000, 0};
-        map_thing map_phantom_dmd       = {{0, 3, 4, 5, 8, 11, 12, 13,      1, 2, 6, 7, 9, 10, 14, 15},              MPKIND__CONCPHAN,    2,  s4dmd,  s_qtag,    0x000, 0};
-        map_thing map_intlk_phantom_dmd = {{0, 2, 6, 7, 9, 11, 12, 13,      1, 3, 4, 5, 8, 10, 14, 15},              MPKIND__INTLK,       2,  s4dmd,  s_qtag,    0x000, 0};
-        map_thing map_stagger           = {{10, 13, 3, 0, 2, 5, 11, 8,      12, 15, 14, 1, 4, 7, 6, 9},              MPKIND__STAG,        2,  s4x4,   s2x4,      0x000, 1};
-Private map_thing map_staggerv          = {{12, 15, 14, 1, 4, 7, 6, 9,      10, 13, 3, 0, 2, 5, 11, 8},              MPKIND__STAG,        2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_stairst           = {{9, 13, 7, 0, 1, 5, 15, 8,       12, 11, 14, 2, 4, 3, 6, 10},             MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_ladder            = {{10, 15, 14, 0, 2, 7, 6, 8,      12, 13, 3, 1, 4, 5, 11, 9},              MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_offset            = {{9, 11, 14, 0, 1, 3, 6, 8,       12, 13, 7, 2, 4, 5, 15, 10},             MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_but_o             = {{10, 13, 14, 1, 2, 5, 6, 9,      12, 15, 3, 0, 4, 7, 11, 8},              MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_o_s2x4_3          = {{10, 13, 14, 1, 2, 5, 6, 9,      12, 15, 3, 0, 4, 7, 11, 8},              MPKIND__O_SPOTS,     2,  s4x4,   s2x4,      0x000, 0};
-        map_thing map_x_s2x4_3          = {{10, 13, 14, 1, 2, 5, 6, 9,      12, 15, 3, 0, 4, 7, 11, 8},              MPKIND__X_SPOTS,     2,  s4x4,   s2x4,      0x000, 0};
-Private map_thing map_o_s2x4_2          = {{14, 1, 2, 5, 6, 9, 10, 13,      0, 3, 7, 4, 8, 11, 15, 12},              MPKIND__O_SPOTS,     2,  s4x4,   s2x4,      0x005, 0};
-Private map_thing map_x_s2x4_2          = {{14, 1, 2, 5, 6, 9, 10, 13,      0, 3, 7, 4, 8, 11, 15, 12},              MPKIND__X_SPOTS,     2,  s4x4,   s2x4,      0x005, 0};
+        map_thing map_b6_trngl          = {{5, 4, 0,                          2, 1, 3},                              MPKIND__SPLIT,       2,  s_bone6, s_trngl,  0x207, 0};
+        map_thing map_s6_trngl          = {{4, 5, 3,                          1, 2, 0},                              MPKIND__SPLIT,       2,  s_short6, s_trngl, 0x108, 1};
+        map_thing map_bone_trngl4       = {{7, 6, 5, 0,                       3, 2, 1, 4},                           MPKIND__SPLIT,       2,  s_bone, s_trngl4,  0x207, 0};
+        map_thing map_rig_trngl4        = {{6, 7, 0, 5,                       2, 3, 4, 1},                           MPKIND__SPLIT,       2,  s_rigger,s_trngl4, 0x10D, 0};
+        map_thing map_s8_tgl4           = {{2, 7, 5, 0,                       6, 3, 1, 4},                           MPKIND__REMOVED,     2,  s_bone, s_trngl4,  0x207, 0};
+        map_thing map_p8_tgl4           = {{0, 2, 7, 5,                       4, 6, 3, 1},                           MPKIND__REMOVED,     2,  s_ptpd, s_trngl4,  0x10D, 0};
+        map_thing map_2x2v              = {{0, 3,                             1, 2},                                 MPKIND__SPLIT,       2,  s2x2,   s1x2,      0x005, 0};
+        map_thing map_2x4_magic         = {{0, 6, 3, 5,                       7, 1, 4, 2},                           MPKIND__NONE,        2,  s2x4,   s1x4,      0x000, 0};
+        map_thing map_qtg_magic         = {{0, 2, 5, 3,                       1, 7, 4, 6},                           MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
+        map_thing map_qtg_intlk         = {{0, 3, 5, 6,                       1, 2, 4, 7},                           MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
+        map_thing map_qtg_magic_intlk   = {{0, 2, 5, 7,                       1, 3, 4, 6},                           MPKIND__NONE,        2,  s_qtag, sdmd,      0x005, 0};
+        map_thing map_ptp_magic         = {{6, 1, 4, 3,                       0, 7, 2, 5},                           MPKIND__NONE,        2,  s_ptpd, sdmd,      0x000, 0};
+        map_thing map_ptp_intlk         = {{0, 1, 6, 3,                       2, 7, 4, 5},                           MPKIND__NONE,        2,  s_ptpd, sdmd,      0x000, 0};
+        map_thing map_ptp_magic_intlk   = {{2, 1, 4, 3,                       0, 7, 6, 5},                           MPKIND__NONE,        2,  s_ptpd, sdmd,      0x000, 0};
+        map_thing map_2x4_diagonal      = {{2, 3, 6, 7,                       0, 1, 4, 5},                           MPKIND__NONE,        2,  s2x4,   s2x2,      0x000, 0};
+        map_thing map_2x4_int_pgram     = {{1, 3, 5, 7,                       0, 2, 4, 6},                           MPKIND__NONE,        2,  s2x4,   s2x2,      0x000, 0};
+        map_thing map_2x4_trapezoid     = {{1, 2, 4, 7,                       0, 3, 5, 6},                           MPKIND__NONE,        2,  s2x4,   s2x2,      0x000, 0};
+        map_thing map_3x4_2x3_intlk     = {{2, 5, 7, 9, 10, 0,                3, 4, 6, 8, 11, 1},                    MPKIND__NONE,        2,  s3x4,   s2x3,      0x005, 0};
+        map_thing map_3x4_2x3_conc      = {{3, 4, 6, 9, 10, 0,                2, 5, 7, 8, 11, 1},                    MPKIND__NONE,        2,  s3x4,   s2x3,      0x005, 0};
+        map_thing map_4x4_ns            = {{12, 13, 0, 14,                    8, 6, 4, 5},                           MPKIND__NONE,        2,  s4x4,   s1x4,      0x000, 1};
+        map_thing map_4x4_ew            = {{0, 1, 4, 2,                       12, 10, 8, 9},                         MPKIND__NONE,        2,  s4x4,   s1x4,      0x005, 1};
+        map_thing map_phantom_box       = {{0, 1, 6, 7, 8, 9, 14, 15,         2, 3, 4, 5, 10, 11, 12, 13},           MPKIND__CONCPHAN,    2,  s2x8,   s2x4,      0x000, 0};
+        map_thing map_intlk_phantom_box = {{0, 1, 4, 5, 10, 11, 14, 15,       2, 3, 6, 7, 8, 9, 12, 13},             MPKIND__INTLK,       2,  s2x8,   s2x4,      0x000, 0};
+        map_thing map_phantom_dmd       = {{0, 3, 4, 5, 8, 11, 12, 13,        1, 2, 6, 7, 9, 10, 14, 15},            MPKIND__CONCPHAN,    2,  s4dmd,  s_qtag,    0x000, 0};
+        map_thing map_intlk_phantom_dmd = {{0, 2, 6, 7, 9, 11, 12, 13,        1, 3, 4, 5, 8, 10, 14, 15},            MPKIND__INTLK,       2,  s4dmd,  s_qtag,    0x000, 0};
+        map_thing map_stagger           = {{10, 13, 3, 0, 2, 5, 11, 8,        12, 15, 14, 1, 4, 7, 6, 9},            MPKIND__STAG,        2,  s4x4,   s2x4,      0x000, 1};
+Private map_thing map_staggerv          = {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},            MPKIND__STAG,        2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_stairst           = {{9, 13, 7, 0, 1, 5, 15, 8,         12, 11, 14, 2, 4, 3, 6, 10},           MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_ladder            = {{10, 15, 14, 0, 2, 7, 6, 8,        12, 13, 3, 1, 4, 5, 11, 9},            MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_offset            = {{9, 11, 14, 0, 1, 3, 6, 8,         12, 13, 7, 2, 4, 5, 15, 10},           MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_but_o             = {{10, 13, 14, 1, 2, 5, 6, 9,        12, 15, 3, 0, 4, 7, 11, 8},            MPKIND__NONE,        2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_o_s2x4_3          = {{10, 13, 14, 1, 2, 5, 6, 9,        12, 15, 3, 0, 4, 7, 11, 8},            MPKIND__O_SPOTS,     2,  s4x4,   s2x4,      0x000, 0};
+        map_thing map_x_s2x4_3          = {{10, 13, 14, 1, 2, 5, 6, 9,        12, 15, 3, 0, 4, 7, 11, 8},            MPKIND__X_SPOTS,     2,  s4x4,   s2x4,      0x000, 0};
+Private map_thing map_o_s2x4_2          = {{14, 1, 2, 5, 6, 9, 10, 13,        0, 3, 7, 4, 8, 11, 15, 12},            MPKIND__O_SPOTS,     2,  s4x4,   s2x4,      0x005, 0};
+Private map_thing map_x_s2x4_2          = {{14, 1, 2, 5, 6, 9, 10, 13,        0, 3, 7, 4, 8, 11, 15, 12},            MPKIND__X_SPOTS,     2,  s4x4,   s2x4,      0x005, 0};
         map_thing map_4x4v     = {{12, 10, 8, 9,         13, 15, 6, 11,        14, 3, 5, 7,      0, 1, 4, 2},        MPKIND__SPLIT,       4,  s4x4,   s1x4,      0x055, 0};
         map_thing map_blocks   = {{12, 14, 7, 9,         13, 0, 2, 11,         15, 1, 4, 6,      10, 3, 5, 8},       MPKIND__NONE,        4,  s4x4,   s2x2,      0x000, 0};
         map_thing map_trglbox  = {{12, 14, 15, 9,        13, 0, 2, 3,          7, 1, 4, 6,       10, 11, 5, 8},      MPKIND__NONE,        4,  s4x4,   s2x2,      0x000, 0};
@@ -1761,82 +2133,84 @@ Private map_thing map_1x16_1x4 = {{0, 1, 3, 2,           4, 5, 7, 6,           1
 Private map_thing map_2x8_2x2  = {{0, 1, 14, 15,         2, 3, 12, 13,         4, 5, 10, 11,     6, 7, 8, 9},        MPKIND__SPLIT,       4,  s2x8,   s2x2,      0x000, 0};
 Private map_thing map_conc_qb  = {{0, 7, 8, 15,          1, 6, 9, 14,          2, 5, 10, 13,     3, 4, 11, 12},      MPKIND__CONCPHAN,    4,  s2x8,   s2x2,      0x000, 0};
 Private map_thing map_4dmd_dmd = {{0, 13, 11, 12,        1, 15, 10, 14,        2, 6, 9, 7,       3, 4, 8, 5},        MPKIND__SPLIT,       4,  s4dmd,  sdmd,      0x055, 0};
-Private map_thing map_2x6_1x6           = {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                       MPKIND__SPLIT,       2,  s2x6,   s1x6,      0x000, 1};
-Private map_thing map_2x8_1x8           = {{15, 14, 12, 13, 8, 9, 11, 10,   0, 1, 3, 2, 7, 6, 4, 5},                 MPKIND__SPLIT,       2,  s2x8,   s1x8,      0x000, 1};
-Private map_thing map_1x12_1x6          = {{0, 1, 2, 5, 4, 3,               11, 10, 9, 6, 7, 8},                     MPKIND__SPLIT,       2,  s1x12,  s1x6,      0x000, 0};
-Private map_thing map_1x16_1x8          = {{0, 1, 3, 2, 7, 6, 4, 5,         15, 14, 12, 13, 8, 9, 11, 10},           MPKIND__SPLIT,       2,  s1x16,  s1x8,      0x000, 0};
-Private map_thing map_intlk_phan_grand  = {{0, 1, 3, 2, 12, 13, 15, 14,     4, 5, 7, 6, 8, 9, 11, 10},               MPKIND__INTLK,       2,  s1x16,  s1x8,      0x000, 0};
-Private map_thing map_conc_phan_grand   = {{0, 1, 3, 2, 8, 9, 11, 10,       4, 5, 7, 6, 12, 13, 15, 14},             MPKIND__CONCPHAN,    2,  s1x16,  s1x8,      0x000, 0};
-        map_thing map_hv_2x4_2          = {{0, 1, 2, 3, 12, 13, 14, 15,     4, 5, 6, 7, 8, 9, 10, 11},               MPKIND__SPLIT,       2,  s2x8,   s2x4,      0x000, 0};
-        map_thing map_3x4_2x3           = {{1, 11, 8, 9, 10, 0,             3, 4, 6, 7, 5, 2},                       MPKIND__SPLIT,       2,  s3x4,   s2x3,      0x005, 0};
-        map_thing map_split_f           = {{9, 11, 7, 2, 4, 5, 6, 8,        12, 13, 14, 0, 1, 3, 15, 10},            MPKIND__SPLIT,       2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_intlk_f           = {{10, 15, 3, 1, 4, 5, 6, 8,       12, 13, 14, 0, 2, 7, 11, 9},             MPKIND__INTLK,       2,  s4x4,   s2x4,      0x000, 1};
-        map_thing map_full_f            = {{12, 13, 14, 0, 4, 5, 6, 8,      10, 15, 3, 1, 2, 7, 11, 9},              MPKIND__CONCPHAN,    2,  s4x4,   s2x4,      0x000, 1};
-Private map_thing map_2x4_2x2           = {{0, 1, 6, 7,                     2, 3, 4, 5},                             MPKIND__SPLIT,       2,  s2x4,   s2x2,      0x000, 0};
-Private map_thing map_2x3_1x3           = {{5, 4, 3,                        0, 1, 2},                                MPKIND__SPLIT,       2,  s2x3,   s1x3,      0x000, 1};
-Private map_thing map_bigd_12d          = {{11, 10, 9, 6, 7, 8,             0, 1, 2, 5, 4, 3},                       MPKIND__SPLIT,       2,  sbigdmd,s_1x2dmd,  0x000, 1};
-Private map_thing map_bone_12d          = {{-1, -1, 0, 7, 6, 5,             3, 2, 1, -1, -1, 4},                     MPKIND__SPLIT,       2,  s_bone, s_1x2dmd,  0x000, 0};
-Private map_thing map_2x4_1x4           = {{7, 6, 4, 5,                     0, 1, 3, 2},                             MPKIND__SPLIT,       2,  s2x4,   s1x4,      0x000, 1};
-Private map_thing map_qtg_dmd           = {{0, 7, 5, 6,                     1, 2, 4, 3},                             MPKIND__SPLIT,       2,  s_qtag, sdmd,      0x005, 0};
-Private map_thing map_ptp_dmd           = {{0, 1, 2, 3,                     6, 7, 4, 5},                             MPKIND__SPLIT,       2,  s_ptpd, sdmd,      0x000, 0};
+Private map_thing map_2x6_1x6           = {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},                     MPKIND__SPLIT,       2,  s2x6,   s1x6,      0x000, 1};
+Private map_thing map_2x8_1x8           = {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},               MPKIND__SPLIT,       2,  s2x8,   s1x8,      0x000, 1};
+Private map_thing map_1x12_1x6          = {{0, 1, 2, 5, 4, 3,                 11, 10, 9, 6, 7, 8},                   MPKIND__SPLIT,       2,  s1x12,  s1x6,      0x000, 0};
+Private map_thing map_1x16_1x8          = {{0, 1, 3, 2, 7, 6, 4, 5,           15, 14, 12, 13, 8, 9, 11, 10},         MPKIND__SPLIT,       2,  s1x16,  s1x8,      0x000, 0};
+Private map_thing map_intlk_phan_grand  = {{0, 1, 3, 2, 12, 13, 15, 14,       4, 5, 7, 6, 8, 9, 11, 10},             MPKIND__INTLK,       2,  s1x16,  s1x8,      0x000, 0};
+Private map_thing map_conc_phan_grand   = {{0, 1, 3, 2, 8, 9, 11, 10,         4, 5, 7, 6, 12, 13, 15, 14},           MPKIND__CONCPHAN,    2,  s1x16,  s1x8,      0x000, 0};
+        map_thing map_hv_2x4_2          = {{0, 1, 2, 3, 12, 13, 14, 15,       4, 5, 6, 7, 8, 9, 10, 11},             MPKIND__SPLIT,       2,  s2x8,   s2x4,      0x000, 0};
+        map_thing map_3x4_2x3           = {{1, 11, 8, 9, 10, 0,               3, 4, 6, 7, 5, 2},                     MPKIND__SPLIT,       2,  s3x4,   s2x3,      0x005, 0};
+        map_thing map_split_f           = {{9, 11, 7, 2, 4, 5, 6, 8,          12, 13, 14, 0, 1, 3, 15, 10},          MPKIND__SPLIT,       2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_intlk_f           = {{10, 15, 3, 1, 4, 5, 6, 8,         12, 13, 14, 0, 2, 7, 11, 9},           MPKIND__INTLK,       2,  s4x4,   s2x4,      0x000, 1};
+        map_thing map_full_f            = {{12, 13, 14, 0, 4, 5, 6, 8,        10, 15, 3, 1, 2, 7, 11, 9},            MPKIND__CONCPHAN,    2,  s4x4,   s2x4,      0x000, 1};
+Private map_thing map_2x4_2x2           = {{0, 1, 6, 7,                       2, 3, 4, 5},                           MPKIND__SPLIT,       2,  s2x4,   s2x2,      0x000, 0};
+Private map_thing map_2x3_1x3           = {{5, 4, 3,                          0, 1, 2},                              MPKIND__SPLIT,       2,  s2x3,   s1x3,      0x000, 1};
+Private map_thing map_bigd_12d          = {{11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},                     MPKIND__SPLIT,       2,  sbigdmd,s_1x2dmd,  0x000, 1};
+Private map_thing map_bone_12d          = {{-1, -1, 0, 7, 6, 5,               3, 2, 1, -1, -1, 4},                   MPKIND__SPLIT,       2,  s_bone, s_1x2dmd,  0x000, 0};
+Private map_thing map_2x4_1x4           = {{7, 6, 4, 5,                       0, 1, 3, 2},                           MPKIND__SPLIT,       2,  s2x4,   s1x4,      0x000, 1};
+Private map_thing map_qtg_dmd           = {{0, 7, 5, 6,                       1, 2, 4, 3},                           MPKIND__SPLIT,       2,  s_qtag, sdmd,      0x005, 0};
+Private map_thing map_ptp_dmd           = {{0, 1, 2, 3,                       6, 7, 4, 5},                           MPKIND__SPLIT,       2,  s_ptpd, sdmd,      0x000, 0};
 Private map_thing map_3x8_3x4           = {{0, 1, 2, 3, 23, 22, 16, 17, 18, 19, 20, 21,
                                                                    4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 11, 10},        MPKIND__SPLIT,       2,  s3x8,   s3x4,      0x000, 0};
 Private map_thing map_4x6_3x4           = {{2, 9, 20, 15, 16, 19, 17, 18, 11, 0, 1, 10,
                                                                    5, 6, 23, 12, 13, 22, 14, 21, 8, 3, 4, 7},        MPKIND__SPLIT,       2,  s4x6,   s3x4,      0x005, 0};
-
 Private map_thing map_4x6_2x6           = {{18, 19, 20, 21, 22, 23, 12, 13, 14, 15, 16, 17,
                                                                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},            MPKIND__SPLIT,       2,  s4x6,   s2x6,      0x000, 1};
-
-
 Private map_thing map_3dmd_dmd = {{0, 10, 8, 9,                    1, 5, 7, 11,                   2, 3, 6, 4,    0}, MPKIND__SPLIT,       3,  s3dmd,  sdmd,      0x015, 0};
         map_thing map_4x6_2x4  = {{1, 10, 19, 16, 17, 18, 11, 0,   3, 8, 21, 14, 15, 20, 9, 2,
                                                                    5, 6, 23, 12, 13, 22, 7, 4,                   0}, MPKIND__SPLIT,       3,  s4x6,   s2x4,      0x015, 0};
-        map_thing map_hv_qtg_2          = {{0, 1, 15, 14, 10, 11, 12, 13,   2, 3, 4, 5, 8, 9, 7, 6},                 MPKIND__SPLIT,       2,  s4dmd,  s_qtag,    0x000, 0};
-        map_thing map_vv_qtg_2          = {{9, 20, 16, 19, 18, 11, 1, 10,   6, 23, 13, 22, 21, 8, 4, 7},             MPKIND__SPLIT,       2,  s4x6,   s_qtag,    0x005, 0};
-Private map_thing map_1x6_1x3           = {{0, 1, 2,                            5, 4, 3},                            MPKIND__SPLIT,       2,  s1x6,   s1x3,      0x000, 0};
-Private map_thing map_1x8_1x4           = {{0, 1, 2, 3,                         6, 7, 4, 5},                         MPKIND__SPLIT,       2,  s1x8,   s1x4,      0x000, 0};
-Private map_thing map_1x12_1x4 = {{0, 1, 3, 2,                     4, 5, 10, 11,                  9, 8, 6, 7,    0}, MPKIND__SPLIT,       3,  s1x12,  s1x4,      0x000, 0};
-Private map_thing map_1x2_1x1           = {{0,                              1},                                      MPKIND__SPLIT,       2,  s1x2,   s1x1,      0x000, 0};
-Private map_thing map_1x4_1x2           = {{0, 1,                           3, 2},                                   MPKIND__SPLIT,       2,  s1x4,   s1x2,      0x000, 0};
-        map_thing map_tgl4_1            = {{1, 0,                           2, 3},                                   MPKIND__NONE,        2,  s_trngl4,s1x2,     0x001, 1};
-        map_thing map_tgl4_2            = {{3, 2,                           1, 0},                                   MPKIND__NONE,        2,  s_trngl4,s1x2,     0x006, 1};
-Private map_thing map_2x6_2x2 = {{0, 1, 10, 11,                    2, 3, 8, 9,                    4, 5, 6, 7,    0}, MPKIND__SPLIT,       3,  s2x6,   s2x2,      0x000, 0};
-Private map_thing map_2x6_2x2r = {{1, 10, 11, 0,                   3, 8, 9, 2,                    5, 6, 7, 4,    0}, MPKIND__SPLIT,       3,  s2x6,   s2x2,      0x015, 0};
-Private map_thing map_conc_tb = {{0, 5, 6, 11,                     1, 4, 7, 10,                   2, 3, 8, 9,    0}, MPKIND__CONCPHAN,    3,  s2x6,   s2x2,      0x000, 0};
-Private map_thing map_conc_tbr = {{5, 6, 11, 0,                    4, 7, 10, 1,                   3, 8, 9, 2,    0}, MPKIND__CONCPHAN,    3,  s2x6,   s2x2,      0x015, 0};
-Private map_thing map_3x4_1x4 = {{9, 8, 6, 7,                      10, 11, 4, 5,                  0, 1, 3, 2,    0}, MPKIND__SPLIT,       3,  s3x4,   s1x4,      0x000, 1};
-Private map_thing map_2x3_1x2 = {{0, 5,                            1, 4,                          2, 3,          0}, MPKIND__SPLIT,       3,  s2x3,   s1x2,      0x015, 0};
-Private map_thing map_1x6_1x2 = {{0, 1,                            2, 5,                          4, 3,          0}, MPKIND__SPLIT,       3,  s1x6,   s1x2,      0x000, 0};
-Private map_thing map_2x2h      = {{3, 2,                              0, 1},                                        MPKIND__SPLIT,       2,  s2x2,   s1x2,      0x000, 1};
-Private map_thing map_2x4_2x2r  = {{1, 6, 7, 0,                        3, 4, 5, 2},                                  MPKIND__SPLIT,       2,  s2x4,   s2x2,      0x005, 0};
-        map_thing map_2x6_2x3   = {{0, 1, 2, 9, 10, 11,                3, 4, 5, 6, 7, 8},                            MPKIND__SPLIT,       2,  s2x6,   s2x3,      0x000, 0};
-Private map_thing map_1x2_rmv   = {{0, 3,                              1, 2},                                        MPKIND__REMOVED,     2,  s1x4,   s1x2,      0x000, 0};
-Private map_thing map_1x2_rmvr  = {{0, 3,                              1, 2},                                        MPKIND__REMOVED,     2,  s2x2,   s1x2,      0x005, 0};
-Private map_thing map_2x2_rmv   = {{0, 2, 5, 7,                        1, 3, 4, 6},                                  MPKIND__REMOVED,     2,  s2x4,   s2x2,      0x000, 0};
-Private map_thing map_1x4_rmv   = {{0, 3, 5, 6,                        1, 2, 4, 7},                                  MPKIND__REMOVED,     2,  s1x8,   s1x4,      0x000, 0};
-Private map_thing map_1x4_rmvr  = {{7, 6, 4, 5,                        0, 1, 3, 2},                                  MPKIND__REMOVED,     2,  s2x4,   s1x4,      0x000, 1};
-Private map_thing map_dmd_rmv   = {{6, 0, 3, 5,                        7, 1, 2, 4},                                  MPKIND__REMOVED,     2,  s_rigger, sdmd,    0x000, 0};
-Private map_thing map_dmd_rmvr  = {{0, 3, 5, 6,                        1, 2, 4, 7},                                  MPKIND__REMOVED,     2,  s_qtag, sdmd,      0x005, 0};
-        map_thing map_dbloff1   = {{0, 1, 3, 2, 4, 5, 7, 6,                                                      0}, MPKIND__NONE,        1,  s2x4,   s_qtag,    0x000, 0};
-        map_thing map_dbloff2   = {{2, 3, 4, 5, 6, 7, 0, 1,                                                      0}, MPKIND__NONE,        1,  s2x4,   s_qtag,    0x000, 0};
-Private map_thing map_ov_1x4_2  = {{0, 1, 2, 3,                    3, 2, 7, 6,                   6, 7, 4, 5,     0}, MPKIND__OVERLAP,     3,  s1x8,   s1x4,      0x000, 0};
-Private map_thing map_ov_1x4_3  = {{9, 8, 6, 7,                    10, 11, 4, 5,                 0, 1, 3, 2,     3}, MPKIND__OVERLAP,     3,  s3x4,   s1x4,      0x000, 0};
+        map_thing map_hv_qtg_2          = {{0, 1, 15, 14, 10, 11, 12, 13,     2, 3, 4, 5, 8, 9, 7, 6},               MPKIND__SPLIT,       2,  s4dmd,  s_qtag,    0x000, 0};
+        map_thing map_vv_qtg_2          = {{9, 20, 16, 19, 18, 11, 1, 10,     6, 23, 13, 22, 21, 8, 4, 7},           MPKIND__SPLIT,       2,  s4x6,   s_qtag,    0x005, 0};
+Private map_thing map_spin_3x4          = {{1, 11, 8, -1, 9, 10, 0, -1,       3, 4, 6, -1, 7, 5, 2, -1},             MPKIND__SPLIT,       2,  s3x4,   s_spindle, 0x005, 0};
+Private map_thing map_hrgl_ptp          = {{-1, -1, 2, 1, -1, -1, 0, 3,       -1, -1, 4, 7, -1, -1, 6, 5},           MPKIND__SPLIT,       2,  s_ptpd, s_hrglass, 0x000, 0};
+Private map_thing map_ov_hrg_1          = {{-1, -1, 5, 7, -1, -1, 0, 6,       -1, -1, 4, 2, -1, -1, 1, 3},           MPKIND__OVERLAP,     2,  s_qtag, s_hrglass, 0x005, 0};
+Private map_thing map_1x6_1x3           = {{0, 1, 2,                          5, 4, 3},                              MPKIND__SPLIT,       2,  s1x6,   s1x3,      0x000, 0};
+Private map_thing map_1x8_1x4           = {{0, 1, 2, 3,                       6, 7, 4, 5},                           MPKIND__SPLIT,       2,  s1x8,   s1x4,      0x000, 0};
+Private map_thing map_1x12_1x4          = {{0, 1, 3, 2,            4, 5, 10, 11,          9, 8, 6, 7,            0}, MPKIND__SPLIT,       3,  s1x12,  s1x4,      0x000, 0};
+Private map_thing map_1x2_1x1           = {{0,                                1},                                    MPKIND__SPLIT,       2,  s1x2,   s1x1,      0x000, 0};
+Private map_thing map_1x4_1x2           = {{0, 1,                             3, 2},                                 MPKIND__SPLIT,       2,  s1x4,   s1x2,      0x000, 0};
+        map_thing map_tgl4_1            = {{1, 0,                             2, 3},                                 MPKIND__NONE,        2,  s_trngl4,s1x2,     0x001, 1};
+        map_thing map_tgl4_2            = {{3, 2,                             1, 0},                                 MPKIND__NONE,        2,  s_trngl4,s1x2,     0x006, 1};
+Private map_thing map_2x6_2x2           = {{0, 1, 10, 11,          2, 3, 8, 9,            4, 5, 6, 7,            0}, MPKIND__SPLIT,       3,  s2x6,   s2x2,      0x000, 0};
+Private map_thing map_2x6_2x2r          = {{1, 10, 11, 0,          3, 8, 9, 2,            5, 6, 7, 4,            0}, MPKIND__SPLIT,       3,  s2x6,   s2x2,      0x015, 0};
+Private map_thing map_conc_tb           = {{0, 5, 6, 11,           1, 4, 7, 10,           2, 3, 8, 9,            0}, MPKIND__CONCPHAN,    3,  s2x6,   s2x2,      0x000, 0};
+Private map_thing map_conc_tbr          = {{5, 6, 11, 0,           4, 7, 10, 1,           3, 8, 9, 2,            0}, MPKIND__CONCPHAN,    3,  s2x6,   s2x2,      0x015, 0};
+Private map_thing map_3x4_1x4           = {{9, 8, 6, 7,            10, 11, 4, 5,          0, 1, 3, 2,            0}, MPKIND__SPLIT,       3,  s3x4,   s1x4,      0x000, 1};
+Private map_thing map_2x3_1x2           = {{0, 5,                  1, 4,                  2, 3,                  0}, MPKIND__SPLIT,       3,  s2x3,   s1x2,      0x015, 0};
+Private map_thing map_1x6_1x2           = {{0, 1,                  2, 5,                  4, 3,                  0}, MPKIND__SPLIT,       3,  s1x6,   s1x2,      0x000, 0};
+Private map_thing map_2x2h              = {{3, 2,                             0, 1},                                 MPKIND__SPLIT,       2,  s2x2,   s1x2,      0x000, 1};
+Private map_thing map_2x4_2x2r          = {{1, 6, 7, 0,                       3, 4, 5, 2},                           MPKIND__SPLIT,       2,  s2x4,   s2x2,      0x005, 0};
+        map_thing map_2x6_2x3           = {{0, 1, 2, 9, 10, 11,               3, 4, 5, 6, 7, 8},                     MPKIND__SPLIT,       2,  s2x6,   s2x3,      0x000, 0};
+Private map_thing map_1x2_rmv           = {{0, 3,                             1, 2},                                 MPKIND__REMOVED,     2,  s1x4,   s1x2,      0x000, 0};
+Private map_thing map_1x2_rmvr          = {{0, 3,                             1, 2},                                 MPKIND__REMOVED,     2,  s2x2,   s1x2,      0x005, 0};
+Private map_thing map_2x2_rmv           = {{0, 2, 5, 7,                       1, 3, 4, 6},                           MPKIND__REMOVED,     2,  s2x4,   s2x2,      0x000, 0};
+Private map_thing map_1x4_rmv           = {{0, 3, 5, 6,                       1, 2, 4, 7},                           MPKIND__REMOVED,     2,  s1x8,   s1x4,      0x000, 0};
+Private map_thing map_1x4_rmvr          = {{7, 6, 4, 5,                       0, 1, 3, 2},                           MPKIND__REMOVED,     2,  s2x4,   s1x4,      0x000, 1};
+Private map_thing map_2x4_rmv           = {{0, 2, 4, 6, 9, 11, 13, 15,        1, 3, 5, 7, 8, 10, 12, 14},            MPKIND__REMOVED,     2,  s2x8,   s2x4,      0x000, 0};
+Private map_thing map_2x4_rmvr          = {{10, 15, 3, 1, 4, 5, 6, 8,         12, 13, 14, 0, 2, 7, 11, 9},           MPKIND__REMOVED,     2,  s4x4,   s2x4,      0x000, 1};
+Private map_thing map_dmd_rmv           = {{6, 0, 3, 5,                       7, 1, 2, 4},                           MPKIND__REMOVED,     2,  s_rigger, sdmd,    0x000, 0};
+Private map_thing map_dmd_rmvr          = {{0, 3, 5, 6,                       1, 2, 4, 7},                           MPKIND__REMOVED,     2,  s_qtag, sdmd,      0x005, 0};
+        map_thing map_dbloff1           = {{0, 1, 3, 2, 4, 5, 7, 6,                                              0}, MPKIND__NONE,        1,  s2x4,   s_qtag,    0x000, 0};
+        map_thing map_dbloff2           = {{2, 3, 4, 5, 6, 7, 0, 1,                                              0}, MPKIND__NONE,        1,  s2x4,   s_qtag,    0x000, 0};
+Private map_thing map_ov_1x4_2          = {{0, 1, 2, 3,            3, 2, 7, 6,            6, 7, 4, 5,            0}, MPKIND__OVERLAP,     3,  s1x8,   s1x4,      0x000, 0};
+Private map_thing map_ov_1x4_3          = {{9, 8, 6, 7,            10, 11, 4, 5,          0, 1, 3, 2,            3}, MPKIND__OVERLAP,     3,  s3x4,   s1x4,      0x000, 0};
 Private map_thing map_ov_s2x2_1         = {{0, 1, 4, 5,                     1, 2, 3, 4},                             MPKIND__OVERLAP,     2,  s2x3,   s2x2,      0x000, 0};
 Private map_thing map_ov_s2x2r_1        = {{1, 4, 5, 0,                     2, 3, 4, 1},                             MPKIND__OVERLAP,     2,  s2x3,   s2x2,      0x005, 0};
-Private map_thing map_ov_s2x2_2 = {{0, 1, 6, 7,                    1, 2, 5, 6,                   2, 3, 4, 5,     0}, MPKIND__OVERLAP,     3,  s2x4,   s2x2,      0x000, 0};
-Private map_thing map_ov_2x3_3  = {{1, 11, 8, 9, 10, 0,        2, 5, 7, 8, 11, 1,       3, 4, 6, 7, 5, 2,        0}, MPKIND__OVERLAP,     3,  s3x4,   s2x3,      0x015, 0};
-Private map_thing map_ov_2x4_0  = {{0, 1, 2, 3, 8, 9, 10, 11,          2, 3, 4, 5, 6, 7, 8, 9},                      MPKIND__OVERLAP,     2,  s2x6,   s2x4,      0x000, 0};
-Private map_thing map_ov_2x4_1  = {{10, 11, 5, 4, 6, 7, 8, 9,          0, 1, 2, 3, 4, 5, 11, 10},                    MPKIND__OVERLAP,     2,  s3x4,   s2x4,      0x000, 1};
-Private map_thing map_ov_2x4_2  = {{0, 1, 2, 3, 12, 13, 14, 15,             2, 3, 4, 5, 10, 11, 12, 13,
-                                    4, 5, 6, 7, 8, 9, 10, 11,                                                    0}, MPKIND__OVERLAP,     3,  s2x8,   s2x4,      0x000, 0};
-Private map_thing map_ov_2x4_3  = {{9, 11, 7, 2, 4, 5, 6, 8,           10, 15, 3, 1, 2, 7, 11, 9,
-                                    12, 13, 14, 0, 1, 3, 15, 10,                                                 0}, MPKIND__OVERLAP,     3,  s4x4,   s2x4,      0x000, 1};
-Private map_thing map_ov_s1x8_0 = {{0, 1, 3, 2, 10, 11, 4, 5,          4, 5, 10, 11, 6, 7, 9, 8},                    MPKIND__OVERLAP,     2,  s1x12,  s1x8,      0x000, 0};
-Private map_thing map_ov_s1x8_1 = {{0, 1, 3, 2, 7, 6, 4, 5,            4, 5, 7, 6, 12, 13, 15, 14,
-                                    15, 14, 12, 13, 8, 9, 11, 10,                                                0}, MPKIND__OVERLAP,     3,  s1x16,  s1x8,      0x000, 0};
-Private map_thing map_ov_qtag_0 = {{0, 1, 5, 11, 7, 8, 9, 10,          1, 2, 3, 4, 6, 7, 11, 5},                     MPKIND__OVERLAP,     2,  s3dmd,  s_qtag,    0x000, 0};
-Private map_thing map_ov_qtag_2 = {{0, 1, 15, 14, 10, 11, 12, 13,      1, 2, 6, 7, 9, 10, 14, 15,
-                                    2, 3, 4, 5, 8, 9, 7, 6,                                                      0}, MPKIND__OVERLAP,     3,  s4dmd,  s_qtag,    0x000, 0};
+Private map_thing map_ov_s2x2_2         = {{0, 1, 6, 7,            1, 2, 5, 6,            2, 3, 4, 5,            0}, MPKIND__OVERLAP,     3,  s2x4,   s2x2,      0x000, 0};
+Private map_thing map_ov_2x3_3          = {{1, 11, 8, 9, 10, 0,    2, 5, 7, 8, 11, 1,     3, 4, 6, 7, 5, 2,      0}, MPKIND__OVERLAP,     3,  s3x4,   s2x3,      0x015, 0};
+Private map_thing map_ov_2x4_0          = {{0, 1, 2, 3, 8, 9, 10, 11,         2, 3, 4, 5, 6, 7, 8, 9},               MPKIND__OVERLAP,     2,  s2x6,   s2x4,      0x000, 0};
+Private map_thing map_ov_2x4_1          = {{10, 11, 5, 4, 6, 7, 8, 9,         0, 1, 2, 3, 4, 5, 11, 10},             MPKIND__OVERLAP,     2,  s3x4,   s2x4,      0x000, 1};
+Private map_thing map_ov_2x4_2          = {{0, 1, 2, 3, 12, 13, 14, 15,       2, 3, 4, 5, 10, 11, 12, 13,     4, 5, 6, 7, 8, 9, 10, 11,       0},
+                                                                                                                     MPKIND__OVERLAP,     3,  s2x8,   s2x4,      0x000, 0};
+Private map_thing map_ov_2x4_3          = {{9, 11, 7, 2, 4, 5, 6, 8,          10, 15, 3, 1, 2, 7, 11, 9,      12, 13, 14, 0, 1, 3, 15, 10,    0},
+                                                                                                                     MPKIND__OVERLAP,     3,  s4x4,   s2x4,      0x000, 1};
+Private map_thing map_ov_s1x8_0         = {{0, 1, 3, 2, 10, 11, 4, 5,         4, 5, 10, 11, 6, 7, 9, 8},             MPKIND__OVERLAP,     2,  s1x12,  s1x8,      0x000, 0};
+Private map_thing map_ov_s1x8_1         = {{0, 1, 3, 2, 7, 6, 4, 5,           4, 5, 7, 6, 12, 13, 15, 14,     15, 14, 12, 13, 8, 9, 11, 10,   0},
+                                                                                                                     MPKIND__OVERLAP,     3,  s1x16,  s1x8,      0x000, 0};
+Private map_thing map_ov_qtag_0         = {{0, 1, 5, 11, 7, 8, 9, 10,         1, 2, 3, 4, 6, 7, 11, 5},              MPKIND__OVERLAP,     2,  s3dmd,  s_qtag,    0x000, 0};
+Private map_thing map_ov_qtag_2         = {{0, 1, 15, 14, 10, 11, 12, 13,     1, 2, 6, 7, 9, 10, 14, 15,      2, 3, 4, 5, 8, 9, 7, 6,         0},
+                                                                                                                     MPKIND__OVERLAP,     3,  s4dmd,  s_qtag,    0x000, 0};
 
 /* Maps for turning triangles into boxes for the "triangle" concept. */
 
@@ -1845,58 +2219,58 @@ Private map_thing map_ov_qtag_2 = {{0, 1, 15, 14, 10, 11, 12, 13,      1, 2, 6, 
 
         map_thing map_inner_box         = {{2, 3, 4, 5, 10, 11, 12, 13,                                          0}, MPKIND__NONE,        1,  s2x8,   s2x4,      0x000, 0};
 
-Private map_thing map_lh_s2x4_2         = {{20, 21, 22, 23, 16, 17, 18, 19,    4, 5, 6, 7, 8, 9, 10, 11},            MPKIND__OFFS_L_HALF, 2,  s3x8,   s2x4,      0x000, 0};
-Private map_thing map_lh_s2x4_3         = {{20, 21, 22, 23, 12, 13, 14, 15,    0, 1, 2, 3, 8, 9, 10, 11},            MPKIND__OFFS_L_HALF, 2,  s4x6,   s2x4,      0x000, 1};
-Private map_thing map_lh_s1x4_2         = {{15, 14, 12, 13,                    4, 5, 7, 6},                          MPKIND__OFFS_L_HALF, 2,  s1p5x8, s1x4,      0x000, 0};
-Private map_thing map_lh_s1x4_3         = {{9, 8, 6, 7,                        0, 1, 3, 2},                          MPKIND__OFFS_L_HALF, 2,  s2x6,   s1x4,      0x000, 1};
-Private map_thing map_lh_s2x2_2         = {{10, 11, 8, 9,                      2, 3, 4, 5},                          MPKIND__OFFS_L_HALF, 2,  s3x4,   s2x2,      0x000, 0};
-Private map_thing map_lh_s2x2_3         = {{11, 8, 9, 10,                      3, 4, 5, 2},                          MPKIND__OFFS_L_HALF, 2,  s3x4,   s2x2,      0x005, 0};
-Private map_thing map_lh_bigd           = {{6, 7, 8, 9,                        0, 1, 2, 3},                          MPKIND__OFFS_L_HALF, 2,  sbigdmd,s_trngl4,  0x007, 0};
+Private map_thing map_lh_s2x4_2         = {{20, 21, 22, 23, 16, 17, 18, 19,   4, 5, 6, 7, 8, 9, 10, 11},             MPKIND__OFFS_L_HALF, 2,  s3x8,   s2x4,      0x000, 0};
+Private map_thing map_lh_s2x4_3         = {{20, 21, 22, 23, 12, 13, 14, 15,   0, 1, 2, 3, 8, 9, 10, 11},             MPKIND__OFFS_L_HALF, 2,  s4x6,   s2x4,      0x000, 1};
+Private map_thing map_lh_s1x4_2         = {{15, 14, 12, 13,                   4, 5, 7, 6},                           MPKIND__OFFS_L_HALF, 2,  s1p5x8, s1x4,      0x000, 0};
+Private map_thing map_lh_s1x4_3         = {{9, 8, 6, 7,                       0, 1, 3, 2},                           MPKIND__OFFS_L_HALF, 2,  s2x6,   s1x4,      0x000, 1};
+Private map_thing map_lh_s2x2_2         = {{10, 11, 8, 9,                     2, 3, 4, 5},                           MPKIND__OFFS_L_HALF, 2,  s3x4,   s2x2,      0x000, 0};
+Private map_thing map_lh_s2x2_3         = {{11, 8, 9, 10,                     3, 4, 5, 2},                           MPKIND__OFFS_L_HALF, 2,  s3x4,   s2x2,      0x005, 0};
+Private map_thing map_lh_bigd           = {{6, 7, 8, 9,                       0, 1, 2, 3},                           MPKIND__OFFS_L_HALF, 2,  sbigdmd,s_trngl4,  0x007, 0};
 
 Private map_thing map_lh_s2x4_0         = {{0, 1, 2, 3, 6, 7, 8, 9,                                              0}, MPKIND__OFFS_L_HALF, 1,  s2x6,   s2x4,      0x000, 0};
 Private map_thing map_lh_s2x4_1         = {{10, 11, 2, 3, 4, 5, 8, 9,                                            0}, MPKIND__OFFS_L_HALF, 1,  s3x4,   s2x4,      0x000, 1};
 Private map_thing map_lh_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,                                              2}, MPKIND__OFFS_L_HALF, 1,  s1x8,   s1x8,      0x000, 0};
-        map_thing map_lh_s2x3_3         = {{1, 2, 4, 5, 7, 3,                  13, 15, 11, 9, 10, 12},               MPKIND__OFFS_L_HALF, 2,  s4x4,   s2x3,      0x005, 1};
-        map_thing map_lh_s2x3_2         = {{9, 11, 7, 5, 6, 8,                 13, 14, 0, 1, 3, 15},                 MPKIND__OFFS_L_HALF, 2,  s4x4,   s2x3,      0x000, 0};
+        map_thing map_lh_s2x3_3         = {{1, 2, 4, 5, 7, 3,                 13, 15, 11, 9, 10, 12},                MPKIND__OFFS_L_HALF, 2,  s4x4,   s2x3,      0x005, 1};
+        map_thing map_lh_s2x3_2         = {{9, 11, 7, 5, 6, 8,                13, 14, 0, 1, 3, 15},                  MPKIND__OFFS_L_HALF, 2,  s4x4,   s2x3,      0x000, 0};
 
-Private map_thing map_rh_s2x4_2         = {{0, 1, 2, 3, 23, 22, 21, 20,        11, 10, 9, 8, 12, 13, 14, 15},        MPKIND__OFFS_R_HALF, 2,  s3x8,   s2x4,      0x000, 0};
-Private map_thing map_rh_s2x4_3         = {{18, 19, 20, 21, 14, 15, 16, 17,    2, 3, 4, 5, 6, 7, 8, 9},              MPKIND__OFFS_R_HALF, 2,  s4x6,   s2x4,      0x000, 1};
-Private map_thing map_rh_s1x4_2         = {{0, 1, 3, 2,                        11, 10, 8, 9},                        MPKIND__OFFS_R_HALF, 2,  s1p5x8, s1x4,      0x000, 0};
-Private map_thing map_rh_s1x4_3         = {{11, 10, 8, 9,                      2, 3, 5, 4},                          MPKIND__OFFS_R_HALF, 2,  s2x6,   s1x4,      0x000, 1};
-Private map_thing map_rh_s2x2_2         = {{0, 1, 11, 10,                      5, 4, 6, 7},                          MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x000, 0};
-Private map_thing map_rh_s2x2_3         = {{1, 11, 10, 0,                      4, 6, 7, 5},                          MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x005, 0};
-Private map_thing map_rh_bigd           = {{11, 10, 9, 8,                      5, 4, 3, 2},                          MPKIND__OFFS_R_HALF, 2,  sbigdmd,s_trngl4,  0x00D, 1};
+Private map_thing map_rh_s2x4_2         = {{0, 1, 2, 3, 23, 22, 21, 20,       11, 10, 9, 8, 12, 13, 14, 15},         MPKIND__OFFS_R_HALF, 2,  s3x8,   s2x4,      0x000, 0};
+Private map_thing map_rh_s2x4_3         = {{18, 19, 20, 21, 14, 15, 16, 17,   2, 3, 4, 5, 6, 7, 8, 9},               MPKIND__OFFS_R_HALF, 2,  s4x6,   s2x4,      0x000, 1};
+Private map_thing map_rh_s1x4_2         = {{0, 1, 3, 2,                       11, 10, 8, 9},                         MPKIND__OFFS_R_HALF, 2,  s1p5x8, s1x4,      0x000, 0};
+Private map_thing map_rh_s1x4_3         = {{11, 10, 8, 9,                     2, 3, 5, 4},                           MPKIND__OFFS_R_HALF, 2,  s2x6,   s1x4,      0x000, 1};
+Private map_thing map_rh_s2x2_2         = {{0, 1, 11, 10,                     5, 4, 6, 7},                           MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x000, 0};
+Private map_thing map_rh_s2x2_3         = {{1, 11, 10, 0,                     4, 6, 7, 5},                           MPKIND__OFFS_R_HALF, 2,  s3x4,   s2x2,      0x005, 0};
+Private map_thing map_rh_bigd           = {{11, 10, 9, 8,                     5, 4, 3, 2},                           MPKIND__OFFS_R_HALF, 2,  sbigdmd,s_trngl4,  0x00D, 1};
 
 Private map_thing map_rh_s2x4_0         = {{2, 3, 4, 5, 8, 9, 10, 11,                                            0}, MPKIND__OFFS_R_HALF, 1,  s2x6,   s2x4,      0x000, 0};
 Private map_thing map_rh_s2x4_1         = {{0, 1, 5, 4, 6, 7, 11, 10,                                            0}, MPKIND__OFFS_R_HALF, 1,  s3x4,   s2x4,      0x000, 1};
 Private map_thing map_rh_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,                                              2}, MPKIND__OFFS_R_HALF, 1,  s1x8,   s1x8,      0x000, 0};
-        map_thing map_rh_s2x3_3         = {{15, 11, 6, 8, 9, 10,            0, 1, 2, 7, 3, 14},                      MPKIND__OFFS_R_HALF, 2,  s4x4,   s2x3,      0x005, 1};
-        map_thing map_rh_s2x3_2         = {{12, 13, 14, 3, 15, 10,          11, 7, 2, 4, 5, 6},                      MPKIND__OFFS_R_HALF, 2,  s4x4,   s2x3,      0x000, 0};
+        map_thing map_rh_s2x3_3         = {{15, 11, 6, 8, 9, 10,              0, 1, 2, 7, 3, 14},                    MPKIND__OFFS_R_HALF, 2,  s4x4,   s2x3,      0x005, 1};
+        map_thing map_rh_s2x3_2         = {{12, 13, 14, 3, 15, 10,            11, 7, 2, 4, 5, 6},                    MPKIND__OFFS_R_HALF, 2,  s4x4,   s2x3,      0x000, 0};
 
-Private map_thing map_lf_s1x4_2         = {{15, 14, 12, 13,                 4, 5, 7, 6},                             MPKIND__OFFS_L_FULL, 2,  s2x8,   s1x4,      0x000, 0};
-Private map_thing map_lf_s1x4_3         = {{11, 10, 8, 9,                   0, 1, 3, 2},                             MPKIND__OFFS_L_FULL, 2,  s2x8,   s1x4,      0x000, 1};
-Private map_thing map_lf_s2x2_2         = {{9, 11, 6, 8,                    14, 0, 1, 3},                            MPKIND__OFFS_L_FULL, 2,  s4x4,   s2x2,      0x000, 0};
-Private map_thing map_lf_s2x2_3         = {{11, 6, 8, 9,                    0, 1, 3, 14},                            MPKIND__OFFS_L_FULL, 2,  s4x4,   s2x2,      0x005, 0};
+Private map_thing map_lf_s1x4_2         = {{15, 14, 12, 13,                   4, 5, 7, 6},                           MPKIND__OFFS_L_FULL, 2,  s2x8,   s1x4,      0x000, 0};
+Private map_thing map_lf_s1x4_3         = {{11, 10, 8, 9,                     0, 1, 3, 2},                           MPKIND__OFFS_L_FULL, 2,  s2x8,   s1x4,      0x000, 1};
+Private map_thing map_lf_s2x2_2         = {{9, 11, 6, 8,                      14, 0, 1, 3},                          MPKIND__OFFS_L_FULL, 2,  s4x4,   s2x2,      0x000, 0};
+Private map_thing map_lf_s2x2_3         = {{11, 6, 8, 9,                      0, 1, 3, 14},                          MPKIND__OFFS_L_FULL, 2,  s4x4,   s2x2,      0x005, 0};
 Private map_thing map_lf_s2x4_0         = {{0, 1, 2, 3, 8, 9, 10, 11,                                            0}, MPKIND__OFFS_L_FULL, 1,  s2x8,   s2x4,      0x000, 0};
 Private map_thing map_lf_s2x4_1         = {{13, 15, 2, 4, 5, 7, 10, 12,                                          0}, MPKIND__OFFS_L_FULL, 1,  s4x4,   s2x4,      0x001, 0};
 Private map_thing map_lf_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,                                              2}, MPKIND__OFFS_L_FULL, 1,  s1x8,   s1x8,      0x000, 0};
 
-Private map_thing map_rf_s1x4_2         = {{0, 1, 3, 2,                     11, 10, 8, 9},                           MPKIND__OFFS_R_FULL, 2,  s2x8,   s1x4,      0x000, 0};
-Private map_thing map_rf_s1x4_3         = {{15, 14, 12, 13,                 4, 5, 7, 6},                             MPKIND__OFFS_R_FULL, 2,  s2x8,   s1x4,      0x000, 1};
-Private map_thing map_rf_s2x2_2         = {{12, 13, 15, 10,                 7, 2, 4, 5},                             MPKIND__OFFS_R_FULL, 2,  s4x4,   s2x2,      0x000, 0};
-Private map_thing map_rf_s2x2_3         = {{13, 15, 10, 12,                 2, 4, 5, 7},                             MPKIND__OFFS_R_FULL, 2,  s4x4,   s2x2,      0x005, 0};
+Private map_thing map_rf_s1x4_2         = {{0, 1, 3, 2,                       11, 10, 8, 9},                         MPKIND__OFFS_R_FULL, 2,  s2x8,   s1x4,      0x000, 0};
+Private map_thing map_rf_s1x4_3         = {{15, 14, 12, 13,                   4, 5, 7, 6},                           MPKIND__OFFS_R_FULL, 2,  s2x8,   s1x4,      0x000, 1};
+Private map_thing map_rf_s2x2_2         = {{12, 13, 15, 10,                   7, 2, 4, 5},                           MPKIND__OFFS_R_FULL, 2,  s4x4,   s2x2,      0x000, 0};
+Private map_thing map_rf_s2x2_3         = {{13, 15, 10, 12,                   2, 4, 5, 7},                           MPKIND__OFFS_R_FULL, 2,  s4x4,   s2x2,      0x005, 0};
 Private map_thing map_rf_s2x4_0         = {{4, 5, 6, 7, 12, 13, 14, 15,                                          0}, MPKIND__OFFS_R_FULL, 1,  s2x8,   s2x4,      0x000, 0};
 Private map_thing map_rf_s2x4_1         = {{0, 1, 11, 6, 8, 9, 3, 14,                                            0}, MPKIND__OFFS_R_FULL, 1,  s4x4,   s2x4,      0x001, 0};
 Private map_thing map_rf_s1x8_0         = {{0, 1, 2, 3, 4, 5, 6, 7,                                              2}, MPKIND__OFFS_R_FULL, 1,  s1x8,   s1x8,      0x000, 0};
 
-Private map_thing map_blob_1x4a = {{13, 10, 6, 8,                  15, 17, 3, 5,              18, 20, 1, 22,     0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x000, 1};
-Private map_thing map_blob_1x4b = {{19, 16, 12, 14,                21, 23, 9, 11,             0, 2, 7, 4,        0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x000, 1};
-Private map_thing map_blob_1x4c = {{1, 22, 18, 20,                 3, 5, 15, 17,              6, 8, 13, 10,      0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x015, 0};
-Private map_thing map_blob_1x4d = {{19, 16, 12, 14,                21, 23, 9, 11,             0, 2, 7, 4,        0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x015, 0};
-Private map_thing map_wblob_1x4a        = {{15, 17, 5, 3, 6, 8, 10, 13,     18, 20, 22, 1, 3, 5, 17, 15},            MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x000, 1};
-Private map_thing map_wblob_1x4b        = {{21, 23, 11, 9, 12, 14, 16, 19,  0, 2, 4, 7, 9, 11, 23, 21},              MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x000, 1};
-Private map_thing map_wblob_1x4c        = {{3, 5, 17, 15, 18, 20, 22, 1,    6, 8, 10, 13, 15, 17, 5, 3},             MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x005, 0};
-Private map_thing map_wblob_1x4d        = {{21, 23, 11, 9, 12, 14, 16, 19,  0, 2, 4, 7, 9, 11, 23, 21},              MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x005, 0};
+Private map_thing map_blob_1x4a         = {{13, 10, 6, 8,          15, 17, 3, 5,          18, 20, 1, 22,         0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x000, 1};
+Private map_thing map_blob_1x4b         = {{19, 16, 12, 14,        21, 23, 9, 11,         0, 2, 7, 4,            0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x000, 1};
+Private map_thing map_blob_1x4c         = {{1, 22, 18, 20,         3, 5, 15, 17,          6, 8, 13, 10,          0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x015, 0};
+Private map_thing map_blob_1x4d         = {{19, 16, 12, 14,        21, 23, 9, 11,         0, 2, 7, 4,            0}, MPKIND__NONE,        3,  s_bigblob,   s1x4, 0x015, 0};
+Private map_thing map_wblob_1x4a        = {{15, 17, 5, 3, 6, 8, 10, 13,       18, 20, 22, 1, 3, 5, 17, 15},          MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x000, 1};
+Private map_thing map_wblob_1x4b        = {{21, 23, 11, 9, 12, 14, 16, 19,    0, 2, 4, 7, 9, 11, 23, 21},            MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x000, 1};
+Private map_thing map_wblob_1x4c        = {{3, 5, 17, 15, 18, 20, 22, 1,      6, 8, 10, 13, 15, 17, 5, 3},           MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x005, 0};
+Private map_thing map_wblob_1x4d        = {{21, 23, 11, 9, 12, 14, 16, 19,    0, 2, 4, 7, 9, 11, 23, 21},            MPKIND__NONE,        2,  s_bigblob,   s2x4, 0x005, 0};
 
 
 
@@ -1932,14 +2306,8 @@ Private map_thing map_all_8_2  = {{2, 3, 6, 7,           0, 1, 4, 5},           
 Private map_thing map_all_8_d1 = {{0, 3, 4, 7,           2, 5, 6, 1},                                                MPKIND__ALL_8,       2,  s_thar,      sdmd, 0x004, 0};
 Private map_thing map_all_8_d2 = {{2, 5, 6, 1,           0, 3, 4, 7},                                                MPKIND__ALL_8,       2,  s_thar,      sdmd, 0x001, 0};
 
-
-
 Private map_thing map_all_8_b1 = {{13, 14, 5, 6,         1, 2, 9, 10},                                               MPKIND__ALL_8,       2,  s4x4,       s2x2, 0x004, 0};
 Private map_thing map_all_8_b2 = {{1, 2, 9, 10,          13, 14, 5, 6},                                              MPKIND__ALL_8,       2,  s4x4,       s2x2, 0x001, 0};
-
-
-
-
 
 Private map_thing map_dmd1     = {{0, 2,                 1, 3},                                                      MPKIND__DMD_STUFF,   2,  sdmd,        s1x2, 0x004, 0};
 Private map_thing map_dmd2     = {{1, 3,                 0, 2},                                                      MPKIND__DMD_STUFF,   2,  sdmd,        s1x2, 0x001, 0};
@@ -2037,6 +2405,14 @@ Private map_hunk mm_qtg_2 = {{0, 0},
                                                         {&map_phantom_dmd, 0},
                                                                  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
 
+Private map_hunk mm_spn_2 = {{0, 0},
+                    {0, &map_spin_3x4},
+                             {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+
+Private map_hunk mm_hrg_2 = {{0, 0},
+                    {&map_hrgl_ptp, 0},
+                             {0, 0},  {0, &map_ov_hrg_1},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
+
 Private map_hunk mm_12d_2 = {{0, 0},
                     {&map_bone_12d, &map_bigd_12d},
                              {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0},  {0, 0}};
@@ -2069,7 +2445,8 @@ Private map_hunk mm_1x8_3 = {{0, 0},
 
 Private map_hunk mm_2x4_2 = {{0, 0},
                     {&map_hv_2x4_2, &map_split_f},
-                             {0, 0},  {&map_ov_2x4_0, &map_ov_2x4_1},
+                             {&map_2x4_rmv, &map_2x4_rmvr},
+                                      {&map_ov_2x4_0, &map_ov_2x4_1},
                                                {&map_intlk_phantom_box, &map_intlk_f},
                                                         {&map_phantom_box, &map_full_f},
                                                                  {&map_lh_s2x4_2, &map_lh_s2x4_3},
@@ -2181,11 +2558,12 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s_bone6 */
    {0,         0,         0,         0},          /* s_short6 */
    {0,         &mm_12d_2, 0,         0},          /* s_1x2dmd */
+   {0,         0,         0,         0},          /* s_2x1dmd */
    {0,         &mm_qtg_2, &mm_qtg_3, 0},          /* s_qtag */
    {0,         0,         0,         0},          /* s_bone */
    {0,         0,         0,         0},          /* s_rigger */
-   {0,         0,         0,         0},          /* s_spindle */
-   {0,         0,         0,         0},          /* s_hrglass */
+   {0,         &mm_spn_2, 0,         0},          /* s_spindle */
+   {0,         &mm_hrg_2, 0,         0},          /* s_hrglass */
    {0,         0,         0,         0},          /* s_dhrglass */
    {0,         0,         0,         0},          /* s_hyperglass */
    {0,         0,         0,         0},          /* s_crosswave */
@@ -2222,5 +2600,4 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* sfat2x8 */
    {0,         0,         0,         0},          /* swide4x4 */
    {0,         0,         0,         0},          /* sbigdmd */
-   {0,         0,         0,         0},          /* sminirigger */
    {0,         0,         0,         0}};         /* s_normal_concentric */

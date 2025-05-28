@@ -410,90 +410,90 @@ extern void do_call_in_series(
 
 
 typedef struct gloop {
-    int x;                  /* This person's coordinates, calibrated so that a matrix */
-    int y;                  /*   position cooresponds to an increase by 4. */
-    long_boolean sel;       /* True if this person is selected.  (False if selectors not in use.) */
-    long_boolean done;      /* Used for loop control on each pass */
-    long_boolean realdone;  /* Used for loop control on each pass */
-    int boybit;             /* 1 if boy, 0 if not (might be neither). */
-    int girlbit;            /* 1 if girl, 0 if not (might be neither). */ 
-    int dir;                /* This person's initial facing direction, 0 to 3. */
-    int deltax;             /* How this person will move, relative to his own facing */
-    int deltay;             /*   direction, when call is finally executed. */
-    int deltarot;           /* How this person will turn. */
-    int rollinfo;           /* How this person's roll info will be set. */
-    struct gloop *nextse;   /* Points to next person south (dir even) or east (dir odd.) */
-    struct gloop *nextnw;   /* Points to next person north (dir even) or west (dir odd.) */
-    struct gloop *nextjse;  /* Similar, but makes lateral chains for keeping track of jay walk. */
-    struct gloop *nextjnw;  /* Same. */
-    long_boolean tbstopse;  /* True if nextse/nextnw is zero because the next spot */
-    long_boolean tbstopnw;  /*   is occupied by a T-boned person (as opposed to being empty.) */
-    } matrix_rec;
+   int x;                  /* This person's coordinates, calibrated so that a matrix */
+   int y;                  /*   position cooresponds to an increase by 4. */
+   int nicex;              /* This person's "nice" coordinates, used for calculating jay walk legality. */
+   int nicey;
+   uint32 id1;             /* The actual person, for error printing. */
+   long_boolean sel;       /* True if this person is selected.  (False if selectors not in use.) */
+   long_boolean done;      /* Used for loop control on each pass */
+   long_boolean realdone;  /* Used for loop control on each pass */
+   uint32 jbits;           /* Bit mask for all possible jaywalkees. */
+   int boybit;             /* 1 if boy, 0 if not (might be neither). */
+   int girlbit;            /* 1 if girl, 0 if not (might be neither). */ 
+   int dir;                /* This person's initial facing direction, 0 to 3. */
+   int deltax;             /* How this person will move, relative to his own facing */
+   int deltay;             /*   direction, when call is finally executed. */
+   int nearest;            /* Forward distance to nearest jaywalkee. */
+   int leftidx;            /* X-increment of leftmost valid jaywalkee. */
+   int rightidx;           /* X-increment of rightmost valid jaywalkee. */
+   int deltarot;           /* How this person will turn. */
+   int rollinfo;           /* How this person's roll info will be set. */
+   struct gloop *nextse;   /* Points to next person south (dir even) or east (dir odd.) */
+   struct gloop *nextnw;   /* Points to next person north (dir even) or west (dir odd.) */
+   long_boolean tbstopse;  /* True if nextse/nextnw is zero because the next spot */
+   long_boolean tbstopnw;  /*   is occupied by a T-boned person (as opposed to being empty.) */
+} matrix_rec;
 
 
 
-
-/* This function is internal. */
-
-Private void start_matrix_call(
+Private int start_matrix_call(
    setup *ss,
-   int *nump,
    matrix_rec matrix_info[],
    uint32 flags,
    setup *people)
 {
    int i;
-   coordrec *thingyptr;
+   coordrec *thingyptr, *nicethingyptr;
+   int nump = 0;
 
    clear_people(people);
-   
+
    thingyptr = setup_attrs[ss->kind].setup_coords;
+   nicethingyptr = setup_attrs[ss->kind].nice_setup_coords;
 
-   if (flags & MTX_FIND_JAYWALKERS)
-      thingyptr = setup_attrs[ss->kind].nice_setup_coords;   /* We want really accurate stuff. */
-
-   if (!thingyptr) fail("Can't do this in this setup.");
-   
+   if (!thingyptr || !nicethingyptr) fail("Can't do this in this setup.");
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
-   
-   *nump = 0;
+
    for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1) {
-         if (*nump == 8) fail("?????too many people????");
-         (void) copy_person(people, *nump, ss, i);
-         matrix_info[*nump].x = thingyptr->xca[i];
-         matrix_info[*nump].y = thingyptr->yca[i];
+         if (nump == 8) fail("?????too many people????");
+         (void) copy_person(people, nump, ss, i);
+         matrix_info[nump].x = thingyptr->xca[i];
+         matrix_info[nump].y = thingyptr->yca[i];
+         matrix_info[nump].nicex = nicethingyptr->xca[i];
+         matrix_info[nump].nicey = nicethingyptr->yca[i];
 
-         matrix_info[*nump].done = FALSE;
-         matrix_info[*nump].realdone = FALSE;
+         matrix_info[nump].done = FALSE;
+         matrix_info[nump].realdone = FALSE;
 
          if (flags & MTX_USE_SELECTOR)
-            matrix_info[*nump].sel = selectp(people, *nump);
+            matrix_info[nump].sel = selectp(people, nump);
          else
-            matrix_info[*nump].sel = FALSE;
+            matrix_info[nump].sel = FALSE;
 
-         matrix_info[*nump].dir = people->people[*nump].id1 & 3;
-   
-         matrix_info[*nump].girlbit = (people->people[*nump].id2 & ID2_GIRL) ? 1 : 0;
-         matrix_info[*nump].boybit = (people->people[*nump].id2 & ID2_BOY) ? 1 : 0;
-         matrix_info[*nump].nextse = 0;
-         matrix_info[*nump].nextnw = 0;
-         matrix_info[*nump].nextjse = 0;
-         matrix_info[*nump].nextjnw = 0;
-         matrix_info[*nump].deltax = 0;
-         matrix_info[*nump].deltay = 0;
-         matrix_info[*nump].deltarot = 0;
-         matrix_info[*nump].rollinfo = ROLLBITM;
-         matrix_info[*nump].tbstopse = FALSE;
-         matrix_info[*nump].tbstopnw = FALSE;
+         matrix_info[nump].id1 = people->people[nump].id1;
+         matrix_info[nump].dir = people->people[nump].id1 & 3;
 
-         (*nump)++;
+         matrix_info[nump].jbits = 0;
+         matrix_info[nump].girlbit = (people->people[nump].id2 & ID2_GIRL) ? 1 : 0;
+         matrix_info[nump].boybit = (people->people[nump].id2 & ID2_BOY) ? 1 : 0;
+         matrix_info[nump].nextse = 0;
+         matrix_info[nump].nextnw = 0;
+         matrix_info[nump].deltax = 0;
+         matrix_info[nump].deltay = 0;
+         matrix_info[nump].nearest = 100000;
+         matrix_info[nump].deltarot = 0;
+         matrix_info[nump].rollinfo = ROLLBITM;
+         matrix_info[nump].tbstopse = FALSE;
+         matrix_info[nump].tbstopnw = FALSE;
+         nump++;
       }
    }
+
+   return nump;
 }
 
-
-/* This function is internal. */
 
 Private void finish_matrix_call(
    matrix_rec matrix_info[],
@@ -748,8 +748,6 @@ Private void finish_matrix_call(
 
    fail("Can't handle this result matrix.");
 
-   
-
 doit:
       result->kind = checkptr->result_kind;
       for (i=0; i<nump; i++) {
@@ -780,8 +778,6 @@ doitrot:
 
 
 
-/* This function is internal. */
-
 Private void matrixmove(
    setup *ss,
    callspec_block *callspec,
@@ -801,7 +797,7 @@ Private void matrixmove(
    flags = callspec->stuff.matrix.flags | MTX_USE_SELECTOR;
    alldelta = 0;
 
-   start_matrix_call(ss, &nump, matrix_info, flags, &people);
+   nump = start_matrix_call(ss, matrix_info, flags, &people);
 
    for (i=0; i<nump; i++) {
       matrix_rec *this = &matrix_info[i];
@@ -816,7 +812,7 @@ Private void matrixmove(
          datum = callspec->stuff.matrix.stuff[this->girlbit];
          alldelta |= (  this->deltax = ( ((datum >> 7) & 0x1F) - 16) << 1  );
          alldelta |= (  this->deltay = ( ((datum >> 2) & 0x1F) - 16) << 1  );
-         this->deltarot = datum & 03;
+         this->deltarot = datum & 3;
          this->rollinfo = (datum >> 12) * ROLLBITR;
       }
    }
@@ -828,7 +824,6 @@ Private void matrixmove(
 }
 
 
-/* This function is internal. */
 
 Private void do_pair(
    matrix_rec *ppp,        /* Selected person */
@@ -855,8 +850,7 @@ Private void do_pair(
          fail("Can't determine sex of this person.");
 
       datum = callspec->stuff.matrix.stuff[base+ppp->girlbit];
-      if (datum == 0) fail("Can't do this call.");
-   
+      if (datum == 0) failp(ppp->id1, "can't do this call.");
       ppp->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
       ppp->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
       ppp->deltarot = datum & 3;
@@ -877,8 +871,7 @@ Private void do_pair(
          fail("Can't determine sex of this person.");
 
       datum = callspec->stuff.matrix.stuff[base+qqq->girlbit];
-      if (datum == 0) fail("Can't do this call.");
-
+      if (datum == 0) failp(qqq->id1, "can't do this call.");
       qqq->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
       qqq->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
       qqq->deltarot = datum & 3;
@@ -889,51 +882,6 @@ Private void do_pair(
 }
 
 
-/* Link mj into mi's jaywalk chain. */
-/* We know that mj->nextjse  and mj->nextjnw are both null. */
-Private void lateral_link(int filter, matrix_rec *mj, matrix_rec *mi, int jx)
-{
-   int sx;
-   matrix_rec *ms = mi;
-
-   if (filter) sx = - mi->y;
-   else        sx = mi->x;
-
-   while (jx > sx && ms->nextjse) {
-      ms = mi->nextjse;
-      if (filter) sx = - ms->y;
-      else        sx = ms->x;
-   }
-
-   if (jx > sx) {
-      ms->nextjse = mj;
-      mj->nextjnw = ms;
-   }
-   else {
-      while (jx <= sx && ms->nextjnw) {
-         ms = mi->nextjnw;
-         if (filter) sx = - ms->y;
-         else        sx = ms->x;
-      }
-      if (jx <= sx) {
-         ms->nextjnw = mj;
-         mj->nextjse = ms;
-      }
-      else {
-         ms->nextjse->nextjnw = mj;
-         mj->nextjse = ms->nextjse;
-         ms->nextjse = mj;
-         mj->nextjnw = ms;
-         ms->nextjse = mj;
-         mj->nextjnw = ms;
-      }
-   }
-}
-
-
-
-
-/* This function is internal. */
 
 Private void do_matrix_chains(
    matrix_rec matrix_info[],
@@ -941,7 +889,8 @@ Private void do_matrix_chains(
    callspec_block *callspec,
    int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
 {
-   long_boolean another_round;
+   long_boolean another_round = TRUE;
+   long_boolean picking_end_jaywalkers = FALSE;
    int i, j;
    uint32 flags;
 
@@ -964,7 +913,13 @@ Private void do_matrix_chains(
 
          /* Find out if these people are adjacent in the right way. */
 
-         if (filter) {
+         if (flags & MTX_FIND_JAYWALKERS) {
+            jx = mj->nicex;
+            ix = mi->nicex;
+            jy = mj->nicey;
+            iy = mi->nicey;
+         }
+         else if (filter) {
             jx = - mj->y;
             ix = - mi->y;
             jy = - mj->x;
@@ -977,43 +932,30 @@ Private void do_matrix_chains(
             iy = mi->y;
          }
 
+         delx = ix - jx;
          dely = iy - jy;
-         delx = jx - ix;
 
          dirxor = mi->dir ^ mj->dir;
 
-         /* If this is a "jaywalk" operation, coordinates are only approximate. */
-
          if (flags & MTX_FIND_JAYWALKERS) {
-fail("You can't do this.");
-            /* Independently of anything else, make chains of all people directly
-               lateral to each other. */
+            int jdist = (mi->dir & 1) ? delx : dely;
+            if (!(mi->dir & 2)) jdist = -jdist;
 
-            if (dirxor == 0 && dely == 0) {
-               if ((!mj->nextjse && !mj->nextjnw)) {
-                  /* J is alone, link into I chain. */
-                  lateral_link(filter, mj, mi, jx);
+            /* Jdist is the forward distance to the jaywalkee.  We demand that it be
+               strictly positive, and minimal with respect to all other jaywalkee
+               candidates.  We also consider only jaywalkees that are either facing
+               back toward us or are facing lateral but are in such a position that
+               they can see us. */
+
+            if (jdist > 0 && jdist <= mi->nearest && dirxor != 0) {
+/**** that dirxor test isn't really good enough */
+               if (jdist < mi->nearest) {
+                  /* This jaywalkee is closer than any others that we have seen; drop all others. */
+                  mi->jbits = 0;
+                  mi->nearest = jdist;  /* This is the new nearest distance. */
                }
-               else if ((!mi->nextjse && !mi->nextjnw)) {
-                  /* I is alone, link into J chain. */
-                  lateral_link(filter, mi, mj, ix);
-               }
+               mi->jbits |= (1 << j);
             }
-
-            if (dirxor != 2) continue;
-            if (((dely+2) & ~3) != 4) continue;  /* Demand facing distance approximately 4. */
-            if (mj->dir != filter) continue;
-
-
-
-
-
-   if (interactivity != interactivity_database_init) {
-printf("filter/i/ix/iy/id/j/jx/jy/jd = %3d %3d %3d %3d %3d %3d %3d %3d\n",
-filter, i, mi->x, mi->y, mi->dir, j, mj->x, mj->y, mj->dir);
-   }
-
-
          }
          else {
             if (dely != 4 || delx != 0) continue;
@@ -1040,102 +982,200 @@ filter, i, mi->x, mi->y, mi->dir, j, mj->x, mj->y, mj->dir);
                else
                   break;
             }
+
+            if (mj->nextnw) fail("Internal error: adjacent to too many people.");
+
+            mi->nextse = mj;
+            mj->nextnw = mi;
+            break;
          }
-
-         if (mj->nextnw) fail("Internal error: adjacent to too many people.");
-
-         mi->nextse = mj;
-         mj->nextnw = mi;
-         break;
       }
    }
 
-
-
-
-   if (flags & MTX_FIND_JAYWALKERS) return;
-
-
-
-
-
    /* Pick out pairs of people and move them. */
-
-   another_round = TRUE;
 
    while (another_round) {
       another_round = FALSE;
 
+      if (flags & MTX_FIND_JAYWALKERS) {
+         /* Clear out any bits that aren't bidirectional. */
+   
+         for (i=0; i<nump; i++) {
+            matrix_rec *mi = &matrix_info[i];
+            if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
+   
+            for (j=0; j<nump; j++) {
+               if (      ((1<<j) & mi->jbits) &&
+                        !((1<<i) & matrix_info[j].jbits))
+                  mi->jbits &= ~(1<<j);
+            }
+   
+            /* If selected person has no jaywalkee, it is an error. */
+            if (!mi->jbits) failp(mi->id1, "can't find person to jaywalk with.");
+         }
+      }
+
       for (i=0; i<nump; i++) {
-         if (!matrix_info[i].done) {
+         matrix_rec *mi = &matrix_info[i];
 
-            /* This person might be ready to be paired up with someone. */
+         if (!mi->done) {
+            if (flags & MTX_FIND_JAYWALKERS) {
 
-            if (matrix_info[i].nextse) {
-               if (matrix_info[i].nextnw)
+               if (!picking_end_jaywalkers) {
+                  mi->leftidx = -1;
+                  mi->rightidx = -1;
+               }
+
+               if (mi->jbits) {   /* If no jbits, person wasn't selected. */
+                  for (j=0; j<nump; j++) {
+                     matrix_rec *mj = &matrix_info[j];
+
+                     if (picking_end_jaywalkers) {
+                        /* Look for people who have been identified as extreme jaywalkers with each other. */
+                        if (j == mi->leftidx && i == mj->rightidx) {
+                           mi->jbits = (1<<j);    /* Separate them from the rest. */
+                           mj->jbits = (1<<i);
+                           another_round = TRUE;   /* We will move them on a future iteration. */
+                        }
+                     }
+                     else {
+                        int jdist;
+
+                        /* Fill in jaywalkee indices with record-holding lateral distance. */
+   
+                        if ((1<<j) & mi->jbits) {
+                           jdist = (mi->dir & 1) ? mj->nicey : mj->nicex;
+                           if ((mi->dir+1) & 2) jdist = -jdist;
+      
+                           if (mi->leftidx >= 0) {
+                              int temp = (mi->dir & 1) ? matrix_info[mi->leftidx].nicey : matrix_info[mi->leftidx].nicex;
+                              if ((mi->dir+1) & 2) temp = -temp;
+                              if (jdist < temp) mi->leftidx = j;
+                           }
+                           else
+                              mi->leftidx = j;
+      
+                           if (mi->rightidx >= 0) {
+                              int temp = (mi->dir & 1) ? matrix_info[mi->rightidx].nicey : matrix_info[mi->rightidx].nicex;
+                              if ((mi->dir+1) & 2) temp = -temp;
+                              if (jdist > temp) mi->rightidx = j;
+                           }
+                           else
+                              mi->rightidx = j;
+                        }
+   
+                        /* Look for special case of two people uniquely selecting each other. */
+                        if (      (1<<j) == mi->jbits &&
+                                  (1<<i) == mj->jbits) {
+                           int delx = mj->x - mi->x;
+                           int dely = mj->y - mi->y;
+
+                           uint32 datum = callspec->stuff.matrix.stuff[mi->girlbit];
+                           if (datum == 0) failp(mi->id1, "can't do this call.");
+
+                           another_round = TRUE;
+   
+                           if (mi->dir & 2) delx = -delx;
+                           if ((mi->dir+1) & 2) dely = -dely;
+
+                           mi->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
+                           mi->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
+                           mi->deltarot = datum & 3;
+                           mi->rollinfo = (datum >> 12) * ROLLBITR;
+                           mi->realdone = TRUE;
+
+                           mi->deltarot += (mj->dir - mi->dir + 2);
+                           mi->deltarot &= 3;
+
+                           if (mi->dir & 1) { mi->deltax += dely; mi->deltay = +delx; }
+                           else             { mi->deltax += delx; mi->deltay = +dely; }
+
+                           mi->done = TRUE;
+                        }
+                        /* Take care of anyone who has unambiguous jaywalkee.  Get that
+                           jaywalkee's attention by stripping off all his other bits. */
+                        else if ((1<<j) == mi->jbits) {
+                           mj->jbits = (1<<i);
+                           another_round = TRUE;   /* We will move them on a future iteration. */
+                        }
+                     }
+                  }
+               }
+            }
+            else if (mi->nextse) {
+               /* This person might be ready to be paired up with someone. */
+               if (mi->nextnw)
                   /* This person has neighbors on both sides.  Can't do anything yet. */
                   ;
                else {
                   /* This person has a neighbor on south/east side only. */
 
-                  if (matrix_info[i].tbstopnw) warn(warn__not_tbone_person);
+                  if (mi->tbstopnw) warn(warn__not_tbone_person);
 
-                  if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   ) {
-                     if ((!(flags & MTX_IGNORE_NONSELECTEES)) && matrix_info[i].nextse->sel) {
+                  if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   ) {
+                     if ((!(flags & MTX_IGNORE_NONSELECTEES)) && mi->nextse->sel) {
                         fail("Two adjacent selected people.");
                      }
                      else {
 
                         /* Do this pair.  First, chop the pair off from anyone else. */
 
-                        if (matrix_info[i].nextse->nextse) matrix_info[i].nextse->nextse->nextnw = 0;
-                        matrix_info[i].nextse->nextse = 0;
+                        if (mi->nextse->nextse) mi->nextse->nextse->nextnw = 0;
+                        mi->nextse->nextse = 0;
                         another_round = TRUE;
-                        do_pair(&matrix_info[i], matrix_info[i].nextse, callspec, 0, filter);
+                        do_pair(mi, mi->nextse, callspec, 0, filter);
                      }
+                  }
+               }
+            }
+            else if (mi->nextnw) {
+               /* This person has a neighbor on north/west side only. */
+
+               if (mi->tbstopse) warn(warn__not_tbone_person);
+
+               if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   ) {
+                  if ((!(flags & MTX_IGNORE_NONSELECTEES)) && mi->nextnw->sel) {
+                     fail("Two adjacent selected people.");
+                  }
+                  else {
+                     /* Do this pair.  First, chop the pair off from anyone else. */
+
+                     if (mi->nextnw->nextnw) mi->nextnw->nextnw->nextse = 0;
+                     mi->nextnw->nextnw = 0;
+                     another_round = TRUE;
+                     do_pair(mi, mi->nextnw, callspec, 2, filter);
                   }
                }
             }
             else {
-               if (matrix_info[i].nextnw) {
-                  /* This person has a neighbor on north/west side only. */
+               /* Person is alone.  If this is his lateral axis, mark him done and don't move him. */
 
-                  if (matrix_info[i].tbstopse) warn(warn__not_tbone_person);
-
-                  if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   ) {
-                     if ((!(flags & MTX_IGNORE_NONSELECTEES)) && matrix_info[i].nextnw->sel) {
-                        fail("Two adjacent selected people.");
-                     }
-                     else {
-                        /* Do this pair.  First, chop the pair off from anyone else. */
-
-                        if (matrix_info[i].nextnw->nextnw) matrix_info[i].nextnw->nextnw->nextse = 0;
-                        matrix_info[i].nextnw->nextnw = 0;
-                        another_round = TRUE;
-                        do_pair(&matrix_info[i], matrix_info[i].nextnw, callspec, 2, filter);
-                     }
-                  }
-               }
-               else {
-                  /* Person is alone.  If this is his lateral axis, mark him done and don't move him. */
-
-                  if ((matrix_info[i].dir ^ filter) & 1) {
-                     if (matrix_info[i].tbstopse || matrix_info[i].tbstopnw) warn(warn__not_tbone_person);
-                     if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   )
-                        fail("Person has no one to work with.");
-                     matrix_info[i].done = TRUE;
-                  }
+               if ((mi->dir ^ filter) & 1) {
+                  if (mi->tbstopse || mi->tbstopnw) warn(warn__not_tbone_person);
+                  if (   (!(flags & MTX_USE_SELECTOR))  ||  mi->sel   )
+                     failp(mi->id1, "has no one to work with.");
+                  mi->done = TRUE;
                }
             }
          }
+      }
+
+      /* If anything happened, don't pick jaywalkers next time around. */
+
+      if (another_round) picking_end_jaywalkers = FALSE;
+
+      /* If doing a jaywalk, and nothing was processed, the leftest/rightest stuff
+         is filled in, and we should check same. */
+
+      if ((flags & MTX_FIND_JAYWALKERS) && !another_round && !picking_end_jaywalkers) {
+         picking_end_jaywalkers = TRUE;
+         another_round = TRUE;     /* Do another round this way. */
       }
    }
 }
 
 
 
-
-/* This function is internal. */
 
 Private void partner_matrixmove(
    setup *ss,
@@ -1145,7 +1185,7 @@ Private void partner_matrixmove(
    uint32 flags;
    setup people;
    matrix_rec matrix_info[9];
-   int i, nump;
+   int i, j, nump;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
       fail("Can't split the setup.");
@@ -1155,43 +1195,42 @@ Private void partner_matrixmove(
 
    flags = callspec->stuff.matrix.flags;
 
-   start_matrix_call(ss, &nump, matrix_info, flags, &people);
+   nump = start_matrix_call(ss, matrix_info, flags, &people);
 
    /* Make the lateral chains first. */
 
    do_matrix_chains(matrix_info, nump, callspec, 1);
 
-   /* Now clean off the pointers in preparation for the second pass. */
+   /* If jaywalking, don't do it again. */
 
-   for (i=0; i<nump; i++) {
-      matrix_info[i].done = FALSE;
-      matrix_info[i].nextse = 0;
-      matrix_info[i].nextnw = 0;
-      matrix_info[i].nextjse = 0;
-      matrix_info[i].nextjnw = 0;
-      matrix_info[i].tbstopse = FALSE;
-      matrix_info[i].tbstopnw = FALSE;
+   if (!(flags & MTX_FIND_JAYWALKERS)){
+      /* Now clean off the pointers in preparation for the second pass. */
+
+      for (i=0; i<nump; i++) {
+         matrix_info[i].done = FALSE;
+         matrix_info[i].nextse = 0;
+         matrix_info[i].nextnw = 0;
+         matrix_info[i].tbstopse = FALSE;
+         matrix_info[i].tbstopnw = FALSE;
+      }
+
+      /* Vertical chains next. */
+
+      do_matrix_chains(matrix_info, nump, callspec, 0);
    }
-
-   /* Vertical chains next. */
-
-   do_matrix_chains(matrix_info, nump, callspec, 0);
 
    /* Scan for people who ought to have done something but didn't. */
 
    for (i=0; i<nump; i++) {
       if (!matrix_info[i].realdone) {
-         if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   ) {
-            fail("Person could not identify other person to work with.");
-         }
+         if ((!(flags & MTX_USE_SELECTOR)) || matrix_info[i].sel)
+            failp(matrix_info[i].id1, "could not identify other person to work with.");
       }
    }
 
    finish_matrix_call(matrix_info, nump, &people, result);
 }
 
-
-/* This function is internal. */
 
 Private void rollmove(
    setup *ss,
@@ -1554,6 +1593,7 @@ Private void do_sequential_call(
    int highlimit;
    long_boolean distribute = FALSE;
    int subpart_count = 0;
+   uint32 restrained_fraction = 0;
 
    if (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) distribute = TRUE;
 
@@ -1581,7 +1621,17 @@ Private void do_sequential_call(
    /* If the "cmd_frac_flags" word is nonzero, we are being asked to do something special. */
 
    if (ss->cmd.cmd_frac_flags) {
-      fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callflags1, total);
+      fraction_info zzz;
+
+      /* If we are doing something under a craziness restraint, take out the low 16 bits of the
+         fraction stuff -- they aren't meant for us -- and pass them to the subject call later. */
+
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) {
+         restrained_fraction = ss->cmd.cmd_frac_flags;
+         ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | 0x0111;
+      }
+
+      zzz = get_fraction_info(ss->cmd.cmd_frac_flags, callflags1, total);
       reverse_order = zzz.reverse_order;
       do_half_of_last_part = zzz.do_half_of_last_part;
       highlimit = zzz.highlimit;
@@ -1592,6 +1642,8 @@ Private void do_sequential_call(
       start_point = zzz.subcall_index;
       if (zzz.instant_stop) instant_stop = start_point*subcall_incr+1;
    }
+
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
 
    if (new_final_concepts & FINAL__SPLIT) {
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
@@ -1792,9 +1844,16 @@ do_plain_call:
       result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
 
       if (do_half_of_last_part && *test_index == highlimit)
-         result->cmd.cmd_frac_flags = 0x000112;
+         result->cmd.cmd_frac_flags = 0x000112UL;
       else
          result->cmd.cmd_frac_flags = 0;
+
+      if (restrained_fraction) {
+         if (result->cmd.cmd_frac_flags) fail("Random/piecewise is too complex.");
+         result->cmd.cmd_frac_flags = restrained_fraction & 0xFFFF;
+         if (result->cmd.cmd_frac_flags == 0x000111UL)
+            result->cmd.cmd_frac_flags = 0;
+      }
 
       if (!first_call) {
          result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
@@ -1940,8 +1999,16 @@ that probably need to be put in. */
 
    /* Check for "central" concept and its ilk, and pick up correct definition. */
 
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
+
+      /* If we invert centers and ends parts, we don't raise errors
+         for bad elongation -- we allow horrible "ends trade" on
+         "invert acey deucey", for example. */
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the ends part of
          detour".  But if we say "ends central detour" we mean "ends do the *centers* part of detour". */
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
@@ -1951,11 +2018,24 @@ that probably need to be put in. */
    
       if (HERITABLE_FLAG_MASK & final_concepts & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
 
-      switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
+      switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
          case CMD_MISC2__CENTRAL_PLAIN:
             /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
             if (callspec->schema != schema_sequential) {
                uint32 temp_concepts, forcing_concepts;
+               by_def_item *defptr;
+               uint32 inv_bits = ss->cmd.cmd_misc2_flags & (CMD_MISC2__CTR_END_INV_CONC | CMD_MISC2__CTR_END_INVERT);
+
+               /* Normally, we get the centers' part of the definition.  But if the user said either
+                  "invert central" (the concept that means to get the ends' part) or "central invert"
+                  (the concept that says to get the centers' part of the inverted call) we get the ends'
+                  part.  If BOTH inversion bits are on, the user said "invert central invert", meaning to
+                  get the ends' part of the inverted call, so we just get the centers' part as usual. */
+
+               if (inv_bits == CMD_MISC2__CTR_END_INV_CONC || inv_bits == CMD_MISC2__CTR_END_INVERT)
+                  defptr = &callspec->stuff.conc.outerdef;
+               else
+                  defptr = &callspec->stuff.conc.innerdef;
 
                if (callspec->schema != schema_concentric)
                   fail("Can't do \"central\" with this call.");
@@ -1966,25 +2046,25 @@ that probably need to be put in. */
 
                temp_concepts = final_concepts;
 
-               forcing_concepts = callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh;
+               forcing_concepts = defptr->modifiersh & ~callspec->callflagsh;
 
                if (forcing_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
                   if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                      temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
                }
 
-               temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
+               temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~defptr->modifiersh);
                temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
-               callspec = base_calls[callspec->stuff.conc.innerdef.call_id];
+               callspec = base_calls[defptr->call_id];
                callflags1 = callspec->callflags1;
                final_concepts = temp_concepts;
                ss->cmd.cmd_final_flags = final_concepts;
                ss->cmd.callspec = callspec;
-               ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CENTRAL_MASK;   /* We are done. */
+               ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;   /* We are done. */
             }
 
             break;
-         case CMD_MISC2__CENTRAL_SNAG: case CMD_MISC2__CENTRAL_MYSTIC:
+         case 0: case CMD_MISC2__CENTRAL_SNAG: case CMD_MISC2__CENTRAL_MYSTIC:
             if (final_concepts & ~HERITABLE_FLAG_MASK) fail("This concept not allowed here.");
             break;
       }
@@ -1997,10 +2077,31 @@ that probably need to be put in. */
       If so, be sure the setup is divided into 1x4's or diamonds. */
 
    the_schema = callspec->schema;
-   if (the_schema == schema_maybe_single_concentric)
-      the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
+
+   if (the_schema == schema_maybe_single_concentric) {
+      if (final_concepts & INHERITFLAG_SINGLE)
+         the_schema = schema_single_concentric;
+      else
+         the_schema = schema_concentric;
+   }
+   else if (the_schema == schema_maybe_grand_single_concentric) {
+      if (final_concepts & INHERITFLAG_GRAND) {
+         if (final_concepts & INHERITFLAG_SINGLE)
+            the_schema = schema_grand_single_concentric;
+         else
+            fail("You must not use \"grand\" without \"single\".");
+      }
+      else {
+         if (final_concepts & INHERITFLAG_SINGLE)
+            the_schema = schema_single_concentric;
+         else
+            the_schema = schema_concentric;
+      }
+   }
    else if (the_schema == schema_maybe_single_cross_concentric)
       the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
+   else if (the_schema == schema_maybe_4x2_concentric)
+      the_schema = (setup_attrs[ss->kind].setup_limits == 5) ? schema_concentric_4_2 : schema_concentric;
    else if (the_schema == schema_maybe_matrix_conc_star) {
       if (final_concepts & INHERITFLAG_12_MATRIX)
          the_schema = schema_conc_star12;
@@ -2013,7 +2114,7 @@ that probably need to be put in. */
    /* We of course don't allow "mystic" or "snag" for things that are
       *CROSS* concentrically defined. */
 
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
       switch (the_schema) {
          case schema_sequential:
          case schema_concentric:
@@ -2021,6 +2122,7 @@ that probably need to be put in. */
          case schema_single_concentric_together:
          case schema_cross_concentric:
          case schema_single_cross_concentric:
+         case schema_by_array:
             break;
          default:
             fail("Can't do \"central/snag/mystic\" with this call.");
@@ -2092,7 +2194,10 @@ that probably need to be put in. */
       /* If the call is sequentially or concentrically defined, the top level flag is required
          before the diamond concept can be inherited.  Since that flag is off, it is an error. */
       if (the_schema != schema_by_array)
-         fail("Can't do this call with the 'diamond' concept.");
+         fail("Can't do this call with the \"diamond\" concept.");
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+         fail("Can't do \"invert/central/snag/mystic\" with the \"diamond\" concept.");
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
@@ -2126,10 +2231,11 @@ that probably need to be put in. */
    /* But, alas, if fractionalization is on, we can't do it yet, because we don't
       know whether we are starting at the beginning.  In the case of fractionalization,
       we will do it later.  We also can't do it yet if we are going
-      to split the setup for "central" or "crazy". */
+      to split the setup for "central" or "crazy", or if we are doing the call "mystic". */
 
    if (  !ss->cmd.cmd_frac_flags &&
          (ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__MUST_SPLIT)) == 0 &&
+         ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) != CMD_MISC2__CENTRAL_MYSTIC || the_schema != schema_by_array) &&
          (callflags1 & (CFLAG1_REAR_BACK_FROM_R_WAVE | CFLAG1_REAR_BACK_FROM_QTAG | CFLAG1_STEP_TO_WAVE))) {
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
@@ -2167,6 +2273,9 @@ that probably need to be put in. */
       allows just the ends part to be done.  If the call was "central", this flag will be turned off. */
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS) {
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+         fail("Can't do \"invert/central/snag/mystic\" with a call for the ends only.");
+
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
       if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint) &&
             (DFM1_ENDSCANDO & callspec->stuff.conc.outerdef.modifiers1)) {
@@ -2178,10 +2287,31 @@ that probably need to be put in. */
          callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
          callflags1 = callspec->callflags1;
          the_schema = callspec->schema;
-         if (the_schema == schema_maybe_single_concentric)
-            the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_concentric : schema_concentric;
+
+         if (the_schema == schema_maybe_single_concentric) {
+            if (final_concepts & INHERITFLAG_SINGLE)
+               the_schema = schema_single_concentric;
+            else
+               the_schema = schema_concentric;
+         }
+         else if (the_schema == schema_maybe_grand_single_concentric) {
+            if (final_concepts & INHERITFLAG_GRAND) {
+               if (final_concepts & INHERITFLAG_SINGLE)
+                  the_schema = schema_grand_single_concentric;
+               else
+                  fail("You must not use \"grand\" without \"single\".");
+            }
+            else {
+               if (final_concepts & INHERITFLAG_SINGLE)
+                  the_schema = schema_single_concentric;
+               else
+                  the_schema = schema_concentric;
+            }
+         }
          else if (the_schema == schema_maybe_single_cross_concentric)
             the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
+         else if (the_schema == schema_maybe_4x2_concentric)
+            the_schema = (setup_attrs[ss->kind].setup_limits == 5) ? schema_concentric_4_2 : schema_concentric;
          else if (the_schema == schema_maybe_matrix_conc_star)
             if (final_concepts & INHERITFLAG_12_MATRIX)
                the_schema = schema_conc_star12;
@@ -2242,6 +2372,9 @@ that probably need to be put in. */
 
    if (final_concepts & FINAL__SPLIT) {
       map_thing *split_map;
+
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+         fail("Can't do \"invert/central/snag/mystic\" with the \"split\" concept.");
 
       final_concepts &= ~FINAL__SPLIT;
       ss->cmd.cmd_final_flags = final_concepts;
@@ -2400,9 +2533,8 @@ that probably need to be put in. */
          }
          else {
             setup_command foo1, foo2;
-            uint32 temp_concepts, conc1, conc2;
-            parse_block *cp1, *cp2;
-            callspec_block *call1, *call2;
+            by_def_item *innerdef = &callspec->stuff.conc.innerdef;
+            by_def_item *outerdef = &callspec->stuff.conc.outerdef;
             parse_block *parseptr = ss->cmd.parseptr;
 
             /* Must be some form of concentric. */
@@ -2413,13 +2545,14 @@ that probably need to be put in. */
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;     /* We think this is the right thing to do. */
             saved_warnings = history[history_ptr+1].warnings;
 
-            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.innerdef.modifiersh, callspec->callflagsh);
-            get_real_subcall(parseptr, &callspec->stuff.conc.innerdef, temp_concepts, &cp1, &call1, &conc1);
+            get_real_subcall(
+               parseptr, innerdef,
+               get_mods_for_subcall(new_final_concepts, innerdef->modifiersh, callspec->callflagsh),
+               &foo1.parseptr, &foo1.callspec, &foo1.cmd_final_flags);
 
-            /* Do it again. */
-
-            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.outerdef.modifiersh, callspec->callflagsh);
-            get_real_subcall(parseptr, &callspec->stuff.conc.outerdef, temp_concepts, &cp2, &call2, &conc2);
+            get_real_subcall(parseptr, outerdef,
+               get_mods_for_subcall(new_final_concepts, outerdef->modifiersh, callspec->callflagsh),
+               &foo2.parseptr, &foo2.callspec, &foo2.cmd_final_flags);
 
             /* Fudge a 3x4 into a 1/4-tag if appropriate. */
 
@@ -2458,8 +2591,9 @@ that probably need to be put in. */
                ss->kind = s_qtag;
                ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             }
-            else if (ss->kind == s_qtag && (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
-                  the_schema == schema_conc_triple_lines) {
+            else if (ss->kind == s_qtag &&
+                     (callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+                     (the_schema == schema_in_out_triple || the_schema == schema_in_out_triple_squash)) {
                /* Or change from qtag to 3x4 if schema requires same. */
                (void) copy_person(ss, 11, ss, 7);
                (void) copy_person(ss, 10, ss, 6);
@@ -2477,21 +2611,14 @@ that probably need to be put in. */
                ss->kind = s3x4;
             }
 
-            foo1.parseptr = cp1;
-            foo1.callspec = call1;
-            foo1.cmd_final_flags = conc1;
-            foo2.parseptr = cp2;
-            foo2.callspec = call2;
-            foo2.cmd_final_flags = conc2;
-
             concentric_move(
                ss, &foo1, &foo2,
                the_schema,
-               callspec->stuff.conc.innerdef.modifiers1,
-               callspec->stuff.conc.outerdef.modifiers1,
+               innerdef->modifiers1,
+               outerdef->modifiers1,
                result);
 
-            if (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.outerdef.modifiers1) {
+            if (DFM1_SUPPRESS_ELONGATION_WARNINGS & outerdef->modifiers1) {
                history[history_ptr+1].warnings.bits[0] &= ~conc_elong_warnings.bits[0];
                history[history_ptr+1].warnings.bits[1] &= ~conc_elong_warnings.bits[1];
             }
@@ -2699,8 +2826,8 @@ extern void move(
 
       clear_people(result);
 
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK)
-         fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
+      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+         fail("Can't do \"invert/central/snag/mystic\" followed by another concept or modifier.");
 
       /* Some final concept (e.g. "magic") is present in front of our virtual setup concept.
          We have to dispose of it.  This means that expanding the matrix (e.g. 2x4->2x6)

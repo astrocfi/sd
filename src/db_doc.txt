@@ -355,6 +355,18 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                         |_____|
 
 
+                      _____
+                     |     |
+                     |  2  |
+             _____ __|__ __|__ _____
+            |     |     |     |     |
+2x1dmd      |  0  |  1  |  4  |  3  |
+            |_____|_____|_____|_____|
+                     |     |
+                     |  5  |
+                     |_____|
+
+
                                _____
              _____ _____ _____|     |_____ _____ _____
             |     |     |     |  3  |     |     |     |
@@ -402,17 +414,43 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
 
 
 
-                               _____
-                              |     |
-                              |  3  |
-             _____ _____ _____|     |_____ _____ _____
-            |     |     |      \   /      |     |     |
-wingedstar  |  0  |  1  |  2           6  |  5  |  4  |
-            |_____|_____|_____ /   \ _____|_____|_____|
-                              |     |
-                              |  7  |
-                              |_____|
+                                  _____
+                                 |     |
+                                 |  3  |
+                _____ _____ _____|     |_____ _____ _____
+               |     |     |      \   /      |     |     |
+   wingedstar  |  0  |  1  |  2           6  |  5  |  4  |
+               |_____|_____|_____ /   \ _____|_____|_____|
+                                 |     |
+                                 |  7  |
+                                 |_____|
+   
+   
+   
+                                  _____             _____
+                                 |     |           |     |
+                                 |  3  |           |  5  |
+                _____ _____ _____|     |_____ _____|     |_____ _____ _____
+               |     |     |      \   /      |      \   /      |     |     |
+wingedstar12   |  0  |  1  |  2           4  | 10           8  |  7  |  6  |
+               |_____|_____|_____ /   \ _____|_____ /   \ _____|_____|_____|
+                                 |     |           |     |
+                                 | 11  |           |  9  |
+                                 |_____|           |_____|
+   
 
+   
+                                  _____             _____             _____
+                                 |     |           |     |           |     |
+                                 |  3  |           |  7  |           | 12  |
+                _____ _____ _____|     |_____ _____|     |_____ _____|     |_____ _____ _____
+               |     |     |      \   /      |      \   /      |      \   /      |     |     |
+wingedstar16   |  0  |  1  |  2           5  |  6          14  | 13          10  |  9  |  8  |
+               |_____|_____|_____ /   \ _____|_____ /   \ _____|_____ /   \ _____|_____|_____|
+                                 |     |           |     |           |     |
+                                 |  4  |           | 15  |           | 11  |
+                                 |_____|           |_____|           |_____|
+   
 
 
                          _____
@@ -1588,6 +1626,21 @@ columns_miniwave
       is two-faced, and FALSE if it is one-faced.  It raises an error if there
       are no people on the other side and hence it can't tell.
 
+cycle_and_wheel_1
+cycle_and_wheel_2
+      apply to 1x4 lines only.  These implement the decisions necessary
+      to do a cycle and wheel.  They are only as strict as necessary to resolve
+      ambiguity.  The first predicate returns TRUE for an extreme left end,
+      and FALSE for an extreme right end.  If the subject person is a center, it
+      checks the adjacent end, and returns TRUE if that person is a left end,
+      and FALSE if a right end.  The second predicate does not handle the case
+      of an extreme left end.  Assuming the subject person is a center or a
+      right end, it finds the far end.  It returns TRUE if that ends faces
+      the same way as the subject, and FALSE if the opposite way.  If these
+      predicates can't determine whether this is a "colliding" call, because
+      the necessary other end is absent, they assume that the call does not
+      collide.
+
 vert1
       applies to 2x2 only.  Returns TRUE if this person is a lead beau or
       trailing belle.  Otherwise returns TRUE if this person's lateral partner
@@ -1797,7 +1850,7 @@ dmd_ctrs_rh
 
 dmd_ctrs_lh
       Returns the boolean negation of what dmd_ctrs_rh would return.  It raises
-      an error under the same circulmstances as dmd_ctrs_rh.
+      an error under the same circumstances as dmd_ctrs_rh.
 
 trngl_pt_rh
       Applies to a triangle.  This is strict relative to the point.
@@ -1960,6 +2013,11 @@ q_line_back
                                     are consistently in right-handed miniwaves */
    dmd_ctrs_lh,                  /* dmd, qtag, ptpd, short6, spindle - the centers (2, 4, or 6 of them)
                                     are consistently in left-handed miniwaves */
+   ctr_pts_rh,                   /* qtag, 2x1dmd, hrglass - the "points of the centers" (ends of the center
+                                    line of 4 in qtag or 2x1dmd; points of the center diamond in hrglass)
+                                    are in a right-handed line or diamond, from their own perspective.
+                                    The direction of the center 2 people is immaterial. */
+   ctr_pts_lh,                   /* qtag, 2x1dmd, hrglass - as above, but left-handed. */
    dmd_ctrs_1f,                  /* dmd - the centers (2 of them) are in a couple */
    said_triangle,                /* short6/pshort6 - caller said the word "triangle" */
    didnt_say_triangle            /* short6/pshort6 - caller didn't say the word "triangle" */

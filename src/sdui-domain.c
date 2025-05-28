@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990-1995  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for program version 30.
+    This is for version 31.
 
     The version of this file is as shown immediately below.
     The version for the user interface does not track the version
@@ -26,23 +26,29 @@
 
 /* This defines the following functions:
    uims_process_command_line
+   uims_display_help
    uims_version_string
    uims_preinitialize
-   uims_add_call_to_menu
-   uims_finish_call_menu
+   uims_create_menu
    uims_postinitialize
    uims_do_outfile_popup
+   uims_do_header_popup
    uims_do_comment_popup
    uims_do_getout_popup
    uims_do_abort_popup
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
-   uims_do_quantifier_popup
+   uims_do_circcer_popup
+   uims_do_tagger_popup
+   uims_get_number_fields
    uims_do_modifier_popup
    uims_reduce_line_count
    uims_add_new_line
    uims_get_command
+   uims_get_startup_command
+   uims_get_call_command
+   uims_get_resolve_command
    uims_begin_search
    uims_begin_reconcile_history
    uims_end_reconcile_history
@@ -60,18 +66,16 @@
 
    uims_version_string        Return a static string containing some version info
    uims_preinitialize         First initialization, if any, before call menus are created
-   uims_add_call_to_menu      Add one call to current menu under construction
-   uims_finish_call_menu      Finish construction of a call menu; there may be more
    uims_postinitialize        Final initialization, if any, after call menus are created
    uims_do_outfile_popup      Put up a popup to let user change the output file
+   uims_do_header_popup       Put up a popup to let user change the header comment
    uims_do_comment_popup      Put up a popup to let user type a comment
    uims_do_getout_popup       Put up a popup to let user type a header line on a sequence
    uims_do_abort_popup        Put up a popup to ask whether user really wants to abort
-   uims_get_command           In any mode, query user for action to be taken
    uims_do_neglect_popup      Put up a popup to query for percentage of stale calls to show
    uims_do_selector_popup     Put up a popup to query for a selector (heads/sides..)
    uims_do_direction_popup    Put up a popup to query for a direction (left/right..)
-   uims_do_quantifier_popup   Same, for a number
+   uims_get_number_fields     Same, for numbers
    uims_do_modifier_popup     Same, for permission to change part of a call
    uims_update_resolve_menu   Change the title line on the special menu for resolve mode
    uims_terminate             Prepare to exit the program
@@ -101,6 +105,7 @@
 #include "/usr/apollo/include/error.h"
 #include "/usr/apollo/include/gpr.h"
 #include "/usr/apollo/include/dialog.h"
+#include <stdio.h>
 #include <string.h>
 #include "sd.h"
 #include "sd_dialog.ins.c"
@@ -129,10 +134,9 @@ static line_block *text_head = (line_block *) 0;
 static line_block **text_tail = &text_head;
 static line_block *free_line_blocks = (line_block *) 0;
 static int local_textline_count = 0;
-static long_boolean text_changed;
+static long_boolean text_changed = FALSE;
 
-static dp_$string_desc_t *menu_list;         /* Gets allocated somewhere. */
-
+static dp_$string_desc_t *menu_list = (dp_$string_desc_t *) 0;
 
 /* BEWARE!!  This table is keyed to the enumeration "call_list_kind". */
 
@@ -182,13 +186,13 @@ static int call_list_menu_signal_keys[] = {
 
 static char search_title_text[80];
 static dp_$string_desc_t search_title;
-static int visible_modifications = -1;
+static int last_banner = -1;
 static dp_$string_desc_t main_title;
 static status_$t status;
 static dp_$string_desc_t menu_things[200];
 static call_list_kind current_call_list;
 static mode_kind last_mode;
-static long_boolean dialog_started = 0;
+static long_boolean ui_started = FALSE;
 
 /* ******* INTERNAL FUNCTIONS ******* */
 
@@ -235,7 +239,7 @@ dialog_get_string(int task, char *junk, int *count)
 }
 
 
-void winning_fill_text(dp_$string_desc_t *q, char k[])
+Private void winning_fill_text(dp_$string_desc_t *q, Cstring k)
 {
    char *p;
 
@@ -251,30 +255,40 @@ void dialog_setmsg(int task, dp_$string_desc_t *msg)
 }
 
 
-int phantom_tasks[] = {task$phantom_concept_menu_1, task$phantom_concept_menu_2, task$phantom_concept_menu_3, task$phantom_concept_menu_4, -1};
-int tandem_tasks[] = {task$tandem_concept_menu_1, task$tandem_concept_menu_2, task$tandem_concept_menu_3, task$tandem_concept_menu_4, -1};
-int distort_tasks[] = {task$distort_concept_menu_1, task$distort_concept_menu_2, task$distort_concept_menu_3, task$distort_concept_menu_4, -1};
+int phantoml_tasks[] = {task$phantoml_concept_menu_1, task$phantoml_concept_menu_2, task$phantoml_concept_menu_3, -1};
+int phantomb_tasks[] = {task$phantomb_concept_menu_1, task$phantomb_concept_menu_2, task$phantomb_concept_menu_3, -1};
+int tandem_tasks[] = {task$tandem_concept_menu_1, task$tandem_concept_menu_2, -1};
+int distort_tasks[] = {task$distort_concept_menu_1, task$distort_concept_menu_2, task$distort_concept_menu_3, -1};
 int dist4_tasks[] = {task$dist4_concept_menu_1, task$dist4_concept_menu_2, task$dist4_concept_menu_3, task$dist4_concept_menu_4, -1};
 int misc_tasks[] = {task$misc_concept_menu_1, task$misc_concept_menu_2, task$misc_concept_menu_3, -1};
+
+int tagger_tasks[] =     {task$tagger0_menu, task$tagger1_menu, task$tagger2_menu, task$tagger3_menu};
+int tagger_enablers[] =  {tagger0_enabler,   tagger1_enabler,   tagger2_enabler,   tagger3_enabler};
+int tagger_disablers[] = {tagger0_disabler,  tagger1_disabler,  tagger2_disabler,  tagger3_disabler};
+
+
 
 /* BEWARE!!  These five tables are keyed to the tables "concept_offset_tables" etc. in sd.h . */
 
 int enablers[] = {
-   phantom_concepts_enabler,
+   phantoml_concepts_enabler,
+   phantomb_concepts_enabler,
    tandem_concepts_enabler,
    distort_concepts_enabler,
    dist4_concepts_enabler,
    misc_concepts_enabler};
 
 int disablers[] = {
-   phantom_concepts_disabler,
+   phantoml_concepts_disabler,
+   phantomb_concepts_disabler,
    tandem_concepts_disabler,
    distort_concepts_disabler,
    dist4_concepts_disabler,
    misc_concepts_disabler};
 
 int *tasklists[] = {
-   phantom_tasks,
+   phantoml_tasks,
+   phantomb_tasks,
    tandem_tasks,
    distort_tasks,
    dist4_tasks,
@@ -354,14 +368,42 @@ extern char *uims_version_string(void)
 
 extern void uims_process_command_line(int *argcp, char ***argvp)
 {
-   /* We do nothing with the command line arguments. */
+   int i;
+   int argno = 1;
+   char **argv = *argvp;
+
+   /* Ignore any switches that could be relevant to sdtty
+      but meaningless to us.  Other than that, we do nothing. */
+
+   while (argno < (*argcp)) {
+      if (strcmp(argv[argno], "-no_line_delete") == 0) ;
+      else if (strcmp(argv[argno], "-no_cursor") == 0) ;
+      else if (strcmp(argv[argno], "-no_graphics") == 0) ;
+      else if (strcmp(argv[argno], "-lines") == 0 && argno+1 < (*argcp)) {
+         (*argcp) -= 2;      /* Remove two arguments from the list. */
+         for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i+1];
+         continue;
+      }
+      else {
+         argno++;
+         continue;
+      }
+
+      (*argcp)--;      /* Remove this argument from the list. */
+      for (i=argno+1; i<=(*argcp); i++) argv[i-1] = argv[i];
+   }
 }
 
 
+extern void uims_display_help(void)
+{
+   /* Hence, we have nothing to say. */
+}
+
 /*
 The main program calls this before any of the call menus are
-created, that is, before any calls to "uims_add_call_to_menu"
-and "uims_finish_call_menu".  This performs any first
+created, that is, before any calls to "uims_create_menu".
+This performs any first
 initialization required by the window management package.
 
 One thing we might want to do here (or do it later, in
@@ -385,8 +427,7 @@ more complicated, because there are many menus (one per nonzero
 item in the enumeration "call_list_kind"), and the calls in
 those menus are presented to us by procedure calls during
 initialization, rather than being found in a compile-time
-table.  That's what "uims_add_call_to_menu" and
-"uims_finish_call_menu" are for.
+table.
 */
 
 extern void uims_preinitialize(void)
@@ -394,20 +435,21 @@ extern void uims_preinitialize(void)
    char *dialog_heap_addr;
    dp_$dpd_id dpd_id;
 
-
-
-   menu_list = (dp_$string_desc_t *) get_mem(abs_max_calls * sizeof(dp_$string_desc_t));
-
-   dialog_heap_addr = (char *) &dp_$sd_dialog_heap;
-   dp_$init_dpd_from_memory(stream_$stdout, &dialog_heap_addr, dp_$sd_dialog_key, &dpd_id, &status);
-   status_error_check("lossage - dp_$init_dpd_from_memory: ");
-
-   dialog_started = 1;
-
    last_mode = mode_resolve;          /* This makes it force menu selection the first time. */
    search_title.chars_p = search_title_text;
    search_title.max_len = 80;
    search_title.cur_len = 0;         /* Clear the initial title. */
+
+   dialog_heap_addr = (char *) &dp_$sd_dialog_heap;
+
+   dp_$init_dpd_from_memory(stream_$stdout, &dialog_heap_addr, dp_$sd_dialog_key, &dpd_id, &status);
+   status_error_check("lossage - dp_$init_dpd_from_memory: ");
+   dp_$task_activate(dp_$all_task_group, &status);
+   status_error_check("lossage - dp_$task_activate: ");
+   gpr_$acquire_display(&status);
+   status_error_check("lossage - gpr_$acquire_display: ");
+
+   ui_started = TRUE;
 }
 
 
@@ -419,8 +461,8 @@ extern void uims_preinitialize(void)
 extern void uims_postinitialize(void)
 {
    short junk16;
-   int j, k, column, popup;
-   char *p;
+   int i, j, k, column, popup;
+   Const char *p;
    dp_$string_desc_t my_text;
    char my_text_text[200];
 
@@ -440,7 +482,7 @@ extern void uims_postinitialize(void)
       while (p[j]) j++;
       menu_things[k].max_len = j;
       menu_things[k].cur_len = j;
-      menu_things[k].chars_p = p;
+      menu_things[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
    }
 
    dp_$enum_set_choices(task$special_concept_menu, 1, (short) k, menu_things, dp_$true, &status);
@@ -449,12 +491,12 @@ extern void uims_postinitialize(void)
    /* Create the "general" concept menu. */
    
    for (k=0; k<general_concept_size; k++) {
-      p = concept_descriptor_table[k+general_concept_offset].name;
+      p = concept_descriptor_table[k+general_concept_offset].menu_name;
       j = 0;
       while (p[j]) j++;
       menu_things[k].max_len = j;
       menu_things[k].cur_len = j;
-      menu_things[k].chars_p = p;
+      menu_things[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
    }
 
    dp_$enum_set_choices(task$general_concept_menu, 1, (short) k, menu_things, dp_$true, &status);
@@ -465,12 +507,12 @@ extern void uims_postinitialize(void)
    for (popup=0; concept_size_tables[popup]; popup++) {
       for (column=0; concept_size_tables[popup][column]>=0; column++) {
          for (k=0; k<concept_size_tables[popup][column]; k++) {
-            p = concept_descriptor_table[k+concept_offset_tables[popup][column]].name;
+            p = concept_descriptor_table[k+concept_offset_tables[popup][column]].menu_name;
             j = 0;
             while (p[j]) j++;
             menu_things[k].max_len = j;
             menu_things[k].cur_len = j;
-            menu_things[k].chars_p = p;
+            menu_things[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
          }
       
          dp_$enum_set_choices(tasklists[popup][column], 1, (short) k, menu_things, dp_$true, &status);
@@ -480,12 +522,87 @@ extern void uims_postinitialize(void)
 
    set_concept_activation();
 
-   /* Now activate the windows. */
+   /* Set up the selector popup. */
 
-   dp_$task_activate(dp_$all_task_group, &status);
-   status_error_check("lossage13: ");
-   gpr_$acquire_display(&status);
-   status_error_check("lossage14: ");
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(last_selector_kind * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<last_selector_kind; k++) {
+         p = selector_list[k+1].name;
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$selector_menu, 1, (short) last_selector_kind, popup_list, true, &status);
+      status_error_check("selector popup - 1: ");
+   }
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(last_direction_kind * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<last_direction_kind; k++) {
+         p = direction_names[k+1];
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$direction_menu, 1, (short) last_direction_kind, popup_list, true, &status);
+      status_error_check("direction popup - 1: ");
+   }
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(8 * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<8; k++) {
+         p = cardinals[k];
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$quantifier_menu, 1, (short) 8, popup_list, true, &status);
+      status_error_check("quantifier popup - 1: ");
+   }
+
+   {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(number_of_circcers * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<number_of_circcers; k++) {
+         p = circcer_calls[k]->menu_name;
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(task$circcer_menu, 1, (short) number_of_circcers, popup_list, true, &status);
+      status_error_check("circcer popup - 1: ");
+   }
+
+   for (i=0 ; i<4 ; i++) {
+      dp_$string_desc_t *popup_list = (dp_$string_desc_t *) get_mem(number_of_taggers[i] * sizeof(dp_$string_desc_t));
+
+      for (k=0; k<number_of_taggers[i]; k++) {
+         p = tagger_calls[i][k]->menu_name;
+         j = 0;
+         while (p[j]) j++;
+         popup_list[k].max_len = j;
+         popup_list[k].cur_len = j;
+         popup_list[k].chars_p = (char *) p;   /* Sorry, we have to cast to non-constant chars. */
+      }
+
+      dp_$enum_set_choices(tagger_tasks[i], 1, (short) number_of_taggers[i], popup_list, true, &status);
+      status_error_check("tagger popup - 1: ");
+   }
 }
 
 
@@ -503,10 +620,28 @@ extern int uims_do_outfile_popup(char dest[])
 
       if (count) {
          dest[count] = '\0';
-         return(POPUP_ACCEPT_WITH_STRING);
+         return POPUP_ACCEPT_WITH_STRING;
       }
    }
-   return(POPUP_DECLINE);
+   return POPUP_DECLINE;
+}
+
+
+
+extern int uims_do_header_popup(char dest[])
+{
+   int count;
+   int my_task;
+
+   dialog_signal(header_enabler);
+   dialog_read(&my_task);        /* It sometimes pops itself down. */
+   if (my_task == header_task) {
+      dialog_signal(header_disabler);       /* But not in this case. */
+      dialog_get_string(header_task, dest, &count);
+      dest[count] = '\0';
+      return POPUP_ACCEPT_WITH_STRING;    /* Could be the null string. */
+   }
+   return POPUP_DECLINE;
 }
 
 
@@ -524,10 +659,10 @@ extern int uims_do_comment_popup(char dest[])
 
       if (count) {
          dest[count] = '\0';
-         return(POPUP_ACCEPT_WITH_STRING);
+         return POPUP_ACCEPT_WITH_STRING;
       }
    }
-   return(POPUP_DECLINE);
+   return POPUP_DECLINE;
 }
 
 
@@ -541,17 +676,17 @@ extern int uims_do_getout_popup(char dest[])
    dialog_read(&my_task);
    dialog_signal(getout_disabler);  /* pop it down */
 
-   if (my_task == getout_abort_task) return(POPUP_DECLINE);
+   if (my_task == getout_abort_task) return POPUP_DECLINE;
 
-   if (my_task == getout_header_task) {
+   if (my_task == getout_header_task || my_task == same_getout_header_task) {
       dialog_get_string(getout_header_task, dest, &count);
       if (count) {
          dest[count] = '\0';
-         return(POPUP_ACCEPT_WITH_STRING);
+         return POPUP_ACCEPT_WITH_STRING;
       }
    }
 
-   return(POPUP_ACCEPT);
+   return POPUP_ACCEPT;
 }
 
 
@@ -562,8 +697,8 @@ extern int uims_do_abort_popup(void)
 
    dialog_signal(abort_confirm_enabler);    /* It pops itself down. */
    dialog_read(&my_task);
-   if (my_task == abort_confirm_select_task) return(POPUP_ACCEPT);
-   else return(POPUP_DECLINE);
+   if (my_task == abort_confirm_select_task) return POPUP_ACCEPT;
+   else return POPUP_DECLINE;
 }
 
 
@@ -594,83 +729,54 @@ is on, we must copy the string into some freshly allocated
 memory.
 */
 
-extern void uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
-{
-   int j;
-
-   menu_list[call_menu_index].chars_p = name;
-   menu_list[call_menu_index].cur_len = strlen(name);
-   if (menu_width < menu_list[call_menu_index].cur_len) menu_list[call_menu_index].cur_len = menu_width;
-   menu_list[call_menu_index].max_len = menu_list[call_menu_index].cur_len;
-}
-
-
 /*
 Communicate with the window system, creating a menu
-containing "number_of_calls[cl]" items, which are the items whose
-text strings were previously transmitted by the calls to
-"uims_add_call_to_menu".
+containing "number_of_calls[cl]" items.
 
 This will be called once for each value in the enumeration
 "call_list_kind".
-You may want to use a static variable to communicate the text
-information from "uims_add_call_to_menu" to here.
 */
 
-
-extern void uims_finish_call_menu(call_list_kind cl, char menu_name[])
+extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
    short ncjunk = number_of_calls[cl];
+   int i;
 
+   if (!menu_list)
+      menu_list = (dp_$string_desc_t *) get_mem(abs_max_calls * sizeof(dp_$string_desc_t));
+
+   for (i=0; i<number_of_calls[cl]; i++) {
+      menu_list[i].chars_p = (char *) call_name_list[i]->menu_name;
+      menu_list[i].cur_len = strlen(menu_list[i].chars_p);
+      if (menu_width < menu_list[i].cur_len) menu_list[i].cur_len = menu_width;
+      menu_list[i].max_len = menu_list[i].cur_len;
+   }
    dp_$enum_set_choices(call_list_menu_tasks[cl], 1, ncjunk, menu_list, true, &status);
    status_error_check("create_menu - 1: ");
 }
 
 
+static char *banner_prompts[] = {
+    (char *) 0,
+    "[AP] ",
+    "[all concepts] ",
+    "[all concepts,AP] ",
+    "[simple modifications] ",
+    "[AP,simple modifications] ",
+    "[all concepts,simple modifications] ",
+    "[all concepts,AP,simple modifications] ",
+    "[all modifications] ",
+    "[AP,all modifications] ",
+    "[all concepts,all modifications] ",
+    "[all concepts,AP,all modifications] "};
 
-/* BEWARE!!  The numbers deposited into "uims_menu_index" when this is invoked in
-   startup mode must correspond to the data in the array "startinfolist"
-   in sdtables.c . */
 
-extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
+
+Private long_boolean get_mouse_action(uims_reply *reply_p)
 {
    int my_task, index;
-
-   /* Check for mode changes. */
-
-   check_menu:
-
-   switch (mode) {
-      case mode_normal:
-         if (last_mode == mode_startup)
-            dialog_signal(startup_disabler);         /* Coming out of startup mode. */
-   
-         if (allowing_modifications)
-            *call_menu = call_list_any;
-
-         if (last_mode != mode_normal || current_call_list != *call_menu) {
-            /* Entering normal from startup/resolve, or call menu has changed -- must put up correct menu. */
-            dialog_signal(call_list_menu_signal_keys[*call_menu]);
-            current_call_list = *call_menu;
-         }
-
-         break;
-      case mode_resolve:
-         if (last_mode != mode_resolve)
-            /* Entering resolve mode.  Place the search submenu over the call menus. */
-            dialog_signal(search_enabler);
-
-         current_call_list = call_list_any;   /* Make it harmless. */
-         break;
-      case mode_startup:
-         if (last_mode != mode_startup)
-            dialog_signal(startup_enabler);          /* Entering startup mode. */
-
-         current_call_list = call_list_any;   /* Make it harmless. */
-         break;
-   }
-
-   last_mode = mode;
+   int banner_mode;
+   char prompt_buffer[200];
 
    /* See if the text area needs to be updated. */
 
@@ -704,25 +810,24 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
       text_changed = FALSE;
    }
 
-   /* See if the modifications banner needs to be updated. */
+   /* See if the banner needs to be updated. */
 
-   if (visible_modifications != allowing_modifications) {
-      if (allowing_modifications == 2) {
-         main_title.chars_p = "[all modifications enabled]   M1 -> select ; M3 -> undo";
-         main_title.cur_len = sizeof("[all modifications enabled]   M1 -> select ; M3 -> undo")-1;
+   banner_mode = (allowing_modifications << 2) |
+                 (allowing_all_concepts ? 2 : 0) |
+                 (using_active_phantoms ? 1 : 0);
+
+   if (last_banner != banner_mode) {
+      if (banner_mode != 0) {
+         (void) sprintf(prompt_buffer, "%s  %s", banner_prompts[banner_mode], "M1 -> select ; M3 -> undo");
+         main_title.chars_p = prompt_buffer;
       }
-      else if (allowing_modifications) {
-         main_title.chars_p = "[simple modifications enabled]   M1 -> select ; M3 -> undo";
-         main_title.cur_len = sizeof("[simple modifications enabled]   M1 -> select ; M3 -> undo")-1;
-      }
-      else {
+      else
          main_title.chars_p = "M1 -> select ; M3 -> undo";
-         main_title.cur_len = sizeof("M1 -> select ; M3 -> undo")-1;
-      }
-   
+
+      main_title.cur_len = strlen(main_title.chars_p);
       main_title.max_len = 80;
       dialog_setmsg(main_title_task, &main_title);
-      visible_modifications = allowing_modifications;
+      last_banner = banner_mode;
    }
 
    getcmd:
@@ -731,44 +836,67 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
    switch (my_task) {
       case task$undo:
          uims_menu_index = command_undo;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$abort:
          uims_menu_index = command_abort;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$quit:
          uims_menu_index = command_quit;
-         return(ui_command_select);
-      case allow_modification_task:
+         *reply_p = ui_command_select;
+         return FALSE;
+      case simple_modifications_task:
          /* Increment "allowing_modifications" up to a maximum of 2. */
          if (allowing_modifications != 2) allowing_modifications++;
-         goto check_menu;
+         return TRUE;
+      case all_modifications_task:
+         allowing_modifications = 2;
+         return TRUE;
       case allow_all_concept_task:
          allowing_all_concepts = !allowing_all_concepts;
          set_concept_activation();
-         goto check_menu;
+         return TRUE;
+      case active_phantoms_task:
+         using_active_phantoms = !using_active_phantoms;
+         set_concept_activation();
+         return TRUE;
+#ifdef NEGLECT
       case neglect_task:
          uims_menu_index = command_neglect;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
+#endif
       case save_pic_task:
          uims_menu_index = command_save_pic;
-         return(ui_command_select);
-      case task$create_outfile:
+         *reply_p = ui_command_select;
+         return FALSE;
+      case task$change_outfile:
          uims_menu_index = command_change_outfile;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
+      case task$change_header:
+         uims_menu_index = command_change_header;
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$create_comment:
          uims_menu_index = command_create_comment;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case getout_task:
          uims_menu_index = command_getout;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case start_choices:
          dialog_get_menu_item(start_choices, &index);
          uims_menu_index = index;
-         return(ui_start_select);
+         *reply_p = ui_start_select;
+         return FALSE;
       case task$general_concept_menu:
          dialog_get_menu_item(task$general_concept_menu, &index);
          uims_menu_index = index+general_concept_offset-1;
-         return(ui_concept_select);
+         *reply_p = ui_concept_select;
+         return FALSE;
       case task$special_concept_menu:
          dialog_get_menu_item(task$special_concept_menu, &index);
 
@@ -798,40 +926,52 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
             if (concept_descriptor_table[uims_menu_index].kind == concept_comment) goto getcmd;
          }
 
-         return(ui_concept_select);
+         *reply_p = ui_concept_select;
+         return FALSE;
       case task$search_resolve:
          uims_menu_index = command_resolve;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search_reconcile:
          uims_menu_index = command_reconcile;
-         return(ui_command_select);
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search_anything:
-         uims_menu_index = command_anything;
-         return(ui_command_select);
+         uims_menu_index = command_random_call;
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search_nice_setup:
-         uims_menu_index = command_nice_setup;
-         return(ui_command_select);
+         uims_menu_index = command_normalize;
+         *reply_p = ui_command_select;
+         return FALSE;
       case task$search$abort:
          uims_menu_index = (int) resolve_command_abort;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$another:
          uims_menu_index = (int) resolve_command_find_another;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$next:
          uims_menu_index = (int) resolve_command_goto_next;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$previous:
          uims_menu_index = (int) resolve_command_goto_previous;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$accept:
          uims_menu_index = (int) resolve_command_accept;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$incdepth:
          uims_menu_index = (int) resolve_command_raise_rec_point;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       case task$search$decdepth:
          uims_menu_index = (int) resolve_command_lower_rec_point;
-         return(ui_resolve_select);
+         *reply_p = ui_resolve_select;
+         return FALSE;
       /* These 3 should never happen, but dialog has been observed to return them if a modification popup
          was abandoned because the debugger confused the program.  Apparently, if the window is obscured,
          the debugger can walk right through the call to uims_do_modifier_popup without getting input
@@ -849,14 +989,115 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
       /* User clicked on a call. */
       dialog_get_menu_item(my_task, &index);
       uims_menu_index = index-1;
-      return(ui_call_select);
+      *reply_p = ui_call_select;
+      return FALSE;
    }
 
    uims_menu_index = command_abort;
-   return(ui_command_select);
+   *reply_p = ui_command_select;
+   return FALSE;
 }
 
 
+/* BEWARE!!  The numbers deposited into "uims_menu_index" must correspond
+   to the data in the array "startinfolist" in sdtables.c . */
+
+extern uims_reply uims_get_startup_command(void)
+{
+   uims_reply reply;
+
+   /* Check for mode changes. */
+
+   if (last_mode != mode_startup)
+      dialog_signal(startup_enabler);          /* Entering startup mode. */
+
+   current_call_list = call_list_any;   /* Make it harmless. */
+
+   last_mode = mode_startup;
+
+   check_menu:
+
+   if (get_mouse_action(&reply)) goto check_menu;
+   return reply;
+}
+
+
+extern long_boolean uims_get_call_command(call_list_kind *call_menu, uims_reply *reply_p)
+{
+   /* Check for mode changes. */
+
+   if (last_mode == mode_startup)
+      dialog_signal(startup_disabler);         /* Coming out of startup mode. */
+
+   check_menu:
+
+   if (allowing_modifications)
+      *call_menu = call_list_any;
+
+   if (last_mode != mode_normal || current_call_list != *call_menu) {
+      /* Entering normal from startup/resolve, or call menu has changed -- must put up correct menu. */
+      dialog_signal(call_list_menu_signal_keys[*call_menu]);
+      current_call_list = *call_menu;
+   }
+
+   last_mode = mode_normal;
+
+   if (get_mouse_action(reply_p)) goto check_menu;
+
+   if (*reply_p == ui_call_select) {
+      /* If user gave a call, deposit same. */
+
+      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
+
+      if (deposit_call(save_call)) return TRUE;
+   }
+   else if (*reply_p == ui_concept_select) {
+      /* If user gave a concept, pick up any needed numeric modifiers. */
+
+      uint32 concept_number_fields = 0;
+      int howmanynumbers = 0;
+      uint32 props = concept_table[concept_descriptor_table[uims_menu_index].kind].concept_prop;
+
+      if (props & CONCPROP__USE_NUMBER)
+         howmanynumbers = 1;
+      if (props & CONCPROP__USE_TWO_NUMBERS)
+         howmanynumbers = 2;
+
+      if (howmanynumbers != 0) {
+         if ((concept_number_fields = uims_get_number_fields(howmanynumbers)) == 0)
+            return TRUE;           /* User waved the mouse away. */
+      }
+
+      /* A concept is required.  Its index has been stored in uims_menu_index,
+         and the "concept_number_fields" is ready. */
+
+      if (deposit_concept(&concept_descriptor_table[uims_menu_index], concept_number_fields))
+         return TRUE;
+   }
+
+   return FALSE;
+}
+
+
+extern uims_reply uims_get_resolve_command(void)
+{
+   uims_reply reply;
+
+   /* Check for mode changes. */
+
+   if (last_mode != mode_resolve)
+      /* Entering resolve mode.  Place the search submenu over the call menus. */
+      dialog_signal(search_enabler);
+
+   check_menu:
+
+   current_call_list = call_list_any;   /* Make it harmless. */
+
+   last_mode = mode_resolve;
+
+   if (get_mouse_action(&reply)) goto check_menu;
+   return reply;
+}
 
 
 extern void uims_reduce_line_count(int n)
@@ -912,14 +1153,14 @@ extern void uims_add_new_line(char the_line[])
 }
 
 static int first_reconcile_history;
-static search_kind reconcile_goal;
+static command_kind reconcile_goal;
 
 /*
  * UIMS_BEGIN_SEARCH is called at the beginning of each search mode
  * command (resolve, reconcile, nice setup, do anything).
  */
 
-extern void uims_begin_search(search_kind goal)
+extern void uims_begin_search(command_kind goal)
 {
     reconcile_goal = goal;
     first_reconcile_history = TRUE;
@@ -957,7 +1198,7 @@ uims_end_reconcile_history(void)
     return FALSE;
 }
 
-extern void uims_update_resolve_menu(search_kind goal, int cur, int max, resolver_display_state state)
+extern void uims_update_resolve_menu(command_kind goal, int cur, int max, resolver_display_state state)
 {
    char title[MAX_TEXT_LINE_LENGTH];
 
@@ -975,6 +1216,7 @@ extern void uims_update_resolve_menu(search_kind goal, int cur, int max, resolve
 }
 
 
+#ifdef NEGLECT
 extern int uims_do_neglect_popup(char dest[])
 {
    char my_text_text[1];
@@ -997,23 +1239,29 @@ extern int uims_do_neglect_popup(char dest[])
    }
    return(POPUP_DECLINE);
 }
+#endif
 
 
 extern int uims_do_selector_popup(void)
 {
-   int task;
-   int num;
-
-   dialog_signal(selector_enabler);
-   dialog_read(&task);
-   dialog_signal(selector_disabler);
-
-   if (task == task$selector_menu) {
-      dialog_get_menu_item(task$selector_menu, &num);
-      return(num);
+   if (interactivity == interactivity_verify) {
+      return (int) selector_for_initialize;
    }
-   else
-      return(0);
+   else {
+      int task;
+      int num;
+
+      dialog_signal(selector_enabler);
+      dialog_read(&task);
+      dialog_signal(selector_disabler);
+
+      if (task == task$selector_menu) {
+         dialog_get_menu_item(task$selector_menu, &num);
+         return num;
+      }
+      else
+         return 0;
+   }
 }
 
 
@@ -1035,28 +1283,81 @@ extern int uims_do_direction_popup(void)
 }
 
 
-
-
-extern int uims_do_quantifier_popup(void)
+extern int uims_do_circcer_popup(void)
 {
    int task;
    int num;
 
-   dialog_signal(quantifier_enabler);
+   dialog_signal(circcer_enabler);
    dialog_read(&task);
-   dialog_signal(quantifier_disabler);
+   dialog_signal(circcer_disabler);
 
-   if (task == task$quantifier_menu) {
-      dialog_get_menu_item(task$quantifier_menu, &num);
-      return(num);
+   if (task == task$circcer_menu) {
+      dialog_get_menu_item(task, &num);
+      return num;
    }
    else
-      return(0);
+      return 0;
 }
 
 
 
-extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind)
+extern int uims_do_tagger_popup(int tagger_class)
+{
+   int task;
+   int num;
+
+   dialog_signal(tagger_enablers[tagger_class]);
+   dialog_read(&task);
+   dialog_signal(tagger_disablers[tagger_class]);
+
+   if (task == tagger_tasks[tagger_class]) {
+      dialog_get_menu_item(task, &num);
+      return (tagger_class << 5) | num;
+   }
+   else
+      return 0;
+}
+
+
+
+extern uint32 uims_get_number_fields(int nnumbers)
+{
+   int i;
+   unsigned int number_list = 0;
+
+
+   if (interactivity == interactivity_verify) {
+      for (i=0 ; i<nnumbers ; i++)
+         number_list |= (number_for_initialize << (i*4));
+   }
+   else {
+      dialog_signal(quantifier_enabler);
+   
+      for (i=0 ; i<nnumbers ; i++) {
+         int task;
+      
+         dialog_read(&task);
+      
+         if (task == task$quantifier_menu) {
+            unsigned int num;
+            dialog_get_menu_item(task$quantifier_menu, (int *) &num);
+            number_list |= (num << (i*4));
+         }
+         else {
+            dialog_signal(quantifier_disabler);
+            return 0;    /* User waved the mouse away. */
+         }
+      }
+   
+      dialog_signal(quantifier_disabler);
+   }
+
+   return number_list;
+}
+
+
+extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)
 {
    int task;
    char tempstring_text[80];
@@ -1080,11 +1381,11 @@ extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind)
          tempstring[1].cur_len = 20;
          dp_$msg_set_value(modifier_title_task, tempstring, 2, &status);
          break;
-      case modify_popup_only_scoot:
+      case modify_popup_only_circ:
          winning_fill_text(&tempstring[0], "\" can be replaced");
-         tempstring[1].chars_p = "with scoot/tag (chain thru) (and scatter).";
-         tempstring[1].max_len = 42;
-         tempstring[1].cur_len = 42;
+         tempstring[1].chars_p = "with a modified circulate-like call.";
+         tempstring[1].max_len = 36;
+         tempstring[1].cur_len = 36;
          dp_$msg_set_value(modifier_title_task, tempstring, 2, &status);
          break;
    }
@@ -1100,7 +1401,7 @@ extern int uims_do_modifier_popup(char callname[], modify_popup_kind kind)
 
 extern void uims_terminate(void)
 {
-   if (dialog_started) {
+   if (ui_started) {
       status_$t st;
 
       gpr_$release_display(&st);
@@ -1136,8 +1437,7 @@ uims_database_tick_end(void)
     /* not implemented yet */
 }
 
-extern void
-uims_database_error(char *message, char *call_name)
+extern void uims_database_error(Cstring message, Cstring call_name)
 {
    print_line(message);
    if (call_name) {
@@ -1146,8 +1446,7 @@ uims_database_error(char *message, char *call_name)
    }
 }
 
-extern void
-uims_bad_argument(char *s1, char *s2, char *s3)
+extern void uims_bad_argument(Cstring s1, Cstring s2, Cstring s3)
 {
    if (s1) print_line(s1);
    if (s2) print_line(s2);

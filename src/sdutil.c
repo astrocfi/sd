@@ -28,6 +28,7 @@
    exit_program
    fail
    fail2
+   failp
    specialfail
    get_escape_string
    string_copy
@@ -69,10 +70,6 @@ and the following external variables:
    cardinals
    ordinals
    selector_list
-   selector_names
-   selector_singular
-   selector_names_uc
-   selector_singular_uc
    direction_names
    last_direction_kind
    warning_strings
@@ -84,7 +81,6 @@ and the following external variable that is declared only in sdui-ttu.h:
 #include <stdio.h>
 #include <string.h>
 #include "sd.h"
-extern void initialize_restr_tables(void);
 
 
 
@@ -128,14 +124,6 @@ long_boolean singlespace_mode;
 Cstring cardinals[] = {"1", "2", "3", "4", "5", "6", "7", "8", (Cstring) 0};
 Cstring ordinals[] = {"1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", (Cstring) 0};
 
-typedef struct {
-   Cstring name;
-   Cstring sing_name;
-   Cstring name_uc;
-   Cstring sing_name_uc;
-   selector_kind opposite;
-} selector_item;
-
 /* BEWARE!!  This list is keyed to the definition of "selector_kind" in sd.h,
    and to the necessary stuff in SDUI. */
 selector_item selector_list[] = {
@@ -174,151 +162,6 @@ selector_item selector_list[] = {
    {"no one",       "no one",      "NO ONE",       "NO ONE",      selector_uninitialized},
    {(Cstring) 0,    (Cstring) 0,   (Cstring) 0,    (Cstring) 0,   selector_uninitialized}};
 
-/* BEWARE!!  These four lists are keyed to the definition of "selector_kind" in sd.h,
-   and to the necessary stuff in SDUI. */
-Cstring selector_names[] = {
-   "???",
-   "boys",
-   "girls",
-   "heads",
-   "sides",
-   "head corners",
-   "side corners",
-   "head boys",
-   "head girls",
-   "side boys",
-   "side girls",
-   "centers",
-   "ends",
-   "leads",
-   "trailers",
-   "beaus",
-   "belles",
-   "center 2",
-   "center 6",
-   "outer 2",
-   "outer 6",
-   "center 4",
-   "outer pairs",
-   "headliners",
-   "sideliners",
-   "near line",
-   "far line",
-   "near column",
-   "far column",
-   "near box",
-   "far box",
-   "everyone",
-   "no one",
-   (Cstring) 0};
-
-Cstring selector_singular[] = {
-   "???",
-   "boy",
-   "girl",
-   "head",
-   "side",
-   "head corner",
-   "side corner",
-   "head boy",
-   "head girl",
-   "side boy",
-   "side girl",
-   "center",
-   "end",
-   "lead",
-   "trailer",
-   "beau",
-   "belle",
-   "center 2",
-   "center 6",
-   "outer 2",
-   "outer 6",
-   "center 4",
-   "outer pair",
-   "headliner",
-   "sideliner",
-   "near line",
-   "far line",
-   "near column",
-   "far column",
-   "near box",
-   "far box",
-   "everyone",
-   "no one",
-   (Cstring) 0};
-
-Cstring selector_names_uc[] = {
-   "???",
-   "BOYS",
-   "GIRLS",
-   "HEADS",
-   "SIDES",
-   "HEAD CORNERS",
-   "SIDE CORNERS",
-   "HEAD BOYS",
-   "HEAD GIRLS",
-   "SIDE BOYS",
-   "SIDE GIRLS",
-   "CENTERS",
-   "ENDS",
-   "LEADS",
-   "TRAILERS",
-   "BEAUS",
-   "BELLES",
-   "CENTER 2",
-   "CENTER 6",
-   "OUTER 2",
-   "OUTER 6",
-   "CENTER 4",
-   "OUTER PAIRS",
-   "HEADLINERS",
-   "SIDELINERS",
-   "NEAR LINE",
-   "FAR LINE",
-   "NEAR COLUMN",
-   "FAR COLUMN",
-   "NEAR BOX",
-   "FAR BOX",
-   "EVERYONE",
-   "NO ONE",
-   (Cstring) 0};
-
-Cstring selector_singular_uc[] = {
-   "???",
-   "BOY",
-   "GIRL",
-   "HEAD",
-   "SIDE",
-   "HEAD CORNER",
-   "SIDE CORNER",
-   "HEAD BOY",
-   "HEAD GIRL",
-   "SIDE BOY",
-   "SIDE GIRL",
-   "CENTER",
-   "END",
-   "LEAD",
-   "TRAILER",
-   "BEAU",
-   "BELLE",
-   "CENTER 2",
-   "CENTER 6",
-   "OUTER 2",
-   "OUTER 6",
-   "CENTER 4",
-   "OUTER PAIR",
-   "HEADLINER",
-   "SIDELINER",
-   "NEAR LINE",
-   "FAR LINE",
-   "NEAR COLUMN",
-   "FAR COLUMN",
-   "NEAR BOX",
-   "FAR BOX",
-   "EVERYONE",
-   "NO ONE",
-   (Cstring) 0};
 
 /* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
    and to the necessary stuff in SDUI. */
@@ -382,11 +225,13 @@ Cstring warning_strings[] = {
    /*  warn__check_c1_phan       */   " Check a 'C1 phantom' setup.",
    /*  warn__check_dmd_qtag      */   " Fudge to a diamond/quarter-tag setup.",
    /*  warn__check_2x4           */   " Check a 2x4 setup.",
+   /*  warn__check_4x4           */   "*Check a 4x4 setup at the start of this call.",
    /*  warn__check_pgram         */   " Opt for a parallelogram.",
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__ctrs_stay_in_ctr    */   " Centers stay in the center.",
    /*  warn__check_c1_stars      */   " Check a generalized 'star' setup.",
    /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
+   /*  warn__adjust_to_feet      */   " Adjust back to footprints.",
    /*  warn__some_touch          */   " Some people step to a wave.",
    /*  warn__split_to_2x4s       */   " Do the call in each 2x4.",
    /*  warn__split_to_2x3s       */   " Do the call in each 2x3.",
@@ -397,6 +242,7 @@ Cstring warning_strings[] = {
    /*  warn__split_phan_in_pgram */   " The split phantom setups are directly adjacent to the real people.",
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
+   /*  warn__bad_modifier_level  */   "*Use of this modifier on this call is not allowed at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast."};
 
@@ -495,11 +341,11 @@ Private restriction_thing ptpd_d        = {4, {4, 0, 2, 4, 7}, {4, 1, 3, 5, 6}, 
 /* Must be a power of 2. */
 #define NUM_RESTR_HASH_BUCKETS 32
 
-typedef struct zilch {
+typedef struct grilch {
    setup_kind k;
    call_restriction restr;
    restriction_thing *value;
-   struct zilch *next;
+   struct grilch *next;
 } restr_initializer;
 
 
@@ -917,6 +763,15 @@ extern void nonreturning fail2(Const char s1[], Const char s2[])
 }
 
 
+extern void nonreturning failp(uint32 id1, Const char s[])
+{
+   collision_person1 = id1;
+   (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
+   error_message1[MAX_ERR_LENGTH-1] = '\0';
+   longjmp(longjmp_ptr->the_buf, 6);
+}
+
+
 extern void nonreturning specialfail(Const char s[])
 {
    (void) strncpy(error_message1, s, MAX_ERR_LENGTH);
@@ -990,9 +845,11 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    long_boolean comma_after_next_concept = FALSE;
 
 
+   long_boolean did_concept = FALSE;
+   long_boolean last_was_t_type = FALSE;
+   long_boolean last_was_l_type = FALSE;
    long_boolean did_comma = FALSE;
-   long_boolean comma_next = FALSE;
-   long_boolean comma_if_another_concept = FALSE;
+   long_boolean request_final_space = FALSE;
 
 
 
@@ -1011,25 +868,21 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          comment_block *fubb;
 
          fubb = (comment_block *) local_cptr->call;
+         if (request_final_space) writestuff(" ");
          writestuff("{ ");
          writestuff(fubb->txt);
          writestuff(" } ");
          local_cptr = local_cptr->next;
+         request_final_space = FALSE;
+         last_was_t_type = FALSE;
+         last_was_l_type = FALSE;
+         comma_after_next_concept = FALSE;
       }
       else if (k > marker_end_of_list) {
          /* This is a concept. */
 
-         long_boolean request_final_space = FALSE;
+         long_boolean force = FALSE;
          long_boolean request_comma_after_next_concept = FALSE;
-
-
-
-#ifdef BROKEN
-         if (comma_if_another_concept && !did_comma) writestuff("+ ");
-#endif
-         comma_if_another_concept = FALSE;
-
-
 
          /* Some concepts look better with a comma after them. */
 
@@ -1040,20 +893,74 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   k == concept_twice ||
                   k == concept_n_times ||
                   k == concept_some_are_tandem ||
+                  k == concept_snag_mystic && (item->value.arg1 & CMD_MISC2__CTR_END_INV_CONC) ||  /* INVERT SNAG or INVERT MYSTIC */
                   k == concept_some_are_frac_tandem ||
                   (    (k == concept_tandem ||           /* The arg4 test picks out the more esoteric */
                         k == concept_frac_tandem) &&     /* things like "<some setup> work solid". */
-                     local_cptr->concept->value.arg4 >= 10) ||
+                     item->value.arg4 >= 10) ||
                   (     k == concept_nth_part &&
                                              /* "SKIP THE <Nth> PART" or "SHIFT <N>" */
-                              (local_cptr->concept->value.arg1 == 9 || local_cptr->concept->value.arg1 == 10)) ||
+                              (item->value.arg1 == 9 || item->value.arg1 == 10)) ||
                   (    (k == concept_so_and_so_only ||           /* The arg1 test picks out "do your part". */
                         k == concept_some_vs_others) &&
-                     local_cptr->concept->value.arg1 < 2)) {
+                     item->value.arg1 < 2)) {
+            /* This is an "F" type concept. */
             comma_after_next_concept = TRUE;
+            last_was_t_type = FALSE;
+            force = did_concept && !last_was_l_type;
+            last_was_l_type = FALSE;
+            did_concept = TRUE;
+         }
+         else if (k == concept_reverse ||
+                  k == concept_left ||
+                  k == concept_grand ||
+                  k == concept_magic ||
+                  k == concept_cross ||
+                  k == concept_1x2 ||
+                  k == concept_2x1 ||
+                  k == concept_2x2 ||
+                  k == concept_1x3 ||
+                  k == concept_3x1 ||
+                  k == concept_3x3 ||
+                  k == concept_4x4 ||
+                  k == concept_single ||
+                  k == concept_singlefile ||
+                  k == concept_interlocked ||
+                  k == concept_standard ||
+                  k == concept_fan ||
+                  k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT ||    /* INVERT */
+                  k == concept_nth_part && item->value.arg1 == 8 ||
+                  k == concept_so_and_so_only && item->value.arg1 == 9 ||
+                  k == concept_c1_phantom ||
+                  k == concept_yoyo) {
+            /* This is an "L" type concept. */
+            last_was_t_type = FALSE;
+            last_was_l_type = TRUE;
+         }
+         else if (k == concept_meta && (item->value.arg1 <= 3 || item->value.arg1 == 7) ||
+                  k == concept_matrix) {
+            /* This is a "leading T/trailing L" type concept. */
+            force = last_was_t_type && !last_was_l_type;;
+/*            comma_after_next_concept |= did_concept; */
+            last_was_t_type = FALSE;
+            last_was_l_type = TRUE;
+/*            did_concept = FALSE; */
+         }
+         else {
+            /* This is a "T" type concept. */
+            comma_after_next_concept |= did_concept;
+            force = last_was_t_type && !last_was_l_type;
+            last_was_t_type = TRUE;
+            last_was_l_type = FALSE;
+            did_concept = TRUE;
          }
 
+         if (force && !did_comma) writestuff(", ");
+         else if (request_final_space) writestuff(" ");
+
          next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
+
+         request_final_space = FALSE;
 
          if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL) {
             parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
@@ -1069,7 +976,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_some_vs_others) {
                if ((i = item->value.arg1) == 1) {
                   writestuff_with_decorations(local_cptr, "DO YOUR PART, @6 ");
-                  comma_after_next_concept = FALSE;   /* We want a comma after the "do your part" only, not after the "others". */
                }
                else if (i == 3)
                   writestuff_with_decorations(local_cptr, "OWN THE @6, ");
@@ -1101,6 +1007,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
             if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
 
+            did_concept = FALSE;                /* We're starting over. */
+            last_was_t_type = FALSE;
+            last_was_l_type = FALSE;
+            comma_after_next_concept = FALSE;
             request_final_space = TRUE;
 
             if (k == concept_centers_and_ends) {
@@ -1211,6 +1121,12 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_comma_after_next_concept = TRUE;   /* "DO THE <Nth> PART <concept>" */
             writestuff_with_decorations(local_cptr, (Const char *) 0);
          }
+         else if (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) {
+            /* If INVERT is followed by another concept, it must be SNAG or MYSTIC.  Put a comma after it. */
+            request_comma_after_next_concept = TRUE;
+            writestuff_with_decorations(local_cptr, (Const char *) 0);
+            request_final_space = TRUE;
+         }
          else if ((k == concept_meta) && local_cptr->concept->value.arg1 == 3) {
             writestuff("INITIALLY");
             request_comma_after_next_concept = TRUE;
@@ -1230,37 +1146,27 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = TRUE;
          }
 
-         if (comma_after_next_concept)
-            writestuff(", ");
-         else if (request_final_space)
-            writestuff(" ");
+         if (comma_after_next_concept) {
+            writestuff(",");
+            request_final_space = TRUE;
+         }
 
          did_comma = comma_after_next_concept;
          comma_after_next_concept = request_comma_after_next_concept;
-
          local_cptr = next_cptr;
 
          if (k == concept_sequential) {
+            if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff(")");
             return;
          }
          else if (k == concept_replace_nth_part) {
+            if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff("]");
             return;
          }
-
-         if (     k != concept_reverse &&
-                  k != concept_left &&
-                  k != concept_grand &&
-                  k != concept_magic &&
-                  k != concept_cross &&
-                  k != concept_single &&
-                  k != concept_singlefile &&
-                  k != concept_interlocked &&
-                  k != concept_yoyo)
-            comma_if_another_concept = TRUE;
       }
       else {
          /* This is a "marker", so it has a call, perhaps with a selector and/or number.
@@ -1279,12 +1185,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          callspec_block *localcall = local_cptr->call;
          parse_block *save_cptr = local_cptr;
 
-#ifdef BROKEN
-         if (comma_if_another_concept && !did_comma) writestuff("= ");
-#endif
-
          subst1_in_use = FALSE;
          subst2_in_use = FALSE;
+
+         if (request_final_space) writestuff(" ");
 
          if (k == concept_another_call_next_mod) {
             search = save_cptr->next;
@@ -1570,6 +1474,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                if (subsidiary_ptr &&
                            (!(subsidiary_ptr->call) ||    /* If no call pointer, it isn't a tag base call. */
                            !(subsidiary_ptr->call->callflags1 & (CFLAG1_BASE_TAG_CALL_MASK | CFLAG1_BASE_CIRC_CALL)))) {
+                  long_boolean not_turning_star = FALSE;
+
                   switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
                      case 2:
@@ -1600,13 +1506,20 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            one star turn with another. */
                         localcall = search->call;
                         write_blank_if_needed();
-                        if ((!(first_replace++)) && subsidiary_ptr &&
+                        if ((first_replace++ == 0) && subsidiary_ptr &&
                               (localcall->callflags1 & CFLAG1_IS_STAR_CALL) &&
                                     ((subsidiary_ptr->concept->kind == marker_end_of_list) ||
-                                    (subsidiary_ptr->concept->kind == concept_another_call_next_mod)) &&
-                              (subsidiary_ptr->call) &&
-                              (subsidiary_ptr->call->callflags1 & CFLAG1_IS_STAR_CALL)) {
-                           writestuff("BUT [");
+                                    subsidiary_ptr->concept->kind == concept_another_call_next_mod) &&
+                              subsidiary_ptr->call &&
+                                    ((subsidiary_ptr->call->callflags1 & CFLAG1_IS_STAR_CALL) ||
+                                    subsidiary_ptr->call->schema == schema_nothing)) {
+
+                           not_turning_star = subsidiary_ptr->call->schema == schema_nothing;
+
+                           if (not_turning_star)
+                              writestuff("BUT don't turn the star");
+                           else
+                              writestuff("BUT [");
                         }
                         else {
                            if (first_replace == 1)
@@ -1617,8 +1530,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(" WITH [");
                         }
    
-                        print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
-                        writestuff("]");
+                        if (!not_turning_star) {
+                           print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
+                           writestuff("]");
+                        }
                         break;
                   }
                }
@@ -1698,28 +1613,24 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
 
    offs = (((roti >> 1) & 1) * (modulus / 2)) - modulus;
 
-   switch (s->skind) {
-      case s2x2:
-         newline();
-         if (elong < 0)
-            do_write("ab@dc@");
-         else if (elong & 1)
-            do_write("ab@@@dc@");
-         else
-            do_write("a    b@d    c@");
-         break;
-      case s_star:
-         newline();
-         do_write("   b@a  c@   d@");
-         break;
-      case s1x4: case sdmd: case s2x4: case s2x3: case s1x6: case s_short6: case s_bone6: case s1x2:
-         newline();
-         str = setup_attrs[s->skind].print_strings[roti & 1];
-         do_write(str);
-         break;
-      default:
-         writestuff(" ????");
+   if (s->skind == s2x2) {
+      if (elong < 0)
+         str = "ab@dc@";
+      else if (elong & 1)
+         str = "ab@@@dc@";
+      else
+         str = "a    b@d    c@";
    }
+   else
+      str = setup_attrs[s->skind].print_strings[roti & 1];
+
+   if (str) {
+      newline();
+      do_write(str);
+   }
+   else
+      writestuff(" ????");
+
    newline();
 }
 
@@ -2705,11 +2616,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_dmd_ctrs_rh:
          case sq_dmd_ctrs_lh:
          case sq_dmd_ctrs_1f:
-            {            /* -1: no centers  /  sq_dmd_ctrs_1f: centers 1-faced  /  sq_dmd_ctrs_lh: left  /  sq_dmd_ctrs_rh: right */
+            {
+               search_qualifier kkk;      /* gets set to the qualifier corresponding to what we have. */
                short *p1;
                short d1;
                short d2;
-               search_qualifier kkk;
                uint32 z = 0;
                long_boolean b1 = TRUE;
                long_boolean b2 = TRUE;
@@ -2755,6 +2666,38 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                else
                   goto bad;
 
+               if ((search_qualifier) p->qualifier == kkk) goto good;
+            }
+         case sq_ctr_pts_rh:
+         case sq_ctr_pts_lh:
+            {
+               search_qualifier kkk;      /* gets set to the qualifier corresponding to what we have. */
+               uint32 t1;
+               uint32 t2;
+               long_boolean b1 = TRUE;
+               long_boolean b2 = TRUE;
+            
+               switch (ss->kind) {
+                  case s_qtag:
+                  case s_hrglass:
+                     t1 = ss->people[6].id1;
+                     t2 = ss->people[2].id1;
+                     break;
+                  case s_2x1dmd:
+                     t1 = ss->people[0].id1;
+                     t2 = ss->people[3].id1;
+                     break;
+                  default:
+                     goto bad;
+               }
+
+               if (t1 && (t1 & d_mask)!=d_north) b1 = FALSE;
+               if (t2 && (t2 & d_mask)!=d_south) b1 = FALSE;
+               if (t1 && (t1 & d_mask)!=d_south) b2 = FALSE;
+               if (t2 && (t2 & d_mask)!=d_north) b2 = FALSE;
+
+               if (b1 == b2) goto bad;
+               kkk = b1 ? sq_ctr_pts_rh : sq_ctr_pts_lh;
                if ((search_qualifier) p->qualifier == kkk) goto good;
             }
       }
@@ -2841,12 +2784,7 @@ extern uint32 find_calldef(
 got_it:
 
    z = calldef_array[northified_index];
-   if (!z) {
-      collision_person1 = scopy->people[real_index].id1;
-      error_message1[0] = '\0';
-      error_message2[0] = '\0';
-      longjmp(longjmp_ptr->the_buf, 6);
-   }
+   if (!z) failp(scopy->people[real_index].id1, "can't execute their part of this call.");
 
    return z;
 }

@@ -24,6 +24,7 @@
 and the following external variables:
    selector_used
    number_used
+   mandatory_call_used
    pred_table     which is filled with pointers to the predicate functions
 */
 
@@ -33,6 +34,7 @@ and the following external variables:
 
 long_boolean selector_used;
 long_boolean number_used;
+long_boolean mandatory_call_used;
 
 
 /* If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
@@ -688,7 +690,6 @@ Private long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
    }
 }
 
-
 /* Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
 Private long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
@@ -719,7 +720,6 @@ Private long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
       return(FALSE);      /* This is a 1FL. */
    }
 }
-
 
 /* Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
@@ -753,7 +753,71 @@ Private long_boolean x18_wheel_and_deal(setup *real_people, int real_index,
    }
 }
 
+/* First test for how to do cycle and wheel.  This always passes the extreme beau,
+   and always fails the extreme belle (causing the belle to go on to the next test.)
+   For centers, it demands an adjacent end (otherwise we wouldn't know whether
+   we were cycling or wheeling) and then returns true if that end is an extreme beau. */
+/* ARGSUSED */
+Private long_boolean cycle_and_wheel_1(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (northified_index == 0)
+      return TRUE;
+   else if (northified_index == 2)
+      return FALSE;
+   else {     /* We are a center.  Find our adjacent end. */
+      int other_person;
 
+      /* We think it is rather silly to use an "assume" concept to specify
+         a symmetric kind of line, and then give a call that doesn't do
+         anything interesting with any of the lines that the assumption can
+         make, but we have to do this. */
+
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_1fl_only:  case cr_2fl_only:   return (northified_index == 1);
+         case cr_wave_only: case cr_magic_only: return (northified_index == 3);
+      }
+
+      other_person = real_people->people[real_index ^ 1].id1;
+
+      if (!other_person)
+         fail("Can't tell how to do this -- no live people.");
+
+      /* See if he is an extreme beau. */
+      if (((other_person ^ real_index) & 2))
+         return FALSE;
+
+      return TRUE;
+   }
+}
+
+/* Second test for how to do cycle and wheel.  This finds the far end, and checks
+   whether he faces the same way as myself. */
+/* ARGSUSED */
+Private long_boolean cycle_and_wheel_2(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int other_person;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_1fl_only: case cr_2fl_only: return TRUE;
+      case cr_wave_only:  return (northified_index != 2);
+      case cr_magic_only: return (northified_index == 2);
+   }
+
+   other_person = real_people->people[(real_index ^ 2) & (~1)].id1;
+
+   /* Here we default to the "non-colliding" version of the call if the
+      opposite end of our line doesn't exist. */
+   if (!other_person)
+      return (northified_index == 1);
+
+   /* See if he faces the same way as myself. */
+   if (((other_person ^ real_people->people[real_index].id1) & 2))
+      return FALSE;
+
+   return TRUE;
+}
 
 Private long_boolean vert1(setup *real_people, int real_index,
    int real_direction, int northified_index)
@@ -1679,6 +1743,8 @@ long_boolean (*pred_table[])(
       x14_wheel_and_deal,              /* "1x4_wheel_and_deal" */
       x16_wheel_and_deal,              /* "1x6_wheel_and_deal" */
       x18_wheel_and_deal,              /* "1x8_wheel_and_deal" */
+      cycle_and_wheel_1,               /* "cycle_and_wheel_1" */
+      cycle_and_wheel_2,               /* "cycle_and_wheel_2" */
       vert1,                           /* "vert1" */
       vert2,                           /* "vert2" */
       inner_active_lines,              /* "inner_active_lines" */

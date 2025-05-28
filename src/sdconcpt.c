@@ -19,7 +19,7 @@
     This is for version 31. */
 
 /* This defines the following functions:
-   move_perhaps_with_active_phantoms
+   impose_assumption_and_move
    do_big_concept
 
 and the following external variables:
@@ -44,106 +44,19 @@ uint32 global_tboneselect;
 
 
 
-Private void do_concept_expand_1x12_matrix(
+Private void do_concept_expand_some_matrix(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind != s1x12) fail("Can't make a 1x12 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_1x16_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s1x16) fail("Can't make a 1x16 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_2x6_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s2x6) fail("Can't make a 2x6 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_2x8_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s2x8) fail("Can't make a 2x8 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   /* We used to turn on the "FINAL__16_MATRIX" call modifier,
+   /* We used to turn on the "FINAL__16_MATRIX" call modifier for 2x8 matrix,
       but that makes tandem stuff not work (it doesn't like
       call modifiers preceding it) and 4x4 stuff not work
       (it wants the matrix expanded, but doesn't want you to say
       "16 matrix").  So we need to let the CMD_MISC__EXPLICIT_MATRIX
       bit control the desired effects. */
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_3x4_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s3x4) fail("Can't make a 3x4 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_4x4_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s4x4) fail("Can't make a 4x4 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_3x8_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s3x8) fail("Can't make a 3x8 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_4x6_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s4x6) fail("Can't make a 4x6 matrix out of this.");
-   ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
-   move(ss, FALSE, result);
-}
-
-
-Private void do_concept_expand_4dm_matrix(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   if (ss->kind != s4dmd) fail("Can't make quadruple diamonds out of this.");
+   if (ss->kind != ((setup_kind) parseptr->concept->value.arg1))
+      fail("Can't make the required matrix out of this.");
    ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
    move(ss, FALSE, result);
 }
@@ -401,23 +314,13 @@ Private void do_concept_single_diagonal(
    a1.kind = s1x4;
    a1.rotation = 0;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   update_id_bits(&a1);
 
    if (parseptr->concept->value.arg1 == 3) {
-      if (a1.cmd.cmd_assume.assumption != cr_none)
-         fail("Redundant or conflicting assumptions.");
-
-      a1.cmd.cmd_assume.assump_col = 0;
-      a1.cmd.cmd_assume.assump_both = 0;
-      a1.cmd.cmd_assume.assumption = cr_wave_only;
-
-      move_perhaps_with_active_phantoms(
-            &a1,
-            check_restriction(&a1, a1.cmd.cmd_assume, 99),
-            &res1);
+      a1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    }
-   else
-      move(&a1, FALSE, &res1);
+
+   update_id_bits(&a1);
+   impose_assumption_and_move(&a1, &res1);
 
    *result = *ss;
 
@@ -1172,7 +1075,7 @@ Private void do_concept_do_phantom_diamonds(
                                       If this isn't specific enough for you, use the "ASSUME LEFT 1/4 LINES" concept, or whatever.
       CMD_MISC__VERIFY_3_4_TAG    "3/4 tags" -- centers in some kind of line, ends are a couple looking out (includes 3/4 line, etc.)
                                       If this isn't specific enough for you, use the "ASSUME LEFT 3/4 LINES" concept, or whatever.
-      CMD_MISC__VERIFY_QTAG_LIKE  "general 1/4 tags" -- all facing same orientaion -- centers in some kind of line, ends are column-like.
+      CMD_MISC__VERIFY_QTAG_LIKE  "general 1/4 tags" -- all facing same orientation -- centers in some kind of line, ends are column-like.
       0                           "diamond spots" -- any facing direction is allowed. */
 
    if (ss->kind != s4dmd) fail("Must have a quadruple diamond/quarter-tag setup for this concept.");
@@ -1447,6 +1350,10 @@ Private void do_concept_new_stretch(
    map_thing *maps;
    setup tempsetup = *ss;
 
+   if (     (parseptr->concept->value.arg1 == 1 && tempsetup.kind != s2x4) ||
+            (parseptr->concept->value.arg1 == 2 && tempsetup.kind != s1x8))
+      fail("Not in correct pformation for this concept.");
+
    tempsetup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
 
    if (tempsetup.kind == s2x4) {
@@ -1674,7 +1581,7 @@ Private long_boolean fill_active_phantoms_and_move(
 
 
 
-extern void move_perhaps_with_active_phantoms(
+Private void move_perhaps_with_active_phantoms(
    setup *ss,
    restriction_thing *restr_thing_ptr,
    setup *result)
@@ -1697,6 +1604,40 @@ extern void move_perhaps_with_active_phantoms(
 
 
 
+extern void impose_assumption_and_move(setup *ss, setup *result)
+{
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
+      assumption_thing t;
+
+      /* **** actually, we want to allow the case of "assume waves" already in place. */
+      if (ss->cmd.cmd_assume.assumption != cr_none)
+         fail("Redundant or conflicting assumptions.");
+
+      t.assump_col = 0;
+      t.assump_both = 0;
+      t.assump_cast = ss->cmd.cmd_assume.assump_cast;
+
+      switch (ss->cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
+         case CMD_MISC__VERIFY_WAVES:     t.assumption = cr_wave_only;    break;
+         case CMD_MISC__VERIFY_DMD_LIKE:  t.assumption = cr_diamond_like; break;
+         case CMD_MISC__VERIFY_QTAG_LIKE: t.assumption = cr_qtag_like;    break;
+         case CMD_MISC__VERIFY_1_4_TAG:   t.assumption = cr_gen_1_4_tag;  break;
+         case CMD_MISC__VERIFY_3_4_TAG:   t.assumption = cr_gen_3_4_tag;  break;
+         default:
+            fail("Unknown assumption verify code.");
+      }
+
+      ss->cmd.cmd_assume = t;
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+      move_perhaps_with_active_phantoms(ss, check_restriction(ss, t, 99), result);
+   }
+   else
+      move(ss, FALSE, result);
+}
+
+
+
+
 Private void do_concept_assume_waves(
    setup *ss,
    parse_block *parseptr,
@@ -1704,6 +1645,8 @@ Private void do_concept_assume_waves(
 {
    assumption_thing t;
    restriction_thing *restr_thing_ptr;
+   long_boolean no_phan_error = FALSE;
+   setup sss;
    int i;
 
    /* "Assume normal casts" is special. */
@@ -1720,14 +1663,11 @@ Private void do_concept_assume_waves(
       If user specifically said there are phantoms, we believe it. */
 
    if (!(ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
+      no_phan_error = TRUE;
       for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
-         if (!ss->people[i].id1) goto found_phan;
+         if (!ss->people[i].id1) no_phan_error = FALSE;
       }
-   
-      fail("Don't know where the phantoms should be assumed to be.");
    }
-
-   found_phan:
 
    /* We wish it were possible to encode this entire word neatly in the concept
       table, but, unfortunately, the way C struct and union initializers work
@@ -1771,6 +1711,8 @@ Private void do_concept_assume_waves(
    if (t.assumption == cr_jleft || t.assumption == cr_jright || t.assumption == cr_ijleft || t.assumption == cr_ijright) {
       /* These assumptions work independently of the "assump_col" number. */
       switch (ss->kind) {
+         case s1x4: goto fudge_from_1x4;
+         case s3x4: goto fudge_from_3x4;
          case s_qtag: goto check_it;
       }
    }
@@ -1852,11 +1794,15 @@ Private void do_concept_assume_waves(
       }
       else if (t.assumption == cr_diamond_like) {
          switch (ss->kind) {
+            case s1x4: goto fudge_from_1x4;
+            case s3x4: goto fudge_from_3x4;
             case s_qtag: goto check_it;
          }
       }
       else if (t.assumption == cr_qtag_like) {
          switch (ss->kind) {
+            case s1x4: goto fudge_from_1x4;
+            case s3x4: goto fudge_from_3x4;
             case s_qtag: goto check_it;
          }
       }
@@ -1864,7 +1810,55 @@ Private void do_concept_assume_waves(
 
    fail("This assumption is not legal from this formation.");
 
+   fudge_from_1x4:
+
+   no_phan_error = FALSE;    /* There really were phantoms after all. */
+
+   (void) copy_person(ss, 6, ss, 0);
+   (void) copy_person(ss, 7, ss, 1);
+   clear_person(ss, 0);
+   clear_person(ss, 1);
+   clear_person(ss, 4);
+   clear_person(ss, 5);
+
+   ss->kind = s_qtag;
+
+   goto check_it;
+
+   fudge_from_3x4:
+
+   sss = *ss;
+   (void) copy_person(ss, 0, &sss, 1);
+   (void) copy_person(ss, 1, &sss, 2);
+   (void) copy_person(ss, 2, &sss, 4);
+   (void) copy_person(ss, 3, &sss, 5);
+   (void) copy_person(ss, 4, &sss, 7);
+   (void) copy_person(ss, 5, &sss, 8);
+   (void) copy_person(ss, 6, &sss, 10);
+   (void) copy_person(ss, 7, &sss, 11);
+
+   if (sss.people[0].id1) {
+      if (sss.people[1].id1) fail("Can't do this assumption.");
+      else (void) copy_person(ss, 0, &sss, 0);
+   }
+   if (sss.people[3].id1) {
+      if (sss.people[2].id1) fail("Can't do this assumption.");
+      else (void) copy_person(ss, 1, &sss, 3);
+   }
+   if (sss.people[6].id1) {
+      if (sss.people[7].id1) fail("Can't do this assumption.");
+      else (void) copy_person(ss, 4, &sss, 6);
+   }
+   if (sss.people[9].id1) {
+      if (sss.people[8].id1) fail("Can't do this assumption.");
+      else (void) copy_person(ss, 5, &sss, 9);
+   }
+
+   ss->kind = s_qtag;
+
    check_it:
+
+   if (no_phan_error) fail("Don't know where the phantoms should be assumed to be.");
 
    restr_thing_ptr = check_restriction(ss, ss->cmd.cmd_assume, 99);
 
@@ -1896,17 +1890,34 @@ Private void do_concept_central(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK)
-      fail("Only one of central, snag, and mystic is allowed.");
+   if (parseptr->concept->value.arg1 == CMD_MISC2__CTR_END_INVERT) {
+      /* If this is "invert", just flip the bit.  They can stack, of course. */
+      ss->cmd.cmd_misc2_flags ^= CMD_MISC2__CTR_END_INVERT;
+   }
+   else {
+      uint32 this_concept = parseptr->concept->value.arg1;
 
-   if (parseptr->concept->value.arg1 == CMD_MISC2__CENTRAL_PLAIN) {
-      if (setup_attrs[ss->kind].setup_limits == 7)
-         ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
-      else if (setup_attrs[ss->kind].setup_limits != 3)
-         fail("Need a 4 or 8 person setup for this.");
+      /* Otherwise, if the "invert" bit was on, we assume that means that the
+         user really wanted "invert snag" or whatever. */
+
+      if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) == CMD_MISC2__CTR_END_INVERT &&
+               !(this_concept & CMD_MISC2__CTR_END_INV_CONC)) {
+         ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_INVERT;   /* Take out the "invert" bit". */
+         this_concept |= CMD_MISC2__CTR_END_INV_CONC;             /* Put in the "this concept is inverted" bit. */
+      }
+      else if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
+         fail("Only one of central, snag, and mystic is allowed.");
+
+      if ((parseptr->concept->value.arg1 & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_PLAIN) {
+         if (setup_attrs[ss->kind].setup_limits == 7)
+            ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
+         else if (setup_attrs[ss->kind].setup_limits != 3)
+            fail("Need a 4 or 8 person setup for this.");
+      }
+
+      ss->cmd.cmd_misc2_flags |= this_concept;
    }
 
-   ss->cmd.cmd_misc2_flags |= parseptr->concept->value.arg1;
    move(ss, FALSE, result);
 }
 
@@ -1918,11 +1929,15 @@ Private void do_concept_crazy(
 {
    int i;
    int craziness, highlimit;
-   setup tempsetup = *ss;
+   setup tempsetup;
    setup_command cmd;
 
    uint32 finalresultflags = 0;
    int reverseness = parseptr->concept->value.arg1;
+   uint32 restraint = ss->cmd.cmd_misc_flags;
+
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
+   tempsetup = *ss;
 
    if (tempsetup.cmd.cmd_final_flags & INHERITFLAG_REVERSE) {
       if (reverseness) fail("Redundant 'REVERSE' modifiers.");
@@ -1960,7 +1975,7 @@ Private void do_concept_crazy(
       craziness.  But if the craziness is unrestrained, which is the usual case, we act on
       the fractions.  This makes "interlace crazy this with reverse crazy that" work. */
 
-   if (cmd.cmd_frac_flags && (cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
+   if (cmd.cmd_frac_flags && (restraint & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
 
       /* The fractions were meant for us, not the subject call. */
 
@@ -2000,8 +2015,6 @@ Private void do_concept_crazy(
    }
 
    if (highlimit <= i || highlimit > craziness) fail("Illegal fraction for \"crazy\".");
-
-   cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;  /* Don't need this any more. */
 
    for ( ; i<highlimit; i++) {
       tempsetup.cmd = cmd;    /* Get a fresh copy of the command. */
@@ -2435,6 +2448,9 @@ Private void do_concept_twice(
    long_boolean reverse_order;
    long_boolean do_half_of_last_part;
    uint32 subject_fractions;
+   uint32 restraint = ss->cmd.cmd_misc_flags;
+
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
 
    if (parseptr->concept->value.arg1)
       repetitions = parseptr->number;
@@ -2447,7 +2463,7 @@ Private void do_concept_twice(
       twiceness.  But if the craziness is unrestrained, which is the usual case, we act on
       the fractions.  This makes "interlace twice this with twice that" work. */
 
-   if (ss->cmd.cmd_frac_flags && (ss->cmd.cmd_misc_flags & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
+   if (ss->cmd.cmd_frac_flags && (restraint & CMD_MISC__RESTRAIN_CRAZINESS) == 0) {
       /* The fractions were meant for us, not the subject call. */
       fraction_info zzz = get_fraction_info(ss->cmd.cmd_frac_flags, 3*CFLAG1_VISIBLE_FRACTION_BIT, repetitions);
       reverse_order = zzz.reverse_order;
@@ -2747,21 +2763,58 @@ Private void do_concept_quad_boxes(
 }
 
 
-Private void do_concept_inner_boxes(
+Private void do_concept_inner_outer(
    setup *ss,
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind != s2x8) fail("Must have a 2x8 setup for this concept.");
-   divided_setup_move(ss, &map_inner_box, phantest_ok, TRUE, result);
-   install_person(result, 0, ss, 0);
-   install_person(result, 1, ss, 1);
-   install_person(result, 6, ss, 6);
-   install_person(result, 7, ss, 7);
-   install_person(result, 8, ss, 8);
-   install_person(result, 9, ss, 9);
-   install_person(result, 14, ss, 14);
-   install_person(result, 15, ss, 15);
+   calldef_schema sch;
+   int rot = 0;
+
+   if (parseptr->concept->value.arg1 & 16)
+      sch = schema_in_out_quad;
+   else
+      sch = schema_in_out_triple;
+
+   switch (parseptr->concept->value.arg1 & (16+7)) {
+      case 0: case 1: case 3:
+         if (ss->kind != s3x4) fail("Sorry, need a 3x4 setup for this.");
+
+         if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+         if (!((parseptr->concept->value.arg1 ^ global_tbonetest) & 1)) {
+            if (global_tbonetest & 1) fail("There are no triple lines here.");
+            else                      fail("There are no triple columns here.");
+         }
+
+         break;
+      case 16+0: case 16+1: case 16+3:
+         if (ss->kind != s4x4) fail("Sorry, need a 4x4 setup for this.");
+
+         if ((global_tbonetest & 011) == 011) fail("Can't do this from T-bone setup.");
+
+         rot = (global_tbonetest ^ parseptr->concept->value.arg1 ^ 1) & 1;
+
+         ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
+         canonicalize_rotation(ss);
+         break;
+      case 4:
+         if (ss->kind != s2x6) fail("Need a 2x6 setup for this.");
+         break;
+      case 16+4:
+         if (ss->kind != s2x8) fail("Need a 2x8 setup for this.");
+         break;
+   }
+
+   if ((parseptr->concept->value.arg1 & 7) == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   if (parseptr->concept->value.arg1 & 8)
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, sch, 0, 0, result);
+   else
+      concentric_move(ss, (setup_command *) 0, &ss->cmd, sch, 0, 0, result);
+
+   result->rotation -= rot;   /* Flip the setup back. */
 }
 
 
@@ -2770,14 +2823,11 @@ Private void do_concept_do_both_boxes(
    parse_block *parseptr,
    setup *result)
 {
-   if (ss->kind == s2x4) {
+   if (ss->kind == s2x4)
       divided_setup_move(ss, parseptr->concept->value.maps, phantest_ok, TRUE, result);
-   }
-   else if (ss->kind == s3x4 && parseptr->concept->value.arg2) {
+   else if (ss->kind == s3x4 && parseptr->concept->value.arg2)
       /* distorted_2x2s_move will notice that concept is funny and will do the right thing. */
-      distorted_2x2s_move(ss, parseptr->concept, result);
-      reinstate_rotation(ss, result);
-   }
+      distorted_2x2s_move(ss, parseptr, result);
    else
       fail("Need a 2x4 setup to do this concept.");
 }
@@ -3402,7 +3452,7 @@ Private void do_concept_meta(
       k = parseptrcopy->concept->kind;
       parseptr_skip = parseptrcopy->next;
    
-      if (k == concept_crazy || k == concept_frac_crazy || k == concept_twice)
+      if (k == concept_crazy || k == concept_frac_crazy || k == concept_fractional || k == concept_twice || k == concept_n_times)
          craziness_restraint = CMD_MISC__RESTRAIN_CRAZINESS;
    
       subject_props = concept_table[k].concept_prop;
@@ -3906,16 +3956,6 @@ Private void do_concept_so_and_so_begin(
 }
 
 
-Private void do_concept_misc_distort(
-   setup *ss,
-   parse_block *parseptr,
-   setup *result)
-{
-   distorted_2x2s_move(ss, parseptr->concept, result);
-   reinstate_rotation(ss, result);
-}
-
-
 typedef struct {
    setup_kind a;
    int b;
@@ -4061,28 +4101,30 @@ extern long_boolean do_big_concept(
          have now preserved even those two flags in cmd_final_flags, so things can
          possibly get better. */
 
-   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) {
-      if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) == CMD_MISC2__CENTRAL_MYSTIC &&
+   if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
+      if (     (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_MYSTIC &&
                (this_table_item->concept_prop & CONCPROP__PERMIT_MYSTIC)) {
 
          /* This is "mystic" with something like "triple waves". */
          /* Turn on the good bits. */
 
          ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_SPLIT;
-         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__INVERT_CENTRAL)
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INV_CONC)
             ss->cmd.cmd_misc2_flags |= CMD_MISC2__MYSTIFY_INVERT;
 
          /* And turn off the old ones. */
 
-         ss->cmd.cmd_misc2_flags &= ~(CMD_MISC2__CENTRAL_MASK | CMD_MISC2__INVERT_CENTRAL);
+         ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;
       }
-      else if (   (ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MASK) == CMD_MISC2__CENTRAL_PLAIN &&
+      else if (   (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) == CMD_MISC2__CENTRAL_PLAIN &&
                   this_kind == concept_fractional) {
          /* We *DO* allow central and fractional to be stacked in either order. */
          ;
       }
-      else
-         fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
+      else if (this_kind != concept_snag_mystic && this_kind != concept_central) {
+         /* If it's another invert/snag/central/mystic, we allow it, since the routine will check carefully. */
+         fail("Can't do \"invert/central/snag/mystic\" followed by another concept or modifier.");
+      }
    }
 
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
@@ -4190,8 +4232,12 @@ extern long_boolean do_big_concept(
       return TRUE;
    }
 
-   if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX))
-      do_matrix_expansion(ss, this_table_item->concept_prop, FALSE);
+   if (!(ss->cmd.cmd_misc_flags & CMD_MISC__NO_EXPAND_MATRIX)) {
+      uint32 prop_bits = this_table_item->concept_prop;
+      /* If the "arg2_matrix" bit is on, pick up additional matrix descriptor bits from the arg2 word. */
+      if (prop_bits & CONCPROP__NEED_ARG2_MATRIX) prop_bits |= this_concept->value.arg2;
+      do_matrix_expansion(ss, prop_bits, FALSE);
+   }
 
    /* We can no longer do any matrix expansion, unless this is "phantom" and "tandem", in which case we continue to allow it.
       The code for the "C1 phantom" concept will check whether it is being used with some tandem-like concept, and expand to
@@ -4290,15 +4336,7 @@ concept_table_item concept_table[] = {
    /* concept_3x1 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_3x3 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_4x4 */                      {CONCPROP__PARSE_DIRECTLY,                                                               0},
-   /* concept_1x12_matrix */              {CONCPROP__NEED_1X12 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_1x12_matrix},
-   /* concept_1x16_matrix */              {CONCPROP__NEED_1X16 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_1x16_matrix},
-   /* concept_2x6_matrix */               {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_2x6_matrix},
-   /* concept_2x8_matrix */               {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_2x8_matrix},
-   /* concept_3x4_matrix */               {CONCPROP__NEED_3X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_3x4_matrix},
-   /* concept_4x4_matrix */               {CONCPROP__NEED_4X4 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_4x4_matrix},
-   /* concept_3x8_matrix */               {CONCPROP__NEED_3X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_3x8_matrix},
-   /* concept_4x6_matrix */               {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_expand_4x6_matrix},
-   /* concept_4dmd_matrix */              {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                       do_concept_expand_4dm_matrix},
+   /* concept_create_matrix */            {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                do_concept_expand_some_matrix},
    /* concept_funny */                    {CONCPROP__PARSE_DIRECTLY,                                                               0},
    /* concept_randomtrngl */              {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 triangle_move},
    /* concept_selbasedtrngl */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        triangle_move},
@@ -4336,11 +4374,14 @@ concept_table_item concept_table[] = {
    /* concept_triple_diamonds_together */ {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds_tog},
    /* concept_quad_diamonds */            {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds},
    /* concept_quad_diamonds_together */   {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_quad_diamonds_tog},
-   /* concept_inner_boxes */              {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_inner_boxes},
+   /* concept_in_out_line_3 */            {CONCPROP__NEED_3X4_1X12 | CONCPROP__STANDARD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS, do_concept_inner_outer},
+   /* concept_in_out_line_4 */            {CONCPROP__NEED_4X4_1X16 | CONCPROP__STANDARD | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS, do_concept_inner_outer},
+   /* concept_in_out_box_3 */             {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_inner_outer},
+   /* concept_in_out_box_4 */             {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS,                        do_concept_inner_outer},
    /* concept_triple_diag */              {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__STANDARD,  do_concept_triple_diag},
    /* concept_triple_diag_together */     {CONCPROP__NEED_BLOB | CONCPROP__NO_STEP | CONCPROP__SET_PHANTOMS | CONCPROP__GET_MASK,  do_concept_triple_diag_tog},
    /* concept_triple_twin */              {CONCPROP__NEED_4X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       triple_twin_move},
-   /* concept_misc_distort */             {CONCPROP__NO_STEP,                                                                      do_concept_misc_distort},
+   /* concept_misc_distort */             {CONCPROP__NO_STEP,                                                                      distorted_2x2s_move},
    /* concept_old_stretch */              {CONCPROP__PARSE_DIRECTLY/*CONCPROP__NO_STEP*/,                                          do_concept_old_stretch},
    /* concept_new_stretch */              {CONCPROP__PARSE_DIRECTLY/*CONCPROP__NO_STEP*/,                                          do_concept_new_stretch},
    /* concept_assume_waves */             {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_assume_waves},

@@ -1,8 +1,78 @@
-		   RELEASE NOTES FOR SD VERSION 31.4
-		 Database version = 31.4 format = 62.
+		   RELEASE NOTES FOR SD VERSION 31.44
+		 Database version = 31.44 format = 66.
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
 
 
+
+New call:  "catch <anything> <n>, only the resulting centers finish".
+Use it with good taste!
+
+New calls: "heads/sides promenade halfway, come in to the middle and
+<anything>", and "heads/sides promenade halfway while the others
+<anything>".  Also, "centers back away, others come in and <anything>,
+intended to be used after, for example, head ladies chain.
+Also, "ends divide".  Use this when you want the outsides to move
+along until they are facing each other.  For example, after "heads
+swing thru", you might say "ends divide", and then have them star thru.
+Note that "ends divide" is the name of the call.  It is not an
+application of the "ends" concept.  You must type it on one line,
+and you may not substitute another designator, such as "sides", for
+the word "ends".  So, for example, you might type or click:
+    heads start
+    swing thru
+    ends divide
+    ends
+    touch 1/4
+    6x2 acey deucey
+You might read this as "heads swing thru, while the sides divide
+and touch 1/4".
+
+
+
+It is now considerably better about handling the "invert" concept
+and its interactions with "central", "snag", and "mystic".
+
+
+
+It now does "colliding" cycle and wheel.
+
+
+
+It handles "little" with a direction (or no direction) given for
+the ends.  In addition to "little, ends go as you are", there is
+"little, ends face <direction>".  Note that the practice of just saying
+"little" from diamonds, and expecting the dancers to go as they are,
+is not accepted by the program, even though it is generally considered
+correct usage at C1.  You must say "little, ends go as you are".
+The calls "plenty" and "little more" are also handled similarly.
+
+
+
+The program tries to do a more sensible job of printing commas
+after concepts.
+
+
+
+New concept:  distorted blocks -- This is "C1 blocks" with some people
+out of position.
+
+
+****** Changes as of version 31.42 ******
+
+New concepts:  <anyone> in your distorted line/wave/column/box/diamond.
+
+
+
+Various new "search/pick" commands were added, to pick random calls
+with or without a concept, pick random calls on the level, and
+create various named setups.
+
+****** Changes as of version 31.41 ******
+
+It now has an enormously improved notion of "jay walk", as well
+as "jay slide thru" and "jay touch 1/4".
+
+****** Changes as of version 31.4 ******
 
 It is now has a considerably better understanding of how to have
 specified people do a call.  If you say something like "side girls
@@ -166,7 +236,7 @@ the centers, you can say
    BOYS counter rotate WHILE THE GIRLS mix
             (use the "BOYS (while the others)" concept)
 
-The "disconnected" concept is improved.
+The "disconnected" concept is also much improved.
 
 
 
@@ -419,7 +489,7 @@ like "the axle but replace the cast 1/2 with a split trade circulate".
 
 The "1/2" fraction can be given to calls for which there is an established
 notion of doing the first half, even if there is no established notion of
-doing the second half, for example, circulate, hinge, and zoom.  This
+doing the second half, for example, circulate, trade, and zoom.  This
 property works for compound calls as well, so "1/2 acey deucey" and
 "1/2 deuces wild" now work naturally.
 
@@ -470,7 +540,8 @@ that does the call once and a little more.  Typically this is 1-1/2 or so.
 The concept formerly (as of version 30.74) known as "<so-and-so> ONLY"
 is now just called "<so-and-so>".  It will be separated by a comma from
 the following text in the transcript to avoid ambiguity.  When using sdtty,
-YOU MUST TYPE IN THE COMMA.  This is to avoid ambiguity with such concepts
+YOU MUST TYPE IN THE COMMA.  [No longer true.  Superseded at about 31.0.]
+This is to avoid ambiguity with such concepts
 as "centers", which is different in very subtle ways, I think.
 To have the other people do some other call, type in
 "heads, (while the others)" with a comma after the people designator.

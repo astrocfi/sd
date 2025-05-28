@@ -32,7 +32,7 @@ typedef struct glozk {
    struct glozk *gc_ptr;          /* used for reclaiming dead blocks */
 } modifier_block;
 
-typedef struct zilch {
+typedef struct filch {
    long_boolean valid;       /* set to TRUE if a match was found */
    long_boolean exact;       /* set to TRUE if an exact match was found */
    uims_reply kind;
@@ -41,7 +41,7 @@ typedef struct zilch {
    direction_kind where;     /* matches <direction> */
    uint32 tagger;            /* matches <atc> */
    uint32 circcer;           /* matches <anything> as in <anything> motivate */
-   Const struct zilch *modifier_parent;
+   Const struct filch *modifier_parent;
    modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
    concept_descriptor *current_modifier;
    long_boolean need_big_menu;

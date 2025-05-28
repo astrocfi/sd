@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set Time-stamp: Jul 28, 1995
-@set sd-version 31.4
+@set Time-stamp: Sep 26, 1995
+@set sd-version 31.44
 @set full-manual
 @c %**end of header
 @iftex
@@ -140,8 +140,9 @@ Calling
 Resolving and Searching
 
 * Resolving::                   Resolving
-* Normalize::                   Normalizing the Setup
-* Pick Random Call::            Letting the program choose a random call
+* Normalize and Standardize::   Normalizing or Standardizing the Setup
+* Pick Random Call::            Letting the program pick a random call
+* Create Setup::                Creating a Specific Setup
 * Reconcile::                   The @code{Reconcile} operation.
 
 Miscellaneous Commands
@@ -171,6 +172,7 @@ Macintosh Overview
 Terminal Interface
 
 * Sdtty::                       The @code{sdtty} program
+* Function Keys in Sdtty::      Function Keys
 * Sdtty on the PC::             The PC version
 * Sdtty on Unix::               The Unix version
 
@@ -179,6 +181,11 @@ Call Notes
 * Sweeping Direction::          Sweeping Direction
 * C1 Single Rotate::            C1 Single Rotate
 * Spread::                      Spread
+* <ANYTHING> and circle::       <ANYTHING> and circle
+* Centers Back Away::           Centers Back Away
+* So-and-so Promenade::         So-and-so Promenade
+* Ends Divide::                 Ends Divide
+* Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
 * Snag Circulate::              Snag Circulate
@@ -194,6 +201,7 @@ Concept Notes
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
 * Phantom Wave Concepts::       Phantom Wave Concepts
+* Assuming a Quarter-Tag::      Assuming a Quarter-Tag
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * Fractional and N Times::      Fractional and N Times
@@ -952,8 +960,9 @@ Mandatory subcalls appear in the menu as the keyword @code{<ANYTHING>}, as
 in @code{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
 nice as for the keywords discussed previously.  It is not possible to type in the call
 just the way you want it to appear.  @i{You must literally type the <ANYTHING>}.
-That is, you type @code{clover and <ANYTHING>}.  Of course, because of the completing
-reader, you rarely need to type that much.  Just @code{clover a} is enough, for
+That is, you type @code{clover and <ANYTHING>} or @code{slant <ANYTHING> and <ANYTHING>}.
+Of course, because of the completing reader, you rarely need to type that much.
+Just @code{clover a} is enough, for
 example.  In @code{sd}, click on the menu item in the usual way.  Either way,
 the program will prompt you for a subcall.  This can be any legal call, including
 concepts and modifiers.  Whatever you enter will appear in brackets, as in
@@ -1258,12 +1267,13 @@ accomplish various goals.
 
 @menu
 * Resolving::                   Resolving
-* Normalize::                   Normalizing the Setup
-* Pick Random Call::            Letting the program choose a random call
+* Normalize and Standardize::   Normalizing or Standardizing the Setup
+* Pick Random Call::            Letting the program pick a random call
+* Create Setup::                Creating a Specific Setup
 * Reconcile::                   The @code{Reconcile} operation.
 @end menu
 
-@node Resolving, Normalize,  , Resolving and Searching
+@node Resolving, Normalize and Standardize,  , Resolving and Searching
 @section Resolving
 
 Whenever the setup is in a resolved state, whether intentionally or
@@ -1307,22 +1317,23 @@ The transcript area shows the effect of that resolution.
 
 You can select @code{find another} to search for another resolution and add
 it to its stored list.  When the list has more than one resolution in it,
-selecting on @code{go to previous} and @code{go to next} will move around in its
+selecting on @code{previous} and @code{next} will move around in its
 list of previously found resolutions and show whichever one you want.
 In this way, you can search
 for a better resolution than the one you already have, but go back to
 the earlier one if no better one is forthcoming.
 
-Selecting @code{accept} will leave resolve mode, causing the current
-resolution to be added to the sequence exactly as though you had
-entered those calls manually.
+Selecting @code{accept current choice} will leave resolve mode, causing
+the current resolution to be added to the sequence exactly as though
+you had entered those calls manually.
 
-Selecting @code{abort the search} (@code{Cancel} in the Macintosh
+Selecting @code{abort the search}, @code{exit the search}, @code{quit the search},
+or @code{undo the search} (or @code{Cancel} in the Macintosh
 version) will throw away all of the saved resolutions and leave resolve
 mode, but will not destroy the sequence.  The sequence will be left just
 as it was before @code{resolve} was selected.
 
-Selecting anything else, such as @code{exit} or @code{end this sequence},
+Selecting anything else, such as @code{end this sequence},
 is equivalent to @code{accept} followed by whatever that action
 is.  So, for example, you can select @code{end this sequence} as soon as
 you see a resolution that you like.
@@ -1359,12 +1370,15 @@ the sequence to a file.}  You will not be able to print a sequence until
 it has been written to a file.  You must give the @code{end this sequence}
 command to write out the sequence.
 
-@node Normalize, Pick Random Call, Resolving, Resolving and Searching
-@section Normalizing the setup
+@node Normalize and Standardize, Pick Random Call, Resolving, Resolving and Searching
+@section Normalizing or Standardizing the Setup
 
-Selecting @code{normalize} invokes an operation very similar to the resolver,
-except that it searches for sequences of up to three calls that normalize
-various matrices, such as 4x4, into a normal 8-person setup.  It uses a variety
+These commands invoke an operation very similar to the resolver,
+except that they search for sequences of up to three calls that
+make the setup ``nicer''.
+
+The @code{normalize} command reduces
+various matrices, such as 4x4, into an 8-person setup.  It uses a variety
 of phantom-like concepts to do its work.
 
 Be aware that the phantom-like concepts that this command uses are not
@@ -1376,23 +1390,73 @@ that are also useful.
 The @code{normalize} operation does not search for such things.  It is only
 intended to search for things that might not be obvious.
 
+The @code{standardize} command turns the setup into an 8-person setup
+in which people are facing in ``reasonable'' directions.  That is, it
+gets out of T-bone setups.  It uses both plain calls and calls with
+concepts.
+
 If you have selected @code{toggle concept levels},
-the @code{normalize} command may
+these commands may
 make use of concepts that are not legal at the chosen level.  This is sometimes
 useful in emergencies.
 
-@node Pick Random Call, Reconcile, Normalize, Resolving and Searching
+@node Pick Random Call, Create Setup, Normalize and Standardize, Resolving and Searching
 @section Letting the program pick a random call
 
-Selecting @code{pick random call} invokes an operation very similar to the resolver,
-except that it searches for any legal single call.  While this may sound like
+There are four commands in this family:  @code{pick random call},
+@code{pick simple call}, @code{pick concept call}, and @code{pick level call}.
+They search for any legal single call.  While this may sound like
 a fairly pointless operation, remember that you can use this while one or
 more concepts are already entered, in which case it will search for legal calls
 that involve those concepts.  Hence, this operation is useful for finding
 clever uses of difficult concepts such as @i{checkpoint},
 @i{interlace}, or @i{on your own}.
 
-@node Reconcile,  , Pick Random Call, Resolving and Searching
+The command @code{pick random call} attempts to pick completely random
+things---sometimes calls, and sometimes calls with concepts.
+@code{Pick simple call} never uses concepts.  @code{Pick concept call}
+always uses at least one concept with the call that it picks.
+@code{Pick level call} picks only calls that are at or near the specified
+calling level.  (By ``near'' we mean that, if the calling level is C4,
+it will pick C4A or C4 calls.  If the level is A2, it will pick A1 or A2 calls.)
+
+@node Create Setup, Reconcile, Pick Random Call, Resolving and Searching
+@section Creating a Specific Setup
+
+These commands pick some call or calls that go into a specified setup.
+The commands are:
+@example
+   @code{create any lines}
+   @code{create waves}
+   @code{create 2fl}
+   @code{create lines in}
+   @code{create lines out}
+   @code{create inverted lines}
+   @code{create 3x1 lines}
+   @code{create any columns}
+   @code{create columns}
+   @code{create magic columns}
+   @code{create dpt}
+   @code{create cdpt}
+   @code{create trade by}
+   @code{create 8 chain}
+   @code{create any 1/4 tag}
+   @code{create 1/4 tag}
+   @code{create 3/4 tag}
+   @code{create 1/4 line}
+   @code{create 3/4 line}
+   @code{create diamonds}
+   @code{create any tidal setup}
+   @code{create tidal wave}
+@end example
+
+``Any lines'' and ``any columns'' mean any 2x4 setup in which people
+are all in generalized lines or columns, respectively.  ``Any tidal
+setup'' means any 1x8, no matter how people are facing.
+All the others are independent of handedness---for example, a
+two-faced line can be of either handedness.
+
+@node Reconcile,  , Create Setup, Resolving and Searching
 @section The @code{Reconcile} operation
 
 Selecting @code{reconcile} invokes an operation like resolving, but it
@@ -1415,7 +1479,7 @@ The reconcile operation is very similar in behavior to resolve, except
 that the program needs to know the insertion point.  Rather than
 searching for the first resolve as soon as you enter the mode, the
 reconcile operation lets you set the insertion point before searching.
-Select @code{raise insertion point} or @code{lower insertion point} to
+Select @code{raise reconcile point} or @code{lower reconcile point} to
 set it.  A dotted line will be displayed showing where in the sequence
 the generated calls will be placed.  When this is in the right place,
 select @code{find another} to find the first reconcile.  You can
@@ -1882,11 +1946,12 @@ Numbers} commands in the @code{Sequence} menu.
 
 @menu
 * Sdtty::                       The @code{sdtty} program
+* Function Keys in Sdtty::      Function Keys
 * Sdtty on the PC::             The PC version
 * Sdtty on Unix::               The Unix version
 @end menu
 
-@node Sdtty, Sdtty on the PC,  , Terminal Interface
+@node Sdtty, Function Keys in Sdtty,  , Terminal Interface
 @section Sdtty
 
 The program @code{sdtty} uses the completing reader for call,
@@ -1913,7 +1978,35 @@ the transcript that has changed with each command is simply redisplayed.
 This will inevitably lead to a choppy appearance on the screen or
 printing device.  The @code{refresh display} command cleans that up.
 
-@node Sdtty on the PC, Sdtty on Unix, Sdtty, Terminal Interface
+@node Function Keys in Sdtty, Sdtty on the PC, Sdtty, Terminal Interface
+@section Function Keys in Sdtty
+
+On the PC, @code{Sdtty} recognizes a number of function keys.  These
+are equivalent to typing the following commands:
+
+@example
+@code{key       normal                     shift                  control}
+@code{}
+@code{F1     heads start                sides start            just as they are}
+@code{F2     two calls in succession    twice}
+@code{F3     pick random call           pick concept call      pick simple call}
+@code{F4     resolve                    reconcile              normalize}
+@code{F5     refresh display            keep picture           insert a comment}
+@code{F6     simple modifications       allow modifications}
+@code{F7     toggle concept levels      toggle active phantoms}
+@code{F8     <anything>                 <concept>}
+@code{F9     undo last call             abort the search}
+@code{F10    end this sequence          change output file}
+@code{F11    pick level call}
+@end example
+
+All of these except @samp{<anything>} and @samp{<concept>} execute the command
+directly, that is, pressing the function key is equivalent to typing the indicated
+text and then pressing @key{Enter}.  The keys for @samp{<anything>} and
+@samp{<concept>} are simply equivalent to entering that text without pressing
+@key{Enter}.
+
+@node Sdtty on the PC, Sdtty on Unix, Function Keys in Sdtty, Terminal Interface
 @section Sdtty on the PC
 
 Our DOS compiler, DJGPP, says it supports 80386, 80387, 80486, XMS,
@@ -2059,6 +2152,11 @@ appropriate to get the dancers through the action that you intend.
 * Sweeping Direction::          Sweeping Direction
 * C1 Single Rotate::            C1 Single Rotate
 * Spread::                      Spread
+* <ANYTHING> and circle::       <ANYTHING> and circle
+* Centers Back Away::           Centers Back Away
+* So-and-so Promenade::         So-and-so Promenade
+* Ends Divide::                 Ends Divide
+* Little/Little More/Plenty::   Little/Little More/Plenty
 * Flip Back::                   Flip Back
 * Face <DIRECTION>::            Face <DIRECTION>
 * Snag Circulate::              Snag Circulate
@@ -2084,7 +2182,7 @@ the preceding call.  This is known to work for the common calls such as
 heads or sides from a squared set.  It performs the common C1 usage of
 this call.  It is nonsensical in other contexts.
 
-@node Spread, Flip Back, C1 Single Rotate, Call Notes
+@node Spread, <ANYTHING> and circle, C1 Single Rotate, Call Notes
 @section Spread
 
 The term @dfn{spread} can mean different things and so is two calls in
@@ -2094,7 +2192,109 @@ Use the call @samp{@dots{} and spread} after @i{wheel and deal},
 or after starting a sequence with something like @samp{heads star thru}.
 You can also use the call @samp{wheel and spread}.
 
-@node Flip Back, Face <DIRECTION>, Spread, Call Notes
+@node <ANYTHING> and circle, Centers Back Away, Spread, Call Notes
+@section <ANYTHING> and circle
+
+Callers use the @code{<ANYTHING> and circle} construction with either
+an 8-person call to be done by everyone, or a 4-person call to be done
+just by the centers, and dancers generally have no confusion about it.
+The program is not so clever.  The @code{<ANYTHING> and circle} call
+has all 8 people do the call, so, for example, it could be used with
+@code{ping-pong circulate} or @code{scoot and plenty}.  If you want
+just the centers to do the <ANYTHING> call, you can use the @code{centers}
+concept.  For example, you could select @code{<ANYTHING> and circle 1/4},
+then @code{centers}, then @code{switch the wave}.  The result will
+come out as @code{[CENTERS switch the wave] and circle 1/4}.
+You presumably would not say the word @samp{centers} when calling this.
+
+There is another way to get this effect is to select @code{simple
+modifications} followed by @code{swing and circle}.  When this
+method is used, the modification call will be done by the centers
+only.  So you could select @code{simple modifications}, then
+@code{swing and circle 1/4}, and then give the modification call
+@code{switch the wave}.
+
+If all else fails, there is a call @code{and circle 1/4} that just
+does the final circling part.
+
+@node Centers Back Away, So-and-so Promenade, <ANYTHING> and circle, Call Notes
+@section Centers Back Away
+
+This call is intended for use in sequences that begin with heads or
+sides doing a @samp{ladies chain} or @samp{right and left thru} or
+something similar.  After they do such a call, they will remain in
+the center.  To have them do the next call (for example, @samp{pass the
+ocean} or @samp{star thru}), just use the @samp{centers} concept.
+If you want the @i{inactive} dancers to come in and do the next call,
+use the call @samp{centers back away, others come in and <ANYTHING>}.
+So, for example, you might enter:
+@example
+   @code{heads start}
+   @code{ladies chain}
+   @code{centers back away, others come in and <ANYTHING>}
+   @code{star thru}
+@end example
+You might read this as ``head ladies chain, then the sides move in and
+star thru''.
+
+@node So-and-so Promenade, Ends Divide, Centers Back Away, Call Notes
+@section So-and-so Promenade
+
+These calls are intended for use in sequences that begin with heads
+or sides promenading halfway around the set.  The calls are
+@example
+   @code{promenade halfway, come in to the middle and <ANYTHING>}
+@end example
+and
+@example
+   @code{promenade halfway, while the others <ANYTHING>}
+@end example
+In each case, start the sequence with the @code{heads start} or @code{sides
+start} command, and then issue one of the calls listed above.  Ignore the
+fact that the displayed setup will look strange before the promenade.
+You will be prompted for the @samp{<ANYTHING>} call, which will be
+done by the appropriate people in the center of the set.
+
+@node Ends Divide, Little/Little More/Plenty, So-and-so Promenade, Call Notes
+@section Ends Divide
+
+This is a call that should be used when you want the outsides to move
+along until they are facing each other.  For example, after @samp{heads
+swing thru}, you might say @samp{ends divide}, and then have them @samp{star thru}.
+Note that @samp{ends divide} is the name of the call.  It is not an
+application of the @samp{ends} concept.  You must type it on one line,
+and you may not substitute another designator, such as @samp{sides}, for
+the word @samp{ends}.  So, for example, you might enter:
+@example
+   @code{heads start}
+   @code{swing thru}
+   @code{ends divide}
+   @code{ends}
+   @code{touch 1/4}
+   @code{6x2 acey deucey}
+@end example
+You might read this as ``heads swing thru, while the sides divide
+and touch 1/4''.
+
+@node Little/Little More/Plenty, Flip Back, Ends Divide, Call Notes
+@section Little, Little More, and Plenty
+
+These are problematical calls when the outsides are in line-like, rather
+than column-like, orientation.  This situation arises, for example, when
+the starting setup is twin diamonds.  The Callerlab C1 and C2 definitions
+state that in this case the outsides counter rotate just as they are,
+without first quartering in some direction.  However, many high-level callers
+have adopted a definition that says that the outsides @i{always} quarter
+right (or take whatever direction is given) before counter rotating.
+Sd uses this formulation.  To handle all the possibilities, there are 3
+varieties of the call
+@samp{little}---just @samp{little}, @samp{little, ends face <DIRECTION>},
+and @samp{little, ends go as you are}.  Use the last one when the
+dancers are in diamonds and you want the outsides to counter rotate
+directly.  Whether or not you say ``ends go as you are'' is up to you.
+The calls @samp{little more} and @samp{plenty} have analogous behavior.
+
+@node Flip Back, Face <DIRECTION>, Little/Little More/Plenty, Call Notes
 @section Flip Back
 
 This call is a special case of the @samp{<ATC> back to a wave} class
@@ -2195,6 +2395,7 @@ flip back while the others flip back}.
 * Two Calls::                   Two Calls in Succession
 * Assume Waves::                Assume Waves
 * Phantom Wave Concepts::       Phantom Wave Concepts
+* Assuming a Quarter-Tag::      Assuming a Quarter-Tag
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * Fractional and N Times::      Fractional and N Times
@@ -2454,7 +2655,7 @@ this mode.  @xref{Changing Modes}.
 When in this mode, @code{sd} will not actually insert the text
 @code{with active phantoms} after each @code{assume} concept.
 
-@node Phantom Wave Concepts, Diamond, Assume Waves, Concept Notes
+@node Phantom Wave Concepts, Assuming a Quarter-Tag, Assume Waves, Concept Notes
 @section Phantom Wave Concepts
 
 All of the phantom line concepts (@samp{triple lines}, @samp{split phantom
@@ -2471,7 +2672,38 @@ concept is used after the phantom wave concept or because the @code{toggle
 active phantoms} command was given, the phantoms will work throughout the entire
 call, based on the initial facing direction in waves.
 
-@node Diamond, Implied Piecewise, Phantom Wave Concepts, Concept Notes
+@node Assuming a Quarter-Tag, Diamond, Phantom Wave Concepts, Concept Notes
+@section Assuming a Quarter-Tag
+
+Callers sometimes wish to perform a generalized quarter-tag call (e.g.
+@samp{scoot and little}) from a setup in which only the center wave
+contains real people, and the outsides need to be assumed.  For example,
+from an as-couples wave, one could wish to specify that the live dancers
+are the as-couples center wave of a quarter-tag.  The way to specify this
+when calling is typically something like @samp{as couples in a quarter-tag,
+scoot and little}.
+
+The proper way to specify this in @code{sd} or @code{sdtty} is with the
+@code{as couples} (or @code{tandem} or @code{couples twosome} or whatever)
+concept, followed by a suitable @code{assume} concept, such as @code{assume
+general 1/4 tags} or @code{assume right 1/4 tags}.  Which of these assumptions
+you choose doesn't matter as long as it is consistent with the setup you are
+creating, since you probably won't read the concept verbatim anyway.
+
+For example, from an as-couples wave, you could select:
+@example
+   @code{as couples}
+   @code{assume right 1/4 tags}
+   @code{scoot and little}
+@end example
+Or, from parallel waves, you could select:
+@example
+   @code{tandem}
+   @code{assume general 1/4 tags}
+   @code{ping-pong circulate}
+@end example
+
+@node Diamond, Implied Piecewise, Assuming a Quarter-Tag, Concept Notes
 @section Diamond
 
 You should not need to slect @code{diamond} except when you actually
@@ -2587,13 +2819,14 @@ something similar.
 @node Designating Certain People, Finish and Like a, Precede it or Follow it, Concept Notes
 @section Designating Certain People
 
-There are four closely related concepts here.  You must have a clear
+There are five closely related concepts here.  You must have a clear
 understanding of how the program treats them in order to use them effectively.
 Compared to the natural and fluent way most dancers and callers use these
 ideas, the program may seem idiosyncratic and ignorant in its handling of them.
 @xref{Linguistic Idiosyncrasies}.
 
-The four concepts are @code{so-and-so}, @code{so-and-so disconnected},
+The five concepts are @code{so-and-so}, @code{so-and-so disconnected},
+@code{so-and-so in your distorted setup},
 @code{so-and-so do your part}, and @code{own the so-and-so}.
 
 In general, be aware that the choice of words and punctuation that the program
@@ -2651,7 +2884,7 @@ the printout, how an action arose.
 The concepts are:
 
 @example
-   @code{<so-and-so> disconnected <call>} or
+   @code{<so-and-so> disconnected <call>}
          or
    @code{<so-and-so> disconnected <call> while the others <other call>}
 @end example
@@ -2665,6 +2898,37 @@ they had vacated.  A few shape-changing calls are permitted.  In this case,
 whichever set of people occupied the center spots prior to the call will
 occupy the center of the result, in accordance with accepted usage for
 this concept.
+
+@subsection So-And-So in your Distorted Setup
+
+The concepts are:
+
+@example
+   @code{<so-and-so> in your distorted line <call>}
+         or
+   @code{<so-and-so> in your distorted wave <call>}
+         or
+   @code{<so-and-so> in your distorted column <call>}
+         or
+   @code{<so-and-so> in your distorted diamond <call>}
+         or
+   @code{<so-and-so> in your distorted box <call>}
+@end example
+
+The designated people are identified in a geometrically distorted setup.
+If the result of the call has a different shape and orientation from the
+beginning setup, those dancers may nevertheless be able to go back to the
+same collective spots, or may be able to maintain the same general location
+in the total formation.
+
+Be aware that the program requires you to use the most specific concept
+in each case.  The @code{distorted} concept requires that the setup be
+geometrically distorted in shape, not just disconnected.  Do not say
+@code{distorted} when @code{disconnected} will do, and do not say
+@code{disconnected} when just telling the people to do the call will do.
+
+This concept has been set at C2.  You can use it at lower levels if
+you issue the @code{toggle concept levels} command.
 
 @subsection So-And-So Do Your Part
 

@@ -39,6 +39,7 @@ call_list_kind *call_menu_ptr;
 
 Private callspec_block *empty_menu[] = {NULLCALLSPEC};
 Private callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
+Private Cstring *selector_menu_list;
 
 Private long_boolean commands_last_option;
 
@@ -147,65 +148,73 @@ extern void
 matcher_initialize(long_boolean show_commands_last)
 {
    int i;
-    int concept_number;
-    concept_descriptor *p;
-    int *item, *level_item;
-    concept_kind end_marker = concept_diagnose;
+   int concept_number;
+   concept_descriptor *p;
+   int *item, *level_item;
+   concept_kind end_marker = concept_diagnose;
 
-    /* Decide whether we allow the "diagnose" concept, by deciding
-        when we will stop the concept list scan. */
-    if (diagnostic_mode) end_marker = marker_end_of_list;
+   /* Decide whether we allow the "diagnose" concept, by deciding
+      when we will stop the concept list scan. */
+   if (diagnostic_mode) end_marker = marker_end_of_list;
 
-    commands_last_option = show_commands_last;
+   commands_last_option = show_commands_last;
 
-    /* initialize our special empty call menu */
+   /* initialize our special empty call menu */
 
-    call_menu_lists[call_list_empty] = empty_menu;
-    number_of_calls[call_list_empty] = 0;
+   call_menu_lists[call_list_empty] = empty_menu;
+   number_of_calls[call_list_empty] = 0;
 
-    /* count the number of concepts to put in the lists */
-    
-    concept_list_length = 0;
-    level_concept_list_length = 0;
-    for (concept_number=0;;concept_number++) {
-        p = &concept_descriptor_table[concept_number];
-        if (p->kind == end_marker) {
-            break;
-        }
-        else if (p->kind == concept_comment || (p->miscflags & 1)) {
-            continue;
-        }
+   /* count the number of concepts to put in the lists */
+   
+   concept_list_length = 0;
+   level_concept_list_length = 0;
+   for (concept_number=0;;concept_number++) {
+      p = &concept_descriptor_table[concept_number];
+      if (p->kind == end_marker) {
+         break;
+      }
+      else if (p->kind == concept_comment || (p->miscflags & 1)) {
+         continue;
+      }
 
-        concept_list_length++;
+      concept_list_length++;
 
-        if (p->level <= calling_level)
-            level_concept_list_length++;
-    }
+      if (p->level <= calling_level)
+         level_concept_list_length++;
+   }
 
-    /* create the concept lists */
+   /* create the concept lists */
 
-    concept_list = (int *) get_mem(sizeof(int) * concept_list_length);
-    level_concept_list = (int *) get_mem(sizeof(int) * level_concept_list_length);
+   concept_list = (int *) get_mem(sizeof(int) * concept_list_length);
+   level_concept_list = (int *) get_mem(sizeof(int) * level_concept_list_length);
 
-    item = concept_list;
-    level_item = level_concept_list;
-    for (concept_number=0;;concept_number++) {
-        p = &concept_descriptor_table[concept_number];
-        if (p->kind == end_marker) {
-            break;
-        }
-        if (p->kind == concept_comment || (p->miscflags & 1)) {
-            continue;
-        }
+   item = concept_list;
+   level_item = level_concept_list;
+   for (concept_number=0;;concept_number++) {
+      p = &concept_descriptor_table[concept_number];
+      if (p->kind == end_marker) {
+         break;
+      }
+      if (p->kind == concept_comment || (p->miscflags & 1)) {
+         continue;
+      }
 
-        *item = concept_number;
-        item++;
+      *item = concept_number;
+      item++;
 
-        if (p->level <= calling_level) {
-            *level_item = concept_number;
-            level_item++;
-        }
-    }
+      if (p->level <= calling_level) {
+         *level_item = concept_number;
+         level_item++;
+      }
+   }
+
+   /* And the selector list. */
+   selector_menu_list = (Cstring *) get_mem((last_selector_kind+2) * sizeof(char *));
+
+   for (i=0; i<last_selector_kind+1; i++)
+      selector_menu_list[i] = selector_list[i].name;
+
+   selector_menu_list[last_selector_kind+1] = (Cstring) 0;
 }
 
 
@@ -267,7 +276,11 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
    longjmp_ptr = &my_longjmp_buffer;
    if (setjmp(my_longjmp_buffer.the_buf)) {
 
-      /* A call failed.  A bad choice of selector or number may be the cause.
+      /* A call failed.  If the call had some mandatory substitution, pass it anyway. */
+
+      if (mandatory_call_used) goto accept;
+
+      /* Or a bad choice of selector or number may be the cause.
          Try different selectors first. */
 
       if (selector_used && verify_used_selector) {
@@ -322,6 +335,7 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
 
    selector_used = FALSE;
    number_used = FALSE;
+   mandatory_call_used = FALSE;
    verify_used_number = FALSE;
    verify_used_selector = FALSE;
 
@@ -339,8 +353,11 @@ static long_boolean verify_call(call_list_kind *clp, Const match_result *result)
       Therefore, the parse tree is incomplete.  We can print such parse trees, but we
       can't execute them.  So we just assume the call works. */
 
-   if (parse_state.parse_stack_index == 0)
-      toplevelmove(); /* does longjmp if error */
+   if (parse_state.parse_stack_index != 0) goto accept;
+
+   toplevelmove(); /* does longjmp if error */
+
+   accept:
 
    resultval = TRUE;
    goto foobar;
@@ -616,7 +633,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
       new_result = *result;
       for (i=1; i<=last_selector_kind; ++i) {
          new_result.who = (selector_kind) i;
-         match_suffix_2(user, ((key == '6') ? selector_names : selector_singular)[i], &p2b, patxp, &new_result);
+         match_suffix_2(user, ((key == '6') ? selector_list[i].name : selector_list[i].sing_name), &p2b, patxp, &new_result);
       }
    }
    else if (key == 'h' && (result->where == direction_uninitialized)) {
@@ -1015,7 +1032,7 @@ static void search_menu(uims_reply kind)
          menu_length = last_direction_kind;
       }
       else if (static_ss.call_menu == match_selectors) {
-         menu = &selector_names[1];
+         menu = &selector_menu_list[1];
          menu_length = last_selector_kind;
       }
       else if (static_ss.call_menu == match_startup_commands) {
@@ -1037,8 +1054,6 @@ static void search_menu(uims_reply kind)
       }
    }
 }
-
-
 
     
 
