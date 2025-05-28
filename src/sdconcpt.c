@@ -76,7 +76,7 @@ Private void do_c1_phantom_move(
    setup *result)
 {
    parse_block *next_parseptr;
-   final_set junk_concepts;
+   uint64 junk_concepts;
    setup setup1, setup2;
    setup the_setups[2];
    int i;
@@ -92,7 +92,7 @@ Private void do_c1_phantom_move(
 
       uint32 what_we_need = 0;
 
-      if (junk_concepts)
+      if (junk_concepts.herit || junk_concepts.final)
          fail("Phantom couples/tandem must not have intervening concpets.");
 
       /* "Phantom tandem" has a higher level than either "phantom" or "tandem". */
@@ -562,7 +562,7 @@ Private void do_concept_parallelogram(
 {
    mpkind mk;
    parse_block *next_parseptr;
-   final_set junk_concepts;
+   uint64 junk_concepts;
    map_thing *map_ptr;
    parse_block *standard_concept = (parse_block *) 0;
 
@@ -585,14 +585,15 @@ Private void do_concept_parallelogram(
    next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
 
    /* But skip over "standard" */
-   if (next_parseptr->concept->kind == concept_standard && junk_concepts == 0) {
+   if (next_parseptr->concept->kind == concept_standard && junk_concepts.herit == 0 && junk_concepts.final == 0) {
       standard_concept = next_parseptr;
       next_parseptr = process_final_concepts(next_parseptr->next, FALSE, &junk_concepts);
    }
 
    if (     next_parseptr->concept->kind == concept_do_phantom_2x4 &&
             ss->kind == s2x6 &&     /* Only allow 50% offset. */
-            junk_concepts == 0 &&
+            junk_concepts.herit == 0 &&
+            junk_concepts.final == 0 &&
             next_parseptr->concept->value.maps == &map_split_f) {
       int linesp = next_parseptr->concept->value.arg2 & 7;
 
@@ -1062,6 +1063,7 @@ Private void do_concept_grand_working(
    int cstuff, tbonetest;
    int m1, m2, m3;
    setup_kind kk;
+   int arity = 2;
 
    cstuff = parseptr->concept->value.arg1;
    /* cstuff =
@@ -1075,35 +1077,63 @@ Private void do_concept_grand_working(
       as ends          : 11 */
 
    if (cstuff < 4) {      /* Working forward/back/right/left. */
-      if (ss->kind != s2x4) fail("Must have a 2x4 setup for this concept.");
+      if (ss->kind == s2x4) {
+         tbonetest = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
 
-      tbonetest = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
-      if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
-      if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
+         /* Look at the center 4 people and put each one in the correct group. */
 
-      /* Look at the center 4 people and put each one in the correct group. */
+         m1 = 0x9; m2 = 0x9; m3 = 0xF;
+         cstuff <<= 2;
 
-      m1 = 0x9; m2 = 0x9; m3 = 0xF;
-      cstuff <<= 2;
+         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m2 |= 0x2 ; m3 &= ~0x1; };
+         if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+      }
+      else if (ss->kind == s2x3) {
+         tbonetest = ss->people[1].id1 | ss->people[4].id1;
+         if ((tbonetest & 010) && (!(cstuff & 1))) fail("Must indicate left/right.");
+         if ((tbonetest & 01) && (cstuff & 1)) fail("Must indicate forward/back.");
 
-      if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
-      if (((ss->people[2].id1 + 6) ^ cstuff) & 8) { m2 |= 0x2 ; m3 &= ~0x1; };
-      if (((ss->people[5].id1 + 6) ^ cstuff) & 8) { m2 |= 0x4 ; m3 &= ~0x8; };
-      if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+         /* Look at the center 2 people and put each one in the correct group. */
+
+         m1 = 0x9; m2 = 0xF; m3 = 0;
+         cstuff <<= 2;
+
+         if (((ss->people[1].id1 + 6) ^ cstuff) & 8) { m1 |= 0x2 ; m2 &= ~0x1; };
+         if (((ss->people[6].id1 + 6) ^ cstuff) & 8) { m1 |= 0x4 ; m2 &= ~0x8; };
+         arity = 1;
+      }
+      else
+         fail("Must have a 2x3 or 2x4 setup for this concept.");
 
       kk = s2x2;
    }
    else if (cstuff < 10) {      /* Working clockwise/counterclockwise. */
-      if (ss->kind != s2x4) fail("Must have a 2x4 setup for this concept.");
+      if (ss->kind == s2x4) {
+         /* Put each of the center 4 people in the correct group, no need to look. */
 
-      /* Put each of the center 4 people in the correct group, no need to look. */
-
-      if (cstuff & 1) {
-         m1 = 0xB; m2 = 0xA; m3 = 0xE;
+         if (cstuff & 1) {
+            m1 = 0xB; m2 = 0xA; m3 = 0xE;
+         }
+         else {
+            m1 = 0xD; m2 = 0x5; m3 = 0x7;
+         }
       }
-      else {
-         m1 = 0xD; m2 = 0x5; m3 = 0x7;
+      else if (ss->kind == s2x3) {
+         m3 = 0;
+         if (cstuff & 1) {
+            m1 = 0xB; m2 = 0xE;
+         }
+         else {
+            m1 = 0xD; m2 = 0x7;
+         }
+         arity = 1;
       }
+      else
+         fail("Must have a 2x3 or 2x4 setup for this concept.");
 
       kk = s2x2;
    }
@@ -1122,7 +1152,7 @@ Private void do_concept_grand_working(
       kk = s1x4;
    }
 
-   overlapped_setup_move(ss, map_lists[kk][2]->f[MPKIND__OVERLAP][0], m1, m2, m3, result);
+   overlapped_setup_move(ss, map_lists[kk][arity]->f[MPKIND__OVERLAP][0], m1, m2, m3, result);
 }
 
 
@@ -2041,13 +2071,13 @@ Private void do_concept_crazy(
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
    tempsetup = *ss;
 
-   if (tempsetup.cmd.cmd_final_flags & INHERITFLAG_REVERSE) {
+   if (tempsetup.cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE) {
       if (reverseness) fail("Redundant 'REVERSE' modifiers.");
       reverseness = 1;
    }
 
-   tempsetup.cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
-   if (tempsetup.cmd.cmd_final_flags)   /* We don't allow other flags, like "cross". */
+   tempsetup.cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
+   if (tempsetup.cmd.cmd_final_flags.herit | tempsetup.cmd.cmd_final_flags.final)   /* We don't allow other flags, like "cross". */
       fail("Illegal modifier before \"crazy\".");
 
    cmd = tempsetup.cmd;    /* We will modify these flags, and, in any case, we need
@@ -2151,13 +2181,13 @@ Private void do_concept_fan(
    /* This is a huge amount of kludgy stuff shoveled in from a variety of sources.
       It needs to be cleaned up and thought about. */
 
-   final_set new_final_concepts;
+   uint64 new_final_concepts;
    parse_block *parseptrcopy;
    callspec_block *callspec;
 
    parseptrcopy = process_final_concepts(parseptr->next, TRUE, &new_final_concepts);
 
-   if (new_final_concepts || parseptrcopy->concept->kind > marker_end_of_list)
+   if (new_final_concepts.herit || new_final_concepts.final || parseptrcopy->concept->kind > marker_end_of_list)
       fail("Can't do \"fan\" followed by another concept or modifier.");
 
    callspec = parseptrcopy->call;
@@ -2426,14 +2456,14 @@ Private void do_concept_checkpoint(
    setup_command subsid_cmd = ss->cmd;
    subsid_cmd.parseptr = parseptr->subsidiary_root;
 
-   if (ss->cmd.cmd_final_flags & ~INHERITFLAG_REVERSE)   /* We don't allow other flags, like "cross". */
+   if (ss->cmd.cmd_final_flags.herit & ~INHERITFLAG_REVERSE)   /* We don't allow other flags, like "cross". */
       fail("Illegal modifier before \"checkpoint\".");
 
-   if (parseptr->concept->value.arg1 || (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE)) {   /* 0 for normal, 1 for reverse checkpoint. */
-      if (parseptr->concept->value.arg1 && (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE))
+   if (parseptr->concept->value.arg1 || (ss->cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE)) {   /* 0 for normal, 1 for reverse checkpoint. */
+      if (parseptr->concept->value.arg1 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE))
          fail("Redundant 'REVERSE' modifiers.");
-      ss->cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
-      subsid_cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
+      ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
+      subsid_cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
       concentric_move(ss, &ss->cmd, &subsid_cmd, schema_rev_checkpoint, 0, 0, TRUE, result);
    }
    else {
@@ -3530,12 +3560,12 @@ Private void do_concept_meta(
       shift N                   : 10
       shifty                    : 11 */
 
-   if (key == 0 && (ss->cmd.cmd_final_flags & INHERITFLAG_REVERSE)) {
+   if (key == 0 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE)) {
       key = 1;     /* "reverse" and "random"  ==>  "reverse random" */
-      ss->cmd.cmd_final_flags &= ~INHERITFLAG_REVERSE;
+      ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
    }
 
-   if (ss->cmd.cmd_final_flags)   /* Now demand that no flags remain. */
+   if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
       fail("Illegal modifier for this concept.");
 
    if (key != 3 && key != 7 && key != 2 && key != 8)
@@ -3603,10 +3633,10 @@ Private void do_concept_meta(
 
       /* If skipping "phantom", maybe it's "phantom tandem", so we need to skip both. */
       if (k == concept_c1_phantom) {
-         uint32 junk_concepts;
+         uint64 junk_concepts;
          parse_block *next_parseptr = process_final_concepts(parseptr_skip, FALSE, &junk_concepts);
 
-         if ((next_parseptr->concept->kind == concept_tandem || next_parseptr->concept->kind == concept_frac_tandem) && junk_concepts == 0)
+         if ((next_parseptr->concept->kind == concept_tandem || next_parseptr->concept->kind == concept_frac_tandem) && junk_concepts.herit == 0 && junk_concepts.final == 0)
             parseptr_skip = next_parseptr->next;
       }
    
@@ -4084,7 +4114,8 @@ Private void do_concept_fractional(
    ss->cmd.cmd_frac_flags = (ss->cmd.cmd_frac_flags & ~0xFFFF) | (s_numer<<12) | (s_denom<<8) | (e_numer<<4) | e_denom;
    ss->cmd.parseptr = parseptr->next;
    ss->cmd.callspec = (callspec_block *) 0;
-   ss->cmd.cmd_final_flags = 0;
+   ss->cmd.cmd_final_flags.final = 0;
+   ss->cmd.cmd_final_flags.herit = 0;
 
    if (parseptr->concept->value.arg1 == 2) {
       uint32 save_elongation = result->cmd.prior_elongation_bits;
@@ -4181,7 +4212,7 @@ Private void do_concept_concentric(
    map_finder *mf;
    calldef_schema schema = (calldef_schema) parseptr->concept->value.arg1;
 
-   if (ss->cmd.cmd_final_flags & INHERITFLAG_CROSS) {
+   if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_CROSS) {
       switch (schema) {
          case schema_concentric:
             schema = schema_cross_concentric;
@@ -4197,7 +4228,7 @@ Private void do_concept_concentric(
       }
    }
 
-   if (ss->cmd.cmd_final_flags & INHERITFLAG_SINGLE) {
+   if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_SINGLE) {
       switch (schema) {
          case schema_concentric:
             schema = schema_single_concentric;
@@ -4210,9 +4241,9 @@ Private void do_concept_concentric(
       }
    }
 
-   ss->cmd.cmd_final_flags &= ~(INHERITFLAG_CROSS | INHERITFLAG_SINGLE);
+   ss->cmd.cmd_final_flags.herit &= ~(INHERITFLAG_CROSS | INHERITFLAG_SINGLE);
 
-   if (ss->cmd.cmd_final_flags)   /* We don't allow other flags, like "left". */
+   if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* We don't allow other flags, like "left". */
       fail("Illegal modifier before \"concentric\".");
 
    switch (schema) {
@@ -4296,7 +4327,8 @@ extern long_boolean do_big_concept(
    concept_kind this_kind = this_concept->kind;
    concept_table_item *this_table_item = &concept_table[this_kind];
    parse_block artificial_parse_block;
-   uint32 extra_mods;
+   uint32 extraheritmods;
+   uint32 extrafinalmods;
 
    /* Most concepts simply have no understanding of, or tolerance for, modifiers
       like "interlocked" in front of them.  So, in the general case, we check for
@@ -4322,22 +4354,24 @@ extern long_boolean do_big_concept(
 
    /* If "CONCPROP__PERMIT_REVERSE" is on, let anything pass. */
 
-   extra_mods = ss->cmd.cmd_final_flags & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|FINAL__SPLIT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK);
+   extraheritmods = ss->cmd.cmd_final_flags.herit & (INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK);
+   extrafinalmods = ss->cmd.cmd_final_flags.final & FINAL__SPLIT;
 
-   if (extra_mods && !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE)) {
+   if ((extraheritmods | extrafinalmods) && !(this_table_item->concept_prop & CONCPROP__PERMIT_REVERSE)) {
       /* This can only be legal if we find a translation in the table. */
 
       concept_fixer_thing *p;
 
-      for (p=concept_fixer_table ; p->newmods ; p++) {
-         if (p->newmods == extra_mods && &concept_descriptor_table[p->before] == this_concept) {
+      for (p=concept_fixer_table ; p->newheritmods | p->newfinalmods ; p++) {
+         if (p->newheritmods == extraheritmods && p->newfinalmods == extrafinalmods && &concept_descriptor_table[p->before] == this_concept) {
             this_concept = &concept_descriptor_table[p->after];
             artificial_parse_block = *this_concept_parse_block;
             artificial_parse_block.concept = this_concept;
             this_concept_parse_block = &artificial_parse_block;
             this_kind = this_concept->kind;
             this_table_item = &concept_table[this_kind];
-            ss->cmd.cmd_final_flags &= ~extra_mods;   /* Take out those mods. */
+            ss->cmd.cmd_final_flags.herit &= ~extraheritmods;   /* Take out those mods. */
+            ss->cmd.cmd_final_flags.final &= ~extrafinalmods;
             goto found_new_concept;
          }
       }
@@ -4420,7 +4454,7 @@ extern long_boolean do_big_concept(
 
    if (this_kind == concept_standard) {
       parse_block *substandard_concptptr;
-      final_set junk_concepts;
+      uint64 junk_concepts;
       int tbonetest = 0;
       int stdtest = 0;
       int livemask = 0;
@@ -4430,12 +4464,12 @@ extern long_boolean do_big_concept(
    
       /* If we hit "matrix", do a little extra stuff and continue. */
 
-      if (!junk_concepts && substandard_concptptr->concept->kind == concept_matrix) {
+      if (!junk_concepts.herit && !junk_concepts.final && substandard_concptptr->concept->kind == concept_matrix) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
          substandard_concptptr = process_final_concepts(substandard_concptptr->next, TRUE, &junk_concepts);
       }
 
-      if (junk_concepts || (!(concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__STANDARD)))
+      if (junk_concepts.herit || junk_concepts.final || (!(concept_table[substandard_concptptr->concept->kind].concept_prop & CONCPROP__STANDARD)))
          fail("This concept must be used with some offset/distorted/phantom concept.");
 
       /* We don't think stepping to a wave is ever a good idea if standard is used.  Most calls that
@@ -4591,6 +4625,8 @@ concept_table_item concept_table[] = {
    /* concept_singlefile */               {0,                                                                                      0},
    /* concept_interlocked */              {0,                                                                                      0},
    /* concept_yoyo */                     {0,                                                                                      0},
+   /* concept_straight */                 {0,                                                                                      0},
+   /* concept_twisted */                  {0,                                                                                      0},
    /* concept_12_matrix */                {0,                                                                                      0},
    /* concept_16_matrix */                {0,                                                                                      0},
    /* concept_1x2 */                      {0,                                                                                      0},

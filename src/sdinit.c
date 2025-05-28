@@ -200,7 +200,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
       /* Now try giving the "cross" modifier. */
 
-      if (test_call->callflagsh & ESCAPE_WORD__CROSS) {
+      if (test_call->callflagsf & ESCAPE_WORD__CROSS) {
          if (!crossiness) {
             crossiness = TRUE;
             goto try_another_cross;
@@ -209,7 +209,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
       /* Now try giving the "magic" modifier. */
 
-      if (test_call->callflagsh & ESCAPE_WORD__MAGIC) {
+      if (test_call->callflagsf & ESCAPE_WORD__MAGIC) {
          if (!magicness) {
             magicness = TRUE;
             goto try_another_magic;
@@ -218,7 +218,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
       /* Now try giving the "interlocked" modifier. */
 
-      if (test_call->callflagsh & ESCAPE_WORD__INTLK) {
+      if (test_call->callflagsf & ESCAPE_WORD__INTLK) {
          if (!intlkness) {
             intlkness = TRUE;
             goto try_another_intlk;
@@ -280,7 +280,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    /* We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
       since we don't know what the tagging call will be. */
-   if (test_call->callflagsh & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
+   if (test_call->callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT)) goto accept;
 
    if (crossiness)
       (void) deposit_concept(&concept_descriptor_table[cross_concept_index]);
@@ -719,8 +719,10 @@ Private void read_level_3_groups(calldef_block *where_to_put)
             temp_predlist->pred = &pred_table[last_datum];
             /* If this call uses a predicate that takes a selector, flag the call so that
                we will query the user for that selector. */
-            if (last_datum < SELECTOR_PREDS)
-               call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+
+            if (last_datum < selector_preds)
+               call_root->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
+
             for (j=0; j < this_start_size; j++) {
                read_halfword();
                temp_predlist->arr[j] = last_datum;
@@ -764,41 +766,30 @@ Private void check_tag(int tag)
 Private void read_in_call_definition(void)
 {
    int j;
+   int lim = 8;
+   uint32 left_half;
 
    switch (call_root->schema) {
       case schema_nothing:
-         return;
-      case schema_matrix:
-         {
-            uint32 left_half = last_datum;
-            read_halfword();
-            call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
-            read_halfword();
-
-            for (j=0; j < 2; j++) {
-               call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
-               read_halfword();
-            }
-         }
-         return;
-      case schema_partner_matrix:
-         {
-            uint32 left_half = last_datum;
-            read_halfword();
-            call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
-            read_halfword();
-
-            for (j=0; j < 8; j++) {
-               call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
-               read_halfword();
-            }
-         }
-         return;
+         break;
       case schema_roll:
-         return;
-   }
+         break;
+      case schema_matrix:
+         lim = 2;
+         /* !!!! FALL THROUGH !!!! */
+      case schema_partner_matrix:
+         /* !!!! FELL THROUGH !!!! */
+         left_half = last_datum;
+         read_halfword();
+         call_root->stuff.matrix.flags = ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
+         if (call_root->stuff.matrix.flags & MTX_USE_SELECTOR) call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+         read_halfword();
 
-   switch (call_root->schema) {
+         for (j=0; j<lim; j++) {
+            call_root->stuff.matrix.stuff[j] = last_datum & 0xFFFF;
+            read_halfword();
+         }
+         break;
       case schema_by_array:
          {
             calldef_block *zz, *yy;
@@ -944,10 +935,10 @@ Private void build_database(call_list_mode_t call_list_mode)
       read_halfword();       /* Get level. */
       savelevel = (dance_level) last_datum;
 
-      read_fullword();       /* Get top level flags, first word. */
+      read_fullword();       /* Get top level flags, first word.  This is the "callflags1" stuff. */
       saveflags1 = last_datum;
 
-      read_fullword();       /* Get top level flags, second word. */
+      read_fullword();       /* Get top level flags, second word.  This is the "heritflags" stuff. */
       saveflagsh = last_datum;
 
       read_halfword();       /* Get char count and schema. */
@@ -972,6 +963,7 @@ Private void build_database(call_list_mode_t call_list_mode)
       call_root->age = 0;
       call_root->level = (int) savelevel;
       call_root->callflags1 = saveflags1;
+      call_root->callflagsf = 0;
       call_root->callflagsh = saveflagsh;
       /* If we are operating at the "all" level, make fractions visible everywhere, to aid in debugging. */
       if (calling_level == l_dontshow) call_root->callflags1 |= 3*CFLAG1_VISIBLE_FRACTION_BIT;
@@ -991,19 +983,19 @@ Private void build_database(call_list_mode_t call_list_mode)
       while ((c = *np++)) {
          if (c == '@') {
             if ((c = *np++) == '6' || c == 'k')
-               call_root->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+               call_root->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
             else if (c == 'h')
-               call_root->callflagsh |= CFLAGH__REQUIRES_DIRECTION;
+               call_root->callflagsf |= CFLAGH__REQUIRES_DIRECTION;
             else if (c == 'v')
-               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*1);
+               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*1);
             else if (c == 'w')
-               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*2);
+               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*2);
             else if (c == 'x')
-               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*3);
+               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*3);
             else if (c == 'y')
-               call_root->callflagsh |= (CFLAGH__TAG_CALL_RQ_BIT*4);
+               call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*4);
             else if (c == 'N')
-               call_root->callflagsh |= CFLAGH__CIRC_CALL_RQ_BIT;
+               call_root->callflagsf |= CFLAGH__CIRC_CALL_RQ_BIT;
          }
       }
 
@@ -1027,7 +1019,7 @@ Private void build_database(call_list_mode_t call_list_mode)
                tagger_calls[0] = get_more_mem(tagger_calls[0], number_of_taggers[0]*sizeof(callspec_block *));
                tagger_calls[0][number_of_taggers[0]-1] = call_root;
             }
-            else if (call_root->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) {
+            else if (call_root->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
                /* But anything that invokes a tagging call goes into each list, inheriting its own class. */
                int xxx;
 
@@ -1035,7 +1027,7 @@ Private void build_database(call_list_mode_t call_list_mode)
                   callspec_block *new_call = (callspec_block *) get_mem(sizeof(callspec_block) + char_count - 3);
                   (void) memcpy(new_call, call_root, sizeof(callspec_block) + char_count - 3);
                   /* Fix it up. */
-                  new_call->callflagsh = (new_call->callflagsh & !CFLAGH__TAG_CALL_RQ_MASK) | CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
+                  new_call->callflagsf = (new_call->callflagsf & !CFLAGH__TAG_CALL_RQ_MASK) | CFLAGH__TAG_CALL_RQ_BIT*(xxx+1);
                   number_of_taggers[xxx]++;
                   tagger_calls[xxx] = get_more_mem(tagger_calls[xxx], number_of_taggers[xxx]*sizeof(callspec_block *));
                   tagger_calls[xxx][number_of_taggers[xxx]-1] = new_call;
@@ -1118,21 +1110,21 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       phrases, suitable for external display on menus, instead of "@" escapes. */
 
    for (i=0; i<number_of_calls[call_list_any]; i++)
-      main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name, &main_call_lists[call_list_any][i]->callflagsh);
+      main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name, &main_call_lists[call_list_any][i]->callflagsf);
 
    for (i=0 ; i<4 ; i++) {
       for (j=0; j<number_of_taggers[i]; j++)
-         tagger_calls[i][j]->menu_name = translate_menu_name(tagger_calls[i][j]->name, &tagger_calls[i][j]->callflagsh);
+         tagger_calls[i][j]->menu_name = translate_menu_name(tagger_calls[i][j]->name, &tagger_calls[i][j]->callflagsf);
    }
 
    for (j=0; j<number_of_circcers; j++)
-      circcer_calls[j]->menu_name = translate_menu_name(circcer_calls[j]->name, &circcer_calls[j]->callflagsh);
+      circcer_calls[j]->menu_name = translate_menu_name(circcer_calls[j]->name, &circcer_calls[j]->callflagsf);
 
    /* Do the base calls (calls that are used in definitions of other calls).  These may have
       already been done, if they were on the level. */
    for (i=1; i <= highest_base_call; i++) {
       if (!base_calls[i]->menu_name)
-         base_calls[i]->menu_name = translate_menu_name(base_calls[i]->name, &base_calls[i]->callflagsh);
+         base_calls[i]->menu_name = translate_menu_name(base_calls[i]->name, &base_calls[i]->callflagsf);
    }
 
    for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++)

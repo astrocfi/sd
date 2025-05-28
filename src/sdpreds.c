@@ -20,6 +20,7 @@ and the following external variables:
    number_used
    mandatory_call_used
    pred_table     which is filled with pointers to the predicate functions
+   selector_preds
 */
 
 #include "sd.h"
@@ -248,6 +249,17 @@ Private long_boolean select_near_select(setup *real_people, int real_index,
    if (current_options.who == selector_all) return TRUE;
 
    return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 1);
+}
+
+/* ARGSUSED */
+Private long_boolean select_near_select_or_phantom(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
+{
+   if (!selectp(real_people, real_index)) return FALSE;
+   if (current_options.who == selector_all) return TRUE;
+
+   return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
                selectp(real_people, real_index ^ 1);
 }
 
@@ -1648,14 +1660,16 @@ Private long_boolean q_tag_check(setup *real_people, int real_index,
 
 /* BEWARE!!  This list must track the array "predtab" in dbcomp.c . */
 
-/* The first 12 of these (the constant to use is SELECTOR_PREDS) take a predicate.
-   Any call that uses one of these predicates in its definition will cause a
-   popup to appear asking "who?". */
+/* The first several of these take a predicate.
+   Any call that uses one of these predicates will have its "need_a_selector"
+   flag set during initialization.  We set the variable "selector_preds" to contain
+   the number of such predicates. */
 
 predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[0]},            /* "select" */
       {unselect,                     (Const long int *) 0},      /* "unselect" */
       {select_near_select,           (Const long int *) 0},      /* "select_near_select" */
+      {select_near_select_or_phantom,(Const long int *) 0},      /* "select_near_select_or_phantom" */
       {select_near_unselect,         (Const long int *) 0},      /* "select_near_unselect" */
       {unselect_near_select,         (Const long int *) 0},      /* "unselect_near_select" */
       {unselect_near_unselect,       (Const long int *) 0},      /* "unselect_near_unselect" */
@@ -1670,6 +1684,8 @@ predicate_descriptor pred_table[] = {
       {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */
       {select_and_roll_is_cw,        (Const long int *) 0},      /* "select_and_roll_is_cw" */
       {select_and_roll_is_ccw,       (Const long int *) 0},      /* "select_and_roll_is_ccw" */
+/* End of predicates that force use of selector. */
+#define PREDS_BEFORE_THIS_POINT 18
       {always,                       (Const long int *) 0},      /* "always" */
       {x22_miniwave,                 (Const long int *) 0},      /* "x22_miniwave" */
       {x22_couple,                   (Const long int *) 0},      /* "x22_couple" */
@@ -1775,3 +1791,5 @@ predicate_descriptor pred_table[] = {
       {q_tag_check, (Const long int *) &q_tag_back_action},      /* "q_tag_back" */
       {q_tag_check, (Const long int *) &q_line_front_action},    /* "q_line_front" */
       {q_tag_check, (Const long int *) &q_line_back_action}};    /* "q_line_back" */
+
+int selector_preds = PREDS_BEFORE_THIS_POINT;

@@ -22,7 +22,12 @@
    move
 */
 
+#include <stdio.h>
+#include <string.h>
 #include "sd.h"
+
+
+static long_boolean debug_popup = FALSE;   /* Helps debug popups under Domain/OS. */
 
 
 extern void canonicalize_rotation(setup *result)
@@ -173,15 +178,15 @@ extern void reinstate_rotation(setup *ss, setup *result)
 
 extern long_boolean divide_for_magic(
    setup *ss,
-   uint32 flags_to_use,
-   uint32 flags_to_check,
+   uint32 heritflags_to_use,
+   uint32 heritflags_to_check,
    setup *result)
 {
    map_thing *division_maps;
    uint32 resflags = 0;
 
    if (ss->kind == s2x4) {
-      if (flags_to_check == INHERITFLAG_MAGIC) {
+      if (heritflags_to_check == INHERITFLAG_MAGIC) {
          /* "Magic" was specified.  Split it into 1x4's in the appropriate magical way. */
          division_maps = &map_2x4_magic;
          goto divide_us;
@@ -189,30 +194,30 @@ extern long_boolean divide_for_magic(
    }
    else if (ss->kind == s_qtag) {
       resflags = RESULTFLAG__NEED_DIAMOND;    /* Indicate that we have done a diamond division and the concept name needs to be changed. */
-      if (flags_to_check == INHERITFLAG_MAGIC) {
+      if (heritflags_to_check == INHERITFLAG_MAGIC) {
          division_maps = &map_qtg_magic;
          goto divide_us;
       }
-      else if ((flags_to_check) == INHERITFLAG_INTLK) {
+      else if (heritflags_to_check == INHERITFLAG_INTLK) {
          division_maps = &map_qtg_intlk;
          goto divide_us;
       }
-      else if ((flags_to_check) == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
+      else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
          division_maps = &map_qtg_magic_intlk;
          goto divide_us;
       }
    }
    else if (ss->kind == s_ptpd) {
       resflags = RESULTFLAG__NEED_DIAMOND;
-      if (flags_to_check == INHERITFLAG_MAGIC) {
+      if (heritflags_to_check == INHERITFLAG_MAGIC) {
          division_maps = &map_ptp_magic;
          goto divide_us;
       }
-      else if ((flags_to_check) == INHERITFLAG_INTLK) {
+      else if (heritflags_to_check == INHERITFLAG_INTLK) {
          division_maps = &map_ptp_intlk;
          goto divide_us;
       }
-      else if ((flags_to_check) == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
+      else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
          division_maps = &map_ptp_magic_intlk;
          goto divide_us;
       }
@@ -222,7 +227,7 @@ extern long_boolean divide_for_magic(
 
 divide_us:
 
-   ss->cmd.cmd_final_flags = flags_to_use & ~flags_to_check;
+   ss->cmd.cmd_final_flags.herit = heritflags_to_use & ~heritflags_to_check;
    divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
 
    /* Since more concepts follow the magic and/or interlocked stuff, we can't
@@ -1403,7 +1408,7 @@ Private void rollmove(
       if (ss->people[i].id1) {
          rot = 0;
          st = ((uint32) stb_z)*DBSTAB_BIT; 
-         if (!(callspec->callflagsh & CFLAGH__REQUIRES_SELECTOR) || selectp(ss, i)) {
+         if (!(callspec->callflagsf & CFLAGH__REQUIRES_SELECTOR) || selectp(ss, i)) {
             switch (ss->people[i].id1 & ROLL_MASK) {
                case ROLLBITL: rot = 033, st = ((uint32) stb_a)*DBSTAB_BIT; break;
                case ROLLBITM: break;
@@ -1423,16 +1428,45 @@ Private void rollmove(
 }
 
 
-/* Strip out those concepts that do not have the "dfm__xxx" flag set saying that they are to be
-   inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT" flag controls
-   both "INHERITFLAG_REVERSE" and "INHERITFLAG_LEFT", turning the former into the latter.  This makes reverse
-   circle by, touch by, and clean sweep work. */
+Private long_boolean get_real_subcall(
+   parse_block *parseptr,
+   by_def_item *item,
+   uint64 new_final_concepts,      /* The flags, heritable and otherwise, with which the parent call was invoked.
+                                       Some of these may be inherited to the subcall. */
+   callspec_block *parent_call,
+   setup_command *cmd_out)         /* We fill in just the parseptr, callspec, cmd_final_flags fields. */
 
-Private uint32 get_mods_for_subcall(uint32 new_final_concepts, uint32 this_modh, uint32 callflagsh)
+/* ****** Comment from long ago:  "Need to send out alternate_concept!!!"  I wonder what that meant? */
+
 {
-   uint32 retval;
+   char tempstring_text[MAX_TEXT_LINE_LENGTH];
+   parse_block *search;
+   parse_block **newsearch;
+   int snumber;
+   int item_id = item->call_id;
+   uint32 mods1 = item->modifiers1;
+   callspec_block *orig_call = base_calls[item_id];
+   long_boolean this_is_tagger = item_id >= BASE_CALL_TAGGER0 && item_id <= BASE_CALL_TAGGER3;
+   long_boolean this_is_tagger_circcer = this_is_tagger || item_id == BASE_CALL_CIRCCER;
+   uint32 callflagsh = parent_call->callflagsh;  /* This has the "XXX_is_inherited" stuff from the parent. */
+   uint32 this_modh = item->modifiersh;   /* The "inherit_XXX" and "force_XXX" flags for this invocation.
+                                             Which it is (inherit or force) depends on whether the corresponding
+                                             "XXX_is_inherited" top-level call flag is on in the parent, that is,
+                                             whether the corresponding bit is on in "callflagsh". */
 
-   retval = new_final_concepts;
+   /* Fill in defaults in case we choose not to get a replacement call. */
+
+   cmd_out->parseptr = parseptr;
+   cmd_out->callspec = orig_call;
+   cmd_out->cmd_final_flags = new_final_concepts;
+
+   /* If this context requires a tagging or scoot call, pass that fact on. */
+   if (this_is_tagger) cmd_out->cmd_final_flags.final |= FINAL__MUST_BE_TAG;
+
+   /* Strip out those concepts that do not have the "dfm__xxx" flag set saying that they are to be
+      inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT" flag controls
+      both "INHERITFLAG_REVERSE" and "INHERITFLAG_LEFT", turning the former into the latter.  This makes reverse
+      circle by, touch by, and clean sweep work. */
 
    /* If this subcall has "inherit_reverse" or "inherit_left" given, but the top-level call
       doesn't permit the corresponding flag to be given, we should turn any "reverse" or
@@ -1440,37 +1474,237 @@ Private uint32 get_mods_for_subcall(uint32 new_final_concepts, uint32 this_modh,
       This is what turns, for example, part 3 of "*REVERSE* clean sweep" into a "*LEFT* 1/2 tag". */
 
    if (this_modh & ~callflagsh & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
-      if (new_final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
-         retval |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+      if (new_final_concepts.herit & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+         cmd_out->cmd_final_flags.herit |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
    }
 
-   retval &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~this_modh);
+   /* Pass any "inherit" flags.  That is, turn off any that are NOT to be inherited.  Flags to be inherited
+      are indicated by "this_modh" and "callflagsh" both on.  But we don't check "callflagsh", since, if it
+      is off, we will force the bit immediately below. */
+
+   cmd_out->cmd_final_flags.herit &= (~new_final_concepts.herit | this_modh);
    
    /* Now turn on any "force" flags.  These are indicated by "this_modh" on and "callflagsh" off. */
 
    if (((INHERITFLAG_REVERSE | INHERITFLAG_LEFT) & callflagsh) == 0)
       /* If neither of the "reverse_means_mirror" or "left_means_mirror" bits is on,
          we allow forcing of left or reverse. */
-      retval |= this_modh & HERITABLE_FLAG_MASK & ~callflagsh;
+      cmd_out->cmd_final_flags.herit |= this_modh & ~callflagsh;
    else
       /* Otherwise, we only allow the other bits. */
-      retval |= this_modh & (HERITABLE_FLAG_MASK & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) & ~callflagsh;
+      cmd_out->cmd_final_flags.herit |= this_modh & ~callflagsh & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
 
-   return retval;
+   /* If this subcall invocation does not permit modification under any value of the
+      "allowing_modifications" switch, we do nothing.  Just return the default.
+      We do not search the list.  Hence, such subcalls are always protected
+      from being substituted, and, if the same call appears multiple times
+      in the derivation tree of a compound call, it will never be replaced.
+      What do we mean by that?  Suppose we did a
+         "[tally ho but [2/3 recycle]] the difference".
+      After we create the table entry saying to change cast off 3/4 into 2/3
+      recycle, we wouldn't want the cast off's in the difference getting
+      modified.  Actually, that is not the real reason.  The casts are in
+      different sublists.  The real reason is that the final part of mixed-up
+      square thru is defined as 
+         conc nullcall [mandatory_anycall] nullcall []
+      and we don't want the unmodifiable nullcall that the ends are supposed to
+      do getting modified, do we? */
+
+   /* But if this is a tagging call substitution, we most definitely do proceed with the search. */
+
+   if (!(mods1 & DFM1_CALL_MOD_MASK) && !this_is_tagger_circcer)
+      return FALSE;
+
+   /* See if we had something from before.  This avoids embarassment if a call is actually
+      done multiple times.  We want to query the user just once and use that result everywhere.
+      We accomplish this by keeping a subcall list showing what modifications the user
+      supplied when we queried. */
+
+   /* We ALWAYS search this list, if such exists.  Even if modifications are disabled.
+      Why?  Because the reconciler re-executes calls after the point of insertion to test
+      their fidelity with the new setup that results from the inserted calls.  If those
+      calls have modified subcalls, we will find ourselves here, looking through the list.
+      Modifications may have been enabled at the time the call was initially entered, but
+      might not be now that we are being called from the reconciler. */
+
+   if (parseptr->concept->kind == concept_another_call_next_mod) {
+      newsearch = &parseptr->next;
+
+      while ((search = *newsearch) != (parse_block *) 0) {
+         if (  orig_call == search->call ||
+               (this_is_tagger && search->call == base_calls[BASE_CALL_TAGGER0])) {
+            /* Found a reference to this call. */
+            parse_block *subsidiary_ptr = search->subsidiary_root;
+
+            /* If the pointer is nil, we already asked about this call,
+               and the reply was no. */
+            if (!subsidiary_ptr) return FALSE;
+
+            cmd_out->parseptr = subsidiary_ptr;
+
+            if (this_is_tagger_circcer)
+               cmd_out->callspec = subsidiary_ptr->call;
+            else {
+               cmd_out->callspec = (callspec_block *) 0;  /* ****** not right????. */
+               cmd_out->cmd_final_flags.herit = 0;        /* ****** not right????. */
+               cmd_out->cmd_final_flags.final = 0;        /* ****** not right????. */
+            }
+
+            return TRUE;
+         }
+
+         newsearch = &search->next;
+      }
+   }
+
+   snumber = (mods1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
+
+   /* Note whether we are using any mandatory substitutions, so that the menu
+      initialization will always accept this call. */
+
+   if (snumber == 2 || snumber == 6) mandatory_call_used = TRUE;
+
+   /* Now we know that the list doesn't say anything about this call.  Perhaps we should
+      query the user for a replacement and add something to the list.  First, decide whether
+      we should consider doing so.  If we are initializing the
+      database, the answer is always "no", even for calls that require a replacement call, such as
+      "clover and anything".  This means that, for the purposes of database initialization,
+      "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
+      that appears in the database. */
+      
+   /* Of course, if we are testing the fidelity of later calls during a reconcile
+      operation, we DO NOT EVER add any modifiers to the list, even if the user
+      clicked on "allow modification" before clicking on "reconcile".  It is perfectly
+      legal to click on "allow modification" before clicking on "reconcile".  It means
+      we want modifications (chosen by random number generator, since we won't be
+      interactive) for the calls that we randomly choose, but not for the later calls
+      that we test for fidelity. */
+
+   if (interactivity == interactivity_database_init || interactivity == interactivity_verify || testing_fidelity) return FALSE;
+
+   /* When we are searching for resolves and the like, the situation is different.  In this case,
+      the interactivity state is set for a search.  We do perform mandatory
+      modifications, so we will generate things like "clover and shakedown".  Of course, no
+      querying actually takes place.  Instead, get_subcall just uses the random number generator.
+      Therefore, whether resolving or in normal interactive mode, we are guided by the
+      call modifier flags and the "allowing_modifications" global variable. */
+
+   /* Depending on what type of substitution is involved and what the "allowing modifications"
+      level is, we may choose not to query about this subcall, but just return the default. */
+
+   switch (snumber) {
+      case 1:   /* or_anycall */
+      case 3:   /* allow_plain_mod */
+      case 5:   /* or_secondary_call */
+         if (!allowing_modifications) return FALSE;
+         break;
+      case 4:   /* allow_forced_mod */
+         if (allowing_modifications <= 1) return FALSE;
+         break;
+   }
+
+   /* At this point, we know we should query the user about this call. */
+      
+   /* Set ourselves up for modification by making the null modification list
+      if necessary.  ***** Someday this null list will always be present. */
+
+   if (parseptr->concept->kind == marker_end_of_list) {
+      parseptr->concept = &marker_concept_mod;
+      newsearch = &parseptr->next;
+   }
+   else if (parseptr->concept->kind != concept_another_call_next_mod)
+      fail("wrong marker in get_real_subcall???");
+
+   /* Create a reference on the list.  "search" points to the null item at the end. */
+
+   tempstring_text[0] = '\0';           /* Null string, just to be safe. */
+
+   /* If doing a tagger, just get the call. */
+
+   if (snumber == 0 && this_is_tagger_circcer)
+      ;
+
+   /* If the replacement is mandatory, or we are not interactive,
+      don't present the popup.  Just get the replacement call. */
+
+   else if (interactivity != interactivity_normal)
+      ;
+   else if (snumber == 2 || snumber == 6) {
+      (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
+   }
+   else {
+
+      /* Need to present the popup to the operator and find out whether modification is desired. */
+
+      modify_popup_kind kind;
+
+      if (this_is_tagger) kind = modify_popup_only_tag;
+      else if (this_is_tagger_circcer) kind = modify_popup_only_circ;
+      else kind = modify_popup_any;
+
+      if (debug_popup || uims_do_modifier_popup(orig_call->menu_name, kind)) {
+         /* User accepted the modification.
+            Set up the prompt and get the concepts and call. */
+      
+         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", orig_call->menu_name);
+      }
+      else {
+         /* User declined the modification.  Create a null entry so that we don't query again. */
+         *newsearch = get_parse_block();
+         (*newsearch)->concept = &marker_concept_mod;
+         (*newsearch)->options.number_fields = mods1;
+         (*newsearch)->call = orig_call;
+         return FALSE;
+      }
+   }
+
+   *newsearch = get_parse_block();
+   (*newsearch)->concept = &marker_concept_mod;
+   (*newsearch)->options.number_fields = mods1;
+   (*newsearch)->call = orig_call;
+
+   /* Set stuff up for reading subcall and its concepts. */
+
+   /* Create a new parse block, point concept_write_ptr at its contents. */
+   /* Create the new root at the start of the subsidiary list. */
+
+   parse_state.concept_write_base = &(*newsearch)->subsidiary_root;
+   parse_state.concept_write_ptr = parse_state.concept_write_base;
+
+   parse_state.parse_stack_index = 0;
+   parse_state.call_list_to_use = call_list_any;
+   (void) strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
+
+   /* Search for special case of "must_be_tag_call" with no other modification bits.
+      That means it is a new-style tagging call. */
+
+   if (snumber == 0 && this_is_tagger_circcer) {
+      longjmp(longjmp_ptr->the_buf, 5);
+   }
+   else {
+      if (query_for_call())
+         longjmp(longjmp_ptr->the_buf, 5);     /* User clicked on something unusual like "exit" or "undo". */
+   }
+
+   cmd_out->parseptr = (*newsearch)->subsidiary_root;
+   cmd_out->callspec = (callspec_block *) 0;    /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */
+   cmd_out->cmd_final_flags.herit = 0;
+   cmd_out->cmd_final_flags.final = 0;
+   return TRUE;
 }
 
 
 Private void divide_diamonds(setup *ss, setup *result)
 {
-   if (ss->kind == s_qtag) {
-      divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
-   }
-   else if (ss->kind == s_ptpd) {
-      divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
-   }
-   else
-      fail("Must have diamonds for this concept.");
+   int ii;
+
+   if (ss->kind == s_qtag) ii = 1;
+   else if (ss->kind == s_ptpd) ii = 0;
+   else fail("Must have diamonds for this concept.");
+
+   divided_setup_move(ss, map_lists[sdmd][1]->f[MPKIND__SPLIT][ii], phantest_ok, FALSE, result);
 }
+
 
 
 /* The fraction stuff is encoded into 6 hexadecimal digits, which we will call
@@ -1730,13 +1964,13 @@ Private void do_sequential_call(
    setup *ss,
    callspec_block *callspec,
    long_boolean qtfudged,
-   uint32 new_final_concepts,
    long_boolean *mirror_p,
    setup *result)
 {
    long_boolean qtf;
    int fetch_index;
    int dist_index;
+   uint64 new_final_concepts = ss->cmd.cmd_final_flags;
    int *test_index = &fetch_index;
    parse_block *parseptr = ss->cmd.parseptr;
    uint32 callflags1 = callspec->callflags1;
@@ -1810,11 +2044,11 @@ Private void do_sequential_call(
 
    ss->cmd.cmd_misc_flags &= ~CMD_MISC__RESTRAIN_CRAZINESS;
 
-   if (new_final_concepts & FINAL__SPLIT) {
+   if (new_final_concepts.final & FINAL__SPLIT) {
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
-         new_final_concepts |= FINAL__SPLIT_SQUARE_APPROVED;
+         new_final_concepts.final |= FINAL__SPLIT_SQUARE_APPROVED;
       else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
-         new_final_concepts |= FINAL__SPLIT_DIXIE_APPROVED;
+         new_final_concepts.final |= FINAL__SPLIT_DIXIE_APPROVED;
    }
 
    qtf = qtfudged;
@@ -1833,7 +2067,7 @@ Private void do_sequential_call(
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
-      if (new_final_concepts & INHERITFLAG_LEFT) {
+      if (new_final_concepts.herit & INHERITFLAG_LEFT) {
          if (!*mirror_p) mirror_this(ss);
          *mirror_p = TRUE;
       }
@@ -1873,15 +2107,10 @@ Private void do_sequential_call(
    }
 
    for (;;) {
-#ifdef CLEAN_CALLSPEC
-      parse_block f1;
-#endif
       by_def_item *this_item;
       uint32 this_mod1;
       uint32 remember_elongation;
-      parse_block *cp1, *cp2;
-      callspec_block *call1, *call2;
-      uint32 conc1, conc2;
+      setup_command foo1, foo2;
       by_def_item *alt_item;
       int use_alternate;
       setup_kind oldk;
@@ -1957,15 +2186,12 @@ Private void do_sequential_call(
          the first part of the call.  But if the user does something like "circle by 1/4 x [leads run]", we
          want to re-evaluate who the leads are. */
 
-      recompute_id = get_real_subcall(parseptr, this_item, get_mods_for_subcall(new_final_concepts, this_item->modifiersh, callspec->callflagsh), &cp1, &call1, &conc1);
+      recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
 
       if (DFM1_REPEAT_N_ALTERNATE & this_mod1)
-         (void) get_real_subcall(parseptr, alt_item, get_mods_for_subcall(new_final_concepts, alt_item->modifiersh, callspec->callflagsh), &cp2, &call2, &conc2);
+         (void) get_real_subcall(parseptr, alt_item, new_final_concepts, callspec, &foo2);
 
       if (recompute_id) update_id_bits(result);
-
-      /* If this context requires a tagging or scoot call, pass that fact on. */
-      if (this_item->call_id >= BASE_CALL_TAGGER0 && this_item->call_id <= BASE_CALL_TAGGER3) conc1 |= FINAL__MUST_BE_TAG;
 
       current_options.number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
 
@@ -2034,42 +2260,18 @@ do_plain_call:
       }
 
       if ((DFM1_REPEAT_N_ALTERNATE & this_mod1) && use_alternate) {
-#ifdef CLEAN_CALLSPEC
-         f1 = *cp2;
-         f1.call = call2;
-#else
-         result->cmd.parseptr = cp2;
-         result->cmd.callspec = call2;
-#endif
-         result->cmd.cmd_final_flags = conc2;
+         result->cmd.parseptr = foo2.parseptr;
+         result->cmd.callspec = foo2.callspec;
+         result->cmd.cmd_final_flags = foo2.cmd_final_flags;
 
       }
       else {
-#ifdef CLEAN_CALLSPEC
-         f1 = *cp1;
-         f1.call = call1;
-#else
-         result->cmd.parseptr = cp1;
-         result->cmd.callspec = call1;
-#endif
-         result->cmd.cmd_final_flags = conc1;
+         result->cmd.parseptr = foo1.parseptr;
+         result->cmd.callspec = foo1.callspec;
+         result->cmd.cmd_final_flags = foo1.cmd_final_flags;
       }
 
-#ifdef CLEAN_CALLSPEC
-      f1.concept = &mark_end_of_list;
-      f1.next = (parse_block *) 0;
-      f1.subsidiary_root = (parse_block *) 0;
-      f1.gc_ptr = (parse_block *) 0;
-      f1.selector = current_options.who;
-      f1.direction = current_options.where;
-      f1.number = current_options.number_fields;
-      f1.tagger = -1;
-      f1.circcer = -1;
-      result->cmd.callspec = (callspec_block *) 0;
-      result->cmd.parseptr = &f1;
-#endif
-
-      if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE))
+      if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts.herit & INHERITFLAG_SINGLE))
          result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
 
       oldk = result->kind;
@@ -2079,7 +2281,7 @@ do_plain_call:
          result,
          DFM1_ROLL_TRANSPARENT & this_mod1,
          !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
-            !(new_final_concepts & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
+            !(new_final_concepts.herit & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
          qtf);
 
       if (oldk != s2x2 && result->kind == s2x2 && remembered_2x2_elongation != 0) {
@@ -2110,7 +2312,7 @@ done_with_big_cycle:
 
       qtf = FALSE;
 
-      new_final_concepts &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
+      new_final_concepts.final &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
 
       first_call = FALSE;
 
@@ -2137,40 +2339,39 @@ done_with_big_cycle:
 
 /* Check for a schema that we weren't sure about, and fix it up. */
 
-Private calldef_schema fixup_conc_schema(callspec_block *callspec, uint32 final_concepts, setup *ss)
+Private calldef_schema fixup_conc_schema(callspec_block *callspec, setup *ss)
 {
-   calldef_schema the_schema;
-
-   the_schema = callspec->schema;
+   calldef_schema the_schema = callspec->schema;
+   uint32 herit_concepts = ss->cmd.cmd_final_flags.herit;
 
    if (the_schema == schema_maybe_single_concentric) {
-      if (final_concepts & INHERITFLAG_SINGLE)
+      if (herit_concepts & INHERITFLAG_SINGLE)
          the_schema = schema_single_concentric;
       else
          the_schema = schema_concentric;
    }
    else if (the_schema == schema_maybe_grand_single_concentric) {
-      if (final_concepts & INHERITFLAG_GRAND) {
-         if (final_concepts & INHERITFLAG_SINGLE)
+      if (herit_concepts & INHERITFLAG_GRAND) {
+         if (herit_concepts & INHERITFLAG_SINGLE)
             the_schema = schema_grand_single_concentric;
          else
             fail("You must not use \"grand\" without \"single\".");
       }
       else {
-         if (final_concepts & INHERITFLAG_SINGLE)
+         if (herit_concepts & INHERITFLAG_SINGLE)
             the_schema = schema_single_concentric;
          else
             the_schema = schema_concentric;
       }
    }
    else if (the_schema == schema_maybe_single_cross_concentric)
-      the_schema = (final_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
+      the_schema = (herit_concepts & INHERITFLAG_SINGLE) ? schema_single_cross_concentric : schema_cross_concentric;
    else if (the_schema == schema_maybe_4x2_concentric)
       the_schema = (setup_attrs[ss->kind].setup_limits == 5) ? schema_concentric_4_2 : schema_concentric;
    else if (the_schema == schema_maybe_matrix_conc_star) {
-      if (final_concepts & INHERITFLAG_12_MATRIX)
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
          the_schema = schema_conc_star12;
-      else if (final_concepts & INHERITFLAG_16_MATRIX)
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
          the_schema = schema_conc_star16;
       else
          the_schema = schema_conc_star;
@@ -2191,11 +2392,9 @@ Private void move_with_real_call(
    uint32 tbonetest;
    uint32 imprecise_rotation_result_flag = 0;
    uint32 unaccepted_flags;
-   uint32 new_final_concepts;
    calldef_schema the_schema;
    long_boolean mirror;
    callspec_block *callspec = ss->cmd.callspec;
-   uint32 final_concepts = ss->cmd.cmd_final_flags;
    uint32 callflags1 = callspec->callflags1;
 
    clear_people(result);
@@ -2220,7 +2419,7 @@ Private void move_with_real_call(
 that probably need to be put in. */
 
 
-   the_schema = fixup_conc_schema(callspec, final_concepts, ss);
+   the_schema = fixup_conc_schema(callspec, ss);
 
    /* Check for "central" concept and its ilk, and pick up correct definition. */
 
@@ -2243,7 +2442,7 @@ that probably need to be put in. */
       /* Now we demand that, if a concept was given, the call had the appropriate flag set saying
          that the concept is legal and will be inherited to the children. */
    
-      if (HERITABLE_FLAG_MASK & final_concepts & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
+      if (ss->cmd.cmd_final_flags.herit & (~callspec->callflagsh)) fail("Can't do this call with this concept.");
 
       switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
          case CMD_MISC2__CENTRAL_PLAIN:
@@ -2267,33 +2466,31 @@ that probably need to be put in. */
                if (the_schema != schema_concentric)
                   fail("Can't do \"central\" with this call.");
 
-               if (final_concepts &
-                     ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+               if (ss->cmd.cmd_final_flags.final & ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
                   fail("This concept not allowed here.");
 
-               temp_concepts = final_concepts;
+               temp_concepts = ss->cmd.cmd_final_flags.herit;
 
                forcing_concepts = defptr->modifiersh & ~callspec->callflagsh;
 
                if (forcing_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
-                  if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
+                  if (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                      temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
                }
 
-               temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~defptr->modifiersh);
+               temp_concepts &= ~(ss->cmd.cmd_final_flags.herit & ~defptr->modifiersh);
                temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
                callspec = base_calls[defptr->call_id];
                callflags1 = callspec->callflags1;
-               final_concepts = temp_concepts;
-               ss->cmd.cmd_final_flags = final_concepts;
+               ss->cmd.cmd_final_flags.herit = temp_concepts;
                ss->cmd.callspec = callspec;
                ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;   /* We are done. */
-               the_schema = fixup_conc_schema(callspec, final_concepts, ss);
+               the_schema = fixup_conc_schema(callspec, ss);
             }
 
             break;
          case 0: case CMD_MISC2__CENTRAL_SNAG: case CMD_MISC2__CENTRAL_MYSTIC:
-            if (final_concepts & ~HERITABLE_FLAG_MASK) fail("This concept not allowed here.");
+            if (ss->cmd.cmd_final_flags.final) fail("This concept not allowed here.");
             break;
       }
    }
@@ -2330,7 +2527,7 @@ that probably need to be put in. */
             if (ss->cmd.cmd_frac_flags != 0x000112)
                fail("This call can't be fractionalized this way.");
             ss->cmd.cmd_frac_flags = 0;
-            final_concepts |= INHERITFLAG_HALF;
+            ss->cmd.cmd_final_flags.herit |= INHERITFLAG_HALF;
             break;
          case schema_nothing: case schema_matrix: case schema_partner_matrix: case schema_roll:
             fail("This call can't be fractionalized.");
@@ -2353,7 +2550,7 @@ that probably need to be put in. */
                      (ss->cmd.cmd_frac_flags != 0x000112))
                   fail("This call can't be fractionalized this way.");
                ss->cmd.cmd_frac_flags = 0;
-               final_concepts |= INHERITFLAG_HALF;
+               ss->cmd.cmd_final_flags.herit |= INHERITFLAG_HALF;
             }
 
             break;
@@ -2363,7 +2560,7 @@ that probably need to be put in. */
    /* If the "diamond" concept has been given and the call doesn't want it, we do
       the "diamond single wheel" variety. */
 
-   if (INHERITFLAG_DIAMOND & final_concepts & (~callspec->callflagsh))  {
+   if (INHERITFLAG_DIAMOND & ss->cmd.cmd_final_flags.herit & (~callspec->callflagsh))  {
       /* If the call is sequentially or concentrically defined, the top level flag is required
          before the diamond concept can be inherited.  Since that flag is off, it is an error. */
       if (the_schema != schema_by_array)
@@ -2375,7 +2572,7 @@ that probably need to be put in. */
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
       if (ss->kind == sdmd) {
-         ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
+         ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_DIAMOND;
          divided_setup_move(ss, map_lists[s1x2][1]->f[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
          return;
       }
@@ -2384,7 +2581,7 @@ that probably need to be put in. */
             BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
             it.  It will come back here after it has done what it needs to. */
 
-         if ((final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
+         if ((ss->cmd.cmd_final_flags.herit & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
             /* Divide into diamonds and try again.  Note that we do not clear the concept. */
             divide_diamonds(ss, result);
             return;
@@ -2398,7 +2595,7 @@ that probably need to be put in. */
       This is only legal if the flag forbidding same is off.
       Furthermore, if certain modifiers have been given, we don't allow it. */
 
-   if (final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX | INHERITFLAG_FUNNY))
+   if (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX | INHERITFLAG_FUNNY))
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
    /* But, alas, if fractionalization is on, we can't do it yet, because we don't
@@ -2413,7 +2610,7 @@ that probably need to be put in. */
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;  /* Can only do it once. */
 
-      if (final_concepts & INHERITFLAG_LEFT) {
+      if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_LEFT) {
          mirror_this(ss);
          mirror = TRUE;
       }
@@ -2425,13 +2622,11 @@ that probably need to be put in. */
          flag and set things back to normal. */
 
       if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-         final_concepts &= ~INHERITFLAG_LEFT;
+         ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_LEFT;
          if (mirror) mirror_this(ss);
          mirror = FALSE;
       }
    }
-
-   ss->cmd.cmd_final_flags = final_concepts;
 
    /* Check for a call whose schema is single (cross) concentric.
       If so, be sure the setup is divided into 1x4's or diamonds. */
@@ -2458,7 +2653,7 @@ that probably need to be put in. */
       or sequentially, mirroring the setup in response to "left" is *NOT* the right thing
       to do.  The right thing is to pass the "left" flag to all subparts that have the
       "inherit_left" invocation flag, and letting events take their course.  So we allow
-      the "INHERITFLAG_LEFT" bit to remain in "final_concepts", because it is still important
+      the "INHERITFLAG_LEFT" bit to remain in "cmd_final_flags", because it is still important
       to know whether we have been invoked with the "left" modifier. */
 
    /* Check for special case of ends doing a call like "detour" which specifically
@@ -2478,7 +2673,7 @@ that probably need to be put in. */
 
          callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
          callflags1 = callspec->callflags1;
-         the_schema = fixup_conc_schema(callspec, final_concepts, ss);
+         the_schema = fixup_conc_schema(callspec, ss);
       }
    }
 
@@ -2486,13 +2681,12 @@ that probably need to be put in. */
 
    /* Enforce the restriction that only tagging calls are allowed in certain contexts. */
 
-   if (final_concepts & FINAL__MUST_BE_TAG) {
+   if (ss->cmd.cmd_final_flags.final & FINAL__MUST_BE_TAG) {
       if (!(callflags1 & CFLAG1_BASE_TAG_CALL_MASK))
          fail("Only a tagging call is allowed here.");
    }
 
-   final_concepts &= ~FINAL__MUST_BE_TAG;
-   ss->cmd.cmd_final_flags = final_concepts;
+   ss->cmd.cmd_final_flags.final &= ~FINAL__MUST_BE_TAG;
 
    /* If the "split" concept has been given and this call uses that concept for a special
       meaning (split square thru, split dixie style), set the special flag to determine that
@@ -2500,17 +2694,16 @@ that probably need to be put in. */
       mix 3" will work.  If we are doing a "split catch", we don't really want to split the
       setup into 2x2's that are isolated from each other, or else the "grand mix" won't work. */
 
-   if (final_concepts & FINAL__SPLIT) {
+   if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
-         final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
+         ss->cmd.cmd_final_flags.final = (ss->cmd.cmd_final_flags.final | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
          if ((current_options.number_fields & 0xF) == 1) fail("Can't split square thru 1.");
       }
       else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
-         final_concepts = (final_concepts | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
+         ss->cmd.cmd_final_flags.final = (ss->cmd.cmd_final_flags.final | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
    }
-
-   ss->cmd.cmd_final_flags = final_concepts;
 
    /* NOTE: We may have mirror-reflected the setup.  "Mirror" is true if so.  We may need to undo this. */
 
@@ -2519,25 +2712,22 @@ that probably need to be put in. */
 
    if (the_schema == schema_split_sequential) {
       if (      setup_attrs[ss->kind].setup_limits == 7 ||
-               (setup_attrs[ss->kind].setup_limits == 11 && (final_concepts & INHERITFLAG_3X3)) ||
-               (setup_attrs[ss->kind].setup_limits == 15 && (final_concepts & INHERITFLAG_4X4)))
+               (setup_attrs[ss->kind].setup_limits == 11 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_3X3)) ||
+               (setup_attrs[ss->kind].setup_limits == 15 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_4X4)))
          ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
       else if (setup_attrs[ss->kind].setup_limits != 3)
          fail("Need a 4 or 8 person setup for this.");
    }
 
-   ss->cmd.cmd_final_flags = final_concepts;
-
    /* If the split concept is still present, do it. */
 
-   if (final_concepts & FINAL__SPLIT) {
+   if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT) {
       map_thing *split_map;
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
          fail("Can't do \"invert/central/snag/mystic\" with the \"split\" concept.");
 
-      final_concepts &= ~FINAL__SPLIT;
-      ss->cmd.cmd_final_flags = final_concepts;
+      ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
       ss->cmd.cmd_misc_flags |= (CMD_MISC__SAID_SPLIT | CMD_MISC__NO_EXPAND_MATRIX);
 
       /* We can't handle the mirroring, so undo it. */
@@ -2553,7 +2743,7 @@ that probably need to be put in. */
             etc., rather than as a virtual-setup concept, or if the "split sequential" schema
             is in use.  In those cases, some "split approved" flag will still be on. */
 
-         if (!(final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)))
+         if (!(ss->cmd.cmd_final_flags.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)))
             fail("Split concept is meaningless in a 2x2.");
 
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
@@ -2604,7 +2794,7 @@ that probably need to be put in. */
 
    switch (the_schema) {
       case schema_nothing:
-         if (final_concepts) fail("Illegal concept for this call.");
+         if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          *result = *ss;
          /* This call is a 1-person call, so it can be presumed to have split both ways. */
          result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_BIT*3;
@@ -2612,25 +2802,25 @@ that probably need to be put in. */
       case schema_matrix:
          /* The "reverse" concept might mean mirror, as in "reverse truck". */
 
-         if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
+         if ((ss->cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
             mirror_this(ss);
             mirror = TRUE;
-            final_concepts &= ~INHERITFLAG_REVERSE;
+            ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
          }
 
-         if (final_concepts) fail("Illegal concept for this call.");
+         if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          matrixmove(ss, callspec, result);
          reinstate_rotation(ss, result);
          result->result_flags = 0;
          break;
       case schema_partner_matrix:
-         if (final_concepts) fail("Illegal concept for this call.");
+         if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          partner_matrixmove(ss, callspec, result);
          reinstate_rotation(ss, result);
          result->result_flags = 0;
          break;
       case schema_roll:
-         if (final_concepts) fail("Illegal concept for this call.");
+         if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final) fail("Illegal concept for this call.");
          rollmove(ss, callspec, result);
          /* This call is a 1-person call, so it can be presumed to have split both ways. */
          result->result_flags = (ss->cmd.prior_elongation_bits & 3) | RESULTFLAG__SPLIT_AXIS_BIT*3;
@@ -2640,42 +2830,37 @@ that probably need to be put in. */
          /* Dispose of the "left" concept first -- it can only mean mirror.  If it is on,
             mirroring may already have taken place. */
 
-         if (final_concepts & INHERITFLAG_LEFT) {
+         if (ss->cmd.cmd_final_flags.herit & INHERITFLAG_LEFT) {
 /* ***** why isn't this particular error test taken care of more generally elsewhere? */
             if (!(callspec->callflagsh & INHERITFLAG_LEFT)) fail("Can't do this call 'left'.");
             if (!mirror) mirror_this(ss);
             mirror = TRUE;
-            final_concepts &= ~INHERITFLAG_LEFT;
+            ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_LEFT;
          }
 
          /* The "reverse" concept might mean mirror, or it might be genuine. */
 
-         if ((final_concepts & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
+         if ((ss->cmd.cmd_final_flags.herit & INHERITFLAG_REVERSE) && (callspec->callflagsh & INHERITFLAG_REVERSE)) {
             /* This "reverse" just means mirror. */
             if (mirror) fail("Can't do this call 'left' and 'reverse'.");
             mirror_this(ss);
             mirror = TRUE;
-            final_concepts &= ~INHERITFLAG_REVERSE;
+            ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_REVERSE;
          }
 
-         /* If the "reverse" flag is still set in final_concepts, it means a genuine
+         /* If the "reverse" flag is still set in cmd_final_flags, it means a genuine
             reverse as in reverse cut/flip the diamond or reverse change-O. */
 
          ss->cmd.callspec = callspec;
-         ss->cmd.cmd_final_flags = final_concepts;
          basic_move(ss, tbonetest, qtfudged, mirror, result);
          break;
       default:
-   
          /* Must be sequential or some form of concentric. */
 
-         new_final_concepts = final_concepts;
-   
          /* We demand that the final concepts that remain be only those in the following list,
             which includes all of the "heritable" concepts. */
 
-         if (new_final_concepts &
-               ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+         if (ss->cmd.cmd_final_flags.final & ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             fail("This concept not allowed here.");
 
          /* Now we figure out how to dispose of "heritable" concepts.  In general, we will selectively inherit them to
@@ -2683,17 +2868,17 @@ that probably need to be put in. */
             it is an error unless the concepts are the special ones "magic" and/or "interlocked", which we can dispose
             of by doing the call in the appropriate magic/interlocked setup. */
 
-         unaccepted_flags = HERITABLE_FLAG_MASK & new_final_concepts & (~callspec->callflagsh);    /* The unaccepted flags. */
+         unaccepted_flags = ss->cmd.cmd_final_flags.herit & (~callspec->callflagsh);    /* The unaccepted flags. */
 
          if (unaccepted_flags != 0) {
-            if (divide_for_magic(ss, new_final_concepts, unaccepted_flags, result))
+            if (divide_for_magic(ss, ss->cmd.cmd_final_flags.herit, unaccepted_flags, result))
                return;
             else
                fail("Can't do this call with this concept.");
          }
 
          if (the_schema == schema_sequential || the_schema == schema_split_sequential) {
-            do_sequential_call(ss, callspec, qtfudged, new_final_concepts, &mirror, result);
+            do_sequential_call(ss, callspec, qtfudged, &mirror, result);
          }
          else {
             setup_command foo1, foo2;
@@ -2711,12 +2896,13 @@ that probably need to be put in. */
 
             (void) get_real_subcall(
                parseptr, innerdef,
-               get_mods_for_subcall(new_final_concepts, innerdef->modifiersh, callspec->callflagsh),
-               &foo1.parseptr, &foo1.callspec, &foo1.cmd_final_flags);
+               ss->cmd.cmd_final_flags, callspec,
+               &foo1);
 
-            (void) get_real_subcall(parseptr, outerdef,
-               get_mods_for_subcall(new_final_concepts, outerdef->modifiersh, callspec->callflagsh),
-               &foo2.parseptr, &foo2.callspec, &foo2.cmd_final_flags);
+            (void) get_real_subcall(
+               parseptr, outerdef,
+               ss->cmd.cmd_final_flags, callspec,
+               &foo2);
 
             /* Fudge a 3x4 into a 1/4-tag if appropriate. */
 
@@ -2839,8 +3025,8 @@ extern void move(
    setup *result)
 {
    parse_block *saved_magic_diamond;
-   uint32 new_final_concepts;
-   uint32 check_concepts;
+   uint64 new_final_concepts;
+   uint64 check_concepts;
    parse_block *parseptrcopy;
    parse_block *parseptr = ss->cmd.parseptr;
 
@@ -2867,9 +3053,6 @@ extern void move(
    }
 
    if (ss->cmd.callspec) {
-#ifdef CLEAN_CALLSPEC
-      fail("We got a callspec.\n");
-#else
       /* This next thing shouldn't happen -- we shouldn't have a call in place when
          there is a pending "centers/ends work <concept>" concept, since that concept should be next. */
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
@@ -2878,15 +3061,7 @@ extern void move(
       }
       move_with_real_call(ss, qtfudged, result);
       return;
-#endif
    }
-
-
-
-
-
-
-
 
    /* Scan the "final" concepts, remembering them and their end point. */
    last_magic_diamond = 0;
@@ -2894,20 +3069,19 @@ extern void move(
    /* But if we have a pending "centers/ends work <concept>" concept, don't. */
 
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_USE) {
-      new_final_concepts = 0;
       parseptrcopy = skip_one_concept(ss->cmd.parseptr);
       parseptrcopy = parseptrcopy->next;    /* It is now after the subject concept. */
-      parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &new_final_concepts);
    }
-   else {
-      parseptrcopy = process_final_concepts(parseptr, TRUE, &new_final_concepts);
-   }
+   else
+      parseptrcopy = parseptr;
 
+   parseptrcopy = process_final_concepts(parseptrcopy, TRUE, &new_final_concepts);
    saved_magic_diamond = last_magic_diamond;
 
-   /* See if there were any "non-final" ones present also. */
+   /* See if there were any old ones present, and include them. */
 
-   new_final_concepts |= ss->cmd.cmd_final_flags;         /* Include any old ones we had. */
+   ss->cmd.cmd_final_flags.herit |= new_final_concepts.herit;
+   ss->cmd.cmd_final_flags.final |= new_final_concepts.final;
 
    if (parseptrcopy->concept->kind <= marker_end_of_list) {
       uint32 saved_number_fields = current_options.number_fields;
@@ -2915,7 +3089,7 @@ extern void move(
       direction_kind saved_direction = current_options.where;
 
       /* There are no "non-final" concepts.  The only concepts are the final ones that
-         have been encoded into new_final_concepts. */
+         have been encoded into cmd_final_flags. */
 
       /* We must read the selector, direction, and number out of the concept list and use them
          for this call to "move".  We are effectively using them as arguments to "move",
@@ -2939,7 +3113,6 @@ extern void move(
       current_options.number_fields = parseptrcopy->options.number_fields;
       ss->cmd.parseptr = parseptrcopy;
       ss->cmd.callspec = parseptrcopy->call;
-      ss->cmd.cmd_final_flags = new_final_concepts;
       move_with_real_call(ss, qtfudged, result);
       current_options.who = saved_selector;
       current_options.where = saved_direction;
@@ -2958,20 +3131,20 @@ extern void move(
 
       /* These are the concepts that we are interested in. */
 
-      check_concepts = new_final_concepts & ~FINAL__MUST_BE_TAG;
+      check_concepts = ss->cmd.cmd_final_flags;
+      check_concepts.final &= ~FINAL__MUST_BE_TAG;
 
       result->result_flags = 0;
-
 
       /* ***** We used to have FINAL__SPLIT in the list below, but it caused "matrix split, tandem step thru" to fail.
          This needs to be reworked. */
 
-      if ((check_concepts & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) == 0) {
+      if (             (check_concepts.herit & ~(INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|INHERITFLAG_SINGLE|INHERITFLAG_INTLK)) == 0 &&
+                        check_concepts.final == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
    
          ss->cmd.parseptr = parseptrcopy;
-         ss->cmd.cmd_final_flags = new_final_concepts;
 
          /* We know that ss->callspec is null. */
          /* ss->cmd.cmd_final_flags may contain
@@ -3003,13 +3176,12 @@ extern void move(
          This is what makes "magic transfer" or "split square thru" work. */
 
       ss->cmd.parseptr = parseptrcopy;
-      ss->cmd.callspec = NULLCALLSPEC;
-      ss->cmd.cmd_final_flags = new_final_concepts;
+      ss->cmd.callspec = (callspec_block *) 0;
 
       /* We can tolerate the "matrix" flag if we are going to do "split".  For anything else,
          "matrix" is illegal. */
 
-      if (check_concepts == FINAL__SPLIT) {
+      if (check_concepts.final == FINAL__SPLIT && check_concepts.herit == 0) {
          map_thing *split_map;
    
          ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_SPLIT;
@@ -3020,7 +3192,7 @@ extern void move(
          else if (ss->kind == s_qtag) split_map = map_lists[sdmd][1]->f[MPKIND__SPLIT][1];
          else fail("Can't do split concept in this setup.");
 
-         ss->cmd.cmd_final_flags &= ~FINAL__SPLIT;
+         ss->cmd.cmd_final_flags.final &= ~FINAL__SPLIT;
          divided_setup_move(ss, split_map, phantest_ok, TRUE, result);
       }
       else {
@@ -3029,19 +3201,20 @@ extern void move(
 
          if (divide_for_magic(
                ss,
-               ss->cmd.cmd_final_flags,
-               check_concepts & ~INHERITFLAG_DIAMOND,
+               ss->cmd.cmd_final_flags.herit,
+               check_concepts.herit & ~INHERITFLAG_DIAMOND,
                result)) {
          }
-         else if (check_concepts == INHERITFLAG_DIAMOND) {
-            ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
+         else if (check_concepts.herit == INHERITFLAG_DIAMOND && check_concepts.final == 0) {
+            ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_DIAMOND;
 
             if (ss->kind == sdmd)
                divided_setup_move(ss, map_lists[s1x2][1]->f[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
             else {
                /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
                ss->cmd.parseptr = parseptr;
-               ss->cmd.cmd_final_flags = 0;
+               ss->cmd.cmd_final_flags.final = 0;
+               ss->cmd.cmd_final_flags.herit = 0;
                divide_diamonds(ss, result);
             }
          }

@@ -1445,6 +1445,11 @@ select_near_select
       unless the selector is "everyone" or "no one".  See the description
       of "select" above.
 
+select_near_select_or_hantom
+      As above, but is satisfied if this person is selected and (other person is phantom or is selected).
+
+
+
 select_near_unselect
 unselect_near_select
 unselect_near_unselect
@@ -2087,8 +2092,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        thar - crossed 2FL's of opposite handedness, ready to move along
    2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center;
                                     2x2 - "1-faced" box; 4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT */
-   3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
-   4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
+   3x3_2fl_only,                 /* 1x6/2x6 - "2-faced lines" of 3 facing one way, 3 the other */
+   4x4_2fl_only,                 /* 1x8/2x8 - "2-faced lines" of 4 facing one way, 4 the other */
    leads_only,                   /* 2x2 - all people are leads, and not T-boned */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way.  UNDEFINED IF T-BONED
@@ -2112,7 +2117,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                        2x4/3x4/2x6/2x8 - consistent waves the long way;
                                        2x2 - real RH or LH box;
                                        4x4 - consistent waves either way, but not T-boned;
-                                       3x2 or 4x2 - columns;
+                                       3x2/4x2/6x2/8x2 - columns;
                                        qtag/pqtag - wave in center
                                        thar - same handedness waves
    1fl_only,                     /* 1x3/1x4/1x6/1x8 - a 1FL, that is, all 3/4/6/8 facing same; 2x3/2x4 - individual 1FL's
@@ -2132,13 +2137,14 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                                     magic columns, diamonds, wave-based triangles... */
 
    right_wave,                      1x2 - right miniwave; 1x4-1x16 - [grand] right wave;
-                                       2x4 - right waves the long way;
+                                       2x4/3x4/2x6/2x8 - consistent waves the long way;
                                        2x2 - real RH box;
                                        4x4 - consistent right waves either way, but not T-boned;
+                                       3x2/4x2/6x2/8x2 - right columns;
                                        qtag/pqtag - right wave in center
                                        dmd, trngl - people are paired in right miniwaves.
-                                       For diamonds, this applies just to the centers.
-                                       For triangles, it applies just to the base.
+                                          For diamonds, this applies just to the centers.
+                                          For triangles, it applies just to the base.
                                        thar - right waves
 
    left_wave,                    /* As above, but left-handed.

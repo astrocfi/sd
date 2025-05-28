@@ -279,6 +279,10 @@ static restriction_thing wave_2x6      = {12, {0, 1, 2, 3, 4, 5, 7, 6, 9, 8, 11,
 static restriction_thing wave_1x14     = {14, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},        {0}, {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 14 */
 static restriction_thing wave_1x16     = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 16 */
 static restriction_thing wave_2x8      = {16, {0, 1, 2, 3, 4, 5, 6, 7, 9, 8, 11, 10, 13, 12, 15, 14},{0}, {0}, {0}, TRUE, chk_wave};            /* check for parallel 2x8 waves */
+
+static restriction_thing cwave_dmd     = {2, {1, 3},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave in center of diamond */
+static restriction_thing wave_tgl      = {2, {1, 2},                         {0},                         {0}, {0}, TRUE, chk_wave};            /* check for miniwave as base of triangle */
+
 static restriction_thing wave_thar     = {8, {0, 1, 2, 3, 5, 4, 7, 6},           /* NOTE THE 4 --> */{4}, {0}, {0}, TRUE, chk_wave};            /* check for consistent wavy thar */
 static restriction_thing thar_1fl      = {8, {0, 3, 1, 2, 6, 5, 7, 4},                               {0}, {0}, {0}, FALSE, chk_wave};           /* check for consistent 1-faced thar */
 
@@ -923,25 +927,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
          /* Some concepts look better with a comma after them. */
 
-         if (     k == concept_so_and_so_stable ||
-                  k == concept_so_and_so_frac_stable ||
-                  k == concept_so_and_so_begin ||
-                  k == concept_fractional ||
-                  k == concept_twice ||
-                  k == concept_n_times ||
-                  k == concept_some_are_tandem ||
-                  (k == concept_snag_mystic && (item->value.arg1 & CMD_MISC2__CTR_END_INV_CONC)) ||  /* INVERT SNAG or INVERT MYSTIC */
-                  k == concept_some_are_frac_tandem ||
-                  (    (k == concept_tandem ||           /* The arg4 test picks out the more esoteric */
-                        k == concept_frac_tandem) &&     /* things like "<some setup> work solid". */
-                     item->value.arg4 >= 10) ||
-                  (     k == concept_nth_part &&
-                                             /* "SKIP THE <Nth> PART" or "SHIFT <N>" */
-                              (item->value.arg1 == 9 || item->value.arg1 == 10)) ||
-                  /* The arg1 test picks out "do your part" or "ignore". */
-                  (     (k == concept_so_and_so_only || k == concept_some_vs_others)
-                                    &&
-                        (item->value.arg1 < 2 || item->value.arg1 == 8))) {
+         if (item->concparseflags & 0x10) {
             /* This is an "F" type concept. */
             comma_after_next_concept = TRUE;
             last_was_t_type = FALSE;
@@ -949,35 +935,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             last_was_l_type = FALSE;
             did_concept = TRUE;
          }
-         else if (k == concept_reverse ||
-                  k == concept_left ||
-                  k == concept_grand ||
-                  k == concept_magic ||
-                  k == concept_cross ||
-                  k == concept_1x2 ||
-                  k == concept_2x1 ||
-                  k == concept_2x2 ||
-                  k == concept_1x3 ||
-                  k == concept_3x1 ||
-                  k == concept_3x3 ||
-                  k == concept_4x4 ||
-                  k == concept_single ||
-                  k == concept_singlefile ||
-                  k == concept_interlocked ||
-                  k == concept_standard ||
-                  k == concept_fan ||
-                  (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||    /* INVERT */
-                  (k == concept_nth_part && item->value.arg1 == 8) ||
-                  (k == concept_so_and_so_only && item->value.arg1 == 11) ||
-                  k == concept_c1_phantom ||
-                  k == concept_yoyo) {
+         else if (item->concparseflags & 0x8) {
             /* This is an "L" type concept. */
             last_was_t_type = FALSE;
             last_was_l_type = TRUE;
          }
-         else if ((k == concept_meta && (item->value.arg1 <= 3 || item->value.arg1 == 7)) ||
-                  k == concept_matrix) {
-            /* This is a "leading T/trailing L" type concept. */
+         else if (item->concparseflags & 0x20) {
+            /* This is a "leading T/trailing L" type concept, also known as a "G" concept. */
             force = last_was_t_type && !last_was_l_type;;
             last_was_t_type = FALSE;
             last_was_l_type = TRUE;
@@ -1084,7 +1048,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             /* These concepts want to take special action if there are no following concepts and
                certain escape characters are found in the name of the following call. */
 
-            final_set finaljunk;
+            uint64 finaljunk;
             callspec_block *target_call;
             parse_block *tptr;
             
@@ -1096,10 +1060,10 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                target_call = tptr->call;
    
                if ((tptr->concept->kind <= marker_end_of_list) && target_call && (
-                     target_call->callflagsh & (ESCAPE_WORD__LEFT | ESCAPE_WORD__MAGIC | ESCAPE_WORD__CROSS | ESCAPE_WORD__INTLK))) {
+                     target_call->callflagsf & (ESCAPE_WORD__LEFT | ESCAPE_WORD__MAGIC | ESCAPE_WORD__CROSS | ESCAPE_WORD__INTLK))) {
                   if (k == concept_left) {
                      /* See if this is a call whose name naturally changes when the "left" concept is used. */
-                     if (target_call->callflagsh & ESCAPE_WORD__LEFT) {
+                     if (target_call->callflagsf & ESCAPE_WORD__LEFT) {
                         use_left_name = TRUE;
                      }
                      else {
@@ -1109,7 +1073,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                   else if (k == concept_magic) {
                      /* See if this is a call that wants the "magic" modifier to be moved inside its name. */
-                     if (target_call->callflagsh & ESCAPE_WORD__MAGIC) {
+                     if (target_call->callflagsf & ESCAPE_WORD__MAGIC) {
                         use_magic_name = TRUE;
                      }
                      else {
@@ -1119,7 +1083,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                   else if (k == concept_interlocked) {
                      /* See if this is a call that wants the "interlocked" modifier to be moved inside its name. */
-                     if (target_call->callflagsh & ESCAPE_WORD__INTLK) {
+                     if (target_call->callflagsf & ESCAPE_WORD__INTLK) {
                         use_intlk_name = TRUE;
                      }
                      else {
@@ -1129,7 +1093,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   }
                   else {
                      /* See if this is a call that wants the "cross" modifier to be moved inside its name. */
-                     if (target_call->callflagsh & ESCAPE_WORD__CROSS) {
+                     if (target_call->callflagsf & ESCAPE_WORD__CROSS) {
                         use_cross_name = TRUE;
                      }
                      else {
@@ -2125,21 +2089,13 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       switch ((search_qualifier) p->qualifier) {
          case sq_wave_only:                    /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
-            }
-
-            tt.assumption = cr_wave_only;
-
-            switch (ss->kind) {
-               case s1x2: case s1x3: case s1x4: case s1x6: case s1x8: case s1x10:
-               case s1x12: case s1x14: case s1x16:
-               case s2x3: case s2x4: case s2x6: case s2x8: case s3x4:
-               case s2x2: case s4x4: case s_thar: case s_qtag:
-                  goto check_tt;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
+            goto do_wave_stuff;
+         case sq_rwave_only:
+            tt.assump_both = 1;   /* To get right-hand only. */
+            goto do_wave_stuff;
+         case sq_lwave_only:
+            tt.assump_both = 2;   /* To get left-hand only. */
+            goto do_wave_stuff;
          case sq_magic_only:                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
             switch (ss->cmd.cmd_assume.assumption) {
                case cr_1fl_only:
@@ -2312,100 +2268,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
-         case sq_rwave_only:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
-            }
-
-            switch (ss->kind) {
-               case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
-               case s1x12: case s1x14: case s1x16:
-               case s2x2: case s4x4: case s_thar: case s_qtag:
-                  tt.assump_both = 1;   /* To get right-hand only. */
-                  tt.assumption = cr_wave_only;
-                  goto check_tt;
-               case s2x4:
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_north))
-                  goto good;
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_west))
-                  goto good;
-                  goto bad;
-               case sdmd:
-/* Need assump_col = 1 and map that looks like    {2, {1, 3},    {0}, {0}, {0}, TRUE,  chk_wave};  */
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_west))
-                  goto good;
-                  goto bad;
-               case s_trngl:
-/* Need map that looks like    {2, {1, 2},    {0}, {0}, {0}, TRUE,  chk_wave};  */
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south))
-                  goto good;
-                  goto bad;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
-         case sq_lwave_only:
-            switch (ss->cmd.cmd_assume.assumption) {
-               case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
-            }
-
-            switch (ss->kind) {
-               case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
-               case s1x12: case s1x14: case s1x16:
-               case s2x2: case s4x4: case s_thar: case s_qtag:
-                  tt.assump_both = 2;   /* To get left-hand only. */
-                  tt.assumption = cr_wave_only;
-                  goto check_tt;
-               case s2x4:
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_north) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_south))
-                  goto good;
-                  if ((!(t = ss->people[0].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[4].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[5].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[6].id1 & d_mask) || t == d_east) &&
-                      (!(t = ss->people[7].id1 & d_mask) || t == d_east))
-                  goto good;
-                  goto bad;
-               case sdmd:
-/* Need assump_col = 1 and map that looks like    {2, {1, 3},    {0}, {0}, {0}, TRUE,  chk_wave};  */
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_west) &&
-                      (!(t = ss->people[3].id1 & d_mask) || t == d_east))
-                  goto good;
-                  goto bad;
-               case s_trngl:
-/* Need map that looks like    {2, {1, 2},    {0}, {0}, {0}, TRUE,  chk_wave};  */
-                  if ((!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
-                      (!(t = ss->people[2].id1 & d_mask) || t == d_north))
-                  goto good;
-                  goto bad;
-               default:
-                  goto good;                 /* We don't understand the setup -- we'd better accept it. */
-            }
          case sq_ctrwv_end2fl:
             /* Note that this qualifier is kind of strict.  We won't permit the call "with
                confidence" do be done unless everyone can trivially determine which
@@ -2552,10 +2414,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto bad;
             }
          case sq_split_dixie:
-            if (ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED) goto good;
+            if (ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED) goto good;
             goto bad;
          case sq_not_split_dixie:
-            if (!(ss->cmd.cmd_final_flags & FINAL__SPLIT_DIXIE_APPROVED)) goto good;
+            if (!(ss->cmd.cmd_final_flags.final & FINAL__SPLIT_DIXIE_APPROVED)) goto good;
             goto bad;
          case sq_said_tgl:
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) goto good;
@@ -2569,6 +2431,15 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_occupied_as_qtag:
             if (ss->kind != s3x4 || (ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto bad;
             goto good;
+         case sq_occupied_as_3x1tgl:
+            if (ss->kind == s_qtag) goto good;
+            if (ss->kind == s3x4 && !(ss->people[1].id1 | ss->people[2].id1 | ss->people[7].id1 | ss->people[8].id1)) goto good;
+            if (ss->kind == s3x4 && !(ss->people[0].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[9].id1)) goto good;
+            if (ss->kind == s2x6 && !(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1)) goto good;
+            if (ss->kind == s2x6 && !(ss->people[3].id1 | ss->people[5].id1 | ss->people[9].id1 | ss->people[11].id1)) goto good;
+            if (ss->kind == s2x3 && !(ss->people[0].id1 | ss->people[2].id1)) goto good;
+            if (ss->kind == s2x3 && !(ss->people[3].id1 | ss->people[5].id1)) goto good;
+            goto bad;
          case sq_dmd_ctrs_rh:
          case sq_dmd_ctrs_lh:
          case sq_dmd_ctrs_1f:
@@ -2663,6 +2534,54 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       }
 
       goto bad;
+
+      do_wave_stuff:
+
+      switch (ss->cmd.cmd_assume.assumption) {
+         case cr_1fl_only: case cr_2fl_only: case cr_magic_only: goto bad;
+      }
+
+      tt.assumption = cr_wave_only;
+
+      switch (ss->kind) {
+         case s1x3:
+            if (tt.assump_both) goto bad;   /* We can't check a 1x3 for right-or-left-handedness. */
+            /* FALL THROUGH!!! */
+         case s1x2: case s1x4: case s1x6: case s1x8: case s1x10:
+         case s1x12: case s1x14: case s1x16:
+         case s2x2: case s4x4: case s_thar: case s_qtag:
+            /* FELL THROUGH!!! */
+            goto check_tt;
+         case s2x4:
+            for (idx=0,u=0 ; idx<8 ; idx++) u |= ss->people[idx].id1;
+            if (!(u&010)) tt.assump_col = 1;
+            goto check_tt;
+         case s2x3:
+            for (idx=0,u=0 ; idx<6 ; idx++) u |= ss->people[idx].id1;
+            if (!(u&010)) tt.assump_col = 1;
+            else if (tt.assump_both) goto bad;   /* We can't check 2x3 lines for right-or-left-handedness. */
+            goto check_tt;
+         case s2x6:
+            for (idx=0,u=0 ; idx<12 ; idx++) u |= ss->people[idx].id1;
+            if (!(u&010)) tt.assump_col = 1;
+            goto check_tt;
+         case s2x8:
+            for (idx=0,u=0 ; idx<16 ; idx++) u |= ss->people[idx].id1;
+            if (!(u&010)) tt.assump_col = 1;
+            goto check_tt;
+         case s3x4:
+            /* This only handles lines; not columns -- we couldn't have "wavy" columns that were symmetric. */
+            goto check_tt;
+         case sdmd:
+            tt.assump_col = 1;
+            rr = &cwave_dmd;
+            goto check_stuff;
+         case s_trngl:
+            rr = &wave_tgl;
+            goto check_stuff;
+         default:
+            goto good;                 /* We don't understand the setup -- we'd better accept it. */
+      }
 
       check_tt:
 
@@ -2932,94 +2851,101 @@ extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *re
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
-   final_set *final_concepts)
+   uint64 *final_concepts)
 {
    parse_block *tptr = cptr;
 
-   *final_concepts = 0;
+   final_concepts->herit = 0;
+   final_concepts->final = 0;
 
    while (tptr) {
-      final_set bit_to_set;
-      final_set bit_to_forbid = 0;
+      uint64 bit_to_set;
+      uint64 bit_to_forbid;
+      bit_to_set.herit = 0;
+      bit_to_set.final = 0;
+      bit_to_forbid.herit = 0;
+      bit_to_forbid.final = 0;
 
       switch (tptr->concept->kind) {
          case concept_comment:
             goto get_next;               /* Need to skip these. */
-         case concept_triangle: bit_to_set = FINAL__TRIANGLE; break;
+         case concept_triangle: bit_to_set.final = FINAL__TRIANGLE; break;
          case concept_magic:
             last_magic_diamond = tptr;
-            bit_to_set = INHERITFLAG_MAGIC;
-            bit_to_forbid = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+            bit_to_set.herit = INHERITFLAG_MAGIC;
+            bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
             break;
          case concept_interlocked:
             last_magic_diamond = tptr;
-            bit_to_set = INHERITFLAG_INTLK;
-            bit_to_forbid = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
+            bit_to_set.herit = INHERITFLAG_INTLK;
+            bit_to_forbid.herit = INHERITFLAG_SINGLE | INHERITFLAG_DIAMOND;
             break;
          case concept_grand:
-            bit_to_set = INHERITFLAG_GRAND;
-            bit_to_forbid = INHERITFLAG_SINGLE;
+            bit_to_set.herit = INHERITFLAG_GRAND;
+            bit_to_forbid.herit = INHERITFLAG_SINGLE;
             break;
-         case concept_cross: bit_to_set = INHERITFLAG_CROSS; break;
-         case concept_yoyo: bit_to_set = INHERITFLAG_YOYO; break;
+         case concept_cross: bit_to_set.herit = INHERITFLAG_CROSS; break;
+         case concept_yoyo: bit_to_set.herit = INHERITFLAG_YOYO; break;
+         case concept_straight: bit_to_set.herit = INHERITFLAG_STRAIGHT; break;
+         case concept_twisted: bit_to_set.herit = INHERITFLAG_TWISTED; break;
          case concept_single:
-            bit_to_set = INHERITFLAG_SINGLE;
-            bit_to_forbid = INHERITFLAG_SINGLEFILE;
+            bit_to_set.herit = INHERITFLAG_SINGLE;
+            bit_to_forbid.herit = INHERITFLAG_SINGLEFILE;
             break;
          case concept_singlefile:
-            bit_to_set = INHERITFLAG_SINGLEFILE;
-            bit_to_forbid = INHERITFLAG_SINGLE;
+            bit_to_set.herit = INHERITFLAG_SINGLEFILE;
+            bit_to_forbid.herit = INHERITFLAG_SINGLE;
             break;
          case concept_1x2:
-            bit_to_set = INHERITFLAG_1X2;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_1X2;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_2x1:
-            bit_to_set = INHERITFLAG_2X1;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_2X1;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_2x2:
-            bit_to_set = INHERITFLAG_2X2;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_2X2;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_1x3:
-            bit_to_set = INHERITFLAG_1X3;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_1X3;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_3x1:
-            bit_to_set = INHERITFLAG_3X1;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_3X1;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_3x3:
-            bit_to_set = INHERITFLAG_3X3;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_3X3;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_4x4:
-            bit_to_set = INHERITFLAG_4X4;
-            bit_to_forbid = MXN_BITS;
+            bit_to_set.herit = INHERITFLAG_4X4;
+            bit_to_forbid.herit = MXN_BITS;
             break;
          case concept_split:
-            bit_to_set = FINAL__SPLIT; break;
+            bit_to_set.final = FINAL__SPLIT; break;
          case concept_reverse:
-            bit_to_set = INHERITFLAG_REVERSE; break;
+            bit_to_set.herit = INHERITFLAG_REVERSE; break;
          case concept_left:
-            bit_to_set = INHERITFLAG_LEFT; break;
+            bit_to_set.herit = INHERITFLAG_LEFT; break;
          case concept_12_matrix:
-            if (check_errors && *final_concepts)
+            if (check_errors && (final_concepts->herit | final_concepts->final))
                fail("Matrix modifier must appear first.");
-            bit_to_set = INHERITFLAG_12_MATRIX;
+            bit_to_set.herit = INHERITFLAG_12_MATRIX;
             break;
          case concept_16_matrix:
-            if (check_errors && *final_concepts)
+            if (check_errors && (final_concepts->herit | final_concepts->final))
                fail("Matrix modifier must appear first.");
-            bit_to_set = INHERITFLAG_16_MATRIX;
+            bit_to_set.herit = INHERITFLAG_16_MATRIX;
             break;
          case concept_diamond:
-            bit_to_set = INHERITFLAG_DIAMOND;
-            bit_to_forbid = INHERITFLAG_SINGLE;
+            bit_to_set.herit = INHERITFLAG_DIAMOND;
+            bit_to_forbid.herit = INHERITFLAG_SINGLE;
             break;
          case concept_funny:
-            bit_to_set = INHERITFLAG_FUNNY; break;
+            bit_to_set.herit = INHERITFLAG_FUNNY; break;
          default:
             goto exit5;
       }
@@ -3027,14 +2953,15 @@ extern parse_block *process_final_concepts(
       if (check_errors) {
          if (tptr->concept->level > calling_level) warn(warn__bad_concept_level);
    
-         if (*final_concepts & bit_to_set)
+         if ((final_concepts->herit & bit_to_set.herit) || (final_concepts->final & bit_to_set.final))
             fail("Redundant call modifier.");
    
-         if (*final_concepts & bit_to_forbid)
+         if ((final_concepts->herit & bit_to_forbid.herit) || (final_concepts->final & bit_to_forbid.final))
             fail("Illegal combination or order of call modifiers.");
       }
 
-      *final_concepts |= bit_to_set;
+      final_concepts->herit |= bit_to_set.herit;
+      final_concepts->final |= bit_to_set.final;
 
       get_next:
 
@@ -3049,7 +2976,7 @@ extern parse_block *process_final_concepts(
 
 extern parse_block *skip_one_concept(parse_block *incoming)
 {
-   final_set new_final_concepts;
+   uint64 new_final_concepts;
    parse_block *retval;
 
    if (incoming->concept->kind == concept_comment)
@@ -3060,7 +2987,7 @@ extern parse_block *skip_one_concept(parse_block *incoming)
    /* Find out whether the next concept (the one that will be "random" or whatever)
       is a modifier or a "real" concept. */
 
-   if (new_final_concepts) {
+   if (new_final_concepts.herit | new_final_concepts.final) {
       retval = incoming; /* Lots of comment-aversion code being punted
                                           here, but it's just too hairy, and we're
                                           going to change all that stuff anyway. */

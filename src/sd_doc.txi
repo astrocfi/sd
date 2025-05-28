@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: August 15, 1996
+@set Time-stamp: August 26, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.75
+@set sd-version 31.76
 @set full-manual
 @c %**end of header
 @iftex
@@ -3213,6 +3213,8 @@ See @ref{Assume Waves} and @ref{Assuming a Quarter-Tag}.
 This inverts the centers' and ends' parts of the call.
 @item fan
 @item yoyo
+@item straight
+@item twisted
 @item central
 @item invert central
 @item snag

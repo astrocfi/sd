@@ -1440,7 +1440,8 @@ extern void toplevelmove(void)
    update_id_bits(&starting_setup);
    starting_setup.cmd.parseptr = conceptptr;
    starting_setup.cmd.callspec = NULLCALLSPEC;
-   starting_setup.cmd.cmd_final_flags = 0;
+   starting_setup.cmd.cmd_final_flags.final = 0;
+   starting_setup.cmd.cmd_final_flags.herit = 0;
    move(&starting_setup, FALSE, &new_setup);
    if (new_setup.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");

@@ -30,7 +30,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.75"
+version "31.76"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1159,6 +1159,7 @@ call "diamond single rotate 1/4" c4
       array [CL3N 0 AL1S 0]
 
 call "triangle circulate" c1 tag trngle_circ
+            split_large_setups
    simple_funny
    setup trngl trngl
       array [0 CR2S AL1S 0 AL3W CR3E]
@@ -1167,6 +1168,7 @@ call "triangle circulate" c1 tag trngle_circ
          if nexttrnglspot_is_tboned [AL2W ZM2N CR0S CR4E AL3S ZM4N]
          if always                  [AL2S ZM2N CR0S CR4S AL3S ZM4N]
             alternate_definition [interlocked] c2
+   simple_funny
    setup short6 short6
       array [CR2S 0 AL0S AL1W 0 CR1E]
    setup pshort6 short6
@@ -1180,13 +1182,22 @@ call "triangle circulate" c1 tag trngle_circ
    setup pbone6 bone6
       array [CR2E CR3S 0 AL1S AL2W 0]
             alternate_definition [3x1] c2
+/*
    setup 3x4 3x4 qualifier occupied_as_h
       array [CR11S 0 0 AL5S ZM3N CR3S ZM4N 0 0 ZM10N ZM0N AL0S]
    setup 3x4 3x4 qualifier occupied_as_qtag
       array [0 AL10S CR4S 0 AL2S ZM2N 0 ZM5N ZM11N 0 CR1S ZM1N]
    setup qtag qtag
       array [AL6S CR2S AL1S ZM1N ZM3N ZM7N CR0S ZM0N]
+*/
+   simple_funny
+   setup 3x2 2x3 qualifier occupied_as_3x1tgl
+      preds "???"
+         if zero_cw_people [   0 CR3S CR4S    0 AL2S ZM4N]
+         if one_cw_person  [   0 ZM2N    0    0 ZM3N    0]
+         if always         [ZM1N    0    0 AL1S    0    0]
             alternate_definition [interlocked 3x1] c2
+   simple_funny
    setup 3x4 3x4 qualifier occupied_as_h
       array [CR5S 0 0 AL11S ZM3N AL0S ZM4N 0 0 ZM10N ZM0N CR3S]
    setup 3x4 3x4 qualifier occupied_as_qtag
@@ -2509,8 +2520,8 @@ call "patch the @6" c3a
    seq some_utb []
 
 call "tap the @6" c4a
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq some_utb []
    seq boxctrrot []
    seq roll []
@@ -2801,6 +2812,13 @@ call "face @h" mainstream tag face_dir
          if inp      [CR0E CR1E AL2W AL3W]
          if outp     [AL0W AL1W CR2E CR3E]
          if no_dir_p [ZM0N ZM1N ZM2N ZM3N]
+   setup 1x8 1x8
+      preds "Direction must be right, left, in, or out."
+         if rightp   [CR0E CR1E CR2E CR3E CR4E CR5E CR6E CR7E]
+         if leftp    [AL0W AL1W AL2W AL3W AL4W AL5W AL6W AL7W]
+         if inp      [CR0E CR1E CR2E CR3E AL4W AL5W AL6W AL7W]
+         if outp     [AL0W AL1W AL2W AL3W CR4E CR5E CR6E CR7E]
+         if no_dir_p [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
    setup 2x1 1x2
       preds "Illegal direction."
          if rightp   [CR0E CR1E]
@@ -2817,8 +2835,8 @@ call "face @h" mainstream tag face_dir
          if no_dir_p [ZM0N]
 
 call "pass @h" a1
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq face_dir []
 
 call "pass in" dontshow tag pass_in
@@ -2827,18 +2845,23 @@ call "pass in" dontshow tag pass_in
       array [0 0 0 0 AL3W AL2W CR1E CR0E]
    setup 2x2 2x2 no_cutting_through restriction not_tboned
       array [0 0 AL1W CR0E]
+            alternate_definition [twisted] c4
+   setup 4x1 2x2
+      array [CAL3N 0 0 CR2S]
 
 call "_face out" dontshow tag face_out
    setup 1x2 1x2
       array [AL0W CR1E]
    setup 1x4 1x4
       array [AL0W AL1W CR2E CR3E]
+   setup 1x8 1x8
+      array [AL0W AL1W AL2W AL3W CR4E CR5E CR6E CR7E]
    setup 2x2 2x2
       array [AL0W CR1E CR2E AL3W]
 
 call "_pass out" dontshow tag pass_out
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq face_out []
 
 call "_quarter in" dontshow tag quarterin
@@ -2927,12 +2950,24 @@ call "pass thru" mainstream tag passthru
             alternate_definition [half] mainstream
    setup 2x1 1x2 rotate
       array [ZM0W 0]
+            alternate_definition [twisted] c4
+   setup 2x1 1x2 rotate
+      array [CM1N 0]
 
 call "touch" mainstream tag touch
             /* The "rear back" property is required for square thru, etc. */
             rear_back_from_r_wave diamond_is_legal left_means_mirror
    setup 2x1 1x2 rotate
       array [ZM0W 0]
+
+call "_touch with twisted" dontshow tag touch_twisted
+            /* The "rear back" property is required for square thru, etc. */
+            rear_back_from_r_wave diamond_is_legal left_means_mirror
+   setup 2x1 1x2 rotate
+      array [ZM0W 0]
+            alternate_definition [twisted] c4
+   setup 2x1 1x2
+      array [CR1E 0]
 
 call "touch 1/4" dontshow tag touch_1_4
             rear_back_from_r_wave left_means_mirror
@@ -3225,6 +3260,31 @@ call "_natural turn and deal" dontshow tag natturnanddeal
          if 1x2_beau_or_miniwave [CR0E AL0E]
          if always [0 AL1E]
 
+call "shuffle the deck" c4
+            reverse_means_mirror left_means_mirror
+   setup 1x4 2x2 restriction 1fl_only
+      array [Z3N Z2N Z1N Z0N]
+            alternate_definition [single] c4
+   setup 1x2 1x2 rotate restriction couples_only
+      array [Z1W Z0W]
+            alternate_definition [3x3] c4
+   setup 1x6 2x3 restriction 1fl_only
+      array [Z5N Z4N Z3N Z2N Z1N Z0N]
+            alternate_definition [4x4] c4
+   setup 1x8 2x4 restriction 1fl_only
+      array [Z7N Z6N Z4N Z5N Z3N Z2N Z0N Z1N]
+
+call "single shuffle" c4 tag sglshuffle
+            reverse_means_mirror
+   setup 1x2 1x2 rotate restriction couples_only
+      array [Z1W Z0W]
+            alternate_definition [3x3] c4
+   setup 1x3 1x3 rotate restriction couples_only
+      array [Z2W Z1W Z0W]
+            alternate_definition [4x4] c4
+   setup 1x4 1x4 rotate restriction couples_only
+      array [Z2W Z3W Z0W Z1W]
+
 call "wheel and spread" plus
             left_means_mirror
    setup 1x4 1x4 qualifier 1fl_only
@@ -3310,6 +3370,11 @@ call "double pass thru" mainstream
             rear_back_from_qtag
    setup 4x1 1x4
       array [ZM3N ZM2N 0 0]
+            alternate_definition [twisted] c4
+   setup dmd 1x4
+      array [0 0 0 CM2E]
+   setup pmd 1x4
+      array [ZM3N 0 0 0]
 
 call "reflected double pass thru" c3
             rear_back_from_qtag
@@ -3325,12 +3390,22 @@ call "strut @eright@f" c3
             left_means_mirror
    setup 4x2 1x8 rotate
       array [ZM6W CR7E 0 0 0 0 CR4E ZM5W]
+            alternate_definition [twisted] c4
+   setup qtag 1x8
+      array [0 0 0 0 ZM5N ZM6N 0 0]
+   setup pqtag 1x8
+      array [0 0 0 CR3W 0 0 CR0W 0]
             alternate_definition [single] c3
    setup 4x1 1x4 rotate
       array [ZM3W CR2E 0 0]
    setup pmd dmd
       array [ZM3N 0 0 0]
    setup dmd dmd
+      array [0 0 0 CR2S]
+            alternate_definition [twisted single] c4
+   setup pmd 1x4 rotate
+      array [ZM3W 0 0 0]
+   setup dmd 1x4 rotate
       array [0 0 0 CR2S]
             alternate_definition [3x1] c4
    setup pqtag 1x8 rotate
@@ -3339,12 +3414,22 @@ call "strut @eright@f" c3
 call "strut right and left" c3
    setup 4x2 1x8 rotate
       array [ZM1W CR7E 0 0 0 0 CR4E ZM2W]
+            alternate_definition [twisted] c4
+   setup qtag 1x8
+      array [0 0 0 0 ZM2N ZM1N 0 0]
+   setup pqtag 1x8
+      array [0 0 0 CR3W 0 0 CR0W 0]
             alternate_definition [single] c4
    setup 4x1 1x4 rotate
       array [ZM1W CR2E 0 0]
    setup pmd dmd
       array [ZM1N 0 0 0]
    setup dmd dmd
+      array [0 0 0 CR2S]
+            alternate_definition [twisted single] c4
+   setup pmd 1x4 rotate
+      array [ZM1W 0 0 0]
+   setup dmd 1x4 rotate
       array [0 0 0 CR2S]
             alternate_definition [3x1] c4
    setup pqtag 1x8 rotate
@@ -3353,6 +3438,11 @@ call "strut right and left" c3
 call "strut left and right" c3
    setup 4x2 1x8 rotate
       array [ZM6W AL0E 0 0 0 0 AL3E ZM5W]
+            alternate_definition [twisted] c4
+   setup qtag 1x8
+      array [0 0 0 0 ZM5N ZM6N 0 0]
+   setup pqtag 1x8
+      array [0 0 0 AL3E 0 0 AL0E 0]
             alternate_definition [single] c4
    setup 4x1 1x4 rotate
       array [ZM3W AL0E 0 0]
@@ -3360,14 +3450,24 @@ call "strut left and right" c3
       array [ZM3N 0 0 0]
    setup dmd dmd
       array [0 0 0 AL0S]
+            alternate_definition [twisted single] c4
+   setup pmd 1x4 rotate
+      array [ZM3W 0 0 0]
+   setup dmd 1x4 rotate
+      array [0 0 0 AL2N]
             alternate_definition [3x1] c4
    setup pqtag 1x8 rotate
       array [AL0E 0 0 0 0 AL2E ZM5W AL1E]
 
-call "pass and roll" a2
-            rear_back_from_r_wave left_means_mirror
+call "_finish pass and roll" dontshow tag fin_passnroll
+            left_means_mirror
    setup 4x1 2x2
-      array [CR0N 0 0 CM3S]
+      array [0 CR0N CM3S 0]
+
+call "pass and roll" a2
+            left_means_mirror first_part_visible twisted_is_inherited magic_is_inherited
+   seq passthru [inherit_twisted inherit_magic]
+   seq fin_passnroll [inherit_left]
 
 call "ah so" c1 tag ahso
    setup 1x4 2x2 no_cutting_through qualifier wave_only
@@ -3942,6 +4042,20 @@ call "crossfire" plus
       array [C1S 0 A0S 0]
    setup pmd 2x2
       array [0 C0W 0 A3E]
+            alternate_definition [straight] c4
+   setup 2x4 2x4 rotate restriction 2fl_only
+      array [CR0E CM1E AM6E AL7E ZM1W AM4E CM3E ZM6W]
+   setup pqtag 2x4
+      array [ZM2N CR4S 0 0 AL3S ZM5N 0 0]
+   setup qtag 2x4
+      array [0 0 AM5S CM4S 0 0 CM6S AM7S]
+            alternate_definition [straight yoyo] c4
+   setup 2x4 2x4 rotate restriction wave_only
+      array [CR0E CM6S AM1N AL7E ZM1W AM3N CM4S ZM6W]
+   setup pqtag 2x4 restriction nice_diamonds
+      array [ZM2N CR4S 0 0 AL3S ZM5N 0 0]
+   setup qtag 2x4 restriction nice_diamonds
+      array [0 0 AM4E CM5W 0 0 CM7W AM6E]
             alternate_definition [3x3] c4
    setup 1x6 2x3 rotate restriction forbidden 3x3_2fl_only
       /* We say that roll is undefined.  The roll rules come from the definition
@@ -3952,11 +4066,6 @@ call "crossfire" plus
    setup 1x8 2x4 rotate restriction forbidden 4x4_2fl_only
       array [C0E C1E C3E C2E A7E A6E A4E A5E]
 
-call "chain down the line" mainstream
-            parallel_conc_end
-   setup 1x4 2x2
-      array [AL0E CCAL1W AAL2W 0]
-
 call "cross sashay" c4
    setup 1x4 2x2 restriction wave_only
       array [CR1S ZM1N AL0S ZM0N]
@@ -3964,6 +4073,18 @@ call "cross sashay" c4
       array [CR1S 0 AL0S 0]
    setup pmd 2x2 restriction nice_diamonds
       array [0 ZM2N 0 ZM1N]
+            alternate_definition [straight] c4
+   setup 2x4 2x4 rotate restriction wave_only
+      array [CR0E ZM0W ZM7W AL7E ZM1W ZM5W ZM2W ZM6W]
+   setup pqtag 2x4 restriction nice_diamonds
+      array [ZM2N CR4S 0 0 AL3S ZM5N 0 0]
+   setup qtag 2x4 restriction nice_diamonds
+      array [0 0 ZM2N ZM3N 0 0 ZM1N ZM0N]
+
+call "chain down the line" mainstream
+            parallel_conc_end
+   setup 1x4 2x2
+      array [AL0E CCAL1W AAL2W 0]
 
 call "swap the wave" c2
             reverse_means_mirror
@@ -4730,8 +4851,8 @@ call "curl thru" c4
       array [R0E R1E L5E L4E]
 
 call "pass the ocean" mainstream tag pass_ocean
-            rear_back_from_r_wave visible_fractions
-   seq passthru []
+            rear_back_from_r_wave visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq quarterin []
    seq touch []
 
@@ -4739,7 +4860,7 @@ call "cross the ocean" c3x
    setup 2x2 1x4 rotate
       array [0 0 R0N L1S]
 
-call "@6 walk/others dodge" mainstream tag starthopping
+call "@6 walk others dodge" mainstream tag starthopping
             yield_if_ambiguous
    setup 2x2 2x2
       preds "Can't tell who is designated."
@@ -4841,60 +4962,65 @@ call "_start dixie style" dontshow tag start_dixie
             alternate_definition [4x4 singlefile] c4
    setup 8x1 1x8
       array [ZM0N ZM3N ZM5N ZM6N 0 0 0 0 ]
+            alternate_definition [twisted singlefile] c4
+   setup dmd 1x4
+      array [0 0 0 CM3E]
+   setup pmd 1x4
+      array [ZM0N 0 0 0]
 
 call "dixie style to a wave" mainstream
             visible_fractions
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited 3x3_is_inherited 4x4_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile inherit_3x3 inherit_4x4]
+            singlefile_is_inherited twisted_is_inherited 3x3_is_inherited 4x4_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_3x3 inherit_4x4 inherit_twisted]
    seq left_touch_1_4 [inherit_left]
 
 call "dixie diamond" c1
             visible_fractions
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile]
+            singlefile_is_inherited twisted_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_twisted]
    seq left_touch_1_4 [inherit_left]
    seq ctrarmturn_14_utb []
 
 call "dixie sashay" c1
             visible_fractions
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile]
+            singlefile_is_inherited twisted_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_twisted]
    seq left_touch_1_4 [inherit_left]
    seq slither []
 
 call "dixie derby" c3x
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile]
+            singlefile_is_inherited twisted_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_twisted]
    seq left_touch_1_4 [inherit_left]
    seq crossroll []
 
 call "dixie spin" c4a
             visible_fractions
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile]
+            singlefile_is_inherited twisted_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_twisted]
    seq left_touch_1_4 [inherit_left]
    seq fanthetop []
 
 call "dixie chain" c4
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile]
+            singlefile_is_inherited twisted_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_twisted]
    seq finish_dixie_chain []
 
 call "dixie daisy" c4
             split_like_dixie_style rear_back_from_r_wave rear_back_from_qtag
-            singlefile_is_inherited left_means_mirror
-   seq start_dixie [inherit_left inherit_singlefile]
+            singlefile_is_inherited twisted_is_inherited left_means_mirror
+   seq start_dixie [inherit_left inherit_singlefile inherit_twisted]
    seq finish_dixie_daisy [inherit_left]
 
 call "pass the sea" a1
-            rear_back_from_r_wave visible_fractions
-   seq passthru []
+            rear_back_from_r_wave visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq quarterin []
    seq lft_touch [force_left]
 
@@ -5251,6 +5377,11 @@ call "_half by the right" dontshow tag 1_2_by_right
             alternate_definition [yoyo] c4
    setup 2x2 1x4 rotate qualifier right_wave
       array [CR1S 0 0 CR2S]
+            alternate_definition [grand yoyo] c4
+   setup 3x2 1x6 qualifier right_wave
+      array [CR0W CR2W CR4W 0 0 0]
+   setup 4x2 1x8 qualifier right_wave
+      array [CR0W CR3W CR6W CR5W 0 0 0 0]
 
 call "_three quarters by the right" dontshow tag 3_4_by_right
             left_means_mirror diamond_is_legal
@@ -5460,8 +5591,8 @@ call "star to a wave" c4a
       array [ACR3W CR0W 0 0]
 
 call "travel thru" c3a
-            rear_back_from_r_wave visible_fractions left_means_mirror 3x3_is_inherited 4x4_is_inherited
-   seq passthru []
+            rear_back_from_r_wave visible_fractions left_means_mirror 3x3_is_inherited 4x4_is_inherited twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq finishtravel [inherit_left inherit_3x3 inherit_4x4]
 
 call "_finish travel thru" dontshow tag finishtravel
@@ -5712,17 +5843,17 @@ call "shake and rattle" c3
       array [CR0S CR1S CR2S CR3S AL4S AL5S AL6S AL7S]
 
 call "catch @1@9" c2
-            split_like_square_thru cross_is_inherited
+            split_like_square_thru cross_is_inherited twisted_is_inherited
             left_means_mirror neednumber
-   seq touch [inherit_left]
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq slip [or_anycall]
    seq stepnfold [inherit_cross]
 
 call "catch @0 @9" c2
-            split_like_square_thru cross_is_inherited
+            split_like_square_thru cross_is_inherited twisted_is_inherited
             left_means_mirror neednumber
-   seq touch [inherit_left]
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq nullcall [mandatory_anycall]
    seq stepnfold [inherit_cross]
@@ -5732,9 +5863,9 @@ call "_centers step and fold" dontshow tag ctrsstepnfold
    conc stepnfold [inherit_cross] nullcall []
 
 call "catch @0 @9, only the resulting centers finish" c3
-            split_like_square_thru cross_is_inherited
+            split_like_square_thru cross_is_inherited twisted_is_inherited
             left_means_mirror neednumber
-   seq touch [inherit_left]
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq nullcall [mandatory_anycall]
    seq ctrsstepnfold [inherit_cross]
@@ -5744,38 +5875,38 @@ call "_finish right on" dontshow tag finish_right_on
       array [CR1W AL1W]
 
 call "@eright@f on @9" c4a
-            split_like_square_thru left_means_mirror neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq finish_right_on []
 
 call "@eright@f on @9 and @b" c4a
-            split_like_square_thru dont_use_in_resolve left_means_mirror need_two_numbers
-   seq touch [inherit_left]
+            split_like_square_thru dont_use_in_resolve left_means_mirror need_two_numbers twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq armturn_n4 [shift_one_number]
    seq roll []
 
 call "square thru @9" mainstream
-            split_like_square_thru left_means_mirror neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq natstepthru []
 
 call "square thru, but on the @u hand, @0" plus
-            split_like_square_thru left_means_mirror neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq nullcall [mandatory_anycall]
 
 call "square thru @9 to a wave" c1
-            split_like_square_thru left_means_mirror neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
 
 call "square thru @9, @6 to a wave" c1
-            split_like_square_thru left_means_mirror neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq somedontstepthru []
 
@@ -5783,16 +5914,25 @@ call "square thru 2" dontshow tag square_thru_2
             split_like_square_thru rear_back_from_r_wave
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM0W CM1E]
+            alternate_definition [twisted] c4
+   setup 4x1 2x2
+      array [CAM2N 0 0 CM3S]
 
 call "square thru 3" dontshow tag square_thru_3
             split_like_square_thru rear_back_from_r_wave
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM3S CM2S]
+            alternate_definition [twisted] c4
+   setup 4x1 2x2
+      array [CAM1W 0 0 CM0W]
 
 call "square thru 4" dontshow tag square_thru_4
             split_like_square_thru rear_back_from_r_wave
    setup 2x2 2x2 restriction not_tboned
       array [0 0 AM2E CM3W]
+            alternate_definition [twisted] c4
+   setup 4x1 2x2
+      array [CAM0S 0 0 CM1N]
 
 call "split square thru 2" dontshow tag splitsq2
    setup 4x2 2x4
@@ -5825,20 +5965,20 @@ call "funny square thru @9" c2
    seq funnysquarefinish []
 
 call "square turn thru @9" c4a
-            split_like_square_thru left_means_mirror yoyo_is_inherited neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror yoyo_is_inherited neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq natturnthru [inherit_yoyo]
 
 call "square turn thru @9 to a wave" c4a
-            split_like_square_thru left_means_mirror yoyo_is_inherited neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror yoyo_is_inherited neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq trade [inherit_yoyo]
 
 call "square turn thru @9, @6 to a wave" c4a
-            split_like_square_thru left_means_mirror neednumber
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror neednumber twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit [repeat_nm1]
    seq trade []
    seq somedontstepthru []
@@ -5972,8 +6112,8 @@ call "courtesy turn" mainstream tag courtesy
       array [AL1S AL0S]
 
 call "right and left thru" mainstream
-            visible_fractions no_elongation_allowed left_means_mirror
-   seq passthru []
+            visible_fractions no_elongation_allowed left_means_mirror twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq courtesy []
 
 call "turn and left thru" c3x
@@ -6584,16 +6724,19 @@ call "_leads divide and move along" dontshow tag leads_div_move_along
 call "split swap" c2
             reverse_means_mirror
    setup 2x2 2x2
-      array [0 0 R1E M2E]
+      array [0 0 CR1E CM2E]
+            alternate_definition [single] c4
+   setup 2x1 1x2 rotate
+      array [C1N 0]
             alternate_definition [singlefile] c4
    setup 4x1 2x2
       array [C3E C2E 0 0]
             alternate_definition [3x3] c4
    setup 2x3 2x3 rotate
-      array [0 0 0 R0N R1N R2N]
+      array [0 0 0 CR0N CR1N CR2N]
             alternate_definition [4x4] c4
    setup 2x4 2x4 rotate
-      array [0 0 0 0 R0N R1N R2N R3N]
+      array [0 0 0 0 CR0N CR1N CR2N CR3N]
 
 call "arky star thru" c1
    setup 2x2 2x2
@@ -6934,8 +7077,8 @@ call "fan and cross thru" c4
       array [0 0 AM2S ZM1N]
 
 call "square chain thru" a1
-            split_like_square_thru left_means_mirror yoyo_is_inherited grand_is_inherited
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror yoyo_is_inherited grand_is_inherited twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit []
    seq trade [inherit_yoyo]
    seq maybegrandslip [inherit_grand]
@@ -6943,16 +7086,16 @@ call "square chain thru" a1
    seq natstepthru []
 
 call "square chain thru to a wave" c1
-            split_like_square_thru left_means_mirror yoyo_is_inherited grand_is_inherited
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror yoyo_is_inherited grand_is_inherited twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit []
    seq trade [inherit_yoyo]
    seq maybegrandslip [inherit_grand]
    seq trade []
 
 call "square chain thru, @6 to a wave" c1
-            split_like_square_thru left_means_mirror yoyo_is_inherited grand_is_inherited
-   seq touch [inherit_left]
+            split_like_square_thru left_means_mirror yoyo_is_inherited grand_is_inherited twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit []
    seq trade [inherit_yoyo]
    seq maybegrandslip [inherit_grand]
@@ -6960,8 +7103,8 @@ call "square chain thru, @6 to a wave" c1
    seq somedontstepthru []
 
 call "square chain@C the top" c1
-            split_like_square_thru yoyo_is_inherited cross_is_inherited left_means_mirror
-   seq touch [inherit_left]
+            split_like_square_thru yoyo_is_inherited cross_is_inherited left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit []
    seq trade [inherit_yoyo]
    seq fanthetop_maybe_cross [inherit_cross]
@@ -6969,16 +7112,16 @@ call "square chain@C the top" c1
    seq natstepthru []
 
 call "square chain@C the top to a wave" c1
-            split_like_square_thru yoyo_is_inherited cross_is_inherited left_means_mirror
-   seq touch [inherit_left]
+            split_like_square_thru yoyo_is_inherited cross_is_inherited left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit []
    seq trade [inherit_yoyo]
    seq fanthetop_maybe_cross [inherit_cross]
    seq trade []
 
 call "square chain@C the top, @6 to a wave" c1
-            split_like_square_thru yoyo_is_inherited cross_is_inherited left_means_mirror
-   seq touch [inherit_left]
+            split_like_square_thru yoyo_is_inherited cross_is_inherited left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq crosslockit []
    seq trade [inherit_yoyo]
    seq fanthetop_maybe_cross [inherit_cross]
@@ -7088,14 +7231,6 @@ call "straight fire" c4a
    setup qtag 2x4 restriction nice_diamonds
       array [0 0 AM4E CM5W 0 0 CM7W AM6E]
 
-call "straight cross sashay" c4
-   setup 2x4 2x4 rotate restriction wave_only
-      array [CR0E ZM0W ZM7W AL7E ZM1W ZM5W ZM2W ZM6W]
-   setup pqtag 2x4 restriction nice_diamonds
-      array [ZM2N CR4S 0 0 AL3S ZM5N 0 0]
-   setup qtag 2x4 restriction nice_diamonds
-      array [0 0 ZM2N ZM3N 0 0 ZM1N ZM0N]
-
 call "straight connect" c4
    setup qtag 2x4 restriction nice_diamonds
       array [0   0    AM2W CM3E  0   0  CM1E AM0W]
@@ -7128,6 +7263,12 @@ call "with a touch of class" c4a
 call "link up" c3a
    setup 2x4 2x4 restriction 2fl_only
       array [AM7S AL0S CR3S CM4S AM1S AM6S CM5S CM2S]
+            alternate_definition [3x3] c4
+   setup 2x6 3x4 restriction 3x3_2fl_only
+      array [A9S A10S A0S C3S C4S C6S A1S A11S A8S C7S C5S C2S]
+            alternate_definition [4x4] c4
+   setup 2x8 4x4 restriction 4x4_2fl_only
+      array [A8S A9S A10S A12S C0S C1S C2S C4S A13S A15S A11S A6S C5S C7S C3S C14S]
 
 call "and anything" c3x          /* **** not right, need to allow for pushy cast */
    setup 2x4 2x4
@@ -7339,18 +7480,18 @@ call "criss cross @9 steps at a time" c3x
       array [AL11N CR3S CR4S CR6S AL9N AL10N AL0N CR5S]
 
 call "barge thru" c4
-            visible_fractions split_like_square_thru
-   seq square_thru_2 [allow_forced_mod]
+            visible_fractions split_like_square_thru twisted_is_inherited
+   seq square_thru_2 [allow_forced_mod inherit_twisted]
    seq trade_by [allow_forced_mod]
 
 call "square the barge" c4
-            split_like_square_thru
-   seq square_thru_4 [allow_forced_mod]
+            split_like_square_thru twisted_is_inherited
+   seq square_thru_4 [allow_forced_mod inherit_twisted]
    seq trade_by [allow_forced_mod]
 
 call "square the barge 3/4" c4
-            split_like_square_thru
-   seq square_thru_3 [allow_forced_mod]
+            split_like_square_thru twisted_is_inherited
+   seq square_thru_3 [allow_forced_mod inherit_twisted]
    seq trade_by [allow_forced_mod]
 
 call "wipe out" c4a
@@ -7409,15 +7550,18 @@ call "ends bend" a1 tag endsbend
       array [0 M6W M1W 0 0 M2W M5W 0]
 
 call "_square the bases part 1" dontshow tag sqbases1
-   conc square_thru_3 [] pass_in [conc_demand_lines conc_force_otherway suppress_elongation_warnings]
+            twisted_is_inherited
+   conc square_thru_3 [inherit_twisted] pass_in [conc_demand_lines conc_force_otherway inherit_twisted suppress_elongation_warnings]
 
 call "square the bases" c1
-   seq sqbases1 []
+            twisted_is_inherited
+   seq sqbases1 [inherit_twisted]
    seq splitsq2 [allow_forced_mod]
    seq trade_by [allow_forced_mod]
 
 call "square the bases plus 2" c4a
-   seq sqbases1 []
+            twisted_is_inherited
+   seq sqbases1 [inherit_twisted]
    seq splitsq4 [allow_forced_mod]
    seq trade_by [allow_forced_mod]
 
@@ -7604,14 +7748,15 @@ call "pin wheel" c4a
       array [L0E L7E R4W R3W L2W L5W R6E R1E]
 
 call "_chisel1" dontshow tag chisel1
-   conc pass_in [] pass_in [conc_demand_lines conc_force_lines endscando]
+            twisted_is_inherited
+   conc pass_in [inherit_twisted] pass_in [conc_demand_lines conc_force_lines endscando inherit_twisted]
 
 call "_chisel2" dontshow tag chisel2
    conc pass_out [] pass_in [conc_demand_lines conc_force_columns endscando]
 
 call "chisel thru" c2
-            visible_fractions
-   seq chisel1 []
+            visible_fractions twisted_is_inherited
+   seq chisel1 [inherit_twisted]
    seq chisel2 []
    seq pass_in [allow_plain_mod]
 
@@ -7621,22 +7766,22 @@ call "_pass the next person" dontshow tag passthenext
       array [CM1E AM0W 0 0]
 
 call "_centers load the boat" dontshow tag cloadboat
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq quarterout []
    seq trade []
    seq passthru []
 
 call "_ends load the boat" dontshow tag eloadboat
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq passthenext []
    seq passthenext []
    seq quarterin []
 
 call "load the boat" plus
-            visible_fractions
-   conc cloadboat [] eloadboat [endscando]
+            visible_fractions twisted_is_inherited
+   conc cloadboat [inherit_twisted] eloadboat [endscando inherit_twisted suppress_elongation_warnings]
 
 call "_start confidence" dontshow tag startconfidence
    conc hingesglctrhinge [] circulate [force_half]
@@ -8315,8 +8460,8 @@ call "_centers finish grand chain 8" dontshow tag ctrfingc8
       array [L1N L0N 0 0]
 
 call "_centers grand chain 8" dontshow tag ctrgc8
-            first_part_visible left_means_mirror
-   seq passthru []
+            first_part_visible left_means_mirror twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq ctrfingc8 [inherit_left]
 
 call "_ends finish grand chain 8" dontshow tag endfingc8
@@ -8324,21 +8469,23 @@ call "_ends finish grand chain 8" dontshow tag endfingc8
       array [L1S L0S 0 0]
 
 call "_ends grand chain 8" dontshow tag endgc8
-            first_part_visible left_means_mirror
-   seq passthru []
+            first_part_visible left_means_mirror twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq endfingc8 [inherit_left]
 
 call "grand chain 8 (centers and ends)" c2
-            first_part_visible left_means_mirror
-   conc ctrgc8 [inherit_left] endgc8 [inherit_left conc_demand_lines conc_force_otherway endscando]
+            first_part_visible left_means_mirror twisted_is_inherited
+   conc ctrgc8 [inherit_left inherit_twisted] endgc8 [inherit_left inherit_twisted conc_demand_lines conc_force_otherway endscando]
+
+call "_finish chain the square" dontshow tag fin_chain_square
+            left_means_mirror
+   setup 4x2 2x4 rotate
+      array [0 A0W 0 A3E A2E 0 CA5E 0]
 
 call "chain the square" c2
-            rear_back_from_r_wave left_means_mirror
-   setup 4x2 2x4 rotate
-      array [0W 0 3E 0 0 2E 0 5E]
-            alternate_definition [magic] c3
-   setup 4x2 2x4 rotate
-      array [5E 0 2E 0 0 3E 0 0W]
+            left_means_mirror first_part_visible twisted_is_inherited magic_is_inherited
+   seq passthru [inherit_twisted inherit_magic]
+   seq fin_chain_square [inherit_left]
 
 call "turn away" c4a
             left_means_mirror
@@ -8380,8 +8527,8 @@ call "the axle" c1
    seq slip [allow_forced_mod roll_transparent]
 
 call "@2pass @3the axle" c1
-            visible_fractions
-   seq passthru [or_anycall]
+            visible_fractions twisted_is_inherited
+   seq passthru [or_anycall inherit_twisted]
    seq axle1 []
    seq trade [allow_forced_mod]
    seq slip [allow_forced_mod roll_transparent]
@@ -8423,13 +8570,13 @@ call "_finish rotary @0" dontshow tag fin_rot_anything
    seq ctrdomandatorycall [inherit_single inherit_grand]
 
 call "rotary @2spin@3" c1
-            first_part_visible left_means_mirror single_is_inherited magic_is_inherited grand_is_inherited
-   seq passthru [inherit_left inherit_magic]
+            first_part_visible left_means_mirror single_is_inherited magic_is_inherited grand_is_inherited twisted_is_inherited
+   seq passthru [inherit_left inherit_magic inherit_twisted]
    seq fin_rot_spin [inherit_left inherit_single inherit_grand]
 
 call "rotary @0" c2
-            first_part_visible left_means_mirror single_is_inherited magic_is_inherited grand_is_inherited
-   seq passthru [inherit_left inherit_magic]
+            first_part_visible left_means_mirror single_is_inherited magic_is_inherited grand_is_inherited twisted_is_inherited
+   seq passthru [inherit_left inherit_magic inherit_twisted]
    seq fin_rot_anything [inherit_left inherit_single inherit_grand]
 
 call "the plank" c4 tag plank
@@ -8511,8 +8658,8 @@ call "_jam thru part 2" dontshow tag jam_thru_2
       array [0 CM2N 0 CR3S AL0N 0 AM1S 0]
 
 call "jam thru" c4a
-            first_part_visible
-   seq passthru []
+            first_part_visible twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq jam_thru_2 []
 
 call "_ride the tide part 2" dontshow tag ridetide2
@@ -8664,46 +8811,50 @@ call "_square out stuff" dontshow tag square_out_stuff
       array [CM3S CM2S AM1S AM0S ZM3N ZM2N ZM1N ZM0N]
 
 call "square out" c4a
-            left_means_mirror
-   seq touch [inherit_left]
+            left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq square_out_stuff []
    seq crosslockit []
    seq natstepthru []
 
 call "square out to a wave" c4a
-            left_means_mirror
-   seq touch [inherit_left]
+            left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq square_out_stuff []
    seq crosslockit []
 
 call "square out, @6 to a wave" c4a
-            left_means_mirror
-   seq touch [inherit_left]
+            left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq square_out_stuff []
    seq crosslockit []
    seq somedontstepthru []
 
 call "square out, but on the 3rd hand, @0" c4a
-            left_means_mirror
-   seq touch [inherit_left]
+            left_means_mirror twisted_is_inherited
+   seq touch_twisted [inherit_left inherit_twisted]
    seq square_out_stuff []
    seq nullcall [mandatory_anycall]
 
+call "_finish cross chain thru" dontshow tag fin_x_chain_thru
+            left_means_mirror
+   setup 4x2 2x4
+      array [0 5N 0 AL4S AL3S 0 2N 0]
+
 call "cross chain thru" c1
-            rear_back_from_r_wave left_means_mirror
+            left_means_mirror first_part_visible twisted_is_inherited magic_is_inherited
+   seq passthru [inherit_twisted inherit_magic]
+   seq fin_x_chain_thru [inherit_left]
+
+call "_finish cross chain and roll" dontshow tag fin_x_chain_roll
+            left_means_mirror
    setup 4x2 2x4
-      array [5N 0 4S 0 0 3S 0 2N]
-            alternate_definition [magic] c3
-   setup 4x2 2x4
-      array [2N 0 3S 0 0 4S 0 5N]
+      array [0 L5W 0 AL4E AL3E 0 L2W 0]
 
 call "cross chain and roll" c1
-            rear_back_from_r_wave left_means_mirror
-   setup 4x2 2x4
-      array [L5W 0 L4E 0 0 L3E 0 L2W]
-            alternate_definition [magic] c3
-   setup 4x2 2x4
-      array [L2W 0 L3E 0 0 L4E 0 L5W]
+            left_means_mirror first_part_visible twisted_is_inherited magic_is_inherited
+   seq passthru [inherit_twisted inherit_magic]
+   seq fin_x_chain_roll [inherit_left]
 
 call "checkover" c1
    setup 4x2 2x4 restriction unusual wave_only
@@ -8936,13 +9087,13 @@ call "@k tie" c4a
             yield_if_ambiguous
    setup 4x2 2x4
       preds "Tandems must be selected/deselected together."
-         if select_near_select     [L7W L6W L1E L0E R7W R6W R1E R0E]
-         if unselect_near_unselect [M6E M7E M4E M5E M2W M3W M0W M1W]
+         if select_near_select_or_phantom [L7W L6W L1E L0E R7W R6W R1E R0E]
+         if unselect_near_unselect        [M6E M7E M4E M5E M2W M3W M0W M1W]
             alternate_definition [cross] c4a
    setup 4x2 2x4
       preds "Tandems must be selected/deselected together."
-         if select_near_select     [R0E R1E R6W R7W L0E L1E L6W L7W]
-         if unselect_near_unselect [M1W M0W M3W M2W M5E M4E M7E M6E]
+         if select_near_select_or_phantom [R0E R1E R6W R7W L0E L1E L6W L7W]
+         if unselect_near_unselect        [M1W M0W M3W M2W M5E M4E M7E M6E]
 
 call "no one tie" c4a
             cross_is_inherited visible_fractions
@@ -9128,6 +9279,16 @@ call "slim down" c4a tag slimdown
    setup 8x2 2x8 rotate
       array [ZM12W ZM13W ZM14W ZM15W ZM0W ZM1W ZM2W ZM3W ZM4W ZM5W ZM6W ZM7W ZM8W ZM9W ZM10W ZM11W]
 
+call "lateral substitute" c2
+   setup 2x4 2x4
+      array [ZM1N ZM0N ZM3N ZM2N ZM5N ZM4N ZM7N ZM6N]
+   setup 4x2 2x4
+      array [ZM1N    0    0 ZM2N ZM5N    0    0 ZM6N]
+   setup ptrngl trngl
+      array [ZM3N ZM5N ZM4N ZM0N ZM2N ZM1N]
+   setup trngl trngl
+      array [   0 ZM5N ZM4N    0 ZM2N ZM1N]
+
 call "step and slide" a1
    setup 1x4 2x3 rotate
       array [ZM4W ZM5W ZM1W ZM0W]
@@ -9233,6 +9394,9 @@ call "circulate" mainstream tag circulate
       array [ZM0N ZM1N ZM4N CR3E AL3W ZM2N ZM5N ZM6N]
    setup 3x2 short6 rotate no_cutting_through
       array [ZM5W ZM2W CR1N AL1S ZM0W ZM3W]
+            alternate_definition [twisted] c4
+   setup 2x1 1x2 rotate
+      array [CM1N 0]
 
 call "circulate @9 times" mainstream
             neednumber visible_fractions distribute_repetitions
@@ -9575,8 +9739,8 @@ call "_wheel and" dontshow tag wheel
       array [L0E L3E 0 0]
 
 call "_8by" dontshow tag 8by
-            visible_fractions left_means_mirror
-   seq passthru []
+            visible_fractions left_means_mirror twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq courtesy []
    seq roll []
 
@@ -9614,14 +9778,15 @@ call "cloverleaf" mainstream tag cloverleaf
       array [0 0 0 0 CR7S CR6S CR5S CR4S AL3N AL2N AL1N AL0N 0 0 0 0]
 
 call "_cloverflow 1" dontshow tag clovflow1
-   conc passthru [] clover [conc_demand_columns conc_force_columns]
+            twisted_is_inherited
+   conc passthru [inherit_twisted] clover [conc_demand_columns conc_force_columns]
 
 call "_cloverflow 2" dontshow tag clovflow2
    crossconc passthru [conc_demand_columns] clover [conc_force_columns]
 
 call "cloverflow" c4
-            visible_fractions
-   seq clovflow1 []
+            visible_fractions twisted_is_inherited
+   seq clovflow1 [inherit_twisted]
    seq clovflow2 []
 
 call "_cloverleaf turn 1" dontshow tag clovturn1
@@ -11709,8 +11874,8 @@ call "_percolate part 3" dontshow tag percolate3
    conc nicely [] natturnthru [inherit_yoyo endscando suppress_elongation_warnings]
 
 call "@1percolate" c1
-            yoyo_is_inherited first_two_parts_visible
-   seq circulate [or_anycall]
+            yoyo_is_inherited twisted_is_inherited first_two_parts_visible
+   seq circulate [or_anycall inherit_twisted]
    seq circulate [force_half]
    seq percolate3 [inherit_yoyo]
 
@@ -11753,8 +11918,8 @@ call "_finish cover up" dontshow tag fincover
    conc recycle [allow_plain_mod] about [suppress_elongation_warnings]
 
 call "@1cover up" c4a
-            visible_fractions
-   seq circulate [or_anycall]
+            twisted_is_inherited visible_fractions
+   seq circulate [or_anycall inherit_twisted]
    seq circulate [force_half]
    seq fincover []
 
@@ -11842,13 +12007,13 @@ call "_shuttle @0 part 2" dontshow tag shuttle2c
    singleconc_together slidethru [] nullcall [mandatory_anycall]
 
 call "shuttle @h" c3x
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq shuttle2d []
 
 call "shuttle @0" c3x
-            visible_fractions
-   seq passthru []
+            visible_fractions twisted_is_inherited
+   seq passthru [inherit_twisted]
    seq shuttle2c []
 
 call "_tag and spin @h part 2" dontshow tag tagnspin2d
@@ -11955,8 +12120,8 @@ call "the action" c4
    seq finishwithmod []
 
 call "barge the action" c4
-            first_part_visible split_like_square_thru left_means_mirror
-   seq square_thru_2 []
+            first_part_visible split_like_square_thru left_means_mirror twisted_is_inherited
+   seq square_thru_2 [inherit_twisted]
    seq startaction [inherit_left]
    seq turnstar1_endstrade []
    seq finishwithmod []

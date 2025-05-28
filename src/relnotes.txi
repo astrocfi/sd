@@ -21,10 +21,17 @@
 Copyright @copyright{} 1996 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.75
-         Database version = 31.75 format = 80.
+          RELEASE NOTES FOR SD VERSION 31.76
+         Database version = 31.76 format = 83.
        X11 UI version 1.17, SDTTY UI version 1.9.
 @end example
+
+****** Changes as of version 31.76 ******
+
+The "straight" and "twisted" concepts are implemented.  Of course,
+"straight" things have existed on a case-by-case basis for some time,
+but now you can say, for example, "straight yoyo crossfire" instead of
+"yoyo straight fire" if you wish.
 
 ****** Changes as of version 31.75 ******
 
@@ -34,7 +41,7 @@ the call @samp{squeeze}.
 ****** Changes as of version 31.73 ******
 
 The program's ability to handle calls in alamo rings is somewhat
-improved.  The the discussion of the call @code{adjust alamo to other pairing}
+improved.  See the discussion of the call @code{adjust alamo to other pairing}
 under ``Call Notes'' in the manual.
 
 The concept formerly called @samp{diagonal} has been changed
@@ -105,16 +112,6 @@ command line.  The line in the @code{[options]} section of
 The old command @code{discard_after_error} are maintained for compatibility,
 but they have no effect.  See the reference manual for further details.
 
-[Incidentally, the act of making the program retain concepts
-after an error occurs was put in about a year and a half ago,
-in version 30.88, at the strong urging of someone who (a) does not
-use this program,
-and (b) has since then been a strong advocate and distributor of
-a competing program.  Hence the only person who ever requested
-this ``feature'' never got the ``benefit'' of it.  I disliked it
-right from the start, and almost immediately added the
-@code{discard_after_error} switch to turn it off.]
-
 ****** Changes as of version 31.67 ******
 
 The function key shift-F12 means @code{find another} when resolving
@@ -135,8 +132,10 @@ If you want 3/4 of a mix, that is, the centers cross run and then the
 new centers hinge, you must type the @code{3/4} concept by itself:
 
 @example
+@group
 3/4
 mix
+@end group
 @end example
 
 ****** Changes as of version 31.66 ******
@@ -214,9 +213,11 @@ The intention of this feature is that it be used with the initialization
 file.  If your initialization file @file{sd.ini} contains:
 
 @example
+@group
 sequence.C3A         C3A             12      NACC, June 1995
 *                    C1              36      Cambridge
 *                    A2               9      NESRDC/1995
+@end group
 @end example
 
 (note that some file names are given as asterisks), then, whenever you
@@ -325,6 +326,7 @@ from certain setups, it is possible to have the outside people
 use truck/loop/shove-off calls to come in to the center:
 
 @example
+@group
  1G^   4GV   4B^   3B^
 
  1BV   2BV   2G^   3GV
@@ -343,12 +345,14 @@ use truck/loop/shove-off calls to come in to the center:
  3G^   3BV   1B^   1GV
 
        4B^   2G^
+@end group
 @end example
 
 New call:  <anyone> spread.  This is done from columns,
 to make a butterfly, blocks, or whatever:
 
 @example
+@group
  1B^   1GV
 
  2G^   2BV
@@ -366,6 +370,7 @@ to make a butterfly, blocks, or whatever:
   .    4B^    .    4GV
 
  3G^    .    3BV    .
+@end group
 @end example
 
 ****** Changes as of version 31.46 ******
@@ -407,12 +412,14 @@ and you may not substitute another designator, such as "sides", for
 the word "ends".  So, for example, you might type or click:
 
 @example
+@group
 heads start
 swing thru
 ends divide
 ends
 touch 1/4
 6x2 acey deucey
+@end group
 @end example
 
 You might read this as "heads swing thru, while the sides divide
@@ -473,6 +480,7 @@ on multiple lines if you wish.  So the following are all legal and
 equivalent things:
 
 @example
+@group
 reverse random tandem swing thru
  
 reverse random
@@ -486,6 +494,7 @@ reverse
 random
 tandem
 swing thru
+@end group
 @end example
 
 similarly, things like "single cross concentric" may be entered as
@@ -543,8 +552,10 @@ This will cause all entered concepts to be thrown away when an error
 occurs.  If this switch is not used, entered concepts remain.
 For example, if we enter
 @example
+@group
 trapezoid
 flip the diamond
+@end group
 @end example
 an error message will be printed.  Under normal circumstances, the
 "trapezoid" concept will remain in place, that is, the program will
@@ -576,9 +587,11 @@ There are no hyphens in front of switches in this file.
 For example, if the file "sd.ini" contains this:
 
 @example
+@group
 [Options]
 singlespace
 discard_after_error
+@end group
 @end example
           
 then the printed sequences will be single spaced, and entered
@@ -594,9 +607,11 @@ New concept:  <anyone> work <concept>.  You actually type the word
 type the people you want for the "anyone".  For example, you
 could type
 @example
+@group
 boys work <concept>
 once removed
 hocus pocus
+@end group
 @end example
 on three separate lines.
 
@@ -614,12 +629,14 @@ do a call.  For example, from diamonds in which the girls are
 the centers, you can say
 
 @example
+@group
 BOYS counter rotate      (use the "BOYS" concept)
    or
 GIRLS mix                (use the "GIRLS" concept)
    or
 BOYS counter rotate WHILE THE GIRLS mix
          (use the "BOYS (while the others)" concept)
+@end group
 @end example
 
 The "disconnected" concept is also much improved.
@@ -754,9 +771,11 @@ are earnestly requested not to call things like "chase the line 3/4".
 
 New concepts: MYSTIC and INVERT MYSTIC work with the following:
 @example
+@group
 TRIPLE BOXES
 TRIPLE LINES/WAVES/COLUMNS
 PHANTOM LINES/WAVES/COLUMNS
+@end group
 @end example
 
 INNER/OUTER TRIANGLES WORK SOLID/THREESOME or fractional quarter
@@ -812,6 +831,7 @@ belonged in a different position in the call.  For example, one
 would type
 
 @example
+@group
    cross
    scoot reaction
 or
@@ -820,6 +840,7 @@ or
 or
    cross
    transaction
+@end group
 @end example
 
 and the program would print out "scoot cross reaction", "hang
@@ -848,9 +869,11 @@ Overlapped waves of course has an implicit "assume waves" in it.
 
 Calls done correctly (I hope):
 @example
+@group
 straight away but [anything]
 quick [anything]
 stroll [anything]
+@end group
 @end example
 
 New calls: explode the top, turning the star unusual amounts.
@@ -1026,13 +1049,16 @@ In general, "stretch", "central", and "crazy" work much better than formerly.
 The "so-and-so do something" concepts have been extensively rewritten.
 There are four related concepts:
 @example
+@group
  "<so-and-so> only"
  "<so-and-so> disconnected"
  "<so-and-so> do your part"
  "own the <so-and-so>"
+@end group
 @end example
 Briefly, they mean the following:
 @example
+@group
  "<so-and-so> only" means that the designees work among themselves
       in whatever undistorted setups they can find.
  "<so-and-so> disconnected" means that the designees work in whatever
@@ -1043,15 +1069,18 @@ Briefly, they mean the following:
       matrix positioning is used.
 Please read the section "so-and-so only" in the manual for details.
          [Superseded at version 30.78.]
+@end group
 @end example
 
 Note that the prior inability to have, for example, the girls hinge from
 a BGGBBGGB grand wave to make point-to-point diamonds, is now fixed.
 It can be done in any of the following ways:
 @example
+@group
 each 1x4 centers hinge
 girls only hinge
 girls disconnected hinge
+@end group
 @end example
 
 A warning is printed for non-interacting use of "multiple formations working",
@@ -1112,6 +1141,7 @@ keys is equivalent to entering the indicated text.  Future versions of the
 program will have the ability to have a customization file indicate what
 keys are bound to what strings.
 @example
+@group
         f1 => "split phantom lines"
 shift   f1 => "interlocked phantom lines"
 control f1 => "phantom lines"
@@ -1120,6 +1150,7 @@ shift   f2 => "interlocked phantom columns"
 control f2 => "phantom columns"
         f3 => "allow modifications"
         f4 => "<anything>"
+@end group
 @end example
 
 The bug that made it crash if an extremely long line was typed to sdtty

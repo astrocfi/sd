@@ -478,6 +478,7 @@ char *qualtab[] = {
    "didnt_say_triangle",
    "occupied_as_h",
    "occupied_as_qtag",
+   "occupied_as_3x1tgl",
    "all_sel",
    "none_sel",
    ""};
@@ -606,6 +607,8 @@ char *flagtabh[] = {
    "singlefile_is_inherited",
    "half_is_inherited",
    "yoyo_is_inherited",
+   "straight_is_inherited",
+   "twisted_is_inherited",
    ""};
 
 /* This table is keyed to the constants "cflag__???".
@@ -632,6 +635,8 @@ char *altdeftabh[] = {
    "singlefile",
    "half",
    "yoyo",
+   "straight",
+   "twisted",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -659,6 +664,8 @@ char *defmodtabh[] = {
    "inherit_singlefile",
    "inherit_half",
    "inherit_yoyo",
+   "inherit_straight",
+   "inherit_twisted",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -689,6 +696,8 @@ char *forcetabh[] = {
    "force_singlefile",
    "force_half",
    "force_yoyo",
+   "force_straight",
+   "force_twisted",
    ""};
 
 
@@ -707,14 +716,11 @@ char *matrixcallflagtab[] = {
 
 /* BEWARE!!  This list must track the array "pred_table" in sdpreds.c . */
 
-/* The first 12 of these (the constant to use is SELECTOR_PREDS) take a predicate.
-   Any call that uses one of these predicates in its definition will cause a
-   popup to appear asking "who?". */
-
 char *predtab[] = {
    "select",
    "unselect",
    "select_near_select",
+   "select_near_select_or_phantom",
    "select_near_unselect",
    "unselect_near_select",
    "unselect_near_unselect",
@@ -1740,10 +1746,8 @@ extern void dbcompile(void)
                   matrixflags |= (1 << bit);
                }
 
-               if (matrixflags & MTX_USE_SELECTOR) call_flagsh |= CFLAGH__REQUIRES_SELECTOR;
                write_call_header(ccc);
-               write_halfword(matrixflags >> 16);
-               write_halfword(matrixflags);
+               write_fullword(matrixflags);
                write_callarray((ccc == schema_matrix) ? 2 : 8, 1);
                break;
             case schema_roll:

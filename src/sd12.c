@@ -298,12 +298,12 @@ extern void triangle_move(
                20 - <anyone>-base
    Add 100 octal if interlocked triangles. */
 
-   if (indicator >= 6 && (ss->cmd.cmd_final_flags & INHERITFLAG_INTLK)) {
+   if (indicator >= 6 && (ss->cmd.cmd_final_flags.herit & INHERITFLAG_INTLK)) {
       indicator |= 0100;     /* Interlocked triangles. */
-      ss->cmd.cmd_final_flags &= ~INHERITFLAG_INTLK;
+      ss->cmd.cmd_final_flags.herit &= ~INHERITFLAG_INTLK;
    }
 
-   if (ss->cmd.cmd_final_flags)   /* Now demand that no flags remain. */
+   if (ss->cmd.cmd_final_flags.herit | ss->cmd.cmd_final_flags.final)   /* Now demand that no flags remain. */
       fail("Illegal modifier for this concept.");
 
    if ((indicator & 0100) && calling_level < intlk_triangle_level) {

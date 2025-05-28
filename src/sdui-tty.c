@@ -44,6 +44,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    uims_preinitialize
    uims_create_menu
    uims_postinitialize
+   show_match
    uims_get_startup_command
    uims_get_call_command
    uims_get_resolve_command
@@ -74,6 +75,8 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
 
 and the following data that are used by sdmatch.c :
 
+   twice_concept_index
+   two_calls_concept_index
    num_command_commands
    command_commands
    number_of_resolve_commands
@@ -99,6 +102,16 @@ and the following data that are used by sdmatch.c :
 
 #include "sd.h"
 #include "sdmatch.h"
+
+
+static Const call_conc_option_state null_options = {
+   selector_uninitialized,
+   direction_uninitialized,
+   0,
+   0,
+   0,
+   0};
+
 #include "sdui-ttu.h"
 
 #define DEL 0x7F
@@ -358,8 +371,7 @@ prompt_for_more_output(void)
     }
 }
 
-Private void
-show_match(char *user_input_str, Const char *extension, Const match_result *mr)
+extern void show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 {
    if (verify_has_stopped) return;  /* Showing has been turned off. */
 
@@ -379,9 +391,11 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 }
 
 
+int twice_concept_index = -1;
+int two_calls_concept_index = -1;
+
+
 /* BEWARE!!  These two lists must stay in step. */
-
-
 
 #ifdef SINGERS
 int num_command_commands = 51;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
@@ -564,7 +578,7 @@ static fcn_key_thing fcn_key_table[] = {
    {0,                      "resolve\n",               ui_command_select, -1-command_resolve},              /*  F4 = 132 = resolve */
    {0,                      "refresh display\n",       ui_command_select, -1-command_refresh},              /*  F5 = 133 = refresh display */
    {0,                      "simple modifications\n",  ui_command_select, -1-command_simple_mods},          /*  F6 = 134 = simple modifications */
-   {0,                      "toggle concept levels\n", ui_command_select, -1-command_toggle_conc_levels},   /*  F7 = 135 = toggle concept levels */
+   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 135 */
    {99,                      (char *) 0,               ui_command_select, 0},                                     /* 136 */
    {99,                      (char *) 0,               ui_command_select, 0},                                     /* 137 */
    {99,                      (char *) 0,               ui_command_select, 0},                                     /* 138 */
@@ -614,8 +628,36 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = (int) start_select_heads_start;
             return;
          }
-         else if (nc == 130)
-            function_key_expansion = "two calls in succession\n";    /* F2 */
+         else if (nc == 130 && which >= 0) {                         /* F2 = two calls in succession */
+            if (two_calls_concept_index < 0) continue;
+            put_line("two calls in succession\n");
+            current_text_line++;
+            parse_state.call_list_to_use = call_list_any;
+            user_match.kind = ui_concept_select;
+            user_match.index = two_calls_concept_index;
+            user_match.newmodifiers = (modifier_block *) 0;
+            user_match.modifier_parent = (match_result *) 0;
+            user_match.current_modifier = (concept_descriptor *) 0;
+            user_match.call_conc_options = null_options;
+            user_match.anything_parent = (match_result *) 0;
+            return;
+         }
+         else if (nc == 135) {                                       /* F7 = 135 = toggle concept levels */
+            if (which >= 0) {
+               put_line("toggle concept levels\n");
+               current_text_line++;
+               user_match.kind = ui_command_select;
+               user_match.index = -1-command_toggle_conc_levels;
+               return;
+            }
+            else if (which == match_startup_commands) {
+               put_line("toggle concept levels\n");
+               current_text_line++;
+               user_match.kind = ui_start_select;
+               user_match.index = (int) start_select_toggle_conc;
+               return;
+            }
+         }
          else if (nc == 136)
             function_key_expansion = "<anything>";                   /* F8 */
          else if (nc == 137 || nc == 169) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
@@ -631,6 +673,13 @@ Private void get_user_input(char *prompt, int which)
                current_text_line++;
                user_match.kind = ui_resolve_select;
                user_match.index = -1-resolve_command_abort;
+               return;
+            }
+            else if (which == match_startup_commands) {
+               put_line("exit from the program\n");
+               current_text_line++;
+               user_match.kind = ui_start_select;
+               user_match.index = (int) start_select_exit;
                return;
             }
          }
@@ -652,8 +701,20 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = (int) start_select_sides_start;
             return;
          }
-         else if (nc == 162)
-            function_key_expansion = "twice\n";                      /* sF2 */
+         else if (nc == 162 && which >= 0) {                         /* sF2 = twice */
+            if (twice_concept_index < 0) continue;
+            put_line("twice\n");
+            current_text_line++;
+            parse_state.call_list_to_use = call_list_any;
+            user_match.kind = ui_concept_select;
+            user_match.index = twice_concept_index;
+            user_match.newmodifiers = (modifier_block *) 0;
+            user_match.modifier_parent = (match_result *) 0;
+            user_match.current_modifier = (concept_descriptor *) 0;
+            user_match.call_conc_options = null_options;
+            user_match.anything_parent = (match_result *) 0;
+            return;
+         }
          else if (nc == 163 && which >= 0) {                         /* sF3 = pick concept call */
             put_line("pick concept call\n");
             current_text_line++;
@@ -682,22 +743,40 @@ Private void get_user_input(char *prompt, int which)
             user_match.index = -1-command_all_mods;
             return;
          }
-         else if (nc == 167 && which >= 0) {                         /* sF7 = toggle active phantoms */
-            put_line("toggle active phantoms\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_toggle_act_phan;
-            return;
+         else if (nc == 167) {                                       /* sF7 = toggle active phantoms */
+            if (which >= 0) {
+               put_line("toggle active phantoms\n");
+               current_text_line++;
+               user_match.kind = ui_command_select;
+               user_match.index = -1-command_toggle_act_phan;
+               return;
+            }
+            else if (which == match_startup_commands) {
+               put_line("toggle active phantoms\n");
+               current_text_line++;
+               user_match.kind = ui_start_select;
+               user_match.index = (int) start_select_toggle_act;
+               return;
+            }
          }
          else if (nc == 168)
             function_key_expansion = "<concept>";                    /* sF8 */
                                                                      /* See above for sF9. */
-         else if (nc == 170 && which >= 0) {                         /* sF10 = change output file */
-            put_line("change output file\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_change_outfile;
-            return;
+         else if (nc == 170) {                                       /* sF10 = change output file */
+            if (which >= 0) {
+               put_line("change output file\n");
+               current_text_line++;
+               user_match.kind = ui_command_select;
+               user_match.index = -1-command_change_outfile;
+               return;
+            }
+            else if (which == match_startup_commands) {
+               put_line("change output file\n");
+               current_text_line++;
+               user_match.kind = ui_start_select;
+               user_match.index = (int) start_select_change_outfile;
+               return;
+            }
          }
          else if (nc == 171 && which >= 0) {                         /* sF11 = pick 8 person level call */
             put_line("pick 8 person level call\n");

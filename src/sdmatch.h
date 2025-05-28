@@ -26,6 +26,7 @@
  *
  */
 
+#define CLOVER_AND
 #define INPUT_TEXTLINE_SIZE 200
 
 typedef struct glozk {
@@ -33,6 +34,11 @@ typedef struct glozk {
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
    struct glozk *next;            /* next concept, or, if this is end mark, points to substitution list */
    struct glozk *gc_ptr;          /* used for reclaiming dead blocks */
+
+   int anything_index;
+   long_boolean anything_need_big_menu;
+   struct glozk *anything_next;
+   struct glozk *anything_mods;
 } modifier_block;
 
 typedef struct filch {
@@ -41,8 +47,10 @@ typedef struct filch {
    uims_reply kind;
    int index;
    call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
+   Const struct filch *anything_parent;
    Const struct filch *modifier_parent;
-   modifier_block *newmodifiers;   /* has "left", "magic", etc. modifiers. */
+   modifier_block *newmodifiers;    /* Has concepts. */
+   modifier_block *anything_calls;  /* Has "<ANYTHING>" calls. */
    concept_descriptor *current_modifier;
    long_boolean need_big_menu;
    int space_ok;             /* space is a legitimate next input character */
@@ -59,7 +67,6 @@ typedef struct {
    char *extended_input;       /* the maximal common extension to the user input */
    int match_count;            /* the number of matches so far */
    int exact_count;            /* the number of exact matches so far */
-   modifier_block *newmodifiers;  /* has "left", "magic", etc. modifiers. */
    int yielding_matches;       /* the number of them that are marked "yield_if_ambiguous". */
    int exact_match;            /* true if an exact match has been found */
    int showing;                /* we are only showing the matching patterns */
@@ -90,6 +97,8 @@ extern long_boolean verify_has_stopped;
 /* The following items are PROVIDED by the main program (that is, the user
    interface part of it) and IMPORTED by sdmatch.c */
 
+extern int twice_concept_index;
+extern int two_calls_concept_index;
 extern int num_command_commands;
 extern Cstring command_commands[];
 extern int number_of_resolve_commands;
@@ -98,14 +107,13 @@ extern int num_extra_resolve_commands;
 extern Cstring extra_resolve_commands[];
 
 
-extern void
-matcher_initialize(long_boolean show_commands_last);
+extern void show_match(char *user_input_str, Const char *extension, Const match_result *mr);
 
-extern void
-matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[]);
+extern void matcher_initialize(long_boolean show_commands_last);
+
+extern void matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[]);
     
-extern int
-match_user_input(
+extern int match_user_input(
     int which_commands,
     match_result *mr,
     char *extension,

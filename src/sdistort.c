@@ -31,7 +31,6 @@
 
 
 #include "sd.h"
-extern map_thing map_rig_1x6;
 
 
 
@@ -281,7 +280,7 @@ Private void innards(
             if (z[0].kind == s1x6 && z[0].rotation == 0 && arity == 2 &&
                   insize == 4 &&
                   !(z[0].people[3].id1 | z[0].people[4].id1 | z[1].people[0].id1 | z[1].people[1].id1)) {
-               final_map = &map_1x10_1x6;
+               final_map = &map_1x8_1x6;
                goto got_map;
             }
             else if (z[0].kind == s_1x2dmd && z[0].rotation == 0 && arity == 2 &&
@@ -1132,7 +1131,7 @@ extern void distorted_move(
 
    veryshort the_map[8];
    parse_block *next_parseptr;
-   final_set junk_concepts;
+   uint64 junk_concepts;
    int rot, rotz;
    setup_kind k;
    setup a1;
@@ -1297,7 +1296,8 @@ extern void distorted_move(
 
    if (     next_parseptr->concept->kind == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     /* Only allow 50% offset. */
-            junk_concepts == 0 &&
+            junk_concepts.herit == 0 &&
+            junk_concepts.final == 0 &&
             next_parseptr->concept->value.maps == &map_hv_2x4_2) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
@@ -1588,6 +1588,17 @@ common_spot_map cmaps[] = {
          { d_north,       0,       0,       0, d_south,       0,       0,       0},
          {       1,      -1,      -1,      -1,       7,      -1,      -1,      -1},
          { d_south,       0,       0,       0, d_north,       0,       0,       0}, s2x6, s2x4, 0},
+   /* common spot 2-faced lines */
+   {4,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,       2,      -1,      -1,       8,      10,      -1,      -1},
+         { d_north, d_north,       0,       0, d_south, d_south,       0,       0},
+         {       1,       3,      -1,      -1,       9,      11,      -1,      -1},
+         { d_south, d_south,       0,       0, d_north, d_north,       0,       0}, s2x8, s2x4, 0},
+   {4,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,      -1,       4,       6,      -1,      -1,      12,      14},
+         {       0,       0, d_north, d_north,       0,       0, d_south, d_south},
+         {      -1,      -1,       5,       7,      -1,      -1,      13,      15},
+         {       0,       0, d_south, d_south,       0,       0, d_north, d_north}, s2x8, s2x4, 0},
    /* common spot columns, facing E-W */
    {1,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
          {      12,      13,      -1,      -1,       4,       5,      -1,      -1},
@@ -1630,6 +1641,12 @@ common_spot_map cmaps[] = {
          {       0, d_south,       0, d_south,       0, d_north,       0, d_north,},
          {      -1,       3,      -1,       5,      -1,      11,      -1,      13,},
          {       0, d_north,       0, d_north,       0, d_south,       0, d_south,}, s4x4, s2x4, 1},
+   /* common spot columns out of waves, just centers of virtual columns will be occupied.  */
+   {1,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,},
+         {      -1,       3,       4,      -1,      -1,       7,       0,      -1,},
+         {       0, d_south, d_south,       0,       0, d_north, d_north,       0,},
+         {      -1,       2,       5,      -1,      -1,       6,       1,      -1,},
+         {       0, d_north, d_north,       0,       0, d_south, d_south,       0,}, s2x4, s2x4, 1},
 
    {0, {0}, {0}, {0}, {0}, {0}, nothing, nothing, 0},
 };
@@ -1649,10 +1666,11 @@ extern void common_spot_move(
 
    rstuff = parseptr->concept->value.arg1 & 15;   /* The "16" bit says to assume waves. */
    /* rstuff =
-      common point galaxy    : 0
-      common spot columns    : 1
-      common spot diamonds   : 2
-      common end lines/waves : 3 */
+      common point galaxy       : 0
+      common spot columns       : 1
+      common spot diamonds      : 2
+      common end lines/waves    : 3
+      common spot 2-faced lines : 4 */
 
    for (map_ptr = cmaps ; map_ptr->orig_kind != nothing ; map_ptr++) {
       if (ss->kind != map_ptr->orig_kind || rstuff != map_ptr->indicator) goto not_this_map;
@@ -1706,7 +1724,9 @@ extern void common_spot_move(
       a1.cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
    }
 
+   update_id_bits(&a0);
    impose_assumption_and_move(&a0, &the_results[0]);
+   update_id_bits(&a1);
    impose_assumption_and_move(&a1, &the_results[1]);
 
    if (uncommon) {

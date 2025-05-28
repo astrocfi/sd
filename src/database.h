@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 81
+#define DATABASE_FORMAT_VERSION 83
 
 
 
@@ -41,8 +41,8 @@
    "forcetabh", and "altdeftabh" in dbcomp.c .  These are the infamous
    "heritable flags".  They are used in generally corresponding ways in
    the "callflagsh" word of a top level callspec_block, the "modifiersh"
-   word of a "by_def_item", and the "modifier_seth" word of a "calldef_block".
-   The constant HERITABLE_FLAG_MASK embraces them.
+   word of a "by_def_item", and the "modifier_seth" word of a "calldef_block",
+   and the "cmd_final_flags.herit" of a setup with its command block.
 */
 
 #define INHERITFLAG_DIAMOND               0x00000001UL
@@ -66,29 +66,8 @@
 #define INHERITFLAG_SINGLEFILE            0x00040000UL
 #define INHERITFLAG_HALF                  0x00080000UL
 #define INHERITFLAG_YOYO                  0x00100000UL
-
-#define HERITABLE_FLAG_MASK               0x001FFFFFUL
-
-/* These spare bits are used in the include file sd.h to allocate flag bits
-   that will share a word with the heritable flags.  Those flag bits are
-   used internally by the program and are not part of the database definition,
-   so they don't belong here.  By setting up these spare bit definitions we
-   can ensure that those bits will not conflict with the heritable flags.
-   That is, if we add a heritable flag, we necessarily destroy a spare bit.
-   If the definitions in sd.h find themselves using an undefined spare bit,
-   we know we are in serious trouble. */
-
-/* A 3-bit field. */
-#define CFLAGH__TAG_CALL_RQ_MASK          0x00E00000UL
-#define CFLAGH__TAG_CALL_RQ_BIT           0x00200000UL
-#define CFLAGH__REQUIRES_SELECTOR         0x01000000UL
-#define CFLAGH__REQUIRES_DIRECTION        0x02000000UL
-#define CFLAGH__CIRC_CALL_RQ_BIT          0x04000000UL
-#define INHERITSPARE_1                    0x08000000UL
-#define INHERITSPARE_2                    0x10000000UL
-#define INHERITSPARE_3                    0x20000000UL
-#define INHERITSPARE_4                    0x40000000UL
-#define INHERITSPARE_5                    0x80000000UL
+#define INHERITFLAG_STRAIGHT              0x00200000UL
+#define INHERITFLAG_TWISTED               0x00400000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
@@ -380,6 +359,7 @@ typedef enum {
    sq_didnt_say_tgl,
    sq_occupied_as_h,
    sq_occupied_as_qtag,
+   sq_occupied_as_3x1tgl,
    sq_all_sel,
    sq_none_sel
 } search_qualifier;
@@ -555,9 +535,6 @@ typedef enum {
 #define DFM1_NUM_SHIFT_MASK               0x000C0000
 #define DFM1_NUM_SHIFT_BIT                0x00040000
 
-/* The first 12 predicates (in "pred_table" in preds.c and "predtab" in dbcomp.c)
-   take selectors.  The following constant indicates that. */
-#define SELECTOR_PREDS 12
 
 typedef enum {
    stb_none,      /* unknown */

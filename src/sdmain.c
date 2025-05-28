@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.75"
+#define VERSION_STRING "31.76"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -46,6 +46,7 @@ static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.c
    sd_version_string
    mark_parse_blocks
    release_parse_blocks_to_mark
+   get_parse_block
    initialize_parse
    copy_parse_tree
    save_parse_state
@@ -55,7 +56,6 @@ static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.c
    query_for_call
    write_header_stuff
    main
-   get_real_subcall
    sequence_is_resolved
 
 and the following external variables:
@@ -185,7 +185,6 @@ static short int *concept_sublists[NUM_CALL_LIST_KINDS];
 static int resolve_scan_start_point;
 static int resolve_scan_current_point;
 static command_kind search_goal;
-static long_boolean debug_popup = FALSE;   /* Helps debug popups under Domain/OS. */
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -347,7 +346,7 @@ extern void release_parse_blocks_to_mark(parse_block *mark_point)
 
 
 
-Private parse_block *get_parse_block(void)
+extern parse_block *get_parse_block(void)
 {
    parse_block *item;
 
@@ -583,8 +582,8 @@ extern long_boolean deposit_call(callspec_block *call)
 
    /* Put in tagging call index if required. */
 
-   if (call->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) {
-      tagclass = ((call->callflagsh & CFLAGH__TAG_CALL_RQ_MASK) / CFLAGH__TAG_CALL_RQ_BIT) - 1;
+   if (call->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
+      tagclass = ((call->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) / CFLAGH__TAG_CALL_RQ_BIT) - 1;
 
       if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
 
@@ -603,7 +602,7 @@ extern long_boolean deposit_call(callspec_block *call)
 
    /* Or circulating call index. */
 
-   if (call->callflagsh & CFLAGH__CIRC_CALL_RQ_BIT) {
+   if (call->callflagsf & CFLAGH__CIRC_CALL_RQ_BIT) {
       if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
 
       if (interactivity == interactivity_database_init) {
@@ -624,11 +623,11 @@ extern long_boolean deposit_call(callspec_block *call)
 
    /* Put in selector, direction, and/or number as required. */
 
-   if (call->callflagsh & CFLAGH__REQUIRES_SELECTOR) {
+   if (call->callflagsf & CFLAGH__REQUIRES_SELECTOR) {
       if (find_selector(&sel)) return TRUE;
    }
 
-   if (call->callflagsh & CFLAGH__REQUIRES_DIRECTION) {
+   if (call->callflagsf & CFLAGH__REQUIRES_DIRECTION) {
       int j;
 
       if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
@@ -1901,231 +1900,6 @@ void main(int argc, char *argv[])
    exit_program(0);
 }
 
-
-extern long_boolean get_real_subcall(
-   parse_block *parseptr,
-   by_def_item *item,
-   final_set concin,
-   parse_block **concptrout,
-   callspec_block **callout,
-   final_set *concout)
-
-/* ****** needs to send out alternate_concept!!! */
-
-{
-   char tempstring_text[MAX_TEXT_LINE_LENGTH];
-   parse_block *search;
-   parse_block **newsearch;
-   int number, snumber;
-   long_boolean this_is_tagger_circcer =
-            (item->call_id >= BASE_CALL_TAGGER0 && item->call_id <= BASE_CALL_TAGGER3) ||
-            item->call_id == BASE_CALL_CIRCCER;
-
-   /* Fill in defaults in case we choose not to get a replacement call. */
-
-   *concptrout = parseptr;
-   *callout = base_calls[item->call_id];
-   *concout = concin;
-   
-   /* If this subcall invocation does not permit modification under any value of the
-      "allowing_modifications" switch, we do nothing.  Just return the default.
-      We do not search the list.  Hence, such subcalls are always protected
-      from being substituted, and, if the same call appears multiple times
-      in the derivation tree of a compound call, it will never be replaced.
-      What do we mean by that?  Suppose we did a
-         "[tally ho but [2/3 recycle]] the difference".
-      After we create the table entry saying to change cast off 3/4 into 2/3
-      recycle, we wouldn't want the cast off's in the difference getting
-      modified.  Actually, that is not the real reason.  The casts are in
-      different sublists.  The real reason is that the final part of mixed-up
-      square thru is defined as 
-         conc nullcall [mandatory_anycall] nullcall []
-      and we don't want the unmodifiable nullcall that the ends are supposed to
-      do getting modified, do we? */
-
-   /* But if this is a tagging call substitution, we most definitely do proceed with the search. */
-
-   if (!(item->modifiers1 & DFM1_CALL_MOD_MASK) && !this_is_tagger_circcer)
-      return FALSE;
-
-   /* See if we had something from before.  This avoids embarassment if a call is actually
-      done multiple times.  We want to query the user just once and use that result everywhere.
-      We accomplish this by keeping a subcall list showing what modifications the user
-      supplied when we queried. */
-
-   /* We ALWAYS search this list, if such exists.  Even if modifications are disabled.
-      Why?  Because the reconciler re-executes calls after the point of insertion to test
-      their fidelity with the new setup that results from the inserted calls.  If those
-      calls have modified subcalls, we will find ourselves here, looking through the list.
-      Modifications may have been enabled at the time the call was initially entered, but
-      might not be now that we are being called from the reconciler. */
-
-   if (parseptr->concept->kind == concept_another_call_next_mod) {
-      newsearch = &parseptr->next;
-
-      while ((search = *newsearch) != NULL) {
-         if (  base_calls[item->call_id] == search->call ||
-               (item->call_id >= BASE_CALL_TAGGER0 &&
-               item->call_id <= BASE_CALL_TAGGER3 &&
-               search->call == base_calls[BASE_CALL_TAGGER0])) {
-            /* Found a reference to this call. */
-            parse_block *subsidiary_ptr = search->subsidiary_root;
-
-            /* If the pointer is nil, we already asked about this call,
-               and the reply was no. */
-            if (!subsidiary_ptr) return FALSE;
-
-            *concptrout = subsidiary_ptr;
-
-            if (this_is_tagger_circcer)
-               *callout = subsidiary_ptr->call;
-            else {
-               *callout = NULLCALLSPEC;             /* ****** not right????. */
-               *concout = 0;                        /* ****** not right????. */
-            }
-
-            return TRUE;
-         }
-
-         newsearch = &search->next;
-      }
-   }
-
-   number = item->modifiers1;
-   snumber = (number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
-
-   /* Note whether we are using any mandatory substitutions, so that the menu
-      initialization will always accept this call. */
-
-   if (snumber == 2 || snumber == 6) mandatory_call_used = TRUE;
-
-   /* Now we know that the list doesn't say anything about this call.  Perhaps we should
-      query the user for a replacement and add something to the list.  First, decide whether
-      we should consider doing so.  If we are initializing the
-      database, the answer is always "no", even for calls that require a replacement call, such as
-      "clover and anything".  This means that, for the purposes of database initialization,
-      "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
-      that appears in the database. */
-      
-   /* Of course, if we are testing the fidelity of later calls during a reconcile
-      operation, we DO NOT EVER add any modifiers to the list, even if the user
-      clicked on "allow modification" before clicking on "reconcile".  It is perfectly
-      legal to click on "allow modification" before clicking on "reconcile".  It means
-      we want modifications (chosen by random number generator, since we won't be
-      interactive) for the calls that we randomly choose, but not for the later calls
-      that we test for fidelity. */
-
-   if (interactivity == interactivity_database_init || interactivity == interactivity_verify || testing_fidelity) return FALSE;
-
-   /* When we are searching for resolves and the like, the situation is different.  In this case,
-      the interactivity state is set for a search.  We do perform mandatory
-      modifications, so we will generate things like "clover and shakedown".  Of course, no
-      querying actually takes place.  Instead, get_subcall just uses the random number generator.
-      Therefore, whether resolving or in normal interactive mode, we are guided by the
-      call modifier flags and the "allowing_modifications" global variable. */
-
-   /* Depending on what type of substitution is involved and what the "allowing modifications"
-      level is, we may choose not to query about this subcall, but just return the default. */
-
-   switch (snumber) {
-      case 1:   /* or_anycall */
-      case 3:   /* allow_plain_mod */
-      case 5:   /* or_secondary_call */
-         if (!allowing_modifications) return FALSE;
-         break;
-      case 4:   /* allow_forced_mod */
-         if (allowing_modifications <= 1) return FALSE;
-         break;
-   }
-
-   /* At this point, we know we should query the user about this call. */
-      
-   /* Set ourselves up for modification by making the null modification list
-      if necessary.  ***** Someday this null list will always be present. */
-
-   if (parseptr->concept->kind == marker_end_of_list) {
-      parseptr->concept = &marker_concept_mod;
-      newsearch = &parseptr->next;
-   }
-   else if (parseptr->concept->kind != concept_another_call_next_mod)
-      fail("wrong marker in get_real_subcall???");
-
-   /* Create a reference on the list.  "search" points to the null item at the end. */
-
-   tempstring_text[0] = '\0';           /* Null string, just to be safe. */
-
-   /* If doing a tagger, just get the call. */
-
-   if (snumber == 0 && this_is_tagger_circcer)
-      ;
-
-   /* If the replacement is mandatory, or we are not interactive,
-      don't present the popup.  Just get the replacement call. */
-
-   else if (interactivity != interactivity_normal)
-      ;
-   else if (snumber == 2 || snumber == 6) {
-      (void) sprintf (tempstring_text, "SUBSIDIARY CALL");
-   }
-   else {
-
-      /* Need to present the popup to the operator and find out whether modification is desired. */
-
-      modify_popup_kind kind;
-
-      if (item->call_id >= BASE_CALL_TAGGER0 && item->call_id <= BASE_CALL_TAGGER3) kind = modify_popup_only_tag;
-      else if (item->call_id == BASE_CALL_CIRCCER) kind = modify_popup_only_circ;
-      else kind = modify_popup_any;
-
-      if (debug_popup || uims_do_modifier_popup(base_calls[item->call_id]->menu_name, kind)) {
-         /* User accepted the modification.
-            Set up the prompt and get the concepts and call. */
-      
-         (void) sprintf (tempstring_text, "REPLACEMENT FOR THE %s", base_calls[item->call_id]->menu_name);
-      }
-      else {
-         /* User declined the modification.  Create a null entry so that we don't query again. */
-         *newsearch = get_parse_block();
-         (*newsearch)->concept = &marker_concept_mod;
-         (*newsearch)->options.number_fields = number;
-         (*newsearch)->call = base_calls[item->call_id];
-         return FALSE;
-      }
-   }
-
-   *newsearch = get_parse_block();
-   (*newsearch)->concept = &marker_concept_mod;
-   (*newsearch)->options.number_fields = number;
-   (*newsearch)->call = base_calls[item->call_id];
-
-   /* Set stuff up for reading subcall and its concepts. */
-
-   /* Create a new parse block, point concept_write_ptr at its contents. */
-   /* Create the new root at the start of the subsidiary list. */
-
-   parse_state.concept_write_base = &(*newsearch)->subsidiary_root;
-   parse_state.concept_write_ptr = parse_state.concept_write_base;
-
-   parse_state.parse_stack_index = 0;
-   parse_state.call_list_to_use = call_list_any;
-   (void) strncpy(parse_state.specialprompt, tempstring_text, MAX_TEXT_LINE_LENGTH);
-
-   /* Search for special case of "must_be_tag_call" with no other modification bits.
-      That means it is a new-style tagging call. */
-
-   if (snumber == 0 && this_is_tagger_circcer) {
-      longjmp(longjmp_ptr->the_buf, 5);
-   }
-   else {
-      if (query_for_call())
-         longjmp(longjmp_ptr->the_buf, 5);     /* User clicked on something unusual like "exit" or "undo". */
-   }
-
-   *concptrout = (*newsearch)->subsidiary_root;
-   *callout = NULLCALLSPEC;              /* We THROW AWAY the alternate call, because we want our user to get it from the concept list. */
-   *concout = 0;
-   return TRUE;
-}
 
 extern long_boolean sequence_is_resolved(void)
 {

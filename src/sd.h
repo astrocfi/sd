@@ -600,8 +600,14 @@ typedef struct glowk {
 } calldef_block;
 
 typedef struct {
+   uint32 herit;
+   uint32 final;
+} uint64;
+
+typedef struct {
    uint32 callflags1;    /* The CFLAG1_??? flags. */
-   uint32 callflagsh;    /* The heritable flags + the ESCAPE_WORD__???  and CFLAGH__??? flags. */
+   uint32 callflagsh;    /* The heritable flags. */
+   uint32 callflagsf;    /* The ESCAPE_WORD__???  and CFLAGH__??? flags. */
    short int age;
    short int level;
    calldef_schema schema;
@@ -711,6 +717,8 @@ typedef enum {
    concept_singlefile,
    concept_interlocked,
    concept_yoyo,
+   concept_straight,
+   concept_twisted,
    concept_12_matrix,
    concept_16_matrix,
    concept_1x2,
@@ -1007,7 +1015,7 @@ typedef struct {
 typedef struct {
    parse_block *parseptr;
    callspec_block *callspec;
-   uint32 cmd_final_flags;
+   uint64 cmd_final_flags;
    uint32 cmd_misc_flags;
    uint32 cmd_misc2_flags;
    uint32 cmd_frac_flags;
@@ -1300,32 +1308,47 @@ typedef enum {
 #define NUM_CALL_LIST_KINDS (((int) call_list_qtag)+1)
 
 
+/* These bits are used to allocate flag bits
+   that appear in the "callflagsf" word of a top level callspec_block
+   and the "cmd_final_flags.final" of a setup with its command block. */
+
+/* A 3-bit field. */
+#define CFLAGH__TAG_CALL_RQ_MASK          0x00000007UL
+#define CFLAGH__TAG_CALL_RQ_BIT           0x00000001UL
+#define CFLAGH__REQUIRES_SELECTOR         0x00000008UL
+#define CFLAGH__REQUIRES_DIRECTION        0x00000010UL
+#define CFLAGH__CIRC_CALL_RQ_BIT          0x00000020UL
+#define CFLAGHSPARE_1                     0x00000040UL
+#define CFLAGHSPARE_2                     0x00000080UL
+#define CFLAGHSPARE_3                     0x00000100UL
+#define CFLAGHSPARE_4                     0x00000200UL
+#define CFLAGHSPARE_5                     0x00000400UL
+
+
+
 /* These flags go along for the ride, in some parts of the code (BUT NOT
-   THE CALLFLAGSH WORD OF A CALLSPEC!), in the same word as the heritable flags,
+   THE CALLFLAGSF WORD OF A CALLSPEC!), in the same word as the heritable flags,
    but are not part of the inheritance mechanism.  We use symbols that have been
    graciously provided for us from database.h to tell us what bits may be safely
    used next to the heritable flags. */
 
-#define FINAL__SPLIT                      INHERITSPARE_1
-#define FINAL__SPLIT_SQUARE_APPROVED      INHERITSPARE_2
-#define FINAL__SPLIT_DIXIE_APPROVED       INHERITSPARE_3
-#define FINAL__MUST_BE_TAG                INHERITSPARE_4
-#define FINAL__TRIANGLE                   INHERITSPARE_5
+#define FINAL__SPLIT                      CFLAGHSPARE_1
+#define FINAL__SPLIT_SQUARE_APPROVED      CFLAGHSPARE_2
+#define FINAL__SPLIT_DIXIE_APPROVED       CFLAGHSPARE_3
+#define FINAL__MUST_BE_TAG                CFLAGHSPARE_4
+#define FINAL__TRIANGLE                   CFLAGHSPARE_5
 
-/* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsh
-   word of a callspec, in the same word as the heritable flags, but are not
-   part of the inheritance mechanism.  We use symbols that have been graciously
+/* These flags, and "CFLAGH__???" flags, go along for the ride, in the callflagsf
+   word of a callspec.  We use symbols that have been graciously
    provided for us from database.h to tell us what bits may be safely used next
    to the heritable flags.  Note that these bits overlap the FINAL__?? bits above.
-   These are used in the callflagsh word of a callspec.  The FINAL__?? bits are
+   These are used in the callflagsf word of a callspec.  The FINAL__?? bits are
    used elsewhere.  They don't mix. */
 
-#define ESCAPE_WORD__LEFT                 INHERITSPARE_1
-#define ESCAPE_WORD__CROSS                INHERITSPARE_2
-#define ESCAPE_WORD__MAGIC                INHERITSPARE_3
-#define ESCAPE_WORD__INTLK                INHERITSPARE_4
-
-typedef uint32 final_set;
+#define ESCAPE_WORD__LEFT                 CFLAGHSPARE_1
+#define ESCAPE_WORD__CROSS                CFLAGHSPARE_2
+#define ESCAPE_WORD__MAGIC                CFLAGHSPARE_3
+#define ESCAPE_WORD__INTLK                CFLAGHSPARE_4
 
 typedef struct glonk {
    char txt[MAX_TEXT_LINE_LENGTH];
@@ -1666,7 +1689,8 @@ typedef struct zilch {
 } conc_initializer;
 
 typedef struct {
-   uint32 newmods;
+   uint32 newheritmods;
+   uint32 newfinalmods;
    int before;    /* These are indices into concept_descriptor_table. */
    int after;
 } concept_fixer_thing;
@@ -1812,7 +1836,8 @@ extern map_thing map_offset;                                        /* in SDTABL
 extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_blocks;                                        /* in SDTABLES */
 extern map_thing map_trglbox;                                       /* in SDTABLES */
-extern map_thing map_1x10_1x6;                                      /* in SDTABLES */
+extern map_thing map_1x8_1x6;                                       /* in SDTABLES */
+extern map_thing map_rig_1x6;                                       /* in SDTABLES */
 extern map_thing map_hv_2x4_2;                                      /* in SDTABLES */
 extern map_thing map_3x4_2x3;                                       /* in SDTABLES */
 extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
@@ -1908,12 +1933,14 @@ extern long_boolean selector_used;                                  /* in SDPRED
 extern long_boolean number_used;                                    /* in SDPREDS */
 extern long_boolean mandatory_call_used;                            /* in SDPREDS */
 extern predicate_descriptor pred_table[];                           /* in SDPREDS */
+extern int selector_preds;                                          /* in SDPREDS */
 
 /* In SDMAIN */
 
 extern char *sd_version_string(void);
 extern parse_block *mark_parse_blocks(void);
 extern void release_parse_blocks_to_mark(parse_block *mark_point);
+extern parse_block *get_parse_block(void);
 extern void initialize_parse(void);
 extern parse_block *copy_parse_tree(parse_block *original_tree);
 extern void save_parse_state(void);
@@ -1922,13 +1949,6 @@ extern long_boolean deposit_call(callspec_block *call);
 extern long_boolean deposit_concept(concept_descriptor *conc);
 extern long_boolean query_for_call(void);
 extern void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags);
-extern long_boolean get_real_subcall(
-   parse_block *parseptr,
-   by_def_item *item,
-   final_set concin,
-   parse_block **concptrout,
-   callspec_block **callout,
-   final_set *concout);
 extern long_boolean sequence_is_resolved(void);
 
 /* In PREDS */
@@ -2051,7 +2071,7 @@ extern void gather(setup *resultpeople, setup *sourcepeople, Const veryshort *re
 extern parse_block *process_final_concepts(
    parse_block *cptr,
    long_boolean check_errors,
-   final_set *final_concepts);
+   uint64 *final_concepts);
 extern parse_block *skip_one_concept(parse_block *incoming);
 extern long_boolean fix_n_results(int arity, setup z[]);
 
@@ -2096,8 +2116,8 @@ extern void reinstate_rotation(setup *ss, setup *result);
 
 extern long_boolean divide_for_magic(
    setup *ss,
-   uint32 flags_to_use,
-   uint32 flags_to_check,
+   uint32 heritflags_to_use,
+   uint32 heritflags_to_check,
    setup *result);
 
 extern long_boolean do_simple_split(setup *ss, long_boolean prefer_1x4, setup *result);

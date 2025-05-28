@@ -999,7 +999,9 @@ extern void concentric_move(
       uint32 modifiers1;
       uint32 ctr_use_flag;
       setup_command *cmdptr;
+#ifdef PEELCHAINTHRUFAILS
       uint32 check;
+#endif
 
       long_boolean doing_ends = (k<0) || (k==center_arity);
 

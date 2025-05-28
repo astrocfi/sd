@@ -21,6 +21,7 @@
 */
 
 #include "sd.h"
+extern map_thing map_qtag_2x3;
 
 
 
@@ -105,6 +106,28 @@ extern void mirror_this(setup *s)
          }
          else
             cptr = &tgl4_0;
+      }
+      else if (s->kind == s_normal_concentric) {
+         int i;
+
+         if (s->inner.skind == s_normal_concentric || s->outer.skind == s_normal_concentric)
+            fail("Recursive concentric?????.");
+
+         s->kind = s->inner.skind;
+         s->rotation = s->inner.srotation;
+         mirror_this(s);    /* Sorry! */
+         s->inner.srotation = s->rotation;
+
+         s->kind = s->outer.skind;
+         s->rotation = s->outer.srotation;
+         for (i=0 ; i<12 ; i++) swap_people(s, i, i+12);
+         mirror_this(s);    /* Sorrier! */
+         for (i=0 ; i<12 ; i++) swap_people(s, i, i+12);
+         s->outer.srotation = s->rotation;
+
+         s->kind = s_normal_concentric;
+         s->rotation = 0;
+         return;
       }
       else
          fail("Don't recognize ending setup for this call; not able to do it mirror.");
@@ -1083,7 +1106,7 @@ Private int divide_the_setup(
    map_thing *division_maps;
    uint32 newtb = *newtb_p;
    uint32 callflags1 = ss->cmd.callspec->callflags1;
-   final_set final_concepts = ss->cmd.cmd_final_flags;
+   uint64 final_concepts = ss->cmd.cmd_final_flags;
    uint32 force_result_split_axis = 0;
    setup_command conc_cmd;
    uint32 must_do_concentric = ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK;
@@ -1807,6 +1830,19 @@ Private int divide_the_setup(
             goto divide_us_no_recompute;
          }
 
+         /* Check whether it has 2x3/3x2 definitions, and divide the setup if so,
+            and if the call permits it.  This is important for permitting "Z axle" from
+            a 3x4 but forbidding "circulate" (unless we give a concept like 12 matrix
+            phantom columns.)  We also enable this if the caller explicitly said
+            "3x4 matrix". */
+
+         if (((callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) || (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
+               (!(newtb & 010) || assoc(b_3x2, ss, calldeflist)) &&
+               (!(newtb & 001) || assoc(b_2x3, ss, calldeflist))) {
+            division_maps = &map_qtag_2x3;
+            goto divide_us_no_recompute;
+         }
+
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT)
             fail("Can't split the setup.");
 
@@ -1903,11 +1939,11 @@ Private int divide_the_setup(
       case s_trngl:
          if (assoc(b_2x2, ss, calldeflist)) {
             if (ss->cmd.cmd_misc_flags & CMD_MISC__SAID_TRIANGLE) {
-               if (final_concepts & FINAL__TRIANGLE)
+               if (final_concepts.final & FINAL__TRIANGLE)
                   fail("'Triangle' concept is redundant.");
             }
             else {
-               if (!(final_concepts & FINAL__TRIANGLE))
+               if (!(final_concepts.final & FINAL__TRIANGLE))
                   fail("You must give the 'triangle' concept.");
             }
 
@@ -1918,7 +1954,7 @@ Private int divide_the_setup(
             else
                fail("Can't figure out which way triangle point is facing.");
 
-            final_concepts &= ~FINAL__TRIANGLE;
+            final_concepts.final &= ~FINAL__TRIANGLE;
             ss->cmd.cmd_final_flags = final_concepts;
             divided_setup_move(ss, division_maps, phantest_ok, FALSE, result);
 
@@ -2106,7 +2142,7 @@ Private int divide_the_setup(
          /* See if this call is being done "split" as in "split square thru" or "split dixie style",
             in which case split into boxes. */
 
-         if (final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
+         if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED))
             goto divide_us_no_recompute;
 
          /* If this is "run", always split it into boxes.  If they are T-boned, they will figure it out, we hope. */
@@ -2415,7 +2451,7 @@ extern void basic_move(
    long_boolean funny_ok2 = FALSE;
    calldef_block *qq;
    callspec_block *callspec = ss->cmd.callspec;
-   final_set final_concepts = ss->cmd.cmd_final_flags;
+   uint64 final_concepts = ss->cmd.cmd_final_flags;
 
    /* We don't allow "central" or "invert" with array-defined calls.  We might allow "snag" or "mystic". */
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK) {
@@ -2464,11 +2500,10 @@ extern void basic_move(
    newtb = tbonetest;
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Setup is extremely bizarre.");
 
-   /* We demand that the final concepts that remain be only those in the following list,
-      which includes all of the "heritable" concepts. */
+   /* We demand that the final concepts that remain be only the following ones. */
 
-   if (final_concepts &
-         ~(HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED | FINAL__TRIANGLE))
+   if (final_concepts.final &
+         ~(FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED | FINAL__TRIANGLE))
       fail("This concept not allowed here.");
 
    /* Set up the result elongation that we will need if the result is
@@ -2523,7 +2558,7 @@ extern void basic_move(
       case s2x2:
          /* Now we do a special check for split-square-thru or split-dixie-style types of things. */
 
-         if (final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
+         if (final_concepts.final & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED)) {
             uint32 i1, i2, p1, p2;
 
             ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
@@ -2552,7 +2587,7 @@ extern void basic_move(
             /* Now do the required transformation, if it is a "split square thru" type.
                For "split dixie style" stuff, do nothing -- the database knows what to do. */
 
-            if (!(final_concepts & FINAL__SPLIT_DIXIE_APPROVED)) {
+            if (!(final_concepts.final & FINAL__SPLIT_DIXIE_APPROVED)) {
                swap_people(ss, i1, i2);
                copy_rot(ss, i1, ss, i1, 033);
                copy_rot(ss, i2, ss, i2, 011);
@@ -2572,7 +2607,7 @@ extern void basic_move(
       except "funny" and "left", but "left" has been taken care of)
       determine what call definition we will get. */
 
-   search_concepts = final_concepts & HERITABLE_FLAG_MASK & ~INHERITFLAG_FUNNY;
+   search_concepts = final_concepts.herit & ~INHERITFLAG_FUNNY;
 
    calldeflist = 0;
 
@@ -2602,7 +2637,7 @@ extern void basic_move(
       /* First, check for "magic" and "interlocked" stuff, and do those divisions if so. */
       if (divide_for_magic(
                ss,
-               final_concepts,
+               final_concepts.herit,
                search_concepts & ~(INHERITFLAG_DIAMOND | INHERITFLAG_SINGLE | INHERITFLAG_SINGLEFILE | INHERITFLAG_CROSS | INHERITFLAG_GRAND),
                result))
          goto un_mirror;
@@ -2657,7 +2692,7 @@ extern void basic_move(
 
       divide_us:
 
-      final_concepts &= ~search_concepts;
+      final_concepts.herit &= ~search_concepts;
       ss->cmd.cmd_final_flags = final_concepts;
       divided_setup_move(ss, division_maps, phantest_ok, TRUE, result);
       goto un_mirror;
@@ -2705,7 +2740,7 @@ extern void basic_move(
       case s_trngl:
          break;
       default:
-         if (final_concepts & FINAL__TRIANGLE)
+         if (final_concepts.final & FINAL__TRIANGLE)
             fail("Triangle concept not allowed here.");
    }
 
@@ -2745,7 +2780,7 @@ extern void basic_move(
       }
       */
 
-      if (final_concepts & FINAL__TRIANGLE)
+      if (final_concepts.final & FINAL__TRIANGLE)
          fail("Triangle concept not allowed here.");
 
       /* We got here if either linedefinition or coldefinition had something.
@@ -2852,7 +2887,7 @@ extern void basic_move(
          }
 
          search_concepts &= ~matrix_check_flag;
-         ss->cmd.cmd_final_flags &= ~matrix_check_flag;
+         ss->cmd.cmd_final_flags.herit &= ~matrix_check_flag;
          search_stuff = search_concepts;
          ss->cmd.cmd_misc_flags |= CMD_MISC__EXPLICIT_MATRIX;
       }
@@ -2898,7 +2933,7 @@ extern void basic_move(
 
    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-   funny = final_concepts & INHERITFLAG_FUNNY;
+   funny = final_concepts.herit & INHERITFLAG_FUNNY;
    inconsistent_rotation = 0;
    inconsistent_setup = 0;
 
