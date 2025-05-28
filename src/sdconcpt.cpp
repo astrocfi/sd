@@ -2431,6 +2431,18 @@ static void do_concept_do_triangular_boxes(
    uint32 division_map_code = ~0U;
    phantest_kind phant = (phantest_kind) parseptr->concept->arg1;
 
+   if (ss->kind == sbigdmd) {
+      do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, true);
+      // Need to compute the livemask again.
+      int i, j;
+      global_livemask = 0;
+      for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
+         if (ss->people[i].id1) {
+            global_livemask |= j;
+         }
+      }
+   }
+
    // We only allow it in a 3x4 if it was real, not phantom.  Arg1 tells which.
    if (ss->kind == s3x4 && phant == phantest_2x2_only_two) {
       if (global_livemask == 04747)
@@ -2443,7 +2455,7 @@ static void do_concept_do_triangular_boxes(
          division_map_code = spcmap_trglbox3x4d;
       phant = phantest_ok;
    }
-   if (ss->kind == s4x5 && phant == phantest_2x2_only_two) {
+   else if (ss->kind == s4x5 && phant == phantest_2x2_only_two) {
       if (global_livemask == 0xB12C4)
          division_map_code = spcmap_trglbox4x5a;
       if (global_livemask == 0x691A4)
@@ -5396,7 +5408,7 @@ static void do_concept_inner_outer(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   uint32 livemask, misc2_zflag;
+   uint32 livemask;
    calldef_schema sch;
    int rot = 0;
    int arg1 = parseptr->concept->arg1;
@@ -5612,17 +5624,11 @@ static void do_concept_inner_outer(
       case s3x4:
          if (arg1 & 8) break;   // Can't say "outside triple Z's", only "center Z".
 
-         // Demand that the center Z be solidly filled.
-
+         // Demand that the center Z be properly filled.
          switch (livemask & 04646) {
-         case 04242:   // Center Z is CW.
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
+         case 04242: case 04444:
+            sch = schema_in_out_center_triple_z;
             goto do_real_z_stuff;
-            break;
-         case 04444:   // Center Z is CCW.
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
-            goto do_real_z_stuff;
-            break;
          }
          break;
       case s3x6:
@@ -5639,23 +5645,13 @@ static void do_concept_inner_outer(
 
          switch (livemask & 0414414) {
          case 0404404:   // Center Z is CW.
-            if ((livemask & 0042042) == 0) {
-               misc2_zflag = CMD_MISC2__IN_Z_CW;
-               goto do_real_z_stuff;
-            }
-            else if ((livemask & 0021021) == 0) {
-               misc2_zflag = CMD_MISC2__IN_AZ_CW;   // Z's are anisotropic.
+            if ((livemask & 0042042) == 0 || (livemask & 0021021) == 0) {
                goto do_real_z_stuff;
             }
 
             break;
          case 0410410:   // Center Z is CCW.
-            if ((livemask & 0021021) == 0) {
-               misc2_zflag = CMD_MISC2__IN_Z_CCW;
-               goto do_real_z_stuff;
-            }
-            else if ((livemask & 0042042) == 0) {
-               misc2_zflag = CMD_MISC2__IN_AZ_CCW;   // Z's are anisotropic.
+            if ((livemask & 0021021) == 0 || (livemask & 0042042) == 0) {
                goto do_real_z_stuff;
             }
 
@@ -5665,54 +5661,39 @@ static void do_concept_inner_outer(
       case swqtag:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask & 0x273) {
-         case 0x231:   // Center Z is CW.
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x252:   // Center Z is CCW.
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x231: case 0x252:
+            sch = schema_in_out_center_triple_z;
             goto do_real_z_stuff;
          }
          break;
       case s2x5:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask) {
-         case 0x3BD:
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x2F7:
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x3BD: case 0x2F7:
+            sch = schema_in_out_center_triple_z;
             goto do_real_z_stuff;
          }
          break;
       case s2x7:
+         if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask & 0x0E1C) {
-         case 0x0C18:
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x060C:
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x0C18: case 0x060C:
+            sch = schema_in_out_center_triple_z;
             goto do_real_z_stuff;
          }
          break;
       case sd2x7:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask & 0x0E1C) {
-         case 0x060C:
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x0C18:
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x060C: case 0x0C18:
+            sch = schema_in_out_center_triple_z;
             goto do_real_z_stuff;
          }
          break;
       case sd2x5:
          if (arg1 & 8) break;   // Can't say "outside triple Z's".
          switch (livemask) {
-         case 0x1EF:
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x37B:
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x1EF: case 0x37B:
             goto do_real_z_stuff;
          }
          break;
@@ -5722,11 +5703,7 @@ static void do_concept_inner_outer(
          // Demand that the center Z be solidly filled.
 
          switch (livemask & 0x701C0) {
-         case 0x300C0:
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x60180:
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x300C0: case 0x60180:
             goto do_real_z_stuff;
          }
          break;
@@ -5736,11 +5713,7 @@ static void do_concept_inner_outer(
          // Demand that the center Z be solidly filled.
 
          switch (livemask & 0x38E) {
-         case 0x30C:
-            misc2_zflag = CMD_MISC2__IN_Z_CW;
-            goto do_real_z_stuff;
-         case 0x186:
-            misc2_zflag = CMD_MISC2__IN_Z_CCW;
+         case 0x30C: case 0x186:
             goto do_real_z_stuff;
          }
          break;
@@ -5772,7 +5745,7 @@ static void do_concept_inner_outer(
 
  do_real_z_stuff:
 
-   ss->cmd.cmd_misc2_flags |= misc2_zflag;
+   ss->cmd.cmd_misc2_flags |= CMD_MISC2__REQUEST_Z;
    goto ready;
 }
 

@@ -132,19 +132,25 @@ void map::initialize()
 
 extern void remove_z_distortion(setup *ss) THROW_DECL
 {
-   if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK)) return;
-
    static const expand::thing fix_cw  = {{1, 2, 4, 5}, s2x2, s2x3, 0};
    static const expand::thing fix_ccw = {{0, 1, 3, 4}, s2x2, s2x3, 0};
 
-   if (ss->kind != s2x3) fail("Can't do this call from a \"Z\".");
-
-   const expand::thing & fixer =
-      (ss->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_AZ_CW)) ?
-      fix_cw : fix_ccw;
+   if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__REQUEST_Z)) return;
 
    ss->cmd.cmd_misc3_flags |= CMD_MISC3__DID_Z_COMPRESSBIT << (ss->rotation & 1);
-   expand::compress_setup(fixer, ss);
+
+   if (ss->kind != s2x3) fail("Can't do this call from a \"Z\".");
+
+   const expand::thing *fixer;
+
+   if ((ss->people[0].id1 | ss->people[3].id1) && !ss->people[2].id1 && !ss->people[5].id1)
+      fixer = &fix_ccw;
+   else if ((ss->people[2].id1 | ss->people[5].id1) && !ss->people[0].id1 && !ss->people[3].id1)
+      fixer = &fix_cw;
+   else
+      fail("Can't figure out \"Z\" offset.");
+
+   expand::compress_setup(*fixer, ss);
    update_id_bits(ss);
 }
 
@@ -395,17 +401,6 @@ static bool multiple_move_innards(
          canonicalize_rotation(&x[i]);
          if (rrr & 1)
             x[i].result_flags.swap_split_info_fields();
-
-         if ((x[i].cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK) && arity == 3) {
-            if (x[i].cmd.cmd_misc2_flags & CMD_MISC2__IN_AZ_CW)
-               x[i].cmd.cmd_misc2_flags ^= (i == 1) ?
-                  (CMD_MISC2__IN_AZ_CW ^ CMD_MISC2__IN_Z_CW) :
-                  (CMD_MISC2__IN_AZ_CW ^ CMD_MISC2__IN_Z_CCW);
-            else if (x[i].cmd.cmd_misc2_flags & CMD_MISC2__IN_AZ_CCW)
-               x[i].cmd.cmd_misc2_flags ^= (i == 1) ?
-                  (CMD_MISC2__IN_AZ_CCW ^ CMD_MISC2__IN_Z_CCW) :
-                  (CMD_MISC2__IN_AZ_CCW ^ CMD_MISC2__IN_Z_CW);
-         }
 
          // It is clearly too late to expand the matrix -- that can't be what is wanted.
          x[i].cmd.cmd_misc_flags =
@@ -764,25 +759,6 @@ static bool multiple_move_innards(
           ((z[0].kind != sdmd || z[1].kind != s2x2) && (z[0].kind != s1x4 || z[1].kind != sdmd))) {
          map_kind = MPKIND__NONE;   // This will raise an error.
       }
-   }
-
-   if (map_kind == MPKIND__LILZCOM) {
-      if (result->result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK) {
-         /* **** Actually, should just forcibly reinstate the Z's,
-            the same as is done in sdconc.c at about 1679. */
-         if (sscmd->cmd_misc2_flags & CMD_MISC2__IN_Z_CW)
-            map_kind = MPKIND__LILZCW;
-         else if (sscmd->cmd_misc2_flags & CMD_MISC2__IN_Z_CCW)
-            map_kind = MPKIND__LILZCCW;
-         else if (sscmd->cmd_misc2_flags & CMD_MISC2__IN_AZ_CW)
-            map_kind = MPKIND__LILAZCW;
-         else if (sscmd->cmd_misc2_flags & CMD_MISC2__IN_AZ_CCW)
-            map_kind = MPKIND__LILAZCCW;
-         else
-            fail("Internal error: Can't figure out how to unwind anisotropic Z's.");
-      }
-      else
-         map_kind = MPKIND__SPLIT;
    }
 
    for (i=0; i<arity; i++) {
@@ -2072,9 +2048,10 @@ extern void distorted_2x2s_move(
    int table_offset, arity, misc_indicator, i;
    setup inputs[4];
    setup results[4];
-   uint32 directionsBE, livemaskBE, misc2_zflag;
+   int z_aspect = 1;      // Default is side-by-side.
    const veryshort *map_ptr = 0;
    const veryshort *map_3x4_restorer = 0;
+   const veryshort *map_z_restorer = 0;
 
    const concept_descriptor *this_concept =
       (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &concept_special_z : parseptr->concept;
@@ -2116,16 +2093,10 @@ extern void distorted_2x2s_move(
       normalize_setup(ss, simple_normalize, false);
    }
 
-   directionsBE = 0;
-   livemaskBE = 0;
    arity = 2;
 
-   for (i=0 ; i<=attr::slimit(ss) ; i++) {
-      uint32 p = ss->people[i].id1;
-      directionsBE = ((directionsBE & 0x3FFFFFFF)<<2) | (p&3);
-      livemaskBE <<= 1;
-      if (p) livemaskBE |= 1;
-   }
+   uint32 directionsBE, livemaskBEhi, livemaskBElo;
+   big_endian_get_directions(ss, directionsBE, livemaskBElo, (uint32 *) 0, &livemaskBEhi);
 
    result->clear_people();
    setup_kind inner_kind = s2x2;
@@ -2137,11 +2108,11 @@ extern void distorted_2x2s_move(
          fail("Must have a 2x12 for this concept.");
 
       arity = 3;
-      if ((livemaskBE & 0xAAAAAA) == 0) {
+      if ((livemaskBElo & 0xCCCCCCCC) == 0 && (livemaskBEhi & 0xCCCC) == 0) {
          map_ptr = map3stag1;
       }
-      else if ((livemaskBE & 0x555555) == 0) {
-         if ((livemaskBE & 0xAAAAAA) == 0)
+      else if ((livemaskBElo & 0x33333333) == 0 && (livemaskBEhi & 0x3333) == 0) {
+         if ((livemaskBElo & 0xCCCCCCCC) == 0 && (livemaskBEhi & 0xCCCC) == 0)
             fail("Can't figure this out.");  // Could only happen if setup is empty.
          map_ptr = map3stag2;
       }
@@ -2157,27 +2128,34 @@ extern void distorted_2x2s_move(
          ss->cmd.cmd_misc3_flags |= CMD_MISC3__ACTUAL_Z_CONCEPT;
 
       if (arity == 3) {
+
+         // Maps for triple side-to-side Z's.
+         static const veryshort mapz3x6ccw[13] = {s3x6, 15, 1, 17, 3, 7, 5, 6, 10, 8, 12, 16, 14};
+         static const veryshort mapz3x6cw[13] =  {s3x6, 0, 16, 2, 8, 4, 6, 9, 7, 11, 17, 13, 15};
+         static const veryshort mapz3x6accw[13] = {s3x6, 0, 16, 17, 3, 4, 6, 9, 7, 8, 12, 13, 15};
+         static const veryshort mapz3x6acw[13] =  {s3x6, 15, 1, 2, 8, 7, 5, 6, 10, 11, 17, 16, 14};
+
          switch (ss->kind) {
          case s3x6:
             // If outer Z's are ambiguous, make them look like inner ones.
-            if ((livemaskBE & 0630630) == 0)
+            if ((livemaskBElo & 0x0F03C3C0) == 0 && (livemaskBEhi & 0xF) == 0)
                warn(warn_same_z_shear);
 
-            if ((livemaskBE & 0250250) == 0) {
-               misc2_zflag = CMD_MISC2__IN_Z_CW;
-               goto do_real_z_stuff;
+            if ((livemaskBElo & 0x3300CCC0) == 0 && (livemaskBEhi & 0x3) == 0) {
+               map_z_restorer = mapz3x6cw;
+               goto do_real_z_final;
             }
-            else if ((livemaskBE & 0520520) == 0) {
-               misc2_zflag = CMD_MISC2__IN_Z_CCW;
-               goto do_real_z_stuff;
+            else if ((livemaskBElo & 0xCC033300) == 0 && (livemaskBEhi & 0xC) == 0) {
+               map_z_restorer = mapz3x6ccw;
+               goto do_real_z_final;
             }
-            else if ((livemaskBE & 0310310) == 0) {
-               misc2_zflag = CMD_MISC2__IN_AZ_CCW;
-               goto do_real_z_stuff;
+            else if ((livemaskBElo & 0xC300F0C0) == 0 && (livemaskBEhi & 0x3) == 0) {
+               map_z_restorer = mapz3x6accw;   // Anisotropic; center Z has different shear.
+               goto do_real_z_final;
             }
-            else if ((livemaskBE & 0460460) == 0) {
-               misc2_zflag = CMD_MISC2__IN_AZ_CW;
-               goto do_real_z_stuff;
+            else if ((livemaskBElo & 0x3C030F00) == 0 && (livemaskBEhi & 0xC) == 0) {
+               map_z_restorer = mapz3x6acw;   // Anisotropic; center Z has different shear.
+               goto do_real_z_final;
             }
          default:
             fail("Must have a 3x6 for this concept.");
@@ -2206,14 +2184,14 @@ extern void distorted_2x2s_move(
                {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
 
                arity = 2;
-               if (     (livemaskBE & ~0x3939) == 0) map_ptr = map1;
-               else if ((livemaskBE & ~0x1D1D) == 0) map_ptr = map2;
-               else if ((livemaskBE & ~0x7272) == 0) map_ptr = map3;
-               else if ((livemaskBE & ~0x5656) == 0) map_ptr = map4;
-               else if ((livemaskBE & ~0x6565) == 0) map_ptr = map5;
-               else if ((livemaskBE & ~0x2727) == 0) map_ptr = map6;
-               else if ((livemaskBE & ~0xD1D1) == 0) map_ptr = map7;
-               else if ((livemaskBE & ~0x9393) == 0) map_ptr = map8;
+               if (     (livemaskBElo & ~0x0FC30FC3) == 0) map_ptr = map1;
+               else if ((livemaskBElo & ~0x03F303F3) == 0) map_ptr = map2;
+               else if ((livemaskBElo & ~0x3F0C3F0C) == 0) map_ptr = map3;
+               else if ((livemaskBElo & ~0x333C333C) == 0) map_ptr = map4;
+               else if ((livemaskBElo & ~0x3C333C33) == 0) map_ptr = map5;
+               else if ((livemaskBElo & ~0x0C3F0C3F) == 0) map_ptr = map6;
+               else if ((livemaskBElo & ~0xF303F303) == 0) map_ptr = map7;
+               else if ((livemaskBElo & ~0xC30FC30F) == 0) map_ptr = map8;
             }
             break;
          case s4x5:
@@ -2229,14 +2207,14 @@ extern void distorted_2x2s_move(
                static const veryshort map45g[9] = {9, 1, 8, 15, 18, 5, 19, 11, -1};
                static const veryshort map45h[9] = {9, 16, 13, 15, 3, 5, 19, 6, -1};
 
-               if (     (livemaskBE & ~0xC1B06) == 0) map_ptr = map45a;
-               else if ((livemaskBE & ~0x1B06C) == 0) map_ptr = map45b;
-               else if ((livemaskBE & ~0x360D8) == 0) map_ptr = map45c;
-               else if ((livemaskBE & ~0x60D83) == 0) map_ptr = map45d;
-               else if ((livemaskBE & ~0x0E83A) == 0) map_ptr = map45e;
-               else if ((livemaskBE & ~0x82E0B) == 0) map_ptr = map45f;
-               else if ((livemaskBE & ~0x44D13) == 0) map_ptr = map45g;
-               else if ((livemaskBE & ~0x16459) == 0) map_ptr = map45h;
+               if (     (livemaskBElo & ~0x03CF003C) == 0 && (livemaskBEhi & ~0xF0) == 0) map_ptr = map45a;
+               else if ((livemaskBElo & ~0xCF003CF0) == 0 && (livemaskBEhi & ~0x03) == 0) map_ptr = map45b;
+               else if ((livemaskBElo & ~0x3C00F3C0) == 0 && (livemaskBEhi & ~0x0F) == 0) map_ptr = map45c;
+               else if ((livemaskBElo & ~0x00F3C00F) == 0 && (livemaskBEhi & ~0x3C) == 0) map_ptr = map45d;
+               else if ((livemaskBElo & ~0xFCC00FCC) == 0 && (livemaskBEhi & ~0x00) == 0) map_ptr = map45e;
+               else if ((livemaskBElo & ~0x0CFC00CF) == 0 && (livemaskBEhi & ~0xC0) == 0) map_ptr = map45f;
+               else if ((livemaskBElo & ~0x30F3030F) == 0 && (livemaskBEhi & ~0x30) == 0) map_ptr = map45g;
+               else if ((livemaskBElo & ~0x3C3033C3) == 0 && (livemaskBEhi & ~0x03) == 0) map_ptr = map45h;
             }
             break;
          case s4x6:
@@ -2252,58 +2230,64 @@ extern void distorted_2x2s_move(
                static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
                static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
 
-               if (     (livemaskBE & ~0x423423) == 0) map_ptr = map46a;
-               else if ((livemaskBE & ~0x0B10B1) == 0) map_ptr = map46b;
-               else if ((livemaskBE & ~0x813813) == 0) map_ptr = map46c;
-               else if ((livemaskBE & ~0x072072) == 0) map_ptr = map46d;
-               else if ((livemaskBE & ~0x1B01B0) == 0) map_ptr = map46e;
-               else if ((livemaskBE & ~0x0D80D8) == 0) map_ptr = map46f;
-               else if ((livemaskBE & ~0x603603) == 0) map_ptr = map46g;
-               else if ((livemaskBE & ~0xC06C06) == 0) map_ptr = map46h;
+               if (     (livemaskBElo & ~0x0F300C0F) == 0 && (livemaskBEhi & ~0x300C) == 0) map_ptr = map46a;
+               else if ((livemaskBElo & ~0x0300CF03) == 0 && (livemaskBEhi & ~0x00CF) == 0) map_ptr = map46b;
+               else if ((livemaskBElo & ~0x0FC0030F) == 0 && (livemaskBEhi & ~0xC003) == 0) map_ptr = map46c;
+               else if ((livemaskBElo & ~0x0C003F0C) == 0 && (livemaskBEhi & ~0x003F) == 0) map_ptr = map46d;
+               else if ((livemaskBElo & ~0x0003CF00) == 0 && (livemaskBEhi & ~0x03CF) == 0) map_ptr = map46e;
+               else if ((livemaskBElo & ~0xC000F3C0) == 0 && (livemaskBEhi & ~0x00F3) == 0) map_ptr = map46f;
+               else if ((livemaskBElo & ~0x0F3C000F) == 0 && (livemaskBEhi & ~0x3C00) == 0) map_ptr = map46g;
+               else if ((livemaskBElo & ~0x3CF0003C) == 0 && (livemaskBEhi & ~0xF000) == 0) map_ptr = map46h;
             }
             break;
          case s3x4:
             arity = 2;  // Might have just said "Z", which would set arity
-                        // to 1.  We can nevertheless find the two Z's.
+                        // to 1.  There are nevertheless two Z's.
             {
                // Maps for 3x4 Z's.
-               /* Using these make t46 fail on triple Z's.
-               static const veryshort mapa[9] =
-               {10, 1, 11, 9, 5, 3, 4, 7, -1};
-               static const veryshort mapb[9] =
-               {0, 11, 8, 10, 2, 4, 6, 5, -1};
-               */
                static const veryshort mapc[16] =   // Only interlocked Z's
                {-1, -1, -1, -1, -1, -1, -1, -1, 10, 2, 5, 9, 11, 3, 4, 8};
                static const veryshort mapd[16] =   // Only interlocked Z's
                {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
+               static const veryshort mapz3x4ccw[9] = {s3x4, 10, 1, 5, 3, 4, 7, 11, 9};
+               static const veryshort mapz3x4cw[9] = {s3x4, 0, 11, 2, 4, 6, 5, 8, 10};
 
-               if ((livemaskBE & ~02727) == 0) {
-                  //                  map_ptr = mapa;
-                  misc2_zflag = CMD_MISC2__IN_Z_CCW;
-                  goto do_real_z_stuff;
+               if ((livemaskBElo & ~0x33F33F) == 0) {
+                  map_z_restorer = mapz3x4ccw;
+                  goto do_real_z_final;
                }
-               else if ((livemaskBE & ~05353) == 0) {
-                  //                  map_ptr = mapb;
-                  misc2_zflag = CMD_MISC2__IN_Z_CW;
-                  goto do_real_z_stuff;
+               else if ((livemaskBElo & ~0xCCFCCF) == 0) {
+                  map_z_restorer = mapz3x4cw;
+                  goto do_real_z_final;
                }
-               else if ((livemaskBE & ~01717) == 0) map_ptr = mapc;
-               else if ((livemaskBE & ~06363) == 0) map_ptr = mapd;
+               else if ((livemaskBElo & ~0x0FF0FF) == 0) map_ptr = mapc;
+               else if ((livemaskBElo & ~0xF0FF0F) == 0) map_ptr = mapd;
             }
             break;
          case s2x6:
             arity = 2;  // Might have just said "Z", which would set arity
-                        // to 1.  We can nevertheless find the two Z's.
+                        // to 1.  There are nevertheless two Z's.
             {
                // Maps for 2x6 Z's.
                static const veryshort mape[16] =
                {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
                static const veryshort mapf[16] =
                {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
+               static const veryshort mapz2x6ccw[9] = {s2x6, 0, 1, 3, 4, 6, 7, 9, 10};
+               static const veryshort mapz2x6cw[9] = {s2x6, 1, 2, 4, 5, 7, 8, 10, 11};
 
-               if (     (livemaskBE & 01111) == 0) map_ptr = mape;
-               else if ((livemaskBE & 04444) == 0) map_ptr = mapf;
+               z_aspect = 0;      // Z's are end-to-end.
+
+               if ((livemaskBElo & ~0xF3CF3C) == 0) {
+                  map_z_restorer = mapz2x6ccw;
+                  goto do_real_z_final;
+               }
+               else if ((livemaskBElo & ~0x3CF3CF) == 0) {
+                  map_z_restorer = mapz2x6cw;
+                  goto do_real_z_final;
+               }
+               else if ((livemaskBElo & 0x0C30C3) == 0) map_ptr = mape;
+               else if ((livemaskBElo & 0xC30C30) == 0) map_ptr = mapf;
             }
             break;
          case s3x6:
@@ -2321,11 +2305,11 @@ extern void distorted_2x2s_move(
                static const veryshort mapk[16] =
                {1, 2, 16, 15, 7, 6, 10, 11, -1, -1, -1, -1, -1, -1, -1, -1};
 
-               if (     livemaskBE == 0426426) map_ptr = mapg;
-               else if (livemaskBE == 0216216) map_ptr = maph;
-               else if (livemaskBE == 0033033) map_ptr = mapi;
-               else if (livemaskBE == 0603603) map_ptr = mapj;
-               else if (livemaskBE == 0306306) map_ptr = mapk;
+               if (     livemaskBElo == 0x0CF3033C && livemaskBEhi == 0xC) map_ptr = mapg;
+               else if (livemaskBElo == 0x03F0C0FC && livemaskBEhi == 0x3) map_ptr = maph;
+               else if (livemaskBElo == 0x0F3C03CF && livemaskBEhi == 0x0) map_ptr = mapi;
+               else if (livemaskBElo == 0x003FC00F && livemaskBEhi == 0xF) map_ptr = mapj;
+               else if (livemaskBElo == 0xC0F0F03C && livemaskBEhi == 0x3) map_ptr = mapk;
             }
             break;
          case s2x3:
@@ -2335,8 +2319,8 @@ extern void distorted_2x2s_move(
                static const veryshort mape1[8] = {0, 1, 3, 4, -1, -1, -1, -1};
                static const veryshort mapf1[8] = {1, 2, 4, 5, -1, -1, -1, -1};
 
-               if (     (livemaskBE & 011) == 0) map_ptr = mape1;
-               else if ((livemaskBE & 044) == 0) map_ptr = mapf1;
+               if (     (livemaskBElo & 0x0C3) == 0) map_ptr = mape1;
+               else if ((livemaskBElo & 0xC30) == 0) map_ptr = mapf1;
             }
             break;
          case s2x2:
@@ -2356,109 +2340,14 @@ extern void distorted_2x2s_move(
       arity = this_concept->arg4;
 
       switch (ss->kind) {
-         /*
-      case s4x4:
-         {
-            // Maps for 4x4 Z's.
-            static const veryshort map1[16] =
-            {12, 15, 11, 10, 3, 2, 4, 7, 12, 3, 7, 10, 15, 2, 4, 11};
-            static const veryshort map2[16] =
-            {12, 13, 3, 15, 11, 7, 4, 5, 12, 13, 7, 11, 15, 3, 4, 5};
-            static const veryshort map3[16] =
-            {14, 1, 2, 3, 10, 11, 6, 9, 11, 1, 2, 6, 10, 14, 3, 9};
-            static const veryshort map4[16] =
-            {13, 14, 1, 3, 9, 11, 5, 6, 13, 14, 11, 9, 3, 1, 5, 6};
-            static const veryshort map5[16] =
-            {10, 13, 15, 9, 7, 1, 2, 5, 10, 7, 5, 9, 13, 1, 2, 15};
-            static const veryshort map6[16] =
-            {13, 14, 15, 10, 7, 2, 5, 6, 13, 14, 2, 7, 10, 15, 5, 6};
-            static const veryshort map7[16] =
-            {3, 0, 1, 7, 9, 15, 11, 8, 15, 0, 1, 11, 9, 3, 7, 8};
-            static const veryshort map8[16] =
-            {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
-
-            arity = 2;
-            if (     (livemaskBE & 0xC6C6) == 0) map_ptr = map1;
-            else if ((livemaskBE & 0xE2E2) == 0) map_ptr = map2;
-            else if ((livemaskBE & 0x8D8D) == 0) map_ptr = map3;
-            else if ((livemaskBE & 0xA9A9) == 0) map_ptr = map4;
-            else if ((livemaskBE & 0x9A9A) == 0) map_ptr = map5;
-            else if ((livemaskBE & 0xD8D8) == 0) map_ptr = map6;
-            else if ((livemaskBE & 0x2E2E) == 0) map_ptr = map7;
-            else if ((livemaskBE & 0x6C6C) == 0) map_ptr = map8;
-            else goto lose;
-         }
-         break;
-      case s4x6:
-         arity = 2;
-         {
-            // Maps for 4x6 Z's.
-            static const veryshort map46a[9] = {11, 1, 10, 18, 22, 6, 23, 13, -1};
-            static const veryshort map46b[9] = {11, 19, 16, 18, 4, 6, 23, 7, -1};
-            static const veryshort map46c[9] = {0, 10, 19, 11, 7, 23, 12, 22, -1};
-            static const veryshort map46d[9] = {18, 10, 19, 17, 7, 5, 6, 22, -1};
-            static const veryshort map46e[9] = {18, 19, 15, 16, 3, 4, 6, 7, -1};
-            static const veryshort map46f[9] = {19, 20, 16, 17, 4, 5, 7, 8, -1};
-            static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
-            static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
-
-            if (     (livemaskBE & 0xBDCBDC) == 0) map_ptr = map46a;
-            else if ((livemaskBE & 0xF4EF4E) == 0) map_ptr = map46b;
-            else if ((livemaskBE & 0x7EC7EC) == 0) map_ptr = map46c;
-            else if ((livemaskBE & 0xF8DF8D) == 0) map_ptr = map46d;
-            else if ((livemaskBE & 0xE4FE4F) == 0) map_ptr = map46e;
-            else if ((livemaskBE & 0xF27F27) == 0) map_ptr = map46f;
-            else if ((livemaskBE & 0x9FC9FC) == 0) map_ptr = map46g;
-            else if ((livemaskBE & 0x3F93F9) == 0) map_ptr = map46h;
-            else goto lose;
-         }
-         break;
-         */
       case s3x4:
          {
             inner_kind = s_qtag;
             arity = 1;  // Whatever the user called it, we are going to a single setup.
-            if (     (livemaskBE & 05050) == 0) map_ptr = mapzda;
-            else if ((livemaskBE & 02424) == 0) map_ptr = mapzdb;
+            if (     (livemaskBElo & 0xCC0CC0) == 0) map_ptr = mapzda;
+            else if ((livemaskBElo & 0x330330) == 0) map_ptr = mapzdb;
          }
          break;
-         /*
-      case s2x6:
-         arity = 2;  // Might have just said "Z", which would set arity
-                     // to 1.  We can nevertheless find the two Z's.
-         {
-            // Maps for 2x6 Z's.
-            static const veryshort mape[16] =
-            {0, 1, 9, 10, 3, 4, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-            static const veryshort mapf[16] =
-            {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
-
-            if (     (livemaskBE & 01111) == 0) map_ptr = mape;
-            else if ((livemaskBE & 04444) == 0) map_ptr = mapf;
-            else goto lose;
-         }
-         break;
-      case s3x6:
-         arity = 2;
-         {
-            // Maps for 3x6 Z's.
-            static const veryshort mapg[16] =
-            {0, 16, 13, 15, 4, 6, 9, 7, -1, -1, -1, -1, -1, -1, -1, -1};
-            static const veryshort maph[16] =
-            {15, 1, 16, 14, 7, 5, 6, 10, -1, -1, -1, -1, -1, -1, -1, -1};
-            static const veryshort mapi[16] =
-            {16,17, 13, 14, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
-            static const veryshort mapj[16] =
-            {0, 1, 17, 16, 8, 7, 9, 10, -1, -1, -1, -1, -1, -1, -1, -1};
-
-            if (     livemaskBE == 0426426) map_ptr = mapg;
-            else if (livemaskBE == 0216216) map_ptr = maph;
-            else if (livemaskBE == 0033033) map_ptr = mapi;
-            else if (livemaskBE == 0603603) map_ptr = mapj;
-            else goto lose;
-         }
-         break;
-         */
       case s2x3:
          if (arity != 1) fail("Use the 'Z diamond' concept here.");
          {
@@ -2467,8 +2356,8 @@ extern void distorted_2x2s_move(
             static const veryshort mapf1[8] = {5, 1, 2, 4};
 
             inner_kind = sdmd;
-            if (     (livemaskBE & 011) == 0) map_ptr = mape1;
-            else if ((livemaskBE & 044) == 0) map_ptr = mapf1;
+            if (     (livemaskBElo & 0x0C3) == 0) map_ptr = mape1;
+            else if ((livemaskBElo & 0xC30) == 0) map_ptr = mapf1;
          }
          break;
       default:
@@ -2487,31 +2376,24 @@ extern void distorted_2x2s_move(
       // The concept is some variety of jay.
 
       if (ss->kind == s3x4) {
-         if (     (livemaskBE & 05050) == 0) map_3x4_restorer = mapzda;
-         else if ((livemaskBE & 02424) == 0) map_3x4_restorer = mapzdb;
-         else if ((livemaskBE & 03030) == 0) map_3x4_restorer = mapzdc;
+         if (     (livemaskBElo & 0xCC0CC0) == 0) map_3x4_restorer = mapzda;
+         else if ((livemaskBElo & 0x330330) == 0) map_3x4_restorer = mapzdb;
+         else if ((livemaskBElo & 0x3C03C0) == 0) map_3x4_restorer = mapzdc;
 
          if (map_3x4_restorer) {   // If didn't set up a restorer, it's an error.
             setup stemp = *ss;
+            stemp.clear_people();
             gather(&stemp, ss, map_3x4_restorer, 8, 0);
             stemp.kind = s_qtag;
             *ss = stemp;
 
             // Need to do this again.
-            directionsBE = 0;
-            livemaskBE = 0;
-
-            for (i=0 ; i<=attr::slimit(ss) ; i++) {
-               uint32 p = ss->people[i].id1;
-               directionsBE = ((directionsBE & 0x3FFFFFFF)<<2) | (p&3);
-               livemaskBE <<= 1;
-               if (p) livemaskBE |= 1;
-            }
+            big_endian_get_directions(ss, directionsBE, livemaskBElo, (uint32 *) 0, &livemaskBEhi);
          }
       }
 
       if (ss->kind == s_qtag) {
-         if (table_offset == 0 || (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0xA000)) {
+         if (table_offset == 0 || (livemaskBElo == 0xFFFF && (directionsBE & 0xF0F0) == 0xA000)) {
             uint32 arg4 = this_concept->arg4 ^ directionsBE;
 
             if (     ((arg4 ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj1;
@@ -2519,7 +2401,7 @@ extern void distorted_2x2s_move(
             else if (((arg4 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
             else if (((arg4 ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
          }
-         else if (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0x00A0) {
+         else if (livemaskBElo == 0xFFFF && (directionsBE & 0xF0F0) == 0x00A0) {
             if (     ((directionsBE ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj3;
             else if (((directionsBE ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj4;
             else if (((directionsBE ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
@@ -2539,8 +2421,8 @@ extern void distorted_2x2s_move(
          static const veryshort map_p2[16] =
          {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
 
-         if (     (livemaskBE & 06060) == 0) map_ptr = map_p1;
-         else if ((livemaskBE & 01414) == 0) map_ptr = map_p2;
+         if (     (livemaskBElo & 0xF00F00) == 0) map_ptr = map_p1;
+         else if ((livemaskBElo & 0x0F00F0) == 0) map_ptr = map_p2;
       }
       break;
    case 3:
@@ -2554,8 +2436,8 @@ extern void distorted_2x2s_move(
          static const veryshort map_b2[16] =
          {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
 
-         if (     (livemaskBE & 05050) == 0) map_ptr = map_b1;
-         else if ((livemaskBE & 02424) == 0) map_ptr = map_b2;
+         if (     (livemaskBElo & 0xCC0CC0) == 0) map_ptr = map_b1;
+         else if ((livemaskBElo & 0x330330) == 0) map_ptr = map_b2;
       }
       break;
    case 4:
@@ -2564,11 +2446,11 @@ extern void distorted_2x2s_move(
       if (ss->kind != s_qtag) fail("Must have quarter-line setup for this concept.");
 
       if (table_offset == 0 ||
-          (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0xA000)) {
+          (livemaskBElo == 0xFFFF && (directionsBE & 0xF0F0) == 0xA000)) {
          if (     ((directionsBE ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
          else if (((directionsBE ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
       }
-      else if (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0x00A0) {
+      else if (livemaskBElo == 0xFFFF && (directionsBE & 0xF0F0) == 0x00A0) {
          if (     ((directionsBE ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
          else if (((directionsBE ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
       }
@@ -2702,12 +2584,31 @@ extern void distorted_2x2s_move(
  lose:
    fail("Can't find the indicated formation.");
 
- do_real_z_stuff:
+ do_real_z_final:
 
-   ss->cmd.cmd_misc2_flags |= misc2_zflag;
    if (table_offset != 0) goto lose;
-   divided_setup_move(ss, MAPCODE(s2x3,arity,MPKIND__LILZCOM,1), phantest_ok, true, result);
+   ss->cmd.cmd_misc2_flags |= CMD_MISC2__REQUEST_Z;
+   divided_setup_move(ss, MAPCODE(s2x3,arity,MPKIND__SPLIT,z_aspect), phantest_ok, true, result);
    result->clear_all_overcasts();
+
+   // The CMD_MISC2__REQUEST_Z bit told it to compress the 2x3 to a 2x2 if the concept
+   // is plain "Z" or the call has no 2x3 definition.  If the result comes back as a 3x4
+   // or 2x6, it did not compress--presumably this was "each z counter rotate".  But if
+   // it comes back as a 2x4, with the correct rotation, compression took place, and we
+   // have to re-expand.  Use the information that we gleaned from the original setup
+   // (that is, map_z_restorer) to tell how to do this.
+
+   if ((arity == 2 && result->kind == s2x4) || (arity == 3 && result->kind == s2x6)) {
+      if (ss->rotation == result->rotation) {
+         result->kind = (setup_kind) (map_z_restorer[0]);
+         setup stemp = *result;
+         result->clear_people();
+         // The zero slot has other stuff.
+         scatter(result, &stemp, map_z_restorer+1, arity*4-1, 0);
+      }
+   }
+
+   return;
 }
 
 

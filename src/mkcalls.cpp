@@ -733,6 +733,7 @@ const char *schematab[] = {
    "in_out_quad",
    "in_out_12mquad",
    "???",
+   "???",
    "select_leads",
    "select_headliners",
    "select_sideliners",

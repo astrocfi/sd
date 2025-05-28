@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.75"
+version "38.76"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1978,7 +1978,12 @@ call "exchange the diamonds, first 1/4" dontshow tag exchd1
    setup pptpd ptpd qualifier dmd_not_intlk
       array [0 CR6E    0    AL6W 0 AL4W    0    CR4E]
 
-call "continue to exchange the diamonds another 1/4" c2 tag exchd2
+call "continue to exchange the diamonds another 1/4" c2
+   // We have to give this a "do_exchange_compress" flag, which exchd2 doesn't have.
+            fudge_to_q_tag take_right_hands intlk_is_inherited do_exchange_compress
+   seq exchd2 [inherit_intlk]
+
+call "exchange the diamonds, second 1/4" dontshow tag exchd2
             fudge_to_q_tag take_right_hands
             // People shouldn't actually have to take right hands,
             // unless something very strange is going on.
@@ -1998,14 +2003,10 @@ call "continue to exchange the diamonds another 1/4" c2 tag exchd2
       array [   0    0 CR4E CR6E    0    0    0    0 AL7W AL5W    0    0]
    setup pbigptpd bigptpd
       array [AL3W AL3W    0    0 CR3E CR3E CR8E CR8E    0    0 AL8W AL8W]
-
-
    setup wqtag qtag
       array [   0    0 AL1W AL1W  0    0    0 CR0E CR0E 0]
    setup pwqtag qtag
       array [CR7E CR2E    0    0 0 AL2W AL7W    0    0    0]
-
-
             alternate_definition [interlocked] c2
    setup qtag bigdmd rotate
       array [   0    0 AL1S CR0N    0    0 CR10N AL11S]
@@ -2063,7 +2064,7 @@ call "exchange the diamonds, third or fourth 1/4" dontshow tag exchd3_or_4
 
 // This one takes a fraction in the call name, at the end.
 call "exchange the diamonds @a" c2 tag exchdmd
-            fudge_to_q_tag take_right_hands intlk_is_inherited neednumber visible_fractions
+            fudge_to_q_tag take_right_hands intlk_is_inherited neednumber visible_fractions do_exchange_compress
    seq_with_fraction exchd1 [inherit_intlk]
    seq exchd2 [inherit_intlk]
    seq exchd3_or_4 [inherit_intlk]
@@ -2071,7 +2072,7 @@ call "exchange the diamonds @a" c2 tag exchdmd
 
 // This one can take an optional fraction in front, in the usual way.
 call "exchange the diamonds" c2
-            fudge_to_q_tag take_right_hands intlk_is_inherited visible_fractions
+            fudge_to_q_tag take_right_hands intlk_is_inherited visible_fractions do_exchange_compress
    seq exchd1 [inherit_intlk]
    seq exchd2 [inherit_intlk]
    seq exchd3_or_4 [inherit_intlk]
@@ -2742,6 +2743,9 @@ call "cut the Z" c4
       array [ZM1W CR2E 0    AL1E AL0E 0]
    setup 2x3 1x4 rotate qualifier true_Z_ccw
       array [CR1E    0 0    ZM1W    0 0]
+   // If just the center 1x2, don't know offset, but don't need it.
+   setup 3x2 1x4 rotate
+      array [   0 CR2E 0       0 AL0E 0]
 
 call "reshape the triangle" c2 tag trngle_reshape
    simple_funny
@@ -6390,6 +6394,16 @@ call "@6 trade" mainstream
       preds "Can't find anyone to trade with."
          if unselect [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if select   [ZM0N ZM1N ZM2N CR7S ZM4N ZM5N ZM6N AL3S]
+   setup bigdmd bigdmd
+      preds "Can't find anyone to trade with."
+         if unselect                [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
+         if select_near_select      [CR1S AL0S    0    0 CR5S AL4S AL7S CR6S    0    0 AL11S CR10S]
+   setup pbigdmd bigdmd
+      preds "Can't find anyone to trade with."
+         if unselect                [ZM0N  ZM1N  ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N ZM8N ZM9N ZM10N ZM11N]
+         if select_near_select      [0     0     CR3S AL2S 0    0    0    0    AL9S CR8S 0     0]
+         if person_select_sum11     [CR11S CR10S 0    0    CR7S CR6S AL5S AL4S 0    0    AL1S  AL0S]
+         if person_select_plus6     [0     0     0    CR9S 0    0    0    0    0    AL3S 0     0]
    setup wingedstar wingedstar
       preds "Can't find anyone to trade with."
          if unselect                [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
@@ -9689,6 +9703,8 @@ call "_Z axle part 1" dontshow tag zaxle1
       array [0 ZM1W CR2E  0 ZM3W 0]
    setup 3x2 1x4 rotate qualifier true_Z_ccw
       array [0 ZM1W  0 AL0E ZM3W 0]
+   setup 3x2 1x4 rotate
+      array [0 ZM1W  0    0 ZM3W 0]
 
 call "_Z pass thru" dontshow tag zpass
             preserve_z_stuff split_large_setups
@@ -9697,6 +9713,10 @@ call "_Z pass thru" dontshow tag zpass
       array [0 ZM2N 0 0 0 ZM4N]
    setup 3x2 2x3 qualifier true_Z_ccw
       array [ZM1N 0 0 0 ZM3N 0]
+   setup 3x2 2x3
+      preds "???"
+         if columns_someone_in_front [ZM1N ZM2N 0 0 ZM3N ZM4N]
+         if always                   [ZM1N ZM2N 0 0 ZM3N ZM4N]
    setup 2x1 1x2
       array [ZM1N 0]
 
@@ -9713,7 +9733,7 @@ call "pass Z axle" c3
    seq trade [inherit_yoyo inherit_gensting]
    seq any_hand_slip [roll_transparent]
 
-call "swing and cross" c4x          /* Ugh!  - J.E.Brosius */
+call "swing and cross" c4x          // Ugh!  - J.E.Brosius
             step_to_wave visible_fractions left_means_touch_or_check
             grand_is_inherited fractal_is_inherited gen_sting_is_inherited nxn_is_inherited
    seq armturn_n4 [insert_number 3 inherit_gensting inherit_fractal]
@@ -15487,6 +15507,9 @@ call "_finish couple up" dontshow tag fincoupleup
       array [CR0S AL1S ZM2N ZM3N]
    setup 2x1 1x2
       array [ZM0N 1S]
+            alternate_definition [half] c3a
+   setup 2x2 2x2
+      array [CR0E AL1W AL2W CR3E]
 
 call "couple up" c3a tag coupleup
    simple_funny
@@ -20286,6 +20309,7 @@ call "trans @0" c4a
 // See nomenclatural comment above for transfer the column.
 
 call "checkmate the column" a2
+            take_right_hands
    setup 4x2 2x4 restriction wave_only
       array [CM5E CM4E CR6W CR7W AL0E AL1E AM3W AM2W]
             alternate_definition [2x1] c4

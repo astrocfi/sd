@@ -220,6 +220,9 @@ static collision_map collision_map_table[] = {
     s2x4,        s2x8,        0, warn__none, 0},
    {4, 0x000000, 0xF0, 0xF0,  {4, 5, 6, 7},         {9, 11, 13, 15},       {8, 10, 12, 14},
     s2x4,        s2x8,        0, warn__none, 0},
+   // Collision after checkmate from a 8-chain
+   {4, 0x000000, 0x66, 0x66,  {1, 2, 5, 6},         {0, 2, 5, 7},          {1, 3, 4, 6},
+    s2x4,        s2x4,        0, warn__none, 0},
 
    // Collision after column circulate from 3/4 box or similar 3x1-column-type things.
    {6, 0x0880DD, 0xDD, 0x88,  {0, 2, 3, 4, 6, 7},   {10, 3, 0, 2, 11, 9},  {10, 3, 1, 2, 11, 8},
@@ -783,11 +786,6 @@ static void install_mirror_person_in_matrix(int x, int y, int doffset,
 void mirror_this(setup *s) THROW_DECL
 {
    int i;
-
-   if (s->cmd.cmd_misc2_flags & (CMD_MISC2__IN_AZ_CW|CMD_MISC2__IN_AZ_CCW))
-      s->cmd.cmd_misc2_flags ^= (CMD_MISC2__IN_AZ_CW ^ CMD_MISC2__IN_AZ_CCW);
-   if (s->cmd.cmd_misc2_flags & (CMD_MISC2__IN_Z_CW|CMD_MISC2__IN_Z_CCW))
-      s->cmd.cmd_misc2_flags ^= (CMD_MISC2__IN_Z_CW ^ CMD_MISC2__IN_Z_CCW);
 
    if (s->kind == nothing) return;
 
@@ -6293,7 +6291,7 @@ foobar:
             if (!newtb || (newtb & 010)) linedefinition = assoc(key1, ss, calldeflist);
             if (!newtb || (newtb & 1)) coldefinition = assoc(key2, ss, calldeflist);
 
-            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__IN_Z_MASK && ss->kind == s2x3) {
+            if (ss->cmd.cmd_misc2_flags & CMD_MISC2__REQUEST_Z && ss->kind == s2x3) {
                // See if the call has a 2x3 definition that goes to a setup of size 4.
                // That is, see if this is "Z axle".  If so, turn off the special "Z" flags
                // and forget about it.  Otherwise, change to a 2x2 and try again.
@@ -6308,7 +6306,7 @@ foobar:
                     (coldefinition &&
                      (attr::klimit(coldefinition->get_end_setup()) == 3 ||
                       (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))))) {
-                  ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
+                  ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__REQUEST_Z;
                }
                else {
                   remove_z_distortion(ss);

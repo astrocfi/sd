@@ -980,14 +980,14 @@ extern void big_endian_get_directions(
    uint32 high_livemask = 0;
 
    for (int i=0; i<=attr::slimit(ss); i++) {
+      uint32 p = ss->people[i].id1;
       high_livemask <<= 2;
       high_directions <<= 2;
       high_livemask |= (livemask >> 30) & 3;
       high_directions |= (directions >> 30) & 3;
-      directions <<= 2;
+      directions = ((directions & 0x3FFFFFFF)<<2) | (p&3);
       livemask <<= 2;
-      uint32 p = ss->people[i].id1;
-      if (p) { livemask |= 3 ; directions |= p & 3; }
+      if (p) { livemask |= 3 ; }
    }
 
    if (high_livemask_p) *high_livemask_p = high_livemask;
@@ -4045,31 +4045,17 @@ extern callarray *assoc(
       case cr_not_tboned_in_quad:
          goto check_tt;
       case cr_true_Z_cw:
-         k ^= 033U ^ 066U;
-         mask ^= CMD_MISC2__IN_Z_CCW ^ CMD_MISC2__IN_Z_CW;
-         // **** FALL THROUGH!!!!
-      case cr_true_Z_ccw:
-         // **** FELL THROUGH!!!!!!
-         k ^= ~033U;
-         mask ^= CMD_MISC2__IN_Z_CCW;
-
-         if (ss->cmd.cmd_misc2_flags & mask)
-             goto good;
-
-         if (ssK == s2x3) {
-            // In this case, we actually check the shear direction of the Z.
-
-            mask = 0;
-
-            for (plaini=0, w=1; plaini<=attr::slimit(ss); plaini++, w<<=1) {
-               if (ss->people[plaini].id1) mask |= w;
-            }
-
-            if ((mask & k) == 0 && (mask & (k^033U^066U)) != 0) goto good;
-            goto bad;
-         }
-         else
+         if (ssK != s2x3)
             goto good;         // We don't understand the setup -- we'd better accept it.
+         if ((ss->people[2].id1 | ss->people[5].id1) && !ss->people[0].id1 && !ss->people[3].id1)
+            goto good;
+         goto bad;
+      case cr_true_Z_ccw:
+         if (ssK != s2x3)
+            goto good;         // We don't understand the setup -- we'd better accept it.
+         if ((ss->people[0].id1 | ss->people[3].id1) && !ss->people[2].id1 && !ss->people[5].id1)
+            goto good;
+         goto bad;
       case cr_true_PG_cw:
          k ^= 01717U ^ 07474U;
          // **** FALL THROUGH!!!!

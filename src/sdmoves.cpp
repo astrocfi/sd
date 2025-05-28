@@ -4384,7 +4384,7 @@ static void do_stuff_inside_sequential_call(
       if (!setup_is_elongated && (result->kind == s2x2 || result->kind == s_short6))
          result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
-      result->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
+      result->cmd.cmd_misc2_flags &= ~CMD_MISC2__REQUEST_Z;
    }
 
    if (!first_time) {
@@ -6095,16 +6095,6 @@ void really_inner_move(
       // reverse as in reverse cut/flip the diamond or reverse change-O.
 
       basic_move(ss, callspec, tbonetest, qtfudged, mirror, result);
-
-      // If the setup expanded from an 8-person setup to a "bigdmd", and we can
-      // compress it back, do so.  This takes care of certain type of "triple diamonds
-      // working together exchange the diamonds 1/2" situations.
-      // The only known case of this for array-type calls is
-      // "continue to exchange the diamonds another 1/4".
-
-      if (result->kind == sbigdmd || result->kind == sbigptpd)
-         normalize_setup(result, normalize_compress_bigdmd, false);
-
       break;
    default:
       /* Must be sequential or some form of concentric. */
@@ -6301,13 +6291,6 @@ void really_inner_move(
                break;
             }
          }
-
-         // If the setup expanded from an 8-person setup to a "bigdmd", and we can
-         // compress it back, do so.  This takes care of certain type of "triple diamonds
-         // working together exchange the diamonds 1/2" situations.
-
-         if (result->kind == sbigdmd || result->kind == sbigptpd)
-            normalize_setup(result, normalize_compress_bigdmd, false);
       }
       else {
          foo1 = ss->cmd;
@@ -7170,7 +7153,10 @@ static void move_with_real_call(
                         0, did_4x4_expansion, imprecise_rotation_result_flagmisc, mirror, result);
 
       if ((callflagsf & CFLAG2_DO_EXCHANGE_COMPRESS))
-         normalize_setup(result, normalize_after_exchange_boxes, false);
+         normalize_setup(result,
+                         (result->kind == sbigdmd || result->kind == sbigptpd) ?
+                         normalize_compress_bigdmd : normalize_after_exchange_boxes,
+                         false);
    }
    catch(error_flag_type foo) {
       if (foo < error_flag_no_retry && this_defn != deferred_array_defn) {

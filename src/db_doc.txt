@@ -2681,17 +2681,20 @@ unselect
       "selected".  See the description of "select" above.
 
 select_near_select
-      applies to 1x2, 1x4, 1x8, 2x4, and qtag setups only.  Returns TRUE if the
-      person under test and the "near" person are both selected.  The "near"
-      person is the partner of the person under test, assuming they are in
-      lines.  If in columns, it is the "tandem partner".  In a quarter-tag, it
-      is the "near" person if on the end, or the "near" person in the center
-      1x4, the same as it would mean on that 1x4 directly.  Note that this
-      person's position is found without reference to anyone's facing
-      direction.  For this predicate and others that test the selectedness
-      of another person, if that other person is a phantom, an error is raised
-      unless the selector is "everyone" or "no one".  See the description
-      of "select" above.
+      applies to 1x2, 1x4, 1x8, 2x4, and qtag setups, but see below.
+      Returns TRUE if the person under test and the "near" person are both
+      selected.  The "near" person is the partner of the person under test,
+      assuming they are in lines.  If in columns, it is the "tandem
+      partner".  In a quarter-tag, it is the "near" person if on the end,
+      or the "near" person in the center 1x4, the same as it would mean on
+      that 1x4 directly.  Note that this person's position is found without
+      reference to anyone's facing direction.  For this predicate and
+      others that test the selectedness of another person, if that other
+      person is a phantom, an error is raised unless the selector is
+      "everyone" or "no one".  See the description of "select" above.
+
+      Actually, this just XOR's the person index with 1 to find the other person,
+      and will work for any setup for which that gets the desired result.
 
 select_near_select_or_phantom
       As above, but is satisfied if this person is selected and the other person

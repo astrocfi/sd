@@ -68,9 +68,6 @@
 extern resultflag_rec get_multiple_parallel_resultflags(setup outer_inners[], int number) THROW_DECL
 {
    resultflag_rec result_flags;
-   result_flags.clear_split_info();
-   result_flags.misc = 0;
-   result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
 
    bool clear_split_fields = false;   // In case we have to clear both fields.
 
@@ -258,8 +255,11 @@ bool conc_tables::analyze_this(
    int & mapelong,
    int & inner_rot,
    int & outer_rot,
-   calldef_schema & analyzer)
+   calldef_schema analyzer)
 {
+   if (analyzer == schema_in_out_center_triple_z)
+      analyzer = schema_in_out_triple_zcom;
+
    uint32 hash_num = ((ss->kind + (5*analyzer)) * 25) &
       (conc_tables::NUM_CONC_HASH_BUCKETS-1);
 
@@ -1856,6 +1856,7 @@ static calldef_schema concentrify(
    case schema_3x3_in_out_triple_squash:
    case schema_4x4_in_out_triple_squash:
    case schema_in_out_triple_zcom:
+   case schema_in_out_center_triple_z:
    case schema_in_out_quad:
    case schema_in_out_12mquad:
    case schema_concentric_6_2:
@@ -2102,7 +2103,7 @@ static calldef_schema concentrify(
       analyzer_result = schema_concentric_2_6;
    else if (analyzer_result == schema_1221_concentric)
       analyzer_result = schema_concentric_6p;
-   else if (analyzer_result == schema_in_out_triple_zcom) {
+   else if (analyzer_result == schema_in_out_triple_zcom || analyzer_result == schema_in_out_center_triple_z) {
       if (impose_z_on_centers)
          analyzer_result = schema_concentric_zs;
       else if (ss->kind != s3x4 && ss->kind != s4x5/* && ss->kind != s2x5*/ && ss->kind != sd3x4)
@@ -3343,17 +3344,17 @@ extern void concentric_move(
 
          // Check for operating on a Z.
 
+         uint32 z_compress_direction99rot = begin_ptr->rotation;
+         uint32 z_compress_direction99skew;
+
          if (begin_ptr->kind == s2x3 &&
-             ((!doing_ends && analyzer == schema_concentric) || analyzer == schema_concentric_zs)) {
-            uint32 mask = doing_ends ? eemask : ccmask;
-            if (mask == 066) {
-               begin_ptr->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
-               demand_no_z_stuff = (analyzer == schema_concentric);
-            }
-            else if (mask == 033) {
-               begin_ptr->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
-               demand_no_z_stuff = (analyzer == schema_concentric);
-            }
+             ((!doing_ends && analyzer == schema_concentric) ||
+              analyzer == schema_concentric_zs ||
+              analyzer == schema_in_out_triple_zcom ||
+              analyzer == schema_in_out_center_triple_z)) {
+            z_compress_direction99skew = doing_ends ? eemask : ccmask;
+            begin_ptr->cmd.cmd_misc2_flags |= CMD_MISC2__REQUEST_Z;
+            demand_no_z_stuff = (analyzer == schema_concentric);
          }
 
          if (doing_ends) {
@@ -3410,6 +3411,7 @@ extern void concentric_move(
                 analyzer != schema_3x3_in_out_triple &&
                 analyzer != schema_4x4_in_out_triple &&
                 analyzer != schema_in_out_triple_zcom &&
+                analyzer != schema_in_out_center_triple_z &&
                 analyzer != schema_in_out_triple_squash &&
                 analyzer != schema_in_out_triple_dyp_squash &&
                 analyzer != schema_sgl_in_out_triple_squash &&
@@ -3547,8 +3549,6 @@ extern void concentric_move(
             mirror_this(begin_ptr);
             begin_ptr->cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
          }
-
-         uint32 orig_z_bits = begin_ptr->cmd.cmd_misc2_flags;
 
          if ((save_cmd_misc2_flags &
               (CMD_MISC2__ANY_WORK|CMD_MISC2__ANY_WORK_INVERT)) == ctr_use_flag) {
@@ -3714,30 +3714,22 @@ extern void concentric_move(
 
             if (result_ptr->kind == s2x2) {
                const expand::thing *fixp;
-               uint32 rotfix = z_compress_direction-1;   // This is 0 for E-W or 1 for N-S
-               result_ptr->rotation -= rotfix;
+               result_ptr->rotation -= z_compress_direction99rot;
                canonicalize_rotation(result_ptr);
 
-               if (orig_z_bits & CMD_MISC2__IN_Z_CW)
+               if (z_compress_direction99skew == 066)
                   fixp = &fix_cw;
-               else if (orig_z_bits & CMD_MISC2__IN_Z_CCW)
+               else if (z_compress_direction99skew == 033)
                   fixp = &fix_ccw;
-               else if (orig_z_bits & CMD_MISC2__IN_AZ_CW)
-                  fixp = doing_ends ? &fix_cw : &fix_ccw;
-               else if (orig_z_bits & CMD_MISC2__IN_AZ_CCW)
-                  fixp = doing_ends ? &fix_ccw : &fix_cw;
                else
-                  fail("Internal error: Can't figure out how to unwind anisotropic Z's.");
+                  fail("Internal error: Can't figure out how to unwind Z.");
 
                expand::expand_setup(*fixp, result_ptr);
-               result_ptr->rotation += rotfix;
+               result_ptr->rotation += z_compress_direction99rot;
             }
-            else
-               fail("Can't do this shape-changer in a 'Z'.");
          }
 
-         if (analyzer == schema_in_out_triple_zcom) {
-            orig_z_bits = ss->cmd.cmd_misc2_flags;
+         if (analyzer == schema_in_out_triple_zcom || analyzer == schema_in_out_center_triple_z) {
             analyzer = schema_in_out_triple;
          }
 
@@ -6588,20 +6580,9 @@ extern void inner_selective_move(
 
             lilss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
 
-            if (key == LOOKUP_Z) {
-               if (fixp->outk == sd2x7) {
-                  if (thislivemask == 0x060C)
-                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
-                  else if (thislivemask == 0x0C18)
-                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
-               }
-               else {
-                  if (thislivemask == 066)
-                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CW;
-                  else if (thislivemask == 033)
-                     lilss->cmd.cmd_misc2_flags |= CMD_MISC2__IN_Z_CCW;
-               }
-            }
+            // Request Z compression.
+            if (key == LOOKUP_Z)
+               lilss->cmd.cmd_misc2_flags |= CMD_MISC2__REQUEST_Z;
 
             update_id_bits(lilss);
             impose_assumption_and_move(lilss, lilres);
@@ -6653,10 +6634,7 @@ extern void inner_selective_move(
             const select::fixer *nextfixp = (const select::fixer *) 0;
 
             if (lilresult[0].kind == s2x2 && key == LOOKUP_Z) {
-               if (lilresult[0].result_flags.misc & RESULTFLAG__DID_Z_COMPRESSMASK) {
-                  expand::expand_setup((thislivemask == 066) ? fix_cw : fix_ccw,
-                                       &lilresult[0]);
-               }
+               expand::expand_setup((thislivemask == 066) ? fix_cw : fix_ccw, &lilresult[0]);
             }
 
             if (numsetups == 1 && lilresult[0].kind == s2x3) {

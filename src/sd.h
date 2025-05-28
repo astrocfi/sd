@@ -655,9 +655,7 @@ struct setup_command {
 // problems, that are simply not worth it.  Especially on 64-bit machines.
 
 struct resultflag_rec {
-   // BEWARE!!!  If add fields to this, be sure to initialize them at start of get_multiple_parallel_resultflags.
-   // Q: Why not just make a default constructor, the way good programmers do?
-   // A: This appears in static initializers in sdinit.  Someday, maybe.
+   // BEWARE!!!  If add fields to this, be sure to initialize them in constructor, below.
    uint16 split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
    uint32 misc;           // Miscellaneous info, with names like RESULTFLAG__???.
    uint32 res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__DID_MXN_EXPANSION bit on.
@@ -678,6 +676,9 @@ struct resultflag_rec {
       split_info[0] = split_info[1];
       split_info[1] = temp;
    }
+
+   resultflag_rec() : misc(0), res_heritflags_to_save_from_mxn_expansion(0)
+   { clear_split_info(); }
 };
 
 
@@ -770,7 +771,7 @@ class conc_tables {
       int & mapelong,
       int & inner_rot,
       int & outer_rot,
-      calldef_schema & analyzer);
+      calldef_schema analyzer);
 
    static bool synthesize_this(             // In sdconc.
       setup *inners,
@@ -2316,23 +2317,20 @@ enum {
 //    CMD_MISC2__ANY_WORK_INVERT is only meaningful if the CMD_MISC2__ANY_WORK is on.
 //    It says that the ends are doing the concept, instead of the centers.
 
-// The low 12 bits are used for encoding the schema if
-// CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on.
-
 enum {
 
-   // The following are used for Z's.
-   //    CMD_MISC2__IN_Z_CW and CMD_MISC2__IN_Z_CCW say that the setup is actually
-   //    a 2x3, but the "Z" (or "each Z", or "triple Z's") concept has been given,
+   // The low 12 bits are used for encoding the schema if
+   // CMD_MISC2__ANY_WORK or CMD_MISC2__ANY_SNAG is on.
+
+   // This indicates that the setup is actually a 2x3, but the "Z" concept has been given,
    //    and the setup should probably be turned into a 2x2.  The only exception
    //    is if the call takes a 2x3 starting setup but not a 2x2 (that is, the call
-   //    is "Z axle").  In that case, the call is done directly in the 2x3, and the
-   //    "Z" distortion is presumed not to have been in place.
-   CMD_MISC2__IN_Z_CW           = 0x00001000U,
-   CMD_MISC2__IN_Z_CCW          = 0x00002000U,
-   CMD_MISC2__IN_AZ_CW          = 0x00004000U,
-   CMD_MISC2__IN_AZ_CCW         = 0x00008000U,
-   CMD_MISC2__IN_Z_MASK         = 0x0000F000U,
+   //    is "Z axle" or "counter rotate").  In that case, the call is done directly
+   //    in the 2x3, and the "Z" distortion is presumed not to have been in place.
+   CMD_MISC2__REQUEST_Z         = 0x00001000U,
+   // spare:         = 0x00002000U,
+   // spare:         = 0x00004000U,
+   // spare:         = 0x00008000U,
 
    CMD_MISC2_RESTRAINED_SUPER   = 0x00010000U,
 
@@ -2892,7 +2890,6 @@ enum mpkind {
    MPKIND__LILZCW,
    MPKIND__LILAZCCW,
    MPKIND__LILAZCW,
-   MPKIND__LILZCOM,
    MPKIND__O_SPOTS,
    MPKIND__X_SPOTS,
    MPKIND__NS_CROSS_IN_4X4,

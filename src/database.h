@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 323
+#define DATABASE_FORMAT_VERSION 324
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -1159,6 +1159,7 @@ enum calldef_schema {
    schema_in_out_quad,
    schema_in_out_12mquad,
    schema_in_out_triple_zcom,
+   schema_in_out_center_triple_z,
    schema_select_leads,
    schema_select_headliners,
    schema_select_sideliners,

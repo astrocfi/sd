@@ -1090,6 +1090,10 @@ expand::thing expand::init_table[] = {
     s2x6, sd2x7, 0, 01414U, 0x0E1CU, false,
     warn__none, warn__none, simple_normalize, 0},
 
+   {{4, 3, 2, 11, 10, 9},
+    s2x3, sd2x7, 1, 0U, 0x31E3U, false,
+    warn__none, warn__none, simple_normalize, 0},
+
    {{8, 11, 1, 2, 5, 7},
     s2x3, s3x4, 1, 0U, 03131, false,
     warn__none, warn__none, simple_normalize, 0},
@@ -2147,10 +2151,6 @@ map::map_thing map::map_init_table[] = {
     s2x2,3,MPKIND__LILAZCCW,0,    0,  s3x6,      0x000, 0},
    {{15, 1, 16, 14,     2, 8, 11, 17,     7, 5, 6, 10},
     s2x2,3,MPKIND__LILAZCW,0,     0,  s3x6,      0x000, 0},
-   {{1, 11, 8, 9, 10, 0,               3, 4, 6, 7, 5, 2},
-    s2x3,2,MPKIND__LILZCOM,1,     0,  s3x4,      0x005, 0},
-   {{1, 16, 13, 14, 15, 0,  3, 8, 11, 12, 17, 2,   5, 6, 9, 10, 7, 4},
-    s2x3,3,MPKIND__LILZCOM,1,     0,  s3x6,      0x015, 0},
 
    {{0, 1, 6, 7, 8, 9, 14, 15,         2, 3, 4, 5, 10, 11, 12, 13},
     s2x4,2,MPKIND__CONCPHAN,0,    0,  s2x8,      0x000, 0},
@@ -3560,10 +3560,12 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     sdmd,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
    {s3dmd,          schema_in_out_triple, {8, 9, 0, 10, 6, 4, 2, 3,         7, 11, 1, 5},
              sdmd,     sdmd,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
-   {s_dhrglass,      schema_in_out_triple, {-1, 0, 6, 5, 2, 1, -1, 4,       -1, 7, -1, 3},
+   {s_dhrglass,     schema_in_out_triple, {-1, 0, 6, 5, 2, 1, -1, 4,       -1, 7, -1, 3},
              sdmd,     s1x4,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
-   {sd2x7,           schema_in_out_triple, {0, 1, 12, 13, 5, 6, 7, 8,       4, 3, 2, 11, 10, 9},
-             s2x2,     s2x3,     0, 1, 1, 2,  0x0F7, schema_in_out_triple},
+   {sd2x7,          schema_in_out_triple, {0, 1, 12, 13, 5, 6, 7, 8,       4, 3, 2, 11, 10, 9},
+             s2x2,     s2x3,     0, 1, 2, 2,  0x0F7, schema_in_out_triple},
+   {s2x7,           schema_in_out_triple, {0, 1, 12, 13, 5, 6, 7, 8,       2, 3, 4, 9, 10, 11},
+             s2x2,     s2x3,     0, 0, 1, 2,  0x0FE, schema_in_out_triple},
 
    {s4dmd,          schema_in_out_quad, {11, 12, 0, 13, 8, 5, 3, 4,
                          1, 2, 6, 7, 9, 10, 14, 15},
@@ -4024,7 +4026,7 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
    {s3x4,           schema_in_out_triple_zcom, {-1, -1, -1, 0, 10, 9,
                                                 6, 4, 3, -1, -1, -1,
                                                 8, 11, 1, 2, 5, 7},
-             s2x3,     s2x3,     1, 1, 1, 2,  0x0FB, schema_in_out_triple},
+             s2x3,     s2x3,     1, 1, 2, 2,  0x0FB, schema_in_out_triple},
 
    {sd3x4,          schema_in_out_triple_zcom, {-1, -1, -1, 0, 11, 10,
                                                 6, 5, 4, -1, -1, -1,
@@ -4047,15 +4049,12 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
                                      0, 1, 2, 4, 3,
                                      12, 13, 5, 6},
              s1x5,     s1x4,     0, 0, 1, 2,  0x2FE, schema_in_out_triple},
-   {swqtag,         schema_in_out_triple, {7, 8,     3, 2,
-                                          6, 9, 0, 1, 4, 5},
-             s1x2,     s2x3,     0, 1, 1, 2,  0x100, schema_nothing},
+   {swqtag,         schema_in_out_triple, {7, 8,     3, 2,     6, 9, 0, 1, 4, 5},
+             s1x2,     s2x3,     0, 1, 2, 2,  0x100, schema_nothing},
    {s2x5,           schema_in_out_triple, {0, 4, 5, 9,     1, 2, 3, 6, 7, 8},
              s2x2,     s2x3,     0, 0, 1, 1,  0x0FE, schema_in_out_triple},
    {sd2x5,          schema_in_out_triple, {0, 6, 5, 1,     4, 3, 2, 9, 8, 7},
              s2x2,     s2x3,     0, 1, 1, 1,  0x0F7, schema_in_out_triple},
-   {s2x7,           schema_in_out_triple, {0, 1, 5, 6, 7, 8, 12, 13,     2, 3, 4, 9, 10, 11},
-             s2x4,     s2x3,     0, 0, 1, 1,  0x0FE, schema_in_out_triple},
    {s4x5,           schema_nothing, {9, 8, 6, 5, 19, 18, 16, 15,     12, 17, 2, 7},
              s2x4,     s1x4,     0, 1, 1, 1,  0x0F7, schema_in_out_triple},
    {s_qtag,         schema_nothing, {5, 0, 1, 4,     6, 7, 2, 3},
@@ -4651,6 +4650,9 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,          s2x6, 0x33, 06666, 0x2D, 0x0, schema_matrix,         spgdmdccw,   nothing, warn__none, 0, 1, {-1, -1, 3, 2, -1, -1, 7, 6}, {5, -1, -1, 0, -1, -1, 1, -1, -1, 4, -1, -1}},
    {s2x4,          s2x6, 0xCC, 03333, 0x2D, 0x0, schema_matrix,         spgdmdcw,    nothing, warn__none, 0, 1, {6, 7, -1, -1, 2, 3, -1, -1},{-1, -1, 5, -1, -1, 0, -1, -1, 1, -1, -1, 4}},
 
+   {s2x3,          s2x6, 0,    0x30C, 0x0E, 0x0, schema_matrix,         s2x7,        nothing, warn__none, 0, 0, {2, 3, 4, 9, 10, 11},{0, 1, -1, -1, 5, 6, 7, 8, -1, -1, 12, 13}},
+   {s2x3,          s2x7, 0,   0x0E1C, 0x0D, 0x0, schema_matrix,        sd2x7,        nothing, warn__none, 0, 0, {11, 10, 9, 4, 3, 2},{0, 1, -1, -1, -1, 5, 6, 7, 8, -1, -1, -1, 12, 13}},
+
    {sdmd,          s2x8, 0,   0x3C3C, 0x0E, 0x0, schema_matrix,         sbigdhrgl,   nothing,  warn__none, 0, 0, {9, 2, 3, 8},               {0, 1, -1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 10, 11}},
    {sdmd,          s2x8, 0,   0x3C3C, 0x0D, 0x0, schema_matrix,         sbighrgl,    nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, -1, -1, -1, 4, 5, 6, 7, -1, -1, -1, -1, 10, 11}},
 
@@ -4944,7 +4946,11 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x6,          s3x4, 0,        0, 0x0E, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 0, {15, 16, 17, 6, 7, 8},   {1, 2, 3, 4, 7, 8, 10, 11, 12, 13, 16, 17}},
    {s1x6,          s3x4, 0,    04646, 0x2C, 0x0, schema_concentric,     s1x6,        s2x3,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},      {3, 4, 6, 9, 10, 0}},
 
+   // These next three must be in this sequence.
+   {s2x3,          s3x4, 0,    06161, 0x0E, 0x0, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},      {1, 2, 3, 7, 8, 9}},
+   {s2x3,          s3x4, 0,    07070, 0x0E, 0x0, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},      {0, 1, 2, 6, 7, 8}},
    {s2x3,          s3x4, 0,    04646, 0x0C, 0x0, schema_concentric,     s2x3,        s2x3,     warn__none, 0, 1, {0, 1, 2, 3, 4, 5},      {3, 4, 6, 9, 10, 0}},
+
    {s2x2,        s_bone, 0,     0xCC, 0x2C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},            {0, 1, 4, 5}},
    {s2x2,          s2x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 5, 6},               {0}},
    {s2x4,          s4x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {10, 15, 3, 1, 2, 7, 11, 9},{0}},
@@ -9838,6 +9844,8 @@ const schema_attr schema_attrs[] = {
    {0,
     schema_nothing},                     // schema_in_out_triple_zcom
    {0,
+    schema_nothing},                     // schema_in_out_center_triple_z
+   {0,
     schema_nothing},                     // schema_select_leads
    {0,
     schema_nothing},                     // schema_select_headliners
@@ -10265,7 +10273,7 @@ select::fixer select::fixer_init_table[] = {
    {fx_f2x3j1, s1x2, s2x3,          0, 0, 2,            {0, 1, 4, 3},
     fx0, fx_foocc,    fx0, fx0,             fx0, fx0,    fx0, fx0},
    {fx_f2x3j2, s1x2, s2x3,          0, 0, 2,            {1, 2, 5, 4},
-    fx0, fx_foo33,    fx0, fx0,             fx0, fx0,    fx0, fx0},
+    fx0, fx_foo33a,    fx0, fx0,             fx0, fx0,    fx0, fx0},
    {fx_fqtgjj1, s2x2, s_qtag,       0, 0, 1, {7, 1, 3, 5},
     fx0, fx0,    fx0, fx0,             fx0, fx0, fx_fqtgjj1, fx_fqtgjj1},
    {fx_fqtgjj2, s2x2, s_qtag,       0, 0, 1, {0, 3, 4, 7},
@@ -10973,9 +10981,9 @@ select::fixer select::fixer_init_table[] = {
    {fx_z1x4u, s1x4, s1x4,               0, 0, 1, {0, 1, 2, 3},
     fx0, fx0,                   fx_z1x4u, fx0,              fx0, fx0,                   fx0, fx0},
    {fx_z2x3a, s2x3, s2x3,               0, 0, 1, {0, 1, 2, 3, 4, 5},
-    fx0, fx0,                   fx_z1x4u, fx_z1x4u,         fx0, fx0,                   fx_z2x3a, fx0},
+    fx0, fx0,                   fx_z1x4u, fx_z1x4u,         fx0, fx0,                   fx_z2x3a, fx_z2x3a},
    {fx_z2x3b, s2x3, s2x3,               0, 0, 1, {0, 1, 2, 3, 4, 5},
-    fx0, fx0,                   fx_z1x4u, fx_z1x4u,         fx0, fx0,                   fx_z2x3b, fx0},
+    fx0, fx0,                   fx_z1x4u, fx_z1x4u,         fx0, fx0,                   fx_z2x3b, fx_z2x3b},
    {fx_fgalpts, sdmd, s_galaxy,         0, 0, 1, {0, 2, 4, 6},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4endd, s2x2, s2x4,            0, 1, 1, {0, 3, 4, 7},
