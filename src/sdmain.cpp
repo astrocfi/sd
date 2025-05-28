@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2018  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.02"
-#define TIME_STAMP "wba@alum.mit.edu Dec 5 2017 $"
+#define VERSION_STRING "39.03"
+#define TIME_STAMP "wba@alum.mit.edu Mar 23 2018 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -1045,6 +1045,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
       printf("-color_by_couple_ygrb       similar to color_by_couple, but with ygrb\n");
       printf("-color_by_corner            similar to color_by_couple, but make corners match\n");
       printf("-no_sound                   do not make any noise when an error occurs\n");
+      printf("-keep_all_pictures          all pictures will be kept; no need to specify individually\n");
       printf("-no_intensify               show text in the normal shade instead of extra-bright\n");
       printf("-tab_changes_focus          (Sd only) make the tab key move keyboard focus\n");
       printf("-no_c3x                     C3X calls are off-list, even at C4\n");

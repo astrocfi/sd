@@ -51,6 +51,8 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
    uint32 p1, p2, p3;
    selector_kind s;
    int thing_to_test = 0;
+   int other_thing_to_test = 0;
+   int other_other_thing_to_test = 0;
    int tand_base = 0;
    uint32 selected_person_mask = ~0U;
 
@@ -221,12 +223,26 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
    case selector_center_girls:
       p3 = pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL);
       p2 = pid2 & (ID2_CENTER|ID2_END);
-      if      (p2 == ID2_END && p3 == ID3_PERM_BOY)     s = selector_end_boys;
-      else if (p2 == ID2_END && p3 == ID3_PERM_GIRL)    s = selector_end_girls;
-      else if (p2 == ID2_CENTER && p3 == ID3_PERM_BOY)  s = selector_center_boys;
-      else if (p2 == ID2_CENTER && p3 == ID3_PERM_GIRL) s = selector_center_girls;
-      else break;
-      goto eq_return;
+      if (ss->kind == s4x5 &&
+          (local_selector == selector_end_boys || local_selector == selector_end_girls)) {
+         // We claim we can identify these people as "ends"
+         if (((0x8C631 >> place) & 1) != 0) {
+            if (p3 == ID3_PERM_BOY) s = selector_end_boys;
+            else if (p3 == ID3_PERM_GIRL) s = selector_end_girls;
+            else break;
+            goto eq_return;
+         }
+         else
+            return false;
+      }
+      else {
+         if      (p2 == ID2_END && p3 == ID3_PERM_BOY)     s = selector_end_boys;
+         else if (p2 == ID2_END && p3 == ID3_PERM_GIRL)    s = selector_end_girls;
+         else if (p2 == ID2_CENTER && p3 == ID3_PERM_BOY)  s = selector_center_boys;
+         else if (p2 == ID2_CENTER && p3 == ID3_PERM_GIRL) s = selector_center_girls;
+         else break;
+         goto eq_return;
+      }
    case selector_beaus:
    case selector_belles:
       p2 = pid2 & (ID2_BEAU|ID2_BELLE);
@@ -710,6 +726,12 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       if ((ss->people[4].id1 & d_mask) == d_west) thing_to_test |= 1;
       if ((ss->people[1].id1 & d_mask) == d_east) thing_to_test |= 2;
       if ((ss->people[5].id1 & d_mask) == d_west) thing_to_test |= 2;
+      if ((ss->people[0].id1 & d_mask) == d_north) other_other_thing_to_test |= 1;
+      if ((ss->people[4].id1 & d_mask) == d_south) other_other_thing_to_test |= 1;
+      if ((ss->people[6].id1 & d_mask) == d_north) other_other_thing_to_test |= 2;
+      if ((ss->people[2].id1 & d_mask) == d_south) other_other_thing_to_test |= 2;
+      if ((ss->people[0].id1 & d_mask) == d_north) other_thing_to_test |= 1;
+      if ((ss->people[2].id1 & d_mask) == d_south) other_thing_to_test |= 2;
       goto finish_inoutpoint;
    case selector_bellepoint_tgl:
    case selector_bellepoint_intlk_tgl:
@@ -721,17 +743,33 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       if ((ss->people[4].id1 & d_mask) == d_east) thing_to_test |= 1;
       if ((ss->people[1].id1 & d_mask) == d_west) thing_to_test |= 2;
       if ((ss->people[5].id1 & d_mask) == d_east) thing_to_test |= 2;
+      if ((ss->people[0].id1 & d_mask) == d_south) other_other_thing_to_test |= 1;
+      if ((ss->people[4].id1 & d_mask) == d_north) other_other_thing_to_test |= 1;
+      if ((ss->people[6].id1 & d_mask) == d_south) other_other_thing_to_test |= 2;
+      if ((ss->people[2].id1 & d_mask) == d_north) other_other_thing_to_test |= 2;
+      if ((ss->people[0].id1 & d_mask) == d_south) other_thing_to_test |= 1;
+      if ((ss->people[2].id1 & d_mask) == d_north) other_thing_to_test |= 2;
    finish_inoutpoint:
+      if (ss->kind == s_qtag) {
+         if (thing_to_test == 1)
+            return (((0xDD >> place) & 1) != 0);
+         else if (thing_to_test == 2)
+            return (((0xEE >> place) & 1) != 0);
+      }
+      else if (ss->kind == s_ptpd) {
+         if (other_other_thing_to_test == 1)
+            return (((0xBB >> place) & 1) != 0);
+         else if (other_other_thing_to_test == 2)
+            return (((0xEE >> place) & 1) != 0);
+      }
+      else if (ss->kind == sdmd) {
+         if (other_thing_to_test == 1)
+            return (((0xB >> place) & 1) != 0);
+         else if (other_thing_to_test == 2)
+            return (((0xE >> place) & 1) != 0);
+      }
 
-      if (ss->kind != s_qtag) fail("Must have diamonds.");
-
-      if (thing_to_test == 1)
-         return (((0xDD >> place) & 1) != 0);
-      else if (thing_to_test == 2)
-         return (((0xEE >> place) & 1) != 0);
-      else
-         fail("Can't find designated point.");
-
+      fail("Can't find designated point.");
    case selector_inside_intlk_tgl:
    case selector_intlk_inside_tgl:
    case selector_inside_tgl:
@@ -1037,9 +1075,12 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 }
 
 
-static const int32 iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-static const int32 dbl_tab01[4] = {0, 1, 0, 1};
-static const int32 dbl_tab21[4] = {2, 1, 1, 0};
+static const int32 iden_tab[25] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                                   14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+static const int32 dbl_tab01[5] = {0, 1, 0, 1, 0};
+static const int32 dbl_tab21[5] = {2, 1, 1, 0, 0};
+static const int32 dbl_tab01n[5] = {0, 1, 0, 1, 1};
+static const int32 dbl_tab21n[5] = {2, 1, 1, 0, 1};
 static const int32 x22tabtandem[4]     = {3, 0, 1, 0};
 static const int32 x22tabantitandem[4] = {3, 2, 1, 0};
 static const int32 x22tabfacing[4]     = {3, 2, 1, 0x1B};
@@ -1057,14 +1098,22 @@ static const int32 semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE
 
 // Here are the predicates.  They will get put into the array "pred_table".
 
-/* ARGSUSED */
 static bool someone_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index ^ (*extra_stuff));
 }
 
-/* ARGSUSED */
+static bool sum_mod_real(setup *real_people, int real_index,
+   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+{
+   int otherindex = (*extra_stuff) - real_index;
+   int size = attr::slimit(real_people)+1;
+   if (otherindex >= size) otherindex -= size;
+   else if (otherindex < 0) otherindex += size;
+   return real_people->people[otherindex].id1 != 0;
+}
+
 static bool sum_mod_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
@@ -1074,6 +1123,8 @@ static bool sum_mod_selected(setup *real_people, int real_index,
    else if (otherindex < 0) otherindex += size;
    return selectp(real_people, otherindex);
 }
+
+
 
 static bool plus_mod_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
@@ -1095,6 +1146,17 @@ static bool plus_mod_selected_real(setup *real_people, int real_index,
       real_index + (*extra_stuff);
    if (otherindex >= size) otherindex -= size;
    return real_people->people[otherindex].id1 && selectp(real_people, otherindex);
+}
+
+static bool plus_mod_real(setup *real_people, int real_index,
+   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
+{
+   int size = attr::slimit(real_people)+1;
+   int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
+      real_index + size - (*extra_stuff) :
+      real_index + (*extra_stuff);
+   if (otherindex >= size) otherindex -= size;
+   return real_people->people[otherindex].id1 != 0;
 }
 
 
@@ -1315,6 +1377,7 @@ static bool always(setup *real_people, int real_index,
 static bool x22_cpltest(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff)
 {
+   if (extra_stuff[4]) warn(warn_suspect_destroyline);
    int other_index;
 
    switch (real_people->cmd.cmd_assume.assumption) {
@@ -1405,6 +1468,18 @@ static bool kicker_coming(setup *real_people, int real_index,
    if (real_people->kind == s1x2) {
       if ((real_people->people[real_index^1].id1 & 8) != 0 &&
           selectp(real_people, real_index^1))
+         return true;
+   }
+   else if (real_people->kind == s_spindle) {
+      if ((real_index & 3) != 3 &&
+          (real_people->people[6-real_index].id1 & 1) != 0 &&
+          selectp(real_people, 6-real_index))
+         return true;
+   }
+   else if (real_people->kind == sdmd) {
+      if ((real_index & 1) != 0 &&
+          (real_people->people[real_index^2].id1 & 1) != 0 &&
+          selectp(real_people, real_index^2))
          return true;
    }
    else {
@@ -1881,7 +1956,7 @@ static bool can_swing_left(setup *real_people, int real_index,
    int direction_index = northified_index - (*extra_stuff ? halfsize : 0);
    if (direction_index < 0) direction_index += size;
 
-   if (setup_attrs[real_people->kind].four_way_symmetry) {
+   if ((setup_attrs[real_people->kind].setup_props & SPROP_4_WAY_SYMMETRY) != 0) {
       // The external meschanism is being a little more helpful than we want.
       if (real_direction & 1) {
          direction_index -= 3*(halfsize>>1);
@@ -3059,8 +3134,35 @@ predicate_descriptor pred_table[] = {
 // End of predicates that force use of selector.
 #define SELECTOR_PREDS 52
       {always,                       (const int32 *) 0},         // "always"
+      {plus_mod_real,                 &iden_tab[1]},             // "person_real_plus1"
+      {plus_mod_real,                 &iden_tab[2]},             // "person_real_plus2"
+      {plus_mod_real,                 &iden_tab[3]},             // "person_real_plus3"
+      {plus_mod_real,                 &iden_tab[4]},             // "person_real_plus4"
+      {plus_mod_real,                 &iden_tab[5]},             // "person_real_plus5"
+      {plus_mod_real,                 &iden_tab[6]},             // "person_real_plus6"
+      {plus_mod_real,                 &iden_tab[7]},             // "person_real_plus7"
+      {plus_mod_real,                 &iden_tab[8]},             // "person_real_plus8"
+      {plus_mod_real,                 &iden_tab[9]},             // "person_real_plus9"
+      {plus_mod_real,                 &iden_tab[10]},            // "person_real_plus10"
+      {plus_mod_real,                 &iden_tab[11]},            // "person_real_plus11"
+      {plus_mod_real,                 &iden_tab[12]},            // "person_real_plus12"
+      {plus_mod_real,                 &iden_tab[13]},            // "person_real_plus13"
+      {plus_mod_real,                 &iden_tab[14]},            // "person_real_plus14"
+      {plus_mod_real,                 &iden_tab[15]},            // "person_real_plus15"
+      {plus_mod_real,                 &iden_tab[16]},            // "person_real_plus16"
+      {plus_mod_real,                 &iden_tab[17]},            // "person_real_plus17"
+      {plus_mod_real,                 &iden_tab[18]},            // "person_real_plus18"
+      {plus_mod_real,                 &iden_tab[19]},            // "person_real_plus19"
+      {sum_mod_real,                  &iden_tab[5]},             // "person_real_sum5"
+      {sum_mod_real,                  &iden_tab[8]},             // "person_real_sum8"
+      {sum_mod_real,                  &iden_tab[9]},             // "person_real_sum9"
+      {sum_mod_real,                  &iden_tab[11]},            // "person_real_sum11"
+      {sum_mod_real,                  &iden_tab[13]},            // "person_real_sum13"
+      {sum_mod_real,                  &iden_tab[24]},            // "person_real_sum24"
       {x22_cpltest,                    dbl_tab21},               // "2x2_miniwave"
       {x22_cpltest,                    dbl_tab01},               // "2x2_couple"
+      {x22_cpltest,                    dbl_tab21n},              // "2x2_miniwave_nocycle_wheel"
+      {x22_cpltest,                    dbl_tab01n},              // "2x2_couple_nocycle_wheel"
       {facing_test,                    x22tabtandem},            // "2x2_tandem_with_someone"
       {facing_test,                    x22tabantitandem},        // "2x2_antitandem"
       {facing_test,                    x22tabfacing},            // "2x2_facing_someone"

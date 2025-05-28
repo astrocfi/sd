@@ -121,7 +121,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
       canonicalize_rotation(result);
       result->turn_into_deadconc();
    }
-   else if (setup_attrs[result->kind].four_way_symmetry) {
+   else if ((setup_attrs[result->kind].setup_props & SPROP_4_WAY_SYMMETRY) != 0) {
       // The setup has 4-way symmetry.  We can canonicalize it so the
       // result rotation is zero.
       int i, rot, rot11, delta, bigd, i0, i1, i2, i3, j0, j1, j2, j3;
@@ -173,7 +173,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->rotation = 0;
    }
-   else if (setup_attrs[result->kind].no_symmetry) {
+   else if ((setup_attrs[result->kind].setup_props & SPROP_NO_SYMMETRY) != 0) {
    }
    else if (result->kind == s1x3) {
       if (result->rotation & 2) {
@@ -895,8 +895,18 @@ extern bool divide_for_magic(
          division_code = MAPCODE(s1x4,2,MPKIND__MAGIC,1);
          goto divide_us;
       }
+      else if ((heritflags_to_check & INHERITFLAG_INTLK) != 0 &&
+               (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
+         // User must actually want diamonds, only the points are present, and some code
+         // thought the right thing was to turn it into a 2x4.
+         expand::expand_setup(s_qtg_2x4, ss);
+         goto do_qtag;
+      }
+
       break;
    case s_qtag:
+   do_qtag:
+
       // Indicate that we have done a diamond division
       // and the concept name needs to be changed.
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__NEED_DIAMOND;
@@ -2098,6 +2108,7 @@ static const checkitem checktable[] = {
    {0x00550067, 0x08410200, s_qtag, 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
    {0x00620046, 0x01080842, sd2x5, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00460062, 0x14100100, sd2x5, 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00A20046, 0x010C0862, sd2x7, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00660055, 0x01000480, s_2x1dmd, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00950026, 0x20008200, s_1x2dmd, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
@@ -2267,6 +2278,8 @@ static const checkitem checktable[] = {
    {0x00620004, 0x01000400, s1x4, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00040062, 0x08000200, s1x4, 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00550026, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00000005, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00550004, 0x20020200, sdmd, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00440004, 0x00020001, s1x3, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00040044, 0x00040001, s1x3, 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00220004, 0x01000000, s1x2, 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
@@ -2654,11 +2667,15 @@ static int matrixmove(
             thisrec->deltay *= count;
          }
          else if (flags & MTX_ADD_2N) {
-            int count = current_options.number_fields & NUMBER_FIELD_MASK;
+            int count = (current_options.number_fields & NUMBER_FIELD_MASK) << 2;
             if (thisrec->deltax < 0)
-               thisrec->deltax -= (count << 2);
+               thisrec->deltax -= count;
+            else if (thisrec->deltax > 0)
+               thisrec->deltax += count;
+            else if (thisrec->deltay < 0)
+               thisrec->deltay -= count;
             else
-               thisrec->deltax += (count << 2);
+               thisrec->deltay += count;
          }
       }
    }
@@ -2955,6 +2972,10 @@ static void make_matrix_chains(
 }
 
 
+// Return value is one of:
+//    cost          the (nonnegative) cost of the unique best pairing of jaywalkers  
+//    -person-1     the indicated person could not find anyone with whom to jaywalk
+//    -0x1000       ambiguous: two or more equally good "best" solutions were found
 static int jaywalk_recurse(
    matrix_rec matrix_info[],
    int start_index,
@@ -2964,6 +2985,7 @@ static int jaywalk_recurse(
    int i, j, k;
    matrix_rec best_info[matrix_info_capacity+1];
    int best_cost;
+   bool ambiguous;
 
    // Pre-clean: Clear out any links that aren't bidirectional.
    // First, mark all targets.
@@ -3042,10 +3064,14 @@ static int jaywalk_recurse(
                cost_or_error_code = jaywalk_recurse(temp_info, i+1, nump, flags);
 
                if (cost_or_error_code >= 0) {
-                  // Found a solution.  Save the best solution.
+                  // Found a solution.  Save the best solution.  Detect ambiguity.
                   if (!found_a_solution || cost_or_error_code < best_cost) {
                      for (j=0; j<nump; j++) best_info[j] = temp_info[j];
                      best_cost = cost_or_error_code;
+                     ambiguous = false;
+                  }
+                  else if (found_a_solution && cost_or_error_code == best_cost) {
+                     ambiguous = true;
                   }
 
                   found_a_solution = true;
@@ -3056,7 +3082,8 @@ static int jaywalk_recurse(
          // Finished the K scan.  Did any recursion find anything?
          // (If more than 1 thing was found, they were compared, and we have the best.)
 
-         if (found_a_solution) {
+         if (ambiguous) return -0x1000;
+         else if (found_a_solution) {
             for (j=0; j<nump; j++) matrix_info[j] = best_info[j];
             return best_cost;
          }
@@ -3091,7 +3118,9 @@ static void process_jaywalk_chains(
    int i, j;
 
    int errnum = jaywalk_recurse(matrix_info, 0, nump, flags);
-   if (errnum < 0)
+   if (errnum == -0x1000)
+      fail("This jaywalk is ambiguous.");
+   else if (errnum < 0)
       failp(matrix_info[-errnum-1].id1, "can't find person to jaywalk with.");
 
    for (i=0; i<nump; i++) {
@@ -4230,6 +4259,12 @@ void reduce_fraction(int &a, int &b)
                For a 5-part call ABCDE:
                   LATEFROMTOREV(K=1,N=2) means do the last half of B, then CD
 
+      (7) CMD_FRAC_CODE_SKIP_K_MINUS_HALF
+                  Same as CMD_FRAC_CODE_FROMTOREV, but do only half of the last part.
+               Do parts from N up through size-K, but only half of part size-K.
+               For a 5-part call ABCDE:
+                  CMD_FRAC_CODE_SKIP_K_MINUS_HALF(K=0,N=1) means do ABCD plus half of E
+
    The output of this procedure, after digesting the above, is a "fraction_info"
    structure, whose important items are:
 
@@ -4495,7 +4530,7 @@ void fraction_info::get_fraction_info(
          break;
       case CMD_FRAC_CODE_FROMTO:
 
-         /* We are doing parts from (K+1) through N. */
+         // We are doing parts from (K+1) through N.
 
          if (m_reverse_order) {
             highdel = my_start_point-this_part+1;
@@ -4528,7 +4563,7 @@ void fraction_info::get_fraction_info(
          break;
       case CMD_FRAC_CODE_FROMTOREV:
 
-         /* We are doing parts from N through (end-K). */
+         // We are doing parts from N through (end-K).
 
          if (m_reverse_order) {
             int lowdel = 1-this_part;
@@ -4536,9 +4571,9 @@ void fraction_info::get_fraction_info(
             m_highlimit += kvalue;
             my_start_point += lowdel;
 
-            /* Be sure that enough parts are visible, and that we are within bounds.
-               If lowdel is zero, we weren't cutting the upper limit, so it's
-               allowed to be beyond the limit of part visibility. */
+            // Be sure that enough parts are visible, and that we are within bounds.
+            // If lowdel is zero, we weren't cutting the upper limit, so it's
+            // allowed to be beyond the limit of part visibility.
 
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4551,9 +4586,9 @@ void fraction_info::get_fraction_info(
             m_highlimit -= kvalue;
             my_start_point += this_part-1;
 
-            /* Be sure that enough parts are visible, and that we are within bounds.
-               If kvalue is zero, we weren't cutting the upper limit, so it's
-               allowed to be beyond the limit of part visibility. */
+            // Be sure that enough parts are visible, and that we are within bounds.
+            // If kvalue is zero, we weren't cutting the upper limit, so it's
+            // allowed to be beyond the limit of part visibility.
 
             if ((m_highlimit < m_client_total-available_final_fractions && kvalue != 0) ||
                 my_start_point > available_initial_fractions)
@@ -4565,7 +4600,7 @@ void fraction_info::get_fraction_info(
          break;
       case CMD_FRAC_CODE_FROMTOREVREV:
 
-         /* We are doing parts from (end-N+1 through (end-K). */
+         // We are doing parts from (end-N+1 through (end-K).
 
          if (m_reverse_order) {
             int highdel = my_start_point+1-m_highlimit-this_part;
@@ -4573,9 +4608,9 @@ void fraction_info::get_fraction_info(
             m_highlimit += kvalue;
             my_start_point -= highdel;
 
-            /* Be sure that enough parts are visible, and that we are within bounds.
-               If lowhdel is zero, we weren't cutting the upper limit, so it's
-               allowed to be beyond the limit of part visibility. */
+            // Be sure that enough parts are visible, and that we are within bounds.
+            // If lowhdel is zero, we weren't cutting the upper limit, so it's
+            // allowed to be beyond the limit of part visibility.
 
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4588,9 +4623,9 @@ void fraction_info::get_fraction_info(
             my_start_point = m_highlimit-this_part;
             m_highlimit -= kvalue;
 
-            /* Be sure that enough parts are visible, and that we are within bounds.
-               If kvalue is zero, we weren't cutting the upper limit, so it's
-               allowed to be beyond the limit of part visibility. */
+            // Be sure that enough parts are visible, and that we are within bounds.
+            // If kvalue is zero, we weren't cutting the upper limit, so it's
+            // allowed to be beyond the limit of part visibility.
 
             if ((m_highlimit > available_initial_fractions && kvalue != 0) ||
                 my_start_point > available_initial_fractions)
@@ -4602,7 +4637,7 @@ void fraction_info::get_fraction_info(
          break;
       case CMD_FRAC_CODE_FROMTOMOST:
 
-         /* We are doing parts from (K+1) through N, but only doing half of part N. */
+         // We are doing parts from (K+1) through N, but only doing half of part N.
 
          if (m_reverse_order) {
             highdel = (my_start_point-this_part+1);
@@ -4618,7 +4653,7 @@ void fraction_info::get_fraction_info(
                fail("This call can't be fractionalized.");
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
-            /* Be sure that we actually do the part that we take half of. */
+            // Be sure that we actually do the part that we take half of.
             if (my_start_point < m_highlimit)
                fail("This call can't be fractionalized this way.");
          }
@@ -4635,7 +4670,7 @@ void fraction_info::get_fraction_info(
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
-            /* Be sure that we actually do the part that we take half of. */
+            // Be sure that we actually do the part that we take half of.
             if (my_start_point >= m_highlimit)
                fail("This call can't be fractionalized this way.");
          }
@@ -4643,7 +4678,7 @@ void fraction_info::get_fraction_info(
          break;
       case CMD_FRAC_CODE_LATEFROMTOREV:
 
-         /* Like FROMTOREV, but get a late start on the first part. */
+         // Like FROMTOREV, but get a late start on the first part.
 
          if (m_reverse_order) {
             int lowdel = 1-this_part;
@@ -4652,9 +4687,9 @@ void fraction_info::get_fraction_info(
             my_start_point += lowdel;
             m_do_half_of_last_part = FRAC_FRAC_LASTHALF_VALUE;
 
-            /* Be sure that enough parts are visible, and that we are within bounds.
-               If lowdel is zero, we weren't cutting the upper limit, so it's
-               allowed to be beyond the limit of part visibility. */
+            // Be sure that enough parts are visible, and that we are within bounds.
+            // If lowdel is zero, we weren't cutting the upper limit, so it's
+            // allowed to be beyond the limit of part visibility.
 
             if (my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
@@ -4662,7 +4697,7 @@ void fraction_info::get_fraction_info(
             if ((my_start_point >= available_initial_fractions && lowdel != 0) ||
                 m_highlimit > available_initial_fractions)
                fail("This call can't be fractionalized.");
-            /* Be sure that we actually do the part that we take half of. */
+            // Be sure that we actually do the part that we take half of.
             if (my_start_point < m_highlimit)
                fail("This call can't be fractionalized this way.");
          }
@@ -4671,19 +4706,39 @@ void fraction_info::get_fraction_info(
             my_start_point += this_part-1;
             m_do_last_half_of_first_part = FRAC_FRAC_LASTHALF_VALUE;
 
-            /* Be sure that enough parts are visible, and that we are within bounds.
-               If kvalue is zero, we weren't cutting the upper limit, so it's
-               allowed to be beyond the limit of part visibility. */
+            // Be sure that enough parts are visible, and that we are within bounds.
+            // If kvalue is zero, we weren't cutting the upper limit, so it's
+            // allowed to be beyond the limit of part visibility.
 
             if ((m_highlimit > available_initial_fractions && kvalue != 0) ||
                 my_start_point > available_initial_fractions)
                fail("This call can't be fractionalized.");
             if (m_highlimit > m_client_total || my_start_point > m_client_total)
                fail("The indicated part number doesn't exist.");
-            /* Be sure that we actually do the part that we take half of. */
+            // Be sure that we actually do the part that we take half of.
             if (my_start_point >= m_highlimit)
                fail("This call can't be fractionalized with this fraction.");
          }
+         break;
+      case CMD_FRAC_CODE_SKIP_K_MINUS_HALF:
+
+         // We are doing parts from N through (end-K), but only half of (end-K).
+
+         if (m_reverse_order)
+            fail("This call can't be fractionalized.");
+
+         m_highlimit -= kvalue;
+         my_start_point += this_part-1;
+
+         // Be sure that enough parts are visible, and that we are within bounds.
+
+         if ((m_highlimit < m_client_total-available_final_fractions) ||
+             my_start_point > available_initial_fractions)
+            fail("This call can't be fractionalized.");
+         if (m_highlimit > m_client_total || my_start_point > m_client_total)
+            fail("The indicated part number doesn't exist.");
+
+         m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
          break;
       default:
          fail("Internal error: bad fraction code.");
@@ -7176,7 +7231,7 @@ static bool do_forced_couples_stuff(
    ss->cmd.do_couples_her8itflags &= ~mxnflags;
 
    if (mxnflags != INHERITFLAG_SINGLE) {
-      tandem_couples_move(ss, selector_uninitialized, 0, 0, 0,
+      tandem_couples_move(ss, who_uninit_thing, 0, 0, 0,
                           tandem_key_cpls, mxnflags, true, result);
       return true;
    }
@@ -7651,7 +7706,7 @@ static void move_with_real_call(
          If so, be sure the setup is divided into 1x4's or diamonds.
          But don't do it if something like "magic" is still unprocessed. */
 
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~callflagsh)) == 0) {
+      if ((ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_YOYOETCMASK))) == 0) {
          // Some schemata change if the given number is odd.  For touch by N x <call>.
          if (current_options.howmanynumbers != 0 && (current_options.number_fields & 1)) {
             if (the_schema == schema_single_concentric_together_if_odd)
@@ -8070,7 +8125,7 @@ void move(
       if the incoming 4x4 did not have its rotation field equal to zero, as is required
       when in canonical form.  So we check this. */
 
-   if (setup_attrs[ss->kind].four_way_symmetry && ss->rotation != 0)
+   if ((setup_attrs[ss->kind].setup_props & SPROP_4_WAY_SYMMETRY) != 0 && ss->rotation != 0)
       fail("There is a bug in 4 way canonicalization -- please report this sequence.");
 
    // See if there is a restrained concept that has been released.

@@ -40,7 +40,11 @@
    open_session
 and the following external variables:
    null_options
-   centers_thing
+   who_centers_thing
+   who_center6_thing
+   who_outer6_thing
+   who_some_thing
+   who_uninit_thing
    selector_for_initialize
    direction_for_initialize
    number_for_initialize
@@ -68,9 +72,7 @@ int *color_index_list;
 int color_randomizer[4];
 
 
-
 call_conc_option_state null_options;
-who_list centers_thing;
 
 
 // This gets temporarily allocated.  It persists through the entire initialization.
@@ -1985,6 +1987,13 @@ static int couple_colors_rgyb[8] = {2, 2, 3, 3, 4, 4, 5, 5};
 static int couple_colors_ygrb[8] = {4, 4, 3, 3, 2, 2, 5, 5};
 
 
+who_list who_centers_thing = {{selector_centers, selector_uninitialized, selector_uninitialized}, 1};
+who_list who_center6_thing = {{selector_center6, selector_uninitialized, selector_uninitialized}, 1};
+who_list who_outer6_thing = {{selector_outer6, selector_uninitialized, selector_uninitialized}, 1};
+who_list who_some_thing = {{selector_some, selector_uninitialized, selector_uninitialized}, 1};
+who_list who_uninit_thing = {{selector_uninitialized, selector_uninitialized, selector_uninitialized}, 1};
+
+
 int useful_concept_indices[UC_extent];
 
 
@@ -2208,9 +2217,6 @@ bool open_session(int argc, char **argv)
 
    general_initialize();
    null_options.initialize();
-   centers_thing.initialize();
-   centers_thing.who[0] = selector_centers;
-   centers_thing.who_stack_ptr = 1;
 
    /* If we have a calling level at this point, fill in the output file name.
       If we do not have a calling level, we will either get it from the session
@@ -2645,6 +2651,12 @@ bool open_session(int argc, char **argv)
                global_cache_miss_reason[0] = jj+1;
                global_cache_miss_reason[1] = mapped_cache[jj];
                global_cache_miss_reason[2] = cache_keys[jj];
+
+               // More diagnostic stuff -- num_calls[any], and checksum.
+               global_cache_miss_reason[3] = mapped_cache[0];
+               global_cache_miss_reason[4] = cache_keys[0];
+               global_cache_miss_reason[5] = mapped_cache[4];
+               global_cache_miss_reason[6] = cache_keys[4];
             }
          }
       }

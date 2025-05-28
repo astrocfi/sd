@@ -217,8 +217,8 @@ static void do_concept_tandem(
 
    tandem_couples_move(
      ss,
-     (parseptr->concept->arg3 & 0x100) ? parseptr->options.who.who[0] :
-     ((parseptr->concept->arg3 & 0x200) ? selector_some : selector_uninitialized),
+     (parseptr->concept->arg3 & 0x100) ? parseptr->options.who :
+     ((parseptr->concept->arg3 & 0x200) ? who_some_thing : who_uninit_thing),
      (parseptr->concept->arg3 & 0xF0) >> 4, // (fractional) twosome info
      parseptr->options.number_fields,
      parseptr->concept->arg3 & 0xF,          // normal/phantom/gruesome etc.
@@ -3691,7 +3691,7 @@ static void do_concept_crazy(
          e_numer = 0;
          highlimit = this_part;
          break;
-      case CMD_FRAC_CODE_FROMTOREV:
+      case CMD_FRAC_CODE_FROMTOREV: case CMD_FRAC_CODE_SKIP_K_MINUS_HALF:
          // Request is to do everything strictly after part this_part-1.
          i = this_part-1;
          break;
@@ -3708,7 +3708,7 @@ static void do_concept_crazy(
       default:
          // If the "K" field ("part2") is nonzero, maybe we can still do something.
          switch (incomingfracs.flags & CMD_FRAC_CODE_MASK) {
-         case CMD_FRAC_CODE_FROMTOREV:
+         case CMD_FRAC_CODE_FROMTOREV: case CMD_FRAC_CODE_SKIP_K_MINUS_HALF:
             i = this_part-1;
             highlimit -= (incomingfracs.flags & CMD_FRAC_PART2_MASK) / CMD_FRAC_PART2_BIT;
             break;
@@ -6296,18 +6296,21 @@ static void do_concept_ferris(
       static const expand::thing mapr20 = {{2,  4, 9, 11,  8, 10, 3, 5}, s_hrglass, s_hsqtag, 1};
       static const expand::thing mapr40 = {{2, 10, 3, 11,  8,  4, 9, 5}, s_hrglass, s_hsqtag, 1};
       static const expand::thing mapr80 = {{4,  1, 6, 11, 10,  7, 0, 5}, s_hrglass, s_hsqtag, 1};
+      static const expand::thing mapr100 = {{-1, -1, 2, 3, -1, -1, 8, 9}, s_spindle, s3x4, 0};
+      static const expand::thing mapr200 = {{1, -1, -1, 6, 7, -1, -1, 0}, s_spindle, s3x4, 0};
 
       uint32 directions;
       uint32 livemask;
       big_endian_get_directions(ss, directions, livemask);
 
-      if (((ss->kind != s_qtag) && (ss->kind != s_hrglass)) || ((directions & 0x5454) != 0))
+      if ((((ss->kind != s_qtag) && (ss->kind != s_hrglass)) || ((directions & 0x5454) != 0)) &&
+          (((ss->kind != s_spindle)) || ((directions & 0x4545) != 0)))
          fail("Must have quarter-tag or hourglass-like setup to do this concept.");
 
       uint32 whatcanitbe = ~0;
       uint32 t;
 
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MAGIC)) {
+      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MAGIC)) { // qtag and hrglass only.
          if ((t = ss->people[0].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x4;
          if ((t = ss->people[4].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x4;
          if ((t = ss->people[2].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x4;
@@ -6316,6 +6319,16 @@ static void do_concept_ferris(
          if ((t = ss->people[5].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x8;
          if ((t = ss->people[2].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x8;
          if ((t = ss->people[6].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x8;
+      }
+      else if (ss->kind == s_spindle) {
+         if ((t = ss->people[2].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[6].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[3].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[7].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x1;
+         if ((t = ss->people[0].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x2;
+         if ((t = ss->people[4].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x2;
+         if ((t = ss->people[3].id1) && ((t ^ d_north) & d_mask)) whatcanitbe &= 0x2;
+         if ((t = ss->people[7].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x2;
       }
       else {
          if ((t = ss->people[1].id1) && ((t ^ d_south) & d_mask)) whatcanitbe &= 0x1;
@@ -6329,6 +6342,7 @@ static void do_concept_ferris(
       }
 
       if (ss->kind == s_hrglass) whatcanitbe <<= 4;
+      else if (ss->kind == s_spindle) whatcanitbe <<= 8;
 
       switch (whatcanitbe) {
       case 0x1: map_ptr = &mapr1; break;
@@ -6339,6 +6353,8 @@ static void do_concept_ferris(
       case 0x20: map_ptr = &mapr20; break;
       case 0x40: map_ptr = &mapr40; break;
       case 0x80: map_ptr = &mapr80; break;
+      case 0x100: map_ptr = &mapr100; break;
+      case 0x200: map_ptr = &mapr200; break;
       }
 
       ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_MAGIC);
@@ -6701,6 +6717,11 @@ static void do_concept_meta(
          ss->cmd.cmd_fraction.flags += CMD_FRAC_PART_BIT;
       else if (corefracs.is_null_with_masked_flags(
                   CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK,
+                  CMD_FRAC_CODE_SKIP_K_MINUS_HALF))
+         // Same as above.
+         ss->cmd.cmd_fraction.flags += CMD_FRAC_PART_BIT;
+      else if (corefracs.is_null_with_masked_flags(
+                  CMD_FRAC_REVERSE | CMD_FRAC_CODE_MASK,
                   CMD_FRAC_REVERSE | CMD_FRAC_CODE_FROMTOREV))
          // If we are already doing just parts N and later while reversed, just bump K.
          ss->cmd.cmd_fraction.flags += CMD_FRAC_PART2_BIT;
@@ -6837,9 +6858,6 @@ static void do_concept_meta(
             while (--rountrip_nesting_count > 0)
                howmanyparts = howmanyparts*2-1;
 
-            /*
-            int howmanyparts_in_subcall = howmanyparts;
-            */
             howmanyparts = howmanyparts*2-1;
 
             // We now have the number of parts for the complete roundtrip.
@@ -6858,16 +6876,6 @@ static void do_concept_meta(
 
             NN = zzz.m_fetch_index;
             KK = howmanyparts-zzz.m_highlimit;
-
-            /*
-              // Require at least one part of the first trip.
-              if (NN >= howmanyparts_in_subcall-1)
-              fail("Sorry, fraction is too complicated.");
-
-             // Require at least one part of the second trip.
-             if (KK >= howmanyparts_in_subcall-1)
-             fail("Sorry, fraction is too complicated.");
-            */
          }
 
          // Now do the roundtrip, skipping the first NN parts and the last KK parts.  Of the whole roundtrip.
@@ -7853,6 +7861,20 @@ static void do_concept_meta(
             // Set the fractionalize field to execute all but the last part of the call.
 
             result->cmd = nocmd;
+
+            // Look for "finally 1/2 ...".  If so, we can do something direct, without the need to
+            // break things up.  Breaking things up could be injurious to concepts like "once
+            // removed".  Cf. test t14t.
+            if ((yescmd.cmd_misc3_flags & (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__PUT_FRAC_ON_FIRST)) ==
+                (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__PUT_FRAC_ON_FIRST) &&
+                yescmd.restrained_concept->concept->kind == concept_fractional &&
+                yescmd.restrained_concept->concept->arg1 == 0 &&
+                yescmd.restrained_concept->options.number_fields == NUMBER_FIELDS_2_1) {
+               result->cmd.cmd_fraction.set_to_null_with_flags(
+                  FRACS(CMD_FRAC_CODE_SKIP_K_MINUS_HALF,1,0));
+               goto finish_it;
+            }
+
             result->cmd.cmd_fraction.set_to_null_with_flags(
                FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_BREAKING_UP);
             do_call_in_series_and_update_bits(result);
@@ -8221,6 +8243,13 @@ static void do_concept_replace_nth_part(
                FRACS(CMD_FRAC_CODE_FROMTOREV,1,1))) {
       // Don't do the last part.
       frac_key2.fraction = 0;
+   }
+   else if (concept_key == 3 &&
+            incoming_fracs.is_null_with_masked_flags(
+               CMD_FRAC_CODE_MASK | CMD_FRAC_PART_MASK | CMD_FRAC_PART2_MASK,
+               FRACS(CMD_FRAC_CODE_SKIP_K_MINUS_HALF,1,0))) {
+      // Do only half of the last part.
+      frac_key2.repackage(1, 2, 3, 4);
    }
    else if (!incoming_fracs.is_null())
       fail("Can't stack meta or fractional concepts.");

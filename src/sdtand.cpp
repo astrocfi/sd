@@ -594,6 +594,8 @@ static tm_thing maps_isearch_tglsome[] = {
 
    {{7, 5, 3, 1,       -1, 0, -1, 4,     -1, 6, -1, 2},                       0,04000,        0,         4, 0,  s1x4,  s_nxtrglcw},
    {{7, 0, 3, 4,       -1, 6, -1, 2,     -1, 1, -1, 5},                       0,00040,        0,         4, 0,  s1x4,  s_nxtrglccw},
+   {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0,00400,        0,         4, 0,  sdmd,  s_ntrglcw},
+   {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0,00004,        0,         4, 0,  sdmd,  s_ntrglccw},
    {{6, 1, 2, 5,       0, -1, 4, -1,     7, -1, 3, -1},                       0,00400,        0,         4, 0,  s1x4,  s_nptrglcw},
    {{0, 2, 4, 6,       7, -1, 3, -1,     1, -1, 5, -1},                       0,00004,        0,         4, 0,  s1x4,  s_nptrglccw},
 
@@ -776,8 +778,8 @@ static void initialize_one_table(tm_thing *map_start, int m_people_per_group)
       // Yes, we could handle this better on a 64-bit system.
       map_search->outunusedmask = outsize >= 32 ? 0xFFFFFFFF : ((1U << outsize)-1);
 
-      uint32 very_special = ((setup_attrs[map_search->outsetup].four_way_symmetry) &&
-                             (setup_attrs[map_search->insetup].no_symmetry) &&
+      uint32 very_special = (((setup_attrs[map_search->outsetup].setup_props & SPROP_4_WAY_SYMMETRY) != 0) &&
+                             ((setup_attrs[map_search->insetup].setup_props & SPROP_NO_SYMMETRY) != 0) &&
                              (map_search->rot & 1) != 0) ? ((1U << outsize)-1) : 0;
 
       for (i=0; i<map_search->limit; i++) {
@@ -1315,7 +1317,7 @@ bool tandrec::pack_us(
 
 extern void tandem_couples_move(
    setup *ss,
-   selector_kind selector,
+   who_list selector,
    int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
                           // also, 4 bit => dynamic, 8 bit => reverse dynamic
    int fraction_fields,   // number fields, if doing fractional twosome/solid
@@ -1351,6 +1353,10 @@ extern void tandem_couples_move(
    bool dead_xconc = false;
    int fudgy2x3count = 0;
    int fudgy2x3limit = 0;
+   // <0 -> not checking, even if someone turns on a low bit.
+   // =0 -> subject to checking, but not enabled now.
+   // >0 -> checking wave-based/tandem-based correctness, based on which low bit is set.
+   int triangle_orientation_checker = ~0;
    tm_thing *our_map_table;
    int finalcount;
    setup ttt[8];
@@ -1382,7 +1388,7 @@ extern void tandem_couples_move(
    //   THREESOME @9/@9 SOLID
 
    if (key == tandem_key_special_triangles) {
-      switch (selector) {
+      switch (selector.who[0]) {
       case selector_inside_tgl:
          key = tandem_key_inside_tgls;
          break;
@@ -1399,10 +1405,10 @@ extern void tandem_couples_move(
          fail("Can't use this designator.");   // This will happen if say "girls work threesome".
       }
 
-      selector = selector_uninitialized;
+      selector = who_uninit_thing;
    }
-   else if (selector == selector_inside_tgl || selector == selector_outside_tgl ||
-            selector == selector_inpoint_tgl || selector == selector_outpoint_tgl) {
+   else if (selector.who[0] == selector_inside_tgl || selector.who[0] == selector_outside_tgl ||
+            selector.who[0] == selector_inpoint_tgl || selector.who[0] == selector_outpoint_tgl) {
       // If it wasn't a couples/tandem concept, the special selectors are not allowed.
       fail("Can't use this designator.");   // This will happen if say "inside triangles work tandem".
    }
@@ -1580,84 +1586,107 @@ extern void tandem_couples_move(
       no_unit_symmetry = true;
    }
    else if (key >= tandem_key_outpoint_tgls) {
+      uint32 tbonetest;
+      int t;
       people_per_group = 3;
       our_map_table = maps_isearch_tglsome;
       no_unit_symmetry = true;
-      if (key == tandem_key_outside_tgls)
-         selector = selector_outer6;
-      else if (key == tandem_key_inside_tgls)
-         selector = selector_center6;
-      else if (key == tandem_key_wave_tgls || key == tandem_key_tand_tgls) {
-         if (ss->kind == s_hrglass) {
-            uint32 tbonetest =
-               ss->people[0].id1 | ss->people[1].id1 |
-               ss->people[4].id1 | ss->people[5].id1;
 
-            if ((tbonetest & 011) == 011 || ((key ^ tbonetest) & 1))
-               fail("Can't find the indicated triangles.");
+      // We need to exclude ptpd (for now) because it has bot inside and outside triangles.
+      if (key == tandem_key_wave_tgls || key == tandem_key_tand_tgls ||
+          (key == tandem_key_outside_tgls && 
+           (setup_attrs[ss->kind].setup_props & (SPROP_OUTSIDE_TRIANGLES|SPROP_INSIDE_TRIANGLES)) == SPROP_OUTSIDE_TRIANGLES))
+         triangle_orientation_checker = 0;
 
-            special_mask = 0x44;   // The triangles have to be these.
-         }
-         else if (ss->kind == s_bone) {
-            uint32 tbonetest =
-               ss->people[0].id1 | ss->people[1].id1 |
-               ss->people[4].id1 | ss->people[5].id1;
+      switch (ss->kind) {
+      case s_hrglass:
+         tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         special_mask = 0x44;
+         triangle_orientation_checker |= 2;
+         break;
+      case s_spindle:
+         tbonetest = ss->people[0].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[6].id1;
+         special_mask = 0x22;
+         triangle_orientation_checker |= 1;
+         break;
+      case s_ntrglcw: case s_nptrglcw:
+         tbonetest = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
+         special_mask = 0x22;
+         triangle_orientation_checker |= 2;
+         break;
+      case s_ntrglccw: case s_nptrglccw:
+         tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         special_mask = 0x44;
+         triangle_orientation_checker |= 2;
+         break;
+      case s_nxtrglcw:
+         tbonetest = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+         special_mask = 0x88;
+         triangle_orientation_checker |= 2;
+         break;
+      case s_nxtrglccw:
+         tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         special_mask = 0x88;
+         triangle_orientation_checker |= 2;
+         break;
+      case s_bone:
+         tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         special_mask = 0x88;
+         triangle_orientation_checker |= 1;
+         break;
+      case s_rigger:
+         tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         special_mask = 0x44;
+         triangle_orientation_checker |= 1;
+         break;
+      case s_dhrglass:
+         tbonetest = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         special_mask = 0x88;
+         triangle_orientation_checker |= 1;
+         break;
+      case s_galaxy:
+         tbonetest = ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1;
+         special_mask = ((key ^ tbonetest) & 1) ? 0x44 : 0x11;
 
-            if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
-               fail("Can't find the indicated triangles.");
+         if ((tbonetest & 011) == 011)
+            fail("Can't find the indicated triangles.");
 
-            special_mask = 0x88;   // The triangles have to be these.
-         }
-         else if (ss->kind == s_rigger) {
-            uint32 tbonetest =
-               ss->people[0].id1 | ss->people[1].id1 |
-               ss->people[4].id1 | ss->people[5].id1;
+         break;
+      case s_c1phan:
+         tbonetest = or_all_people(ss);
 
-            if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
-               fail("Can't find the indicated triangles.");
+         t = key;
 
-            special_mask = 0x44;   // The triangles have to be these.
-         }
-         else if (ss->kind == s_dhrglass) {
-            uint32 tbonetest =
-               ss->people[0].id1 | ss->people[1].id1 |
-               ss->people[4].id1 | ss->people[5].id1;
+         if ((tbonetest & 010) == 0) t ^= 1;
+         else if ((tbonetest & 1) != 0)
+            fail("Can't find the indicated triangles.");
 
-            if ((tbonetest & 011) == 011 || !((key ^ tbonetest) & 1))
-               fail("Can't find the indicated triangles.");
+         special_mask = (t&1) ? 0x2121 : 0x1212;
 
-            special_mask = 0x88;   // The triangles have to be these.
-         }
-         else if (ss->kind == s_galaxy) {
-            uint32 tbonetest =
-               ss->people[1].id1 | ss->people[3].id1 |
-               ss->people[5].id1 | ss->people[7].id1;
-
-            if ((tbonetest & 011) == 011)
-               fail("Can't find the indicated triangles.");
-
-            if ((key ^ tbonetest) & 1)
-               special_mask = 0x44;
-            else
-               special_mask = 0x11;
-         }
-         else if (ss->kind == s_c1phan) {
-            int t = key;
-
-            uint32 tbonetest = or_all_people(ss);
-
-            if ((tbonetest & 010) == 0) t ^= 1;
-            else if ((tbonetest & 1) != 0)
-               fail("Can't find the indicated triangles.");
-
-            if (t&1) special_mask = 0x2121;
-            else     special_mask = 0x1212;
-         }
-         else
-            fail("Can't find these triangles.");
+         break;
+      default:
+         if (key == tandem_key_wave_tgls || key == tandem_key_tand_tgls)
+            fail("Can't find the indicated triangles.");
       }
-      else if ((key == tandem_key_outpoint_tgls || key == tandem_key_inpoint_tgls) &&
-               ss->kind == s_qtag) {
+
+      if (triangle_orientation_checker > 0 && (key == tandem_key_wave_tgls || key == tandem_key_tand_tgls)) {
+         if ((tbonetest & 011) == 011 || ((key ^ tbonetest ^ triangle_orientation_checker) & 1))
+            fail("Can't find the indicated triangles.");
+      }
+
+      if (key != tandem_key_wave_tgls && key != tandem_key_tand_tgls && triangle_orientation_checker < 0)
+         special_mask = 0;
+
+      if (key == tandem_key_outside_tgls) {
+         if (triangle_orientation_checker < 0) selector = who_outer6_thing;
+      }
+      else if (key == tandem_key_inside_tgls) {
+         if (triangle_orientation_checker < 0) selector = who_center6_thing;
+      }
+      else if (key == tandem_key_wave_tgls || key == tandem_key_tand_tgls) {
+         // No further action.
+      }
+      else if ((key == tandem_key_outpoint_tgls || key == tandem_key_inpoint_tgls) && ss->kind == s_qtag) {
          if (key == tandem_key_inpoint_tgls) {
             if (     (ss->people[0].id1 & d_mask) == d_east &&
                      (ss->people[1].id1 & d_mask) != d_west &&
@@ -1686,9 +1715,9 @@ extern void tandem_couples_move(
          if (special_mask == 0)
             fail("Can't find designated point.");
       }
-      else if (key != tandem_key_anyone_tgls || ss->kind != s_c1phan)
-         // For <anyone>-based triangles in C1-phantom,
-         // we just use whatever selector was given.
+      else if (key != tandem_key_anyone_tgls)
+         // For <anyone>-based triangles, usually in a C1-phantom,
+         // but could be stuff like s_nptrglcw; we just use whatever selector was given.
          fail("Can't find these triangles.");
    }
    else if (key == tandem_key_diamond) {
@@ -1738,8 +1767,8 @@ extern void tandem_couples_move(
    // Find out who is selected, if this is a "so-and-so are tandem".
    saved_selector = current_options.who;
 
-   if (selector != selector_uninitialized)
-      current_options.who.who[0] = selector;
+   if (selector.who[0] != selector_uninitialized)
+      current_options.who = selector;
 
    for (i=0, jbit=1; i<=attr::slimit(ss); i++, jbit<<=1) {
       uint32 p = ss->people[i].id1;
@@ -1747,7 +1776,7 @@ extern void tandem_couples_move(
          allmask |= jbit;
          // We allow a "special" mask to override the selector.
          // We also tell "selectp" that "some" is a legal selector.
-         if ((selector != selector_uninitialized && !selectp(ss, i, people_per_group)) ||
+         if ((selector.who[0] != selector_uninitialized && !selectp(ss, i, people_per_group)) ||
              (jbit & special_mask) != 0)
             tandstuff.single_mask |= jbit;
          else {
@@ -1812,40 +1841,115 @@ extern void tandem_couples_move(
       }
    }
    else if (tandstuff.m_no_unit_symmetry) {
-      if (key == tandem_key_anyone_tgls) {
-         // This was <anyone>-based triangles.  The setup must have been a C1-phantom.
+      if (key == tandem_key_outside_tgls && (setup_attrs[ss->kind].setup_props & SPROP_OUTSIDE_TRIANGLES) == 0) {
+         fail("Can't find these triangles.");
+      }
+      else if (key == tandem_key_inside_tgls && (setup_attrs[ss->kind].setup_props & SPROP_INSIDE_TRIANGLES) == 0) {
+         fail("Can't find these triangles.");
+      }
+      else if (key == tandem_key_anyone_tgls) {
+         // This was <anyone>-based triangles.
+         // The setup is usually a C1-phantom, but could be stuff like nptrglcw.
          // The current mask shows just the base.  Expand it to include the apex.
+
          ewmask |= nsmask;     // Get the base bits regardless of facing direction.
-         if (allmask == 0xAAAA) {
-            tandstuff.single_mask &= 0x7777;
-            if (ewmask == 0x0A0A) {
-               ewmask |= 0x8888;
-               nsmask = 0;
+
+         switch (ss->kind) {
+         case s_c1phan:
+            if (allmask == 0xAAAA) {
+               tandstuff.single_mask &= 0x7777;
+               if (ewmask == 0x0A0A) {
+                  ewmask = 0x8A8A;
+                  nsmask = 0;
+                  break;
+               }
+               else if (ewmask == 0xA0A0) {
+                  nsmask = 0xA8A8;
+                  ewmask = 0;
+                  break;
+               }
             }
-            else if (ewmask == 0xA0A0) {
-               ewmask |= 0x8888;
-               nsmask = ewmask;
-               ewmask = 0;
+            else if (allmask == 0x5555) {
+               tandstuff.single_mask &= 0xBBBB;
+               if (ewmask == 0x0505) {
+                  nsmask = 0x4545;
+                  ewmask = 0;
+                  break;
+               }
+               else if (ewmask == 0x5050) {
+                  ewmask = 0x5454;
+                  nsmask = 0;
+                  break;
+               }
             }
             else
                fail("Can't find these triangles.");
-         }
-         else if (allmask == 0x5555) {
-            tandstuff.single_mask &= 0xBBBB;
-            if (ewmask == 0x0505) {
-               ewmask |= 0x4444;
-               nsmask = ewmask;
-               ewmask = 0;
-            }
-            else if (ewmask == 0x5050) {
-               ewmask |= 0x4444;
+         case s_rigger:
+            tandstuff.single_mask &= 0x77;
+            if (ewmask == 0x33) {
                nsmask = 0;
+               ewmask = 0xBB;
+               break;
             }
             else
                fail("Can't find these triangles.");
-         }
-         else
+         case s_ntrglcw: case s_nptrglcw:
+            tandstuff.single_mask &= 0xEE;
+            if (ewmask == 0xCC) {
+               nsmask = 0xDD;
+               ewmask = 0;
+               break;
+            }
+            else
+               fail("Can't find these triangles.");
+         case s_ntrglccw: case s_nptrglccw:
+            tandstuff.single_mask &= 0x77;
+            if (ewmask == 0x33) {
+               nsmask = 0xBB;
+               ewmask = 0;
+               break;
+            }
+            else
+               fail("Can't find these triangles.");
+         case s_nxtrglcw:
+            tandstuff.single_mask &= 0xEE;
+            if (ewmask == 0x66) {
+               nsmask = 0x77;
+               ewmask = 0;
+               break;
+            }
+            else
+               fail("Can't find these triangles.");
+         case s_nxtrglccw:
+            tandstuff.single_mask &= 0xBB;
+            if (ewmask == 0x33) {
+               nsmask = 0x77;
+               ewmask = 0;
+               break;
+            }
+            else
+               fail("Can't find these triangles.");
+         case s_bone:
+            tandstuff.single_mask &= 0xBB;
+            if (ewmask == 0x33) {
+               nsmask = 0;
+               ewmask = 0x77;
+               break;
+            }
+            else
+               fail("Can't find these triangles.");
+         case s_spindle:
+            tandstuff.single_mask &= 0x77;
+            if (ewmask == 0x55) {
+               nsmask = 0;
+               ewmask = 0xFF;
+               break;
+            }
+            else
+               fail("Can't find these triangles.");
+         default:
             fail("Can't find these triangles.");
+         }
       }
       else if (key == tandem_key_3x1tgls) {
          if (ss->kind == s2x6 || ss->kind == s4x6 || ss->kind == s2x12) {
@@ -1887,6 +1991,14 @@ extern void tandem_couples_move(
          else
             fail("Can't find these triangles.");
       }
+      else if (ss->kind == s_spindle || special_mask == 0x2121) {
+         ewmask = allmask;
+         nsmask = 0;
+      }
+      else if (ss->kind == s_nxtrglcw || ss->kind == s_nxtrglccw) {
+         ewmask = 0;
+         nsmask = allmask;
+      }
       else if ((special_mask == 0x44 && ss->kind != s_rigger) ||
                special_mask == 0x1212 ||
                special_mask == 0x22 ||
@@ -1894,15 +2006,19 @@ extern void tandem_couples_move(
          ewmask = 0;
          nsmask = allmask;
       }
-      else if (special_mask == 0x2121) {
-         ewmask = allmask;
-         nsmask = 0;
-      }
       else if (ss->kind == s_c1phan)
          fail("Sorry, don't know who is lateral.");
       else {
-         ewmask = allmask;
-         nsmask = 0;
+         // This is the big default thing for triangles.
+         if ((key == tandem_key_outside_tgls || key == tandem_key_inside_tgls) &&
+             (setup_attrs[ss->kind].setup_props & SPROP_TGL_BASE_HORIZ) != 0) {
+            nsmask = allmask;
+            ewmask = 0;
+         }
+         else {
+            ewmask = allmask;
+            nsmask = 0;
+         }
       }
    }
    else if (key == tandem_key_overlap_siam) {

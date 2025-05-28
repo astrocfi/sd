@@ -379,6 +379,20 @@ The program only recognizes the designators @strong{boys} and @strong{girls}.
 The only exception is the call @strong{ladies chain}.  Of course, you can
 use whatever designation you want when calling.
 
+@unnumberedsec Why don't the ladies progress properly when I write a singing call?
+@strong{Sd} and @strong{Sdtty} are oriented toward writing individual
+sequences, not whole dances or singing calls.  It doesn't remember from one
+sequence to the next that it progressed the ladies.  But each sequence written
+in singing call mode (for example, with the @strong{toggle singing call}
+command) will progress the ladies.  If you write 4 such sequences and call them,
+the ladies will progress all the way around, as they should.  You simply need to
+ignore the fact that the program set everyone back to the beginning at the start
+of each sequence.  You need to be careful about calling sequences that use
+designators of heads or sides, but you need to be careful about that sort of
+thing anyway.  Things like @strong{Heads square thru 4, make a right-hand star,
+turn it all the way, heads star left in the middle ...} can be
+troublesome, and the program won't help you stay out of trouble.
+
 @unnumberedsec Why does an opening like @strong{heads single rotate 1/4} do the "correct" thing (having the heads do their single rotate on the outside while the sides move in) at C1, but not at C2 and above?
 
 The call that you want is @strong{heads single rotate 1/4 while the others <anything>}, as in

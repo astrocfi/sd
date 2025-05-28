@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2018  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -105,7 +105,7 @@ bool global_cache_failed_flag;
 //   (Zero if hit, missing index+1 if miss, 9 if couldn't open the cache file.)
 // Word 1 is what we wanted at the index.
 // Word 2 is what we got.
-int global_cache_miss_reason[3];
+int global_cache_miss_reason[15];
 uims_reply_thing global_reply(ui_user_cancel, 99);
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
@@ -522,7 +522,7 @@ void ui_utils::printsetup(setup *x)
 
    personstart = 0;
 
-   if (setup_attrs[x->kind].four_way_symmetry) {
+   if ((setup_attrs[x->kind].setup_props & SPROP_4_WAY_SYMMETRY) != 0) {
       /* still to do???
          s_1x1
          s2x2
@@ -958,6 +958,7 @@ void ui_utils::write_history_line(int history_index,
                                  file_write_flag write_to_file)
 {
    m_leave_missing_calls_blank = leave_missing_calls_blank;
+   m_selector_recursion_level = -1;  // Will go up to >= 0 when printing selectors.
 
    int w, i;
    parse_block *thing;
@@ -1146,13 +1147,21 @@ void ui_utils::unparse_call_name(Cstring name, char *s, const call_conc_option_s
 }
 
 
-/* There are 2 bits that are meaningful in the argument to "print_recurse":
+/* There are a few bits that are meaningful in the argument to "print_recurse":
          PRINT_RECURSE_STAR
    This means to print an asterisk for a call that is missing in the
    current type-in state.
          PRINT_RECURSE_CIRC
    This means that this is a circulate-substitute call, and should have any
-   @O ... @P stuff elided from it. */
+   @O ... @P stuff elided from it.
+         PRINT_RECURSE_SELECTOR
+   This means that we are really just printing a selector, from the stack
+   in local_cptr->options.who.
+         PRINT_RECURSE_SELECTOR_SING
+         As above, but print singular name. */
+
+
+
 
 
 void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
@@ -1607,10 +1616,6 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
          parse_block *search;
          bool pending_subst1, pending_subst2;
 
-         selector_kind i16junk = local_cptr->options.who.who[0];
-         direction_kind idirjunk = local_cptr->options.where;
-         uint32 number_list = local_cptr->options.number_fields;
-         const call_with_name *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
          bool subst1_in_use = false;
@@ -1662,10 +1667,21 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
 
          /* Call = NIL means we are echoing input and user hasn't entered call yet. */
 
-         if (localcall) {
-            Cstring np = localcall->name;
+         direction_kind idirjunk = local_cptr->options.where;
+         uint32 number_list = local_cptr->options.number_fields;
+         const call_with_name *localcall = local_cptr->call_to_print;
 
-            if (enable_file_writing) localcall->the_defn.frequency++;
+         if (localcall) {
+            Cstring np;
+
+            if (print_recurse_arg & PRINT_RECURSE_SELECTOR_SING)
+               np = selector_list[local_cptr->options.who.who[m_selector_recursion_level]].sing_name;
+            else if (print_recurse_arg & PRINT_RECURSE_SELECTOR)
+               np = selector_list[local_cptr->options.who.who[m_selector_recursion_level]].name;
+            else {
+               np = localcall->name;
+               if (enable_file_writing) localcall->the_defn.frequency++;
+            }
 
             while (*np) {
                char c = *np++;
@@ -1676,12 +1692,12 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                   switch (savec) {
                   case '6': case 'k': case 'K': case 'V':
                      write_blank_if_needed();
-                     if (savec == 'k')
-                        writestuff(selector_list[i16junk].sing_name);
-                     else
-                        writestuff(selector_list[i16junk].name);
-                     if (np[0] && np[0] != ' ' && np[0] != ']')
+                     m_selector_recursion_level++;
+                     print_recurse(local_cptr, savec == 'k' ? PRINT_RECURSE_SELECTOR_SING : PRINT_RECURSE_SELECTOR);
+                     if (np[0] && np[0] != ' ' && np[0] != ']' && np[0] != '-')
                         writestuff(" ");
+
+                     m_selector_recursion_level--;
                      break;
                   case 'v': case 'w': case 'x': case 'y':
                      write_blank_if_needed();
@@ -1931,7 +1947,9 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             a natural replacement.  In any case, we have to find forcible replacements and
             report them. */
 
-         if (k == concept_another_call_next_mod) {
+         if (k == concept_another_call_next_mod &&
+             ((print_recurse_arg & (PRINT_RECURSE_SELECTOR_SING | PRINT_RECURSE_SELECTOR)) == 0)) {
+
             int first_replace = 0;
 
             for (search = save_cptr->next ; search ; search = search->next) {
@@ -3064,7 +3082,7 @@ void ui_utils::run_program(iobase & ggg)
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2017 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2018 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
@@ -3120,14 +3138,18 @@ void ui_utils::run_program(iobase & ggg)
 
    // If in diagnostic mode, we print a detailed reason for any cache miss.
    if (ui_options.diagnostic_mode && global_cache_miss_reason[0] != 0) {
-      char reasonstuff[50];
+      char localreason[500];
 
-      (void) sprintf(reasonstuff, "Cache miss, reloaded: %d %d %d.",
-                     global_cache_miss_reason[0],
-                     global_cache_miss_reason[1],
-                     global_cache_miss_reason[2]);
+      sprintf(localreason, "Cache miss, reloaded: %d %d %d %d %d %d %d.",
+              global_cache_miss_reason[0],
+              global_cache_miss_reason[1],
+              global_cache_miss_reason[2],
+              global_cache_miss_reason[3],
+              global_cache_miss_reason[4],
+              global_cache_miss_reason[5],
+              global_cache_miss_reason[6]);
       newline();
-      writestuff(reasonstuff);
+      writestuff(localreason);
       newline();
       newline();
    }

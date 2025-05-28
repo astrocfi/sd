@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 346
+#define DATABASE_FORMAT_VERSION 349
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -212,6 +212,7 @@ enum base_call_index {
    base_call_backemup,
    base_call_circulate,
    base_call_trade,
+   base_call_touch,
    base_call_plainprom,
    base_call_plainpromeighths,
    base_call_any_hand_remake,
@@ -844,6 +845,26 @@ enum begin_kind {
    b_phsqtag,
    b_wingedstar,
    b_pwingedstar,
+   b_ntrgl6cw,
+   b_pntrgl6cw,
+   b_ntrgl6ccw,
+   b_pntrgl6ccw,
+   b_nftrgl6cw,
+   b_pnftrgl6cw,
+   b_nftrgl6ccw,
+   b_pnftrgl6ccw,
+   b_ntrglcw,
+   b_pntrglcw,
+   b_ntrglccw,
+   b_pntrglccw,
+   b_nptrglcw,
+   b_pnptrglcw,
+   b_nptrglccw,
+   b_pnptrglccw,
+   b_nxtrglcw,
+   b_pnxtrglcw,
+   b_nxtrglccw,
+   b_pnxtrglccw,
    b_323,
    b_p323,
    b_343,

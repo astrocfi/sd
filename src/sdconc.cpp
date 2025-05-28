@@ -1285,6 +1285,14 @@ extern void normalize_concentric(
          inners[0].clear_people();
          goto compute_rotation_again;
       }
+      else if (outers->kind == sdmd && inners[0].kind == nothing) {
+         inners[0].kind = s1x4;
+         inners[0].rotation = 1;
+         inners[0].eighth_rotation = 0;
+         inners[0].result_flags = outers->result_flags;
+         inners[0].clear_people();
+         goto compute_rotation_again;
+      }
 
       switch (outers->kind) {
          case s1x4:
@@ -3899,6 +3907,7 @@ extern void concentric_move(
 
    configuration::set_multiple_warnings(saved_ctr_warnings);
    configuration::set_multiple_warnings(saved_end_warnings);
+   configuration::clear_one_warning(warn_suspect_destroyline);
 
    // Now, if some command (centers or ends) didn't exist, we pick up the needed result flags
    // from the other part.
@@ -4560,6 +4569,28 @@ void merge_table::merge_setups(setup *ss,
 
    if (res1->kind == s_dead_concentric || res2->kind == s_dead_concentric)
       rose_from_dead = true;
+   else if ((res1->kind == s_qtag && res2->kind == s_qtag) ||
+            (res1->kind == sdmd && res2->kind == sdmd)) {
+      // The situation with 1/4 tags is difficult.  Don't normalize the
+      // outsides away.  Cf. vq9t.  Diamonds too.
+      canonicalize_rotation(res1);
+      canonicalize_rotation(res2);
+      if (res1->rotation == res2->rotation) {
+         *result = *res2;
+         bool what_do_we_put_in = action >= merge_c1_phantom;
+         collision_collector CC(what_do_we_put_in ? collision_severity_ok : collision_severity_no);
+         CC.note_prefilled_result(result);
+
+         for (i=0; i<=attr::slimit(res1); i++) {
+            if (res1->people[i].id1)
+               CC.install_with_collision(result, i, res1, i, 0);
+         }
+
+         CC.fix_possible_collision(result);
+         canonicalize_rotation(result);
+         return;
+      }
+   }
 
    merge_action orig_action = action;
    // Only use the special triangle stuff if doing brute force merge.
@@ -5491,7 +5522,7 @@ extern void selective_move(
 
          try {
             tandem_couples_move(ss,
-                                parseptr->options.who.who[0],
+                                parseptr->options.who,
                                 kk->arg3 >> 4,
                                 kkk->options.number_fields,
                                 0,
@@ -5804,6 +5835,7 @@ extern void inner_selective_move(
       // That requires moving some bits between the two masks, to bring in the apex.
       uint32 bothlivemask = livemask[0] << 16 | livemask[1];
       uint32 delta = 0;
+      uint32 apex_people = 0;
       if (local_selector == selector_anyone_base_tgl) {
          // Anyone-based triangle, not interlocked.
          switch (ss->kind) {
@@ -5867,6 +5899,53 @@ extern void inner_selective_move(
             fail("Can't find the indicated triangles.");
          }
       }
+      else if ((local_selector == selector_anyone_apex_of_tandem_tgl ||
+               local_selector == selector_anyone_apex_of_wave_tgl) && ss->kind == s2x4) {
+
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
+         apex_people = or_all_people(&the_setups[0]) & 011;
+
+         if (apex_people == 010) {
+            switch (livemask[0]) {
+            case 0x88:
+               delta = 0x66;
+               tglindicator = 0x400;
+               break;
+            case 0x11:
+               delta = 0x66;
+               tglindicator = 0x401;
+               break;
+            case 0x44:
+               delta = 0x99;
+               tglindicator = 0x402;
+               break;
+            case 0x22:
+               delta = 0x99;
+               tglindicator = 0x403;
+               break;
+            }
+         }
+         else if (apex_people == 001) {
+            switch (livemask[0]) {
+            case 0x88: 
+               delta = 0x33;
+               tglindicator = 0x500;
+               break;
+            case 0x44: 
+               delta = 0x33;
+               tglindicator = 0x501;
+               break;
+            case 0x22:
+               delta = 0xCC;
+               tglindicator = 0x502;
+               break;
+            case 0x11:
+               delta = 0xCC;
+               tglindicator = 0x503;
+               break;
+            }
+         }
+      }
       else {
          // Anyone-based triangle, interlocked.
          switch (ss->kind) {
@@ -5899,14 +5978,27 @@ extern void inner_selective_move(
       the_setups[0] = *ss;              // designees
       the_setups[1] = *ss;              // non-designees
 
+      uint32 base_people = 0;
+
       for (i=0, j=1; i<=sizem1; i++, j<<=1) {
          if (ss->people[i].id1) {
             if (livemask[0] & j)
                the_setups[1].clear_person(i);
             if (livemask[1] & j)
                the_setups[0].clear_person(i);
+            if (delta & j)
+               base_people |= ss->people[i].id1;
          }
       }
+
+      base_people &= 011;
+
+      if (local_selector == selector_anyone_apex_of_wave_tgl)
+         base_people ^= 011;
+
+      if ((local_selector == selector_anyone_apex_of_tandem_tgl ||
+           local_selector == selector_anyone_apex_of_wave_tgl) && base_people != apex_people)
+         fail("Can't find the indicated triangles.");
    }
 
    current_options.who = saved_selector;
@@ -5945,22 +6037,38 @@ extern void inner_selective_move(
    // you are".
    //
    if (others <= 0 &&
-       cmd1->parseptr &&
-       cmd1->parseptr->concept &&
-       cmd1->parseptr->concept->kind == marker_end_of_list &&
-       cmd1->parseptr->call &&
-       (cmd1->parseptr->call->the_defn.schema == schema_matrix ||
-        (cmd1->parseptr->call == base_calls[base_call_circulate] &&
-         (ss->kind == s2x4 || ss->kind == s2x2) &&
-         local_selector < selector_POSITIONAL_START)) &&
-       !(cmd1->parseptr->call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) &&
        (orig_indicator == selective_key_ignore ||
         orig_indicator == selective_key_plain ||
         orig_indicator == selective_key_dyp)) {
-      indicator = selective_key_dyp;
-      orig_indicator = selective_key_dyp;
-      action = normalize_strict_matrix;
-      force_matrix_merge = true;
+      parse_block *foo = cmd1->parseptr;
+
+      // We see through any "N times" concepts.
+      while (foo && foo->concept &&
+             (foo->concept->kind == concept_n_times || foo->concept->kind == concept_n_times_const)) {
+         foo = foo->next;
+      }
+
+      // Now watch for matrix calls, or circulate in 2x2/2x4 where selector is who-you-are,
+      // with no concepts other than "N times".
+      // And the call must not itself require a selector.  We are already acting on the selector.
+      // We require a "who-you-are" selector, such as "side boys", rather than a positional selector,
+      // such as "ends", so that the people can just do it, without getting hung up on all the
+      // complex interactions involved with the "select::hash_lookup" mechanism below.
+      if (foo && foo->concept && foo->call && foo->concept->kind == marker_end_of_list) {
+         if ((foo->call->the_defn.callflagsf & CFLAGH__REQUIRES_SELECTOR) == 0 &&
+             (foo->call->the_defn.schema == schema_matrix || 
+              (foo->call == base_calls[base_call_circulate] &&
+               (ss->kind == s2x4 || ss->kind == s2x2) &&
+               // The "who-you-are" selectors are in two groups, because some have to be in the
+               // unsymmetrical "no_resolve" section near the end.
+               (local_selector < selector_WHO_YOU_ARE_END ||
+                (local_selector >= selector_WHO_YOU_ARE_2_START && local_selector < selector_TGL_START))))) {
+            indicator = selective_key_dyp;
+            orig_indicator = selective_key_dyp;
+            action = normalize_strict_matrix;
+            force_matrix_merge = true;
+         }
+      }
    }
 
    if (orig_indicator == selective_key_lead_for_a || orig_indicator == selective_key_promenade_and_lead_for_a) {
@@ -7023,6 +7131,22 @@ extern void inner_selective_move(
                else if ((thislivemask & 0x11) == 0)
                   map_key_table = tglmap::qttglmap2;
             }
+            else if (kk == s_ptpd && ((tglindicator & ~0001) == 8)) {
+               // Beau/belle-point in point-to-point diamonds.
+               // Picking out 8 or 9.
+               if ((thislivemask & 0x11) == 0)
+                  map_key_table = tglmap::ptptglmap1;
+               else if ((thislivemask & 0x44) == 0)
+                  map_key_table = tglmap::ptptglmap2;
+            }
+            else if (kk == sdmd && ((tglindicator & ~0301) == 8)) {
+               // Beau/belle-point in single diamond.
+               // Picking out 8 or 9, with 100 or 200 bits; will get taken care of later.
+               if ((thislivemask & 0x4) == 0)
+                  map_key_table = tglmap::dmtglmap1;
+               else if ((thislivemask & 0x1) == 0)
+                  map_key_table = tglmap::dmtglmap2;
+            }
             else if ((tglindicator & ~1) == 0106 && kk == s_rigger) {
                map_key_table = tglmap::rgtglmap1;
             }
@@ -7135,6 +7259,14 @@ extern void inner_selective_move(
             else if ((tglindicator & ~0101) == 6 && kk == s_ntrgl6ccw) {
                map_key_table = tglmap::t6ccwtglmap1;
             }
+            else if ((tglindicator & ~3) == 0x400 && kk == s2x4) {
+               tglindicator <<= 6;
+               map_key_table = tglmap::rtglmap400;
+            }
+            else if ((tglindicator & ~3) == 0x500 && kk == s2x4) {
+               tglindicator <<= 6;
+               map_key_table = tglmap::rtglmap500;
+            }
 
             if (!map_key_table)
                fail("Can't find the indicated triangles.");
@@ -7178,7 +7310,7 @@ extern void inner_selective_move(
             if (key & (LOOKUP_IGNORE|LOOKUP_DISC|LOOKUP_NONE)) {
                if (kk == s2x4 && the_setups[setupcount^1].kind == s2x4) {
                   // Used in rd03\1213:  Selector is girls, call is spread.  (Yes, if just say
-                  // "girls spread"
+                  // "girls spread")
                   if ((thislivemask & ~0x0F) == 0 && (otherlivemask & 0x0F) == 0)
                      fixp = select::fixer_ptr_table[select::fx_f2x4far];
                   else if ((thislivemask & ~0xF0) == 0  && (otherlivemask & 0xF0) == 0)

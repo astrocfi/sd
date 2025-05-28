@@ -257,6 +257,26 @@ int begin_sizes[] = {
    12,         // b_phsqtag
    8,          // b_wingedstar
    8,          // b_pwingedstar
+   8,          // ntrgl6cw
+   8,          // pntrgl6cw
+   8,          // ntrgl6ccw
+   8,          // pntrgl6ccw
+   8,          // nftrgl6cw
+   8,          // pnftrgl6cw
+   8,          // nftrgl6ccw
+   8,          // pnftrgl6ccw
+   8,          // ntrglcw
+   8,          // pntrglcw
+   8,          // ntrglccw
+   8,          // pntrglccw
+   8,          // nptrglcw
+   8,          // pnptrglcw
+   8,          // nptrglccw
+   8,          // pnptrglccw
+   8,          // nxtrglcw
+   8,          // pnxtrglcw
+   8,          // nxtrglccw
+   8,          // pnxtrglccw
    8,          // b_323
    8,          // b_p323
    10,         // b_343

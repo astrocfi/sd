@@ -588,7 +588,7 @@ void matcher_initialize()
    selector_hasher.add_one(bucket);
 
    for (i=1; i<selector_INVISIBLE_START; i++) {
-      if (selector_list[i].name[0] == '@' && (selector_list[i].name[1] == 'k')) {
+      if (selector_list[i].name[0] == '@' && (selector_list[i].name[1] == 'k' || selector_list[i].name[1] == '6')) {
          // This is a selector like "<anyone>-based triangles".  Put it into every bucket
          // that could match a selector.  Is any of this stuff necessary?
          continue;

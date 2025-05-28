@@ -561,6 +561,7 @@ enum warning_index {
    warn_verycontroversial,
    warn_no_internal_phantoms,
    warn_serious_violation,
+   warn_suspect_destroyline,
    warn__4_circ_tracks,
    warn__assume_dpt,
    warn_bogus_yoyo_rims_hubs,
@@ -1101,7 +1102,7 @@ enum {
    CMD_FRAC_IMPROPER_BIT    = 0x00200000U,
    CMD_FRAC_THISISLAST      = 0x00400000U,
    CMD_FRAC_REVERSE         = 0x00800000U,
-   CMD_FRAC_CODE_MASK       = 0x07000000U,    // This is a 3 bit field.
+   CMD_FRAC_CODE_MASK       = 0x07000000U,    // This is a 3 bit field.  Could easily be increased.
 
    // Here are the codes that can be inside.  We require that CMD_FRAC_CODE_ONLY be zero.
    // We require that the PART_MASK field be nonzero (we use 1-based part numbering)
@@ -1115,6 +1116,7 @@ enum {
    CMD_FRAC_CODE_FROMTOREVREV   = 0x04000000U,
    CMD_FRAC_CODE_FROMTOMOST     = 0x05000000U,
    CMD_FRAC_CODE_LATEFROMTOREV  = 0x06000000U,
+   CMD_FRAC_CODE_SKIP_K_MINUS_HALF = 0x07000000U,
 
    CMD_FRAC_BREAKING_UP     = 0x10000000U,
    CMD_FRAC_FORCE_VIS       = 0x20000000U,
@@ -1362,7 +1364,7 @@ enum selector_kind {
    selector_headgirls,
    selector_sideboys,
    selector_sidegirls,    // Selectors after this depend on where you are.
-   selector_centers,    selector_POSITIONAL_START = selector_centers,
+   selector_centers,    selector_WHO_YOU_ARE_END = selector_centers,
    selector_ends,
    selector_outsides,
    selector_leads,
@@ -1456,7 +1458,8 @@ enum selector_kind {
    selector_facingright,
    selector_farthest1,
    selector_nearest1,
-   selector_boy1,
+   // Another WHO_YOU_ARE group.  It runs up to TGL_START, exclusive.
+   selector_boy1,    selector_WHO_YOU_ARE_2_START = selector_boy1,
    selector_girl1,
    selector_cpl1,
    selector_boy2,
@@ -1512,6 +1515,8 @@ enum selector_kind {
    selector_anyone_base_tgl,  selector_RECURSIVE_START = selector_anyone_base_tgl,
    selector_anyone_base_intlk_tgl,
    selector_intlk_anyone_base_tgl,
+   selector_anyone_apex_of_tandem_tgl,
+   selector_anyone_apex_of_wave_tgl,
    // Start of selectors used only in "some are tandem" operations, with a control key of 'K'.
    selector_some,             selector_SOME_START = selector_some,
    // Start of invisible selectors.
@@ -1561,6 +1566,12 @@ struct who_list {
    selector_kind who[who_stack_size];
    int who_stack_ptr;
 };
+
+extern who_list who_centers_thing;
+extern who_list who_center6_thing;
+extern who_list who_outer6_thing;
+extern who_list who_some_thing;
+extern who_list who_uninit_thing;
 
 
 struct call_conc_option_state {
@@ -2299,7 +2310,12 @@ enum init_callback_state {
 
 class SDLIB_API ui_utils {
 
-   enum { PRINT_RECURSE_STAR=1, PRINT_RECURSE_CIRC=2 };
+   enum {
+      PRINT_RECURSE_STAR          = 0x1,   // At most one of these will be on.
+      PRINT_RECURSE_CIRC          = 0x2,
+      PRINT_RECURSE_SELECTOR      = 0x4,
+      PRINT_RECURSE_SELECTOR_SING = 0x8
+   };
 
 public:
    ui_utils(matcher_class *ma, iobase & iob) : m_clipboard_allocation(0), matcher_p(ma), iob88(iob)
@@ -2361,6 +2377,7 @@ public:
       bool usurping_writechar;
    } m_writechar_block;
 
+   int m_selector_recursion_level;
    bool m_leave_missing_calls_blank;
    bool m_reply_pending;
    int m_clipboard_allocation;
@@ -3323,6 +3340,8 @@ class tglmap {
       tgl0,        // The null table entry.
       tglmap1b,
       tglmap2b,
+      tglmap1w,
+      tglmap2w,
       tglmap1i,
       tglmap2i,
       tglmap1d,
@@ -3336,9 +3355,11 @@ class tglmap {
       tglmap2x,
       tglmap1y,
       tglmap2y,
+      tglmap3p,
+      tglmap3q,
       tglmap1k,
       tglmap2k,
-      tglmap2r,
+      tglmap2q,
       tglmap2p,
       tglmap1t,
       tglmap2t,
@@ -3349,6 +3370,14 @@ class tglmap {
       tg6mapccw,
       tglmaps6,
       tglmapb6,
+      tglmap1r,
+      tglmap2r,
+      tglmap3r,
+      tglmap4r,
+      tglmap5r,
+      tglmap6r,
+      tglmap7r,
+      tglmap8r,
       tglmap323_33,
       tglmap323_66,
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
@@ -3367,13 +3396,13 @@ class tglmap {
       tglmapkey otherkey;
       veryshort nointlkshapechange;
       veryshort randombits;
-      veryshort mapqt1[8];   // In quarter-tag: first triangle (upright),
-                             // then second triangle (inverted), then idle.
-      veryshort mapcp1[8];   // In C1 phantom: first triangle (inverted),
-                             // then second triangle (upright), then idle.
-      veryshort mapbd1[8];   // In bigdmd.
-      veryshort map241[8];   // In 2x4.
-      veryshort map261[8];   // In 2x6.
+      veryshort mapqt1[6];   // In quarter-tag: first triangle (upright),
+                             // then second triangle (inverted).
+      veryshort mapcp1[6];   // In C1 phantom: first triangle (inverted),
+                             // then second triangle (upright).
+      veryshort mapbd1[6];   // In bigdmd.
+      veryshort map241[6];   // In 2x4.
+      veryshort map261[6];   // In 2x6.
    };
 
  private:
@@ -3405,6 +3434,10 @@ class tglmap {
    static const tglmapkey dbqtglmap2[];
    static const tglmapkey qttglmap1[];
    static const tglmapkey qttglmap2[];
+   static const tglmapkey ptptglmap1[];
+   static const tglmapkey ptptglmap2[];
+   static const tglmapkey dmtglmap1[];
+   static const tglmapkey dmtglmap2[];
    static const tglmapkey bdtglmap1[];
    static const tglmapkey bdtglmap2[];
    static const tglmapkey rgtglmap1[];
@@ -3415,6 +3448,8 @@ class tglmap {
    static const tglmapkey ritglmap3[];
    static const tglmapkey d7tglmap1[];
    static const tglmapkey d7tglmap2[];
+   static const tglmapkey rtglmap400[];
+   static const tglmapkey rtglmap500[];
    static const tglmapkey s323map33[];
    static const tglmapkey s323map66[];
 };
@@ -3530,6 +3565,23 @@ class merge_table {
    static void initialize();             // In sdconc.
 };
 
+// These are the "setup_props" bits.
+enum {
+   // This is true if the setup has 4-way symmetry.  Such setups will always be
+   // canonicalized so that their rotation field will be zero.
+   SPROP_4_WAY_SYMMETRY    = 0x00000001U,
+   // This is true if the setup has no (that is, 1-way) symmetry.  Such setups
+   // will never be canonicalized -- their rotation field may be 0, 1, 2, or 3.
+   SPROP_NO_SYMMETRY       = 0x00000002U,
+   // You can say "outside triangles".
+   SPROP_OUTSIDE_TRIANGLES = 0x00000004U,
+   SPROP_INSIDE_TRIANGLES  = 0x00000008U,
+   // For setups with inside/outside triangles, the base people are horizontal to each other.
+   SPROP_TGL_BASE_HORIZ    = 0x00000010U
+};
+
+
+
 struct setup_attr {
    // This is the size of the setup MINUS ONE.
    int setup_limits;
@@ -3573,13 +3625,8 @@ struct setup_attr {
    // that 4 is greater than 3.
    short int bounding_box[2];
 
-   // This is true if the setup has 4-way symmetry.  Such setups will always be
-   // canonicalized so that their rotation field will be zero.
-   bool four_way_symmetry;
-
-   // This is true if the setup has no (that is, 1-way) symmetry.  Such setups
-   // will never be canonicalized -- their rotation field may be 0, 1, 2, or 3.
-   bool no_symmetry;
+   // Various properties, with names SPROP_???
+   uint32 setup_props;
 
    // This is the bit table for filling in the "ID2" bits.
    const id_bit_table *id_bit_table_ptr;
@@ -3801,7 +3848,6 @@ enum distort_key {
 
 
 extern call_conc_option_state null_options;
-extern who_list centers_thing;
 
 
 // A "configuration" is a state in the evolving sequence.
@@ -4560,7 +4606,7 @@ extern SDLIB_API int hashed_randoms;                                /* in SDTOP 
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
 extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
-extern SDLIB_API int global_cache_miss_reason[3];                   /* in SDUTIL */
+extern SDLIB_API int global_cache_miss_reason[15];                   /* in SDUTIL */
 extern SDLIB_API uims_reply_thing global_reply;                     /* in SDUTIL */
 extern configuration *clipboard;                                    /* in SDUTIL */
 extern int clipboard_size;                                          /* in SDUTIL */
@@ -4572,6 +4618,7 @@ extern warning_info no_search_warnings;                             /* in SDTOP 
 extern warning_info conc_elong_warnings;                            /* in SDTOP */
 extern warning_info dyp_each_warnings;                              /* in SDTOP */
 extern warning_info useless_phan_clw_warnings;                      /* in SDTOP */
+extern warning_info suspect_destroyline_warnings;                   /* in SDTOP */
 extern int concept_sublist_sizes[call_list_extent];                 /* in SDTOP */
 extern short int *concept_sublists[call_list_extent];               /* in SDTOP */
 extern int good_concept_sublist_sizes[call_list_extent];            /* in SDTOP */
@@ -5650,7 +5697,7 @@ extern void initialize_tandem_tables();
 
 extern void tandem_couples_move(
    setup *ss,
-   selector_kind selector,
+   who_list selector,
    int twosome,           // solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3

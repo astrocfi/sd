@@ -1683,8 +1683,8 @@ static void special_triangle(
 {
    int real_index;
    int numout = attr::slimit(result)+1;
-   bool is_triangle = setup_attrs[scopy->kind].no_symmetry;
-   bool result_is_triangle = setup_attrs[result->kind].no_symmetry;
+   bool is_triangle = (setup_attrs[scopy->kind].setup_props & SPROP_NO_SYMMETRY) != 0;
+   bool result_is_triangle = (setup_attrs[result->kind].setup_props & SPROP_NO_SYMMETRY) != 0;
 
    for (real_index=0; real_index<num; real_index++) {
       personrec this_person = scopy->people[real_index];
@@ -4201,7 +4201,7 @@ static int divide_the_setup(
    inner_selective_move(ss, &conc_cmd, &conc_cmd,
                         ss->cmd.callspec == base_calls[base_call_trade] ?
                         selective_key_dyp_for_mystic : selective_key_dyp,
-                        1, 0, false, 0, centers_thing, 0, 0, result);
+                        1, 0, false, 0, who_centers_thing, 0, 0, result);
    return 1;
 }
 
@@ -4679,8 +4679,8 @@ static uint32 do_actual_array_call(
          special_4_way_symm(linedefinition, ss, &newpersonlist, newplacelist,
                             lilresult_mask, result);
       }
-      else if (setup_attrs[ss->kind].no_symmetry || ss->kind == s1x3 ||
-               setup_attrs[result->kind].no_symmetry || result->kind == s1x3) {
+      else if ((setup_attrs[ss->kind].setup_props & SPROP_NO_SYMMETRY) != 0 || ss->kind == s1x3 ||
+               (setup_attrs[result->kind].setup_props & SPROP_NO_SYMMETRY) != 0 || result->kind == s1x3) {
          if (inconsistent_rotation | inconsistent_setup)
             fail("This call is an inconsistent shape-changer.");
          special_triangle(coldefinition, linedefinition, ss, &newpersonlist, newplacelist,
@@ -6539,6 +6539,11 @@ foobar:
       ss, callspec, linedefinition, coldefinition, newtb,
       funny, mirror, four_way_startsetup, orig_elongation, desired_elongation,
       check_peeloff_migration, result);
+
+   // Check for special case of "touch" going directly from a 2x2 to a 1x4.  In that case
+   // the split bits need to be set as though the shortcut had not occurred.  Cf. t42t.
+   if (ss->kind == s2x2 && result->kind == s1x4 && ss->cmd.callspec == base_calls[base_call_touch])
+      result->result_flags.split_info[result->rotation&1]++;
 
    // If the invocation of this call is "roll transparent", restore roll info
    // from before the call for those people that are marked as roll-neutral.

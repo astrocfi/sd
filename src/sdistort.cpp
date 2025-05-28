@@ -819,7 +819,7 @@ static void multiple_move_innards(
             map_kind = MPKIND__HET_OFFS_R_HALF;
       }
 
-      if (!hetero_mapkind(map_kind) && (arity != 2 || !setup_attrs[z[0].kind].no_symmetry)) {
+      if (!hetero_mapkind(map_kind) && (arity != 2 || (setup_attrs[z[0].kind].setup_props & SPROP_NO_SYMMETRY) == 0)) {
          if ((rotstate & 0xF03) == 0) {
             // Rotations are alternating.  Aside from the two map kinds just below,
             // we demand funnymap on.  These are the maps that want alternating rotations.
@@ -921,7 +921,7 @@ static void multiple_move_innards(
    // But maps with unsymmetrical things (e.g. triangles) inside are always hetero.
 
    if (arity == 1 || (z[0].kind == z[1].kind && z[0].rotation == z[1].rotation &&
-                      !setup_attrs[z[0].kind].no_symmetry)) {
+                      (setup_attrs[z[0].kind].setup_props & SPROP_NO_SYMMETRY) == 0)) {
       if (map_kind == MPKIND__HET_ONCEREM) {
          map_kind = MPKIND__REMOVED;
       }
@@ -4754,16 +4754,11 @@ static void reassemble_triangles(const veryshort *mapnums,
                                  uint32 r,
                                  int swap_res,
                                  const setup res[2],
-                                 const setup idle,
                                  setup *result) THROW_DECL
 {
-   // Restore the two people who don't move.
-   if (mapnums[6] >= 0) copy_rot(result, mapnums[6], &idle, 0, ri);
-   if (mapnums[7] >= 0) copy_rot(result, mapnums[7], &idle, 1, ri);
-
-   // Copy the triangles.
    scatter(result, &res[swap_res], mapnums, 2, r^022);
-   scatter(result, &res[swap_res^1], &mapnums[3], 2, r);
+   if (result->kind != sdmd)
+      scatter(result, &res[swap_res^1], &mapnums[3], 2, r);
 }
 
 
@@ -4776,7 +4771,6 @@ void tglmap::do_glorious_triangles(
    int i, r, startingrot;
    uint32 rotstate, pointclip;
    setup a1, a2;
-   setup idle;
    setup res[2];
    const veryshort *mapnums;
    const map *map_ptr = ptrtable[map_ptr_table[(indicator >> 6) & 3]];
@@ -4798,35 +4792,41 @@ void tglmap::do_glorious_triangles(
       mapnums = map_ptr->mapbd1;
       startingrot = 3;
    }
-   else {   // s_qtag, s_ptpd, or s_323.
+   else if (ss->kind == s2x4) {
+      mapnums = map_ptr->map241;
+      startingrot = map_ptr->randombits;
+   }
+   else {   // s_qtag, s_ptpd, s_323, or single diamond.
       mapnums = map_ptr->mapqt1;
       startingrot = (map_ptr->randombits & 16) ? 1 : 0;
    }
 
    r = ((-startingrot) & 3) * 011;
    gather(&a1, ss, mapnums, 2, r);
-   gather(&a2, ss, &mapnums[3], 2, r^022);
-
-   // Save the two people who don't move.
-   if (mapnums[6] >= 0) copy_person(&idle, 0, ss, mapnums[6]);
-   if (mapnums[7] >= 0) copy_person(&idle, 1, ss, mapnums[7]);
-   idle.suppress_roll(0);
-   idle.suppress_roll(1);
-
    a1.cmd = ss->cmd;
-   a2.cmd = ss->cmd;
    a1.kind = s_trngl;
-   a2.kind = s_trngl;
    a1.rotation = 0;
-   a2.rotation = 2;
    a1.eighth_rotation = 0;
-   a2.eighth_rotation = 0;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    move(&a1, false, &res[0]);
-   move(&a2, false, &res[1]);
 
-   fix_n_results(2, -1, res, rotstate, pointclip, 0);
+   if (!(map_ptr->randombits & 32)) {
+      gather(&a2, ss, &mapnums[3], 2, r^022);
+      a2.cmd = ss->cmd;
+      a2.kind = s_trngl;
+      a2.rotation = 2;
+      a2.eighth_rotation = 0;
+      a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+      move(&a2, false, &res[1]);
+      fix_n_results(2, -1, res, rotstate, pointclip, 0);
+      result->result_flags = get_multiple_parallel_resultflags(res, 2);
+      res[1].rotation += 2;
+      canonicalize_rotation(&res[1]);
+   }
+   else {
+      fix_n_results(1, -1, res, rotstate, pointclip, 0);
+      result->result_flags = get_multiple_parallel_resultflags(res, 1);
+   }
 
    if (res[0].kind == nothing) {
       result->kind = nothing;
@@ -4834,18 +4834,14 @@ void tglmap::do_glorious_triangles(
       return;
    }
 
-   /* The low digit of rotstate (should have just low 2 bits on) tells
-      what possible rotation states could exist with all setups in
-      same parity.  The next digit tells what possible states of z0
-      exist with alternating parity.  The highest bit deals with triangles
-      rotating by 90 degrees from one setup to the next, or something
-      like that. */
+   // The low digit of rotstate (should have just low 2 bits on) tells
+   // what possible rotation states could exist with all setups in
+   // same parity.  The next digit tells what possible states of z0
+   // exist with alternating parity.  The highest bit deals with triangles
+   // rotating by 90 degrees from one setup to the next, or something
+   // like that.
 
    if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
-
-   result->result_flags = get_multiple_parallel_resultflags(res, 2);
-   res[1].rotation += 2;
-   canonicalize_rotation(&res[1]);
 
    // Check for non-shape-or-orientation-changing result.
 
@@ -4853,9 +4849,12 @@ void tglmap::do_glorious_triangles(
       result->kind = ss->kind;
       result->rotation = 0;
       result->eighth_rotation = 0;
-      reassemble_triangles(mapnums, 0, (startingrot^2) * 011, 0, res, idle, result);
+      reassemble_triangles(mapnums, 0, (startingrot^2) * 011, 0, res, result);
       return;
    }
+
+   if (ss->kind == s2x4)
+      fail("Can't do this.");   // Don't apologize; it's ridiculous.
 
    res[0].rotation += startingrot;
    res[1].rotation += startingrot;
@@ -4892,16 +4891,13 @@ void tglmap::do_glorious_triangles(
             r = 011;
          }
 
-         reassemble_triangles(map_ptr->mapqt1, 0, r, 0, res, idle, result);
+         reassemble_triangles(map_ptr->mapqt1, 0, r, 0, res, result);
       }
       else if (res[0].rotation == 2 && ss->kind != s_bone6) {
          if (map_ptr->nointlkshapechange)
             goto shapechangeerror;
 
          result->kind = s_c1phan;
-         // Restore the two people who don't move.
-         copy_rot(result, map_ptr->mapcp1[7], &idle, 0, r);
-         copy_rot(result, map_ptr->mapcp1[6], &idle, 1, r);
          scatter(result, &res[0], &map_ptr->mapcp1[3], 2, 0);
          scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
       }
@@ -4926,7 +4922,7 @@ void tglmap::do_glorious_triangles(
                   result->rotation += 3;
                }
 
-               reassemble_triangles(map_ptr->map241, ri, 011, 1, res, idle, result);
+               reassemble_triangles(map_ptr->map241, ri, 011, 1, res, result);
             }
             else {
                if (map_ptr->randombits & 8) {
@@ -4939,7 +4935,7 @@ void tglmap::do_glorious_triangles(
                   result->kind = s_short6;
                }
 
-               reassemble_triangles(map_ptr->map261, ri, r, 1, res, idle, result);
+               reassemble_triangles(map_ptr->map261, ri, r, 1, res, result);
             }
          }
          else if (ss->kind == s_short6) {
@@ -4948,27 +4944,23 @@ void tglmap::do_glorious_triangles(
 
             result->kind = map_ptr->kind;
             result->rotation += 2;
-            reassemble_triangles(map_ptr->mapqt1, 0, 022, 1, res, idle, result);
+            reassemble_triangles(map_ptr->mapqt1, 0, 022, 1, res, result);
          }
          else if (ss->kind == s_bone6) {
             if (res[0].rotation & 1) {
-               reassemble_triangles(map_ptr->map261, 0, 0, 1, res, idle, result);
+               reassemble_triangles(map_ptr->map261, 0, 0, 1, res, result);
             }
             else {
                if (!(res[0].rotation & 2))
                   map_ptr = ptrtable[map_ptr->otherkey];
                result->kind = map_ptr->kind;
-               reassemble_triangles(map_ptr->mapqt1, 0, 022, 0, res, idle, result);
+               reassemble_triangles(map_ptr->mapqt1, 0, 022, 0, res, result);
             }
          }
          else if (result->kind == s_c1phan) {
-            reassemble_triangles(map_ptr->mapcp1, r, 0, 1, res, idle, result);
+            reassemble_triangles(map_ptr->mapcp1, r, 0, 1, res, result);
          }
          else {
-            // Restore the two people who don't move.
-            copy_rot(result, map_ptr->mapqt1[7], &idle, 0, r);
-            copy_rot(result, map_ptr->mapqt1[6], &idle, 1, r);
-
             // Copy the triangles.
             scatter(result, &res[0], map_ptr->mapqt1, 2, 0);
             scatter(result, &res[1], &map_ptr->mapqt1[3], 2, 022);
@@ -4993,7 +4985,7 @@ void tglmap::do_glorious_triangles(
             result->kind = map_ptr->kind1x3;
          }
 
-         reassemble_triangles(mapnums, 0, 022, 0, res, idle, result);
+         reassemble_triangles(mapnums, 0, 022, 0, res, result);
       }
       else {
          if (startingrot == 1)
@@ -5003,7 +4995,7 @@ void tglmap::do_glorious_triangles(
             mapnums = map_ptr->map261;
             result->kind = s2x5;
             warn(warn__check_2x5);
-            reassemble_triangles(mapnums, 0, 022, 0, res, idle, result);
+            reassemble_triangles(mapnums, 0, 022, 0, res, result);
          }
          else {
             map_ptr = ptrtable[map_ptr->otherkey];
@@ -5011,9 +5003,6 @@ void tglmap::do_glorious_triangles(
             result->kind = map_ptr->kind1x3;
 
             if (map_ptr->randombits & 1) {    // What a crock!
-               copy_rot(result, map_ptr->map241[6], &idle, 0, r);
-               copy_rot(result, map_ptr->map241[7], &idle, 1, r);
-
                for (i=0; i<3; i++) {
                   copy_person(result, map_ptr->map241[i+3], &res[0], 2-i);
                   copy_rot(result, map_ptr->map241[i], &res[1], 2-i, 022);
@@ -5021,8 +5010,6 @@ void tglmap::do_glorious_triangles(
             }
             else {
                mapnums = map_ptr->map241;
-               copy_rot(result, mapnums[7], &idle, 0, r);
-               copy_rot(result, mapnums[6], &idle, 1, r);
                scatter(result, &res[0], mapnums, 2, 0);
                scatter(result, &res[1], &mapnums[3], 2, 022);
             }

@@ -131,6 +131,7 @@ and the following external variables:
    conc_elong_warnings
    dyp_each_warnings
    useless_phan_clw_warnings
+   suspect_destroyline_warnings
    allowing_all_concepts
    allowing_minigrand
    allow_bend_home_getout
@@ -271,6 +272,7 @@ warning_info no_search_warnings;
 warning_info conc_elong_warnings;
 warning_info dyp_each_warnings;
 warning_info useless_phan_clw_warnings;
+warning_info suspect_destroyline_warnings;
 bool allowing_all_concepts = false;
 bool allowing_minigrand = false;
 bool allow_bend_home_getout = false;
@@ -3354,6 +3356,9 @@ void initialize_sdlib()
 
    for (i=0 ; i<warn__NUM_WARNINGS ; i++) {
       switch (warning_strings[i][0]) {
+      case '%':
+         suspect_destroyline_warnings.setbit((warning_index) i);
+         no_search_warnings.setbit((warning_index) i); break;
       case '#':
          useless_phan_clw_warnings.setbit((warning_index) i);
          // FALL THROUGH!!!!
@@ -6709,12 +6714,43 @@ void toplevelmove() THROW_DECL
                starting_setup.people[i].id3 |= (((i+3) & 4) ? ID3_NEARFOUR : ID3_FARFOUR);
          }
       }
-      else if (starting_setup.kind == s_spindle && starting_setup.rotation & 1) {
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON) {
-               starting_setup.people[i].id3 |=
-                  (((0x1C >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
-                  (((0xC1 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+      else if (starting_setup.kind == s_spindle) {
+         if (starting_setup.rotation & 1) {
+            for (i=0; i<8; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  starting_setup.people[i].id3 |=
+                     (((0x1C >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+                     (((0xC1 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+               }
+            }
+         }
+         else {
+            for (i=0; i<8; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  starting_setup.people[i].id3 |=
+                     (((0x70 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE) |
+                     (((0x07 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+               }
+            }
+         }
+      }
+      else if (starting_setup.kind == s3dmd && !(starting_setup.rotation & 1)) {
+         uint32 livemask = little_endian_live_mask(&starting_setup);
+         if ((livemask & 0x1C0) == 0x1C0) {
+            for (i=0; i<12; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  starting_setup.people[i].id3 |=
+                     (((0x1C0 >> i) & 1) ? ID3_NEARTHREE : ID3_FARFIVE);
+               }
+            }
+         }
+
+         if ((livemask & 0x7) == 0x7) {
+            for (i=0; i<12; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  starting_setup.people[i].id3 |=
+                     (((0x7 >> i) & 1) ? ID3_FARTHREE : ID3_NEARFIVE);
+               }
             }
          }
       }
@@ -6814,6 +6850,11 @@ void toplevelmove() THROW_DECL
    remove_tgl_distortion(&newhist.state);
    remove_fudgy_2x3_2x6(&newhist.state);
 
+   // If did a Cycle and Wheel with the 2x2 facing recycle as both parts,
+   // It sin't legal.  If it was done under a concentric concept, the error was cleared.
+   if (newhist.test_one_warning_specific(warn_suspect_destroyline))
+      fail("This isn't a legitimate cycle and wheel.");
+
    if (newhist.state.kind == s1p5x8)
       fail("Can't go into a 50% offset 1x8.");
    else if (newhist.state.kind == s1p5x4)
@@ -6827,17 +6868,6 @@ void toplevelmove() THROW_DECL
    // Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here.
    newhist.state.result_flags.misc |= starting_setup.result_flags.misc &
       (RESULTFLAG__IMPRECISE_ROT|RESULTFLAG__ACTIVE_PHANTOMS_ON|RESULTFLAG__ACTIVE_PHANTOMS_OFF);
-
-   /*
-   // But 1/8 rotation stuff cancels in pairs.
-   if (newhist.state.eighth_rotation & starting_setup.eighth_rotation) {
-      newhist.state.eighth_rotation = 0;
-      newhist.state.rotation++;
-      canonicalize_rotation(&newhist.state);
-   }
-   else
-      newhist.state.eighth_rotation += starting_setup.eighth_rotation;
-   */
 }
 
 
