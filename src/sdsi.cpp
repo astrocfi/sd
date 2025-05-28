@@ -145,14 +145,12 @@ extern void general_initialize()
    unsigned int seed = (ui_options.resolve_test_random_seed != 0) ?
       ui_options.resolve_test_random_seed : (uint32_t) time((time_t *)0);
    srand(seed);
-   random_count = 0;
 }
 
 
 extern int generate_random_number(int modulus)
 {
    random_number = (int) rand();
-   random_recent_history[(random_count++) & 127] = random_number;
    return random_number % modulus;
 }
 

@@ -6399,9 +6399,6 @@ extern SDLIB_API bool showing_has_stopped;                    // in SDMATCH
 extern SDLIB_API int session_index;                           // in SDSI
 extern SDLIB_API bool rewrite_with_new_style_filename;        // in SDSI
 extern SDLIB_API int random_number;                           // in SDSI
-extern SDLIB_API uint32_t random_recent_history[128];
-extern SDLIB_API int random_count;
-extern SDLIB_API int random_top_level_start;
 extern SDLIB_API const char *database_filename;               // in SDSI
 extern SDLIB_API const char *new_outfile_string;              // in SDSI
 extern SDLIB_API char abridge_filename[MAX_TEXT_LINE_LENGTH]; // in SDSI

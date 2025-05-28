@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2021  William B. Ackerman.
+//    Copyright (C) 1990-2013  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -32,6 +32,8 @@
 //    http://www.gnu.org/licenses/
 //
 //    ===================================================================
+//
+//    This is for version 38.
 
 /* This defines the following functions:
    configuration::null_resolve_thing
@@ -39,6 +41,9 @@
    configuration::calculate_resolve
    write_resolve_text
    full_resolve
+   configuration::concepts_in_place
+   resolve_command_ok
+   nice_setup_command_ok
    create_resolve_menu_title
    initialize_getout_tables
 */
@@ -88,10 +93,10 @@ static int resolve_allocation = 0;
 static int *avoid_list = (int *) 0;
 static int avoid_list_size;
 static int avoid_list_allocation = 0;
-static uint32_t perm_array[8];
+static uint32 perm_array[8];
 static setup_kind goal_kind;
 static int goal_rotation;
-static uint32_t goal_directions[8];
+static uint32 goal_directions[8];
 static const reconcile_descriptor *current_reconciler;
 
 // BEWARE!!  This must be keyed to the enumeration "command_kind" in sd.h .
@@ -277,9 +282,9 @@ struct resolve_tester {
    // Add 0x20 bit -- same as 0x40 if distance is zero, otherwise OK.
    // Add 0x40 bit to make the resolver never find this, though
    //    we will display it if user gets here.
-   uint32_t distance;
-   int8_t locations[8];
-   uint32_t directions;
+   uint32 distance;
+   veryshort locations[8];
+   uint32 directions;
 };
 
 bool configuration::sequence_is_resolved()
@@ -307,12 +312,6 @@ const resolve_tester *configuration::null_resolve_ptr = &null_resolve_thing;
 //
 // The assignment of couple number may be rotated freely, of course.  But the person
 // in slot 0 of the list (B1 in the example) must be a boy.
-
-
-static const resolve_tester test_2x2_stuff[] = {
-   // Look for at-home getout in two-couple material.
-   {resolve_circle,         MS, 4,   {1, 0, -1, -1, 3, 2, -1, -1},  0xAA008800},
-   {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_thar_stuff[] = {
    {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
@@ -788,18 +787,12 @@ void configuration::calculate_resolve()
 {
    const resolve_tester *testptr;
    int i;
-   uint32_t singer_offset = 0;
+   uint32 singer_offset = 0;
 
    if (ui_options.singing_call_mode == 1) singer_offset = 0600;
    else if (ui_options.singing_call_mode == 2) singer_offset = 0200;
 
    switch (state.kind) {
-   case s2x2:
-      if (two_couple_calling)
-         testptr = test_2x2_stuff;
-      else
-         goto no_resolve;
-      break;
    case s2x4:
       testptr = test_2x4_stuff; break;
    case s3x4:
@@ -848,8 +841,8 @@ void configuration::calculate_resolve()
    }
 
    do {
-      uint32_t directionword;
-      uint32_t firstperson = state.people[testptr->locations[0]].id1 & 0700;
+      uint32 directionword;
+      uint32 firstperson = state.people[testptr->locations[0]].id1 & 0700;
       if (firstperson & 0100) goto not_this_one;
 
       // We run the tests in descending order, because the test for i=0 is especially
@@ -857,25 +850,23 @@ void configuration::calculate_resolve()
       // failures as quickly as possible.
 
       for (i=7,directionword=testptr->directions ; i>=0 ; i--,directionword>>=4) {
-         uint32_t expected_id = (i << 6) + ((i&1) ? singer_offset : 0);
+         uint32 expected_id = (i << 6) + ((i&1) ? singer_offset : 0);
 
          // The adds of "expected_id" and "firstperson" may overflow out of the "700" bits
          // into the next 2 bits.  (One bit for each add.)
 
-         if (((state.people[testptr->locations[i]].id1 ^
+         if ((state.people[testptr->locations[i]].id1 ^
               (expected_id + firstperson + (directionword & 0xF))) &
-              0777) && (directionword & 0xF) != 0)  // Skip some tests if doing two couple.
+             0777)
             goto not_this_one;
       }
 
       if (calling_level < (dance_level) testptr->level_needed ||
           (testptr->k == resolve_minigrand && !allowing_minigrand)) goto not_this_one;
 
+      resolve_flag.the_item = testptr;
       resolve_flag.distance =
          ((state.rotation << 1) + (firstperson >> 6) + testptr->distance) & 7;
-      if (two_couple_calling && resolve_flag.distance != 0)
-         goto not_this_one;    // Must be at home.
-      resolve_flag.the_item = testptr;
       return;
 
       not_this_one: ;
@@ -1018,13 +1009,17 @@ static int history_insertion_point;    // Where our resolve should lie in the hi
 static int history_save;               // Where we are inserting calls now.  This moves
                                        // forward as we build multiple-call resolves.
 
+#ifdef EXCESSIVE_RECONCILE_FIXUP
+static uint32 global_status;    // Yeah, it's sleazy making this static.
+#endif
+
 static bool inner_search(command_kind goal,
                          resolve_rec *new_resolve,
                          int insertion_depth,
                          int insertion_width)
 {
    int i, j;
-   uint32_t directions, p, q;
+   uint32 directions, p, q;
    double CLOCKS_TO_RESOLVE;
 
    if (ui_options.resolve_test_minutes > 0)
@@ -1065,7 +1060,7 @@ static bool inner_search(command_kind goal,
    volatile int little_count = 0;
    volatile int attempt_count = 0;
 
-   int32_t air_start_time = clock();
+   int32 air_start_time = clock();
    double big_resolve_time = 0.0;
    hashed_random_list[0] = 0;
 
@@ -1124,7 +1119,7 @@ static bool inner_search(command_kind goal,
          // ticks on Windows, and 100,000 ticks on Linux.  Tally that in a
          // doubleprecision floating variable.  36 billion is trivial for such a thing.
 
-         int32_t air_time = clock() - air_start_time;
+         int32 air_time = clock() - air_start_time;
          air_start_time += air_time; // Reset it for the next time we come up for air.
 
          // But what if the system clock wrapped around (overflowed) during this time?
@@ -1308,9 +1303,9 @@ static bool inner_search(command_kind goal,
 
       case command_standardize:
          {
-            uint32_t tb = 0;
-            uint32_t tbtb = 0;
-            uint32_t tbpt = 0;
+            uint32 tb = 0;
+            uint32 tbtb = 0;
+            uint32 tbpt = 0;
 
             for (i=0 ; i<8 ; i++) {
                tb |= ns->people[i].id1;
@@ -1335,9 +1330,10 @@ static bool inner_search(command_kind goal,
       case command_reconcile:
          {
             if (ns->kind != goal_kind) goto not_a_solution_but_maybe_can_build_on_it;
-
+#ifndef EXCESSIVE_RECONCILE_FIXUP
             for (j=0; j<8; j++) {
                if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto not_a_solution_but_maybe_can_build_on_it; }
+#endif
 
             int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
             int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
@@ -1349,8 +1345,9 @@ static bool inner_search(command_kind goal,
             int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
 
             // Test for absolute sex correctness if required.
-
+#ifndef EXCESSIVE_RECONCILE_FIXUP
             if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto not_a_solution_but_maybe_can_build_on_it;
+#endif
 
             p7 = (p7 - p6) & PID_MASK;
             p6 = (p6 - p5) & PID_MASK;
@@ -1502,8 +1499,13 @@ static bool inner_search(command_kind goal,
       // gets destructively reset to the initial state by restore_parse_state, so we must
       // protect it.
 
+#ifdef EXCESSIVE_RECONCILE_FIXUP
+      configuration::history[config_history_ptr+1].command_root =
+         copy_parse_tree(configuration::history[config_history_ptr+1].command_root);
+#else
       configuration::history[huge_history_ptr+1].command_root =
          copy_parse_tree(configuration::history[huge_history_ptr+1].command_root);
+#endif
 
       // Save the entire resolve, that is, the calls we inserted, and where we inserted them.
 
@@ -1530,6 +1532,9 @@ static bool inner_search(command_kind goal,
       // doing something clever.  Oh well.)
 
       testing_fidelity = true;
+#ifdef EXCESSIVE_RECONCILE_FIXUP
+      global_status = 0;
+#endif
 
       for (j=0; j<new_resolve->insertion_point; j++) {
          // Copy the whole thing into the history, chiefly to get the call and concepts.
@@ -1537,14 +1542,43 @@ static bool inner_search(command_kind goal,
 
          configuration::next_config() = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point];
 
+#ifdef EXCESSIVE_RECONCILE_FIXUP
+         // The call to fix_up_call_for_fidelity_test will alter the parse tree in
+         // configuration::next_config().command_root, so make a copy.
+         configuration::next_config().command_root = copy_parse_tree(configuration::next_config().command_root);
+
+         // **** Unfortunately, we need to copy it back if we accept this resolve.
+         // Well, actually, we need to save, in each resolve, all the permutations that
+         // were involved.  This presumably means saving the entire rest of the sequence.
+         // Which means that the "stuph" array is unbounded.
+
+         if (fix_up_call_for_fidelity_test(&configuration::current_config().state,
+                                           &huge_history_save[j+huge_history_ptr-new_resolve->insertion_point].state,
+                                           global_status) || (global_status & 2)) {
+            goto not_a_solution_but_maybe_can_build_on_it;
+         }
+
+         // Now execute the call again, from the new starting configuration.
+
+         try {
+            toplevelmove();
+            finish_toplevelmove();
+         }
+         catch(error_flag_type) {
+            goto not_a_solution_but_maybe_can_build_on_it;
+         }
+#else
          // Now execute the call again, from the new starting configuration.
          // This might signal and go to cant_consider_this_call.
          toplevelmove();
          finish_toplevelmove();
+#endif
+
          configuration this_state = configuration::next_config();
          this_state.state.rotation -= new_resolve->rotchange;
          canonicalize_rotation(&this_state.state);
 
+#ifndef EXCESSIVE_RECONCILE_FIXUP
          if (this_state.state.rotation !=
              huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.rotation)
             goto cant_consider_this_call;
@@ -1560,10 +1594,10 @@ static bool inner_search(command_kind goal,
 
                if (this_state.state.people[k].id1 != ((t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK)))
                   goto cant_consider_this_call;
-               if (this_state.state.people[k].id2 !=
-                   ((t.id2 & ~ID2_PERM_ALLBITS) | (thispermuteperson.id2 & ID2_PERM_ALLBITS)))
+               if (this_state.state.people[k].id2 != t.id2)
                   goto cant_consider_this_call;
-               if (this_state.state.people[k].id3 != t.id3)
+               if (this_state.state.people[k].id3 !=
+                   ((t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS)))
                   goto cant_consider_this_call;
             }
             else {
@@ -1571,6 +1605,7 @@ static bool inner_search(command_kind goal,
                   goto cant_consider_this_call;
             }
          }
+#endif
 
          config_history_ptr++;
       }
@@ -1723,13 +1758,12 @@ static bool reconcile_command_ok()
    return (current_reconciler != 0);
 }
 
-static bool resolve_command_ok()
+extern int resolve_command_ok(void)
 {
-   int n = attr::klimit(configuration::current_config().state.kind);
-   return n == 7 || (two_couple_calling && n == 3);
+   return attr::klimit(configuration::current_config().state.kind) == 7;
 }
 
-static bool nice_setup_command_ok()
+extern int nice_setup_command_ok(void)
 {
    int i, k;
    bool setup_ok = false;
@@ -1807,11 +1841,11 @@ uims_reply_thing ui_utils::full_resolve()
             specialfail("Not in acceptable setup for resolve.");
          break;
       case command_standardize:
-         if (!resolve_command_ok() || two_couple_calling)
+         if (!resolve_command_ok())
             specialfail("Not in acceptable setup for standardize.");
          break;
       case command_reconcile:
-         if (!reconcile_command_ok() || two_couple_calling)
+         if (!reconcile_command_ok())
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
          {
@@ -1827,7 +1861,7 @@ uims_reply_thing ui_utils::full_resolve()
                                              // we wait for the user to set the depth.
          break;
       case command_normalize:
-         if (!nice_setup_command_ok() || two_couple_calling)
+         if (!nice_setup_command_ok())
             specialfail("Sorry, can't do this: concepts are already selected, or no applicable concepts are available.");
          break;
    }
@@ -1915,7 +1949,7 @@ uims_reply_thing ui_utils::full_resolve()
 
                if (t.id1) {
                   const personrec & thispermuteperson = this_resolve->permutepersoninfo[(t.id1 & PID_MASK) >> 6];
-                  t.id2 = (t.id2 & ~ID2_PERM_ALLBITS) | (thispermuteperson.id2 & ID2_PERM_ALLBITS);
+                  t.id3 = (t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS);
                   t.id1 = (t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK);
                }
             }
@@ -1953,6 +1987,18 @@ uims_reply_thing ui_utils::full_resolve()
          if (search_goal == command_reconcile) {
             writestuff("------------------------------------");
             newline();
+
+#ifdef EXCESSIVE_RECONCILE_FIXUP
+            // And the warnings if something significant changed.
+            if (global_status & 4) {
+               writestuff("Warning -- the formation has changed.");
+               newline();
+            }
+            else if (global_status & 1) {
+               writestuff("Warning -- person identifiers were changed.");
+               newline();
+            }
+#endif
          }
 
          // Show whatever comes after the resolve.
