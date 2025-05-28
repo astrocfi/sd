@@ -596,6 +596,14 @@ static const resolve_tester test_4dmd_stuff[] = {
    {resolve_rlg,            MS, 4,   {11, 10, 5, 4, 3, 2, 13, 12}, 0x138A31A8},
    {resolve_none, MS, 0x10}};
 
+static const resolve_tester test_3dmd_stuff[] = {
+   // Some points facing each other, others around the corner to a center.
+   {resolve_la,             MS, 7,   {6, 3, 2, 1, 0, 9, 8, 7},     0x38131A31},
+   {resolve_la,             MS, 7,   {7, 6, 3, 2, 1, 0, 9, 8},     0x31A31381},
+   {resolve_rlg,            MS, 3,   {7, 6, 3, 2, 1, 0, 9, 8},     0x138131A3},
+   {resolve_rlg,            MS, 5,   {8, 7, 6, 3, 2, 1, 0, 9},     0x131A3138},
+   {resolve_none, MS, 0x10}};
+
 static const resolve_tester test_bigdmd_stuff[] = {
    // From  miniwaves in "common point diamonds".
    {resolve_rlg,            MS, 2,   {7, 6, 3, 2, 1, 0, 9, 8},     0x8A31A813},
@@ -780,6 +788,8 @@ void configuration::calculate_resolve()
       testptr = test_qtag_stuff; break;
    case s_hrglass:
       testptr = test_hrgl_stuff; break;
+   case s3dmd:
+      testptr = test_3dmd_stuff; break;
    case s4dmd:
       testptr = test_4dmd_stuff; break;
    case sbigdmd:

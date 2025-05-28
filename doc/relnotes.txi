@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.82
-@set title2 Database version = 38.82 format = 327
+@set title1 RELEASE NOTES FOR VERSION 38.83
+@set title2 Database version = 38.83 format = 328
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.83::
 * 38.82::
 * 38.81::
 * 38.80::
@@ -121,7 +122,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.82, Top, (dir)
+@node Intro, 38.83, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -132,11 +133,17 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2015 William B. Ackerman
 @sp 3
 @menu
-* 38.82::               Changes in the current version
+* 38.83::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.82, 38.81, Intro, Top
+@node 38.83, 38.82, Intro, Top
+@unnumberedsec Version 38.83 changes
+
+Fixed a number of minor problems.
+
+@c ************
+@node 38.82, 38.81, 38.83, Top
 @unnumberedsec Version 38.82 changes
 
 In accordance with a vote of the Callerlab Advanced Committee,

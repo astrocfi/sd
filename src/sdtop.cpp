@@ -633,9 +633,25 @@ extern void update_id_bits(setup *ss)
             face_list += 2;
       }
 
+      // Those that were not found to be facing get set to ID2_NOTFACING, except that if
+      // the height of the setup was 1, that is, it's a 1x4 or such, any person facing
+      // up or down is deemed not to be facing anyone.
+      //
+      // This means that, in a 1x4 line, people will have neither ID2_FACING nor
+      // ID2_NOTFACING set, so the designation "those facing" will not just return
+      // false; it will raise an error.  If we are in a 1/4 tag and the call is
+      // "[those facing pass thru] and circle 1/4", it tries the 4-person call with just
+      // the centers first, and, if that raises an error, it tries it with the whole
+      // 8-person setup.  So this code makes the 4-person version illegal, so it will go
+      // to the 8-person version.
+
+      uint32 cant_do_it_mask = (setup_attrs[ss->kind].bounding_box[1] == 1) ? 0x8 : 0;
+
       for (i=0 ; i<=attr::slimit(ss) ; i++) {
-         if (ss->people[i].id1 && !(ss->people[i].id2 & ID2_FACING))
+         if (ss->people[i].id1 && !(ss->people[i].id2 & ID2_FACING) &&
+             !(ss->people[i].id1 & cant_do_it_mask)) {
             ss->people[i].id2 |= ID2_NOTFACING;
+         }
       }
    }
 
@@ -4250,6 +4266,9 @@ extern callarray *assoc(
       case cr_said_dmd:
          if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_DIAMOND) goto good;
          goto bad;
+      case cr_said_gal:
+         if (ss->cmd.cmd_misc3_flags & CMD_MISC3__SAID_GALAXY) goto good;
+         goto bad;
       case cr_didnt_say_tgl:
          tt.assump_negate = 1;
          /* **** FALL THROUGH!!!! */
@@ -5179,7 +5198,6 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 bool fix_n_results(
    int arity,
    int goal,
-   bool kind_is_split,
    setup z[],
    uint32 & rotstates,
    uint32 & pointclip,
@@ -5188,7 +5206,6 @@ bool fix_n_results(
 {
    int i;
 
-   bool reorder_setups_2_and_3 = kind_is_split && arity == 4;
    int lineflag = 0;
    bool dmdflag = false;
    bool qtflag = false;
@@ -5252,14 +5269,11 @@ bool fix_n_results(
       // next.  (The whole point of the rotstates and the rotstate_table is to track this.)
       // But, if rotations change from one subsetup to the next and there are 4 or more
       // of them, we don't expect them to rotate uniformly from left to right.
-      // We want to track a rotation set of {0, 1, 1, 0}, which would happen if we did
+      // We want to track a rotation set of {0, 1, 0, 1}, which would happen if we did
       // a quadruple boxes reach out in a 2x8 with the center boxes T-boned to the outer
       // ones.  So we swap the last two subsetups.  This is tested in t46t.
       // If the number is higher than that, we have no effective way of dealing with
       // nonuniform rotations.
-
-      int suggested_incremental_rotation_parity = i & 1;
-      if (reorder_setups_2_and_3 && (i&2)) suggested_incremental_rotation_parity ^= 1;
 
       if (z[i].kind == s_normal_concentric) {
 
@@ -5379,7 +5393,7 @@ bool fix_n_results(
             rotstates &= 0x033;
 
          canonicalize_rotation(&z[i]);
-         rotstates &= rotstate_table[(suggested_incremental_rotation_parity << 2) |
+         rotstates &= rotstate_table[((i << 2) & 4) |
                                     ((z[i].rotation^dmdqtagfudge) & 3)];
       }
    }
@@ -5553,9 +5567,6 @@ bool fix_n_results(
          z[i].clear_people();
          z[i].eighth_rotation = 0;
 
-         int suggested_incremental_rotation_parity = i & 1;
-         if (reorder_setups_2_and_3 && (i&2)) suggested_incremental_rotation_parity ^= 1;
-
          if (rotstates & 0x1)
             z[i].rotation = 0;
          else if (rotstates & 0x2)
@@ -5565,17 +5576,17 @@ bool fix_n_results(
          else if (rotstates & 0x8)
             z[i].rotation = 3;
          else if (rotstates & 0x10)
-            z[i].rotation = suggested_incremental_rotation_parity;
+            z[i].rotation = i & 1;
          else if (rotstates & 0x20)
-            z[i].rotation = suggested_incremental_rotation_parity ^ 1;
+            z[i].rotation = ~i & 1;
          else if (rotstates & 0x100)
-            z[i].rotation = 2*suggested_incremental_rotation_parity;
+            z[i].rotation = 2*(i & 1);
          else if (rotstates & 0x200)
-            z[i].rotation = 1+2*suggested_incremental_rotation_parity;
+            z[i].rotation = 1+2*(i & 1);
          else if (rotstates & 0x400)
-            z[i].rotation = 2-2*suggested_incremental_rotation_parity;
+            z[i].rotation = 2-2*(i & 1);
          else if (rotstates & 0x800)
-            z[i].rotation = 3-2*suggested_incremental_rotation_parity;
+            z[i].rotation = 3-2*(i & 1);
          else
             fail("Don't recognize ending setup for this call.");
       }

@@ -2144,7 +2144,8 @@ static bool handle_4x4_division(
       else if ((callflags1 & CFLAG1_12_16_MATRIX_MEANS_SPLIT) &&
                ((!(newtb & 001) || assoc(b_1x4, ss, calldeflist)) &&
                 (!(newtb & 010) || assoc(b_4x1, ss, calldeflist)))) {
-         division_code = spcmap_4x4v;
+         finalrot++;
+         division_code = MAPCODE(s1x4,4,MPKIND__SPLIT,1);
          return true;
       }
    }
@@ -3039,10 +3040,10 @@ static int divide_the_setup(
 
       switch (livemask) {
       case 01717:
-         division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_L_HALF,0);
+         division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0,s_trngl4,0x7);
          break;
       case 07474:
-         division_code = MAPCODE(s_trngl4,2,MPKIND__OFFS_R_HALF,0);
+         division_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0,s_trngl4,0xD);
          break;
       }
 
@@ -3247,11 +3248,11 @@ static int divide_the_setup(
       break;
    case s_nftrgl6cw:
       // The only legal thing we can do here is split into two triangles.
-      division_code = MAPCODE(s_trngl,2,MPKIND__OFFS_R_HALF,0);
+      division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_OFFS_R_HALF,0,s_trngl,0x2);
       goto divide_us_no_recompute;
    case s_nftrgl6ccw:
       // The only legal thing we can do here is split into two triangles.
-      division_code = MAPCODE(s_trngl,2,MPKIND__OFFS_L_HALF,0);
+      division_code = HETERO_MAPCODE(s_trngl,2,MPKIND__HET_OFFS_L_HALF,0,s_trngl,0x8);
       goto divide_us_no_recompute;
    case s_wingedstar6:
       // **** Not really right.  Ought to check facing directions of the people that will be

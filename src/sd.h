@@ -1188,6 +1188,8 @@ class select {
       fx_dbt2a,
       fx_dbt1b,
       fx_dbt2b,
+      fx_dbt1d,
+      fx_dbt1l,
       fx_1x5p1y,
       fx_1x5p1z,
       fx_5p1x1d,
@@ -1677,7 +1679,8 @@ enum {
    SCA_SPLITOK         = 0x00000020U,
    SCA_INV_SUP_ELWARN  = 0x00000040U,
    SCA_CONC_REV_ORDER  = 0x00000080U,
-   SCA_NO_OVERCAST     = 0x00000100U
+   SCA_NO_OVERCAST     = 0x00000100U,
+   SCA_REMOVE_VERIFY   = 0x00000200U
 };
 
 struct schema_attr {
@@ -2237,17 +2240,6 @@ struct concept_table_item {
    been done the same way without the "split" concept.  This prevents superfluous
    things like "split pass thru".
 
-   CMD_MISC__SAID_TRIANGLE means that we are at a level of recursion in which
-   the word "triangle" has been uttered, so it is OK to do things like "triangle
-   peel and trail" without giving the explicit "triangle" concept again.  This
-   makes it possible to say things like "tandem-based triangles peel and trail".
-
-   CMD_MISC__DO_AS_COUPLES means that the "couples_unless_single" invocation
-   flag is on, and the call may need to be done as couples or whatever.  The
-   bits in "do_couples_heritflags" control this.  If INHERITFLAG_SINGLE is on,
-   do not do it as couples.  If off, do it as couples.  If various other bits
-   are on (e.g. INHERITFLAG_1X3), do the appropriate thing.
-
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -2273,6 +2265,23 @@ struct concept_table_item {
    no longer permits us to do the implicit step to a wave or rear back from one
    that some calls permit at the top level.
 */
+
+
+/* Same, for the "cmd_misc3_flags" word.
+   CMD_MISC3__SAID_TRIANGLE means that we are at a level of recursion in which
+   the word "triangle" has been uttered, so it is OK to do things like "triangle
+   peel and trail" without giving the explicit "triangle" concept again.  This
+   makes it possible to say things like "tandem-based triangles peel and trail".
+
+   Similarly for CMD_MISC3__SAID_DIAMOND, etc.
+
+   CMD_MISC3__DO_AS_COUPLES means that the "couples_unless_single" invocation
+   flag is on, and the call may need to be done as couples or whatever.  The
+   bits in "do_couples_heritflags" control this.  If INHERITFLAG_SINGLE is on,
+   do not do it as couples.  If off, do it as couples.  If various other bits
+   are on (e.g. INHERITFLAG_1X3), do the appropriate thing.
+*/
+
 
 // Beware!  These flags must be disjoint from DFM1_CONCENTRICITY_FLAG_MASK, in database.h .
 // If that changes, these flags need to be chacked.
@@ -2425,19 +2434,20 @@ enum {
    CMD_MISC3__SUPERCALL            = 0x00020000U,
    CMD_MISC3__SAID_TRIANGLE        = 0x00040000U,
    CMD_MISC3__SAID_DIAMOND         = 0x00080000U,
-   CMD_MISC3__SAID_Z               = 0x00100000U,
-   CMD_MISC3__TRY_MIMIC_LINES      = 0x00200000U,
-   CMD_MISC3__TRY_MIMIC_COLS       = 0x00400000U,
+   CMD_MISC3__SAID_GALAXY          = 0x00100000U,
+   CMD_MISC3__SAID_Z               = 0x00200000U,
+   CMD_MISC3__TRY_MIMIC_LINES      = 0x00400000U,
+   CMD_MISC3__TRY_MIMIC_COLS       = 0x00800000U,
 
    // This is a 2 bit field.
-   CMD_MISC3__DID_Z_COMPRESSMASK   = 0x01800000U,
-   CMD_MISC3__DID_Z_COMPRESSBIT    = 0x00800000U,
+   CMD_MISC3__DID_Z_COMPRESSMASK   = 0x03000000U,
+   CMD_MISC3__DID_Z_COMPRESSBIT    = 0x01000000U,
 
-   CMD_MISC3__ACTUAL_Z_CONCEPT     = 0x02000000U,
+   CMD_MISC3__ACTUAL_Z_CONCEPT     = 0x04000000U,
 
    // This refers to the special invocation of a "optional_special_number" call;
    // call is being given an optional numeric arg because of really hairy fraction.
-   CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x04000000U
+   CMD_MISC3__SPECIAL_NUMBER_INVOKE= 0x08000000U
 };
 
 enum normalize_action {
@@ -2888,7 +2898,6 @@ enum mpkind {
    MPKIND__MAGIC,
    MPKIND__INTLKDMD,
    MPKIND__MAGICINTLKDMD,
-   MPKIND__NONISOTROPREM,
    MPKIND__OFFS_L_ONEQ,
    MPKIND__OFFS_R_ONEQ,
    MPKIND__OFFS_L_THIRD,
@@ -2901,8 +2910,6 @@ enum mpkind {
    MPKIND__OVLOFS_R_HALF,
    MPKIND__OFFS_L_HALF_STAGGER,
    MPKIND__OFFS_R_HALF_STAGGER,
-   MPKIND__OFFS_L_HALF_NONISO,
-   MPKIND__OFFS_R_HALF_NONISO,
    MPKIND__OFFS_L_THRQ,
    MPKIND__OFFS_R_THRQ,
    MPKIND__OFFS_L_FULL,
@@ -2950,6 +2957,8 @@ enum mpkind {
    MPKIND__BENT8SW,
    MPKIND__BENT8NW,
    MPKIND__HET_SPLIT,
+   MPKIND__HET_OFFS_L_HALF,
+   MPKIND__HET_OFFS_R_HALF,
    MPKIND__HET_CONCPHAN,
    MPKIND__HET_ONCEREM,
    MPKIND__HET_CO_ONCEREM,   // exactly colocated
@@ -2963,7 +2972,8 @@ enum mpkind {
 inline bool hetero_mapkind(mpkind k)
 {
    return (k == MPKIND__HET_SPLIT || k == MPKIND__HET_CONCPHAN || k == MPKIND__HET_CO_ONCEREM ||
-           k == MPKIND__HET_ONCEREM || k == MPKIND__HET_TWICEREM);
+           k == MPKIND__HET_ONCEREM || k == MPKIND__HET_TWICEREM ||
+           k == MPKIND__HET_OFFS_L_HALF || k == MPKIND__HET_OFFS_R_HALF);
 }
 
 
@@ -3397,7 +3407,6 @@ parse_block *process_final_concepts(
 bool fix_n_results(
    int arity,
    int goal,
-   bool kind_is_split,
    setup z[],
    uint32 & rotstates,
    uint32 & pointclip,

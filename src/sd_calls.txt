@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.82"
+version "38.83"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -2523,8 +2523,9 @@ call "swing and circle 1/4" dontshow tag swing_and_circle
 call "centers @0" dontshow tag ctrsanything
    conc6p_or_normal nullcall [mandatory_anycall] nullcall []
 
-// We make this able to act on either a 4-person call
-// for the centers, or an 8-person call.
+// We make this able to act on either a 4-person call for the
+// centers, or an 8-person call.  4-person calls get priority.
+
 call "_@0 and circle 1/4" dontshow tag anything_and_circle
             fudge_to_q_tag
    seq ctrsanything []
@@ -3019,13 +3020,13 @@ call "cast off @b" mainstream tag cast_off_n4
             parallel_conc_end yield_if_ambiguous gen_sting_is_inherited neednumber
    setup 1x2 1x2 rotate qualifier num 1 none
       preds "Need to be in miniwave or line of 4."
-         if cast_normal  [CR0N AL0S]
+         if cast_normal_or_warn [CR0N AL0S]
    setup 1x2 1x2 qualifier num 2 none
       preds "Need to be in miniwave or line of 4."
-         if cast_normal  [CR1S AL0S]
+         if cast_normal_or_warn [CR1S AL0S]
    setup 1x2 1x2 rotate qualifier num 3 none
       preds "Need to be in miniwave or line of 4."
-         if cast_normal  [CR1S AL1N]
+         if cast_normal_or_warn [CR1S AL1N]
    setup 1x4 2x2 qualifier num 1 none
       predscantdo
          if cast_normal  [CR0E AL0W AL1W CR1E]
@@ -3057,9 +3058,6 @@ call "cast off @b" mainstream tag cast_off_n4
          if cast_pushy   [AL0E AL5E 0    CR2W CR3W 0]
          if always       [0    AL5E 0    0    CR3W 0]
             alternate_definition [half] mainstream
-
-// ***********THIS IS CAST OFF [HALF]
-
    setup 1x2 1x2        restriction forbidden wave_only qualifier num 0 none
       array [ZM0N ZM1N]
    setup 1x2 1x2        plus_eighth_rotation qualifier right live num 1 wave_only
@@ -6178,7 +6176,7 @@ call "_trade, allow t-bone" dontshow tag trade_w_tbone
             alternate_definition [half] mainstream
    setup 1x2 1x2 rotate
       predscantdocallinsetup
-         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if 1x2_beau_miniwave_or_warn [CR0N AL0S]
          if always [0 AL1S]
             alternate_definition [half funny] c2
    setup 1x2 1x2 rotate
@@ -6347,6 +6345,10 @@ call "@6 trade" mainstream
          if select_near_select          [CR1S AL0S AL3S CR2S]
          if select_once_rem_from_select [CR3S CR2S AL1S AL0S]
          if conc_from_select            [CR2S CR3S AL0S AL1S]
+   setup 2x2 2x2
+      preds "Can't find anyone to trade with."
+         if unselect                    [ZM0N ZM1N ZM2N ZM3N]
+         if select_near_select          [CR1S AL0S AL3S CR2S]
    setup 2x4 2x4
       preds "Can't find anyone to trade with."
          if unselect                    [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
@@ -11028,6 +11030,18 @@ call "_start dixie style" dontshow tag start_dixie
    setup trngl4 1x4 rotate qualifier ntbone not_split_dixie
       predscantdo
          if raise_some_sglfile [ZM2W ZM1W 0 0 0 0 ZM1W ZM2W]
+   // This selects people in an "around the corner" DPT.
+   setup alamo alamo qualifier 1fl_only
+      array [0 0 AL1W ZM3N 0 0 ZM6N CR0E]
+   // Same, in 4x4 "O" spots.
+   setup 4x4 alamo qualifier 1fl_only
+      array [0 AL1W ZM3N 0 0 0 0 0 0 ZM6N CR0E 0 0 0 0 0]
+   // This selects people in a "straight ahead" DPT.
+   setup alamo alamo plus_eighth_rotation qualifier miniwaves
+      array [0 0 1W 1W 0 0 6N 6N]
+   // Same, in 4x4 "O" spots.
+   setup 4x4 alamo plus_eighth_rotation qualifier miniwaves
+      array [0 1W 1W 0 0 0 0 0 0 6N 6N 0 0 0 0 0]
             alternate_definition [singlefile] mainstream
    setup 4x1 1x4 qualifier in 2fl_only
       array [ZM0N ZM3N 0 0 ]
@@ -18043,17 +18057,17 @@ call "delight" c3a tag delight
    conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod]
         elight [conc_demand_columns conc_force_spots]
 
-call "delight but @m" c3a
+call "delight but @m" c3a tag delightbut
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    conc swingbackwindmillbut2nd [inherit_yoyo inherit_gensting inherit_fractal]
         elight [conc_demand_columns conc_force_spots]
 
 call "dilemma" c3a tag dilemma
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
-   conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal]
+   conc swingbackwindmill [inherit_yoyo inherit_gensting inherit_fractal allow_forced_mod]
         elemma [conc_demand_columns conc_force_spots]
 
-call "dilemma but @m" c3a
+call "dilemma but @m" c3a tag dilemmabut
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    conc swingbackwindmillbut2nd [inherit_yoyo inherit_gensting inherit_fractal]
         elemma [conc_demand_columns conc_force_spots]
@@ -18211,12 +18225,26 @@ call "@v er's delight" c3a
    seq extend []
    seq delight [inherit_fractal]
 
+call "@v er's delight but @m" c3a
+            first_part_visible left_means_mirror
+            singlefile_is_inherited fractal_is_inherited revert_is_inherited
+   seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
+   seq extend []
+   seq delightbut [inherit_fractal]
+
 call "@v er's dilemma" c3a
             first_part_visible left_means_mirror
             singlefile_is_inherited fractal_is_inherited revert_is_inherited
    seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
    seq extend []
    seq dilemma [inherit_fractal]
+
+call "@v er's dilemma but @m" c3a
+            first_part_visible left_means_mirror
+            singlefile_is_inherited fractal_is_inherited revert_is_inherited
+   seq real_base_0 [inherit_left inherit_singlefile inherit_revert inherit_fractal]
+   seq extend []
+   seq dilemmabut [inherit_fractal]
 
 call "@v er's dream" c4a
             first_part_visible singlefile_is_inherited revert_is_inherited fractal_is_inherited
@@ -18723,6 +18751,10 @@ call "extend" mainstream tag extend
       predscantdocallinsetup
          if dmd_ctrs_rh [ZM0N ZM1N 0 0]
          if always      [ZM3N 0 0 ZM2N]
+   setup star 2x2 qualifier live ntbone right dmd_ctrs_mwv
+      array [ZM0N 0 0 ZM3N]
+   setup star 2x2 qualifier live ntbone left dmd_ctrs_mwv
+      array [0 0 ZM1N ZM2N]
 
    // Bogus usage, with both points facing the same wall.
    setup pmd trngl4 rotate qualifier live qtag_like_anisotropic restriction serious_violation alwaysfail
@@ -21360,6 +21392,10 @@ call "circulate" mainstream tag circulate
       array [0 0 0 AL2W 0 0 0 CR0E]
    setup pspindle spindle qualifier didnt_say_triangle
       array [ZM1N ZM2N CR3E 0 AL3W ZM4N ZM5N 0]
+   setup galaxy galaxy qualifier said_galaxy
+      predscantdocallinsetup
+         if next_galaxyspot_is_tboned [R1E R2E 0 L2W L3W M4N 0 M0N]
+         if always [M1N R2E 0 L2W M3N M4N 0 M0N]
 
    setup beehive beehive
       array [CR1E 0 AL1W ZM2N ZM0N ZM9N 0 ZM8N CR9S AL8S]
@@ -21577,7 +21613,7 @@ call "circulate for acey deucey" dontshow tag circulateforacey
       array [0 0 ZM3N ZM0N]
    setup 2x2 1x4 rotate qualifier explicit out in_or_out
       array [CR0N AL1S 0 0]
-   setup 2x2 dmd rotate no_cutting_through
+   setup 2x2 dmd rotate no_cutting_through really_want_diamond
       array [CR0N AL0S ZM1W ZM3W]
    setup pshort6 short6 other_elongate rotate
       array [ZM5W ZM0W CR1N AL1S ZM2W ZM3W]

@@ -1623,14 +1623,14 @@ map::map_thing map::map_init_table[] = {
    {{9, 0, 10, 8,       1, 5, 7, 11,       4, 2, 3, 6},
     sdmd,3,MPKIND__HET_SPLIT,0,  warn__none,  s_3mptpd,  (((veryshort) sdmd) << 24) | 0x004, 0},
 
-   {{0, 1, 3, 2,        4, 5, 7, 6,        15, 14, 12, 13,      11, 10, 8, 9},
-    s1x4,4,MPKIND__HET_SPLIT,1,  warn__none, sbigbigh,  (((veryshort) s1x4) << 24) | 0x041, 0},
-   {{0, 1, 3, 2,        4, 5, 7, 6,        15, 14, 12, 13,      11, 10, 8, 9},
-    s1x4,4,MPKIND__HET_SPLIT,0,  warn__none, sbigbigx,  (((veryshort) s1x4) << 24) | 0x014, 0},
-   {{0, 13, 11, 12,     14, 1, 15, 10,     7, 2, 6, 9,          3, 4, 8, 5},
-    sdmd,4,MPKIND__HET_SPLIT,1,  warn__none, s_4mdmd,   (((veryshort) sdmd) << 24) | 0x041, 0},
-   {{12, 0, 13, 11,     1, 15, 10, 14,     2, 6, 9, 7,          5, 3, 4, 8},
-    sdmd,4,MPKIND__HET_SPLIT,0,  warn__none, s_4mptpd,  (((veryshort) sdmd) << 24) | 0x014, 0},
+   {{0, 1, 3, 2,        4, 5, 7, 6,      11, 10, 8, 9,        15, 14, 12, 13},
+    s1x4,4,MPKIND__HET_SPLIT,1,  warn__none, sbigbigh,  (((veryshort) s1x4) << 24) | 0x011, 0},
+   {{0, 1, 3, 2,        4, 5, 7, 6,      11, 10, 8, 9,        15, 14, 12, 13},
+    s1x4,4,MPKIND__HET_SPLIT,0,  warn__none, sbigbigx,  (((veryshort) s1x4) << 24) | 0x044, 0},
+   {{0, 13, 11, 12,     14, 1, 15, 10,          3, 4, 8, 5,     7, 2, 6, 9},
+    sdmd,4,MPKIND__HET_SPLIT,1,  warn__none, s_4mdmd,   (((veryshort) sdmd) << 24) | 0x011, 0},
+   {{12, 0, 13, 11,     1, 15, 10, 14,          5, 3, 4, 8,     2, 6, 9, 7},
+    sdmd,4,MPKIND__HET_SPLIT,0,  warn__none, s_4mptpd,  (((veryshort) sdmd) << 24) | 0x044, 0},
 
    // See t60@6140.
    {{11, 10, 7, 6, 23, 22, 19, 18,    15, 20, 9, 2, 3, 8, 21, 14},
@@ -2010,9 +2010,9 @@ map::map_thing map::map_init_table[] = {
     s2x2,2,MPKIND__OFFS_R_FULL,1, warn__none,  s4x4,      0x005, 0},
 
    {{5, 0, 1,                     2, 3, 4},
-    s_trngl,2,MPKIND__OFFS_L_HALF,0, warn__none,s_nftrgl6ccw,0x108, 0},
+    s_trngl,2,MPKIND__HET_OFFS_L_HALF,0, warn__none,s_nftrgl6ccw, (((veryshort) s_trngl) << 24) | 0x8, 0},
    {{0, 4, 5,                     3, 1, 2},
-    s_trngl,2,MPKIND__OFFS_R_HALF,0, warn__none,s_nftrgl6cw,0x102, 0},
+    s_trngl,2,MPKIND__HET_OFFS_R_HALF,0, warn__none,s_nftrgl6cw, (((veryshort) s_trngl) << 24) | 0x2, 0},
 
    // For the 45 degree couples hinge stuff.
 
@@ -2126,14 +2126,14 @@ map::map_thing map::map_init_table[] = {
     sdmd,2,MPKIND__OFFS_R_FULL,0, warn__none,  s4x6,      0x000, 0},
 
    {{6, 7, 8, 9,                       0, 1, 2, 3},
-    s_trngl4,2,MPKIND__OFFS_L_HALF,0, warn__none, sbigdmd,0x107, 0},
+    s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0, warn__none,  sbigdmd, (((veryshort) s_trngl4) << 24) | 0x7, 0},
    {{11, 10, 9, 8,                     5, 4, 3, 2},
-    s_trngl4,2,MPKIND__OFFS_R_HALF,0, warn__none, sbigdmd,0x10D, 0},
+    s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0, warn__none,  sbigdmd, (((veryshort) s_trngl4) << 24) | 0xD, 0},
 
-   {{15, 11, 6, 8,                      7, 3, 14, 0},
-    s_trngl4,2,MPKIND__OFFS_L_HALF_NONISO,0,warn__check_hokey_4x4,s4x4,0x202, 0},
-   {{11, 15, 12, 13,                      3, 7, 4, 5},
-    s_trngl4,2,MPKIND__OFFS_R_HALF_NONISO,0,warn__check_hokey_4x4,s4x4,0x208, 0},
+   {{11, 7, 2, 4,                      3, 15, 10, 12},
+    s_trngl4,2,MPKIND__HET_OFFS_L_HALF,0,warn__check_hokey_4x4,s4x4,(((veryshort) s_trngl4) << 24) | 0xD, 0},
+   {{7, 11, 8, 9,                      15, 3, 0, 1},
+    s_trngl4,2,MPKIND__HET_OFFS_R_HALF,0,warn__check_hokey_4x4,s4x4,(((veryshort) s_trngl4) << 24) | 0x7, 0},
 
    {{11, 7, 2, 4, 5, 6,                12, 13, 14, 3, 15, 10},
     s2x3,2,MPKIND__OFFS_L_THIRD,1, warn__none,  s4x4,      0x000, 0},
@@ -2333,6 +2333,9 @@ map::map_thing map::map_init_table[] = {
      3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
     s2x6,2,MPKIND__OVERLAP,0,     warn__none,  s2x9,      0x000, 0},
 
+   {{0, 1, 3, -1, 7, 6, 2, -1,         3, 2, 6, -1, 4, 5, 7, -1},
+    s3x1dmd,2,MPKIND__OVERLAP,0,     warn__none,  s1x8,     0x000, 0},
+
    // Overlapped 2x2's.
    {{0, 1, 4, 5,                       1, 2, 3, 4},
     s2x2,2,MPKIND__OVERLAP,0,     warn__none,  s2x3,      0x000, 0},
@@ -2523,9 +2526,9 @@ map::map_thing map::map_init_table[] = {
     s1x4,3,MPKIND__HET_TWICEREM,1, warn__none,  s_qtag,     (((veryshort) s1x2) << 24) | 0x10015, 0xFFFF},
 
    {{2, 7, 5, 0,                       6, 3, 1, 4},
-    s_trngl4,2,MPKIND__REMOVED,1, warn__none,  s_bone,    0x107, 0},
+    s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_bone, (((veryshort) s_trngl4) << 24) | 0x107, 0},
    {{0, 2, 7, 5,                       4, 6, 3, 1},
-    s_trngl4,2,MPKIND__NONISOTROPREM,1, warn__none,s_ptpd,0x10D, 0},
+    s_trngl4,2,MPKIND__HET_ONCEREM,1, warn__none, s_ptpd, (((veryshort) s_trngl4) << 24) | 0x10D, 0},
 
    {{2, 4, 0,                          5, 1, 3},
     s_trngl,2,MPKIND__REMOVED,1,  warn__none,  s_bone6,   0x107, 0},
@@ -2654,7 +2657,7 @@ map::map_thing map::map_init_table[] = {
      0, 1, 2, 5, 4, 3},
     s1x6,3,MPKIND__SPLIT,1,       warn__none,  s3x6,      0x000, 0},
    {{17, 16, 15, 12, 13, 14,           18, 19, 20, 23, 22, 21,
-     11, 10, 9, 6, 7, 8,               0, 1, 2, 5, 4, 3},
+     0, 1, 2, 5, 4, 3,                 11, 10, 9, 6, 7, 8},
     s1x6,4,MPKIND__SPLIT,1,       warn__none,  s4x6,      0x000, 0},
 
    {{6, 0, 7, 5,                       3, 1, 2, 4},
@@ -2668,9 +2671,9 @@ map::map_thing map::map_init_table[] = {
     sdmd,3,MPKIND__SPLIT,0,       warn__none,  s3ptpd,    0x000, 0},
    {{0, 10, 8, 9,           1, 5, 7, 11,           2, 3, 6, 4},
     sdmd,3,MPKIND__SPLIT,1,       warn__none,  s3dmd,     0x015, 0},
-   {{12, 0, 13, 11,     14, 1, 15, 10,     7, 2, 6, 9,     5, 3, 4, 8},
+   {{12, 0, 13, 11,     14, 1, 15, 10,     5, 3, 4, 8,     7, 2, 6, 9},
     sdmd,4,MPKIND__SPLIT,0,       warn__none,  s4ptpd,    0x000, 0},
-   {{0, 13, 11, 12,     1, 15, 10, 14,     2, 6, 9, 7,     3, 4, 8, 5},
+   {{0, 13, 11, 12,     1, 15, 10, 14,     3, 4, 8, 5,     2, 6, 9, 7},
     sdmd,4,MPKIND__SPLIT,1,       warn__none,  s4dmd,     0x055, 0},
 
    {{0, 1, 2, 3,                       6, 7, 4, 5},
@@ -2681,9 +2684,9 @@ map::map_thing map::map_init_table[] = {
     s1x4,3,MPKIND__SPLIT,0,       warn__none,  s1x12,     0x000, 0},
    {{9, 8, 6, 7,            10, 11, 4, 5,          0, 1, 3, 2},
     s1x4,3,MPKIND__SPLIT,1,       warn__none,  s3x4,      0x000, 0},
-   {{0, 1, 3, 2,           4, 5, 7, 6,          15, 14, 12, 13,   11, 10, 8, 9},
+   {{0, 1, 3, 2,           4, 5, 7, 6,          11, 10, 8, 9,     15, 14, 12, 13},
     s1x4,4,MPKIND__SPLIT,0,       warn__none,  s1x16,     0x000, 0},
-   {{8, 6, 4, 5,           9, 11, 2, 7,         10, 15, 1, 3,     12, 13, 0, 14},
+   {{8, 6, 4, 5,           9, 11, 2, 7,         12, 13, 0, 14,    10, 15, 1, 3},
     s1x4,4,MPKIND__SPLIT,1,       warn__none,  s4x4,      0x000, 0},
    {{0, 9, 14, 15,          1, 8, 13, 16,          2, 7, 12, 17,
      3, 6, 11, 18,          4, 5, 10, 19},
@@ -2707,9 +2710,9 @@ map::map_thing map::map_init_table[] = {
    {{1, 10, 11, 0,          3, 8, 9, 2,            5, 6, 7, 4},
     s2x2,3,MPKIND__SPLIT,1,       warn__none,  s2x6,      0x015, 0},
 
-   {{0, 1, 14, 15,         2, 3, 12, 13,        4, 5, 10, 11,     6, 7, 8, 9},
+   {{0, 1, 14, 15,         2, 3, 12, 13,        6, 7, 8, 9,       4, 5, 10, 11},
     s2x2,4,MPKIND__SPLIT,0,       warn__none,  s2x8,      0x000, 0},
-   {{1, 14, 15, 0,         3, 12, 13, 2,        5, 10, 11, 4,     7, 8, 9, 6},
+   {{1, 14, 15, 0,         3, 12, 13, 2,        7, 8, 9, 6,       5, 10, 11, 4},
     s2x2,4,MPKIND__SPLIT,1,       warn__none,  s2x8,      0x055, 0},
 
    {{0, 1, 18, 19,         2, 3, 16, 17,        4, 5, 14, 15,
@@ -2752,9 +2755,9 @@ map::map_thing map::map_init_table[] = {
     s1x3,2,MPKIND__SPLIT,0,       warn__none,  s1x6,      0x000, 0},
    {{5, 4, 3,                          0, 1, 2},
     s1x3,2,MPKIND__SPLIT,1,       warn__none,  s2x3,      0x000, 0},
-   {{0, 1, 2,              3, 4, 5,             11, 10, 9,        8, 7, 6},
+   {{0, 1, 2,              3, 4, 5,             8, 7, 6,          11, 10, 9},
     s1x3,4,MPKIND__SPLIT,0,       warn__none,  s1x12,     0x000, 0},
-   {{0, 10, 9,             1, 11, 8,            2, 5, 7,          3, 4, 6},
+   {{0, 10, 9,             1, 11, 8,            3, 4, 6,          2, 5, 7},
     s1x3,4,MPKIND__SPLIT,1,       warn__none,  s3x4,      0x055, 0},
    {{11, 10, 9,            8, 7, 6,             0, 1, 2,          3, 4, 5},
     s1x3,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none,  s2x6,     0x000, 0},
@@ -2822,7 +2825,7 @@ map::map_thing map::map_init_table[] = {
     s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s2x4, 0x000, 0},
    {{7, 6, 5, 4, 0, 1, 2, 3},
     s1x1,8,MPKIND__SPLIT_OTHERWAY_TOO,1, warn__none, s2x4, 0x5555, 0},
-   {{0, 1, 3, 2},
+   {{0, 1, 2, 3},
     s1x1,4,MPKIND__SPLIT,0, warn__none, s1x4, 0x000, 0},
    {{3, 2, 0, 1},
     s1x1,4,MPKIND__SPLIT_OTHERWAY_TOO,0, warn__none, s2x2, 0x000, 0},
@@ -2984,7 +2987,7 @@ const map::map_thing map::spec_map_table[] = {
     s1x2,4,MPKIND__NONE,1,        warn__none, s4x4,       0x011, 0, spcmap_4x4_spec4},
    {{8, 6,    13, 15,    14, 0,    7, 5},
     s1x2,4,MPKIND__NONE,0,        warn__none, s4x4,       0x044, 0, spcmap_4x4_spec5},
-   {{12, 10, 8, 9,         13, 15, 6, 11,     14, 3, 5, 7,      0, 1, 4, 2},
+   {{12, 10, 8, 9,      13, 15, 6, 11,      0, 1, 4, 2,     14, 3, 5, 7},
     s1x4,4,MPKIND__SPLIT,1,       warn__none,  s4x4,      0x055, 0, spcmap_4x4v},
    {{0, 1, 2, 3, 4, 5, 6, 7,      8, 9, 10, 11, 12, 13, 14, 15},
     s1x1,16,MPKIND__NONE,0,       warn__none, s4x4,       0x000, 0, spcmap_4x4_1x1},
@@ -3123,9 +3126,11 @@ static expand::thing rear_sqset_stuffb = {{6, 5, 9, -1, -1, 2, 14, 13, 1, -1, -1
 static expand::thing rear_bone_stuffa = {{0, 5, 7, 6, 4, 1, 3, 2}, s1x8, s_bone, 0};
 static expand::thing rear_bone_stuffb = {{0, 3, 2, 5, 4, 7, 6, 1}, s_bone, s2x4, 0};
 static expand::thing rear_bone_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_bone, s_rigger, 0};
+static expand::thing rear_bone_stuffd = {{0, 3, 5, 2, 4, 7, 1, 6}, s_bone, s2x4, 0};
 static expand::thing rear_rig_stuffa = {{1, 2, 3, 4, 5, 6, 7, 0}, s_rigger, s2x4, 0};
 static expand::thing rear_rig_stuffb = {{3, 6, 4, 5, 7, 2, 0, 1}, s_rigger, s1x8, 0};
 static expand::thing rear_rig_stuffc = {{6, 3, 1, 4, 2, 7, 5, 0}, s_rigger, s_bone, 0};
+static expand::thing rear_rig_stuffd = {{1, 2, 4, 3, 5, 6, 0, 7}, s_rigger, s2x4, 0};
 static expand::thing rear_funnydmd   = {{7, 0, 1, 2, 3, 4, 5, 6}, s_qtag, s2x4, 1};
 static expand::thing rear_funny3x1   = {{5, 7, 6, 0, 1, 3, 2, 4}, s2x4, s_qtag, 1};
 
@@ -3289,6 +3294,12 @@ full_expand::thing touch_init_table1[] = {
    {warn__some_rear_back,  8, &step_2x4nwstuff,s2x4,        0xFFFFU,     0x2D87U, ~0U},
    // Rear back from columns to end-to-end single 8-chains.
    {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFU,     0x55FFU, ~0U},
+
+   // Some rear back from ends of 2x4, to a rigger.
+   {warn__some_rear_back,  8, &rear_rig_stuffd, s2x4,       0xFFFFU,     0x69C3U, ~0U},
+   // Or from centers, to a bone.
+   {warn__some_rear_back,  8, &rear_bone_stuffd, s2x4,      0xFFFFU,     0x963CU, ~0U},
+
    // Centers rear back from 1/4-box to triangles.
    {warn__some_rear_back,  8, &step_qbox_stuff, s2x4,       0xFFFFU,     0x57FDU, ~0U},
 
@@ -4417,13 +4428,14 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
 //
 // Additionally:
 //    The "10" bit means that action must be merge_without_gaps.
-//    The "20" bit means that action must NOT be merge_strict_matrix.
+//    The "20" bit means that action must NOT be merge_strict_matrix or merge_for_own.
 //    The "40" bit means only accept it if the setups, prior to cutting down,
 //       were a 2x4 and a 1x8 that were perpendicular to each other.
 //    The "80" bit means that action must NOT be merge_c1_phantom_real.
 //    The "100" bit means that original action must NOT be merge_after_dyp.
 //    The "200" bit means only accept it if the setups, prior to cutting down,
 //       were a 2x4 and a ptpd that were perpendicular to each other. */
+//    The "400" bit means that action must NOT be merge_without_gaps.
 
 // swap_setups
 //    1 bit - swap setups;
@@ -4447,6 +4459,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
    {s1x4p2dmd, s4p2x1dmd,   0, 0xD8, 0x0E, 0x0, schema_matrix,        s1x4p2dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, -1, -1, 5, -1, -1}},
    {s1x4p2dmd, s4p2x1dmd, 0xD8,   0, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, -1, -1, 5, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+
+   {s1x6,    sdbltrngl4,  010, 0x0C, 0x0E, 0x0, schema_matrix,         sline6box,     nothing,  warn__none, 0, 0, {1, 2, 3, -1, 5, 4}, {0, 1, -1, -1, 4, 5, 6, 7}},
 
    {s3p1x1dmd,     s1x8, 0x03, 0x4E, 0x0B, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 2, 2, {-1, -1, 6, 7, 3, 4}, {5, -1, -1, -1, 0, 1, -1, 2}},
    {s3p1x1dmd,     s1x8, 0x03, 0xE4, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {-1, -1, 3, 4, 6, 7}, {0, 1, -1, 2, 5, -1, -1, -1}},
@@ -5074,11 +5088,13 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x2,          s4x4, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {15, 3, 7, 11},             {0}},
    {s2x2,          s2x8, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 4, 11, 12},             {0}},
    {s2x2,          s2x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0}},
+   /*
    {s2x3,          s2x5, 0,    0x1CE, 0x0C, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, 3, 6, 7, 8},              {0}},
-   {s2x3,          s2x5, 0,    0x1CE, 0x2C, 0x0, schema_concentric,     s2x3,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},              {0, 4, 5, 9}},
+   */
+   {s2x3,          s2x5, 0,    0x1CE, 0x0C, 0x0, schema_concentric,     s2x3,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},              {0, 4, 5, 9}},
    {s2x2,          s2x5, 0,    0x1CE, 0x2C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},              {0, 4, 5, 9}},
    {s1x4,          s2x5, 0,    0x1CE, 0x2C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},              {0, 4, 5, 9}},
-   {s2x3,         sd2x5, 0,    0x39C, 0x2C, 0x0, schema_concentric,     s2x3,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},              {0, 6, 5, 1}},
+   {s2x3,         sd2x5, 0,    0x39C, 0x0C, 0x0, schema_concentric,     s2x3,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},              {0, 6, 5, 1}},
    {s2x2,         sd2x5, 0,    0x39C, 0x2C, 0x0, schema_concentric,     s2x2,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},              {0, 6, 5, 1}},
    {s1x4,         sd2x5, 0,    0x39C, 0x2C, 0x0, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 0, {0, 1, 2, 3},              {0, 6, 5, 1}},
    {s1x2,   sdblspindle, 0,   0x8888, 0x0D, 0x0, schema_matrix,         s2x7,        nothing,  warn__none, 0, 0, {3, 10},{0, 1, 2, -1, 11, 12, 13, -1, 7, 8, 9, -1, 4, 5, 6, -1}},
@@ -9905,9 +9921,9 @@ const setup_attr setup_attrs[] = {
 
 // BEWARE!!  This list is keyed to the definition of "calldef_schema" in database.h .
 const schema_attr schema_attrs[] = {
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric
-   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK | SCA_REMOVE_VERIFY,
     schema_concentric},                  // schema_cross_concentric
    {SCA_NO_OVERCAST,
     schema_nothing},                     // schema_3x3k_concentric
@@ -9917,9 +9933,9 @@ const schema_attr schema_attrs[] = {
     schema_nothing},                     // schema_4x4k_concentric
    {SCA_CROSS | SCA_COPY_LYZER,
     schema_4x4k_concentric},             // schema_4x4k_cross_concentric
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_SPLITOK | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_single_concentric
-   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK,
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_COPY_LYZER | SCA_SNAGOK | SCA_REMOVE_VERIFY,
     schema_single_concentric},           // schema_single_cross_concentric
    {SCA_NO_OVERCAST,
     schema_nothing},                     // schema_grand_single_concentric
@@ -9980,45 +9996,45 @@ const schema_attr schema_attrs[] = {
    {SCA_CROSS | SCA_COPY_LYZER,
     schema_concentric_zs},               // schema_cross_concentric_zs
    // *************************** Don't lots more need the "SCA_CENTRALCONC" bit?
-   {SCA_CENTRALCONC | SCA_SNAGOK,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_or_diamond_line
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_or_6_2_line
-   {0,
+   {SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_6_2
-   {SCA_CROSS,
+   {SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_6_2},              // schema_cross_concentric_6_2
-   {0,
+   {SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_6_2_line
-   {SCA_SNAGOK,
+   {SCA_SNAGOK | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_6
-   {SCA_CROSS,
+   {SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_2_6},              // schema_cross_concentric_2_6
-   {0,
+   {SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_4
-   {SCA_CROSS,
+   {SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_2_4},              // schema_cross_concentric_2_4
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_4_or_normal
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_4_2
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_4_2_prefer_1x4
-   {SCA_CENTRALCONC | SCA_CROSS,
+   {SCA_CENTRALCONC | SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_4_2},              // schema_cross_concentric_4_2
-   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN,
+   {SCA_CENTRALCONC | SCA_SNAGOK | SCA_DETOUR | SCA_INV_SUP_ELWARN | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_4_2_or_normal
-   {0,
+   {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_or_2_6
-   {0,
+   {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_or_6_2
-   {0,
+   {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_8_4
-   {0,
+   {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_big2_6
-   {0,
+   {0 | SCA_REMOVE_VERIFY,
     schema_nothing},                     // schema_concentric_2_6_or_2_4
-   {SCA_CROSS,
+   {SCA_CROSS | SCA_REMOVE_VERIFY,
     schema_concentric_2_6_or_2_4},       // schema_cross_concentric_2_6_or_2_4
    {0,
     schema_nothing},                     // schema_concentric_innermost
@@ -11037,6 +11053,12 @@ select::fixer select::fixer_init_table[] = {
    {fx_dbt2b,  s1x2, sdbltrngl4, 0, 0, 2, {0, 1, 4, 5},
     fx0, fx_f2x4pos02,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_dbt1d,  sdmd, sdbltrngl4, 0, 0, 1, {1, 2, 4, 3},
+    fx0, fx0,                   fx_dbt1l, fx0,              fx0, fx0,                   fx0, fx0},
+
+   {fx_dbt1l,  s1x4, s1x8,       0, 0, 1, {1, 3, 6, 2},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
    {fx_1x5p1z, sdmd, splinepdmd, UINT32_C(0x80000002), 0, 1, {6, 7, 4, 5},
     fx0, fx0,                   fx_1x5p1d, fx0,             fx0, fx0,                   fx0, fx0},
    {fx_1x5p1y, sdmd, splinepdmd, UINT32_C(0x80000000), 0, 1, {4, 5, 6, 7},
@@ -11657,8 +11679,9 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                     sdbltrngl4,   0x0C,   fx_dbt2,       fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0x03,   fx_dbt3,       fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0xC0,   fx_dbt4,       fx0, -1},
-   {LOOKUP_NONE,                     sdbltrngl4,   0xCC,   fx_dbt1b,       fx0, -1},
-   {LOOKUP_NONE,                     sdbltrngl4,   0x33,   fx_dbt2b,       fx0, -1},
+   {LOOKUP_NONE,                     sdbltrngl4,   0xCC,   fx_dbt1b,      fx0, -1},
+   {LOOKUP_NONE,                     sdbltrngl4,   0x33,   fx_dbt2b,      fx0, -1},
+   {LOOKUP_NONE,                     sdbltrngl4,   0x1E,   fx_dbt1d,      fx0, -1},
 
    {LOOKUP_NONE,                           s1x6,   0x18,   fx_l2b4,       fx0, -1},
    {LOOKUP_NONE,                           s1x6,   0x03,   fx_l2b5,       fx0, -1},

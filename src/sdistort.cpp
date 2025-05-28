@@ -366,18 +366,6 @@ static void multiple_move_innards(
    bool check_offset_z = true;
    uint32 mysticflag = sscmd->cmd_misc2_flags;
 
-   switch (map_kind) {
-   case MPKIND__NONISOTROPREM:
-      map_kind = MPKIND__REMOVED;
-      break;
-   case MPKIND__OFFS_L_HALF_NONISO:
-      map_kind = MPKIND__OFFS_L_HALF;
-      break;
-   case MPKIND__OFFS_R_HALF_NONISO:
-      map_kind = MPKIND__OFFS_R_HALF;
-      break;
-   }
-
    mpkind starting_map_kind = map_kind;
    uint32 eighth_rot_flag = ~0U;
 
@@ -701,7 +689,35 @@ static void multiple_move_innards(
       map_kind == MPKIND__4_QUADRANTS_WITH_45_ROTATION ||
       map_kind == MPKIND__TRIPLETRADEINWINGEDSTAR6;
 
-   // These special map kinds involve different setups, so "fix_n_results" can't be used.
+   // Because of the way heterogenous setups are allowed, we have to mix normal and
+   // hetero maps fairly freely.  We use a doctrine that says that even subsetups must
+   // match, and odd subsetups must match also.  In the homogeneous case, everything
+   // must match, and that's what "fix_n_results" normally tests.  But if they don't
+   // match, symmetry requires that the arity 4 case be geometrically laid out like
+   // this:
+   //
+   //     z[0]   z[1]   z[3]   z[2]
+   //
+   // That way, even setups will match (think 4 1x2's in a rigger or bone) and odd ones
+   // too.  They do *NOT* simply go left to right (or bottom to top.)
+   //
+   // For arity 3, the layout is straight across:
+   //
+   //     z[0]   z[1]   z[2]
+   //
+   // So that the evens-must-match-and-odds-must-match doctrine gets a symmetric setup.
+   //
+   // For higher numbers, they go straight across.  That gets the required symmetry for
+   // N=5.  For 6 or higher, there is not clear way to do it.  But for 5 and up it's
+   // meaningless, and hetero maps don't exist.
+   //
+   // Non-split things follow the same general doctrine.  So, for example, thar or alamo
+   // maps have the subsetups that go sequentially around the ring, allowing
+   // heterogeneous symmetric setups.
+
+   // Hetero map kinds involve different setups, so "fix_n_results" can't be used.
+   // (It can handle different rotations, but not different setup kinds.)
+
    if (!hetero_mapkind(map_kind)) {
 
       // If the starting map is of kind MPKIND__NONE, we will be in serious trouble unless
@@ -713,7 +729,6 @@ static void multiple_move_innards(
 
       if (fix_n_results(arity,
                         (map_kind == MPKIND__NONE && maps->inner_kind == sdmd) ? 9 : funnymap ? 7 : -1,
-                        map_kind == MPKIND__SPLIT && (arity != 4 || maps->inner_kind != s1x2),
                         z, rotstate, pointclip, rot & 0xF, true)) {
          if (map_kind != MPKIND__SPLIT)
             fail("This is an inconsistent shape or orientation changer.");
@@ -753,12 +768,18 @@ static void multiple_move_innards(
          }
       }
 
-      if (map_kind == MPKIND__SPLIT && arity == 2 && (z[0].kind == s_trngl || z[0].kind == s_trngl4) &&
-          (z[0].kind != z[1].kind || z[0].rotation != z[1].rotation)) {
-         map_kind = MPKIND__HET_SPLIT;
+      if (arity >= 2 && (z[0].kind != z[1].kind || z[0].rotation != z[1].rotation))  {
+         if (map_kind == MPKIND__SPLIT)
+            map_kind = MPKIND__HET_SPLIT;
+         else if (map_kind == MPKIND__REMOVED)
+            map_kind = MPKIND__HET_ONCEREM;
+         else if (map_kind == MPKIND__OFFS_L_HALF)
+            map_kind = MPKIND__HET_OFFS_L_HALF;
+         else if (map_kind == MPKIND__OFFS_R_HALF)
+            map_kind = MPKIND__HET_OFFS_R_HALF;
       }
 
-      if (!hetero_mapkind(map_kind) && (arity != 2 || (z[0].kind != s_trngl && z[0].kind != s_trngl4))) {
+      if (!hetero_mapkind(map_kind) && (arity != 2 || !setup_attrs[z[0].kind].no_symmetry)) {
          if ((rotstate & 0xF03) == 0) {
             // Rotations are alternating.  Aside from the two map kinds just below,
             // we demand funnymap on.  These are the maps that want alternating rotations.
@@ -800,24 +821,40 @@ static void multiple_move_innards(
       // Don't do this for twice-removed maps: changing the setups is extremely
       // problematical in that case.  This is a quick-and-dirty transformation.
       //
+      // Fill in empty setups from other setup of same parity.
+      //
       // See test t38.
 
-      int goodindex = -1;
+      int goodindex[2];
+      goodindex[0] = -1;
+      goodindex[1] = -1;
 
       for (i=0; i<arity; i++) {
-         if (z[i].kind != nothing && goodindex < 0) goodindex = i;
+         if (z[i].kind != nothing && goodindex[i&1] < 0) goodindex[i&1] = i;
       }
 
-      if (goodindex < 0) {
+      if (goodindex[0] < 0 && goodindex[1] < 0) {
          result->kind = nothing;
          clear_result_flags(result);
          return;
       }
+      else if (goodindex[0] < 0) {
+         goodindex[0] = goodindex[1];  // If have one parity but not the other, copy it.
+      }
+      else if (goodindex[1] < 0) {
+         goodindex[1] = goodindex[0];
+      }
 
       for (i=0; i<arity; i++) {
          if (z[i].kind == nothing) {
-            z[i] = z[goodindex];
+            z[i] = z[goodindex[i&1]];
             z[i].clear_people();
+         }
+
+         // Check that all the setups are consistent.  The maps are only
+         // indexed from the first two setups, so the others need to be checked.
+         if (i >= 2 && (z[i].kind != z[i-2].kind || z[i].rotation != z[i-2].rotation)) {
+            fail("This is an inconsistent shape or orientation changer.");
          }
       }
    }
@@ -838,20 +875,23 @@ static void multiple_move_innards(
       no_reuse_map = true;
    }
 
-   if (map_kind == MPKIND__HET_ONCEREM) {
-      if (z[0].kind == z[1].kind && z[0].rotation == z[1].rotation) {
-         map_kind = MPKIND__REMOVED;     // Not heterogeneous after all.
-      }
+   // Check whether formerly heterogeneous situations have become homogeneous.
+   // But maps with unsymmetrical things (e.g. triangles) inside are always hetero.
 
-      no_reuse_map = true;
-   }
-   else if (map_kind == MPKIND__HET_SPLIT) {
-      if (z[0].kind == z[1].kind && z[0].rotation == z[1].rotation &&
-          z[0].kind != s_trngl && z[0].kind != s_trngl4) {  // Maps containing triangles are always hetero.
-         map_kind = MPKIND__SPLIT;     // Not heterogeneous after all.
+   if (arity == 1 || (z[0].kind == z[1].kind && z[0].rotation == z[1].rotation &&
+                      !setup_attrs[z[0].kind].no_symmetry)) {
+      if (map_kind == MPKIND__HET_ONCEREM) {
+         map_kind = MPKIND__REMOVED;
       }
-
-      no_reuse_map = true;
+      else if (map_kind == MPKIND__HET_SPLIT) {
+         map_kind = MPKIND__SPLIT;
+      }
+      else if (map_kind == MPKIND__HET_OFFS_L_HALF) {
+         map_kind = MPKIND__OFFS_L_HALF;
+      }
+      else if (map_kind == MPKIND__HET_OFFS_R_HALF) {
+         map_kind = MPKIND__OFFS_R_HALF;
+      }
    }
 
    for (i=0; i<arity; i++) {
@@ -889,46 +929,6 @@ static void multiple_move_innards(
          warn(warn__use_quadruple_setup_instead);
       else
          warn(warn__did_not_interact);   // The best we can do; quadruple formation isn't legal.
-   }
-
-   // Triangles are extremely complicated.  Past attempts to handle them "elegantly"
-   // have not been very successful.  So we do things on a case-by-case basis, untl
-   // we can figure out another Grand Unified Theory.
-
-   if (arity == 2 && ((z[0].rotation ^ z[1].rotation) & 3) == 2) {
-      uint32 r = z[0].rotation & 3;
-
-      if (z[0].kind == s_trngl) {
-         if (map_kind == MPKIND__HET_SPLIT) {
-         }
-         else if ((r & ~2) == 0 && vert == 0 && (map_kind == MPKIND__OFFS_R_HALF || map_kind == MPKIND__OFFS_L_HALF)) {
-         }
-         else
-            fail("Can't do this orientation changer.");
-      }
-      else if (z[0].kind == s_trngl4) {
-         if (map_kind == MPKIND__HET_SPLIT) {
-         }
-         else if (map_kind == MPKIND__REMOVED) {
-            if ((z[0].rotation & 2) == 0) map_kind = MPKIND__NONISOTROPREM;
-         }
-         else if (r == 1 && vert == 1 && map_kind == MPKIND__OFFS_R_HALF) {
-            // Mirror trade gets here.
-         }
-         else if (r == 3 && vert == 1 && map_kind == MPKIND__OFFS_L_HALF) {
-            // Trade gets here.
-         }
-         else if (r == 3 && vert == 1 && map_kind == MPKIND__OFFS_R_HALF) {
-            // Mirror hinge gets here.
-            if (((r+vert) & 2) == 0) map_kind = MPKIND__OFFS_R_HALF_NONISO;
-         }
-         else if (r == 1 && vert == 1 && map_kind == MPKIND__OFFS_L_HALF) {
-            // Hinge gets here.
-            if (((r+vert) & 2) != 0) map_kind = MPKIND__OFFS_L_HALF_NONISO;
-         }
-         else
-            fail("Can't do this orientation changer.");
-      }
    }
 
    // See if we can put things back with the same map we used before.
@@ -1035,16 +1035,32 @@ static void multiple_move_innards(
          // indexed by the required distance, so we don't have to do this junky
          // stuff.
 
+         // ***** Deal with the fact that SPLIT maps with arity 4 have a new setup
+         // order: z0, z1, z3, z2 from left to right or bottom to top.
+         // This will have to get straightened out someday.
+
          if (before_distance == after_distance) {
+            if (map_kind != MPKIND__SPLIT && arity == 4) {
+               setup t = z[2]; z[2] = z[3]; z[3] = t;
+            }
             map_kind = MPKIND__SPLIT;
          }
          else if (before_distance*2 == after_distance) {
+            if (map_kind == MPKIND__SPLIT && arity == 4) {
+               setup t = z[2]; z[2] = z[3]; z[3] = t;
+            }
             map_kind = MPKIND__OVERLAP;
          }
          else if (before_distance*4 == after_distance) {
+            if (map_kind == MPKIND__SPLIT && arity == 4) {
+               setup t = z[2]; z[2] = z[3]; z[3] = t;
+            }
             map_kind = MPKIND__OVERLAP14;
          }
          else if (before_distance*4 == after_distance*3) {
+            if (map_kind == MPKIND__SPLIT && arity == 4) {
+               setup t = z[2]; z[2] = z[3]; z[3] = t;
+            }
             map_kind = MPKIND__OVERLAP34;
          }
          else if (before_distance == after_distance*2 && arity == 2) {
@@ -1066,6 +1082,12 @@ static void multiple_move_innards(
             z[3] = z[1];
             z[1].clear_people();
             z[2].clear_people();
+
+            if (map_kind != MPKIND__SPLIT) {
+               setup t = z[2]; z[2] = z[3]; z[3] = t;
+            }
+
+            map_kind = MPKIND__SPLIT;
             arity = 4;
          }
          else if (before_distance == after_distance*4 && arity == 2) {
@@ -1195,6 +1217,10 @@ static void multiple_move_innards(
          map_kind = (map_kind == MPKIND__OFFS_R_HALF) ? MPKIND__OFFS_L_HALF : MPKIND__OFFS_R_HALF;
       }
    }
+
+   // One final check.  Putting an empty setup into the loopkup mechanism can be catastrophic.
+   if (z[0].kind == nothing || (arity >= 2 && z[1].kind == nothing))
+      fail("This is an inconsistent shape or orientation changer.");
 
    final_mapcode = hetero_mapkind(map_kind) ?
       HETERO_MAPCODE(z[0].kind,arity,map_kind,(z[0].rotation ^ vert) & 1,
@@ -3922,270 +3948,303 @@ struct common_spot_map {
 common_spot_map cmaps[] = {
 
    // Common point galaxy.
-   {1, s_rigger, s_galaxy, 0,
-         {      -1,       0,      -1,       1,      -1,       4,      -1,       5},
-         {       6,      -1,      -1,      -1,       2,      -1,      -1,      -1},
-         { d_north,       0,       0,       0, d_south,       0,       0,       0},
-         {       7,      -1,      -1,      -1,       3,      -1,      -1,      -1},
-         { d_south,       0,       0,       0, d_north,       0,       0,       0}},
+   {0x40000001, s_rigger, s_galaxy, 0,
+    {      -1,       0,      -1,       1,      -1,       4,      -1,       5},
+    {       6,      -1,      -1,      -1,       2,      -1,      -1,      -1},
+    { d_north,       0,       0,       0, d_south,       0,       0,       0},
+    {       7,      -1,      -1,      -1,       3,      -1,      -1,      -1},
+    { d_south,       0,       0,       0, d_north,       0,       0,       0}},
 
    // Common point diamonds.
-   {4, sbigdmd, s_qtag, 1,
-         {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
-         {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},
-         { d_south,       0,       0,       0, d_north,       0,       0,       0},
-         {       4,      -1,      -1,      -1,      10,      -1,      -1,      -1},
-         { d_north,       0,       0,       0, d_south,       0,       0,       0}},
-   {4, sbigdmd, s_qtag, 1,
-         {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
-         {      -1,       6,      -1,      -1,      -1,       0,      -1,      -1},
-         {       0, d_south,       0,       0,       0, d_north,       0,       0},
-         {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
-         {       0, d_north,       0,       0,       0, d_south,       0,       0}},
-   // Alternate maps for diamonds.
-   {0x80000000+4, sbigdmd, s_qtag, 1,
-         {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
-         {       5,      -1,      -1,      -1,      10,      -1,      -1,      -1},
-         { d_south,       0,       0,       0, d_south,       0,       0,       0},
-         {       4,      -1,      -1,      -1,      11,      -1,      -1,      -1},
-         { d_north,       0,       0,       0, d_north,       0,       0,       0}},
-   {0x80000000+4, sbigdmd, s_qtag, 1,
-         {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
-         {      -1,       7,      -1,      -1,      -1,       0,      -1,      -1},
-         {       0, d_north,       0,       0,       0, d_north,       0,       0},
-         {      -1,       6,      -1,      -1,      -1,       1,      -1,      -1},
-         {       0, d_south,       0,       0,       0, d_south,       0,       0}},
+   {0x20000004, sbigdmd, s_qtag, 1,
+    {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
+    {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},
+    { d_south,       0,       0,       0, d_north,       0,       0,       0},
+    {       4,      -1,      -1,      -1,      10,      -1,      -1,      -1},
+    { d_north,       0,       0,       0, d_south,       0,       0,       0}},
+   {0x20000004, sbigdmd, s_qtag, 1,
+    {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
+    {      -1,       6,      -1,      -1,      -1,       0,      -1,      -1},
+    {       0, d_south,       0,       0,       0, d_north,       0,       0},
+    {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
+    {       0, d_north,       0,       0,       0, d_south,       0,       0}},
+   // Alternate maps for same.
+   {0xA0000004, sbigdmd, s_qtag, 1,
+    {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
+    {       5,      -1,      -1,      -1,      10,      -1,      -1,      -1},
+    { d_south,       0,       0,       0, d_south,       0,       0,       0},
+    {       4,      -1,      -1,      -1,      11,      -1,      -1,      -1},
+    { d_north,       0,       0,       0, d_north,       0,       0,       0}},
+   {0xA0000004, sbigdmd, s_qtag, 1,
+    {      -1,      -1,       8,       9,      -1,      -1,       2,       3},
+    {      -1,       7,      -1,      -1,      -1,       0,      -1,      -1},
+    {       0, d_north,       0,       0,       0, d_north,       0,       0},
+    {      -1,       6,      -1,      -1,      -1,       1,      -1,      -1},
+    {       0, d_south,       0,       0,       0, d_south,       0,       0}},
 
    // Common spot point-to-point diamonds.
-   {0x400, sbigptpd, s_ptpd, 0,
-         {       2,      -1,       3,      -1,       8,      -1,       9,      -1},
-         {      -1,       5,      -1,      -1,      -1,      11,      -1,      -1},
-         {       0,  d_east,       0,       0,       0,  d_west,       0,       0},
-         {      -1,       4,      -1,      -1,      -1,      10,      -1,      -1},
-         {       0,  d_west,       0,       0,       0,  d_east,       0,       0}},
-   {0x400, sbigptpd, s_ptpd, 0,
-         {       2,      -1,       3,      -1,       8,      -1,       9,      -1},
-         {      -1,      -1,      -1,       1,      -1,      -1,      -1,       7},
-         {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
-         {      -1,      -1,      -1,       0,      -1,      -1,      -1,       6},
-         {       0,       0,       0,  d_west,       0,       0,       0,  d_east}},
-   {0x400, s_bone, s_ptpd, 0,
-         {      -1,       0,      -1,       5,      -1,       4,      -1,       1},
-         {      -1,      -1,       7,      -1,      -1,      -1,       3,      -1},
-         {       0,       0, d_south,       0,       0,       0, d_north,       0},
-         {      -1,      -1,       6,      -1,      -1,      -1,       2,      -1},
-         {       0,       0, d_north,       0,       0,       0, d_south,       0}},
+   {0x20000400, sbigptpd, s_ptpd, 0,
+    {       2,      -1,       3,      -1,       8,      -1,       9,      -1},
+    {      -1,       5,      -1,      -1,      -1,      11,      -1,      -1},
+    {       0,  d_east,       0,       0,       0,  d_west,       0,       0},
+    {      -1,       4,      -1,      -1,      -1,      10,      -1,      -1},
+    {       0,  d_west,       0,       0,       0,  d_east,       0,       0}},
+   {0x20000400, sbigptpd, s_ptpd, 0,
+    {       2,      -1,       3,      -1,       8,      -1,       9,      -1},
+    {      -1,      -1,      -1,       1,      -1,      -1,      -1,       7},
+    {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
+    {      -1,      -1,      -1,       0,      -1,      -1,      -1,       6},
+    {       0,       0,       0,  d_west,       0,       0,       0,  d_east}},
+   {0x20000400, s_bone, s_ptpd, 0,
+    {      -1,       0,      -1,       5,      -1,       4,      -1,       1},
+    {      -1,      -1,       7,      -1,      -1,      -1,       3,      -1},
+    {       0,       0, d_south,       0,       0,       0, d_north,       0},
+    {      -1,      -1,       6,      -1,      -1,      -1,       2,      -1},
+    {       0,       0, d_north,       0,       0,       0, d_south,       0}},
 
    // Common point hourglass.
    {0x80, sbighrgl, s_hrglass, 1,
-         {      -1,      -1,       8,       3,      -1,      -1,       2,       9},
-         {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},
-         { d_south,       0,       0,       0, d_north,       0,       0,       0},
-         {       4,      -1,      -1,      -1,      10,      -1,      -1,      -1},
-         { d_north,       0,       0,       0, d_south,       0,       0,       0}},
+    {      -1,      -1,       8,       3,      -1,      -1,       2,       9},
+    {       5,      -1,      -1,      -1,      11,      -1,      -1,      -1},
+    { d_south,       0,       0,       0, d_north,       0,       0,       0},
+    {       4,      -1,      -1,      -1,      10,      -1,      -1,      -1},
+    { d_north,       0,       0,       0, d_south,       0,       0,       0}},
    {0x80, sbighrgl, s_hrglass, 1,
-         {      -1,      -1,       8,       3,      -1,      -1,       2,       9},
-         {      -1,       6,      -1,      -1,      -1,       0,      -1,      -1},
-         {       0, d_south,       0,       0,       0, d_north,       0,       0},
-         {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
-         {       0, d_north,       0,       0,       0, d_south,       0,       0}},
+    {      -1,      -1,       8,       3,      -1,      -1,       2,       9},
+    {      -1,       6,      -1,      -1,      -1,       0,      -1,      -1},
+    {       0, d_south,       0,       0,       0, d_north,       0,       0},
+    {      -1,       7,      -1,      -1,      -1,       1,      -1,      -1},
+    {       0, d_north,       0,       0,       0, d_south,       0,       0}},
 
    // Common spot lines from a parallelogram -- the centers are themselves
    // and the wings become ends.
 
+   // All in outer triple boxes, they become ends of 2x4.
    {0x10, s2x6, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,      -1,      -1,       5,       6,      -1,      -1,      11},
-         { d_north,       0,       0, d_south, d_south,       0,       0, d_north},
-         {       1,      -1,      -1,       4,       7,      -1,      -1,      10},
-         { d_south,       0,       0, d_north, d_north,       0,       0, d_south}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,      -1,       5,       6,      -1,      -1,      11},
+    { d_north,       0,       0, d_south, d_south,       0,       0, d_north},
+    {       1,      -1,      -1,       4,       7,      -1,      -1,      10},
+    { d_south,       0,       0, d_north, d_north,       0,       0, d_south}},
+
+   // All in outer quadruple boxes; we allow this.
+   {0x10, s2x8, s2x4, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,      -1,       7,       8,      -1,      -1,      15},
+    { d_north,       0,       0, d_south, d_south,       0,       0, d_north},
+    {       1,      -1,      -1,       6,       9,      -1,      -1,      14},
+    { d_south,       0,       0, d_north, d_north,       0,       0, d_south}},
+
+   // In parallelograms.
    {0x10, s2x6, s2x4, 0,
-         {      -1,       2,       3,      -1,      -1,       8,       9,      -1},
-         {      -1,      -1,      -1,       5,      -1,      -1,      -1,      11},
-         {       0,       0,       0, d_south,       0,       0,       0, d_north},
-         {      -1,      -1,      -1,       4,      -1,      -1,      -1,      10},
-         {       0,       0,       0, d_north,       0,       0,       0, d_south}},
+    {      -1,       2,       3,      -1,      -1,       8,       9,      -1},
+    {      -1,      -1,      -1,       5,      -1,      -1,      -1,      11},
+    {       0,       0,       0, d_south,       0,       0,       0, d_north},
+    {      -1,      -1,      -1,       4,      -1,      -1,      -1,      10},
+    {       0,       0,       0, d_north,       0,       0,       0, d_south}},
    {0x10, s2x6, s2x4, 0,
-         {      -1,       2,       3,      -1,      -1,       8,       9,      -1},
-         {       0,      -1,      -1,      -1,       6,      -1,      -1,      -1},
-         { d_north,       0,       0,       0, d_south,       0,       0,       0},
-         {       1,      -1,      -1,      -1,       7,      -1,      -1,      -1},
-         { d_south,       0,       0,       0, d_north,       0,       0,       0}},
+    {      -1,       2,       3,      -1,      -1,       8,       9,      -1},
+    {       0,      -1,      -1,      -1,       6,      -1,      -1,      -1},
+    { d_north,       0,       0,       0, d_south,       0,       0,       0},
+    {       1,      -1,      -1,      -1,       7,      -1,      -1,      -1},
+    { d_south,       0,       0,       0, d_north,       0,       0,       0}},
 
    // Common spot lines from waves; everyone is a center.
 
    {0x20, s2x4, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,       0,       3,      -1,      -1,       4,       7,      -1},
-         {       0, d_north, d_south,       0,       0, d_south, d_north,       0},
-         {      -1,       1,       2,      -1,      -1,       5,       6,      -1},
-         {       0, d_south, d_north,       0,       0, d_north, d_south,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,       0,       3,      -1,      -1,       4,       7,      -1},
+    {       0, d_north, d_south,       0,       0, d_south, d_north,       0},
+    {      -1,       1,       2,      -1,      -1,       5,       6,      -1},
+    {       0, d_south, d_north,       0,       0, d_north, d_south,       0}},
 
    // Common spot lines from a 2x8        Occupied as     ^V^V....
    //                                                     ....^V^V   (or other way)
    // they become 2-faced lines.
 
    {8, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,       2,      -1,      -1,       8,      10,      -1,      -1},
-         { d_north, d_north,       0,       0, d_south, d_south,       0,       0},
-         {       1,       3,      -1,      -1,       9,      11,      -1,      -1},
-         { d_south, d_south,       0,       0, d_north, d_north,       0,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,       2,      -1,      -1,       8,      10,      -1,      -1},
+    { d_north, d_north,       0,       0, d_south, d_south,       0,       0},
+    {       1,       3,      -1,      -1,       9,      11,      -1,      -1},
+    { d_south, d_south,       0,       0, d_north, d_north,       0,       0}},
    {8, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,      -1,       4,       6,      -1,      -1,      12,      14},
-         {       0,       0, d_north, d_north,       0,       0, d_south, d_south},
-         {      -1,      -1,       5,       7,      -1,      -1,      13,      15},
-         {       0,       0, d_south, d_south,       0,       0, d_north, d_north}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       4,       6,      -1,      -1,      12,      14},
+    {       0,       0, d_north, d_north,       0,       0, d_south, d_south},
+    {      -1,      -1,       5,       7,      -1,      -1,      13,      15},
+    {       0,       0, d_south, d_south,       0,       0, d_north, d_north}},
 
    // Common spot lines from a 2x8        Occupied as     ^V..^V..
    //                                                     ..^V..^V   (or other way)
    // they become 2-faced lines.
 
    {8, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,      -1,       5,      -1,       8,      -1,      13,      -1},
-         { d_north,       0, d_south,       0, d_south,       0, d_north,       0},
-         {       1,      -1,       4,      -1,       9,      -1,      12,      -1},
-         { d_south,       0, d_north,       0, d_north,       0, d_south,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,       5,      -1,       8,      -1,      13,      -1},
+    { d_north,       0, d_south,       0, d_south,       0, d_north,       0},
+    {       1,      -1,       4,      -1,       9,      -1,      12,      -1},
+    { d_south,       0, d_north,       0, d_north,       0, d_south,       0}},
 
    {8, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,       2,      -1,       7,      -1,      10,      -1,      15},
-         {       0, d_north,       0, d_south,       0, d_south,       0, d_north},
-         {      -1,       3,      -1,       6,      -1,      11,      -1,      14},
-         {       0, d_south,       0, d_north,       0, d_north,       0, d_south}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,       2,      -1,       7,      -1,      10,      -1,      15},
+    {       0, d_north,       0, d_south,       0, d_south,       0, d_north},
+    {      -1,       3,      -1,       6,      -1,      11,      -1,      14},
+    {       0, d_south,       0, d_north,       0, d_north,       0, d_south}},
 
    // Common spot lines from a 2x8        Occupied as     ^V^V....
    //                                                     ....^V^V   (or other way)
    // they become waves.
 
    {0x40, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,       3,      -1,      -1,       8,      11,      -1,      -1},
-         { d_north, d_south,       0,       0, d_south, d_north,       0,       0},
-         {       1,       2,      -1,      -1,       9,      10,      -1,      -1},
-         { d_south, d_north,       0,       0, d_north, d_south,       0,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,       3,      -1,      -1,       8,      11,      -1,      -1},
+    { d_north, d_south,       0,       0, d_south, d_north,       0,       0},
+    {       1,       2,      -1,      -1,       9,      10,      -1,      -1},
+    { d_south, d_north,       0,       0, d_north, d_south,       0,       0}},
    {0x40, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,      -1,       4,       7,      -1,      -1,      12,      15},
-         {       0,       0, d_north, d_south,       0,       0, d_south, d_north},
-         {      -1,      -1,       5,       6,      -1,      -1,      13,      14},
-         {       0,       0, d_south, d_north,       0,       0, d_north, d_south}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       4,       7,      -1,      -1,      12,      15},
+    {       0,       0, d_north, d_south,       0,       0, d_south, d_north},
+    {      -1,      -1,       5,       6,      -1,      -1,      13,      14},
+    {       0,       0, d_south, d_north,       0,       0, d_north, d_south}},
 
    // Common spot lines from a 2x8        Occupied as     ^V..^V..
    //                                                     ..^V..^V   (or other way)
    // they become waves.
 
    {0x40, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,      -1,       4,      -1,       8,      -1,      12,      -1},
-         { d_north,       0, d_north,       0, d_south,       0, d_south,       0},
-         {       1,      -1,       5,      -1,       9,      -1,      13,      -1},
-         { d_south,       0, d_south,       0, d_north,       0, d_north,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,       4,      -1,       8,      -1,      12,      -1},
+    { d_north,       0, d_north,       0, d_south,       0, d_south,       0},
+    {       1,      -1,       5,      -1,       9,      -1,      13,      -1},
+    { d_south,       0, d_south,       0, d_north,       0, d_north,       0}},
    {0x40, s2x8, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,       2,      -1,       6,      -1,      10,      -1,      14},
-         {       0, d_north,       0, d_north,       0, d_south,       0, d_south},
-         {      -1,       3,      -1,       7,      -1,      11,      -1,      15},
-         {       0, d_south,       0, d_south,       0, d_north,       0, d_north}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,       2,      -1,       6,      -1,      10,      -1,      14},
+    {       0, d_north,       0, d_north,       0, d_south,       0, d_south},
+    {      -1,       3,      -1,       7,      -1,      11,      -1,      15},
+    {       0, d_south,       0, d_south,       0, d_north,       0, d_north}},
 
    // Common spot columns, facing E-W.
 
    // Clumps.
    {2, s4x4, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      12,      13,      -1,      -1,       4,       5,      -1,      -1},
-         {  d_east,  d_east,       0,       0,  d_west,  d_west,       0,       0},
-         {      10,      15,      -1,      -1,       2,       7,      -1,      -1},
-         {  d_west,  d_west,       0,       0,  d_east,  d_east,       0,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      12,      13,      -1,      -1,       4,       5,      -1,      -1},
+    {  d_east,  d_east,       0,       0,  d_west,  d_west,       0,       0},
+    {      10,      15,      -1,      -1,       2,       7,      -1,      -1},
+    {  d_west,  d_west,       0,       0,  d_east,  d_east,       0,       0}},
    {2, s4x4, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,      -1,      14,       0,      -1,      -1,       6,       8},
-         {       0,       0,  d_east,  d_east,       0,       0,  d_west,  d_west},
-         {      -1,      -1,       3,       1,      -1,      -1,      11,       9},
-         {       0,       0,  d_west,  d_west,       0,       0,  d_east,  d_east}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,      14,       0,      -1,      -1,       6,       8},
+    {       0,       0,  d_east,  d_east,       0,       0,  d_west,  d_west},
+    {      -1,      -1,       3,       1,      -1,      -1,      11,       9},
+    {       0,       0,  d_west,  d_west,       0,       0,  d_east,  d_east}},
+
    // Stairsteps.
    {2, s4x4, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      12,      -1,      14,      -1,       4,      -1,       6,      -1},
-         {  d_east,       0,  d_east,       0,  d_west,       0,  d_west,       0},
-         {      10,      -1,       3,      -1,       2,      -1,      11,      -1},
-         {  d_west,       0,  d_west,       0,  d_east,       0,  d_east,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      12,      -1,      14,      -1,       4,      -1,       6,      -1},
+    {  d_east,       0,  d_east,       0,  d_west,       0,  d_west,       0},
+    {      10,      -1,       3,      -1,       2,      -1,      11,      -1},
+    {  d_west,       0,  d_west,       0,  d_east,       0,  d_east,       0}},
    {2, s4x4, s2x4, 0,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,      13,      -1,       0,      -1,       5,      -1,       8},
-         {       0,  d_east,       0,  d_east,       0,  d_west,       0,  d_west},
-         {      -1,      15,      -1,       1,      -1,       7,      -1,       9},
-         {       0,  d_west,       0,  d_west,       0,  d_east,       0,  d_east}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      13,      -1,       0,      -1,       5,      -1,       8},
+    {       0,  d_east,       0,  d_east,       0,  d_west,       0,  d_west},
+    {      -1,      15,      -1,       1,      -1,       7,      -1,       9},
+    {       0,  d_west,       0,  d_west,       0,  d_east,       0,  d_east}},
+
+   // Far apart lines.
+   {2, s4x4, s2x4, 0,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      12,      -1,      -1,       0,       4,      -1,      -1,       8},
+    {  d_east,       0,       0,  d_east,  d_west,       0,       0,  d_west},
+    {      10,      -1,      -1,       1,       2,      -1,      -1,       9},
+    {  d_west,       0,       0,  d_west,  d_east,       0,       0,  d_east}},
+
    // Stairsteps in middle, ends are normal.
    {2, s4x4, s2x4, 0,
-         {      10,      -1,       3,       1,       2,      -1,      11,       9},
-         {      -1,      13,      -1,      -1,      -1,       5,      -1,      -1},
-         {       0,  d_east,       0,       0,       0,  d_west,       0,       0},
-         {      -1,      15,      -1,      -1,      -1,       7,      -1,      -1},
-         {       0,  d_west,       0,       0,       0,  d_east,       0,       0}},
+    {      10,      -1,       3,       1,       2,      -1,      11,       9},
+    {      -1,      13,      -1,      -1,      -1,       5,      -1,      -1},
+    {       0,  d_east,       0,       0,       0,  d_west,       0,       0},
+    {      -1,      15,      -1,      -1,      -1,       7,      -1,      -1},
+    {       0,  d_west,       0,       0,       0,  d_east,       0,       0}},
    {2, s4x4, s2x4, 0,
-         {      10,      15,      -1,       1,       2,       7,      -1,       9},
-         {      -1,      -1,      14,      -1,      -1,      -1,       6,      -1},
-         {       0,       0,  d_east,       0,       0,       0,  d_west,       0},
-         {      -1,      -1,       3,      -1,      -1,      -1,      11,      -1},
-         {       0,       0,  d_west,       0,       0,       0,  d_east,       0}},
+    {      10,      15,      -1,       1,       2,       7,      -1,       9},
+    {      -1,      -1,      14,      -1,      -1,      -1,       6,      -1},
+    {       0,       0,  d_east,       0,       0,       0,  d_west,       0},
+    {      -1,      -1,       3,      -1,      -1,      -1,      11,      -1},
+    {       0,       0,  d_west,       0,       0,       0,  d_east,       0}},
+
    // 'Z' columns, centers are normal.
    {2, s4x4, s2x4, 0,
-         {      -1,      15,       3,      -1,      -1,       7,      11,      -1},
-         {      12,      -1,      -1,      -1,       4,      -1,      -1,      -1},
-         {  d_east,       0,       0,       0,  d_west,       0,       0,       0},
-         {      10,      -1,      -1,      -1,       2,      -1,      -1,      -1},
-         {  d_west,       0,       0,       0,  d_east,       0,       0,       0}},
+    {      -1,      15,       3,      -1,      -1,       7,      11,      -1},
+    {      12,      -1,      -1,      -1,       4,      -1,      -1,      -1},
+    {  d_east,       0,       0,       0,  d_west,       0,       0,       0},
+    {      10,      -1,      -1,      -1,       2,      -1,      -1,      -1},
+    {  d_west,       0,       0,       0,  d_east,       0,       0,       0}},
    {2, s4x4, s2x4, 0,
-         {      10,      15,       3,      -1,       2,       7,      11,      -1},
-         {      -1,      -1,      -1,       0,      -1,      -1,      -1,       8},
-         {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
-         {      -1,      -1,      -1,       1,      -1,      -1,      -1,       9},
-         {       0,       0,       0,  d_west,       0,       0,       0,  d_east}},
+    {      10,      15,       3,      -1,       2,       7,      11,      -1},
+    {      -1,      -1,      -1,       0,      -1,      -1,      -1,       8},
+    {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
+    {      -1,      -1,      -1,       1,      -1,      -1,      -1,       9},
+    {       0,       0,       0,  d_west,       0,       0,       0,  d_east}},
 
    // Common spot columns, facing N-S.
 
    // Clumps.
    {2, s4x4, s2x4, 1,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,       1,      -1,      -1,       8,       9,      -1,      -1},
-         { d_south, d_south,       0,       0, d_north, d_north,       0,       0},
-         {      14,       3,      -1,      -1,       6,      11,      -1,      -1},
-         { d_north, d_north,       0,       0, d_south, d_south,       0,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,       1,      -1,      -1,       8,       9,      -1,      -1},
+    { d_south, d_south,       0,       0, d_north, d_north,       0,       0},
+    {      14,       3,      -1,      -1,       6,      11,      -1,      -1},
+    { d_north, d_north,       0,       0, d_south, d_south,       0,       0}},
    {2, s4x4, s2x4, 1,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,      -1,       2,       4,      -1,      -1,      10,      12},
-         {       0,       0, d_south, d_south,       0,       0, d_north, d_north},
-         {      -1,      -1,       7,       5,      -1,      -1,      15,      13},
-         {       0,       0, d_north, d_north,       0,       0, d_south, d_south}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,      -1,       2,       4,      -1,      -1,      10,      12},
+    {       0,       0, d_south, d_south,       0,       0, d_north, d_north},
+    {      -1,      -1,       7,       5,      -1,      -1,      15,      13},
+    {       0,       0, d_north, d_north,       0,       0, d_south, d_south}},
+
    // Stairsteps.
    {2, s4x4, s2x4, 1,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {       0,      -1,       2,      -1,       8,      -1,      10,      -1},
-         { d_south,       0, d_south,       0, d_north,       0, d_north,       0},
-         {      14,      -1,       7,      -1,       6,      -1,      15,      -1},
-         { d_north,       0, d_north,       0, d_south,       0, d_south,       0}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,       2,      -1,       8,      -1,      10,      -1},
+    { d_south,       0, d_south,       0, d_north,       0, d_north,       0},
+    {      14,      -1,       7,      -1,       6,      -1,      15,      -1},
+    { d_north,       0, d_north,       0, d_south,       0, d_south,       0}},
    {2, s4x4, s2x4, 1,
-         {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
-         {      -1,       1,      -1,       4,      -1,       9,      -1,      12},
-         {       0, d_south,       0, d_south,       0, d_north,       0, d_north},
-         {      -1,       3,      -1,       5,      -1,      11,      -1,      13},
-         {       0, d_north,       0, d_north,       0, d_south,       0, d_south}},
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {      -1,       1,      -1,       4,      -1,       9,      -1,      12},
+    {       0, d_south,       0, d_south,       0, d_north,       0, d_north},
+    {      -1,       3,      -1,       5,      -1,      11,      -1,      13},
+    {       0, d_north,       0, d_north,       0, d_south,       0, d_south}},
+
+   // Far apart lines.
+   {2, s4x4, s2x4, 1,
+    {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+    {       0,      -1,      -1,       4,       8,      -1,      -1,      12},
+    { d_south,       0,       0,       d_south, d_north, 0,       0, d_north},
+    {      14,      -1,      -1,       5,       6,      -1,      -1,      13},
+    { d_north,       0,       0,       d_north, d_south, 0,       0, d_south}},
+
    // Stairsteps in middle, ends are normal.
    {2, s4x4, s2x4, 1,
-         {      14,      -1,       7,       5,       6,      -1,      15,      13},
-         {      -1,       1,      -1,      -1,      -1,       9,      -1,      -1},
-         {       0, d_south,       0,       0,       0, d_north,       0,       0},
-         {      -1,       3,      -1,      -1,      -1,      11,      -1,      -1},
-         {       0, d_north,       0,       0,       0, d_south,       0,       0}},
+    {      14,      -1,       7,       5,       6,      -1,      15,      13},
+    {      -1,       1,      -1,      -1,      -1,       9,      -1,      -1},
+    {       0, d_south,       0,       0,       0, d_north,       0,       0},
+    {      -1,       3,      -1,      -1,      -1,      11,      -1,      -1},
+    {       0, d_north,       0,       0,       0, d_south,       0,       0}},
    {2, s4x4, s2x4, 1,
-         {      14,       3,      -1,       5,       6,      11,      -1,      13},
-         {      -1,      -1,       2,      -1,      -1,      -1,      10,      -1},
-         {       0,       0, d_south,       0,       0,       0, d_north,       0},
-         {      -1,      -1,       7,      -1,      -1,      -1,      15,      -1},
-         {       0,       0, d_north,       0,       0,       0, d_south,       0}},
+    {      14,       3,      -1,       5,       6,      11,      -1,      13},
+    {      -1,      -1,       2,      -1,      -1,      -1,      10,      -1},
+    {       0,       0, d_south,       0,       0,       0, d_north,       0},
+    {      -1,      -1,       7,      -1,      -1,      -1,      15,      -1},
+    {       0,       0, d_north,       0,       0,       0, d_south,       0}},
+
    // 'Z' columns, centers are normal.
    {2, s4x4, s2x4, 1,
     {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
@@ -4208,8 +4267,8 @@ common_spot_map cmaps[] = {
     {      -1,       2,       5,      -1,      -1,       6,       1,      -1},
     {       0, d_north, d_north,       0,       0, d_south, d_south,       0}},
 
-   // Common spot 1/4 tags from a tidal wave (just center line).
-   {0x200, s1x8, s_qtag, 0,
+   // Common spot 1/4 tags from a tidal wave (just center line), also includes common center diamonds.
+   {0xA00, s1x8, s_qtag, 0,
     {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
     {      -1,      -1,       4,       6,      -1,      -1,       0,       2},
     {       0,       0, d_south, d_north,       0,       0, d_north, d_south},
@@ -4266,12 +4325,14 @@ extern void common_spot_move(
 
    int rstuff = parseptr->concept->arg1;
    // rstuff =
-   // common point galaxy from rigger          : 0x1
-   // common spot columns (from 4x4 or perhaps 2x4) : 0x2
-   // common point diamonds                    : 0x4
+   // common point galaxy (rigger)             : 0x1
+   // common spot columns (4x4 or perhaps 2x4) : 0x2
+   // common spot diamonds (bigdmd or 1x8)     : 0x804
+   // common point diamonds (bigdmd)           : 0x4
    // common point hourglass                   : 0x80
-   // common end lines/waves (from 2x6)        : 0x10
+   // common end lines/waves (from 2x6 or 2x8) : 0x10
    // common center lines/waves (from 2x4)     : 0x20
+   // common spot waves (from 2x8)             : 0x40
    // common spot 2-faced lines (from 2x8)     : 0x8
    // common spot lines                        : 0x78
    // common spot waves                        : 0x70
@@ -4374,6 +4435,16 @@ extern void common_spot_move(
 
       a0.cmd.cmd_misc_flags |= parseptr->concept->arg2;
       a1.cmd.cmd_misc_flags |= parseptr->concept->arg2;
+
+      if (0x40000000U & map_ptr->indicator) {
+         a0.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_GALAXY;
+         a1.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_GALAXY;
+      }
+
+      if (0x20000000U & map_ptr->indicator) {
+         a0.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
+         a1.cmd.cmd_misc3_flags |= CMD_MISC3__SAID_DIAMOND;
+      }
 
       update_id_bits(&a0);
       impose_assumption_and_move(&a0, &the_results[0]);
@@ -4565,7 +4636,7 @@ void tglmap::do_glorious_triangles(
    move(&a1, false, &res[0]);
    move(&a2, false, &res[1]);
 
-   fix_n_results(2, -1, false, res, rotstate, pointclip, 0);
+   fix_n_results(2, -1, res, rotstate, pointclip, 0);
 
    if (res[0].kind == nothing) {
       result->kind = nothing;
@@ -4575,7 +4646,7 @@ void tglmap::do_glorious_triangles(
 
    /* The low digit of rotstate (should have just low 2 bits on) tells
       what possible rotation states could exist with all setups in
-      same parity.  The next digit tells what possible states  of z0
+      same parity.  The next digit tells what possible states of z0
       exist with alternating parity.  The highest bit deals with triangles
       rotating by 90 degrees from one setup to the next, or something
       like that. */

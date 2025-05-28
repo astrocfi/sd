@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 327
+#define DATABASE_FORMAT_VERSION 328
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -989,6 +989,7 @@ enum call_restriction {
    cr_said_dmd,            // Qualifier only.
    cr_said_tgl,            // Qualifier only.
    cr_didnt_say_tgl,       // Qualifier only.
+   cr_said_gal,            // Qualifier only.
    cr_occupied_as_stars,   // Qualifier only.
    cr_occupied_as_clumps,  // Qualifier only.
    cr_occupied_as_blocks,  // Qualifier only.

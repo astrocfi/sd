@@ -392,6 +392,9 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       case sboxdmd:
          selected_person_mask = 0x0F;
          break;
+      case sdbltrngl4:
+         selected_person_mask = 0x1E;
+         break;
       }
 
       break;

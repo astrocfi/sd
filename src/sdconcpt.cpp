@@ -405,8 +405,12 @@ static void do_c1_phantom_move(
       // Do the call in each line, them remove resulting phantoms carefully.
 
       if (global_livemask == 0x5C5C || global_livemask == 0xA3A3) {
-         // Split into 4 vertical strips.
-         divided_setup_move(ss, spcmap_4x4v, phantest_ok, true, result);
+         // Split into 4 vertical strips.  Flip the setup around.
+         ss->rotation++;
+         canonicalize_rotation(ss);
+         divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, true, result);
+         result->rotation--;
+         canonicalize_rotation(ss);
       }
       else if (global_livemask == 0xC5C5 || global_livemask == 0x3A3A) {
          // Split into 4 horizontal strips.
@@ -2913,13 +2917,13 @@ static void do_concept_once_removed(
          map_code = MAPCODE(sdmd,2,MPKIND__REMOVED,0);
          break;
       case s_bone:
-         map_code = MAPCODE(s_trngl4,2,MPKIND__REMOVED,1);
+         map_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_ONCEREM,1,s_trngl4,0x7);
          break;
       case s_bone6:
          map_code = MAPCODE(s_trngl,2,MPKIND__REMOVED,1);
          break;
       case s_ptpd:
-         map_code = MAPCODE(s_trngl4,2,MPKIND__NONISOTROPREM,1);
+         map_code = HETERO_MAPCODE(s_trngl4,2,MPKIND__HET_ONCEREM,1,s_trngl4,0xD);
          break;
       case s_spindle:
          map_code = HETERO_MAPCODE(s2x2,2,MPKIND__HET_CO_ONCEREM,0,sdmd,0);
@@ -4263,6 +4267,7 @@ static void do_concept_checkerboard(
    };
 
    static const CKBDtabletype CKBDtable[] = {
+      // First 5 must be as shown, because "so-and-so preferred" depends on this.
       {s2x4, 0,              0xCCCC,     0x00AA,      // outfacers are as if in RWV
        d_north, d_south, 0, {0, 2, 4, 6}, {7, 1, 3, 5}, {1, 3, 5, 7}, {7, 1, 3, 5}},
       {s2x4, 0,              0x3333,     0x00AA,      // outfacers are as if in LWV
@@ -4273,6 +4278,10 @@ static void do_concept_checkerboard(
        d_north, d_south, 0, {2, 3, 6, 7}, {0, 1, 4, 5}, {0, 1, 4, 5}, {0, 1, 4, 5}},
       {s2x4, 0,              0xC3C3,     0x00AA,      // outfacers are ends
        d_north, d_south, 0, {0, 3, 4, 7}, {-1, -1, -1, -1}, {1, 2, 5, 6}, {-1, -1, -1, -1}},
+      {s2x4, 0,              0xF00F,     0x00AA,      // unsymmetrical, outfacers on left
+       d_north, d_south, 0, {0, 1, 6, 7}, {-1, -1, -1, -1}, {2, 3, 4, 5}, {-1, -1, -1, -1}},
+      {s2x4, 0,              0x0FF0,     0x00AA,      // unsymmetrical, outfacers on right
+       d_north, d_south, 0, {2, 3, 4, 5}, {-1, -1, -1, -1}, {0, 1, 6, 7}, {-1, -1, -1, -1}},
       {s_c1phan, 0x33333333, 0xCC00CC00, 0x004488CC,  // C1 phantoms, outfacers N/S
        d_north, d_south, 033, {0, 2, 8, 10}, {4, 6, 12, 14}, {4, 6, 12, 14}, {4, 6, 12, 14}},
       {s_c1phan, 0x33333333, 0x00CC00CC, 0x004488CC,  // C1 phantoms, outfacers E/W

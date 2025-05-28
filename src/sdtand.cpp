@@ -2084,7 +2084,7 @@ extern void tandem_couples_move(
          }
       }
 
-      fix_n_results(tttcount+1, -1, false, ttt, rotstate, pointclip, 0);
+      fix_n_results(tttcount+1, -1, ttt, rotstate, pointclip, 0);
 
       if (ttt[0].kind == nothing || !(rotstate & 0xF03))
          fail("Can't do this.");

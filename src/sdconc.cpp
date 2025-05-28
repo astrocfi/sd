@@ -3170,6 +3170,11 @@ extern void concentric_move(
          analyzer = schema_cross_concentric;
    }
 
+   if (schema_attrs[analyzer].attrs & SCA_REMOVE_VERIFY) {
+      // These "verify" things can't possibly be meaningful after this point.
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__VERIFY_MASK;
+   }
+
    begin_inner[0].cmd = ss->cmd;
    begin_inner[1].cmd = ss->cmd;
    begin_inner[2].cmd = ss->cmd;
@@ -3890,7 +3895,7 @@ extern void concentric_move(
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad ||
        analyzer == schema_concentric_others) {
-      fix_n_results(center_arity, -1, false, &outer_inners[1], rotstate, pointclip, 0);
+      fix_n_results(center_arity, -1, &outer_inners[1], rotstate, pointclip, 0);
       if (outer_inners[1].kind != nothing && !(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
       // Try to turn inhomogeneous diamond/wave combinations into all diamonds,
@@ -3932,7 +3937,7 @@ extern void concentric_move(
    else if (analyzer == schema_4x4k_concentric ||
             analyzer == schema_3x3k_concentric) {
       // Put all 3, or all 4, results into the same formation.
-      fix_n_results(center_arity+1, -1, false, outer_inners, rotstate, pointclip, 0);
+      fix_n_results(center_arity+1, -1, outer_inners, rotstate, pointclip, 0);
       if (outer_inners[0].kind == nothing)
          fail("This is an inconsistent shape or orientation changer.");
    }
@@ -4164,7 +4169,7 @@ extern void concentric_move(
             concwarntable = concwarndmdtable;
 
          switch (final_outers_start_kind) {
-         case s1x4: case sdmd:
+         case s1x4: case sdmd: case s_star:
 
             // Outers' call has gone from a 1x4 or diamond to a 2x2.  The rules are:
             // (1) The "force_columns" or "force_lines" flag in the invocation takes
@@ -6627,7 +6632,7 @@ extern void inner_selective_move(
             goto fooble;
          }
 
-         fix_n_results(numsetups, -1, false, lilresult, rotstate, pointclip, 0);
+         fix_n_results(numsetups, -1, lilresult, rotstate, pointclip, 0);
 
          if (lilresult[0].kind == nothing) goto lose;
          if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
@@ -6968,7 +6973,6 @@ extern void inner_selective_move(
 
    {
       merge_action ma = merge_c1_phantom;
-
 
       if (ss->kind == s4x4 && indicator == selective_key_plain && !inner_shape_change)
          ma = merge_strict_matrix;
