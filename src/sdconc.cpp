@@ -4832,7 +4832,7 @@ void merge_table::initialize()
 
 // This overwrites its first argument setup.
 void merge_table::merge_setups(setup *ss,
-                               merge_action action,
+                               merge_action_type action,
                                setup *result,
                                call_with_name *maybe_the_call /* = (call_with_name *) 0 */) THROW_DECL
 {
@@ -4874,7 +4874,7 @@ void merge_table::merge_setups(setup *ss,
       }
    }
 
-   merge_action orig_action = action;
+   merge_action_type orig_action = action;
    // Only use the special triangle stuff if doing brute force merge.
    if (action == merge_c1_phantom_from_triangle_call)
       action = merge_c1_phantom;
@@ -5905,6 +5905,8 @@ extern void inner_selective_move(
    int sizem1 = attr::slimit(ss);
    selective_key orig_indicator = indicator;
    normalize_action action = normalize_before_isolated_call;
+   merge_action_type ma = merge_c1_phantom;   // The default.
+   uint16_t special_merge_action = 0;
    bool force_matrix_merge = false;
    bool inner_shape_change = false;
    bool doing_special_promenade_thing = false;
@@ -7761,6 +7763,16 @@ extern void inner_selective_move(
                if ((thislivemask & i) == 0 && (thislivemask & k) != 0) {
                   rotfix = 1;     // we are vertical and not horizontal.
                   // Still need to check whether we are both, or neither.  That would be an error.
+               }
+
+               if (thislivemask == 0x548A || thislivemask == 0x512A)
+                  rotfix = 1;
+               else if (thislivemask == 0xA548 || thislivemask == 0xA512)
+                  rotfix = 2;
+               else if (thislivemask == 0x8A54 || thislivemask == 0x2A51)
+                  rotfix = 3;
+
+               if (rotfix != 0) {
                   this_one->rotation += rotfix;   // Just flip the setup around and recanonicalize.
                   canonicalize_rotation(this_one);
                   thislivemask = this_one->little_endian_live_mask();
@@ -7769,12 +7781,13 @@ extern void inner_selective_move(
                // Now rotfix is 1 to select the triangles whose bases are
                // vertically aligned, and 0 for the horizontally aligned bases.
 
-               if ((thislivemask & 0xAAAA) == 0)
+               if (thislivemask == 0x48A5 || thislivemask == 0x12A5)
+                  map_key_table = tglmap::uc1tglmap1;
+               else if ((thislivemask & 0xAAAA) == 0)
                   map_key_table = tglmap::c1tglmap1;
                else if ((thislivemask & 0x5555) == 0)
                   map_key_table = tglmap::c1tglmap2;
-
-               if ((thislivemask & k) == 0 && (thislivemask & i) != 0) {
+               else if ((thislivemask & k) == 0 && (thislivemask & i) != 0) {
                   // We are horizontal and not vertical, OK.
                }
                else if (rotfix) {
@@ -8218,14 +8231,17 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
                }
                else if (attr::klimit(fixp->ink) == 7) {
-                  if (lilresult[0].kind == s1x8)
+                  if (lilresult[0].kind == s1x6 || lilresult[0].kind == s1x8)
                      nextfixp = select::fixer_ptr_table[fixp->next1x4];
                   else if (lilresult[0].kind == s2x4)
                      nextfixp = select::fixer_ptr_table[fixp->next2x2];
+                  else if (lilresult[0].kind == s_crosswave && fixp->ink != s_crosswave)
+                     nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                   else if (lilresult[0].kind == s_qtag)
                      nextfixp = select::fixer_ptr_table[fixp->nextdmd];
-                  else if (lilresult[0].kind == s_rigger)
+                  else if (lilresult[0].kind == s_rigger) {
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
+                  }
                }
                else if (attr::klimit(fixp->ink) == 2) {
                   if (lilresult[0].kind == s1x3)
@@ -8312,6 +8328,10 @@ extern void inner_selective_move(
             this_result->kind = s_qtag;
          else
             this_result->kind = fixp->outk;
+
+         special_merge_action = fixp->numsetups >> 12;
+         if (special_merge_action != 0)
+            ma = (merge_action_type) special_merge_action;
 
          map_scanner = 0;
          frot = fixp->rot;  // This stays fixed.
@@ -8448,8 +8468,6 @@ extern void inner_selective_move(
    result->result_flags = get_multiple_parallel_resultflags(the_results, 2);
 
    {
-      merge_action ma = merge_c1_phantom;
-
       if (ss->kind == s4x4 && indicator == selective_key_plain && !inner_shape_change)
          ma = merge_strict_matrix;
 

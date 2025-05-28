@@ -124,6 +124,7 @@
    tglmap::init_table
    c1tglmap1
    c1tglmap2
+   uc1tglmap1
    dbqtglmap1
    dbqtglmap2
    qttglmap1
@@ -5381,6 +5382,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_crosswave,s_crosswave, 0x88,0x11,0x0D,0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, 3, -1, 4, 5, 7, -1}, {-1, 7, 1, 2, -1, 3, 5, 6}},
    {s1x2,   s_crosswave, 0,        0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 7},                     {0}},
    {s1x8,   s_crosswave, 0xCC,  0x55, 0x2D, 0x1, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {1, 3, 5, 7},{0, 1, 4, 5}},
+   {s1x8,   s_crosswave, 0xCC,     0, 0xD2E,0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, 1, -1, -1, 4, 5, -1, -1}, {0}},
    {s1x4,      s_rigger, 0xA,      0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {7, -1, 3, -1},{0}},
 
    // These two must be in the order shown.
@@ -5392,7 +5394,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x8,       s3x1dmd, 0xAA,  0x66, 0x1E, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 0, {0, -1, 2, -1, 4, -1, 6, -1},{1, -1, -1, 3, 5, -1, -1, 7}},
    {s1x6,       s1x3dmd, 044,   0x66, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 2, -1, 5, 6, -1},{0}},
    {s1x8,       s1x3dmd, 0x55,  0x66, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 1, -1, 2, -1, 5, -1, 6},{0}},
-   {s1x3dmd,    s2x4,    0x66,  0x66, 0X1BE,0x0, schema_matrix,       s_spindle,     nothing,  warn__none, 0, 0, {7, -1, -1, 1, 3, -1, -1, 5},{0, -1, -1, 2, 4, -1, -1, 6}},
+   {s1x3dmd,    s2x4,    0x66,  0x66, 0x1BE,0x0, schema_matrix,       s_spindle,     nothing,  warn__none, 0, 0, {7, -1, -1, 1, 3, -1, -1, 5},{0, -1, -1, 2, 4, -1, -1, 6}},
    {s1x3dmd,  s_spindle, 0x66,  0xAA, 0x0E, 0x0, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {0, 2, 4, 6}},
    {s1x3dmd,     s_ptpd, 0x66,  0x55, 0x0E, 0x0, schema_rev_checkpoint,    sdmd,     s2x2,     warn__none, 0, 0, {0, 3, 4, 7},               {1, 7, 5, 3}},
    {s_1x2dmd, s_2x1dmd, 022,     022, 0x1D, 0x0, schema_matrix,      s_crosswave,    nothing,  warn__none, 0, 1, {0, -1, 3, 4, -1, 7}, {6, -1, 1, 2, -1, 5}},
@@ -5726,10 +5728,19 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,      s_c1phan, 0x77,0xA0A0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, 4, -1, -1, -1, 12},{0}},
    {s2x4,      s_c1phan, 0xEE,0x0505, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, -1, -1, -1, 9, -1, -1, -1},{0}},
 
-   // Even more
+   // Even more.
    {s2x4,      s_c1phan, 0x77,0x0B0B, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, 8, -1, -1, -1, 0},{0}},
    {s2x4,      s_c1phan, 0xEE,0x7070, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {5, -1, -1, -1, 13, -1, -1, -1},{0}},
-
+   // Even more, unsymmetrical.
+   {s2x4,      s_c1phan, 0x7E,0x00B7, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {4, -1, -1, -1, -1, -1, -1, 1},{0}},
+   {s2x4,      s_c1phan, 0xE7,0xB700, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, 9, 12, -1, -1, -1},{0}},
+   {s2x4,      s_c1phan, 0x7E,0x700B, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {0, -1, -1, -1, -1, -1, -1, 13},{0}},
+   {s2x4,      s_c1phan, 0xE7,0x0B70, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, 5, 8, -1, -1, -1},{0}},
+   // And more.
+   {s2x2,      s_c1phan, 0x3, 0xED00, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, -1, 11, 14},{0}},
+   {s2x2,      s_c1phan, 0x6, 0xD00E, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, -1, -1, 15},{0}},
+   {s2x2,      s_c1phan, 0xC, 0x00ED, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, 6, -1, -1},{0}},
+   {s2x2,      s_c1phan, 0x9, 0x0ED0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {-1, 7, 10, -1},{0}},
 
    {s1x6,      sbigx,    044,      0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 3, -1, 8, 9, -1},        {0}},
    {s1x6,      s_1x2dmd, 044,    022, 0x1D, 0x0, schema_matrix,         s3x1dmd,     nothing,  warn__none, 0, 1, {0, 1, -1, 4, 5, -1},        {7, -1, 2, 3, -1, 6}},
@@ -12084,9 +12095,9 @@ select::fixer select::fixer_init_table[] = {
    {fx_f1x8hi2,  s1x2, s1x8,        0, 0, 1, {5, 4},
     fx0, fx_f2x4pos4,           fx0, fx0,                   fx0, fx0,           fx0, fx0},
 
-   {fx_f1x8low6, s1x6, s1x8,        0, 0, 1, {0, 1, 3, 7, 6, 2},
+   {fx_f1x8low6, s1x6, s1x8,        0, 0, (((uint16_t) merge_c1_phantom_real) << 12) + 1, {0, 1, 3, 7, 6, 2},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,           fx_f2x4pos8, fx0},
-   {fx_f1x8hi6,  s1x6, s1x8,        0, 0, 1, {3, 2, 6, 4, 5, 7},
+   {fx_f1x8hi6,  s1x6, s1x8,        0, 0, (((uint16_t) merge_c1_phantom_real) << 12) + 1, {3, 2, 6, 4, 5, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,           fx_f2x4pos5, fx0},
 
    {fx_f1x8lodbt4, s1x2, s1x8,      0, 0, 2, {3, 2, 5, 4},
@@ -12145,12 +12156,19 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx_fxwvrig1,           fx0, fx0},
    {fx_fxwvpos2,s_crosswave,s_crosswave,0, 0, 1, {0, 1, 2, 3, -1, -1, 6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx_fxwvrig2,           fx0, fx0},
+   {fx_fxwvpos3,s_crosswave,s_crosswave,0, 0, 1, {-1, -1, 2, 3, 4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fxwvpos4,s_crosswave,s_crosswave,0, 0, 1, {0, 1, 2, 3, -1, -1, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_fxwvpos5, s_rigger,s_crosswave,0, 0, (((uint16_t) merge_c1_phantom_real) << 12) + 1, {-1, -1, 2, 3, 4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_fxwvpos6, s_rigger, s_crosswave,0, 0, (((uint16_t) merge_c1_phantom_real) << 12) + 1, {0, 1, 2, 3, -1, -1, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_fxwvrig1, s_rigger, s_rigger,0, 0, 1, {0, 1, 2, 3, 4, 5, -1, -1},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+    fx0, fx0,            fx_f1x8hi6, fx0,                   fx_fxwvpos3, fx_fxwvpos5,   fx0, fx0},
    {fx_fxwvrig2, s_rigger, s_rigger,0, 0, 1, {0, 1, -1, -1, 4, 5, 6, 7},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-
+    fx0, fx0,           fx_f1x8low6, fx0,                   fx_fxwvpos4, fx_fxwvpos6,   fx0, fx0},
    {fx_f2x4pos02, s1x2, s2x4,       1, 0, 2, {0, 7, 2, 5},
     fx0, fx_f1x8hidbt4,         fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_f2x4pos13, s1x2, s2x4,       1, 0, 2, {1, 6, 3, 4},
@@ -12664,6 +12682,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                       sboxpdmd,   0xF0,   fx_boxpdma,    fx0, -1},
    {LOOKUP_NONE,                       sboxpdmd,   0x0F,   fx_boxpdmb,    fx0, -1},
    {LOOKUP_NONE,                       sboxpdmd,   0xF4,   fx_beehive1,   fx0, -1},
+   {LOOKUP_NONE,                       s_rigger,   0x3F,   fx_fxwvrig1,   fx0, -1},
+   {LOOKUP_NONE,                       s_rigger,   0xF3,   fx_fxwvrig2,   fx0, -1},
    {LOOKUP_NONE,                      s_spindle,   0xE3,   fx_beehive2,   fx0, -1},
    {LOOKUP_NONE,                      s_spindle,   0x3E,   fx_beehive3,   fx0, -1},
    {LOOKUP_NONE,                      s_spindle,   0x1C,   fx_spnnrtgl,   fx0, -1},
@@ -12866,47 +12886,61 @@ select::sel_item select::sel_init_table[] = {
 const tglmap::map tglmap::init_table[] = {
 
    // mykey     kind   kind1x3 otherkey
-   //                                   nointlkshapechange
-   //                                      randombits
+   //                                      randombits and per-triangle rotation
+   //                                      |
 
    // In C1 phantom: first triangle (inverted),
    // then second triangle (upright), then idle.
-   {tglmap1b, s_c1phan, s2x4, tglmap2b, 0, 0,
+   {tglmap1b, s_c1phan, s2x4, tglmap2b,    0,
     {4, 3, 2,   0, 7, 6},    // mapqt1
     {6, 8, 10,  14,0, 2},    // mapcp1
     {10, 9, 8,  4, 3, 2},    // mapbd1
     {6, 5, 4, 2, 1, 0},      // map241
     {10, 9, 8, 4, 3, 2}},    // map261
 
-   {tglmap2b, s_qtag, s2x4, tglmap1b, 0, 1,
+   {tglmap2b, s_qtag, s2x4, tglmap1b,      tgl_rev_ord_if_1x3,
     {5, 6, 7,   1, 2, 3},
     {3, 15, 13, 11,7, 5},
     {1, 2, 3,   7, 8, 9},
     {7, 6, 5, 3, 2, 1},
     {1, 2, 3, 7, 8, 9}},
 
-   {tglmap1w, sdmd, nothing, tglmap1w, 0, 32+16,
+   {utglmap1c, s_c1phan, nothing, utglmap1c, 0xA,
+    {-1},
+    {14, 0, 2, 11, 7, 5},
+    {-1},
+    {-1},
+    {-1}},
+
+   {utglmap1ci, s_c1phan, nothing, utglmap1ci, 0xA,
+    {-1},
+    {12, 0, 2, 9, 7, 5},
+    {-1},
+    {-1},
+    {-1}},
+
+   {tglmap1w, sdmd, nothing, tglmap1w,     tg99onlyonetriangle + 1,
     {0, 1, 3,   -1, -1, -1},
     {-1},
     {-1},
     {-1},
     {-1}},
 
-   {tglmap2w, sdmd, nothing, tglmap2w, 0, 32+16,
+   {tglmap2w, sdmd, nothing, tglmap2w,     tg99onlyonetriangle + 1,
     {2, 3, 1,   -1, -1, -1},
     {-1},
     {-1},
     {-1},
     {-1}},
 
-   {tglmap1i, nothing, nothing, tglmap2i, 0, 0,   // Interlocked
+   {tglmap1i, nothing, nothing, tglmap2i,  0,   // Interlocked
     {0, 0, 0,   0, 0, 0},
     {4, 8, 10,  12,0, 2},
     {0, 0, 0,   0, 0, 0},
     {0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0}},
 
-   {tglmap2i, nothing, nothing,  tglmap1i, 0, 0,   // Interlocked
+   {tglmap2i, nothing, nothing,  tglmap1i, 0,   // Interlocked
     {0, 0, 0,   0, 0, 0},
     {1, 15, 13, 9, 7, 5},
     {0, 0, 0,   0, 0, 0},
@@ -12914,28 +12948,28 @@ const tglmap::map tglmap::init_table[] = {
     {0, 0, 0, 0, 0, 0}},
 
    // Maps for deepbigqtg setups.
-   {tglmap1d, s2x8, s2x8, tglmap2d, 0, 0,
+   {tglmap1d, s2x8, s2x8, tglmap2d,        0,
     {4, 3, 2,   0, 7, 6},
     {2, 6, 7,   10,14, 15},
     {10, 9, 8,  4, 3, 2},
     {1, 2, 3,   9, 10, 11},
     {10, 9, 8, 4, 3, 2}},
 
-   {tglmap2d, s2x8, s2x8, tglmap1d, 0, 0,
+   {tglmap2d, s2x8, s2x8, tglmap1d,        0,
     {4, 3, 2,   0, 7, 6},
     {3, 4, 5,   11,12,13},
     {10, 9, 8,  4, 3, 2},
     {14,13,12,  6, 5, 4},
     {10, 9, 8, 4, 3, 2}},
 
-   {tglmap1m, nothing, s2x8, tglmap2m, 1, 0,   // Interlocked
+   {tglmap1m, nothing, s2x8, tglmap2m,     tgl_nointlkshapechange,   // Interlocked
     {5, 6, 7,   1, 2, 3},
     {0, 6, 7,   8,14,15},
     {1, 2, 3,   7, 8, 9},
     {7, 6, 5, 3, 2, 1},
     {1, 2, 3, 7, 8, 9}},
 
-   {tglmap2m, nothing, s2x8, tglmap1m, 1, 0,   // Interlocked
+   {tglmap2m, nothing, s2x8, tglmap1m,     tgl_nointlkshapechange,   // Interlocked
     {5, 6, 7,   1, 2, 3},
     {1, 4, 5,   9,12,13},
     {1, 2, 3,   7, 8, 9},
@@ -12943,64 +12977,64 @@ const tglmap::map tglmap::init_table[] = {
     {1, 2, 3, 7, 8, 9}},
 
    // Interlocked triangles in quarter-tag:
-   {tglmap1j, s_qtag, nothing, tglmap2j, 1, 1,   // In/out point.
+   {tglmap1j, s_qtag, nothing, tglmap2j,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange,   // In/out point.
     {4, 7, 2,   0, 3, 6}, {0}, {0}, {0}, {0}},
 
-   {tglmap2j, s_qtag, nothing, tglmap1j, 1, 1,   // In/out point.
+   {tglmap2j, s_qtag, nothing, tglmap1j,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange,   // In/out point.
     {5, 6, 3,   1, 2, 7}, {0}, {0}, {0}, {0}},
 
-   {tglmap3j, s_qtag, nothing, tglmap3j, 1, 17,   // Inside, in qtag.
+   {tglmap3j, s_qtag, nothing, tglmap3j,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange+1,   // Inside, in qtag.
     {7, 1, 4,   3, 5, 0}, {0}, {0}, {0}, {0}},
 
    // Magic triangles in quarter-tag:
-   {tglmap1x, s_qtag, nothing, tglmap2x, 1, 1,
+   {tglmap1x, s_qtag, nothing, tglmap2x,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange,
     {4, 6, 7,   0, 2, 3}, {0}, {0}, {0}, {0}},
 
-   {tglmap2x, s_qtag, nothing, tglmap1x, 1, 1,
+   {tglmap2x, s_qtag, nothing, tglmap1x,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange,
     {5, 3, 2,   1, 7, 6}, {0}, {0}, {0}, {0}},
 
    // Plain triangles in ptpd:
-   {tglmap3p, s_ptpd, nothing, tglmap3p, 1, 16,
+   {tglmap3p, s_ptpd, nothing, tglmap3p,   tgl_nointlkshapechange + 1,
     {6, 7, 5,   2, 3, 1}, {0}, {0}, {0}, {0}},
 
-   {tglmap3q, s_ptpd, nothing, tglmap3q, 1, 16,
+   {tglmap3q, s_ptpd, nothing, tglmap3q,   tgl_nointlkshapechange + 1,
     {0, 1, 3,   4, 5, 7}, {0}, {0}, {0}, {0}},
 
    // Magic interlocked triangles in quarter-tag:
-   {tglmap1y, s_qtag, nothing, tglmap2y, 1, 1,
+   {tglmap1y, s_qtag, nothing, tglmap2y,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange,
     {4, 6, 3,   0, 2, 7}, {0}, {0}, {0}, {0}},
 
-   {tglmap2y, s_qtag, nothing, tglmap1y, 1, 1,
+   {tglmap2y, s_qtag, nothing, tglmap1y,   tgl_rev_ord_if_1x3+tgl_nointlkshapechange,
     {5, 7, 2,   1, 3, 6}, {0}, {0}, {0}, {0}},
 
    // "Right triangles" in a 2x4.
-   {tglmap1r, s2x4, nothing, tglmap1r, 0, 0x3,
+   {tglmap1r, s2x4, nothing, tglmap1r,     3,
     {0}, {0}, {0}, {3, 5, 2,   7, 1, 6}, {0}},
-   {tglmap2r, s2x4, nothing, tglmap2r, 0, 0x2,
+   {tglmap2r, s2x4, nothing, tglmap2r,     2,
     {0}, {0}, {0}, {3, 4, 5,   7, 0, 1}, {0}},
-   {tglmap3r, s2x4, nothing, tglmap3r, 0, 0x1,
+   {tglmap3r, s2x4, nothing, tglmap3r,     1,
     {0}, {0}, {0}, {2, 3, 4,   6, 7, 0}, {0}},
-   {tglmap4r, s2x4, nothing, tglmap4r, 0, 0x2,
+   {tglmap4r, s2x4, nothing, tglmap4r,     2,
     {0}, {0}, {0}, {2, 4, 5,   6, 0, 1}, {0}},
-   {tglmap5r, s2x4, nothing, tglmap5r, 0, 0x1,
+   {tglmap5r, s2x4, nothing, tglmap5r,     1,
     {0}, {0}, {0}, {5, 3, 4,   1, 7, 0}, {0}},
-   {tglmap6r, s2x4, nothing, tglmap6r, 0, 0x0,
+   {tglmap6r, s2x4, nothing, tglmap6r,     0,
     {0}, {0}, {0}, {5, 2, 3,   1, 6, 7}, {0}},
-   {tglmap7r, s2x4, nothing, tglmap7r, 0, 0x3,
+   {tglmap7r, s2x4, nothing, tglmap7r,     3,
     {0}, {0}, {0}, {4, 5, 2,   0, 1, 6}, {0}},
-   {tglmap8r, s2x4, nothing, tglmap8r, 0, 0x0,
+   {tglmap8r, s2x4, nothing, tglmap8r,     0,
     {0}, {0}, {0}, {4, 2, 3,   0, 6, 7}, {0}},
 
    // In 323: first triangle (inverted),
    // then second triangle (upright), then idle.
-   {tglmap323_33, s_323, s2x4, tglmap323_33, 0, 0,
+   {tglmap323_33, s_323, s2x4, tglmap323_33, 0,
     {7, 0, 1,   3, 4, 5},
     {0},
     {0},
     {0, 1, 2,   4, 5, 6},
     {9, 8, 7,   4, 3, 2}},
 
-   {tglmap323_66, s_323, s2x4, tglmap323_66, 0, 0,
+   {tglmap323_66, s_323, s2x4, tglmap323_66, 0,
     {3, 1, 2,   7, 5, 6},
     {0},
     {0},
@@ -13008,14 +13042,14 @@ const tglmap::map tglmap::init_table[] = {
     {0, 1, 2,   5, 6, 7}},
 
    // In 343: as above.
-   {tglmap343_33, s_323, s2x4, tglmap343_33, 0, 0,
+   {tglmap343_33, s_323, s2x4, tglmap343_33, 0,
     {7, 8, 9,   2, 3, 4},
     {0},
     {0},
     {0, 1, 2,   4, 5, 6},
     {9, 8, 7,   4, 3, 2}},
 
-   {tglmap343_66, s_323, s2x4, tglmap343_66, 0, 0,
+   {tglmap343_66, s_323, s2x4, tglmap343_66, 0,
     {5, 4, 3,   0, 9, 8},
     {0},
     {0},
@@ -13023,56 +13057,56 @@ const tglmap::map tglmap::init_table[] = {
     {0, 1, 2,   5, 6, 7}},
 
    // In d25: as above.
-   {tglmapd25_33, sd2x5, s2x4, tglmapd25_33, 0, 0x10,
+   {tglmapd25_33, sd2x5, s2x4, tglmapd25_33, 1,
     {0, 2, 3,   6, 8, 9},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_33i, sd2x5, s2x4, tglmapd25_33i, 0, 0x10,
+   {tglmapd25_33i, sd2x5, s2x4, tglmapd25_33i, 1,
     {0, 9, 8,   6, 3, 2},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_66, sd2x5, s2x4, tglmapd25_66, 0, 0x10,
+   {tglmapd25_66, sd2x5, s2x4, tglmapd25_66, 1,
     {1, 3, 4,   5, 7, 8},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_66i, sd2x5, s2x4, tglmapd25_66i, 0, 0x10,
+   {tglmapd25_66i, sd2x5, s2x4, tglmapd25_66i, 1,
     {1, 8, 7,   5, 4, 3},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_16b, sd2x5, s2x4, tglmapd25_16b, 0, 0x10,
+   {tglmapd25_16b, sd2x5, s2x4, tglmapd25_16b, 1,
     {8, 6, 5,   3, 1, 0},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_16bi, sd2x5, s2x4, tglmapd25_16bi, 0, 0x10,
+   {tglmapd25_16bi, sd2x5, s2x4, tglmapd25_16bi, 1,
     {3, 6, 5,   8, 1, 0},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_1ad, sd2x5, s2x4, tglmapd25_1ad, 0, 0x10,
+   {tglmapd25_1ad, sd2x5, s2x4, tglmapd25_1ad, 1,
     {0, 2, 3,   5, 7, 8},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmapd25_35a, sd2x5, s2x4, tglmapd25_35a, 0, 0x10,
+   {tglmapd25_35a, sd2x5, s2x4, tglmapd25_35a, 1,
     {1, 3, 4,   6, 8, 9},
     {0},
     {0},
@@ -13081,14 +13115,14 @@ const tglmap::map tglmap::init_table[] = {
 
    // Things in 434
 
-   {tglmap434_73, s_434, s2x4, tglmap434_73, 0, 0,
+   {tglmap434_73, s_434, s2x4, tglmap434_73, 0,
     {9, 0, 1,   4, 5, 6},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmap434_14, s_434, s2x4, tglmap434_14, 0, 0,
+   {tglmap434_14, s_434, s2x4, tglmap434_14, 0,
     {4, 2, 3,   9, 7, 8},
     {0},
     {0},
@@ -13097,104 +13131,104 @@ const tglmap::map tglmap::init_table[] = {
 
    // Things in 3223
 
-   {tglmap3223_2b, s_3223, nothing, tglmap3223_2b, 0, 0x10,
+   {tglmap3223_2b, s_3223, nothing, tglmap3223_2b, 1,
     {9, 2, 5,   4, 7, 0},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_1c, s_3223, nothing, tglmap3223_1c, 0, 0x10,
+   {tglmap3223_1c, s_3223, nothing, tglmap3223_1c, 1,
     {3, 1, 2,   8, 6, 7},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_3e, s_3223, nothing, tglmap3223_3e, 0, 0x10,
+   {tglmap3223_3e, s_3223, nothing, tglmap3223_3e, 1,
     {9, 2, 5,   8, 6, 7},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_09, s_3223, nothing, tglmap3223_09, 0, 0x10,
+   {tglmap3223_09, s_3223, nothing, tglmap3223_09, 1,
     {3, 1, 2,   4, 7, 0},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_39, s_3223, nothing, tglmap3223_39, 0, 0x10,
+   {tglmap3223_39, s_3223, nothing, tglmap3223_39, 1,
     {7, 4, 8,   2, 9, 3},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_2bi, s_3223, nothing, tglmap3223_2bi, 0, 0x10,
+   {tglmap3223_2bi, s_3223, nothing, tglmap3223_2bi, 1,
     {8, 2, 5,   3, 7, 0},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_1ci, s_3223, nothing, tglmap3223_1ci, 0, 0x10,
+   {tglmap3223_1ci, s_3223, nothing, tglmap3223_1ci, 1,
     {4, 1, 2,   9, 6, 7},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_3ei, s_3223, nothing, tglmap3223_3ei, 0, 0x10,
+   {tglmap3223_3ei, s_3223, nothing, tglmap3223_3ei, 1,
     {8, 2, 5,   9, 6, 7},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_09i, s_3223, nothing, tglmap3223_09i, 0, 0x10,
+   {tglmap3223_09i, s_3223, nothing, tglmap3223_09i, 1,
     {4, 1, 2,   3, 7, 0},
     {0}, {0}, {0}, {0}},
 
-   {tglmap3223_39i, s_3223, nothing, tglmap3223_39i, 0, 0x10,
+   {tglmap3223_39i, s_3223, nothing, tglmap3223_39i, 1,
     {7, 3, 9,   2, 8, 4},
     {0}, {0}, {0}, {0}},
 
    // Interlocked triangles in bigdmd:
-   {tglmap1k, nothing, nothing, tglmap2k, 1, 0,
+   {tglmap1k, nothing, nothing, tglmap2k, tgl_nointlkshapechange,
     {0, 0, 0,   0, 0, 0},
     {0, 0, 0,   0, 0, 0},
     {10, 3, 8,  4, 9, 2},
     {0},
     {0}},
 
-   {tglmap2k, nothing, nothing, tglmap1k, 1, 0,
+   {tglmap2k, nothing, nothing, tglmap1k, tgl_nointlkshapechange,
     {0, 0, 0,   0, 0, 0},
     {0, 0, 0,   0, 0, 0},
     {1, 2, 9,   7, 8, 3},
     {0},
     {0}},
 
-   {tglmap2q, nothing, nothing, tglmap2q, 1, 0,   // Inside interlock, in rigger.
+   {tglmap2q, nothing, nothing, tglmap2q, tgl_nointlkshapechange,   // Inside interlock, in rigger.
     {0},
     {0},
     {7, 1, 4,   3, 5, 0},
     {0},
     {0}},
 
-   {tglmap2p, nothing, nothing, tglmap2p, 1, 0x10,// Inside interlock, in ptpd.
+   {tglmap2p, nothing, nothing, tglmap2p, tgl_nointlkshapechange + 1,// Inside interlock, in ptpd.
     {2, 7, 5,   6, 3, 1},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmap1t, nothing, nothing, tglmap1t, 1, 0x10,// Outside interlock, in rigger.
+   {tglmap1t, nothing, nothing, tglmap1t, tgl_nointlkshapechange + 1,// Outside interlock, in rigger.
     {0},
     {0},
     {6, 1, 4,   2, 5, 0},
     {0},
     {0}},
 
-   {tglmap2t, nothing, nothing, tglmap2t, 1, 0x10,// Outside interlock, in ptpd.
+   {tglmap2t, nothing, nothing, tglmap2t, tgl_nointlkshapechange + 1,// Outside interlock, in ptpd.
     {0, 7, 5,   4, 3, 1},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmap3t, nothing, nothing, tglmap3t, 1, 0x10,// Outside interlock, in qtag.
+   {tglmap3t, nothing, nothing, tglmap3t, tgl_nointlkshapechange + 1,// Outside interlock, in qtag.
     {6, 1, 4,   2, 5, 0},
     {0},
     {0},
     {0},
     {0}},
 
-   {tglmaps6, s_bone6, nothing, tg6mapcw, 0, 1,
+   {tglmaps6, s_bone6, nothing, tg6mapcw, tgl_rev_ord_if_1x3,
     {5, 4, 0,   2, 1, 3},   // qt1 -- come out if rotate 180.
     {0},
     {1, 2, 0,   4, 5, 3},   // bd1 -- go in with this, come out if no rotate.
     {0},
     {0}},
 
-   {tglmapb6, s_short6, nothing, tg6mapccw, 0, 1,
+   {tglmapb6, s_short6, nothing, tg6mapccw, tgl_rev_ord_if_1x3,
     {1, 2, 0,   4, 5, 3},   // qt1 -- come out if rotate 180.
     {0},
     {5, 4, 0,   2, 1, 3},   // bd1 -- go in with this, come out if no rotate.
@@ -13206,14 +13240,14 @@ const tglmap::map tglmap::init_table[] = {
    // mykey     kind   kind1x3 otherkey
    //                                    nointlkshapechange
    //                                       randombits
-   {tglmapd71, s2x8, nothing, tglmapd71, 0, 1,
+   {tglmapd71, s2x8, nothing, tglmapd71, tgl_rev_ord_if_1x3,
     {0},
     {0},
     {12, 3, 4,   5, 10, 11},
     {0},
     {14, 13, 12,   6, 5, 4}},
 
-   {tglmapd72, s2x8, nothing, tglmapd72, 0, 1,
+   {tglmapd72, s2x8, nothing, tglmapd72, tgl_rev_ord_if_1x3,
     {0},
     {0},
     {1, 2, 3,   8, 9, 10},
@@ -13224,14 +13258,14 @@ const tglmap::map tglmap::init_table[] = {
    // The "4" bit says this is one of these not-mirror-symmetric setups.
    // The "8" bit says this is an 8-person version.
 
-   {tg6mapcw, s_ntrgl6ccw, nothing, tg6mapccw, 0, 5,
+   {tg6mapcw, s_ntrgl6ccw, nothing, tg6mapccw, 1,
     {5, 0, 1,   2, 3, 4},   // qt1 -- come out if rotate 180.
     {0, 4, 5,   3, 1, 2},   // cp1 -- go in with this, come out if no rotate.
     {0},
     {5, 4, 0,   2, 1, 3},   // 241 -- come out to bone6
     {1, 2, 0,   4, 5, 3}},  // 261 -- come out to short6
 
-   {tg6mapccw, s_ntrgl6cw, nothing, tg6mapcw, 0, 7,
+   {tg6mapccw, s_ntrgl6cw, nothing, tg6mapcw, 3,
     {3, 1, 2,   0, 4, 5},
     {2, 3, 4,   5, 0, 1},
     {0},
@@ -13250,6 +13284,8 @@ const tglmap::tglmapkey tglmap::b6tglmap1[1] = {tglmapb6};
 
 const tglmap::tglmapkey tglmap::c1tglmap1[2] = {tglmap1b, tglmap1i};
 const tglmap::tglmapkey tglmap::c1tglmap2[2] = {tglmap2b, tglmap2i};
+
+const tglmap::tglmapkey tglmap::uc1tglmap1[2] = {utglmap1c, utglmap1ci};
 
 const tglmap::tglmapkey tglmap::dbqtglmap1[2] = {tglmap1d, tglmap1m};
 const tglmap::tglmapkey tglmap::dbqtglmap2[2] = {tglmap2d, tglmap2m};

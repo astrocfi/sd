@@ -709,7 +709,7 @@ uint32_t * collision_collector::install_with_collision(
 
 
 
-void collision_collector::fix_possible_collision(merge_action action /*= merge_strict_matrix*/,
+void collision_collector::fix_possible_collision(merge_action_type action /*= merge_strict_matrix*/,
                                                  uint32_t callarray_flags /*= 0*/,
                                                  setup *ss /*= (setup *) 0*/) THROW_DECL
 {
@@ -6025,7 +6025,7 @@ static uint32_t do_actual_array_call(
                                     ss->cmd.parseptr->concept->kind == marker_end_of_list) ?
          ss->cmd.parseptr->call : (call_with_name *) 0;
 
-      merge_action action = (maybe_call && (maybe_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES)) ?
+      merge_action_type action = (maybe_call && (maybe_call->the_defn.callflags1 & CFLAG1_TAKE_RIGHT_HANDS_AS_COUPLES)) ?
          merge_c1_phantom_real_couples : merge_strict_matrix;
 
       CC.fix_possible_collision(action, goodies->callarray_flags, ss);

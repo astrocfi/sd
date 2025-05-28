@@ -4935,15 +4935,15 @@ extern void common_spot_move(
 
 
 static void reassemble_triangles(const int8_t *mapnums,
-                                 uint32_t ri,
-                                 uint32_t r,
+                                 uint32_t r1,
+                                 uint32_t r2,
                                  int swap_res,
                                  const setup res[2],
                                  setup *result) THROW_DECL
 {
-   scatter(result, &res[swap_res], mapnums, 2, r^022);
+   scatter(result, &res[swap_res], mapnums, 2, r1);
    if (result->kind != sdmd)
-      scatter(result, &res[swap_res^1], &mapnums[3], 2, r);
+      scatter(result, &res[swap_res^1], &mapnums[3], 2, r2);
 }
 
 
@@ -4953,13 +4953,13 @@ void tglmap::do_glorious_triangles(
    int indicator,
    setup *result) THROW_DECL
 {
-   int i, r, startingrot;
+   int i, startingrot;
    uint32_t rotstate, pointclip;
    setup a1, a2;
    setup res[2];
    const int8_t *mapnums;
    const map *map_ptr = ptrtable[map_ptr_table[(indicator >> 6) & 3]];
-   bool specttgls = (map_ptr->randombits & 4) != 0;
+   bool specttgls = (map_ptr->flags & tg99spectgl) != 0;
 
    if (ss->kind == s_c1phan || ss->kind == sdeepbigqtg || specttgls) {
       mapnums = map_ptr->mapcp1;
@@ -4979,15 +4979,14 @@ void tglmap::do_glorious_triangles(
    }
    else if (ss->kind == s2x4) {
       mapnums = map_ptr->map241;
-      startingrot = map_ptr->randombits;
+      startingrot = map_ptr->flags & 3;
    }
    else {   // s_qtag, s_ptpd, s_323, or single diamond.
       mapnums = map_ptr->mapqt1;
-      startingrot = (map_ptr->randombits & 16) ? 1 : 0;
+      startingrot = map_ptr->flags & 3;
    }
 
-   r = ((-startingrot) & 3) * 011;
-   gather(&a1, ss, mapnums, 2, r);
+   gather(&a1, ss, mapnums, 2, (((map_ptr->flags >> 2) - startingrot) & 3) * 011);
    a1.cmd = ss->cmd;
    a1.kind = s_trngl;
    a1.rotation = 0;
@@ -4995,17 +4994,17 @@ void tglmap::do_glorious_triangles(
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
    move(&a1, false, &res[0]);
 
-   if (!(map_ptr->randombits & 32)) {
-      gather(&a2, ss, &mapnums[3], 2, r^022);
+   if (!(map_ptr->flags & tg99onlyonetriangle)) {
+      gather(&a2, ss, &mapnums[3], 2, ((2 - startingrot) & 3) * 011);
       a2.cmd = ss->cmd;
       a2.kind = s_trngl;
-      a2.rotation = 2;
+      a2.rotation = ((map_ptr->flags >> 2) + 2) & 3;
       a2.eighth_rotation = 0;
       a2.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
       move(&a2, false, &res[1]);
       fix_n_results(2, -1, res, rotstate, pointclip, 0);
       result->result_flags = get_multiple_parallel_resultflags(res, 2);
-      res[1].rotation += 2;
+      res[1].rotation += ((2 + (map_ptr->flags >> 2)) & 3);
       canonicalize_rotation(&res[1]);
    }
    else {
@@ -5034,7 +5033,8 @@ void tglmap::do_glorious_triangles(
       result->kind = ss->kind;
       result->rotation = 0;
       result->eighth_rotation = 0;
-      reassemble_triangles(mapnums, 0, (startingrot^2) * 011, 0, res, result);
+      reassemble_triangles(mapnums, ((startingrot + (map_ptr->flags >> 2)) & 3) * 011,
+                           ((startingrot + 2) & 3) * 011, 0, res, result);
       return;
    }
 
@@ -5048,8 +5048,6 @@ void tglmap::do_glorious_triangles(
 
    result->rotation = res[0].rotation;
    result->eighth_rotation = 0;
-
-   r = ((-res[0].rotation) & 3) * 011;
 
    if (res[0].rotation & 2)
       result->kind = ptrtable[map_ptr->otherkey]->kind;
@@ -5076,10 +5074,10 @@ void tglmap::do_glorious_triangles(
             r = 011;
          }
 
-         reassemble_triangles(map_ptr->mapqt1, 0, r, 0, res, result);
+         reassemble_triangles(map_ptr->mapqt1, r^022, r, 0, res, result);
       }
       else if (res[0].rotation == 2 && ss->kind != s_bone6) {
-         if (map_ptr->nointlkshapechange)
+         if (map_ptr->flags & tgl_nointlkshapechange)
             goto shapechangeerror;
 
          result->kind = s_c1phan;
@@ -5087,40 +5085,30 @@ void tglmap::do_glorious_triangles(
          scatter(result, &res[1], map_ptr->mapcp1, 2, 022);
       }
       else {
-         if (result->kind == nothing || map_ptr->nointlkshapechange)
+         if (result->kind == nothing || map_ptr->flags & tgl_nointlkshapechange)
             goto shapechangeerror;
 
          map_ptr = ptrtable[map_ptr->otherkey];
 
          if (specttgls) {
-            uint32_t ri = 0;
             uint32_t r = 0;
 
-            if (!((map_ptr->randombits ^ res[0].rotation) & 2)) {
-               if (map_ptr->randombits & 8) {
-                  result->kind = s_ptpd;
-                  result->rotation += 3;
-                  if (map_ptr->randombits & 2) ri = 022;
-               }
-               else {
-                  result->kind = s_bone6;
-                  result->rotation += 3;
-               }
-
-               reassemble_triangles(map_ptr->map241, ri, 011, 1, res, result);
+            if (!(((map_ptr->flags) ^ res[0].rotation) & 2)) {
+               result->rotation += 3;
+               result->kind = (map_ptr->flags & tg99chooseptpdrigger) ? s_ptpd : s_bone6;
+               reassemble_triangles(map_ptr->map241, 033, 011, 1, res, result);
             }
             else {
-               if (map_ptr->randombits & 8) {
+               if (map_ptr->flags & tg99chooseptpdrigger) {
                   result->kind = s_rigger;
                   r = 011;
-                  if (!(map_ptr->randombits & 2)) ri = 022;
                   result->rotation += 3;
                }
                else {
                   result->kind = s_short6;
                }
 
-               reassemble_triangles(map_ptr->map261, ri, r, 1, res, result);
+               reassemble_triangles(map_ptr->map261, r^022, r, 1, res, result);
             }
          }
          else if (ss->kind == s_short6) {
@@ -5133,7 +5121,7 @@ void tglmap::do_glorious_triangles(
          }
          else if (ss->kind == s_bone6) {
             if (res[0].rotation & 1) {
-               reassemble_triangles(map_ptr->map261, 0, 0, 1, res, result);
+               reassemble_triangles(map_ptr->map261, 022, 0, 1, res, result);
             }
             else {
                if (!(res[0].rotation & 2))
@@ -5143,7 +5131,7 @@ void tglmap::do_glorious_triangles(
             }
          }
          else if (result->kind == s_c1phan) {
-            reassemble_triangles(map_ptr->mapcp1, r, 0, 1, res, result);
+            reassemble_triangles(map_ptr->mapcp1, 022, 0, 1, res, result);
          }
          else {
             // Copy the triangles.
@@ -5153,7 +5141,7 @@ void tglmap::do_glorious_triangles(
       }
    }
    else if (res[0].kind == s1x3) {
-      if (result->kind == nothing || map_ptr->nointlkshapechange)
+      if (result->kind == nothing || map_ptr->flags & tgl_nointlkshapechange)
          goto shapechangeerror;
 
       if (res[0].rotation == 0) {
@@ -5177,26 +5165,24 @@ void tglmap::do_glorious_triangles(
             fail("Can't do this shape-changer.");
 
          if (map_ptr->kind == s_323) {
-            mapnums = map_ptr->map261;
             result->kind = s2x5;
             warn(warn__check_2x5);
-            reassemble_triangles(mapnums, 0, 022, 0, res, result);
+            reassemble_triangles(map_ptr->map261, 0, 022, 0, res, result);
          }
          else {
             map_ptr = ptrtable[map_ptr->otherkey];
 
             result->kind = map_ptr->kind1x3;
 
-            if (map_ptr->randombits & 1) {    // What a crock!
+            if (map_ptr->flags & tgl_rev_ord_if_1x3) {
                for (i=0; i<3; i++) {
                   copy_person(result, map_ptr->map241[i+3], &res[0], 2-i);
                   copy_rot(result, map_ptr->map241[i], &res[1], 2-i, 022);
                }
             }
             else {
-               mapnums = map_ptr->map241;
-               scatter(result, &res[0], mapnums, 2, 0);
-               scatter(result, &res[1], &mapnums[3], 2, 022);
+               scatter(result, &res[0], map_ptr->map241, 2, 0);
+               scatter(result, &res[1], map_ptr->map241+3, 2, 022);
             }
          }
       }

@@ -2485,7 +2485,7 @@ static int finish_matrix_call(
    bool do_roll_stability,
    collision_severity allow_collisions,
    bool allow_fudging,
-   merge_action action,
+   merge_action_type action,
    setup *people,
    setup *result) THROW_DECL
 {
@@ -3662,7 +3662,7 @@ static int partner_matrixmove(
 // This treats res2 as though it had rotation zero.
 // Res1 is allowed to have rotation.
 extern void brute_force_merge(const setup *res1, const setup *res2,
-                              merge_action action, setup *result) THROW_DECL
+                              merge_action_type action, setup *result) THROW_DECL
 {
    int i;
    int r = res1->rotation & 3;

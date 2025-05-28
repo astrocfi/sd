@@ -3177,6 +3177,10 @@ class select {
       fx_f2x2pl,
       fx_fxwvpos1,
       fx_fxwvpos2,  
+      fx_fxwvpos3,
+      fx_fxwvpos4,
+      fx_fxwvpos5,
+      fx_fxwvpos6,
       fx_fxwvrig1,
       fx_fxwvrig2,  
       fx_f1x4pl,
@@ -3463,8 +3467,9 @@ class select {
       setup_kind ink;
       setup_kind outk;
       uint32_t rot;
-      short prior_elong;
-      short numsetups;
+      uint16_t prior_elong;
+      uint16_t numsetups;  // Special merge code in high 4, stuff for rotation
+                           // (see ~ conc\8171) in 2nd 4, num setups in low 8.
       int8_t indices[24];
       fixerkey next1x2;
       fixerkey next1x2rot;
@@ -3525,6 +3530,8 @@ class tglmap {
       tgl0,        // The null table entry.
       tglmap1b,
       tglmap2b,
+      utglmap1c,
+      utglmap1ci,
       tglmap1w,
       tglmap2w,
       tglmap1i,
@@ -3590,6 +3597,18 @@ class tglmap {
       tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
+   // Low two bits have rotation for first triangle.
+   // Next two bits give rotation of second triangle, beyond the first,
+   // and beyond the usual 180 degress.  So these bits are usually zero.
+   enum flags {
+      tg99chooseptpdrigger    =  0x400,
+      tg99startingrotfieldbit =  0x800,
+      tg99onlyonetriangle     = 0x1000,
+      tg99spectgl             = 0x2000,
+      tgl_rev_ord_if_1x3      = 0x4000,
+      tgl_nointlkshapechange  = 0x8000,
+   };
+
    // We make this a struct inside the class, rather than having its
    // fields just comprise the class itself (note that there are no
    // fields in this class, and it is never instantiated) so that
@@ -3601,8 +3620,7 @@ class tglmap {
       setup_kind kind;
       setup_kind kind1x3;
       tglmapkey otherkey;
-      int8_t nointlkshapechange;
-      int8_t randombits;
+      uint16_t flags;
       int8_t mapqt1[6];   // In quarter-tag: first triangle (upright),
                           // then second triangle (inverted).
       int8_t mapcp1[6];   // In C1 phantom: first triangle (inverted),
@@ -3663,6 +3681,7 @@ class tglmap {
    static const tglmapkey b6tglmap1[];
    static const tglmapkey c1tglmap1[];
    static const tglmapkey c1tglmap2[];
+   static const tglmapkey uc1tglmap1[];
    static const tglmapkey dbqtglmap1[];
    static const tglmapkey dbqtglmap2[];
    static const tglmapkey qttglmap1[];
@@ -3746,7 +3765,7 @@ struct coordrec {
 
 // Beware!  There are >= tests lying around, so order is important.
 // In particular, sdconc (search for "brute_force_merge") has such tests.
-enum merge_action {
+enum merge_action_type {
    merge_strict_matrix,
    merge_for_own,
    merge_c1_phantom,
@@ -3809,7 +3828,7 @@ class merge_table {
    static const concmerge_thing map_24r24d;
 
    static void merge_setups(setup *ss,   // In sdconc.
-                            merge_action action,
+                            merge_action_type action,
                             setup *result,
                             call_with_name *maybe_the_call = (call_with_name *) 0) THROW_DECL;
 
@@ -5726,7 +5745,7 @@ public:
       int rot,
       bool force_moved_bit = false) THROW_DECL;
 
-   void fix_possible_collision(merge_action action = merge_strict_matrix,
+   void fix_possible_collision(merge_action_type action = merge_strict_matrix,
                                uint32_t callarray_flags = 0,
                                setup *ss = (setup *) 0) THROW_DECL;
 
@@ -5804,7 +5823,7 @@ extern uint32_t do_call_in_series(
    bool qtfudged) THROW_DECL;
 
 extern void brute_force_merge(const setup *res1, const setup *res2,
-                              merge_action action, setup *result) THROW_DECL;
+                              merge_action_type action, setup *result) THROW_DECL;
 
 extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *result) THROW_DECL;
 

@@ -7,15 +7,9 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>reliable</strong>.
 </p>
 <p align="center">
-<strong>The current version of Sd/Sdtty is 39.70</strong>, released on Dec 5, 2024.
+<strong>The current version of Sd/Sdtty is 39.71</strong>, released on Jan 10, 2025.
 <p align="center">
-<strong>The mechanism for preparing new releases has changed.  This
-has a consequence for you, the person downloading the program.</strong>
-<p align="center">
-<strong>It will ask you for the location in which to place the program.  Unless
-you are doing something extremely unusual, type ``C:\sd''.</strong>
-<p align="center">
-That's the location where it has traditionally been stored.
+<strong>This reflects recent changes in the C3 list.</strong>
 <br>
 <p align="center">
 <strong>The program has support for writing two-couple material.  See the release notes</strong>

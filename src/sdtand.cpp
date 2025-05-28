@@ -404,6 +404,7 @@ static tm_thing maps_isearch_twosome[] = {
    {{2, 1, 0,                        3, -1, -1},                    0ULL,            0xC,      3, 1,  s1x3,  s_trngl4},
    {{0, 1, 3,                        -1, -1, 2},                    0ULL,            0xC,      3, 3,  s1x3,  s_trngl4},
    {{0, 3, 2,                        -1, 1, -1},                    0ULL,              0,      3, 0,  s1x3,  sdmd},
+   {{0, 2, 4,                        1, 5, 3},                      0222ULL,         077,      3, 0,  s1x3,  s1x6},
 
    {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},        0200200ULL,    0xC30,        6, 0,  s_ntrgl6cw,  s2x6},
    {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},         0002002ULL,    0x0C3,        6, 0,  s_ntrgl6ccw, s2x6},
@@ -703,8 +704,9 @@ static tm_thing maps_isearch_fudgy2x4[] = {
    // Two of these are called out by number 0 or 1.  The others are used for unwinding.
    {{6, 0, 2,                        5, 1, 3},                         0222ULL,     0x6F,         3, 0, s_trngl,s2x4},
    {{1, 5, 7,                        2, 4, 6},                         0222ULL,     0xF6,         3, 2, s_trngl,s2x4},
-   {{3, 5, 0,                        2, 4, 1},                         0002ULL,     0063,         3, 3,  s_trngl, s2x3},
-   {{5, 1, 4,                        0, 2, 3},                         0002ULL,     0036,         3, 1,  s_trngl, s2x3},
+   {{3, 5, 0,                        2, 4, 1},                         0002ULL,     0063,         3, 3, s_trngl, s2x3},
+   {{5, 1, 4,                        0, 2, 3},                         0002ULL,     0036,         3, 1, s_trngl, s2x3},
+   {{5, 4, 3,                        0, 1, 2},                         0000ULL,     0000,         3, 0, s1x3, s2x3},
    {{0}, 0ULL,0, 0, 0,  nothing, nothing}};
 
 static tm_thing maps_isearch_fudgy2x6[] = {

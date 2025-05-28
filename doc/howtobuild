@@ -17,13 +17,14 @@ Doing so might cause it to be included in the "do_pack" script.
        UPDATING VERSION NUMBERS AND MAINTAINING THE PROGRAM.
 
 Be sure the version numbers and dates are correct in:
-    [sd]    sdmain.cpp   (version # and date are visible)
+    [sd]    sdmain.cpp   (version # and date (with year) are visible)
     [sd]    sd.rc        (SD & UI version #'s, and the year, are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
     [sd]    install.sed  (version # and date, with year, visible around line 24.
     [sddoc] about.lst    (version # and year are visible)
     [sddoc] sd_doc.txi         (version # and date, with year (two places!), are visible)
-    [sddoc] relnotes.txi       (version #, database format version #,
+    [sddoc] relnotes.txi       (version # and date, with year, are visible)
+                               als, database format version #,
                                and UI version # are visible.
                                Also, check its claimed database format
                                version against database.h)

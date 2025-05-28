@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.70"
+version "39.71"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -196,7 +196,7 @@ call "vertical left tag" c2 tag vertical_left_half_tag
    setup 2x4 2x4 rotate
       array [0 0 0 0 Z0W Z1W Z2W Z3W]
 
-call "chase" c3 tag chase_the_half_tag
+call "chase" c3a tag chase_the_half_tag
             left_means_mirror split_large_setups base_tag_call_3
    setup 2x2 2x2
       array [C1S C2S 0 0]
@@ -214,7 +214,7 @@ call "chase" c3 tag chase_the_half_tag
       array [C0E C1E C2E C3E 0 0 0 0]
 
 // We allow both spellings -- "chase your leader" and "chase the tag your leader".
-call "chase the tag" c3
+call "chase the tag" c3a
             left_means_mirror split_large_setups base_tag_call_2
    setup 2x2 2x2
       array [C1S C2S 0 0]
@@ -423,7 +423,7 @@ call "continue to magic cross invert another 1/4" c4
    setup qtag 2x4 restriction forbidden wave_only
       array [CR3S AL0S ZM3N ZM2N ZM6N ZM5N ZM0N ZM1N]
 
-call "track" c3
+call "track" c3a
             left_means_mirror base_tag_call_0
    setup 4x2 2x4 rotate
       array [0 0 3E 4E 6E 1E 0 0]
@@ -2917,7 +2917,7 @@ call "triangle circulate" c1 tag trngle_circ
    setup qtag qtag
       array [CR2S AL6S AL0S ZM1N ZM3N ZM7N CR1S ZM0N]
 
-call "cut the 3x1 triangle" c4a
+call "cut the 3x1 triangle" c3
             split_large_setups
    setup bone6 bone6
       array [0 0 0 0 0 0]   // This should suffice to make it illegal.
@@ -2928,7 +2928,7 @@ call "cut the 3x1 triangle" c4a
          if one_cw_person  [   0 CM2E    0    0 AM0E    0]
          if always         [ZM1W    0    0 AL1E    0    0]
 
-call "flip the 3x1 triangle" c4a
+call "flip the 3x1 triangle" c3
             split_large_setups
    setup bone6 bone6
       array [0 0 0 0 0 0]   /* This should suffice to make it illegal. */
@@ -2939,7 +2939,7 @@ call "flip the 3x1 triangle" c4a
          if one_cw_person  [   0 AL0E    0    0 CR2E    0]
          if always         [ZM1W    0    0 AL1E    0    0]
 
-call "flip the Z" c4
+call "flip the Z" c3
             split_large_setups
    setup 3x2 1x4 array [0 0 0 0 0 0]
             alternate_definition [reverse] c4
@@ -2952,7 +2952,7 @@ call "flip the Z" c4
    setup 2x3 1x4 rotate qualifier true_Z_ccw
       array [CR1E    0 0    ZM1W    0 0]
 
-call "cut the Z" c4
+call "cut the Z" c3
             split_large_setups
    setup 3x2 1x4 array [0 0 0 0 0 0]
             alternate_definition [reverse] c4
@@ -9102,7 +9102,7 @@ call "@w the line" mainstream
 // "circle the tag", "loop and tag", "chase the tag", and "dixie tag".  Note that "chase" and
 // "chase the tag" both exist.  So you can say either "chase your leader" or "chase the tag your leader".
 
-call "@x @a" c3      // How's this for a call name?
+call "@x @a" c3a      // How's this for a call name?
             neednumber left_means_mirror single_is_inherited singlefile_is_inherited
             nxn_is_inherited bigmatrix_is_inherited revert_is_inherited fractal_is_inherited
    seq tagnullcall2 [inherit_left inherit_single inherit_nxn
@@ -9110,7 +9110,7 @@ call "@x @a" c3      // How's this for a call name?
    seq revert_if_needed [inherit_revert inherit_fractal inherit_nxn]
    seq extend_n [inherit_single inherit_nxn inherit_bigmatrix]
 
-call "@x" c3         // Or this?
+call "@x" c3a         // Or this?
             left_means_mirror single_is_inherited singlefile_is_inherited
             nxn_is_inherited bigmatrix_is_inherited revert_is_inherited fractal_is_inherited
    seq tagnullcall2 [inherit_left inherit_single inherit_nxn inherit_bigmatrix inherit_singlefile]
@@ -9211,7 +9211,7 @@ call "vertical turn and deal" c4a
 /* The main <ATC> mechanism uses the word order "chase the tag N/4".  We provide
    this for the other common word order "chase the N/4 tag". */
 
-call "chase the @a tag" c3
+call "chase the @a tag" c3a
             neednumber left_means_mirror singlefile_is_inherited
             single_is_inherited nxn_is_inherited bigmatrix_is_inherited revert_is_inherited fractal_is_inherited
    seq chase_the_half_tag [inherit_left inherit_singlefile
@@ -10071,6 +10071,9 @@ call "recycle" mainstream tag recycle
          if 2x2_miniwave [CR2S AL0S AL1S CR3S]
          if 2x2_couple   [0    0    ZM0N CR3S]
          if always       [CR2S 0    0    CR3S]
+            alternate_definition [singlefile cross] c3
+   setup 4x1 1x4 rotate
+      array [ZM0W CR3E 0 0]
             alternate_definition [single] c4
    setup 1x2 1x2 restriction forbidden wave_only
       array [CR1S AL0S]
@@ -10277,6 +10280,10 @@ call "cross cycle" c3
    seq ctrsfoldforrecycle [force_cross]
    seq splitctrrot [seq_re_evaluate inherit_rectify]
    seq roll []
+
+call "single file cross cycle" c3
+   setup 4x1 1x4 rotate
+      array [ZM0W CR3E 0 0]
 
 call "2/3 cross cycle" c3
             visible_fractions rectify_is_inherited
@@ -14167,7 +14174,7 @@ call "_finish travel thru" dontshow tag finishtravel
    setup 1x2 1x2 rotate restriction forbidden all_facing_same
       array [AL1S AL0S]
 
-call "revolve to a wave" c3
+call "revolve to a wave" c4
    setup 2x2 1x4 no_cutting_through
       array [CR2S CR3N ZM0N CR1S]
             alternate_definition [singlefile] c4
@@ -14532,10 +14539,10 @@ call "shake and rattle" c3
             reverse_means_mirror
    setup 2x2 2x2
       array [CR1W CR2W AL3W AL0W]
-            alternate_definition [single] c4
+            alternate_definition [single] c3
    setup 2x1 1x2 rotate
       array [AL0S CR1S]
-            alternate_definition [singlefile] c4
+            alternate_definition [singlefile] c3
    setup 4x1 2x2
       array [AL0W AL1W CR2W CR3W]
             alternate_definition [3x3] c4
@@ -17206,7 +17213,7 @@ call "wheel fan and cross thru" c4a
 // This is the spelling appearing in Baker's list, which is
 // a very careful compilation from original sources.  It also appears
 // this way in a number of sloppy compilations.
-call "ripoff" c3 tag ripoff
+call "ripoff" c4 tag ripoff
             reverse_means_mirror
    setup 2x2 2x2
       array [CR1S CR2N ZM3N ZM0N]
@@ -17221,7 +17228,7 @@ call "ripoff" c3 tag ripoff
 // but perhaps not so faithful to original sources.  It is also the spelling
 // in the official C3 list, a rather careless document.  It also appears
 // this way in a number of sloppy compilations.
-call "rip off" c3
+call "rip off" c4
    alias ripoff
 
 call "boomerang" c3
@@ -26198,7 +26205,7 @@ call "@0 the K but @m" c3a
    seq nullcall [mandatory_anycall]
    seq the_k_but []
 
-call "counterpoint" c4a
+call "counterpoint" c3
             reverse_means_mirror single_is_inherited mxn_is_inherited nxn_is_inherited rectify_is_inherited
             bigmatrix_is_inherited singlefile_is_inherited diamond_is_legal cross_is_inherited
    maybe_nxn_1331_cols_conc
@@ -27359,7 +27366,7 @@ call "the difference" c4a
    seq slipforcatch [inherit_grand inherit_yoyo inherit_gensting inherit_diamond allow_forced_mod]
    seq cast_off_n4_with_warn [insert_number 3 inherit_diamond inherit_fractal inherit_gensting]
 
-call "contour the line" c4a
+call "contour the line" c3
             left_means_mirror single_is_inherited grand_is_inherited
             magic_is_inherited bigmatrix_is_inherited
             nxn_is_inherited rectify_is_inherited visible_fractions
