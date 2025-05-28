@@ -50,7 +50,8 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 {
    uint32 p1, p2, p3;
    selector_kind s;
-   int thing_to_test;
+   int thing_to_test = 0;
+   int tand_base = 0;
    uint32 selected_person_mask = ~0U;
 
    uint32 directions;
@@ -61,7 +62,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 
    // Pull out the cases that do not require the person to be real.
 
-   switch (current_options.who) {
+   switch (current_options.who.who[0]) {
       case selector_all:
       case selector_everyone:
          return true;
@@ -91,7 +92,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
          if (ptr) {
-            switch (current_options.who) {
+            switch (current_options.who.who[0]) {
             case selector_centers:
             case selector_ends:
             case selector_center2:
@@ -124,7 +125,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
 
  do_switch:
 
-   switch (current_options.who) {
+   switch (current_options.who.who[0]) {
    case selector_boys:
       if      ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_BOY) return true;
       else if ((pid3 & (ID3_PERM_BOY|ID3_PERM_GIRL)) == ID3_PERM_GIRL) return false;
@@ -242,7 +243,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       goto eq_return;
    case selector_center2:
    case selector_outer6:
-      if (ss->kind == s3x4 && current_options.who == selector_center2) {
+      if (ss->kind == s3x4 && current_options.who.who[0] == selector_center2) {
          return (pid2 & ID2_CTR2) != 0;  // This one is always valid, even if we don't know who the "outer 6" are.
       }
       else if (ss->kind == s1x6) {
@@ -252,7 +253,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          else break;
       }
       else if (ss->kind == s2x7 || ss->kind == s_23232 || ss->kind == sdblspindle) {
-         if (current_options.who == selector_center2)
+         if (current_options.who.who[0] == selector_center2)
             return (pid2 & ID2_CTR2) != 0;
          else break;
       }
@@ -681,13 +682,178 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       }
       break;
 
-
-   case selector_inside_tgl:
-   case selector_outside_tgl:
    case selector_inpoint_tgl:
+   case selector_inpoint_intlk_tgl:
+   case selector_intlk_inpoint_tgl:
+   case selector_magic_inpoint_tgl:
+   case selector_magic_intlk_inpoint_tgl:
+   case selector_intlk_magic_inpoint_tgl:
+      if ((ss->people[0].id1 & d_mask) == d_east) thing_to_test |= 1;
+      if ((ss->people[4].id1 & d_mask) == d_west) thing_to_test |= 1;
+      if ((ss->people[1].id1 & d_mask) == d_west) thing_to_test |= 2;
+      if ((ss->people[5].id1 & d_mask) == d_east) thing_to_test |= 2;
+      goto finish_inoutpoint;
    case selector_outpoint_tgl:
-      // We don't consider these to be legal.  They are handled only in special tandem/couples code.
-      fail("Can't use this designator.");
+   case selector_outpoint_intlk_tgl:
+   case selector_intlk_outpoint_tgl:
+   case selector_magic_outpoint_tgl:
+   case selector_magic_intlk_outpoint_tgl:
+   case selector_intlk_magic_outpoint_tgl:
+      if ((ss->people[0].id1 & d_mask) == d_west) thing_to_test |= 1;
+      if ((ss->people[4].id1 & d_mask) == d_east) thing_to_test |= 1;
+      if ((ss->people[1].id1 & d_mask) == d_east) thing_to_test |= 2;
+      if ((ss->people[5].id1 & d_mask) == d_west) thing_to_test |= 2;
+   finish_inoutpoint:
+
+      if (ss->kind != s_qtag) fail("Must have diamonds.");
+
+      if (thing_to_test == 1)
+         return (((0xDD >> place) & 1) != 0);
+      else if (thing_to_test == 2)
+         return (((0xEE >> place) & 1) != 0);
+      else
+         fail("Can't find designated point.");
+
+   case selector_inside_intlk_tgl:
+   case selector_intlk_inside_tgl:
+   case selector_inside_tgl:
+      p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
+      if (ss->kind == sbigdmd)
+         return (((03636 >> place) & 1) != 0);
+      else if (ss->kind == sd2x7)
+         return (((0x1F3E >> place) & 1) != 0);
+      else if (p2 == ID2_CTR6) return true;
+      else if (p2 == ID2_OUTR2) return false;
+      break;
+
+   case selector_outside_intlk_tgl:
+   case selector_intlk_outside_tgl:
+      if (ss->kind == s_rigger)
+         return (place != 3 && place != 7);
+      // FALL THROUGH!!!
+   case selector_outside_tgl:
+      // FELL THROUGH!!!
+      p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
+      if      (p2 == ID2_OUTR6) return true;
+      else if (p2 == ID2_CTR2) return false;
+      break;
+
+   case selector_tand_base_tgl:
+   case selector_tand_base_intlk_tgl:
+   case selector_intlk_tand_base_tgl:
+      tand_base = 1;
+      // FALL THROUGH!!!
+   case selector_wave_base_tgl:
+   case selector_wave_base_intlk_tgl:
+   case selector_intlk_wave_base_tgl:
+      // FELL THROUGH!!!
+
+      switch (ss->kind) {
+      case s_bone:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && ((tand_base ^ thing_to_test) & 1))
+            return (((0x77 >> place) & 1) != 0);
+         break;
+      case s_bone6:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1;
+         if ((thing_to_test & 011) != 011 && ((tand_base ^ thing_to_test) & 1))
+            return true;
+         break;
+      case s_rigger:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && ((tand_base ^ thing_to_test) & 1))
+            return (((0xBB >> place) & 1) != 0);
+         break;
+      case s_short6:
+         thing_to_test = ss->people[0].id1 | ss->people[2].id1 | ss->people[3].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return true;
+         break;
+      case s_galaxy:
+         thing_to_test = ss->people[1].id1 | ss->people[3].id1 | ss->people[5].id1 | ss->people[7].id1;
+         if ((thing_to_test & 011) != 011) {
+            if ((tand_base ^ thing_to_test) & 1)
+               return (((0xBB >> place) & 1) != 0);
+            else
+               return (((0xEE >> place) & 1) != 0);
+         }
+         break;
+      case s_hrglass:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return (((0xBB >> place) & 1) != 0);
+         break;
+      case s_ntrglcw:
+      case s_nptrglcw:
+         thing_to_test = ss->people[2].id1 | ss->people[3].id1 | ss->people[6].id1 | ss->people[7].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return (((0xDD >> place) & 1) != 0);
+         break;
+      case s_ntrglccw:
+      case s_nptrglccw:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return (((0xBB >> place) & 1) != 0);
+         break;
+      case s_nxtrglcw:
+         thing_to_test = ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return (((0x77 >> place) & 1) != 0);
+         break;
+      case s_nxtrglccw:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return (((0x77 >> place) & 1) != 0);
+         break;
+      case s_ntrgl6cw:
+         thing_to_test = ss->people[1].id1 | ss->people[2].id1 | ss->people[4].id1 | ss->people[5].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return true;
+         break;
+      case s_ntrgl6ccw:
+         thing_to_test = ss->people[0].id1 | ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1;
+         if ((thing_to_test & 011) != 011 && !((tand_base ^ thing_to_test) & 1))
+            return true;
+         break;
+      case s_323:
+         // Apparently we can't do plain "wave-based" or "tandem-based" here.
+         break;
+      case s_c1phan:
+         if ((livemask & ~directions & 0x55555555) == 0)
+            tand_base ^= 1;   // There is no one facing NS
+         else if ((livemask & directions & 0x55555555) != 0)
+            break;           // There are people facing both ways; not legal.
+
+         // Now tand_base is 1 to select the triangles whose bases are
+         // vertically aligned, and 0 for the horizontally aligned bases.
+
+         if (current_options.who.who[0] == selector_tand_base_tgl ||
+             current_options.who.who[0] == selector_wave_base_tgl) {
+            if (tand_base != 0)
+               return (((0xDEDE >> place) & 1) != 0);
+            else
+               return (((0xEDED >> place) & 1) != 0);
+         }
+         else {
+            if (tand_base != 0)
+               return (((0x7B7B >> place) & 1) != 0);
+            else
+               return (((0xB7B7 >> place) & 1) != 0);
+         }
+      case sdeepbigqtg:
+         thing_to_test = ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
+            ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1;
+         if (!(thing_to_test & ((tand_base & 1) ? 010 : 1)))
+            return (((0xFCFC >> place) & 1) != 0);
+         break;
+      }
+
+      fail("Can't do this concept in this setup.");
+
+   case selector_anyone_base_tgl:
+   case selector_anyone_base_intlk_tgl:
+   case selector_intlk_anyone_base_tgl:
+      fail("Can't do this concept in this setup.");
 
    case selector_some:
       // We have to figure out how to group the people, based on unambiguous information from facing directions.
@@ -831,10 +997,10 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
    fail("Can't decide who are selected.");
 
  eq_return:
-   return (current_options.who == s);
+   return (current_options.who.who[0] == s);
 
  first_last_test:
-   switch (current_options.who) {
+   switch (current_options.who.who[0]) {
    case selector_firstone: case selector_rightmostone:
       return thing_to_test >= 3;
    case selector_firsttwo: case selector_rightmosttwo:
@@ -913,51 +1079,12 @@ static bool plus_mod_selected_real(setup *real_people, int real_index,
    return real_people->people[otherindex].id1 && selectp(real_people, otherindex);
 }
 
-static bool plus_mod_selected_nocross(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
-{
-   int size = attr::slimit(real_people)+1;
-   int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
-      real_index + size - (*extra_stuff) :
-      real_index + (*extra_stuff);
-   if (otherindex >= size) otherindex -= size;
-   // Check whether they are in different halves.
-   if ((((real_index-size/2) | 1) * ((otherindex-size/2) | 1)) < 0) return false;
-   return real_people->people[otherindex].id1 && selectp(real_people, otherindex);
-}
-
 
 static const int32 l_4x3_tab[12] = {
    -99, -99, -99, -99, 3, 2, 4, 5, 11, 10, 0, 1};
 
 static const int32 r_4x3_tab[12] = {
    10, 11, 5, 4, 6, 7, -99, -99, -99, -99, 9, 8};
-
-static const int32 adj_4x4_tab[16] =
-{14, 3, 7, 1, 5, 4, 8, 2, 6, 11, 15, 9, 13, 12, 0, 10};
-
-static const int32 or_4x4_tab[16] =
-{13, 15, 11, 10, 6, 8, 4, 9, 5, 7, 3, 2, 14, 0, 12, 1};
-
-static const int32 ctr_4x4_tab[16] =
-{-99, -99, -99, 15, -99, 6, 5, 11, -99, -99, -99, 7, -99, 14, 13, 3};
-
-static const int32 end_4x4_tab[16] =
-{12, 10, 9, -99, 8, -99, -99, -99, 4, 2, 1, -99, 0, -99, -99, -99};
-
-/* ARGSUSED */
-static bool select_with_special(setup *real_people, int real_index,
-   int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
-{
-   if (!selectp(real_people, real_index)) return false;
-   int32 otherindex = extra_stuff[northified_index]+real_index-northified_index;
-   if (otherindex < -50) return false;  // Check for -99 even though it's been finagled.
-   int size = attr::slimit(real_people)+1;
-   if (otherindex >= size) otherindex -= size;
-   else if (otherindex < 0) otherindex += size;
-   if (!(real_people->people[otherindex].id1 & BIT_PERSON)) return false;
-   return selectp(real_people, otherindex);
-}
 
 /* ARGSUSED */
 static bool semi_squeezer_select(setup *real_people, int real_index,
@@ -981,7 +1108,7 @@ static bool select_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_all || current_options.who == selector_everyone)
+   if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
       return true;
 
    // We generally try to make "near" mean lateral; we usually get it right with no extra
@@ -1003,7 +1130,7 @@ static bool select_near_select_or_phantom(setup *real_people, int real_index,
 
    if (!selectp(real_people, real_index))
       return false;
-   else if (current_options.who == selector_all || current_options.who == selector_everyone)
+   else if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
       return true;
 
    if (attr::slimit(real_people) == 11) {
@@ -1034,7 +1161,7 @@ static bool select_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_all || current_options.who == selector_everyone)
+   if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
       return false;
 
    return !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
@@ -1046,7 +1173,7 @@ static bool unselect_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    if (selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_none) return false;
+   if (current_options.who.who[0] == selector_none) return false;
 
    return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 1);
@@ -1059,7 +1186,7 @@ static bool unselect_near_unselect(setup *real_people, int real_index,
    int lim, base_person;
 
    if (selectp(real_people, real_index)) return false;
-   else if (current_options.who == selector_none) return true;
+   else if (current_options.who.who[0] == selector_none) return true;
 
    if (attr::slimit(real_people) == 11) {
       base_person = base_table[real_index];
@@ -1089,7 +1216,7 @@ static bool select_once_rem_from_select(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_all || current_options.who == selector_everyone)
+   if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
       return true;
 
    if (real_people->kind == s2x4)
@@ -1105,7 +1232,7 @@ static bool select_once_rem_from_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    if (!selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_all || current_options.who == selector_everyone)
+   if (current_options.who.who[0] == selector_all || current_options.who.who[0] == selector_everyone)
       return false;
 
    int other_index;
@@ -1135,7 +1262,7 @@ static bool unselect_once_rem_from_select(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
    if (selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_none) return false;
+   if (current_options.who.who[0] == selector_none) return false;
 
    if (real_people->kind == s2x4)
       return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
@@ -2878,7 +3005,6 @@ predicate_descriptor pred_table[] = {
       {sum_mod_selected,               &iden_tab[9]},            // "person_select_sum9"
       {sum_mod_selected,              &iden_tab[11]},            // "person_select_sum11"
       {sum_mod_selected,              &iden_tab[13]},            // "person_select_sum13"
-      {sum_mod_selected,              &iden_tab[15]},            // "person_select_sum15"
       {plus_mod_selected,             &iden_tab[1]},             // "person_select_plus1"
       {plus_mod_selected,             &iden_tab[2]},             // "person_select_plus2"
       {plus_mod_selected,             &iden_tab[3]},             // "person_select_plus3"
@@ -2902,23 +3028,6 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected_real,        &iden_tab[9]},             // "person_select_real_plus9"
       {plus_mod_selected_real,        &iden_tab[10]},            // "person_select_real_plus10"
       {plus_mod_selected_real,        &iden_tab[11]},            // "person_select_real_plus11"
-      {plus_mod_selected_nocross,     &iden_tab[1]},             // "person_select_nocross_plus1"
-      {plus_mod_selected_nocross,     &iden_tab[2]},             // "person_select_nocross_plus2"
-      {plus_mod_selected_nocross,     &iden_tab[3]},             // "person_select_nocross_plus3"
-      {plus_mod_selected_nocross,     &iden_tab[4]},             // "person_select_nocross_plus4"
-      {plus_mod_selected_nocross,     &iden_tab[5]},             // "person_select_nocross_plus5"
-      {plus_mod_selected_nocross,     &iden_tab[6]},             // "person_select_nocross_plus6"
-      {plus_mod_selected_nocross,     &iden_tab[7]},             // "person_select_nocross_plus7"
-      {plus_mod_selected_nocross,     &iden_tab[8]},             // "person_select_nocross_plus8"
-      {plus_mod_selected_nocross,     &iden_tab[9]},             // "person_select_nocross_plus9"
-      {plus_mod_selected_nocross,     &iden_tab[10]},            // "person_select_nocross_plus10"
-      {plus_mod_selected_nocross,     &iden_tab[11]},            // "person_select_nocross_plus11"
-      {select_with_special,           l_4x3_tab},                // "select_4x3_on_left"
-      {select_with_special,           r_4x3_tab},                // "select_4x3_on_right"
-      {select_with_special,           adj_4x4_tab},              // "select_w_adj_4x4"
-      {select_with_special,           or_4x4_tab},               // "select_w_or_4x4"
-      {select_with_special,           ctr_4x4_tab},              // "select_w_ctr_4x4"
-      {select_with_special,           end_4x4_tab},              // "select_w_end_4x4"
       {semi_squeezer_select,          semi_squeeze_tab},         // "semi_squeezer_select"
       {select_once_rem_from_unselect,(const int32 *) 0},         // "select_once_rem_from_unselect"
       {unselect_once_rem_from_select,(const int32 *) 0},         // "unselect_once_rem_from_select"
@@ -2930,7 +3039,7 @@ predicate_descriptor pred_table[] = {
       {x14_side_of_line_facing,       &iden_tab[11]},            // "1x4_selectee_of_far_side_is_linelike_facing_ccw"
       {kicker_coming,                (const int32 *) 0},         // "kicker_coming"
 // End of predicates that force use of selector.
-#define SELECTOR_PREDS 47
+#define SELECTOR_PREDS 52
       {always,                       (const int32 *) 0},         // "always"
       {x22_cpltest,                    dbl_tab21},               // "2x2_miniwave"
       {x22_cpltest,                    dbl_tab01},               // "2x2_couple"

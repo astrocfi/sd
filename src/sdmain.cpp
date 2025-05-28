@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 
 //    The version of this file is as shown immediately below.  This string
@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.93"
-#define TIME_STAMP "wba@alum.mit.edu May 8 2017 $"
+#define VERSION_STRING "39.01"
+#define TIME_STAMP "wba@alum.mit.edu Oct 5 2017 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -363,24 +363,36 @@ static bool find_circcer(uint32 *circcp)
 
 
 /* Returns true if it fails, meaning that the user waved the mouse away. */
-static bool find_selector(selector_kind *sel_p, bool is_for_call)
+static bool find_selector(who_list *sel_p, bool is_for_call)
 {
-   if (interactivity == interactivity_normal) {
-      matcher_class &matcher = *gg77->matcher_p;
-      selector_kind sel;
+   sel_p->initialize();
 
-      if (matcher.m_final_result.valid &&
-          (matcher.m_final_result.match.call_conc_options.who != selector_uninitialized)) {
-         sel = matcher.m_final_result.match.call_conc_options.who;
-         matcher.m_final_result.match.call_conc_options.who = selector_uninitialized;
+   do {
+      selector_kind sel0;
+
+      if (interactivity == interactivity_normal) {
+         matcher_class &matcher = *gg77->matcher_p;
+
+         if (matcher.m_final_result.valid &&
+             (matcher.m_final_result.match.call_conc_options.who.who[sel_p->who_stack_ptr] != selector_uninitialized)) {
+            sel0 = matcher.m_final_result.match.call_conc_options.who.who[sel_p->who_stack_ptr];
+            matcher.m_final_result.match.call_conc_options.who.who[sel_p->who_stack_ptr] = selector_uninitialized;
+         }
+         else {
+            sel0 = gg77->iob88.do_selector_popup(matcher);
+
+            if (sel0 == selector_uninitialized)
+               return true;
+         }
       }
-      else if ((sel = gg77->iob88.do_selector_popup(matcher)) == selector_uninitialized)
-         return true;
+      else
+         sel0 = do_selector_iteration(is_for_call);
 
-      *sel_p = sel;
-   }
-   else
-      *sel_p = do_selector_iteration(is_for_call);
+      sel_p->who[sel_p->who_stack_ptr++] = sel0;
+
+      if (sel0 < selector_RECURSIVE_START || sel0 >= selector_SOME_START)
+         break;
+   } while (sel_p->who_stack_ptr < sel_p->who_stack_size);
 
    return false;
 }
@@ -441,7 +453,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
    parse_block *new_block;
    call_with_name *tagger_call;
    uint32 tagg = 0;
-   selector_kind sel = selector_uninitialized;
+   who_list sel;
    direction_kind dir = direction_uninitialized;
    uint32 circc = 0;    /* Circulator index (1-based). */
    uint32 number_list = 0;
@@ -567,7 +579,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
 extern bool deposit_concept(const concept_descriptor *conc)
 {
    parse_block *new_block;
-   selector_kind sel = selector_uninitialized;
+   who_list sel;
    direction_kind dir = direction_uninitialized;
    uint32 number_list = 0;
    int howmanynumbers = 0;
@@ -1063,7 +1075,9 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
    testing_fidelity = false;
    header_comment[0] = 0;
    abridge_filename[0] = 0;
-   verify_options.who = selector_uninitialized;
+   verify_options.who.who[0] = selector_uninitialized;
+   verify_options.who.who[1] = selector_uninitialized;
+   verify_options.who.who[2] = selector_uninitialized;
    verify_options.number_fields = 0;
    verify_options.howmanynumbers = 0;
    GLOB_doing_frequency = false;

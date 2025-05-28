@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2015  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 /* This defines the following functions:
    canonicalize_rotation
@@ -87,14 +87,18 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          fail("Recursive concentric?????.");
 
       int save_rotation = result->rotation;
+      int save_eighth_rotation = result->eighth_rotation;
 
       result->kind = result->inner.skind;
       result->rotation += result->inner.srotation;
+      result->eighth_rotation += result->inner.seighth_rotation;
       canonicalize_rotation(result);    // Sorry!
       result->inner.srotation = result->rotation;
+      result->inner.seighth_rotation = result->eighth_rotation;
 
       result->kind = result->outer.skind;
       result->rotation = save_rotation + result->outer.srotation;
+      result->eighth_rotation = save_eighth_rotation + result->inner.seighth_rotation;
       for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
       canonicalize_rotation(result);    // Sorrier!
       for (i=0 ; i<12 ; i++) result->swap_people(i, i+12);
@@ -102,18 +106,20 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->kind = s_normal_concentric;
       result->rotation = 0;
+      result->eighth_rotation = 0;
    }
    else if (result->kind == s_dead_concentric) {
       if (result->inner.skind == s_normal_concentric || result->inner.skind == s_dead_concentric)
          fail("Recursive concentric?????.");
 
+      // Bring it up from the "inner" field to the main thing, canonicalize, and send it back.
+      // The individual people are in the right place throughout all this.
+      // Sorry!
       result->kind = result->inner.skind;
       result->rotation += result->inner.srotation;
-      canonicalize_rotation(result);    // Sorry!
-      result->inner.srotation = result->rotation;
-
-      result->kind = s_dead_concentric;
-      result->rotation = 0;
+      result->eighth_rotation += result->inner.seighth_rotation;
+      canonicalize_rotation(result);
+      result->turn_into_deadconc();
    }
    else if (setup_attrs[result->kind].four_way_symmetry) {
       // The setup has 4-way symmetry.  We can canonicalize it so the
@@ -1189,7 +1195,7 @@ extern uint32 do_call_in_series(
 
    if (tempsetup.kind == s2x2) {
       switch (sss->kind) {
-         case s1x4: case sdmd: case s2x2:
+         case s1x4: case s_star: case sdmd: case s2x2:
             current_elongation = tempsetup.result_flags.misc & 3;
 
             /* If just the ends were doing this, and it had some
@@ -1919,6 +1925,10 @@ static const coordrec qtagto4x5 = {s4x5, 0x23,
 static const veryshort qtagto4x5correction[] =
 {-2, 8, -2, 9,    6, 8, 9, 9,    6, -8, 9, -9,    -6, 8, -9, 9,    -6, -8, -9, -9,    127};
 
+static const veryshort galtodeep2x1correction[] =
+{-7, 2, -6, 2,    7, -2, 6, -2,    7, 2, 6, 2,    -7, -2, -6, -2,
+ -2, 7, -2, 6,    2, -7, 2, -6,    2, 7, 2, 6,    -2, -7, -2, -6,   127};
+
 static const coordrec bonetobigh = {sbigh, 0x23,
    {-10, -10, -10, -10,  -6,  -2,  10,  10,  10,  10,   6,   2},
    {  6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6,   0,   0}, {
@@ -2180,6 +2190,8 @@ static const checkitem checktable[] = {
    {0x00A70055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00950057, 0x20008620, swhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00660073, 0x00098006, sdeep2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00770073, 0x0001A015, sdeep2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, galtodeep2x1correction},
+   {0x00730077, 0x00408304, sdeep2x1dmd, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, galtodeep2x1correction},
    {0x00A60055, 0x09000480, s3x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00A60044, 0x09040400, s_wingedstar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    {0x00A30055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
@@ -2622,7 +2634,7 @@ static int matrixmove(
          // This is legal if girlbit or boybit is on (in which case we use
          // the appropriate datum) or if the two data are identical so
          // the sex doesn't matter.
-         if ((thisrec->girlbit | thisrec->boybit) == 0 &&
+         if ((thisrec->girlbit | thisrec->boybit) == 0 && !(flags & MTX_FIND_TRADERS) &&
              callstuff[0] != callstuff[1]) {
             if (flags & MTX_USE_VEER_DATA)
                fail("Can't determine lateral direction of this person.");
@@ -2647,8 +2659,126 @@ static int matrixmove(
             else if (relative_delta_x == 0)
                fail("Person is on a center line.");
          }
+         //#define NICE
+         if (flags & MTX_FIND_TRADERS) {
+#ifdef NICE
+            const coordrec *checkptr = setup_attrs[ss->kind].nice_setup_coords;
+#else
+            const coordrec *checkptr = setup_attrs[ss->kind].setup_coords;
+#endif
+            int32 d = thisrec->dir;
+            // These numbers are -1, 0, or +1.  They tell how far to move to get the next person
+            // to this person's own left.  Negatives of these to get people to the right.
+            int dyleft = (d&1) * ((d<<30)>>30);
+            d += 3;
+            int dxleft = (d&1) * ((d<<30)>>30);
 
-         if (flags & MTX_USE_NUMBER) {
+            int dircount[2];   // How many people we saw to the left or right.
+            int xposition[2];
+            int yposition[2];
+            bool passed_a_gap[2];
+
+            // This is 0 for the search to the left, then 1 for the search to the right.
+            for (int searchdir=0; searchdir<2; searchdir++) {
+               bool gap = false;
+               int actualdel = 1 - searchdir*2;   // This is -1 for left, +1 for right.
+               dircount[searchdir] = 0;
+#ifdef NICE
+               int tx = thisrec->nicex;
+               int ty = thisrec->nicey;
+#else
+               int tx = thisrec->x;
+               int ty = thisrec->y;
+#endif
+               int failcount = 0;
+               while (true) {
+                  tx += dxleft * actualdel * 4;
+                  ty += dyleft * actualdel * 4;
+
+                  // Does person at (tx, ty) exist?
+
+                  int place = checkptr->get_index_from_coords(tx, ty);
+                  if (place < 0) {
+                     // If we didn't find any valid spot with the initial step of 4,
+                     // keep looking in the same direction, with step size reduced to 1,
+                     // until we find a valid spot or go past 10.
+                     failcount++;
+                     if (failcount > 6)
+                        break;   // We really can't find a spot.
+                     gap = true;
+                     tx -= dxleft * actualdel * 3;  // Sleazy way to make the next step size be 1.
+                     ty -= dyleft * actualdel * 3;
+                     continue;
+                  }
+
+                  // Unfortunate special case:  1/4 tags (and hourglasses) have the spacing
+                  // between the outsides set to 9 for complex reasons.  This would normally
+                  // trigger the "across a gap" warning, but we don't want it to.  It will
+                  // find the person to trade with, leaving a failcount of 5.  So we watch
+                  // for that case.  The ends of the center wave of a 1/4 tag have a spacing
+                  // of 12, and the points of the diamond of an hourglass have a spacing of 10,
+                  // so they don't get this case, and they trigger the "gap" warning.
+                  if (failcount == 5 && (ss->kind == s_qtag || ss->kind == s_hrglass))
+                     gap = false;
+
+                  failcount = 0;   // Found someone; reset the fail counter.
+                  // Is that person selected?
+                  if (ss->people[place].id1 == 0 || !selectp(ss, place))
+                     continue;
+
+                  // If this is the first person in this direction, save the location.
+                  if (dircount[searchdir] == 0) {
+                     passed_a_gap[searchdir] = gap;
+                     xposition[searchdir] = tx;
+                     yposition[searchdir] = ty;
+                  }
+
+                  dircount[searchdir]++;
+               }
+            }
+
+            // One of the directions must have an odd count, the other an even count.
+            if (((dircount[0] + dircount[1]) & 1) == 0)
+               fail("Can't find trade target.");
+
+            int absdelx, absdely;
+
+            int whichway = (dircount[0] & 1) ? 0 : 1;   // 0 if left, 1 if right.
+
+            if (passed_a_gap[whichway])
+               warn(warn__trade_across_gap);
+
+#ifdef NICE
+            absdelx = xposition[whichway] - thisrec->nicex;
+            absdely = yposition[whichway] - thisrec->nicey;
+#else
+            absdelx = xposition[whichway] - thisrec->x;
+            absdely = yposition[whichway] - thisrec->y;
+#endif
+            thisrec->roll_stability_info = callstuff[whichway];  // Get the boy encoding; it has "AL" direction.
+
+            // This suff is absolute, but later code wants it relative and will convert
+            // to absolute, so we have to unwind that.
+            switch (thisrec->dir) {
+            case 0:
+               thisrec->deltax = absdelx;
+               thisrec->deltay = absdely;
+               break;
+            case 1:
+               thisrec->deltax = -absdely;
+               thisrec->deltay = absdelx;
+               break;
+            case 2:
+               thisrec->deltax = -absdelx;
+               thisrec->deltay = -absdely;
+               break;
+            case 3:
+               thisrec->deltax = absdely;
+               thisrec->deltay = -absdelx;
+               break;
+            }
+         }
+         else if (flags & MTX_USE_NUMBER) {
             int count = current_options.number_fields & NUMBER_FIELD_MASK;
             thisrec->deltax *= count;
             thisrec->deltay *= count;
@@ -2667,7 +2797,7 @@ static int matrixmove(
                                      true, merge_strict_matrix, &people, result);
 
    if (alldelta != 0) {
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED && !(flags & MTX_FIND_TRADERS))
          fail("This call not allowed in distorted or virtual setup.");
 
       if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -3367,7 +3497,7 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    int i;
    bool fudged_start = false;
    uint32 flags = MTX_STOP_AND_WARN_ON_TBONE | MTX_IGNORE_NONSELECTEES;
-   selector_kind saved_selector = current_options.who;
+   who_list saved_selector = current_options.who;
    current_options.who = parseptr->options.who;
 
    setup scopy = *ss;      // Will save rotation of this to the very end.
@@ -3494,7 +3624,7 @@ extern void anchor_someone_and_move(
    matrix_rec after_matrix_info[matrix_info_capacity+1];
    int i, j, k, nump;
    int deltax[MAX_GROUPS], deltay[MAX_GROUPS];
-   selector_kind saved_selector = current_options.who;
+   who_list saved_selector = current_options.who;
    setup saved_start_people = *ss;
    int Bindex[MAX_GROUPS];
    int Aindex[MAX_GROUPS];
@@ -5921,6 +6051,9 @@ static bool do_misc_schema(
    const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
    parse_block *parseptr = ss->cmd.parseptr;
 
+   who_list sel;
+   sel.initialize();
+
    // Must be some form of concentric, or a "sel_XXX" schema.
 
    if (!(schema_attrs[the_schema].attrs & SCA_SPLITOK)) {
@@ -5939,9 +6072,10 @@ static bool do_misc_schema(
    ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
 
    if (the_schema == schema_select_leads) {
+      sel.who[0] = selector_leads;
       inner_selective_move(ss, foo1p, &foo2,
                            selective_key_plain, 1, 0, false, 0,
-                           selector_leads,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -5949,7 +6083,7 @@ static bool do_misc_schema(
    else if (the_schema == schema_select_headliners) {
       inner_selective_move(ss, foo1p, &foo2,
                            selective_key_plain, 1, 0, false, 0x80000008U,
-                           selector_uninitialized,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -5957,7 +6091,7 @@ static bool do_misc_schema(
    else if (the_schema == schema_select_sideliners) {
       inner_selective_move(ss, foo1p, &foo2,
                            selective_key_plain, 1, 0, false, 0x80000001U,
-                           selector_uninitialized,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -6009,7 +6143,7 @@ static bool do_misc_schema(
       }
       inner_selective_move(ss, foo1p, (setup_command *) 0,
                            selective_key_plain, 0, 0, false, result_mask | 0x400000,
-                           selector_uninitialized,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -6024,7 +6158,7 @@ static bool do_misc_schema(
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
                            selective_key_plain, 0, 0, false, result_mask | 0x400000,
-                           selector_uninitialized,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -6073,7 +6207,7 @@ static bool do_misc_schema(
 
       inner_selective_move(ss, foo1p, (setup_command *) 0,
                            selective_key_plain, 0, 0, false, result_mask | 0x400000,
-                           selector_uninitialized,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -6088,7 +6222,7 @@ static bool do_misc_schema(
 
       inner_selective_move(ss, foo1p, &foo2,
                            selective_key_plain_no_live_subsets, 1, 0, false, result_mask | 0x400000,
-                           selector_uninitialized,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -6106,9 +6240,10 @@ static bool do_misc_schema(
       return true;
    }
    else if (the_schema == schema_select_those_facing_both_live) {
+      sel.who[0] = selector_thosefacing;
       inner_selective_move(ss, foo1p, &foo2,
                            selective_key_plain_from_id_bits, 1, 0, true, 0,
-                           selector_thosefacing,
+                           sel,
                            innerdef->modifiers1,
                            outerdef->modifiers1,
                            result);
@@ -6531,6 +6666,9 @@ void really_inner_move(
    bool mirror,
    setup *result) THROW_DECL
 {
+   who_list sel;
+   sel.initialize();
+
    if (callflagsf & CFLAG2_NO_RAISE_OVERCAST)
       ss->clear_all_overcasts();
 
@@ -6618,6 +6756,26 @@ void really_inner_move(
    case schema_partner_matrix:
    case schema_partner_partial_matrix:
       {
+         // For fairly hairy reasons "<anyone> trade" is given as a matrix call.  That
+         // code can't deal with conentric setups, which are presumably setups with
+         // centers and ends at 45 degress to each other.  If the <anyone> are the
+         // centers or the ends, we may be able to use the concentric mechanism.
+         if (ss->kind == s_normal_concentric && (callspec->stuff.matrix.matrix_flags & MTX_FIND_TRADERS)) {
+            if (current_options.who.who[0] == selector_centers) {
+               current_options.who.who[0] = selector_all;
+               concentric_move(ss, &ss->cmd, (setup_command *) 0, schema_concentric,
+                               0, 0, true, false, ~0U, result);
+               current_options.who.who[0] = selector_centers;
+               return;
+            }
+            else if (current_options.who.who[0] == selector_ends)
+               current_options.who.who[0] = selector_all;
+               concentric_move(ss, (setup_command *) 0, &ss->cmd, schema_concentric,
+                               0, 0, true, false, ~0U, result);
+               current_options.who.who[0] = selector_ends;
+               return;
+         }
+
          bool expanded = false;
          static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, s2x2, s4x4, 0};
          static const expand::thing exp_back_to_2x6_stuff = {{0, 1, 4, 5, 6, 7, 10, 11}, s2x4, s2x6, 0};
@@ -6945,9 +7103,10 @@ void really_inner_move(
             if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CENTRAL_MYSTIC) && ss->cmd.cmd_fraction.is_null()) {
                ss->cmd.cmd_misc3_flags |= CMD_MISC3__DOING_YOUR_PART;
                setup_command conc_cmd = ss->cmd;
+               sel.who[0] = selector_centers;
 
                inner_selective_move(ss, &conc_cmd, &conc_cmd, selective_key_dyp,
-                                    1, 0, false, 0, selector_centers, 0, 0, result);
+                                    1, 0, false, 0, sel, 0, 0, result);
             }
             else
                do_sequential_call(ss, callspec, qtfudged, &mirror, extra_heritmask_bits, result);
@@ -6986,10 +7145,11 @@ void really_inner_move(
  do_special_select_stuff:
 
    if (special_selector == selector_none) fail("Can't do this call in this formation.");
+   sel.who[0] = special_selector;
 
    inner_selective_move(ss, &foo1, (setup_command *) 0,
                         special_indicator, 0, 0, false, 0,
-                        special_selector, special_modifiers, 0, result);
+                        sel, special_modifiers, 0, result);
 
  foobarf:
 

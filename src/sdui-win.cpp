@@ -1513,7 +1513,7 @@ void MainWindow_OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
       matcher.m_final_result.match.packed_next_conc_or_subcall = 0;
       matcher.m_final_result.match.packed_secondary_subcall = 0;
-      matcher.m_final_result.match.call_conc_options = null_options;
+      matcher.m_final_result.match.call_conc_options.initialize();
       matcher.m_final_result.real_next_subcall = (match_result *) 0;
       matcher.m_final_result.real_secondary_subcall = (match_result *) 0;
 

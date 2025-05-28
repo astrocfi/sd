@@ -147,7 +147,6 @@ and the following external variables:
    concept_sublists
    good_concept_sublist_sizes
    good_concept_sublists
-   null_options
    verify_options
    verify_used_number
    verify_used_direction
@@ -301,10 +300,6 @@ short int *concept_sublists[call_list_extent];
    we don't want anything the least bit ugly in these lists. */
 int good_concept_sublist_sizes[call_list_extent];
 short int *good_concept_sublists[call_list_extent];
-const call_conc_option_state null_options = {
-   selector_uninitialized,
-   direction_uninitialized,
-   0, 0, 0, 0, 0};
 call_conc_option_state verify_options;
 bool verify_used_number;
 bool verify_used_direction;
@@ -1805,6 +1800,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0}, {0}, {0}, false, chk_wave},
    {s1x8, cr_2fl_per_1x4, 2, {0, 1, 4, 5, 2, 3, 6, 7},
     {2}, {0}, {0}, false, chk_anti_groups},
+   {s1x8, cr_2fl_per_1x4, 8, {0, 3, 1, 2, 6, 5, 7, 4},
+    {0}, {0}, {0}, false, chk_wave},
    {s2x4, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
     {2}, {0}, {0}, true, chk_groups},
    {s1x8, cr_4x4couples_only, 4, {0, 4, 1, 5, 2, 6, 3, 7},
@@ -2219,6 +2216,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table9[] = 
    {sdmd, cr_jright, 4, {2, 0, 1, 3},
     {8}, {0}, {0}, true, chk_wave},
    {sdmd, cr_jleft, 4, {2, 0, 3, 1},
+    {8}, {0}, {0}, true, chk_wave},
+   {s_star, cr_jleft, 4, {2, 0, 1, 3},
     {8}, {0}, {0}, true, chk_wave},
    {sdmd, cr_diamond_like, 4, {2, 0, 2},
     {2, 1, 3}, {0}, {0}, false, chk_dmd_qtag},
@@ -3584,7 +3583,7 @@ static void debug_print_parse_block(int level, const parse_block *p, char *temps
       if (p->concept) n += sprintf(tempstring_text+n, "  concept %s  ", p->concept->name);
       if (p->call) n += sprintf(tempstring_text+n, "  call %s  ", p->call->name);
       n += sprintf(tempstring_text+n, " %d %d %d %d %d \n",
-             p->options.who,
+             p->options.who.who[0],
              p->options.where,
              p->options.howmanynumbers,
              (int) p->options.number_fields,
@@ -4489,12 +4488,15 @@ extern callarray *assoc(
             // In fact, we don't even look at k.
             // 32 bits in k aren't enough to do everything we want
             // in a completely general way.
-            if (mask == 0x11 || mask == 0x88)
-               goto good;
+            if (mask == 0x11 || mask == 0x88) goto good;
             goto bad;
          }
          else if (ssK == s1x6 && this_qualifier == cr_ripple_both_ends) {
             if (mask == ((k>>16) & 0x3F)) goto good;
+            goto bad;
+         }
+         else if (ssK == s1x6 && this_qualifier == cr_ripple_one_end) {
+            if (mask == 010 || mask == 001) goto good;
             goto bad;
          }
          else if (ssK == s1x8 && this_qualifier == cr_ripple_both_ends) {
@@ -4505,7 +4507,8 @@ extern callarray *assoc(
          // If the actual setup is a 2x4 and we are testing a 1x4,
          // we have to accept it.  After it gets split to 1x4's,
          // we will test it more thoroughly.
-         goto good;
+         if (ssK == s2x4)
+            goto good;
       case cr_people_1_and_5_real:
          if (ss->people[1].id1 & ss->people[5].id1) goto good;
          goto bad;
@@ -5108,10 +5111,6 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
    while (incoming->concept->kind == concept_comment)
       incoming = incoming->next;
 
-   // Reject "concept_marker_concept_mod" and similar special things.
-   //   if (incoming->concept->kind < marker_end_of_list)
-   //      fail("Need a concept.");
-
    m_nocmd_misc3_bits = 0;
    m_heritflag = 0;
    m_old_retval = incoming;
@@ -5512,7 +5511,8 @@ bool fix_n_results(
          else if (kk == nothing &&
                   (deadconcindex < 0 ||
                    (z[i].inner.skind == z[deadconcindex].inner.skind &&
-                    z[i].inner.srotation == z[deadconcindex].inner.srotation))) {
+                    z[i].inner.srotation == z[deadconcindex].inner.srotation &&
+                    z[i].inner.seighth_rotation == z[deadconcindex].inner.seighth_rotation))) {
             deadconcindex = i;
          }
          else
@@ -5627,6 +5627,7 @@ bool fix_n_results(
       if (kk == s_dead_concentric || kk == s_normal_concentric) {
          z[i].inner.skind = z[deadconcindex].inner.skind;
          z[i].inner.srotation = z[deadconcindex].inner.srotation;
+         z[i].inner.seighth_rotation = z[deadconcindex].inner.seighth_rotation;
       }
    }
 
@@ -5701,6 +5702,7 @@ void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) TH
    else if (ss->kind == s_dead_concentric && action > plain_normalize) {
       ss->kind = ss->inner.skind;
       ss->rotation += ss->inner.srotation;
+      ss->eighth_rotation += ss->inner.seighth_rotation;
       did_something = true;
       goto startover;
    }
@@ -6175,7 +6177,7 @@ void toplevelmove() THROW_DECL
               cnext->call->the_defn.schema == schema_cross_concentric_specialpromenade)) {
             conceptptr->concept = (configuration::current_config().startinfoindex == start_select_sides_start) ?
                &concept_sides_concept : &concept_heads_concept;
-            conceptptr->options.who = (selector_kind) conceptptr->concept->arg1;
+            conceptptr->options.who.who[0] = (selector_kind) conceptptr->concept->arg1;
 
             starting_setup.kind = configuration::startinfolist[start_select_as_they_are].the_setup_p->kind;
             starting_setup.rotation = configuration::startinfolist[start_select_as_they_are].the_setup_p->rotation;
@@ -6198,7 +6200,7 @@ void toplevelmove() THROW_DECL
    newhist.draw_pic = false;
    newhist.state_is_valid = false;
    newhist.init_resolve();
-   current_options = null_options;
+   current_options.initialize();
 
    // Put in identification bits for global/unsymmetrical stuff, if possible.
    clear_absolute_proximity_and_facing_bits(&starting_setup);
@@ -6783,6 +6785,7 @@ void toplevelmove() THROW_DECL
    else if (newhist.state.kind == s_dead_concentric) {
       newhist.state.kind = newhist.state.inner.skind;
       newhist.state.rotation += newhist.state.inner.srotation;
+      newhist.state.eighth_rotation += newhist.state.inner.seighth_rotation;
    }
 
    // Once rotation is imprecise, it is always imprecise.  Same for the other flags copied here.

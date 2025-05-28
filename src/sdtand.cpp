@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 // This file contains stuff for tandem and as-couples moves.
 
@@ -1334,7 +1334,7 @@ extern void tandem_couples_move(
 
    clean_up_unsymmetrical_setup(ss);
 
-   selector_kind saved_selector;
+   who_list saved_selector;
    const tm_thing *incoming_map;
    const tm_thing *map_search;
    int i, people_per_group;
@@ -1734,7 +1734,7 @@ extern void tandem_couples_move(
    saved_selector = current_options.who;
 
    if (selector != selector_uninitialized)
-      current_options.who = selector;
+      current_options.who.who[0] = selector;
 
    for (i=0, jbit=1; i<=attr::slimit(ss); i++, jbit<<=1) {
       uint32 p = ss->people[i].id1;
@@ -2167,6 +2167,7 @@ extern void tandem_couples_move(
          dead_conc = true;
          tandstuff.virtual_result.kind = tandstuff.virtual_result.inner.skind;
          tandstuff.virtual_result.rotation += tandstuff.virtual_result.inner.srotation;
+         tandstuff.virtual_result.eighth_rotation += tandstuff.virtual_result.inner.seighth_rotation;
       }
       else if (tandstuff.virtual_result.kind == s_normal_concentric &&
                tandstuff.virtual_result.inner.skind == nothing &&
@@ -2175,6 +2176,7 @@ extern void tandem_couples_move(
          dead_xconc = true;
          tandstuff.virtual_result.kind = tandstuff.virtual_result.outer.skind;
          tandstuff.virtual_result.rotation += tandstuff.virtual_result.outer.srotation;
+         tandstuff.virtual_result.eighth_rotation += tandstuff.virtual_result.outer.seighth_rotation;
       }
 
       if (attr::slimit(&tandstuff.virtual_result) < 0)
@@ -2348,15 +2350,12 @@ extern void tandem_couples_move(
          warn(warn__check_hokey_2x4);
 
       if (dead_conc) {
-         result->inner.skind = result->kind;
-         result->inner.srotation = result->rotation;
-         result->rotation = 0;
-         result->eighth_rotation = 0;
-         result->kind = s_dead_concentric;
+         result->turn_into_deadconc();
       }
       else if (dead_xconc) {
          result->outer.skind = result->kind;
          result->outer.srotation = result->rotation;
+         result->outer.seighth_rotation = result->eighth_rotation;
          result->concsetup_outer_elongation = tandstuff.virtual_result.outer.srotation+1;
          result->rotation = 0;
          result->eighth_rotation = 0;
@@ -2832,7 +2831,7 @@ static void fixup_mimic(setup *result, const uint16 split_info[2],
    case s_dead_concentric:
       result->kind = result->inner.skind;
       result->rotation = result->inner.srotation;
-      result->eighth_rotation = 0;
+      result->eighth_rotation = result->inner.seighth_rotation;
       canonicalize_rotation(result);
       return;
    default:
@@ -2979,7 +2978,7 @@ void mimic_move(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   selector_kind who = parseptr->options.who;
+   selector_kind who = parseptr->options.who.who[0];
    bool centers = false;
    int i;
    mimic_info MI;

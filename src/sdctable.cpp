@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2016  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 /* This defines the following external variables:
    centers_concept
@@ -1884,32 +1884,10 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, CMD_MISC__VERIFY_LINES, CONCPROP__NEEDK_1X16},
    {"IN A TIDAL COLUMN",                     concept_tandem_in_setup,         D, l_c3,
     UC_none, CMD_MISC__VERIFY_COLS, CONCPROP__NEEDK_2X8},
-   {"INSIDE TRIANGLES",                      concept_randomtrngl,             D, l_c1,
-    UC_none, 2},
-   {"INSIDE INTERLOCKED TRIANGLES",          concept_randomtrngl,             D, l_c2,
-    UC_none, 0102},
-   {"OUTSIDE INTERLOCKED TRIANGLES",         concept_randomtrngl,             D, l_c2,
-    UC_none, 0103},
-   {"OUTSIDE TRIANGLES",                     concept_randomtrngl,             D, l_c1,
-    UC_none, 3},
-   {"IN POINT TRIANGLES",                    concept_randomtrngl,             D, l_c1,
-    UC_none, 5},
-   {"IN POINT INTERLOCKED TRIANGLES",        concept_randomtrngl,             D, l_c2,
-    UC_none, 0105},
-   {"OUT POINT TRIANGLES",                   concept_randomtrngl,             D, l_c1,
-    UC_none, 4},
-   {"OUT POINT INTERLOCKED TRIANGLES",       concept_randomtrngl,             D, l_c2,
-    UC_none, 0104},
    {"TALL 6",                                concept_randomtrngl,             D, l_c4a,
     UC_none, 0},
    {"SHORT 6",                               concept_randomtrngl,             D, l_c4a,
     UC_none, 1},
-   {"WAVE-BASED TRIANGLES",                  concept_randomtrngl,             D, l_c1,
-    UC_none, 6},
-   {"TANDEM-BASED TRIANGLES",                concept_randomtrngl,             D, l_c1,
-    UC_none, 7},
-   {"@k-BASED TRIANGLES",                    concept_selbasedtrngl,           D, l_c1,
-    UC_none, 20},
    {"MINI-BUTTERFLY",                        concept_mini_but_o,              D, l_c3,
     UC_none, 0},
    {"MINI-O",                                concept_mini_but_o,              D, l_c3,

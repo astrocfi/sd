@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -36,7 +36,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 #include <stdio.h>
 #include <string.h>
@@ -172,7 +172,6 @@ enum concept_kind {
    concept_two_faced,
    concept_funny,
    concept_randomtrngl,
-   concept_selbasedtrngl,
    concept_split,
    concept_each_1x4,
    concept_diamond,
@@ -513,6 +512,7 @@ enum warning_index {
    warn__fudgy_half_offset,
    warn__check_3x4,
    warn__check_2x4,
+   warn__check_2x5,
    warn__check_hokey_2x4,
    warn__check_4x4,
    warn__check_hokey_4x5,
@@ -534,6 +534,7 @@ enum warning_index {
    warn__adjust_to_feet,
    warn__some_touch,
    warn__some_touch_evil,
+   warn__trade_across_gap,
    warn__split_to_2x4s,
    warn__split_to_2x3s,
    warn__split_to_1x8s,
@@ -804,14 +805,39 @@ enum selector_kind {
    selector_cpls2_3,
    selector_cpls3_4,
    selector_cpls4_1,
-   // Start of selectors used only in "some are tandem" operations, with a control key of 'K'.
-   selector_some,          selector_SOME_START = selector_some,
-   selector_inside_tgl,
+
+   selector_inside_tgl,    selector_TGL_START = selector_inside_tgl,
+   selector_inside_intlk_tgl,
+   selector_intlk_inside_tgl,
    selector_outside_tgl,
+   selector_outside_intlk_tgl,
+   selector_intlk_outside_tgl,
    selector_inpoint_tgl,
+   selector_inpoint_intlk_tgl,
+   selector_intlk_inpoint_tgl,
+   selector_magic_inpoint_tgl,
+   selector_magic_intlk_inpoint_tgl,
+   selector_intlk_magic_inpoint_tgl,
    selector_outpoint_tgl,
+   selector_outpoint_intlk_tgl,
+   selector_intlk_outpoint_tgl,
+   selector_magic_outpoint_tgl,
+   selector_magic_intlk_outpoint_tgl,
+   selector_intlk_magic_outpoint_tgl,
+   selector_wave_base_tgl,
+   selector_wave_base_intlk_tgl,
+   selector_intlk_wave_base_tgl,
+   selector_tand_base_tgl,
+   selector_tand_base_intlk_tgl,
+   selector_intlk_tand_base_tgl,
+   // Start of recursive selectors.
+   selector_anyone_base_tgl,  selector_RECURSIVE_START = selector_anyone_base_tgl,
+   selector_anyone_base_intlk_tgl,
+   selector_intlk_anyone_base_tgl,
+   // Start of selectors used only in "some are tandem" operations, with a control key of 'K'.
+   selector_some,             selector_SOME_START = selector_some,
    // Start of invisible selectors.
-   selector_mysticbeaus,   selector_INVISIBLE_START = selector_mysticbeaus,
+   selector_mysticbeaus,      selector_INVISIBLE_START = selector_mysticbeaus,
    selector_mysticbelles,
    selector_notctrdmd,
    selector_ENUM_EXTENT   // Not a selector; indicates extent of the enum.
@@ -835,6 +861,125 @@ enum direction_kind {
    direction_the_music,
    direction_ENUM_EXTENT   // Not a direction; indicates extent of the enum.
 };
+
+
+
+struct concept_table_item {
+   uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
+   // We wish we could put a "throw" clause on this function, but we can't.
+   void (*concept_action)(setup *, parse_block *, setup *);
+};
+
+
+/* These flags go into the "concept_prop" field of a "concept_table_item".
+
+   CONCPROP__SECOND_CALL means that the concept takes a second call, so a sublist must
+      be created, with a pointer to same just after the concept pointer.
+
+   CONCPROP__USE_SELECTOR means that the concept requires a selector, which must be
+      inserted into the concept list just after the concept pointer.
+
+   CONCPROP__NEEDK_4X4   mean that the concept requires the indicated setup, and, at
+   CONCPROP__NEEDK_2X8   the top level, the existing setup should be expanded as needed.
+      etc....
+
+   CONCPROP__SET_PHANTOMS means that phantoms are in use under this concept, so that,
+      when looking for tandems or couples, we shouldn't be disturbed if we
+      pair someone with a phantom.  It is what makes "split phantom lines tandem"
+      work, so that "split phantom lines phantom tandem" is unnecessary.
+
+   CONCPROP__NO_STEP means that stepping to a wave or rearing back from one is not
+      allowed under this concept.
+
+   CONCPROP__GET_MASK means that tbonetest & livemask need to be computed before executing the concept.
+
+   CONCPROP__STANDARD means that the concept can be "standard".
+
+   CONCPROP__USE_NUMBER         Concept takes one number.
+   CONCPROP__USE_TWO_NUMBERS    Concept takes two numbers.
+   CONCPROP__USE_FOUR_NUMBERS   Etc.
+
+   CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
+      for transmission back to the client.  Normally this is off, and the split axis bits
+      will be cleared after execution of the concept.
+
+   CONCPROP__NEED_ARG2_MATRIX means that the "arg2" word of the concept_descriptor
+      block contains additional bits of the "CONCPROP__NEEDK_3X8" kind to be sent to
+      "do_matrix_expansion".  This is done so that concepts with different matrix
+      expansion bits can share the same concept type.
+*/
+
+
+
+enum {
+   CONCPROP__SECOND_CALL     = 0x00000001U,
+   CONCPROP__USE_SELECTOR    = 0x00000002U,
+   CONCPROP__SET_PHANTOMS    = 0x00000004U,
+   CONCPROP__NO_STEP         = 0x00000008U,
+
+   // This is a five bit field.  CONCPROP__NEED_LOBIT marks its low bit.
+   // WARNING!!!  The values in this field are encoded into a bit field
+   // for the setup expansion/normalization tables (see the definition
+   // of the macro "NEEDMASK".)  It follows that there can't be more than 32 of them.
+   CONCPROP__NEED_MASK       = 0x000001F0U,
+   CONCPROP__NEED_LOBIT      = 0x00000010U,
+   CONCPROP__NEEDK_4X4       = 0x00000010U,
+   CONCPROP__NEEDK_2X8       = 0x00000020U,
+   CONCPROP__NEEDK_2X6       = 0x00000030U,
+   CONCPROP__NEEDK_4DMD      = 0x00000040U,
+   CONCPROP__NEEDK_BLOB      = 0x00000050U,
+   CONCPROP__NEEDK_4X6       = 0x00000060U,
+   CONCPROP__NEEDK_3X8       = 0x00000070U,
+   CONCPROP__NEEDK_3DMD      = 0x00000080U,
+   CONCPROP__NEEDK_1X10      = 0x00000090U,
+   CONCPROP__NEEDK_1X12      = 0x000000A0U,
+   CONCPROP__NEEDK_3X4       = 0x000000B0U,
+   CONCPROP__NEEDK_1X16      = 0x000000C0U,
+   CONCPROP__NEEDK_QUAD_1X4  = 0x000000D0U,
+   CONCPROP__NEEDK_TWINDMD   = 0x000000E0U,
+   CONCPROP__NEEDK_TWINQTAG  = 0x000000F0U,
+   CONCPROP__NEEDK_CTR_DMD   = 0x00000100U,
+   CONCPROP__NEEDK_END_DMD   = 0x00000110U,
+   CONCPROP__NEEDK_TRIPLE_1X4= 0x00000120U,
+   CONCPROP__NEEDK_CTR_1X4   = 0x00000130U,
+   CONCPROP__NEEDK_END_1X4   = 0x00000140U,
+   CONCPROP__NEEDK_CTR_2X2   = 0x00000150U,
+   CONCPROP__NEEDK_END_2X2   = 0x00000160U,
+   CONCPROP__NEEDK_3X4_D3X4  = 0x00000170U,
+   CONCPROP__NEEDK_3X6       = 0x00000180U,
+   CONCPROP__NEEDK_4D_4PTPD  = 0x00000190U,
+   CONCPROP__NEEDK_4X5       = 0x000001A0U,
+   CONCPROP__NEEDK_2X10      = 0x000001B0U,
+   CONCPROP__NEEDK_2X12      = 0x000001C0U,
+   CONCPROP__NEEDK_DBLX      = 0x000001D0U,
+   CONCPROP__NEEDK_DEEPXWV   = 0x000001E0U,
+   CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0U,
+
+   CONCPROP__NEED_ARG2_MATRIX= 0x00000200U,
+   CONCPROP__USE_DIRECTION   = 0x00000400U,
+   /* spare:                   0x00000800U, */
+   /* spare:                   0x00010000U, */
+   /* spare:                   0x00020000U, */
+   CONCPROP__USES_PARTS      = 0x00040000U,
+   CONCPROP__IS_META         = 0x00080000U,
+   CONCPROP__GET_MASK        = 0x00100000U,
+   CONCPROP__STANDARD        = 0x00200000U,
+   CONCPROP__USE_NUMBER      = 0x00400000U,
+   CONCPROP__USE_TWO_NUMBERS = 0x00800000U,
+   CONCPROP__USE_FOUR_NUMBERS= 0x01000000U,
+   CONCPROP__MATRIX_OBLIVIOUS= 0x02000000U,
+   CONCPROP__PERMIT_MATRIX   = 0x04000000U,
+   CONCPROP__SHOW_SPLIT      = 0x08000000U,
+   CONCPROP__PERMIT_MYSTIC   = 0x10000000U,
+   CONCPROP__PERMIT_REVERSE  = 0x20000000U,
+   CONCPROP__PERMIT_MODIFIERS= 0x40000000U
+};
+
+extern SDLIB_API const concept_table_item concept_table[];          /* in SDCONCPT */
+extern uint32 global_tbonetest;                                     /* in SDCONCPT */
+extern uint32 global_livemask;                                      /* in SDCONCPT */
+extern uint32 global_selectmask;                                    /* in SDCONCPT */
+extern uint32 global_tboneselect;                                   /* in SDCONCPT */
 
 
 struct resolve_indicator {
@@ -945,10 +1090,42 @@ enum resolve_command_kind {
 
 
 
-/* BEWARE!!  There is a static initializer for this, "null_options", in sdtop.cpp
-   that must be kept up to date. */
+struct who_list {
+   enum { who_stack_size = 3 };
+
+   void initialize()
+   {
+      for (int i=0 ; i<who_stack_size ; i++)
+         who[i] = selector_uninitialized;
+      who_stack_ptr = 0;
+   }
+
+   void collapse_down()
+   {
+      for (int i=0 ; i<who_stack_size-1 ; i++)
+         who[i] = who[i+1];
+      who[who_stack_size-1] = selector_uninitialized;
+   }
+
+   selector_kind who[who_stack_size];
+   int who_stack_ptr;
+};
+
+
 struct call_conc_option_state {
-   selector_kind who;        /* selector, if any, used by concept or call */
+
+   void initialize()
+   {
+      who.initialize();
+      where = direction_uninitialized;
+      tagger = 0;
+      circcer = 0;
+      number_fields = 0;
+      howmanynumbers = 0;
+      star_turn_option = 0;
+   }
+
+   who_list who;             /* selector, if any, used by concept or call */
    direction_kind where;     /* direction, if any, used by concept or call */
    uint32 tagger;            /* tagging call indices, if any, used by call.
                                 If nonzero, this is 3 bits for the 0-based tagger class
@@ -1026,7 +1203,7 @@ enum call_list_kind {
 struct modifier_block {
    uims_reply_kind kind;
    int32 index;
-   call_conc_option_state call_conc_options;  /* Has numbers, selectors, etc. */
+   call_conc_option_state call_conc_options;  // Has numbers, selectors, etc.
    call_with_name *call_ptr;
    const concept_descriptor *concept_ptr;
    modifier_block *packed_next_conc_or_subcall;  /* next concept, or, if this is end mark, points to substitution list */
@@ -1656,7 +1833,6 @@ extern SDLIB_API int number_of_calls[call_list_extent];
 
 extern SDLIB_API bool using_active_phantoms;                        /* in SDTOP */
 extern SDLIB_API int allowing_modifications;                        /* in SDTOP */
-extern SDLIB_API const call_conc_option_state null_options;         /* in SDTOP */
 extern SDLIB_API int config_history_ptr;                            /* in SDTOP */
 extern SDLIB_API bool allowing_all_concepts;                        /* in SDTOP */
 extern SDLIB_API int abs_max_calls;                                 /* in SDTOP */

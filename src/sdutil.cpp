@@ -360,6 +360,8 @@ void ui_utils::writestuff_with_decorations(const call_conc_option_state *cptr, C
 {
    uint32 index = cptr->number_fields;
    int howmany = cptr->howmanynumbers;
+   call_conc_option_state recurse_ptr = *cptr;
+   recurse_ptr.who.collapse_down();
 
    while (f[0]) {
       if (f[0] == '@') {
@@ -374,10 +376,10 @@ void ui_utils::writestuff_with_decorations(const call_conc_option_state *cptr, C
             writestuff(is_concept ? direction_names[cptr->where].name_uc : direction_names[cptr->where].name);
             break;
          case '6': case 'K': case 'V':
-            writestuff(selector_list[cptr->who].name_uc);
+            writestuff_with_decorations(&recurse_ptr, selector_list[cptr->who.who[0]].name_uc, is_concept);
             break;
          case 'k':
-            writestuff(selector_list[cptr->who].sing_name_uc);
+            writestuff_with_decorations(&recurse_ptr, selector_list[cptr->who.who[0]].sing_name_uc, is_concept);
             break;
          default:   /**** maybe we should really do what "translate_menu_name"
                           does, using call to "get_escape_string". */
@@ -497,6 +499,11 @@ void ui_utils::print_4_person_setup(int ps, small_setup *s, int elong)
    }
    else
       writestuff(" ????");
+
+   if (s->seighth_rotation != 0) {
+      writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
+      newline();
+   }
 
    newline();
 }
@@ -761,13 +768,13 @@ void ui_utils::printsetup(setup *x)
             str = "6 6 c d e@7a b@76 6 h g f";
             break;
          case 1:
-            str = " 5a@@ 5b@@ hc@@ gd@@ fe@";
+            str = " 5a@@ 5b@@ hc@@ gd@@ fe";
             break;
          case 2:
             str = "f g h@76 6 6 b a@7e d c";
             break;
          default:
-            str = " ef@@ dg@@ ch@@ 5b@@ 5a@";
+            str = " ef@@ dg@@ ch@@ 5b@@ 5a";
             break;
          }
 
@@ -847,7 +854,7 @@ void ui_utils::printsetup(setup *x)
             str = "h 6 6 d@76 f e 6 b a@7g 6 6 c";
             break;
          default:
-            str = " gh@@ 5f@@ 5e@@ cd@@ 5b@@ 5a@";
+            str = " gh@@ 5f@@ 5e@@ cd@@ 5b@@ 5a";
             break;
          }
 
@@ -1373,7 +1380,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_some_vs_others &&
                      (selective_key) item->arg1 != selective_key_own) {
-               selector_kind opp = selector_list[local_cptr->options.who].opposite;
+               selector_kind opp = selector_list[local_cptr->options.who.who[0]].opposite;
                writestuff(" WHILE THE ");
                writestuff((opp == selector_uninitialized) ?
                           ((Cstring) "OTHERS") :
@@ -1601,7 +1608,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
          parse_block *search;
          bool pending_subst1, pending_subst2;
 
-         selector_kind i16junk = local_cptr->options.who;
+         selector_kind i16junk = local_cptr->options.who.who[0];
          direction_kind idirjunk = local_cptr->options.where;
          uint32 number_list = local_cptr->options.number_fields;
          const call_with_name *localcall = local_cptr->call_to_print;
@@ -2230,7 +2237,7 @@ void parse_block::initialize(const concept_descriptor *cc)
    concept = cc;
    call = (call_with_name *) 0;
    call_to_print = (call_with_name *) 0;
-   options = null_options;
+   options.initialize();
    replacement_key = 0;
    no_check_call_level = false;
    say_and = false;
@@ -2765,7 +2772,7 @@ extern uint32 translate_selector_fields(parse_block *xx, uint32 mask)
    uint32 retval = 0;
 
    for ( ; xx ; xx=xx->next) {
-      switch (xx->options.who) {
+      switch (xx->options.who.who[0]) {
       case selector_heads:
          z = translate_selector_permutation1(mask >> 13);
          break;
@@ -2831,8 +2838,8 @@ extern uint32 translate_selector_fields(parse_block *xx, uint32 mask)
       }
 
       if (z == selector_uninitialized) retval = 2;   // Raise error.
-      if (z != xx->options.who) retval |= 1;         // Note that we changed something.
-      xx->options.who = z;
+      if (z != xx->options.who.who[0]) retval |= 1;         // Note that we changed something.
+      xx->options.who.who[0] = z;
 
    nofix:
 

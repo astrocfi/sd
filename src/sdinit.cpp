@@ -39,6 +39,8 @@
    start_stats_file_from_GLOB_stats_filename
    open_session
 and the following external variables:
+   null_options
+   centers_thing
    selector_for_initialize
    direction_for_initialize
    number_for_initialize
@@ -65,6 +67,11 @@ direction_kind direction_for_initialize;
 int number_for_initialize;
 int *color_index_list;
 int color_randomizer[4];
+
+
+
+call_conc_option_state null_options;
+who_list centers_thing;
 
 
 // This gets temporarily allocated.  It persists through the entire initialization.
@@ -2201,6 +2208,10 @@ bool open_session(int argc, char **argv)
    delete [] args;
 
    general_initialize();
+   null_options.initialize();
+   centers_thing.initialize();
+   centers_thing.who[0] = selector_centers;
+   centers_thing.who_stack_ptr = 1;
 
    /* If we have a calling level at this point, fill in the output file name.
       If we do not have a calling level, we will either get it from the session
@@ -2232,7 +2243,7 @@ bool open_session(int argc, char **argv)
 
    // Set up the color translations based on the user's options.
 
-   color_index_list = couple_colors_rgby;   // Default = color_by_couple.
+   color_index_list = couple_colors_rgby;   // Default (plain "color_by_couple") = RGBY.
 
    switch (ui_options.color_scheme) {
    case color_by_gender: case no_color:
@@ -2341,6 +2352,7 @@ bool open_session(int argc, char **argv)
       char cachename[MAX_TEXT_LINE_LENGTH];
       strncpy(cachename, getout_strings[calling_level], MAX_TEXT_LINE_LENGTH);
       strcat(cachename, "cache");
+      uint32 escape_bit_junk;
 
       MAPPED_CACHE_FILE cache_stuff((glob_abridge_mode == abridge_mode_abridging) ? 2 : 1,
                                     sourcenames, database_input_files,
@@ -2478,7 +2490,7 @@ bool open_session(int argc, char **argv)
       selector_menu_list = new Cstring [selector_INVISIBLE_START];
 
       for (i=0; i<selector_INVISIBLE_START-1; i++)
-         selector_menu_list[i] = selector_list[i+1].name;
+         selector_menu_list[i] = translate_menu_name(selector_list[i+1].name, &escape_bit_junk);
 
       selector_menu_list[selector_INVISIBLE_START-1] = (Cstring) 0;
 

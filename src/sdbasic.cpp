@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 /* This defines the following functions:
    collision_collector::install_with_collision
@@ -792,12 +792,8 @@ void collision_collector::fix_possible_collision(setup *result,
          gather(result, &spare_setup, m3276, 3, 0);
       }
 
-      result->kind = s_dead_concentric;
-      result->inner.srotation = result->rotation;
-      result->inner.skind = s1x4;
-      result->rotation = 0;
-      result->eighth_rotation = 0;
-      result->concsetup_outer_elongation = 0;
+      result->kind = s1x4;
+      result->turn_into_deadconc();
    }
 }
 
@@ -882,17 +878,19 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s->inner.skind;
          s->rotation = s->inner.srotation;
-         s->eighth_rotation = 0;
+         s->eighth_rotation = s->inner.seighth_rotation;
          mirror_this(s);    // Sorry!
          s->inner.srotation = s->rotation;
+         s->inner.seighth_rotation = s->eighth_rotation;
 
          s->kind = s->outer.skind;
          s->rotation = s->outer.srotation;
-         s->eighth_rotation = 0;
+         s->eighth_rotation = s->outer.seighth_rotation;
          for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          mirror_this(s);    // Sorrier!
          for (i=0 ; i<12 ; i++) s->swap_people(i, i+12);
          s->outer.srotation = s->rotation;
+         s->outer.seighth_rotation = s->eighth_rotation;
 
          s->kind = s_normal_concentric;
          s->rotation = 0;
@@ -905,12 +903,9 @@ void mirror_this(setup *s) THROW_DECL
 
          s->kind = s->inner.skind;
          s->rotation += s->inner.srotation;
+         s->eighth_rotation += s->inner.seighth_rotation;
          mirror_this(s);    // Sorry!
-         s->inner.srotation = s->rotation;
-
-         s->kind = s_dead_concentric;
-         s->rotation = 0;
-         s->eighth_rotation = 0;
+         s->turn_into_deadconc();
          return;
       }
       else
@@ -4068,6 +4063,11 @@ static int divide_the_setup(
       }
 
       break;
+   case s_323:
+      // No need to check facing directions and such; this is the only
+      // wy we can divide it (unless you allow 2 triangles and an extended 1x2.)
+      division_code = HETERO_MAPCODE(s1x3,3,MPKIND__HET_SPLIT,0,s1x2,0x0);
+      goto divide_us_no_recompute;
    case s_trngl4:
       // See if the call has a 1x2, 2x1, or 1x1 definition, in which case
       // split it and do each part.
@@ -4302,7 +4302,7 @@ static int divide_the_setup(
    inner_selective_move(ss, &conc_cmd, &conc_cmd,
                         ss->cmd.callspec == base_calls[base_call_trade] ?
                         selective_key_dyp_for_mystic : selective_key_dyp,
-                        1, 0, false, 0, selector_centers, 0, 0, result);
+                        1, 0, false, 0, centers_thing, 0, 0, result);
    return 1;
 }
 
@@ -5849,6 +5849,16 @@ static uint32 do_actual_array_call(
          fail("Can't figure out what you want.");
    }
 
+   // If a star went to a 2x2, set outer_elongation to make people laterally far and vertically close.
+   // This is a hack to make Load the Boat work when the outsides are a facing star.
+   if (ss->kind == s_star && result->kind == s2x2) {
+      uint32 newtb99 = or_all_people(result);
+      if (!(newtb99 & 001))
+         desired_elongation = 1;
+      else if (!(newtb99 & 010))
+         desired_elongation = 2;
+   }
+
    fixup:
 
    if (need_to_normalize || result->kind == s_c1phan)
@@ -6032,6 +6042,9 @@ extern void basic_move(
    switch (ss->kind) {
    case s2x2: case s2x3: case s_short6: case s_bone6:
       orig_elongation = ss->cmd.prior_elongation_bits;
+      break;
+   case s_star:
+      orig_elongation = 0;
       break;
    case s1x2: case s1x4: case sdmd:
       orig_elongation = 2 - (ss->rotation & 1);

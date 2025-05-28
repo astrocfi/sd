@@ -133,12 +133,12 @@ selector_kind do_selector_iteration(bool allow_iteration)
 
    if (interactivity == interactivity_database_init ||
        interactivity == interactivity_verify) {
-      if (verify_options.who == selector_uninitialized) {
+      if (verify_options.who.who[0] == selector_uninitialized) {
          verify_used_selector = true;
          return selector_for_initialize;
       }
       else
-         return verify_options.who;
+         return verify_options.who.who[0];
    }
 
    int j;

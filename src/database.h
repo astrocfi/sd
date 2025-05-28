@@ -36,7 +36,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 // These are written as the first two halfwords of the binary database file.
 // The format version is not related to the version of the program or database.
@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 341
+#define DATABASE_FORMAT_VERSION 342
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -426,14 +426,15 @@ enum {
    MTX_BOTH_SELECTED_OK       = 0x40,
    MTX_FIND_SQUEEZERS         = 0x80,
    MTX_FIND_SPREADERS         = 0x100,
-   MTX_USE_VEER_DATA          = 0x200,
-   MTX_USE_NUMBER             = 0x400,
-   MTX_MIRROR_IF_RIGHT_OF_CTR = 0x800,
-   MTX_ONLY_IN                = 0x1000,
-   MTX_ONLY_OUT               = 0x2000,
-   MTX_ADD_2N                 = 0x4000,
-   MTX_INCLUDE_PHANTOMS       = 0x8000,
-   MTX_NOT_TRUE_INVADER       = 0x10000
+   MTX_FIND_TRADERS           = 0x200,
+   MTX_USE_VEER_DATA          = 0x400,
+   MTX_USE_NUMBER             = 0x800,
+   MTX_MIRROR_IF_RIGHT_OF_CTR = 0x1000,
+   MTX_ONLY_IN                = 0x2000,
+   MTX_ONLY_OUT               = 0x4000,
+   MTX_ADD_2N                 = 0x8000,
+   MTX_INCLUDE_PHANTOMS       = 0x10000,
+   MTX_NOT_TRUE_INVADER       = 0x20000
 };
 
 

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2012  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 /* This defines the following functions:
    tglmap::initialize
@@ -671,6 +671,7 @@ static void multiple_move_innards(
        z[0].kind == nothing && z[1].kind == s_dead_concentric && z[1].inner.skind == s2x2) {
       result->kind = s4x4;
       result->rotation += z[1].inner.srotation;
+      result->eighth_rotation += z[1].inner.seighth_rotation;
       result->clear_people();
       static const veryshort butterfly_fixer[] = {15, 3, 7, 11};
       scatter(result, &z[1], butterfly_fixer, 3, 0);
@@ -794,6 +795,7 @@ static void multiple_move_innards(
                      z[i] = qtagtemp;
                   else if (x[i].kind == s2x4 &&
                            z[i].inner.skind == s1x4 &&
+                           z[i].inner.seighth_rotation == 0 &&
                            ((x[i].rotation+z[i].rotation+z[i].inner.srotation) & 1) == 1)
                      z[i] = qtagtemp;   // Try to fix single file dixie diamond.
                   else
@@ -1025,6 +1027,7 @@ static void multiple_move_innards(
          for (i=0; i<arity; i++) {
             z[i].kind = z[i].inner.skind;
             z[i].rotation += z[i].inner.srotation;
+            z[i].eighth_rotation += z[i].inner.seighth_rotation;
             canonicalize_rotation(&z[i]);
          }
       }
@@ -1458,10 +1461,10 @@ static void multiple_move_innards(
    vrot = final_map->per_person_rot;
 
    for (j=0,rot=final_map->rot ; j<arity ; j++,rot>>=2) {
-      if (j == 1 && final_map->map_kind == MPKIND__HET_TWICEREM) {
-         // Need secondary insize.
+      if ((j&1) && hetero_mapkind(final_map->map_kind))
          insize = attr::klimit((setup_kind) (final_map->rot >> 24))+1;
-      }
+      else
+         insize = attr::klimit(final_map->inner_kind)+1;
 
       for (i=0 ; i<insize ; i++) {
          install_rot(result, *getptr++, &z[j], i, 011*((rot+vrot) & 3));
@@ -1542,9 +1545,10 @@ extern void divided_setup_move(
    for (j=0,frot=rot; j<arity; j++,frot>>=2) {
       vflags[j] = 0;
 
-      if (j == 1 && hetero_mapkind(maps->map_kind)) {
+      if ((j&1) && hetero_mapkind(maps->map_kind))
          insize = attr::klimit(kn_secondary)+1;
-      }
+      else
+         insize = attr::klimit(kn)+1;
 
       for (i=0; i<insize; i++) {
          int mm = *getptr++;
@@ -3827,7 +3831,7 @@ void do_concept_wing(
       selector_mysticbeaus,
       selector_all};
 
-   selector_kind saved_selector = current_options.who;
+   who_list saved_selector = current_options.who;
 
    // We scan twice -- the first time we put the normal and winged people
    // into the setup in which they belong.  The second time, we try to
@@ -3840,12 +3844,12 @@ void do_concept_wing(
          uint32 this_id1 = ss->people[i].id1;
          if (this_id1) {
             if (!pass2) all_people++;
-            current_options.who = wing_sel_table[rstuff];
+            current_options.who.who[0] = wing_sel_table[rstuff];
             if (selectp(ss, i)) {
                int x = coordptr->xca[i];
                int y = coordptr->yca[i];
 
-               current_options.who = selector_belles;
+               current_options.who.who[0] = selector_belles;
                int shift = selectp(ss, i) ? -4 : 4;
 
                switch (this_id1 & 3) {
@@ -4827,12 +4831,11 @@ void tglmap::do_glorious_triangles(
       }
    }
    else if (res[0].kind == s1x3) {
-
       if (result->kind == nothing || map_ptr->nointlkshapechange)
          goto shapechangeerror;
 
       if (res[0].rotation == 0) {
-         if (ss->kind == sdeepbigqtg || ss->kind == s_323)
+         if (ss->kind == sdeepbigqtg)
             fail("Sorry, can't do this.");
 
          if (startingrot == 1) {
@@ -4851,25 +4854,33 @@ void tglmap::do_glorious_triangles(
          if (startingrot == 1)
             fail("Can't do this shape-changer.");
 
-         map_ptr = ptrtable[map_ptr->otherkey];
-
-         result->kind = map_ptr->kind1x3;
-
-         if (map_ptr->randombits & 1) {    // What a crock!
-            copy_rot(result, map_ptr->map241[6], &idle, 0, r);
-            copy_rot(result, map_ptr->map241[7], &idle, 1, r);
-
-            for (i=0; i<3; i++) {
-               copy_person(result, map_ptr->map241[i+3], &res[0], 2-i);
-               copy_rot(result, map_ptr->map241[i], &res[1], 2-i, 022);
-            }
+         if (map_ptr->kind == s_323) {
+            mapnums = map_ptr->map261;
+            result->kind = s2x5;
+            warn(warn__check_2x5);
+            reassemble_triangles(mapnums, 0, 022, 0, res, idle, result);
          }
          else {
-            mapnums = map_ptr->map241;
-            copy_rot(result, mapnums[7], &idle, 0, r);
-            copy_rot(result, mapnums[6], &idle, 1, r);
-            scatter(result, &res[0], mapnums, 2, 0);
-            scatter(result, &res[1], &mapnums[3], 2, 022);
+            map_ptr = ptrtable[map_ptr->otherkey];
+
+            result->kind = map_ptr->kind1x3;
+
+            if (map_ptr->randombits & 1) {    // What a crock!
+               copy_rot(result, map_ptr->map241[6], &idle, 0, r);
+               copy_rot(result, map_ptr->map241[7], &idle, 1, r);
+
+               for (i=0; i<3; i++) {
+                  copy_person(result, map_ptr->map241[i+3], &res[0], 2-i);
+                  copy_rot(result, map_ptr->map241[i], &res[1], 2-i, 022);
+               }
+            }
+            else {
+               mapnums = map_ptr->map241;
+               copy_rot(result, mapnums[7], &idle, 0, r);
+               copy_rot(result, mapnums[6], &idle, 1, r);
+               scatter(result, &res[0], mapnums, 2, 0);
+               scatter(result, &res[1], &mapnums[3], 2, 022);
+            }
          }
       }
    }
@@ -4896,277 +4907,6 @@ void tglmap::do_glorious_triangles(
 }
 
 
-
-
-// This procedure does wave-base, tandem-base, and so-and-so-base.
-static void wv_tand_base_move(
-   setup *s,
-   int indicator,
-   setup *result) THROW_DECL
-{
-   uint32 tbonetest;
-   int t;
-   calldef_schema schema;
-   const tglmap::tglmapkey *map_key_table;
-
-   switch (s->kind) {
-   case s_bone:
-   case s_rigger:
-      if ((indicator & 076) == 20) {
-         if (global_selectmask != (global_livemask & 0x33))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
-
-         if ((indicator & 076) != 6 || (tbonetest & 011) == 011 || !((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      if (s->kind == s_bone) {
-         if (indicator & 0100) fail("Can't do this concept in this setup.");
-         concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6,
-                         0, 0, true, false, ~0U, result);
-         return;
-      }
-      else {
-         // We now know that the desired triangles are the "inside" ones.
-
-         if (indicator & 0100) {
-            tglmap::do_glorious_triangles(s, tglmap::rgtglmap1, indicator, result);
-            reinstate_rotation(s, result);
-            return;
-         }
-         else
-            schema = schema_concentric_6_2;
-      }
-
-      break;
-   case s_bone6:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 033))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[3].id1 | s->people[4].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || !((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      tglmap::do_glorious_triangles(s, tglmap::b6tglmap1, indicator, result);
-      reinstate_rotation(s, result);
-      return;
-   case s_short6:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 055))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[0].id1 | s->people[2].id1 | s->people[3].id1 | s->people[5].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      tglmap::do_glorious_triangles(s, tglmap::s6tglmap1, indicator, result);
-      reinstate_rotation(s, result);
-      return;
-   case s_galaxy:
-      if ((indicator & 076) != 6)   // Only "tandem-base" and "wave-base" are allowed here.
-         goto losing;
-
-      tbonetest = s->people[1].id1 | s->people[3].id1 | s->people[5].id1 | s->people[7].id1;
-
-      if ((tbonetest & 011) == 011)
-         goto losing;
-      else if ((indicator ^ tbonetest) & 1)
-         schema = (indicator & 0100) ? schema_intlk_lateral_6 : schema_lateral_6;
-      else
-         schema = (indicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
-
-      // For galaxies, the schema is now in terms of the absolute orientation.
-      // We know that the original setup rotation was canonicalized.
-      break;
-   case s_hrglass:
-      if ((indicator & 076) != 6)   // Only "tandem-base" and "wave-base" are allowed here.
-         goto losing;
-
-      tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
-
-      if ((tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-         goto losing;
-
-      schema = (indicator & 0100) ? schema_intlk_vertical_6 : schema_vertical_6;
-      break;
-   case s_ntrglcw:
-   case s_nptrglcw:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 0xCC))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[2].id1 | s->people[3].id1 | s->people[6].id1 | s->people[7].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6,
-                      0, 0, true, false, ~0U, result);
-      return;
-   case s_ntrglccw:
-   case s_nptrglccw:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 0x33))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      concentric_move(s, (setup_command *) 0, &s->cmd, schema_concentric_2_6,
-                      0, 0, true, false, ~0U, result);
-      return;
-   case s_nxtrglcw:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 0x66))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[1].id1 | s->people[2].id1 | s->people[5].id1 | s->people[6].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      concentric_move(s, &s->cmd, (setup_command *) 0, schema_concentric_6_2,
-                      0, 0, true, false, ~0U, result);
-      return;
-   case s_nxtrglccw:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 0x33))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[4].id1 | s->people[5].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      concentric_move(s, &s->cmd, (setup_command *) 0, schema_concentric_6_2,
-                      0, 0, true, false, ~0U, result);
-      return;
-   case s_ntrgl6cw:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 066))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[1].id1 | s->people[2].id1 | s->people[4].id1 | s->people[5].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      tglmap::do_glorious_triangles(s, tglmap::t6cwtglmap1, indicator, result);
-      reinstate_rotation(s, result);
-      return;
-   case s_ntrgl6ccw:
-      if (indicator == 20) {
-         if (global_selectmask != (global_livemask & 033))
-            goto losing;
-      }
-      else {
-         tbonetest = s->people[0].id1 | s->people[1].id1 | s->people[3].id1 | s->people[4].id1;
-
-         if ((indicator & ~1) != 6 || (tbonetest & 011) == 011 || ((indicator ^ tbonetest) & 1))
-            goto losing;
-      }
-
-      tglmap::do_glorious_triangles(s, tglmap::t6ccwtglmap1, indicator, result);
-      reinstate_rotation(s, result);
-      return;
-   case s_323:
-      if (indicator != 20)
-         goto losing;
-      if (global_selectmask == (global_livemask & 0x33))
-         tglmap::do_glorious_triangles(s, tglmap::s323map33, indicator, result);
-      else if (global_selectmask == (global_livemask & 0x66))
-         tglmap::do_glorious_triangles(s, tglmap::s323map66, indicator, result);
-      else
-         goto losing;
-
-      reinstate_rotation(s, result);
-      return;
-   case s_c1phan:
-      if ((indicator & 077) == 20) {
-         t = 0;
-         if (global_selectmask == (global_livemask & 0x5A5A))
-            t = 1;
-         else if (global_selectmask != (global_livemask & 0xA5A5))
-            goto losing;
-      }
-      else {
-         t = indicator & 1;
-         if ((global_tbonetest & 010) == 0) t ^= 1;
-         else if ((global_tbonetest & 1) != 0)
-            goto losing;
-      }
-
-      // Now t is 0 to select the triangles whose bases are horizontally
-      // aligned, and 1 for the vertically aligned bases.
-
-      s->rotation += t;   // Just flip the setup around and recanonicalize.
-      canonicalize_rotation(s);
-
-      if ((global_livemask & 0xAAAA) == 0)
-         map_key_table = tglmap::c1tglmap1;
-      else if ((global_livemask & 0x5555) == 0)
-         map_key_table = tglmap::c1tglmap2;
-      else
-         goto losing;
-
-      tglmap::do_glorious_triangles(s, map_key_table, indicator, result);
-      result->rotation -= t;   // Flip the setup back.
-      reinstate_rotation(s, result);
-      return;
-   case sdeepbigqtg:
-      if ((indicator & 077) == 20) {
-         if (global_selectmask != (global_livemask & 0xF0F0))
-            goto losing;
-      }
-      else {
-         if (global_tbonetest & ((indicator & 1) ? 010 : 1))
-            goto losing;
-      }
-
-      if ((global_livemask & 0x3A3A) == 0)
-         map_key_table = tglmap::dbqtglmap1;
-      else if ((global_livemask & 0xC5C5) == 0)
-         map_key_table = tglmap::dbqtglmap2;
-      else
-         goto losing;
-
-      tglmap::do_glorious_triangles(s, map_key_table, indicator, result);
-      reinstate_rotation(s, result);
-      return;
-   default:
-      fail("Can't do this concept in this setup.");
-   }
-
-   concentric_move(s, &s->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
-   return;
-
- losing:
-   fail("Can't find the indicated triangles.");
-}
-
-
 extern void triangle_move(
    setup *ss,
    parse_block *parseptr,
@@ -5188,27 +4928,11 @@ extern void triangle_move(
    Add 100 octal if interlocked triangles.
    Add 200 octal if magic triangles. */
 
-   int indicator_base = indicator & 077;
+   // The indicators above are still in use elsewhere (sdconc.cpp),
+   // but only tall 6 and short 6 are actually used here.
 
-   if (indicator_base >= 2 && indicator_base <= 21 &&
-       ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_INTLK)) {
-      indicator |= 0100;     // Interlocked triangles.
-      ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_INTLK);
-   }
-
-   if (indicator_base >= 4 && indicator_base <= 5 &&
-       ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MAGIC)) {
-      indicator |= 0200;     // Magic triangles.
-      ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_MAGIC);
-   }
-
-   // Now demand that no flags remain.
    if (ss->cmd.cmd_final_flags.test_for_any_herit_or_final_bit())
       fail("Illegal modifier for this concept.");
-
-   if (((indicator & 0100) && calling_level < intlk_triangle_level) ||
-       ((indicator & 0200) && calling_level < magic_triangle_level))
-      warn_about_concept_level();
 
    warning_info saved_warnings = configuration::save_warnings();
 
@@ -5229,163 +4953,11 @@ extern void triangle_move(
       else
          fail("Must have galaxy for this concept.");
 
-      // For galaxies, the schema is now in terms of the absolute orientation.
+      // The schema is now in terms of the absolute orientation.
 
       concentric_move(ss, &ss->cmd, (setup_command *) 0, schema, 0, 0, true, false, ~0U, result);
    }
-   else {
-      // Set this so we can do "peel and trail" without saying "triangle" again.
-      ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_TRIANGLE;
-      const tglmap::tglmapkey *map_key_table = (const tglmap::tglmapkey *) 0;
 
-      if (indicator_base >= 6) {
-         // Indicator = 6 for wave-base, 7 for tandem-base, 20 for <anyone>-base.
-         wv_tand_base_move(ss, indicator, result);
-      }
-      else if (indicator_base >= 4) {
-         // Indicator = 5 for in point, 4 for out point.
-
-         int t = 0;
-
-         if (ss->kind != s_qtag) fail("Must have diamonds.");
-
-         if (indicator_base == 5) {
-            if ((ss->people[0].id1 & d_mask) == d_east) t |= 1;
-            if ((ss->people[4].id1 & d_mask) == d_west) t |= 1;
-            if ((ss->people[1].id1 & d_mask) == d_west) t |= 2;
-            if ((ss->people[5].id1 & d_mask) == d_east) t |= 2;
-         }
-         else {
-            if ((ss->people[0].id1 & d_mask) == d_west) t |= 1;
-            if ((ss->people[4].id1 & d_mask) == d_east) t |= 1;
-            if ((ss->people[1].id1 & d_mask) == d_east) t |= 2;
-            if ((ss->people[5].id1 & d_mask) == d_west) t |= 2;
-         }
-
-         if (t == 1)
-            map_key_table = tglmap::qttglmap1;
-         else if (t == 2)
-            map_key_table = tglmap::qttglmap2;
-         else
-            fail("Can't find designated point.");
-
-         tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
-         reinstate_rotation(ss, result);
-      }
-      else {
-         // Indicator = 2 for inside, 3 for outside.
-
-         if (indicator_base == 2 && ss->kind == sbigdmd) {
-            if (global_livemask == 07474)
-               map_key_table = tglmap::bdtglmap1;
-            else if (global_livemask == 01717)
-               map_key_table = tglmap::bdtglmap2;
-            else
-               fail("Can't find the indicated triangles.");
-
-            tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator == 0102 && ss->kind == s_rigger) {
-            tglmap::do_glorious_triangles(ss, tglmap::rgtglmap1, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator == 0102 && ss->kind == s_ptpd) {
-            tglmap::do_glorious_triangles(ss, tglmap::rgtglmap2, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator == 0102 && ss->kind == s_qtag) {
-            tglmap::do_glorious_triangles(ss, tglmap::rgtglmap3, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator == 0103 && ss->kind == s_rigger) {
-            tglmap::do_glorious_triangles(ss, tglmap::ritglmap1, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator == 0103 && ss->kind == s_ptpd) {
-            tglmap::do_glorious_triangles(ss, tglmap::ritglmap2, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator == 0103 && ss->kind == s_qtag) {
-            tglmap::do_glorious_triangles(ss, tglmap::ritglmap3, indicator, result);
-            reinstate_rotation(ss, result);
-            return;
-         }
-         else if (indicator & 0100)
-            fail("Illegal modifier for this concept.");
-
-         if (indicator_base == 2) {
-            switch (ss->kind) {
-            case s_hrglass:
-               // This is the schema for picking out the triangles in an hourglass.
-               schema = schema_vertical_6;
-               break;
-            case s_rigger:
-            case s_ptpd:
-            case s_nxtrglcw:
-            case s_nxtrglccw:
-               schema = schema_concentric_6_2;
-               break;
-            case sd2x7:
-               if (indicator & 0300) fail("Can't find the indicated triangles.");
-
-               if (global_livemask == 0x3C78U)
-                  map_key_table = tglmap::d7tglmap1;
-               else if (global_livemask == 0x078FU)
-                  map_key_table = tglmap::d7tglmap2;
-               else
-                  fail("Can't find the triangle.");
-               break;
-            case s_qtag:
-               schema = schema_concentric_6_2_tgl;
-               break;
-            case sbigdmd:
-            default:
-               fail("There are no 'inside' triangles.");
-            }
-
-            if (map_key_table) {
-               tglmap::do_glorious_triangles(ss, map_key_table, indicator, result);
-               reinstate_rotation(ss, result);
-               return;
-            }
-
-            concentric_move(ss, &ss->cmd, (setup_command *) 0, schema,
-                            0, 0, true, false, ~0U, result);
-         }
-         else {
-            switch (ss->kind) {
-            case s_ptpd:
-            case s_qtag:
-            case s_spindle:
-            case s_bone:
-            case s_hrglass:
-            case s_dhrglass:
-            case s_ntrglcw:
-            case s_ntrglccw:
-            case s_nptrglcw:
-            case s_nptrglccw:
-               schema = schema_concentric_2_6;
-               break;
-            default:
-               fail("There are no 'outside' triangles.");
-            }
-
-            concentric_move(ss, (setup_command *) 0, &ss->cmd, schema,
-                            0, 0, true, false, ~0U, result);
-         }
-      }
-   }
-
-   // Don't give the "do the call in each 1x3" warning
-   // if it arose during a triangle call.
-   configuration::clear_one_warning(warn__split_to_1x3s);
    configuration::set_multiple_warnings(saved_warnings);
    result->clear_all_overcasts();
 }

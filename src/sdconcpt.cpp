@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2016  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 /* This defines the following functions:
    do_big_concept
@@ -217,7 +217,7 @@ static void do_concept_tandem(
 
    tandem_couples_move(
      ss,
-     (parseptr->concept->arg3 & 0x100) ? parseptr->options.who :
+     (parseptr->concept->arg3 & 0x100) ? parseptr->options.who.who[0] :
      ((parseptr->concept->arg3 & 0x200) ? selector_some : selector_uninitialized),
      (parseptr->concept->arg3 & 0xF0) >> 4, // (fractional) twosome info
      parseptr->options.number_fields,
@@ -577,7 +577,7 @@ static void do_concept_single_diagonal(
 
    selective_move(ss, parseptr, selective_key_disc_dist, 0,
                   parseptr->concept->arg1,
-                  global_livemask & 0x9999, selector_uninitialized, false, result);
+                  global_livemask & 0x9999, null_options.who, false, result);
 }
 
 
@@ -1184,9 +1184,9 @@ static uint32 get_standard_people(setup *ss, selector_kind who,
    tbonetest = 0;
    stdtest = 0;
    uint32 livemask = 0;
-   selector_kind saved_selector = current_options.who;
+   who_list saved_selector = current_options.who;
 
-   current_options.who = who;
+   current_options.who.who[0] = who;
 
    for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
       int p = ss->people[i].id1;
@@ -1365,7 +1365,7 @@ static void do_concept_parallelogram(
       if (standard_concept) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
          uint32 tbonetest;
-         global_livemask = get_standard_people(ss, standard_concept->options.who,
+         global_livemask = get_standard_people(ss, standard_concept->options.who.who[0],
                                                tbonetest, global_tbonetest);
 
          if (!tbonetest) {
@@ -3160,15 +3160,16 @@ static void do_concept_new_stretch(
       parse_block *next_parseptr = process_final_concepts(parseptr->next, false,
                                                           &junk_concepts, true, false);
 
-      if ((next_parseptr->concept->kind == concept_randomtrngl ||
-          next_parseptr->concept->kind == concept_selbasedtrngl) &&
+      if ((next_parseptr->concept->kind == concept_so_and_so_only) &&
+          next_parseptr->options.who.who[0] >= selector_TGL_START &&
+          next_parseptr->options.who.who[0] < selector_SOME_START &&
           !junk_concepts.test_for_any_herit_or_final_bit()) {
          if (tempsetup.kind == s_hrglass) {
             tempsetup.swap_people(3, 7);
          }
          else if (tempsetup.kind == s_ptpd &&
-                  next_parseptr->concept->kind == concept_randomtrngl &&
-                  next_parseptr->concept->arg1 == 2) {
+                  next_parseptr->concept->kind == concept_so_and_so_only &&
+                  next_parseptr->options.who.who[0] == selector_inside_tgl) {
             // We require "inside triangles".
             tempsetup.swap_people(2, 6);
          }
@@ -3753,12 +3754,14 @@ static void do_concept_crazy(
       if ((i ^ reverseness) & 1) {
          // Do it in the center.
          // If this is crazy Z's, CMD_MISC3__IMPOSE_Z_CONCEPT will be on, and the selector will be changed later.
-         selector_kind sel = selector_center4;
+         who_list sel;
+         sel.initialize();
+         sel.who[0] = selector_center4;
 
          if (attr::klimit(tempsetup.kind) < 7) {
             if (tempsetup.cmd.prior_elongation_bits & PRIOR_ELONG_BASE_FOR_TANDEM) {
                warn(warn__crazy_tandem_interaction);
-               sel = selector_center2;
+               sel.who[0] = selector_center2;
             }
             else
                fail("Need an 8-person setup for this.");
@@ -4045,8 +4048,8 @@ void nose_move(
    direction_kind where,
    setup *result) THROW_DECL
 {
-   selector_kind saved_selector = current_options.who;
-   current_options.who = who;
+   who_list saved_selector = current_options.who;
+   current_options.who.who[0] = who;
 
    int n = attr::slimit(ss);
    if (n < 0) fail("Sorry, can't do nose starting in this setup.");
@@ -4129,8 +4132,8 @@ void stable_move(
 
    howfar <<= 1;    // Calibrated in eighths.
 
-   selector_kind saved_selector = current_options.who;
-   current_options.who = who;
+   who_list saved_selector = current_options.who;
+   current_options.who.who[0] = who;
 
    int n = attr::slimit(ss);
    if (n < 0) fail("Sorry, can't do stable starting in this setup.");
@@ -4220,7 +4223,7 @@ static void do_concept_paranoid(
    update_id_bits(result);
    int sizem1 = attr::slimit(result);
 
-   selector_kind saved_selector = current_options.who;
+   who_list saved_selector = current_options.who;
    current_options.who = parseptr->options.who;
 
    for (int i=0; i<=sizem1; i++) {
@@ -4247,7 +4250,7 @@ static void do_concept_nose(
 
    nose_move(ss,
              parseptr->concept->arg1 == 0,
-             parseptr->options.who,
+             parseptr->options.who.who[0],
              parseptr->options.where,
              result);
 }
@@ -4267,7 +4270,7 @@ static void do_concept_stable(
                parseptr->concept->arg2 != 0,
                parseptr->concept->arg1 == 0,
                parseptr->options.number_fields,
-               parseptr->options.who,
+               parseptr->options.who.who[0],
                result);
 }
 
@@ -6041,9 +6044,11 @@ static void do_concept_centers_and_ends(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   selective_move(ss, parseptr, selective_key_plain, 1, 0, 0,
-                  (selector_kind) parseptr->concept->arg1,
-                  parseptr->concept->arg2 != 0, result);
+   who_list sel;
+   sel.initialize();
+   sel.who[0] = (selector_kind) parseptr->concept->arg1;
+
+   selective_move(ss, parseptr, selective_key_plain, 1, 0, 0, sel, parseptr->concept->arg2 != 0, result);
 }
 
 
@@ -6052,9 +6057,11 @@ static void do_concept_centers_or_ends(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   selective_move(ss, parseptr, selective_key_plain, 0, 0, 0,
-                  (selector_kind) parseptr->concept->arg1,
-                  parseptr->concept->arg2 != 0, result);
+   who_list sel;
+   sel.initialize();
+   sel.who[0] = (selector_kind) parseptr->concept->arg1;
+
+   selective_move(ss, parseptr, selective_key_plain, 0, 0, 0, sel, parseptr->concept->arg2 != 0, result);
 }
 
 
@@ -6101,10 +6108,14 @@ static void do_concept_mini_but_o(
 
    if (mask == 0) fail("Can't do this concept in this setup.");
 
+   who_list sel;
+   sel.initialize();
+   sel.who[0] = selector_none;
+
    // Adding 2 to the lookup key makes it check for columns.
    selective_move(ss, parseptr, selective_key_mini_but_o, 0,
                   is_an_o ? LOOKUP_MINI_O+2 : LOOKUP_MINI_B+2,
-                  mask, selector_none, false, result);
+                  mask, sel, false, result);
 
    result->rotation -= rot;   // Flip the setup back.
    return;
@@ -8579,7 +8590,7 @@ static void do_concept_so_and_so_begin(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   selector_kind saved_selector;
+   who_list saved_selector;
    int i;
    setup setup1, setup2;
    setup the_setups[2];
@@ -9101,7 +9112,7 @@ extern bool do_big_concept(
 
       uint32 tbonetest;
       uint32 stdtest;
-      int livemask = get_standard_people(ss, this_concept_parse_block->options.who,
+      int livemask = get_standard_people(ss, this_concept_parse_block->options.who.who[0],
                                          tbonetest, stdtest);
 
       if (!tbonetest) {
@@ -9176,7 +9187,7 @@ extern bool do_big_concept(
       int i;
       uint32 j;
       bool doing_select;
-      selector_kind saved_selector = current_options.who;
+      who_list saved_selector = current_options.who;
 
       if (attr::slimit(ss) < 0) fail("Can't do this concept in this setup.");
 
@@ -9304,8 +9315,6 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_funny
    {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS,
     triangle_move},                                         // concept_randomtrngl
-   {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__PERMIT_MODIFIERS | CONCPROP__USE_SELECTOR,
-    triangle_move},                                         // concept_selbasedtrngl
    {0, 0},                                                  // concept_split
    {CONCPROP__SHOW_SPLIT | CONCPROP__PERMIT_MATRIX | CONCPROP__GET_MASK,
     do_concept_do_each_1x4},                                // concept_each_1x4

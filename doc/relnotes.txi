@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <3 Mar 2017 wba>
+@c Time-stamp: <5 Oct 2017 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.93
-@set title2 Database version = 38.93 format = 341
+@set title1 RELEASE NOTES FOR VERSION 39.01
+@set title2 Database version = 39.01 format = 342
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.01::
 * 38.93::
 * 38.92::
 * 38.91::
@@ -132,7 +133,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.93, Top, (dir)
+@node Intro, 39.01, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -143,11 +144,76 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2017 William B. Ackerman
 @sp 3
 @menu
-* 38.93::               Changes in the current version
+* 39.01::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.93, 38.92, Intro, Top
+@node 39.01, 38.93, Intro, Top
+@unnumberedsec Version 39.01 changes
+
+There has been a major redesign of the way triangle concepts are done
+internally.  This should have essentially no visible effect on program
+behavior.
+
+In the past, things like @strong{in point triangles} were @i{concepts},
+so that @strong{in point triangles circulate} was an application of the
+concept @strong{in point triangles} to the call @strong{circulate}.  Now
+the triangle designators are @i{selectors}, the same as @strong{centers},
+@strong{heads}, or @strong{girls}.  There is a concept
+"@strong{<ANYONE>}", which has a selector fill in for the <ANYONE> and
+has those people do the call.  So, when you type @strong{centers trade}
+you are invoking the concept @strong{<ANYONE>} on the call
+@strong{trade}, with the selector @strong{centers} filled in for the
+<ANYONE>.  Now, when you type @strong{in point triangles circulate}, you
+are effectively doing an @strong{<ANYONE> circulate} with @strong{in
+point triangles} filled in as the selector.
+
+There is also a concept @strong{<ANYONE> (while the others)}
+which takes two calls and has the selected people do the first call while the
+others do the second call.  So you can type
+
+@strong{centers (while the others)}
+
+@strong{trade}
+
+@strong{circulate}
+
+You literally type the @strong{"(while"}; then you can press <enter> and Sd will
+fill in the rest.  The two calls have to be entered on separate lines; concepts that
+take two calls require this.  This will come out as
+
+@strong{CENTERS trade WHILE THE ENDS circulate}.
+
+Sd will fill in the other selector if it can.  Because of this, you can type
+
+@strong{outside triangles (while the others)}
+
+@strong{circulate}
+
+@strong{hinge}
+
+which will come out as
+
+@strong{OUTSIDE TRIANGLES circulate WHILE THE CENTER 2 hinge}
+
+Other changes:
+
+No one can roll after @strong{transfer the column}.
+
+The program can do @strong{any hand remake} in a thar.
+
+Further improvements to @strong{<anyone> trade}.
+
+Improvements to @strong{<anyone> ripple}.
+
+Improvements to @strong{load the boat}.
+
+Improvements to @strong{linear cycle}.
+
+The program can do @strong{sweep 1/8}.
+
+@c ************
+@node 38.93, 38.92, 39.01, Top
 @unnumberedsec Version 38.93 changes
 
 A serious bug was fixed, that could cause the program to crash.
@@ -969,7 +1035,7 @@ of cases in which that won't work.
 @node 38.35, 38.33, 38.36, Top
 @unnumberedsec Version 38.35 changes
 
-The call @strong{kickoff} was brought into compliance with the current Callerlab definition.  The non-desgnees
+The call @strong{kickoff} was brought into compliance with the current Callerlab definition.  The non-designees
 only partner tag if an active person is kicking into their spot.
 
 The @strong{stingy} and @strong{generous} concepts were improved.

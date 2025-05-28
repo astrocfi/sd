@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -33,7 +33,7 @@
 //
 //    ===================================================================
 //
-//    This is for version 38.
+//    This is for version 39.
 
 #include <stdio.h>
 #include <string.h>
@@ -608,7 +608,8 @@ struct assumption_thing {
 
 struct small_setup {
    setup_kind skind;
-   int srotation;
+   uint16 srotation;
+   uint16 seighth_rotation;
 };
 
 
@@ -722,6 +723,26 @@ struct setup {
          uint32 P6, uint32 I6,
          uint32 P7, uint32 I7,
          uint32 little_endian_wheretheygo = 0x76543210);
+
+void turn_into_deadconc()
+   {
+      // Copy stuff down to "inner".
+      inner.skind = kind;
+      inner.srotation = rotation;
+      inner.seighth_rotation = eighth_rotation;
+      kind = s_dead_concentric;
+      rotation = 0;
+      eighth_rotation = 0;
+
+      // And clear "outer".
+      outer.skind = nothing;
+      outer.srotation = 0;
+      outer.seighth_rotation = 0;
+      concsetup_outer_elongation = 0;
+      for (int j=0; j<(MAX_PEOPLE/2); j++) {
+         clear_person(j+(MAX_PEOPLE/2));
+      }
+   }
 };
 
 
@@ -1175,6 +1196,8 @@ class select {
       fx_f2x4lr,
       fx_f2x4rl,
       fx_f4dmdiden,
+      fx_plinepdmd1,
+      fx_plinepdmd2,
       fx_1x5p1d,
       fx_1x5p1e,
       fx_1x5p1f,
@@ -1597,6 +1620,7 @@ enum merge_action {
    merge_c1_phantom,
    merge_c1_phantom_real_couples,
    merge_c1_phantom_real,
+   merge_c1_phantom_from_triangle_call,
    merge_after_dyp,
    merge_without_gaps
 };
@@ -1914,110 +1938,6 @@ enum {
 
 
 
-/* These flags go into the "concept_prop" field of a "concept_table_item".
-
-   CONCPROP__SECOND_CALL means that the concept takes a second call, so a sublist must
-      be created, with a pointer to same just after the concept pointer.
-
-   CONCPROP__USE_SELECTOR means that the concept requires a selector, which must be
-      inserted into the concept list just after the concept pointer.
-
-   CONCPROP__NEEDK_4X4   mean that the concept requires the indicated setup, and, at
-   CONCPROP__NEEDK_2X8   the top level, the existing setup should be expanded as needed.
-      etc....
-
-   CONCPROP__SET_PHANTOMS means that phantoms are in use under this concept, so that,
-      when looking for tandems or couples, we shouldn't be disturbed if we
-      pair someone with a phantom.  It is what makes "split phantom lines tandem"
-      work, so that "split phantom lines phantom tandem" is unnecessary.
-
-   CONCPROP__NO_STEP means that stepping to a wave or rearing back from one is not
-      allowed under this concept.
-
-   CONCPROP__GET_MASK means that tbonetest & livemask need to be computed before executing the concept.
-
-   CONCPROP__STANDARD means that the concept can be "standard".
-
-   CONCPROP__USE_NUMBER         Concept takes one number.
-   CONCPROP__USE_TWO_NUMBERS    Concept takes two numbers.
-   CONCPROP__USE_FOUR_NUMBERS   Etc.
-
-   CONCPROP__SHOW_SPLIT means that the concept prepares the "split_axis" bits properly
-      for transmission back to the client.  Normally this is off, and the split axis bits
-      will be cleared after execution of the concept.
-
-   CONCPROP__NEED_ARG2_MATRIX means that the "arg2" word of the concept_descriptor
-      block contains additional bits of the "CONCPROP__NEEDK_3X8" kind to be sent to
-      "do_matrix_expansion".  This is done so that concepts with different matrix
-      expansion bits can share the same concept type.
-*/
-
-
-
-enum {
-   CONCPROP__SECOND_CALL     = 0x00000001U,
-   CONCPROP__USE_SELECTOR    = 0x00000002U,
-   CONCPROP__SET_PHANTOMS    = 0x00000004U,
-   CONCPROP__NO_STEP         = 0x00000008U,
-
-   // This is a five bit field.  CONCPROP__NEED_LOBIT marks its low bit.
-   // WARNING!!!  The values in this field are encoded into a bit field
-   // for the setup expansion/normalization tables (see the definition
-   // of the macro "NEEDMASK".)  It follows that there can't be more than 32 of them.
-   CONCPROP__NEED_MASK       = 0x000001F0U,
-   CONCPROP__NEED_LOBIT      = 0x00000010U,
-   CONCPROP__NEEDK_4X4       = 0x00000010U,
-   CONCPROP__NEEDK_2X8       = 0x00000020U,
-   CONCPROP__NEEDK_2X6       = 0x00000030U,
-   CONCPROP__NEEDK_4DMD      = 0x00000040U,
-   CONCPROP__NEEDK_BLOB      = 0x00000050U,
-   CONCPROP__NEEDK_4X6       = 0x00000060U,
-   CONCPROP__NEEDK_3X8       = 0x00000070U,
-   CONCPROP__NEEDK_3DMD      = 0x00000080U,
-   CONCPROP__NEEDK_1X10      = 0x00000090U,
-   CONCPROP__NEEDK_1X12      = 0x000000A0U,
-   CONCPROP__NEEDK_3X4       = 0x000000B0U,
-   CONCPROP__NEEDK_1X16      = 0x000000C0U,
-   CONCPROP__NEEDK_QUAD_1X4  = 0x000000D0U,
-   CONCPROP__NEEDK_TWINDMD   = 0x000000E0U,
-   CONCPROP__NEEDK_TWINQTAG  = 0x000000F0U,
-   CONCPROP__NEEDK_CTR_DMD   = 0x00000100U,
-   CONCPROP__NEEDK_END_DMD   = 0x00000110U,
-   CONCPROP__NEEDK_TRIPLE_1X4= 0x00000120U,
-   CONCPROP__NEEDK_CTR_1X4   = 0x00000130U,
-   CONCPROP__NEEDK_END_1X4   = 0x00000140U,
-   CONCPROP__NEEDK_CTR_2X2   = 0x00000150U,
-   CONCPROP__NEEDK_END_2X2   = 0x00000160U,
-   CONCPROP__NEEDK_3X4_D3X4  = 0x00000170U,
-   CONCPROP__NEEDK_3X6       = 0x00000180U,
-   CONCPROP__NEEDK_4D_4PTPD  = 0x00000190U,
-   CONCPROP__NEEDK_4X5       = 0x000001A0U,
-   CONCPROP__NEEDK_2X10      = 0x000001B0U,
-   CONCPROP__NEEDK_2X12      = 0x000001C0U,
-   CONCPROP__NEEDK_DBLX      = 0x000001D0U,
-   CONCPROP__NEEDK_DEEPXWV   = 0x000001E0U,
-   CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0U,
-
-   CONCPROP__NEED_ARG2_MATRIX= 0x00000200U,
-   CONCPROP__USE_DIRECTION   = 0x00000400U,
-   /* spare:                   0x00000800U, */
-   /* spare:                   0x00010000U, */
-   /* spare:                   0x00020000U, */
-   CONCPROP__USES_PARTS      = 0x00040000U,
-   CONCPROP__IS_META         = 0x00080000U,
-   CONCPROP__GET_MASK        = 0x00100000U,
-   CONCPROP__STANDARD        = 0x00200000U,
-   CONCPROP__USE_NUMBER      = 0x00400000U,
-   CONCPROP__USE_TWO_NUMBERS = 0x00800000U,
-   CONCPROP__USE_FOUR_NUMBERS= 0x01000000U,
-   CONCPROP__MATRIX_OBLIVIOUS= 0x02000000U,
-   CONCPROP__PERMIT_MATRIX   = 0x04000000U,
-   CONCPROP__SHOW_SPLIT      = 0x08000000U,
-   CONCPROP__PERMIT_MYSTIC   = 0x10000000U,
-   CONCPROP__PERMIT_REVERSE  = 0x20000000U,
-   CONCPROP__PERMIT_MODIFIERS= 0x40000000U
-};
-
 // Used by distorted_move.
 enum distort_key {
    DISTORTKEY_DIST_CLW,
@@ -2031,6 +1951,10 @@ enum distort_key {
    DISTORTKEY_OFFS_TRIPLECLW,
    DISTORTKEY_OFFS_TRIPLE_BOX
 };
+
+
+extern call_conc_option_state null_options;
+extern who_list centers_thing;
 
 
 // A "configuration" is a state in the evolving sequence.
@@ -2150,13 +2074,6 @@ class configuration {
       { next_config().warnings.clearmultiple(rhs); }
    inline static bool test_multiple_warnings(const warning_info & rhs)
       { return next_config().warnings.testmultiple(rhs); }
-};
-
-
-struct concept_table_item {
-   uint32 concept_prop;      /* Takes bits of the form CONCPROP__??? */
-   // We wish we could put a "throw" clause on this function, but we can't.
-   void (*concept_action)(setup *, parse_block *, setup *);
 };
 
 
@@ -2801,12 +2718,6 @@ extern configuration *clipboard;                                    /* in SDUTIL
 extern int clipboard_size;                                          /* in SDUTIL */
 extern bool retain_after_error;                                     /* in SDUTIL */
 extern SDLIB_API const Cstring concept_key_table[];                 /* in SDUTIL */
-
-extern SDLIB_API const concept_table_item concept_table[];          /* in SDCONCPT */
-extern uint32 global_tbonetest;                                     /* in SDCONCPT */
-extern uint32 global_livemask;                                      /* in SDCONCPT */
-extern uint32 global_selectmask;                                    /* in SDCONCPT */
-extern uint32 global_tboneselect;                                   /* in SDCONCPT */
 
 extern parse_block *last_magic_diamond;                             /* in SDTOP */
 extern warning_info no_search_warnings;                             /* in SDTOP */
@@ -3961,7 +3872,7 @@ extern void selective_move(
                 //  1 - both sets
    uint32 arg2,
    uint32 override_selector,
-   selector_kind selector_to_use,
+   const who_list &selector_to_use,
    bool concentric_rules,
    setup *result) THROW_DECL;
 
@@ -3976,7 +3887,7 @@ extern void inner_selective_move(
    uint32 arg2,
    bool demand_both_setups_live,
    uint32 override_selector,
-   selector_kind selector_to_use,
+   const who_list &selector_to_use,
    uint32 modsa1,
    uint32 modsb1,
    setup *result) THROW_DECL;
