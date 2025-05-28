@@ -1051,6 +1051,9 @@ extern bool do_simple_split(
       }
 
       fail("Can't figure out how to split this call.");
+   case s2x8:
+      mapcode = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+      break;
    case s1x8:
       mapcode = MAPCODE(s1x4,2,MPKIND__SPLIT,0);
       if (split_command == split_command_1x8) recompute_id = false;
@@ -7156,22 +7159,16 @@ static void move_with_real_call(
       // cause splitting to take place.
 
       if (the_schema == schema_split_sequential) {
-         uint32 nxnflags = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_NXNMASK);
-         uint32 mxnflags = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK);
+         uint32 nxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK);
+         uint32 mxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK);
          int limits = attr::slimit(ss);
+         uint32 mask = little_endian_live_mask(ss);
 
-         if (limits == 7) {
-            if (nxnflags != INHERITFLAGNXNK_3X3 &&
-                nxnflags != INHERITFLAGNXNK_4X4 &&
-                !(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
-               if (ss->rotation & 1)
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
-               else
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-            }
-         }
-         else if (limits == 11 &&
-                  (mxnflags == INHERITFLAGMXNK_1X3 || mxnflags == INHERITFLAGMXNK_3X1)) {
+         if ((limits == 7 && nxnflags != INHERITFLAGNXNK_3X3 && nxnflags != INHERITFLAGNXNK_4X4) ||
+             (limits == 11 && (mxnflags == INHERITFLAGMXNK_1X3 ||
+                               mxnflags == INHERITFLAGMXNK_3X1 ||
+                               nxnflags == INHERITFLAGNXNK_3X3)) ||
+             ((limits == 15 && nxnflags == INHERITFLAGNXNK_4X4))) {
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
                if (ss->rotation & 1)
                   ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_VERT;
@@ -7179,40 +7176,30 @@ static void move_with_real_call(
                   ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
             }
          }
-         else if ((limits == 11 && nxnflags == INHERITFLAGNXNK_3X3) ||
-                  (limits == 15 && nxnflags == INHERITFLAGNXNK_4X4) ||
-                  (limits == 5 && nxnflags == INHERITFLAGNXNK_3X3))
-            ;    // No action.
-
-         // This used to just bypass 3.  It now bypasses 1 in order to get
-         // disband to work in a bone6.
-         else if (limits != 3 && limits != 1) {
-
-            // If this is a 3x4 or 4x4 inhabited in boxes,
-            // we allow the splitting into those boxes.
-
-            uint32 mask = little_endian_live_mask(ss);
-
-            if (ss->kind == s3x4) {
-               if (mask == 0xF3C || mask == 0xCF3)
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-               else
-                  fail("Can't split this setup.");
-            }
-            else if (ss->kind == s4x4) {
-               if (mask == 0x4B4B || mask == 0xB4B4)
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-               else
-                  fail("Can't split this setup.");
-            }
-            else if (ss->kind == s2x6) {
-               if (mask == 0xDB6 || mask == 0x6DB)
-                  ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
-               else
-                  fail("Can't split this setup.");
-            }
+         else if (ss->kind == s3x4) {
+            // These setups and populations (clumps in a 3x4 or 4x4, Z's in a 2x6)
+            // don't require and 3x3-like modifiers.
+            if (mask == 0xF3C || mask == 0xCF3)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
             else
+               fail("Can't split this setup.");
+         }
+         else if (ss->kind == s4x4) {
+            if (mask == 0x4B4B || mask == 0xB4B4)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+            else
+               fail("Can't split this setup.");
+         }
+         else if (ss->kind == s2x6) {
+            if (mask == 0xDB6 || mask == 0x6DB)
+               ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT_HORIZ;
+            else
+               fail("Can't split this setup.");
+         }
+         else if ((limits != 5 || nxnflags != INHERITFLAGNXNK_3X3)) {
+            if (limits != 3 && limits != 1 && limits != 7) {
                fail("Need a 4 or 8 person setup for this.");
+            }
          }
       }
 

@@ -1189,6 +1189,8 @@ class select {
       fx_dbt1b,
       fx_dbt2b,
       fx_dbt1d,
+      fx_dbt3t,
+      fx_dbt6t,
       fx_dbt1l,
       fx_1x5p1y,
       fx_1x5p1z,

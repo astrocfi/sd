@@ -992,12 +992,12 @@ static bool inner_search(command_kind goal,
 {
    int i, j;
    uint32 directions, p, q;
-   int CLOCKS_TO_RESOLVE;
+   double CLOCKS_TO_RESOLVE;
 
    if (ui_options.resolve_test_minutes > 0)
-      CLOCKS_TO_RESOLVE = ui_options.resolve_test_minutes * 60 * CLOCKS_PER_SEC;
+      CLOCKS_TO_RESOLVE = (double) ui_options.resolve_test_minutes * 60.0 * ((double) CLOCKS_PER_SEC);
    else
-      CLOCKS_TO_RESOLVE = 5*CLOCKS_PER_SEC;
+      CLOCKS_TO_RESOLVE = 5.0 * ((double) CLOCKS_PER_SEC);
 
    history_insertion_point = huge_history_ptr;
 
@@ -1032,7 +1032,8 @@ static bool inner_search(command_kind goal,
    volatile int little_count = 0;
    volatile int attempt_count = 0;
 
-   int attempt_start_time = clock();
+   int32 air_start_time = clock();
+   double big_resolve_time = 0.0;
    hashed_random_list[0] = 0;
 
    // Mark the parse block allocation, so that we throw away the garbage created by failing attempts.
@@ -1065,27 +1066,58 @@ static bool inner_search(command_kind goal,
       // Check whether we have been trying too long.  If so, give up and report failure.
       // The user can try again by giving the "find another" command.  We use the actual
       // clock for this test, and give up after 5 seconds.  But we only do the test
-      // every 256 tries, so that we won't waste a lot of time in the "clock" library
-      // call.  (We have no idea how long that call takes.)  This also has the nice
-      // property that, when debugging, clock expirations won't interfere until 255
-      // things have been tried.
+      // every 4096 tries.  Part of the reason is so that we won't waste a lot of time
+      // in the "clock" library call.  Another reason is to capture a reasonably
+      // accurate value for the clock() call when this happens.  Measurements show that,
+      // on a 1.6 GHz processor, it does about 40,000 attempts per second, so it will
+      // come up for air about 10 times per second.
+      //
+      // This also has the nice property that, when debugging, clock expirations won't
+      // interfere until 4095 things have been tried.
+      //
+      // But there is a much more serious problem that needs to be addressed.  On
+      // Windows, CLOCKS_PER_SEC is 1000, that is, the clock ticks count milliseconds.
+      // But on Linux, CLOCKS_PER_SEC is 1000000, that is, the clock ticks count
+      // microseconds.  We want to allow really long tests. like 10 hours.  That's 36
+      // billion ticks on Linux.  The returned value of the clock() call is a signed
+      // 32-bit integer--it was clearly not intended to measure intervals this long.
+      //
+      // So we effectively reset the clock manipulation every time we come up for
+      // air--10 times per second.  That's still very accurate on Windows, a resolution
+      // of 1 percent.
 
-      if (!(attempt_count & 255) && ((int) (clock()-attempt_start_time)) > CLOCKS_TO_RESOLVE) {
-         // Too many tries -- too bad.
-         config_history_ptr = huge_history_ptr;
+      if (!(attempt_count & 4095)) {
+         // Come up for air; see how much clock time has elapsed.  It will be about 100
+         // ticks on Windows, and 100,000 ticks on Linux.  Tally that in a
+         // doubleprecision floating variable.  36 billion is trivial for such a thing.
 
-         // We shouldn't have to do the following stuff.  The searcher should be written
-         // such that it doesn't get stuck on a call with any iterator nonzero, because,
-         // if the iterator is ever set to zero, the current call should continue
-         // cycling that iterator until it goes back to zero.  However, if there were
-         // a bug in that code, the consequences would be extremely embarrassing.
-         // The resolver would just be stuck, repeatedly reporting failure until the
-         // entire resolve operation is manually aborted.  To be sure that never happens,
-         // we do this.  This could have the effect of prematurely terminating an
-         // iteration search, but no one will notice.
+         int32 air_time = clock() - air_start_time;
+         air_start_time += air_time; // Reset it for the next time we come up for air.
 
-         reset_internal_iterators();
-         return false;
+         // But what if the system clock wrapped around (overflowed) during this time?
+         // No problem; the signed 32-bit subtract will do the right thing.  That is,
+         // assuming the system clock didn't advance by more than 2 billion during this
+         // time.
+
+         big_resolve_time += (double) air_time;
+
+         if (big_resolve_time > CLOCKS_TO_RESOLVE) {
+            // Too many tries -- too bad.
+            config_history_ptr = huge_history_ptr;
+
+            // We shouldn't have to do the following stuff.  The searcher should be written
+            // such that it doesn't get stuck on a call with any iterator nonzero, because,
+            // if the iterator is ever set to zero, the current call should continue
+            // cycling that iterator until it goes back to zero.  However, if there were
+            // a bug in that code, the consequences would be extremely embarrassing.
+            // The resolver would just be stuck, repeatedly reporting failure until the
+            // entire resolve operation is manually aborted.  To be sure that never happens,
+            // we do this.  This could have the effect of prematurely terminating an
+            // iteration search, but no one will notice.
+
+            reset_internal_iterators();
+            return false;
+         }
       }
 
       // Now clear any concepts if we are not on the first call of the series.

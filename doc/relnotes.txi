@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.83
-@set title2 Database version = 38.83 format = 328
+@set title1 RELEASE NOTES FOR VERSION 38.84
+@set title2 Database version = 38.84 format = 328
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.84::
 * 38.83::
 * 38.82::
 * 38.81::
@@ -122,7 +123,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.83, Top, (dir)
+@node Intro, 38.84, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -133,11 +134,41 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2015 William B. Ackerman
 @sp 3
 @menu
-* 38.83::               Changes in the current version
+* 38.84::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.83, 38.82, Intro, Top
+@node 38.84, 38.83, Intro, Top
+@unnumberedsec Version 38.84 changes
+
+Fixed a number of minor problems, relating to
+
+@strong{3x3 counter rotate},
+@strong{swing and circle},
+@strong{dixie diamond},
+@strong{1/2 U-turn back},
+@strong{Z axle},
+@strong{couple up},
+@strong{tally ho},
+@strong{(scatter) scoot to a wave},
+@strong{hocus pocus} with the outsides going an odd number of quarters,
+@strong{lead beaus} etc.,
+@strong{checkerboard} going into and out of phantom formations,
+very long resolve diagnostics,
+very long inserted comments,
+@strong{left touch 1/4} in offset lines,
+unsymmetrical @strong{near 3} etc.,
+@strong{[those facing pass thru] and circle 1/4},
+@strong{[stretched wave 2/3 recycle] er's coordinate},
+@strong{delight/dilemma},
+@strong{wheel and <anything>}
+
+The call @strong{swing and circle 1/4} has 2 parts.  The first is @strong{swing} in the wave.  The second is @strong{slip} in the wave while the outer 6 do what needs to be done.  For @strong{<anything> and circle 1/4} there are also 2 parts.  The first is @strong{<anything>}.  The second is just the outer 6 do what needs to be done.
+
+The calls @strong{swing and circle N/4} and @strong{<anything> and circle N/4}, for values of @strong{N} greater than 1, have @strong{N} parts, each of which has 2 sub-parts.
+
+@c ************
+@node 38.83, 38.82, 38.84, Top
 @unnumberedsec Version 38.83 changes
 
 Fixed a number of minor problems.

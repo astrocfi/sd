@@ -198,6 +198,17 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       else if (p2 == (ID2_TRAILER|ID2_CENTER)) s = selector_trail_ctrs;
       else break;
       goto eq_return;
+   case selector_lead_beaus:
+   case selector_lead_belles:
+   case selector_trail_beaus:
+   case selector_trail_belles:
+      p2 = pid2 & (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE);
+      if      (p2 == (ID2_LEAD|ID2_BEAU))      s = selector_lead_beaus;
+      else if (p2 == (ID2_LEAD|ID2_BELLE))     s = selector_lead_belles;
+      else if (p2 == (ID2_TRAILER|ID2_BEAU))   s = selector_trail_beaus;
+      else if (p2 == (ID2_TRAILER|ID2_BELLE))  s = selector_trail_belles;
+      else break;
+      goto eq_return;
    case selector_end_boys:
    case selector_end_girls:
    case selector_center_boys:

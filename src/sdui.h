@@ -88,12 +88,12 @@ enum { MAX_RESOLVE_SIZE = 5 };
 // error codes to what this would otherwise be, and to keep GCC's extremely
 // picky warning checking happy, we subtract 80 before letting the system
 // library append an error message to it.
-#define MAX_FILENAME_LENGTH 340
-#define INPUT_TEXTLINE_SIZE 300
+#define MAX_FILENAME_LENGTH 440
+#define INPUT_TEXTLINE_SIZE 400
 // Absolute maximum length we can handle in text operations, including
 // writing to file.  If a call gets more complicated than this, stuff
 // will simply not be written to the file.  Too bad.
-#define MAX_TEXT_LINE_LENGTH 200
+#define MAX_TEXT_LINE_LENGTH 300
 
 // INPUT_TEXTLINE_SIZE must be >= MAX_TEXT_LINE_LENGTH, or calls to copy_to_user_input could fail.
 

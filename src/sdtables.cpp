@@ -194,8 +194,12 @@ selector_item selector_list[] = {
    {"ends",         "end",         "ENDS",         "END",         selector_centers},
    {"leads",        "lead",        "LEADS",        "LEAD",        selector_trailers},
    {"trailers",     "trailer",     "TRAILERS",     "TRAILER",     selector_leads},
+   {"lead beaus",   "lead beau",   "LEAD BEAUS",   "LEAD BEAU",   selector_uninitialized},
+   {"lead belles",  "lead belle",  "LEAD BELLES",  "LEAD BELLE",  selector_uninitialized},
    {"lead ends",    "lead end",    "LEAD ENDS",    "LEAD END",    selector_uninitialized},
    {"lead centers", "lead center", "LEAD CENTERS", "LEAD CENTER", selector_uninitialized},
+   {"trailing beaus","trailing beau","TRAILING BEAUS","TRAILING BEAU",selector_uninitialized},
+   {"trailing belles","trailing belle","TRAILING BELLES","TRAILING BELLE",selector_uninitialized},
    {"trailing ends","trailing end","TRAILING ENDS","TRAILING END",selector_uninitialized},
    {"trailing centers","trailing center","TRAILING CENTERS","TRAILING CENTER",selector_uninitialized},
    {"end boys",     "end boy",     "END BOYS",     "END BOY",     selector_uninitialized},
@@ -5601,6 +5605,19 @@ static const coordrec thing2x8 = {s2x8, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+// Used only by mirror_this.
+static const coordrec thing1p5x8 = {nothing, 3,
+   {-14, -10,  -6,  -2,   2,   6,  10,  14,  14,  10,   6,   2,  -2,  -6, -10, -14},
+   {  3,   3,   3,   3,   3,   3,   3,   3,  -3,  -3,  -3,  -3,  -3,  -3,  -3,  -3}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+       0,  1,  2,  3,  4,  5,  6,  7,
+      15, 14, 13, 12, 11, 10,  9,  8,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thing2x9 = {s2x9, 4,
    { -16, -12, -8,  -4,   0,   4,   8,  12,  16,  16,  12,   8,   4,   0,  -4,  -8, -12, -16},
    {  2,   2,   2,   2,   2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2}, {
@@ -8878,8 +8895,8 @@ const setup_attr setup_attrs[] = {
     {"a  b  c  d@h  g  f  e",
      "ha@@gb@@fc@@ed"}},
    {15,                     // sfudgy2x6l
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thing1p5x8,
+    &thing1p5x8,
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
@@ -8888,8 +8905,8 @@ const setup_attr setup_attrs[] = {
     {"a  b  c  d  e  f  g  h@p  o  n  m  l  k  j  i",
      "pa@@ob@@nc@@md@@le@@kf@@jg@@ih"}},
    {15,                     // sfudgy2x6r
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thing1p5x8,
+    &thing1p5x8,
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
@@ -11052,9 +11069,12 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx_f1x8lodbt4,         fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_dbt2b,  s1x2, sdbltrngl4, 0, 0, 2, {0, 1, 4, 5},
     fx0, fx_f2x4pos02,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-
    {fx_dbt1d,  sdmd, sdbltrngl4, 0, 0, 1, {1, 2, 4, 3},
     fx0, fx0,                   fx_dbt1l, fx0,              fx0, fx0,                   fx0, fx0},
+   {fx_dbt3t, s_trngl, sdbltrngl4, 1, 0, 1, {5, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_dbt6t, s_bone6, sdbltrngl4, 0, 0, 1, {2, 6, 5, 7, 3, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_dbt1l,  s1x4, s1x8,       0, 0, 1, {1, 3, 6, 2},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -11682,7 +11702,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                     sdbltrngl4,   0xCC,   fx_dbt1b,      fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0x33,   fx_dbt2b,      fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0x1E,   fx_dbt1d,      fx0, -1},
-
+   {LOOKUP_NONE,                     sdbltrngl4,   0xE0,   fx_dbt3t,      fx0, -1},
+   {LOOKUP_NONE,                     sdbltrngl4,   0xFC,   fx_dbt6t,      fx0, -1},
    {LOOKUP_NONE,                           s1x6,   0x18,   fx_l2b4,       fx0, -1},
    {LOOKUP_NONE,                           s1x6,   0x03,   fx_l2b5,       fx0, -1},
    {LOOKUP_NONE,                      splinedmd,   0xF0,   fx_5p1x1d,     fx0, -1},

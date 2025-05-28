@@ -2802,8 +2802,9 @@ static bool fix_empty_inners(
    else if (center_arity == 1) {
       // The centers are just gone!
 
-      // First, look for special case of outers are a 4x4 with no one in the center.
-      if (result_outer->kind == s4x4 && (little_endian_live_mask(result_outer) & 0x8888) == 0) {
+      // First, look for special case of outers are a 4x4 or galaxy with no one in the center.
+      if ((result_outer->kind == s4x4 && (little_endian_live_mask(result_outer) & 0x8888) == 0) ||
+          (result_outer->kind == s_galaxy && (little_endian_live_mask(result_outer) & 0xAA) == 0)) {
          *result = *result_outer;
          return true;
       }

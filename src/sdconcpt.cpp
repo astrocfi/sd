@@ -4264,32 +4264,33 @@ static void do_concept_checkerboard(
       veryshort mapl[4];   // Where the others go, checkerboard.
       veryshort mapb[4];   // Where the others go, checkerbox.
       veryshort mapd[4];   // Where the others go, checkerdiamond.
+      veryshort mapr[4];   // Alternate mapl for orientation changer.
    };
 
    static const CKBDtabletype CKBDtable[] = {
       // First 5 must be as shown, because "so-and-so preferred" depends on this.
       {s2x4, 0,              0xCCCC,     0x00AA,      // outfacers are as if in RWV
-       d_north, d_south, 0, {0, 2, 4, 6}, {7, 1, 3, 5}, {1, 3, 5, 7}, {7, 1, 3, 5}},
+       d_north, d_south, 0, {0, 2, 4, 6}, {7, 1, 3, 5}, {1, 3, 5, 7}, {7, 1, 3, 5}, {-1}},
       {s2x4, 0,              0x3333,     0x00AA,      // outfacers are as if in LWV
-       d_north, d_south, 0, {1, 3, 5, 7}, {0, 6, 4, 2}, {0, 2, 4, 6}, {0, 2, 4, 6}},
+       d_north, d_south, 0, {1, 3, 5, 7}, {0, 6, 4, 2}, {0, 2, 4, 6}, {0, 2, 4, 6}, {-1}},
       {s2x4, 0,              0xF0F0,     0x00AA,      // outfacers are as if in R2FL
-       d_north, d_south, 0, {0, 1, 4, 5}, {7, 6, 3, 2}, {2, 3, 6, 7}, {7, 2, 3, 6}},
+       d_north, d_south, 0, {0, 1, 4, 5}, {7, 6, 3, 2}, {2, 3, 6, 7}, {7, 2, 3, 6}, {14, 4, 6, 12}},
       {s2x4, 0,              0x0F0F,     0x00AA,      // outfacers are as if in L2FL
-       d_north, d_south, 0, {2, 3, 6, 7}, {0, 1, 4, 5}, {0, 1, 4, 5}, {0, 1, 4, 5}},
+       d_north, d_south, 0, {2, 3, 6, 7}, {0, 1, 4, 5}, {0, 1, 4, 5}, {0, 1, 4, 5}, {11, 1, 3, 9}},
       {s2x4, 0,              0xC3C3,     0x00AA,      // outfacers are ends
-       d_north, d_south, 0, {0, 3, 4, 7}, {-1, -1, -1, -1}, {1, 2, 5, 6}, {-1, -1, -1, -1}},
+       d_north, d_south, 0, {0, 3, 4, 7}, {-1, -1, -1, -1}, {1, 2, 5, 6}, {-1, -1, -1, -1}, {-1}},
       {s2x4, 0,              0xF00F,     0x00AA,      // unsymmetrical, outfacers on left
-       d_north, d_south, 0, {0, 1, 6, 7}, {-1, -1, -1, -1}, {2, 3, 4, 5}, {-1, -1, -1, -1}},
+       d_north, d_south, 0, {0, 1, 6, 7}, {-1, -1, -1, -1}, {2, 3, 4, 5}, {-1, -1, -1, -1}, {-1}},
       {s2x4, 0,              0x0FF0,     0x00AA,      // unsymmetrical, outfacers on right
-       d_north, d_south, 0, {2, 3, 4, 5}, {-1, -1, -1, -1}, {0, 1, 6, 7}, {-1, -1, -1, -1}},
+       d_north, d_south, 0, {2, 3, 4, 5}, {-1, -1, -1, -1}, {0, 1, 6, 7}, {-1, -1, -1, -1}, {-1}},
       {s_c1phan, 0x33333333, 0xCC00CC00, 0x004488CC,  // C1 phantoms, outfacers N/S
-       d_north, d_south, 033, {0, 2, 8, 10}, {4, 6, 12, 14}, {4, 6, 12, 14}, {4, 6, 12, 14}},
+       d_north, d_south, 033, {0, 2, 8, 10}, {4, 6, 12, 14}, {4, 6, 12, 14}, {4, 6, 12, 14}, {15, 5, 7, 13}},
       {s_c1phan, 0x33333333, 0x00CC00CC, 0x004488CC,  // C1 phantoms, outfacers E/W
-       d_east, d_west, 0, {4, 6, 12, 14}, {0, 2, 8, 10}, {0, 2, 8, 10}, {0, 2, 8, 10}},
+       d_east, d_west, 0, {4, 6, 12, 14}, {0, 2, 8, 10}, {0, 2, 8, 10}, {0, 2, 8, 10}, {11, 1, 3, 9}},
       {s_c1phan, 0xCCCCCCCC, 0x00330033, 0x33001122,  // other C1 phantoms, N/S
-       d_north, d_south, 033, {7, 5, 15, 13}, {1, 3, 9, 11}, {11, 9, 3, 1}, {1, 11, 9, 3}},
+       d_north, d_south, 033, {7, 5, 15, 13}, {1, 3, 9, 11}, {11, 9, 3, 1}, {1, 11, 9, 3}, {2, 8, 10, 0}},
       {s_c1phan, 0xCCCCCCCC, 0x33003300, 0x33001122,  // other C1 phantoms, E/W
-       d_west, d_east, 0, {3, 1, 11, 9}, {13, 15, 5, 7}, {7, 5, 15, 13}, {13, 7, 5, 15}},
+       d_west, d_east, 0, {3, 1, 11, 9}, {13, 15, 5, 7}, {7, 5, 15, 13}, {13, 7, 5, 15}, {14, 4, 6, 12}},
       {nothing}};
 
    int i;
@@ -4525,19 +4526,6 @@ static void do_concept_checkerboard(
    setup res1;
    move(&a1, false, &res1);
 
-   // Look at the rotation coming out of the move.  If the setup is
-   // 1x4, we require it to be even (checkerboard lockit not allowed).
-   // Otherwise, allow any rotation.  But we give a warning for
-   // peculiarly oriented diamonds.
-   if (res1.rotation != 0) {
-      if (res1.kind == s1x4)
-         fail("'Checker' call went to 1x4 setup oriented the wrong way.");
-      if (res1.kind == sdmd)
-         warn(warn_controversial);
-   }
-
-   int rot = ((res1.rotation - CKBDthing->rot) & 3) * 011;
-
    map_ptr =
       (res1.kind == s1x4) ? CKBDthing->mapl :
       (res1.kind == s2x2) ? CKBDthing->mapb :
@@ -4545,14 +4533,47 @@ static void do_concept_checkerboard(
 
    if (!map_ptr) fail("Don't recognize ending setup after 'checker' call.");
 
-   if (*map_ptr < 0) fail("Can't do this.");
-
-   for (i=0; i<4; i++) copy_rot(result, map_ptr[i], &res1, (i-res1.rotation)&3, rot);
-
    result->kind = ss->kind;
    result->rotation = 0;
    result->eighth_rotation = 0;
    result->result_flags = res1.result_flags;
+
+   if (res1.rotation != 0) {
+      // Look at the rotation coming out of the move.  We know res1 is a 1x4 or a
+      // diamond.  If it's a 1x4, we can handle incoming phantom setups--just fill
+      // the result as a phantom setup that happens to be a 2x4, and it will get trimmed
+      // later.  Otherwise, allow any rotation.  But we give a warning for peculiarly
+      // oriented diamonds.
+
+      if (res1.kind == sdmd) {
+         // Effectively do a "slim down" on the diamond and hope that's what the caller wants.
+         warn(warn_controversial);
+      }
+      else if (ss->kind == s_c1phan) {
+         // If incoming setup was a phantom setup, just put people back, using a modified table.
+         // The result will be occupied as a 2x4, and will get reduced to same.
+         map_ptr = CKBDthing->mapr;
+      }
+      else {
+         // Incoming setup was a 2x4; turn it into a c1phan.  The 2x4 result has the
+         // people who traded; move them into their proper place in the c1phan.  The
+         // final result will not be reduced; it will stay as a c1phan.
+         setup temp = *result;
+         temp.kind = s_c1phan;
+         temp.clear_people();
+         scatter(&temp, result, map_c1_phan.map1, 7, 0);
+         *result = temp;
+         map_ptr = CKBDthing->mapr;
+         // Only legal for 2FL cases.
+         if (*map_ptr < 0) fail("'Checker' call went to 1x4 setup oriented the wrong way.");
+      }
+   }
+
+   if (*map_ptr < 0) fail("Can't do this.");
+   int rot = ((res1.rotation - CKBDthing->rot) & 3) * 011;
+
+   for (i=0; i<4; i++) copy_rot(result, map_ptr[i], &res1, (i-res1.rotation) & 3, rot);
+
    reinstate_rotation(ss, result);
    result->clear_all_overcasts();
 }

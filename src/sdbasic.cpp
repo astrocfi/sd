@@ -925,13 +925,15 @@ static const veryshort ftlcwv[12] = {25, 26, 2, 3, 9, 10, 18, 19, 25, 26, 2, 3};
 static const veryshort ftlqtg[12] = {29, 6, 10, 11, 13, 22, 26, 27, 29, 6, 10, 11};
 static const veryshort ftlbigqtg[12] = {28, 7, 10, 11, 12, 23, 26, 27, 28, 7, 10, 11};
 static const veryshort ftlshort6dmd[9] = {4, -1, -1, 1, -1, -1, 4, -1, -1};
-static const veryshort qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+static const veryshort qtlqtg[12] = {1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1, 4};
 static const veryshort qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
 static const veryshort qtlbone2[12] = {0, -1, -1, 1, 4, -1, -1, 5, 0, -1, -1, 1};
 static const veryshort qtlxwv[12] = {0, 1, -1, -1, 4, 5, -1, -1, 0, 1, -1, -1};
 static const veryshort qtl1x8[12] = {-1, -1, 5, 7, -1, -1, 1, 3, -1, -1, 5, 7};
 static const veryshort qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
 static const veryshort qtlgls[12] = {2, 5, 6, 7, 8, 11, 0, 1, 2, 5, 6, 7};
+static const veryshort qtg2x4[12] = {7, 0, -1, -1, 3, 4, -1, -1, 7, 0, -1, -1};
+static const veryshort f2x4qtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
 static const veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
 static const veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
 static const veryshort ft3x4bb[12] = {-1, -1, -1, -1, 8, 9, -1, -1, -1, -1, 2, 3};
@@ -4720,81 +4722,57 @@ static uint32 do_actual_array_call(
             setup_kind other_kind = linedefinition->get_end_setup();
 
             if (inconsistent_rotation) {
-               if (result->kind == s_spindle && other_kind == s_crosswave) {
-                  result->kind = sx4dmd;
-                  tempkind = sx4dmd;
-                  final_translatec = ftcspn;
 
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftlcwv[0];
+               struct arraycallfixer {
+                  setup_kind reskind;
+                  setup_kind otherkind;
+                  setup_kind finalkind;
+                  const veryshort *final_c;
+                  const veryshort *final_l;
+                  bool onlyifequalize;
+               };
+
+               arraycallfixer arraycallfixtable[] = {
+                  {s_spindle, s_crosswave, sx4dmd, ftcspn, ftlcwv, false},
+                  {s_bone, s_qtag, sx4dmdbone, ftcbone, ftlbigqtg, false},
+                  {s_short6, s_2x1dmd, s_short6, identity24, ftlshort6dmd, false},
+                  {s_2x1dmd, s1x6, sx1x6, ftc2x1dmd, ftl2x1dmd, false},
+                  {s2x4, s_qtag, sxequlize, ftequalize, ftlqtg, true}, // Complicated T-boned "transfer and []".
+                  {s2x4, s_qtag, s2x4, identity24, qtg2x4, false},
+                  {s_qtag, s2x4, s_qtag, identity24, f2x4qtg, false},
+                  {nothing},
+               };
+
+               for (arraycallfixer *p = arraycallfixtable ; p->reskind != nothing ; p++) {
+                  if (result->kind == p->reskind && other_kind == p->otherkind &&
+                      (!p->onlyifequalize || (callspec->callflagsf & CFLAG2_EQUALIZE))) {
+                     result->kind = p->finalkind;
+                     tempkind = result->kind;
+                     final_translatec = p->final_c;
+                     final_translatel = p->final_l;
                      rotfudge_line = 3;
-                  }
-                  else {
-                     final_translatel = &ftlcwv[4];
-                     rotfudge_line = 1;
+
+                     if (!(goodies->callarray_flags & CAF__ROT)) {
+                        final_translatel += (attr::klimit(p->reskind) + 1) >> 1;
+                        rotfudge_line += 2;
+                     }
+
+                     goto donewiththis;
                   }
                }
-               else if (result->kind == s2x4 && other_kind == s_hrglass) {
+
+               if (result->kind == s2x4 && other_kind == s_hrglass) {
                   result->rotation = linedefinition->callarray_flags & CAF__ROT;
                   result->kind = s_hrglass;
                   tempkind = s_hrglass;
+                  final_translatec = qtlqtg;
 
                   if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatec = &qtlqtg[4];
                      rotfudge_col = 1;
                   }
                   else {
-                     final_translatec = &qtlqtg[0];
+                     final_translatec += (attr::klimit(s_hrglass) + 1) >> 1;
                      rotfudge_col = 3;
-                  }
-               }
-               else if (result->kind == s2x4 && other_kind == s_qtag) {
-                  // We seem to be doing a complicated T-boned "transfer and []".
-                  // Check whether we have been requested to "equalize",
-                  // in which case we can do glorious things like going into
-                  // a center diamond.
-                  if ((callspec->callflagsf & CFLAG2_EQUALIZE)) {
-                     result->kind = sxequlize;
-                     tempkind = sxequlize;
-                     final_translatec = ftequalize;
-
-                     if (goodies->callarray_flags & CAF__ROT) {
-                        final_translatel = &ftlqtg[0];
-                        rotfudge_line = 3;
-                     }
-                     else {
-                        final_translatel = &ftlqtg[4];
-                        rotfudge_line = 1;
-                     }
-                  }
-                  else {
-                     // In this case, line people are right, column people are wrong.
-                     result->rotation = linedefinition->callarray_flags & CAF__ROT;
-                     result->kind = s_qtag;
-                     tempkind = s_qtag;
-
-                     if (goodies->callarray_flags & CAF__ROT) {
-                        final_translatec = &qtlqtg[4];
-                        rotfudge_col = 1;
-                     }
-                     else {
-                        final_translatec = &qtlqtg[0];
-                        rotfudge_col = 3;
-                     }
-                  }
-               }
-               else if (result->kind == s_bone && other_kind == s_qtag) {
-                  result->kind = sx4dmdbone;
-                  tempkind = sx4dmdbone;
-                  final_translatec = ftcbone;
-
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftlbigqtg[0];
-                     rotfudge_line = 3;
-                  }
-                  else {
-                     final_translatel = &ftlbigqtg[4];
-                     rotfudge_line = 1;
                   }
                }
                else if (result->kind == s_qtag && other_kind == s_bone) {
@@ -4810,34 +4788,6 @@ static uint32 do_actual_array_call(
                   else {
                      final_translatec = &ftlbigqtg[0];
                      rotfudge_line = 2;
-                  }
-               }
-               else if (result->kind == s_short6 && other_kind == s_2x1dmd) {
-                  tempkind = s_short6;
-
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftlshort6dmd[0];
-                     rotfudge_line = 3;
-                  }
-                  else {
-                     final_translatel = &ftlshort6dmd[3];
-                     rotfudge_line = 1;
-                  }
-               }
-               else if (result->kind == s_2x1dmd && other_kind == s1x6) {
-                  // was sx4dmdbone
-                  // Thing to look at is line 4755
-                  result->kind = sx1x6;
-                  tempkind = sx1x6;
-                  final_translatec = ftc2x1dmd;
-
-                  if (goodies->callarray_flags & CAF__ROT) {
-                     final_translatel = &ftl2x1dmd[0];
-                     rotfudge_line = 3;
-                  }
-                  else {
-                     final_translatel = &ftl2x1dmd[3];
-                     rotfudge_line = 1;
                   }
                }
                else
@@ -4946,6 +4896,8 @@ static uint32 do_actual_array_call(
             else
                fail("This call is an inconsistent shape-changer.");
          }
+
+      donewiththis:
 
          halfnumoutl = numoutl >> 1;
          halfnumoutc = numoutc >> 1;
