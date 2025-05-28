@@ -258,7 +258,9 @@ get_call_command(call_list_kind *call_menu)
     if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
         if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
             /* Increment "allowing_modifications" up to a maximum of 2. */
-            if (allowing_modifications != 2) allowing_modifications++;
+            /* Actually, we just set it to 2.  Having two grades of modifiability
+               is very unwieldy. */
+            if (allowing_modifications != 2) allowing_modifications = 2;
             /* This must be called to get the little checkmark in the menus correct */
             update_modification_state(allowing_modifications);
         }

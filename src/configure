@@ -701,18 +701,6 @@ test -n "$x_includes" && test -n "$verbose" && echo "	X11 headers are in $x_incl
 test -n "$x_libraries" && test -n "$verbose" && echo "	X11 libraries are in $x_libraries"
 fi
 
-
-
-
-
-echo " ******* here is the stuff ******* "
-echo " ********************************* "
-echo "  $x_includes"
-echo "  $x_libraries"
-echo " ********************************* "
-
-
-
 if test -n "$x_includes"; then
   X11_FLAGS="-I$x_includes"
 fi

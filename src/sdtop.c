@@ -42,11 +42,11 @@ typedef struct {
    expand_thing *expand_lists;
    } full_expand_thing;
 
-Private expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s_4dmd, 0};
-Private expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s_4dmd, 0};
-Private expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s_3x1dmd, s_3dmd, 0};
-Private expand_thing exp_4x4_4dm_stuff_a = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s_4dmd, 1};
-Private expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s_4dmd, 0};
+Private expand_thing exp_1x8_4dm_stuff   = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
+Private expand_thing exp_qtg_4dm_stuff   = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, nothing, s4dmd, 0};
+Private expand_thing exp_3x1d_3d_stuff   = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
+Private expand_thing exp_4x4_4dm_stuff_a = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
+Private expand_thing exp_4x4_4dm_stuff_b = {{3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 14, 0, 1, 2, 15}, 16, nothing, s4dmd, 0};
 Private expand_thing exp_2x4_2x6_stuff   = {{1, 2, 3, 4, 7, 8, 9, 10}, 8, s2x4, s2x6, 0};
 Private expand_thing exp_qtg_3x4_stuff   = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, nothing, s3x4, 0};
 Private expand_thing exp_2x6_2x8_stuff   = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
@@ -189,7 +189,7 @@ extern void update_id_bits(setup *ss)
    for (i=0; i<MAX_PEOPLE; i++) ss->people[i].id2 &= ~BITS_TO_CLEAR;
 
    switch (ss->kind) {
-      case s_1x2:
+      case s1x2:
          ptr = bit_table_1x2; break;
       case s1x4:
          ptr = bit_table_1x4; break;
@@ -215,7 +215,7 @@ extern void update_id_bits(setup *ss)
          return;
    }
 
-   j = setup_limits[ss->kind];
+   j = setup_attrs[ss->kind].setup_limits;
    for (i=0; i<=j; i++) {
       if (ss->people[i].id1 & BIT_PERSON)
          ss->people[i].id2 |= ptr[i][ss->people[i].id1 & 3];
@@ -236,7 +236,7 @@ Private expand_thing rear_c1c_stuff = {{6, -1, 7, -1, 0, -1, 1, -1, 2, -1, 3, -1
 Private expand_thing rear_c1d_stuff = {{-1, 7, -1, 6, -1, 0, -1, 1, -1, 3, -1, 2, -1, 4, -1, 5}, 16, nothing, s2x4, 1};
 Private expand_thing rear_c1e_stuff = {{3, -1, 1, -1, 7, -1, 5, -1, 11, -1, 9, -1, 15, -1, 13, -1}, 16, nothing, s_c1phan, 0};
 Private expand_thing rear_c1f_stuff = {{-1, 0, -1, 2, -1, 4, -1, 6, -1, 8, -1, 10, -1, 12, -1, 14}, 16, nothing, s_c1phan, 0};
-Private expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s_1x2, 1};
+Private expand_thing rear_miniwave_stuff = {{1, 0}, 2, nothing, s1x2, 1};
 Private expand_thing rear_2x4_stuff = {{6, 7, 1, 0, 2, 3, 5, 4}, 8, nothing, s2x4, 1};
 Private expand_thing rear_col_stuff = {{0, 3, 6, 5, 4, 7, 2, 1}, 8, nothing, s1x8, 0};
 Private expand_thing rear_vrbox_stuff = {{1, 0, 3, 2}, 4, nothing, s1x4, 1};
@@ -270,7 +270,7 @@ Private full_expand_thing rear_sqtag_pair    = {warn__awful_rear_back, 0, &rear_
 Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, nothing, s2x4, 0};
 Private expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
 Private expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
-Private expand_thing step_1x2_stuff = {{0, 1}, 2, nothing, s_1x2, 1};
+Private expand_thing step_1x2_stuff = {{0, 1}, 2, nothing, s1x2, 1};
 Private expand_thing step_2x2v_stuff = {{1, 2, 3, 0}, 4, nothing, s1x4, 0};
 Private expand_thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 Private expand_thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, nothing, s2x4, 1};
@@ -307,13 +307,13 @@ extern void touch_or_rear_back(
    expand_thing *zptr;
    int directions, livemask;
 
-   if (setup_limits[scopy->kind] < 0) return;          /* We don't understand absurd setups. */
+   if (setup_attrs[scopy->kind].setup_limits < 0) return;          /* We don't understand absurd setups. */
 
    directions = 0;
    livemask = 0;
    tptr = 0;
 
-   for (i=0; i<=setup_limits[scopy->kind]; i++) {
+   for (i=0; i<=setup_attrs[scopy->kind].setup_limits; i++) {
       int p = scopy->people[i].id1;
       directions = (directions<<2) | (p&3);
       livemask <<= 2;
@@ -324,7 +324,7 @@ extern void touch_or_rear_back(
       if (scopy->kind == s1x4 && (livemask == 0xFF) && (directions == 0x28)) {
          tptr = &rear_wave_pair;          /* Rear back from a wave to facing couples. */
       }
-      else if (scopy->kind == s_1x2 && (livemask == 0xF) && (directions == 0x2)) {
+      else if (scopy->kind == s1x2 && (livemask == 0xF) && (directions == 0x2)) {
          tptr = &rear_miniwave_pair;      /* Rear back from a miniwave to facing people. */
       }
       else if (scopy->kind == s2x4) {
@@ -446,7 +446,7 @@ extern void touch_or_rear_back(
                tptr = &step_tgl4_pair;
             }
             break;
-         case s_1x2:
+         case s1x2:
             if ((livemask == 0xF) && (directions == 0x7)) {
                tptr = &step_1x2_pair;         /* Check for stepping to a miniwave from people facing. */
             }
@@ -582,7 +582,7 @@ extern void do_matrix_expansion(
          }
       }
       else if (concprops & CONCPROP__NEED_3DMD) {
-         if (ss->kind == s_3x1dmd) {         /* Need to expand to real triple diamonds. */
+         if (ss->kind == s3x1dmd) {         /* Need to expand to real triple diamonds. */
             eptr = &exp_3x1d_3d_stuff; goto expand_me;
          }
       }
@@ -920,6 +920,12 @@ extern void normalize_setup(setup *ss, normalize_action action)
 {
    /* Normalize setup by removing outboard phantoms. */
 
+   if (ss->kind == sfat2x8)
+      ss->kind = s2x8;     /* That's all it takes! */
+
+   if (ss->kind == swide4x4)
+      ss->kind = s4x4;     /* That's all it takes! */
+
    if (ss->kind == s1x16) {         /* This might leave a 1x14, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[8].id1)) {
          compress_setup(&exp_1x14_1x16_stuff, ss);
@@ -951,12 +957,12 @@ extern void normalize_setup(setup *ss, normalize_action action)
    }
    else if (ss->kind == s4x4)
       normalize_4x4(ss);
-   else if (ss->kind == s_3dmd) {
+   else if (ss->kind == s3dmd) {
       if (!(ss->people[0].id1 | ss->people[2].id1 | ss->people[6].id1 | ss->people[8].id1)) {
          compress_setup(&exp_3x1d_3d_stuff, ss);
       }
    }
-   else if (ss->kind == s_4dmd)
+   else if (ss->kind == s4dmd)
       normalize_4dmd(ss);
    else if (ss->kind == s_c1phan)
       normalize_c1_phan(ss);
@@ -1033,7 +1039,7 @@ In any case, let's try it without this.
          if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1)) {
             /* This makes the centers able to do it. */
             if (!(ss->people[2].id1 | ss->people[6].id1)) {
-               ss->kind = s_1x2;
+               ss->kind = s1x2;
                (void) copy_person(ss, 0, ss, 7);
                (void) copy_person(ss, 1, ss, 3);
             }
@@ -1117,6 +1123,8 @@ extern void toplevelmove(void)
 
    starting_setup.cmd.cmd_misc_flags = 0;
    starting_setup.cmd.cmd_frac_flags = 0;
+   starting_setup.cmd.cmd_assume.assumption = cr_none;
+   starting_setup.cmd.cmd_assume.assump_cast = 0;
    starting_setup.cmd.prior_elongation_bits = 0;
    newhist->warnings.bits[0] = 0;
    newhist->warnings.bits[1] = 0;

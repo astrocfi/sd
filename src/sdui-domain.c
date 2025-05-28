@@ -740,7 +740,9 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
          return(ui_command_select);
       case allow_modification_task:
          /* Increment "allowing_modifications" up to a maximum of 2. */
-         if (allowing_modifications != 2) allowing_modifications++;
+         /* Actually, we just set it to 2.  Having two grades of modifiability
+            is very unwieldy. */
+         if (allowing_modifications != 2) allowing_modifications = 2;
          goto check_menu;
       case allow_all_concept_task:
          allowing_all_concepts = !allowing_all_concepts;

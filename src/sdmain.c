@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.73"
+#define VERSION_STRING "30.74"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -587,6 +587,28 @@ extern long_boolean deposit_concept(concept_descriptor *conc, unsigned int numbe
 }
 
 
+
+Private void print_error_person(unsigned int person, long_boolean example)
+{
+   char person_string[3];
+
+   if (person & BIT_ACT_PHAN) {
+      writestuff("phantom");
+   }
+   else if (person & BIT_TANDVIRT) {
+      writestuff("virtual");
+   }
+   else {
+      person_string[0] = ((person >> 7) & 3) + '1';
+      person_string[1] = (person & 0100) ? 'G' : 'B';
+      person_string[2] = '\0';
+      writestuff(person_string);
+      if (example) writestuff(", for example");
+   }
+}
+
+
+
 /* False result means OK.  Otherwise, user clicked on something special,
    such as "abort" or "undo", and the reply tells what it was. */
 
@@ -658,23 +680,11 @@ extern long_boolean query_for_call(void)
                   /* very special message -- no text here, two people collided
                      and they are stored in collision_person1 and collision_person2. */
    
-            char person_string[3];
-   
             writestuff("Some people (");
-            if ((collision_person1 | collision_person2) & BIT_VIRTUAL) {
-               writestuff("virtual) on same spot.");
-            }
-            else {
-               person_string[0] = ((collision_person1 >> 7) & 3) + '1';
-               person_string[1] = (collision_person1 & 0100) ? 'G' : 'B';
-               person_string[2] = '\0';
-               writestuff(person_string);
-               writestuff(" and ");
-               person_string[0] = ((collision_person2 >> 7) & 3) + '1';
-               person_string[1] = (collision_person2 & 0100) ? 'G' : 'B';
-               writestuff(person_string);
-               writestuff(", for example) on same spot.");
-            }
+            print_error_person(collision_person1, FALSE);
+            writestuff(" and ");
+            print_error_person(collision_person2, TRUE);
+            writestuff(") on same spot.");
          }
          else if (error_flag == 4) {
             writestuff(error_message1);
@@ -690,20 +700,10 @@ extern long_boolean query_for_call(void)
          else if (error_flag == 6) {
                   /* very special message -- no text here, someone can't execute the
                      call, and he is stored in collision_person1. */
-
-            char person_string[3];
-   
+  
             writestuff("Some people (");
-            if (collision_person1 & BIT_VIRTUAL) {
-               writestuff("virtual) can't execute their part of this call.");
-            }
-            else {
-               person_string[0] = ((collision_person1 >> 7) & 3) + '1';
-               person_string[1] = (collision_person1 & 0100) ? 'G' : 'B';
-               person_string[2] = '\0';
-               writestuff(person_string);
-               writestuff(", for example) can't execute their part of this call.");
-            }
+            print_error_person(collision_person1, TRUE);
+            writestuff(") can't execute their part of this call.");
          }
          else           /* Must be 5, special signal for aborting out of subcall reader. */
             writestuff("You can't select that here.");
@@ -725,7 +725,13 @@ extern long_boolean query_for_call(void)
             and those concepts on a separate line. */
 
          if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
-            sprintf (indexbuf, "%d: ", history_ptr-whole_sequence_low_lim+2);
+
+
+            if (!diagnostic_mode)    /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
+               sprintf (indexbuf, "%2d: ", history_ptr-whole_sequence_low_lim+2);
+            else
+               sprintf (indexbuf, "%d: ", history_ptr-whole_sequence_low_lim+2);
+
             /* This prints the concepts entered so far, with a "header" consisting of the index number.
                This partial concept tree is incomplete, so write_history_line has to be (and is) very careful. */
             write_history_line(history_ptr+1, indexbuf, FALSE, file_write_no);
@@ -737,7 +743,10 @@ extern long_boolean query_for_call(void)
          }
          else {
             /* No partially entered concepts.  Put the sequence number in front of any "specialprompt". */
-            sprintf (indexbuf, "%d: %s", history_ptr-whole_sequence_low_lim+2, parse_state.specialprompt);
+            if (!diagnostic_mode)    /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
+               sprintf (indexbuf, "%2d: %s", history_ptr-whole_sequence_low_lim+2, parse_state.specialprompt);
+            else
+               sprintf (indexbuf, "%d: %s", history_ptr-whole_sequence_low_lim+2, parse_state.specialprompt);
 
             writestuff(indexbuf);
             newline();
@@ -1179,7 +1188,14 @@ void main(int argc, char *argv[])
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY; for details see the license.");
       newline();
-      writestuff("This is free software, and you are welcome to redistribute it.");
+      writestuff("This is free software, and you are welcome to redistribute it ");
+      writestuff("under certain conditions; for details see the license.");
+      newline();
+      writestuff("You should have received a copy of the GNU General Public License ");
+      writestuff("along with this program, in the file \"COPYING\" or with the manual; if not, write to ");
+      writestuff("the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA ");
+      writestuff("02139, USA.");
+      newline();
       newline();
    }
 

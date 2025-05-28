@@ -3,8 +3,8 @@
 @c See the file INSTALL for how to format and view.
 @setfilename sd_doc.info
 @settitle Sd
-@set sd-version 30.7
-@set Time-stamp: June 13, 1994
+@set sd-version 30.74
+@set Time-stamp: July 16, 1994
 @set full-manual
 @c %**end of header
 @iftex
@@ -90,6 +90,7 @@ This is the summary table of contents:
 * Customization::               Customization with X Resources
 * Versions::                    Version Numbers
 * Installation::                Building and Installing the Program
+* Copying::                     The GNU General Public License
 
 This is the complete table of contents:
 
@@ -171,6 +172,7 @@ Concept Notes
 * Divided::                     Divided
 * Concentric::                  Concentric
 * Two Calls::                   Two Calls in Succession
+* Assume Waves::                Assume Waves
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * Do it Twice::                 Do it Twice
@@ -1476,10 +1478,10 @@ It would be very difficult for a computer program to understand how to
 characterize the calls that are reasonable, and Sd does not attempt
 to do so.
 
-Because of this potential for misuse, Sd does not support such things
-as @samp{like a ...} or @samp{finish like a ...}.  In many cases, you can use
-explicit substitution to get this effect.  For example, by clicking on
-@code{allow modifications} twice, you can enter @code{shazam BUT REPLACE
+Because of this potential for misuse, Sd does not support very many things
+of the form @samp{like a ...} or @samp{finish like a ...}.  In many cases, you
+can use explicit substitution to get this effect.  For example, by clicking on
+@code{allow modifications}, you can enter @code{shazam BUT REPLACE
 arm turn 1/4 WITH [cast off 3/4]} which you can then read as @samp{cast off
 3/4 like a shazam}.  If you wish to enter such a thing, or enter @code{cast off 3/4}
 and @code{U-turn back}, and then edit the transcript file with a text editor,
@@ -1568,6 +1570,7 @@ To permit fractional use of recycle, as with
 * Divided::                     Divided
 * Concentric::                  Concentric
 * Two Calls::                   Two Calls in Succession
+* Assume Waves::                Assume Waves
 * Diamond::                     Diamond
 * Implied Piecewise::           Implied Piecewise
 * Do it Twice::                 Do it Twice
@@ -1658,7 +1661,7 @@ They finish in approximately the places where the ends began.
 If we do it from a 1/4 tag, the centers finish where the ends began.
 @end enumerate
 
-@node Two Calls, Diamond, Concentric, Concept Notes
+@node Two Calls, Assume Waves, Concentric, Concept Notes
 @section Two Calls in Succession
 
 The @code{do two calls in succession} concept allows a pair of calls to
@@ -1669,7 +1672,61 @@ to say the concept when calling is problematical.  Something like @samp{consider
 the following two calls to be one unit, and do a stable swing thru and turn thru}
 might be appropriate.
 
-@node Diamond, Implied Piecewise, Two Calls, Concept Notes
+@node Assume Waves, Diamond, Two Calls, Concept Notes
+@section Assume Waves
+
+There are several concepts that tell the dancers how phantoms are facing.
+They are
+@example
+   @code{assume waves}
+   @code{assume miniwaves}
+   @code{assume two-faced lines}
+   @code{assume one-faced lines}
+   @code{assume inverted lines}
+   @code{assume inverted boxes}
+   @code{assume normal columns}
+   @code{assume magic columns}
+   @code{assume eight chain}
+   @code{assume trade by}
+   @code{assume dpt}
+   @code{assume cdpt}
+   @code{assume facing lines}
+   @code{assume back-to-back lines}
+@end example
+
+When these are used without "active phantoms" (see below), the information
+that they convey tells the dancers how to begin certain calls such as
+@samp{hinge}, @samp{vertical tag}, and @samp{in roll circulate}.
+The information is thrown away after the call begins.  That is, the program
+does not hold the dancers responsible for tracking phantoms through a call.
+It only tells them how to begin.
+
+Use these concepts with care.  Many dancers don't like to be held responsible
+for the facing direction of phantoms.
+
+The concept @code{assume normal casts} may be used in cases in which you
+do not require the dancers to track phantoms through the call, but you
+want to resolve any ambiguity about the @samp{cast off 3/4} operations
+that happen at the end of such calls as @samp{chain reaction} and
+@samp{motivate}.  You might read such an operation as @samp{12 matrix
+motivate, assume the final cast off is normal}.
+
+The concept @code{with active phantoms}, used after one of the "assume"
+concepts, effectively places invisible but otherwise intelligent dancers
+on the phantom spots, with the indicated facing direction.  Those phantoms
+proceed through the entire call, interacting with each other and with the
+live dancers as necessary.  If the call is impossible for the phantoms do,
+or if illegal collisions occur between live dancers and phantoms. an error
+message is printed.  At the end of the call, any live dancers or phantoms
+that come to the same spot may take right hands with each other, if that is
+appropriate for the call.
+
+Use this concept with extreme care, if at all.  It is extremely dangerous
+in terms of what it may require the dancers to do.  Many dancers find it
+difficult enough to do the live people's parts of calls without having to
+do the phantoms' parts also.
+
+@node Diamond, Implied Piecewise, Assume Waves, Concept Notes
 @section Diamond
 
 You should not need to click on @code{diamond} except when you actually
@@ -2145,8 +2202,11 @@ The calls database also has a version.
 If you modify the database, we ask that you
 change the version string at the top of the file.
 
-@node Installation, , Versions, Top
+@node Installation, Copying, Versions, Top
 @include install.txinfo
+
+@node Copying, , Installation, Top
+@include gpl.txinfo
 
 @page
 @contents

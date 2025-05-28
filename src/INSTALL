@@ -207,6 +207,9 @@ readme.txinfo
 install.txinfo
      INSTALL file source
 
+gpl.txinfo
+     GNU General Public License source
+
 sd_doc.PS
      user documentation as PostScript
 

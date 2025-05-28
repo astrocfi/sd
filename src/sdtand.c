@@ -63,16 +63,16 @@ Private tm_thing maps_isearch_twosome[] = {
    {{7, 6, 4, 5},                   {0, 1, 3, 2},                 {0}, {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s2x4},            /* "2x4_4" - see below */
    {{0, 2, 5, 7},                   {1, 3, 4, 6},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0},                   {3, 4, 6, 1},                 {0}, {0},      0,     0xFF,         4, 1,  0,  0, 0,  s2x2,  s2x4},
-   {{3, 2},                         {0, 1},                       {0}, {0},      0,     0000,         2, 0,  0,  0, 0,  s_1x2, s2x2},
-   {{0, 3},                         {1, 2},                       {0}, {0},      0,     0017,         2, 1,  0,  0, 0,  s_1x2, s2x2},
-   {{0, 3},                         {1, 2},                       {0}, {0},    0x5,     0017,         2, 0,  0,  0, 0,  s_1x2, s1x4},
-   {{0},                            {1},                          {0}, {0},    0x1,     0003,         1, 0,  0,  0, 0,  s_1x1, s_1x2},           /* 1x2 */  /* this one is known to be good */
-   {{0},                            {1},                          {0}, {0},      0,     0003,         1, 1,  0,  0, 0,  s_1x1, s_1x2},           /* ????? */
+   {{3, 2},                         {0, 1},                       {0}, {0},      0,     0000,         2, 0,  0,  0, 0,  s1x2,  s2x2},
+   {{0, 3},                         {1, 2},                       {0}, {0},      0,     0017,         2, 1,  0,  0, 0,  s1x2,  s2x2},
+   {{0, 3},                         {1, 2},                       {0}, {0},    0x5,     0017,         2, 0,  0,  0, 0,  s1x2,  s1x4},
+   {{0},                            {1},                          {0}, {0},    0x1,     0003,         1, 0,  0,  0, 0,  s1x1,  s1x2},           /* 1x2 */  /* this one is known to be good */
+   {{0},                            {1},                          {0}, {0},      0,     0003,         1, 1,  0,  0, 0,  s1x1,  s1x2},           /* ????? */
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},   0x55,     0xFF,         4, 0,  0,  0, 0,  s1x4,  s1x8},
-   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,    0xFFF,         6, 0,  0,  0, 0,  s_1x6, s1x12},
+   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,    0xFFF,         6, 0,  0,  0, 0,  s1x6,  s1x12},
    {{0, 2, 6, 4, 9, 11, 15, 13},    {1, 3, 7, 5, 8, 10, 14, 12},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s1x8,  s1x16},
    {{15, 14, 12, 13, 8, 9, 11, 10}, {0, 1, 3, 2, 7, 6, 4, 5},     {0}, {0},      0,     0000,         8, 0,  0,  0, 0,  s1x8,  s2x8},
-   {{11, 10, 9, 6, 7, 8},           {0, 1, 2, 5, 4, 3},           {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s2x6},
+   {{11, 10, 9, 6, 7, 8},           {0, 1, 2, 5, 4, 3},           {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s2x6},
    {{10, 15, 3, 1, 4, 5, 6, 8},     {12, 13, 14, 0, 2, 7, 11, 9}, {0}, {0},      0,     0000,         8, 0,  0,  0, 0,  s2x4,  s4x4},
    {{14, 3, 7, 5, 8, 9, 10, 12},    {0, 1, 2, 4, 6, 11, 15, 13},  {0}, {0},      0,   0xFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x4},
    /* When the map following this one gets fixed and uncommented, this one will have to appear first, of course.  Actually, it's
@@ -82,7 +82,7 @@ Private tm_thing maps_isearch_twosome[] = {
    {{11, 10, 9, 8, 7, 6, 12, 13, 14, 15, 16, 17},
                      {0, 1, 2, 3, 4, 5, 23, 22, 21, 20, 19, 18},  {0}, {0},      0,     0000,        12, 0,  0,  0, 0,  s2x6,  s4x6},
 */
-   {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s_2x3, s3x4},
+   {{2, 5, 7, 9, 10, 0},            {3, 4, 6, 8, 11, 1},          {0}, {0},      0,   0x0FFF,         6, 1,  0,  0, 0,  s2x3,  s3x4},
    {{0, 2, 4, 6, 9, 11, 13, 15},    {1, 3, 5, 7, 8, 10, 12, 14},  {0}, {0}, 0x5555,   0xFFFF,         8, 0,  0,  0, 0,  s2x4,  s2x8},
 
    /* Next one is for centers in tandem in lines, making a virtual bone6. */
@@ -96,17 +96,17 @@ Private tm_thing maps_isearch_twosome[] = {
    {{3, 2, 4, 5, 6, 0},             {1, -1, -1, 7, -1, -1},       {0}, {0},  0x041,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
    {{1, 2, 4, 5, 6, 7},             {-1, -1, 3, -1, -1, 0},       {0}, {0},  0x410,     0000,         6, 1,  0,  0, 0,  s_short6, s_qtag},
    /* Next three are for various people in tandem in columns of 8, making virtual columns of 6. */
-   {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s_2x3, s2x4},
-   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0146,         6, 0,  0,  0, 0,  s_2x3, s2x4},
-   {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s_2x3, s2x4},
+   {{0, 2, 3, 5, 6, 7},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s2x3,  s2x4},
+   {{0, 1, 3, 4, 6, 7},             {-1, 2, -1, -1, 5, -1},       {0}, {0},  0x104,     0146,         6, 0,  0,  0, 0,  s2x3,  s2x4},
+   {{0, 1, 2, 4, 5, 7},             {-1, -1, 3, -1, -1, 6},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s2x3,  s2x4},
    /* Next three are for various people as couples in a C1 phantom or 1/4 tag, making virtual columns of 6. */
-   {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
-   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s_2x3, s_qtag},
-   {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_2x3, s_c1phan},
+   {{3, 7, 5, 9, 15, 13},           {1, -1, -1, 11, -1, -1},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
+   {{1, 3, 4, 5, 6, 0},             {-1, 2, -1, -1, 7, -1},       {0}, {0},      0,     0xCC,         6, 1,  0,  0, 0,  s2x3,  s_qtag},
+   {{0, 2, 6, 8, 10, 12},           {-1, -1, 4, -1, -1, 14},      {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s2x3,  s_c1phan},
    /* Next three are for various people in tandem in a rigger or PTP diamonds, making a virtual line of 6. */
-   {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_rigger},
-   {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_ptpd},
-   {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s_1x6, s_bone},
+   {{6, 7, 5, 2, 3, 4},             {-1, -1, 0, -1, -1, 1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_rigger},
+   {{0, 3, 2, 4, 5, 6},             {-1, 1, -1, -1, 7, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_ptpd},
+   {{5, 6, 7, 4, 2, 3},             {0, -1, -1, 1, -1, -1},       {0}, {0},      0,     0000,         6, 0,  0,  0, 0,  s1x6,  s_bone},
 
    {{0, 3, 5, 6},                   {1, 2, 4, 7},                 {0}, {0},      0,     0377,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
 
@@ -130,32 +130,32 @@ Private tm_thing maps_isearch_twosome[] = {
    /* Next one is for so-and-so in tandem in a short6, making a virtual line of 4. */
    {{1, 0, 4, 5},                   {-1, 2, -1, 3},               {0}, {0},      0,     0055,         4, 1,  0,  0, 0,  s1x4,  s_short6},
    /* Next three are for so-and-so as couples in a line of 8, making a virtual line of 6. */
-   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s_1x6, s1x8},
-   {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       {0}, {0},  0x104,     0252,         6, 0,  0,  0, 0,  s_1x6, s1x8},
-   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s_1x6, s1x8},
+   {{0, 1, 3, 4, 5, 6},             {-1, -1, 2, -1, -1, 7},       {0}, {0},  0x410,     0xCC,         6, 0,  0,  0, 0,  s1x6,  s1x8},
+   {{0, 1, 2, 4, 7, 6},             {-1, 3, -1, -1, 5, -1},       {0}, {0},  0x104,     0252,         6, 0,  0,  0, 0,  s1x6,  s1x8},
+   {{0, 3, 2, 5, 7, 6},             {1, -1, -1, 4, -1, -1},       {0}, {0},  0x041,     0063,         6, 0,  0,  0, 0,  s1x6,  s1x8},
    /* Next two are for so-and-so as couples in a line of 6, making a virtual line of 4. */
-   {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s1x4,  s_1x6},
-   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s1x4,  s_1x6},
+   {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s1x4,  s1x6},
+   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s1x4,  s1x6},
    /* Next 4 are for so-and-so in tandem from a column of 6, making a virtual column of 4.  The first two are the real maps,
       and the other two take care of the reorientation that sometimes happens when coming out of a 2x2. */
-   {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s2x2,  s_2x3},
-   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s2x2,  s_2x3},
-   {{1, 3, 5, 0},                   {2, -1, 4, -1},               {0}, {0},      0,     0066,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
-   {{2, 4, 5, 0},                   {-1, 3, -1, 1},               {0}, {0},      0,     0033,         4, 1,  0,  0, 0,  s2x2,  s_2x3},
-   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,   0x0FFF,         6, 0,  0,  0, 0,  s_2x3, s2x6},
-   {{2, 0},                         {3, 1},                       {0}, {0},    0x4,      0xC,         2, 1,  0,  0, 0,  s_1x2, s_trngl4},
-   {{1, 3},                         {0, 2},                       {0}, {0},    0x1,      0xC,         2, 3,  0,  0, 0,  s_1x2, s_trngl4},
+   {{0, 1, 3, 5},                   {-1, 2, -1, 4},               {0}, {0},   0x44,     0066,         4, 0,  0,  0, 0,  s2x2,  s2x3},
+   {{0, 2, 4, 5},                   {1, -1, 3, -1},               {0}, {0},   0x11,     0033,         4, 0,  0,  0, 0,  s2x2,  s2x3},
+   {{1, 3, 5, 0},                   {2, -1, 4, -1},               {0}, {0},      0,     0066,         4, 1,  0,  0, 0,  s2x2,  s2x3},
+   {{2, 4, 5, 0},                   {-1, 3, -1, 1},               {0}, {0},      0,     0033,         4, 1,  0,  0, 0,  s2x2,  s2x3},
+   {{0, 2, 4, 7, 9, 11},            {1, 3, 5, 6, 8, 10},          {0}, {0},  0x555,   0x0FFF,         6, 0,  0,  0, 0,  s2x3,  s2x6},
+   {{2, 0},                         {3, 1},                       {0}, {0},    0x4,      0xC,         2, 1,  0,  0, 0,  s1x2,  s_trngl4},
+   {{1, 3},                         {0, 2},                       {0}, {0},    0x1,      0xC,         2, 3,  0,  0, 0,  s1x2,  s_trngl4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
 Private tm_thing maps_isearch_threesome[] = {
 
 /*   map1                  map2                  map3                 map4    sidemask outsidemask limit rot            insetup outsetup */
-   {{0, 5},               {1, 4},               {2, 3},                {0},    0x5,      077,         2, 0,  0,  0, 0,  s_1x2, s_1x6},
-   {{0, 5},               {1, 4},               {2, 3},                {0},      0,      077,         2, 1,  0,  0, 0,  s_1x2, s_2x3},
+   {{0, 5},               {1, 4},               {2, 3},                {0},    0x5,      077,         2, 0,  0,  0, 0,  s1x2,  s1x6},
+   {{0, 5},               {1, 4},               {2, 3},                {0},      0,      077,         2, 1,  0,  0, 0,  s1x2,  s2x3},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0},        {4, 7, 10, 1},        {5, 6, 9, 2},          {0},      0,    07777,         4, 1,  0,  0, 0,  s2x2,  s2x6},
-   {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},    0x55,   07777,         4, 0,  0,  0, 0,  s1x4, s1x12},
+   {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},    0x55,   07777,         4, 0,  0,  0, 0,  s1x4,  s1x12},
    {{3, 8, 21, 14, 17, 18, 11, 0},       {4, 7, 22, 13, 16, 19, 10, 1},
                                          {5, 6, 23, 12, 15, 20, 9, 2}, {0},      0,0x0FFFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x6},
    {{9, 8, 6, 7},         {10, 11, 4, 5},       {0, 1, 3, 2},          {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
@@ -164,13 +164,13 @@ Private tm_thing maps_isearch_threesome[] = {
 Private tm_thing maps_isearch_foursome[] = {
 
 /*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
-   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s1x8},
-   {{0, 7},           {1, 6},           {2, 5},           {3, 4},                0,    0x0FF,         2, 1,  0,  0, 0,  s_1x2, s2x4},
+   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s1x2,  s1x8},
+   {{0, 7},           {1, 6},           {2, 5},           {3, 4},                0,    0x0FF,         2, 1,  0,  0, 0,  s1x2,  s2x4},
    {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s2x8},
    {{4, 11, 15, 0},   {5, 10, 14, 1},   {6, 9, 13, 2},    {7, 8, 12, 3},         0,  0x0FFFF,         4, 1,  0,  0, 0,  s2x2,  s2x8},
-   {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4, s1x16},
+   {{0, 4, 11, 15},   {1, 5, 10, 14},   {2, 6, 9, 13},    {3, 7, 8, 12},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4,  s1x16},
    {{17, 16, 15, 12, 13, 14},       {18, 19, 20, 23, 22, 21},
-        {11, 10, 9, 6, 7, 8},               {0, 1, 2, 5, 4, 3},                  0,     0000,         6, 0,  0,  0, 0,  s_1x6, s4x6},
+        {11, 10, 9, 6, 7, 8},               {0, 1, 2, 5, 4, 3},                  0,     0000,         6, 0,  0,  0, 0,  s1x6,  s4x6},
    {{8, 6, 4, 5},     {9, 11, 2, 7},    {10, 15, 1, 3},   {12, 13, 0, 14},       0,     0000,         4, 0,  0,  0, 0,  s1x4,  s4x4},
    {{12, 10, 8, 9},   {13, 15, 6, 11},  {14, 3, 5, 7},    {0, 1, 4, 2},          0,   0xFFFF,         4, 1,  0,  0, 0,  s1x4,  s4x4},
    {{0},                            {0},                          {0}, {0},      0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
@@ -178,8 +178,8 @@ Private tm_thing maps_isearch_foursome[] = {
 Private tm_thing maps_isearch_boxsome[] = {
 
 /*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
-   {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s2x4},
-   {{7, 5},           {0, 2},           {6, 4},           {1, 3},                0,        0,         2, 0,  0,  0, 0,  s_1x2, s2x4},
+   {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s1x2,  s2x4},
+   {{7, 5},           {0, 2},           {6, 4},           {1, 3},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s2x4},
    {{0, 2, 6, 4},     {1, 3, 7, 5},     {15, 13, 9, 11},  {14, 12, 8, 10},    0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4,  s2x8},
    {{15, 13, 9, 11},  {0, 2, 6, 4},     {14, 12, 8, 10},  {1, 3, 7, 5},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s2x8},
    {{12, 14, 7, 9},   {13, 0, 2, 11},   {10, 3, 5, 8},    {15, 1, 4, 6},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s4x4},
@@ -189,9 +189,9 @@ Private tm_thing maps_isearch_boxsome[] = {
 Private tm_thing maps_isearch_dmdsome[] = {
 
 /*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
-   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s_1x2, s_ptpd},
-   {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s_1x2, s_qtag},
-   {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s_4dmd},
+   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s1x2,  s_ptpd},
+   {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
+   {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s4dmd},
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
@@ -250,7 +250,7 @@ Private void initialize_one_table(tm_thing *map_start, int np)
       unsigned int osidemask = 0;
 
       /* All 1's for people in outer setup. */
-      unsigned int alloutmask = (1 << (setup_limits[map_search->outsetup]+1))-1;
+      unsigned int alloutmask = (1 << (setup_attrs[map_search->outsetup].setup_limits+1))-1;
 
       for (i=0, m=1; i<map_search->limit; i++, m<<=2) {
          alloutmask &= ~(1 << map_search->map1[i]);
@@ -281,7 +281,7 @@ Private void initialize_one_table(tm_thing *map_start, int np)
       map_search->outunusedmask = alloutmask;
 
       /* We can't encode the virtual person number in the required 3-bit field if this is > 8. */
-      if (map_search->limit != setup_limits[map_search->insetup]+1) fail("Tandem table initialization failed: limit wrong.");
+      if (map_search->limit != setup_attrs[map_search->insetup].setup_limits+1) fail("Tandem table initialization failed: limit wrong.");
       if (map_search->limit > 8) fail("Tandem table initialization failed: limit too big.");
       if (map_search->outsidemask != osidemask) fail("Tandem table initialization failed: Smask.");
    }
@@ -409,7 +409,7 @@ Private void pack_us(
       lat = (m ^ map_ptr->rot) & 1;
 
       if (sgl & 1) {
-         ptr->id1 = (f.id1 & ~0700) | (i << 6) | BIT_VIRTUAL;
+         ptr->id1 = (f.id1 & ~0700) | (i << 6) | BIT_TANDVIRT;
          ptr->id2 = f.id2;
          b.id1 = 0xFFFFFFFF;
       }
@@ -520,7 +520,7 @@ Private void pack_us(
                   fail("People not facing same way for tandem or as couples.");
             }
 
-            ptr->id1 = (vp1 & ~0700) | (i << 6) | BIT_VIRTUAL;
+            ptr->id1 = (vp1 & ~0700) | (i << 6) | BIT_TANDVIRT;
             ptr->id2 = vp2;
 
             if (twosome >= 2)
@@ -577,7 +577,7 @@ extern void tandem_couples_move(
    tandstuff.single_mask = 0;
    clear_people(result);
 
-   if (setup_limits[ss->kind] < 0) fail("Can't do tandem/couples concept from this position.");
+   if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do tandem/couples concept from this position.");
 
    /* We use the phantom indicator to forbid an already-distorted setup.
       The act of forgiving phantom pairing is based on the setting of the
@@ -595,7 +595,7 @@ extern void tandem_couples_move(
    ewmask = 0;
    allmask = 0;
 
-   for (i=0, jbit=1; i<=setup_limits[ss->kind]; i++, jbit<<=1) {
+   for (i=0, jbit=1; i<=setup_attrs[ss->kind].setup_limits; i++, jbit<<=1) {
       unsigned int p = ss->people[i].id1;
       if (p) {
          allmask |= jbit;
@@ -729,7 +729,7 @@ extern void tandem_couples_move(
                                                     embarrassment at an ATA dance, April 3, 1993. */
    move(&tandstuff.virtual_setup, FALSE, &tandstuff.virtual_result);
 
-   if (setup_limits[tandstuff.virtual_result.kind] < 0)
+   if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");
 
    sglmask = 0;     /* Bits appear here in pairs!  Only low bit of each pair is used. */
@@ -739,7 +739,7 @@ extern void tandem_couples_move(
    /* Compute orbitmask, livemask, and sglmask.
       Since we are synthesizing bit masks, we scan in reverse order to make things easier. */
 
-   for (i=setup_limits[tandstuff.virtual_result.kind]; i>=0; i--) {
+   for (i=setup_attrs[tandstuff.virtual_result.kind].setup_limits; i>=0; i--) {
       int p = tandstuff.virtual_result.people[i].id1;
       sglmask <<= 2;
       livemask <<= 2;

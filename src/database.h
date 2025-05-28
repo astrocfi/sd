@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993, 1994  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 44
+#define DATABASE_FORMAT_VERSION 45
 
 
 
@@ -142,7 +142,6 @@ typedef enum {
    in the call data base. */
 /* BEWARE!!  This list must track the array "estab" in dbcomp.c . */
 /* BEWARE!!  This list must track the array "setup_attrs" in sdtables.c . */
-/* BEWARE!!  This list must track the array "setup_limits" in sdtables.c . */
 /* BEWARE!!  This list must track the array "map_lists" in sdtables.c . */
 /* BEWARE!!  This list must track the array "bigconctab" in sdconc.c . */
 /* BEWARE!!  This list must track the array "printing_tables" in sdutil.c . */
@@ -153,9 +152,9 @@ typedef enum {
 
 typedef enum {
    nothing,
-   s_1x1,
-   s_1x2,
-   s_1x3,
+   s1x1,
+   s1x2,
+   s1x3,
    s2x2,
    sdmd,
    s_star,
@@ -173,13 +172,13 @@ typedef enum {
    s1x4,
    s1x8,
    s2x4,
-   s_2x3,
-   s_1x6,
+   s2x3,
+   s1x6,
    s3x4,
    s2x6,
    s2x8,
    s4x4,
-   s_x1x6,  /* Crossed 1x6's -- internal use only. */
+   sx1x6,  /* Crossed 1x6's -- internal use only. */
    s1x10,
    s1x12,
    s1x14,
@@ -187,17 +186,19 @@ typedef enum {
    s_c1phan,
    s_bigblob,
    s_ptpd,
-   s_3x1dmd,
-   s_3dmd,
-   s_4dmd,
+   s3x1dmd,
+   s3dmd,
+   s4dmd,
    s_wingedstar,
    s_wingedstar12,
    s_wingedstar16,
    s_galaxy,
    s4x6,
    s_thar,
-   s_x4dmd,  /* These are too big to actually represent -- */
-   s_8x8,    /* we don't let them out of their cage. */
+   sx4dmd,   /* These are too big to actually represent -- */
+   s8x8,     /* we don't let them out of their cage. */
+   sfat2x8,  /* Same here.  These are big setups that are the size of 4x8's, */
+   swide4x4, /* but only have 16 people.  The reason is to prevent loss of phantoms. */
    s_normal_concentric
 } setup_kind;
 
@@ -346,13 +347,14 @@ typedef enum {
    cr_4x4couples_only,              /* 1x8 lines - each group of 4 people are facing the same way */
    cr_awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
    cr_nice_diamonds,                /* qtag or ptpd - diamonds have consistent handedness */
-   cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column */
+   cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line */
    cr_peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
    cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */
    cr_not_tboned,                   /* 2x2 - people must not be T-boned */
    cr_opposite_sex,                 /* 2x1 - people must be opposite sexes facing each other */
    cr_quarterbox_or_col,            /* 4x2 - acceptable setup for "triple cross" */
-   cr_quarterbox_or_magic_col       /* 4x2 - acceptable setup for "make magic" */
+   cr_quarterbox_or_magic_col,      /* 4x2 - acceptable setup for "make magic" */
+   cr_li_lo                         /* SPECIAL -- used for "assume" stuff */
 } call_restriction;
 
 /* BEWARE!!  This list must track the array "schematab" in dbcomp.c . */

@@ -33,7 +33,7 @@ extern void canonicalize_rotation(setup *result)
 {
    result->rotation &= 3;
 
-   if (result->kind == s_1x1) {
+   if (result->kind == s1x1) {
       (void) copy_rot(result, 0, result, 0, (result->rotation) * 011);
       result->rotation = 0;
    }
@@ -46,7 +46,7 @@ extern void canonicalize_rotation(setup *result)
       rot = result->rotation;
       if (rot == 0) return;
       rot11 = rot * 011;
-      bigd = setup_limits[result->kind] + 1;
+      bigd = setup_attrs[result->kind].setup_limits + 1;
       delta = bigd >> 2;
 
       i0 = 1;
@@ -84,7 +84,7 @@ extern void canonicalize_rotation(setup *result)
    }
    else if (result->kind == s_trngl4) {
    }
-   else if (result->kind == s_1x3) {
+   else if (result->kind == s1x3) {
       if (result->rotation & 2) {
 
          /* Must turn this setup upside-down. */
@@ -96,7 +96,7 @@ extern void canonicalize_rotation(setup *result)
       }
       result->rotation &= 1;
    }
-   else if (((setup_limits[result->kind] & ~07776) == 1)) {
+   else if (((setup_attrs[result->kind].setup_limits & ~07776) == 1)) {
       /* We have a setup of an even number of people.  We know how to canonicalize
          this.  The resulting rotation should be 0 or 1. */
 
@@ -106,7 +106,7 @@ extern void canonicalize_rotation(setup *result)
    
          int i, offs;
    
-         offs = (setup_limits[result->kind]+1) >> 1;     /* Half the setup size. */
+         offs = (setup_attrs[result->kind].setup_limits+1) >> 1;     /* Half the setup size. */
    
          for (i=0; i<offs; i++) {
             swap_people(result, i, i+offs);
@@ -304,16 +304,16 @@ extern void do_call_in_series(
 
    if (roll_transparent) {
       /* Can only do this if we understand the setups. */
-      if ((setup_limits[tempsetup.kind] >= 0) && (setup_limits[sss->kind] >= 0)) {
+      if ((setup_attrs[tempsetup.kind].setup_limits >= 0) && (setup_attrs[sss->kind].setup_limits >= 0)) {
          int u, v;
 
-         for (u=0; u<=setup_limits[tempsetup.kind]; u++) {
+         for (u=0; u<=setup_attrs[tempsetup.kind].setup_limits; u++) {
             if (tempsetup.people[u].id1 & ROLLBITM) {
                /* This person is roll-neutral.  Reinstate his original roll info, by
                   searching for him in the starting setup. */
                tempsetup.people[u].id1 &= ~ROLL_MASK;
-               for (v=0; v<=setup_limits[sss->kind]; v++) {
-                  if (((tempsetup.people[u].id1 ^ sss->people[v].id1) & 0700) == 0)
+               for (v=0; v<=setup_attrs[sss->kind].setup_limits; v++) {
+                  if (((tempsetup.people[u].id1 ^ sss->people[v].id1) & XPID_MASK) == 0)
                      tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_MASK);
                }
             }
@@ -409,10 +409,10 @@ Private void start_matrix_call(
    thingyptr = setup_attrs[ss->kind].setup_coords;
    if (!thingyptr) fail("Can't do this in this setup.");
    
-   if (setup_limits[ss->kind] < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
+   if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
    
    *nump = 0;
-   for (i=0; i<=setup_limits[ss->kind]; i++) {
+   for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1) {
          if (*nump == 8) fail("?????too many people????");
          (void) copy_person(people, *nump, ss, i);
@@ -555,7 +555,7 @@ Private void finish_matrix_call(
       goto doitrot;
    }
    else if ((ypar == 0x00A60055) && ((signature & (~0x09000480)) == 0)) {
-      checkptr = setup_attrs[s_3x1dmd].setup_coords;
+      checkptr = setup_attrs[s3x1dmd].setup_coords;
       goto doit;
    }
    /* Depending on how the setup is actually occupied, xmax and ymax may vary.
@@ -568,13 +568,13 @@ Private void finish_matrix_call(
    /* If certain far out people are missing, xmax will be different, but we will
        still need to go to a 3dmd. */
    else if (((ypar == 0x00A70055) || (ypar == 0x00770055) || (ypar == 0x00730055)) && ((signature & (~0x29008480)) == 0)) {
-      checkptr = setup_attrs[s_3dmd].setup_coords;
+      checkptr = setup_attrs[s3dmd].setup_coords;
       goto doit;
    }
    /* If certain far out people are missing, xmax will be different, but we will
        still need to go to a 4dmd. */
    else if (((ypar == 0x00E30055) || (ypar == 0x00B30055) || (ypar == 0x00A30055)) && ((signature & (~0x0940A422)) == 0)) {
-      checkptr = setup_attrs[s_4dmd].setup_coords;
+      checkptr = setup_attrs[s4dmd].setup_coords;
       goto doit;
    }
    else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
@@ -626,11 +626,11 @@ Private void finish_matrix_call(
       goto doitrot;
    }
    else if ((ypar == 0x00440022) && ((signature & (~0x04000300)) == 0)) {
-      checkptr = setup_attrs[s_2x3].setup_coords;
+      checkptr = setup_attrs[s2x3].setup_coords;
       goto doit;
    }
    else if ((ypar == 0x00220044) && ((signature & (~0x01000840)) == 0)) {
-      checkptr = setup_attrs[s_2x3].setup_coords;
+      checkptr = setup_attrs[s2x3].setup_coords;
       goto doitrot;
    }
    else if ((ypar == 0x00A20022) && ((signature & (~0x000C8026)) == 0)) {
@@ -676,7 +676,7 @@ Private void finish_matrix_call(
       goto doit;
    }
    else if ((ypar == 0x00220004) && ((signature & (~0x01000000)) == 0)) {
-      checkptr = setup_attrs[s_1x2].setup_coords;
+      checkptr = setup_attrs[s1x2].setup_coords;
       goto doit;
    }
 
@@ -1008,12 +1008,12 @@ Private void rollmove(
    int i;
    unsigned int rot, st;
 
-   if (setup_limits[ss->kind] < 0) fail("Can't roll in this setup.");
+   if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't roll in this setup.");
    
    result->kind = ss->kind;
    result->rotation = ss->rotation;
    
-   for (i=0; i<=setup_limits[ss->kind]; i++) {
+   for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++) {
       if (ss->people[i].id1) {
          rot = 0;
          st = ((unsigned int) stb_z)*DBSTAB_BIT; 
@@ -1061,6 +1061,19 @@ Private unsigned int get_mods_for_subcall(unsigned int new_final_concepts, defmo
    retval &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~this_modh);
    
    return retval;
+}
+
+
+Private void divide_diamonds(setup *ss, setup *result)
+{
+   if (ss->kind == s_qtag) {
+      divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
+   }
+   else if (ss->kind == s_ptpd) {
+      divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
+   }
+   else
+      fail("Must have diamonds for this concept.");
 }
 
 
@@ -1213,34 +1226,21 @@ that probably need to be put in. */
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
 
-      switch (ss->kind) {
-         case sdmd:
-            ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
-            divided_setup_move(ss, (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+      if (ss->kind == sdmd) {
+         ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
+         divided_setup_move(ss, (*map_lists[s1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+         return;
+      }
+      else {
+         /* If in a qtag or point-to-points, perhaps we ought to divide into single diamonds and try again.
+            BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
+            it.  It will come back here after it has done what it needs to. */
+
+         if ((final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
+            /* Divide into diamonds and try again.  Note that we do not clear the concept. */
+            divide_diamonds(ss, result);
             return;
-         case s_qtag:
-            /* If in a qtag, perhaps we ought to divide into single diamonds and try again.
-               BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
-               it.  It will come back here after it has done what it needs to. */
-   
-            if ((final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
-               /* Divide into diamonds and try again.  Note that we do not clear the concept. */
-               divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
-               return;
-            }
-            break;
-         case s_ptpd:
-            /* If in point-to-point diamonds, perhaps we ought to divide into single diamonds and try again.
-               BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
-               it.  It will come back here after it has done what it needs to. */
-   
-            if ((final_concepts & (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) == 0) {
-               /* Divide into diamonds and try again.  Note that we do not clear the concept. */
-               divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
-               return;
-            }
-            break;
-         default: fail("Must have diamonds for this concept.");
+         }
       }
    }
 
@@ -1325,8 +1325,11 @@ that probably need to be put in. */
 
    /* Enforce the restriction that only tagging or scooting calls are allowed in certain contexts. */
 
-   if ((final_concepts & FINAL__MUST_BE_TAG) && (!(callspec->callflags1 & CFLAG1_IS_TAG_CALL)))
-      fail("Only a tagging call is allowed here.");
+   if (final_concepts & FINAL__MUST_BE_TAG) {
+      if (!(callspec->callflags1 & CFLAG1_IS_TAG_CALL) ||
+            ((callspec->callflags1 & CFLAG1_NUMBER_MASK) && current_number_fields != 2))
+         fail("Only a tagging call is allowed here.");
+   }
    else if ((final_concepts & FINAL__MUST_BE_SCOOT) && (!(callspec->callflags1 & CFLAG1_IS_SCOOT_CALL)))
       fail("Only a scoot/tag (chain thru) (and scatter) call is allowed here.");
 
@@ -1355,9 +1358,9 @@ that probably need to be put in. */
       cause splitting to take place. */
 
    if (the_schema == schema_split_sequential) {
-      if (setup_limits[ss->kind] == 7)
+      if (setup_attrs[ss->kind].setup_limits == 7)
          ss->cmd.cmd_misc_flags |= CMD_MISC__MUST_SPLIT;
-      else if (setup_limits[ss->kind] != 3)
+      else if (setup_attrs[ss->kind].setup_limits != 3)
          fail("Need a 4 or 8 person setup for this.");
    }
 
@@ -1412,10 +1415,10 @@ that probably need to be put in. */
       fail("\"Matrix\" concept must be followed by applicable concept.");
 
    tbonetest = 0;
-   if (setup_limits[ss->kind] >= 0) {
+   if (setup_attrs[ss->kind].setup_limits >= 0) {
       int j;
 
-      for (j=0; j<=setup_limits[ss->kind]; j++) tbonetest |= ss->people[j].id1;
+      for (j=0; j<=setup_attrs[ss->kind].setup_limits; j++) tbonetest |= ss->people[j].id1;
       if (!(tbonetest & 011)) {
          if (ss->cmd.cmd_frac_flags)
             fail("Can't fractionalize a call if no one is doing it.");
@@ -1753,7 +1756,10 @@ that probably need to be put in. */
                   for (j = 1; j <= count_to_use; j++) {
                      result->cmd = ss->cmd;
                      result->cmd.cmd_frac_flags = 0;
-                     if (!first_call) result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+                     if (!first_call) {
+                        result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+                        result->cmd.cmd_assume.assumption = cr_none;
+                     }
                      result->cmd.prior_elongation_bits = remember_elongation;
                      result->cmd.parseptr = cp1;
                      result->cmd.callspec = call1;
@@ -1780,7 +1786,10 @@ that probably need to be put in. */
                   for (j = 1; j <= count_to_use; j++) {
                      result->cmd = ss->cmd;
                      result->cmd.cmd_frac_flags = 0;
-                     if (!first_call) result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+                     if (!first_call) {
+                        result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+                        result->cmd.cmd_assume.assumption = cr_none;
+                     }
                      result->cmd.prior_elongation_bits = remember_elongation;
 
                      if (j&1) {
@@ -1813,7 +1822,10 @@ that probably need to be put in. */
                   result->cmd.cmd_frac_flags = 0;
                   /* We don't supply these; they get filled in by the call. */
                   result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
-                  if (!first_call) result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+                  if (!first_call) {
+                     result->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
+                     result->cmd.cmd_assume.assumption = cr_none;
+                  }
                   result->cmd.parseptr = cp1;
                   result->cmd.callspec = call1;
                   result->cmd.cmd_final_flags = conc1;
@@ -2140,23 +2152,15 @@ extern void move(
          }
          else if (check_concepts == INHERITFLAG_DIAMOND) {
             ss->cmd.cmd_final_flags &= ~INHERITFLAG_DIAMOND;
-            if (ss->kind == sdmd) {
-               divided_setup_move(ss, (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
-            }
-            else if (ss->kind == s_qtag) {
+
+            if (ss->kind == sdmd)
+               divided_setup_move(ss, (*map_lists[s1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+            else {
                /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
                ss->cmd.parseptr = parseptr;
                ss->cmd.cmd_final_flags = 0;
-               divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
+               divide_diamonds(ss, result);
             }
-            else if (ss->kind == s_ptpd) {
-               /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
-               ss->cmd.parseptr = parseptr;
-               ss->cmd.cmd_final_flags = 0;
-               divided_setup_move(ss, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
-            }
-            else
-               fail("Must have diamonds for this concept.");
          }
          else
             fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->name);

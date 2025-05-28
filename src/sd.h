@@ -116,9 +116,9 @@ typedef struct {
          40 000 -
          20 000 -
          10 000 -
-          4 000 - 
-          2 000 - virtual person (created by tandem/couples concept, can't print out)
-          1 000 - live person (just so at least one bit is always set)
+          4 000 - live person (just so at least one bit is always set)
+          2 000 - active phantom (see below, under XPID_MASK)
+          1 000 - virtual person (see below, under XPID_MASK)
             700 - these 3 bits identify actual person
              60 - these 2 bits must be clear for rotation
              10 - part of rotation (facing north/south)
@@ -133,17 +133,31 @@ typedef struct {
 #define ROLLBITL    0400000000
 #define ROLLBITM    0200000000
 #define ROLLBITR    0100000000
+
 #define STABLE_MASK  077000000
 #define STABLE_ENAB  040000000
 #define STABLE_VBIT  010000000
 #define STABLE_RBIT  001000000
-#define BIT_VIRTUAL 02000
-#define BIT_PERSON  01000
-#define d_mask  01013
-#define d_north 01010
-#define d_south 01012
-#define d_east  01001
-#define d_west  01003
+#define BIT_PERSON   04000
+#define BIT_ACT_PHAN 02000
+#define BIT_TANDVIRT 01000
+
+/* Person ID.  These bit positions are extremely hard wired into, among other
+   things, the resolver and the printer. */
+#define PID_MASK  0700
+
+/* Extended person ID.  These 5 bits identify who the person is for the purpose
+   of most manipulations.  0 to 7 are normal live people (the ones who squared up).
+   8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
+   active (but nevertheless identifiable) phantoms.  This means that, when
+   BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT. */
+#define XPID_MASK 03700
+
+#define d_mask  04013
+#define d_north 04010
+#define d_south 04012
+#define d_east  04001
+#define d_west  04003
 
 /* Person bits for "id2" field are:
  20 000 000 000 -
@@ -280,8 +294,6 @@ typedef struct {
    CMD_MISC__NO_STEP_TO_WAVE means that we are at a level of recursion that no longer permits us to do the
    implicit step to a wave or rear back from one that some calls permit at the top level.
 
-   CMD_MISC__ASSUME_WAVES means that the "assume waves" concept has been given.
-
    CMD_MISC__EXPLICIT_MIRROR means that the setup has been mirrored by the "mirror"
    concept, separately from anything done by "left" or "reverse".  Such a mirroring
    does NOT cause the "take right hands" stuff to compensate by going to left hands,
@@ -305,7 +317,7 @@ typedef struct {
 /* We are getting dangerously low on bits!!!  In fact, they are all gone!!!! */
 #define CMD_MISC__EXPLICIT_MIRROR    0x00000100
 #define CMD_MISC__MATRIX_CONCEPT     0x00000200
-#define CMD_MISC__ASSUME_WAVES       0x00000400
+/*    available:                     0x00000400 */
 #define CMD_MISC__EXPLICIT_MATRIX    0x00000800
 #define CMD_MISC__NO_EXPAND_MATRIX   0x00001000
 #define CMD_MISC__DISTORTED          0x00002000
@@ -492,10 +504,7 @@ typedef enum {
 } mpkind;
 
 typedef struct {
-   Const veryshort map1[8];
-   Const veryshort map2[8];
-   Const veryshort map3[8];
-   Const veryshort map4[8];
+   Const veryshort maps[32];
    Const mpkind map_kind;
    Const int arity;
    Const setup_kind outer_kind;
@@ -599,6 +608,7 @@ typedef enum {
    concept_old_stretch,
    concept_new_stretch,
    concept_assume_waves,
+   concept_active_phantoms,
    concept_mirror,
    concept_central,
    concept_crazy,
@@ -724,6 +734,15 @@ typedef struct glock {
    in a history array, this stuff is meaningless. */
 
 typedef struct {
+   unsigned int assump_col: 8;       /* Stuff to go with assumption -- col vs. line. */
+   unsigned int assump_both: 4;      /* Stuff to go with assumption -- "handedness" enforcement --
+                                                0/1/2 = either/1st/2nd. */
+   unsigned int assump_cast: 4;      /* Nonzero means there is an "assume normal casts" assumption. */
+   call_restriction assumption: 16;  /* Any "assume waves" type command. */
+} assumption_thing;
+
+
+typedef struct {
    parse_block *parseptr;        /* The full parse tree for the concept(s)/call(s) we are trying to do.
                                     While we traverse the big concepts in this tree, the "callspec" and
                                     "cmd_final_flags" are typically zero.  They only come into use when
@@ -738,6 +757,7 @@ typedef struct {
    unsigned int cmd_misc_flags;  /* Other miscellaneous info controlling the execution of the call,
                                     with names like CMD_MISC__???. */
    unsigned int cmd_frac_flags;  /* Fractionalization info controlling the execution of the call. */
+   assumption_thing cmd_assume;  /* Any "assume waves" type command. */
 /*
    This field tells, for a 2x2 setup prior to having a call executed, how that
    2x2 is elongated (due to these people being the outsides) in the east-west
@@ -1286,7 +1306,6 @@ extern char *getout_strings[];                                      /* in SDTABL
 extern char *filename_strings[];                                    /* in SDTABLES */
 extern char *menu_names[];                                          /* in SDTABLES */
 extern setup_attr setup_attrs[];                                    /* in SDTABLES */
-extern int setup_limits[];                                          /* in SDTABLES */
 extern int begin_sizes[];                                           /* in SDTABLES */
 extern startinfo startinfolist[];                                   /* in SDTABLES */
 extern map_thing map_b6_trngl;                                      /* in SDTABLES */
@@ -1339,15 +1358,28 @@ extern map_thing map_dbloff1;                                       /* in SDTABL
 extern map_thing map_dbloff2;                                       /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
+extern map_thing map_inner_box;                                     /* in SDTABLES */
 extern map_thing map_lh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_lh_s2x3_2;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_3;                                     /* in SDTABLES */
 extern map_thing map_rh_s2x3_2;                                     /* in SDTABLES */
+extern map_thing map_lz12;                                          /* in SDTABLES */
+extern map_thing map_rz12;                                          /* in SDTABLES */
+extern map_thing map_lof12;                                         /* in SDTABLES */
+extern map_thing map_rof12;                                         /* in SDTABLES */
+extern map_thing map_lof16;                                         /* in SDTABLES */
+extern map_thing map_rof16;                                         /* in SDTABLES */
 extern map_thing map_dmd_1x1;                                       /* in SDTABLES */
 extern map_thing map_star_1x1;                                      /* in SDTABLES */
 extern map_thing map_qtag_f0;                                       /* in SDTABLES */
 extern map_thing map_qtag_f1;                                       /* in SDTABLES */
 extern map_thing map_qtag_f2;                                       /* in SDTABLES */
+extern map_thing map_diag2a;                                        /* in SDTABLES */
+extern map_thing map_diag2b;                                        /* in SDTABLES */
+extern map_thing map_f2x8_4x4;                                      /* in SDTABLES */
+extern map_thing map_w4x4_4x4;                                      /* in SDTABLES */
+extern map_thing map_f2x8_2x8;                                      /* in SDTABLES */
+extern map_thing map_w4x4_2x8;                                      /* in SDTABLES */
 extern map_thing *maps_3diag[4];                                    /* in SDTABLES */
 extern map_thing *maps_3diagwk[4];                                  /* in SDTABLES */
 extern map_hunk *map_lists[][4];                                    /* in SDTABLES */
@@ -1541,8 +1573,7 @@ extern void initialize_getout_tables(void);
 
 extern void mirror_this(setup *s);
 extern void do_stability(unsigned int *personp, stability stab, int turning);
-extern void check_line_restriction(setup *ss, call_restriction restr, unsigned int flags);
-extern void check_column_restriction(setup *ss, call_restriction restr, unsigned int flags);
+extern void check_restriction(setup *ss, assumption_thing restr, unsigned int flags);
 extern void basic_move(
    setup *ss,
    int tbonetest,

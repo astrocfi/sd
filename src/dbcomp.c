@@ -351,6 +351,8 @@ char *estab[] = {
    "thar",
    "???",
    "???",
+   "???",
+   "???",
    "normal_concentric",
    ""};
 
@@ -431,6 +433,8 @@ char *crtab[] = {
    "opposite_sex",
    "quarterbox_or_col",
    "quarterbox_or_magic_col",
+   "???",
+   "???",
    ""};
 
 /* This table is keyed to the constants "DFM1_***".  These are the general
@@ -603,6 +607,8 @@ char *predtab[] = {
    "x14_once_rem_couple",
    "lines_miniwave",
    "lines_couple",
+   "cast_normal",
+   "cast_pushy",
    "lines_magic_miniwave",
    "lines_magic_couple",
    "lines_once_rem_miniwave",
@@ -1313,6 +1319,8 @@ def2:
    /* If see something other than "setup", it's either an alternate definition
       to start another group of arrays, or it's the end of the whole call. */
 
+   callarray_flags1 = 0;
+
    if (strcmp(tok_str, "setup") != 0) {
       int alt_level;
       unsigned int rrr = 0;
@@ -1351,7 +1359,6 @@ def2:
       get_tok();
       if (tok_kind != tok_symbol) errexit("Missing indicator");
    
-      callarray_flags1 = 0;
       if (!strcmp(tok_str, "simple_funny")) {
          callarray_flags1 = CAF__FACING_FUNNY;
          get_tok();
@@ -1364,7 +1371,6 @@ def2:
 
    /* Must have seen "setup" -- do another basic array. */
 
-   callarray_flags1 = 0;
    goto def2;
 }
 

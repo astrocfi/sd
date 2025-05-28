@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "30.73"
+version "30.74"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve is_tag_call
@@ -1118,17 +1118,17 @@ call "cast off 3/4" dontshow tag cast_off_34
             dont_use_in_resolve parallel_conc_end
    setup 1x2 1x2 rotate
       preds "Need to be in miniwave or line of 4."
-         if lines_miniwave [CR1S AL1N]
+         if cast_normal  [CR1S AL1N]
    setup 1x4 2x2
       preds "?"
-         if lines_miniwave [CR3W AL3E AL2E CR2W]
-         if lines_couple   [AL0E AL3E CR1W CR2W]
-         if always         [0    AL3E 0    CR2W]
+         if cast_normal  [CR3W AL3E AL2E CR2W]
+         if cast_pushy   [AL0E AL3E CR1W CR2W]
+         if always       [0    AL3E 0    CR2W]
    setup 1x6 2x3
       preds "?"
-         if lines_miniwave [CR5W AL5E CR4W AL3E CR3W AL4E]
-         if lines_couple   [AL0E AL5E 0    CR2W CR3W 0]
-         if always         [0    AL5E 0    0    CR3W 0]
+         if cast_normal  [CR5W AL5E CR4W AL3E CR3W AL4E]
+         if cast_pushy   [AL0E AL5E 0    CR2W CR3W 0]
+         if always       [0    AL5E 0    0    CR3W 0]
                alternate_definition [single] c4       /* For divide the ocean */
    setup 1x2 1x2
       array [AL0E CR1W]
@@ -1256,6 +1256,16 @@ call "U-turn back" mainstream tag uturnback
       array [CR0S AL1S]
    setup 1x1 1x1
       array [0S]
+   setup star star
+      array [CR0S 1S AL2S 3S]
+
+call "U-turn away" dontshow tag uturnaway
+   setup 1x2 1x2
+      array [AL0S CR1S]
+   setup 1x1 1x1
+      array [0S]
+   setup star star
+      array [AL0S 1S CR2S 3S]
 
 call "@gquarter @eright@f" dontshow tag quarter_right
             left_means_mirror
@@ -1747,24 +1757,15 @@ call "tag the line" mainstream tag tagtheline
    setup 1x4 1x4 restriction awkward_centers
       array [C3E C2E A1W A0W]
 
-call "snap the 1/4 tag" c4
-            left_means_mirror
-   setup 1x4 dmd
+call "snap the@c @a@d tag" c4
+            left_means_mirror is_tag_call neednumber
+   setup 1x4 dmd qualifier n_is_1
       array [1E 0E 3W 2W]
-
-call "snap the @c1/2 @dtag" c4
-            left_means_mirror is_tag_call
-   setup 1x4 2x2
+   setup 1x4 2x2 qualifier n_is_2
       array [1E 0E 3W 2W]
-
-call "snap the 3/4 tag" c4
-            left_means_mirror
-   setup 1x4 dmd
+   setup 1x4 dmd qualifier n_is_3
       array [2E 1E 0W 3W]
-
-call "snap the tag" c4
-            left_means_mirror
-   setup 1x4 1x4
+   setup 1x4 1x4 qualifier n_is_4
       array [2E 3E 0W 1W]
 
 call "@i1/4 @j cross @lflip" c1
@@ -1825,6 +1826,23 @@ call "vertical @c1/2 @dtag" c1 tag verticalhalftag
    setup 2x1 1x2 rotate
       array [ZM0W 1E]
 
+call "vertical 3/4 tag" c1
+            left_means_mirror
+   setup 2x2 dmd rotate restriction not_tboned
+      preds "Can't do this with phantoms or T-boned people."
+         if vert1 [C1E A2E Z0W Z3W]
+         if vert2 [0 A1E 0 Z0W]
+
+call "vertical tag" c1 tag verticaltag
+            left_means_mirror
+   setup 2x2 1x4 rotate restriction not_tboned
+      preds "Can't do this with phantoms or T-boned people."
+         if vert1 [C3E A2E Z0W Z1W]
+         if vert2 [0 A3E 0 Z0W]
+            alternate_definition [single] c4
+   setup 2x1 1x2
+      array [ZM1N 0S]
+
 /* This call does the "vertical" the normal way, and only
    does the half-tag part passing left shoulders.  It is
    not the same as "left vertical half tag", which is a complete
@@ -1853,109 +1871,64 @@ call "vertical turn and deal" c3x
          if vert1 [CR1W AL2E ZM0N ZM3N]
          if vert2 [0 AL1E 0 ZM0N]
 
-call "vertical 3/4 tag" c1
-            left_means_mirror
-   setup 2x2 dmd rotate restriction not_tboned
-      preds "Can't do this with phantoms or T-boned people."
-         if vert1 [C1E A2E Z0W Z3W]
-         if vert2 [0 A1E 0 Z0W]
-
-call "vertical tag" c1 tag verticaltag
-            left_means_mirror
-   setup 2x2 1x4 rotate restriction not_tboned
-      preds "Can't do this with phantoms or T-boned people."
-         if vert1 [C3E A2E Z0W Z1W]
-         if vert2 [0 A3E 0 Z0W]
-            alternate_definition [single] c4
-   setup 2x1 1x2
-      array [ZM1N 0S]
-
-call "tag the star 1/4" c4a
-            left_means_mirror
-   setup 2x2 dmd rotate restriction forbidden not_tboned
+call "tag the star@c @a@d" c4a
+            left_means_mirror is_tag_call neednumber
+   setup 2x2 dmd rotate restriction forbidden not_tboned qualifier n_is_1
       array [0 0 ACR0E CR1E]
-            alternate_definition [singlefile] c4
-   setup 4x1 dmd
-      array [ACR2S CR3S 0 0]
-
-call "tag the star@c 1/2@d" c4a
-            left_means_mirror is_tag_call
-   setup 2x2 2x2 restriction forbidden not_tboned
+   setup 2x2 2x2        restriction forbidden not_tboned qualifier n_is_2
       array [0 0 ACR1S CR2S]
-            alternate_definition [singlefile] c4
-   setup 4x1 2x2
-      array [ACR2S CR3S 0 0]
-
-call "tag the star 3/4" c4a
-            left_means_mirror
-   setup 2x2 dmd rotate restriction forbidden not_tboned
+   setup 2x2 dmd rotate restriction forbidden not_tboned qualifier n_is_3
       array [0 0 ACR1E CR2E]
-            alternate_definition [singlefile] c4
-   setup 4x1 dmd
-      array [ACR3S CR0S 0 0]
-
-call "tag the star" c4a
-            left_means_mirror
-   setup 2x2 1x4 rotate restriction forbidden not_tboned
+   setup 2x2 1x4 rotate restriction forbidden not_tboned qualifier n_is_4
       array [0 0 ACR3E CR2E]
             alternate_definition [singlefile] c4
-   setup 4x1 1x4
+   setup 4x1 dmd qualifier n_is_1
+      array [ACR2S CR3S 0 0]
+   setup 4x1 2x2 qualifier n_is_2
+      array [ACR2S CR3S 0 0]
+   setup 4x1 dmd qualifier n_is_3
+      array [ACR3S CR0S 0 0]
+   setup 4x1 1x4 qualifier n_is_4
       array [ACR1S CR0S 0 0]
 
-call "loop and 1/4 tag" c3
-            left_means_mirror
-   setup 2x2 dmd restriction peelable_box
+call "loop and@c @a@d tag" c3
+            left_means_mirror is_tag_call neednumber
+   setup 2x2 dmd        restriction peelable_box qualifier n_is_1
       array [1E 3W 2W 0E]
-            alternate_definition [cross] c4a
-   setup 2x2 dmd restriction peelable_box
-      array [3W 1E 0E 2W]
-
-call "loop and @c1/2 @dtag" c3
-            left_means_mirror is_tag_call
-   setup 2x2 2x2 restriction peelable_box
+   setup 2x2 2x2        restriction peelable_box qualifier n_is_2
       array [1E 3W 2W 0E]
-            alternate_definition [cross] c4a
-   setup 2x2 2x2 restriction peelable_box
-      array [3W 1E 0E 2W]
-            alternate_definition [3x3] c4
-   setup 3x2 2x3 rotate restriction peelable_box
-      array [0N 1N 2N 5S 4S 3S]
-            alternate_definition [cross 3x3] c4
-   setup 3x2 2x3 rotate restriction peelable_box
-      array [3S 4S 5S 2N 1N 0N]
-            alternate_definition [4x4] c4
-   setup 4x2 2x4 rotate restriction peelable_box
-      array [0N 1N 2N 3N 7S 6S 5S 4S]
-            alternate_definition [cross 4x4] c4
-   setup 4x2 2x4 rotate restriction peelable_box
-      array [4S 5S 6S 7S 3N 2N 1N 0N]
-
-call "loop and 3/4 tag" c3
-            left_means_mirror
-   setup 2x2 dmd restriction peelable_box
+   setup 2x2 dmd        restriction peelable_box qualifier n_is_3
       array [2E 0W 3W 1E]
-            alternate_definition [cross] c4a
-   setup 2x2 dmd restriction peelable_box
-      array [0W 2E 1E 3W]
-
-call "loop and tag" c3
-            left_means_mirror
-   setup 2x2 1x4 restriction peelable_box
+   setup 2x2 1x4        restriction peelable_box qualifier n_is_4
       array [2E 0W 1W 3E]
             alternate_definition [cross] c4a
-   setup 2x2 1x4 restriction peelable_box
+   setup 2x2 dmd        restriction peelable_box qualifier n_is_1
+      array [3W 1E 0E 2W]
+   setup 2x2 2x2        restriction peelable_box qualifier n_is_2
+      array [3W 1E 0E 2W]
+   setup 2x2 dmd        restriction peelable_box qualifier n_is_3
+      array [0W 2E 1E 3W]
+   setup 2x2 1x4        restriction peelable_box qualifier n_is_4
       array [0W 2E 3E 1W]
             alternate_definition [3x3] c4
-   setup 3x2 1x6 rotate restriction peelable_box
+   setup 3x2 2x3 rotate restriction peelable_box qualifier n_is_2
+      array [0N 1N 2N 5S 4S 3S]
+   setup 3x2 1x6 rotate restriction peelable_box qualifier n_is_4
       array [5N 4N 3N 0S 1S 2S]
             alternate_definition [cross 3x3] c4
-   setup 3x2 1x6 rotate restriction peelable_box
+   setup 3x2 2x3 rotate restriction peelable_box qualifier n_is_2
+      array [3S 4S 5S 2N 1N 0N]
+   setup 3x2 1x6 rotate restriction peelable_box qualifier n_is_4
       array [2S 1S 0S 3N 4N 5N]
             alternate_definition [4x4] c4
-   setup 4x2 1x8 rotate restriction peelable_box
+   setup 4x2 2x4 rotate restriction peelable_box qualifier n_is_2
+      array [0N 1N 2N 3N 7S 6S 5S 4S]
+   setup 4x2 1x8 rotate restriction peelable_box qualifier n_is_4
       array [6N 7N 5N 4N 0S 1S 3S 2S]
             alternate_definition [cross 4x4] c4
-   setup 4x2 1x8 rotate restriction peelable_box
+   setup 4x2 2x4 rotate restriction peelable_box qualifier n_is_2
+      array [4S 5S 6S 7S 3N 2N 1N 0N]
+   setup 4x2 1x8 rotate restriction peelable_box qualifier n_is_4
       array [2S 3S 1S 0S 4N 5N 7N 6N]
 
 call "@i1/4 @j cross @linvert" c2
@@ -2168,7 +2141,7 @@ call "crossfire" plus
 call "chain down the line" mainstream
             parallel_conc_end
    setup 1x4 2x2
-      array [L0E L1W L2W 0]
+      array [AL0E CCAL1W AAL2W 0]
 
 call "cross sashay" c4
    setup 1x4 2x2 restriction wave_only
@@ -4325,8 +4298,12 @@ call "_hinge and single centers hinge" dontshow tag hingesglctrhinge
    seq hinge []
    seq sglctrhinge []
 
+call "_centers hinge" dontshow tag ctrhinge
+            left_means_mirror
+   conc hinge [inherit_left] nullcall []
+
 call "_single centers hinge" dontshow tag sglctrhinge
-            dont_use_in_resolve left_means_mirror
+            left_means_mirror
    singleconc hinge [inherit_left] nullcall []
 
 call "you all" c4 tag youall
@@ -4597,18 +4574,22 @@ call "siamese breakdown" c4
 
 call "_cross to dmd part 1" dontshow tag cross_to_dmd_1
    setup 2x4 2x4
-      array [M1N R3S L0S M2N M5N M3N M0N M6N]
+      array [ZM1N CR3S AL0S ZM2N ZM5N ZM3N ZM0N ZM6N]
 
 call "cross to a diamond" c4a
+            left_means_mirror
    seq cross_to_dmd_1 []
-   seq sglctrhinge [roll_transparent]
+   seq sglctrhinge [roll_transparent inherit_left]
 
 call "_cross to wv part 2" dontshow tag cross_to_wv_2
    setup 2x4 2x4
-      array [R2S M0N M3N L1S M2N M4N M7N M1N]
+      array [CR2S ZM0N ZM3N AL1S ZM2N ZM4N ZM7N ZM1N]
+   setup 4x2 2x4 rotate
+      array [ZM5W ZM7W ZM0W 0 0 ZM3W ZM4W ZM6W]
 
 call "cross to a wave" c4
-   seq sglctrhinge []
+            left_means_mirror
+   seq ctrhinge [inherit_left]
    seq cross_to_wv_2 []
 
 call "presto" c4a
@@ -6696,8 +6677,11 @@ call "cut the galaxy" c2
          if always                    [M1N R3S 0 L0S M2N L7S 0 R4S]
 
 call "_the K" dontshow tag the_k
+   singleconc_together trade [] uturnaway []
+/*
    setup 1x4 1x4
       array [AL0S CR3S CR2S AL1S]
+*/
 
 call "@2cross @3the K" c2
             visible_fractions finish_means_skip_first_part

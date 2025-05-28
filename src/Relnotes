@@ -1,5 +1,5 @@
-		   RELEASE NOTES FOR SD VERSION 30.72
-		 Database version = 30.72 format = 44,
+		   RELEASE NOTES FOR SD VERSION 30.74
+		 Database version = 30.74 format = 45,
     X11 UI version 1.15, SDTTY UI version 1.6, MAC UI version 2.2.
 
 Took out the words "end-to-end" for those versions of concepts like
@@ -12,16 +12,31 @@ usual phantom concepts, as well as with "split" and "each 1x4".  It may
 also be used with "standard", as in "heads ARE STANDARD IN MATRIX SPLIT
 PHANTOM LINES slim down".
 
+New concepts: all 4 couples and all 8.  Inner dual boxes.
+
+New concept: mirror.  This can apply to any call, and does a complete
+mirror reversal of it, including the act of taking right hands if
+dancers meet at the end.  That is, dancers will actually take left hands
+in this case.  Calls modified by "left" or "reverse" do not have this
+property -- dancers come to physical right hands.  Hence "left chain reaction"
+only affects the hinge (if necessary), but "mirror chain reaction" also
+causes dancers to come to left hands if they meet at the end of the call.
+"Mirror left chain reaction" would of course use a right-handed hinge and
+then come to left hands at the end.
+
+New concepts: assume <whatever> for several values of <whatever>, such
+as waves, two-faced lines, magic columns, facing lines, etc.  Also, there
+is a concept "with active phantoms" that can be used after these.  Please
+see the manual for a discussion of what these concepts mean.  The
+implementation of these concepts is in a rather incomplete state at present.
+
 New calls: [cross] kick by <n>.  Double/triple star thru.  Square thru
 etc. to a wave.  Square thru but on the <Nth> hand (courtesy of Dave
 Decot).  Drop in/out are now legal from facing diamonds.  Many
 minor improvements.
 
-New concepts: all 4 couples and all 8.  Inner dual boxes.
-
-I have yielded to massive pressure and allowed "bigblock" and "stagger" to
-be applicable to any kind of distorted lines or columns respectively.
-So bigblock is legal in a butterfly or "O".
+"Bigblock" and "stagger" are now applicable to any kind of distorted
+lines or columns respectively.  So "bigblock" is legal in a butterfly or "O".
 
 It now prints a "line" number next to each call, both in the displayed
 sequence and the transcript file.  Users are commonly quick to condemn
@@ -57,7 +72,7 @@ Briefly, they mean the following:
          original setup, with the non-designees replaced by phantoms.
     "own the <so-and-so>" is like "do your part", except that strict
          matrix positioning is used.
-Read the section "so-and-so only" in the manual for details.
+Please read the section "so-and-so only" in the manual for details.
 
 Note that the prior inability to have, for example, the girls hinge from
 a BGGBBGGB grand wave to make point-to-point diamonds, is now fixed.
@@ -70,13 +85,13 @@ A warning is printed for non-interacting use of "multiple formations working",
 "interlocked phantom setups", and "phantom setups" concepts.  That is,
 things like "triple boxes working together scoot back", "grand working right
 star thru", "interlocked phantom lines swing thru", and "phantom columns
-double pass thru" give a warning.  In the case of "interlocked phantom setups"
-and "phantom setups", you should use "split phantom setups" instead.  I
-would prefer to have the program require "quadruple setups" instead, but
-the "quadruple setups" concept is generally C4, while some of the
-"phantom setups" and "interlocked phantom setups" concepts are C3 or C3A.
-The "resolve", "reconcile", and "pick random call" operations will not
-choose calls that give this warning.
+double pass thru" give a warning.  The "resolve", "reconcile", and "pick
+random call" operations will not choose calls that give this warning.
+In the case of "interlocked phantom setups" and "phantom setups", you should
+use "split phantom setups" instead.  I would have preferred to have the
+required concept be "quadruple setups", but the "quadruple setups" concept
+is generally C4, while some of the "phantom setups" and "interlocked phantom
+setups" concepts are C3 or C3A.
 
 The call "counter" is now more literate about the subtleties of "left",
 "interlocked", and "cross".  "Central counter" is literate also.
@@ -111,14 +126,32 @@ The bug that allowed things like "ends circulate" or "team up" from a
 starting DPT has been fixed.  Also, things like "ends flutter wheel" from
 a starting DPT or from facing lines is now illegal.
 
+The "allow modifications" icon only needs to be clicked on (or typed)
+once to get the full range of modifications.  There are no longer two
+levels of modifiability.
+
+A few function keys have been defined for the PC.  Pressing the following
+keys is equivalent to entering the indicated text.  Future versions of the
+program will have the ability to have a customization file indicate what
+keys are bound to what strings.
+           f1 => "split phantom lines"
+   shift   f1 => "interlocked phantom lines"
+   control f1 => "phantom lines"
+           f2 => "split phantom columns"
+   shift   f2 => "interlocked phantom columns"
+   control f2 => "phantom columns"
+           f3 => "allow modifications"
+           f4 => "<anything>"
+
 The bug that made it crash if an extremely long line was typed to sdtty
-has been fixed.  We thank Ben Rubright's cat for finding this bug.
+has been fixed.  We thank Lynette Bellini's cat for finding this bug.
 
 Before writing a sequence to the transcript file, it now checks to see whether
 a control-Z character exists at the end of that file, and removes same.  Some
 editors on PC's have been observed placing such characters at the end of a
 file, and some printing software stops when it encounters a control-Z,
-resulting in inability to print files with more than one sequence.
+resulting in inability to print files containing sequences that were
+appended after the file was edited.
 
 There are new concepts: "PRECEDE IT BY" and "FOLLOW IT BY", which take
 two calls.  They perform the first call (first in textual order, that is)
@@ -127,15 +160,8 @@ swing thru", does a swing thru and roll.  There is only one context in which
 these concepts are sensible -- they can be the subject of the PIECEWISE,
 RANDOM, or REVERSE RANDOM meta-concepts.  For example, "PIECEWISE FOLLOW IT
 BY criss cross the deucey, turn the key" will do a criss cross the deucey
-after each of the three parts of turn the key.
-
-These concepts are among the situations in which the program does not attempt
-to print out the exact words that are appropriate to use when calling, but
-instead prints out an unambiguous description of what is supposed to happen.
-The exact words you should use depend on the context and on your judgement.
-You might say "piecewise add a criss cross the deucey, and turn the key",
-or "do a criss cross the deucey after each part, and turn the key", or
-something similar.
+after each of the three parts of turn the key.  Please see the manual for
+further discussion of the linguistic implications of these.
 
 Please read the new section "linguistic idiosyncrasies" in the manual.
 

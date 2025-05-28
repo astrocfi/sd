@@ -1031,14 +1031,11 @@ Private char peoplenames[] = "1234";
 Private char directions[] = "B?B>B?B<B?B?B?B?B^B?BVB?B?B?B?B?G?G>G?G<G?G?G?G?G^G?GVG?G?G?G?G?";
 Private char personbuffer[] = " ZZZ";
 
-Private void printperson(int x)
+Private void printperson(unsigned int x)
 {
    int i;
 
-   if ((x & 01000) == 0) {
-      writestuff("  . ");
-   }
-   else {
+   if (x & BIT_PERSON) {
       i = 2 * (x & 017);
       if ((x & 0100) != 0) i = i+32;
       personbuffer[1] = peoplenames[(x >> 7) & 3];
@@ -1046,6 +1043,8 @@ Private void printperson(int x)
       personbuffer[3] = directions[i+1];
       writestuff(personbuffer);
    }
+   else
+      writestuff("  . ");
 }
 
 /* These static variables are used by printsetup/print_4_person_setup/do_write. */
@@ -1118,12 +1117,14 @@ static char *printing_tables[][2] = {
    {"      c@      d@abfe@      h@      g",                                   (char *) 0},                                                                                                       /* s_thar */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_x4dmd */
    {(char *) 0,                                                               (char *) 0},                                                                                                       /* s_8x8 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* sfat2x8 */
+   {(char *) 0,                                                               (char *) 0},                                                                                                       /* swide4x4 */
    {(char *) 0,                                                               (char *) 0}};                                                                                                      /* s_normal_concentric */
 
 
 Private void print_4_person_setup(int ps, small_setup *s, int elong)
 {
-   modulus = setup_limits[s->skind]+1;
+   modulus = setup_attrs[s->skind].setup_limits+1;
    roti = (s->srotation & 3);
    personstart = ps;
 
@@ -1156,7 +1157,7 @@ Private void print_4_person_setup(int ps, small_setup *s, int elong)
          else
             do_write("   b@a  c@   d@");
          break;
-      case s1x4: case sdmd: case s2x4: case s_2x3: case s_1x6: case s_short6: case s_bone6: case s_1x2:
+      case s1x4: case sdmd: case s2x4: case s2x3: case s1x6: case s_short6: case s_bone6: case s1x2:
          newline();
          do_write(printing_tables[s->skind][roti & 1]);
          break;
@@ -1313,7 +1314,7 @@ extern void write_history_line(int history_index, Const char *header, long_boole
    if (header) writestuff(header);   /* Be sure we get it for partially entered concepts -- this line will go away. */
    else if (i > 0 && !diagnostic_mode) {   /* For now, don't do this if diagnostic, until we decide whether it is permanent. */
       char indexbuf[200];
-      sprintf(indexbuf, "%d:   ", i);
+      sprintf(indexbuf, "%2d:   ", i);
       writestuff(indexbuf);
    }
 #else
@@ -1642,7 +1643,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                }
             case sq_miniwaves:                    /* miniwaves everywhere */
                switch (ss->kind) {
-                  case s_1x2:
+                  case s1x2:
                      if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
                      if ((i & 2) && !(k & 1)) goto good;
                      goto bad;
@@ -1701,7 +1702,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                      goto good;                 /* We don't understand the setup -- we'd better accept it. */
                }
             case sq_rwave_only:
-               if (ss->kind == s_1x2) {
+               if (ss->kind == s1x2) {
                   if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
                       (!(t = ss->people[1].id1 & d_mask) || t == d_south))
                   goto good;
@@ -1785,7 +1786,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
                }
             case sq_lwave_only:
-               if (ss->kind == s_1x2) {
+               if (ss->kind == s1x2) {
                   if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
                       (!(t = ss->people[1].id1 & d_mask) || t == d_north))
                   goto good;
@@ -1901,11 +1902,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             case sq_true_Z:                    /* 2x3, 3x4, or 2x6 - real Z spots occupied, so can do Z axle */
                mask = 0;
 
-               for (i=0, k=1; i<=setup_limits[ss->kind]; i++, k<<=1) {
+               for (i=0, k=1; i<=setup_attrs[ss->kind].setup_limits; i++, k<<=1) {
                   if (ss->people[i].id1) mask |= k;
                }
 
-               if (ss->kind == s_2x3) {
+               if (ss->kind == s2x3) {
                   if (mask == 033 || mask == 066) goto good;
                   goto bad;
                }
@@ -2268,7 +2269,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
             an error that is somewhat descriptive. */
          if (z[i].outer.skind == nothing)
             fail("Can't do this: don't know where the phantoms went.");
-         else if (z[i].inner.skind == nothing && z[i].outer.skind == s_1x2) {
+         else if (z[i].inner.skind == nothing && z[i].outer.skind == s1x2) {
             /* We can fix this up.  Just turn it into a 1x4 with the ends missing.
             (If a diamond is actually required, that will get fixed up below.)
             The test case for this is split phantom lines cross to a diamond from 2FL. */
@@ -2287,7 +2288,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
       if (z[i].kind != nothing) {
          canonicalize_rotation(&z[i]);
 
-         if (z[i].kind == s_1x2)
+         if (z[i].kind == s1x2)
             miniflag = TRUE;
          else if ((z[i].kind == s1x4 || z[i].kind == sdmd) && (z[i].people[1].id1 | z[i].people[3].id1) == 0)
             lineflag = TRUE;
@@ -2303,7 +2304,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
 
    if (kk == nothing) {
       if (lineflag) kk = s1x4;
-      else if (miniflag) kk = s_1x2;
+      else if (miniflag) kk = s1x2;
       else return(TRUE);
    }
    
@@ -2312,12 +2313,12 @@ extern long_boolean fix_n_results(int arity, setup z[])
    if (lineflag && kk != s1x4 && kk != sdmd) goto lose;
 
    /* If something was a 1x2, that's OK if something else was a 1x4. */
-   if (miniflag && kk != s1x4 && kk != s_1x2) goto lose;
+   if (miniflag && kk != s1x4 && kk != s1x2) goto lose;
 
    for (i=0; i<arity; i++) {
       if (z[i].kind == nothing)
          clear_people(&z[i]);
-      else if (z[i].kind == s_1x2 && kk == s1x4) {
+      else if (z[i].kind == s1x2 && kk == s1x4) {
          /* We have to expand a 1x2 to the center spots of a 1x4. */
          (void) copy_person(&z[i], 3, &z[i], 1);
          clear_person(&z[i], 2);

@@ -153,17 +153,21 @@ get_char_input(void)
 #endif
 
    if (c == 129)
-      function_key_expansion = "split phantom lines";
+      function_key_expansion = "split phantom lines\n";
    else if (c == 130)
-      function_key_expansion = "split phantom columns";
+      function_key_expansion = "split phantom columns\n";
+   else if (c == 131)
+      function_key_expansion = "allow modifications\n";
+   else if (c == 132)
+      function_key_expansion = "<anything>";
    else if (c == 161)
-      function_key_expansion = "interlocked phantom lines";
+      function_key_expansion = "interlocked phantom lines\n";
    else if (c == 162)
-      function_key_expansion = "interlocked phantom columns";
+      function_key_expansion = "interlocked phantom columns\n";
    else if (c == 193)
-      function_key_expansion = "phantom lines";
+      function_key_expansion = "phantom lines\n";
    else if (c == 194)
-      function_key_expansion = "phantom columns";
+      function_key_expansion = "phantom columns\n";
    else if (c >= 128)
       c = ' ';
 
@@ -612,7 +616,9 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
             if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_ALLOW_MODS) {
                 /* Increment "allowing_modifications" up to a maximum of 2. */
-                if (allowing_modifications != 2) allowing_modifications++;
+                /* Actually, we just set it to 2.  Having two grades of modifiability
+                   is very unwieldy. */
+                if (allowing_modifications != 2) allowing_modifications = 2;
             }
             else {   /* Must be SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS. */
                 allowing_all_concepts = !allowing_all_concepts;

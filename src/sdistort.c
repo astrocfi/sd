@@ -32,14 +32,16 @@
 #include "sd.h"
 
 
+
 Private void innards(
    setup *ss,
    Const map_thing *maps,
    long_boolean recompute_id,
+   assumption_thing new_assume,
    setup *x,
    setup *result)
 {
-   int i;
+   int i, j;
    Const map_thing *final_map;
    map_hunk *hunk;
    setup z[4];
@@ -47,6 +49,7 @@ Private void innards(
    int rot = maps->rot;
    int vert = maps->vert;
    int arity = maps->arity;
+   int insize = setup_attrs[maps->inner_kind].setup_limits+1;
    mpkind map_kind = maps->map_kind;
 
    clear_people(result);
@@ -57,6 +60,7 @@ Private void innards(
          x[i].rotation = 0;
          /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
          x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) | CMD_MISC__DISTORTED | CMD_MISC__NO_EXPAND_MATRIX;
+         x[i].cmd.cmd_assume = new_assume;
          if (recompute_id) update_id_bits(&x[i]);
          move(&x[i], FALSE, &z[i]);
       }
@@ -74,7 +78,7 @@ Private void innards(
    
    /* Set the final result_flags to the OR of everything that happened.
       The elongation stuff doesn't matter --- if the result is a 2x2
-      begin done around the outside, the procedure that called us
+      being done around the outside, the procedure that called us
       (basic_move) knows what is happening and will fix that bit.
       Also, check that the "did_last_part" bits are the same. */
 
@@ -84,7 +88,7 @@ Private void innards(
       to be reassembled, so we get out now.  These maps are indicated by arity = 1
       and map3[1] nonzero. */
 
-   if ((arity == 1) && (maps->map3[1])) {
+   if ((arity == 1) && (maps->maps[insize] == 1)) {
       *result = z[0];
       goto getout;
    }
@@ -200,12 +204,12 @@ Private void innards(
          warn(warn__bigblock_feet);
          break;
       case MPKIND__NONE:
-         if (maps != &map_tgl4_1 || z[0].kind != s_1x2)
+         if (maps != &map_tgl4_1 || z[0].kind != s1x2)
             fail("Can't do shape-changer with this concept.");
          break;
    }
 
-   if (maps == &map_tgl4_1 && z[0].kind == s_1x2) {
+   if (maps == &map_tgl4_1 && z[0].kind == s1x2) {
       final_map = &map_tgl4_2;
    }
    else {
@@ -233,10 +237,32 @@ Private void innards(
    if (!final_map) {
       if (arity == 1)
          fail("Don't know how far to re-offset this.");
-      else
-         fail("Can't do this shape-changing call with this concept.");
+
+      if (arity == 2 && z[0].kind == s4x4 && map_kind == MPKIND__SPLIT) {
+         /* We allow the special case of appending two 4x4's, if the real people
+            (this includes active phantoms!) can fit inside a 4x4 or 2x8. */
+         if (  z[0].people[0].id1 | z[0].people[4].id1 | z[0].people[5].id1 | z[0].people[6].id1 |
+               z[0].people[8].id1 | z[0].people[12].id1 | z[0].people[13].id1 | z[0].people[14].id1 |
+               z[1].people[0].id1 | z[1].people[4].id1 | z[1].people[5].id1 | z[1].people[6].id1 |
+               z[1].people[8].id1 | z[1].people[12].id1 | z[1].people[13].id1 | z[1].people[14].id1)
+            final_map = &map_w4x4_4x4;
+         else
+            final_map = &map_f2x8_4x4;
+      }
+      else if (arity == 2 && z[0].kind == s2x8 && z[0].rotation == 1 && map_kind == MPKIND__SPLIT) {
+         if (  z[1].people[8].id1 | z[1].people[9].id1 | z[1].people[10].id1 | z[1].people[11].id1 |
+               z[1].people[12].id1 | z[1].people[13].id1 | z[1].people[14].id1 | z[1].people[15].id1 |
+               z[0].people[0].id1 | z[0].people[1].id1 | z[0].people[2].id1 | z[0].people[3].id1 |
+               z[0].people[4].id1 | z[0].people[5].id1 | z[0].people[6].id1 | z[0].people[7].id1)
+            final_map = &map_w4x4_2x8;
+         else
+            final_map = &map_f2x8_2x8;
+      }
+
+      if (!final_map) fail("Can't do this shape-changing call with this concept.");
    }
 
+   insize = setup_attrs[final_map->inner_kind].setup_limits+1;
    result->rotation = z[0].rotation;
 
    if (final_map == &map_tgl4_2)
@@ -247,10 +273,10 @@ Private void innards(
 
    result->rotation -= vert;
 
-   /* For single arity maps, nonzero map3 item means to give warning. */
-   if ((arity == 1) && (final_map->map3[0])) warn(warn__offset_gone);
-   /* For triple arity maps, nonzero map4 item means to give warning. */
-   if ((arity == 3) && (final_map->map4[0])) warn(warn__overlap_gone);
+   /* For single arity maps, a marker of 2 means to give warning. */
+   if ((arity == 1) && (final_map->maps[insize] == 2)) warn(warn__offset_gone);
+   /* For triple arity maps, a marker of 2\3 means to give warning. */
+   if ((arity == 3) && (final_map->maps[insize*3] == 3)) warn(warn__overlap_gone);
 
    /* If this is a special map that expects some setup to have been flipped upside-down, do so. */
 
@@ -271,38 +297,13 @@ Private void innards(
 
    rot = final_map->rot;
 
-   for (i=0; i<=setup_limits[final_map->inner_kind]; i++) {
-      int t = final_map->map1[i];
-
-      if (t >= 0)
-         install_rot(result, t, &z[0], i, 011*(rot & 3));
-      else if (z[0].people[i].id1 & BIT_PERSON)
-         fail("This would go into an excessively large matrix.");
-
-      if (final_map->arity >= 2) {
-         int t = final_map->map2[i];
-
+   for (j=0 ; j<final_map->arity ; j++) {
+      int rrr = 011*((rot>>(j*2)) & 3);
+      for (i=0 ; i<insize ; i++) {
+         int t = final_map->maps[i+insize*j];
          if (t >= 0)
-            install_rot(result, t, &z[1], i, 011*((rot>>2) & 3));
-         else if (z[1].people[i].id1 & BIT_PERSON)
-            fail("This would go into an excessively large matrix.");
-      }
-
-      if (final_map->arity >= 3) {
-         int t = final_map->map3[i];
-
-         if (t >= 0)
-            install_rot(result, t, &z[2], i, 011*((rot>>4) & 3));
-         else if (z[2].people[i].id1 & BIT_PERSON)
-            fail("This would go into an excessively large matrix.");
-      }
-
-      if (final_map->arity == 4) {
-         t = final_map->map4[i];
-
-         if (t >= 0)
-            install_rot(result, t, &z[3], i, 011*((rot>>6) & 3));
-         else if (z[3].people[i].id1 & BIT_PERSON)
+            install_rot(result, t, &z[j], i, rrr);
+         else if (z[j].people[i].id1 & BIT_PERSON)
             fail("This would go into an excessively large matrix.");
       }
    }
@@ -327,39 +328,41 @@ extern void divided_setup_move(
    setup x[4];
 
    setup_kind kn = maps->inner_kind;
+   int insize = setup_attrs[kn].setup_limits+1;
    int rot = maps->rot;
    int arity = maps->arity;
+   assumption_thing t = ss->cmd.cmd_assume;
    
    v1flag = 0;
    v2flag = 0;
    v3flag = 0;
    v4flag = 0;
 
-   for (i=0; i<=setup_limits[kn]; i++) {
+   for (i=0; i<insize; i++) {
       setup tstuff;
       clear_people(&tstuff);
 
-      mm = maps->map1[i];
+      mm = maps->maps[i];
       if (mm >= 0)
          tstuff.people[0] = ss->people[mm];
       v1flag |= tstuff.people[0].id1;
 
       if (arity >= 2) {
-         mm = maps->map2[i];
+         mm = maps->maps[i+insize];
          if (mm >= 0)
             tstuff.people[1] = ss->people[mm];
          v2flag |= tstuff.people[1].id1;
       }
 
       if (arity >= 3) {
-         mm = maps->map3[i];
+         mm = maps->maps[i+insize*2];
          if (mm >= 0)
             tstuff.people[2] = ss->people[mm];
          v3flag |= tstuff.people[2].id1;
       }
 
       if (arity == 4) {
-         mm = maps->map4[i];
+         mm = maps->maps[i+insize*3];
          if (mm >= 0)
             tstuff.people[3] = ss->people[mm];
          v4flag |= tstuff.people[3].id1;
@@ -425,7 +428,30 @@ extern void divided_setup_move(
    if (v3flag) x[2].kind = kn;
    if (v4flag) x[3].kind = kn;
 
-   innards(ss, maps, recompute_id, x, result);
+   if (recompute_id) {
+      t.assumption = cr_none;
+   }
+   else {
+      /* Fix a few things.  *** This probably needs more work. */
+      /* Is this the right way to do it?  Absolutely not!  Will fix soon. */
+
+      if (ss->kind == s2x2 && kn == s1x2 && t.assumption == cr_magic_only)
+         t.assumption = cr_wave_only;    /* Only really correct if splitting into couples, not if into tandems.  Sigh... */
+      if (ss->kind == s2x2 && kn == s1x2 && t.assumption == cr_li_lo)
+         t.assumption = cr_couples_only;
+      if (ss->kind == s2x2 && kn == s1x2 && t.assumption == cr_2fl_only)
+         t.assumption = cr_couples_only;
+      else if (ss->kind == s1x4 && kn == s1x2 && t.assumption == cr_magic_only)
+         t.assumption = cr_wave_only;
+      else if (ss->kind == s1x4 && kn == s1x2 && t.assumption == cr_1fl_only)
+         t.assumption = cr_couples_only;
+      else if (ss->kind == s1x4 && kn == s1x2 && t.assumption == cr_2fl_only)
+         t.assumption = cr_couples_only;
+      else if (ss->kind == s2x4 && kn == s1x4 && t.assumption == cr_li_lo)
+         t.assumption = cr_1fl_only;
+   }
+
+   innards(ss, maps, recompute_id, t, x, result);
 
    /* Put in the splitting axis info, if appropriate. */
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
@@ -457,29 +483,31 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
 {
    int i, j;
    setup x[4];
+   assumption_thing t = ss->cmd.cmd_assume;
 
    setup_kind kn = maps->inner_kind;
+   int insize = setup_attrs[kn].setup_limits+1;
    int rot = maps->rot;
    int arity = maps->arity;
 
    if (arity >= 4) fail("Can't handle this many overlapped setups.");
 
-   for (i=0, j=1; i<=setup_limits[kn]; i++, j<<=1) {
+   for (i=0, j=1; i<insize; i++, j<<=1) {
       if (j & m1)
-         (void) copy_rot(&x[0], i, ss, maps->map1[i], 011*((-rot) & 3));
+         (void) copy_rot(&x[0], i, ss, maps->maps[i], 011*((-rot) & 3));
       else
          clear_person(&x[0], i);
 
       if (arity >= 2) {
          if (j & m2)
-            (void) copy_rot(&x[1], i, ss, maps->map2[i], 011*((-(rot>>2)) & 3));
+            (void) copy_rot(&x[1], i, ss, maps->maps[i+insize], 011*((-(rot>>2)) & 3));
          else
             clear_person(&x[1], i);
       }
 
       if (arity >= 3) {
          if (j & m3)
-            (void) copy_rot(&x[2], i, ss, maps->map3[i], 011*((-(rot>>4)) & 3));
+            (void) copy_rot(&x[2], i, ss, maps->maps[i+insize*2], 011*((-(rot>>4)) & 3));
          else
             clear_person(&x[2], i);
       }
@@ -489,7 +517,8 @@ extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
    x[1].kind = kn;
    x[2].kind = kn;
 
-   innards(ss, maps, TRUE, x, result);
+   t.assumption = cr_none;
+   innards(ss, maps, TRUE, t, x, result);
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_MASK;
 }
 
@@ -887,8 +916,10 @@ extern void distorted_2x2s_move(
    a2.kind = s2x2;
    a2.rotation = 0;
 
+   a1.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
    move(&a1, FALSE, &res1);
+   a2.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a2);
    move(&a2, FALSE, &res2);
    
@@ -1081,6 +1112,7 @@ extern void distorted_move(
    a1.rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a1.cmd.cmd_assume.assumption = cr_none;
    move(&a1, FALSE, &res1);
    if (res1.kind != s2x4 || (res1.rotation & 1)) fail("Can only do non-shape-changing 2x4 -> 2x4 calls in Z or distorted setups.");
    result->rotation = res1.rotation;
@@ -1247,6 +1279,7 @@ extern void do_concept_rigger(
    a1.rotation = 0;
    a1.cmd = ss->cmd;
    a1.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
+   a1.cmd.cmd_assume.assumption = cr_none;
    move(&a1, FALSE, &res1);
    
    if (res1.kind != s2x4) fail("Can only do 2x4 -> 2x4 calls.");

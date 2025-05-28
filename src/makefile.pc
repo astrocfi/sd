@@ -210,7 +210,7 @@ ls:
 	@echo $(DISTFILES)
 
 sd300bn: sdtty.exe mkcalls.exe sd_calls.dat
-	lha a $@ readme relnotes oldnotes
+	lha a $@ readme relnotes oldnotes copying
 	lha a $@ sd_calls.txt sd_calls.dat db_doc.txt
 	lha a $@ sdtty.exe mkcalls.exe go32.exe sd_doc.txt sd_doc.ps
 	lha s $@

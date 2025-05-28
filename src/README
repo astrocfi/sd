@@ -32,27 +32,25 @@ release.
 Getting Sd
 ==========
 
-   Sd is available via anonymous FTP from the directory
-`contrib/c4/sd/' on host ftp.x.org.  FTP is the Internet file transfer
-protocol.  The file `sd-nn.tar.Z' (where `nn' changes with the version)
-is a compressed tar file containing the sources.  The file
-`sdxxxbn.exe' (where `xxx' changes with the version) is a
-self-extracting DOS archive containing a pre-built executable.
+   Sd is available via anonymous FTP from the directory `misc/sd/' on
+host ftp.x.org.  FTP is the Internet file transfer protocol.  The file
+`sd-nn.tar.Z' (where `nn' changes with the version) is a compressed tar
+file containing the sources.  The file `sdxxxbn.exe' (where `xxx'
+changes with the version) is a self-extracting DOS archive containing a
+pre-built executable.
 
    If your mailer can interpret MIME messages, we can also send you Sd
-by email.  MIME is a draft Internet standard for structured mail.  It
-includes support for mailing large binary files, such as a tar file of
-Sd.
+by email.  MIME is a draft Internet standard for structured mail, and
+it includes support for mailing large binary files.
 
    Lastly, if you cannot get Sd over the net, we will ship a floppy and
 printed documentation for $4 (price valid for 1994).  Normally we send
-runnable DOS binaries on the floppy.  If you want sources or a
+runnable DOS binaries on a 3.5-inch floppy.  If you want sources or a
 different format instead, please say so.
 
    If you are on the Internet, you can read Sd documentation using the
-World Wide Web.  Give this locator to your WWW program:
-
-http://www.mit.edu:8001/afs/athena/activity/t/tech-squares/WWW/sd/Sd.html
+World Wide Web.  Give the locator http://www.x.org/misc/sd to your WWW
+program.
 
 How to Contact the Authors
 ==========================

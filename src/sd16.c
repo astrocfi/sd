@@ -86,7 +86,7 @@ extern void phantom_2x4_move(
    if (vflag) {
       vpeople.rotation--;
       canonicalize_rotation(&vpeople);
-      divided_setup_move(&vpeople, maps, newphantest, 0, &the_setups[1]);
+      divided_setup_move(&vpeople, maps, newphantest, TRUE, &the_setups[1]);
       the_setups[1].rotation++;
       canonicalize_rotation(&the_setups[1]);
    }
@@ -98,7 +98,7 @@ extern void phantom_2x4_move(
    /* Do the N-S facing people. */
 
    if (hflag) {
-      divided_setup_move(&hpeople, maps, newphantest, 0, &the_setups[0]);
+      divided_setup_move(&hpeople, maps, newphantest, TRUE, &the_setups[0]);
    }
    else {
       the_setups[0].kind = nothing;

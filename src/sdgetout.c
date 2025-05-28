@@ -87,8 +87,8 @@ static nice_setup_info_item nice_setup_info[] = {
    {s1x12,  &nice_setup_thing_1x12, (int *) 0, 0},
    {s1x14,  &nice_setup_thing_1x16, (int *) 0, 0},  /* Note overuse. */
    {s1x16,  &nice_setup_thing_1x16, (int *) 0, 0},
-   {s_3dmd, &nice_setup_thing_3dmd, (int *) 0, 0},
-   {s_4dmd, &nice_setup_thing_4dmd, (int *) 0, 0},
+   {s3dmd,  &nice_setup_thing_3dmd, (int *) 0, 0},
+   {s4dmd,  &nice_setup_thing_4dmd, (int *) 0, 0},
    {s4x6,   &nice_setup_thing_4x6,  (int *) 0, 0}
 };
 
@@ -510,13 +510,13 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       history_insertion_point -= insertion_point;    /* strip away the extra calls */
 
       goal_kind = history[history_insertion_point].state.kind;
-      if (setup_limits[goal_kind] != 7) return(FALSE);
+      if (setup_attrs[goal_kind].setup_limits != 7) return(FALSE);
       for (j=0; j<8; j++) goal_directions[j] = history[history_insertion_point].state.people[j].id1 & d_mask;
 
       for (j=0; j<8; j++) {
          perm_indices[j] = -1;
          for (i=0; i<8; i++)
-            if ((history[history_insertion_point].state.people[i].id1 & 0700) == perm_array[j]) perm_indices[j] = i;
+            if ((history[history_insertion_point].state.people[i].id1 & ID_BITS_1) == perm_array[j]) perm_indices[j] = i;
          if (perm_indices[j] < 0) return(FALSE);      /* didn't find the person???? */
       }
    }
@@ -658,7 +658,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
          somewhat unusual setups like dogbones or riggers, but they might be
          sort of interesting if they arise.  (Actually, it is highly unlikely,
          given the concepts that we use.) */
-      if (setup_limits[ns->kind] != 7) goto what_a_loss;
+      if (setup_attrs[ns->kind].setup_limits != 7) goto what_a_loss;
    }
    else if (goal == search_reconcile) {
       if (ns->kind != goal_kind) goto what_a_loss;
@@ -666,31 +666,31 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
          if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
 
          {        /* Need some local temporaries -- ugly in C, impossible in Pascal! */
-         int p0 = ns->people[perm_indices[0]].id1 & 0700;
-         int p1 = ns->people[perm_indices[1]].id1 & 0700;
-         int p2 = ns->people[perm_indices[2]].id1 & 0700;
-         int p3 = ns->people[perm_indices[3]].id1 & 0700;
-         int p4 = ns->people[perm_indices[4]].id1 & 0700;
-         int p5 = ns->people[perm_indices[5]].id1 & 0700;
-         int p6 = ns->people[perm_indices[6]].id1 & 0700;
-         int p7 = ns->people[perm_indices[7]].id1 & 0700;
+         int p0 = ns->people[perm_indices[0]].id1 & ID_BITS_1;
+         int p1 = ns->people[perm_indices[1]].id1 & ID_BITS_1;
+         int p2 = ns->people[perm_indices[2]].id1 & ID_BITS_1;
+         int p3 = ns->people[perm_indices[3]].id1 & ID_BITS_1;
+         int p4 = ns->people[perm_indices[4]].id1 & ID_BITS_1;
+         int p5 = ns->people[perm_indices[5]].id1 & ID_BITS_1;
+         int p6 = ns->people[perm_indices[6]].id1 & ID_BITS_1;
+         int p7 = ns->people[perm_indices[7]].id1 & ID_BITS_1;
 
          /* Test for absolute sex correctness if required. */
          if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
 
-         p7 = (p7 - p6) & 0700;
-         p6 = (p6 - p5) & 0700;
-         p5 = (p5 - p4) & 0700;
-         p4 = (p4 - p3) & 0700;
-         p3 = (p3 - p2) & 0700;
-         p2 = (p2 - p1) & 0700;
-         p1 = (p1 - p0) & 0700;
+         p7 = (p7 - p6) & ID_BITS_1;
+         p6 = (p6 - p5) & ID_BITS_1;
+         p5 = (p5 - p4) & ID_BITS_1;
+         p4 = (p4 - p3) & ID_BITS_1;
+         p3 = (p3 - p2) & ID_BITS_1;
+         p2 = (p2 - p1) & ID_BITS_1;
+         p1 = (p1 - p0) & ID_BITS_1;
 
          /* Test each sex individually for uniformity of offset around the ring. */
          if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
             goto what_a_loss;
 
-         if (((p1 + p2) & 0700) != 0200)   /* Test for each sex in sequence. */
+         if (((p1 + p2) & ID_BITS_1) != 0200)   /* Test for each sex in sequence. */
             goto what_a_loss;
 
          if ((p2 & 0100) == 0)         /* Test for alternating sex. */
@@ -771,15 +771,15 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       if (this_state.warnings.bits[1] != huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].warnings.bits[1])
          goto try_again;
 
-      for (k=0; k<=setup_limits[this_state.state.kind]; k++) {
+      for (k=0; k<=setup_attrs[this_state.state.kind].setup_limits; k++) {
          personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];
 
          if (t.id1) {
             if (this_state.state.people[k].id1 !=
-                  ((t.id1 & (~ID_BITS_1)) | new_resolve->permute1[(t.id1 & 0700) >> 6]))
+                  ((t.id1 & (~ID_BITS_1)) | new_resolve->permute1[(t.id1 & ID_BITS_1) >> 6]))
                goto try_again;
             if (this_state.state.people[k].id2 !=
-                  ((t.id2 & (~ID_BITS_2)) | new_resolve->permute2[(t.id1 & 0700) >> 6]))
+                  ((t.id2 & (~ID_BITS_2)) | new_resolve->permute2[(t.id1 & ID_BITS_1) >> 6]))
                goto try_again;
          }
          else {
@@ -835,7 +835,7 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       if (goal == search_nice_setup) {
          int k;
 
-         if (setup_limits[ns->kind] > setup_limits[history[history_ptr].state.kind])
+         if (setup_attrs[ns->kind].setup_limits > setup_attrs[history[history_ptr].state.kind].setup_limits)
             goto try_again;
 
          for (k=0 ; k < NUM_NICE_START_KINDS ; k++) {
@@ -913,7 +913,7 @@ extern uims_reply full_resolve(search_kind goal)
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
          for (j=0; j<8; j++)
-            perm_array[j] = current_people[current_reconciler->perm[j]].id1 & 0700;
+            perm_array[j] = current_people[current_reconciler->perm[j]].id1 & ID_BITS_1;
 
          current_depth = 1;
          find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
@@ -1005,14 +1005,14 @@ extern uims_reply full_resolve(search_kind goal)
 
             /* Repair this setup by permuting all the people. */
 
-            for (k=0; k<=setup_limits[this_state->state.kind]; k++) {
+            for (k=0; k<=setup_attrs[this_state->state.kind].setup_limits; k++) {
                personrec t = this_state->state.people[k];
 
                if (t.id1) {
                   this_state->state.people[k].id1 = 
-                     (t.id1 & (~ID_BITS_1)) | this_resolve->permute1[(t.id1 & 0700) >> 6];
+                     (t.id1 & (~ID_BITS_1)) | this_resolve->permute1[(t.id1 & ID_BITS_1) >> 6];
                   this_state->state.people[k].id2 = 
-                     (t.id2 & (~ID_BITS_2)) | this_resolve->permute2[(t.id1 & 0700) >> 6];
+                     (t.id2 & (~ID_BITS_2)) | this_resolve->permute2[(t.id1 & ID_BITS_1) >> 6];
                }
             }
             

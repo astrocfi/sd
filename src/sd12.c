@@ -177,7 +177,7 @@ Private void do_glorious_triangles(
          }
       }
    }
-   else if (res1.kind == s_1x3) {
+   else if (res1.kind == s1x3) {
       result->kind = s2x4;
 
       if (res1.rotation == 0) {

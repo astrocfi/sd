@@ -1384,6 +1384,18 @@ lines_couple
       and facing the same direction.  Returns FALSE if the partner is
       a phantom or faces the opposite way or is T-boned.
 
+cast_normal
+      applies to 1x2, 1x4, or 1x6 lines only.
+      This is the same as "lines_miniwave", except that it also senses
+      whether the "assume normal casts" concept has been given, and
+      returns TRUE if so.
+
+cast_pushy
+      applies to 1x2, 1x4, or 1x6 lines only.
+      This is the same as "lines_couple", except that it also senses
+      whether the "assume normal casts" concept has been given, and
+      returns FALSE if so.
+
 lines_magic_miniwave
       applies to 2x4 lines only.  Returns TRUE if the magic partner
       of the person under test (the person in the opposite corner of

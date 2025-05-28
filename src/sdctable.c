@@ -449,8 +449,8 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 38
-#define mm__1_phan 22
+#define mm__1_size 46
+#define mm__1_phan 34
    {"LEFT",                                  concept_left,                  l_mainstream},
    {"REVERSE",                               concept_reverse,               l_mainstream},
    {"CROSS",                                 concept_cross,                 l_mainstream},
@@ -465,11 +465,23 @@ concept_descriptor concept_descriptor_table[] = {
    {"12 MATRIX",                             concept_12_matrix,             l_c3x},
    {"16 MATRIX",                             concept_16_matrix,             l_c3x},
    {"FUNNY",                                 concept_funny,                 l_c2},
-   {"ASSUME WAVES",                          concept_assume_waves,          l_c3,        {0, cr_wave_only, 0}},
-   {"ASSUME TWO-FACED LINES",                concept_assume_waves,          l_c3,        {0, cr_2fl_only, 0}},
-   {"ASSUME NORMAL COLUMNS",                 concept_assume_waves,          l_c3,        {0, cr_wave_only, 1}},
-   {"ASSUME MAGIC COLUMNS",                  concept_assume_waves,          l_c3,        {0, cr_magic_only, 1}},
-   {"CENTRAL",                               concept_central,               l_c3x},
+   {"ASSUME WAVES",                          concept_assume_waves,          l_c3,        {0, cr_wave_only,  0, 0}},
+   {"ASSUME MINIWAVES",                      concept_assume_waves,          l_c3,        {0, cr_wave_only,  2, 0}},
+   {"ASSUME TWO-FACED LINES",                concept_assume_waves,          l_c3,        {0, cr_2fl_only,   0, 0}},
+   {"ASSUME ONE-FACED LINES",                concept_assume_waves,          l_c3,        {0, cr_1fl_only,   0, 0}},
+   {"ASSUME INVERTED LINES",                 concept_assume_waves,          l_c3,        {0, cr_magic_only, 0, 0}},
+   {"ASSUME INVERTED BOXES",                 concept_assume_waves,          l_c3,        {0, cr_magic_only, 2, 0}},
+   {"ASSUME NORMAL COLUMNS",                 concept_assume_waves,          l_c3,        {0, cr_wave_only,  1, 0}},
+   {"ASSUME MAGIC COLUMNS",                  concept_assume_waves,          l_c3,        {0, cr_magic_only, 1, 0}},
+   {"ASSUME EIGHT CHAIN",                    concept_assume_waves,          l_c3,        {0, cr_li_lo,      1, 1}},
+   {"ASSUME TRADE BY",                       concept_assume_waves,          l_c3,        {0, cr_li_lo,      1, 2}},
+   {"ASSUME DPT",                            concept_assume_waves,          l_c3,        {0, cr_2fl_only,   1, 1}},
+   {"ASSUME CDPT",                           concept_assume_waves,          l_c3,        {0, cr_2fl_only,   1, 2}},
+   {"ASSUME FACING LINES",                   concept_assume_waves,          l_c3,        {0, cr_li_lo,      0, 2}},
+   {"ASSUME BACK-TO-BACK LINES",             concept_assume_waves,          l_c3,        {0, cr_li_lo,      0, 1}},
+   {"ASSUME NORMAL CASTS",                   concept_assume_waves,          l_c3,        {0, cr_alwaysfail, 0, 0}},
+   {"WITH ACTIVE PHANTOMS",                  concept_active_phantoms,       l_c4},
+   {"CENTRAL",                               concept_central,               l_c3},
    {"FAN",                                   concept_fan_or_yoyo,           l_c3,        {0, 0}},
    {"YO-YO",                                 concept_fan_or_yoyo,           l_c4,        {0, 1}},
    {"PARALLELOGRAM",                         concept_parallelogram,         l_c2},
@@ -485,10 +497,6 @@ concept_descriptor concept_descriptor_table[] = {
    {"STRETCHED SETUP",                       concept_new_stretch,           l_c2},
    {"FERRIS",                                concept_ferris,                l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                l_c3a,        {0, 1}},
-         {"", concept_comment, l_nonexistent_concept},
-   {"ALL 4 COUPLES",                         concept_all_8,                 l_a2,         {0, 0}},
-   {"ALL 8",                                 concept_all_8,                 l_c1,         {0, 1}},
-   {"ALL 8 (diamonds)",                      concept_all_8,                 l_c1,         {0, 2}},
 /* -------- column break -------- */
 #define mm__2_size 47
    {"CENTERS",                               concept_centers_or_ends,       l_mainstream, {0, 0}},
@@ -539,7 +547,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"REPLACE THE <Nth> PART",                concept_replace_nth_part,      l_c2,         {0, 0}},
    {"INTERRUPT AFTER THE <Nth> PART",        concept_replace_nth_part,      l_c2,         {0, 1}},
 /* -------- column break -------- */
-#define mm__3_size 41
+#define mm__3_size 45
 #define mm__3_3x3 39
 #define mm__3_4x4 40
    {"IN POINT TRIANGLE",                     concept_randomtrngl,           l_c1,         {0, 1}},
@@ -583,6 +591,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"3X1",                                   concept_3x1,                   l_c2},
    {"3X3",                                   concept_3x3,                   l_c3x},
    {"4X4",                                   concept_4x4,                   l_c3x},
+         {"", concept_comment, l_nonexistent_concept},
+   {"ALL 4 COUPLES",                         concept_all_8,                 l_a2,         {0, 0}},
+   {"ALL 8",                                 concept_all_8,                 l_c1,         {0, 1}},
+   {"ALL 8 (diamonds)",                      concept_all_8,                 l_c1,         {0, 2}},
 
 /* general concepts */
 

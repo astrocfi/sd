@@ -324,12 +324,28 @@ Private long_boolean x14_once_rem_couple(setup *real_people, int real_index,
 Private long_boolean lines_couple(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return FALSE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
-      if (real_people->kind == s_1x6 && real_index >= 2)
+      if (real_people->kind == s1x6 && real_index >= 2)
+         other_person = real_people->people[7 - real_index].id1;
+      return ((this_person ^ other_person) & DIR_MASK) == 0;
+   }
+}
+
+/* ARGSUSED */
+Private long_boolean cast_pushy(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assump_cast)
+      return FALSE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ 1].id1;
+      if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
       return ((this_person ^ other_person) & DIR_MASK) == 0;
    }
@@ -341,7 +357,7 @@ Private long_boolean columns_tandem(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
-   if (real_people->kind == s_1x6 && real_index >= 2)
+   if (real_people->kind == s1x6 && real_index >= 2)
       other_person = real_people->people[7 - real_index].id1;
    return ((this_person ^ other_person) & DIR_MASK) == 0;
 }
@@ -350,12 +366,28 @@ Private long_boolean columns_tandem(setup *real_people, int real_index,
 Private long_boolean lines_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return TRUE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
-      if (real_people->kind == s_1x6 && real_index >= 2)
+      if (real_people->kind == s1x6 && real_index >= 2)
+         other_person = real_people->people[7 - real_index].id1;
+      return ((this_person ^ other_person) & DIR_MASK) == 2;
+   }
+}
+
+/* ARGSUSED */
+Private long_boolean cast_normal(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assump_cast)
+      return TRUE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ 1].id1;
+      if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
       return ((this_person ^ other_person) & DIR_MASK) == 2;
    }
@@ -367,7 +399,7 @@ Private long_boolean columns_antitandem(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
-   if (real_people->kind == s_1x6 && real_index >= 2)
+   if (real_people->kind == s1x6 && real_index >= 2)
       other_person = real_people->people[7 - real_index].id1;
    return ((this_person ^ other_person) & DIR_MASK) == 2;
 }
@@ -435,8 +467,10 @@ Private long_boolean lines_once_rem_couple(setup *real_people, int real_index,
 Private long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if ((real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES) || northified_index == 0)
-      return(TRUE);
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only || northified_index == 0)
+      return TRUE;
+   else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
+      return FALSE;
    else {
       int other_person = real_people->people[real_index ^ 1].id1;
       int direction_diff = other_person ^ real_direction;
@@ -456,13 +490,22 @@ Private long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
 
    if (northified_index <= 1)
       /* We are in the beau-side couple -- it's OK. */
-      return(TRUE);
+      return TRUE;
    else {
-      /* We are in the belle-side couple -- find the two people in the other couple.
+      /* We are in the belle-side couple.  First, see if an assumption is guiding us. */
+
+      int other_people;
+
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_2fl_only: return TRUE;
+         case cr_1fl_only: return FALSE;
+      }
+
+      /* Find the two people in the other couple.
          Just "or" them to be sure we get someone.  They are already known
          to be facing consistently if they are both there. */
-      int other_people = real_people->people[real_index ^ 2].id1 |
-                           real_people->people[real_index ^ 3].id1;
+      other_people = real_people->people[real_index ^ 2].id1 |
+                     real_people->people[real_index ^ 3].id1;
 
       /* At least one of those people must exist. */
       if (!other_people)
@@ -471,9 +514,9 @@ Private long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
       /* See if they face the same way as myself.  Note that the "2" bit of
          real_index is the complement of my own direction bit. */
       if (((other_people ^ real_index) & 2))
-         return(FALSE);   /* This is a 1FL. */
+         return FALSE;   /* This is a 1FL. */
 
-      return(TRUE);       /* This is a 2FL. */
+      return TRUE;       /* This is a 2FL. */
    }
 }
 
@@ -594,6 +637,13 @@ Private long_boolean judge_is_right(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_2fl_only: return FALSE;  /* This is an error -- socker/judge can't be unambiguous. */
+      case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return TRUE;
+      case cr_magic_only: return (real_index & 1) == 0;
+   }
+
    return(
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 0)       /* judge exists to my right */
          &&
@@ -606,6 +656,13 @@ Private long_boolean judge_is_left(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_2fl_only: return FALSE;  /* This is an error -- socker/judge can't be unambiguous. */
+      case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return FALSE;
+      case cr_magic_only: return (real_index & 1) != 0;
+   }
+
    return(
       (((real_people->people[f].id1 ^ this_person) & 013) == 2)           /* judge exists to my left */
          &&
@@ -618,6 +675,13 @@ Private long_boolean socker_is_right(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_2fl_only: return FALSE;  /* This is an error -- socker/judge can't be unambiguous. */
+      case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return FALSE;
+      case cr_magic_only: return (real_index & 1) != 0;
+   }
+
    return(
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 2)       /* socker exists to my right */
          &&
@@ -630,6 +694,13 @@ Private long_boolean socker_is_left(setup *real_people, int real_index,
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
+
+   switch (real_people->cmd.cmd_assume.assumption) {
+      case cr_wave_only: case cr_2fl_only: return FALSE;  /* This is an error -- socker/judge can't be unambiguous. */
+      case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return TRUE;
+      case cr_magic_only: return (real_index & 1) == 0;
+   }
+
    return(
       (((real_people->people[f].id1 ^ this_person) & 013) == 0)           /* socker exists to my left */
          &&
@@ -682,9 +753,10 @@ static int magic_inroll_directions_2x3[6] = {012, 010, 012, 010, 012, 010};
 Private long_boolean inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
+   if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
 
    return in_out_roll_select(
       012 - ((real_index & 4) >> 1),
@@ -697,9 +769,10 @@ Private long_boolean inroller_is_cw(setup *real_people, int real_index,
 Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index >> 2)) & 1) == 0;
+   if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
 
    return in_out_roll_select(
       magic_inroll_directions[real_index],
@@ -712,8 +785,10 @@ Private long_boolean magic_inroller_is_cw(setup *real_people, int real_index,
 Private long_boolean outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
+   if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
 
    return in_out_roll_select(
       010 + ((real_index & 4) >> 1),
@@ -726,8 +801,10 @@ Private long_boolean outroller_is_cw(setup *real_people, int real_index,
 Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index >> 2)) & 1) != 0;
+   if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+      return ((northified_index ^ (northified_index >> 1)) & 2) != 0;
 
    return in_out_roll_select(
       022 - magic_inroll_directions[real_index],
@@ -740,7 +817,7 @@ Private long_boolean magic_outroller_is_cw(setup *real_people, int real_index,
 Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -754,7 +831,7 @@ Private long_boolean inroller_is_cw_2x3(setup *real_people, int real_index,
 Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -768,7 +845,7 @@ Private long_boolean magic_inroller_is_cw_2x3(setup *real_people, int real_index
 Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -782,7 +859,7 @@ Private long_boolean outroller_is_cw_2x3(setup *real_people, int real_index,
 Private long_boolean magic_outroller_is_cw_2x3(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       fail("Not legal.");
 
    return in_out_roll_select(
@@ -796,8 +873,7 @@ Private long_boolean magic_outroller_is_cw_2x3(setup *real_people, int real_inde
 Private long_boolean inroller_is_cw_2x6(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index / 6)) & 1) == 0;
 
    return in_out_roll_select(
@@ -811,8 +887,7 @@ Private long_boolean inroller_is_cw_2x6(setup *real_people, int real_index,
 Private long_boolean outroller_is_cw_2x6(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index / 6)) & 1) != 0;
 
    return in_out_roll_select(
@@ -826,8 +901,7 @@ Private long_boolean outroller_is_cw_2x6(setup *real_people, int real_index,
 Private long_boolean inroller_is_cw_2x8(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index >> 3)) & 1) == 0;
 
    return in_out_roll_select(
@@ -841,8 +915,7 @@ Private long_boolean inroller_is_cw_2x8(setup *real_people, int real_index,
 Private long_boolean outroller_is_cw_2x8(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-
-   if (real_people->cmd.cmd_misc_flags & CMD_MISC__ASSUME_WAVES)
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
       return ((northified_index ^ (northified_index >> 3)) & 1) != 0;
 
    return in_out_roll_select(
@@ -1251,6 +1324,8 @@ long_boolean (*pred_table[])(
       x14_once_rem_couple,             /* "x14_once_rem_couple" */
       lines_miniwave,                  /* "lines_miniwave" */
       lines_couple,                    /* "lines_couple" */
+      cast_normal,                     /* "cast_normal" */
+      cast_pushy,                      /* "cast_pushy" */
       opp_in_magic,                    /* "lines_magic_miniwave" */
       same_in_magic,                   /* "lines_magic_couple" */
       lines_once_rem_miniwave,         /* "lines_once_rem_miniwave" */
