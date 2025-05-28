@@ -931,6 +931,9 @@ class select {
       fx_f1x12outre,
       fx_f1x3d6,
       fx_f323,
+      fx_f3223,
+      fx_f3x6a,
+      fx_f343,
       fx_f323d,
       fx_f3x1zzd,
       fx_f1x3zzd,
@@ -1171,15 +1174,38 @@ class select {
       fx_1x5p1e,
       fx_1x5p1f,
       fx_1x5p1g,
+      fx_1x5p1h,
+      fx_1x5p1j,
+      fx_1x5p1k,
+      fx_linefbox0,
+      fx_linefbox1,
+      fx_linefbox2,
+      fx_linefbox3,
+      fx_linefbox4,
       fx_l2b1,
       fx_l2b2,
       fx_l2b3,
       fx_l2b4,
       fx_l2b5,
+      fx_l2b6,
+      fx_l2b7,
+      fx_l2b8,
       fx_l6b1,
       fx_l6b2,
       fx_l6b3,
       fx_l6b4,
+      fx_l6b5,
+      fx_l6b6,
+      fx_l6b7,
+      fx_l6b8,
+      fx_l6b9,
+      fx_l6b10,
+      fx_l6b11,
+      fx_l6b12,
+      fx_l6b13,
+      fx_l6b14,
+      fx_l6b15,
+      fx_l6b16,
       fx_dbt1,
       fx_dbt2,
       fx_dbt3,
@@ -1191,6 +1217,8 @@ class select {
       fx_dbt1d,
       fx_dbt3t,
       fx_dbt6t,
+      fx_dbt6u,
+      fx_dbt7t,
       fx_dbt1l,
       fx_1x5p1y,
       fx_1x5p1z,
@@ -1535,6 +1563,15 @@ struct ctr_end_mask_rec {
 
 
 struct coordrec {
+   int get_index_from_coords(int x, int y) const
+   {
+      int mag = xfactor >> 4;
+      int place = diagram[32 - (1 << ((xfactor&0xF)-1)) - ((y >> mag) << (xfactor&0xF)) + (x >> mag)];
+      if (place < 0 || (xca[place] != x) || (yca[place] != y))
+         return -1;
+      return place;
+   }
+
    setup_kind result_kind;
    int xfactor;
    veryshort xca[24];
@@ -1544,7 +1581,7 @@ struct coordrec {
 
 
 // Beware!  There are >= tests lying around, so order is important.
-// In particular, sdconc (search for "brute_force_merge" has such tests.
+// In particular, sdconc (search for "brute_force_merge") has such tests.
 enum merge_action {
    merge_strict_matrix,
    merge_for_own,
@@ -1823,9 +1860,8 @@ struct nice_setup_info_item {
    could be split either way, so we have no information.
 */
 
-// The two low bits are used for result elongation, so we start with 0x00000004.
-
 enum {
+   // The two low bits are used for result elongation, so bits start with 0x00000004.
    // This is a four bit field.
    RESULTFLAG__PART_COMPLETION_BITS = 0x0000003CU,
    RESULTFLAG__DID_LAST_PART        = 0x00000004U,
@@ -1835,7 +1871,8 @@ enum {
 
    RESULTFLAG__NEED_DIAMOND         = 0x00000040U,
    RESULTFLAG__DID_MXN_EXPANSION    = 0x00000080U,
-   // Skipped 4 bits here
+   RESULTFLAG__COMPRESSED_FROM_2X3  = 0x00000100U,
+   // 3 spare bits here
    RESULTFLAG__ACTIVE_PHANTOMS_ON   = 0x00001000U,
    RESULTFLAG__ACTIVE_PHANTOMS_OFF  = 0x00002000U,
    RESULTFLAG__EXPAND_TO_2X3        = 0x00004000U,
@@ -1863,7 +1900,7 @@ enum {
    RESULTFLAG__FORCE_SPOTS_ALWAYS   = 0x20000000U,
    RESULTFLAG__INVADED_SPACE        = 0x40000000U,
    RESULTFLAG__STOP_OVERCAST_CHECK  = 0x80000000U
-   // No spares!
+   // No spares!  Actually, 3 spares above.
 };
 
 
@@ -2787,20 +2824,6 @@ extern const coordrec tgl3_0;                                       /* in SDTABL
 extern const coordrec tgl3_1;                                       /* in SDTABLES */
 extern const coordrec tgl4_0;                                       /* in SDTABLES */
 extern const coordrec tgl4_1;                                       /* in SDTABLES */
-extern const coordrec squeezethingglass;                            /* in SDTABLES */
-extern const coordrec squeezethinggal;                              /* in SDTABLES */
-extern const coordrec squeezething343;                              /* in SDTABLES */
-extern const coordrec squeezethingqtag;                             /* in SDTABLES */
-extern const coordrec squeezething4dmd;                             /* in SDTABLES */
-extern const coordrec squeezefinalglass;                            /* in SDTABLES */
-extern const coordrec truck_to_ptpd;                                /* in SDTABLES */
-extern const coordrec truck_to_deepxwv;                             /* in SDTABLES */
-extern const coordrec press_4dmd_4x4;                               /* in SDTABLES */
-extern const coordrec press_4dmd_qtag1;                             /* in SDTABLES */
-extern const coordrec press_4dmd_qtag2;                             /* in SDTABLES */
-extern const coordrec press_qtag_4dmd1;                             /* in SDTABLES */
-extern const coordrec press_qtag_4dmd2;                             /* in SDTABLES */
-extern const coordrec acc_crosswave;                                /* in SDTABLES */
 
 extern id_bit_table id_bit_table_2x5_z[];                           /* in SDTABLES */
 extern id_bit_table id_bit_table_2x5_ctr6[];                        /* in SDTABLES */
@@ -2900,6 +2923,7 @@ enum mpkind {
    MPKIND__OVERLAP14,
    MPKIND__OVERLAP34,
    MPKIND__SPEC_MATRIX_OVERLAP,
+   MPKIND__UNDERLAP,
    MPKIND__INTLK,
    MPKIND__CONCPHAN,
    MPKIND__MAGIC,
@@ -3262,18 +3286,6 @@ extern bool check_for_concept_group(
 extern SDLIB_API const concept_descriptor *concept_descriptor_table;
 
 
-void fail(const char s[]) THROW_DECL NORETURN2;
-
-void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
-
-extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
-
-extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
-
-void specialfail(const char s[]) THROW_DECL NORETURN2;
-
-extern void warn(warning_index w);
-
 extern restriction_test_result verify_restriction(
    setup *ss,
    assumption_thing tt,
@@ -3594,28 +3606,28 @@ public:
    // Simple constructor, takes argument saying whether collisions will be legal.
    collision_collector(collision_severity allow):
       m_allow_collisions(allow),
-      collision_mask(0),
+      m_collision_mask(0),
       m_callflags1(CFLAG1_TAKE_RIGHT_HANDS),  // Default is that collisions are legal.
-      assume_ptr((assumption_thing *) 0),
+      m_assume_ptr((assumption_thing *) 0),
       m_force_mirror_warn(false),
       m_doing_half_override(false),
-      cmd_misc_flags(0),
+      m_cmd_misc_flags(0),
       m_collision_appears_illegal(1),  // Halfway between "appears_illegal"
                                        // and not -- use table item.
-      result_mask(0)
+      m_result_mask(0)
    {}
 
    // Glorious constructor, takes all sorts of stuff.
    collision_collector(bool mirror, setup_command *cmd, const calldefn *callspec):
       m_allow_collisions(collision_severity_ok),
-      collision_mask(0),
+      m_collision_mask(0),
       m_callflags1(callspec->callflags1),
-      assume_ptr(&cmd->cmd_assume),
+      m_assume_ptr(&cmd->cmd_assume),
       m_force_mirror_warn(mirror),
       m_doing_half_override(false),
-      cmd_misc_flags(cmd->cmd_misc_flags),
+      m_cmd_misc_flags(cmd->cmd_misc_flags),
       m_collision_appears_illegal(0),  // May change to 2 as call progresses.
-      result_mask(0)
+      m_result_mask(0)
       {
          // If doing half of a call, and doing it left,
          // and there is a "collision", make them come to left hands.
@@ -3626,29 +3638,32 @@ public:
       }
 
    void note_prefilled_result(const setup *result)
-      { result_mask = little_endian_live_mask(result); }
+      { m_result_mask = little_endian_live_mask(result); }
 
    void install_with_collision(
       setup *result, int resultplace,
       const setup *sourcepeople, int sourceplace,
       int rot) THROW_DECL;
 
-   void fix_possible_collision(setup *result, merge_action action = merge_strict_matrix) THROW_DECL;
+   void fix_possible_collision(setup *result,
+                               merge_action action = merge_strict_matrix,
+                               uint32 callarray_flags = 0,
+                               setup *ss = (setup *) 0) THROW_DECL;
 
 private:
    const collision_severity m_allow_collisions;
-   int collision_index;
-   uint32 collision_mask;
+   int m_collision_index;
+   uint32 m_collision_mask;
    uint32 m_callflags1;
-   assumption_thing *assume_ptr;
+   assumption_thing *m_assume_ptr;
    bool m_force_mirror_warn;
    bool m_doing_half_override;
-   uint32 cmd_misc_flags;
+   uint32 m_cmd_misc_flags;
    // This is way too hairy.  In addition to its low 3 bits, the 0x100 bit is now in use,
    // meaning "if a collision occurs, give a warning that it is controversial".  It is
    // used when a collision occurs between the two groups doing an "own the anyone" operation.
    int m_collision_appears_illegal;
-   uint32 result_mask;
+   uint32 m_result_mask;
 };
 
 extern void mirror_this(setup *s) THROW_DECL;
@@ -3724,21 +3739,6 @@ extern bool get_real_subcall(
    uint32 extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
 
-extern int gcd(int a, int b);
-
-// These control inversion of the start and end args.  That is, the position
-// fraction F is turned into 1-F.
-enum fraction_invert_flags {
-   FRAC_INVERT_NONE = 0,
-   FRAC_INVERT_START = 1,
-   FRAC_INVERT_END = 2
-};
-
-extern uint32 process_fractions(int start, int end,
-                                fraction_invert_flags invert_flags,
-                                const fraction_command & incoming_fracs,
-                                bool make_improper = false,
-                                bool *improper_p = 0) THROW_DECL;
 
 extern int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) THROW_DECL;
 

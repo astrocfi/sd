@@ -84,20 +84,6 @@
    tgl3_1
    tgl4_0
    tgl4_1
-   squeezethingglass
-   squeezethinggal
-   squeezething343
-   squeezethingqtag
-   squeezething4dmd
-   squeezefinalglass
-   truck_to_ptpd
-   truck_to_deepxwv
-   press_4dmd_4x4
-   press_4dmd_qtag1
-   press_4dmd_qtag2
-   press_qtag_4dmd1
-   press_qtag_4dmd2
-   acc_crosswave
    id_bit_table_2x5_z
    id_bit_table_2x5_ctr6
    id_bit_table_d2x7a
@@ -461,6 +447,7 @@ Cstring warning_strings[] = {
    /*  warn__brute_force_mxn     */   "*Check that you are satisfied, and that the dancers will be satisfied, that this usage is correct, effective, and unambiguous.",
    /*  warn__two_faced           */   "*Not a wave -- maybe should say 'two-faced'.",
    /*  warn__cant_track_phantoms */   "*The phantoms may not have been tracked correctly.",
+   /*  warn__did_weird_stretch_response */"*Forced a smaller setup for 'stretch', this may be controversial.",
    /*  warn__crazy_tandem_interaction */  "*Using \"crazy\" on decomposed tandem-like operation.",
    /*  warn__mimic_ambiguity_checked */"*The mimic was ambiguous, but the result is the same either way.",
    /*  warn__mimic_ambiguity_resolved */"*The mimic was ambiguous, but only one assumption works.",
@@ -578,8 +565,16 @@ expand::thing expand::init_table[] = {
     s2x4, s2x6, 0, 0U, 0xC03, false,
     warn__none, warn__none, normalize_recenter, 0},
 
+   {{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+    s2x5, s2x6, 0, 0U, 0x801, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
    {{0, 1, 2, 3, 8, 9, 10, 11},
     s2x4, s2x6, 0, 0U, 0x0F0, false,
+    warn__none, warn__none, normalize_recenter, 0},
+
+   {{0, 1, 2, 3, 4, 7, 8, 9, 10, 11},
+    s2x5, s2x6, 0, 0U, 0x060, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13},
@@ -599,11 +594,11 @@ expand::thing expand::init_table[] = {
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 2, 3, 4, 7, 8, 9},
-    s1x4p2dmd, s1x4dmd, 0, 0U, 0x60, false,
+    slinefbox, s1x4dmd, 0, 0U, 0x60, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{5, 6, 7, 8, 9, 2, 3, 4},
-    s1x4p2dmd, s1x4dmd, 2, 0U, 0x03, false,
+    slinefbox, s1x4dmd, 2, 0U, 0x03, false,
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, -1, 1, -1, 2, -1, 3, -1, -1, 8, -1, 9, -1, 11, -1, 10},
@@ -615,7 +610,7 @@ expand::thing expand::init_table[] = {
     warn__none, warn__none, normalize_recenter, 0},
 
    {{0, 1, 3, 2, 5, 6, -1, -1},
-    s1x8, s1x4p2dmd, 0, 0U, 0x90, false,
+    s1x8, slinefbox, 0, 0U, 0x90, false,
     warn__none, warn__none, normalize_before_merge, 0},
 
    {{0, 1, -1, 2, 5, -1, -1, -1},
@@ -711,11 +706,11 @@ expand::thing expand::init_table[] = {
     warn__none, warn__none, normalize_to_4, 0},
 
    {{2, 3, 6, 7},
-    s2x2, sline2box, 0, 0U, 0x33, false,
+    s2x2, slinejbox, 0, 0U, 0x33, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{2, 3, 5, 4},
-    s1x4, sline6box, 0, 0U, 0xC3, false,
+    s1x4, slinevbox, 0, 0U, 0xC3, false,
     warn__none, warn__none, normalize_to_4, 0},
 
    {{8, 2},
@@ -1683,6 +1678,15 @@ map::map_thing map::map_init_table[] = {
    {{4, 5, 6, 7,                       2, 3, 0, 1},
     sdmd,2,MPKIND__HET_SPLIT,1,   warn__none, sdmdpdmd, (((veryshort) sdmd) << 24) | 0x20004, 0},
 
+   {{0, 1, 2, 7,                       3, 4, 5, 6},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,   warn__none, slinejbox, (((veryshort) s2x2) << 24) | 0x001, 0},
+   {{0, 1, 3, 2,                       4, 5, 6, 7},
+    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, slinevbox, (((veryshort) s_trngl4) << 24) | 0x004, 0},
+   {{3, 2, 1, 0,                       4, 5, 6, 7},
+    s_trngl4,2,MPKIND__HET_SPLIT,1,   warn__none, slineybox, (((veryshort) s2x2) << 24) | 0x003, 0},
+   {{0, 1, 3, 2,                       5, 6, 7, 4},
+    s1x4,2,MPKIND__HET_SPLIT,0,   warn__none, slinefbox, (((veryshort) s_trngl4) << 24) | 0x00C, 0},
+
    {{4, 5, 3,                          1, 2, 0},
     s_trngl,2,MPKIND__HET_SPLIT,1,      warn__none, s_short6, (((veryshort) s_trngl) << 24) | 0x108, 0},
    {{4, 5, 3,                          1, 2, 0},
@@ -1732,6 +1736,10 @@ map::map_thing map::map_init_table[] = {
     s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x00A, 0},
    {{13, 15, 11, 9,                    0, 2, 4, 6},
     s_trngl4,2,MPKIND__HET_SPLIT,0,   warn__none, s_c1phan,   (((veryshort) s_trngl4) << 24) | 0x005, 0},
+
+   {{-1, -1, -1, -1,   1, 2, 3, 0,       15, 12, 13, 14,   -1, -1, -1, -1,
+     7, 4, 5, 6,       -1, -1, -1, -1,   -1, -1, -1, -1,     9, 10, 11, 8},
+    s_c1phan,2,MPKIND__SPLIT,0,     warn__none, s_c1phan, 0x000, 0},
 
    {{12, 15, 14, 1, 4, 7, 6, 9,        10, 13, 3, 0, 2, 5, 11, 8},
     s2x4,2,MPKIND__STAG,0,        warn__none,  s4x4,      0x000, 0},
@@ -2354,6 +2362,14 @@ map::map_thing map::map_init_table[] = {
     s2x2,2,MPKIND__OVERLAP,0,     warn__none,  s2x3,      0x000, 0},
    {{1, 4, 5, 0,                       2, 3, 4, 1},
     s2x2,2,MPKIND__OVERLAP,1,     warn__none,  s2x3,      0x005, 0},
+
+   // Underlapped 2x2's or 1x4's in a 2x5, center pair is missing.
+   {{0, 1, 8, 9,                       3, 4, 5, 6},
+    s2x2,2,MPKIND__UNDERLAP,0,     warn__none,  s2x5,      0x000, 0},
+   {{1, 8, 9, 0,                       4, 5, 6, 3},
+    s2x2,2,MPKIND__UNDERLAP,1,     warn__none,  s2x5,      0x005, 0},
+   {{0, 1, 3, 2,                       8, 7, 5, 6},
+    s1x4,2,MPKIND__UNDERLAP,0,     warn__none,  s1x10,      0x000, 0},
 
    {{0, 1, 6, 7,            1, 2, 5, 6,            2, 3, 4, 5},
     s2x2,3,MPKIND__OVERLAP,0,     warn__none,  s2x4,      0x000, 0},
@@ -3304,6 +3320,8 @@ full_expand::thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0x0F0FU,     0x0208U, ~0U},
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0x0FF0U,     0x0280U, ~0U},
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xF00FU,     0x2008U, ~0U},
+   {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0x00FFU,     0x0088U, ~0U},
+   {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFF00U,     0x2200U, ~0U},
    // Rear back from 2x6 waves to a triple-column 8 chain (3x4.)
    {warn__rear_back,       8, &step_3x4_stuff, s2x6,      0xF00F00U,   0x200800U, ~0U},
    {warn__rear_back,       8, &step_3x4_stuff, s2x6,      0x00F00FU,   0x002008U, ~0U},
@@ -3930,6 +3948,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x2,     sdmd,     1, 0, 9, 1,  0xAF5, schema_concentric},
    {s_galaxy,       schema_nothing, {1, 3, 5, 7,    0, 2, 4, 6},
              s2x2,     sdmd,     0, 0, 9, 1,  0xAFA, schema_concentric},
+
+   {s_galaxy,       schema_nothing, {0, -1, 4, -1,    1, 2, 3, 5, 6, 7},
+             s1x4,     s_short6, 0, 0, 9, 1,  0xAFA, schema_concentric},
+
    {s_crosswave,    schema_nothing, {1, 3, 5, 7,    6, 0, 2, 4},
              sdmd,     s_star,   0, 1, 9, 1,  0xAF5, schema_concentric},
    {s_crosswave,    schema_nothing, {1, 3, 5, 7,    0, 2, 4, 6},
@@ -4482,18 +4504,28 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s_spindle,     s2x4, 0x55,  0x66, 0x0D, 0x0, schema_concentric,     sdmd,        s2x2,     warn__none, 0, 0, {7, 1, 3, 5},               {0, 3, 4, 7}},
    {s_ptpd,     sbigptpd, 0,  0,    0x0E, 0x0, schema_nothing,          nothing,     nothing,  warn__none, 0, 0, {2, 4, 3, 1, 8, 10, 9, 7}, {0}},
 
-   {s1x3p1dmd,     s1x8,  0,  0x0C, 0x0B, 0x0, schema_matrix,         s1x4p2dmd,     nothing,  warn__none, 2, 2, {1, 2, 6, 7, 3, 4}, {5, 6, -1, -1, 0, 1, 3, 2}},
-   {s1x3p1dmd,     s1x8,  0,  0xC0, 0x0E, 0x0, schema_matrix,         s1x4p2dmd,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 6, 7}, {0, 1, 3, 2, 5, 6, -1, -1}},
+   {s1x3p1dmd,     s1x8,  0,  0x0C, 0x0B, 0x0, schema_matrix,         slinefbox,     nothing,  warn__none, 2, 2, {1, 2, 6, 7, 3, 4}, {5, 6, -1, -1, 0, 1, 3, 2}},
+   {s1x3p1dmd,     s1x8,  0,  0xC0, 0x0E, 0x0, schema_matrix,         slinefbox,     nothing,  warn__none, 0, 0, {1, 2, 3, 4, 6, 7}, {0, 1, 3, 2, 5, 6, -1, -1}},
 
-   {s1x4p2dmd, s4p2x1dmd,   0, 0xD8, 0x0E, 0x0, schema_matrix,        s1x4p2dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, -1, -1, 5, -1, -1}},
-   {s1x4p2dmd, s4p2x1dmd, 0xD8,   0, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, -1, -1, 5, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {slinefbox, s4p2x1dmd,   0, 0xD8, 0x0E, 0x0, schema_matrix,        slinefbox,     nothing,  warn__none, 0, 0, {0, 1, 2, 3, 4, 5, 6, 7}, {0, 1, 2, -1, -1, 5, -1, -1}},
+   {slinefbox, s4p2x1dmd, 0xD8,   0, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {0, 1, 2, -1, -1, 5, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
-   {s1x6,    sdbltrngl4,  010, 0x0C, 0x0E, 0x0, schema_matrix,         sline6box,     nothing,  warn__none, 0, 0, {1, 2, 3, -1, 5, 4}, {0, 1, -1, -1, 4, 5, 6, 7}},
+   {s2x2, slineybox,     0x06, 0x0C, 0x0E, 0x0, schema_matrix,             s2x4,     nothing,  warn__none, 0, 0, {1, -1, -1, 6}, {0, 7, -1, -1, 2, 3, 4, 5}},
+
+   {s1x4, slineybox,     0x03, 0x90, 0x0E, 0x0, schema_matrix,              s_bone,     nothing,  warn__none, 0, 0, {-1, -1, 2, 3}, {0, 5, 6, 7, -1, 1, 4, -1}},
+
+   {slineybox, sdbltrngl4, 0x9F, 0xC0, 0x0E, 0x0, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, -1, -1, 6, 7, -1}, {0}},
+
+   {slineybox, sdbltrngl4, 0,    0x3F, 0x0E, 0x1, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {-1, -1, -1, -1, -1, -1, 5, 6}, {0}},
+
+   {slinefbox, sdbltrngl4, 0x03, 0xFC, 0x0E, 0x1, schema_nothing,       nothing,     nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, -1, -1}, {0}},
+
+   {s1x6,    sdbltrngl4,  010, 0x0C, 0x0E, 0x0, schema_matrix,         slinevbox,     nothing,  warn__none, 0, 0, {1, 2, 3, -1, 5, 4}, {0, 1, -1, -1, 4, 5, 6, 7}},
 
    {s3p1x1dmd,     s1x8, 0x03, 0x4E, 0x0B, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 2, 2, {-1, -1, 6, 7, 3, 4}, {5, -1, -1, -1, 0, 1, -1, 2}},
    {s3p1x1dmd,     s1x8, 0x03, 0xE4, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {-1, -1, 3, 4, 6, 7}, {0, 1, -1, 2, 5, -1, -1, -1}},
 
-   {s1x8,     s1x4p2dmd, 0xC0,    0, 0x0E, 0x0, schema_matrix,        s1x4p2dmd,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, 5, 6, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
+   {s1x8,     slinefbox, 0xC0,    0, 0x0E, 0x0, schema_matrix,        slinefbox,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, 5, 6, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
    {s1x8,     s4p2x1dmd, 0xE4,    0, 0x0E, 0x0, schema_matrix,        s4p2x1dmd,     nothing,  warn__none, 0, 0, {0, 1, -1, 2, 5, -1, -1, -1}, {0, 1, 2, 3, 4, 5, 6, 7}},
 
    {s1x6,     s4p2x1dmd,    0, 0xD8, 0x0E, 0x0, schema_matrix,        s1x8,          nothing,  warn__none, 0, 0, {1, 3, 2, 5, 7, 6}, {0, 1, 3, -1, -1, 4, -1, -1}},
@@ -4507,36 +4539,80 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x8,       s2x4,     0xF0, 0xC3, 0x0E, 0x0, schema_matrix,        slinebox,     nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, -1, -1}, {-1, -1, 4, 5, 6, 7, -1, -1}},
    {s1x8,       s2x4,     0x0F, 0x3C, 0x0E, 0x0, schema_matrix,        slinebox,     nothing,  warn__none, 0, 2, {-1, -1, -1, -1, 0, 1, 3, 2}, {6, 7, -1, -1, -1, -1, 4, 5}},
 
-   {s1x8,       s2x4,     0xFC, 0x81, 0x0E, 0x0, schema_matrix,        sline2box,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, -1, -1}, {-1, 2, 3, 4, 5, 6, 7, -1}},
-   {s1x8,       s2x4,     0xCF, 0x18, 0x0E, 0x0, schema_matrix,        sline2box,    nothing,  warn__none, 0, 2, {-1, -1, -1, -1, 0, 1, -1, -1}, {5, 6, 7, -1, -1, 2, 3, 4}},
-   {s2x3,   s_rigger,      063, 0x0C, 0x0E, 0x0, schema_matrix,        sline2box,    nothing,  warn__none, 0, 0, {-1, -1, 4, 5, -1, -1}, {2, 3, -1, -1, 6, 7, 0, 1}},
-   {s2x3,   s_rigger,      036, 0xC0, 0x0E, 0x0, schema_matrix,        sline2box,    nothing,  warn__none, 0, 2, {5, -1, -1, -1, -1, 4}, {6, 7, 0, 1, 2, 3, -1, -1}},
-   {s1x8,  sline2box,     0x03, 0xFC, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, -1, -1}},
-   {s1x8,  sline6box,     0xCF, 0xC0, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, 6, 7, -1, -1}},
-   {s1x4,  sline6box,        0, 0x3C, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {2, 3, 5, 4}},
-   {s2x2,  sline6box,        0, 0x3C, 0x0E, 0x0, schema_matrix,        sline2box,    nothing,  warn__none, 0, 0, {2, 3, 6, 7}, {0, 1, -1, -1, -1, -1, 4, 5}},
+   {s1x8,       s2x4,     0xFC, 0x81, 0x0E, 0x0, schema_matrix,        slinejbox,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, -1, -1}, {-1, 2, 3, 4, 5, 6, 7, -1}},
+   {s1x8,       s2x4,     0xCF, 0x18, 0x0E, 0x0, schema_matrix,        slinejbox,    nothing,  warn__none, 0, 2, {-1, -1, -1, -1, 0, 1, -1, -1}, {5, 6, 7, -1, -1, 2, 3, 4}},
+   {s2x3,   s_rigger,      063, 0x0C, 0x0E, 0x0, schema_matrix,        slinejbox,    nothing,  warn__none, 0, 0, {-1, -1, 4, 5, -1, -1}, {2, 3, -1, -1, 6, 7, 0, 1}},
+   {s2x3,   s_rigger,      036, 0xC0, 0x0E, 0x0, schema_matrix,        slinejbox,    nothing,  warn__none, 0, 2, {5, -1, -1, -1, -1, 4}, {6, 7, 0, 1, 2, 3, -1, -1}},
+   {s1x8,  slinejbox,     0x03, 0xFC, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, -1, -1}},
+   {s1x8,  slinejbox,     0xC0, 0xB4, 0x0E, 0x0, schema_matrix,        slinefbox,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, 5, 6, -1, -1}, {0, 1, -1, 4, -1, -1, 7, -1}},
 
-   {s2x4,  sline2box,     0x7E, 0x03, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, 1, 2, 3, 4, 5, 6}},
-   {s1x4,  sline2box,        0, 0xCC, 0x0E, 0x0, schema_matrix,        sline6box,    nothing,  warn__none, 0, 0, {2, 3, 5, 4}, {0, 1, -1, -1, 6, 7, -1, -1}},
-   {s1x6,  sline2box,      047, 0x30, 0x0E, 0x0, schema_matrix,         s_rigger,    nothing,  warn__none, 0, 0, {-1, -1, -1, 2, 3, -1}, {6, 7, 0, 1, -1, -1, 4, 5}},
-   {s2x2,  sline2box,        0, 0xCC, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {2, 3, 6, 7}},
-   {s2x2,  sline2box,      0x9, 0x48, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, 3, 6, -1}},
-   {s2x4,  sline6box,     0x7E, 0x03, 0x0E, 0x0, schema_matrix,           s_bone,    nothing,  warn__none, 0, 0, {0, -1, -1, -1, -1, -1, -1, 5}, {-1, -1, 6, 7, 3, 2, 1, 4}},
-   {s2x4,  sline6box,     0x18, 0x3F, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, -1, -1, 3, 4}},
+   {s1x8,  slinevbox,     0xCF, 0xC0, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, 6, 7, -1, -1}},
+   {s1x4,  slinevbox,        0, 0x3C, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {2, 3, 5, 4}},
+   {s2x2,  slinevbox,        0, 0x3C, 0x0E, 0x0, schema_matrix,        slinejbox,    nothing,  warn__none, 0, 0, {2, 3, 6, 7}, {0, 1, -1, -1, -1, -1, 4, 5}},
 
-   {s1x8,       s2x4,     0x30, 0xE7, 0x0E, 0x0, schema_matrix,        sline6box,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, 4, 5}, {-1, -1, -1, 6, 7, -1, -1, -1}},
-   {s1x8,       s2x4,     0x03, 0x7E, 0x0E, 0x0, schema_matrix,        sline6box,    nothing,  warn__none, 0, 2, {-1, -1, 4, 5, 0, 1, 3, 2}, {7, -1, -1, -1, -1, -1, -1, 6}},
-   {s_bone,     s1x8,     0x21, 0xFC, 0x0E, 0x0, schema_matrix,        sline6box,    nothing,  warn__none, 0, 0, {-1, 6, 5, 4, 7, -1, 2, 3}, {0, 1, -1, -1, -1, -1, -1, -1}},
-   {s_bone,     s1x8,     0x12, 0xCF, 0x0E, 0x0, schema_matrix,        sline6box,    nothing,  warn__none, 0, 2, {7, -1, 2, 3, -1, 6, 5, 4}, {-1, -1, -1, -1, 0, 1, -1, -1}},
+   {s2x4,  slinejbox,     0x7E, 0x03, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, 1, 2, 3, 4, 5, 6}},
+   {s1x4,  slinejbox,        0, 0xCC, 0x0E, 0x0, schema_matrix,        slinevbox,    nothing,  warn__none, 0, 0, {2, 3, 5, 4}, {0, 1, -1, -1, 6, 7, -1, -1}},
+   {s1x4,  slinejbox,     0x0C, 0x84, 0x0E, 0x0, schema_matrix,         slinebox,    nothing,  warn__none, 0, 0, {2, 3, -1, -1}, {0, 1, -1, 4, 5, 6, 7, -1}},
 
-   {s1x4,  sline2box,      0x3, 0x48, 0x0E, 0x0, schema_matrix,        sdbltrngl4,   nothing,  warn__none, 0, 0, {-1, -1, 5, 4}, {0, 1, 2, -1, 6, 7, -1, 3}},
-   {s1x4,  sline6box,        0, 0,    0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {2, 3, 5, 4}},
-   {s2x2,  sline6box,      0x6, 0x0C, 0x0E, 0x0, schema_matrix,        sdbltrngl4,   nothing,  warn__none, 0, 0, {2, -1, -1, 3}, {0, 1, -1, -1, 4, 5, 6, 7}},
 
-   {s2x2,  sdbltrngl4,     0x9, 0x30, 0x0E, 0x0, schema_matrix,        sline2box,   nothing,  warn__none, 0, 0, {-1, 3, 6, -1}, {0, 1, 2, 7, -1, -1, 4, 5}},
-   {s1x4,  sdbltrngl4,     0xC, 0x0C, 0x0E, 0x0, schema_matrix,        sline6box,   nothing,  warn__none, 0, 0, {2, 3, -1, -1}, {0, 1, -1, -1, 4, 5, 6, 7}},
+   {s1x4,  s2x4,           0xC, 0x42, 0x0E, 0x0, schema_matrix,        slineybox,    nothing,  warn__none, 0, 0,
+    {2, 3, -1, -1}, {0, -1, 4, 5, 6, 7, -1, 1}},
+   {s1x4,  s2x4,           0x3, 0x24, 0x0E, 0x0, schema_matrix,        slineybox,    nothing,  warn__none, 0, 2,
+    {-1, -1, 2, 3}, {6, 7, -1, 1, 0, -1, 4, 5}},
+
+   {s2x2,  s1x8,           0x9, 0xC0, 0x0E, 0x0, schema_matrix,        slinefbox,    nothing,  warn__none, 0, 0,
+    {-1, 4, 7, -1}, {0, 1, 3, 2, 5, 6, -1, -1}},
+   {s2x2,  s1x8,           0x6, 0x0C, 0x0E, 0x0, schema_matrix,        slinefbox,    nothing,  warn__none, 0, 2,
+    {7, -1, -1, 4}, {5, 6, -1, -1, 0, 1, 3, 2}},
+
+
+
+
+   {s1x6,  slinejbox,      047, 0x30, 0x0E, 0x0, schema_matrix,         s_rigger,    nothing,  warn__none, 0, 0, {-1, -1, -1, 2, 3, -1}, {6, 7, 0, 1, -1, -1, 4, 5}},
+   {s2x2,  slinejbox,        0, 0xCC, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {2, 3, 6, 7}},
+   {s2x2,  slinejbox,      0x9, 0x48, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, 3, 6, -1}},
+   {s2x4,  slinevbox,     0x7E, 0x03, 0x0E, 0x0, schema_matrix,           s_bone,    nothing,  warn__none, 0, 0, {0, -1, -1, -1, -1, -1, -1, 5}, {-1, -1, 6, 7, 3, 2, 1, 4}},
+   {s2x4,  slinevbox,     0x18, 0x3F, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, -1, -1, -1, -1, 3, 4}},
+   {slinevbox,  slineybox,   0, 0x93, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, 2, 3, -1, 6, 7, -1}},
+   {slinevbox,  slineybox, 0x33,   0, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, 2, 3, -1, -1, 5, 6}},
+   {slinevbox,  slinefbox, 0xF0,   0, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, 2, 3, -1, -1, -1, -1}},
+
+   {s1x8,       s2x4,     0x30, 0xE7, 0x0E, 0x0, schema_matrix,        slinevbox,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, 4, 5}, {-1, -1, -1, 6, 7, -1, -1, -1}},
+   {s1x8,       s2x4,     0x03, 0x7E, 0x0E, 0x0, schema_matrix,        slinevbox,    nothing,  warn__none, 0, 2, {-1, -1, 4, 5, 0, 1, 3, 2}, {7, -1, -1, -1, -1, -1, -1, 6}},
+   {s_bone,     s1x8,     0x21, 0xFC, 0x0E, 0x0, schema_matrix,        slinevbox,    nothing,  warn__none, 0, 0, {-1, 6, 5, 4, 7, -1, 2, 3}, {0, 1, -1, -1, -1, -1, -1, -1}},
+   {s_bone,     s1x8,     0x12, 0xCF, 0x0E, 0x0, schema_matrix,        slinevbox,    nothing,  warn__none, 0, 2, {7, -1, 2, 3, -1, 6, 5, 4}, {-1, -1, -1, -1, 0, 1, -1, -1}},
+
+   {s1x4,  slinejbox,      0x3, 0x48, 0x0E, 0x0, schema_matrix,        sdbltrngl4,   nothing,  warn__none, 0, 0, {-1, -1, 5, 4}, {0, 1, 2, -1, 6, 7, -1, 3}},
+   {s1x4,  slinevbox,        0, 0,    0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {2, 3, 5, 4}},
+   {s2x2,  slinevbox,      0x6, 0x0C, 0x0E, 0x0, schema_matrix,        sdbltrngl4,   nothing,  warn__none, 0, 0, {2, -1, -1, 3}, {0, 1, -1, -1, 4, 5, 6, 7}},
+
+   {s2x2,  slinevbox,      0x9, 0x30, 0x0E, 0x0, schema_matrix,          slinebox,   nothing,  warn__none, 0, 0, {-1, 4, 7, -1}, {0, 1, 2, 3, -1, -1, 5, 6}},
+
+
+   {s1x4,  slinebox,         0, 0x90, 0x0E, 0x0, schema_matrix,         slinevbox,   nothing,  warn__none, 0, 0, {2, 3, 5, 4}, {0, 1, 2, 3, -1, 6, 7, -1}},
+
+   {slineybox, sdbltrngl4, 0x60, 0,   0x0B, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {7, 6, 5, 4, 3, -1, -1, 2}},
+
+   {slinebox, slineybox,  0x0C, 0x03, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, 2, 3, 4, 5, 6, 7}},
+
+   {slinebox, sdbltrngl4,  0x9C, 0,   0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, 6, 7, -1}},
+
+   {slinebox, sdbltrngl4,  0, 0x3C,   0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, 5, 6}},
+
+
+   {s2x2,  sdbltrngl4,     0x9, 0x30, 0x0E, 0x0, schema_matrix,        slinejbox,   nothing,  warn__none, 0, 0, {-1, 3, 6, -1}, {0, 1, 2, 7, -1, -1, 4, 5}},
+   {s1x4,  sdbltrngl4,     0xC, 0x0C, 0x0E, 0x0, schema_matrix,        slinevbox,   nothing,  warn__none, 0, 0, {2, 3, -1, -1}, {0, 1, -1, -1, 4, 5, 6, 7}},
    {s2x4,  sdbltrngl4,    0x5A, 0x33, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {-1, -1, 1, 6, -1, -1, 3, 4}},
    {s1x8,  sdbltrngl4,    0xC3, 0xCC, 0x0E, 0x1, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, 6, 7, -1, -1}},
+   {s1x8,  sdbltrngl4,    0x3C,    0, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, 4, 5}},
+   {s1x8,  slineybox,     0xC0, 0x63, 0x0E, 0x0, schema_matrix,        slinefbox,   nothing,  warn__none, 0, 0, {0, 1, 3, 2, 5, 6, -1, -1}, {-1, -1, 2, 3, 4, -1, -1, 7}},
+
+   {s1x8,  slinevbox,     0xF0,    0, 0x0E, 0x0, schema_nothing,         nothing,    nothing,  warn__none, 0, 0, {0, 1, 3, 2, -1, -1, -1, -1}},
+
+   {s2x4,  slinefbox,     0x42, 0x63, 0x0E, 0x0, schema_matrix,        slineybox,   nothing,  warn__none, 0, 0, {0, -1, 4, 5, 6, 7, -1, 1}, {-1, -1, 2, 3, 4, -1, -1, 7}},
+   {s2x4,  slinefbox,     0x81, 0x6C, 0x0E, 0x0, schema_matrix,        slinejbox,   nothing,  warn__none, 0, 0, {-1, 2, 3, 4, 5, 6, 7, -1}, {0, 1, -1, -1, 3, -1, -1, 6}},
+
+   {s2x4,  slinefbox,     0xC3, 0x60, 0x0E, 0x0, schema_matrix,         slinebox,   nothing,  warn__none, 0, 0, {-1, -1, 4, 5, 6, 7, -1, -1}, {0, 1, 2, 3, 4, -1, -1, 7}},
 
    {s1x8,       s2x4,     0x3C, 0xA5, 0x0E, 0x0, schema_matrix,        sdbltrngl4,   nothing,  warn__none, 0, 0, {0, 1, -1, -1, -1, -1, 4, 5}, {-1, 2, -1, 6, 7, -1, 3, -1}},
    {s1x8,       s2x4,     0xC3, 0x5A, 0x0E, 0x0, schema_matrix,        sdbltrngl4,   nothing,  warn__none, 0, 2, {-1, -1,  4,  5,  0,  1, -1, -1}, {7, -1, 3, -1, -1, 2, -1, 6}},
@@ -4547,6 +4623,12 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s2x4,     splinepdmd, 0xF0, 0xF0, 0x0D, 0x0, schema_matrix,      s_trngl8,       nothing,  warn__none, 0, 1, {4, 5, 6, 7, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
    {s2x4,     sdmdpdmd,   0xF0, 0xF0, 0x0E, 0x0, schema_matrix,     slinepdmd,       nothing,  warn__none, 0, 0, {4, 5, 7, 6, -1, -1, -1, -1}, {0, 1, 2, 3, -1, -1, -1, -1}},
    {s2x4,       slinedmd, 0x3C, 0xF0, 0x0D, 0x0, schema_matrix,       sboxdmd,       nothing,  warn__none, 0, 0, {5, 6, -1, -1, -1, -1, 7, 4}, {0, 1, 2, 3, -1, -1, -1, -1}},
+
+   {s2x2,  slinebox,       0x6, 0x0C, 0x0E, 0x0, schema_matrix,     slinejbox,       nothing,  warn__none, 0, 0,
+    {2, -1, -1, 7}, {0, 1, -1, -1, 3, 4, 5, 6}},
+
+   {s2x4,  slinebox,       0x42, 0x3, 0x0E, 0x0, schema_matrix,     slineybox,       nothing,  warn__none, 0, 0,
+    {0, -1, 4, 5, 6, 7, -1, 1}, {-1, -1, 2, 3, 4, 5, 6, 7}},
 
    {s2x4,      splinedmd, 0x3C, 0x0F, 0x0E, 0x0, schema_matrix,       sboxdmd,       nothing,  warn__none, 0, 3, {5, 6, -1, -1, -1, -1, 7, 4}, {-1, -1, -1, -1, 1, 2, 3, 0}},
    {s2x4,     splinepdmd, 0x3C, 0x0F, 0x0E, 0x0, schema_matrix,      sboxpdmd,       nothing,  warn__none, 0, 3, {5, 6, -1, -1, -1, -1, 7, 4}, {-1, -1, -1, -1, 2, 3, 0, 1}},
@@ -4997,15 +5079,12 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
    // This one must be after the four that precede.
    {s1x4,          s4x4, 0,   0xEEEE, 0x0C, 0x8, schema_concentric,     s1x4,        s2x2,     warn__none, 0, 1, {0, 1, 2, 3},{0, 4, 8, 12}},
-
    {s2x3,          s4x5, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {8, 7, 6, 18, 17, 16},{0}},
-
    {s1x4,          s4x5, 0,  0xF83E0, 0xAE, 0x0, schema_matrix,         s_545,       nothing,  warn__none, 0, 0, {12, 13, 5, 6},               {0, 1, 2, 3, 4, -1, -1, -1, -1, -1, 7, 8, 9, 10, 11, -1, -1, -1, -1, -1}},
-
    {s1x4,          s4x5, 0,  0x739CE, 0xAD, 0x0, schema_matrix,         s3x4,        nothing,  warn__none, 0, 1, {10, 11, 4, 5},               {9, -1, -1, -1, 0, 1, -1, -1, -1, 8, 3, -1, -1, -1, 6, 7, -1, -1, -1, 2}},
    {s1x4,          s4x5, 0,  0x739CE, 0xAE, 0x0, schema_matrix,         sbigh,       nothing,  warn__none, 0, 0, {4, 5, 10, 11},               {0, -1, -1, -1, 9, 8, -1, -1, -1, 1, 6, -1, -1, -1, 3, 2, -1, -1, -1, 7}},
-
-   {s1x4,          s3x6, 0,        0, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {16, 17, 7, 8},{0}},
+   {s2x2,          s3x6, 0,  0636636, 0x0E, 0x0, schema_matrix,         s_3223,      nothing,  warn__none, 0, 0, {4, 3, 9, 8},               {0, -1, -1, -1, -1, 1, 2, -1, -1, 5, -1, -1, -1, -1, 6, 7, -1, -1}},
+   {s1x4,          s3x6, 0,  0636636, 0x0D, 0x0, schema_matrix,         s_343,       nothing,  warn__none, 0, 1, {8, 9, 3, 4},               {7, -1, -1, -1, -1, 0, 1, -1, -1, 2, -1, -1, -1, -1, 5, 6, -1, -1}},
    {s_short6,   s1x8,    0,     0xEE, 0x0E, 0x0, schema_matrix,         s_galaxy,    nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7},       {0, -1, -1, -1, 4, -1, -1, -1}},
    {s_short6,   s1x6,    0,      066, 0x0E, 0x0, schema_matrix,         s_galaxy,    nothing,  warn__none, 0, 0, {1, 2, 3, 5, 6, 7},       {0, -1, -1, 4, -1, -1}},
    {s1x6,   s_spindle,   0,     0x77, 0x0E, 0x0, schema_concentric,     s1x6,        s1x2,     warn__none, 0, 0, {0, 1, 2, 3, 4, 5},       {7, 3}},
@@ -5078,6 +5157,10 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x2,         s_525, 0,    04040, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {11, 5}, {0}},
    {s3x4,         s_525, 06666,    0, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {3, -1, -1, 7, -1, -1, 9, -1, -1, 1, -1, -1}, {0}},
    {s1x4,         s_525, 0,    04444, 0x0D, 0x0, schema_matrix,         sbigdmd,     nothing,  warn__none, 0, 0, {2, 3, 8, 9},               {0, 1, -1, 4, 5, -1, 6, 7, -1, 10, 11, -1}},
+   {s1x4,        s_3223, 0,    0x318, 0x0E, 0x0, schema_matrix,         s3x6,        nothing,  warn__none, 0, 0, {16, 17, 7, 8},               {0, 5, 6, -1, -1, 9, 14, 15, -1, -1}},
+   {s_343,       s_3223, 0x0E7,0x318, 0x0E, 0x1, schema_nothing,        nothing,     nothing,  warn__none, 1, 0, {0, 1, 2, -1, -1, 5, 6, 7, -1, -1}, {0}},
+
+   {s_323,       s_3223, 0x88, 0x0E7, 0x0E, 0x0, schema_matrix,         s_3223,      nothing,  warn__none, 0, 1, {6, 7, 0, -1,1, 2, 5, -1}, {-1, -1, -1, 4, 8, -1, -1, -1, 9, 3}},
 
    {sdmd,         s_525, 0,    04444, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {2, 5, 8, 11},         {0}},
    {s1x2,          s2x3, 0,      022, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 4},               {0}},
@@ -5085,6 +5168,8 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
    {s1x2,         s_323, 0,     0x88, 0x0E, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {7, 3},               {0}},
    {s2x2,         s_323, 0,     0xAA, 0x0C, 0x0, schema_matrix,         s4x4,        nothing,  warn__check_butterfly, 0, 0, {15, 3, 7, 11},             {12, -1, 0, -1, 4, -1, 8, -1}},
    {s1x4,         s_323, 0,     0xAA, 0x0D, 0x0, schema_concentric,     s1x4,        s2x4,     warn__none, 0, 1, {0, 1, 2, 3},               {2, 1, 3, 4, 6, 5, 7, 0}},
+   {s1x4,         s_323, 0,     0x88, 0x0D, 0x0, schema_matrix,         s3x6,     nothing,     warn__none, 0, 1, {16, 17, 7, 8},               {14, 15, 0, -1, 5, 6, 9, -1}},
+
    {sdmd,         s_323, 0,     0xAA, 0x0D, 0x0, schema_nothing,        nothing,     nothing,  warn__none, 0, 0, {1, 3, 5, 7},         {0}},
    {sdmd,       s1x3dmd, 0,     0xAA, 0x1D, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 2, 4, 6}},
    {sdmd,       s1x3dmd, 0,     0xCC, 0x0C, 0x0, schema_concentric,     sdmd,        s1x4,     warn__none, 0, 0, {0, 1, 2, 3},               {0, 1, 4, 5}},
@@ -5229,7 +5314,7 @@ merge_table::concmerge_thing merge_table::merge_init_table[] = {
 
 // These are used in mirror_this, for handling difficult triangles.
 
-const coordrec tgl3_0 = {s_trngl, 3,
+const coordrec tgl3_0 = {s_trngl, 0x23,
    {  0,  -2,   2},
    {  0,   4,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5241,7 +5326,7 @@ const coordrec tgl3_0 = {s_trngl, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-const coordrec tgl3_1 = {s_trngl, 3,
+const coordrec tgl3_1 = {s_trngl, 0x23,
    {  0,   4,   4},
    {  0,   2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5253,7 +5338,7 @@ const coordrec tgl3_1 = {s_trngl, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-const coordrec tgl4_0 = {s_trngl4, 3,
+const coordrec tgl4_0 = {s_trngl4, 0x23,
    {  0,   0,  -2,   2},
    { -4,   0,   4,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5265,7 +5350,7 @@ const coordrec tgl4_0 = {s_trngl4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-const coordrec tgl4_1 = {s_trngl4, 3,
+const coordrec tgl4_1 = {s_trngl4, 0x23,
    { -4,   0,   4,   4},
    {  0,   0,   2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5277,135 +5362,10 @@ const coordrec tgl4_1 = {s_trngl4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-// These are used in sdmoves to fudge matrix calls.
-
-const coordrec squeezethingglass = {s_hrglass, 3,
-   { -4,   4,   8,   0,   4,  -4,  -8,   0},
-   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {0}};
-
-const coordrec squeezethinggal = {s_galaxy, 3,
-   { -6,  -2,   0,   2,   6,   2,   0,  -2},
-   {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {0}};
-
-const coordrec squeezething343 = {s_343, 3,
-   { -4,   0,   4,   6,   2,   4,   0,  -4,  -6,  -2},
-   {  6,   6,   6,   0,   0,  -6,  -6,  -6,   0,   0}, {0}};
-
-const coordrec squeezethingqtag = {s_qtag, 3,
-   { -2,   2,   6,   2,   2,  -2,  -6,  -2},
-   {  4,   4,   0,   0,  -4,  -4,   0,   0}, {0}};
-
-const coordrec squeezething4dmd = {s4dmd, 3,
-   {-10,  -5,   5,  10,  14,  10,   6,   2,  10,   5,  -5, -10, -14, -10,  -6,  -2},
-   {  6,   6,   6,   6,   0,   0,   0,   0,  -6,  -6,  -6,  -6,   0,   0,   0,   0}, {0}};
-
-const coordrec squeezefinalglass = {s_hrglass, 3,
-   { -2,   2,   6,   0,   2,  -2,  -6,   0},
-   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1,  0,  1, -1, -1, -1,
-      -1, -1,  6, -1,  3, -1,  2, -1,
-      -1, -1, -1, -1,  7, -1, -1, -1,
-      -1, -1, -1,  5,  4, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec truck_to_ptpd = {s_ptpd, 3,
-   {-10,  -6,  -2,  -6,  10,   6,   2,   6},
-   {  0,   2,   0,  -2,   0,  -2,   0,   2}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1,  0,  1,  2,  6,  7,  4, -1,
-      -1, -1,  3, -1, -1,  5, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec truck_to_deepxwv = {sdeepxwv, 4,
-   {-11,  -7,  -2,  -2,  -2,  -2,  11,   7,   2,   2,   2,   2},
-   {  0,   0,   6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6}, {
-      -1, -1, -1, -1, -1, -1, -1,  2, 11, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1,  0,  1,  3, 10,  7,  6, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1,  4,  9, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1,  5,  8, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec press_4dmd_4x4 = {s4x4, 3,
-   { 11,   9,   9,   1,  11,   5,  -5,   1, -11,  -9,  -9,  -1, -11,  -5,   5,  -1},
-   {  7,   1,  -1,   1,  -7,  -7,  -7,  -1,  -7,  -1,   1,  -1,   7,   7,   7,   1}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, 12, 13, -1, -1, 14,  0, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1,  8,  6, -1, -1,  5,  4, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec press_4dmd_qtag1 = {s_qtag, 3,
-   { -7,  -1,   6,   2,   7,   1,  -6,  -2},
-   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1,  0,  1, -1, -1, -1, -1,
-      -1, -1,  6,  7,  3,  2, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1,  5,  4, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec press_4dmd_qtag2 = {s_qtag, 3,
-   {  1,   7,   6,   2,  -1,   -7,  -6,  -2},
-   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1,  0,  1, -1, -1,
-      -1, -1,  6,  7,  3,  2, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1,  5,  4, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec press_qtag_4dmd1 = {s4dmd, 3,
-   {-11,  -5,   0,   9,  14,  10,   6,   2,  11,   5,   0,  -9, -14, -10,  -6,  -2},
-   {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1,  0,  1, -1,  2, -1,  3, -1,
-      12, 13, 14, 15,  7,  6,  5,  4,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, 11, -1, -1, 10,  9,  8, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec press_qtag_4dmd2 = {s4dmd, 3,
-   { -8,   1,   5,  11,  14,  10,   6,   2,   8,  -1,  -5, -11, -14, -10,  -6,  -2},
-   {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1,  0, -1,  1,  2,  3, -1,
-      12, 13, 14, 15,  7,  6,  5,  4,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, 11, 10,  9, -1, -1,  8, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
-
-const coordrec acc_crosswave = {s_crosswave, 3,
-   { -8,  -4,   0,   0,   8,   4,   0,   0},
-   {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1,  2, -1, -1, -1,
-      -1, -1,  0,  1,  3,  5,  4, -1,
-      -1, -1, -1, -1,  7, -1, -1, -1,
-      -1, -1, -1, -1,  6, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1,
-      -1, -1, -1, -1, -1, -1, -1, -1}};
 
 // These are used in setup_coords.
 
-static const coordrec thing1x1 = {s1x1, 3,
+static const coordrec thing1x1 = {s1x1, 0x23,
    {  0},
    {  0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5417,7 +5377,7 @@ static const coordrec thing1x1 = {s1x1, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x2 = {s1x2, 3,
+static const coordrec thing1x2 = {s1x2, 0x23,
    { -2,   2},
    {  0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5429,7 +5389,7 @@ static const coordrec thing1x2 = {s1x2, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x3 = {s1x3, 3,
+static const coordrec thing1x3 = {s1x3, 0x23,
    { -4,   0,   4},
    {  0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5441,7 +5401,7 @@ static const coordrec thing1x3 = {s1x3, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x4 = {s1x4, 3,
+static const coordrec thing1x4 = {s1x4, 0x23,
    { -6,  -2,   6,   2},
    {  0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5453,7 +5413,7 @@ static const coordrec thing1x4 = {s1x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x5 = {s1x5, 3,
+static const coordrec thing1x5 = {s1x5, 0x23,
    { -8,  -4,   0,   4,   8},
    {  0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5465,7 +5425,7 @@ static const coordrec thing1x5 = {s1x5, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x6 = {s1x6, 3,
+static const coordrec thing1x6 = {s1x6, 0x23,
    {-10,  -6,  -2,  10,   6,   2},
    {  0,   0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5477,7 +5437,7 @@ static const coordrec thing1x6 = {s1x6, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x8 = {s1x8, 3,
+static const coordrec thing1x8 = {s1x8, 0x23,
    {-14, -10,  -2,  -6,  14,  10,   2,   6},
    {  0,   0,   0,   0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5489,7 +5449,7 @@ static const coordrec thing1x8 = {s1x8, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x10 = {s1x10, 4,
+static const coordrec thing1x10 = {s1x10, 0x24,
    {-18, -14, -10,  -6,  -2,  18,  14,  10,   6,   2},
    {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5497,7 +5457,7 @@ static const coordrec thing1x10 = {s1x10, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x12 = {s1x12, 4,
+static const coordrec thing1x12 = {s1x12, 0x24,
    {-22, -18, -14, -10,  -6,  -2,  22,  18,  14,  10,   6,   2},
    {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5505,7 +5465,7 @@ static const coordrec thing1x12 = {s1x12, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x14 = {s1x14, 4,
+static const coordrec thing1x14 = {s1x14, 0x24,
    {-26, -22, -18, -14, -10,  -6,  -2,  26,  22,  18,  14,  10,   6,   2},
    {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5513,7 +5473,7 @@ static const coordrec thing1x14 = {s1x14, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x16 = {s1x16, 4,
+static const coordrec thing1x16 = {s1x16, 0x24,
    {-30, -26, -22, -18, -14, -10,  -6,  -2,  30,  26,  22,  18,  14,  10,   6,   2},
    {  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5521,7 +5481,7 @@ static const coordrec thing1x16 = {s1x16, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdmd = {sdmd, 3,
+static const coordrec thingdmd = {sdmd, 0x23,
    { -5,   0,   4,   0},
    {  0,   2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5533,7 +5493,7 @@ static const coordrec thingdmd = {sdmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingdmd = {sdmd, 3,
+static const coordrec nicethingdmd = {sdmd, 0x23,
    { -5,   0,   5,   0},
    {  0,   2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5545,7 +5505,7 @@ static const coordrec nicethingdmd = {sdmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x2 = {s2x2, 3,
+static const coordrec thing2x2 = {s2x2, 0x23,
    { -2,   2,   2,  -2},
    {  2,   2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5557,7 +5517,7 @@ static const coordrec thing2x2 = {s2x2, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x3 = {s2x3, 3,
+static const coordrec thing2x3 = {s2x3, 0x23,
    { -4,   0,   4,   4,   0,  -4},
    {  2,   2,   2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5569,7 +5529,7 @@ static const coordrec thing2x3 = {s2x3, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x4 = {s2x4, 3,
+static const coordrec thing2x4 = {s2x4, 0x23,
    { -6,  -2,   2,   6,   6,   2,  -2,  -6},
    {  2,   2,   2,   2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5581,7 +5541,7 @@ static const coordrec thing2x4 = {s2x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x5 = {s2x5, 3,
+static const coordrec thing2x5 = {s2x5, 0x23,
    { -8,  -4,   0,   4,   8,   8,   4,   0,  -4,  -8},
    {  2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5593,7 +5553,7 @@ static const coordrec thing2x5 = {s2x5, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x6 = {s2x6, 3,
+static const coordrec thing2x6 = {s2x6, 0x23,
    {-10,  -6,  -2,   2,   6,  10,  10,   6,   2,  -2,  -6,  -10},
    {  2,   2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5605,7 +5565,7 @@ static const coordrec thing2x6 = {s2x6, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x7 = {s2x7, 3,
+static const coordrec thing2x7 = {s2x7, 0x23,
    { -12, -8,  -4,   0,   4,   8,  12,  12,   8,   4,   0,  -4,  -8, -12},
    {  2,   2,   2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5617,7 +5577,7 @@ static const coordrec thing2x7 = {s2x7, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x8 = {s2x8, 3,
+static const coordrec thing2x8 = {s2x8, 0x23,
    {-14, -10,  -6,  -2,   2,   6,  10,  14,  14,  10,   6,   2,  -2,  -6, -10, -14},
    {  2,   2,   2,   2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5630,7 +5590,7 @@ static const coordrec thing2x8 = {s2x8, 3,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
 // Used only by mirror_this.
-static const coordrec thing1p5x8 = {nothing, 3,
+static const coordrec thing1p5x8 = {nothing, 0x23,
    {-14, -10,  -6,  -2,   2,   6,  10,  14,  14,  10,   6,   2,  -2,  -6, -10, -14},
    {  3,   3,   3,   3,   3,   3,   3,   3,  -3,  -3,  -3,  -3,  -3,  -3,  -3,  -3}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5642,7 +5602,7 @@ static const coordrec thing1p5x8 = {nothing, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x9 = {s2x9, 4,
+static const coordrec thing2x9 = {s2x9, 0x24,
    { -16, -12, -8,  -4,   0,   4,   8,  12,  16,  16,  12,   8,   4,   0,  -4,  -8, -12, -16},
    {  2,   2,   2,   2,   2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5650,7 +5610,7 @@ static const coordrec thing2x9 = {s2x9, 4,
       -1, -1, -1, -1, 17, 16, 15, 14, 13, 12, 11, 10,  9, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x10 = {s2x10, 4,
+static const coordrec thing2x10 = {s2x10, 0x24,
    {-18, -14, -10,  -6,  -2,   2,   6,  10,  14,  18,  18,  14,  10,   6,   2,  -2,  -6, -10, -14, -18},
    {  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5658,7 +5618,7 @@ static const coordrec thing2x10 = {s2x10, 4,
       -1, -1, -1, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x12 = {s2x12, 4,
+static const coordrec thing2x12 = {s2x12, 0x24,
    {-22, -18, -14, -10,  -6,  -2,   2,   6,  10,  14,  18,  22,
      22,  18,  14,  10,   6,   2,  -2,  -6, -10, -14, -18, -22},
    {  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
@@ -5668,7 +5628,7 @@ static const coordrec thing2x12 = {s2x12, 4,
       -1, -1, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3x6 = {s3x6, 3,
+static const coordrec thing3x6 = {s3x6, 0x23,
    {-10,  -6,  -2,   2,   6,  10,  10,   6,   2,  10,   6,   2,  -2,  -6, -10, -10,  -6,  -2},
    {  4,   4,   4,   4,   4,   4,   0,   0,   0,  -4,  -4,  -4,  -4,  -4,  -4,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5680,7 +5640,7 @@ static const coordrec thing3x6 = {s3x6, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3x8 = {s3x8, 3,
+static const coordrec thing3x8 = {s3x8, 0x23,
    {-14, -10,  -6,  -2,   2,   6,  10,  14,
      14,  10,   6,   2,  14,  10,   6,   2,
      -2,  -6, -10, -14, -14, -10,  -6,  -2},
@@ -5696,7 +5656,7 @@ static const coordrec thing3x8 = {s3x8, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3x4 = {s3x4, 3,
+static const coordrec thing3x4 = {s3x4, 0x23,
    { -6,  -2,   2,   6,   6,   2,   6,   2,  -2,  -6,  -6,  -2},
    {  4,   4,   4,   4,   0,   0,  -4,  -4,  -4,  -4,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5708,7 +5668,7 @@ static const coordrec thing3x4 = {s3x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingd3x4 = {sd3x4, 3,
+static const coordrec thingd3x4 = {sd3x4, 0x23,
    { -8,  -4,   0,   4,   8,   8,   8,   4,   0,  -4,  -8,  -8},
    {  4,   2,   2,   2,   4,   0,  -4,  -2,  -2,  -2,  -4,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5720,7 +5680,7 @@ static const coordrec thingd3x4 = {sd3x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingd4x5 = {sd4x5, 3,
+static const coordrec thingd4x5 = {sd4x5, 0x23,
    {-12, -12, -12, -12, -12,  -8,  -4,   0,   4,   8,  12,  12,  12,  12,  12,   8,   4,   0,  -4,  -8},
    {  8,   4,   0,  -4,  -8,   2,   2,   2,   2,   2,  -8,  -4,   0,   4,   8,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5732,7 +5692,7 @@ static const coordrec thingd4x5 = {sd4x5, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing_323 = {s_323, 3,
+static const coordrec thing_323 = {s_323, 0x23,
    { -4,   0,   4,   2,   4,   0,  -4,  -2},
    {  4,   4,   4,   0,  -4,  -4,  -4,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5744,7 +5704,7 @@ static const coordrec thing_323 = {s_323, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing_343 = {s_343, 3,
+static const coordrec thing_343 = {s_343, 0x23,
    { -4,   0,   4,   6,   2,   4,   0,  -4,  -6,  -2},
    {  4,   4,   4,   0,   0,  -4,  -4,  -4,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5756,7 +5716,7 @@ static const coordrec thing_343 = {s_343, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing_3223 = {s_3223, 3,
+static const coordrec thing_3223 = {s_3223, 0x23,
    { -6,   6,   6,   2,  -2,   6,  -6,  -6,  -2,   2},
    {  4,   4,   0,   2,   2,  -4,  -4,   0,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5768,7 +5728,7 @@ static const coordrec thing_3223 = {s_3223, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing_525 = {s_525, 3,
+static const coordrec thing_525 = {s_525, 0x23,
    { -8,  -4,   0,   4,   8,   2,   8,   4,   0,  -4,  -8,  -2},
    {  4,   4,   4,   4,   4,   0,  -4,  -4,  -4,  -4,  -4,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5780,7 +5740,7 @@ static const coordrec thing_525 = {s_525, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing_545 = {s_545, 3,
+static const coordrec thing_545 = {s_545, 0x23,
    { -8,  -4,   0,   4,   8,   6,   2,   8,   4,   0,  -4,  -8,  -6,  -2},
    {  4,   4,   4,   4,   4,   0,   0,  -4,  -4,  -4,  -4,  -4,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5792,7 +5752,7 @@ static const coordrec thing_545 = {s_545, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing_h545 = {sh545, 3,
+static const coordrec thing_h545 = {sh545, 0x23,
    { -8,  -4,   0,   4,   8,   8,   2,   8,   4,   0,  -4,  -8,  -8,  -2},
    {  4,   4,   4,   4,   4,   0,   0,  -4,  -4,  -4,  -4,  -4,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5804,7 +5764,7 @@ static const coordrec thing_h545 = {sh545, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinggal = {s_galaxy, 3,
+static const coordrec thinggal = {s_galaxy, 0x23,
    { -7,  -2,   0,   2,   7,   2,   0,  -2},
    {  0,   2,   7,   2,   0,  -2,  -7,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5816,7 +5776,7 @@ static const coordrec thinggal = {s_galaxy, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingthar = {s_thar, 3,
+static const coordrec thingthar = {s_thar, 0x23,
    { -9,  -5,   0,   0,   9,   5,   0,   0},
    {  0,   0,   9,   5,   0,   0,  -9,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5828,7 +5788,7 @@ static const coordrec thingthar = {s_thar, 3,
       -1, -1, -1, -1,  6, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingalamo = {s_alamo, 3,
+static const coordrec thingalamo = {s_alamo, 0x23,
    { -2,   2,   5,   5,   2,  -2,  -5,  -5},
    {  5,   5,   2,  -2,  -5,  -5,  -2,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5840,7 +5800,7 @@ static const coordrec thingalamo = {s_alamo, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingx1x8 = {sx1x8, 3,
+static const coordrec thingx1x8 = {sx1x8, 0x23,
    {-14, -10,  -6,  -2,   0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   0},
    {  0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   0, -14, -10,  -6,  -2}, {
       -1, -1, -1, -1,  4, -1, -1, -1,
@@ -5852,7 +5812,7 @@ static const coordrec thingx1x8 = {sx1x8, 3,
       -1, -1, -1, -1, 13, -1, -1, -1,
       -1, -1, -1, -1, 12, -1, -1, -1}};
 
-static const coordrec thingxwv = {s_crosswave, 3,
+static const coordrec thingxwv = {s_crosswave, 0x23,
    { -9,  -5,   0,   0,   9,   5,   0,   0},
    {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5864,7 +5824,7 @@ static const coordrec thingxwv = {s_crosswave, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingrigger = {s_rigger, 3,
+static const coordrec thingrigger = {s_rigger, 0x23,
    { -2,   2,  10,   6,   2,  -2, -10,  -6},
    {  2,   2,   0,   0,  -2,  -2,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5876,7 +5836,7 @@ static const coordrec thingrigger = {s_rigger, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3x3 = {s3x3, 3,
+static const coordrec thing3x3 = {s3x3, 0x23,
    { -4,   0,   4,   4,   4,   0,  -4,  -4,   0},
    {  4,   4,   4,   0,  -4,  -4,  -4,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5888,7 +5848,7 @@ static const coordrec thing3x3 = {s3x3, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingd2x5 = {sd2x5, 3,
+static const coordrec thingd2x5 = {sd2x5, 0x23,
    { -6,  -6,  -2,  -2,  -2,   6,   6,   2,   2,   2},
    {  2,  -2,   4,   0,  -4,  -2,   2,  -4,   0,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5900,7 +5860,7 @@ static const coordrec thingd2x5 = {sd2x5, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingd2x7 = {sd2x7, 3,
+static const coordrec thingd2x7 = {sd2x7, 0x23,
    {-10,  -6,  -2,  -2,  -2,   6,  10,  10,   6,   2,   2,   2,  -6, -10},
    {  2,   2,   4,   0,  -4,   2,   2,  -2,  -2,  -4,   0,   4,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5912,7 +5872,7 @@ static const coordrec thingd2x7 = {sd2x7, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingntrgl6cw = {s_ntrgl6cw, 3,
+static const coordrec thingntrgl6cw = {s_ntrgl6cw, 0x23,
    { -4,   2,   6,   4,  -2,  -6},
    {  2,   2,   2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5924,7 +5884,7 @@ static const coordrec thingntrgl6cw = {s_ntrgl6cw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingntrgl6ccw = {s_ntrgl6ccw, 3,
+static const coordrec thingntrgl6ccw = {s_ntrgl6ccw, 0x23,
    { -6,  -2,   4,   6,   2,  -4},
    {  2,   2,   2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5936,7 +5896,7 @@ static const coordrec thingntrgl6ccw = {s_ntrgl6ccw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingnftrgl6cw = {s_nftrgl6cw, 3,
+static const coordrec thingnftrgl6cw = {s_nftrgl6cw, 0x23,
    { -5,   2,   6,   5,  -2,  -6},
    {  5,   0,   0,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5948,7 +5908,7 @@ static const coordrec thingnftrgl6cw = {s_nftrgl6cw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingnftrgl6ccw = {s_nftrgl6ccw, 3,
+static const coordrec thingnftrgl6ccw = {s_nftrgl6ccw, 0x23,
    { -6,  -2,   5,   6,   2,  -5},
    {  0,   0,   5,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5960,7 +5920,7 @@ static const coordrec thingnftrgl6ccw = {s_nftrgl6ccw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingntrglcw = {s_ntrglcw, 3,
+static const coordrec thingntrglcw = {s_ntrglcw, 0x23,
    { -6,   0,   4,   8,   6,   0,  -4,  -8},
    {  2,   2,   2,   2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5972,7 +5932,7 @@ static const coordrec thingntrglcw = {s_ntrglcw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingntrglccw = {s_ntrglccw, 3,
+static const coordrec thingntrglccw = {s_ntrglccw, 0x23,
    { -8,  -4,   0,   6,   8,   4,   0,  -6},
    {  2,   2,   2,   2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5984,7 +5944,7 @@ static const coordrec thingntrglccw = {s_ntrglccw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingnxtrglcw = {s_nxtrglcw, 3,
+static const coordrec thingnxtrglcw = {s_nxtrglcw, 0x23,
    { -4,   2,   6,  10,   4,  -2,  -6, -10},
    {  2,   2,   2,   0,  -2,  -2,  -2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -5996,7 +5956,7 @@ static const coordrec thingnxtrglcw = {s_nxtrglcw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingnxtrglccw = {s_nxtrglccw, 3,
+static const coordrec thingnxtrglccw = {s_nxtrglccw, 0x23,
    { -6,  -2,   4,  10,   6,   2,  -4, -10},
    {  2,   2,   2,   0,  -2,  -2,  -2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6008,7 +5968,7 @@ static const coordrec thingnxtrglccw = {s_nxtrglccw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingspindle = {s_spindle, 3,
+static const coordrec thingspindle = {s_spindle, 0x23,
    { -4,   0,   4,   8,   4,   0,  -4,  -8},
    {  2,   2,   2,   0,  -2,  -2,  -2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6020,7 +5980,7 @@ static const coordrec thingspindle = {s_spindle, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingspindle12 = {s_spindle12, 3,
+static const coordrec thingspindle12 = {s_spindle12, 0x23,
    { -4,   0,   4,  12,   8,   4,   0,  -4, -12,  -8},
    {  2,   2,   2,   0,   0,  -2,  -2,  -2,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6032,7 +5992,7 @@ static const coordrec thingspindle12 = {s_spindle12, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdblspindle = {sdblspindle, 4,
+static const coordrec thingdblspindle = {sdblspindle, 0x24,
    {-14, -10,  -6,  -2,  -6, -10, -14, -18,  14,  10,   6,   2,   6,  10,  14,  18},
    {  2,   2,   2,   0,  -2,  -2,  -2,   0,  -2,  -2,  -2,   0,   2,   2,   2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6040,7 +6000,7 @@ static const coordrec thingdblspindle = {sdblspindle, 4,
       -1, -1, -1, -1,  6,  5,  4, -1, -1, 10,  9,  8, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdblbone = {sdblbone, 4,
+static const coordrec thingdblbone = {sdblbone, 0x24,
    {-22,  -2,  -6, -10,  -2, -22, -18, -14,  22,   2,   6,  10,   2,  22,  18,  14},
    {  2,   2,   0,   0,  -2,  -2,   0,   0,  -2,  -2,   0,   0,   2,   2,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6048,7 +6008,7 @@ static const coordrec thingdblbone = {sdblbone, 4,
       -1, -1,  5, -1, -1, -1, -1,  4,  9, -1, -1, -1, -1,  8, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdblbone6 = {sdblbone6, 4,
+static const coordrec thingdblbone6 = {sdblbone6, 0x24,
    {-14,  -2,  -6,  -2, -14, -10,  14,   2,   6,   2,  14,  10},
    {  2,   2,   0,  -2,  -2,   0,  -2,  -2,   0,   2,   2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6056,7 +6016,7 @@ static const coordrec thingdblbone6 = {sdblbone6, 4,
       -1, -1, -1, -1,  4, -1, -1,  3,  7, -1, -1,  6, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdblrig = {sdblrig, 4,
+static const coordrec thingdblrig = {sdblrig, 0x24,
    {-14, -10,  -2,  -6, -10, -14, -22, -18,  14,  10,   2,   6,  10,  14,  22,  18},
    {  2,   2,   0,   0,  -2,  -2,   0,   0,  -2,  -2,   0,   0,   2,   2,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6064,7 +6024,7 @@ static const coordrec thingdblrig = {sdblrig, 4,
       -1, -1, -1, -1,  5,  4, -1, -1, -1, -1,  9,  8, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingnptrglcw = {s_nptrglcw, 3,
+static const coordrec thingnptrglcw = {s_nptrglcw, 0x23,
    { -8,  -2,   6,  10,   8,   2,  -6, -10},
    {  2,   0,   2,   2,  -2,   0,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6076,7 +6036,7 @@ static const coordrec thingnptrglcw = {s_nptrglcw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingnptrglccw = {s_nptrglccw, 3,
+static const coordrec thingnptrglccw = {s_nptrglccw, 0x23,
    {-10,  -6,  -2,   8,  10,   6,   2,  -8},
    {  2,   2,   0,   2,  -2,  -2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6088,7 +6048,7 @@ static const coordrec thingnptrglccw = {s_nptrglccw, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbone = {s_bone, 3,
+static const coordrec thingbone = {s_bone, 0x23,
    {-10,  10,   6,   2,  10, -10,  -6,  -2},
    {  2,   2,   0,   0,  -2,  -2,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6100,7 +6060,7 @@ static const coordrec thingbone = {s_bone, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbone6 = {s_bone6, 3,
+static const coordrec thingbone6 = {s_bone6, 0x23,
    { -6,   6,   2,   6,  -6,  -2},
    {  2,   2,   0,  -2,  -2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6112,7 +6072,7 @@ static const coordrec thingbone6 = {s_bone6, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingqtag = {s_qtag, 3,       /* "fudged" coordinates */
+static const coordrec thingqtag = {s_qtag, 0x23,       /* "fudged" coordinates */
    { -4,   5,   6,   2,   4,  -5,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6124,7 +6084,7 @@ static const coordrec thingqtag = {s_qtag, 3,       /* "fudged" coordinates */
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingqtag = {s_qtag, 3,   /* "true" coordinates */
+static const coordrec nicethingqtag = {s_qtag, 0x23,   /* "true" coordinates */
    { -5,   5,   6,   2,   5,  -5,  -6,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6136,7 +6096,7 @@ static const coordrec nicethingqtag = {s_qtag, 3,   /* "true" coordinates */
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingspgdmdcw = {spgdmdcw, 3,
+static const coordrec thingspgdmdcw = {spgdmdcw, 0x23,
    { -5,   5,   6,   2,   5,  -5,  -6,  -2},
    {  9,   1,  -4,  -4,  -9,  -1,   4,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6148,7 +6108,7 @@ static const coordrec thingspgdmdcw = {spgdmdcw, 3,
       -1, -1, -1, -1, -1,  4, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingspgdmdccw = {spgdmdccw, 3,
+static const coordrec thingspgdmdccw = {spgdmdccw, 0x23,
    { -5,   5,   6,   2,   5,  -5,  -6,  -2},
    {  1,   9,   4,   4,  -1,  -9,  -4,  -4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6160,7 +6120,7 @@ static const coordrec thingspgdmdccw = {spgdmdccw, 3,
       -1, -1,  5, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingwqtag = {swqtag, 3,       // "fudged" coordinates
+static const coordrec thingwqtag = {swqtag, 0x23,       // "fudged" coordinates
    { -4,   5,  10,   6,   2,   4,  -5, -10,  -6,  -2},
    {  5,   5,   0,   0,   0,  -5,  -5,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6172,7 +6132,7 @@ static const coordrec thingwqtag = {swqtag, 3,       // "fudged" coordinates
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingwqtag = {swqtag, 3,   // "true" coordinates
+static const coordrec nicethingwqtag = {swqtag, 0x23,   // "true" coordinates
    { -5,   5,  10,   6,   2,   5,  -5, -10,  -6,  -2},
    {  5,   5,   0,   0,   0,  -5,  -5,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6184,7 +6144,7 @@ static const coordrec nicethingwqtag = {swqtag, 3,   // "true" coordinates
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinghsqtag = {s_hsqtag, 3,
+static const coordrec thinghsqtag = {s_hsqtag, 0x23,
    { -5,  -5,  -5,  -5,   0,   2,   5,   5,   5,   5,   0,  -2},
    {  6,   2,  -2,  -6,   5,   0,  -6,  -2,   2,   6,  -5,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6196,7 +6156,7 @@ static const coordrec thinghsqtag = {s_hsqtag, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdmdlndmd = {s_dmdlndmd, 3,
+static const coordrec thingdmdlndmd = {s_dmdlndmd, 0x23,
    { -7,   0,   0,   7,   9,   5,   7,   0,   0,  -7,  -9,  -5},
    {  5,   6,   2,   5,   0,   0,  -5,  -6,  -2,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6208,7 +6168,7 @@ static const coordrec thingdmdlndmd = {s_dmdlndmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinghqtag = {s_hqtag, 3,       // "fudged" coordinates
+static const coordrec thinghqtag = {s_hqtag, 0x23,       // "fudged" coordinates
    { -9,  -9,  -9,  -9,  -4,   5,   6,   2,   9,   9,   9,   9,   4,  -5,  -6,  -2},
    {  6,   2,  -2,  -6,   5,   5,   0,   0,  -6,  -2,   2,   6,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6220,7 +6180,7 @@ static const coordrec thinghqtag = {s_hqtag, 3,       // "fudged" coordinates
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethinghqtag = {s_hqtag, 3,   // "true" coordinates
+static const coordrec nicethinghqtag = {s_hqtag, 0x23,   // "true" coordinates
    { -9,  -9,  -9,  -9,  -5,   5,   6,   2,   9,   9,   9,   9,   5,  -5,  -6,  -2},
    {  6,   2,  -2,  -6,   5,   5,   0,   0,  -6,  -2,   2,   6,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6232,7 +6192,7 @@ static const coordrec nicethinghqtag = {s_hqtag, 3,   // "true" coordinates
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2stars = {s_2stars, 3,       /* "fudged" coordinates */
+static const coordrec thing2stars = {s_2stars, 0x23,       /* "fudged" coordinates */
    { -4,   5,   7,   2,   4,  -5,  -7,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6244,7 +6204,7 @@ static const coordrec thing2stars = {s_2stars, 3,       /* "fudged" coordinates 
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicething2stars = {s_2stars, 3,   /* "true" coordinates */
+static const coordrec nicething2stars = {s_2stars, 0x23,   /* "true" coordinates */
    { -5,   5,   7,   2,   5,  -5,  -7,  -2},
    {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6256,7 +6216,7 @@ static const coordrec nicething2stars = {s_2stars, 3,   /* "true" coordinates */
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingptpd = {s_ptpd, 3,       /* "fudged" coordinates */
+static const coordrec thingptpd = {s_ptpd, 0x23,       /* "fudged" coordinates */
    { -9,  -5,  -2,  -5,   9,   5,   2,   5},
    {  0,   2,   0,  -2,   0,  -2,   0,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6268,7 +6228,7 @@ static const coordrec thingptpd = {s_ptpd, 3,       /* "fudged" coordinates */
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingptpd = {s_ptpd, 3,       /* "true" coordinates */
+static const coordrec nicethingptpd = {s_ptpd, 0x23,       /* "true" coordinates */
    {-10,  -6,  -2,  -6,  10,   6,   2,   6},
    {  0,   2,   0,  -2,   0,  -2,   0,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6280,7 +6240,7 @@ static const coordrec nicethingptpd = {s_ptpd, 3,       /* "true" coordinates */
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigdmd = {sbigdmd, 3,   /* used for both --
+static const coordrec thingbigdmd = {sbigdmd, 0x23,   /* used for both --
                                                 symmetric and safe for press/truck */
    { -9,  -5,   0,   0,   5,   9,   9,   5,   0,   0,  -5,  -9},
    {  2,   2,   6,   2,   2,   2,  -2,  -2,  -6,  -2,  -2,  -2}, {
@@ -6293,7 +6253,7 @@ static const coordrec thingbigdmd = {sbigdmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigptpd = {sbigptpd, 3,
+static const coordrec thingbigptpd = {sbigptpd, 0x23,
    { -6,  -6, -10,  -2,  -6,  -6,   6,   6,  10,   2,   6,   6},
    { -6,  -2,   0,   0,   2,   6,   6,   2,   0,   0,  -2,  -6}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6305,7 +6265,7 @@ static const coordrec thingbigptpd = {sbigptpd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x2dmd = {s_1x2dmd, 3,   /* used for both --
+static const coordrec thing1x2dmd = {s_1x2dmd, 0x23,   /* used for both --
                                                 symmetric and safe for press/truck */
    { -9,  -5,   0,   9,   5,   0},
    {  0,   0,   2,   0,   0,  -2}, {
@@ -6318,7 +6278,7 @@ static const coordrec thing1x2dmd = {s_1x2dmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x3p1dmd = {s1x3p1dmd, 3,     // Used for both.
+static const coordrec thing1x3p1dmd = {s1x3p1dmd, 0x23,     // Used for both.
    { -9,  -5,  -1,   4,   9,   4},
    {  0,   0,   0,   2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6330,7 +6290,7 @@ static const coordrec thing1x3p1dmd = {s1x3p1dmd, 3,     // Used for both.
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x3dmd = {s1x3dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thing1x3dmd = {s1x3dmd, 0x23,   // Used for both -- symmetric and safe for press/truck.
    {-13,  -9,  -5,   0,  13,   9,   5,   0},
    {  0,   0,   0,   2,   0,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6342,7 +6302,7 @@ static const coordrec thing1x3dmd = {s1x3dmd, 3,   // Used for both -- symmetric
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3x1dmd = {s3x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thing3x1dmd = {s3x1dmd, 0x23,   // Used for both -- symmetric and safe for press/truck.
    {-10,  -6,  -2,   0,  10,   6,   2,   0},
    {  0,   0,   0,   5,   0,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6354,7 +6314,7 @@ static const coordrec thing3x1dmd = {s3x1dmd, 3,   // Used for both -- symmetric
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingwingstar = {s_wingedstar, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thingwingstar = {s_wingedstar, 0x23,   // Used for both -- symmetric and safe for press/truck.
    {-10,  -6,  -2,   0,  10,   6,   2,   0},
    {  0,   0,   0,   4,   0,   0,   0,  -4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6366,7 +6326,7 @@ static const coordrec thingwingstar = {s_wingedstar, 3,   // Used for both -- sy
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing4p2x1dmd = {s4p2x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thing4p2x1dmd = {s4p2x1dmd, 0x23,   // Used for both -- symmetric and safe for press/truck.
    {-10,  -6,  -2,   2,   4,  10,   6,   4},
    {  0,   0,   0,   0,   5,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6378,7 +6338,7 @@ static const coordrec thing4p2x1dmd = {s4p2x1dmd, 3,   // Used for both -- symme
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3p1x1dmd = {s3p1x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thing3p1x1dmd = {s3p1x1dmd, 0x23,   // Used for both -- symmetric and safe for press/truck.
    { -6,  -2,   2,   4,   6,   4},
    {  0,   0,   0,   5,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6390,7 +6350,7 @@ static const coordrec thing3p1x1dmd = {s3p1x1dmd, 3,   // Used for both -- symme
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing2x1dmd = {s_2x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thing2x1dmd = {s_2x1dmd, 0x23,   // Used for both -- symmetric and safe for press/truck.
    { -6,  -2,   0,   6,   2,   0},
    {  0,   0,   5,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6402,7 +6362,7 @@ static const coordrec thing2x1dmd = {s_2x1dmd, 3,   // Used for both -- symmetri
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdeep2x1dmd = {sdeep2x1dmd, 3,   // used for both --
+static const coordrec thingdeep2x1dmd = {sdeep2x1dmd, 0x23,   // used for both --
                                                      // symmetric and safe for press/truck
    { -6,  -2,   0,   2,   6,   6,   2,   0,  -2,  -6},
    {  2,   2,   7,   2,   2,  -2,  -2,  -7,  -2,  -2}, {
@@ -6415,7 +6375,7 @@ static const coordrec thingdeep2x1dmd = {sdeep2x1dmd, 3,   // used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3dmd = {s3dmd, 3,   /* used for both --
+static const coordrec thing3dmd = {s3dmd, 0x23,   /* used for both --
                                             symmetric and safe for press/truck */
    { -7,   0,   7,  10,   6,   2,   7,   0,  -7, -10,  -6,  -2},
    {  5,   5,   5,   0,   0,   0,  -5,  -5,  -5,   0,   0,   0}, {
@@ -6428,7 +6388,7 @@ static const coordrec thing3dmd = {s3dmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing4dmd = {s4dmd, 3,   /* used for both --
+static const coordrec thing4dmd = {s4dmd, 0x23,   /* used for both --
                                             symmetric and safe for press/truck */
    {-11,  -5,   5,  11,  14,  10,   6,   2,  11,   5,  -5, -11, -14, -10,  -6,  -2},
    {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
@@ -6441,7 +6401,7 @@ static const coordrec thing4dmd = {s4dmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3mdmd = {s_3mdmd, 3,   /* used for both --
+static const coordrec thing3mdmd = {s_3mdmd, 0x23,   /* used for both --
                                                symmetric and safe for press/truck */
    {-11,   0,  11,  13,   9,   5,  11,   0, -11, -13,  -9,  -5},
    {  5,   2,   5,   0,   0,   0,  -5,  -2,  -5,   0,   0,   0}, {
@@ -6454,7 +6414,7 @@ static const coordrec thing3mdmd = {s_3mdmd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3mptpd = {s_3mptpd, 3,   /* used for both --
+static const coordrec thing3mptpd = {s_3mptpd, 0x23,   /* used for both --
                                                  symmetric and safe for press/truck */
    {-11,   0,  11,  14,   6,   2,  11,   0, -11, -14,  -6,  -2},
    {  2,   5,   2,   0,   0,   0,  -2,  -5,  -2,   0,   0,   0}, {
@@ -6467,7 +6427,7 @@ static const coordrec thing3mptpd = {s_3mptpd, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingshort6 = {s_short6, 3,   /* used for both --
+static const coordrec thingshort6 = {s_short6, 0x23,   /* used for both --
                                                  symmetric and safe for press/truck */
    { -2,   0,   2,   2,   0,  -2},
    {  2,   6,   2,  -2,  -6,  -2}, {
@@ -6480,7 +6440,7 @@ static const coordrec thingshort6 = {s_short6, 3,   /* used for both --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingphan = {s_c1phan, 3,   /* "true" coordinates for mirroring --
+static const coordrec nicethingphan = {s_c1phan, 0x23,   /* "true" coordinates for mirroring --
                                    actually, the truck distances are greatly exaggerated. */
    {-10,  -6,  -2,  -6,   6,  10,   6,   2,  10,   6,   2,   6,  -6, -10,  -6,  -2},
    {  6,  10,   6,   2,  10,   6,   2,   6,  -6, -10,  -6,  -2, -10,  -6,  -2,  -6}, {
@@ -6493,7 +6453,7 @@ static const coordrec nicethingphan = {s_c1phan, 3,   /* "true" coordinates for 
       -1, -1, 12, -1, -1,  9, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingphan = {s_c1phan, 3,   /* "fudged" coordinates -- only truck within each 1x2 is allowed */
+static const coordrec thingphan = {s_c1phan, 0x23,   /* "fudged" coordinates -- only truck within each 1x2 is allowed */
    { -6,  -3,  -2,  -3,   4,  15,   4,  11,   7,   4,   3,   4,  -5, -14,  -5, -10},
    {  4,  13,   4,   9,   7,   4,   3,   4,  -5, -14,  -5, -10,  -6,  -7,  -2,  -7}, {
       -1, -1, -1,  1, -1, -1, -1, -1,
@@ -6505,7 +6465,7 @@ static const coordrec thingphan = {s_c1phan, 3,   /* "fudged" coordinates -- onl
       -1, -1, -1, -1, -1, 11, -1, -1,
       -1, -1, -1, -1, -1,  9, -1, -1}};
 
-static const coordrec nicethingglass = {s_hrglass, 3,   // "True" coordinates for mirroring --
+static const coordrec nicethingglass = {s_hrglass, 0x23,   // "True" coordinates for mirroring --
                                         // actually, the truck distances are greatly exaggerated.
    { -5,   5,   6,   0,   5,  -5,  -6,   0},
    {  5,   5,   0,   2,  -5,  -5,   0,  -2}, {
@@ -6518,7 +6478,7 @@ static const coordrec nicethingglass = {s_hrglass, 3,   // "True" coordinates fo
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingglass = {s_hrglass, 3,   // "Fudged" coordinates -- only truck by center 2 is allowed.
+static const coordrec thingglass = {s_hrglass, 0x23,   // "Fudged" coordinates -- only truck by center 2 is allowed.
    { -4,   5,   5,   0,   4,  -5,  -5,   0},
    {  5,   5,   0,   2,  -5,  -5,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6530,7 +6490,7 @@ static const coordrec thingglass = {s_hrglass, 3,   // "Fudged" coordinates -- o
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdglass = {s_dhrglass, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thingdglass = {s_dhrglass, 0x23,   // Used for both -- symmetric and safe for press/truck.
    {-10,  10,   5,   0,  10, -10,  -5,   0},
    {  2,   2,   0,   2,  -2,  -2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6542,7 +6502,7 @@ static const coordrec thingdglass = {s_dhrglass, 3,   // Used for both -- symmet
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigdglass = {sbigdhrgl, 3,   // Used for both -- symmetric and safe for press/truck.
+static const coordrec thingbigdglass = {sbigdhrgl, 0x23,   // Used for both -- symmetric and safe for press/truck.
    {-14, -10,   0,   5,  10,  14,  14,  10,  0,  -5,  -10, -14},
    {  2,   2,   2,   0,   2,   2,  -2,  -2, -2,   0,   -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6554,7 +6514,7 @@ static const coordrec thingbigdglass = {sbigdhrgl, 3,   // Used for both -- symm
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingbigglass = {sbighrgl, 3,   // "True" coordinates for mirroring --
+static const coordrec nicethingbigglass = {sbighrgl, 0x23,   // "True" coordinates for mirroring --
                                            // actually, the truck distances are greatly exaggerated.
    { -9,  -5,   0,   2,   5,   9,   9,   5,   0,  -2,  -5,  -9},
    {  5,   5,   5,   0,   5,   5,  -5,  -5,  -5,   0,  -5,  -5}, {
@@ -6567,7 +6527,7 @@ static const coordrec nicethingbigglass = {sbighrgl, 3,   // "True" coordinates 
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigglass = {sbighrgl, 3,   // "Fudged" coordinates -- only a few trucks are allowed.
+static const coordrec thingbigglass = {sbighrgl, 0x23,   // "Fudged" coordinates -- only a few trucks are allowed.
    { -9,  -5,   0,   2,   5,   9,   9,   5,   0,  -2,  -5,  -9},
    {  4,   4,   5,   0,   5,   5,  -4,  -4,  -5,   0,  -5,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6579,7 +6539,7 @@ static const coordrec thingbigglass = {sbighrgl, 3,   // "Fudged" coordinates --
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec nicethingwglass = {swhrglass, 3,   /* "true" coordinates for mirroring --
+static const coordrec nicethingwglass = {swhrglass, 0x23,   /* "true" coordinates for mirroring --
                                    actually, the truck distances are greatly exaggerated. */
    { -5,   5,   9,   5,   0,   5,  -5,  -9,  -5,   0},
    {  5,   5,   0,   0,   2,  -5,  -5,   0,   0,  -2}, {
@@ -6592,7 +6552,7 @@ static const coordrec nicethingwglass = {swhrglass, 3,   /* "true" coordinates f
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingwglass = {swhrglass, 3,   /* "fudged" coordinates -- only truck by center 2 is allowed */
+static const coordrec thingwglass = {swhrglass, 0x23,   /* "fudged" coordinates -- only truck by center 2 is allowed */
    { -4,   5,   9,   5,   0,   4,  -5,  -9,  -5,   0},
    {  5,   5,   0,   0,   2,  -5,  -5,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6604,7 +6564,7 @@ static const coordrec thingwglass = {swhrglass, 3,   /* "fudged" coordinates -- 
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing4x4 = {s4x4, 3,
+static const coordrec thing4x4 = {s4x4, 0x23,
    {  6,   6,   6,   2,   6,   2,  -2,   2,  -6,  -6,  -6,  -2,  -6,  -2,   2,  -2},
    {  6,   2,  -2,   2,  -6,  -6,  -6,  -2,  -6,  -2,   2,  -2,   6,   6,   6,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6616,7 +6576,7 @@ static const coordrec thing4x4 = {s4x4, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing4x5 = {s4x5, 3,
+static const coordrec thing4x5 = {s4x5, 0x23,
    { -8,  -4,   0,   4,   8,   8,   4,   0,  -4,  -8,   8,   4,   0,  -4,  -8,  -8,  -4,   0,   4,   8},
    {  6,   6,   6,   6,   6,   2,   2,   2,   2,   2,  -6,  -6,  -6,  -6,  -6,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6628,7 +6588,7 @@ static const coordrec thing4x5 = {s4x5, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing23232 = {s_23232, 3,
+static const coordrec thing23232 = {s_23232, 0x23,
    { -4,   4,  -8,   0,   8,   4,   4,  -4,   8,   0,  -8,  -4},
    {  4,   4,   2,   2,   2,   0,  -4,  -4,  -2,  -2,  -2,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6640,7 +6600,7 @@ static const coordrec thing23232 = {s_23232, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing4x6 = {s4x6, 3,
+static const coordrec thing4x6 = {s4x6, 0x23,
    {-10,  -6,  -2,   2,   6,  10,  10,   6,   2,  -2,  -6, -10,  10,   6,   2,  -2,  -6, -10, -10,  -6,  -2,   2,   6,  10},
    {  6,   6,   6,   6,   6,   6,   2,   2,   2,   2,   2,   2,  -6,  -6,  -6,  -6,  -6,  -6,  -2,  -2,  -2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6652,7 +6612,7 @@ static const coordrec thing4x6 = {s4x6, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing3oqtg = {s3oqtg, 3,
+static const coordrec thing3oqtg = {s3oqtg, 0x23,
    { -8,   0,   8,  12,   8,   4,   0,  12,   8,   4,   8,   0,  -8, -12,  -8,  -4,   0, -12,  -8,  -4},
    {  6,   6,   6,   2,   2,   2,   2,  -2,  -2,  -2,  -6,  -6,  -6,  -2,  -2,  -2,  -2,   2,   2,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6664,7 +6624,7 @@ static const coordrec thing3oqtg = {s3oqtg, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigh = {sbigh, 3,
+static const coordrec thingbigh = {sbigh, 0x23,
    { -9,  -9,  -9,  -9,  -6,  -2,   9,   9,   9,   9,   6,   2},
    {  6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6676,7 +6636,7 @@ static const coordrec thingbigh = {sbigh, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigbigx = {sbigbigx, 4,
+static const coordrec thingbigbigx = {sbigbigx, 0x24,
    {-19, -15, -11,  -7,  -2,  -2,  -2,  -2,  19,  15,  11,   7,   2,   2,   2,   2},
    {  0,   0,   0,   0,   6,   2,  -2,  -6,   0,   0,   0,   0,  -6,  -2,   2,   6}, {
       -1, -1, -1, -1, -1, -1, -1,  4, 15, -1, -1, -1, -1, -1, -1, -1,
@@ -6684,7 +6644,7 @@ static const coordrec thingbigbigx = {sbigbigx, 4,
       -1, -1, -1, -1, -1, -1, -1,  6, 13, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1,  7, 12, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigbigh = {sbigbigh, 4,
+static const coordrec thingbigbigh = {sbigbigh, 0x24,
    {-17, -17, -17, -17, -14, -10,  -6,  -2,  17,  17,  17,  17,  14,  10,   6,   2},
    {  6,   2,  -2,  -6,   0,   0,   0,   0,  -6,  -2,   2,   6,   0,   0,   0,   0}, {
       -1, -1, -1,  0, -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1,
@@ -6693,7 +6653,7 @@ static const coordrec thingbigbigh = {sbigbigh, 4,
       -1, -1, -1,  3, -1, -1, -1, -1, -1, -1, -1, -1,  8, -1, -1, -1}};
 
 
-static const coordrec thingbigbone = {sbigbone, 3,
+static const coordrec thingbigbone = {sbigbone, 0x23,
    {-14, -10,  -6,  -2,  10,  14,  14,  10,   6,   2, -10, -14},
    {  2,   2,   0,   0,   2,   2,  -2,  -2,   0,   0,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6705,7 +6665,7 @@ static const coordrec thingbigbone = {sbigbone, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigrig = {sbigrig, 4,
+static const coordrec thingbigrig = {sbigrig, 0x24,
    {-18, -14, -10,  -6,  -2,   2,  18,  14,  10,   6,   2,  -2},
    {  0,   0,   0,   0,   2,   2,   0,   0,   0,   0,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6713,7 +6673,7 @@ static const coordrec thingbigrig = {sbigrig, 4,
       -1, -1, -1, -1, -1, -1, -1, 11, 10, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing5x1dmd = {s5x1dmd, 4,
+static const coordrec thing5x1dmd = {s5x1dmd, 0x24,
    {-18, -14, -10,  -6,  -2,   0,  18,  14,  10,   6,   2,   0},
    {  0,   0,   0,   0,   0,   5,   0,   0,   0,   0,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,  5, -1, -1, -1, -1, -1, -1, -1,
@@ -6721,7 +6681,7 @@ static const coordrec thing5x1dmd = {s5x1dmd, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x5dmd = {s1x5dmd, 4,
+static const coordrec thing1x5dmd = {s1x5dmd, 0x24,
    {-21, -17, -13,  -9,  -5,   0,  21,  17,  13,   9,   5,   0},
    {  0,   0,   0,   0,   0,   2,   0,   0,   0,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6729,7 +6689,7 @@ static const coordrec thing1x5dmd = {s1x5dmd, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x4dmd = {s1x4dmd, 4,
+static const coordrec thing1x4dmd = {s1x4dmd, 0x24,
    {-17, -13,  -9,  -5,   0,  17,  13,   9,   5,   0},
    {  0,   0,   0,   0,   2,   0,   0,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6737,7 +6697,7 @@ static const coordrec thing1x4dmd = {s1x4dmd, 4,
       -1, -1, -1, -1, -1, -1, -1, -1,  9, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thing1x4p2dmd = {s1x4p2dmd, 4,
+static const coordrec thinglinefbox = {slinefbox, 0x24,
    {-13,  -9,  -5,  -1,  4,  13,   9,   4},
    {  0,   0,   0,   0,  2,   0,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6745,7 +6705,7 @@ static const coordrec thing1x4p2dmd = {s1x4p2dmd, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1,  7, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinglinepdmd = {slinepdmd, 3,
+static const coordrec thinglinepdmd = {slinepdmd, 0x23,
    {  0,  -2,   0,   2, -6,  -2,   6,   2},
    { -6,  -2,   2,  -2,  6,   6,   6,   6}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6757,7 +6717,7 @@ static const coordrec thinglinepdmd = {slinepdmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdmdpdmd = {sdmdpdmd, 3,
+static const coordrec thingdmdpdmd = {sdmdpdmd, 0x23,
    {  0,  -2,   0,   2, -4,   0,   4,   0},
    { -8,  -4,   0,  -4,  6,   8,   6,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6769,7 +6729,7 @@ static const coordrec thingdmdpdmd = {sdmdpdmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingplinepdmd = {splinepdmd, 4,
+static const coordrec thingplinepdmd = {splinepdmd, 0x24,
    {-13,  -9,  -5,  -1,  3,   8,  13,   8},
    {  0,   0,   0,   0,  0,   2,   0,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6777,7 +6737,7 @@ static const coordrec thingplinepdmd = {splinepdmd, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  7, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingplinedmd = {splinedmd, 3,
+static const coordrec thingplinedmd = {splinedmd, 0x23,
    {-10,  -6,  -2,   2,   6,   8,  10,   8},
    {  0,   0,   0,   0,   0,   5,   0,  -5}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6789,7 +6749,7 @@ static const coordrec thingplinedmd = {splinedmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinglinedmd = {slinedmd, 3,
+static const coordrec thinglinedmd = {slinedmd, 0x23,
    { -5,   0,   5,   0,  -6,  -2,   6,   2},
    { -2,   0,  -2,  -4,   4,   4,   4,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6801,7 +6761,7 @@ static const coordrec thinglinedmd = {slinedmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thinglinebox = {slinebox, 4,
+static const coordrec thinglinebox = {slinebox, 0x24,
    {-10,  -6,  -2,   2,   6,  10,  10,   6},
    {  0,   0,   0,   0,   2,   2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6809,7 +6769,7 @@ static const coordrec thinglinebox = {slinebox, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1,  7,  6, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingline2box = {sline2box, 4,
+static const coordrec thinglinejbox = {slinejbox, 0x24,
    { -8,  -4,   0,   4,   8,   8,   4,   0},
    {  0,   0,   2,   2,   2,  -2,  -2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6817,7 +6777,7 @@ static const coordrec thingline2box = {sline2box, 4,
       -1, -1, -1, -1, -1, -1, -1, -1,  7,  6,  5, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingline6box = {sline6box, 4,
+static const coordrec thinglinevbox = {slinevbox, 0x24,
    {-12,  -8,  -4,   0,   4,   8,  12,  12},
    {  0,   0,   0,   0,   0,   0,   2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6825,7 +6785,15 @@ static const coordrec thingline6box = {sline6box, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,  7, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdbltrngl4 = {sdbltrngl4, 4,
+static const coordrec thinglineybox = {slineybox, 0x24,
+   { -8,  -8,  -4,   0,   4,   8,   8,   4},
+   {  2,  -2,   0,   0,   2,   2,  -2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1,  0,  2,  3,  4,  5, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1,  1, -1, -1,  7,  6, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thingdbltrngl4 = {sdbltrngl4, 0x24,
    {-10,  -6,  -2,  -2,   2,   6,  10,  10},
    {  0,   0,   2,  -2,   0,   0,   2,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6833,7 +6801,7 @@ static const coordrec thingdbltrngl4 = {sdbltrngl4, 4,
       -1, -1, -1, -1, -1, -1, -1,  3, -1, -1,  7, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingboxdmd = {sboxdmd, 3,
+static const coordrec thingboxdmd = {sboxdmd, 0x23,
    { -5,   0,   5,   0,  -2,   2,   2,  -2},
    { -4,  -2,  -4,  -6,   6,   6,   2,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6845,7 +6813,7 @@ static const coordrec thingboxdmd = {sboxdmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingboxpdmd = {sboxpdmd, 3,
+static const coordrec thingboxpdmd = {sboxpdmd, 0x23,
    {  0,  -2,   0,   2,  -2,   2,   2,  -2},
    { -8,  -4,   0,  -4,   8,   8,   4,   4}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6857,7 +6825,7 @@ static const coordrec thingboxpdmd = {sboxpdmd, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingtrngl8 = {s_trngl8, 3,
+static const coordrec thingtrngl8 = {s_trngl8, 0x23,
    {  0,   0,   0,   0,  -6,  -2,   2,   6},
    { -8,  -4,   0,   4,   9,   9,   9,   9}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6869,7 +6837,7 @@ static const coordrec thingtrngl8 = {s_trngl8, 3,
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingbigx = {sbigx, 4,
+static const coordrec thingbigx = {sbigx, 0x24,
    {-17, -13,  -9,  -5,   0,   0,  17,  13,   9,   5,   0,   0},
    {  0,   0,   0,   0,   6,   2,   0,   0,   0,   0,  -6,  -2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,  4, -1, -1, -1, -1, -1, -1, -1,
@@ -6877,7 +6845,7 @@ static const coordrec thingbigx = {sbigx, 4,
       -1, -1, -1, -1, -1, -1, -1, -1, 11, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, 10, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingwiderigger = {swiderigger, 4,
+static const coordrec thingwiderigger = {swiderigger, 0x24,
    { -6,  -2,   2,   6,  14,  10,   6,   2,  -2,  -6, -14, -10},
    {  2,   2,   2,   2,   0,   0,  -2,  -2,  -2,  -2,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6885,7 +6853,7 @@ static const coordrec thingwiderigger = {swiderigger, 4,
       -1, -1, -1, -1, -1, -1,  9,  8,  7,  6, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingrigger12 = {srigger12, 4,
+static const coordrec thingrigger12 = {srigger12, 0x24,
    { -4,   0,   4,  16,  12,   8,   4,   0,  -4, -16, -12,  -8},
    {  2,   2,   2,   0,   0,   0,  -2,  -2,  -2,   0,   0,   0}, {
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -6893,7 +6861,7 @@ static const coordrec thingrigger12 = {srigger12, 4,
       -1, -1, -1, -1, -1, -1, -1,  8,  7,  6, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingdeepxwv = {sdeepxwv, 4,
+static const coordrec thingdeepxwv = {sdeepxwv, 0x24,
    {-10,  -6,  -2,  -2,  -2,  -2,  10,   6,   2,   2,   2,   2},
    {  0,   0,   6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6}, {
       -1, -1, -1, -1, -1, -1, -1,  2, 11, -1, -1, -1, -1, -1, -1, -1,
@@ -6901,7 +6869,7 @@ static const coordrec thingdeepxwv = {sdeepxwv, 4,
       -1, -1, -1, -1, -1, -1, -1,  4,  9, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1,  5,  8, -1, -1, -1, -1, -1, -1, -1}};
 
-static const coordrec thingblob = {s_bigblob, 3,
+static const coordrec thingblob = {s_bigblob, 0x23,
    { -2,   2,   2,   6,   6,   2,  10,  10,   6,   6,   2,   2,   2,  -2,  -2,  -6,  -6,  -2, -10, -10,  -6,  -6,  -2,  -2},
    { 10,  10,   6,   6,   2,   2,   2,  -2,  -2,  -6,  -6,  -2, -10, -10,  -6,  -6,  -2,  -2,  -2,   2,   2,   6,   6,   2}, {
       -1, -1, -1, -1, -1, -1, -1, -1,
@@ -7872,7 +7840,7 @@ static const id_bit_table id_bit_table_s4p2x1dmd[] = {
    NOBIT(ID2_CTR1X6),
    NOBIT(ID2_NCTR1X6)};
 
-static const id_bit_table id_bit_table_sline2box[] = {
+static const id_bit_table id_bit_table_slinejbox[] = {
    NOBIT(ID2_OUTRPAIRS),
    NOBIT(ID2_OUTRPAIRS),
    NOBIT(ID2_CENTER | ID2_CTR4),
@@ -7882,7 +7850,7 @@ static const id_bit_table id_bit_table_sline2box[] = {
    NOBIT(ID2_CENTER | ID2_CTR4),
    NOBIT(ID2_CENTER | ID2_CTR4)};
 
-static const id_bit_table id_bit_table_sline6box[] = {
+static const id_bit_table id_bit_table_slinevbox[] = {
    NOBIT(ID2_OUTRPAIRS),
    NOBIT(ID2_OUTRPAIRS),
    NOBIT(ID2_CENTER | ID2_CTR4),
@@ -7891,6 +7859,16 @@ static const id_bit_table id_bit_table_sline6box[] = {
    NOBIT(ID2_CENTER | ID2_CTR4),
    NOBIT(ID2_OUTRPAIRS),
    NOBIT(ID2_OUTRPAIRS)};
+
+static const id_bit_table id_bit_table_slineybox[] = {
+   NOBIT(ID2_OUTRPAIRS),
+   NOBIT(ID2_OUTRPAIRS),
+   NOBIT(ID2_CENTER | ID2_CTR4),
+   NOBIT(ID2_CENTER | ID2_CTR4),
+   NOBIT(ID2_CENTER | ID2_CTR4),
+   NOBIT(ID2_OUTRPAIRS),
+   NOBIT(ID2_OUTRPAIRS),
+   NOBIT(ID2_CENTER | ID2_CTR4)};
 
 static const id_bit_table id_bit_table_splinedmd[] = {
    NOBIT(ID2_CTR1X6),
@@ -9098,16 +9076,6 @@ const setup_attr setup_attrs[] = {
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
-   {7,                     // s1x4p2dmd
-    &thing1x4p2dmd,
-    &thing1x4p2dmd,
-    {0, 0, 0, 0},
-    {b_nothing, b_nothing},
-    {0, 0},
-    false, true,
-    (const id_bit_table *) 0,
-    {(Cstring) 0,
-     (Cstring) 0}},
    {7,                     // s4p2x1dmd
     &thing4p2x1dmd,
     &thing4p2x1dmd,
@@ -9162,30 +9130,50 @@ const setup_attr setup_attrs[] = {
     &thinglinebox,
     &thinglinebox,
     {0, 0, 0, 0},
-    {b_nothing, b_nothing},
+    {b_linebox, b_plinebox},
     {0, 0},
     false, true,
     (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
-   {7,                     // sline2box
-    &thingline2box,
-    &thingline2box,
+   {7,                     // slinejbox
+    &thinglinejbox,
+    &thinglinejbox,
     {0, 0, 0, 0},
-    {b_nothing, b_nothing},
+    {b_linejbox, b_plinejbox},
     {0, 0},
     false, true,
-    id_bit_table_sline2box,
+    id_bit_table_slinejbox,
     {(Cstring) 0,
      (Cstring) 0}},
-   {7,                     // sline6box
-    &thingline6box,
-    &thingline6box,
+   {7,                     // slinevbox
+    &thinglinevbox,
+    &thinglinevbox,
     {0, 0, 0, 0},
-    {b_nothing, b_nothing},
+    {b_linevbox, b_plinevbox},
     {0, 0},
     false, true,
-    id_bit_table_sline6box,
+    id_bit_table_slinevbox,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {7,                     // slineybox
+    &thinglineybox,
+    &thinglineybox,
+    {0, 0, 0, 0},
+    {b_lineybox, b_plineybox},
+    {0, 0},
+    false, true,
+    id_bit_table_slineybox,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {7,                     // slinefbox
+    &thinglinefbox,
+    &thinglinefbox,
+    {0, 0, 0, 0},
+    {b_linefbox, b_plinefbox},
+    {0, 0},
+    false, true,
+    (const id_bit_table *) 0,
     {(Cstring) 0,
      (Cstring) 0}},
    {7,                     // sdbltrngl4
@@ -10371,7 +10359,7 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx_foo77,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_fooEEprime, s1x3, s2x4,          0, 0, 2, {1, 2, 3, 7, 6, 5},
     fx0, fx_foo77,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_1x4p2d, sdmd, s1x4p2dmd,         0, 0, 1, {3, 4, 6, 7},
+   {fx_1x4p2d, sdmd, slinefbox,         0, 0, 1, {3, 4, 6, 7},
     fx0, fx0,                   fx_1x4p2l, fx0,       fx0, fx_4p2x1d,                   fx0, fx0},
    {fx_1x4p2l, s1x4, s1x8,              0, 0, 1, {2, 6, 5, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -10544,6 +10532,12 @@ select::fixer select::fixer_init_table[] = {
     fx_f1x3d6, fx_f323,    fx0, fx0,             fx0, fx0,             fx0, fx0},
    {fx_f323, s1x3, s_323,            0, 0, 2, {6, 5, 4, 0, 1, 2},
     fx_f323, fx_f1x3d6,    fx0, fx0,             fx0, fx0,             fx0, fx0},
+   {fx_f3223, s2x2, s_3223,           0, 0, 1, {4, 3, 9, 8},
+    fx0, fx0,         fx_f3x6a, fx_f343,         fx0, fx0,             fx0, fx0},
+   {fx_f3x6a, s1x4, s3x6,             0, 0, 1, {16, 17, 7, 8},
+    fx0, fx0,              fx0, fx0,             fx0, fx0,             fx0, fx0},
+   {fx_f343, s1x4, s_343,             0, 0, 1, {8, 9, 3, 4},
+    fx0, fx0,              fx0, fx_f3x6a,        fx0, fx0,             fx0, fx_f3223},
    {fx_f323d, s2x3, s_323,           0, 0, 1, {0, 1, 2, 4, 5, 6},
     fx0, fx0,    fx0, fx0,             fx0, fx0,        fx_f323d, fx_f3x4outrd},
    {fx_f3x1zzd, sdmd, s3x1dmd,       0, 0, 1, {0, 3, 4, 7},
@@ -10594,16 +10588,18 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,    fx0, fx0,       fx_fxwv2d, fx0,             fx0, fx0},
    {fx_fxwv3d, s_star, s_crosswave,  0, 0, 1,          {1, 2, 5, 6},
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
-   {fx_fqtgns, s1x2, s_qtag,        0, 0, 2,          {0, 1, 5, 4},
-    fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
-   {fx_ftharns, s1x2, s_thar,       1, 0, 2,          {2, 3, 7, 6},
-    fx0, fx_fqtgns,    fx0, fx0,             fx0, fx0,             fx0, fx0},
-   {fx_ftharew, s1x2, s_thar,       0, 0, 2,          {0, 1, 5, 4},
-    fx0, fx_fqtgns,    fx0, fx0,             fx0, fx0,             fx0, fx0},
-   {fx_falamons, s1x2, s_alamo,     0, 0, 2,          {0, 1, 5, 4},
-    fx0, fx_ftharns,   fx0, fx0,             fx0, fx0,             fx0, fx0},
-   {fx_falamoew, s1x2, s_alamo,     1, 0, 2,          {7, 6, 2, 3},
-    fx0, fx_ftharew,   fx0, fx0,             fx0, fx0,             fx0, fx0},
+
+   {fx_fqtgns, s2x2, s_qtag,        1, 0, 1,          {1, 4, 5, 0},
+    fx0, fx0,          fx0, fx0,             fx0, fx0,             fx0, fx0},
+   {fx_ftharns, s1x4, s_thar,       1, 0x40, 1,       {2, 3, 6, 7},
+    fx0, fx0,          fx0, fx0,             fx0, fx0,             fx_fqtgns, fx_fqtgns},
+   {fx_ftharew, s1x4, s_thar,       0, 0x40, 1,       {0, 1, 4, 5},
+    fx0, fx0,          fx0, fx0,             fx0, fx0,             fx_fqtgns, fx_fqtgns},
+   {fx_falamons, s2x2, s_alamo,     0, 0, 1,          {0, 1, 4, 5},
+    fx0, fx_ftharns,   fx0, fx_fqtgctr,      fx0, fx0,             fx0, fx0},
+   {fx_falamoew, s2x2, s_alamo,     1, 0, 1,          {2, 3, 6, 7},
+    fx0, fx_ftharew,   fx0, fx_fqtgctr,      fx0, fx0,             fx0, fx0},
+
    {fx_fqtgj1, s1x2, s_qtag,        1, 0, 2,          {1, 3, 7, 5},
     fx0, fx0,    fx0, fx0,             fx0, fx0,             fx0, fx0},
    {fx_fqtgj2, s1x2, s_qtag,        1, 0, 2,          {0, 7, 3, 4},
@@ -10667,11 +10663,11 @@ select::fixer select::fixer_init_table[] = {
    {fx_box3c, s1x2, s2x2,          0, 0, 1,          {0, 1},
     fx0, fx_n1x4c,          fx0, fx0,        fx0, fx0,    fx0, fx0},
    {fx_box6c, s1x2, s2x2,          1, 0, 1,          {1, 2},
-    fx0,     fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+    fx0, fx_n1x4c,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_box9c, s1x2, s2x2,          1, 0, 1,          {0, 3},
-    fx0,     fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+    fx0, fx_n1x43,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_boxcc, s1x2, s2x2,          0, 0, 1,          {3, 2},
-    fx0,     fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
+    fx0, fx_n1x43,              fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_box55, s1x1, s2x2,        0, 0, 2,          {0, 2},
     fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0},
    {fx_boxaa, s1x1, s2x2,        0, 0, 2,          {1, 3},
@@ -11041,37 +11037,105 @@ select::fixer select::fixer_init_table[] = {
    // In a box+line, doing something to the line.
    {fx_1x5p1g, s1x4, slinebox,      0, 0, 1, {0, 1, 3, 2},
     fx0, fx0,                   fx0, fx_f2x4far,     fxboxpdmdd, fx_boxdmd,     fx_f2x4left, fx_f2x4left},
+   // Doing something to the center tgl4.
+   {fx_1x5p1h, s_trngl4, slinebox, 0x40000001, 0, 1, {2, 3, 4, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_1x5p1k},
 
+   {fx_1x5p1k, s_trngl4, sdbltrngl4, 0x40000003, 0, 1, {5, 4, 3, 2},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_1x5p1h},
+
+   // Doing something to just two center people.
+   {fx_1x5p1j,    s1x2, slinebox,      0, 0, 1, {2, 3},
+    fx0, fx_l2b6,               fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_linefbox0, s1x2, slinebox,      1, 0, 1, {5, 6},
+    fx0, fx_linefbox1,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_linefbox1, s1x2, slinefbox,     0, 0, 1, {6, 5},
+    fx0, fx_linefbox0,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_linefbox2, s1x2, slinebox,      0, 0, 1, {0, 1},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_linefbox3, s1x2, slinefbox,     0, 0, 2, {0, 1, 6, 5},
+    fx0, fx_l6b10,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_linefbox4, s1x2, slinebox,      1, 0, 1, {4, 7},
+    fx0, fx_l6b14,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    // In a line2box, doing something to the box of 6.
-   {fx_l2b1,   s2x3, sline2box,     0, 0, 1, {2, 3, 4, 5, 6, 7},
+   {fx_l2b1,   s2x3, slinejbox,     0, 0, 1, {2, 3, 4, 5, 6, 7},
     fx0, fx0,            fx_f1x8hi6, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   // In a line2box, doing something to the line of 2.
-   {fx_l2b2,   s1x2, sline2box,     0, 0, 1, {0, 1},
+   // In a linejbox, doing something to the line of 2.
+   {fx_l2b2,   s1x2, slinejbox,     0, 0, 1, {0, 1},
     fx0, fx_f2x4pos1,           fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   // In a line2box, doing something to the far 2 in the box of 6.
-   {fx_l2b3,   s1x2, sline2box,     1, 0, 1, {4, 5},
+   // In a linejbox, doing something to the far 2 in the box of 6.
+   {fx_l2b3,   s1x2, slinejbox,     1, 0, 1, {4, 5},
     fx0, fx_l2b4,               fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_dbt1a,  s1x2, slinejbox,  1, 0, 1, {3, 6},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_l2b6,   s1x2, slinejbox,     1, 0, 1, {2, 7},
+    fx0, fx_1x5p1j,             fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
+   {fx_l6b5,   s1x2, slineybox,     0, 0, 1, {2, 3},
+    fx0, fx_f2x4pos2,           fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
-   // In a line6box, doing something to the line of 6.
-   {fx_l6b1,   s1x6, sline6box,     0, 0, 1, {0, 1, 2, 5, 4, 3},
+   {fx_l6b6,   s1x2, slineybox,     1, 0, 1, {5, 6},
+    fx0, fx_dbt3,               fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b7,   s1x2, slineybox,     1, 0, 1, {4, 7},
+    fx0, fx_n1x4c,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b8,   s1x2, slineybox,     1, 0, 1, {0, 1},
+    fx0, fx_linefbox2,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b14,   s1x2, slinevbox,    0, 0, 1, {4, 5},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b11, s_trngl4, slineybox,  0x40000003, 0, 1, {3, 2, 1, 0},
+    fx0, fx0,               fx0, fx0,                   fx0, fx0,                       fx0, fx_l2b7},
+
+   {fx_l6b12, s1x2, slineybox,   1, 0, 2, {0, 1, 4, 7},
+    fx0, fx_l6b13,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b13, s1x2, slinevbox,   0, 0, 2, {0, 1, 4, 5},
+    fx0, fx_l6b12,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b15, s_trngl4, slinevbox, 0x40000001, 0, 1, {4, 5, 6, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_l6b16},
+
+   {fx_l6b16, s_trngl4, slinefbox,  0x40000003, 0, 1, {5, 6, 7, 4},
+    fx0, fx0,               fx0, fx0,                   fx0, fx0,                       fx0, fx_l6b15},
+
+   {fx_l2b7, s_trngl4, slinejbox,   0x40000001, 0, 1, {0, 1, 2, 7},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx_l6b11},
+
+   {fx_l2b8, s1x2, slinejbox,    1, 0, 2, {2, 7, 4, 5},
+    fx0, fx_f1x8lodbt4,         fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b9, s_bone6, slineybox, 0, 0, 1, {0, 4, 3, 7, 1, 2},
+    fx0, fx_dbt7t,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_l6b10,  s1x2, slineybox,  1, 0, 2, {0, 1, 5, 6},
+    fx0, fx_linefbox3,          fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   {fx_dbt7t, s_1x2dmd, sdbltrngl4, 0, 0, 1, {0, 1, 2, 5, 4, 3},
+    fx_l6b9, fx0,               fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+   // In a linevbox, doing something to the line of 6.
+   {fx_l6b1,   s1x6, slinevbox,     0, 0, 1, {0, 1, 2, 5, 4, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,           fx_f2x4pos8, fx0},
 
    // In a line6box, doing something to the line of 2.
-   {fx_l6b2,   s1x2, sline6box,     1, 0, 1, {6, 7},
+   {fx_l6b2,   s1x2, slinevbox,     1, 0, 1, {6, 7},
     fx0, fx_f1x8hi2,            fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    // In a line6box, doing something to the near 2 in the line of 6.
-   {fx_l6b3,   s1x2, sline6box,     0, 0, 1, {0, 1},
+   {fx_l6b3,   s1x2, slinevbox,     0, 0, 1, {0, 1},
     fx0, fx_l6b4,               fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_l6b4,   s1x2, s_bone,        1, 0, 1, {0, 5},
-    fx0, fx_l6b4,               fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_l2b4,   s1x2, s1x6,      0, 0, 1, {4, 3},
     fx0, fx_f2x3a14,                fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -11082,13 +11146,11 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx_dbt1a,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_dbt2,   s1x2, sdbltrngl4, 1, 0, 1, {2, 3},
     fx0, fx_dbt2a,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_dbt3,   s1x2, sdbltrngl4, 0, 0, 1, {0, 1},
+   {fx_dbt3,   s1x2, sdbltrngl4, UINT32_C(0xA0000000), 0, 1, {0, 1},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_dbt4,   s1x2, sdbltrngl4, 1, 0, 1, {6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_dbt1a,  s1x2, sline2box,  1, 0, 1, {3, 6},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_dbt2a,  s1x2, sline6box,  0, 0, 1, {2, 3},
+   {fx_dbt2a,  s1x2, slinevbox,  0, 0, 1, {2, 3},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_dbt1b,  s1x2, sdbltrngl4, 1, 0, 2, {2, 3, 6, 7},
@@ -11100,7 +11162,9 @@ select::fixer select::fixer_init_table[] = {
    {fx_dbt3t, s_trngl, sdbltrngl4, 1, 0, 1, {5, 6, 7},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_dbt6t, s_bone6, sdbltrngl4, 0, 0, 1, {2, 6, 5, 7, 3, 4},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+    fx0, fx_dbt6u,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_dbt6u, s_1x2dmd, slinefbox, 0, 0, 1, {2, 3, 4, 5, 6, 7},
+    fx_dbt6t, fx0,              fx0, fx0,                   fx0, fx0,                   fx0, fx0},
 
    {fx_dbt1l,  s1x4, s1x8,       0, 0, 1, {1, 3, 6, 2},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
@@ -11473,22 +11537,6 @@ select::fixer select::fixer_init_table[] = {
    {fx0}};
 
 
-/*
-   {fx_4x5eight0, s1x2, s1x8,           0, 0, 4, {0, 1, 3, 2, 6, 7, 5, 4},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_4x5eight1, s1x2, s2x4,           1, 0, 4, {0, 7, 1, 6, 2, 5, 3, 4},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_4x5eight2, s1x2, s2x4,           3, 0, 4, {7, 0, 6, 1, 5, 2, 4, 3},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-   {fx_4x5eight3, s1x2, s1x8,           0, 0, 4, {0, 1, 3, 2, 6, 7, 5, 4},
-    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
-
-
-
-
-*/
-
-
 select::sel_item select::sel_init_table[] = {
    {LOOKUP_Z,                  s2x3,        066,    fx_z2x3a,      fx0, -1},
    {LOOKUP_Z,                  s2x3,        033,    fx_z2x3b,      fx0, -1},
@@ -11737,18 +11785,46 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                             s2x4, 0x11,   fx_foo11,      fx0, -1},
    {LOOKUP_NONE,                             s2x4, 0x77,   fx_foo77,      fx0, -1},
    {LOOKUP_NONE,                             s2x4, 0xEE,   fx_fooEE,      fx0, -1},
-   {LOOKUP_NONE,                      s1x4p2dmd,   0xD8,   fx_1x4p2d,     fx0, -1},
    {LOOKUP_NONE,                      s4p2x1dmd,   0xD8,   fx_4p2x1d,     fx0, -1},
    {LOOKUP_NONE,                      splinepdmd,  0xF0,   fx_1x5p1d,     fx0, -1},
    {LOOKUP_NONE,                      splinepdmd,  0x0F,   fx_1x5p1e,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0xF0,   fx_1x5p1f,     fx0, -1},
    {LOOKUP_NONE,                      slinebox,    0x0F,   fx_1x5p1g,     fx0, -1},
-   {LOOKUP_NONE,                      sline2box,   0xFC,   fx_l2b1,       fx0, -1},
-   {LOOKUP_NONE,                      sline2box,   0x03,   fx_l2b2,       fx0, -1},
-   {LOOKUP_NONE,                      sline2box,   0x30,   fx_l2b3,       fx0, -1},
-   {LOOKUP_NONE,                      sline6box,   0x3F,   fx_l6b1,       fx0, -1},
-   {LOOKUP_NONE,                      sline6box,   0xC0,   fx_l6b2,       fx0, -1},
-   {LOOKUP_NONE,                      sline6box,   0x03,   fx_l6b3,       fx0, -1},
+
+
+   {LOOKUP_NONE,                      slinebox,    0x03,   fx_1x5p1g,     fx0, -1},  // Goes to "Y"
+   {LOOKUP_NONE,                      slinebox,    0x60,   fx_linefbox0,  fx0, -1},  // Goes to "F"
+   {LOOKUP_NONE,                      slinebox,    0x9C,   fx_1x5p1h,     fx0, -1},  // Goes to sdbltrngl4
+   {LOOKUP_NONE,                      sdbltrngl4,  0x3C,   fx_1x5p1k,     fx0, -1},  // Goes to slinebox
+   {LOOKUP_NONE,                      slinebox,    0x0C,   fx_1x5p1j,     fx0, -1},  // Goes to "J"
+   {LOOKUP_NONE,                      slinebox,    0x90,   fx_linefbox4,  fx0, -1},  // Goes to "V"
+
+
+   {LOOKUP_NONE,                      slinefbox,   0xD8,   fx_1x4p2d,     fx0, -1},
+
+   {LOOKUP_NONE,                      slinejbox,   0xFC,   fx_l2b1,       fx0, -1},
+   {LOOKUP_NONE,                      slinejbox,   0x03,   fx_l2b2,       fx0, -1},
+   {LOOKUP_NONE,                      slinejbox,   0x30,   fx_l2b3,       fx0, -1},
+   {LOOKUP_NONE,                      slinejbox,   0x87,   fx_l2b7,       fx0, -1},
+   {LOOKUP_NONE,                      slinejbox,   0xB4,   fx_l2b8,       fx0, -1},
+
+   {LOOKUP_NONE,                      slinevbox,   0x3F,   fx_l6b1,       fx0, -1},
+   {LOOKUP_NONE,                      slinevbox,   0xC0,   fx_l6b2,       fx0, -1},
+   {LOOKUP_NONE,                      slinevbox,   0x03,   fx_l6b3,       fx0, -1},
+   {LOOKUP_NONE,                      slinevbox,   0x33,   fx_l6b13,      fx0, -1},
+   {LOOKUP_NONE,                      slinevbox,   0xF0,   fx_l6b15,      fx0, -1},
+   {LOOKUP_NONE,                      slinefbox,   0xF0,   fx_l6b16,      fx0, -1},
+
+
+   {LOOKUP_NONE,                      slineybox,   0x0C,   fx_l6b5,       fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x60,   fx_l6b6,       fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x03,   fx_l6b8,       fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x0F,   fx_l6b11,      fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x63,   fx_l6b10,      fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x90,   fx_l6b7,       fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x9F,   fx_l6b9,       fx0, -1},
+   {LOOKUP_NONE,                      slinefbox,   0xFC,   fx_dbt6u,      fx0, -1},
+   {LOOKUP_NONE,                      slineybox,   0x93,   fx_l6b12,      fx0, -1},
 
    {LOOKUP_NONE,                     sdbltrngl4,   0x30,   fx_dbt1,       fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0x0C,   fx_dbt2,       fx0, -1},
@@ -11759,6 +11835,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                     sdbltrngl4,   0x1E,   fx_dbt1d,      fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0xE0,   fx_dbt3t,      fx0, -1},
    {LOOKUP_NONE,                     sdbltrngl4,   0xFC,   fx_dbt6t,      fx0, -1},
+   {LOOKUP_NONE,                     sdbltrngl4,   0x3F,   fx_dbt7t,      fx0, -1},
    {LOOKUP_NONE,                           s1x6,   0x18,   fx_l2b4,       fx0, -1},
    {LOOKUP_NONE,                           s1x6,   0x03,   fx_l2b5,       fx0, -1},
    {LOOKUP_NONE,                      splinedmd,   0xF0,   fx_5p1x1d,     fx0, -1},
@@ -11823,6 +11900,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s_525,       00707,  fx_f525nw,     fx0, -1},
    {LOOKUP_NONE,                      s_525,       03434,  fx_f525ne,     fx0, -1},
    {LOOKUP_NONE,                      s_323,        0x77,  fx_f323,       fx0, -1},
+   {LOOKUP_NONE,                      s_3223,      0x318,  fx_f3223,      fx0, -1},
+   {LOOKUP_NONE,                      s_343,       0x318,  fx_f343,       fx0, -1},
    {LOOKUP_NONE,                      sdeepxwv,    00303,  fx_fdpxwve,    fx0, -1},
    {LOOKUP_NONE,                      s_ntrgl6cw,    066,  fx_ftgl6ccd,   fx0, -1},
    {LOOKUP_NONE,                      s_ntrgl6ccw,   033,  fx_ftgl6cccd,  fx0, -1},

@@ -96,8 +96,9 @@ Go to sddoc directory and do:
 21 May 15  -  13 Jun 15  #29
 13 Jun 15  -  17 Oct 15  #49
 17 Oct 15  -   1 Jan 16  #50
- 1 Jan 16                #51
-22 Jan 16                #52
+ 1 Jan 16  -  21 Jan 16  #51
+22 Jan 16  -  13 Feb 17  #52
+13 Feb 17                #53
 
 (#25, #26, #48, #30, #47 are also available.)
 Also, do [DPT] initially touch by 1/2 x [split sidetrack]
@@ -153,8 +154,8 @@ BE SURE TO DELETE *~ and funny .h, .cpp, .cmd, and makefile files
 BEFORE DOING THIS.
 
 In \wba\sd:          save _vnnnn    (e.g.  save _v3201 -- No periods)
-In \wba\sddoc:       save _vnnnn
 In \wba\sd\regress:  save _vnnnn
+In \wba\sddoc:       save _vnnnn
 
 -----------------------------------------------------------------
 
@@ -192,13 +193,12 @@ Copy the above files into ~.
 
 cd ~
 cp sd/sd.ini .
-rm sd/*
-rm sd/regress/*
+cd sd
+rm -rf *
+mkdir regress
+cd ~
 rm sddoc/*
 rm staging/*
-
-(The first of these will complain about the subdirectory "regress".)
-
 cd staging
 unzip -a ../sd_vnnnn
 mv * ../sd
@@ -214,8 +214,8 @@ cd regress
 chmod 775 *.sh
 ./doit.sh
 cd ..
-
 make -f makefile.linux64 tarball
+
 sftp USERNAME@www.challengedance.org
 (P=PASSWORD)
 cd public_html/sd

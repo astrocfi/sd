@@ -51,6 +51,7 @@
    process_number_insertion
    get_real_subcall
    gcd
+   reduce_fraction
    process_fractions
    fraction_info::get_fraction_info
    fraction_info::get_fracs_for_this_part
@@ -1386,6 +1387,29 @@ struct matrix_rec {
 
 
 
+static const coordrec squeezethingglass = {s_hrglass, 0x23,
+   { -4,   4,   8,   0,   4,  -4,  -8,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {0}};
+
+static const coordrec squeezethinggal = {s_galaxy, 0x23,
+   { -6,  -2,   0,   2,   6,   2,   0,  -2},
+   {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {0}};
+
+static const coordrec squeezething343 = {s_343, 0x23,
+   { -4,   0,   4,   6,   2,   4,   0,  -4,  -6,  -2},
+   {  6,   6,   6,   0,   0,  -6,  -6,  -6,   0,   0}, {0}};
+
+static const coordrec squeezethingqtag = {s_qtag, 0x23,
+   { -2,   2,   6,   2,   2,  -2,  -6,  -2},
+   {  4,   4,   0,   0,  -4,  -4,   0,   0}, {0}};
+
+static const coordrec squeezething4dmd = {s4dmd, 0x23,
+   {-10,  -5,   5,  10,  14,  10,   6,   2,  10,   5,  -5, -10, -14, -10,  -6,  -2},
+   {  6,   6,   6,   6,   0,   0,   0,   0,  -6,  -6,  -6,  -6,   0,   0,   0,   0}, {0}};
+
+
+enum { matrix_info_capacity = MAX_PEOPLE };
+
 static int start_matrix_call(
    const setup *ss,
    matrix_rec matrix_info[],
@@ -1420,8 +1444,8 @@ static int start_matrix_call(
       fail("Can't do this in this setup.");
 
    for (i=0; i<=attr::slimit(ss); i++) {
-      if (ss->people[i].id1) {
-         if (nump == 8) fail("?????too many people????");
+      if (ss->people[i].id1 || (flags & MTX_INCLUDE_PHANTOMS)) {
+         if (nump == matrix_info_capacity) fail("?????too many people????");
          copy_person(people, nump, ss, i);
 
          matrix_info[nump].nicex = nicethingyptr->xca[i];
@@ -1487,409 +1511,855 @@ struct checkitem {
    uint32 new_rot;     // 0x100 bit means this fudging is severe.
    warning_index warning;
    const coordrec *new_checkptr;
-   veryshort fixer[33];
+   const veryshort *correction_list;
 };
 
 
+static const coordrec spec_qtag1 = {s_qtag, 0x23,
+   { -4,   4,   6,   2,   4,  -4,  -6,  -2},
+   {  6,   6,   0,   0,  -6,  -6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  5, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spec_343 = {s_343, 0x23,
+   { -4,   0,   4,   6,   2,   4,   0,  -4,  -6,  -2},
+   {  6,   6,   6,   0,   0,  -6,  -6,  -6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1,  8,  9,  4,  3, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  7,  6,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spec_wqt_4dmd = {s4dmd, 0x23,
+   {-11,  -4,   5,  11,  14,  10,   6,   2,  11,   4,  -5, -11, -14, -10,  -6,  -2},
+   {  5,   5,   5,   5,   0,   0,   0,   0,  -5,  -5,  -5,  -5,   0,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1, -1,  2,  3, -1,
+      12, 13, 14, 15,  7,  6,  5,  4,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 11, 10, -1, -1,  9,  8, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spec_spin_gal = {s_galaxy, 0x23,
+   { -8,  -4,   0,   4,   8,   4,   0,  -4},
+   {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1,  0,  1, -1,  3,  4, -1,
+      -1, -1, -1,  7, -1,  5, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec ptpto3x6 = {s3x6, 0x23,
+   {-10,  -5,  -2,   2,   5,  10,   9,   5,   2,  10,   5,   2,  -2,  -5, -10,  -9,  -5,  -2},
+   {  4,   4,   4,   4,   4,   4,   0,   0,   0,  -4,  -4,  -4,  -4,  -4,  -4,   0,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  3,  4,  5, -1,
+      -1, 15, 16, 17,  8,  7,  6, -1,
+      -1, 14, 13, 12, 11, 10,  9, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+static const coordrec squeezefinalglass = {s_hrglass, 0x23,
+   { -2,   2,   6,   0,   2,  -2,  -6,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1, -1, -1, -1,
+      -1, -1,  6, -1,  3, -1,  2, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec x3x6toptp = {s_ptpd, 0x23,
+   {-10,  -6,  -2,  -6,  10,   6,   2,   6},
+   {  0,   2,   0,  -2,   0,  -2,   0,   2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  1,  2,  6,  7,  4, -1,
+      -1, -1,  3, -1, -1,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec truck_to_deepxwv = {sdeepxwv, 0x24,
+   {-11,  -7,  -2,  -2,  -2,  -2,  11,   7,   2,   2,   2,   2},
+   {  0,   0,   6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6}, {
+      -1, -1, -1, -1, -1, -1, -1,  2, 11, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  0,  1,  3, 10,  7,  6, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1,  4,  9, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1,  5,  8, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec press_4dmd_4x4 = {s4x4, 0x23,
+   { 11,   9,   9,   1,  11,   5,  -5,   1, -11,  -9,  -9,  -1, -11,  -5,   5,  -1},
+   {  7,   1,  -1,   1,  -7,  -7,  -7,  -1,  -7,  -1,   1,  -1,   7,   7,   7,   1}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 12, 13, -1, -1, 14,  0, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  8,  6, -1, -1,  5,  4, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec press_4dmd_qtag1 = {s_qtag, 0x23,
+   { -7,  -1,   6,   2,   7,   1,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1, -1, -1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec press_4dmd_qtag2 = {s_qtag, 0x23,
+   {  1,   7,   6,   2,  -1,   -7,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  0,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5,  4, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec acc_crosswave = {s_crosswave, 0x23,
+   { -8,  -4,   0,   0,   8,   4,   0,   0},
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1,  0,  1,  3,  5,  4, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec s3dmdtoqtg0 = {s_qtag, 0x23,
+   { -5,   5,   6,   2,   5,  -5,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1, -1,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5, -1, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec s3dmdtoqtg1 = {s_qtag, 0x23,
+   { -2,   5,   6,   2,   2,  -5,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5, -1,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec s3dmdtoqtg2 = {s_qtag, 0x23,
+   { -5,   2,   6,   2,   5,  -2,  -6,  -2},
+   {  5,   5,   0,   0,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1,  1, -1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  5, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec alamoto2x4 = {s2x4, 0x23,
+   { -5,  -2,   2,   5,   5,   2,  -2,  -5},
+   {  2,   1,   1,   2,  -2,  -1,  -1,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1,  2,  3, -1, -1,
+      -1, -1,  7,  6,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec promtoc1phan1 = {s_c1phan, 0x23,
+   { -9,  -2,  -5,  -2,   2,   9,   2,   5,   9,   2,   5,   2,  -2,  -9,  -2, -5},
+   {  2,   9,   2,   5,   9,   2,   5,   2,  -2,  -9,  -2,  -5,  -9,  -2,  -5,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  1,  4, -1, -1, -1,
+      -1, -1, -1,  3,  6, -1, -1, -1,
+      -1,  0,  2, -1, -1,  7,  5, -1,
+      -1, 13, 15, -1, -1, 10,  8, -1,
+      -1, -1, -1, 14, 11, -1, -1, -1,
+      -1, -1, -1, 12,  9, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+// These two have slightly different pictures because of an unavoidable conflict
+// due to the way picture indices are computed from the coordinates.
+// This one is use for a right-hand promenade.
+static const coordrec promtoc1phan2e = {s_c1phan, 0x23,
+   { -9,  -4,  -5,  -4,   4,   9,   4,   5,   9,   4,   5,   4,  -4,  -9,  -4,  -5},
+   {  4,   9,   4,   5,   9,   4,   5,   4,  -4,  -9,  -4,  -5,  -9,  -4,  -5,  -4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  1, -1,  4, -1, -1,
+      -1,  0,  2,  3, -1,  6,  5, -1,
+      -1, -1, -1, -1, -1,  7, -1, -1,
+      -1, 13, 15, -1, -1, 10,  8, -1,
+      -1, -1, -1, 14, 11, -1, -1, -1,
+      -1, -1, -1, 12,  9, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+// This one is use for a left-hand promenade.
+static const coordrec promtoc1phan2o = {s_c1phan, 0x23,
+   { -9,  -4,  -5,  -4,   4,   9,   4,   5,   9,   4,   5,   4,  -4,  -9,  -4,  -5},
+   {  4,   9,   4,   5,   9,   4,   5,   4,  -4,  -9,  -4,  -5,  -9,  -4,  -5,  -4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  1, -1,  4, -1, -1,
+      -1,  0,  2,  3, -1,  7,  5, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, 13, 15, -1, -1, 10,  8, -1,
+      -1, -1, -1, 14, -1, 11, -1, -1,
+      -1, -1, -1, 12, -1,  9, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec s1x6toshort6 = {s_galaxy, 0x23,
+   { -6,  -2,   0,   2,   6,   2,   0,  -2},
+   {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1,  0,  1,  3,  4, -1, -1,
+      -1, -1, -1,  7,  5, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+// Magnification turned on.       That's what   V   this "1" is about.
+static const coordrec x343togal = {s_galaxy, 0x13,
+   { -6,  -4,   0,   4,   6,   4,   0,  -4},
+   {  0,   2,   6,   2,   0,  -2,  -6,  -2}, {
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  1, -1, -1, -1,  3, -1,
+      -1,  0, -1, -1, -1, -1, -1,  4,
+      -1, -1,  7, -1, -1, -1,  5, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec deep2x1togal = {s_galaxy, 0x23,
+   { -6,  -2,   0,   2,   6,   2,   0,  -2},
+   {  0,   2,   7,   2,   0,  -2,  -7,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1,  0,  1,  3,  4, -1, -1,
+      -1, -1, -1,  7,  5, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec bightobone = {s_bone, 0x23,
+   {-9,   9,   6,   2,   9,  -9,  -6,  -2},
+   { 2,   2,   0,   0,  -2,  -2,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0,  6,  7,  3,  2,  1, -1,
+      -1,  5, -1, -1, -1, -1,  4, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec s4x4toqtg = {s_qtag, 0x23,
+   { -2,   2,   6,   2,   2,  -2,  -6,  -2},
+   {  6,   6,   0,   0,  -6,  -6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1, -1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec deepxwvtoxwv = {s_crosswave, 0x23,
+   {-10,  -6,   0,   0,  10,   6,   0,   0},
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1,  0,  1, -1,  3,  5,  4, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+// Magnification turned on.    That's what   V   this "1" is about.
+static const coordrec xwvtothar = {s_thar, 0x13,
+   { -7,  -3,   0,   0,   7,   3,   0,   0},
+   {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  3, -1, -1, -1,
+       0, -1,  1, -1, -1,  5, -1,  4,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec thartoxwv = {s_crosswave, 0x23,
+   {-11,  -7,   0,   0,  11,   7,   0,   0},
+   {  0,   0,   9,   5,   0,   0,  -9,  -5}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  2, -1, -1, -1,
+      -1, -1, -1, -1,  3, -1, -1, -1,
+      -1,  0,  1, -1, -1,  5,  4, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1,  6, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spndltohrgl = {s_hrglass, 0x23,
+   { -4,   4,   8,   0,   4,  -4,  -8,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1, -1,  6, -1,  3, -1,  2, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1,  5, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec dhrgltohrgl = {s_hrglass, 0x23,
+   { -6,   6,   5,   0,   6,  -6,  -5,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1, -1,  1, -1, -1,
+      -1, -1,  6, -1,  3,  2, -1, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1,  5, -1, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec bonetoqtag = {s_qtag, 0x23,
+   { -6,   6,   6,   2,   6,  -6,  -6,  -2},
+   {  6,   6,   0,   0,  -6,  -6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0, -1, -1,  1, -1, -1,
+      -1, -1,  6,  7,  3,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  5, -1, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec qtagto3x4 = {s3x4, 0x23,
+   { -9,  -4,   5,   9,   6,   2,   9,   4,  -5,  -9,  -6,  -2},
+   {  5,   5,   5,   5,   0,   0,  -5,  -5,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0, -1,  1, -1,  2,  3, -1,
+      -1, -1, 10, 11,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  9,  8, -1, -1,  7,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec qtagto3x4a = {s3x4, 0x23,
+   { -8,  -4,   5,   9,   6,   2,   8,   4,  -5,  -9,  -6,  -2},
+   {  5,   5,   5,   5,   0,   0,  -5,  -5,  -5,  -5,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1,  0,  1, -1,  2,  3, -1,
+      -1, -1, 10, 11,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  9,  8, -1, -1,  7,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+static const veryshort qtagto3x4correction[] =
+{4, 5, 9, 5,     -4, -5, -9, -5,    -3, 5, -9, 5,    3, -5, 9, -5,
+ 6, -4, 9, -5,   -6, 4, -9, 5,      6, 4, 9, 5,      -6, -4, -9, -5, 127};
+
+static const coordrec qtagto4x5 = {s4x5, 0x23,
+   { -9,  -4,   0,   4,   9,   8,   5,   0,  -5,  -8,   9,   4,   0,  -4,  -9,  -9,  -5,   0,   5,   8},
+   {  9,   9,   6,   9,   9,   2,   4,   2,   5,   2,  -9,  -9,  -6,  -9,  -9,  -2,  -4,  -2,  -5,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0, -1,  1, -1,  3,  4, -1,
+      -1, -1,  8, -1,  2,  6, -1, -1,
+      -1, -1,  9, -1,  7, -1,  5, -1,
+      -1, 15, 16, -1, 17, -1, 19, -1,
+      -1, -1, -1, -1, 12, 18, -1, -1,
+      -1, 14, -1, 13, -1, 11, 10, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+static const veryshort qtagto4x5correction[] =
+{-2, 8, -2, 9,    6, 8, 9, 9,    6, -8, 9, -9,    -6, 8, -9, 9,    -6, -8, -9, -9,    127};
+
+static const coordrec bonetobigh = {sbigh, 0x23,
+   {-10, -10, -10, -10,  -6,  -2,  10,  10,  10,  10,   6,   2},
+   {  6,   2,  -2,  -6,   0,   0,  -6,  -2,   2,   6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  0, -1, -1, -1, -1,  9, -1,
+      -1,  1,  4,  5, 11, 10,  8, -1,
+      -1,  2, -1, -1, -1, -1,  7, -1,
+      -1,  3, -1, -1, -1, -1,  6, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec spinto343 = {s_343, 0x23,
+   { -4,   0,   4,   8,   2,   4,   0,  -4,  -8,  -2},
+   {  6,   6,   6,   0,   0,  -6,  -6,  -6,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1,  8,  9,  4, -1,  3, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  7,  6,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+// Magnification turned on.  That's what   V   this "1" is about.
+static const coordrec galto343 = {s_343, 0x13,
+   { -2,   0,   2,   6,   2,   2,   0,  -2,  -6,  -2},
+   {  6,   6,   6,   0,   0,  -6,  -6,  -6,   0,   0}, {
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1,  8, -1,  9, -1,  4, -1,  3,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  7,  6,  5, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec x343toglass = {s_hrglass, 0x23,
+   { -4,   4,   6,   0,   4,  -4,  -6,   0},
+   {  6,   6,   0,   2,  -6,  -6,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1, -1,  6, -1,  3,  2, -1, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1,  5, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec x1x8tox1x8 = {sx1x8, 0x23,
+   {-14, -10,  -6,  -2,   0,   0,   0,   0,  14,  10,   6,   6,   0,   0,   0,   0},
+   {  0,   0,   0,   0,  14,  10,   6,   2,   0,   0,   0,   4, -14, -10,  -6,  -2}, {
+      -1, -1, -1, -1,  4, -1, -1, -1,
+      -1, -1, -1, -1,  5, -1, -1, -1,
+      -1, -1, -1, -1,  6, 11, -1, -1,
+       0,  1,  2,  3,  7, 10,  9,  8,
+      -1, -1, -1, -1, 15, -1, -1, -1,
+      -1, -1, -1, -1, 14, -1, -1, -1,
+      -1, -1, -1, -1, 13, -1, -1, -1,
+      -1, -1, -1, -1, 12, -1, -1, -1}};
+static const veryshort sx1x8correction[] =
+{2, 0, 6, 4, 127};
+
+// Magnification turned on.          That's what   V   this "1" is about.
+static const coordrec galtospindle = {s_spindle, 0x13,
+   { -2,   0,   2,   6,   2,   0,  -2,  -6},
+   {  2,   2,   2,   0,  -2,  -2,  -2,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1,  7, -1, -1, -1, -1, -1,  3,
+      -1, -1, -1,  6,  5,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+// Magnification turned on.   That's what   V   this "1" is about.
+static const coordrec rigtoqtg = {s_qtag, 0x13,
+   { -2,   2,   6,   2,   2,  -2,  -6,  -2},
+   {  2,   2,   0,   0,  -2,  -2,   0,   0}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0, -1,  1, -1, -1,
+      -1,  6, -1,  7, -1,  3, -1,  2,
+      -1, -1, -1,  5, -1,  4, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const coordrec tolinefbox = {slinefbox, 0x24,
+   {-10,  -6,  -2,   2,  6,  14,  10,   6},
+   {  0,   0,   0,   0,  2,   0,   0,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1,  0,  1,  2,  3,  4,  6,  5, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1,  7, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
+
+static const veryshort s1x6correction_a[] =
+    {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0, 127};
+static const veryshort s1x6correction_b[] =
+   {0, -9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 127};
+
 static const checkitem checktable[] = {
-   {0x00620046, 0x10808404, s_3223,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x08080104, s_nxtrglcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x0C008002, s_nxtrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00630095, 0x00840050, spgdmdcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00630095, 0x10800A00, spgdmdccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x08008404, s_rigger, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00770077, 0x00418004, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620046, 0x10808404, s_3223,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60026, 0x08080104, s_nxtrglcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60026, 0x0C008002, s_nxtrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00630095, 0x00840050, spgdmdcw,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00630095, 0x10800A00, spgdmdccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20026, 0x08008404, s_rigger, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00770077, 0x00418004, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    // Fudge this to a galaxy.  The center 2 did a squeeze or spread from a spindle.
-   {0x00840066, 0x0C000108, s_galaxy, UINT32_C(~0), 0, warn__check_galaxy, (const coordrec *) 0,
-    {0, 6, 0, 7,       0, -6, 0, -7,     8, 0, 7, 0,       -8, 0, -7, 0,
-     4, 2, 2, 2,       4, -2, 2, -2,     -4, 2, -2, 2,     -4, -2, -2, -2}},
+   {0x00840066, 0x0C000108, nothing, UINT32_C(~0), 0, warn__check_galaxy, &spec_spin_gal, (const veryshort *) 0},
+
    // Fudge this to quadruple diamonds.  Someone trucked out from a wqtag.
-   {0x00E70055, 0x0900A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-4, 5, -5, 5, 4, -5, 5, -5, 127}},
-   // Next two: The centers did a 1/2 truck from point-to-point diamonds.  Fudge to a 3x6.
-   {0x00930044, 0x01018800, s3x6, UINT32_C(0522522), 0, warn__none, (const coordrec *) 0,
-    {-9, 0, -10, 0,    9, 0, 10, 0,      -5, 0, -6, 0,
-     -5, -4, -6, -4,   -5, 4, -6, 4,     5, -4, 6, -4,     5, 4, 6, 4}},
-   {0x00930044, 0x21018800, s3x6, UINT32_C(0722722), 0, warn__none, (const coordrec *) 0,
-    {-9, 0, -10, 0,    9, 0, 10, 0,      -5, 0, -6, 0,     5, 0, 6, 0,
-     -5, -4, -6, -4,   -5, 4, -6, 4,     5, -4, 6, -4,     5, 4, 6, 4}},
+   {0x00E70055, 0x0900A422, nothing, UINT32_C(~0), 0, warn__none, &spec_wqt_4dmd, (const veryshort *) 0},
+
+   // Centers did a 1/2 truck from point-to-point diamonds.  Fudge to a 3x6.
+   {0x00930044, 0x21018800, nothing, UINT32_C(0722722), 0, warn__none, &ptpto3x6, (const veryshort *) 0},
+   // Centers did a 1/2 truck from a 3x6.  Fudge to point-to-point diamonds.
+   {0x00A20026, 0x09080002, nothing, UINT32_C(~0), 0, warn__none, &x3x6toptp, (const veryshort *) 0},
 
    // The points did a 1/2 press ahead from triple diamonds.  Fudge to a qtag.
-   {0x00630055, 0x01420421, s_qtag, 0, 0, warn__none, (const coordrec *) 0,
-    {-2, 5, -4, 5,     -5, 5, -4, 5,     2, 5, 5, 5,
-     -2, -5, -5, -5,   2, -5, 4, -5,     5, -5, 4, -5}},
+   {0x00630055, 0x01400420, nothing, UINT32_C(~0), 0, warn__none, &s3dmdtoqtg0, (const veryshort *) 0},
+   {0x00630055, 0x01020420, nothing, UINT32_C(~0), 0, warn__none, &s3dmdtoqtg1, (const veryshort *) 0},
+   {0x00630055, 0x01420401, nothing, UINT32_C(~0), 0, warn__none, &s3dmdtoqtg2, (const veryshort *) 0},
 
-   // The centers did a 1/2 truck from a 3x6.  Fudge to point-to-point diamonds.
-   {0x00A20026, 0x09080002, nothing, UINT32_C(~0), 0, warn__none, &truck_to_ptpd, {127}},
+   // People pressed ahead from an alamo ring.  Fudge to 2x4.
+   {0x00530023, 0x00102090, nothing, UINT32_C(~0), 0, warn__none, &alamoto2x4, (const veryshort *) 0},
+   {0x00230053, 0x00220009, nothing, UINT32_C(~0), 1, warn__none, &alamoto2x4, (const veryshort *) 0},
 
-   // Fudge to 2x4.  People pressed ahead from an alamo ring.
-   {0x00530023, 0x00102090, s2x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-5, 2, -6, 2,     -2, 1, -2, 2,     2, 1, 2, 2,       5, 2, 6, 2,
-     5, -2, 6, -2,     2, -1, 2, -2,     -2, -1, -2, -2,   -5, -2, -6, -2}},
+   // 1/2 press ahead from star promenade.
+   {0x00930093, 0x411600C1, nothing, UINT32_C(~0), 0, warn__check_c1_phan, &promtoc1phan1, (const veryshort *) 0},
 
-   // OK to here (13).  This has something to do with "initialize_matrix_position_tables".
-   // Not sure what that was about.
+   // Full press ahead from RH star promenade.  Goes to same setup as 1/2 press ahead.
+   // These two need to be separate because of picture collision.
+   {0x00950095, 0x11000800, nothing, UINT32_C(~0), 0, warn__check_c1_phan, &promtoc1phan2e, (const veryshort *) 0},
+   // As above, LH.
+   {0x00950095, 0x00810404, nothing, UINT32_C(~0), 0, warn__check_c1_phan, &promtoc1phan2o, (const veryshort *) 0},
 
-   {0x00230053, 0x00220009, s2x4,  UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {2, -5, 2, -6,      1, -2, 2, -2,
-     1, 2, 2, 2,        2, 5, 2, 6,
-     -2, 5, -2, 6,      -1, 2, -2, 2,
-     -1, -2, -2, -2,    -2, -5, -2, -6}},
-
-   {0x00770073, 0x0001A005, sdeep2x1dmd,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {7, 2, 6, 2,        7, -2, 6, -2,
-     -7, 2, -6, 2,      -7, -2, -6, -2, 127}},
-
-   {0x00730077, 0x00408304, sdeep2x1dmd,  UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {2, 7, 2, 6,        2, -7, 2, -6,
-     -2, 7, -2, 6,      -2, -7, -2, -6, 127}},
-
-   {0x00620073, 0x00088306, s4x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {2, 7, 2, 6,        2, -7, 2, -6,
-     -2, 7, -2, 6,      -2, -7, -2, -6, 127}},
-
-   {0x00730073, 0x0000A305, s4x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {2, 7, 2, 6,        2, -7, 2, -6,
-     -2, 7, -2, 6,      -2, -7, -2, -6,
-     7, 2, 6, 2,        7, -2, 6, -2,
-     -7, 2, -6, 2,      -7, -2, -6, -2}},
-
-   // 1/2 press ahead from LH star promenade.
-   {0x00930093, 0x41020080, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
-    { -2, 9, -3, 13,    -2, 5, -3, 9,
-      9, 2, 15, 4,      5, 2, 11, 4,
-      2, -9, 4, -14,    2, -5, 4, -10,
-      -9, -2, -14, -7,  -5, -2, -10, -7}},
-   // 1/2 press ahead from RH star promenade.  Have to list them separately, because can only have 8 specifiers.
-   {0x00930093, 0x00140041, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
-    { -9, 2, -6, 4,     -5, 2, -2, 4,
-      2, 9, 4, 7,       2, 5, 4, 3,
-      9, -2, 7, -5,     5, -2, 3, -5,
-      -2, -9, -5, -6,   -2, -5, -5, -2}},
-   // Full press ahead from LH star promenade.  Goes to same setup as 1/2 press ahead.
-   {0x00950095, 0x00810404, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
-    { -4, 9, -3, 13,    -4, 5, -3, 9,      9, 4, 15, 4,      5, 4, 11, 4,
-      4, -9, 4, -14,    4, -5, 4, -10,     -9, -4, -14, -7,  -5, -4, -10, -7}},
-   // As above, RH.
-   {0x00950095, 0x11000800, s_c1phan, UINT32_C(~0), 0, warn__check_c1_phan, (const coordrec *) 0,
-    { -9, 4, -6, 4,     -5, 4, -2, 4,
-      4, 9, 4, 7,       4, 5, 4, 3,
-      9, -4, 7, -5,     5, -4, 3, -5,
-      -4, -9, -5, -6,   -4, -5, -5, -2}},
-
-   // Next 2 items: fudge to a galaxy.  The points got here by pressing and trucking.
+   // Next 3 items: fudge to a galaxy.  The points got here by pressing and trucking.
    // Don't need to tell them to check a galaxy -- it's pretty obvious.
-   {0x00660066, 0x08008404, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
-   {0x00660077, 0x00018404, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {0, 6, 0, 7, 0, -6, 0, -7, 6, 0, 7, 0, -6, 0, -7, 0, 127}},
-   {0x00660066, 0x0C000500, s_galaxy, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {0, 6, 0, 7,    0, -6, 0, -7,    6, 0, 7, 0,      -6, 0, -7, 0,
-     4, 2, 2, 2,    4, -2, 2, -2,    -4, 2, -2, 2,    -4, -2, -2, -2, 127}},
+   {0x00660066, 0x08008404, nothing, UINT32_C(~0), 0, warn__none, &s1x6toshort6, (const veryshort *) 0},
+   {0x00660077, 0x00018404, nothing, UINT32_C(~0), 0, warn__none, &deep2x1togal, (const veryshort *) 0},
+   {0x00660066, 0x0C000500, nothing, UINT32_C(~0), 0, warn__none, &x343togal, (const veryshort *) 0},
+
    // Next 2 items: the trailing points pressed ahead from quadruple diamonds,
    // so that only the centers 2 diamonds are now occupied.  Fudge to diamonds.
-   {0x00730055, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
-   {0x00710051, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, {127}},
+   {0x00730055, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, (const veryshort *) 0},
+   {0x00710051, 0x01008420, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag1, (const veryshort *) 0},
    // Next 2 items: same, other way.
-   {0x00730055, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
-   {0x00710051, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, {127}},
+   {0x00730055, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, (const veryshort *) 0},
+   {0x00710051, 0x21080400, nothing, UINT32_C(~0), 0, warn__check_dmd_qtag, &press_4dmd_qtag2, (const veryshort *) 0},
 
    // This must precede the "squeezefinalglass" stuff.
-   {0x00620026, 0x01080002, s_bone6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00620026, 0x01080002, s_bone6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
    // People 1/2 pressed ahead from quadruple 3/4 tags.  Fudge to a 4x4.
-   {0x00B10071, 0x01806000, nothing, UINT32_C(~0), 0, warn__none, &press_4dmd_4x4, {127}},
+   {0x00B10071, 0x01806000, nothing, UINT32_C(~0), 0, warn__none, &press_4dmd_4x4, (const veryshort *) 0},
 
-   // Next 2 items: six poeple did a squeeze from a galaxy.  Fudge to an hourglass.
-   {0x00260062, 0x10100600, nothing, UINT32_C(~0), 0, warn__none, &squeezefinalglass, {127}},
-   {0x00660066, 0x10100600, nothing, UINT32_C(~0), 0, warn__none, &squeezefinalglass, {127}},
+   // Next 2 items: six people did a squeeze from a galaxy.  Fudge to an hourglass.
+   {0x00260062, 0x10100600, nothing, UINT32_C(~0), 0, warn__none, &squeezefinalglass, (const veryshort *) 0},
+   {0x00660066, 0x10100600, nothing, UINT32_C(~0), 0, warn__none, &squeezefinalglass, (const veryshort *) 0},
    // Next 2 items: same, other way.
-   {0x00620026, 0x09080002, nothing, UINT32_C(~0), 1, warn__none, &squeezefinalglass, {127}},
-   {0x00660066, 0x09080002, nothing, UINT32_C(~0), 1, warn__none, &squeezefinalglass, {127}},
+   {0x00620026, 0x09080002, nothing, UINT32_C(~0), 1, warn__none, &squeezefinalglass, (const veryshort *) 0},
+   {0x00660066, 0x09080002, nothing, UINT32_C(~0), 1, warn__none, &squeezefinalglass, (const veryshort *) 0},
 
    // Some points did a squeeze from a galaxy.  Fudge to a spindle.
-   {0x00660026, 0x00008604, s_spindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {6, 0, 8, 0, -6, 0, -8, 0,
-     2, 2, 4, 2, 2, -2, 4, -2, -2, 2, -4, 2, -2, -2, -4, -2, 127}},
+   {0x00660026, 0x00008604, nothing, UINT32_C(~0), 0, warn__none, &galtospindle, (const veryshort *) 0},
    // Same, on other orientation.
-   {0x00260066, 0x09008004, s_spindle, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {0, 6, 0, 8, 0, -6, 0, -8,
-     2, 2, 2, 4, -2, 2, -2, 4, 2, -2, 2, -4, -2, -2, -2, -4, 127}},
+   {0x00260066, 0x09008004, nothing, UINT32_C(~0), 1, warn__none, &galtospindle, (const veryshort *) 0},
 
-   {0x01150026, 0x20048202, s1x4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x24009102, s1x4p2dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x22009022, splinepdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60055, 0x09000400, splinedmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00670046, 0x109408C1, slinedmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660062, 0x1810C244, slinepdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00460086, 0x00242861, sdmdpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660095, 0x40050031, s_trngl8,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01150026, 0x20048202, s1x4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00D50026, 0x22009022, splinepdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60055, 0x09000400, splinedmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00670046, 0x109408C1, slinedmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00660062, 0x1810C244, slinepdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00460086, 0x00242861, sdmdpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00660095, 0x40050031, s_trngl8,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x00950062, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00550062, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910022, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950062, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00550062, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00910022, 0x091002C0, sbigdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00620055, 0x01020401, sbigdmd, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x00950095, 0x22008080, s_thar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00530053, 0x00120081, s_alamo, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950095, 0x22008080, s_thar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00530053, 0x00120081, s_alamo, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
    // This is a "crosswave" on precise matrix spots.
-   {0x00660084, 0x01040420, nothing, UINT32_C(~0), 1, warn__none, &acc_crosswave, {127}},
+   {0x00660084, 0x01040420, nothing, UINT32_C(~0), 1, warn__none, &acc_crosswave, (const veryshort *) 0},
 
-   {0x00950066, 0x28008200, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x01040420, s_bone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00950066, 0x28008200, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20026, 0x01040420, s_bone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
    // Pressed in from a bigh.
-   {0x00930026, 0x01000440, s_bone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-9, 2, -10, 2, -9, -2, -10, -2, 9, 2, 10, 2, 9, -2, 10, -2}},
-   {0x00260062, 0x08008004, s_short6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840026, 0x04000308, s_spindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840046, 0x04210308, sd3x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840044, 0x04210308, sd3x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00930026, 0x01000440, nothing, UINT32_C(~0), 0, warn__none, &bightobone, (const veryshort *) 0},
 
-   {0x00C40026, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40046, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40086, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00260062, 0x08008004, s_short6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840026, 0x04000308, s_spindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840046, 0x04210308, sd3x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840044, 0x04210308, sd3x4,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x00A200A2, 0x101CC4E6, s_bigblob, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   //   {0x00670055, 0x01000420, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00770055, 0x01400420, s_2stars, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40026, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00C40046, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00C40086, 0x06109384, sd4x5,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   // Inner wing did a tow-truck-like operation from a rigger, for example,
-   // after a sets in motion.  Fudge to a 1/4 tag.  This is serious fudging, and marked as such with the "0x100".
-   {0x00620026, 0x01008404, s_qtag, UINT32_C(~0), 0x100, warn__none, (const coordrec *) 0,
-    {-2, 2, -4, 5, 2, 2, 5, 5, 2, -2, 4, -5, -2, -2, -5, -5, 127}},
+   {0x00A200A2, 0x101CC4E6, s_bigblob, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00770055, 0x01400420, s_2stars, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   // Similar to the above, but truck was from a deepxwv.
-   {0x00620066, 0x11100400, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-2, 6, -4, 5, 2, 6, 5, 5, 2, -6, 4, -5, -2, -6, -5, -5, 127}},
+   // Inner wing did a tow-truck-like operation from a rigger.  Fudge to a 1/4 tag.
+   // This is serious fudging, and marked as such with the "0x100".
+   // Test: S1P, touch, center 4 ah so, HG shove off.
+   {0x00620026, 0x01008404, nothing, UINT32_C(~0), 0x100, warn__none, &rigtoqtg, (const veryshort *) 0},
+   // Similar to the above, but trucks/presses were from a 4x4.
+   {0x00620066, 0x11100400, nothing, UINT32_C(~0), 0, warn__none, &s4x4toqtg, (const veryshort *) 0},
+   {0x00660062, 0x08080202, nothing, UINT32_C(~0), 1, warn__none, &s4x4toqtg, (const veryshort *) 0},
+   // Or from blocks.
+   {0x00660066, 0x01202400, nothing, UINT32_C(~0), 0, warn__none, &spec_qtag1, (const veryshort *) 0},
+   {0x00660066, 0x18800200, nothing, UINT32_C(~0), 1, warn__none, &spec_qtag1, (const veryshort *) 0},
+   // Going to a "343" ("sausage")
+   {0x00660066, 0x09202400, nothing, UINT32_C(~0), 0, warn__none, &spec_343, (const veryshort *) 0},
+   {0x00660066, 0x18800600, nothing, UINT32_C(~0), 1, warn__none, &spec_343, (const veryshort *) 0},
 
-   // Inner people did a 1/2 E.R.A. from a deepxwv.
-   {0x00A60066, 0x08000600, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {10, 0, 9, 0, 6, 0, 5, 0, -10, 0, -9, 0, -6, 0, -5, 0, 127}},
+   // Inner people moved in from a deepxwv.
+   {0x00A60066, 0x08000600, nothing, UINT32_C(~0), 0, warn__none, &deepxwvtoxwv, (const veryshort *) 0},
 
    // Inner wing did a 1/2 tow truck from a crosswave.  We want a thar.
-   {0x00750066, 0x08400220, s_thar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-7, 0, -9, 0, -3, 0, -5, 0, 0, 6, 0, 9, 0, 2, 0, 5,
-    7, 0, 9, 0, 3, 0, 5, 0, 0, -6, 0, -9, 0, -2, 0, -5}},
+   {0x00750066, 0x08400220, nothing, UINT32_C(~0), 0, warn__none, &xwvtothar, (const veryshort *) 0},
 
    // Outer person did a 1/2 tow truck from a thar.  We want a crosswave.
-   {0x00B50095, 0x02400180, s_crosswave, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-11, 0, -9, 0, -7, 0, -5, 0, 0, 9, 0, 6, 0, 5, 0, 2,
-    11, 0, 9, 0, 7, 0, 5, 0, 0, -9, 0, -6, 0, -5, 0, -2}},
+   {0x00B50095, 0x02400180, nothing, UINT32_C(~0), 0, warn__none, &thartoxwv, (const veryshort *) 0},
+   {0x009500B5, 0x20018008, nothing, UINT32_C(~0), 1, warn__none, &thartoxwv, (const veryshort *) 0},
 
-   {0x00570067, 0x03100084, s_hsqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00570057, 0x03100084, s_hsqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00750067, 0x28008200, s_dmdlndmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950067, 0x28008200, s_dmdlndmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00550067, 0x08410200, s_qtag, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00620046, 0x01080842, sd2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20046, 0x010C0862, sd2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660055, 0x01000480, s_2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950026, 0x20008200, s_1x2dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50026, 0x20008202, s1x3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A30055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A70055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950057, 0x20008620, swhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660073, 0x00098006, sdeep2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60055, 0x09000480, s3x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60044, 0x09040400, s_wingedstar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A30055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A70055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00770055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00730055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B10051, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50057, 0x20008202, s_3mdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B50057, 0x20008202, s_3mdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00B70057, 0x41022480, s_3mptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E70057, 0x41022480, s_3mptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D50066, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01150066, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00D10004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01110004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20066, 0x18108404, sdeepxwv, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00570067, 0x03100084, s_hsqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00570057, 0x03100084, s_hsqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00750067, 0x28008200, s_dmdlndmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00950067, 0x28008200, s_dmdlndmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
+   // This must be before next two.  This one needs a small correction.  This deals with things
+   // like end of wave press ahead/back, or outside right/left loop 1, in qtag.
+   // A lot of the tests for these are in t59.
+   // THIS APPEARS TO BE INTRACTABLE!
+   {0x00670055, 0x31800420, nothing, UINT32_C(~0), 0, warn__none, &qtagto3x4, qtagto3x4correction},
+
+   // Test is H PTO, SG R loop 0, see t59.
+   {0x00870055, 0x09000420, nothing, UINT32_C(~0), 0, warn__none, &qtagto3x4a, (const veryshort *) 0},
+   // Test is H PTO, SB L loop 0, see t59.
+   {0x00970055, 0x01400400, nothing, UINT32_C(~0), 0, warn__none, &qtagto3x4, (const veryshort *) 0},
+
+   {0x00670055, 0x01000420, s_qtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00550067, 0x08410200, s_qtag, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
+   {0x00620046, 0x01080842, sd2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20046, 0x010C0862, sd2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00660055, 0x01000480, s_2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00950026, 0x20008200, s_1x2dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00D50026, 0x20008202, s1x3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A30055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A70055, 0x09000420, swqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00950057, 0x20008620, swhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00660073, 0x00098006, sdeep2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60055, 0x09000480, s3x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60044, 0x09040400, s_wingedstar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A30055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A70055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00770055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00730055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00B30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00B10051, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A30055, 0x0940A422, s4dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00D50057, 0x20008202, s_3mdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00B50057, 0x20008202, s_3mdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00B70057, 0x41022480, s_3mptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E70057, 0x41022480, s_3mptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00D50066, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01150066, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00D10004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00910004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01110004, 0x28048202, sbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20066, 0x18108404, sdeepxwv, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    // Someone trucked from a deep2x1dmd to a deepxwv.
-   {0x006600B3, 0x0008800E, nothing, UINT32_C(~0), 1, warn__none, &truck_to_deepxwv, {127}},
-   {0x00F30066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01130066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01330066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01130066, 0x09406600, sbigbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01130026, 0x09406600, sbigbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00550057, 0x20000620, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x006600B3, 0x0008800E, nothing, UINT32_C(~0), 1, warn__none, &truck_to_deepxwv, (const veryshort *) 0},
+   {0x00F30066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01130066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01330066, 0x12148904, sbigbigx, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01130066, 0x09406600, sbigbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01130026, 0x09406600, sbigbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00550057, 0x20000620, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
    // The checkpointers squeezed or spread from a spindle.  Fudge to an hourglass.
-   {0x00840066, 0x00202208, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-4, 6, -4, 5, 4, 6, 5, 5, 4, -6, 4, -5, -4, -6, -5, -5, 8, 0, 5, 0, -8, 0, -5, 0, 127}},
-   // The outsides cast back from a dhrglass.
-   {0x00670066, 0x20004240, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-6, -6, -5, -5, 6, -6, 4, -5, 6, 6, 5, 5, -6, 6, -4, 5, 127}},
-   {0x00A70026, 0x20040220, s_dhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00530026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620044, 0x11800C40, s3x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00440062, 0x0C202300, s3x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00670055, 0x31800420, s3x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-4, 5, -2, 4, 5, 5, 2, 4, -3, 5, -6, 4, 4, 5, 6, 4, 4, -5, 2, -4, -5, -5, -2, -4, 3, -5, 6, -4, -4, -5, -6, -4, 127}},
-   {0x00840022, 0x06001300, s2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00220084, 0x21080840, s2x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20004, 0x09002400, s1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x000400E2, 0x08004202, s1x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x01220004, 0x49002400, s1x10, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01620004, 0x49012400, s1x12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01A20004, 0x49012404, s1x14, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x02E20004, 0x4B012404, s1x14, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01E20004, 0x49092404, s1x16, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620022, 0x00088006, s2x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00220062, 0x10108004, s2x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00440022, 0x04000300, s2x3, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00220044, 0x01000840, s2x3, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20022, 0x000C8026, s2x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x002200A2, 0x10108484, s2x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40022, 0x26001B00, s2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01040022, 0x36009B00, s2x9, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20022, 0x004C8036, s2x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x002200E2, 0x12908484, s2x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x01220022, 0x006C8136, s2x10,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01620022, 0x026C81B6, s2x12,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20044, 0x19804E40, s3x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20044, 0x1D806E41, s3x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840062, 0x4E203380, s4x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620084, 0x31888C60, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   // Fudge this to a 4x5.  People were trucking in a qtag.
-   {0x00670095, 0x10840C40, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {-4, 1, -2, 0, 5, 9, 2, 8, 4, -1, 2, 0, -5, -9, -2, -8,
-     -4, 9, -2, 8, 5, 1, 2, 0, 4, -9, 2, -8, -5, -1, -2, 0}},
-   // And this, similar trucking.
-   {0x00670085, 0x21088420, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {-4, 5, -2, 4, 5, 5, 2, 4, 4, -5, 2, -4, -5, -5, -2, -4, 127}},
-   // And this, similar trucking.
-   {0x00870055, 0x09000420, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {-8, 5, -6, 4, 5, 5, 2, 4, 8, -5, 6, -4, -5, -5, -2, -4, 127}},
-   // And this, similar trucking.
-   //             This replaces the stuff from line 1510.
-   {0x00970055, 0x01400400, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {-4, 5, -2, 4, 9, 5, 6, 4, 4, -5, 2, -4, -9, -5, -6, -4, 127}},
+   {0x00840066, 0x00202208, nothing, UINT32_C(~0), 0, warn__none, &spndltohrgl, (const veryshort *) 0},
 
-   // This is the aforesaid stuff, moved below.
-   // The points pressed ahead from normal diamonds.  Fudge to quadruple diamonds.
-   {0x00970055, 0x01400480, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd1, {127}},
-   // Same, other way.
-   {0x00870055, 0x09080400, nothing, UINT32_C(~0), 0, warn__check_quad_dmds, &press_qtag_4dmd2, {127}},
+   // The outsides cast back from a dhrglass, going to an hourglass.
+   {0x00670066, 0x20004240, nothing, UINT32_C(~0), 0, warn__none, &dhrgltohrgl, (const veryshort *) 0},
+   // Same, from bone, going to qtag.
+   {0x00620066, 0x01004440, nothing, UINT32_C(~0), 0, warn__none, &bonetoqtag, (const veryshort *) 0},
 
+   {0x00A70026, 0x20040220, s_dhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00930026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00910026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00530026, 0x01108080, s_ptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00620044, 0x11800C40, s3x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00440062, 0x0C202300, s3x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840022, 0x06001300, s2x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00220084, 0x21080840, s2x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E20004, 0x09002400, s1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x000400E2, 0x08004202, s1x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01220004, 0x49002400, s1x10, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01620004, 0x49012400, s1x12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01A20004, 0x49012404, s1x14, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x02E20004, 0x4B012404, s1x14, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01E20004, 0x49092404, s1x16, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00620022, 0x00088006, s2x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00220062, 0x10108004, s2x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00440022, 0x04000300, s2x3, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00220044, 0x01000840, s2x3, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20022, 0x000C8026, s2x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x002200A2, 0x10108484, s2x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00C40022, 0x26001B00, s2x7, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01040022, 0x36009B00, s2x9, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E20022, 0x004C8036, s2x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x002200E2, 0x12908484, s2x8, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01220022, 0x006C8136, s2x10,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01620022, 0x026C81B6, s2x12,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20044, 0x19804E40, s3x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E20044, 0x1D806E41, s3x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840062, 0x4E203380, s4x5, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00620084, 0x31888C60, s4x5, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x00A20062, 0x109CC067, s4x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x006200A2, 0x1918C4C6, s4x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00620062, 0x1018C046, s4x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01040026, 0x04100348, srigger12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40026, 0x04100348, srigger12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}}, // Only 7 wide, but no setup for that.
-   {0x00930066, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910062, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00910022, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   // Fudge this to a 4x5.  People were trucking in a qtag.  Tests for these are in t59.
+   // Specific test is H dixie chain, HG/HB right/left loop 1.  THIS ONE IS INTRACTABLE!
+   {0x00670085, 0x21088420, nothing, UINT32_C(~0), 1, warn__none, &qtagto4x5, qtagto4x5correction},
+
+   {0x00A20062, 0x109CC067, s4x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x006200A2, 0x1918C4C6, s4x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00C40062, 0x6E001B80, s3oqtg, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00620062, 0x1018C046, s4x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01040026, 0x04100348, srigger12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   // Result is only 7 wide, but there is no setup for that.
+   {0x00C40026, 0x04100348, srigger12, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00930066, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00910062, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00910022, 0x01080C40, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
    // Pressed out from a bone.
-   {0x00A20066, 0x01840421, sbigh, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-10, 6, -9, 6, -10, 2, -9, 2, -10, -6, -9, -6, -10, -2, -9, -2,
-     10, 6, 9, 6, 10, 2, 9, 2, 10, -6, 9, -6, 10, -2, 9, -2}},
-   {0x00E20026, 0x01440430, sbigbone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01620026, 0x4A00A484, sdblbone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20066, 0x01840421, nothing, UINT32_C(~0), 0, warn__none, &bonetobigh, (const veryshort *) 0},
+   {0x00E20026, 0x01440430, sbigbone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01620026, 0x4A00A484, sdblbone, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
    // Next 3 must follow the "bigbone" entry above.
-   {0x00A20026, 0x090C0422, slinebox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00570066, 0x18118A04, sboxdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00260084, 0x20080861, sboxpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A20026, 0x090C0422, slinebox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00570066, 0x18118A04, sboxdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00260084, 0x20080861, sboxpdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x00840026, 0x06021308, sline2box, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00C40026, 0x20120809, sline6box, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x09048424, sdbltrngl4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40026, 0x20120809, slinevbox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00D50026, 0x24009102, slinefbox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E20026, 0x09082402, nothing, UINT32_C(~0), 0, warn__none, &tolinefbox, (const veryshort *) 0},
+   {0x00840026, 0x06021308, slinejbox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840026, 0x06021101, slineybox, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20026, 0x09048424, sdbltrngl4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x01620026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01220026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20026, 0x0800A404, sbigrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01220026, 0x4800A404, sbigrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01260055, 0x49002480, s5x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E60055, 0x49002480, s5x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01150026, 0x20048212, s1x5dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01550026, 0x20048212, s1x5dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E20026, 0x0808A006, swiderigger,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00460044, 0x41040010, s_323, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660044, 0x41040410, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00660066, 0x18100400, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-2, -6, -4, -4,    0, 6, 0, 4,    2, -6, 4, -4,    2, 6, 4, 4,    0, -6, 0, -4, -2, 6, -4, 4, 127}},
-   {0x00840066, 0x08202008, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-4, -6, -4, -4,    0, 6, 0, 4,    4, -6, 4, -4,    4, 6, 4, 4,
-     0, -6, 0, -4,      -4, 6, -4, 4,  8, 0, 6, 0,      -8, 0, -6, 0, 127}},
-   {0x00660066, 0x00202600, s_hrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-4, -6, -5, -5, 6, 0, 5, 0, 4, -6, 4, -5, 4, 6, 5, 5, -6, 0, -5, 0, -4, 6, -4, 5, 127}},
-   {0x00860044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00440044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860044, 0x41250410, s_545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860044, 0x41250018, sh545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840004, 0x00000008, sh545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01620026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01220026, 0x41450430, sdblrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E20026, 0x0800A404, sbigrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01220026, 0x4800A404, sbigrig, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01260055, 0x49002480, s5x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E60055, 0x49002480, s5x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01150026, 0x20048212, s1x5dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01550026, 0x20048212, s1x5dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E20026, 0x0808A006, swiderigger,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00460044, 0x41040010, s_323, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00660044, 0x41040410, s_343, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
 
-   {0x00A600A6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00A600E6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00E600A6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00E600E6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x006600A6, 0x09004400, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x006600E6, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
-   {0x00E60066, 0x09006602, sx1x8, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {2, 0, 6, 4, 127}},
+   // Center 4 squeeze, gal -> 343.
+   {0x00660066, 0x18100400, nothing, UINT32_C(~0), 0, warn__none, &galto343, (const veryshort *) 0},
+   {0x00660066, 0x08080402, nothing, UINT32_C(~0), 1, warn__none, &galto343, (const veryshort *) 0},
 
-   {0x00860022, 0x02080300, s_ntrglccw,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00860022, 0x04001202, s_ntrglcw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   // Center 6 squeeze, spindle -> 343.
+   {0x00840066, 0x08202008, nothing, UINT32_C(~0), 0, warn__none, &spinto343, (const veryshort *) 0},
+   // Squeeze, 343 -> hourglass,.
+   {0x00660066, 0x00202600, nothing, UINT32_C(~0), 0, warn__none, &x343toglass, (const veryshort *) 0},
 
-   {0x00220022, 0x00008004, s2x2, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20004, 0x09000400, s1x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00860044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00440044, 0x49650044, s_525, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00860044, 0x41250410, s_545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00860044, 0x41250018, sh545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840004, 0x00000008, sh545, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
+   {0x00A600A6, 0x09006602, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+   {0x00A600E6, 0x09006602, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+   {0x00E600A6, 0x09006602, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+   {0x00E600E6, 0x09006602, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+   {0x006600A6, 0x09004400, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+   {0x006600E6, 0x09006602, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+   {0x00E60066, 0x09006602, nothing,   UINT32_C(~0), 0, warn__none, &x1x8tox1x8, sx1x8correction},
+
+   {0x00860022, 0x02080300, s_ntrglccw,UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00860022, 0x04001202, s_ntrglcw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
+   {0x00220022, 0x00008004, s2x2, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20004, 0x09000400, s1x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
    // Two colliding 1/2 circulates from as-couples T-bone.
-   {0x00930004, 0x21008400, s1x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 0, 127}},
-   {0x00040093, 0x0A000280, s1x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {0, -9, 0, -10, 0, 9, 0, 10, 0, -5, 0, -6, 0, 5, 0, 6, 127}},
-   {0x00620004, 0x01000400, s1x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00040062, 0x08000200, s1x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00550026, 0x20020200, sdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00440004, 0x00020001, s1x3, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00040044, 0x00040001, s1x3, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00220004, 0x01000000, s1x2, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00040022, 0x00000200, s1x2, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20066, 0x09084042, sbigptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A20026, 0x414C0032, sdblspindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01220026, 0x414C0032, sdblspindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00950063, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930067, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970067, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970057, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00930057, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00970055, 0x114008A0, sbighrgl,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00E70026, 0x20440230, sbigdhrgl, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x03080020, s_nptrglcw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00A60026, 0x01041002, s_nptrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00510062, 0x02000004, s2x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0,
-    {-5, 6, -2, 6, 5, 6, 2, 6, -5, -6, -2, -6, 5, -6, 2, -6, 127}},
-   {0x00770077, 0x22808044, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {2, 2, 4, 3, -2, -2, -5, -2, 127}},
-   {0x00770077, 0x02808084, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-2, 2, -2, 4, 2, -2, 3, -5, 127}},
-   {0x00F700E7, 0x2101180C, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {2, 2, 11, 4, -2, -2, -10, -7, 127}},
-   {0x00F700E7, 0x25019000, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0,
-    {-2, 2, -3, 9, 2, -2, 4, -10, 127}},
-   {0x00840046, 0x42021210, s_23232, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   // THESE TWO ARE INTRACTABLE!
+   {0x00930004, 0x21008400, s1x6, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, s1x6correction_a},
+   {0x00040093, 0x0A000280, s1x6, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, s1x6correction_b},
+   {0x00620004, 0x01000400, s1x4, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00040062, 0x08000200, s1x4, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00550026, 0x20020200, sdmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00440004, 0x00020001, s1x3, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00040044, 0x00040001, s1x3, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00220004, 0x01000000, s1x2, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00040022, 0x00000200, s1x2, UINT32_C(~0), 1, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20066, 0x09084042, sbigptpd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A20026, 0x414C0032, sdblspindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x01220026, 0x414C0032, sdblspindle, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00950063, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00930067, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00970067, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00970057, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00930057, 0x01080C60, s_hqtag, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00970055, 0x114008A0, sbighrgl,  UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00E70026, 0x20440230, sbigdhrgl, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60026, 0x03080020, s_nptrglcw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00A60026, 0x01041002, s_nptrglccw, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+   {0x00840046, 0x42021210, s_23232, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0},
+
    {0}};
 
 
 static checkitem c1fixup =
-{0, 0, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}};
+{0, 0, s_c1phan, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0};
 
 static checkitem s4p2x1fixup =
-{0, 0, s4p2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}};
+{0, 0, s4p2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, (const veryshort *) 0};
 
 
 void initialize_matrix_position_tables()
 {
+#if 0
    const checkitem *p;
 
    for (p = checktable ; p < checktable+13 ; p++) {
@@ -1942,10 +2412,11 @@ void initialize_matrix_position_tables()
       if (p->ypar != ypar || p->sigcheck != signature)
          gg77->iob88.fatal_error_exit(1, "Matrix position table initialization failed");
    }
+#endif
 }
 
 
-static void finish_matrix_call(
+static int finish_matrix_call(
    matrix_rec matrix_info[],
    int nump,
    bool do_roll_stability,
@@ -1956,16 +2427,15 @@ static void finish_matrix_call(
    setup *result) THROW_DECL
 {
    int i;
-   int xmax, ymax, x, y, k;
+   int xmax, ymax, x, y, k, alldelta;
    uint32 signature, xpar, ypar;
-   const coordrec *checkptr;
    result->clear_people();
 
-   xmax = xpar = ymax = ypar = signature = 0;
+   xmax = xpar = ymax = ypar = signature = alldelta = 0;
    int xatnonzeroy = -1000;
 
    for (i=0; i<nump; i++) {
-
+      if (!matrix_info[i].id1) continue;
       /* If this person's position has low bit on, that means we consider his coordinates
          not sufficiently well-defined that we will allow him to do any pressing or
          trucking.  He is only allowed to turn.  That is, we will require deltax and
@@ -1983,6 +2453,8 @@ static void finish_matrix_call(
              (matrix_info[i].deltax | matrix_info[i].deltay))
             fail("Someone's ending position is not well defined.");
       */
+
+      alldelta |= matrix_info[i].deltax | matrix_info[i].deltay;
 
       switch (matrix_info[i].dir) {
       case 0:
@@ -2048,18 +2520,18 @@ static void finish_matrix_call(
    if (p->new_setup == splinedmd && xatnonzeroy == 4)
       p = &s4p2x1fixup;
 
-   // Perform any required fixups, moving people around before
+   if ((p->new_rot & 0x100) && !allow_fudging)
+      fail("Can't figure out result setup.");
+
+   // Perform any required corrections, moving people around before
    // sending them to be placed in the final setup.  That final
    // setup placement can be very picky.
-   if (p->fixer[0] != 127) {
-      if ((p->new_rot & 0x100) && !allow_fudging)
-         fail("Can't figure out result setup.");
-
+   if (p->correction_list) {
       for (i=0; i<nump; i++) {
-         for (k=0; k<32 && p->fixer[k]!=127; k+=4) {
-            if (matrix_info[i].x == p->fixer[k] && matrix_info[i].y == p->fixer[k+1]) {
-               matrix_info[i].x = p->fixer[k+2];
-               matrix_info[i].y = p->fixer[k+3];
+         for (k=0; p->correction_list[k]!=127; k+=4) {
+            if (matrix_info[i].x == p->correction_list[k] && matrix_info[i].y == p->correction_list[k+1]) {
+               matrix_info[i].x = p->correction_list[k+2];
+               matrix_info[i].y = p->correction_list[k+3];
                break;
             }
          }
@@ -2068,32 +2540,26 @@ static void finish_matrix_call(
 
    warn(p->warning);
 
-   if (p->new_setup == nothing)
-      checkptr = p->new_checkptr;
-   else
-      checkptr = setup_attrs[p->new_setup].setup_coords;
+   const coordrec *checkptr = (p->new_checkptr) ? p->new_checkptr :
+      setup_attrs[p->new_setup].setup_coords;
 
    result->rotation = p->new_rot & 3;
    result->eighth_rotation = 0;
    result->kind = checkptr->result_kind;
-
-   int doffset = 32 - (1 << (checkptr->xfactor-1));
 
    collision_collector CC(allow_collisions);
 
    for (i=0; i<nump; i++) {
       int mx, my;
       matrix_rec *mp = &matrix_info[i];
+      if (!mp->id1) continue;
 
       if (result->rotation) { mx = -mp->y; my = mp->x; }
       else { mx = mp->x; my = mp->y; }
 
-      int place = checkptr->diagram[doffset - ((my >> 2) << checkptr->xfactor) + (mx >> 2)];
-      if (place < 0) fail("Person has moved into a grossly ill-defined location.");
-
-      if ((checkptr->xca[place] != mx) || (checkptr->yca[place] != my))
-         if (checkptr->result_kind != sx1x8)   // Know that these maps are OK, and some fudging took place.
-            fail("Person has moved into a slightly ill-defined location.");
+      int place = checkptr->get_index_from_coords(mx, my);
+      if (place < 0)
+         fail("Person has moved into an ill-defined location.");
 
       int rot = ((mp->deltarot-result->rotation) & 3)*011;
       CC.install_with_collision(result, place, people, i, rot);
@@ -2114,6 +2580,7 @@ static void finish_matrix_call(
 
    // Pass the "action" in case it's merge_c1_phantom_real_couples.
    CC.fix_possible_collision(result, action);
+   return alldelta;
 }
 
 
@@ -2136,17 +2603,15 @@ static void mirror_slide_roll(matrix_rec *ppp)
       (((ppp->roll_stability_info+DBSLIDE_BIT) >> 1) & DBSLIDE_BIT) * 3;
 }
 
-static void matrixmove(
+static int matrixmove(
    setup *ss,
    uint32 flags,
    const uint32 *callstuff,
    setup *result) THROW_DECL
 {
    setup people;
-   matrix_rec matrix_info[9];
-   int i, nump, alldelta;
-
-   alldelta = 0;
+   matrix_rec matrix_info[matrix_info_capacity+1];
+   int i, nump;
 
    nump = start_matrix_call(ss, matrix_info, 0, flags, &people);
 
@@ -2188,10 +2653,18 @@ static void matrixmove(
             thisrec->deltax *= count;
             thisrec->deltay *= count;
          }
-
-         alldelta |= thisrec->deltax | thisrec->deltay;
+         else if (flags & MTX_ADD_2N) {
+            int count = current_options.number_fields & NUMBER_FIELD_MASK;
+            if (thisrec->deltax < 0)
+               thisrec->deltax -= (count << 2);
+            else
+               thisrec->deltax += (count << 2);
+         }
       }
    }
+
+   int alldelta = finish_matrix_call(matrix_info, nump, true, collision_severity_no,
+                                     true, merge_strict_matrix, &people, result);
 
    if (alldelta != 0) {
       if (ss->cmd.cmd_misc_flags & CMD_MISC__DISTORTED)
@@ -2203,8 +2676,6 @@ static void matrixmove(
    else
       // This call split the setup in every possible way.
       result->result_flags.maximize_split_info();
-
-   finish_matrix_call(matrix_info, nump, true, collision_severity_no, true, merge_strict_matrix, &people, result);
 
    reinstate_rotation(ss, result);
    clear_result_flags(result);
@@ -2220,6 +2691,8 @@ static void matrixmove(
       result->result_flags.misc |= 2 - (ss->rotation & 1);
       break;
    }
+
+   return alldelta;
 }
 
 
@@ -2334,11 +2807,11 @@ static void make_matrix_chains(
 
    for (i=0; i<nump; i++) {
       matrix_rec *mi = &matrix_info[i];
-      if ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel)) continue;
+      if (!mi->id1 || ((flags & MTX_IGNORE_NONSELECTEES) && (!mi->sel))) continue;
 
       for (j=0; j<nump; j++) {
          matrix_rec *mj = &matrix_info[j];
-         if ((flags & MTX_IGNORE_NONSELECTEES) && (!mj->sel)) continue;
+         if (!mj->id1 || ((flags & MTX_IGNORE_NONSELECTEES) && (!mj->sel))) continue;
 
          // Find out if these people are adjacent in the right way.
 
@@ -2470,7 +2943,7 @@ static int jaywalk_recurse(
    uint32 flags) THROW_DECL
 {
    int i, j, k;
-   matrix_rec best_info[9];
+   matrix_rec best_info[matrix_info_capacity+1];
    int best_cost;
 
    // Pre-clean: Clear out any links that aren't bidirectional.
@@ -2535,7 +3008,7 @@ static int jaywalk_recurse(
                // This person wants to jay walk with someone.  First, save a temporary
                // copy of the whole matrix_info array;
 
-               matrix_rec temp_info[9];
+               matrix_rec temp_info[matrix_info_capacity+1];
 
                for (j=0; j<nump; j++) temp_info[j] = matrix_info[j];
 
@@ -2667,52 +3140,51 @@ static void process_nonjaywalk_chains(
 
       for (i=0; i<nump; i++) {
          matrix_rec *mi = &matrix_info[i];
+         if (!mi->id1 || mi->done) continue;
 
-         if (!mi->done) {
-            if (mi->nextse) {
-               // This person might be ready to be paired up with someone.
-               if (mi->nextnw)
-                  // This person has neighbors on both sides.  Can't do anything yet.
+         if (mi->nextse) {
+            // This person might be ready to be paired up with someone.
+            if (mi->nextnw)
+               // This person has neighbors on both sides.  Can't do anything yet.
                   ;
-               else {
-                  // This person has a neighbor on south/east side only.
+            else {
+               // This person has a neighbor on south/east side only.
 
-                  if (mi->tbstopnw) warn(warn__not_tbone_person);
-
-                  if ((!(flags & MTX_USE_SELECTOR)) || mi->sel) {
-                     // Do this pair.  First, chop the pair off from anyone else.
-
-                     if (mi->nextse->nextse) mi->nextse->nextse->nextnw = 0;
-                     mi->nextse->nextse = 0;
-                     another_round = true;
-                     do_pair(mi, mi->nextse, callstuff, flags, 0, filter);
-                  }
-               }
-            }
-            else if (mi->nextnw) {
-               // This person has a neighbor on north/west side only.
-
-               if (mi->tbstopse) warn(warn__not_tbone_person);
+               if (mi->tbstopnw) warn(warn__not_tbone_person);
 
                if ((!(flags & MTX_USE_SELECTOR)) || mi->sel) {
                   // Do this pair.  First, chop the pair off from anyone else.
 
-                  if (mi->nextnw->nextnw) mi->nextnw->nextnw->nextse = 0;
-                  mi->nextnw->nextnw = 0;
+                  if (mi->nextse->nextse) mi->nextse->nextse->nextnw = 0;
+                  mi->nextse->nextse = 0;
                   another_round = true;
-                  do_pair(mi, mi->nextnw, callstuff, flags, 2, filter);
+                  do_pair(mi, mi->nextse, callstuff, flags, 0, filter);
                }
             }
-            else {
-               // Person is alone.  If this is his lateral axis,
-               // mark him done and don't move him.
+         }
+         else if (mi->nextnw) {
+            // This person has a neighbor on north/west side only.
 
-               if ((mi->dir ^ filter) & 1) {
-                  if (mi->tbstopse || mi->tbstopnw) warn(warn__not_tbone_person);
-                  if ((!(flags & MTX_USE_SELECTOR)) || mi->sel)
-                     failp(mi->id1, "has no one to work with.");
-                  mi->done = true;
-               }
+            if (mi->tbstopse) warn(warn__not_tbone_person);
+
+            if ((!(flags & MTX_USE_SELECTOR)) || mi->sel) {
+               // Do this pair.  First, chop the pair off from anyone else.
+
+               if (mi->nextnw->nextnw) mi->nextnw->nextnw->nextse = 0;
+               mi->nextnw->nextnw = 0;
+               another_round = true;
+               do_pair(mi, mi->nextnw, callstuff, flags, 2, filter);
+            }
+         }
+         else {
+            // Person is alone.  If this is his lateral axis,
+            // mark him done and don't move him.
+
+            if ((mi->dir ^ filter) & 1) {
+               if (mi->tbstopse || mi->tbstopnw) warn(warn__not_tbone_person);
+               if ((!(flags & MTX_USE_SELECTOR)) || mi->sel)
+                  failp(mi->id1, "has no one to work with.");
+               mi->done = true;
             }
          }
       }
@@ -2721,14 +3193,14 @@ static void process_nonjaywalk_chains(
 
 
 
-static void partner_matrixmove(
+static int partner_matrixmove(
    setup *ss,
    uint32 flags,
    const uint32 *callstuff,
    setup *result) THROW_DECL
 {
    setup people;
-   matrix_rec matrix_info[9];
+   matrix_rec matrix_info[matrix_info_capacity+1];
    int i, nump;
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -2788,13 +3260,14 @@ static void partner_matrixmove(
    // Scan for people who ought to have done something but didn't.
 
    for (i=0; i<nump; i++) {
-      if (!matrix_info[i].realdone) {
+      if (!matrix_info[i].realdone && matrix_info[i].id1) {
          if ((!(flags & MTX_USE_SELECTOR)) || matrix_info[i].sel)
             failp(matrix_info[i].id1, "could not identify other person to work with.");
       }
    }
 
-   finish_matrix_call(matrix_info, nump, true, collision_severity_no, true, merge_strict_matrix, &people, result);
+   int alldelta = finish_matrix_call(matrix_info, nump, true, collision_severity_no,
+                                     true, merge_strict_matrix, &people, result);
    reinstate_rotation(ss, result);
 
    // Take out any active phantoms that we placed.
@@ -2807,6 +3280,7 @@ static void partner_matrixmove(
    }
 
    clear_result_flags(result);
+   return alldelta;
 }
 
 
@@ -2824,15 +3298,13 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       allow_collisions = collision_severity_controversial;
 
    // First, check if the setups are nice enough for the matrix stuff,
-   // as indicated by having both "setup_coords" and "nice_setup_coords".
+   // as indicated by having "nice_setup_coords".
    // If they match each other but aren't nice, we will do it the
    // extremely brute force way.
 
    if (res1->kind != res2->kind || r != 0 ||
-       (setup_attrs[res1->kind].nice_setup_coords &&
-        setup_attrs[res1->kind].setup_coords) ||
-       res1->kind == s_trngl4 ||
-       res1->kind == s_trngl) {
+       setup_attrs[res1->kind].nice_setup_coords ||
+       res1->kind == s_trngl4 || res1->kind == s_trngl) {
 
       // We know that start_matrix_call will raise an error if its incoming
       // setup is not of the sort that canonicalizes to rotation 0 or 1.
@@ -2841,7 +3313,7 @@ extern void brute_force_merge(const setup *res1, const setup *res2,
       // get past start_matrix_call.
 
       setup people;
-      matrix_rec matrix_info[9];
+      matrix_rec matrix_info[matrix_info_capacity+1];
 
       int nump = start_matrix_call(res1, matrix_info, 0, 0, &people);
 
@@ -2890,8 +3362,8 @@ extern void drag_someone_and_move(setup *ss, parse_block *parseptr, setup *resul
    THROW_DECL
 {
    setup people, second_people;
-   matrix_rec matrix_info[9];
-   matrix_rec second_matrix_info[9];
+   matrix_rec matrix_info[matrix_info_capacity+1];
+   matrix_rec second_matrix_info[matrix_info_capacity+1];
    int i;
    bool fudged_start = false;
    uint32 flags = MTX_STOP_AND_WARN_ON_TBONE | MTX_IGNORE_NONSELECTEES;
@@ -3018,8 +3490,8 @@ extern void anchor_someone_and_move(
 {
    enum { MAX_GROUPS = 12 };
    setup people;
-   matrix_rec before_matrix_info[9];
-   matrix_rec after_matrix_info[9];
+   matrix_rec before_matrix_info[matrix_info_capacity+1];
+   matrix_rec after_matrix_info[matrix_info_capacity+1];
    int i, j, k, nump;
    int deltax[MAX_GROUPS], deltay[MAX_GROUPS];
    selector_kind saved_selector = current_options.who;
@@ -3571,7 +4043,7 @@ static void divide_diamonds(setup *ss, setup *result) THROW_DECL
 
 
 // a <= b
-extern int gcd(int a, int b)
+int gcd(int a, int b)
 {
    for (;;) {
       int rem;
@@ -3581,6 +4053,13 @@ extern int gcd(int a, int b)
       b = a;
       a = rem;
    }
+}
+
+void reduce_fraction(int &a, int &b)
+{
+   int g = gcd(a, b);
+   a /= g;
+   b /= g;
 }
 
 
@@ -3769,16 +4248,16 @@ extern int gcd(int a, int b)
 //      "incoming_fracs of reverse order of arg_fracs",
 // that is, the first 1/4 (1,0,4,1).  If the client retains the
 // CMD_FRAC_REVERSE flag on that, it will do the last 1/4 of the call.
-extern uint32 process_fractions(int start, int end,
-                                fraction_invert_flags invert_flags,
-                                const fraction_command & incoming_fracs,
-                                bool make_improper /* = false */,
-                                bool *improper_p /* = 0 */) THROW_DECL
+void fraction_command::process_fractions(int start, int end,
+                                         fraction_invert_flags invert_flags,
+                                         const fraction_command & incoming_fracs,
+                                         bool make_improper /* = false */,
+                                         bool *improper_p /* = 0 */) THROW_DECL
 {
-   int cn = start & NUMBER_FIELD_MASK;
-   int cd = (start >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
-   int dn = end & NUMBER_FIELD_MASK;
-   int dd = (end >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
+   int cn = fraction_command::end_numer(start);
+   int cd = fraction_command::end_denom(start);
+   int dn = fraction_command::end_numer(end);
+   int dd = fraction_command::end_denom(end);
 
    if (invert_flags & FRAC_INVERT_START) cn = cd-cn;
    if (invert_flags & FRAC_INVERT_END) dn = dd-dn;
@@ -3797,10 +4276,10 @@ extern uint32 process_fractions(int start, int end,
    // If being asked to do "1-M/N", make the fraction improper.
    if (make_improper) numer += denom;
 
-   int s_denom = (incoming_fracs.fraction >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK;
-   int s_numer = (incoming_fracs.fraction >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK;
-   int e_denom = (incoming_fracs.fraction >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
-   int e_numer = (incoming_fracs.fraction & NUMBER_FIELD_MASK);
+   int s_denom = incoming_fracs.start_denom();
+   int s_numer = incoming_fracs.start_numer();
+   int e_denom = incoming_fracs.end_denom();
+   int e_numer = incoming_fracs.end_numer();
 
    s_numer = P*s_denom+numer*s_numer;
    e_numer = P*e_denom+numer*e_numer;
@@ -3813,25 +4292,7 @@ extern uint32 process_fractions(int start, int end,
       e_numer -= e_denom;
    }
 
-   if (s_numer < 0 || s_numer >= s_denom || e_numer <= 0 || e_numer > e_denom)
-      fail("Illegal fraction.");
-
-   int divisor = gcd(s_numer, s_denom);
-   s_numer /= divisor;
-   s_denom /= divisor;
-
-   divisor = gcd(e_numer, e_denom);
-   e_numer /= divisor;
-   e_denom /= divisor;
-
-   if (s_numer > NUMBER_FIELD_MASK || s_denom > NUMBER_FIELD_MASK ||
-       e_numer > NUMBER_FIELD_MASK || e_denom > NUMBER_FIELD_MASK)
-      fail("Fractions are too complicated.");
-
-   return (s_denom<<(BITS_PER_NUMBER_FIELD*3)) |
-      (s_numer<<(BITS_PER_NUMBER_FIELD*2)) |
-      (e_denom<<BITS_PER_NUMBER_FIELD) |
-      e_numer;
+   repackage(s_numer, s_denom, e_numer, e_denom);
 }
 
 
@@ -3885,10 +4346,10 @@ void fraction_info::get_fraction_info(
    m_do_last_half_of_first_part = (fracfrac) 0;
 
    int this_part = (frac_stuff.flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
-   int s_denom = (frac_stuff.fraction >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK;
-   int s_numer = (frac_stuff.fraction >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK;
-   int e_denom = (frac_stuff.fraction >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
-   int e_numer = (frac_stuff.fraction & NUMBER_FIELD_MASK);
+   int s_denom = frac_stuff.start_denom();
+   int s_numer = frac_stuff.start_numer();
+   int e_denom = frac_stuff.end_denom();
+   int e_numer = frac_stuff.end_numer();
 
    if (s_numer >= s_denom) fail("Fraction must be proper.");
    int my_start_point = m_client_total * s_numer;
@@ -4324,8 +4785,8 @@ void fraction_info::get_fraction_info(
          int span = m_end_point - my_start_point;
          if (span < 0) span = -span;
          span++;
-         int num = (*restrained_concept_p)->options.number_fields & NUMBER_FIELD_MASK;
-         int den = ((*restrained_concept_p)->options.number_fields >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
+         int num = fraction_command::end_numer((*restrained_concept_p)->options.number_fields);
+         int den = fraction_command::end_denom((*restrained_concept_p)->options.number_fields);
          int t = num * span;
          int shorter_span = t / den;
 
@@ -4432,6 +4893,9 @@ bool fill_active_phantoms_and_move(setup *ss, setup *result, bool suppress_fudgy
       return true;   /* We couldn't do it -- the assumption is not specific enough, like "general diamonds". */
 
    ss->cmd.cmd_assume.assumption = cr_none;
+   // Fill in the geometrical bits (beau/lead/center/etc) for the newly created phantoms,
+   // but not the boy/girl/couple-number stuff.
+   update_id_bits(ss);
    move(ss, false, result, suppress_fudgy_2x3_2x6_fixup);
 
    // Take out the phantoms.
@@ -5793,7 +6257,9 @@ static bool do_misc_schema(
       // The database author is responsible for what ID bits mean in this case.
       concentric_move(ss, foo1p, &foo2, the_schema,
                       innerdef->modifiers1,
-                      override_concentric_rules ? override_concentric_rules : outerdef->modifiers1,
+                      override_concentric_rules ?
+                      (outerdef->modifiers1 & ~DFM1_CONCENTRICITY_FLAG_MASK) | override_concentric_rules :
+                      outerdef->modifiers1,
                       the_schema != schema_rev_checkpoint, true, ~0U, result);
 
       result->rotation -= rot;   // Flip the setup back.
@@ -6206,6 +6672,8 @@ void really_inner_move(
             fail("Illegal concept for this call.");
 
          uint32 flags = callspec->stuff.matrix.matrix_flags;
+         if ((flags & MTX_ONLY_IN) && current_options.where != direction_in) fail("Can't use this selector.");
+         if ((flags & MTX_ONLY_OUT) && current_options.where != direction_out) fail("Can't use this selector.");
          matrix_def_block *base_block = callspec->stuff.matrix.matrix_def_list;
 
          for ( ;; ) {
@@ -6217,16 +6685,21 @@ void really_inner_move(
 
          const uint32 *callstuff = base_block->matrix_def_items;
 
-         if (the_schema == schema_partner_matrix || the_schema == schema_partner_partial_matrix)
-            partner_matrixmove(ss, flags, callstuff, result);
-         else
+         int alldelta = (the_schema == schema_partner_matrix || the_schema == schema_partner_partial_matrix) ?
+            partner_matrixmove(ss, flags, callstuff, result) :
             matrixmove(ss, flags, callstuff, result);
 
          // If the invocation of this call is "roll transparent", restore roll info
          // from before the call for those people that are marked as roll-neutral.
          fix_roll_transparency_stupidly(ss, result);
 
-         result->result_flags.misc |= RESULTFLAG__INVADED_SPACE;
+         if (alldelta == 0) {
+            // No one moves, so it's maximally split.  And it isn't a space-invader.
+            result->result_flags.maximize_split_info();
+         }
+         else if (!(flags & MTX_NOT_TRUE_INVADER)) {
+            result->result_flags.misc |= RESULTFLAG__INVADED_SPACE;
+         }
 
          if (expanded) {
             result->result_flags.misc &= ~3;

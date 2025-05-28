@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2016  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "38.89"
-#define TIME_STAMP "wba@alum.mit.edu June 10 2016 $"
+#define VERSION_STRING "38.91"
+#define TIME_STAMP "wba@alum.mit.edu February 13 2017 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -147,6 +147,7 @@ command_list_menu_item command_menu[] = {
    {"toggle concept levels",          command_toggle_conc_levels, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",         command_toggle_act_phan, ID_COMMAND_TOGGLE_PHAN},
    {"toggle minigrand getouts",       command_toggle_minigrand, -1},
+   {"toggle bend line home getouts",  command_toggle_bend_home, -1},
    {"toggle overflow warning",        command_toggle_overflow_warn, -1},
    {"toggle retain after error",      command_toggle_retain_after_error, -1},
    {"toggle nowarn mode",             command_toggle_nowarn_mode, -1},
@@ -251,6 +252,7 @@ startup_list_menu_item startup_menu[] = {
    {"toggle concept levels",       start_select_toggle_conc, ID_COMMAND_TOGGLE_CONC},
    {"toggle active phantoms",      start_select_toggle_act, ID_COMMAND_TOGGLE_PHAN},
    {"toggle minigrand getouts",    start_select_toggle_minigrand, -1},
+   {"toggle bend line home getouts",start_select_toggle_bend_home, -1},
    {"toggle overflow warning",     start_select_toggle_overflow_warn, -1},
    {"toggle singlespace mode",     start_select_toggle_singlespace, -1},
    {"toggle retain after error",   start_select_toggle_retain, -1},
@@ -849,6 +851,9 @@ extern bool query_for_call()
          case command_toggle_minigrand:
             allowing_minigrand = !allowing_minigrand;
             goto check_menu;
+         case command_toggle_bend_home:
+            allow_bend_home_getout = !allow_bend_home_getout;
+            goto check_menu;
          case command_toggle_overflow_warn:
             enforce_overcast_warning = !enforce_overcast_warning;
             goto check_menu;
@@ -947,7 +952,7 @@ extern bool query_for_call()
 
       switch (parse_state.parse_stack[parse_state.parse_stack_index].save_concept_kind) {
       case concept_centers_and_ends:
-         strncpy(parse_state.specialprompt, "ENTER CALL FOR ENDS", MAX_TEXT_LINE_LENGTH);
+         strncpy(parse_state.specialprompt, "ENTER CALL FOR OUTSIDES", MAX_TEXT_LINE_LENGTH);
          break;
       case concept_on_your_own:
          strncpy(parse_state.specialprompt, "ENTER SECOND (CENTERS) CALL", MAX_TEXT_LINE_LENGTH);
@@ -1037,6 +1042,7 @@ extern int sdmain(int argc, char *argv[], iobase & ggg)
       printf("-keep_all_pictures          keep the picture after every call\n");
       printf("-single_click               (Sd only) act on single mouse clicks on the menu\n");
       printf("-minigrand_getouts          allow \"mini-grand\" (RLG but promenade on 3rd hand) getouts\n");
+      printf("-bend_line_home_getouts     show \"couples circulate X, bend the line\" getouts (will still show promenade\n");
       printf("-warn_on_overflow           issue warning if same turning on consecutive calls\n");
       printf("-concept_levels             allow concepts from any level\n");
       printf("-no_warnings                do not display or print any warning messages\n");

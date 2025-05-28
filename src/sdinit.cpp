@@ -103,6 +103,8 @@ extern bool parse_level(Cstring s, Cstring *break_ptr /*= 0*/)
       case 'c': case 'C':
          if (s[1] == '3' && (s[2] == 'a' || s[2] == 'A') && len == 3)
             calling_level = l_c3a;
+         else if (s[1] == '3' && (s[2] == 'b' || s[2] == 'B') && len == 3)
+            calling_level = l_c3;
          else if (s[1] == '3' && (s[2] == 'x' || s[2] == 'X') && len == 3)
             calling_level = l_c3x;
          else if (s[1] == '4' && (s[2] == 'a' || s[2] == 'A') && len == 3)
@@ -2168,6 +2170,8 @@ bool open_session(int argc, char **argv)
             { allowing_all_concepts = true; continue; }
          else if (strcmp(&args[argno][1], "minigrand_getouts") == 0)
             { allowing_minigrand = true; continue; }
+         else if (strcmp(&args[argno][1], "bend_line_home_getouts") == 0)
+            { allow_bend_home_getout = true; continue; }
          else if (strcmp(&args[argno][1], "warn_on_overflow") == 0)
             { enforce_overcast_warning = true; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)

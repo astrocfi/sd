@@ -4628,6 +4628,7 @@ void merge_table::merge_setups(setup *ss,
       res2->rotation = 0;
       result->rotation = 0;
       result->eighth_rotation = 0;
+      res1->eighth_rotation = 0;
       res2->eighth_rotation = 0;
       canonicalize_rotation(res1);
       canonicalize_rotation(res2);
@@ -5154,11 +5155,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
          }
          else
             // Non-designees do first part only.
-            this_one->cmd.cmd_fraction.fraction =
-               process_fractions(NUMBER_FIELDS_1_0,
-                                 ss->cmd.parseptr->options.number_fields,
-                                 FRAC_INVERT_END,
-                                 this_one->cmd.cmd_fraction);
+            this_one->cmd.cmd_fraction.process_fractions(NUMBER_FIELDS_1_0,
+                                                         ss->cmd.parseptr->options.number_fields,
+                                                         FRAC_INVERT_END,
+                                                         this_one->cmd.cmd_fraction);
             this_one->cmd.cmd_fraction.flags = 0;
       }
 
@@ -5295,11 +5295,10 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
       the_setups[0].cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
 
       the_setups[0].cmd.cmd_fraction.flags ^= CMD_FRAC_REVERSE;
-      the_setups[0].cmd.cmd_fraction.fraction =
-         process_fractions(NUMBER_FIELDS_1_0,
-                           ss->cmd.parseptr->options.number_fields,
-                           FRAC_INVERT_NONE,
-                           the_setups[0].cmd.cmd_fraction);
+      the_setups[0].cmd.cmd_fraction.process_fractions(NUMBER_FIELDS_1_0,
+                                                       ss->cmd.parseptr->options.number_fields,
+                                                       FRAC_INVERT_NONE,
+                                                       the_setups[0].cmd.cmd_fraction);
       the_setups[0].cmd.cmd_fraction.flags = 0;
       the_setups[0].cmd.parseptr = parseptrcopy->next;    // Skip over the concept.
       uint32 finalresultflagsmisc = the_setups[0].result_flags.misc;
@@ -5996,26 +5995,32 @@ extern void inner_selective_move(
          else if (bigend_ssmask == 0x6060)
             whattodo = &thing4x4_6060;
       }
-      else if (ss->kind == s_alamo && bigend_llmask == 0xFF) {
-         if (bigend_ssmask == 0xCC)
+      else if (bigend_llmask == 0xFF) {
+         if (ss->kind == s_alamo && bigend_ssmask == 0xCC)
             whattodo = &thingalamocc;
-         else if (bigend_ssmask == 0x33)
+         else if (ss->kind == s_alamo && bigend_ssmask == 0x33)
             whattodo = &thingalamo33;
+         else if (ss->kind == s_spindle && bigend_ssmask == 0x11)
+            whattodo = &thingspindle;
+         else if (ss->kind == s_qtag && bigend_ssmask == 0x22)
+            whattodo = &thingqtag22;
+         else if (ss->kind == s_qtag && bigend_ssmask == 0xCC)
+            whattodo = &thingqtag11;
+         else if (ss->kind == s_bone && bigend_ssmask == 0xCC)
+            whattodo = &thingbone;
+         else if (ss->kind == s_hrglass && bigend_ssmask == 0xCC)
+            whattodo = &thinghrglass;
+         else if (ss->kind == s_dhrglass && bigend_ssmask == 0xCC)
+            whattodo = &thinghrglass;
+         else if (ss->kind == s2x4 && bigend_ssmask == 0x99)
+            whattodo = &thing2x4;
+         else if (ss->kind == s_rigger && bigend_ssmask == 0x33)
+            whattodo = &thing2x4;
+         else if (ss->kind == s1x8 && bigend_ssmask == 0xCC)
+            whattodo = &thing2x4;
+         else if (ss->kind == s_crosswave && bigend_ssmask == 0xCC)
+            whattodo = &thing2x4;
       }
-      else if (ss->kind == s_spindle && bigend_llmask == 0xFF && bigend_ssmask == 0x11)
-         whattodo = &thingspindle;
-      else if (ss->kind == s_qtag && bigend_llmask == 0xFF && bigend_ssmask == 0x22)
-         whattodo = &thingqtag22;
-      else if (ss->kind == s_qtag && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
-         whattodo = &thingqtag11;
-      else if (ss->kind == s_bone && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
-         whattodo = &thingbone;
-      else if (ss->kind == s_hrglass && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
-         whattodo = &thinghrglass;
-      else if (ss->kind == s_dhrglass && bigend_llmask == 0xFF && bigend_ssmask == 0xCC)
-         whattodo = &thinghrglass;
-      else if (ss->kind == s2x4 && bigend_llmask == 0xFF && bigend_ssmask == 0x99)
-         whattodo = &thing2x4;
 
       final_and_herit_flags local_flags;
       local_flags.clear_all_herit_and_final_bits();
@@ -6040,9 +6045,15 @@ extern void inner_selective_move(
                if (whattodo->compressor_backout) expand::compress_setup(*whattodo->compressor_backout, &local_setup);
                call_conc_option_state saved_options = current_options;
                current_options = parseptrcopy->options;
+
+               uint32 override =
+                  (callspec->stuff.conc.outerdef.call_id == base_call_plainprom ||
+                   callspec->stuff.conc.outerdef.call_id == base_call_plainpromeighths) ?
+                  DFM1_CONC_FORCE_COLUMNS : 0;
+
                really_inner_move(&local_setup, false, callspec, whattodo->schema1,
                                  callspec->callflags1, callspec->callflagsf,
-                                 0, false, 0, false, result);
+                                 override, false, 0, false, result);
                current_options = saved_options;
                return;
             }
@@ -6438,6 +6449,9 @@ extern void inner_selective_move(
          }
 
          move(this_one, false, this_result);
+         // Is this the right thing???????????????
+         repair_fudgy_2x3_2x6(this_result);
+         remove_fudgy_2x3_2x6(this_result);
       }
       else if (indicator >= selective_key_plain &&
                indicator != selective_key_work_concept &&
@@ -6496,6 +6510,9 @@ extern void inner_selective_move(
                }
 
                impose_assumption_and_move(this_one, this_result);
+               // Is this the right thing???????????????
+               repair_fudgy_2x3_2x6(this_result);
+               remove_fudgy_2x3_2x6(this_result);
                goto done_with_this_one;
             }
          }
@@ -6777,9 +6794,11 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
                   else if (lilresult[0].kind == s1x4)
                      nextfixp = select::fixer_ptr_table[fixp->next1x4rot];
-                  else if (lilresult[0].kind == sdmd && !(fixp->rot & 0x40000000))
-                     nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                   else if (lilresult[0].kind == s2x3 && (fixp->rot & 0x40000000))
+                     nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
+                  else if (lilresult[0].kind == s_trngl4 && (fixp->rot & 0x40000000))
+                     nextfixp = select::fixer_ptr_table[fixp->next2x2v];
+                  else if (lilresult[0].kind == sdmd && !(fixp->rot & 0x40000000))
                      nextfixp = select::fixer_ptr_table[fixp->nextdmdrot];
                }
 
@@ -6807,9 +6826,11 @@ extern void inner_selective_move(
                }
 
                if ((nextfixp->rot & 3) == 0) {
-                  for (lilcount=0; lilcount<numsetups; lilcount++) {
-                     lilresult[lilcount].rotation += 2;
-                     canonicalize_rotation(&lilresult[lilcount]);
+                  if (!(nextfixp->rot & 0x20000000)) {
+                     for (lilcount=0; lilcount<numsetups; lilcount++) {
+                        lilresult[lilcount].rotation += 2;
+                        canonicalize_rotation(&lilresult[lilcount]);
+                     }
                   }
                }
             }
@@ -6823,6 +6844,8 @@ extern void inner_selective_move(
                      nextfixp = select::fixer_ptr_table[fixp->nextdmd];
                   else if (lilresult[0].kind == s_bone6)
                      nextfixp = select::fixer_ptr_table[fixp->next1x2];
+                  else if (lilresult[0].kind == s_1x2dmd)
+                     nextfixp = select::fixer_ptr_table[fixp->next1x2rot];
                }
                else if (attr::klimit(fixp->ink) == 7) {
                   if (lilresult[0].kind == s1x8)
@@ -7030,14 +7053,10 @@ extern void inner_selective_move(
          ma = merge_for_own;
       else if (indicator == selective_key_mini_but_o)
          ma = merge_strict_matrix;
-
-
       else if (indicator == selective_key_dyp &&
                ss->cmd.parseptr &&
                ss->cmd.parseptr->concept->kind == concept_do_phantom_2x4)
          ma = merge_strict_matrix;
-
-
       else if (indicator == selective_key_dyp ||
                indicator == selective_key_plain_from_id_bits)
          ma = merge_after_dyp;

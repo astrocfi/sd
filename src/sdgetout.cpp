@@ -128,6 +128,17 @@ static const char *resolve_distances[] = {
    "7/8",
    "0"};
 
+static const char *circ_to_home_distances[] = {
+   "",
+   "couples 1/2 circulate, ",
+   "couples circulate, ",
+   "couples circulate 1-1/2, ",
+   "couples circulate twice, ",
+   "couples circulate 2-1/2, ",
+   "couples circulate 3 times, ",
+   "couples circulate 3-1/2, "};
+
+
 // BEWARE!!  This enum must track the table "resolve_first_parts".
 enum first_part_kind {
    first_part_none,
@@ -948,21 +959,32 @@ void ui_utils::write_resolve_text(bool doing_file)
          distance ^= 4;
       }
 
-      writestuff(resolve_main_parts[mainpart]);
+      if (index == resolve_revprom || index == resolve_revsglfileprom)
+         distance = (-distance) & 7;
 
+      writestuff(resolve_main_parts[mainpart]);
       writestuff("  (");
       write_aproximately();
 
       if (distance == 0) {
-         writestuff("at home)");
+         writestuff("at home");
       }
       else {
-         if (index == resolve_revprom || index == resolve_revsglfileprom)
-            writestuff(resolve_distances[8 - distance]);
-         else
-            writestuff(resolve_distances[distance]);
-         writestuff(" promenade)");
+         writestuff(resolve_distances[distance]);
+         writestuff(" promenade");
       }
+
+      if (allow_bend_home_getout) {
+         if ((mainpart == main_part_prom || mainpart == main_part_revprom) &&
+             (configuration::current_config().state.kind == s2x4 || distance == 0) &&
+             !(configuration::current_config().state.result_flags.misc & RESULTFLAG__IMPRECISE_ROT)) {
+            writestuff(", or ");
+            writestuff(circ_to_home_distances[distance]);
+            writestuff("bend the line, you're home");
+         }
+      }
+
+      writestuff(")");
    }
 }
 

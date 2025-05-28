@@ -22,7 +22,16 @@ In general, these program archive files, when unpacked, will create
 the "sd" directory subordinate to the directory in which the
 unpacking takes place, and then place the files in same.
 <ul>
-<li>Download <a href="linux.tgz">linux.tgz</a> for Linux/Gnu/Intel.
+<li>Linux: download <a href="linux.tgz">linux.tgz</a> into your chosen directory.  It is typically ~/sd, that is,
+a created sd directory subordinate to your home directory.  But it can be anywhere.
+<p>
+After downloading, you should have a file named <code>linux.tgz</code>,which
+is a gzipped Unix archive.
+Unpack it (that is, <code>tar -zxvf linux.tgz</code>) into the chosen directory.
+It will create the "sdtty" executable, along with the calls database.
+It will overwrite the previous program, but will not affect other files,
+such as written sequences or your <code>sd.ini</code> file.  If this program
+does not work for you, download the source files and compile.
 <li>For other varieties of Unix, download the sources from <a href="sd_source.zip">sd_source.zip</a> and compile.
 </ul>
 <hr>

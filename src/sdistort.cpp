@@ -866,7 +866,9 @@ static void multiple_move_innards(
    // (basic_move) knows what is happening and will fix that bit.
    // Also, check that the "did_last_part" bits are the same.
 
+   uint32 savemisc = result->result_flags.misc;
    result->result_flags = get_multiple_parallel_resultflags(z, arity);
+   result->result_flags.misc |= savemisc & RESULTFLAG__COMPRESSED_FROM_2X3;
 
    // Deal with the map kinds that take two different inner setup kinds.
 
@@ -969,7 +971,7 @@ static void multiple_move_innards(
       break;
    }
 
-   if (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) {
+   if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) || (result->result_flags.misc & RESULTFLAG__INVADED_SPACE)) {
       int after_distance;
       bool deadconc = false;
 
@@ -1020,13 +1022,14 @@ static void multiple_move_innards(
          // for something like, from normal diamonds, "work matrix in each diamond, and
          // drop in".  The 2x2 and diamond setups have the same height.
 
-         if (before_distance == after_distance && !deadconc)
+         if ((sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && before_distance == after_distance && !deadconc)
             fail("Unnecessary use of matrix concept.");
 
          // If the setups are 50% overlapped, make the appropriate adjustment.
 
          if (map_kind == MPKIND__OVERLAP) before_distance >>= 1;
-         else if (map_kind != MPKIND__SPLIT) fail("Can't use matrix with this concept.");
+         else if (map_kind != MPKIND__SPLIT && (sscmd->cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT))
+            fail("Can't use matrix with this concept.");
 
          // "Before_distance" is now the distance between flagpole centers of the
          // virtual setups.  See what kind of fudging we have to do to get the
@@ -2805,6 +2808,8 @@ extern void distorted_2x2s_move(
          // The zero slot has other stuff.
          scatter(result, &stemp, map_z_restorer+1, arity*4-1, 0);
       }
+      else if (result->result_flags.misc & RESULTFLAG__COMPRESSED_FROM_2X3)
+         fail("Can't do this call in this setup.");
    }
 
    return;
@@ -3774,8 +3779,6 @@ void do_concept_wing(
    if (!coordptr || sizem1 < 0)
       fail("Can't do this in this setup.");
 
-   int doffset = 32 - (1 << (coordptr->xfactor-1));
-
    int all_people = 0;
    int normal_people = 0;
    int winged_people = 0;
@@ -3815,8 +3818,8 @@ void do_concept_wing(
                case 3: y += shift; break;
                }
 
-               int place = coordptr->diagram[doffset - ((y >> 2) << coordptr->xfactor) + (x >> 2)];
-               if (place < 0 || coordptr->xca[place] != x || coordptr->yca[place] != y)
+               int place = coordptr->get_index_from_coords(x, y);
+               if (place < 0)
                   fail("Can't do this.");
 
                if (pass2) {

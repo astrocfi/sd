@@ -1767,9 +1767,7 @@ extern void tandem_couples_move(
       int fractional_twosome_part_num =
          num - fraction_in_eighths * fractional_twosome_part_den;
 
-      int fracgcd = gcd(fractional_twosome_part_num, fractional_twosome_part_den);
-      fractional_twosome_part_num /= fracgcd;
-      fractional_twosome_part_den /= fracgcd;
+      reduce_fraction(fractional_twosome_part_num, fractional_twosome_part_den);
 
       fraction_in_eighths <<= 1;  // Put it into eighths temporarily.
 

@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 331
+#define DATABASE_FORMAT_VERSION 338
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -141,8 +141,10 @@
 // incorrect code, in a phase-of-the-moon-dependent way, for "snag bits and pieces",
 // and there is no evidence that Micro$oft ever fixed this.  So we stick with version 6
 // and use it only for its nice debugger.  Production code is compiled with MinGW/gcc.
+// Apparently VS 2015, with _MSC_VER = 1900, doesn't need this.  They finally got their act together
+// (in this small matter.)
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #define USE_OWN_INT_MACROS
 #endif
 
@@ -210,6 +212,8 @@ enum base_call_index {
    base_call_backemup,
    base_call_circulate,
    base_call_trade,
+   base_call_plainprom,
+   base_call_plainpromeighths,
    base_call_any_hand_remake,
    base_call_passthru,
    base_call_check_cross_counter,
@@ -424,7 +428,12 @@ enum {
    MTX_FIND_SPREADERS         = 0x100,
    MTX_USE_VEER_DATA          = 0x200,
    MTX_USE_NUMBER             = 0x400,
-   MTX_MIRROR_IF_RIGHT_OF_CTR = 0x800
+   MTX_MIRROR_IF_RIGHT_OF_CTR = 0x800,
+   MTX_ONLY_IN                = 0x1000,
+   MTX_ONLY_OUT               = 0x2000,
+   MTX_ADD_2N                 = 0x4000,
+   MTX_INCLUDE_PHANTOMS       = 0x8000,
+   MTX_NOT_TRUE_INVADER       = 0x10000
 };
 
 
@@ -582,15 +591,16 @@ enum setup_kind {
    s3ptpd,
    s4ptpd,
    s_trngl8,
-   s1x4p2dmd,
    s4p2x1dmd,
    splinepdmd,
    splinedmd,
    slinepdmd,
    slinedmd,
    slinebox,
-   sline2box,
-   sline6box,
+   slinejbox,
+   slinevbox,
+   slineybox,
+   slinefbox,
    sdbltrngl4,
    sboxdmd,
    sboxpdmd,
@@ -696,6 +706,16 @@ enum begin_kind {
    b_pvee,
    b_trngl8,
    b_ptrngl8,
+   b_linebox,
+   b_plinebox,
+   b_linejbox,
+   b_plinejbox,
+   b_linevbox,
+   b_plinevbox,
+   b_lineybox,
+   b_plineybox,
+   b_linefbox,
+   b_plinefbox,
    b_bone6,
    b_pbone6,
    b_short6,

@@ -237,6 +237,7 @@ enum concept_kind {
    concept_so_and_so_stable,
    concept_frac_stable,
    concept_so_and_so_frac_stable,
+   concept_so_and_so_paranoid,
    concept_nose,
    concept_so_and_so_nose,
    concept_emulate,
@@ -592,6 +593,7 @@ enum warning_index {
    warn__brute_force_mxn,
    warn__two_faced,
    warn__cant_track_phantoms,
+   warn__did_weird_stretch_response,
    warn__crazy_tandem_interaction,
    warn__mimic_ambiguity_checked,
    warn__mimic_ambiguity_resolved,
@@ -890,6 +892,7 @@ enum start_select_kind {
    start_select_toggle_conc,
    start_select_toggle_singlespace,
    start_select_toggle_minigrand,
+   start_select_toggle_bend_home,
    start_select_toggle_overflow_warn,
    start_select_toggle_act,
    start_select_toggle_retain,
@@ -1082,6 +1085,21 @@ struct direction_item {
    Cstring name_uc;
 };
 
+void fail(const char s[]) THROW_DECL NORETURN2;
+
+void fail_no_retry(const char s[]) THROW_DECL NORETURN2;
+
+extern void fail2(const char s1[], const char s2[]) THROW_DECL NORETURN2;
+
+extern void failp(uint32 id1, const char s[]) THROW_DECL NORETURN2;
+
+void specialfail(const char s[]) THROW_DECL NORETURN2;
+
+extern void warn(warning_index w);
+
+int gcd(int a, int b);    // In sdmoves
+
+void reduce_fraction(int &a, int &b);    // In sdmoves
 
 // There are two different contexts in which we deal with collections of
 // numbers.  In each case the numbers are packed into 6 bit fields, so they can
@@ -1213,6 +1231,15 @@ enum {
 // Helpful macro for assembling the code and its two numeric arguments.
 #define FRACS(code,n,k) (code|((n)*CMD_FRAC_PART_BIT)|((k)*CMD_FRAC_PART2_BIT))
 
+// These control inversion of the start and end args.  That is, the position
+// fraction F is turned into 1-F.
+enum fraction_invert_flags {
+   FRAC_INVERT_NONE = 0,
+   FRAC_INVERT_START = 1,
+   FRAC_INVERT_END = 2
+};
+
+
 struct fraction_command {
    uint32 flags;
    uint32 fraction;  // The fraction info, packed into 4 fields.
@@ -1241,6 +1268,37 @@ struct fraction_command {
 
    inline bool is_null_with_masked_flags(uint32 testmask, uint32 testflags)
    { return (flags & testmask) == testflags && fraction == FRAC_FRAC_NULL_VALUE; }
+
+   inline static int start_denom(uint32 f) { return (f >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK; }
+   inline static int start_numer(uint32 f) { return (f >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK; }
+   inline static int end_denom(uint32 f) { return (f >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK; }
+   inline static int end_numer(uint32 f) { return (f & NUMBER_FIELD_MASK); }
+   inline int start_denom() const { return start_denom(fraction); }
+   inline int start_numer() const { return start_numer(fraction); }
+   inline int end_denom() const { return end_denom(fraction); }
+   inline int end_numer() const { return end_numer(fraction); }
+
+   inline void repackage(int sn, int sd, int en, int ed)
+   {
+      if (sn < 0 || sn >= sd || en <= 0 || en > ed)
+         fail("Illegal fraction.");
+
+      reduce_fraction(sn, sd);
+      reduce_fraction(en, ed);
+
+      if (sn > NUMBER_FIELD_MASK || sd > NUMBER_FIELD_MASK ||
+          en > NUMBER_FIELD_MASK || ed > NUMBER_FIELD_MASK)
+         fail("Fractions are too complicated.");
+
+      fraction = (sd<<(BITS_PER_NUMBER_FIELD*3)) | (sn<<(BITS_PER_NUMBER_FIELD*2)) | (ed<<BITS_PER_NUMBER_FIELD) | en;
+   }
+
+   // This is in sdmoves.cpp.
+   void process_fractions(int start, int end,
+                          fraction_invert_flags invert_flags,
+                          const fraction_command & incoming_fracs,
+                          bool make_improper = false,
+                          bool *improper_p = 0) THROW_DECL;
 
    includes_first_part_enum includes_first_part();
 };
@@ -1279,6 +1337,7 @@ enum command_kind {
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_minigrand,
+   command_toggle_bend_home,
    command_toggle_overflow_warn,
    command_toggle_act_phan,
    command_toggle_retain_after_error,

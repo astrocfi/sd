@@ -515,6 +515,7 @@ extern SDLIB_API int last_direction_kind;                           /* in SDTOP 
 extern SDLIB_API char database_version[81];                         /* in SDTOP */
 extern SDLIB_API bool testing_fidelity;                             /* in SDTOP */
 extern SDLIB_API bool allowing_minigrand;                           /* in SDTOP */
+extern SDLIB_API bool allow_bend_home_getout;                       /* in SDTOP */
 extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP */
 extern SDLIB_API bool verify_used_number;                           /* in SDTOP */
 extern SDLIB_API bool verify_used_direction;                        /* in SDTOP */

@@ -121,6 +121,16 @@ int begin_sizes[] = {
    10,         // b_pvee,
    16,         // b_trngl8
    16,         // b_ptrngl8
+   8,          // b_linebox
+   8,          // b_plinebox
+   8,          // b_linejbox
+   8,          // b_plinejbox
+   8,          // b_linevbox
+   8,          // b_plinevbox
+   8,          // b_lineybox
+   8,          // b_plineybox
+   8,          // b_linefbox
+   8,          // b_plinefbox
    6,          // b_bone6
    6,          // b_pbone6
    6,          // b_short6

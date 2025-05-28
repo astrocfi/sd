@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2016  William B. Ackerman.
+//    Copyright (C) 1990-2017  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -653,26 +653,6 @@ void ui_utils::printsetup(setup *x)
 
          do_write(str);
          break;
-      case s1x4p2dmd:
-         offs = 0;
-
-         switch (roti) {
-         case 0:
-            str = "6 6 6 6 e@7a b c d 6 g f@76 6 6 6 h";
-            break;
-         case 1:
-            str = " 5a@@ 5b@@ 5c@@ 5d@@ he@@ 5g@@ 5f@";
-            break;
-         case 2:
-            str = "6 6 h@7f g 6 d c b a@76 6 e";
-            break;
-         default:
-            str = " 5f@@ 5g@@ eh@@ 5d@@ 5c@@ 5b@@ 5a@";
-            break;
-         }
-
-         do_write(str);
-         break;
       case splinepdmd:
          offs = 0;
 
@@ -773,7 +753,7 @@ void ui_utils::printsetup(setup *x)
 
          do_write(str);
          break;
-      case sline2box:
+      case slinejbox:
          offs = 0;
 
          switch (roti) {
@@ -793,7 +773,7 @@ void ui_utils::printsetup(setup *x)
 
          do_write(str);
          break;
-      case sline6box:
+      case slinevbox:
          offs = 0;
 
          switch (roti) {
@@ -808,6 +788,46 @@ void ui_utils::printsetup(setup *x)
             break;
          default:
             str = " gh@@ 5f@@ 5e@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slineybox:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "a 6 6 e f@76 c d@7b 6 6 h g";
+            break;
+         case 1:
+            str = " ba@@ 5c@@ 5d@@ he@@ gf";
+            break;
+         case 2:
+            str = "g h 6 6 b@76 6 d c@7f e 6 6 a";
+            break;
+         default:
+            str = " fg@@ eh@@ 5d@@ 5c@@ ab";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case slinefbox:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 e@7a b c d 6 g f@76 6 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ he@@ 5g@@ 5f@";
+            break;
+         case 2:
+            str = "6 6 h@7f g 6 d c b a@76 6 e";
+            break;
+         default:
+            str = " 5f@@ 5g@@ eh@@ 5d@@ 5c@@ 5b@@ 5a@";
             break;
          }
 
@@ -1339,10 +1359,15 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = true;
 
             if (k == concept_centers_and_ends) {
+               selector_kind opp = selector_list[item->arg1].opposite;
+
+               writestuff(" WHILE THE ");
+               writestuff((opp == selector_uninitialized) ?
+                          ((Cstring) "OTHERS") :
+                          selector_list[opp].name_uc);
+
                if (item->arg2)
-                  writestuff(" WHILE THE ENDS CONCENTRIC");
-               else
-                  writestuff(" WHILE THE ENDS");
+                  writestuff(" CONCENTRIC");
             }
             else if (k == concept_some_vs_others &&
                      (selective_key) item->arg1 != selective_key_own) {
@@ -1467,7 +1492,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (allow_deferred_concept &&
                      next_cptr &&
-                     (k == concept_n_times_const ||
+                     ((k == concept_n_times_const && item->arg2 <= 100) ||
                       k == concept_n_times ||
                       (k == concept_fractional && item->arg1 == 2))) {
                deferred_concept = local_cptr;
@@ -3029,7 +3054,7 @@ void ui_utils::run_program(iobase & ggg)
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2016 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2017 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
@@ -3230,6 +3255,9 @@ void ui_utils::run_program(iobase & ggg)
          goto new_sequence;
       case start_select_toggle_minigrand:
          allowing_minigrand = !allowing_minigrand;
+         goto new_sequence;
+      case start_select_toggle_bend_home:
+         allow_bend_home_getout = !allow_bend_home_getout;
          goto new_sequence;
       case start_select_toggle_overflow_warn:
          enforce_overcast_warning = !enforce_overcast_warning;

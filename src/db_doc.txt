@@ -1142,15 +1142,6 @@ vee             __|_____|_____|__    (1 way symmetry)
                               |_____|
 
 
-                                     _____
-             _____ _____ _____ _____|     |_____ _____
-            |     |     |     |     |  4  |     |     |
-1x4p2dmd    |  0  |  1  |  2  |  3  |_____|  6  |  5  | (1 way symmetry)
-            |_____|_____|_____|_____|     |_____|_____|
-                                    |  7  |
-                                    |_____|
-
-
                             _____
                            |     |
                            |  3  |
@@ -1240,7 +1231,7 @@ slinebox    |  0  |  1  |  2  |  3  |_____|_____|   (1 way symmetry)
                          _____ _____ _____
              _____ _____|     |     |     |
             |     |     |  2  |  3  |  4  |
-sline2box   |  0  |  1  |_____|_____|_____|   (1 way symmetry)
+slinejbox   |  0  |  1  |_____|_____|_____|   (1 way symmetry; these are Morse code)
             |_____|_____|     |     |     |
                         |  7  |  6  |  5  |
                         |_____|_____|_____|
@@ -1250,11 +1241,30 @@ sline2box   |  0  |  1  |_____|_____|_____|   (1 way symmetry)
                                                  _____
              _____ _____ _____ _____ _____ _____|     |
             |     |     |     |     |     |     |  6  |
-sline6box   |  0  |  1  |  2  |  3  |  4  |  5  |_____|   (1 way symmetry)
+slinevbox   |  0  |  1  |  2  |  3  |  4  |  5  |_____|   (1 way symmetry)
             |_____|_____|_____|_____|_____|_____|     |
                                                 |  7  |
                                                 |_____|
 
+
+
+             _____             _____ _____
+            |     |___________|     |     |
+            |  0  |     |     |  4  |  5  |
+slineybox   |_____|  2  |  3  |_____|_____|   (1 way symmetry)
+            |     |_____|_____|     |     |
+            |  1  |           |  7  |  6  |
+            |_____|           |_____|_____|
+
+
+
+                                     _____
+             _____ _____ _____ _____|     |___________
+            |     |     |     |     |  4  |     |     |
+slinefbox   |  0  |  1  |  2  |  3  |_____|  6  |  5  |   (1 way symmetry)
+            |_____|_____|_____|_____|     |_____|_____|
+                                    |  7  |
+                                    |_____|
 
 
                          _____             _____
@@ -3053,16 +3063,11 @@ columns_miniwave
       decide what to do (no assumption, this person is a belle, and other
       person is a phantom) it simply returns TRUE.
 
-can_swing_left
-
-or deep2x1dmd or wqtag
-
-      applies to 1x3dmd only.  People are required to be in "normal"
-      diamond-like orientation.  That is, the center 2 must be a line
-      of 2, and the groups of 3 must be lines.  Returns TRUE if the
-      person can cast 1/2 to the left, because he has a live person on
-      his left hand, and that person is facing in the opposite direction.
-      returns FALSE otherwise.
+can_swing_right, can_swing_left
+      applies to 1x4, 1x3dmd, c1phan, deep2x1dmd, or wqtag.  People are required
+      to be in "normal" couple-like orientation.  Returns TRUE if the
+      person has a live neighbor to his right(left), and that person is facing
+      in the opposite direction.  Returns FALSE otherwise.
 
 1x4_wheel_and_deal
       applies to 1x4 lines only.  This implements the decision necessary
@@ -3576,8 +3581,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     Alamo (column-like) - "DPT around the corner".
                                     4x4, "O" spots, column-like - same as alamo.
 
-                                    2x3/2x4 - individual 1FL's.  In these cases, when used as a qualifier,
-                                    the "in" and "out" modifiers may be used.
+                                    2x3/2x4/2x6 - individual 1FL's.  In these cases, when used
+                                    as a qualifier, the "in" and "out" modifiers may be used.
 
                                     thar or xwv - crossed 2FL's of opposite handedness, ready to "move along".
 

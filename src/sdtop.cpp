@@ -133,6 +133,7 @@ and the following external variables:
    useless_phan_clw_warnings
    allowing_all_concepts
    allowing_minigrand
+   allow_bend_home_getout
    enforce_overcast_warning
    using_active_phantoms
    last_direction_kind
@@ -274,6 +275,7 @@ warning_info dyp_each_warnings;
 warning_info useless_phan_clw_warnings;
 bool allowing_all_concepts = false;
 bool allowing_minigrand = false;
+bool allow_bend_home_getout = false;
 bool enforce_overcast_warning = false;
 bool using_active_phantoms = false;
 int last_direction_kind = direction_ENUM_EXTENT-1;
@@ -6382,11 +6384,11 @@ void toplevelmove() THROW_DECL
                   ((i != 0) ? (i == 6 ? near1bit : no1bit) : far1bit);
          }
       }
-      else if ((starting_setup.kind == slinebox || starting_setup.kind == sline2box ||
-                starting_setup.kind == sline6box || starting_setup.kind == sdbltrngl4) &&
+      else if ((starting_setup.kind == slinebox || starting_setup.kind == slinejbox ||
+                starting_setup.kind == slinevbox || starting_setup.kind == sdbltrngl4) &&
                starting_setup.rotation & 1) {
          // All 4 of these setups can respond to near/far 1/2/4/6.
-         // Additionally, sline6box can respond to 3 and 5.
+         // Additionally, slinevbox can respond to 3 and 5.
          // And slinebox responds to 3.
          uint32 near1bit = ID3_FARTHEST1;
          uint32 far7bit = ID3_NOTFARTHEST1;
@@ -6449,12 +6451,12 @@ void toplevelmove() THROW_DECL
                      ((i < 4) ? near4bit : far4bit|farboxbit) |
                      ((i != 6 && i != 5) ? near6bit : far2bit);
                   break;
-               case sline2box:
+               case slinejbox:
                   starting_setup.people[i].id3 |=
                      ((i != 4 && i != 5 && i != 3 && i != 6) ? near4bit : far4bit|farboxbit) |
                      ((i != 4 && i != 5) ? near6bit : far2bit);
                   break;
-               case sline6box:
+               case slinevbox:
                   starting_setup.people[i].id3 |=
                      ((i < 6) ? near6bit : far2bit) |
                      ((i < 5) ? near5bit : far3bit) |
@@ -6467,6 +6469,76 @@ void toplevelmove() THROW_DECL
                      ((i < 5) ? near5bit : far3bit) |
                      ((i < 4) ? near4bit : far4bit);
                   break;
+               }
+            }
+         }
+      }
+      else if ((starting_setup.kind == slineybox || starting_setup.kind == slinefbox) &&
+               starting_setup.rotation & 1) {
+         // These setups can respond to near/far 2/4/6, near 3, and far 5.
+         // And slinefbox responds to near/far 1/7.
+         uint32 near1bit = ID3_FARTHEST1;
+         uint32 far7bit = ID3_NOTFARTHEST1;
+         uint32 far1bit = ID3_NEAREST1;
+         uint32 near7bit = ID3_NOTNEAREST1;
+         uint32 near2bit = ID3_FARTWO;
+         uint32 far6bit = ID3_NEARSIX;
+         uint32 near6bit = ID3_FARSIX;
+         uint32 far2bit = ID3_NEARTWO;
+         uint32 near3bit = ID3_FARTHREE;
+         uint32 far5bit = ID3_NEARFIVE;
+         uint32 near4bit = ID3_FARFOUR;
+         uint32 far4bit = ID3_NEARFOUR;
+
+         uint32 linepeople =
+            starting_setup.people[0].id1 | starting_setup.people[1].id1 |
+            starting_setup.people[2].id1 | starting_setup.people[3].id1;
+
+         if (starting_setup.rotation & 2) {
+            near1bit = ID3_NEAREST1;
+            far7bit = ID3_NOTNEAREST1;
+            far1bit = ID3_FARTHEST1;
+            near7bit = ID3_NOTFARTHEST1;
+            near2bit = ID3_NEARTWO;
+            far6bit = ID3_FARSIX;
+            near6bit = ID3_NEARSIX;
+            far2bit = ID3_FARTWO;
+            near3bit = ID3_NEARTHREE;
+            far5bit = ID3_FARFIVE;
+            near4bit = ID3_NEARFOUR;
+            far4bit = ID3_FARFOUR;
+
+            if (starting_setup.kind == slinefbox) {
+               if (!(linepeople & 1))
+                  near4bit |= ID3_NEARLINE;
+               else if (!(linepeople & 010)) 
+                  near4bit |= ID3_NEARCOL;
+            }
+            else {
+               far4bit |= ID3_FARBOX;
+            }
+         }
+         else {
+            if (starting_setup.kind == slinefbox) {
+               if (!(linepeople & 1))
+                  near4bit |= ID3_FARLINE;
+               else if (!(linepeople & 010))
+                  near4bit |= ID3_FARCOL;
+            }
+            else {
+               far4bit |= ID3_NEARBOX;
+            }
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               starting_setup.people[i].id3 |=
+                  ((i < 2) ? near2bit : far6bit) | ((i < 3) ? near3bit : far5bit) |
+                  ((i < 4) ? near4bit : far4bit) | ((i == 5 || i == 6) ? far2bit : near6bit);
+
+               if (starting_setup.kind == slinefbox) {
+                  starting_setup.people[i].id3 |=
+                     ((i == 0) ? near1bit : far7bit) | ((i == 5) ? far1bit : near7bit);
                }
             }
          }
@@ -6656,7 +6728,7 @@ void toplevelmove() THROW_DECL
          tbonetest[1] = 0;
 
          for (i=0; i<16; i++)
-            tbonetest[(setup_attrs[s4x4].setup_coords->yca[i] < 0) ? 1 : 0] |= starting_setup.people[i].id1;
+            tbonetest[(setup_attrs[s4x4].nice_setup_coords->yca[i] < 0) ? 1 : 0] |= starting_setup.people[i].id1;
 
          if (livemask == 0x4B4BU || livemask == 0x0B4B4U) {
             farbit = ID3_FARBOX|ID3_FARFOUR;
@@ -6673,7 +6745,7 @@ void toplevelmove() THROW_DECL
 
          for (i=0; i<16; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= (setup_attrs[s4x4].setup_coords->yca[i] < 0) ? nearbit : farbit;
+               starting_setup.people[i].id3 |= (setup_attrs[s4x4].nice_setup_coords->yca[i] < 0) ? nearbit : farbit;
          }
       }
    }

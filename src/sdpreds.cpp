@@ -389,7 +389,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
       case s3p1x1dmd:
          selected_person_mask = 074;
          break;
-      case s1x4p2dmd:
+      case slinefbox:
       case s4p2x1dmd:
          selected_person_mask = 0xD8;
          break;
@@ -906,8 +906,10 @@ static bool sum_mod_selected_for_12p(setup *real_people, int real_index,
 static bool plus_mod_selected(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff) THROW_DECL
 {
-   int otherindex = real_index + (*extra_stuff);
    int size = attr::slimit(real_people)+1;
+   int otherindex = ((real_people->kind == s1x3) && (real_direction & 2)) ?
+      real_index + size - (*extra_stuff) :
+      real_index + (*extra_stuff);
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
 }
@@ -969,8 +971,13 @@ static bool select_near_select(setup *real_people, int real_index,
    if (current_options.who == selector_all || current_options.who == selector_everyone)
       return true;
 
-   return (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
-          selectp(real_people, real_index ^ 1);
+   // We generally try to make "near" mean lateral; we usually get it right with no extra
+   // fussing.  But in the case of a 2x2 with people facing sideways, it takes extra work.
+   int other_index = (real_people->kind == s2x2 && (real_direction & 1)) ?
+      real_index ^ 3 : real_index ^ 1;
+
+   return (real_people->people[other_index].id1 & BIT_PERSON) &&
+          selectp(real_people, other_index);
 }
 
 static int base_table[12] = {0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9};
@@ -1701,6 +1708,7 @@ static bool x12_beau_or_miniwave(setup *real_people, int real_index,
 
 static const int32 swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
 static const int32 swingleft_1x4[4] = {-1, 0, 3, 1};
+static const int32 swingleft_c1phan[16] = {-1, -1, 0, 1, -1, 7, 4, -1, 10, 11, -1, -1, 14, -1, -1, 13};
 static const int32 swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
 static const int32 swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
@@ -1715,6 +1723,14 @@ static bool can_swing_left(setup *real_people, int real_index,
    int direction_index = northified_index - (*extra_stuff ? halfsize : 0);
    if (direction_index < 0) direction_index += size;
 
+   if (setup_attrs[real_people->kind].four_way_symmetry) {
+      // The external meschanism is being a little more helpful than we want.
+      if (real_direction & 1) {
+         direction_index -= 3*(halfsize>>1);
+         if (direction_index < 0) direction_index += size;
+      }
+   }
+
    switch (real_people->kind) {
    case s1x4:
       t = swingleft_1x4[direction_index];
@@ -1727,6 +1743,9 @@ static bool can_swing_left(setup *real_people, int real_index,
       break;
    case sdeep2x1dmd:
       t = swingleft_deep2x1dmd[direction_index];
+      break;
+   case s_c1phan:
+      t = swingleft_c1phan[direction_index];
       break;
    default:
       return false;

@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.89
-@set Time-stamp: June 10, 2016
+@set sd-version 38.91
+@set Time-stamp: February 13, 2017
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -42,7 +42,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-@noindent Copyright @copyright{} 1992-2016 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2017 William B. Ackerman and Stephen Gildea
 
 @noindent Permission is granted to make and distribute verbatim copies of this manual.
 

@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <22 Jan 2016 wba>
+@c Time-stamp: <13 Feb 2017 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.89
-@set title2 Database version = 38.89 format = 331
+@set title1 RELEASE NOTES FOR VERSION 38.91
+@set title2 Database version = 38.91 format = 338
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,8 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.91::
+* 38.90::
 * 38.89::
 * 38.88::
 * 38.87::
@@ -128,7 +130,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.89, Top, (dir)
+@node Intro, 38.91, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -136,14 +138,47 @@ notes relating to even older versions.
 
 @w{ }@c the @* above makes the @sp below fail without this line  1998-05
 @sp 2
-@noindent Copyright @copyright{} 1996-2016 William B. Ackerman
+@noindent Copyright @copyright{} 1996-2017 William B. Ackerman
 @sp 3
 @menu
-* 38.89::               Changes in the current version
+* 38.91::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.89, 38.88, Intro, Top
+@node 38.91, 38.90, Intro, Top
+@unnumberedsec Version 38.91 changes
+
+It can now do @strong{ends promenade N/4} (in the sense of @strong{heads promenade halfway, come into the middle and ...}) when in a "rigger", 1/8, or 1x8-with-centers-lockit setup.
+
+A bug was fixed in @strong{cast back}.
+
+It can handle fractions given to @strong{echo} constructions.  For example, @strong{do the last 3/4, echo <concept>} means do the last half of the call with the concept, then the full call without it.
+
+@c ************
+@node 38.90, 38.89, 38.91, Top
+@unnumberedsec Version 38.90 changes
+
+Improved ability to get out of thars, the importance of which is increased wit the addition of @strong{flip the galaxy} and @strong{cut the galaxy} at C1.
+
+Allow @strong{ripple} in 3-person lines.
+
+Fixed @strong{pass in} and @strong{pass out} so that they really turn toward or away from the center
+of the set or the center of the explicitly named subformation.
+
+Fixed misleading/incorrect information in transcript file after concepts like @strong{center 2/outer 6}.
+
+The @strong{stretch} concept takes a 4-person call, with preference for a 2x2 splitting, same as @strong{central} or  @strong{crazy}.  This means that, for example, from waves, @strong{stretch counter rotate} will do a @strong{stretch split counter rotate}.
+
+The call @strong{double cross} has been moved to A1, in accordance with a recent change from Callerlab.
+
+When it sees a @strong{promenade} getout from 2-faced lines, in addition to indicating that getout as before, it can also display it as a "circulate, bend the line" getout, as in @strong{promenade (3/8 promenade, or couples circulate 1-1/2, bend the line, you're home)}.  You may find this helpful, or you may find it annoying.  It is an option, and it is off by default.  You may put the switch "-bend_line_home_getouts" in the invocation of the program, or the line "bend_line_home_getouts" in the "[Options]" section of your @file{sd.ini} initialization file.  You can also switch this on or off at any time with the @strong{toggle bend line home getouts} command.
+
+New concept: @strong{<anyone> paranoid}.
+
+Ability to handle unsymmetrical @strong{chain reaction} was improved.
+
+@c ************
+@node 38.89, 38.88, 38.90, Top
 @unnumberedsec Version 38.89 changes
 
 Moved @strong{triple cross} to the A1 program, as per the decision of Callerlab.
