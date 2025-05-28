@@ -2678,73 +2678,79 @@ static bool fix_empty_outers(
          // But this is no worse than lots of other places where this program, and
          // humans, make assumptions about "normal" situations.
 
-         // Make sure these people go to the same spots, and remove possibly misleading info.
-         localmods1 |= DFM1_CONC_FORCE_SPOTS;
-         localmods1 &= ~(DFM1_CONC_FORCE_LINES |
-                         DFM1_CONC_FORCE_COLUMNS |
-                         DFM1_CONC_FORCE_OTHERWAY);
 
-         if (the_call && (the_call->the_defn.schema == schema_nothing ||
-                          the_call->the_defn.schema == schema_nothing_noroll ||
-                          the_call->the_defn.schema == schema_nothing_other_elong))
-            ;        // It's OK, the call was "nothing".
-         else if (the_call == base_calls[base_call_trade] ||
-                  the_call == base_calls[base_call_passin] ||
-                  the_call == base_calls[base_call_passout] ||
-                  the_call == base_calls[base_call_any_hand_remake] ||
-                  the_call == base_calls[base_call_any_hand_remake_with_step])
-            ;        // It's OK, the call was "trade" or "any hand remake".
-         else if ((the_call == base_calls[base_call_circulate] || the_call == base_calls[base_call_motcirc]) &&
-                  cmdout && cmdout->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF) &&
-                  cmdout->cmd_fraction.is_null()) {
-            // The call is "1/2 circulate".  We assume it goes to a diamond.
-            // We don't check that the facing directions are such that this is
-            // actually true.  Too bad.
-            // Well, it actually goes to a star.  It's the best we can do, given that
-            // we don't know facing directions.  In practice, that's good enough.
-            localmods1 &= ~DFM1_CONC_FORCE_SPOTS;  // We don't want this after all.
-            result_outer->kind = s_star;
+         if (the_call == base_calls[base_call_ends_counter]) {
+            localmods1 |= DFM1_ONLY_FORCE_ELONG_IF_EMPTY;
+            localmods1 &= ~DFM1_CONC_DEMAND_COLUMNS;
          }
-         else if ((the_call == base_calls[base_base_hinge] ||
-                   the_call == base_calls[base_base_hinge_for_nicely] ||
-                   the_call == base_calls[base_base_hinge_with_warn] ||
-                   the_call == base_calls[base_base_hinge_for_breaker] ||
-                   the_call == base_calls[base_base_hinge_and_then_trade] ||
-                   the_call == base_calls[base_base_hinge_and_then_trade_for_breaker]) &&
-                  ((orig_elong_flags+1) & 2)) {
-            if (result_outer->kind == s1x4) {
-               result_outer->kind = s2x2;
-               result_outer->rotation = 0;
-               result_outer->eighth_rotation = 0;
-            }
-            else {
-               result_outer->kind = s1x4;
-               result_outer->rotation = (orig_elong_flags & 1) ^ 1;
-               result_outer->eighth_rotation = 0;
-            }
-         }
-         else if (center_arity > 1)
-            ;        // It's OK.
          else {
-            // We simply have no idea where the outsides should be.  We
-            // simply contract the setup to a 4-person setup (or whatever),
-            // throwing away the outsides completely.  If this was an
-            // "on your own", it may be possible to put things back together.
-            // This is what makes "1P2P; pass thru; ENDS leads latch on;
-            // ON YOUR OWN disband & snap the lock" work.  But if we try to glue
-            // these setups together, "fix_n_results" will raise an error, since
-            // it won't know whether to leave room for the phantoms.
-            *result = *result_inner;  // This gets all the inner people, and the result_flags.
-            result->turn_into_deadconc();
+            // Make sure these people go to the same spots, and remove possibly misleading info.
+            localmods1 |= DFM1_CONC_FORCE_SPOTS;
+            localmods1 &= ~(DFM1_CONC_FORCE_LINES |
+                            DFM1_CONC_FORCE_COLUMNS |
+                            DFM1_CONC_FORCE_OTHERWAY);
+            if (the_call && (the_call->the_defn.schema == schema_nothing ||
+                             the_call->the_defn.schema == schema_nothing_noroll ||
+                             the_call->the_defn.schema == schema_nothing_other_elong))
+               ;        // It's OK, the call was "nothing".
+            else if (the_call == base_calls[base_call_trade] ||
+                     the_call == base_calls[base_call_passin] ||
+                     the_call == base_calls[base_call_passout] ||
+                     the_call == base_calls[base_call_any_hand_remake] ||
+                     the_call == base_calls[base_call_any_hand_remake_with_step])
+               ;        // It's OK, the call was "trade" or "any hand remake".
+            else if ((the_call == base_calls[base_call_circulate] || the_call == base_calls[base_call_motcirc]) &&
+                     cmdout && cmdout->cmd_final_flags.bool_test_heritbits(INHERITFLAG_HALF) &&
+                     cmdout->cmd_fraction.is_null()) {
+               // The call is "1/2 circulate".  We assume it goes to a diamond.
+               // We don't check that the facing directions are such that this is
+               // actually true.  Too bad.
+               // Well, it actually goes to a star.  It's the best we can do, given that
+               // we don't know facing directions.  In practice, that's good enough.
+               localmods1 &= ~DFM1_CONC_FORCE_SPOTS;  // We don't want this after all.
+               result_outer->kind = s_star;
+            }
+            else if ((the_call == base_calls[base_base_hinge] ||
+                      the_call == base_calls[base_base_hinge_for_nicely] ||
+                      the_call == base_calls[base_base_hinge_with_warn] ||
+                      the_call == base_calls[base_base_hinge_for_breaker] ||
+                      the_call == base_calls[base_base_hinge_and_then_trade] ||
+                      the_call == base_calls[base_base_hinge_and_then_trade_for_breaker]) &&
+                     ((orig_elong_flags+1) & 2)) {
+               if (result_outer->kind == s1x4) {
+                  result_outer->kind = s2x2;
+                  result_outer->rotation = 0;
+                  result_outer->eighth_rotation = 0;
+               }
+               else {
+                  result_outer->kind = s1x4;
+                  result_outer->rotation = (orig_elong_flags & 1) ^ 1;
+                  result_outer->eighth_rotation = 0;
+               }
+            }
+            else if (center_arity > 1)
+               ;        // It's OK.
+            else {
+               // We simply have no idea where the outsides should be.  We
+               // simply contract the setup to a 4-person setup (or whatever),
+               // throwing away the outsides completely.  If this was an
+               // "on your own", it may be possible to put things back together.
+               // This is what makes "1P2P; pass thru; ENDS leads latch on;
+               // ON YOUR OWN disband & snap the lock" work.  But if we try to glue
+               // these setups together, "fix_n_results" will raise an error, since
+               // it won't know whether to leave room for the phantoms.
+               *result = *result_inner;  // This gets all the inner people, and the result_flags.
+               result->turn_into_deadconc();
 
-            // This used to set concsetup_outer_elongation to begin_outer_elongation
-            // instead of zero.  It was explained with a comment:
-            //     "We remember a vague awareness of where the outside would have been."
-            // It is no longer done that way.  We enforce precise rules, with no notions
-            // of a "vague awareness".
+               // This used to set concsetup_outer_elongation to begin_outer_elongation
+               // instead of zero.  It was explained with a comment:
+               //     "We remember a vague awareness of where the outside would have been."
+               // It is no longer done that way.  We enforce precise rules, with no notions
+               // of a "vague awareness".
 
-            result->concsetup_outer_elongation = 0;
-            return true;
+               result->concsetup_outer_elongation = 0;
+               return true;
+            }
          }
       }
    }
@@ -4679,8 +4685,17 @@ extern void concentric_move(
                   final_elongation |= new_elongation;
                }
             }
-            else
+            else {
                final_elongation = (outer_inners[0].result_flags.misc & 3);
+               if (localmods1 & DFM1_CONC_FORCE_LINES) {
+                  final_elongation &= ~2;
+                  final_elongation |= 1;
+               }
+               else if (localmods1 & DFM1_CONC_FORCE_COLUMNS) {
+                  final_elongation &= ~1;
+                  final_elongation |= 2;
+               }
+            }
 
             break;
          case s1x2:

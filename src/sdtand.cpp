@@ -3660,8 +3660,32 @@ void mimic_move(
 
    if (MI.groupsize <= 2) {
 
-      // We have the usual problem with splitting a 2x4.  Try this first,
-      // with its own catch handler.
+      // We have the usual problem with splitting a 2x4.
+
+      // Firstfirstfirst, watch for directions and lateral having same parity,
+      // in which case we might want to force a 1x4 split.
+
+      if (ss->kind == s2x4 && ((directions ^ MI.lateral) & 1) == 0) {
+         // So if hint matches dir, do a 1x4.
+
+         if (((MI.setup_hint & (MIMIC_SETUP_LINES|MIMIC_SETUP_WAVES)) && ((directions & 1) == 0)) ||
+             ((MI.setup_hint & (MIMIC_SETUP_COLUMNS)) && ((directions & 1) != 0))) {
+            division_code = MAPCODE(s1x4,2,MPKIND__SPLIT,1);
+
+            try {
+               divided_setup_move(&aa, division_code, phantest_ok, true, result);
+               warn(warn__each1x4);
+               return;
+            }
+            catch(error_flag_type e) {
+               if (e == error_flag_no_retry) throw e;
+            }
+
+            configuration::restore_warnings(saved_warnings);
+         }
+      }
+
+      // Try this first, with its own catch handler.
       try {
          bool dontdoit = false;
 

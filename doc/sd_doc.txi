@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 39.59
-@set Time-stamp: Dec 19, 2023
+@set sd-version 39.60
+@set Time-stamp: Jan 12, 2024
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -42,7 +42,7 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-@noindent Copyright @copyright{} 1992-2023 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2024 William B. Ackerman and Stephen Gildea
 
 @noindent Permission is granted to make and distribute verbatim copies of this manual.
 
@@ -3990,16 +3990,6 @@ These are straightforward.
 @item 12 matrix phantom C/L
 These are done from a 3x4.  The setup is separated into
 parallel 3x2's, and the call is done in each of those setups.
-@item divided C/L/W
-These are done from a 2x8.  The setup is separated into
-end-to-end 2x4's, and the call is done in each of those setups.  They are equivalent
-to, and generally replaced by, @i{split phantom boxes}.
-If people are T-boned, you can use @code{standard} to permit the concept to be used.
-@item 12 matrix divided C/L/W
-These are similar to @i{divided C/L/W}, except that they are
-done from a 2x6.  The setup is separated into
-end-to-end 2x3's, and the call is done in each of those setups.  There is no
-@i{split phantom boxes} equivalent for these.
 @item twin phantom tidal C/L/W
 @item triple tidal C/L/W
 These are done from a 2x8 or 3x8, respectively, and form two or three parallel

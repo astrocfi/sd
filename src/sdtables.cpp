@@ -2051,6 +2051,9 @@ map::map_thing map::map_init_table[] = {
    {{5, 4,                 6, 7,                 0, 1,              3, 2},
     s1x2,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,1, warn__none,  s_alamo, 0x0CC, 0},
 
+   {{-1, -1, -1, -1,    6, 0, 7, 5,        -1, -1, -1, -1,  3, 1, 2, 4},
+    s_star,4,MPKIND__4_QUADRANTS_WITH_45_ROTATION,1, warn__none,  s_2stars, 0, 0x00000000},
+
    {{9, 11, 6, 8,       10, 12, 13, 15,    14, 0, 1, 3,     5, 7, 2, 4},
     s2x2,4,MPKIND__4_QUADRANTS,1, warn__none,  s4x4, 0x0CC, 0},
 
@@ -4734,6 +4737,8 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x2,     s_bone6,  0, 0, 1, 1,  0x8FA, schema_concentric},
    {s_qtag,         schema_concentric_2_6, {7, 3,    5, 6, 0, 1, 2, 4},
              s1x2,     s_short6, 0, 1, 1, 1,  0x8FD, schema_concentric},
+   {s_2stars,         schema_concentric_2_6, {7, 3,    5, 6, 0, 1, 2, 4},
+             s1x2,     s_short6, 0, 1, 1, 1,  0x9FD, schema_concentric},
    {s_343,          schema_concentric_2_6, {9, 4,    7, 8, 0, 2, 3, 5},
              s1x2,     s_short6, 0, 1, 1, 1,  0x9FD, schema_concentric},
    {s_hrglass,      schema_concentric_2_6, {7, 3,    5, 6, 0, 1, 2, 4},

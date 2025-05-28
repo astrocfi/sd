@@ -3242,7 +3242,7 @@ static int divide_the_setup(
             have_1x2 = assoc(b_1x2, ss, calldeflist, &specialpass);
             have_2x1 = assoc(b_2x1, ss, calldeflist, &specialpass);
             if (ss->cmd.cmd_assume.assumption != cr_none) specialpass = true;
-            if (have_1x2 || have_2x1) specialpass = true;
+            if (have_1x2 || have_2x1 || assoc(b_star, ss, calldeflist, &specialpass)) specialpass = true;
             if (livemask == 0x0F0F) finalrot++;   // The 8-way map can only take one occupation.
 
             // If the planets are auspicious, do a direct 8-way division.

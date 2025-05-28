@@ -6,7 +6,7 @@
 CC = g++
 
 # This gives any "-D" switches that we always need to send to the compiler.
-DEFS = -m64 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts
+DEFS = -m64 -Wall -Wno-switch -Wno-uninitialized -Wno-char-subscripts -Wno-narrowing
 
 # This gives the optimization and/or debug info.  These flags presumably
 # don't affect the semantics of the language and run-time environment, so you
@@ -69,9 +69,9 @@ SDLIB_OBJS = sdmain.o sdutil.o sdbasic.o sdinit.o \
              mapcachefile.o sdpick.o sdsi.o sdmatch.o common.o
 
 HFILES = sdui.h sd.h database.h paths.h mapcachefile.h sort.h \
-             deploy.h resource.h sdprint.h
+             deploy.h resource.h sdprint.h sdmatch.h sdchars.h
 
-MAKEFILES = makefile.linux32 makefile.linux64 \
+MAKEFILES = makefile.linux32 makefile.linux64 makefile.linuxnostatic32 makefile.linuxnostatic64 \
             makefile.cygnus makefile.cygwin makefile.djgpp \
             makefile.mingw makefile.mac makefile.solaris
 
@@ -107,7 +107,7 @@ sdui-ttu.o: sdui-ttu.cpp
 
 # Miscellaneous file dependencies.
 
-sd.h sdui.h: database.h
+sd.h sdui.h: database.h sdchars.h
 
 mkcalls.o sdmain.o sdsi.o: paths.h
 
@@ -117,7 +117,7 @@ sdinit.cpp: mapcachefile.h sort.h
 
 mapcachefile.cpp: mapcachefile.h
 
-$(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h database.h paths.h
+$(SDLIB_OBJS) $(SDTTY_OBJS): sdui.h sd.h sdchars.h database.h paths.h
 
 clean::
 	-$(RM) *.o sd sdtty mkcalls sd_calls.dat tags

@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2023  William B. Ackerman.
+//    Copyright (C) 1990-2024  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -55,7 +55,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "39.59"
+version "39.60"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -3048,6 +3048,11 @@ call "_centers arm turn @b / ends turn back" dontshow tag ctrarmturn_n4_utb
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    singleconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] uturnback []
 
+call "_fudge then centers arm turn @b / ends turn away" dontshow tag fudge_ctrarmturn_n4_utaway
+            neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
+   seq fudge_to_parallel_diamonds []
+   seq ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting]
+
 call "_centers arm turn @b / ends turn away" dontshow tag ctrarmturn_n4_utaway
             neednumber yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited
    singleconc armturn_n4 [inherit_yoyo inherit_fractal inherit_gensting] uturnaway []
@@ -3588,11 +3593,6 @@ call "turn the star @b, qual" dontshow tag turnstar2
    setup pmd 2x2 qualifier num 3 nice_diamonds
       array [0 CR2S 0 AL1S]
 
-call "_turn star @b and fudge@S" dontshow tag turnstarn_fudge
-            neednumber yoyo_fractal_numbers
-   seq turndmdn [or_secondary_call]
-   seq fudge_to_parallel_diamonds []
-
 call "turn the star @b" plus tag turnstarn
             dont_use_in_resolve is_star_call neednumber
    seq turnstar1 [repeat_n]
@@ -3701,7 +3701,7 @@ call "turn the star 2, interrupt after first with @0 and after second with @m" c
    their part of star turns that could otherwise lead to collisions in
    intermediate states. */
 call "turn the star @b, nobox" dontshow tag turndmdn
-            is_star_call neednumber 12_16_matrix_means_split
+            is_star_call neednumber 12_16_matrix_means_split fractional_numbers
             yoyo_is_inherited gen_sting_is_inherited yoyo_fractal_numbers dont_raise_overcast
    setup star star      qualifier num 0 none
       array [ZM0N 0 ZM2N 0]
@@ -3774,20 +3774,78 @@ call "turn the star @b, nobox" dontshow tag turndmdn
       array [CCR1E 0 AAL1W 0]
    setup pmd dmd        qualifier num 5 none
       array [0 CCR2E 0 AAL2W]
+
             alternate_definition [half] a2
-   setup star star      qualifier num 2 none
+   setup star star      qualifier num 2 none      // Turn 1/4
       array [CR1E 0 AL1W 0]
    setup dmd dmd rotate qualifier num 2 none
       array [CR0N 0 AL0S 0]
    setup pmd dmd rotate qualifier num 2 none
       array [0 CR1N 0 AL1S]
+
+   setup star star plus_eighth_rotation qualifier num 1 none   // Turn 1/8
+      array [CR3W 0 AL0S 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 1 none
+      array [CR3W 0 AL0S 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 1 none
+      array [0 CR0W 0 AL1S]
+
+   setup star star plus_eighth_rotation qualifier num 3 none   // Turn 3/8
+      array [CR0N 0 AL3E 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 3 none
+      array [CR0N 0 AL3E 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 3 none
+      array [0 CR1N 0 AL0E]
+
+   setup star star plus_eighth_rotation qualifier num 5 none   // Turn 5/8
+      array [CR1E 0 AL2N 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 5 none
+      array [CR1E 0 AL2N 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 5 none
+      array [0 CR2E 0 AL3N]
+
+   setup star star plus_eighth_rotation qualifier num 7 none   // Turn 7/8
+      array [CR2S 0 AL1W 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 7 none
+      array [CR2S 0 AL1W 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 7 none
+      array [0 CR3S 0 AL2W]
+
             alternate_definition [lasthalf] a2
-   setup star star      qualifier num 2 none
+   setup star star      qualifier num 2 none      // Turn 1/4
       array [CR1E 0 AL1W 0]
    setup dmd dmd rotate qualifier num 2 none
       array [CR0N 0 AL0S 0]
    setup pmd dmd rotate qualifier num 2 none
       array [0 CR1N 0 AL1S]
+
+   setup star star plus_eighth_rotation qualifier num 1 none   // Turn 1/8
+      array [CR3W 0 AL0S 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 1 none
+      array [CR3W 0 AL0S 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 1 none
+      array [0 CR0W 0 AL1S]
+
+   setup star star plus_eighth_rotation qualifier num 3 none   // Turn 3/8
+      array [CR0N 0 AL3E 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 3 none
+      array [CR0N 0 AL3E 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 3 none
+      array [0 CR1N 0 AL0E]
+
+   setup star star plus_eighth_rotation qualifier num 5 none   // Turn 5/8
+      array [CR1E 0 AL2N 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 5 none
+      array [CR1E 0 AL2N 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 5 none
+      array [0 CR2E 0 AL3N]
+
+   setup star star plus_eighth_rotation qualifier num 7 none   // Turn 7/8
+      array [CR2S 0 AL1W 0]
+   setup dmd star rotate plus_eighth_rotation qualifier num 7 none
+      array [CR2S 0 AL1W 0]
+   setup pmd star rotate plus_eighth_rotation qualifier num 7 none
+      array [0 CR3S 0 AL2W]
 
 /* This allows diamonds or stars only -- no boxes. */
 call "_turn the star @b / ends trade@S" dontshow tag turndmdn_endstrade
@@ -10341,7 +10399,8 @@ call "change the web" c4
    seq ctrsswing [inherit_yoyo inherit_gensting]
    seq ctr2castoff_n [insert_number 3]
    seq change_web_1 []
-   seq turnstarn_fudge [insert_number 5]
+   seq turndmdn [or_secondary_call insert_number 5]
+   seq fudge_to_parallel_diamonds []
    seq ctr2castoff_n [insert_number 3]
    seq change_web_3 []
 
@@ -10350,7 +10409,8 @@ call "@9-@9-@9-@9 change the web" c4
    seq ctrscastoff_n []
    seq ctr2castoff_n [shift_one_number]
    seq change_web_1 []
-   seq turnstarn_fudge [shift_two_numbers]
+   seq turndmdn [or_secondary_call shift_two_numbers]
+   seq fudge_to_parallel_diamonds []
    seq ctr2castoff_n [shift_three_numbers]
    seq change_web_3 []
 
@@ -18231,22 +18291,6 @@ call "@9 steps at a time" c3
    seq 2steps_part_2 []
    seq 2steps_part_3 []
             neednumber
-/* Don't coddle these
-   setup 4x2 2x4 restriction wave_only qualifier num 0 none
-      array [CR7W CR6W CR5W CR4W AL3E AL2E AL1E AL0E]
-   setup 4x2 3x4 rotate restriction wave_only qualifier num 3 none
-      array [CR5S AL0N AL10N AL9N CR6S CR4S CR3S AL11N]
-   setup 4x2 2x4 restriction wave_only qualifier num 4 none
-      array [AL3E AL2E AL1E AL0E CR7W CR6W CR5W CR4W]
-   setup 3x2 2x3 restriction wave_only qualifier num 0 none
-      array [CR5W CR4W CR3W AL2E AL1E AL0E]
-   setup 3x2 short6 restriction wave_only qualifier num 1 none
-      array [CR5W CR3W AL1E CR4W AL2E AL0E]
-   setup 3x2 bone6 rotate restriction wave_only qualifier num 2 none
-      array [CR2S AL0N AL4N CR3S CR1S AL5N]
-   setup 3x2 2x3 restriction wave_only qualifier num 3 none
-      array [AL2E AL1E AL0E CR5W CR4W CR3W]
-*/
    // Leave this is for ci03 -- wayward #1.
    setup 4x2 3x4 rotate restriction wave_only qualifier num 1 none
       array [CR7S CR5S CR2S AL10N CR4S AL1N AL11N AL8N]
@@ -24889,11 +24933,11 @@ call "fan chain the gears@S" c3 tag fan_chain_gears
             step_to_wave fractal_is_inherited gen_sting_is_inherited
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
    seq veryctr2trade [inherit_gensting]  // Of course, anyone who tried to apply generous/stingy here would lose.
-   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 3]
    seq veryctr2trade [inherit_gensting]
    // The final ends U-turn away, not toward the center.
    // Callerlab plus definitions, page 6.
-   seq ctrarmturn_n4_utaway [inherit_fractal inherit_gensting insert_number 3]
+   seq fudge_ctrarmturn_n4_utaway [inherit_fractal inherit_gensting insert_number 3]
 
 // Is this legal from a tidal wave?  Some people think so, based on their careful reading
 // of the Callerlab definition.  The Callerlab definition says that it starts in parallel
@@ -24909,11 +24953,11 @@ call "spin chain the gears@S" plus
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 3]
    seq veryctr2trade [inherit_gensting]
    // The final ends U-turn away, not toward the center.
    // Callerlab plus definitions, page 6
-   seq ctrarmturn_n4_utaway [inherit_fractal inherit_gensting insert_number 3]
+   seq fudge_ctrarmturn_n4_utaway [inherit_fractal inherit_gensting insert_number 3]
 
 call "spin chain the gears@S but @m" c1
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
@@ -24921,8 +24965,9 @@ call "spin chain the gears@S but @m" c1
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 3]
    seq veryctr2trade [inherit_gensting]
+   seq fudge_to_parallel_diamonds []
    seq ctr_but_utaway []
 
 call "@9-@9-@9-@9 spin chain the gears" c4
@@ -24931,9 +24976,9 @@ call "@9-@9-@9-@9 spin chain the gears" c4
    seq armturn_n4 [inherit_yoyo inherit_gensting inherit_fractal]
    seq ctrarmturn_n4_utb [shift_one_number]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal shift_two_numbers]
+   seq turndmdn [inherit_fractal or_secondary_call shift_two_numbers]
    seq veryctr2trade [inherit_gensting]
-   seq ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
+   seq fudge_ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
 
 call "swing chain the gears@S" c4
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
@@ -24941,9 +24986,9 @@ call "swing chain the gears@S" c4
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
    seq youall [inherit_fractal inherit_gensting]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal insert_number 1]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 1]
    seq veryctr2trade [inherit_gensting]
-   seq ctrarmturn_n4_utaway [inherit_yoyo inherit_gensting insert_number 1]
+   seq fudge_ctrarmturn_n4_utaway [inherit_yoyo inherit_gensting insert_number 1]
 
 call "swing chain the gears@S but @m" c4
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
@@ -24951,7 +24996,7 @@ call "swing chain the gears@S but @m" c4
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
    seq youall [inherit_fractal inherit_gensting]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal insert_number 1]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 1]
    seq veryctr2trade [inherit_gensting]
    seq ctr_but_utaway []
 
@@ -24959,7 +25004,8 @@ call "fan chain and exchange the gears@S" c3 tag fan_chain_exch_gears
             step_to_wave left_means_touch_or_check fractal_is_inherited gen_sting_is_inherited
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 3]
+   seq fudge_to_parallel_diamonds []
    seq exchdmd [insert_number 3]
    // Yeah, this gets the roll information wrong.  Tough.
    seq flipdiamond [force_intlk no_check_mod_level]
@@ -24976,9 +25022,9 @@ call "fan chain and circulate the gears@S" c4
             fractal_is_inherited gen_sting_is_inherited rectify_is_inherited
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
    seq lines_slip_thru [inherit_yoyo inherit_gensting inherit_rectify]
-   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 3]
    seq veryctr2trade [inherit_gensting]
-   seq ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
+   seq fudge_ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
    seq ends_circ [inherit_rectify]
 
 call "spin chain and circulate the gears@S" c4
@@ -24987,9 +25033,9 @@ call "spin chain and circulate the gears@S" c4
    seq tradencheckparwaves [inherit_yoyo inherit_gensting]
    seq checkparlinesnfanback [inherit_fractal inherit_gensting]
    seq lines_slip_thru [inherit_yoyo inherit_gensting inherit_rectify]
-   seq turnstarn_fudge [inherit_fractal insert_number 3]
+   seq turndmdn [inherit_fractal or_secondary_call insert_number 3]
    seq veryctr2trade [inherit_gensting]
-   seq ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
+   seq fudge_ctrarmturn_n4_utaway [inherit_gensting insert_number 3]
    seq ends_circ [inherit_rectify]
 
 call "@9-@9-@9-@9 spin chain and circulate the gears@S" c4
@@ -24999,9 +25045,9 @@ call "@9-@9-@9-@9 spin chain and circulate the gears@S" c4
    seq ctrarmturn_n4_utb [inherit_fractal inherit_gensting shift_one_number]
    seq ends_circ [inherit_rectify]
    seq veryctr2trade [inherit_gensting]
-   seq turnstarn_fudge [inherit_fractal shift_two_numbers]
+   seq turndmdn [inherit_fractal or_secondary_call shift_two_numbers]
    seq veryctr2trade [inherit_gensting]
-   seq ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
+   seq fudge_ctrarmturn_n4_utaway [inherit_yoyo inherit_fractal inherit_gensting shift_three_numbers]
    seq ends_circ [inherit_rectify]
 
 call "scoot back" mainstream tag scootback
@@ -28035,7 +28081,7 @@ call "counter" c2 tag counter
             nxn_is_inherited rectify_is_inherited
    conc ctrscounter [inherit_intlk inherit_cross inherit_nxn inherit_fractal inherit_gensting inherit_rectify]
         endscounter [inherit_left inherit_cross inherit_nxn inherit_fractal inherit_gensting
-                     conc_demand_columns conc_force_otherway endscando]
+                     conc_demand_columns conc_force_lines endscando]
 
 call "cross counter" c3a
             fudge_to_q_tag visible_fractions left_means_mirror

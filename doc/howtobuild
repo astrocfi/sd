@@ -155,7 +155,7 @@ BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
    mingw64 cleanup   // optional: remove .o files etc. after building
    mingw64 savesource    // This packs the "official" source distribution.
 
-DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, MKCALLS.EXE and DEPLOY.EXE!
+DO A VIRUS SCAN ON SD.EXE, SDTTY.EXE, SDLIB.DLL, and MKCALLS.EXE!
 
    // Test that Sd comes up.
 
