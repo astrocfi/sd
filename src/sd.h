@@ -377,6 +377,10 @@ enum concept_kind {
    concept_2x2,
    concept_1x3,
    concept_3x1,
+   concept_3x0,
+   concept_0x3,
+   concept_4x0,
+   concept_0x4,
    concept_3x3,
    concept_4x4,
    concept_5x5,
@@ -1598,8 +1602,11 @@ struct setup_command {
    parse_block **restrained_final;
    fraction_command restrained_fraction;
    uint32 restrained_super8flags;
-   bool restrained_do_as_couples;
    uint32 restrained_super9flags;
+   bool restrained_do_as_couples;
+   uint32 restrained_miscflags;
+   uint32 restrained_misc2flags;
+   uint32 extraspecialsuperduper_misc2flags;
    parse_block *skippable_concept;
    uint32 skippable_heritflags;
    uint32 cmd_heritflags_to_save_from_mxn_expansion;
@@ -3813,7 +3820,8 @@ enum {
    CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
    CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
    CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL,
-   CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x000001000UL
+   CMD_MISC3__IMPOSE_Z_CONCEPT     = 0x00001000UL,
+   CMD_MISC3__DONE_WITH_REST_SUPER = 0x00002000UL
 };
 
 enum normalize_action {
@@ -4508,14 +4516,6 @@ enum mpkind {
    MPKIND__OFFS_R_THRQ,
    MPKIND__OFFS_L_FULL,
    MPKIND__OFFS_R_FULL,
-   MPKIND__OFFS_L_ONEQ_SPECIAL,
-   MPKIND__OFFS_R_ONEQ_SPECIAL,
-   MPKIND__OFFS_L_HALF_SPECIAL,
-   MPKIND__OFFS_R_HALF_SPECIAL,
-   MPKIND__OFFS_L_THRQ_SPECIAL,
-   MPKIND__OFFS_R_THRQ_SPECIAL,
-   MPKIND__OFFS_L_FULL_SPECIAL,
-   MPKIND__OFFS_R_FULL_SPECIAL,
    MPKIND__OFFS_BOTH_FULL,
    MPKIND__OFFS_BOTH_SINGLEV,
    MPKIND__OFFS_BOTH_SINGLEH,
@@ -5236,13 +5236,19 @@ extern void remove_z_distortion(setup *ss) THROW_DECL;
 
 extern void remove_tgl_distortion(setup *ss) THROW_DECL;
 
+struct whuzzisthingy {
+   concept_kind k;
+   int rot;
+};
+
 extern void divided_setup_move(
    setup *ss,
    uint32 map_encoding,
    phantest_kind phancontrol,
    bool recompute_id,
    setup *result,
-   unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2) THROW_DECL;
+   unsigned int noexpand_bits_to_set = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2,
+   whuzzisthingy *thing = (whuzzisthingy *) 0) THROW_DECL;
 
 extern void overlapped_setup_move(
    setup *ss,

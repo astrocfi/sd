@@ -3125,6 +3125,7 @@ extern void concentric_move(
          begin_ptr->cmd.callspec = cmdptr->callspec;
          begin_ptr->cmd.cmd_final_flags = cmdptr->cmd_final_flags;
          begin_ptr->cmd.cmd_fraction = cmdptr->cmd_fraction;
+         begin_ptr->cmd.cmd_misc2_flags |= cmdptr->extraspecialsuperduper_misc2flags;
 
          // If doing something under a "3x1" (or "1x3") concentric schema,
          // put the "3x3" flag into the 6-person call, whichever call that is,
@@ -5018,35 +5019,6 @@ extern void selective_move(
       if (concept_table[k].concept_prop & CONCPROP__SET_PHANTOMS)
          indicator = selective_key_work_no_concentric;
 
-      // Check for special case of "<anyone> work tandem", and change it to
-      // "<anyone> are tandem".
-
-      /*
-      if ((k == concept_tandem || k == concept_frac_tandem) &&
-          kk->arg1 == 0 &&
-          kk->arg2 == 0 &&
-          (kk->arg3 & ~0xF0) == 0 &&
-          (kk->arg4 == tandem_key_cpls || kk->arg4 == tandem_key_cpls3 || kk->arg4 == tandem_key_cpls4 ||
-           kk->arg4 == tandem_key_tand || kk->arg4 == tandem_key_tand3 || kk->arg4 == tandem_key_tand4) &&
-          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
-                                                 INHERITFLAG_MXNMASK |
-                                                 INHERITFLAG_NXNMASK |
-                                                 INHERITFLAG_TWISTED) == 0) {
-         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-         ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
-         tandem_couples_move(ss, 
-                             parseptr->options.who,
-                             kk->arg3 >> 4,
-                             kkk->options.number_fields,
-                             0,
-                             (tandem_key) kk->arg4,
-                             0,
-                             false,
-                             result);
-         return;
-      }
-      else
-      */
       if ((k == concept_stable || k == concept_frac_stable) && kk->arg1 == 0) {
          ss->cmd.parseptr = cmd2thing.parseptr;  // Skip the concept.
          stable_move(ss,
@@ -5552,7 +5524,7 @@ extern void inner_selective_move(
                   goto do_concentric_ends;
             }
          }
-         else if (ss->kind == s_d3x4) {    /* **** BUG  what a crock -- fix this right. */
+         else if (ss->kind == sd3x4) {    /* **** BUG  what a crock -- fix this right. */
             if (bigend_llmask == 03535) {    // Spindle occupation.
                schema = schema_concentric_6_2;
                if (selector_to_use == selector_center6)

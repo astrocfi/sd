@@ -652,7 +652,7 @@ extern void update_id_bits(setup *ss)
       else if ((livemask & 03131UL) == 01111UL) ptr = id_bit_table_3x4_corners;
       else if (livemask == 07272UL || livemask == 06565UL) ptr = id_bit_table_3x4_zs;
       break;
-   case s_d3x4:
+   case sd3x4:
       if ((livemask & 01616UL) != 01616UL) ptr = (id_bit_table *) 0;
       break;
    case s4x4:
@@ -4789,6 +4789,14 @@ extern parse_block *process_final_concepts(
          heritsetbit = INHERITFLAGMXNK_1X3; break;
       case concept_3x1:
          heritsetbit = INHERITFLAGMXNK_3X1; break;
+      case concept_3x0:
+         heritsetbit = INHERITFLAGMXNK_3X0; break;
+      case concept_0x3:
+         heritsetbit = INHERITFLAGMXNK_0X3; break;
+      case concept_4x0:
+         heritsetbit = INHERITFLAGMXNK_4X0; break;
+      case concept_0x4:
+         heritsetbit = INHERITFLAGMXNK_0X4; break;
       case concept_2x2:
          heritsetbit = INHERITFLAGNXNK_2X2; break;
       case concept_3x3:
@@ -5792,8 +5800,11 @@ void toplevelmove() THROW_DECL
    starting_setup.cmd.cmd_heritflags_to_save_from_mxn_expansion = 0;
    starting_setup.cmd.restrained_concept = (parse_block *) 0;
    starting_setup.cmd.restrained_super8flags = 0;
-   starting_setup.cmd.restrained_do_as_couples = false;
    starting_setup.cmd.restrained_super9flags = 0;
+   starting_setup.cmd.restrained_do_as_couples = false;
+   starting_setup.cmd.restrained_miscflags = 0;
+   starting_setup.cmd.restrained_misc2flags = 0;
+   starting_setup.cmd.extraspecialsuperduper_misc2flags = 0;
    starting_setup.cmd.restrained_fraction.flags = 0;
    starting_setup.cmd.restrained_fraction.fraction = 0;
 

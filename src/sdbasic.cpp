@@ -834,6 +834,9 @@ static const veryshort ftqthbh[12] = {12, 13, 2, 3, 4, 5, 10, 11, 12, 13, 2, 3};
 
 static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
                                      10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
+
+static const veryshort ftrig12[12] = {9, 10, 11, -1, -1, -1, 3, 4, 5, -1, -1, -1,};
+
 static const veryshort ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13,
                                       0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
 static const veryshort ft2x42x6[8] = {1, 2, 3, 4, 7, 8, 9, 10};
@@ -910,7 +913,12 @@ static const veryshort h1x6translatev[15] = {
 static const veryshort h1x8translatev[20] = {
    0,  0,  0,  0,  0, 1, 3, 2,
    0,  0,  0,  0,  4, 5, 7, 6,
-   0,  0,  0, 0};
+   0,  0,  0,  0};
+
+static const veryshort hxwvdmdtranslate3012[20] = {
+   3,  3,  3,  3,  0,  0,  0,  0,
+   1,  1,  1,  1,  2,  2,  2,  2,
+   3,  3,  3,  3};
 
 static const veryshort hx1x6translatev[15] = {
    0,  6,  7,  0,  1,  0,
@@ -4697,7 +4705,7 @@ foobar:
 
    if (matrix_check_flag == 0 && !(ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)) {
       if (!(search_concepts_without_funny & INHERITFLAG_16_MATRIX) &&
-          ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == s_d3x4 ||
+          ((ss->kind == s2x6 || ss->kind == s3x4 || ss->kind == sd3x4 ||
             ss->kind == s1x12 || ss->kind == sdeepqtg) ||
            (((callspec->callflags1 & CFLAG1_SPLIT_LARGE_SETUPS) ||
              (ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX)) &&
@@ -5211,7 +5219,10 @@ foobar:
             else {
                if (result->kind == s4x4 && other_kind == s2x4) {
                   numoutl = attr::klimit(other_kind)+1;
-                  final_translatel = &ftc4x4[0];
+                  final_translatel = ftc4x4;
+               }
+               else if (result->kind == srigger12 && other_kind == s1x12) {
+                  final_translatel = ftrig12;
                }
                else if (result->kind == s4x4 && other_kind == s_qtag) {
                   numoutl = attr::klimit(other_kind)+1;
@@ -5550,30 +5561,50 @@ foobar:
                permuter = h1x6thartranslate;   // thar spots.
                result->kind = s_thar;
             }
-            /*
-            else if ((lilresult_mask[0] & 04141UL) == 0) {
-               permuter = hx1x6translatev;  // crosswave spots, vertical.
-               result->kind = s_crosswave;
-               rotator = 1;
-            }
-            else if ((lilresult_mask[0] & 01414UL) == 0) {
-               permuter = hx1x6translatev+3;  // crosswave spots, horizontal.
-               result->kind = s_crosswave;
-            }
-            */
             else
                fail("Call went to improperly-formed setup.");
             break;
          case sx1x8:
-            if ((lilresult_mask[0] & 0x0F0FUL) == 0) {
+            if (attr::slimit(ss) == 3) {
+               // This is for "1/2 ripoff".  We have to figure out how to orient the diamond spots,
+               // even in the presence of T-bones and various things that are not locally symmetric.
+               // Anyone deep in the center (that would be a trailing beau, they walk directly into
+               // the center) defines it, as long as no one else is inconsistent with that.
+               // Anyone far to the outside (that would be a lead beau, they always take the
+               // outside track) defines it, as long as no one else is inconsistent with that.
+               // The people we aren't sure about are the lead belles, doing the 1/2 zoom.  They
+               // will sometimes be in close, and sometimes out.  They have to take their cues from
+               // the other people.  Similarly for the trailing belles.  They slide over and may be
+               // facing directly in the center, or may be far apart, depending on what the others do.
+               if ((lilresult_mask[0] & ~0x7F78UL) == 0 ||  // Anyone deep inside, with no one else conflicting
+                   (lilresult_mask[0] & ~0x787FUL) == 0 ||
+                   (lilresult_mask[0] & ~0xFE1EUL) == 0 ||  // Anyone far outside
+                   (lilresult_mask[0] & ~0x1EFEUL) == 0 ||
+                   (lilresult_mask[0] & ~0x3C3CUL) == 0) {  // Generally inside and outside
+                  permuter = hxwvdmdtranslate3012;
+                  result->kind = sdmd;
+                  rotator = 1;
+               }
+               else if ((lilresult_mask[0] & ~0xF787UL) == 0 ||  // Anyone deep inside, with no one else conflicting
+                        (lilresult_mask[0] & ~0x87F7UL) == 0 ||
+                        (lilresult_mask[0] & ~0xE1EFUL) == 0 ||  // Anyone far outside
+                        (lilresult_mask[0] & ~0xEFE1UL) == 0 ||
+                        (lilresult_mask[0] & ~0xC3C3UL) == 0) {  // Generally inside and outside
+                  permuter = hxwvdmdtranslate3012+4;
+                  result->kind = sdmd;
+               }
+               else
+                  fail("Call went to improperly-formed setup.");
+            }
+            else if ((lilresult_mask[0] & 0x0F0FUL) == 0) {
                warn(warn__4_circ_tracks);
-               permuter = h1x8translatev;    // 1x8 spots, horizontal.
+               permuter = h1x8translatev;    // 1x8 spots, vertical.
                result->kind = s1x8;
                rotator = 1;
             }
             else if ((lilresult_mask[0] & 0xF0F0UL) == 0) {
                warn(warn__4_circ_tracks);
-               permuter = h1x8translatev+4;  // 1x8 spots, vertical.
+               permuter = h1x8translatev+4;  // 1x8 spots, horizontal.
                result->kind = s1x8;
             }
             else if ((lilresult_mask[0] & 0x9999UL) == 0) {

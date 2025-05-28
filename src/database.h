@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 288
+#define DATABASE_FORMAT_VERSION 292
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -113,44 +113,50 @@ enum heritflags {
    INHERITFLAG_FAST       = 0x00040000UL,
    INHERITFLAG_REWIND     = 0x00080000UL,
 
-   // This is a 3 bit field.
-   INHERITFLAG_MXNMASK    = 0x00700000UL,
+   // This is a 4 bit field.
+   INHERITFLAG_MXNMASK    = 0x00F00000UL,
    // This is its low bit.
    INHERITFLAG_MXNBIT     = 0x00100000UL,
 
-   // These 4 things are the choices available inside.
+   // These 8 things are some of the 15 choices available inside.
    INHERITFLAGMXNK_1X2    = 0x00100000UL,
    INHERITFLAGMXNK_2X1    = 0x00200000UL,
    INHERITFLAGMXNK_1X3    = 0x00300000UL,
    INHERITFLAGMXNK_3X1    = 0x00400000UL,
+   INHERITFLAGMXNK_0X3    = 0x00500000UL,
+   INHERITFLAGMXNK_3X0    = 0x00600000UL,
+   INHERITFLAGMXNK_0X4    = 0x00700000UL,
+   INHERITFLAGMXNK_4X0    = 0x00800000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_NXNMASK    = 0x03800000UL,
+   INHERITFLAG_NXNMASK    = 0x07000000UL,
    // This is its low bit.
-   INHERITFLAG_NXNBIT     = 0x00800000UL,
+   INHERITFLAG_NXNBIT     = 0x01000000UL,
 
    // These 7 things are the choices available inside.
-   INHERITFLAGNXNK_2X2    = 0x00800000UL,
-   INHERITFLAGNXNK_3X3    = 0x01000000UL,
-   INHERITFLAGNXNK_4X4    = 0x01800000UL,
-   INHERITFLAGNXNK_5X5    = 0x02000000UL,
-   INHERITFLAGNXNK_6X6    = 0x02800000UL,
-   INHERITFLAGNXNK_7X7    = 0x03000000UL,
-   INHERITFLAGNXNK_8X8    = 0x03800000UL,
+   INHERITFLAGNXNK_2X2    = 0x01000000UL,
+   INHERITFLAGNXNK_3X3    = 0x02000000UL,
+   INHERITFLAGNXNK_4X4    = 0x03000000UL,
+   INHERITFLAGNXNK_5X5    = 0x04000000UL,
+   INHERITFLAGNXNK_6X6    = 0x05000000UL,
+   INHERITFLAGNXNK_7X7    = 0x06000000UL,
+   INHERITFLAGNXNK_8X8    = 0x07000000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_REVERTMASK = 0x1C000000UL,
+   INHERITFLAG_REVERTMASK = 0x38000000UL,
    // This is its low bit.
-   INHERITFLAG_REVERTBIT  = 0x04000000UL,
+   INHERITFLAG_REVERTBIT  = 0x08000000UL,
 
    // These 7 things are the choices available inside.
-   INHERITFLAGRVRTK_REVERT= 0x04000000UL,
-   INHERITFLAGRVRTK_REFLECT=0x08000000UL,
-   INHERITFLAGRVRTK_RVF   = 0x0C000000UL,
-   INHERITFLAGRVRTK_RFV   = 0x10000000UL,
-   INHERITFLAGRVRTK_RVFV  = 0x14000000UL,
-   INHERITFLAGRVRTK_RFVF  = 0x18000000UL,
-   INHERITFLAGRVRTK_RFF   = 0x1C000000UL
+   INHERITFLAGRVRTK_REVERT= 0x08000000UL,
+   INHERITFLAGRVRTK_REFLECT=0x10000000UL,
+   INHERITFLAGRVRTK_RVF   = 0x18000000UL,
+   INHERITFLAGRVRTK_RFV   = 0x20000000UL,
+   INHERITFLAGRVRTK_RVFV  = 0x28000000UL,
+   INHERITFLAGRVRTK_RFVF  = 0x30000000UL,
+   INHERITFLAGRVRTK_RFF   = 0x38000000UL
+
+   // Two bits remain.
 };
 
 
@@ -363,7 +369,8 @@ enum setup_kind {
    s2x7,
    sd2x7,
    s2x9,
-   s_d3x4,
+   sd3x4,
+   sd4x5,
    s1p5x8,   // internal use only
    s1p5x4,   // internal use only
    s2x8,
@@ -411,6 +418,7 @@ enum setup_kind {
    sdeepqtg,
    sdeepbigqtg,
    swiderigger,
+   srigger12,
    sdeepxwv,
    s3oqtg,
    s_thar,
@@ -545,6 +553,8 @@ enum begin_kind {
    b_9x2,
    b_d3x4,
    b_d4x3,
+   b_d4x5,
+   b_d5x4,
    b_2x8,
    b_8x2,
    b_4x4,
@@ -576,6 +586,8 @@ enum begin_kind {
    b_pdeepbigqtg,
    b_widerigger,
    b_pwiderigger,
+   b_rigger12,
+   b_prigger12,
    b_deepxwv,
    b_pdeepxwv,
    b_3oqtg,

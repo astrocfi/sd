@@ -365,7 +365,7 @@ static const resolve_tester test_4x4_stuff[] = {
    {resolve_la,             MS, 5,   {1, 14, 3, 8, 9, 6, 11, 0},   0x13113133},
    {resolve_la,             MS, 7,   {7, 4, 2, 13, 15, 12, 10, 5}, 0x31331311},
 
-   // From stairsteps.
+   // From stairstep lines.
    {resolve_rlg,            MS, 3,   {7, 2, 14, 0, 15, 10, 6, 8},  0x8A8AA8A8},
    {resolve_rlg,            MS, 3,   {5, 4, 3, 1, 13, 12, 11, 9},  0x8A8AA8A8},
    {resolve_rlg,            MS, 1,   {1, 0, 15, 13, 9, 8, 7, 5},   0x31311313},
@@ -374,6 +374,14 @@ static const resolve_tester test_4x4_stuff[] = {
    {resolve_la,             MS, 6,   {5, 1, 3, 12, 13, 9, 11, 4},  0xA8AA8A88},
    {resolve_la,             MS, 4,   {1, 13, 15, 8, 9, 5, 7, 0},   0x13113133},
    {resolve_la,             MS, 0,   {11, 4, 2, 14, 3, 12, 10, 6}, 0x31331311},
+   {resolve_prom,           MS, 7,   {7, 2, 14, 0, 15, 10, 6, 8},  0x8888AAAA},
+   {resolve_prom,           MS, 7,   {5, 4, 3, 1, 13, 12, 11, 9},  0x8888AAAA},
+   {resolve_prom,           MS, 5,   {1, 0, 15, 13, 9, 8, 7, 5},   0x33331111},
+   {resolve_prom,           MS, 1,   {11, 6, 2, 4, 3, 14, 10, 12}, 0x11113333},
+   {resolve_revprom,        MS, 7,   {2, 7, 0, 14, 10, 15, 8, 6},  0xAAAA8888},
+   {resolve_revprom,        MS, 7,   {4, 5, 1, 3, 12, 13, 9, 11},  0xAAAA8888},
+   {resolve_revprom,        MS, 5,   {0, 1, 13, 15, 8, 9, 5, 7},   0x11113333},
+   {resolve_revprom,        MS, 1,   {6, 11, 4, 2, 14, 3, 12, 10}, 0x33331111},
 
    // From blocks.
    {resolve_rlg,            MS, 3,   {5, 2, 3, 0, 13, 10, 11, 8},  0x8A8AA8A8},
@@ -491,11 +499,16 @@ static const resolve_tester test_2x8_stuff[] = {
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_3x4_stuff[] = {
-   // From offset waves.
+   // From offset lines.
    {resolve_rlg,            MS, 3,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8A8AA8A8},
    {resolve_rlg,            MS, 3,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8A8AA8A8},
    {resolve_la,             MS, 6,   {7, 4, 5, 0, 1, 10, 11, 6},   0xA8AA8A88},
    {resolve_la,             MS, 6,   {5, 3, 2, 10, 11, 9, 8, 4},   0xA8AA8A88},
+   {resolve_prom,           MS, 7,   {7, 6, 5, 4, 1, 0, 11, 10},   0x8888AAAA},
+   {resolve_prom,           MS, 7,   {5, 4, 2, 3, 11, 10, 8, 9},   0x8888AAAA},
+   {resolve_revprom,        MS, 7,   {6, 7, 4, 5, 0, 1, 10, 11},   0xAAAA8888},
+   {resolve_revprom,        MS, 7,   {4, 5, 3, 2, 10, 11, 9, 8},   0xAAAA8888},
+
    // From sort of skewed offset 8-chain.
    // It may have been a mistake to write these.
    //   {resolve_rlg,       MS, 2,   {6, 4, 11, 1, 0, 10, 5, 7},   0x8A8AA8A8},

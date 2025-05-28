@@ -234,6 +234,21 @@ static const expand::thing exp53  = {{0, 1, 3, 5, 6, 7, 9, 11},  s2x4, s2x6, 0, 
 static const expand::thing exp3u  = {{1, 3, 4, 5, 6, 7, 8, 10},  s2x4, s2x6, 0, 0, 02772};
 static const expand::thing exp3d  = {{0, 1, 2, 4, 7, 9, 10, 11}, s2x4, s2x6, 0, 0, 07227};
 
+
+static const expand::thing exp70 = {{3, 4, 5, 9, 10, 11}, s2x3, s2x6, 0, 0, 07070};
+static const expand::thing exp07 = {{0, 1, 2, 6, 7, 8}, s2x3, s2x6, 0, 0, 00707};
+
+
+
+static const expand::thing expxF0 = {{4, 5, 6, 7, 12, 13, 14, 15}, s2x4, s2x8, 0, 0, 0xF0F0};
+static const expand::thing expx0F = {{0, 1, 2, 3, 8, 9, 10, 11}, s2x4, s2x8, 0, 0, 0x0F0F};
+static const expand::thing expxAA = {{1, 3, 5, 7, 9, 11, 13, 15}, s2x4, s2x8, 0, 0, 0xAAAA};
+static const expand::thing expx55 = {{0, 2, 4, 6, 8, 10, 12, 14}, s2x4, s2x8, 0, 0, 0x5555};
+static const expand::thing exp4x4x71 = {{12, 13, 14, 0, 4, 5, 6, 8}, s2x4, s4x4, 0, 0, 0x7171};
+static const expand::thing exp4x4x8E = {{10, 15, 3, 1, 2, 7, 11, 9}, s2x4, s4x4, 0, 0, 0x8E8E};
+static const expand::thing exp4x4x17 = {{8, 9, 10, 12, 0, 1, 2, 4}, s2x4, s4x4, 1, 0, 0x1717};
+static const expand::thing exp4x4xE8 = {{6, 11, 15, 13, 14, 3, 7, 5}, s2x4, s4x4, 1, 0, 0xE8E8};
+
 static const expand::thing exp12m = {{9, 10, 1, 3, 4, 7},        s_2x1dmd, s3dmd, 0, 0, 03232};
 static const expand::thing exp21m = {{8, 11, 0, 2, 5, 6},        s2x3, s3dmd, 1, 0, 04545};
 
@@ -246,6 +261,10 @@ static const expand::thing exp15  = {{0, 2, 3, 6, 8, 9},         s2x3, s2x6, 0, 
 static const expand::thing exp31  = {{0, 3, 4, 6, 9, 10},        s2x3, s2x6, 0, 0, 03131};
 static const expand::thing exp13  = {{0, 1, 3, 6, 7, 9},         s2x3, s2x6, 0, 0, 01313};
 
+static const expand::thing expb31 = {{9, 10, 0, 3, 4, 6},        s2x3, s3x4, 1, 0, 03131};
+static const expand::thing expb46 = {{8, 11, 1, 2, 5, 7},        s2x3, s3x4, 1, 0, 04646};
+
+
 static const expand::thing expl52 = {{1, 3, 5, 7, 9, 11},        s1x6, s1x12, 0, 0, 05252};
 static const expand::thing expl25 = {{0, 2, 4, 6, 8, 10},        s1x6, s1x12, 0, 0, 02525};
 static const expand::thing expg72 = {{1, 3, 5, 4, 7, 9, 11, 10}, s1x8, s1x12, 0, 0, 07272};
@@ -253,10 +272,19 @@ static const expand::thing expg27 = {{0, 1, 4, 2, 6, 7, 10, 8},  s1x8, s1x12, 0,
 static const expand::thing expg56 = {{1, 2, 5, 3, 7, 8, 11, 9},  s1x8, s1x12, 0, 0, 05656};
 static const expand::thing expg35 = {{0, 2, 4, 3, 6, 8, 10, 9},  s1x8, s1x12, 0, 0, 03535};
 
-static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, s_spindle, s_d3x4, 0, 0, 05656};
-static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8},
-                                     s3dmd, s_d3x4, 1};
-static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, s_323, s_d3x4, 1, 0, 06565};
+static const expand::thing exprig12a = {{9, 10, 11, 1, 3, 4, 5, 7}, s1x3dmd, srigger12, 0, 0, 07272};
+static const expand::thing exprig12b = {{0, 1, 2, 4, 6, 7, 8, 10}, s_spindle, srigger12, 0, 0, 02727};
+
+static const expand::thing expsp3 = {{1, 2, 3, 5, 7, 8, 9, 11}, s_spindle, sd3x4, 0, 0, 05656};
+static const expand::thing expd34s6 = {{9, 11, 1, 3, 5, 7}, s_short6, sd3x4, 1, 0, 05252};
+static const expand::thing expd3423 = {{0, 2, 4, 6, 8, 10}, s2x3, sd3x4, 0, 0, 02525};
+static const expand::thing exp3d3 = {{10, 11, 0, -1, -1, 2, 4, 5, 6, -1, -1, 8}, s3dmd, sd3x4, 1};
+static const expand::thing exp323 = {{10, 11, 0, 2, 4, 5, 6, 8}, s_323, sd3x4, 1, 0, 06565};
+static const expand::thing exp303 = {{10, 11, 0, 4, 5, 6}, s2x3, sd3x4, 1, 0, 06161};
+static const expand::thing exp030 = {{1, 2, 3, 7, 8, 9}, s2x3, sd3x4, 0, 0, 01616};
+static const expand::thing exp4141 = {{17, 18, 11, 0, 5, 6, 23, 12}, s2x4, s4x6, 1, 0, 041414141};
+
+
 
 static const expand::thing expb51 = {{0, 3, 5, 6, 9, 11},        s_bone6, s3x4, 0, 0, 05151};
 static const expand::thing expb26 = {{8, 10, 1, 2, 4, 7},        s_short6, s3x4, 1, 0, 02626};
@@ -278,6 +306,15 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       &exp56, &exp65, &exp35, &exp53,
       &exp46, &exp64, &exp54, &exp45,
       &exp51, &exp15, &exp31, &exp13,
+      &exp70, &exp07,
+      (const expand::thing *) 0};
+
+   static const expand::thing *unwind_2x8_table[] = {
+      &expx0F, &expxF0, &expx55, &expxAA,
+      (const expand::thing *) 0};
+
+   static const expand::thing *unwind_4x4_table[] = {
+      &exp4x4x71, &exp4x4x8E, &exp4x4x17, &exp4x4xE8,
       (const expand::thing *) 0};
 
    static const expand::thing *unwind_3dmd_table[] = {
@@ -285,7 +322,7 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       (const expand::thing *) 0};
 
    static const expand::thing *unwind_3x4_table[] = {
-      &s_qtg_3x4, &expb51, &expb26,
+      &s_qtg_3x4, &expb51, &expb26, &expb31, &expb46,
       (const expand::thing *) 0};
 
    static const expand::thing *unwind_1x6_table[] = {
@@ -293,16 +330,31 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
       (const expand::thing *) 0};
 
    static const expand::thing *unwind_d3x4_table[] = {
-      &exp323, &expsp3,
+      &exp323, &exp303, &expsp3, &expd34s6, &expd3423, &exp030,
       (const expand::thing *) 0};
 
    static const expand::thing *unwind_1x12_table[] = {
       &expl52, &expl25, &expg72, &expg27, &expg56, &expg35,
       (const expand::thing *) 0};
 
+   static const expand::thing *unwind_rigger12_table[] = {
+      &exprig12a, &exprig12b,
+      (const expand::thing *) 0};
+
+   static const expand::thing *unwind_4x6_table[] = {
+      &exp4141,
+      (const expand::thing *) 0};
+
+
    const expand::thing **p = (const expand::thing **) 0;
 
    switch (ss->kind) {
+   case s2x8:
+      p = unwind_2x8_table;
+      break;
+   case s4x4:
+      p = unwind_4x4_table;
+      break;
    case s2x6:
       p = unwind_2x6_table;
       break;
@@ -315,28 +367,44 @@ extern void remove_mxn_spreading(setup *ss) THROW_DECL
    case s1x6:
       p = unwind_1x6_table;
       break;
-   case s_d3x4:
+   case sd3x4:
       p = unwind_d3x4_table;
       break;
    case s1x12:
       p = unwind_1x12_table;
       break;
+   case srigger12:
+      p = unwind_rigger12_table;
+      break;
+   case s4x6:
+      p = unwind_4x6_table;
+      break;
    }
+
+   const expand::thing *final = (const expand::thing *) 0;
 
    if (p) {
       for ( ; *p ; p++) {
-         const expand::thing *final = *p;
-
-         if (livemasklittle == final->biglivemask) {
-            expand::compress_setup(*final, ss);
-
-            if (final == &expg72)
-               ss->result_flags.misc |= RESULTFLAG__VERY_ENDS_ODD;
-            else if (final == &expg27)
-               ss->result_flags.misc |= RESULTFLAG__VERY_CTRS_ODD;
-
+         if (livemasklittle == (*p)->biglivemask) {
+            // Exact match, accept it immediately.  We know it's unambiguous.
+            final = *p;
             break;
          }
+         else if ((livemasklittle & ~(*p)->biglivemask) == 0) {
+            if (final) return;    // Ambiguous.
+            final = *p;
+         }
+      }
+
+      if (final) {
+         expand::compress_setup(*final, ss);
+
+         if (final == &expg72)
+            ss->result_flags.misc |= RESULTFLAG__VERY_ENDS_ODD;
+         else if (final == &expg27)
+            ss->result_flags.misc |= RESULTFLAG__VERY_CTRS_ODD;
+
+         ss->result_flags.misc &= ~RESULTFLAG__DID_MXN_EXPANSION;
       }
    }
 }
@@ -346,111 +414,147 @@ extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_D
 {
    struct Nx1_checker {
       uint32 directions;
+      bool unsymm;
       const expand::thing *action_if_Nx1;
       const expand::thing *action_if_1xN;
    };
 
    static const Nx1_checker Nx1_checktable_2x4[] = {
-      {0x2A80, &exp72, &exp72},  // These are independent of whether we said "1x3" or "3x1".
-      {0x802A, &exp72, &exp72},
-      {0x7FD5, &exp72, &exp72},
-      {0xD57F, &exp72, &exp72},
-      {0xA802, &exp27, &exp27},
-      {0x02A8, &exp27, &exp27},
-      {0xFD57, &exp27, &exp27},
-      {0x57FD, &exp27, &exp27},
-      {0x208A, &exp56, &exp56},
-      {0x8A20, &exp56, &exp56},
-      {0x75DF, &exp56, &exp56},
-      {0xDF75, &exp56, &exp56},
-      {0xA208, &exp35, &exp35},
-      {0x08A2, &exp35, &exp35},
-      {0xF75D, &exp35, &exp35},
-      {0x5DF7, &exp35, &exp35},
-      {0x2AA8, &exp3u, &exp3u},  // These 8 are unsymmetrical.
-      {0x8002, &exp3u, &exp3u},
-      {0x7FFD, &exp3u, &exp3u},
-      {0xD557, &exp3u, &exp3u},
-      {0xA82A, &exp3d, &exp3d},
-      {0x0280, &exp3d, &exp3d},
-      {0xFD7F, &exp3d, &exp3d},
-      {0x57D5, &exp3d, &exp3d},
-      {0x55FF, &exp72, &exp27},  // These are specific to "1x3" or "3x1".
-      {0x00AA, &exp72, &exp27},
-      {0xFF55, &exp27, &exp72},
-      {0xAA00, &exp27, &exp72},
+      {0x2A80, false, &exp72, &exp72},  // These are independent of whether we said "1x3" or "3x1".
+      {0x6AC0, false, &exp72, &exp72},
+      {0xEA40, false, &exp72, &exp72},
+      // Then swap
+      {0x802A, false, &exp72, &exp72},
+      {0xC06A, false, &exp72, &exp72},
+      {0x40EA, false, &exp72, &exp72},
+
+      {0x7FD5, false, &exp72, &exp72},
+      {0x3F95, false, &exp72, &exp72},
+      {0xBF15, false, &exp72, &exp72},
+      // Then swap
+      {0xD57F, false, &exp72, &exp72},
+      {0x953F, false, &exp72, &exp72},
+      {0x15BF, false, &exp72, &exp72},
+
+      {0xA802, false, &exp27, &exp27},
+      {0xA903, false, &exp27, &exp27},
+      {0xAB01, false, &exp27, &exp27},
+      // Then swap
+      {0x02A8, false, &exp27, &exp27},
+      {0x03A9, false, &exp27, &exp27},
+      {0x01AB, false, &exp27, &exp27},
+
+      {0xFD57, false, &exp27, &exp27},
+      {0xFC56, false, &exp27, &exp27},
+      {0xFE54, false, &exp27, &exp27},
+      // Then swap
+      {0x57FD, false, &exp27, &exp27},
+      {0x56FC, false, &exp27, &exp27},
+      {0x54FE, false, &exp27, &exp27},
+
+      {0x208A, false, &exp56, &exp56},
+      {0x8A20, false, &exp56, &exp56},
+      {0x75DF, false, &exp56, &exp56},
+      {0xDF75, false, &exp56, &exp56},
+      {0xA208, false, &exp35, &exp35},
+      {0x08A2, false, &exp35, &exp35},
+      {0xF75D, false, &exp35, &exp35},
+      {0x5DF7, false, &exp35, &exp35},
+      {0x2AA8, true,  &exp3u, &exp3u},  // These 8 are unsymmetrical.
+      {0x8002, true,  &exp3u, &exp3u},
+      {0x7FFD, true,  &exp3u, &exp3u},
+      {0xD557, true,  &exp3u, &exp3u},
+      {0xA82A, true,  &exp3d, &exp3d},
+      {0x0280, true,  &exp3d, &exp3d},
+      {0xFD7F, true,  &exp3d, &exp3d},
+      {0x57D5, true,  &exp3d, &exp3d},
+      {0x55FF, false, &exp72, &exp27},  // These are specific to "1x3" or "3x1".
+      {0x00AA, false, &exp72, &exp27},
+      {0xFF55, false, &exp27, &exp72},
+      {0xAA00, false, &exp27, &exp72},
+      {0}};
+
+   static const Nx1_checker Nx0_checktable_2x3[] = {
+      {02577, false, &exp70, &exp07},
+      {00052, false, &exp70, &exp07},
+      {07725, false, &exp07, &exp70},
+      {05200, false, &exp07, &exp70},
+      {0}};
+
+   static const Nx1_checker Nx0_checktable_2x4[] = {
+      {0x55FF, false, &expxF0, &expx0F},
+      {0x00AA, false, &expxF0, &expx0F},
+      {0xFF55, false, &expx0F, &expxF0},
+      {0xAA00, false, &expx0F, &expxF0},
       {0}};
 
    static const Nx1_checker Nx1_checktable_1x8[] = {
-      {0x2A80, &expg72, &expg72},  // These are independent of whether we said "1x3" or "3x1".
-      {0x802A, &expg72, &expg72},
-      {0x7FD5, &expg72, &expg72},
-      {0xD57F, &expg72, &expg72},
-      {0xA208, &expg27, &expg27},
-      {0x08A2, &expg27, &expg27},
-      {0xF75D, &expg27, &expg27},
-      {0x5DF7, &expg27, &expg27},
-      {0x208A, &expg56, &expg56},
-      {0x8A20, &expg56, &expg56},
-      {0x75DF, &expg56, &expg56},
-      {0xDF75, &expg56, &expg56},
-      {0xA802, &expg35, &expg35},
-      {0x02A8, &expg35, &expg35},
-      {0xFD57, &expg35, &expg35},
-      {0x57FD, &expg35, &expg35},
-      {0x55FF, &expg72, &expg27},  // These are specific to "1x3" or "3x1".
-      {0x00AA, &expg72, &expg27},
-      {0xFF55, &expg27, &expg72},
-      {0xAA00, &expg27, &expg72},
+      {0x2A80, false, &expg72, &expg72},  // These are independent of whether we said "1x3" or "3x1".
+      {0x802A, false, &expg72, &expg72},
+      {0x7FD5, false, &expg72, &expg72},
+      {0xD57F, false, &expg72, &expg72},
+      {0xA208, false, &expg27, &expg27},
+      {0x08A2, false, &expg27, &expg27},
+      {0xF75D, false, &expg27, &expg27},
+      {0x5DF7, false, &expg27, &expg27},
+      {0x208A, false, &expg56, &expg56},
+      {0x8A20, false, &expg56, &expg56},
+      {0x75DF, false, &expg56, &expg56},
+      {0xDF75, false, &expg56, &expg56},
+      {0xA802, false, &expg35, &expg35},
+      {0x02A8, false, &expg35, &expg35},
+      {0xFD57, false, &expg35, &expg35},
+      {0x57FD, false, &expg35, &expg35},
+      {0x55FF, false, &expg72, &expg27},  // These are specific to "1x3" or "3x1".
+      {0x00AA, false, &expg72, &expg27},
+      {0xFF55, false, &expg27, &expg72},
+      {0xAA00, false, &expg27, &expg72},
       {0}};
 
    static const Nx1_checker Nx1_checktable_2x3[] = {
-      {01240, &exp52, &exp52},  // These are independent of whether we said "1x2" or "2x1".
-      {04012, &exp52, &exp52},
-      {03765, &exp52, &exp52},
-      {06537, &exp52, &exp52},
-      {05002, &exp25, &exp25},
-      {00250, &exp25, &exp25},
-      {07527, &exp25, &exp25},
-      {02775, &exp25, &exp25},
-      {02577, &exp52, &exp25},  // These are specific to "1x2" or "2x1".
-      {00052, &exp52, &exp25},
-      {07725, &exp25, &exp52},
-      {05200, &exp25, &exp52},
+      {01240, false, &exp52, &exp52},  // These are independent of whether we said "1x2" or "2x1".
+      {04012, false, &exp52, &exp52},
+      {03765, false, &exp52, &exp52},
+      {06537, false, &exp52, &exp52},
+      {05002, false, &exp25, &exp25},
+      {00250, false, &exp25, &exp25},
+      {07527, false, &exp25, &exp25},
+      {02775, false, &exp25, &exp25},
+      {02577, false, &exp52, &exp25},  // These are specific to "1x2" or "2x1".
+      {00052, false, &exp52, &exp25},
+      {07725, false, &exp25, &exp52},
+      {05200, false, &exp25, &exp52},
       {0}};
 
    static const Nx1_checker Nx1_checktable_1x6[] = {
-      {01240, &expl52, &expl52},  // These are independent of whether we said "1x2" or "2x1".
-      {04012, &expl52, &expl52},
-      {03765, &expl52, &expl52},
-      {06537, &expl52, &expl52},
-      {05002, &expl25, &expl25},
-      {00250, &expl25, &expl25},
-      {07527, &expl25, &expl25},
-      {02775, &expl25, &expl25},
-      {02577, &expl52, &expl25},  // These are specific to "1x2" or "2x1".
-      {00052, &expl52, &expl25},
-      {07725, &expl25, &expl52},
-      {05200, &expl25, &expl52},
+      {01240, false, &expl52, &expl52},  // These are independent of whether we said "1x2" or "2x1".
+      {04012, false, &expl52, &expl52},
+      {03765, false, &expl52, &expl52},
+      {06537, false, &expl52, &expl52},
+      {05002, false, &expl25, &expl25},
+      {00250, false, &expl25, &expl25},
+      {07527, false, &expl25, &expl25},
+      {02775, false, &expl25, &expl25},
+      {02577, false, &expl52, &expl25},  // These are specific to "1x2" or "2x1".
+      {00052, false, &expl52, &expl25},
+      {07725, false, &expl25, &expl52},
+      {05200, false, &expl25, &expl52},
       {0}};
 
    uint32 directions;
    uint32 dblbitlivemask;
    const Nx1_checker *getin_search;
+   uint32 full_occupation = (uint32) ((1 << ((attr::klimit(ss->kind)+1) << 1)) - 1);
 
    big_endian_get_directions(ss, directions, dblbitlivemask);
 
    if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X3) {
       if (ss->kind == s2x4) {
-         // ***** Want to get rid of this test, so can handle phantoms.
-         // But that doesn't work.
-         if (dblbitlivemask != 0xFFFF) return false;
          getin_search = Nx1_checktable_2x4;
          goto do_Nx1_search;
       }
       else if (ss->kind == s1x8) {
-         if (dblbitlivemask != 0xFFFF) return false;
          getin_search = Nx1_checktable_1x8;
          goto do_Nx1_search;
       }
@@ -487,18 +591,14 @@ extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_D
    else if (heritflags_to_check == INHERITFLAGMXNK_2X1 ||
             heritflags_to_check == INHERITFLAGMXNK_1X2) {
       if (ss->kind == s2x3) {
-         if (dblbitlivemask != 0xFFF) return false;
          getin_search = Nx1_checktable_2x3;
          goto do_Nx1_search;
       }
       else if (ss->kind == s1x6) {
-         if (dblbitlivemask != 0xFFF) return false;
          getin_search = Nx1_checktable_1x6;
          goto do_Nx1_search;
       }
       else if (ss->kind == s_bone6) {
-         if (dblbitlivemask != 0xFFF) return false;
-
          if (directions == 01240 || directions == 04012 ||
              directions == 01042 || directions == 04210 ||
              directions == 03765 || directions == 06537 ||
@@ -508,8 +608,6 @@ extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_D
          }
       }
       else if (ss->kind == s_short6) {
-         if (dblbitlivemask != 0xFFF) return false;
-
          if (directions == 00052 || directions == 05200 ||
              directions == 07725 || directions == 02577 ||
              directions == 03567 || directions == 06735 ||
@@ -517,6 +615,20 @@ extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_D
             expand::expand_setup(expb26, ss);
             return true;
          }
+      }
+   }
+   else if (heritflags_to_check == INHERITFLAGMXNK_4X0 ||
+            heritflags_to_check == INHERITFLAGMXNK_0X4) {
+      if (ss->kind == s2x4) {
+         getin_search = Nx0_checktable_2x4;
+         goto do_Nx1_search;
+      }
+   }
+   else if (heritflags_to_check == INHERITFLAGMXNK_3X0 ||
+            heritflags_to_check == INHERITFLAGMXNK_0X3) {
+      if (ss->kind == s2x3) {
+         getin_search = Nx0_checktable_2x3;
+         goto do_Nx1_search;
       }
    }
 
@@ -531,21 +643,44 @@ extern bool do_1x3_type_expansion(setup *ss, uint32 heritflags_to_check) THROW_D
    // on.  But that really doesn't work.  We can't search for hard Nx1 and 1xN
    // formulations in the presence of phantoms.
 
-   const expand::thing *final = (const expand::thing *) 0;
+   const expand::thing *highquality = (const expand::thing *) 0;
+   const expand::thing *lowquality = (const expand::thing *) 0;
+   bool lowqualityisambiguous = false;
 
    for ( ; getin_search->directions ; getin_search++) {
-      if (getin_search->directions == directions) {
-         if (final) return false;    // It's ambiguous.  ***** Won't happen.
-         final = (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-                  heritflags_to_check == INHERITFLAGMXNK_2X1) ?
-            getin_search->action_if_Nx1 :
-            getin_search->action_if_1xN;
-         break;
+      if (((getin_search->directions ^ directions) & dblbitlivemask) == 0) {
+
+         // Unsymmetrical maps require full occupation.
+         if (getin_search->unsymm && dblbitlivemask != full_occupation)
+            continue;
+
+         if (getin_search->action_if_Nx1 != getin_search->action_if_1xN) {
+            // This is a high quality map.  It can tell what to do without requiring lots of people.
+            if (highquality) return false;    // If high quality maps are ambiguous, we lose.
+            highquality = (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
+                           heritflags_to_check == INHERITFLAGMXNK_4X0 ||
+                           heritflags_to_check == INHERITFLAGMXNK_3X0 ||
+                           heritflags_to_check == INHERITFLAGMXNK_2X1) ?
+               getin_search->action_if_Nx1 :
+               getin_search->action_if_1xN;
+         }
+         else {
+            // This is a low quality map.  Ambiguity is OK, up to two, if a high quality map is present.
+            if (lowquality) lowqualityisambiguous = true;
+            lowquality = getin_search->action_if_Nx1;
+         }
       }
    }
 
-   if (final) {
-      expand::expand_setup(*final, ss);
+   if (!highquality) {
+      // No high quality map; must use an unambiguous low quality one.
+      if (lowqualityisambiguous)
+         return false;
+      highquality = lowquality;
+   }
+
+   if (highquality) {
+      expand::expand_setup(*highquality, ss);
       return true;
    }
 
@@ -643,6 +778,10 @@ extern bool divide_for_magic(
 
    if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X3 ||
+       heritflags_to_check == INHERITFLAGMXNK_3X0 ||
+       heritflags_to_check == INHERITFLAGMXNK_0X3 ||
+       heritflags_to_check == INHERITFLAGMXNK_4X0 ||
+       heritflags_to_check == INHERITFLAGMXNK_0X4 ||
        heritflags_to_check == INHERITFLAGMXNK_2X1 ||
        heritflags_to_check == INHERITFLAGMXNK_1X2) {
 
@@ -666,12 +805,14 @@ extern bool divide_for_magic(
 
  do_3x3:
 
+   bool sixteen = (heritflags_to_use == INHERITFLAGMXNK_0X4 || heritflags_to_use == INHERITFLAGMXNK_4X0);
+
    ss->cmd.cmd_final_flags.herit = (heritflags)
       ((heritflags_to_use & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) |
-      INHERITFLAGNXNK_3X3);
+       (sixteen ? INHERITFLAGNXNK_4X4 : INHERITFLAGNXNK_3X3));
 
    if (attr::slimit(ss) > 7)
-      ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_12_MATRIX);
+      ss->cmd.cmd_final_flags.set_heritbit(sixteen ? INHERITFLAG_16_MATRIX : INHERITFLAG_12_MATRIX);
 
    saved_warnings = configuration::save_warnings();
    impose_assumption_and_move(ss, result);
@@ -1354,8 +1495,13 @@ static const checkitem checktable[] = {
     {-9, 2, -10, 2, -9, -2, -10, -2, 9, 2, 10, 2, 9, -2, 10, -2}},
    {0x00260062, 0x08008004, s_short6, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00840026, 0x04000308, s_spindle, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840046, 0x04210308, s_d3x4, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x00840044, 0x04210308, s_d3x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840046, 0x04210308, sd3x4,  0, warn__none, (const coordrec *) 0, {127}},
+   {0x00840044, 0x04210308, sd3x4,  0, warn__none, (const coordrec *) 0, {127}},
+
+   {0x00C40026, 0x06109384, sd4x5,  0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40046, 0x06109384, sd4x5,  0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40086, 0x06109384, sd4x5,  0, warn__none, (const coordrec *) 0, {127}},
+
    {0x00A200A2, 0x101CC4E6, s_bigblob, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00670055, 0x01000420, s_qtag, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00770055, 0x01400420, s_2stars, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1467,6 +1613,8 @@ static const checkitem checktable[] = {
    {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00620062, 0x1018C046, s4x4, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01040026, 0x04100348, srigger12, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00C40026, 0x04100348, srigger12, 0, warn__none, (const coordrec *) 0, {127}}, // Only 7 wide, but no setup for that.
    {0x00930066, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00910062, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00910022, 0x01080C40, sbigh, 0, warn__none, (const coordrec *) 0, {127}},
@@ -4826,7 +4974,7 @@ static bool do_misc_schema(
    selective_key *special_indicatorp,
    setup *result) THROW_DECL
 {
-   setup_command foo2;
+   setup_command foo2 = ss->cmd;
    const by_def_item *innerdef = &callspec->stuff.conc.innerdef;
    const by_def_item *outerdef = &callspec->stuff.conc.outerdef;
    parse_block *parseptr = ss->cmd.parseptr;
@@ -5851,6 +5999,12 @@ static void really_inner_move(setup *ss,
             normalize_setup(result, normalize_compress_bigdmd, false);
       }
       else {
+         foo1 = ss->cmd;
+
+         // *********** this is of course bogus LINES LINES LINES LINES
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER)
+            foo1.extraspecialsuperduper_misc2flags |= ss->cmd.restrained_misc2flags;
+
          if (do_misc_schema(ss, the_schema, callspec, callflags1, &foo1, &special_selector,
                             &special_modifiers, &special_indicator, result))
             goto do_special_select_stuff;
@@ -6053,8 +6207,33 @@ static void move_with_real_call(
                                                        INHERITFLAG_LASTHALF))))
             fail("Can't do this call with this concept.");
 
+         if (ss->cmd.cmd_misc2_flags & CMD_MISC2_RESTRAINED_SUPER &&
+             !(ss->cmd.cmd_misc3_flags & CMD_MISC3__DONE_WITH_REST_SUPER)) {
+            // *********** LINES LINES LINES LINES LINES
+            ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+            ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__DO_CENTRAL;
+            ss->cmd.cmd_misc3_flags |= CMD_MISC3__DONE_WITH_REST_SUPER;
+         }
+
          if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) {
+            // Set the appropriate "split h/v" bit.  It seems that we need to refrain
+            // from forcing the split if 4x4 was given.  The test is [gwv]
+            // finally 4x4 central stampede.
+
+            // Also, we do not force the split if the "straight" modifier has been given.
+            // In that case the dancers know what they are doing, and that the
+            // usual rule that "central" means "do it on each side" is not
+            // being followed.  The test is straight central interlocked little.
+
+            if (attr::slimit(ss) == 7 &&
+                ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_NXNMASK)) != INHERITFLAGNXNK_4X4) &&
+                ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_STRAIGHT)) == 0)) {
+               ss->cmd.cmd_misc_flags |=
+                  (ss->rotation & 1) ? CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
+            }
+
             // If it is sequential, we just pass it through.  Otherwise, we handle it here.
+
             if (the_schema != schema_sequential &&
                 the_schema != schema_sequential_with_fraction &&
                 the_schema != schema_sequential_with_split_1x8_id) {
@@ -6760,15 +6939,21 @@ extern void move(
          p3.call = ss->cmd.callspec;
          p3.call_to_print = p3.call;
 
-         if (p3.concept->kind != concept_another_call_next_mod)
+         if (p3.concept->kind != concept_another_call_next_mod) {
             p3.concept = &conzept::mark_end_of_list;
+            p3.next = (parse_block *) 0;
+         }
 
          p3.no_check_call_level = true;
          p3.options = current_options;
          ss->cmd.parseptr = &p1;
          ss->cmd.callspec = (call_with_name *) 0;
-         ss->cmd.cmd_misc2_flags |= CMD_MISC2_RESTRAINED_SUPER;
          ss->cmd.restrained_super8flags = ss->cmd.cmd_final_flags.herit;
+         ss->cmd.restrained_miscflags = ss->cmd.cmd_misc_flags;
+         ss->cmd.restrained_misc2flags = ss->cmd.cmd_misc2_flags;
+         //  ****************** change for the "init lines [central little more] thru" bug LINES LINES LINES LINES
+         //         ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__CTR_END_MASK;
+         ss->cmd.cmd_misc2_flags |= CMD_MISC2_RESTRAINED_SUPER;
          ss->cmd.cmd_final_flags.clear_all_heritbits();
          move(ss, false, result);
       }

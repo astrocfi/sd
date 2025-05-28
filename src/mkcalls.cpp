@@ -138,6 +138,8 @@ int begin_sizes[] = {
    18,         /* b_9x2 */
    12,         /* b_d3x4 */
    12,         /* b_d4x3 */
+   20,         /* b_d4x5 */
+   20,         /* b_d5x4 */
    16,         /* b_2x8 */
    16,         /* b_8x2 */
    16,         /* b_4x4 */
@@ -169,6 +171,8 @@ int begin_sizes[] = {
    16,         /* b_pdeepbigqtg */
    12,         /* b_widerigger */
    12,         /* b_pwiderigger */
+   12,         /* b_rigger12 */
+   12,         /* b_prigger12 */
    12,         /* b_deepxwv */
    12,         /* b_pdeepxwv */
    20,         /* b_3oqtg */
@@ -536,6 +540,8 @@ const char *sstab[] = {
    "9x2",
    "d3x4",
    "d4x3",
+   "d4x5",
+   "d5x4",
    "2x8",
    "8x2",
    "4x4",
@@ -567,6 +573,8 @@ const char *sstab[] = {
    "pdeepbigqtg",
    "widerigger",
    "pwiderigger",
+   "rigger12",
+   "prigger12",
    "deepxwv",
    "pdeepxwv",
    "3oqtg",
@@ -715,6 +723,7 @@ const char *estab[] = {
    "d2x5",
    "2x9",
    "d3x4",
+   "d4x5",
    "???",
    "???",
    "2x8",
@@ -762,6 +771,7 @@ const char *estab[] = {
    "deepqtg",
    "deepbigqtg",
    "widerigger",
+   "rigger12",
    "deepxwv",
    "3oqtg",
    "thar",
@@ -1231,6 +1241,10 @@ const char *mxntabplain[] = {
    "2x1",
    "1x3",
    "3x1",
+   "0x3",
+   "3x0",
+   "0x4",
+   "4x0",
    ""};
 
 const char *nxntabplain[] = {
@@ -1258,6 +1272,10 @@ const char *mxntabforce[] = {
    "force_2x1",
    "force_1x3",
    "force_3x1",
+   "force_0x3",
+   "force_3x0",
+   "force_0x4",
+   "force_4x0",
    ""};
 
 const char *nxntabforce[] = {
@@ -2508,23 +2526,16 @@ def2:
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "num")) {
-               call_qual_stuff |= (get_num("Need a qualifier number here")+1) * QUALBIT__NUM_BIT;
+               int n = get_num("Need a qualifier number here");
+               if (n > 14)
+                  errexit("Number may not be greater than 14");
+               call_qual_stuff |= (n+1) * QUALBIT__NUM_BIT;
                get_tok();
             }
             else
                break;
          }
 
-         if (tok_kind != tok_symbol) errexit("Improper qualifier");
-         if ((t = search(qualtab)) < 0) errexit("Unknown qualifier");
-         call_qual_stuff |= t;
-      }
-      else if (!strcmp(tok_str, "nqualifier")) {
-         int t;
-
-         if (call_qual_stuff) errexit("Only one qualifier is allowed");
-         call_qual_stuff = (get_num("Need a qualifier number here")+1) * QUALBIT__NUM_BIT;
-         get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
          if ((t = search(qualtab)) < 0) errexit("Unknown qualifier");
          call_qual_stuff |= t;

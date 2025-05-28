@@ -1088,38 +1088,63 @@ static void do_concept_parallelogram(
    if (junk_concepts.test_for_any_herit_or_final_bit())
       kk = concept_comment;
 
-   mpkind mk, mkbox;
+   phantest_kind phancontrol = phantest_ok;
+   uint32 map_code = ~0UL;
+   bool is_pgram = false;
+
+   int linesp;
+   mpkind mk;
 
    if (ss->kind == s2x6) {
       if (global_livemask == 07474) {
-         mk = MPKIND__OFFS_R_HALF; mkbox = MPKIND__OFFS_R_HALF_SPECIAL; }
+         mk = MPKIND__OFFS_R_HALF; }
       else if (global_livemask == 01717) {
-         mk = MPKIND__OFFS_L_HALF; mkbox = MPKIND__OFFS_L_HALF_SPECIAL; }
+         mk = MPKIND__OFFS_L_HALF; }
       else fail("Can't find a parallelogram.");
+      is_pgram = true;
    }
    else if (ss->kind == s2x5) {
       warn(warn__1_4_pgram);
       if (global_livemask == 0x3DE) {
-         mk = MPKIND__OFFS_R_ONEQ; mkbox = MPKIND__OFFS_R_ONEQ_SPECIAL; }
+         mk = MPKIND__OFFS_R_ONEQ; }
       else if (global_livemask == 0x1EF) {
-         mk = MPKIND__OFFS_L_ONEQ; mkbox = MPKIND__OFFS_L_ONEQ_SPECIAL; }
+         mk = MPKIND__OFFS_L_ONEQ; }
       else fail("Can't find a parallelogram.");
+      is_pgram = true;
    }
    else if (ss->kind == s2x7) {
       warn(warn__3_4_pgram);
       if (global_livemask == 0x3C78) {
-         mk = MPKIND__OFFS_R_THRQ; mkbox = MPKIND__OFFS_R_THRQ_SPECIAL; }
+         mk = MPKIND__OFFS_R_THRQ; }
       else if (global_livemask == 0x078F) {
-         mk = MPKIND__OFFS_L_THRQ; mkbox = MPKIND__OFFS_L_THRQ_SPECIAL; }
+         mk = MPKIND__OFFS_L_THRQ; }
       else fail("Can't find a parallelogram.");
+      is_pgram = true;
    }
    else if (ss->kind == s2x8) {
       warn(warn__full_pgram);
       if (global_livemask == 0xF0F0) {
-         mk = MPKIND__OFFS_R_FULL; mkbox = MPKIND__OFFS_R_FULL_SPECIAL; }
+         mk = MPKIND__OFFS_R_FULL; }
       else if (global_livemask == 0x0F0F) {
-         mk = MPKIND__OFFS_L_FULL; mkbox = MPKIND__OFFS_L_FULL_SPECIAL; }
+         mk = MPKIND__OFFS_L_FULL; }
       else fail("Can't find a parallelogram.");
+      is_pgram = true;
+   }
+
+   if (is_pgram) {
+      if (kk == concept_multiple_boxes &&
+          next_parseptr->concept->arg4 == 3 &&
+          next_parseptr->concept->arg5 == MPKIND__SPLIT) {
+         // This is "parallelogram triple boxes".
+         if (standard_concept) fail("Don't use \"standard\" with triple boxes.");
+         goto whuzzzzz;
+      }
+      else if (kk == concept_do_phantom_boxes &&
+               next_parseptr->concept->arg3 == MPKIND__SPLIT) {
+         // This is "parallelogram split phantom boxes".
+         if (standard_concept) fail("Don't use \"standard\" with split phantom boxes.");
+         goto whuzzzzz;
+      }
    }
    else if (ss->kind == s4x6 && kk == concept_do_phantom_2x4) {
       // See whether people fit unambiguously
@@ -1145,9 +1170,6 @@ static void do_concept_parallelogram(
    else
       fail("Can't do parallelogram concept from this position.");
 
-   phantest_kind phancontrol = phantest_ok;
-   uint32 map_code = ~0UL;
-
    if (kk == concept_do_phantom_2x4 &&
        (ss->kind == s2x6 || ss->kind == s2x5 || ss->kind == s2x7 ||
         ss->kind == s4x5 || ss->kind == s4x6)) {
@@ -1163,7 +1185,7 @@ static void do_concept_parallelogram(
          if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
       }
 
-      int linesp = next_parseptr->concept->arg2 & 7;
+      linesp = next_parseptr->concept->arg2 & 7;
 
       if (standard_concept) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
@@ -1225,31 +1247,6 @@ static void do_concept_parallelogram(
       phancontrol = (phantest_kind) next_parseptr->concept->arg1;
       ss->cmd.parseptr = next_parseptr->next;
    }
-   else if (kk == concept_do_phantom_boxes &&
-            next_parseptr->concept->arg3 == MPKIND__SPLIT &&
-            ss->kind == s2x6) {     // Only allow 50% offset.
-      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
-      if (ss->kind != s2x8) fail("Not in proper setup for this concept.");
-
-      if (standard_concept) fail("Don't use \"standard\" with split phantom boxes.");
-
-      ss->cmd.parseptr = next_parseptr->next;
-      map_code = MAPCODE(s2x4,2,mkbox,0);
-   }
-   else if (kk == concept_multiple_boxes &&
-            next_parseptr->concept->arg4 == 3 &&
-            next_parseptr->concept->arg5 == MPKIND__SPLIT &&
-            ss->kind == s2x6) {     // Only allow 50% offset.
-      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
-      if (ss->kind != s2x8) fail("Not in proper setup for this concept.");
-
-      if (standard_concept) fail("Don't use \"standard\" with triple boxes.");
-
-      ss->cmd.parseptr = next_parseptr->next;
-      map_code = MAPCODE(s2x2,3,mkbox,0);
-   }
    else
       map_code = MAPCODE(s2x4,1,mk,1);   // Plain parallelogram.
 
@@ -1260,6 +1257,22 @@ static void do_concept_parallelogram(
 
    // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags.clear_split_info();
+   return;
+
+ whuzzzzz:
+
+   ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+   ss->cmd.parseptr = next_parseptr->next;
+
+   whuzzisthingy zis;
+   zis.k = kk;
+   zis.rot = 0;
+
+   divided_setup_move(ss, MAPCODE(s2x4,1,mk,1), phancontrol, true, result, 0, &zis);
+
+   // The split-axis bits are gone.  If someone needs them, we have work to do.
+   result->result_flags.clear_split_info();
+   return;
 }
 
 
@@ -3163,22 +3176,22 @@ static void do_concept_central(
    setup *result) THROW_DECL
 {
    if (parseptr->concept->arg1 == CMD_MISC2__SAID_INVERT) {
-      /* If this is "invert", just flip the bit.  They can stack, of course. */
+      // If this is "invert", just flip the bit.  They can stack, of course.
       ss->cmd.cmd_misc2_flags ^= CMD_MISC2__SAID_INVERT;
    }
    else {
       uint32 this_concept = parseptr->concept->arg1;
 
-      /* Otherwise, if the "invert" bit was on, we assume that means that the
-         user really wanted "invert snag" or whatever. */
+      // Otherwise, if the "invert" bit was on, we assume that means that
+      // the user really wanted "invert snag" or whatever.
 
       if (ss->cmd.cmd_misc2_flags & CMD_MISC2__SAID_INVERT) {
          if (this_concept &
             (CMD_MISC2__INVERT_CENTRAL|CMD_MISC2__INVERT_SNAG|CMD_MISC2__INVERT_MYSTIC))
             fail("You can't invert a concept twice.");
-         /* Take out the "invert" bit". */
+         // Take out the "invert" bit".
          ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__SAID_INVERT;
-         /* Put in the "this concept is inverted" bit. */
+         // Put in the "this concept is inverted" bit.
          if (this_concept == CMD_MISC2__DO_CENTRAL)
             this_concept |= CMD_MISC2__INVERT_CENTRAL;
          else if (this_concept == CMD_MISC2__CENTRAL_SNAG)
@@ -3187,29 +3200,10 @@ static void do_concept_central(
             this_concept |= CMD_MISC2__INVERT_MYSTIC;
       }
 
-      /* Check that we aren't setting the bit twice. */
+      // Check that we aren't setting the bit twice.
 
       if (ss->cmd.cmd_misc2_flags & this_concept)
          fail("You can't give this concept twice.");
-
-      if (parseptr->concept->arg1 & CMD_MISC2__DO_CENTRAL) {
-
-         // We are having a problem here.  It seems that we need to refrain
-         // from forcing the split if 4x4 was given.  The test is [gwv]
-         // finally 4x4 central stampede.
-
-         // We do not force the split if the "straight" modifier has been given.
-         // In that case the dancers know what they are doing, and that the
-         // usual rule that "central" means "do it on each side" is not
-         // being followed.  The test is, of course, straight central interlocked little.
-
-         if (attr::slimit(ss) == 7 &&
-             ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_NXNMASK)) != INHERITFLAGNXNK_4X4) &&
-             ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_STRAIGHT)) == 0)) {
-            ss->cmd.cmd_misc_flags |=
-               (ss->rotation & 1) ? CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
-         }
-      }
 
       ss->cmd.cmd_misc2_flags |= this_concept;
    }
@@ -3946,14 +3940,12 @@ static void do_concept_checkerboard(
    if (parseptr->concept->arg2 == 1) {
       // This is "shadow <setup>"
 
-      setup_command subsid_cmd;
-
       if ((kn != s2x2 || ss->kind != s2x4) &&
           (kn != s1x4 || (ss->kind != s_qtag && ss->kind != s_bone)) &&
           (kn != sdmd || (ss->kind != s_hrglass && ss->kind != s_dhrglass)))
          fail("Not in correct setup for 'shadow line/box/diamond' concept.");
 
-      subsid_cmd = ss->cmd;
+      setup_command subsid_cmd = ss->cmd;
       subsid_cmd.parseptr = (parse_block *) 0;
       subsid_cmd.callspec = base_calls[base_call_ends_shadow];
       subsid_cmd.cmd_fraction.set_to_null();
@@ -4939,7 +4931,7 @@ static void do_concept_move_in_and(
 
    if (check_for_centers_concept(0, ss->cmd.parseptr, &ss->cmd)) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
-      concentric_move(ss, &ss->cmd, 0, schema_concentric, 0, 0, true, false, ~0UL, result);
+      concentric_move(ss, &ss->cmd, (setup_command *) 0, schema_concentric, 0, 0, true, false, ~0UL, result);
    }
    else {
       move(ss, false, result);
@@ -5160,7 +5152,7 @@ static void do_concept_inner_outer(
    case 64+0: case 64+1:
    case 64+8+0: case 64+8+1:
       // Center or outside phantom lines/columns (no wave).
-      if (ss->kind == s3x4 || ss->kind == s_d3x4 || ss->kind == s3dmd)
+      if (ss->kind == s3x4 || ss->kind == sd3x4 || ss->kind == s3dmd)
          goto verify_clw;
       else
          fail("Need quadruple 1x3's for this.");
@@ -7272,9 +7264,8 @@ static void do_concept_fractional(
 
    if (improper) {
       // Do the whole call first, then part of it again.
-
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_MASK)
-         fail("Can't do \"invert/central/snag/mystic\" followed by this concept or modifier.");
+      if (ss->cmd.cmd_misc2_flags & (CMD_MISC2__CENTRAL_SNAG | CMD_MISC2__INVERT_SNAG))
+         fail("Can't do \"snag\" followed by this concept or modifier.");
 
       if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) != 0 &&
           ((ss->cmd.cmd_fraction.flags & (CMD_FRAC_CODE_MASK|CMD_FRAC_BREAKING_UP)) ==
@@ -8034,7 +8025,6 @@ enum {
 
 
 // Beware!!  This table must be keyed to definition of "concept_kind" in sd.h .
-
 const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_another_call_next_mod
    {0, 0},                                                  // concept_mod_declined
@@ -8090,6 +8080,10 @@ const concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_2x2
    {0, 0},                                                  // concept_1x3
    {0, 0},                                                  // concept_3x1
+   {0, 0},                                                  // concept_3x0
+   {0, 0},                                                  // concept_0x3
+   {0, 0},                                                  // concept_4x0
+   {0, 0},                                                  // concept_0x4
    {0, 0},                                                  // concept_3x3
    {0, 0},                                                  // concept_4x4
    {0, 0},                                                  // concept_5x5

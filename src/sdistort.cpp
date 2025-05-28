@@ -314,7 +314,8 @@ static void innards(
    unsigned int noexpand_bits_to_set,
    bool do_second_only,
    setup *x,
-   setup *result) THROW_DECL
+   setup *result,
+   whuzzisthingy *thing = (whuzzisthingy *) 0) THROW_DECL
 {
    int i, j;
    uint32 rotstate, pointclip;
@@ -404,7 +405,39 @@ static void innards(
          xorigkind[i] = x[i].kind;
          xorigrot[i] = x[i].rotation;
 
-         impose_assumption_and_move(&x[i], &z[i]);
+         // Handle special cases of things like "parallelogram triple boxes".
+         if (thing) {
+            uint32 map_code;
+
+            if (thing->k == concept_do_phantom_2x4) {
+               do_matrix_expansion(&x[i], CONCPROP__NEEDK_4X4, false);
+               if (x[i].kind != s4x4) fail("Must have a 4x4 setup for this concept.");
+               x[i].rotation += thing->rot;
+               canonicalize_rotation(&x[i]);
+               map_code = MAPCODE(s2x4,2,MPKIND__SPLIT,1);
+            }
+            else if (thing->k == concept_do_phantom_boxes) {
+               // This is split phantom boxes.
+               do_matrix_expansion(&x[i], CONCPROP__NEEDK_2X8, false);
+               if (x[i].kind != s2x8) fail("Not in proper setup for this concept.");
+               map_code = MAPCODE(s2x4,2,MPKIND__SPLIT,0);
+            }
+            else {
+               // This is triple boxes.
+               do_matrix_expansion(&x[i], CONCPROP__NEEDK_2X6, false);
+               if (x[i].kind != s2x6) fail("Not in proper setup for this concept.");
+               map_code = MAPCODE(s2x2,3,MPKIND__SPLIT,0);
+            }
+
+            divided_setup_move(&x[i], map_code, phantest_ok, recompute_id, &z[i], noexpand_bits_to_set);
+
+            if (thing->k == concept_do_phantom_2x4) {
+               z[i].rotation -= thing->rot;
+               canonicalize_rotation(&z[i]);
+            }
+         }
+         else
+            impose_assumption_and_move(&x[i], &z[i]);
 
          if (mirror)
             mirror_this(&z[i]);
@@ -473,6 +506,11 @@ static void innards(
          }
       }
 
+      no_reuse_map = true;
+   }
+
+   if (thing) {
+      normalize_setup(&z[0], plain_normalize, false);
       no_reuse_map = true;
    }
 
@@ -942,6 +980,10 @@ static void innards(
 
       if (arity == 1) {
          switch (map_kind) {
+         case MPKIND__OFFS_L_ONEQ:
+         case MPKIND__OFFS_R_ONEQ:
+         case MPKIND__OFFS_L_THRQ:
+         case MPKIND__OFFS_R_THRQ:
          case MPKIND__OFFS_L_HALF:
          case MPKIND__OFFS_R_HALF:
          case MPKIND__OFFS_L_FULL:
@@ -1161,12 +1203,14 @@ extern void divided_setup_move(
    phantest_kind phancontrol,
    bool recompute_id,
    setup *result,
-   unsigned int noexpand_bits_to_set /* = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 */ ) THROW_DECL
+   unsigned int noexpand_bits_to_set, /* = CMD_MISC__NO_EXPAND_1 | CMD_MISC__NO_EXPAND_2 */ 
+   whuzzisthingy *thing /* = 0 */ ) THROW_DECL
 {
    int i, j;
    int vflags[16];
    setup x[16];
    setup_kind kn_twicerem;
+
    const map::map_thing *maps = map::get_map_from_code(map_encoding);
 
    if (!maps || ss->kind != maps->outer_kind)
@@ -1283,7 +1327,7 @@ extern void divided_setup_move(
       noexpand_bits_to_set,
       (maps->map_kind == MPKIND__CONCPHAN &&
        phancontrol == phantest_ctr_phantom_line && !vflags[0]),
-      x, result);
+      x, result, thing);
 
    // "Innards" has returned with the splitting info correct for the subcalls, but
    // not taking into account the incoming rotation in "ss->rotation".  We need to
@@ -2481,12 +2525,13 @@ extern void distorted_move(
    setup_kind k;
    setup a1;
    setup res1;
-   mpkind mk, mkbox;
+   mpkind mk;
    uint32 map_code = ~0UL;
    int rotate_back = 0;
    uint32 livemask = global_livemask;
    uint32 linesp = parseptr->concept->arg2;
    bool zlines = true;
+   concept_kind kk;
 
    if (linesp & 8) {
       if (linesp & 1) {
@@ -2795,12 +2840,10 @@ extern void distorted_move(
 
          if (livemask == 0xB4B4) {
             mk = MPKIND__OFFS_L_FULL;
-            mkbox = MPKIND__OFFS_L_FULL_SPECIAL;
             goto do_offset_call;
          }
          else if (livemask == 0x4B4B) {
             mk = MPKIND__OFFS_R_FULL;
-            mkbox = MPKIND__OFFS_R_FULL_SPECIAL;
             goto do_offset_call;
          }
 
@@ -2833,12 +2876,10 @@ extern void distorted_move(
             // the elegant way (handling shape-changers) if so.
             if (livemask == 07474) {
                mk = MPKIND__OFFS_L_HALF;
-               mkbox = MPKIND__OFFS_L_HALF_SPECIAL;
                goto do_offset_call;
             }
             else if (livemask == 06363) {
                mk = MPKIND__OFFS_R_HALF;
-               mkbox = MPKIND__OFFS_R_HALF_SPECIAL;
                goto do_offset_call;
             }
 
@@ -2938,8 +2979,17 @@ extern void distorted_move(
 
    map_code = MAPCODE(s2x4,1,mk,0);
 
+   // We are only interested in a few concepts, and only if there
+   // are no intervening modifiers.  Shut off the concept if there
+   // are modifiers.
+
+   kk = next_parseptr->concept->kind;
+
+   if (junk_concepts.test_for_any_herit_or_final_bit())
+      kk = concept_comment;
+
    if (ss->kind == s3x8) {
-      if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
+      if (kk == concept_do_phantom_boxes &&
           !junk_concepts.test_for_any_herit_or_final_bit() &&
           next_parseptr->concept->arg3 == MPKIND__SPLIT) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -2950,29 +3000,18 @@ extern void distorted_move(
       else
          fail("Can't do this concept in this setup.");
    }
-   else if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
+   else if (kk == concept_do_phantom_2x4 &&
             !junk_concepts.test_for_any_herit_or_final_bit() &&
             linesp == (next_parseptr->concept->arg2 & 7) &&  // Demand same "CLW" as original.
             next_parseptr->concept->arg3 == MPKIND__SPLIT) {
-      if (ss->kind == s3x4) {
-         do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, false);
-         if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
-      }
-      else if (ss->kind == s4x4) {
-         expand::expand_setup(((linesp & 1) ? s_4x4_4x6a : s_4x4_4x6b), ss);
+      if (ss->kind == s3x4 || ss->kind == s4x4) {
+         goto whuzzzzz;
       }
       else
          goto do_divided_call;
 
-      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-      ss->cmd.parseptr = next_parseptr->next;
-      map_code = MAPCODE(s2x4,2,mkbox,1);
-      // ***** What's this for????
-      // Taken from do_matrix_expansion?  Then we *don't* need to do it?  At least, if did 3x4 -> 4x5?
-      for (int i=0; i<MAX_PEOPLE; i++)
-         ss->people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
    }
-   else if (next_parseptr->concept->kind == concept_do_phantom_boxes &&
+   else if (kk == concept_do_phantom_boxes &&
             ss->kind == s3x4 &&     // Only allow 50% offset.
             !junk_concepts.test_for_any_herit_or_final_bit() &&
             next_parseptr->concept->arg3 == MPKIND__SPLIT) {
@@ -3003,10 +3042,34 @@ extern void distorted_move(
 
  getout:
 
-   if (rotate_back) {
-      result->rotation--;
+   if (rotate_back != 0) {
+      result->rotation -= rotate_back;
       canonicalize_rotation(result);
    }
+
+   return;
+
+ whuzzzzz:
+
+   ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+   ss->cmd.parseptr = next_parseptr->next;
+   // ***** What's this for????
+   // Taken from do_matrix_expansion?  Then we *don't* need to do it?  At least, if did 3x4 -> 4x5?
+   for (int i=0; i<MAX_PEOPLE; i++)
+      ss->people[i].id3 &= ~ID3_LESS_BITS_TO_CLEAR;
+
+   if (disttest != disttest_offset)
+      fail("You must specify offset lines/columns when in this setup.");
+
+   if ((linesp & 7) == 3)
+      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+   whuzzisthingy zis;
+   zis.k = kk;
+   zis.rot = (ss->kind == s4x4) ? 1 : 0;
+
+   divided_setup_move(ss, MAPCODE(s2x4,1,mk,0), phantest_ok, true, result, 0, &zis);
+   goto getoutnosplit;
 }
 
 
