@@ -154,7 +154,12 @@ static void do_concept_tandem(
    // The table said this concept was matrix-oblivious.  Now that we have
    // expanded for "in a whatever", we have to take action.
 
-   ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   // Not so!!!!   We used to do:
+   //    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+   // Which prevented any further matrix expansion (e.g. the 2x4-4x4 that
+   // happens on split phantom lines) from happening after any "phantom tandem"
+   // type of call.  We no longer do that, which means that things like
+   // "phantom as couples split phantom lines square the bases" are now legal.
 
    uint32 mxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
                                                             INHERITFLAG_MXNMASK |
@@ -262,7 +267,12 @@ static void do_c1_phantom_move(
       else {
          if (what_we_need != 0)
             do_matrix_expansion(ss, what_we_need, true);
-         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+         // We used to do:
+         //    ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
+         // Which prevented any further matrix expansion (e.g. the 2x4-4x4 that
+         // happens on split phantom lines) from happening after any "phantom tandem"
+         // type of call.  We no longer do that, which means that things like
+         // "phantom as couples split phantom lines square the bases" are now legal.
       }
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
@@ -7460,6 +7470,7 @@ concept_table_item concept_table[] = {
    {0, 0},                                                  // concept_fast
    {0, 0},                                                  // concept_straight
    {0, 0},                                                  // concept_twisted
+   {0, 0},                                                  // concept_rewind
    {0, 0},                                                  // concept_12_matrix
    {0, 0},                                                  // concept_16_matrix
    {0, 0},                                                  // concept_revert

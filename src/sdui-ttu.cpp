@@ -490,7 +490,7 @@ extern void put_line(const char the_line[])
          // No funny stuff at all.
          // By leaving "use_escapes_for_drawing_people" at zero, we know
          // that the line will be nothing but ASCII text.
-         (void) fputs(the_line, stdout);
+         fputs(the_line, stdout);
       }
       else {
          // We need to watch for escape characters
@@ -505,13 +505,13 @@ extern void put_line(const char the_line[])
                put_char(' ');
 
                if (ui_options.color_scheme != no_color) {
-                  (void) fputs("\033[1;", stdout);
-                  (void) fputs(color_translations[color_index_list[personidx]].vt100_string, stdout);
+                  fputs("\033[1;", stdout);
+                  fputs(color_translations[color_index_list[personidx]].vt100_string, stdout);
 
                   if (ui_options.reverse_video)
-                     (void) fputs(";40m", stdout);
+                     fputs(";40m", stdout);
                   else
-                     (void) fputs(";47m", stdout);
+                     fputs(";47m", stdout);
                }
 
                put_char(ui_options.pn1[personidx]);
@@ -543,7 +543,7 @@ extern void put_char(int c)
 #endif
    }
    else {
-      (void) putchar(c);
+      putchar(c);
    }
 }
 

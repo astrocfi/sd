@@ -327,6 +327,7 @@ enum concept_kind {
    concept_fast,
    concept_straight,
    concept_twisted,
+   concept_rewind,
    concept_12_matrix,
    concept_16_matrix,
    concept_revert,
@@ -3989,8 +3990,7 @@ extern const expand::thing s_qtg_3x4;
 extern const expand::thing s_short6_2x3;
 extern const expand::thing s_bigrig_dblbone;
 extern const expand::thing s_bigbone_dblrig;
-
-
+extern const veryshort identity24[24];
 extern full_expand::thing rear_1x2_pair;
 extern full_expand::thing rear_2x2_pair;
 extern full_expand::thing rear_bone_pair;
@@ -4924,7 +4924,6 @@ void print_recurse(parse_block *thing, int print_recurse_arg);
 void clear_screen();
 extern void writechar(char src);
 SDLIB_API void newline();
-extern void open_text_line();
 void doublespace_file();
 SDLIB_API void writestuff(const char *s);
 extern parse_block *mark_parse_blocks();
@@ -5022,11 +5021,16 @@ extern void rubout();
 /* Move cursor up "n" lines and then clear rest of screen. */
 extern void erase_last_n(int n);
 
-/* Write a line.  The text may or may not have a newline at the end. */
-/* This may or may not be after a prompt and/or echoed user input. */
+// Write a line.  The text may or may not have a newline at the end.
+// This may or may not be after a prompt and/or echoed user input.
+// Returns the number of line advances on the transcript pad that
+// occurred because system line wraparound occurred.  A line advance
+// because there was a newline at the end of the given line does not count.
 extern void put_line(const char the_line[]);
 
-/* Write a single character on the current output line. */
+// Write a single character on the current output line.
+// Returns 1 if that character was not a newline but nevertheless
+// caused a line wraparound, zero otherwise.
 extern void put_char(int c);
 
 /* Get one character from input, no echo, no waiting for <newline>.

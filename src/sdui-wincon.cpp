@@ -382,7 +382,8 @@ extern void put_line(const char the_line[])
             put_char(' ');
 
             if (ui_options.color_scheme != no_color)
-               (void) SetConsoleTextAttribute(consoleStdout, color_translate[color_index_list[personidx]]);
+               SetConsoleTextAttribute(consoleStdout,
+                                       color_translate[color_index_list[personidx]]);
 
             put_char(my_pn1[personidx]);
             put_char(my_pn2[personidx]);
@@ -391,14 +392,14 @@ extern void put_line(const char the_line[])
             // Set back to plain "white".
 
             if (ui_options.color_scheme != no_color)
-               (void) SetConsoleTextAttribute(consoleStdout, text_color);
+               SetConsoleTextAttribute(consoleStdout, text_color);
          }
          else
-            (void) put_char(c);
+            put_char(c);
       }
    }
    else {
-      (void) fputs(the_line, stdout);
+      fputs(the_line, stdout);
    }
 }
 
@@ -415,7 +416,7 @@ extern void put_char(int c)
          // and all resizing thereof, is irrelevant.  It will take care of itself, the way
          // it does in any decent operating system (unlike some that I've had to deal with.)
 
-         (void) GetConsoleScreenBufferInfo(consoleStdout, &consoleInfo);
+         GetConsoleScreenBufferInfo(consoleStdout, &consoleInfo);
          consoleInfo.dwCursorPosition.X = 0;   // Cursor position within the pad.
 
          if (consoleInfo.dwSize.Y-1 != consoleInfo.dwCursorPosition.Y)
@@ -438,17 +439,16 @@ extern void put_char(int c)
             coord.Y = -1;
             consoleFill.Attributes = consoleInfo.wAttributes;
             consoleFill.Char.AsciiChar = ' ';
-            (void) ScrollConsoleScreenBuffer(consoleStdout, &scrollRect, 0, coord, &consoleFill);
+            ScrollConsoleScreenBuffer(consoleStdout, &scrollRect, 0, coord, &consoleFill);
          }
 
-         (void) SetConsoleCursorPosition(consoleStdout, consoleInfo.dwCursorPosition);
+         SetConsoleCursorPosition(consoleStdout, consoleInfo.dwCursorPosition);
       }
       else
          WriteFile(consoleStdout, &cc, 1, &junk, (LPOVERLAPPED) 0);
    }
-   else {
-      (void) putchar(c);
-   }
+   else
+      putchar(c);
 }
 
 

@@ -1261,7 +1261,7 @@ static void display_reconcile_history(int current_depth, int n)
          write_history_line(j, false, false, file_write_no);
    }
 
-   gg->add_new_line("", 0);   // Write a blank line.
+   newline();   // Write a blank line.
 }
 
 

@@ -632,7 +632,7 @@ char *sstab[] = {
    "pdblrig",
    ""};
 
-/* This table is keyed to "setup_kind". */
+// This table is keyed to "setup_kind".
 char *estab[] = {
    "nothing",
    "1x1",
@@ -724,6 +724,8 @@ char *estab[] = {
    "3oqtg",
    "thar",
    "alamo",
+   "???",
+   "???",
    "???",
    "???",
    "???",
@@ -935,6 +937,8 @@ char *qualtab[] = {
    "qtag_mwv",
    "qtag_mag_mwv",
    "dmd_ctrs_1f",
+   "dmd_pts_mwv",
+   "dmd_pts_1f",
    "dmd_intlk",
    "dmd_not_intlk",
    "tall_6",
@@ -1093,7 +1097,7 @@ char *flagtab1[] = {
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */
 
-/* This table is keyed to the constants "cflag__???".  The bits indicated by it
+/* This table is keyed to the constants "INHERITFLAG_???".  The bits indicated by it
    are encoded into the "callflags" word of the top-level call descriptor. */
 char *flagtabh[] = {
    "diamond_is_legal",
@@ -1115,9 +1119,10 @@ char *flagtabh[] = {
    "lasthalf_is_inherited",
    "fractal_is_inherited",
    "fast_is_inherited",
+   "rewind_is_inherited",
    ""};
 
-/* This table is keyed to the constants "cflag__???".
+/* This table is keyed to the constants "INHERITFLAG_???".
    Notice that it looks like flagtabh. */
 char *altdeftabh[] = {
    "diamond",
@@ -1139,6 +1144,7 @@ char *altdeftabh[] = {
    "lasthalf",
    "fractal",
    "fast",
+   "rewind",
    ""};
 
 char *mxntabplain[] = {
@@ -1218,6 +1224,7 @@ char *defmodtabh[] = {
    "inherit_lasthalf",
    "inherit_fractal",
    "inherit_fast",
+   "inherit_rewind",
    ""};
 
 /* This table is keyed to the constants "dfm_***".  These are the heritable
@@ -1246,6 +1253,7 @@ char *forcetabh[] = {
    "force_lasthalf",
    "force_fractal",
    "force_fast",
+   "force_rewind",
    ""};
 
 
@@ -1392,6 +1400,8 @@ char *predtab[] = {
    "three_cw_people",
    "quad_person_cw",
    "quad_person_ccw",
+   "next_dmd_spot_is_facing",
+   "next_dmd_spot_is_normal",
    "nexttrnglspot_is_tboned",
    "nextinttrnglspot_is_tboned",
    "next62spot_is_tboned",
@@ -1472,6 +1482,7 @@ tagtabitem tagtabinit[num_base_call_indices] = {
       {0, "disband1"},
       {0, "slither"},
       {0, "maybegrandslither"},
+      {0, "plan_ctrtoend"},
       {0, "prepare_to_drop"},
       {0, "hinge_then_trade"},
       {0, "hinge_then_trade_for_breaker"},

@@ -28,6 +28,7 @@
    initialize_tandem_tables
 */
 
+#include <string.h>
 #include "sd.h"
 
 
@@ -45,7 +46,7 @@ typedef struct {
 
 
 typedef struct {
-   veryshort maps[24];
+   veryshort maps[32];
    uint32 ilatmask;           /* lateral pairs in inside numbering --
                                  only "1" bits used! (except triangles) */
    uint32 olatmask;
@@ -218,39 +219,72 @@ static tm_thing maps_isearch_twosome[] = {
    {{1, 3, 4, 6, 7, 0,               2, -1, -1, 5, -1, -1},                      0,     0x66,         6, 1,  0,  0, 0,  s_short6,  s_nxtrglcw},
    {{2, 3, 5, 6, 7, 0,              -1, -1, 4, -1, -1, 1},                       0,     0x33,         6, 1,  0,  0, 0,  s_short6,  s_nxtrglccw},
 
-   {{0, 2, 3, 4, 7, 8, 9, 11,        1, -1, -1, 5, 6, -1, -1, 10},           0x4141, 06363,
-    8, 0, 0, 0, 0, s2x4, s2x6},
+   {{0, 2, 3, 4, 7, 8, 9, 11,        1, -1, -1, 5, 6, -1, -1, 10},
+    0x4141,     06363,      8, 0, 0, 0, 0, s2x4, s2x6},
 
-   {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},                     0x555,   0x0FFF,         6, 0,  0,  0, 0,  s2x3,  s2x6},
-   // The two maps just below must be after the map just above.
-   {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},                  02020,  0x18060,         6, 0,  0,  0, 0,  s2x3,  s4x5},
-   {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},                  00101,  0xC0300,         6, 0,  0,  0, 0,  s2x3,  s4x5},
-   // And this one must be after it also.
-   {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},                      00404,    03636,         6, 1,  0,  0, 0,  s_short6,  s2x6},
+   {{0, 2, 4, 7, 9, 11,              1, 3, 5, 6, 8, 10},
+    0x555,      0x0FFF,     6, 0,  0,  0, 0,  s2x3,  s2x6},
+   // The three maps just below must be after the map just above.
+   {{-2, 7, 6, -2, 12, 15,           -2, 2, 5, -2, 17, 16},
+    02020,      0x18060,    6, 0,  0,  0, 0,  s2x3,  s4x5},
+   {{9, 7, -2, 18, 12, -2,           8, 2, -2, 19, 17, -2},
+    00101,      0xC0300,    6, 0,  0,  0, 0,  s2x3,  s4x5},
+   {{3, 6, 8, 10, 11, 1,             4, 5, 7, 9, 0, 2},
+    00404,      03636,      6, 1,  0,  0, 0,  s_short6,  s2x6},
 
-   {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},                     02121,    00303,         6, 1,  0,  0, 0,  s_short6,  sdeepxwv},
+   {{10, 7, 8, 5, 0, 3,              11, 6, 9, 4, 1, 2},
+    02121,      00303,      6, 1,  0,  0, 0,  s_short6,  sdeepxwv},
 
-   {{-2, 3, 4, -2, 8, 11,           -2, 2, 5, -2, 9, 10},                    02020,  0xC30,         6, 0,  0,  0, 0,  s2x3,  sbigdmd},
-   {{0, 3, -2, 7, 8, -2,           1, 2, -2, 6, 9, -2},                      00101,  0x0C3,         6, 0,  0,  0, 0,  s2x3,  sbigdmd},
+   {{-2, 3, 4, -2, 8, 11,           -2, 2, 5, -2, 9, 10},
+    02020,      0xC30,      6, 0,  0,  0, 0,  s2x3,  sbigdmd},
+   {{0, 3, -2, 7, 8, -2,           1, 2, -2, 6, 9, -2},
+    00101,      0x0C3,      6, 0,  0,  0, 0,  s2x3,  sbigdmd},
 
-   {{2, 0,                           3, 1},                                    0x4,      0xC,         2, 1,  0,  0, 0,  s1x2,  s_trngl4},
-   {{1, 3,                           0, 2},                                    0x1,      0xC,         2, 3,  0,  0, 0,  s1x2,  s_trngl4},
-   {{2, 1, 0,                        3, -1, -1},                                 0,      0xC,         3, 1,  0,  0, 0,  s1x3,  s_trngl4},
-   {{0, 1, 3,                        -1, -1, 2},                                 0,      0xC,         3, 3,  0,  0, 0,  s1x3,  s_trngl4},
-   {{0, 3, 2,                        -1, 1, -1},                                 0,     0000,         3, 0,  0,  0, 0,  s1x3,  sdmd},
+   {{2, 0,                           3, 1},
+    0x4,        0xC,        2, 1,  0,  0, 0,  s1x2,  s_trngl4},
+   {{1, 3,                           0, 2},
+    0x1,        0xC,        2, 3,  0,  0, 0,  s1x2,  s_trngl4},
+   {{2, 1, 0,                        3, -1, -1},
+    0,          0xC,        3, 1,  0,  0, 0,  s1x3,  s_trngl4},
+   {{0, 1, 3,                        -1, -1, 2},
+    0,          0xC,        3, 3,  0,  0, 0,  s1x3,  s_trngl4},
+   {{0, 3, 2,                        -1, 1, -1},
+    0,          0,          3, 0,  0,  0, 0,  s1x3,  sdmd},
 
-   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},                 0x410,    0xC30,         6, 0,  0,  0, 0,  s_ntrgl6cw,  s2x6},
-   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},                  0x041,    0x0C3,         6, 0,  0,  0, 0,  s_ntrgl6ccw, s2x6},
-   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},                 0x104,    0x618,         6, 0,  0,  0, 0,  s_ntrgl6cw,  s2x6},
-   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},                  0x104,    0x186,         6, 0,  0,  0, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},
+    0x410,      0xC30,      6, 0,  0,  0, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 2, 4, 7, 8, 10,              1, -1, -1, 6, -1, -1},
+    0x041,      0x0C3,      6, 0,  0,  0, 0,  s_ntrgl6ccw, s2x6},
+   {{1, 3, 5, 7, 10, 11,              -1, 4, -1, -1, 9, -1},
+    0x104,      0x618,      6, 0,  0,  0, 0,  s_ntrgl6cw,  s2x6},
+   {{0, 1, 4, 6, 8, 10,              -1, 2, -1, -1, 7, -1},
+    0x104,      0x186,      6, 0,  0,  0, 0,  s_ntrgl6ccw, s2x6},
 
-   /* This map must be very late, after the two that do 2x4->4x4
-      and the one that does 2x4->2x8. */
-   {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},            0x4141,   0xF0F0,         8, 1,  0,  0, 0,  s2x4,  sdeepbigqtg},
+   // This map must be very late, after the two that do 2x4->4x4
+   // and the one that does 2x4->2x8.
+   {{3, 5, 14, 8, 9, 12, 7, 2,      1, 4, 15, 10, 11, 13, 6, 0},
+    0x4141,     0xF0F0,     8, 1,  0,  0, 0,  s2x4,  sdeepbigqtg},
 
-   {{9, 8, 23, 22, 14, 15, 18, 19,       2, 3, 6, 7, 21, 20, 11, 10},            0,     0000,         8, 0,  0,  0, 0,  s_rigger, s4x6},
+   {{9, 8, 23, 22, 14, 15, 18, 19,       2, 3, 6, 7, 21, 20, 11, 10},
+    0,          0,          8, 0,  0,  0, 0,  s_rigger, s4x6},
 
-   {{0}, 0, 0, 0, 0,  0,  0, 0, nothing, nothing}};
+   // These must be at the end.  They can partially restore setups
+   // through intermediate setups that are too big.
+
+   {{15, 14, 13, 12, 11, 10, 9, 8, 16, 17, 18, 19, 20, 21, 22, 23,
+     0, 1, 2, 3, 4, 5, 6, 7, 31, 30, 29, 28, 27, 26, 25, 24},
+    0,          0,          16, 0,  0,  0, 0,  s2x8,  shyper4x8},
+   {{0, 2, 4, 6, 8, 10, 12, 14, 17, 19, 21, 23, 25, 27, 29, 31,
+     1, 3, 5, 7, 9, 11, 13, 15, 16, 18, 20, 22, 24, 26, 28, 30},
+    0x55555555, 0xFFFFFFFF, 16, 0,  0,  0, 0,  s2x8,  shyper2x16},
+   {{6, 9, 30, 11, 17, 19, 21, 28, 23, 24, 15, 26, 0, 2, 4, 13,
+     7, 8, 31, 10, 16, 18, 20, 29, 22, 25, 14, 27, 1, 3, 5, 12},
+    0x55555555, 0xFFFFFFFF, 16, 0,  0,  0, 0,  s4x4,  shyper4x8},
+   {{17, 19, 21, 28, 23, 24, 15, 26, 0, 2, 4, 13, 6, 9, 30, 11,
+     16, 18, 20, 29, 22, 25, 14, 27, 1, 3, 5, 12, 7, 8, 31, 10},
+    0,          0xFFFFFFFF, 16, 1,  0,  0, 0,  s4x4,  shyper4x8},
+
+   {{0}, 0, 0, 0, 0, 0, 0, 0, nothing, nothing}};
 
 
 static tm_thing maps_isearch_threesome[] = {
@@ -598,13 +632,18 @@ static void unpack_us(
    tandrec *tandstuff,
    setup *result) THROW_DECL
 {
-   int i;
+   int i, j;
    uint32 m, o, r;
 
-   result->kind = map_ptr->outsetup;
-   result->rotation = tandstuff->virtual_result.rotation - map_ptr->rot;
-   result->result_flags = tandstuff->virtual_result.result_flags;
    r = map_ptr->rot*011;
+
+   // The result of the unpacking goes to an enormous "hyper" array.
+   // This array may be bigger than the maximum allowed value of 24.
+   // We will then reduce it to the actual setup.
+
+   personrec hyperarray[32];
+   memset(hyperarray, 0, sizeof(personrec)*32);
+   uint32 hyperarrayoccupation = 0;
 
    for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=2, o>>=2) {
       uint32 z = rotperson(tandstuff->virtual_result.people[i].id1, r);
@@ -612,59 +651,107 @@ static void unpack_us(
       if (z != 0) {
          int ii = (z >> 6) & 7;
 
-         if (m & 1) {
-            /* Unpack single person. */
+         bool invert_order = ((o + (map_ptr->rot&1) + 1) & 2) && !tandstuff->no_unit_symmetry;
 
-            personrec f = tandstuff->real_saved_people[0][ii];
-            if (f.id1) f.id1 = (f.id1 & ~(NROLL_MASK|STABLE_MASK|077)) | (z & (NROLL_MASK|STABLE_MASK|013));
-            result->people[map_ptr->maps[i]] = f;
-         }
-         else {
-            int j;
-            personrec fb[8];
+         // Figure out whether we are unpacking a single person or multiple people.
+         int howmanytounpack = 1;
 
-            /* Unpack tandem/couples person. */
-
-            for (j=0 ; j<tandstuff->np ; j++) {
-               fb[j] = tandstuff->real_saved_people[j][ii];
-               if (fb[j].id1) fb[j].id1 =
-                                 (fb[j].id1 & ~(NROLL_MASK|STABLE_MASK|077)) |
-                                 (z & (NROLL_MASK|STABLE_MASK|013));
-            }
-
+         if (!(m & 1)) {
+            howmanytounpack = tandstuff->np;
             if (map_ptr->maps[i+map_ptr->limit] < 0)
                fail("This would go to an impossible setup.");
+         }
 
-            if (((o + (map_ptr->rot&1) + 1) & 2) && !tandstuff->no_unit_symmetry) {
-               for (j=0 ; j<tandstuff->np ; j++)
-                  result->people[map_ptr->maps[i+(map_ptr->limit*j)]] = fb[tandstuff->np-j-1];
-            }
-            else {
-               for (j=0 ; j<tandstuff->np ; j++)
-                  result->people[map_ptr->maps[i+(map_ptr->limit*j)]] = fb[j];
-            }
+         personrec fb[8];
+
+         for (j=0 ; j<howmanytounpack ; j++) {
+            fb[j] = tandstuff->real_saved_people[j][ii];
+            if (fb[j].id1) fb[j].id1 =
+                              (fb[j].id1 & ~(NROLL_MASK|STABLE_MASK|077)) |
+                              (z & (NROLL_MASK|STABLE_MASK|013));
+         }
+
+         for (j=0 ; j<howmanytounpack ; j++) {
+            int unpack_order = invert_order ? howmanytounpack-j-1 : j;
+            int hyperarrayplace = map_ptr->maps[i+(map_ptr->limit*j)];
+            hyperarray[hyperarrayplace] = fb[unpack_order];
+            if (fb[unpack_order].id1 != 0) hyperarrayoccupation |= 1<< hyperarrayplace;
          }
       }
    }
 
-   canonicalize_rotation(result);
+   static const veryshort fixer_4x8_4x4[24] = {
+      5, 10, 29, 11, 18, 19, 20, 28,
+      21, 26, 13, 27, 2, 3, 4, 12,
+      -1, -1, -1, -1, -1, -1, -1, -1};
+
+   static const veryshort fixer_4x8_2x8[24] = {
+      15, 14, 13, 12, 11, 10, 9, 8,
+      31, 30, 29, 28, 27, 26, 25, 24,
+      -1, -1, -1, -1, -1, -1, -1, -1};
+
+   static const veryshort fixer_2x8_2x16[24] = {
+      4, 5, 6, 7, 8, 9, 10, 11,
+      20, 21, 22, 23, 24, 25, 26, 27,
+      -1, -1, -1, -1, -1, -1, -1, -1};
+
+   static const veryshort fixer_2x12_2x24[24] = {
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+      18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+
+
+   result->kind = map_ptr->outsetup;
+   result->rotation = tandstuff->virtual_result.rotation - map_ptr->rot;
+   result->result_flags = tandstuff->virtual_result.result_flags;
+
+   const veryshort *my_huge_map = (const veryshort *) 0;
+
+   if (result->kind == shyper4x8) {
+      if ((hyperarrayoccupation & 0xC3C3C3C3) == 0) {
+         result->kind = s4x4;
+         my_huge_map = fixer_4x8_4x4;
+      }
+      else if ((hyperarrayoccupation & 0x00FF00FF) == 0) {
+         result->kind = s2x8;
+         my_huge_map = fixer_4x8_2x8;
+      } 
+   }
+   else if (result->kind == shyper2x16) {
+      if ((hyperarrayoccupation & 0xF00FF00F) == 0) {
+         result->kind = s2x8;
+         my_huge_map = fixer_2x8_2x16;
+      }
+      else if ((hyperarrayoccupation & 0xC003C003) == 0) {
+         result->kind = s2x12;
+         my_huge_map = fixer_2x12_2x24;
+      }
+   }
+   else
+      my_huge_map = identity24;
+
+   if (!my_huge_map)
+      fail("This would go to an impossible setup.");
+
+   for (i=0; i<MAX_PEOPLE; i++) {
+      if (my_huge_map[i] >= 0)
+         result->people[i] = hyperarray[my_huge_map[i]];
+   }
 }
 
 
 
+// Lat = 0 means the people we collapsed, relative to the incoming geometry,
+// were one behind the other.  Lat = 1 means they were lateral.  "Incoming
+// geometry" does not include the incoming rotation field, since we ignore it.
+// We are not responsible for the rotation field of the incoming setup.
 
-/* Lat = 0 means the people we collapsed, relative to the incoming geometry, were one
-   behind the other.  Lat = 1 means they were lateral.  "Incoming geometry" does
-   not include the incoming rotation field, since we ignore it.  We are not responsible
-   for the rotation field of the incoming setup.
+// The canonical storage of the real people, while we are doing the virtual
+// call, is as follows:
+//    Real_saved_people[0] gets person on left (lat=1) near person (lat=0).
+//    Real_saved_people[last] gets person on right (lat=1) or far person (lat=0). */
 
-  The canonical storage of the real people, while we are doing the virtual call, is as follows:
-
-   Real_saved_people[0] gets person on left (lat=1) near person (lat=0).
-   Real_saved_people[last] gets person on right (lat=1) or far person (lat=0). */
-
-// Returns true if it found people facing the wrong way.  This can happen if we are
-// trying siamese and we shouldn't be.
+// This returns true if it found people facing the wrong way.  This can happen
+// if we are trying siamese and we shouldn't be.
 
 static bool pack_us(
    personrec *s,
@@ -1605,6 +1692,7 @@ extern void tandem_couples_move(
             (map_search->insinglemask == sglmask) &&
             ((map_search->ilatmask & livemask) == hmask)) {
          unpack_us(map_search, orbitmask, &tandstuff, result);
+         canonicalize_rotation(result);
          reinstate_rotation(ss, result);
 
          // When we fudge wrongly-oriented triangles to a 2x4, we need

@@ -37,9 +37,10 @@
    s_2x4_qtg
    s_1x2_dmd
    s_qtg_3x4
-   s_1x2_hrgl
-   s_dmd_hrgl
-   s_dmd_hrgl_disc
+   s_short6_2x3
+   s_bigrig_dblbone
+   s_bigbone_dblrig
+   identity24
    expand::init_table
    map::map_init_table
    * Try to do something sensible with these. *
@@ -385,6 +386,11 @@ const expand::thing s_bigrig_dblbone = {{6, 7, 3, 2, 1, 12, 14, 15, 11, 10, 9, 4
 // This is duplicated in the big table.
 const expand::thing s_bigbone_dblrig = {{0, 1, 3, 2, 12, 13, 8, 9, 11, 10, 4, 5},
                                         12, sbigbone, sdblrig, 0};
+
+
+const veryshort identity24[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                                  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+
 
 // This isn't declared const!  Why not?  Because there are pointers
 // linking the hash chains, that get filled in during initialization.
@@ -5405,6 +5411,24 @@ static const id_bit_table id_bit_table_crosswave[] = {
    SOUTHBIT(ID2_CENTER|ID2_CTR4     |ID2_OUTR6|ID2_CTR6 |ID2_NCTRDMD| ID2_CTR1X4),
    NORTHBIT(ID2_CENTER|ID2_CTR4     |ID2_CTR2 |ID2_CTR6 |ID2_CTRDMD | ID2_CTR1X4)};
 
+static const id_bit_table id_bit_table_c1phan[] = {
+   WESTBIT(0),
+   NORTHBIT(0),
+   EASTBIT(0),
+   SOUTHBIT(0),
+   NORTHBIT(0),
+   EASTBIT(0),
+   SOUTHBIT(0),
+   WESTBIT(0),
+   EASTBIT(0),
+   SOUTHBIT(0),
+   WESTBIT(0),
+   NORTHBIT(0),
+   SOUTHBIT(0),
+   WESTBIT(0),
+   NORTHBIT(0),
+   EASTBIT(0)};
+
 static const id_bit_table id_bit_table_gal[] = {
    NOBIT(ID2_END),
    NWBITS(ID2_CENTER|ID2_CTR4),
@@ -5445,35 +5469,35 @@ static const id_bit_table id_bit_table_323[] = {
    NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
    WESTBIT(ID2_CTRDMD | ID2_CTR2 |ID2_NOUTR1X3)};
 
-/* If the population is "common spot diamonds", the richer table below is used instead. */
+// If the population is "common spot diamonds", the richer table below is used instead.
 static const id_bit_table id_bit_table_bigdmd[] = {
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_NCTR1X4 | ID2_OUTR6)};
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   NORTHBIT(ID2_CTR1X4 | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR1X4 | ID2_CTR2),
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR1X4 | ID2_OUTR6),
+   NORTHBIT(ID2_CTR1X4 | ID2_CTR2),
+   EASTBIT(ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_NCTR1X4 | ID2_OUTR6)};
 
-/* This table is only accepted if the population is "common spot diamonds". */
+// This table is only accepted if the population is "common spot diamonds".
 id_bit_table id_bit_table_bigdmd_wings[] = {
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_OUTR6),
-   NOBIT(ID2_CTR4      | ID2_CTR1X4  | ID2_CTR2),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
-   NOBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   NORTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_CTR2),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   SOUTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_OUTR6),
+   NORTHBIT(ID2_CTR4     | ID2_CTR1X4  | ID2_CTR2),
+   EASTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6),
+   WESTBIT(ID2_OUTRPAIRS | ID2_NCTR1X4 | ID2_OUTR6)};
 
 static const id_bit_table id_bit_table_bigptpd[] = {
    NOBIT(ID2_OUTR6),
@@ -6825,7 +6849,7 @@ const setup_attr setup_attrs[] = {
     {b_c1phan, b_c1phan},
     {0, 0},
     true,
-    (const id_bit_table *) 0,
+    id_bit_table_c1phan,
     {(Cstring) 0,
      (Cstring) 0}},
    {15,                     // s_hyperbone
@@ -7174,6 +7198,26 @@ const setup_attr setup_attrs[] = {
     {0, 0, 0, 0},
     {b_nothing, b_nothing},
     {0, 0},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {15,                     // shyper4x8
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {8, 4},
+    false,
+    (const id_bit_table *) 0,
+    {(Cstring) 0,
+     (Cstring) 0}},
+   {15,                     // shyper2x16
+    (const coordrec *) 0,
+    (const coordrec *) 0,
+    {0, 0, 0, 0},
+    {b_nothing, b_nothing},
+    {16, 2},
     false,
     (const id_bit_table *) 0,
     {(Cstring) 0,

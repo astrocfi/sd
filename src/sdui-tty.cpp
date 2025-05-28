@@ -30,8 +30,8 @@
  * version.
  */
 
-#define UI_VERSION_STRING "1.12"
-#define UI_TIME_STAMP "wba@alum.mit.edu  14 Mar 2000 $"
+#define UI_VERSION_STRING "1.13"
+#define UI_TIME_STAMP "wba@alum.mit.edu  5 Jul 2005 $"
 
 /* This file defines all the functions in class iofull
    except for
@@ -452,11 +452,15 @@ static void pack_and_echo_character(char c)
    }
 }
 
-/* This tells how many more lines of matches (the stuff we print in response
-   to a question mark) we can print before we have to say "--More--" to
-   get permission from the user to continue.  If showing_has_stopped goes on, the
-   user has given a negative reply to one of our queries, and so we don't
-   print any more stuff. */
+// This tells how many more lines of matches (the stuff we print in response
+// to a question mark) we can print before we have to say "--More--" to
+// get permission from the user to continue.  If showing_has_stopped goes on, the
+// user has given a negative reply to one of our queries, and so we don't
+// print any more stuff.
+
+// Specifically, this number, minus "text_line_count" is how many lines
+// we have left on the current screenful.  When text_line_count reaches
+// match_counter, we have run out of space and need to query the user.
 static int match_counter;
 
 // This is what we reset the counter to whenever the user confirms.  That is,
@@ -471,6 +475,10 @@ static int match_counter;
 // want to see an enormous amount of output all at once.  This way, a
 // workstation user sees things presented one screenful at a time, and only
 // needs to scroll back if she wants to look at earlier screenfuls.
+// This also caters to those people unfortunate enough to have to use those
+// pathetic excuses for workstations (HP-UX and SunOS come to mind) that don't
+// allow infinite scrolling.
+
 static int match_lines;
 
 
@@ -485,7 +493,7 @@ static bool prompt_for_more_output()
       switch (c) {
       case '\r':
       case '\n':
-         match_counter = 1; // Show one more line,
+         match_counter = text_line_count+1; // Show one more line,
          return true;       // but otherwise keep going.
       case '\b':
       case DEL:
@@ -505,21 +513,19 @@ void iofull::show_match()
 {
    if (showing_has_stopped) return;  // Showing has been turned off.
 
-   if (match_counter <= 0) {
-      match_counter = match_lines - 1;
+   if (match_counter <= text_line_count) {
+      match_counter = text_line_count+match_lines-2;
       if (!prompt_for_more_output()) {
-         match_counter = -1;   // Turn it off.
+         match_counter = text_line_count-1;   // Turn it off.
          showing_has_stopped = true;
          return;
       }
    }
-   match_counter--;
 
-   if (GLOB_match.indent) put_line("   ");
-   put_line(GLOB_user_input);
-   put_line(GLOB_full_extension);
-   put_line("\n");
-   current_text_line++;
+   if (GLOB_match.indent) writestuff("   ");
+   writestuff(GLOB_user_input);
+   writestuff(GLOB_full_extension);
+   newline();
 }
 
 
@@ -655,13 +661,9 @@ static bool get_user_input(char *prompt, int which)
          put_line("\n");
          current_text_line++;
          match_lines = get_lines_for_more();
-         // There might be a bug in the curses library that makes it report a
-         // huge screen height, leading to a "runaway" listing of the calls
-         // when '?' is typed.  So we watch for anomalous values.
-         if (match_lines < 2) match_lines = 2;
-         else if (match_lines > 50) match_lines = 25;
+         if (match_lines < 2) match_lines = 25;  // The system is screwed up.
          if (ui_options.diagnostic_mode) match_lines = 1000000;
-         match_counter = match_lines-1;    // Last line used for "--More--" prompt.
+         match_counter = text_line_count+match_lines-2;   // Count for for "--More--" prompt.
          showing_has_stopped = false;
          (void) match_user_input(which, true, c == '?', false);
          put_line("\n");     // Write a blank line.
@@ -1020,20 +1022,21 @@ popup_return iofull::do_comment_popup(char dest[])
 
 popup_return iofull::do_outfile_popup(char dest[])
 {
-   char buffer[MAX_TEXT_LINE_LENGTH];
-   sprintf(buffer, "Current sequence output file is \"%s\".\n", outfile_string);
-   put_line(buffer);
-   current_text_line++;
+   writestuff("Current sequence output file is \"");
+   writestuff(outfile_string);
+   writestuff("\".");
+   newline();
+
    return get_popup_string("Enter new file name (or '+' to base it on today's date)", dest);
 }
 
 popup_return iofull::do_header_popup(char dest[])
 {
    if (header_comment[0]) {
-      char buffer[MAX_TEXT_LINE_LENGTH];
-      sprintf(buffer, "Current title is \"%s\".\n", header_comment);
-      put_line(buffer);
-      current_text_line++;
+      writestuff("Current title is \"");
+      writestuff(header_comment);
+      writestuff("\".");
+      newline();
    }
    return get_popup_string("Enter new title", dest);
 }
@@ -1041,16 +1044,16 @@ popup_return iofull::do_header_popup(char dest[])
 popup_return iofull::do_getout_popup(char dest[])
 {
    if (header_comment[0]) {
-      char buffer[MAX_TEXT_LINE_LENGTH];
-      sprintf(buffer, "Session title is \"%s\".\n", header_comment);
-      put_line(buffer);
-      current_text_line++;
-      put_line("You can give an additional comment for just this sequence.\n");
-      current_text_line++;
+      writestuff("Session title is \"");
+      writestuff(header_comment);
+      writestuff("\".");
+      newline();
+      writestuff("You can give an additional comment for just this sequence.");
+      newline();
    }
    else {
-      put_line("Type comment for this sequence, if desired.\n");
-      current_text_line++;
+      writestuff("Type comment for this sequence, if desired.");
+      newline();
    }
 
    return get_popup_string("Enter comment", dest);
@@ -1090,12 +1093,12 @@ static int confirm(char *question)
    }
 }
 
-int iofull::yesnoconfirm(char * /*title*/, char *line1, char *line2, bool /*excl*/, bool /*info*/)
+int iofull::yesnoconfirm(char * /*title*/, char *line1, char *line2,
+                         bool /*excl*/, bool /*info*/)
 {
    if (line1) {
-      put_line(line1);
-      put_line("\n");
-      current_text_line++;
+      writestuff(line1);
+      newline();
    }
 
    return confirm(line2);
@@ -1115,7 +1118,8 @@ void iofull::update_resolve_menu(command_kind goal, int cur, int max,
    resolver_happiness = state;
 
    create_resolve_menu_title(goal, cur, max, state, title);
-   gg->add_new_line(title, 0);
+   writestuff(title);
+   newline();
 }
 
 int iofull::do_selector_popup()
@@ -1226,8 +1230,8 @@ uint32 iofull::get_number_fields(int nnumbers, bool forbid_zero)
             char buffer[200];
             get_string_input("How many? ", buffer, 200);
             if (buffer[0] == '!' || buffer[0] == '?') {
-               put_line("Type a number between 0 and 15\n");
-               current_text_line++;
+               writestuff("Type a number between 0 and 15");
+               newline();
             }
             else if (!buffer[0]) return ~0;
             else {

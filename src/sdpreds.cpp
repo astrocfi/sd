@@ -1917,6 +1917,17 @@ static bool check_4x4_quad(setup *real_people, int real_index,
    return real_people->people[(real_index+extra_stuff[0]) & 0xF].id1 != 0;
 }
 
+/* ARGSUSED */
+static bool check_facing_dmd_spot(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff)
+{
+   int my_handedness = real_people->people[real_index].id1 ^ real_index;
+   int next_index = (real_index + 1 - (my_handedness & 2)) & 3;
+   int next_handedness = real_people->people[next_index].id1 ^ next_index;
+   // We demand that the next person be real.
+   return ((my_handedness ^ next_handedness) & (BIT_PERSON|3)) == extra_stuff[0];
+}
+
 
 // -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person.
 
@@ -2451,6 +2462,8 @@ predicate_descriptor pred_table[] = {
       {count_cw_people,                &iden_tab[3]},            // "three_cw_people"
       {check_4x4_quad,                 &iden_tab[14]},           // "quad_person_cw"
       {check_4x4_quad,                 &iden_tab[11]},           // "quad_person_ccw"
+      {check_facing_dmd_spot,          &iden_tab[2]},            // "next_dmd_spot_is_facing"
+      {check_facing_dmd_spot,          &iden_tab[0]},            // "next_dmd_spot_is_normal"
       {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
       {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
       {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"

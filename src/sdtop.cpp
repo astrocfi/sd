@@ -1423,6 +1423,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_mwv, 2, {1, 3, -1},
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_pts_mwv, 2, {0, 2, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_star,    cr_dmd_ctrs_mwv, 2, {1, 1}, {1, 3},
     {1, 0}, {1, 2},              false, chk_star},
    {s_2stars,  cr_dmd_ctrs_mwv, 2, {2, 0, 1}, {2, 4, 5},
@@ -1443,6 +1445,10 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {s_qtag,    cr_dmd_ctrs_mwv, 4, {3, 2, 6, 7, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_dmd_pts_mwv, 4, {0, 5, 1, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_ptpd,    cr_dmd_pts_mwv, 4, {0, 2, 6, 4, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s3dmd,     cr_dmd_ctrs_mwv, 6, {4, 3, 11, 5, 9, 10, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s4dmd,     cr_dmd_ctrs_mwv, 8, {5, 4, 7, 6, 14, 15, 12, 13, -1},
@@ -1457,11 +1463,16 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
    {sdmd,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
     {1, 3, 1}, {0}, {0}, false, chk_spec_directions},
+   {sdmd,      cr_dmd_pts_1f, 2, {0, 2, -1},
+    {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
+   {s_qtag,    cr_dmd_pts_1f, 2, {0, 1, 5, 4, -1},
+    {1, 3, 0}, {0}, {0}, false, chk_spec_directions},
+   {s_ptpd,    cr_dmd_pts_1f, 2, {0, 6, 2, 4, -1},
+    {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s1x4,      cr_dmd_ctrs_1f, 2, {1, 3, -1},
     {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
    {s1x8,      cr_dmd_ctrs_1f, 4, {1, 3, 7, 5, -1},
     {0, 2, 1}, {0}, {0}, false, chk_spec_directions},
-
    {s_short6,  cr_extend_inroutl, 6, {0, 2, 5, 3, 4, 1, -1},
     {0, 2, 0}, {0}, {0}, false, chk_spec_directions},
    {s_short6,  cr_extend_inloutr, 6, {2, 0, 3, 5, 4, 1, -1},
@@ -1768,6 +1779,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table1[] = 
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_ctrs_in_out, 4, {1, 2, 6, 5},
     {0}, {0}, {0}, false, chk_wave},
+   {s2x4, cr_indep_in_out, 0, {3, 2, 3, 2, 1, 0, 1, 0},
+    {0}, {0}, {0}, false, chk_indep_box},
    {s2x4, cr_2fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, true, chk_wave},
    {s2x4, cr_wave_only, 8, {0, 4, 1, 5, 2, 6, 3, 7},
@@ -3699,6 +3712,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
       case cr_conc_iodiff:
       case cr_nice_wv_triangles:
       case cr_spd_base_mwv:
+      case cr_dmd_pts_mwv:
+      case cr_dmd_pts_1f:
          goto check_tt;
       case cr_dmd_ctrs_mwv:
          switch (ssA) {
@@ -3972,15 +3987,29 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          }
 
          if (ssK == s1x4) {
-            if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF)) goto good;
+            if (mask == (k & 0xF) || mask == ((k>>4) & 0xF) || mask == ((k>>8) & 0xF))
+               goto good;
+            goto bad;
+         }
+         else if (ssK == s2x4 && this_qualifier == cr_ripple_one_end) {
+            // Only "cr_ripple_one_end" is supported in a 2x4.
+            // In fact, we don't even look at k.
+            // 32 bits in k aren't enough to do everything we want
+            // in a completely general way.
+            if (mask == 0x11 || mask == 0x88)
+               goto good;
             goto bad;
          }
          else if (ssK == s1x6) {
+            // Only "cr_ripple_both_ends" is supported.
             if (mask == ((k>>16) & 0x3F)) goto good;
             goto bad;
          }
 
-         goto good;     // Huh?
+         // If the actual setup is a 2x4 and we are testing a 1x4,
+         // we have to accept it.  After it gets split to 1x4's,
+         // we will test it more thoroughly.
+         goto good;
       case cr_people_1_and_5_real:
          if (ss->people[1].id1 & ss->people[5].id1) goto good;
          goto bad;
@@ -4170,7 +4199,7 @@ got_it:
 
 extern void clear_people(setup *z)
 {
-   (void) memset(z->people, 0, sizeof(personrec)*MAX_PEOPLE);
+   memset(z->people, 0, sizeof(personrec)*MAX_PEOPLE);
 }
 
 
@@ -4425,6 +4454,8 @@ extern parse_block *process_final_concepts(
          heritsetbit = INHERITFLAG_FRACTAL; break;
       case concept_straight:
          heritsetbit = INHERITFLAG_STRAIGHT; break;
+      case concept_rewind:
+         heritsetbit = INHERITFLAG_REWIND; break;
       case concept_twisted:
          heritsetbit = INHERITFLAG_TWISTED; break;
       case concept_single:

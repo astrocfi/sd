@@ -697,8 +697,6 @@ void mirror_this(setup *s) THROW_DECL
 }
 
 
-static const veryshort identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                                 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
 static const veryshort ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 static const veryshort ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9,
                                10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
@@ -4682,8 +4680,8 @@ foobar:
       }
       else {
          int halfnumoutl, halfnumoutc, numoutl, numoutc;
-         const veryshort *final_translatec = identity;
-         const veryshort *final_translatel = identity;
+         const veryshort *final_translatec = identity24;
+         const veryshort *final_translatel = identity24;
          int rotfudge_line = 0;
          int rotfudge_col = 0;
 

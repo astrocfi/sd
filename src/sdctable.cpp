@@ -1420,6 +1420,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none},
    {"TWISTED",                               concept_twisted,               L+D, l_c4,
     UC_none},
+   {"REWIND",                                concept_rewind,                L+D, l_c4,
+    UC_none},
    {"@6 ARE STANDARD IN",                    concept_standard,              L+D, l_c4a,
     UC_none, 0},
    {"STABLE",                                concept_stable,                  D, l_c3a,

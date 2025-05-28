@@ -130,7 +130,7 @@ If you put options in it, you will get those options every time you run
 @code{Sd} or @code{Sdtty}.  If you don't have such a file, give the
 command @strong{initialize session file} to @code{Sd} or @code{Sdtty} to
 create it.  Then edit it.  Use a plain text editor such as Emacs or
-Notepad -- do not use a word processor.  You will see a section called
+Notepad---do not use a word processor.  You will see a section called
 ``[Options]''.  Add whatever options you like.  Do not put hyphens in front
 of options in this file.  For example:
 
@@ -155,7 +155,7 @@ exactly what version of Windows you have, but it generally involves
 right-clicking the icon, or going to Start->Settings->Taskbar->Start
 Menu Programs->Advanced.  Either way, you should be able to copy and
 paste it, and right-click it to rename it or edit its properties.  Put
-the copied icon wherever you want -- desktop, Start Menu, or wherever.
+the copied icon wherever you want---desktop, Start Menu, or wherever.
 Rename it to whatever you want.  Then edit its properties.  When editing
 its properties, you can change the icon that is displayed, and you can
 add options by selecting the ``shortcut'' tab.  On the ``target'' line,
@@ -209,7 +209,7 @@ whatever startup icons you may have placed.
 
 @unnumberedsec How can I define ``hot keys''?
 
-Edit (with a plain text editor such as Emacs or Notepad -- do not use a
+Edit (with a plain text editor such as Emacs or Notepad---do not use a
 word processor) the initialization file C:\sd\sd.ini.  If you don't have
 such a file, give the command @strong{initialize session file} to @code{Sd} to
 create it.  Then edit it.  You will see a section called ``[Accelerators]''
@@ -245,7 +245,7 @@ that key.  A combination like @strong{f6} denotes that function key.  When
 defining function keys, you may use the @strong{s} prefix, or no prefix at
 all, to get shift-function-key or plain-function key.  With letters or
 digits, you must use some combination of alt or control.  (You can't
-define just @strong{c} as a hot key for concentric -- it would make it
+define just @strong{c} as a hot key for concentric---it would make it
 impossible to type @strong{circulate}.)
 
 @unnumberedsec How can I define abreviations for calls?
@@ -291,6 +291,12 @@ start another sequence.  It will ask for confirmation first.
 The program only recognizes the designators @strong{boys} and @strong{girls}.
 The only exception is the call @strong{ladies chain}.  Of course, you can
 use whatever designation you want when calling.
+
+@unnumberedsec The Callerlab definitions allow @strong{veer left} and @strong{veer right} with single people.  Why doesn't @code{Sd} allow this?
+
+@code{Sd} considers this situation ambiguous, so you need to say
+@strong{single veer left} or @strong{single veer right}.  Whether you
+need to say this when calling is up to you.
 
 @unnumberedsec How can I identify the center wave of 6 in a 3x1 diamond?
 
@@ -484,6 +490,14 @@ to type everything all on one line.  It sometimes fails in this case.
 If something like @strong{boys trade} doesn't work when typed together, try
 typing the @strong{boys} designator, pressing @strong{<ENTER>}, and then typing
 the @strong{trade} call.
+
+@unnumberedsec How can I use the @strong{two-faced} concept?
+
+It isn't clear that this is actually something that needs to be
+said---modern challenge choreography seems to have adopted the position
+that you just do your part anyway.  So just give the call.  A warning
+may be printed, such as "Do your part" or "This is an unusual setup for
+this call".  You may or may not choose to say "two-faced" when calling.
 
 @unnumberedsec How can I do @strong{same sex disconnected}?
 
@@ -817,7 +831,7 @@ on two calls.
 There is also a concept @strong{precede it by}, which performs the first call
 @emph{before} the second.
 
-There is really only one context in which these concepts are sensible--they can be
+There is really only one context in which these concepts are sensible---they can be
 the subject of the @strong{piecewise}, @strong{random}, or @strong{reverse random}
 meta-concepts.  For example:
 
@@ -1068,13 +1082,18 @@ on the command line or in a script or Windows shortcut, or put the line
 
 I'm glad you asked.  The Microsoft compiler is not of acceptably high
 quality for the compilation of Sd and Sdtty.  Microsoft may know how to
-write software that aggressively propagates email viruses, and they may
-know how to write software that deletes competitors' products, and they
-may know how to write software that makes competing web browsers look
-defective, but they don't know how to write compilers.  Compilations of
-Sd and Sdtty have been observed to crash on ``snag bits and pieces''
-from waves.  At first this was believed to occur only with Visual C++
-version 6, service pack 3, which caused me to revert to version 5.
+write software that aggressively propagates email viruses
+(@uref{http://www.securityworld.com/community/hottopics/lovebugvirus.html,here}),
+and they may know how to write software that deletes competitors'
+products (@uref{http://www.dotcomeon.com/bluemountain.html,here}), and
+they may know how to write software that makes competing web browsers
+look defective
+(@uref{http://news.zdnet.com/2100-3513_22-5218163.html,here}), but they
+don't know how, or can't be bothered, to write compilers that generate
+correct code.  Compilations of Sd and Sdtty have been observed to crash
+on ``snag bits and pieces'' from waves.  At first this was believed to
+occur only with Visual C++ version 6, service pack 3, which caused me to
+revert to version 5.
 
 The bug was eventually tracked down to incorrect restoration of the ECX
 register upon exit from a ``switch'' statement.  Bugs of this type, in
@@ -1094,7 +1113,7 @@ have.  As of Sd version
 always been used for the Linux release, of course.
 
 No version of Sd or Sdtty suffering from this Microsoft compiler bug was
-ever released--the code was modified to avoid the bug.  But that is not
+ever released---the code was modified to avoid the bug.  But that is not
 a workable solution in the long run, since I don't know what other parts
 of the program could be getting compiled incorrectly.
 
@@ -1117,7 +1136,7 @@ of the program could be getting compiled incorrectly.
   postscript viewer:    GSView 2.7                   free
                         Ghostscript 5.50             free
   PDF viewer:           Acrobat 4.0                  free
-  HTML viewer:          Netscape 4.76                free
+  HTML viewer:          Firefox 1.0                  free
   Zip disk software:    Iomega 2.8.0.2               commercial
   mailer for upload:    Netscape 4.76                free
 @end example

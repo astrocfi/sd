@@ -28,7 +28,6 @@
    clear_screen
    writechar
    newline
-   open_text_line
    doublespace_file
    writestuff
    mark_parse_blocks
@@ -1567,6 +1566,16 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
    return;
 }
 
+static char current_line[MAX_TEXT_LINE_LENGTH];
+
+static void open_text_line()
+{
+   writechar_block.destcurr = current_line;
+   writechar_block.lastchar = ' ';
+   writechar_block.lastlastchar = ' ';
+   writechar_block.lastblank = (char *) 0;
+}
+
 void clear_screen()
 {
    written_history_items = -1;
@@ -1612,8 +1621,6 @@ static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
 }
 
 
-static char current_line[MAX_TEXT_LINE_LENGTH];
-
 extern void writechar(char src)
 {
    // Don't write two consecutive commas.
@@ -1621,7 +1628,7 @@ extern void writechar(char src)
 
    writechar_block.lastlastchar = writechar_block.lastchar;
 
-   *writechar_block.destcurr = (writechar_block.lastchar = src);
+   *writechar_block.destcurr = writechar_block.lastchar = src;
    if (src == ' ' && writechar_block.destcurr != current_line)
       writechar_block.lastblank = writechar_block.destcurr;
 
@@ -1692,21 +1699,14 @@ void newline()
 
    text_line_count++;
    gg->add_new_line(current_line,
-      enable_file_writing ? 0 : (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
+      enable_file_writing ?
+                    0 :
+                    (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
    open_text_line();
 }
 
 
 
-
-
-extern void open_text_line()
-{
-   writechar_block.destcurr = current_line;
-   writechar_block.lastchar = ' ';
-   writechar_block.lastlastchar = ' ';
-   writechar_block.lastblank = (char *) 0;
-}
 
 
 void doublespace_file()

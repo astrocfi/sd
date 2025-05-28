@@ -29,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 230
+#define DATABASE_FORMAT_VERSION 233
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -54,6 +54,7 @@ enum base_call_index {
    base_call_disband1,
    base_call_slither,
    base_call_maybegrandslither,
+   base_call_plan_ctrtoend,
    base_base_prepare_to_drop,
    base_base_hinge_and_then_trade,
    base_base_hinge_and_then_trade_for_breaker,
@@ -102,45 +103,46 @@ enum heritflags {
    INHERITFLAG_LASTHALF   = 0x00010000UL,
    INHERITFLAG_FRACTAL    = 0x00020000UL,
    INHERITFLAG_FAST       = 0x00040000UL,
+   INHERITFLAG_REWIND     = 0x00080000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_MXNMASK    = 0x00380000UL,
+   INHERITFLAG_MXNMASK    = 0x00700000UL,
    // This is its low bit.
-   INHERITFLAG_MXNBIT     = 0x00080000UL,
+   INHERITFLAG_MXNBIT     = 0x00100000UL,
 
    // These 4 things are the choices available inside.
-   INHERITFLAGMXNK_1X2    = 0x00080000UL,
-   INHERITFLAGMXNK_2X1    = 0x00100000UL,
-   INHERITFLAGMXNK_1X3    = 0x00180000UL,
-   INHERITFLAGMXNK_3X1    = 0x00200000UL,
+   INHERITFLAGMXNK_1X2    = 0x00100000UL,
+   INHERITFLAGMXNK_2X1    = 0x00200000UL,
+   INHERITFLAGMXNK_1X3    = 0x00300000UL,
+   INHERITFLAGMXNK_3X1    = 0x00400000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_NXNMASK    = 0x01C00000UL,
+   INHERITFLAG_NXNMASK    = 0x03800000UL,
    // This is its low bit.
-   INHERITFLAG_NXNBIT     = 0x00400000UL,
+   INHERITFLAG_NXNBIT     = 0x00800000UL,
 
    // These 7 things are the choices available inside.
-   INHERITFLAGNXNK_2X2    = 0x00400000UL,
-   INHERITFLAGNXNK_3X3    = 0x00800000UL,
-   INHERITFLAGNXNK_4X4    = 0x00C00000UL,
-   INHERITFLAGNXNK_5X5    = 0x01000000UL,
-   INHERITFLAGNXNK_6X6    = 0x01400000UL,
-   INHERITFLAGNXNK_7X7    = 0x01800000UL,
-   INHERITFLAGNXNK_8X8    = 0x01C00000UL,
+   INHERITFLAGNXNK_2X2    = 0x00800000UL,
+   INHERITFLAGNXNK_3X3    = 0x01000000UL,
+   INHERITFLAGNXNK_4X4    = 0x01800000UL,
+   INHERITFLAGNXNK_5X5    = 0x02000000UL,
+   INHERITFLAGNXNK_6X6    = 0x02800000UL,
+   INHERITFLAGNXNK_7X7    = 0x03000000UL,
+   INHERITFLAGNXNK_8X8    = 0x03800000UL,
 
    // This is a 3 bit field.
-   INHERITFLAG_REVERTMASK = 0x0E000000UL,
+   INHERITFLAG_REVERTMASK = 0x1C000000UL,
    // This is its low bit.
-   INHERITFLAG_REVERTBIT  = 0x02000000UL,
+   INHERITFLAG_REVERTBIT  = 0x04000000UL,
 
    // These 7 things are the choices available inside.
-   INHERITFLAGRVRTK_REVERT= 0x02000000UL,
-   INHERITFLAGRVRTK_REFLECT=0x04000000UL,
-   INHERITFLAGRVRTK_RVF   = 0x06000000UL,
-   INHERITFLAGRVRTK_RFV   = 0x08000000UL,
-   INHERITFLAGRVRTK_RVFV  = 0x0A000000UL,
-   INHERITFLAGRVRTK_RFVF  = 0x0C000000UL,
-   INHERITFLAGRVRTK_RFF   = 0x0E000000UL
+   INHERITFLAGRVRTK_REVERT= 0x04000000UL,
+   INHERITFLAGRVRTK_REFLECT=0x08000000UL,
+   INHERITFLAGRVRTK_RVF   = 0x0C000000UL,
+   INHERITFLAGRVRTK_RFV   = 0x10000000UL,
+   INHERITFLAGRVRTK_RVFV  = 0x14000000UL,
+   INHERITFLAGRVRTK_RFVF  = 0x18000000UL,
+   INHERITFLAGRVRTK_RFF   = 0x1C000000UL
 };
 
 
@@ -153,7 +155,7 @@ enum heritflags {
 // It also means that a short6 is to be fudged to a 2x3.  See the call
 // "quick step part 1".
 
-// BEWARE!!  This list must track the table "flagtab1" in mkcalls.c .
+// BEWARE!!  This list must track the table "flagtab1" in mkcalls.cpp .
 // These flags go into the "callflags1" word of a callspec_block,
 // and the "topcallflags1" word of the parse_state.
 
@@ -373,6 +375,8 @@ enum setup_kind {
    s8x8,      // we don't let them out of their cage.
    sx1x16,    // Ditto.
    shypergal, // Ditto.
+   shyper4x8, // Ditto.
+   shyper2x16,// Ditto.
    sfat2x8,   // Ditto.  These are big setups that are the size of 4x8's,
    swide4x4,  // but only have 16 people.  The reason is to prevent loss of phantoms.
    s_323,
@@ -682,6 +686,8 @@ enum call_restriction {
    cr_qtag_mwv,            // Qualifier only.
    cr_qtag_mag_mwv,        // Qualifier only.
    cr_dmd_ctrs_1f,         // Qualifier only.
+   cr_dmd_pts_mwv,         // Qualifier only.
+   cr_dmd_pts_1f,          // Qualifier only.
    cr_dmd_intlk,
    cr_dmd_not_intlk,
    cr_tall6,               // Actually not checked as qualifier or restriction.

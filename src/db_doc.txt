@@ -1,6 +1,6 @@
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2004  William B. Ackerman.
+//    Copyright (C) 1990-2005  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -2744,6 +2744,17 @@ outposter_is_ccw
       from this person is the outposter.  Returns FALSE if the outposter is at the
       clockwise end of the line, or there is no live outposter.
 
+nexd_dmd_spot_is_facing
+      applies to "real" diamonds (everyone has a hand toward the center) only.
+      Returns TRUE if the person to which this person would circulate is facing
+      back.  That is, the diamond appears to be facing, as seen by the person
+      under test.  If that person is facing another direction, or there is no
+      person on that spot, it returns FALSE.
+
+nexd_dmd_spot_is_normal
+      Similar to "nexd_dmd_spot_is_facing", but tests whether the next person
+      in the circulate path would circulate in the same direction.
+
 nexttrnglspot_is_tboned
       applies to triangles only.  This is intended to determine which way a
       person should face after doing a triangle circulate.  Returns FALSE if
@@ -3109,8 +3120,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     As a qualifier, this can take the "live" modifier.
    trailers_only      R/Q           as above, people are trailers.
 
-   couples_only       R/Q           1x2/1x4/1x8, 2x4 (lines/cols), 2x2,
-                                       qtag, bone, trngl, alamo - people are paired
+   couples_only       R/Q           1x2/1x4/1x8/1x16, 2x4/2x6/2x8 (lines or cols),
+                                       2x2, qtag, bone, trngl, alamo - people are paired
                                        in genuine couples, not miniwaves.
                                        For qtags, and bones, this applies
                                        just to the centers.  For triangles, it applies
@@ -3232,9 +3243,9 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        an 8 chain or a trade by.
 
    magic_only         R/Q           3x2 or 4x2 - magic column; 2x4 - inverted lines;
-                                       1x4 - single inverted line; 2x2 - inverted box
-                                       thar/crosswave - two waves of opposite handedness.
-                                       alamo - miniwave boxes of opposite handedness.
+                                       1x4 - single inverted line; 2x2 - inverted box.
+                                       Thar/crosswave - two waves of opposite handedness.
+                                       Alamo - miniwave boxes of opposite handedness.
                                        "Right/left/in/out" and "live" may be used when
                                        it is a qualifier --
                                           2x4 - I/O refers to centers
@@ -3277,24 +3288,26 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    none,                            any setup - this always passes (presumably to
                                        use some special indicator like "num" or "live".
 
-   gen_qbox                         2x4/4x2 - demands that everyone be column-like.  This is
-                                       intended to be used with the "left" or "right" modifiers.
-                                       It demands that the center 4 have that handedness.  When
-                                       the "live" modifier is used, it additionally demands that
-                                       there be at least one center, so that a definitive test
-                                       of the handedness can be made.  This qualifier does not
-                                       test the facing direction of the ends, other than to
-                                       demand that they be column-like.  Hence, a 1/4 box,
-                                       3/4 box, column, or magic column will satisfy this,
-                                       as long as the centers have the indicated handedness.
+   gen_qbox                         2x4/4x2 - demands that everyone be column-like.
+                                       This is intended to be used with the "left" or
+                                       "right" modifiers.  It demands that the center 4
+                                       have that handedness.  When the "live" modifier is
+                                       used, it additionally demands that there be at
+                                       least one center, so that a definitive test of the
+                                       handedness can be made.  This qualifier does not
+                                       test the facing direction of the ends, other than
+                                       to demand that they be column-like.  Hence, a 1/4
+                                       box, 3/4 box, column, or magic column will satisfy
+                                       this, as long as the centers have the indicated
+                                       handedness.
 
    centers_in_or_out      Really ought to document this!   Live
 
    independent_in_or_out,           2x2/2x4/4x2 - like "in_or_out", but does not require
-                                    people to be coupled.  They can be arbitrarily T-boned,
-                                    and it just tests that each person is a leader or trailer
-                                    in his 2x2.  This should be used with the "in" or "out"
-                                    mofifier, of course.
+                                       people to be coupled.  They can be arbitrarily
+                                       T-boned, and it just tests that each person is a
+                                       leader or trailer in his 2x2.  This should be used
+                                       with the "in" or "out" mofifier, of course.
 
    dmd_intlk          Really ought to document this!   Live
    dmd_not_intlk      Really ought to document this!   Live
@@ -3326,6 +3339,19 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                        1x6 - these are "out 2&1 lines" with the outer pairs
                                        in miniwaves.  1x8 - the outer pairs are miniwaves
                                        and the inner pairs are couples.
+
+   ripple_one_end          Q        1x4, 2x4 - exactly one person in a 1x4 is selected,
+                                    and that person is an end.  In a 2x4, exactly two
+                                    ends, who are opposites, are selected.
+
+   ripple_both_ends        Q        1x4, 1x6 - both ends of the 1x4 or 1x6, and only
+                                    those people, are selected.
+
+   ripple_both_centers     Q        1x4 - both centers of the 1x4, and only those two
+                                    people, are selected.
+
+   ripple_any_centers      Q        1x4 - one or both centers of the 1x4, but no ends,
+                                    are selected.
 
    split_dixie,                     2x2 - invoked with "split" for dixie style
    not_split_dixie,                 2x2 - invoked without "split" for dixie style
@@ -3361,7 +3387,7 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                                     is some form of generalized 1/4 tag of the indicated
                                     handedness.
 
-                  ** We don't list trngl4 in the above two, because it doesn't obey the
+                  ** We don't list trngl4 in the above, because it doesn't obey the
                   all-larger-setups rule, that is, it hasn't been implemented for bone
                   and rigger.  (and how about c1phantoms?)  There is another potential
                   problem -- these are used to examine the base of individual triangles,
@@ -3376,16 +3402,21 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
                   bone6, both the RH and LH versions will pass, so that splitting will
                   take place.
 
-   spd_base_mwv            Q        spindle, 1x3dmd - for a spindle, it is like "dmd_ctrs_mwv"
-                                    above, but tests only the outer 4 of the center 2x3.
-                                    The very center 2 are ignored.  For a 1x3dmd, does an
-                                    analogous thing with pairs (1,2) and (5,6).
-
    dmd_ctrs_1f             Q        dmd, 1x4, 1x8 - the centers (2 or 4 of them) are
                                     in a couple.  For 1x8, it checks the centers of
                                     each side, and they must be symmetrical, that is,
                                     one couple facing north and the other south.
                                     Or something like that.  It may not be correct.
+
+   dmd_pts_mwv             Q        qtag, dmd - the points are facing opposite directions.
+                                    The "right" or "left" modifiers may be used.
+
+   dmd_pts_1f              Q        qtag, dmd - the points are facing the same way.
+
+   spd_base_mwv            Q        spindle, 1x3dmd - for a spindle, it is like "dmd_ctrs_mwv"
+                                    above, but tests only the outer 4 of the center 2x3.
+                                    The very center 2 are ignored.  For a 1x3dmd, does an
+                                    analogous thing with pairs (1,2) and (5,6).
 
    ctr_pts_rh, ctr_pts_lh  Q        qtag, 2x1dmd, hrglass, dhrglass, bone, bone6,
                                        short6, star - the "points of the centers"

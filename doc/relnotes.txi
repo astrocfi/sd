@@ -10,9 +10,9 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 36.59
-@set title2 Database version = 36.59 format = 230
-@set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
+@set title1 RELEASE NOTES FOR VERSION 36.60
+@set title2 Database version = 36.60 format = 233
+@set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
 
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.60::
 * 36.59::
 * 36.58::
 * 36.57::
@@ -62,7 +63,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.59, Top, (dir)
+@node Intro, 36.60, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -73,11 +74,47 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2005 William B. Ackerman
 @sp 3
 @menu
-* 36.59::               Changes in the current version
+* 36.60::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.59, 36.58, Intro, Top
+@node 36.60, 36.59, Intro, Top
+@unnumberedsec Version 36.60 changes
+
+The program can do a few more rewinds.  It does not do rewinds by
+the trial-and-error method.
+
+The program can do phantom setup concepts stacked after couples/tandem
+concepts (e.g. @strong{phantom as couples split phantom lines})
+reasonably well.
+
+The program can do @strong{prefer the <anyone>} on both @strong{in roll circulate}
+and @strong{out roll circulate}.
+
+The program can do a better job of @strong{triple star thru}.  The call
+is fractionalizable.
+
+The program can do @strong{single veer left} and @strong{single veer right}.
+Callerlab allows these calls to be used without the word "single" when they
+are unambiguous.  @code{Sd} does not.
+
+The program can do @strong{single file all 4 ladies chain}.
+
+The calls @strong{<ATC> chain thru and scatter} have been moved from C4 to C3.
+
+The program can do a better job of @strong{plan ahead} when the centers
+are phantoms.  Specifically, it can use the @strong{assume facing lines}
+command to tell it how the call should be done.
+
+The program can identify @strong{beaus}, @strong{belles},
+@strong{leads}, and @strong{trailers} in C1 phantoms and collided
+diamonds.
+
+The program does a better job of showing individual screenfuls of choices
+when '?' or '!' is typed.  It used to get confused by very long lines.
+
+@c ************
+@node 36.59, 36.58, 36.60, Top
 @unnumberedsec Version 36.59 changes
 
 New call: @strong{<anyone> run 1-1/2}.  Without this call, the use of

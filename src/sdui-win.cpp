@@ -315,13 +315,10 @@ static void erase_questionable_stuff()
 
 void iofull::show_match()
 {
-   char szLocalString[MAX_TEXT_LINE_LENGTH];
-   szLocalString[0] = '\0';
-   if (GLOB_match.indent) lstrcat(szLocalString, "   ");
-   lstrcat(szLocalString, GLOB_user_input);
-   lstrcat(szLocalString, GLOB_full_extension);
-   szLocalString[85] = '\0';  // Just to be sure.
-   gg->add_new_line(szLocalString, 0);
+   if (GLOB_match.indent) writestuff("   ");
+   writestuff(GLOB_user_input);
+   writestuff(GLOB_full_extension);
+   newline();
 }
 
 
@@ -3136,8 +3133,11 @@ void iofull::update_resolve_menu(command_kind goal, int cur, int max,
 {
    create_resolve_menu_title(goal, cur, max, state, szResolveWndTitle);
    UpdateStatusBar(szResolveWndTitle);
+
    // Put it in the transcript area also, where it's easy to see.
-   gg->add_new_line(szResolveWndTitle, 0);
+
+   writestuff(szResolveWndTitle);
+   newline();
 }
 
 

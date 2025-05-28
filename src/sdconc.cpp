@@ -1824,9 +1824,12 @@ static bool fix_empty_outers(
          // diamond chain through work from columns far apart, among
          // other things.
 
-         // Make sure these people go to the same spots, and remove possibly misleading info.
+         // Make sure these people go to the same spots,
+         // and remove possibly misleading info.
          localmods1 |= DFM1_CONC_FORCE_SPOTS;
-         localmods1 &= ~(DFM1_CONC_FORCE_LINES | DFM1_CONC_FORCE_COLUMNS | DFM1_CONC_FORCE_OTHERWAY);
+         localmods1 &= ~(DFM1_CONC_FORCE_LINES |
+                         DFM1_CONC_FORCE_COLUMNS |
+                         DFM1_CONC_FORCE_OTHERWAY);
 
          call_with_name *the_call = begin_outer->cmd.callspec;   // Might be null pointer.
 
@@ -1864,7 +1867,7 @@ static bool fix_empty_outers(
             // these setups together, "fix_n_results" will raise an error, since
             // it won't know whether to leave room for the phantoms.
 
-            *result = *result_inner;   // This gets all the inner people, and the result_flags.
+            *result = *result_inner;  // This gets all the inner people, and the result_flags.
             result->kind = s_dead_concentric;
             result->inner.skind = result_inner[0].kind;
             result->inner.srotation = result_inner[0].rotation;
@@ -2785,11 +2788,18 @@ extern void concentric_move(
          result_ptr->suppress_all_rolls();
       }
 
-      if (analyzer ==  schema_concentric_to_outer_diamond &&
+      if (analyzer == schema_concentric_to_outer_diamond &&
           doing_ends &&
           result_ptr->kind != sdmd) {
-         if (result_ptr->kind != s1x4 || (result_ptr->people[1].id1 | result_ptr->people[3].id1))
+         if (result_ptr->kind == s1x4 &&
+             !(result_ptr->people[1].id1 | result_ptr->people[3].id1)) {
+         }
+         else if (result_ptr->kind == nothing) {
+            clear_people(result_ptr);
+         }
+         else
             fail("Can't make a diamond out of this.");
+
          result_ptr->kind = sdmd;
       }
    }
@@ -2983,8 +2993,34 @@ extern void concentric_move(
       if (fix_empty_outers(ss->kind, final_outers_start_kind, localmods1,
                            crossing, begin_outer_elongation, center_arity,
                            analyzer, cmdin, cmdout, &begin_outer, &result_outer,
-                           result_inner, result))
-         goto getout;
+                           result_inner, result)) {
+
+
+         if (crossing &&
+             begin_outer.cmd.callspec == base_calls[base_call_plan_ctrtoend] &&
+             final_outers_finish_dirs == 0 &&
+             ss->cmd.cmd_assume.assumption == cr_li_lo &&
+             ss->cmd.cmd_assume.assump_col == 0) {
+
+            // This is "plan ahead" with an "assume facing lines".
+            // If no live people in the center, we infer their direction
+            // from the overall assumption, and set the final direction
+            // to what would have resulted.  We have only the assumption
+            // to tell us what to do.
+            //
+            // Q: wouldn't a smarter "inherit_conc_assumptions" have taken
+            //    care of this?
+            // A: No.  It correctly inherited the "facing lines" to "facing couples"
+            //    in each 2x2 before doing the call, but just knowing that the center
+            //    2x2 was in facing couples doesn't tell us what we really need to know --
+            //    that those couples were parallel to the overall 2x4.
+
+            localmods1 = localmodsout1;   // Set it back to DFM1_CONC_FORCE_COLUMNS.
+            final_outers_finish_dirs = (~ss->cmd.cmd_assume.assump_col) & 1;
+         }
+         else
+            goto getout;
+      }
    }
    else if (result_inner[0].kind == nothing) {
       if (fix_empty_inners(orig_inners_start_kind, center_arity,
@@ -3271,10 +3307,10 @@ extern void concentric_move(
        !(result_inner[0].people[1].id1 | result_inner[0].people[3].id1 |
          result_inner[1].people[1].id1 | result_inner[1].people[3].id1)) {
       result_inner[1].swap_people(0, 1);
-      (void) copy_rot(&result_inner[1], 0, &result_inner[1], 2, 033);
-      (void) copy_rot(&result_inner[1], 2, &result_inner[0], 2, 033);
-      (void) copy_rot(&result_inner[0], 2, &result_inner[0], 0, 033);
-      (void) copy_rot(&result_inner[0], 0, &result_inner[1], 1, 033);
+      copy_rot(&result_inner[1], 0, &result_inner[1], 2, 033);
+      copy_rot(&result_inner[1], 2, &result_inner[0], 2, 033);
+      copy_rot(&result_inner[0], 2, &result_inner[0], 0, 033);
+      copy_rot(&result_inner[0], 0, &result_inner[1], 1, 033);
       result_inner[1].clear_person(1);
       result_outer.rotation--;
       rotate_back++;
