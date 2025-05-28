@@ -3772,15 +3772,11 @@ void fraction_info::get_fraction_info(
          if (my_start_point >= m_client_total)
             fail("The indicated part number doesn't exist.");
 
-         // If "K" (the secondary part number) is nonzero,
-         // shorten m_highlimit by that amount.
          if (m_reverse_order) {
-            m_highlimit += kvalue;
             if (m_highlimit > my_start_point)
                fail("The indicated part number doesn't exist.");
          }
          else {
-            m_highlimit -= kvalue;
             if (m_highlimit <= my_start_point)
                fail("The indicated part number doesn't exist.");
          }
@@ -4007,6 +4003,20 @@ void fraction_info::get_fraction_info(
       fail("This call can't be fractionalized.");
    }
 
+   if (frac_stuff.fraction & CMD_FRAC_DEFER_HALF_OF_LAST) {
+      if (m_do_half_of_last_part || m_do_last_half_of_first_part)
+         fail("Can't do this nested fraction.");
+      m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+      frac_stuff.fraction &= ~CMD_FRAC_DEFER_HALF_OF_LAST;
+   }
+
+   if (frac_stuff.fraction & CMD_FRAC_DEFER_LASTHALF_OF_FIRST) {
+      if (m_do_half_of_last_part || m_do_last_half_of_first_part)
+         fail("Can't do this nested fraction.");
+      m_do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
+      frac_stuff.fraction &= ~CMD_FRAC_DEFER_LASTHALF_OF_FIRST;
+   }
+
    if (frac_stuff.flags & CMD_FRAC_FIRSTHALF_ALL) {
       int diff = m_highlimit - my_start_point;
 
@@ -4067,7 +4077,7 @@ uint32 fraction_info::get_fracs_for_this_part()
          return CMD_FRAC_NULL_VALUE;
    }
    else {
-      if (m_do_half_of_last_part != 0 && m_client_index == m_highlimit-1)
+      if (m_do_half_of_last_part != 0 && (m_client_index == m_highlimit-1 || m_client_index == m_instant_stop-1))
          return m_do_half_of_last_part;
       else if (m_do_last_half_of_first_part != 0 && m_client_index == m_start_point)
          return m_do_last_half_of_first_part;
@@ -4738,10 +4748,14 @@ static void do_sequential_call(
 
    // Test for all this is "random left, swing thru".
    // The test cases for this stuff are such things as "left swing thru".
+   // But don't do it if a restraint has just been lifted from a supercall-- in that case
+   // Princess Leia is asking for help, and the call we are about to do is not what it seems.
 
    if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE | CMD_MISC__ALREADY_STEPPED)) &&
        zzz.this_starts_at_beginning() &&
-       (callflags1 & CFLAG1_STEP_REAR_MASK)) {
+       (callflags1 & CFLAG1_STEP_REAR_MASK) &&
+       !(ss->cmd.restrained_concept &&
+         (ss->cmd.cmd_misc3_flags & (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__SUPERCALL)) == CMD_MISC3__SUPERCALL)) {
 
       if (new_final_concepts.test_heritbit(INHERITFLAG_LEFT)) {
          if (!*mirror_p) mirror_this(ss);

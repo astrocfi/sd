@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.46"
+version "38.47"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -1058,7 +1058,7 @@ call "counter@O rotate@P" c1 tag ctr_rot
       array [CR0N CR1N CR2N CR3N AL12S AL13S AL14S AL15S
             AL0S AL1S AL2S AL3S CR12N CR13N CR14N CR15N]
             alternate_definition [magic] c2
-   setup 2x2 2x2 qualifier magic_only restriction unusual alwaysfail
+   setup 2x2 2x2 qualifier magic_only restriction serious_violation alwaysfail
       array [CR1E AL0W CR0E AL1W]
    // To be sure this doesn't just split into 2x2's.
    setup 2x4 2x4 qualifier magic_only restriction forbidden alwaysfail
@@ -2303,13 +2303,13 @@ call "and circle 1/4" c2 tag andcircle
             fudge_to_q_tag magic_is_inherited
    conc2_6_or_2_4 nullcall [] outer6andcircle [inherit_magic]
 
+call "slip while circle 1/4" dontshow tag slipwhilecircle
+            fudge_to_q_tag magic_is_inherited
+   conc2_6_or_2_4 trade [] outer6andcircle [inherit_magic]
+
 call "centers swing" dontshow tag ctrsswing
             yoyo_is_inherited gen_sting_is_inherited
    conc6p_or_normal swing [or_anycall inherit_yoyo inherit_gensting] nullcall []
-
-call "centers swing/slip" dontshow tag ctrsswingslip
-            yoyo_is_inherited gen_sting_is_inherited
-   conc6p_or_normal waveswingslip [or_anycall inherit_yoyo inherit_gensting] nullcall []
 
 call "center 4 cast off @b" dontshow tag ctrscastoff_n
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited neednumber yoyo_fractal_numbers
@@ -2319,11 +2319,11 @@ call "center 2 cast off @b" dontshow tag ctr2castoff_n
             yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited neednumber yoyo_fractal_numbers
    select_center2 cast_off_n4_with_warn [inherit_yoyo inherit_fractal inherit_gensting allow_forced_mod] nullcall []
 
-call "_something and circle 1/4" dontshow tag something_and_circle
-            fudge_to_q_tag step_to_qtag left_means_touch_or_check
+call "swing and circle 1/4" dontshow tag swing_and_circle
+            visible_fractions fudge_to_q_tag step_to_qtag left_means_touch_or_check
             yoyo_is_inherited gen_sting_is_inherited magic_is_inherited
-   seq ctrsswingslip [inherit_yoyo inherit_gensting]
-   seq andcircle [inherit_magic]
+   seq ctrsswing [inherit_yoyo inherit_gensting]
+   seq slipwhilecircle [inherit_magic]
 
 call "centers @0" dontshow tag ctrsanything
    conc6p_or_normal nullcall [mandatory_anycall] nullcall []
@@ -2338,11 +2338,11 @@ call "_@0 and circle 1/4" dontshow tag anything_and_circle
    seq nullcall [mandatory_anycall]
    seq andcircle []
 
-call "@2swing @3and circle @a" c1    /* If modified, center 4 do the modification. */
+call "swing and circle @a" c1    /* If modified, center 4 do the modification. */
             neednumber visible_fractions distribute_repetitions
             step_to_qtag left_means_touch_or_check neednumber
             yoyo_is_inherited gen_sting_is_inherited magic_is_inherited
-   seq something_and_circle [repeat_n inherit_yoyo inherit_gensting inherit_magic]
+   seq swing_and_circle [repeat_n inherit_yoyo inherit_gensting inherit_magic]
 
 call "@0 and circle @a" c2
             neednumber visible_fractions distribute_repetitions
@@ -19683,6 +19683,9 @@ call "double cross" c2
 call "fancy" c3a tag fancy
    setup 4x2 2x4 restriction unusual wave_only
       array [CR2S CR5S CR3S CR4S AL3S AL4S AL2S AL5S]
+            alternate_definition [magic] c3a
+   setup 4x2 2x4 restriction unusual magic_only
+      array [AL5S CR5S AL4S CR4S AL3S CR3S AL2S CR2S]
             alternate_definition [3x3] c4
    // Ambiguous!!!!!
    setup 6x2 3x4 restriction serious_violation alwaysfail
@@ -19700,9 +19703,13 @@ call "fancy" c3a tag fancy
 call "_fancy but nothing" dontshow tag fancybut
    setup 4x2 qtag rotate restriction unusual wave_only
       array [ZM6W ZM7W CR0E CR1E AL0E AL1E ZM3W ZM2W]
+            alternate_definition [magic] c3a
+   setup 4x2 qtag rotate restriction unusual magic_only
+      array [ZM2W ZM7W AL1E CR1E AL0E CR0E ZM3W ZM6W]
 
 call "fancy but @0" c3a
-   seq fancybut []
+            magic_is_inherited
+   seq fancybut [inherit_magic]
    seq centers_mandatory_call []
 
 call "scoot and fancy" c3a

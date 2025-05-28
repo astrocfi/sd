@@ -1,3 +1,12 @@
+
+
+
+Do this
+.txi.html
+makeinfo --no_split --html -o $@ $<
+
+
+
 ===============================================================
 *********** DO NOT RENAME THIS TO HOWTOBUILD.TXT **************
 Doing so would cause it to be included in the "do_pack" script.
@@ -92,6 +101,8 @@ Go to sddoc directory and do:
 16 Jun 12                #46
 next          #45
 (#25, #26, #29, #30, #36 are also available.)
+Also, do [DPT] initially touch by 1/2 x [split sidetrack]
+BUG!!!!!  [H star thru] initially touch by 1/2 x [pass the music] FAILS!
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++
@@ -284,7 +295,6 @@ New way, Dec 10, 2010, uses psftp, no email
 Start psftp (under "putty" group.)
 open scotch.ics.uci.edu
 (U=ackerman, P=x464pq)
-***** New PW is sdmingw3 for now.
 lcd \wba\sddoc
 put pack.zip
   This is silent and not helpful.  It takes a while.  Run putty,

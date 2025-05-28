@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.46
-@set title2 Database version = 38.46 format = 313
+@set title1 RELEASE NOTES FOR VERSION 38.47
+@set title2 Database version = 38.47 format = 313
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.47::
 * 38.46::
 * 38.45::
 * 38.44::
@@ -85,7 +86,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.46, Top, (dir)
+@node Intro, 38.47, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -96,11 +97,28 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2012 William B. Ackerman
 @sp 3
 @menu
-* 38.46::               Changes in the current version
+* 38.47::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.46, 38.45, Intro, Top
+@node 38.47, 38.46, Intro, Top
+@unnumberedsec Version 38.47 changes
+
+Modifying the "swing/slip" of @strong{swing and circle <N/4>} by giving
+the @strong{allow modifications} command is no longer supported.  Simply
+enter it with the subcall in square brackets, as in @strong{[switch to a
+diamond] and circle 1/4}.
+
+Sd has a better understanding of the parts of @strong{swing and circle
+1/4}.  The second half has the outer six circulate while the center two
+finish the swing thru.
+
+Sd can better handle complex cases of fractions, parts, and
+meta-concepts, such as @strong{7/10 fourthly tandem swing the
+fractions}.
+
+@c ************
+@node 38.46, 38.45, 38.47, Top
 @unnumberedsec Version 38.46 changes
 
 The @strong{<anyone> in your staggered wave} (or line, column, or box)

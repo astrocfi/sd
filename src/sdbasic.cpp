@@ -369,10 +369,17 @@ static collision_map collision_map_table[] = {
     s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
    {2, 0x000000, 0x09, 0x09, {0, 3},               {0, 3},                {1, 2},
     s1x4,        s1x4,        0, warn__none, 0},                  // From "head pass thru, all split circulate".
+
+   // These items handle single-spot collisions in a 1x4 from a T-boned 2x2.
    {3, 0x000000, 0x07, 0x04, {0, 1, 2},            {0, 1, 3},             {0, 1, 2},
     s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
    {3, 0x000000, 0x0D, 0x01, {0, 2, 3},            {0, 2, 3},             {1, 2, 3},
     s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
+   {3, 0x000000, 0x0B, 0x08, {0, 1, 3},            {0, 1, 3},             {0, 1, 2},
+    s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
+   {3, 0x000000, 0x0E, 0x02, {1, 2, 3},            {0, 2, 3},             {1, 2, 3},
+    s1x4,        s1x4,        0, warn__none, 0},                  // From nasty T-bone.
+
    // These items handle "1/2 split trade circulate" from 2x2's.
    // They also do "switch to a diamond" when the ends come to the same spot in the center.
    {3, 0x008008, 0x0D, 0x08, {0, 2, 3},            {0, 2, 1},             {0, 2, 3},

@@ -3387,6 +3387,10 @@ static void do_concept_crazy(
 
    craziness_fraction_num += craziness_fraction_den*craziness_integer;
 
+   // Fraction that isn't integral number of quarters isn't allowed if reverse crazy.
+   if ((craziness_fraction_num % craziness_fraction_den) != 0 && reverseness != 0)
+      fail("Illegal fraction for \"crazy\".");
+
    int s_denom = (incomingfracs.fraction >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK;
    int s_numer = (incomingfracs.fraction >> (BITS_PER_NUMBER_FIELD*2)) & NUMBER_FIELD_MASK;
    int e_denom = (incomingfracs.fraction >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
@@ -6405,8 +6409,6 @@ static void do_concept_meta(
               (key != meta_key_rev_echo && key != meta_key_echo))) {
             yescmd.restrained_concept = foo.m_old_retval;
             yescmd.cmd_misc3_flags |= CMD_MISC3__RESTRAIN_CRAZINESS;
-            if (foo.m_skipped_concept->concept->kind == concept_supercall)
-               yescmd.cmd_misc3_flags |= CMD_MISC3__SUPERCALL;
             yescmd.restrained_final = foo.m_root_of_result_of_skip;
             yescmd.parseptr = result_of_skip;
          }
@@ -6813,6 +6815,9 @@ static void do_concept_meta(
                // in the region after the selected part.
                if (S > A+1) {
                   // The active region begins with something non-selected.
+                  if (ff.m_do_half_of_last_part != 0)
+                     fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.
+
                   result->cmd = nocmd;
                   // Set the fractionalize field to do the first few parts of the call.
                   result->cmd.cmd_fraction.set_to_null_with_flags(
@@ -6822,6 +6827,7 @@ static void do_concept_meta(
 
                // Do the selected part, that is, the part that needs the concept.
                result->cmd = yescmd;
+
                result->cmd.cmd_fraction.set_to_null_with_flags(
                   FRACS(CMD_FRAC_CODE_ONLY,S,0) | CMD_FRAC_BREAKING_UP);
 
@@ -6830,15 +6836,16 @@ static void do_concept_meta(
                   // There is, so do the selected part and then set up the remaining part.
                   do_call_in_series_and_update_bits(result);
                   result->cmd = nocmd;
-                  result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
                   result->cmd.cmd_fraction.set_to_null_with_flags(
-                      FRACS(CMD_FRAC_CODE_FROMTOREV, S+1, N-Z) | CMD_FRAC_BREAKING_UP);
+                      FRACS(CMD_FRAC_CODE_FROMTOREV,S+1,N-Z));
+                  //                  result->cmd.cmd_fraction.fraction |= 0x80000000;
                }
-
-               if (ff.m_do_half_of_last_part == CMD_FRAC_HALF_VALUE)
-                  result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
-               else if (ff.m_do_half_of_last_part != 0)
-                  fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.
+               else {
+                  // Selected part was the end, so it's all we do.  But check that that last part
+                  // hadn't been truncated.
+                  if (ff.m_do_half_of_last_part != 0 && Z <= S)
+                     fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.
+               }
 
                goto rollover_and_finish_it;
             }
@@ -6976,24 +6983,11 @@ static void do_concept_meta(
             FRACS(CMD_FRAC_CODE_FROMTOREV,2,0) | CMD_FRAC_BREAKING_UP);
       }
       else {
-         fraction_info ff(ss->cmd, 0, true);    // Allow half parts.
-         // For now, we allow only m_do_half_of_last_part = "1/2".
-         if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != CMD_FRAC_HALF_VALUE) ||
-             ff.m_do_last_half_of_first_part != 0 ||
-             ff.m_instant_stop < 0)  // This is the error indication.
+         fraction_info ff(ss->cmd, 0);
+         if (ff.m_instant_stop < 0)  // This is the error indication.
             fail("Can't stack meta or fractional concepts this way.");
 
-         int N = ff.m_fetch_total;   // Number of parts of call, same as number of things we will do.
-         int A = ff.m_fetch_index;   // Starting point, due to incoming fraction.
-         int Z = ff.m_highlimit;     // Ending point, due to incoming fraction.
-
-         if (A == 0) {   // Does the given fraction include the first part?
-
-
-            if (ff.m_do_half_of_last_part != 0)
-               fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.  Probably quite simple.
-
-
+         if (ff.m_fetch_index == 0) {   // Does the given fraction include the first part?
             // Do the first part, with the concept.
             result->cmd = yescmd;
             result->cmd.cmd_fraction.set_to_null_with_flags(
@@ -7004,17 +6998,14 @@ static void do_concept_meta(
             result->cmd = nocmd;
             result->cmd.cmd_assume.assumption = cr_none;   // Assumptions don't carry through.
             result->cmd.cmd_fraction.set_to_null_with_flags(
-               FRACS(CMD_FRAC_CODE_FROMTO, Z, 1) | CMD_FRAC_BREAKING_UP);
+               FRACS(CMD_FRAC_CODE_FROMTO,ff.m_highlimit,1) | CMD_FRAC_BREAKING_UP);
          }
          else {
             // The fraction excludes the first part, so "initially" doesn't make much sense.  Whatever.
             result->cmd = nocmd;
             result->cmd.cmd_assume.assumption = cr_none;  // Assumptions don't carry through.
             result->cmd.cmd_fraction.set_to_null_with_flags(
-               FRACS(CMD_FRAC_CODE_FROMTOREV, A+1, N-Z) | CMD_FRAC_BREAKING_UP);
-
-            if (ff.m_do_half_of_last_part != 0)
-               result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
+               FRACS(CMD_FRAC_CODE_FROMTOREV,ff.m_fetch_index+1,ff.m_fetch_total-ff.m_highlimit) | CMD_FRAC_BREAKING_UP);
          }
       }
 

@@ -1043,6 +1043,10 @@ enum {
    CMD_FRAC_HALF_VALUE      = NUMBER_FIELDS_1_0_2_1,
    CMD_FRAC_LASTHALF_VALUE  = NUMBER_FIELDS_2_1_1_1,
 
+   // Special flags for the top of the "fraction" field.
+   CMD_FRAC_DEFER_HALF_OF_LAST = 0x80000000,
+   CMD_FRAC_DEFER_LASTHALF_OF_FIRST = 0x40000000,
+
    // These refer to the "flags" field.  First, there are two numeric fields,
    // called "n" and "k", that are associated with the codes.  We encode those
    // fields in 6 bits, as usual.
@@ -3878,7 +3882,8 @@ enum {
                                                       // This is how we enforce the "no overcast warnings for actions
                                                       // internal to a compound call" rule.
    CMD_MISC3__ROLL_TRANSP          = 0x00008000U,
-   CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000U
+   CMD_MISC3__ROLL_TRANSP_IF_Z     = 0x00010000U,
+   CMD_MISC3__SUPERCALL            = 0x00020000U
 };
 
 enum normalize_action {
@@ -5089,7 +5094,7 @@ class fraction_info {
    // Special constructor for grabbing the parts out of a call that we hope is next in the parse tree.
    // Offset is the number of parts by which we are to shorten the call from what its actual
    // definition says.  So, for example, for "finish", offset is 1.
-   fraction_info(setup_command & cmd, int offset) :
+   fraction_info(setup_command & cmd, int offset, bool allow_halves = false) :
       m_reverse_order(false),
       m_instant_stop(-99),  // Error indication; will change to +99 if OK.
       m_do_half_of_last_part(0),
@@ -5120,7 +5125,10 @@ class fraction_info {
                m_end_point = m_fetch_total-1;
                get_fraction_info(corefracs, pp->call->the_defn.callflags1, weirdness_off);
 
-               if (m_fetch_total <= 1 || m_do_half_of_last_part != 0 || m_do_last_half_of_first_part != 0)
+               if (m_fetch_total <= 1)
+                  m_instant_stop = -99;
+
+               if (!allow_halves && (m_do_half_of_last_part != 0 || m_do_last_half_of_first_part != 0))
                   m_instant_stop = -99;
             }
          }
