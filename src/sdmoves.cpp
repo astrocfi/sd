@@ -537,7 +537,7 @@ extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL
    else
       return;
 
-   warn(warn_controversial);
+   warn(warn_verycontroversial);
 }
 
 
@@ -565,7 +565,7 @@ extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL
    else
       return;
 
-   warn(warn_controversial);
+   warn(warn_verycontroversial);
 }
 
 
@@ -6123,6 +6123,7 @@ void really_inner_move(
    switch (the_schema) {
    case schema_nothing:
    case schema_nothing_noroll:
+   case schema_nothing_other_elong:
       if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF|FINAL__UNDER_RANDOM_META))))
          fail("Illegal concept for this call.");
       *result = *ss;
@@ -6132,6 +6133,8 @@ void really_inner_move(
       // to have split maximally both ways.
       result->result_flags.maximize_split_info();
       result->result_flags.misc = ss->cmd.prior_elongation_bits & 3;
+      if (the_schema == schema_nothing_other_elong)
+         result->result_flags.misc ^= 3;
       break;
    case schema_recenter:
       if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
@@ -6911,6 +6914,7 @@ static void move_with_real_call(
             break;
          case schema_nothing:
          case schema_nothing_noroll:
+         case schema_nothing_other_elong:
          case schema_sequential:
          case schema_split_sequential:
          case schema_sequential_with_fraction:

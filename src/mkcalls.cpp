@@ -522,7 +522,7 @@ const char *estab[] = {
    "d4x5",
    "spindle12",
    "???",
-   "???",
+   "1p5x4",
    "???",
    "???",
    "???",
@@ -762,6 +762,7 @@ const char *schematab[] = {
    "setup",
    "nulldefine",
    "nulldefine_noroll",
+   "nulldefine_other_elong",
    "matrix",
    "partnermatrix",
    "partnerpartialmatrix",
@@ -2698,6 +2699,7 @@ int main(int argc, char *argv[])
          break;
       case schema_nothing:
       case schema_nothing_noroll:
+      case schema_nothing_other_elong:
       case schema_roll:
       case schema_recenter:
          get_tok_or_eof();

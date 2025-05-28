@@ -1467,8 +1467,26 @@ extern void normalize_concentric(
    }
 
    // We don't allow different eighths-rotation under any circumstances (for now).
-   if (inners[0].eighth_rotation != outers->eighth_rotation)
-      fail("Inconsistent rotation.");
+
+   for (j=0; j<center_arity; j++) {
+      if (inners[j].eighth_rotation != outers->eighth_rotation)
+         fail("Inconsistent rotation.");
+   }
+
+   result->eighth_rotation = outers->eighth_rotation;
+
+   // If the schema is plain concentric and the sub-setups are 1/8 rotated, take out
+   // that rotation for the purposes of synthesize_this.  The local geometry is taken
+   // care of by the lines-to-lines etc. stuff.  Note that the result rotation will
+   // have the 1/8 indicator.  Note also that the consistency among the sub-setups
+   // has already been taken care of.  But if the inner and outer setups are 2x3's,
+   // something strange is going on, which by convention does what it does.  See t62.
+
+   if (synthesizer == schema_concentric && center_arity == 1 &&
+       !(outers->kind == s2x3 && inners[0].kind == s2x3))
+      outers->eighth_rotation = 0;   // Trick synthesize_this into not getting excited.
+   else if (result->eighth_rotation & 1)
+      warn(warn_controversial);
 
    if (!conc_tables::synthesize_this(
          inners,
@@ -1482,11 +1500,6 @@ extern void normalize_concentric(
          synthesizer,
          result))
       goto anomalize_it;
-
-   if (outers->eighth_rotation & 1)
-      warn(warn_controversial);
-
-   result->eighth_rotation = outers->eighth_rotation;
 
    if (table_synthesizer == schema_conc_o ||
        synthesizer == schema_in_out_triple_squash ||
@@ -2506,7 +2519,8 @@ static bool fix_empty_outers(
                          DFM1_CONC_FORCE_OTHERWAY);
 
          if (the_call && (the_call->the_defn.schema == schema_nothing ||
-                          the_call->the_defn.schema == schema_nothing_noroll))
+                          the_call->the_defn.schema == schema_nothing_noroll ||
+                          the_call->the_defn.schema == schema_nothing_other_elong))
             ;        // It's OK, the call was "nothing".
          else if (the_call == base_calls[base_call_trade] ||
                   the_call == base_calls[base_call_any_hand_remake])
@@ -2592,7 +2606,7 @@ static bool this_call_preserves_shape(const setup *begin,
    const calldefn *def = &begin->cmd.callspec->the_defn;
 
    switch (def->schema) {
-   case schema_nothing: case schema_nothing_noroll: return true;
+   case schema_nothing: case schema_nothing_noroll: case schema_nothing_other_elong: return true;
    case schema_by_array:
       {
          // Calls like "arm turn N/4" are special.  Look at the number that it was given.
@@ -6677,7 +6691,27 @@ extern void inner_selective_move(
                }
             }
 
-            if (numsetups == 2 && lilresult[0].kind == s_trngl) {
+            if (lilresult[0].eighth_rotation != 0) {
+               this_result->eighth_rotation = 1;
+
+               if (lilresult[0].kind == s1x2 && fixp->mykey == select::fx_f4x5down && lilresult[0].rotation == 0) {
+                  nextfixp = select::fixer_ptr_table[select::fx_4x5eight0];
+               }
+               else if (lilresult[0].kind == s1x2 && fixp->mykey == select::fx_f4x5down && lilresult[0].rotation == 1) {
+                  nextfixp = select::fixer_ptr_table[select::fx_4x5eight1];
+               }
+               else if (lilresult[0].kind == s1x2 && fixp->mykey == select::fx_f4x5up && lilresult[0].rotation == 0) {
+                  nextfixp = select::fixer_ptr_table[select::fx_4x5eight2];
+                  this_result->rotation = 1;
+               }
+               else if (lilresult[0].kind == s1x2 && fixp->mykey == select::fx_f4x5up && lilresult[0].rotation == 1) {
+                  nextfixp = select::fixer_ptr_table[select::fx_4x5eight3];
+                  this_result->rotation = 1;
+               }
+               else
+                  goto lose;
+            }
+            else if (numsetups == 2 && lilresult[0].kind == s_trngl) {
                if (((lilresult[0].rotation ^ lilresult[1].rotation) != 2) ||
                    ((lilresult[0].rotation & ~2) != 0))
                   goto lose;

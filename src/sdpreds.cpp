@@ -757,6 +757,9 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
             case s_bone:
                if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x3;
                break;
+            case s_qtag:
+               if (C == D && (A ^ B) == 0x202) thing_to_test = 0xC;
+               break;
             case s_rigger:
                if ((C ^ D) == 0x202 && (A ^ B) == 0x202) thing_to_test = 0x3;
                break;

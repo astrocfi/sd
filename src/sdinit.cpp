@@ -877,6 +877,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       break;
    case schema_nothing:
    case schema_nothing_noroll:
+   case schema_nothing_other_elong:
    case schema_roll:
    case schema_recenter:
       break;

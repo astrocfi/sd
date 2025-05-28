@@ -934,6 +934,8 @@ static const veryshort qtlrig[12] = {6, 7, -1, -1, 2, 3, -1, -1, 6, 7, -1, -1};
 static const veryshort qtlgls[12] = {2, 5, 6, 7, 8, 11, 0, 1, 2, 5, 6, 7};
 static const veryshort qtg2x4[12] = {7, 0, -1, -1, 3, 4, -1, -1, 7, 0, -1, -1};
 static const veryshort f2x4qtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+static const veryshort f2x4phan[24] = {12, 14, 3, 1, 4, 6, 11, 9, 4, 6, 11, 9,
+                                       12, 14, 3, 1, 12, 14, 3, 1, 4, 6, 11, 9};
 static const veryshort ft4x4bh[16] = {9, 8, 7, -1, 6, -1, -1, -1, 3, 2, 1, -1, 0, -1, -1, -1};
 static const veryshort ftqtgbh[8] = {-1, -1, 10, 11, -1, -1, 4, 5};
 static const veryshort ft3x4bb[12] = {-1, -1, -1, -1, 8, 9, -1, -1, -1, -1, 2, 3};
@@ -3790,15 +3792,26 @@ static int divide_the_setup(
          goto do_mystically;
 
       // See if this call has applicable 2x2 definition, in which case split into boxes.
+
       if (assoc(b_2x2, ss, calldeflist)) goto divide_us_no_recompute;
 
       // See long comment above for s1x8.  The test cases for this are
       // "own the <points>, trade by flip the diamond", and
       // "own the <points>, flip the diamond by flip the diamond".
+      //
+      // But it's more complicated than that.  While we must do this for flip/cut
+      // the diamond, we must *not* do it for "N/4 by the right".  Complicated cases
+      // of phantom waves swing the fractions depend on this.  The test is rh06.
+      // The call N/4 by the right has lots of complicated behavior in diamond/qtag spots,
+      // and we must not trigger that behavior.  So we test for the call "N/4 by the right"
+      // by an incredibly sleazy and shameful method.  We check whether the call has
+      // a definition in a short6, which N/4 by the right does.  We pass a null second
+      // argument so it won't do any special qualifier tests; we just want to know
+      // whether short6 is on the association list.
 
       if ((ss->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) &&
           (ss->people[1].id1 | ss->people[2].id1 |
-           ss->people[5].id1 | ss->people[6].id1) == 0) {
+           ss->people[5].id1 | ss->people[6].id1) == 0 && !assoc(b_short6, (setup *) 0, calldeflist)) {
          setup sstest = *ss;
 
          expand::expand_setup(s_qtg_2x4, &sstest);
@@ -4740,6 +4753,7 @@ static uint32 do_actual_array_call(
                   {s2x4, s_qtag, sxequlize, ftequalize, ftlqtg, true}, // Complicated T-boned "transfer and []".
                   {s2x4, s_qtag, s2x4, identity24, qtg2x4, false},
                   {s_qtag, s2x4, s_qtag, identity24, f2x4qtg, false},
+                  {s_c1phan, s2x4, s_c1phan, identity24, f2x4phan, false},
                   {nothing},
                };
 
@@ -5608,8 +5622,9 @@ static uint32 do_actual_array_call(
          case s2x3:
          case s2x5:
          case s3x3:
+         case s1p5x4:
          case s_bone6:
-            // This call turned a smaller setup (like a 1x4) into a 2x3.
+            // This call turned a smaller setup (like a 1x4) into a 2x3 or something similar.
             // It is presumably a call like "pair the line" or "step and slide".
             // Flag the result setup so that the appropriate phantom-squashing
             // will take place if two of these results are placed end-to-end.

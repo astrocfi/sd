@@ -1352,6 +1352,10 @@ class select {
       fx_bar55d,
       fx_fppaad,
       fx_fpp55d,
+      fx_4x5eight0,
+      fx_4x5eight1,
+      fx_4x5eight2,
+      fx_4x5eight3,
       fx_ENUM_EXTENT   // Not a fixer; indicates extent of the enum.
    };
 

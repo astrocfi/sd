@@ -573,6 +573,7 @@ enum warning_index {
    warn__dyp_resolve_ok,
    warn__unusual,
    warn_controversial,
+   warn_verycontroversial,
    warn_serious_violation,
    warn__4_circ_tracks,
    warn__assume_dpt,

@@ -1001,6 +1001,10 @@ void ui_utils::write_history_line(int history_index,
    if (this_item->test_one_warning_specific(warn__split_to_1x3s))
       this_item->clear_one_warning_specific(warn__split_to_1x6s);
 
+   // Or "controversial" and "seriously controversial".
+   if (this_item->test_one_warning_specific(warn_verycontroversial))
+      this_item->clear_one_warning_specific(warn_controversial);
+
    // Or "really_no_eachsetup".
    this_item->clear_one_warning_specific(warn__really_no_eachsetup);
 

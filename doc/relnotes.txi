@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.86
-@set title2 Database version = 38.86 format = 329
+@set title1 RELEASE NOTES FOR VERSION 38.87
+@set title2 Database version = 38.87 format = 331
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.87::
 * 38.86::
 * 38.85::
 * 38.84::
@@ -125,7 +126,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.86, Top, (dir)
+@node Intro, 38.87, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -136,11 +137,27 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2016 William B. Ackerman
 @sp 3
 @menu
-* 38.86::               Changes in the current version
+* 38.87::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.86, 38.85, Intro, Top
+@node 38.87, 38.86, Intro, Top
+@unnumberedsec Version 38.87 changes
+
+Changed the levels of some calls in accordance with the Callerlab Triennial review.
+
+Fixed the behavior of @strong{crossfire}.  Those who traded step ahead.  Those who cross folded do not.
+
+Fixed the allowable starting positions for @strong{plan ahead}.
+
+Fixed a bug in fractionalization of @strong{mini busy}.
+
+Fixed a bug in @strong{CRAZY}.
+
+Fixed a bug in @strong{cast off 1/8} and @strong{cast off 3/8} with a designator.
+
+@c ************
+@node 38.86, 38.85, 38.87, Top
 @unnumberedsec Version 38.86 changes
 
 The handling of @strong{right roll to a wave} and @strong{latch on} was changed, in accordance with the definitions.

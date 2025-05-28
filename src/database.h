@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 329
+#define DATABASE_FORMAT_VERSION 331
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -563,7 +563,7 @@ enum setup_kind {
    sd4x5,
    s_spindle12,
    s1p5x8,   // internal use only
-   s1p5x4,   // internal use only
+   s1p5x4,
    sfudgy2x6l,
    sfudgy2x6r,
    sfudgy2x3l,
@@ -1200,6 +1200,7 @@ enum calldef_schema {
    schema_by_array,
    schema_nothing,
    schema_nothing_noroll,
+   schema_nothing_other_elong,
    schema_matrix,
    schema_partner_matrix,
    schema_partner_partial_matrix,

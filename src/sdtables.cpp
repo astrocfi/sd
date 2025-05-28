@@ -434,6 +434,7 @@ Cstring warning_strings[] = {
    /*  warn__dyp_resolve_ok      */   " Do your part.",
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
+   /*  warn_verycontroversial    */   "*Change offset to other axis, this may be seriously controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
    /*  warn__4_circ_tracks       */   "*Original ends of lines stay outside of the others.",
    /*  warn__assume_dpt          */   "*Assume a starting DPT.",
@@ -2607,6 +2608,13 @@ map::map_thing map::map_init_table[] = {
     s1x8,2,MPKIND__SPLIT,0,       warn__none,  s1x16,     0x000, 0},
    {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
     s1x8,2,MPKIND__SPLIT,1,       warn__none,  s2x8,      0x000, 0},
+
+   // For crossfire.
+   {{7, 6, 5, 4, 4, 5, 6, 7,           0, 1, 2, 3, 3, 2, 1, 0},
+    s1p5x4,2,MPKIND__SPLIT,1,     warn__none,  s2x4,      0x000, 0},
+   {{0, 1, 2, 3, 12, 13, 14, 15,       4, 5, 6, 7, 8, 9, 10, 11},
+    s1p5x4,2,MPKIND__SPLIT,0,     warn__none,  s2x8,      0x000, 0},
+
    {{-1, -1, -1, -1, 3, 2, 0, 1,
      4, 5, 7, 6, 12, 13, 15, 14,
      11, 10, 8, 9, -1, -1, -1, -1},
@@ -10202,6 +10210,8 @@ const schema_attr schema_attrs[] = {
    {0,
     schema_nothing},                     // schema_nothing_noroll
    {0,
+    schema_nothing},                     // schema_nothing_other_elong
+   {0,
     schema_nothing},                     // schema_matrix
    {0,
     schema_nothing},                     // schema_partner_matrix
@@ -11432,7 +11442,36 @@ select::fixer select::fixer_init_table[] = {
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
    {fx_fpp55d, s1x2, s2x4,              0, 0, 2,          {0, 2, 6, 4},
     fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+
+   {fx_4x5eight0, s1x2, s1x8,           0, 0, 4, {0, 1, 3, 2, 6, 7, 5, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_4x5eight1, s1x2, s2x4,           1, 0, 4, {0, 7, 1, 6, 2, 5, 3, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_4x5eight2, s1x2, s2x4,           3, 0, 4, {7, 0, 6, 1, 5, 2, 4, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_4x5eight3, s1x2, s1x8,           0, 0, 4, {0, 1, 3, 2, 6, 7, 5, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+
    {fx0}};
+
+
+/*
+   {fx_4x5eight0, s1x2, s1x8,           0, 0, 4, {0, 1, 3, 2, 6, 7, 5, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_4x5eight1, s1x2, s2x4,           1, 0, 4, {0, 7, 1, 6, 2, 5, 3, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_4x5eight2, s1x2, s2x4,           3, 0, 4, {7, 0, 6, 1, 5, 2, 4, 3},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+   {fx_4x5eight3, s1x2, s1x8,           0, 0, 4, {0, 1, 3, 2, 6, 7, 5, 4},
+    fx0, fx0,                   fx0, fx0,                   fx0, fx0,                   fx0, fx0},
+
+
+
+
+*/
+
 
 select::sel_item select::sel_init_table[] = {
    {LOOKUP_Z,                  s2x3,        066,    fx_z2x3a,      fx0, -1},
@@ -11780,7 +11819,7 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                      s3x4,        04343,  fx_f3x4down,   fx0, -1},
    {LOOKUP_NONE,                      s3x4,        05454,  fx_f3x4up,     fx0, -1},
    {LOOKUP_NONE,                      s4x5,      0x60D83,  fx_f4x5down,   fx0, -1},
-   {LOOKUP_NONE,                      s4x5,      0x360D8,  fx_f4x5up,   fx0, -1},
+   {LOOKUP_NONE,                      s4x5,      0x360D8,  fx_f4x5up,     fx0, -1},
    {LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX,  s3x4,        03030,  fx_d3x4ub6,    fx0, -1},
    {LOOKUP_DIST_BOX|LOOKUP_DIAG_BOX,  s3x4,        02121,  fx_d3x4ub5,    fx0, -1},
    {LOOKUP_NONE,                      s4x4,       0x3030,  fx_f4x4nw,     fx0, -1},

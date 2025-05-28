@@ -647,6 +647,7 @@ static tm_thing maps_isearch_fudgy2x6[] = {
    {{0}, 0,0, 0, 0, 0,  nothing, nothing}};
 
 
+
 struct siamese_item {
    setup_kind testkind;
    uint32 testval; // High 16 = people facing E/W (little-endian), low 16 = people facing N/S.
@@ -1323,6 +1324,7 @@ extern void tandem_couples_move(
    uint32 dynamic = twosome >> 2;
    twosome &= 3;
 
+
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_NOT_EXECUTE) {
       result->kind = nothing;
       clear_result_flags(result);
@@ -1929,7 +1931,8 @@ extern void tandem_couples_move(
 
    // Initiate the "fudgy 2x3" or "fudgy 2x6" mechanism.
 
-   if (phantom == 0 && nsmask == 0 && ewmask == allmask) {
+   if (phantom == 0 && 
+       (nsmask == 0 && ewmask == allmask) | (ewmask == 0 && nsmask == allmask)) {
       if ((key == tandem_key_cpls || key == tandem_key_tand) && ss->kind == s2x3 &&
           (allmask == 033 || allmask == 066)) {
          our_map_table = maps_isearch_fudgy2x3;

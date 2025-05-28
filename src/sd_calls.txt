@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.86"
+version "38.87"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -66,6 +66,10 @@ call "nothing" mainstream tag nullcall
 call "_nothing, and dont roll" dontshow tag nullcall_noroll
             dont_use_in_resolve
    nulldefine_noroll
+
+call "_nothing, other elongation" dontshow tag nullcall_other_elong
+            dont_use_in_resolve dont_raise_overcast
+   nulldefine_other_elong
 
 call "_secondary nothing" dontshow tag nullsecond
    nulldefine
@@ -8259,7 +8263,7 @@ call "zag" a2
    setup qtag qtag
       array [AL0W AL1W ZM2N ZM3N 0 0 ZM6N ZM7N]
 
-call "double pass thru" mainstream
+call "double pass thru" mainstream tag dpt
             rear_back_from_qtag
    setup 4x1 1x4
       array [ZM3N ZM2N 0 0]
@@ -9148,6 +9152,7 @@ call "crossfire" plus
             parallel_conc_end
    setup 2x4 qtag qualifier live out in_or_out /* If facing in, clause below handles it. */
       array [CR1S CM2S AM7S AL0S 0 0 0 0]
+
    // Extremely strange ones.
    setup 2x4 bone rotate qualifier live tbone out centers_in_or_out
                          restriction unusual alwaysfail
@@ -9155,16 +9160,18 @@ call "crossfire" plus
    setup 4x2 bone rotate qualifier live tbone out centers_in_or_out
                          restriction unusual alwaysfail
       array [0 0 CM2E 0 0 AM7E 0 0]
-   setup 2x4 2x4 rotate qualifier live tbone in centers_in_or_out
+
+   setup 2x4 4x4 qualifier live tbone in centers_in_or_out
                         restriction unusual alwaysfail
-      array [CR0E 0 0 AL7E 0 0 0 0]
-   setup 4x2 2x4 rotate qualifier live tbone in centers_in_or_out
+      array [CR14S 0 0 AL13S 0 0 0 0]
+   setup 4x2 4x4 qualifier live tbone in centers_in_or_out
                         restriction unusual alwaysfail
-      array [0 CM5E 0 0 0 0 AM6E 0]
+      array [0 CM9S 0 0 0 0 AM10S 0]
+
    setup 1x4 2x2 qualifier couples_only        // Handles 1-faced or 2-faced lines.
       array [CR1S CM2S AL0S AM3S]
-   setup 1x4 1x4 qualifier magic_only          // Handles inverted lines.
-      array [CR2S CM2S AL1S AM1S]
+   setup 1x4 1p5x4 qualifier magic_only        // Handles inverted lines.
+      array [CR3S CM4S AL1S AM6S]
 
    // Wave: this is the horrible Applications Review Committee thing.
    // "The definition allows for this application; however, the ending position
@@ -11822,18 +11829,18 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
    setup qtag 3x1dmd rotate qualifier num 3 right qtag_mag_mwv
       array [CR1S 0 ZM3W 0 0 CR4S 0 CR6S]
 
-   setup qtag 2x4 rotate  qualifier num 1 right wave_only
-      array [0 0 0 CR1N 0 0 CR6N 0]
-   setup pqtag 2x4 rotate qualifier num 1 right wave_only
-      array [ZM7W ZM0W 0 0 ZM3W ZM4W 0 0]
+   setup qtag c1phan  qualifier num 1 right wave_only
+      array [0 0 0 CR6E 0 0 CR3E 0]
+   setup pqtag c1phan qualifier num 1 right wave_only
+      array [ZM1N ZM4N 0 0 ZM9N ZM12N 0 0]
    setup qtag qtag        qualifier num 2 right wave_only
       array [0 0 0 CR2S 0 0 CR7S 0]
    setup pqtag 2x4 rotate qualifier num 2 right wave_only
       array [ZM7W ZM0W 0 0 ZM3W ZM4W 0 0]
-   setup qtag 2x4 rotate  qualifier num 3 right wave_only
-      array [0 0 0 CR2S 0 0 CR5S 0]
-   setup pqtag 2x4 rotate qualifier num 3 right wave_only
-      array [ZM7W ZM0W 0 0 ZM3W ZM4W 0 0]
+   setup qtag c1phan  qualifier num 3 right wave_only
+      array [0 0 0 CR11W 0 0 CR14W 0]
+   setup pqtag c1phan qualifier num 3 right wave_only
+      array [ZM1N ZM4N 0 0 ZM9N ZM12N 0 0]
 
    setup qtag qtag     qualifier num 0 left wave_only
       array [ZM0N ZM1N ZM2N 0 ZM4N ZM5N 0 ZM7N]
@@ -11910,8 +11917,6 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR1W CR2W CR7W 0 0 0 0 0]
    setup 1x8 spindle qualifier num 1 left wave_only
       array [0 CR0E CR1E 0 ZM3N 0 0 CR2E]
-//   setup 1x8 1x8 qualifier num 2 left wave_only
-//      array [0 CR3S ZM2N 0 ZM4N 0 0 CR5S]   // Don't cross the center line unless said grand.
    setup 1x8 spindle qualifier num 3 left wave_only
       array [0 CR6W CR5W 0 ZM3N 0 0 CR4W]
 
@@ -11928,13 +11933,6 @@ call "_ @D by the right" dontshow tag odd_frac_by_right
       array [CR7S CR6S CR5S CR4S 0 0 0 0]
    setup 4x2 1x8 qualifier num 3 right wave_only
       array [CR0W CR3W CR6W CR5W 0 0 0 0]
-
-   setup 2x2 1x4 rotate qualifier num 1 right wave_only
-      array [CR0N 0 0 CR3N]
-   setup 2x2 2x2 qualifier num 2 right wave_only
-      array [CR1S 0 0 CR2S]
-   setup 2x2 1x4 rotate qualifier num 3 right wave_only
-      array [CR1S 0 0 CR2S]
 
    // Still need to do generous/stingy stuff below this.
 
@@ -16880,7 +16878,7 @@ call "_centers plan ahead" dontshow tag plan_ctrtoend
       array [AL1S 0 0 CR0N]
 
 call "_ends plan ahead" dontshow tag plan_endtoctr
-            rear_back_from_r_wave left_means_mirror
+            left_means_mirror
    setup 2x2 2x2
       array [CR3N AACR0S ACR1W CR2W]
 
@@ -17236,21 +17234,27 @@ call "square the bases plus @9" c4
    seq splitsq2plusn [inherit_left allow_forced_mod]
    seq trade_by [inherit_left allow_forced_mod]
 
-call "_ends regroup" dontshow tag eregroup
+call "_ends regroup 1" dontshow tag eregroup1
    setup 2x2 2x2 qualifier out in_or_out
-      array [AM3E CM2W 0 0]
+      array [AL0W CR1E 0 0]
    setup 2x2 2x2 restriction unusual alwaysfail
-      array [AM3E CM2W CAM1W ACM0E]
+      array [AL0W CR1E CR2E AL3W]
+
+call "_ends regroup" dontshow tag eregroup
+            visible_fractions
+   seq eregroup1 []
+   seq trade []
+   seq nullcall_other_elong []
 
 call "regroup" c1
             visible_fractions diamond_is_legal funny_is_inherited
    conc trade_and_roll_w_tbone [inherit_diamond inherit_funny]
-        eregroup [inherit_diamond inherit_funny conc_demand_lines conc_force_lines endscando]
+        eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
 
 call "regroup but @m" c3
             visible_fractions diamond_is_legal funny_is_inherited
    conc trade_w_tbone_but [inherit_diamond inherit_funny]
-        eregroup [inherit_diamond inherit_funny conc_demand_lines conc_force_lines endscando]
+        eregroup [inherit_diamond inherit_funny conc_demand_lines endscando]
 
 call "_trade, must be leads" dontshow tag trade_demand_leads
    setup 2x2 2x2
@@ -22843,9 +22847,6 @@ call "_check a wave" dontshow tag checkawave
       array [ZM0N ZM1N ZM2N ZM3N]
    setup 1x2 1x2 restriction unusual wave_unless_say_2faced
       array [ZM0N ZM1N]
-   // In case it's "yoyo".
-   setup 2x2 2x2 restriction forbidden wave_only
-      array [ZM0N ZM1N ZM2N ZM3N]
 
 call "_check parallel waves" dontshow tag checkparwaves
    setup 2x4 2x4 restriction unusual wave_unless_say_2faced
@@ -24374,10 +24375,10 @@ call "centers thru and close the gate" c4
 
 call "_mini busy 1" dontshow tag mini_busy_1
    setup 2x4 3x4 restriction 2fl_only
-      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM11N ZM10N]
+      array [CR0E CR1E AL2W AL3W ZM4N ZM5N ZM11N ZM10N]
 
 call "_mini busy 2" dontshow tag mini_busy_2
-   in_out_triple_squash plain_tag [] sglctrtogetherhinge []
+   in_out_triple_squash dpt [force_half] sglctrtogetherhinge []
 
 call "_mini busy 3" dontshow tag mini_busy_3
    conc flipdiamond [] quarterin [conc_demand_lines conc_force_spots]
