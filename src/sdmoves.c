@@ -1669,6 +1669,7 @@ Private void do_sequential_call(
    /* This tells whether the setup was genuinely elongated when it came in.  We keep track of pseudo-elongation
       during the call even when it wasn't, but sometimes we really need to know. */
    long_boolean setup_is_elongated = (ss->kind == s2x2 || ss->kind == s_short6) && ss->cmd.prior_elongation_bits != 0;
+   int remembered_2x2_elongation = 0;
    int subpart_count = 0;
    uint32 restrained_fraction = 0;
 
@@ -1682,7 +1683,7 @@ Private void do_sequential_call(
          uint32 this_mod1 = this_item->modifiers1;
 
          if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
-            total += (current_number_fields >> (((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
+            total += (current_options.number_fields >> (((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
 
             if (DFM1_REPEAT_N_ALTERNATE & this_mod1) ii++;
             if (DFM1_REPEAT_NM1 & this_mod1) total--;
@@ -1797,8 +1798,9 @@ Private void do_sequential_call(
       uint32 conc1, conc2;
       by_def_item *alt_item;
       int use_alternate;
+      setup_kind oldk;
       long_boolean recompute_id;
-      uint32 saved_number_fields = current_number_fields;
+      uint32 saved_number_fields = current_options.number_fields;
 
       /* Now the "index" values (fetch_index and dist_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
@@ -1879,13 +1881,11 @@ Private void do_sequential_call(
       /* If this context requires a tagging or scoot call, pass that fact on. */
       if (this_item->call_id >= BASE_CALL_TAGGER0 && this_item->call_id <= BASE_CALL_TAGGER3) conc1 |= FINAL__MUST_BE_TAG;
 
-      current_number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
-
-      remember_elongation = result->cmd.prior_elongation_bits;
+      current_options.number_fields >>= ((DFM1_NUM_SHIFT_MASK & this_mod1) / DFM1_NUM_SHIFT_BIT) * 4;
 
       /* Check for special repetition stuff. */
       if ((DFM1_REPEAT_N | DFM1_REPEAT_NM1 | DFM1_REPEAT_N_ALTERNATE) & this_mod1) {
-         int count_to_use = current_number_fields & 0xF;
+         int count_to_use = current_options.number_fields & 0xF;
 
          number_used = TRUE;
          if (DFM1_REPEAT_NM1 & this_mod1) count_to_use--;
@@ -1900,6 +1900,8 @@ Private void do_sequential_call(
          if (subpart_count == 0) goto done_with_big_cycle;
          subpart_count--;
       }
+
+      remember_elongation = result->cmd.prior_elongation_bits;
 
 do_plain_call:
 
@@ -1922,6 +1924,7 @@ do_plain_call:
       }
 
       result->cmd = ss->cmd;
+      result->cmd.prior_elongation_bits = remember_elongation;
 
       /* We don't supply these; they get filled in by the call. */
       result->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
@@ -1971,19 +1974,20 @@ do_plain_call:
       f1.next = (parse_block *) 0;
       f1.subsidiary_root = (parse_block *) 0;
       f1.gc_ptr = (parse_block *) 0;
-      f1.selector = current_selector;
-      f1.direction = current_direction;
-      f1.number = current_number_fields;
+      f1.selector = current_options.who;
+      f1.direction = current_options.where;
+      f1.number = current_options.number_fields;
       f1.tagger = -1;
       f1.circcer = -1;
       result->cmd.callspec = (callspec_block *) 0;
       result->cmd.parseptr = &f1;
 #endif
 
-      result->cmd.prior_elongation_bits = remember_elongation;
-
       if ((DFM1_CPLS_UNLESS_SINGLE & this_mod1) && !(new_final_concepts & INHERITFLAG_SINGLE))
          result->cmd.cmd_misc_flags |= CMD_MISC__DO_AS_COUPLES;
+
+      oldk = result->kind;
+      if (oldk == s2x2 && result->cmd.prior_elongation_bits != 0) remembered_2x2_elongation = result->cmd.prior_elongation_bits & 3;
 
       do_call_in_series(
          result,
@@ -1991,6 +1995,11 @@ do_plain_call:
          !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) &&
             !(new_final_concepts & (INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)),
          qtf);
+
+      if (oldk != s2x2 && result->kind == s2x2 && remembered_2x2_elongation != 0) {
+         result->result_flags = (result->result_flags & ~3) | remembered_2x2_elongation;
+         result->cmd.prior_elongation_bits = (result->cmd.prior_elongation_bits & ~3) | remembered_2x2_elongation;
+      }
 
       if (subpart_count && !distribute) continue;
 
@@ -2011,7 +2020,7 @@ done_with_big_cycle:
 
       ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
 
-      current_number_fields = saved_number_fields;
+      current_options.number_fields = saved_number_fields;
 
       qtf = FALSE;
 
@@ -2087,10 +2096,12 @@ that probably need to be put in. */
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
 
       /* If we invert centers and ends parts, we don't raise errors
-         for bad elongation -- we allow horrible "ends trade" on
-         "invert acey deucey", for example. */
+         for bad elongation if "suppress_elongation_warnings" was set for the centers part.
+         This allows horrible "ends trade" on "invert acey deucey", for example,
+         since "acey deucey" has that flag set for the trade that the centers do. */
 
-      if (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT)
+      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_INVERT) && callspec->schema == schema_concentric &&
+            (DFM1_SUPPRESS_ELONGATION_WARNINGS & callspec->stuff.conc.innerdef.modifiers1))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_CHK_ELONG;
 
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the ends part of
@@ -2157,10 +2168,9 @@ that probably need to be put in. */
    if (callflags1 & CFLAG1_IMPRECISE_ROTATION)
       imprecise_rotation_result_flag = RESULTFLAG__IMPRECISE_ROT;
 
-   /* Check for a call whose schema is single (cross) concentric.
-      If so, be sure the setup is divided into 1x4's or diamonds. */
-
    the_schema = callspec->schema;
+
+   /* Check for a schema that we weren't sure about, and fix it up. */
 
    if (the_schema == schema_maybe_single_concentric) {
       if (final_concepts & INHERITFLAG_SINGLE)
@@ -2253,24 +2263,6 @@ that probably need to be put in. */
       }
    }
 
-   switch (the_schema) {
-      case schema_single_concentric:
-      case schema_single_cross_concentric:
-         ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
-         if (!do_simple_split(ss, TRUE, result))
-            return;
-
-         break;
-      case schema_single_concentric_together:
-         switch (ss->kind) {
-            case s1x8: case s_ptpd:
-               ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
-               (void) do_simple_split(ss, TRUE, result);
-               return;
-         }
-         break;
-   }
-
    /* If the "diamond" concept has been given and the call doesn't want it, we do
       the "diamond single wheel" variety. */
 
@@ -2343,6 +2335,25 @@ that probably need to be put in. */
    }
 
    ss->cmd.cmd_final_flags = final_concepts;
+
+   /* Check for a call whose schema is single (cross) concentric.
+      If so, be sure the setup is divided into 1x4's or diamonds. */
+
+   switch (the_schema) {
+      case schema_single_concentric:
+      case schema_single_cross_concentric:
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
+         if (!do_simple_split(ss, TRUE, result)) return;
+         break;
+      case schema_single_concentric_together:
+         switch (ss->kind) {
+            case s1x8: case s_ptpd:
+               ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT;
+               if (!do_simple_split(ss, TRUE, result)) return;
+               break;
+         }
+         break;
+   }
 
    /* At this point, we may have mirrored the setup and, of course, left the switch "mirror"
       on.  We did it only as needed for the [touch / rear back / check] stuff.  What we
@@ -2428,7 +2439,7 @@ that probably need to be put in. */
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX;
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU) {
          final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
-         if ((current_number_fields & 0xF) == 1) fail("Can't split square thru 1.");
+         if ((current_options.number_fields & 0xF) == 1) fail("Can't split square thru 1.");
       }
       else if (callflags1 & CFLAG1_SPLIT_LIKE_DIXIE_STYLE)
          final_concepts = (final_concepts | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
@@ -2832,9 +2843,9 @@ extern void move(
    new_final_concepts |= ss->cmd.cmd_final_flags;         /* Include any old ones we had. */
 
    if (parseptrcopy->concept->kind <= marker_end_of_list) {
-      uint32 saved_number_fields = current_number_fields;
-      selector_kind saved_selector = current_selector;
-      direction_kind saved_direction = current_direction;
+      uint32 saved_number_fields = current_options.number_fields;
+      selector_kind saved_selector = current_options.who;
+      direction_kind saved_direction = current_options.where;
 
       /* There are no "non-final" concepts.  The only concepts are the final ones that
          have been encoded into new_final_concepts. */
@@ -2856,16 +2867,16 @@ extern void move(
          ss->cmd.skippable_concept = ss->cmd.parseptr;
       }
 
-      current_selector = parseptrcopy->selector;
-      current_direction = parseptrcopy->direction;
-      current_number_fields = parseptrcopy->number;
+      current_options.who = parseptrcopy->options.who;
+      current_options.where = parseptrcopy->options.where;
+      current_options.number_fields = parseptrcopy->options.number_fields;
       ss->cmd.parseptr = parseptrcopy;
       ss->cmd.callspec = parseptrcopy->call;
       ss->cmd.cmd_final_flags = new_final_concepts;
       move_with_real_call(ss, qtfudged, result);
-      current_selector = saved_selector;
-      current_direction = saved_direction;
-      current_number_fields = saved_number_fields;
+      current_options.who = saved_selector;
+      current_options.where = saved_direction;
+      current_options.number_fields = saved_number_fields;
    }
    else {
       /* We now know that there are "non-final" (virtual setup) concepts present. */

@@ -30,9 +30,6 @@
    matcher_initialize
    matcher_setup_call_menu
    match_user_input
-
-and the following external variables:
-   elide_blanks
 */
 
 /* #define TIMING */ /* uncomment to display timing information */
@@ -46,8 +43,6 @@ and the following external variables:
 #ifdef TIMING
 #include <time.h>
 #endif
-
-int elide_blanks = 0;
 
 static callspec_block *empty_menu[] = {NULLCALLSPEC};
 static callspec_block **call_menu_lists[NUM_CALL_LIST_KINDS];
@@ -116,6 +111,8 @@ static Cstring startup_commands[] = {
    "just as they are",
    "toggle concept levels",
    "toggle active phantoms",
+   "toggle ignoreblanks",
+   "toggle retain after error",
    "change output file",
    "change title",
    (Cstring) 0

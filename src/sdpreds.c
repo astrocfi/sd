@@ -51,7 +51,7 @@ extern long_boolean selectp(setup *ss, int place)
 
    /* Pull out the cases that do not require the person to be real. */
 
-   switch (current_selector) {
+   switch (current_options.who) {
       case selector_all:
          return TRUE;
       case selector_none:
@@ -66,7 +66,7 @@ extern long_boolean selectp(setup *ss, int place)
    permpid1 = ss->people[place].id1;
    pid2 = ss->people[place].id2;
 
-   switch (current_selector) {
+   switch (current_options.who) {
       case selector_boys:
          if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return TRUE;
          else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return FALSE;
@@ -241,7 +241,7 @@ Private long_boolean select_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_all) return TRUE;
+   if (current_options.who == selector_all) return TRUE;
 
    return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 1);
@@ -252,7 +252,7 @@ Private long_boolean select_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_all) return FALSE;
+   if (current_options.who == selector_all) return FALSE;
 
    return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
                !selectp(real_people, real_index ^ 1);
@@ -263,7 +263,7 @@ Private long_boolean unselect_near_select(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_none) return FALSE;
+   if (current_options.who == selector_none) return FALSE;
 
    return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 1);
@@ -274,7 +274,7 @@ Private long_boolean unselect_near_unselect(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_none) return TRUE;
+   if (current_options.who == selector_none) return TRUE;
 
    return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
                !selectp(real_people, real_index ^ 1);
@@ -285,7 +285,7 @@ Private long_boolean select_once_rem_from_select(setup *real_people, int real_in
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_all) return TRUE;
+   if (current_options.who == selector_all) return TRUE;
 
    if (real_people->kind == s2x4)
       return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
@@ -302,7 +302,7 @@ Private long_boolean select_once_rem_from_unselect(setup *real_people, int real_
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (!selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_all) return FALSE;
+   if (current_options.who == selector_all) return FALSE;
 
    if (real_people->kind == s2x4)
       return   !(real_people->people[real_index ^ 2].id1 & BIT_PERSON) ||
@@ -317,7 +317,7 @@ Private long_boolean unselect_once_rem_from_select(setup *real_people, int real_
    int real_direction, int northified_index, Const short *extra_stuff)
 {
    if (selectp(real_people, real_index)) return FALSE;
-   if (current_selector == selector_none) return FALSE;
+   if (current_options.who == selector_none) return FALSE;
 
    if (real_people->kind == s2x4)
       return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
@@ -1598,28 +1598,28 @@ Private long_boolean x22_girl_facing_boy(setup *real_people, int real_index,
 Private long_boolean leftp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_left;
+   return current_options.where == direction_left;
 }
 
 /* ARGSUSED */
 Private long_boolean rightp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_right;
+   return current_options.where == direction_right;
 }
 
 /* ARGSUSED */
 Private long_boolean inp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_in;
+   return current_options.where == direction_in;
 }
 
 /* ARGSUSED */
 Private long_boolean outp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_out;
+   return current_options.where == direction_out;
 }
 
 
@@ -1627,35 +1627,35 @@ Private long_boolean outp(setup *real_people, int real_index,
 Private long_boolean zigzagp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_zigzag;
+   return current_options.where == direction_zigzag;
 }
 
 /* ARGSUSED */
 Private long_boolean zagzigp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_zagzig;
+   return current_options.where == direction_zagzig;
 }
 
 /* ARGSUSED */
 Private long_boolean zigzigp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_zigzig;
+   return current_options.where == direction_zigzig;
 }
 
 /* ARGSUSED */
 Private long_boolean zagzagp(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_zagzag;
+   return current_options.where == direction_zagzag;
 }
 
 /* ARGSUSED */
 Private long_boolean no_dir_p(setup *real_people, int real_index,
    int real_direction, int northified_index, Const short *extra_stuff)
 {
-   return current_direction == direction_no_direction;
+   return current_options.where == direction_no_direction;
 }
 
 

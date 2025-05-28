@@ -57,8 +57,34 @@
 */
 
 
-extern void mirror_this(setup *s)
 
+static coordrec tgl4_0 = {s_trngl4, 3,
+   {  0,   0,  -2,   2},
+   { -4,   0,   4,   4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  2,  3, -1, -1, -1,
+      -1, -1, -1, -1,  1, -1, -1, -1,
+      -1, -1, -1, -1,  0, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+static coordrec tgl4_1 = {s_trngl4, 3,
+   { -4,   0,   4,   4},
+   {  0,   0,   2,  -2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1,  2, -1, -1,
+      -1, -1, -1, -1, -1,  3, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
+
+extern void mirror_this(setup *s)
 {
    uint32 l, r, z, n, t;
    coordrec *cptr;
@@ -69,7 +95,21 @@ extern void mirror_this(setup *s)
    if (s->kind == nothing) return;
 
    cptr = setup_attrs[s->kind].nice_setup_coords;
-   if (!cptr) fail("Don't recognize ending setup for this call; not able to do it mirror.");
+
+   if (!cptr) {
+      if (s->kind == s_trngl4) {
+         if (s->rotation & 1) {
+            s->rotation += 2;
+            for (i=0; i<4; i++) (void) copy_rot(s, i, s, i, 022);
+            cptr = &tgl4_1;
+         }
+         else
+            cptr = &tgl4_0;
+      }
+      else
+         fail("Don't recognize ending setup for this call; not able to do it mirror.");
+   }
+
    limit = setup_attrs[s->kind].setup_limits;
 
    if (s->rotation & 1) {
@@ -126,12 +166,13 @@ typedef struct {
    warning_index warning;    /* an optional warning to give */
 } collision_map;
 
-Private collision_map collision_map_table[] = {
+static collision_map collision_map_table[] = {
    /* These items handle various types of "1/2 circulate" calls from 2x4's. */
    {4, 0x000000, 0x33, 0x33, {0, 1, 4, 5},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        0, warn__none},   /* from lines in */
    {4, 0x0CC0CC, 0xCC, 0xCC, {2, 3, 6, 7},         {0, 3, 5, 6},          {1, 2, 4, 7},           s_crosswave, s1x8,        1, warn__none},   /* from lines out */
    {4, 0x000000, 0x0F, 0x0F, {0, 1, 2, 3},         {0, 3, 5, 6},          {1, 2, 4, 7},           s1x4,        s1x8,        0, warn__none},   /* more of same */
    {4, 0x022022, 0xAA, 0xAA, {1, 3, 5, 7},         {2, 5, 7, 0},          {3, 4, 6, 1},           s_spindle,   s_crosswave, 0, warn__none},   /* from trade by */
+   {2, 0x022022, 0x22, 0x22, {1, 5},               {2, 7},                {3, 6},                 s_spindle,   s_crosswave, 0, warn__none},   /* from DPT/trade by with no ends */
    {6, 0x0880CC, 0xDD, 0x88, {0, 2, 3, 4, 6, 7},   {7, 0, 1, 3, 4, 6},    {7, 0, 2, 3, 4, 5},     s_crosswave, s3x1dmd,     1, warn__none},   /* from 3&1 lines w/ centers in */
    {6, 0x000044, 0x77, 0x22, {0, 1, 2, 4, 5, 6},   {0, 1, 3, 4, 6, 7},    {0, 2, 3, 4, 5, 7},     s_crosswave, s3x1dmd,     0, warn__none},   /* from 3&1 lines w/ centers out */
    {6, 0x0440CC, 0xEE, 0x44, {1, 2, 3, 5, 6, 7},   {7, 0, 2, 3, 5, 6},    {7, 1, 2, 3, 4, 6},     s_crosswave, s3x1dmd,     1, warn__none},   /* from 3&1 lines w/ ends in */
@@ -241,12 +282,9 @@ extern void fix_collision(
       lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
    }
 
-   c_map_ptr = collision_map_table;
-   for (;;) {
-      if (c_map_ptr->size < 0) break;
+   for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
       if ((result->kind == c_map_ptr->initial_kind) && ((lowbitmask == c_map_ptr->lmask)) && (result_mask == c_map_ptr->rmask) && (collision_mask == c_map_ptr->cmask))
          goto win;
-      c_map_ptr++;
    }
 
    /* Don't recognize the pattern, report this as normal collision. */
@@ -289,68 +327,68 @@ extern void fix_collision(
 }
 
 
-Private int identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
-Private int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
-Private int ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
-Private int ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
-Private int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
-Private int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
-Private int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
-Private int qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
-Private int qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
-Private int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
-Private int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
-Private int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
-Private int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
-Private int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
-Private int sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
-Private int sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
-Private int sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
-Private int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
-Private int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
-Private int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
-Private int s3dmntranslatev[12] = {0, 7, 0, 9, 10, 11, 0, 1, 0, 3, 4, 5};
+static int identity[24] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+static int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+static int ftc4x4[24] = {10, 15, 3, 1, 2, 7, 11, 9, 2, 7, 11, 9, 10, 15, 3, 1, 10, 15, 3, 1, 2, 7, 11, 9};
+static int ftcphan[24] = {0, 2, 7, 5, 8, 10, 15, 13, 8, 10, 15, 13, 0, 2, 7, 5, 0, 2, 7, 5, 8, 10, 15, 13};
+static int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
+static int ftcspn[8] = {-1, 5, -1, 6, -1, 11, -1, 0};
+static int ftlcwv[12] = {9, 10, 1, 2, 3, 4, 7, 8, 9, 10, 1, 2};
+static int qtlqtg[12] = {5, -1, -1, 0, 1, -1, -1, 4, 5, -1, -1, 0};
+static int qtlbone[12] = {0, 3, -1, -1, 4, 7, -1, -1, 0, 3, -1, -1};
+static int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
+static int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
+static int s1x6translateh[12] = {0, 1, 2, 0, 0, 0, 3, 4, 5, 0, 0, 0};
+static int s1x6translatev[12] = {0, 0, 0, 0, 1, 2, 0, 0, 0, 3, 4, 5};
+static int sxwvtranslateh[12] = {0, 1, 0, 0, 2, 3, 4, 5, 0, 0, 6, 7};
+static int sxwvtranslatev[12] = {0, 6, 7, 0, 1, 0, 0, 2, 3, 4, 5, 0};
+static int sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
+static int sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
+static int s3dmftranslateh[12] = {9, 10, 11, 1, 0, 0, 3, 4, 5, 7, 0, 0};
+static int s3dmftranslatev[12] = {7, 0, 0, 9, 10, 11, 1, 0, 0, 3, 4, 5};
+static int s3dmntranslateh[12] = {9, 10, 11, 0, 1, 0, 3, 4, 5, 0, 7, 0};
+static int s3dmntranslatev[12] = {0, 7, 0, 9, 10, 11, 0, 1, 0, 3, 4, 5};
 
 
 
-Private int octtranslateh[64] = {
+static int octtranslateh[64] = {
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
 
-Private int octtranslatev[64] = {
+static int octtranslatev[64] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
 
-Private int qdmtranslateh[32] = {
+static int qdmtranslateh[32] = {
    12, 13, 14, 15,  0,  1,  0,  0,  0,   0,  0,  0,  3,  0,  2,  0,
    4,   5,  6,  7,  0,  9,  0,  8,  0,   0,  0,  0, 11,  0, 10,  0};
 
-Private int qdmtranslatev[32] = {
+static int qdmtranslatev[32] = {
    0,   0,  0,  0, 11,  0, 10,  0, 12, 13, 14, 15,  0,  1,  0,  0,
    0,   0,  0,  0,  3,  0,  2,  0,  4,   5,  6,  7,  0,  9,  0,  8};
 
-Private int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
-Private int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
-Private int galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
-Private int dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
-Private int linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
-Private int galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
-Private int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
-Private int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
+static int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
+static int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
+static int galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
+static int dmdhyperv[12] = {0, 3, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0};
+static int linehyperv[12] = {0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 3, 0};
+static int galhyperv[12] = {0, 7, 5, 6, 0, 0, 0, 3, 1, 2, 0, 4};
+static int starhyperh[12] =  {0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0};
+static int fstarhyperh[12] = {0, 0, 0, 1, 0, 0, 2, 0, 0, 3, 0, 0};
 
 
-Private int qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
-Private int qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
-Private int qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
-Private int qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
-Private int q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
-Private int q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
-Private int q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
-Private int q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
+static int qtbd1[12] = {5, 9, 6, 7, 9, 0, 1, 9, 2, 3, 9, 4};
+static int qtbd2[12] = {9, 5, 6, 7, 0, 9, 9, 1, 2, 3, 4, 9};
+static int qtbd3[12] = {9, 5, 6, 7, 9, 0, 9, 1, 2, 3, 9, 4};
+static int qtbd4[12] = {5, 9, 6, 7, 0, 9, 1, 9, 2, 3, 4, 9};
+static int q3x4xx1[12] = {9, 5, 0, 9, 9, 1, 9, 2, 3, 9, 9, 4};
+static int q3x4xx2[12] = {9, 9, 9, 9, 2, 3, 9, 9, 9, 9, 0, 1};
+static int q3x4xx3[12] = {9, 9, 2, 2, 9, 9, 3, 3, 9, 9, 0, 1};
+static int q3x4xx4[12] = {3, 3, 9, 9, 0, 1, 9, 9, 2, 2, 9, 9};
 
 
 

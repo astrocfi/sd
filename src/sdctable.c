@@ -79,7 +79,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* phantom concepts */
 
-#define pl__1_size 38
+#define pl__1_size 39
 #define pl__1_spl 0
 #define pl__1_ipl 1
 #define pl__1_pl 2
@@ -133,8 +133,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE LINES WORKING BACKWARD",      concept_quad_lines_tog,        4, l_c4a, {0, 2, 1}},
    {"QUADRUPLE LINES WORKING CLOCKWISE",     concept_quad_lines_tog_std,    4, l_c4,  {0, 8, 1}},
    {"QUADRUPLE LINES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,  4, l_c4,  {0, 9, 1}},
+   {"QUADRUPLE LINES WORKING TOWARD THE CENTER",concept_quad_lines_tog_std, 4, l_c4,  {0, 12, 1}},
 /* -------- column break -------- */
-#define pl__2_size 38
+#define pl__2_size 39
 #define pl__2_spw 0
 #define pl__2_ipw 1
 #define pl__2_pw 2
@@ -176,8 +177,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE WAVES WORKING BACKWARD",      concept_quad_lines_tog,        4, l_c4a, {0, 2, 3}},
    {"QUADRUPLE WAVES WORKING CLOCKWISE",     concept_quad_lines_tog_std,    4, l_c4, {0, 8, 3}},
    {"QUADRUPLE WAVES WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,  4, l_c4, {0, 9, 3}},
+   {"QUADRUPLE WAVES WORKING TOWARD THE CENTER",concept_quad_lines_tog_std, 4, l_c4, {0, 12, 3}},
 /* -------- column break -------- */
-#define pl__3_size 38
+#define pl__3_size 39
 #define pl__3_spc 0
 #define pl__3_ipc 1
 #define pl__3_pc 2
@@ -231,8 +233,9 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE COLUMNS WORKING LEFT",        concept_quad_lines_tog,        4, l_c4a, {0, 0, 0}},
    {"QUADRUPLE COLUMNS WORKING CLOCKWISE",   concept_quad_lines_tog_std,    4, l_c4, {0, 8, 0}},
    {"QUADRUPLE COLUMNS WORKING COUNTERCLOCKWISE",concept_quad_lines_tog_std,4, l_c4, {0, 9, 0}},
+   {"QUADRUPLE COLUMNS WORKING TOWARD THE CENTER",concept_quad_lines_tog_std,4,l_c4, {0, 12, 0}},
 /* -------- column break -------- */
-#define pb__1_size 41
+#define pb__1_size 42
 #define pb__1_spb 0
 #define pb__1_ipb 1
 #define pb__1_pb 2
@@ -289,9 +292,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE BOXES WORKING RIGHT",         concept_quad_boxes_together,   4, l_c4a, {0, 3, 0}},
    {"QUADRUPLE BOXES WORKING LEFT",          concept_quad_boxes_together,   4, l_c4a, {0, 1, 0}},
    {"QUADRUPLE BOXES WORKING CLOCKWISE",     concept_quad_boxes_together,   4, l_c4,  {0, 8, 0}},
-   {"QUADRUPLE BOXES WORKING COUNTERCLOCKWISE",concept_quad_boxes_together, 4, l_c4 , {0, 9, 0}},
+   {"QUADRUPLE BOXES WORKING COUNTERCLOCKWISE",concept_quad_boxes_together, 4, l_c4,  {0, 9, 0}},
+   {"QUADRUPLE BOXES WORKING TOWARD THE CENTER",concept_quad_boxes_together,4, l_c4,  {0, 12, 0}},
 /* -------- column break -------- */
-#define pb__2_size 34
+#define pb__2_size 35
 #define pb__2_spd 0
 #define pb__2_ipd 1
 #define pb__2_pd 2
@@ -335,7 +339,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"QUADRUPLE DIAMOND SPOTS",               concept_quad_diamonds,         4, l_c4a, {0, 0, 0}},
          {"", concept_comment, 0, l_nonexistent_concept},
          {"", concept_comment, 0, l_nonexistent_concept},
-   {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,4, l_c4a},
+   {"QUADRUPLE DIAMONDS WORKING TOGETHER",   concept_quad_diamonds_together,4, l_c4a, {0, 0, 0}},
+   {"QUADRUPLE DIAMONDS WORKING TOWARD THE CENTER",concept_quad_diamonds_together,4, l_c4, {0, 12, 0}},
 /* -------- column break -------- */
 #define pb__3_size 33
 #define pb__3_sp1 0
@@ -596,7 +601,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* Miscellaneous concepts */
 
-#define mm__1_size 68
+#define mm__1_size 70
 #define mm__1_left 0
 #define mm__1_cross 2
 #define mm__1_grand 5
@@ -665,9 +670,11 @@ concept_descriptor concept_descriptor_table[] = {
    {"@6 ARE @b STABLE",                      concept_so_and_so_frac_stable, 4, l_c4,         {0, TRUE,  TRUE}},
    {"TRACE",                                 concept_trace,                 0, l_c3x},
    {"STRETCH",                               concept_old_stretch,           4, l_c1},
-   {"STRETCHED SETUP",                       concept_new_stretch,           4, l_c2,         {0, 0}},
-   {"STRETCHED BOX",                         concept_new_stretch,           4, l_c2,         {0, 1}},
-   {"STRETCHED LINE",                        concept_new_stretch,           4, l_c2,         {0, 2}},
+   {"STRETCHED SETUP",                       concept_new_stretch,           4, l_c2,         {0, 16}},
+   {"STRETCHED BOX",                         concept_new_stretch,           4, l_c2,         {0, 18}},
+   {"STRETCHED LINE",                        concept_new_stretch,           4, l_c2,         {0, 1}},
+   {"STRETCHED WAVE",                        concept_new_stretch,           4, l_c2,         {0, 3}},
+   {"STRETCHED COLUMN",                      concept_new_stretch,           4, l_c2,         {0, 4}},
    {"FERRIS",                                concept_ferris,                4, l_c3x,        {0, 0}},
    {"RELEASE",                               concept_ferris,                4, l_c3a,        {0, 1}},
 /* -------- column break -------- */
@@ -794,16 +801,17 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* general concepts */
 
-#define gg_2x8_matrix 19
+#define gg_2x8_matrix 20
    {"CENTERS",                               concept_centers_or_ends,       5, l_mainstream, {0, selector_centers, FALSE}},
    {"ENDS",                                  concept_centers_or_ends,       5, l_mainstream, {0, selector_ends, FALSE}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      5, l_mainstream, {0, selector_centers, FALSE}},
    {"LEFT",                                  concept_left,                  5, l_mainstream},
    {"REVERSE",                               concept_reverse,               5, l_mainstream},
    {"SPLIT",                                 concept_split,                 5, l_mainstream},
-   {"EACH 1X4",                              concept_each_1x4,              4, l_mainstream, {0, 0}},
-   {"EACH LINE",                             concept_each_1x4,              4, l_mainstream, {0, 1}},
-   {"EACH WAVE",                             concept_each_1x4,              4, l_mainstream, {0, 3}},
+   {"EACH 1X4",                              concept_each_1x4,              4, l_mainstream, {0, 0, 0}},
+   {"EACH LINE",                             concept_each_1x4,              4, l_mainstream, {0, 1, 0}},
+   {"EACH WAVE",                             concept_each_1x4,              4, l_mainstream, {0, 3, 0}},
+   {"EACH DIAMOND",                          concept_each_1x4,              4, l_mainstream, {0, 0, 1}},
    {"CROSS",                                 concept_cross,                 5, l_mainstream},
    {"GRAND",                                 concept_grand,                 5, l_plus},
    {"MAGIC",                                 concept_magic,                 5, l_c1},

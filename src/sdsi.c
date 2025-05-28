@@ -832,7 +832,9 @@ extern long_boolean open_session(int argc, char **argv)
          else if (strcmp(&args[argno][1], "singlespace") == 0)
             { singlespace_mode = TRUE; continue; }
          else if (strcmp(&args[argno][1], "discard_after_error") == 0)
-            { erase_after_error = TRUE; continue; }
+            { retain_after_error = FALSE; continue; }
+         else if (strcmp(&args[argno][1], "retain_after_error") == 0)
+            { retain_after_error = TRUE; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
             { using_active_phantoms = TRUE; continue; }
          else if (strcmp(&args[argno][1], "sequence") == 0) {

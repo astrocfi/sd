@@ -1,7 +1,49 @@
-		   RELEASE NOTES FOR SD VERSION 31.71
-		 Database version = 31.71 format = 79.
+		   RELEASE NOTES FOR SD VERSION 31.72
+		 Database version = 31.72 format = 79.
                 X11 UI version 1.17, SDTTY UI version 1.9.
 
+
+****** Changes as of version 31.72 ******
+
+The operation of ignoring blanks (previously set with the
+"ignoreblanks" line in the "sd.ini" file or in the command line)
+is now controlled with a "toggle" command.  The command is
+
+    toggle ignoreblanks
+
+It is normally off.  It can still be turned on automatically
+at program startup, as before, through the "sd.ini" file or the
+command line.  See the reference manual for further details.
+
+
+The operation of discarding or retaining entered concepts after
+an error occurs (previously set with the "discard_after_error"
+line in the "sd.ini" file or in the command line) is now
+controlled with a "toggle" command.  The command is
+
+    toggle retain after error
+
+The name of this has been changed from "discard" to "retain".
+It is still normally off, but that means that the program normally
+discards, rather than retaining.  Hence, the default behavior has
+changed.  In the absence of any special action, the program will
+DISCARD entered concepts.  Previously, it retained them.  To get the
+old behavior, that is, to retain entered concepts, you must use the
+"toggle retain after error" command.  It can also be turned on
+automatically at program startup, through the "sd.ini" file or the
+command line.  The line in the "sd.ini" file to do this is
+"retain_after_error".  The command line switch is "-retain_after_error".
+The old command "discard_after_error" are maintained for compatibility,
+but they have no effect.  See the reference manual for further details.
+
+   [Incidentally, the act of making the program retain concepts
+   after an error occurs was put in about a year and a half ago,
+   at the strong urging of someone who (a) does not use this program,
+   and (b) has since then been a strong advocate and distributor of
+   a competing program.  Hence the only person who ever requested
+   this "feature" never got the "benefit" of it.  I disliked it
+   right from the start, and almost immediately added the
+   "discard_after_error" switch to turn it off.]
 
 ****** Changes as of version 31.67 ******
 

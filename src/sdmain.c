@@ -21,7 +21,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.71"
+#define VERSION_STRING "31.72"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -72,7 +72,6 @@ and the following external variables:
    sequence_number
    last_file_position
    global_age
-   erase_after_error
    parse_state
    uims_menu_index
    database_version
@@ -87,11 +86,11 @@ and the following external variables:
    allowing_modifications
    allowing_all_concepts
    using_active_phantoms
+   elide_blanks
+   retain_after_error
    singing_call_mode
    diagnostic_mode
-   current_selector
-   current_direction
-   current_number_fields
+   current_options
    no_search_warnings
    conc_elong_warnings
    dyp_each_warnings
@@ -147,7 +146,6 @@ call_list_mode_t glob_call_list_mode;
 int sequence_number = -1;
 int last_file_position = -1;
 int global_age;
-long_boolean erase_after_error;
 parse_state_type parse_state;
 int uims_menu_index;
 char database_version[81];
@@ -162,11 +160,11 @@ long_boolean verify_used_selector;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
+long_boolean elide_blanks = FALSE;
+long_boolean retain_after_error = FALSE;
 int singing_call_mode = 0;
 long_boolean diagnostic_mode = FALSE;
-selector_kind current_selector;
-direction_kind current_direction;
-uint32 current_number_fields;
+call_conc_option_state current_options;
 warning_info no_search_warnings = {{0, 0}};
 warning_info conc_elong_warnings = {{0, 0}};
 warning_info dyp_each_warnings = {{0, 0}};
@@ -366,11 +364,12 @@ Private parse_block *get_parse_block(void)
 
    item->concept = (concept_descriptor *) 0;
    item->call = (callspec_block *) 0;
-   item->selector = selector_uninitialized;
-   item->direction = direction_uninitialized;
-   item->number = 0;
-   item->tagger = -1;
-   item->circcer = -1;
+   item->options.who = selector_uninitialized;
+   item->options.where = direction_uninitialized;
+   item->options.number_fields = 0;
+   item->options.howmanynumbers = 0;
+   item->options.tagger = -1;
+   item->options.circcer = -1;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
@@ -418,11 +417,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
    for (;;) {
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
-      new_item->selector = old_item->selector;
-      new_item->tagger = old_item->tagger;
-      new_item->circcer = old_item->circcer;
-      new_item->direction = old_item->direction;
-      new_item->number = old_item->number;
+      new_item->options = old_item->options;
 
       if (old_item->subsidiary_root)
          new_item->subsidiary_root = copy_parse_tree(old_item->subsidiary_root);
@@ -460,11 +455,7 @@ Private void reset_parse_tree(
    for (;;) {
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
-      new_item->selector = old_item->selector;
-      new_item->tagger = old_item->tagger;
-      new_item->circcer = old_item->circcer;
-      new_item->direction = old_item->direction;
-      new_item->number = old_item->number;
+      new_item->options = old_item->options;
 
       /* Chop off branches that don't belong. */
 
@@ -659,18 +650,19 @@ extern long_boolean deposit_call(callspec_block *call)
    new_block = get_parse_block();
    new_block->concept = &mark_end_of_list;
    new_block->call = call;
-   new_block->selector = sel;
-   new_block->direction = dir;
-   new_block->number = number_list;
-   new_block->tagger = -1;
-   new_block->circcer = -1;
+   new_block->options.who = sel;
+   new_block->options.where = dir;
+   new_block->options.number_fields = number_list;
+   new_block->options.howmanynumbers = howmanynums;
+   new_block->options.tagger = -1;
+   new_block->options.circcer = -1;
 
    /* Filling in the tagger requires recursion! */
 
    if (tagg > 0) {
       parse_block **savecwp = parse_state.concept_write_ptr;
 
-      new_block->tagger = tagg;
+      new_block->options.tagger = tagg;
       new_block->concept = &marker_concept_mod;
       new_block->next = get_parse_block();
       new_block->next->concept = &marker_concept_mod;
@@ -694,7 +686,7 @@ extern long_boolean deposit_call(callspec_block *call)
    if (circc > 0) {
       parse_block **savecwp = parse_state.concept_write_ptr;
 
-      new_block->circcer = circc;
+      new_block->options.circcer = circc;
       new_block->concept = &marker_concept_mod;
       new_block->next = get_parse_block();
       new_block->next->concept = &marker_concept_mod;
@@ -751,9 +743,10 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
 
    new_block = get_parse_block();
    new_block->concept = conc;
-   new_block->selector = sel;
-   new_block->direction = direction_uninitialized;
-   new_block->number = number_list;
+   new_block->options.who = sel;
+   new_block->options.where = direction_uninitialized;
+   new_block->options.number_fields = number_list;
+   new_block->options.howmanynumbers = howmanynumbers;
 
    *parse_state.concept_write_ptr = new_block;
 
@@ -959,6 +952,14 @@ extern long_boolean query_for_call(void)
          }
          else if (uims_menu_index == (int) command_toggle_act_phan) {
             using_active_phantoms = !using_active_phantoms;
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_toggle_ignoreblanks) {
+            elide_blanks = !elide_blanks;
+            goto check_menu;
+         }
+         else if (uims_menu_index == (int) command_toggle_retain_after_error) {
+            retain_after_error = !retain_after_error;
             goto check_menu;
          }
          else if (uims_menu_index == (int) command_toggle_singer) {
@@ -1404,7 +1405,7 @@ void main(int argc, char *argv[])
 
    enable_file_writing = FALSE;
    singlespace_mode = FALSE;
-   erase_after_error = FALSE;
+   retain_after_error = FALSE;
    interactivity = interactivity_database_init;
    testing_fidelity = FALSE;
    parse_active_list = (parse_block *) 0;
@@ -1502,11 +1503,11 @@ void main(int argc, char *argv[])
       /* Try to remove the call from the current parse tree, but leave everything else
          in place.  This will fail if the parse tree, or our place on it, is too
          complicated.  Also, we do not do it if in diagnostic mode, or if the user
-         specified "erase_after_error", or if the special "heads into the middle and ..."
+         did not specify "retain_after_error", or if the special "heads into the middle and ..."
          operation is in place. */
 
       if (     !diagnostic_mode && 
-               !erase_after_error &&
+               retain_after_error &&
                ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
                backup_one_item()) {
          reply_pending = FALSE;
@@ -1579,6 +1580,12 @@ void main(int argc, char *argv[])
          goto new_sequence;
       case start_select_toggle_act:
          using_active_phantoms = !using_active_phantoms;
+         goto new_sequence;
+      case start_select_toggle_ignoreblank:
+         elide_blanks = !elide_blanks;
+         goto new_sequence;
+      case start_select_toggle_retain:
+         retain_after_error = !retain_after_error;
          goto new_sequence;
       case start_select_change_outfile:
          {
@@ -2079,7 +2086,7 @@ extern long_boolean get_real_subcall(
          /* User declined the modification.  Create a null entry so that we don't query again. */
          *newsearch = get_parse_block();
          (*newsearch)->concept = &marker_concept_mod;
-         (*newsearch)->number = number;
+         (*newsearch)->options.number_fields = number;
          (*newsearch)->call = base_calls[item->call_id];
          return FALSE;
       }
@@ -2087,7 +2094,7 @@ extern long_boolean get_real_subcall(
 
    *newsearch = get_parse_block();
    (*newsearch)->concept = &marker_concept_mod;
-   (*newsearch)->number = number;
+   (*newsearch)->options.number_fields = number;
    (*newsearch)->call = base_calls[item->call_id];
 
    /* Set stuff up for reading subcall and its concepts. */

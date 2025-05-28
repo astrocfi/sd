@@ -719,7 +719,7 @@ Private void write_nice_number(char indicator, uint32 num)
 
 Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
 {
-   int index = cptr->number;
+   int index = cptr->options.number_fields;
    Const char *f;
 
    f = s;     /* Argument "s", if non-null, overrides the concept name in the table. */
@@ -734,11 +734,11 @@ Private void writestuff_with_decorations(parse_block *cptr, Const char *s)
                index >>= 4;
                continue;
             case '6':
-               writestuff(selector_list[cptr->selector].name_uc);
+               writestuff(selector_list[cptr->options.who].name_uc);
                f += 2;
                continue;
             case 'k':
-               writestuff(selector_list[cptr->selector].sing_name_uc);
+               writestuff(selector_list[cptr->options.who].sing_name_uc);
                f += 2;
                continue;
          }
@@ -1017,7 +1017,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                      writestuff("(interrupting after the ");
                   else
                      writestuff("(replacing the ");
-                  writestuff(ordinals[local_cptr->number-1]);
+                  writestuff(ordinals[local_cptr->options.number_fields-1]);
                   writestuff(" part) ");
                }
             }
@@ -1043,7 +1043,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff(" WHILE THE ENDS");
             }
             else if (k == concept_some_vs_others && item->value.arg1 != 3) {
-               selector_kind opp = selector_list[local_cptr->selector].opposite;
+               selector_kind opp = selector_list[local_cptr->options.who].opposite;
                writestuff(" WHILE THE ");
                writestuff((opp == selector_uninitialized) ? ((Cstring) "OTHERS") : selector_list[opp].name_uc);
             }
@@ -1193,9 +1193,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          long_boolean pending_subst1, subst1_in_use, this_is_subst1;
          long_boolean pending_subst2, subst2_in_use, this_is_subst2;
 
-         selector_kind i16junk = local_cptr->selector;
-         direction_kind idirjunk = local_cptr->direction;
-         uint32 number_list = local_cptr->number;
+         selector_kind i16junk = local_cptr->options.who;
+         direction_kind idirjunk = local_cptr->options.where;
+         uint32 number_list = local_cptr->options.number_fields;
          callspec_block *localcall = local_cptr->call;
          parse_block *save_cptr = local_cptr;
 
@@ -1211,7 +1211,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                this_is_subst2 = FALSE;
                subsidiary_ptr = search->subsidiary_root;
                if (subsidiary_ptr) {
-                  switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+                  switch ((search->options.number_fields & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
                      case 2:
                         this_is_subst1 = TRUE;
@@ -1286,8 +1286,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         /* We didn't find the tagger.  It must not have been entered into the parse tree.
                            See if we can get it from the "tagger" field. */
 
-                        if (save_cptr->tagger > 0)
-                           writestuff(tagger_calls[save_cptr->tagger >> 5][(save_cptr->tagger & 0x1F)-1]->menu_name);
+                        if (save_cptr->options.tagger > 0)
+                           writestuff(tagger_calls[save_cptr->options.tagger >> 5][(save_cptr->options.tagger & 0x1F)-1]->menu_name);
                         else
                            writestuff("NO TAGGER???");
 
@@ -1315,8 +1315,8 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                         /* We didn't find the circcer.  It must not have been entered into the parse tree.
                            See if we can get it from the "circcer" field. */
 
-                        if (save_cptr->circcer > 0)
-                           writestuff(circcer_calls[(save_cptr->circcer)-1]->menu_name);
+                        if (save_cptr->options.circcer > 0)
+                           writestuff(circcer_calls[(save_cptr->options.circcer)-1]->menu_name);
                         else
                            writestuff("NO CIRCCER???");
 
@@ -1502,14 +1502,14 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            )) {
                   long_boolean not_turning_star = FALSE;
 
-                  switch ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
+                  switch ((search->options.number_fields & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) {
                      case 1:
                      case 2:
                      case 3:
                         /* This is a natural replacement.  It may already have been taken care of. */
-                        if (pending_subst1 || ((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3) {
+                        if (pending_subst1 || ((search->options.number_fields & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3) {
                            write_blank_if_needed();
-                           if (((search->number & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3)
+                           if (((search->options.number_fields & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT) == 3)
                               writestuff("but [");
                            else
                               writestuff("[modification: ");
@@ -2062,7 +2062,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       if (p->qual_num != 0) {
          number_used = TRUE;
-         if (p->qual_num != (current_number_fields & 0xF)+1) continue;
+         if (p->qual_num != (current_options.number_fields & 0xF)+1) continue;
       }
 
       if ((search_qualifier) p->qualifier == sq_none) goto good;
@@ -2095,27 +2095,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             tt.assumption = cr_wave_only;
 
             switch (ss->kind) {
-               case s1x4: case s2x4:
+               case s1x4: case s2x4: case s2x2: case s4x4:
                   goto check_tt;
-               case s2x2:
-                  u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-
-                  if ((u & 1) == 0) {
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[3].id1) != 0) { k |=  t; i &=  t; }
-                     if (!(k & ~i & 2)) goto good;
-                  }
-                  else if ((u & 010) == 0) {
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[2].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                     if (!(k & ~i & 2)) goto good;
-                  }
-
-                  goto bad;
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
@@ -2130,27 +2111,8 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             tt.assumption = cr_magic_only;
 
             switch (ss->kind) {
-               case s1x4: case s2x4:
+               case s1x4: case s2x4: case s2x2:
                   goto check_tt;
-               case s2x2:
-                  u = ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1;
-
-                  if ((u & 1) == 0) {
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                     if (!(k & ~i & 2)) goto good;
-                  }
-                  else if ((u & 010) == 0) {
-                     if ((t = ss->people[0].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[1].id1) != 0) { k |= ~t; i &= ~t; }
-                     if ((t = ss->people[2].id1) != 0) { k |=  t; i &=  t; }
-                     if ((t = ss->people[3].id1) != 0) { k |= ~t; i &= ~t; }
-                     if (!(k & ~i & 2)) goto good;
-                  }
-
-                  goto bad;
                default:
                   goto good;                 /* We don't understand the setup -- we'd better accept it. */
             }
@@ -2255,6 +2217,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                   if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
                   if ((i & 2) && !(k & 1)) goto good;
                   goto bad;
+               case s1x6:
+                  if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[2].id1) & (u = ss->people[5].id1)) { k |= t|u; i &= t^u; }
+                  if ((t = ss->people[4].id1) & (u = ss->people[3].id1)) { k |= t|u; i &= t^u; }
+                  if ((i & 2) && !(k & 1)) goto good;
+                  goto bad;
                case s1x8:
                   if ((t = ss->people[0].id1) & (u = ss->people[1].id1)) { k |= t|u; i &= t^u; }
                   if ((t = ss->people[3].id1) & (u = ss->people[2].id1)) { k |= t|u; i &= t^u; }
@@ -2316,6 +2284,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                    (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
                    (!(t = ss->people[3].id1 & d_mask) || t == d_north) &&
                    (!(t = ss->people[2].id1 & d_mask) || t == d_south))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s1x6) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_south))
                goto good;
                goto bad;
             }
@@ -2399,6 +2377,16 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                    (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
                    (!(t = ss->people[3].id1 & d_mask) || t == d_south) &&
                    (!(t = ss->people[2].id1 & d_mask) || t == d_north))
+               goto good;
+               goto bad;
+            }
+            else if (ss->kind == s1x6) {
+               if ((!(t = ss->people[0].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[1].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[2].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[5].id1 & d_mask) || t == d_north) &&
+                   (!(t = ss->people[4].id1 & d_mask) || t == d_south) &&
+                   (!(t = ss->people[3].id1 & d_mask) || t == d_north))
                goto good;
                goto bad;
             }
@@ -2741,10 +2729,10 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       check_stuff:
 
+      qa0 = 0; qa1 = 0;
+
       switch (rr->check) {
          case chk_wave:
-            qa0 = 0; qa1 = 0;
-
             for (idx=0; idx<rr->size; idx++) {
                if ((t = ss->people[rr->map1[idx]].id1) != 0) { qa0 |=  t; qa1 |= ~t; }
                if ((t = ss->people[rr->map2[idx]].id1) != 0) { qa0 |= ~t; qa1 |=  t; }
@@ -2752,6 +2740,33 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             if (((qa0 | tt.assump_both) & (qa1 | (tt.assump_both << 1)) & 2) != 0)
                goto bad;
+
+            goto good;
+         case chk_box:
+            u = 0;
+            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++)
+               u |= ss->people[idx].id1;
+
+            if ((u & 1) == 0) {
+               for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+                  if ((t = ss->people[idx].id1) != 0) {
+                     qa0 |= t^rr->map1[idx]^2;
+                     qa1 |= t^rr->map1[idx]^0;
+                  }
+               }
+            }
+            else if ((u & 010) == 0) {
+               for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
+                  if ((t = ss->people[idx].id1) != 0) {
+                     qa0 |= t^rr->map2[idx]^0;
+                     qa1 |= t^rr->map2[idx]^2;
+                  }
+               }
+            }
+            else
+               goto bad;
+
+            if (qa0 & qa1 & 2) goto bad;
 
             goto good;
          case chk_1_group:

@@ -2076,7 +2076,7 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
    wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x3 - two "waves" -- people not in tandem with each other;
-                                    2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave; 2x2 - real box; 4x4 - consistent waves;
+                                    2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave; 2x2 - real RH or LH box; 4x4 - consistent waves; */
                                     qtag - wave in center; pqtag - wave in center (use only if center people have no legal
                                        move from pqtag, only from qtag);
                                     3x2/4x2/6x2/8x2 - column */
@@ -2106,15 +2106,16 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
 
                            APPENDIX C -- QUALIFIERS
 
-   wave_only,                    /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
+   wave_only,                    /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box; 4x4 - consistent waves; */
    1fl_only,                     /* 1x4/1x6/1x8 - a 1FL, that is, all 4/6/8 facing same; 2x3/2x4 - individual 1FL's */
-   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 4x1 - single DPT or single CDPT; qtag - 2FL in center */
+   2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 4x4 - consistent 2FL's; 1x8 - a grand 2FL;
+                                    4x1 - single DPT or single CDPT; qtag - 2FL in center */
    couples_only,                 /* 1x2 or 1x4 or 1x8 or 2x2 or 2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
    3x3couples_only,              /* 1x3/1x6/2x3/2x6/1x12 lines - each group of 3 people are facing the same way */
    4x4couples_only,              /* 1x4/1x8/2x4/2x8/1x16 lines - each group of 4 people are facing the same way */
    magic_only,                   /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
    in_or_out,                    /* 1x2/2x2 - all facing in or all facing out */
-   miniwaves,                    /* 1x2, 1x4, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
+   miniwaves,                    /* 1x2, 1x4, 1x6, 1x8, 2x4, 2x2, dmd, qtag, trngl - people
                                     are paired in miniwaves of various handedness.
                                     For diamonds and qtags, this applies just to the centers.
                                     For triangles, it applies just to the base.
@@ -2399,6 +2400,20 @@ conc_concentric_rules
 
 
 suppress_elongation_warnings
+      For the ends' part of a concentrically defined call, this says to suppress
+      printing warnings about this not being done concentrically and hence the
+      lines-to-lines and opposite elongation rules are not being used.  Instead,
+      the program uses its best guess (guided by such things as "parallel_conc_end"
+      and the various "demand" and "force" flags) as to where to put people.
+      When the program does this, it often prints a warning.  This flag suppresses
+      that warning.
+      For the *CENTERS'* part of a concentrically defined call, this says to
+      suppress any error (not warning) about the ends being too far apart, in
+      ths event that this call is done with the "invert" concept.  Note that this
+      is a completely different sort of thing, and this flag is being overloaded.
+      The centers' part of acey deucey is invoked with this flag, which means that
+      "invert acey deucey" is legal from lines.  We consider "ends trade" from lines
+      to be unesthetic, but it is sometimes used as part of "invert acey deucey".
 or_anycall
 mandatory_anycall
 repeat_n

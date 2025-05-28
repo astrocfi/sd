@@ -32,6 +32,8 @@
 *startup.asTheyAre: Just as they are
 *startup.toggleConceptLevels: Toggle concept levels
 *startup.toggleActivePhantoms: Toggle active phantoms
+*startup.toggleIgnoreBlanks: Toggle ignoreblanks
+*startup.toggleRetain_after_error: Toggle retain after error
 *startup.changeOutputFile: Change output file
 *startup.changeTitle: Change title
 *command.exit: Exit the program
@@ -41,6 +43,8 @@
 *command.allowmods: Allow modifications
 *command.allowconcepts: Toggle concept levels
 *command.activephantoms: Toggle active phantoms
+*command.ignoreblanks: Toggle ignoreblanks
+*command.retainaftererror: Toggle retain after error
 *command.comment: Insert a comment
 *command.outfile: Change output file
 *command.title: Change title

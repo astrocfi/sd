@@ -384,9 +384,9 @@ show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 
 
 #ifdef SINGERS
-int num_command_commands = 49;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 51;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 #else
-int num_command_commands = 47;
+int num_command_commands = 49;
 #endif
 
 
@@ -397,6 +397,8 @@ Cstring command_commands[] = {
    "allow modifications",
    "toggle concept levels",
    "toggle active phantoms",
+   "toggle ignoreblanks",
+   "toggle retain after error",
 #ifdef SINGERS
    "toggle singing call",
    "toggle singing call with backward progression",
@@ -451,6 +453,8 @@ static command_kind command_command_values[] = {
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_act_phan,
+   command_toggle_ignoreblanks,
+   command_toggle_retain_after_error,
 #ifdef SINGERS
    command_toggle_singer,
    command_toggle_singer_backward,
@@ -544,6 +548,31 @@ static command_kind extra_resolve_command_values[] = {
 
 
 
+typedef struct {
+   int which_test;      /* 0 to test for >= 0, negative to test for that value exactly. */
+   char *line_to_put;
+   uims_reply match_kind;
+   int match_index;
+} fcn_key_thing;
+
+
+#define FCN_KEY_TAB_LOW 131
+#define FCN_KEY_TAB_LAST 140
+
+static fcn_key_thing fcn_key_table[] = {
+   {0,                      "pick random call\n",      ui_command_select, -1-command_random_call},          /*  F3 = 131 = pick random call */
+   {0,                      "resolve\n",               ui_command_select, -1-command_resolve},              /*  F4 = 132 = resolve */
+   {0,                      "refresh display\n",       ui_command_select, -1-command_refresh},              /*  F5 = 133 = refresh display */
+   {0,                      "simple modifications\n",  ui_command_select, -1-command_simple_mods},          /*  F6 = 134 = simple modifications */
+   {0,                      "toggle concept levels\n", ui_command_select, -1-command_toggle_conc_levels},   /*  F7 = 135 = toggle concept levels */
+   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 136 */
+   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 137 */
+   {99,                      (char *) 0,               ui_command_select, 0},                                     /* 138 */
+   {0,                      "pick level call\n",       ui_command_select, -1-command_level_call},           /* F11 = 139 = pick level call */
+   {match_resolve_commands, "find another\n",          ui_resolve_select, -1-resolve_command_find_another}  /* F12 = 140 = find another */
+};
+
+
 
 /* result is indicated in user_match */
 
@@ -587,41 +616,6 @@ Private void get_user_input(char *prompt, int which)
          }
          else if (nc == 130)
             function_key_expansion = "two calls in succession\n";    /* F2 */
-         else if (nc == 131 && which >= 0) {                         /* F3 = pick random call */
-            put_line("pick random call\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_random_call;
-            return;
-         }
-         else if (nc == 132 && which >= 0) {                         /* F4 = resolve */
-            put_line("resolve\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_resolve;
-            return;
-         }
-         else if (nc == 133 && which >= 0) {                         /* F5 = refresh display */
-            put_line("refresh display\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_refresh;
-            return;
-         }
-         else if (nc == 134 && which >= 0) {                         /* F6 = simple modifications */
-            put_line("simple modifications\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_simple_mods;
-            return;
-         }
-         else if (nc == 135 && which >= 0) {                         /* F7 = toggle concept levels */
-            put_line("toggle concept levels\n");
-            current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_toggle_conc_levels;
-            return;
-         }
          else if (nc == 136)
             function_key_expansion = "<anything>";                   /* F8 */
          else if (nc == 137 || nc == 169) {                          /* F9 or sF9 = undo or abort the search, as appropriate. */
@@ -642,18 +636,13 @@ Private void get_user_input(char *prompt, int which)
          }
          else if (nc == 138)
             function_key_expansion = "write this sequence\n";        /* F10 */
-         else if (nc == 139 && which >= 0) {                         /* F11 = pick level call */
-            put_line("pick level call\n");
+         else if (nc >= FCN_KEY_TAB_LOW && nc <= FCN_KEY_TAB_LAST &&
+                     ((fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test == 0 && which >= 0) ||
+                     (fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test <= 0 && which == fcn_key_table[nc-FCN_KEY_TAB_LOW].which_test))) {
+            put_line(fcn_key_table[nc-FCN_KEY_TAB_LOW].line_to_put);
             current_text_line++;
-            user_match.kind = ui_command_select;
-            user_match.index = -1-command_level_call;
-            return;
-         }
-         else if (nc == 140 && which == match_resolve_commands) {    /* F12 = find another */
-            put_line("find another\n");
-            current_text_line++;
-            user_match.kind = ui_resolve_select;
-            user_match.index = -1-resolve_command_find_another;
+            user_match.kind = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_kind;
+            user_match.index = fcn_key_table[nc-FCN_KEY_TAB_LOW].match_index;
             return;
          }
          else if (nc == 161 && which == match_startup_commands) {    /* sF1 = sides start */
@@ -843,7 +832,7 @@ Private void get_user_input(char *prompt, int which)
 	   if (matches > 0) {
             char tempstuff[200];
 
-            (void) sprintf(tempstuff, "  (%d matches, type ? for list)\n", matches);
+            (void) sprintf(tempstuff, "  (%d matches, type ! or ? for list)\n", matches);
             put_line(tempstuff);
          }
          else {

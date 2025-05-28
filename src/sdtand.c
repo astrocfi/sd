@@ -765,10 +765,10 @@ extern void tandem_couples_move(
       fail("Can't specify phantom tandem/couples in virtual or distorted setup.");
 
    /* Find out who is selected, if this is a "so-and-so are tandem". */
-   saved_selector = current_selector;
+   saved_selector = current_options.who;
 
    if (selector != selector_uninitialized)
-      current_selector = selector;
+      current_options.who = selector;
 
    nsmask = 0;
    ewmask = 0;
@@ -791,7 +791,7 @@ extern void tandem_couples_move(
       }
    }
    
-   current_selector = saved_selector;
+   current_options.who = saved_selector;
 
    if (!allmask) {
       result->result_flags = 0;

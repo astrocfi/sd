@@ -5,7 +5,7 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: June 16, 1996
+@set Time-stamp: July 12, 1996
 @tex
 \global\setfont\smallrm\rmshape{8}{1000}
 \global\font\smallsy=cmsy9
@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.70
+@set sd-version 31.72
 @set full-manual
 @c %**end of header
 @iftex
@@ -120,6 +120,7 @@ The Completing Reader for Sdtty
 
 * Question Mark::               Question Mark and Exclamation Point
 * Minimizing Typing::           Minimizing the Amount of Typing You Must Do
+* Ignoring Blanks::             Ignoring Blanks and Hyphens when Typing
 
 Invoking Sd via Command Line
 
@@ -144,7 +145,7 @@ Calling
 * Scrolling::                     the call menu scroll bar
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Discarding Concepts After an Error:: Discarding Concepts After an Error
+* Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
 
 Resolving and Searching
@@ -167,7 +168,7 @@ Miscellaneous Commands
 
 Terminal Interface
 
-* Sdtty::                       The @code{sdtty} program
+* Sdtty::                       The @code{Sdtty} program
 * Function Keys in Sdtty::      Function Keys
 * Sdtty on the PC::             The PC version
 * Sdtty on Unix::               The Unix version
@@ -243,9 +244,9 @@ sdtty c2
 In addition to calls and concepts, there are program commands for actions
 such as automatic resolves, exiting the program, and other miscellaneous
 actions.  @xref{Resolving and Searching}.
-In @code{sd}, they are found in the menu in the upper
+In @code{Sd}, they are found in the menu in the upper
 left corner.
-In @code{sdtty}, just type the name of the command.
+In @code{Sdtty}, just type the name of the command.
 
 The following chapters cover the operation of @code{Sd} and
 @code{Sdtty} in detail.
@@ -256,7 +257,7 @@ The following chapters cover the operation of @code{Sd} and
 @code{Sdtty} uses a @dfn{completing reader} for interpreting the
 characters that you type.
 This means that you only need to type as much of the word or command as is
-required to be unambiguous.  Whenever you type a space, @code{sdtty} completes
+required to be unambiguous.  Whenever you type a space, @code{Sdtty} completes
 the word you just typed, if necessary and possible.  Whenever you type
 @iftex
 @keycap{ENTER}
@@ -272,7 +273,7 @@ the word you just typed, if necessary and possible.  Whenever you type
 @key{<RETURN>}
 @end ifinfo
 on some keyboards),
-@code{sdtty} completes the entire line
+@code{Sdtty} completes the entire line
 if necessary and possible.
 
 For example, at mainstream, you can enter a swing thru by typing
@@ -297,7 +298,7 @@ after @samp{thru} is typed, no completion is required either.  If you type
 @ifinfo
 @samp{sw thru @key{<ENTER>}}
 @end ifinfo
-instead, @code{sdtty} completes the word @samp{swing}.  It does this by printing
+instead, @code{Sdtty} completes the word @samp{swing}.  It does this by printing
 @samp{ing} on the screen as soon as you type the space after
 @samp{sw}.  If you type
 @iftex
@@ -306,7 +307,7 @@ instead, @code{sdtty} completes the word @samp{swing}.  It does this by printing
 @ifinfo
 @samp{sw th @key{<ENTER>}},
 @end ifinfo
-@code{sdtty} will complete both words.  It prints @samp{ing} as soon as you type the
+@code{Sdtty} will complete both words.  It prints @samp{ing} as soon as you type the
 space, and it prints @samp{ru} as soon as you type
 @iftex
 @keycap{ENTER}.
@@ -335,7 +336,7 @@ Because of this completion, you can get into the habit of just typing
 @end ifinfo
 at mainstream.  However, it will only work if what you type is unambiguous.
 At higher levels, @samp{sw} could also mean @samp{swap around}.  When there is an
-ambiguity, @code{sdtty} will beep at you and complete as much as it can.  You can
+ambiguity, @code{Sdtty} will beep at you and complete as much as it can.  You can
 type @samp{?} or @samp{!} (discussed below) to see what the problem is.
 
 With practice, you can get a reasonable feel for how much abbreviation you can
@@ -388,13 +389,14 @@ aesthetics and ambiguity avoidance.
 @menu
 * Question Mark::               Question Mark and Exclamation Point
 * Minimizing Typing::           Minimizing the Amount of Typing You Must Do
+* Ignoring Blanks::             Ignoring Blanks and Hyphens when Typing
 @end menu
 
 @node Question Mark, Minimizing Typing,  , The Completing Reader for Sdtty
 @section Question Mark and Exclamation Point
 
 At any time, you can type a question mark or exclamation point.  Either of
-these will make @code{sdtty} print out all legal completions of the line
+these will make @code{Sdtty} print out all legal completions of the line
 that has been entered so far.  If what you
 have typed is unambiguous, that will consist of just one thing.  If you
 have typed nothing, it will consist of every legal thing you could type---typically
@@ -439,14 +441,38 @@ to see just one more line.  Type a backspace (or
 @ifinfo
 @key{<DEL>})
 @end ifinfo
-to stop.  When the output ends, either because @code{sdtty} printed everything or
+to stop.  When the output ends, either because @code{Sdtty} printed everything or
 because you typed a backspace, the partially entered line will be redisplayed, just
 as it was before you typed the question mark.
 
-@node Minimizing Typing, , Question Mark, The Completing Reader for Sdtty
+When you are typing calls or concepts and you type
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+while the line that you have typed is ambiguous, @code{Sdtty} will display something
+like @samp{(10 matches, type ! or ? for list)}.  The number that it prints is the
+number of syntactically legal choices among which it can't decide.  This is the number
+of choices that would have been listed if you had typed @samp{!}.  It may be more than
+the number of things that would be listed if you had typed @samp{?}.  The reason
+is that the @samp{?} operation has to test every call before listing it.  It can
+easily do this faster than you can read the list of choices.  When you type
+@iftex
+@keycap{ENTER}
+@end iftex
+@ifinfo
+@key{<ENTER>}
+@end ifinfo
+while there are multiple syntactic choices available, the computer can't count
+them fast enough to respond instantaneously.  It therefore displays an approximate
+number, computed by looking at its database without testing each call.
+
+@node Minimizing Typing, Ignoring Blanks, Question Mark, The Completing Reader for Sdtty
 @section Minimizing the Amount of Typing You Must Do
 
-The @code{sdtty} completion mechanism, especially the
+The @code{Sdtty} completion mechanism, especially the
 @iftex
 @keycap{ESC}
 @end iftex
@@ -482,7 +508,7 @@ is probably more than you want to do.  If you type just
       heads do
 @end example
 the line will be almost unambiguous---there are only two possible commands
-that start this way.  By typing a question mark, @code{sdtty} will show them
+that start this way.  By typing a question mark, @code{Sdtty} will show them
 to you.  They are
 @example
       heads do your part
@@ -583,6 +609,26 @@ followed by
 @end ifinfo
 is still a good way to proceed.
 
+@node Ignoring Blanks, , Minimizing Typing, The Completing Reader for Sdtty
+@section Ignoring Blanks and Hyphens when Typing
+
+@code{Sdtty} has an option whereby it can recognize calls and concepts
+that have been typed
+in without the spaces that normally separate words.  Some users prefer
+abbreviated spellings like @code{inroll circulate}---when this switch is
+given, you can spell it that way.  You can even type
+@code{tandemreverserandomstablespinthetop} if you wish.
+This also allows one to ignore hyphens, as in @code{tandembased triangles}
+or to type blanks instead of hyphens, as in @code{tandem based triangles}.
+In all cases the correct spelling will be printed in the transcript:
+@code{tandem-based triangles} or @code{in roll circulate}.
+
+The @code{toggle ignoreblanks} command toggles
+(turns on or off) the state of this option.
+@xref{Changing Modes}.  It can also be turned on when the program begins,
+either by giving a command-line option (@xref{Command-Line Options}) or
+through the use of the initialization file (@xref{Option Control}).
+
 @node Invoking Sd, The Initialization File, The Completing Reader for Sdtty, Top
 @chapter Invoking Sd via Command Line (DOS or UNIX only)
 
@@ -631,7 +677,7 @@ Examples:
 
 @display
 @t{sd -singlespace plus}
-@t{sdtty -discard_after_error -active_phantoms c3}
+@t{sdtty -retain_after_error -active_phantoms c3}
 @end display
 
 These option keywords can also be placed, without the preceding hyphens,
@@ -639,7 +685,9 @@ in the ``options'' section of the initialization file.  @xref{Option Control}.
 When this is done, the options will always be in force, and do not need to
 be specified each time the program is run.
 
-The following options are used by both @code{Sd} and @code{Sdtty}:
+The following options are used by both @code{Sd} and @code{Sdtty}.
+Note that some of them use the underscore character, whereas the corresponding
+``toggle'' commands use blanks between words.
 
 @table @code
 @item -db @var{filename}
@@ -655,19 +703,20 @@ This may be useful for those who use special fonts or special printer
 arrangements.
 @item -ignoreblanks
 This makes the program recognize calls and concepts that have been typed
-in without the spaces that normally separate words.  Some users prefer
-abbreviated spellings like @code{inroll circulate}---when this switch is
-given, you can spell it that way.  You can even type
-@code{tandemreverserandomstablespinthetop} if you wish.
-This also allows one to ignore hyphens, as in @code{tandembased triangles}
-or to type blanks instead of hyphens, as in @code{tandem based triangles}.
-In all cases the correct spelling will be printed in the transcript:
-@code{in roll circulate} or @code{tandem-based triangles}.
-@item -discard_after_error
-This makes the program automatically discard all concepts that had
+in without the spaces that normally separate words.  In particular, it
+makes the program behave as though you had given the @code{toggle ignoreblanks}
+command.  @xref{Ignoring Blanks}.
+@item -retain_after_error
+This makes the program automatically retain all concepts that had
 been typed prior to the current call, whenever an error occurs.
-Some users may find the concept retention behavior objectionable.
-@xref{Discarding Concepts After an Error}.
+The usual behavior is to discard all typed concepts when an error occurs.
+In particular, it makes the program behave as though you had given
+the @code{toggle retain after error} command.
+@xref{Retaining Concepts After an Error}.
+@item -discard_after_error
+This makes the program discard all concepts that had
+been typed prior to the current call, whenever an error occurs.
+Since this is the usual behavior, you never need this option.
 @item -active_phantoms
 This turns on the ``active phantoms'' behavior, as though the command
 @code{toggle active phantoms} had been given.
@@ -799,7 +848,7 @@ singlespace
 [Sessions]
 sequence.C3       C3           12     NACC, June 1995
 sequence.C4       C4           31     NACC, June 1995
-+                 C1           75     My Wednesday group
+workshop          C1           75     My wednesday group
 +                 A2           9      NESRDC/1995
 *                 A1           2      Lake Shore Farm Weekend
 @end example
@@ -826,11 +875,11 @@ display the 5 lines and ask you which one you want to use, like this:
 Do you want to use one of the following sessions?
 
   0     (no session)
-  1  sequence.C3          C3         12      NACC, June 1995
-  2  sequence.C4          C4         31      NACC, June 1995
-  3  +                    C1         75      My wednesday group
-  4  +                    A2          9      NESRDC/1995
-  5  *                    A1          2      Lake Shore Farm Weekend
+  1  sequence.C3       C3           12      NACC, June 1995
+  2  sequence.C4       C4           31      NACC, June 1995
+  3  workshop          C1           75      My wednesday group
+  4  +                 A2           9       NESRDC/1995
+  5  *                 A1           2       Lake Shore Farm Weekend
   6     (create a new session)
 
 Enter the number of the desired session:
@@ -855,12 +904,26 @@ instead of the default ``sequence.C1''.  Cards will be serialized
 starting at 75.  Each card will have a title saying
 ``My Wednesday group''.
 
+If the given file name is ``+'', the program will generate a file name
+for you, based on today's date.  This may be useful for managing files,
+so that you know when it is safe to delete a file that you have printed.
+The program will of course tell you what the name of that file is.
+All runs of the program using that session on the same day will append
+their sequences to the same file.  The file name will be something like
+like@file{9mar96.C3}.
+
+If the given file name is ``*'', the program will generate a file name
+in the same way, except that it will always generate a new file for each
+run of the program.  If the program is started several times in one day,
+the files will be different.  The generated file names will be something
+like @file{9mar96a.C3}.  Note the @file{a} after the year.
+
 At the end of the session, the file will be updated with the
 next index number.  For example, if you wrote 12 sequences, they would
 be numbered 75 through 86, and the file would be rewritten as
 
 @example
-workshop             C1               87     My Wednesday group
+workshop          C1           87     My wednesday group
 @end example
 
 so that the next session for that group would start with sequence number 87.
@@ -886,7 +949,7 @@ you can delete it.  Type the negative of its line number.  In the
 above example, if you entered ``-4'', the line
 
 @example
-   a2stuff              A2               9      NESRDC/1995
+   +                 A2           9      NESRDC/1995
 @end example
 
 would be deleted.  After doing this, the program terminates
@@ -912,21 +975,31 @@ preferences so that the program will always use them.  Do @emph{not}
 place a hyphen in front of an option in the initialization file.
 
 For example, the line
-
 @example
    singlespace
 @end example
-
 would be used if you like your output single-spaced.
 
 The line
-
 @example
    no_graphics
 @end example
-
 would be used if your computer does not have the special graphics
 characters.
+
+The line
+@example
+   ignoreblanks
+@end example
+would be used if you wish to type calls and concepts without the normal
+blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
+
+The line
+@example
+   retain_after_error
+@end example
+would be used if you wish to have the program retain the concepts that
+you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
 
 You can edit the file with an editor such as @samp{notepad}.
 
@@ -951,7 +1024,7 @@ generate a sequence of calls of your choosing.
 * Entering Calls::              Entering Calls
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Discarding Concepts After an Error:: Discarding Concepts After an Error
+* Retaining Concepts After an Error:: Retaining Concepts After an Error
 * Asymmetric Selectors::        Asymmetric Selectors
 @end menu
 
@@ -1129,7 +1202,7 @@ type @code{quarter <DIRECTION>} or whatever, and then type a question mark.
 Calls that take a direction have the keyword @code{<DIRECTION>} in them in the
 menus, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTION>}.
 
-When using @code{sd}, after you click on such a call, a popup will appear listing
+When using @code{Sd}, after you click on such a call, a popup will appear listing
 all possible directions.  Click on the one you want.  If you decide you don't
 want that call, just move the mouse away from the popup.
 
@@ -1145,7 +1218,7 @@ Calls that take a number have the keyword @code{<N>}, @code{<N/4>}, or @code{<Nt
 in them, like @code{eight chain <N>}, @code{invert the column <N/4>}, or
 @code{square thru, but on the <Nth> hand <ANYTHING>}.
 
-When using @code{sd}, a popup will appear listing the numbers from 1 to 8.  Click
+When using @code{Sd}, a popup will appear listing the numbers from 1 to 8.  Click
 on the one you want.  If the keyword was @code{<N/4>}, click on the value of @code{N}.
 The program will turn it into @code{N/4} (or, if @code{N}=2, into @code{1/2}).
 If you decide you don't
@@ -1170,7 +1243,7 @@ in their names.  Examples are @code{quarter thru}, @code{quarter the deucey},
 These are listed in the Callerlab lists with the words spelled out, though
 individual preferences vary.  Some people prefer to write @code{1/4 thru} and
 @code{3/4 thru}.  @code{Sd} and @code{Sdtty} list the call as @code{<N/4> thru}
-in the menu.  In @code{sd}, you click on that and then click on a number (only 1 and 3
+in the menu.  In @code{Sd}, you click on that and then click on a number (only 1 and 3
 are legal, of course).  In @code{Sdtty}, you can type @code{<N/4> thru} and then type
 1 or 3, or you can type the call directly, either in numbers or in words.  That is,
 you can type either @code{1/4 thru} or @code{quarter thru}.  No matter how you
@@ -1179,7 +1252,7 @@ enter one of these calls, it will always be printed out in words, as in
 
 @subsubheading Person designators
 These work like the others in a straightforward way.  The calls appear in the menu
-with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.  In @code{sd},
+with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.  In @code{Sd},
 you click on that and then make a selection from a popup menu.  In @code{Sdtty},
 you can either type the @code{<ANYONE>} literally and then answer the question,
 or you can type in the desired call directly, as in @code{patch the sides}.
@@ -1208,14 +1281,14 @@ Specify these in the usual way.  In @code{Sdtty} you can type the @code{<ATC>} d
 or you can enter the complete call.
 
 At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
-@code{reflected <ATC>} that make use of another tagging call.  In @code{sd}, you
+@code{reflected <ATC>} that make use of another tagging call.  In @code{Sd}, you
 will be presented with another popup.  In @code{Sdtty}, you can type in the
 entire call directly, as in @code{revert cross flip chain thru reactivate}.
 
 @subsubheading <ANYTHING> Calls
 Calls that use the ``<ANYTHING>'' mechanism, such as @code{in roll motivate},
 have the keyword @code{<ANYTHING>} in them, as in @code{<ANYTHING> motivate}.
-In @code{Sdtty}, you can type in the entire call directly.  In @code{sd},
+In @code{Sdtty}, you can type in the entire call directly.  In @code{Sd},
 click on the call with the word @code{<ANYTHING>} in it.  A popup will appear,
 asking for the replacement for the circulate.
 
@@ -1242,7 +1315,7 @@ Just @code{clover a} is enough, for example.  Furthermore, function key
 <F8>
 @end ifinfo
 is equivalent to typing @code{<ANYTHING>}.
-In @code{sd}, click on the menu item in the usual way.  Either way,
+In @code{Sd}, click on the menu item in the usual way.  Either way,
 the program will prompt you for a subcall.  This can be any legal call, including
 concepts and modifiers.  Whatever you enter will appear in brackets, as in
 @code{clover and [TANDEM shazam]}.
@@ -1536,7 +1609,7 @@ override this if you wish.  The @code{toggle concept levels} command toggles
 (turns on or off) the state of off-level concept permission.
 @xref{Changing Modes} and @ref{Using Off-Level Concepts}.
 
-@node Call Modifications, Discarding Concepts After an Error, Entering Concepts, Calling
+@node Call Modifications, Retaining Concepts After an Error, Entering Concepts, Calling
 @section Call Modifications
 
 Some calls can be modified in a natural way, such as @samp{catch fan the top 3},
@@ -1598,27 +1671,27 @@ cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
 [2/3 recycle] the difference] cover up} things may be quite difficult.
 How (and whether) you choose to read such a card is up to you.
 
-@node Discarding Concepts After an Error, Asymmetric Selectors, Call Modifications, Calling
-@section Discarding Concepts After an Error
+@node Retaining Concepts After an Error, Asymmetric Selectors, Call Modifications, Calling
+@section Retaining Concepts After an Error
 
-When an error occurs in the execution of a call, the program tries
+When an error occurs in the execution of a call, @code{Sd} has an option
+whereby it tries
 to leave in place any concepts that were associated with that call.
 That is, after printing the error message, the program will behave
 as though you had once again typed those concepts.  The assumption here
 is that only the call was mistaken, and you really wanted the concepts
 and do not wish to have to enter them again.  If you don't want those
-concepts, you can remove them one by one with the ``undo'' command.
-Or you can use the command ``discard entered concepts'' to get rid of
+concepts, you can remove them one by one with the @code{undo} command.
+Or you can use the command @code{discard entered concepts} to get rid of
 all of them at once.
 
-Some people may find this behavior objectionable.  You can make the
-program automatically discard all pending concepts whenever an error
-occurs by using the @code{-discard_after_error} command-line switch
-when the program is started.  You can also place the line
-@code{discard_after_error} into the ``Options'' section of the initialization
-file.  @xref{The Initialization File}.
+The @code{toggle retain after error} command toggles
+(turns on or off) the state of this option.
+@xref{Changing Modes}.  It can also be turned on when the program begins,
+either by giving a command-line option (@xref{Command-Line Options}) or
+through the use of the initialization file (@xref{Option Control}).
 
-@node Asymmetric Selectors,  , Discarding Concepts After an Error, Calling
+@node Asymmetric Selectors,  , Retaining Concepts After an Error, Calling
 @section Asymmetric Selectors
 
 The people selector popup contains various asymmetric selectors such as
@@ -1958,11 +2031,11 @@ If you select the @code{exit} command, the program will exit.  If a
 sequence is in progress, the program will ask for confirmation first.
 (Remember that a sequence is not finished until the @code{write this
 sequence} command has been given.)
-In @code{sd} with the X Window System, using your window manager
+In @code{Sd} with the X Window System, using your window manager
 to send a @code{Delete Window} message to the
 program is equivalent to clicking on the @code{exit} button.  This is
 what normally happens when you double-click the special control button in the
-upper left corner of the @code{sd} window.
+upper left corner of the @code{Sd} window.
 
 If you select the @code{abort} command, the program will abort the sequence
 but not exit.  It will go back to the startup menu to allow you to
@@ -2003,26 +2076,41 @@ will not appear in the sequence written to a file.  If you want the
 current position to have its picture written in a file (say, because the
 sequence is very difficult and you believe it may be necessary to say
 something helpful then like ``check a parallelogram with boys in the center
-box'') click on @code{keep picture}.
+box'') select the command @code{keep picture}.
 
 @node Changing Modes, , Keeping Pictures, Misc Commands
 @section Changing Modes
 
-There are two commands that change some aspect of the way @code{Sd}
-or @code{Sdtty} run.  The two commands are @code{toggle concept levels}
-and @code{toggle active phantoms}.  Normally, both of these are off.
-You may want to turn one or both of them on for your own personal
+There are several commands that change some aspect of the way @code{Sd}
+or @code{Sdtty} runs.  They are:
+@example
+   toggle concept levels
+   toggle active phantoms
+   toggle ignoreblanks
+   toggle retain after error
+@end example
+Normally, all of these are off.
+You may want to turn one or more of them on for your own personal
 preference, or for some special reason.  These commands @dfn{toggle} their
 respective modes.  That is, they turn the mode on if it was off, and
-off if it was on.  The current state of the modes is always displayed
+off if it was on.  The current state of the @code{concept levels} and
+@code{active phantoms} modes is always displayed
 in the input prompt in @code{Sdtty}, or the mode line in the upper
-right corner in @code{sd}.
+right corner in @code{Sd}.
 
 The @code{toggle concept levels} command changes the legality of concepts
 that are not on the specified calling level.  @xref{Entering Concepts}.
 
 The @code{toggle active phantoms} command changes the persistence of
 phantoms during certain calls.  @xref{Assume Waves}.
+
+The @code{toggle ignoreblanks} command changes the option whereby
+the parser lets type calls and concepts without the normal
+blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
+
+The @code{toggle retain after error} command changes the option whereby
+program retains the concepts that
+you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
 
 @node Terminal Interface, Linguistic Idiosyncrasies, Misc Commands, Top
 @chapter Terminal Interface
@@ -2190,7 +2278,7 @@ program's judgement can ever be.
 
 The program sometimes requires you to say various @dfn{helper} words, such
 as @code{left} in cases where their necessity is is not universally
-agreed upon.  For example, from a left-handed quarter-tag, @code{sd}
+agreed upon.  For example, from a left-handed quarter-tag, @code{Sd}
 will not accept @code{scoot and plenty}---you are required to enter
 @code{left scoot and plenty}, even though the Callerlab definition does
 not require the word @code{left} in this case.  What helper words you
@@ -2762,6 +2850,7 @@ independent 4-person calls.
 @item quadruple L/W/B working forward/backward
 @item quadruple C/B working right/left
 @item quadruple C/L/W/B working clockwise/counterclockwise
+@item quadruple C/L/W/B/D working toward the center
 These are straightforward.
 @item triple diagonal C/L/W
 @item triple diagonal L/W working forward/backward
@@ -3137,8 +3226,8 @@ lines-to-lines rule embrace the roll.  It also makes it possible to place two
 calls on the same line that need to be spoken together for clarity, such as
 @samp{recycle and roll}.  The finished transcript will show the two calls within
 parentheses, and separated by a semicolon.  The proper way
-to say the concept when calling is problematical.  Something like @samp{consider
-the following two calls to be one unit, and do a stable swing thru and turn thru}
+to say the concept when calling is problematical.  Something like ``consider
+the following two calls to be one unit, and do a stable swing thru and turn thru''
 might be appropriate.
 @item precede it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item follow it by@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -3434,6 +3523,7 @@ side of the screen.
 @item each 1x4
 @item each line
 @item each wave
+@item each diamond
 These can be used in troublesome situations to force a setup to be split
 in the indicated way.  For example, from a tidal wave, the @code{each wave}
 concept can be used to cause a @samp{counter rotate} to be performed as a
@@ -3632,7 +3722,7 @@ You can put @code{Sd} into a mode in which there is an implicit
 @code{with active phantoms} whenever any assumption is made.
 The @code{toggle active phantoms} command toggles (turns on or off)
 this mode.  @xref{Changing Modes}.
-When in this mode, @code{sd} will not actually insert the text
+When in this mode, @code{Sd} will not actually insert the text
 @code{with active phantoms} after each @code{assume} concept.
 
 @node Assuming a Quarter-Tag, Designating Certain People, Assume Waves, Concept Notes

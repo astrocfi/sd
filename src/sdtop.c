@@ -311,7 +311,7 @@ extern void touch_or_rear_back(
    if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
       if (scopy->kind == s1x4 && (livemask == 0xFFUL) && (directions == 0x28UL)) {
          if (scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS)
-            scopy->cmd.prior_elongation_bits = (scopy->cmd.prior_elongation_bits & (~3)) | scopy->rotation+1;
+            scopy->cmd.prior_elongation_bits = (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
          tptr = &rear_wave_pair;          /* Rear back from a wave to facing couples. */
       }
       else if (scopy->kind == s1x2 && (livemask == 0xFUL) && (directions == 0x2UL)) {
@@ -423,7 +423,7 @@ extern void touch_or_rear_back(
             }
             break;
          case s2x4:
-            if (     ((livemask == 0xFFFFUL) || (livemask == 0xF0F0UL) || (livemask == 0x0F0FUL))
+            if (     ((livemask == 0xFFFFUL) || (livemask == 0xF0F0UL) || (livemask == 0x0F0FUL) || (livemask == 0x0FF0UL) || (livemask == 0xF00FUL))
                               &&
                      ((directions ^ 0x77DDUL) & livemask) == 0)
                tptr = &step_8ch_pair;         /* Check for stepping to parallel waves from an 8 chain. */
@@ -1416,7 +1416,7 @@ extern void toplevelmove(void)
    /* Set the selector to "uninitialized", so that, if we do a call like "run", we
       will query the user to find out who is selected. */
 
-   current_selector = selector_uninitialized;
+   current_options.who = selector_uninitialized;
 
    /* Put in identification bits for global/unsymmetrical stuff, if possible. */
 

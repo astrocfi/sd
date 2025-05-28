@@ -1170,10 +1170,13 @@ extern void distorted_move(
    static Const veryshort list_2x8[16] = {0, 15, 1, 14, 3, 12, 2, 13, 7, 8, 6, 9, 4, 11, 5, 10};
 
    veryshort the_map[8];
+   parse_block *next_parseptr;
+   final_set junk_concepts;
    int rot, rotz;
    setup_kind k;
    setup a1;
    setup res1;
+   mpkind mk;
 
    map_thing *map_ptr;
    int rotate_back = 0;
@@ -1182,29 +1185,27 @@ extern void distorted_move(
    long_boolean zlines = TRUE;
 
    if (linesp & 8) {
+      int i;
+
       k = s1x8;
 
-      if (ss->kind == s2x8) {
-         int i;
+      if (ss->kind != s2x8) fail("Must have 2x8 setup for this concept.");
 
-         if (linesp & 1) {
-            if (global_tbonetest & 1) fail("There is no tidal line here.");
-         }
-         else {
-            if (global_tbonetest & 010) fail("There is no tidal column here.");
-         }
-   
-         /* Search for the live people. */
-         
-         for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
-         
-         zlines = FALSE;
-         rot = 0;
-         rotz = 0;
-         result->kind = s2x8;      
+      if (linesp & 1) {
+         if (global_tbonetest & 1) fail("There is no tidal line here.");
       }
-      else
-         fail("Must have 2x8 setup for this concept.");
+      else {
+         if (global_tbonetest & 010) fail("There is no tidal column here.");
+      }
+
+      /* Search for the live people. */
+      
+      for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
+      
+      zlines = FALSE;
+      rot = 0;
+      rotz = 0;
+      result->kind = s2x8;      
    }
    else {
       k = s2x4;
@@ -1225,6 +1226,8 @@ extern void distorted_move(
             return;
          }
    
+         /* Look for butterfly or "O" spots occupied. */
+
          if (livemask == 0x6666 || livemask == 0x9999) {
             if (!((linesp ^ global_tbonetest) & 1)) {    /* What a crock -- this is all backwards. */
                rotate_back = 1;                          /* (Well, actually everything else is backwards.) */
@@ -1243,21 +1246,20 @@ extern void distorted_move(
             livemask = ((livemask << 4) & 0xFFFF) | (livemask >> 12);
          }
    
+         /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
+
+         if (livemask == 0xB4B4) { mk = MPKIND__OFFS_L_FULL; goto do_offset_call; }
+         if (livemask == 0x4B4B) { mk = MPKIND__OFFS_R_FULL; goto do_offset_call; }
+
          /* Search for the live people.
             Must scan sideways for each Y value, looking for exactly 2 people
             If any of the scans returns false, meaning that the 2 people are not adjacent,
             set zlines to false. */
-   
-         /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
-   
-         if (livemask == 0xB4B4) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_L_FULL][1]; goto do_divided_call; }
-         else if (livemask == 0x4B4B) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_R_FULL][1]; goto do_divided_call; }
-         else {
-            if (!search_row(4, &the_map[0], &the_map[7], list_10_6_5_4, ss)) zlines = FALSE;
-            if (!search_row(4, &the_map[1], &the_map[6], list_11_13_7_2, ss)) zlines = FALSE;
-            if (!search_row(4, &the_map[2], &the_map[5], list_12_17_3_1, ss)) zlines = FALSE;
-            if (!search_row(4, &the_map[3], &the_map[4], list_14_15_16_0, ss)) zlines = FALSE;
-         }
+
+         if (!search_row(4, &the_map[0], &the_map[7], list_10_6_5_4, ss)) zlines = FALSE;
+         if (!search_row(4, &the_map[1], &the_map[6], list_11_13_7_2, ss)) zlines = FALSE;
+         if (!search_row(4, &the_map[2], &the_map[5], list_12_17_3_1, ss)) zlines = FALSE;
+         if (!search_row(4, &the_map[3], &the_map[4], list_14_15_16_0, ss)) zlines = FALSE;
       
          rot = 011;
          rotz = 033;
@@ -1273,9 +1275,9 @@ extern void distorted_move(
    
          /* Check for special case of offset lines/columns, and do it the elegant way (handling shape-changers) if so. */
          
-         if (livemask == 07474) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_L_HALF][1]; goto do_divided_call; }
-         else if (livemask == 06363) { map_ptr = map_lists[s2x4][0]->f[MPKIND__OFFS_R_HALF][1]; goto do_divided_call; }
-   
+         if (livemask == 07474) { mk = MPKIND__OFFS_L_HALF; goto do_offset_call; }
+         if (livemask == 06363) { mk = MPKIND__OFFS_R_HALF; goto do_offset_call; }
+
          /* Search for the live people. */
          
          if (!search_row(3, &the_map[0], &the_map[7], list_0_12_11, ss)) zlines = FALSE;
@@ -1325,6 +1327,30 @@ extern void distorted_move(
    reinstate_rotation(ss, result);
    goto getout;
    
+   do_offset_call:
+
+   /* This is known to be a plain offset C/L/W in a 3x4 or 4x4.  See if it
+      is followed by "split phantom boxes", in which case we do something esoteric. */
+
+   next_parseptr = process_final_concepts(parseptr->next, FALSE, &junk_concepts);
+
+   if (     next_parseptr->concept->kind == concept_do_phantom_boxes &&
+            ss->kind == s3x4 &&     /* Only allow 50% offset. */
+            junk_concepts == 0 &&
+            next_parseptr->concept->value.maps == &map_hv_2x4_2) {
+      ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+      do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
+      if (ss->kind != s3x8) fail("Must have a 3x4 setup for this concept.");
+
+      if ((linesp & 7) == 3)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+      ss->cmd.parseptr = next_parseptr->next;
+      map_ptr = map_lists[s2x4][1]->f[mk][0];
+   }
+   else
+      map_ptr = map_lists[s2x4][0]->f[mk][1];
+
    do_divided_call:
 
    if (disttest != disttest_offset)

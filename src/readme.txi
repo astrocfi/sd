@@ -102,7 +102,8 @@ lists are careless.  In such cases, we have attempted to correct the errors
 where possible, using a variety of sources.  Priority is given to those
 sources that have shown the greatest care in their editing.
 
-The ``-ignoreblanks'' command line switch, or the line ``ignoreblanks''
+The @code{toggle ignoreblanks} command, or
+the ``-ignoreblanks'' command line switch, or the line ``ignoreblanks''
 in the ``options'' section of the initialization file, will make Sdtty
 accept words that are run together or the use of blanks instead of
 hyphens.  Hence, misspelled concepts and calls such as @code{tandem based triangles}
@@ -258,7 +259,9 @@ A:INSTALL
 @end example
 
 If you are upgrading to a new version, it will ask whether it is OK to
-overwrite existing files.  Type ``Y'' in each case.
+overwrite existing files.  Type ``Y'' in each case, assuming that you want
+to replace the existing version.  It will not damage or delete any sequence
+transcript files or initialization files.
 
 Once the installation is complete, you can run Sdtty under DOS or Windows.
 To run it from DOS, type
@@ -270,6 +273,9 @@ sdtty
 
 You can also start Sdtty directly from Windows, once you have completed the
 steps in the next section.
+
+You may safely delete any documentation files from your hard disk after installing
+the program.
 
 @node Making Sdtty Start Under Windows, Licensing Terms, Installing Sdtty on a PC, Intro
 @unnumberedsec Making Sdtty Start Under Windows
@@ -299,8 +305,8 @@ click @code{Finish}.  Sdtty will now be in the selected location.
 From the Program Manager, double-click the program group you want to place it in,
 for example, @code{Accessories}.  In the Toolbar of the Program Manager, click
 @code{File}.  Then click @code{new}.  Select @code{Program Item}, and click @code{OK}.
-Type @code{C:\SD\SDTTY.PIF} as the @code{Program Filename}.  Choose an icon if you wish.
-Then click @code{OK}.
+Type @code{C:\SD\SDTTY.PIF} as the @code{Program Filename} or @code{Command Line}.
+Choose an icon if you wish.  Then click @code{OK}.
 
 @node Licensing Terms, Author Contact, Making Sdtty Start Under Windows, Intro
 @unnumberedsec Licensing Terms

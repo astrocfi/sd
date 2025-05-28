@@ -96,7 +96,8 @@ Private Widget neglectpopup, neglectbox;
 
 /* This is the order in which command buttons will appear on the screen.
     These will be translated into the things required by the main program by
-    the translation table "button_translations", which must track this enumeration. */
+    the translation table "button_translations".
+   BEWARE!!  This must track the tables "button_translations" and "command_resources". */
 typedef enum {
    cmd_button_quit,
    cmd_button_undo,
@@ -105,6 +106,8 @@ typedef enum {
    cmd_button_allow_mods,
    cmd_button_allow_concepts,
    cmd_button_active_phantoms,
+   cmd_button_ignoreblanks,
+   cmd_button_retain_after_error,
    cmd_button_create_comment,
    cmd_button_change_outfile,
    cmd_button_change_title,
@@ -301,8 +304,10 @@ Private Cstring *concept_popup_list = NULL;
 #define USER_GESTURE_NULL -1
 #define SPECIAL_SIMPLE_MODS -2
 #define SPECIAL_ALLOW_MODS -3
-#define SPECIAL_ALLOW_ALL_CONCEPTS -4
-#define SPECIAL_ALLOW_ACT_PHANTOMS -5
+#define SPECIAL_TOGGLE_ALL_CONCEPTS -4
+#define SPECIAL_TOGGLE_ACT_PHANTOMS -5
+#define SPECIAL_TOGGLE_IGNOREBLANKS -6
+#define SPECIAL_TOGGLE_RETAIN_AFTER_ERROR -7
 
 
 /* Beware:  This table must track the enumeration "cmd_button_kind". */
@@ -312,8 +317,10 @@ static int button_translations[] = {
    command_abort,                         /* cmd_button_abort */
    SPECIAL_SIMPLE_MODS,                   /* cmd_button_simple_mods */
    SPECIAL_ALLOW_MODS,                    /* cmd_button_allow_mods */
-   SPECIAL_ALLOW_ALL_CONCEPTS,            /* cmd_button_allow_concepts */
-   SPECIAL_ALLOW_ACT_PHANTOMS,            /* cmd_button_active_phantoms */
+   SPECIAL_TOGGLE_ALL_CONCEPTS,           /* cmd_button_allow_concepts */
+   SPECIAL_TOGGLE_ACT_PHANTOMS,           /* cmd_button_active_phantoms */
+   SPECIAL_TOGGLE_IGNOREBLANKS,           /* cmd_button_ignoreblanks */
+   SPECIAL_TOGGLE_RETAIN_AFTER_ERROR,     /* cmd_button_retain_after_error */
    command_create_comment,                /* cmd_button_create_comment */
    command_change_outfile,                /* cmd_button_change_outfile */
    command_change_header,                 /* cmd_button_change_title */
@@ -595,6 +602,8 @@ Private XtResource startup_resources[] = {
     MENU("asTheyAre", start_list[start_select_as_they_are], "Just as they are"),
     MENU("toggleConceptLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
     MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
+    MENU("toggleIgnoreBlanks", start_list[start_select_toggle_ignoreblank], "Toggle ignoreblanks"),
+    MENU("toggleRetain_after_error", start_list[start_select_toggle_retain], "Toggle retain after error"),
     MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
     MENU("changeTitle", start_list[start_select_change_header_comment], "Change title")
 };
@@ -608,6 +617,8 @@ Private XtResource command_resources[] = {
     MENU("allowmods", cmd_list[cmd_button_allow_mods], "Allow modifications"),
     MENU("allowconcepts", cmd_list[cmd_button_allow_concepts], "Toggle concept levels"),
     MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
+    MENU("ignoreblanks", cmd_list[cmd_button_ignoreblanks], "Toggle ignoreblanks"),
+    MENU("retainaftererror", cmd_list[cmd_button_retain_after_error], "Toggle retain after error"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
     MENU("outfile", cmd_list[cmd_button_change_outfile], "Change output file"),
     MENU("title", cmd_list[cmd_button_change_title], "Change title"),
@@ -1338,13 +1349,21 @@ extern uims_reply uims_get_startup_command(void)
             allowing_modifications = 2;
             goto try_again;
          }
-         else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+         else if (uims_menu_index == SPECIAL_TOGGLE_ALL_CONCEPTS) {
             allowing_all_concepts = !allowing_all_concepts;
             /* ***** Maybe we should change visibility of off-level concepts at this point. */
             goto try_again;
          }
-         else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+         else if (uims_menu_index == SPECIAL_TOGGLE_ACT_PHANTOMS) {
             using_active_phantoms = !using_active_phantoms;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_TOGGLE_IGNOREBLANKS) {
+            elide_blanks = !elide_blanks;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
+            retain_after_error = !retain_after_error;
             goto try_again;
          }
       }
@@ -1409,13 +1428,21 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          allowing_modifications = 2;
          goto try_again;
       }
-      else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+      else if (uims_menu_index == SPECIAL_TOGGLE_ALL_CONCEPTS) {
          allowing_all_concepts = !allowing_all_concepts;
          /* ***** Maybe we should change visibility of off-level concepts at this point. */
          goto try_again;
       }
-      else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+      else if (uims_menu_index == SPECIAL_TOGGLE_ACT_PHANTOMS) {
          using_active_phantoms = !using_active_phantoms;
+         goto try_again;
+      }
+      else if (uims_menu_index == SPECIAL_TOGGLE_IGNOREBLANKS) {
+         elide_blanks = !elide_blanks;
+         goto try_again;
+      }
+      else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
+         retain_after_error = !retain_after_error;
          goto try_again;
       }
    }
@@ -1479,13 +1506,21 @@ extern uims_reply uims_get_resolve_command(void)
             allowing_modifications = 2;
             goto try_again;
          }
-         else if (uims_menu_index == SPECIAL_ALLOW_ALL_CONCEPTS) {
+         else if (uims_menu_index == SPECIAL_TOGGLE_ALL_CONCEPTS) {
             allowing_all_concepts = !allowing_all_concepts;
             /* ***** Maybe we should change visibility of off-level concepts at this point. */
             goto try_again;
          }
-         else if (uims_menu_index == SPECIAL_ALLOW_ACT_PHANTOMS) {
+         else if (uims_menu_index == SPECIAL_TOGGLE_ACT_PHANTOMS) {
             using_active_phantoms = !using_active_phantoms;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_TOGGLE_IGNOREBLANKS) {
+            elide_blanks = !elide_blanks;
+            goto try_again;
+         }
+         else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
+            retain_after_error = !retain_after_error;
             goto try_again;
          }
       }

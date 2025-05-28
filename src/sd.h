@@ -908,17 +908,22 @@ typedef enum {
    direction_zagzag
 } direction_kind;
 
+typedef struct {
+   selector_kind who;        /* selector, if any, used by concept or call */
+   direction_kind where;     /* direction, if any, used by concept or call */
+   uint32 tagger;            /* tagging call index, if any, used by call */
+   uint32 circcer;           /* circulating call index, if any, used by call */
+   uint32 number_fields;     /* number, if any, used by concept or call */
+   int howmanynumbers;       /* tells how many there are */
+} call_conc_option_state;
+
 typedef struct glock {
    concept_descriptor *concept;   /* the concept or end marker */
    callspec_block *call;          /* if this is end mark, gives the call; otherwise unused */
    struct glock *next;            /* next concept, or, if this is end mark, points to substitution list */
    struct glock *subsidiary_root; /* for concepts that take a second call, this is its parse root */
    struct glock *gc_ptr;          /* used for reclaiming dead blocks */
-   selector_kind selector;        /* selector, if any, used by concept or call */
-   direction_kind direction;      /* direction, if any, used by concept or call */
-   uint32 number;                 /* number, if any, used by concept or call */
-   int tagger;                    /* tagging call index, if any, used by call */
-   int circcer;                   /* circulating call index, if any, used by call */
+   call_conc_option_state options;/* number, selector, direction, etc. */
 } parse_block;
 
 /* The following items are not actually part of the setup description,
@@ -1179,6 +1184,8 @@ typedef enum {
    start_select_as_they_are,
    start_select_toggle_conc,
    start_select_toggle_act,
+   start_select_toggle_ignoreblank,
+   start_select_toggle_retain,
    start_select_change_outfile,
    start_select_change_header_comment
 } start_select_kind;
@@ -1207,6 +1214,8 @@ typedef enum {
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_act_phan,
+   command_toggle_ignoreblanks,
+   command_toggle_retain_after_error,
    command_toggle_singer,
    command_toggle_singer_backward,
    command_refresh,
@@ -1480,7 +1489,6 @@ typedef enum {
 typedef enum {
    chk_none,
    chk_wave,
-   chk_strict,
    chk_1_group,
    chk_2_groups,
    chk_4_groups,
@@ -1550,15 +1558,6 @@ typedef enum {
    interactivity_in_first_scan,
    interactivity_in_random_search
 } interactivity_state;
-
-typedef struct {
-   selector_kind who;        /* matches <anyone> */
-   direction_kind where;     /* matches <direction> */
-   uint32 tagger;            /* matches <atc> */
-   uint32 circcer;           /* matches <anything> as in <anything> motivate */
-   uint32 number_fields;     /* matches all the number fields */
-   int howmanynumbers;       /* tells how many there are */
-} call_conc_option_state;
 
 typedef enum {
    call_list_mode_none,
@@ -1863,7 +1862,6 @@ extern call_list_mode_t glob_call_list_mode;                        /* in SDMAIN
 extern int sequence_number;                                         /* in SDMAIN */
 extern int last_file_position;                                      /* in SDMAIN */
 extern int global_age;                                              /* in SDMAIN */
-extern long_boolean erase_after_error;                              /* in SDMAIN */
 extern parse_state_type parse_state;                                /* in SDMAIN */
 extern int uims_menu_index;                                         /* in SDMAIN */
 extern long_boolean uims_menu_cross;                                /* in SDMAIN */
@@ -1883,11 +1881,11 @@ extern long_boolean verify_used_selector;                           /* in SDMAIN
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 extern long_boolean using_active_phantoms;                          /* in SDMAIN */
+extern long_boolean elide_blanks;                                   /* in SDMAIN */
+extern long_boolean retain_after_error;                             /* in SDMAIN */
 extern int singing_call_mode;                                       /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
-extern selector_kind current_selector;                              /* in SDMAIN */
-extern direction_kind current_direction;                            /* in SDMAIN */
-extern uint32 current_number_fields;                                /* in SDMAIN */
+extern call_conc_option_state current_options;                      /* in SDMAIN */
 extern warning_info no_search_warnings;                             /* in SDMAIN */
 extern warning_info conc_elong_warnings;                            /* in SDMAIN */
 extern warning_info dyp_each_warnings;                              /* in SDMAIN */
