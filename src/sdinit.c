@@ -31,10 +31,10 @@
 Private callspec_block **global_temp_call_list;
 Private int global_callcount;     /* Index into the above. */
 
-#define SB (ID2_SIDE|ID2_BOY)
-#define HB (ID2_HEAD|ID2_BOY)
-#define SG (ID2_SIDE|ID2_GIRL)
-#define HG (ID2_HEAD|ID2_GIRL)
+#define SB (ID1_PERM_SIDE|ID1_PERM_BOY)
+#define HB (ID1_PERM_HEAD|ID1_PERM_BOY)
+#define SG (ID1_PERM_SIDE|ID1_PERM_GIRL)
+#define HG (ID1_PERM_HEAD|ID1_PERM_GIRL)
 #define WEST(x) (d_west|ROLLBITL|(x)<<6)
 #define EAST(x) (d_east|ROLLBITL|(x)<<6)
 #define NORT(x) (d_north|ROLLBITL|(x)<<6)
@@ -42,20 +42,20 @@ Private int global_callcount;     /* Index into the above. */
 
 /* In all of these setups in which people are facing, they are normal couples.  This makes initialization of things like star thru,
    ladies chain, and curlique work.  The setup for starting DPT has the appropriate sex for triple star thru. */
-Private setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT(6), SB}, {SOUT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
-Private setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
-Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST(3), SG}, {EAST(4), HB}, {WEST(5), HG}, {WEST(2), SB}, {WEST(7), SG}, {WEST(0), HB}, {EAST(1), HG}, {EAST(6), SB}}, 0};
-Private setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST(7), SG}, {WEST(5), HG}, {EAST(4), HB}, {EAST(6), SB}, {EAST(3), SG}, {EAST(1), HG}, {WEST(0), HB}, {WEST(2), SB}}, 0};
-Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST(6), SB}, {EAST(5), HG}, {EAST(4), HB}, {EAST(7), SG}, {WEST(2), SB}, {WEST(1), HG}, {WEST(0), HB}, {WEST(3), SG}}, 0};
-Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST(6), SB}, {WEST(5), HG}, {WEST(4), HB}, {WEST(7), SG}, {EAST(2), SB}, {EAST(1), HG}, {EAST(0), HB}, {EAST(3), SG}}, 0};
-Private setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST(6), SB}, {WEST(5), HG}, {EAST(4), HB}, {WEST(7), SG}, {WEST(2), SB}, {EAST(1), HG}, {WEST(0), HB}, {EAST(3), SG}}, 0};
-Private setup test_setup_tby  = {s2x4, 0, {0}, {{WEST(5), HG}, {EAST(6), SB}, {WEST(7), SG}, {EAST(4), HB}, {EAST(1), HG}, {WEST(2), SB}, {EAST(3), SG}, {WEST(0), HB}}, 0};
-Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT(5), HG}, {SOUT(6), SB}, {SOUT(7), SG}, {SOUT(4), HB}, {NORT(1), HG}, {NORT(2), SB}, {NORT(3), SG}, {NORT(0), HB}}, 0};
-Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT(6), SB}, {NORT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
-Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {NORT(3), SG}}, 0};
-Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {SOUT(3), SG}}, 0};
-Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT(6), SB}, {NORT(5), HG}, {SOUT(4), HB}, {SOUT(7), SG}, {SOUT(2), SB}, {SOUT(1), HG}, {NORT(0), HB}, {NORT(3), SG}}, 0};
-Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(6), SB}, {SOUT(5), HG}, {NORT(4), HB}, {NORT(7), SG}, {NORT(2), SB}, {NORT(1), HG}, {SOUT(0), HB}, {SOUT(3), SG}}, 0};
+Private setup test_setup_1x8  = {s1x8, 0, {0}, {{NORT(6) | SB, 0}, {SOUT(5) | HG, 0}, {SOUT(4) | HB, 0}, {NORT(7) | SG, 0}, {SOUT(2) | SB, 0}, {NORT(1) | HG, 0}, {NORT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
+Private setup test_setup_l1x8 = {s1x8, 0, {0}, {{SOUT(6) | SB, 0}, {NORT(5) | HG, 0}, {NORT(4) | HB, 0}, {SOUT(7) | SG, 0}, {NORT(2) | SB, 0}, {SOUT(1) | HG, 0}, {SOUT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
+Private setup test_setup_dpt  = {s2x4, 0, {0}, {{EAST(3) | SG, 0}, {EAST(4) | HB, 0}, {WEST(5) | HG, 0}, {WEST(2) | SB, 0}, {WEST(7) | SG, 0}, {WEST(0) | HB, 0}, {EAST(1) | HG, 0}, {EAST(6) | SB, 0}}, 0};
+Private setup test_setup_cdpt = {s2x4, 0, {0}, {{WEST(7) | SG, 0}, {WEST(5) | HG, 0}, {EAST(4) | HB, 0}, {EAST(6) | SB, 0}, {EAST(3) | SG, 0}, {EAST(1) | HG, 0}, {WEST(0) | HB, 0}, {WEST(2) | SB, 0}}, 0};
+Private setup test_setup_rcol = {s2x4, 0, {0}, {{EAST(6) | SB, 0}, {EAST(5) | HG, 0}, {EAST(4) | HB, 0}, {EAST(7) | SG, 0}, {WEST(2) | SB, 0}, {WEST(1) | HG, 0}, {WEST(0) | HB, 0}, {WEST(3) | SG, 0}}, 0};
+Private setup test_setup_lcol = {s2x4, 0, {0}, {{WEST(6) | SB, 0}, {WEST(5) | HG, 0}, {WEST(4) | HB, 0}, {WEST(7) | SG, 0}, {EAST(2) | SB, 0}, {EAST(1) | HG, 0}, {EAST(0) | HB, 0}, {EAST(3) | SG, 0}}, 0};
+Private setup test_setup_8ch  = {s2x4, 0, {0}, {{EAST(6) | SB, 0}, {WEST(5) | HG, 0}, {EAST(4) | HB, 0}, {WEST(7) | SG, 0}, {WEST(2) | SB, 0}, {EAST(1) | HG, 0}, {WEST(0) | HB, 0}, {EAST(3) | SG, 0}}, 0};
+Private setup test_setup_tby  = {s2x4, 0, {0}, {{WEST(5) | HG, 0}, {EAST(6) | SB, 0}, {WEST(7) | SG, 0}, {EAST(4) | HB, 0}, {EAST(1) | HG, 0}, {WEST(2) | SB, 0}, {EAST(3) | SG, 0}, {WEST(0) | HB, 0}}, 0};
+Private setup test_setup_lin  = {s2x4, 0, {0}, {{SOUT(5) | HG, 0}, {SOUT(6) | SB, 0}, {SOUT(7) | SG, 0}, {SOUT(4) | HB, 0}, {NORT(1) | HG, 0}, {NORT(2) | SB, 0}, {NORT(3) | SG, 0}, {NORT(0) | HB, 0}}, 0};
+Private setup test_setup_lout = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
+Private setup test_setup_rwv  = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {SOUT(5) | HG, 0}, {NORT(4) | HB, 0}, {SOUT(7) | SG, 0}, {SOUT(2) | SB, 0}, {NORT(1) | HG, 0}, {SOUT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
+Private setup test_setup_lwv  = {s2x4, 0, {0}, {{SOUT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
+Private setup test_setup_r2fl = {s2x4, 0, {0}, {{NORT(6) | SB, 0}, {NORT(5) | HG, 0}, {SOUT(4) | HB, 0}, {SOUT(7) | SG, 0}, {SOUT(2) | SB, 0}, {SOUT(1) | HG, 0}, {NORT(0) | HB, 0}, {NORT(3) | SG, 0}}, 0};
+Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(6) | SB, 0}, {SOUT(5) | HG, 0}, {NORT(4) | HB, 0}, {NORT(7) | SG, 0}, {NORT(2) | SB, 0}, {NORT(1) | HG, 0}, {SOUT(0) | HB, 0}, {SOUT(3) | SG, 0}}, 0};
 
 
 

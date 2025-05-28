@@ -33,8 +33,7 @@
 #include "sd.h"
 
 /* bits that we need to manipulate, segregated by word number in the personrec */
-#define ID_BITS_1 000000700
-#define ID_BITS_2 017770000
+#define ID1_PERM_ALLBITS     017770000000UL
 
 
 /* maximum number of hashes we remember to avoid duplicates.
@@ -136,6 +135,7 @@ static Cstring title_string[] = {
    "Pick Simple Call: ",
    "Pick Concept Call: ",
    "Pick Level Call: ",
+   "Pick 8 Person Level Call: ",
    "Create Setup: ",
 };
 
@@ -549,7 +549,7 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
       for (j=0; j<8; j++) {
          perm_indices[j] = -1;
          for (i=0; i<8; i++)
-            if ((history[history_insertion_point].state.people[i].id1 & ID_BITS_1) == perm_array[j]) perm_indices[j] = i;
+            if ((history[history_insertion_point].state.people[i].id1 & PID_MASK) == perm_array[j]) perm_indices[j] = i;
          if (perm_indices[j] < 0) return(FALSE);      /* didn't find the person???? */
       }
    }
@@ -737,31 +737,31 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
          if ((ns->people[j].id1 & d_mask) != goal_directions[j]) goto what_a_loss;
 
          {        /* Need some local temporaries -- ugly in C, impossible in Pascal! */
-         int p0 = ns->people[perm_indices[0]].id1 & ID_BITS_1;
-         int p1 = ns->people[perm_indices[1]].id1 & ID_BITS_1;
-         int p2 = ns->people[perm_indices[2]].id1 & ID_BITS_1;
-         int p3 = ns->people[perm_indices[3]].id1 & ID_BITS_1;
-         int p4 = ns->people[perm_indices[4]].id1 & ID_BITS_1;
-         int p5 = ns->people[perm_indices[5]].id1 & ID_BITS_1;
-         int p6 = ns->people[perm_indices[6]].id1 & ID_BITS_1;
-         int p7 = ns->people[perm_indices[7]].id1 & ID_BITS_1;
+         int p0 = ns->people[perm_indices[0]].id1 & PID_MASK;
+         int p1 = ns->people[perm_indices[1]].id1 & PID_MASK;
+         int p2 = ns->people[perm_indices[2]].id1 & PID_MASK;
+         int p3 = ns->people[perm_indices[3]].id1 & PID_MASK;
+         int p4 = ns->people[perm_indices[4]].id1 & PID_MASK;
+         int p5 = ns->people[perm_indices[5]].id1 & PID_MASK;
+         int p6 = ns->people[perm_indices[6]].id1 & PID_MASK;
+         int p7 = ns->people[perm_indices[7]].id1 & PID_MASK;
 
          /* Test for absolute sex correctness if required. */
          if (!current_reconciler->allow_eighth_rotation && (p0 & 0100)) goto what_a_loss;
 
-         p7 = (p7 - p6) & ID_BITS_1;
-         p6 = (p6 - p5) & ID_BITS_1;
-         p5 = (p5 - p4) & ID_BITS_1;
-         p4 = (p4 - p3) & ID_BITS_1;
-         p3 = (p3 - p2) & ID_BITS_1;
-         p2 = (p2 - p1) & ID_BITS_1;
-         p1 = (p1 - p0) & ID_BITS_1;
+         p7 = (p7 - p6) & PID_MASK;
+         p6 = (p6 - p5) & PID_MASK;
+         p5 = (p5 - p4) & PID_MASK;
+         p4 = (p4 - p3) & PID_MASK;
+         p3 = (p3 - p2) & PID_MASK;
+         p2 = (p2 - p1) & PID_MASK;
+         p1 = (p1 - p0) & PID_MASK;
 
          /* Test each sex individually for uniformity of offset around the ring. */
          if (p1 != p3 || p3 != p5 || p5 != p7 || p2 != p4 || p4 != p6)
             goto what_a_loss;
 
-         if (((p1 + p2) & ID_BITS_1) != 0200)   /* Test for each sex in sequence. */
+         if (((p1 + p2) & PID_MASK) != 0200)   /* Test for each sex in sequence. */
             goto what_a_loss;
 
          if ((p2 & 0100) == 0)         /* Test for alternating sex. */
@@ -851,6 +851,10 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
             break;
       }
    }
+   else if (goal == command_8person_level_call) {
+      /* We demand that no splitting have taken place along either axis. */
+      if (ns->result_flags & RESULTFLAG__SPLIT_AXIS_MASK) goto what_a_loss;
+   }
 
    /* The call (or sequence thereof) seems to satisfy our criterion.  Just to be
       sure, we have to examine all future calls (for a reconcile -- for other stuff
@@ -877,8 +881,8 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
    if (goal == command_reconcile) {
       for (j=0; j<8; j++) {
-         new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID_BITS_1;
-         new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id2 & ID_BITS_2;
+         new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & PID_MASK;
+         new_resolve->permute2[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & ID1_PERM_ALLBITS;
       }
 
       new_resolve->rotchange = ns->rotation - history[history_insertion_point].state.rotation;
@@ -925,10 +929,9 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
 
          if (t.id1) {
             if (this_state.state.people[k].id1 !=
-                  ((t.id1 & (~ID_BITS_1)) | new_resolve->permute1[(t.id1 & ID_BITS_1) >> 6]))
+                  ((t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | new_resolve->permute1[(t.id1 & PID_MASK) >> 6] | new_resolve->permute2[(t.id1 & PID_MASK) >> 6]))
                goto try_again;
-            if (this_state.state.people[k].id2 !=
-                  ((t.id2 & (~ID_BITS_2)) | new_resolve->permute2[(t.id1 & ID_BITS_1) >> 6]))
+            if (this_state.state.people[k].id2 != t.id2)
                goto try_again;
          }
          else {
@@ -1069,7 +1072,7 @@ extern uims_reply full_resolve(command_kind goal)
             specialfail("Not in acceptable setup for reconcile, or sequence is too short, or concepts are selected.");
 
          for (j=0; j<8; j++)
-            perm_array[j] = current_people[current_reconciler->perm[j]].id1 & ID_BITS_1;
+            perm_array[j] = current_people[current_reconciler->perm[j]].id1 & PID_MASK;
 
          current_depth = 1;
          find_another_resolve = FALSE;       /* We initially don't look for resolves; we wait for the user
@@ -1164,9 +1167,9 @@ extern uims_reply full_resolve(command_kind goal)
 
                if (t.id1) {
                   this_state->state.people[k].id1 = 
-                     (t.id1 & (~ID_BITS_1)) | this_resolve->permute1[(t.id1 & ID_BITS_1) >> 6];
-                  this_state->state.people[k].id2 = 
-                     (t.id2 & (~ID_BITS_2)) | this_resolve->permute2[(t.id1 & ID_BITS_1) >> 6];
+                     (t.id1 & ~(PID_MASK | ID1_PERM_ALLBITS)) | this_resolve->permute1[(t.id1 & PID_MASK) >> 6]
+                                                              | this_resolve->permute2[(t.id1 & PID_MASK) >> 6];
+                  this_state->state.people[k].id2 = t.id2;
                }
             }
             

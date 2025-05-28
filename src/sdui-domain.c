@@ -463,16 +463,6 @@ extern void uims_postinitialize(void)
    short junk16;
    int i, j, k, column, popup;
    Const char *p;
-   dp_$string_desc_t my_text;
-   char my_text_text[200];
-
-   /* Initialize the getout message with the null string. */
-
-   my_text.chars_p = my_text_text;
-   my_text.max_len = 80;
-   my_text.cur_len = 0;
-   dp_$string_set_value(getout_header_task, my_text.chars_p, my_text.cur_len, &status);
-   status_error_check("lossage - initializing getout title: ");
 
    /* Create the "special" concept menu.  This just lists the popups. */
 
@@ -671,14 +661,24 @@ extern int uims_do_getout_popup(char dest[])
 {
    int count;
    int my_task;
+   dp_$string_desc_t my_text;
+   char my_text_text[200];
+
+   /* Initialize the getout message with the null string. */
+
+   my_text.chars_p = my_text_text;
+   my_text.max_len = 80;
+   my_text.cur_len = 0;
+   dp_$string_set_value(getout_header_task, my_text.chars_p, my_text.cur_len, &status);
+   status_error_check("lossage - initializing getout title: ");
 
    dialog_signal(getout_enabler);   /* pop it up */
    dialog_read(&my_task);
    dialog_signal(getout_disabler);  /* pop it down */
 
-   if (my_task == getout_abort_task) return POPUP_DECLINE;
+   if (my_task == getout_abort_task) return POPUP_DECLINE;  /* User wants to cancel. */
 
-   if (my_task == getout_header_task || my_task == same_getout_header_task) {
+   if (my_task == getout_header_task) {
       dialog_get_string(getout_header_task, dest, &count);
       if (count) {
          dest[count] = '\0';
@@ -686,7 +686,7 @@ extern int uims_do_getout_popup(char dest[])
       }
    }
 
-   return POPUP_ACCEPT;
+   return POPUP_ACCEPT;  /* No comment, but user wants to accept. */
 }
 
 

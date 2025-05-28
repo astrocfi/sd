@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.55"
+#define VERSION_STRING "31.56"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -46,7 +46,7 @@
    not by any utility.  Furthermore, we do not believe that it is proper for
    source control utilities to alter the text in a source file. */
 
-static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  02 Nov 95 $";
+static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.com  19 Dec 95 $";
 
 /* This defines the following functions:
    sd_version_string
@@ -61,7 +61,6 @@ static char *id="@(#)$He" "ader: Sd: version " VERSION_STRING "  wba@apollo.hp.c
    query_for_call
    write_header_stuff
    main
-   write_sequence_to_file
    get_real_subcall
    sequence_is_resolved
 
@@ -187,6 +186,7 @@ static short int *concept_sublists[NUM_CALL_LIST_KINDS];
 static int resolve_scan_start_point;
 static int resolve_scan_current_point;
 static command_kind search_goal;
+static long_boolean debug_popup = FALSE;   /* Helps debug popups under Domain/OS. */
 
 /* Stuff for saving parse state while we resolve. */
 
@@ -1030,7 +1030,8 @@ extern long_boolean query_for_call(void)
          just called the random number generator again, it would screw up the hash numbers,
          which would make the uniquefication fail, so we could see the same thing twice. */
    
-      if (search_goal == command_level_call && ((dance_level) result->level) < level_threshholds[calling_level]) fail("Level reject.");
+      if (     (search_goal == command_level_call || search_goal == command_8person_level_call) &&
+               ((dance_level) result->level) < level_threshholds[calling_level]) fail("Level reject.");
       if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
       if (deposit_call(result)) goto recurse_entry;
    }
@@ -1228,6 +1229,103 @@ Private long_boolean backup_one_item(void)
    /* We did not find our place. */
 
    return FALSE;
+}
+
+
+/* return TRUE if sequence was written */
+
+Private long_boolean write_sequence_to_file(void)
+{
+   int getout_ind;
+   char date[MAX_TEXT_LINE_LENGTH];
+   char second_header[MAX_TEXT_LINE_LENGTH];
+   char seqstring[20];
+   int j;
+
+   /* Put up the getout popup to see if the user wants to enter a header string. */
+
+   getout_ind = uims_do_getout_popup(second_header);
+
+   /* Some user interfaces (those with icons) may have an icon to abort the
+      sequence, rather than just decline the comment.  Such an action comes
+      back as "POPUP_DECLINE". */
+
+   if (getout_ind == POPUP_DECLINE)
+      return FALSE;    /* User didn't want to end this sequence after all. */
+   else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header[0] = '\0';
+
+   /* Open the file and write it. */
+
+   clear_screen();
+   open_file();
+   enable_file_writing = TRUE;
+   doublespace_file();
+
+   get_date(date);
+   writestuff(date);
+   writestuff("     ");
+   write_header_stuff(FALSE, history[history_ptr].state.result_flags);
+
+   newline();
+
+   /* Write header comment, if it exists. */
+
+   if (header_comment[0]) {
+      writestuff("             ");
+      writestuff(header_comment);
+   }
+
+   if (sequence_number >= 0) {
+      (void) sprintf(seqstring, "#%d", sequence_number);
+      writestuff("   ");
+      writestuff(seqstring);
+   }
+
+   /* Write secondary header comment, if it exists. */
+
+   if (second_header[0]) {
+      writestuff("       ");
+      writestuff(second_header);
+   }
+
+   if (header_comment[0] || second_header[0] || sequence_number >= 0) newline();
+
+   newline();
+
+   if (sequence_number >= 0) sequence_number++;
+
+   for (j=whole_sequence_low_lim; j<=history_ptr; j++)
+      write_history_line(j, (char *) 0, FALSE, file_write_double);
+
+   /* Echo the concepts entered so far.  */
+
+   if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+      write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
+   }
+
+   if (sequence_is_resolved())
+      write_resolve_text(TRUE);
+
+   newline();
+   enable_file_writing = FALSE;
+   newline();
+
+   close_file();     /* This will signal a "specialfail" if a file error occurs. */
+
+   writestuff("Sequence");
+
+   if (sequence_number >= 0) {
+      writestuff(" ");
+      writestuff(seqstring);
+   }
+
+   writestuff(" written to \"");
+   writestuff(outfile_string);
+   writestuff("\".");
+   newline();
+
+   global_age++;
+   return TRUE;
 }
 
 
@@ -1710,83 +1808,6 @@ void main(int argc, char *argv[])
    exit_program(0);
 }
 
-/* return TRUE if sequence was written */
-
-extern long_boolean write_sequence_to_file(void)
-{
-   char date[MAX_TEXT_LINE_LENGTH];
-   char header[MAX_TEXT_LINE_LENGTH];
-   char seqstring[20];
-   int j;
-
-   /* Open the file and write it. */
-
-   clear_screen();
-   open_file();
-   enable_file_writing = TRUE;
-   doublespace_file();
-
-   get_date(date);
-   writestuff(date);
-   writestuff("     ");
-   write_header_stuff(FALSE, history[history_ptr].state.result_flags);
-   newline();
-
-   /* Write header comment, if it exists. */
-
-   if (header_comment[0]) {
-      writestuff("             ");
-      writestuff(header_comment);
-      if (sequence_number < 0) newline();
-   }
-
-   if (sequence_number >= 0) {
-      (void) sprintf(seqstring, "#%d", sequence_number);
-      writestuff("   ");
-      writestuff(seqstring);
-      newline();
-   }
-
-   newline();
-
-   if (sequence_number >= 0) sequence_number++;
-
-   for (j=whole_sequence_low_lim; j<=history_ptr; j++)
-      write_history_line(j, (char *) 0, FALSE, file_write_double);
-
-   /* Echo the concepts entered so far.  */
-
-   if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
-      write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
-   }
-
-   if (sequence_is_resolved())
-      write_resolve_text(TRUE);
-
-   newline();
-   enable_file_writing = FALSE;
-   newline();
-
-   close_file();     /* This will signal a "specialfail" if a file error occurs. */
-
-   writestuff("Sequence");
-
-   if (sequence_number >= 0) {
-      writestuff(" ");
-      writestuff(seqstring);
-   }
-
-   writestuff(" written to \"");
-   writestuff(outfile_string);
-   writestuff("\".");
-   newline();
-
-   global_age++;
-   return TRUE;
-}
-
-
-Private long_boolean debug_popup = FALSE;
 
 extern void get_real_subcall(
    parse_block *parseptr,

@@ -707,14 +707,14 @@ CONST static char *fallback_resources[] = {
     "*direction.choose*borderWidth: 0", /* prettier this way */
     "*Dialog.value*Translations: #override <Key>Return: accept_string()\n",
     "*comment.label: You can insert a comment:",
-    "*getout.label: Text to be placed at the beginning of this sequence:",
+    "*getout.label: Comment for this sequence:",
 #ifdef NEGLECT
     "*neglect.label: Percentage (integer) of neglected calls:",
 #endif
     "*abort.label: Abort",
     "*ok.label: Ok",
-    "*abortGetout.label: Abort getout",
-    "*noHeader.label: No header",
+    "*nowriteGetout.label: Don't write sequence",
+    "*noCommentGetout.label: No comment",
     "*useDefault.label: Use default",
     NULL};
 
@@ -1034,9 +1034,9 @@ uims_preinitialize(void)
 					/* create an empty value area */
 					XtNvalue, "", NULL);
 
-    XawDialogAddButton(getoutbox, "abortGetout", dialog_callback,
+    XawDialogAddButton(getoutbox, "nowriteGetout", dialog_callback,
 		       (XtPointer)POPUP_DECLINE);
-    XawDialogAddButton(getoutbox, "noHeader", dialog_callback,
+    XawDialogAddButton(getoutbox, "noCommentGetout", dialog_callback,
 		       (XtPointer)POPUP_ACCEPT);
     XawDialogAddButton(getoutbox, "ok", dialog_callback,
 		       (XtPointer)POPUP_ACCEPT_WITH_STRING);
@@ -1795,7 +1795,7 @@ Private XawTextBlock text_block;
 /*
  * add a line to the text output area.
  * the_line does not have the trailing Newline in it and
- * is volitile, so we must copy it if we need it to stay around.
+ * is volatile, so we must copy it if we need it to stay around.
  */
 extern void
 uims_add_new_line(char the_line[])

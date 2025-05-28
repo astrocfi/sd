@@ -1504,12 +1504,19 @@ x22_tandem_with_someone
       Returns FALSE if the vertical partner is a phantom or faces the
       opposite way or is T-boned.
 
-3x2_someone_in_front
-      applies to 3x2 only.  Returns TRUE for any of the four corner people,
-      or for a center person if the spot in front is occupied.  The facing
-      direction of the person in the spot in front of the person under test
-      is not checked, nor is the existence of anyone in back of the person
-      under test.
+columns_someone_in_front
+      applies to 3x2 or 4x2 only.  For a 3x2:  Returns TRUE for any of the
+      four corner people, or for a center person if the spot in front is
+      occupied.  The facing direction of the person in the spot in front
+      of the person under test is not checked, nor is the existence of anyone
+      in back of the person under test.
+
+      For a 4x2:  Returns TRUE if the spot in front is occupied.  The facing
+      direction of the person in the spot in front of the person under test is
+      not checked, nor is the existence of anyone in back of the person under
+      test.  If the person under test is #1 in the column, this returns FALSE.
+      Note that this is fundamentally different from the 3x2 test -- the test
+      is applied to any #4 person.
 
 x14_once_rem_miniwave
       applies to 1x4 only.  Returns TRUE if the person once-removed
@@ -1778,7 +1785,6 @@ inroller_is_cw_2x8
 outroller_is_cw_2x8
       apply to 2x6 and 2x8 lines only.  These are 2x6 and 2x8 versions.
 
-
 outposter_is_cw
       applies to 2x4 lines only.  Returns TRUE if the end of the line clockwise
       from this person is the outposter.  The rules for outposters are different
@@ -2011,8 +2017,9 @@ restriction is violated, as follows:
 /* These restrictions are "overloaded" -- their meaning depends on the starting setup. */
 
    alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
-   wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave;
-                                    2x2 - real box; 4x4 - consistent waves; qtag - wave in center; pqtag - wave in center
+   wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x3 - two "waves" -- people not in tandem with each other;
+                                    2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave; 2x2 - real box; 4x4 - consistent waves;
+                                    qtag - wave in center; pqtag - wave in center
                                     (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
    wave_unless_say_2faced,
    all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */

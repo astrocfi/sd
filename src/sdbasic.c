@@ -547,18 +547,18 @@ extern restriction_thing *check_restriction(setup *ss, assumption_thing restr, u
                   i = 0;
                   k = 0;
                   if (ss->people[0].id1) {
-                     i = ss->people[0].id2;
-                     if (!(i & (ID2_BOY | ID2_GIRL)))
+                     i = ss->people[0].id1;
+                     if (!(i & (ID1_PERM_BOY | ID1_PERM_GIRL)))
                         goto restr_failed;
                   }
 
                   if (ss->people[1].id1) {
-                     k = ss->people[1].id2;
-                     if (!(k & (ID2_BOY | ID2_GIRL)))
+                     k = ss->people[1].id1;
+                     if (!(k & (ID1_PERM_BOY | ID1_PERM_GIRL)))
                         goto restr_failed;
                   }
 
-                  if ((i&k) & (ID2_BOY | ID2_GIRL))
+                  if ((i&k) & (ID1_PERM_BOY | ID1_PERM_GIRL))
                      goto restr_failed;
                   break;
             }

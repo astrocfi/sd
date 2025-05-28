@@ -77,11 +77,7 @@ APPLICATION_INTERFACE sd_dialog
       CHANGES_ONLY = false ;
       END
 
-   no_getout_header_task := NULL:
-      COMP => <RETURN> ;
-      END
-
-   same_getout_header_task := NULL:
+   getout_no_header_task := NULL:
       COMP => <RETURN> ;
       END
 
@@ -834,11 +830,11 @@ USER_INTERFACE sd_dialog
       END
 
    getout_popup := POPUP:
-      [m1] => <getout_abort_task comp> ;
-      leave => <getout_abort_task comp> ;
-      HELP_TEXT = "Type a header line, then hit <return>."
-                 &"Click on NO HEADER to write the sequence, but without a header."
-                 &"Move the mouse away to exit this popup." ;
+      [m1] => <getout_no_header_task comp> ;
+      leave => <getout_no_header_task comp> ;
+      HELP_TEXT = "Type a comment, then press <return>."
+                 &"Click on NO COMMENT, or move the mouse away, to write the sequence, but without a comment."
+                 &"Click on DON'T WRITE to exit this popup." ;
       CONTENTS = NICE_ROW:
          ORIENTATION = vertical ;
          CONTENTS = (
@@ -852,14 +848,14 @@ USER_INTERFACE sd_dialog
                PROMPT = "Header comment ->" ;
                END
             NICE_ICON:
-               [m1] => <same_getout_header_task comp> ;
-               TASK = same_getout_header_task ;
-               STRING = "USE SAME HEADER" ;
+               [m1] => <getout_no_header_task comp> ;
+               TASK = getout_no_header_task ;
+               STRING = "NO COMMENT" ;
                END
             NICE_ICON:
-               [m1] => <no_getout_header_task comp> ;
-               TASK = no_getout_header_task ;
-               STRING = "NO HEADER" ;
+               [m1] => <getout_abort_task comp> ;
+               TASK = getout_abort_task ;
+               STRING = "DON'T WRITE THE SEQUENCE" ;
                END )
          END
       END
@@ -867,7 +863,7 @@ USER_INTERFACE sd_dialog
    outfile_popup := POPUP:
       [m1] => <outfile_popup popdown; outfile_abort_task comp> ;
       leave => <outfile_popup popdown; outfile_abort_task comp> ;
-      HELP_TEXT = "Type a file name, then hit <return>."
+      HELP_TEXT = "Type a file name, then press <return>."
                  &"Move the mouse away to abandon the change and continue the sequence." ;
       CONTENTS = NICE_ROW:
          ORIENTATION = vertical ;
@@ -884,7 +880,7 @@ USER_INTERFACE sd_dialog
    header_popup := POPUP:
       [m1] => <header_popup popdown; header_abort_task comp> ;
       leave => <header_popup popdown; header_abort_task comp> ;
-      HELP_TEXT = "Type a comment, then hit <return>."
+      HELP_TEXT = "Type a header to appear on all sequences, then press <return>."
                  &"Move the mouse away to abandon the change and continue the sequence." ;
       CONTENTS = NICE_ROW:
          ORIENTATION = vertical ;
@@ -901,7 +897,7 @@ USER_INTERFACE sd_dialog
    comment_popup := POPUP:
       [m1] => <comment_popup popdown; comment_abort_task comp> ;
       leave => <comment_popup popdown; comment_abort_task comp> ;
-      HELP_TEXT = "Type a comment, then hit <return>."
+      HELP_TEXT = "Type a comment, then press <return>."
                  &"Move the mouse away to abandon the comment and continue the sequence." ;
       CONTENTS = NICE_ROW:
          ORIENTATION = vertical ;
@@ -919,7 +915,7 @@ USER_INTERFACE sd_dialog
    neglect_popup := POPUP:
       [m1] => <neglect_popup popdown; popup_abort_task comp> ;
       leave => <neglect_popup popdown; popup_abort_task comp> ;
-      HELP_TEXT = "Type a percentage (integer), then hit <return>."
+      HELP_TEXT = "Type a percentage (integer), then press <return>."
                  &"It will list that percentage of the calls that have been used least recently."
                  &"Move the mouse away to abandon this operation and continue the sequence." ;
       CONTENTS = NICE_ROW:
@@ -1170,7 +1166,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_1 ;
-                     SIZE = ((5 40) (52 40) (100 40)) chars ;
+                     SIZE = ((5 44) (52 44) (100 44)) chars ;
                      END )
                END
             ROW:
@@ -1180,7 +1176,7 @@ USER_INTERFACE sd_dialog
                   NICE_MENU:
                      [m1] => <* select> ;
                      TASK = task$tandem_concept_menu_2 ;
-                     SIZE = ((5 40) (52 40) (100 40)) chars ;
+                     SIZE = ((5 44) (52 44) (100 44)) chars ;
                      END )
                END )
          END

@@ -725,7 +725,7 @@ char *predtab[] = {
    "x22_couple",
    "x22_facing_someone",
    "x22_tandem_with_someone",
-   "3x2_someone_in_front",
+   "columns_someone_in_front",
    "x14_once_rem_miniwave",
    "x14_once_rem_couple",
    "lines_miniwave",

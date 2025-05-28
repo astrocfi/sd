@@ -43,7 +43,7 @@ long_boolean mandatory_call_used;
 
 #define DIR_MASK (BIT_PERSON | 3)
 
-#define ID2_ALL_ID (ID2_HEAD|ID2_SIDE|ID2_BOY|ID2_GIRL)
+#define ID1_PERM_ALL_ID (ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL)
 
 
 
@@ -51,7 +51,7 @@ long_boolean mandatory_call_used;
 
 extern long_boolean selectp(setup *ss, int place)
 {
-   uint32 pid2;
+   uint32 permpid1, pid2;
 
    selector_used = TRUE;
 
@@ -69,48 +69,49 @@ extern long_boolean selectp(setup *ss, int place)
    if (!(ss->people[place].id1 & BIT_PERSON))
       fail("Can't decide who are selected.");
 
+   permpid1 = ss->people[place].id1;
    pid2 = ss->people[place].id2;
 
    switch (current_selector) {
       case selector_boys:
-         if      ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_BOY) return TRUE;
-         else if ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_GIRL) return FALSE;
+         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return TRUE;
+         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return FALSE;
          break;
       case selector_girls:
-         if      ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_GIRL) return TRUE;
-         else if ((pid2 & (ID2_BOY|ID2_GIRL)) == ID2_BOY) return FALSE;
+         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return TRUE;
+         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return FALSE;
          break;
       case selector_heads:
-         if      ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_HEAD) return TRUE;
-         else if ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_SIDE) return FALSE;
+         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return FALSE;
          break;
       case selector_sides:
-         if      ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_SIDE) return TRUE;
-         else if ((pid2 & (ID2_HEAD|ID2_SIDE)) == ID2_HEAD) return FALSE;
+         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return FALSE;
          break;
       case selector_headcorners:
-         if      ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_HCOR) return TRUE;
-         else if ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_SCOR) return FALSE;
+         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return FALSE;
          break;
       case selector_sidecorners:
-         if      ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_SCOR) return TRUE;
-         else if ((pid2 & (ID2_HCOR|ID2_SCOR)) == ID2_HCOR) return FALSE;
+         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return FALSE;
          break;
       case selector_headboys:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NHB)) == (ID2_HEAD|ID2_BOY)) return TRUE;
-         else if ((pid2 & ID2_NHB) == ID2_NHB) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB) return FALSE;
          break;
       case selector_headgirls:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NHG)) == (ID2_HEAD|ID2_GIRL)) return TRUE;
-         else if ((pid2 & ID2_NHG) == ID2_NHG) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG) return FALSE;
          break;
       case selector_sideboys:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NSB)) == (ID2_SIDE|ID2_BOY)) return TRUE;
-         else if ((pid2 & ID2_NSB) == ID2_NSB) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB) return FALSE;
          break;
       case selector_sidegirls:
-         if      ((pid2 & (ID2_ALL_ID|ID2_NSG)) == (ID2_SIDE|ID2_GIRL)) return TRUE;
-         else if ((pid2 & ID2_NSG) == ID2_NSG) return FALSE;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG) return FALSE;
          break;
       case selector_centers:
          if      ((pid2 & (ID2_CENTER|ID2_END)) == ID2_CENTER) return TRUE;
@@ -151,6 +152,18 @@ extern long_boolean selectp(setup *ss, int place)
       case selector_outer6:
          if      ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_OUTR6) return TRUE;
          else if ((pid2 & (ID2_CTR2|ID2_OUTR6)) == ID2_CTR2) return FALSE;
+         break;
+      case selector_ctrdmd:
+         if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return TRUE;
+         else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return FALSE;
+         break;
+      case selector_ctr_1x4:
+         if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return TRUE;
+         else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
+         break;
+      case selector_ctr_1x6:
+         if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return TRUE;
+         else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return FALSE;
          break;
       case selector_center4:
          if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return TRUE;
@@ -374,15 +387,25 @@ Private long_boolean x22_tandem_with_someone(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean x32_someone_in_front(setup *real_people, int real_index,
+Private long_boolean cols_someone_in_front(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_index == 1 || real_index == 4) {
-      if (real_people->people[real_index+((northified_index==1) ? 1 : -1)].id1)
-         return TRUE;
+   if (real_people->kind == s2x3) {
+      if (real_index == 1 || real_index == 4) {
+         if (real_people->people[real_index+((northified_index==1) ? 1 : -1)].id1)
+            return TRUE;
+         else return FALSE;
+      }
+      else return TRUE;
+   }
+   else {
+      if (northified_index < 3 || northified_index > 4) {
+         if (real_people->people[real_index+((northified_index<4) ? 1 : -1)].id1)
+            return TRUE;
+         else return FALSE;
+      }
       else return FALSE;
    }
-   else return TRUE;
 }
 
 /* ARGSUSED */
@@ -1382,14 +1405,14 @@ Private long_boolean column_double_down(setup *real_people, int real_index,
 Private long_boolean boyp(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return((real_people->people[real_index].id2 & ID2_BOY) != 0);
+   return((real_people->people[real_index].id1 & ID1_PERM_BOY) != 0);
 }
 
 /* ARGSUSED */
 Private long_boolean girlp(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   return((real_people->people[real_index].id2 & ID2_GIRL) != 0);
+   return((real_people->people[real_index].id1 & ID1_PERM_GIRL) != 0);
 }
 
 /* ARGSUSED */
@@ -1410,36 +1433,36 @@ Private long_boolean roll_is_ccw(setup *real_people, int real_index,
 Private long_boolean x12_boy_facing_girl(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id2;
-   int other_person = real_people->people[real_index ^ 1].id2;
-   return((this_person & ID2_BOY) && (other_person & ID2_GIRL));
+   int this_person = real_people->people[real_index].id1;
+   int other_person = real_people->people[real_index ^ 1].id1;
+   return((this_person & ID1_PERM_BOY) && (other_person & ID1_PERM_GIRL));
 }
 
 /* ARGSUSED */
 Private long_boolean x12_girl_facing_boy(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id2;
-   int other_person = real_people->people[real_index ^ 1].id2;
-   return((this_person & ID2_GIRL) && (other_person & ID2_BOY));
+   int this_person = real_people->people[real_index].id1;
+   int other_person = real_people->people[real_index ^ 1].id1;
+   return((this_person & ID1_PERM_GIRL) && (other_person & ID1_PERM_BOY));
 }
 
 /* ARGSUSED */
 Private long_boolean x22_boy_facing_girl(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int this_person = real_people->people[real_index].id2;
-   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id2;
-   return((this_person & ID2_BOY) && (other_person & ID2_GIRL));
+   int this_person = real_people->people[real_index].id1;
+   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
+   return((this_person & ID1_PERM_BOY) && (other_person & ID1_PERM_GIRL));
 }
 
 /* ARGSUSED */
 Private long_boolean x22_girl_facing_boy(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id2;
-   int this_person = real_people->people[real_index].id2;
-   return((this_person & ID2_GIRL) && (other_person & ID2_BOY));
+   int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
+   int this_person = real_people->people[real_index].id1;
+   return((this_person & ID1_PERM_GIRL) && (other_person & ID1_PERM_BOY));
 }
 
 /* ARGSUSED */
@@ -1717,7 +1740,7 @@ long_boolean (*pred_table[])(
       x22_couple,                      /* "x22_couple" */
       x22_facing_someone,              /* "x22_facing_someone" */
       x22_tandem_with_someone,         /* "x22_tandem_with_someone" */
-      x32_someone_in_front,            /* "3x2_someone_in_front" */
+      cols_someone_in_front,           /* "columns_someone_in_front" */
       x14_once_rem_miniwave,           /* "x14_once_rem_miniwave" */
       x14_once_rem_couple,             /* "x14_once_rem_couple" */
       lines_miniwave,                  /* "lines_miniwave" */

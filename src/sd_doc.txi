@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: November 14, 1995
-@set sd-version 31.54
+@set Time-stamp: December 19, 1995
+@set sd-version 31.56
 @set full-manual
 @c %**end of header
 @iftex
@@ -150,7 +150,7 @@ Miscellaneous Commands
 
 * Save Sequence::               Saving the Sequence
 * Change Output File::          Changing the Output File
-* Change Header Comment::       Changing the Header Comment
+* Change Title::                Changing the Title
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
@@ -611,21 +611,36 @@ Such a file might look like this:
 Each line after the line @code{[Sessions]}, up until a blank line
 or the end of the file, describes a possible session
 of using the program, showing the output filename, level, next sequence
-number, and header comment.
+number, and title.
 
 This example file shows 5 possible things you could work on.  You can select
 any one of them during a session.  When the program is started, it will
-display the 5 lines and ask you which one you want to use.  If
-you enter 0, or just press @key{<ENTER>}, the program will ignore
+display the 5 lines and ask you which one you want to use, like this:
+
+@example
+   Do you want to use one of the following sessions?
+
+     0     (no session)
+     1  sequence.C3          C3              12      NACC, June 1995
+     2  sequence.C4          C4              31      NACC, June 1995
+     3  workshop             C1              75      My wednesday group
+     4  a2stuff              A2               9      NESRDC/1995
+     5  a1stuff              A1               2      Lake Shore Farm Weekend
+     6     (create a new session)
+
+   Enter the number of the desired session:
+@end example
+
+If you enter ``0'', or just press @key{<ENTER>}, the program will ignore
 the sessions and proceed normally.  If you enter the
 number of one of the lines of the file, the program will operate
 at that level (ignoring any level designator you might have given),
-and use the named output file and header comment.  It will also
+and use the named output file and title.  It will also
 print a sequence number on each card, starting with the number shown.
 For example, if you entered ``3'' after the file above is displayed,
 the program will operate at C1.  The output file will be ``workshop''
 instead of the default ``sequence.C1''.  Cards will be serialized
-starting at 75.  Each card will have a header comment saying
+starting at 75.  Each card will have a title saying
 ``My Wednesday group''.
 
 At the end of the session, the file will be updated with the
@@ -639,17 +654,18 @@ be numbered 75 through 86, and the file would be rewritten as
 so that the next session for that group would start with sequence number 87.
 
 If, at any time during the session, you changed the output file
-(with the @code{Change Output File} operation) or the header
-comment (with the @code{Change Header Comment} operation),
+(with the @code{Change Output File} operation) or the
+title (with the @code{Change Title} operation),
 the initialization file will be updated at the end of the session to
 show the effect of the change.
 
 When the program starts, you can tell it to create a new entry in
-the file by entering a number one
-higher than the highest line shown.  During the first sequence,
+the file by entering the number corresponding to @code{(create a new session)}.
+In the above example, type ``6''.  During the first sequence,
 use the @code{Change Output File} command and the
-@code{Change Header Comment} command to set these---they will be written
-to the initialization file at the end of the session.
+@code{Change Title} command to set these.
+At the end of the session, item number 6, containing the appropriate data,
+will be written to the updated initialization file.
 
 If you no longer want some entry in the initialization file,
 you can delete it.  Type the negative of its line number.  In the
@@ -1404,8 +1420,9 @@ useful in emergencies.
 @node Pick Random Call, Create Setup, Normalize and Standardize, Resolving and Searching
 @section Letting the program pick a random call
 
-There are four commands in this family:  @code{pick random call},
-@code{pick simple call}, @code{pick concept call}, and @code{pick level call}.
+There are five commands in this family:  @code{pick random call},
+@code{pick simple call}, @code{pick concept call}, @code{pick level call},
+and @code{pick 8 person level call}.
 They search for any legal single call.  While this may sound like
 a fairly pointless operation, remember that you can use this while one or
 more concepts are already entered, in which case it will search for legal calls
@@ -1420,6 +1437,8 @@ always uses at least one concept with the call that it picks.
 @code{Pick level call} picks only calls that are at or near the specified
 calling level.  (By ``near'' we mean that, if the calling level is C4,
 it will pick C4A or C4 calls.  If the level is A2, it will pick A1 or A2 calls.)
+@code{Pick 8 person level call} is similar, but it picks only calls that
+involve all 8 people.
 
 @node Create Setup, Reconcile, Pick Random Call, Resolving and Searching
 @section Creating a Specific Setup
@@ -1523,7 +1542,7 @@ sequences.
 @menu
 * Save Sequence::               Saving the Sequence
 * Change Output File::          Changing the Output File
-* Change Header Comment::       Changing the Header Comment
+* Change Title::                Changing the Title
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
@@ -1550,7 +1569,7 @@ If you are using the Macintosh version, files are handled differently.
 @xref{Sequence Files}.  To specify a label to be used as a subtitle,
 use the @code{Label} command in the @code{Sequence} menu.
 
-@node Change Output File, Change Header Comment, Save Sequence, Misc Commands
+@node Change Output File, Change Title, Save Sequence, Misc Commands
 @section Changing the Output File
 
 You can change the name of the file to which the program writes its
@@ -1566,24 +1585,24 @@ be written back to that file at the end of the session.
 If you are using the Macintosh version, files are handled differently.
 @xref{Sequence Files}.
 
-@node Change Header Comment, Abort/Exit/Undo, Change Output File, Misc Commands
-@section Changing the Header Comment
+@node Change Title, Abort/Exit/Undo, Change Output File, Misc Commands
+@section Changing the Title
 
-You can change the header that will be printed at the top of each sequence
-by selecting the @code{Change header comment} command.  A popup
-will appear, prompting you for a new comment, or @code{sdtty} will
-ask you to type in the new comment.  This action will become
+You can change the title that will be printed at the top of each sequence
+by selecting the @code{Change Title} command.  A popup
+will appear, prompting you for a new title, or @code{sdtty} will
+ask you to type in the new title.  This action will become
 effective the next time a sequence is written out.  Sequences previously
-written will keep their old comment.  You can remove the comment by just
-pressing @key{<ENTER>} when asked for the new comment.
+written will keep their old title.  You can remove the title by just
+pressing @key{<ENTER>} when asked for the new title.
 
-When the program starts, there is no header comment, unless the initialization
+When the program starts, there is no title, unless the initialization
 file was used.
 
-When the initialization file is used, any change in the header comment will
+When the initialization file is used, any change in the title will
 be written back to that file at the end of the session.
 
-@node Abort/Exit/Undo, Inserting Comments, Change Header Comment, Misc Commands
+@node Abort/Exit/Undo, Inserting Comments, Change Title, Misc Commands
 @section @code{Abort}, @code{Exit}, and @code{Undo}
 
 If you select the @code{exit} command, the program will exit.  If a
@@ -1998,7 +2017,7 @@ F7    toggle concept levels     toggle active phantoms
 F8    <anything>                <concept>
 F9    undo last call            abort the search
 F10   end this sequence         change output file
-F11   pick level call
+F11   pick level call           pick 8 person level call
 @end example
 
 All of these except @samp{<anything>} and @samp{<concept>} execute the command
@@ -2136,7 +2155,7 @@ you had waves with the boys on the ends, and you had just done a
 @samp{1/2, acey deucey}, the boys have a big diamond around the outside.
 You can't just do a @code{BOYS diamond circulate}, because the
 @code{so-and-so} concept is extremely fussy.
-@ref{Designating Certain People}.  The way to do this is with
+@xref{Designating Certain People}.  The way to do this is with
 @code{BOYS DISCONNECTED diamond circulate}.  This concept is only
 legitimate at C2, so you will need @code{toggle concept levels} below that.
 You would presumably say something like @samp{boys diamond circulate around

@@ -148,6 +148,9 @@ selector_item selector_list[] = {
    {"center 6",     "center 6",    "CENTER 6",     "CENTER 6",    selector_outer2},
    {"outer 2",      "outer 2",     "OUTER 2",      "OUTER 2",     selector_center6},
    {"outer 6",      "outer 6",     "OUTER 6",      "OUTER 6",     selector_center2},
+   {"center diamond", "center diamond", "CENTER DIAMOND", "CENTER DIAMOND",    selector_uninitialized},
+   {"center 1x4",   "center 1x4",  "CENTER 1X4",   "CENTER 1X4",  selector_uninitialized},
+   {"center 1x6",   "center 1x6",  "CENTER 1X6",   "CENTER 1X6",  selector_uninitialized},
    {"center 4",     "center 4",    "CENTER 4",     "CENTER 4",    selector_outerpairs},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
    {"headliners",   "headliner",   "HEADLINERS",   "HEADLINER",   selector_sideliners},
@@ -263,6 +266,7 @@ Private restriction_thing wave_1x6      = {3, {0, 2, 4},                   {1, 3
 Private restriction_thing wave_1x8      = {4, {0, 3, 6, 5},                {1, 2, 7, 4},                   {0}, {0}, TRUE, chk_wave};            /* check for grand wave */
 Private restriction_thing wave_1x10     = {5, {0, 2, 4, 6, 8},             {1, 3, 5, 7, 9},                {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 10 */
 Private restriction_thing wave_1x12     = {6, {0, 2, 4, 7, 9, 11},         {1, 3, 5, 6, 8, 10},            {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 12 */
+Private restriction_thing wave_2x3      = {3, {0, 2, 4},                   {1, 3, 5},                      {0}, {0}, FALSE, chk_wave};           /* check for two "waves" -- people are antitandem */
 Private restriction_thing wave_2x6      = {6, {0, 2, 4, 7, 9, 11},         {1, 3, 5, 6, 8, 10},            {0}, {0}, TRUE, chk_wave};            /* check for parallel consistent 2x6 waves */
 Private restriction_thing wave_1x14     = {7, {0, 2, 4, 6, 8, 10, 12},     {1, 3, 5, 7, 9, 11, 13},        {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 14 */
 Private restriction_thing wave_1x16     = {8, {0, 2, 4, 6, 9, 11, 13, 15}, {1, 3, 5, 7, 8, 10, 12, 14},    {0}, {0}, TRUE, chk_wave};            /* check for grand wave of 16 */
@@ -389,6 +393,7 @@ static restr_initializer restr_init_table[] = {
    {s2x3, cr_1fl_only, &one_faced_2x3},
    {s2x4, cr_2fl_only, &two_faced_2x4},
    {s2x4, cr_wave_only, &wave_2x4},
+   {s2x3, cr_wave_only, &wave_2x3},
    {s2x3, cr_magic_only, &invert_2x3},
    {s2x4, cr_magic_only, &invert_2x4},
    {s2x4, cr_li_lo, &lio_2x4},

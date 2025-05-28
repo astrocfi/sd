@@ -81,10 +81,10 @@
 *comment.label: You can insert a comment:
 *outfilepopup.format: Sequence output file is "%s".  Enter new name:
 *headerpopup.format: Current header comment is "%s".  Enter new comment:
-*getout.label: Text to be placed at the beginning of this sequence:
+*getout.label: Comment for this sequence:
 *neglect.label: Percentage (integer) of neglected calls:
 *abort.label: Abort
 *ok.label: Ok
-*abortGetout.label: Abort getout
-*noHeader.label: No header
+*nowriteGetout.label: Don't write sequence
+*noCommentGetout.label: No comment
 *useDefault.label: Use default

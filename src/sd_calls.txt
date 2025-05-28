@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "31.55"
+version "31.56"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve
@@ -3966,8 +3966,8 @@ call "_fudge 2 after fold" dontshow tag fold_fudge2
       array [ZM0N ZM1N    0 ZM2N ZM3N    0]
    setup 3x2 2x2
       preds "?"
-         if 3x2_someone_in_front [ZM0N ZM0N ZM1N ZM2N ZM3N ZM3N]
-         if always               [ZM0N ZM1N ZM1N ZM2N ZM2N ZM3N]
+         if columns_someone_in_front [ZM0N ZM0N ZM1N ZM2N ZM3N ZM3N]
+         if always                   [ZM0N ZM1N ZM1N ZM2N ZM2N ZM3N]
 
 /* This is the call that fudges the result back to a box instead of leaving
    a "Z".  This is what dancers below C1 or so will typically do. */
@@ -6427,10 +6427,12 @@ call "square the bases plus 2" c4
 /* ****  We need these two calls to make regression tests win,
    until we figure out the really right way to do this. */
 call "square the bases (old)" c1
+            dont_use_in_resolve
    setup 2x4 2x4 rotate
    array [0 0 0 0 AM5E AL3W CR4W CM2E]
 
 call "square the bases plus 2 (old)" c4
+            dont_use_in_resolve
    setup 2x4 2x4 rotate
    array [0 0 0 0 AAL7E AM1W CM6W CCR0E]
 
@@ -7542,11 +7544,15 @@ call "quick @0" c3a
    seq quickany2 []
 
 call "make magic" c1
-   setup 4x2 2x4 restriction quarterbox_or_magic_col
+   /* If anyone is in lines, this restriction will behave improperly. */
+   setup 4x2 2x4 restriction unusual quarterbox_or_magic_col
       preds "???"
-         if columns_tandem      [ZM0N ZM5N ZM2N ZM3N ZM4N ZM5N ZM2N ZM7N]
-         if columns_antitandem  [ZM1N ZM5N ZM3N ZM3N ZM4N ZM4N ZM2N ZM6N]
-         if always              [   0 ZM5N    0 ZM3N ZM4N    0 ZM2N    0]  /* This could happen if lots of phantoms. */
+         if columns_antitandem       [ZM1N ZM5N ZM3N ZM3N ZM4N ZM4N ZM2N ZM6N]
+         if columns_someone_in_front [ZM0N ZM5N ZM2N ZM3N ZM4N ZM5N ZM2N ZM7N]
+         if always                   [   0 ZM5N    0 ZM3N ZM4N    0 ZM2N    0]  /* This could happen if lots of phantoms. */
+   /* But it doesn't matter, because this next restriction will be sure the warning is raised. */
+   setup 2x4 2x4 restriction unusual alwaysfail
+      array [0 0 0 0 0 ZM1N ZM2N 0]
 
 call "open up the column" c3a tag openup
    setup 4x2 2x4 restriction forbidden wave_only
@@ -10558,16 +10564,18 @@ call "_start action" dontshow tag startaction
             left_means_mirror
    conc half_rev_swap [inherit_left] hinge [inherit_left conc_demand_columns]
 
-call "the action" c4 tag the_action
+call "the action" c4
             left_means_mirror
    seq startaction [inherit_left]
    seq turnstar1_endstrade []
    seq finishwithmod []
 
 call "barge the action" c4
-            visible_fractions split_like_square_thru left_means_mirror
+            first_part_visible split_like_square_thru left_means_mirror
    seq square_thru_2 []
-   seq the_action [inherit_left]
+   seq startaction [inherit_left]
+   seq turnstar1_endstrade []
+   seq finishwithmod []
 
 call "spin the windmill, outsides as you are" dontshow tag swapwindmill4
    conc swingslipcast3 [] dblcirc [conc_demand_lines conc_force_lines]

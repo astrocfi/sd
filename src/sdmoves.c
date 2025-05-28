@@ -476,8 +476,8 @@ Private int start_matrix_call(
          matrix_info[nump].dir = people->people[nump].id1 & 3;
 
          matrix_info[nump].jbits = 0;
-         matrix_info[nump].girlbit = (people->people[nump].id2 & ID2_GIRL) ? 1 : 0;
-         matrix_info[nump].boybit = (people->people[nump].id2 & ID2_BOY) ? 1 : 0;
+         matrix_info[nump].girlbit = (people->people[nump].id1 & ID1_PERM_GIRL) ? 1 : 0;
+         matrix_info[nump].boybit = (people->people[nump].id1 & ID1_PERM_BOY) ? 1 : 0;
          matrix_info[nump].nextse = 0;
          matrix_info[nump].nextnw = 0;
          matrix_info[nump].deltax = 0;

@@ -34,6 +34,10 @@ and the following external variables:
 #include <stdio.h>
 
 #include "sd.h"
+extern map_thing map_diag23a;
+extern map_thing map_diag23b;
+extern map_thing map_diag23c;
+extern map_thing map_diag23d;
 
 
 
@@ -357,26 +361,53 @@ Private void do_concept_double_diagonal(
    uint32 tbonetest;
    map_thing *map_ptr;
 
-   tbonetest = global_tbonetest;
+   if (parseptr->concept->value.arg2) {
+      setup ssave = *ss;
+      int switcher = (parseptr->concept->value.arg1 ^ global_tbonetest) & 1;
 
-   if      (global_livemask == 0x2A82A8) map_ptr = &map_diag2a;
-   else if (global_livemask == 0x505505) map_ptr = &map_diag2b;
-   else
-      tbonetest = ~0UL;   /* Force error. */
+      if (ss->kind != s4x4 || (global_tbonetest & 011) == 011) global_livemask = 0;   /* Force error. */
 
-   if (ss->kind != s4x6) tbonetest = ~0UL;   /* Force error. */
+      if      (global_livemask == 0x2D2D) map_ptr = switcher ? &map_diag23a : &map_diag23b;
+      else if (global_livemask == 0xD2D2) map_ptr = switcher ? &map_diag23c : &map_diag23d;
+      else
+         fail("There are no diagonal lines or columns of 3 here.");
 
-   if (parseptr->concept->value.arg1 & 1) {
-      if (tbonetest & 010) fail("There are no diagonal lines here.");
+      if (parseptr->concept->value.arg1 == 3)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+      divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
+
+      /* I wish this weren't so sleazy, but a new concentricity schema seems excessive. */
+
+      if (result->kind != s4x4) fail("Can't figure out result setup.");
+
+      (void) copy_person(result, 0, &ssave, 0);
+      (void) copy_person(result, 4, &ssave, 4);
+      (void) copy_person(result, 8, &ssave, 8);
+      (void) copy_person(result, 12, &ssave, 12);
    }
    else {
-      if (tbonetest & 1) fail("There are no diagonal columns here.");
+      tbonetest = global_tbonetest;
+
+      if      (global_livemask == 0x2A82A8) map_ptr = &map_diag2a;
+      else if (global_livemask == 0x505505) map_ptr = &map_diag2b;
+      else
+         tbonetest = ~0UL;   /* Force error. */
+
+      if (ss->kind != s4x6) tbonetest = ~0UL;   /* Force error. */
+
+      if (parseptr->concept->value.arg1 & 1) {
+         if (tbonetest & 010) fail("There are no diagonal lines here.");
+      }
+      else {
+         if (tbonetest & 1) fail("There are no diagonal columns here.");
+      }
+
+      if (parseptr->concept->value.arg1 == 3)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
+
+      divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
    }
-
-   if (parseptr->concept->value.arg1 == 3)
-      ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
-
-   divided_setup_move(ss, map_ptr, phantest_ok, TRUE, result);
 }
 
 

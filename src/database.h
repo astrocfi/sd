@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 70
+#define DATABASE_FORMAT_VERSION 71
 
 
 

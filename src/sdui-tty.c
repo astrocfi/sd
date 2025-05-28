@@ -208,6 +208,8 @@ get_char_input(void)
       function_key_expansion = "abort the search\n";           /* sF9 */
    else if (c == 170)
       function_key_expansion = "change output file\n";         /* sF10 */
+   else if (c == 171)
+      function_key_expansion = "pick 8 person level call\n";   /* sF11 */
 
    else if (c == 193)
       function_key_expansion = "just as they are\n";           /* cF1 */
@@ -476,7 +478,7 @@ Private match_result user_match;
 #define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
 #define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
 
-int num_command_commands = 45;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 46;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 
 Cstring command_commands[] = {
    "simple modifications",
@@ -502,6 +504,7 @@ Cstring command_commands[] = {
    "pick simple call",
    "pick concept call",
    "pick level call",
+   "pick 8 person level call",
    "create any lines",
    "create waves",
    "create 2fl",
@@ -550,6 +553,7 @@ static command_kind command_command_values[] = {
    command_simple_call,
    command_concept_call,
    command_level_call,
+   command_8person_level_call,
    command_create_any_lines,
    command_create_waves,
    command_create_2fl,
@@ -920,14 +924,14 @@ extern int uims_do_header_popup(char dest[])
       put_line(buffer);
       current_text_line++;
    }
-   return get_popup_string("Enter new comment", dest);
+   return get_popup_string("Enter new header", dest);
 }
 
 extern int uims_do_getout_popup(char dest[])
 {
-    put_line("Specify text label for sequence.\n");
+    put_line("Type comment for this sequence, if desired.\n");
     current_text_line++;
-    return get_popup_string("Enter label", dest);
+    return get_popup_string("Enter comment", dest);
 }
 
 #ifdef NEGLECT

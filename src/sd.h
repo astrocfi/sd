@@ -123,25 +123,25 @@ typedef struct {
 
 /* Person bits for "id1" field are:
  20 000 000 000 -
- 10 000 000 000 - 
-  4 000 000 000 - 
-  2 000 000 000 -
-  1 000 000 000 -
-    400 000 000 - roll direction is CCW
-    200 000 000 - roll direction is neutral
-    100 000 000 - roll direction is CW
-     40 000 000 - fractional stability enabled
-     20 000 000 - stability "v" field -- 2 bits
-     10 000 000 -     "
-      4 000 000 - stability "r" field -- 3 bits
-      2 000 000 -     "
-      1 000 000 -     "
-        400 000 -
-        200 000 -
-        100 000 -
-         40 000 -
-         20 000 -
-         10 000 -
+ 10 000 000 000 - not side girl    **** these 10 bits are "permanent" -- they never change in a person
+  4 000 000 000 - not side boy
+  2 000 000 000 - not head girl
+  1 000 000 000 - not head boy
+    400 000 000 - head corner
+    200 000 000 - side corner
+    100 000 000 - head
+     40 000 000 - side
+     20 000 000 - boy
+     10 000 000 - girl             **** end of permanent bits
+      4 000 000 - roll direction is CCW
+      2 000 000 - roll direction is neutral
+      1 000 000 - roll direction is CW
+        400 000 - fractional stability enabled
+        200 000 - stability "v" field -- 2 bits
+        100 000 -     "
+         40 000 - stability "r" field -- 3 bits
+         20 000 -     "
+         10 000 -     "
           4 000 - live person (just so at least one bit is always set)
           2 000 - active phantom (see below, under XPID_MASK)
           1 000 - virtual person (see below, under XPID_MASK)
@@ -153,20 +153,35 @@ typedef struct {
               1 - part of rotation (facing east/west)
 */
 
-/* These are a 3 bit field -- ROLL_BIT tells where its low bit lies. */
-#define ROLL_MASK   0700000000UL
-#define ROLL_BIT    0100000000UL
-#define ROLLBITL    0400000000UL
-#define ROLLBITM    0200000000UL
-#define ROLLBITR    0100000000UL
+#define ID1_PERM_NSG         010000000000UL
+#define ID1_PERM_NSB          04000000000UL
+#define ID1_PERM_NHG          02000000000UL
+#define ID1_PERM_NHB          01000000000UL
+#define ID1_PERM_HCOR          0400000000UL
+#define ID1_PERM_SCOR          0200000000UL
+#define ID1_PERM_HEAD          0100000000UL
+#define ID1_PERM_SIDE           040000000UL
+#define ID1_PERM_BOY            020000000UL
+#define ID1_PERM_GIRL           010000000UL
 
-#define STABLE_MASK  077000000UL
-#define STABLE_ENAB  040000000UL
-#define STABLE_VBIT  010000000UL
-#define STABLE_RBIT  001000000UL
-#define BIT_PERSON   04000UL
-#define BIT_ACT_PHAN 02000UL
-#define BIT_TANDVIRT 01000UL
+#define ID1_PERM_ALLBITS     017770000000UL
+
+/* These are a 3 bit field -- ROLL_BIT tells where its low bit lies. */
+#define ROLL_MASK   07000000UL
+#define ROLL_BIT    01000000UL
+#define ROLLBITL    04000000UL
+#define ROLLBITM    02000000UL
+#define ROLLBITR    01000000UL
+
+/* These are a 6 bit field. */
+#define STABLE_MASK  0770000UL
+#define STABLE_ENAB  0400000UL
+#define STABLE_VBIT  0100000UL
+#define STABLE_RBIT  0010000UL
+
+#define BIT_PERSON   0004000UL
+#define BIT_ACT_PHAN 0002000UL
+#define BIT_TANDVIRT 0001000UL
 
 /* Person ID.  These bit positions are extremely hard wired into, among other
    things, the resolver and the printer. */
@@ -196,16 +211,16 @@ typedef struct {
     100 000 000 - outer 6
      40 000 000 - trailer
      20 000 000 - leader
-     10 000 000 - not side girl
-      4 000 000 - not side boy
-      2 000 000 - not head girl
-      1 000 000 - not head boy
-        400 000 - head corner
-        200 000 - side corner
-        100 000 - head
-         40 000 - side
-         20 000 - boy
-         10 000 - girl
+     10 000 000 - center diamond
+      4 000 000 - not center diamond
+      2 000 000 - center 1x4
+      1 000 000 - not center 1x4
+        400 000 - center 1x6
+        200 000 - not center 1x6
+        100 000 - 
+         40 000 - 
+         20 000 - 
+         10 000 - 
           4 000 - center
           2 000 - end
           1 000 - near column
@@ -230,16 +245,12 @@ typedef struct {
 #define ID2_OUTR6      0100000000UL
 #define ID2_TRAILER     040000000UL
 #define ID2_LEAD        020000000UL
-#define ID2_NSG         010000000UL
-#define ID2_NSB          04000000UL
-#define ID2_NHG          02000000UL
-#define ID2_NHB          01000000UL
-#define ID2_HCOR          0400000UL
-#define ID2_SCOR          0200000UL
-#define ID2_HEAD          0100000UL
-#define ID2_SIDE           040000UL
-#define ID2_BOY            020000UL
-#define ID2_GIRL           010000UL
+#define ID2_CTRDMD      010000000UL
+#define ID2_NCTRDMD      04000000UL
+#define ID2_CTR1X4       02000000UL
+#define ID2_NCTR1X4      01000000UL
+#define ID2_CTR1X6        0400000UL
+#define ID2_NCTR1X6       0200000UL
 #define ID2_CENTER          04000UL
 #define ID2_END             02000UL
 #define ID2_NEARCOL         01000UL
@@ -250,6 +261,17 @@ typedef struct {
 #define ID2_FARBOX            020UL
 #define ID2_CTR4              010UL
 #define ID2_OUTRPAIRS         004UL
+
+/* These are the bits that get filled in by "update_id_bits". */
+#define BITS_TO_CLEAR (ID2_LEAD|ID2_TRAILER|ID2_BEAU|ID2_BELLE| \
+ID2_CENTER|ID2_END|ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6| \
+ID2_CTRDMD|ID2_NCTRDMD|ID2_CTR1X4|ID2_NCTR1X4| \
+ID2_CTR1X6|ID2_NCTR1X6|ID2_CTR4|ID2_OUTRPAIRS)
+
+
+/* These are the really global position bits.  They get filled in only at the top level. */
+#define GLOB_BITS_TO_CLEAR (ID2_NEARCOL|ID2_NEARLINE|ID2_NEARBOX|ID2_FARCOL|ID2_FARLINE|ID2_FARBOX|ID2_HEADLINE|ID2_SIDELINE)
+
 
 
 typedef struct {
@@ -828,6 +850,9 @@ typedef enum {
    selector_center6,
    selector_outer2,
    selector_outer6,
+   selector_ctrdmd,
+   selector_ctr_1x4,
+   selector_ctr_1x6,
    selector_center4,
    selector_outerpairs,
    selector_headliners,
@@ -1215,6 +1240,7 @@ typedef enum {
    command_simple_call,
    command_concept_call,
    command_level_call,
+   command_8person_level_call,
    command_create_any_lines,   /* Create setup commands start here */
    command_create_waves,
    command_create_2fl,
@@ -1882,7 +1908,6 @@ extern void get_real_subcall(
    callspec_block **callout,
    final_set *concout);
 extern long_boolean sequence_is_resolved(void);
-extern long_boolean write_sequence_to_file(void);
 
 /* In PREDS */
 

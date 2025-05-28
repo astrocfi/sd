@@ -1,6 +1,54 @@
-		   RELEASE NOTES FOR SD VERSION 31.54
-		 Database version = 31.53 format = 68.
+		   RELEASE NOTES FOR SD VERSION 31.56
+		 Database version = 31.56 format = 71.
                 X11 UI version 1.16, SDTTY UI version 1.6.
+
+
+****** Changes as of version 31.56 ******
+
+There are now two types of information that get printed at
+the top of a sequence:  the "title", and the "comment".
+
+The title is something that is expected to remain unchanged
+for all the sequences of a dance or series.  It is typically
+something like "Pace Spectacular, 1995".  The title is what
+the initialization file provides.  The command "change title"
+can change it.  Once changed, it stays changed, and the new
+title is written back to the initialization file.
+
+The comment is something that is expected to be particular
+to the individual sequence.  It might be something like
+"hard" or "lots of phantoms".  The program will prompt you
+for this at the end of each sequence, when you type or click
+"end this sequence".  It is not automatically remembered
+from one sequence to the next.
+
+The command previously known as "change header comment"
+has been changed to "change title".
+
+
+
+New "pick" command:  "pick 8 person level call".  This is like
+"pick level call", except that only 8-person calls are chosen.
+The function key <shift-F11> selects this function.
+These commands are only available in sdtty at present.
+
+
+
+New designators: center diamond, center 1x4, center 1x6.  These allow
+unambiguous selection in certain setups like 1x3 diamonds, 3x1 diamonds,
+and a wave between to perpendicular miniwaves.
+
+
+New concepts: <so-and-so> are couples/tandems of three,
+or couples/tandem threesome, etc.  The "center 1x6" designators
+are sometimes useful here.
+
+New concepts: diagonal lines/waves/columns of 3.  These are done in
+blocks, and create a virtual 6-person setup.
+
+Also, the concepts formerly known as "two diagonal lines/waves/columns"
+is now just "diagonal lines/waves/columns".  These are done in 4x6
+setups.
 
 
 ****** Changes as of version 31.50 ******
