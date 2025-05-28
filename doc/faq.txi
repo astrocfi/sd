@@ -220,7 +220,7 @@ Notwithstanding the Callerlab definitions, the program considers @strong{plenty}
 @emph{always} to have the outsides quarter right.  There is a call @strong{plenty,
 ends go as you are} that gets the action that you probably want.
 
-@unnumberedsec How can I call ``boys start quarter thru'' from C1 phantoms?
+@unnumberedsec How can I call @strong{boys start quarter thru} from C1 phantoms?
 
 Just like that: @strong{boys start quarter thru}, or @strong{boys start 1/4
 thru} (either spelling is accepted.)  The @strong{<ANYONE> start} concept
@@ -232,6 +232,35 @@ program will then ask for the person indicator.
 
 If using @code{Sd} with the menu and mouse, you must find the concept listed
 under @strong{<ANYONE> start}, not @strong{boys start}.
+
+@unnumberedsec How can I do things like @strong{heads promenade halfway, come in to the middle for a right and left thru}?
+
+Start the sequence with the @strong{heads start} command, and give the
+call @strong{promenade halfway, come in to the middle and [right and
+left thru]}, or whatever call you want.  That call must be in square
+brackets, as shown.  The comma is optional.  You can also do
+@strong{promenade halfway, while the others [right and left thru]},
+or @strong{promenade 3/4, while the others [right and left thru]}, or 1/4.
+In all cases the people who do the call in brackets will be in the middle,
+and the others will be as couples on the outside.
+
+Remembering all this isn't easy.  Just type @strong{prom} followed by a
+question mark, and the program will remind you of what to do.
+
+@unnumberedsec How can I do @strong{girls trade} from blocks, as in @strong{girls press ahead and trade}?
+
+Just type it.  But there is no call @strong{press ahead and trade}.  You must say
+@strong{girls press ahead} followed by @strong{girls trade}.
+
+Previous versions of the program required you to say @strong{in your blocks girls trade}.
+
+@unnumberedsec How can I do @strong{pinwheel}?
+
+If you are in a promenade setup, type something like @strong{sides lead
+for a pinwheel}.  The program will give you a rough guess of how far it
+thought the dancers promenaded before doing the call.  You can also do
+@strong{ends pinwheel} or @strong{centers pinwheel} from applicable
+formations such as tidal lines.
 
 @unnumberedsec How can I change the star turns on Chain Reaction?
 

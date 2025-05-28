@@ -2275,8 +2275,6 @@ extern bool open_session(int argc, char **argv)
       gg->create_menu(call_list_any);
       gg->init_step(do_tick, 1);
 
-      // Create the special call menus for restricted setups.
-
       // We are going to try to use the cache file, if we have one.
       // The cache file mechanism will check file sizes and creation
       // times for us.  But then we will do some additional checks.
@@ -2333,7 +2331,7 @@ extern bool open_session(int argc, char **argv)
          }
       }
       else {
-         // The cache didn't work.  We need to make the menus
+         // The cache read didn't work.  We need to make the menus
          // by testing all calls in all common setups.
          // This is the thing that takes all the time.
 
@@ -2387,7 +2385,7 @@ extern bool open_session(int argc, char **argv)
             }
          }
          else
-            gg->fatal_error_exit(1, "Can't map menu cache file");
+            global_cache_failed_flag = true;
       }
 
       // Repair the damage to the call lists, that is, turn them from

@@ -24,25 +24,6 @@ Be sure the version numbers and dates are correct in:
                                version against database.h)
     [sddoc] index2.htmli       (version # and date are visible)
              ==> Be sure to run do_index <num> after editing this!!!
-    [sddoc] download-unix.html (version # of HP-UX release is visible)
-
------------------------------------------------------------------
-
-                       BEFORE STARTING
-
-BEWARE!!!!!
-
-MANY OPERATIONS REQUIRE A LOCAL ACCOUNT!!!
-THESE INCLUDE ALL DOCUMENT PREPARATION, AND THE DO_LINUX SCRIPT.
-
-LOG OUT OF THE NETWORK ACCOUNT!!!!!   LOG IN IN THE LOCAL DOMAIN!!!!
-
-
-Do "clean clean" in sddoc.  This deletes all the derived documentation
-files, the self-extracting .exe files, and the ".zip" and ".msg"
-files used for uploading to the web.
-
-Then choose the poster child.  Do "do_index <number>".
 
 -----------------------------------------------------------------
 
@@ -59,6 +40,7 @@ put a better (i.e. real cygwin) version in there.
 Go to sddoc directory and do:
 
     setmingw
+    clean clean
     do_plain
     do_ps
     do_pdf
@@ -66,8 +48,6 @@ Go to sddoc directory and do:
             (It is important that a poster child number
              always be loaded before running "do_html")
     do_html
-    do_download-unix   (at MPG, if HP-UX release is desired, see below)
-    do_hpux            (at MPG, if HP-UX release is desired, see below)
 
 -----------------------------------------------------------------
                 POSTER CHILD LOG
@@ -239,9 +219,7 @@ These files should exist, all in the sddoc directory:
     plain.txt     |
     ps.txt        |   These files get mailed
     pdf.txt       |   to update the web page.
-    html.txt      |
-    dnu.txt       |   (HP-UX only)
-    hpux.txt      /   (HP-UX only)
+    html.txt      /
 
     install3.exe    \
     install.exe      |    These files are used locally for

@@ -175,6 +175,18 @@ selector_item selector_list[] = {
    {"center column","center column","CENTER COLUMN","CENTER COLUMN",selector_outerpairs},
    {"center box",   "center box",  "CENTER BOX",   "CENTER BOX",  selector_outerpairs},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
+   {"first 1",      "first 1",     "FIRST 1",      "FIRST 1",     selector_uninitialized},
+   {"last 1",       "last 1",      "LAST 1",       "LAST 1",      selector_uninitialized},
+   {"first 2",      "first 2",     "FIRST 2",      "FIRST 2",     selector_uninitialized},
+   {"last 2",       "last 2",      "LAST 2",       "LAST 2",      selector_uninitialized},
+   {"first 3",      "first 3",     "FIRST 3",      "FIRST 3",     selector_uninitialized},
+   {"last 3",       "last 3",      "LAST 3",       "LAST 3",      selector_uninitialized},
+   {"leftmost 1",   "leftmost 1",  "LEFTMOST 1",   "LEFTMOST 1",  selector_uninitialized},
+   {"rightmost 1",  "rightmost 1", "RIGHTMOST 1",  "RIGHTMOST 1", selector_uninitialized},
+   {"leftmost 2",   "leftmost 2",  "LEFTMOST 2",   "LEFTMOST 2",  selector_uninitialized},
+   {"rightmost 2",  "rightmost 2", "RIGHTMOST 2",  "RIGHTMOST 2", selector_uninitialized},
+   {"leftmost 3",   "leftmost 3",  "LEFTMOST 3",   "LEFTMOST 3",  selector_uninitialized},
+   {"rightmost 3",  "rightmost 3", "RIGHTMOST 3",  "RIGHTMOST 3", selector_uninitialized},
 #ifdef TGL_SELECTORS
    /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
    {"wave-based triangles",   "wave-based triangle",   "WAVE-BASED TRIANGLES",   "WAVE-BASED TRIANGLE",   selector_uninitialized},
@@ -1692,19 +1704,20 @@ map::map_thing map::map_init_table[] = {
      5, 6, 23, 7, 12, 13, 14, 22, 15, 20, 9, 21, 2, 3, 4, 8},
     s4x4,2,MPKIND__OVERLAP,0,     0,  s4x6,      0x000, 0},
    {{0, 1, 5, 11, 7, 8, 9, 10,         1, 2, 3, 4, 6, 7, 11, 5},
-    s_qtag,2,MPKIND__OVERLAP,0,   0,  s3dmd,    0x000, 0},
+    s_qtag,2,MPKIND__OVERLAP,0,   0,  s3dmd,     0x000, 0},
    {{9, 0, 10, 8, 5, 7, 11, 1,         11, 1, 5, 7, 3, 6, 4, 2},
     s_ptpd,2,MPKIND__OVERLAP,0,   0,  s3ptpd,    0x000, 0},
    {{20, 21, 22, 23, 11, 10, 9, 8, 12, 13, 14, 15, 16, 17, 18, 19,
      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 23, 22, 21, 20},
     s2x8,2,MPKIND__OVERLAP,1,     0,  s3x8,      0x000, 0},
    {{0, 1, 3, 2, 10, 11, 4, 5,         4, 5, 10, 11, 6, 7, 9, 8},
-    s1x8,2,MPKIND__OVERLAP,0,     0,  s1x12,      0x000, 0},
-
+    s1x8,2,MPKIND__OVERLAP,0,     0,  s1x12,     0x000, 0},
+   {{15, 14, 12, 13, 8, 9, 11, 10,     0, 1, 3, 2, 7, 6, 4, 5},
+    s1x8,2,MPKIND__OVERLAP,1,     3,  s2x8,      0x000, 0},
    {{0, 1, 3, 2, 7, 8, 4, 9,           2, 3, 9, 4, 5, 6, 8, 7},
-    s1x8,2,MPKIND__OVERLAP14,0,     0,  s1x10,      0x000, 0},
+    s1x8,2,MPKIND__OVERLAP14,0,   0,  s1x10,     0x000, 0},
    {{0, 1, 3, 2, 13, 6, 4, 5,          6, 13, 11, 12, 7, 8, 10, 9},
-    s1x8,2,MPKIND__OVERLAP34,0,     0,  s1x14,      0x000, 0},
+    s1x8,2,MPKIND__OVERLAP34,0,   0,  s1x14,     0x000, 0},
 
    {{0, 1, 3, 2, 7, 6, 4, 5,           4, 5, 7, 6, 12, 13, 15, 14,
      15, 14, 12, 13, 8, 9, 11, 10},
@@ -1712,7 +1725,9 @@ map::map_thing map::map_init_table[] = {
    {{0, 1, 3, 2, 10, 11, 4, 5,         2, 3, 5, 4, 8, 9, 11, 10,
      4, 5, 10, 11, 6, 7, 9, 8},
     s1x8,3,MPKIND__OVERLAP14,0,    0,  s1x12,    0x000, 0},
-
+   {{19, 18, 16, 17, 12, 13, 15, 14,   20, 21, 23, 22, 8, 9, 11, 10,
+     0, 1, 3, 2, 7, 6, 4, 5},
+    s1x8,3,MPKIND__OVERLAP,1,     3,  s3x8,      0x000, 0},
    {{0, 1, 2, 3, 8, 9, 10, 11,         2, 3, 4, 5, 6, 7, 8, 9},
     s2x4,2,MPKIND__OVERLAP,0,     0,  s2x6,      0x000, 0},
    {{10, 11, 5, 4, 6, 7, 8, 9,         0, 1, 2, 3, 4, 5, 11, 10},
@@ -2114,6 +2129,18 @@ const map::map_thing map::spec_map_table[] = {
     s2x2,1,MPKIND__NONE,0,        1,  s_trngl,   0x000, 0, spcmap_trngl_box2},
    {{2, 3, 4, 5, 10, 11, 12, 13},
     s2x4,1,MPKIND__NONE,0,        0,  s2x8,      0x000, 0, spcmap_inner_box},
+   {{0, 10, 2, 8, 12, 22, 14, 20,        11, 1, 9, 3, 23, 13, 21, 15},
+    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_lh_stag},
+   {{2, 8, 4, 6, 14, 20, 16, 18,          9, 3, 7, 5, 21, 15, 19, 17},
+    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_rh_stag},
+   {{0, 8, 2, 6, 10, 18, 12, 16,          9, 1, 7, 3, 19, 11, 17, 13},
+    s2x4,2,MPKIND__NONE,0,        0,  s4x5, 0x000, 0, spcmap_lh_stag_1_4},
+   {{1, 7, 3, 5, 11, 17, 13, 15,          8, 2, 6, 4, 18, 12, 16, 14},
+    s2x4,2,MPKIND__NONE,0,        0,  s4x5, 0x000, 0, spcmap_rh_stag_1_4},
+   {{11, 1, 2, 8, 23, 13, 14, 20,         0, 10, 9, 3, 12, 22, 21, 15},
+    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_lh_ox},
+   {{9, 3, 4, 6, 21, 15, 16, 18,          2, 8, 7, 5, 14, 20, 19, 17},
+    s2x4,2,MPKIND__NONE,0,        0,  s4x6, 0x000, 0, spcmap_rh_ox},
    {{0, -1, 1, -1, 2, -1, 3, -1, 6, -1, 7, -1, 8, -1, 9, -1},
     s_c1phan,1,MPKIND__OFFS_L_HALF,0, 0,  sbigdmd, 0x000, 0, spcmap_lh_c1phana},
    {{-1, 12, -1, 10, -1, 3, -1, 15, -1, 4, -1, 2, -1, 11, -1, 7},
@@ -2964,10 +2991,18 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s1x4,     s_star,   0, 0, 1, 1,  0x2FA, schema_concentric},
    {sbigh,          schema_concentric, {4, 5, 10, 11,    0, 9, 6, 3},
              s1x4,     s2x2,     0, 0, 3, 1,  0x0EF, schema_concentric},
+
+   // The 3x4 items appear after the 3dmd items.  Since the search order is reversed,
+   // the 3x4 will be preferred when putting together a 1x4 and 2x2.
    {s3dmd,          schema_concentric, {10, 11, 4, 5,    0, 2, 6, 8},
              s1x4,     s2x2,     0, 0, 3, 1,  0x0EF, schema_concentric},
    {s3dmd,          schema_nothing, {10, 11, 4, 5,    8, 0, 2, 6},
              s1x4,     s2x2,     0, 1, 3, 1,  0x2DF, schema_concentric},
+   {s3x4,           schema_concentric, {10, 11, 4, 5,    0, 3, 6, 9},
+             s1x4,     s2x2,     0, 0, 3, 1,  0x0EF, schema_concentric},
+   {s3x4,           schema_nothing, {10, 11, 4, 5,    9, 0, 3, 6},
+             s1x4,     s2x2,     0, 1, 3, 1,  0x2DF, schema_concentric},
+
    {s4x4,           schema_concentric, {15, 3, 7, 11,    12, 0, 4, 8},
              s2x2,     s2x2,     0, 0, 3, 1,  0x0CF, schema_concentric},
    {s1x3dmd,        schema_concentric_diamond_line, {1, 2, 5, 6,    0, 3, 4, 7},
@@ -4257,6 +4292,18 @@ static const coordrec thingthar = {s_thar, 3,
       -1, -1, -1, -1,  6, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thingalamo = {s_alamo, 3,
+   { -2,   2,   5,   5,   2,  -2,  -5,  -5},
+   {  5,   5,   2,  -2,  -5,  -5,  -2,   2}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1,  0,  1, -1, -1, -1,
+      -1, -1,  7, -1, -1,  2, -1, -1,
+      -1, -1,  6, -1, -1,  3, -1, -1,
+      -1, -1, -1,  5,  4, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thingxwv = {s_crosswave, 3,
    { -9,  -5,   0,   0,   9,   5,   0,   0},
    {  0,   0,   6,   2,   0,   0,  -6,  -2}, {
@@ -5072,6 +5119,16 @@ static const id_bit_table id_bit_table_2x2[] = {
    NEBITS(0),
    SEBITS(0),
    SWBITS(0)};
+
+static const id_bit_table id_bit_table_thar[] = {
+   WESTBIT( ID2_END),
+   EASTBIT( ID2_CENTER),
+   NORTHBIT(ID2_END),
+   SOUTHBIT(ID2_CENTER),
+   EASTBIT( ID2_END),
+   WESTBIT( ID2_CENTER),
+   SOUTHBIT(ID2_END),
+   NORTHBIT(ID2_CENTER)};
 
 static const id_bit_table id_bit_table_2x4[] = {
    NWBITS(ID2_END),
@@ -7042,12 +7099,12 @@ const setup_attr setup_attrs[] = {
     {b_thar, b_thar},
     {0, 0},
     true,
-    (const id_bit_table *) 0,
+    id_bit_table_thar,
     {"66c@66d@ab6fe@66h@66g",
      (Cstring) 0}},
    {7,                      // s_alamo
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingalamo,
+    &thingalamo,
     {0, 0, 0, 0},
     {b_alamo, b_alamo},
     {0, 0},
@@ -7640,7 +7697,7 @@ const schema_attr schema_attrs[] = {
 */
 
 const ctr_end_mask_rec dead_masks = {0, 0, 0, 0};
-const ctr_end_mask_rec masks_for_3x4 = {0, 0, 0x041, 0};        // Only used if occupied as "H".
+const ctr_end_mask_rec masks_for_3x4 = {0xC3, 0, 0x041, 0};     // Only used if occupied as "H".
 const ctr_end_mask_rec masks_for_3dmd_ctr2 = {0, 0, 00101, 0};  // Only if ctr 2 / outer 1x3's
 const ctr_end_mask_rec masks_for_3dmd_ctr4 = {00303, 0, 0, 0};  // Only if ctr 1x4 / outer points
 const ctr_end_mask_rec masks_for_bigh_ctr4 = {00303, 0, 0, 0};  // Only if ctr 1x4 / outer points
@@ -7967,6 +8024,8 @@ select::fixer select::fixer_init_table[] = {
    {fx_foo22, s1x1, s2x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 5}},
    {fx_foo44, s1x1, s2x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {2, 6}},
    {fx_foo88, s1x1, s2x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 7}},
+   {fx_foo77, s1x3, s2x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1, 2, 4, 5, 6}},
+   {fx_fooEE, s1x3, s2x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {1, 2, 3, 5, 6, 7, }},
    {fx_n1x43, s1x2, s1x4,        0, 0, 1,       fx_n1x43,     fx_box9c,     fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 1}},
    {fx_n1x4c, s1x2, s1x4,        0, 0, 1,       fx_n1x4c,     fx_box6c,     fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {3, 2}},
    {fx_n1x45, s1x1, s1x4,        0, 0, 2,       fx0,          fx0,          fx0,          fx0, fx0,          fx0,    fx0,          fx0,          {0, 2}},
@@ -8601,6 +8660,8 @@ select::sel_item select::sel_init_table[] = {
    {LOOKUP_NONE,                           s2x4,   0x44,   fx_foo44,      fx0, -1},
    {LOOKUP_NONE,                           s2x4,   0x22,   fx_foo22,      fx0, -1},
    {LOOKUP_NONE,                           s2x4,   0x11,   fx_foo11,      fx0, -1},
+   {LOOKUP_NONE,                           s2x4,   0x77,   fx_foo77,      fx0, -1},
+   {LOOKUP_NONE,                           s2x4,   0xEE,   fx_fooEE,      fx0, -1},
    {LOOKUP_NONE,               s1x4,        0x3,    fx_n1x43,      fx0, -1},
    {LOOKUP_NONE,               s1x4,        0xC,    fx_n1x4c,      fx0, -1},
    {LOOKUP_NONE,               s1x4,        0x5,    fx_n1x45,      fx0, -1},

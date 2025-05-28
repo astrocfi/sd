@@ -44,6 +44,7 @@
    run_program
 and the following external variables:
    global_error_flag
+   global_cache_failed_flag
    global_reply
    global_age
    global_leave_missing_calls_blank
@@ -72,6 +73,7 @@ and the following external variables:
 
 // External variables.
 error_flag_type global_error_flag;
+bool global_cache_failed_flag;
 uims_reply global_reply;
 int global_age;
 bool global_leave_missing_calls_blank;
@@ -2265,11 +2267,6 @@ void run_program()
 {
    int i;
 
-   global_age = 1;
-   global_error_flag = (error_flag_type) 0;
-   interactivity = interactivity_normal;
-   clear_screen();
-
    if (!ui_options.diagnostic_mode) {
       writestuff("SD -- square dance caller's helper.");
       newline();
@@ -2318,6 +2315,13 @@ void run_program()
          newline();
          newline();
       }
+   }
+
+   if (global_cache_failed_flag) {
+      newline();
+      writestuff("Cache file mechanism failed, continuing anyway.");
+      newline();
+      newline();
    }
 
    // If anything in the "try" block throws an exception, we will get here

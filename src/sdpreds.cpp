@@ -60,6 +60,7 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 {
    uint32 permpid1, pid2, p1, p2;
    selector_kind s;
+   int thing_to_test;
 
    selector_used = true;
 
@@ -452,15 +453,76 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          return ((permpid1+0200) & PID_MASK & ~0300) == 0000;
       break;
 
+   case selector_firstone:
+   case selector_lastone:
+   case selector_firsttwo:
+   case selector_lasttwo:
+   case selector_firstthree:
+   case selector_lastthree:
+      if (ss->kind == s2x4) {
+         uint32 directions;
+         uint32 livemask;
+         get_directions(ss, directions, livemask);
+
+         if (directions == (livemask & 0x55FF))
+            thing_to_test = place & 3;        // Right column.
+         else if (directions == (livemask & 0xFF55))
+            thing_to_test = 3-(place & 3);    // Left column.
+         else
+            break;
+
+         goto first_last_test;
+      }
+      break;
+
+   case selector_leftmostone:
+   case selector_rightmostone:
+   case selector_leftmosttwo:
+   case selector_rightmosttwo:
+   case selector_leftmostthree:
+   case selector_rightmostthree:
+      if (ss->kind == s2x4) {
+         uint32 directions;
+         uint32 livemask;
+         get_directions(ss, directions, livemask);
+
+         if (directions == (livemask & 0x00AA))
+            thing_to_test = place & 3;        // Lines out.
+         else if (directions == (livemask & 0xAA00))
+            thing_to_test = 3-(place & 3);    // Lines in.
+         else
+            break;
+
+         goto first_last_test;
+      }
+      break;
+
    default:
-      fail("ERROR - selector failed to get initialized.");
+      fail("INTERNAL ERROR - selector failed to get initialized.");
    }
 
    fail("Can't decide who are selected.");
 
  eq_return:
-
    return (current_options.who == s);
+
+ first_last_test:
+   switch (current_options.who) {
+   case selector_firstone: case selector_rightmostone:
+      return thing_to_test >= 3;
+   case selector_firsttwo: case selector_rightmosttwo:
+      return thing_to_test >= 2;
+   case selector_firstthree: case selector_rightmostthree:
+      return thing_to_test >= 1;
+   case selector_lastone: case selector_leftmostone:
+      return thing_to_test < 1;
+   case selector_lasttwo: case selector_leftmosttwo:
+      return thing_to_test < 2;
+   case selector_lastthree: case selector_leftmostthree:
+      return thing_to_test < 3;
+   }
+
+   fail("Can't decide who are selected.");   // Won't happen.
 }
 
 
@@ -518,6 +580,32 @@ static bool plus_mod_selected(setup *real_people, int real_index,
    int otherindex = real_index + (*extra_stuff);
    int size = attr::slimit(real_people)+1;
    if (otherindex >= size) otherindex -= size;
+   return selectp(real_people, otherindex);
+}
+
+static const long int adj_4x4_tab[16] =
+{14, 3, 7, 1, 5, 4, 8, 2, 6, 11, 15, 9, 13, 12, 0, 10};
+
+static const long int or_4x4_tab[16] =
+{13, 15, 11, 10, 6, 8, 4, 9, 5, 7, 3, 2, 14, 0, 12, 1};
+
+static const long int ctr_4x4_tab[16] =
+{-99, -99, -99, 15, -99, 6, 5, 11, -99, -99, -99, 7, -99, 14, 13, 3};
+
+static const long int end_4x4_tab[16] =
+{12, 10, 9, -99, 8, -99, -99, -99, 4, 2, 1, -99, 0, -99, -99, -99};
+
+/* ARGSUSED */
+static bool select_with_special(setup *real_people, int real_index,
+   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+{
+   if (!selectp(real_people, real_index)) return false;
+   long int otherindex = extra_stuff[northified_index]+real_index-northified_index;
+   if (otherindex < -50) return false;  // Check for -99 even though it's been finagled.
+   int size = attr::slimit(real_people)+1;
+   if (otherindex >= size) otherindex -= size;
+   else if (otherindex < 0) otherindex += size;
+   if (!(real_people->people[otherindex].id1 & BIT_PERSON)) return false;
    return selectp(real_people, otherindex);
 }
 
@@ -2250,7 +2338,11 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected,             &iden_tab[8]},             // "person_select_plus8"
       {plus_mod_selected,             &iden_tab[12]},            // "person_select_plus12"
       {sum_mod_selected_for_12p,      &iden_tab[15]},            // "person_select12_sum15"
-      {semi_squeezer_select,       semi_squeeze_tab},            // "semi_squeezer_select"
+      {select_with_special,           adj_4x4_tab},              // "select_w_adj_4x4"
+      {select_with_special,           or_4x4_tab},               // "select_w_or_4x4"
+      {select_with_special,           ctr_4x4_tab},              // "select_w_ctr_4x4"
+      {select_with_special,           end_4x4_tab},              // "select_w_end_4x4"
+      {semi_squeezer_select,          semi_squeeze_tab},         // "semi_squeezer_select"
       {select_once_rem_from_unselect,(const long int *) 0},      // "select_once_rem_from_unselect"
       {unselect_once_rem_from_select,(const long int *) 0},      // "unselect_once_rem_from_select"
       {select_and_roll_is_cw,        (const long int *) 0},      // "select_and_roll_is_cw"

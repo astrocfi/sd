@@ -95,7 +95,7 @@ extern resultflag_rec get_multiple_parallel_resultflags(setup outer_inners[], in
 
 
 select::sel_item *select::sel_hash_table[select::NUM_SEL_HASH_BUCKETS];
-select::fixer *select::fixer_ptr_table[fx_ENUMLAST];
+select::fixer *select::fixer_ptr_table[fx_ENUM_EXTENT];
 
 void select::initialize()
 {
@@ -112,7 +112,7 @@ void select::initialize()
 
    fixer *fixp;
 
-   for (i=fx0 ; i<fx_ENUMLAST ; i++) fixer_ptr_table[i] = (fixer *) 0;
+   for (i=fx0 ; i<fx_ENUM_EXTENT ; i++) fixer_ptr_table[i] = (fixer *) 0;
 
    for (fixp = fixer_init_table ; fixp->mykey != fx0 ; fixp++) {
       if (fixer_ptr_table[fixp->mykey])
@@ -120,7 +120,7 @@ void select::initialize()
       fixer_ptr_table[fixp->mykey] = fixp;
    }
 
-   for (i=fx0+1 ; i<fx_ENUMLAST ; i++) {
+   for (i=fx0+1 ; i<fx_ENUM_EXTENT ; i++) {
       if (!fixer_ptr_table[i])
          gg->fatal_error_exit(1, "Fixer table initialization failed", "undef");
    }
@@ -1218,7 +1218,7 @@ static calldef_schema concentrify(
          analyzer_result = schema_concentric_2_4;
       else if (attr::slimit(ss) == 3)
          analyzer_result = schema_single_concentric;
-      else if (ss->kind == s3x4 && (livemask == 0xCF3 || livemask == 0xF3C)) {
+      else if (ss->kind == s3x4 && (livemask == 06363 || livemask == 07474)) {
          analyzer_result = schema_in_out_triple;
          analyzer = schema_in_out_triple;
          inverting ^= 1;
@@ -1250,7 +1250,7 @@ static calldef_schema concentrify(
          analyzer_result = schema_concentric;
       break;
    case schema_1331_concentric:
-      if (ss->kind == s3x4 && (livemask & 0111) == 0) {
+      if (ss->kind == s3x4 && (livemask & 01111) == 0) {
          // Compress to a 1/4 tag.
          ss->kind = s_qtag;
          swap_people(ss, 1, 0);
@@ -1414,34 +1414,39 @@ static calldef_schema concentrify(
          inners[0].rotation = 0;
          outers->kind = s2x2;
          outers->rotation = 0;
-         *outer_elongation = ((~outers->rotation) & 1) + 1;
-         (void) copy_person(&inners[0], 0, ss, 10);
-         (void) copy_person(&inners[0], 1, ss, 11);
-         (void) copy_person(&inners[0], 2, ss, 4);
-         (void) copy_person(&inners[0], 3, ss, 5);
+
+         if (livemask == 07171UL)
+            *outer_elongation = 3;   // If occupied as "H", put them in the corners.
+         else
+            *outer_elongation = ((~outers->rotation) & 1) + 1;
+
+         copy_person(&inners[0], 0, ss, 10);
+         copy_person(&inners[0], 1, ss, 11);
+         copy_person(&inners[0], 2, ss, 4);
+         copy_person(&inners[0], 3, ss, 5);
 
          if (!ss->people[0].id1 && ss->people[1].id1)
-            (void) copy_person(outers, 0, ss, 1);
-         else if (!ss->people[1].id1 && !ss->people[0].id1)
-            (void) copy_person(outers, 0, ss, 0);
+            copy_person(outers, 0, ss, 1);
+         else if (!ss->people[1].id1 && ss->people[0].id1)
+            copy_person(outers, 0, ss, 0);
          else fail("Can't find centers and ends in this formation.");
 
          if (!ss->people[2].id1 && ss->people[3].id1)
-            (void) copy_person(outers, 1, ss, 3);
+            copy_person(outers, 1, ss, 3);
          else if (!ss->people[3].id1 && ss->people[2].id1)
-            (void) copy_person(outers, 1, ss, 2);
+            copy_person(outers, 1, ss, 2);
          else fail("Can't find centers and ends in this formation.");
 
          if (!ss->people[6].id1 && ss->people[7].id1)
-            (void) copy_person(outers, 2, ss, 7);
+            copy_person(outers, 2, ss, 7);
          else if (!ss->people[7].id1 && ss->people[6].id1)
-            (void) copy_person(outers, 2, ss, 6);
+            copy_person(outers, 2, ss, 6);
          else fail("Can't find centers and ends in this formation.");
 
          if (!ss->people[8].id1 && ss->people[9].id1)
-            (void) copy_person(outers, 3, ss, 9);
+            copy_person(outers, 3, ss, 9);
          else if (!ss->people[9].id1 && ss->people[8].id1)
-            (void) copy_person(outers, 3, ss, 8);
+            copy_person(outers, 3, ss, 8);
          else fail("Can't find centers and ends in this formation.");
 
          goto finish;

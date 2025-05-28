@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.4
-@set Time-stamp: November 6, 2004
+@set sd-version 36.5
+@set Time-stamp: December 15, 2004
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -21,7 +21,7 @@
 @c
 @c We want the title and copyright stuff in the info file, too,
 @c (and most importantly, in the ASCII version created by
-@c "makeinfo --no-headers") so it cannot be inside a @titlepage environment.
+@c "makeinfo --no-headers"), so it cannot be inside a @titlepage environment.
 @headings off
 @iftex
 @ @c hard Space to make vskip work
@@ -42,19 +42,10 @@
 @vskip 0pt plus 1fill
 @end iftex
 
-Copyright @copyright{} 1992-2004 William B. Ackerman and Stephen Gildea
+@noindent Copyright @copyright{} 1992-2004 William B. Ackerman and Stephen Gildea
 
-@ignore
-Permission is granted to process this file through TeX or other text
-processors and print the results, provided the printed document carries
-copying permission notice identical to this one except for the removal
-of this paragraph (this paragraph not being relevant to the printed
-manual).
-@end ignore
+@noindent Permission is granted to make and distribute verbatim copies of this manual.
 
-Permission is granted to make and distribute verbatim copies of this manual.
-
-@iftex
 Sd is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -68,7 +59,14 @@ License for more details.
 You should have received a copy of the GNU General Public License
 along with Sd; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-@end iftex
+
+@ignore
+Permission is granted to process this file through TeX or other text
+processors and print the results, provided the printed document carries
+copying permission notice identical to this one except for the removal
+of this paragraph (this paragraph not being relevant to the printed
+manual).
+@end ignore
 
 @page	@c end of copyright page
 
@@ -2756,15 +2754,20 @@ Since this is the usual behavior, you don't need this option.
 It is present only for compatibility with older versions.
 If it is in your @file{sd.ini} file, take it out.
 @item tab_changes_focus
-This applies to @code{Sd} only.  Windows programs normally use the tab key
-to move keyboard focus around among the active windows in some fixed order,
-and the shift-tab key to move in the opposite order.  This change of focus
-is nearly useless in @code{Sd}, because the keyboard focus is almost always
-on the text input region.  Therefore, the default behavior of @code{Sd} is to
-have the tab key instead perform the same completion function as the escape key,
-just as @code{Sdtty} does.  (The shift-tab key still moves focus in the backwards
-order.)  This option re-enables the conventional Windows
-meaning of the tab key.
+This applies to @code{Sd} only.  Windows programs normally use the tab
+key to move keyboard focus around among the active windows in some fixed
+order, and the shift-tab key to move in the opposite order.  This change
+of focus is nearly useless in @code{Sd} for most users, because the
+keyboard focus is almost always in the text input region.  Therefore,
+@code{Sd} normally has the tab key do something different---it performs
+the same completion function as the escape key, just as @code{Sdtty}
+does.  (The shift-tab key still moves window focus in the backwards
+order.)  The @code{tab_changes_focus} option re-enables the conventional
+Windows meaning of the tab key.  With this option turned on, if you are
+typing in a call, and you type tab, it will not complete the call.
+Instead, focus will shift to the call menu.  You can use the arrow keys
+to move around in the call menu, and then press @key{ENTER} to select
+that call.
 @item keep_all_pictures
 This keeps a picture after every call, as if the ``keep picture''
 command had been given each time.
@@ -4479,9 +4482,9 @@ This is used in front of concepts like @samp{split phantom lines}.
 @item release
 @item stretch
 @item stretched setup
-@item stretched C/L/W/B/D
+@item stretched C/L/W/B/D/1T
 @item stretched <any triangle concept>
-These are straightforward.
+These are (reasonably) straightforward.
 @item centers
 @item ends
 @item centers and ends@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
@@ -5563,17 +5566,24 @@ walls}.
 @item center 2 / center 6
 @item very centers
 (@code{center 2} and @code{very centers} are the same.)
-
 @item outer 2 / outer 6
 @item very ends
 (@code{outer 2} and @code{very ends} are the same.)
-
 @item leads / trailers
 @item beaus / belles
 @item head corners / side corners
 @item head boys / head girls / side boys / side girls
 @item lead ends / lead centers / trailing ends / trailing centers
 @item headliners / sideliners
+@item first 1, 2, or 3 / last 1, 2, or 3
+These are used only in normal columns.  They designate the first 1, 2,
+or 3 people, counting from the front.  Example: @code{first 3 are
+tandems of 3, peel and trail}.
+@item leftmost 1, 2, or 3 / rightmost 1, 2, or 3
+These are used only in lines facing in or out.  Example: @code{leftmost
+3 here comes the judge}.  These may not be the exact words you should use
+when calling.  I am not aware that callers actually use these
+designators.
 @item those facing
 @item everyone
 @item all

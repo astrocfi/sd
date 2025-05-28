@@ -1170,6 +1170,7 @@ static const checkitem checktable[] = {
    {0x00910022, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
 
    {0x00950095, 0x22008080, s_thar, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00530053, 0x00120081, s_alamo, 0, warn__none, (const coordrec *) 0, {127}},
 
    // This is a "crosswave" on precise matrix spots.
    {0x00660084, 0x01040420, nothing, 1, warn__none, &acc_crosswave, {127}},
@@ -2568,7 +2569,7 @@ extern void process_number_insertion(uint32 mod_word)
 extern bool get_real_subcall(
    parse_block *parseptr,
    const by_def_item *item,
-   setup_command *cmd_in,
+   const setup_command *cmd_in,
    const calldefn *parent_call,
    bool forbid_flip,
    uint32 extra_heritmask_bits,

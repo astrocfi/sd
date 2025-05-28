@@ -260,7 +260,7 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
    if (innards->mapfd < 0) return;
    innards->map_address = (int *) mmap(0, innards->filewords<<2, PROT_READ|PROT_WRITE,
                                        MAP_SHARED, innards->mapfd, 0);
-   if (((int) innards->map_address) < 0) innards->map_address = (int *) 0;
+   if (((int) innards->map_address) == MAP_FAILED) innards->map_address = (int *) 0;
 #else
    if (innards->mapfiledesc) fclose(innards->mapfiledesc);
    if (innards->map_address) delete [] innards->map_address;

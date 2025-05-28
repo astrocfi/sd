@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "36.4"
+version "36.5"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -1136,6 +1136,11 @@ call "@6 break the alamo" c4
          if select_once_rem_from_select [0 0 0 0 0 A3W  C6E  0 0 0 0 0 0 C4E A1W 0]
          if unselect                    [0 0 0 0 0 Z10N Z15N 0 0 0 0 0 0 C5S A0S 0]
          if always                      [0 0 0 0 0 0    0    0 0 0 0 0 0 0   0   0]
+   setup alamo c1phan
+      preds "?"
+         if select_near_select [C4E A1W 0 0 A3W  C6E  0 0]
+         if unselect           [C5S A0S 0 0 Z10N Z15N 0 0]
+         if always             [0   0   0 0 0    0    0 0]
 
 call "adjust alamo to other pairing" mainstream
             dont_use_in_resolve
@@ -4843,6 +4848,22 @@ call "trade" mainstream tag trade
    setup pmd dmd
       array [0 CR0W 0 AL0E]
 
+call "partner trade" mainstream
+            left_means_mirror diamond_is_legal 12_16_matrix_means_split
+            // Need "left" for "half trade".
+   setup 1x2 1x2
+      array [CR1S AL0S]
+            alternate_definition [half] mainstream
+   setup 1x2 1x2 rotate
+      preds "???"
+         if 1x2_beau_or_miniwave [CR0N AL0S]
+         if always [0 AL1S]
+            alternate_definition [twisted] c4
+   setup 1x2 1x2 rotate qualifier miniwaves
+      array [CR1S AL1N]
+   setup 1x2 1x2 rotate qualifier couples_only
+      array [CR1S L0S]
+
 call "_trade, allow t-bone" dontshow tag trade_w_tbone
             left_means_mirror diamond_is_legal 12_16_matrix_means_split
    /* Need "left" for "half trade", and "parallel_conc_end" for "yoyo trade" */
@@ -5126,7 +5147,18 @@ call "@6 trade" mainstream
       preds "Can't find anyone to trade with."
          if unselect         [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
          if conc_from_select [   0 CR3S    0 AL0S    0 AL7S    0 CR5S]
-
+   setup 4x4 4x4
+      preds "Can't find anyone to trade with."
+         if unselect         [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N
+                              ZM8N ZM9N ZM10N ZM11N ZM12N ZM13N ZM14N ZM15N]
+         if select_w_adj_4x4 [AL14S AL3S AL7S CR1S AL5S CR4S AL8S CR2S
+                              CR6S CR11S CR15S AL9S CR13S AL12S CR0S AL10S]
+         if select_w_or_4x4  [AL13S AL15S AL11S AL10S AL6S AL8S CR4S AL9S
+                              CR5S CR7S CR3S CR2S CR14S CR0S AL12S CR1S]
+         if select_w_ctr_4x4 [0 0 0 AL15S 0 AL6S CR5S AL11S
+                              0 0 0 CR7S 0 CR14S AL13S CR3S]
+         if select_w_end_4x4 [AL12S AL10S AL9S 0 AL8S 0 0 0
+                              CR4S CR2S CR1S 0 CR0S 0 0 0]
 
 call "trade and roll" plus tag trade_and_roll
             dont_use_in_nice_resolve
@@ -5710,7 +5742,7 @@ call "8 roll away with a half sashay" c4
    seq miniwavetrade [inherit_diamond inherit_yoyo]
    seq uturnback [inherit_diamond]
 
-call "put centers in" mainstream tag centersin
+call "put centers in" mainstream
    setup 4x2 2x4 rotate
       array [ZM7W 0 ZM1W ZM0W ZM3W ZM2W 0 ZM4W]
    setup 2x4 2x4 rotate
@@ -5722,11 +5754,17 @@ call "centers in" mainstream
    setup 2x4 2x4 rotate
       array [ZM7W 0 0 ZM0W ZM3W 0 0 ZM4W]
 
+call "_centers in if needed" dontshow tag centersinifneeded
+   setup 4x2 2x4 rotate qualifier ntbone none
+      array [ZM7W 0 ZM1W ZM0W ZM3W ZM2W 0 ZM4W]
+   setup 2x4 2x4 qualifier ntbone none
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N 0 0 ZM7N]
+
 call "put centers out" c3x
    setup 4x2 2x4 rotate
-      array [6W 0 0W 1W 2W 3W 0 5W]
+      array [ZM6W 0 ZM0W ZM1W ZM2W ZM3W 0 ZM5W]
    setup 2x4 2x4 rotate
-      array [6W 0 0 1W 2W 0 0 5W]
+      array [ZM6W 0 0 ZM1W ZM2W 0 0 ZM5W]
 
 call "put trailers out" c3x
    setup 4x2 2x4 rotate qualifier in 2fl_only
@@ -6291,10 +6329,12 @@ call "first couple go right, next go left" mainstream
       array [0 0 AL1E CR3E CR2E AL0E 0 0]
 
 call "first couple go right, next go right, keep walking" mainstream
+            imprecise_rotation
    setup 4x2 thar
       array [0 0 4E 6S 7S 5E 0 0]
 
 call "first couple go left, next go left, keep walking" mainstream
+            imprecise_rotation
    setup 4x2 thar
       array [0 0 5W 3S 2S 4W 0 0]
 
@@ -10056,10 +10096,10 @@ call "remake the wave" a2 tag remake
 
 call "remake the column" a2
             /* Actually, left should mean check, but "touch_or_check" isn't right.  Sigh. */
-            yoyo_is_inherited fractal_is_inherited
+            grand_is_inherited yoyo_is_inherited fractal_is_inherited
             left_means_mirror visible_fractions
    seq armturn_n4 [inherit_fractal insert_number 1]
-   seq maybegrandslip_notc3 [force_grand inherit_yoyo]
+   seq maybegrandslip_notc3 [inherit_grand inherit_yoyo]
    seq armturn_n4 [inherit_fractal insert_number 3 roll_transparent]
 
 call "_remake, start with turn @b" dontshow tag remake_start_with_n
@@ -10154,7 +10194,10 @@ call "swing the fractions 4/5" c1
    seq 1_2_by_left_for_swing_fractions [inherit_left inherit_yoyo inherit_diamond]
 
 call "any hand swing the fractions" c1
-            dont_use_in_nice_resolve fractal_is_inherited visible_fractions
+            dont_use_in_nice_resolve
+   setup thar alamo qualifier miniwaves
+      array [4S 0S 0 0 5S 1S 0 0]
+            fractal_is_inherited visible_fractions
    seq cast_off_n4 [inherit_fractal insert_number 1]
    seq maybegrandslip_notc3 []
    seq cast_off_n4 [inherit_fractal insert_number 3]
@@ -13678,8 +13721,8 @@ call "_line to line part 2" dontshow tag line_line_2
 
 call "line to line" c3
             visible_fractions twisted_is_inherited
-   seq line_line_1 [inherit_twisted]   /* We put "inherit_twisted" on these to */
-   seq line_line_2 [inherit_twisted]   /* force caller to say "finally twisted". */
+   seq line_line_1 [inherit_twisted]   // We put "inherit_twisted" on these to
+   seq line_line_2 [inherit_twisted]   // force caller to say "finally twisted".
    seq pass_in [allow_plain_mod inherit_twisted]
 
 call "line to line but @0" c3
@@ -14437,9 +14480,9 @@ call "load the boat" plus
             // See test bi01t.
             visible_fractions twisted_is_inherited
    seq passthru [inherit_twisted]
-   seq boat2 []
-   seq boat3 []
-   seq boat4 []
+   seq boat2 [inherit_twisted]  // Of course, twisted will expire before we get here.
+   seq boat3 [inherit_twisted]
+   seq boat4 [inherit_twisted]
 
 call "@0 the boat" plus
             visible_fractions
@@ -14976,10 +15019,36 @@ call "cast a net" c4a
    seq circulate [force_half allow_forced_mod]
    seq fincastanet [inherit_yoyo]
 
+call "_check facing couples, no roll" dontshow tag checkfacing_noroll
+   setup 2x2 2x2 qualifier ntbone in in_or_out
+      array [0 0 ZM2N ZM3N]
+
+call "_pass the top 1" dontshow tag passtop1
+            left_means_mirror
+   conc spinthetop [inherit_left] pass_in [inherit_left conc_demand_lines conc_force_otherway]
+
+call "_pass the top 2" dontshow tag passtop2
+   conc explode [] pass_in [conc_demand_lines conc_force_spots]
+
+call "_pass the top 3" dontshow tag passtop3
+   crossconc checkfacing_noroll [conc_demand_columns] checkfacing_noroll [conc_force_lines]
+
 call "pass the top" c4a
+   // The array definition is the one that will succeed if the centers
+   // are absent.  In that case, the sequential definition would fail,
+   // because the resulting shape would depend on the facing directions
+   // of the absent centers.  But the array definition will make it do
+   // the "normal" thing, effectively assuming facing lines.
+   // So the array definition must be first.  The test is lh06t.
             rear_back_from_r_wave left_means_mirror
    setup 2x4 2x4
    array [0 0 0 0 AM1S CM7N CCAM0S CM2S]
+            left_means_mirror
+   // Fractions aren't visible, because there is no consensus that this
+   // call can be fractionalized.
+   seq passtop1 [inherit_left]
+   seq passtop2 []
+   seq passtop3 []
 
 call "sock it to me" c2
    setup 2x4 2x4 qualifier socker_is_cw
@@ -18929,6 +18998,16 @@ call "_check line, unusual" dontshow tag checkline_unusual
    // if the ends try to do anything.
    conc nullcall [] boguscall []
 
+call "_check line or thar, unusual" dontshow tag checklineorthar_unusual
+   setup 1x4 1x4
+      array [ZM0N ZM1N ZM2N ZM3N]
+   setup 2x2 2x2 restriction unusual alwaysfail
+      array [ZM0N ZM1N ZM2N ZM3N]
+   setup 1x2 1x2 restriction unusual alwaysfail
+      array [ZM0N ZM1N]
+   setup thar thar
+      array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
+
 call "_check parallel lines" dontshow tag checkparlines
    setup 2x4 2x4
       array [ZM0N ZM1N ZM2N ZM3N ZM4N ZM5N ZM6N ZM7N]
@@ -18966,11 +19045,16 @@ call "_check parallel waves" dontshow tag checkparwaves
 
 call "_trade and check line, unusual" dontshow tag tradencheckline_unusual
             yoyo_is_inherited bigmatrix_is_inherited diamond_is_legal
-   /* We don't allow inheriting half here.  If one could say "initially half,
-      rims trade back" (or "initially snag", or whatever), the rims/hubs
-      identification would get confused. */
+   // We don't allow inheriting half here.  If one could say "initially half,
+   // rims trade back" (or "initially snag", or whatever), the rims/hubs
+   // identification would get confused.
    seq trade [inherit_yoyo inherit_diamond inherit_bigmatrix]
    seq checkline_unusual [roll_transparent inherit_diamond inherit_bigmatrix]
+
+call "_trade and check line or thar, unusual" dontshow tag tradenchecklineorthar_unusual
+            yoyo_is_inherited bigmatrix_is_inherited
+   seq trade [inherit_yoyo inherit_bigmatrix]
+   seq checklineorthar_unusual [roll_transparent inherit_bigmatrix]
 
 call "_trade and check line, illegal" dontshow tag tradencheckline_illegal
             yoyo_is_inherited bigmatrix_is_inherited
@@ -19010,24 +19094,28 @@ call "_hubs trade @0 part 2" dontshow tag hubs_trade_2_any
 
 call "rims trade @2back@3" c2
             visible_fractions yoyo_is_inherited bigmatrix_is_inherited
-   seq_with_split_1x8_id tradencheckline_unusual [seq_never_re_evaluate inherit_yoyo]
-   seq rims_trade_2 [inherit_yoyo inherit_bigmatrix]
+   seq_with_split_1x8_id tradenchecklineorthar_unusual
+            [seq_never_re_evaluate inherit_yoyo]
+   seq rims_trade_2
+            [inherit_yoyo inherit_bigmatrix]
 
 call "hubs trade @2back@3" c2
             visible_fractions yoyo_is_inherited bigmatrix_is_inherited
-   seq_with_split_1x8_id tradencheckline_unusual [seq_never_re_evaluate inherit_yoyo]
-   seq hubs_trade_2 [inherit_yoyo inherit_bigmatrix]
+   seq_with_split_1x8_id tradenchecklineorthar_unusual
+            [seq_never_re_evaluate inherit_yoyo]
+   seq hubs_trade_2
+            [inherit_yoyo inherit_bigmatrix]
 
 call "rims trade @0" c2
             visible_fractions yoyo_is_inherited bigmatrix_is_inherited dont_use_in_resolve
-   seq_with_split_1x8_id tradencheckline_unusual
+   seq_with_split_1x8_id tradenchecklineorthar_unusual
             [seq_never_re_evaluate inherit_yoyo inherit_bigmatrix]
    seq rims_trade_2_any
             [inherit_yoyo inherit_bigmatrix]
 
 call "hubs trade @0" c2
             visible_fractions yoyo_is_inherited bigmatrix_is_inherited dont_use_in_resolve
-   seq_with_split_1x8_id tradencheckline_unusual
+   seq_with_split_1x8_id tradenchecklineorthar_unusual
             [seq_never_re_evaluate inherit_yoyo inherit_bigmatrix]
    seq hubs_trade_2_any
             [inherit_yoyo inherit_bigmatrix]
@@ -20380,15 +20468,14 @@ call "_ctrs pass thru/ends slide thru" dontshow tag pass_thru_slide_thru
    conc passthru [] slidethru [conc_demand_lines conc_force_columns]
 
 call "push open the gate" c4a
-            first_part_visible   /* This is so you can do it with centers already in,
-                                    by saying "finish".  Not really right. */
-   seq centersin [allow_forced_mod]
+            first_part_visible
+   seq centersinifneeded []
    seq cast_off_34 [allow_forced_mod]
    seq endsbend []
    seq pass_thru_slide_thru []
 
 call "centers thru and close the gate" c4
-   seq centersin []
+   seq centersinifneeded []
    seq twist1 []
    seq twist2 []
 

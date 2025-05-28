@@ -613,33 +613,36 @@ static void do_concept_multiple_lines_tog(
    parse_block *parseptr,
    setup *result) THROW_DECL
 {
-   /* This can only be standard for together/apart/clockwise/counterclockwise/toward-the-center,
-      not for forward/back/left/right, because we look at individual facing directions to
-      determine which other line/column the people in the center lines/columns must work in. */
+   // This can only be standard for
+   // together/apart/clockwise/counterclockwise/toward-the-center,
+   // not for forward/back/left/right, because we look at
+   // individual facing directions to determine which other
+   // line/column the people in the center lines/columns must
+   // work in.
 
    int rotfix = 0;
    setup_kind base_setup = s2x4;
    int base_vert = 1;
    uint32 masks[8];
 
-   /* arg4 = number of C/L/W. */
+   // Arg4 = number of C/L/W.
 
    int cstuff = parseptr->concept->arg1;
-   /* cstuff =
-      forward (lines) or left (cols)     : 0
-      backward (lines) or right (cols)   : 2
-      clockwise                          : 8
-      counterclockwise                   : 9
-      together (must be end-to-end)      : 10
-      apart (must be end-to-end)         : 11
-      toward the center (quadruple only) : 12 */
+   // cstuff =
+   // forward (lines) or left (cols)     : 0
+   // backward (lines) or right (cols)   : 2
+   // clockwise                          : 8
+   // counterclockwise                   : 9
+   // together (must be end-to-end)      : 10
+   // apart (must be end-to-end)         : 11
+   // toward the center (quadruple only) : 12
 
    int linesp = parseptr->concept->arg3;
 
-   /* If this was multiple columns, we allow stepping to a wave.  This makes it
-      possible to do interesting cases of turn and weave, when one column
-      is a single 8 chain and another is a single DPT.  But if it was multiple
-      lines, we forbid it. */
+   // If this was multiple columns, we allow stepping to a wave.  This makes it
+   // possible to do interesting cases of turn and weave, when one column
+   // is a single 8 chain and another is a single DPT.  But if it was multiple
+   // lines, we forbid it.
 
    if (linesp & 1)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
@@ -648,7 +651,7 @@ static void do_concept_multiple_lines_tog(
       ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
    if (parseptr->concept->arg4 == 3) {
-      /* Triple C/L/W working. */
+      // Triple C/L/W working.
 
       if (cstuff >= 10) {
          if (ss->kind != s1x12) fail("Must have a 1x12 setup for this concept.");
@@ -662,10 +665,10 @@ static void do_concept_multiple_lines_tog(
             if (!(global_tbonetest & 1)) fail("There are no columns of 4 here.");
          }
     
-         if (cstuff == 10) {     /* Working together. */
+         if (cstuff == 10) {     // Working together.
             masks[0] = 0xCF; masks[1] = 0xFC;
          }
-         else {                 /* Working apart. */
+         else {                 // Working apart.
             masks[0] = 0x3F; masks[1] = 0xF3;
          }
 
@@ -693,18 +696,18 @@ static void do_concept_multiple_lines_tog(
             if (!(tbonetest & 1)) fail("There are no columns of 4 here.");
          }
     
-         /* Initially assign the centers to the upper (masks[1]) group. */
+         // Initially assign the centers to the upper (masks[1]) group.
          masks[0] = 0xF0; masks[1] = 0xFF;
     
-         /* Look at the center line people and put each one in the correct group. */
+         // Look at the center line people and put each one in the correct group.
     
          if (cstuff == 8) {
-            masks[0] = 0xFC; masks[1] = 0xCF;   /* clockwise */
+            masks[0] = 0xFC; masks[1] = 0xCF;   // clockwise
          }
          else if (cstuff == 9) {
-            masks[0] = 0xF3; masks[1] = 0x3F;   /* counterclockwise */
+            masks[0] = 0xF3; masks[1] = 0x3F;   // counterclockwise
          }
-         else {                        /* forward/back/left/right */
+         else {                        // forward/back/left/right
             if ((ss->people[10].id1 ^ cstuff) & 2) { masks[1] &= ~0x80 ; masks[0] |= 0x1; };
             if ((ss->people[11].id1 ^ cstuff) & 2) { masks[1] &= ~0x40 ; masks[0] |= 0x2; };
             if ((ss->people[5].id1  ^ cstuff) & 2) { masks[1] &= ~0x20 ; masks[0] |= 0x4; };
@@ -713,14 +716,14 @@ static void do_concept_multiple_lines_tog(
       }
    }
    else if (parseptr->concept->arg4 == 4) {
-      /* Quadruple C/L/W working. */
+      // Quadruple C/L/W working.
 
       if (cstuff >= 12) {
          if (ss->kind != s4x4) fail("Must have a 4x4 setup to do this concept.");
 
          if ((global_tbonetest & 011) == 011) fail("Sorry, can't do this from T-bone setup.");
          rotfix = (global_tbonetest ^ linesp ^ 1) & 1;
-         ss->rotation += rotfix;   /* Just flip the setup around and recanonicalize. */
+         ss->rotation += rotfix;   // Just flip the setup around and recanonicalize.
          canonicalize_rotation(ss);
 
          masks[0] = 0xF0; masks[1] = 0xFF; masks[2] = 0x0F;
@@ -737,10 +740,10 @@ static void do_concept_multiple_lines_tog(
             if (!(global_tbonetest & 1)) fail("There are no columns of 4 here.");
          }
 
-         if (cstuff == 10) {    /* Working together end-to-end. */
+         if (cstuff == 10) {    // Working together end-to-end.
             masks[0] = 0xCF; masks[1] = 0xCC; masks[2] = 0xFC;
          }
-         else {                 /* Working apart end-to-end. */
+         else {                 // Working apart end-to-end.
             masks[0] = 0x3F; masks[1] = 0x33; masks[2] = 0xF3;
          }
 
@@ -781,12 +784,12 @@ static void do_concept_multiple_lines_tog(
             rotfix = (linesp ^ 1) & 1;
             vpeople.rotation += rotfix;
             do_4x4_quad_working(&vpeople, cstuff, &the_setups[0]);
-            the_setups[0].rotation -= rotfix;   /* Flip the setup back. */
+            the_setups[0].rotation -= rotfix;   // Flip the setup back.
 
             rotfix = (linesp) & 1;
             hpeople.rotation += rotfix;
             do_4x4_quad_working(&hpeople, cstuff, &the_setups[1]);
-            the_setups[1].rotation -= rotfix;   /* Flip the setup back. */
+            the_setups[1].rotation -= rotfix;   // Flip the setup back.
 
             *result = the_setups[1];
             result->result_flags = get_multiple_parallel_resultflags(the_setups, 2);
@@ -797,14 +800,14 @@ static void do_concept_multiple_lines_tog(
             rotfix = (tbonetest ^ linesp ^ 1) & 1;
             ss->rotation += rotfix;
             do_4x4_quad_working(ss, cstuff, result);
-            result->rotation -= rotfix;   /* Flip the setup back. */
+            result->rotation -= rotfix;   // Flip the setup back.
          }
 
          return;
       }
    }
    else if (parseptr->concept->arg4 == 5) {
-      /* Quintuple C/L/W working. */
+      // Quintuple C/L/W working.
 
       int i, tbonetest;
 
@@ -826,18 +829,20 @@ static void do_concept_multiple_lines_tog(
          if (tbonetest & 1) fail("There are no columns of 4 here.");
       }
  
-      /* Initially assign the center 3 lines to the right (masks[1]/masks[2]/masks[3]) group. */
+      // Initially assign the center 3 lines to the right (masks[1]/masks[2]/masks[3]) group.
       masks[0] = 0xF0; masks[1] = 0xF0; masks[2] = 0xF0; masks[3] = 0xFF;
  
-      /* Look at the center 3 lines of people and put each one in the correct group. */
+      // Look at the center 3 lines of people and put each one in the correct group.
  
       if (cstuff == 8) {
-         masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCC; masks[3] = 0xCF;   /* clockwise */
+         // clockwise
+         masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCC; masks[3] = 0xCF;
       }
       else if (cstuff == 9) {
-         masks[0] = 0xF3; masks[1] = 0x33; masks[2] = 0x33; masks[3] = 0x3F;   /* counterclockwise */
+         // counterclockwise
+         masks[0] = 0xF3; masks[1] = 0x33; masks[2] = 0x33; masks[3] = 0x3F;
       }
-      else {                        /* forward/back/left/right */
+      else {                        // forward/back/left/right
          if ((ss->people[3].id1  + 3 + cstuff) & 2) { masks[2] |= 0x01; masks[3] &= ~0x80; };
          if ((ss->people[6].id1  + 3 + cstuff) & 2) { masks[2] |= 0x02; masks[3] &= ~0x40; };
          if ((ss->people[18].id1 + 3 + cstuff) & 2) { masks[2] |= 0x04; masks[3] &= ~0x20; };
@@ -853,13 +858,13 @@ static void do_concept_multiple_lines_tog(
       }
    }
    else {
-      /* Sextuple C/L/W working. */
+      // Sextuple C/L/W working.
 
       int i;
       uint32 tbonetest = global_tbonetest;
 
-      /* Expanding to a 4x6 is tricky.  See the extensive comments in the
-         function "triple_twin_move" in sdistort.c . */
+      // Expanding to a 4x6 is tricky.  See the extensive comments in the
+      // function "triple_twin_move" in sdistort.c .
 
       if (cstuff < 8) {
          tbonetest = 0;
@@ -883,18 +888,22 @@ static void do_concept_multiple_lines_tog(
          else fail("Can't find the required columns.");
       }
  
-      /* Initially assign the center 3 lines to the right (masks[1]/masks[2]/masks[3]/masks[4]) group. */
+      // Initially assign the center 3 lines to the right
+      // (masks[1]/masks[2]/masks[3]/masks[4]) group.
       masks[0] = 0xF0; masks[1] = 0xF0; masks[2] = 0xF0; masks[3] = 0xF0; masks[4] = 0xFF;
  
-      /* Look at the center 4 lines of people and put each one in the correct group. */
+      // Look at the center 4 lines of people and put each one in the correct group.
  
       if (cstuff == 8) {
-         masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCC; masks[3] = 0xCC; masks[4] = 0xCF;   /* clockwise */
+         // clockwise
+         masks[0] = 0xFC; masks[1] = 0xCC; masks[2] = 0xCC; masks[3] = 0xCC; masks[4] = 0xCF;
       }
       else if (cstuff == 9) {
-         masks[0] = 0xF3; masks[1] = 0x33; masks[2] = 0x33; masks[3] = 0x33; masks[4] = 0x3F;   /* counterclockwise */
+         // counterclockwise
+         masks[0] = 0xF3; masks[1] = 0x33; masks[2] = 0x33; masks[3] = 0x33; masks[4] = 0x3F;
       }
-      else {                        /* forward/back/left/right */
+      else {
+         // forward/back/left/right
          if ((ss->people[ 4].id1 + 3 + cstuff) & 2) { masks[3] |= 0x01; masks[4] &= ~0x80; };
          if ((ss->people[ 7].id1 + 3 + cstuff) & 2) { masks[3] |= 0x02; masks[4] &= ~0x40; };
          if ((ss->people[22].id1 + 3 + cstuff) & 2) { masks[3] |= 0x04; masks[4] &= ~0x20; };
@@ -916,7 +925,32 @@ static void do_concept_multiple_lines_tog(
 
    overlapped_setup_move(ss, MAPCODE(base_setup,parseptr->concept->arg4-1,MPKIND__OVERLAP,base_vert),
       masks, result);
-   result->rotation -= rotfix;   /* Flip the setup back. */
+   result->rotation -= rotfix;   // Flip the setup back.
+}
+
+
+static uint32 get_standard_people(setup *ss, selector_kind who,
+                                  uint32 & tbonetest, uint32 & stdtest)
+{
+   int i, j;
+   tbonetest = 0;
+   stdtest = 0;
+   uint32 livemask = 0;
+   selector_kind saved_selector = current_options.who;
+   
+   current_options.who = who;
+   
+   for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
+      int p = ss->people[i].id1;
+      tbonetest |= p;
+      if (p) {
+         livemask |= j;
+         if (selectp(ss, i)) stdtest |= p;
+      }
+   }
+   
+   current_options.who = saved_selector;
+   return livemask;
 }
 
 
@@ -944,14 +978,15 @@ static void do_concept_parallelogram(
       return;
    }
 
-   /* See if it is followed by "split phantom C/L/W" or "split phantom boxes",
-      in which case we do something esoteric. */
+   // See if it is followed by "split phantom C/L/W" or "split phantom boxes",
+   // in which case we do something esoteric.
 
    const parse_block *next_parseptr;
    final_and_herit_flags junk_concepts;
    junk_concepts.clear_all_herit_and_final_bits();
 
-   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
+   next_parseptr = process_final_concepts(parseptr->next, false, &junk_concepts,
+                                          true, __FILE__, __LINE__);
 
    const parse_block *standard_concept = (parse_block *) 0;
 
@@ -960,18 +995,17 @@ static void do_concept_parallelogram(
        junk_concepts.test_herit_and_final_bits() == 0) {
       standard_concept = next_parseptr;
       junk_concepts.clear_all_herit_and_final_bits();
-      next_parseptr = process_final_concepts(next_parseptr->next, false, &junk_concepts, true, __FILE__, __LINE__);
+      next_parseptr = process_final_concepts(next_parseptr->next, false, &junk_concepts,
+                                             true, __FILE__, __LINE__);
    }
 
-   // The only concepts we are interested in are "split phantom 2x4"
-   // or "split phantom boxes", and only if there are no intervening modifiers.
-   // Shut off all others.
+   // We are only interested in a few concepts, and only if there
+   // are no intervening modifiers.  Shut off the concept if there
+   // are modifiers.
 
    concept_kind kk = next_parseptr->concept->kind;
 
-   if (junk_concepts.test_herit_and_final_bits() != 0 ||
-       ((kk != concept_multiple_boxes || next_parseptr->concept->arg4 != 3) &&
-        next_parseptr->concept->arg3 != MPKIND__SPLIT))
+   if (junk_concepts.test_herit_and_final_bits() != 0)
       kk = concept_comment;
 
    mpkind mk, mkbox;
@@ -1008,21 +1042,38 @@ static void do_concept_parallelogram(
       else fail("Can't find a parallelogram.");
    }
    else if (ss->kind == s4x6 && kk == concept_do_phantom_2x4) {
-      if      (global_livemask == 000740074) mk = MPKIND__OFFS_R_HALF;
-      else if (global_livemask == 000170017) mk = MPKIND__OFFS_L_HALF;
+      // See whether people fit unambiguously
+      // into one parallelogram or the other.
+      if ((global_livemask & 003600360) == 0 && (global_livemask & 060036003) != 0)
+         mk = MPKIND__OFFS_L_HALF;
+      else if ((global_livemask & 060036003) == 0 && (global_livemask & 003600360) != 0)
+         mk = MPKIND__OFFS_R_HALF;
       else fail("Can't find a parallelogram.");
+      warn(warn__pg_hard_to_see);
+   }
+   else if (ss->kind == s4x5 && kk == concept_do_phantom_2x4) {
+      // See whether people fit unambiguously
+      // into one parallelogram or the other.
+      if ((global_livemask & 0x0C030) == 0 && (global_livemask & 0x80601) != 0)
+         mk = MPKIND__OFFS_L_ONEQ;
+      else if ((global_livemask & 0x80601) == 0 && (global_livemask & 0x0C030) != 0)
+         mk = MPKIND__OFFS_R_ONEQ;
+      else fail("Can't find a parallelogram.");
+      warn(warn__1_4_pgram);
       warn(warn__pg_hard_to_see);
    }
    else
       fail("Can't do parallelogram concept from this position.");
 
-   uint32 map_code;
+   phantest_kind phancontrol = phantest_ok;
+   uint32 map_code = ~0UL;
 
    if (kk == concept_do_phantom_2x4 &&
-       (ss->kind == s2x6 || ss->kind == s2x5 || ss->kind == s2x7 || ss->kind == s4x6)) {
-      int linesp = next_parseptr->concept->arg2 & 7;
+       (ss->kind == s2x6 || ss->kind == s2x5 || ss->kind == s2x7 ||
+        ss->kind == s4x5 || ss->kind == s4x6)) {
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
+
       if (ss->kind == s2x5) {
          do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, false);
          if (ss->kind != s4x5) fail("Must have a 4x5 setup for this concept.");
@@ -1032,26 +1083,13 @@ static void do_concept_parallelogram(
          if (ss->kind != s4x6) fail("Must have a 4x6 setup for this concept.");
       }
 
-      if (standard_concept) {
-         int tbonetest = 0;
-         int stdtest = 0;
-         int livemask = 0;
-         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
-         int i, j;
-         selector_kind saved_selector = current_options.who;
+      int linesp = next_parseptr->concept->arg2 & 7;
 
-         current_options.who = standard_concept->options.who;
-      
-         for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
-            int p = ss->people[i].id1;
-            tbonetest |= p;
-            if (p) {
-               livemask |= j;
-               if (selectp(ss, i)) stdtest |= p;
-            }
-         }
-      
-         current_options.who = saved_selector;
+      if (standard_concept) {
+         ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+         uint32 tbonetest;
+         global_livemask = get_standard_people(ss, standard_concept->options.who,
+                                               tbonetest, global_tbonetest);
 
          if (!tbonetest) {
             result->kind = nothing;
@@ -1062,11 +1100,10 @@ static void do_concept_parallelogram(
          if ((tbonetest & 011) != 011)
             fail("People are not T-boned -- 'standard' is meaningless.");
       
-         if (!stdtest) fail("No one is standard.");
-         if ((stdtest & 011) == 011) fail("The standard people are not facing consistently.");
-      
-         global_tbonetest = stdtest;
-         global_livemask = livemask;
+         if (!global_tbonetest)
+            fail("No one is standard.");
+         if ((global_tbonetest & 011) == 011)
+            fail("The standard people are not facing consistently.");
       }
 
       if (linesp & 1) {
@@ -1079,10 +1116,37 @@ static void do_concept_parallelogram(
       if (linesp == 3)
          ss->cmd.cmd_misc_flags |= CMD_MISC__VERIFY_WAVES;
 
+      // Look for "parallelogram split phantom C/L/W"
+      // or "parallelogram stagger/big block/O/butterfly".
+
+      switch (next_parseptr->concept->arg3) {
+      case MPKIND__SPLIT:
+         map_code = MAPCODE(s2x4,2,mk,1);
+         break;
+      case MPKIND__STAG:
+         if (mk == MPKIND__OFFS_L_HALF)
+            map_code = spcmap_lh_stag;
+         else if (mk == MPKIND__OFFS_R_HALF)
+            map_code = spcmap_rh_stag;
+         else if (mk == MPKIND__OFFS_L_ONEQ)
+            map_code = spcmap_lh_stag_1_4;
+         else if (mk == MPKIND__OFFS_R_ONEQ)
+            map_code = spcmap_rh_stag_1_4;
+         break;
+      case MPKIND__O_SPOTS:
+      case MPKIND__X_SPOTS:
+         if (mk == MPKIND__OFFS_L_HALF)
+            map_code = spcmap_lh_ox;
+         else if (mk == MPKIND__OFFS_R_HALF)
+            map_code = spcmap_rh_ox;
+         break;
+      }
+
+      phancontrol = (phantest_kind) next_parseptr->concept->arg1;
       ss->cmd.parseptr = next_parseptr->next;
-      map_code = MAPCODE(s2x4,2,mk,1);
    }
    else if (kk == concept_do_phantom_boxes &&
+            next_parseptr->concept->arg3 == MPKIND__SPLIT &&
             ss->kind == s2x6) {     // Only allow 50% offset.
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_2X8, false);
@@ -1109,7 +1173,10 @@ static void do_concept_parallelogram(
    else
       map_code = MAPCODE(s2x4,1,mk,0);   // Plain parallelogram.
 
-   divided_setup_move(ss, map_code, phantest_ok, true, result);
+   if (map_code == ~0UL)
+      fail("Can't do this concept with parallelogram.");
+
+   divided_setup_move(ss, map_code, phancontrol, true, result);
 
    // The split-axis bits are gone.  If someone needs them, we have work to do.
    result->result_flags.clear_split_info();
@@ -2609,22 +2676,43 @@ static void do_concept_new_stretch(
       parse_block *next_parseptr = process_final_concepts(parseptr->next, false,
                                                           &junk_concepts, true, __FILE__, __LINE__);
 
-      if ((next_parseptr->concept->kind != concept_randomtrngl &&
-          next_parseptr->concept->kind != concept_selbasedtrngl) ||
-          junk_concepts.test_herit_and_final_bits())
-         fail("\"Stretched\" concept must be followed by triangle concept.");
-
-      if (tempsetup.kind == s_hrglass) {
-         swap_people(&tempsetup, 3, 7);
+      if ((next_parseptr->concept->kind == concept_randomtrngl ||
+          next_parseptr->concept->kind == concept_selbasedtrngl) &&
+          junk_concepts.test_herit_and_final_bits() == 0) {
+         if (tempsetup.kind == s_hrglass) {
+            swap_people(&tempsetup, 3, 7);
+         }
+         else if (tempsetup.kind == s_ptpd &&
+                  next_parseptr->concept->kind == concept_randomtrngl &&
+                  next_parseptr->concept->arg1 == 2) {
+            // We require "inside triangles".
+            swap_people(&tempsetup, 2, 6);
+         }
+         else
+            fail("Stretched setup call didn't start in appropriate setup.");
       }
-      else if (tempsetup.kind == s_ptpd &&
-               next_parseptr->concept->kind == concept_randomtrngl &&
-               next_parseptr->concept->arg1 == 2) {
-         // We require "inside triangles".
-         swap_people(&tempsetup, 2, 6);
+      else if (next_parseptr->concept->kind == concept_do_phantom_2x4 &&
+               next_parseptr->concept->arg3 == MPKIND__SPLIT &&
+               junk_concepts.test_herit_and_final_bits() == 0) {
+         if (tempsetup.kind == s4x4 && ((global_tbonetest & 011) != 011)) {
+            if ((global_tbonetest ^ next_parseptr->concept->arg2) & 1) {
+               swap_people(&tempsetup, 1, 2);
+               swap_people(&tempsetup, 3, 7);
+               swap_people(&tempsetup, 15, 11);
+               swap_people(&tempsetup, 10, 9);
+            }
+            else {
+               swap_people(&tempsetup, 13, 14);
+               swap_people(&tempsetup, 15, 3);
+               swap_people(&tempsetup, 11, 7);
+               swap_people(&tempsetup, 6, 5);
+            }
+         }
+         else
+            fail("Stretched setup call didn't start in appropriate setup.");
       }
       else
-         fail("Stretched setup call didn't start in appropriate setup.");
+         fail("\"Stretched\" concept must be followed by triangle or split phantom concept.");
 
       move(&tempsetup, false, result);
       return;
@@ -7091,17 +7179,14 @@ extern bool do_big_concept(
    if (this_kind == concept_standard) {
       parse_block *substandard_concptptr;
       final_and_herit_flags junk_concepts;
-      int tbonetest = 0;
-      int stdtest = 0;
-      int livemask = 0;
 
       // Skip to the phantom-line (or whatever) concept
       // by going over the "standard" and skipping comments.
 
       junk_concepts.clear_all_herit_and_final_bits();
       substandard_concptptr = process_final_concepts(orig_concept_parse_block->next,
-                                                     true,
-                                                     &junk_concepts, true, __FILE__, __LINE__);
+                                                     true, &junk_concepts,
+                                                     true, __FILE__, __LINE__);
    
       // If we hit "matrix", do a little extra stuff and continue.
 
@@ -7109,8 +7194,8 @@ extern bool do_big_concept(
           substandard_concptptr->concept->kind == concept_matrix) {
          ss->cmd.cmd_misc_flags |= CMD_MISC__MATRIX_CONCEPT;
          substandard_concptptr = process_final_concepts(substandard_concptptr->next,
-                                                        true,
-                                                        &junk_concepts, true, __FILE__, __LINE__);
+                                                        true, &junk_concepts,
+                                                        true, __FILE__, __LINE__);
       }
 
       if (junk_concepts.test_herit_and_final_bits() != 0 ||
@@ -7145,23 +7230,10 @@ extern bool do_big_concept(
 
       if (attr::slimit(ss) < 0) fail("Can't do this concept in this setup.");
    
-      {
-         int i, j;
-         selector_kind saved_selector = current_options.who;
-   
-         current_options.who = this_concept_parse_block->options.who;
-   
-         for (i=0, j=1; i<=attr::slimit(ss); i++, j<<=1) {
-            int p = ss->people[i].id1;
-            tbonetest |= p;
-            if (p) {
-               livemask |= j;
-               if (selectp(ss, i)) stdtest |= p;
-            }
-         }
-   
-         current_options.who = saved_selector;
-      }
+      uint32 tbonetest;
+      uint32 stdtest;
+      int livemask = get_standard_people(ss, this_concept_parse_block->options.who,
+                                         tbonetest, stdtest);
    
       if (!tbonetest) {
          result->kind = nothing;

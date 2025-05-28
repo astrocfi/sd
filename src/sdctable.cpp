@@ -1450,6 +1450,8 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 4},
    {"STRETCHED DIAMOND",                     concept_new_stretch,             D, l_c3a,
     UC_none, 19},
+   {"STRETCHED 1/4 TAG",                     concept_new_stretch,             D, l_c3a,
+    UC_none, 19},
    {"STRETCHED",                             concept_new_stretch,             D, l_c3a,
     UC_none, 20},
    {"FERRIS",                                concept_ferris,                  D, l_c3x,

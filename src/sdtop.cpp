@@ -1658,6 +1658,8 @@ restriction_tester::restr_initializer restriction_tester::restr_init_table0[] = 
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_thar, cr_1fl_only, 8, {0, 3, 1, 2, 6, 5, 7, 4},
     {0}, {0}, {0}, false, chk_wave},
+   {s_thar, cr_miniwaves, 1, {0, 2, 4, 6, 1, 3, 5, 7},
+    {4}, {0}, {0}, false,  chk_anti_groups},
    {s_thar, cr_magic_only, 8, {0, 1, 3, 2, 5, 4, 6, 7},
     /* NOTE THE 4 --> */{4}, {0}, {0}, true,  chk_wave},
    {s_crosswave, cr_wave_only, 8, {0, 1, 2, 3, 5, 4, 7, 6},
@@ -3515,7 +3517,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec) THROW_DECL
          switch (ssK) {
          case s1x2: case s1x4: case s1x6: case s1x8: case s1x16: case s2x4:
          case sdmd: case s_trngl: case s_qtag: case s_ptpd: case s_bone:
-         case s2x2:
+         case s2x2: case s_thar:
             goto fix_col_line_stuff;
          default:
             goto good;                 /* We don't understand the setup --

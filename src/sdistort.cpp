@@ -45,14 +45,14 @@
 #include "sd.h"
 
 
-const tglmap::map *tglmap::ptrtable[tgl_ENUMLAST];
+const tglmap::map *tglmap::ptrtable[tgl_ENUM_EXTENT];
 
 void tglmap::initialize()
 {
    int i;
    const map *tabp;
 
-   for (i=tgl0 ; i<tgl_ENUMLAST ; i++) ptrtable[i] = (map *) 0;
+   for (i=tgl0 ; i<tgl_ENUM_EXTENT ; i++) ptrtable[i] = (map *) 0;
 
    for (tabp = init_table ; tabp->mykey != tgl0 ; tabp++) {
       if (ptrtable[tabp->mykey])
@@ -60,7 +60,7 @@ void tglmap::initialize()
       ptrtable[tabp->mykey] = tabp;
    }
 
-   for (i=tgl0+1 ; i<tgl_ENUMLAST ; i++) {
+   for (i=tgl0+1 ; i<tgl_ENUM_EXTENT ; i++) {
       if (!ptrtable[i])
          gg->fatal_error_exit(1, "Tgl_map table initialization failed", "undef");
    }

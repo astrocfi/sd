@@ -541,7 +541,7 @@ enum useful_concept_enum {
   UC_3x3,
   UC_4x4,
   UC_2x8matrix,
-  UC_extent    // Not a selector; indicates extent of the enum.
+  UC_extent    // Not an item; indicates extent of the enum.
 };
 
 // Some versions of gcc don't like the class "concept", so we change the spelling.
@@ -639,8 +639,20 @@ enum selector_kind {
    selector_center_col,
    selector_center_box,
    selector_outerpairs,
+   selector_firstone,
+   selector_lastone,
+   selector_firsttwo,
+   selector_lasttwo,
+   selector_firstthree,
+   selector_lastthree,
+   selector_leftmostone,
+   selector_rightmostone,
+   selector_leftmosttwo,
+   selector_rightmosttwo,
+   selector_leftmostthree,
+   selector_rightmostthree,
 #ifdef TGL_SELECTORS
-   /* Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c . */
+   // Taken out.  Not convinced these are right.  See also sdutil.c, sdpreds.c .
    selector_wvbasetgl,
    selector_tndbasetgl,
    selector_insidetgl,
@@ -682,8 +694,7 @@ enum selector_kind {
    // Start of invisible selectors.
    selector_INVISIBLE_START,   selector_mysticbeaus = selector_INVISIBLE_START,
    selector_mysticbelles,
-   // Not a selector; indicates extent of the enum.
-   selector_ENUM_EXTENT
+   selector_ENUM_EXTENT   // Not a selector; indicates extent of the enum.
 };
 
 // BEWARE!!  This list must track the array "direction_names" in sdutil.cpp .
@@ -1438,6 +1449,8 @@ class select {
       fx_foo22,
       fx_foo44,
       fx_foo88,
+      fx_foo77,
+      fx_fooEE,
       fx_n1x43,
       fx_n1x4c,
       fx_n1x45,
@@ -1768,7 +1781,7 @@ class select {
       fx_bar55d,
       fx_fppaad,
       fx_fpp55d,
-      fx_ENUMLAST    // Not actually in the table.
+      fx_ENUM_EXTENT   // Not a fixer; indicates extent of the enum.
    };
 
    // We make this a struct inside the class, rather than having its
@@ -1826,7 +1839,7 @@ class select {
  public:
 
    // In sdconc.
-   static fixer *fixer_ptr_table[fx_ENUMLAST];
+   static fixer *fixer_ptr_table[fx_ENUM_EXTENT];
    static void initialize();             // In sdconc.
 
    // In sdconc.
@@ -1857,7 +1870,7 @@ class tglmap {
       tglmap1k,
       tglmap2k,
       tglmap2r,
-      tgl_ENUMLAST    // Not actually in the table.
+      tgl_ENUM_EXTENT   // Not a key; indicates extent of the enum.
    };
 
    // We make this a struct inside the class, rather than having its
@@ -1888,7 +1901,7 @@ class tglmap {
    static const map init_table[];
 
    // The pointer table, constructed during initialization.
-   static const map *ptrtable[tgl_ENUMLAST];
+   static const map *ptrtable[tgl_ENUM_EXTENT];
 
  public:
 
@@ -3868,6 +3881,7 @@ extern int number_for_initialize;                                   /* in SDINIT
 extern SDLIB_API int *color_index_list;                             /* in SDINIT */
 
 extern SDLIB_API error_flag_type global_error_flag;                 /* in SDUTIL */
+extern SDLIB_API bool global_cache_failed_flag;                     /* in SDUTIL */
 extern SDLIB_API uims_reply global_reply;                           /* in SDUTIL */
 extern SDLIB_API int global_age;                                    /* in SDUTIL */
 extern bool global_leave_missing_calls_blank;                       /* in SDUTIL */
@@ -4117,6 +4131,12 @@ enum specmapkind {
    spcmap_trngl_box1,
    spcmap_trngl_box2,
    spcmap_inner_box,
+   spcmap_lh_stag,
+   spcmap_rh_stag,
+   spcmap_lh_stag_1_4,
+   spcmap_rh_stag_1_4,
+   spcmap_lh_ox,
+   spcmap_rh_ox,
    spcmap_lh_c1phana,
    spcmap_lh_c1phanb,
    spcmap_rh_c1phana,
@@ -4400,7 +4420,7 @@ extern void process_number_insertion(uint32 mod_word);
 extern bool get_real_subcall(
    parse_block *parseptr,
    const by_def_item *item,
-   setup_command *cmd_in,
+   const setup_command *cmd_in,
    const calldefn *parent_call,
    bool forbid_flip,
    uint32 extra_heritmask_bits,

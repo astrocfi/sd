@@ -1150,8 +1150,8 @@ extern void tandem_couples_move(
             fail("Can't find designated point.");
       }
       else if (key != tandem_key_anyone_tgls || ss->kind != s_c1phan)
-         /* For <anyone>-based triangles in C1-phantom,
-            we just use whatever selector was given. */
+         // For <anyone>-based triangles in C1-phantom,
+         // we just use whatever selector was given.
          fail("Can't find these triangles.");
    }
    else if (key == tandem_key_diamond) {
@@ -1162,11 +1162,11 @@ extern void tandem_couples_move(
       np = 4;
       our_map_table = maps_isearch_boxsome;
    }
-   else if (key >= 8) {
+   else if (key >= tandem_key_tand4) {
       np = 4;
       our_map_table = maps_isearch_foursome;
    }
-   else if (key >= 4) {
+   else if (key >= tandem_key_tand3) {
       np = 3;
       our_map_table = maps_isearch_threesome;
    }
