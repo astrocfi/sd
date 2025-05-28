@@ -1,7 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2000  William B. Ackerman.
-    Copyright (C) 1996 Charles Petzold.
+    Copyright (C) 1990-1999  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -11,10 +10,12 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 34. */
+    This is for version 32. */
 
 /* This defines the following functions:
-   iofull::choose_font
+   uims_choose_font
+   uims_print_this
+   uims_print_any
 */
 
 #define STRICT
@@ -27,17 +28,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "paths.h"
+#include "basetype.h"
+#include "sdui.h"
 #include "resource.h"
 void windows_init_printer_font(HWND hwnd, HDC hdc);
-extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance,
-                               const char *filename);
+extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
-void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
+void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance);
 
 
-#if defined(_MSC_VER)
 #pragma comment(lib, "comctl32")
-#endif
 
 
 static LOGFONT lf;
@@ -101,12 +102,12 @@ BOOL CALLBACK PrintDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       return TRUE;
    }
    return FALSE;
-}
+}          
 
 BOOL CALLBACK PrintAbortProc(HDC hPrinterDC, int iCode)
 {
    MSG msg;
-
+     
    while (!bUserAbort && PeekMessage (&msg, NULL, 0, 0, PM_REMOVE)) {
       if (!hDlgPrint || !IsDialogMessage (hDlgPrint, &msg)) {
          TranslateMessage(&msg);
@@ -117,23 +118,20 @@ BOOL CALLBACK PrintAbortProc(HDC hPrinterDC, int iCode)
 }
 
 
-// We make this really large.  Memory is cheap.  Bugs aren't.
-#define PRINT_LINE_LENGTH 500
-
-void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
+void PrintFile(char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
 {
    BOOL            bSuccess;
    TEXTMETRIC      tm;
 
    // Invoke Print common dialog box
-
+     
    ZeroMemory(&pd, sizeof(PRINTDLG));   // Don't keep selections around.
    pd.lStructSize = sizeof(PRINTDLG);
    pd.hwndOwner = hwnd;
    pd.Flags = PD_ALLPAGES | PD_NOPAGENUMS | PD_RETURNDC |
       PD_NOSELECTION | PD_DISABLEPRINTTOFILE | PD_HIDEPRINTTOFILE;
    pd.nCopies = 1;
-
+     
    if (!PrintDlg(&pd)) return;
 
    HDC hdcPrn = pd.hDC;
@@ -149,7 +147,7 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
    SelectObject(hdcPrn, CreateFontIndirect(&printerlf));
 
    // Font is now ready.  Find out how big it is.
-
+     
    GetTextMetrics(hdcPrn, &tm);
    int iPixelLineHeight = tm.tmHeight + tm.tmExternalLeading;
 
@@ -163,18 +161,17 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
    // This is where we choose to stop printing.  It must not be greater than
    // "GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight", that is, we must subtract
    // iPixelLineHeight.  If we set it to exactly that value, we print to the bottom
-   // of the page.  So we subtract twice that value to get a reasonable
-   // bottom margin.
-   int iPixelBottomOfPage = GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight*2;
+   // of the page.  That seems to look right.
+   int iPixelBottomOfPage = GetDeviceCaps(hdcPrn, VERTRES)-iPixelLineHeight;
 
    // Display the printing dialog box
-
+     
    EnableWindow(hwnd, FALSE);
-
+     
    bSuccess = TRUE;
    bUserAbort = FALSE;
-
-   hDlgPrint = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_PRINTING_DIALOG),
+     
+   hDlgPrint = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_PRINTING_DIALOG), 
                             hwnd, (DLGPROC) PrintDlgProc);
 
    SetDlgItemText(hDlgPrint, IDC_FILENAME, szFileName);
@@ -184,7 +181,7 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
    ZeroMemory(&di, sizeof(DOCINFO));
    di.cbSize = sizeof(DOCINFO);
    di.lpszDocName = szMainTitle;
-
+     
    FILE *fildes = fopen(szFileName, "r");
    if (!fildes) {
       bSuccess = FALSE;
@@ -254,16 +251,14 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
                   if (fgetpos(fildes, &fposLineStart))
                      break;
 
-                  char pstrBuffer[PRINT_LINE_LENGTH+1];
-                  if (!fgets(pstrBuffer, PRINT_LINE_LENGTH, fildes)) {
+                  char pstrBuffer[INPUT_TEXTLINE_SIZE+1];
+                  if (!fgets(pstrBuffer, INPUT_TEXTLINE_SIZE, fildes)) {
                      bEOF = true;
                      break;
                   }
-
                   // Strip off any <NEWLINE> -- we don't want it.  Note that, since
                   // we are using a POSIX call to read the file, we get POSIX-style
                   // line breaks -- just '\n'.
-
                   int j = strlen(pstrBuffer);
                   if (j>0 && pstrBuffer[j-1] == '\n')
                      pstrBuffer[j-1] = '\0';
@@ -288,42 +283,42 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
 
                   TextOut (hdcPrn, 0, iRasterPos, pstrBuffer, strlen(pstrBuffer));
                }
-
+                         
                if (bPageIsOpen) {
                   if (EndPage (hdcPrn) < 0) {
                      bSuccess = FALSE;
                      goto print_failed;
                   }
                }
-
+                         
                if (bUserAbort)
                   break;
             }
-
+                    
             if (!bSuccess || bUserAbort)
                break;
          }
-
+               
          if (!bSuccess || bUserAbort)
             break;
       }
    }
    else
       bSuccess = FALSE;
-
+     
    if (bSuccess)
       EndDoc(hdcPrn);
-
+     
  print_failed:
 
    if (!bUserAbort) {
       EnableWindow(hwnd, TRUE);
       DestroyWindow(hDlgPrint);
    }
-
+     
    if (fildes) (void) fclose(fildes);
    DeleteDC(hdcPrn);
-
+     
    if (!(bSuccess && !bUserAbort)) {
      char szBuffer[MAX_PATH + 64];
      wsprintf(szBuffer, "Could not print file %s", szFileName);
@@ -332,7 +327,9 @@ void PrintFile(const char *szFileName, HWND hwnd, char *szMainTitle, HINSTANCE h
 }
 
 
-void windows_choose_font()
+
+
+extern long_boolean uims_choose_font()
 {
    // This operation will take place in the context of the display
    // rather than the printer, but we have to do it that way, because
@@ -353,13 +350,13 @@ void windows_choose_font()
    // Now "lf" has all the info, though it is, unfortunately, calibrated
    // for the display.  Also, "cf.iPointSize" has the point size times 10,
    // which is, fortunately, invariant.
+   return TRUE;
 }
 
 
-extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance,
-                               const char *filename)
+extern void windows_print_this(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
 {
-   PrintFile(filename, hwnd, szMainTitle, hInstance);
+   PrintFile(outfile_string, hwnd, szMainTitle, hInstance);
 }
 
 
@@ -369,8 +366,6 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
    char szCurDir[_MAX_PATH];
    char szFileToPrint[_MAX_PATH];
    OPENFILENAME ofn;
-   static const char szFilter[] = "Text Files (*.txt)\0*.txt\0" \
-      "All Files (*.*)\0*.*\0";
 
    (void) GetCurrentDirectory(_MAX_PATH, szCurDir);
 
@@ -381,16 +376,16 @@ extern void windows_print_any(HWND hwnd, char *szMainTitle, HINSTANCE hInstance)
    ofn.lStructSize = sizeof(OPENFILENAME);
    if (szPrintDir[0])
       ofn.lpstrInitialDir = szPrintDir;
-   else
+   else      
       ofn.lpstrInitialDir = "";
    ofn.hwndOwner = hwnd;
-   ofn.lpstrFilter = szFilter;
+   ofn.lpstrFilter = 0;
    ofn.lpstrFile = szFileToPrint;
    ofn.nMaxFile = _MAX_PATH;
    ofn.lpstrFileTitle = 0;
    ofn.nMaxFileTitle = 0;
    ofn.Flags = OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST;
-   ofn.lpstrDefExt = "txt";
+   ofn.lpstrDefExt = "";
 
    if (!GetOpenFileName(&ofn))
       return;     // Take no action if we didn't get a file name.

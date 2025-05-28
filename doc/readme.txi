@@ -209,10 +209,10 @@ A somewhat different version runs on Unix systems running the X Window System in
 The most straightforward way to obtain @code{Sd} or @code{Sdtty} is to
 download the program from
 @ifclear html
-@t{http://www.lynette.org/sd/}
+@t{http://www.gildea.com/sd/}
 @end ifclear
 @ifset html
-@t{<A HREF="http://www.lynette.org/sd/">http://www.lynette.org/sd/</A>}
+@t{<A HREF="http://www.gildea.com/sd/">http://www.gildea.com/sd/</A>}
 @end ifset
 on the World Wide Web.  The reference manual and other documentation may be
 browsed there or downloaded for your local use as well.
@@ -224,16 +224,53 @@ The price is $4 (price valid for 2000).
 @xref{Author Contact}.
 @end ifset
 
+Sd and Sdtty are also available via FTP from the directory
+@file{sd/} on host ftp.gildea.com.
+FTP is the Internet file transfer protocol.
+
+The file
+@ifclear html
+@file{install.exe}
+@end ifclear
+@ifset html
+@file{<A HREF="ftp://ftp.gildea.com/sd/install.exe">install.exe</A>}
+@end ifset
+is the @code{Sd} program for installation on PC's.  It is the same file as
+@samp{INSTALL.EXE} that is furnished on a floppy disk.
+
+Pre-built versions for various Unix-style systems are available in the same
+@ifclear html
+FTP directory;
+@end ifclear
+@ifset html
+<A HREF="ftp://ftp.gildea.com/sd/">FTP directory</A>;
+@end ifset
+check to see if there is a binary for your platform.
+The file
+@ifclear html
+@file{Manifest}
+@end ifclear
+@ifset html
+@file{<A HREF="ftp://ftp.gildea.com/sd/Manifest">Manifest</A>}
+@end ifset
+contains a description of all the files in this directory.
+
+If you choose to download by an FTP connection, you must transfer the files in binary mode.
+
+If your mailer can interpret MIME messages, we can also send you Sd
+by email.  MIME is a draft Internet standard for structured mail, and
+it includes support for mailing large binary files.
+
 @node Documentation, Software Safety, Getting Sd or Sdtty, Intro
 @unnumberedsec Documentation
 
 If you are on the Internet, you can browse or download @code{Sd}/@code{Sdtty}
 documentation from
 @ifclear html
-@t{http://www.lynette.org/sd/readings.html}
+@t{http://www.gildea.com/sd/readings.html}
 @end ifclear
 @ifset html
-@t{<A HREF="http://www.lynette.org/sd/readings.html">http://www.lynette.org/sd/readings.html</A>}
+@t{<A HREF="http://www.gildea.com/sd/readings.html">http://www.gildea.com/sd/readings.html</A>}
 @end ifset
 on the World Wide Web.  The documentation is the same for the two programs.
 
@@ -357,10 +394,9 @@ directory.
 When the installation is complete, the programs will be in the @file{Sd}
 subfolder of the @file{Programs} folder of the Start Menu.  The installation
 procedure also leaves an Explorer open on the shortcut icons.
-There are several icons for starting @code{Sd} or @code{Sdtty} with various
-color schemes, for browsing the manual or release notes,
-and for editing the initialization file.  You may copy any or all of these
-from the open Explorer to the Desktop
+There are 3 icons: one for @code{Sd}, one for @code{Sdtty},
+and one for editing the initialization
+file.  You may copy any or all of these from the open Explorer to the Desktop
 and/or the Start Menu.  To do this, perform a drag-and-drop operation,
 using the right mouse button.  If the system asks, select ``Copy Here''.
 To place icons in on the Desktop, just perform a right-mouse drag-and-drop
@@ -436,6 +472,17 @@ but modification of them is forbidden by copyright law.
 @node Author Contact, Acknowledgements, Licensing Terms, Intro
 @unnumberedsec How to Contact the Authors
 
+The Internet mailing list @code{sd}, hosted at @code{lists.best.com}, is for
+discussion of Sd
+and announcements of new versions.  Send email to
+@ifclear html
+@code{sd-request@@lists.best.com}
+@end ifclear
+@ifset html
+@code{<A HREF="mailto:sd-request@@lists.best.com">sd-request@@lists.best.com</A>}
+@end ifset
+to be added.
+
 Please send any praise, bug reports, or other comments on Sd
 to the authors at the addresses given below.
 Be sure to include the version number.
@@ -451,7 +498,7 @@ Stephen Gildea
 @ifset html
 <A HREF="http://www.gildea.com/stephen/">Stephen Gildea</A>
 @end ifset
-gildea@@.stop.mail-abuse.org
+stephen@@gildea.com
 @end display
 
 If you do not have access to electronic mail, write to
@@ -478,6 +525,6 @@ was contributed by Alan Snyder.
 The @code{Sd} interface for Windows was contributed by Robert Cays.
 
 We received helpful feedback and testing from Robert French, Judy
-Anderson, Bill van Melle, Tom Rinker, Lois Lew, Ron Nicholson, Dave Decot,
+Anderson, Bill van Melle, Lois Lew, Ron Nicholson, Dave Decot,
 Kristin Jensen, Larry Dunn, and Nick Martellacci.
 @end ifset

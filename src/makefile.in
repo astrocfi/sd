@@ -1,0 +1,294 @@
+# Makefile for Sd (square dance caller's helper)
+# Time-stamp: <1998-06-16 21:54:55 gildea>
+
+srcdir = @srcdir@
+# VPATH is for GNU make
+VPATH = @srcdir@
+
+# This gives the compiler name and any switches that it needs to make
+# it operate the way we want (ANSI language, standards conformance,
+# target hardware, etc.)
+# To get gcc on Athena, "add outland" before running "configure".
+CC = @CC@
+
+# This gives any "-D" switches that we always need to send to the compiler.
+DEFS = @DEFS@
+
+# This gives the optimization and/or debug info.  These flags presumably
+# don't affect the semantics of the language and run-time environment, so you
+# might reasonably want to change them to suit your taste.
+# The options shown here have been chosen to optimize the program for
+# production use.  Depending on your operating system, compiler, and debugger,
+# this may compromise the ability to debug the program.  In this case, you may
+# need to choose different options, typically "-g", for debugging.
+# Consult your system, compiler, and debugger vendor for further information.
+CDEBUGFLAGS = @CDEBUGFLAGS@
+
+CFLAGS = $(DEFS) $(CDEBUGFLAGS)
+
+# These are the "-I"  and "-D" flags that we must use for the compilation
+# of the X11 user interface (sdui-x11.c).
+X11_FLAGS = @X11_FLAGS@
+
+# These are the "-I"  and "-D" flags that we must use for the compilation
+# of the system-dependent part of the TTY user interface (sdui-ttu.c).
+TTY_FLAGS = @TTY_FLAGS@
+
+# These are the library flags that we must use for the final bind of
+# the X11 version of "sd".
+X11_LIBS = @X11_LIBS@
+
+# These are the library flags that we must use for the final bind of
+# "sdtty".
+TTY_LIBS = @TTY_LIBS@
+
+SD_SRCS = sdmain.c sdinit.c sdutil.c sdbasic.c \
+          sdtables.c sdctable.c sdtop.c sdconcpt.c sdpreds.c \
+          sdgetout.c sdmoves.c sdtand.c sdconc.c sdistort.c \
+          sdpick.c sdsi.c
+
+SD_OBJS = sdmain.o sdinit.o sdutil.o sdbasic.o \
+          sdtables.o sdctable.o sdtop.o sdconcpt.o sdpreds.o \
+          sdgetout.o sdmoves.o sdtand.o sdconc.o sdistort.o \
+          sdpick.o sdsi.o
+
+SDX11_SRC = sdui-x11.c
+SDX11_OBJ = sdui-x11.o
+
+# This has all special source files for sdtty,
+# for making the distribution and running lint.
+SDTTY_SRC = sdui-tty.c sdmatch.c sdui-ttu.c sdui-tpc.c
+SDTTY_OBJ_UNIX = sdui-tty.o sdmatch.o sdui-ttu.o
+SDTTY_OBJ_PC   = sdui-tty.o sdmatch.o sdui-tpc.o
+# This has the special object files used for building this version of sdtty.
+SDTTY_OBJ = @SDTTY_OBJ@
+
+SDTTY_OBJS = @SDTTY_OBJS@
+
+MKCALLS_SRCS = mkcalls.c dbcomp.c
+MKCALLS_OBJS = mkcalls.o dbcomp.o
+
+SRCS = $(SD_SRCS) $(SDX11_SRC) $(SDTTY_SRC) $(MKCALLS_SRCS)
+OBJS = $(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ) $(MKCALLS_OBJS)
+
+all: @DEFAULT_TARGET@
+allx11: sd sd_calls.dat
+alltty: sdtty sd_calls.dat
+everything: allx11 sdtty
+
+LDPRELIBS = @STATIC@
+LDPOSTLIBS = @DYNAMIC@
+
+sd: $(SD_OBJS) $(SDX11_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SD_OBJS) $(SDX11_OBJ) $(LDPRELIBS) $(X11_LIBS) $(LDPOSTLIBS)
+
+mkcalls: $(MKCALLS_OBJS)
+	$(CC) $(CFLAGS) -o $@ $(MKCALLS_OBJS)
+@STRIP@
+@COFF2EXE@
+
+# The coff2exe program is for djgpp on DOS
+
+sdtty: $(SD_OBJS) $(SDTTY_OBJ)
+	$(CC) $(CFLAGS) -o $@ $(SDTTY_OBJS) $(TTY_LIBS)
+@STRIP@
+@COFF2EXE@
+
+sd_calls.dat: sd_calls.txt mkcalls
+	./mkcalls $(srcdir)/sd_calls.txt
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+# sdui-x11.c may need -D_POSIX_SOURCE with gcc 1.40 on Ultrix 4.2
+
+sdui-x11.o: sdui-x11.c
+	$(CC) $(CFLAGS) $(X11_FLAGS) -c $(srcdir)/$*.c
+
+sdui-ttu.o: sdui-ttu.c
+	$(CC) $(CFLAGS) $(TTY_FLAGS) -c $(srcdir)/$*.c
+
+dbcomp.o sdmain.o sdsi.o sdui-x11.o: paths.h
+
+dbcomp.o: database.h
+
+$(SD_OBJS) $(SDX11_OBJ) $(SDTTY_OBJ): sd.h database.h
+
+$(SDTTY_OBJ): sdmatch.h
+
+configure: configure.in
+	-cd "$(srcdir)" && autoconf
+
+config.status: configure sdmain.c
+	./config.status --recheck
+
+Makefile: Makefile.in config.status
+	./config.status
+
+info: sd_doc.info
+dvi: sd_doc.dvi
+ps: sd_doc.ps
+html: sd_doc_toc.html
+
+DOCSRCS = sd_doc.txi readme.txi install.txi gpl.txi
+
+sd_doc.dvi sd_doc.info sd_doc.txt sd_doc_toc.html: $(DOCSRCS)
+
+# additional suffixes used for the documentation
+.SUFFIXES: .dvi .info .txt .txi
+
+RM = rm -f
+
+MAKEINFO = makeinfo --no-split
+MAKE_ASCII = makeinfo --no-split --no-headers
+TXI2DVI = tex
+DVIPS = dvips
+TXI2HTML = texi2html
+@SET_MAKE@
+
+# We do it twice, so cross references will be reconciled.
+.txi.dvi:
+	$(TXI2DVI) $<
+	$(TXI2DVI) $<
+
+.txi.info:
+	$(MAKEINFO) -I$(srcdir) $<
+
+.txi.txt:
+	$(MAKE_ASCII) -o $@ -I$(srcdir) $<
+
+.txi.html:
+	$(TXI2HTML) $<
+
+sd_doc.ps: sd_doc.dvi
+	$(DVIPS) -o $@ $?
+
+sessions.ps: sessions.dvi
+	$(DVIPS) -o $@ $?
+
+relnotes.ps: relnotes.dvi
+	$(DVIPS) -o $@ $?
+
+demo.ps: demo.dvi
+	$(DVIPS) -o $@ $?
+
+# These large documents have two Web forms: monolithic and split
+
+sd_doc.html:
+	$(TXI2HTML) -monolithic sd_doc.txi
+
+sd_doc_toc.html: sd_doc.txi
+	$(TXI2HTML) -split_node -menu sd_doc.txi
+
+sessions.html:
+	$(TXI2HTML) -monolithic sessions.txi
+
+sessions_toc.html: sessions.txi
+	$(TXI2HTML) -split_chapter -menu sessions.txi
+
+
+# Stephen's fancy way of producing a pretty, compact PostScript file.
+# You don't want to know.
+sd_doc.PS: $(DOCSRCS)
+	if [ -r make-ps ]; then make-ps $@ $(DOCSRCS); \
+	else $(MAKE) sd_doc.ps && mv sd_doc.ps sd_doc.PS; fi
+
+INSTALL: install.txi
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/install.txi
+
+README: readme.txi
+	$(MAKE_ASCII) -o $@ --no-validate $(srcdir)/readme.txi
+
+
+docclean:
+	-$(RM) *.aux *.log *.toc *.dvi
+	-$(RM) *.cp *.cps *.fn *.fns *.ky *.kys *.pg *.pgs *.tp *.tps *.vr *.vrs
+
+clean:: docclean
+clean::
+	-$(RM) *.o sd sdtty mkcalls sd_calls.dat
+	-$(RM) lint.out
+
+distclean: clean
+	-$(RM) sequence.*
+	-$(RM) *~ core
+	-$(RM) *.tar *.tar$(COMPRESS_SUF)
+
+realclean: distclean
+	-$(RM) *.info *.PS *.html sd_doc.txt sd_doc.ps
+
+LINT = /usr/lang/alint
+
+lint:
+	$(LINT) -ux $(SD_SRCS) $(SDX11_SRC)
+
+DISTTXT = README INSTALL oldnotes COPYING sample1.ini sample2.ini demo.ps demo.txt sessions.ps sessions.txt \
+            relnotes.ps relnotes.txt \
+            Imakefile Makefile.in configure.in configure Sd.res sd_calls.txt \
+            sd_doc.PS sd_doc.txt db_doc.txt
+DISTSRCS = sd.h database.h paths.h sdui-ttu.h sdmatch.h
+MACFILES = MacSd.p.Hqx MacSd.p.rsrc.Hqx Macwdef.p.Hqx \
+            macalert.c maccomp.c macdlog.c macevent.c macguts.h maclabel.c \
+            macmatch.c macmenu.c macpref.c macrec.c macsel.c macstart.c \
+            macstuff.c mactext.c macutil.c macwdef.c macwin.c macwmgr.c \
+            sdsi-mac.c sdui-mac.c
+PCFILES = pcfiles.lnk makefile.pc
+DISTFILES = $(DISTTXT) $(DOCSRCS) $(SRCS) $(DISTSRCS) $(PCFILES)
+
+TAR = tar
+TARFLAGS = @TARFLAGS@
+DIST_TARFILE = sd-@VERSION@.tar
+COMPRESS_SUF = .gz
+COMPRESS = gzip
+
+dist: dist-files
+	$(TAR) $(TARFLAGS) $(DIST_TARFILE) $(DISTFILES)
+	$(RM) $(DIST_TARFILE)$(COMPRESS_SUF)
+	$(COMPRESS) $(DIST_TARFILE)
+
+dist-files: configure Makefile INSTALL README sd_doc.txt sd_doc.PS \
+            demo.ps demo.txt sessions.ps sessions.txt relnotes.ps relnotes.txt pc-files
+
+ls:
+	@echo $(DISTFILES)
+
+pcdist: install
+
+install: sdtty.exe mkcalls.exe sd_calls.dat
+	lha a $@ readme oldnotes
+	lha a $@ sdtty.exe mkcalls.exe cwsdpmi.exe sdtty.pif
+	lha a $@ sample1.ini sample2.ini demo.txt demo.ps sessions.txt sessions.ps relnotes.txt relnotes.ps
+	lha a $@ sd_calls.txt sd_calls.dat
+	lha a $@ sd_doc.txt sd_doc.ps
+	lha s $@
+
+BIN_TARFILE = sd-@VERSION@-@SYSTEM@.tar
+
+@BINDIST_RULE@
+
+TARFILES1 = README
+TARFILES2 = sd sdtty mkcalls \
+	 sample1.ini sample2.ini \
+	 sd_calls.txt sd_calls.dat \
+	 Sd.res
+
+$(BIN_TARFILE)$(COMPRESS_SUF): Makefile $(TARFILES2) $(TARFILES1)
+	$(TAR) $(TARFLAGS) $(BIN_TARFILE) $(TARFILES1) $(TARFILES2)
+	$(RM) $@
+	-$(COMPRESS) < $(BIN_TARFILE) > $@
+
+pc-files: $(PCFILES)
+
+pcfiles.lnk: Makefile.in
+	rm -f $@
+	for obj in $(SD_OBJS) $(SDTTY_OBJ_PC); do echo $$obj; done >> $@
+
+LN = @LN_S@
+
+makefile.pc: configure Makefile.in
+	-rm -f config.cache
+	-mv config.status config.status.save
+	-$(LN) Makefile.in makefile.pc.in
+	$(srcdir)/configure --with-pc
+	-mv config.status.save config.status
+	-rm makefile.pc.in

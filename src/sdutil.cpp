@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2003  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -10,7 +10,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-    This is for version 34. */
+    This is for version 33. */
 
 /* This defines the following functions:
    get_escape_string
@@ -18,6 +18,7 @@
    unparse_call_name
    print_recurse
    clear_screen
+   write_header_stuff
    writechar
    newline
    open_text_line
@@ -38,24 +39,27 @@ and the following external variables:
    global_error_flag
    global_reply
    global_age
-   global_leave_missing_calls_blank
    clipboard
    clipboard_size
    wrote_a_sequence
    retain_after_error
    outfile_string
    header_comment
-   creating_new_session
+   need_new_header_comment
    sequence_number
    starting_sequence_number
-   old_filename_strings
-   new_filename_strings
    filename_strings
    concept_key_table
 */
 
 
 #include <string.h>
+
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
 
 #include "sd.h"
 
@@ -74,33 +78,17 @@ and the following external variables:
 error_flag_type global_error_flag;
 uims_reply global_reply;
 int global_age;
-bool global_leave_missing_calls_blank;
 configuration *clipboard = (configuration *) 0;
 int clipboard_size = 0;
-bool wrote_a_sequence = false;
-bool retain_after_error = false;
+long_boolean wrote_a_sequence = FALSE;
+long_boolean retain_after_error = FALSE;
 char outfile_string[MAX_FILENAME_LENGTH] = SEQUENCE_FILENAME;
 char header_comment[MAX_TEXT_LINE_LENGTH];
-bool creating_new_session = false;
+long_boolean need_new_header_comment = FALSE;
 int sequence_number = -1;
 int starting_sequence_number;
-
-// Under DJGPP, the default is always old-style filenames, because
-// the underlying system (DOS or Windows 3.1) presumably can only
-// handle "8.3" failenames.  Even under Windows NT, the emulation
-// seems to handle only 8.3 filenames.  Under Windows 2000, it
-// seems to handle long filenames, but is totally broken in other
-// respects (compilation with Cygwin crashed in ntvdm.)  The bug
-// has been reported to Microsoft, and, of course, never fixed.
-
-#if defined(DJGPP)
-Cstring *filename_strings = old_filename_strings;
-#else
-Cstring *filename_strings = old_filename_strings; // ******** For now
-#endif
-
-// BEWARE!!  These lists are keyed to the definition of "dance_level" in database.h
-Cstring old_filename_strings[] = {
+/* BEWARE!!  This list is keyed to the definition of "dance_level" in database.h . */
+Cstring filename_strings[] = {
    ".MS",
    ".Plus",
    ".A1",
@@ -115,23 +103,6 @@ Cstring old_filename_strings[] = {
    ".C4X",
    ".all",
    ".all",
-   ""};
-
-Cstring new_filename_strings[] = {
-   "_MS.txt",
-   "_Plus.txt",
-   "_A1.txt",
-   "_A2.txt",
-   "_C1.txt",
-   "_C2.txt",
-   "_C3A.txt",
-   "_C3.txt",
-   "_C3X.txt",
-   "_C4A.txt",
-   "_C4.txt",
-   "_C4X.txt",
-   "_all.txt",
-   "_all.txt",
    ""};
 
 Cstring concept_key_table[] = {
@@ -195,7 +166,6 @@ Cstring concept_key_table[] = {
 
 static Cstring sessions_init_table[] = {
    "[Options]",
-   "new_style_filename",
    "",
    "[Sessions]",
    "+                    C1               1      Sample",
@@ -203,25 +173,13 @@ static Cstring sessions_init_table[] = {
    "[Accelerators]",
    (char *) 0};
 
-static Cstring abbreviations_table[] = {
-   "[Abbreviations]",
-   "u       U-turn back",
-   "rlt     right and left thru",
-   (char *) 0};
+
 
 
 /* These variables are are global to this file. */
 
-static bool reply_pending;
+static long_boolean reply_pending;
 static int clipboard_allocation = 0;
-
-
-// Some things fail under Visual C++ version 5 and version 6.  (Under different
-// circumstances for those 2 compilers!)  I complained, and they won't even
-// acknowledge the existence of the bug report unless I pay them money.
-extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp()
-{
-}
 
 
 /* Getting blanks into all the right places in the presence of substitions,
@@ -231,7 +189,7 @@ extern void FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewing
    help by never putting two blanks together, always putting blanks adjacent
    to the outside of brackets, and never putting blanks adjacent to the
    inside of brackets.  This procedure is part of that mechanism. */
-static void write_blank_if_needed()
+static void write_blank_if_needed(void)
 {
    if (writechar_block.lastchar != ' ' &&
        writechar_block.lastchar != '[' &&
@@ -246,29 +204,29 @@ static void write_blank_if_needed()
    a non-null pointer to a null character.  If it is an escape that is normally
    simply dropped, it returns a null pointer. */
 
-const char *get_escape_string(char c)
+SDLIB_API Const char *get_escape_string(char c)
 {
    switch (c) {
-   case '0': case 'm': case 'T':
-      return "<ANYTHING>";
-   case 'N':
-      return "<ANYCIRC>";
-   case '6': case 'k':
-      return "<ANYONE>";
-   case 'h':
-      return "<DIRECTION>";
-   case '9':
-      return "<N>";
-   case 'a': case 'b': case 'B': case 'D':
-      return "<N/4>";
-   case 'u':
-      return "<Nth>";
-   case 'v': case 'w': case 'x': case 'y':
-      return "<ATC>";
-   case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
-      return "";
-   default:
-      return (char *) 0;
+      case '0': case 'm':
+         return "<ANYTHING>";
+      case 'N':
+         return "<ANYCIRC>";
+      case '6': case 'k':
+         return "<ANYONE>";
+      case 'h':
+         return "<DIRECTION>";
+      case '9':
+         return "<N>";
+      case 'a': case 'b': case 'B': case 'D':
+         return "<N/4>";
+      case 'u':
+         return "<Nth>";
+      case 'v': case 'w': case 'x': case 'y':
+         return "<ATC>";
+      case '7': case 'n': case 'j': case 'J': case 'E': case 'Q':
+         return "";
+      default:
+         return (char *) 0;
    }
 }
 
@@ -340,7 +298,7 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
                           does, using call to "get_escape_string". */
             break;
          }
-
+         
          f += 2;
       }
       else
@@ -348,6 +306,9 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
    }
 }
 
+
+// **** This is duplicated here and in sdmain in sdmain.cpp
+static char directions[] = "?>?<????^?V?????";
 
 static void printperson(uint32 x)
 {
@@ -358,7 +319,7 @@ static void printperson(uint32 x)
          writechar(ui_options.pn1[(x >> 6) & 7]);
          writechar(ui_options.pn2[(x >> 6) & 7]);
          if (enable_file_writing)
-            writechar(ui_options.stddirec[x & 017]);
+            writechar(directions[x & 017]);
          else
             writechar(ui_options.direc[x & 017]);
       }
@@ -396,11 +357,11 @@ static void do_write(Cstring s)
          if (*s == '7') {
             s++;
             ui_options.squeeze_this_newline = 1;
-            newline();
+            (*the_callback_block.newline_fn)();
             ui_options.squeeze_this_newline = 0;
          }
          else
-            newline();
+            (*the_callback_block.newline_fn)();
       }
       else if (c >= 'a' && c <= 'x')
          printperson(rotperson(printarg->people[personstart + ((c-'a'-offs)%modulus)].id1, ri));
@@ -434,7 +395,7 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
 {
    Cstring str;
 
-   modulus = attr::klimit(s->skind)+1;
+   modulus = setup_attrs[s->skind].setup_limits+1;
    roti = (s->srotation & 3);
    personstart = ps;
 
@@ -454,13 +415,13 @@ static void print_4_person_setup(int ps, small_setup *s, int elong)
       str = setup_attrs[s->skind].print_strings[roti & 1];
 
    if (str) {
-      newline();
+      (*the_callback_block.newline_fn)();
       do_write(str);
    }
    else
       writestuff(" ????");
 
-   newline();
+   (*the_callback_block.newline_fn)();
 }
 
 
@@ -471,10 +432,10 @@ static void printsetup(setup *x)
 
    ui_options.drawing_picture = 1;
    printarg = x;
-   modulus = attr::slimit(x)+1;
+   modulus = setup_attrs[x->kind].setup_limits+1;
    roti = x->rotation & 3;
-
-   newline();
+   
+   (*the_callback_block.newline_fn)();
 
    personstart = 0;
 
@@ -553,57 +514,52 @@ static void printsetup(setup *x)
       case s_dead_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers only:");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
          print_4_person_setup(0, &(x->inner), -1);
          break;
       case s_normal_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers:");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
          print_4_person_setup(0, &(x->inner), -1);
          ui_options.drawing_picture = 0;
          writestuff(" ends:");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
          print_4_person_setup(12, &(x->outer), x->concsetup_outer_elongation);
          break;
       default:
          ui_options.drawing_picture = 0;
          writestuff("???? UNKNOWN SETUP ????");
-         newline();
+         (*the_callback_block.newline_fn)();
          ui_options.drawing_picture = 1;
       }
    }
 
-   newline();
+   (*the_callback_block.newline_fn)();
    ui_options.drawing_picture = 0;
-   newline();
+   (*the_callback_block.newline_fn)();
 }
 
 
-
-
-void write_history_line(int history_index,
-                        bool picture,
-                        bool leave_missing_calls_blank,
-                        file_write_flag write_to_file,
-                        const char *header)
+SDLIB_API void write_history_line(int history_index, const char *header,
+                                  long_boolean picture, file_write_flag write_to_file)
 {
-   global_leave_missing_calls_blank = leave_missing_calls_blank;
-
-   int w, i;
+   int centersp, w, i;
    parse_block *thing;
-   configuration *this_item = &configuration::history[history_index];
+   configuration *this_item = &history[history_index];
 
    if (write_to_file == file_write_double && !ui_options.singlespace_mode)
       doublespace_file();
 
-   // Do not put index numbers into output file -- user may edit it later.
+   centersp = this_item->centersp;
 
-   if (!enable_file_writing && !ui_options.diagnostic_mode) {
-      i = history_index-configuration::whole_sequence_low_lim+1;
+   /* Do not put index numbers into output file -- user may edit it later. */
+
+   if (!enable_file_writing && !diagnostic_mode) {
+      i = history_index-whole_sequence_low_lim+1;
       if (i > 0) {
          char indexbuf[10];
          sprintf(indexbuf, "%2d:   ", i);
@@ -611,92 +567,85 @@ void write_history_line(int history_index,
       }
    }
 
-   if (this_item->nontrivial_startinfo_specific()) {
-      if (this_item->get_startinfo_specific()->into_the_middle) goto morefinal;
-      writestuff(this_item->get_startinfo_specific()->name);
+   if (centersp != 0) {
+      if (startinfolist[centersp].into_the_middle) goto morefinal;
+      writestuff(startinfolist[centersp].name);
       goto final;
    }
 
    thing = this_item->command_root;
+   
+   /* Need to check for the special case of starting a sequence with heads or sides.
+      If this is the first line of the history, and we started with heads of sides,
+      change the name of this concept from "centers" to the appropriate thing. */
 
-   // Need to check for the special case of starting a sequence with heads or sides.
-   // If this is the first line of the history, and we started with heads of sides,
-   // change the name of this concept from "centers" to the appropriate thing.
-
-   if (history_index == 2 &&
-       thing->concept->kind == concept_centers_or_ends &&
-       thing->concept->arg1 == selector_centers) {
-      if (configuration::history[1].get_startinfo_specific()->into_the_middle) {
-         writestuff(configuration::history[1].get_startinfo_specific()->name);
+   if (history_index == 2 && thing->concept->kind == concept_centers_or_ends && thing->concept->value.arg1 == selector_centers) {
+      centersp = history[1].centersp;
+      if (startinfolist[centersp].into_the_middle) {
+         writestuff(startinfolist[centersp].name);
          writestuff(" ");
          thing = thing->next;
       }
    }
-
+   
    print_recurse(thing, 0);
-
+   
    final:
 
-   newline();
+   (*the_callback_block.newline_fn)();
 
    morefinal:
 
-   // Check for warnings to print.
-   // Do not double space them, even if writing final output.
+   /* Check for warnings to print. */
+   /* Do not double space them, even if writing final output. */
 
-   // First, don't print both "bad concept level" and "bad modifier level".
+   /* First, don't print both "bad concept level" and "bad modifier level". */
 
-   if (this_item->test_one_warning_specific(warn__bad_concept_level))
-      this_item->clear_one_warning_specific(warn__bad_modifier_level);
+   if ((1 << (warn__bad_concept_level & 0x1F)) & this_item->warnings.bits[warn__bad_concept_level>>5])
+      this_item->warnings.bits[warn__bad_modifier_level>>5] &= ~(1 << (warn__bad_modifier_level & 0x1F));
 
-   // Or "opt for parallelogram" and "each 1x4".
+   /* Or "opt for parallelogram" and "each 1x4". */
 
-   if (this_item->test_one_warning_specific(warn__check_pgram))
-      this_item->clear_one_warning_specific(warn__each1x4);
+   if ((1 << (warn__check_pgram & 0x1F)) & this_item->warnings.bits[warn__check_pgram>>5])
+      this_item->warnings.bits[warn__each1x4>>5] &= ~(1 << (warn__each1x4 & 0x1F));
 
-   // Or "each 1x6" and "each 1x3".
+   /* Or "each 1x6" and "each 1x3". */
 
-   if (this_item->test_one_warning_specific(warn__split_1x6))
-      this_item->clear_one_warning_specific(warn__split_to_1x6s);
+   if ((1 << (warn__split_1x6 & 0x1F)) & this_item->warnings.bits[warn__split_1x6>>5])
+      this_item->warnings.bits[warn__split_to_1x6s>>5] &= ~(1 << (warn__split_to_1x6s & 0x1F));
 
    if (!ui_options.nowarn_mode) {
-      for (w=0 ; w<warn__NUM_WARNINGS ; w++) {
-         if (this_item->test_one_warning_specific((warning_index) w)) {
+      for (w=0 ; w<NUM_WARNINGS ; w++) {
+         if ((1 << (w & 0x1F)) & this_item->warnings.bits[w>>5]) {
             writestuff("  Warning:  ");
             writestuff(&warning_strings[w][1]);
-            newline();
+            (*the_callback_block.newline_fn)();
          }
       }
    }
 
-   if (picture || this_item->draw_pic || ui_options.keep_all_pictures) {
+   if (picture || this_item->draw_pic)
       printsetup(&this_item->state);
 
-      if (this_item->state.result_flags & RESULTFLAG__PLUSEIGHTH_ROT) {
-         writestuff("  Note:  Actual setup is 45 degrees clockwise from diagram above.");
-         newline();
-      }
-   }
-
-   // Record that this history item has been written to the UI.
-   this_item->text_line = text_line_count;
+   /* Record that this history item has been written to the UI. */
+   this_item->text_line = the_callback_block.text_line_count;
 }
 
 
 
 
 
-void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
+SDLIB_API void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
 {
    writechar_block_type saved_writeblock = writechar_block;
    writechar_block.destcurr = s;
-   writechar_block.usurping_writechar = true;
+   writechar_block.usurping_writechar = TRUE;
 
    writestuff_with_decorations(options, name);
    writechar('\0');
 
    writechar_block = saved_writeblock;
-   writechar_block.usurping_writechar = false;
+   writechar_block.usurping_writechar = FALSE;
 }
 
 
@@ -712,30 +661,30 @@ void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
 #define PRINT_RECURSE_CIRC 2
 
 
-void print_recurse(parse_block *thing, int print_recurse_arg)
+SDLIB_API void print_recurse(parse_block *thing, int print_recurse_arg)
 {
    parse_block *local_cptr;
    parse_block *next_cptr;
-   bool use_left_name = false;
-   bool use_cross_name = false;
-   bool use_magic_name = false;
-   bool use_grand_name = false;
-   bool use_intlk_name = false;
-   bool allow_deferred_concept = true;
+   long_boolean use_left_name = FALSE;
+   long_boolean use_cross_name = FALSE;
+   long_boolean use_magic_name = FALSE;
+   long_boolean use_grand_name = FALSE;
+   long_boolean use_intlk_name = FALSE;
+   long_boolean allow_deferred_concept = TRUE;
    parse_block *deferred_concept = (parse_block *) 0;
    int deferred_concept_paren = 0;
    int comma_after_next_concept = 0;    /* 1 for comma, 2 for the word "all". */
    int did_comma = 0;                   /* Same as comma_after_next_concept. */
-   bool did_concept = false;
-   bool last_was_t_type = false;
-   bool last_was_l_type = false;
-   bool request_final_space = false;
+   long_boolean did_concept = FALSE;
+   long_boolean last_was_t_type = FALSE;
+   long_boolean last_was_l_type = FALSE;
+   long_boolean request_final_space = FALSE;
 
    local_cptr = thing;
 
    while (local_cptr) {
       concept_kind k;
-      const conzept::concept_descriptor *item;
+      concept_descriptor *item;
 
       item = local_cptr->concept;
       k = item->kind;
@@ -749,70 +698,70 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          writestuff(fubb->txt);
          writestuff(" } ");
          local_cptr = local_cptr->next;
-         request_final_space = false;
-         last_was_t_type = false;
-         last_was_l_type = false;
+         request_final_space = FALSE;
+         last_was_t_type = FALSE;
+         last_was_l_type = FALSE;
          comma_after_next_concept = 0;
       }
       else if (k > marker_end_of_list) {
-         // This is a concept.
+         /* This is a concept. */
 
-         bool force = false;
-         int request_comma_after_next_concept = 0;       // Same as comma_after_next_concept.
+         long_boolean force = FALSE;
+         int request_comma_after_next_concept = 0;           /* Same as comma_after_next_concept. */
 
-         // Some concepts look better with a comma after them.
+         /* Some concepts look better with a comma after them. */
 
          if (item->concparseflags & CONCPARSE_PARSE_F_TYPE) {
-            // This is an "F" type concept.
+            /* This is an "F" type concept. */
             comma_after_next_concept = 1;
-            last_was_t_type = false;
+            last_was_t_type = FALSE;
             force = did_concept && !last_was_l_type;
-            last_was_l_type = false;
-            did_concept = true;
+            last_was_l_type = FALSE;
+            did_concept = TRUE;
          }
          else if (item->concparseflags & CONCPARSE_PARSE_L_TYPE) {
-            // This is an "L" type concept.
-            last_was_t_type = false;
-            last_was_l_type = true;
+            /* This is an "L" type concept. */
+            last_was_t_type = FALSE;
+            last_was_l_type = TRUE;
          }
          else if (item->concparseflags & CONCPARSE_PARSE_G_TYPE) {
-            // This is a "leading T/trailing L" type concept, also known as a "G" concept.
+            /* This is a "leading T/trailing L" type concept, also known as a "G" concept. */
             force = last_was_t_type && !last_was_l_type;;
-            last_was_t_type = false;
-            last_was_l_type = true;
+            last_was_t_type = FALSE;
+            last_was_l_type = TRUE;
          }
          else {
-            // This is a "T" type concept.
+            /* This is a "T" type concept. */
             if (did_concept && k != concept_tandem_in_setup) comma_after_next_concept = 1;
             force = last_was_t_type && !last_was_l_type;
-            last_was_t_type = true;
-            last_was_l_type = false;
-            did_concept = true;
+            last_was_t_type = TRUE;
+            last_was_l_type = FALSE;
+            did_concept = TRUE;
          }
 
          // We never put a comma before things like "in a 1/4 tag".
          if (force && did_comma == 0 && k != concept_tandem_in_setup) writestuff(", ");
          else if (request_final_space) writestuff(" ");
 
-         next_cptr = local_cptr->next;    // Now it points to the thing after this concept.
+         next_cptr = local_cptr->next;    /* Now it points to the thing after this concept. */
 
-         request_final_space = false;
+         request_final_space = FALSE;
 
          if (concept_table[k].concept_prop & CONCPROP__SECOND_CALL) {
             parse_block *subsidiary_ptr = local_cptr->subsidiary_root;
 
             if (k == concept_centers_and_ends) {
-               if (item->arg1 == selector_center6 ||
-                   item->arg1 == selector_center2 ||
-                   item->arg1 == selector_verycenters)
-                  writestuff(selector_list[item->arg1].name_uc);
+               if (item->value.arg1 == selector_center6 ||
+                   item->value.arg1 == selector_center2 ||
+                   item->value.arg1 == selector_verycenters)
+                  writestuff(selector_list[item->value.arg1].name_uc);
                else
                   writestuff(selector_list[selector_centers].name_uc);
 
                writestuff(" ");
             }
             else if (k == concept_some_vs_others) {
-               selective_key sk = (selective_key) item->arg1;
+               selective_key sk = (selective_key) item->value.arg1;
 
                if (sk == selective_key_dyp)
                   writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ");
@@ -826,46 +775,33 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-            else if (k == concept_special_sequential_num) {
-               writestuff("USE ");
-
-               // If stuff hasn't been completely entered, show the number.
-               if (!local_cptr->next || !subsidiary_ptr)
-                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
-            }
-            else if (k == concept_replace_nth_part ||
-                     k == concept_replace_last_part ||
-                     k == concept_interrupt_at_fraction) {
-               if (local_cptr->next && subsidiary_ptr) {
-                  writestuff("DELAY: ");
-               }
-               else {
-                  switch (local_cptr->concept->arg1) {
-                  case 0:
-                     writestuff("replace the last part of ");
-                     if (!local_cptr->next) writestuff("this call:");
-                     break;
-                  case 1:
-                     writestuff("interrupt before the last part of ");
-                     if (!local_cptr->next) writestuff("this call:");
-                     break;
-                  case 2:
-                     if (!local_cptr->next)
-                        writestuff_with_decorations(&local_cptr->options,
-                                                    "interrupt this call after @9/@9:");
-                     else
-                        writestuff("interrrupt ");
-                     break;
-                  case 8:
-                     writestuff_with_decorations(&local_cptr->options,
-                                                 "replace the @u part of ");
-                     if (!local_cptr->next) writestuff("this call:");
-                     break;
-                  case 9:
-                     writestuff_with_decorations(&local_cptr->options,
-                                                 "interrupting after the @u part of ");
-                     if (!local_cptr->next) writestuff("this call:");
-                     break;
+            else if (k == concept_replace_nth_part || k == concept_replace_last_part || k == concept_interrupt_at_fraction) {
+               writestuff("DELAY: ");
+               if (!local_cptr->next || !subsidiary_ptr) {
+                  switch (local_cptr->concept->value.arg1) {
+                     case 9:
+                        writestuff("(interrupting after the ");
+                        writestuff(ordinals[local_cptr->options.number_fields]);
+                        writestuff(" part) ");
+                        break;
+                     case 8:
+                        writestuff("(replacing the ");
+                        writestuff(ordinals[local_cptr->options.number_fields]);
+                        writestuff(" part) ");
+                        break;
+                     case 0:
+                        writestuff("(replacing the last part) ");
+                        break;
+                     case 1:
+                        writestuff("(interrupting before the last part) ");
+                        break;
+                     case 2:
+                        writestuff("(interrupting after ");
+                        writestuff(cardinals[local_cptr->options.number_fields & 0xF]);
+                        writestuff("/");
+                        writestuff(cardinals[(local_cptr->options.number_fields >> 4) & 0xF]);
+                        writestuff(") ");
+                        break;
                   }
                }
             }
@@ -876,90 +812,59 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
             print_recurse(local_cptr->next, 0);
 
-            // If echoing incomplete input, we can't show the second call.
-            // But we may want to show something useful.
-            if (!subsidiary_ptr) {
-               if (local_cptr->next) {
-                  if (k == concept_replace_nth_part ||
-                      k == concept_replace_last_part ||
-                      k == concept_interrupt_at_fraction) {
-                     switch (local_cptr->concept->arg1) {
-                     case 0: case 1: case 8: case 9:
-                        writestuff(" with this call:");
-                        break;
-                     case 2:
-                        writestuff_with_decorations(&local_cptr->options,
-                                                    " after @9/@9 with this call:");
-                        break;
-                     }
-                  }
-               }
-               break;
-            }
+            if (!subsidiary_ptr) break;         /* Can happen if echoing incomplete input. */
 
-            did_concept = false;                /* We're starting over. */
-            last_was_t_type = false;
-            last_was_l_type = false;
+            did_concept = FALSE;                /* We're starting over. */
+            last_was_t_type = FALSE;
+            last_was_l_type = FALSE;
             comma_after_next_concept = 0;
-            request_final_space = true;
+            request_final_space = TRUE;
 
             if (k == concept_centers_and_ends) {
-               if (item->arg2)
+               if (item->value.arg2)
                   writestuff(" WHILE THE ENDS CONCENTRIC");
                else
                   writestuff(" WHILE THE ENDS");
             }
-            else if (k == concept_some_vs_others &&
-                     (selective_key) item->arg1 != selective_key_own) {
+            else if (k == concept_some_vs_others && (selective_key) item->value.arg1 != selective_key_own) {
+
                selector_kind opp = selector_list[local_cptr->options.who].opposite;
                writestuff(" WHILE THE ");
-               writestuff((opp == selector_uninitialized) ?
-                          ((Cstring) "OTHERS") :
-                          selector_list[opp].name_uc);
+               writestuff((opp == selector_uninitialized) ? ((Cstring) "OTHERS") : selector_list[opp].name_uc);
             }
             else if (k == concept_on_your_own)
                writestuff(" AND");
-            else if (k == concept_interlace)
+            else if (k == concept_interlace ||
+                     k == concept_sandwich)
                writestuff(" WITH");
-            else if (k == concept_sandwich)
-               writestuff(" AROUND");
-            else if (k == concept_special_sequential_num) {
-               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
-               request_final_space = false;
-            }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
                writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
                writestuff(" WITH A [");
-               request_final_space = false;
+               request_final_space = FALSE;
             }
             else if (k == concept_sequential)
                writestuff(" ;");
             else if (k == concept_special_sequential) {
-               if (item->arg1 == 2)
-                  writestuff(" :");   // This is "start with".
-               else if (item->arg1 == 4)
-                  writestuff(" IN");
+               if (item->value.arg1 == 2)
+                  writestuff(" :");   /* This is "start with". */
                else
                   writestuff(",");
             }
             else
                writestuff(" BY");
 
-            // Note that we leave "allow_deferred_concept" on.  This means that
-            // if we say "twice" immediately inside the second clause
-            // of an interlace, it will get the special processing.
-            // The first clause will get the special processing by virtue
-            // of the recursion.
+            /* Note that we leave "allow_deferred_concept" on.  This means that if we say "twice"
+               immediately inside the second clause of an interlace, it will get the special
+               processing.  The first clause will get the special processing by virtue of the recursion. */
 
             next_cptr = subsidiary_ptr;
 
-            // Setting this means that, if the second argument uses "twice",
-            // we will put it in parens.  This is needed to disambiguate
-            // this situation from the use of "twice" before the entire
-            // "interlace".
+            /* Setting this means that, if the second argument uses "twice", we will put
+               it in parens.  This is needed to disambiguate this situation from the
+               use of "twice" before the entire "interlace". */
             if (deferred_concept_paren == 0) deferred_concept_paren = 2;
          }
          else {
@@ -974,72 +879,69 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                                k == concept_magic ||
                                k == concept_grand ||
                                k == concept_interlocked)) {
+   
+               /* These concepts want to take special action if there are no following
+                  concepts and certain escape characters are found in the name of
+                  the following call. */
+   
+               uint64 junk_concepts;
 
-               // These concepts want to take special action if there are no following
-               // concepts and certain escape characters are found in the name of
-               // the following call.
-
-               final_and_herit_flags junk_concepts;
-               junk_concepts.clear_all_herit_and_final_bits();
-
-               // Skip all final concepts, then demand that what remains is a marker
-               // (as opposed to a serious concept), and that a real call
-               // has been entered, and that its name starts with "@g".
-               tptr = process_final_concepts(next_cptr, false, &junk_concepts, false, __FILE__, __LINE__);
-
+               junk_concepts.her8it = 0;
+               junk_concepts.final = 0;
+               
+               /* Skip all final concepts, then demand that what remains is a marker
+                  (as opposed to a serious concept), and that a real call
+                  has been entered, and that its name starts with "@g". */
+               tptr = process_final_concepts(next_cptr, FALSE, &junk_concepts);
+   
                if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call_to_print;
             }
 
             if (target_call &&
                 k == concept_left &&
                 (target_call->the_defn.callflagsf & ESCAPE_WORD__LEFT)) {
-               use_left_name = true;
+               use_left_name = TRUE;
             }
             else if (target_call &&
                      k == concept_magic &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__MAGIC)) {
-               use_magic_name = true;
+               use_magic_name = TRUE;
             }
             else if (target_call &&
                      k == concept_grand &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__GRAND)) {
-               use_grand_name = true;
+               use_grand_name = TRUE;
             }
             else if (target_call &&
                      k == concept_interlocked &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__INTLK)) {
-               use_intlk_name = true;
+               use_intlk_name = TRUE;
             }
             else if (target_call &&
                      k == concept_cross &&
                      (target_call->the_defn.callflagsf & ESCAPE_WORD__CROSS)) {
-               use_cross_name = true;
+               use_cross_name = TRUE;
             }
             else if (allow_deferred_concept &&
                      next_cptr &&
-                     (k == concept_n_times_const ||
+                     (k == concept_twice ||
                       k == concept_n_times ||
-                      (k == concept_fractional && item->arg1 == 2))) {
+                      (k == concept_fractional && item->value.arg1 == 2))) {
                deferred_concept = local_cptr;
                comma_after_next_concept = 0;
-               did_concept = false;
+               did_concept = FALSE;
 
-               // If there is another concept, we need parens.
+               /* If there is another concept, we need parens. */
                if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
 
-               if (deferred_concept_paren == 3) writestuff("(");
-               if (deferred_concept_paren) writestuff("(");
+               if (deferred_concept_paren == 3) writestuff("("/*)*/);
+               if (deferred_concept_paren) writestuff("("/*)*/);
             }
             else {
-               if ((k == concept_meta_one_arg &&
-                    item->arg1 == meta_key_nth_part_work) ||
-                   (k == concept_meta_two_args &&
-                    item->arg1 == meta_key_first_frac_work) ||
-                   (k == concept_snag_mystic && item->arg1 == CMD_MISC2__SAID_INVERT) ||
-                   (k == concept_meta &&
-                    (item->arg1 == meta_key_initially ||
-                     item->arg1 == meta_key_finally ||
-                     item->arg1 == meta_key_initially_and_finally))) {
+               if ((k == concept_meta_one_arg && item->value.arg1 == meta_key_nth_part_work) ||
+                   (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__SAID_INVERT) ||
+                   (k == concept_meta && (item->value.arg1 == meta_key_initially ||
+                                          item->value.arg1 == meta_key_finally))) {
                   /* This is "DO THE <Nth> PART",
                      or INVERT followed by another concept, which must be SNAG or MYSTIC,
                      or INITIALLY/FINALLY.
@@ -1047,14 +949,14 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   request_comma_after_next_concept = 1;
                }
                else if (k == concept_so_and_so_only &&
-                        ((selective_key) item->arg1) == selective_key_work_concept) {
+                        ((selective_key) item->value.arg1) == selective_key_work_concept) {
                   /* "<ANYONE> WORK" */
                   /* This concept requires the word "all" after the following concept. */
                   request_comma_after_next_concept = 2;
                }
 
                writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
-               request_final_space = true;
+               request_final_space = TRUE;
             }
 
             /* For some concepts, we still permit the "defer" stuff.  But don't do it
@@ -1062,20 +964,19 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                "<anyone> work 1-1/2, swing thru" turning into
                "<anyone> work swing thru 1-1/2". */
 
-            if ((k != concept_so_and_so_only || item->arg2) &&
-                k != concept_centers_or_ends &&
+            if ((k != concept_so_and_so_only || item->value.arg2) &&
                 k != concept_c1_phantom &&
                 k != concept_tandem)
-               allow_deferred_concept = false;
+               allow_deferred_concept = FALSE;
          }
 
          if (comma_after_next_concept == 2) {
             writestuff(", ALL");
-            request_final_space = true;
+            request_final_space = TRUE;
          }
          else if (comma_after_next_concept == 1) {
             writestuff(",");
-            request_final_space = true;
+            request_final_space = TRUE;
          }
 
          did_comma = comma_after_next_concept;
@@ -1086,11 +987,13 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             comma_after_next_concept = request_comma_after_next_concept;
 
          if (comma_after_next_concept == 2 && next_cptr) {
+            //            parse_block *junk2;
             concept_kind kjunk;
+            parse_block *junk2;
             uint32 njunk;
 
-            if (check_for_concept_group(next_cptr, &kjunk, &njunk))
-               comma_after_next_concept = 3;    // Will try again later.
+            if (check_for_concept_group(next_cptr, FALSE, &kjunk, &njunk, &junk2))
+               comma_after_next_concept = 3;    /* Will try again later. */
          }
 
          local_cptr = next_cptr;
@@ -1117,7 +1020,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          parse_block *sub1_ptr;
          parse_block *sub2_ptr;
          parse_block *search;
-         bool pending_subst1, pending_subst2;
+         long_boolean pending_subst1, pending_subst2;
 
          selector_kind i16junk = local_cptr->options.who;
          direction_kind idirjunk = local_cptr->options.where;
@@ -1125,8 +1028,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          call_with_name *localcall = local_cptr->call_to_print;
          parse_block *save_cptr = local_cptr;
 
-         bool subst1_in_use = false;
-         bool subst2_in_use = false;
+         long_boolean subst1_in_use = FALSE;
+         long_boolean subst2_in_use = FALSE;
 
          if (request_final_space) writestuff(" ");
 
@@ -1134,36 +1037,36 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             search = save_cptr->next;
             while (search) {
                parse_block *subsidiary_ptr = search->subsidiary_root;
-               bool this_is_subst1 = false;
-               bool this_is_subst2 = false;
+               long_boolean this_is_subst1 = FALSE;
+               long_boolean this_is_subst2 = FALSE;
                if (subsidiary_ptr) {
                   switch (search->replacement_key) {
                      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
-                        this_is_subst1 = true;
+                        this_is_subst1 = TRUE;
                         break;
                      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
-                        this_is_subst2 = true;
+                        this_is_subst2 = TRUE;
                         break;
                   }
 
                   if (this_is_subst1) {
                      if (subst1_in_use) writestuff("ERROR!!!");
-                     subst1_in_use = true;
+                     subst1_in_use = TRUE;
                      sub1_ptr = subsidiary_ptr;
                   }
 
                   if (this_is_subst2) {
                      if (subst2_in_use) writestuff("ERROR!!!");
-                     subst2_in_use = true;
+                     subst2_in_use = TRUE;
                      sub2_ptr = subsidiary_ptr;
                   }
                }
                search = search->next;
             }
          }
-
+   
          pending_subst1 = subst1_in_use;
          pending_subst2 = subst2_in_use;
 
@@ -1204,8 +1107,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
-                             CFLAG1_BASE_TAG_CALL_MASK)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_TAG_CALL_MASK)) {
                            print_recurse(subsidiary_ptr, 0);
                            goto did_tagger;
                         }
@@ -1237,8 +1139,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         parse_block *subsidiary_ptr = search->subsidiary_root;
                         if (subsidiary_ptr &&
                             subsidiary_ptr->call_to_print &&
-                            (subsidiary_ptr->call_to_print->the_defn.callflags1 &
-                             CFLAG1_BASE_CIRC_CALL)) {
+                            (subsidiary_ptr->call_to_print->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL)) {
                            print_recurse(subsidiary_ptr, PRINT_RECURSE_CIRC);
                            goto did_circcer;
                         }
@@ -1258,27 +1159,17 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
-                  case 'h':                   // Need to plug in a direction.
+                  case 'h':                   /* Need to plug in a direction. */
                      write_blank_if_needed();
                      writestuff(direction_names[idirjunk]);
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
                   case '9': case 'a': case 'b': case 'B': case 'D': case 'u':
-                     // Need to plug in a number.
+                     /* Need to plug in a number. */
                      write_blank_if_needed();
-
-                     // Watch for "zero and a half".
-                     if (savec == '9' && (number_list & 0xF) == 0 &&
-                         np[0] == '-' && np[1] == '1' &&
-                         np[2] == '/' && np[3] == '2') {
-                        writestuff("1/2");
-                        np += 4;
-                     }
-                     else
-                        write_nice_number(savec, number_list & 0xF);
-
-                     number_list >>= 4;    // Get ready for next number.
+                     write_nice_number(savec, number_list & 0xF);
+                     number_list >>= 4;    /* Get ready for next number. */
                      break;
                   case 'e':
                      if (use_left_name) {
@@ -1300,7 +1191,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         writestuff("cross");
                      }
                      break;
-                  case 'S':                   // Look for star turn replacement.
+                  case 'S':                   /* Look for star turn replacement. */
                      if (save_cptr->options.star_turn_option < 0) {
                         writestuff(", don't turn the star");
                      }
@@ -1353,8 +1244,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      }
                      break;
                   case 'l': case 'L': case 'R': case 'F': case '8': case 'o':
-                     // Just skip these -- they end stuff that we could have
-                     // elided but didn't.
+                     /* Just skip these -- they end stuff that we could have
+                        elided but didn't. */
                      break;
                   case 'n': case 'p': case 'r': case 'm': case 't':
                      if (subst2_in_use) {
@@ -1369,21 +1260,16 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            np += 2;
                         }
                      }
-
-                     if (savec != 'p' && savec != 'n') {
-                        if (pending_subst2) {
-                           write_blank_if_needed();
-                           writestuff("[");
-                           print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
-                           pending_subst2 = false;
-                        }
-                        else if (savec == 'm' && !global_leave_missing_calls_blank) {
-                           write_blank_if_needed();
-                           writestuff("[???]");
-                        }
+   
+                     if (pending_subst2 && savec != 'p' && savec != 'n') {
+                        write_blank_if_needed();
+                        writestuff("[");
+                        print_recurse(sub2_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
+         
+                        pending_subst2 = FALSE;
                      }
-
+         
                      break;
                   case 'O':
                      if (print_recurse_arg & PRINT_RECURSE_CIRC) {
@@ -1405,22 +1291,16 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                            np += 2;
                         }
                      }
-
-                     if (savec != '4' && savec != '7') {
-                        if (pending_subst1) {
-                           write_blank_if_needed();
-                           writestuff("[");
-                           print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
-                           writestuff("]");
-                           if (savec == 'T') writestuff(" er's");
-                           pending_subst1 = false;
-                        }
-                        else if (savec == '0' && !global_leave_missing_calls_blank) {
-                           write_blank_if_needed();
-                           writestuff("[???]");
-                        }
+         
+                     if (pending_subst1 && savec != '4' && savec != '7') {
+                        write_blank_if_needed();
+                        writestuff("[");
+                        print_recurse(sub1_ptr, PRINT_RECURSE_STAR);
+                        writestuff("]");
+         
+                        pending_subst1 = FALSE;
                      }
-
+         
                      break;
                   }
                }
@@ -1442,7 +1322,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          /* Now if "pending_subst" is still on, we have to do by hand what should have been
             a natural replacement.  In any case, we have to find forcible replacements and
             report them. */
-
+   
          if (k == concept_another_call_next_mod) {
             int first_replace = 0;
 
@@ -1487,8 +1367,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      case DFM1_CALL_MOD_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT:
-                        // This is a natural replacement.
-                        // It may already have been taken care of.
+                        /* This is a natural replacement.
+                           It may already have been taken care of. */
                         if (pending_subst1 ||
                             search->replacement_key ==
                             DFM1_CALL_MOD_ALLOW_PLAIN_MOD/DFM1_CALL_MOD_BIT) {
@@ -1504,8 +1384,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case DFM1_CALL_MOD_OR_SECONDARY/DFM1_CALL_MOD_BIT:
                      case DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT:
-                        // This is a secondary replacement.
-                        // It may already have been taken care of.
+                        /* This is a secondary replacement.
+                           It may already have been taken care of. */
                         if (pending_subst2) {
                            write_blank_if_needed();
                            writestuff("[modification: ");
@@ -1544,44 +1424,43 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
    }
 
    if (deferred_concept) {
-      if (deferred_concept_paren & 1) writestuff(")");
+      if (deferred_concept_paren & 1) writestuff(/*(*/")");
       writestuff(" ");
 
-      if (deferred_concept->concept->kind == concept_n_times_const &&
-          deferred_concept->concept->arg2 == 3)
+      if (deferred_concept->concept->kind == concept_twice &&
+          deferred_concept->concept->value.arg2 == 3)
          writestuff("3 TIMES");
       else
-         writestuff_with_decorations(&deferred_concept->options,
-                                     deferred_concept->concept->name);
-      if (deferred_concept_paren & 2) writestuff(")");
+         writestuff_with_decorations(&deferred_concept->options, deferred_concept->concept->name);
+      if (deferred_concept_paren & 2) writestuff(/*(*/")");
    }
 
    return;
 }
 
-void clear_screen()
+SDLIB_API void clear_screen(void)
 {
    written_history_items = -1;
-   text_line_count = 0;
-   gg->reduce_line_count(0);
+   the_callback_block.text_line_count = 0;
+   (*the_callback_block.uims_reduce_line_count_fn)(0);
    open_text_line();
 }
 
-static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
+SDLIB_API void write_header_stuff(long_boolean with_ui_version, uint32 act_phan_flags)
 {
-   if (!ui_options.diagnostic_mode) {
-      // Log creation version info.
-      if (with_ui_version) {     // This is the "pretty" form that we display while running.
+   if (!diagnostic_mode) {
+      /* log creation version info */
+      if (with_ui_version) {     /* This is the "pretty" form that we display while running. */
          writestuff("Sd ");
-         writestuff(sd_version_string());
+         writestuff((*the_callback_block.sd_version_string_fn)());
          writestuff(" : db");
          writestuff(database_version);
          writestuff(" : ui");
-         writestuff(gg->version_string());
+         writestuff((*the_callback_block.uims_version_string_fn)());
       }
-      else {                     // This is the "compact" form that goes into the file.
+      else {                     /* This is the "compact" form that goes into the file. */
          writestuff("Sd");
-         writestuff(sd_version_string());
+         writestuff((*the_callback_block.sd_version_string_fn)());
          writestuff(":db");
          writestuff(database_version);
       }
@@ -1596,10 +1475,10 @@ static void write_header_stuff(bool with_ui_version, uint32 act_phan_flags)
 
    writestuff("     ");
 
-   // Log level info.
+   /* log level info */
    writestuff(getout_strings[calling_level]);
 
-   if (glob_abridge_mode == abridge_mode_abridging)
+   if (glob_call_list_mode == call_list_mode_abridging)
       writestuff(" (abridged)");
 }
 
@@ -1608,22 +1487,19 @@ static char current_line[MAX_TEXT_LINE_LENGTH];
 
 extern void writechar(char src)
 {
-   // Don't write two consecutive commas.
-   if (src == ',' && src == writechar_block.lastchar) return;
-
    writechar_block.lastlastchar = writechar_block.lastchar;
 
    *writechar_block.destcurr = (writechar_block.lastchar = src);
    if (src == ' ' && writechar_block.destcurr != current_line)
       writechar_block.lastblank = writechar_block.destcurr;
 
-   // If drawing a picture, don't do automatic line breaks.
+   /* If drawing a picture, don't do automatic line breaks. */
 
    if (writechar_block.destcurr < &current_line[MAX_PRINT_LENGTH] || writechar_block.usurping_writechar || ui_options.drawing_picture)
       writechar_block.destcurr++;
    else {
-      // Line overflow.  Try to write everything up to the last
-      // blank, then fill next line with everything since that blank.
+      /* Line overflow.  Try to write everything up to the last
+         blank, then fill next line with everything since that blank. */
 
       char save_buffer[MAX_TEXT_LINE_LENGTH];
       char *q = save_buffer;
@@ -1646,7 +1522,7 @@ extern void writechar(char src)
    }
 }
 
-void newline()
+SDLIB_API void newline(void)
 {
    /* Erase any trailing blanks.  Failure to do so can lead to some
       incredibly obscure bugs when some editors on PC's try to "fix"
@@ -1678,10 +1554,10 @@ void newline()
 
 
    if (enable_file_writing)
-      write_file(current_line);
+      (*the_callback_block.write_file_fn)(current_line);
 
-   text_line_count++;
-   gg->add_new_line(current_line,
+   the_callback_block.text_line_count++;
+   (*the_callback_block.uims_add_new_line_fn)(current_line,
       enable_file_writing ? 0 : (ui_options.drawing_picture | (ui_options.squeeze_this_newline << 1)));
    open_text_line();
 }
@@ -1690,7 +1566,7 @@ void newline()
 
 
 
-extern void open_text_line()
+extern void open_text_line(void)
 {
    writechar_block.destcurr = current_line;
    writechar_block.lastchar = ' ';
@@ -1699,13 +1575,13 @@ extern void open_text_line()
 }
 
 
-void doublespace_file()
+SDLIB_API void doublespace_file(void)
 {
-   write_file("");
+   (*the_callback_block.write_file_fn)("");
 }
 
 
-void writestuff(const char *s)
+SDLIB_API void writestuff(const char *s)
 {
    while (*s) writechar(*s++);
 }
@@ -1715,7 +1591,7 @@ void writestuff(const char *s)
 static parse_block *parse_active_list = (parse_block *) 0;
 static parse_block *parse_inactive_list = (parse_block *) 0;
 
-extern parse_block *mark_parse_blocks()
+extern parse_block *mark_parse_blocks(void)
 {
    return parse_active_list;
 }
@@ -1731,7 +1607,7 @@ extern void release_parse_blocks_to_mark(parse_block *mark_point)
       parse_inactive_list = item;
 
       /* Clear pointers so we will notice if it gets erroneously re-used. */
-      item->concept = &conzept::mark_end_of_list;
+      item->concept = &mark_end_of_list;
       item->call = base_calls[1];
       item->call_to_print = item->call;
       item->subsidiary_root = (parse_block *) 0;
@@ -1771,7 +1647,7 @@ extern parse_block *copy_parse_tree(parse_block *original_tree)
 }
 
 
-parse_block *get_parse_block()
+SDLIB_API parse_block *get_parse_block(void)
 {
    parse_block *item;
 
@@ -1780,18 +1656,18 @@ parse_block *get_parse_block()
       parse_inactive_list = item->gc_ptr;
    }
    else {
-      item = (parse_block *) get_mem(sizeof(parse_block));
+      item = (parse_block *) (*the_callback_block.get_mem_fn)(sizeof(parse_block));
    }
 
    item->gc_ptr = parse_active_list;
    parse_active_list = item;
 
-   item->concept = (conzept::concept_descriptor *) 0;
+   item->concept = (concept_descriptor *) 0;
    item->call = (call_with_name *) 0;
    item->call_to_print = (call_with_name *) 0;
    item->options = null_options;
    item->replacement_key = 0;
-   item->no_check_call_level = false;
+   item->no_check_call_level = 0;
    item->subsidiary_root = (parse_block *) 0;
    item->next = (parse_block *) 0;
 
@@ -1806,17 +1682,17 @@ static parse_block *saved_command_root;
 
 extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head)
 {
-   parse_block *new_item = final_head;
-   parse_block *old_item = original_tree;
+   parse_block *new_item, *old_item;
 
+   new_item = final_head;
+   old_item = original_tree;
    for (;;) {
-      if (!new_item || !old_item) crash_print(__FILE__, __LINE__);
       new_item->concept = old_item->concept;
       new_item->call = old_item->call;
       new_item->call_to_print = old_item->call_to_print;
       new_item->options = old_item->options;
 
-      // Chop off branches that don't belong.
+      /* Chop off branches that don't belong. */
 
       if (!old_item->subsidiary_root)
          new_item->subsidiary_root = (parse_block *) 0;
@@ -1836,10 +1712,10 @@ extern void reset_parse_tree(parse_block *original_tree, parse_block *final_head
 
 /* Save the entire parse stack, and make a copy of the dynamic blocks that
    comprise the parse state. */
-extern void save_parse_state()
+extern void save_parse_state(void)
 {
    saved_parse_state = parse_state;
-   saved_command_root = copy_parse_tree(configuration::next_config().command_root);
+   saved_command_root = copy_parse_tree(history[history_ptr+1].command_root);
 }
 
 
@@ -1848,18 +1724,20 @@ extern void save_parse_state()
    could have happened will add to the tree but never delete anything.)  This way,
    after we have saved and restored things, they are all in their original,
    locations, so that the pointers in the parse stack will still be valid. */
-extern void restore_parse_state()
+extern long_boolean restore_parse_state(void)
 {
    parse_state = saved_parse_state;
 
    if (saved_command_root)
-      reset_parse_tree(saved_command_root, configuration::next_config().command_root);
+      reset_parse_tree(saved_command_root, history[history_ptr+1].command_root);
    else
-      configuration::next_config().command_root = 0;
+      history[history_ptr+1].command_root = 0;
+
+   return FALSE;
 }
 
 
-void string_copy(char **dest, Cstring src)
+SDLIB_API void string_copy(char **dest, Cstring src)
 {
    Cstring f = src;
    char *t = *dest;
@@ -1875,9 +1753,9 @@ void string_copy(char **dest, Cstring src)
    The "num_pics" argument tells how many of the last history items
    are to have pictures forced, so we can tell exactly what items
    have pictures. */
-void display_initial_history(int upper_limit, int num_pics)
+SDLIB_API void display_initial_history(int upper_limit, int num_pics)
 {
-   int j, startpoint;
+   int j, startpoint, compilerbug;
 
    /* See if we can re-use some of the safely written history. */
    /* First, cut down overly optimistic estimates. */
@@ -1892,9 +1770,9 @@ void display_initial_history(int upper_limit, int num_pics)
       We cut written_history_items down to below that item if such is the case. */
 
    for (j=1; j<=written_history_items; j++) {
-      int compilerbug = ((int) ((unsigned int) (written_history_nopic-j)) ^
+      compilerbug = ((int) ((unsigned int) (written_history_nopic-j)) ^
                  ((unsigned int) (upper_limit-num_pics-j)));
-      if (compilerbug < 0 && !configuration::history[j].draw_pic) {
+      if (compilerbug < 0 && ~history[j].draw_pic) {
          written_history_items = j-1;
          break;
       }
@@ -1903,27 +1781,26 @@ void display_initial_history(int upper_limit, int num_pics)
    if (written_history_items > 0) {
       /* We win.  Back up the text line count to the right place, and rewrite the rest. */
 
-      text_line_count = configuration::history[written_history_items].text_line;
-      gg->reduce_line_count(text_line_count);
+      the_callback_block.text_line_count = history[written_history_items].text_line;
+      (*the_callback_block.uims_reduce_line_count_fn)(the_callback_block.text_line_count);
       open_text_line();
       startpoint = written_history_items+1;
    }
    else {
       /* We lose, there is nothing we can use. */
       clear_screen();
-      write_header_stuff(true, 0);
-      newline();
-      newline();
+      write_header_stuff(TRUE, 0);
+      (*the_callback_block.newline_fn)();
+      (*the_callback_block.newline_fn)();
       startpoint = 1;
    }
 
-   for (j=startpoint; j<=upper_limit-num_pics; j++)
-      write_history_line(j, false, false, file_write_no);
+   for (j=startpoint; j<=upper_limit-num_pics; j++) write_history_line(j, (char *) 0, FALSE, file_write_no);
 
-   // Now write stuff with forced pictures.
+   /* Now write stuff with forced pictures. */
 
    for (j=upper_limit-num_pics+1; j<=upper_limit; j++) {
-      if (j >= startpoint) write_history_line(j, true, false, file_write_no);
+      if (j >= startpoint) write_history_line(j, (char *) 0, TRUE, file_write_no);
    }
 
    written_history_items = upper_limit;   /* This stuff is now safe. */
@@ -1932,20 +1809,22 @@ void display_initial_history(int upper_limit, int num_pics)
 
 
 
-extern void initialize_parse()
+extern void initialize_parse(void)
 {
-   parse_state.concept_write_base = &configuration::next_config().command_root;
+   int i;
+
+   parse_state.concept_write_base = &history[history_ptr+1].command_root;
    parse_state.concept_write_ptr = parse_state.concept_write_base;
    *(parse_state.concept_write_ptr) = (parse_block *) 0;
    parse_state.parse_stack_index = 0;
-   parse_state.base_call_list_to_use = find_proper_call_list(&configuration::current_config().state);
+   parse_state.base_call_list_to_use = find_proper_call_list(&history[history_ptr].state);
    parse_state.call_list_to_use = parse_state.base_call_list_to_use;
-   configuration::next_config().init_centersp_specific();
-   configuration::init_warnings();
-   configuration::next_config().draw_pic = false;
+   history[history_ptr+1].centersp = 0;
+   for (i=0 ; i<WARNING_WORDS ; i++) history[history_ptr+1].warnings.bits[i] = 0;
+   history[history_ptr+1].draw_pic = FALSE;
 
-   if (written_history_items > configuration::history_ptr)
-      written_history_items = configuration::history_ptr;
+   if (written_history_items > history_ptr)
+      written_history_items = history_ptr;
 
    parse_state.specialprompt[0] = '\0';
    parse_state.topcallflags1 = 0;
@@ -1954,30 +1833,31 @@ extern void initialize_parse()
 
 
 
-static void do_change_outfile(bool signal)
+static void do_change_outfile(long_boolean signal)
 {
    char newfile_string[MAX_FILENAME_LENGTH];
 
-   if (gg->do_outfile_popup(newfile_string) == POPUP_ACCEPT_WITH_STRING &&
-       newfile_string[0]) {
-      char confirm_message[MAX_FILENAME_LENGTH+25];
-      char *final_message;
+   if ((*the_callback_block.uims_do_outfile_popup_fn)(newfile_string)) {
+      if (newfile_string[0]) {
+         char confirm_message[MAX_FILENAME_LENGTH+25];
+         char *final_message;
 
-      if (install_outfile_string(newfile_string)) {
-         strncpy(confirm_message, "Output file changed to \"", 25);
-         strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
-         strncat(confirm_message, "\"", 2);
-         final_message = confirm_message;
-      }
-      else
-         final_message = "No write access to that file, no action taken.";
+         if ((*the_callback_block.install_outfile_string_fn)(newfile_string)) {
+            (void) strncpy(confirm_message, "Output file changed to \"", 25);
+            (void) strncat(confirm_message, outfile_string, MAX_FILENAME_LENGTH);
+            (void) strncat(confirm_message, "\"", 2);
+            final_message = confirm_message;
+         }
+         else
+            final_message = "No write access to that file, no action taken.";
 
-      if (signal) {
-         specialfail(final_message);
-      }
-      else {
-         writestuff(final_message);
-         newline();
+         if (signal) {
+            specialfail(final_message);
+         }
+         else {
+            writestuff(final_message);
+            newline();
+         }
       }
    }
 }
@@ -1985,16 +1865,16 @@ static void do_change_outfile(bool signal)
 
 
 // Returns TRUE if it successfully backed up one parse block.
-static bool backup_one_item()
+static long_boolean backup_one_item(void)
 {
 
    // User wants to undo a call.  The concept parse list is not set up
    // for easy backup, so we search forward from the beginning.
 
    parse_block **this_ptr = parse_state.concept_write_base;
-   if (!this_ptr || !*this_ptr) return false;
+   if (!this_ptr || !*this_ptr) return FALSE;
 
-   if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
+   if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
       this_ptr = &((*this_ptr)->next);
 
    for (;;) {
@@ -2007,70 +1887,71 @@ static bool backup_one_item()
       if (this_ptr == parse_state.concept_write_ptr) {
          parse_state.concept_write_ptr = last_ptr;
 
-         // See whether we need to destroy a frame in the parse stack.
+         /* See whether we need to destroy a frame in the parse stack. */
          if (parse_state.parse_stack_index != 0 &&
                parse_state.parse_stack[parse_state.parse_stack_index-1].concept_write_save_ptr == last_ptr)
             parse_state.parse_stack_index--;
 
          *last_ptr = (parse_block *) 0;
-         return true;
+         return TRUE;
       }
 
       if ((*last_ptr)->concept->kind <= marker_end_of_list) break;
    }
 
-   // We did not find our place.
+   /* We did not find our place. */
 
-   return false;
+   return FALSE;
 }
 
 
-// Returns true if sequence was written.
-static bool write_sequence_to_file() THROW_DECL
+// Returns TRUE if sequence was written.
+static long_boolean write_sequence_to_file(void) THROW_DECL
 {
+   int getout_ind;
    char date[MAX_TEXT_LINE_LENGTH];
    char second_header[MAX_TEXT_LINE_LENGTH];
    char seqstring[20];
    int j;
 
-   // Put up the getout popup to see if the user wants to enter a header string.
+   /* Put up the getout popup to see if the user wants to enter a header string. */
 
-   popup_return getout_ind = gg->do_getout_popup(second_header);
+   getout_ind = (*the_callback_block.uims_do_getout_popup_fn)(second_header);
 
-   // Some user interfaces (those with icons) may have an icon to abort the
-   // sequence, rather than just decline the comment.  Such an action comes
-   // back as "POPUP_DECLINE".
+   /* Some user interfaces (those with icons) may have an icon to abort the
+      sequence, rather than just decline the comment.  Such an action comes
+      back as "POPUP_DECLINE". */
 
    if (getout_ind == POPUP_DECLINE)
-      return false;    // User didn't want to end this sequence after all.
+      return FALSE;    /* User didn't want to end this sequence after all. */
    else if (getout_ind != POPUP_ACCEPT_WITH_STRING) second_header[0] = '\0';
 
-   // Open the file and write it.
+   /* Open the file and write it. */
 
    clear_screen();
-   open_file();
-   enable_file_writing = true;
+   (*the_callback_block.open_file_fn)();
+   enable_file_writing = TRUE;
    doublespace_file();
-   get_date(date);
+   (*the_callback_block.get_date_fn)(date);
    writestuff(date);
    writestuff("     ");
-   write_header_stuff(false, configuration::current_config().state.result_flags);
+   write_header_stuff(FALSE, history[history_ptr].state.result_flags);
    newline();
 
-   if (!configuration::sequence_is_resolved()) {
+   if (!(*the_callback_block.sequence_is_resolved_fn)()) {
       writestuff("             NOT RESOLVED");
       newline();
    }
 
-   if (ui_options.singing_call_mode != 0) {
+   if (singing_call_mode != 0) {
       writestuff(
-         (ui_options.singing_call_mode == 2) ?
+         (singing_call_mode == 2) ?
          "             Singing call reverse progression" :
          "             Singing call progression");
       newline();
    }
 
-   // Write header comment, if it exists.
+   /* Write header comment, if it exists. */
 
    if (header_comment[0]) {
       writestuff("             ");
@@ -2083,7 +1964,7 @@ static bool write_sequence_to_file() THROW_DECL
       writestuff(seqstring);
    }
 
-   // Write secondary header comment, if it exists.
+   /* Write secondary header comment, if it exists. */
 
    if (second_header[0]) {
       writestuff("       ");
@@ -2096,23 +1977,23 @@ static bool write_sequence_to_file() THROW_DECL
 
    if (sequence_number >= 0) sequence_number++;
 
-   for (j=configuration::whole_sequence_low_lim; j<=configuration::history_ptr; j++)
-      write_history_line(j, false, false, file_write_double);
+   for (j=whole_sequence_low_lim; j<=history_ptr; j++)
+      write_history_line(j, (char *) 0, FALSE, file_write_double);
 
-   // Echo the concepts entered so far.
+   /* Echo the concepts entered so far.  */
 
-   if (parse_state.concept_write_ptr != &configuration::next_config().command_root) {
-      write_history_line(configuration::history_ptr+1, false, false, file_write_double);
+   if (parse_state.concept_write_ptr != &history[history_ptr+1].command_root) {
+      write_history_line(history_ptr+1, (char *) 0, FALSE, file_write_double);
    }
 
-   if (configuration::sequence_is_resolved())
-      write_resolve_text(true);
+   if ((*the_callback_block.sequence_is_resolved_fn)())
+      write_resolve_text(TRUE);
 
    newline();
-   enable_file_writing = false;
+   enable_file_writing = FALSE;
    newline();
 
-   close_file();     // This will signal a "specialfail" if a file error occurs.
+   (*the_callback_block.close_file_fn)();     /* This will signal a "specialfail" if a file error occurs. */
 
    writestuff("Sequence");
 
@@ -2126,9 +2007,9 @@ static bool write_sequence_to_file() THROW_DECL
    writestuff("\".");
    newline();
 
-   wrote_a_sequence = true;
+   wrote_a_sequence = TRUE;
    global_age++;
-   return true;
+   return TRUE;
 }
 
 
@@ -2137,7 +2018,7 @@ static uint32 id_fixer_array[16] = {
    07777522525, 07777453232, 07777314646, 07777265151,
    07777255225, 07777324532, 07777463146, 07777512651,
    07777252552, 07777323245, 07777464631, 07777515126};
-
+  
 
 static selector_kind translate_selector_permutation1(uint32 x)
 {
@@ -2257,7 +2138,7 @@ static uint32 translate_selector_fields(parse_block *xx, uint32 mask)
 
 
 
-void run_program()
+SDLIB_API void run_program()
 {
    int i;
 
@@ -2266,11 +2147,11 @@ void run_program()
    interactivity = interactivity_normal;
    clear_screen();
 
-   if (!ui_options.diagnostic_mode) {
+   if (!diagnostic_mode) {
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2003 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2000 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();
@@ -2279,8 +2160,6 @@ void run_program()
       writestuff("Copyright (c) 1995, Robert E. Cays");
       newline();
       writestuff("Copyright (c) 1996, Charles Petzold");
-      newline();
-      writestuff("Copyright (c) 2001-2002  Chris \"Fen\" Tamanaha");
       newline();
       writestuff("SD comes with ABSOLUTELY NO WARRANTY;");
       newline();
@@ -2319,20 +2198,20 @@ void run_program()
 
    try {
       if (global_error_flag) {
-         // The call we were trying to do has failed.  Abort it and display the error message.
-
+         /* The call we were trying to do has failed.  Abort it and display the error message. */
+   
          if (interactivity == interactivity_database_init ||
              interactivity == interactivity_verify)
-            gg->fatal_error_exit(1, "Unknown error context", error_message1);
+            (*the_callback_block.init_error_fn)(error_message1);
 
          // If this is a real call execution error, save the call that caused it.
 
          if (global_error_flag < error_flag_wrong_command) {
-            configuration::history[0] = configuration::next_config();     // So failing call will get printed.
-            // But copy the parse tree, since we are going to clip it.
-            configuration::history[0].command_root = copy_parse_tree(configuration::history[0].command_root);
-            // But without any warnings we may have collected.
-            configuration::history[0].init_warnings_specific();
+            history[0] = history[history_ptr+1];     /* So failing call will get printed. */
+            /* But copy the parse tree, since we are going to clip it. */
+            history[0].command_root = copy_parse_tree(history[0].command_root);
+            /* But without any warnings we may have collected. */
+            for (i=0 ; i<WARNING_WORDS ; i++) history[0].warnings.bits[i] = 0;
          }
          if (global_error_flag == error_flag_wrong_command) {
             /* Special signal -- user clicked on special thing while trying to get subcall. */
@@ -2346,24 +2225,25 @@ void run_program()
                  (uims_menu_index == command_paste_all_calls) ||
                  (uims_menu_index == command_erase) ||
                  (uims_menu_index == command_abort)))
-               reply_pending = true;
+               reply_pending = TRUE;
             goto start_with_pending_reply;
          }
-
+   
          /* Try to remove the call from the current parse tree, but leave everything else
             in place.  This will fail if the parse tree, or our place on it, is too
             complicated.  Also, we do not do it if in diagnostic mode, or if the user
             did not specify "retain_after_error", or if the special "heads into the middle and ..."
             operation is in place. */
 
-         if (!ui_options.diagnostic_mode &&
+         if (!diagnostic_mode && 
              retain_after_error &&
-             ((configuration::history_ptr != 1) || !configuration::history[1].get_startinfo_specific()->into_the_middle) &&
+             ((history_ptr != 1) || !startinfolist[history[1].centersp].into_the_middle) &&
              backup_one_item()) {
-            reply_pending = false;
-            // Take out warnings that arose from the failed call,
-            // since we aren't going to do that call.
-            configuration::init_warnings();
+            reply_pending = FALSE;
+            /* Take out warnings that arose from the failed call,
+               since we aren't going to do that call. */
+            for (i=0 ; i<WARNING_WORDS ; i++)
+               history[history_ptr+1].warnings.bits[i] = 0;
             goto simple_restart;
          }
          goto start_cycle;      /* Failed, reinitialize the whole line. */
@@ -2372,21 +2252,20 @@ void run_program()
    show_banner:
 
       writestuff("Version ");
-      write_header_stuff(true, 0);
+      write_header_stuff(TRUE, 0);
       newline();
       writestuff("Output file is \"");
       writestuff(outfile_string);
       writestuff("\"");
       newline();
 
-      if (creating_new_session) {
-         do_change_outfile(false);
-         gg->do_header_popup(header_comment);
-         creating_new_session = false;
+      if (need_new_header_comment) {
+         (void) (*the_callback_block.uims_do_header_popup_fn)(header_comment);
+         need_new_header_comment = FALSE;
       }
-
+   
    new_sequence:
-
+   
       // Here to start a fresh sequence.  If first time, or if we got here
       // by clicking on "abort", the screen has been cleared.  Otherwise,
       // it shows the last sequence that we wrote.
@@ -2395,7 +2274,7 @@ void run_program()
       // But if we have stuff in the clipboard, we save everything.
 
       if (clipboard_size == 0) release_parse_blocks_to_mark((parse_block *) 0);
-
+   
       /* Update the console window title. */
 
       {
@@ -2409,17 +2288,17 @@ void run_program()
 
          if (header_comment[0])
             (void) sprintf(title, "%s  %s%s",
-                           &old_filename_strings[calling_level][1], header_comment, numstuff);
+                           &filename_strings[calling_level][1], header_comment, numstuff);
          else
             (void) sprintf(title, "%s%s",
-                           &old_filename_strings[calling_level][1], numstuff);
+                           &filename_strings[calling_level][1], numstuff);
 
-         gg->set_window_title(title);
+         (*the_callback_block.uims_set_window_title_fn)(title);
       }
 
       /* Query for the starting setup. */
 
-      global_reply = gg->get_startup_command();
+      global_reply = (*the_callback_block.uims_get_startup_command_fn)();
 
       if (global_reply == ui_command_select && uims_menu_index == command_quit) goto normal_exit;
       if (global_reply != ui_start_select) goto normal_exit;           /* Huh? */
@@ -2427,12 +2306,6 @@ void run_program()
       switch (uims_menu_index) {
       case start_select_toggle_conc:
          allowing_all_concepts = !allowing_all_concepts;
-         goto new_sequence;
-      case start_select_toggle_singlespace:
-         ui_options.singlespace_mode = !ui_options.singlespace_mode;
-         goto new_sequence;
-      case start_select_toggle_minigrand:
-         allowing_minigrand = !allowing_minigrand;
          goto new_sequence;
       case start_select_toggle_act:
          using_active_phantoms = !using_active_phantoms;
@@ -2443,38 +2316,35 @@ void run_program()
       case start_select_toggle_nowarn_mode:
          ui_options.nowarn_mode = !ui_options.nowarn_mode;
          goto new_sequence;
-      case start_select_toggle_keepallpic_mode:
-         ui_options.keep_all_pictures = !ui_options.keep_all_pictures;
-         goto new_sequence;
       case start_select_toggle_singleclick_mode:
          ui_options.accept_single_click = !ui_options.accept_single_click;
          goto new_sequence;
       case start_select_toggle_singer:
-         if (ui_options.singing_call_mode != 0)
-            ui_options.singing_call_mode = 0;    /* Turn it off. */
+         if (singing_call_mode != 0)
+            singing_call_mode = 0;    /* Turn it off. */
          else
-            ui_options.singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
+            singing_call_mode = 1;    /* 1 for forward progression, 2 for backward. */
          goto new_sequence;
       case start_select_toggle_singer_backward:
-         if (ui_options.singing_call_mode != 0)
-            ui_options.singing_call_mode = 0;    /* Turn it off. */
+         if (singing_call_mode != 0)
+            singing_call_mode = 0;    /* Turn it off. */
          else
-            ui_options.singing_call_mode = 2;
+            singing_call_mode = 2;
          goto new_sequence;
       case start_select_select_print_font:
-         if (!gg->choose_font()) {
+         if (!(*the_callback_block.uims_choose_font_fn)()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_current:
-         if (!gg->print_this()) {
+         if (!(*the_callback_block.uims_print_this_fn)()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
          goto new_sequence;
       case start_select_print_any:
-         if (!gg->print_any()) {
+         if (!(*the_callback_block.uims_print_any_fn)()) {
             writestuff("Printing is not supported in this program.");
             newline();
          }
@@ -2486,7 +2356,7 @@ void run_program()
 
             if (session) {
                (void) fclose(session);
-               if (gg->do_session_init_popup() != POPUP_ACCEPT) {
+               if ((*the_callback_block.uims_do_session_init_popup_fn)() != POPUP_ACCEPT) {
                   writestuff("No action has been taken.");
                   newline();
                   goto new_sequence;
@@ -2514,11 +2384,6 @@ void run_program()
                if (fputs("\n", session) == EOF) goto copy_failed;
             }
 
-            for (q = abbreviations_table ; *q ; q++) {
-               if (fputs(*q, session) == EOF) goto copy_failed;
-               if (fputs("\n", session) == EOF) goto copy_failed;
-            }
-
             if (fputs("\n", session) == EOF) goto copy_failed;
             (void) fclose(session);
             writestuff("The file has been initialized, and will take effect the next time the program is started.");
@@ -2535,34 +2400,36 @@ void run_program()
             goto new_sequence;
          }
       case start_select_change_outfile:
-         do_change_outfile(false);
+         do_change_outfile(FALSE);
          goto new_sequence;
       case start_select_change_header_comment:
-         (void) gg->do_header_popup(header_comment);
+         (void) (*the_callback_block.uims_do_header_popup_fn)(header_comment);
+         need_new_header_comment = FALSE;
          goto new_sequence;
       case start_select_exit:
          goto normal_exit;
       }
+   
+      history_ptr = 1;              /* Clear the position history. */
 
-      // We now know that uims_menu_index is in the range 1 to 5, that is,
-      // start_select_h1p2p ... start_select_as_they_are.  We will put
-      // that into the startinfo stuff in the history.
+      whole_sequence_low_lim = 2;
+      if (!startinfolist[uims_menu_index].into_the_middle) whole_sequence_low_lim = 1;
 
-      configuration::initialize_history(uims_menu_index);   // Clear the position history.
-      configuration::history[1].init_warnings_specific();
-      configuration::history[1].init_resolve();
-      // Put the people into their starting position.
-      configuration::history[1].state = configuration::history[1].get_startinfo_specific()->the_setup;
-
+      for (i=0 ; i<WARNING_WORDS ; i++) history[1].warnings.bits[i] = 0;
+      history[1].draw_pic = FALSE;
+      history[1].centersp = uims_menu_index;
+      history[1].resolve_flag.kind = resolve_none;
+      /* Put the people into their starting position. */
+      history[1].state = startinfolist[uims_menu_index].the_setup;
       written_history_items = -1;
 
       global_error_flag = (error_flag_type) 0;
-
+   
       /* Come here to read a bunch of concepts and a call and add an item to the history. */
-
+   
    start_cycle:
 
-      reply_pending = false;
+      reply_pending = FALSE;
 
    start_with_pending_reply:
 
@@ -2581,36 +2448,36 @@ void run_program()
          and that is right here.  Note that we are about to call "initialize_parse",
          which destroys any lingering pointers into the history array. */
 
-      if (history_allocation < configuration::history_ptr+MAX_RESOLVE_SIZE+2) {
+      if (history_allocation < history_ptr+MAX_RESOLVE_SIZE+2) {
          configuration * t;
          history_allocation <<= 1;
          t = (configuration *)
-            get_more_mem_gracefully(configuration::history, history_allocation * sizeof(configuration));
+            (*the_callback_block.get_more_mem_gracefully_fn)(history, history_allocation * sizeof(configuration));
          if (!t) {
             /* Couldn't get memory; we are in serious trouble. */
             history_allocation >>= 1;
             /* Bring history_ptr down to safe size.  This will have the effect of
                throwing away the last call, or part or all of the last resolve. */
-            configuration::history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
+            history_ptr = history_allocation-MAX_RESOLVE_SIZE-2;
             specialfail("Not enough memory!");
          }
-         configuration::history = t;
+         history = t;
       }
 
       initialize_parse();
 
-      // Check for first call given to heads or sides only.
-
-      if ((configuration::history_ptr == 1) && configuration::history[1].get_startinfo_specific()->into_the_middle)
-         deposit_concept(&conzept::centers_concept);
-
-      // Come here to get a concept or call or whatever from the user.
-
-      // Display the menu and make a choice!!!!
-
+      /* Check for first call given to heads or sides only. */
+   
+      if ((history_ptr == 1) && startinfolist[history[1].centersp].into_the_middle)
+         (*the_callback_block.deposit_concept_fn)(&centers_concept);
+   
+      /* Come here to get a concept or call or whatever from the user. */
+   
+      /* Display the menu and make a choice!!!! */
+   
    simple_restart:
 
-      if ((!reply_pending) && (!query_for_call())) {
+      if ((!reply_pending) && (!(*the_callback_block.query_for_call_fn)())) {
          // User specified a call (and perhaps concepts too).
 
          // The call to toplevelmove may make a call to "fail", which will get caught
@@ -2619,33 +2486,33 @@ void run_program()
 
          toplevelmove();
          finish_toplevelmove();
-         configuration::history_ptr++;         // Call successfully completed; save it.
+         history_ptr++;         // Call successfully completed; save it.
          goto start_cycle;
       }
+   
+      /* If get here, query_for_call exitted without completing its parse, because the operator
+         selected something like "quit", "undo", or "resolve", or because we have such a command
+         already pending. */
 
-      // If get here, query_for_call exitted without completing its parse,
-      // because the operator selected something like "quit", "undo",
-      // or "resolve", or because we have such a command already pending.
-
-      reply_pending = false;
+      reply_pending = FALSE;
 
       if (global_reply == ui_command_select) {
          switch ((command_kind) uims_menu_index) {
          case command_quit:
-            if (gg->do_abort_popup() != POPUP_ACCEPT)
+            if ((*the_callback_block.uims_do_abort_popup_fn)() != POPUP_ACCEPT)
                goto simple_restart;
             goto normal_exit;
          case command_abort:
-            if (gg->do_abort_popup() != POPUP_ACCEPT)
+            if ((*the_callback_block.uims_do_abort_popup_fn)() != POPUP_ACCEPT)
                goto simple_restart;
             clear_screen();
             goto show_banner;
          case command_cut_to_clipboard:
-            while (backup_one_item()) ;   // Repeatedly remove any parse blocks that we have.
+            while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
             initialize_parse();
 
-            if (configuration::history_ptr <= 1 ||
-                (configuration::history_ptr == 2 && configuration::history[1].get_startinfo_specific()->into_the_middle))
+            if (history_ptr <= 1 ||
+                (history_ptr == 2 && startinfolist[history[1].centersp].into_the_middle))
                specialfail("Can't cut past this point.");
 
             clipboard_size++;
@@ -2653,22 +2520,22 @@ void run_program()
             if (clipboard_allocation < clipboard_size) {
                configuration *t;
                clipboard_allocation = clipboard_size;
-               // Increase by 50% beyond what we have now.
+               /* Increase by 50% beyond what we have now. */
                clipboard_allocation += clipboard_allocation >> 1;
                t = (configuration *)
-                  get_more_mem_gracefully(clipboard,
+                  (*the_callback_block.get_more_mem_gracefully_fn)(clipboard,
                                           clipboard_allocation * sizeof(configuration));
                if (!t) specialfail("Not enough memory!");
                clipboard = t;
             }
 
-            clipboard[clipboard_size-1] = configuration::history[configuration::history_ptr-1];
-            clipboard[clipboard_size-1].command_root = configuration::current_config().command_root;
-            configuration::history_ptr--;
+            clipboard[clipboard_size-1] = history[history_ptr-1];
+            clipboard[clipboard_size-1].command_root = history[history_ptr].command_root;
+            history_ptr--;
             goto start_cycle;
          case command_delete_entire_clipboard:
             if (clipboard_size != 0) {
-               if (gg->do_delete_clipboard_popup() != POPUP_ACCEPT)
+               if ((*the_callback_block.uims_do_delete_clipboard_popup_fn)() != POPUP_ACCEPT)
                   goto simple_restart;
             }
 
@@ -2681,30 +2548,30 @@ void run_program()
          case command_paste_all_calls:
             if (clipboard_size == 0) specialfail("The clipboard is empty.");
 
-            while (backup_one_item()) ;   // Repeatedly remove any parse blocks that we have.
+            while (backup_one_item()) ;   /* Repeatedly remove any parse blocks that we have. */
             initialize_parse();
 
-            if (configuration::history_ptr >= 1 &&
-                (configuration::history_ptr >= 2 || !configuration::history[1].get_startinfo_specific()->into_the_middle)) {
+            if (history_ptr >= 1 &&
+                (history_ptr >= 2 || !startinfolist[history[1].centersp].into_the_middle)) {
                uint32 status = 0;
 
                while (clipboard_size != 0) {
                   uint32 directions1, directions2, livemask1, livemask2;
                   parse_block *saved_root;
-                  setup *old = &configuration::current_config().state;
+                  setup *old = &history[history_ptr].state;
                   setup *nuu = &clipboard[clipboard_size-1].state;
                   uint32 mask = 0777777;
 
-                  configuration::next_config() = clipboard[clipboard_size-1];
+                  history[history_ptr+1] = clipboard[clipboard_size-1];
 
-                  // Save the entire parse tree, in case it gets damaged
-                  // by an aborted selector replacement.
+                  /* Save the entire parse tree, in case it gets damaged
+                     by an aborted selector replacement. */
 
-                  saved_root = copy_parse_tree(configuration::next_config().command_root);
+                  saved_root = copy_parse_tree(history[history_ptr+1].command_root);
 
-                  // If the setup, population, and facing directions don't match, the
-                  // call execution is problematical.  We don't translate selectors.
-                  // The operator is responsible for what happens.
+                  /* If the setup, population, and facing directions don't match, the
+                     call execution is problematical.  We don't translate selectors.
+                     The operator is responsible for what happens. */
 
                   if (nuu->kind != old->kind) {
                      status |= 4;
@@ -2716,10 +2583,10 @@ void run_program()
                   livemask1 = 0;
                   livemask2 = 0;
 
-                  // Find out whether the formations agree, and gather the information
-                  // that we need to translate the selectors.
+                  /* Find out whether the formations agree, and gather the information
+                     that we need to translate the selectors. */
 
-                  for (i=0; i<=attr::slimit(old); i++) {
+                  for (i=0; i<=setup_attrs[old->kind].setup_limits; i++) {
                      uint32 p = old->people[i].id1;
                      uint32 q = nuu->people[i].id1;
                      uint32 oldmask = mask;
@@ -2734,13 +2601,13 @@ void run_program()
                      directions2 = (directions2<<2) | (q&3);
 
                      mask |= (b|4) << (a*3 + 18);
-                     oldmask ^= mask;     // The bits that changed.
-                     // Demand that, if anything changed at all, some new field got
-                     // set.  This has the effect of demanding that existing fields
-                     // never change, and that only new fields are created or existing
-                     // fields are rewritten with their original data.
+                     oldmask ^= mask;     /* The bits that changed. */
+                     /* Demand that, if anything changed at all, some new field got
+                        set.  This has the effect of demanding that existing fields
+                        never change, and that only new fields are created or existing
+                        fields are rewritten with their original data. */
                      if (oldmask != 0 && (mask & 04444000000) == 0)
-                        mask |= 07777000000;  // Raise error.
+                        mask |= 07777000000;  /* Raise error. */
                      mask &= id_fixer_array[(a<<2) | b];
                   }
 
@@ -2749,17 +2616,17 @@ void run_program()
                      goto doitanyway;
                   }
 
-                  // Everything matches.  Translate the selectors.
+                  /* Everything matches.  Translate the selectors. */
 
-                  // If error happened, be sure everyone knows about it.
+                  /* If error happened, be sure everyone knows about it. */
                   if ((mask & 07777000000) == 07777000000) mask &= ~07777000000;
 
                   status |=
-                     translate_selector_fields(configuration::next_config().command_root,
+                     translate_selector_fields(history[history_ptr+1].command_root,
                                                (mask << 1) | ((nuu->rotation ^ old->rotation) & 1));
 
                   if (status & 2) {
-                     reset_parse_tree(saved_root, configuration::next_config().command_root);
+                     reset_parse_tree(saved_root, history[history_ptr+1].command_root);
                      specialfail("Sorry, can't fix person identifier.  "
                                  "You can give the command 'delete one call from clipboard' "
                                  "to remove this call.");
@@ -2768,27 +2635,27 @@ void run_program()
                doitanyway:
 
                   interactivity = interactivity_no_query_at_all;
-                  testing_fidelity = true;
+                  testing_fidelity = TRUE;
 
                   // Create a temporary error handler.
 
                   try {
                      toplevelmove();
                      finish_toplevelmove();
-                     configuration::history_ptr++;
+                     history_ptr++;
                   }
                   catch(error_flag_type) {
                      // The call failed.
                      interactivity = interactivity_normal;
-                     testing_fidelity = false;
-                     reset_parse_tree(saved_root, configuration::next_config().command_root);
+                     testing_fidelity = FALSE;
+                     reset_parse_tree(saved_root, history[history_ptr+1].command_root);
                      specialfail("The pasted call has failed.  "
                                  "You can give the command 'delete one call from clipboard' "
                                  "to remove it.");
                   }
 
                   interactivity = interactivity_normal;
-                  testing_fidelity = false;
+                  testing_fidelity = FALSE;
                   clipboard_size--;
                   if ((command_kind) uims_menu_index == command_paste_one_call) break;
                }
@@ -2801,69 +2668,44 @@ void run_program()
             goto start_cycle;
          case command_undo:
             if (backup_one_item()) {
-               // We succeeded in backing up by one concept.  Continue from that point.
-               // But if we backed all the way to the beginning, reset the call menu list.
+               /* We succeeded in backing up by one concept.  Continue from that point.
+                  But if we backed all the way to the beginning, reset the call menu list. */
 
                if (parse_state.concept_write_base == parse_state.concept_write_ptr &&
                    parse_state.parse_stack_index == 0)
                   parse_state.call_list_to_use = parse_state.base_call_list_to_use;
 
-               reply_pending = false;
+               reply_pending = FALSE;
                goto simple_restart;
             }
-            else if (parse_state.concept_write_base != &configuration::next_config().command_root) {
-               // Failed to back up, but some concept exists.  This must have been inside
-               // a "checkpoint" or similar complex thing.  Just throw it all away,
-               // but do not delete any completed calls.
-               reply_pending = false;
+            else if (parse_state.concept_write_base != parse_state.concept_write_ptr ||
+                     parse_state.concept_write_base != &history[history_ptr+1].command_root) {
+               /* Failed to back up, but some concept exists.  This must have been inside
+                  a "checkpoint" or similar complex thing.  Just throw it all away,
+                  but do not delete any completed calls. */
+               reply_pending = FALSE;
                goto start_cycle;
             }
-            else if (parse_state.concept_write_base != parse_state.concept_write_ptr) {
-               // Failed to back up, but some concept exists.
-               // Check for just one concept, and that concept is in place
-               // only because it is the "centers" concept for a "heads/sides start".
-               if (parse_state.concept_write_base &&
-                   &((*parse_state.concept_write_base)->next) == parse_state.concept_write_ptr &&
-                   configuration::history_ptr == 1 &&
-                   configuration::current_config().get_startinfo_specific()->into_the_middle) {
-                  // User typed "undo" at the start of the sequence.
-                  // Just abort the sequence.  Don't even ask for permission --
-                  // there is nothing of value.
-                  clear_screen();
-                  goto show_banner;
-               }
-               else {
-                  reply_pending = false;
-                  goto start_cycle;
-               }
-            }
             else {
-               // There were no concepts entered.  Throw away the entire preceding line.
-               if (configuration::history_ptr > 1) {
-                  configuration::history_ptr--;
-                  // Going to start_cycle will make sure written_history_items
-                  // does not exceed history_ptr.
-                  goto start_cycle;
-               }
-               else {
-                  // User typed "undo" at the start of the sequence.  Abort the sequence.
-                  clear_screen();
-                  goto show_banner;
-               }
+               /* There were no concepts entered.  Throw away the entire preceding line. */
+               if (history_ptr > 1) history_ptr--;
+               /* Going to start_cycle will make sure written_history_items
+                  does not exceed history_ptr. */
+               goto start_cycle;
             }
          case command_erase:
-            reply_pending = false;
+            reply_pending = FALSE;
             goto start_cycle;
          case command_save_pic:
-            configuration::current_config().draw_pic = true;
-            // We have to back up to BEFORE the item we just changed.
-            if (written_history_items > configuration::history_ptr-1)
-               written_history_items = configuration::history_ptr-1;
+            history[history_ptr].draw_pic = TRUE;
+            /* We have to back up to BEFORE the item we just changed. */
+            if (written_history_items > history_ptr-1)
+               written_history_items = history_ptr-1;
             goto simple_restart;
          case command_help:
             {
                char help_string[MAX_ERR_LENGTH];
-               const char *prefix;
+               Const char *prefix;
                int current_length;
 
                switch (parse_state.call_list_to_use) {
@@ -2912,7 +2754,7 @@ void run_program()
                help_string[MAX_ERR_LENGTH-1] = '\0';
                current_length = strlen(help_string);
 
-               if (configuration::sequence_is_resolved()) {
+               if ((*the_callback_block.sequence_is_resolved_fn)()) {
                   (void) strncpy(&help_string[current_length],
                                  "  You may also write out this finished sequence "
                                  "by typing 'write this sequence'.",
@@ -2928,13 +2770,13 @@ void run_program()
                specialfail(help_string);
             }
          case command_change_outfile:
-            do_change_outfile(true);
+            do_change_outfile(TRUE);
             goto start_cycle;
          case command_change_header:
             {
                char newhead_string[MAX_TEXT_LINE_LENGTH];
-
-               if (gg->do_header_popup(newhead_string)) {
+         
+               if ((*the_callback_block.uims_do_header_popup_fn)(newhead_string)) {
                   (void) strncpy(header_comment, newhead_string, MAX_TEXT_LINE_LENGTH);
 
                   if (newhead_string[0]) {
@@ -2951,48 +2793,48 @@ void run_program()
                goto start_cycle;
             }
          case command_getout:
-            // Check that it is really resolved.
+            /* Check that it is really resolved. */
 
-            if (!configuration::sequence_is_resolved()) {
-               if (gg->do_write_anyway_popup() != POPUP_ACCEPT)
+            if (!(*the_callback_block.sequence_is_resolved_fn)()) {
+               if ((*the_callback_block.uims_do_write_anyway_popup_fn)() != POPUP_ACCEPT)
                   specialfail("This sequence is not resolved.");
-               configuration::current_config().draw_pic = true;
+               history[history_ptr].draw_pic = TRUE;
             }
 
             if (!write_sequence_to_file())
-               goto start_cycle; // User cancelled action.
+               goto start_cycle; /* user cancelled action */
             goto new_sequence;
          case command_select_print_font:
-            if (!gg->choose_font())
+            if (!(*the_callback_block.uims_choose_font_fn)())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_current:
-            if (!gg->print_this())
+            if (!(*the_callback_block.uims_print_this_fn)())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_print_any:
-            if (!gg->print_any())
+            if (!(*the_callback_block.uims_print_any_fn)())
                specialfail("Printing is not supported in this program.");
             goto start_cycle;
          case command_help_manual:
-            if (!gg->help_manual())
+            if (!(*the_callback_block.uims_help_manual_fn)())
                specialfail("Manual browsing is not supported in this program.");
             goto start_cycle;
-         default:     // Should be some kind of search command.
-            // If it wasn't, we have a serious problem.
+         default:     /* Should be some kind of search command. */
+            /* If it wasn't, we have a serious problem. */
             if (((command_kind) uims_menu_index) < command_resolve) goto normal_exit;
             search_goal = (command_kind) uims_menu_index;
             global_reply = full_resolve();
 
-            // If full_resolve refused to operate (for example, we clicked on "reconcile"
-            // when in an hourglass), it returned "ui_search_accept", which will cause
-            // us simply to go to start_cycle.
+            /* If full_resolve refused to operate (for example, we clicked on "reconcile"
+               when in an hourglass), it returned "ui_search_accept", which will cause
+               us simply to go to start_cycle. */
 
-            // If user clicked on something random, treat it as though he clicked on
-            // "accept" followed by whatever it was.  This includes "quit", "abort",
-            // "end this sequence", and any further search commands.
-            // So a search command (e.g. "pick random call") will cause the last
-            // search result to be accepted, and begin another search on top of that result.
+            /* If user clicked on something random, treat it as though he clicked on "accept"
+               followed by whatever it was.  This includes "quit", "abort", "end this sequence",
+            and any further search commands.  So a search command (e.g. "pick random call")
+            will cause the last search result to be accepted, and begin another search on top
+            of that result. */
 
             if (global_reply == ui_command_select) {
                switch ((command_kind) uims_menu_index) {
@@ -3006,13 +2848,12 @@ void run_program()
                }
 
                allowing_modifications = 0;
-               configuration::next_config().draw_pic = false;
-               parse_state.concept_write_base = &configuration::next_config().command_root;
+               history[history_ptr+1].draw_pic = FALSE;
+               parse_state.concept_write_base = &history[history_ptr+1].command_root;
                parse_state.concept_write_ptr = parse_state.concept_write_base;
                *parse_state.concept_write_ptr = (parse_block *) 0;
-               reply_pending = true;
-               // Going to start_with_pending_reply will make sure
-               // written_history_items does not exceed history_ptr.
+               reply_pending = TRUE;
+               /* Going to start_with_pending_reply will make sure written_history_items does not exceed history_ptr. */
                goto start_with_pending_reply;
             }
 
@@ -3021,7 +2862,7 @@ void run_program()
       }
 
       goto normal_exit;
-   }
+   }      
    catch(error_flag_type sss) {
       global_error_flag = sss;
       goto got_an_exception;

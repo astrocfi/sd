@@ -6,17 +6,16 @@ Sd: a checker-moving program that is <strong>powerful</strong>,
 <strong>sophisticated</strong>, <strong>accurate</strong> and
 <strong>reliable</strong>.
 </p>
-<p align="center">
-<strong>The current version of Sd/Sdtty is 34.8n</strong>, released on May 12, 2003.
 <br>
+<p align="center">
+<strong>The current version of Sd/Sdtty is 34.21</strong>, released on August 27, 2000.
 <p>
-<strong>A bug causing occasional crashes during resolving
-has been fixed.  You should download this version.</strong>
+<strong>NOTE!!!!  Version 34.2, released on August 21, has a serious defect.  If you
+downloaded it, please replace it with version 34.21.  We apologize for the
+inconvenience.</strong>.
 <p>
-The program is now able to associate abridgement files with sessions.
-See the release notes and manual.
-<p>
-The program should start up much faster than before.
+This version no longer needs the special "helper" calls like "recycle (parts)"
+or "scoot and weave (parts)".  Just type the plain call name in all cases.
 <p>
 <dl>
 <dt>
@@ -28,7 +27,7 @@ A sample of fun things Sd can do.
 <dt>
 <font size="+1"><a href="intro.html">Background</a></font></dt>
 <dd>
-Background and availability info, and information about Microsoft compiler bugs.
+Background and availability info.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
@@ -36,7 +35,7 @@ Background and availability info, and information about Microsoft compiler bugs.
 <dd>
 Be running the latest, fully-functional version
 <a href="download-pc.html">on your own PC</a>
-(Windows or Linux) in minutes.
+(Windows, Linux, or DOS) in minutes.
 <br>
 Or download the program for other varieties of
 <a href="download-unix.html">Unix</a>.
@@ -46,7 +45,16 @@ Or download the program for other varieties of
 <font size="+1"><a href="readings.html">Documentation</a></font></dt>
 <dd>
 Browse or download documents about Sd,
-including the entire <a href="sd_doc.html">users manual</a>.
+including the entire <a href="manual/">users manual</a>.
+<br>&nbsp;<!--blank line--><br>
+</dd>
+<dt>
+<font size="+1">Mailing List</font></dt>
+<dd>
+To add yourself to the mailing list to receive announcements
+of new versions, send a message to
+<a href="mailto:sd-request@lists.best.com">&lt;sd-request@lists.best.com&gt;</a>.
+Put the single lower-case word "subscribe" in the message body.
 <br>&nbsp;<!--blank line--><br>
 </dd>
 <dt>
@@ -62,10 +70,10 @@ Email
 <a href="mailto:wba@alum.mit.edu">&lt;wba@alum.mit.edu&gt;</a>.
 <hr>
 For general info on square dancing, see the
-<a href="http://www.dosado.com/">Western Square Dancing</a>
+<a href="http://www.doSAdo.com/">Western Square Dancing</a>
 site.
 <br>
-<em>Time-stamp: "11 August 2002"</em>
+<em>Time-stamp: "3 February 2000"</em>
 <!-- end of body text -->
 </td>
 <td bgcolor="#ff9900">&nbsp;</td>

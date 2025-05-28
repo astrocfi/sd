@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990-2002  William B. Ackerman.
+    Copyright (C) 1990-2000  William B. Ackerman.
 
     This file is unpublished and contains trade secrets.  It is
     to be used by permission only and not to be disclosed to third
@@ -24,15 +24,21 @@ and the following external variables:
    selector_preds
 */
 
+#ifdef WIN32
+#define SDLIB_API __declspec(dllexport)
+#else
+#define SDLIB_API
+#endif
+
 #include "sd.h"
 
 
-// These variables are external.
+/* These variables are external. */
 
-bool selector_used;
-bool direction_used;
-bool number_used;
-bool mandatory_call_used;
+long_boolean selector_used;
+long_boolean direction_used;
+long_boolean number_used;
+long_boolean mandatory_call_used;
 
 
 /* If a real person and a person under test are XOR'ed, the result AND'ed with this constant,
@@ -41,29 +47,27 @@ bool mandatory_call_used;
 
 #define DIR_MASK (BIT_PERSON | 3)
 
-enum {
-   ID1_PERM_ALL_ID = ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL
-};
+#define ID1_PERM_ALL_ID (ID1_PERM_HEAD|ID1_PERM_SIDE|ID1_PERM_BOY|ID1_PERM_GIRL)
 
 
 
 
 
-extern bool selectp(setup *ss, int place) THROW_DECL
+extern long_boolean selectp(setup *ss, int place) THROW_DECL
 {
    uint32 permpid1, pid2, p1, p2;
    selector_kind s;
 
-   selector_used = true;
+   selector_used = TRUE;
 
    /* Pull out the cases that do not require the person to be real. */
 
    switch (current_options.who) {
       case selector_all:
       case selector_everyone:
-         return true;
+         return TRUE;
       case selector_none:
-         return false;
+         return FALSE;
    }
 
    permpid1 = ss->people[place].id1;
@@ -83,8 +87,8 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       // based on the actual occupancy, and we are looking at an unoccupied
       // space.
 
-      if (attr::slimit(ss) < 8) {
-         const id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
+      if (setup_attrs[ss->kind].setup_limits < 8) {
+         id_bit_table *ptr = setup_attrs[ss->kind].id_bit_table_ptr;
 
          if (ptr) {
             switch (current_options.who) {
@@ -101,9 +105,6 @@ extern bool selectp(setup *ss, int place) THROW_DECL
             case selector_ctr_1x6:
             case selector_outer1x3s:
             case selector_center4:
-            case selector_center_wave:
-            case selector_center_line:
-            case selector_center_col:
             case selector_outerpairs:
                pid2 = ptr[place][0] &
                   BITS_TO_CLEAR &
@@ -120,52 +121,44 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 
    switch (current_options.who) {
       case selector_boys:
-         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return true;
-         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return false;
+         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return TRUE;
+         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return FALSE;
          break;
       case selector_girls:
-         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return true;
-         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return false;
+         if      ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_GIRL) return TRUE;
+         else if ((permpid1 & (ID1_PERM_BOY|ID1_PERM_GIRL)) == ID1_PERM_BOY) return FALSE;
          break;
       case selector_heads:
-         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return true;
-         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return false;
+         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return FALSE;
          break;
       case selector_sides:
-         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return true;
-         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return false;
+         if      ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_SIDE) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HEAD|ID1_PERM_SIDE)) == ID1_PERM_HEAD) return FALSE;
          break;
       case selector_headcorners:
-         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return true;
-         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return false;
+         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return FALSE;
          break;
       case selector_sidecorners:
-         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return true;
-         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return false;
+         if      ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_SCOR) return TRUE;
+         else if ((permpid1 & (ID1_PERM_HCOR|ID1_PERM_SCOR)) == ID1_PERM_HCOR) return FALSE;
          break;
       case selector_headboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY))
-            return true;
-         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB)
-            return false;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHB)) == (ID1_PERM_HEAD|ID1_PERM_BOY)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NHB) == ID1_PERM_NHB) return FALSE;
          break;
       case selector_headgirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL))
-            return true;
-         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG)
-            return false;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NHG)) == (ID1_PERM_HEAD|ID1_PERM_GIRL)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NHG) == ID1_PERM_NHG) return FALSE;
          break;
       case selector_sideboys:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY))
-            return true;
-         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB)
-            return false;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSB)) == (ID1_PERM_SIDE|ID1_PERM_BOY)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NSB) == ID1_PERM_NSB) return FALSE;
          break;
       case selector_sidegirls:
-         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL))
-            return true;
-         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG)
-            return false;
+         if      ((permpid1 & (ID1_PERM_ALL_ID|ID1_PERM_NSG)) == (ID1_PERM_SIDE|ID1_PERM_GIRL)) return TRUE;
+         else if ((permpid1 & ID1_PERM_NSG) == ID1_PERM_NSG) return FALSE;
          break;
       case selector_centers:
       case selector_ends:
@@ -219,9 +212,9 @@ extern bool selectp(setup *ss, int place) THROW_DECL
             else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
             else break;
          }
-         else if (ss->kind == s2x7 || ss->kind == sdblspindle) {
+         else if (ss->kind == s2x7) {
             if (current_options.who == selector_center2)
-               return (pid2 & ID2_CTR2) != 0;
+               return (pid2 & ID2_CTR2);
             else break;
          }
          else {
@@ -234,16 +227,16 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       case selector_verycenters:    /* Gotta fix this stuff - use fall-through variable. */
          if (ss->kind == s1x6) {
             p2 = pid2 & (ID2_CTR2|ID2_OUTRPAIRS);
-            if      (p2 == ID2_CTR2) return true;
+            if      (p2 == ID2_CTR2) return TRUE;
             else if (p2 == ID2_OUTRPAIRS) s = selector_outerpairs;
             else break;
          }
          else if (ss->kind == s2x7) {
-            return (pid2 & ID2_CTR2) != 0;
+            return (pid2 & ID2_CTR2);
          }
          else {
             p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-            if      (p2 == ID2_CTR2) return true;
+            if      (p2 == ID2_CTR2) return TRUE;
             else if (p2 == ID2_OUTR6) s = selector_outer6;
             else break;
          }
@@ -270,8 +263,8 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          switch (ss->kind) {
             case s_ptpd: case s_qtag: case s_rigger:
                p2 = pid2 & (ID2_CTR6|ID2_OUTR2);
-               if      (p2 == ID2_CTR6)  return true;
-               else if (p2 == ID2_OUTR2) return false;
+               if      (p2 == ID2_CTR6)  return TRUE;
+               else if (p2 == ID2_OUTR2) return FALSE;
                break;
          }
          break;
@@ -279,8 +272,8 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          switch (ss->kind) {
             case s_ptpd: case s_qtag: case s_bone: case s_spindle:
                p2 = pid2 & (ID2_CTR2|ID2_OUTR6);
-               if      (p2 == ID2_CTR2)  return false;
-               else if (p2 == ID2_OUTR6) return true;
+               if      (p2 == ID2_CTR2)  return FALSE;
+               else if (p2 == ID2_OUTR6) return TRUE;
                break;
          }
          break;
@@ -290,88 +283,85 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          break;
 #endif
       case selector_ctrdmd:
-         if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return true;
-         else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return false;
+         if      ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_CTRDMD) return TRUE;
+         else if ((pid2 & (ID2_CTRDMD|ID2_NCTRDMD)) == ID2_NCTRDMD) return FALSE;
          break;
       case selector_ctr_1x4:
-         if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
-         else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
+         if      ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return TRUE;
+         else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
          break;
       case selector_ctr_1x6:
-         if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return true;
-         else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return false;
+         if      ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_CTR1X6) return TRUE;
+         else if ((pid2 & (ID2_CTR1X6|ID2_NCTR1X6)) == ID2_NCTR1X6) return FALSE;
          break;
       case selector_outer1x3s:
-         if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
-         else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
+         if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return TRUE;
+         else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return FALSE;
          break;
       case selector_center4:
-      case selector_center_wave:
-      case selector_center_line:
-      case selector_center_col:
-         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return true;
-         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return false;
-         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return true;
-         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return false;
-         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_CTR4) return true;
-         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
+         if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_CTR4) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return FALSE;
+         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return FALSE;
+         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_CTR4) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
          break;
       case selector_outerpairs:
          if (ss->kind == s1x6) {
-            if      ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-            else if ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_CTR2) return false;
+            if      ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+            else if ((pid2 & (ID2_CTR2  |ID2_OUTRPAIRS)) == ID2_CTR2) return FALSE;
          }
          else {
-            if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-            else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return false;
-            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
-            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return false;
+            if      ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+            else if ((pid2 & (ID2_CTR4  |ID2_OUTRPAIRS)) == ID2_CTR4) return FALSE;
+            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
+            else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return FALSE;
          }
 
          break;
       case selector_headliners:
-         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return true;
-         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return false;
+         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return TRUE;
+         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return FALSE;
          break;
       case selector_sideliners:
-         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return true;
-         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return false;
+         if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_SIDELINE) return TRUE;
+         else if ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return FALSE;
          break;
       case selector_thosefacing:
-         if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return true;
-         else if ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_NOTFACING) return false;
+         if      ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_FACING) return TRUE;
+         else if ((pid2 & (ID2_FACING|ID2_NOTFACING)) == ID2_NOTFACING) return FALSE;
          break;
       case selector_nearline:
-         if      (pid2 & ID2_NEARLINE) return true;
-         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+         if      (pid2 & ID2_NEARLINE) return TRUE;
+         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return FALSE;
          break;
       case selector_farline:
-         if      (pid2 & ID2_FARLINE) return true;
-         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+         if      (pid2 & ID2_FARLINE) return TRUE;
+         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return FALSE;
          break;
       case selector_nearcolumn:
-         if      (pid2 & ID2_NEARCOL) return true;
-         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+         if      (pid2 & ID2_NEARCOL) return TRUE;
+         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return FALSE;
          break;
       case selector_farcolumn:
-         if      (pid2 & ID2_FARCOL) return true;
-         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+         if      (pid2 & ID2_FARCOL) return TRUE;
+         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return FALSE;
          break;
       case selector_nearbox:
-         if      (pid2 & ID2_NEARBOX) return true;
-         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return false;
+         if      (pid2 & ID2_NEARBOX) return TRUE;
+         else if (pid2 & (ID2_FARLINE|ID2_FARCOL|ID2_FARBOX)) return FALSE;
          break;
       case selector_farbox:
-         if      (pid2 & ID2_FARBOX) return true;
-         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return false;
+         if      (pid2 & ID2_FARBOX) return TRUE;
+         else if (pid2 & (ID2_NEARLINE|ID2_NEARCOL|ID2_NEARBOX)) return FALSE;
          break;
       case selector_facingfront:
-         if      (pid2 & ID2_FACEFRONT) return true;
-         else if (pid2 & ID2_FACEBACK) return false;
+         if      (pid2 & ID2_FACEFRONT) return TRUE;
+         else if (pid2 & ID2_FACEBACK) return FALSE;
          break;
       case selector_facingback:
-         if      (pid2 & ID2_FACEBACK) return true;
-         else if (pid2 & ID2_FACEFRONT) return false;
+         if      (pid2 & ID2_FACEBACK) return TRUE;
+         else if (pid2 & ID2_FACEFRONT) return FALSE;
          break;
 
       /* For the unsymmetrical selectors, we demand that the person not be virtual
@@ -440,108 +430,106 @@ extern bool selectp(setup *ss, int place) THROW_DECL
 }
 
 
-static const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-static const long int dbl_tab01[4] = {0, 1, false, true};
-static const long int x22tabtand[3] = {3, 0, 1};
-static const long int x22tabface[3] = {3, 2, 1};
-static const long int x24tabtand[3] = {7, 0, 1};
-static const long int x24tabface[3] = {7, 2, 1};
-static const long int dbl_tab21[4] = {2, 1, true, false};
+static Const long int iden_tab[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static Const long int dbl_tab01[4] = {0, 1, FALSE, TRUE};
+static Const long int dbl_tab03[2] = {0, 3};
+static Const long int dbl_tab23[2] = {2, 3};
+static Const long int dbl_tab21[4] = {2, 1, TRUE, FALSE};
 
-static const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
-static const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
-static const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
-static const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
-static const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
+static Const long int boystuff_no_rh[3]  = {ID1_PERM_BOY,  ID1_PERM_GIRL, 0};
+static Const long int girlstuff_no_rh[3] = {ID1_PERM_GIRL, ID1_PERM_BOY,  0};
+static Const long int boystuff_rh[3]     = {ID1_PERM_BOY,  ID1_PERM_GIRL, 1};
+static Const long int girlstuff_rh[3]    = {ID1_PERM_GIRL, ID1_PERM_BOY,  1};
+static Const long int semi_squeeze_tab[8] = {0xD, 0xE, 0x9, 0x9, 0x2, 0xD, 0x2, 0xE};
 
 
 /* Here are the predicates.  They will get put into the array "pred_table". */
 
 /* ARGSUSED */
-static bool someone_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean someone_selected(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    return selectp(real_people, real_index ^ (*extra_stuff));
 }
 
 /* ARGSUSED */
-static bool sum_mod_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean sum_mod_selected(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
-   int size = attr::slimit(real_people)+1;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
 }
 
 /* ARGSUSED */
-static bool sum_mod_selected_for_12p(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean sum_mod_selected_for_12p(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int otherindex = (*extra_stuff) - real_index;
    if ((real_index % 6) >= 3) otherindex += 4;
-   int size = attr::slimit(real_people)+1;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
 }
 
 /* ARGSUSED */
-static bool plus_mod_selected(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean plus_mod_selected(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int otherindex = real_index + (*extra_stuff);
-   int size = attr::slimit(real_people)+1;
+   int size = setup_attrs[real_people->kind].setup_limits+1;
    if (otherindex >= size) otherindex -= size;
    return selectp(real_people, otherindex);
 }
 
 /* ARGSUSED */
-static bool semi_squeezer_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean semi_squeezer_select(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int other_index = ((northified_index ^ extra_stuff[northified_index&7]) + real_index - northified_index) & 0xF;
 
-   return (real_people->people[other_index].id1 & BIT_PERSON) &&
-          selectp(real_people, other_index);
+   return      (real_people->people[other_index].id1 & BIT_PERSON) &&
+               selectp(real_people, other_index);
 }
 
 /* ARGSUSED */
-static bool unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean unselect(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    return !selectp(real_people, real_index);
 }
 
 /* ARGSUSED */
-static bool select_near_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_near_select(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   if (!selectp(real_people, real_index)) return false;
+   if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
-      return true;
+      return TRUE;
 
-   return (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
-          selectp(real_people, real_index ^ 1);
+   return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 1);
 }
 
 static int base_table[12] = {0, 0, 0, 3, 3, 3, 6, 6, 6, 9, 9, 9};
 
 /* ARGSUSED */
-static bool select_near_select_or_phantom(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_near_select_or_phantom(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int lim, base_person;
 
    if (!selectp(real_people, real_index))
-      return false;
+      return FALSE;
    else if (current_options.who == selector_all || current_options.who == selector_everyone)
-      return true;
+      return TRUE;
 
-   if (attr::slimit(real_people) == 11) {
+   if (setup_attrs[real_people->kind].setup_limits == 11) {
       base_person = base_table[real_index];
       lim = 2;
    }
-   if (attr::slimit(real_people) == 15) {
+   if (setup_attrs[real_people->kind].setup_limits == 15) {
       base_person = real_index & 4;
       lim = 3;
    }
@@ -554,51 +542,51 @@ static bool select_near_select_or_phantom(setup *real_people, int real_index,
    for ( ; lim >= 0 ; lim--) {
       if ((real_people->people[base_person+lim].id1 & BIT_PERSON) &&
           !selectp(real_people, base_person+lim))
-         return false;
+         return FALSE;
    }
 
-   return true;
+   return TRUE;
 }
 
 /* ARGSUSED */
-static bool select_near_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_near_unselect(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   if (!selectp(real_people, real_index)) return false;
+   if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
-      return false;
+      return FALSE;
 
-   return !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
-          !selectp(real_people, real_index ^ 1);
+   return      !(real_people->people[real_index ^ 1].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 1);
 }
 
 /* ARGSUSED */
-static bool unselect_near_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean unselect_near_select(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   if (selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_none) return false;
+   if (selectp(real_people, real_index)) return FALSE;
+   if (current_options.who == selector_none) return FALSE;
 
    return      (real_people->people[real_index ^ 1].id1 & BIT_PERSON) &&
                selectp(real_people, real_index ^ 1);
 }
 
 /* ARGSUSED */
-static bool unselect_near_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean unselect_near_unselect(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    int lim, base_person;
 
    if (selectp(real_people, real_index))
-      return false;
+      return FALSE;
    else if (current_options.who == selector_none)
-      return true;
+      return TRUE;
 
-   if (attr::slimit(real_people) == 11) {
+   if (setup_attrs[real_people->kind].setup_limits == 11) {
       base_person = base_table[real_index];
       lim = 2;
    }
-   if (attr::slimit(real_people) == 15) {
+   if (setup_attrs[real_people->kind].setup_limits == 15) {
       base_person = real_index & 4;
       lim = 3;
    }
@@ -611,64 +599,52 @@ static bool unselect_near_unselect(setup *real_people, int real_index,
    for ( ; lim >= 0 ; lim--) {
       if ((real_people->people[base_person+lim].id1 & BIT_PERSON) &&
           selectp(real_people, base_person+lim))
-         return false;
+         return FALSE;
    }
 
-   return true;
+   return TRUE;
 }
 
 /* ARGSUSED */
-static bool select_once_rem_from_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_once_rem_from_select(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   if (!selectp(real_people, real_index)) return false;
+   if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
-      return true;
+      return TRUE;
 
    if (real_people->kind == s2x4)
-      return (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
-             selectp(real_people, real_index ^ 2);
+      return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 2);
    else
-      return (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
-             selectp(real_people, real_index ^ 3);
+      return   (real_people->people[real_index ^ 3].id1 & BIT_PERSON) &&
+               selectp(real_people, real_index ^ 3);
+
+
 }
 
 /* ARGSUSED */
-static bool select_once_rem_from_unselect(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_once_rem_from_unselect(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   if (!selectp(real_people, real_index)) return false;
+   if (!selectp(real_people, real_index)) return FALSE;
    if (current_options.who == selector_all || current_options.who == selector_everyone)
-      return false;
+      return FALSE;
 
-   int other_index;
-
-   if (real_people->kind == s2x6) {
-      int q = (real_index >= 6) ? real_index-6 : real_index;
-      other_index = real_index + 2;
-      if (q >= 4) other_index = real_index - 2;
-      else if (q >= 2) {
-         // We demand BOTH outer people be (nonexistent or unselected).
-         if ((real_people->people[real_index - 2].id1 & BIT_PERSON) &&
-             selectp(real_people, real_index - 2))
-            return false;
-      }
-   }
-   else if (real_people->kind == s2x4)
-      other_index = real_index ^ 2;
+   if (real_people->kind == s2x4)
+      return   !(real_people->people[real_index ^ 2].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 2);
    else
-      other_index = real_index ^ 3;
-
-   return !(real_people->people[other_index].id1 & BIT_PERSON) ||
-          !selectp(real_people, other_index);
+      return   !(real_people->people[real_index ^ 3].id1 & BIT_PERSON) ||
+               !selectp(real_people, real_index ^ 3);
 }
 
 /* ARGSUSED */
-static bool unselect_once_rem_from_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean unselect_once_rem_from_select(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   if (selectp(real_people, real_index)) return false;
-   if (current_options.who == selector_none) return false;
+   if (selectp(real_people, real_index)) return FALSE;
+   if (current_options.who == selector_none) return FALSE;
 
    if (real_people->kind == s2x4)
       return   (real_people->people[real_index ^ 2].id1 & BIT_PERSON) &&
@@ -679,35 +655,35 @@ static bool unselect_once_rem_from_select(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool select_and_roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_and_roll_is_cw(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITR) != 0;
 }
 
 /* ARGSUSED */
-static bool select_and_roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean select_and_roll_is_ccw(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
+   return selectp(real_people, real_index) && (real_people->people[real_index].id1 & ROLLBITL) != 0;
 }
 
 /* ARGSUSED */
-static bool always(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean always(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   return true;
+   return TRUE;
 }
 
 /* ARGSUSED */
-static bool x22_cpltest(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x22_cpltest(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int other_index;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_miniwaves: return extra_stuff[2] != 0;
-   case cr_2fl_only: case cr_couples_only: case cr_li_lo: return extra_stuff[3] != 0;
+   case cr_wave_only: case cr_miniwaves: return extra_stuff[2];
+   case cr_2fl_only: case cr_couples_only: case cr_li_lo: return extra_stuff[3];
    }
 
    other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
@@ -716,71 +692,71 @@ static bool x22_cpltest(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool facing_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x22_facing_test(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   int other_index = real_index ^ extra_stuff[(real_direction << 1) & 2];
+   int other_index = real_index ^ (((real_direction << 1) & 2) ^ extra_stuff[1]);
    return ((real_people->people[real_index].id1 ^
-            real_people->people[other_index].id1) & DIR_MASK) == (uint32) extra_stuff[1];
+            real_people->people[other_index].id1) & DIR_MASK) == (uint32) *extra_stuff;
 }
 
 /* ARGSUSED */
-static bool cols_someone_in_front(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean cols_someone_in_front(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (real_people->kind == s2x3) {
       if (real_index == 1 || real_index == 4) {
          if (real_people->people[real_index+((northified_index==1) ? 1 : -1)].id1)
-            return true;
-         else return false;
+            return TRUE;
+         else return FALSE;
       }
-      else return true;
+      else return TRUE;
    }
    else {
       if (northified_index < 3 || northified_index > 4) {
          if (real_people->people[real_index+((northified_index<4) ? 1 : -1)].id1)
-            return true;
-         else return false;
+            return TRUE;
+         else return FALSE;
       }
-      else return false;
+      else return FALSE;
    }
 }
 
 /* ARGSUSED */
-static bool x14_once_rem_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x14_once_rem_miniwave(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_li_lo: case cr_1fl_only: return false;
-   case cr_2fl_only: case cr_magic_only: return true;
+   case cr_wave_only: case cr_li_lo: case cr_1fl_only: return FALSE;
+   case cr_2fl_only: case cr_magic_only: return TRUE;
    }
 
    switch ((real_people->people[real_index].id1 ^
             real_people->people[real_index ^ 3].id1) & DIR_MASK) {
    case 0:
-      return false;
+      return FALSE;
    case 2:
-      return true;
+      return TRUE;
    default:
       if (extra_stuff[0] & 2) {
          /* This is "intlk_cast_normal_or_warn".  Don't give the warning if person
             would have known what to do anyway. */
          if (!(real_index & 1))
             warn(warn__opt_for_normal_cast);
-         return true;
+         return TRUE;
       }
       else
-         return false;
+         return FALSE;
    }
 }
 
 /* ARGSUSED */
-static bool x14_once_rem_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x14_once_rem_couple(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_wave_only: case cr_li_lo: case cr_1fl_only: return true;
-   case cr_2fl_only: case cr_magic_only: return false;
+   case cr_wave_only: case cr_li_lo: case cr_1fl_only: return TRUE;
+   case cr_2fl_only: case cr_magic_only: return FALSE;
    }
 
    return ((real_people->people[real_index].id1 ^
@@ -788,14 +764,14 @@ static bool x14_once_rem_couple(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool lines_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean lines_miniwave(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
-      return true;
+      return TRUE;
    case cr_2fl_only:
-      return false;
+      return FALSE;
    default:
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
@@ -806,14 +782,14 @@ static bool lines_miniwave(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool lines_couple(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean lines_couple(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
-      return false;
+      return FALSE;
    case cr_2fl_only:
-      return true;
+      return TRUE;
    default:
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ 1].id1;
@@ -823,14 +799,14 @@ static bool lines_couple(setup *real_people, int real_index,
    }
 }
 
-static const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
-static const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
-static const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
-static const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
+static Const long int tab_mwv_in_3n1[8]  = {2, 0, 0, 4, 3, 7, 2};
+static Const long int tab_cpl_in_3n1[8]  = {0, 2, 0, 4, 3, 7, 2};
+static Const long int tab_mwv_out_3n1[8] = {2, 0, 1, 5, 2, 6, 3};
+static Const long int tab_cpl_out_3n1[8] = {0, 2, 1, 5, 2, 6, 3};
 
 /* ARGSUSED */
-static bool check_3n1_setup(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean check_3n1_setup(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 A = extra_stuff[0];
    uint32 B = extra_stuff[1];
@@ -840,10 +816,10 @@ static bool check_3n1_setup(setup *real_people, int real_index,
    uint32 F = extra_stuff[5];
    uint32 G = extra_stuff[6];
 
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-       real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
-       ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != A)
-      return false;
+   if (     real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+            real_people->cmd.cmd_assume.assumption == cr_2fl_only ||
+            ((real_people->people[real_index].id1 ^ real_people->people[real_index ^ 1].id1) & DIR_MASK) != A)
+      return FALSE;
    else if (real_people->kind == s2x4) {
       int k = real_index & 2;
 
@@ -878,8 +854,8 @@ static bool check_3n1_setup(setup *real_people, int real_index,
      0 for "miniwave_side_of_2n1_line"
      3 for "couple_side_of_2n1_line" */
 /* ARGSUSED */
-static bool some_side_of_2n1_line(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean some_side_of_2n1_line(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int k = extra_stuff[0];
    if (real_index == 0 || real_index == 3) k ^= 3;
@@ -897,16 +873,16 @@ static bool some_side_of_2n1_line(setup *real_people, int real_index,
      1 for "cast_normal"
      3 for "cast_normal_or_warn" */
 /* ARGSUSED */
-static bool cast_normal_or_whatever(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean cast_normal_or_whatever(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
          real_people->cmd.cmd_assume.assump_cast)
-      return (extra_stuff[0] & 1) != 0;
+      return extra_stuff[0] & 1;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
          real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-      return (extra_stuff[0] & 1) == 0;
+      return (extra_stuff[0] & 1) ^ 1;
    else {
       uint32 this_person = real_people->people[real_index].id1;
       uint32 other_person = real_people->people[real_index ^ 1].id1;
@@ -915,9 +891,9 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
 
       switch (((this_person ^ other_person) & DIR_MASK) ^ ((extra_stuff[0] & 1) << 1)) {
       case 0:
-         return true;
+         return TRUE;
       case 2:
-         return false;
+         return FALSE;
       default:
          if (extra_stuff[0] & 2) {
             /* This is "cast_normal_or_warn".  Don't give the warning if person
@@ -926,33 +902,28 @@ static bool cast_normal_or_whatever(setup *real_people, int real_index,
                      ||
                      (real_index != 1 && real_index != ((real_people->kind == s1x6) ? 4 : 3)))
                warn(warn__opt_for_normal_cast);
-            return true;
+            return TRUE;
          }
          else
-            return false;
+            return FALSE;
       }
    }
 }
 
 /* ARGSUSED */
-static bool columns_tandem(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean columns_tandem(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 this_person;
    int other_index;
 
-   if (real_people->kind == s_qtag) {
-      if (real_index == 2 || real_index == 6) return false;  // Wings of qtag always fail.
-   }
-   else if (real_people->kind == s_spindle) {
-      if (real_index == 3 || real_index == 7) return false; // Or points of spindle.
-   }
-   else {
+   if (real_people->kind != s_qtag) {
       switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_wave_only: case cr_2fl_only: return (extra_stuff[0] ^ 1) != 0;
-      case cr_magic_only: case cr_li_lo: return extra_stuff[0] != 0;
+      case cr_wave_only: case cr_2fl_only: return extra_stuff[0] ^ 1;
+      case cr_magic_only: case cr_li_lo: return extra_stuff[0];
       }
    }
+   else if (real_index == 2 || real_index == 6) return FALSE;  /* Wings of qtag always fail. */
 
    this_person = real_people->people[real_index].id1;
    other_index = real_index ^ 1;
@@ -981,78 +952,52 @@ static bool columns_tandem(setup *real_people, int real_index,
           (((real_index & 3) == 3) && ((real_direction ^ (real_index >> 1)) & 2)))
          other_index = real_index ^ 7;
    }
-   else if (real_people->kind == s_spindle) {
-      switch (real_index) {
-      case 0: other_index = 1; break;
-      case 1: other_index = (real_direction & 2) ? 0: 2; break;
-      case 2: other_index = 1; break;
-      case 4: other_index = 5; break;
-      case 5: other_index = (real_direction & 2) ? 6: 4; break;
-      case 6: other_index = 5; break;
-      }
-   }
 
    return ((this_person ^ real_people->people[other_index].id1) & DIR_MASK) ==
       ((uint32) extra_stuff[0] << 1);
 }
 
 /* ARGSUSED */
-static bool same_in_pair(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean same_in_pair(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person;
    int other_person;
 
-   if (real_people->kind == s_bone) {
-      // This is only valid for the ends; the documentation says so.
-      other_person = real_people->people[real_index ^ 5].id1;
-   }
-   else {
-      if (real_people->cmd.cmd_assume.assump_col == 1) {
-         switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_2fl_only: case cr_li_lo: return true;
-         case cr_wave_only: case cr_magic_only: return false;
-         }
+   if (real_people->cmd.cmd_assume.assump_col == 1) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_2fl_only: case cr_li_lo: return TRUE;
+         case cr_wave_only: case cr_magic_only: return FALSE;
       }
-
-      other_person = real_people->people[real_index ^ 7].id1;
    }
 
    this_person = real_people->people[real_index].id1;
-
-   return ((this_person ^ other_person) & DIR_MASK) == 0;
+   other_person = real_people->people[real_index ^ 7].id1;
+   return(((this_person ^ other_person) & DIR_MASK) == 0);
 }
 
 /* ARGSUSED */
-static bool opp_in_pair(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean opp_in_pair(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person;
    int other_person;
 
-   if (real_people->kind == s_bone) {
-      // This is only valid for the ends; the documentation says so.
-      other_person = real_people->people[real_index ^ 5].id1;
-   }
-   else {
-      if (real_people->cmd.cmd_assume.assump_col == 1) {
-         switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_wave_only: case cr_magic_only: return true;
-         case cr_2fl_only: case cr_li_lo: return false;
-         }
+   if (real_people->cmd.cmd_assume.assump_col == 1) {
+      switch (real_people->cmd.cmd_assume.assumption) {
+         case cr_wave_only: case cr_magic_only: return TRUE;
+         case cr_2fl_only: case cr_li_lo: return FALSE;
       }
-
-      other_person = real_people->people[real_index ^ 7].id1;
    }
 
    this_person = real_people->people[real_index].id1;
-
-   return ((this_person ^ other_person) & DIR_MASK) == 2;
+   other_person = real_people->people[real_index ^ 7].id1;
+   return(((this_person ^ other_person) & DIR_MASK) == 2);
 }
 
 /* ARGSUSED */
-static bool opp_in_magic(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean opp_in_magic(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1060,8 +1005,8 @@ static bool opp_in_magic(setup *real_people, int real_index,
 
    if (real_people->cmd.cmd_assume.assump_col == 1) {
       switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_wave_only: case cr_li_lo: return true;
-         case cr_2fl_only: case cr_magic_only: return false;
+         case cr_wave_only: case cr_li_lo: return TRUE;
+         case cr_2fl_only: case cr_magic_only: return FALSE;
       }
    }
 
@@ -1079,8 +1024,8 @@ static bool opp_in_magic(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool same_in_magic(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean same_in_magic(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person;
    int other_person;
@@ -1088,8 +1033,8 @@ static bool same_in_magic(setup *real_people, int real_index,
 
    if (real_people->cmd.cmd_assume.assump_col == 1) {
       switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_2fl_only: case cr_magic_only: return true;
-         case cr_wave_only: case cr_li_lo: return false;
+         case cr_2fl_only: case cr_magic_only: return TRUE;
+         case cr_wave_only: case cr_li_lo: return FALSE;
       }
    }
 
@@ -1107,25 +1052,25 @@ static bool same_in_magic(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool once_rem_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean once_rem_test(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 2].id1;
-   return ((this_person ^ other_person) & DIR_MASK) == extra_stuff[0];
+   return ((this_person ^ other_person) & DIR_MASK) == (uint32) extra_stuff[0];
 }
 
 /* ARGSUSED */
-static bool x12_beau_or_miniwave(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean x12_beau_or_miniwave(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves ||
          northified_index == 0 ||
          (real_people->kind == s2x2 && northified_index == 3))
-      return true;
+      return TRUE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only)
-      return false;
+      return FALSE;
    else {
       int other_person = real_people->people[real_index ^ 1 ^ ((real_direction&1) << 1)].id1;
       int direction_diff = other_person ^ real_direction;
@@ -1135,40 +1080,36 @@ static bool x12_beau_or_miniwave(setup *real_people, int real_index,
 
       if (extra_stuff[0] == 1 && !other_person) {
          warn(warn__opt_for_normal_hinge);
-         return true;
+         return TRUE;
       }
 
       if (extra_stuff[0] == 2 && !other_person) {
-         return true;
+         return TRUE;
       }
 
       if (!other_person || (direction_diff & 1))
          fail("Need a real, not T-boned, person to work with.");
 
       if ((direction_diff & 2) == 2)
-         return true;
+         return TRUE;
 
       if (extra_stuff[0] == 2)
          warn(warn__like_linear_action);
 
-      return false;
+      return FALSE;
    }
 }
 
 static const long int swingleft_1x3dmd[8] = {-1, 0, 1, -1, 5, 6, -1, 3};
-static const long int swingleft_1x4[4] = {-1, 0, 3, 1};
 static const long int swingleft_deep2x1dmd[10] = {-1, 0, -1, 1, 3, 6, 8, -1, 9, -1};
 static const long int swingleft_wqtag[10] = {-1, -1, 3, 4, 9, -1, -1, -1, 7, 8};
 
-static bool can_swing_left(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean can_swing_left(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int t;
 
    switch (real_people->kind) {
-   case s1x4:
-      t = swingleft_1x4[northified_index];
-      break;
    case s1x3dmd:
       t = swingleft_1x3dmd[northified_index];
       break;
@@ -1179,12 +1120,12 @@ static bool can_swing_left(setup *real_people, int real_index,
       t = swingleft_deep2x1dmd[northified_index];
       break;
    default:
-      return false;
+      return FALSE;
    }
 
-   if (t < 0) return false;
+   if (t < 0) return FALSE;
    if (northified_index != real_index) {
-      int size = attr::slimit(real_people)+1;
+      int size = setup_attrs[real_people->kind].setup_limits+1;
       t -= size >> 1;
       if (t < 0) t += size;
    }
@@ -1198,105 +1139,105 @@ static bool can_swing_left(setup *real_people, int real_index,
    false if belle side of 1FL.  Raises a warning if wheel and deal can't be done,
    and opts for L2FL. */
 /* ARGSUSED */
-static bool x14_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   // We assume people have already been checked for coupleness.
+   /* We assume people have already been checked for coupleness. */
 
    if (northified_index <= 1)
-      // We are in the beau-side couple -- it's OK.
-      return true;
+      /* We are in the beau-side couple -- it's OK. */
+      return TRUE;
    else {
-      // We are in the belle-side couple.  First, see if an assumption is guiding us.
+      /* We are in the belle-side couple.  First, see if an assumption is guiding us. */
 
       int other_people;
 
       switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_2fl_only: return true;
-         case cr_1fl_only: return false;
+         case cr_2fl_only: return TRUE;
+         case cr_1fl_only: return FALSE;
       }
 
-      // Find the two people in the other couple.
-      // Just "or" them to be sure we get someone.  They are already known
-      // to be facing consistently if they are both there.
+      /* Find the two people in the other couple.
+         Just "or" them to be sure we get someone.  They are already known
+         to be facing consistently if they are both there. */
       other_people = real_people->people[real_index ^ 2].id1 |
                      real_people->people[real_index ^ 3].id1;
 
-      // At least one of those people must exist.
+      /* At least one of those people must exist. */
       if (!other_people) {
          warn(warn__opt_for_2fl);
-         return true;
+         return TRUE;
       }
 
-      // See if they face the same way as myself.  Note that the "2" bit of
-      // real_index is the complement of my own direction bit.
+      /* See if they face the same way as myself.  Note that the "2" bit of
+         real_index is the complement of my own direction bit. */
       if (((other_people ^ real_index) & 2))
-         return false;   // This is a 1FL.
+         return FALSE;   /* This is a 1FL. */
 
-      return true;       // This is a 2FL.
+      return TRUE;       /* This is a 2FL. */
    }
 }
 
 /* Test for 3X3 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
-static bool x16_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean x16_wheel_and_deal(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   // We assume people have already been checked for coupleness.
+   /* We assume people have already been checked for coupleness. */
 
    if (northified_index <= 2 || northified_index >= 9)
-      // We are in the beau-side triad -- it's OK.
-      return true;
+      /* We are in the beau-side triad -- it's OK. */
+      return(TRUE);
    else {
-      // We are in the belle-side triad -- find the three people in the other triad.
-      // Just "or" them to be sure we get someone.  They are already known
-      // to be facing consistently if they are all there.
+      /* We are in the belle-side triad -- find the three people in the other triad.
+         Just "or" them to be sure we get someone.  They are already known
+         to be facing consistently if they are all there. */
       int other_side = ((real_index / 3) ^ 1) * 3;
       int other_people = real_people->people[other_side].id1 |
                            real_people->people[other_side+1].id1 |
                            real_people->people[other_side+2].id1;
 
-      // At least one of those people must exist.
+      /* At least one of those people must exist. */
       if (!other_people)
          fail("Can't tell how to do this -- no live people.");
 
-      // See if they face the same way as myself.
+      /* See if they face the same way as myself. */
       if (((other_people ^ real_people->people[real_index].id1) & 2))
-         return true;       // This is a 2FL.
+         return(TRUE);    /* This is a 2FL. */
 
-      return false;         // This is a 1FL.
+      return(FALSE);      /* This is a 1FL. */
    }
 }
 
 /* Test for 4X4 wheel_and_deal to be done 2FL-style, or beau side of 1FL. */
 /* ARGSUSED */
-static bool x18_wheel_and_deal(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean x18_wheel_and_deal(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   // We assume people have already been checked for coupleness.
+   /* We assume people have already been checked for coupleness. */
 
    if (northified_index <= 3 || northified_index >= 12)
-      // We are in the beau-side quad -- it's OK.
-      return true;
+      /* We are in the beau-side quad -- it's OK. */
+      return(TRUE);
    else {
-      // We are in the belle-side quad -- find the four people in the other quad.
-      // Just "or" them to be sure we get someone.  They are already known
-      // to be facing consistently if they are all there.
+      /* We are in the belle-side quad -- find the four people in the other quad.
+         Just "or" them to be sure we get someone.  They are already known
+         to be facing consistently if they are all there. */
       int other_side = (real_index & 014) ^ 4;
       int other_people = real_people->people[other_side].id1 |
                            real_people->people[other_side+1].id1 |
                            real_people->people[other_side+2].id1 |
                            real_people->people[other_side+3].id1;
 
-      // At least one of those people must exist.
+      /* At least one of those people must exist. */
       if (!other_people)
          fail("Can't tell how to do this -- no live people.");
 
-      // See if they face the same way as myself.
+      /* See if they face the same way as myself. */
       if (((other_people ^ real_people->people[real_index].id1) & 2))
-         return true;       // This is a 2FL.
+         return(TRUE);    /* This is a 2FL. */
 
-      return false;         // This is a 1FL.
+      return(FALSE);      /* This is a 1FL. */
    }
 }
 
@@ -1305,13 +1246,13 @@ static bool x18_wheel_and_deal(setup *real_people, int real_index,
    For centers, it demands an adjacent end (otherwise we wouldn't know whether
    we were cycling or wheeling) and then returns true if that end is an extreme beau. */
 /* ARGSUSED */
-static bool cycle_and_wheel_1(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean cycle_and_wheel_1(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    if (northified_index == 0)
-      return true;
+      return TRUE;
    else if (northified_index == 2)
-      return false;
+      return FALSE;
    else {     /* We are a center.  Find our adjacent end. */
       int other_person;
 
@@ -1321,8 +1262,8 @@ static bool cycle_and_wheel_1(setup *real_people, int real_index,
          make, but we have to do this. */
 
       switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_1fl_only:  case cr_2fl_only:   return northified_index == 1;
-         case cr_wave_only: case cr_magic_only: return northified_index == 3;
+         case cr_1fl_only:  case cr_2fl_only:   return (northified_index == 1);
+         case cr_wave_only: case cr_magic_only: return (northified_index == 3);
       }
 
       other_person = real_people->people[real_index ^ 1].id1;
@@ -1330,252 +1271,250 @@ static bool cycle_and_wheel_1(setup *real_people, int real_index,
       if (!other_person)
          fail("Can't tell how to do this -- no live people.");
 
-      // See if he is an extreme beau.
+      /* See if he is an extreme beau. */
       if (((other_person ^ real_index) & 2))
-         return false;
+         return FALSE;
 
-      return true;
+      return TRUE;
    }
 }
 
 /* Second test for how to do cycle and wheel.  This finds the far end, and checks
    whether he faces the same way as myself. */
 /* ARGSUSED */
-static bool cycle_and_wheel_2(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean cycle_and_wheel_2(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    switch (real_people->cmd.cmd_assume.assumption) {
-      case cr_1fl_only: case cr_2fl_only: return true;
-      case cr_wave_only:  return northified_index != 2;
-      case cr_magic_only: return northified_index == 2;
+      case cr_1fl_only: case cr_2fl_only: return TRUE;
+      case cr_wave_only:  return (northified_index != 2);
+      case cr_magic_only: return (northified_index == 2);
    }
 
    int other_person = real_people->people[(real_index ^ 2) & (~1)].id1;
 
-   // Here we default to the "non-colliding" version of the call if the
-   // opposite end of our line doesn't exist.
+   /* Here we default to the "non-colliding" version of the call if the
+      opposite end of our line doesn't exist. */
    if (!other_person) {
       warn(warn__opt_for_no_collision);
-      return northified_index == 1;
+      return (northified_index == 1);
    }
 
-   // See if he faces the same way as myself.
+   /* See if he faces the same way as myself. */
    if (((other_person ^ real_people->people[real_index].id1) & 2))
-      return false;
+      return FALSE;
 
-   return true;
+   return TRUE;
 }
 
-static bool vert1(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean vert1(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!(northified_index & 1))
-      return true;
+      return TRUE;
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves)
-      return false;
+      return FALSE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
             real_people->cmd.cmd_assume.assumption == cr_li_lo)
-      return true;
+      return TRUE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) | 1)].id1;
 
-      return ((this_person ^ other_person) & DIR_MASK) == 0;
+      return(((this_person ^ other_person) & DIR_MASK) == 0);
    }
 }
 
-static bool vert2(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean vert2(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if (!(northified_index & 1))
-      return false;
+      return FALSE;
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
          real_people->cmd.cmd_assume.assumption == cr_miniwaves)
-      return true;
+      return TRUE;
    else if (real_people->cmd.cmd_assume.assumption == cr_couples_only ||
             real_people->cmd.cmd_assume.assumption == cr_li_lo)
-      return false;
+      return FALSE;
    else {
       int this_person = real_people->people[real_index].id1;
       int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) | 1)].id1;
 
-      return ((this_person ^ other_person) & DIR_MASK) == 2;
+      return(((this_person ^ other_person) & DIR_MASK) == 2);
    }
 }
 
 /* ARGSUSED */
-static bool inner_active_lines(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean inner_active_lines(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if ((real_index+3) & 2)
-      return northified_index >= 4;     // I am an end.
+      return(northified_index >= 4);     /* I am an end */
    else if (real_people->people[real_index ^ 1].id1)
-      return                            // I am a center, with a live partner.
+      return                           /* I am a center, with a live partner */
          (uint32) (012 - ((real_index & 4) >> 1)) ==
          (real_people->people[real_index ^ 1].id1 & 017);
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-      return northified_index < 4;
+      return(northified_index < 4);
    else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-      return northified_index >= 4;
+      return(northified_index >= 4);
    else
-      return false;
+      return FALSE;
 }
 
 /* ARGSUSED */
-static bool outer_active_lines(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean outer_active_lines(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    if ((real_index+3) & 2)
-      return northified_index < 4;      // I am an end.
+      return(northified_index < 4);      /* I am an end */
    else if (real_people->people[real_index ^ 1].id1)
-      return                            // I am a center, with a live partner.
+      return                            /* I am a center, with a live partner */
          (uint32) (010 + ((real_index & 4) >> 1)) ==
          (real_people->people[real_index ^ 1].id1 & 017);
    else if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-      return northified_index >= 4;
+      return(northified_index >= 4);
    else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-      return northified_index < 4;
+      return(northified_index < 4);
    else
-      return false;
+      return FALSE;
 }
 
-static bool judge_is_right_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean judge_is_right_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
 
-   return
+   return(
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 0)       /* judge exists to my right */
          &&
-      (((real_people->people[f].id1 ^ this_person) & 013) != 2);         /* we do not have another judge to my left */
+      (((real_people->people[f].id1 ^ this_person) & 013) != 2));         /* we do not have another judge to my left */
 }
 
-static bool judge_is_left_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean judge_is_left_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
 
-   return
+   return(
       (((real_people->people[f].id1 ^ this_person) & 013) == 2)           /* judge exists to my left */
          &&
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 0);     /* we do not have another judge to my right */
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 0));     /* we do not have another judge to my right */
 }
 
-static bool socker_is_right_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean socker_is_right_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
 
-   return
+   return(
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 2)       /* socker exists to my right */
          &&
-      (((real_people->people[f].id1 ^ this_person) & 013) != 0);         /* we do not have another socker to my left */
+      (((real_people->people[f].id1 ^ this_person) & 013) != 0));         /* we do not have another socker to my left */
 }
 
-static bool socker_is_left_1x3(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean socker_is_left_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int f = this_person & 2;
 
-   return
+   return(
       (((real_people->people[f].id1 ^ this_person) & 013) == 0)           /* socker exists to my left */
          &&
-      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2);     /* we do not have another socker to my right */
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2));     /* we do not have another socker to my right */
 }
 
-static const long int jr1x4[4]  = {1, 0, 0, 2};
-static const long int sl1x4[4]  = {1, 2, 0, 2};
-static const long int jl1x4[4]  = {0, 2, 2, 0};
-static const long int sr1x4[4]  = {0, 0, 2, 0};
+static Const long int jr1x4[4]  = {1, 0, 0, 2};
+static Const long int sl1x4[4]  = {1, 2, 0, 2};
+static Const long int jl1x4[4]  = {0, 2, 2, 0};
+static Const long int sr1x4[4]  = {0, 0, 2, 0};
 
-static const long int jr1x6[4]  = {1, 0, 0, 2};
-static const long int sl1x6[4]  = {1, 2, 0, 2};
-static const long int jl1x6[4]  = {0, 2, 2, 0};
-static const long int sr1x6[4]  = {0, 0, 2, 0};
+static Const long int jr1x6[4]  = {1, 0, 0, 2};
+static Const long int sl1x6[4]  = {1, 2, 0, 2};
+static Const long int jl1x6[4]  = {0, 2, 2, 0};
+static Const long int sr1x6[4]  = {0, 0, 2, 0};
 
-static const long int jr1x8[4]  = {1, 0, 0, 2};
-static const long int sl1x8[4]  = {1, 2, 0, 2};
-static const long int jl1x8[4]  = {0, 2, 2, 0};
-static const long int sr1x8[4]  = {0, 0, 2, 0};
+static Const long int jr1x8[4]  = {1, 0, 0, 2};
+static Const long int sl1x8[4]  = {1, 2, 0, 2};
+static Const long int jl1x8[4]  = {0, 2, 2, 0};
+static Const long int sr1x8[4]  = {0, 0, 2, 0};
 
 /* ARGSUSED */
-static bool judge_check_1x4(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean judge_check_1x4(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 this_person = real_people->people[real_index].id1;
    uint32 f;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      // This is an error -- socker/judge can't be unambiguous.
-   case cr_wave_only: case cr_2fl_only: return false;
-   case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return extra_stuff[0] != 0;
+      /* This is an error -- socker/judge can't be unambiguous. */
+   case cr_wave_only: case cr_2fl_only: return FALSE;
+   case cr_all_facing_same: case cr_1fl_only: case cr_li_lo: return extra_stuff[0];
    case cr_magic_only: return (real_index & 1) != extra_stuff[0];
    }
 
    f = (this_person & 2) ^ extra_stuff[1];
 
    return
-      // Judge/socker exists in the correct place.
+      /* judge/socker exists in the correct place */
       (((real_people->people[2-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
       &&
-      // We do not have another judge/socker in the wrong place.
+      /* we do not have another judge/socker in the wrong place */
       (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
 }
 
 /* ARGSUSED */
-static bool judge_check_1x6(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean judge_check_1x6(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 this_person = real_people->people[real_index].id1;
    uint32 f;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      // This is an error -- socker/judge can't be unambiguous.
-   case cr_wave_only: case cr_3x3_2fl_only: return false;
-   case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
+      /* This is an error -- socker/judge can't be unambiguous. */
+   case cr_wave_only: case cr_3x3_2fl_only: return FALSE;
+   case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0];
    }
 
    f = (this_person & 2) ^ extra_stuff[1];
    f += f>>1;
 
    return
-      // Judge/socker exists in the correct place.
+      /* judge/socker exists in the correct place */
       (((real_people->people[3-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
       &&
-      // We do not have another judge/socker in the wrong place.
+      /* we do not have another judge/socker in the wrong place */
       (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
 }
 
 /* ARGSUSED */
-static bool judge_check_1x8(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean judge_check_1x8(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 this_person = real_people->people[real_index].id1;
    uint32 f;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-      // This is an error -- socker/judge can't be unambiguous.
-   case cr_wave_only: case cr_4x4_2fl_only: return false;
-   case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0] != 0;
+      /* This is an error -- socker/judge can't be unambiguous. */
+   case cr_wave_only: case cr_4x4_2fl_only: return FALSE;
+   case cr_all_facing_same: case cr_1fl_only: return extra_stuff[0];
    }
 
    f = ((this_person & 2) ^ extra_stuff[1]) << 1;
 
    return
-      // Judge/socker exists in the correct place.
+      /* judge/socker exists in the correct place */
       (((real_people->people[4-f].id1 ^ this_person) & 013) == (uint32) extra_stuff[2])
       &&
-      // We do not have another judge/socker in the wrong place.
+      /* we do not have another judge/socker in the wrong place */
       (((real_people->people[f].id1 ^ this_person) & 013) != (uint32) extra_stuff[3]);
 }
 
-// A remnant.
-#define C_const
 
 static C_const veryshort inroll_directions[24] = {
    012, 012, 012, 012, 010, 010, 010, 010,
@@ -1607,13 +1546,12 @@ static C_const veryshort inroll_directions_2x8[48] = {
       7,  7,  7,  7,  7,  7,  7,  7, 15, 15, 15, 15, 15, 15, 15, 15,
       0,  0,  0,  0,  0,  0,  0,  0,  8,  8,  8,  8,  8,  8,  8,  8};
 
-enum inroll_assume_test {
+typedef enum {
    ira__no_wave,
    ira__sixes,
    ira__eights,
    ira__gen
-};
-
+} inroll_assume_test;
 
 typedef struct {
    C_const veryshort *directions;
@@ -1637,75 +1575,86 @@ static C_const inroll_action outroller_2x8          = {inroll_directions_2x8,   
 
 
 
-static bool in_out_roll_select(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+/* ARGSUSED */
+static long_boolean in_out_roll_select(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   const inroll_action *thing = (const inroll_action *) extra_stuff;
-   const veryshort *directions = thing->directions;
-   int code = thing->code;
+   /* "Yes_roll_direction" is the facing direction that constitutes what we are
+      looking for (inroller or outroller as the case may be). */
+
+   Const veryshort *directions;
+   Const inroll_action *thing;
+   int yes_roll_direction, no_roll_direction;
+   int cw_end, ccw_end;
+   int cw_idx, ccw_idx;
+   int size, code;
+
+   thing = (Const inroll_action *) extra_stuff;
+
+   directions = thing->directions;
+   code = thing->code;
 
    switch (thing->ira) {
-   case ira__no_wave:
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         fail("Not legal.");
-      break;
-   case ira__sixes:
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index / 6) ^ code) & 1) == 0;
-      break;
-   case ira__eights:
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index >> 3) ^ code) & 1) == 0;
-      break;
-   case ira__gen:
-      if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
-         return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
-      if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
-         return (((northified_index >> 1) ^ (northified_index >> 2) ^ code) & 1) == 0;
-      break;
+      case ira__no_wave:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            fail("Not legal.");
+         break;
+      case ira__sixes:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            return ((northified_index ^ (northified_index / 6) ^ code) & 1) == 0;
+         break;
+      case ira__eights:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            return ((northified_index ^ (northified_index >> 3) ^ code) & 1) == 0;
+         break;
+      case ira__gen:
+         if (real_people->cmd.cmd_assume.assumption == cr_wave_only)
+            return ((northified_index ^ (northified_index >> 2) ^ code) & 1) == 0;
+         if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
+            return (((northified_index >> 1) ^ (northified_index >> 2) ^ code) & 1) == 0;
+         break;
    }
 
-   // "Yes_roll_direction" is the facing direction that constitutes what we are
-   // looking for (inroller or outroller as the case may be).
-
-   int yes_roll_direction = directions[real_index];
+   yes_roll_direction = directions[real_index];
    if (code&1) yes_roll_direction = 022 - yes_roll_direction;
-   int no_roll_direction = 022 - yes_roll_direction;
+   no_roll_direction = 022 - yes_roll_direction;
 
-   int size = attr::slimit(real_people)+1;
+   size = setup_attrs[real_people->kind].setup_limits+1;
 
-   int cw_idx  = directions[real_index+size];
-   int ccw_idx = directions[real_index+2*size];
+   cw_idx  = directions[real_index+size];
+   ccw_idx = directions[real_index+2*size];
 
-   int cw_end =  real_people->people[cw_idx].id1 & 017;
-   int ccw_end = real_people->people[ccw_idx].id1 & 017;
+   cw_end =  real_people->people[cw_idx].id1 & 017;
+   ccw_end = real_people->people[ccw_idx].id1 & 017;
 
-   if (
-       // cw_end exists and is proper, and we do not have ccw_end proper also
-       (cw_end == yes_roll_direction && ccw_end != yes_roll_direction) ||
-       // or if ccw_end exists and is improper, and cw_end is a phantom
-       (ccw_end == no_roll_direction && cw_end == 0))
-      return true;
+   if (  /* cw_end exists and is proper, and we do not have ccw_end proper also */
+         (cw_end == yes_roll_direction && ccw_end != yes_roll_direction) ||
+         /* or if ccw_end exists and is improper, and cw_end is a phantom */
+         (ccw_end == no_roll_direction && cw_end == 0))
+      return(TRUE);
    else if (
-            // ccw_end exists and is proper, and we do not have cw_end proper also
-            (ccw_end == yes_roll_direction && cw_end != yes_roll_direction) ||
-            // or if cw_end exists and is improper, and ccw_end is a phantom
-            (cw_end == no_roll_direction && ccw_end == 0))
-      return false;
+         /* ccw_end exists and is proper, and we do not have cw_end proper also */
+         (ccw_end == yes_roll_direction && cw_end != yes_roll_direction) ||
+         /* or if cw_end exists and is improper, and ccw_end is a phantom */
+         (cw_end == no_roll_direction && ccw_end == 0))
+      return FALSE;
    else {
-      static const char * const errmsg[4] = {
-         "Can't find end looking in.",
-         "Can't find end looking out.",
-         "Can't find magic end looking in.",
-         "Can't find magic end looking out."};
-      fail(errmsg[code&3]);
-      return false;
+      char *errmsg;
+      switch (code&3) {
+         case 0: errmsg = "Can't find end looking in.";        break;
+         case 1: errmsg = "Can't find end looking out.";       break;
+         case 2: errmsg = "Can't find magic end looking in.";  break;
+         case 3: errmsg = "Can't find magic end looking out."; break;
+      }
+      fail(errmsg);
+      return FALSE;
    }
 }
 
 
-static bool outposter_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+/* ARGSUSED */
+static long_boolean outposter_is_cw(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 outroll_direction;
    uint32 cw_dir;
@@ -1718,24 +1667,22 @@ static bool outposter_is_cw(setup *real_people, int real_index,
       return (northified_index & 4) == 0;
    else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
             real_people->cmd.cmd_assume.assump_both == 2)
-      return true;
+      return TRUE;
 
    outroll_direction = 010 + ((real_index & 4) >> 1);
    cw_dir = real_people->people[real_index | 3].id1 & 017;
 
-   // Cw_end exists and is looking out.
-   if (cw_dir == outroll_direction) return true;
-   // Or cw_end is phantom but ccw_end is looking in, so it has to be the phantom.
-   else if (cw_dir == 0 &&
-            (real_people->people[real_index & 4].id1 & 017) == (022 - outroll_direction))
-      return true;
-   // We don't know.
-   else return false;
+   /* cw_end exists and is looking out */
+   if (cw_dir == outroll_direction) return TRUE;
+   /* or cw_end is phantom but ccw_end is looking in, so it has to be the phantom */
+   else if (cw_dir == 0 && (real_people->people[real_index & 4].id1 & 017) == (022 - outroll_direction)) return TRUE;
+   /* we don't know */
+   else return FALSE;
 }
 
 /* ARGSUSED */
-static bool outposter_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean outposter_is_ccw(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    uint32 inroll_direction;
 
@@ -1744,32 +1691,32 @@ static bool outposter_is_ccw(setup *real_people, int real_index,
    else if (real_people->cmd.cmd_assume.assumption == cr_2fl_only)
       return ((northified_index ^ (northified_index >> 1)) & 2) == 0;
    else if (real_people->cmd.cmd_assume.assumption == cr_1fl_only)
-      return false;
+      return FALSE;
    else if (real_people->cmd.cmd_assume.assumption == cr_li_lo &&
             real_people->cmd.cmd_assume.assump_both == 2)
-      return false;
+      return FALSE;
 
    inroll_direction = 012 - ((real_index & 4) >> 1);
 
-   // Demand that cw_end be looking in -- otherwise "outposter_is_cw"
-   // would have accepted it if it were legal.
-   if ((real_people->people[real_index | 3].id1 & 017) != inroll_direction) return false;
+   /* Demand that cw_end be looking in -- otherwise "outposter_is_cw"
+      would have accepted it if it were legal. */
+   if ((real_people->people[real_index | 3].id1 & 017) != inroll_direction) return FALSE;
    else {
-      // Now if ccw_end is looking out or is a phantom, it's OK.
+      /* Now if ccw_end is looking out or is a phantom, it's OK. */
       uint32 ccw_dir = real_people->people[real_index & 4].id1 & 017;
-      if (ccw_dir == 0 || ccw_dir == 022-inroll_direction) return true;
-      return false;
+      if (ccw_dir == 0 || ccw_dir == 022-inroll_direction) return TRUE;
+      return FALSE;
    }
 }
 
 /* ARGSUSED */
-static bool count_cw_people(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean count_cw_people(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int i;
    int count = 0;
 
-   int limit = (attr::slimit(real_people)+1) >> 1;
+   int limit = (setup_attrs[real_people->kind].setup_limits+1) >> 1;
    if (real_index >= limit) limit <<= 1;
 
    for (i=real_index+1; i<limit ; i++) {
@@ -1780,26 +1727,26 @@ static bool count_cw_people(setup *real_people, int real_index,
 }
 
 
-/* -3 means error, -2 means return false, -1 does not occur, and >= 0 means test that person. */
+/* -3 means error, -2 means return FALSE, -1 does not occur, and >= 0 means test that person. */
 
 /* ARGSUSED */
-static bool check_tbone(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean check_tbone(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    long int z = extra_stuff[(real_index<<2) + real_direction];
 
    if (z == -2)
-      return false;
+      return FALSE;
    else if (z >= 0) {
       uint32 zz = real_people->people[z].id1;
       if (zz & BIT_PERSON)
-         return ((zz ^ real_people->people[real_index].id1) & 1) != 0;
+         return (zz ^ real_people->people[real_index].id1) & 1;
       else if (real_people->kind == s_short6) {
          switch (real_people->cmd.cmd_assume.assumption) {
          case cr_diamond_like:
-            return true;
+            return TRUE;
          case cr_qtag_like:
-            return false;
+            return FALSE;
          case cr_jleft:
          case cr_jright:
          case cr_ijleft:
@@ -1809,81 +1756,66 @@ static bool check_tbone(setup *real_people, int real_index,
       }
       else if (real_people->kind == s_trngl) {
          switch (real_people->cmd.cmd_assume.assumption) {
-         case cr_jleft: case cr_jright:
-            // If "assume normal diamonds" or "assume facing diamonds" is present,
-            // the spot is t-boned for person zero.
-            if (real_people->cmd.cmd_assume.assump_col == 4)
-               return real_index == 0;
-            break;
          case cr_tall6:
-            return real_index == 0;
-         default:
-            if (real_index==0) {
-               // Try looking at the other base person!
-               uint32 zz = real_people->people[z^3].id1;
-               if (zz & BIT_PERSON) {
-                  warn(warn__opt_for_not_tboned_base);
-                  return ((zz ^ real_people->people[real_index].id1) & 1) != 0;
-               }
-            }
+            return TRUE;
          }
       }
    }
    fail("Can't determine where to go or which way to face.");
-   return false;
+   return FALSE;
 }
 
-static const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
-static const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
-static const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
+static Const long int trnglspot_tboned_tab[12] = {-3,  2, -3,  1,    -2, -2,  0, 0,    -2,  0,  0, -2};
+static Const long int six2spot_tboned_tab[24]  = {-2, -2, -2, -2,    -3,  2, -3, 0,    -2, -2, -2, -2,    -2, -2, -2, -2,    -3, 3, -3, 5,    -2, -2, -2, -2};
+static Const long int mag62spot_tboned_tab[24] = {-3, -2, -3, -2,    -3,  3, -3, 5,    -3, -2, -3, -2,    -3, -2, -3, -2,    -3, 2, -3, 0,    -3, -2, -3, -2};
 
 /* ARGSUSED */
-static bool nextinttrnglspot_is_tboned(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean nextinttrnglspot_is_tboned(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   static const long int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
-   static const long int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
+   static Const long int bb[24] = {-2, -2, 4, 4,     -3, 3, -3, 5,     -2, 4, 4, -2,     1, 1, -2, -2,     -3, 2, -3, 0,     1, -2, -2, 1};
+   static Const long int cc[24] = {2, 2, -2, -2,      5, -2, -2, 5,    0, -3, 4, -3,     -2, -2, 5, 5,     -2, 2, 2, -2,     1, -3, 3, -3};
 
    return check_tbone(real_people, real_index, real_direction, northified_index,
          (real_people->kind == s_short6) ? bb : cc);
 }
 
 /* ARGSUSED */
-static bool next_galaxyspot_is_tboned(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean next_galaxyspot_is_tboned(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   static const long int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
+   static Const long int aa[32] = {1, -3, 7, -3,     2, 2, 0, 0,     -3, 3, -3, 1,     2, 4, 4, 2,    3, -3, 5, -3,     4, 4, 6, 6,    -3, 5, -3, 7,      0, 6, 6, 0};
 
    /* We always return true for centers.  That way
       the centers can reverse flip a galaxy even if the
       next point does not exist.  Maybe this isn't a good way
       to do it, and we need another predicate.  Sigh. */
 
-   if (real_index & 1) return true;
+   if (real_index & 1) return TRUE;
 
    return check_tbone(real_people, real_index, real_direction, northified_index, aa);
 }
 
 /* ARGSUSED */
-static bool column_double_down(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean column_double_down(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    return
       (northified_index < 3)              /* unless #1 in column, it's easy */
          ||
       (northified_index > 4)
          ||
-      // If #1, my adjacent end must exist and face in.
+      /* if #1, my adjacent end must exist and face in */
       ((uint32) ((((real_index + 2) & 4) >> 1) + 1) == (real_people->people[real_index ^ 7].id1 & 017));
 }
 
 
 
 /* ARGSUSED */
-static bool apex_test(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean apex_test(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
-   uint32 unmoving_end = ((real_people->people[0].id1+NROLL_BIT) & (NROLL_BIT*2)) ? 2 : 0;
+   uint32 unmoving_end = (real_people->people[0].id1 & (ROLLBITR|ROLLBITL)) ? 2 : 0;
    uint32 status;
 
    if ((real_people->people[0].id1 &
@@ -1903,8 +1835,8 @@ static bool apex_test(setup *real_people, int real_index,
 
 
 /* ARGSUSED */
-static bool boygirlp(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean boygirlp(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    /* If this is a slide thru from a miniwave that is not right-handed, raise a warning. */
    if (extra_stuff[2] && northified_index != 0)
@@ -1914,31 +1846,31 @@ static bool boygirlp(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-static bool roll_is_cw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean roll_is_cw(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_R;
+   return (real_people->people[real_index].id1 & ROLLBITR) != 0;
 }
 
 /* ARGSUSED */
-static bool roll_is_ccw(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean roll_is_ccw(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   return (real_people->people[real_index].id1 & ROLL_DIRMASK) == ROLL_IS_L;
+   return (real_people->people[real_index].id1 & ROLLBITL) != 0;
 }
 
 /* ARGSUSED */
-static bool x12_with_other_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x12_facing_other_sex(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ 1].id1;
-   return (this_person & extra_stuff[0]) && (other_person & extra_stuff[1]);
+   return((this_person & extra_stuff[0]) && (other_person & extra_stuff[1]));
 }
 
 /* ARGSUSED */
-static bool x22_facing_other_sex(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean x22_facing_other_sex(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    int this_person = real_people->people[real_index].id1;
    int other_person = real_people->people[real_index ^ (((real_direction << 1) & 2) ^ 3)].id1;
@@ -1960,66 +1892,66 @@ static direction_kind direction_list[] = {
 
 
 /* ARGSUSED */
-static bool directionp(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean directionp(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
-   direction_used = true;
+   direction_used = TRUE;
    return current_options.where == direction_list[extra_stuff[0]];
 }
 
 
 
 /* ARGSUSED */
-static bool dmd_ctrs_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    if (real_people->cmd.cmd_assume.assump_col == 0) {
       switch (real_people->cmd.cmd_assume.assumption) {
       case cr_jleft:
-         if (real_people->cmd.cmd_assume.assump_both == 2) return *extra_stuff == 0;
-         else if (real_people->cmd.cmd_assume.assump_both == 1) return *extra_stuff != 0;
+         if (real_people->cmd.cmd_assume.assump_both == 2) return !(*extra_stuff);
+         else if (real_people->cmd.cmd_assume.assump_both == 1) return (*extra_stuff);
          break;
       case cr_jright:
-         if (real_people->cmd.cmd_assume.assump_both == 2) return *extra_stuff != 0;
-         else if (real_people->cmd.cmd_assume.assump_both == 1) return *extra_stuff == 0;
+         if (real_people->cmd.cmd_assume.assump_both == 2) return (*extra_stuff);
+         else if (real_people->cmd.cmd_assume.assump_both == 1) return !(*extra_stuff);
          break;
       }
    }
 
    assumption_thing tt;
-   bool booljunk;
+   long_boolean booljunk;
 
    tt.assumption = cr_dmd_ctrs_mwv;
    tt.assump_col = 0;
    tt.assump_both = 1;
    tt.assump_negate = 0;
    tt.assump_live = 0;
-   if (verify_restriction(real_people, tt, false, &booljunk) == restriction_passes)
-      return *extra_stuff == 0;
+   if (verify_restriction(real_people, tt, FALSE, &booljunk) == restriction_passes)
+      return !(*extra_stuff);
    tt.assump_both = 2;
-   if (verify_restriction(real_people, tt, false, &booljunk) == restriction_passes)
-      return *extra_stuff != 0;
+   if (verify_restriction(real_people, tt, FALSE, &booljunk) == restriction_passes)
+      return (*extra_stuff);
 
    fail("Can't determine handedness.");
-   return false;
+   return FALSE;
 }
 
 /* ARGSUSED */
-static bool trngl_pt_rh(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff) THROW_DECL
+static long_boolean trngl_pt_rh(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff) THROW_DECL
 {
    if ((real_people->people[0].id1 & d_mask) == d_west)
-      return true;
+      return TRUE;
    else if ((real_people->people[0].id1 & d_mask) == d_east)
-      return false;
+      return FALSE;
 
    fail("Can't determine handedness of triangle point.");
-   return false;
+   return FALSE;
 }
 
 
 typedef struct {
-   C_const long int ctr_action;    /* -1 for true, -2 for false, else required direction xor. */
+   C_const long int ctr_action;    /* -1 for TRUE, -2 for FALSE, else required direction xor. */
    C_const long int end_action;
    C_const long int bbbbb;
 } simple_qtag_action;
@@ -2071,29 +2003,29 @@ static full_qtag_action q_line_back_action = {
    { 0, 012,  0}};           /* none        */
 
 /* ARGSUSED */
-static bool q_tag_check(setup *real_people, int real_index,
-   int real_direction, int northified_index, const long int *extra_stuff)
+static long_boolean q_tag_check(setup *real_people, int real_index,
+   int real_direction, int northified_index, Const long int *extra_stuff)
 {
    full_qtag_action *bigactionp = (full_qtag_action *) extra_stuff;
    simple_qtag_action *actionp;
    int both = real_people->cmd.cmd_assume.assump_both;
 
    switch (real_people->cmd.cmd_assume.assumption) {
-   case cr_jleft: actionp = (simple_qtag_action *) &(bigactionp->if_jleft); break;
-   case cr_jright: actionp = (simple_qtag_action *) &(bigactionp->if_jright); break;
-   case cr_ijleft: actionp = (simple_qtag_action *) &(bigactionp->if_ijleft); break;
-   case cr_ijright: actionp = (simple_qtag_action *) &(bigactionp->if_ijright); break;
-   case cr_real_1_4_tag: actionp = (simple_qtag_action *) &(bigactionp->if_tag); both = 2; break;
-   case cr_real_3_4_tag: actionp = (simple_qtag_action *) &(bigactionp->if_tag); both = 1; break;
-   case cr_real_1_4_line: actionp = (simple_qtag_action *) &(bigactionp->if_line); both = 2; break;
-   case cr_real_3_4_line: actionp = (simple_qtag_action *) &(bigactionp->if_line); both = 1; break;
-   default: actionp = (simple_qtag_action *) &(bigactionp->none); break;
+      case cr_jleft:         actionp = (simple_qtag_action *) &(bigactionp->if_jleft);          break;
+      case cr_jright:        actionp = (simple_qtag_action *) &(bigactionp->if_jright);         break;
+      case cr_ijleft:        actionp = (simple_qtag_action *) &(bigactionp->if_ijleft);         break;
+      case cr_ijright:       actionp = (simple_qtag_action *) &(bigactionp->if_ijright);        break;
+      case cr_real_1_4_tag:  actionp = (simple_qtag_action *) &(bigactionp->if_tag);  both = 2; break;
+      case cr_real_3_4_tag:  actionp = (simple_qtag_action *) &(bigactionp->if_tag);  both = 1; break;
+      case cr_real_1_4_line: actionp = (simple_qtag_action *) &(bigactionp->if_line); both = 2; break;
+      case cr_real_3_4_line: actionp = (simple_qtag_action *) &(bigactionp->if_line); both = 1; break;
+      default:               actionp = (simple_qtag_action *) &(bigactionp->none);              break;
    }
 
    if (real_index & 2) {
       /* I am in the center line. */
-      if (actionp->ctr_action == -1) return true;
-      else if (actionp->ctr_action == -2) return false;
+      if (actionp->ctr_action == -1) return TRUE;
+      else if (actionp->ctr_action == -2) return FALSE;
       /* This line is executed if there is no assumption.  It attempts to determine whether the physical setup
          is a wave or a 2FL by checking just the subject and his partner.  Of course, a more thorough check
          would be a nice idea. */
@@ -2102,7 +2034,7 @@ static bool q_tag_check(setup *real_people, int real_index,
    else {
       /* I am on the outside; find the end of the center line nearest me. */
 
-      if (actionp->end_action < 0) return false;
+      if (actionp->end_action < 0) return FALSE;
       else if (actionp->end_action <= 2) {
          if (real_people->cmd.cmd_assume.assump_col == 4)
             return ((((real_index+3) >> 1) ^ real_people->people[real_index].id1) & 2) == ((actionp->end_action == 0) ? 0UL : 2UL);
@@ -2124,7 +2056,7 @@ static bool q_tag_check(setup *real_people, int real_index,
             if ((t = real_people->people[7].id1))
                both |= actionp->end_action ^ t;
 
-            if (!both) return false;
+            if (!both) return FALSE;
             both >>= 1;
          }
          else if (actionp->bbbbb == 97) {
@@ -2144,7 +2076,7 @@ static bool q_tag_check(setup *real_people, int real_index,
             if ((t = real_people->people[7].id1))
                both |= actionp->end_action ^ t ^ 2;
 
-            if (!both) return false;
+            if (!both) return FALSE;
             both >>= 1;
          }
          else {
@@ -2177,7 +2109,7 @@ static bool q_tag_check(setup *real_people, int real_index,
 }
 
 
-// BEWARE!!  This list must track the array "predtab" in mkcalls.cpp
+/* BEWARE!!  This list must track the array "predtab" in dbcomp.c . */
 
 /* The first several of these take a predicate.
    Any call that uses one of these predicates will have its "need_a_selector"
@@ -2186,13 +2118,13 @@ static bool q_tag_check(setup *real_people, int real_index,
 
 predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[0]},            /* "select" */
-      {unselect,                     (const long int *) 0},      /* "unselect" */
-      {select_near_select,           (const long int *) 0},      /* "select_near_select" */
-      {select_near_select_or_phantom,(const long int *) 0},      /* "select_near_select_or_phantom" */
-      {select_near_unselect,         (const long int *) 0},      /* "select_near_unselect" */
-      {unselect_near_select,         (const long int *) 0},      /* "unselect_near_select" */
-      {unselect_near_unselect,       (const long int *) 0},      /* "unselect_near_unselect" */
-      {select_once_rem_from_select,  (const long int *) 0},      /* "select_once_rem_from_select" */
+      {unselect,                     (Const long int *) 0},      /* "unselect" */
+      {select_near_select,           (Const long int *) 0},      /* "select_near_select" */
+      {select_near_select_or_phantom,(Const long int *) 0},      /* "select_near_select_or_phantom" */
+      {select_near_unselect,         (Const long int *) 0},      /* "select_near_unselect" */
+      {unselect_near_select,         (Const long int *) 0},      /* "unselect_near_select" */
+      {unselect_near_unselect,       (Const long int *) 0},      /* "unselect_near_unselect" */
+      {select_once_rem_from_select,  (Const long int *) 0},      /* "select_once_rem_from_select" */
       {someone_selected,               &iden_tab[2]},            /* "conc_from_select" */
       {someone_selected,               &iden_tab[3]},            /* "other_spindle_cw_select" */
       {someone_selected,               &iden_tab[4]},            /* "grand_conc_from_select" */
@@ -2210,24 +2142,22 @@ predicate_descriptor pred_table[] = {
       {plus_mod_selected,             &iden_tab[12]},            /* "person_select_plus12" */
       {sum_mod_selected_for_12p,      &iden_tab[15]},            /* "person_select12_sum15" */
       {semi_squeezer_select,       semi_squeeze_tab},            /* "semi_squeezer_select" */
-      {select_once_rem_from_unselect,(const long int *) 0},      /* "select_once_rem_from_unselect" */
-      {unselect_once_rem_from_select,(const long int *) 0},      /* "unselect_once_rem_from_select" */
-      {select_and_roll_is_cw,        (const long int *) 0},      /* "select_and_roll_is_cw" */
-      {select_and_roll_is_ccw,       (const long int *) 0},      /* "select_and_roll_is_ccw" */
+      {select_once_rem_from_unselect,(Const long int *) 0},      /* "select_once_rem_from_unselect" */
+      {unselect_once_rem_from_select,(Const long int *) 0},      /* "unselect_once_rem_from_select" */
+      {select_and_roll_is_cw,        (Const long int *) 0},      /* "select_and_roll_is_cw" */
+      {select_and_roll_is_ccw,       (Const long int *) 0},      /* "select_and_roll_is_ccw" */
 /* End of predicates that force use of selector. */
 #define PREDS_BEFORE_THIS_POINT 23
-      {always,                       (const long int *) 0},      /* "always" */
+      {always,                       (Const long int *) 0},      /* "always" */
       {x22_cpltest,                    dbl_tab21},               /* "x22_miniwave" */
       {x22_cpltest,                    dbl_tab01},               /* "x22_couple" */
-      {facing_test,                    x22tabface},              /* "x22_facing_someone" */
-      {facing_test,                    x22tabtand},              /* "x22_tandem_with_someone" */
-      {facing_test,                    x24tabface},              /* "x24_facing_someone" */
-      {facing_test,                    x24tabtand},              /* "x24_tandem_with_someone" */
-      {cols_someone_in_front,        (const long int *) 0},      /* "columns_someone_in_front" */
+      {x22_facing_test,                dbl_tab23},               /* "x22_facing_someone" */
+      {x22_facing_test,                dbl_tab03},               /* "x22_tandem_with_someone" */
+      {cols_someone_in_front,        (Const long int *) 0},      /* "columns_someone_in_front" */
       {x14_once_rem_miniwave,         &iden_tab[1]},             /* "x14_once_rem_miniwave" */
-      {x14_once_rem_couple,          (const long int *) 0},      /* "x14_once_rem_couple" */
-      {lines_miniwave,               (const long int *) 0},      /* "lines_miniwave" */
-      {lines_couple,                 (const long int *) 0},      /* "lines_couple" */
+      {x14_once_rem_couple,          (Const long int *) 0},      /* "x14_once_rem_couple" */
+      {lines_miniwave,               (Const long int *) 0},      /* "lines_miniwave" */
+      {lines_couple,                 (Const long int *) 0},      /* "lines_couple" */
       {check_3n1_setup,              tab_mwv_in_3n1},            /* "miniwave_side_of_in_3n1_line" */
       {check_3n1_setup,              tab_cpl_in_3n1},            /* "couple_side_of_in_3n1_line" */
       {check_3n1_setup,             tab_mwv_out_3n1},            /* "miniwave_side_of_out_3n1_line" */
@@ -2243,42 +2173,44 @@ predicate_descriptor pred_table[] = {
       {cast_normal_or_whatever,        &iden_tab[1]},            /* "cast_normal" */
       {cast_normal_or_whatever,        &iden_tab[0]},            /* "cast_pushy" */
       {cast_normal_or_whatever,        &iden_tab[3]},            /* "cast_normal_or_warn" */
+
       {x14_once_rem_miniwave,          &iden_tab[3]},            /* "intlk_cast_normal_or_warn" */
-      {opp_in_magic,                 (const long int *) 0},      /* "lines_magic_miniwave" */
-      {same_in_magic,                (const long int *) 0},      /* "lines_magic_couple" */
+
+      {opp_in_magic,                 (Const long int *) 0},      /* "lines_magic_miniwave" */
+      {same_in_magic,                (Const long int *) 0},      /* "lines_magic_couple" */
       {once_rem_test,                  &iden_tab[2]},            /* "lines_once_rem_miniwave" */
       {once_rem_test,                  &iden_tab[0]},            /* "lines_once_rem_couple" */
-      {same_in_pair,                 (const long int *) 0},      /* "lines_tandem" */
-      {opp_in_pair,                  (const long int *) 0},      /* "lines_antitandem" */
+      {same_in_pair,                 (Const long int *) 0},      /* "lines_tandem" */
+      {opp_in_pair,                  (Const long int *) 0},      /* "lines_antitandem" */
       {columns_tandem,                 &iden_tab[0]},            /* "columns_tandem" */
       {columns_tandem,                 &iden_tab[1]},            /* "columns_antitandem" */
-      {same_in_magic,                (const long int *) 0},      /* "columns_magic_tandem" */
-      {opp_in_magic,                 (const long int *) 0},      /* "columns_magic_antitandem" */
+      {same_in_magic,                (Const long int *) 0},      /* "columns_magic_tandem" */
+      {opp_in_magic,                 (Const long int *) 0},      /* "columns_magic_antitandem" */
       {once_rem_test,                  &iden_tab[0]},            /* "columns_once_rem_tandem" */
       {once_rem_test,                  &iden_tab[2]},            /* "columns_once_rem_antitandem" */
-      {same_in_pair,                 (const long int *) 0},      /* "columns_couple" */
-      {opp_in_pair,                  (const long int *) 0},      /* "columns_miniwave" */
+      {same_in_pair,                 (Const long int *) 0},      /* "columns_couple" */
+      {opp_in_pair,                  (Const long int *) 0},      /* "columns_miniwave" */
       {x12_beau_or_miniwave,           &iden_tab[0]},            /* "1x2_beau_or_miniwave" */
       {x12_beau_or_miniwave,           &iden_tab[1]},            /* "1x2_beau_miniwave_or_warn" */
       {x12_beau_or_miniwave,           &iden_tab[2]},            /* "1x2_beau_miniwave_for_breaker" */
-      {can_swing_left,               (const long int *) 0},      /* "can_swing_left" */
-      {x14_wheel_and_deal,           (const long int *) 0},      /* "1x4_wheel_and_deal" */
-      {x16_wheel_and_deal,           (const long int *) 0},      /* "1x6_wheel_and_deal" */
-      {x18_wheel_and_deal,           (const long int *) 0},      /* "1x8_wheel_and_deal" */
-      {cycle_and_wheel_1,            (const long int *) 0},      /* "cycle_and_wheel_1" */
-      {cycle_and_wheel_2,            (const long int *) 0},      /* "cycle_and_wheel_2" */
-      {vert1,                        (const long int *) 0},      /* "vert1" */
-      {vert2,                        (const long int *) 0},      /* "vert2" */
-      {inner_active_lines,           (const long int *) 0},      /* "inner_active_lines" */
-      {outer_active_lines,           (const long int *) 0},      /* "outer_active_lines" */
+      {can_swing_left,               (Const long int *) 0},      /* "can_swing_left" */
+      {x14_wheel_and_deal,           (Const long int *) 0},      /* "1x4_wheel_and_deal" */
+      {x16_wheel_and_deal,           (Const long int *) 0},      /* "1x6_wheel_and_deal" */
+      {x18_wheel_and_deal,           (Const long int *) 0},      /* "1x8_wheel_and_deal" */
+      {cycle_and_wheel_1,            (Const long int *) 0},      /* "cycle_and_wheel_1" */
+      {cycle_and_wheel_2,            (Const long int *) 0},      /* "cycle_and_wheel_2" */
+      {vert1,                        (Const long int *) 0},      /* "vert1" */
+      {vert2,                        (Const long int *) 0},      /* "vert2" */
+      {inner_active_lines,           (Const long int *) 0},      /* "inner_active_lines" */
+      {outer_active_lines,           (Const long int *) 0},      /* "outer_active_lines" */
       {judge_check_1x4,                       jr1x4},            /* "judge_is_right" */
       {judge_check_1x4,                       jl1x4},            /* "judge_is_left" */
       {judge_check_1x4,                       sr1x4},            /* "socker_is_right" */
       {judge_check_1x4,                       sl1x4},            /* "socker_is_left" */
-      {judge_is_right_1x3,           (const long int *) 0},      /* "judge_is_right_1x3" */
-      {judge_is_left_1x3,            (const long int *) 0},      /* "judge_is_left_1x3" */
-      {socker_is_right_1x3,          (const long int *) 0},      /* "socker_is_right_1x3" */
-      {socker_is_left_1x3,           (const long int *) 0},      /* "socker_is_left_1x3" */
+      {judge_is_right_1x3,           (Const long int *) 0},      /* "judge_is_right_1x3" */
+      {judge_is_left_1x3,            (Const long int *) 0},      /* "judge_is_left_1x3" */
+      {socker_is_right_1x3,          (Const long int *) 0},      /* "socker_is_right_1x3" */
+      {socker_is_left_1x3,           (Const long int *) 0},      /* "socker_is_left_1x3" */
       {judge_check_1x6,                       jr1x6},            /* "judge_is_right_1x6" */
       {judge_check_1x6,                       jl1x6},            /* "judge_is_left_1x6" */
       {judge_check_1x6,                       sr1x6},            /* "socker_is_right_1x6" */
@@ -2287,30 +2219,30 @@ predicate_descriptor pred_table[] = {
       {judge_check_1x8,                       jl1x8},            /* "judge_is_left_1x8" */
       {judge_check_1x8,                       sr1x8},            /* "socker_is_right_1x8" */
       {judge_check_1x8,                       sl1x8},            /* "socker_is_left_1x8" */
-      {in_out_roll_select, (const long int *) &inroller_cw},     /* "inroller_is_cw" */
-      {in_out_roll_select, (const long int *) &magic_inroller_cw}, /* "magic_inroller_is_cw" */
-      {in_out_roll_select, (const long int *) &outroller_cw},    /* "outroller_is_cw" */
-      {in_out_roll_select, (const long int *) &magic_outroller_cw}, /* "magic_outroller_is_cw" */
-      {in_out_roll_select, (const long int *) &inroller_cw_2x3}, /* "inroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &magic_inroller_cw_2x3}, /* "magic_inroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &outroller_cw_2x3},/* "outroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &magic_outroller_cw_2x3}, /* "magic_outroller_is_cw_2x3" */
-      {in_out_roll_select, (const long int *) &inroller_2x6},   /* "inroller_is_cw_2x6" */
-      {in_out_roll_select, (const long int *) &outroller_2x6},  /* "outroller_is_cw_2x6" */
-      {in_out_roll_select, (const long int *) &inroller_2x8},   /* "inroller_is_cw_2x8" */
-      {in_out_roll_select, (const long int *) &outroller_2x8},  /* "outroller_is_cw_2x8" */
-      {outposter_is_cw,              (const long int *) 0},      /* "outposter_is_cw" */
-      {outposter_is_ccw,             (const long int *) 0},      /* "outposter_is_ccw" */
+      {in_out_roll_select, (Const long int *) &inroller_cw},     /* "inroller_is_cw" */
+      {in_out_roll_select, (Const long int *) &magic_inroller_cw}, /* "magic_inroller_is_cw" */
+      {in_out_roll_select, (Const long int *) &outroller_cw},    /* "outroller_is_cw" */
+      {in_out_roll_select, (Const long int *) &magic_outroller_cw}, /* "magic_outroller_is_cw" */
+      {in_out_roll_select, (Const long int *) &inroller_cw_2x3}, /* "inroller_is_cw_2x3" */
+      {in_out_roll_select, (Const long int *) &magic_inroller_cw_2x3}, /* "magic_inroller_is_cw_2x3" */
+      {in_out_roll_select, (Const long int *) &outroller_cw_2x3},/* "outroller_is_cw_2x3" */
+      {in_out_roll_select, (Const long int *) &magic_outroller_cw_2x3}, /* "magic_outroller_is_cw_2x3" */
+      {in_out_roll_select, (Const long int *) &inroller_2x6},   /* "inroller_is_cw_2x6" */
+      {in_out_roll_select, (Const long int *) &outroller_2x6},  /* "outroller_is_cw_2x6" */
+      {in_out_roll_select, (Const long int *) &inroller_2x8},   /* "inroller_is_cw_2x8" */
+      {in_out_roll_select, (Const long int *) &outroller_2x8},  /* "outroller_is_cw_2x8" */
+      {outposter_is_cw,              (Const long int *) 0},      /* "outposter_is_cw" */
+      {outposter_is_ccw,             (Const long int *) 0},      /* "outposter_is_ccw" */
       {count_cw_people,                &iden_tab[0]},            /* "zero_cw_people" */
       {count_cw_people,                &iden_tab[1]},            /* "one_cw_person" */
       {count_cw_people,                &iden_tab[2]},            /* "two_cw_people" */
       {count_cw_people,                &iden_tab[3]},            /* "three_cw_people" */
-      {check_tbone,            trnglspot_tboned_tab},            // "nexttrnglspot_is_tboned"
-      {nextinttrnglspot_is_tboned,   (const long int *) 0},      // "nextinttrnglspot_is_tboned"
-      {check_tbone,             six2spot_tboned_tab},            // "next62spot_is_tboned"
-      {check_tbone,            mag62spot_tboned_tab},            // "next_magic62spot_is_tboned"
-      {next_galaxyspot_is_tboned,    (const long int *) 0},      // "next_galaxyspot_is_tboned"
-      {column_double_down,           (const long int *) 0},      // "column_double_down"
+      {check_tbone,            trnglspot_tboned_tab},            /* "nexttrnglspot_is_tboned" */
+      {nextinttrnglspot_is_tboned,   (Const long int *) 0},    /* "nextinttrnglspot_is_tboned" */
+      {check_tbone,             six2spot_tboned_tab},            /* "next62spot_is_tboned" */
+      {check_tbone,            mag62spot_tboned_tab},          /* "next_magic62spot_is_tboned" */
+      {next_galaxyspot_is_tboned,    (Const long int *) 0},     /* "next_galaxyspot_is_tboned" */
+      {column_double_down,           (Const long int *) 0},      /* "column_double_down" */
       {apex_test,                      &iden_tab[1]},            /* "apex_test_1" */
       {apex_test,                      &iden_tab[2]},            /* "apex_test_2" */
       {apex_test,                      &iden_tab[3]},            /* "apex_test_3" */
@@ -2318,10 +2250,10 @@ predicate_descriptor pred_table[] = {
       {boygirlp,                    girlstuff_no_rh},            /* "girlp" */
       {boygirlp,                        boystuff_rh},            /* "boyp_rh_slide_thru" */
       {boygirlp,                       girlstuff_rh},            /* "girlp_rh_slide_thru" */
-      {roll_is_cw,                   (const long int *) 0},      /* "roll_is_cw" */
-      {roll_is_ccw,                  (const long int *) 0},      /* "roll_is_ccw" */
-      {x12_with_other_sex,            boystuff_no_rh},           /* "x12_boy_with_girl" */
-      {x12_with_other_sex,           girlstuff_no_rh},           /* "x12_girl_with_boy" */
+      {roll_is_cw,                   (Const long int *) 0},      /* "roll_is_cw" */
+      {roll_is_ccw,                  (Const long int *) 0},      /* "roll_is_ccw" */
+      {x12_facing_other_sex,          boystuff_no_rh},           /* "x12_boy_facing_girl" */
+      {x12_facing_other_sex,         girlstuff_no_rh},           /* "x12_girl_facing_boy" */
       {x22_facing_other_sex,          boystuff_no_rh},           /* "x22_boy_facing_girl" */
       {x22_facing_other_sex,         girlstuff_no_rh},           /* "x22_girl_facing_boy" */
       {directionp,                     &iden_tab[0]},            /* "leftp" */
@@ -2336,10 +2268,10 @@ predicate_descriptor pred_table[] = {
       {directionp,                     &iden_tab[9]},            /* "no_dir_p" */
       {dmd_ctrs_rh,                    &iden_tab[0]},            /* "dmd_ctrs_rh" */
       {dmd_ctrs_rh,                    &iden_tab[1]},            /* "dmd_ctrs_lh" */
-      {trngl_pt_rh,                  (const long int *) 0},      /* "trngl_pt_rh" */
-      {q_tag_check, (const long int *) &q_tag_front_action},     /* "q_tag_front" */
-      {q_tag_check, (const long int *) &q_tag_back_action},      /* "q_tag_back" */
-      {q_tag_check, (const long int *) &q_line_front_action},    /* "q_line_front" */
-      {q_tag_check, (const long int *) &q_line_back_action}};    /* "q_line_back" */
+      {trngl_pt_rh,                  (Const long int *) 0},      /* "trngl_pt_rh" */
+      {q_tag_check, (Const long int *) &q_tag_front_action},     /* "q_tag_front" */
+      {q_tag_check, (Const long int *) &q_tag_back_action},      /* "q_tag_back" */
+      {q_tag_check, (Const long int *) &q_line_front_action},    /* "q_line_front" */
+      {q_tag_check, (Const long int *) &q_line_back_action}};    /* "q_line_back" */
 
 int selector_preds = PREDS_BEFORE_THIS_POINT;

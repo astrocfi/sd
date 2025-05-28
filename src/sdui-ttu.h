@@ -18,27 +18,31 @@
    which way a person is facing.  It must point to a string in stable storage. */
 extern char *ui_directions;
 
+/* Process any command line arguments that we need.
+   Returns nonzero if it failed -- error message has already been printed. */
+extern int ttu_process_command_line(int *argcp, char **argv);
+
 /* Print the help message appropriate for the switches that we support. */
-extern void ttu_display_help();
+extern void ttu_display_help(void);
 
 /* Initialize this package. */
-extern void ttu_initialize();
+extern void ttu_initialize(void);
 
 /* Terminate this package. */
-extern void ttu_terminate();
+extern void ttu_terminate(void);
 
 /* Get number of lines to use for "more" processing.  This number is
    not used for any other purpose -- the rest of the program is not concerned
    with the "screen" size. */
 
-extern int get_lines_for_more();
+extern int get_lines_for_more(void);
 
 /* Clear the current line, leave cursor at left edge. */
-extern void clear_line();
+extern void clear_line(void);
 
 /* Backspace the cursor and clear the rest of the line, presumably
    erasing the last character. */
-extern void rubout();
+extern void rubout(void);
 
 /* Move cursor up "n" lines and then clear rest of screen. */
 extern void erase_last_n(int n);

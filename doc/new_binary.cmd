@@ -21,18 +21,18 @@ del install.zip
 "C:\program files\winzip\wzzip" install @zipfiles.lst
 "C:\program files\winzip self-extractor\wzipse32" install.zip @zipsecmds.lst
 del install.zip
-REM del bin.txt bin.zip bin.asc
-REM echo cd sd> bin.msg
-REM echo uufile>> bin.msg
-REM uuencode install.exe|uufix>> bin.msg
-REM pgp -sta +clearsig=on +armor=on bin.msg -u wba -o bin.asc
-REM del bin.msg
-REM ren bin.asc bin.txt
-REM REM zip bin bin.txt
-REM REM
-REM REM         The file "bin.zip" may now be unzipped to "bin.txt",
-REM REM            which can then be mailed, creating these files:
-REM REM
-REM REM                  sd/install.exe
-REM REM
-REM REM         The file "install.exe" may now be copied to diskettes.
+del bin.txt bin.zip bin.asc
+echo cd sd> bin.msg
+echo uufile>> bin.msg
+uuencode install.exe|uufix>> bin.msg
+pgp -sta +clearsig=on +armor=on bin.msg -u wba -o bin.asc
+del bin.msg
+ren bin.asc bin.txt
+REM zip bin bin.txt
+REM
+REM         The file "bin.zip" may now be unzipped to "bin.txt",
+REM            which can then be mailed, creating these files:
+REM
+REM                  sd/install.exe
+REM
+REM         The file "install.exe" may now be copied to diskettes.
