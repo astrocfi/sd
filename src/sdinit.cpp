@@ -1194,7 +1194,8 @@ extern void prepare_to_read_menus()
 
    if (calling_level < zig_zag_level) {
       last_direction_kind = direction_zigzag-1;
-      direction_names[direction_zigzag] = (Cstring) 0;
+      direction_names[direction_zigzag].name = (Cstring) 0;
+      direction_names[direction_zigzag].name_uc = (Cstring) 0;
    }
 
    if (glob_abridge_mode < abridge_mode_writing) {

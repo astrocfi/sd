@@ -77,6 +77,8 @@ int begin_sizes[] = {
    6,          /* b_ptrngl */
    8,          /* b_trngl4 */
    8,          /* b_ptrngl4 */
+   16,         /* b_trngl8 */
+   16,         /* b_ptrngl8 */
    6,          /* b_bone6 */
    6,          /* b_pbone6 */
    6,          /* b_short6 */
@@ -128,8 +130,8 @@ int begin_sizes[] = {
    12,         /* b_6x2 */
    14,         /* b_2x7 */
    14,         /* b_7x2 */
-  14,          /* b_d2x7 */
-  14,          /* b_d7x2 */
+   14,         /* b_d2x7 */
+   14,         /* b_d7x2 */
    18,         /* b_2x9 */
    18,         /* b_9x2 */
    12,         /* b_d3x4 */
@@ -209,6 +211,8 @@ int begin_sizes[] = {
    16,         /* b_p4mdmd */
    16,         /* b_4mptpd */
    16,         /* b_p4mptpd */
+   10,         /* b_1x4dmd */
+   10,         /* b_p1x4dmd */
    12,         /* b_bigh */
    12,         /* b_pbigh */
    12,         /* b_bigx */
@@ -233,8 +237,8 @@ int begin_sizes[] = {
    12,         /* b_pbigptpd */
    12,         /* b_big3x1dmd */
    12,         /* b_pbig3x1dmd */
-   12,         /* b_big1x3dmd */
-   12,         /* b_pbig1x3dmd */
+   12,         /* b_1x5dmd */
+   12,         /* b_p1x5dmd */
    18,         /* b_big3dmd */
    18,         /* b_pbig3dmd */
    24,         /* b_big4dmd */
@@ -467,6 +471,8 @@ char *sstab[] = {
    "ptrngl",
    "trngl4",
    "ptrngl4",
+   "trngl8",
+   "ptrngl8",
    "bone6",
    "pbone6",
    "short6",
@@ -599,6 +605,8 @@ char *sstab[] = {
    "p4mdmd",
    "4mptpd",
    "p4mptpd",
+   "1x4dmd",
+   "p1x4dmd",
    "bigh",
    "pbigh",
    "bigx",
@@ -623,8 +631,8 @@ char *sstab[] = {
    "pbigptpd",
    "big3x1dmd",
    "pbig3x1dmd",
-   "big1x3dmd",
-   "pbig1x3dmd",
+   "1x5dmd",
+   "p1x5dmd",
    "big3dmd",
    "pbig3dmd",
    "big4dmd",
@@ -657,6 +665,7 @@ char *estab[] = {
    "2x3",
    "1x2dmd",
    "2x1dmd",
+   "1x3p1dmd",
    "qtag",
    "bone",
    "1x8",
@@ -684,6 +693,7 @@ char *estab[] = {
    "???",
    "???",
    "???",
+   "1x4dmd",
    "wqtag",
    "deep2x1dmd",
    "whrglass",
@@ -704,13 +714,15 @@ char *estab[] = {
    "1x14",
    "1x16",
    "c1phan",
-   "???",
    "bigblob",
    "ptpd",
    "3dmd",
    "4dmd",
    "3ptpd",
    "4ptpd",
+   "trngl8",
+   "1x4p2dmd",
+   "1x5p1dmd",
    "hsqtag",
    "dmdlndmd",
    "hqtag",
@@ -736,6 +748,8 @@ char *estab[] = {
    "3oqtg",
    "thar",
    "alamo",
+   "confused_dmd",
+   "???",
    "???",
    "???",
    "???",
@@ -767,7 +781,7 @@ char *estab[] = {
    "bigdmd",
    "bigptpd",
    "big3x1dmd",
-   "big1x3dmd",
+   "1x5dmd",
    "big3dmd",
    "big4dmd",
    "dblxwave",
@@ -862,6 +876,7 @@ char *schematab[] = {
    "checkpoint_mystic_ok",
    "cross_checkpoint",
    "reverse_checkpoint",
+   "???",
    "ckpt_star",
    "maybe_in_out_triple_squash",
    "in_out_triple_squash",
@@ -1053,7 +1068,7 @@ char *defmodtab1[] = {
    "mandatory_anycall",
    "allow_forced_mod",
    "only_force_elong_if_empty",
-   "???",
+   "roll_transparent_if_z",
    "endscando",
    "finish_this_part",
    "roll_transparent",
@@ -1324,12 +1339,21 @@ char *predtab[] = {
    "pair_person_select",
    "person_select_sum5",
    "person_select_sum8",
+   "person_select_sum9",
    "person_select_sum11",
    "person_select_sum13",
    "person_select_sum15",
+   "person_select_plus1",
+   "person_select_plus2",
+   "person_select_plus3",
    "person_select_plus4",
+   "person_select_plus5",
    "person_select_plus6",
+   "person_select_plus7",
    "person_select_plus8",
+   "person_select_plus9",
+   "person_select_plus10",
+   "person_select_plus11",
    "person_select_plus12",
    "person_select12_sum15",
    "select_w_adj_4x4",
@@ -1526,8 +1550,13 @@ tagtabitem tagtabinit[num_base_call_indices] = {
    {0, "disband1"},
    {0, "slither"},
    {0, "maybegrandslither"},
+   {0, "dixie_half_tag"},
    {0, "plan_ctrtoend"},
    {0, "prepare_to_drop"},
+   {0, "hinge"},
+   {0, "hinge_for_nicely"},
+   {0, "hinge_with_warn"},
+   {0, "hinge_for_breaker"},
    {0, "hinge_then_trade"},
    {0, "hinge_then_trade_for_breaker"},
    {0, "two_o_circs_for_frac"},

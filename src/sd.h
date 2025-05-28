@@ -197,9 +197,7 @@ enum error_flag_type {
 // Because we are initializing things in ways that C++ frowns on, the
 // C++ compiler punishes us by not letting us declare fields "const".
 // This is unfortunate.  We attach great importance to the ability of
-// the C/C++ type mechanism to prevent table overwrites.  (In fact, a
-// test compilation of a competing program with "const" declarators on
-// these tables revealed an astonishing bug.)
+// the C/C++ type mechanism to prevent table overwrites.
 //
 // For a while, we solved this problem by putting the initializers in
 // plain C files (sdtables.c and sdctable.c) and linking with the other
@@ -430,6 +428,8 @@ enum concept_kind {
    concept_so_and_so_stable,
    concept_frac_stable,
    concept_so_and_so_frac_stable,
+   concept_nose,
+   concept_so_and_so_nose,
    concept_emulate,
    concept_standard,
    concept_matrix,
@@ -696,10 +696,13 @@ enum selector_kind {
    selector_farbox,
    selector_nearfour,
    selector_farfour,
+   selector_thediamond,
    selector_facingfront,
    selector_facingback,
    selector_facingleft,
    selector_facingright,
+   selector_farthest1,
+   selector_nearest1,
    selector_boy1,
    selector_girl1,
    selector_cpl1,
@@ -724,7 +727,7 @@ enum selector_kind {
    selector_ENUM_EXTENT   // Not a selector; indicates extent of the enum.
 };
 
-// BEWARE!!  This list must track the array "direction_names" in sdutil.cpp .
+// BEWARE!!  This list must track the array "direction_names" in sdtables.cpp .
 // Note also that the "zig-zag" items will get disabled below A2.
 // The key for this is "direction_zigzag".
 enum direction_kind {
@@ -738,7 +741,8 @@ enum direction_kind {
    direction_zigzag,
    direction_zagzig,
    direction_zigzig,
-   direction_zagzag
+   direction_zagzag,
+   direction_ENUM_EXTENT   // Not a direction; indicates extent of the enum.
 };
 
 // There are two different contexts in which we deal with collections of
@@ -1411,8 +1415,10 @@ enum {
    ID2_END        = 0x00001000UL,
    ID2_CTR4       = 0x00000800UL,
    ID2_OUTRPAIRS  = 0x00000400UL,
+   ID2_THEDMD     = 0x00000200UL,
+   ID2_NOTTHEDMD  = 0x00000100UL,
 
-   // 10 available codes.
+   // 8 available codes.
 
    // Various useful combinations.
 
@@ -1426,7 +1432,7 @@ enum {
    ID2_FACING|ID2_NOTFACING|ID2_CENTER|ID2_END|
    ID2_CTR2|ID2_CTR6|ID2_OUTR2|ID2_OUTR6|ID2_CTRDMD|ID2_NCTRDMD|
    ID2_CTR1X4|ID2_NCTR1X4|ID2_CTR1X6|ID2_NCTR1X6|
-   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS
+   ID2_OUTR1X3|ID2_NOUTR1X3|ID2_CTR4|ID2_OUTRPAIRS|ID2_THEDMD|ID2_NOTTHEDMD
 };
 
 
@@ -1452,6 +1458,10 @@ enum {
    ID3_FACEBACK   = 0x00400000UL,
    ID3_FACELEFT   = 0x00200000UL,
    ID3_FACERIGHT  = 0x00100000UL,
+   ID3_FARTHEST1    = 0x00080000UL,
+   ID3_NOTFARTHEST1 = 0x00040000UL,
+   ID3_NEAREST1     = 0x00020000UL,
+   ID3_NOTNEAREST1  = 0x00010000UL,
 
    ID3_LESS_BITS_TO_CLEAR =
    ID3_NEARCOL|ID3_NEARLINE|ID3_NEARBOX|ID3_NEARFOUR|ID3_FARCOL|ID3_FARLINE|ID3_FARBOX|ID3_FARFOUR,
@@ -1459,17 +1469,17 @@ enum {
    ID3_GLOB_BITS_TO_CLEAR =
    ID3_LESS_BITS_TO_CLEAR|ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT,
 
-   ID3_PERM_NSG     = 0x00040000UL,  // Not side girl
-   ID3_PERM_NSB     = 0x00020000UL,  // Not side boy
-   ID3_PERM_NHG     = 0x00010000UL,  // Not head girl
-   ID3_PERM_NHB     = 0x00008000UL,  // Not head boy
-   ID3_PERM_HCOR    = 0x00004000UL,  // Head corner
-   ID3_PERM_SCOR    = 0x00002000UL,  // Side corner
-   ID3_PERM_HEAD    = 0x00001000UL,  // Head
-   ID3_PERM_SIDE    = 0x00000800UL,  // Side
-   ID3_PERM_BOY     = 0x00000400UL,  // Boy
-   ID3_PERM_GIRL    = 0x00000200UL,  // Girl
-   ID3_PERM_ALLBITS = 0x0007FE00UL,
+   ID3_PERM_NSG     = 0x00000200UL,  // Not side girl
+   ID3_PERM_NSB     = 0x00000100UL,  // Not side boy
+   ID3_PERM_NHG     = 0x00000080UL,  // Not head girl
+   ID3_PERM_NHB     = 0x00000040UL,  // Not head boy
+   ID3_PERM_HCOR    = 0x00000020UL,  // Head corner
+   ID3_PERM_SCOR    = 0x00000010UL,  // Side corner
+   ID3_PERM_HEAD    = 0x00000008UL,  // Head
+   ID3_PERM_SIDE    = 0x00000004UL,  // Side
+   ID3_PERM_BOY     = 0x00000002UL,  // Boy
+   ID3_PERM_GIRL    = 0x00000001UL,  // Girl
+   ID3_PERM_ALLBITS = 0x000003FFUL,
 
    // These are the standard definitions for the 8 people in the square.
 
@@ -1593,6 +1603,7 @@ struct setup {
    inline void suppress_roll(int place);
    inline void suppress_all_rolls();
    inline void swap_people(int oneplace, int otherplace);
+   inline void rotate_person(int where, int rotamount);
 
    setup() {}
    setup(setup_kind k, int r,    // in sdtop.cpp.
@@ -1662,10 +1673,11 @@ class conc_tables {
       setup *outers,
       int center_arity,
       uint32 orig_elong_is_controversial,
-      int i,
+      int relative_rotation,
       uint32 matrix_concept,
       int outer_elongation,
       calldef_schema synthesizer,
+      calldef_schema orig_synthesizer,
       setup *result);
 
    static void initialize();             // In sdconc.
@@ -1730,6 +1742,15 @@ class select {
       fx_foo88,
       fx_foo77,
       fx_fooEE,
+      fx_1x4p2d,
+      fx_1x4p2l,
+      fx_1x5p1d,
+      fx_1x5p1l,
+      fx_1x5p1z,
+      fx_1x6lowf,
+      fx_1x6hif,
+      fx_1x3p1lowf,
+      fx_1x3p1lhif,
       fx_n1x43,
       fx_n1x4c,
       fx_n1x45,
@@ -2380,6 +2401,7 @@ enum warning_index {
    warn__tasteless_slide_thru,
    warn__compress_carefully,
    warn__two_faced,
+   warn__cant_track_phantoms,
    warn__diagnostic,
    warn__NUM_WARNINGS       // Not a real warning; just used for counting.
 };
@@ -2501,6 +2523,10 @@ struct setup_attr {
    // This is true if the setup has 4-way symmetry.  Such setups will always be
    // canonicalized so that their rotation field will be zero.
    bool four_way_symmetry;
+
+   // This is true if the setup has no (that is, 1-way) symmetry.  Such setups
+   // will never be canonicalized -- their rotation field may be 0, 1, 2, or 3.
+   bool no_symmetry;
 
    // This is the bit table for filling in the "ID2" bits.
    const id_bit_table *id_bit_table_ptr;
@@ -2814,6 +2840,11 @@ struct selector_item {
    selector_kind opposite;
 };
 
+struct direction_item {
+   Cstring name;
+   Cstring name_uc;
+};
+
 enum mode_kind {
    mode_none,     /* Not a real mode; used only for fictional purposes
                         in the user interface; never appears in the rest of the program. */
@@ -3115,7 +3146,7 @@ enum {
    // This is a five bit field.  CONCPROP__NEED_LOBIT marks its low bit.
    // WARNING!!!  The values in this field are encoded into a bit field
    // for the setup expansion/normalization tables (see the definition
-   // of "NEEDMASK".)  It follows that there can't be more than 32 of them.
+   // of the macro "NEEDMASK".)  It follows that there can't be more than 32 of them.
    CONCPROP__NEED_MASK       = 0x000001F0UL,
    CONCPROP__NEED_LOBIT      = 0x00000010UL,
    CONCPROP__NEEDK_4X4       = 0x00000010UL,
@@ -3151,7 +3182,7 @@ enum {
    CONCPROP__NEEDK_QUAD_1X3  = 0x000001F0UL,
 
    CONCPROP__NEED_ARG2_MATRIX= 0x00000200UL,
-   /* spare:                   0x00000400UL, */
+   CONCPROP__USE_DIRECTION   = 0x00000400UL,
    /* spare:                   0x00000800UL, */
    /* spare:                   0x00010000UL, */
    /* spare:                   0x00020000UL, */
@@ -3557,7 +3588,8 @@ enum {
    CMD_MISC3__NEED_DIAMOND         = 0x00000080UL,
    CMD_MISC3__DOING_ENDS           = 0x00000100UL,
    CMD_MISC3__TWO_FACED_CONCEPT    = 0x00000200UL,
-   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL     // Treat "<anything> motivate" as plain motivate.
+   CMD_MISC3__NO_ANYTHINGERS_SUBST = 0x00000400UL,    // Treat "<anything> motivate" as plain motivate.
+   CMD_MISC3__PARENT_COUNT_IS_ONE  = 0x00000800UL
 };
 
 
@@ -3654,6 +3686,7 @@ enum normalize_action {
    normalize_after_exchange_boxes,
    normalize_before_isolated_call,
    normalize_before_isolate_not_too_strict,
+   plain_normalize,
    normalize_after_triple_squash,    // ***** this used to be after normalize_to_2.
    normalize_to_6,
    normalize_to_4,
@@ -4070,7 +4103,6 @@ extern SDLIB_API ui_option_type ui_options;                         /* in SDTOP 
 extern SDLIB_API bool enable_file_writing;                          /* in SDTOP */
 extern SDLIB_API Cstring cardinals[NUM_CARDINALS+1];                /* in SDTOP */
 extern SDLIB_API Cstring ordinals[NUM_CARDINALS+1];                 /* in SDTOP */
-extern SDLIB_API Cstring direction_names[];                         /* in SDTOP */
 extern SDLIB_API Cstring getout_strings[];                          /* in SDTOP */
 extern SDLIB_API writechar_block_type writechar_block;              /* in SDTOP */
 extern SDLIB_API int num_command_commands;                          /* in SDTOP */
@@ -4087,6 +4119,7 @@ extern SDLIB_API int abs_max_calls;                                 /* in SDTOP 
 extern SDLIB_API int max_base_calls;                                /* in SDTOP */
 extern SDLIB_API Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];     /* in SDTOP */
 extern SDLIB_API Cstring *selector_menu_list;                       /* in SDTOP */
+extern SDLIB_API Cstring *direction_menu_list;                      /* in SDTOP */
 extern SDLIB_API Cstring *circcer_menu_list;                        /* in SDTOP */
 
 
@@ -4277,8 +4310,8 @@ enum mpkind {
    MPKIND__SPEC_MATRIX_OVERLAP,
    MPKIND__INTLK,
    MPKIND__CONCPHAN,
+   MPKIND__MAGIC,
    MPKIND__INTLKDMD,
-   MPKIND__MAGICDMD,
    MPKIND__MAGICINTLKDMD,
    MPKIND__NONISOTROPIC,
    MPKIND__NONISOTROP1,
@@ -4288,6 +4321,8 @@ enum mpkind {
    MPKIND__OFFS_R_ONEQ,
    MPKIND__OFFS_L_HALF,
    MPKIND__OFFS_R_HALF,
+   MPKIND__OFFS_L_HALF_STAGGER,
+   MPKIND__OFFS_R_HALF_STAGGER,
    MPKIND__OFFS_L_HALF_NONISO,
    MPKIND__OFFS_R_HALF_NONISO,
    MPKIND__OFFS_L_THRQ,
@@ -4317,6 +4352,7 @@ enum mpkind {
    MPKIND__ALL_8,
    MPKIND__DMD_STUFF,
    MPKIND__STAG,
+   MPKIND__OX,
    MPKIND__DIAGQTAG,
    MPKIND__DIAGQTAG4X6,
    MPKIND__BENT0CW,
@@ -4413,8 +4449,6 @@ enum specmapkind {
    spcmap_lh_s2x3_7,
    spcmap_rh_s2x3_7,
    spcmap_d1x10,
-   spcmap_lz12,
-   spcmap_rz12,
    spcmap_tgl451,
    spcmap_tgl452,
    spcmap_dmd_1x1,
@@ -4439,7 +4473,6 @@ enum specmapkind {
    spcmap_emergency2,
    spcmap_fix_triple_turnstyle,
    spcmap_2x2v,
-   spcmap_2x4_magic,
    spcmap_ptp_magic,
    spcmap_ptp_intlk,
    spcmap_ptp_magic_intlk,
@@ -4471,8 +4504,6 @@ enum specmapkind {
    spcmap_dhrgl2,
    spcmap_dbgbn1,
    spcmap_dbgbn2,
-   spcmap_off1x81,
-   spcmap_off1x82,
    spcmap_dqtag1,
    spcmap_dqtag2,
    spcmap_dqtag3,
@@ -4532,6 +4563,7 @@ extern nice_setup_info_item nice_setup_info[];
 
 extern const concept_fixer_thing concept_fixer_table[];
 
+extern direction_item direction_names[];                            /* in SDTABLES */
 extern selector_item selector_list[];                               /* in SDTABLES */
 extern Cstring warning_strings[];                                   /* in SDTABLES */
 
@@ -4698,6 +4730,13 @@ inline void setup::swap_people(int oneplace, int otherplace)
    people[otherplace] = people[oneplace];
    people[oneplace] = temp;
 }
+
+inline void setup::rotate_person(int where, int rotamount)
+{
+   uint32 newperson = people[where].id1;
+   if (newperson) people[where].id1 = (newperson + rotamount) & ~064;
+}
+
 
 extern uint32 copy_person(setup *resultpeople, int resultplace, const setup *sourcepeople, int sourceplace);
 
@@ -4959,7 +4998,7 @@ extern bool do_simple_split(
 extern uint32 do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
-   bool roll_transparent,
+   uint32 roll_transparent_bits,
    bool normalize,
    bool qtfudged) THROW_DECL;
 
@@ -5098,6 +5137,13 @@ extern bool do_big_concept(
    setup *ss,
    parse_block *the_concept_parse_block,
    bool handle_concept_details,
+   setup *result) THROW_DECL;
+
+void nose_move(
+   setup *ss,
+   bool everyone,
+   selector_kind who,
+   direction_kind where,
    setup *result) THROW_DECL;
 
 void stable_move(

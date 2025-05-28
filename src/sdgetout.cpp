@@ -46,8 +46,7 @@ struct resolve_rec {
    int size;
    int insertion_point;
    int insertion_width;
-   int permute1[8];
-   int permute3[8];
+   personrec permutepersoninfo[8];
    int rotchange;
 };
 
@@ -1331,10 +1330,8 @@ static bool inner_search(command_kind goal,
       new_resolve->size = configuration::history_ptr - history_insertion_point;
 
       if (goal == command_reconcile) {
-         for (j=0; j<8; j++) {
-            new_resolve->permute1[perm_array[j] >> 6] = ns->people[perm_indices[j]].id1 & PID_MASK;
-            new_resolve->permute3[perm_array[j] >> 6] = ns->people[perm_indices[j]].id3 & ID3_PERM_ALLBITS;
-         }
+         for (j=0; j<8; j++)
+            new_resolve->permutepersoninfo[perm_array[j] >> 6] = ns->people[perm_indices[j]];
 
          new_resolve->rotchange = ns->rotation - goal_rotation;
          new_resolve->insertion_point = insertion_depth;
@@ -1410,15 +1407,14 @@ static bool inner_search(command_kind goal,
             personrec t = huge_history_save[j+huge_history_ptr+1-new_resolve->insertion_point].state.people[k];
 
             if (t.id1) {
-               if (this_state.state.people[k].id1 !=
-                   ((t.id1 & ~PID_MASK) |
-                    new_resolve->permute1[(t.id1 & PID_MASK) >> 6]))
+               const personrec & thispermuteperson = new_resolve->permutepersoninfo[(t.id1 & PID_MASK) >> 6];
+
+               if (this_state.state.people[k].id1 != ((t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK)))
                   goto cant_consider_this_call;
                if (this_state.state.people[k].id2 != t.id2)
                   goto cant_consider_this_call;
                if (this_state.state.people[k].id3 !=
-                   ((t.id3 & ~ID3_PERM_ALLBITS) |
-                    new_resolve->permute3[(t.id1 & PID_MASK) >> 6]))
+                   ((t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS)))
                   goto cant_consider_this_call;
             }
             else {
@@ -1754,12 +1750,9 @@ uims_reply full_resolve()
                personrec & t = this_state->state.people[k];
 
                if (t.id1) {
-                  t.id1 =
-                     (t.id1 & ~PID_MASK) |
-                     this_resolve->permute1[(t.id1 & PID_MASK) >> 6];
-                  t.id3 =
-                     (t.id3 & ~ID3_PERM_ALLBITS) |
-                     this_resolve->permute3[(t.id1 & PID_MASK) >> 6];
+                  const personrec & thispermuteperson = this_resolve->permutepersoninfo[(t.id1 & PID_MASK) >> 6];
+                  t.id3 = (t.id3 & ~ID3_PERM_ALLBITS) | (thispermuteperson.id3 & ID3_PERM_ALLBITS);
+                  t.id1 = (t.id1 & ~PID_MASK) | (thispermuteperson.id1 & PID_MASK);
                }
             }
 

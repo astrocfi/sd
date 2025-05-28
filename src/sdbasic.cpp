@@ -387,9 +387,16 @@ static collision_map collision_map_table[] = {
 
    // These items handle circulate in a short6, and hence handle collisions in 6X2 acey deucey.
 
-   {4, 0x12, 0x1B, 0x09, {0, 1, 3, 4},             {0, 2, 6, 7},          {1, 2, 5, 7},
+   {6, 022,  077,  055,  {0, 1, 2, 3, 4, 5},       {0, 2, 3, 6, 7, 9},    {1, 2, 4, 5, 7, 8},
+    s_short6,    sdeep2x1dmd, 0, warn__none, 0x40000000},
+
+   {5, 022,  073,  001,  {0, 1, 3, 4, 5},          {0, 2, 6, 7, 8},       {1, 2, 6, 7, 8},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
-   {4, 0x12, 0x36, 0x24, {1, 2, 4, 5},             {2, 3, 7, 9},          {2, 4, 7, 8},
+   {5, 022,  067,  040,  {0, 1, 2, 4, 5},          {1, 2, 3, 7, 9},       {1, 2, 3, 7, 8},
+    s_short6,    sdeep2x1dmd, 0, warn__none, 0},
+   {5, 022,  076,  004,  {1, 2, 3, 4, 5},          {2, 3, 6, 7, 8},       {2, 4, 6, 7, 8},
+    s_short6,    sdeep2x1dmd, 0, warn__none, 0},
+   {5, 022,  037,  010,  {0, 1, 2, 3, 4},          {1, 2, 3, 6, 7},       {1, 2, 3, 5, 7},
     s_short6,    sdeep2x1dmd, 0, warn__none, 0},
 
    {4, 0x012012, 0x36, 0x12, {1, 2, 4, 5},         {6, 0, 3, 4},          {7, 0, 2, 4},
@@ -515,8 +522,9 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
    for (i=0; i<MAX_PEOPLE; i++) lowbitmask |= ((spare_setup.people[i].id1) & 1) << i;
 
    for (c_map_ptr = collision_map_table ; c_map_ptr->size >= 0 ; c_map_ptr++) {
-      bool yukk = (result->kind == c_map_ptr->initial_kind) &&
-         ((lowbitmask == c_map_ptr->lmask)) &&
+      if (result->kind != c_map_ptr->initial_kind) continue;
+
+      bool yukk = ((lowbitmask == c_map_ptr->lmask)) &&
          (result_mask == c_map_ptr->rmask) &&
          (collision_mask == c_map_ptr->cmask);
 
@@ -525,7 +533,6 @@ void collision_collector::fix_possible_collision(setup *result) THROW_DECL
       // one genuine collision.
       if (!yukk &&
           (c_map_ptr->assume_key & 0x40000000) != 0 &&
-          result->kind == c_map_ptr->initial_kind &&
           (result_mask & ~c_map_ptr->rmask) == 0 &&
           ((result_mask | (result_mask << (MAX_PEOPLE/2))) & c_map_ptr->lmask) == lowbitmask &&
           (result_mask & c_map_ptr->cmask) == collision_mask) {
@@ -834,15 +841,12 @@ static const veryshort phantranslateh[16] = { 0, -1,  1,  1, -1,  3,  2,  2,
                                               4, -1,  5,  5, -1,  7,  6,  6};
 static const veryshort phantranslatev[16] = {-1,  7,  6,  6,  0, -1,  1,  1,
                                              -1,  3,  2,  2,  4, -1,  5,  5};
-
-#ifdef BREAKS_CAST_BACK
-static const veryshort phan4x4xlatea[16] = {-1, -1,  8,  6, -1, -1, 12, 10, -1, -1,  0, 14, -1, -1,  4,  2};
-static const veryshort phan4x4xlateb[16] = {-1,  5, -1,  7, -1,  9, -1, 11, -1, 13, -1, 15, -1,  1, -1,  3};
-#endif
 static const veryshort sdmdtranslateh[8] = {0, 0, 0, 1, 2, 0, 0, 3};
 static const veryshort sdmdtranslatev[8] = {0, 3, 0, 0, 0, 1, 2, 0};
-
-
+static const veryshort sdmdripoff56[8] = {0, 0, 1, 0, 2, 0, 3, 0};
+static const veryshort sdmdripoff65[8] = {0, 0, 1, 0, 0, 2, 3, 0};
+static const veryshort sdmdripoff95[8] = {3, 0, 0, 0, 1, 0, 0, 2};
+static const veryshort sdmdripoff59[8] = {3, 0, 0, 0, 1, 0, 2, 0};
 
 static const veryshort octtranslatev[80] = {
    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
@@ -1302,7 +1306,7 @@ static void special_4_way_symm(
    switch (result->kind) {
    case s2x2: case s_galaxy:
    case s_c1phan: case s4x4:
-   case s_hyperglass: case s_thar:
+   case s_hyperglass: case s_thar: case s_confused_dmd:
    case s_star: case s1x1: case s_alamo:
       break;
    case s1x4:
@@ -1574,7 +1578,10 @@ static bool handle_3x4_division(
             (!(newtb & 010) || assoc(b_2x1, ss, calldeflist))) ||
            assoc(b_1x1, ss, calldeflist))) {
          warn(warn__each1x2);
-         division_code = (livemask == 07272) ? spcmap_lz12 : spcmap_rz12;
+         division_code = (livemask == 07272) ?
+            MAPCODE(s1x2,4,MPKIND__OFFS_L_HALF_STAGGER,1) :
+            MAPCODE(s1x2,4,MPKIND__OFFS_R_HALF_STAGGER,1);
+
          return true;
       }
    }
@@ -2481,6 +2488,12 @@ static int divide_the_setup(
          break;
       case 0x0F0F:
          division_code = MAPCODE(s1x4,2,MPKIND__OFFS_R_HALF,0);
+         break;
+      case 0xCCCC:
+         division_code = MAPCODE(s1x2,4,MPKIND__OFFS_L_HALF_STAGGER,0);
+         break;
+      case 0x3333:
+         division_code = MAPCODE(s1x2,4,MPKIND__OFFS_R_HALF_STAGGER,0);
          break;
       }
 
@@ -3656,6 +3669,12 @@ static int divide_the_setup(
          division_code = MAPCODE(s1x2,2,MPKIND__NONISOTROP2,0);
          goto divide_us_no_recompute;
       }
+
+      break;
+   case s_trngl8:
+      // This is the only way we can divide it.
+      division_code = MAPCODE(s1x4,2,MPKIND__NONISOTROP2,0);
+      goto divide_us_no_recompute;
    }
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -5208,22 +5227,10 @@ foobar:
                // T-boned reverse flip?  Probably not.
 
                if (tempkind != s4x4) fail("Galaxy call went to improperly-formed setup.");
-#ifdef BREAKS_CAST_BACK
-               /* See if people landed classical C1 phantom spots. */
-               if ((lilresult_mask[0] & 0x3333) == 0) {
-                  result->kind = s_c1phan;
-                  permuter = phan4x4xlatea;
-               }
-               else if ((lilresult_mask[0] & 0x5555) == 0) {
-                  result->kind = s_c1phan;
-                  permuter = phan4x4xlateb;
-               }
-
-#endif
             }
             break;
          case s_c1phan:
-            /* See if people landed on 2x4 spots. */
+            // See if people landed on 2x4 spots.
             if ((lilresult_mask[0] & 0x7B7B) == 0) {
                result->kind = s2x4;
                permuter = phantranslateh;
@@ -5244,15 +5251,47 @@ foobar:
             }
             break;
          case s_thar:
-            if ((lilresult_mask[0] & 0x66) == 0) {    /* Check horiz dmd spots. */
+            if ((lilresult_mask[0] & 0x66) == 0) {         // Check horiz dmd spots.
                result->kind = sdmd;
                permuter = sdmdtranslateh;
             }
-            else if ((lilresult_mask[0] & 0x99) == 0) {    /* Check vert dmd spots. */
+            else if ((lilresult_mask[0] & 0x99) == 0) {    // Check vert dmd spots.
                result->kind = sdmd;
                permuter = sdmdtranslatev;
                rotator = 1;
             }
+            else
+               fail("Call went to improperly-formed setup.");
+            break;
+         case s_confused_dmd:
+            if ((lilresult_mask[0] & 0x66) == 0) {         // Check horiz dmd spots.
+               result->kind = sdmd;
+               permuter = sdmdtranslateh;
+            }
+            else if ((lilresult_mask[0] & 0x99) == 0) {    // Check vert dmd spots.
+               result->kind = sdmd;
+               permuter = sdmdtranslatev;
+               rotator = 1;
+            }
+            else if (lilresult_mask[0] == 0x95) {    // Fudgy ripoff is happening; make the people
+               result->kind = sdmd;                  // who could be facing each other be close.
+               permuter = sdmdripoff95;
+               rotator = 1;
+            }
+            else if (lilresult_mask[0] == 0x59) {    // Ditto.
+               result->kind = sdmd;
+               permuter = sdmdripoff59;
+               rotator = 1;
+            }
+            else if (lilresult_mask[0] == 0x65) {    // Ditto.
+               result->kind = sdmd;
+               permuter = sdmdripoff65;
+            }
+            else if (lilresult_mask[0] == 0x56) {    // Ditto.
+               result->kind = sdmd;
+               permuter = sdmdripoff56;
+            }
+
             else
                fail("Call went to improperly-formed setup.");
             break;
@@ -5714,7 +5753,7 @@ foobar:
       }
    }
 
-   /* Install all the people. */
+   // Install all the people.
 
    {
       // We create an especially glorious collision collector here, with all
@@ -5729,14 +5768,14 @@ foobar:
          personrec newperson = newpersonlist.people[real_index];
          if (newperson.id1) {
             if (funny) {
-               if (newperson.id1 != ~0UL) {       /* We only handle people who haven't been erased. */
+               if (newperson.id1 != ~0UL) {  // We only handle people who haven't been erased.
                   k = real_index;
-                  j = real_index;               /* j will move twice as fast as k, looking for a loop not containing starting point. */
+                  j = real_index;    // J will move twice as fast as k, looking for a loop not containing starting point.
                   do {
                      j = newplacelist[j];
-                     /* If hit a phantom, we can't proceed. */
+                     // If hit a phantom, we can't proceed.
                      if (!newpersonlist.people[j].id1) fail("Can't do 'funny' call with phantoms.");
-                     /* If hit an erased person, we have clearly hit a loop not containing starting point. */
+                     // If hit an erased person, we have clearly hit a loop not containing starting point.
                      else if (newpersonlist.people[j].id1 == ~0UL) break;
                      j = newplacelist[j];
                      if (!newpersonlist.people[j].id1) fail("Can't do 'funny' call with phantoms.");
@@ -5787,6 +5826,25 @@ foobar:
          warn(warn__not_funny);
 
       CC.fix_possible_collision(result);
+   }
+
+   // Fix up "dixie tag" result if fraction was 1/4.
+   if ((ss->cmd.cmd_misc3_flags & CMD_MISC3__PARENT_COUNT_IS_ONE) &&
+       ss->cmd.callspec == base_calls[base_call_dixiehalftag] &&
+       result->kind == s2x2) {
+      // We just did a "dixie 1/2 tag" but will want to back up to the 1/4 position.
+      // Need to change handedness.
+      uint32 newtb = or_all_people(result);
+      if (!(newtb & 001)) {
+         result->swap_people(0, 1);
+         result->swap_people(2, 3);
+      }
+      else if (!(newtb & 010)) {
+         result->swap_people(0, 3);
+         result->swap_people(2, 1);
+      }
+      else
+         fail("Can't figure out what you want.");
    }
 
    fixup:

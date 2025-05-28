@@ -526,6 +526,7 @@ static void innards(
                setup dmdtemp;
                setup_kind k = try_to_expand_dead_conc(z[i], x[i].cmd.callspec, linetemp, qtagtemp, dmdtemp);
                if (k == s1x4) {
+                  warn(warn__cant_track_phantoms);
                   if (x[i].kind == s_qtag)
                      z[i] = qtagtemp;
                   else
@@ -831,6 +832,9 @@ static void innards(
          warn(warn__bigblockqtag_feet);
       else
          warn(warn__bigblock_feet);
+      break;
+   case MPKIND__OX:
+      warn(warn__bigblock_feet);
       break;
    case MPKIND__DIAGQTAG:
    case MPKIND__DIAGQTAG4X6:
@@ -2476,8 +2480,8 @@ extern void distorted_move(
       if (disttest == disttest_offset) {
          // Offset tidal C/L/W.
          if (ss->kind == s2x8) {
-            if (global_livemask == 0x0F0F) { map_code = spcmap_off1x81; }
-            else if (global_livemask == 0xF0F0) { map_code = spcmap_off1x82; }
+            if (global_livemask == 0xF0F0) { map_code = MAPCODE(s1x8,1,MPKIND__OFFS_L_FULL,0); }
+            else if (global_livemask == 0x0F0F) { map_code = MAPCODE(s1x8,1,MPKIND__OFFS_R_FULL,0); }
             else fail("Can't find offset 1x8.");
 
             goto do_divided_call;
@@ -2634,8 +2638,8 @@ extern void distorted_move(
    }
    else if (linesp & 128) {
       // Offset split phantom boxes.
-      static const uint32 map_code_table[4] = {0, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
-                                               MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), 0};
+      static const uint32 map_code_table[4] = {~0UL, MAPCODE(s2x4,2,MPKIND__OFFS_L_HALF,0),
+                                               MAPCODE(s2x4,2,MPKIND__OFFS_R_HALF,0), ~0UL};
 
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, false);
       if (ss->kind != s3x8) fail("Can't do this concept in this setup.");
@@ -2648,7 +2652,7 @@ extern void distorted_move(
       if ((global_livemask & 0x0F00F0) == 0) key |= 2;
 
       map_code = map_code_table[key];
-      if (map_code == 0) fail("Can't find offset 2x4's.");
+      if (map_code == ~0UL) fail("Can't find offset 2x4's.");
       goto do_divided_call;
    }
    else if (linesp & 256) {

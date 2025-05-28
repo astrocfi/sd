@@ -2737,7 +2737,7 @@ void ShowListBox(int nWhichOne)
          UpdateStatusBar("<direction>");
 
          for (int i=0 ; i<last_direction_kind ; i++)
-            scan_menu(direction_names[i+1],
+            scan_menu(direction_menu_list[i+1],
                       hDC, &nLongest, MAKELONG(i, (int) ui_special_concept));
       }
       else if (nLastOne == match_selectors) {

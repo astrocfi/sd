@@ -29,7 +29,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 263
+#define DATABASE_FORMAT_VERSION 270
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -57,8 +57,13 @@ enum base_call_index {
    base_call_disband1,
    base_call_slither,
    base_call_maybegrandslither,
+   base_call_dixiehalftag,
    base_call_plan_ctrtoend,
    base_base_prepare_to_drop,
+   base_base_hinge,
+   base_base_hinge_for_nicely,
+   base_base_hinge_with_warn,
+   base_base_hinge_for_breaker,
    base_base_hinge_and_then_trade,
    base_base_hinge_and_then_trade_for_breaker,
    base_call_two_o_circs,
@@ -312,6 +317,7 @@ enum setup_kind {
    s2x3,
    s_1x2dmd,
    s_2x1dmd,
+   s1x3p1dmd,
    s_qtag,
    s_bone,
    s1x8,
@@ -339,6 +345,7 @@ enum setup_kind {
    s_nxtrglccw,
    spgdmdcw,
    spgdmdccw,
+   s1x4dmd,
    swqtag,
    sdeep2x1dmd,
    swhrglass,
@@ -359,13 +366,15 @@ enum setup_kind {
    s1x14,
    s1x16,
    s_c1phan,
-   s_hyperbone,   /* internal use only */
    s_bigblob,
    s_ptpd,
    s3dmd,
    s4dmd,
    s3ptpd,
    s4ptpd,
+   s_trngl8,
+   s1x4p2dmd,
+   s1x5p1dmd,
    s_hsqtag,
    s_dmdlndmd,
    s_hqtag,
@@ -391,8 +400,10 @@ enum setup_kind {
    s3oqtg,
    s_thar,
    s_alamo,
+   s_confused_dmd,
    sx4dmd,    // These are too big to actually represent --
    sx4dmdbone,// we don't let them out of their cage.
+   s_hyperbone, // Ditto.
    s8x8,      // Ditto.
    sxequlize, // Ditto.
    sx1x16,    // Ditto.
@@ -422,7 +433,7 @@ enum setup_kind {
    sbigdmd,
    sbigptpd,
    sbig3x1dmd,
-   sbig1x3dmd,
+   s1x5dmd,
    sbig3dmd,
    sbig4dmd,
    sdblxwave,
@@ -453,6 +464,8 @@ enum begin_kind {
    b_ptrngl,
    b_trngl4,
    b_ptrngl4,
+   b_trngl8,
+   b_ptrngl8,
    b_bone6,
    b_pbone6,
    b_short6,
@@ -585,6 +598,8 @@ enum begin_kind {
    b_p4mdmd,
    b_4mptpd,
    b_p4mptpd,
+   b_1x4dmd,
+   b_p1x4dmd,
    b_bigh,
    b_pbigh,
    b_bigx,
@@ -609,8 +624,8 @@ enum begin_kind {
    b_pbigptpd,
    b_big3x1dmd,
    b_pbig3x1dmd,
-   b_big1x3dmd,
-   b_pbig1x3dmd,
+   b_1x5dmd,
+   b_p1x5dmd,
    b_big3dmd,
    b_pbig3dmd,
    b_big4dmd,
@@ -888,6 +903,7 @@ enum calldef_schema {
    schema_checkpoint_mystic_ok,
    schema_cross_checkpoint,
    schema_rev_checkpoint,
+   schema_rev_checkpoint_concept,
    schema_ckpt_star,
    schema_maybe_in_out_triple_squash,
    schema_in_out_triple_squash,
@@ -1054,7 +1070,7 @@ enum mods1_word {
    DFM1_CALL_MOD_MAND_SECONDARY      = 0x00000600UL,
 
    DFM1_ONLY_FORCE_ELONG_IF_EMPTY    = 0x00000800UL,
-   // spare        = 0x00001000UL,
+   DFM1_ROLL_TRANSPARENT_IF_Z        = 0x00001000UL,
    DFM1_ENDSCANDO                    = 0x00002000UL,
    DFM1_FINISH_THIS                  = 0x00004000UL,
    DFM1_ROLL_TRANSPARENT             = 0x00008000UL,

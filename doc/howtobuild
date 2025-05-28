@@ -74,8 +74,9 @@ Go to sddoc directory and do:
 20 Nov 05  -   7 Jul 06  #24
  7 Jul 06  -   8 Apr 07  #27
  8 Apr 07  -  23 Jun 07  #28
-23 Jun 07  -             #30
-(#25, #26, and #29 are also available.)
+23 Jun 07  -  13 Oct 07  #31
+13 Oct 07  -             #33
+(#25, #26, #29, #30, and #32 are also available.)
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++

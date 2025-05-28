@@ -24,6 +24,7 @@
 
 /* This defines the following functions:
    do_big_concept
+   nose_move
    stable_move
 
 and the following external variables:
@@ -77,10 +78,17 @@ typedef struct {
 } phan_map;
 
 static phan_map map_c1_phan   = {7, s2x4,   {0, 2, 7, 5, 8, 10, 15, 13},    {4, 6, 11, 9, 12, 14, 3, 1}};
-static phan_map map_pinwheel1 = {7, s2x4,   {10, 15, -1, -1, 2, 7, -1, -1}, {14, 3, -1, -1, 6, 11, -1, -1}};
-static phan_map map_pinwheel2 = {7, s2x4,   {-1, -1, 3, 1, -1, -1, 11, 9},  {-1, -1, 7, 5, -1, -1, 15, 13}};
+
+static phan_map map_pinwheel1 = {7, s2x4,   {10, 15, -1, -1,  2,  7, -1, -1},  {14,  3, -1, -1,  6, 11, -1, -1}};
+static phan_map map_pinwheel2 = {7, s2x4,   {-1, -1,  3,  1, -1, -1, 11,  9},  {-1, -1,  7,  5, -1, -1, 15, 13}};
+static phan_map map_tophat1   = {7, s2x4,   {-1, -1,  3,  1,  2,  7, -1, -1},  {-1, -1, -1, -1,  6, 11, 15, 13}};
+static phan_map map_tophat2   = {7, s2x4,   {10, 15,  3,  1, -1, -1, -1, -1},  {-1, -1,  7,  5,  6, 11, -1, -1}};
+static phan_map map_tophat3   = {7, s2x4,   {10, 15, -1, -1, -1, -1, 11,  9},  {14,  3,  7,  5, -1, -1, -1, -1}};
+static phan_map map_tophat4   = {7, s2x4,   {-1, -1, -1, -1,  2,  7, 11,  9},  {14,  3, -1, -1, -1, -1, 15, 13}};
+
 static phan_map map_pinwheel3 = {7, s2x4,   {0, 1, -1, -1, 6, 7, -1, -1}, {2, 5, -1, -1, 8, 11, -1, -1}};
 static phan_map map_pinwheel4 = {7, s2x4,   {-1, -1, 2, 3, -1, -1, 8, 9},  {-1, -1, 5, 7, -1, -1, 11, 1}};
+
 static phan_map map_o_spots   = {7, s2x4,   {10, -1, -1, 1, 2, -1, -1, 9},  {14, -1, -1, 5, 6, -1, -1, 13}};
 static phan_map map_qt_phan   = {7, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7},   {1, 4, -1, -1, 5, 0, -1, -1}};
 
@@ -304,7 +312,7 @@ static void do_c1_phantom_move(
    else if (ss->kind == s4x4) {
       setup temp;
 
-      // Check for a 4x4 occupied as a "pinwheel", and treat it as phantoms.
+      // Check for a 4x4 occupied as a "pinwheel" or "tophat", and treat it as phantoms.
 
       if (global_livemask == 0xCCCC) {
          map_ptr = &map_pinwheel1;
@@ -312,6 +320,22 @@ static void do_c1_phantom_move(
       }
       else if (global_livemask == 0xAAAA) {
          map_ptr = &map_pinwheel2;
+         goto use_map;
+      }
+      else if (global_livemask == 0xA8CE) {
+         map_ptr = &map_tophat1;
+         goto use_map;
+      }
+      else if (global_livemask == 0x8CEA) {
+         map_ptr = &map_tophat2;
+         goto use_map;
+      }
+      else if (global_livemask == 0xCEA8) {
+         map_ptr = &map_tophat3;
+         goto use_map;
+      }
+      else if (global_livemask == 0xEA8C) {
+         map_ptr = &map_tophat4;
          goto use_map;
       }
 
@@ -544,31 +568,56 @@ static void do_concept_double_offset(
    // Check that the concept is correctly named.
 
    uint32 errmask = 0;
+   uint32 case01 = 0;
+   uint32 case23 = 0;
+   if (((directions ^ 0x8822) & ctrmask) != 0 &&
+       ((directions ^ 0x2288) & ctrmask) != 0)
+      case01 = 1;
+
+   if (((directions ^ 0xAA00) & ctrmask) != 0 &&
+       ((directions ^ 0x00AA) & ctrmask) != 0)
+      case23 = 1;
 
    switch (parseptr->concept->arg1) {
    case 0:
       // Double-offset quarter tag.
       errmask = (directions & ctrmask & 0x5555) |
+         case01 |
          ((directions ^ 0xAAAA) & topmask) |
          (directions & botmask);
       break;
    case 1:
       // Double-offset three-quarter tag.
       errmask = (directions & ctrmask & 0x5555) |
+         case01 |
          ((directions ^ 0xAAAA) & botmask) |
          (directions & topmask);
       break;
    case 2:
+      // Double-offset quarter line.
+      errmask = (directions & ctrmask & 0x5555) |
+         case23 |
+         ((directions ^ 0xAAAA) & topmask) |
+         (directions & botmask);
+      break;
+   case 3:
+      // Double-offset three-quarter line.
+      errmask = (directions & ctrmask & 0x5555) |
+         case23 |
+         ((directions ^ 0xAAAA) & botmask) |
+         (directions & topmask);
+      break;
+   case 4:
       // Double-offset general quarter tag.
       errmask = directions & livemask & 0x5555;
       break;
-   case 3:
+   case 5:
       // Double-offset diamonds.
       errmask = (~directions & (topmask | botmask) & 0x5555) |
          (directions & ctrmask & 0x5555);
       break;
    default:
-      // Case 4 -- double-offset diamond spots -- anything goes.
+      // Case 6 -- double-offset diamond spots -- anything goes.
       break;
    }
 
@@ -3551,6 +3600,77 @@ static void do_concept_fan(
    result->result_flags.misc = finalresultflagsmisc & ~3;
 }
 
+void nose_move(
+   setup *ss,
+   bool everyone,
+   selector_kind who,
+   direction_kind where,
+   setup *result) THROW_DECL
+{
+   selector_kind saved_selector = current_options.who;
+   current_options.who = who;
+
+   int n = attr::slimit(ss);
+   if (n < 0) fail("Sorry, can't do nose starting in this setup.");
+   const coordrec *coordptr = setup_attrs[ss->kind].nice_setup_coords;
+
+   int initial_turn[32];
+
+   int i;
+   for (i=0; i<=n; i++) {           // Execute the required turning, and remember same.
+      uint32 p = ss->people[i].id1;
+      if (p & BIT_PERSON) {
+         int turn;
+         int my_coord;
+         bool select = everyone || selectp(ss, i);
+         switch (where)
+         {
+         case direction_left:
+            turn = 3;
+            break;
+         case direction_right:
+            turn = 1;
+            break;
+         case direction_back:
+            turn = 2;
+            break;
+         case direction_in:
+         case direction_out:
+            if (!coordptr) fail("Can't do this in this formation.");
+            my_coord = (p & 1) ? coordptr->yca[i] : coordptr->xca[i];
+            if (my_coord == 0) fail("Person is in center column.");
+            if (where == direction_out) my_coord = -my_coord;
+            if ((p+1) & 2) my_coord = -my_coord;
+            turn = my_coord < 0 ? 1 : 3;
+            break;
+         default: fail("Illegal direction.");
+         }
+         
+         if (select) ss->people[i].id1 = rotperson(p, turn * 011);
+         initial_turn[(p >> 6) & 037] = select ? turn : 0;
+      }
+   }
+
+   current_options.who = saved_selector;
+
+   move(ss, false, result);
+
+   setup_kind kk = result->kind;
+
+   if (kk == s_dead_concentric)
+      kk = result->inner.skind;
+
+   n = attr::klimit(kk);
+   if (n < 0) fail("Sorry, can't do nose going to this setup.");
+
+   for (i=0; i<=n; i++) {      // Undo the turning.
+      uint32 p = result->people[i].id1;
+      if (p & BIT_PERSON) {
+         result->people[i].id1 = rotperson(p, ((- initial_turn[(p >> 6) & 037]) & 3) * 011);
+      }
+   }
+}
+
 void stable_move(
    setup *ss,
    bool fractional,
@@ -3635,6 +3755,22 @@ void stable_move(
          result->people[i].id1 = p;
       }
    }
+}
+
+
+static void do_concept_nose(
+   setup *ss,
+   parse_block *parseptr,
+   setup *result) THROW_DECL
+{
+   if (ss->cmd.cmd_final_flags.test_herit_and_final_bits())
+      fail("Illegal modifier before \"nose\".");
+
+   nose_move(ss,
+             parseptr->concept->arg1 == 0,
+             parseptr->options.who,
+             parseptr->options.where,
+             result);
 }
 
 
@@ -4070,7 +4206,7 @@ static void do_concept_checkpoint(
    //    on the call.
 
    if (reverseness)
-      concentric_move(ss, &this_cmd, &subsid_cmd, schema_rev_checkpoint,
+      concentric_move(ss, &this_cmd, &subsid_cmd, schema_rev_checkpoint_concept,
                       0, 0, true, false, ~0UL, result);
    else
       concentric_move(ss, &subsid_cmd, &this_cmd, schema_checkpoint,
@@ -4137,7 +4273,7 @@ static bool prepare_for_call_under_repetition(
 
 static void do_call_in_series_simple(setup *result) THROW_DECL
 {
-   do_call_in_series(result, false, false, true, false);
+   do_call_in_series(result, false, 0, true, false);
 }
 
 
@@ -4281,7 +4417,7 @@ static void do_concept_special_sequential(
             FRACS(CMD_FRAC_CODE_FROMTO,stopindex-1,0) | CMD_FRAC_BREAKING_UP);
          result->cmd.prior_expire_bits |=
             result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
-         do_call_in_series(result, true, false, true, false);
+         do_call_in_series(result, true, 0, true, false);
       }
 
       // Do the replacement call.
@@ -4294,7 +4430,7 @@ static void do_concept_special_sequential(
       // Give this call a clean start with respect to expiration stuff.
       uint32 suspended_expiration_bits = result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, true, false, true, false);
+      do_call_in_series(result, true, 0, true, false);
 
       // Put back the expiration bits for the resumed call.
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
@@ -4307,7 +4443,7 @@ static void do_concept_special_sequential(
       result->cmd.cmd_fraction.set_to_null_with_flags(
          FRACS(CMD_FRAC_CODE_FROMTOREV,stopindex+1,0) | CMD_FRAC_BREAKING_UP);
       result->cmd.prior_expire_bits |= result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, true, false, true, false);
+      do_call_in_series(result, true, 0, true, false);
    }
    else if (parseptr->concept->arg1 == 2) {
       // This is "start with (call)", which is the same as "replace the 1st part".
@@ -4882,7 +5018,7 @@ static void do_concept_inner_outer(
             else                      fail("There are no triple columns here.");
          }
          goto ready;
-      case sbigh: case sbigx: case sbigrig: case s_hsqtag: case sbig3x1dmd: case sbig1x3dmd:
+      case sbigh: case sbigx: case sbigrig: case s_hsqtag: case sbig3x1dmd: case s1x5dmd:
          goto verify_clw;
       }
 
@@ -5016,7 +5152,7 @@ static void do_concept_inner_outer(
       switch (ss->kind) {
       case s3dmd: case s3ptpd: case s_3mdmd: case s_3mptpd: case s3x1dmd: case s1x3dmd:
       case s_hsqtag: case s_hrglass: case s_dhrglass: case sbighrgl: case sbigdhrgl:
-      case sbig3x1dmd: case sbig1x3dmd:
+      case sbig3x1dmd: case s1x5dmd:
          goto ready;
       }
 
@@ -5481,7 +5617,7 @@ static void do_concept_multiple_formations(
 
       do_matrix_expansion(&tempsetup, need_prop, false);
 
-      if (tempsetup.kind != sbig3x1dmd && tempsetup.kind != sbig1x3dmd &&
+      if (tempsetup.kind != sbig3x1dmd && tempsetup.kind != s1x5dmd &&
           tempsetup.kind != s_hsqtag && tempsetup.kind != s_dmdlndmd)
          fail("Can't do this concept in this setup.");
       break;
@@ -6661,7 +6797,7 @@ static void do_concept_meta(
 
          result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
 
-         do_call_in_series(result, true, false, true, false);
+         do_call_in_series(result, true, 0, true, false);
 
          if (result->result_flags.misc & RESULTFLAG__SECONDARY_DONE) {
             index = 0;
@@ -6865,7 +7001,7 @@ static void do_concept_replace_nth_part(
       // This seems to make t50 work.
       result->cmd.prior_expire_bits |=
          result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, true, false, true, false);
+      do_call_in_series(result, true, 0, true, false);
    }
 
    // Do the interruption/replacement call.
@@ -6883,7 +7019,7 @@ static void do_concept_replace_nth_part(
       uint32 suspended_expiration_bitsmisc =
          result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, true, false, true, false);
+      do_call_in_series(result, true, 0, true, false);
 
       // Put back the expiration bits for the resumed call.
       result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
@@ -6914,7 +7050,7 @@ static void do_concept_replace_nth_part(
       // This seems to make t50 work.
       result->cmd.prior_expire_bits |=
          result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
-      do_call_in_series(result, true, false, true, false);
+      do_call_in_series(result, true, 0, true, false);
    }
 }
 
@@ -6977,7 +7113,7 @@ static void do_concept_interlace(
          // This seems to make t50 work.
          result->cmd.prior_expire_bits |= result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
 
-         do_call_in_series(result, true, false, true, false);
+         do_call_in_series(result, true, 0, true, false);
          calla_expiration_bitsmisc = result->result_flags.misc;
 
          if (!(result->result_flags.misc & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -7014,7 +7150,7 @@ static void do_concept_interlace(
             result->cmd.prior_expire_bits |=
                result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
 
-            do_call_in_series(result, true, false, true, false);
+            do_call_in_series(result, true, 0, true, false);
             return;
          }
 
@@ -7024,7 +7160,7 @@ static void do_concept_interlace(
          // This seems to make t50 work.
          result->cmd.prior_expire_bits |= result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
 
-         do_call_in_series(result, true, false, true, false);
+         do_call_in_series(result, true, 0, true, false);
          callb_expiration_bitsmisc = result->result_flags.misc;
 
          if (!(result->result_flags.misc & RESULTFLAG__PARTS_ARE_KNOWN))
@@ -7121,10 +7257,68 @@ static void do_concept_fractional(
             move(ss, false, result);
          }
       }
+      else if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) >= (CMD_FRAC_PART_BIT*2) &&
+               (ss->cmd.cmd_fraction.flags & (CMD_FRAC_CODE_MASK|CMD_FRAC_BREAKING_UP)) ==
+               (CMD_FRAC_CODE_FROMTOREV|CMD_FRAC_BREAKING_UP)) {
+
+         // We are being asked to do "1-3/5 swing the fractions", but skipping some number of initial parts,
+         // and perhaps some final parts as well.  We will take the chance that the number of initial parts
+         // to skip does not exceed the first full swing the fractions.
+
+         // We are being asked to do everything beyond some part of
+         // "1-3/5 swing the fractions".
+
+         // First, we do the full call, skipping the initial parts that need to be skipped.
+
+         prepare_for_call_in_series(result, ss);
+
+         result->cmd.cmd_fraction.set_to_null_with_flags(
+            FRACS(CMD_FRAC_CODE_FROMTOREV,ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK,0) | CMD_FRAC_BREAKING_UP);
+
+         do_call_in_series(result, false, 0,
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
+            false);
+
+         copy_cmd_preserve_elong_and_expire(ss, result);
+         result->cmd.cmd_fraction.flags = ss->cmd.cmd_fraction.flags;
+         result->cmd.cmd_fraction.fraction = new_fracs;
+
+         if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART2_MASK) != 0) {
+            result->cmd.cmd_fraction.flags &= ~CMD_FRAC_PART_MASK;  // Force "N" to 1.
+            result->cmd.cmd_fraction.flags |= CMD_FRAC_PART_BIT; 
+         }
+         else {
+            result->cmd.cmd_fraction.flags = 0;   // Do the whole 3/5.
+         }
+
+         if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
+            update_id_bits(result);
+         result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
+
+         do_call_in_series(result, false, 0,
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
+            false);
+      }
+      else if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) == CMD_FRAC_PART_BIT &&
+               (ss->cmd.cmd_fraction.flags & (CMD_FRAC_CODE_MASK|CMD_FRAC_BREAKING_UP)) ==
+           (CMD_FRAC_CODE_ONLYREV|CMD_FRAC_BREAKING_UP)) {
+
+         // We are being asked to do just the last few parts of
+         // "1-3/5 swing the fractions".  We are going to hope that those parts
+         // lie only in the final "3/5".
+         // Actually, we take no chances.  If it isn't the very last part, we don't allow it.
+
+         prepare_for_call_in_series(result, ss);
+         result->cmd.cmd_fraction.flags = ss->cmd.cmd_fraction.flags;
+         result->cmd.cmd_fraction.fraction = new_fracs;
+         do_call_in_series(result, false, 0,
+            !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
+            false);
+      }
       else {
          prepare_for_call_in_series(result, ss);
          result->cmd.cmd_fraction.set_to_null_with_flags(ss->cmd.cmd_fraction.flags);
-         do_call_in_series(result, false, false,
+         do_call_in_series(result, false, 0,
             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
             false);
 
@@ -7140,12 +7334,25 @@ static void do_concept_fractional(
             // "1-3/5 swing the fractions".
             result->cmd.cmd_fraction.flags = 0;   // Do the whole 3/5.
          }
+         else {
+            if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) == CMD_FRAC_PART_BIT &&
+                (ss->cmd.cmd_fraction.flags & (CMD_FRAC_CODE_MASK|CMD_FRAC_BREAKING_UP)) ==
+                 (CMD_FRAC_CODE_FROMTOREV|CMD_FRAC_BREAKING_UP)) {
+                  // No action; this is OK.
+            }
+            else if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) {
+               // No action; this is OK.
+            }
+            else {
+               fail("Sorry, can't do this.");
+            }
+         }
 
          if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
             update_id_bits(result);
          result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
 
-         do_call_in_series(result, false, false,
+         do_call_in_series(result, false, 0,
             !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX),
             false);
       }
@@ -7206,8 +7413,8 @@ static void do_concept_so_and_so_begin(
 
    current_options.who = saved_selector;
 
-   normalize_setup(&setup1, normalize_before_isolated_call, false);
-   normalize_setup(&setup2, normalize_before_isolated_call, false);
+   normalize_setup(&setup1, plain_normalize, false);
+   normalize_setup(&setup2, plain_normalize, false);
 
    // We just feed the "reverse" bit and the fractional stuff (low 16 bits)
    // through.  They have no effect on what we are doing.
@@ -7887,6 +8094,10 @@ const concept_table_item concept_table[] = {
    {CONCPROP__USE_SELECTOR | CONCPROP__USE_NUMBER |
     CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
     do_concept_stable},                                     // concept_so_and_so_frac_stable
+   {CONCPROP__USE_DIRECTION | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_nose},                                       // concept_nose
+   {CONCPROP__USE_DIRECTION | CONCPROP__USE_SELECTOR | CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
+    do_concept_nose},                                       // concept_so_and_so_nose
    {CONCPROP__MATRIX_OBLIVIOUS,
     do_concept_emulate},                                    // concept_emulate
    {CONCPROP__USE_SELECTOR | CONCPROP__NO_STEP | CONCPROP__PERMIT_MATRIX,

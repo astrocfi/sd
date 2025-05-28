@@ -33,8 +33,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "37.4"
-#define TIME_STAMP "wba@alum.mit.edu  14 Jun 2007 $"
+#define VERSION_STRING "37.5"
+#define TIME_STAMP "wba@alum.mit.edu  13 Oct 2007 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -544,6 +544,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
 {
    parse_block *new_block;
    selector_kind sel = selector_uninitialized;
+   direction_kind dir = direction_uninitialized;
    uint32 number_list = 0;
    int howmanynumbers = 0;
 
@@ -552,6 +553,10 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
       if (find_selector(&sel, false)) return true;
+   }
+
+   if (concept_table[conc->kind].concept_prop & CONCPROP__USE_DIRECTION) {
+      if (find_direction(&dir)) return true;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -568,7 +573,7 @@ extern bool deposit_concept(const conzept::concept_descriptor *conc)
    new_block = get_parse_block();
    new_block->concept = conc;
    new_block->options.who = sel;
-   new_block->options.where = direction_uninitialized;
+   new_block->options.where = dir;
    new_block->options.number_fields = number_list;
    new_block->options.howmanynumbers = howmanynumbers;
 

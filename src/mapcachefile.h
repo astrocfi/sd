@@ -99,7 +99,7 @@
 // the file.
 
 // The address at which the cache file is mapped can be obtained by
-// calling the procedure "map_address()".  It will be zero if mapping
+// calling the method "map_address()".  It will be zero if mapping
 // was unsuccessful for any reason.
 
 // After constructing a cache object, examine the map address first,
@@ -180,7 +180,7 @@ struct MAPPED_CACHE_INNARDS;
 
 class MAPPED_CACHE_FILE {
    int *client_address;
-   struct MAPPED_CACHE_INNARDS *innards;
+   MAPPED_CACHE_INNARDS *innards;
  public:
 
    enum miss_reason {

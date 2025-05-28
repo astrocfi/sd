@@ -55,7 +55,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
    result->rotation &= 3;
 
    if (result->kind == s1x1) {
-      copy_rot(result, 0, result, 0, (result->rotation) * 011);
+      result->rotate_person(0, (result->rotation) * 011);
       result->rotation = 0;
    }
    else if (result->kind == s_normal_concentric) {
@@ -148,7 +148,7 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
 
       result->rotation = 0;
    }
-   else if (result->kind == s_trngl || result->kind == s_trngl4) {
+   else if (setup_attrs[result->kind].no_symmetry) {
    }
    else if (result->kind == s1x3) {
       if (result->rotation & 2) {
@@ -156,9 +156,9 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          // Must turn this setup upside-down.
 
          result->swap_people(0, 2);
-         copy_rot(result, 0, result, 0, 022);
-         copy_rot(result, 1, result, 1, 022);
-         copy_rot(result, 2, result, 2, 022);
+         result->rotate_person(0, 022);
+         result->rotate_person(1, 022);
+         result->rotate_person(2, 022);
       }
       result->rotation &= 1;
    }
@@ -171,12 +171,11 @@ extern void canonicalize_rotation(setup *result) THROW_DECL
          // Must turn this setup upside-down.
 
          int offs = (attr::slimit(result)+1) >> 1;     // Half the setup size.
-         int i;
 
-         for (i=0; i<offs; i++) {
+         for (int i=0; i<offs; i++) {
             result->swap_people(i, i+offs);
-            copy_rot(result, i, result, i, 022);
-            copy_rot(result, i+offs, result, i+offs, 022);
+            result->rotate_person(i, 022);
+            result->rotate_person(i+offs, 022);
          }
       }
 
@@ -595,7 +594,7 @@ extern bool divide_for_magic(
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
          // "Magic" was specified.  Split it into 1x4's
          // in the appropriate magical way.
-         division_code = spcmap_2x4_magic;
+         division_code = MAPCODE(s1x4,2,MPKIND__MAGIC,1);
          goto divide_us;
       }
       break;
@@ -605,7 +604,7 @@ extern bool divide_for_magic(
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__NEED_DIAMOND;
 
       if (heritflags_to_check == INHERITFLAG_MAGIC) {
-         division_code = MAPCODE(sdmd,2,MPKIND__MAGICDMD,1);
+         division_code = MAPCODE(sdmd,2,MPKIND__MAGIC,1);
          goto divide_us;
       }
       else if (heritflags_to_check == INHERITFLAG_INTLK) {
@@ -800,7 +799,7 @@ extern bool do_simple_split(
 extern uint32 do_call_in_series(
    setup *sss,
    bool dont_enforce_consistent_split,
-   bool roll_transparent,
+   uint32 roll_transparent_bits,
    bool normalize,
    bool qtfudged) THROW_DECL
 {
@@ -930,7 +929,7 @@ extern uint32 do_call_in_series(
    // Can only do this if we understand the setups, as indicated by the "slimit"
    // being defined.
 
-   if (roll_transparent &&
+   if ((roll_transparent_bits & (DFM1_ROLL_TRANSPARENT|DFM1_ROLL_TRANSPARENT_IF_Z)) != 0 &&
        (attr::slimit(&tempsetup) >= 0) &&
        (attr::slimit(sss) >= 0)) {
 
@@ -958,30 +957,41 @@ extern uint32 do_call_in_series(
       int u, v;
 
       for (u=0; u<=attr::slimit(&tempsetup); u++) {
-         if ((tempsetup.people[u].id1 & ROLL_DIRMASK) == ROLL_DIRMASK) {
-            // This person is roll-neutral.  Reinstate his original roll info,
-            // by searching for him in the starting setup.
-            // But do *NOT* restore his "this person moved" bit from its
-            // previous state.  Leave it in its current state.
+         uint32 *thispid1 = &tempsetup.people[u].id1;
+         if (*thispid1) {
+            uint32 rollinfo = *thispid1 & ROLL_DIRMASK;
 
-            if (!moving_people_cant_roll)
-               tempsetup.people[u].id1 &= ~ROLL_DIRMASK;
+            // Look for people marked "M", that is, roll-neutral.
+            // But if in "DFM1_ROLL_TRANSPARENT_IF_Z" mode, also look for people marked undefined,
+            // and force them to "M" rather than being transparent.
+            if ((roll_transparent_bits & DFM1_ROLL_TRANSPARENT_IF_Z) != 0 && rollinfo == 0) {
+               *thispid1 |= ROLL_IS_M;
+            }
+            else if (rollinfo == ROLL_DIRMASK) {
+               // This person is roll-neutral.  Reinstate his original roll info,
+               // by searching for him in the starting setup.
+               // But do *NOT* restore his "this person moved" bit from its
+               // previous state.  Leave it in its current state.
 
-            for (v=0; v<=attr::slimit(sss); v++) {
-               // But we do *NOT* do this if the before and after setups
-               // were the same, the call was marked "moving_people_cant_roll",
-               // and the person finished on a different spot.
+               if (!moving_people_cant_roll)
+                  *thispid1 &= ~ROLL_DIRMASK;
 
-               if (((tempsetup.people[u].id1 ^ sss->people[v].id1) & XPID_MASK) == 0) {
-                  if (moving_people_cant_roll) {
-                     tempsetup.people[u].id1 &= ~ROLL_DIRMASK;
-                     if (u == v)
-                        tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_DIRMASK);
-                     else
-                        tempsetup.people[u].id1 |= ROLL_IS_M;  // This person moved.
-                  }
-                  else {
-                     tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_DIRMASK);
+               for (v=0; v<=attr::slimit(sss); v++) {
+                  // But we do *NOT* do this if the before and after setups
+                  // were the same, the call was marked "moving_people_cant_roll",
+                  // and the person finished on a different spot.
+
+                  if (((*thispid1 ^ sss->people[v].id1) & XPID_MASK) == 0) {
+                     if (moving_people_cant_roll) {
+                        *thispid1 &= ~ROLL_DIRMASK;
+                        if (u == v)
+                           *thispid1 |= (sss->people[v].id1 & ROLL_DIRMASK);
+                        else
+                           *thispid1 |= ROLL_IS_M;  // This person moved.
+                     }
+                     else {
+                        *thispid1 |= (sss->people[v].id1 & ROLL_DIRMASK);
+                     }
                   }
                }
             }
@@ -1021,7 +1031,7 @@ extern uint32 do_call_in_series(
       Only "1x12 matrix" turns on CMD_MISC__EXPLICIT_MATRIX.  Plain "12 matrix will appear
       in the "new_final_concepts" word. */
 
-   if (normalize) normalize_setup(sss, simple_normalize, false);
+   if (normalize) normalize_setup(sss, plain_normalize, false);
 
    /* To be safe, we should take away the "did last part" bit for the second call,
       but we are fairly sure it won't be on. */
@@ -1318,6 +1328,10 @@ static const checkitem checktable[] = {
     {0, 6, 0, 8, 0, -6, 0, -8,
      2, 2, 2, 4, -2, 2, -2, 4, 2, -2, 2, -4, -2, -2, -2, -4, 127}},
 
+   {0x01150026, 0x20048202, s1x4dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x24009102, s1x4p2dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00D50026, 0x22009022, s1x5p1dmd, 0, warn__none, (const coordrec *) 0, {127}},
+
    {0x00950062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00550062, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00910022, 0x091002C0, sbigdmd, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1438,6 +1452,10 @@ static const checkitem checktable[] = {
    {0x00E20044, 0x1D806E41, s3x8, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00840062, 0x4E203380, s4x5, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00620084, 0x31888C60, s4x5, 1, warn__none, (const coordrec *) 0, {127}},
+   // Fudge this to a 4x5.  People were trucking in a qtag.
+   {0x00670095, 0x10840C40, s4x5, 1, warn__none, (const coordrec *) 0,
+    {-4, 1, -2, 0, 5, 9, 2, 8, 4, -1, 2, 0, -5, -9, -2, -8,
+     -4, 9, -2, 8, 5, 1, 2, 0, 4, -9, 2, -8, -5, -1, -2, 0}},
    {0x00A20062, 0x109CC067, s4x6, 0, warn__none, (const coordrec *) 0, {127}},
    {0x006200A2, 0x1918C4C6, s4x6, 1, warn__none, (const coordrec *) 0, {127}},
    {0x00C40062, 0x6E001B80, s3oqtg, 0, warn__none, (const coordrec *) 0, {127}},
@@ -1458,8 +1476,8 @@ static const checkitem checktable[] = {
    {0x01220026, 0x4800A404, sbigrig, 0, warn__none, (const coordrec *) 0, {127}},
    {0x01260055, 0x49002480, sbig3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E60055, 0x49002480, sbig3x1dmd, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01150026, 0x20048212, sbig1x3dmd, 0, warn__none, (const coordrec *) 0, {127}},
-   {0x01550026, 0x20048212, sbig1x3dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01150026, 0x20048212, s1x5dmd, 0, warn__none, (const coordrec *) 0, {127}},
+   {0x01550026, 0x20048212, s1x5dmd, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00E20026, 0x0808A006, swiderigger,0, warn__none, (const coordrec *) 0, {127}},
    {0x00460044, 0x41040010, s_323, 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660044, 0x41040410, s_343, 0, warn__none, (const coordrec *) 0, {127}},
@@ -4165,7 +4183,7 @@ static void do_stuff_inside_sequential_call(
    uint32 stuff = do_call_in_series(
                      result,
                      reverse_order,
-                     (DFM1_ROLL_TRANSPARENT & this_mod1) != 0,
+                     this_mod1,
                      ((cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) == 0 &&
                       (new_final_concepts.test_heritbits(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) == 0 &&
                       (recompute_id || (this_mod1 & DFM1_SEQ_NORMALIZE) != 0)),
@@ -4191,7 +4209,18 @@ static void do_sequential_call(
    uint32 extra_heritmask_bits,
    setup *result) THROW_DECL
 {
-   int i;
+   // We prefer fraction information in the fraction field rather than the herit bits.
+   // (Under certain circumstances if might get changed back later.)
+   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_HALF)) {
+      ss->cmd.cmd_fraction.set_to_firsthalf_with_flags(0);
+      ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_HALF);
+   }
+
+   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LASTHALF)) {
+      ss->cmd.cmd_fraction.set_to_lasthalf_with_flags(0);
+      ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_LASTHALF);
+   }
+
    bool forbid_flip = ss->cmd.callspec == base_calls[base_call_basetag0_noflip];
    final_and_herit_flags new_final_concepts = ss->cmd.cmd_final_flags;
    parse_block *parseptr = ss->cmd.parseptr;
@@ -4295,6 +4324,7 @@ static void do_sequential_call(
    // Otherwise, the defaults that we have placed into zzz will be used.
 
    revert_weirdness_type doing_weird_revert = weirdness_off;
+
 
    if (!ss->cmd.cmd_fraction.is_null()) {
       if ((zzz.m_do_half_of_last_part | zzz.m_do_last_half_of_first_part) != 0)
@@ -4407,6 +4437,8 @@ static void do_sequential_call(
       ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
+
+   int i;
 
    if (this_schema == schema_sequential_with_split_1x8_id) {
       if (ss->kind == s1x8) {
@@ -6113,12 +6145,11 @@ static void move_with_real_call(
             break;
          default:
 
-            /* Must be some form of concentric.  We allow visible fractions,
-               and take no action in that case.  This means that any fractions
-               will be sent to constituent calls. */
+            // Must be some form of concentric.  We allow visible fractions,
+            // and take no action in that case.  This means that any fractions
+            // will be sent to constituent calls.
 
             if (!(callflags1 & CFLAG1_VISIBLE_FRACTION_MASK)) {
-
                // Otherwise, we allow the fraction "1/2" to be given, if the top-level
                // heritability flag allows it.  We turn the fraction into a "final concept".
 
@@ -6613,6 +6644,10 @@ extern void move(
    bool qtfudged,
    setup *result) THROW_DECL
 {
+   // Need this to check for dixie tag 1/4.
+   if (current_options.number_fields == 1)
+      ss->cmd.cmd_misc3_flags |= CMD_MISC3__PARENT_COUNT_IS_ONE;
+
    result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
    parse_block *saved_magic_diamond = (parse_block *) 0;
    parse_block *parseptr = ss->cmd.parseptr;
@@ -6867,8 +6902,17 @@ extern void move(
       // There are no "big" concepts.  The only concepts are the "little" ones
       // that have been encoded into cmd_final_flags.
 
+      // Find out whether there is a concentric-like schema for this call.  Other schemata
+      // (e.g. array) might get in the way.  Skip them.  Of course, if we take action based
+      // on the concentric schema, when it comes time to do the call, it will try the array
+      // schema first.  That will fail, and it will eventually get to the correct schema.
+
+      const calldefn *search_defn = &this_call->the_defn;
+      while (search_defn->schema == schema_by_array && search_defn->compound_part)
+         search_defn = search_defn->compound_part;
+
       if ((ss->cmd.cmd_misc2_flags & (CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG))) {
-         switch (this_call->the_defn.schema) {
+         switch (search_defn->schema) {
          case schema_concentric:
          case schema_concentric_4_2:
          case schema_concentric_4_2_or_normal:
@@ -6910,7 +6954,7 @@ extern void move(
              (((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLY) &&
               ((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) != CMD_FRAC_CODE_ONLYREV))) {
             FuckingThingToTryToKeepTheFuckingStupidMicrosoftCompilerFromScrewingUp();
-            switch (this_call->the_defn.schema) {
+            switch (search_defn->schema) {
             case schema_concentric:
             case schema_concentric_6_2:
             case schema_concentric_6_2_line:

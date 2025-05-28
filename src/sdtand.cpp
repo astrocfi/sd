@@ -91,6 +91,15 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 2, 5, 7,                     1, 3, 4, 6},                        0,02222,     0xFF,         4, 0,  s2x2,  s2x4},
    {{2, 5, 7, 0,                     3, 4, 6, 1},                            0,0,     0xFF,         4, 1,  s2x2,  s2x4},
 
+   // This one gets h1p, far box star thru, as couples touch
+   {{7, 6, 2, 5,                     0, 1, 3, 4},                        0,00022,     0x3C,         4, 1, s_trngl4, s2x4},
+   // This one gets h1p, near box star thru, as couples touch
+   {{4, 5, 7, 0,                     3, 2, 6, 1},                        0,00022,     0xC3,         4, 3, s_trngl4, s2x4},
+
+   // This one comes back from far box
+   {{0, 2, 4, 6,                     1, 3, 5, 7},                        0,02200,     0xF0,      4, 0, s_trngl4, s_trngl8},
+
+
 
    // Special maps for couples 1/8 twosome stuff.
    // These need further work in the table initializer.
@@ -298,16 +307,11 @@ static tm_thing maps_isearch_twosome[] = {
    {{0, 3, -2, 7, 8, -2,           1, 2, -2, 6, 9, -2},
     0,0002002,      0x0C3,      6, 0,  s2x3,  sbigdmd},
 
-   {{2, 0,                           3, 1},
-    0,020,        0xC,        2, 1,  s1x2,  s_trngl4},
-   {{1, 3,                           0, 2},
-    0,02,        0xC,        2, 3,  s1x2,  s_trngl4},
-   {{2, 1, 0,                        3, -1, -1},
-    0,0,          0xC,        3, 1,  s1x3,  s_trngl4},
-   {{0, 1, 3,                        -1, -1, 2},
-    0,0,          0xC,        3, 3,  s1x3,  s_trngl4},
-   {{0, 3, 2,                        -1, 1, -1},
-    0,0,          0,          3, 0,  s1x3,  sdmd},
+   {{2, 0,                           3, 1},                         0,020,        0xC,        2, 1,  s1x2,  s_trngl4},
+   {{1, 3,                           0, 2},                         0,02,         0xC,        2, 3,  s1x2,  s_trngl4},
+   {{2, 1, 0,                        3, -1, -1},                    0,0,          0xC,        3, 1,  s1x3,  s_trngl4},
+   {{0, 1, 3,                        -1, -1, 2},                    0,0,          0xC,        3, 3,  s1x3,  s_trngl4},
+   {{0, 3, 2,                        -1, 1, -1},                    0,0,          0,          3, 0,  s1x3,  sdmd},
 
    {{1, 3, 4, 7, 9, 11,              -1, -1, 5, -1, -1, 10},
     0,0200200,      0xC30,      6, 0,  s_ntrgl6cw,  s2x6},
@@ -951,7 +955,7 @@ static bool pack_us(
    int virt_index = -1;
 
    tandstuff->virtual_setup.clear_people();
-   tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
+   tandstuff->virtual_setup.rotation = map_ptr->rot & 3;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
 
    for (i=0,
@@ -1105,7 +1109,7 @@ static bool pack_us(
          }
 
          if (map_ptr->rot & 1)   // Compensate for setup rotation.
-            ptr->id1 = rotccw(ptr->id1);
+            ptr->id1 = rotperson(ptr->id1, (-map_ptr->rot & 3) * 011);
 
          for (j=0 ; j<tandstuff->np ; j++)
             tandstuff->real_saved_people[j][virt_index] = fb[j];

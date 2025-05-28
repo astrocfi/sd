@@ -323,7 +323,7 @@ static void write_nice_number(char indicator, int num)
 
 
 
-static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
+static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f, bool is_concept)
 {
    uint32 index = cptr->number_fields;
    int howmany = cptr->howmanynumbers;
@@ -336,6 +336,9 @@ static void writestuff_with_decorations(call_conc_option_state *cptr, Cstring f)
             write_nice_number(f[1], (howmany <= 0) ? -1 : (int) (index & NUMBER_FIELD_MASK));
             index >>= BITS_PER_NUMBER_FIELD;
             howmany--;
+            break;
+         case 'h':
+            writestuff(is_concept ? direction_names[cptr->where].name_uc : direction_names[cptr->where].name);
             break;
          case '6': case 'K':
             writestuff(selector_list[cptr->who].name_uc);
@@ -557,6 +560,86 @@ static void printsetup(setup *x)
 
          do_write(str);
          break;
+      case s_trngl8:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "e f g h@@6 5d@6 5c@6 5b@6 5a";
+            break;
+         case 1:
+            str = "6 6 6 6 e@@6 6 6 6 f@7a b c d@76 6 6 6 g@@6 6 6 6 h";
+            break;
+         case 2:
+            str = "6 5a@6 5b@6 5c@6 5d@@h g f e";
+            break;
+         default:
+            str = "h@@g@76 d c b a@7f@@e";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s1x3p1dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 d@7a b c 6 e@76 6 6 f";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ fd@@ 5e@";
+            break;
+         case 2:
+            str = "6 f@7e 6 c b a@76 d";
+            break;
+         default:
+            str = " 5e@@ df@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s1x4p2dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 e@7a b c d 6 g f@76 6 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ he@@ 5g@@ 5f@";
+            break;
+         case 2:
+            str = "6 6 h@7f g 6 d c b a@76 6 e";
+            break;
+         default:
+            str = " 5f@@ 5g@@ eh@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
+      case s1x5p1dmd:
+         offs = 0;
+
+         switch (roti) {
+         case 0:
+            str = "6 6 6 6 6 f@7a b c d e 6 g@76 6 6 6 6 h";
+            break;
+         case 1:
+            str = " 5a@@ 5b@@ 5c@@ 5d@@ 5e@@ hf@@ 5g@";
+            break;
+         case 2:
+            str = "6 h@7g 6 e d c b a@76 f";
+            break;
+         default:
+            str = " 5g@@ fh@@ 5e@@ 5d@@ 5c@@ 5b@@ 5a@";
+            break;
+         }
+
+         do_write(str);
+         break;
       case s_dead_concentric:
          ui_options.drawing_picture = 0;
          writestuff(" centers only:");
@@ -713,7 +796,7 @@ void unparse_call_name(Cstring name, char *s, call_conc_option_state *options)
    writechar_block.destcurr = s;
    writechar_block.usurping_writechar = true;
 
-   writestuff_with_decorations(options, name);
+   writestuff_with_decorations(options, name, false);
    writechar('\0');
 
    writechar_block = saved_writeblock;
@@ -833,13 +916,13 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                selective_key sk = (selective_key) item->arg1;
 
                if (sk == selective_key_dyp)
-                  writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ");
+                  writestuff_with_decorations(&local_cptr->options, "DO YOUR PART, @6 ", true);
                else if (sk == selective_key_own)
-                  writestuff_with_decorations(&local_cptr->options, "OWN THE @6, ");
+                  writestuff_with_decorations(&local_cptr->options, "OWN THE @6, ", true);
                else if (sk == selective_key_plain)
-                  writestuff_with_decorations(&local_cptr->options, "@6 ");
+                  writestuff_with_decorations(&local_cptr->options, "@6 ", true);
                else
-                  writestuff_with_decorations(&local_cptr->options, "@6 DISCONNECTED ");
+                  writestuff_with_decorations(&local_cptr->options, "@6 DISCONNECTED ", true);
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -849,10 +932,10 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
 
                // If stuff hasn't been completely entered, show the number.
                if (!local_cptr->next || !subsidiary_ptr)
-                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ");
+                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ", true);
             }
             else if (k == concept_special_sequential_4num) {
-               writestuff_with_decorations(&local_cptr->options, item->name);
+               writestuff_with_decorations(&local_cptr->options, item->name, true);
                writestuff(" ");
             }
             else if (k == concept_replace_nth_part ||
@@ -874,18 +957,18 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   case 2:
                      if (!local_cptr->next)
                         writestuff_with_decorations(&local_cptr->options,
-                                                    "interrupt this call after @9/@9:");
+                                                    "interrupt this call after @9/@9:", true);
                      else
                         writestuff("interrrupt ");
                      break;
                   case 8:
                      writestuff_with_decorations(&local_cptr->options,
-                                                 "replace the @u part of ");
+                                                 "replace the @u part of ", true);
                      if (!local_cptr->next) writestuff("this call:");
                      break;
                   case 9:
                      writestuff_with_decorations(&local_cptr->options,
-                                                 "interrupting after the @u part of ");
+                                                 "interrupting after the @u part of ", true);
                      if (!local_cptr->next) writestuff("this call:");
                      break;
                   }
@@ -911,7 +994,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         break;
                      case 2:
                         writestuff_with_decorations(&local_cptr->options,
-                                                    " after @9/@9 with this call:");
+                                                    " after @9/@9 with this call:", true);
                         break;
                      }
                   }
@@ -946,14 +1029,14 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sandwich)
                writestuff(" AROUND");
             else if (k == concept_special_sequential_num) {
-               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ");
+               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ", true);
                request_final_space = false;
             }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
                writestuff(" BUT ");
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
                writestuff(" WITH A [");
                request_final_space = false;
             }
@@ -1078,7 +1161,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   comma_after_next_concept = 5;
                }
 
-               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name);
+               writestuff_with_decorations(&local_cptr->options, local_cptr->concept->name, true);
                request_final_space = true;
             }
 
@@ -1128,7 +1211,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff(")");
-            return;
+            break;
          }
          else if (k == concept_replace_nth_part ||
                   k == concept_replace_last_part ||
@@ -1136,7 +1219,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
             if (request_final_space) writestuff(" ");
             print_recurse(local_cptr, PRINT_RECURSE_STAR);
             writestuff("]");
-            return;
+            break;
          }
       }
       else {
@@ -1289,7 +1372,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                      break;
                   case 'h':                   // Need to plug in a direction.
                      write_blank_if_needed();
-                     writestuff(direction_names[idirjunk]);
+                     writestuff(direction_names[idirjunk].name);
                      if (np[0] && np[0] != ' ' && np[0] != ']')
                         writestuff(" ");
                      break;
@@ -1556,7 +1639,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                         writestuff_with_decorations(
                            &search->options,
                            (replaced_call->the_defn.callflags1 & CFLAG1_IS_STAR_CALL) ?
-                           "turn the star @b" : replaced_call->name);
+                           "turn the star @b" : replaced_call->name, false);
 
                         writestuff(" WITH [");
                         print_recurse(subsidiary_ptr, PRINT_RECURSE_STAR);
@@ -1581,7 +1664,7 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
          writestuff("3 TIMES");
       else
          writestuff_with_decorations(&deferred_concept->options,
-                                     deferred_concept->concept->name);
+                                     deferred_concept->concept->name, true);
       if (deferred_concept_paren & 2) writestuff(")");
    }
 

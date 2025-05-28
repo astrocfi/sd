@@ -343,6 +343,10 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
       }
 
       break;
+   case selector_thediamond:
+         if      ((pid2 & (ID2_THEDMD|ID2_NOTTHEDMD)) == ID2_THEDMD) return true;
+         else if ((pid2 & (ID2_THEDMD|ID2_NOTTHEDMD)) == ID2_NOTTHEDMD) return false;
+      break;
    case selector_headliners:
       if      ((pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEFRONT ||
                (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT|ID3_FACERIGHT)) == ID3_FACEBACK) return true;
@@ -406,6 +410,14 @@ extern bool selectp(setup *ss, int place, int allow_some /*= 0*/) THROW_DECL
    case selector_facingright:
       if      (pid3 & ID3_FACERIGHT) return true;
       else if (pid3 & (ID3_FACEFRONT|ID3_FACEBACK|ID3_FACELEFT)) return false;
+      break;
+   case selector_farthest1:
+      if      (pid3 & ID3_FARTHEST1) return true;
+      else if (pid3 & (ID3_NOTFARTHEST1)) return false;
+      break;
+   case selector_nearest1:
+      if      (pid3 & ID3_NEAREST1) return true;
+      else if (pid3 & (ID3_NOTNEAREST1)) return false;
       break;
 
       // For the unsymmetrical selectors, we demand that the person not be virtual
@@ -2252,25 +2264,13 @@ static bool x22_facing_other_sex(setup *real_people, int real_index,
 }
 
 
-static direction_kind direction_list[] = {
-   direction_left,
-   direction_right,
-   direction_in,
-   direction_out,
-   direction_back,
-   direction_zigzag,
-   direction_zagzig,
-   direction_zigzig,
-   direction_zagzag,
-   direction_no_direction};
-
 
 /* ARGSUSED */
 static bool directionp(setup *real_people, int real_index,
    int real_direction, int northified_index, const long int *extra_stuff)
 {
    direction_used = true;
-   return current_options.where == direction_list[extra_stuff[0]];
+   return current_options.where == (direction_kind) extra_stuff[0];
 }
 
 
@@ -2507,12 +2507,21 @@ predicate_descriptor pred_table[] = {
       {someone_selected,               &iden_tab[7]},            // "pair_person_select"
       {sum_mod_selected,               &iden_tab[5]},            // "person_select_sum5"
       {sum_mod_selected,               &iden_tab[8]},            // "person_select_sum8"
+      {sum_mod_selected,               &iden_tab[9]},            // "person_select_sum9"
       {sum_mod_selected,              &iden_tab[11]},            // "person_select_sum11"
       {sum_mod_selected,              &iden_tab[13]},            // "person_select_sum13"
       {sum_mod_selected,              &iden_tab[15]},            // "person_select_sum15"
+      {plus_mod_selected,             &iden_tab[1]},             // "person_select_plus1"
+      {plus_mod_selected,             &iden_tab[2]},             // "person_select_plus2"
+      {plus_mod_selected,             &iden_tab[3]},             // "person_select_plus3"
       {plus_mod_selected,             &iden_tab[4]},             // "person_select_plus4"
+      {plus_mod_selected,             &iden_tab[5]},             // "person_select_plus5"
       {plus_mod_selected,             &iden_tab[6]},             // "person_select_plus6"
+      {plus_mod_selected,             &iden_tab[7]},             // "person_select_plus7"
       {plus_mod_selected,             &iden_tab[8]},             // "person_select_plus8"
+      {plus_mod_selected,             &iden_tab[9]},             // "person_select_plus9"
+      {plus_mod_selected,             &iden_tab[10]},            // "person_select_plus10"
+      {plus_mod_selected,             &iden_tab[11]},            // "person_select_plus11"
       {plus_mod_selected,             &iden_tab[12]},            // "person_select_plus12"
       {sum_mod_selected_for_12p,      &iden_tab[15]},            // "person_select12_sum15"
       {select_with_special,           adj_4x4_tab},              // "select_w_adj_4x4"
@@ -2645,16 +2654,16 @@ predicate_descriptor pred_table[] = {
       {x12_with_other_sex,           girlstuff_no_rh},           // "x12_girl_with_boy"
       {x22_facing_other_sex,          boystuff_no_rh},           // "x22_boy_facing_girl"
       {x22_facing_other_sex,         girlstuff_no_rh},           // "x22_girl_facing_boy"
-      {directionp,                     &iden_tab[0]},            // "leftp"
-      {directionp,                     &iden_tab[1]},            // "rightp"
-      {directionp,                     &iden_tab[2]},            // "inp"
-      {directionp,                     &iden_tab[3]},            // "outp"
-      {directionp,                     &iden_tab[4]},            // "backp"
-      {directionp,                     &iden_tab[5]},            // "zigzagp"
-      {directionp,                     &iden_tab[6]},            // "zagzigp"
-      {directionp,                     &iden_tab[7]},            // "zigzigp"
-      {directionp,                     &iden_tab[8]},            // "zagzagp"
-      {directionp,                     &iden_tab[9]},            // "no_dir_p"
+      {directionp,           &iden_tab[direction_left]},         // "leftp"
+      {directionp,           &iden_tab[direction_right]},        // "rightp"
+      {directionp,           &iden_tab[direction_in]},           // "inp"
+      {directionp,           &iden_tab[direction_out]},          // "outp"
+      {directionp,           &iden_tab[direction_back]},         // "backp"
+      {directionp,           &iden_tab[direction_zigzag]},       // "zigzagp"
+      {directionp,           &iden_tab[direction_zagzig]},       // "zagzigp"
+      {directionp,           &iden_tab[direction_zigzig]},       // "zigzigp"
+      {directionp,           &iden_tab[direction_zagzag]},       // "zagzagp"
+      {directionp,           &iden_tab[direction_no_direction]}, // "no_dir_p"
       {dmd_ctrs_rh,                    &iden_tab[0]},            // "dmd_ctrs_rh"
       {dmd_ctrs_rh,                    &iden_tab[1]},            // "dmd_ctrs_lh"
       {trngl_pt_rh,                  (const long int *) 0},      // "trngl_pt_rh"

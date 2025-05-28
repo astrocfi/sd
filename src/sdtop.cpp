@@ -89,7 +89,6 @@ and the following external variables:
    enable_file_writing
    cardinals
    ordinals
-   direction_names
    getout_strings
    writechar_block
    num_command_commands
@@ -106,6 +105,7 @@ and the following external variables:
    max_base_calls
    tagger_menu_list
    selector_menu_list
+   direction_menu_list
    circcer_menu_list
    tagger_calls
    circcer_calls
@@ -231,23 +231,8 @@ Cstring cardinals[NUM_CARDINALS+1];
 Cstring ordinals[NUM_CARDINALS+1];
 
 
-/* BEWARE!!  This list is keyed to the definition of "direction_kind" in sd.h,
-   and to the necessary stuff in SDUI. */
-/* This array, and the variable "last_direction_kind" below, get manipulated
+/* The variable "last_direction_kind" below, gets manipulated
    at startup in order to remove the "zig-zag" items below A2. */
-Cstring direction_names[] = {
-   "???",
-   "(no direction)",
-   "left",
-   "right",
-   "in",
-   "out",
-   "back",
-   "zig-zag",
-   "zag-zig",
-   "zig-zig",
-   "zag-zag",
-   (Cstring) 0};
 
 writechar_block_type writechar_block;
 int num_command_commands;     // Size of the command menu.
@@ -264,6 +249,7 @@ int abs_max_calls;
 int max_base_calls;
 Cstring *tagger_menu_list[NUM_TAGGER_CLASSES];
 Cstring *selector_menu_list;
+Cstring *direction_menu_list;
 Cstring *circcer_menu_list;
 call_with_name **tagger_calls[NUM_TAGGER_CLASSES];
 call_with_name **circcer_calls;
@@ -1241,6 +1227,35 @@ extern void touch_or_rear_back(
    canonicalize_rotation(scopy);
 
    goto do_the_leftie_test;
+}
+
+
+
+bool expand::compress_from_hash_table(setup *ss,
+                                      normalize_action action,
+                                      uint32 livemask,
+                                      bool noqtagcompress) THROW_DECL
+{
+   uint32 hash_num = (ss->kind * 25) & (expand::NUM_EXPAND_HASH_BUCKETS-1);
+
+   const thing *cptr;
+
+   for (cptr=compress_hash_table[hash_num] ; cptr ; cptr=cptr->next_compress) {
+      if (cptr->outer_kind == ss->kind &&
+          action >= cptr->action_level &&
+          (cptr->biglivemask & livemask) == 0) {
+
+         // Do not compress qtag to 2x3 is switch is on.
+         if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
+            continue;
+
+         warn(cptr->norwarning);
+         expand::compress_setup(*cptr, ss);
+         return true;
+      }
+   }
+
+   return false;
 }
 
 
@@ -2509,32 +2524,33 @@ restriction_test_result verify_restriction(
       limit = rr->map2[0];
 
       for (idx=0; idx<limit; idx++) {
-         qa0 = 0; qa1 = 0;
+         qaa[idx&1] = (tt.assump_both<<1) & 2;
+         qaa[(idx&1)^1] = tt.assump_both & 2;
 
          for (i=0,j=idx; i<rr->size; i++,j+=limit) {
-            if ((t = ss->people[rr->map1[j]].id1) != 0) { qa0 |= t; qa1 |= t^2; }
+            if ((t = ss->people[rr->map1[j]].id1) != 0) { qaa[0] |= t; qaa[1] |= t^2; }
             else if (local_negate || tt.assump_live) goto bad;    // All live people were demanded.
          }
 
-         if ((qa0 & qa1 & 2) != 0) goto bad;
+         if ((qaa[0] & qaa[1] & 2) != 0) goto bad;
 
          if (rr->ok_for_assume) {
             if (tt.assump_col == 1) {
-               if ((qa0 & 2) == 0) { pdir = d_east; }
-               else                { pdir = d_west; }
+               if ((qaa[0] & 2) == 0) { pdir = d_east; }
+               else                   { pdir = d_west; }
 
-               qa0 >>= 3;
-               qa1 >>= 3;
+               qaa[0] >>= 3;
+               qaa[1] >>= 3;
             }
             else {
-               if ((qa0 & 2) == 0) { pdir = d_north; }
-               else                { pdir = d_south; }
+               if ((qaa[0] & 2) == 0) { pdir = d_north; }
+               else                   { pdir = d_south; }
             }
 
-            if ((qa0|qa1)&1) goto bad;
+            if ((qaa[0]|qaa[1])&1) goto bad;
 
             if (instantiate_phantoms) {
-               if (qa0 == 0) fail("Need live person to determine handedness.");
+               if (qaa[0] == 0) fail("Need live person to determine handedness.");
 
                for (i=0,k=0 ; k<rr->size ; i+=limit,k++) {
                   create_active_phantom(&ss->people[rr->map1[idx+i]], pdir, &phantom_count);
@@ -3155,6 +3171,13 @@ extern void initialize_sdlib()
       selector_menu_list[i] = selector_list[i+1].name;
 
    selector_menu_list[selector_INVISIBLE_START-1] = (Cstring) 0;
+
+   // Create the direction menu list.  Do one more than the extent, to get the null string at the end.
+
+   direction_menu_list = (Cstring *) get_mem((direction_ENUM_EXTENT+1) * sizeof(char *));
+
+   for (i=0; i<direction_ENUM_EXTENT+1; i++)
+      direction_menu_list[i] = direction_names[i].name;
 
    // Create the circcer list.
 
@@ -5295,17 +5318,6 @@ extern bool fix_n_results(int arity,
          z[i].inner.skind = z[deadconcindex].inner.skind;
          z[i].inner.srotation = z[deadconcindex].inner.srotation;
       }
-
-      /*
-      if (z[i].kind == s_trngl || z[i].kind == s_trngl4) {
-         z[i].rotation = i << 1;
-         if (rotstates & 0xC00) z[i].rotation += 2;
-         if (rotstates & 0xA00) z[i].rotation++;
-         z[i].rotation &= 3;
-      }
-      else
-         z[i].rotation = (rotstates >> 1) & 1;
-      */
    }
 
    return false;
@@ -5341,33 +5353,6 @@ extern bool warnings_are_unacceptable(bool strict)
    return otherthanbadconc.testmultiple(no_search_warnings);
 }
 
-bool expand::compress_from_hash_table(setup *ss,
-                                      normalize_action action,
-                                      uint32 livemask,
-                                      bool noqtagcompress) THROW_DECL
-{
-   uint32 hash_num = (ss->kind * 25) & (expand::NUM_EXPAND_HASH_BUCKETS-1);
-
-   const thing *cptr;
-
-   for (cptr=compress_hash_table[hash_num] ; cptr ; cptr=cptr->next_compress) {
-      if (cptr->outer_kind == ss->kind &&
-          action >= cptr->action_level &&
-          (cptr->biglivemask & livemask) == 0) {
-
-         // Do not compress qtag to 2x3 is switch is on.
-         if (noqtagcompress && cptr->outer_kind == s_qtag && cptr->inner_kind == s2x3)
-            continue;
-
-         warn(cptr->norwarning);
-         expand::compress_setup(*cptr, ss);
-         return true;
-      }
-   }
-
-   return false;
-}
-
 
 const expand::thing s_dmd_hrgl = {{6, 3, 2, 7}, 4, sdmd, s_hrglass, 0};
 const expand::thing s_dmd_hrgl_disc = {{6, -1, 3, 2, -1, 7}, 6, s_1x2dmd, s_hrglass, 0};
@@ -5398,7 +5383,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
       ss->kind = s2x8;     /* That's all it takes! */
    else if (ss->kind == swide4x4)
       ss->kind = s4x4;     /* That's all it takes! */
-   else if (ss->kind == s_dead_concentric && action >= normalize_before_isolated_call) {
+   else if (ss->kind == s_dead_concentric && action > plain_normalize) {
       ss->kind = ss->inner.skind;
       ss->rotation += ss->inner.srotation;
       did_something = true;
@@ -5441,10 +5426,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
 
    setup_kind oldk = ss->kind;
 
-   bool b = expand::compress_from_hash_table(ss,
-                                             action,
-                                             livemask,
-                                             noqtagcompress);
+   bool b = expand::compress_from_hash_table(ss, action, livemask, noqtagcompress);
 
    if (!b) goto difficult;
 
@@ -5856,24 +5838,55 @@ void toplevelmove() THROW_DECL
          }
       }
       else if (starting_setup.kind == s1x8 && starting_setup.rotation & 1) {
-         uint32 nearbit = 0;
-         uint32 farbit = 0;
-         uint32 tbonetest = 0;
-
-         for (i=0; i<8; i++) tbonetest |= starting_setup.people[i].id1;
+         uint32 nearbit = ID3_NEARFOUR;
+         uint32 farbit = ID3_FARFOUR;
+         uint32 tbonetest = or_all_people(&starting_setup);
 
          if (!(tbonetest & 1)) {
-            nearbit = ID3_NEARLINE|ID3_NEARFOUR;
-            farbit = ID3_FARLINE|ID3_FARFOUR;
+            nearbit |= ID3_NEARLINE;
+            farbit |= ID3_FARLINE;
          }
          else if (!(tbonetest & 010)) {
-            nearbit = ID3_NEARCOL|ID3_NEARFOUR;
-            farbit = ID3_FARCOL|ID3_FARFOUR;
+            nearbit |= ID3_NEARCOL;
+            farbit |= ID3_FARCOL;
          }
 
          for (i=0; i<8; i++) {
             if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i + 2 + (starting_setup.rotation << 1)) & 4) ? farbit : nearbit;
+               starting_setup.people[i].id3 |=
+                  ((i & 4) ? nearbit : farbit) |
+                  ((i == 0) ? (ID3_FARTHEST1|ID3_NOTNEAREST1) :
+                   ((i == 4) ? (ID3_NEAREST1|ID3_NOTFARTHEST1) :
+                    (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
+         }
+      }
+      else if (starting_setup.kind == s1x5p1dmd && starting_setup.rotation & 1) {
+         uint32 nearbit = ID3_NEARFOUR;
+         uint32 farbit = ID3_FARFOUR;
+         uint32 waynearbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+         uint32 wayfarbit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+
+         if (starting_setup.rotation & 2) {
+            nearbit = ID3_FARFOUR;
+            farbit = ID3_NEARFOUR;
+            waynearbit = ID3_FARTHEST1|ID3_NOTNEAREST1;
+            wayfarbit = ID3_NEAREST1|ID3_NOTFARTHEST1;
+         }
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |=
+                  ((i & 4) ? nearbit : farbit) |
+                  ((i == 0) ? wayfarbit : ((i == 6) ? waynearbit : (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
+         }
+      }
+      else if (starting_setup.kind == s_qtag && starting_setup.rotation & 1) {
+         uint32 nearbit = ID3_NEARFOUR;
+         uint32 farbit = ID3_FARFOUR;
+
+         for (i=0; i<8; i++) {
+            if (starting_setup.people[i].id1 & BIT_PERSON)
+               starting_setup.people[i].id3 |= (((i+3) & 4) ? nearbit : farbit);
          }
       }
       else if (starting_setup.kind == s_c1phan) {
@@ -5990,7 +6003,7 @@ void finish_toplevelmove() THROW_DECL
    configuration & newhist = configuration::next_config();
 
    // Remove outboard phantoms from the resulting setup.
-   normalize_setup(&newhist.state, simple_normalize, false);
+   normalize_setup(&newhist.state, plain_normalize, false);
 
    for (int i=0; i<MAX_PEOPLE; i++) newhist.state.people[i].id3 &= ~ID3_GLOB_BITS_TO_CLEAR;
    newhist.calculate_resolve();

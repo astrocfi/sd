@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.4
-@set title2 Database version = 37.4 format = 263
+@set title1 RELEASE NOTES FOR VERSION 37.5
+@set title2 Database version = 37.5 format = 270
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.5::
 * 37.4::
 * 37.3::
 * 37.2::
@@ -56,7 +57,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.4, Top, (dir)
+@node Intro, 37.5, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -67,11 +68,56 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2007 William B. Ackerman
 @sp 3
 @menu
-* 37.4::               Changes in the current version
+* 37.5::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.4, 37.3, Intro, Top
+@node 37.5, 37.4, Intro, Top
+@unnumberedsec Version 37.5 changes
+
+@c  =======/////////////=============*********Defer until done well:  1x5p1dmd, trngl8
+@c  =======/////////////=============*********Defer until done well:  "top hat"
+
+New concept: @strong{OX} (distorted column.)
+
+New concept: @strong{nose}.  This is less complete than the full version in Masahiro Kurasawa's paper.
+
+New call family: @strong{dixie tag}.
+
+New selectors: @strong{the diamond}, @strong{near/far 4}, @strong{nearest/farthest person}.
+
+A bug was fixed in the printout of certain complex combinations.  We thank our
+current A2 group for finding this, and apologize to anyone who might have called
+something incomple.
+
+An extremely obscure bug was found in the behavior after a
+@strong{reconcile} command was completed.  We thank Justin Legakis for
+finding this.
+
+The @strong{offset tidal column/line/wave} concept, in a fully offset 2x8, can be used
+with shape-changing calls.
+
+Sd can now do a better job with 2-person calls in Z lines or columns.
+
+Sd has a (limited) ability to handle setups involving a diamond placed unsymmetrically within a tidal line.
+
+The "in roll to a wave and roll" bug was fixed.
+
+A bug was fixed in @strong{rally} and @strong{scoot and rally} with phantoms on the outside.
+
+The first and last halves of the call @strong{double pass thru} are recognized.
+
+The call @strong{fan chain the star (T-bone)} has been removed.  Just do @strong{fan chain the star},
+but be aware that this might not agree with the "official" definition.
+
+The @strong{funny} concept can be applied to the centers' trade in calls like @strong{acey deucey}
+and @strong{hocus pocus}.  This means that people trade only if in a real miniwave or couple, not if
+T-boned.  Without this concept, the centers just do their part of a trade.
+
+There is the usual better tracking of phantoms, and various other minor fixes and improvements.
+
+@c ************
+@node 37.4, 37.3, 37.5, Top
 @unnumberedsec Version 37.4 changes
 
 New concepts: @strong{two-faced}, or @strong{2-faced}.  This will make
