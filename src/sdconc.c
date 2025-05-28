@@ -2736,6 +2736,10 @@ static Const fixer fqtgjj2   = {s2x2, s_qtag,      0, 0, 1,       0,          0,
 static Const fixer fgalcv    = {s1x2, s_galaxy,    1, 0, 1,       &fgalcv,    &fgalch,    0,          0, 0,          0,    0,          0,          {{2, 6}},           {{-1}}};
 static Const fixer fgalch    = {s1x2, s_galaxy,    0, 0, 1,       &fgalch,    &fgalcv,    0,          0, 0,          0,    0,          0,          {{0, 4}},           {{-1}}};
 static Const fixer fspindlc  = {s1x2, s_spindle,   1, 0, 2,       &fspindlc,  &f1x3aad,   0,          0, 0,          0,    0,          0,          {{0, 6}, {2, 4}},   {{-1}}};
+static Const fixer fspindlf  = {s1x2, s_spindle,   0, 0, 2,       &fspindlf,  0,          0,          0, 0,          0,    0,          0,          {{1, 2}, {6, 5}},   {{-1}}};
+static Const fixer fspindlg  = {s1x2, s_spindle,   0, 0, 2,       &fspindlg,  0,          0,          0, 0,          0,    0,          0,          {{0, 1}, {5, 4}},   {{-1}}};
+static Const fixer fspindlfd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlfd, 0,          {{1, 2, 5, 6}},     {{-1}}};
+static Const fixer fspindlgd = {s2x2, s_spindle,   0, 0, 1,       0,          0,          0,          0, 0,          0,    &fspindlgd, 0,          {{0, 1, 4, 5}},     {{-1}}};
 static Const fixer f1x3aad   = {s1x2, s1x3dmd,     0, 0, 2,       &f1x3aad,   &fspindlc,  0,          0, 0,          0,    0,          0,          {{1, 2}, {6, 5}},   {{-1}}};
 static Const fixer f2x3c     = {s1x2, s2x3,        1, 0, 2,       &f2x3c,     &f1x2aad,   0,          0, 0,          0,    0,          0,          {{0, 5}, {2, 3}},   {{-1}}};
 
@@ -2895,6 +2899,8 @@ static Const sel_item sel_table[] = {
    {LOOKUP_DIST_BOX,           s2x4,        0xCC,   &d2x4y2,     (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s_qtag,      0xAA,   &fqtgjj1,    (fixer *) 0, -1},
    {LOOKUP_DIST_BOX,           s_qtag,      0x99,   &fqtgjj2,    (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s_spindle,   0x66,   &fspindlfd,  (fixer *) 0, -1},
+   {LOOKUP_DIST_BOX,           s_spindle,   0x33,   &fspindlgd,  (fixer *) 0, -1},
    {LOOKUP_DIAG_CLW,           s4x4,        0x0909, &d4x4l1,     &d4x4l2,     0},
    {LOOKUP_DIAG_CLW,           s4x4,        0x9090, &d4x4l3,     &d4x4l4,     4},
    {LOOKUP_DIST_CLW,           s_rigger,    0x99,   &distrig1,   (fixer *) 0, -1},
@@ -2968,6 +2974,8 @@ static Const sel_item sel_table[] = {
    {LOOKUP_NONE,               s_bone,      0x33,   &fboneendo,  (fixer *) 0, -1},
    {LOOKUP_NONE,               s_ptpd,      0xAA,   &foozz,      (fixer *) 0, -1},
    {LOOKUP_NONE,               s_spindle,   0x55,   &fspindlc,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_spindle,   0x66,   &fspindlf,   (fixer *) 0, -1},
+   {LOOKUP_NONE,               s_spindle,   0x33,   &fspindlg,   (fixer *) 0, -1},
    {LOOKUP_NONE,               s_galaxy,    0x44,   &fgalcv,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s_galaxy,    0x11,   &fgalch,     (fixer *) 0, -1},
    {LOOKUP_NONE,               s1x3dmd,     0x66,   &f1x3aad,    (fixer *) 0, -1},

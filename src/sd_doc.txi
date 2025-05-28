@@ -16,7 +16,7 @@
     \kern-0.4pt\hrule}%
   \kern-.06em\raise0.4pt\hbox{$\rangle$}}}}
 @end tex
-@set sd-version 31.78
+@set sd-version 31.79
 @set full-manual
 @c %**end of header
 @iftex
@@ -2617,7 +2617,7 @@ the result will be a squared set.  To do the next call, one typically needs to h
 the heads or sides go up to the middle.  Since this is not the first call, the
 program won't automatically do it, and you need to do it explicitly.
 
-There is a call ``@samp{<ANYONE> press ahead}'' for this purpose.  The call
+There is a call @samp{<ANYONE> press ahead} for this purpose.  The call
 is officially on the C2 list, but @code{Sd} and @code{Sdtty} allow it at
 Mainstream.  Have the heads press ahead, or whatever is appropriate.
 If the heads and sides are not positioned consistently (as, for example,
@@ -2625,8 +2625,8 @@ after an @samp{all 4 ladies chain 3/4}), use the designation @code{headliners}
 or @code{sideliners}.  These designations refer to the people currently facing
 head or side walls, respectively.  @code{Sd} and @code{Sdtty} recognize them
 at Mainstream.  When actually calling in such a situation, a common phrase to use
-is ``@samp{at the heads}'', as in ``@samp{all 4 ladies chain 3/4; at the heads,
-square thru 2}''.  The way this would be entered to the program is:
+is @samp{at the heads}, as in @samp{all 4 ladies chain 3/4; at the heads,
+square thru 2}.  The way this would be entered to the program is:
 @example
 @group
    just as they are               (instead of heads or sides start)
@@ -2668,8 +2668,8 @@ the word @samp{ends}.  So, for example, you might enter:
    6x2 acey deucey
 @end group
 @end example
-You might read this as ``@samp{heads swing thru, while the sides divide
-and touch 1/4}''.
+You might read this as @samp{heads swing thru, while the sides divide
+and touch 1/4}.
 
 @node Little/Little More/Plenty, Flip Back, Ends Divide, Call Notes
 @section Little, Little More, and Plenty
