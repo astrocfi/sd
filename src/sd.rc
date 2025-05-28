@@ -189,7 +189,7 @@ BEGIN
                     IDC_STATIC,53,19,144,8
     CTEXT           "conditions; for details see the file COPYING.txt.",
                     IDC_STATIC,53,29,148,8
-    CTEXT           "SD Version 36.56:   Copyright © 1990-2005 All rights reserved.",
+    CTEXT           "SD Version 36.57:   Copyright © 1990-2005 All rights reserved.",
                     IDC_STATIC,13,42,199,8
     CTEXT           "William B. Ackerman and Stephen Gildea",IDC_STATIC,47,
                     52,130,8

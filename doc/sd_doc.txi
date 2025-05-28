@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 36.56
-@set Time-stamp: February 27, 2005
+@set sd-version 36.57
+@set Time-stamp: March 11, 2005
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4724,6 +4724,9 @@ parts.  For example, @samp{first 1/4 tandem spin the top},
 @samp{middle 1/3 tandem remake}, or @samp{last 1/4 stable swing thru}.
 Whether these are precisely the words you should use is up to you.
 The @kbd{halfway} concept is the same as @kbd{first 1/2}.
+
+@item half and half @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
+This does the first half of the first call, followed by the second half of the second call.
 
 @item replace the <Nth> part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]
 @item replace the last part@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ [must be entered by itself]

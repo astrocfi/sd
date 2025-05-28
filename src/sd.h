@@ -3522,6 +3522,13 @@ class full_expand {
       // Also, the "16" bit means allow only step to a box, not step to a full wave.
       // Also, the "32" bit means to give "some people touch" warning if this is
       //     a "step_to_wave_4_people" call.
+      // Also, the "64" bit means this is an item relating to having just the centers
+      // touch to a miniwave, and we may need to give the "warn__some_touch_evil"
+      // warning.
+      // Also, the "128" bit means this is an item that lets you do a swing thru
+      // from the partially occupied 2x4 that would result from everyone doing a
+      // 1/2 press back from a right-hand wave.  We don't allow the touch to a wave
+      // if the user gave a phantom concept.
       int forbidden_elongation;
       expand::thing *expand_lists;
       setup_kind kind;
@@ -4814,9 +4821,9 @@ class fraction_info {
    uint32 get_fracs_for_this_part();
 
    // This one is in sdmoves.cpp
-   bool query_instant_stop(uint32 & result_flag_wordmisc);
+   bool query_instant_stop(uint32 & result_flag_wordmisc) const;
 
-   void demand_this_part_exists() THROW_DECL
+   void demand_this_part_exists()  const THROW_DECL
       {
          if (m_fetch_index >= m_fetch_total || m_fetch_index < 0)
             fail("The indicated part number doesn't exist.");

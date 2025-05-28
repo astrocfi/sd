@@ -2453,6 +2453,7 @@ static expand::thing step_2x2h_stuff = {{0, 1, 2, 3}, 4, nothing, s1x4, 1};
 static expand::thing step_8ch_stuff = {{7, 6, 0, 1, 3, 2, 4, 5}, 8, s2x4, s2x4, 1};
 static expand::thing step_li_stuff = {{1, 2, 7, 4, 5, 6, 3, 0}, 8, s2x4, s1x8, 0};
 static expand::thing step_li6_stuff = {{1, 5, 3, 4, 2, 0}, 6, s2x3, s1x6, 0};
+static expand::thing step_liphan_stuff = {{-1, 1, -1, 2, -1, 3, -1, 0}, 8, s2x4, s1x4, 0};
 static expand::thing step_spindle_stuff = {{3, 6, 5, 4, 7, 2, 1, 0}, 8, s_spindle, s1x8, 0};
 static expand::thing step_bn_stuff = {{0, 7, 2, 1, 4, 3, 6, 5}, 8, nothing, s_bone, 0};
 static expand::thing step_bn23_stuff = {{0, 2, 1, 3, 5, 4}, 6, nothing, s_bone6, 0};
@@ -2598,6 +2599,9 @@ full_expand::thing touch_init_table3[] = {
    // Same, with missing people.
    {warn__none,      16, &step_li_stuff,      s2x4,         0xC3C3UL,     0x8200UL, ~0UL},
    {warn__none,      16, &step_li_stuff,      s2x4,         0x3C3CUL,     0x2800UL, ~0UL},
+
+   // Check for stepping to a wave from partially occupied lines facing, only beaus present.
+   {warn__none,     128, &step_liphan_stuff,  s2x4,         0x3333UL,     0x2200UL, ~0UL},
 
    // Check for stepping to a bone from a squared set or whatever.
    {warn__none,      16, &step_bn_stuff,      s2x4,         0xFFFFUL,     0x6941UL, 0x7D7DUL},
@@ -3122,6 +3126,10 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              s2x3,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
    {s2x5,           schema_checkpoint, {0, 2, -1, 5, 7, -1,     1, 3, 6, 8},
              s2x3,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
+   {s2x6,           schema_checkpoint, {-1, 2, -1, 5, -1, 8, -1, 11,     1, 4, 7, 10},
+             s2x4,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
+   {s2x6,           schema_checkpoint, { 0, -1, 3, -1, 6, -1, 9, -1,     1, 4, 7, 10},
+             s2x4,     s2x2,     0, 0, 1, 1,  0x100, schema_nothing},
    {s1x16,          schema_in_out_quad, {0, 1, 3, 2, 11, 10, 8, 9,
                                          4, 5, 7, 6, 12, 13, 15, 14},
              s1x4,     s1x8,     0, 0, 1, 2,  0x0FE, schema_in_out_quad},

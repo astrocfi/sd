@@ -950,6 +950,8 @@ void print_recurse(parse_block *thing, int print_recurse_arg)
                   writestuff(" :");   // This is "start with".
                else if (item->arg1 == 4)
                   writestuff(" IN");
+               else if (item->arg1 == 5)
+                  writestuff(" AND");
                else
                   writestuff(",");
             }
@@ -2282,7 +2284,7 @@ void run_program()
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2004 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2005 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

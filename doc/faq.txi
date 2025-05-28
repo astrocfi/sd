@@ -876,6 +876,13 @@ When calling, you would presumably say
 @strong{All 4 ladies chain 3/4, @strong{*AT*} the heads, square thru ....}
 or whatever terminology you like to use.
 
+@unnumberedsec I can't seem to get it to do anything after things like @strong{all 4 couples right and left thru}.
+
+This is really the same problem as the @strong{all 4 ladies chain}
+problem of the previous question.  You need to start the sequence with
+@strong{just as they are}, then do the @strong{all four couples} calls,
+and then have some people @strong{press ahead} to do the rest of the sequence.
+
 @unnumberedsec Why can't I do @strong{split phantom lines load the boat} from an 8-chain?
 
 There are two reasons, one very simple and one more serious.  First,

@@ -1056,7 +1056,7 @@ extern bool install_outfile_string(char newstring[])
 
    // Clean off leading blanks, and stop after any internal blank.
 
-   (void) sscanf(newstring, "%s", test_string);
+   sscanf(newstring, "%s", test_string);
 
    // Look for special file string of "*" or "+".
    // If so, generate a new file name.
@@ -1072,7 +1072,7 @@ extern bool install_outfile_string(char newstring[])
       letter[0] = 'a';
       letter[1] = '\0';
       time(&clocktime);
-      (void) sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
+      sscanf(ctime(&clocktime), "%s %s %s %s %s", t1, t2, t3, t4, t5);
 
       // Now t2 = "Jan", t3 = "16", and t5 = "1996".
 
@@ -1294,7 +1294,7 @@ extern int process_session_info(Cstring *error_msg)
       int num_fields_parsed;
       char junk_name[MAX_FILENAME_LENGTH];
       char filename_string[MAX_FILENAME_LENGTH];
-      char session_levelstring[50];
+      char session_levelstring[MAX_FILENAME_LENGTH+10];
 
       // Find the "[Sessions]" indicator again.
 
@@ -1445,7 +1445,7 @@ static void rewrite_init_file()
             else {
                bool more_stuff = false;
 
-               // Search for the "[Sessions]" indicator.
+               // Search for the "[Sessions]" indicator, copying stuff that we skip.
 
                for (;;) {
                   if (!fgets(line, MAX_FILENAME_LENGTH, rfile)) goto copy_done;
@@ -1469,7 +1469,8 @@ static void rewrite_init_file()
                }
 
                if (i < session_index) {
-                  /* User has requested a line number larger than the file.  Append a new line. */
+                  // User has requested a line number larger than the file.
+                  // Append a new line.
                   if (write_back_session_line(wfile) < 0)
                      goto copy_failed;
                }

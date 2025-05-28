@@ -4001,8 +4001,8 @@ static void copy_cmd_preserve_elong_and_expire(const setup *ss, setup *result, b
 }
 
 
-static bool do_call_under_repetition(
-   fraction_info *yyy,
+static bool prepare_for_call_under_repetition(
+   const fraction_info *yyy,
    int & fetch_number,
    setup *ss,
    setup *result) THROW_DECL
@@ -4038,7 +4038,7 @@ static bool do_call_under_repetition(
       result->cmd.restrained_fraction = 0;
    }
    else
-      result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  /* No fractions to constituent call. */
+      result->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;  // No fractions to constituent call.
 
    fetch_number = yyy->m_fetch_index;
    return false;
@@ -4071,7 +4071,7 @@ static void do_concept_sequential(
    for (;;) {
       int fetch_number;
 
-      if (do_call_under_repetition(&zzz, fetch_number, ss, result)) break;
+      if (prepare_for_call_under_repetition(&zzz, fetch_number, ss, result)) break;
       if (zzz.not_yet_in_active_section()) goto go_to_next_cycle;
       if (zzz.ran_off_active_section()) break;
 
@@ -4107,21 +4107,63 @@ static void do_concept_special_sequential(
    //    2 - start with (call)
    //    3 - use (call) for <Nth> part
    //    4 - use (call) in
+   //    5 - half and half
 
+   if (parseptr->concept->arg1 == 5) {
+      // This is "half and half".
 
+      fraction_info zzz(2);
 
-   /*
-   if ((ss->cmd.cmd_misc_flags & (CMD_MISC__PUT_FRAC_ON_FIRST|CMD_MISC__RESTRAIN_CRAZINESS)) ==
-       CMD_MISC__PUT_FRAC_ON_FIRST) {
-      // Curried meta-concept.  Take the fraction info off the first call.
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__PUT_FRAC_ON_FIRST;
-      ss->cmd.cmd_frac_flags = CMD_FRAC_NULL_VALUE;
+      if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
+         zzz.get_fraction_info(ss->cmd.cmd_frac_flags,
+                               3*CFLAG1_VISIBLE_FRACTION_BIT,
+                               weirdness_off);
+      }
+
+      zzz.m_first_call = !zzz.m_reverse_order;
+
+      prepare_for_call_in_series(result, ss);
+
+      for (;;) {
+         int fetch_number;
+         uint32 corefracs;
+
+         if (prepare_for_call_under_repetition(&zzz, fetch_number, ss, result)) break;
+         if (zzz.not_yet_in_active_section()) goto go_to_next_cycle;
+         if (zzz.ran_off_active_section()) break;
+
+         corefracs = zzz.get_fracs_for_this_part();
+
+         // The fetch number is 0 or 1.  Depending on which it is,
+         // get the proper parse pointer.
+         if (fetch_number == 0) {
+            // Doing the first call.  Apply the fraction "first 1/2".
+            result->cmd.cmd_frac_flags =
+               process_spectacularly_new_fractions(0, 1, 1, 2, corefracs);
+         }
+         else {
+            // Doing the second call.  Apply the fraction "last 1/2".
+            result->cmd.cmd_frac_flags =
+               process_spectacularly_new_fractions(1, 2, 1, 1, corefracs);
+            result->cmd.parseptr = parseptr->subsidiary_root;
+         }
+
+         do_call_in_series_simple(result);
+         zzz.m_first_call = false;
+
+         // If we are being asked to do just one part of a call,
+         // exit now.  Also, fill in bits in result->result_flags.
+
+         if (zzz.query_instant_stop(result->result_flags.misc)) break;
+
+      go_to_next_cycle:
+
+         // Increment for next cycle.
+         zzz.m_fetch_index += zzz.m_subcall_incr;
+         zzz.m_client_index += zzz.m_subcall_incr;
+      }
    }
-   */
-
-
-
-   if (parseptr->concept->arg1 == 3) {
+   else if (parseptr->concept->arg1 == 3) {
       // This is "use (call) for <Nth> part", which is the same as "replace the <Nth> part".
 
       if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE)
@@ -4302,7 +4344,7 @@ static void do_concept_n_times(
    for (;;) {
       int fetch_number;
 
-      if (do_call_under_repetition(&zzz, fetch_number, ss, result)) break;
+      if (prepare_for_call_under_repetition(&zzz, fetch_number, ss, result)) break;
       if (zzz.not_yet_in_active_section()) goto go_to_next_cycle;
       if (zzz.ran_off_active_section()) break;
 
@@ -6484,7 +6526,8 @@ static void do_concept_replace_nth_part(
       break;
    case 2:
       // "Interrupt after M/N".
-      frac_key1 = process_spectacularly_new_fractions(0, 1, parseptr->options.number_fields & 0xF,
+      frac_key1 = process_spectacularly_new_fractions(0, 1,
+                                                      parseptr->options.number_fields & 0xF,
                                                       (parseptr->options.number_fields >> 4) & 0xF,
                                                       ss->cmd.cmd_frac_flags);
       frac_key2 = ((frac_key1 & 0xFF)<<8) | 0x0011;

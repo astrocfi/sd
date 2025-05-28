@@ -872,25 +872,65 @@ extern void do_call_in_series(
       }
    }
 
-   /* If this call is "roll transparent", restore roll info from before the call for those people
-      that are marked as roll-neutral. */
+   // If the invocation of this call is "roll transparent", restore roll info
+   // from before the call for those people that are marked as roll-neutral.
 
-   if (roll_transparent) {
-      // Can only do this if we understand the setups.
-      if ((attr::slimit(&tempsetup) >= 0) &&
-          (attr::slimit(sss) >= 0)) {
-         int u, v;
+   // Can only do this if we understand the setups, as indicated by the "slimit"
+   // being defined.
 
-         for (u=0; u<=attr::slimit(&tempsetup); u++) {
-            if ((tempsetup.people[u].id1 & ROLL_DIRMASK) == ROLL_DIRMASK) {
-               // This person is roll-neutral.  Reinstate his original roll info,
-               // by searching for him in the starting setup.
-               // But do *NOT* restore his "this person moved" bit from its
-               // previous state.  Leave it in its current state.
+   if (roll_transparent &&
+       (attr::slimit(&tempsetup) >= 0) &&
+       (attr::slimit(sss) >= 0)) {
+
+      // We may turn on the "moving_people_cant_roll" flag.  But only if the
+      // the starting and ending setups are the same.  (If they aren't the same,
+      // we can't tell whether people moved.)  In this case, we only perform
+      // the special "roll_transparent" operation for people who didn't move
+      // to a different location.  For people who moved, we leave their
+      // roll-neutral status in place.
+      //
+      // This is required for "and cross" in such things as percolate.
+      // Everyone has hinged and therefore has roll direction.  The "and
+      // cross" is invoked with "roll_transparent" on, so that the people
+      // who don't move on the "and cross" will still be able to roll.
+      // But the people who crossed need to preserve their "ZM" status
+      // and not have it reset to the previous call.
+
+      bool moving_people_cant_roll = false;
+
+      if (sss->cmd.callspec &&
+          (sss->cmd.callspec->the_defn.callflagsf & CFLAG2_IF_MOVE_CANT_ROLL) != 0 &&
+          tempsetup.kind == sss->kind)
+         moving_people_cant_roll = true;
+
+      int u, v;
+
+      for (u=0; u<=attr::slimit(&tempsetup); u++) {
+         if ((tempsetup.people[u].id1 & ROLL_DIRMASK) == ROLL_DIRMASK) {
+            // This person is roll-neutral.  Reinstate his original roll info,
+            // by searching for him in the starting setup.
+            // But do *NOT* restore his "this person moved" bit from its
+            // previous state.  Leave it in its current state.
+
+            if (!moving_people_cant_roll)
                tempsetup.people[u].id1 &= ~ROLL_DIRMASK;
-               for (v=0; v<=attr::slimit(sss); v++) {
-                  if (((tempsetup.people[u].id1 ^ sss->people[v].id1) & XPID_MASK) == 0)
+
+            for (v=0; v<=attr::slimit(sss); v++) {
+               // But we do *NOT* do this if the before and after setups
+               // were the same, the call was marked "moving_people_cant_roll",
+               // and the person finished on a different spot.
+
+               if (((tempsetup.people[u].id1 ^ sss->people[v].id1) & XPID_MASK) == 0) {
+                  if (moving_people_cant_roll) {
+                     tempsetup.people[u].id1 &= ~ROLL_DIRMASK;
+                     if (u == v)
+                        tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_DIRMASK);
+                     else
+                        tempsetup.people[u].id1 |= ROLL_IS_M;  // This person moved.
+                  }
+                  else {
                      tempsetup.people[u].id1 |= (sss->people[v].id1 & ROLL_DIRMASK);
+                  }
                }
             }
          }
@@ -900,8 +940,8 @@ extern void do_call_in_series(
    uint32 save_expire = sss->cmd.prior_expire_bits;
    *sss = tempsetup;
    sss->cmd.prior_expire_bits = save_expire;
-   sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   /* But pick these up from the call. */
-   sss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;   // But not this one!
+   sss->cmd.cmd_misc_flags = qqqq.cmd.cmd_misc_flags;   // But pick these up from the call.
+   sss->cmd.cmd_misc_flags &= ~CMD_MISC__DISTORTED;     // But not this one!
 
    /* Remove outboard phantoms.
       It used to be that normalize_setup was not called
@@ -3418,7 +3458,7 @@ uint32 fraction_info::get_fracs_for_this_part()
 }
 
 
-bool fraction_info::query_instant_stop(uint32 & result_flag_wordmisc)
+bool fraction_info::query_instant_stop(uint32 & result_flag_wordmisc) const
 {
    if (m_instant_stop != 99) {
       // Check whether we honored the last possible request.  That is,

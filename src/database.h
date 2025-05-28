@@ -29,7 +29,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 228
+#define DATABASE_FORMAT_VERSION 229
 
 // BEWARE!!  These must track the items in "tagtabinit" in mkcalls.cpp .
 enum base_call_index {
@@ -204,7 +204,8 @@ enum {
    CFLAG2_EQUALIZE                  = 0x08000000UL,
    CFLAG2_ONE_PERSON_CALL           = 0x10000000UL,
    CFLAG2_YIELD_IF_AMBIGUOUS        = 0x20000000UL,
-   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x40000000UL
+   CFLAG2_DO_EXCHANGE_COMPRESS      = 0x40000000UL,
+   CFLAG2_IF_MOVE_CANT_ROLL         = 0x80000000UL
 };
 
 // Beware!!  This list must track the table "matrixcallflagtab" in mkcalls.cpp .

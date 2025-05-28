@@ -1081,12 +1081,13 @@ char *flagtab1[] = {
    "funny_means_those_facing",
    "split_like_square_thru",
    "no_elongation_allowed",    // The overflow (into CFLAG2_) items start here.
-   "imprecise_rotation",       //    There is space for 8 of them.  So there is 1 left.
+   "imprecise_rotation",       //    There is space for 8 of them.  We are full.
    "can_be_fan",
    "equalize",
    "one_person_call",
    "yield_if_ambiguous",
    "do_exchange_compress",
+   "anyone_who_moves_cant_roll",
    ""};
 
 /* The next three tables are all in step with each other, and with the "heritable" flags. */

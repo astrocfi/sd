@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <9 Feb 2005 wba>
+@c Time-stamp: <11 Mar 2005 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR SD VERSION 36.56
-@set title2 Database version = 36.56 format = 228
+@set title1 RELEASE NOTES FOR SD VERSION 36.57
+@set title2 Database version = 36.57 format = 229
 @set title3 parser version 1.12, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 36.57::
 * 36.56::
 * 36.55::
 * 36.54::
@@ -59,7 +60,7 @@ The files @file{relnotes98.txi} and @file{oldnotes} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 36.56, Top, (dir)
+@node Intro, 36.57, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -70,11 +71,28 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2004 William B. Ackerman
 @sp 3
 @menu
-* 36.56::               Changes in the current version
+* 36.57::               Changes in the current version
 @end menu
 
 @c ************
-@node 36.56, 36.55, Intro, Top
+@node 36.57, 36.56, Intro, Top
+@unnumberedsec Version 36.57 changes
+
+New concept: @strong{half and half}.  This takes two calls.  Do the
+first half of the first call, and then the second half of th second
+call.
+
+The behavior of @strong{roll} after @strong{percolate} and @strong{stampede}
+was repaired.
+
+The definitions of @strong{breaker} and @strong{detract} were repaired.
+In both calls, the first part for the centers is @strong{box counter
+rotate}, not @strong{box circulate}.  This would only make a difference
+in things like @strong{breaker 3 but interrupt after the 1st part with
+inrigger in roll circulate}.
+
+@c ************
+@node 36.56, 36.55, 36.57, Top
 @unnumberedsec Version 36.56 changes
 
 The program is better about doing intricate meta-concepts, such as

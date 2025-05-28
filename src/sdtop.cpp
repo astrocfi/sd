@@ -1103,6 +1103,14 @@ extern void touch_or_rear_back(
    else
       warn(tptr->warning);  // Or give whatever warning the table says, but not both.
 
+   // The 128 bit says that we have a setup with phantoms, but we insist that no
+   // phantom concept was given.  If we have everyone 1/2 press back from a
+   // right-hand wave, we have a 2x4 from which we allow "swing thru", as long
+   // as no phantom concept was given.  (If we said "split phantom waves", we
+   // would definitely not want to step to a single wave from this 2x4.)
+   if ((tptr->forbidden_elongation & 128) && (scopy->cmd.cmd_misc_flags & CMD_MISC__PHANTOMS))
+      return;
+
    if ((tptr->forbidden_elongation & 4) && (scopy->cmd.cmd_misc_flags & CMD_MISC__DOING_ENDS))
       scopy->cmd.prior_elongation_bits =
          (scopy->cmd.prior_elongation_bits & (~3)) | ((scopy->rotation+1) & 3);
