@@ -46,8 +46,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.14"
-#define TIME_STAMP "wba@alum.mit.edu Mar 15 2020 $"
+#define VERSION_STRING "39.15"
+#define TIME_STAMP "wba@alum.mit.edu Jun 30 2020 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -64,6 +64,8 @@ and the following external variables:
    elide_blanks
 */
 
+
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
 #include <string.h>
@@ -555,7 +557,7 @@ extern bool deposit_call(call_with_name *call, const call_conc_option_state *opt
       if (circc > number_of_circcers) fail_no_retry("bad circcer index???");
 
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
-      if (deposit_call(circcer_calls[circc-1], &null_options))
+      if (deposit_call(circcer_calls[circc-1].the_circcer, &null_options))
          throw error_flag_type(error_flag_wrong_command);     // User waved the mouse away while getting subcall.
       parse_state.concept_write_ptr = savecwp;
    }

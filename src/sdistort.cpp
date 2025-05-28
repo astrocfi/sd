@@ -3422,6 +3422,21 @@ extern void distorted_move(
       if (map_code == ~0U) fail("Can't find offset 2x4's.");
 
       goto do_divided_call;
+   case DISTORTKEY_OFFS_PARALLELOGRAM:
+      if (ss->kind == s3x6) {
+         switch (livemask) {
+         case 0x391C8: map_code = MAPCODE(s2x4,1,MPKIND__OFFSPG_L1,1); break;
+         case 0x389C4: map_code = MAPCODE(s2x4,1,MPKIND__OFFSPG_R1,1); break;
+         case 0x20F07: map_code = MAPCODE(s2x4,1,MPKIND__OFFSPG_L2,1); break;
+         case 0x27138: map_code = MAPCODE(s2x4,1,MPKIND__OFFSPG_R2,1); break;
+         }
+      }
+
+      if (map_code == ~0U) fail("Can't find offset parallelogram.");
+
+      warn(warn_controversial);    // Is this even a concept?
+
+      goto do_divided_call;
    case DISTORTKEY_OFFS_QTAG:
       if (ss->kind != spgdmdcw && ss->kind != spgdmdccw) {
          // Try to fudge a 4x4 into the setup we want.

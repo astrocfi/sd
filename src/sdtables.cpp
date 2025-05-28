@@ -1974,6 +1974,15 @@ map::map_thing map::map_init_table[] = {
    {{2, 3, 4, 5, 8, 9, 10, 11},
     s2x4,1,MPKIND__OFFS_R_HALF,1, warn__none,  s2x6,      0x000, 0},
 
+   {{15, 16, 17, 3, 6, 7, 8, 12},
+    s2x4,1,MPKIND__OFFSPG_L1,1, warn__none,  s3x6,      0x000, 0},
+   {{2, 8, 7, 6, 11, 17, 16, 15},
+    s2x4,1,MPKIND__OFFSPG_R1,1, warn__none,  s3x6,      0x000, 0},
+   {{0, 1, 2, 8, 9, 10, 11, 17},
+    s2x4,1,MPKIND__OFFSPG_L2,1, warn__none,  s3x6,      0x000, 0},
+   {{17, 3, 4, 5, 8, 12, 13, 14},
+    s2x4,1,MPKIND__OFFSPG_R2,1, warn__none,  s3x6,      0x000, 0},
+
    {{12, 15, 4, 7,   8, 11, 0, 3},  // need for NS swing thru
     s1x4,2,MPKIND__NS_CROSS_IN_4X4,0, warn__none, s4x4,      0x000, 0},
    {{0, 3, 8, 11,    12, 15, 4, 7}, // coming out of NS spin the top

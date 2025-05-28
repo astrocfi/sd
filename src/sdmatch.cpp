@@ -1728,7 +1728,7 @@ void matcher_class::match_wildcard(
             uint32_t save_circcer = m_current_result->match.call_conc_options.circcer;
 
             for (iu=0; iu<number_of_circcers; ++iu) {
-               const char *fromptr = get_call_name(circcer_calls[iu]);
+               const char *fromptr = get_call_name(circcer_calls[iu].the_circcer);
                char *toptr = circname;
                char c;
                do {
@@ -2155,7 +2155,7 @@ void matcher_class::search_menu(uims_reply_kind kind)
       else {
          for (i = 0; i < number_of_circcers; i++) {
             m_active_result.match.call_conc_options.circcer++;
-            match_pattern(get_call_name(circcer_calls[i]));
+            match_pattern(get_call_name(circcer_calls[i].the_circcer));
          }
       }
    }

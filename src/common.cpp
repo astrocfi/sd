@@ -27,52 +27,52 @@
 
 // These combinations are not allowed.
 
-#define FORBID1 (INHERITFLAG_FRACTAL|INHERITFLAG_YOYOETCMASK)
-#define FORBID2 (INHERITFLAG_SINGLEFILE|INHERITFLAG_SINGLE)
-#define FORBID3 (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)
-#define FORBID4 (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)
+#define FORBID1R (INHERITFLAGR_FRACTAL|INHERITFLAGR_YOYOETCMASK)
+#define FORBID2R (INHERITFLAGR_SINGLEFILE|INHERITFLAGR_SINGLE)
+#define FORBID3R (INHERITFLAGR_MXNMASK|INHERITFLAGR_NXNMASK)
+#define FORBID4R (INHERITFLAGR_12_MATRIX|INHERITFLAGR_16_MATRIX)
 
 
-bool do_heritflag_merge(uint32_t *dest, uint32_t source)
+bool do_heritflag_merge(heritflags & dest, heritflags source)
 {
-   uint32_t revertsource = source & INHERITFLAG_REVERTMASK;
+   uint32_t revertsourcer = source.r & INHERITFLAGR_REVERTMASK;
 
-   if (revertsource) {
+   if (revertsourcer) {
       // If the source is a revert/reflect bit, things are complicated.
 
-      uint32_t revertdest = *dest & INHERITFLAG_REVERTMASK;
+      uint32_t revertdestr = dest.r & INHERITFLAGR_REVERTMASK;
 
-      if (!revertdest) {
+      if (revertdestr == 0) {
          goto good;
       }
-      else if (revertsource == INHERITFLAGRVRTK_REVERT &&
-               revertdest == INHERITFLAGRVRTK_REFLECT) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RFV;
+      else if (revertsourcer == INHERITFLAGRRVRTK_REVERT &&
+               revertdestr == INHERITFLAGRRVRTK_REFLECT) {
+         dest.clear_bits_rl(INHERITFLAGR_REVERTMASK, 0);
+         dest.set_bits_rl(INHERITFLAGRRVRTK_RFV, 0);
          return false;
       }
-      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
-               revertdest == INHERITFLAGRVRTK_REVERT) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RVF;
+      else if (revertsourcer == INHERITFLAGRRVRTK_REFLECT &&
+               revertdestr == INHERITFLAGRRVRTK_REVERT) {
+         dest.clear_bits_rl(INHERITFLAGR_REVERTMASK, 0);
+         dest.set_bits_rl(INHERITFLAGRRVRTK_RVF, 0);
          return false;
       }
-      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
-               revertdest == INHERITFLAGRVRTK_REFLECT) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RFF;
+      else if (revertsourcer == INHERITFLAGRRVRTK_REFLECT &&
+               revertdestr == INHERITFLAGRRVRTK_REFLECT) {
+         dest.clear_bits_rl(INHERITFLAGR_REVERTMASK, 0);
+         dest.set_bits_rl(INHERITFLAGRRVRTK_RFF, 0);
          return false;
       }
-      else if (revertsource == INHERITFLAGRVRTK_REVERT &&
-               revertdest == INHERITFLAGRVRTK_RVF) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RVFV;
+      else if (revertsourcer == INHERITFLAGRRVRTK_REVERT &&
+               revertdestr == INHERITFLAGRRVRTK_RVF) {
+         dest.clear_bits_rl(INHERITFLAGR_REVERTMASK, 0);
+         dest.set_bits_rl(INHERITFLAGRRVRTK_RVFV, 0);
          return false;
       }
-      else if (revertsource == INHERITFLAGRVRTK_REFLECT &&
-               revertdest == INHERITFLAGRVRTK_RFV) {
-         *dest &= ~INHERITFLAG_REVERTMASK;
-         *dest |= INHERITFLAGRVRTK_RFVF;
+      else if (revertsourcer == INHERITFLAGRRVRTK_REFLECT &&
+               revertdestr == INHERITFLAGRRVRTK_RFV) {
+         dest.clear_bits_rl(INHERITFLAGR_REVERTMASK, 0);
+         dest.set_bits_rl(INHERITFLAGRRVRTK_RFVF, 0);
          return false;
       }
       else
@@ -82,18 +82,18 @@ bool do_heritflag_merge(uint32_t *dest, uint32_t source)
    // Check for plain redundancy.  If this is a bit in one of the complex
    // fields, this simple test may not catch the error, but the next one will.
 
-   if (*dest & source)
+   if ((dest.r & source.r) || (dest.l & source.l))
       return true;
 
-   if (((*dest & FORBID1) && (source & FORBID1)) ||
-       ((*dest & FORBID2) && (source & FORBID2)) ||
-       ((*dest & FORBID3) && (source & FORBID3)) ||
-       ((*dest & FORBID4) && (source & FORBID4)))
+   if (((dest.r & FORBID1R) && (source.r & FORBID1R)) ||
+       ((dest.r & FORBID2R) && (source.r & FORBID2R)) ||
+       ((dest.r & FORBID3R) && (source.r & FORBID3R)) ||
+       ((dest.r & FORBID4R) && (source.r & FORBID4R)))
       return true;
 
    good:
 
-   *dest |= source;
+   dest.set_bits_rl(source.r, source.l);
 
    return false;
 }

@@ -908,7 +908,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             ((left_half & 0xFFFF) << 16) | (last_datum & 0xFFFF);
 
          if (root_to_use->stuff.matrix.matrix_flags & MTX_USE_SELECTOR)
-            root_to_use->callflagsh |= CFLAGH__REQUIRES_SELECTOR;
+            root_to_use->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
          if (root_to_use->stuff.matrix.matrix_flags & MTX_USE_NUMBER)
             root_to_use->callflags1 |= CFLAG1_NUMBER_BIT;
 
@@ -917,7 +917,8 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
          root_to_use->stuff.matrix.matrix_def_list = this_matrix_block;
 
          this_matrix_block->modifier_level = calling_level;
-         this_matrix_block->alternate_def_flags = 0;
+         this_matrix_block->alternate_def_flags.r = (heritflagsr) 0;
+         this_matrix_block->alternate_def_flags.l = (heritflagsl) 0;
          this_matrix_block->next = (matrix_def_block *) 0;
 
       next_matrix_clause:
@@ -947,7 +948,9 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             this_matrix_block = this_matrix_block->next;
             this_matrix_block->modifier_level = (dance_level) (last_datum & 0xFFF);
             read_fullword();
-            this_matrix_block->alternate_def_flags = last_datum;
+            this_matrix_block->alternate_def_flags.r = (heritflagsr) last_datum;
+            read_fullword();
+            this_matrix_block->alternate_def_flags.l = (heritflagsl) last_datum;
             this_matrix_block->next = (matrix_def_block *) 0;
             goto next_matrix_clause;
          }
@@ -960,7 +963,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
 
          zz = new calldef_block;
          zz->next = 0;
-         zz->modifier_seth = 0;
+         zz->modifier_seth.initialize_rl(0, 0);
          zz->modifier_level = l_mainstream;
          root_to_use->stuff.arr.def_list = zz;
 
@@ -973,7 +976,9 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             zz->modifier_level = (dance_level) (last_datum & 0xFF);
             zz->next = 0;
             read_fullword();
-            zz->modifier_seth = last_datum;
+            zz->modifier_seth.r = (heritflagsr) last_datum;
+            read_fullword();
+            zz->modifier_seth.l = (heritflagsl) last_datum;
             read_halfword();
             read_array_def_blocks(zz);
          }
@@ -999,7 +1004,9 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
             read_fullword();
             templist[next_definition_index].modifiers1 = (mods1_word) last_datum;
             read_fullword();
-            templist[next_definition_index++].modifiersh = last_datum;
+            templist[next_definition_index].modifiersh.r = (heritflagsr) last_datum;
+            read_fullword();
+            templist[next_definition_index++].modifiersh.l = (heritflagsl) last_datum;
             read_halfword();
          }
 
@@ -1021,14 +1028,18 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       read_fullword();
       root_to_use->stuff.conc.innerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
-      root_to_use->stuff.conc.innerdef.modifiersh = last_datum;
+      root_to_use->stuff.conc.innerdef.modifiersh.r = (heritflagsr) last_datum;
+      read_fullword();
+      root_to_use->stuff.conc.innerdef.modifiersh.l = (heritflagsl) last_datum;
       read_halfword();
       check_tag(last_12);
       root_to_use->stuff.conc.outerdef.call_id = (uint16_t) last_12;
       read_fullword();
       root_to_use->stuff.conc.outerdef.modifiers1 = (mods1_word) last_datum;
       read_fullword();
-      root_to_use->stuff.conc.outerdef.modifiersh = last_datum;
+      root_to_use->stuff.conc.outerdef.modifiersh.r = (heritflagsr) last_datum;
+      read_fullword();
+      root_to_use->stuff.conc.outerdef.modifiersh.l = (heritflagsl) last_datum;
       read_halfword();
       break;
    }
@@ -1047,9 +1058,12 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       read_fullword();       // Get top level flags, first word.
                              // This is the "callflags1" stuff.
       uint32_t saveflags1 = last_datum;
-      read_fullword();       // Get top level flags, second word.
-                             // This is the "heritflags" stuff.
-      uint32_t saveflagsh = last_datum;
+      // The "heritflags" stuff, two full words, right then left.
+      read_fullword();
+      heritflags saveflagsherit;
+      saveflagsherit.r = (heritflagsr) last_datum;
+      read_fullword();
+      saveflagsherit.l = (heritflagsl) last_datum;
       read_halfword();       // Get char count (ignore same) and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       recursed_call_root->frequency = 0;
@@ -1058,7 +1072,7 @@ static void read_in_call_definition(calldefn *root_to_use, int char_count)
       recursed_call_root->callflags1 = saveflags1;
       recursed_call_root->callflagsf = saveflags1overflow << 16;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      recursed_call_root->callflagsh = saveflagsh;
+      recursed_call_root->callflagsherit = saveflagsherit;
       read_in_call_definition(recursed_call_root, 0);    // Recurse.
       root_to_use->compound_part = recursed_call_root;
    }
@@ -1715,7 +1729,7 @@ static void build_database_1(abridge_mode_t abridge_mode)
 
    number_of_circcers = 0;
    number_of_circcers_allocated = 0;
-   circcer_calls = (call_with_name **) 0;
+   circcer_calls = (circcer_object *) 0;
 
    // This list will be permanent.
    base_calls = new call_with_name *[max_base_calls];
@@ -1754,14 +1768,26 @@ static void build_database_1(abridge_mode_t abridge_mode)
       read_halfword();       // Get 16 bits of "callflags1"  overflow stuff.
       uint32_t saveflags1overflow = last_datum;
 
-      read_fullword();       // Get top level flags, first word.
-                             // This is the "callflags1" stuff.
+      // This is the "callflags1" stuff.
+      read_fullword();
       uint32_t saveflags1 = last_datum;
 
-      read_fullword();       // Get top level flags, second word.
-                             // This is the "heritflags" stuff.
-      uint32_t saveflagsh = last_datum;
+      // Deal with the special "base_circ_call" / phony "force" info.
+      heritflags phonyheritbit;
+      phonyheritbit.initialize_rl(0, 0);
+      if (saveflags1 & CFLAG1_BASE_CIRC_CALL) {
+         read_fullword();
+         phonyheritbit.r = (heritflagsr) last_datum;
+         read_fullword();
+         phonyheritbit.l = (heritflagsl) last_datum;
+      }
 
+      // The "heritflags" stuff, two full words, right then left.
+      read_fullword();
+      heritflags saveflagsherit;
+      saveflagsherit.r = (heritflagsr) last_datum;
+      read_fullword();
+      saveflagsherit.l = (heritflagsl) last_datum;
       read_halfword();       // Get char count and schema.
       call_schema = (calldef_schema) (last_datum & 0xFF);
       char_count = (last_datum >> 8) & 0xFF;
@@ -1786,7 +1812,8 @@ static void build_database_1(abridge_mode_t abridge_mode)
       call_root->the_defn.callflags1 = saveflags1;
       call_root->the_defn.callflagsf = saveflags1overflow << 16;
       // Will get "CFLAGH" and "ESCAPE_WORD" bits later.
-      call_root->the_defn.callflagsh = saveflagsh;
+      call_root->the_defn.callflagsherit = saveflagsherit;
+
       read_in_call_definition(&call_root->the_defn, char_count);
 
       // We accept a call if:
@@ -1835,6 +1862,27 @@ static void build_database_1(abridge_mode_t abridge_mode)
             if (local_callcount >= abs_max_calls)
                database_error_exit("Too many base calls -- mkcalls made an error");
             local_call_list[local_callcount++] = call_root;
+
+            // If this is a base circulate call, create and fill in the circcer_object for it.
+            // These are structs with pointers to the call and heritflag items
+            // (taken from the "force_XXX" declarations.)  This is done in two stages--
+            // grab the herit info now, and the call pointer later, after translating aliases.
+
+            if (call_root->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
+               // See whether we need to reallocate these lists.
+               if (number_of_circcers >= number_of_circcers_allocated) {
+                  number_of_circcers_allocated = number_of_circcers_allocated*2 + 5;
+                  circcer_object *new_circcers = new circcer_object[number_of_circcers_allocated];
+
+                  if (circcer_calls) {
+                     memcpy(new_circcers, circcer_calls, number_of_circcers*sizeof(circcer_object));
+                     delete [] circcer_calls;
+                  }
+                  circcer_calls = new_circcers;
+               }
+
+               circcer_calls[number_of_circcers++].the_herit_thing = phonyheritbit;
+            }
          }
       }
    }
@@ -1852,9 +1900,53 @@ static void build_database_1(abridge_mode_t abridge_mode)
    // Translate the aliases.
 
    for (i=0 ; i<local_callcount ; i++) {
-      while (local_call_list[i]->the_defn.schema == schema_alias) {
-         local_call_list[i]->the_defn =
-            base_calls[local_call_list[i]->the_defn.stuff.conc.innerdef.call_id]->the_defn;
+      call_with_name *t = local_call_list[i];
+
+      while (t->the_defn.schema == schema_alias) {
+         // Demand that the aliaser and the aliasee have the same base_circ_call status.
+         if ((t->the_defn.callflags1 ^
+             base_calls[t->the_defn.stuff.conc.innerdef.call_id]->the_defn.callflags1) & CFLAG1_BASE_CIRC_CALL)
+            gg77->iob88.fatal_error_exit(1, "Aliaser and the aliasee have the same base_circ_call status", t->name);
+         t->the_defn = base_calls[t->the_defn.stuff.conc.innerdef.call_id]->the_defn;
+      }
+   }
+
+   // Pass 2 of handling the circcers.
+
+   uint32_t number_of_circcers_pass2 = 0;   // Start the count over.
+
+   for (i=0 ; i<local_callcount ; i++) {
+      call_with_name *t = local_call_list[i];
+      if (t->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
+         if (number_of_circcers_pass2 >= number_of_circcers)
+            gg77->iob88.fatal_error_exit(1, "Base_circ_call list out of phase", "1");
+         // This is what all the fuss was about.
+         t->the_defn.circcer_index = number_of_circcers_pass2;
+         circcer_calls[number_of_circcers_pass2++].the_circcer = t;
+      }
+   }
+
+   if (number_of_circcers_pass2 != number_of_circcers)
+      gg77->iob88.fatal_error_exit(1, "Base_circ_call list out of phase", "2");
+
+   unsigned int gg, jj, kk;
+
+   for (gg = 0 ; gg < number_of_circcers ; gg++) {
+      circcer_calls[gg].the_concept = (concept_descriptor *) 0;   // In case we don't find anything.
+
+      for (kk = 0 ; kk <= LAST_SIMPLE_HERIT_CONCEPT-FIRST_SIMPLE_HERIT_CONCEPT ; kk++) {
+         if (simple_herit_leftbits_table[kk] == circcer_calls[gg].the_herit_thing.l) {
+            for (jj = 0 ; concept_descriptor_table[jj].kind != marker_end_of_list ; jj++) {
+               if (concept_descriptor_table[jj].kind == kk+FIRST_SIMPLE_HERIT_CONCEPT) {
+                  circcer_calls[gg].the_concept = &concept_descriptor_table[jj];
+                  break;
+               }
+            }
+
+            if (concept_descriptor_table[jj].kind == marker_end_of_list)
+               gg77->iob88.fatal_error_exit(1, "Failed to set up base_call data", "1");
+            break;
+         }
       }
    }
 }
@@ -2435,6 +2527,7 @@ bool open_session(int argc, char **argv)
       // "any" menu.  It calls init_step(init_calibrate_tick), which calibrates
       // the progress bar.
       build_database_1(glob_abridge_mode);
+
       fclose(database_file);
 
       // Make the cardinal/ordinal tables.
@@ -2505,21 +2598,10 @@ bool open_session(int argc, char **argv)
                translate_menu_name(base_calls[i]->name, &base_calls[i]->the_defn.callflagsf);
       }
 
-      // Process the circulate calls.
-
+      // Translate the base circulate calls.
       for (i=0 ; i<local_callcount ; i++) {
          call_with_name *t = local_call_list[i];
          if (t->the_defn.callflags1 & CFLAG1_BASE_CIRC_CALL) {
-            if (number_of_circcers >= number_of_circcers_allocated) {
-               number_of_circcers_allocated = number_of_circcers_allocated*2 + 5;
-               call_with_name **new_circcers = new call_with_name *[number_of_circcers_allocated];
-               if (circcer_calls) {
-                  memcpy(new_circcers, circcer_calls, number_of_circcers*sizeof(call_with_name *));
-                  delete [] circcer_calls;
-               }
-               circcer_calls = new_circcers;
-            }
-            circcer_calls[number_of_circcers++] = t;
             t->menu_name = translate_menu_name(t->name, &t->the_defn.callflagsf);
          }
       }
@@ -2561,7 +2643,7 @@ bool open_session(int argc, char **argv)
       circcer_menu_list = new Cstring[number_of_circcers+1];
 
       for (ui=0; ui<number_of_circcers; ui++)
-         circcer_menu_list[ui] = circcer_calls[ui]->menu_name;
+         circcer_menu_list[ui] = circcer_calls[ui].the_circcer->menu_name;
 
       circcer_menu_list[number_of_circcers] = (Cstring) 0;
 

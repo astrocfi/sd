@@ -1807,7 +1807,7 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                            See if we can get it from the "circcer" field. */
 
                      if (save_cptr->options.circcer > 0)
-                        writestuff(circcer_calls[(save_cptr->options.circcer)-1]->menu_name);
+                        writestuff(circcer_calls[(save_cptr->options.circcer)-1].the_circcer->menu_name);
                      else
                         writestuff("NO CIRCCER???");
 

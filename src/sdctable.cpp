@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1198,6 +1198,8 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0},
    {"PARALLELOGRAM DIAMONDS",                concept_parallelogram,           D, l_c3a,
     UC_none, 1},
+   {"OFFSET PARALLELOGRAM",                  concept_distorted,               D, l_c3,
+    UC_none, disttest_offset, 0, 0, DISTORTKEY_OFFS_PARALLELOGRAM*16+0},
    {"OFFSET 1/4 TAG",                        concept_distorted,               D, l_c4,
     UC_none, disttest_any, 0, CMD_MISC__VERIFY_1_4_TAG, DISTORTKEY_OFFS_QTAG*16},
    {"OFFSET 3/4 TAG",                        concept_distorted,               D, l_c4,
@@ -1482,6 +1484,28 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none},
    {"INTERLOCKED",                           concept_interlocked,           L+D, l_c1,
     UC_intlk},
+   {"IN ROLL",                               concept_inroll,                  D, l_a2,
+    UC_none},
+   {"OUT ROLL",                              concept_outroll,                 D, l_a2,
+    UC_none},
+   {"ZOOM ROLL",                             concept_zoomroll,                D, l_c4,
+    UC_none},
+   {"SPLIT TRADE",                           concept_splittrade,              D, l_c2,
+    UC_none},
+   {"BIAS",                                  concept_bias,                    D, l_c3a,
+    UC_none},
+   {"BIAS TRADE",                            concept_biastrade,               D, l_c4,
+    UC_none},
+   {"ORBIT",                                 concept_orbit,                   D, l_c4,
+    UC_none},
+   {"TWIN ORBIT",                            concept_twinorbit,               D, l_c4,
+    UC_none},
+   {"ROTARY",                                concept_rotary,                  D, l_c4a,
+    UC_none},
+   {"SCATTER",                               concept_scatter,               L+D, l_c3a,
+    UC_none},
+   {"CROSS OVER",                            concept_crossover,             L+D, l_a1,
+    UC_none},
    {"12 MATRIX",                             concept_12_matrix,               D, l_c3x,
     UC_none},
    {"16 MATRIX",                             concept_16_matrix,               D, l_c3x,
@@ -2080,17 +2104,17 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"ALL 8 (diamonds)",                      concept_all_8,                   D, l_a2,
     UC_none, 2},
    {"REVERT",                                concept_revert,                L+D, l_c4a,
-    UC_none, INHERITFLAGRVRTK_REVERT},
+    UC_none, INHERITFLAGRRVRTK_REVERT},
    {"REFLECTED",                             concept_revert,                L+D, l_c3,
-    UC_none, INHERITFLAGRVRTK_REFLECT},
+    UC_none, INHERITFLAGRRVRTK_REFLECT},
    {"REVERT AND THEN REFLECT",               concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRVRTK_RVF},
+    UC_none, INHERITFLAGRRVRTK_RVF},
    {"REFLECT AND THEN REVERT",               concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRVRTK_RFV},
+    UC_none, INHERITFLAGRRVRTK_RFV},
    {"REVERT, THEN REFLECT, THEN REVERT",     concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRVRTK_RVFV},
+    UC_none, INHERITFLAGRRVRTK_RVFV},
    {"REFLECT, THEN REVERT, THEN REFLECT",    concept_revert,                L+D, l_c3x,
-    UC_none, INHERITFLAGRVRTK_RFVF},
+    UC_none, INHERITFLAGRRVRTK_RFVF},
    {"FAST",                                  concept_fast,                  L+D, l_c4,
     UC_none},
    {"CENTERS",                               concept_centers_or_ends,         D, l_mainstream,
@@ -2168,25 +2192,25 @@ concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
    {"???",                                   marker_end_of_list}};
 
 
-const concept_fixer_thing concept_fixer_table[] = {
-   {0, FINAL__SPLIT,      UC_pl, UC_spl},    // SPLIT + PHANTOM LINES
-   {INHERITFLAG_INTLK, 0, UC_pl, UC_ipl},    // INTERLOCKED + PHANTOM LINES
-   {0, FINAL__SPLIT,      UC_pw, UC_spw},    // SPLIT + PHANTOM WAVES
-   {INHERITFLAG_INTLK, 0, UC_pw, UC_ipw},    // INTERLOCKED + PHANTOM WAVES
-   {0, FINAL__SPLIT,      UC_pc, UC_spc},    // SPLIT + PHANTOM COLUMNS
-   {INHERITFLAG_INTLK, 0, UC_pc, UC_ipc},    // INTERLOCKED + PHANTOM COLUMNS
-   {0, FINAL__SPLIT,      UC_pb, UC_spb},    // SPLIT + PHANTOM BOXES
-   {INHERITFLAG_INTLK, 0, UC_pb, UC_ipb},    // INTERLOCKED + PHANTOM BOXES
-   {0, FINAL__SPLIT,      UC_pd, UC_spd},    // SPLIT + PHANTOM DIAMONDS
-   {INHERITFLAG_INTLK, 0, UC_pd, UC_ipd},    // INTERLOCKED + PHANTOM DIAMONDS
-   {0, FINAL__SPLIT,      UC_pds, UC_spds},  // SPLIT + PHANTOM DIAMOND SPOTS
-   {INHERITFLAG_INTLK, 0, UC_pds, UC_ipds},  // INTERLOCKED + PHANTOM DIAMOND SPOTS
-   {0, FINAL__SPLIT,      UC_p1, UC_sp1},    // SPLIT + PHANTOM 1/4 TAGS
-   {INHERITFLAG_INTLK, 0, UC_p1, UC_ip1},    // INTERLOCKED + PHANTOM 1/4 TAGS
-   {0, FINAL__SPLIT,      UC_p3, UC_sp3},    // SPLIT + PHANTOM 3/4 TAGS
-   {INHERITFLAG_INTLK, 0, UC_p3, UC_ip3},    // INTERLOCKED + PHANTOM 3/4 TAGS
-   {0, FINAL__SPLIT,      UC_pgt, UC_spgt},  // SPLIT + PHANTOM GENERAL 1/4 TAGS
-   {INHERITFLAG_INTLK, 0, UC_pgt, UC_ipgt},  // INTERLOCKED + PHANTOM GENERAL 1/4 TAGS
+const concept_fixer_thing_r concept_fixer_table_r[] = {
+   {0, FINAL__SPLIT,       UC_pl, UC_spl},    // SPLIT + PHANTOM LINES
+   {INHERITFLAGR_INTLK, 0, UC_pl, UC_ipl},    // INTERLOCKED + PHANTOM LINES
+   {0, FINAL__SPLIT,       UC_pw, UC_spw},    // SPLIT + PHANTOM WAVES
+   {INHERITFLAGR_INTLK, 0, UC_pw, UC_ipw},    // INTERLOCKED + PHANTOM WAVES
+   {0, FINAL__SPLIT,       UC_pc, UC_spc},    // SPLIT + PHANTOM COLUMNS
+   {INHERITFLAGR_INTLK, 0, UC_pc, UC_ipc},    // INTERLOCKED + PHANTOM COLUMNS
+   {0, FINAL__SPLIT,       UC_pb, UC_spb},    // SPLIT + PHANTOM BOXES
+   {INHERITFLAGR_INTLK, 0, UC_pb, UC_ipb},    // INTERLOCKED + PHANTOM BOXES
+   {0, FINAL__SPLIT,       UC_pd, UC_spd},    // SPLIT + PHANTOM DIAMONDS
+   {INHERITFLAGR_INTLK, 0, UC_pd, UC_ipd},    // INTERLOCKED + PHANTOM DIAMONDS
+   {0, FINAL__SPLIT,       UC_pds, UC_spds},  // SPLIT + PHANTOM DIAMOND SPOTS
+   {INHERITFLAGR_INTLK, 0, UC_pds, UC_ipds},  // INTERLOCKED + PHANTOM DIAMOND SPOTS
+   {0, FINAL__SPLIT,       UC_p1, UC_sp1},    // SPLIT + PHANTOM 1/4 TAGS
+   {INHERITFLAGR_INTLK, 0, UC_p1, UC_ip1},    // INTERLOCKED + PHANTOM 1/4 TAGS
+   {0, FINAL__SPLIT,       UC_p3, UC_sp3},    // SPLIT + PHANTOM 3/4 TAGS
+   {INHERITFLAGR_INTLK, 0, UC_p3, UC_ip3},    // INTERLOCKED + PHANTOM 3/4 TAGS
+   {0, FINAL__SPLIT,       UC_pgt, UC_spgt},  // SPLIT + PHANTOM GENERAL 1/4 TAGS
+   {INHERITFLAGR_INTLK, 0, UC_pgt, UC_ipgt},  // INTERLOCKED + PHANTOM GENERAL 1/4 TAGS
    {0, 0, UC_none, UC_none}};
 
 static const useful_concept_enum nice_setup_concept_4x4[] = {

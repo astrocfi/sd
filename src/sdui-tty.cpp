@@ -86,6 +86,7 @@ and the following other variables:
 */
 
 
+#define _CRT_SECURE_NO_WARNINGS
 // For "sprintf" and some IO stuff (fflush, printf, stdout) that we use
 // during the "database tick" printing before the actual IO package is started.
 // During normal operation, we don't do any IO at all in this file.
@@ -94,7 +95,7 @@ and the following other variables:
 #include <ctype.h>
 #include <stdlib.h>
 
-extern void exit(int code);
+//extern void exit(int code);
 
 #include "sd.h"
 

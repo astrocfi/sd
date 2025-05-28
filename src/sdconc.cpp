@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2017  William B. Ackerman.
+//    Copyright (C) 1990-2020  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1635,8 +1635,8 @@ static calldef_schema concentrify(
 
    // Need to do this now, so that the "schema_concentric_big2_6" stuff below will be triggered.
    if (analyzer_result == schema_concentric_6p_or_normal_or_2x6_2x3) {
-      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_6X2 ||
-          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK) == INHERITFLAGMXNK_3X2)
+      if (ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MXNMASK) == INHERITFLAGRMXNK_6X2 ||
+          ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MXNMASK) == INHERITFLAGRMXNK_3X2)
          analyzer_result = schema_concentric_2_6;
       else if (attr::slimit(ss) == 5)
          analyzer_result = schema_concentric_6p;
@@ -2592,7 +2592,7 @@ static bool fix_empty_outers(
                   the_call == base_calls[base_call_any_hand_remake])
             ;        // It's OK, the call was "trade" or "any hand remake".
          else if (the_call == base_calls[base_call_circulate] &&
-                  cmdout && cmdout->cmd_final_flags.test_heritbit(INHERITFLAG_HALF) &&
+                  cmdout && cmdout->cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF) &&
                   cmdout->cmd_fraction.is_null()) {
             // The call is "1/2 circulate".  We assume it goes to a diamond.
             // We don't check that the facing directions are such that this is
@@ -3143,11 +3143,12 @@ extern void concentric_move(
 
    parse_block *save_skippable_concept = ss->cmd.skippable_concept;
    ss->cmd.skippable_concept = (parse_block *) 0;
-   uint32_t save_skippable_heritflags = ss->cmd.skippable_heritflags;
-   ss->cmd.skippable_heritflags = 0;
+   uint32_t save_skippable_heritflags_r = ss->cmd.skippable_heritflags.r;
+   ss->cmd.skippable_heritflags.l = (heritflagsl) 0;
+   ss->cmd.skippable_heritflags.r = (heritflagsr) 0;
 
-   const uint32_t scnxn =
-      ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK);
+   const uint32_t scrnxn =
+      ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_NXNMASK | INHERITFLAGR_MXNMASK);
 
    ss->cmd.cmd_misc2_flags &= ~(0xFFF | CMD_MISC2__ANY_WORK_INVERT |
                                 CMD_MISC2__ANY_WORK | CMD_MISC2__ANY_SNAG);
@@ -3209,10 +3210,10 @@ extern void concentric_move(
 
    if (ss->kind == s_qtag &&
        analyzer != schema_concentric_6_2 &&
-       (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_12_MATRIX) ||
-        scnxn == INHERITFLAGMXNK_1X3 ||
-        scnxn == INHERITFLAGMXNK_3X1 ||
-        scnxn == INHERITFLAGNXNK_3X3))
+       (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_12_MATRIX) ||
+        scrnxn == INHERITFLAGRMXNK_1X3 ||
+        scrnxn == INHERITFLAGRMXNK_3X1 ||
+        scrnxn == INHERITFLAGRNXNK_3X3))
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, true);
 
    for (i=0; i<32; i++) {
@@ -3445,15 +3446,15 @@ extern void concentric_move(
          // and "single" into the other one.
          if (analyzer == schema_1331_concentric) {
             if (attr::slimit(begin_ptr) == 5) {
-               begin_ptr->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_NXNMASK);
-               begin_ptr->cmd.cmd_final_flags.set_heritbit(INHERITFLAGNXNK_3X3);
+               begin_ptr->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_NXNMASK);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGRNXNK_3X3);
             }
             else
-               begin_ptr->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_SINGLE);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_SINGLE);
          }
          else if (analyzer == schema_1221_concentric) {
             if (attr::slimit(begin_ptr) == 1)
-               begin_ptr->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_SINGLE);
+               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_SINGLE);
          }
 
          // Check for operating on a Z.
@@ -3666,8 +3667,8 @@ extern void concentric_move(
          if ((save_cmd_misc2_flags &
               (CMD_MISC2__ANY_WORK|CMD_MISC2__ANY_WORK_INVERT)) == ctr_use_flag) {
 
-            if (save_skippable_heritflags != 0) {
-               begin_ptr->cmd.cmd_final_flags.set_heritbits(save_skippable_heritflags);
+            if (save_skippable_heritflags_r != 0) {
+               begin_ptr->cmd.cmd_final_flags.set_heritbits_r(save_skippable_heritflags_r);
                impose_assumption_and_move(begin_ptr, result_ptr);
             }
             else {
@@ -4056,7 +4057,7 @@ extern void concentric_move(
 
    // If doing half of an acey deucey, don't force spots--it messes up short6 orientation.
    if (analyzer == schema_concentric_6p_or_normal_or_2x6_2x3 &&
-       ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_HALF) != 0)
+       ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF) != 0)
       localmodsout1 &= ~DFM1_CONC_FORCE_SPOTS;
 
    // If the outsides did "emulate", they stay on the same spots no matter what
@@ -4080,8 +4081,8 @@ extern void concentric_move(
    setup_command *outercmd = (inverting) ? cmdin : cmdout;
 
    if (outercmd &&
-       (outercmd->cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED) != 0 ||
-       outercmd->cmd_final_flags.test_heritbits(INHERITFLAG_REVERTMASK) == INHERITFLAGRVRTK_REFLECT)) {
+       (outercmd->cmd_final_flags.test_heritbit_r(INHERITFLAGR_TWISTED) != 0 ||
+       outercmd->cmd_final_flags.test_heritbits_r(INHERITFLAGR_REVERTMASK) == INHERITFLAGRRVRTK_REFLECT)) {
       columnsfailbit = 1 << elongshift;
       linesfailbit = 8 >> elongshift;
    }
@@ -5253,8 +5254,8 @@ extern void punt_centers_use_concept(setup *ss, setup *result) THROW_DECL
        (ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_alternate ||
         ss->cmd.parseptr->next->call->the_defn.schema == schema_sequential_remainder) &&
-       (ss->cmd.parseptr->next->call->the_defn.callflagsh & INHERITFLAG_YOYOETCMASK) &&
-       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh & INHERITFLAG_YOYOETCMASK) &&
+       (ss->cmd.parseptr->next->call->the_defn.callflagsherit.r & INHERITFLAGR_YOYOETCMASK) &&
+       (ss->cmd.parseptr->next->call->the_defn.stuff.seq.defarray[0].modifiersh.r & INHERITFLAGR_YOYOETCMASK) &&
        ss->cmd.cmd_fraction.is_null()) {
       doing_yoyo = true;
       ss->cmd.cmd_fraction.set_to_null_with_flags(
@@ -5539,10 +5540,10 @@ extern void selective_move(
           (kk->arg4 == tandem_key_cpls || kk->arg4 == tandem_key_tand ||
            kk->arg4 == tandem_key_cpls3 || kk->arg4 == tandem_key_tand3 ||
            kk->arg4 == tandem_key_special_triangles) &&
-          ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_SINGLE |
-                                                 INHERITFLAG_MXNMASK |
-                                                 INHERITFLAG_NXNMASK |
-                                                 INHERITFLAG_TWISTED) == 0) {
+          ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_SINGLE |
+                                                   INHERITFLAGR_MXNMASK |
+                                                   INHERITFLAGR_NXNMASK |
+                                                   INHERITFLAGR_TWISTED) == 0) {
          // Save a few things in case we have to try a second theory.
          uint32_t save_flags = ss->cmd.cmd_misc_flags;
          parse_block *save_parse = ss->cmd.parseptr;

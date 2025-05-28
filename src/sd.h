@@ -41,6 +41,9 @@
 // Unless this isn't for the WIN32 API at all, in which case make the
 // "SDLIB_API" symbol do nothing.
 
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #if defined(WIN32)
 #if defined(SDLIB_EXPORTS)
 #define SDLIB_API __declspec(dllexport)
@@ -50,6 +53,8 @@
 #else
 #define SDLIB_API
 #endif
+
+#define _CRT_SECURE_NO_WARNINGS
 
 #define THROW_DECL throw(error_flag_type)
 
@@ -139,6 +144,21 @@ enum concept_kind {
    concept_straight,
    concept_twisted,
    concept_rewind,
+
+   concept_crossover,
+   FIRST_SIMPLE_HERIT_CONCEPT = concept_crossover,
+   concept_inroll,
+   concept_outroll,
+   concept_splittrade,
+   concept_bias,
+   concept_biastrade,
+   concept_orbit,
+   concept_twinorbit,
+   concept_rotary,
+   concept_scatter,
+   concept_zoomroll,
+   LAST_SIMPLE_HERIT_CONCEPT = concept_zoomroll,
+
    concept_12_matrix,
    concept_16_matrix,
    concept_revert,
@@ -919,7 +939,7 @@ enum {
 
 struct matrix_def_block {
    matrix_def_block *next;
-   uint32_t alternate_def_flags;
+   heritflags alternate_def_flags;
    dance_level modifier_level;
    uint32_t matrix_def_items[2];     // Dynamically allocated to either 2 or 16.
 };
@@ -965,10 +985,10 @@ struct callarray {
 };
 
 struct calldef_block {
-   /* This has individual keys for groups of heritable modifiers.  Hence one
-      can't say anything like "alternate_definition [3x3 4x4]".  But of course
-      one can mix things from different groups. */
-   uint32_t modifier_seth;
+   // This has individual keys for groups of heritable modifiers.  Hence one
+   // can't say anything like "alternate_definition [3x3 4x4]".  But of course
+   // one can mix things from different groups.
+   heritflags modifier_seth;
    callarray *callarray_list;
    calldef_block *next;
    dance_level modifier_level;
@@ -994,19 +1014,16 @@ struct by_def_item {
       modifiers.  An individual switch like "force_3x3" causes that key to be
       placed in the field of "modifiersh". */
 
-   uint32_t modifiersh;
+   heritflags modifiersh;
 };
 
 struct calldefn {
-   uint32_t callflags1;    // The CFLAG1_??? flags.
-   uint32_t callflagsh;    // The mask for the heritable flags.
-   // Within the "callflagsh" field, the various grouped fields
-   // (e.g. INHERITFLAG_MXNMASK) are uniform -- either all the bits are
-   // on or they are all off.  A call can only inherit the entire group,
-   // by saying "mxn_is_inherited".
+   uint32_t callflags1;      // The CFLAG1_??? flags.
+   heritflags callflagsherit; // The mask for the heritable flags.
    uint32_t callflagsf;    // The ESCAPE_WORD__???  and CFLAGH__??? flags.
    mutable short int frequency;  // For call-use statistics.  Logically ought to be at the top level, but we hide it here.
-   short int level;
+   int8_t level;
+   int8_t circcer_index;   // index into the circcer_calls table if this is a base_circ_call.
    calldef_schema schema;
    calldefn *compound_part;
    union {
@@ -1305,23 +1322,33 @@ class final_and_herit_flags {
 
    // Stuff for manipulating the "herit" bits.
 
+   // Test all 64 bits, report if any bits match.
+   inline bool bool_test_heritbits(heritflags & y) const { return ((herit.r & y.r) | (herit.l & y.l)) != 0; }
+
    // This tests a single bit.  It returns an int rather than a bool
    // in case the client wants to combine the result with other
    // stuff for greater efficiency.
-   inline uint32_t test_heritbit(heritflags y) const { return herit & y; }
+   inline uint32_t test_heritbit_r(uint32_t y) const { return herit.r & y; }
    // This tests against a word, presumably containing a mask of 2 or more bits.
-   inline uint32_t test_heritbits(uint32_t y) const { return herit & y; }
+   inline uint32_t test_heritbits_r(uint32_t y) const { return herit.r & y; }
+   inline uint32_t test_heritbits_l(uint32_t y) const { return herit.l & y; }
    // This clears a single bit.
-   inline void clear_heritbit(heritflags y) { herit = (heritflags) (herit & ~y); }
+   inline void clear_heritbit_r(uint32_t y) { herit.r = (heritflagsr) (herit.r & ~y); }
    // This clears a mask of bits.  Bits that are ON in the argument
    // get CLEARED in the field.
-   inline void clear_heritbits(uint32_t y) { herit = (heritflags) (herit & ~y); }
+   inline void clear_heritbits_r(uint32_t y) { herit.r = (heritflagsr) (herit.r & ~y); }
+   // This clears a mask of bits.  Bits that are ON in the argument
+   // get CLEARED in the field.
+   inline void clear_heritbits_l(uint32_t y) { herit.l = (heritflagsl) (herit.l & ~y); }
+
    // This sets a single bit.
-   inline void set_heritbit(heritflags y) { herit = (heritflags) (herit | y); }
+   //   inline void set_heritbit_r(heritflags y) { herit.r = (heritflagsr) (herit.r | y.r); }
    // This sets a mask of bits.
-   inline void set_heritbits(uint32_t y) { herit = (heritflags) (herit | y); }
+   inline void set_heritbits_r(uint32_t y) { herit.r = (heritflagsr) (herit.r | y); }
+   inline void set_heritbits_l(uint32_t y) { herit.l = (heritflagsl) (herit.l | y); }
+
    // Clear all bits.
-   inline void clear_all_heritbits() { herit = (heritflags) 0; }
+   inline void clear_all_heritbits() { herit.r = (heritflagsr) 0; herit.l = (heritflagsl) 0; }
 
    // Stuff for manipulating the "final" bits.  Exactly analogous
    // to the "herit" stuff.  See comments above.
@@ -1336,10 +1363,10 @@ class final_and_herit_flags {
 
    // Clear both herit and final bits.
    inline void clear_all_herit_and_final_bits()
-      { herit = (heritflags) 0; final = (finalflags) 0; }
+      { herit.r = (heritflagsr) 0; herit.l = (heritflagsl) 0; final = (finalflags) 0; }
 
    // Test both fields, to see whether any bits, in either field, are on.
-   inline bool test_for_any_herit_or_final_bit() { return (herit | final) != 0; }
+   inline bool test_for_any_herit_or_final_bit() { return (herit.l | herit.r | final) != 0; }
 };
 
 
@@ -1662,22 +1689,22 @@ struct setup_command {
    uint32_t cmd_misc_flags;
    uint32_t cmd_misc2_flags;
    uint32_t cmd_misc3_flags;
-   uint32_t do_couples_her8itflags;
+   heritflags do_couples_her8itflags;
    assumption_thing cmd_assume;
    uint32_t prior_elongation_bits;
    uint32_t prior_expire_bits;
    parse_block *restrained_concept;
    parse_block **restrained_final;
    fraction_command restrained_fraction;
-   uint32_t restrained_super8flags;
-   uint32_t restrained_super9flags;
+   heritflags restrained_super8flags;
+   heritflags restrained_super9flags;
    bool restrained_do_as_couples;
    uint32_t restrained_miscflags;
    uint32_t restrained_misc2flags;
    uint32_t restrained_selector_decoder[2];
    parse_block *skippable_concept;
-   uint32_t skippable_heritflags;
-   uint32_t cmd_heritflags_to_save_from_mxn_expansion;
+   heritflags skippable_heritflags;
+   heritflags cmd_heritflags_to_save_from_mxn_expansion;
 
    void promote_restrained_fraction() {
       if (restrained_fraction.fraction != 0) {
@@ -1703,7 +1730,7 @@ struct resultflag_rec {
    // BEWARE!!!  If add fields to this, be sure to initialize them in constructor, below.
    uint16_t split_info[2];  // The split stuff.  X in slot 0, Y in slot 1.
    uint32_t misc;           // Miscellaneous info, with names like RESULTFLAG__???.
-   uint32_t res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__DID_MXN_EXPANSION bit on.
+   heritflags res_heritflags_to_save_from_mxn_expansion;   // Used if misc has RESULTFLAG__DID_MXN_EXPANSION bit on.
                            // Gets copied to command block for next cycle of sequential call.
 
    inline void clear_split_info()
@@ -1722,8 +1749,12 @@ struct resultflag_rec {
       split_info[1] = temp;
    }
 
-   resultflag_rec() : misc(0), res_heritflags_to_save_from_mxn_expansion(0)
-   { clear_split_info(); }
+   resultflag_rec() : misc(0)
+   { 
+      res_heritflags_to_save_from_mxn_expansion.r = (heritflagsr) 0;
+      res_heritflags_to_save_from_mxn_expansion.l = (heritflagsl) 0;
+      clear_split_info();
+   }
 };
 
 enum { MAX_PEOPLE = 24 };
@@ -2550,11 +2581,16 @@ extern SDLIB_API ui_utils *gg77;                                    /* in SDTOP 
 
 
 extern SDLIB_API call_with_name **tagger_calls[NUM_TAGGER_CLASSES];        /* in SDTOP */
-extern SDLIB_API call_with_name **circcer_calls;                           /* in SDTOP */
-extern SDLIB_API uint32_t number_of_taggers[NUM_TAGGER_CLASSES];           /* in SDTOP */
-extern SDLIB_API uint32_t number_of_taggers_allocated[NUM_TAGGER_CLASSES]; /* in SDTOP */
 extern SDLIB_API uint32_t number_of_circcers;                              /* in SDTOP */
 extern SDLIB_API uint32_t number_of_circcers_allocated;                    /* in SDTOP */
+struct circcer_object {
+   call_with_name *the_circcer;
+   heritflags the_herit_thing;
+   const concept_descriptor *the_concept;
+ };
+extern SDLIB_API circcer_object *circcer_calls;                            /* in SDTOP */
+extern SDLIB_API uint32_t number_of_taggers[NUM_TAGGER_CLASSES];           /* in SDTOP */
+extern SDLIB_API uint32_t number_of_taggers_allocated[NUM_TAGGER_CLASSES]; /* in SDTOP */
 extern SDLIB_API call_conc_option_state current_options;                   /* in SDTOP */
 
 class saved_error_info {
@@ -3527,7 +3563,7 @@ class tglmap {
 };
 
 
-typedef uint32_t id_bit_table[4];
+typedef int id_bit_table[4];
 
 struct ctr_end_mask_rec {
    uint32_t mask_normal;
@@ -3917,7 +3953,8 @@ enum distort_key {
    DISTORTKEY_OFFS_SPL_PHAN_BOX,
    DISTORTKEY_OFFS_QTAG,
    DISTORTKEY_OFFS_TRIPLECLW,
-   DISTORTKEY_OFFS_TRIPLE_BOX
+   DISTORTKEY_OFFS_TRIPLE_BOX,
+   DISTORTKEY_OFFS_PARALLELOGRAM
 };
 
 
@@ -4551,7 +4588,7 @@ enum restriction_test_result {
    restriction_no_item
 };
 
-struct concept_fixer_thing {
+struct concept_fixer_thing_r {
    uint32_t newheritmods;
    uint32_t newfinalmods;
    useful_concept_enum before;
@@ -4710,7 +4747,6 @@ extern const ctr_end_mask_rec masks_for_3dmd_ctr2;                  /* in SDTABL
 extern const ctr_end_mask_rec masks_for_3dmd_ctr4;                  /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_bigh_ctr4;                  /* in SDTABLES */
 extern const ctr_end_mask_rec masks_for_4x4;                        /* in SDTABLES */
-extern int begin_sizes[];                                           /* in SDCOMMON */
 
 extern const coordrec tgl3_0;                                       /* in SDTABLES */
 extern const coordrec tgl3_1;                                       /* in SDTABLES */
@@ -4824,6 +4860,10 @@ enum mpkind {
    MPKIND__OFFS_R_THIRD,
    MPKIND__OFFS_L_HALF,
    MPKIND__OFFS_R_HALF,
+   MPKIND__OFFSPG_L1,
+   MPKIND__OFFSPG_L2,
+   MPKIND__OFFSPG_R1,
+   MPKIND__OFFSPG_R2,
    MPKIND__FUDGYOFFS_L_HALF,
    MPKIND__FUDGYOFFS_R_HALF,
    MPKIND__OVLOFS_L_HALF,
@@ -5105,7 +5145,7 @@ struct clw3_thing {
 
 extern nice_setup_info_item nice_setup_info[];
 
-extern const concept_fixer_thing concept_fixer_table[];
+extern const concept_fixer_thing_r concept_fixer_table_r[];
 
 
 extern const clw3_thing clw3_table[];                               /* in SDTABLES */
@@ -5160,7 +5200,7 @@ struct skipped_concept_info {
    parse_block *m_old_retval;
    parse_block *m_skipped_concept;
    uint32_t m_need_to_restrain;   // 1=(if not doing echo), 2=(yes, always)
-   uint32_t m_heritflag;
+   heritflags m_heritflag;
    parse_block *m_concept_with_root;
    parse_block *m_result_of_skip;
    parse_block **m_root_of_result_of_skip;
@@ -5168,7 +5208,7 @@ struct skipped_concept_info {
 
    skipped_concept_info() : m_nocmd_misc3_bits(0) {}
    skipped_concept_info(parse_block *incoming) THROW_DECL;    // In SDTOP
-   parse_block *get_next() { return (m_heritflag != 0) ? m_concept_with_root : m_result_of_skip; }
+   parse_block *get_next() { return (m_heritflag.r != 0 || m_heritflag.l != 0) ? m_concept_with_root : m_result_of_skip; }
 };
 
 extern bool check_for_concept_group(
@@ -5525,7 +5565,7 @@ public:
       {
          // If doing half of a call, and doing it left,
          // and there is a "collision", make them come to left hands.
-         if (mirror && cmd->cmd_final_flags.test_heritbit(INHERITFLAG_HALF)) {
+         if (mirror && cmd->cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF)) {
             m_force_mirror_warn = false;
             m_doing_half_override = true;
          }
@@ -5597,11 +5637,9 @@ extern void remove_fudgy_2x3_2x6(setup *ss) THROW_DECL;
 
 extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL;
 
-extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check, bool splitting) THROW_DECL;
-
 extern bool divide_for_magic(
    setup *ss,
-   uint32_t heritflags_to_check,
+   heritflags heritflags_to_check,
    setup *result) THROW_DECL;
 
 extern bool do_simple_split(
@@ -5630,7 +5668,7 @@ extern bool get_real_subcall(
    const setup_command *cmd_in,
    const calldefn *parent_call,
    bool forbid_flip,
-   uint32_t extra_heritmask_bits,
+   heritflags extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL;
 
 
@@ -5780,7 +5818,7 @@ extern void tandem_couples_move(
    int fraction_fields,   // number fields, if doing fractional twosome/solid
    int phantom,           // normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3
    tandem_key key,
-   uint32_t mxn_bits,
+   uint32_t mxn_bitsr,    // always grouped on the right side.
    bool phantom_pairing_ok,
    setup *result) THROW_DECL;
 
@@ -6176,6 +6214,7 @@ extern SDLIB_API call_conc_option_state verify_options;             /* in SDTOP 
 extern SDLIB_API bool verify_used_number;                           /* in SDTOP */
 extern SDLIB_API bool verify_used_direction;                        /* in SDTOP */
 extern SDLIB_API bool verify_used_selector;                         /* in SDTOP */
+extern SDLIB_API heritflagsl simple_herit_leftbits_table[];         /* in SDTOP */
 
 
 struct comment_block {

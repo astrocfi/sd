@@ -145,7 +145,7 @@ extern void general_initialize()
    // on a multiprocessor, by giving them slightly
    // different timeouts.
    unsigned int seed = (ui_options.resolve_test_random_seed != 0) ?
-      ui_options.resolve_test_random_seed : time((time_t *)0);
+      ui_options.resolve_test_random_seed : (uint32_t) time((time_t *)0);
    srand(seed);
 }
 

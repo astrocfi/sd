@@ -578,7 +578,7 @@ extern void repair_fudgy_2x3_2x6(setup *ss) THROW_DECL
 }
 
 
-extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check) THROW_DECL
+static bool do_1x3_type_expansion(setup *ss, heritflags heritflags_to_check) THROW_DECL
 {
    struct Nx1_checker {
       uint32_t directions;
@@ -716,8 +716,8 @@ extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check) THROW
 
    big_endian_get_directions(ss, directions, dblbitlivemask);
 
-   if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-       heritflags_to_check == INHERITFLAGMXNK_1X3) {
+   if (heritflags_to_check.r == INHERITFLAGRMXNK_3X1 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_1X3) {
       if (ss->kind == s2x4) {
          getin_search = Nx1_checktable_2x4;
          goto do_Nx1_search;
@@ -756,8 +756,8 @@ extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check) THROW
          if (dblbitlivemask == 0x33F || dblbitlivemask == 0xFCC) return true;
       }
    }
-   else if (heritflags_to_check == INHERITFLAGMXNK_2X1 ||
-            heritflags_to_check == INHERITFLAGMXNK_1X2) {
+   else if (heritflags_to_check.r == INHERITFLAGRMXNK_2X1 ||
+            heritflags_to_check.r == INHERITFLAGRMXNK_1X2) {
       if (ss->kind == s2x3) {
          getin_search = Nx1_checktable_2x3;
          goto do_Nx1_search;
@@ -785,15 +785,15 @@ extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check) THROW
          }
       }
    }
-   else if (heritflags_to_check == INHERITFLAGMXNK_4X0 ||
-            heritflags_to_check == INHERITFLAGMXNK_0X4) {
+   else if (heritflags_to_check.r == INHERITFLAGRMXNK_4X0 ||
+            heritflags_to_check.r == INHERITFLAGRMXNK_0X4) {
       if (ss->kind == s2x4) {
          getin_search = Nx0_checktable_2x4;
          goto do_Nx1_search;
       }
    }
-   else if (heritflags_to_check == INHERITFLAGMXNK_3X0 ||
-            heritflags_to_check == INHERITFLAGMXNK_0X3) {
+   else if (heritflags_to_check.r == INHERITFLAGRMXNK_3X0 ||
+            heritflags_to_check.r == INHERITFLAGRMXNK_0X3) {
       if (ss->kind == s2x3) {
          getin_search = Nx0_checktable_2x3;
          goto do_Nx1_search;
@@ -826,10 +826,10 @@ extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check) THROW
             // This is a high quality map.  It can tell what to do without requiring lots of people.
             if (highquality) return false;    // If high quality maps are ambiguous, we lose.
             bool NX1 =
-               heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-               heritflags_to_check == INHERITFLAGMXNK_4X0 ||
-               heritflags_to_check == INHERITFLAGMXNK_3X0 ||
-               heritflags_to_check == INHERITFLAGMXNK_2X1;
+               heritflags_to_check.r == INHERITFLAGRMXNK_3X1 ||
+               heritflags_to_check.r == INHERITFLAGRMXNK_4X0 ||
+               heritflags_to_check.r == INHERITFLAGRMXNK_3X0 ||
+               heritflags_to_check.r == INHERITFLAGRMXNK_2X1;
             if ((ss->cmd.cmd_misc_flags & CMD_MISC__DID_LEFT_MIRROR) != 0)
                NX1 = !NX1;
             highquality = NX1 ? getin_search->action_if_Nx1 : getin_search->action_if_1xN;
@@ -860,20 +860,20 @@ extern bool do_1x3_type_expansion(setup *ss, uint32_t heritflags_to_check) THROW
 
 extern bool divide_for_magic(
    setup *ss,
-   uint32_t heritflags_to_check,
+   heritflags heritflags_to_check,
    setup *result) THROW_DECL
 {
    warning_info saved_warnings;
    uint32_t division_code;
 
-   uint32_t heritflags_to_use = ss->cmd.cmd_final_flags.herit;
+   heritflags heritflags_to_use = ss->cmd.cmd_final_flags.herit;
 
    // If "magic" was specified, we have to be sure the level is
    // high enough (e.g. C3B).  At C1, only real magic columns,
    // and whatever calls have something explicit in the database,
    // are permitted.
 
-   if (heritflags_to_check & INHERITFLAG_MAGIC) {
+   if (heritflags_to_check.r & INHERITFLAGR_MAGIC) {
       bool booljunk;
       assumption_thing tt;
 
@@ -891,13 +891,13 @@ extern bool divide_for_magic(
 
    switch (ss->kind) {
    case s2x4:
-      if (heritflags_to_check == INHERITFLAG_MAGIC) {
+      if (heritflags_to_check.r == INHERITFLAGR_MAGIC) {
          // "Magic" was specified.  Split it into 1x4's
          // in the appropriate magical way.
          division_code = MAPCODE(s1x4,2,MPKIND__MAGIC,1);
          goto divide_us;
       }
-      else if ((heritflags_to_check & INHERITFLAG_INTLK) != 0 &&
+      else if ((heritflags_to_check.r & INHERITFLAGR_INTLK) != 0 &&
                (ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1) == 0) {
          // User must actually want diamonds, only the points are present, and some code
          // thought the right thing was to turn it into a 2x4.
@@ -913,20 +913,20 @@ extern bool divide_for_magic(
       // and the concept name needs to be changed.
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__NEED_DIAMOND;
 
-      if (heritflags_to_check == INHERITFLAG_MAGIC) {
+      if (heritflags_to_check.r == INHERITFLAGR_MAGIC) {
          division_code = MAPCODE(sdmd,2,MPKIND__MAGIC,1);
          goto divide_us;
       }
-      else if (heritflags_to_check == INHERITFLAG_INTLK) {
+      else if (heritflags_to_check.r == INHERITFLAGR_INTLK) {
          division_code = MAPCODE(sdmd,2,MPKIND__INTLKDMD,1);
          goto divide_us;
       }
-      else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
+      else if (heritflags_to_check.r == (INHERITFLAGR_MAGIC | INHERITFLAGR_INTLK)) {
          division_code = MAPCODE(sdmd,2,MPKIND__MAGICINTLKDMD,1);
          goto divide_us;
       }
-      else if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-               heritflags_to_check == INHERITFLAGMXNK_1X3) {
+      else if (heritflags_to_check.r == INHERITFLAGRMXNK_3X1 ||
+               heritflags_to_check.r == INHERITFLAGRMXNK_1X3) {
          expand::expand_setup(s_qtg_3x4, ss);
          goto do_3x3;
       }
@@ -934,15 +934,15 @@ extern bool divide_for_magic(
    case s_ptpd:
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__NEED_DIAMOND;
 
-      if (heritflags_to_check == INHERITFLAG_MAGIC) {
+      if (heritflags_to_check.r == INHERITFLAGR_MAGIC) {
          division_code = spcmap_ptp_magic;
          goto divide_us;
       }
-      else if (heritflags_to_check == INHERITFLAG_INTLK) {
+      else if (heritflags_to_check.r == INHERITFLAGR_INTLK) {
          division_code = spcmap_ptp_intlk;
          goto divide_us;
       }
-      else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
+      else if (heritflags_to_check.r == (INHERITFLAGR_MAGIC | INHERITFLAGR_INTLK)) {
          division_code = spcmap_ptp_magic_intlk;
          goto divide_us;
       }
@@ -951,17 +951,18 @@ extern bool divide_for_magic(
 
    // Now check for 1x3 types of stuff.
 
-   if (heritflags_to_check == INHERITFLAGMXNK_3X1 ||
-       heritflags_to_check == INHERITFLAGMXNK_1X3 ||
-       heritflags_to_check == INHERITFLAGMXNK_3X0 ||
-       heritflags_to_check == INHERITFLAGMXNK_0X3 ||
-       heritflags_to_check == INHERITFLAGMXNK_4X0 ||
-       heritflags_to_check == INHERITFLAGMXNK_0X4 ||
-       heritflags_to_check == INHERITFLAGMXNK_2X1 ||
-       heritflags_to_check == INHERITFLAGMXNK_1X2) {
+   if (heritflags_to_check.r == INHERITFLAGRMXNK_3X1 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_1X3 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_3X0 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_0X3 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_4X0 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_0X4 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_2X1 ||
+       heritflags_to_check.r == INHERITFLAGRMXNK_1X2) {
 
       // If we have already expanded, don't do it again.
-      if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion != heritflags_to_check) {
+      if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.r != heritflags_to_check.r ||
+          ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.l != heritflags_to_check.l) {
          if (do_1x3_type_expansion(ss, heritflags_to_check))
             goto do_3x3;
       }
@@ -974,26 +975,30 @@ extern bool divide_for_magic(
 
  divide_us:
 
-   ss->cmd.cmd_final_flags.herit = (heritflags) (heritflags_to_use & ~heritflags_to_check);
+   ss->cmd.cmd_final_flags.herit.initialize_rl(heritflags_to_use.r & ~heritflags_to_check.r,
+                                               heritflags_to_use.l & ~heritflags_to_check.l);
    divided_setup_move(ss, division_code, phantest_ok, true, result);
    return true;
 
  do_3x3:
 
-   bool sixteen = (heritflags_to_use == INHERITFLAGMXNK_0X4 || heritflags_to_use == INHERITFLAGMXNK_4X0);
+   bool sixteen = (heritflags_to_use.l == 0 &&
+                   (heritflags_to_use.r == INHERITFLAGRMXNK_0X4 || heritflags_to_use.r == INHERITFLAGRMXNK_4X0));
 
-   ss->cmd.cmd_final_flags.herit = (heritflags)
-      ((heritflags_to_use & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) |
-       (sixteen ? INHERITFLAGNXNK_4X4 : INHERITFLAGNXNK_3X3));
+   ss->cmd.cmd_final_flags.herit.r = (heritflagsr)
+      ((heritflags_to_use.r & ~(INHERITFLAGR_MXNMASK|INHERITFLAGR_NXNMASK)) |
+       (sixteen ? INHERITFLAGRNXNK_4X4 : INHERITFLAGRNXNK_3X3));
+   ss->cmd.cmd_final_flags.herit.l = heritflags_to_use.l;
 
    if (attr::slimit(ss) > 7)
-      ss->cmd.cmd_final_flags.set_heritbit(sixteen ? INHERITFLAG_16_MATRIX : INHERITFLAG_12_MATRIX);
+      ss->cmd.cmd_final_flags.set_heritbits_r(sixteen ? INHERITFLAGR_16_MATRIX : INHERITFLAGR_12_MATRIX);
 
    saved_warnings = configuration::save_warnings();
    impose_assumption_and_move(ss, result);
    result->result_flags.misc |= RESULTFLAG__DID_MXN_EXPANSION;
-   result->result_flags.res_heritflags_to_save_from_mxn_expansion =
-      heritflags_to_use & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK);
+
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion.initialize_rl(
+      heritflags_to_use.r & (INHERITFLAGR_MXNMASK|INHERITFLAGR_NXNMASK), heritflags_to_use.l);
 
    // Shut off "each 2x3" types of warnings -- they will arise spuriously
    // while the people do the calls in isolation.
@@ -1048,10 +1053,11 @@ extern bool do_simple_split(
          break;
       }
       else if (split_command == split_command_1x4) {
-         if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_3X1 ||
-             ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_1X3 ||
-             ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_2X1 ||
-             ss->cmd.cmd_heritflags_to_save_from_mxn_expansion == INHERITFLAGMXNK_1X2) {
+         if (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.l == 0 &&
+             (ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.r == INHERITFLAGRMXNK_3X1 ||
+              ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.r == INHERITFLAGRMXNK_1X3 ||
+              ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.r == INHERITFLAGRMXNK_2X1 ||
+              ss->cmd.cmd_heritflags_to_save_from_mxn_expansion.r == INHERITFLAGRMXNK_1X2)) {
             mapcode = MAPCODE(s1x6,2,MPKIND__SPLIT,1);
             break;
          }
@@ -1874,6 +1880,9 @@ static const int8_t qtagto3x4correction[] =
 {4, 5, 9, 5,     -4, -5, -9, -5,    -3, 5, -9, 5,    3, -5, 9, -5,
  6, -4, 9, -5,   -6, 4, -9, 5,      6, 4, 9, 5,      -6, -4, -9, -5, 127};
 
+static const int8_t s3x6correction[] =
+{2, 5, 2, 4,     -2, 5, -2, 4,      2, -5, 2, -4,    -2, -5, -2, -4, 127};
+
 static const coordrec qtagto4x5 = {s4x5, 0x123,
    { -8,  -4,   0,   4,   8,   8,   5,   0,  -5,  -8,   8,   4,   0,  -4,  -8,  -8,  -5,   0,   5,   8},
    {  6,   9,   6,   9,   6,   2,   4,   2,   5,   2,  -6,  -9,  -6,  -9,  -6,  -2,  -4,  -2,  -5,  -2}};
@@ -2072,6 +2081,9 @@ static const checkitem checktable[] = {
 
    {0x00A200A2, 0x101CC4E6, s_bigblob, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
    {0x00770055, 0x01400420, s_2stars, 0, warn__none, (const coordrec *) 0, (const int8_t *) 0},
+
+   {0x00A20055, 0x09000401, s3x6, 0x200, warn__none, (const coordrec *) 0, s3x6correction},
+   {0x00A20055, 0x09020400, s3x6, 0x200, warn__none, (const coordrec *) 0, s3x6correction},
 
    // Inner wing did a tow-truck-like operation from a rigger.  Fudge to a 1/4 tag.
    // This is serious fudging, and marked as such with the "0x100".
@@ -3836,14 +3848,13 @@ static void rollmove(
 }
 
 
-static uint32_t fix_gensting_weirdness(const setup_command *cmd, uint32_t callflagsh)
+static void fix_gensting_weirdness(const setup_command *cmd, heritflags & callflagsh)
 {
-   if (cmd->cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK) == INHERITFLAG_YOYOETCK_STINGY) {
+   if (cmd->cmd_final_flags.test_heritbits_r(INHERITFLAGR_YOYOETCMASK) == INHERITFLAGR_YOYOETCK_STINGY) {
       // User gave "stingy".  Because we are cheating with these bits, special action is needed.
-      if (callflagsh & INHERITFLAG_YOYOETCK_GENEROUS)
-         callflagsh |= INHERITFLAG_YOYOETCK_STINGY;
+      if (callflagsh.bool_test_any_bit_rl(INHERITFLAGR_YOYOETCK_GENEROUS, 0))
+         callflagsh.set_bits_rl(INHERITFLAGR_YOYOETCK_STINGY, 0);
    }
-   return callflagsh;
 }
 
 
@@ -3851,7 +3862,7 @@ static uint32_t fix_gensting_weirdness(const setup_command *cmd, uint32_t callfl
 static void do_inheritance(setup_command *cmd,
                            const calldefn *parent_call,
                            const by_def_item *defptr,
-                           uint32_t extra_heritmask_bits) THROW_DECL
+                           heritflags extra_heritmask_bits) THROW_DECL
 {
    // Strip out those concepts that do not have the "dfm__xxx" flag set saying that
    // they are to be inherited to this part of the call.  BUT: the "INHERITFLAG_LEFT"
@@ -3864,13 +3875,15 @@ static void do_inheritance(setup_command *cmd,
    // This is what turns, for example, part 3 of "*REVERSE* clean sweep" into a "*LEFT*
    // 1/2 tag".
 
-   uint32_t callflagsh = parent_call->callflagsh;
-   uint32_t temp_concepts = cmd->cmd_final_flags.herit;
-   uint32_t forcing_concepts = defptr->modifiersh & ~callflagsh;
+   heritflags callflagsh;
+   callflagsh = parent_call->callflagsherit;
+   heritflags temp_concepts = cmd->cmd_final_flags.herit;
+   heritflags forcing_concepts = defptr->modifiersh;
+   forcing_concepts.initialize_rl(forcing_concepts.r & ~callflagsh.r, forcing_concepts.l & ~callflagsh.l);
 
-   if (forcing_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
-      if (cmd->cmd_final_flags.test_heritbits(INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
-         temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+   if (forcing_concepts.bool_test_any_bit_rl(INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT, 0)) {
+      if (cmd->cmd_final_flags.test_heritbits_r(INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT))
+         temp_concepts.r = (heritflagsr) (temp_concepts.r | (INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT));
    }
 
    // Pass any "inherit" flags.  That is, turn off any that are NOT to be inherited.
@@ -3879,24 +3892,31 @@ static void do_inheritance(setup_command *cmd,
    // immediately below.
 
    // Fix special case of yoyo/generous/stingy.  HALF and LASTHALF are always considered to be heritable.
-   uint32_t hhhh = fix_gensting_weirdness(cmd, defptr->modifiersh | INHERITFLAG_HALF |
-                                        INHERITFLAG_LASTHALF | INHERITFLAG_QUARTER);
+   heritflags hhhh = defptr->modifiersh;
+   hhhh.r = (heritflagsr) (hhhh.r | (INHERITFLAGR_HALF | INHERITFLAGR_LASTHALF | INHERITFLAGR_QUARTER));
+   fix_gensting_weirdness(cmd, hhhh);
 
-   temp_concepts &= (~cmd->cmd_final_flags.herit | hhhh | extra_heritmask_bits);
+   temp_concepts.initialize_rl(temp_concepts.r & (~cmd->cmd_final_flags.herit.r | hhhh.r | extra_heritmask_bits.r),
+                               temp_concepts.l & (~cmd->cmd_final_flags.herit.l | hhhh.l | extra_heritmask_bits.l));
 
    // Now turn on any "force" flags.  These are indicated by "modifiersh" on
    // and "callflagsh" off.
 
-   if (temp_concepts & defptr->modifiersh & ~callflagsh & (INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_QUARTER))
+   if (temp_concepts.r & defptr->modifiersh.r &
+       ~callflagsh.r & (INHERITFLAGR_HALF | INHERITFLAGR_LASTHALF | INHERITFLAGR_QUARTER))
       fail("Can't do this with this fraction.");   // "force_half" was used when we already had "half" coming in.
 
-   if (((INHERITFLAG_REVERSE | INHERITFLAG_LEFT) & callflagsh) == 0)
+   if (((INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT) & callflagsh.r) == 0) {
       // If neither of the "reverse_means_mirror" or "left_means_mirror" bits is on,
       // we allow forcing of left or reverse.
-      temp_concepts |= forcing_concepts;
-   else
+      temp_concepts.set_bits_rl(forcing_concepts.r, forcing_concepts.l);
+   }
+   else {
       // Otherwise, we only allow the other bits.
-      temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
+      temp_concepts.r = (heritflagsr) (temp_concepts.r |
+                                       (forcing_concepts.r & ~(INHERITFLAGR_REVERSE | INHERITFLAGR_LEFT)));
+      temp_concepts.l = (heritflagsl) (temp_concepts.l | forcing_concepts.l);
+   }
 
    cmd->cmd_final_flags.herit = (heritflags) temp_concepts;
    cmd->callspec = base_calls[defptr->call_id];
@@ -3928,7 +3948,7 @@ extern bool get_real_subcall(
    const setup_command *cmd_in,
    const calldefn *parent_call,
    bool forbid_flip,
-   uint32_t extra_heritmask_bits,
+   heritflags extra_heritmask_bits,
    setup_command *cmd_out) THROW_DECL   // We fill in just the parseptr, callspec, cmd_final_flags fields.
 {
    parse_block *search;
@@ -3944,7 +3964,7 @@ extern bool get_real_subcall(
       item_id >= base_call_tagger0 && item_id < base_call_tagger0+NUM_TAGGER_CLASSES;
    bool this_is_tagger_circcer = this_is_tagger || item_id == base_call_circcer;
 
-   if (!(new_final_concepts.test_heritbit(INHERITFLAG_FRACTAL)))
+   if (!(new_final_concepts.test_heritbit_r(INHERITFLAGR_FRACTAL)))
       mods1 &= ~DFM1_FRACTAL_INSERT;
 
    // Fill in defaults in case we choose not to get a replacement call.
@@ -4062,7 +4082,7 @@ extern bool get_real_subcall(
                if (snumber == (DFM1_CALL_MOD_MAND_ANYCALL/DFM1_CALL_MOD_BIT) ||
                    snumber == (DFM1_CALL_MOD_MAND_SECONDARY/DFM1_CALL_MOD_BIT)) {
                   if (search->concept->kind == concept_supercall) {
-                     cmd_out->cmd_final_flags.herit = (heritflags) cmd_in->restrained_super8flags;
+                     cmd_out->cmd_final_flags.herit = cmd_in->restrained_super8flags;
                      cmd_out->cmd_misc2_flags &= ~CMD_MISC2_RESTRAINED_SUPER;
                   }
                }
@@ -4986,7 +5006,8 @@ int try_to_get_parts_from_parse_pointer(setup const *ss, parse_block const *pp) 
          CMD_MISC2__INVERT_MYSTIC | CMD_MISC2__CTR_END_MASK)) ||
        (!pp || pp->concept->kind != marker_end_of_list) ||
        (pp->call->the_defn.schema != schema_sequential) ||
-       (ss->cmd.cmd_final_flags.herit & (INHERITFLAG_HALF | INHERITFLAG_REWIND | INHERITFLAG_LASTHALF | INHERITFLAG_QUARTER)))
+       (ss->cmd.cmd_final_flags.herit.r & (INHERITFLAGR_HALF | INHERITFLAGR_REWIND |
+                                           INHERITFLAGR_LASTHALF | INHERITFLAGR_QUARTER)))
       return -1;
    return pp->call->the_defn.stuff.seq.howmanyparts;
 }
@@ -5191,7 +5212,9 @@ static void do_stuff_inside_sequential_call(
    // dancers really do track an awareness of the formation.
 
    if (result->cmd.cmd_fraction.is_null()) {
-      if (!(result->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_QUARTER))) {
+      if (!(result->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_HALF |
+                                                         INHERITFLAGR_LASTHALF |
+                                                         INHERITFLAGR_QUARTER))) {
          if (result->cmd.callspec == base_calls[base_call_chreact_1]) {
 
             /* If we are starting a chain reaction, and the assumption was some form
@@ -5226,7 +5249,7 @@ static void do_stuff_inside_sequential_call(
          }
          else if (result->cmd.callspec == base_calls[base_call_scoottowave]) {
             if (result->kind == s2x4 &&
-                !result->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
+                !result->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_YOYOETCMASK)) {
                if ((result->people[0].id1 & d_mask) == d_north ||
                    (result->people[1].id1 & d_mask) == d_south ||
                    (result->people[2].id1 & d_mask) == d_north ||
@@ -5294,7 +5317,7 @@ static void do_stuff_inside_sequential_call(
          }
          else if ((result->cmd.callspec == base_calls[base_call_slither] ||
                    (result->cmd.callspec == base_calls[base_call_maybegrandslither] &&
-                    !result->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_GRAND))) &&
+                    !result->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_GRAND))) &&
                   old_assump_col == 0 &&
                   old_assump_both == 0) {
             switch (old_assumption) {
@@ -5381,7 +5404,7 @@ static void do_stuff_inside_sequential_call(
             *fix_next_assump_both_p = old_assump_both;
          }
       }
-      else if ((result->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_HALF))) {
+      else if ((result->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_HALF))) {
          if (result->cmd.callspec == base_calls[base_call_circulate]) {
             // If we are doing a 1/2 circulate in a 2x2 that assumes lines facing in or out,
             // result is a wave.
@@ -5410,7 +5433,7 @@ static void do_stuff_inside_sequential_call(
                      result,
                      reverse_order,
                      ((cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX) == 0 &&
-                      (new_final_concepts.test_heritbits(INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX)) == 0 &&
+                      (new_final_concepts.test_heritbits_r(INHERITFLAGR_12_MATRIX|INHERITFLAGR_16_MATRIX)) == 0 &&
                       (recompute_id || (this_mod1 & DFM1_SEQ_NORMALIZE) != 0)),
                      qtfudged);
 
@@ -5431,24 +5454,24 @@ static void do_sequential_call(
    const calldefn *callspec,
    bool qtfudged,
    bool *mirror_p,
-   uint32_t extra_heritmask_bits,
+   heritflags extra_heritmask_bits,
    setup *result) THROW_DECL
 {
    // We prefer fraction information in the fraction field rather than the herit bits.
    // (Under certain circumstances if might get changed back later.)
-   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_HALF)) {
+   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_HALF)) {
       ss->cmd.cmd_fraction.set_to_firsthalf_with_flags(0);
-      ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_HALF);
+      ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_HALF);
    }
 
-   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_QUARTER)) {
+   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_QUARTER)) {
       ss->cmd.cmd_fraction.set_to_firstquarter_with_flags(0);
-      ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_QUARTER);
+      ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_QUARTER);
    }
 
-   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LASTHALF)) {
+   if (ss->cmd.cmd_fraction.is_null() && ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_LASTHALF)) {
       ss->cmd.cmd_fraction.set_to_lasthalf_with_flags(0);
-      ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_LASTHALF);
+      ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_LASTHALF);
    }
 
    bool forbid_flip = ss->cmd.callspec == base_calls[base_call_basetag0_noflip];
@@ -5477,10 +5500,10 @@ static void do_sequential_call(
 
    fraction_command saved_fracs = ss->cmd.cmd_fraction;
    bool feeding_fractions_through =
-      (callspec->callflagsh & (INHERITFLAG_HALF|INHERITFLAG_QUARTER|INHERITFLAG_LASTHALF)) != 0;
+      (callspec->callflagsherit.r & (INHERITFLAGR_HALF|INHERITFLAGR_QUARTER|INHERITFLAGR_LASTHALF)) != 0;
 
    // If rewinding, do the parts in reverse order.
-   if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REWIND)) {
+   if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_REWIND)) {
       ss->cmd.cmd_fraction.flags ^= CMD_FRAC_REVERSE;
       ss->cmd.cmd_fraction.flags |= CMD_FRAC_FORCE_VIS;
    }
@@ -5565,7 +5588,7 @@ static void do_sequential_call(
       // are referring to.
       ss->cmd.cmd_misc_flags &= ~DFM1_CONCENTRICITY_FLAG_MASK;
 
-      uint32_t revertflags = ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERTMASK);
+      uint32_t revertflags_r = ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_REVERTMASK);
 
       // Watch for "revert flip the line 1/2" stuff.
       // We look for a 3 part call, with fractions not visible, whose
@@ -5583,8 +5606,8 @@ static void do_sequential_call(
       uint32_t visibility_info = (callflags1 & CFLAG1_VISIBLE_FRACTION_MASK) / CFLAG1_VISIBLE_FRACTION_BIT;
 
       if (zzz.m_client_total == 3 &&    // Sorry, can't do tag the star.
-          (revertflags == INHERITFLAGRVRTK_REVERT ||
-           revertflags == INHERITFLAGRVRTK_REFLECT) &&
+          (revertflags_r == INHERITFLAGRRVRTK_REVERT ||
+           revertflags_r == INHERITFLAGRRVRTK_REFLECT) &&
           (callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_BIT &&
           current_options.howmanynumbers == 1 &&
           current_options.number_fields == 2 &&
@@ -5597,8 +5620,8 @@ static void do_sequential_call(
       }
       else if ((callspec->stuff.seq.defarray[0].call_id == base_call_basetag0 ||
                 callspec->stuff.seq.defarray[0].call_id == base_call_basetag0_noflip) &&
-          (revertflags == INHERITFLAGRVRTK_REVERT ||
-           revertflags == INHERITFLAGRVRTK_REFLECT)) {
+          (revertflags_r == INHERITFLAGRRVRTK_REVERT ||
+           revertflags_r == INHERITFLAGRRVRTK_REFLECT)) {
          // Treat it as though it had an extra part
          zzz.m_client_total++;
 
@@ -5668,7 +5691,7 @@ static void do_sequential_call(
        !(ss->cmd.restrained_concept &&
          (ss->cmd.cmd_misc3_flags & CMD_MISC3__SUPERCALL))) {
 
-      if (new_final_concepts.test_heritbit(INHERITFLAG_LEFT)) {
+      if (new_final_concepts.test_heritbit_r(INHERITFLAGR_LEFT)) {
          if (!*mirror_p) mirror_this(ss);
          *mirror_p = true;
       }
@@ -5720,7 +5743,8 @@ static void do_sequential_call(
       bool recompute_id = false;
       uint32_t saved_number_fields = current_options.number_fields;
       int saved_num_numbers = current_options.howmanynumbers;
-      uint32_t herit_bits_to_clear = 0;
+      heritflags herit_bits_to_clear;
+      herit_bits_to_clear.initialize_rl(0, 0);
 
       /* Now the "index" values (zzz.m_fetch_index and zzz.m_client_index) contain the
          number of parts we have completed.  That is, they point (in 0-based
@@ -5834,7 +5858,7 @@ static void do_sequential_call(
 
       // If this subcall invocation involves inserting or shifting the numbers, do so.
 
-      if (!(new_final_concepts.test_heritbit(INHERITFLAG_FRACTAL)))
+      if (!(new_final_concepts.test_heritbit_r(INHERITFLAGR_FRACTAL)))
          this_mod1 &= ~DFM1_FRACTAL_INSERT;
 
       process_number_insertion(this_mod1);
@@ -5865,12 +5889,12 @@ static void do_sequential_call(
              zzz.m_fetch_index+zzz.m_subcall_incr == zzz.m_highlimit) {
             just_use_half_of_count = true;
          }
-         else if (new_final_concepts.test_heritbit(INHERITFLAG_HALF)) {
-            herit_bits_to_clear = INHERITFLAG_HALF;
+         else if (new_final_concepts.test_heritbit_r(INHERITFLAGR_HALF)) {
+            herit_bits_to_clear.r = INHERITFLAGR_HALF;
             just_use_half_of_count = true;
          }
-         else if (new_final_concepts.test_heritbit(INHERITFLAG_LASTHALF)) {
-            herit_bits_to_clear = INHERITFLAG_LASTHALF;
+         else if (new_final_concepts.test_heritbit_r(INHERITFLAGR_LASTHALF)) {
+            herit_bits_to_clear.r = INHERITFLAGR_LASTHALF;
             just_use_half_of_count = true;
          }
 
@@ -5908,7 +5932,7 @@ static void do_sequential_call(
 
       {
          uint32_t remember_expire = result->cmd.prior_expire_bits;
-         uint32_t remember_save_3x1_herit = result->cmd.cmd_heritflags_to_save_from_mxn_expansion;
+         heritflags remember_save_3x1_herit = result->cmd.cmd_heritflags_to_save_from_mxn_expansion;
          result->cmd = ss->cmd;
          result->cmd.prior_expire_bits = remember_expire;
          result->cmd.cmd_heritflags_to_save_from_mxn_expansion = remember_save_3x1_herit;
@@ -5929,7 +5953,7 @@ static void do_sequential_call(
       // If we are feeding fractions through, either "inherit_half" or "inherit_lasthalf"
       // causes the fraction info to be fed to this subcall.
       if (feeding_fractions_through) {
-         if (this_item->modifiersh & (INHERITFLAG_HALF|INHERITFLAG_LASTHALF))
+         if (this_item->modifiersh.r & (INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF))
             result->cmd.cmd_fraction = saved_fracs;
          else
             result->cmd.cmd_fraction.set_to_null();
@@ -5960,15 +5984,17 @@ static void do_sequential_call(
       result->cmd.parseptr = fooptr->parseptr;
       result->cmd.callspec = fooptr->callspec;
       result->cmd.cmd_final_flags = fooptr->cmd_final_flags;
-      result->cmd.cmd_final_flags.clear_heritbits(herit_bits_to_clear);
+      result->cmd.cmd_final_flags.clear_heritbits_r(herit_bits_to_clear.r);
+      result->cmd.cmd_final_flags.clear_heritbits_l(herit_bits_to_clear.l);
 
-      if (result->cmd.cmd_heritflags_to_save_from_mxn_expansion != 0 &&
-          result->cmd.cmd_heritflags_to_save_from_mxn_expansion ==
-          (((uint32_t) result->cmd.cmd_final_flags.herit) & (INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK))) {
+      if (result->cmd.cmd_heritflags_to_save_from_mxn_expansion.r != 0 &&
+          result->cmd.cmd_heritflags_to_save_from_mxn_expansion.r ==
+          (heritflagsr) ((result->cmd.cmd_final_flags.herit.r) & (INHERITFLAGR_MXNMASK|INHERITFLAGR_NXNMASK))) {
 
-         result->cmd.cmd_final_flags.herit = (heritflags)
-            ((result->cmd.cmd_final_flags.herit & ~(INHERITFLAG_MXNMASK|INHERITFLAG_NXNMASK)) |
-             (INHERITFLAGNXNK_3X3|INHERITFLAG_12_MATRIX));
+         result->cmd.cmd_final_flags.herit.r = (heritflagsr)
+            ((result->cmd.cmd_final_flags.herit.r & ~(INHERITFLAGR_MXNMASK|INHERITFLAGR_NXNMASK)) |
+             (INHERITFLAGRNXNK_3X3|INHERITFLAGR_12_MATRIX));
+         result->cmd.cmd_final_flags.herit.l = (heritflagsl) 0;
       }
 
       do_stuff_inside_sequential_call(
@@ -6001,7 +6027,7 @@ static void do_sequential_call(
 
       ss->cmd.cmd_misc_flags |= result->cmd.cmd_misc_flags & ~DFM1_CONCENTRICITY_FLAG_MASK;
 
-      if (DFM1_SEQ_REENABLE_ELONG_CHK & this_mod1)
+      if (this_mod1 & DFM1_SEQ_REENABLE_ELONG_CHK)
          ss->cmd.cmd_misc_flags &= ~CMD_MISC__NO_CHK_ELONG;
 
       current_options.number_fields = saved_number_fields;
@@ -6021,6 +6047,17 @@ static void do_sequential_call(
       if (zzz.query_instant_stop(result->result_flags.misc)) break;
 
    go_to_next_cycle:
+
+      // Are we someplace where absolute location bits are known?  That is, are we not
+      // under some other operation that could get the bits wrong?  If so, clear those
+      // bits and put in new ones.  Just sample one person.
+
+      if ((this_mod1 & DFM1_SEQ_NO_RE_EVALUATE) == 0 &&
+          attr::slimit(result) >= 0 &&
+          (result->people[0].id3 & ID3_ABSOLUTE_PROXIMITY_BITS) != 0) {
+         clear_absolute_proximity_and_facing_bits(result);
+         put_in_absolute_proximity_and_facing_bits(result);
+      }
 
       // Increment for next cycle.
       fetching_remainder_for_this_cycle = true;
@@ -6055,6 +6092,8 @@ static bool do_misc_schema(
 
    who_list sel;
    sel.initialize();
+   heritflags zeroherit;
+   zeroherit.initialize_rl(0, 0);
 
    // Must be some form of concentric, or a "sel_XXX" schema.
 
@@ -6064,10 +6103,10 @@ static bool do_misc_schema(
    }
 
    get_real_subcall(parseptr, innerdef,
-                    &ss->cmd, callspec, false, 0, foo1p);
+                    &ss->cmd, callspec, false, zeroherit, foo1p);
 
    get_real_subcall(parseptr, outerdef,
-                    &ss->cmd, callspec, false, 0, &foo2);
+                    &ss->cmd, callspec, false, zeroherit, &foo2);
 
    foo1p->cmd_fraction = ss->cmd.cmd_fraction;
    anycall_promote_restrained_fraction(innerdef, foo1p);
@@ -6361,7 +6400,7 @@ static bool do_misc_schema(
          }
          break;
       case schema_3x3_concentric:
-         if (!(ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_12_MATRIX)) &&
+         if (!(ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_12_MATRIX)) &&
              !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))
             fail("You must specify a matrix.");
 
@@ -6373,7 +6412,7 @@ static bool do_misc_schema(
          break;
       case schema_4x4_lines_concentric:
       case schema_4x4_cols_concentric:
-         if (!(ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_16_MATRIX)) &&
+         if (!(ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_16_MATRIX)) &&
              !(ss->cmd.cmd_misc_flags & CMD_MISC__EXPLICIT_MATRIX))
             fail("You must specify a matrix.");
 
@@ -6412,7 +6451,7 @@ static bool do_misc_schema(
 
 
 static calldef_schema get_real_callspec_and_schema(setup *ss,
-   uint32_t herit_concepts,
+   heritflags herit_concepts,
    calldef_schema the_schema) THROW_DECL
 {
    // Check for a schema that we weren't sure about,
@@ -6420,52 +6459,52 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
 
    switch (the_schema) {
    case schema_maybe_single_concentric:
-      return (herit_concepts & INHERITFLAG_SINGLE) ?
+      return (herit_concepts.r & INHERITFLAGR_SINGLE) ?
          schema_single_concentric : schema_concentric;
    case schema_maybe_single_cross_concentric:
-      return (herit_concepts & INHERITFLAG_SINGLE) ?
+      return (herit_concepts.r & INHERITFLAGR_SINGLE) ?
          schema_single_cross_concentric : schema_cross_concentric;
    case schema_maybe_6x2_single_conc_together:
-      return (herit_concepts & INHERITFLAG_GRAND) ?
+      return (herit_concepts.r & INHERITFLAGR_GRAND) ?
          schema_concentric_6_2 : schema_single_concentric_together;
    case schema_maybe_grand_single_concentric:
-      if (herit_concepts & INHERITFLAG_GRAND) {
-         if (herit_concepts & INHERITFLAG_SINGLE)
+      if (herit_concepts.r & INHERITFLAGR_GRAND) {
+         if (herit_concepts.r & INHERITFLAGR_SINGLE)
             return schema_grand_single_concentric;
          else
             fail("You must not use \"grand\" without \"single\".");
       }
       else {
-         return (herit_concepts & INHERITFLAG_SINGLE) ?
+         return (herit_concepts.r & INHERITFLAGR_SINGLE) ?
             schema_single_concentric : schema_concentric;
       }
    case schema_grand_single_or_matrix_concentric:
-      if (herit_concepts & INHERITFLAG_GRAND) {
-         if (herit_concepts & (INHERITFLAG_12_MATRIX|INHERITFLAG_16_MATRIX))
+      if (herit_concepts.r & INHERITFLAGR_GRAND) {
+         if (herit_concepts.r & (INHERITFLAGR_12_MATRIX|INHERITFLAGR_16_MATRIX))
             fail("You must not use \"grand\" with \"12 matrix\" or \"16 matrix\".");
-         else if (herit_concepts & INHERITFLAG_SINGLE)
+         else if (herit_concepts.r & INHERITFLAGR_SINGLE)
             return schema_grand_single_concentric;
          else
             fail("You must not use \"grand\" without \"single\".");
       }
       else {
-         if (herit_concepts & INHERITFLAG_12_MATRIX)
+         if (herit_concepts.r & INHERITFLAGR_12_MATRIX)
             return schema_conc_12;
-         else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         else if (herit_concepts.r & INHERITFLAGR_16_MATRIX)
             return schema_conc_16;
          else
-            return (herit_concepts & INHERITFLAG_SINGLE) ?
+            return (herit_concepts.r & INHERITFLAGR_SINGLE) ?
                schema_single_concentric : schema_concentric;
       }
    case schema_maybe_grand_single_cross_concentric:
-      if (herit_concepts & INHERITFLAG_GRAND) {
-         if (herit_concepts & INHERITFLAG_SINGLE)
+      if (herit_concepts.r & INHERITFLAGR_GRAND) {
+         if (herit_concepts.r & INHERITFLAGR_SINGLE)
             return schema_grand_single_cross_concentric;
          else
             fail("You must not use \"grand\" without \"single\".");
       }
       else {
-         if (herit_concepts & INHERITFLAG_SINGLE)
+         if (herit_concepts.r & INHERITFLAGR_SINGLE)
             return schema_single_cross_concentric;
          else
             return schema_cross_concentric;
@@ -6476,66 +6515,66 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
       // turns it into a "special concentric", which has the centers working
       // in three pairs.
 
-      if (herit_concepts & INHERITFLAG_SINGLE) {
-         if (herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK))
+      if (herit_concepts.r & INHERITFLAGR_SINGLE) {
+         if (herit_concepts.r & (INHERITFLAGR_GRAND | INHERITFLAGR_NXNMASK))
             return schema_concentric_others;
          else
             return schema_single_concentric;
       }
       else {
-         if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == INHERITFLAG_GRAND)
+         if ((herit_concepts.r & (INHERITFLAGR_GRAND | INHERITFLAGR_NXNMASK)) == INHERITFLAGR_GRAND)
             fail("You must not use \"grand\" without \"single\" or \"nxn\".");
-         else if ((herit_concepts & (INHERITFLAG_GRAND | INHERITFLAG_NXNMASK)) == 0) {
+         else if ((herit_concepts.r & (INHERITFLAGR_GRAND | INHERITFLAGR_NXNMASK)) == 0) {
             if (the_schema == schema_maybe_special_trade_by)
                return schema_special_trade_by;
             else
                return schema_concentric;
          }
-         else if ((herit_concepts &
-                   (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
-                  (INHERITFLAGNXNK_4X4 | INHERITFLAG_16_MATRIX))
+         else if ((herit_concepts.r &
+                   (INHERITFLAGR_NXNMASK | INHERITFLAGR_12_MATRIX | INHERITFLAGR_16_MATRIX)) ==
+                  (INHERITFLAGRNXNK_4X4 | INHERITFLAGR_16_MATRIX))
             return schema_4x4_lines_concentric;
-         else if ((herit_concepts &
-                   (INHERITFLAG_NXNMASK | INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX)) ==
-                  (INHERITFLAGNXNK_3X3 | INHERITFLAG_12_MATRIX))
+         else if ((herit_concepts.r &
+                   (INHERITFLAGR_NXNMASK | INHERITFLAGR_12_MATRIX | INHERITFLAGR_16_MATRIX)) ==
+                  (INHERITFLAGRNXNK_3X3 | INHERITFLAGR_12_MATRIX))
             return schema_3x3_concentric;
       }
       break;
    case schema_maybe_nxn_lines_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
+      switch (herit_concepts.r &
+              (INHERITFLAGR_SINGLE | INHERITFLAGR_NXNMASK | INHERITFLAGR_MXNMASK)) {
+      case INHERITFLAGR_SINGLE:
          return schema_single_concentric;
-      case INHERITFLAGMXNK_1X3:
+      case INHERITFLAGRMXNK_1X3:
          return schema_concentric_6_2;
-      case INHERITFLAGMXNK_3X1:
+      case INHERITFLAGRMXNK_3X1:
          return schema_concentric_2_6;
-      case INHERITFLAGNXNK_3X3:
+      case INHERITFLAGRNXNK_3X3:
          return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
+      case INHERITFLAGRNXNK_4X4:
          return schema_4x4_lines_concentric;
-      case INHERITFLAGMXNK_1X2:
-      case INHERITFLAGMXNK_2X1:
+      case INHERITFLAGRMXNK_1X2:
+      case INHERITFLAGRMXNK_2X1:
          return schema_concentric_6p_or_normal;
       case 0:
          return schema_concentric;
       }
       break;
    case schema_maybe_nxn_cols_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
+      switch (herit_concepts.r &
+              (INHERITFLAGR_SINGLE | INHERITFLAGR_NXNMASK | INHERITFLAGR_MXNMASK)) {
+      case INHERITFLAGR_SINGLE:
          return schema_single_concentric;
-      case INHERITFLAGMXNK_1X3:
+      case INHERITFLAGRMXNK_1X3:
          return schema_concentric_6_2;
-      case INHERITFLAGMXNK_3X1:
+      case INHERITFLAGRMXNK_3X1:
          return schema_concentric_2_6;
-      case INHERITFLAGNXNK_3X3:
+      case INHERITFLAGRNXNK_3X3:
          return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
+      case INHERITFLAGRNXNK_4X4:
          return schema_4x4_cols_concentric;
-      case INHERITFLAGMXNK_1X2:
-      case INHERITFLAGMXNK_2X1:
+      case INHERITFLAGRMXNK_1X2:
+      case INHERITFLAGRMXNK_2X1:
          return schema_concentric_6p_or_normal;
       case 0:
          return schema_concentric;
@@ -6544,19 +6583,19 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
    case schema_maybe_nxn_1331_lines_concentric:
    case schema_concentric_ctrbox:
       // Various 1x3 etc. concepts override any "center box" stuff.
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
+      switch (herit_concepts.r &
+              (INHERITFLAGR_SINGLE | INHERITFLAGR_NXNMASK | INHERITFLAGR_MXNMASK)) {
+      case INHERITFLAGR_SINGLE:
          return schema_single_concentric;
-      case INHERITFLAGNXNK_3X3:
+      case INHERITFLAGRNXNK_3X3:
          return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
+      case INHERITFLAGRNXNK_4X4:
          return schema_4x4_lines_concentric;
-      case INHERITFLAGMXNK_1X3:
-      case INHERITFLAGMXNK_3X1:
+      case INHERITFLAGRMXNK_1X3:
+      case INHERITFLAGRMXNK_3X1:
          return schema_1331_concentric;
-      case INHERITFLAGMXNK_1X2:
-      case INHERITFLAGMXNK_2X1:
+      case INHERITFLAGRMXNK_1X2:
+      case INHERITFLAGRMXNK_2X1:
          return schema_1221_concentric;
       default:
          if (the_schema == schema_maybe_nxn_1331_lines_concentric)
@@ -6567,82 +6606,82 @@ static calldef_schema get_real_callspec_and_schema(setup *ss,
          return the_schema;
       }
    case schema_maybe_nxn_1331_cols_concentric:
-      switch (herit_concepts &
-              (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK | INHERITFLAG_MXNMASK)) {
-      case INHERITFLAG_SINGLE:
+      switch (herit_concepts.r &
+              (INHERITFLAGR_SINGLE | INHERITFLAGR_NXNMASK | INHERITFLAGR_MXNMASK)) {
+      case INHERITFLAGR_SINGLE:
          return schema_single_concentric;
-      case INHERITFLAGNXNK_3X3:
+      case INHERITFLAGRNXNK_3X3:
          return schema_3x3_concentric;
-      case INHERITFLAGNXNK_4X4:
+      case INHERITFLAGRNXNK_4X4:
          return schema_4x4_cols_concentric;
-      case INHERITFLAGMXNK_1X3:
-      case INHERITFLAGMXNK_3X1:
+      case INHERITFLAGRMXNK_1X3:
+      case INHERITFLAGRMXNK_3X1:
          return schema_1331_concentric;
-      case INHERITFLAGMXNK_1X2:
-      case INHERITFLAGMXNK_2X1:
+      case INHERITFLAGRMXNK_1X2:
+      case INHERITFLAGRMXNK_2X1:
          return schema_1221_concentric;
       case 0:
          return schema_concentric;
       }
       break;
    case schema_maybe_matrix_single_concentric_together:
-      if ((herit_concepts & (INHERITFLAG_NXNMASK|INHERITFLAG_12_MATRIX)) ==
-               (INHERITFLAGNXNK_3X3|INHERITFLAG_12_MATRIX))
+      if ((herit_concepts.r & (INHERITFLAGR_NXNMASK|INHERITFLAGR_12_MATRIX)) ==
+               (INHERITFLAGRNXNK_3X3|INHERITFLAGR_12_MATRIX))
          return schema_3x3_concentric;
-      else if ((herit_concepts & (INHERITFLAG_NXNMASK|INHERITFLAG_16_MATRIX)) ==
-               (INHERITFLAGNXNK_4X4|INHERITFLAG_16_MATRIX))
+      else if ((herit_concepts.r & (INHERITFLAGR_NXNMASK|INHERITFLAGR_16_MATRIX)) ==
+               (INHERITFLAGRNXNK_4X4|INHERITFLAGR_16_MATRIX))
          return schema_4x4_lines_concentric;
-      else if (herit_concepts & INHERITFLAG_12_MATRIX)
+      else if (herit_concepts.r & INHERITFLAGR_12_MATRIX)
          return schema_conc_12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+      else if (herit_concepts.r & INHERITFLAGR_16_MATRIX)
          return schema_conc_16;
-      else if (herit_concepts & INHERITFLAG_GRAND)
+      else if (herit_concepts.r & INHERITFLAGR_GRAND)
          return schema_concentric_others;
-      else if (herit_concepts & INHERITFLAG_DIAMOND)
+      else if (herit_concepts.r & INHERITFLAGR_DIAMOND)
          return schema_concentric_2_6;
-      else if (herit_concepts & INHERITFLAG_SINGLE)
+      else if (herit_concepts.r & INHERITFLAGR_SINGLE)
          return schema_single_concentric;
       else
          return schema_single_concentric_together;
    case schema_maybe_matrix_conc:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
+      if (herit_concepts.r & INHERITFLAGR_12_MATRIX)
          return schema_conc_12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+      else if (herit_concepts.r & INHERITFLAGR_16_MATRIX)
          return schema_conc_16;
       else
          return schema_concentric;
    case schema_maybe_matrix_conc_star:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
+      if (herit_concepts.r & INHERITFLAGR_12_MATRIX)
          return schema_conc_star12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+      else if (herit_concepts.r & INHERITFLAGR_16_MATRIX)
          return schema_conc_star16;
       else
          return schema_conc_star;
    case schema_maybe_matrix_conc_bar:
-      if (herit_concepts & INHERITFLAG_12_MATRIX)
+      if (herit_concepts.r & INHERITFLAGR_12_MATRIX)
          return schema_conc_bar12;
-      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+      else if (herit_concepts.r & INHERITFLAGR_16_MATRIX)
          return schema_conc_bar16;
       else
          return schema_conc_bar;
    case schema_maybe_in_out_triple_squash:
-      switch (herit_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK)) {
-      case INHERITFLAG_SINGLE:
+      switch (herit_concepts.r & (INHERITFLAGR_SINGLE | INHERITFLAGR_NXNMASK)) {
+      case INHERITFLAGR_SINGLE:
          return schema_sgl_in_out_triple_squash;
-      case INHERITFLAGNXNK_3X3:
+      case INHERITFLAGRNXNK_3X3:
          return schema_3x3_in_out_triple_squash;
-      case INHERITFLAGNXNK_4X4:
+      case INHERITFLAGRNXNK_4X4:
          return schema_4x4_in_out_triple_squash;
       case 0:
          return schema_in_out_triple_squash;
       }
    case schema_maybe_in_out_triple_dyp_squash:
-      switch (herit_concepts & (INHERITFLAG_SINGLE | INHERITFLAG_NXNMASK)) {
-      case INHERITFLAG_SINGLE:
+      switch (herit_concepts.r & (INHERITFLAGR_SINGLE | INHERITFLAGR_NXNMASK)) {
+      case INHERITFLAGR_SINGLE:
          return schema_sgl_in_out_triple_squash;
-      case INHERITFLAGNXNK_3X3:
+      case INHERITFLAGRNXNK_3X3:
          return schema_3x3_in_out_triple_squash;
-      case INHERITFLAGNXNK_4X4:
+      case INHERITFLAGRNXNK_4X4:
          return schema_4x4_in_out_triple_squash;
       case 0:
          return schema_in_out_triple_dyp_squash;
@@ -6704,7 +6743,8 @@ void really_inner_move(
    selective_key special_indicator = selective_key_plain;
    uint32_t special_modifiers = 0;
    // These two are always heritable.
-   uint32_t callflagsh = callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF;
+   heritflags callflagsh = callspec->callflagsherit;
+   callflagsh.set_bits_rl(INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF, 0);
 
    // If the "matrix" concept is on and we get here,
    // that is, we haven't acted on a "split" command, it is illegal.
@@ -6745,8 +6785,8 @@ void really_inner_move(
    setup_command foo1;
 
    if ((callflags1 & CFLAG1_FUNNY_MEANS_THOSE_FACING) &&
-       ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FUNNY)) {
-      ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_FUNNY);
+       ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_FUNNY)) {
+      ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_FUNNY);
 
       // We have to do this -- we need to know who is facing *now*.
       update_id_bits(ss);
@@ -6759,7 +6799,9 @@ void really_inner_move(
    case schema_nothing:
    case schema_nothing_noroll:
    case schema_nothing_other_elong:
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF|FINAL__UNDER_RANDOM_META))))
+      if ((ss->cmd.cmd_final_flags.test_finalbits(~(FINAL__UNDER_RANDOM_META))) |
+          (ss->cmd.cmd_final_flags.test_heritbits_r(~(INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF))) |
+          (ss->cmd.cmd_final_flags.test_heritbits_l(~0)))
          fail("Illegal concept for this call.");
       *result = *ss;
       result->suppress_all_rolls(the_schema == schema_nothing);
@@ -6772,7 +6814,8 @@ void really_inner_move(
          result->result_flags.misc ^= 3;
       break;
    case schema_recenter:
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) |
+      if ((ss->cmd.cmd_final_flags.test_heritbits_r(~(INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF))) |
+          (ss->cmd.cmd_final_flags.test_heritbits_l(~0)) |
           (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META)))
          fail("Illegal concept for this call.");
       *result = *ss;
@@ -6815,23 +6858,23 @@ void really_inner_move(
 
          // The "reverse" concept might mean mirror, as in "reverse truck".
          // The "left" concept might also mean mirror, as in "left anchor".
-         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE) &&
-             (callflagsh & INHERITFLAG_REVERSE)) {
+         if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_REVERSE) &&
+             (callflagsh.r & INHERITFLAGR_REVERSE)) {
             mirror_this(ss);
             mirror = true;
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_REVERSE);
+            ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_REVERSE);
          }
-         else if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT) &&
-             (callflagsh & INHERITFLAG_LEFT)) {
+         else if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_LEFT) &&
+             (callflagsh.r & INHERITFLAGR_LEFT)) {
             mirror_this(ss);
             mirror = true;
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
+            ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_LEFT);
          }
 
          if (ss->kind == s_qtag &&
-             ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_12_MATRIX)) {
+             ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_12_MATRIX)) {
             do_matrix_expansion(ss, CONCPROP__NEEDK_3X4, true);
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_12_MATRIX);
+            ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_12_MATRIX);
          }
          else if (ss->kind == s2x2 &&
                   // The elongation field can contain spurious stuff.  It is only
@@ -6857,7 +6900,7 @@ void really_inner_move(
          remove_z_distortion(ss);
 
          // Not sure what this is about.  How can these flags appear?
-         ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_16_MATRIX|INHERITFLAG_12_MATRIX);
+         ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_16_MATRIX|INHERITFLAGR_12_MATRIX);
 
          if (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META))
             fail("Illegal concept for this call.");
@@ -6868,7 +6911,8 @@ void really_inner_move(
          matrix_def_block *base_block = callspec->stuff.matrix.matrix_def_list;
 
          for ( ;; ) {
-            if (base_block->alternate_def_flags == (uint32_t) ss->cmd.cmd_final_flags.herit)
+            if ((base_block->alternate_def_flags.r == ss->cmd.cmd_final_flags.herit.r) &&
+                (base_block->alternate_def_flags.l == ss->cmd.cmd_final_flags.herit.l))
                break;
             base_block = base_block->next;
             if (!base_block) fail("Illegal concept for this call.");
@@ -6972,7 +7016,8 @@ void really_inner_move(
 
       break;
    case schema_roll:
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~0)) |
+      if ((ss->cmd.cmd_final_flags.test_heritbits_r(~0)) |
+          (ss->cmd.cmd_final_flags.test_heritbits_l(~0)) |
           (ss->cmd.cmd_final_flags.test_finalbits(~FINAL__UNDER_RANDOM_META)))
          fail("Illegal concept for this call.");
       remove_z_distortion(ss);
@@ -6987,26 +7032,26 @@ void really_inner_move(
       // Dispose of the "left" concept first -- it can only mean mirror.  If it is on,
       // mirroring may already have taken place.
 
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT)) {
+      if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_LEFT)) {
          /* ***** why isn't this particular error test taken care of more generally elsewhere? */
-         if (!(callflagsh & INHERITFLAG_LEFT))
+         if (!(callflagsh.r & INHERITFLAGR_LEFT))
             fail("Can't do this call 'left'.");
          if (!mirror) mirror_this(ss);
          mirror = true;
          ss->cmd.cmd_misc_flags |= CMD_MISC__DID_LEFT_MIRROR;
-         ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
+         ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_LEFT);
       }
 
       // The "reverse" concept might mean mirror, or it might be genuine.
 
-      if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE)) &&
-          (callflagsh & INHERITFLAG_REVERSE)) {
+      if ((ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_REVERSE)) &&
+          (callflagsh.r & INHERITFLAGR_REVERSE)) {
          // This "reverse" just means mirror.
-         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT))
+         if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_LEFT))
             fail("Can't do this call 'left' and 'reverse'.");
          if (!mirror) mirror_this(ss);
          mirror = true;
-         ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_REVERSE);
+         ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_REVERSE);
       }
 
       // If the "reverse" flag is still set in cmd_final_flags, it means a genuine
@@ -7036,14 +7081,17 @@ void really_inner_move(
       // letting the call deal with the resulting "3x3".  In both cases,
       // "divide_for_magic" will deal with it.
 
-      uint32_t extra_heritmask_bits = 0;
+      heritflags extra_heritmask_bits;
+      extra_heritmask_bits.initialize_rl(0, 0);
 
       {
          // Fix special case of yoyo/generous/stingy.
-         uint32_t hhhh = fix_gensting_weirdness(&ss->cmd, callflagsh);
+         heritflags hhhh = callflagsh;
+         fix_gensting_weirdness(&ss->cmd, hhhh);
 
-         uint32_t unaccepted_flags =
-            ss->cmd.cmd_final_flags.test_heritbits(~hhhh);
+         heritflags unaccepted_flags;
+         unaccepted_flags.initialize_rl(ss->cmd.cmd_final_flags.herit.r & ~hhhh.r,
+                                        ss->cmd.cmd_final_flags.herit.l & ~hhhh.l);
 
          // Special case:  Some calls do not specify "magic" inherited
          // to their children, but can nevertheless be executed magically.
@@ -7072,11 +7120,11 @@ void really_inner_move(
          //
          // This stuff applies to interlocked and similar things also.
 
-         if (unaccepted_flags != 0) {
-            if ((unaccepted_flags &
-                 ~(INHERITFLAG_INTLK | INHERITFLAG_MAGIC |
-                   INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK |
-                   INHERITFLAG_SINGLEFILE)) == 0 &&
+         if ((unaccepted_flags.l | unaccepted_flags.r) != 0) {
+            if ((unaccepted_flags.r &
+                 ~(INHERITFLAGR_INTLK | INHERITFLAGR_MAGIC |
+                   INHERITFLAGR_MXNMASK | INHERITFLAGR_NXNMASK |
+                   INHERITFLAGR_SINGLEFILE)) == 0 &&
                 the_schema == schema_sequential &&
                 (ss->cmd.cmd_fraction.flags & CMD_FRAC_PART_MASK) != 0 &&
                 (((ss->cmd.cmd_fraction.flags & CMD_FRAC_CODE_MASK) == CMD_FRAC_CODE_ONLY) ||
@@ -7197,8 +7245,8 @@ void really_inner_move(
          }
 
          if (the_schema == schema_split_sequential && result->kind == s2x6 &&
-             ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) == INHERITFLAGMXNK_1X3 ||
-              (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_MXNMASK)) == INHERITFLAGMXNK_3X1)) {
+             ((ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_MXNMASK)) == INHERITFLAGRMXNK_1X3 ||
+              (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_MXNMASK)) == INHERITFLAGRMXNK_3X1)) {
             switch(little_endian_live_mask(result)) {
             case 02727:
                expand::compress_setup(exp27, result);
@@ -7289,18 +7337,18 @@ static bool do_forced_couples_stuff(
    }
 
    ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__DO_AS_COUPLES;
-   uint32_t mxnflags = ss->cmd.do_couples_her8itflags &
-      (INHERITFLAG_SINGLE | INHERITFLAG_MXNMASK | INHERITFLAG_NXNMASK);
+   uint32_t mxnflagsr = ss->cmd.do_couples_her8itflags.r &
+      (INHERITFLAGR_SINGLE | INHERITFLAGR_MXNMASK | INHERITFLAGR_NXNMASK);
 
    // Mxnflags now has the "single" bit, or any "1x3" stuff.  If it is the "single"
    // bit alone, we do the call directly--we don't do "as couples".  Otherwise,
    // we the do call as couples, passing any modifiers.
 
-   ss->cmd.do_couples_her8itflags &= ~mxnflags;
+   ss->cmd.do_couples_her8itflags.clear_bits_rl(mxnflagsr, 0);
 
-   if (mxnflags != INHERITFLAG_SINGLE) {
+   if (mxnflagsr != INHERITFLAGR_SINGLE) {
       tandem_couples_move(ss, who_uninit_thing, 0, 0, 0,
-                          tandem_key_cpls, mxnflags, true, result);
+                          tandem_key_cpls, mxnflagsr, true, result);
       return true;
    }
 
@@ -7348,6 +7396,9 @@ static void move_with_real_call(
    // useful to check that someday) and we just have the callspec and the final
    // concepts.
 
+   heritflags zero_heritmask_bits;
+   zero_heritmask_bits.initialize_rl(0, 0);
+
    if (ss->kind == nothing) {
       if (!ss->cmd.cmd_fraction.is_null())
          fail("Can't fractionalize a call if no one is doing it.");
@@ -7362,7 +7413,7 @@ static void move_with_real_call(
    if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) && ss->cmd.cmd_final_flags.final)
          fail("This concept not allowed here.");
 
-   uint32_t herit_concepts = ss->cmd.cmd_final_flags.herit;
+   heritflags herit_concepts = ss->cmd.cmd_final_flags.herit;
 
    calldefn *this_defn = &ss->cmd.callspec->the_defn;
    calldefn *deferred_array_defn = (calldefn *) 0;
@@ -7386,7 +7437,8 @@ static void move_with_real_call(
       bool mirror = false;
       uint32_t callflags1 = this_defn->callflags1;
       // These two are always heritable.
-      uint32_t callflagsh = this_defn->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF;
+      heritflags callflagsh = this_defn->callflagsherit;
+      callflagsh.set_bits_rl(INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF, 0);
       uint32_t callflagsf = this_defn->callflagsf;
 
       calldef_schema the_schema =
@@ -7403,24 +7455,24 @@ static void move_with_real_call(
       }
 
       if ((callflags1 & CFLAG1_YOYO_FRACTAL_NUM)) {
-         if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_FRACTAL)) {
+         if (ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_FRACTAL)) {
             if ((current_options.number_fields & (NUMBER_FIELD_MASK ^ 2)) == 1)
                current_options.number_fields ^= 2;
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_FRACTAL);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_FRACTAL);
          }
-         else if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYOETCMASK)) == INHERITFLAG_YOYOETCK_YOYO) {
+         else if ((ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_YOYOETCMASK)) == INHERITFLAGR_YOYOETCK_YOYO) {
             if ((current_options.number_fields & NUMBER_FIELD_MASK) == 2)
                current_options.number_fields++;
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_YOYOETCMASK);
          }
-         else if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYOETCMASK)) == INHERITFLAG_YOYOETCK_GENEROUS) {
+         else if ((ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_YOYOETCMASK)) == INHERITFLAGR_YOYOETCK_GENEROUS) {
             current_options.number_fields++;
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_YOYOETCMASK);
          }
-         else if ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_YOYOETCMASK)) == INHERITFLAG_YOYOETCK_STINGY &&
+         else if ((ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_YOYOETCMASK)) == INHERITFLAGR_YOYOETCK_STINGY &&
                   current_options.number_fields > 0) {
             current_options.number_fields--;
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_YOYOETCMASK);
          }
       }
 
@@ -7449,9 +7501,10 @@ static void move_with_real_call(
          // appropriate flag set saying that the concept is legal and will
          // be inherited to the children.  Unless it is defined by array.
          if (the_schema != schema_by_array) {
-            callflagsh = fix_gensting_weirdness(&ss->cmd, callflagsh);
+            fix_gensting_weirdness(&ss->cmd, callflagsh);
 
-            if (ss->cmd.cmd_final_flags.test_heritbits(~callflagsh))
+            if ((ss->cmd.cmd_final_flags.test_heritbits_r(~callflagsh.r)) ||
+                (ss->cmd.cmd_final_flags.test_heritbits_l(~callflagsh.l)))
                fail("Can't do this call with this concept.");
          }
 
@@ -7466,10 +7519,10 @@ static void move_with_real_call(
             // being followed.  The test is straight central interlocked little.
 
             if (attr::slimit(ss) == 7 &&
-                ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_NXNMASK)) != INHERITFLAGNXNK_4X4) &&
-                ((ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_STRAIGHT)) == 0)) {
+                ((ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_NXNMASK)) != INHERITFLAGRNXNK_4X4) &&
+                ((ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_STRAIGHT)) == 0)) {
                if (!(ss->cmd.cmd_misc2_flags & CMD_MISC2__DO_CENTRAL) ||
-                   !(ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_DIAMOND)))
+                   !(ss->cmd.cmd_final_flags.test_heritbit_r(INHERITFLAGR_DIAMOND)))
                   ss->cmd.cmd_misc_flags |=
                      (ss->rotation & 1) ? CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
             }
@@ -7517,7 +7570,7 @@ static void move_with_real_call(
                      fail("You can't select that part of the call.");
                   }
 
-                  do_inheritance(&ss->cmd, this_defn, defptr, 0);
+                  do_inheritance(&ss->cmd, this_defn, defptr, zero_heritmask_bits);
                   process_number_insertion(defptr->modifiers1);
 
                   if (ss->cmd.callspec == base_calls[base_call_null_second])
@@ -7562,7 +7615,7 @@ static void move_with_real_call(
 
             // We skip all of this if the incoming setup is empty.
             if (attr::slimit(ss) < 0 || or_all_people(ss) != 0) {
-               heritflags bit_to_set = (heritflags) 0;
+               heritflags bit_to_set = zero_heritmask_bits;
 
                if ((callflagsf & CFLAG2_FRACTIONAL_NUMBERS) &&
                    (ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0 &&
@@ -7607,7 +7660,7 @@ static void move_with_real_call(
                   if ((zzz.m_do_half_of_last_part|zzz.m_do_last_half_of_first_part) == 0) {
                      goto done;
                   }
-                  else if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_HALF|INHERITFLAG_LASTHALF) == 0) {
+                  else if (ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF) == 0) {
 
                      // Calls with the "fractional_numbers" property can be coded so
                      // that they can take the "half" or "lasthalf" modifier and thereby do
@@ -7615,12 +7668,12 @@ static void move_with_real_call(
                      // presumably obey Fermi-Dirac statistics.
 
                      if ((zzz.m_do_half_of_last_part) != 0) {
-                        ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_HALF);
+                        ss->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_HALF);
                         current_options.number_fields = current_options.number_fields*2 - 1;
                         goto done;
                      }
                      else {
-                        ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_LASTHALF);
+                        ss->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_LASTHALF);
                         current_options.number_fields = current_options.number_fields*2 - 1;
                         goto done;
                      }
@@ -7629,17 +7682,17 @@ static void move_with_real_call(
 
                if ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0) {
                   if (ss->cmd.cmd_fraction.fraction == FRAC_FRAC_HALF_VALUE)
-                     bit_to_set = INHERITFLAG_HALF;
+                     bit_to_set.r = INHERITFLAGR_HALF;
                   else if (ss->cmd.cmd_fraction.fraction == FRAC_FRAC_LASTHALF_VALUE) {
-                     bit_to_set = INHERITFLAG_LASTHALF;
+                     bit_to_set.r = INHERITFLAGR_LASTHALF;
                   }
                }
 
                // Check for special case of swing the fractions with really hairy fraction.
 
-               if (bit_to_set == 0 &&
+               if (bit_to_set.r == 0 &&
                    ((callflags1 & CFLAG1_NUMBER_MASK) == CFLAG1_NUMBER_MASK) &&
-                   !(ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) {
+                   !(ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_HALF|INHERITFLAGR_LASTHALF))) {
 
                   int n = ss->cmd.cmd_fraction.fraction - NUMBER_FIELDS_1_0_4_0;
                   if (n >= 0 && n <= 3) {
@@ -7650,9 +7703,9 @@ static void move_with_real_call(
                   }
                }
 
-               if (bit_to_set == 0 || ss->cmd.cmd_final_flags.test_heritbit(bit_to_set))
+               if (bit_to_set.r == 0 || ss->cmd.cmd_final_flags.test_heritbit_r(bit_to_set.r))
                   fail("This call can't be fractionalized this way.");
-               ss->cmd.cmd_final_flags.set_heritbit(bit_to_set);
+               ss->cmd.cmd_final_flags.set_heritbits_r(bit_to_set.r);
 
             done: ;
             }
@@ -7687,11 +7740,11 @@ static void move_with_real_call(
 
                if (ss->cmd.cmd_fraction.is_firsthalf()) {
                   ss->cmd.cmd_fraction.set_to_null();
-                  ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_HALF);
+                  ss->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_HALF);
                }
                else if (ss->cmd.cmd_fraction.is_lasthalf()) {
                   ss->cmd.cmd_fraction.set_to_null();
-                  ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_LASTHALF);
+                  ss->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_LASTHALF);
                }
                else {
                   fail("This call can't be fractionalized this way.");
@@ -7705,7 +7758,7 @@ static void move_with_real_call(
       // If the "diamond" concept has been given and the call doesn't want it, we do
       // the "diamond single wheel" variety.
 
-      if (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_DIAMOND & ~callflagsh))  {
+      if (ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_DIAMOND & ~callflagsh.r))  {
          // If the call is sequentially or concentrically defined, the top level flag is required
          // before the diamond concept can be inherited.  Since that flag is off, it is an error.
          if (the_schema != schema_by_array)
@@ -7721,7 +7774,7 @@ static void move_with_real_call(
             if (ss->cmd.cmd_misc3_flags & CMD_MISC3__NEED_DIAMOND)
                resflagsmisc |= RESULTFLAG__NEED_DIAMOND;
 
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_DIAMOND);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_DIAMOND);
             ss->clear_all_overcasts();
             divided_setup_move(ss, MAPCODE(s1x2,2,MPKIND__NONISOTROPDMD,0),
                                phantest_ok, true, result);
@@ -7735,8 +7788,8 @@ static void move_with_real_call(
             // is also present, we don't.  We let basic_move deal with
             // it.  It will come back here after it has done what it needs to.
 
-            if (!(ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MAGIC|INHERITFLAG_INTLK))) {
-               /* Divide into diamonds and try again.  Note that we do not clear the concept. */
+            if (!(ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MAGIC|INHERITFLAGR_INTLK))) {
+               // Divide into diamonds and try again.  Note that we do not clear the concept.
                divide_diamonds(ss, result);
                return;
             }
@@ -7747,9 +7800,9 @@ static void move_with_real_call(
       // This is only legal if the flag forbidding same is off.
       // Furthermore, if certain modifiers have been given, we don't allow it.
 
-      if ((ss->cmd.cmd_final_flags.test_heritbits(
-            INHERITFLAG_MAGIC | INHERITFLAG_INTLK |
-            INHERITFLAG_12_MATRIX | INHERITFLAG_16_MATRIX | INHERITFLAG_FUNNY)))
+      if ((ss->cmd.cmd_final_flags.test_heritbits_r(
+            INHERITFLAGR_MAGIC | INHERITFLAGR_INTLK |
+            INHERITFLAGR_12_MATRIX | INHERITFLAGR_16_MATRIX | INHERITFLAGR_FUNNY)))
          ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
 
       /* But, alas, if fractionalization is on, we can't do it yet, because we don't
@@ -7767,9 +7820,9 @@ static void move_with_real_call(
             if (!(ss->cmd.cmd_misc_flags & (CMD_MISC__NO_STEP_TO_WAVE |
                                             CMD_MISC__ALREADY_STEPPED |
                                             CMD_MISC__MUST_SPLIT_MASK))) {
-               if ((((callflagsh & INHERITFLAG_LEFT) || (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) &&
-                    ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_LEFT)) ||
-                   ((callflagsh & INHERITFLAG_REVERSE) && ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_REVERSE))) {
+               if ((((callflagsh.r & INHERITFLAGR_LEFT) || (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK)) &&
+                    ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_LEFT)) ||
+                   ((callflagsh.r & INHERITFLAGR_REVERSE) && ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_REVERSE))) {
                   mirror_this(ss);
                   mirror = true;
                }
@@ -7791,13 +7844,13 @@ static void move_with_real_call(
             // Actually, turning off the "left" flag is more global than that.
 
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-               ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
+               ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_LEFT);
             }
             break;
          case fraction_command::no:
             // If we're doing the rest of the call, just turn all that stuff off.
             if (callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) {
-               ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_LEFT);
+               ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_LEFT);
             }
             break;
          }
@@ -7810,7 +7863,7 @@ static void move_with_real_call(
          If so, be sure the setup is divided into 1x4's or diamonds.
          But don't do it if something like "magic" is still unprocessed. */
 
-      if ((ss->cmd.cmd_final_flags.test_heritbits(~(callflagsh|INHERITFLAG_YOYOETCMASK))) == 0) {
+      if ((ss->cmd.cmd_final_flags.test_heritbits_r(~(callflagsh.r|INHERITFLAGR_YOYOETCMASK))) == 0) {
          // Some schemata change if the given number is odd.  For touch by N x <call>.
          if (current_options.howmanynumbers != 0 && (current_options.number_fields & 1)) {
             if (the_schema == schema_single_concentric_together_if_odd)
@@ -7923,7 +7976,7 @@ static void move_with_real_call(
                local_4x4_exp = true;
             }
 
-            do_inheritance(&ss->cmd, this_defn, &this_defn->stuff.conc.outerdef, 0);
+            do_inheritance(&ss->cmd, this_defn, &this_defn->stuff.conc.outerdef, zero_heritmask_bits);
             move_with_real_call(ss, qtfudged, local_4x4_exp, result);
             return;
          }
@@ -7939,11 +7992,11 @@ static void move_with_real_call(
             // Basic_move will handle them.
             if (ss->cmd.cmd_fraction.is_firsthalf()) {
                ss->cmd.cmd_fraction.set_to_null();
-               ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_HALF);
+               ss->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_HALF);
             }
             else if (ss->cmd.cmd_fraction.is_lasthalf()) {
                ss->cmd.cmd_fraction.set_to_null();
-               ss->cmd.cmd_final_flags.set_heritbit(INHERITFLAG_LASTHALF);
+               ss->cmd.cmd_final_flags.set_heritbits_r(INHERITFLAGR_LASTHALF);
             }
             else
                fail("This call can't be fractionalized this way.");
@@ -8008,16 +8061,16 @@ static void move_with_real_call(
       // cause splitting to take place.
 
       if (the_schema == schema_split_sequential) {
-         uint32_t nxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_NXNMASK);
-         uint32_t mxnflags = ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_MXNMASK);
+         uint32_t nxnflagsr = ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_NXNMASK);
+         uint32_t mxnflagsr = ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_MXNMASK);
          int limits = attr::slimit(ss);
          uint32_t mask = little_endian_live_mask(ss);
 
-         if ((limits == 7 && nxnflags != INHERITFLAGNXNK_3X3 && nxnflags != INHERITFLAGNXNK_4X4) ||
-             (limits == 11 && (mxnflags == INHERITFLAGMXNK_1X3 ||
-                               mxnflags == INHERITFLAGMXNK_3X1 ||
-                               nxnflags == INHERITFLAGNXNK_3X3)) ||
-             ((limits == 15 && nxnflags == INHERITFLAGNXNK_4X4))) {
+         if ((limits == 7 && nxnflagsr != INHERITFLAGRNXNK_3X3 && nxnflagsr != INHERITFLAGRNXNK_4X4) ||
+             (limits == 11 && (mxnflagsr == INHERITFLAGRMXNK_1X3 ||
+                               mxnflagsr == INHERITFLAGRMXNK_3X1 ||
+                               nxnflagsr == INHERITFLAGRNXNK_3X3)) ||
+             ((limits == 15 && nxnflagsr == INHERITFLAGRNXNK_4X4))) {
             if (!(ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)) {
                ss->cmd.cmd_misc_flags |= (ss->rotation & 1) ?
                   CMD_MISC__MUST_SPLIT_VERT : CMD_MISC__MUST_SPLIT_HORIZ;
@@ -8043,7 +8096,7 @@ static void move_with_real_call(
             else
                fail("Can't split this setup.");
          }
-         else if ((limits != 5 || nxnflags != INHERITFLAGNXNK_3X3)) {
+         else if ((limits != 5 || nxnflagsr != INHERITFLAGRNXNK_3X3)) {
             if (limits != 3 && limits != 1 && limits != 7) {
                fail("Need a 4 or 8 person setup for this.");
             }
@@ -8120,7 +8173,7 @@ static void move_with_real_call(
             // specified and the call has the special flag.  This is for recycle.
             if (this_defn->compound_part->schema != schema_sequential ||
                 !(this_defn->compound_part->callflagsf & CFLAG2_NO_SEQ_IF_NO_FRAC) ||
-                !ss->cmd.cmd_fraction.is_null() || ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_HALF)) {
+                !ss->cmd.cmd_fraction.is_null() || ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_HALF)) {
                this_defn = this_defn->compound_part;
                goto try_next_callspec;
             }
@@ -8141,24 +8194,24 @@ static void move_with_real_call(
 static void handle_expiration(setup *ss, uint32_t *bit_to_set)
 {
    if (ss->cmd.prior_expire_bits & RESULTFLAG__EXPIRATION_ENAB) {
-      if (ss->cmd.cmd_final_flags.test_heritbit(INHERITFLAG_TWISTED)) {
+      if (ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_TWISTED)) {
          if (ss->cmd.prior_expire_bits & RESULTFLAG__TWISTED_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_TWISTED);   // Already did that.
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_TWISTED);   // Already did that.
          *bit_to_set |= RESULTFLAG__TWISTED_EXPIRED;
       }
 
       // Take care of generous and stingy; they are complicated.
 
-      switch (ss->cmd.cmd_final_flags.test_heritbits(INHERITFLAG_YOYOETCMASK)) {
-      case INHERITFLAG_YOYOETCK_YOYO:
+      switch (ss->cmd.cmd_final_flags.test_heritbits_r(INHERITFLAGR_YOYOETCMASK)) {
+      case INHERITFLAGR_YOYOETCK_YOYO:
          if (ss->cmd.prior_expire_bits & RESULTFLAG__YOYO_ONLY_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_YOYOETCMASK);
          *bit_to_set |= RESULTFLAG__YOYO_ONLY_EXPIRED;
          break;
-      case INHERITFLAG_YOYOETCK_GENEROUS:
-      case INHERITFLAG_YOYOETCK_STINGY:
+      case INHERITFLAGR_YOYOETCK_GENEROUS:
+      case INHERITFLAGR_YOYOETCK_STINGY:
          if (ss->cmd.prior_expire_bits & RESULTFLAG__GEN_STING_EXPIRED)
-            ss->cmd.cmd_final_flags.clear_heritbits(INHERITFLAG_YOYOETCMASK);
+            ss->cmd.cmd_final_flags.clear_heritbits_r(INHERITFLAGR_YOYOETCMASK);
          *bit_to_set |= RESULTFLAG__GEN_STING_EXPIRED;
          break;
       }
@@ -8218,7 +8271,7 @@ void move(
    if (current_options.number_fields == 1)
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__PARENT_COUNT_IS_ONE;
 
-   result->result_flags.res_heritflags_to_save_from_mxn_expansion = 0;
+   result->result_flags.res_heritflags_to_save_from_mxn_expansion.initialize_rl(0, 0);
    parse_block *saved_magic_diamond = (parse_block *) 0;
    parse_block *parseptr = ss->cmd.parseptr;
    uint32_t resultflags_to_put_inmisc = 0;
@@ -8413,7 +8466,7 @@ void move(
    if (ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) {
       skipped_concept_info foo(ss->cmd.parseptr);
 
-      if (foo.m_heritflag != 0) {
+      if (!foo.m_heritflag.is_zero()) {
          parseptrcopy = foo.m_concept_with_root;
          ss->cmd.skippable_heritflags = foo.m_heritflag;
       }
@@ -8536,7 +8589,7 @@ void move(
 
       // The "anyone work" stuff will need this, along with the
       // CMD_MISC2__ANY_WORK_CALL_CROSSED bit that we set above.
-      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) && (ss->cmd.skippable_heritflags == 0))
+      if ((ss->cmd.cmd_misc2_flags & CMD_MISC2__ANY_WORK) && (ss->cmd.skippable_heritflags.is_zero()))
          ss->cmd.skippable_concept = ss->cmd.parseptr;
 
       /* We must read the selector, direction, and number out of the concept list and use them
@@ -8559,12 +8612,13 @@ void move(
       if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_MODIFIERS) {
          ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_MODIFIERS;
 
-         if (do_heritflag_merge((uint32_t *) &ss->cmd.cmd_final_flags.herit, ss->cmd.restrained_super8flags))
+         if (do_heritflag_merge(ss->cmd.cmd_final_flags.herit, ss->cmd.restrained_super8flags))
             fail("Illegal combination of call modifiers.");
 
          ss->cmd.do_couples_her8itflags = ss->cmd.restrained_super9flags;
 
-         ss->cmd.cmd_final_flags.set_heritbits(ss->cmd.parseptr->more_finalherit_flags.herit);
+         ss->cmd.cmd_final_flags.set_heritbits_r(ss->cmd.parseptr->more_finalherit_flags.herit.r);
+         ss->cmd.cmd_final_flags.set_heritbits_l(ss->cmd.parseptr->more_finalherit_flags.herit.l);
          ss->cmd.cmd_final_flags.set_finalbits(ss->cmd.parseptr->more_finalherit_flags.final);
 
          if (ss->cmd.restrained_do_as_couples) {
@@ -8665,24 +8719,24 @@ void move(
 
       parse_block artificial_parse_block;
 
-      uint32_t extraheritmods = ss->cmd.cmd_final_flags.test_heritbits(
-          INHERITFLAG_REVERSE|INHERITFLAG_LEFT|INHERITFLAG_GRAND|INHERITFLAG_CROSS|
-          INHERITFLAG_SINGLE|INHERITFLAG_INTLK|INHERITFLAG_DIAMOND);
+      uint32_t extraheritmodsr = ss->cmd.cmd_final_flags.test_heritbits_r(
+          INHERITFLAGR_REVERSE|INHERITFLAGR_LEFT|INHERITFLAGR_GRAND|INHERITFLAGR_CROSS|
+          INHERITFLAGR_SINGLE|INHERITFLAGR_INTLK|INHERITFLAGR_DIAMOND);
       uint32_t extrafinalmods = ss->cmd.cmd_final_flags.test_finalbit(FINAL__SPLIT);
 
-      if (extraheritmods | extrafinalmods) {
+      if (extraheritmodsr | extrafinalmods) {
          // This can only be legal if we find a translation in the table.
 
-         const concept_fixer_thing *p;
+         const concept_fixer_thing_r *p;
 
-         for (p=concept_fixer_table ; p->newheritmods | p->newfinalmods ; p++) {
-            if (p->newheritmods == extraheritmods && p->newfinalmods == extrafinalmods &&
+         for (p=concept_fixer_table_r ; p->newheritmods | p->newfinalmods ; p++) {
+            if (p->newheritmods == extraheritmodsr && p->newfinalmods == extrafinalmods &&
                 &concept_descriptor_table[useful_concept_indices[p->before]] == ss->cmd.parseptr->concept) {
                artificial_parse_block = *ss->cmd.parseptr;
                artificial_parse_block.concept = &concept_descriptor_table[useful_concept_indices[p->after]];
                ss->cmd.parseptr = &artificial_parse_block;
                parseptrcopy = ss->cmd.parseptr;
-               ss->cmd.cmd_final_flags.clear_heritbits(extraheritmods);   /* Take out those mods. */
+               ss->cmd.cmd_final_flags.clear_heritbits_r(extraheritmodsr);   // Take out those mods.
                ss->cmd.cmd_final_flags.clear_finalbits(extrafinalmods);
                goto found_new_concept;
             }
@@ -8700,30 +8754,33 @@ void move(
       // If concept does not accept "magic" or "interlocked", we have to take
       // such modifiers seriously, and divide the setup magically.
       // Otherwise, we just do the concept.
-      uint32_t foobar = 0;
+      heritflags foobar;
+      foobar.initialize_rl(0, 0);
       uint32_t fooble = 0;
 
       const concept_descriptor *ddd = ss->cmd.parseptr->concept;
 
       if (!(concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_MODIFIERS)) {
-         foobar = INHERITFLAG_HALF | INHERITFLAG_LASTHALF | INHERITFLAG_DIAMOND |
-            INHERITFLAG_MAGIC | INHERITFLAG_INTLK | INHERITFLAG_REVERSE;
+         foobar.set_bits_rl(INHERITFLAGR_HALF | INHERITFLAGR_LASTHALF | INHERITFLAGR_DIAMOND |
+                            INHERITFLAGR_MAGIC | INHERITFLAGR_INTLK | INHERITFLAGR_REVERSE, 0);
          fooble = ~0U;
 
          if (ddd->kind == concept_meta) {
              if (ddd->arg1 != meta_key_finally &&
                  ddd->arg1 != meta_key_nth_part_work &&
                  ddd->arg1 != meta_key_initially_and_finally)
-            foobar &= ~(INHERITFLAG_MAGIC | INHERITFLAG_INTLK);
+                foobar.clear_bits_rl(INHERITFLAGR_MAGIC | INHERITFLAGR_INTLK, 0);
          }
 
          if (concept_table[ddd->kind].concept_prop & CONCPROP__PERMIT_REVERSE)
-            foobar &= ~INHERITFLAG_REVERSE;
+            foobar.clear_bits_rl(INHERITFLAGR_REVERSE, 0);
       }
 
       // If there are no modifier bits that the concept can't accept, do the concept.
 
-      if (((check_concepts.test_heritbits(foobar)) | (check_concepts.test_finalbits(fooble))) == 0) {
+      if (((check_concepts.test_heritbits_r(foobar.r)) |
+           (check_concepts.test_heritbits_l(foobar.l)) |
+           (check_concepts.test_finalbits(fooble))) == 0) {
          if (do_big_concept(ss, ss->cmd.parseptr, true, result)) {
             canonicalize_rotation(result);
             saved_magic_diamond = (parse_block *) 0;
@@ -8756,7 +8813,7 @@ void move(
       // We can tolerate the "matrix" flag if we are going to do "split".
       // For anything else, "matrix" is illegal.
 
-      if (check_concepts.final == FINAL__SPLIT && check_concepts.herit == 0) {
+      if (check_concepts.final == FINAL__SPLIT && check_concepts.herit.is_zero()) {
          uint32_t split_map;
 
          ss->cmd.cmd_misc_flags |= CMD_MISC__SAID_SPLIT;
@@ -8774,13 +8831,15 @@ void move(
          if (ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT)
             fail("\"Matrix\" concept must be followed by applicable concept.");
 
-         if (divide_for_magic(
-               ss,
-               check_concepts.test_heritbits(~INHERITFLAG_DIAMOND),
-               result)) {
+         heritflags arg2 = check_concepts.herit;
+         arg2.clear_bits_rl(INHERITFLAGR_DIAMOND, 0);
+
+         if (divide_for_magic(ss, arg2, result)) {
          }
-         else if (check_concepts.herit == INHERITFLAG_DIAMOND && check_concepts.final == 0) {
-            ss->cmd.cmd_final_flags.clear_heritbit(INHERITFLAG_DIAMOND);
+         else if (check_concepts.herit.r == INHERITFLAGR_DIAMOND &&
+                  check_concepts.herit.l == 0 &&
+                  check_concepts.final == 0) {
+            ss->cmd.cmd_final_flags.clear_heritbit_r(INHERITFLAGR_DIAMOND);
 
             if (ss->kind == sdmd) {
                uint32_t resflagsmisc = 0;

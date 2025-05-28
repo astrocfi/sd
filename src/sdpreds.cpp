@@ -1637,12 +1637,12 @@ static bool lines_miniwave(setup *real_people, int real_index,
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
-      return true;
+      if (real_people->kind != sdmd) return true;
    case cr_2fl_only:
-      return false;
+      if (real_people->kind != sdmd) return false;
    default:
       int this_person = real_people->people[real_index].id1;
-      int other_person = real_people->people[real_index ^ 1].id1;
+      int other_person = real_people->people[real_index ^ ((real_people->kind == sdmd) ? 2 : 1)].id1;
       if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
       return ((this_person ^ other_person) & DIR_MASK) == 2;
@@ -1655,12 +1655,12 @@ static bool lines_couple(setup *real_people, int real_index,
 {
    switch (real_people->cmd.cmd_assume.assumption) {
    case cr_wave_only: case cr_magic_only:
-      return false;
+      if (real_people->kind != sdmd) return false;
    case cr_2fl_only:
-      return true;
+      if (real_people->kind != sdmd) return true;
    default:
       int this_person = real_people->people[real_index].id1;
-      int other_person = real_people->people[real_index ^ 1].id1;
+      int other_person = real_people->people[real_index ^ ((real_people->kind == sdmd) ? 2 : 1)].id1;
       if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
       return ((this_person ^ other_person) & DIR_MASK) == 0;

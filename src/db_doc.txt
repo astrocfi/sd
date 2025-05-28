@@ -2875,6 +2875,8 @@ x14_once_rem_couple
 lines_miniwave
       applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
       (Or thar in which only line-like people have a legal move.)
+      (It may also be used in a diamond, in which case it tests the opposite,
+      that is, the other point or the other center.)
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the opposite direction.  Returns FALSE if the partner is
       a phantom or faces the same way or is T-boned.
@@ -2882,6 +2884,8 @@ lines_miniwave
 lines_couple
       applies to 1x2, 1x4, 1x6, 1x8, 2x4, 3x4, 2x6, or 2x8 lines only.
       (Or thar in which only line-like people have legal move.)
+      (It may also be used in a diamond, in which case it tests the opposite,
+      that is, the other point or the other center.)
       Returns TRUE if the lateral partner of the person under test is alive
       and facing the same direction.  Returns FALSE if the partner is
       a phantom or faces the opposite way or is T-boned.
@@ -3816,6 +3820,8 @@ These restrictions are "overloaded" -- their meaning depends on the starting set
    outroller_is_cw    Q             2x4 or qtag - the outrollers are in clockwise position
    outroller_is_ccw   Q             2x4 or qtag - the outrollers are in counterclockwise
                                        position
+
+   ends_didnt_move    Q             1x4, 1x8, 2x4 - all the ends of the 1x4 or each 1x4 didn't move.
 
    peelable_box                     2x2, 3x2, 4x2, 5x2, 6x2 or 8x2 - all people in each
                                        column are facing same way

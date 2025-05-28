@@ -45,6 +45,7 @@
 
 // Do this to get WM_MOUSEWHEEL defined in windows header files.
 #define _WIN32_WINNT 0x0400
+#define _CRT_SECURE_NO_WARNINGS
 
 #define STRICT
 #define WIN32_LEAN_AND_MEAN
@@ -2705,7 +2706,7 @@ void ShowListBox(int nWhichOne)
          UpdateStatusBar("<circulate replacement>");
 
          for (unsigned int iu=0 ; iu<number_of_circcers ; iu++)
-            scan_menu(get_call_menu_name(circcer_calls[iu]), hDC, &nLongest, MAKELONG(iu, 0));
+            scan_menu(get_call_menu_name(circcer_calls[iu].the_circcer), hDC, &nLongest, MAKELONG(iu, 0));
       }
       else if (nLastOne >= matcher_class::e_match_taggers &&
                nLastOne < matcher_class::e_match_taggers+NUM_TAGGER_CLASSES) {

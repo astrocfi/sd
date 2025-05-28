@@ -9,6 +9,7 @@
 // return opened POSIX file descriptors to the callee.  If this is statically
 // part of a DLL, but is not exported from the DLL, that's OK.
 
+#define _CRT_SECURE_NO_WARNINGS
 #include "mapcachefile.h"
 #include <string.h>
 #include <sys/stat.h>
@@ -114,7 +115,7 @@ MAPPED_CACHE_FILE::MAPPED_CACHE_FILE(int numsourcefiles,
          innards->properly_opened = false;
          innards->the_miss_reason = MISS_CANT_OPEN_SOURCE;
       }
-      else if (fstat(fileno(srcfiles[i]), &innards->source_stats[i])) {
+      else if (fstat(_fileno(srcfiles[i]), &innards->source_stats[i])) {
          // If we can open the source files but can't get their
          // modification times, it's still possible to proceed.  We
          // will leave the file descriptor nonzero.  But we will
@@ -305,7 +306,7 @@ void MAPPED_CACHE_FILE::map_for_writing(int clientmapfilesizeinbytes)
    int i;
    for (i=0 ; i<innards->numsourcefiles ; i++) {
       innards->map_address[3+2*i] = innards->source_stats[i].st_size;
-      innards->map_address[4+2*i] = innards->source_stats[i].st_mtime;
+      innards->map_address[4+2*i] = (int) innards->source_stats[i].st_mtime;
    }
 
    client_address = innards->map_address + innards->header_size_in_words;
