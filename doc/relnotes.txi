@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.33
-@set title2 Database version = 38.33 format = 300
+@set title1 RELEASE NOTES FOR VERSION 38.34
+@set title2 Database version = 38.34 format = 300
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.34::
 * 38.33::
 * 38.32::
 * 38.31::
@@ -73,7 +74,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.33, Top, (dir)
+@node Intro, 38.34, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -84,11 +85,20 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2010 William B. Ackerman
 @sp 3
 @menu
-* 38.33::               Changes in the current version
+* 38.34::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.33, 38.32, Intro, Top
+@node 38.34, 38.33, Intro, Top
+@unnumberedsec Version 38.34 changes
+
+The call @strong{kickoff} was brought into compliance with the current Callerlab definition.  The non-desgnees
+only partner tag if an active person is kicking into their spot.
+
+The @strong{stingy} and @strong{generous} concepts were improved.
+
+@c ************
+@node 38.33, 38.32, 38.34, Top
 @unnumberedsec Version 38.33 changes
 
 The program can handle many more unsymmetrical things, such as, from columns, @strong{near 4 follow to a diamond},

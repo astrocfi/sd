@@ -276,6 +276,11 @@ static collision_map collision_map_table[] = {
     s2x4,        s2x6,        0, warn__none, 0},
    {6, 0x000000, 0xEE, 0x88, {1, 2, 3, 5, 6, 7},   {2, 3, 4, 8, 9, 11},   {2, 3, 5, 8, 9, 10},
     s2x4,        s2x6,        0, warn__none, 0},
+   {6, 0x000000, 0x7E, 0x18, {1, 2, 3, 4, 5, 6},   {2, 3, 4, 7, 8, 9},    {2, 3, 5, 6, 8, 9},
+    s2x4,        s2x6,        0, warn__none, 0},
+   {6, 0x000000, 0xE7, 0x81, {0, 1, 2, 5, 6, 7},   {0, 2, 3, 8, 9, 11},   {1, 2, 3, 8, 9, 10},
+    s2x4,        s2x6,        0, warn__none, 0},
+
    // These items handle single lines with people wedged on one end, and hence handle flip or cut the diamond.
    {3, 0x000000, 0x0B, 0x01, {0, 1, 3},            {0, 2, 5},             {1, 2, 5},
     s1x4,        s1x6,        0, warn__none, 0},

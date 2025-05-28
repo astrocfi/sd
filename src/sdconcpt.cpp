@@ -6957,7 +6957,7 @@ static void do_concept_meta(
          index = nfield - 1;
          shortenhighlim = kfield;
       }
-      else if (!corefracs.is_null())
+      else if (corefracs.flags != 0)  // If flags=0, we allow incoming fraction; we pass it on.
          fail("Can't stack meta or fractional concepts.");
 
       frac_stuff = corefracs;

@@ -305,7 +305,7 @@ const map::map_thing *map::get_map_from_code(uint32 map_encoding)
 }
 
 
-static void innards(
+static void multiple_move_innards(
    setup_command *sscmd,
    uint32 map_encoding,
    const map::map_thing *maps,
@@ -314,6 +314,7 @@ static void innards(
    unsigned int noexpand_bits_to_set,
    bool do_second_only,
    setup *x,
+   setup *z,
    setup *result,
    whuzzisthingy *thing = (whuzzisthingy *) 0) THROW_DECL
 {
@@ -324,7 +325,6 @@ static void innards(
 
    setup_kind xorigkind[16];
    int xorigrot[16];
-   setup z[16];
 
    uint32 rot = maps->rot;
    int vert = (maps->vert ^ rot) & 1;
@@ -1327,14 +1327,15 @@ extern void divided_setup_move(
          t.assumption = cr_1fl_only;
    }
 
-   innards(
+   setup z[16];
+   multiple_move_innards(
       &ss->cmd, map_encoding, maps, recompute_id, t,
       noexpand_bits_to_set,
       (maps->map_kind == MPKIND__CONCPHAN &&
        phancontrol == phantest_ctr_phantom_line && !vflags[0]),
-      x, result, thing);
+      x, z, result, thing);
 
-   // "Innards" has returned with the splitting info correct for the subcalls, but
+   // "Multiple_move_innards" has returned with the splitting info correct for the subcalls, but
    // not taking into account the incoming rotation in "ss->rotation".  We need to
    // add onto that the splitting that we have just done, which also does not take
    // the incoming rotation into account.
@@ -1442,9 +1443,10 @@ extern void overlapped_setup_move(
       }
    }
 
+   setup z[16];
    t.assumption = cr_none;
-   innards(&ss->cmd, map_encoding, maps, true, t,
-           noexpand_bits_to_set, false, x, result);
+   multiple_move_innards(&ss->cmd, map_encoding, maps, true, t,
+                         noexpand_bits_to_set, false, x, z, result);
    reinstate_rotation(ss, result);
    result->result_flags.clear_split_info();
    result->clear_all_overcasts();

@@ -2828,7 +2828,7 @@ extern void anchor_someone_and_move(
    setup people;
    matrix_rec before_matrix_info[9];
    matrix_rec after_matrix_info[9];
-   int i, j, k, nump, numgroups;
+   int i, j, k, nump;
    int deltax[MAX_GROUPS], deltay[MAX_GROUPS];
    selector_kind saved_selector = current_options.who;
    setup saved_start_people = *ss;
@@ -2861,11 +2861,48 @@ extern void anchor_someone_and_move(
        ss->kind != s_ptpd)
       fail("Sorry, can't do this in this setup.");
    move(ss, false, result);
-   numgroups = 0;
 
    nump = start_matrix_call(&saved_start_people, before_matrix_info, 0,
                             MTX_USE_SELECTOR, &people);
    current_options.who = saved_selector;
+
+   int numgroups = 0;
+   uint32 splitting_indicator = (result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0];
+   bool we_have_a_problem = false;
+
+   switch (splitting_indicator) {
+   case 1:       // Single split on X.
+   case 0x10:    // Single split on Y.
+      numgroups = 2;
+      break;
+   case 0x11:    // Single split on both X and Y.
+   case 3:       // Triple split on X.
+      numgroups = 4;
+      break;
+   case 0x12:    // Double split on X, single on Y.
+   case 0x21:    // Double split on Y, single on X.
+      numgroups = 6;
+      break;
+   case 0x13:    // Triple split on X, single on Y.
+   case 0x31:    // Triple split on Y, single on X.
+      numgroups = 8;
+      break;
+   case 0x15:    // Quintuple split on X, single on Y.
+   case 0x51:    // Quintuple split on Y, single on X.
+      numgroups = 12;
+      break;
+   default:
+      we_have_a_problem = true;
+   }
+
+   if (we_have_a_problem) {
+      if (ss->kind != s4x4)
+         fail("Can't 'anchor' someone for an 8-person call.");
+
+      // Needs 48-person setups!
+      divided_setup_move(ss, MAPCODE(s1x4,4,MPKIND__SPLIT,1), phantest_ok, true, result);
+      fail("Can't 'anchor' someone for an 8-person call.");
+   }
 
    for (i=0 ; i<nump ; i++) {
       int x = before_matrix_info[i].x;
@@ -2873,68 +2910,59 @@ extern void anchor_someone_and_move(
 
       // Look at both fields simultaneously.
 
-      switch ((result->result_flags.split_info[1] << 4) | result->result_flags.split_info[0]) {
-      case 1:    // Single split on X.
-         numgroups = 2;
+      switch (splitting_indicator) {
+      case 1:       // Single split on X.
          if (x < 0) j = 0;
          else j = 1;
          break;
       case 0x10:    // Single split on Y.
-         numgroups = 2;
          if (y < 0) j = 0;
          else j = 1;
          break;
       case 0x11:    // Single split on both X and Y.
-         numgroups = 4;
          if (x < 0) j = 0;
          else j = 2;
          if (y < 0) j++;
          break;
-      case 3:    // Triple split on X.
+      case 3:       // Triple split on X.
          // This is split into four groups in a row from left to right.
-         numgroups = 4;
          if      (x < -setup_attrs[ss->kind].bounding_box[0]) j = 0;
          else if (x < 0) j = 1;
          else if (x < setup_attrs[ss->kind].bounding_box[0]) j = 2;
          else j = 3;
          break;
-      case 0x12:    // Double split on both X, single on Y.
+      case 0x12:    // Double split on X, single on Y.
          // This is split into 2 groups vertically and 3 groups laterally.
-         numgroups = 6;
          if (y < 0) j = 0;
          else j = 3;
          if (x+x/2 > setup_attrs[ss->kind].bounding_box[0]) j += 2;
          else if (x+x/2 >= -setup_attrs[ss->kind].bounding_box[0]) j += 1;
          break;
-      case 0x21:    // Double split on both Y, single on X.
+      case 0x21:    // Double split on Y, single on X.
          // This is split into 3 groups vertically and 2 groups laterally.
-         numgroups = 6;
          if (x < 0) j = 0;
          else j = 3;
          if (y+y/2 > setup_attrs[ss->kind].bounding_box[1]) j += 2;
          else if (y+y/2 >= -setup_attrs[ss->kind].bounding_box[1]) j += 1;
          break;
-      case 0x13:    // Triple split on both X, single on Y.
+      case 0x13:    // Triple split on X, single on Y.
          // This is split into 2 groups vertically and 4 groups laterally.
-         numgroups = 8;
          if (y < 0) j = 0;
          else j = 4;
          if      (x < -setup_attrs[ss->kind].bounding_box[0]) j += 3;
          else if (x < 0) j += 2;
          else if (x < setup_attrs[ss->kind].bounding_box[0]) j += 1;
          break;
-      case 0x31:    // Triple split on both Y, single on X.
+      case 0x31:    // Triple split on Y, single on X.
          // This is split into 4 groups vertically and 2 groups laterally.
-         numgroups = 8;
          if (x < 0) j = 0;
          else j = 4;
          if      (y < -setup_attrs[ss->kind].bounding_box[0]) j += 3;
          else if (y < 0) j += 2;
          else if (y < setup_attrs[ss->kind].bounding_box[0]) j += 1;
          break;
-      case 0x15:    // Quintuple split on both X, single on Y.
+      case 0x15:    // Quintuple split on X, single on Y.
          // This is split into 2 groups vertically and 6 groups laterally.
-         numgroups = 12;
          if (y < 0) j = 0;
          else j = 6;
          if      (x < -2*setup_attrs[ss->kind].bounding_box[0]) j += 5;
@@ -2943,9 +2971,8 @@ extern void anchor_someone_and_move(
          else if (x < setup_attrs[ss->kind].bounding_box[0]) j += 2;
          else if (x < 2*setup_attrs[ss->kind].bounding_box[0]) j += 1;
          break;
-      case 0x51:    // Quintuple split on both Y, single on X.
+      case 0x51:    // Quintuple split on Y, single on X.
          // This is split into 6 groups vertically and 2 groups laterally.
-         numgroups = 12;
          if (x < 0) j = 0;
          else j = 6;
          if      (y < -2*setup_attrs[ss->kind].bounding_box[0]) j += 5;
@@ -2954,8 +2981,6 @@ extern void anchor_someone_and_move(
          else if (y < setup_attrs[ss->kind].bounding_box[0]) j += 2;
          else if (y < 2*setup_attrs[ss->kind].bounding_box[0]) j += 1;
          break;
-      default:
-         fail("Can't 'anchor' someone for an 8-person call.");
       }
 
       Eindex[j] = 99;    // We have someone in this group.
