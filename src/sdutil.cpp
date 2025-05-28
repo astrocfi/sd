@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2014  William B. Ackerman.
+//    Copyright (C) 1990-2015  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -1172,16 +1172,33 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential) {
                writestuff("(");
             }
-            else if (k == concept_special_sequential_num) {
-               writestuff("USE ");
+            else if (k == concept_special_sequential ||
+                     k == concept_special_sequential_num ||
+                     k == concept_special_sequential_4num) {
+               switch (item->arg1) {
+               case part_key_use_last_part:
+                  writestuff("USE ");
 
-               // If stuff hasn't been completely entered, show the number.
-               if (!local_cptr->next || !subsidiary_ptr)
-                  writestuff_with_decorations(&local_cptr->options, "(for @u part) ", true);
-            }
-            else if (k == concept_special_sequential_4num) {
-               writestuff_with_decorations(&local_cptr->options, item->name, true);
-               writestuff(" ");
+                  // If stuff hasn't been completely entered, show what we want.
+                  if (!local_cptr->next || !subsidiary_ptr)
+                     writestuff_with_decorations(&local_cptr->options, "(for last part) ", true);
+                  break;
+               case part_key_use_nth_part:
+                  writestuff("USE ");
+
+                  // If stuff hasn't been completely entered, show the number.
+                  if (!local_cptr->next || !subsidiary_ptr)
+                     writestuff_with_decorations(&local_cptr->options, "(for @u part) ", true);
+                  break;
+               case part_key_frac_and_frac:
+                  writestuff_with_decorations(&local_cptr->options, item->name, true);
+                  writestuff(" ");
+                  break;
+               default:
+                  writestuff(item->name);
+                  writestuff(" ");
+                  break;
+               }
             }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
@@ -1273,10 +1290,6 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
                writestuff(" WITH");
             else if (k == concept_sandwich)
                writestuff(" AROUND");
-            else if (k == concept_special_sequential_num) {
-               writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ", true);
-               request_final_space = false;
-            }
             else if (k == concept_replace_nth_part ||
                      k == concept_replace_last_part ||
                      k == concept_interrupt_at_fraction) {
@@ -1288,15 +1301,31 @@ void ui_utils::print_recurse(parse_block *thing, int print_recurse_arg)
             else if (k == concept_sequential)
                writestuff(" ;");
             else if (k == concept_special_sequential ||
+                     k == concept_special_sequential_num ||
                      k == concept_special_sequential_4num) {
-               if (item->arg1 == 2)
-                  writestuff(" :");   // This is "start with".
-               else if (item->arg1 == 4)
+               switch (item->arg1) {
+               case part_key_start_with:
+                  writestuff(" :");
+                  break;
+               case part_key_use:
                   writestuff(" IN");
-               else if (item->arg1 == 5 || item->arg1 == 6)
+                  break;
+               case part_key_use_nth_part:
+                  writestuff_with_decorations(&local_cptr->options, " FOR THE @u PART: ", true);
+                  request_final_space = false;
+                  break;
+               case part_key_half_and_half:
+               case part_key_frac_and_frac:
                   writestuff(" AND");
-               else
+                  break;
+               case part_key_use_last_part:
+                  writestuff_with_decorations(&local_cptr->options, " FOR THE LAST PART: ", true);
+                  request_final_space = false;
+                  break;
+               default:
                   writestuff(",");
+                  break;
+               }
             }
             else
                writestuff(" BY");
@@ -2902,7 +2931,7 @@ void ui_utils::run_program(iobase & ggg)
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
-      writestuff("Copyright (c) 1990-2014 William B. Ackerman");
+      writestuff("Copyright (c) 1990-2015 William B. Ackerman");
       newline();
       writestuff("   and Stephen Gildea.");
       newline();

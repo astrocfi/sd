@@ -1479,11 +1479,6 @@ extern void normalize_concentric(
          result))
       goto anomalize_it;
 
-   if (inners->eighth_rotation != outers->eighth_rotation)
-      fail("Inconsistent rotation.");
-
-   result->eighth_rotation = inners->eighth_rotation;
-
    if (table_synthesizer == schema_conc_o ||
        synthesizer == schema_in_out_triple_squash ||
        synthesizer == schema_in_out_triple_dyp_squash)
@@ -3861,6 +3856,8 @@ extern void concentric_move(
    if (analyzer == schema_in_out_triple_zcom) analyzer = schema_concentric_zs;
    else if (analyzer == schema_in_out_triple && imposing_z) analyzer = schema_concentric;
 
+   uint32 eighth_rotation = 0;
+
    if (analyzer == schema_concentric ||
        analyzer == schema_in_out_triple ||
        analyzer == schema_concentric_zs ||
@@ -3875,7 +3872,7 @@ extern void concentric_move(
        analyzer == schema_in_out_quad ||
        analyzer == schema_in_out_12mquad ||
        analyzer == schema_concentric_others) {
-      if (fix_n_results(center_arity, -1, false, &outer_inners[1], rotstate, pointclip, 0)) {
+      if (fix_n_results(center_arity, -1, false, &outer_inners[1], rotstate, pointclip, eighth_rotation, 0)) {
          outer_inners[1].kind = nothing;
       }
       else if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
@@ -3883,7 +3880,6 @@ extern void concentric_move(
       // Try to turn inhomogeneous diamond/wave combinations into all diamonds,
       // if the waves are missing their centers or ends.  If the resulting diamonds
       // are nonisotropic (elongated differently), that's OK.
-
       if (analyzer == schema_in_out_triple && ((final_elongation+1) & 2) != 0) {
          if (outer_inners[0].kind == sdmd && outer_inners[1].kind == s1x4) {
             if (!(outer_inners[1].people[0].id1 | outer_inners[1].people[2].id1 |
@@ -3915,12 +3911,17 @@ extern void concentric_move(
             }
          }
       }
+
+      eighth_rotation = 0;
    }
    else if (analyzer == schema_4x4k_concentric ||
             analyzer == schema_3x3k_concentric) {
       // Put all 3, or all 4, results into the same formation.
-      fix_n_results(center_arity+1, -1, false, outer_inners, rotstate, pointclip, 0);
+      fix_n_results(center_arity+1, -1, false, outer_inners, rotstate, pointclip, eighth_rotation, 0);
+      //      eighth_rotation = 0;
    }
+
+   if (eighth_rotation != 0) fail("Sorry, under construction.");
 
    // If the call was something like "ends detour", the concentricity info was left in the
    // cmd_misc_flags during the execution of the call, so we have to pick it up to make sure
@@ -6623,8 +6624,10 @@ extern void inner_selective_move(
             goto fooble;
          }
 
-         if (fix_n_results(numsetups, -1, false, lilresult, rotstate, pointclip, 0)) goto lose;
-         if (!(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
+         uint32 eighth_rotation;
+
+         if (fix_n_results(numsetups, -1, false, lilresult, rotstate, pointclip, eighth_rotation, 0)) goto lose;
+         if (eighth_rotation != 0 || !(rotstate & 0xF03)) fail("Sorry, can't do this orientation changer.");
 
          this_result->clear_people();
 

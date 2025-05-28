@@ -2413,6 +2413,8 @@ enum {
    // This is a 2 bit field.
    CMD_MISC3__DID_Z_COMPRESSMASK   = 0x01800000U,
    CMD_MISC3__DID_Z_COMPRESSBIT    = 0x00800000U,
+
+   CMD_MISC3__ACTUAL_Z_CONCEPT     = 0x02000000U
 };
 
 enum normalize_action {
@@ -2630,6 +2632,17 @@ enum tandem_key {
    tandem_key_ys = 32
 };
 
+enum part_key_kind {
+   part_key_follow_by,
+   part_key_precede_by,
+   part_key_start_with,
+   part_key_use_nth_part,
+   part_key_use,
+   part_key_half_and_half,
+   part_key_frac_and_frac,
+   part_key_use_last_part
+};
+
 // BEWARE!!  This list is keyed to the table "meta_key_props" in sdtables.cpp .
 enum meta_key_kind {
    meta_key_random,
@@ -2644,6 +2657,7 @@ enum meta_key_kind {
    meta_key_nth_part_work,
    meta_key_first_frac_work,
    meta_key_skip_nth_part,
+   meta_key_skip_last_part,
    meta_key_shift_n,
    meta_key_echo,
    meta_key_rev_echo,   // Must follow meta_key_echo.
@@ -3301,35 +3315,35 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
 
-extern void warn_about_concept_level();
+void warn_about_concept_level();
 
-extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss);
+void turn_4x4_pinwheel_into_c1_phantom(setup *ss);
 
-extern bool clean_up_unsymmetrical_setup(setup *ss);
+bool clean_up_unsymmetrical_setup(setup *ss);
 
-extern setup_kind try_to_expand_dead_conc(const setup & result,
+setup_kind try_to_expand_dead_conc(const setup & result,
                                           const call_with_name *call,
                                           setup & lineout, setup & qtagout, setup & dmdout);
 
-extern parse_block *process_final_concepts(
+parse_block *process_final_concepts(
    parse_block *cptr,
    bool check_errors,
    final_and_herit_flags *final_concepts,
    bool forbid_unfinished_parse,
    bool only_one) THROW_DECL;
 
-extern bool fix_n_results(int arity,
-                          int goal,
-                          bool kind_is_split,
-                          setup z[],
-                          uint32 & rotstates,
-                          uint32 & pointclip,
-                          uint32 fudgystupidrot) THROW_DECL;
+bool fix_n_results(
+   int arity,
+   int goal,
+   bool kind_is_split,
+   setup z[],
+   uint32 & rotstates,
+   uint32 & pointclip,
+   uint32 fudgystupidrot) THROW_DECL;
 
-extern bool warnings_are_unacceptable(bool strict);
+bool warnings_are_unacceptable(bool strict);
 
-extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
-     THROW_DECL;
+void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) THROW_DECL;
 
 void check_concept_parse_tree(parse_block *conceptptr, bool strict) THROW_DECL;
 
@@ -3337,7 +3351,7 @@ bool check_for_centers_concept(uint32 & callflags1_to_examine,     // We rewrite
                                parse_block * & parse_scan,         // This too.
                                const setup_command *the_cmd) THROW_DECL;
 
-extern bool do_subcall_query(
+bool do_subcall_query(
    int snumber,
    parse_block *parseptr,
    parse_block **newsearch,
@@ -3345,7 +3359,7 @@ extern bool do_subcall_query(
    bool this_is_tagger_circcer,
    call_with_name *orig_call);
 
-extern call_list_kind find_proper_call_list(setup *s);
+call_list_kind find_proper_call_list(setup *s);
 
 enum collision_severity {
    collision_severity_no,

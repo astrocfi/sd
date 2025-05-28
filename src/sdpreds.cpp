@@ -735,6 +735,7 @@ extern bool selectp(const setup *ss, int place, int allow_some /*= 0*/) THROW_DE
          else if (allow_some == 3) {
             switch (ss->kind) {
             case s_323:
+            case s3x1dmd:
             case s1x3dmd:
                if (A == B && B == C) thing_to_test = 0x7;
                break;
@@ -1666,33 +1667,38 @@ static bool can_swing_left(setup *real_people, int real_index,
    int real_direction, int northified_index, const int32 *extra_stuff)
 {
    int t;
+   int size = attr::slimit(real_people)+1;
+   int halfsize = size >> 1;
+
+   // For "can_swing_right" fudge the northified_index to be a southified_index.
+   int direction_index = northified_index - (*extra_stuff ? halfsize : 0);
+   if (direction_index < 0) direction_index += size;
 
    switch (real_people->kind) {
    case s1x4:
-      t = swingleft_1x4[northified_index];
+      t = swingleft_1x4[direction_index];
       break;
    case s1x3dmd:
-      t = swingleft_1x3dmd[northified_index];
+      t = swingleft_1x3dmd[direction_index];
       break;
    case swqtag:
-      t = swingleft_wqtag[northified_index];
+      t = swingleft_wqtag[direction_index];
       break;
    case sdeep2x1dmd:
-      t = swingleft_deep2x1dmd[northified_index];
+      t = swingleft_deep2x1dmd[direction_index];
       break;
    default:
       return false;
    }
 
    if (t < 0) return false;
-   if (northified_index != real_index) {
-      int size = attr::slimit(real_people)+1;
-      t -= size >> 1;
+
+   if (direction_index != real_index) {
+      t -= halfsize;
       if (t < 0) t += size;
    }
 
-   return ((real_people->people[real_index].id1 ^ real_people->people[t].id1) &
-           DIR_MASK) == 2;
+   return ((real_people->people[real_index].id1 ^ real_people->people[t].id1) & DIR_MASK) == 2;
 }
 
 
@@ -2888,7 +2894,8 @@ predicate_descriptor pred_table[] = {
       {x12_beau_or_miniwave,           &iden_tab[1]},            // "1x2_beau_miniwave_or_warn"
       {x12_beau_or_miniwave,           &iden_tab[2]},            // "1x2_beau_miniwave_for_breaker"
       {x12_beau_or_miniwave,           &iden_tab[3]},            // "1x2_beau_miniwave_or_ok"
-      {can_swing_left,               (const int32 *) 0},         // "can_swing_left"
+      {can_swing_left,                 &iden_tab[0]},            // "can_swing_left"
+      {can_swing_left,                 &iden_tab[1]},            // "can_swing_right"
       {x14_wheel_and_deal,             &iden_tab[1]},            // "1x4_wheel_and_deal"
       {x14_wheel_and_deal,             &iden_tab[0]},            // "1x4_wheel_and_deal_or_1fl"
       {x16_wheel_and_deal,           (const int32 *) 0},         // "1x6_wheel_and_deal"

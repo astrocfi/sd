@@ -4753,7 +4753,7 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
 }
 
 
-extern void warn_about_concept_level()
+void warn_about_concept_level()
 {
    if (allowing_all_concepts)
       warn(warn__bad_concept_level);
@@ -4762,7 +4762,7 @@ extern void warn_about_concept_level()
 }
 
 
-extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss)
+void turn_4x4_pinwheel_into_c1_phantom(setup *ss)
 {
    if (ss->kind == s4x4) {
       switch(little_endian_live_mask(ss)) {
@@ -4778,7 +4778,7 @@ extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss)
 
 
 
-extern bool clean_up_unsymmetrical_setup(setup *ss)
+bool clean_up_unsymmetrical_setup(setup *ss)
 {
    static expand::thing thing_splinedmd_1x8 = {{0, 1, 3, 2, -1, -1, -1, -1}, splinedmd, s1x8, 0};
    static expand::thing thing_splinedmd_qtag = {{-1, -1, -1, -1, 3, 1, 2, 4}, splinedmd, s_qtag, 0};
@@ -4803,9 +4803,9 @@ extern bool clean_up_unsymmetrical_setup(setup *ss)
 static const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, s_qtag, s2x4, 3};
 
 
-extern setup_kind try_to_expand_dead_conc(const setup & result,
-                                          const call_with_name *call,
-                                          setup & lineout, setup & qtagout, setup & dmdout)
+setup_kind try_to_expand_dead_conc(const setup & result,
+                                   const call_with_name *call,
+                                   setup & lineout, setup & qtagout, setup & dmdout)
 {
    lineout = result;
    lineout.rotation += lineout.inner.srotation;
@@ -4856,7 +4856,7 @@ extern setup_kind try_to_expand_dead_conc(const setup & result,
 // (2) The herit field is otherwise messed up.  Only zero/nonzero matters.
 // (3) In any case the "final" field will be correct. */
 
-extern parse_block *process_final_concepts(
+parse_block *process_final_concepts(
    parse_block *cptr,
    bool check_errors,
    final_and_herit_flags *final_concepts,
@@ -5131,13 +5131,14 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 // diamond points, and changes the diamond points to ends of lines.
 // It's not clear that this is the wisest way to do this.
 
-extern bool fix_n_results(int arity,
-                          int goal,
-                          bool kind_is_split,
-                          setup z[],
-                          uint32 & rotstates,
-                          uint32 & pointclip,
-                          uint32 fudgystupidrot) THROW_DECL
+bool fix_n_results(
+   int arity,
+   int goal,
+   bool kind_is_split,
+   setup z[],
+   uint32 & rotstates,
+   uint32 & pointclip,
+   uint32 fudgystupidrot) THROW_DECL
 {
    int i;
 
@@ -5555,7 +5556,7 @@ extern bool fix_n_results(int arity,
 
 
 
-extern bool warnings_are_unacceptable(bool strict)
+bool warnings_are_unacceptable(bool strict)
 {
    // If we are doing a "standardize", we let ALL warnings pass.
    // We particularly want weird T-bones and other unusual sort of things.
@@ -5592,8 +5593,7 @@ const expand::thing s_dmd_323 = {{5, 7, 1, 3}, sdmd, s_323, 1};
 // When preparing for an isolated call, that is, "so-and-so do your part, whatever",
 // we work at it a little, so we set action=normalize_before_isolated_call.
 // For normal usage, we set action=simple_normalize.
-extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress)
-   THROW_DECL
+void normalize_setup(setup *ss, normalize_action action, bool noqtagcompress) THROW_DECL
 {
    uint32 livemask, tbonetest;
    bool did_something = false;
@@ -5791,9 +5791,7 @@ extern void normalize_setup(setup *ss, normalize_action action, bool noqtagcompr
       action = simple_normalize;
       goto startover;
    }
-   else if (!did_something && ss->kind == s3x4 &&
-       !(ss->people[0].id1 | ss->people[3].id1 |
-         ss->people[6].id1 | ss->people[9].id1)) {
+   else if (ss->kind == s3x4 && (livemask & 01111) == 0) {
       expand::compress_setup(s_qtg_3x4, ss);
       did_something = true;
       goto startover;
@@ -6606,7 +6604,7 @@ bool deposit_call_tree(modifier_block *anythings, parse_block *save1, int key)
 
 
 
-extern bool do_subcall_query(
+bool do_subcall_query(
    int snumber,
    parse_block *parseptr,
    parse_block **newsearch,
@@ -6789,7 +6787,7 @@ extern bool do_subcall_query(
 
 
 
-extern call_list_kind find_proper_call_list(setup *s)
+call_list_kind find_proper_call_list(setup *s)
 {
    if (s->kind == s1x8) {
       if      ((s->people[0].id1 & 017) == 010 &&

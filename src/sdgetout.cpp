@@ -288,6 +288,21 @@ const resolve_tester null_resolve_thing = {
 
 const resolve_tester *configuration::null_resolve_ptr = &null_resolve_thing;
 
+// The list is:
+// where in the setup to find B1, where in the setup to find G1,
+// where in the setup to find B2, where in the setup to find G2,
+// where in the setup to find B3, where in the setup to find G3,
+// where in the setup to find B4, where in the setup to find G4,
+//
+// The direction word is, left to right:
+// direction of B1, direction of G1,
+// direction of B2, direction of G2,
+// direction of B3, direction of G3,
+// direction of B4, direction of G4,
+//
+// The assignment of couple number may be rotated freely, of course.  But the person
+// in slot 0 of the list (B1 in the example) must be a boy.
+
 static const resolve_tester test_thar_stuff[] = {
    {resolve_rlg,            MS, 2,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A31A813},
    {resolve_minigrand,      MS, 4,   {5, 0, 3, 6, 1, 4, 7, 2},     0x8833AA11},
@@ -406,6 +421,13 @@ static const resolve_tester test_4x4_stuff[] = {
    {resolve_rlg,            MS, 1,   {1, 14, 15, 12, 9, 6, 7, 4},  0x31311313},
    {resolve_la,             MS, 7,   {5, 2, 3, 0, 13, 10, 11, 8},  0xA8A88A8A},
    {resolve_la,             MS, 5,   {1, 14, 15, 12, 9, 6, 7, 4},  0x13133131},
+
+   // From weird stuff
+   {resolve_rlg,            MS, 6,   {15, 11, 5, 4, 7, 3, 13, 12}, 0xA8138A31},
+   {resolve_rlg,            MS, 0,   {3, 15, 9, 8, 11, 7, 1, 0},   0x31A8138A},
+   {resolve_rlg,            MS, 6,   {15, 11, 8, 6, 7, 3, 0, 14},  0xA8138A31},
+   {resolve_rlg,            MS, 0,   {3, 15, 12, 10, 11, 7, 4, 2}, 0x31A8138A},
+
    {resolve_none, MS, 0x10}};
 
 static const resolve_tester test_alamo_stuff[] = {
@@ -491,6 +513,9 @@ static const resolve_tester test_qtag_stuff[] = {
    {resolve_rlg,            MS, 4,   {5, 4, 3, 2, 1, 0, 7, 6},     0x8A8AA8A8},
    {resolve_minigrand,      MS, 6,   {5, 0, 3, 6, 1, 4, 7, 2},     0x8888AAAA},
    {resolve_la,             MS, 7,   {4, 2, 3, 1, 0, 6, 7, 5},     0x88A8AA8A},
+
+   // From a really weird 1/4-tag-like setup, about 900 milli-Tersoffs.
+   {resolve_rlg,            MS, 3,   {4, 2, 3, 1, 0, 6, 7, 5},     0x1A313813},
 
    // Singers only.
    // Swing/prom from 3/4 tag, ends sashayed (normal case is above).

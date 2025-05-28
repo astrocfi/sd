@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2015  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 322
+#define DATABASE_FORMAT_VERSION 323
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun

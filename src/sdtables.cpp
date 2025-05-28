@@ -3532,6 +3532,12 @@ conc_tables::cm_thing conc_tables::conc_init_table[] = {
              sdmd,     s1x4,     1, 0, 1, 1,  0x0FD, schema_intermediate_diamond},
    {s3x1dmd,        schema_outside_diamond, {7, 0, 3, 4,         1, 2, 5, 6},
              sdmd,     s1x4,     1, 0, 1, 1,  0x0FD, schema_outside_diamond},
+
+   {s_wingedstar,   schema_intermediate_diamond, {1, 3, 5, 7,         0, 2, 4, 6},
+             sdmd,     s1x4,     0, 0, 1, 1,  0x0FE, schema_intermediate_diamond},
+   {s_wingedstar,   schema_outside_diamond, {0, 3, 4, 7,         1, 2, 5, 6},
+             sdmd,     s1x4,     0, 0, 1, 1,  0x0FE, schema_outside_diamond},
+
    // For putting back shape-changers.
    {s1x3dmd,        schema_intermediate_diamond, {1, 3, 5, 7,         0, 2, 4, 6},
              sdmd,     s1x4,     0, 0, 1, 1,  0x0FE, schema_intermediate_diamond},
@@ -6118,6 +6124,18 @@ static const coordrec thing3x1dmd = {s3x1dmd, 3,   // Used for both -- symmetric
       -1, -1, -1, -1, -1, -1, -1, -1,
       -1, -1, -1, -1, -1, -1, -1, -1}};
 
+static const coordrec thingwingstar = {s_wingedstar, 3,   // Used for both -- symmetric and safe for press/truck.
+   {-10,  -6,  -2,   0,  10,   6,   2,   0},
+   {  0,   0,   0,   4,   0,   0,   0,  -4}, {
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1,  3, -1, -1, -1,
+      -1,  0,  1,  2,  6,  5,  4, -1,
+      -1, -1, -1, -1,  7, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1,
+      -1, -1, -1, -1, -1, -1, -1, -1}};
+
 static const coordrec thing4p2x1dmd = {s4p2x1dmd, 3,   // Used for both -- symmetric and safe for press/truck.
    {-10,  -6,  -2,   2,   4,  10,   6,   4},
    {  0,   0,   0,   0,   5,   0,   0,  -5}, {
@@ -7061,14 +7079,14 @@ static const id_bit_table id_bit_table_hrglass[] = {
    NOBIT(ID2_CENTER|ID2_CTR4|ID2_CTR2 |ID2_CTRDMD | ID2_CTR6)};
 
 static const id_bit_table id_bit_table_dhrglass[] = {
-   NORTHBIT(ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   NORTHBIT(ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   NOBIT(   ID2_CENTER|ID2_CTRDMD | ID2_OUTR6|ID2_NOUTR1X3),
-   NORTHBIT(ID2_CENTER|ID2_CTRDMD | ID2_CTR2 |ID2_OUTR1X3),
-   SOUTHBIT(ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   SOUTHBIT(ID2_END   |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
-   NOBIT(   ID2_CENTER|ID2_CTRDMD | ID2_OUTR6|ID2_NOUTR1X3),
-   SOUTHBIT(ID2_CENTER|ID2_CTRDMD | ID2_CTR2 |ID2_OUTR1X3)};
+   NORTHBIT(ID2_END            |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   NORTHBIT(ID2_END            |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   NOBIT(   ID2_CENTER|ID2_CTR4|ID2_CTRDMD | ID2_OUTR6|ID2_NOUTR1X3),
+   NORTHBIT(ID2_CENTER|ID2_CTR4|ID2_CTRDMD | ID2_CTR2 |ID2_OUTR1X3),
+   SOUTHBIT(ID2_END            |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   SOUTHBIT(ID2_END            |ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
+   NOBIT(   ID2_CENTER|ID2_CTR4|ID2_CTRDMD | ID2_OUTR6|ID2_NOUTR1X3),
+   SOUTHBIT(ID2_CENTER|ID2_CTR4|ID2_CTRDMD | ID2_CTR2 |ID2_OUTR1X3)};
 
 static const id_bit_table id_bit_table_323[] = {
    NOBIT(  ID2_NCTRDMD| ID2_OUTR6|ID2_OUTR1X3),
@@ -7621,14 +7639,14 @@ static const id_bit_table id_bit_table_dmdpdmd[] = {
    NOBIT(ID2_CTR2)};
 
 static const id_bit_table id_bit_table_swingedstar[] = {
-   NOBIT(ID2_OUTR2| ID2_CTR1X6 | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_CTR4),
-   NOBIT(ID2_CTR6 | ID2_NCTR1X6| ID2_CTR4),
-   NOBIT(ID2_OUTR2| ID2_CTR1X6 | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_OUTRPAIRS),
-   NOBIT(ID2_CTR6 | ID2_CTR1X6 | ID2_CTR4),
-   NOBIT(ID2_CTR6 | ID2_NCTR1X6| ID2_CTR4)};
+   NOBIT(ID2_OUTR2| ID2_OUTRPAIRS | ID2_END | ID2_CTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_CTR6 | ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6 | ID2_CTR1X4),
+   NOBIT(ID2_CTR6|  ID2_CTR4|   ID2_CENTER| ID2_CTR1X6 | ID2_CTR1X4),
+   NOBIT(ID2_CTR6 | ID2_CTR4|   ID2_CENTER| ID2_NCTR1X6  | ID2_NCTR1X4),
+   NOBIT(ID2_OUTR2| ID2_OUTRPAIRS | ID2_END | ID2_CTR1X6 | ID2_NCTR1X4),
+   NOBIT(ID2_CTR6 | ID2_OUTRPAIRS| ID2_END| ID2_CTR1X6 | ID2_CTR1X4),
+   NOBIT(ID2_CTR6|  ID2_CTR4|   ID2_CENTER| ID2_CTR1X6 | ID2_CTR1X4),
+   NOBIT(ID2_CTR6 | ID2_CTR4|   ID2_CENTER| ID2_NCTR1X6  | ID2_NCTR1X4)};
 
 static const id_bit_table id_bit_table_spindle[] = {
    NORTHBIT(ID2_CTR6 |ID2_OUTR6),
@@ -8897,8 +8915,8 @@ const setup_attr setup_attrs[] = {
     {"a6 6 6 6l@76 5e 6 f@7b6 6 6 6k@76o p h g@7c6 6 6 6j@76 5n 6 m@7d6 6 6 6i",
      "dcba@65o@75n6e@765p@65h@75m6f@765g@ijkl"}},
    {7,                      // s_wingedstar
-    (const coordrec *) 0,
-    (const coordrec *) 0,
+    &thingwingstar,
+    &thingwingstar,
     {0x33, 0x77, 0, 0},
     {b_wingedstar, b_pwingedstar},
     {0, 0},
@@ -9898,6 +9916,7 @@ const uint32 meta_key_props[] = {
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_nth_part_work
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2 | MKP_COMMA_NEXT,   // meta_key_first_frac_work
    0,                                 // meta_key_skip_nth_part
+   0,                                 // meta_key_skip_last_part
    0,                                 // meta_key_shift_n
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_echo
    MKP_RESTRAIN_1 | MKP_RESTRAIN_2,   // meta_key_rev_echo

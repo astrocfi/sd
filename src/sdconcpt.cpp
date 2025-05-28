@@ -2966,12 +2966,15 @@ static void do_concept_old_stretch(
       // We don't check if this was 3x1 -- too complicated for now.
 
       uint32 field_to_check = (result->rotation & 1);
+      // Short6 is geometrically strange.  Maybe ought to check bounding box instead?
+      if (result->kind == s_short6)
+         field_to_check ^= 1;
 
       if (!mxnstuff && result->result_flags.split_info[field_to_check] == 0)
          fail("Stretch call was not a 4 person call divided along stretching axis.");
 
       if (mxnstuff && (result->kind == s1x8)) {
-         /* This is a bit sleazy. */
+         // This is a bit sleazy.
 
          if (((result->people[0].id1 ^ result->people[1].id1) & 2) ||
              (result->result_flags.misc & RESULTFLAG__VERY_ENDS_ODD)) {
@@ -3010,6 +3013,21 @@ static void do_concept_old_stretch(
          }
          else if (result->kind == s3x4 && little_endian_live_mask(result) == 07171) {
             result->swap_people(5, 11);
+         }
+         else if (result->kind == s_short6) {
+            result->swap_people(5, 0);
+            result->swap_people(2, 3);
+         }
+         else if (result->kind == s_rigger) {
+            result->swap_people(5, 4);
+            result->swap_people(0, 1);
+         }
+         else if (result->kind == s_bone) {
+            result->swap_people(3, 6);
+            result->swap_people(2, 7);
+         }
+         else if (result->kind == s_bone6) {
+            result->swap_people(2, 5);
          }
          else
             fail("Stretch call didn't go to a legal setup.");
@@ -4691,15 +4709,16 @@ static void do_concept_special_sequential(
    setup *result) THROW_DECL
 {
    // Values of arg1 are:
-   //    0 - follow it by (call)
-   //    1 - precede it by (call)
-   //    2 - start with (call)
-   //    3 - use (call) for <Nth> part
-   //    4 - use (call) in
-   //    5 - half and half
-   //    6 - I/J and M/N
+   //    part_key_follow_by     (0) - follow it by (call)
+   //    part_key_precede_by    (1) - precede it by (call)
+   //    part_key_start_with    (2) - start with (call)
+   //    part_key_use_nth_part  (3) - use (call) for <Nth> part
+   //    part_key_use           (4) - use (call) in
+   //    part_key_half_and_half (5) - half and half
+   //    part_key_frac_and_frac (6) - I/J and M/N
+   //    part_key_use_last_part (7) - use (call) for the last part
 
-   if (parseptr->concept->arg1 == 5 || parseptr->concept->arg1 == 6) {
+   if (parseptr->concept->arg1 == part_key_half_and_half || parseptr->concept->arg1 == part_key_frac_and_frac) {
       // This is "half and half".
 
       fraction_info zzz(2);
@@ -4761,7 +4780,7 @@ static void do_concept_special_sequential(
          zzz.m_client_index += zzz.m_subcall_incr;
       }
    }
-   else if (parseptr->concept->arg1 == 3) {
+   else if (parseptr->concept->arg1 == part_key_use_nth_part) {
       // This is "use (call) for <Nth> part", which is the same as "replace the <Nth> part".
 
       if (!ss->cmd.cmd_fraction.is_null())
@@ -4770,7 +4789,7 @@ static void do_concept_special_sequential(
       prepare_for_call_in_series(result, ss);
       int stopindex = parseptr->options.number_fields;
 
-      // Do the early part, if any of the main call.
+      // Do the early part, if any, of the main call.
 
       if (stopindex > 1) {
          copy_cmd_preserve_elong_and_expire(ss, result);
@@ -4808,7 +4827,37 @@ static void do_concept_special_sequential(
       result->cmd.prior_expire_bits |= result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
       do_call_in_series(result, true, true, false);
    }
-   else if (parseptr->concept->arg1 == 2) {
+   else if (parseptr->concept->arg1 == part_key_use_last_part) {
+      // This is "use (call) for last part".
+
+      if (!ss->cmd.cmd_fraction.is_null())
+         fail("Can't stack meta or fractional concepts.");
+
+      prepare_for_call_in_series(result, ss);
+
+      // Do all of the main call except the last.
+
+      copy_cmd_preserve_elong_and_expire(ss, result);
+      result->cmd.prior_expire_bits |= RESULTFLAG__EXPIRATION_ENAB;
+      result->cmd.parseptr = parseptr->subsidiary_root;
+      result->cmd.cmd_fraction.set_to_null_with_flags(
+         FRACS(CMD_FRAC_CODE_FROMTOREV,1,1) | CMD_FRAC_BREAKING_UP);
+      result->cmd.prior_expire_bits |=
+         result->result_flags.misc & RESULTFLAG__EXPIRATION_BITS;
+      do_call_in_series(result, true, true, false);
+
+      // Do the replacement call.
+
+      result->cmd = ss->cmd;
+      if (!(result->result_flags.misc & RESULTFLAG__NO_REEVALUATE))
+         update_id_bits(result);    // So you can interrupt with "leads run", etc.
+      result->cmd.cmd_misc_flags &= ~CMD_MISC__NO_EXPAND_MATRIX;
+
+      // Give this call a clean start with respect to expiration stuff.
+      result->result_flags.misc &= ~RESULTFLAG__EXPIRATION_BITS;
+      do_call_in_series(result, true, true, false);
+   }
+   else if (parseptr->concept->arg1 == part_key_start_with) {
       // This is "start with (call)", which is the same as "replace the 1st part".
 
       if (!ss->cmd.cmd_fraction.is_null())
@@ -4839,7 +4888,8 @@ static void do_concept_special_sequential(
       result->result_flags.misc = finalresultflagsmisc & ~3;
    }
    else {
-      // This is replace with (4), follow with (0) or precede with (1).
+
+      // This is replace with (part_key_use), follow by (part_key_follow_by) or precede with (part_key_precede_by).
 
       // We allow fractionalization commands only for the special case of "piecewise"
       // or "random", in which case we will apply them to the first call only.
@@ -6289,9 +6339,7 @@ static void do_concept_all_8(
    }
 
    if (key == 0) {
-
-      /* This is "all 4 couples". */
-
+      // This is "all 4 couples".
       if (  ss->kind != s4x4 ||
             (( ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
                ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1) != 0) ||
@@ -6303,16 +6351,15 @@ static void do_concept_all_8(
             (ss->people[ 5].id1 != 0 && ((ss->people[ 5].id1) & 1) != 0) ||
             (ss->people[ 9].id1 != 0 && ((ss->people[ 9].id1) & 1) == 0) ||
             (ss->people[13].id1 != 0 && ((ss->people[13].id1) & 1) != 0))
-         fail("Must be in squared set spots.");
+         fail("Must be in squared set formation.");
 
       divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, true, result);
    }
    else {
+      // This is "all 8" or "all 8 (diamond)".
 
-      /* This is "all 8" or "all 8 (diamond)". */
-
-      /* Turn a 2x4 into a 4x4, if people are facing reasonably.  If the centers are all
-         facing directly across the set, it might not be a good idea to allow this. */
+      // Turn a 2x4 into a 4x4, if people are facing reasonably.  If the centers are all
+      // facing directly across the set, it might not be a good idea to allow this.
       if (ss->kind == s2x4 && key == 1) {
          uint32 tbctrs =
             ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1;
@@ -6340,57 +6387,58 @@ static void do_concept_all_8(
          else
             divided_setup_move(ss, MAPCODE(sdmd,2,MPKIND__ALL_8,0), phantest_ok, true, result);
 
-         /* The above stuff did an "elongate perpendicular to the long axis of the 1x4 or diamond"
-            operation, also known as an "ends' part of concentric" operation.  Some people believe
-            (perhaps as part of a confusion between "all 8" and "all 4 couples", or some other mistaken
-            notion) that they should always end on column spots.  Now it is true that "all 4 couples"
-            always ends on columns spots, but that's because it can only begin on column spots.
-            To avoid undue controversy or bogosity, we only allow the call if both criteria are met.
-            The "opposite elongation" criterion was already met, so we check for the mistaken
-            "end on column spots" criterion.  If someone really wants to hinge from a thar, they can
-            just say "hinge". */
-/*  Not any longer.  Always go to columns.
+         // The above stuff did an "elongate perpendicular to the long axis of the 1x4 or diamond"
+         // operation, also known as an "ends' part of concentric" operation.  Some people believe
+         // (perhaps as part of a confusion between "all 8" and "all 4 couples", or some other mistaken
+         // notion) that they should always end on column spots.  Now it is true that "all 4 couples"
+         // always ends on columns spots, but that's because it can only begin on column spots.
+         // To avoid undue controversy or bogosity, we only allow the call if both criteria are met.
+         // The "opposite elongation" criterion was already met, so we check for the mistaken
+         // "end on column spots" criterion.  If someone really wants to hinge from a thar, they can
+         // just say "hinge".
+
+         /*  Not any longer.  Always go to columns.
          if (result->kind == s4x4) {
-            if (     ((result->people[1].id1 | result->people[2].id1 | result->people[9].id1 | result->people[10].id1) & 010) ||
-                     ((result->people[14].id1 | result->people[5].id1 | result->people[6].id1 | result->people[13].id1) & 1))
+            if (((result->people[1].id1 | result->people[2].id1 | result->people[9].id1 | result->people[10].id1) & 010) ||
+                ((result->people[14].id1 | result->people[5].id1 | result->people[6].id1 | result->people[13].id1) & 1))
                fail("Ending position is not defined.");
          }
          return;
-*/
+         */
       }
       else if (key == 2)
-         fail("Must be in a thar.");   /* Can't do "all 8 (diamonds)" from squared-set spots. */
+         fail("Must be in a thar.");   // Can't do "all 8 (diamonds)" from squared-set spots.
       else if (ss->kind == s_crosswave) {
          ss->kind = s_thar;
          divided_setup_move(ss, MAPCODE(s1x4,2,MPKIND__ALL_8,0), phantest_ok, true, result);
       }
       else if (ss->kind == s4x4) {
-         /* This is "all 8" in a squared-set-type of formation.  This concept isn't really formally
-            defined here, except for the well-known cases like "all 8 spin the top", in which they
-            would step to a wave and then proceed from the resulting thar.  That is, it is known
-            to be legal in facing line-like elongation if everyone steps to a wave.  But it is
-            also called from column-like elongation, with everyone facing out, for things like
-            "all 8 shakedown", so we want to allow that.
+         // This is "all 8" in a squared-set-type of formation.  This concept isn't really formally
+         // defined here, except for the well-known cases like "all 8 spin the top", in which they
+         // would step to a wave and then proceed from the resulting thar.  That is, it is known
+         // to be legal in facing line-like elongation if everyone steps to a wave.  But it is
+         // also called from column-like elongation, with everyone facing out, for things like
+         // "all 8 shakedown", so we want to allow that.
+         //
+         // Perhaps, if people are in line-like elongation, we should have a cmd_misc bit saying
+         // "must step to a wave" along with the bit saying "must not step to a wave".
+         // To make matters worse, it might be nice to allow only some people to step to a wave
+         // in a suitable rigger setup.
+         //
+         // Basically, no one knows exactly how this concept is supposed to work in all the
+         // cases.  This isn't a problem for anyone except those people who have the misfortune
+         // to try to write a computer program to do this stuff.
 
-            Perhaps, if people are in line-like elongation, we should have a cmd_misc bit saying
-            "must step to a wave" along with the bit saying "must not step to a wave".
-            To make matters worse, it might be nice to allow only some people to step to a wave
-            in a suitable rigger setup.
-
-            Basically, no one knows exactly how this concept is supposed to work in all the
-            cases.  This isn't a problem for anyone except those people who have the misfortune
-            to try to write a computer program to do this stuff. */
-
-         /* First, it's clearly only legal if on squared-set spots. */
+         // First, it's clearly only legal if on squared-set spots.
 
          if ((    ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[7].id1 |
                   ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[15].id1) != 0)
             fail("Must be on squared-set spots.");
 
-         /* If people started out line-like, we demand that they be facing in.  That is, we do not allow
-            "all quarter away from your partner, then all 8 shakedown", though we do allow "all
-            face your partner and all 8 square chain thru to a wave".  We are just being as conservative
-            as possible while allowing those cases that are commonly used. */
+         // If people started out line-like, we demand that they be facing in.  That is, we do not allow
+         // "all quarter away from your partner, then all 8 shakedown", though we do allow "all
+         // face your partner and all 8 square chain thru to a wave".  We are just being as conservative
+         // as possible while allowing those cases that are commonly used.
 
          divided_setup_move(ss, MAPCODE(s2x2,2,MPKIND__ALL_8,0), phantest_ok, true, result);
       }
@@ -6706,6 +6754,7 @@ static void do_concept_meta(
    }
 
    if (key != meta_key_skip_nth_part &&
+       key != meta_key_skip_last_part &&
        key != meta_key_revorder &&
        key != meta_key_shift_n &&
        key != meta_key_shift_half) {
@@ -6796,6 +6845,14 @@ static void do_concept_meta(
       // Do the final part.
       result->cmd.cmd_fraction.set_to_null_with_flags(
          FRACS(CMD_FRAC_CODE_FROMTOREV,parseptr->options.number_fields+1,0));
+      goto finish_it;
+
+   case meta_key_skip_last_part:
+      if (!corefracs.is_null())
+         fail("Can't stack meta or fractional concepts.");
+
+      result->cmd.cmd_fraction.set_to_null_with_flags(
+         FRACS(CMD_FRAC_CODE_FROMTOREV,1,1));
       goto finish_it;
 
    case meta_key_shift_n:
@@ -7069,22 +7126,26 @@ static void do_concept_meta(
          uint32 bfracs = ~0U;
          uint32 cfracs = ~0U;
 
-         if (concept_option_code == 2) {
-            // This is "middle M/N".
-            uint32 middlestuff = stuff + denom*((1<<BITS_PER_NUMBER_FIELD)+1);
-            afracs = process_fractions(NUMBER_FIELDS_1_0, middlestuff, FRAC_INVERT_END, corefracs);
-            bfracs = process_fractions(middlestuff, middlestuff, FRAC_INVERT_START, corefracs);
-            cfracs = process_fractions(middlestuff, NUMBER_FIELDS_1_1, FRAC_INVERT_NONE, corefracs);
-         }
-         else if (concept_option_code) {
+         switch (concept_option_code) {
+         case 1:
             // This is "last M/N".
             afracs = process_fractions(NUMBER_FIELDS_1_0, stuff, FRAC_INVERT_END, corefracs);
             bfracs = process_fractions(stuff, NUMBER_FIELDS_1_1, FRAC_INVERT_START, corefracs);
-         }
-         else {
-            // This is "halfway" or "first M/N".
+            break;
+         case 2:
+            // This is "middle M/N".
+            {
+               uint32 middlestuff = stuff + denom*((1<<BITS_PER_NUMBER_FIELD)+1);
+               afracs = process_fractions(NUMBER_FIELDS_1_0, middlestuff, FRAC_INVERT_END, corefracs);
+               bfracs = process_fractions(middlestuff, middlestuff, FRAC_INVERT_START, corefracs);
+               cfracs = process_fractions(middlestuff, NUMBER_FIELDS_1_1, FRAC_INVERT_NONE, corefracs);
+            }
+            break;
+         default:
+            // This is "halfway" (3) or "first M/N" (0).
             bfracs = process_fractions(NUMBER_FIELDS_1_0, stuff, FRAC_INVERT_NONE, corefracs);
             cfracs = process_fractions(stuff, NUMBER_FIELDS_1_1, FRAC_INVERT_NONE, corefracs);
+            break;
          }
 
          // Do afracs without.
@@ -8540,6 +8601,7 @@ extern bool do_big_concept(
                 this_kind != concept_frac_crazy &&
                 (this_kind != concept_meta ||
                  (this_concept->arg1 != meta_key_like_a &&
+                  this_concept->arg1 != meta_key_skip_last_part &&
                   this_concept->arg1 != meta_key_shift_n)) &&
                 (this_kind != concept_meta_one_arg ||
                  (this_concept->arg1 != meta_key_skip_nth_part &&
@@ -8869,6 +8931,8 @@ const concept_table_item concept_table[] = {
    {CONCPROP__SHOW_SPLIT, do_concept_once_removed},         // concept_once_removed
    {CONCPROP__NEEDK_4X4 | Nostep_phantom,
     do_concept_do_phantom_2x2},                             // concept_do_phantom_2x2
+   {CONCPROP__NEEDK_4X4,
+    do_concept_do_phantom_2x2},                             // concept_do_blocks_2x2
    {CONCPROP__NEEDK_2X8 | Nostandard_matrix_phantom,
     do_concept_do_phantom_boxes},                           // concept_do_phantom_boxes
    {CONCPROP__NEEDK_4D_4PTPD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,

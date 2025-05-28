@@ -634,6 +634,26 @@ static bool multiple_move_innards(
       }
    }
 
+   // If did a "colliding call like circulate in a 2x2, going to parallel waves
+   // with just one wave occupied, strip the 2x4 down to a 1x4.
+   if (map_kind == MPKIND__REMOVED && arity == 2 && !(sscmd->cmd_misc_flags & CMD_MISC__PHANTOMS) &&
+            z[0].kind == s2x4 && z[1].kind == s2x4 &&
+            z[0].rotation == 1 && z[1].rotation == 1) {
+      static const expand::thing thing_top = {{0, 1, 3, 2}, s1x4, s2x4, 0};
+      static const expand::thing thing_bot = {{7, 6, 4, 5}, s1x4, s2x4, 0};
+
+      for (i=0; i<2; i++) {
+         switch (little_endian_live_mask(&z[i])) {
+         case 0xF0:
+            expand::compress_setup(thing_bot, &z[i]);
+            break;
+         case 0x0F:
+            expand::compress_setup(thing_top, &z[i]);
+            break;
+         }
+      }
+   }
+
    // This stuff might not be correct.  We are trying to let these map kinds go through,
    // since they can handle non-isotropic setups.  But we raise an error on any other maps,
    // since they can't handle it.  These map kinds are known to work -- they all arise
@@ -2008,69 +2028,36 @@ extern void distorted_2x2s_move(
    // Maps for jays. These have the extra 24 to handle going to 1x4's.
 
    static const veryshort mapj1[48] = {
-               7, 2, 4, 5, 0, 1, 3, 6,
-               6, 3, 4, 5, 0, 1, 2, 7,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               0, 1, 2, 3, 6, 7, 4, 5,
-               5, 4, 2, 3, 6, 7, 1, 0,
-               -1, -1, -1, -1, -1, -1, -1, -1};
+      7, 2, 4, 5, 0, 1, 3, 6,              6, 3, 4, 5, 0, 1, 2, 7,      -1, -1, -1, -1, -1, -1, -1, -1,
+      0, 1, 2, 3, 6, 7, 4, 5,              5, 4, 2, 3, 6, 7, 1, 0,      -1, -1, -1, -1, -1, -1, -1, -1};
 
    static const veryshort mapj2[48] = {
-               6, 3, 4, 5, 0, 1, 2, 7,
-               7, 2, 4, 5, 0, 1, 3, 6,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               5, 4, 2, 3, 6, 7, 1, 0,
-               0, 1, 2, 3, 6, 7, 4, 5,
-               -1, -1, -1, -1, -1, -1, -1, -1};
+      6, 3, 4, 5, 0, 1, 2, 7,              7, 2, 4, 5, 0, 1, 3, 6,      -1, -1, -1, -1, -1, -1, -1, -1,
+      5, 4, 2, 3, 6, 7, 1, 0,              0, 1, 2, 3, 6, 7, 4, 5,      -1, -1, -1, -1, -1, -1, -1, -1};
 
    static const veryshort mapj3[48] = {
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               7, 2, 4, 5, 0, 1, 3, 6,
-               6, 3, 4, 5, 0, 1, 2, 7,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               0, 1, 2, 3, 6, 7, 4, 5,
-               5, 4, 2, 3, 6, 7, 1, 0};
+      -1, -1, -1, -1, -1, -1, -1, -1,      7, 2, 4, 5, 0, 1, 3, 6,      6, 3, 4, 5, 0, 1, 2, 7,
+      -1, -1, -1, -1, -1, -1, -1, -1,      0, 1, 2, 3, 6, 7, 4, 5,      5, 4, 2, 3, 6, 7, 1, 0};
 
    static const veryshort mapj4[48] = {
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               6, 3, 4, 5, 0, 1, 2, 7,
-               7, 2, 4, 5, 0, 1, 3, 6,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               5, 4, 2, 3, 6, 7, 1, 0,
-               0, 1, 2, 3, 6, 7, 4, 5};
+      -1, -1, -1, -1, -1, -1, -1, -1,      6, 3, 4, 5, 0, 1, 2, 7,      7, 2, 4, 5, 0, 1, 3, 6,
+      -1, -1, -1, -1, -1, -1, -1, -1,      5, 4, 2, 3, 6, 7, 1, 0,      0, 1, 2, 3, 6, 7, 4, 5};
 
    // Maps for facing/back-to-front/back-to-back parallelograms.
    // These have the extra 24 to handle going to 1x4's.
 
    static const veryshort mapk1[48] = {
-               3, 2, 4, 5, 0, 1, 7, 6,
-               6, 7, 4, 5, 0, 1, 2, 3,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               0, 1, 2, 3, 6, 7, 4, 5,
-               5, 4, 2, 3, 6, 7, 1, 0,
-               -1, -1, -1, -1, -1, -1, -1, -1};
+      3, 2, 4, 5, 0, 1, 7, 6,              6, 7, 4, 5, 0, 1, 2, 3,      -1, -1, -1, -1, -1, -1, -1, -1,
+      0, 1, 2, 3, 6, 7, 4, 5,              5, 4, 2, 3, 6, 7, 1, 0,      -1, -1, -1, -1, -1, -1, -1, -1};
    static const veryshort mapk2[48] = {
-               6, 7, 4, 5, 0, 1, 2, 3,
-               3, 2, 4, 5, 0, 1, 7, 6,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               5, 4, 2, 3, 6, 7, 1, 0,
-               0, 1, 2, 3, 6, 7, 4, 5,
-               -1, -1, -1, -1, -1, -1, -1, -1};
+      6, 7, 4, 5, 0, 1, 2, 3,              3, 2, 4, 5, 0, 1, 7, 6,      -1, -1, -1, -1, -1, -1, -1, -1,
+      5, 4, 2, 3, 6, 7, 1, 0,              0, 1, 2, 3, 6, 7, 4, 5,      -1, -1, -1, -1, -1, -1, -1, -1};
    static const veryshort mapk3[48] = {
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               3, 2, 4, 5, 0, 1, 7, 6,
-               6, 7, 4, 5, 0, 1, 2, 3,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               0, 1, 2, 3, 6, 7, 4, 5,
-               5, 4, 2, 3, 6, 7, 1, 0};
-
+      -1, -1, -1, -1, -1, -1, -1, -1,      3, 2, 4, 5, 0, 1, 7, 6,      6, 7, 4, 5, 0, 1, 2, 3,
+      -1, -1, -1, -1, -1, -1, -1, -1,      0, 1, 2, 3, 6, 7, 4, 5,      5, 4, 2, 3, 6, 7, 1, 0};
    static const veryshort mapk4[48] = {
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               6, 7, 4, 5, 0, 1, 2, 3,
-               3, 2, 4, 5, 0, 1, 7, 6,
-               -1, -1, -1, -1, -1, -1, -1, -1,
-               5, 4, 2, 3, 6, 7, 1, 0,
-               0, 1, 2, 3, 6, 7, 4, 5};
+      -1, -1, -1, -1, -1, -1, -1, -1,      6, 7, 4, 5, 0, 1, 2, 3,      3, 2, 4, 5, 0, 1, 7, 6,
+      -1, -1, -1, -1, -1, -1, -1, -1,      5, 4, 2, 3, 6, 7, 1, 0,      0, 1, 2, 3, 6, 7, 4, 5};
 
    static const veryshort map3stag1[48] = {
       1, 3, 21, 23, 5, 7, 17, 19, 9, 11, 13, 15};
@@ -2078,11 +2065,16 @@ extern void distorted_2x2s_move(
    static const veryshort map3stag2[48] = {
       0, 2, 20, 22, 4, 6, 16, 18, 8, 10, 12, 14};
 
+   static const veryshort mapzda[9] = {1, 3, 4, 5, 7, 9, 10, 11, -1};
+   static const veryshort mapzdb[9] = {0, 2, 4, 5, 6, 8, 10, 11, -1};
+   static const veryshort mapzdc[9] = {0, 3, 4, 5, 6, 9, 10, 11, -1};
+
    int table_offset, arity, misc_indicator, i;
    setup inputs[4];
    setup results[4];
-   uint32 directions, livemask, misc2_zflag;
+   uint32 directionsBE, livemaskBE, misc2_zflag;
    const veryshort *map_ptr = 0;
+   const veryshort *map_3x4_restorer = 0;
 
    const concept_descriptor *this_concept =
       (ss->cmd.cmd_misc3_flags & CMD_MISC3__IMPOSE_Z_CONCEPT) ? &concept_special_z : parseptr->concept;
@@ -2112,7 +2104,7 @@ extern void distorted_2x2s_move(
    //      7       triple staggered boxes
    //      8       clockwise or counterclockwise jay
 
-   // Table_offset is 0, 8, or 12.  It selects the appropriate part of the maps.
+   // Table_offset is 0, 8, 12, or 16.  It selects the appropriate part of the maps.
    // For "Z"      :   0 == normal, 8 == interlocked.
    // For Jay/Pgram:   0 == normal, 8 == back-to-front, 16 == back-to-back.
 
@@ -2124,15 +2116,15 @@ extern void distorted_2x2s_move(
       normalize_setup(ss, simple_normalize, false);
    }
 
-   directions = 0;
-   livemask = 0;
+   directionsBE = 0;
+   livemaskBE = 0;
    arity = 2;
 
    for (i=0 ; i<=attr::slimit(ss) ; i++) {
       uint32 p = ss->people[i].id1;
-      directions = ((directions & 0x3FFFFFFF)<<2) | (p&3);
-      livemask <<= 1;
-      if (p) livemask |= 1;
+      directionsBE = ((directionsBE & 0x3FFFFFFF)<<2) | (p&3);
+      livemaskBE <<= 1;
+      if (p) livemaskBE |= 1;
    }
 
    result->clear_people();
@@ -2145,11 +2137,11 @@ extern void distorted_2x2s_move(
          fail("Must have a 2x12 for this concept.");
 
       arity = 3;
-      if ((livemask & 0xAAAAAA) == 0) {
+      if ((livemaskBE & 0xAAAAAA) == 0) {
          map_ptr = map3stag1;
       }
-      else if ((livemask & 0x555555) == 0) {
-         if ((livemask & 0xAAAAAA) == 0)
+      else if ((livemaskBE & 0x555555) == 0) {
+         if ((livemaskBE & 0xAAAAAA) == 0)
             fail("Can't figure this out.");  // Could only happen if setup is empty.
          map_ptr = map3stag2;
       }
@@ -2157,30 +2149,33 @@ extern void distorted_2x2s_move(
       break;
    case 0:
       // The concept is some variety of "Z".
-      arity = this_concept->arg4;
+      arity = this_concept->arg4 & 0xF;  // 16 bit here means real "Z" concept, not "EACH Z", always reduce to 2x2.
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
       ss->cmd.cmd_misc3_flags |= CMD_MISC3__SAID_Z;
+
+      if (this_concept->arg4 & 0x10)
+         ss->cmd.cmd_misc3_flags |= CMD_MISC3__ACTUAL_Z_CONCEPT;
 
       if (arity == 3) {
          switch (ss->kind) {
          case s3x6:
             // If outer Z's are ambiguous, make them look like inner ones.
-            if ((livemask & 0630630) == 0)
+            if ((livemaskBE & 0630630) == 0)
                warn(warn_same_z_shear);
 
-            if ((livemask & 0250250) == 0) {
+            if ((livemaskBE & 0250250) == 0) {
                misc2_zflag = CMD_MISC2__IN_Z_CW;
                goto do_real_z_stuff;
             }
-            else if ((livemask & 0520520) == 0) {
+            else if ((livemaskBE & 0520520) == 0) {
                misc2_zflag = CMD_MISC2__IN_Z_CCW;
                goto do_real_z_stuff;
             }
-            else if ((livemask & 0310310) == 0) {
+            else if ((livemaskBE & 0310310) == 0) {
                misc2_zflag = CMD_MISC2__IN_AZ_CCW;
                goto do_real_z_stuff;
             }
-            else if ((livemask & 0460460) == 0) {
+            else if ((livemaskBE & 0460460) == 0) {
                misc2_zflag = CMD_MISC2__IN_AZ_CW;
                goto do_real_z_stuff;
             }
@@ -2211,14 +2206,14 @@ extern void distorted_2x2s_move(
                {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
 
                arity = 2;
-               if (     (livemask & ~0x3939) == 0) map_ptr = map1;
-               else if ((livemask & ~0x1D1D) == 0) map_ptr = map2;
-               else if ((livemask & ~0x7272) == 0) map_ptr = map3;
-               else if ((livemask & ~0x5656) == 0) map_ptr = map4;
-               else if ((livemask & ~0x6565) == 0) map_ptr = map5;
-               else if ((livemask & ~0x2727) == 0) map_ptr = map6;
-               else if ((livemask & ~0xD1D1) == 0) map_ptr = map7;
-               else if ((livemask & ~0x9393) == 0) map_ptr = map8;
+               if (     (livemaskBE & ~0x3939) == 0) map_ptr = map1;
+               else if ((livemaskBE & ~0x1D1D) == 0) map_ptr = map2;
+               else if ((livemaskBE & ~0x7272) == 0) map_ptr = map3;
+               else if ((livemaskBE & ~0x5656) == 0) map_ptr = map4;
+               else if ((livemaskBE & ~0x6565) == 0) map_ptr = map5;
+               else if ((livemaskBE & ~0x2727) == 0) map_ptr = map6;
+               else if ((livemaskBE & ~0xD1D1) == 0) map_ptr = map7;
+               else if ((livemaskBE & ~0x9393) == 0) map_ptr = map8;
             }
             break;
          case s4x5:
@@ -2234,14 +2229,14 @@ extern void distorted_2x2s_move(
                static const veryshort map45g[9] = {9, 1, 8, 15, 18, 5, 19, 11, -1};
                static const veryshort map45h[9] = {9, 16, 13, 15, 3, 5, 19, 6, -1};
 
-               if (     (livemask & ~0xC1B06) == 0) map_ptr = map45a;
-               else if ((livemask & ~0x1B06C) == 0) map_ptr = map45b;
-               else if ((livemask & ~0x360D8) == 0) map_ptr = map45c;
-               else if ((livemask & ~0x60D83) == 0) map_ptr = map45d;
-               else if ((livemask & ~0x0E83A) == 0) map_ptr = map45e;
-               else if ((livemask & ~0x82E0B) == 0) map_ptr = map45f;
-               else if ((livemask & ~0x44D13) == 0) map_ptr = map45g;
-               else if ((livemask & ~0x16459) == 0) map_ptr = map45h;
+               if (     (livemaskBE & ~0xC1B06) == 0) map_ptr = map45a;
+               else if ((livemaskBE & ~0x1B06C) == 0) map_ptr = map45b;
+               else if ((livemaskBE & ~0x360D8) == 0) map_ptr = map45c;
+               else if ((livemaskBE & ~0x60D83) == 0) map_ptr = map45d;
+               else if ((livemaskBE & ~0x0E83A) == 0) map_ptr = map45e;
+               else if ((livemaskBE & ~0x82E0B) == 0) map_ptr = map45f;
+               else if ((livemaskBE & ~0x44D13) == 0) map_ptr = map45g;
+               else if ((livemaskBE & ~0x16459) == 0) map_ptr = map45h;
             }
             break;
          case s4x6:
@@ -2257,14 +2252,14 @@ extern void distorted_2x2s_move(
                static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
                static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
 
-               if (     (livemask & ~0x423423) == 0) map_ptr = map46a;
-               else if ((livemask & ~0x0B10B1) == 0) map_ptr = map46b;
-               else if ((livemask & ~0x813813) == 0) map_ptr = map46c;
-               else if ((livemask & ~0x072072) == 0) map_ptr = map46d;
-               else if ((livemask & ~0x1B01B0) == 0) map_ptr = map46e;
-               else if ((livemask & ~0x0D80D8) == 0) map_ptr = map46f;
-               else if ((livemask & ~0x603603) == 0) map_ptr = map46g;
-               else if ((livemask & ~0xC06C06) == 0) map_ptr = map46h;
+               if (     (livemaskBE & ~0x423423) == 0) map_ptr = map46a;
+               else if ((livemaskBE & ~0x0B10B1) == 0) map_ptr = map46b;
+               else if ((livemaskBE & ~0x813813) == 0) map_ptr = map46c;
+               else if ((livemaskBE & ~0x072072) == 0) map_ptr = map46d;
+               else if ((livemaskBE & ~0x1B01B0) == 0) map_ptr = map46e;
+               else if ((livemaskBE & ~0x0D80D8) == 0) map_ptr = map46f;
+               else if ((livemaskBE & ~0x603603) == 0) map_ptr = map46g;
+               else if ((livemaskBE & ~0xC06C06) == 0) map_ptr = map46h;
             }
             break;
          case s3x4:
@@ -2283,18 +2278,18 @@ extern void distorted_2x2s_move(
                static const veryshort mapd[16] =   // Only interlocked Z's
                {-1, -1, -1, -1, -1, -1, -1, -1, 0, 5, 7, 10, 1, 4, 6, 11};
 
-               if ((livemask & ~02727) == 0) {
+               if ((livemaskBE & ~02727) == 0) {
                   //                  map_ptr = mapa;
                   misc2_zflag = CMD_MISC2__IN_Z_CCW;
                   goto do_real_z_stuff;
                }
-               else if ((livemask & ~05353) == 0) {
+               else if ((livemaskBE & ~05353) == 0) {
                   //                  map_ptr = mapb;
                   misc2_zflag = CMD_MISC2__IN_Z_CW;
                   goto do_real_z_stuff;
                }
-               else if ((livemask & ~01717) == 0) map_ptr = mapc;
-               else if ((livemask & ~06363) == 0) map_ptr = mapd;
+               else if ((livemaskBE & ~01717) == 0) map_ptr = mapc;
+               else if ((livemaskBE & ~06363) == 0) map_ptr = mapd;
             }
             break;
          case s2x6:
@@ -2307,8 +2302,8 @@ extern void distorted_2x2s_move(
                static const veryshort mapf[16] =
                {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
 
-               if (     (livemask & 01111) == 0) map_ptr = mape;
-               else if ((livemask & 04444) == 0) map_ptr = mapf;
+               if (     (livemaskBE & 01111) == 0) map_ptr = mape;
+               else if ((livemaskBE & 04444) == 0) map_ptr = mapf;
             }
             break;
          case s3x6:
@@ -2326,11 +2321,11 @@ extern void distorted_2x2s_move(
                static const veryshort mapk[16] =
                {1, 2, 16, 15, 7, 6, 10, 11, -1, -1, -1, -1, -1, -1, -1, -1};
 
-               if (     livemask == 0426426) map_ptr = mapg;
-               else if (livemask == 0216216) map_ptr = maph;
-               else if (livemask == 0033033) map_ptr = mapi;
-               else if (livemask == 0603603) map_ptr = mapj;
-               else if (livemask == 0306306) map_ptr = mapk;
+               if (     livemaskBE == 0426426) map_ptr = mapg;
+               else if (livemaskBE == 0216216) map_ptr = maph;
+               else if (livemaskBE == 0033033) map_ptr = mapi;
+               else if (livemaskBE == 0603603) map_ptr = mapj;
+               else if (livemaskBE == 0306306) map_ptr = mapk;
             }
             break;
          case s2x3:
@@ -2340,8 +2335,8 @@ extern void distorted_2x2s_move(
                static const veryshort mape1[8] = {0, 1, 3, 4, -1, -1, -1, -1};
                static const veryshort mapf1[8] = {1, 2, 4, 5, -1, -1, -1, -1};
 
-               if (     (livemask & 011) == 0) map_ptr = mape1;
-               else if ((livemask & 044) == 0) map_ptr = mapf1;
+               if (     (livemaskBE & 011) == 0) map_ptr = mape1;
+               else if ((livemaskBE & 044) == 0) map_ptr = mapf1;
             }
             break;
          case s2x2:
@@ -2383,14 +2378,14 @@ extern void distorted_2x2s_move(
             {14, 0, 3, 15, 11, 7, 6, 8, 14, 0, 7, 11, 15, 3, 6, 8};
 
             arity = 2;
-            if (     (livemask & 0xC6C6) == 0) map_ptr = map1;
-            else if ((livemask & 0xE2E2) == 0) map_ptr = map2;
-            else if ((livemask & 0x8D8D) == 0) map_ptr = map3;
-            else if ((livemask & 0xA9A9) == 0) map_ptr = map4;
-            else if ((livemask & 0x9A9A) == 0) map_ptr = map5;
-            else if ((livemask & 0xD8D8) == 0) map_ptr = map6;
-            else if ((livemask & 0x2E2E) == 0) map_ptr = map7;
-            else if ((livemask & 0x6C6C) == 0) map_ptr = map8;
+            if (     (livemaskBE & 0xC6C6) == 0) map_ptr = map1;
+            else if ((livemaskBE & 0xE2E2) == 0) map_ptr = map2;
+            else if ((livemaskBE & 0x8D8D) == 0) map_ptr = map3;
+            else if ((livemaskBE & 0xA9A9) == 0) map_ptr = map4;
+            else if ((livemaskBE & 0x9A9A) == 0) map_ptr = map5;
+            else if ((livemaskBE & 0xD8D8) == 0) map_ptr = map6;
+            else if ((livemaskBE & 0x2E2E) == 0) map_ptr = map7;
+            else if ((livemaskBE & 0x6C6C) == 0) map_ptr = map8;
             else goto lose;
          }
          break;
@@ -2407,26 +2402,24 @@ extern void distorted_2x2s_move(
             static const veryshort map46g[9] = {1, 2, 10, 11, 22, 23, 13, 14, -1};
             static const veryshort map46h[9] = {0, 1, 9, 10, 21, 22, 12, 13, -1};
 
-            if (     (livemask & 0xBDCBDC) == 0) map_ptr = map46a;
-            else if ((livemask & 0xF4EF4E) == 0) map_ptr = map46b;
-            else if ((livemask & 0x7EC7EC) == 0) map_ptr = map46c;
-            else if ((livemask & 0xF8DF8D) == 0) map_ptr = map46d;
-            else if ((livemask & 0xE4FE4F) == 0) map_ptr = map46e;
-            else if ((livemask & 0xF27F27) == 0) map_ptr = map46f;
-            else if ((livemask & 0x9FC9FC) == 0) map_ptr = map46g;
-            else if ((livemask & 0x3F93F9) == 0) map_ptr = map46h;
+            if (     (livemaskBE & 0xBDCBDC) == 0) map_ptr = map46a;
+            else if ((livemaskBE & 0xF4EF4E) == 0) map_ptr = map46b;
+            else if ((livemaskBE & 0x7EC7EC) == 0) map_ptr = map46c;
+            else if ((livemaskBE & 0xF8DF8D) == 0) map_ptr = map46d;
+            else if ((livemaskBE & 0xE4FE4F) == 0) map_ptr = map46e;
+            else if ((livemaskBE & 0xF27F27) == 0) map_ptr = map46f;
+            else if ((livemaskBE & 0x9FC9FC) == 0) map_ptr = map46g;
+            else if ((livemaskBE & 0x3F93F9) == 0) map_ptr = map46h;
             else goto lose;
          }
          break;
          */
       case s3x4:
          {
-            static const veryshort mapzda[9] = {1, 3, 4, 5, 7, 9, 10, 11, -1};
-            static const veryshort mapzdb[9] = {0, 2, 4, 5, 6, 8, 10, 11, -1};
             inner_kind = s_qtag;
             arity = 1;  // Whatever the user called it, we are going to a single setup.
-            if (     (livemask & 05050) == 0) map_ptr = mapzda;
-            else if ((livemask & 02424) == 0) map_ptr = mapzdb;
+            if (     (livemaskBE & 05050) == 0) map_ptr = mapzda;
+            else if ((livemaskBE & 02424) == 0) map_ptr = mapzdb;
          }
          break;
          /*
@@ -2440,8 +2433,8 @@ extern void distorted_2x2s_move(
             static const veryshort mapf[16] =
             {1, 2, 10, 11, 4, 5, 7, 8, -1, -1, -1, -1, -1, -1, -1, -1};
 
-            if (     (livemask & 01111) == 0) map_ptr = mape;
-            else if ((livemask & 04444) == 0) map_ptr = mapf;
+            if (     (livemaskBE & 01111) == 0) map_ptr = mape;
+            else if ((livemaskBE & 04444) == 0) map_ptr = mapf;
             else goto lose;
          }
          break;
@@ -2458,10 +2451,10 @@ extern void distorted_2x2s_move(
             static const veryshort mapj[16] =
             {0, 1, 17, 16, 8, 7, 9, 10, -1, -1, -1, -1, -1, -1, -1, -1};
 
-            if (     livemask == 0426426) map_ptr = mapg;
-            else if (livemask == 0216216) map_ptr = maph;
-            else if (livemask == 0033033) map_ptr = mapi;
-            else if (livemask == 0603603) map_ptr = mapj;
+            if (     livemaskBE == 0426426) map_ptr = mapg;
+            else if (livemaskBE == 0216216) map_ptr = maph;
+            else if (livemaskBE == 0033033) map_ptr = mapi;
+            else if (livemaskBE == 0603603) map_ptr = mapj;
             else goto lose;
          }
          break;
@@ -2474,8 +2467,8 @@ extern void distorted_2x2s_move(
             static const veryshort mapf1[8] = {5, 1, 2, 4};
 
             inner_kind = sdmd;
-            if (     (livemask & 011) == 0) map_ptr = mape1;
-            else if ((livemask & 044) == 0) map_ptr = mapf1;
+            if (     (livemaskBE & 011) == 0) map_ptr = mape1;
+            else if ((livemaskBE & 044) == 0) map_ptr = mapf1;
          }
          break;
       default:
@@ -2493,23 +2486,47 @@ extern void distorted_2x2s_move(
    case 1:
       // The concept is some variety of jay.
 
-      if (ss->kind != s_qtag) fail("Must have quarter-tag setup for this concept.");
+      if (ss->kind == s3x4) {
+         if (     (livemaskBE & 05050) == 0) map_3x4_restorer = mapzda;
+         else if ((livemaskBE & 02424) == 0) map_3x4_restorer = mapzdb;
+         else if ((livemaskBE & 03030) == 0) map_3x4_restorer = mapzdc;
 
-      if (table_offset == 0 ||
-          (livemask == 0xFF && (directions & 0xF0F0) == 0xA000)) {
-         uint32 arg4 = this_concept->arg4 ^ directions;
+         if (map_3x4_restorer) {   // If didn't set up a restorer, it's an error.
+            setup stemp = *ss;
+            gather(&stemp, ss, map_3x4_restorer, 8, 0);
+            stemp.kind = s_qtag;
+            *ss = stemp;
 
-         if (     ((arg4 ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj1;
-         else if (((arg4 ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj2;
-         else if (((arg4 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
-         else if (((arg4 ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
+            // Need to do this again.
+            directionsBE = 0;
+            livemaskBE = 0;
+
+            for (i=0 ; i<=attr::slimit(ss) ; i++) {
+               uint32 p = ss->people[i].id1;
+               directionsBE = ((directionsBE & 0x3FFFFFFF)<<2) | (p&3);
+               livemaskBE <<= 1;
+               if (p) livemaskBE |= 1;
+            }
+         }
       }
-      else if (livemask == 0xFF && (directions & 0xF0F0) == 0x00A0) {
-         if (     ((directions ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj3;
-         else if (((directions ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj4;
-         else if (((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
-         else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
+
+      if (ss->kind == s_qtag) {
+         if (table_offset == 0 || (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0xA000)) {
+            uint32 arg4 = this_concept->arg4 ^ directionsBE;
+
+            if (     ((arg4 ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj1;
+            else if (((arg4 ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj2;
+            else if (((arg4 ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
+            else if (((arg4 ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
+         }
+         else if (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0x00A0) {
+            if (     ((directionsBE ^ 0x0802) & 0x0F0F) == 0) map_ptr = mapj3;
+            else if (((directionsBE ^ 0x0208) & 0x0F0F) == 0) map_ptr = mapj4;
+            else if (((directionsBE ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
+            else if (((directionsBE ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
+         }
       }
+
       break;
    case 2:
       // The concept is twin parallelograms.
@@ -2522,8 +2539,8 @@ extern void distorted_2x2s_move(
          static const veryshort map_p2[16] =
          {0, 1, 4, 5, 10, 11, 6, 7, -1, -1, -1, -1, -1, -1, -1, -1};
 
-         if (     (livemask & 06060) == 0) map_ptr = map_p1;
-         else if ((livemask & 01414) == 0) map_ptr = map_p2;
+         if (     (livemaskBE & 06060) == 0) map_ptr = map_p1;
+         else if ((livemaskBE & 01414) == 0) map_ptr = map_p2;
       }
       break;
    case 3:
@@ -2537,8 +2554,8 @@ extern void distorted_2x2s_move(
          static const veryshort map_b2[16] =
          {0, 2, 5, 10, 11, 4, 6, 8, 0, 2, 4, 11, 10, 5, 6, 8};
 
-         if (     (livemask & 05050) == 0) map_ptr = map_b1;
-         else if ((livemask & 02424) == 0) map_ptr = map_b2;
+         if (     (livemaskBE & 05050) == 0) map_ptr = map_b1;
+         else if ((livemaskBE & 02424) == 0) map_ptr = map_b2;
       }
       break;
    case 4:
@@ -2547,13 +2564,13 @@ extern void distorted_2x2s_move(
       if (ss->kind != s_qtag) fail("Must have quarter-line setup for this concept.");
 
       if (table_offset == 0 ||
-          (livemask == 0xFF && (directions & 0xF0F0) == 0xA000)) {
-         if (     ((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
-         else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
+          (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0xA000)) {
+         if (     ((directionsBE ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk1;
+         else if (((directionsBE ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk2;
       }
-      else if (livemask == 0xFF && (directions & 0xF0F0) == 0x00A0) {
-         if (     ((directions ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
-         else if (((directions ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
+      else if (livemaskBE == 0xFF && (directionsBE & 0xF0F0) == 0x00A0) {
+         if (     ((directionsBE ^ 0x0A00) & 0x0F0F) == 0) map_ptr = mapk3;
+         else if (((directionsBE ^ 0x000A) & 0x0F0F) == 0) map_ptr = mapk4;
       }
       break;
    case 5:
@@ -2641,6 +2658,7 @@ extern void distorted_2x2s_move(
       if (results[i].kind != inner_kind || results[i].rotation != 0) {
          if (results[i].kind != s1x4 ||
              results[i].rotation != 1 ||
+             ss->kind != s_qtag ||
              (misc_indicator != 1 && misc_indicator != 8 && misc_indicator != 4))
             fail("Can't do shape-changer with this concept.");
          scatter(result, &results[i], &map_ptr[24], 3, 0);
@@ -2664,6 +2682,17 @@ extern void distorted_2x2s_move(
       }
       else if (results[0].kind != s2x2 || results[1].kind != s2x2)
          fail("Can't do this shape-changer with this concept.");  // Yow!  They're different!
+   }
+
+   // Check for fudging of a 3x4 for jay concepts.
+   if (map_3x4_restorer) {
+      if (result->kind != s_qtag)
+         fail("Can't do shape-changer with this concept.");
+      setup stemp = *result;
+      stemp.clear_people();
+      scatter(&stemp, result, map_3x4_restorer, 7, 0);
+      stemp.kind = s3x4;
+      *result = stemp;
    }
 
    result->result_flags = get_multiple_parallel_resultflags(results, arity);

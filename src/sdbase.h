@@ -181,6 +181,7 @@ enum concept_kind {
    concept_do_both_boxes,
    concept_once_removed,
    concept_do_phantom_2x2,
+   concept_do_blocks_2x2,
    concept_do_phantom_boxes,
    concept_do_phantom_diamonds,
    concept_do_phantom_2x4,

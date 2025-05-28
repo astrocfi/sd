@@ -4412,6 +4412,7 @@ static uint32 do_actual_array_call(
    int i, j, k;
    setup newpersonlist;
    int newplacelist[MAX_PEOPLE];
+   bool need_to_normalize = false;
 
    newpersonlist.clear_people();
 
@@ -5121,6 +5122,8 @@ static uint32 do_actual_array_call(
             else if ((lilresult_mask[0] & 0x77770FFFU) != 0 ||
                      (lilresult_mask[1] & 0x77770FFFU) != 0)
                fail("Call went to improperly-formed setup.");
+
+            need_to_normalize = true;
             break;
          case sx1x16:
             if ((lilresult_mask[0] & 0x00FF00FFU) == 0) {
@@ -5798,6 +5801,9 @@ static uint32 do_actual_array_call(
 
    fixup:
 
+   if (need_to_normalize)
+      normalize_setup(result, plain_normalize, true);
+
    reinstate_rotation(ss, result);
 
    // Handle the "casting overflow" calculation.
@@ -6291,13 +6297,17 @@ foobar:
                // See if the call has a 2x3 definition that goes to a setup of size 4.
                // That is, see if this is "Z axle".  If so, turn off the special "Z" flags
                // and forget about it.  Otherwise, change to a 2x2 and try again.
+               //
+               // But if an actual "Z" concept has been specified (as opposed to "EACH Z"
+               // or some implicit thing like "Z axle"), always turn it into a 2x2.
 
-               if ((linedefinition &&
-                    (attr::klimit(linedefinition->get_end_setup()) == 3 ||
-                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))) ||
-                   (coldefinition &&
-                    (attr::klimit(coldefinition->get_end_setup()) == 3 ||
-                     (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF)))) {
+               if (!(ss->cmd.cmd_misc3_flags & CMD_MISC3__ACTUAL_Z_CONCEPT) &&
+                   ((linedefinition &&
+                     (attr::klimit(linedefinition->get_end_setup()) == 3 ||
+                      (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))) ||
+                    (coldefinition &&
+                     (attr::klimit(coldefinition->get_end_setup()) == 3 ||
+                      (callspec->callflags1 & CFLAG1_PRESERVE_Z_STUFF))))) {
                   ss->cmd.cmd_misc2_flags &= ~CMD_MISC2__IN_Z_MASK;
                }
                else {

@@ -1603,6 +1603,7 @@ static const checkitem checktable[] = {
    {0x00950057, 0x20008620, swhrglass, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00660073, 0x00098006, sdeep2x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A60055, 0x09000480, s3x1dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
+   {0x00A60044, 0x09040400, s_wingedstar, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A30055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00A70055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
    {0x00770055, 0x29008480, s3dmd, UINT32_C(~0), 0, warn__none, (const coordrec *) 0, {127}},
@@ -3878,16 +3879,20 @@ void fraction_info::get_fraction_info(
          my_start_point += m_reverse_order ? (1-this_part) : (this_part-1);
 
          // Be sure that enough parts are visible.
-         if (my_start_point >= available_initial_fractions)
-            fail("This call can't be fractionalized.");
          if (my_start_point >= m_client_total)
             fail("The indicated part number doesn't exist.");
 
          if (m_reverse_order) {
+            if (m_client_total-my_start_point > available_final_fractions)
+               fail("This call can't be fractionalized.");
+
             if (m_highlimit > my_start_point)
                fail("The indicated part number doesn't exist.");
          }
          else {
+            if (my_start_point >= available_initial_fractions)
+               fail("This call can't be fractionalized.");
+
             if (m_highlimit <= my_start_point)
                fail("The indicated part number doesn't exist.");
          }

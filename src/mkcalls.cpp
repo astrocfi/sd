@@ -91,12 +91,12 @@ left_means_mirror        The "left" modifier is legal          The "left" modifi
 reverse_means_mirror     The "reverse" modifier is legal       The "reverse" modifier is legal
                          and causes the call to be             and will be passed on to those
                          done mirror.                          subcalls that have the
-                         You may also use the                  "inherit_left" property set in
-                         "reverse_coming_next"                 the subcall invocation.  Its
-                         flag in the array list to             meaning in that subcall is
-                         get a completely different            determined according to the way
-                         meaning.  You should of               that subcall is defined, by
-                         course not use both.                  applying this rule recursively.
+                                                               "inherit_left" property set in
+                                                               the subcall invocation.  Its
+                                                               meaning in that subcall is
+                                                               determined according to the way
+                                                               that subcall is defined, by
+                                                               applying this rule recursively.
                                                                Presumably at least one subcall
                                                                has that property set.
 
@@ -1311,6 +1311,7 @@ const char *predtab[] = {
    "1x2_beau_miniwave_for_breaker",
    "1x2_beau_miniwave_or_ok",
    "can_swing_left",
+   "can_swing_right",
    "1x4_wheel_and_deal",
    "1x4_wheel_and_deal_or_1fl",
    "1x6_wheel_and_deal",
