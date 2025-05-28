@@ -218,7 +218,7 @@ The centers of the resulting wave want to occupy the center stripe.
 But that stripe is only one person wide.  We can't have just one of them
 occupy the center, and the Solomon rule
 @iftex
-@footnote{The Solomon rule(I Kings 3:16-28) says that cutting
+@footnote{The Solomon rule (I Kings 3:16-28) says that cutting
 people in half is generally not a good way to solve a problem.}
 @end iftex
 says we can't put half of each
@@ -433,7 +433,7 @@ appropriately, however far the inactives have to be pushed out.
 @end example
 @sp 1
 The @samp{ignore} concept is the way to make 6 people work disconnected.
-Naming them explicitly (``heads and side boys'') is unwieldy, and is
+Naming them explicitly (``heads and side girls'') is unwieldy, and is
 not supported by @code{Sd}.
 
 In both of these cases, the designated people

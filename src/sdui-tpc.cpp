@@ -64,7 +64,7 @@ static void csetmode(int mode)             /* 1 means raw, no echo, one characte
 #endif
 
 
-extern void ttu_final_option_setup()
+void iofull::final_initialize()
 {
    /* If no "-no_graphics" switch was not given, and our run-time
       system supports it, switch over to the "pointy triangles"
@@ -76,25 +76,24 @@ extern void ttu_final_option_setup()
 #endif
 }
 
-extern void ttu_display_help(void)
+void iofull::display_help()
 {
-   printf("-lines <N>                  assume this many lines on the screen\n");
-   printf("-no_cursor                  do not use screen management functions\n");
+   printf("-lines <n>                  assume this many lines on the screen\n");
+   printf("-no_cursor                  do not use screen management functions at all\n");
    printf("-journal <filename>         echo input commands to journal file\n");
 }
 
-extern void ttu_set_window_title(char s[])
-{
-}
-
-extern bool uims_help_manual()
-{
-   return false;
-}
+extern void ttu_set_window_title(const char *string) {}
 
 
-extern void ttu_initialize(void)
+bool iofull::help_manual() { return false; }
+
+
+extern void ttu_initialize()
 {
+   // Set the default value if the user hasn't explicitly set something.
+   if (sdtty_screen_height <= 0) sdtty_screen_height = 25;
+
 #ifdef DJGPP
    gppconio_init();
 #endif
@@ -103,25 +102,25 @@ extern void ttu_initialize(void)
       to direct what it does.  So, if "no_console" is on,
       we take appropriate action. */
 
-   no_cursor |= no_console;
+   sdtty_no_cursor |= sdtty_no_console;
 
    text_ptr = text_buffer;
    lines_in_buffer = 0;
 }
 
-extern void ttu_terminate(void)
+void ttu_terminate()
 {
 #if !defined(DJGPP)
    csetmode(0);   /* Restore normal input mode. */
 #endif
 }
 
-extern int get_lines_for_more(void)
+extern int get_lines_for_more()
 {
-   return screen_height;
+   return sdtty_screen_height-1;
 }
 
-extern void clear_line(void)
+extern void clear_line()
 {
 #ifdef DJGPP
    int yp = wherey();
@@ -132,7 +131,7 @@ extern void clear_line(void)
 #endif
 }
 
-extern void rubout(void)
+extern void rubout()
 {
    printf("\b \b");
 }
@@ -143,7 +142,7 @@ extern void erase_last_n(int n)
    char *p = text_buffer;
    int c = 0;
 
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       if (lines_in_buffer > n) {
          lines_in_buffer = lines_in_buffer-n;
 
@@ -178,7 +177,7 @@ static void pack_in_buffer(char c)
 {
    *text_ptr++ = c;
    if (c == '\n') {
-      if (lines_in_buffer >= screen_height) {
+      if (lines_in_buffer >= sdtty_screen_height-1) {
          /* We need to throw away a line at the start of the buffer. */
          char *p = text_buffer;
          char *sp = text_buffer;
@@ -199,7 +198,7 @@ static void pack_in_buffer(char c)
 
 extern void put_line(const char the_line[])
 {
-   if (!no_cursor) {
+   if (!sdtty_no_cursor) {
       const char *p = the_line;
       char c;
       while ((c = *p++))
@@ -211,7 +210,7 @@ extern void put_line(const char the_line[])
 
 extern void put_char(int c)
 {
-   if (!no_cursor)
+   if (!sdtty_no_cursor)
       pack_in_buffer((char) c);
 
    (void) putchar(c);
@@ -321,7 +320,7 @@ static short int altletter_translate[] = {
 #endif
 
 
-extern int get_char(void)
+extern int get_char()
 #if defined(DJGPP)
 {
    int n;
@@ -419,11 +418,7 @@ extern void get_string(char *dest, int max)
    (void) putchar('\n');
 }
 
-extern void ttu_bell(void)
+extern void ttu_bell()
 {
    (void) putchar('\007');
-}
-
-extern void initialize_signal_handlers(void)
-{
 }

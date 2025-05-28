@@ -14,44 +14,44 @@ REM               "public_html/sd/appnote2.pdf"
 REM               "public_html/sd/appnote3.pdf"
 REM
 make pdf.all
-del pdfdoc.lzh pdfdoc.exe pdfdoc.tar
-lha a pdfdoc sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf relnotes98.pdf appnote1.pdf appnote2.pdf appnote3.pdf
-lha s pdfdoc
-del pdfdoc.lzh
+del pdfdoc.zip pdfdoc.tar pdfdoc.tar.gz
+REM del pdfdoc.lzh pdfdoc.exe pdfdoc.zip pdfdoc.tar
+"C:\program files\winzip\wzzip" pdfdoc sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf relnotes98.pdf appnote1.pdf appnote2.pdf appnote3.pdf
 tar cvf pdfdoc.tar sd_doc.pdf demo.pdf sessions.pdf relnotes.pdf relnotes98.pdf appnote1.pdf appnote2.pdf appnote3.pdf
-gzip pdfdoc.tar -c > pdfdoc.gz
-del pdfdoc.tar pdf.msg pdf.txt pdf.zip pdf.asc
-echo cd sd> pdf.msg
-echo uufile>> pdf.msg
-uuencode pdfdoc.exe|uufix>> pdf.msg
-echo uufile>> pdf.msg
-uuencode pdfdoc.gz|uufix>> pdf.msg
-echo mv pdfdoc.gz pdfdoc.tar.gz>> pdf.msg
-echo cd ../public_html/sd>> pdf.msg
-echo uufile>> pdf.msg
-uuencode relnotes.pdf|uufix>> pdf.msg
-echo uufile>> pdf.msg
-uuencode relnotes98.pdf|uufix>> pdf.msg
-echo uufile>> pdf.msg
-uuencode appnote1.pdf|uufix>> pdf.msg
-echo uufile>> pdf.msg
-uuencode appnote2.pdf|uufix>> pdf.msg
-echo uufile>> pdf.msg
-uuencode appnote3.pdf|uufix>> pdf.msg
-echo cd demo>> pdf.msg
-echo uufile>> pdf.msg
-uuencode demo.pdf|uufix>> pdf.msg
-echo cd ../manual>> pdf.msg
-echo uufile>> pdf.msg
-uuencode sd_doc.pdf|uufix>> pdf.msg
-echo cd ../sessions>> pdf.msg
-echo uufile>> pdf.msg
-uuencode sessions.pdf|uufix>> pdf.msg
-pgp -sta +clearsig=on +armor=on pdf.msg -u wba -o pdf.asc
-del pdf.msg
-ren pdf.asc pdf.txt
-REM zip pdf pdf.txt
-REM
-REM         The file "pdf.txt" may now be mailed.
-REM
-REM         The file "pdfdoc.exe" may also be copied to diskettes.
+gzip pdfdoc.tar -c > pdfdoc.tar.gz
+del pdfdoc.tar
+REM del pdfdoc.tar pdf.msg pdf.txt pdf.zip pdf.asc
+REM echo cd sd> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode pdfdoc.exe|uufix>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode pdfdoc.gz|uufix>> pdf.msg
+REM echo mv pdfdoc.gz pdfdoc.tar.gz>> pdf.msg
+REM echo cd ../public_html/sd>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode relnotes.pdf|uufix>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode relnotes98.pdf|uufix>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode appnote1.pdf|uufix>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode appnote2.pdf|uufix>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode appnote3.pdf|uufix>> pdf.msg
+REM echo cd demo>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode demo.pdf|uufix>> pdf.msg
+REM echo cd ../manual>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode sd_doc.pdf|uufix>> pdf.msg
+REM echo cd ../sessions>> pdf.msg
+REM echo uufile>> pdf.msg
+REM uuencode sessions.pdf|uufix>> pdf.msg
+REM pgp -sta +clearsig=on +armor=on pdf.msg -u wba -o pdf.asc
+REM del pdf.msg
+REM ren pdf.asc pdf.txt
+REM REM zip pdf pdf.txt
+REM REM
+REM REM         The file "pdf.txt" may now be mailed.
+REM REM
+REM REM         The file "pdfdoc.exe" may also be copied to diskettes.

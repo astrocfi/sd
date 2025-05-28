@@ -8,11 +8,11 @@
 <table cellpadding=30 align=center><tr><td bgcolor="#333333">
 <font color="#ffcc66">
 <PRE>
-          3G&gt;               heads                           1B&lt;
-                            disconnected
-4G^ 3BV 4B^ 2BV 1B^ 2GV     diamond       --&gt;     4G^ 1G^ 4B^ 2BV 3GV 2GV
+          3G&gt;                 girls                         2G&lt;
+                           disconnected
+3B^ 4GV 4B^ 2BV 2G^ 1BV      diamond      --&gt;     3B^ 1G^ 4B^ 2BV 3GV 1BV
                             circulate
-          1G&lt;                                               3B&gt;
+          1G&lt;                                               4G&gt;
 </PRE></font></table>
 <p>
 Sd and Sdtty are two programs, often collectively called "Sd".&nbsp;
@@ -21,10 +21,13 @@ can select calls by clicking on them, or by typing them from the keyboard.&nbsp;
 "Sdtty" uses a type-in interface only.&nbsp;  You select calls by typing their names.
 Many callers prefer the type-in interface.  If you are one of them, you might want to
 try "Sd" anyway.  It is keystroke-compatible with Sdtty, and has a more sophisticated
-mechanism for displaying the setup.
+mechanism for displaying the setup.  That is, you can type calls exactly as you would
+for Sdtty, and ignore the menu on the left side of the screen.
 <p>
-Both programs are available on PC's running Windows 95, Windows 98, Windows 2000,
-or Windows NT.&nbsp;  Only Sdtty is available on Linux, DOS or Windows 3.1.
+Both programs are available on PC's running Windows 95, Windows 98, Windows ME, Windows 2000,
+Windows NT, or Windows XP.&nbsp;  Only Sdtty is available on Linux, DOS or Windows 3.1.
+We do not recommend using the program on DOS or Windows 3.1.  It does not work well,
+and it is not being maintained beyond version 34.6.
 <p>
 You can be running Sd on your PC in minutes.&nbsp;
 <a href="download-pc.html">Download Sd</a>.  (This includes Linux on Intel hardware.)
@@ -33,14 +36,91 @@ Sd and/or Sdtty are available on some other Unix systems.&nbsp;
 <a href="download-unix.html">Download Sd for other varieties of Unix</a>.
 <p>
 Sd and Sdtty are not available for the Macintosh.
+<p align="center">
+<strong>ANOTHER COMPILER BUG ALERT!!!!!</strong>
 <p>
-Because this is not a commercial program, and the name "Sd" is not trademarked,
-it is not possible to prevent others from creating or distributing
-other programs with the same name.&nbsp;  What you get here is the real thing.
-
+Microsoft Visual C++, professional edition, version 5.0 also exhibits the
+bug described below.  This means that there are <strong>no</strong> Microsoft compilers
+that can correctly compile Sd.  A temporary patch has been put into the code to prevent
+it from affecting users.  Future versions of Sd will probably be compiled with gcc.
+<p>
+<p align="center">
+<strong>COMPILER BUG ALERT!!!!!</strong>
+<p>
+Microsoft Visual C++, professional edition, version 6.0, service pack 5, has a
+bug that renders it unfit for compiling Sd or Sdtty.  See the
+<a href="relnotes.html">release notes</a>
+for version 34.7 for technical details of the bug.  This bug
+does not affect users, because this compiler has never been
+used, and never will be used, for compiling the distributed version of Sd.
+<p>
+This bug was reported to Microsoft on 17 December 2001.
+More than one year later, the following mail was sent to Microsoft management:
 <hr>
-Up to <a href="./">Sd home page</a>.<br>
-<em>Time-stamp: "1 April 2000"</em>
+<pre>
+Subject: Extremely serious compiler bug in Visual C++ version 6.0, SP5
+   Date: Thu, 6 Feb 2003 19:04:29 -0500 (Eastern Standard Time)
+   From: William Ackerman <wba@alum.mit.edu>
+     To: microsoft managers <managers@microsoft.com>
+     CC: wba <wba@alum.mit.edu>
+
+Friends:
+
+On 17 December 2001 I reported a bug in the Visual C++ compiler.
+The compiler silently generated incorrect code.  As you know,
+that is, by far, the most serious mistake a compiler can make.
+
+This bug involves the failure to restore the ECX register on exit
+from a switch statement.
+
+I received no reply.  I received no tracking number.  No service
+pack beyond SP5 has appeared on your web site.
+
+At the time I filed the report, I was unable to give a complete
+test case, because it exceeded your size limit.
+I gave information on contacting me (phone numbers, snailmail
+address, email address) so that I could send the whole program
+to you.  You have not contacted me.
+
+You can see a summary of the details of the problem on my web site:
+Up to <a href="http://www.lynette.org/sd/intro.html">http://www.lynette.org/sd/intro.html</a>
+But, to reproduce this bug, you will most likely need the entire file.
+
+More than a year has passed.  I wonder if you can tell me the status
+of this bug?
+</pre>
+<hr>
+The following reply was received the next day:
+<hr>
+<pre>
+Subject: RE:{RTCProd#001-920-293}Extremely serious compiler bug in Visual C++ version 6.0, SP5
+   Date: Fri, 7 Feb 2003 19:31:50 -0500 (Eastern Standard Time)
+   From: "Customer Feedback for PSS Customers" <managers@microsoft.com>
+     To: "William Ackerman" <wba@alum.mit.edu>
+
+Hello,
+ 
+Thank you for contacting Microsoft.
+<p>
+I understand from your email that you have  reported a possible bug in Visual C++ 6.0. When you report a possible bug to
+Microsoft, it goes to our development group. If they determine the issue to be a  bug in the software, that information
+will be entered into our Knowledge Base  along with any necessary resolution. They do not generally report back to the
+individual who reported the issue.
+ 
+If you would like to get a response regarding the issue, please submit a  support request. You can do this online at 
+http://support.microsoft.com or by  calling 800-936-5800.
+ 
+Thank you,
+ 
+Matt H.
+Microsoft Online Customer Representative
+</pre>
+<hr>
+The website and telephone numbers given are for services for which Microsoft charges money.
+Needless to say, I did not follow up on this.
+<hr>
+Up to <a href="index.html">Sd home page</a>.<br>
+<em>Time-stamp: "27 January 2003"</em>
 </body>
 </html>
 <!--

@@ -7,8 +7,7 @@ TXI2DVI = tex
 TXI2PDF = pdftex
 DVIPS = dvips
 CRFIX = crfix
-TXI2HTML = perl texi2html
-TOCFRONT = perl tocfront
+TXI2HTML = C:\perl\bin\perl texi2html
 
 .SUFFIXES: .dvi .info .txt .txi .pdf .html .ps .pso .all
 

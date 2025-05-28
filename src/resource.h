@@ -20,21 +20,23 @@
 #define IDC_FILENAME                    1000
 #define IDC_FILE_ACCEPT                 1003
 #define IDC_FILE_EDIT                   1004
-#define IDC_FILE_TEXT                   1005
-#define IDC_FILE_CANCEL                 1006
-#define IDC_START_CAPTION               1007
-#define IDC_START_LIST                  1008
-#define IDC_START_ACCEPT                1009
-#define IDC_START_CANCEL                1010
-#define IDC_OUTPUT_NAME                 1011
+#define IDC_FILE_TEXT1                  1005
+#define IDC_FILE_TEXT2                  1006
+#define IDC_FILE_CANCEL                 1007
+#define IDC_START_CAPTION               1008
+#define IDC_START_LIST                  1009
+#define IDC_START_ACCEPT                1010
+#define IDC_START_CANCEL                1011
+#define IDC_OUTPUT_NAME                 1012
 #define IDC_DEFAULT                     1013
 #define IDC_USERDEFINED                 1014
 #define IDC_DATABASE_NAME               1016
 #define IDC_NORMAL                      1019
 #define IDC_WRITE_LIST                  1020
 #define IDC_WRITE_FULL_LIST             1021
-#define IDC_ABRIDGED                    1022
-#define IDC_CALL_LIST_NAME              1024
+#define IDC_ABRIDGE                     1022
+#define IDC_CANCEL_ABRIDGE              1023
+#define IDC_ABRIDGE_NAME                1024
 #define IDC_START_DELETE_SESSION_CHECKED 1025
 #define IDC_SEQ_NUM_OVERRIDE            1026
 #define IDC_SEQ_NUM_OVERRIDE_SPIN       1027
@@ -97,7 +99,7 @@
 #define ID_HELP_SDHELP                  40056
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        117

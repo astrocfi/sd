@@ -1,6 +1,6 @@
 echo on
 rem        This command alone cleans temporary stuff and mailing
-rem        files, but not actual derived objects.  With the arguemnt
+rem        files, but not actual derived objects.  With the argument
 rem        "clean" (that is, "clean clean") it deletes all derived
 rem        objects.
 rem
@@ -26,15 +26,9 @@ del appnote*.html
 del appnote*.txt
 del demo.html
 del demo.txt
-REM del sample.html     This is a derived object, but don't delete it just yet
+del sample.html
 del *.ps
 del *.pdf
-REM what are these "bin" files?
-REM del html.bin
-REM del ps.bin
-REM del pdf.bin
-REM del dnu.bin
-REM del dnp.bin
 del psdoc.exe
 del textdoc.exe
 del pdfdoc.exe
