@@ -5,7 +5,7 @@ Doing so would cause it to be included in the "do_pack" script.
           HOW TO RELEASE A NEW VERSION OF SD
 
      This file is \wba\sddoc\howtobuild.
-        Last modified 9 Feb 2006.
+        Last modified 9 May 2009.
 
 -----------------------------------------------------------------
 
@@ -15,6 +15,7 @@ Be sure the version numbers and dates are correct in:
     [sd]    sdmain.cpp   (version # is visible)
     [sd]    sd.rc        (SD & UI version #'s are visible in "about" dialog)
     [sd]    sd_calls.txt (version # is visible)
+    [sd]       [When rolling the year, fix copyright notice in sdutil.cpp]
     [sddoc] title.lst    (version # is visible)
     [sddoc] about.lst    (version # is visible)
     [sddoc] sd_doc.txi         (version # and date are visible)
@@ -78,8 +79,9 @@ Go to sddoc directory and do:
 13 Oct 07  -  30 Mar 08  #33
 30 Mar 08  -  10 Mar 09  #32
 10 Mar 09  -   9 May 09  #34
- 9 May 09  -             #35
-(#25, #26, #29, #30 are also available.)
+ 9 May 09  -   6 Jun 09  #35
+ 6 Jun 09  -             #37
+(#25, #26, #29, #30, #36 are also available.)
 -----------------------------------------------------------------
 
                TESTING AND PRODUCTION BUILD - MSVC++
@@ -266,9 +268,12 @@ install                                  *
 -----------------------------------------------------------------
 New way, Oct 08, does not require any FTP/SCP from Philips, uses mail.
 
-Be sure "chpobox" is turned off at athena.
+Be sure "chpobox" is turned off at athena.  That is, mail is
+received locally, and not forwarded.
 
-Mail pack.zip as an attachment to wba@mit.edu
+**** Rename pack.zip to pack.zig
+
+Mail it as an attachment to wba@mit.edu
 Wait for it to arrive, then
 
 Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
@@ -277,17 +282,18 @@ Run PuTTY.  Doubleclick athena.  U=wba P=x464pq.
    athena> I
    athena> arrow down to the message, then cr.
    athena> V, then arrow down to attachment section
-   athena> S, give file name "pack.zip" if needed.
+   athena> S, give file name "pack.zig" if needed.
    athena> Q
    athena> Check that pack.zip is exactly the same size as original.
-   athena> scp pack.zip ackerman@scotch.ics.uci.edu:pack.zip
+   athena> scp pack.zig ackerman@scotch.ics.uci.edu:pack.zig
    P=x464pq.
    athena> ssh -l ackerman scotch.ics.uci.edu
    P=x464pq.
+      scotch> mv pack.zig pack.zip
       scotch> unzip pack
       scotch> rm pack.zip
       scotch> exit
-   athena> rm pack.zip
+   athena> rm pack.zig
 (delete the mail message)
    athena> exit
 

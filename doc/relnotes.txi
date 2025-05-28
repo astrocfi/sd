@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 37.81
-@set title2 Database version = 37.81 format = 280
+@set title1 RELEASE NOTES FOR VERSION 37.82
+@set title2 Database version = 37.82 format = 280
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 37.82::
 * 37.81::
 * 37.8::
 * 37.7::
@@ -61,7 +62,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 37.81, Top, (dir)
+@node Intro, 37.82, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -72,11 +73,20 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2009 William B. Ackerman
 @sp 3
 @menu
-* 37.81::               Changes in the current version
+* 37.82::               Changes in the current version
 @end menu
 
 @c ************
-@node 37.81, 37.8, Intro, Top
+@node 37.82, 37.81, Intro, Top
+@unnumberedsec Version 37.82 changes
+
+The handling of the @strong{mimic} concept was improved.  The designators
+@strong{ends}, @strong{ends of lines}, @strong{ends of columns},
+@strong{centers}, @strong{centers of lines}, and @strong{centers of columns} may
+be used.
+
+@c ************
+@node 37.81, 37.8, 37.82, Top
 @unnumberedsec Version 37.81 changes
 
 There is a new concept, available at C4, @strong{overlapped siamese}.  This is done

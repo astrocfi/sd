@@ -5490,8 +5490,6 @@ static void really_inner_move(setup *ss,
       {
          bool expanded = false;
          static const expand::thing exp_from_2x2_stuff = {{12, 0, 4, 8}, 4, s2x2, s4x4, 0};
-         static const expand::thing exp_back_to_2x4_stuff = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
-         static const expand::thing exp_2x2_2x4r_stuff = {{7, 0, 3, 4}, 4, s2x2, s2x4, 1};
          static const expand::thing exp_back_to_2x6_stuff = {{0, 1, 4, 5, 6, 7, 10, 11}, 8, s2x4, s2x6, 0};
 
          // The "reverse" concept might mean mirror, as in "reverse truck".
@@ -5524,9 +5522,9 @@ static void really_inner_move(setup *ss,
             if (ss->cmd.prior_elongation_bits == 3)
                expand::expand_setup(exp_from_2x2_stuff, ss);
             else if (ss->cmd.prior_elongation_bits == 1)
-               expand::expand_setup(exp_back_to_2x4_stuff, ss);
+               expand::expand_setup(s_2x2_2x4_ends, ss);
             else
-               expand::expand_setup(exp_2x2_2x4r_stuff, ss);
+               expand::expand_setup(s_2x2_2x4_endsb, ss);
 
             // Since we are reconstructing the original setup,
             // we think it is reasonable to say that the setup is
@@ -5578,7 +5576,7 @@ static void really_inner_move(setup *ss,
                      !(result->people[1].id1 | result->people[2].id1 |
                        result->people[5].id1 | result->people[6].id1)) {
                result->result_flags.misc |= (result->rotation & 1) + 1;
-               expand::compress_setup(exp_back_to_2x4_stuff, result);
+               expand::compress_setup(s_2x2_2x4_ends, result);
             }
             else if (result->kind == s2x6 &&
                      !(result->people[2].id1 | result->people[3].id1 |

@@ -1,5 +1,9 @@
+// -*- mode:c++; indent-tabs-mode:nil; c-basic-offset:3; fill-column:88 -*-
+
 #ifndef SORT_H
 #define SORT_H
+
+//    Copyright (C) 1993-2009  William B. Ackerman.
 
 //    This is free software; you can redistribute it and/or modify it
 //    under the terms of the GNU General Public License as published by

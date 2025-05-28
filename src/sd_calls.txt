@@ -44,7 +44,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "37.81"
+version "37.82"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -12388,41 +12388,20 @@ call "zing" c1 tag zing
             can_be_one_side_lateral
    setup 2x2 2x2 restriction peelable_box
       array [AL3E CR2W AL1W CR0E]
-            alternate_definition [1x2] c4
-   setup 3x2 2x3 restriction peelable_box
-      array [CR1E CR2E AL0E CR5W AL3W AL4W]
-            alternate_definition [2x1] c4
-   setup 3x2 2x3 restriction peelable_box
-      array [CR2E AL1E AL0E CR5W CR4W AL3W]
-            alternate_definition [1x3] c4
-   setup 4x2 2x4 restriction peelable_box
-      array [CR1E CR2E CR3E AL0E CR7W AL4W AL5W AL6W]
-            alternate_definition [3x1] c4
-   setup 4x2 2x4 restriction peelable_box
-      array [CR3E AL2E AL1E AL0E CR7W CR6W CR5W AL4W]
-            alternate_definition [2x2] c4
-   setup 4x2 2x4 restriction peelable_box
-      array [CR2E CR3E AL1E AL0E CR7W CR6W AL4W AL5W]
-            alternate_definition [3x3] c4
-   setup 6x2 2x6 restriction peelable_box
-      array [CR3E CR4E CR5E AL2E AL1E AL0E CR11W CR10W CR9W AL6W AL7W AL8W]
-            alternate_definition [4x4] c4
-   setup 8x2 2x8 restriction peelable_box
-      array [CR4E CR5E CR6E CR7E AL3E AL2E AL1E AL0E CR15W CR14W CR13W CR12W AL8W AL9W AL10W AL11W]
 
 call "1/2 split trade circulate" c2
             dont_use_in_resolve take_right_hands
-   /* We have to use the "forbidden" option, since this def'n
-      is slightly sleazy, and wouldn't do the right thing
-      from a leftie box. */
+   // We have to use the "forbidden" option, since this def'n
+   // is slightly sleazy, and wouldn't do the right thing
+   // from a leftie box.
    setup 2x2 dmd rotate restriction forbidden magic_only
       array [CR0N AL0S ZM1W ZM3W]
 
 call "split trade circulate 1-1/2" c2
             dont_use_in_resolve take_right_hands
-   /* We have to use the "forbidden" option, since this def'n
-      is slightly sleazy, and wouldn't do the right thing
-      from a leftie box. */
+   // We have to use the "forbidden" option, since this def'n
+   // is slightly sleazy, and wouldn't do the right thing
+   // from a leftie box.
    setup 2x2 dmd rotate restriction forbidden magic_only
       array [CM1E AM3E CR0N AL0S]
 

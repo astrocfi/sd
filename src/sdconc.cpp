@@ -5685,7 +5685,7 @@ back_here:
                }
 
                if (nextfixp) {
-                  inner_shape_change = true;
+                  inner_shape_change = (nextfixp != fixp);
                }
                else {
                   if (lilresult[0].kind == fixp->ink)

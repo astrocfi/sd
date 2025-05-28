@@ -26,9 +26,12 @@
    direction_names
    selector_list
    warning_strings
+   s_2x2_2x4
+   s_2x2_2x4b
+   s_2x2_2x4_ends
+   s_2x2_2x4_endsb
    s_qtg_2x4
    s_2x3_qtg
-   s_2x2_2x4
    s_4x4_4x6a
    s_4x4_4x6b
    s_4x4_4dma
@@ -37,8 +40,6 @@
    s_c1phan_4x4b
    s_dmd_323
    s_1x4_dmd
-   s_2x4_qtg
-   s_1x2_dmd
    s_qtg_3x4
    s_short6_2x3
    s_bigrig_dblbone
@@ -201,6 +202,10 @@ selector_item selector_list[] = {
    {"center line of 6",  "center line of 6", "CENTER LINE OF 6",  "CENTER LINE OF 6", selector_uninitialized},
    {"center column of 6","center column of 6","CENTER COLUMN OF 6","CENTER COLUMN OF 6",selector_uninitialized},
    {"outer pairs",  "outer pair",  "OUTER PAIRS",  "OUTER PAIR",  selector_center4},
+   {"centers of lines","center of lines","CENTERS OF LINES","CENTER OF LINES",selector_uninitialized},
+   {"ends of lines","end of lines","ENDS OF LINES","END OF LINES",selector_uninitialized},
+   {"centers of columns","center of columns","CENTERS OF COLUMNS","CENTER OF COLUMNS",selector_uninitialized},
+   {"ends of columns","end of columns","ENDS OF COLUMNS","END OF COLUMNS",selector_uninitialized},
    {"first 1",      "first 1",     "FIRST 1",      "FIRST 1",     selector_uninitialized},
    {"last 1",       "last 1",      "LAST 1",       "LAST 1",      selector_uninitialized},
    {"first 2",      "first 2",     "FIRST 2",      "FIRST 2",     selector_uninitialized},
@@ -394,8 +399,14 @@ Cstring warning_strings[] = {
 
 
 
-
-/* s_qtg_2x4 is duplicated in the big table. */
+const expand::thing s_2x2_2x4 = {
+   {1, 2, 5, 6}, 4, s2x2, s2x4, 0};
+const expand::thing s_2x2_2x4b = {
+   {6, 1, 2, 5}, 4, s2x2, s2x4, 1};
+const expand::thing s_2x2_2x4_ends = {
+   {0, 3, 4, 7}, 4, s2x2, s2x4, 0};
+const expand::thing s_2x2_2x4_endsb = {
+   {7, 0, 3, 4}, 4, s2x2, s2x4, 1};
 const expand::thing s_qtg_2x4 = {
    {5, -1, -1, 0, 1, -1, -1, 4}, 8, s2x4, s_qtag, 1};
 const expand::thing s_4x4_4x6a = {

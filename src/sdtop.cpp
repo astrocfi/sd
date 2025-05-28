@@ -4608,6 +4608,10 @@ extern bool clean_up_unsymmetrical_setup(setup *ss)
    return false;
 }
 
+
+static const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, 8, s_qtag, s2x4, 3};
+
+
 extern setup_kind try_to_expand_dead_conc(const setup & result,
                                           const call_with_name *call,
                                           setup & lineout, setup & qtagout, setup & dmdout)
@@ -4620,20 +4624,18 @@ extern setup_kind try_to_expand_dead_conc(const setup & result,
    dmdout.rotation += dmdout.inner.srotation;
 
    if (result.inner.skind == s1x4) {
-      static expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
+      static const expand::thing exp_conc_1x8 = {{3, 2, 7, 6}, 4, s1x4, s1x8, 0};
+      static const expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
+      static const expand::thing exp_conc_dmd = {{1, 2, 5, 6}, 4, s1x4, s3x1dmd, 0};
       expand::expand_setup(exp_conc_1x8, &lineout);
-      static expand::thing exp_conc_qtg = {{6, 7, 2, 3}, 4, s1x4, s_qtag, 0};
       expand::expand_setup(exp_conc_qtg, &qtagout);
-      static expand::thing exp_conc_dmd = {{1, 2, 5, 6}, 4, s1x4, s3x1dmd, 0};
       expand::expand_setup(exp_conc_dmd, &dmdout);
    }
    else if (result.inner.skind == s2x2) {
-      static expand::thing exp_conc_2x2a = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
-      static expand::thing exp_conc_2x2b = {{6, 1, 2, 5}, 4, s2x2, s2x4, 1};
       if (result.concsetup_outer_elongation == 1)
-         expand::expand_setup(exp_conc_2x2a, &lineout);
+         expand::expand_setup(s_2x2_2x4, &lineout);
       else if (result.concsetup_outer_elongation == 2)
-         expand::expand_setup(exp_conc_2x2b, &lineout);
+         expand::expand_setup(s_2x2_2x4b, &lineout);
       else fail("Can't figure out where the ends went.");
    }
 
@@ -4982,10 +4984,6 @@ skipped_concept_info::skipped_concept_info(parse_block *incoming) THROW_DECL
 }
 
 
-
-/* s_2x2_2x4 is duplicated in the big table. */
-const expand::thing s_2x2_2x4 = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
-const expand::thing s_2x4_qtg = {{3, 4, -1, -1, 7, 0, -1, -1}, 8, s_qtag, s2x4, 3};
 
 // Prepare several setups to be assembled into one, by making them all have
 // the same kind and rotation.  If there is a question about what ending
@@ -5855,59 +5853,58 @@ void toplevelmove() THROW_DECL
       }
 
       if (starting_setup.kind == s2x4) {
-         uint32 nearbit = 0;
-         uint32 farbit = 0;
-
          if (starting_setup.rotation & 1) {
-            nearbit = ID3_NEARBOX|ID3_NEARFOUR;
-            farbit = ID3_FARBOX|ID3_FARFOUR;
+            for (i=0; i<8; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON)
+                  starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ?
+                     ID3_NEARBOX|ID3_NEARFOUR : ID3_FARBOX|ID3_FARFOUR;
+            }
          }
          else {
-            uint32 tbonetest = 0;
+            for (i=0; i<8; i++) {
+               if (starting_setup.people[i].id1 & BIT_PERSON) {
+                  uint32 nearbit = (starting_setup.people[i].id1 & 1) ?
+                     ID3_NEARCOL | ID3_NEARFOUR :
+                     ID3_NEARLINE | ID3_NEARFOUR;
 
-            for (i=0; i<8; i++) tbonetest |= starting_setup.people[i].id1;
+                  uint32 farbit = (starting_setup.people[i].id1 & 1) ?
+                     ID3_FARCOL | ID3_FARFOUR :
+                     ID3_FARLINE | ID3_FARFOUR;
 
-            if (!(tbonetest & 1)) {
-               nearbit = ID3_NEARLINE|ID3_NEARFOUR;
-               farbit = ID3_FARLINE|ID3_FARFOUR;
+                  starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ?
+                     nearbit : farbit;
+               }
             }
-            else if (!(tbonetest & 010)) {
-               nearbit = ID3_NEARCOL|ID3_NEARFOUR;
-               farbit = ID3_FARCOL|ID3_FARFOUR;
-            }
-         }
-
-         for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
-               starting_setup.people[i].id3 |= ((i + (starting_setup.rotation << 1)) & 4) ? nearbit : farbit;
          }
       }
       else if ((starting_setup.kind == s1x8 || starting_setup.kind == s_ptpd) && starting_setup.rotation & 1) {
-         uint32 nearbit = ID3_NEARFOUR;
-         uint32 farbit = ID3_FARFOUR;
-         uint32 tbonetest = or_all_people(&starting_setup);
-
-         if (starting_setup.kind == s1x8) {
-            if (!(tbonetest & 1)) {
-               nearbit |= ID3_NEARLINE;
-               farbit |= ID3_FARLINE;
-            }
-            else if (!(tbonetest & 010)) {
-               nearbit |= ID3_NEARCOL;
-               farbit |= ID3_FARCOL;
-            }
-         }
-
          for (i=0; i<8; i++) {
-            if (starting_setup.people[i].id1 & BIT_PERSON)
+            if (starting_setup.people[i].id1 & BIT_PERSON) {
+               uint32 nearbit = ID3_NEARFOUR;
+               uint32 farbit = ID3_FARFOUR;
+
+               if (starting_setup.kind == s1x8) {
+                  if (starting_setup.people[i].id1 & 1) {
+                     nearbit |= ID3_NEARCOL;
+                     farbit |= ID3_FARCOL;
+                  }
+                  else {
+                     nearbit |= ID3_NEARLINE;
+                     farbit |= ID3_FARLINE;
+                  }
+               }
+
                starting_setup.people[i].id3 |=
                   ((i & 4) ? nearbit : farbit) |
                   ((i == 0) ? (ID3_FARTHEST1|ID3_NOTNEAREST1) :
                    ((i == 4) ? (ID3_NEAREST1|ID3_NOTFARTHEST1) :
                     (ID3_NOTNEAREST1|ID3_NOTFARTHEST1)));
+            }
          }
       }
-      else if ((starting_setup.kind == splinepdmd || starting_setup.kind == splinedmd || starting_setup.kind == slinebox) &&
+      else if ((starting_setup.kind == splinepdmd ||
+                starting_setup.kind == splinedmd ||
+                starting_setup.kind == slinebox) &&
                starting_setup.rotation & 1) {
          uint32 nearbit = ID3_NEARFOUR;
          uint32 farbit = ID3_FARFOUR;

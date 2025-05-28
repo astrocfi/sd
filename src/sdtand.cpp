@@ -1426,10 +1426,9 @@ extern void tandem_couples_move(
                special_mask = 0x11;
          }
          else if (ss->kind == s_c1phan) {
-            uint32 tbonetest = 0;
             int t = key;
 
-            for (i=0; i<16; i++) tbonetest |= ss->people[i].id1;
+            uint32 tbonetest = or_all_people(ss);
 
             if ((tbonetest & 010) == 0) t ^= 1;
             else if ((tbonetest & 1) != 0)
@@ -2244,7 +2243,6 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
    static expand::thing exp55_2x4_1x4 = {{0, 6, 4, 2}, 4, s1x4, s2x4, 0};
    static expand::thing expAA_2x4_1x4 = {{7, 1, 3, 5}, 4, s1x4, s2x4, 0};
    static expand::thing exp66_2x4_2x2 = {{1, 2, 5, 6}, 4, s2x2, s2x4, 0};
-   static expand::thing exp99_2x4_2x2 = {{0, 3, 4, 7}, 4, s2x2, s2x4, 0};
    static expand::thing expC3_2x4_2x2 = {{0, 1, 6, 7}, 4, s2x2, s2x4, 0};
    static expand::thing exp3C_2x4_2x2 = {{2, 3, 4, 5}, 4, s2x2, s2x4, 0};
    static expand::thing exp0F_2x4_1x4 = {{0, 1, 3, 2}, 4, s1x4, s2x4, 0};
@@ -2337,7 +2335,7 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
          case 0x2AA: compress_map = &expAA_2x4_dmd; break;
 
          case 0x066: case 0x166: compress_map = &exp66_2x4_2x2; break;
-         case 0x099: case 0x199: compress_map = &exp99_2x4_2x2; break;
+         case 0x099: case 0x199: compress_map = &s_2x2_2x4_ends; break;
          case 0x0C3: case 0x1C3: compress_map = &expC3_2x4_2x2; break;
          case 0x03C: case 0x13C: compress_map = &exp3C_2x4_2x2; break;
          case 0x00F: case 0x10F: compress_map = &exp0F_2x4_1x4; break;
@@ -2454,6 +2452,11 @@ void recursively_fix(setup *result, const uint16 split_info[2], const setup *ori
       */
 
       break;
+   case s_dead_concentric:
+      result->kind = result->inner.skind;
+      result->rotation = result->inner.srotation;
+      canonicalize_rotation(result);
+      return;
    default:
       fail("Sorry, can't handle this result setup.");
    }
@@ -2536,64 +2539,126 @@ void mimic_move(
    if (little_endian_live_mask(ss) != (uint32) (1 << (attr::slimit(ss)+1)) - 1)
       fail_no_retry("Phantoms not allowed.");
 
-   setup temp1 = *ss;
-   uint32 ilatmask3low = 0;
+   // What we do is very different for centers/ends vs. other designators.
 
-   tandrec ttt(false, true);
-   ttt.m_people_per_group = 2;
-   ttt.virtual_result = temp1;
+   switch (parseptr->options.who) {
+   case selector_trailers:
+   case selector_beaus:
+   case selector_leads:
+   case selector_belles:
+      {
+         setup temp1 = *ss;
+         uint32 ilatmask3low = 0;
 
-   for (int k=attr::slimit(ss); k>=0; k--) {
-      ilatmask3low <<= 3;
-      uint32 p = ss->people[k].id1;
+         tandrec ttt(false, true);
+         ttt.m_people_per_group = 2;
+         ttt.virtual_result = temp1;
 
-      // Set the person number fields to the identity map.
-      ttt.virtual_result.people[k].id1 = (p & ~0700) | (k<<6);
-      ilatmask3low |= (p & 1) << 1;
+         for (int k=attr::slimit(ss); k>=0; k--) {
+            ilatmask3low <<= 3;
+            uint32 p = ss->people[k].id1;
 
-      int the_real_index;
+            // Set the person number fields to the identity map.
+            ttt.virtual_result.people[k].id1 = (p & ~0700) | (k<<6);
+            ilatmask3low |= (p & 1) << 1;
 
-      switch (parseptr->options.who) {
-      case selector_trailers:
-         the_real_index = ((p+0) >> 1) & 1;
-         break;
-      case selector_beaus:
-         ilatmask3low ^= 2;
-         the_real_index = ((p+1) >> 1) & 1;
-         break;
-      case selector_leads:
-         the_real_index = ((p+2) >> 1) & 1;
-         break;
-      case selector_belles:
-         ilatmask3low ^= 2;
-         the_real_index = ((p+3) >> 1) & 1;
-         break;
-      default:
-         fail("Sorry, only leads, trailers, beaus, and belles are allowed.");
+            int the_real_index;
+
+            switch (parseptr->options.who) {
+            case selector_trailers:
+               the_real_index = ((p+0) >> 1) & 1;
+               break;
+            case selector_beaus:
+               ilatmask3low ^= 2;
+               the_real_index = ((p+1) >> 1) & 1;
+               break;
+            case selector_leads:
+               the_real_index = ((p+2) >> 1) & 1;
+               break;
+            case selector_belles:
+               ilatmask3low ^= 2;
+               the_real_index = ((p+3) >> 1) & 1;
+               break;
+            }
+
+            ttt.m_real_saved_people[the_real_index].people[k] = ss->people[k];
+            ttt.m_real_saved_people[the_real_index^1].clear_person(k);
+         }
+
+         tm_thing *map_search = maps_isearch_twosome;
+         while (map_search->outsetup != nothing) {
+            if ((map_search->insetup == ss->kind) &&
+                map_search->insinglemaskhigh == 0 &&
+                map_search->insinglemasklow == 0 &&
+                (map_search->ilatmask3high) == 0 &&
+                (map_search->ilatmask3low) == ilatmask3low)
+               break;
+
+            map_search++;
+         }
+
+         if (map_search->outsetup == nothing)
+            fail("Can't do this.");
+
+         ttt.unpack_us(map_search, 0, 0, &temp1);
+
+         move(&temp1, false, result);
       }
+      break;
+   case selector_centers:
+   case selector_centers_of_lines:
+   case selector_centers_of_columns:
+      {
+         if (ss->kind != s2x2)
+            fail("Can't do this.");
 
-      ttt.m_real_saved_people[the_real_index].people[k] = ss->people[k];
-      ttt.m_real_saved_people[the_real_index^1].clear_person(k);
+         uint32 tbonetest = or_all_people(ss);
+
+         if (parseptr->options.who == selector_centers_of_columns)
+            tbonetest ^= 011;
+
+         if ((tbonetest & 010) == 0) {
+            expand::expand_setup(s_2x2_2x4b, ss);
+         }
+         else {
+            if ((tbonetest & 1) != 0)
+               fail("Can't figure out how to make lines or columns.");
+            expand::expand_setup(s_2x2_2x4, ss);
+         }
+
+         move(ss, false, result);
+      }
+      break;
+   case selector_ends:
+   case selector_ends_of_lines:
+   case selector_ends_of_columns:
+      {
+         if (ss->kind != s2x2)
+            fail("Can't do this.");
+
+         uint32 tbonetest = or_all_people(ss);
+
+         if (parseptr->options.who == selector_ends_of_columns)
+            tbonetest ^= 011;
+
+         if ((tbonetest & 010) == 0) {
+            expand::expand_setup(s_2x2_2x4_endsb, ss);
+         }
+         else {
+            if ((tbonetest & 1) != 0)
+               fail("Can't figure out how to make lines or columns.");
+            expand::expand_setup(s_2x2_2x4_ends, ss);
+         }
+
+         ss->cmd.cmd_misc_flags |= (parseptr->options.who == selector_ends_of_columns) ?
+            CMD_MISC__VERIFY_COLS : CMD_MISC__VERIFY_LINES;
+
+         impose_assumption_and_move(ss, result);
+      }
+      break;
+   default:
+      fail("This designator is not allowed.");
    }
-
-   tm_thing *map_search = maps_isearch_twosome;
-   while (map_search->outsetup != nothing) {
-      if ((map_search->insetup == ss->kind) &&
-          map_search->insinglemaskhigh == 0 &&
-          map_search->insinglemasklow == 0 &&
-          (map_search->ilatmask3high) == 0 &&
-          (map_search->ilatmask3low) == ilatmask3low)
-         break;
-
-      map_search++;
-   }
-
-   if (map_search->outsetup == nothing)
-      fail("Can't do this.");
-
-   ttt.unpack_us(map_search, 0, 0, &temp1);
-
-   move(&temp1, false, result);
 
    if (result->rotation & 1)
       result->result_flags.swap_split_info_fields();

@@ -669,6 +669,10 @@ enum selector_kind {
    selector_center_line_of_6,
    selector_center_col_of_6,
    selector_outerpairs,
+   selector_centers_of_lines,
+   selector_ends_of_lines,
+   selector_centers_of_columns,
+   selector_ends_of_columns,
    selector_firstone,
    selector_lastone,
    selector_firsttwo,
@@ -4325,6 +4329,10 @@ extern id_bit_table id_bit_table_3ptpd[];                           /* in SDTABL
 extern id_bit_table id_bit_table_wqtag_hollow[];                    /* in SDTABLES */
 extern const id_bit_table id_bit_table_3x6_with_1x6[];              /* in SDTABLES */
 
+extern const expand::thing s_2x2_2x4;
+extern const expand::thing s_2x2_2x4b;
+extern const expand::thing s_2x2_2x4_ends;
+extern const expand::thing s_2x2_2x4_endsb;
 extern const expand::thing s_qtg_2x4;
 extern const expand::thing s_4x4_4x6a;
 extern const expand::thing s_4x4_4x6b;
