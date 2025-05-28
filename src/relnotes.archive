@@ -1,0 +1,1103 @@
+		    RELEASE NOTES FOR VERSION 24.1
+       Database version = 24.0, format = 24, X11 UI version 1.9.
+
+Some file names in the distribution have been changed:
+
+Release_notes is now Relnotes (You've already figured that out by now)
+release_notes.archive is now relnotes.archive
+Readme is now README
+sdresolve.c is now sdgetout.c
+make_calls.c is now mkcalls.c
+The program make_calls is now mkcalls
+The source database (formerly calls.dat) is sd_calls.txt
+The compiled version (formerly sd_database) is sd_calls.dat
+
+The version of the program and database that created each sequence is
+logged in the sequence output file.  As more and more people use Sd,
+this feature should make it easier to reproduce and track down bugs.
+
+More selectors were added: centers, ends, center 2, center 6, outer 2,
+outer 6.  So you can now have the centers run, for example.  The names
+of selectors now appear in the transcript in lower case.  Only concepts
+are in upper case.  The reason is to make it possible to distinguish
+the concept "CENTERS" and the call "U-turn back" from the call "<anyone>
+U-turn back" with the centers selected for the anyone.  Of course the
+effect is the same, but there is no guarantee that that will always be
+the case for all calls.
+
+Asymmetrical selectors are supported!  You can have the near column
+pass thru, etc.  The resultant setup must be reasonable -- no shape-changers
+on one side of the set.  Beware!  Most calls have not been checked for
+robustness in the presence of asymmetrical setups.  Use this with care!
+The management will not be responsible for any asymmetrical sequences
+left unattended.  The resolver checks all 8 people, so it should work.
+If the setup is asymmetrical, it will of course almost never find a resolve.
+
+A bug in the "reconcile" operation was fixed.  It caused the program to
+discard about 1/2 of all possible reconciles that were found, because the
+final check didn't handle shape-changers correctly and led the program
+to believe it had made an error.  This bug did not cause corrupted
+sequences to be written -- it simply made reconciles extraordinarily hard
+to find.
+
+Two bugs that can lead to occasional crashing were fixed.  I thank Sue
+Curtis for her patience and assistance in finding these.
+
+A new call schema "splitseq" was added, which is like "seq" except that it
+first splits the setup according to the notion of "split counter rotate"
+and then maintains that division through the entire call.  Only the first
+part of the call uses "splitseq"; the others use "seq".  This was used to
+fix the definition of "turn on".  I think it now does "turn on" and
+"extend" correctly.
+
+The "some do this/others do that" concept has been changed to "own the
+so-and-so".
+
+It is now somewhat better about putting setups back together after an
+"on your own" or "own the so-and-so" or "so-and-so only" operation.
+For example, it can do ends only and centers only rotates and single
+rotates.
+
+Calls had their levels changed in accordance with Callerlab changes
+made in the fall of 1991: inlet, outlet, dodge circulate, drop in/out,
+flip the line, circle to a wave, wheel fan & cross thru (to C3X),
+make magic, split mixed up (to C3X), round off (to C3X).
+
+New calls: [magic] walk out to a column, rotate 1/2, single rotate 1/2,
+Curl thru, dive thru, pass to the center, bypass, various fractions of
+track N and tagging calls, all combinations of peel/trail the deal,
+sweep 1/4 (goes clockwise unless say "reverse")
+
+Several additional calls have had "single" versions created.  Several
+additional calls are now fractionalizable.
+
+Cross horseshoe turn was fixed.  Sorry.
+The ability to do tally ho from lines back-to-back was fixed.
+
+Wheel and spread is now legal only from 1-faced lines.  Tag circulate is
+legal only from 2-faced lines.  Swing and mix, alter the wave, swing along,
+etc. will now print warnings if started in other than waves.
+
+It no longer permits you to do a spin chain thru from lines back-to-back.
+(It used to tell everyone to "do their part".)
+
+There is a new call "single file rotate", with fractions 1/4 and 1/2.
+This is done from a 1x4 column.  Select it by clicking the "single"
+concept.  The program will turn the name into "single file", same as for
+single file recycle.  To get the usual "single rotate" calls, use
+those names.
+
+Many of the changes in the database resulted from contributions by
+Kathy Godfrey and Sue Curtis.
+
+===============================================================================
+
+
+               NOTES ON THE X11 USER INTERFACE RELEASE 1.9
+                            By Stephen Gildea
+
+
+The text display area is now a scrolling window that displays the
+entire sequence history.  The scrollbar to the left of it can scroll
+the text up and down, as with the call menus.
+
+Text from this window can be cut using standard X techniques and
+pasted into other X clients.
+
+Pressing Return at the end of any text typed into a popup will accept
+that string.  This is the same as clicking the mouse on the "Ok" button.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.21
+              Database version = 23, format = 22, X11 UI version 1.7.
+
+A fifth concept menu popup was added, that has all remaining concepts,
+hopefully in a somewhat friendlier format than the previous version.
+The general concept menu below the special concept popup icons still
+exists, but it only contains duplicates of the extremely common concepts.
+
+The "grand working" concept can now deal with the case in which the virtual
+setups being 50% overlapped into the final result are only 1 person deep.
+In this case they are simply abutted with no overlap, and the warning
+"the overlap goes away" is given.  This occurs in the case of "grand working
+apart lockit" from a grand wave or "grand working right swap the top" from
+lines facing.  The 3 virtual setups are parallel lines.  They have no depth,
+so they are just abutted into a 3x4.  This is analogous to the situation
+in which "parallelogram touch" is called from parallelogram lines facing,
+resulting in a grand wave with the warning "the offset goes away".
+
+The definition of "boomerang" was fixed -- it should now permit only
+miniwave boxes and 1-faced boxes.
+
+I caved in to pressure and made the definition of "fascinating <anything>"
+consistent with common misusage.  "Fascinating bend the line" is now awkward.
+
+A bug that made the program tend to crash when you clicked on "heads start",
+"replace the second part", and "do anything", has been fixed.  How the program
+ever worked as well as it did is a mystery.
+
+An extreme lack of randomness in the random number generator (uncovered while
+fixing the above bug) was fixed.  Clicking on "sides start; replace 2nd part;
+do anything" rarely found combinations other than "spin the top but replace
+the 2nd part with so-and-so run".  The problem was exacerbated by the fact
+that the mainstream call menu has exactly 64 items.  The program now uses the
+UN*X standard 48-bit random number generator.
+
+The ability to do 12-matrix calls is significantly improved.  It can do 12-matrix
+motivates and relay the tops.
+
+It can now do "Z axle" from 16-matrix Z's, resulting in a parallelogram.
+
+New calls: tickle, grand spin/fan the top (grand working apart spin the
+top now works also.)  Alter the wave/diamond/and circulate are now defined
+by parts, and hence are subject to randomness.  Lead right.  (Click on
+"LEFT" and "lead right" to get "lead left")
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.20
+              Database version = 22, format = 21, X11 UI version 1.7.
+
+Minor fixes to calls like mini-pleasure and relay your pleasure --
+they now require real columns or grand waves.  They will not engage
+in bizarre "do your part" stuff.  Also, scamper was moved into the
+commented-out section for bogus calls.
+
+Other minor internal changes.
+
+                  X11 interface (version 1.7):
+
+Typing Return in a type-in popup (e.g. for a subtitle on a sequence) now
+accepts the string, the same as clicking on "OK".
+
+Confirmation popups are placed slightly better.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.19
+              Database version = 21, format = 20, X11 UI version 1.6.
+
+New calls: lock 'em up, short/long trip, fiddle around, spin a wheel,
+stack the wheel, create a column, flare the star.
+
+All bogus calls (turn up, steer clear, differentiate, rewind your neighbor,
+etc) have been moved to the front of the file and placed in a comment.
+
+The call "step lively" is now defined as detour, slim down, and circulate,
+with visible fractions.  That is, one can fractionalize it, apply random
+or piecewise concepts, etc.  Is this acceptable according to modern usage?
+
+The calls "leads wheel the ocean/sea" now give a warning if the setup is
+not a 1-faced box.  Additional calls "wheel the ocean/sea" were added, which
+require everyone to be a lead.  You can also specify certain people to start
+a wheel the ocean/sea/to-a-diamond or quarter wheel the ocean/sea/to-a-diamond.
+If you specify the starting people for wheel the ocean, it is legal for the
+inactive people to be in a left-handed miniwave.
+
+The flag "first_part_visible" has been added to the database.  This is
+intended for calls that have a recognizable first part, but no recognizable
+part division after that, such as tag chain thru reactivate.  This flag
+makes it possible to do things like "so-and-so start a tag chain thru
+reactivate" or "start triple lines, tag chain thru reactivate".
+
+The "so-and-so start" and "start <some concept>" concepts were added.
+
+The "replace the Nth part" and "interrupt after the Nth part" concepts were added.
+
+The "interlace" concept was added.
+
+WARNING:  Some of these modification/interruption meta-concepts push the
+semantics of the language to the limit.  Whenever a call undergoes an
+interruption or enters or leaves a part with an additional concept on it,
+there is an implicit "piecewise" at that instant.  That is, concepts and
+setups are re-evaluated.  Furthermore, replacements and interruptions are
+"normal", that is, they do not carry any concepts that were on the call
+being replaced but not on the entire operation.
+   Example, from a starting DPT setup:
+      DELAY: TANDEM TWOSOME clean sweep 1/4 BUT REPLACE THE 3rd
+      PART WITH A [CHECKPOINT crossfire BY crossfire]
+   Normally, the tandem twosome behavior is not re-evaluated after each
+   part of the clean sweep.  But, since the 3rd part was replaced with
+   something else to which that concept did not apply, the setup is
+   re-evaluated before doing the final part.  Note in particular that
+   the replacement was "normal" -- the call having a part replaced was a
+   tandem twosome clean sweep 1/4.  If we wanted the entire operation,
+   including the replacement, to be tandem twosome (with no re-evaluation,
+   of course) we might call:
+      TANDEM TWOSOME DELAY: clean sweep 1/4 BUT REPLACE THE 3rd
+      PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
+
+The chaotic nature of the main concept menu is getting serious.  The concepts
+that relate to fractionalizing/interrupting/dissecting calls have been placed
+near the end.  Does anyone have any suggestions for organizing this?
+
+                  X11 interface (version 1.6):
+
+Mouse button 3, clicked anywhere other than in a scroll bar
+(where it has its usual scroll bar meaning) is equivalent to clicking
+on the "undo" icon.  It undoes the last call or concept.  Use mouse
+button 1 for all other non-scroll-bar actions.
+
+If you ask your window manager to kill the program, Sd intercepts the
+request and asks you to confirm that you wish to abort the current sequence.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.18
+              Database version = 20, format = 19.
+
+An unfortunate bug in the command line argument handling in version 17
+was fixed.  It is now once again possible to use arbitrary X window system
+arguments on the command line.
+
+The ability to use customized databases was added.  In addition to the
+calling level and any X-window arguments on the command line, the program
+recognizes three special flags:
+   -write_list <filename>  -- write out the call list for the
+         indicated level INSTEAD OF running the program.
+   -write_full_list <filename>  -- write out the call list for the
+         indicated level and all lower levels INSTEAD OF running the program.
+   -abridge <filename>  -- read in the file, strike all the calls
+         contained therein off the menus, and proceed.
+
+The first two are used to prepare a call list.  The call list for the
+indicated level, exactly as the calls appear in the menu, will be written
+to the named file.  If "-write_list" is used, only the calls exactly on
+that level will be written.  If "-write_full_list" is used, the lower level
+calls will be written as well, so the file will look exactly like the
+main call menu.  After performing either of these operations, the program
+exits.
+
+The third special flag is used to read in a list of calls to be avoided.
+Any call listed in the file, in precisely the same format as it was written
+out, will be removed from the internal database prior to running the program.
+Every sequence written under control of such a file will say "(abridged)"
+after its level.
+
+To write material for a group that is learning C2, for example, run the
+program with
+         sd c2 -write_list my.group
+Then delete from the file "my.group" those calls that the group has learned.
+When writing material, use the command
+         sd c2 -abridge my.group
+As the group learns new C2 calls, delete the corresponding lines from
+the file "my.group".  That file always contains the calls that they don't
+yet know.  When the file goes to zero, they know the whole list.
+
+The lines in the abridgement file must always be in exactly the same format
+as the strings that are written out by the "write_list" or "write_full_list"
+flags.  The program has no tolerance for creative capitalization, stray
+blanks, or other variations.  Any line in the file that does not match a
+call in the menu is simply ignored.  The order is not important, though it
+is possible that leaving it in the original menu order may someday yield
+faster program startup.
+
+New calls: circle to a two..faced..line, grand walk and dodge, mesh
+(beware! there is a bug: it permits it from people back-to-back.  I
+need to make a restriction or qualifier.) turn and left thru,
+cross follow thru, flare out to a line.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.17
+
+A bug was fixed in the "double offset 1/4 tag" concept.
+
+The "two diagonal lines/columns" (from a 4x6) and "so-and-so in a diagonal
+line/column" (from a 4x4) concept were added.
+
+It is now legal to do a "resolve" or "do anything" when a complex
+concept has been entered and its calls partially filled in.  That is,
+one can now do "checkpoint recycle by <do anything>".  Previously, one
+could do "checkpoint <do anything>", having the program fill in both
+calls, but it was not possible to specify one call and have the program
+find the other.
+
+The various "scatter scoot chain thru nuclear reaction" calls were broken
+out into separate menu items.  While this consumes a lot of menu space,
+there was widespread disapproval of the previous method of constructing
+such calls by multiple substitution steps.
+
+All the "cross chain reaction", "cross reactivate", and "cross nuclear
+reaction" calls were removed from the menus.  (The previous change would
+have been incredibly expensive if this were not done.)  To get the cross
+versions, just click on the "cross" concept.  The program will insert the
+word "cross" in the right place in the finished call.
+
+The "do the Nth part <concept>" meta-concept was added.
+
+New calls: tap, cross double your pleasure, [cross] double your pleasure from
+columns of 6, turnover, turn by, turn by 1-1/2.
+
+"gruesome" couples/tandem concept.  In this program, "gruesome" simply means
+phantom couples or tandem with the phantoms added to make a 2x8 rather than
+the 4x4 that would normally be created, and with the added requirement that
+the pairing be parallel to the long axis.  "Gruesome twosome" is just an
+abbreviation for gruesome as couples twosome.
+
+Levels have finally been associated with concepts!!!!!!  If a concept is used
+at an illegal level, it just gives a warning.  Many concepts have not yet had
+their levels catalogued.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.16
+
+The call restriction flag "split_trade_box" has been changed to "magic_only".
+Its meaning on a 2x2 is unchanged -- the setup must be a split-trade-circulate
+type of box.  It is now additionally defined on a 4x2, meaning that the setup
+must be a magic column.
+
+An embarrassing bug was fixed in "do anything" for the first call of
+a sequence.  Previously, if one clicked on "heads start", then "split",
+then "do anything", it would search for things of the form "heads into
+the middle and start a split square chain thru", as it should, but it would
+execute the call in an extremely strange way, resulting in an
+unsymmetrical resulting setup.  Because of the asymmetry, it is extremely
+unlikely that any generated sequences were tainted by this bug.
+
+The cast 3/4 that appears very early in motivate, relay the top, and
+cast and relay was changed from a "cast off 3/4" to an "arm turn 3/4".
+This makes it legal in the presence of phantoms.  As a result, it is now
+possible to do a "split phantom lines motivate but turn the star 1/4" from
+normal waves.  (If the star turn is left at the usual 1/2, the final
+cast off 3/4 is still ambiguous.)
+
+The copyright date was changed to 1991, and the name of the file containing
+the license was changed from gnu.license to COPYING, in accordance with
+FSF custom.
+
+The ability to do certain "matrix" calls, U-turn back and quarter left/right,
+from virtual and distorted setups was improved.  It is now possible to do
+"tandem heads U-turn back", for example.  This makes "patch" viable.
+Also, it can do 1-person calls in C1 phantoms with the "so-and-so only" concept.
+
+The "triangle" concept was added, as in "triangle peel and trail".  The program
+can now recognize wave-based and tandem-based triangles in C1 phantom setups,
+and can do triangle orientation-changers correctly.  There is also a "so-and-so
+based triangle" concept, available in C1 phantom setups.
+
+It now does the right thing with the "inherit_left" and "inherit_reverse"
+modifiers.  If a call that is defined sequentially or concentrically has one
+but not the other of "left_means_mirror" or "reverse_means_mirror" (these
+flags don't mean what they say when used with sequentially or concentrically
+defined calls -- they mean that the concept is legal and can be inherited
+to subcalls.  What the subcall does with them is its business) and a subcall
+has the "inherit_reverse" or "inherit_left" flag on for the concept that is
+NOT premitted, the program will turn the given concept into the other one
+and send it to the subcall.  For example:
+   call "clean sweep @b" c3x
+               reverse_means_mirror neednumber visible_fractions
+      seq circle4 [inherit_reverse repeat_n]
+      seq lft_veer_left [inherit_left]
+      seq tagtheline [inherit_left]
+      seq leadsrollright [inherit_left]
+"reverse clean sweep 1/4" is defined as
+      REVERSE circle4 ; LEFT lft_veer_left ; LEFT tagtheline ; LEFT leadsrollright
+The "reverse" concept gets turned into "left" for those subcalls that need it.
+
+New calls: cheerio (done correctly!), grand switch, scramble, single circle to a line,
+patch, scramble, central scramble, snag circulate, drift around, all sorts of "pitch"
+variations, all sorts of "touch by" fractions.
+
+With confidence is now done correctly.  It can be done from a "mayday, no direction"
+setup.  Speaking of which, mayday with no direction was added.
+
+Convert the (wave-based) triangle now handles the case in which the point
+has a different handedness from the base.
+
+Singular words for the various selectors were introduced, and the calls "<anyone> hop"
+and "<anyone> tie" were modified to use same.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.15
+
+Many "forbidden" flags were put on restrictions in the database.  For example,
+it is now simply illegal (as opposed to giving a "do your part" warning) to call
+"cast a shadow" or "detour" when the ends are not in a true tandem.
+
+The behavior when an error occurs during a file writing operation has
+been improved.  When you click on "getout", it attempts to write the sequence
+to the currently selected file.  If this fails for any reason, it displays
+an error message and does not destroy the sequence.  You can then change the
+file name (by clicking on "outfile") or otherwise repair the problem, and
+then click on "getout" again.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.14
+
+The "reverse random" concept was added.
+The theoretical problem with pair the line, from version 13, was settled.
+It is legal from arbitrary lines.  When done from parallel lines, if the
+result of each line is a Z, the setup remains a 2x6.  Otherwise, whether the
+ends were facing in or out, the setup is shrink-wrapped to a 2x4.  The calls
+[cross] loop the loop, rip the line, and step and slide were implemented
+in this manner also.
+
+The concepts "divided lines" and "divided columns", done from a 2x8,
+and "12 matrix divided lines" and "12 matrix divided columns", done from
+a 2x6, were added.  The former two are equivalent to split phantom twin
+boxes, except that they demand that people be facing in the indicated way.
+For all of these concepts, if people are T-boned, you can use "standard"
+to permit the concept to be used.  The purpose of the 12 matrix versions
+is to allow calls that take 2x3 setups to be done from a 2x6.  In all
+cases outboard phantoms are added as required at the start of the call,
+and removed at the end.
+
+The meaning of the "demand_lines" and "demand_columns" flags was reworked.
+
+For a call that is defined concentrically:
+   The first subcall specifier gives the call to be executed by the centers.
+   The second subcall specifier gives the call to be executed by the ends.
+For a call that is defined cross concentrically:
+   The first subcall specifier gives the call to be executed by the
+      original ends, finishing in the center.
+   The second subcall specifier gives the call to be executed by the
+      original centers, finishing on the outside.
+
+The meaning of the "demand_lines" and "demand_columns" flags for the call
+executed by the people who START ON THE OUTSIDE (for "concentric" this is
+the second subcall specifier; for "cross concentric" it is the first) is
+as follows:
+   If the original ends are in a 2x2, their elongation is checked to
+   determine whether they are on line-like or column-like spots,
+   independently of the centers' formation.  So, for example, in a
+   quarter-tag, the ends are in a 2x2 and satisfy the "demand_columns"
+   criterion.  In a "trim a web" setup, they are also in column-like
+   spots.  In diamonds, they are in line-like spots.  If the original
+   ends are not in a 2x2 and a "demand" flag is set, no checking is done.
+
+The meaning of the "demand_lines" and "demand_columns" flags for the call
+executed by the people who START IN THE CENTER (for "concentric" this is
+the first subcall specifier; for "cross concentric" it is the second) is
+as follows:
+   If the original centers are in a 2x2, the elongation of the outsides
+   is measured relative to the facing direction of the centers.  If
+   "demand_lines" is given, the outsides' elongation is required to lateral
+   to the centers.  If "demand_columns" is given, the outsides' elongation
+   is required to forward or back relative to the centers. If the outsides
+   are in a 2x2 (so the overall setup is a 2x4) these flags test whether the
+   centers are actually in their part of lines or columns.  If the outsides
+   are not in a 2x2, their elongation is tested anyway.  So, from a "rigger"
+   setup, the "demand_lines" flag tests whether the centers find the wings
+   lateral to them.
+
+Either flag will cause an error is the setup is a galaxy (elongation can't
+be determined), or if the centers are T-boned (elongation isn't consistent
+for all 4 centers.)  If the original centers are not in a 2x2 and one of these
+flags is set, no checking is done.
+
+
+The restriction "quarterbox_or_col" was added, and used in "triple cross",
+so that it will no longer allow this call from 8 chains and other
+inappropriate setups.
+
+It can now do 1x2 calls in full generality (I hope) from generalized
+quarter-tag setups and "riggers".  For example, hinge turns a quarter-tag
+into a rigger (sorry, Eric), and vice-versa.  In a rigger setup, it
+analyzes facing direction to determine who works with whom.
+
+The "do two calls in succession" concept was added.  If this is done under
+another concept, that concept applies to the entire pair of calls.  This
+makes it possible to do a "concentric (recycle ; roll)" and have the lines-to-lines
+rule embrace the roll.  The script will appear as above.  The proper way
+to say the concept when calling is problematical.  Something like "consider
+the following two calls to be one unit, and do a stable swing thru and turn thru"
+might be appropriate.  Or you could just read the parentheses.
+
+New calls: grand nicely, grand swing and cross [ugh!], grand curli-cross,
+put centers in, put centers out, centers thru and close the gate, cross town roll.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.13
+
+The "ferris" and "release" concepts were added.
+
+The call "roll" (without selector) was added, which takes no selector.
+You no longer need to say "everyone roll".
+
+The "outfile" icon was added, courtesy of Kathy.  Click on this to change
+the name of the output file.  The default file name is now sequence.<level>,
+as in sequence.MS or sequence.C1.
+
+A bug was fixed involving left turn thru from facing people.  It got confused
+about stepping to a wave and doing a right-hand-only call.  (I define
+turn thru as a right-hand-only call.)
+
+[Cross] horseshoe turn is defined correctly, and can be done from T-boned
+or other strange setups.
+
+The restriction "couples_only" was expanded to be meaningful from 2x4
+lines or columns, so that "rotate" (the call) could be defined.
+
+The "tall 6", "short 6", "inside triangles", and "outside triangles"
+concepts were added.  Things are in a somewhat confused state while I
+figure out what things really ought to be called.
+
+The necessary mechanism was added to handle calls in which the line people
+and the column people have different ideas about the final setup shape, that
+is, the "rotate" indicator is on for some people and off for others, as in
+   setup 4x2 2x4 rotate 
+      array [L4W L5W L6E L7E L0E L1E L2W L3W]
+   setup 2x4 2x4
+      array [L7S L0S L5S L2S L3N L4N L1N L6N]
+This was used to make "single rotate" (the call) and "change your image" work.
+("Change your image" had previously been defined in a strange way in order
+to get around the problem.)
+
+Some new modifiers were added for restrictions in the database.
+Between the word "restriction" and the name of the restriction you may place
+the word "unusual" or "forbidden".  If "unusual" is given, and the restriction
+is violated, the warning "This is an unusual setup for this call" (as opposed
+to "do your part") will be given.  Such a warning will make the call ineligible
+for use in a resolve or "do anything" operation.  This is intended to be used
+to make "sidetrack" be more caller-friendly when called from lines.
+If "forbidden" is specified and the restriction is violated, the call is
+simply illegal.  This is used with the "couples_only" restriction to make
+"rotate" (the call) work.  (Things would have been a lot easier if "rotate"
+were just an as-couples single rotate, because the mechanism exists,
+as you know if you've been reading these notes, to do such things very simply.
+Alas, the call "rotate" doesn't work that way.)
+
+A new restriction, "alwaysfail" was added.  It is intended to be used with
+the "unusual" flag (see preceding paragraph.)  The call "sidetrack" now
+makes use of this, and issues an "unusual setup" warning if called from
+2x4 lines.
+
+The "random" and "piecewise" concepts were added.  They require that the
+call be sequentially defined and have the "visible_fractions" flag set in
+the database.  A very few calls were so flagged.  As usual for new features,
+use with care.
+
+New calls:
+   <anything> the windmill left or right
+   [single] hinge and trade,
+   [single] hinge and circulate left/right
+   [single] [3/4 circle] bring us together
+   rotate
+      I believe it now knows how to do rotate and single rotate, including the
+      some-are-in-lines-and-others-are-in-columns stuff.
+   shuttle right/left
+   tag & spin right/left
+      To get the "left" indicator, click on "left" before clicking on the call.
+      It will do the right thing.  This is the completely wrong way to do this stuff.
+   spin the yo-yo
+   relay the yo-yo
+   interlocked ramble
+   cross ramble
+   cross counter
+      Give the "cross" concept to the entire call "scoot and ramble"
+      or "scoot and counter".  The program will clean it up.
+   trail chain thru
+   [cross] pair the line
+      There is a theoretical problem with [cross] pair the line,
+      that requires resolution.  Is it legal from lines facing?
+      Would saying "split phantom lines" before the call change
+      that?  How does shrink wrapping apply to this call in general?
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.12
+
+The "diamond" concept was added, in both the "diamond single wheel" and the
+"diamond swing thru" forms.  Calls are marked in the database with the
+"diamond_as_in_swing_thru" flag if they take the second form.  Compound calls
+marked in this way inherit the diamond property to their subcalls by means of
+the "inherit_diamond" invocation flag.  Basic calls use the "alternate_definition
+[diamond]" clause.  Such calls must still have the "diamond_as_in_swing_thru"
+flag at the top level.
+
+You should not need to click on "diamond" except when you actually want the
+diamond concept.  There are cases in which it may seem that the word "diamond"
+ought to be added after clicking on "interlocked" and/or "magic".  The program
+will insert the extra word "diamond" for you.  (At least that is the intention.)
+So, for example, clicking on "magic" and then "alter the diamond" will get
+"magic diamond, alter the diamond", and clicking on "magic", "interlocked", "diamond",
+"as couples", and "quarter right" will get "magic interlocked diamond, diamond
+as couples quarter right".
+
+The ability to do "phantom turn and deal" calls from appropriate setups was
+added.  That is, the "phantom" concept now means either the "C1 phantom"
+meaning or the "phantom turn and deal" meaning, depending on the setup.
+The latter meaning will be used whenever the people occupy generalized
+stairstep/ladder spots.  Any call that leaves pairwise-squashable phantoms
+is legal, for example, "phantom single file flutter wheel".
+
+The "ferris" concept was added.  It requires that the phantoms be removable.
+It is in a fairly pathetic state.  "Release" is in the concept menu but is
+not implemented.
+
+New calls: turn up, mini turn up, (cross) clear the way.
+
+The "cpls_unless_single" modifier was implemented, for sequential calls
+only.  It may not be used with any of the 3 "repeat" modifiers.
+If the "single_is_inherited" top level call flag is on, then the "single"
+modifier is allowed, and will suppress this action.  Perhaps a version
+that is not suppressable is needed, so we can selectively determine
+just where "single" is used.  All this stuff was used for a complete
+recoding of the [grand] [single] cross [trade] and wheel family.
+
+The "split phantom twin boxes sets in motion" bug was fixed.  The program
+doesn't normally distinguish between the spot locations of two parallel
+diamonds and those of a quarter tag.  The call went into two quarter tags
+next to each other, which is treated as quadruple diamond spots.
+Whenever the outer diamonds are empty in quadruple diamonds at the end
+of a call, the outer diamonds are thrown away, leaving just the two
+center diamonds, that is, a quarter tag.  This was changed.  It now
+examines people's facing direction.  If the remaining people were in
+actual diamond-like orientations when throwing away the outer diamonds,
+the resulting setup will be a quarter tag.  Otherwise it will be an "H".
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.11
+
+The spelling error in the word "inifinitive" in the notes for version 1.10
+was fixed.  The misspelled word in the preceding sentence was in
+quotes, so it doesn't count.
+
+You should be able to say things like so-and-so are standard in
+quadruple lines, siamese breakdown.  Standard is recognized for
+triple/quadruple lines, 12 matrix phantom lines/columns, and
+two phantom lines/columns of 6/8.
+
+Two new definition schemata have been added: "singleconc" and
+"singlecrossconc".  We'll see how they work.
+It can do single [cross] concentric calls into and out of diamonds.
+
+New calls: <N/4> the alter (N had better be odd, of course)
+and <N/4> cast and relay.  In alphabetizing the menu, substitutable
+numbers are completely ignored rather than being listed under "N",
+so "<N/4> the alter" is listed under "T" (!), and "<N/4> cast and relay"
+under "C".  Sigh.
+
+More new calls: magic walk the plank, magic open up the column,
+open up (cross) reaction, split grand chain 8 (special case, squared-set
+position only), wheel and spread from line of 3 (be sure they are all
+facing the same way; the program can't yet tell), single rotary spin done
+correctly.  Quarter thru defined more nearly correctly, so tandem
+or siamese quarter thru can be done from appropriate setups.
+Fractional chain and circulate in, spin chain and circulate in,
+good and plenty.  Many single/cross/magic versions of existing calls.
+
+There is much improved printing of tagging call modifications, as in
+      [vertical tag] your leader
+and star turning modifications, as in
+      scoot and plenty BUT [turn the star 3/4, interrupt after 1
+         with [[[revert the [vertical tag]] chain thru and
+         scatter] reaction BUT [turn the star 1/2]]]
+
+Many star turn operations now take numeric arguments instead of being
+listed individually.
+
+It can do 2-person calls individually in each group when in
+a "C1 phantom" setup.  This means it is beginning to do siamese
+breakdown intelligently.
+
+The concepts "grand", "cross", and "single" were added, and many calls whose
+cross/single/grand versions were listed separately were reworked to use this.
+For example,
+to get a cross chuck-a-luck, use the "cross" concept with chuck-a-luck.
+The appropriate inheritance indicators were added to the database language.
+See, for example, the way "cross clover and ..." inherits cross to its
+subcall.  For calls whose names are usually given as "single file ...",
+click on "single".  It will be changed to "single file" in the transcript.
+
+The ability to have more than one call modifier was added, so we now
+have interlocked magic flip/cut the diamond.  Instead of saying
+"magic_coming_next", the database says "alternate_definition [magic] <level>".
+The level tells what level is appropriate for the call with that modification.
+The database has partly been updated to contain this level information, so it
+knows that "magic in roll circulate" is not legal at a2.
+
+The level specified with "alternate_definition" is checked whether the call
+is invoked by clicking on it at the top level or invoked as a sequential or
+concentric subcall from some other call!!!  This is different from the program's
+behavior for calls without modifications, in which it is perfectly legal to
+execute a call that contains a subcall that would be at too high a level to
+be executed directly.  For example, "rotary spin" is marked as C1 in the database,
+but it invokes a subcall to do the pull by and [single] courtesy turn.  The
+"single" concept is inherited to that subcall, and the "single" version of that
+subcall is marked C3.  Therefore, "single rotary spin" is not legal below C3.
+The subcall itself is marked as "dontshow", meaning infinitely high, but that
+isn't checked.  It just controls whether the call appears on the menu.
+
+A new invocation schema, "maybesingleconc" has been created.  It is equivalent
+to "singleconc" if the call was invoked with the "single" concept, and
+equivalent to "conc" otherwise.  The call should have "single_is_inherited"
+property.  Think of the "single" concept as being inheritable both to subcalls
+and to invocation schemata.  The subcall in "rotary spin", discussed at great
+length above, uses this.
+
+It has a better sense of what is reasonable when a 2-person call is given
+to the outsides.  It permits cy-kick from a grand wave but not from diamonds.
+It forbids "ends hinge" when in waves, but allows "concentric hinge" from waves.
+
+   The problem with cy-kick was that it used to mark the ends part with
+   "conc_demand_columns" in order to make sure that the ends were close to each
+   other laterally, that is, to make it illegal from diamonds.  The problem is
+   that conc_demand_columns and conc_demand_lines both cause the program to
+   demand a 2x2.  So, if the ends were in a 1x4, it would not allow the call.
+   What we are trying to do is not "demanding columns" so much as demanding that
+   the two people be close to each other laterally, since that is obviously
+   what the two-person call kickoff requires.  But we can't add a flag to calls
+   like kickoff saying that we require the two people to be close -- it should
+   be obvious.  The solution is to say that, whenever a two-person call is executed
+   in a 2x2 setup, and that setup is elongated (due to being the outsides),
+   we require that the division axis be such that the people working with each
+   other on the two-person call be physically close to each other.  Once this
+   change was made, the illegality of "ends hinge" from lines came for free.
+   Of course, we have to turn off this feature when the concentric concept is
+   used.
+
+It knows how to have some people rear back but not others, so, for example,
+square thru can be done from certain rigger setups, dogbones, and C1 phantom
+setups.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.10
+
+The split infinitive in the notes for version 1.9 was fixed, but the
+spelling error remains.  This will be fixed in version 1.11.
+
+Fixed cover up -- it should do all the right things now.
+Fixed bug in "strip" from an hourglass.
+
+The program interface to the user interface module was changed.  The
+X-window interface (sdui-x11.c) has become simpler, more elegant,
+and more efficient.
+
+Triple diagonal lines/columns have been broken for a while; fixed.
+Triple twin lines/columns, and "standard" in same, were implemented.
+These, and triple diagonal lines/columns, are in the phantom concept
+popup, which is now quite huge.
+
+The logic for deciding who works with whom in a 2x2 setup was changed.
+It will not allow the call "trade" to be executed in a T-boned 2x2.
+A consequence of this is that it may do siamese breakdown slightly
+more intelligently, but don't count on it.
+
+Fixed bug in "standard" with distorted moves (bigblock, stairstep, etc.)
+
+Fixed yet another bug in concentric stuff.  Previous versions may have
+had "locker's choice" broken.  The problem was in the "parallel_conc_end"
+indicator on calls.  When a call is defined sequentially, the way
+"trade;stepandfold" is, the program used to check for this flag on
+the entire "trade;stepandfold" call.  The flag is absent, so the
+program defaulted to setting the final elongation to be perpendicular
+to the original ends' 1x4, which makes "choice" fail.  The program
+now checks for the "parallel_conc_end" flag on the constituent calls.
+Since the flag is set for the call "step and fold", the right thing
+happens.  Making it do "split cast" is difficult, because the outsides
+part is a hinge followed by a trade.  The hinge is the call for which
+the "parallel_conc_end" flag is important.  While doing the trade,
+it has to remember what spots the hinge wanted to end on.  I'm boring you.
+
+New calls: 1/4 the alter, gravitate.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.9
+
+New calls: more elegant zip code, hoop-de-do, improved 6x2 acey deucey
+(dancers will be more intelligent about figuring out which way to face
+without needing a live person in front of them in the circulate path),
+mayday in/out,
+
+Fixed bug in sidetrack (it used to do an implicit split sidetrack
+if the setup was in columns, because the call was, inexplicably and
+inexcusably, not entered by definition.)  This was broken only in 1.8.
+The split infinitive in this paragraph will be fixed in version 1.10.
+
+Fixed problems with shape-changers in butterfly or O (it used to
+believe they were illegal in some cases.)
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.8
+
+The "undo" icon behaves in a MUCH more user-friendly way.
+
+It is legal to do phantom lines/cols/boxes/diamonds if only the outer
+pair of the setups are occupied.
+
+New calls: 2/3 sidetrack, split sidetrack, split 2/3 sidetrack, split cast,
+anything and cross, nicely, triple cast, follow the yellow brick road,
+turn the key, transaction stuff, cloverflow, cloverleaf turn.
+Fix bug in "bounce the <anyone>".
+
+<anything> the yellow bricking <anything>:
+   To use the second <anything>, as in "follow the yellow bricking
+   turn and deal", you should click on "follow the yellow brick road"
+   with simple modifications enabled.
+
+   To use the first <anything>, as in "revert cross loop and tag
+   the yellow brick road", click on "tag the yellow brick road".
+   If simple modifications are enabled, you will be able to turn
+   the 1/2 tag into whatever tagging variation you want.
+   The philosophy is the same as for things like tagger's dilemma.
+
+   If you want to modify both, you must select "all modifications",
+   (click twice on "allow modifications"), do "tag the yellow brick
+   road", and force the second modification.  It will come out
+   looking ugly.  Sorry.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.7
+
+Quadruple diamonds working together are implemented.
+
+A long-standing bug was fixed (I'm sure you've noticed it) whereby
+the program would crash if you clicked on another "resolve" (or
+"do anything", etc.) while one such command was already in progress.
+The intention is that, if you click on any of the command icons
+while the program is in search mode, it considers that to be an
+"accept current choice" followed by whatever you selected.  This
+way, if you like a resolve, you can simply click on "getout".
+Clicking on "resolve" a second time is sort of pointless, since it
+searches for additional resolves on top of the already resolved
+sequence, but having the program crash is even more pointless.
+
+Calls added: snap, crackle, pop, bits and pieces, fan the gate, push
+open the gate, single scoot and trade                                                     
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.6
+
+Disband and disperse are now entered by definition, and can be done
+when the ends are in lines or columns.  The centers can be T-boned to them,
+or course.
+
+The calls tag circulate, turn and flip, (quarter) wheel to a diamond,
+clean sweep, wheel and spread, counteract, curl apart, outpost,
+chip off, ship ahoy were added.
+
+A bug was fixed with left swing thru in parallelogram.
+
+Reactivate and cross reactivate had been broken since galaxies
+were added.  They have been fixed.
+
+Z axle should work correctly now.
+
+Note!!!  Use siamese breakdown with care.  This is nothing new, it
+just needs to be pointed out.  I'm not sure how to implement this
+so that it uses it in ways that aren't stupid.
+
+The quadruple line/quadruple column/quadruple box/quadruple diamond
+concepts have been added.  Quadruple diamonds working together are
+still not implemented.
+
+The "save picture" icon has been added.  At any point in the sequence,
+you can click on this to make the current picture a permanent part
+of the transcript.  It will be written into the output file.
+
+The "neglected calls" icon has been added.  it is in a VERY INCOMPLETE
+STATE.  When you click on it, the program will ask you for a percentage
+of neglected calls to list.  (Move the mouse away to get 25%.)  It will
+display the oldest calls in an extremely klutzy format.
+
+   It may increase the number of calls that it displays beyond what
+   you requested in order to treat all calls equally.  If you start
+   the program, use 2% of the list, and ask for the oldest 1% of the
+   calls, it will display the oldest 98%, since all of those 98% of
+   the calls are equally old.
+
+   At high challenge levels the feature is nearly useless, since there
+   is so much to display, and it only shows that last 25 lines or so
+   on the screen.  Someday this may be done correctly.
+
+   A call is considered "used" only when it is written out to the file,
+   or marked as described below.  Calls that are subsequently undone
+   don't count.
+
+   While displaying the neglected calls, if you click on a call in
+   the menu, that call is marked as though it had just been used.
+   
+   To get out of this display and return to useful work, click on
+   "neglected calls" again.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.5
+
+A fourth special concept popup was added, containing 4-person distorted
+or virtual setup concepts like trapezoid, blocks, and Jay.  The "split"
+concept was put into this popup.  Maybe it shouldn't be.
+
+A few embarrassing bugs were fixed.  The program had never really
+understood how to do cross-concentric, and had some ad-hoc garbage
+in there in an unsuccessful attempt to make "all 8 recycle" and
+"zip code" work.  Things should be much better now.  It can now
+probably do cross concentric as well as most people.
+
+Problems with subtle aspects of "split" were fixed.  It might work
+correctly now.
+
+Version 1.4 used too strict a criterion for stepping to a wave or
+rearing back from one in the presence of hierarchically defined calls.
+It used to believe that, if a call does not have the "step to a wave"
+flag set at some high level in its definition tree, it forfeits the
+right to step to a wave at a lower level for which the flag is set.
+It no longer behaves that way.
+
+The problems listed above were found through the alertness of some
+intrepid users, for which I am grateful.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.4
+
+A number of calls whose "left" versions cause the name to be altered
+now do so correctly.  To use such a call, enter the "left" concept
+with the normal (right) form of the call, e.g. "LEFT chase right",
+"LEFT strut right", etc.  The display and transcript will remove the
+concept LEFT and move it into the name in the appropriate way, e.g.
+"chase left", "strut left".
+
+It can now do split-square-thru types of calls in virtual setups, such as
+once removed or trapezoid.  It is more robust in the presence of phantoms.
+It will only do the call if the people who start (that is, the people who
+should be facing each other) are both alive.
+
+The "peelable_box" restriction has been implemented for 2x4 setups, for which it
+means that the ends are in the appropriate setup.  Cast a shadow has been
+put back to its old definition, with this restriction.  Therefore, it
+is now legal only from lines in which the ends are people in tandem with
+each other.  The centers can be any combination of leads or trailers,
+but they may not be T-boned to the centers.
+
+The ability to do "partner matrix" calls has been added.  Among the new calls are
+tow truck, shove off, anchor, bridge the gap, and run the wheel.  They are,
+of course, not permitted in a distorted setup, since they are "press and truck"
+types of calls.  Sorry, Clark.
+
+The "galaxy" setup has been added.
+
+It can take right hands on unwraps from facing setups.
+
+It identifies the person in distress when someone is not able to execute
+his part of a call.
+
+The database format has changed -- comments are now indicated by /* .. */.
+I suppose this makes it possible to have the C preprocessor operate on the
+database.  A horrifying thought!  The database text file also carries a
+version number (major and minor) that gets encoded into the binary file.
+When the program starts, this is printed, along with the version of the
+main program and of the user interface module.
+
+It can do press-and-truck calls more generally, including U-turn-back
+and quarter left/right.  It knows that certain people, such as the points
+of diamonds and galaxies, are not in well-defined positions for
+press-and-truck calls, whereas the centers may be able to do such calls.
+Your perception of where the points of diamonds are may differ from the
+program's perception, e.g. you may think the points of right-hand diamonds
+can do a right loop 1 to move to each others' spots.  Sorry, Clark.
+
+And, of course, many parts of the program have become MUCH more elegant.
+
+The present version of this (Sept 17, 1990) may be a little unstable.  It
+is being released for experimental work on the concept menus.  It is
+hoped that a more polished version will be forthcoming soon, with the
+improved concept menus.  Please report any problems that are observed.
+In particular, watch for
+   (1) Incorrect handling of the ends' part of concentric moves, or the
+   ends' behavior when the centers do something.  For example, starting
+   with HEADS SWING THRU and having the sides move up to be on diamond
+   spots.
+   (2) Fraudulent claims that a call can't be done in a virtual or distorted
+   setup, when in fact the setup is perfectly normal.
+   (3) Inability to execute press/truck types of calls, or inability to
+   put the resulting matrix back together.
+
+===============================================================================
+
+                RELEASE NOTES FOR VERSION 1.3
+
+Massive changes have been made to internal logic for dealing
+with setup rotations and the handling of compound calls.
+
+The program should be much more flexible and robust in its
+handling of many situations.  Several bugs, and a great many
+misfeatures, have been fixed.
+
+Some call restriction indicators have been added:
+   "peelable_box" is a 2x2 in which each person is in tandem
+      with another person -- used in things like peel off,
+      peel to a diamond, etc.
+   "not_tboned" is a 2x2 (only defined for a 2x2) in which no
+      one is T-boned.  Used for things like right and left thru.
+   "quarterbox_or_magic_col" is used to make the call make magic
+      behave more reasonably.
+
+Mechanism has been added to make the substitution of tagging calls
+more restrictive.  The invocation flag "must_be_tag_call" requires
+that the subject call, or any replacement for it, be a call with the
+call flag "is_tag_call".  This makes it impossible to turn "tag your
+neighbor into "acey deucey your neighbor", for example.
+
+The binary database file has a version number encoded into it, in
+order to reduce the incidence of problems caused by running a copy
+of the calling program that expects a different format than that
+produced by the database maker.  When you get a new calling program,
+you must get a new database maker (make_calls.c), and must run it
+to produce the binary database.  Furthermore, there is no guarantee
+of compatibility of the format of the textual database from one
+version to another.  For example, the current database uses the
+"is_tag_call" indicator, which previous database makers do not
+recognize.
+
+The "triple diagonal" lines/columns concepts have been added,
+along with the "working everywhichway" variations.
+
+It can now step to a left-handed wave for calls like "left swing thru".
+
+When it rears back from a wave, it issues a warning.  Such a call
+is not considered acceptable when searching for resolves.
+
+When it refuses to take action on a "resolve" or "reconcile"
+mouse click because the setup is inappropriate, it explains
+why, rather than simply ignoring the mouse click.
+
+It can go to right hands on chain reaction (etc.) and flip the hourglass.
+
+Many changes were made in the database.  Most noteworthy are:
+   The "centers hinge" in "trade the diamond" is now done correctly
+      (that is, on each side rather than globally), so that, if the
+      diamond circulate is changed to a strip the diamond, it will work.
+
+   Cast a shadow is now defined in terms of ends and centers, so that
+      the ends can use the "peelable_box" restriction.  A side-effect
+      of this is that it can do the call when the centers are T-boned
+      to the ends.  This may not be a good idea.
+   
+   The call "recycle" handles both the wave type and the facing couples
+       type.  Unfortunately, it does all of this at mainstream.  (There
+       is no notion of different variations of calls being on different
+       lists.)  It also handles the box-of-4 "split recycle" movement
+       when it sees such a box.  From parallel waves, the "SPLIT"
+       concept will cause it to do this, overriding the normal preference
+       for doing wave recycles.  The call "split recycle" also exists
+       in its own right, at C2.
+
+   Tag-reaction variations are now selected as follows:
+   (1) Enable modifications, of course.
+   (2) Click on "scoot reaction" or "scoot cross reactivate" or
+      "scoot nuclear reaction" or whatever.
+   (3a) If you want a "scoot chain thru reaction" type of variation,
+      change the "scoot back" to "scatter scoot", or
+      "scoot chain thru" or "scatter scoot chain thru".
+   (3b) If you want some kind of tagging call, change the "scoot back"
+      to a "tag back to a wave", or "tag back and scatter", or
+      "tag chain thru" or "tag chain thru and scatter".
+   (4) Change the "1/2 tag" to "1/2 tag the star" or whatever,
+      perhaps reverting same.
+   So a possible call is:
+      [[[revert the [cross loop and 1/2 tag]] chain thru and
+         scatter] cross nuclear reaction] the wave

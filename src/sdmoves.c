@@ -1,0 +1,1606 @@
+/* SD -- square dance caller's helper.
+
+    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 1, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+    This is for version 25. */
+
+/* This defines the following functions:
+   canonicalize_rotation
+   reinstate_rotation
+   move
+*/
+
+#include "sd.h"
+
+
+
+extern void canonicalize_rotation(setup *result) {
+
+   if (result->kind == s_1x1) {
+      (void) copy_rot(result, 0, result, 0, (result->rotation & 3) * 011);
+      result->rotation = 0;
+   }
+   else if ((result->kind == s4x4) ||
+            (result->kind == s2x2) ||
+            (result->kind == s_star) ||
+            (result->kind == s_bigblob) ||
+            (result->kind == s_c1phan) ||
+            (result->kind == s_hyperglass) ||
+            (result->kind == s_galaxy)) {
+      /* The setup has 4-way symmetry.  We can canonicalize it so the
+         result rotation is zero. */
+      int i, rot, rot11, delta, bigd, i0, i1, i2, i3, j0, j1, j2, j3;
+      personrec x0, x1, x2, x3;
+
+      rot = result->rotation & 3;
+      if (rot == 0) return;
+      rot11 = rot * 011;
+      bigd = setup_limits[result->kind] + 1;
+      delta = bigd >> 2;
+
+      i0 = 1;
+      i1 = i0 + delta;
+      i2 = i1 + delta;
+      i3 = i2 + delta;
+      j0 = (rot-4)*delta+1;
+      j1 = j0 + delta;
+      j2 = j1 + delta;
+      j3 = j2 + delta;
+      for (i=0; i<delta; i++) {
+         if ((--i0) < 0) i0 += bigd;
+         if ((--i1) < 0) i1 += bigd;
+         if ((--i2) < 0) i2 += bigd;
+         if ((--i3) < 0) i3 += bigd;
+         if ((--j0) < 0) j0 += bigd;
+         if ((--j1) < 0) j1 += bigd;
+         if ((--j2) < 0) j2 += bigd;
+         if ((--j3) < 0) j3 += bigd;
+         x0 = result->people[i0];
+         x1 = result->people[i1];
+         x2 = result->people[i2];
+         x3 = result->people[i3];
+         result->people[j0].id1 = rotperson(x0.id1, rot11);
+         result->people[j0].id2 = x0.id2;
+         result->people[j1].id1 = rotperson(x1.id1, rot11);
+         result->people[j1].id2 = x1.id2;
+         result->people[j2].id1 = rotperson(x2.id1, rot11);
+         result->people[j2].id2 = x2.id2;
+         result->people[j3].id1 = rotperson(x3.id1, rot11);
+         result->people[j3].id2 = x3.id2;
+      }
+
+      result->rotation = 0;
+   }
+   else if (result->kind == s_1x3) {
+      if (result->rotation & 2) {
+
+         /* Must turn this setup upside-down. */
+   
+         swap_people(result, 0, 2);
+         (void) copy_rot(result, 0, result, 0, 022);
+         (void) copy_rot(result, 1, result, 1, 022);
+         (void) copy_rot(result, 2, result, 2, 022);
+      }
+      result->rotation &= 1;
+   }
+   else if (((setup_limits[result->kind] & ~07776) == 1)) {
+      /* We have a setup of an even number of people.  We know how to canonicalize
+         this.  The resulting rotation should be 0 or 1. */
+
+      if (result->rotation & 2) {
+
+         /* Must turn this setup upside-down. */
+   
+         int i, offs;
+   
+         offs = (setup_limits[result->kind]+1) >> 1;     /* Half the setup size. */
+   
+         for (i=0; i<offs; i++) {
+            swap_people(result, i, i+offs);
+            (void) copy_rot(result, i, result, i, 022);
+            (void) copy_rot(result, i+offs, result, i+offs, 022);
+         }
+      }
+      result->rotation &= 1;
+   }
+   else
+      result->rotation &= 3;
+}
+
+
+extern void reinstate_rotation(setup *ss, setup *result) {
+
+   int globalrotation;
+
+   switch (ss->kind) {
+      case s_normal_concentric:
+         globalrotation = 0;
+         break;
+      default:
+         globalrotation = ss->rotation;
+   }
+   
+   switch (result->kind) {
+      case s_normal_concentric:
+         result->inner.srotation += globalrotation;
+         result->outer.srotation += globalrotation;
+         break;
+      case nothing:
+         break;
+      default:
+         result->rotation += globalrotation;
+         break;
+   }
+
+   canonicalize_rotation(result);
+}
+
+
+
+typedef struct gloop {
+    int x;                  /* This person's coordinates, calibrated so that a matrix */
+    int y;                  /*   position cooresponds to an increase by 4. */
+    long_boolean sel;       /* True if this person is selected.  (False if selectors not in use.) */
+    long_boolean done;      /* Used for loop control on each pass */
+    long_boolean realdone;  /* Used for loop control on each pass */
+    int boybit;             /* 1 if boy, 0 if not (might be neither). */
+    int girlbit;            /* 1 if girl, 0 if not (might be neither). */ 
+    int dir;                /* This person's initial facing direction, 0 to 3. */
+    int deltax;             /* How this person will move, relative to his own facing */
+    int deltay;             /*   direction, when call is finally executed. */
+    int deltarot;           /* How this person will turn. */
+    int rollinfo;           /* How this person's roll info will be set. */
+    struct gloop *nextse;   /* Points to next person south (dir even) or east (dir odd.) */
+    struct gloop *nextnw;   /* Points to next person north (dir even) or west (dir odd.) */
+    long_boolean tbstopse;  /* True if nextse/nextnw is zero because the next spot */
+    long_boolean tbstopnw;  /*   is occupied by a T-boned person (as opposed to being empty.) */
+    } matrix_rec;
+
+
+
+
+/* This function is internal. */
+
+static void start_matrix_call(
+   setup *ss,
+   int *nump,
+   matrix_rec matrix_info[],
+   long_boolean use_selector,
+   setup *people)
+
+{
+   int i;
+   coordrec *thingyptr;
+
+   clear_people(people);
+   
+   thingyptr = setup_coords[ss->kind];
+   if (!thingyptr) fail("Can't do this in this setup.");
+   
+   if (setup_limits[ss->kind] < 0) fail("Can't do this in this setup.");        /* this is actually superfluous */
+   
+   *nump = 0;
+   for (i=0; i<=setup_limits[ss->kind]; i++) {
+      if (ss->people[i].id1) {
+         if (*nump == 8) fail("?????too many people????");
+         (void) copy_person(people, *nump, ss, i);
+         matrix_info[*nump].x = thingyptr->xca[i];
+         matrix_info[*nump].y = thingyptr->yca[i];
+
+         matrix_info[*nump].done = FALSE;
+         matrix_info[*nump].realdone = FALSE;
+
+         if (use_selector)
+            matrix_info[*nump].sel = selectp(people, *nump);
+         else
+            matrix_info[*nump].sel = FALSE;
+
+         matrix_info[*nump].dir = people->people[*nump].id1 & 3;
+   
+         matrix_info[*nump].girlbit = (people->people[*nump].id2 & ID2_GIRL) ? 1 : 0;
+         matrix_info[*nump].boybit = (people->people[*nump].id2 & ID2_BOY) ? 1 : 0;
+         matrix_info[*nump].nextse = 0;
+         matrix_info[*nump].nextnw = 0;
+         matrix_info[*nump].deltax = 0;
+         matrix_info[*nump].deltay = 0;
+         matrix_info[*nump].deltarot = 0;
+         matrix_info[*nump].rollinfo = ROLLBITM;
+         matrix_info[*nump].tbstopse = FALSE;
+         matrix_info[*nump].tbstopnw = FALSE;
+
+         (*nump)++;
+      }
+   }
+}
+
+
+/* This function is internal. */
+
+static void finish_matrix_call(
+   matrix_rec matrix_info[],
+   int nump,
+   setup *people,
+   setup *result)
+
+{
+   int i, place;
+   int xmax, xpar, ymax, ypar, signature, x, y, k;
+   coordrec *checkptr;
+
+   xmax = xpar = ymax = ypar = signature = 0;
+
+   for (i=0; i<nump; i++) {
+      people->people[i].id1 = (rotperson(people->people[i].id1, matrix_info[i].deltarot*011) & (~ROLLBITS)) | matrix_info[i].rollinfo;
+
+      /* If this person's position has low bit on, that means we consider his coordinates
+         not sufficiently well-defined that we will allow him to do any pressing or
+         trucking.  He is only allowed to turn.  That is, we will require deltax and
+         deltay to be zero.  An example of this situation is the points of a galaxy. */
+
+      if (((matrix_info[i].x | matrix_info[i].y) & 1) && (matrix_info[i].deltax | matrix_info[i].deltay))
+         fail("Someone's ending position is not well defined.");
+
+      switch (matrix_info[i].dir) {
+         case 0:
+            matrix_info[i].x += matrix_info[i].deltax;
+            matrix_info[i].y += matrix_info[i].deltay;
+            break;
+         case 1:
+            matrix_info[i].x += matrix_info[i].deltay;
+            matrix_info[i].y -= matrix_info[i].deltax;
+            break;
+         case 2:
+            matrix_info[i].x -= matrix_info[i].deltax;
+            matrix_info[i].y -= matrix_info[i].deltay;
+            break;
+         case 3:
+            matrix_info[i].x -= matrix_info[i].deltay;
+            matrix_info[i].y += matrix_info[i].deltax;
+            break;
+      }
+
+      x = matrix_info[i].x;
+      y = matrix_info[i].y;
+
+      /* Compute new max, parity, and signature info. */
+
+      if ((x < 0) || ((x == 0) && (y < 0))) { x = -x; y = -y; }
+      signature |= 1 << ((31000 + 12*x - 11*y) % 31);
+      if (y < 0) y = -y;
+      /* Now x and y have both had absolute values taken. */
+      if (x > xmax) xmax = x;
+      if (y > ymax) ymax = y;
+      k = x | 4;
+      xpar |= (k & (~(k-1)));
+      k = y | 4;
+      ypar |= (k & (~(k-1)));
+   }
+
+   ypar |= (xmax << 20) | (xpar << 16) | (ymax << 4);
+
+   result->rotation = 0;
+
+   if ((ypar == 0x00A20026) && ((signature & (~0x08008404)) == 0)) {
+      checkptr = setup_coords[s_rigger];
+      goto doit;
+   }
+   if ((ypar == 0x00770077) && ((signature & (~0x00418004)) == 0)) {
+      checkptr = setup_coords[s_galaxy];
+      goto doit;
+   }
+   else if ((ypar == 0x00A20026) && ((signature & (~0x01040420)) == 0)) {
+      checkptr = setup_coords[s_bone];
+      goto doit;
+   }
+   else if ((ypar == 0x00840026) && ((signature & (~0x04000308)) == 0)) {
+      checkptr = setup_coords[s_spindle];
+      goto doit;
+   }
+   else if ((ypar == 0x00A200A2) && ((signature & (~0x101CC4E6)) == 0)) {
+      checkptr = setup_coords[s_bigblob];
+      goto doit;
+   }
+   else if ((ypar == 0x00670055) && ((signature & (~0x01000420)) == 0)) {
+      checkptr = setup_coords[s_qtag];
+      goto doit;
+   }
+   else if ((ypar == 0x00550067) && ((signature & (~0x08410200)) == 0)) {
+      checkptr = setup_coords[s_qtag];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00550057) && ((signature & (~0x20000620)) == 0)) {
+      checkptr = setup_coords[s_hrglass];
+      goto doit;
+   }
+   else if ((ypar == 0x00620044) && ((signature & (~0x11800C40)) == 0)) {
+      checkptr = setup_coords[s3x4];
+      goto doit;
+   }
+   else if ((ypar == 0x00440062) && ((signature & (~0x0C202300)) == 0)) {
+      checkptr = setup_coords[s3x4];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00E20004) && ((signature & (~0x09002400)) == 0)) {
+      checkptr = setup_coords[s1x8];
+      goto doit;
+   }
+   else if ((ypar == 0x000400E2) && ((signature & (~0x08004202)) == 0)) {
+      checkptr = setup_coords[s1x8];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00620022) && ((signature & (~0x00088006)) == 0)) {
+      checkptr = setup_coords[s2x4];
+      goto doit;
+   }
+   else if ((ypar == 0x00220062) && ((signature & (~0x10108004)) == 0)) {
+      checkptr = setup_coords[s2x4];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00A20022) && ((signature & (~0x000C8026)) == 0)) {
+      checkptr = setup_coords[s2x6];
+      goto doit;
+   }
+   else if ((ypar == 0x002200A2) && ((signature & (~0x10108484)) == 0)) {
+      checkptr = setup_coords[s2x6];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00E20022) && ((signature & (~0x004C8036)) == 0)) {
+      checkptr = setup_coords[s2x8];
+      goto doit;
+   }
+   else if ((ypar == 0x002200E2) && ((signature & (~0x12908484)) == 0)) {
+      checkptr = setup_coords[s2x8];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00A20062) && ((signature & (~0x109CC067)) == 0)) {
+      checkptr = setup_coords[s4x6];
+      goto doit;
+   }
+   else if ((ypar == 0x006200A2) && ((signature & (~0x1918C4C6)) == 0)) {
+      checkptr = setup_coords[s4x6];
+      goto doitrot;
+   }
+   else if ((ypar == 0x00620062) && ((signature & (~0x1018C046)) == 0)) {
+      checkptr = setup_coords[s4x4];
+      goto doit;
+   }
+   /* **** These last ones are sort of a crock.  They are designed to make
+      matrix calls work in distorted or virtual setups in some circumstances
+      (i.e. if no one changes coordinates.)  However, they won't work in the
+      presence of unsymmetrical phantoms.  What we really should do is, if
+      the setup is virtual/distorted (or maybe the test should be if no one
+      moved) just force people back to the same setup they started in. */
+   else if ((ypar == 0x00220022) && ((signature & (~0x00008004)) == 0)) {
+      checkptr = setup_coords[s2x2];
+      goto doit;
+   }
+   else if ((ypar == 0x00620004) && ((signature & (~0x01000400)) == 0)) {
+      checkptr = setup_coords[s1x4];
+      goto doit;
+   }
+   else if ((ypar == 0x00220004) && ((signature & (~0x01000000)) == 0)) {
+      checkptr = setup_coords[s_1x2];
+      goto doit;
+   }
+
+   fail("Can't handle this result matrix.");
+
+   
+
+doit:
+      result->kind = checkptr->result_kind;
+      for (i=0; i<nump; i++) {
+         place = checkptr->numbers[3-(matrix_info[i].y >> 2)] [(matrix_info[i].x >> 2)+4];
+         if (place < 0) fail("Person has moved into a grossly ill-defined location.");
+         if ((checkptr->xca[place] != matrix_info[i].x) || (checkptr->yca[place] != matrix_info[i].y))
+            fail("Person has moved into a slightly ill-defined location.");
+         install_person(result, place, people, i);
+      }
+      
+      return;
+
+doitrot:
+      result->kind = checkptr->result_kind;
+      result->rotation = 1;   
+      for (i=0; i<nump; i++) {
+         place = checkptr->numbers[3-(matrix_info[i].x >> 2)] [3-(matrix_info[i].y >> 2)];
+         if (place < 0) fail("Person has moved into a grossly ill-defined location.");
+         if ((checkptr->xca[place] != -matrix_info[i].y) || (checkptr->yca[place] != matrix_info[i].x))
+            fail("Person has moved into a slightly ill-defined location.");
+         install_rot(result, place, people, i, 033);
+      }
+      
+      return;
+}
+
+
+
+/* This function is internal. */
+
+static void matrixmove(
+   setup *ss,
+   callspec_block *callspec,
+   setup *result)
+
+{
+   int datum;
+   setup people;
+   matrix_rec matrix_info[9];
+   int i, nump, alldelta;
+
+   alldelta = 0;
+
+   start_matrix_call(ss, &nump, matrix_info, TRUE, &people);
+
+   for (i=0; i<nump; i++) {
+      if (matrix_info[i].sel) {
+         /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
+            or if the two data are identical so the sex doesn't matter. */
+         if ((matrix_info[i].girlbit | matrix_info[i].boybit) == 0 &&
+                  (callspec->stuff.matrix.stuff[0] != callspec->stuff.matrix.stuff[1]))
+            fail("Can't determine sex of this person.");
+
+         datum = callspec->stuff.matrix.stuff[matrix_info[i].girlbit];
+         alldelta |= (  matrix_info[i].deltax = ( ((datum >> 7) & 0x1F) - 16) << 1  );
+         alldelta |= (  matrix_info[i].deltay = ( ((datum >> 2) & 0x1F) - 16) << 1  );
+         matrix_info[i].deltarot = datum & 03;
+         matrix_info[i].rollinfo = (datum >> 12) * ROLLBITR;
+      }
+   }
+
+   if ((alldelta != 0) && (ss->setupflags & SETUPFLAG__DISTORTED))
+      fail("This call not allowed in distorted or virtual setup.");
+   
+   finish_matrix_call(matrix_info, nump, &people, result);
+}
+
+
+/* This function is internal. */
+
+static void do_pair(
+   matrix_rec *ppp,        /* Selected person */
+   matrix_rec *qqq,        /* Unselected person */
+   callspec_block *callspec,
+   int flip,
+   int filter)             /* 1 to do N/S facers, 0 for E/W facers. */
+{
+   int base;
+   int datum;
+   int flags;
+
+   flags = callspec->stuff.matrix.flags;
+
+   if ((filter ^ ppp->dir) & 1) {
+      base = (ppp->dir & 2) ? 6 : 4;
+      if (!(flags & MTX_USE_SELECTOR)) base &= 3;
+      base ^= flip;
+
+      /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
+         or if the two data are identical so the sex doesn't matter. */
+      if ((ppp->girlbit | ppp->boybit) == 0 &&
+               (callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1]))
+         fail("Can't determine sex of this person.");
+
+      datum = callspec->stuff.matrix.stuff[base+ppp->girlbit];
+      if (datum == 0) fail("Can't do this call.");
+   
+      ppp->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
+      ppp->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
+      ppp->deltarot = datum & 3;
+      ppp->rollinfo = (datum >> 12) * ROLLBITR;
+      ppp->realdone = TRUE;
+   }
+   ppp->done = TRUE;
+
+   if ((filter ^ qqq->dir) & 1) {
+      base = (qqq->dir & 2) ? 0 : 2;
+      if (flags & MTX_IGNORE_NONSELECTEES) base |= 4;
+      base ^= flip;
+
+      /* This is legal if girlbit or boybit is on (in which case we use the appropriate datum)
+         or if the two data are identical so the sex doesn't matter. */
+      if ((qqq->girlbit | qqq->boybit) == 0 &&
+               (callspec->stuff.matrix.stuff[base] != callspec->stuff.matrix.stuff[base+1]))
+         fail("Can't determine sex of this person.");
+
+      datum = callspec->stuff.matrix.stuff[base+qqq->girlbit];
+      if (datum == 0) fail("Can't do this call.");
+
+      qqq->deltax = (((datum >> 7) & 0x1F) - 16) << 1;
+      qqq->deltay = (((datum >> 2) & 0x1F) - 16) << 1;
+      qqq->deltarot = datum & 3;
+      qqq->rollinfo = (datum >> 12) * ROLLBITR;
+      qqq->realdone = TRUE;
+   }
+   qqq->done = TRUE;
+}
+
+
+/* This function is internal. */
+
+static void do_matrix_chains(
+   matrix_rec matrix_info[],
+   int nump,
+   callspec_block *callspec,
+   int filter)                        /* 1 for E/W chains, 0 for N/S chains. */
+
+{
+   long_boolean another_round;
+   int i, j, flags;
+
+   flags = callspec->stuff.matrix.flags;
+
+   /* Find adjacency relationships, and fill in the "se"/"nw" pointers. */
+
+   for (i=0; i<nump; i++) {
+      if ((flags & MTX_IGNORE_NONSELECTEES) && (!matrix_info[i].sel)) continue;
+      for (j=0; j<nump; j++) {
+         if ((flags & MTX_IGNORE_NONSELECTEES) && (!matrix_info[j].sel)) continue;
+         /* Find out if these people are adjacent in the right way. */
+
+         if (    ( filter && matrix_info[j].x == matrix_info[i].x + 4 && matrix_info[j].y == matrix_info[i].y)
+            ||   (!filter && matrix_info[j].y == matrix_info[i].y - 4 && matrix_info[j].x == matrix_info[i].x)   ) {
+
+            /* Now, if filter = 1, person j is just east of person i.
+               If filter = 0, person j is just south of person i. */
+
+            if (flags & MTX_TBONE_IS_OK) {
+               matrix_info[i].nextse = &matrix_info[j];     /* Make the chain independently of facing direction. */
+               matrix_info[j].nextnw = &matrix_info[i];
+            }
+            else {
+               if ((matrix_info[i].dir ^ filter) & 1) {
+                  if ((matrix_info[i].dir ^ matrix_info[j].dir) & 1) {
+                     if (!(flags & MTX_STOP_AND_WARN_ON_TBONE)) fail("People are T-boned.");
+                     matrix_info[i].tbstopse = TRUE;
+                     matrix_info[j].tbstopnw = TRUE;
+                  }
+                  else {
+                     if ((flags & MTX_MUST_FACE_SAME_WAY) && (matrix_info[i].dir ^ matrix_info[j].dir))
+                        fail("Paired people must face the same way.");
+                     matrix_info[i].nextse = &matrix_info[j];
+                     matrix_info[j].nextnw = &matrix_info[i];
+                  }
+               }
+            }
+            break;
+         }
+      }
+   }
+
+   /* Pick out pairs of people and move them. */
+
+   another_round = TRUE;
+
+   while (another_round) {
+      another_round = FALSE;
+
+      for (i=0; i<nump; i++) {
+         if (!matrix_info[i].done) {
+
+            /* This person might be ready to be paired up with someone. */
+
+            if (matrix_info[i].nextse) {
+               if (matrix_info[i].nextnw)
+                  /* This person has neighbors on both sides.  Can't do anything yet. */
+                  ;
+               else {
+                  /* This person has a neighbor on south/east side only. */
+
+                  if (matrix_info[i].tbstopnw) warn(warn__not_tbone_person);
+
+                  if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   ) {
+                     if ((!(flags & MTX_IGNORE_NONSELECTEES)) && matrix_info[i].nextse->sel) {
+                        fail("Two adjacent selected people.");
+                     }
+                     else {
+
+                        /* Do this pair.  First, chop the pair off from anyone else. */
+
+                        if (matrix_info[i].nextse->nextse) matrix_info[i].nextse->nextse->nextnw = 0;
+                        matrix_info[i].nextse->nextse = 0;
+                        another_round = TRUE;
+                        do_pair(&matrix_info[i], matrix_info[i].nextse, callspec, 0, filter);
+                     }
+                  }
+               }
+            }
+            else {
+               if (matrix_info[i].nextnw) {
+                  /* This person has a neighbor on north/west side only. */
+
+                  if (matrix_info[i].tbstopse) warn(warn__not_tbone_person);
+
+                  if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   ) {
+                     if ((!(flags & MTX_IGNORE_NONSELECTEES)) && matrix_info[i].nextnw->sel) {
+                        fail("Two adjacent selected people.");
+                     }
+                     else {
+                        /* Do this pair.  First, chop the pair off from anyone else. */
+
+                        if (matrix_info[i].nextnw->nextnw) matrix_info[i].nextnw->nextnw->nextse = 0;
+                        matrix_info[i].nextnw->nextnw = 0;
+                        another_round = TRUE;
+                        do_pair(&matrix_info[i], matrix_info[i].nextnw, callspec, 2, filter);
+                     }
+                  }
+               }
+               else {
+                  /* Person is alone.  If this is his lateral axis, mark him done and don't move him. */
+
+                  if ((matrix_info[i].dir ^ filter) & 1) {
+                     if (matrix_info[i].tbstopse || matrix_info[i].tbstopnw) warn(warn__not_tbone_person);
+                     if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   )
+                        fail("Person has no one to work with.");
+                     matrix_info[i].done = TRUE;
+                  }
+               }
+            }
+         }
+      }
+   }
+}
+
+
+
+
+
+
+/* This function is internal. */
+
+static void partner_matrixmove(
+   setup *ss,
+   callspec_block *callspec,
+   setup *result)
+
+{
+   int flags;
+   setup people;
+   matrix_rec matrix_info[9];
+   int i, nump;
+
+   if (ss->setupflags & SETUPFLAG__DISTORTED)
+      fail("This call not allowed in distorted or virtual setup.");
+
+   flags = callspec->stuff.matrix.flags;
+
+   start_matrix_call(ss, &nump, matrix_info, flags & MTX_USE_SELECTOR, &people);
+
+   /* Make the lateral chains first. */
+
+   do_matrix_chains(matrix_info, nump, callspec, 1);
+
+   /* Now clean off the pointers in preparation for the second pass. */
+
+   for (i=0; i<nump; i++) {
+      matrix_info[i].done = FALSE;
+      matrix_info[i].nextse = 0;
+      matrix_info[i].nextnw = 0;
+      matrix_info[i].tbstopse = FALSE;
+      matrix_info[i].tbstopnw = FALSE;
+   }
+
+   /* Vertical chains next. */
+
+   do_matrix_chains(matrix_info, nump, callspec, 0);
+
+   /* Scan for people who ought to have done something but didn't. */
+
+   for (i=0; i<nump; i++) {
+      if (!matrix_info[i].realdone) {
+         if (   (!(flags & MTX_USE_SELECTOR))  ||  matrix_info[i].sel   ) {
+            fail("Person could not identify other person to work with.");
+         }
+      }
+   }
+
+   finish_matrix_call(matrix_info, nump, &people, result);
+}
+
+
+/* This function is internal. */
+
+static void rollmove(
+   setup *ss,
+   callspec_block *callspec,
+   setup *result)
+
+{
+   int i, rot;
+
+   if (setup_limits[ss->kind] < 0) fail("Can't roll in this setup.");
+   
+   result->kind = ss->kind;
+   result->rotation = ss->rotation;
+   
+   for (i=0; i<=setup_limits[ss->kind]; i++) {
+      if (ss->people[i].id1) {
+         rot = 0;
+         if (!(callspec->callflags & cflag__requires_selector) || selectp(ss, i)) {
+            switch (ss->people[i].id1 & ROLLBITS) {
+               case ROLLBITL: rot = 033; break;
+               case ROLLBITM: break;
+               case ROLLBITR: rot = 011; break;
+               default: fail("Roll not supported after previous call.");
+            }
+         }
+         install_rot(result, i, ss, i, rot);
+      }
+      else
+         clear_person(result, i);
+   }
+}
+
+
+/* Strip out those concepts that do not have the "dfm__xxx" flag set saying that they are to be
+   inherited to this part of the call.  BUT: the "dfm_inherit_left" (a.k.a. "FINAL__LEFT") flag controls
+   both "FINAL__REVERSE" and "FINAL__LEFT", turning the former into the latter.  This makes reverse
+   circle by, touch by, and clean sweep work. */
+
+static final_set get_mods_for_subcall(final_set new_final_concepts, defmodset this_mod, int callflags)
+{
+   final_set retval;
+
+   retval = new_final_concepts;
+
+   /* If this subcall has "inherit_reverse" or "inherit_left" given, but the top-level call
+      doesn't permit the corresponding flag to be given, we should turn any "reverse" or
+      "left" modifier that was given into the other one, and cause that to be inherited.
+      This is what turns, for example, part 3 of "*REVERSE* clean sweep" into a "*LEFT* 1/2 tag". */
+
+
+   if (this_mod & ~callflags & (FINAL__REVERSE | FINAL__LEFT)) {
+      if (new_final_concepts & (FINAL__REVERSE | FINAL__LEFT))
+         retval |= (FINAL__REVERSE | FINAL__LEFT);
+   }
+
+   retval &= ~(new_final_concepts & HERITABLE_FLAG_MASK & ~this_mod);
+   
+   return (retval);
+}
+
+
+
+/* ***** The following is all wrong.  It's much simpler now.  We just fill in the
+         elongation in the result flags, if we can deduce it. */
+/* Whenever the ending setup is 2x2, we are responsible for filling in the "parallel_conc_end"
+   field of the result, to say, for 1x4/dmd->2x2 calls, whether the people prefer to
+   elongate parallel to the long axis of the 1x4/dmd, and, for 2x2->2x2 calls, whether
+   the people prefer to go to antispots.  This info will be used if the call is executed
+   by the outsides, so that the resulting 2x2 must be elongated in some direction to leave
+   room for the centers.  Of course, if the "concentric" or "checkpoint" concept has been
+   given, this info will be overruled by the various rules for executing those concepts.
+   If this call is executed as part of some kind of concentric schema, there are modification
+   flags that can also override this stuff. */
+
+
+extern void move(
+   setup *ss,
+   parse_block *parseptr,
+   callspec_block *callspec,
+   final_set final_concepts,
+   long_boolean qtfudged,
+   setup *result)
+
+{
+   int subcall_index;
+   final_set temp_concepts, conc1, conc2;
+   long_boolean qtf;
+   parse_block *cp1;
+   parse_block *cp2;
+   warning_info saved_warnings;
+   int tbonetest;
+   setup tempsetup;
+   parse_block *saved_magic_diamond;
+   final_set new_final_concepts;
+   final_set check_concepts;
+   parse_block *parseptrcopy;
+   callspec_block *call1, *call2;
+   calldef_schema the_schema;
+   long_boolean mirror;
+
+   clear_people(result);
+   result->setupflags = 0;
+
+   if (!callspec) {
+
+      /* Scan the "final" concepts, remembering them and their end point. */
+      last_magic_diamond = 0;
+      parseptrcopy = process_final_concepts(parseptr, TRUE, &new_final_concepts);
+      saved_magic_diamond = last_magic_diamond;
+
+      /* See if there were any "non-final" ones present also. */
+
+      new_final_concepts |= final_concepts;         /* Include any old ones we had. */
+
+      /* These are the concepts that we are interested in. */
+
+      check_concepts = new_final_concepts & ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
+
+      if (parseptrcopy->concept->kind > marker_end_of_list) {
+
+         /* We now know that there are "non-final" (virtual setup) concepts present. */
+
+         /* Look for virtual setup concept that can be done by dispatch from table, with no
+            intervening final concepts. */
+
+         if ((check_concepts == 0) && do_big_concept(ss, parseptrcopy, result)) {
+            goto norot;
+         }
+
+         /* We are about to do some semi-final (?) concepts.  Stepping to a wave or
+            rearing back from one is no longer permitted. */
+         ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+
+         /* There are a few "final" concepts that
+            will not be treated as such if there are non-final concepts occurring
+            after them.  Instead, they will be treated as virtual setup concepts.
+            This is what makes "magic once removed trade" work, for
+            example.  On the other hand, if there are no non-final concepts following, treat these as final.
+            This is what makes "magic transfer" or "split square thru" work. */
+
+         if (check_concepts == FINAL__SPLIT) {
+            map_thing *split_map;
+      
+            ss->setupflags |= SETUPFLAG__SAID_SPLIT;
+
+            if (ss->kind == s2x4) split_map = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
+            else if (ss->kind == s1x8) split_map = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
+            else if (ss->kind == s_ptpd) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
+            else if (ss->kind == s_qtag) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
+            else fail("Can't do split concept in this setup.");
+      
+            divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__SPLIT,
+               split_map, phantest_ok, TRUE, result);
+         }
+         else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__MAGIC) {
+            if (ss->kind == s2x4) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+                  &map_2x4_magic, phantest_ok, TRUE, result);
+            }
+            else if (ss->kind == s_qtag) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+                  &map_qtg_magic, phantest_ok, TRUE, result);
+
+               /* Since more concepts follow the magic and/or interlocked stuff, we can't
+                  allow the concept to be just "magic" etc.  We have to change it to
+                  "magic diamond, ..."  Otherwise, things could come out sounding like
+                  "magic diamond as couples quarter right" when we should really be saying
+                  "magic diamond, diamond as couples quarter right".  Therefore, we are going
+                  to do something seriously hokey: we are going to change the concept descriptor
+                  to one whose name has the extra "diamond" word.  We do this by marking the
+                  setupflags word in the result.  The actual hokey stuff will be done presently. */
+
+               result->setupflags |= RESULTFLAG__NEED_DIAMOND;
+            }
+            else if (ss->kind == s_ptpd) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__MAGIC,
+                  &map_ptp_magic, phantest_ok, TRUE, result);
+               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+            }
+            else
+               fail("Can't do magic concept in this context.");
+         }
+         else if ((check_concepts & ~FINAL__DIAMOND) == FINAL__INTERLOCKED) {
+            if (ss->kind == s_qtag) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
+                  &map_qtg_intlk, phantest_ok, TRUE, result);
+               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+            }
+            if (ss->kind == s_ptpd) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__INTERLOCKED,
+                  &map_ptp_intlk, phantest_ok, TRUE, result);
+               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+            }
+            else
+               fail("Can't do interlocked concept in this context.");
+         }
+         else if ((check_concepts & ~FINAL__DIAMOND) == (FINAL__INTERLOCKED | FINAL__MAGIC)) {
+            if (ss->kind == s_qtag) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
+                     &map_qtg_magic_intlk, phantest_ok, TRUE, result);
+               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+            }
+            if (ss->kind == s_ptpd) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~(FINAL__INTERLOCKED | FINAL__MAGIC),
+                     &map_ptp_magic_intlk, phantest_ok, TRUE, result);
+               result->setupflags |= RESULTFLAG__NEED_DIAMOND;      /* See above. */
+            }
+            else
+               fail("Can't do magic interlocked concept in this context.");
+         }
+         else if (check_concepts == FINAL__DIAMOND) {
+            if (ss->kind == sdmd) {
+               divided_setup_move(ss, parseptrcopy, NULLCALLSPEC, new_final_concepts & ~FINAL__DIAMOND,
+                     (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+            }
+            else if (ss->kind == s_qtag) {
+               /* Divide into diamonds and try again.  (Note that we back up the concept pointer.) */
+               divided_setup_move(ss, parseptr, NULLCALLSPEC, 0,
+                     (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
+            }
+            else
+               fail("Must have diamonds for this concept.");
+         }
+         else
+            fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->name);
+      }
+      else {
+         /* There are no "non-final" concepts.  The only concepts are the final ones that
+            have been encoded into new_final_concepts. */
+
+         /* We must read the selector out of the concept list and use it for this call to "move".
+            We are effectively using it as an argument to "move", with all the care that must go
+            into invocations of recursive procedures.  However, at its point of actual use, it
+            must be in a global variable.  Therefore, we explicitly save and restore that
+            global variable (in a dynamic variable local to this instance) rather than passing
+            it as an explicit argument.  By saving it and restoring it in this way, we make
+            things like "checkpoint bounce the beaux by bounce the belles" work. */
+         
+         {
+            selector_kind saved_selector = current_selector;
+   
+            current_selector = parseptrcopy->selector;
+            move(ss, parseptrcopy, parseptrcopy->call, new_final_concepts, qtfudged, result);
+            current_selector = saved_selector;
+         }
+      }
+
+      /* If execution of the call raised a request that we change a concept name from "magic" to
+         "magic diamond,", for example, do so. */
+
+      if (result->setupflags & RESULTFLAG__NEED_DIAMOND) {
+         if (saved_magic_diamond && saved_magic_diamond->concept->value.arg1 == 0) {
+            if (saved_magic_diamond->concept->kind == concept_magic) saved_magic_diamond->concept = &special_magic;
+            else if (saved_magic_diamond->concept->kind == concept_interlocked) saved_magic_diamond->concept = &special_interlocked;
+         }
+      }
+
+      return;
+   }
+   
+   /* We have a genuine call.  Presumably all serious concepts have been disposed of
+      (that is, nothing interesting will be found in parseptr -- it might be
+      useful to check that someday) and we just have the callspec and the final
+      concepts.
+      The first thing we must do is check for a call whose schema is single (cross)
+      concentric.  If so, be sure the setup is divided into 1x4's or diamonds. */
+
+   the_schema = callspec->schema;
+   if (the_schema == schema_maybe_single_concentric)
+      the_schema = (final_concepts & FINAL__SINGLE) ? schema_single_concentric : schema_concentric;
+   else if (the_schema == schema_maybe_matrix_conc_star)
+      the_schema = (final_concepts & FINAL__12_MATRIX) ? schema_conc_star12 : schema_conc_star;
+
+   /* Do some quick error checking for visible fractions.  For now, either flag is acceptable.  Later, we will
+      distinguish between the "visible_fractions" and "first_part_visible" flags. */
+   if ((ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK) &&
+            (((the_schema != schema_sequential) && (the_schema != schema_split_sequential)) || (!(callspec->callflags & (cflag__visible_fractions | cflag__first_part_visible)))))
+      fail("This call can't be fractionalized.");
+
+   switch (the_schema) {
+      case schema_single_concentric:
+      case schema_single_cross_concentric:
+         switch (ss->kind) {
+            case s2x4:
+               divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[s1x4][1])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+               return;
+            case s1x8:
+               divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[s1x4][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+               return;
+            case s_qtag:
+               divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, TRUE, result);
+               return;
+            case s_ptpd:
+               divided_setup_move(ss, parseptr, callspec, final_concepts, (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, TRUE, result);
+               return;
+         }
+   }
+
+   /* If the "diamond" concept has been given and the call doesn't want it, we do
+      the "diamond single wheel" variety. */
+
+   if (FINAL__DIAMOND & final_concepts & (~callspec->callflags))  {
+      /* If the call is sequentially or concentrically defined, the top level flag is required
+         before the diamond concept can be inherited.  Since that flag is off, it is an error. */
+      if (the_schema != schema_by_array)
+         fail("Can't do this call with the 'diamond' concept.");
+
+      switch (ss->kind) {
+         case sdmd:
+            divided_setup_move(ss, parseptr, callspec, final_concepts & ~FINAL__DIAMOND,
+                  (*map_lists[s_1x2][1])[MPKIND__DMD_STUFF][0], phantest_ok, TRUE, result);
+            return;
+         case s_qtag:
+            /* If in a qtag, perhaps we ought to divide into single diamonds and try again.
+               BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
+               it.  It will come back here after it has done what it needs to. */
+   
+            if ((final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED)) == 0) {
+               /* Divide into diamonds and try again.  Note that we do not clear the concept. */
+               divided_setup_move(ss, parseptr, callspec, final_concepts,
+                     (*map_lists[sdmd][1])[MPKIND__SPLIT][1], phantest_ok, FALSE, result);
+               return;
+            }
+            break;
+         case s_ptpd:
+            /* If in point-to-point diamonds, perhaps we ought to divide into single diamonds and try again.
+               BUT: if "magic" or "interlocked" is also present, we don't.  We let basic_move deal with
+               it.  It will come back here after it has done what it needs to. */
+   
+            if ((final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED)) == 0) {
+               /* Divide into diamonds and try again.  Note that we do not clear the concept. */
+               divided_setup_move(ss, parseptr, callspec, final_concepts,
+                     (*map_lists[sdmd][1])[MPKIND__SPLIT][0], phantest_ok, FALSE, result);
+               return;
+            }
+            break;
+         default: fail("Must have diamonds for this concept.");
+      }
+   }
+
+   mirror = FALSE;
+
+   /* It may be appropriate to step to a wave or rear back from one.
+      This is only legal if the flag forbidding same is off.
+      Furthermore, if certain modifiers have been given, we don't allow it. */
+
+   if (final_concepts & (FINAL__MAGIC | FINAL__INTERLOCKED | FINAL__12_MATRIX | FINAL__FUNNY))
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;
+
+   /* But, alas, if fractionalization is on, we can't do it yet, because we don't
+      know whether we are starting at the beginning.  In the case of fractionalization,
+      we will do it later.  We already know that the call is sequentially defined. */
+
+   if ((!(ss->setupflags & (SETUPFLAG__NO_STEP_TO_WAVE | SETUPFLAG__FRACTIONALIZE_MASK))) &&
+         (callspec->callflags & (cflag__rear_back_from_r_wave | cflag__rear_back_from_qtag | cflag__step_to_wave))) {
+
+      ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
+
+      if (final_concepts & FINAL__LEFT) {
+         mirror = TRUE;
+         mirror_this(ss);
+      }
+
+      if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
+         touch_or_rear_back(ss, callspec->callflags);
+   }
+
+   if (ss->setupflags & SETUPFLAG__DOING_ENDS) {
+      /* Check for special case of ends doing a call like "detour" which specifically
+         allows just the ends part to be done. */
+      if ((the_schema == schema_concentric || the_schema == schema_rev_checkpoint) &&
+            (dfm_endscando & callspec->stuff.conc.outerdef.modifiers)) {
+
+         /* Copy the concentricity flags from the call definition into the setup.  All the fuss
+            in database.h about concentricity flags co-existing with setupflags refers
+            to this moment. */
+         ss->setupflags |= (callspec->stuff.conc.outerdef.modifiers & DFM_CONCENTRICITY_FLAG_MASK);
+
+         callspec = base_calls[callspec->stuff.conc.outerdef.call_id];
+         the_schema = callspec->schema;
+         if (the_schema == schema_maybe_single_concentric)
+            the_schema = (final_concepts & FINAL__SINGLE) ? schema_single_concentric : schema_concentric;
+         else if (the_schema == schema_maybe_matrix_conc_star)
+            the_schema = (final_concepts & FINAL__12_MATRIX) ? schema_conc_star12 : schema_conc_star;
+      }
+   }
+
+   /* Enforce the restriction that only tagging or scooting calls are allowed in certain contexts. */
+
+   if ((final_concepts & FINAL__MUST_BE_TAG) && (!(cflag__is_tag_call & callspec->callflags)))
+      fail("Only a tagging call is allowed here.");
+   else if ((final_concepts & FINAL__MUST_BE_SCOOT) && (!(cflag__is_scoot_call & callspec->callflags)))
+      fail("Only a scoot/tag (chain thru) (and scatter) call is allowed here.");
+
+   final_concepts &= ~(FINAL__MUST_BE_TAG | FINAL__MUST_BE_SCOOT);
+
+   /* If the "split" concept has been given and this call uses that concept for a special
+      meaning (split square thru, split dixie style), set the special flag to determine that
+      action, and remove the split concept.  Why remove it?  So that "heads split catch grand
+      mix 3" will work.  If we are doing a "split catch", we don't really want to split the
+      setup into 2x2's that are isolated from each other. */
+
+   if (final_concepts & FINAL__SPLIT) {
+      if (callspec->callflags & cflag__split_like_square_thru)
+         final_concepts = (final_concepts | FINAL__SPLIT_SQUARE_APPROVED) & (~FINAL__SPLIT);
+      else if (callspec->callflags & cflag__split_like_dixie_style)
+         final_concepts = (final_concepts | FINAL__SPLIT_DIXIE_APPROVED) & (~FINAL__SPLIT);
+   }
+
+   /* NOTE: We may have mirror-reflected the setup.  "Mirror" is true if so.  We may need to undo this. */
+
+   /* If this is the "split sequential" schema and we have not already done so,
+      cause splitting to take place. */
+
+   if (the_schema == schema_split_sequential && !(final_concepts & FINAL__SPLIT_SEQ_DONE))
+      final_concepts |= FINAL__SPLIT | FINAL__SPLIT_SEQ_DONE;
+
+   /* If the split concept is still present, do it. */
+
+   if (final_concepts & FINAL__SPLIT) {
+      map_thing *split_map;
+
+      final_concepts &= ~FINAL__SPLIT;
+      ss->setupflags |= SETUPFLAG__SAID_SPLIT;
+
+      /* We can't handle the mirroring, so undo it. */
+      if (mirror) { mirror_this(ss); mirror = FALSE; }
+
+      if (ss->kind == s2x4) split_map = (*map_lists[s2x2][1])[MPKIND__SPLIT][0];
+      else if (ss->kind == s1x8) split_map = (*map_lists[s1x4][1])[MPKIND__SPLIT][0];
+      else if (ss->kind == s_ptpd) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][0];
+      else if (ss->kind == s_qtag) split_map = (*map_lists[sdmd][1])[MPKIND__SPLIT][1];
+      else if (ss->kind == s2x2) {
+         /* "Split" was given while we are already in a 2x2?  The only way that
+            can be legal is if the word "split" was meant as a modifier for "split square thru"
+            etc., rather than as a virtual-setup concept, or if the "split sequential" schema
+            is in use.  In those cases, some "split approved" flag will still be on. */
+
+         if (!(final_concepts & (FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED | FINAL__SPLIT_SEQ_DONE)))
+            fail("Split concept is meaningless in a 2x2.");
+
+         move(ss, parseptr, callspec, final_concepts, qtfudged, result);
+         return;
+      }
+      else
+         fail("Can't do split concept in this setup.");
+
+      divided_setup_move(ss, parseptr, callspec, final_concepts, split_map, phantest_ok, TRUE, result);
+      return;
+   }
+
+   tbonetest = 0;
+   if (setup_limits[ss->kind] >= 0) {
+      int j;
+
+      for (j=0; j<=setup_limits[ss->kind]; j++) tbonetest |= ss->people[j].id1;
+      if (!(tbonetest & 011)) {
+         result->kind = nothing;
+         return;
+      }
+   }
+
+   /* We can't handle the mirroring unless the schema is by_array, so undo it. */
+
+   if (the_schema != schema_by_array) {
+      if (mirror) { mirror_this(ss); mirror = FALSE; }
+   }
+
+   switch (the_schema) {
+      case schema_nothing:
+         if (final_concepts) fail("Illegal concept for this call.");
+         *result = *ss;
+         result->setupflags = ((ss->setupflags & SETUPFLAG__ELONGATE_MASK) / SETUPFLAG__ELONGATE_BIT) * RESULTFLAG__ELONGATE_BIT;
+         break;
+      case schema_matrix:
+         if (final_concepts) fail("Illegal concept for this call.");
+         matrixmove(ss, callspec, result);
+         reinstate_rotation(ss, result);
+         break;
+      case schema_partner_matrix:
+         if (final_concepts) fail("Illegal concept for this call.");
+         partner_matrixmove(ss, callspec, result);
+         reinstate_rotation(ss, result);
+         break;
+      case schema_roll:
+         if (final_concepts) fail("Illegal concept for this call.");
+         rollmove(ss, callspec, result);
+         break;
+      case schema_by_array:
+         /* Dispose of the "left" concept first -- it can only mean mirror.  If it is on,
+            mirroring may already have taken place. */
+
+         if (final_concepts & FINAL__LEFT) {
+            if (!(callspec->callflags & cflag__left_means_mirror)) fail("Can't do this call 'left'.");
+            if (!mirror) mirror_this(ss);
+            mirror = TRUE;
+            final_concepts &= ~FINAL__LEFT;
+         }
+
+         /* The "reverse" concept might mean mirror, or it might be genuine. */
+
+         if ((final_concepts & FINAL__REVERSE) && (callspec->callflags & cflag__reverse_means_mirror)) {
+            /* This "reverse" just means mirror. */
+            if (mirror) fail("Can't do this call 'left' and 'reverse'.");
+            if (!mirror) mirror_this(ss);
+            mirror = TRUE;
+            final_concepts &= ~FINAL__REVERSE;
+         }
+
+         /* If the "reverse" flag is still set in final_concepts, it means a genuine
+            reverse as in reverse cut/flip the diamond or reverse change-O. */
+
+         basic_move(ss, parseptr, callspec, final_concepts, tbonetest, qtfudged, result);
+         break;
+      default:
+   
+         /* Must be sequential or some form of concentric. */
+   
+         new_final_concepts = final_concepts;
+   
+         /* We demand that the final concepts that remain be only those in the following list,
+            which includes all of the "heritable" concepts. */
+
+         if (new_final_concepts &
+               ~(FINAL__SPLIT | HERITABLE_FLAG_MASK | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED | FINAL__SPLIT_SEQ_DONE))
+            fail("This concept not allowed here.");
+
+         /* Now we demand that, if the concept was given, the call had the appropriate flag set saying
+            that the concept is legal and will be inherited to the children.  We make heavy use here
+            of the fact that the "FINAL__XXX" bits and the "cflag__xxx" bits match. */
+
+         if (HERITABLE_FLAG_MASK & new_final_concepts & (~callspec->callflags)) fail("Can't do this call with this concept.");
+
+         if (the_schema == schema_sequential || the_schema == schema_split_sequential) {
+            int current_elongation = ss->setupflags & SETUPFLAG__ELONGATE_MASK;
+            int finalsetupflags = 0;
+            int highlimit;
+            long_boolean instant_stop;
+
+            qtf = qtfudged;
+
+            if (new_final_concepts & FINAL__SPLIT) {
+               if (callspec->callflags & cflag__split_like_square_thru)
+                  new_final_concepts |= FINAL__SPLIT_SQUARE_APPROVED;
+               else if (callspec->callflags & cflag__split_like_dixie_style)
+                  new_final_concepts |= FINAL__SPLIT_DIXIE_APPROVED;
+            }
+
+            /* Iterate over the parts of the call. */
+
+            highlimit = 1000000;
+            subcall_index = 0;          /* Where we start, in the absence of special stuff. */
+            instant_stop = FALSE;
+
+            /* If SETUPFLAG__FRACTIONALIZE_MASK stuff is nonzero, we are being asked to do something special.
+               Read the three indicators.  Their meaning is as follows:
+                  high 3 bits   middle 3 bits   low 3 bits
+                     "key"       "denom"          "numer"
+                       2          zero            nonzero       do just the indicated part, set
+                                                                    RESULTFLAG__DID_LAST_PART if it was last
+                     zero        nonzero          nonzero       fractional - do first <numer>/<denom> of the call */
+
+            if (ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK) {
+               int numer = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*07))   / SETUPFLAG__FRACTIONALIZE_BIT);
+               int denom = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*070))  / (SETUPFLAG__FRACTIONALIZE_BIT*8));
+               int key   = ((ss->setupflags & (SETUPFLAG__FRACTIONALIZE_BIT*0700)) / (SETUPFLAG__FRACTIONALIZE_BIT*64));
+               int t;
+
+               for (t=0 ; callspec->stuff.def.defarray[t].call_id; t++);   /* Now t = number of parts in call. */
+
+               if (key == 2) {
+                  /* Just do the "numer" part of the call, and tell if it was last. */
+                  subcall_index = numer-1;
+                  if (subcall_index >= t) fail("The indicated part number doesn't exist.");
+                  instant_stop = TRUE;
+                  /* If only first part is visible, this is illegal unless we are doing first part. */
+                  if (!(callspec->callflags & cflag__visible_fractions) && (subcall_index != 0))
+                     fail("This call can't be fractionalized.");
+               }
+               else {
+                  /* Do parts up to (key=0) or after (key=1) the indicated part.  The indicated
+                     part may be an absolute part number (denom=0) or a fraction. */
+
+                  int indicated_part;
+
+                  if (denom) {
+                     /* Amount to do was given as a fraction. */
+                     if (numer >= denom) fail("Fraction must be proper.");
+                     indicated_part = t * numer;
+                     if ((indicated_part % denom) != 0) fail("This call can't be fractionalized with this fraction.");
+                     indicated_part = indicated_part / denom;
+                     /* If only first part is visible, this is illegal. */
+                     if (!(callspec->callflags & cflag__visible_fractions))
+                        fail("This call can't be fractionalized.");
+                  }
+                  else {
+                     indicated_part = numer;
+                     /* If only first part is visible, this is illegal unless we are breaking just after the first part. */
+                     if (!(callspec->callflags & cflag__visible_fractions) && (indicated_part != 1))
+                        fail("This call can't be fractionalized.");
+                  }
+
+                  if (key == 1) {
+                     /* Do the last section of the call, starting just after indicated_part. */
+                     subcall_index = indicated_part;
+                     if (subcall_index > t) fail("The indicated part number doesn't exist.");
+                  }
+                  else {
+                     /* Do the first section of the call, up to the indicated_part. */
+                     highlimit = indicated_part;
+                     if (highlimit > t) fail("The indicated part number doesn't exist.");
+                  }
+               }
+            }
+
+            /* Did we neglect to do the touch/rear back stuff because fractionalization was enabled?
+               If so, now is the time to correct that.  We only do it for the first part. */
+
+            if ((!(ss->setupflags & SETUPFLAG__NO_STEP_TO_WAVE)) && (subcall_index == 0) &&
+                  (callspec->callflags & (cflag__rear_back_from_r_wave | cflag__rear_back_from_qtag | cflag__step_to_wave))) {
+
+               ss->setupflags |= SETUPFLAG__NO_STEP_TO_WAVE;  /* Can only do it once. */
+
+               if (final_concepts & FINAL__LEFT) {
+                  mirror = TRUE;
+                  mirror_this(ss);
+               }
+
+               if (setup_limits[ss->kind] >= 0)          /* We don't understand absurd setups. */
+                  touch_or_rear_back(ss, callspec->callflags);
+            }
+
+            *result = *ss;
+
+            for (;;) {
+               int j;
+               setup tttt;
+               by_def_item *this_item;
+               defmodset this_mod;
+
+               if (subcall_index >= highlimit) break;
+
+               this_item = &callspec->stuff.def.defarray[subcall_index];
+
+               if (!this_item->call_id) break;
+
+               this_mod = this_item->modifiers;
+
+               temp_concepts = get_mods_for_subcall(new_final_concepts, this_mod, callspec->callflags);
+               get_real_subcall(parseptr, this_item, temp_concepts, &cp1, &call1, &conc1);
+
+               /* If this context requires a tagging or scoot call, pass that fact on. */
+               if (dfm_must_be_tag_call & this_mod) conc1 |= FINAL__MUST_BE_TAG;
+               else if (dfm_must_be_scoot_call & this_mod) conc1 |= FINAL__MUST_BE_SCOOT;
+
+               if (dfm_repeat_n & this_mod) {
+                  tempsetup = *result;
+                  for (j=1; j<=parseptr->number; j++) {
+                     tttt = tempsetup;
+                     tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                     move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
+                     finalsetupflags |= tempsetup.setupflags;
+                  }
+               }
+               else if (dfm_repeat_nm1 & this_mod) {
+                  tempsetup = *result;
+                  for (j=1; j<=parseptr->number-1; j++) {
+                     tttt = tempsetup;
+                     tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                     move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
+                     finalsetupflags |= tempsetup.setupflags;
+                  }
+               }
+               else if (dfm_repeat_n_alternate & this_mod) {
+                  tempsetup = *result;
+
+                  /* Read the call after this one -- we will alternate between the two. */
+                  get_real_subcall(parseptr, &callspec->stuff.def.defarray[subcall_index+1], temp_concepts, &cp2, &call2, &conc2);
+
+                  for (j=1; j<=parseptr->number; j++) {
+                     tttt = tempsetup;
+                     tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+                     if (j&1)
+                        move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
+                     else
+                        move(&tttt, cp2, call2, conc2, qtf, &tempsetup);
+                     finalsetupflags |= tempsetup.setupflags;
+                  }
+                  subcall_index++;     /* Skip over the second call. */
+               }
+               else {
+                  tttt = *result;
+                  tttt.setupflags = (ss->setupflags & ~(SETUPFLAG__FRACTIONALIZE_MASK | SETUPFLAG__ELONGATE_MASK)) | current_elongation;
+
+                  if ((dfm_cpls_unless_single & this_mod) && !(new_final_concepts & FINAL__SINGLE)) {
+                     tandem_couples_move(&tttt, cp1, call1, conc1,
+                           selector_uninitialized, FALSE, FALSE, 1, &tempsetup);
+                  }
+                  else
+                     move(&tttt, cp1, call1, conc1, qtf, &tempsetup);
+
+                  finalsetupflags |= tempsetup.setupflags;
+               }
+
+               /* If this call is "roll transparent", restore roll info from before the call for those people
+                  that are marked as roll-neutral. */
+
+               if (dfm_roll_transparent & this_mod) {
+                  /* Can only do this if we understand the setups. */
+                  if ((setup_limits[tempsetup.kind] >= 0) && (setup_limits[result->kind] >= 0)) {
+                     int u, v;
+
+                     for (u=0; u<=setup_limits[tempsetup.kind]; u++) {
+                        if (tempsetup.people[u].id1 & ROLLBITM) {
+                           /* This person is roll-neutral.  Reinstate his original roll info, by
+                              searching for him in the starting setup. */
+                           tempsetup.people[u].id1 &= ~ROLLBITS;
+                           for (v=0; v<=setup_limits[result->kind]; v++) {
+                              if (((tempsetup.people[u].id1 ^ result->people[v].id1) & 0700) == 0)
+                                 tempsetup.people[u].id1 |= (result->people[v].id1 & ROLLBITS);
+                           }
+                        }
+                     }
+                  }
+               }
+
+               /* Whenever the ending setup is 2x2, we are responsible for computing the
+                  "current_elongation" field of the result. */
+
+               /* The following comments used to be in this code, back when it was much
+                  more complicated than it is now. */
+
+               /* If the setup has undergone a transition from a 1x4/diamond to a 2x2, make a note
+                  of what the elongation should be according to the call's "parallel_conc_end" flag.
+                  Remember that "result" contatins the setup at the start of this step, and "tempsetup"
+                  has the setup at the end of this step.  The xor's with the rotations are done to
+                  compensate for the fact that we may have done, say, a lockit, in an earlier step.
+                  The final value that we have to provide for result->parallel_conc_end must state
+                  the elongation relative to the original 1x4 orientation.  Whew!
+               I believe the test cases for this stuff are locker's choice and split cast, the
+                  latter being done from a grand line.  In that case, the ends have to hinge and
+                  then trade.  The hinge has them stay close together, so they are as if in columns.
+                  The trade then must preserve that.
+               This used to xor the current setup rotation and the original setup rotation into the
+                  equation, believing that, if a lockit happened earlier, we want the
+                  "parallel_conc_end" property on the 1x4->2x2 subcall to apply to the entire
+                  call.  I no longer believe that is correct.  What happens now is that each subcall is
+                  evaluated independently.  If a 1x4->2x2 subcall occurs, we find out, from looking
+                  at the call descriptor, where the dancers would like to finish that subcall,
+                  and proceed from there. */
+
+               /* Next part: we have to preserve the meaning of the "parallel_conc_end" flag
+                  for 2x2->2x2 calls also.  Its meaning in this case is "go to antispots".
+                  This is necessary to make "ENDS counter rotate" work from lines.  (Note
+                  that counter rotate has this flag set.)  For a compound call, we obviously
+                  want to xor all the flags of the constituent parts.  That is why we do an
+                  xor here.  (Note that we initialized it to zero.)  But the stuff just above
+                  overwrote it.  That's OK.  Any 1x4->2x2 call ought to destroy the "antispots"
+                  info from previous 2x2->2x2 calls.  But after the 1x4->2x2 call has filled
+                  in the elongation info, subsequent 2x2->2x2 calls requesting antispots should
+                  flip the elongation.
+               The test case for this is N/4 chain and circulate in.  The ends do a double
+                  circulate, which is defined sequentially as 2 circulates.  Before this code was
+                  put in, basic_move honored the parallel_conc_end/antispots flag for atomic
+                  2x2->2x2 calls, but it wasn't honored here for concatenations of such.  The
+                  final state of result->parallel_conc_end was random, so it would sometimes
+                  think the ends should go to column spots. */
+
+               if (tempsetup.kind == s2x2) {
+                  switch (result->kind) {
+                     case s1x4: case sdmd: case s2x2:
+                        current_elongation = (((tempsetup.setupflags & RESULTFLAG__ELONGATE_MASK) / RESULTFLAG__ELONGATE_BIT) * SETUPFLAG__ELONGATE_BIT);
+                        break;
+   
+                     /* Otherwise (perhaps the setup was a star) we have no idea how to elongate the setup. */
+   
+                     default:
+                        current_elongation = 0;
+                        break;
+                  }
+               }
+               else
+                  current_elongation = 0;
+
+               *result = tempsetup;
+
+               /* Remove outboard phantoms. 
+                  It used to be that normalize_setup was not called
+                  here.  It was found that we couldn't do things like, from a suitable offset wave,
+                  [triple line 1/2 flip] back to a wave, that is, start offset and finish normally.
+                  So this has been added.  However, there may have been a reason for not normalizing.
+                  If any problems are found, it may be that a flag needs to be added to seqdef calls
+                  saying whether to remove outboard phantoms after each part. */
+
+               normalize_setup(result, simple_normalize);
+
+               qtf = FALSE;
+
+               new_final_concepts &= ~(FINAL__SPLIT | FINAL__SPLIT_SQUARE_APPROVED | FINAL__SPLIT_DIXIE_APPROVED);
+
+               subcall_index++;
+
+               /* If we are being asked to do just one part of a call (from SETUPFLAG__FRACTIONALIZE_MASK),
+                  exit now.  Also, see if we just did the last part. */
+
+               if ((ss->setupflags & SETUPFLAG__FRACTIONALIZE_MASK) && instant_stop) {
+                  /* Check whether this is last part of the call, by peeking ahead. */
+                  if (!(&callspec->stuff.def.defarray[subcall_index])->call_id) finalsetupflags |= RESULTFLAG__DID_LAST_PART;
+                  break;
+               }
+            }
+
+            result->setupflags = (finalsetupflags & ~RESULTFLAG__ELONGATE_MASK) | ((current_elongation / SETUPFLAG__ELONGATE_BIT) * RESULTFLAG__ELONGATE_BIT);
+         }
+         else {
+
+            /* Must be some form of concentric. */
+   
+            saved_warnings = history[history_ptr+1].warnings;
+
+            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.innerdef.modifiers, callspec->callflags);
+            get_real_subcall(parseptr, &callspec->stuff.conc.innerdef, temp_concepts, &cp1, &call1, &conc1);
+
+            /* Do it again. */
+
+            temp_concepts = get_mods_for_subcall(new_final_concepts, callspec->stuff.conc.outerdef.modifiers, callspec->callflags);
+            get_real_subcall(parseptr, &callspec->stuff.conc.outerdef, temp_concepts, &cp2, &call2, &conc2);
+
+            /* Fudge a 3x4 into a 1/4-tag if appropriate. */
+
+            if (ss->kind == s3x4 && (callspec->callflags & cflag__fudge_to_q_tag) &&
+                  (the_schema == schema_concentric || the_schema == schema_cross_concentric)) {
+
+               if (ss->people[0].id1) {
+                  if (ss->people[1].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+               }
+               else (void) copy_person(ss, 0, ss, 1);
+
+               if (ss->people[3].id1) {
+                  if (ss->people[2].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                  else (void) copy_person(ss, 1, ss, 3);
+               }
+               else (void) copy_person(ss, 1, ss, 2);
+
+               (void) copy_person(ss, 2, ss, 4);
+               (void) copy_person(ss, 3, ss, 5);
+
+               if (ss->people[6].id1) {
+                  if (ss->people[7].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                  else (void) copy_person(ss, 4, ss, 6);
+               }
+               else (void) copy_person(ss, 4, ss, 7);
+
+               if (ss->people[9].id1) {
+                  if (ss->people[8].id1) fail("Can't do this call from arbitrary 3x4 setup.");
+                  else (void) copy_person(ss, 5, ss, 9);
+               }
+               else (void) copy_person(ss, 5, ss, 8);
+
+               (void) copy_person(ss, 6, ss, 10);
+               (void) copy_person(ss, 7, ss, 11);
+
+               ss->kind = s_qtag;
+               ss->setupflags |= SETUPFLAG__DISTORTED;
+            }
+
+            concentric_move(
+               ss,
+               cp1, cp2, call1, call2, conc1, conc2,
+               the_schema,
+               callspec->stuff.conc.innerdef.modifiers,
+               callspec->stuff.conc.outerdef.modifiers,
+               result);
+
+            if (dfm_suppress_elongation_warnings & callspec->stuff.conc.outerdef.modifiers) {
+               history[history_ptr+1].warnings.bits[0] &= ~(Warnings_About_Conc_elongation);
+            }
+            history[history_ptr+1].warnings.bits[0] |= saved_warnings.bits[0];
+            history[history_ptr+1].warnings.bits[1] |= saved_warnings.bits[1];
+         }
+
+         break;
+   }
+
+   /* Reflect back if necessary. */
+   if (mirror) mirror_this(result);
+
+   norot:
+
+   canonicalize_rotation(result);
+}

@@ -1,0 +1,1104 @@
+\input texinfo @c %**start of header -*-texinfo-*-
+@setfilename sd_doc.info
+@ifinfo
+sd_doc.txi time-stamp: @{92/08/27 19:15:52 gildea@}
+@end ifinfo
+@settitle Sd
+@c %**end of header
+@iftex
+@finalout
+@end iftex
+@titlepage
+@c
+@center @titlefont{Sd}
+@sp 1
+@center A Square Dance Caller's Helper
+@sp 10
+@center William B. Ackerman and Stephen Gildea
+@c
+@end titlepage
+@headings off
+@iftex
+@c to make vskip work:
+@center @r{ }
+@vskip 0pt plus 1fill
+@end iftex
+
+This manual documents Sd version 25.
+
+Copyright @copyright{} 1992 William B. Ackerman and Stephen Gildea
+
+@ignore
+Permission is granted to process this file through TeX and print the
+results, provided the printed document carries copying permission notice
+identical to this one except for the removal of this paragraph (this
+paragraph not being relevant to the printed manual).
+
+@end ignore
+Permission is granted to make and distribute copies of this manual
+provided the copyright notice and this permission notice are preserved
+on all copies.
+
+@page	@c end of copyright page
+@headings on   
+
+@node Top, Intro, (dir), (dir)
+
+@ifinfo
+This file documents Sd, a square dance caller's helper.
+
+Table of Contents
+
+You can pick a item out of one of the menus here, or, to start reading
+the manual from the beginning, type @key{n} to go to the next node.
+
+This is the summary table of contents:
+
+@end ifinfo
+@menu
+* Intro::                       Introduction
+* Starting Sd::                 Starting Sd
+* Calling::                     Calling
+* Resolving and Searching::     Resolving and Searching
+* Miscellaneous Commands::      Miscellaneous Commands
+* Call Notes::                  Call Notes
+* Concept Notes::               Concept Notes
+* Bugs and Misfeatures::        Known Bugs and Misfeatures (very incomplete)
+* Miscellaneous Advice::        Miscellaneous Advice and Warnings
+
+
+This is the complete table of contents:
+
+Starting Sd
+
+* Command Switches::            Command Switches
+* Abridgement::                 Abridgement
+
+Calling
+
+* The Startup Screen::          The Startup Screen
+* Heads/Sides Start::             starting with the heads or sides
+* 1P2P Lines::                    starting with 1P2P lines
+* Just As They Are::              starting with a squared set
+* Entering Calls::              Entering Calls
+* Call Menus::                    call menus
+* The Scroll Bar::                the call menu scroll bar
+* Variations on Calls::           how to write variations on calls
+* Entering Concepts::           Entering Concepts
+* Call Modifications::          Call Modifications
+* Tag/Scoot Calls::             Tag/Scoot Call Modifications
+* Single/Cross/Left::           The Single, Cross, and Left Modifiers
+* Asymmetric Selectors::        How to Write Asymmetric Sequences
+
+Resolving and Searching
+
+* Resolving::                   Resolving
+* Making Nice Setups::          Making Nice Setups
+* Do Anything::                 The @code{Do Anything} operation.
+* Reconcile::                   The @code{Reconcile} operation.
+
+Miscellaneous Commands
+
+* Writing Out the Sequence::    Writing Out the Sequence
+* Changing the Output File::    Changing the Output File
+* Abort/Exit/Undo::             Abort, Exit, and Undo
+* Inserting Comments::          Inserting Comments
+* Saving Pictures::             Saving Pictures
+
+Call Notes
+
+* Box the Gnat::                @i{Box the Gnat}
+* Sweeping Direction::          Sweeping Direction
+* C1 Single Rotate::            C1 Single Rotate
+* Spread::                      Spread
+* Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
+* Rotate from Columns::         Rotate from Columns
+* Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
+
+Concept Notes
+
+* Gruesome::                    Gruesome
+* Divided::                     Divided
+* Concentric::                  Concentric
+* Two Calls in Succession::     Two Calls in Succession
+* Diamond::                     Diamond
+* Implied Piecewise::           Implied Piecewise
+* So-And-So Only::              So-And-So Only
+@end menu
+
+@node Intro, Starting Sd, Top, Top
+@unnumbered Introduction
+
+Sd is a square dance caller's helper.  The program assists in writing material
+for Western square dancing by doing the checker pushing.  You tell the
+program what call you want to call next, and it computes the resulting
+setup and shows it to you.
+
+Sd was intended to be used to write challenge-level material where the
+sequences are often complex and the checker pushing tedious and
+error-prone.  Most challenge callers write out the material they will
+call before they get to the dance, unlike Mainstream callers, who
+often invent the material on the fly from the stage.
+
+Sd knows nothing about timing, body flow, or esthetics.
+
+This program is not appropriate for Traditional-style squares.  Designing
+the exquisitely timed and well-phrased sequences that make up Traditional
+squares may or may not be beyond the capability of computer programs,
+but it is definitely beyond the capability of this program.
+
+Since the emphasis here is on checker pushing, you will find various
+mainstream staples missing, such as Circle Left, Grand Square, and
+Allemande Left.  Since these calls are technical zeros, there is no
+reason to have them in a checker-pushing program.  However, if you
+wish to write material containing calls such as these, you can use the
+@code{insert comment} command to write them into the sequence.
+
+In short, if you are writing a Traditional or Mainstream dance,
+you may find that this program is not for you.
+
+@node Starting Sd, Calling, Intro, Top
+@chapter Starting Sd
+
+The program is invoked with a single argument---the level.
+This is one of @code{m} (mainstream), @code{p} (plus), @code{a1},
+@code{a2}, @code{c1}, @code{c2}, @code{c3a}, @code{c3}, @code{c3x},
+@code{c4a}, or @code{c4}.
+The default is @code{m}.
+This determines the calls and concepts that will be made
+available, according to our best guess of what the levels mean.  Various
+optional arguments are permitted to control the window system, call list
+customization, and other options.  These will be described later.
+
+The call definitions will be read in from the encoded database file
+@file{sd_calls.dat}.  The program will then ponder the database for a few
+seconds while it determines what calls to put on what menus.  This
+takes about (200/MIPS) seconds at C4, correspondingly less at lower levels.
+
+@menu
+* Command Switches::            Command Switches
+* Abridgement::                 Abridgement
+@end menu
+
+@node Command Switches, Abridgement, Starting Sd, Starting Sd
+@section Command Switches
+
+Sd accepts all Xt command-line options.  The following are some of the
+more useful options for use with Sd:
+
+@table @code
+@item -rv
+reverse video
+@item -bg
+background color
+@item -fg
+foreground color
+@item -bd
+border color
+@item -font
+font used everywhere
+@item -geometry
+geometry in pixels
+@item -title
+title for window manager and icon use
+@item -name
+name to look up resources under.  default: program name.
+@item -xrm
+an X resource manager string.
+@end table
+
+@ignore
+Additional options not implemented yet:
+-database (-db) location of the calls database
+-out      file name to write sequences to
+@end ignore
+
+
+@node Abridgement, Calling , Command Switches, Starting Sd
+@section Abridgement
+
+In addition to the calling level and any X Window System arguments on
+the command line, the program recognizes three special flags:
+
+@table @code
+@item -write_list @var{filename}
+write out the call list for the indicated level instead of running the program.
+@item -write_full_list @var{filename}
+write out the call list for the indicated level and all lower levels
+instead of running the program.
+@item -abridge @var{filename}
+read in the file, strike all the calls contained therein off the menus,
+and proceed.
+@end table
+
+The first two are used to prepare a call list.  The call list for the
+indicated level, exactly as the calls appear in the menu, will be written
+to the named file.  If @code{-write_list} is used, only the calls exactly on
+that level will be written.  If @code{-write_full_list} is used, the lower level
+calls will be written as well, so the file will look exactly like the
+main call menu.  After performing either of these operations, the program
+exits.
+
+The third special flag is used to read in a list of calls to be avoided.
+Any call listed in the file, in precisely the same format as it was written
+out, will be removed from the internal database prior to running the program.
+Every sequence written under control of such a file will say @samp{(abridged)}
+after its level.
+
+To write material for a group that is learning C2, for example, run the
+program with
+@example
+        sd c2 -write_list my_group
+@end example
+
+Then delete from the file @file{my_group} those calls that the group has learned.
+When writing material, use the command
+@example
+        sd c2 -abridge my_group
+@end example
+
+As the group learns new C2 calls, delete the corresponding lines from
+the file @file{my_group}.  That file always contains the calls that they don't
+yet know.  When the file goes to zero, they know the whole list.
+
+The lines in the abridgement file must always be in exactly the same format
+as the strings that are written out by the @code{-write_list} or @code{-write_full_list}
+flags.  The program has no tolerance for creative capitalization, stray
+blanks, or other variations.  Any line in the file that does not match a
+call in the menu is simply ignored.  The order is not important, though it
+is possible that leaving it in the original menu order may someday yield
+faster program startup.
+
+@node Calling, Resolving and Searching, Starting Sd, Top
+@chapter Calling
+
+This chapter describes how to use the program in its normal mode to
+generate a sequence of calls of your choosing.
+
+@menu
+* The Startup Screen::          The Startup Screen
+* Entering Calls::              Entering Calls
+* Entering Concepts::           Entering Concepts
+* Call Modifications::          Call Modifications
+* Tag/Scoot Calls::             Tag/Scoot Call Modifications
+* Single/Cross/Left::           The Single, Cross, and Left Modifiers
+* Asymmetric Selectors::        How to Write Asymmetric Sequences
+@end menu
+
+@node The Startup Screen, Entering Calls, Calling, Calling
+@section The Startup Screen
+
+The startup menu is displayed when the program starts and after each
+sequence has been completed and written to a file.  In addition to the
+obvious program exit button, this permits you to select the starting
+operation.  The selections here, and almost everywhere else in the
+program, are made by moving the mouse until the cursor is over the
+chosen item, and pressing Mouse Button 1 (typically the left button).
+
+@menu
+* Heads/Sides Start::           starting with the heads or sides
+* 1P2P Lines::                  starting with 1P2P lines
+* Just As They Are::            starting with a squared set
+@end menu
+
+@node Heads/Sides Start, 1P2P Lines, The Startup Screen, The Startup Screen
+@subsection Heads/Sides Start
+
+If you click on @code{heads start} or @code{sides start}, the sequence will begin
+with @samp{heads} or @samp{sides} and the first call.  Normally this means that the
+designated people will move into the center and do the first call while
+the others wait.  Subsequent calls will be directed to everyone.  For
+example, one might click on @code{heads start}, and then @code{star thru}, and
+then @code{double pass thru}, and so on.  You can also click on @code{heads start}
+or @code{sides start} followed by a call such as @i{split square thru} or @i{split
+dixie style to a wave}.  Use the @code{split} concept to get these.
+
+If you want to have the heads go into the middle and do several calls
+before the sides join in, as in @i{head ladies chain ; heads square thru 4},
+or @i{heads touch 1/4 ; walk and dodge}, you must click on @code{centers}
+before all calls after the initial one.  Whether you actually read the card
+that way while calling is up to you.
+
+@node 1P2P Lines, Just As They Are, Heads/Sides Start, The Startup Screen
+@subsection 1P2P Lines
+
+The @code{heads 1P2P} and @code{sides 1P2P} starting actions refer to caller jargon
+for a common starting maneuver, typified by @i{so-and-so lead right and
+circle up 4}.  You can read the card that way, or as @i{wheel thru and
+circle up 4}, or as @i{step right}, or as @i{bring us together}, or whatever
+improvisation you like.  The promenade distance printed at the end of the
+sequence will assume that you said @i{step right} or @i{lead right @r{(or @i{wheel
+thru})} and circle up 4}.
+
+Whether you consider 1P2P openings to be overused is up to you.
+
+@node Just As They Are, Entering Calls, 1P2P Lines, The Startup Screen
+@subsection Just As They Are
+
+The @code{just as they are} button starts the sequence on squared set spots,
+without having the heads or sides begin.  This is nearly useless, since
+the program doesn't know about the @i{all 4 couples} concept or about
+thars or alamo rings.  This shortcoming may be fixed in the future.
+
+
+@node Entering Calls, Entering Concepts, The Startup Screen, Calling
+@section Entering Calls
+
+The usual thing you do when writing a sequence is to select calls from
+the call menu, perhaps preceded by one or more concepts.  (Concepts are
+discussed in the next section.)
+
+@menu
+* Call Menus::                  call menus
+* The Scroll Bar::              The call menu scroll bar
+* Variations on Calls::         How to write variations on calls
+@end menu
+
+@node Call Menus, The Scroll Bar, Entering Calls, Entering Calls
+@subsection Call Menus
+
+The call menu is the long menu near the center of the screen.  There are
+actually 17 menus that can appear here, each tailored to the current
+setup.  For example, if the current setup is right-hand waves, a menu
+will appear that contains only those calls that the program believes
+might be legal from right-hand waves.  This determination is approximate
+but conservative---appearance on the menu does not necessarily mean it
+is legal, though absence from the menu means that the program is fairly
+certain that it can't be legal.  There is a @dfn{universal} menu that
+appears when the setup is not one of the common ones, or when anything
+complex is going on.  This contains every call that is in the database
+for the chosen level.
+
+The call menus are alphabetized in a way that ignores blanks and @code{<N>},
+@code{<ANYONE>}, or @code{<ANYTHING>} items.  Hence, @code{<ANYONE> run} will be found
+under @code{r}.  Digits are listed first, followed by upper case letters,
+followed by lower case letters.
+
+A number of calls have limitations or quirks that you should be aware of.
+@xref{Call Notes}.
+
+@node The Scroll Bar, Variations on Calls, Call Menus, Entering Calls
+@subsection The Scroll Bar
+
+The call menu can be scrolled with the scroll bar to its left.  Move the
+mouse into the scroll bar area.  Clicking the left mouse button will scroll
+the window down over the menu by a percentage of the window's size that is
+equal to the percentage that the cursor is down from the top of the scroll
+bar.  Clicking the right mouse button will scroll the window up by the
+same amount.  Clicking the middle mouse button will move the window to a
+percentage down the menu that is equal to the percentage that the cursor
+is down from the top of the scroll bar.  If the mouse is moved while the
+middle mouse button is held down, the menu will scroll in real time.
+
+@node Variations on Calls, Entering Concepts, The Scroll Bar, Entering Calls
+@subsection Variations on Calls
+
+Some calls require a numeric designator (e.g., @i{square thru 3}) or a people
+designator (e.g., @i{boys run}) or another call (e.g., @i{clover and star
+thru}).  Such designators appear in the call menu as @code{<N>} or @code{<ANYONE>}
+or @code{<ANYTHING>}.  When you select one of the first two kinds of calls,
+a popup will appear containing numbers or people designators.  Click on
+the chosen item.  Not all items will be legal in all cases, such as
+@code{leads run} from a grand line.  If you made a mistake, just move the mouse
+away from the popup.
+
+When you select a call that requires a subordinate call, the program
+will prompt you for it.
+
+Some calls or concepts may require more than one numeric argument.  If
+this is the case, numeric popups will appear more than once.  Enter the
+numbers in sequence.
+
+Some calls or concepts require a number that is naturally expressed as a
+fraction indicating some number of quarters, such as touch 1/4, 1/2, or
+3/4.  Enter the integer number of quarters.  The program will turn the
+fraction into the appropriate form, e.g., 2/4 becomes 1/2.
+
+
+@node Entering Concepts, Call Modifications, Entering Calls, Calling
+@section Entering Concepts
+
+A call may be preceded by concepts.  These may be nested (@dfn{stacked}) to
+any reasonable depth.  In a perhaps hopeless attempt to keep the concept
+menus from becoming too unwieldy, concepts have been organized into a
+general concept menu and several submenus organized by topics.  The
+main concept menu is in the lower left corner.  It supposedly contains all
+the extremely common concepts.  Buttons for the other concepts submenus
+appear above this menu.  Clicking on one of these buttons brings up the
+submenu.  If you don't see what you want on a concept submenu, move the
+mouse away.  Some concepts appear in more than one submenu---it doesn't
+matter which one you use.  The submenus are
+
+@table @code
+@item phantom concepts
+those that involve picking out virtual setups, that may include
+phantoms, from a real formation that is larger than 8 people.  Examples:
+@i{split phantom lines}, @i{triple boxes}, @i{triple lines working forward}.
+
+@item couples/tandem concepts
+the obvious thing.
+
+@item distorted concepts
+those that involve picking out distorted virtual setups, without
+phantoms, by identifying real people out of a formation that is larger
+than 8 people, or the phantom equivalent of same.  Examples:
+@i{parallelogram}, @i{stairstep lines}, @i{bigblock}.
+
+@item 4-person distorted concepts
+those that involve picking out 4-person virtual setups, without
+phantoms, by identifying real people, or the phantom equivalent of same.
+Examples: @i{trapezoid}, @i{once removed}, @i{jay}.
+
+@item miscellaneous concepts
+all others.  There are a lot of them.
+@end table
+
+When you click on any concept, the universal call menu replaces whatever
+special call menu may have been presented, since the set of legal calls
+becomes highly unpredictable.
+
+Some concepts require a numeric designator (e.g., @i{interrupt after the 3rd
+part}) or a people designator (e.g., @i{girls are stable}).  The handling
+is the same as for calls that require these.
+
+Some concepts require two calls (e.g., @i{checkpoint} and @i{interlace}).  After
+choosing such a concept, enter the first call, preceded by whatever concepts
+apply to it.  The program will then prompt you for the second call.
+A complex tree of concepts and calls can thus be constructed.
+
+
+@node Call Modifications, Tag/Scoot Calls, Entering Concepts, Calling
+@section Call Modifications
+
+Some calls can be modified in a natural way, such as @samp{in roll motivate}
+and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
+the diamond but replace the diamond circulate with explode the diamond}.
+To form such a call, click on @code{allow modifications} before choosing the
+call.  There are two levels of this feature.  If you click on @code{allow
+modifications} just once, you get the simple version, which only prompts
+you for @dfn{natural} modifications.  Natural modifications have been somewhat
+arbitrarily defined as those for which there is an accepted way of fitting
+the words in without using the phrase ``but replace the <whatever> with
+<whatever>.''  If you click on @code{allow modifications} a second time, you allow
+a potentially large number of modification possibilities, sometimes several
+in the same call.
+
+When either level of modifications is selected, the line at the top of
+the text transcript area indicates this.  Also, the universal call menu
+is chosen whenever modifications are enabled, since the possibilities are
+so unpredictable.
+
+When you click on a call for which modifications are possible, a popup
+will appear saying something like @code{The box circulate can be
+replaced.  Do you want to replace it?} Moving the mouse away constitutes
+a @samp{no} reply.  If you click in the active area of the popup, you
+will then be prompted for the replacement call.  Enter it, along with
+any concepts.  In some cases you may be asked repeatedly about various
+modification.  For example, in @i{motivate}, you can replace the initial
+@i{circulate} and can turn the star a different amount.  You may select
+any or all of these modifications.
+
+For both these optional modifications and the mandatory subcalls (e.g., @code{clover
+and <anything>}) discussed earlier, the program attempts to show
+unambiguously how everything is structured, by putting subcalls and their
+accompanying concepts in square brackets.  It also attempts to put
+natural modifications in their natural place in the phrase.  In complex
+cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
+[2/3 recycle] the difference] cover up} things may be quite difficult.
+How (and whether) you choose to read such a card is up to you.
+
+
+@node Tag/Scoot Calls, Single/Cross/Left, Call Modifications, Calling
+@section Tag/Scoot Call Modifications
+
+To use tagging call modifications, like @samp{tag the star your leader},
+enable modifications, click on @code{tag your leader} (the generic form of all tagging calls is
+@samp{tag @dots{}}) followed by the @samp{1/2} version of the replacement tagging call,
+e.g., @code{1/2 tag the star} or @code{loop and 1/2 tag}.  The program will
+remove the superfluous @samp{1/2}.  You may also choose the @code{revert}
+or @code{reflect} calls here.
+
+To get something like @samp{flip chain thru and scatter reaction}, enable
+modifications and select @code{tag chain thru and scatter reaction} or
+whatever.  Then change the @code{1/2 tag}.
+
+@code{1/2 invert} is an acceptable tagging replacement.
+
+
+@node Single/Cross/Left, Asymmetric Selectors, Tag/Scoot Calls, Calling
+@section The @i{Single,} @i{Cross,} and @i{Left} Modifiers
+
+There are a number of calls that contain these words in a nonstraightforward
+way.  In these cases, click on the concept before clicking on the call,
+even though the word order seems wrong.  The program will repair the
+word order.
+
+Examples:
+
+@table @i
+@item Chase left @r{or} left roll the
+Click on @code{LEFT} and then @code{chase right} or @code{right roll
+the}.
+
+@item Scoot and cross ramble, trans cross reactivate, @r{etc.}
+Click on @code{CROSS} and then the call.  The program will move the
+word @samp{cross} into the correct place in the transcript.
+For example, click on @code{CROSS} and then @code{scoot and ramble}
+to get @i{scoot and cross ramble}.  Click on @code{CROSS} and then
+@code{transactivate} to get @i{trans cross reactivate}.  Click on
+@code{MAGIC}, @code{CROSS} and then @code{trans nuclear reaction} to get
+@i{magic trans cross nuclear reaction}.
+@end table
+
+Some calls use a @samp{single file} modifier.  Click on @code{SINGLE} to get this.
+The program will change the wording to @samp{single file}.
+Note in particular that the call described by some callers as @i{on a
+double track, dixie style} (even when there is only one @dfn{track}) is known
+to the program as @i{single file dixie style}.
+
+Not all calls that have the word @samp{cross} or @samp{single} in them are invoked
+by clicking on the concept.  Some, like @samp{cross your neighbor} and
+@samp{single rotate} are simply in the database under their full names.
+Note in particular that the @samp{single} concept for @samp{rotate} gets the
+call @samp{single file rotate}, which is a 1x4 column call.
+
+
+@node Asymmetric Selectors, Resolving and Searching, Single/Cross/Left, Calling
+@section Asymmetric Selectors
+
+The people selector popup contains various asymmetric selectors such as
+@code{near line} and @code{far box}.  You can use these selectors with
+the @code{so-and-so only} concept to call @i{near column
+pass thru}, etc.  The resultant setup must be reasonable---no shape-changers
+on one side of the set.  Most calls have not been checked for
+robustness in the presence of asymmetrical setups.  Use this with care!
+The resolver checks all 8 people, so it should work.
+If you have not restored symmetry, resolves may be extraordinarily difficult
+to find.
+
+
+@node Resolving and Searching, Miscellaneous Commands, Calling, Top
+@chapter Resolving and Searching
+
+This chapter describes how to have the program find calls for you to
+accomplish various goals.
+
+@menu
+* Resolving::                   Resolving
+* Making Nice Setups::          Making Nice Setups
+* Do Anything::                 The @code{Do Anything} operation.
+* Reconcile::                   The @code{Reconcile} operation.
+@end menu
+
+@node Resolving, Making Nice Setups, Resolving and Searching, Resolving and Searching
+@section Resolving
+
+Whenever the setup is in a resolved state, whether intentionally or
+accidentally, the program indicates that fact at the bottom of the
+transcript area.  The program looks for @i{right and left grand},
+@i{left allemande}, @i{dixie grand}, or @i{promenade} from 8-chain,
+trade by, double pass thru, waves, crossed waves, 1/4 tag, 3/4 tag, and
+left-hand two-faced lines, as appropriate.  If the sequence needs an
+@i{extend}, @i{circulate}, @i{pass thru}, @i{trade by}, or @i{cross by}
+to get to a resolve, that is close enough.
+
+Whenever the @samp{resolve} message appears, you can end the sequence and
+write it to a file by clicking on @code{end this sequence}.  There are
+at least three ways to resolve a sequence: you can wander into a resolve
+by accident, you can @dfn{sight resolve} the square, entering the calls
+that you want, or you can use the @code{resolve} command.  This command
+adds the necessary calls to the sequence, exactly as if you had entered
+them.
+
+When you click on @code{resolve}, the program goes into a special mode in
+which it searches for resolves, saves them, and lets you look through
+them and pick one that you like.  Up to 50 resolves may be stored
+while it is doing this.  A resolve is a sequence of up to three calls
+that leads to a resolved state.  While the program is in resolve mode,
+the call menu is replaced by a special menu of options, along with
+information about the current resolve.  That information tells how
+many resolves are currently stored and which one is currently shown.
+When you click on @code{resolve}, the program finds the first resolve and
+displays it, showing information @samp{1 out of 1}, which means that it
+has one resolve stored, and resolve number one is currently displayed.
+The transcript area shows the effect of that resolve.
+
+You can click on @code{find another} to search for another resolve and add
+it to its stored list.  When the list has more than one resolve in it,
+clicking on @code{go to previous} and @code{go to next} will move around in its
+list and show whichever resolve you want.  In this way, you can search
+for a better resolve than the one you already have, but go back to
+the earlier one if no better one is forthcoming.
+
+Clicking on @code{accept} will leave resolve mode, causing the current
+resolve to be added to the sequence exactly as though you had
+entered those calls manually.  You can then @code{undo} individual calls if
+you wish.
+
+Clicking on @code{abort the search} will throw away all of the saved
+resolves and leave resolve mode, but will not destroy the sequence.
+The sequence will be left just as it was before @code{resolve} was selected.
+
+Clicking on anything else, such as @code{exit}, @code{end this sequence}, or a
+concept, is equivalent to @code{accept} followed by whatever that action
+is.  So, for example, you can click on @code{end this sequence} as soon as
+you see a resolve that you like.
+
+If one or more concepts are pending when you select @code{resolve}, the
+program will search only for resolves whose first call starts with those
+concepts.  So, for example, clicking on @code{once removed} and then
+@code{resolve} might get you this resolve:
+
+@example
+   ONCE REMOVED reverse the pass
+   linear flow
+   right and left grand  (7/8 promenade)
+@end example
+
+The program searches for resolves by using a random number generator to
+generate up to 5000 random sequences, occasionally inserting concepts.
+It biases the search in favor of short sequences (1 call) rather than
+long ones (3 calls) and in favor of resolves that do not contain @i{all 8
+circulate}.  If, after 5000 attempts, no resolve is found, the @code{find another}
+operation fails.  (This tends to happen if you try to resolve out of an
+hourglass at mainstream.)  You can click on @code{find another} again to make
+another attempt if you wish.
+
+@node Making Nice Setups, Do Anything, Resolving, Resolving and Searching
+@section Making Nice Setups
+
+Clicking on @code{nice setup} invokes an operation very similar to the resolver,
+except that it searches for sequences of up to three calls that normalize
+a 4x4 matrix into a 2x4.  It uses @i{split phantom lines} and similar concepts
+to do its work.
+
+The program does not yet have the ability to perform other normalization
+tasks, such as using the @i{triple box} or @i{triple line} concepts to get out
+of various 12 matrices.
+
+@node Do Anything, Reconcile, Making Nice Setups, Resolving and Searching
+@section The @code{Do Anything} operation
+
+Clicking on @code{do anything} invokes an operation very similar to the resolver,
+except that it searches for any legal single call.  While this may sound like
+a fairly pointless operation, remember that you can use this while one or
+more concepts are already entered, in which case it will search for legal calls
+that involve those concepts.  Hence, this operation is useful for finding
+cute uses of difficult concepts such as @i{checkpoint}, @i{trace}, or @i{on your own}.
+
+@node Reconcile, Miscellaneous Commands, Do Anything, Resolving and Searching
+@section The @code{Reconcile} operation
+
+Clicking on @code{reconcile} invokes an operation like resolving, but it puts
+the generated calls someplace other than at the end.  This is useful if you
+have a clever getout at the end of the sequence, and you want it to be the
+resolve, but people don't have their partners and corners.  This lets you
+retroactively modify the sequence so that the clever getout will work.
+
+Note first that this operation may only be invoked when the setup is
+left-handed two-faced lines, right-handed waves, or left-handed waves,
+in which case it assumes you want a @i{promenade}, @i{right and left grand}, or
+@i{left allemande} respectively.  The program must know which getout type you
+want.  If the setup is an 8-chain, it can't tell.  In that case, either
+do a @code{touch} or a @code{left touch}, to give the program a clue.  Then, after the
+reconcile operation is complete, you can erase that extra call.
+
+The reconcile operation is very similar in behavior to resolve, except
+that the program needs to know the insertion point.  Rather than
+searching for the first resolve as soon as you enter the mode, the
+reconcile operation lets you set the insertion point before searching.
+Click on @code{raise insertion point} or @code{lower insertion point} to
+set it.  A dotted line will be displayed showing where in the sequence
+the generated calls will be placed.  When this is in the right place,
+click on @code{find another} to find the first reconcile.  You can
+change the insertion point at any time.
+
+Reconciles are extremely difficult to find---much harder than resolves.
+To avoid frustration, make the insertion point be at a place where the
+setup is very simple and a large number of calls are legal.  We recommend
+making the insertion point be at a place where the setup is in waves.
+Remember that, if the insertion point is at an hourglass, the program
+has to find a random sequence of up to 3 calls that goes from an hourglass
+to another hourglass while miraculously performing the required
+permutation.
+
+Avoid using reconcile when a gender-dependent or head/side-dependent
+call lies between the insertion point and the end of the sequence.  The
+program checks every reconcile by re-executing all calls from the
+insertion point to the end and verifying that everything is exactly as
+it was except for the permutation of the people.  For example, if the
+call @samp{heads kickoff} occurs after the insertion point, and a
+potential reconcile changes heads and sides, it will not be offered.
+For gender-dependent calls the situation is a little better: if, at the
+end of the sequence, the boys are in the center and the girls on the end
+before doing the reconcile, you know that any inserted sequence will
+have to be gender-preserving anyway, so calls like @samp{star thru} and
+@samp{boys kickoff} will be okay.
+
+@node Miscellaneous Commands, Call Notes, Resolving and Searching, Top
+@chapter Miscellaneous Commands
+
+This section describes commands that are not concerned with generating
+sequences.
+
+@menu
+* Writing Out the Sequence::    Writing Out the Sequence
+* Changing the Output File::    Changing the Output File
+* Abort/Exit/Undo::             Abort, Exit, and Undo
+* Inserting Comments::          Inserting Comments
+* Saving Pictures::             Saving Pictures
+@end menu
+
+@node Writing Out the Sequence, Changing the Output File, Miscellaneous Commands, Miscellaneous Commands
+@section Writing Out the Sequence
+
+At any time when the sequence is resolved (for example, after a successful
+use of the @code{resolve} operation), you can click on @code{end this sequence}.
+This will append the current sequence to the current output file, and then
+go back to the startup screen.  You will be given an opportunity to enter
+a line of text to be used as a subtitle, for example ``very hard interlace''
+or ``stupid biggie.''  The written sequence will also be annotated with the
+level, the current date and time, and the versions of the program and
+database.
+
+Until you have done the @code{end this sequence} operation, the sequence is not
+written to disk and you cannot start writing a new sequence.  Just
+resolving isn't enough.
+
+@node Changing the Output File, Abort/Exit/Undo, Writing Out the Sequence, Miscellaneous Commands
+@section Changing the Output File
+
+TBA
+
+@node Abort/Exit/Undo, Inserting Comments, Changing the Output File, Miscellaneous Commands
+@section @code{Abort}, @code{Exit}, and @code{Undo}
+
+If you click on the @code{exit} button, the program will exit.  If a
+sequence is in progress, the program will ask for confirmation first.
+Using your window manager to send a @code{Delete Window} message to the
+program is equivalent to clicking on the @code{exit} button.  The
+@code{exit} button appears on the startup screen as well as the normal
+screen.
+
+If you click on the @code{abort} button, the program will abort the sequence
+but not exit.  It will go back to the startup screen to allow you to
+start another sequence.  It will ask for confirmation first.
+
+If you click on the @code{undo} button while no call is partially entered,
+that is, while no concepts have been entered, the program will erase
+the last complete call, with all of its concepts.  If one or more
+concepts have been entered, only the last concept will be erased.
+
+@node Inserting Comments, Saving Pictures, Abort/Exit/Undo, Miscellaneous Commands
+@section Inserting Comments
+
+TBA
+
+@node Saving Pictures, Call Notes, Inserting Comments, Miscellaneous Commands
+@section Saving Pictures
+
+The program shows pictures in the transcript for the current position
+and the position just before the last call.  Normally, those pictures
+will not appear in the sequence written to the file.  If you want the
+current position to have its picture written in the file (say, because the
+sequence is very difficult and you believe it may be necessary to say
+something helpful then like ``check a parallelogram with boys in the center
+box'') click on @code{save picture}.
+
+@node Call Notes, Concept Notes, Miscellaneous Commands, Top
+@chapter Call Notes
+
+@menu
+* Box the Gnat::                @i{Box the Gnat}
+* Sweeping Direction::          Sweeping Direction
+* C1 Single Rotate::            C1 Single Rotate
+* Spread::                      Spread
+* Colliding Recycle::           Colliding Recycle, Ah So, and Cycle and Wheel
+* Rotate from Columns::         Rotate from Columns
+* Yellow Bricking::             @i{<anything> the Yellow Bricking <anything>}
+@end menu
+
+@node Box the Gnat, Sweeping Direction, Call Notes, Call Notes
+@section @i{Box the Gnat}
+
+@i{Box the gnat} is equivalent to @i{touch 1/2}.  Common usage of this
+call leaves hands sort of joined.  If you call @i{box the gnat} followed by
+@i{hinge}, there will be trouble.
+
+@node Sweeping Direction, C1 Single Rotate, Box the Gnat, Call Notes
+@section Sweeping Direction
+
+@i{Sweep 1/4}, @i{with the flow}, and @i{by golly} all assume a sweeping direction.
+The program does not currently remember sweeping direction from the
+preceding call.  Hence, it assumes clockwise.  Click on @code{REVERSE} if you want
+it the other way.
+
+@node C1 Single Rotate, Spread, Sweeping Direction, Call Notes
+@section C1 @i{Single Rotate}
+
+@samp{Single rotate while the others} is intended to be called to the
+heads or sides from a squared set.  It performs the common C1 usage of
+this call.  It is nonsensical in other contexts.
+
+@node Spread, Colliding Recycle, C1 Single Rotate, Call Notes
+@section Spread
+
+@samp{Spread} is the call you use after @i{follow your neighbor}.  @samp{And spread}
+is the one you use after @i{wheel and deal}, or after starting a sequence with
+something like @samp{heads star thru}.
+
+@node Colliding Recycle, Rotate from Columns, Spread, Call Notes
+@section Colliding @i{Recycle}
+
+``Colliding'' @i{recycle}, @i{ah so}, and @i{cycle and wheel} are not implemented.
+Do not call these if the ends of the line are facing the same way.  @i{Wheel
+and deal} from a one-faced line is okay.
+
+@node Rotate from Columns, Yellow Bricking, Colliding Recycle, Call Notes
+@section Rotate from Columns
+
+Remember that @i{rotate} and @i{single rotate} from columns is legal only
+at C3, but from lines it is legal at C2.  Since the program has no
+knowledge of different starting setups implying different levels, the call
+is in the database at C2.  Don't use it from columns at that level.
+
+@node Yellow Bricking, Concept Notes, Rotate from Columns, Call Notes
+@section @i{<anything> the Yellow Bricking <anything>}
+
+To use the second @code{<anything>} in @i{<anything> the yellow bricking
+<anything>}, as in @i{follow the yellow bricking turn and deal}, enable
+simple modifications and click on @code{follow the yellow brick road}.
+
+To use the first @code{<anything>}, as in @i{revert cross loop and tag
+the yellow brick road}, click on @code{tag the yellow brick road}.
+If simple modifications are enabled, you will be able to turn
+the @i{1/2 tag} into whatever tagging variation you want.
+The philosophy is the same as for things like @i{tagger's dilemma}.
+
+If you want to modify both, you must enable all modifications
+(click twice on @code{allow modifications}), do @code{tag the yellow brick
+road}, and use the second modification.  It will come out
+looking ugly.  Sorry.
+
+
+@node Concept Notes, Bugs and Misfeatures, Call Notes, Top
+@chapter Concept Notes
+
+@menu
+* Gruesome::                    Gruesome
+* Divided::                     Divided
+* Concentric::                  Concentric
+* Two Calls in Succession::     Two Calls in Succession
+* Diamond::                     Diamond
+* Implied Piecewise::           Implied Piecewise
+* So-And-So Only::              So-And-So Only
+@end menu
+
+@node Gruesome, Divided, Concept Notes, Concept Notes
+@section Gruesome
+
+In this program, @dfn{gruesome} simply means
+@i{phantom couples or tandem} with the phantoms added to make a 2x8 rather than
+the 4x4 that would normally be created, and with the added requirement that
+the pairing be parallel to the long axis.  @dfn{Gruesome twosome} is just an
+abbreviation for @i{gruesome as couples twosome}.
+
+@node Divided, Concentric, Gruesome, Concept Notes
+@section Divided
+
+The concepts @samp{divided lines} and @samp{divided columns}, done from a 2x8,
+and @samp{12 matrix divided lines} and @samp{12 matrix divided columns}, done from
+a 2x6, mean that the setup is to be separated into 2x4's or 2x3's, respectively.
+The former two are equivalent to @i{split phantom twin
+boxes}, except that they demand that people be facing in the indicated way.
+For all of these concepts, if people are T-boned, you can use @code{standard}
+to permit the concept to be used.  In all
+cases outboard phantoms are added as required at the start of the call,
+and removed where possible at the conclusion of the call.
+
+@node Concentric, Two Calls in Succession, Divided, Concept Notes
+@section Concentric
+
+The @samp{concentric} and @samp{cross concentric} concepts are formulated
+as follows:
+The rule tells how the people who finish on the outside should
+elongate their 2x2 if they finish in a 2x2.  This is the only
+case that needs to be addressed.
+
+@enumerate
+@item
+If the people who finished on the outside in a 2x2 started
+in a 2x2, they use the ``line-to-lines/columns-to-columns'' rule,
+relative to what setup @i{they} thought they were in.
+
+If the concept was @i{concentric}, so these people started on
+the outside in an elongated 2x2, they can make a decision about
+whether they had line or column elongation.  They do not have
+to be in a 2x4 for this.  For example, from a dogbone created by
+Heads touch, the sides think they are in columns.  But from ordinary
+diamonds or an hourglass, they think they are in lines.
+
+If the concept was @i{cross concentric}, so these people started in the
+center in a 2x2, they must have the assistance of the original ends.
+The original setup must have been a 2x4, except for weird pinwheel-like
+setups noted below.  Hence it is @i{illegal} to call @i{cross concentric
+square thru 2} from a rigger in which the center box is facing couples
+and the wings have right hands and are expected to rear back.  The
+centers do not know whether they were in lines or columns because the
+ends are not in an acceptable setup.  The centers do @i{not} use the
+``checkpoint elongate perpendicular to the 1x4 rule''---that rule does not
+apply here.  If the outsides are in a pinwheel or whatever, each center
+makes the line vs.@: columns decision based on the end person in their own
+quadrant.  That is, the center person's own facing direction and that
+end person's @i{location,} but not that end person's facing direction.
+
+@item
+If the people who finished on the outside in a 2x2 started
+in a 1x4 or diamond, they use the @dfn{checkpoint rule}---they elongate
+their resulting 2x2 perpendicular to the long axis of @i{their own}
+1x4 or diamond, not the long axis of the set.  Yes, I realize that this
+is controversial and may not be in accordance with Callerlab
+definitions.
+
+If the concept was @i{concentric}, so these people started on
+the outside in a 1x4 or diamond, their own long axis is presumably
+the same as the long axis of the whole set.
+
+If the concept was @i{cross concentric}, so these people started in
+the center in a 1x4 or diamond, their own long axis might not be the
+long axis of the set.  If we do @i{cross concentric square thru 2}
+from a crossedwave, so everyone rears back, the original centers
+finish perpendicular to their own 1x4, not the original ends' 1x4.
+They finish in approximately the places where the ends began.
+If we do it from a 1/4 tag, the centers finish where the ends began.
+@end enumerate
+
+@node Two Calls in Succession, Diamond, Concentric, Concept Notes
+@section Two Calls in Succession
+
+The @code{do two calls in succession} concept allows a pair of calls to
+be executed atomically under a concept.  This makes it possible to do
+a @samp{concentric (recycle ; roll)} and have the lines-to-lines
+rule embrace the roll.  The script will appear as above.  The proper way
+to say the concept when calling is problematical.  Something like @samp{consider
+the following two calls to be one unit, and do a stable swing thru and turn thru}
+might be appropriate.  Or you could just read the parentheses.
+
+@node Diamond, Implied Piecewise, Two Calls in Succession, Concept Notes
+@section Diamond
+
+You should not need to click on @code{diamond} except when you actually
+want the diamond concept, as in @i{diamond single wheel} or @i{diamond swing
+thru}.  There are cases in which it may seem that the word @i{diamond}
+ought to be added after clicking on @code{interlocked} and/or
+@code{magic}.  The program will insert the extra word @i{diamond} for
+you.  (At least that is the intention.)  So, for example, clicking on
+@code{magic} and then @code{alter the diamond} will get @samp{magic
+diamond, alter the diamond}, and clicking on @code{magic},
+@code{interlocked}, @code{diamond}, @code{as couples}, and @code{quarter
+right} will get @samp{magic interlocked diamond, diamond as couples
+quarter right}.
+
+@node Implied Piecewise, So-And-So Only, Diamond, Concept Notes
+@section Implied Piecewise
+
+Some of the replacement/interruption meta-concepts push the
+semantics of the language to the limit.  Whenever a call undergoes an
+interruption or enters or leaves a part with an additional concept on it,
+there is an implicit @i{piecewise} at that instant.  That is, concepts and
+setups are re-evaluated.  Furthermore, replacements and interruptions are
+@i{normal}, that is, they do not carry any concepts that were on the call
+being replaced but not on the entire operation.
+
+Example, from a starting DPT setup:
+
+@example
+DELAY: TANDEM TWOSOME clean sweep 1/4 BUT REPLACE THE 3rd
+PART WITH A [CHECKPOINT crossfire BY crossfire]
+@end example
+
+Normally, the tandem twosome behavior is not re-evaluated after each
+part of the clean sweep.  But, since the 3rd part was replaced with
+something else to which that concept did not apply, the setup is
+re-evaluated before doing the final part.  Note in particular that
+the replacement was @i{normal}---the call having a part replaced was a
+@i{tandem twosome clean sweep 1/4}.  If we wanted the entire operation,
+including the replacement, to be tandem twosome (with no re-evaluation,
+of course) we might call:
+@example
+TANDEM TWOSOME DELAY: clean sweep 1/4 BUT REPLACE THE 3rd
+PART WITH A [SINGLE CROSS CONCENTRIC turn thru]
+@end example
+
+
+@node So-And-So Only, Bugs and Misfeatures, Implied Piecewise, Concept Notes
+@section So-And-So Only
+
+This concept means that the designees do their part of the call in the
+compete setup, as if it were @samp{own the @i{so-and-so} for @i{call} by
+nothing}.  It does not do the call in their disconnected setup, even
+though that is a common interpretation.
+
+
+@node Bugs and Misfeatures, Miscellaneous Advice, Concept Notes, Top
+@chapter Known Bugs and Misfeatures
+
+The @dfn{funny} concept is not fully implemented.  Only @dfn{funny circulate}
+types of calls are supported, as in @i{funny go first class} or @i{funny bingo}.
+Do not attempt a @i{funny square thru} or @i{funny slide thru}.
+
+The behavior of the @dfn{ends} concept is far too lenient.  It will
+allow the ends of a 2x4 to do any 2x2 call, ignorant of the fact that
+real people will object to having the centers in the way.  For example,
+from a column or DPT, it will allow the ends to circulate.  Don't do
+this.
+
+This chapter is very incomplete.
+
+@node Miscellaneous Advice,  , Known Bugs and Misfeatures, Top
+@chapter Miscellaneous Advice and Warnings
+
+If a call that you believe is legal does not appear on the menu,
+click on @code{allow modifications}.  This will bring up the universal call
+menu.  You can then thrash out which of you or the computer is correct.
+
+Warning:  The database is not without errors or misunderstandings in
+nonstandard uses of calls.  The program generally tries to be extremely
+conservative, its author being aware of how annoying it is to have to
+sight out of what seemed to start out as a beautiful card.  However,
+you should not blindly accept what the program does, particularly if
+a call was used in an unusual way.  The management will not be
+responsible for any sequences left unattended.
+
+Warning:  Some combinations of things that seem obvious
+to the program might not be agreed to by the dancers.  Particularly
+at high challenge levels, some things are controversial.  Proceed with
+caution.  Unless you agree wholeheartedly with what the program did, and
+believe that the dancers will also agree, it may be best not to do it.
+Don't stack outrageous interrupts and replacements, with concepts going
+every which way, unless you are prepared to explain yourself at the end
+of the tip.
+
+Warning:  The program's notion of levels is only keyed to concepts and
+calls, not to concept/call combinations, and not to calls in the context
+of certain setups.  For example, since @i{split} and @i{square thru} are
+both mainstream, it thinks that @i{split square thru} is mainstream, even
+though it is A1.  Also, @i{chain reaction} should only be used from the
+simple @samp{heads pass the ocean} setup at A1, but the program doesn't
+know this.
+
+For debugging, there is a hidden level called @code{all}, which is above
+C4.  At this level, even the invisible calls that are used in the
+definitions of other calls are legal.  They typically begin with an
+underscore.  Also, when the @code{all} level is selected, all
+sequentially-defined calls are fractionalizable, even if they aren't in
+practice.
+
+@page
+@contents
+@bye
+
+@c Local Variables:
+@c time-stamp-start: "time-stamp: @{"
+@c time-stamp-finish: "@}"
+@c End:
