@@ -33,7 +33,7 @@
     General Public License if you distribute the file.
 */
 
-version "34.8e"
+version "34.8g"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve
@@ -7868,6 +7868,22 @@ call "@v back to a wave, centers to a wave" c1
             singlefile_is_inherited
             revert_is_inherited
    seq real_base_0_noflip [inherit_left inherit_singlefile inherit_revert]
+   seq scootbacktowave []
+
+// Same two calls, without "back to a wave".
+call "@v back" c1
+            yield_if_ambiguous visible_fractions left_means_mirror
+            singlefile_is_inherited single_is_inherited nxn_is_inherited
+            bigmatrix_is_inherited revert_is_inherited fast_is_inherited
+   seq real_base_0 [inherit_left inherit_singlefile inherit_single
+                    inherit_nxn inherit_bigmatrix inherit_revert]
+   seq strictboxyscootback [inherit_single inherit_nxn inherit_fast]
+
+call "@v back, centers to a wave" c1
+            yield_if_ambiguous visible_fractions left_means_mirror
+            singlefile_is_inherited
+            revert_is_inherited
+   seq real_base_0 [inherit_left inherit_singlefile inherit_revert]
    seq scootbacktowave []
 
 // We leave this one in because it is a genuine call without the "back to a wave" words.
@@ -21580,6 +21596,10 @@ call "stack the wheel" c4a
 call "_cross trade and wheel part 2" dontshow tag crosstradewheel2
    setup 1x8 1x8           // very center 2 trade
       array [ZM0N ZM1N CR6S ZM3N ZM4N ZM5N AL2S ZM7N]
+            alternate_definition [half] c2
+   setup 1x8 1x3dmd        // very center 2 hinge
+      array [ZM0N ZM1N CR3E ZM2N ZM4N ZM5N AL3W ZM6N]
+
             alternate_definition [single] c2
    setup 1x4 1x4           // center 2 trade
       array [ZM0N CR3S ZM2N AL1S]
@@ -21591,18 +21611,38 @@ call "_cross trade and wheel part 2" dontshow tag crosstradewheel2
    setup 1x4 dmd           // center 2 hinge
       array [ZM0N CR1E ZM2N AL1W]
             alternate_definition [lasthalf single] c2
+
    setup dmd 1x4           // center 2 hinge
       array [ZM0N 0    ZM2N 0]
    setup pmd 1x4 restriction wave_only   // If not miniwave, how can we finish the trade?
       array [0    CR3E 0    AL3W]
+
             alternate_definition [grand] c2
    setup 1x8 1x8           // center 6 trade
       array [ZM0N CR3S CR6S AL1S ZM4N AL7S AL2S CR5S]
+            alternate_definition [half grand] c2
+   setup 1x8 spindle       // center 6 hinge
+      array [ZM7N CR0E CR1E AL0W ZM3N AL2W AL1W CR2E]
+
             alternate_definition [grand single] c2
    setup 1x8 1x8           // center 6 trade
       array [ZM0N CR3S CR6S AL1S ZM4N AL7S AL2S CR5S]
    setup 1x6 1x6           // center 4 trade
       array [ZM0N CR2S AL1S ZM3N AL5S CR4S]
+            alternate_definition [half grand single] c2
+   setup 1x8 spindle       // center 6 hinge
+      array [ZM7N CR0E CR1E AL0W ZM3N AL2W AL1W CR2E]
+   setup 1x6 short6 rotate // center 4 hinge
+      array [ZM4W CR5N AL5S ZM1W AL0S CR0N]
+            alternate_definition [lasthalf grand single] c2
+   setup spindle 1x8       // center 6 hinge
+      array [0 0 0 ZM4N 0 0 0 ZM0N]
+   setup pspindle 1x8      // center 6 hinge
+      array [CR3E CR6E CR5E ZM4N AL5W AL6W AL3W ZM0N]
+   setup short6 1x6 rotate // center 4 hinge
+      array [CR1N ZM0W AL1S AL5S ZM3W CR5N]
+   setup pshort6 1x6 rotate// center 4 hinge
+      array [0 ZM0W 0 0 ZM3W 0]
 
 call "_cross and wheel part 3" dontshow tag crossnwheel3
    setup 1x4 2x2 qualifier miniwaves

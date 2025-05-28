@@ -454,7 +454,7 @@ conzept::concept_descriptor conzept::unsealed_concept_descriptor_table[] = {
     UC_none, 0, CMD_MISC__VERIFY_REAL_3_4_LINE},
    {"TRIPLE GENERAL 1/4 TAGS",               concept_triple_diamonds,         D, l_c3x,
     UC_none, 0, CMD_MISC__VERIFY_QTAG_LIKE},
-   {"TRIPLE Z's",                            concept_misc_distort,            D, l_c4,
+   {"TRIPLE Z's",                            concept_misc_distort_matrix,     D, l_c4,
     UC_none, 0, CONCPROP__NEEDK_3X6, 0, 3},
    {"TRIPLE 1X4s",                           concept_triple_lines,            D, l_c3,
     UC_none, 0},

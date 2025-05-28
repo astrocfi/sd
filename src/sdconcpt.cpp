@@ -7072,6 +7072,8 @@ concept_table_item concept_table[] = {
    {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__NO_STEP | Standard_matrix_phantom,
     triple_twin_move},                                      // concept_triple_twin_nomystic
    {CONCPROP__NEED_ARG2_MATRIX, distorted_2x2s_move},       // concept_misc_distort
+   {CONCPROP__NEED_ARG2_MATRIX | CONCPROP__PERMIT_MATRIX,
+    distorted_2x2s_move},                                   // concept_misc_distort_matrix
    {0, do_concept_old_stretch},                             // concept_old_stretch
    {CONCPROP__GET_MASK, do_concept_new_stretch},            // concept_new_stretch
    {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,
