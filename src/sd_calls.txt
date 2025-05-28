@@ -21,7 +21,7 @@
     at program startup, as the "db" part of the complete version.
 */
 
-version 27 7
+version 27 90
 
 /* ****************** TEMPORARY HACK FOR TESTING
 
@@ -1135,6 +1135,8 @@ call "_trade & roll" dontshow tag trade_and_roll
       array [CR1W AL0E]
 
 call "U-turn back" mainstream tag uturnback
+   setup 1x2 1x2
+      array [CR0S AL1S]
    setup 1x1 1x1
       array [0S]
 
@@ -3541,18 +3543,19 @@ call "relay the deucey" plus
             step_to_wave
    setup 2x4 2x4 restriction wave_only
    array [4S 5S 6S 7S 0S 1S 2S 3S]
+
 call "twin orbit circulate" c3a
    setup 2x4 2x4 restriction wave_only
-   array [6N 7N 4N 5N 2N 3N 0N 1N]
+      array [AL6N AL7N CR4N CR5N ZM2N ZM3N ZM0N ZM1N]
 
 call "orbit circulate" c3a
             left_means_mirror
    setup 2x4 2x4 restriction wave_only
-      array [R2S R3S R4N R5N M2N M3N M0N M1N]
+      array [CR2S CR3S CR4N CR5N ZM2N ZM3N ZM0N ZM1N]
 
 call "barrel of fun" c4a
    setup 2x4 2x4
-   array [2N 4S 1S 3S 0 0 0 0]
+      array [L2N R4S L1S R3S 0 R0N L5N 0]
 
 call "roll em" c4a
             left_means_mirror
@@ -4041,8 +4044,25 @@ call "trade by" mainstream
       array [0 0 0 0 0 ZM2N ZM1N 0]
 
 call "roll out to a column" c4a
+            left_means_mirror
    setup 4x2 2x4
-      array [0 5N 6S 4S 5S 7S 4N 0]
+      /* Can't yet encode stability info for 2 of these people --
+         they are highly obscure people anyway. */
+      array [0 5N C6S C4S C5S C7S 4N 0]
+
+call "3X3 roll out to a column" c4
+            left_means_mirror
+   setup 4x3 2x6 
+      array [0 0 C9S C6S C7S C10S C8S C11S 0 0 0 0]
+/* I'm not happy about this one
+   setup 6x2 2x6
+      array [0 0 0 C10S C8S C6S C7S C9S 11S 0 0 0]
+*/
+
+call "4X4 roll out to a column" c4
+            left_means_mirror
+   setup 4x4 2x8 rotate
+      array [C3E C7E 0 C6E 0 0 0 0 0 0 C4E 0 C0E C1E C2E C5E]
 
 call "hit the wall" c4a
    setup 4x2 2x4
@@ -4405,6 +4425,20 @@ call "countershake" c4
             alternate_definition [single] c4
    setup 4x1 2x2
       array [0 0 3W 0W]
+
+call "3X3 countershake" c4
+            left_means_mirror
+   setup 4x3 2x6 
+      array [0 0 C2W C9W C10W C1W C11W C0W 0 0 0 0]
+/* I'm not happy about this one.
+   setup 6x2 3x4
+      array [0 0 0 C1W C11W C8W C9W C10W C0W 0 0 0]
+*/
+
+call "4X4 countershake" c4
+            left_means_mirror
+   setup 4x4 2x8 rotate
+      array [C7S C8S 0 C9S 0 0 0 0 0 0 C11S 0 C4S C5S C6S C10S]
 
 call "triple scoot" plus
    setup 4x2 2x4 restriction forbidden wave_only

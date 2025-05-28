@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following external variables:
    general_concept_size
@@ -598,6 +598,8 @@ begin_kind keytab[][2] = {
    {b_galaxy,        b_galaxy},         /* s_galaxy */
    {b_nothing,       b_nothing},        /* s4x6 */
    {b_nothing,       b_nothing},        /* s_thar */
+   {b_nothing,       b_nothing},        /* s_6x6 */
+   {b_nothing,       b_nothing},        /* s_8x8 */
    {b_nothing,       b_nothing}};       /* s_normal_concentric */
 
 
@@ -656,6 +658,8 @@ coordrec *setup_coords[] = {
    &thinggal,          /* s_galaxy */
    &thing4x6,          /* s4x6 */
    0,                  /* s_thar */
+   0,                  /* s_6x6 */
+   0,                  /* s_8x8 */
    0};                 /* s_normal_concentric */
 
 
@@ -709,6 +713,8 @@ coordrec *nice_setup_coords[] = {
    &thinggal,          /* s_galaxy */
    &thing4x6,          /* s4x6 */
    0,                  /* s_thar */
+   0,                  /* s_6x6 */
+   0,                  /* s_8x8 */
    0};                 /* s_normal_concentric */
 
 
@@ -756,6 +762,8 @@ int setup_limits[] = {
    7,          /* s_galaxy */
    23,         /* s4x6 */
    7,          /* s_thar */
+   35,         /* s_6x6 */     /* Danger!!  We can never store these people!! */
+   63,         /* s_8x8 */     /* Danger!!  We can never store these people!! */
    -1};        /* s_normal_concentric */
 
 /* BEWARE!!  This list is keyed to the definition of "begin_kind" in SD.H. */
@@ -1292,6 +1300,8 @@ map_hunk *map_lists[][4] = {
    {0,         0,         0,         0},          /* s_galaxy */
    {0,         0,         0,         0},          /* s4x6 */
    {0,         0,         0,         0},          /* s_thar */
+   {0,         0,         0,         0},          /* s_6x6 */
+   {0,         0,         0,         0},          /* s_8x8 */
    {0,         0,         0,         0}};         /* s_normal_concentric */
 
 

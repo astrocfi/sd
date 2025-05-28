@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following functions:
    mirror_this
@@ -217,6 +217,19 @@ static int ftc2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
 static int ftl2x4[12] = {6, 11, 15, 13, 14, 3, 7, 5, 6, 11, 15, 13};
 static int galtranslateh[16] = {0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6, 0, 0, 0, 1};
 static int galtranslatev[16] = {0, 0, 0, 1, 0, 3, 4, 2, 0, 0, 0, 5, 0, 7, 0, 6};
+
+static int octtranslateh[64] = {
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
+    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11,
+    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12};
+
+static int octtranslatev[64] = {
+    0,  0,  0, 15,  0,  0,  0, 14,  0,  0,  0, 13,  0,  0,  0, 12,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,
+    0,  0,  0,  7,  0,  0,  0,  6,  0,  0,  0,  5,  0,  0,  0,  4,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  8,  9, 10, 11};
+
 static int dmdhyperh[12] = {0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 3, 0};
 static int linehyperh[12] = {0, 1, 0, 0, 0, 0, 2, 3, 0, 0, 0, 0};
 static int galhyperh[12] = {6, 0, 0, 0, 3, 1, 2, 0, 4, 0, 7, 5};
@@ -863,16 +876,33 @@ static void check_column_restriction(setup *ss, call_restriction restr, unsigned
 
 
 
+/* We have a few bogus setups here:
+   8x8 =
+     0   1   2   3  28  24  20  16 
+     4   5   6   7  29  25  21  17
+     8   9  10  11  30  26  22  18
+    12  13  14  15  31  27  23  19
+    51  55  59  63  47  46  45  44
+    50  54  58  62  43  42  41  40
+    49  53  57  61  39  38  37  36
+    48  52  56  60  35  34  33  32
+*/
+
+
+
 static void special_4_way_symm(
    callarray *tdef,
    setup *scopy,
    personrec newpersonlist[],
    int newplacelist[],
-   int *result_mask,
+   int result_mask[],
    setup *result)
 
 {
    static int table_2x4[8] = {10, 15, 3, 1, 2, 7, 11, 9};
+   static int table_2x8[16] = {
+      12, 13, 14, 15, 31, 27, 23, 19,
+      44, 45, 46, 47, 63, 59, 55, 51};
    static int line_table[4] = {0, 1, 6, 7};
    static int dmd_table[4] = {0, 4, 6, 10};
 
@@ -899,6 +929,10 @@ static void special_4_way_symm(
          result->kind = s4x4;
          the_table = table_2x4;
          break;
+      case s2x8:
+         result->kind = s_8x8;
+         the_table = table_2x8;
+         break;
       default:
          fail("Don't recognize ending setup for this call.");
    }
@@ -906,7 +940,8 @@ static void special_4_way_symm(
    begin_size = setup_limits[scopy->kind]+1;
    result_size = setup_limits[result->kind]+1;
    result_quartersize = result_size >> 2;
-   *result_mask = 0;
+   result_mask[0] = 0;
+   result_mask[1] = 0;
 
    for (real_index=0; real_index<begin_size; real_index++) {
       personrec this_person = scopy->people[real_index];
@@ -928,7 +963,7 @@ static void special_4_way_symm(
 
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
-         *result_mask |= (1 << k);
+         result_mask[k>>5] |= (1 << (k&037));
       }
    }
 }
@@ -2080,7 +2115,7 @@ extern void basic_move(
       goto fixup;
    }
    else {   
-      int lilresult_mask;
+      int lilresult_mask[2];
       setup_kind tempkind;
 
       result->rotation = goodies->callarray_flags & CAF__ROT;
@@ -2092,7 +2127,8 @@ extern void basic_move(
       numout = setup_limits[result->kind]+1;
       halfnumout = numout >> 1;
       tempkind = result->kind;
-      lilresult_mask = 0;
+      lilresult_mask[0] = 0;
+      lilresult_mask[1] = 0;
 
       if (funny) {
          if ((ss->kind != result->kind) || result->rotation || inconsistent_rotation)
@@ -2100,7 +2136,7 @@ extern void basic_move(
       }
 
       if (four_way_startsetup) {
-         special_4_way_symm(ldef, ss, newpersonlist, newplacelist, &lilresult_mask, result);
+         special_4_way_symm(ldef, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
       else if (ss->kind == s_trngl) {
          if (inconsistent_rotation) fail("This call is an inconsistent shape-changer.");
@@ -2170,7 +2206,7 @@ extern void basic_move(
                newpersonlist[real_index].id2 = this_person.id2;
                kt = ((real_direction & 1) ? final_translatec : final_translatel) [k];
                newplacelist[real_index] = kt;
-               lilresult_mask |= (1 << kt);
+               lilresult_mask[0] |= (1 << kt);
             }
          }
       }
@@ -2192,7 +2228,7 @@ extern void basic_move(
       if (setup_limits[ss->kind] < setup_limits[result->kind]) {
          if (result->kind == s4x4) {
             /* See if people landed on 2x4 spots. */
-            if ((lilresult_mask & 0x7171) == 0) {
+            if ((lilresult_mask[0] & 0x7171) == 0) {
                result->kind = s2x4;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) {
@@ -2200,7 +2236,7 @@ extern void basic_move(
                   }
                }
             }
-            else if ((lilresult_mask & 0x1717) == 0) {
+            else if ((lilresult_mask[0] & 0x1717) == 0) {
                result->kind = s2x4;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) {
@@ -2221,15 +2257,38 @@ extern void basic_move(
                if (tempkind != s4x4) fail("Galaxy call went to improperly-formed setup.");
             }
          }
+         else if (result->kind == s_8x8) {
+            /* See if people landed on 2x8 spots. */
+            if ((lilresult_mask[0] & 0x77770FFF) == 0 && (lilresult_mask[1] & 0x77770FFF) == 0) {
+               result->kind = s2x8;
+               for (real_index=0; real_index<num; real_index++) {
+                  if (ss->people[real_index].id1) {
+                     newplacelist[real_index] = octtranslateh[newplacelist[real_index]];
+                  }
+               }
+            }
+            else if ((lilresult_mask[0] & 0x0FFF7777) == 0 && (lilresult_mask[1] & 0x0FFF7777) == 0) {
+               result->kind = s2x8;
+               for (real_index=0; real_index<num; real_index++) {
+                  if (ss->people[real_index].id1) {
+                     newplacelist[real_index] = octtranslatev[newplacelist[real_index]];
+                     newpersonlist[real_index].id1 = rotccw(newpersonlist[real_index].id1);
+                  }
+               }
+               result->rotation++;
+            }
+            else
+               fail("Call went to improperly-formed setup.");
+         }
          else if (result->kind == s_hyperglass) {
             /* We check for 1x4's before checking for diamonds. */
-            if ((lilresult_mask & 07474) == 0) {
+            if ((lilresult_mask[0] & 07474) == 0) {
                result->kind = s1x4;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) newplacelist[real_index] = linehyperh[newplacelist[real_index]];
                }
             }
-            else if ((lilresult_mask & 04747) == 0) {
+            else if ((lilresult_mask[0] & 04747) == 0) {
                result->kind = s1x4;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) {
@@ -2239,13 +2298,13 @@ extern void basic_move(
                }
                result->rotation++;
             }
-            else if ((lilresult_mask & 05656) == 0) {
+            else if ((lilresult_mask[0] & 05656) == 0) {
                result->kind = sdmd;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) newplacelist[real_index] = dmdhyperh[newplacelist[real_index]];
                }
             }
-            else if ((lilresult_mask & 06565) == 0) {
+            else if ((lilresult_mask[0] & 06565) == 0) {
                result->kind = sdmd;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) {
@@ -2255,13 +2314,13 @@ extern void basic_move(
                }
                result->rotation++;
             }
-            else if ((lilresult_mask & 01212) == 0) {
+            else if ((lilresult_mask[0] & 01212) == 0) {
                result->kind = s_hrglass;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) newplacelist[real_index] = galhyperh[newplacelist[real_index]];
                }
             }
-            else if ((lilresult_mask & 02121) == 0) {
+            else if ((lilresult_mask[0] & 02121) == 0) {
                result->kind = s_hrglass;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) {
@@ -2271,13 +2330,13 @@ extern void basic_move(
                }
                result->rotation++;
             }
-            else if ((lilresult_mask & 05555) == 0) {
+            else if ((lilresult_mask[0] & 05555) == 0) {
                result->kind = s_star;
                for (real_index=0; real_index<num; real_index++) {
                   if (ss->people[real_index].id1) newplacelist[real_index] = starhyperh[newplacelist[real_index]];
                }
             }
-            else if ((lilresult_mask & 06666) == 0) {
+            else if ((lilresult_mask[0] & 06666) == 0) {
                result->kind = s_star;        /* Actually, this is a star with all people sort of far away
                                              from the center.  We may need to invent a new setup, "farstar". */
                for (real_index=0; real_index<num; real_index++) {

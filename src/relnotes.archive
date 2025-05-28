@@ -1,3 +1,126 @@
+		    RELEASE NOTES FOR VERSION 27.8
+       Database version = 27.7, format = 31, X11 UI version 1.11.
+
+Finally fixed (????) stuff like "centers [2/3 recycle] the difference"
+from a grand wave.  This also makes the evil example in the documentation,
+[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY [2/3 recycle]
+the difference] cover up, work.  I recently called that example to a
+C4 group.  They got through it, but did not seem very happy about it.
+
+Fixed a bug in the table directing the transformation of a 4x4 into
+quadruple diamonds.  This would only occur if people were all in the outer
+columns, and a concept like "quadruple diamonds" or "split phantom diamonds"
+was used, which requires the people to consider themselves points of those
+diamonds.  This would have resulted in an incorrect sequence.  We apologize
+for any behind-the-microphone embarrassment that this may have caused.
+
+Fixed another evil case of knowing where the phantoms went on things like
+"split phantom lines tag chain thru reaction".
+
+Tightened up the program's understanding or nonunderstanding of where
+phantoms went.  It is no longer possible to call "split phantom lines
+hocus pocus" from columns.  It used to do it wrong, by not leaving space
+for the phantoms.  It now refuses, because it doesn't know which way the
+phantoms oriented their setup, and hence it doesn't know whether to leave
+room for them.  It is true that many humans would claim that this is legal,
+and that one does have to leave room for the phantoms no matter which way
+they are facing, due to the "double O circulate" theorem.  However, the
+program does not know that theorem.
+
+New MxN calls: various fractions of peel/trail off, peel/trail the deal,
+including 3X3 and 4X4.  3X3 and 4X4 loop and tag, beau/belle hop, turn/wheel
+to a line, turn/wheel and deal, triple turn/wheel, circle to a wave, follow
+your leader, walk and dodge, couple up, bend/retreat the line, crossfire,
+shake and/or rattle, wheel thru, wheel the ocean/sea.
+
+The ability to expand the matrix from a 2x4 to a 2x6 or 2x8 when executing a
+call that requires same was implemented.  It is now possible to do 12 matrix
+circulate or 3X3/4X4 follow your leader from a 2x4.
+
+Other new calls: Soft touch, about, diamond inlet/outlet/recycle, 3/4 wheel
+the ocean/sea/to a diamond.  Magic versions of various 3x1 transfer things.
+Lots of other minor maintenance.
+
+New concepts: Triple/quadruple lines/columns working together/apart.
+These take a 1x12 or 1x16 setup.  Also, plain triple/quadruple
+lines/columns can be done from a 1x12 or 1x16.
+
+More new concepts: Fractional stable and fractional twosome/solid.  It can
+only do these for calls that have had stability information encoded into the
+database, which most calls do not yet have.  See below.
+
+It can now do "matrix" calls (U-turn back, quarter left/right, press/truck where
+appropriate) in more setups, including triple diamonds, quadruple diamonds,
+3x1 diamonds, and 1x10/1x12/1x14/1x16.
+
+Database internal stuff:
+   The restriction in the database known as "peelable box" is now legal from
+   3x2 and 4x2 columns, and means that, in each single file column, all people
+   are facing the same way.  The meaning of "peelable box" in a 2x4, that the
+   ends are in a peelable 2x2, was removed.  Use "ends_are_peelable" for this.
+   Cast a shadow and criss-cross the shadow were modified accordingly.
+
+   A new restriction "all_facing_same" was added, that tests that all 4,
+   6, or 8 people are facing the same way in a 2x2, 2x3, or 2x4.  This was
+   used to make 3x3/4x4 leads wheel the ocean complain if not done from a
+   "couple following a couple".
+
+   A new restriction "nice_diamonds" was added, that tests that parallel
+   or point-to-point diamonds are entirely consistently handed.  This
+   forbids "diamond swing thru" from facing diamonds, which used to be
+   accepted.
+
+   The new letters "Z", "C", and "A" are used to indicate stability in a
+   by-array call specifier.  They appear just before the roll indicator,
+   if any.  For example:
+         array [AL0E CR1W AL0W CR1E]    (this is "bingo")
+   "C" means this person turns 1 to 4 positions clockwise.  Exactly how
+   far will be deduced from his ending direction.  "A" means he turns 1
+   to 4 positions anticlockwise.  "Z" means he does not turn at all, but
+   stability is still supported.  If no indicator is present, fractional
+   stable is not supported for this person.  More complex indicators will
+   be provided in the future for calls that have people reverse direction.
+
+   There is a new call flag "12_16_matrix_means_split" which means that,
+   if this call is given with the 12 matrix concept in a 3x4 or 2x6 setup,
+   it will do the call in each of the three 1x4's or 2x2's respectively
+   if that is required.  It used to be that calls would do that in all
+   cases, so that the initial trade in a 12 matrix relay the top
+   would work.  It had the unfortunate consequence that, from triple
+   lines "12 matrix counter rotate" was legal and would do a lockit in
+   each of the 3 waves.  Now the call "trade" has this flag but "counter
+   rotate" does not, so that "12 matrix relay the top" works but "12 matrix
+   counter rotate" is illegal.  You can of course do a plain counter rotate.
+
+A bug in initialization was fixed that made it not think that "ladies chain"
+was legal from facing lines.  What was the problem?  Ladies chain is only
+legal from normal couples.  When setups were being tested at program startup,
+the test setup for lines facing and 8 chain had the couples sashayed.
+
+The file sd_doc.txi was renamed sd_doc.txinfo.
+
+Two new command line arguments:
+
+-sequence filename          sets the base name for sequence output
+-db filename                sets the calls database file
+
+The defaults are as before.  There are X resources associated with both.
+
+
+			User Interface Changes
+
+Safety border around concept popups.
+
+Prettier mouse cursor in some cases.
+
+The file Sd.ad was renamed Sd.res, and the documentation of its use
+has changed.  It is no longer considered an app-defaults file.  Most
+users were unable to install it in /usr/lib anyway.  It is now merely
+a sample of some resources you might want to set in your user
+resources file for Sd.  See README for the new documentation.
+
+===============================================================================
+
 		    RELEASE NOTES FOR VERSION 26.0
        Database version = 25.3, format = 26, X11 UI version 1.10.
 

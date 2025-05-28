@@ -7,20 +7,21 @@
 
 # If you must use this file directly, expect to have to edit it.
 
-CC = cc -Aa -z +DA1.1 -D_AES_SOURCE +w1
-DEFS = 
-CFLAGS = $(DEFS) $(CDEBUGFLAGS)
+CC=gcc
+CFLAGS=$(CDEBUGFLAGS) -traditional
+# Note: the "-traditional" above is needed only if "fixincludes" has
+# not been run on your machine.
 
 # CDEBUGFLAGS is used by both cc and ld.
 # If you want a smaller executable and are willing to lose the ability
 # to debug, use "-O" instead of "-g".
-CDEBUGFLAGS = -g
+CDEBUGFLAGS = -O
 
 # these flags are passed only to ld
 LDFLAGS = $(CDEBUGFLAGS)
 
 # additional flags for gildea's code
-UICFLAGS =
+UICFLAGS = -Wswitch
 
 #PEDCFLAGS = -pedantic -O -Wimplicit -Wreturn-type -Wunused -Wcomment
 #PEDANTICW = -Wformat -Wchar-subscripts -Wshadow -Wpointer-arith
@@ -33,7 +34,7 @@ SDUI_SRC = sdui-x11.c
 # Libraries the UI needs to be linked with.  If your X11 libraries aren't
 # installed, you may want to add some -L<dir> flags to LDFLAGS below
 # to specify the library directories explicitly.
-SDUI_LIBS = -L/usr/lib/X11R5 -lXaw -lXmu -lXt -lXext -lX11 
+SDUI_LIBS = -lXaw -lXmu -lXt -lXext -lX11
 
 # override unnecessary SunOS 4.0 stuff:
 #TARGET_ARCH=
@@ -81,7 +82,7 @@ sd_doc.PS: sd_doc-sorted.dvi
 
 
 sdui-x11.o: sdui-x11.c
-	$(CC) $(CFLAGS) -I/usr/include/X11R5 -c sdui-x11.c
+	$(CC) $(CFLAGS) $(UICFLAGS) -c sdui-x11.c
 
 mkcalls.o sdmain.o sdsi.o sdui-x11.o: paths.h
 

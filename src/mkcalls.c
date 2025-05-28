@@ -334,6 +334,8 @@ char *estab[] = {
    "galaxy",
    "4x6",
    "thar",
+   "???",
+   "???",
    "normal_concentric",
    ""};
 

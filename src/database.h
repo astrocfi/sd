@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* These are written as the first two halfwords of the binary database file.
    The format version is not related to the version of the program or database.
@@ -27,7 +27,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 31
+#define DATABASE_FORMAT_VERSION 32
 
 /* BEWARE!!  This list must track the tables "flagtab" and "nexttab"" in mkcalls.c .
    Because the constants are not defined contiguously, there are spacer items
@@ -152,6 +152,8 @@ typedef enum {
    s_galaxy,
    s4x6,
    s_thar,
+   s_6x6,    /* These are too big to actaully represent -- */
+   s_8x8,    /* we don't let them out of their cage. */
    s_normal_concentric
 } setup_kind;
 

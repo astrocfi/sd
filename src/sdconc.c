@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 27. */
+    This is for version 28. */
 
 /* This defines the following functions:
    concentric_move
@@ -604,6 +604,8 @@ static cm_thing *bigconctab[][9] = {
    {&mapstar_2x2,   0,                    0,                  0,                 0,                0,              &map1x2_short6,   &maplatgal, 0},               /* s_galaxy */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s4x6 */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s_thar */
+   {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s_6x6 */
+   {0,              0,                    0,                  0,                 0,                0,              0,                0,          0},               /* s_8x8 */
    {0,              0,                    0,                  0,                 0,                0,              0,                0,          0}};              /* s_normal_concentric */
 
 
