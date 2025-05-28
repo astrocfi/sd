@@ -109,6 +109,7 @@ static void do_concept_tandem(
 {
    // The "arg3" field of the concept descriptor contains bit fields as follows:
    // "100" bit:  this takes a selector
+   // "200" bit:  this takes an implicit selector of "some"
    // "F0" field: (fractional) twosome info --
    //    0=solid
    //    1=twosome
@@ -192,7 +193,8 @@ static void do_concept_tandem(
 
    tandem_couples_move(
      ss,
-     (parseptr->concept->arg3 & 0x100) ? parseptr->options.who : selector_uninitialized,
+     (parseptr->concept->arg3 & 0x100) ? parseptr->options.who :
+     ((parseptr->concept->arg3 & 0x200) ? selector_some : selector_uninitialized),
      (parseptr->concept->arg3 & 0xF0) >> 4, // (fractional) twosome info
      parseptr->options.number_fields,
      parseptr->concept->arg3 & 0xF,          // normal/phantom/gruesome etc.
@@ -4061,14 +4063,7 @@ static void do_concept_checkerboard(
    // First, we allow these to be done in a C1 phantom setup under certain
    // conditions.  If it's the equivalent "pinwheel" 4x4, fix it.
 
-   if (ss->kind == s4x4) {
-      uint32 mask = little_endian_live_mask(ss);
-
-      if (mask == 0xAAAA)
-         expand::compress_setup(s_c1phan_4x4a, ss);
-      else if (mask == 0xCCCC)
-         expand::compress_setup(s_c1phan_4x4b, ss);
-   }
+   turn_4x4_pinwheel_into_c1_phantom(ss);
 
    if (parseptr->concept->arg2 & 8) {
       // This is "so-and-so preferred for the trade, checkerboard".
@@ -4264,9 +4259,7 @@ static void do_concept_checkerboard(
    a1.cmd.cmd_assume.assumption = cr_none;
    update_id_bits(&a1);
    setup res1;
-   a1.suppress_all_rolls(false);     // From moving in.
    move(&a1, false, &res1);
-   res1.suppress_all_rolls(false);   // From moving out.
 
    // Look at the rotation coming out of the move.  If the setup is
    // 1x4, we require it to be even (checkerboard lockit not allowed).

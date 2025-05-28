@@ -29,7 +29,6 @@
    initialize_tandem_tables
    tandem_couples_move
    mimic_move
-   process_anomalous_mxn
 */
 
 #include <string.h>

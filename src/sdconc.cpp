@@ -34,6 +34,10 @@
    merge_table::map_tgl4l
    merge_table::map_tgl4b
    merge_table::map_2234b
+   merge_table::map_24r24a
+   merge_table::map_24r24b
+   merge_table::map_24r24c
+   merge_table::map_24r24d
    merge_table::initialize
    merge_table::lookup
    merge_setups
@@ -4240,15 +4244,28 @@ extern void concentric_move(
 
 
 
-const merge_table::concmerge_thing merge_table::map_tgl4l  = {
+const merge_table::concmerge_thing merge_table::map_tgl4l = {
    nothing, nothing, 0, 0, 0, 0x0, schema_by_array, s1x4, nothing,
    warn__none, 0, 0, {0, 1, -1, -1}, {0}};
-const merge_table::concmerge_thing merge_table::map_tgl4b  = {
+const merge_table::concmerge_thing merge_table::map_tgl4b = {
    nothing, nothing, 0, 0, 0, 0x0, schema_by_array, s2x2, nothing,
    warn__none, 0, 0, {-1, -1, 2, 3}, {0}};
-const merge_table::concmerge_thing merge_table::map_2234b  = {
+const merge_table::concmerge_thing merge_table::map_2234b = {
    nothing, nothing, 0, 0, 0, 0x0, schema_matrix, s4x4, nothing,
    warn__none, 0, 0, {15, 3, 7, 11}, {12, 13, 14, 0, -1, -1, 4, 5, 6, 8, -1, -1}};
+const merge_table::concmerge_thing merge_table::map_24r24a = {
+   nothing, nothing, 0, 0, 0, 0x0, schema_matrix, s2x4, nothing,
+   warn__check_2x4, 0, 1, {0, 1, 2, -1, 4, 5, 6, -1}, {7, -1, -1, -1, 3, -1, -1, -1}};
+const merge_table::concmerge_thing merge_table::map_24r24b = {
+   nothing, nothing, 0, 0, 0, 0x0, schema_matrix, s2x4, nothing,
+   warn__check_2x4, 0, 1, {-1, 1, 2, 3, -1, 5, 6, 7}, {-1, -1, -1, 0, -1, -1, -1, 4}};
+const merge_table::concmerge_thing merge_table::map_24r24c = {
+   nothing, nothing, 0, 0, 0, 0x0, schema_matrix, s2x4, nothing,
+   warn__check_2x4, 0, 0, {3, -1, -1, -1, 7, -1, -1, -1}, {0, 1, 2, -1, 4, 5, 6, -1}};
+const merge_table::concmerge_thing merge_table::map_24r24d = {
+   nothing, nothing, 0, 0, 0, 0x0, schema_matrix, s2x4, nothing,
+   warn__check_2x4, 0, 0, {-1, -1, -1, 4, -1, -1, -1, 0}, {-1, 1, 2, 3, -1, 5, 6, 7}};
+
 
 merge_table::concmerge_thing *merge_table::merge_hash_tables[merge_table::NUM_MERGE_HASH_BUCKETS];
 
@@ -4500,6 +4517,19 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
             result->clear_people();
             scatter(result, res1, matrixmap1, 7, 011);
             install_scatter(result, 8, matrixmap2, res2, 0);
+            goto final_getout;
+         }
+         else if (mask1 == 0x77 && mask2 == 0x11) {
+            the_map = &merge_table::map_24r24a;
+         }
+         else if (mask1 == 0xEE && mask2 == 0x88) {
+            the_map = &merge_table::map_24r24b;
+         }
+         else if (mask1 == 0x11 && mask2 == 0x77) {
+            the_map = &merge_table::map_24r24c;
+         }
+         else if (mask1 == 0x88 && mask2 == 0xEE) {
+            the_map = &merge_table::map_24r24d;
          }
          else if (mask1 == 0x66 && mask2 == 0x66) {
             static const veryshort alamomap1[8] = {-1, 2, 3, -1, -1, 6, 7, -1};
@@ -4508,6 +4538,7 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
             result->clear_people();
             scatter(result, res1, alamomap1, 7, 011);
             install_scatter(result, 8, alamomap2, res2, 0);
+            goto final_getout;
          }
          else {
             static const veryshort phanmap1[8] = {4, 6, 11, 9, 12, 14, 3, 1};
@@ -4531,9 +4562,9 @@ extern void merge_setups(setup *ss, merge_action action, setup *result) THROW_DE
                else
                   warn(warn__check_gen_c1_stars);
             }
-         }
 
-         goto final_getout;
+            goto final_getout;
+         }
       }
       else if (res2->kind == s_trngl4 && res1->kind == s_trngl4 && r == 2 &&
                (mask1 & 0xC) == 0 && (mask2 & 0xC) == 0) {

@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.36
-@set title2 Database version = 38.36 format = 300
+@set title1 RELEASE NOTES FOR VERSION 38.37
+@set title2 Database version = 38.37 format = 300
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.37::
 * 38.36::
 * 38.35::
 * 38.33::
@@ -75,7 +76,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.36, Top, (dir)
+@node Intro, 38.37, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -86,11 +87,51 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2010 William B. Ackerman
 @sp 3
 @menu
-* 38.36::               Changes in the current version
+* 38.37::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.36, 38.35, Intro, Top
+@node 38.37, 38.36, Intro, Top
+@unnumberedsec Version 38.37 changes
+
+The ability to do the @strong{stingy} and @strong{generous} concepts has been much improved.
+
+There are several new concepts to facilitate designating certain people to work together as couples or tandems, or couples or tandems of 3:
+
+@strong{the (couples/tandems) are solid}
+
+@strong{the (couples of 3/tandems of 3) are solid}
+
+@strong{the (couples/tandems) are solid N/4 twosome}
+
+@strong{the (couples of 3/tandems of 3) are solid N/4 threesome}
+
+@strong{the (couples/tandems) are twosome}
+
+@strong{the (couples of 3/tandems of 3) are threesome}
+
+@strong{the (couples/tandems) are twosome N/4 solid}
+
+@strong{the (couples of 3/tandems of 3) are threesome N/4 solid}
+
+These are used when it is possible to determine who are selected based
+on facing directions.  For example, in a quarter box (@strong{heads
+touch 1/4}) setup, one can do @strong{the tandems of 3 are solid, pass
+the ocean}.  Who comprise the tandems of 3 can be determined from facing
+directions.
+
+These are equivalent to the existing designator "@strong{some}", as in
+@strong{some are tandems of 3, pass the ocean}.  This designator can be
+used to select people, that might otherwise be difficult to name, by
+using their facing directions.
+
+When people can't be identified by their facing directions, it is also
+possible to use the designators @strong{first 1}, @strong{first 2}, or
+@strong{first 3}, from columns, or @strong{last N}, or, from lines,
+@strong{leftmost N} or @strong{rightmost N}.
+
+@c ************
+@node 38.36, 38.35, 38.37, Top
 @unnumberedsec Version 38.36 changes
 
 The program is much better at doing things that turn people by 45 degrees.

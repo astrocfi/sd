@@ -1793,6 +1793,7 @@ class select {
       fx_foo88,
       fx_foo77,
       fx_fooEE,
+      fx_fooEEprime,
       fx_1x4p2d,
       fx_1x4p2l,
       fx_4p2x1d,
@@ -2622,6 +2623,10 @@ class merge_table {
    static const concmerge_thing map_tgl4l;
    static const concmerge_thing map_tgl4b;
    static const concmerge_thing map_2234b;
+   static const concmerge_thing map_24r24a;
+   static const concmerge_thing map_24r24b;
+   static const concmerge_thing map_24r24c;
+   static const concmerge_thing map_24r24d;
 
    friend void merge_setups(setup *ss, merge_action action, setup *result) THROW_DECL;
 
@@ -4958,6 +4963,8 @@ extern void gather(setup *resultpeople, const setup *sourcepeople,
 
 extern void install_scatter(setup *resultpeople, int num, const veryshort *placelist,
                             const setup *sourcepeople, int rot) THROW_DECL;
+
+extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss);
 
 extern bool clean_up_unsymmetrical_setup(setup *ss);
 

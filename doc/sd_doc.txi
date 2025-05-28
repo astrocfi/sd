@@ -1,8 +1,8 @@
 \input texinfo
 @c user documentation for Sd (square dance caller's helper)
 @c
-@set sd-version 38.36
-@set Time-stamp: Nov 28, 2010
+@set sd-version 38.37
+@set Time-stamp: Dec 12, 2010
 @c
 @setfilename sd_doc.info
 @c We want the version number to show in the html file.
@@ -4146,6 +4146,10 @@ These concepts are the same.  The setups are end-to-end.
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
 @item <ANYONE> are couples of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
 @item <ANYONE> are tandems of 3@ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem threesome
+@item the couples are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ the couples are twosome
+@item the tandems are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ the tandems are twosome
+@item the couples of 3 are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ the couples of 3 are threesome
+@item the tandems of 3 are solid@ @ @ @ @ @ @ @ @ @ @ @ @ @ the tandems of 3 are threesome
 @item inside triangles are solid@ @ @ @ @ @ @ @ @ @ @ @ inside triangles are threesome
 @item outside triangles are solid@ @ @ @ @ @ @ @ @ @ @ outside triangles are threesome
 @item in point triangles are solid@ @ @ @ @ @ @ @ @ @ in point triangles are threesome

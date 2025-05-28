@@ -56,6 +56,7 @@
    scatter
    gather
    install_scatter
+   turn_4x4_pinwheel_into_c1_phantom
    clean_up_unsymmetrical_setup
    process_final_concepts
    really_skip_one_concept
@@ -4562,6 +4563,22 @@ extern void install_scatter(setup *resultpeople, int num, const veryshort *place
    for (int j=0; j<num; j++)
       install_rot(resultpeople, placelist[j], sourcepeople, j, rot);
 }
+
+extern void turn_4x4_pinwheel_into_c1_phantom(setup *ss)
+{
+   if (ss->kind == s4x4) {
+      switch(little_endian_live_mask(ss)) {
+      case 0xAAAA:
+         expand::compress_setup(s_c1phan_4x4a, ss);
+         break;
+      case 0xCCCC:
+         expand::compress_setup(s_c1phan_4x4b, ss);
+         break;
+      }
+   }
+}
+
+
 
 extern bool clean_up_unsymmetrical_setup(setup *ss)
 {

@@ -6830,17 +6830,8 @@ static void move_with_real_call(
             ss->cmd.cmd_final_flags.clear_finalbit(FINAL__SPLIT);
          }
 
-         if (ss->kind == s4x4) {
-            // The entire rest of the program expects split calls to be done in a C1 phantom setup rather than a 4x4.
-            switch(little_endian_live_mask(ss)) {
-            case 0xAAAA:
-               expand::compress_setup(s_c1phan_4x4a, ss);
-               break;
-            case 0xCCCC:
-               expand::compress_setup(s_c1phan_4x4b, ss);
-               break;
-            }
-         }
+         // The entire rest of the program expects split calls to be done in a C1 phantom setup rather than a 4x4.
+         turn_4x4_pinwheel_into_c1_phantom(ss);
       }
 
       // NOTE: We may have mirror-reflected the setup.  "Mirror" is true if so.
