@@ -35,7 +35,7 @@
     General Public License if you distribute the file.
 */
 
-version "30.8"
+version "30.82"
 
 call "(nothing)" mainstream tag nullcall
             dont_use_in_resolve is_tag_call
@@ -854,14 +854,22 @@ call "@2spin @3the windmill, outsides @h" a2
 call "sock it to me" c2
    setup 1x4 1x4
       preds "Can't find an unambiguous socker."
-         if socker_is_left [R2S L0S L3S L1S]
-         if socker_is_right [0 R3S 0 R2S]
+         if socker_is_left  [CR2S AL0S AL3S AL1S]
+         if socker_is_right [0    CR3S 0    CR2S]
+   setup 1x3 1x3
+      preds "Can't find an unambiguous socker."
+         if socker_is_left_1x3  [CR2S AL0S AL1S]
+         if socker_is_right_1x3 [0    CR2S 0]
 
 call "here comes the judge" c2
    setup 1x4 1x4
       preds "Can't find an unambiguous judge."
-         if judge_is_right [R1S R3S L0S R2S]
-         if judge_is_left [0 L0S 0 L1S]
+         if judge_is_right [CR1S CR3S AL0S CR2S]
+         if judge_is_left  [0    AL0S 0    AL1S]
+   setup 1x3 1x3
+      preds "Can't find an unambiguous judge."
+         if judge_is_right_1x3 [CR1S CR2S AL0S]
+         if judge_is_left_1x3  [0    AL0S 0]
 
 call "partner tag" plus tag partnertag
    setup 1x2 1x2
@@ -1174,6 +1182,16 @@ call "cast off 3/4" dontshow tag cast_off_34
          if x14_once_rem_couple   [AL0E CR2W CR1W AL3E]
          if always                [0    CR2W 0    AL3E]
 
+call "cast off 3/4, opt for normal" dontshow tag cast_off_34_with_warn
+            dont_use_in_resolve parallel_conc_end
+   setup 1x2 1x2 rotate
+      preds "Need to be in miniwave or line of 4."
+         if cast_normal  [CR1S AL1N]
+   setup 1x4 2x2
+      preds "?"
+         if cast_normal_or_warn  [CR3W AL3E AL2E CR2W]
+         if always               [AL0E AL3E CR1W CR2W]
+
 /* Use this only after setting up the roll direction from initial cast.  Not for general use. */
 call "_continue to cast off" dontshow tag continue_cast
             dont_use_in_resolve parallel_conc_end
@@ -1326,10 +1344,6 @@ call "@gquarter @eright@f" dontshow tag quarter_right
             left_means_mirror
    setup 1x1 1x1
       array [CR0E]
-
-call "quarter left" dontshow tag quarter_left
-   setup 1x1 1x1
-      array [AL0W]
 
 /* This one doesn't allow "no direction". */
 call "quarter @h" mainstream
@@ -1850,14 +1864,14 @@ call "snap the@c @a@d tag" c4
    setup 1x4 1x4 nqualifier 4 none
       array [2E 3E 0W 1W]
 
-call "@i1/4 @j cross @lflip" c1
+call "@i1/4 @jcross @lflip" c1
    setup 1x4 dmd restriction forbidden wave_only
       array [1E 0E 1W 2W]
             alternate_definition [cross] c3
    setup 1x4 dmd restriction forbidden 2fl_only
       array [1E 2W 1W 0E]
 
-call "@i@c1/2 @d@j cross @lflip" c1 tag half_flip
+call "@i@c1/2 @d@jcross @lflip" c1 tag half_flip
             is_tag_call
    setup 1x4 2x2 restriction forbidden wave_only
       array [C1E A3E A0W C2W]
@@ -1865,7 +1879,7 @@ call "@i@c1/2 @d@j cross @lflip" c1 tag half_flip
    setup 1x4 2x2 restriction forbidden 2fl_only
       array [C1E C2W A0W A3E]
 
-call "@i3/4 @j cross @lflip" c1
+call "@i3/4 @jcross @lflip" c1
    setup 1x4 dmd restriction forbidden wave_only
       array [2E 3E 0W 3W]
             alternate_definition [cross] c3
@@ -2046,14 +2060,14 @@ call "invert the column" c2
    setup 3x2 2x3 restriction forbidden wave_only
       array [R3S R4S R5S L0S L1S L2S]
 
-call "@i1/3 @j cross @linvert" c2
+call "@i1/3 @jcross @linvert" c2
    setup 3x2 short6 restriction forbidden wave_only
       array [M0N M2N L1S R4S M3N M5N]
             alternate_definition [cross] c2
    setup 3x2 short6 restriction forbidden wave_only
       array [M0N M2N R4S L1S M3N M5N]
 
-call "@i2/3 @j cross @linvert" c2 tag invert_2_3
+call "@i2/3 @jcross @linvert" c2 tag invert_2_3
    setup 3x2 bone6 rotate restriction forbidden wave_only
       array [M5W L0E L4E R3E R1E M2W]
             alternate_definition [cross] c2
@@ -2654,7 +2668,7 @@ call "pair the line" c4
    setup 1x4 2x3 rotate
       array [CR0E CR1E AL5E AL4E]
 
-call "@i@6 @j cross @lfold" mainstream
+call "@i@6 @jcross @lfold" mainstream
 /* This used to be:
    partnermatrix use_selector stop_and_warn_on_tbone
       [M16N 16 M16N 16 M16N 16 M16N 16 R18S 18 R18S 18 L14S 18 L14S 18]
@@ -2821,14 +2835,19 @@ call "pass the sea" a2
    setup 2x2 1x4 rotate
    array [0 0 L0S R1N]
 
+/* It's just simpler to list these calls separately.  We could use the
+   "@e...@f mechanism, and the "left_means_mirror" flag, and all that,
+   and then typing in would be natural, but getting "veer left" from the
+   menu would still require clicking on the "left" concept.  Since "veer
+   left" is vastly more common than "veer right", that would be inconvenient.
+   Better just to list both of them. */
+call "veer right" mainstream
+   setup 2x2 1x4
+      array [0 0 2N 3N]
+
 call "veer left" mainstream
    setup 2x2 1x4
       array [0 0 1N 0N]
-
-call "@gveer @eright@f" mainstream
-            left_means_mirror
-   setup 2x2 1x4
-      array [0 0 2N 3N]
 
 call "leftable veer left" dontshow tag lft_veer_left
             left_means_mirror
@@ -3529,9 +3548,9 @@ call "_natural turn thru" dontshow tag natturnthru
 
 call "pair off" a1
    setup 2x2 2x2
-      array [0 0 R2E L3W]
+      array [0 0 CR2E AL3W]
    setup 2x4 2x4
-      array [0 0 0 0 R4E R5E L6W L7W]
+      array [0 0 0 0 CR4E CR5E AL6W AL7W]
 
 call "short and sweet" c4a
             reverse_means_mirror
@@ -3746,7 +3765,7 @@ call "_beaus kickoff" dontshow tag beaukick
    setup 1x2 1x2
       array [CR1W AM0W]
 
-call "@i@6 @j cross @lrun" mainstream
+call "@i@6 @jcross @lrun" mainstream
    setup 1x2 1x2
       preds "Can't have both people run."
          if select_near_unselect [CR1S AL0S]
@@ -3775,7 +3794,7 @@ call "_centers cross run" dontshow tag ctrcrossrun  /* Maybe can regularize this
    setup 1x8 2x4
       array [ZM7N CR1E CR2E AL0W ZM4N AL2W AL1W CR3E]
 
-call "@i@6 @j cross @lkickoff" c2 tag designeeskick
+call "@i@6 @jcross @lkickoff" c2 tag designeeskick
    setup 2x2 2x2
       preds "Can't tell who is kicking off."
          if select [CR1W AL0E AL3E CR2W]
@@ -3790,7 +3809,7 @@ call "@i@6 @j cross @lkickoff" c2 tag designeeskick
          if select_once_rem_from_unselect   [CR3W CR2W AL1E AL0E]
          if unselect_once_rem_from_select   [C1E A0W A3W C2E]
 
-call "@i@6 @j cross @lkick by @9" c3
+call "@i@6 @jcross @lkick by @9" c3
             neednumber
    /* It would be nice to have better selectors to catch errors if both ends
       are selected, or neither. */
@@ -5089,7 +5108,7 @@ call "_swingbackwindmill" dontshow tag swingbackwindmill
    seq swing []
    seq slip []
    seq slip []
-   seq cast_off_34 []
+   seq cast_off_34_with_warn []
 
 call "delight" c4 tag delight
    conc swingbackwindmill [] elight [conc_demand_columns conc_force_lines]
@@ -6101,9 +6120,9 @@ call "explosion" c4a
    setup 4x2 2x4 rotate restriction wave_only
    array [0W 5E 3E 2E 1E 0E 6E 3W]
 
-call "@iexplode the @j cross @lclover" c4
+call "@iexplode the @jcross @lclover" c4
             cross_is_inherited
-   conc trade_and_roll [inherit_cross] clover [inherit_cross conc_demand_columns conc_force_columns endscando]
+   conc trade_and_roll [] clover [inherit_cross conc_demand_columns conc_force_columns endscando]
 
 call "press for time" c4
    setup 4x2 2x4 rotate restriction wave_only
@@ -7312,7 +7331,7 @@ call "chain reaction" a1
    because we might change it to a revert the tag reaction, which has another
    cast off 3/4. */
 
-call "@iscoot @j cross @lreaction" c3
+call "@iscoot @jcross @lreaction" c3
             cross_is_inherited
    seq scootback []
    seq wvchreact_1 [inherit_cross]
@@ -7320,7 +7339,7 @@ call "@iscoot @j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@iscatter scoot @j cross @lreaction" c3
+call "@iscatter scoot @jcross @lreaction" c3
             cross_is_inherited
    seq scatscoot []
    seq wvchreact_1 [inherit_cross]
@@ -7328,7 +7347,7 @@ call "@iscatter scoot @j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@iscoot chain thru @j cross @lreaction" c3
+call "@iscoot chain thru @jcross @lreaction" c3
             cross_is_inherited
    seq scootchainthru []
    seq wvchreact_1 [inherit_cross]
@@ -7336,7 +7355,7 @@ call "@iscoot chain thru @j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@iscatter scoot chain thru @j cross @lreaction" c3
+call "@iscatter scoot chain thru @jcross @lreaction" c3
             cross_is_inherited
    seq scatscootchainthru []
    seq wvchreact_1 [inherit_cross]
@@ -7344,7 +7363,7 @@ call "@iscatter scoot chain thru @j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@i@2tag @3@j cross @lreaction" c3
+call "@i@2tag @3@jcross @lreaction" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scootback []
@@ -7353,7 +7372,7 @@ call "@i@2tag @3@j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@i@2tag @3and scatter @j cross @lreaction" c3
+call "@i@2tag @3and scatter @jcross @lreaction" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scatscoot []
@@ -7362,7 +7381,7 @@ call "@i@2tag @3and scatter @j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@i@2tag @3chain thru @j cross @lreaction" c3
+call "@i@2tag @3chain thru @jcross @lreaction" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scootchainthru []
@@ -7371,7 +7390,7 @@ call "@i@2tag @3chain thru @j cross @lreaction" c3
    seq turnstar1_endstrade []
    seq finishwitharmturn []
 
-call "@i@2tag @3chain thru and scatter @j cross @lreaction" c3
+call "@i@2tag @3chain thru and scatter @jcross @lreaction" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scatscootchainthru []
@@ -7402,35 +7421,35 @@ call "reactivate" c3
    seq spindlefudge []
    seq reactivate2 []
 
-call "@iscoot @j cross @lreactivate" c3
+call "@iscoot @jcross @lreactivate" c3
             cross_is_inherited
    seq scootback []
    seq wvchreact_1 [inherit_cross]
    seq spindlefudge []
    seq reactivate2 []
 
-call "@iscatter scoot @j cross @lreactivate" c3
+call "@iscatter scoot @jcross @lreactivate" c3
             cross_is_inherited
    seq scatscoot []
    seq wvchreact_1 [inherit_cross]
    seq spindlefudge []
    seq reactivate2 []
 
-call "@iscoot chain thru @j cross @lreactivate" c3
+call "@iscoot chain thru @jcross @lreactivate" c3
             cross_is_inherited
    seq scootchainthru []
    seq wvchreact_1 [inherit_cross]
    seq spindlefudge []
    seq reactivate2 []
 
-call "@iscatter scoot chain thru @j cross @lreactivate" c3
+call "@iscatter scoot chain thru @jcross @lreactivate" c3
             cross_is_inherited
    seq scatscootchainthru []
    seq wvchreact_1 [inherit_cross]
    seq spindlefudge []
    seq reactivate2 []
 
-call "@i@2tag @3@j cross @lreactivate" c3
+call "@i@2tag @3@jcross @lreactivate" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scootback []
@@ -7438,7 +7457,7 @@ call "@i@2tag @3@j cross @lreactivate" c3
    seq spindlefudge []
    seq reactivate2 []
 
-call "@i@2tag @3and scatter @j cross @lreactivate" c3
+call "@i@2tag @3and scatter @jcross @lreactivate" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scatscoot []
@@ -7446,7 +7465,7 @@ call "@i@2tag @3and scatter @j cross @lreactivate" c3
    seq spindlefudge []
    seq reactivate2 []
 
-call "@i@2tag @3chain thru @j cross @lreactivate" c3
+call "@i@2tag @3chain thru @jcross @lreactivate" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scootchainthru []
@@ -7454,7 +7473,7 @@ call "@i@2tag @3chain thru @j cross @lreactivate" c3
    seq spindlefudge []
    seq reactivate2 []
 
-call "@i@2tag @3chain thru and scatter @j cross @lreactivate" c3
+call "@i@2tag @3chain thru and scatter @jcross @lreactivate" c3
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scatscootchainthru []
@@ -7482,7 +7501,7 @@ call "nuclear reaction" c3
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@iscoot @j cross @lnuclear reaction" c3x
+call "@iscoot @jcross @lnuclear reaction" c3x
             cross_is_inherited
    seq scootback []
    seq backemup []
@@ -7490,7 +7509,7 @@ call "@iscoot @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@iscatter scoot @j cross @lnuclear reaction" c3x
+call "@iscatter scoot @jcross @lnuclear reaction" c3x
             cross_is_inherited
    seq scatscoot []
    seq backemup []
@@ -7498,7 +7517,7 @@ call "@iscatter scoot @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@iscoot chain thru @j cross @lnuclear reaction" c3x
+call "@iscoot chain thru @jcross @lnuclear reaction" c3x
             cross_is_inherited
    seq scootchainthru []
    seq backemup []
@@ -7506,7 +7525,7 @@ call "@iscoot chain thru @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@iscatter scoot chain thru @j cross @lnuclear reaction" c3x
+call "@iscatter scoot chain thru @jcross @lnuclear reaction" c3x
             cross_is_inherited
    seq scatscootchainthru []
    seq backemup []
@@ -7514,7 +7533,7 @@ call "@iscatter scoot chain thru @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@i@2tag @3@j cross @lnuclear reaction" c3x
+call "@i@2tag @3@jcross @lnuclear reaction" c3x
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scootback []
@@ -7523,7 +7542,7 @@ call "@i@2tag @3@j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@i@2tag @3and scatter @j cross @lnuclear reaction" c3x
+call "@i@2tag @3and scatter @jcross @lnuclear reaction" c3x
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scatscoot []
@@ -7532,7 +7551,7 @@ call "@i@2tag @3and scatter @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@i@2tag @3chain thru @j cross @lnuclear reaction" c3x
+call "@i@2tag @3chain thru @jcross @lnuclear reaction" c3x
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scootchainthru []
@@ -7541,7 +7560,7 @@ call "@i@2tag @3chain thru @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@i@2tag @3chain thru and scatter @j cross @lnuclear reaction" c3x
+call "@i@2tag @3chain thru and scatter @jcross @lnuclear reaction" c3x
             left_means_mirror cross_is_inherited first_part_visible
    seq halftag [or_anycall inherit_left must_be_tag_call]
    seq scatscootchainthru []
@@ -7550,7 +7569,7 @@ call "@i@2tag @3chain thru and scatter @j cross @lnuclear reaction" c3x
    seq nuclear_nucleus []
    seq ctr_rot []
 
-call "@itrans @j cross @lnuclear reaction" c4a
+call "@itrans @jcross @lnuclear reaction" c4a
             magic_is_inherited cross_is_inherited
    seq transfer [inherit_magic]
    seq backemup []

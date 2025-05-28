@@ -83,22 +83,18 @@ extern void rubout(void)
 extern void erase_last_n(int n)
 {
    char *p = text_buffer;
-   char *sp = text_buffer;   /* "Start" pointer for display. */
    int c = 0;
 
    if (!no_cursor) {
       if (lines_in_buffer > n) {
          lines_in_buffer = lines_in_buffer-n;
 
-         /* Now point p just after the "lines_in_buffer"th newline,
-            and sp 25 (or so) lines back. */
+         /* Now point p just after the "lines_in_buffer"th newline. */
          while (p != text_ptr) {   /* Just being careful. */
             if (*p++ == '\n') {
                /* Found a "newline", count same. */
                c++;
-               if (c == lines_in_buffer-screen_height)
-                  sp = p;     /* We found the spot 25 lines back. */
-               else if (c == lines_in_buffer)
+               if (c == lines_in_buffer)
                   break;      /* We found the new ending spot. */
             }
          }
@@ -107,18 +103,39 @@ extern void erase_last_n(int n)
          lines_in_buffer = 0;
       }
 
-      /* Now "p" has the new end, and "sp" tells where to start display.  That is,
-         if the buffer has more than 25 lines in it, "sp" points to the beginning
-         of the last 25 lines. */
+      /* Now "p" has the new end. */
 
       text_ptr = p;
       *p = '\0';
 
       gotoxy(1, 1);
       clrscr();
-      printf("%s", sp);
+      printf("%s", text_buffer);
    }
    /* Otherwise, we take no action at all. */
+}
+
+static void pack_in_buffer(char c)
+{
+   *text_ptr++ = c;
+   if (c == '\n') {
+      if (lines_in_buffer >= screen_height) {
+         /* We need to throw away a line at the start of the buffer. */
+         char *p = text_buffer;
+         char *sp = text_buffer;
+
+         while (p != text_ptr) {   /* Just being careful. */
+            if (*p++ == '\n') {
+               /* Found the new text, copy it down. */
+               while (p != text_ptr) *sp++ = *p++;
+               text_ptr = sp;
+               break;
+            }
+         }
+      }
+      else
+         lines_in_buffer++;
+   }
 }
 
 extern void put_line(char the_line[])
@@ -126,10 +143,8 @@ extern void put_line(char the_line[])
    if (!no_cursor) {
       char *p = the_line;
       char c;
-      while (c = *p++) {
-         *text_ptr++ = c;
-         if (c == '\n') lines_in_buffer++;
-      }
+      while (c = *p++)
+         pack_in_buffer(c);
 
       (void) fputs(the_line, stdout);
    }
@@ -140,10 +155,8 @@ extern void put_line(char the_line[])
 
 extern void put_char(int c)
 {
-   if (!no_cursor) {
-      *text_ptr++ = (char) c;
-      if (c == '\n') lines_in_buffer++;
-   }
+   if (!no_cursor)
+      pack_in_buffer(c);
 
    (void) putchar(c);
 }

@@ -27,18 +27,20 @@
  */
 
 typedef struct {
-    int valid;            /* set to TRUE if a match was found */
-    int exact;            /* set to TRUE if an exact match was found */
-    uims_reply kind;
-    int index;
-    selector_kind who;    /* matches <anyone> */
-    direction_kind where; /* matches <direction> */
-    int number_fields;    /* matches all the number fields */
-    int howmanynumbers;   /* tells how many there are */
-    int space_ok;         /* space is a legitimate next input character */
+   long_boolean valid;   /* set to TRUE if a match was found */
+   long_boolean exact;   /* set to TRUE if an exact match was found */
+   uims_reply kind;
+   int index;
+   selector_kind who;    /* matches <anyone> */
+   direction_kind where; /* matches <direction> */
+   long_boolean left;    /* matches "left" */
+   long_boolean cross;   /* matches "cross" */
+   int number_fields;    /* matches all the number fields */
+   int howmanynumbers;   /* tells how many there are */
+   int space_ok;         /* space is a legitimate next input character */
 } match_result;
 
-typedef void (*show_function)(char *user_input, char *extension, Const match_result *mr);
+typedef void (*show_function)(char *user_input, Const char *extension, Const match_result *mr);
 
 enum {
     match_startup_commands = -1,
@@ -51,7 +53,7 @@ extern void
 matcher_initialize(long_boolean show_commands_last);
 
 extern void
-matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[]);
+matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[]);
     
 extern int
 match_user_input(

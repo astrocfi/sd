@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This defines the following functions:
    initialize_menus
@@ -27,15 +27,9 @@
 
 /* Global to this file. */
 
-/* These two get temporarily allocated.  They persist through the entire initialization. */
+/* This gets temporarily allocated.  It persists through the entire initialization. */
 Private callspec_block **global_temp_call_list;
-Private char **global_temp_call_name_list;
 Private int global_callcount;     /* Index into the above. */
-
-/* This contains the menu-presentable (e.g. "@" escapes turned into "<ANYONE>", etc.)
-   text corresponding to "main_call_lists[call_list_any]", that is, the alphabetized
-   universal menu.  It persists through the entire initialization. */
-Private char **global_main_call_name_list;
 
 #define SB (ID2_SIDE|ID2_BOY)
 #define HB (ID2_HEAD|ID2_BOY)
@@ -67,132 +61,92 @@ Private setup test_setup_l2fl = {s2x4, 0, {0}, {{SOUT(6), SB}, {SOUT(5), HG}, {N
 
 
 
-/* This cleans up the text of the alphabetized main call list in
-   "main_call_lists[call_list_any]", putting the menu-presentable form
-   into global_main_call_name_list, from which various subsets will be picked out
-   for the menus.  It simply re-uses the stored string where it can, and allocates
-   fresh memory if a substitution took place. */
+/* This cleans up the text of a call or concept name, returning the
+   menu-presentable form to be put into the "menu_name" field.  It
+   simply re-uses the stored string where it can, and allocates fresh memory
+   if a substitution took place. */
 
-Private void create_call_name_list(void)
+static Const char *translate_menu_name(Const char *orig_name)
 {
-   int i, j;
-   char *name_ptr;
-   long_boolean atsign;
+   int j;
    char c;
    int namelength;
+   long_boolean atsign = FALSE;
+   Const char *name_ptr = orig_name;
 
-   for (i=0; i<number_of_calls[call_list_any]; i++) {
-      name_ptr = main_call_lists[call_list_any][i]->name;
-      atsign = FALSE;
+   /* See if the name has an 'at' sign, in which case we have to modify it to
+      get the actual menu text. */
 
-      /* See if the name has an 'at' sign, in which case we have to modify it to
-         get the actual menu text. */
+   namelength = 0;
+   for (;;) {
+      c = name_ptr[namelength++];
+      if (!c) break;
+      else if (c == '@') atsign = TRUE;
+   }
 
-      namelength = 0;
-      for (;;) {
-         c = name_ptr[namelength];
-         if (!c) break;
-         else if (c == '@') atsign = TRUE;
-         namelength++;
-      }
+   if (atsign) {
+      char tempname[200];
+      char *temp_ptr;
+      char *new_ptr;
+      int templength;
 
-      if (atsign) {
-         char tempname[200];
-         char *temp_ptr;
-         int templength;
+      temp_ptr = tempname;
+      templength = 0;
 
-         temp_ptr = tempname;
-         templength = 0;
+      for (j = 0; j < namelength; j++) {
+         char *p;
 
-         for (j = 0; j < namelength; j++) {
-            c = name_ptr[j];
+         c = name_ptr[j];
 
-            if (c == '@') {
-               j++;
-               c = name_ptr[j];
-               if (c == '0' || c == 'm') {
-                  char *p;
-
-                  p = temp_ptr+templength;
-                  string_copy(&p, "<ANYTHING>");
-                  templength = p - temp_ptr;
-               }
-               else if (c == '6' || c == 'k') {
-                  char *p;
-
-                  p = temp_ptr+templength;
-                  string_copy(&p, "<ANYONE>");
-                  templength = p - temp_ptr;
-               }
-               else if (c == 'h') {
-                  char *p;
-
-                  p = temp_ptr+templength;
-                  string_copy(&p, "<DIRECTION>");
-                  templength = p - temp_ptr;
-               }
-               else if (c == '9') {
-                  char *p;
-
-                  p = temp_ptr+templength;
-                  string_copy(&p, "<N>");
-                  templength = p - temp_ptr;
-               }
-               else if (c == 'a' || c == 'b' || c == 'B') {
-                  char *p;
-
-                  p = temp_ptr+templength;
-                  string_copy(&p, "<N/4>");
-                  templength = p - temp_ptr;
-               }
-               else if (c == 'u') {
-                  char *p;
-
-                  p = temp_ptr+templength;
-                  string_copy(&p, "<Nth>");
-                  templength = p - temp_ptr;
-               }
-               else if (c == '7' || c == 'n' || c == 'j') {
-                  /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
-                  while (name_ptr[j] != '@') j++;
-                  j++;
-               }
+         if (c == '@') {
+            Const char *q = get_escape_string(name_ptr[++j]);
+            if (q && *q) {
+               while (*q) temp_ptr[templength++] = *q++;
+               continue;
             }
-            else if (c != ' ' || templength == 0 || temp_ptr[templength-1] != ' ')
-               temp_ptr[templength++] = c;
-         }
+            else if (q) {
+               /* Skip over @7...@8, @n .. @o, and @j...@l stuff. */
+               while (name_ptr[j] != '@') j++;
+               j++;
+            }
 
-         tempname[templength] = '\0';
-         /* Must copy the text into some fresh memory, being careful about overflow. */
-         name_ptr = get_mem(templength+1);
-         for (j=0; j<=templength; j++) name_ptr[j] = tempname[j];
+            /* Be sure we don't leave two consecutive blanks in the text. */
+            if (name_ptr[j+1] == ' ' && templength != 0 && temp_ptr[templength-1] == ' ') j++;
+         }
+         else
+            temp_ptr[templength++] = c;
       }
 
-      global_main_call_name_list[i] = name_ptr;
+      tempname[templength] = '\0';
+      /* Must copy the text into some fresh memory, being careful about overflow. */
+      new_ptr = get_mem(templength+1);
+      for (j=0; j<=templength; j++) new_ptr[j] = tempname[j];
+      return new_ptr;
    }
+   else
+      return name_ptr;
 }
 
 
-Private void create_menu(call_list_kind cl, char *call_name_list[])
-{
-   int i;
 
-   for (i=0; i<number_of_calls[cl]; i++) {
-      uims_add_call_to_menu(cl, i, call_name_list[i]);
-   }
-   uims_finish_call_menu(cl, menu_names[cl]);
-}
+
+
+
+
+
+
 
 
 /* These variables are actually local to test_starting_setup, but they are
    expected to be preserved across the longjmp, so they must be static. */
 Private parse_block *parse_mark;
 Private int call_index;
+Private callspec_block *test_call;
+Private long_boolean crossiness;
 
 
 Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 {
-   callspec_block *test_call;
    real_jmp_buf my_longjmp_buffer;
    int i;
 
@@ -242,6 +196,15 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
          }
       }
 
+      /* Now try giving the "cross" modifier. */
+
+      if (test_call->name[0] == '@' && test_call->name[1] == 'i') {
+         if (!crossiness) {
+            crossiness = TRUE;
+            goto try_another_cross;
+         }
+      }
+
       /* Otherwise fall through and go on to the next call. */
    }
 
@@ -257,6 +220,11 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
       "no one advance to a column" are illegal.  If "beaus" doesn't work, we will
       try "ends" (for the call "fold"), "all", and finally "none" (for the call
       "run"), before giving up. */
+
+   crossiness = FALSE;
+
+   try_another_cross:
+
    number_for_initialize = 1;
 
    try_another_number:
@@ -281,6 +249,9 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    if (test_call->schema == schema_roll) goto accept;
 
+   if (crossiness)
+      (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+
    (void) deposit_call(test_call);
    toplevelmove();
 
@@ -288,7 +259,6 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
   accept:
    global_temp_call_list[global_callcount] = test_call;
-   global_temp_call_name_list[global_callcount] = global_main_call_name_list[call_index];
    global_callcount++;
    goto try_again;
 
@@ -308,7 +278,7 @@ Private void test_starting_setup(call_list_kind cl, Const setup *test_setup)
 
    /* Create the menu for it. */
 
-   create_menu(cl, global_temp_call_name_list);
+   uims_create_menu(cl, global_temp_call_list);
 }
 
 
@@ -447,13 +417,13 @@ Private void create_misc_call_lists(void)
       else {
          if (  assoc(b_8x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
                assoc(b_4x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
-               assoc(b_2x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
+               assoc(b_2x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list) ||
+               assoc(b_1x1, (setup *) 0, main_call_lists[call_list_any][j]->stuff.arr.def_list->callarray_list))
             accept_it = TRUE;
       }
 
       if (accept_it) {
          global_temp_call_list[callcount] = main_call_lists[call_list_any][j];
-         global_temp_call_name_list[callcount] = global_main_call_name_list[j];
          callcount++;
       }
    }
@@ -468,7 +438,7 @@ Private void create_misc_call_lists(void)
 
    /* Create the menu for it. */
 
-   create_menu(call_list_gcol, global_temp_call_name_list);
+   uims_create_menu(call_list_gcol, global_temp_call_list);
 
    /* QTAG */
 
@@ -494,7 +464,6 @@ Private void create_misc_call_lists(void)
 
       if (accept_it) {
          global_temp_call_list[callcount] = main_call_lists[call_list_any][j];
-         global_temp_call_name_list[callcount] = global_main_call_name_list[j];
          callcount++;
       }
    }
@@ -509,7 +478,7 @@ Private void create_misc_call_lists(void)
 
    /* Create the menu for it. */
 
-   create_menu(call_list_qtag, global_temp_call_name_list);
+   uims_create_menu(call_list_qtag, global_temp_call_list);
 }
 
 
@@ -724,10 +693,9 @@ Private void build_database(call_list_mode_t call_list_mode)
    /* This list will be permanent. */
    base_calls = (callspec_block **) get_mem(max_base_calls * sizeof(callspec_block *));
 
-   /* These three will be temporary.  The first two last through the entire initialization
-      process.  The last one only in this procedure. */
+   /* These two will be temporary.  The first lasts through the entire initialization
+      process.  The second one only in this procedure. */
    global_temp_call_list = (callspec_block **) get_mem(abs_max_calls * sizeof(callspec_block *));
-   global_temp_call_name_list = (char **) get_mem(abs_max_calls * sizeof(char *));
    local_call_list = (callspec_block **) get_mem(abs_max_calls * sizeof(callspec_block *));
 
    /* Clear the tag list.  Calls will fill this in as they announce themselves. */
@@ -954,7 +922,8 @@ Private void build_database(call_list_mode_t call_list_mode)
 
 extern void initialize_menus(call_list_mode_t call_list_mode)
 {
-   int arithtest = 2081607680;
+   uint32 arithtest = 2081607680;
+   int i;
 
    /* This "if" should never get executed.  We expect compilers to optimize
       it away, and perhaps print a warning about it. */
@@ -989,6 +958,15 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    build_database(call_list_mode);
    uims_database_tick(10);
 
+   /* Make the translated names for all calls and concepts.  These have the "<...>"
+      phrases, suitable for external display on menus, instead of "@" escapes. */
+
+   for (i=0; i<number_of_calls[call_list_any]; i++)
+      main_call_lists[call_list_any][i]->menu_name = translate_menu_name(main_call_lists[call_list_any][i]->name);
+
+   for (i=0; concept_descriptor_table[i].kind != marker_end_of_list; i++)
+      concept_descriptor_table[i].menu_name = translate_menu_name(concept_descriptor_table[i].name);
+
    the_array = main_call_lists[call_list_any];
    heapsort(number_of_calls[call_list_any]);
 
@@ -1000,19 +978,14 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          display in the menus (no "@" signs) and initialize the menus with the
          cleaned-up and subsetted text. */
 
-   global_main_call_name_list = (char **) get_mem(abs_max_calls * sizeof(char *));
-   create_call_name_list();
    uims_database_tick(5);
-
-   /* Now temporary array "global_main_call_name_list" has the menu-presentable
-      form of the text corresponding to "main_call_lists[call_list_any]". */
 
    /* Do special stuff if we are reading or writing a call list file. */
 
    if (call_list_mode != call_list_mode_none) {
       if (call_list_mode == call_list_mode_abridging) {
          char abridge_call[100];
-         int i, j;
+         int j;
    
          while (read_from_call_list_file(abridge_call, 99)) {
             /* Remove the newline character. */
@@ -1023,10 +996,9 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
                alphabetized before the '@' escapes were expanded.  It
                is no longer in alphabetical order. */
             for (i=0; i<number_of_calls[call_list_any]; i++) {
-               if (!strcmp(abridge_call, global_main_call_name_list[i])) {
+               if (!strcmp(abridge_call, main_call_lists[call_list_any][i]->name)) {
                   /* Delete this call and move all subsequent calls down one position. */
                   for (j=i+1; j<number_of_calls[call_list_any]; j++) {
-                     global_main_call_name_list[j-1] = global_main_call_name_list[j];
                      main_call_lists[call_list_any][j-1] = main_call_lists[call_list_any][j];
                   }
                   number_of_calls[call_list_any]--;
@@ -1038,7 +1010,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
       else {      /* Writing a list of some kind. */
          int i;
          for (i=0; i<number_of_calls[call_list_any]; i++) {
-            write_to_call_list_file(global_main_call_name_list[i]);
+            write_to_call_list_file(main_call_lists[call_list_any][i]->menu_name);
          }
       }
 
@@ -1050,8 +1022,8 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
          goto getout;   /* That's all! */
    }
 
-   /* Now the array "main_call_lists[call_list_any]" and "global_main_call_name_list"
-         have the stuff for the calls that we will actually use.
+   /* Now the array "main_call_lists[call_list_any]"
+         has the stuff for the calls that we will actually use.
       The remaining tasks are to make the subcall lists for other setups (e.g.
          those calls legal from columns), and initialize the menus with the
          subsetted text. */
@@ -1059,7 +1031,7 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
    uims_preinitialize();
 
    /* This is the universal menu. */
-   create_menu(call_list_any, global_main_call_name_list);
+   uims_create_menu(call_list_any, main_call_lists[call_list_any]);
    uims_database_tick(5);
 
    /* Create the special call menus for restricted setups. */
@@ -1081,12 +1053,8 @@ extern void initialize_menus(call_list_mode_t call_list_mode)
 
    create_misc_call_lists();
 
-   /* This was just temporary, for copying into menus. */
-   free_mem(global_main_call_name_list);
-
-   /* These were global to the initialization, but they go away also. */
+   /* This was global to the initialization, but it goes away also. */
    free_mem(global_temp_call_list);
-   free_mem(global_temp_call_name_list);
 
    getout:
 

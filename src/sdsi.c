@@ -706,7 +706,7 @@ extern char *read_from_call_list_file(char name[], int n)
 }
 
 
-extern void write_to_call_list_file(char name[])
+extern void write_to_call_list_file(Const char name[])
 {
    fputs(name, call_list_file);
    fputs("\n", call_list_file);

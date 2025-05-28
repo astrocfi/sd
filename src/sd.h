@@ -530,7 +530,12 @@ typedef struct {
          by_def_item outerdef;
       } conc;           /* if schema = any of the concentric ones. */
    } stuff;
-   /* Dynamically allocated to whatever size is required, will have trailing null. */
+   /* This is the "pretty" name -- "@" escapes have been changed to things like "<N>".
+      If there are no escapes, this just points to the stuff below.  If escapes are present,
+      it points to allocated storage elsewhere.  Either way, it persists throughout the program. */
+   Const char *menu_name;
+   /* Dynamically allocated to whatever size is required, will have trailing null.
+      This is the name as it appeared in the database, with "@" escapes. */
    char name[4];
 } callspec_block;
 
@@ -723,6 +728,7 @@ typedef struct {
       Const int arg4;
       Const int arg5;
    } value;
+   Const char *menu_name;
 } concept_descriptor;
 
 /* BEWARE!!  This list must track the arrays "selector_names" and "selector_singular" in sdutil.c .
@@ -989,9 +995,10 @@ typedef enum {
    warn__split_phan_in_pgram,
    warn__bad_interlace_match,
    warn__not_on_block_spots,
-   warn__did_not_interact
+   warn__did_not_interact,
+   warn__opt_for_normal_cast
 } warning_index;
-#define NUM_WARNINGS (((int) warn__did_not_interact)+1)
+#define NUM_WARNINGS (((int) warn__opt_for_normal_cast)+1)
 
 /* BEWARE!!  This list must track the array "resolve_table" in sdgetout.c . */
 typedef enum {
@@ -1461,7 +1468,9 @@ extern nice_setup_thing nice_setup_thing_1x16;                      /* in SDCTAB
 extern nice_setup_thing nice_setup_thing_3dmd;                      /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_4dmd;                      /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_4x6;                       /* in SDCTABLE */
-extern int phantom_concept_index;
+extern int phantom_concept_index;                                   /* in SDCTABLE */
+extern int left_concept_index;                                      /* in SDCTABLE */
+extern int cross_concept_index;                                     /* in SDCTABLE */
 extern int general_concept_offset;                                  /* in SDCTABLE */
 extern int general_concept_size;                                    /* in SDCTABLE */
 extern int *concept_offset_tables[];                                /* in SDCTABLE */
@@ -1565,6 +1574,8 @@ extern int last_file_position;                                      /* in SDMAIN
 extern int global_age;                                              /* in SDMAIN */
 extern parse_state_type parse_state;                                /* in SDMAIN */
 extern int uims_menu_index;                                         /* in SDMAIN */
+extern long_boolean uims_menu_cross;                                /* in SDMAIN */
+extern long_boolean uims_menu_left;                                 /* in SDMAIN */
 extern char database_version[81];                                   /* in SDMAIN */
 extern int whole_sequence_low_lim;                                  /* in SDMAIN */
 extern interactivity_state interactivity;                           /* in SDMAIN */
@@ -1657,15 +1668,14 @@ extern void fill_in_neglect_percentage(char junk[], int n);
 extern int parse_number(char junk[]);
 extern long_boolean open_call_list_file(call_list_mode_t call_list_mode, char filename[]);
 extern char *read_from_call_list_file(char name[], int n);
-extern void write_to_call_list_file(char name[]);
+extern void write_to_call_list_file(Const char name[]);
 extern long_boolean close_call_list_file(void);
 
 /* In SDUI */
 
 extern void uims_process_command_line(int *argcp, char ***argvp);
 extern void uims_preinitialize(void);
-extern void uims_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[]);
-extern void uims_finish_call_menu(call_list_kind cl, Const char menu_name[]);
+extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[]);
 extern void uims_postinitialize(void);
 extern int uims_do_outfile_popup(char dest[]);
 extern int uims_do_comment_popup(char dest[]);
@@ -1703,6 +1713,7 @@ extern void exit_program(int code);
 extern void nonreturning fail(Const char s[]);
 extern void nonreturning fail2(Const char s1[], Const char s2[]);
 extern void nonreturning specialfail(Const char s[]);
+extern Const char *get_escape_string(char c);
 extern void string_copy(char **dest, char src[]);
 extern void display_initial_history(int upper_limit, int num_pics);
 extern void write_history_line(int history_index, Const char *header, long_boolean picture, file_write_flag write_to_file);

@@ -865,7 +865,7 @@ Private void special_4_way_symm(
    setup *scopy,
    personrec newpersonlist[],
    int newplacelist[],
-   int result_mask[],
+   int lilresult_mask[],
    setup *result)
 
 {
@@ -919,8 +919,8 @@ Private void special_4_way_symm(
    begin_size = setup_attrs[scopy->kind].setup_limits+1;
    result_size = setup_attrs[result->kind].setup_limits+1;
    result_quartersize = result_size >> 2;
-   result_mask[0] = 0;
-   result_mask[1] = 0;
+   lilresult_mask[0] = 0;
+   lilresult_mask[1] = 0;
 
    for (real_index=0; real_index<begin_size; real_index++) {
       personrec this_person = scopy->people[real_index];
@@ -942,7 +942,7 @@ Private void special_4_way_symm(
 
          newpersonlist[real_index].id2 = this_person.id2;
          newplacelist[real_index] = k;
-         result_mask[k>>5] |= (1 << (k&037));
+         lilresult_mask[k>>5] |= (1 << (k&037));
       }
    }
 }
@@ -985,6 +985,49 @@ Private void special_triangle(
 }
 
 
+/* This function is internal. */
+
+Private void special_1x3(
+   callarray *cdef,
+   callarray *ldef,
+   setup *scopy,
+   personrec newpersonlist[],
+   int newplacelist[],
+   int lilresult_mask[],
+   setup *result)
+
+{
+   int real_index;
+   int real_direction, northified_index;
+   uint32 z;
+   int k;
+   int num = 3;
+   int numout = setup_attrs[result->kind].setup_limits+1;
+
+   for (real_index=0; real_index<num; real_index++) {
+      uint32 z;
+      personrec this_person = scopy->people[real_index];
+      newpersonlist[real_index].id1 = 0;
+      newpersonlist[real_index].id2 = 0;
+      if (this_person.id1) {
+         int real_direction = this_person.id1 & 3;
+         northified_index = (real_direction & 2) ? num-1-real_index : real_index;
+         z = find_calldef((real_direction & 1) ? cdef : ldef, scopy, real_index, real_direction, northified_index);
+         k = (z >> 4) & 017;
+         if (real_direction & 2) k = numout-1-k;
+         newpersonlist[real_index].id1 = (this_person.id1 & ~(ROLL_MASK | 077)) |
+               ((z + real_direction * 011) & 013) |
+               ((z * (ROLL_BIT/DBROLL_BIT)) & ROLL_MASK);
+
+         if (this_person.id1 & STABLE_ENAB)
+            do_stability(&newpersonlist[real_index].id1, (stability) ((z/DBSTAB_BIT) & 0xF), (z + real_direction - real_direction + result->rotation));
+
+         newpersonlist[real_index].id2 = this_person.id2;
+         newplacelist[real_index] = k;
+         lilresult_mask[0] |= (1 << k);
+      }
+   }
+}
 
 
 Private int divide_the_setup(
@@ -1676,6 +1719,11 @@ Private int divide_the_setup(
 
          if (assoc(b_1x2, ss, calldeflist) || assoc(b_2x1, ss, calldeflist) || assoc(b_1x1, ss, calldeflist)) {
             division_maps = (*map_lists[s1x2][2])[MPKIND__SPLIT][1];
+            goto divide_us_no_recompute;
+         }
+         /* If it has 1x3 or 3x1 definitions, split it 2 ways. */
+         if (assoc(b_1x3, ss, calldeflist) || assoc(b_3x1, ss, calldeflist)) {
+            division_maps = (*map_lists[s1x3][1])[MPKIND__SPLIT][1];
             goto divide_us_no_recompute;
          }
          break;
@@ -2720,6 +2768,10 @@ extern void basic_move(
                }
             }
          }
+      }
+      else if (ss->kind == s1x3) {
+         if (inconsistent_rotation | inconsistent_setup) fail("This call is an inconsistent shape-changer.");
+         special_1x3(coldefinition, linedefinition, ss, newpersonlist, newplacelist, lilresult_mask, result);
       }
       else {
          int *final_translatec = identity;

@@ -27,6 +27,7 @@
    fail
    fail2
    specialfail
+   get_escape_string
    string_copy
    display_initial_history
    write_history_line
@@ -261,7 +262,8 @@ char *warning_strings[] = {
    /*  warn__split_phan_in_pgram */   " The split phantom setups are directly adjacent to the real people.",
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
-   /*  warn__did_not_interact    */   "*The setups did not interact with each other."};
+   /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
+   /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast."};
 
 /* These variables are used by the text-packing stuff. */
 
@@ -373,53 +375,70 @@ extern void writestuff(Const char s[])
 
 
 
+Private void write_nice_number(char indicator, uint32 num)
+{
+   char nn;
+
+   switch (indicator) {
+      case '9': case 'a': case 'b': case 'B':
+         nn = '0' + num;
+         if (indicator == '9')
+            writechar(nn);
+         else if (indicator == 'B') {
+            if (num == 1)
+               writestuff("quarter");
+            else if (num == 2)
+               writestuff("half");
+            else if (num == 3)
+               writestuff("three quarter");
+            else if (num == 4)
+               writestuff("four quarter");
+            else {
+               writechar(nn);
+               writestuff("/4");
+            }
+         }
+         else if (num == 2)
+            writestuff("1/2");
+         else if (num == 4 && indicator == 'a')
+            writestuff("full");
+         else {
+            writechar(nn);
+            writestuff("/4");
+         }
+         break;
+      case 'u':     /* Need to plug in an ordinal number. */
+         writestuff(ordinals[num-1]);
+         break;
+   }
+}
+
+
 Private void writestuff_with_decorations(parse_block *cptr, Const char *s, long_boolean singular)
 {
    int index = cptr->number;
-   selector_kind sel = cptr->selector;
-   char *selname = singular ? selector_singular[sel] : selector_names[sel];
    Const char *f;
 
    f = s;     /* Argument "s", if non-null, overrides the concept name in the table. */
    if (!f) f = cptr->concept->name;
 
    while (*f) {
-      if (f[0] == '<') {
-         if ((concept_table[cptr->concept->kind].concept_prop & (CONCPROP__USE_NUMBER | CONCPROP__USE_TWO_NUMBERS)) && f[1] == 'N') {
-            if (f[2] == '/' && f[3] == '4' && f[4] == '>') {
-               if ((index & 0xF) == 2)
-                  writestuff("1/2");
-               else {
-                  writechar('0' + (index & 0xF));
-                  writestuff("/4");
-               }
-               f += 5;
+      if (f[0] == '@') {
+         switch (f[1]) {
+            case 'a': case 'b': case 'B': case 'u': case '9':
+               write_nice_number(f[1], index & 0xF);
+               f += 2;
                index >>= 4;
                continue;
-            }
-            else if (f[2] == 't' && f[3] == 'h' && f[4] == '>') {
-               writestuff(ordinals[(index & 0xF)-1]);
-               f += 5;
-               index >>= 4;
+            case '6': case 'k':
+               writestuff(singular ? selector_singular[cptr->selector] : selector_names[cptr->selector]);
+               f += 2;
                continue;
-            }
-            else if (f[2] == '>') {
-               writechar('0' + (index & 0xF));
-               f += 3;
-               index >>= 4;
-               continue;
-            }
          }
-         else if ((concept_table[cptr->concept->kind].concept_prop & CONCPROP__USE_SELECTOR) &&
-                  f[1] == 'A' && f[2] == 'N' && f[3] == 'Y' && f[4] == 'O' && f[5] == 'N' && f[6] == 'E' && f[7] == '>') {
-            writestuff(selname);
-            f += 8;
-            continue;
-         }
-         else if (f[1] == 'c' && f[2] == 'o' && f[3] == 'n' && f[4] == 'c' && f[5] == 'e' && f[6] == 'p' && f[7] == 't' && f[8] == '>') {
-            f += 9;
-            continue;
-         }
+      }
+      else if (f[0] == '<' && f[1] == 'c' && f[2] == 'o' && f[3] == 'n' && f[4] == 'c' && f[5] == 'e' && f[6] == 'p' && f[7] == 't' && f[8] == '>') {
+         f += 9;
+         continue;
       }
 
       writechar(*f++);
@@ -467,6 +486,36 @@ extern void nonreturning specialfail(Const char s[])
    error_message1[MAX_ERR_LENGTH-1] = '\0';
    error_message2[0] = '\0';
    longjmp(longjmp_ptr->the_buf, 4);
+}
+
+
+/* This examines the indicator character after an "@" escape.  If the escape
+   is for something that is supposed to appear in the menu as a "<...>"
+   wildcard, it returns that string.  If it is an escape that starts a
+   substring that would normally be elided, as in "@7 ... @8", it returns
+   a non-null pointer to a null character.  If it is an escape that is normally
+   simply dropped, it returns a null pointer. */
+
+extern Const char *get_escape_string(char c)
+{
+   switch (c) {
+      case '0': case 'm':
+         return "<ANYTHING>";
+      case '6': case 'k':
+         return "<ANYONE>";
+      case 'h':
+         return "<DIRECTION>";
+      case '9':
+         return "<N>";
+      case 'a': case 'b': case 'B':
+         return "<N/4>";
+      case 'u':
+         return "<Nth>";
+      case '7': case 'n': case 'j':
+         return "";
+      default:
+         return (char *) 0;
+   }
 }
 
 
@@ -561,13 +610,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             }
             else if (k == concept_some_vs_others) {
                if ((i = item->value.arg1) == 1)
-                  writestuff_with_decorations(static_cptr, "<ANYONE> DO YOUR PART, ", FALSE);
+                  writestuff_with_decorations(static_cptr, "@6 DO YOUR PART, ", FALSE);
                else if (i == 3)
-                  writestuff_with_decorations(static_cptr, "OWN THE <ANYONE>, ", FALSE);
+                  writestuff_with_decorations(static_cptr, "OWN THE @6, ", FALSE);
                else if (i == 5)
-                  writestuff_with_decorations(static_cptr, "<ANYONE>, ", FALSE);
+                  writestuff_with_decorations(static_cptr, "@6, ", FALSE);
                else
-                  writestuff_with_decorations(static_cptr, "<ANYONE> DISCONNECTED ", FALSE);
+                  writestuff_with_decorations(static_cptr, "@6 DISCONNECTED ", FALSE);
             }
             else if (k == concept_sequential) {
                writestuff("(");
@@ -733,7 +782,7 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
          selector_kind i16junk = static_cptr->selector;
          int tagjunk = static_cptr->tagger;
          direction_kind idirjunk = static_cptr->direction;
-         int number_list = static_cptr->number;
+         uint32 number_list = static_cptr->number;
          unsigned int next_recurse1_arg = 0;
          unsigned int next_recurse2_arg = 0;
          callspec_block *localcall = static_cptr->call;
@@ -792,7 +841,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
 
          if (localcall) {      /* Call = NIL means we are echoing input and user hasn't entered call yet. */
             char *np;
-            char nn[2];
             char savec;
 
             if (enable_file_writing) localcall->age = global_age;
@@ -837,41 +885,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
                            writestuff(" ");
                         np += 2;       /* skip the indicator */
                         break;
-                     case '9': case 'a': case 'b': case 'B':    /* Need to plug in a number. */
+                     case '9': case 'a': case 'b': case 'B': case 'u':    /* Need to plug in a number. */
                         write_blank_if_needed();
-                        nn[0] = '0' + (number_list & 0xF);
-                        nn[1] = '\0';
-                        if (savec == '9')
-                           writestuff(nn);
-                        else if (savec == 'B') {
-                           if ((number_list & 0xF) == 1)
-                              writestuff("quarter");
-                           else if ((number_list & 0xF) == 2)
-                              writestuff("half");
-                           else if ((number_list & 0xF) == 3)
-                              writestuff("three quarter");
-                           else if ((number_list & 0xF) == 4)
-                              writestuff("four quarter");
-                           else {
-                              writestuff(nn);
-                              writestuff("/4");
-                           }
-                        }
-                        else if ((number_list & 0xF) == 2)
-                           writestuff("1/2");
-                        else if ((number_list & 0xF) == 4 && savec == 'a')
-                           writestuff("full");
-                        else {
-                           writestuff(nn);
-                           writestuff("/4");
-                        }
-   
-                        number_list >>= 4;    /* Get ready for next number. */
-                        np += 2;              /* skip the indicator */
-                        break;
-                     case 'u':     /* Need to plug in an ordinal number. */
-                        write_blank_if_needed();
-                        writestuff(ordinals[(number_list & 0xF)-1]);
+                        write_nice_number(savec, number_list & 0xF);
                         number_list >>= 4;    /* Get ready for next number. */
                         np += 2;              /* skip the indicator */
                         break;
@@ -2378,7 +2394,9 @@ extern long_boolean fix_n_results(int arity, setup z[])
          }
 
          if (rr < 0) rr = z[i].rotation;
-         if (rr != z[i].rotation) goto lose;
+         /* If the setups are "trngl4", we allow mismatched rotation --
+            the client will take care of it. */
+         if (rr != z[i].rotation && z[i].kind != s_trngl4) goto lose;
       }
    }
 
@@ -2407,7 +2425,7 @@ extern long_boolean fix_n_results(int arity, setup z[])
       }
 
       z[i].kind = kk;
-      z[i].rotation = rr;
+      if (kk != s_trngl4) z[i].rotation = rr;
    }
 
    return FALSE;

@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992, 1993  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for program version 30.
+    This is for version 31.
 
     The version of this file is as shown immediately below.
     The version for the user interface does not track the version
@@ -28,8 +28,7 @@
    uims_process_command_line
    uims_version_string
    uims_preinitialize
-   uims_add_call_to_menu
-   uims_finish_call_menu
+   uims_create_menu
    uims_postinitialize
    uims_do_outfile_popup
    uims_do_comment_popup
@@ -60,8 +59,6 @@
 
    uims_version_string        Return a static string containing some version info
    uims_preinitialize         First initialization, if any, before call menus are created
-   uims_add_call_to_menu      Add one call to current menu under construction
-   uims_finish_call_menu      Finish construction of a call menu; there may be more
    uims_postinitialize        Final initialization, if any, after call menus are created
    uims_do_outfile_popup      Put up a popup to let user change the output file
    uims_do_comment_popup      Put up a popup to let user type a comment
@@ -365,8 +362,8 @@ extern void uims_process_command_line(int *argcp, char ***argvp)
 
 /*
 The main program calls this before any of the call menus are
-created, that is, before any calls to "uims_add_call_to_menu"
-and "uims_finish_call_menu".  This performs any first
+created, that is, before any calls to "uims_create_menu".
+This performs any first
 initialization required by the window management package.
 
 One thing we might want to do here (or do it later, in
@@ -390,8 +387,7 @@ more complicated, because there are many menus (one per nonzero
 item in the enumeration "call_list_kind"), and the calls in
 those menus are presented to us by procedure calls during
 initialization, rather than being found in a compile-time
-table.  That's what "uims_add_call_to_menu" and
-"uims_finish_call_menu" are for.
+table.
 */
 
 extern void uims_preinitialize(void)
@@ -454,7 +450,7 @@ extern void uims_postinitialize(void)
    /* Create the "general" concept menu. */
    
    for (k=0; k<general_concept_size; k++) {
-      p = concept_descriptor_table[k+general_concept_offset].name;
+      p = concept_descriptor_table[k+general_concept_offset].menu_name;
       j = 0;
       while (p[j]) j++;
       menu_things[k].max_len = j;
@@ -470,7 +466,7 @@ extern void uims_postinitialize(void)
    for (popup=0; concept_size_tables[popup]; popup++) {
       for (column=0; concept_size_tables[popup][column]>=0; column++) {
          for (k=0; k<concept_size_tables[popup][column]; k++) {
-            p = concept_descriptor_table[k+concept_offset_tables[popup][column]].name;
+            p = concept_descriptor_table[k+concept_offset_tables[popup][column]].menu_name;
             j = 0;
             while (p[j]) j++;
             menu_things[k].max_len = j;
@@ -665,34 +661,25 @@ is on, we must copy the string into some freshly allocated
 memory.
 */
 
-extern void uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
-{
-   int j;
-
-   menu_list[call_menu_index].chars_p = name;
-   menu_list[call_menu_index].cur_len = strlen(name);
-   if (menu_width < menu_list[call_menu_index].cur_len) menu_list[call_menu_index].cur_len = menu_width;
-   menu_list[call_menu_index].max_len = menu_list[call_menu_index].cur_len;
-}
-
-
 /*
 Communicate with the window system, creating a menu
-containing "number_of_calls[cl]" items, which are the items whose
-text strings were previously transmitted by the calls to
-"uims_add_call_to_menu".
+containing "number_of_calls[cl]" items.
 
 This will be called once for each value in the enumeration
 "call_list_kind".
-You may want to use a static variable to communicate the text
-information from "uims_add_call_to_menu" to here.
 */
 
-
-extern void uims_finish_call_menu(call_list_kind cl, char menu_name[])
+extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
    short ncjunk = number_of_calls[cl];
+   int i;
 
+   for (i=0; i<number_of_calls[cl]; i++) {
+      menu_list[i].chars_p = (char *) call_name_list[i]->menu_name;
+      menu_list[i].cur_len = strlen(menu_list[i].chars_p);
+      if (menu_width < menu_list[i].cur_len) menu_list[i].cur_len = menu_width;
+      menu_list[i].max_len = menu_list[i].cur_len;
+   }
    dp_$enum_set_choices(call_list_menu_tasks[cl], 1, ncjunk, menu_list, true, &status);
    status_error_check("create_menu - 1: ");
 }
@@ -815,6 +802,9 @@ extern uims_reply uims_get_command(mode_kind mode, call_list_kind *call_menu)
 
    getcmd:
    dialog_read(&my_task);
+
+   uims_menu_cross = FALSE;
+   uims_menu_left = FALSE;
 
    switch (my_task) {
       case task$undo:

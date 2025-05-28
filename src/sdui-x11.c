@@ -29,8 +29,7 @@ static char *id="@(#)$He" "ader: Sd: sdui-x11.c  " UI_VERSION_STRING "    gildea
    uims_process_command_line
    uims_version_string
    uims_preinitialize
-   uims_add_call_to_menu
-   uims_finish_call_menu
+   uims_create_menu
    uims_postinitialize
    uims_get_command
    uims_do_comment_popup
@@ -331,6 +330,8 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
         uims_reply local_reply = (uims_reply) client_data;
  
 	uims_menu_index = item->list_index; /* extern var <- menu item no. */
+         uims_menu_cross = FALSE;
+         uims_menu_left = FALSE;
 
         if (local_reply == ui_command_select) {
             /* Translate into the form the main program wants, except for a few
@@ -368,7 +369,7 @@ command_or_menu_chosen(Widget w, XtPointer client_data, XtPointer call_data)
                 for (col=0; col<maxcolumn; col++) {
                     if (row < concept_size_tables[menu][col])
                         concept_popup_list[i] = concept_descriptor_table
-                            [ concept_offset_tables[menu][col]+row ].name;
+                            [ concept_offset_tables[menu][col]+row ].menu_name;
                     else
                         concept_popup_list[i] = empty_string;
                     i++;
@@ -708,8 +709,7 @@ uims_process_command_line(int *argcp, char **argvp[])
 
 /*
  * The main program calls this before any of the call menus are
- * created, that is, before any calls to uims_add_call_to_menu
- * or uims_finish_call_menu.
+ * created, that is, before any calls to uims_create_menu.
  */
 extern void
 uims_preinitialize(void)
@@ -1013,47 +1013,32 @@ Private int concept_menu_len;
 Private Cstring *call_menu_lists[NUM_CALL_LIST_KINDS];
 Private Cstring call_menu_names[NUM_CALL_LIST_KINDS];
 
-/*
- * We have been given the name of one call (call number
- * call_menu_index, from 0 to number_of_calls[cl]) to be added to the
- * call menu cl (enumerated over the type call_list_kind.)
- * The string is guaranteed to be in stable storage.
- */
-extern void
-uims_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[])
-{
-    int menu_num = (int) cl;
-
-    add_call_to_menu(&call_menu_lists[menu_num], call_menu_index,
-		     number_of_calls[menu_num], name);
-}
-
 
 Private call_list_kind longest_title = call_list_empty;
 Private int longest_title_length = 0;
 
 /*
- * Create a menu containing number_of_calls[cl] items, which are the
- * items whose text strings were previously transmitted by the calls
- * to uims_add_call_to_menu.  Use the "menu_name" argument to create a
- * title line for the menu.  The string is in static storage.
- * 
+ * Create a menu containing number_of_calls[cl] items.
  * This will be called once for each value in the enumeration call_list_kind.
  */
-/* ARGSUSED */
-extern void
-uims_finish_call_menu(call_list_kind cl, Const char menu_name[])
+extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
-    int name_len = strlen((char *) menu_name);
+   int i;
+   int name_len = strlen((char *) menu_names[cl]);
 
-    call_menu_names[cl] = menu_name;
+   for (i=0; i<number_of_calls[cl]; i++) {
+      add_call_to_menu(&call_menu_lists[cl], i,
+         number_of_calls[cl], call_name_list[i]->menu_name);
+   }
 
-    /* XXX - counting characters is not correct because the font
-       need not be fixed width.  */
-    if (name_len > longest_title_length) {
-	longest_title_length = name_len;
-	longest_title = cl;
-    }
+   call_menu_names[cl] = menu_names[cl];
+
+   /* XXX - counting characters is not correct because the font
+      need not be fixed width.  */
+   if (name_len > longest_title_length) {
+      longest_title_length = name_len;
+      longest_title = cl;
+   }
 }
 
 Private call_list_kind visible_call_menu = call_list_none;
@@ -1103,7 +1088,7 @@ widen_viewport(Widget vw, Widget childw)
 Private Cstring empty_menu[] = {NULL};
 
 /* The main program calls this after all the call menus have been created,
-   after all calls to uims_add_call_to_menu and uims_finish_call_menu.
+   after all calls to uims_create_menu.
    This performs any final initialization required by the interface package.
 
    It must also perform any required setup of the concept menu.  The
@@ -1127,7 +1112,7 @@ uims_postinitialize(void)
     /* fill in general concept menu */
     for (i=0; i<general_concept_size; i++)
 	add_call_to_menu(&concept_menu_list, i, general_concept_size,
-			 concept_descriptor_table[i+general_concept_offset].name);
+			 concept_descriptor_table[i+general_concept_offset].menu_name);
 
     concept_menu_len = general_concept_size;
 

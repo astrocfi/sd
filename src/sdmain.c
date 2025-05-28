@@ -27,7 +27,7 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "30.81"
+#define VERSION_STRING "30.82"
 
 /* We cause this string (that is, the concatentaion of these strings) to appear
    in the binary image of the program, so that the "what" and "ident" utilities
@@ -76,6 +76,8 @@ and the following external variables:
    global_age
    parse_state
    uims_menu_index
+   uims_menu_cross
+   uims_menu_left
    database_version
    whole_sequence_low_lim
    interactivity
@@ -137,6 +139,8 @@ int last_file_position = -1;
 int global_age;
 parse_state_type parse_state;
 int uims_menu_index;
+long_boolean uims_menu_cross;
+long_boolean uims_menu_left;
 char database_version[81];
 int whole_sequence_low_lim;
 interactivity_state interactivity = interactivity_normal;
@@ -828,6 +832,9 @@ extern long_boolean query_for_call(void)
       else {
          local_reply = ui_call_select;
       }
+
+      uims_menu_cross = FALSE;
+      uims_menu_left = FALSE;
    }
 
    /* Now see what kind of command we have. */
@@ -915,12 +922,18 @@ extern long_boolean query_for_call(void)
          which would make the uniquefication fail, so we could see the same thing twice. */
    
       if (result->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE) fail("This shouldn't get printed.");
+      if (deposit_call(result)) goto recurse_entry;
    }
    else {
-      result = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
-   }
+      callspec_block *save_call = main_call_lists[parse_state.call_list_to_use][uims_menu_index];
 
-   if (deposit_call(result)) goto recurse_entry;
+      if (uims_menu_cross)
+         (void) deposit_concept(&concept_descriptor_table[cross_concept_index], 0);
+      if (uims_menu_left)
+         (void) deposit_concept(&concept_descriptor_table[left_concept_index], 0);
+
+      if (deposit_call(save_call)) goto recurse_entry;
+   }
 
    /* Check our "stack" and see if we have recursive invocations to clean up. */
 

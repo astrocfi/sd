@@ -1,8 +1,8 @@
 /* 
  * sdui-tty.c - SD TTY User Interface
  * Originally for Macintosh.  Unix version by gildea.
- * Time-stamp: <94/07/28 00:41:53 gildea>
- * Copyright (c) 1990,1991,1992,1993 Stephen Gildea, William B. Ackerman, and
+ * Time-stamp: <94/11/10 17:17:53 wba>
+ * Copyright (c) 1990-1994 Stephen Gildea, William B. Ackerman, and
  *   Alan Snyder
  *
  * Permission to use, copy, modify, and distribute this software for
@@ -34,14 +34,13 @@
 /* See comments in sdmain.c regarding this string. */
 static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    UI_VERSION_STRING
-   "  wba@apollo.hp.com  10 Dec 93 $";
+   "  wba@apollo.hp.com  10 Nov 94 $";
 
 /* This file defines the following functions:
    uims_process_command_line
    uims_version_string
    uims_preinitialize
-   uims_add_call_to_menu
-   uims_finish_call_menu
+   uims_create_menu
    uims_postinitialize
    uims_get_command
    uims_do_comment_popup
@@ -241,8 +240,7 @@ uims_process_command_line(int *argcp, char ***argvp)
 
 /*
  * The main program calls this before any of the call menus are
- * created, that is, before any calls to uims_add_call_to_menu
- * or uims_finish_call_menu.
+ * created, that is, before any calls to uims_create_menu.
  */
  
 extern void
@@ -251,44 +249,30 @@ uims_preinitialize(void)
 }
 
 /*
- * We have been given the name of one call (call number
- * call_menu_index, from 0 to number_of_calls[cl]) to be added to the
- * call menu cl (enumerated over the type call_list_kind.)
- * The string is guaranteed to be in stable storage.
- */
- 
-extern void
-uims_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[])
-{
-    matcher_add_call_to_menu(cl, call_menu_index, name);
-}
-
-
-/*
- * Create a menu containing number_of_calls[cl] items, which are the
- * items whose text strings were previously transmitted by the calls
- * to uims_add_call_to_menu.  Use the "menu_name" argument to create a
+ * Create a menu containing number_of_calls[cl] items.
+ * Use the "menu_names" array to create a
  * title line for the menu.  The string is in static storage.
  * 
  * This will be called once for each value in the enumeration call_list_kind.
  */
 
-extern void
-uims_finish_call_menu(call_list_kind cl, Const char menu_name[])
+extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
-    call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
+   call_menu_prompts[cl] = (char *) get_mem(50);  /* *** Too lazy to compute it. */
+   matcher_setup_call_menu(cl, call_name_list);
 
-    if (cl == call_list_any)
-        /* The menu name here is "(any setup)".  That may be a sensible
-           name for a menu, but it isn't helpful as a prompt.  So we
-           just use a vanilla prompt. */
-        call_menu_prompts[cl] = "--> ";
-    else
-        (void) sprintf(call_menu_prompts[cl], "(%s)--> ", menu_name);
+   if (cl == call_list_any)
+      /* The menu name here is "(any setup)".  That may be a sensible
+         name for a menu, but it isn't helpful as a prompt.  So we
+         just use a vanilla prompt. */
+      call_menu_prompts[cl] = "--> ";
+   else
+      (void) sprintf(call_menu_prompts[cl], "(%s)--> ", menu_names[cl]);
 }
 
+
 /* The main program calls this after all the call menus have been created,
-   after all calls to uims_add_call_to_menu and uims_finish_call_menu.
+   after all calls to uims_create_menu.
    This performs any final initialization required by the interface package.
 
    It must also perform any required setup of the concept menu.  The
@@ -313,7 +297,7 @@ uims_postinitialize(void)
 }
 
 Private void
-pack_and_echo_character(int c)
+pack_and_echo_character(char c)
 {
    /* Really should handle error better -- ring the bell,
       but this is called inside a loop. */
@@ -365,7 +349,7 @@ prompt_for_more_output(void)
     put_line("--More--");
 
     for (;;) {
-        int c = get_char_input();
+        char c = get_char_input();
         clear_line();   /* Erase the "more" line; next item goes on that line. */
 
         switch (c) {
@@ -386,22 +370,75 @@ prompt_for_more_output(void)
 }
 
 Private void
-show_match(char *user_input_str, char *extension, Const match_result *mr)
+show_match(char *user_input_str, Const char *extension, Const match_result *mr)
 {
-    if (match_counter < 0) return;  /* Showing has been turned off. */
+   char temp[200];
+   char c;
+   Const char *p;
+   char *q;
+   char *z;
 
-    if (match_counter <= 0) {
-        match_counter = match_lines - 1;
-        if (!prompt_for_more_output()) {
-            match_counter = -1;   /* Turn it off. */
-            return;
-        }
-    }
-    match_counter--;
-    put_line(user_input_str);
-    put_line(extension);
-    put_line("\n");
-    current_text_line++;
+   if (match_counter < 0) return;  /* Showing has been turned off. */
+
+   if (match_counter <= 0) {
+       match_counter = match_lines - 1;
+       if (!prompt_for_more_output()) {
+           match_counter = -1;   /* Turn it off. */
+           return;
+       }
+   }
+   match_counter--;
+   put_line(user_input_str);
+
+#ifdef do_we_need_this
+   p = extension;
+   q = temp;
+
+   for (;;) {
+      c = *p++;
+      if (c == '@') {
+         c = *p++;
+
+         if (c == '0' || c == 'm') {
+            z = "<ANYTHING>"; goto pack_special_stuff;
+         }
+         else if (c == '6' || c == 'k') {
+            z = "<ANYONE>"; goto pack_special_stuff;
+         }
+         else if (c == 'h') {
+            z = "<DIRECTION>"; goto pack_special_stuff;
+         }
+         else if (c == '9') {
+            z = "<N>"; goto pack_special_stuff;
+         }
+         else if (c == 'a' || c == 'b' || c == 'B') {
+            z = "<N/4>"; goto pack_special_stuff;
+         }
+         else if (c == 'u') {
+            z = "<Nth>"; goto pack_special_stuff;
+         }
+      }
+      else
+         *q++ = c;
+
+      if (!c) break;
+      continue;
+
+      pack_special_stuff:
+
+      for (;;) {
+         c = *z++;
+         *q++ = c;
+         if (!c) break;
+      }
+   }
+
+   put_line(temp);
+#else
+   put_line((char *) extension);
+#endif
+   put_line("\n");
+   current_text_line++;
 }
 
 /*
@@ -458,7 +495,7 @@ get_user_input(char *prompt, int which)
 {
     char extended_input[200];
     char *p;
-    int c;
+    char c;
     int matches;
     
     user_match.valid = FALSE;
@@ -641,6 +678,8 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
         get_user_input(prompt_ptr, (int) current_call_menu);
 
         uims_menu_index = user_match.index;
+        uims_menu_cross = user_match.cross;
+        uims_menu_left = user_match.left;
 
         if (user_match.kind == ui_command_select && uims_menu_index >= NUM_COMMAND_KINDS) {
             if (uims_menu_index == NUM_COMMAND_KINDS + SPECIAL_COMMAND_SIMPLE_MODS) {
@@ -713,7 +752,7 @@ uims_do_neglect_popup(char dest[])
 Private int
 confirm(char *question)
 {
-    int c;
+    char c;
 
     for (;;) {
         put_line(question);

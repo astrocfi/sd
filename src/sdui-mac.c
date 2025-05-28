@@ -29,8 +29,7 @@ static char *sdui_version = "2.2";
    uims_process_command_line
    uims_version_string
    uims_preinitialize
-   uims_add_call_to_menu
-   uims_finish_call_menu
+   uims_create_menu
    uims_postinitialize
    uims_get_command
    uims_do_comment_popup
@@ -86,8 +85,7 @@ uims_process_command_line(int *argcp, char ***argvp)
 
 /*
  * The main program calls this before any of the call menus are
- * created, that is, before any calls to uims_add_call_to_menu
- * or uims_finish_call_menu.
+ * created, that is, before any calls to uims_create_menu.
  */
  
 extern void
@@ -96,35 +94,21 @@ uims_preinitialize(void)
 }
 
 /*
- * We have been given the name of one call (call number
- * call_menu_index, from 0 to number_of_calls[cl]) to be added to the
- * call menu cl (enumerated over the type call_list_kind.)
- * The string is guaranteed to be in stable storage.
- */
- 
-extern void
-uims_add_call_to_menu(call_list_kind cl, int call_menu_index, char name[])
-{
-    matcher_add_call_to_menu(cl, call_menu_index, name);
-}
-
-/*
- * Create a menu containing number_of_calls[cl] items, which are the
- * items whose text strings were previously transmitted by the calls
- * to uims_add_call_to_menu.  Use the "menu_name" argument to create a
+ * Create a menu containing number_of_calls[cl] items.
+ * Use the "menu_name" argument to create a
  * title line for the menu.  The string is in static storage.
  * 
  * This will be called once for each value in the enumeration call_list_kind.
  */
-
-extern void
-uims_finish_call_menu(call_list_kind cl, char menu_name[])
+extern void uims_create_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
-   call_menu_names[cl] = menu_name;
+   matcher_setup_call_menu(cl, call_name_list);
+   call_menu_names[cl] = menu_names[cl];
 }
 
+
 /* The main program calls this after all the call menus have been created,
-   after all calls to uims_add_call_to_menu and uims_finish_call_menu.
+   after all calls to uims_create_menu.
    This performs any final initialization required by the interface package.
 
    It must also perform any required setup of the concept menu.  The
@@ -248,6 +232,8 @@ get_call_command(call_list_kind *call_menu)
     input_set_prompt("Enter concept or call", call_menu_names[*call_menu]);
     get_user_command((int) *call_menu);
     uims_menu_index = user_match.index;
+    uims_menu_cross = user_match.cross;
+    uims_menu_left = user_match.left;
     
     /*
      * User can type "modify next command", but sd doesn't want to hear about it.

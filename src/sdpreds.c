@@ -1,6 +1,6 @@
 /* SD -- square dance caller's helper.
 
-    Copyright (C) 1990, 1991, 1992  William B. Ackerman.
+    Copyright (C) 1990-1994  William B. Ackerman.
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-    This is for version 30. */
+    This is for version 31. */
 
 /* This defines the following function:
    selectp
@@ -370,22 +370,6 @@ Private long_boolean lines_couple(setup *real_people, int real_index,
 }
 
 /* ARGSUSED */
-Private long_boolean cast_pushy(setup *real_people, int real_index,
-   int real_direction, int northified_index)
-{
-   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
-         real_people->cmd.cmd_assume.assump_cast)
-      return FALSE;
-   else {
-      int this_person = real_people->people[real_index].id1;
-      int other_person = real_people->people[real_index ^ 1].id1;
-      if (real_people->kind == s1x6 && real_index >= 2)
-         other_person = real_people->people[7 - real_index].id1;
-      return ((this_person ^ other_person) & DIR_MASK) == 0;
-   }
-}
-
-/* ARGSUSED */
 Private long_boolean columns_tandem(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
@@ -426,6 +410,47 @@ Private long_boolean cast_normal(setup *real_people, int real_index,
       if (real_people->kind == s1x6 && real_index >= 2)
          other_person = real_people->people[7 - real_index].id1;
       return ((this_person ^ other_person) & DIR_MASK) == 2;
+   }
+}
+
+/* ARGSUSED */
+Private long_boolean cast_pushy(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assump_cast)
+      return FALSE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ 1].id1;
+      if (real_people->kind == s1x6 && real_index >= 2)
+         other_person = real_people->people[7 - real_index].id1;
+      return ((this_person ^ other_person) & DIR_MASK) == 0;
+   }
+}
+
+/* ARGSUSED */
+Private long_boolean cast_normal_or_warn(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   if (real_people->cmd.cmd_assume.assumption == cr_wave_only ||
+         real_people->cmd.cmd_assume.assump_cast)
+      return TRUE;
+   else {
+      int this_person = real_people->people[real_index].id1;
+      int other_person = real_people->people[real_index ^ 1].id1;
+      if (real_people->kind == s1x6 && real_index >= 2)
+         other_person = real_people->people[7 - real_index].id1;
+
+      switch ((this_person ^ other_person) & DIR_MASK) {
+         case 2:
+            return TRUE;
+         case 0:
+            return FALSE;
+         default:
+            warn(warn__opt_for_normal_cast);
+            return TRUE;
+      }
    }
 }
 
@@ -755,6 +780,53 @@ Private long_boolean socker_is_left(setup *real_people, int real_index,
       (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2));     /* we do not have another socker to my right */
 }
 
+Private long_boolean judge_is_right_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person = real_people->people[real_index].id1;
+   int f = this_person & 2;
+
+   return(
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 0)       /* judge exists to my right */
+         &&
+      (((real_people->people[f].id1 ^ this_person) & 013) != 2));         /* we do not have another judge to my left */
+}
+
+Private long_boolean judge_is_left_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person = real_people->people[real_index].id1;
+   int f = this_person & 2;
+
+   return(
+      (((real_people->people[f].id1 ^ this_person) & 013) == 2)           /* judge exists to my left */
+         &&
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 0));     /* we do not have another judge to my right */
+}
+
+Private long_boolean socker_is_right_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person = real_people->people[real_index].id1;
+   int f = this_person & 2;
+
+   return(
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) == 2)       /* socker exists to my right */
+         &&
+      (((real_people->people[f].id1 ^ this_person) & 013) != 0));         /* we do not have another socker to my left */
+}
+
+Private long_boolean socker_is_left_1x3(setup *real_people, int real_index,
+   int real_direction, int northified_index)
+{
+   int this_person = real_people->people[real_index].id1;
+   int f = this_person & 2;
+
+   return(
+      (((real_people->people[f].id1 ^ this_person) & 013) == 0)           /* socker exists to my left */
+         &&
+      (((real_people->people[f ^ 2].id1 ^ this_person) & 013) != 2));     /* we do not have another socker to my right */
+}
 
 /* Helper function for in/out roll circulate stuff.  "Yes_roll_direction" is the facing direction
    that constitutes what we are looking for (inroller or outroller as the case may be). */
@@ -1374,6 +1446,7 @@ long_boolean (*pred_table[])(
       lines_couple,                    /* "lines_couple" */
       cast_normal,                     /* "cast_normal" */
       cast_pushy,                      /* "cast_pushy" */
+      cast_normal_or_warn,             /* "cast_normal_or_warn" */
       opp_in_magic,                    /* "lines_magic_miniwave" */
       same_in_magic,                   /* "lines_magic_couple" */
       lines_once_rem_miniwave,         /* "lines_once_rem_miniwave" */
@@ -1400,6 +1473,10 @@ long_boolean (*pred_table[])(
       judge_is_left,                   /* "judge_is_left" */
       socker_is_right,                 /* "socker_is_right" */
       socker_is_left,                  /* "socker_is_left" */
+      judge_is_right_1x3,              /* "judge_is_right_1x3" */
+      judge_is_left_1x3,               /* "judge_is_left_1x3" */
+      socker_is_right_1x3,             /* "socker_is_right_1x3" */
+      socker_is_left_1x3,              /* "socker_is_left_1x3" */
       inroller_is_cw,                  /* "inroller_is_cw" */
       magic_inroller_is_cw,            /* "magic_inroller_is_cw" */
       outroller_is_cw,                 /* "outroller_is_cw" */

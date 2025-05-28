@@ -790,109 +790,109 @@ gotit:
     |       |       |       |       |       |       |       |       |       |       analyzer_LATERAL6
     |       |       |       |       |       |       |       |       |       |       |       analyzer_DIAMOND_LINE */
 
-extern cm_hunk concthing_1x4 =
+cm_hunk concthing_1x4 =
    {0,      0,      0,      0,      0,      0,      0,      &map1x2_1x2,
                                                                     0,      0,      0,      0};
 
-extern cm_hunk concthing_dmd =
+cm_hunk concthing_dmd =
    {0,      0,      0,      0,      0,      0,      0,      &oddmap1x2_1x2,
                                                                     0,      0,      0,      0};
 
-extern cm_hunk concthing_qtag =
+cm_hunk concthing_qtag =
    {&map2x2_1x4h,
             0,      &oddmapshort6_1x2v,
                             &oddmap1x2_2x3,
                                      &map1x2_intgl,
                                             0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_bone =
+cm_hunk concthing_bone =
    {&map2x2_1x4v,
             &map1x2_bone6_rc,
                     &mapbone6_1x2,
                             0,      0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_rigger =
+cm_hunk concthing_rigger =
    {&map1x4_2x2,
             &oddmap1x2_short6_rc,
                     0,      &oddmap1x2_short6,
                                     0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_spindle =
+cm_hunk concthing_spindle =
    {0,      &map2x2_dmd_rc,
                     &mapshort6_1x2h,
                             &map1x2_2x3,
                                     0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_hrglass =
+cm_hunk concthing_hrglass =
    {&map2x2_dmd,
             0,      &mapshort6_1x2v,
                             0,      0,      0,      0,      0,      0,      &oddmap1x2_bone6,
                                                                                     0,
                                                                                             0};
 
-extern cm_hunk concthing_dhrglass =
+cm_hunk concthing_dhrglass =
    {&map2x2_dmdv,
             &map1x2_2x3_rc,
                     &mapbone6_1x2v,
                             0,      0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_xwave =
+cm_hunk concthing_xwave =
    {&oddmap1x4_1x4,
             0,      &oddmapminrig_1x2,
                             0,      0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_1x8 =
+cm_hunk concthing_1x8 =
    {&map1x4_1x4,
             &map1x4_1x4_rc,
                     &map1x6_1x2,
                             &map1x2_1x6,
                                     0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_2x4 =
+cm_hunk concthing_2x4 =
    {&map2x2_2x2v,
             0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_3x4 =
+cm_hunk concthing_3x4 =
    {0,      0,      &oddmap2x3_1x2,
                             0,      0,      &map2x3_2x3,
                                                     0,      0,      &map_3line,
                                                                             0,      0,      0};
 
-extern cm_hunk concthing_4x4 =
+cm_hunk concthing_4x4 =
    {0,      0,      0,      0,      0,      0,      &map2x4_2x4v,
                                                             0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_ptpd =
+cm_hunk concthing_ptpd =
    {0,      &map2x2_1x4_rc,
                     &oddmapshort6_1x2h,
                             &map1x2_bone6,
                                     0,      0,      0,      0,      0,      0,      0,      0};
 
-extern cm_hunk concthing_3x1dmd =
+cm_hunk concthing_3x1dmd =
    {&oddmap1x4_dmd,
             0,      &mapminrig_1x2,
                             &oddmap1x2_1x6,
                                     0,      0,      0,      0,      0,      0,      0,      &mapdmd_line};
 
-extern cm_hunk concthing_wstar =
+cm_hunk concthing_wstar =
    {&map1x4_star,
             0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      &map_s_dmd_line};
 
-extern cm_hunk concthing_wstar12 =
+cm_hunk concthing_wstar12 =
    {0,      0,      0,      0,      0,      &map_spec_star12,
                                                     0,      0,      0,      0,      0,      &oddmap_s_short_1x6};
 
-extern cm_hunk concthing_wstar16 =
+cm_hunk concthing_wstar16 =
    {0,      0,      0,      0,      0,      0,      &map_spec_star16,
                                                             0,      0,      0,      0,      &map_s_spindle_1x8};
 
-extern cm_hunk concthing_gal =
+cm_hunk concthing_gal =
    {&mapstar_2x2,
             0,      0,      0,      0,      0,      0,      0,      0,      &map1x2_short6,
                                                                                     &maplatgal,
                                                                                             0};
 
-extern cm_hunk concthing_thar =
+cm_hunk concthing_thar =
    {&mapstar_star,
             0,      0,      0,      0,      0,      0,      0,      0,      0,      0,      0};
 

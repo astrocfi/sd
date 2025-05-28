@@ -1,6 +1,48 @@
-		   RELEASE NOTES FOR SD VERSION 30.8
-		 Database version = 30.8 format = 51,
+		   RELEASE NOTES FOR SD VERSION 30.82
+		 Database version = 30.82 format = 51,
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.82 ******
+
+A long-standing bug in sdtty, causing it to crash when scrolling
+through a large amount of "?" text, was fixed.
+
+A major change was made in the way parsing is done in the "sdtty"
+program.
+
+This information supersedes information in the current manual.
+
+In previous versions of the program, "cross" and "left" versions
+of calls were obtained by typing those concepts in front of the
+call in the usual way, even in cases in which the word naturally
+belonged in a different position in the call.  For example, one
+would type
+   cross
+   scoot reaction
+or
+   left
+   hang a right
+or
+   cross
+   transaction
+and the program would print out "scoot cross reaction", "hang
+a left", or "trans cross chain reaction" as required.  It is now
+possible to type these calls in directly with the desired word order.
+That is, you type "trans cross chain reaction" directly.  You can
+still use the "cross" or "left" modifier in front of the call, if you
+wish.
+
+In the menu-based version of the program, you still click on
+the "cross" or "left" modifier before clicking on the call.
+
+Whichever program you use, the result will be printed out in the
+natural word order.
+
+****** Changes as of version 30.81 ******
+
+An embarrassing bug was fixed.  This could cause the menus for
+grand columns and diamonds/quarter-tags to fail to show as many
+calls as they should.
 
 ****** Changes as of version 30.8 ******
 

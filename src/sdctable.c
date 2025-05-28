@@ -39,6 +39,8 @@
    nice_setup_thing_4dmd
    nice_setup_thing_4x6
    phantom_concept_index
+   left_concept_index
+   cross_concept_index
    general_concept_offset
    general_concept_size
    concept_offset_tables
@@ -352,8 +354,8 @@ concept_descriptor concept_descriptor_table[] = {
    {"BOXES WORK SOLID",                      concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 8}},
    {"DIAMONDS WORK SOLID",                   concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 9}},
    {"SKEW",                                  concept_tandem,                FALSE, l_c4a,        {0, FALSE, 0, 0, 3}},
-   {"<ANYONE> ARE AS COUPLES",               concept_some_are_tandem,       FALSE, l_a1,         {0, TRUE,  0, 0, 1}},
-   {"<ANYONE> ARE TANDEM",                   concept_some_are_tandem,       FALSE, l_c1,         {0, TRUE,  0, 0, 0}},
+   {"@6 ARE AS COUPLES",                     concept_some_are_tandem,       FALSE, l_a1,         {0, TRUE,  0, 0, 1}},
+   {"@6 ARE TANDEM",                         concept_some_are_tandem,       FALSE, l_c1,         {0, TRUE,  0, 0, 0}},
    {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 0, 2, 1}},
    {"GRUESOME TANDEM",                       concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 0, 2, 0}},
 /* -------- column break -------- */
@@ -370,42 +372,42 @@ concept_descriptor concept_descriptor_table[] = {
    {"BOXSOME",                               concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 8}},
    {"DIAMONDSOME",                           concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 9}},
    {"SKEWSOME",                              concept_tandem,                FALSE, l_c4a,        {0, FALSE, 1, 0, 3}},
-   {"<ANYONE> ARE COUPLES TWOSOME",          concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 1}},
-   {"<ANYONE> ARE TANDEM TWOSOME",           concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 0}},
+   {"@6 ARE COUPLES TWOSOME",                concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 1}},
+   {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 0}},
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 1, 2, 1}},
    {"GRUESOME TANDEM TWOSOME",               concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 1, 2, 0}},
 /* -------- column break -------- */
 #define tt__3_size 14
-   {"COUPLES <N/4> TWOSOME",                 concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 1}},
-   {"TANDEM <N/4> TWOSOME",                  concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 0}},
-   {"SIAMESE <N/4> TWOSOME",                 concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 2}},
-   {"COUPLES OF THREE <N/4> THREESOME",      concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 5}},
-   {"TANDEMS OF THREE <N/4> THREESOME",      concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 4}},
-   {"COUPLES OF FOUR <N/4> FOURSOME",        concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 7}},
-   {"TANDEMS OF FOUR <N/4> FOURSOME",        concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 6}},
-   {"BOXES ARE SOLID <N/4> BOXSOME",         concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 8}},
-   {"DIAMONDS ARE SOLID <N/4> DIAMONDSOME",  concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 9}},
-   {"SKEW <N/4> TWOSOME",                    concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 3}},
-   {"<ANYONE> ARE COUPLES <N/4> TWOSOME",    concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 1}},
-   {"<ANYONE> ARE TANDEM <N/4> TWOSOME",     concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 0}},
-   {"GRUESOME AS COUPLES <N/4> TWOSOME",     concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 2, 1}},
-   {"GRUESOME TANDEM <N/4> TWOSOME",         concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 2, 0}},
-/* -------- column break -------- */
-#define tt__4_size 14
-   {"COUPLES TWOSOME <N/4> SOLID",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 1}},
-   {"TANDEM TWOSOME <N/4> SOLID",            concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 0}},
-   {"SIAMESE TWOSOME <N/4> SOLID",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 2}},
-   {"COUPLES THREESOME <N/4> SOLID",         concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 5}},
-   {"TANDEM THREESOME <N/4> SOLID",          concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 4}},
-   {"COUPLES FOURSOME <N/4> SOLID",          concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 7}},
-   {"TANDEM FOURSOME <N/4> SOLID",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 6}},
-   {"BOXSOME <N/4> SOLID",                   concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 8}},
-   {"DIAMONDSOME <N/4> SOLID",               concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 9}},
-   {"SKEWSOME <N/4> SOLID",                  concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 3}},
-   {"<ANYONE> ARE COUPLES TWOSOME <N/4> SOLID",concept_some_are_frac_tandem,FALSE, l_c4,       {0, TRUE,  3, 0, 1}},
-   {"<ANYONE> ARE TANDEM TWOSOME <N/4> SOLID", concept_some_are_frac_tandem,FALSE, l_c4,       {0, TRUE,  3, 0, 0}},
-   {"GRUESOME TWOSOME <N/4> SOLID",          concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 2, 1}},
-   {"GRUESOME TANDEM TWOSOME <N/4> SOLID",   concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 2, 0}},
+   {"COUPLES @b TWOSOME",                    concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 1}},
+   {"TANDEM @b TWOSOME",                     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 0}},
+   {"SIAMESE @b TWOSOME",                    concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 2}},
+   {"COUPLES OF THREE @b THREESOME",         concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 5}},
+   {"TANDEMS OF THREE @b THREESOME",         concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 4}},
+   {"COUPLES OF FOUR @b FOURSOME",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 7}},
+   {"TANDEMS OF FOUR @b FOURSOME",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 6}},
+   {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 8}},
+   {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 9}},
+   {"SKEW @b TWOSOME",                       concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 3}},
+   {"@6 ARE COUPLES @b TWOSOME",             concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 1}},
+   {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 0}},
+   {"GRUESOME AS COUPLES @b TWOSOME",        concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 2, 1}},
+   {"GRUESOME TANDEM @b TWOSOME",            concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 2, 0}},
+/* -------- column break -------- */         
+#define tt__4_size 14                        
+   {"COUPLES TWOSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 1}},
+   {"TANDEM TWOSOME @b SOLID",               concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 0}},
+   {"SIAMESE TWOSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 2}},
+   {"COUPLES THREESOME @b SOLID",            concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 5}},
+   {"TANDEM THREESOME @b SOLID",             concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 4}},
+   {"COUPLES FOURSOME @b SOLID",             concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 7}},
+   {"TANDEM FOURSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 6}},
+   {"BOXSOME @b SOLID",                      concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 8}},
+   {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 9}},
+   {"SKEWSOME @b SOLID",                     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 3}},
+   {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,  FALSE, l_c4,       {0, TRUE,  3, 0, 1}},
+   {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,  FALSE, l_c4,       {0, TRUE,  3, 0, 0}},
+   {"GRUESOME TWOSOME @b SOLID",             concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 2, 1}},
+   {"GRUESOME TANDEM TWOSOME @b SOLID",      concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 2, 0}},
 
 /* distorted concepts */
 
@@ -416,7 +418,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"OFFSET COLUMNS",                        concept_distorted,             FALSE, l_c2,         {0, disttest_offset, 0}},
    {"\"Z\" COLUMNS",                         concept_distorted,             FALSE, l_c3,         {0, disttest_z, 0}},
    {"DISTORTED COLUMNS",                     concept_distorted,             FALSE, l_c3,         {0, disttest_any, 0}},
-   {"<ANYONE> IN A DIAGONAL COLUMN",         concept_single_diagonal,       FALSE, l_c3,         {0, 0}},
+   {"@6 IN A DIAGONAL COLUMN",               concept_single_diagonal,       FALSE, l_c3,         {0, 0}},
    {"TWO DIAGONAL COLUMNS",                  concept_double_diagonal,       FALSE, l_c3,         {0, 0}},
    {"\"O\"",                                 concept_do_phantom_2x4,        FALSE, l_c1,         {&map_o_s2x4_3, phantest_only_first_one, 0, MPKIND__NONE}},
    {"BUTTERFLY",                             concept_do_phantom_2x4,        FALSE, l_c1,         {&map_x_s2x4_3, phantest_only_second_one, 0, MPKIND__NONE}},
@@ -428,7 +430,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"OFFSET LINES",                          concept_distorted,             FALSE, l_c2,         {0, disttest_offset, 1}},
    {"\"Z\" LINES",                           concept_distorted,             FALSE, l_c3,         {0, disttest_z, 1}},
    {"DISTORTED LINES",                       concept_distorted,             FALSE, l_c3,         {0, disttest_any, 1}},
-   {"<ANYONE> IN A DIAGONAL LINE",           concept_single_diagonal,       FALSE, l_c3,         {0, 1}},
+   {"@6 IN A DIAGONAL LINE",                 concept_single_diagonal,       FALSE, l_c3,         {0, 1}},
    {"TWO DIAGONAL LINES",                    concept_double_diagonal,       FALSE, l_c3,         {0, 1}},
          {"", concept_comment, l_nonexistent_concept},
    {"PARALLELOGRAM",                         concept_parallelogram,         FALSE, l_c2},
@@ -491,6 +493,8 @@ concept_descriptor concept_descriptor_table[] = {
 /* Miscellaneous concepts */
 
 #define mm__1_size 59
+#define mm__1_left 0
+#define mm__1_cross 2
 #define mm__1_phan 12
    {"LEFT",                                  concept_left,                  FALSE, l_mainstream},
    {"REVERSE",                               concept_reverse,               FALSE, l_mainstream},
@@ -541,11 +545,11 @@ concept_descriptor concept_descriptor_table[] = {
    {"CENTRAL",                               concept_central,               FALSE, l_c3},
    {"FAN",                                   concept_fan_or_yoyo,           FALSE, l_c3,        {0, 0}},
    {"YO-YO",                                 concept_fan_or_yoyo,           FALSE, l_c4,        {0, 1}},
-   {"<ANYONE> ARE STANDARD IN",              concept_standard,              FALSE, l_c4a,        {0, 0}},
+   {"@6 ARE STANDARD IN",                    concept_standard,              FALSE, l_c4a,        {0, 0}},
    {"STABLE",                                concept_stable,                FALSE, l_c3a,        {0, FALSE, FALSE}},
-   {"<ANYONE> ARE STABLE",                   concept_so_and_so_stable,      FALSE, l_c3a,        {0, TRUE,  FALSE}},
-   {"<N/4> STABLE",                          concept_frac_stable,           FALSE, l_c4,         {0, FALSE, TRUE}},
-   {"<ANYONE> ARE <N/4> STABLE",             concept_so_and_so_frac_stable, FALSE, l_c4,         {0, TRUE,  TRUE}},
+   {"@6 ARE STABLE",                         concept_so_and_so_stable,      FALSE, l_c3a,        {0, TRUE,  FALSE}},
+   {"@b STABLE",                             concept_frac_stable,           FALSE, l_c4,         {0, FALSE, TRUE}},
+   {"@6 ARE @b STABLE",                      concept_so_and_so_frac_stable, FALSE, l_c4,         {0, TRUE,  TRUE}},
    {"TRACE",                                 concept_trace,                 FALSE, l_c3x},
    {"STRETCH",                               concept_old_stretch,           FALSE, l_c1},
    {"STRETCHED SETUP",                       concept_new_stretch,           FALSE, l_c2},
@@ -569,38 +573,38 @@ concept_descriptor concept_descriptor_table[] = {
    {"CHECKERBOX",                            concept_checkerboard,          FALSE, l_c3a,        {0, s2x2}},
    {"CHECKERDIAMOND",                        concept_checkerboard,          FALSE, l_c3x,        {0, sdmd}},
          {"", concept_comment, l_nonexistent_concept},
-   {"<ANYONE>,",                             concept_so_and_so_only,        FALSE, l_mainstream, {0, 4}},
-   {"<ANYONE>, (while the others)",          concept_some_vs_others,        FALSE, l_mainstream, {0, 5}},
-   {"<ANYONE> DISCONNECTED",                 concept_so_and_so_only,        FALSE, l_c2, {0, 6}},
-   {"<ANYONE> DISCONNECTED (while the others)", concept_some_vs_others,     FALSE, l_c2, {0, 7}},
-   {"<ANYONE> DO YOUR PART,",                concept_so_and_so_only,        FALSE, l_mainstream, {0, 0}},
-   {"<ANYONE> DO YOUR PART, (while the others)", concept_some_vs_others,    FALSE, l_mainstream, {0, 1}},
+   {"@6,",                                   concept_so_and_so_only,        FALSE, l_mainstream, {0, 4}},
+   {"@6, (while the others)",                concept_some_vs_others,        FALSE, l_mainstream, {0, 5}},
+   {"@6 DISCONNECTED",                       concept_so_and_so_only,        FALSE, l_c2, {0, 6}},
+   {"@6 DISCONNECTED (while the others)",    concept_some_vs_others,        FALSE, l_c2, {0, 7}},
+   {"@6 DO YOUR PART,",                      concept_so_and_so_only,        FALSE, l_mainstream, {0, 0}},
+   {"@6 DO YOUR PART, (while the others)",   concept_some_vs_others,        FALSE, l_mainstream, {0, 1}},
    {"ON YOUR OWN",                           concept_on_your_own,           FALSE, l_c4a},
-   {"OWN THE <ANYONE>",                      concept_some_vs_others,        FALSE, l_c3a,        {0, 3}},
+   {"OWN THE @6",                            concept_some_vs_others,        FALSE, l_c3a,        {0, 3}},
          {"", concept_comment, l_nonexistent_concept},
    {"two calls in succession",               concept_sequential,            FALSE, l_mainstream},
    {"FOLLOW IT BY",                          concept_special_sequential,    FALSE, l_c2,        {0, 0}},
    {"PRECEDE IT BY",                         concept_special_sequential,    FALSE, l_c2,        {0, 1}},
    {"CRAZY",                                 concept_crazy,                 FALSE, l_c2,        {0, 0, FALSE}},
    {"REVERSE CRAZY",                         concept_crazy,                 FALSE, l_c3x,       {0, 1, FALSE}},
-   {"<N/4> CRAZY",                           concept_frac_crazy,            FALSE, l_c2,        {0, 0, TRUE}},
-   {"<N/4> REVERSE CRAZY",                   concept_frac_crazy,            FALSE, l_c3x,       {0, 1, TRUE}},
+   {"@a CRAZY",                              concept_frac_crazy,            FALSE, l_c2,        {0, 0, TRUE}},
+   {"@a REVERSE CRAZY",                      concept_frac_crazy,            FALSE, l_c3x,       {0, 1, TRUE}},
    {"RANDOM",                                concept_meta,                  FALSE, l_c3a,        {0, 0}},
    {"REVERSE RANDOM",                        concept_meta,                  FALSE, l_c3x,        {0, 1}},
    {"PIECEWISE",                             concept_meta,                  FALSE, l_c3x,        {0, 2}},
-   {"<N>/<N>",                               concept_fractional,            FALSE, l_mainstream, {0, 0}},
-   {"1-<N>/<N>",                             concept_fractional,            FALSE, l_mainstream, {0, 2}},
+   {"@9/@9",                                 concept_fractional,            FALSE, l_mainstream, {0, 0}},
+   {"1-@9/@9",                               concept_fractional,            FALSE, l_mainstream, {0, 2}},
    {"TWICE",                                 concept_twice,                 FALSE, l_mainstream},
-   {"DO THE LAST <N>/<N>",                   concept_fractional,            FALSE, l_c1,         {0, 1}},
+   {"DO THE LAST @9/@9",                     concept_fractional,            FALSE, l_c1,         {0, 1}},
    {"REVERSE ORDER",                         concept_meta,                  FALSE, l_c3x,        {0, 5}},
    {"INTERLACE",                             concept_interlace,             FALSE, l_c3x},
    {"START <concept>",                       concept_meta,                  FALSE, l_c2,         {0, 3}},
    {"FINISH",                                concept_meta,                  FALSE, l_c2,         {0, 4}},
-   {"<ANYONE> START",                        concept_so_and_so_begin,       FALSE, l_c2,         {0, 0}},
-   {"SKIP THE <Nth> PART",                   concept_nth_part,              FALSE, l_c2,         {0, 1}},
-   {"DO THE <Nth> PART <concept>",           concept_nth_part,              FALSE, l_c2,         {0, 0}},
-   {"REPLACE THE <Nth> PART",                concept_replace_nth_part,      FALSE, l_c2,         {0, 0}},
-   {"INTERRUPT AFTER THE <Nth> PART",        concept_replace_nth_part,      FALSE, l_c2,         {0, 1}},
+   {"@6 START",                              concept_so_and_so_begin,       FALSE, l_c2,         {0, 0}},
+   {"SKIP THE @u PART",                      concept_nth_part,              FALSE, l_c2,         {0, 1}},
+   {"DO THE @u PART <concept>",              concept_nth_part,              FALSE, l_c2,         {0, 0}},
+   {"REPLACE THE @u PART",                   concept_replace_nth_part,      FALSE, l_c2,         {0, 0}},
+   {"INTERRUPT AFTER THE @u PART",           concept_replace_nth_part,      FALSE, l_c2,         {0, 1}},
 /* -------- column break -------- */
 #define mm__3_size 45
 #define mm__3_3x3 39
@@ -613,7 +617,7 @@ concept_descriptor concept_descriptor_table[] = {
    {"SHORT 6",                               concept_randomtrngl,           FALSE, l_c3x,        {0, 5}},
    {"WAVE-BASE TRIANGLES",                   concept_randomtrngl,           FALSE, l_c1,         {0, 6}},
    {"TANDEM-BASE TRIANGLES",                 concept_randomtrngl,           FALSE, l_c1,         {0, 7}},
-   {"<ANYONE>-BASED TRIANGLE",               concept_selbasedtrngl,         FALSE, l_c1,         {0, 20}},
+   {"@6-BASED TRIANGLE",                     concept_selbasedtrngl,         FALSE, l_c1,         {0, 20}},
          {"", concept_comment, l_nonexistent_concept},
    {"CONCENTRIC",                            concept_concentric,            FALSE, l_c1,         {0, schema_concentric}},
    {"CROSS CONCENTRIC",                      concept_concentric,            FALSE, l_c2,         {0, schema_cross_concentric}},
@@ -627,10 +631,10 @@ concept_descriptor concept_descriptor_table[] = {
    {"GRAND WORKING AS CENTERS",              concept_grand_working,         FALSE, l_c3x,        {0, 8}},
    {"GRAND WORKING AS ENDS",                 concept_grand_working,         FALSE, l_c3x,        {0, 9}},
          {"", concept_comment, l_nonexistent_concept},
-   {"<ANYONE> ARE CENTERS OF A DOUBLE-OFFSET 1/4-TAG",concept_double_offset,FALSE, l_c4,      {0, 0}},
-   {"<ANYONE> ARE CENTERS OF A DOUBLE-OFFSET 3/4-TAG",concept_double_offset,FALSE, l_c4,      {0, 1}},
-   {"<ANYONE> ARE CENTERS OF A DOUBLE-OFFSET THING",concept_double_offset,  FALSE, l_c4,      {0, 2}},
-   {"<ANYONE> ARE CENTERS OF DOUBLE-OFFSET DIAMONDS",concept_double_offset, FALSE, l_c4,        {0, 3}},
+   {"@6 ARE CENTERS OF A DOUBLE-OFFSET 1/4-TAG",concept_double_offset,      FALSE, l_c4,      {0, 0}},
+   {"@6 ARE CENTERS OF A DOUBLE-OFFSET 3/4-TAG",concept_double_offset,      FALSE, l_c4,      {0, 1}},
+   {"@6 ARE CENTERS OF A DOUBLE-OFFSET THING",concept_double_offset,        FALSE, l_c4,      {0, 2}},
+   {"@6 ARE CENTERS OF DOUBLE-OFFSET DIAMONDS",concept_double_offset,       FALSE, l_c4,        {0, 3}},
          {"", concept_comment, l_nonexistent_concept},
    {"INRIGGER",                              concept_rigger,                FALSE, l_c3x,        {0, 2}},
    {"OUTRIGGER",                             concept_rigger,                FALSE, l_c3x,        {0, 0}},
@@ -883,6 +887,8 @@ nice_setup_thing nice_setup_thing_4x6 = {
 
 
 int phantom_concept_index = mm_1_offset + mm__1_phan;
+int left_concept_index = mm_1_offset + mm__1_left;
+int cross_concept_index = mm_1_offset + mm__1_cross;
 
 
 Private int phantoml_sizes[]  = {pl__1_size, pl__2_size, pl__3_size,             -1};

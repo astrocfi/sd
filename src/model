@@ -29,7 +29,7 @@ MODEL sd =
                                %CR_OPT(-dba) %CR_OPT(-dbs) %CR_OPT(-ndb)        @
                                %OPTION(-ninfo) %OPTION(-info)                   @
                                %OPTION(-config) %OPTION(-nalign)                @
-                               %CR_OPT(-cpu) %OPTION(-nwarn)                    @
+                               %CR_OPT(-cpu) %CR_OPT(-def) %OPTION(-nwarn)      @
                                %OPTION(-comchk) %OPTION(-cond) %OPTION(-subchk) @
                                %OPTION(-exp) %CR_OPT(-opt)
       %DONE;
@@ -41,37 +41,138 @@ MODEL sd =
    USE_POOL
       the_pool;
 
-   DEPENDS_SOURCE
-      'sd_dialog_dpd.bin';
-      'sd_debug_dialog_dpd.bin';
+   NIL_TRANSLATION;
 
-   TRANSLATE
-      /com/bind - <<!
-          %RESULT_OF(?*.c).bin
-          sd_dialog_dpd.bin
-      -b sd
-      !
-      /com/bind - <<!
-          %RESULT_OF(?*.c).bin
-          sd_debug_dialog_dpd.bin
-      -b sdebug
-      !
-   %DONE;
-
-   SHELL '//pooh/com/sh';
+   SHELL '/com/sh';
 
    DEPENDS_RESULT
 
-    ELEMENT sdui-domain.c @the_libe =
-         DEPENDS_SOURCE
-                '/usr/apollo/include/base.h';
-                '/usr/apollo/include/error.h';
-                '/usr/apollo/include/gpr.h';
-                '/usr/apollo/include/dialog.h';
-                '/usr/include/string.h';
-                sd_dialog.ins.c @ the_libe;
-    END OF sdui-domain.c;
 
-   %INCLUDE '~/sd/sd.ins.sml';
+   AGGREGATE stuff =
+      TRANSLATE
+         /com/bind - <<!
+             %RESULT_OF(?*.c).bin
+         -b %RESULT -nound
+         !
+      %DONE;
+
+      SHELL '/com/sh';
+
+      DEPENDS_RESULT
+
+      %INCLUDE '~/sd/sd.ins.sml';
+   END OF stuff;
+
+
+   AGGREGATE dom_dialog =
+      SHELL '/com/sh';
+
+      TRANSLATE
+         /com/cpf %RESULT_OF(sdui-domain.c).bin %RESULT
+      %DONE;
+
+      DEPENDS_RESULT
+
+      ELEMENT sdui-domain.c @the_libe =
+            DEPENDS_SOURCE
+                   '/usr/apollo/include/base.h';
+                   '/usr/apollo/include/error.h';
+                   '/usr/apollo/include/gpr.h';
+                   '/usr/apollo/include/dialog.h';
+                   '/usr/include/string.h';
+                   sd_dialog.ins.c @ the_libe;
+      END OF sdui-domain.c;
+   END OF dom_dialog;
+
+
+   AGGREGATE sdreal =
+      DEPENDS_SOURCE
+         'sd_dialog_dpd.bin';
+
+      TRANSLATE
+         /com/bind - <<!
+             %RESULT_OF(stuff)
+             %RESULT_OF(dom_dialog)
+             sd_dialog_dpd.bin
+         -b sd
+         !
+      %DONE;
+
+      SHELL '/com/sh';
+
+      DEPENDS_RESULT
+
+      stuff;
+      dom_dialog;
+   END OF sdreal;
+
+
+   AGGREGATE sdebug =
+      DEPENDS_SOURCE
+         'sd_debug_dialog_dpd.bin';
+
+      TRANSLATE
+         /com/bind - <<!
+             %RESULT_OF(stuff)
+             %RESULT_OF(dom_dialog)
+             sd_debug_dialog_dpd.bin
+         -b sdebug
+         !
+      %DONE;
+
+      SHELL '/com/sh';
+
+      DEPENDS_RESULT
+
+      stuff;
+      dom_dialog;
+   END OF sdebug;
+
+
+   AGGREGATE sdtty =
+      TRANSLATE
+         /com/bind - <<!
+             %RESULT_OF(?*.c).bin
+             %RESULT_OF(stuff)
+         -b sdtty
+         !
+      %DONE;
+
+      SHELL '/com/sh';
+
+      DEPENDS_RESULT
+
+      stuff;
+
+      ELEMENT sdui-tty.c @the_libe =
+         DEPENDS_SOURCE
+            sdmatch.h @ the_libe;
+            sdui-ttu.h @ the_libe;
+            '/usr/include/stdlib.h';
+            '/usr/include/string.h';
+            '/usr/include/stdio.h';
+            '/usr/include/ctype.h';
+      END OF sdui-tty.c;
+
+      ELEMENT sdui-ttu.c @the_libe =
+         DEPENDS_SOURCE
+            sdmatch.h @ the_libe;
+            sdui-ttu.h @ the_libe;
+            '/usr/include/unistd.h';
+            '/usr/include/stdlib.h';
+            '/usr/include/string.h';
+            '/usr/include/stdio.h';
+            '/usr/include/signal.h';
+            '/usr/include/termios.h';
+      END OF sdui-ttu.c;
+
+      ELEMENT sdmatch.c @the_libe =
+         DEPENDS_SOURCE
+            sdmatch.h @ the_libe;
+            '/usr/include/string.h';
+            '/usr/include/stdio.h';
+            '/usr/include/ctype.h';
+      END OF sdmatch.c;
+   END OF sdtty;
 
 END OF sd;

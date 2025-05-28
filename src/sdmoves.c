@@ -2222,7 +2222,7 @@ extern void move(
             }
          }
          else
-            fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->name);
+            fail2("Can't do this concept with other concepts preceding it:", parseptrcopy->concept->menu_name);
       }
    }
 

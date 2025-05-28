@@ -2112,8 +2112,10 @@ inherit_single
 @e ... @f - text to change to "left" if this call has "left" modifier.
                       Must use @g also if this appears.
 @g        - at beginning of call name: an @e...@f sequence will occur.
+                      If @i and @g are both used, @i must be first.
 @h        - put direction here.
 @i        - at beginning of call name: an @j...@l sequence will occur.
+                      If @i and @g are both used, @i must be first.
 @j ... @l - text to add if this call has "cross" modifier.  Presumably
                   has the word "cross" in it.
                       Must use @i also if this appears.

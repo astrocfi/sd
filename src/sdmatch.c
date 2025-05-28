@@ -15,7 +15,7 @@
 
 /* This file defines the following functions:
    matcher_initialize
-   matcher_add_call_to_menu
+   matcher_setup_call_menu
    match_user_input
 */
 
@@ -23,7 +23,7 @@
 
 #include "sd.h"
 #include "sdmatch.h"
-#include <string.h> /* for strcpy, strncmp */
+#include <string.h> /* for strcpy */
 #include <stdio.h>  /* for sprintf */
 #include <ctype.h>  /* for tolower */
 
@@ -38,7 +38,7 @@ static long_boolean   commands_last_option;
 
 typedef struct {
     int number;            /* index of concept in concept_descriptor_table */
-    char *name;            /* name of concept in all lower case */
+    Const char *name;      /* name of concept */
 } concept_item;
 
 static concept_item *concept_list; /* all concepts */
@@ -62,8 +62,6 @@ typedef struct {
 
 typedef void input_matcher(match_state *sp);
 
-static void add_call_to_menu(char ***menu, int call_menu_index,
-                             int menu_size, Const char callname[]);
 static void startup_matcher(match_state *sp);
 static void resolve_matcher(match_state *sp);
 static void call_matcher(match_state *sp);
@@ -71,21 +69,12 @@ static void selector_matcher(match_state *sp);
 static void direction_matcher(match_state *sp);
 static void search_menu(match_state *sp, char *menu[], int menu_length, uims_reply kind);
 static void search_concept(match_state *sp);
-static void match_pattern(match_state *sp, char pattern[], Const match_result *result);
-static void match_suffix(match_state *sp, char *user, char *pat,
-                          char *patxp, Const match_result *result);
-static void match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
-                          char *patxp, Const match_result *result);
-static int  match_wildcard(match_state *sp, char *user, char *pat,
-                          char *patxp, Const match_result *result);
-static void record_a_match(match_state *sp, Const match_result *result);
+static void match_pattern(match_state *sp, Const char pattern[], Const match_result *result, uims_reply kind);
+static void match_suffix(char *user, Const char *pat, Const match_result *result);
 static void strn_gcp(char *s1, char *s2);
 static long_boolean verify_call(call_list_kind cl, int call_index, selector_kind who);
 static long_boolean verify_call_with_selector(callspec_block *call, selector_kind sel);
 static long_boolean try_call_with_selector(callspec_block *call, selector_kind sel);
-
-static char *strdup_lower(Const char *source);
-static void strcpy_lower(char *dest, Const char *source);
 
 /* the following arrays must be coordinated with the sd program */
 
@@ -122,8 +111,6 @@ static char *n_4_patterns[] = {
     "5/4",
     (char *) 0
 };
-
-
 
 
 /*
@@ -192,7 +179,7 @@ matcher_initialize(long_boolean show_commands_last)
             continue;
         }
         item->number = concept_number;
-        item->name = strdup_lower(p->name);
+        item->name = p->name;
         if (p->level <= calling_level) {
             level_item->number = item->number;
             level_item->name = item->name;
@@ -202,34 +189,18 @@ matcher_initialize(long_boolean show_commands_last)
     }
 }
 
-/*
- * Call MATCHER_ADD_CALL_TO_MENU to add a call to a call menu.
- * We have been given the name of one call (call number
- * call_menu_index, from 0 to number_of_calls[cl]) to be added to the
- * call menu cl (enumerated over the type call_list_kind.)
- * The string is guaranteed to be in stable storage.
- */
- 
+
 extern void
-matcher_add_call_to_menu(call_list_kind cl, int call_menu_index, Const char name[])
+matcher_setup_call_menu(call_list_kind cl, callspec_block *call_name_list[])
 {
-    int menu_num = (int) cl;
+   int i;
 
-    add_call_to_menu(&call_menu_lists[menu_num], call_menu_index,
-             number_of_calls[menu_num], name);
+   call_menu_lists[cl] = (char **) get_mem((number_of_calls[cl]) * sizeof(char *));
+
+   for (i=0; i<number_of_calls[cl]; i++)
+      call_menu_lists[cl][i] = call_name_list[i]->name;
 }
 
-static void
-add_call_to_menu(char ***menu, int call_menu_index, int menu_size,
-                 Const char callname[])
-{
-    if (call_menu_index == 0) {
-        /* first item in this menu; set it up */
-        *menu = (char **)get_mem((unsigned)(menu_size+1) * sizeof(char **));
-    }
-
-    (*menu)[call_menu_index] = strdup_lower(callname);
-}
 
 /*
  * MATCH_USER_INPUT is the basic command matching function.
@@ -413,11 +384,13 @@ search_menu(match_state *sp, char *menu[], int menu_length, uims_reply kind)
     result.kind = kind;
     result.who = selector_uninitialized;
     result.where = direction_uninitialized;
+    result.left = FALSE;
+    result.cross = FALSE;
     result.number_fields = 0;
     result.howmanynumbers = 0;
     for (i = 0; i < menu_length; i++) {
         result.index = i;
-        match_pattern(sp, menu[i], &result);
+        match_pattern(sp, menu[i], &result, kind);
     }
 }
 
@@ -433,6 +406,8 @@ search_concept(match_state *sp)
     result.kind = ui_concept_select;
     result.who = selector_uninitialized;
     result.where = direction_uninitialized;
+    result.left = FALSE;
+    result.cross = FALSE;
     result.number_fields = 0;
     result.howmanynumbers = 0;
 
@@ -447,10 +422,17 @@ search_concept(match_state *sp)
 
     while (--count >= 0) {
         result.index = item->number;
-        match_pattern(sp, item->name, &result);
+        match_pattern(sp, item->name, &result, (uims_reply) 0);
         ++item;
     }
 }
+
+
+/* These things are statically used by the match_suffix, match_wildcard, and match_suffix_2 procedures. */
+/* Patxp is where the next character of the extension of the user input for the current pattern is to be written. */
+
+static match_state *static_sp;
+static char *static_patxp;
 
 /*
  * Match_pattern tests the user input against a pattern (pattern)
@@ -462,96 +444,79 @@ search_concept(match_state *sp)
  */
  
 static void
-match_pattern(match_state *sp, char pattern[], Const match_result *result)
+match_pattern(match_state *sp, Const char pattern[], Const match_result *result, uims_reply kind)
 {
-    int pch, uch;
+   char pch, uch;
 
-    /* the following special cases are purely to improve performance */
+   /* the following special cases are purely to improve performance */
 
-    pch = pattern[0];
-    uch = sp->full_input[0];
+   pch = pattern[0];
+   uch = sp->full_input[0];
 
-    if (uch == '\0') {
-        /* null user input matches everything (except a comment) */
-        /* special case: pattern never begins with SPACE */
-        /* special case: ignore wildcards, we know there are multiple matches */
-        
-        if (pch == '*') {
-            return;
-        }
-        /* special case: sp->extension not set */
-        ++sp->match_count;
-	    if (sp->showing) {
-	        if (!sp->verify
-	                 || (result->kind != ui_call_select)
-	                 || verify_call(current_call_menu, result->index, result->who)) {
-                (*sp->sf)("", pattern, result);
-            }
-        }
-        return;
-    }
+   if (uch == '\0') {
+      if (!sp->showing) {
+         /* null user input matches everything (except a comment) */
+         /* special case: pattern never begins with SPACE */
+         /* special case: ignore wildcards, we know there are multiple matches */
+          
+         if (pch == '*') {
+              return;
+         }
+         /* special case: sp->extension not set */
+         ++sp->match_count;
+         return;
+      }
+   }
+   else if (uch != tolower(pch) && pch != '@' && pch != '<') {
+      /* fails to match */
+      return;
+   }
 
-    if ((uch != pch) && (pch != '<')) {
-        /* fails to match */
-        return;
-    }
+   normal:
 
-    if (pch == '*') {
-        /* a commented out pattern */
-        return;
-    }
+   if (pch == '*') {
+      /* a commented out pattern */
+      return;
+   }
 
-    match_suffix(sp, sp->full_input, pattern, sp->extension, result);
+   static_sp = sp;
+   static_patxp = sp->extension;
+   match_suffix(sp->full_input, pattern, result);
 }
+
+
 
 /*
- * Match_suffix continues the matching process for a suffix of the current
- * user input (User) and a suffix of the current pattern (Pat).  Patxp is
- * where the next character of the extension of the user input for the current
- * pattern is to be written.
- *
+ * Record a match.  Extension is how the current input would be extended to
+ * match the current pattern.  Result is the value of the
+ * current pattern.  Special case: if user input is empty, extension is
+ * not set.
  */
-
+    
 static void
-match_suffix(match_state *sp, char *user, char *pat, char *patxp, Const match_result *result)
+record_a_match(Const match_result *result)
 {
-    if (user && (*user == '\0')) {
-        /* we have just reached the end of the user input */
-        if (*pat == '\0') {
-            /* exact match */
-            *patxp = '\0';
-            record_a_match(sp, result);
-        }
-        else {
-            if (*pat == ' ')
-                sp->space_ok = TRUE;
-            /* we need to look at the rest of the pattern because
-               if it contains wildcards, then there are multiple matches */
-            match_suffix(sp, 0, pat, patxp, result);
-        }
-    }
-    else if ((*pat == '<') &&
-             match_wildcard(sp, user, pat, patxp, result)) {
-        ; /* everything done by match_wildcard */
-    }    
-    else if (user==0) {
-        /* user input has run out, just looking for more wildcards */
-        if (*pat) {
-            /* there is more pattern */
-            *patxp++ = *pat;
-            match_suffix(sp, user, pat+1, patxp, result);
-        }
-        else {
-            /* reached the end of the pattern */
-            *patxp = '\0';
-            record_a_match(sp, result);
-        }
-    }
-    else if (*user == *pat) {
-        match_suffix(sp, user+1, pat+1, patxp, result);
-    }
-}
+   if (static_sp->extended_input) {
+      if (static_sp->match_count == 0)
+         /* this is the first match */
+         strcpy(static_sp->extended_input, static_sp->extension);
+      else
+         strn_gcp(static_sp->extended_input, static_sp->extension);
+   }
+   if ((static_sp->match_count == 0) || (*static_sp->extension == '\0'))
+      static_sp->result = *result;      /* first match or an exact match */
 
+   if (*static_sp->extension == '\0')
+      static_sp->result.exact = TRUE;
+
+   static_sp->match_count++;
+   if (static_sp->showing) {
+      if (!static_sp->verify ||
+            (result->kind != ui_call_select) ||
+            verify_call(current_call_menu, result->index, result->who))
+         (*static_sp->sf)(static_sp->full_input, static_sp->extension, result);
+   }
+}
 
 /*
  * Match_suffix_2 is like match_suffix, except that the pattern is
@@ -562,169 +527,275 @@ match_suffix(match_state *sp, char *user, char *pat, char *patxp, Const match_re
  */
 
 static void
-match_suffix_2(match_state *sp, char *user, char *pat1, char *pat2,
-               char *patxp, Const match_result *result)
+match_suffix_2(char *user, char *pat1, Const char *pat2, char *this_patxp, Const match_result *result)
 {
-    if (*pat1 == 0) {
-        /* PAT1 has run out, switch to PAT2 */
-        match_suffix(sp, user, pat2, patxp, result);
-    }
-    else if (user && (*user == '\0')) {
-        /* we have just reached the end of the user input */
-        if (*pat1 == ' ')
-            sp->space_ok = TRUE;
-        /* we need to look at the rest of the pattern because
-           if it contains wildcards, then there are multiple matches */
-        match_suffix_2(sp, NULL, pat1, pat2, patxp, result);
-    }
-    else if (user==0) {
-        /* user input has run out, just looking for more wildcards */
-        *patxp++ = *pat1;
-        match_suffix_2(sp, user, pat1+1, pat2, patxp, result);
-    }
-    else if (*user == *pat1) {
-        match_suffix_2(sp, user+1, pat1+1, pat2, patxp, result);
-    }
+   char *cur_user = user;
+   char *cur_pat1 = pat1;
+
+   for (;;) {
+      if (*cur_pat1 == 0) {
+         /* PAT1 has run out, switch to PAT2 */
+         match_suffix(cur_user, pat2, result);
+         break;
+      }
+      else if (cur_user && (*cur_user == '\0')) {
+         /* we have just reached the end of the user input */
+         if (*cur_pat1 == ' ')
+            static_sp->space_ok = TRUE;
+          /* we need to look at the rest of the pattern because
+             if it contains wildcards, then there are multiple matches */
+         cur_user = (char *) 0;
+      }
+      else if (cur_user==0) {
+         /* user input has run out, just looking for more wildcards */
+         *static_patxp++ = *cur_pat1++;
+      }
+      else if (*cur_user++ != *cur_pat1++)
+         break;
+   }
+
+   static_patxp = this_patxp;    /* Put it back to its saved value. */
 }
 
 /*
- * Match_wildcard tests for and handles pattern suffixes that being with
+ * Match_wildcard tests for and handles pattern suffixes that begin with
  * a wildcard such as "<anyone>".  A wildcard is handled only if there is
  * room in the Result struct to store the associated value.
  */
 
-static int
-match_wildcard(match_state *sp, char *user, char *pat, char *patxp, Const match_result *result)
+static void
+match_wildcard(char *user, Const char *pat, Const match_result *result)
 {
-    char *prefix, *suffix;
-    int i;
-    match_result new_result;
+   char *prefix;
+   int i;
+   match_result new_result;
+   char key = *pat++;
+   char *save_patxp = static_patxp;
 
-    if (sp->showing && (user==0)) {
-        /* if we are just listing the matching commands, there
-           is no point in expanding wildcards that are past the
-           part that matches the user input */
-        return FALSE;
-    }
+   /* if we are just listing the matching commands, there
+      is no point in expanding wildcards that are past the
+      part that matches the user input.  That is why we test
+      "static_sp->showing" and "(user == 0)". */
 
-    if ((strncmp(pat, "<anyone>", 8)==0) && (result->who == selector_uninitialized)) {
-        suffix = pat+8;
-        new_result = *result;
-        for (i=1; i<=last_selector_kind; ++i) {
-            new_result.who = (selector_kind) i;
-            prefix = selector_names[i];
-            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
-        }
-        return FALSE;
-    }
-    else if ((strncmp(pat, "<direction>", 11)==0) && (result->where == direction_uninitialized)) {
-        suffix = pat+11;
-        new_result = *result;
-        for (i=1; i<=last_direction_kind; ++i) {
-            new_result.where = (direction_kind) i;
-            prefix = direction_names[i];
-            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
-        }
-        return FALSE;
-    }
-    else if (strncmp(pat, "<n>", 3)==0) {
-        suffix = pat+3;
-        new_result = *result;
-        new_result.howmanynumbers++;
+   if ((key == '6' || key == 'k') && (result->who == selector_uninitialized)) {
+      if (static_sp->showing && (user == 0)) return;
+      new_result = *result;
+      for (i=1; i<=last_selector_kind; ++i) {
+         new_result.who = (selector_kind) i;
+         match_suffix_2(user, selector_names[i], pat, save_patxp, &new_result);
+      }
+   }
+   else if ((key == 'h') && (result->where == direction_uninitialized)) {
+      if (static_sp->showing && (user == 0)) return;
+      new_result = *result;
+      for (i=1; i<=last_direction_kind; ++i) {
+         new_result.where = (direction_kind) i;
+         match_suffix_2(user, direction_names[i], pat, save_patxp, &new_result);
+      }
+   }
+   else if ((key == 'j') && (!result->cross)) {
+      char crossname[80];
+      char *crossptr = crossname;
 
-        for (i=1;; ++i) {
-            new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-            prefix = cardinals[i-1];
-            if (prefix == NULL) {
-                break;
-            }
-            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
-        }
-        return FALSE;
-    }
-    else if (strncmp(pat, "<nth>", 5)==0) {
-        suffix = pat+5;
-        new_result = *result;
-        new_result.howmanynumbers++;
+      new_result = *result;
+      while ((*crossptr++ = *pat++) != '@');
+      pat++;
+      crossptr--;
+      *crossptr = 0;
+      new_result.cross = TRUE;
+      match_suffix_2(user, crossname, pat, save_patxp, &new_result);
+   }
+   else if ((key == 'e') && (!result->left)) {
+      new_result = *result;
+      while (*pat++ != '@');
+      pat++;
+      new_result.left = TRUE;
+      match_suffix_2(user, "left", pat, save_patxp, &new_result);
+   }
+   else if (key == '9') {
+      if (static_sp->showing && (user == 0)) return;
+      new_result = *result;
+      new_result.howmanynumbers++;
 
-        for (i=1;; ++i) {
-            new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-            prefix = ordinals[i-1];
-            if (prefix == NULL) {
-                break;
-            }
-            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
-        }
-        return FALSE;
-    }
-    else if (strncmp(pat, "<n/4>", 5)==0) {
-        suffix = pat+5;
-        new_result = *result;
+      for (i=1;; i++) {
+          prefix = cardinals[i-1];
+          if (prefix == NULL) {
+              break;
+          }
+          new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
+          match_suffix_2(user, prefix, pat, save_patxp, &new_result);
+      }
+   }
+   else if (key == 'u') {
+      if (static_sp->showing && (user == 0)) return;
+      new_result = *result;
+      new_result.howmanynumbers++;
 
-        new_result.howmanynumbers++;
+      for (i=1;; i++) {
+          prefix = ordinals[i-1];
+          if (prefix == NULL) {
+              break;
+          }
+          new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
+          match_suffix_2(user, prefix, pat, save_patxp, &new_result);
+      }
+   }
+   else if ((key == 'a' || key == 'b' || key == 'B') && (result->who == selector_uninitialized)) {
+      if (static_sp->showing && (user == 0)) return;
+      new_result = *result;
 
-        for (i=1;; ++i) {
-            new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
-            prefix = n_4_patterns[i-1];
-            if (prefix == NULL) {
-                break;
-            }
-            match_suffix_2(sp, user, prefix, suffix, patxp, &new_result);
-        }
+      new_result.howmanynumbers++;
 
-        /* special case: allow "quarter" for 1/4 */
-        new_result.number_fields = result->number_fields + (1 << ((new_result.howmanynumbers-1)*4));
-        match_suffix_2(sp, user, "quarter", suffix, patxp, &new_result);
+      for (i=1;; i++) {
+          prefix = n_4_patterns[i-1];
+          if (prefix == NULL) {
+              break;
+          }
+          new_result.number_fields += 1 << ((new_result.howmanynumbers-1)*4);
+          match_suffix_2(user, prefix, pat, save_patxp, &new_result);
+      }
 
-        /* special case: allow "half" or "1/2" for 2/4 */
-        new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
-        match_suffix_2(sp, user, "half", suffix, patxp, &new_result);
-        match_suffix_2(sp, user, "1/2", suffix, patxp, &new_result);
+      /* special case: allow "quarter" for 1/4 */
+      new_result.number_fields = result->number_fields + (1 << ((new_result.howmanynumbers-1)*4));
+      match_suffix_2(user, "quarter", pat, save_patxp, &new_result);
 
-        /* special case: allow "three quarter" for 3/4 */
-        new_result.number_fields = result->number_fields + (3 << ((new_result.howmanynumbers-1)*4));
-        match_suffix_2(sp, user, "three quarter", suffix, patxp, &new_result);
+      /* special case: allow "half" or "1/2" for 2/4 */
+      new_result.number_fields = result->number_fields + (2 << ((new_result.howmanynumbers-1)*4));
+      match_suffix_2(user, "half", pat, save_patxp, &new_result);
+      match_suffix_2(user, "1/2", pat, save_patxp, &new_result);
 
-        /* special case: allow "full" for 4/4 */
-        new_result.number_fields = result->number_fields + (4 << ((new_result.howmanynumbers-1)*4));
-        match_suffix_2(sp, user, "full", suffix, patxp, &new_result);
+      /* special case: allow "three quarter" for 3/4 */
+      new_result.number_fields = result->number_fields + (3 << ((new_result.howmanynumbers-1)*4));
+      match_suffix_2(user, "three quarter", pat, save_patxp, &new_result);
 
-        return FALSE;
-    }
-    else return FALSE;
+      /* special case: allow "full" for 4/4 */
+      new_result.number_fields = result->number_fields + (4 << ((new_result.howmanynumbers-1)*4));
+      match_suffix_2(user, "full", pat, save_patxp, &new_result);
+   }
 }
 
 /*
- * Record a match.  Extension is how the current input would be extended to
- * match the current pattern.  Result is the value of the
- * current pattern.  Special case: if user input is empty, extension is
- * not set.
+ * Match_suffix continues the matching process for a suffix of the current
+ * user input (User) and a suffix of the current pattern (Pat).
  */
-    
+
 static void
-record_a_match(match_state *sp, Const match_result *result)
+match_suffix(char *user, Const char *pat, Const match_result *result)
 {
-    if (sp->extended_input) {
-        if (sp->match_count == 0)
-            /* this is the first match */
-            strcpy(sp->extended_input, sp->extension);
-        else
-            strn_gcp(sp->extended_input, sp->extension);
-    }
-    if ((sp->match_count == 0) || (*sp->extension == '\0'))
-        /* first match or an exact match */
-        sp->result = *result;
-    if (*sp->extension == '\0')
-        sp->result.exact = TRUE;
-    ++sp->match_count;
-	if (sp->showing) {
-	    if (!sp->verify
-	             || (result->kind != ui_call_select)
-	             || verify_call(current_call_menu, result->index, result->who)) {
-            (*sp->sf)(sp->full_input, sp->extension, result);
-        }
-    }
+   char *cur_user = user;
+   Const char *cur_pat = pat;
+
+   for (;;) {
+      if (cur_user && (*cur_user == '\0')) {
+         /* we have just reached the end of the user input */
+         if (*cur_pat == '\0') {
+            /* exact match */
+            *static_patxp = '\0';
+            record_a_match(result);
+            break;
+         }
+         else {
+            if (*cur_pat == ' ')
+               static_sp->space_ok = TRUE;
+            /* we need to look at the rest of the pattern because
+                if it contains wildcards, then there are multiple matches */
+            cur_user = (char *) 0;
+         }
+      }
+      else {
+         char p = *cur_pat++;
+
+         /* Check for expansion of wildcards.  But if we are just listing
+            the matching commands, there is no point in expanding wildcards
+            that are past the part that matches the user input */
+
+         if (p == '@')
+            match_wildcard(cur_user, cur_pat, result);
+
+         if (cur_user == 0) {
+            /* user input has run out, just looking for more wildcards */
+            if (p) {
+               /* there is more pattern */
+               if (p == '@') {
+                  Const char *ep = get_escape_string(*cur_pat++);
+
+                  if (ep && *ep) {
+                     (void) strcpy(static_patxp, ep);
+                     static_patxp += strlen(static_patxp);
+                  }
+                  else {
+                     if (ep) {
+                        while (*cur_pat++ != '@');
+                        cur_pat++;
+                     }
+
+                     /* Don't write duplicate blanks. */
+                     /* ***** It would be nice to make this not look back before the beginning!!!!! */
+                     if (*cur_pat == ' ' && static_patxp[-1] == ' ') cur_pat++;
+                  }
+               }
+               else
+                  *static_patxp++ = tolower(p);
+            }
+            else {
+               /* reached the end of the pattern */
+               *static_patxp = '\0';
+               record_a_match(result);
+               break;
+            }
+         }
+         else {
+            char u = *cur_user++;
+
+            if (p == '@') {
+               Const char *ep = get_escape_string(*cur_pat++);
+               if (u == '<') {
+                  if (ep && *ep) {
+                     int i;
+   
+                     for (i=1; ep[i]; i++) {
+                        if (!cur_user[i-1]) {
+                           while (ep[i]) { *static_patxp++ = ep[i]; i++; }
+                           cur_user = 0;
+                           goto cont;
+                        }
+   
+                        if (cur_user[i-1] != tolower(ep[i])) return;
+                     }
+   
+                     cur_user += strlen((char *) ep)-1;
+                     cont: ;
+                  }
+                  else
+                     break;
+               }
+               else {
+                  if (ep && *ep) {
+                     return;   /* Pattern has "<...>" thing, but user didn't type "<". */
+                  }
+
+                  else {
+                     if (ep) {
+                        while (*cur_pat++ != '@');
+                        cur_pat++;
+                     }
+
+                     cur_user--;    /* Back up! */
+
+                     /* Check for something that would cause the pattern effectively to have
+                        two consecutive blanks, and compress them to one.  This can happen
+                        if the pattern string has lots of confusing '@' escapes. */
+                     if (*cur_pat == ' ' && cur_user[-1] == ' ') cur_pat++;
+                  }
+               }
+            }
+            else if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A'))
+               break;
+         }
+      }
+   }
 }
+
 
 /*
  * STRN_GCP sets S1 to be the greatest common prefix of S1 and S2.
@@ -844,23 +915,4 @@ try_call_with_selector(callspec_block *call, selector_kind sel)
     parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
     toplevelmove(); /* does longjmp if error */
     return TRUE;
-}
-
-/* Utility */
-
-static char *
-strdup_lower(Const char *source)
-{
-   char *dest;
-   /* Unfortunately, the Bozos defining the AES didn't make the argument
-      to strlen a const. */
-   dest = get_mem(strlen((char *) source) + 1);
-   strcpy_lower(dest, source);
-   return dest;
-}
-
-static void
-strcpy_lower(char *dest, Const char *source)
-{
-    while (*dest++ = tolower(*source++));
 }
