@@ -32,7 +32,7 @@ and the following external variables:
    exp_2x3_qtg_stuff
    exp_4x4_4x6_stuff_a
    exp_4x4_4x6_stuff_b
-   exp_3x4_4x5_stuff
+   exp_3x4_4x5_stuff    <--- make this private !!!!
    exp_c1phan_4x4_stuff1
    exp_c1phan_4x4_stuff2
 */
@@ -63,17 +63,19 @@ Private expand_thing exp_1x8_bone_stuff    = {{-1, -1, 7, 6, -1, -1, 3, 2}, 8, s
 Private expand_thing exp_2x4_bone_stuff    = {{0, -1, -1, 1, 4, -1, -1, 5}, 8, s2x4, s_bone, 0};
 Private expand_thing exp_3x4_bigd_stuff    = {{-1, -1, -1, -1, 2, 3, -1, -1, -1, -1, 8, 9}, 12, s3x4, sbigdmd, 1};
 Private expand_thing exp_3dmd_bighrgl_stuff= {{-1, 2, -1, -1, -1, 3, -1, 8, -1, -1, -1, 9}, 12, s3dmd, sbighrgl, 0};
-Private expand_thing exp_dmd_3x1d_stuff    = {{7, 2, 3, 6},       4, sdmd, s3x1dmd, 1};
-Private expand_thing exp_dmd_2x1d_stuff    = {{5, 1, 2, 4},       4, sdmd, s_2x1dmd, 1};
-Private expand_thing exp_dmd_1x2d_stuff    = {{1, 2, 4, 5},       4, sdmd, s_1x2dmd, 0};
-Private expand_thing exp_1x2_3x1d_stuff    = {{2, 6},             2, s1x2, s3x1dmd, 0};
-Private expand_thing exp_1x4_3x1d_stuff    = {{1, 2, 5, 6},       4, s1x4, s3x1dmd, 0};
-Private expand_thing exp_1x6_3x1d_stuff    = {{0, 1, 2, 4, 5, 6}, 6, s1x6, s3x1dmd, 0};
+Private expand_thing exp_dmd_3x1d_stuff    = {{7, 2, 3, 6},       4, sdmd,     s3x1dmd, 1};
+Private expand_thing exp_2x1d_3x1d_stuff   = {{1, 2, 3, 5, 6, 7}, 6, s_2x1dmd, s3x1dmd, 0};
+Private expand_thing exp_1x2_3x1d_stuff    = {{2, 6},             2, s1x2,     s3x1dmd, 0};
+Private expand_thing exp_1x4_3x1d_stuff    = {{1, 2, 5, 6},       4, s1x4,     s3x1dmd, 0};
+Private expand_thing exp_1x6_3x1d_stuff    = {{0, 1, 2, 4, 5, 6}, 6, s1x6,     s3x1dmd, 0};
 Private expand_thing exp_1x2d_1x3d_stuff   = {{1, 2, 3, 5, 6, 7}, 6, s_1x2dmd, s1x3dmd, 0};
+Private expand_thing exp_dmd_2x1d_stuff    = {{5, 1, 2, 4},       4, sdmd,     s_2x1dmd, 1};
+Private expand_thing exp_dmd_1x2d_stuff    = {{1, 2, 4, 5},       4, sdmd,     s_1x2dmd, 0};
 Private expand_thing exp_2x2_gal_stuff     = {{1, 3, 5, 7}, 4, s2x2, s_galaxy, 0};
 Private expand_thing exp_3x4_4dm_stuff     = {{0, 1, 2, 3, -1, -1, 8, 9, 10, 11, -1, -1}, 12, s3x4, s4dmd, 0};
 Private expand_thing exp_1x8_4dm_stuff     = {{12, 13, 15, 14, 4, 5, 7, 6}, 8, s1x8, s4dmd, 0};
 Private expand_thing exp_qtg_4dm_stuff     = {{1, 2, 6, 7, 9, 10, 14, 15}, 8, s_qtag, s4dmd, 0};
+Private expand_thing exp_ptp_4ptp_stuff    = {{14, 1, 15, 10, 6, 9, 7, 2}, 8, s_ptpd, s4ptpd, 0};
 Private expand_thing exp_3x1d_3d_stuff     = {{9, 10, 11, 1, 3, 4, 5, 7}, 8, s3x1dmd, s3dmd, 0};
 Private expand_thing exp_1x2_3d_stuff      = {{11, 5}, 2, s1x2, s3dmd, 0};
 Private expand_thing exp_4x4_4dm_stuff_a   = {{0, 1, 2, 14, 3, 5, 4, 7, 8, 9, 10, 6, 11, 13, 12, 15}, 16, nothing, s4dmd, 1};
@@ -90,7 +92,7 @@ Private expand_thing exp_2x3_3x4_stuff     = {{8, 11, 1, 2, 5, 7}, 6, s2x3, s3x4
 Private expand_thing exp_2x3_d3x4_stuff    = {{1, 2, 3, 7, 8, 9}, 6, s2x3, s_d3x4, 0};
 Private expand_thing exp_spindle_d3x4_stuff= {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s_spindle, s_d3x4, 0};
 Private expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
-extern  expand_thing exp_2x3_qtg_stuff     = {{5, 7, 0, 1, 3, 4}, 6, s2x3, s_qtag, 1};
+        expand_thing exp_2x3_qtg_stuff     = {{5, 7, 0, 1, 3, 4}, 6, s2x3, s_qtag, 1};
 Private expand_thing exp_2x6_2x8_stuff     = {{1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14}, 12, s2x6, s2x8, 0};
 Private expand_thing exp_1x8_1x12_stuff    = {{2, 3, 5, 4, 8, 9, 11, 10}, 8, nothing, s1x12, 0};
 Private expand_thing exp_3x4_3x8_stuff     = {{2, 3, 4, 5, 10, 11, 14, 15, 16, 17, 22, 23}, 12, s3x4, s3x8, 0};
@@ -105,22 +107,23 @@ Private expand_thing exp_xwv_bigx_stuff    = {{2, 3, 4, 5, 8, 9, 10, 11}, 8, s_c
 Private expand_thing exp_1x3d_bigx_stuff   = {{1, 2, 3, 5, 7, 8, 9, 11}, 8, s1x3dmd, sbigx, 0};
 Private expand_thing exp_rig_bigrig_stuff  = {{4, 5, 8, 9, 10, 11, 2, 3}, 8, s_rigger, sbigrig, 0};
 Private expand_thing exp_bone_bigbone_stuff= {{1, 4, 8, 9, 7, 10, 2, 3}, 8, s_bone, sbigbone, 0};
+Private expand_thing exp_1x6_1x8_stuff     = {{1, 3, 2, 5, 7, 6}, 6, s1x6, s1x8, 0};
+Private expand_thing exp_1x8_1x10_stuff    = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
 Private expand_thing exp_1x10_1x12_stuff   = {{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}, 10, s1x10, s1x12, 0};
 Private expand_thing exp_1x12_1x14_stuff   = {{1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13}, 12, s1x12, s1x14, 0};
 Private expand_thing exp_1x14_1x16_stuff   = {{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15}, 14, s1x14, s1x16, 0};
-Private expand_thing exp_1x8_1x10_stuff    = {{1, 2, 4, 3, 6, 7, 9, 8}, 8, s1x8, s1x10, 0};
 Private expand_thing exp_2x6_4x6_stuff     = {{11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19, 18}, 12, s2x6, s4x6, 0};
-extern  expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, s4x4, s4x6, 0};
-extern  expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, s4x4, s4x6, 1};
+        expand_thing exp_4x4_4x6_stuff_a   = {{4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20, 1, 2, 3, 9}, 16, s4x4, s4x6, 0};
+        expand_thing exp_4x4_4x6_stuff_b   = {{1, 2, 3, 9, 4, 7, 22, 8, 13, 14, 15, 21, 16, 19, 10, 20}, 16, s4x4, s4x6, 1};
 Private expand_thing exp_2x4_2x8_stuff     = {{2, 3, 4, 5, 10, 11, 12, 13}, 8, s2x4, s2x8, 0};
-extern  expand_thing exp_3x4_4x5_stuff     = {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17}, 12, s3x4, s4x5, 1};
+        expand_thing exp_3x4_4x5_stuff     = {{13, 16, 8, 1, 2, 7, 3, 6, 18, 11, 12, 17}, 12, s3x4, s4x5, 1};
 Private expand_thing exp_2x5_4x5_stuff     = {{9, 8, 7, 6, 5, 19, 18, 17, 16, 15}, 10, s2x5, s4x5, 0};
 Private expand_thing exp_2x4_4x4_stuff1    = {{10, 15, 3, 1, 2, 7, 11, 9}, 8, s2x4, s4x4, 0};
 Private expand_thing exp_2x4_4x4_stuff2    = {{6, 11, 15, 13, 14, 3, 7, 5}, 8, s2x4, s4x4, 1};
 Private expand_thing exp_2x4_c1phan_stuff1 = {{0, 2, 7, 5, 8, 10, 15, 13}, 8, s2x4, s_c1phan, 0};
 Private expand_thing exp_2x4_c1phan_stuff2 = {{12, 14, 3, 1, 4, 6, 11, 9}, 8, s2x4, s_c1phan, 1};
-extern  expand_thing exp_c1phan_4x4_stuff1 = {{-1, 13, -1, 15, -1, 1, -1, 3, -1, 5, -1, 7, -1, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
-extern  expand_thing exp_c1phan_4x4_stuff2 = {{10, -1, 15, -1, 14, -1, 3, -1, 2, -1, 7, -1, 6, -1, 11, -1}, 16, s_c1phan, s4x4, 0};
+        expand_thing exp_c1phan_4x4_stuff1 = {{-1, 13, -1, 15, -1, 1, -1, 3, -1, 5, -1, 7, -1, 9, -1, 11}, 16, s_c1phan, s4x4, 0};
+        expand_thing exp_c1phan_4x4_stuff2 = {{10, -1, 15, -1, 14, -1, 3, -1, 2, -1, 7, -1, 6, -1, 11, -1}, 16, s_c1phan, s4x4, 0};
 Private expand_thing exp_4x4_blob_stuff    = {{3, 4, 8, 5, 9, 10, 14, 11, 15, 16, 20, 17, 21, 22, 2, 23}, 16, nothing, s_bigblob, 0};
 Private expand_thing exp_4x6_blob_stuffa   = {{-1, 21, 22, 2, 3, -1, 6, 4, 5, 23, 20, 19, -1, 9, 10, 14, 15, -1, 18, 16, 17, 11, 8, 7}, 24, s4x6, s_bigblob, 0};
 Private expand_thing exp_4x6_blob_stuffb   = {{-1, 15, 16, 20, 21, -1, 0, 22, 23, 17, 14, 13, -1, 3, 4, 8, 9, -1, 12, 10, 11, 5, 2, 1}, 24, s4x6, s_bigblob, 0};
@@ -177,6 +180,10 @@ extern void update_id_bits(setup *ss)
             We really should only allow 2-person calls, unless we say
             "outer triple boxes".  So we're not completely sure what the right thing is. */
          if (livemask != 07474UL && livemask != 0x3CFUL) ptr = (id_bit_table *) 0;
+         break;
+      case s1x10:
+         /* We recognize center 4 and center 6 if this has center 6 filled, then a gap, then isolated people. */
+         if (livemask != 0x3BDUL) ptr = (id_bit_table *) 0;
          break;
       case sbigdmd:
          /* If this is populated appropriately, we can identify "outer pairs". */
@@ -270,6 +277,8 @@ Private expand_thing rear_twistqtag_stuff = {{0, 3, 2, 1}, 4, nothing, sdmd, 0};
 Private expand_thing step_sqs_stuff = {{7, 0, 1, 2, 3, 4, 5, 6}, 8, s_thar, s2x4, 0};
 Private expand_thing step_1x8_stuff = {{0, 7, 6, 1, 4, 3, 2, 5}, 8, s1x8, s2x4, 0};
 Private expand_thing step_qbox_stuff = {{0, 3, 5, 2, 4, 7, 1, 6}, 8, s_bone, s2x4, 0};
+Private expand_thing rear_3n1a_stuff = {{3, 1, 7, 5, 11, 9, 15, 13}, 8, s2x4, s_c1phan, 0};
+Private expand_thing rear_3n1b_stuff = {{0, 2, 6, 4, 8, 10, 14, 12}, 8, s2x4, s_c1phan, 0};
 Private expand_thing step_1x4_side_stuff = {{0, 1, 2, 3}, 4, nothing, sdmd, 0};
 Private expand_thing step_1x4_stuff = {{0, 3, 2, 1}, 4, nothing, s2x2, 0};
 Private expand_thing step_1x2_stuff = {{0, 1}, 2, s1x2, s1x2, 1};
@@ -320,6 +329,8 @@ static full_expand_thing touch_init_table1[] = {
    {warn__rear_back,       8, &step_8ch_stuff, s2x4,        0xFFFFUL,     0x2288UL, ~0UL},      /* Rear back from parallel waves to an 8 chain. */
    {warn__awful_rear_back, 8, &step_1x8_stuff, s2x4,        0xFFFFUL,     0x55FFUL, ~0UL},      /* Rear back from columns to end-to-end single 8-chains. */
    {warn__some_rear_back,  8, &step_qbox_stuff, s2x4,       0xFFFFUL,     0x57FDUL, ~0UL},      /* Centers rear back from 1/4-box to triangles. */
+   {warn__some_rear_back,  0, &rear_3n1a_stuff, s2x4,       0xFFFFUL,     0x2A80UL, ~0UL},      /* Some people rear back from 3&1 line to triangles. */
+   {warn__some_rear_back,  0, &rear_3n1b_stuff, s2x4,       0xFFFFUL,     0xA208UL, ~0UL},      /* Some people rear back from 3&1 line to triangles. */
    {warn__awful_rear_back, 0, &rear_vrbox_stuff, s2x2,        0xFFUL,       0x28UL, ~0UL},      /* Rear back from a right-hand box to a single 8 chain. */
    {warn__awful_rear_back, 0, &rear_hrbox_stuff, s2x2,        0xFFUL,       0x5FUL, ~0UL},
    {warn__some_rear_back,  0, &rear_rig_stuffa,s_rigger,    0xFFFFUL,     0x0802UL, 0x0F0FUL},  /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
@@ -697,7 +708,21 @@ extern void do_matrix_expansion(
                eptr = &exp_4x4_blob_stuff; goto expand_me;
             }
             break;
+         case CONCPROP__NEEDK_4X5:
+            if (ss->kind == s3x4) {
+               eptr = &exp_3x4_4x5_stuff; goto expand_me;
+            }
+            else if (ss->kind == s2x5) {
+               eptr = &exp_2x5_4x5_stuff; goto expand_me;
+            }
+            break;
+         case CONCPROP__NEEDK_4D_4PTPD:
+            if (ss->kind == s_ptpd) {
+               eptr = &exp_ptp_4ptp_stuff; goto expand_me;
+            }
+            /* FALL THROUGH!!! */
          case CONCPROP__NEEDK_4DMD:
+            /* FELL THROUGH!!! */
             switch (ss->kind) {
                case s1x8:
                   eptr = &exp_1x8_4dm_stuff; goto expand_me;
@@ -974,6 +999,11 @@ extern void normalize_setup(setup *ss, normalize_action action)
          compress_setup(&exp_1x10_1x12_stuff, ss);
    }
 
+   if (ss->kind == s1x10) {         /* This might leave a 1x8, which might be reduced further. */
+      if (!(ss->people[0].id1 | ss->people[5].id1))
+         compress_setup(&exp_1x8_1x10_stuff, ss);
+   }
+
    if (ss->kind == s_bigblob) {
       /* This might leave a 4x6, which might be reduced further. */
       if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[12].id1 | ss->people[13].id1)) {
@@ -1004,11 +1034,7 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
    }
 
-   if (ss->kind == s1x10) {
-      if (!(ss->people[0].id1 | ss->people[5].id1))
-         compress_setup(&exp_1x8_1x10_stuff, ss);
-   }
-   else if (ss->kind == s4x4) {
+   if (ss->kind == s4x4) {
       if (!(ss->people[0].id1 | ss->people[4].id1 | ss->people[8].id1 | ss->people[12].id1)) {
          if (!(ss->people[5].id1 | ss->people[6].id1 | ss->people[13].id1 | ss->people[14].id1))
             compress_setup(&exp_2x4_4x4_stuff1, ss);
@@ -1030,19 +1056,16 @@ extern void normalize_setup(setup *ss, normalize_action action)
    }
    else if (ss->kind == s4dmd) {
       if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[5].id1 |
-               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[13].id1)) {
+               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[13].id1))
          compress_setup(&exp_qtg_4dm_stuff, ss);
-      }
       else if (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[2].id1 | ss->people[3].id1 |
-               ss->people[8].id1 | ss->people[9].id1 | ss->people[10].id1 | ss->people[11].id1)) {
+               ss->people[8].id1 | ss->people[9].id1 | ss->people[10].id1 | ss->people[11].id1))
          compress_setup(&exp_1x8_4dm_stuff, ss);
-      }
-      /*   NO!!  Want to leave this as quad diamonds.  User might say "quadruple lines ....".  Cf. test t33t.
-      else if (!(ss->people[4].id1 | ss->people[5].id1 | ss->people[6].id1 | ss->people[7].id1 |
-               ss->people[12].id1 | ss->people[13].id1 | ss->people[14].id1 | ss->people[15].id1)) {
-         compress_setup(&exp_3x4_4dm_stuff, ss);
-      }
-      */
+   }
+   else if (ss->kind == s4ptpd) {
+      if (!(ss->people[0].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[5].id1 |
+               ss->people[8].id1 | ss->people[11].id1 | ss->people[12].id1 | ss->people[13].id1))
+         compress_setup(&exp_ptp_4ptp_stuff, ss);
    }
    else if (ss->kind == s_c1phan) {
       if (!(ss->people[1].id1 | ss->people[3].id1 | ss->people[4].id1 | ss->people[6].id1 |
@@ -1113,6 +1136,9 @@ extern void normalize_setup(setup *ss, normalize_action action)
       }
       else if ((ss->kind == s1x3dmd) && (!(ss->people[0].id1 | ss->people[4].id1))) {
          compress_setup(&exp_1x2d_1x3d_stuff, ss);
+      }
+      else if ((ss->kind == s1x8) && (!(ss->people[0].id1 | ss->people[4].id1))) {
+         compress_setup(&exp_1x6_1x8_stuff, ss);
       }
    }
 
@@ -1267,11 +1293,19 @@ extern void normalize_setup(setup *ss, normalize_action action)
          if (!(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))
             ss->kind = s2x6;     /* That's all! */
       }
-      else if (ss->kind == s3x1dmd && (!(ss->people[0].id1 | ss->people[1].id1 | ss->people[4].id1 | ss->people[5].id1))) {
-         if (!(ss->people[3].id1 | ss->people[7].id1))
-            compress_setup(&exp_1x2_3x1d_stuff, ss);
-         else
-            compress_setup(&exp_dmd_3x1d_stuff, ss);
+      else if (ss->kind == s3x1dmd && (!(ss->people[0].id1 | ss->people[4].id1))) {
+         if (!(ss->people[1].id1 | ss->people[5].id1)) {
+            if (!(ss->people[3].id1 | ss->people[7].id1))
+               compress_setup(&exp_1x2_3x1d_stuff, ss);
+            else
+               compress_setup(&exp_dmd_3x1d_stuff, ss);
+         }
+         else {
+            if (!(ss->people[3].id1 | ss->people[7].id1))
+               compress_setup(&exp_1x4_3x1d_stuff, ss);
+            else
+               compress_setup(&exp_2x1d_3x1d_stuff, ss);
+         }
       }
       else if (ss->kind == s_ptpd) {
          /* This makes it possible to do "own the <points>, trade by flip the diamond" from

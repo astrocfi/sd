@@ -383,6 +383,24 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                   |_____|           |_____|
 
 
+
+                   _____             _____             _____
+             _____|     |_____ _____|     |_____ _____|     |_____
+            |     |  0  |     |     |  1  |     |     |  2  |     |
+3ptpd       |  9  |_____| 10  | 11  |_____|  5  |  4  |_____|  3  |
+            |_____|     |_____|_____|     |_____|_____|     |_____|
+                  |  8  |           |  7  |           |  6  |
+                  |_____|           |_____|           |_____|
+
+
+                   _____             _____             _____             _____
+             _____|     |_____ _____|     |_____ _____|     |_____ _____|     |_____
+            |     |  0  |     |     |  1  |     |     |  2  |     |     |  3  |     |
+4ptpd       | 12  |_____| 13  | 14  |_____| 15  |  7  |_____|  6  |  5  |_____|  4  |
+            |_____|     |_____|_____|     |_____|_____|     |_____|_____|     |_____|
+                  | 11  |           | 10  |           |  9  |           |  8  |
+                  |_____|           |_____|           |_____|           |_____|
+
                          _____
              _____ _____|     |_____ _____
             |     |     |  2  |     |     |
@@ -447,6 +465,26 @@ ptpd        |  0  |_____|  2  |  6  |_____|  4  |
                |     |     |     |     |     |     |     |
                | 11  |     | 10  |     |  9  |     |  8  |
                |_____|     |_____|     |_____|     |_____|
+
+
+
+                   _____             _____             _____
+             _____|     |_____ _____|     |_____ _____|     |_____
+            |     |  0  |     |     |  1  |     |     |  2  |     |
+3ptpd       |  9  |_____| 10  | 11  |_____|  5  |  4  |_____|  3  |
+            |_____|     |_____|_____|     |_____|_____|     |_____|
+                  |  8  |           |  7  |           |  6  |
+                  |_____|           |_____|           |_____|
+
+
+
+                   _____             _____             _____             _____
+             _____|     |_____ _____|     |_____ _____|     |_____ _____|     |_____
+            |     |  0  |     |     |  1  |     |     |  2  |     |     |  3  |     |
+4ptpd       | 12  |_____| 13  | 14  |_____| 15  |  7  |_____|  6  |  5  |_____|  4  |
+            |_____|     |_____|_____|     |_____|_____|     |_____|_____|     |_____|
+                  | 11  |           | 10  |           |  9  |           |  8  |
+                  |_____|           |_____|           |_____|           |_____|
 
 
 
@@ -557,6 +595,22 @@ hyperglass  |  0  |  1           7  |  6  |      (4 way symmetry)
               | 11  |   |     |   |  8  |
               |_____|   |  9  |   |_____|
                         |_____|
+
+
+
+                _____       _____
+               |     |     |     |
+               |  0  |     |  1  |
+             __|__ __|__ __|__ __|__
+            |     |     |     |     |
+            |  5  |  4  |  3  |  2  |
+deepqtg     |_____|_____|_____|_____|
+            |     |     |     |     |
+            |  8  |  9  | 10  | 11  |
+            |_____|_____|_____|_____|
+               |     |     |     |
+               |  7  |     |  6  |
+               |_____|     |_____|
 
 
                    _____       _____       _____
@@ -2334,10 +2388,24 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
                            APPENDIX C -- QUALIFIERS
 
    wave_only,                       Same as corresponding restriction, above.
+                                       This can take the "live" and/or "left" or "right" mofifiers.
+                                       If "right" or "left", it means this:
+                                          1x2 - right miniwave; 1x4-1x16 - [grand] right wave;
+                                          2x4/3x4/2x6/2x8 - consistent waves the long way;
+                                          2x2 - real RH box;
+                                          4x4 - consistent right waves either way, but not T-boned;
+                                          3x2/4x2/6x2/8x2 - right columns;
+                                          qtag/pqtag - right wave in center
+                                          ptpd/pptpd - right miniwaves in centers of each diamond
+                                          dmd, trngl - people are paired in right miniwaves.
+                                             For diamonds, this applies just to the centers.
+                                             For triangles, it applies just to the base.
+                                          thar - right waves
    all_facing_same,                 Same as corresponding restriction, above.
    1fl_only,                        Same as corresponding restriction, above.
    2fl_only,                        Same as corresponding restriction, above.
-   live_2fl_only                    Same as corresponding restriction, above.
+                                       This can take the "live" and/or "left" or "right" mofifiers.
+                                       If "right" or "left" in qtag, it applies to 2fl in center.
    couples_only,                    Same as corresponding restriction, above.
    3x3couples_only,                 Same as corresponding restriction, above.
    4x4couples_only,                 Same as corresponding restriction, above.
@@ -2347,27 +2415,6 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    in_or_out,                       Same as corresponding restriction, above.
    miniwaves,                       Same as corresponding restriction, above.
    not_miniwaves,                   True if all people are live, and the miniwaves restriction, above, FAILS.
-
-   right_wave,                      1x2 - right miniwave; 1x4-1x16 - [grand] right wave;
-                                       2x4/3x4/2x6/2x8 - consistent waves the long way;
-                                       2x2 - real RH box;
-                                       4x4 - consistent right waves either way, but not T-boned;
-                                       3x2/4x2/6x2/8x2 - right columns;
-                                       qtag/pqtag - right wave in center
-                                       ptpd/pptpd - right miniwaves in centers of each diamond
-                                       dmd, trngl - people are paired in right miniwaves.
-                                          For diamonds, this applies just to the centers.
-                                          For triangles, it applies just to the base.
-                                       thar - right waves
-   left_wave,                       As above, but left-handed.
-
-   right_2fl                        ????
-                                       qtag/pqtag - right 2FL in center
-   left_2fl                         ????
-                                       qtag/pqtag - left 2FL in center
-   live_right_2fl                   ????
-   live_left_2fl                    ????
-
    1_4_tag,                      /* dmd, qtag - this is a 1/4 tag, i.e. points are looking in */
    3_4_tag,                      /* dmd, qtag - this is a 3/4 tag, i.e. points are looking out */
    dmd_same_point,               /* dmd - centers would circulate to same point */
@@ -2378,14 +2425,20 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    lateral_columns_empty,        /* 3x4, 4x4, 4x6, 3x8 - everyone is oriented consistently, 4 (or 8) wide and however many deep.
                                     Within each 4-wide and 2-or-3-deep subsetup, either the center two columns, or two
                                     columns that are once removed from each other, are unoccupied. */
-   ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl.  1x6 - these are "out 2&1 lines" with the outer pairs in couples.
-   ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave.  1x6 - these are "out 2&1 lines" with the outer pairs in miniwaves.
+   ctrwv_end2fl,                 /* crosswave - center line is wave, end line is 2fl.
+                                       1x6 - these are "out 2&1 lines" with the outer pairs in couples.
+                                       1x8 - the outer pairs are couples and the inner pairs are miniwaves.
+   ctr2fl_endwv,                 /* crosswave - center line is 2fl, end line is wave.
+                                       1x6 - these are "out 2&1 lines" with the outer pairs in miniwaves.
+                                       1x8 - the outer pairs are miniwaves and the inner pairs are couples.
    split_dixie,                  /* 2x2 - invoked with "split" for dixie style */
    not_split_dixie,              /* 2x2 - invoked without "split" for dixie style */
    8_chain,                      /* 4x2/4x1/2x1 - [single] 8 chain */
    trade_by,                     /* 4x2/4x1/2x1 - [single] trade by */
    facing_in,                    /* 2x2 - all people are trailers, and not T-boned.  2x4 - lines in.  4x2/4x1/2x1 - [single] 8 chain.
+                                       This can take the "live" mofifier.
    facing_out,                   /* 2x2 - all people are leads, and not T-boned.  2x4 - lines out.  4x2/4x1/2x1 - [single] trade by.
+                                       This can take the "live" mofifier.
 
    all_ctrs_rh,                  /* Same as "dmd_ctrs_rh", below, for now.
    all_ctrs_lh,                  /* Same as "dmd_ctrs_lh", below, for now.
@@ -2425,8 +2478,8 @@ There are a number of internal ones not shown here.  See the file ~/sd/restricti
    col_ends_looking_in           /* 2x4 columns - the ends are #4 */
    ripple stuff .......
    people_1_and_5_real           /* 1x8 (or any applicable setup) people #1 and #5 are real */
-   centers_sel                   /* 2x4/qtag - the centers are selected and the ends are not. */
-   ends_sel                      /* 2x4/qtag - the ends are selected and the centers are not. */
+   centers_sel                   /* 1x4/2x4/qtag - the centers are selected and the ends are not. */
+   ends_sel                      /* 1x4/2x4/qtag - the ends are selected and the centers are not. */
    all_sel                       /* 1x1/1x2 - everyone in the setup is selected */
    none_sel                      /* 1x1/1x2 - no one in the setup is selected */
 

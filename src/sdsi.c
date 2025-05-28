@@ -208,7 +208,7 @@ extern int generate_random_number(int modulus)
 
 extern void hash_nonrandom_number(int number)
 {
-   hashed_randoms = hashed_randoms*37+number;
+   hashed_randoms = hashed_randoms*1049633+number;
 }
 
 
@@ -863,8 +863,10 @@ extern long_boolean open_session(int argc, char **argv)
             { allowing_all_concepts = TRUE; continue; }
          else if (strcmp(&args[argno][1], "active_phantoms") == 0)
             { using_active_phantoms = TRUE; continue; }
+#ifdef OLD_ELIDE_BLANKS_JUNK
          else if (strcmp(&args[argno][1], "ignoreblanks") == 0)
             { elide_blanks = TRUE; continue; }
+#endif
          else if (strcmp(&args[argno][1], "discard_after_error") == 0)
             { retain_after_error = FALSE; continue; }
          else if (strcmp(&args[argno][1], "retain_after_error") == 0)
@@ -976,8 +978,9 @@ extern long_boolean open_session(int argc, char **argv)
 
       /* Skip over the lines before the one we want. */
 
-      for (i=0 ; i<session_index ; i++)
+      for (i=0 ; i<session_index ; i++) {
          if (!fgets(line, MAX_FILENAME_LENGTH, session)) break;
+      }
 
       if (i != session_index)
          goto no_session;

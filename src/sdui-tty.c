@@ -50,6 +50,7 @@
    uims_do_getout_popup
    uims_do_write_anyway_popup
    uims_do_abort_popup
+   uims_do_session_init_popup
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
@@ -393,7 +394,7 @@ concept_descriptor *two_calls_concept_ptr = (concept_descriptor *) 0;
 
 /* BEWARE!!  These two lists must stay in step. */
 
-int num_command_commands = 50;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
+int num_command_commands = 49;          /* The number of items in the tables, independent of NUM_COMMAND_KINDS. */
 
 
 Cstring command_commands[] = {
@@ -403,7 +404,9 @@ Cstring command_commands[] = {
    "allow modifications",
    "toggle concept levels",
    "toggle active phantoms",
+#ifdef OLD_ELIDE_BLANKS_JUNK
    "toggle ignoreblanks",
+#endif
    "toggle retain after error",
    "toggle nowarn mode",
    "undo last call",
@@ -456,7 +459,9 @@ static command_kind command_command_values[] = {
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_act_phan,
+#ifdef OLD_ELIDE_BLANKS_JUNK
    command_toggle_ignoreblanks,
+#endif
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
    command_undo,
@@ -782,15 +787,15 @@ Private void get_user_input(char *prompt, int which)
          continue;
       }
 
-      if (c == ' ') {
-         /* extend only to one space, inclusive */
+      if (c == ' ' || c == '-') {
+         /* extend only to one space or hyphen, inclusive */
          matches = match_user_input(which, FALSE, FALSE);
          user_match = static_ss.result;
          p = static_ss.extended_input;
 
          if (*p) {
             while (*p) {
-               if (*p != ' ')
+               if (*p != ' ' && *p != '-')
                   pack_and_echo_character(*p++);
                else
                   goto foobar;
@@ -1186,6 +1191,13 @@ extern int uims_do_abort_popup(void)
     put_line("The current sequence will be aborted.\n");
     current_text_line++;
     return confirm("Do you really want to abort it? ");
+}
+
+extern int uims_do_session_init_popup(void)
+{
+    put_line("You already have a session file.\n");
+    current_text_line++;
+    return confirm("Do you really want to delete it and start over? ");
 }
 
 extern int uims_do_modifier_popup(Cstring callname, modify_popup_kind kind)

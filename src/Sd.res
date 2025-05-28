@@ -32,11 +32,12 @@
 *startup.asTheyAre: Just as they are
 *startup.toggleConceptLevels: Toggle concept levels
 *startup.toggleActivePhantoms: Toggle active phantoms
-*startup.toggleIgnoreBlanks: Toggle ignoreblanks
+!*startup.toggleIgnoreBlanks: Toggle ignoreblanks
 *startup.toggleRetain_after_error: Toggle retain after error
 *startup.toggleNowarnMode: Toggle nowarn mode
 *startup.toggleSinger: Toggle singing call
 *startup.toggleReverseSinger: Toggle singing call with backward progression
+*startup.initSessionFile: Initialize session file
 *startup.changeOutputFile: Change output file
 *startup.changeTitle: Change title
 *command.exit: Exit the program
@@ -82,6 +83,7 @@
 *text*wrap: word
 *confirmpopup.writeAnyway: Do you want to write this sequence anyway?
 *confirmpopup.abort: Do you really want to abort this sequence?
+*confirmpopup.sessInit: Do you really want to re-initialize your session file?
 *confirmpopup.modifyFormat: The "%s" can be replaced.
 *confirmpopup.modifyTagFormat: The "%s" can be replaced with a tagging call.
 *confirmpopup.modifyCircFormat: The "%s" can be replaced with a modified circulate-like call.

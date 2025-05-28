@@ -610,6 +610,23 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    if (attempt_count > 5000) {
       /* Too many tries -- too bad. */
       history_ptr = huge_history_ptr;
+
+      /* We shouldn't have to do the following stuff.  The searcher should be written
+         such that it doesn't get stuck on a call with any iterator nonzero, because,
+         if the iterator is ever set to zero, the current call should continue
+         cycling that iterator until it goes back to zero.  However, if there were
+         a bug in that code, the consequences would be extremely embarrassing.
+         The resolver would just be stuck, repeatedly reporting failure until the
+         entire resolve operation is manually aborted.  To be sure that never happens,
+         we do this.  This could have the effect of prematurely terminating an
+         iteration search, but no one will notice. */
+
+      selector_iterator = 0;
+      direction_iterator = 0;
+      number_iterator = 0;
+      tagger_iterator = 0;
+      circcer_iterator = 0;
+
       retval = FALSE;
       goto timeout;
    }
@@ -681,7 +698,10 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
          w |= warn_word;
    }
 
-   if (ww) {
+   /* But if we are doing a "standardize", we let ALL warnings pass.  We particularly
+      want weird T-bone and other unusual sort of things. */
+
+   if (goal != command_standardize && ww) {
       /* But if "allow all concepts" was given, and that's the only bad warning, we let it pass. */
       if (!allowing_all_concepts || w != 0) goto try_again;
    }
@@ -736,17 +756,22 @@ Private long_boolean inner_search(command_kind goal, resolve_rec *new_resolve, i
    else if (goal == command_standardize) {
       uint32 tb = 0;
       uint32 tbtb = 0;
+      uint32 tbpt = 0;
 
       for (i=0 ; i<8 ; i++) {
          tb |= ns->people[i].id1;
          tbtb |= ns->people[i].id1 ^ ((i & 2) << 2);
+         tbpt |= ns->people[i].id1 ^ (i & 1);
       }
 
       if (ns->kind == s2x4 || ns->kind == s1x8) {
          if ((tb & 011) == 011) goto what_a_loss;
       }
       else if (ns->kind == s_qtag) {
-         if ((tb & 01) != 0 && (tbtb & 010) != 0) goto what_a_loss;
+         if ((tb & 1) != 0 && (tbtb & 010) != 0) goto what_a_loss;
+      }
+      else if (ns->kind == s_ptpd) {
+         if ((tb & 010) != 0 && (tbpt & 1) != 0) goto what_a_loss;
       }
       else
          goto what_a_loss;

@@ -136,6 +136,12 @@ int begin_sizes[] = {
    20,         /* b_5x4 */
    24,         /* b_4x6 */
    24,         /* b_6x4 */
+   20,         /* b_2x10 */
+   20,         /* b_10x2 */
+   24,         /* b_2x12 */
+   24,         /* b_12x2 */
+   12,         /* b_deepqtg */
+   12,         /* b_pdeepqtg */
    20,         /* b_3oqtg */
    20,         /* b_p3oqtg */
    8,          /* b_thar */
@@ -150,6 +156,10 @@ int begin_sizes[] = {
    12,         /* b_p3dmd */
    16,         /* b_4dmd */
    16,         /* b_p4dmd */
+   12,         /* b_3ptpd */
+   12,         /* b_p3ptpd */
+   16,         /* b_4ptpd */
+   16,         /* b_p4ptpd */
    12,         /* b_bigh */
    12,         /* b_pbigh */
    12,         /* b_bigx */

@@ -331,6 +331,12 @@ char *sstab[] = {
    "5x4",
    "4x6",
    "6x4",
+   "2x10",
+   "10x2",
+   "2x12",
+   "12x2",
+   "deepqtg",
+   "pdeepqtg",
    "3oqtg",
    "p3oqtg",
    "thar",
@@ -345,6 +351,10 @@ char *sstab[] = {
    "p3dmd",
    "4dmd",
    "p4dmd",
+   "3ptpd",
+   "p3ptpd",
+   "4ptpd",
+   "p4ptpd",
    "bigh",
    "pbigh",
    "bigx",
@@ -410,6 +420,8 @@ char *estab[] = {
    "ptpd",
    "3dmd",
    "4dmd",
+   "3ptpd",
+   "4ptpd",
    "wingedstar",
    "wingedstar12",
    "wingedstar16",
@@ -421,6 +433,9 @@ char *estab[] = {
    "3x8",
    "4x5",
    "4x6",
+   "2x10",
+   "2x12",
+   "deepqtg",
    "3oqtg",
    "thar",
    "alamo",
@@ -450,6 +465,7 @@ char *schematab[] = {
    "grandsingleconc",
    "grandsinglecrossconc",
    "singleconc_together",
+   "maybematrix_singleconc_together",
    "maybesingleconc",
    "maybesinglecrossconc",
    "maybegrandsingleconc",
@@ -469,6 +485,7 @@ char *schematab[] = {
    "conc_or_diamond_line",
    "conc6_2",
    "conc2_6",
+   "conc2_6_or_2_4",
    "conc6p",
    "conc6p_or_normal",
    "conc6p_or_singletogether",
@@ -476,6 +493,8 @@ char *schematab[] = {
    "conc_others",
    "conc6_2_tgl",
    "conc_to_outer_dmd",
+   "conc_12",
+   "conc_16",
    "conc_star",
    "conc_star12",
    "conc_star16",
@@ -483,6 +502,7 @@ char *schematab[] = {
    "conc_bar12",
    "conc_bar16",
    "conc_o",
+   "maybematrix_conc",
    "maybematrix_conc_star",
    "maybematrix_conc_bar",
    "checkpoint",
@@ -493,8 +513,11 @@ char *schematab[] = {
    "in_out_triple",
    "in_out_quad",
    "select_leads",
+   "select_headliners",
+   "select_sideliners",
    "select_center2",
    "select_center4",
+   "select_center6",
    "???",
    "???",
    "???",
@@ -513,16 +536,9 @@ char *schematab[] = {
 char *qualtab[] = {
    "none",
    "wave_only",
-   "right_wave",
-   "left_wave",
    "all_facing_same",
    "1fl_only",
    "2fl_only",
-   "right_2fl",
-   "left_2fl",
-   "live_2fl_only",
-   "live_right_2fl",
-   "live_left_2fl",
    "couples_only",
    "3x3couples_only",
    "4x4couples_only",
@@ -530,6 +546,7 @@ char *qualtab[] = {
    "in_or_out",
    "miniwaves",
    "not_miniwaves",
+   "as_couples_miniwaves",
    "1_4_tag",
    "3_4_tag",
    "dmd_same_point",
@@ -547,8 +564,6 @@ char *qualtab[] = {
    "trade_by",
    "facing_in",
    "facing_out",
-   "live_facing_in",
-   "live_facing_out",
    "all_ctrs_rh",
    "all_ctrs_lh",
    "dmd_ctrs_rh",
@@ -645,7 +660,7 @@ char *defmodtab1[] = {
    "endscando",
    "repeat_nm1",
    "roll_transparent",
-   "???",                /* spare, ought to take it out. */
+   "permit_touch_or_rear_back",
    "cpls_unless_single",
    "shift_one_number",
    "shift_two_numbers",     /* The constant "shift_three_numbers" is elsewhere. */
@@ -1031,8 +1046,7 @@ char call_name[100];
 int call_namelen;
 int call_level;
 int call_startsetup;
-int call_qualifier;
-int call_qual_num;
+int call_qual_stuff;
 int call_endsetup;
 int call_endsetup_in;
 int call_endsetup_out;
@@ -1303,7 +1317,9 @@ static void write_defmod_flags(int is_seq)
             bit assignment as "conc_demand_lines". */
 
          else if (is_seq && strcmp(tok_str, "seq_re_evaluate") == 0)
-            rr1 |= DFM1_CONC_DEMAND_LINES;
+            rr1 |= DFM1_SEQ_RE_EVALUATE;
+         else if (is_seq && strcmp(tok_str, "do_half_more") == 0)
+            rr1 |= DFM1_SEQ_DO_HALF_MORE;
 
          else if (strcmp(tok_str, "allow_plain_mod") == 0)
             rr1 |= (3*DFM1_CALL_MOD_BIT);
@@ -1519,8 +1535,9 @@ static void write_seq_stuff(void)
 static void write_array_def_block(uint32 callarrayflags)
 {
    write_halfword(0x6000 | callarrayflags);
-   write_halfword(call_startsetup | (call_qualifier << 8));
-   write_halfword(call_qual_num);
+   write_halfword(call_startsetup);
+   write_halfword(call_qual_stuff);
+
    if (callarrayflags & CAF__CONCEND) {
       write_halfword(call_endsetup_in | (restrstate << 8));
       write_halfword(call_endsetup_out);
@@ -1572,8 +1589,7 @@ static void write_array_def(uint32 funnyflag)
 def2:
    restrstate = 0;
    callarray_flags2 = 0;
-   call_qualifier = 0;
-   call_qual_num = 0;
+   call_qual_stuff = 0;
 
    get_tok();
    if (tok_kind != tok_symbol) errexit("Improper starting setup");
@@ -1631,22 +1647,43 @@ def2:
          break;
       }
       else if (!strcmp(tok_str, "qualifier")) {
-         if (call_qualifier) errexit("Only one qualifier is allowed");
-         call_qual_num = 0;
+         int t;
+
+         if (call_qual_stuff) errexit("Only one qualifier is allowed");
          get_tok();
 
          /* Look for other indicators. */
          for (;;) {
-            if (tok_kind == tok_symbol && !strcmp(tok_str, "live")) {
-               call_qual_num |= 0x40;
+            if (tok_kind == tok_symbol && !strcmp(tok_str, "left")) {
+               call_qual_stuff |= QUALBIT__LEFT;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "out")) {
+               call_qual_stuff |= QUALBIT__LEFT;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "right")) {
+               call_qual_stuff |= QUALBIT__RIGHT;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "in")) {
+               call_qual_stuff |= QUALBIT__RIGHT;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "live")) {
+               call_qual_stuff |= QUALBIT__LIVE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "tbone")) {
-               call_qual_num |= 0x20;
+               call_qual_stuff |= QUALBIT__TBONE;
                get_tok();
             }
             else if (tok_kind == tok_symbol && !strcmp(tok_str, "ntbone")) {
-               call_qual_num |= 0x10;
+               call_qual_stuff |= QUALBIT__NTBONE;
+               get_tok();
+            }
+            else if (tok_kind == tok_symbol && !strcmp(tok_str, "num")) {
+               call_qual_stuff |= (get_num("Need a qualifier number here")+1) * QUALBIT__NUM_BIT;
                get_tok();
             }
             else
@@ -1654,28 +1691,18 @@ def2:
          }
 
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
-         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
-      }
-      else if (!strcmp(tok_str, "tqualifier")) {
-         if (call_qualifier) errexit("Only one qualifier is allowed");
-         call_qual_num = 0x10;
-         get_tok();
-         if (tok_kind != tok_symbol) errexit("Improper qualifier");
-         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
+         if ((t = search(qualtab)) < 0) errexit("Unknown qualifier");
+         call_qual_stuff |= t;
       }
       else if (!strcmp(tok_str, "nqualifier")) {
-         if (call_qualifier) errexit("Only one qualifier is allowed");
-         call_qual_num = get_num("Need a qualifier number here")+1;
+         int t;
+
+         if (call_qual_stuff) errexit("Only one qualifier is allowed");
+         call_qual_stuff = (get_num("Need a qualifier number here")+1) * QUALBIT__NUM_BIT;
          get_tok();
          if (tok_kind != tok_symbol) errexit("Improper qualifier");
-         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
-      }
-      else if (!strcmp(tok_str, "tnqualifier")) {
-         if (call_qualifier) errexit("Only one qualifier is allowed");
-         call_qual_num = get_num("Need a qualifier number here")+0x10+1;
-         get_tok();
-         if (tok_kind != tok_symbol) errexit("Improper qualifier");
-         if ((call_qualifier = search(qualtab)) < 0) errexit("Unknown qualifier");
+         if ((t = search(qualtab)) < 0) errexit("Unknown qualifier");
+         call_qual_stuff |= t;
       }
       else if (!strcmp(tok_str, "restriction")) {
          get_tok();

@@ -112,7 +112,7 @@ Private void do_glorious_triangles(
    move(&a1, FALSE, &res[0]);
    move(&a2, FALSE, &res[1]);
 
-   if (fix_n_results(2, res)) {
+   if (fix_n_results(2, nothing, res)) {
       result->kind = nothing;
       result->result_flags = 0;
       return;

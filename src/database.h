@@ -21,7 +21,7 @@
    database format version. */
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 113
+#define DATABASE_FORMAT_VERSION 118
 
 
 
@@ -114,7 +114,6 @@
 #define CFLAG1_BASE_TAG_CALL_BIT          0x01000000UL
 #define CFLAG1_BASE_CIRC_CALL             0x08000000UL
 #define CFLAG1_ENDS_TAKE_RIGHT_HANDS      0x10000000UL
-#define CFLAG1_ODD_NUMBER_ONLY            0x20000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -127,6 +126,25 @@
 #define MTX_BOTH_SELECTED_OK       0x40
 #define MTX_FIND_SQUEEZERS         0x80
 #define MTX_FIND_SPREADERS         0x100
+
+
+
+/* These definitions help to encode things in the "qualifierstuff" field
+   of a call definition.  That field is an unsigned 16 bit integer.  The low
+   7 bits are a cast of the qualifier kind itself (hence we allow 127
+   nontrivial qualifiers).  The high 9 bits are as follows. */
+
+/* These two must be consecutive for encoding in the "assump_both" field. */
+#define QUALBIT__LEFT           0x8000
+#define QUALBIT__RIGHT          0x4000
+#define QUALBIT__LIVE           0x2000
+#define QUALBIT__TBONE          0x1000
+#define QUALBIT__NTBONE         0x0800
+/* A 4 bit field.  If nonzero, there is a number requirement, and the field is that number plus 1. */
+#define QUALBIT__NUM_MASK       0x0780
+#define QUALBIT__NUM_BIT        0x0080
+#define QUALBIT__QUAL_CODE      0x007F
+
 
 
 /* BEWARE!!  This list must track the table "leveltab" in dbcomp.c . */
@@ -208,6 +226,8 @@ typedef enum {
    s_ptpd,
    s3dmd,
    s4dmd,
+   s3ptpd,
+   s4ptpd,
    s_wingedstar,
    s_wingedstar12,
    s_wingedstar16,
@@ -219,6 +239,9 @@ typedef enum {
    s3x8,
    s4x5,
    s4x6,
+   s2x10,
+   s2x12,
+   sdeepqtg,
    s3oqtg,
    s_thar,
    s_alamo,
@@ -320,6 +343,12 @@ typedef enum {
    b_5x4,
    b_4x6,
    b_6x4,
+   b_2x10,
+   b_10x2,
+   b_2x12,
+   b_12x2,
+   b_deepqtg,
+   b_pdeepqtg,
    b_3oqtg,
    b_p3oqtg,
    b_thar,
@@ -334,6 +363,10 @@ typedef enum {
    b_p3dmd,
    b_4dmd,
    b_p4dmd,
+   b_3ptpd,
+   b_p3ptpd,
+   b_4ptpd,
+   b_p4ptpd,
    b_bigh,
    b_pbigh,
    b_bigx,
@@ -384,16 +417,9 @@ typedef enum {
 typedef enum {
    sq_none,                /* See db_doc.txt for explanation of these. */
    sq_wave_only,
-   sq_rwave_only,
-   sq_lwave_only,
    sq_all_facing_same,
    sq_1fl_only,
    sq_2fl_only,
-   sq_r2fl_only,
-   sq_l2fl_only,
-   sq_live_2fl_only,
-   sq_live_r2fl_only,
-   sq_live_l2fl_only,
    sq_couples_only,
    sq_3x3couples_only,
    sq_4x4couples_only,
@@ -401,6 +427,7 @@ typedef enum {
    sq_in_or_out,
    sq_miniwaves,
    sq_not_miniwaves,
+   sq_as_couples_miniwaves,
    sq_1_4_tag,
    sq_3_4_tag,
    sq_dmd_same_pt,
@@ -418,8 +445,6 @@ typedef enum {
    sq_trade_by,
    sq_facing_in,
    sq_facing_out,
-   sq_live_facing_in,
-   sq_live_facing_out,
    sq_all_ctrs_rh,
    sq_all_ctrs_lh,
    sq_dmd_ctrs_rh,
@@ -508,6 +533,7 @@ typedef enum {
    schema_grand_single_concentric,
    schema_grand_single_cross_concentric,
    schema_single_concentric_together,
+   schema_maybe_matrix_single_concentric_together,
    schema_maybe_single_concentric,
    schema_maybe_single_cross_concentric,
    schema_maybe_grand_single_concentric,
@@ -527,6 +553,7 @@ typedef enum {
    schema_concentric_or_diamond_line,
    schema_concentric_6_2,
    schema_concentric_2_6,
+   schema_concentric_2_6_or_2_4,
    schema_concentric_6p,
    schema_concentric_6p_or_normal,
    schema_concentric_6p_or_sgltogether,
@@ -534,6 +561,8 @@ typedef enum {
    schema_concentric_others,
    schema_concentric_6_2_tgl,
    schema_concentric_to_outer_diamond,
+   schema_conc_12,
+   schema_conc_16,
    schema_conc_star,
    schema_conc_star12,
    schema_conc_star16,
@@ -541,6 +570,7 @@ typedef enum {
    schema_conc_bar12,
    schema_conc_bar16,
    schema_conc_o,
+   schema_maybe_matrix_conc,
    schema_maybe_matrix_conc_star,
    schema_maybe_matrix_conc_bar,
    schema_checkpoint,
@@ -551,8 +581,11 @@ typedef enum {
    schema_in_out_triple,
    schema_in_out_quad,
    schema_select_leads,
+   schema_select_headliners,
+   schema_select_sideliners,
    schema_select_ctr2,
    schema_select_ctr4,
+   schema_select_ctr6,
    schema_lateral_6,             /* Not for public use! */
    schema_vertical_6,            /* Not for public use! */
    schema_intlk_lateral_6,       /* Not for public use! */
@@ -645,6 +678,7 @@ typedef enum {
 
 /* These are the "seq" flags.  They overlay the "conc" flags. */
 #define DFM1_SEQ_RE_EVALUATE              0x00000001
+#define DFM1_SEQ_DO_HALF_MORE             0x00000002
 
 /* BEWARE!!  This list must track the table "defmodtab1" in dbcomp.c . */
 /* Start of miscellaneous flags.  These go in the "modifiers1" word of a by_def_item. */
@@ -657,7 +691,7 @@ typedef enum {
 #define DFM1_ENDSCANDO                    0x00002000
 #define DFM1_REPEAT_NM1                   0x00004000
 #define DFM1_ROLL_TRANSPARENT             0x00008000
-/* spare:                                 0x00010000 */
+#define DFM1_PERMIT_TOUCH_OR_REAR_BACK    0x00010000
 #define DFM1_CPLS_UNLESS_SINGLE           0x00020000
 /* This is a 2 bit field -- NUM_SHIFT_BIT tells where its low bit lies. */
 #define DFM1_NUM_SHIFT_MASK               0x000C0000

@@ -38,6 +38,7 @@
    uims_do_getout_popup
    uims_do_write_anyway_popup
    uims_do_abort_popup
+   uims_do_session_init_popup
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
@@ -720,6 +721,17 @@ extern int uims_do_abort_popup(void)
    dialog_signal(abort_confirm_enabler);    /* It pops itself down. */
    dialog_read(&my_task);
    if (my_task == abort_confirm_select_task) return POPUP_ACCEPT;
+   else return POPUP_DECLINE;
+}
+
+
+extern int uims_do_session_init_popup(void)
+{
+   int my_task;
+
+   dialog_signal(sess_init_confirm_enabler);    /* It pops itself down. */
+   dialog_read(&my_task);
+   if (my_task == sess_init_confirm_select_task) return POPUP_ACCEPT;
    else return POPUP_DECLINE;
 }
 

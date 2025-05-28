@@ -148,7 +148,7 @@ nevertheless sometimes prints warning messages of various types to alert
 less-experienced callers that something might be unusually difficult or
 controversial, or might violate some definition or some commonly accepted notion.
 
-These warning messages are intended for callers less competent than you.
+@noindent These warning messages are intended for callers less competent than you.
 Ignore them.
 
 You can prevent the program from displaying or printing these warning messages
@@ -320,8 +320,10 @@ CD C:\SD
 sdtty
 @end example
 
-You can also start Sdtty directly from Windows, once you have completed the
-steps in the next section.
+You can also start Sdtty directly from Windows.  The best way is to carry out the
+steps in the next section to set up a ``shortcut'' icon.  Sdtty can also be started
+by locating the file @file{C:\SD\SDTTY.PIF} in the File Manager or Windows 95 Explorer,
+and double-clicking it.
 
 You may safely delete any documentation files from your hard disk after installing
 the program.
@@ -329,8 +331,8 @@ the program.
 @node Making Sdtty Start Under Windows, Licensing Terms, Installing Sdtty on a PC, Intro
 @unnumberedsec Making Sdtty Start Under Windows
 
-You can arrange for Windows to start Sdtty directly,
-without explicitly going to DOS@.  You only need to do the following steps once.
+You can arrange for Windows to start Sdtty directly, from a ``shortcut'' icon.
+You only need to do the following steps once.
 After you have done them, upgrades to new versions of Sdtty will work
 without repeating this.
 

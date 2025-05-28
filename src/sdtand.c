@@ -32,6 +32,7 @@ typedef struct {
    int vertical_people[MAX_PEOPLE];    /* 1 if original people were near/far; 0 if lateral */
    uint32 single_mask;
    long_boolean no_unit_symmetry;
+   long_boolean phantom_pairing_ok;
    int np;
 } tandrec;
 
@@ -240,6 +241,8 @@ Private tm_thing maps_isearch_dmdsome[] = {
    {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_ptpd},
    {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
    {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s4dmd},
+   {{12, 14, 5, 7},   {0, 1, 3, 2},     {11, 10, 8, 9},   {13, 15, 4, 6},     0x55,   0xFFFF,         4, 0,  0,  0, 0,  s1x4,  s4ptpd},
+   {{-2, 4, -2, 5},   {-2, 3, -2, 6},   {-2, 2, -2, 7},   {-2, 1, -2, 0},     0x55,        0,         4, 1,  0,  0, 0,  sdmd,  s_qtag},
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
@@ -362,7 +365,10 @@ Private void initialize_one_table(tm_thing *map_start, int np)
       uint32 alloutmask = (1 << (setup_attrs[map_search->outsetup].setup_limits+1))-1;
 
       for (i=0, m=1; i<map_search->limit; i++, m<<=2) {
+         if (map_search->map1[i] == -2) continue;
+
          alloutmask &= ~(1 << map_search->map1[i]);
+
          if (map_search->map2[i] < 0) {
             imask |= m;
             omask |= 1 << map_search->map1[i];
@@ -448,6 +454,9 @@ Private void unpack_us(
             if (b.id1) b.id1 = (b.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
             if (b2.id1) b2.id1 = (b2.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
             if (b3.id1) b3.id1 = (b3.id1 & ~(ROLL_MASK|STABLE_MASK|077)) | (z & (ROLL_MASK|STABLE_MASK|013));
+
+            if (map_ptr->map2[i] < 0)
+               fail("This would go to an impossible setup.");
 
             if (((o + (map_ptr->rot&1) + 1) & 2) && !tandstuff->no_unit_symmetry) {
                if (tandstuff->np >= 4) {
@@ -540,7 +549,7 @@ Private void pack_us(
             if ((((f.id1 ^ b3.id1) | (b.id1 ^ b2.id1) | (~(f.id1 ^ b.id1))) & BIT_PERSON))
                fail("Can't find skew people.");
          }
-         else if (!(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS)) {
+         else if (!(tandstuff->virtual_setup.cmd.cmd_misc_flags & CMD_MISC__PHANTOMS) && !tandstuff->phantom_pairing_ok) {
 
             /* Otherwise, we usually forbid phantoms unless some phantom concept was used
                (either something like "phantom tandem" or some other phantom concept such
@@ -674,6 +683,7 @@ extern void tandem_couples_move(
                                  inside triangles = 22 / outside triangles = 23
                                  wave-based triangles triangles = 26 / tandem-based triangles = 27
                                  <anyone>-based triangles = 30 / 3x1 triangles = 31 / Y's = 32 */
+   long_boolean phantom_pairing_ok,
    setup *result)
 {
    selector_kind saved_selector;
@@ -694,8 +704,8 @@ extern void tandem_couples_move(
    special_mask = 0;
    tandstuff.single_mask = 0;
    tandstuff.no_unit_symmetry = FALSE;
+   tandstuff.phantom_pairing_ok = phantom_pairing_ok;
    clear_people(result);
-
 
    if (key == 32) {
       np = 4;
@@ -867,7 +877,7 @@ extern void tandem_couples_move(
       nsmask = 0;
    }
    else if (key == 17) {
-      if (ss->kind == s_ptpd || ss->kind == sdmd) {
+      if (ss->kind == s_ptpd || ss->kind == s3ptpd || ss->kind == s4ptpd || ss->kind == sdmd) {
          ewmask = allmask;
          nsmask = 0;
       }

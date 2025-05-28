@@ -649,8 +649,7 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 
    while ((last_datum & 0xE000) == 0x6000) {
       begin_kind this_start_setup;
-      search_qualifier this_qualifier;
-      int this_qual_num;
+      unsigned short this_qualifierstuff;
       call_restriction this_restriction;
       setup_kind end_setup;
       setup_kind end_setup_out;
@@ -660,14 +659,12 @@ Private void read_level_3_groups(calldef_block *where_to_put)
 
       these_flags = last_datum & 0x1FFF;    /* We allow 13 callarray_flags. */
 
-      read_halfword();       /* Get qualifier and start setup. */
-      this_qualifier = (search_qualifier) ((last_datum & 0xFF00) >> 8);
+      read_halfword();       /* Get start setup. */
       this_start_setup = (begin_kind) (last_datum & 0xFF);
       this_start_size = begin_sizes[this_start_setup];
 
-      read_halfword();       /* Get qualifier number. */
-      this_qual_num = last_datum & 0xFF;
-
+      read_halfword();       /* Get qualifier stuff. */
+      this_qualifierstuff = last_datum;
       read_halfword();       /* Get restriction and end setup. */
       this_restriction = (call_restriction) ((last_datum & 0xFF00) >> 8);
       end_setup = (setup_kind) (last_datum & 0xFF);
@@ -699,10 +696,8 @@ Private void read_level_3_groups(calldef_block *where_to_put)
       }
 
       current_call_block = tp;
-
       tp->callarray_flags = these_flags;
-      tp->qualifier = (veryshort) this_qualifier;
-      tp->qual_num = this_qual_num;
+      tp->qualifierstuff = this_qualifierstuff;
       tp->start_setup = (veryshort) this_start_setup;
       tp->restriction = this_restriction;
 
@@ -1010,6 +1005,8 @@ Private void build_database(call_list_mode_t call_list_mode)
                call_root->callflagsf |= CFLAGH__REQUIRES_SELECTOR;
             else if (c == 'h')
                call_root->callflagsf |= CFLAGH__REQUIRES_DIRECTION;
+            else if (c == 'D')
+               call_root->callflagsf |= CFLAGH__ODD_NUMBER_ONLY;
             else if (c == 'v')
                call_root->callflagsf |= (CFLAGH__TAG_CALL_RQ_BIT*1);
             else if (c == 'w')

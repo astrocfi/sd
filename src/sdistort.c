@@ -43,19 +43,12 @@ static map_thing *map_hash_table2[NUM_MAP_HASH_BUCKETS];
 
 extern void initialize_map_tables(void)
 {
-   mapcoder *tabp;
    map_thing *tab2p;
    int i;
 
    for (i=0 ; i<NUM_MAP_HASH_BUCKETS ; i++) {
       map_hash_table[i] = (mapcoder *) 0;
       map_hash_table2[i] = (map_thing *) 0;
-   }
-
-   for (tabp = map_init_table ; tabp->code != ~0 ; tabp++) {
-      uint32 hash_num = ((tabp->code+(tabp->code>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
-      tabp->next = map_hash_table[hash_num];
-      map_hash_table[hash_num] = tabp;
    }
 
    for (tab2p = map_init_table2 ; tab2p->outer_kind != nothing ; tab2p++) {
@@ -70,28 +63,27 @@ extern void initialize_map_tables(void)
 Private Const map_thing *get_map_from_code(uint32 map_encoding)
 {
    int mk = (map_encoding & 0x3F0) >> 4;
+   uint32 hash_num;
+   mapcoder *p;
+   map_thing *q;
 
    if (mk == MPKIND__SPLIT && !(map_encoding & 8)) {
       int sk = (map_encoding & 0xFFFFFC00) >> 10;
-      if (sk > s2x6) return (Const map_thing *) 0;
-
-      return split_lists[sk][(map_encoding & 0xF)-2];
+      if (sk <= s2x6)
+         return split_lists[sk][(map_encoding & 0xF)-2];
    }
-   else {
-      mapcoder *p;
-      map_thing *q;
-      uint32 hash_num = ((map_encoding+(map_encoding>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
 
-      for (p=map_hash_table[hash_num] ; p ; p=p->next) {
-         if (p->code == map_encoding) return p->the_map;
-      }
+   hash_num = ((map_encoding+(map_encoding>>8) * ((unsigned int) 035761254233))) & (NUM_MAP_HASH_BUCKETS-1);
 
-      for (q=map_hash_table2[hash_num] ; q ; q=q->next) {
-         if (q->code == map_encoding) return q;
-      }
-
-      return (Const map_thing *) 0;
+   for (p=map_hash_table[hash_num] ; p ; p=p->next) {
+      if (p->code == map_encoding) return p->the_map;
    }
+
+   for (q=map_hash_table2[hash_num] ; q ; q=q->next) {
+      if (q->code == map_encoding) return q;
+   }
+
+   return (Const map_thing *) 0;
 }
 
 
@@ -105,7 +97,7 @@ Private void innards(
    setup *result)
 {
    int i, j;
-   Const map_thing *final_map;
+   Const map_thing *final_map = (map_thing *) 0;
    setup z[8];
 
    uint32 rot = maps->rot;
@@ -172,7 +164,12 @@ Private void innards(
       goto noniso1;
    }
 
-   if (fix_n_results(arity, z)) {
+   /* If the starting map is of kind MPKIND__NONE, we will be in serious trouble unless
+      the final setups are of the same kind as those shown in the map.  Fix_n_results
+      has a tendency to try to turn diamonds into 1x4's whenever it can, that is,
+      whenever the centers are empty.  We tell it not to do that if it will cause problems. */
+
+   if (fix_n_results(arity, map_kind == MPKIND__NONE ? maps->inner_kind : nothing, z)) {
       result->kind = nothing;
       result->result_flags = 0;
       return;
@@ -492,22 +489,33 @@ Private void innards(
          }
       }
 
-      final_map = get_map_from_code(MAPCODE(z[0].kind,arity,map_kind,z[0].rotation & 1));
+      if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl4 && (z[0].rotation & 1) == 0) {
+         if (z[0].rotation & 2)
+            final_map = &map_phan_trngl4a;
+         else if (z[1].rotation & 2)
+            final_map = &map_phan_trngl4b;
+      }
+      else if (arity == 2 && map_kind == MPKIND__SPLIT && z[0].kind == s_trngl && (z[0].rotation & 1) != 0) {
+         if (z[0].rotation & 2)
+            final_map = &map_b6_trngl;
+         if (z[1].rotation & 2)
+            final_map = &map_s6_trngl;
+      }
+      else {
+         uint32 code = MAPCODE(z[0].kind,arity,map_kind,z[0].rotation & 1);
+         final_map = get_map_from_code(code);
 
-      if (arity == 2) {
-         if (z[0].rotation & 2) {
-            if      (final_map == &map_s6_trngl) final_map = &map_b6_trngl;
-            else if (final_map == &map_s8_tgl4) {}
-            else if (final_map == &map_phan_trngl4a) {}
-            else if (final_map == &map_rig_trngl4) final_map = &map_bone_trngl4;
-            else final_map = 0;        /* Raise an error. */
-         }
-         if (z[1].rotation & 2) {
-            if      (final_map == &map_s6_trngl) {}
-            else if (final_map == &map_s8_tgl4) final_map = &map_p8_tgl4;
-            else if (final_map == &map_phan_trngl4a) final_map = &map_phan_trngl4b;
-            else if (final_map == &map_rig_trngl4) {}
-            else final_map = 0;       /* Raise an error. */
+         if (arity == 2) {
+            if (z[0].rotation & 2) {
+               if      (code == MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)) {}
+               else if (code == MAPCODE(s_trngl4,2,MPKIND__SPLIT, 1)) final_map = &map_bone_trngl4;
+               else final_map = 0;        /* Raise an error. */
+            }
+            if (z[1].rotation & 2) {
+               if      (code == MAPCODE(s_trngl4,2,MPKIND__REMOVED, 1)) final_map = &map_p8_tgl4;
+               else if (code == MAPCODE(s_trngl4,2,MPKIND__SPLIT, 1)) {}
+               else final_map = 0;       /* Raise an error. */
+            }
          }
       }
    }
@@ -561,6 +569,8 @@ Private void innards(
       result->rotation += 2;
 
    if ((z[0].rotation & 1) && (final_map->rot & 1))
+      result->rotation = 0;
+   else if (arity == 2 && z[0].rotation == 2 && z[1].rotation == 0 && (final_map->rot & 0xF) == 0x2)
       result->rotation = 0;
 
    result->rotation -= vert;
@@ -635,7 +645,7 @@ extern void divided_setup_move(
 
    assumption_thing t = ss->cmd.cmd_assume;
 
-   if (!maps) fail("Can't do this concept.");
+   if (!maps) fail("Can't do this concept in this setup.");
 
    kn = maps->inner_kind;
    insize = setup_attrs[kn].setup_limits+1;
@@ -670,7 +680,7 @@ extern void divided_setup_move(
       case phantest_both:
          if (!(vflags[0] && vflags[1]))
             /* Only one of the two setups is occupied. */
-            fail("Don't use phantom concept if you don't mean it.");
+            warn(warn__stupid_phantom_clw);
          break;
       case phantest_only_one:
          if (vflags[0] && vflags[1]) fail("Can't find the setup to work in.");
@@ -683,16 +693,16 @@ extern void divided_setup_move(
          break;
       case phantest_first_or_both:
          if (!vflags[0])
-            fail("Don't use phantom concept if you don't mean it.");
+            warn(warn__stupid_phantom_clw);
          break;
       case phantest_2x2_both:
          /* Test for "C1" blocks. */
          if (!((vflags[0] | vflags[2]) && (vflags[1] | vflags[3])))
-            fail("Don't use phantom concept if you don't mean it.");
+            warn(warn__stupid_phantom_clw);
          break;
       case phantest_not_just_centers:
          if (!(vflags[0] | vflags[2]))
-            fail("Don't use phantom concept if you don't mean it.");
+            warn(warn__stupid_phantom_clw);
          break;
       case phantest_2x2_only_two:
          /* Test for NOT "C1" blocks. */
@@ -765,52 +775,40 @@ extern void divided_setup_move(
 
 
 extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
-   int m1, int m2, int m3, setup *result)
+   uint32 *masks, setup *result)
 {
    overlapped_setup_move(
       ss,
       get_map_from_code(map_encoding),
-      m1, m2, m3,
+      masks,
       result);
 }
 
 
 extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
-   int m1, int m2, int m3, setup *result)
+   uint32 *masks, setup *result)
 {
-   int i, j, k;
-   setup x[4];
+   int i, j, rot;
+   uint32 k;
+   setup x[8];
    assumption_thing t = ss->cmd.cmd_assume;
 
    setup_kind kn = maps->inner_kind;
    int insize = setup_attrs[kn].setup_limits+1;
-   int rot = maps->rot;
    int arity = maps->arity;
+   Const veryshort *mapbase = maps->maps;
 
-   if (arity >= 4) fail("Can't handle this many overlapped setups.");
+   if (arity >= 8) fail("Can't handle this many overlapped setups.");
 
-   for (i=0, k=1; i<insize; i++, k<<=1) {
-      if (k & m1)
-         (void) copy_rot(&x[0], i, ss, maps->maps[i], 011*((-rot) & 3));
-      else
-         clear_person(&x[0], i);
-
-      if (arity >= 2) {
-         if (k & m2)
-            (void) copy_rot(&x[1], i, ss, maps->maps[i+insize], 011*((-(rot>>2)) & 3));
-         else
-            clear_person(&x[1], i);
-      }
-
-      if (arity >= 3) {
-         if (k & m3)
-            (void) copy_rot(&x[2], i, ss, maps->maps[i+insize*2], 011*((-(rot>>4)) & 3));
-         else
-            clear_person(&x[2], i);
+   for (j=0, rot=maps->rot ; j<arity ; j++, rot>>=2) {
+      int rrr = 011*((-rot) & 3);
+      clear_people(&x[j]);
+      x[j].kind = kn;
+      for (i=0, k=1; i<insize; i++, k<<=1, mapbase++) {
+         if (k & masks[j])
+            (void) copy_rot(&x[j], i, ss, *mapbase, rrr);
       }
    }
-
-   for (j=0; j<arity; j++) x[j].kind = kn;
 
    t.assumption = cr_none;
    innards(&ss->cmd, maps, TRUE, t, FALSE, x, result);
@@ -848,14 +846,13 @@ extern void do_phantom_2x4_concept(
 
    int linesp = parseptr->concept->value.arg2 & 1;
    int rot = (global_tbonetest ^ linesp ^ 1) & 1;
-   Const map_thing *maps = parseptr->concept->value.maps;
+   Const map_thing *maps;
 
    /* If this was phantom columns, we allow stepping to a wave.  This makes it
       possible to do interesting cases of turn and weave, when one column
       is a single 8 chain and another is a single DPT.  But if it was phantom
       lines, we forbid it.  We also always forbid it if it was one of the special
-      things like "stagger" or "butterfly", which is indicated by the map_kind
-      field being MPKIND__NONE. */
+      things like "stagger", which is indicated by the map_kind field being MPKIND__NONE. */
 
    if (linesp || parseptr->concept->value.arg3 == MPKIND__NONE)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
@@ -879,9 +876,13 @@ extern void do_phantom_2x4_concept(
 
          rot = 0;
          maps = get_map_from_code(MAPCODE(s1x8,2,parseptr->concept->value.arg3,0));
-         if (!maps) fail("This concept not allowed in this setup.");
          break;
       case s4x4:
+
+         if (parseptr->concept->value.arg3 != MPKIND__NONE)
+            maps = get_map_from_code(MAPCODE(s2x4,2,parseptr->concept->value.arg3,1));
+         else
+            maps = parseptr->concept->value.maps;
 
          /* Check for special case of "stagger" or "bigblock", without the word "phantom",
             when people are not actually on block spots. */
@@ -909,7 +910,7 @@ extern void do_phantom_2x4_concept(
       case s2x6:
          /* Check for special case of split phantom lines/columns in a parallelogram. */
 
-         if (maps->map_kind == MPKIND__SPLIT) {
+         if (parseptr->concept->value.arg3 == MPKIND__SPLIT) {
             setup stemp;
 
             if (rot) {
@@ -932,15 +933,16 @@ extern void do_phantom_2x4_concept(
             break;              /* Note that rot is zero. */
          }
          /* Otherwise fall through to error message!!! */
+         /* FALL THROUGH!!! */
       default:
+         /* FELL THROUGH!!! */
          fail("Need a 4x4 setup to do this concept.");
    }
 
    ss->rotation += rot;   /* Just flip the setup around and recanonicalize. */
    canonicalize_rotation(ss);
 
-   divided_setup_move(ss, maps,
-         (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
+   divided_setup_move(ss, maps, (phantest_kind) parseptr->concept->value.arg1, TRUE, result);
    result->rotation -= rot;   /* Flip the setup back. */
    /* The split-axis bits are gone.  If someone needs them, we have work to do. */
    result->result_flags &= ~RESULTFLAG__SPLIT_AXIS_FIELDMASK;
@@ -1374,27 +1376,42 @@ extern void distorted_move(
          if (global_tbonetest & 010) fail("There is no tidal column here.");
       }
 
-      if (ss->kind == sbigbone) {
-         if (global_livemask == 01717) { map_ptr = &map_dbgbn1; }
-         else if (global_livemask == 07474) { map_ptr = &map_dbgbn2; }
-         else fail("Can't find distorted 1x8.");
+      if (disttest == disttest_offset) {
+         /* Offset tidal C/L/W. */
+         if (ss->kind == s2x8) {
+            if (global_livemask == 0x0F0F) { map_ptr = &map_off1x81; }
+            else if (global_livemask == 0xF0F0) { map_ptr = &map_off1x82; }
+            else fail("Can't find offset 1x8.");
 
-         disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
-         goto do_divided_call;
+            goto do_divided_call;
+         }
+         else
+            fail("Must have 2x8 setup for this concept.");
       }
-      else if (ss->kind == s2x8) {
-         /* Search for the live people. */
+      else {
+         /* Distorted tidal C/L/W. */
+         if (ss->kind == sbigbone) {
+            if (global_livemask == 01717) { map_ptr = &map_dbgbn1; }
+            else if (global_livemask == 07474) { map_ptr = &map_dbgbn2; }
+            else fail("Can't find distorted 1x8.");
 
-         for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
+            disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
+            goto do_divided_call;
+         }
+         else if (ss->kind == s2x8) {
+            /* Search for the live people. */
 
-         k = s1x8;
-         zlines = FALSE;
-         rot = 0;
-         rotz = 0;
-         result->kind = s2x8;      
+            for (i=0; i<8; i++) (void) search_row(2, &the_map[i], &the_map[i], &list_2x8[i<<1], ss);
+
+            k = s1x8;
+            zlines = FALSE;
+            rot = 0;
+            rotz = 0;
+            result->kind = s2x8;      
+         }
+         else
+            fail("Must have 2x8 setup for this concept.");
       }
-      else
-         fail("Must have 2x8 setup for this concept.");
    }
    else if (linesp & 16) {
       if (ss->kind == sbighrgl) {
@@ -1426,7 +1443,7 @@ extern void distorted_move(
             if (disttest != disttest_offset)
                fail("Sorry, can't apply this concept when people are T-boned.");
       
-            phantom_2x4_move(ss, linesp & 1, phantest_only_one, &(map_offset), result);
+            phantom_2x4_move(ss, linesp & 1, phantest_only_one, &map_offset, result);
             return;
          }
    
@@ -1438,7 +1455,7 @@ extern void distorted_move(
                ss->rotation++;
                canonicalize_rotation(ss);
             }
-            map_ptr = (livemask & 1) ? &map_x_s2x4_3 : &map_o_s2x4_3;
+            mapcode = (livemask & 1) ? MAPCODE(s2x4,2,MPKIND__X_SPOTS,1) : MAPCODE(s2x4,2,MPKIND__O_SPOTS,1);
             disttest = disttest_offset;  /* We know what we are doing -- shut off the error message. */
             goto do_divided_call;
          }
@@ -1553,11 +1570,7 @@ extern void distorted_move(
       int i;
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
-
-      /* Actually, should do
       do_matrix_expansion(ss, CONCPROP__NEEDK_4X5, FALSE);
-      */
-      expand_setup(&exp_3x4_4x5_stuff, ss);
       for (i=0; i<MAX_PEOPLE; i++)
          ss->people[i].id2 &= (~GLOB_BITS_TO_CLEAR | (ID2_FACEFRONT|ID2_FACEBACK|ID2_HEADLINE|ID2_SIDELINE));
 
@@ -1570,7 +1583,7 @@ extern void distorted_move(
             ss->kind == s3x4 &&     /* Only allow 50% offset. */
             junk_concepts.herit == 0 &&
             junk_concepts.final == 0 &&
-            next_parseptr->concept->value.maps == &map_hv_2x4_2) {
+            next_parseptr->concept->value.arg3 == MPKIND__SPLIT) {
       ss->cmd.cmd_misc_flags |= CMD_MISC__PHANTOMS;
       do_matrix_expansion(ss, CONCPROP__NEEDK_3X8, FALSE);
       if (ss->kind != s3x8) fail("Must have a 3x4 setup for this concept.");
@@ -1935,7 +1948,8 @@ common_spot_map cmaps[] = {
          {      -1,       3,      -1,       7,      -1,      11,      -1,      15},
          {       0, d_south,       0, d_south,       0, d_north,       0, d_north}, s2x8, s2x4, 0},
 
-   /* common spot columns, facing E-W */
+   /* Common spot columns, facing E-W */
+   /* Clumps */
    {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
          {      12,      13,      -1,      -1,       4,       5,      -1,      -1},
          {  d_east,  d_east,       0,       0,  d_west,  d_west,       0,       0},
@@ -1946,6 +1960,7 @@ common_spot_map cmaps[] = {
          {       0,       0,  d_east,  d_east,       0,       0,  d_west,  d_west},
          {      -1,      -1,       3,       1,      -1,      -1,      11,       9},
          {       0,       0,  d_west,  d_west,       0,       0,  d_east,  d_east}, s4x4, s2x4, 0},
+   /* Stairsteps */
    {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
          {      12,      -1,      14,      -1,       4,      -1,       6,      -1},
          {  d_east,       0,  d_east,       0,  d_west,       0,  d_west,       0},
@@ -1956,33 +1971,81 @@ common_spot_map cmaps[] = {
          {       0,  d_east,       0,  d_east,       0,  d_west,       0,  d_west},
          {      -1,      15,      -1,       1,      -1,       7,      -1,       9},
          {       0,  d_west,       0,  d_west,       0,  d_east,       0,  d_east}, s4x4, s2x4, 0},
-   /* common spot columns, facing N-S */
-   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,},
-         {       0,       1,      -1,      -1,       8,       9,      -1,      -1,},
-         { d_south, d_south,       0,       0, d_north, d_north,       0,       0,},
-         {      14,       3,      -1,      -1,       6,      11,      -1,      -1,},
-         { d_north, d_north,       0,       0, d_south, d_south,       0,       0,}, s4x4, s2x4, 1},
-   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,},
-         {      -1,      -1,       2,       4,      -1,      -1,      10,      12,},
-         {       0,       0, d_south, d_south,       0,       0, d_north, d_north,},
-         {      -1,      -1,       7,       5,      -1,      -1,      15,      13,},
-         {       0,       0, d_north, d_north,       0,       0, d_south, d_south,}, s4x4, s2x4, 1},
-   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,},
-         {       0,      -1,       2,      -1,       8,      -1,      10,      -1,},
-         { d_south,       0, d_south,       0, d_north,       0, d_north,       0,},
-         {      14,      -1,       7,      -1,       6,      -1,      15,      -1,},
-         { d_north,       0, d_north,       0, d_south,       0, d_south,       0,}, s4x4, s2x4, 1},
-   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,},
-         {      -1,       1,      -1,       4,      -1,       9,      -1,      12,},
-         {       0, d_south,       0, d_south,       0, d_north,       0, d_north,},
-         {      -1,       3,      -1,       5,      -1,      11,      -1,      13,},
-         {       0, d_north,       0, d_north,       0, d_south,       0, d_south,}, s4x4, s2x4, 1},
-   /* common spot columns out of waves, just centers of virtual columns will be occupied.  */
-   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1,},
-         {      -1,       3,       4,      -1,      -1,       7,       0,      -1,},
-         {       0, d_south, d_south,       0,       0, d_north, d_north,       0,},
-         {      -1,       2,       5,      -1,      -1,       6,       1,      -1,},
-         {       0, d_north, d_north,       0,       0, d_south, d_south,       0,}, s2x4, s2x4, 1},
+   /* Stairsteps in middle, ends are normal */
+   {2,   {      10,      -1,      -1,       1,       2,      -1,      -1,       9},
+         {      -1,      13,      -1,      -1,      -1,       5,      -1,      -1},
+         {       0,  d_east,       0,       0,       0,  d_west,       0,       0},
+         {      -1,      15,      -1,      -1,      -1,       7,      -1,      -1},
+         {       0,  d_west,       0,       0,       0,  d_east,       0,       0}, s4x4, s2x4, 0},
+   {2,   {      10,      -1,      -1,       1,       2,      -1,      -1,       9},
+         {      -1,      -1,      14,      -1,      -1,      -1,       6,      -1},
+         {       0,       0,  d_east,       0,       0,       0,  d_west,       0},
+         {      -1,      -1,       3,      -1,      -1,      -1,      11,      -1},
+         {       0,       0,  d_west,       0,       0,       0,  d_east,       0}, s4x4, s2x4, 0},
+   /* 'Z' columns, centers are normal */
+   {2,   {      -1,      15,       3,      -1,      -1,       7,      11,      -1},
+         {      12,      -1,      -1,      -1,       4,      -1,      -1,      -1},
+         {  d_east,       0,       0,       0,  d_west,       0,       0,       0},
+         {      10,      -1,      -1,      -1,       2,      -1,      -1,      -1},
+         {  d_west,       0,       0,       0,  d_east,       0,       0,       0}, s4x4, s2x4, 0},
+   {2,   {      -1,      15,       3,      -1,      -1,       7,      11,      -1},
+         {      -1,      -1,      -1,       0,      -1,      -1,      -1,       8},
+         {       0,       0,       0,  d_east,       0,       0,       0,  d_west},
+         {      -1,      -1,      -1,       1,      -1,      -1,      -1,       9},
+         {       0,       0,       0,  d_west,       0,       0,       0,  d_east}, s4x4, s2x4, 0},
+
+   /* Common spot columns, facing N-S */
+   /* Clumps */
+   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,       1,      -1,      -1,       8,       9,      -1,      -1},
+         { d_south, d_south,       0,       0, d_north, d_north,       0,       0},
+         {      14,       3,      -1,      -1,       6,      11,      -1,      -1},
+         { d_north, d_north,       0,       0, d_south, d_south,       0,       0}, s4x4, s2x4, 1},
+   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,      -1,       2,       4,      -1,      -1,      10,      12},
+         {       0,       0, d_south, d_south,       0,       0, d_north, d_north},
+         {      -1,      -1,       7,       5,      -1,      -1,      15,      13},
+         {       0,       0, d_north, d_north,       0,       0, d_south, d_south}, s4x4, s2x4, 1},
+   /* Stairsteps */
+   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {       0,      -1,       2,      -1,       8,      -1,      10,      -1},
+         { d_south,       0, d_south,       0, d_north,       0, d_north,       0},
+         {      14,      -1,       7,      -1,       6,      -1,      15,      -1},
+         { d_north,       0, d_north,       0, d_south,       0, d_south,       0}, s4x4, s2x4, 1},
+   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,       1,      -1,       4,      -1,       9,      -1,      12},
+         {       0, d_south,       0, d_south,       0, d_north,       0, d_north},
+         {      -1,       3,      -1,       5,      -1,      11,      -1,      13},
+         {       0, d_north,       0, d_north,       0, d_south,       0, d_south}, s4x4, s2x4, 1},
+   /* Stairsteps in middle, ends are normal */
+   {2,   {      14,      -1,      -1,       5,       6,      -1,      -1,      13},
+         {      -1,       1,      -1,      -1,      -1,       9,      -1,      -1},
+         {       0, d_south,       0,       0,       0, d_north,       0,       0},
+         {      -1,       3,      -1,      -1,      -1,      11,      -1,      -1},
+         {       0, d_north,       0,       0,       0, d_south,       0,       0}, s4x4, s2x4, 1},
+   {2,   {      14,      -1,      -1,       5,       6,      -1,      -1,      13},
+         {      -1,      -1,       2,      -1,      -1,      -1,      10,      -1},
+         {       0,       0, d_south,       0,       0,       0, d_north,       0},
+         {      -1,      -1,       7,      -1,      -1,      -1,      15,      -1},
+         {       0,       0, d_north,       0,       0,       0, d_south,       0}, s4x4, s2x4, 1},
+   /* 'Z' columns, centers are normal */
+   {2,   {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
+         {       0,      -1,      -1,      -1,       8,      -1,      -1,      -1},
+         { d_south,       0,       0,       0, d_north,       0,       0,       0},
+         {      14,      -1,      -1,      -1,       6,      -1,      -1,      -1},
+         { d_north,       0,       0,       0, d_south,       0,       0,       0}, s4x4, s2x4, 1},
+   {2,   {      -1,       3,       7,      -1,      -1,      11,      15,      -1},
+         {      -1,      -1,      -1,       4,      -1,      -1,      -1,      12},
+         {       0,       0,       0, d_south,       0,       0,       0, d_north},
+         {      -1,      -1,      -1,       5,      -1,      -1,      -1,      13},
+         {       0,       0,       0, d_north,       0,       0,       0, d_south}, s4x4, s2x4, 1},
+
+   /* Common spot columns out of waves, just centers of virtual columns will be occupied.  */
+   {2,   {      -1,      -1,      -1,      -1,      -1,      -1,      -1,      -1},
+         {      -1,       3,       4,      -1,      -1,       7,       0,      -1},
+         {       0, d_south, d_south,       0,       0, d_north, d_north,       0},
+         {      -1,       2,       5,      -1,      -1,       6,       1,      -1},
+         {       0, d_north, d_north,       0,       0, d_south, d_south,       0}, s2x4, s2x4, 1},
 
    {0, {0}, {0}, {0}, {0}, {0}, nothing, nothing, 0},
 };
@@ -1998,6 +2061,7 @@ extern void common_spot_move(
    long_boolean uncommon = FALSE;
    setup a0, a1;
    setup the_results[2];
+   long_boolean not_rh;
    common_spot_map *map_ptr;
    warning_info saved_warnings = history[history_ptr+1].warnings;
 
@@ -2015,50 +2079,47 @@ extern void common_spot_move(
 
    for (map_ptr = cmaps ; map_ptr->orig_kind != nothing ; map_ptr++) {
       if (ss->kind != map_ptr->orig_kind || !(rstuff & map_ptr->indicator)) goto not_this_map;
+      not_rh = FALSE;
 
       /* See if this map works with right hands. */
 
       for (i=0; i<=setup_attrs[map_ptr->partial_kind].setup_limits; i++) {
-         int t;
+         int t = map_ptr->common0[i];
+         int u = map_ptr->common1[i];
 
-         t = map_ptr->common0[i];
          if (t >= 0) {
             if ((ss->people[t].id1 & d_mask) != map_ptr->dir0[i]) goto not_this_rh_map;
          }
 
-         t = map_ptr->common1[i];
-         if (t >= 0) {
-            if ((ss->people[t].id1 & d_mask) != map_ptr->dir1[i]) goto not_this_rh_map;
+         if (u >= 0) {
+            if ((ss->people[u].id1 & d_mask) != map_ptr->dir1[i]) goto not_this_rh_map;
          }
-      }
-      goto found;
 
-      not_this_rh_map: ;
+         continue;
 
-      /* See if this map works with left hands. */
+         not_this_rh_map: ;
 
-      for (i=0; i<=setup_attrs[map_ptr->partial_kind].setup_limits; i++) {
-         int t;
+         not_rh = TRUE;
 
-         t = map_ptr->common0[i];
          if (t >= 0) {
             if ((ss->people[t].id1 & d_mask) != (map_ptr->dir0[i] ^ 2)) goto not_this_map;
          }
 
-         t = map_ptr->common1[i];
-         if (t >= 0) {
-            if ((ss->people[t].id1 & d_mask) != (map_ptr->dir1[i] ^ 2)) goto not_this_map;
+         if (u >= 0) {
+            if ((ss->people[u].id1 & d_mask) != (map_ptr->dir1[i] ^ 2)) goto not_this_map;
          }
       }
 
-      warn(warn__tasteless_com_spot);
       goto found;
 
       not_this_map: ;
    }
+
    fail("Not in legal setup for common-spot call.");
 
    found:
+
+   if (not_rh) warn(warn__tasteless_com_spot);
 
    a0 = *ss;
    a1 = *ss;

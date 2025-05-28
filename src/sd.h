@@ -71,6 +71,7 @@ typedef char veryshort;
    will do the right thing with that, but, just in case, we use a typedef.
 
    The type "uint32" must be an unsigned integer of at least 32 bits.
+   The type "uint16" must be an unsigned integer of at least 16 bits.
 
    Note also:  There are many places in the program (not just in database.h and sd.h)
    where the suffix "UL" is put on constants that are intended to be of type "uint32".
@@ -78,6 +79,7 @@ typedef char veryshort;
    necessary to change all of those. */
 
 typedef unsigned long int uint32;
+typedef unsigned short int uint16;
 
 typedef Const char *Cstring;
 
@@ -571,7 +573,7 @@ typedef struct {
    the flags resulting from one call be passed to the next.  In fact, that
    would be incorrect.  The CMD_MISC__??? bits should start at zero at the
    beginning of each call, and accumulate stuff as the call goes deeper into
-   recursion.  The RESULTFLAG__XXX bits should, in general, be the OR of the
+   recursion.  The RESULTFLAG__??? bits should, in general, be the OR of the
    bits of the components of a compound call, though this may not be so for
    the elongation bits at the bottom of the word. */
 
@@ -581,15 +583,14 @@ typedef struct glork {
    struct glork *next;
    uint32 callarray_flags;
    call_restriction restriction;
-   veryshort qualifier;     /* Must cast to search_qualifier! */
-   veryshort qual_num;      /* Low 4 bits: zero for no qualification, else N+1. "16" bit: must not be T-boned. */
+   uint16 qualifierstuff;   /* See QUALBIT__??? definitions in database.h */
    veryshort start_setup;   /* Must cast to begin_kind! */
    veryshort end_setup;     /* Must cast to setup_kind! */
    veryshort end_setup_in;  /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    veryshort end_setup_out; /* Only if end_setup = concentric */  /* Must cast to setup_kind! */
    union {
       /* Dynamically allocated to whatever size is required. */
-      unsigned short def[4];     /* only if pred = false */
+      uint16 def[4];     /* only if pred = false */
       struct {                   /* only if pred = true */
          struct predptr_pair_struct *predlist;
          /* Dynamically allocated to whatever size is required. */
@@ -679,7 +680,7 @@ typedef enum {
 #define MAPCODE(setupkind,num,mapkind,rot) ((((int)(setupkind)) << 10) | (((int)(mapkind)) << 4) | (((num)-1) << 1) | (rot))
 
 typedef struct skrilch {
-   Const veryshort maps[32];
+   Const veryshort maps[40];
    Const mpkind map_kind;
    Const short int warncode;
    Const short int arity;
@@ -697,10 +698,13 @@ typedef enum {
    analyzer_NORMAL,
    analyzer_CHECKPT,
    analyzer_2X6,
+   analyzer_2X4,
    analyzer_6X2,
    analyzer_6P,
    analyzer_6X2_TGL,
    analyzer_O,
+   analyzer_CONC12,
+   analyzer_CONC16,
    analyzer_BAR,
    analyzer_BAR12,
    analyzer_BAR16,
@@ -818,12 +822,10 @@ typedef enum {
    concept_double_diagonal,
    concept_parallelogram,
    concept_triple_lines,
-   concept_triple_lines_tog,
-   concept_triple_lines_tog_std,
+   concept_multiple_lines_tog,
+   concept_multiple_lines_tog_std,
    concept_triple_1x8_tog,
    concept_quad_lines,
-   concept_quad_lines_tog,
-   concept_quad_lines_tog_std,
    concept_quad_boxes,
    concept_quad_boxes_together,
    concept_triple_boxes,
@@ -1188,7 +1190,7 @@ typedef struct predptr_pair_struct {
    predicate_descriptor *pred;
    struct predptr_pair_struct *next;
    /* Dynamically allocated to whatever size is required. */
-   unsigned short arr[4];
+   uint16 arr[4];
 } predptr_pair;
 
 /* BEWARE!!  This list must track the array "warning_strings" in sdutil.c . */
@@ -1237,6 +1239,7 @@ typedef enum {
    warn__check_c1_stars,
    warn__check_gen_c1_stars,
    warn__bigblock_feet,
+   warn__bigblockqtag_feet,
    warn__adjust_to_feet,
    warn__some_touch,
    warn__split_to_2x4s,
@@ -1248,11 +1251,13 @@ typedef enum {
    warn__split_phan_in_pgram,
    warn__bad_interlace_match,
    warn__not_on_block_spots,
+   warn__stupid_phantom_clw,
    warn__bad_modifier_level,
    warn__bad_call_level,
    warn__did_not_interact,
    warn__opt_for_normal_cast,
    warn__opt_for_normal_hinge,
+   warn__opt_for_2fl,
    warn__like_linear_action,
    warn__split_1x6,
    warn__colocated_once_rem,
@@ -1345,11 +1350,14 @@ typedef enum {
    start_select_as_they_are,
    start_select_toggle_conc,
    start_select_toggle_act,
+#ifdef OLD_ELIDE_BLANKS_JUNK
    start_select_toggle_ignoreblank,
+#endif
    start_select_toggle_retain,
    start_select_toggle_nowarn_mode,
    start_select_toggle_singer,
    start_select_toggle_singer_backward,
+   start_select_init_session_file,
    start_select_change_outfile,
    start_select_change_header_comment
 } start_select_kind;
@@ -1378,7 +1386,9 @@ typedef enum {
    command_all_mods,
    command_toggle_conc_levels,
    command_toggle_act_phan,
+#ifdef OLD_ELIDE_BLANKS_JUNK
    command_toggle_ignoreblanks,
+#endif
    command_toggle_retain_after_error,
    command_toggle_nowarn_mode,
    command_refresh,
@@ -1464,11 +1474,12 @@ typedef enum {
 #define CFLAGH__REQUIRES_SELECTOR         0x00000008UL
 #define CFLAGH__REQUIRES_DIRECTION        0x00000010UL
 #define CFLAGH__CIRC_CALL_RQ_BIT          0x00000020UL
-#define CFLAGHSPARE_1                     0x00000040UL
-#define CFLAGHSPARE_2                     0x00000080UL
-#define CFLAGHSPARE_3                     0x00000100UL
-#define CFLAGHSPARE_4                     0x00000200UL
-#define CFLAGHSPARE_5                     0x00000400UL
+#define CFLAGH__ODD_NUMBER_ONLY           0x00000040UL
+#define CFLAGHSPARE_1                     0x00000080UL
+#define CFLAGHSPARE_2                     0x00000100UL
+#define CFLAGHSPARE_3                     0x00000200UL
+#define CFLAGHSPARE_4                     0x00000400UL
+#define CFLAGHSPARE_5                     0x00000800UL
 
 
 
@@ -1579,6 +1590,8 @@ typedef uint32 defmodset;
 #define CONCPROP__NEEDK_END_2X2    0x00000150UL
 #define CONCPROP__NEEDK_3X4_D3X4   0x00000160UL
 #define CONCPROP__NEEDK_3X6        0x00000170UL
+#define CONCPROP__NEEDK_4D_4PTPD   0x00000180UL
+#define CONCPROP__NEEDK_4X5        0x00000190UL
                                    
 #define CONCPROP__NEED_ARG2_MATRIX 0x00000200UL                                   
 /* spare:                          0x00000400UL */
@@ -1669,6 +1682,8 @@ typedef struct {
 } restriction_thing;
 
 /* This allows 96 warnings. */
+/* BEWARE!!  If this is changed, this initializers for things like "no_search_warnings"
+   in sdamin.c will need to be updated. */
 #define WARNING_WORDS 3
 
 typedef struct {
@@ -1836,6 +1851,7 @@ typedef struct {
 #define extend_34_level l_plus
 #define phantom_tandem_level l_c4a
 #define intlk_triangle_level l_c2
+#define beau_belle_level l_a2
 
 typedef struct {           /* This is done to preserve the encapsulation of type "jmp_buf".                  */
    jmp_buf the_buf;        /*   We are going to use pointers to these things.  If we simply used             */
@@ -1937,14 +1953,11 @@ extern startinfo startinfolist[];                                   /* in SDTABL
 extern map_thing map_b6_trngl;                                      /* in SDTABLES */
 extern map_thing map_s6_trngl;                                      /* in SDTABLES */
 extern map_thing map_bone_trngl4;                                   /* in SDTABLES */
-extern map_thing map_rig_trngl4;                                    /* in SDTABLES */
-extern map_thing map_s8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_p8_tgl4;                                       /* in SDTABLES */
 extern map_thing map_spndle_once_rem;                               /* in SDTABLES */
 extern map_thing map_1x3dmd_once_rem;                               /* in SDTABLES */
 extern map_thing map_phan_trngl4a;                                  /* in SDTABLES */
 extern map_thing map_phan_trngl4b;                                  /* in SDTABLES */
-extern map_thing map_phan_trngl4c;                                  /* in SDTABLES */
 extern map_thing map_lh_zzztgl;                                     /* in SDTABLES */
 extern map_thing map_rh_zzztgl;                                     /* in SDTABLES */
 extern map_thing map_2x2v;                                          /* in SDTABLES */
@@ -1958,41 +1971,25 @@ extern map_thing map_ptp_magic_intlk;                               /* in SDTABL
 extern map_thing map_2x4_diagonal;                                  /* in SDTABLES */
 extern map_thing map_2x4_int_pgram;                                 /* in SDTABLES */
 extern map_thing map_2x4_trapezoid;                                 /* in SDTABLES */
-extern map_thing map_3x4_2x3_intlk;                                 /* in SDTABLES */
-extern map_thing map_3x4_2x3_conc;                                  /* in SDTABLES */
 extern map_thing map_4x4_ns;                                        /* in SDTABLES */
 extern map_thing map_4x4_ew;                                        /* in SDTABLES */
-extern map_thing map_phantom_box;                                   /* in SDTABLES */
-extern map_thing map_intlk_phantom_box;                             /* in SDTABLES */
-extern map_thing map_phantom_dmd;                                   /* in SDTABLES */
-extern map_thing map_intlk_phantom_dmd;                             /* in SDTABLES */
 extern map_thing map_vsplit_f;                                      /* in SDTABLES */
-extern map_thing map_split_f;                                       /* in SDTABLES */
-extern map_thing map_intlk_f;                                       /* in SDTABLES */
-extern map_thing map_full_f;                                        /* in SDTABLES */
 extern map_thing map_stagger;                                       /* in SDTABLES */
 extern map_thing map_stairst;                                       /* in SDTABLES */
 extern map_thing map_ladder;                                        /* in SDTABLES */
 extern map_thing map_but_o;                                         /* in SDTABLES */
-extern map_thing map_o_s2x4_3;                                      /* in SDTABLES */
-extern map_thing map_x_s2x4_3;                                      /* in SDTABLES */
 extern map_thing map_offset;                                        /* in SDTABLES */
 extern map_thing map_4x4v;                                          /* in SDTABLES */
 extern map_thing map_blocks;                                        /* in SDTABLES */
 extern map_thing map_trglbox;                                       /* in SDTABLES */
 extern map_thing map_1x8_1x6;                                       /* in SDTABLES */
 extern map_thing map_rig_1x6;                                       /* in SDTABLES */
-extern map_thing map_hv_2x4_2;                                      /* in SDTABLES */
-extern map_thing map_3x4_2x3;                                       /* in SDTABLES */
 extern map_thing map_4x6_2x4;                                       /* in SDTABLES */
-extern map_thing map_hv_qtg_2;                                      /* in SDTABLES */
-extern map_thing map_vv_qtg_2;                                      /* in SDTABLES */
 extern map_thing map_ov_hrg_1;                                      /* in SDTABLES */
 extern map_thing map_ov_gal_1;                                      /* in SDTABLES */
 extern map_thing map_3o_qtag_1;                                     /* in SDTABLES */
 extern map_thing map_tgl4_1;                                        /* in SDTABLES */
 extern map_thing map_tgl4_2;                                        /* in SDTABLES */
-extern map_thing map_2x6_2x3;                                       /* in SDTABLES */
 extern map_thing map_qtag_2x3;                                      /* in SDTABLES */
 extern map_thing map_2x3_rmvr;                                      /* in SDTABLES */
 extern map_thing map_dbloff1;                                       /* in SDTABLES */
@@ -2001,6 +1998,8 @@ extern map_thing map_dhrgl1;                                        /* in SDTABL
 extern map_thing map_dhrgl2;                                        /* in SDTABLES */
 extern map_thing map_dbgbn1;                                        /* in SDTABLES */
 extern map_thing map_dbgbn2;                                        /* in SDTABLES */
+extern map_thing map_off1x81;                                       /* in SDTABLES */
+extern map_thing map_off1x82;                                       /* in SDTABLES */
 extern map_thing map_trngl_box1;                                    /* in SDTABLES */
 extern map_thing map_trngl_box2;                                    /* in SDTABLES */
 extern map_thing map_inner_box;                                     /* in SDTABLES */
@@ -2075,15 +2074,23 @@ extern long_boolean verify_used_selector;                           /* in SDMAIN
 extern int allowing_modifications;                                  /* in SDMAIN */
 extern long_boolean allowing_all_concepts;                          /* in SDMAIN */
 extern long_boolean using_active_phantoms;                          /* in SDMAIN */
+#ifdef OLD_ELIDE_BLANKS_JUNK
 extern long_boolean elide_blanks;                                   /* in SDMAIN */
+#endif
 extern long_boolean retain_after_error;                             /* in SDMAIN */
 extern int alternate_person_glyphs;                                 /* in SDMAIN */
 extern int singing_call_mode;                                       /* in SDMAIN */
 extern long_boolean diagnostic_mode;                                /* in SDMAIN */
 extern call_conc_option_state current_options;                      /* in SDMAIN */
+extern uint32 selector_iterator;                                    /* in SDMAIN */
+extern uint32 direction_iterator;                                   /* in SDMAIN */
+extern uint32 number_iterator;                                      /* in SDMAIN */
+extern uint32 tagger_iterator;                                      /* in SDMAIN */
+extern uint32 circcer_iterator;                                     /* in SDMAIN */
 extern warning_info no_search_warnings;                             /* in SDMAIN */
 extern warning_info conc_elong_warnings;                            /* in SDMAIN */
 extern warning_info dyp_each_warnings;                              /* in SDMAIN */
+extern warning_info useless_phan_clw_warnings;                      /* in SDMAIN */
 
 extern int random_number;                                           /* in SDSI */
 extern int hashed_randoms;                                          /* in SDSI */
@@ -2174,6 +2181,7 @@ extern int uims_do_comment_popup(char dest[]);
 extern int uims_do_getout_popup(char dest[]);
 extern int uims_do_write_anyway_popup(void);
 extern int uims_do_abort_popup(void);
+extern int uims_do_session_init_popup(void);
 extern int uims_do_neglect_popup(char dest[]);
 extern int uims_do_selector_popup(void);
 extern int uims_do_direction_popup(void);
@@ -2249,7 +2257,7 @@ extern parse_block *process_final_concepts(
    long_boolean check_errors,
    uint64 *final_concepts);
 extern parse_block *skip_one_concept(parse_block *incoming);
-extern long_boolean fix_n_results(int arity, setup z[]);
+extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[]);
 
 /* In SDGETOUT */
 
@@ -2351,10 +2359,10 @@ extern void divided_setup_move(
    setup *result);
 
 extern void new_overlapped_setup_move(setup *ss, uint32 map_encoding,
-   int m1, int m2, int m3, setup *result);
+   uint32 *masks, setup *result);
 
 extern void overlapped_setup_move(setup *ss, Const map_thing *maps,
-   int m1, int m2, int m3, setup *result);
+   uint32 *masks, setup *result);
 
 extern void do_phantom_2x4_concept(
    setup *ss,
@@ -2412,10 +2420,16 @@ extern void tandem_couples_move(
    selector_kind selector,
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
-   int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
-   int key,                   /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
-                                 tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
-                                 box = 10 / diamond = 10 / outside triangles = 20 / inside triangles = 21 */
+   int phantom,               /* normal=0 phantom=1 general-gruesome=2 gruesome-with-wave-check=3 */
+   int key,                   /* tandem of 2 = 0 / couples of 2 = 1 / siamese of 2 = 2
+                                 tandem of 3 = 4 / couples of 3 = 5 / siamese of 3 = 6
+                                 tandem of 4 = 8 / couples of 4 = 9 / siamese of 4 = 10
+                                 box = 10 / diamond = 11 / skew = 18
+                                 out point triangles = 20 / in point triangles = 21
+                                 inside triangles = 22 / outside triangles = 23
+                                 wave-based triangles triangles = 26 / tandem-based triangles = 27
+                                 <anyone>-based triangles = 30 / 3x1 triangles = 31 / Y's = 32 */
+   long_boolean phantom_pairing_ok,
    setup *result);
 
 extern void initialize_tandem_tables(void);

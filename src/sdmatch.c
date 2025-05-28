@@ -94,11 +94,14 @@ static Cstring startup_commands[] = {
    "just as they are",
    "toggle concept levels",
    "toggle active phantoms",
+#ifdef OLD_ELIDE_BLANKS_JUNK
    "toggle ignoreblanks",
+#endif
    "toggle retain after error",
    "toggle nowarn mode",
    "toggle singing call",
    "toggle reverse singing call",
+   "initialize session file",
    "change output file",
    "change title",
    (Cstring) 0
@@ -562,12 +565,15 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
 
          while (p[0] == '@') {
             switch (p[1]) {
+               case 'S':
+                  static_ss.space_ok = TRUE;
+                  /* FALL THROUGH! */
                case 'M':
                case 'I':
                case 'C':
                case 'r':
                case 's':
-               case 'S':
+                  /* FELL THROUGH! */
                   p += 2;
                   continue;
                case 'n':
@@ -578,6 +584,8 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
             }
             break;
          }
+
+         while (p[0] == ',' || p[0] == '\'') p++;
 
          if (*p == ' ' || *p == '-')
             static_ss.space_ok = TRUE;
@@ -688,7 +696,7 @@ static void match_suffix_2(Cstring user, Cstring pat1, pat2_block *pat2, int pat
                char u = *user++;
 
                if (u != p && (p > 'Z' || p < 'A' || u != p+'a'-'A')) {
-#ifdef NONE_OF_THIS_CRAP
+#ifdef OLD_ELIDE_BLANKS_JUNK
                   if (elide_blanks) {
                      if (p != '-' || u != ' ') {           /* If user said "wave based" instead of "wave-based", just continue. */
                         if (p == ' ' || p == '-') user--;  /* If user said "wavebased" (no hyphen) or "inroll" (no blank), elide. */

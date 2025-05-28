@@ -200,6 +200,8 @@ extern long_boolean selectp(setup *ss, int place)
          else if ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return FALSE;
          else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_CTR4) return TRUE;
          else if ((pid2 & (ID2_CTR4|ID2_END)) == ID2_END) return FALSE;
+         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_CTR4) return TRUE;
+         else if ((pid2 & (ID2_CTR4|ID2_NCTR1X4)) == ID2_NCTR1X4) return FALSE;
          break;
       case selector_outerpairs:
          if      ((pid2 & (ID2_CTR4|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return TRUE;
@@ -896,7 +898,8 @@ Private long_boolean can_swing_left(setup *real_people, int real_index,
 
 
 /* Test for wheel and deal to be done 2FL-style, or beau side of 1FL.  Returns
-   false if belle side of 1FL.  Raises an error if wheel and deal can't be done. */
+   false if belle side of 1FL.  Raises a warning if wheel and deal can't be done,
+   and opts for L2FL. */
 /* ARGSUSED */
 Private long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
    int real_direction, int northified_index, Const long int *extra_stuff)
@@ -923,8 +926,10 @@ Private long_boolean x14_wheel_and_deal(setup *real_people, int real_index,
                      real_people->people[real_index ^ 3].id1;
 
       /* At least one of those people must exist. */
-      if (!other_people)
-         fail("Can't tell how to do this -- no live people.");
+      if (!other_people) {
+         warn(warn__opt_for_2fl);
+         return TRUE;
+      }
 
       /* See if they face the same way as myself.  Note that the "2" bit of
          real_index is the complement of my own direction bit. */

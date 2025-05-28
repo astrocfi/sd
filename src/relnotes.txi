@@ -11,10 +11,49 @@
 Copyright @copyright{} 1996-1997 William B. Ackerman
 @sp 2
 @example
-          RELEASE NOTES FOR SD VERSION 31.91
-         Database version = 31.91 format = 113
+          RELEASE NOTES FOR SD VERSION 31.92
+         Database version = 31.92 format = 118
        X11 UI version 1.17, SDTTY UI version 1.9
 @end example
+
+****** Changes as of version 31.92 ******
+
+The unpleasantness of the parser in 31.91 has been fixed---you can type
+things like @code{ping pong circulate} directly.
+
+Apostrophe and comma are optional.
+
+You can get a u-turn back by typing u <space> <enter>.
+
+The resolver is much more thorough in searching for single call
+resolves that give RLG, LA, or promenade endings.
+
+The mechanism by which the resolver avoids presenting the same resolve
+twice sometimes mistakenly thought that it had already presented a
+resolve that it hadn't.  As a consequence, the program occasionally
+missed a perfectly good resolve.  This has been fixed.
+
+You can type the call @code{eight by} as either @code{eight by} or @code{8 by}.
+
+You can now type in star modifications directly, as in
+@code{chain reaction, turn the star 1/2}
+or
+@code{chain reaction, don't turn the star}
+(You may also use the @code{simple modifications} or @code{allow modifications}
+stuff, but you should hardly ever need to use those any more.)
+
+For the call tag the star, you *must* type it directly.  Do not type
+@code{allow modifications} and then @code{tag the star the yellow brick road},
+expecting to be queried for modified star turns.
+
+In text that Sd displays or writes out to the transcript file,
+the concepts @code{twice}, @code{N times}, and @code{1-M/N} will
+be placed after the call.  @emph{You still enter concepts, as before,
+in front of the call.}
+
+The spelling of @code{wheel fan & cross thru} has been changed to @code{wheel fan and cross thru}.
+We apologize for jerking people around, but this makes it consistent with all other
+``and'' calls.  There are now no calls with an ampersand in their names.
 
 ****** Changes as of version 31.91 ******
 
@@ -42,13 +81,15 @@ There is a new section of the manual, ``Interruptions and Interlace'',
 describing some esoteric aspects of calls like @samp{exchange the diamonds}.
 
 It is legal to omit the typing of apostrophe or comma.  This means that
-you can type "chain reaction turn the star 1/2" or "ends go as you
-are turntable" or "lockers choice" or "tag the star ers delight".
+you can type @code{chain reaction turn the star 1/2} or @code{ends go as you
+are turntable} or @code{lockers choice} or "tag the star ers delight".
 
 It is also legal to type a space where a hyphen would normally be
 required.  This means that you can type "swing o late" or "tandem based
 triangles".  Use this cautiously!!  Because of word completion, Sd may
 complete more of the call than you were expecting when you type a space.
+
+[The above problem was fixed in version 31.92.]
 
 The calls @samp{triple scoot}, @samp{partner tag}, and @samp{remake the thar}
 were moved from the Plus to the A1 lists, in accordance with the recent

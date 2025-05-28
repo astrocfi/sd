@@ -21,8 +21,8 @@
     General Public License if you distribute the file.
 */
 
-#define VERSION_STRING "31.91"
-#define TIME_STAMP "wba@apollo.hp.com  15 Nov 97 $"
+#define VERSION_STRING "31.92"
+#define TIME_STAMP "wba@apollo.hp.com  28 Dec 97 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -75,9 +75,15 @@ and the following external variables:
    singing_call_mode
    diagnostic_mode
    current_options
+   selector_iterator
+   direction_iterator
+   number_iterator
+   tagger_iterator
+   circcer_iterator
    no_search_warnings
    conc_elong_warnings
    dyp_each_warnings
+   useless_phan_clw_warnings
 */
 
 
@@ -123,7 +129,9 @@ Private void display_help(void)
    printf("-singlespace                single space the output file\n");
    printf("-no_warnings                do not display or print any warning messages\n");
    printf("-retain_after_error         retain pending concepts after error\n");
+#ifdef OLD_ELIDE_BLANKS_JUNK
    printf("-ignoreblanks               allow user to omit spaces when typing in\n");
+#endif
    printf("-active_phantoms            use active phantoms for \"assume\" operations\n");
    printf("-sequence filename          base name for sequence output (def \"%s\")\n",
           SEQUENCE_FILENAME);
@@ -169,15 +177,23 @@ long_boolean verify_used_selector;
 int allowing_modifications = 0;
 long_boolean allowing_all_concepts = FALSE;
 long_boolean using_active_phantoms = FALSE;
+#ifdef OLD_ELIDE_BLANKS_JUNK
 long_boolean elide_blanks = FALSE;
+#endif
 long_boolean retain_after_error = FALSE;
 int alternate_person_glyphs = 0;
 int singing_call_mode = 0;
 long_boolean diagnostic_mode = FALSE;
 call_conc_option_state current_options;
+uint32 selector_iterator = 0;
+uint32 direction_iterator = 0;
+uint32 number_iterator = 0;
+uint32 tagger_iterator = 0;
+uint32 circcer_iterator = 0;
 warning_info no_search_warnings = {{0, 0, 0}};
 warning_info conc_elong_warnings = {{0, 0, 0}};
 warning_info dyp_each_warnings = {{0, 0, 0}};
+warning_info useless_phan_clw_warnings = {{0, 0, 0}};
 
 /* These variables are are global to this file. */
 
@@ -294,6 +310,11 @@ Private void initialize_concept_sublists(void)
                         setup_mask = 0; break;    /* Don't waste time on the others. */
                   }
                   break;
+               case concept_multiple_lines_tog_std:
+               case concept_multiple_lines_tog:
+               /* Test for quadruple C/L/W working. */
+                  if (p->value.arg4 == 4) setup_mask = MASK_2X4;
+                  break;
                case concept_quad_diamonds:
                case concept_quad_diamonds_together:
                case concept_do_phantom_diamonds:
@@ -302,9 +323,8 @@ Private void initialize_concept_sublists(void)
                case concept_do_phantom_2x4:
                case concept_divided_2x4:
                case concept_quad_lines:
-               case concept_quad_lines_tog_std:
-               case concept_quad_lines_tog:
-                  setup_mask = MASK_2X4; break;   /* Can actually improve on this. */
+                  setup_mask = MASK_2X4;          /* Can actually improve on this. */
+                  break;
                case concept_assume_waves:
                   /* We never allow the "assume_waves" concept.  In the early days,
                      it was actually dangerous.  It isn't dangerous any more,
@@ -497,36 +517,88 @@ extern long_boolean restore_parse_state(void)
    else
       history[history_ptr+1].command_root = 0;
 
-   return (FALSE);
+   return FALSE;
 }
 
 
 
-
-
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-Private long_boolean find_selector(selector_kind *sel)
+Private long_boolean find_tagger(int tagclass, int *tagg, callspec_block **tagger_call)
 {
-   int j;
+   if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
 
-   if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
-      if (verify_options.who == selector_uninitialized) {
-         *sel = selector_for_initialize;
-         verify_used_selector = 1;
+   if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
+      if ((*tagg = uims_do_tagger_popup(tagclass)) == 0) return TRUE;
+      if ((*tagg >> 5) != tagclass) fail("bad tagger class???");
+      if ((*tagg & 0x1F) > number_of_taggers[tagclass]) fail("bad tagger index???");
+   }
+   else {
+      int tag;
+
+      if (interactivity == interactivity_database_init) {
+         tag = 0;   /* This may not be right. */
       }
-      else
-         *sel = verify_options.who;
+      else {
+         if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
+            tag = tagger_iterator;
+
+            /* But we don't allow any call that takes a another tag call (e.g. "revert"),
+               or any other iteratable modifier.  It's just too complicated to iterate
+               over the space of all calls when things like this happen.
+               We also reject any that are marked not to be used in resolve. */
+
+            while (     tag < number_of_taggers[tagclass] &&
+                        (  (tagger_calls[tagclass][tag]->callflags1 &
+                                 (CFLAG1_DONT_USE_IN_RESOLVE|
+                                 CFLAG1_NUMBER_MASK)) ||
+                           (tagger_calls[tagclass][tag]->callflagsf &
+                                 (CFLAGH__TAG_CALL_RQ_MASK|
+                                 CFLAGH__CIRC_CALL_RQ_BIT|
+                                 CFLAGH__REQUIRES_SELECTOR|
+                                 CFLAGH__REQUIRES_DIRECTION))))
+               tag++;
+
+            if (tag == number_of_taggers[tagclass] && tagger_iterator == 0)
+               return TRUE;  /* There simply are no acceptable taggers. */
+
+            if ((selector_iterator | direction_iterator | number_iterator) == 0) {
+               tagger_iterator = tag+1;
+
+               while (     tagger_iterator < number_of_taggers[tagclass] &&
+                           (  (tagger_calls[tagclass][tagger_iterator]->callflags1 &
+                                    (CFLAG1_DONT_USE_IN_RESOLVE|
+                                    CFLAG1_NUMBER_MASK)) ||
+                              (tagger_calls[tagclass][tagger_iterator]->callflagsf &
+                                    (CFLAGH__TAG_CALL_RQ_MASK|
+                                    CFLAGH__CIRC_CALL_RQ_BIT|
+                                    CFLAGH__REQUIRES_SELECTOR|
+                                    CFLAGH__REQUIRES_DIRECTION))))
+                  tagger_iterator++;
+
+               /* See if we have exhausted all possible taggers. */
+               if (tagger_iterator == number_of_taggers[tagclass])
+                  tagger_iterator = 0;
+            }
+         }
+         else {
+            tag = generate_random_number(number_of_taggers[tagclass]);
+         }
+
+         hash_nonrandom_number(tag);
+      }
+
+      /* We don't generate "dont_use_in_resolve" taggers in any random search. */
+      if (tagger_calls[tagclass][tag]->callflags1 & CFLAG1_DONT_USE_IN_RESOLVE)
+         fail("This shouldn't get printed.");
+
+      *tagg = (tagclass << 5) | (tag+1);
    }
-   else if (interactivity != interactivity_normal) {
-       /* We don't generate unsymmetrical selectors when searching.  It generates
-           too many "couple #3 u-turn-back" calls. */
-      *sel = (selector_kind) generate_random_number(unsymm_selector_start-1)+1;
-      hash_nonrandom_number(((int) (*sel)) - 1);
-   }
-   else if ((j = uims_do_selector_popup()) != 0)
-      *sel = (selector_kind) j;
-   else
-      return TRUE;
+
+   /* At this point, tagg contains 8 bits:
+         3 bits of tagger list (zero-based - 0/1/2/3)
+         5 bits of tagger within that list (1-based). */
+
+   *tagger_call = tagger_calls[tagclass][(*tagg & 0x1F)-1];
 
    return FALSE;
 }
@@ -534,7 +606,158 @@ Private long_boolean find_selector(selector_kind *sel)
 
 
 /* Returns TRUE if it fails, meaning that the user waved the mouse away. */
-Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, uint32 *number_list)
+Private long_boolean find_circcer(int *circcp)
+{
+   if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
+
+   if (interactivity == interactivity_normal || interactivity == interactivity_verify) {
+      if ((*circcp = uims_do_circcer_popup()) == 0)
+         return TRUE;
+   }
+   else if (interactivity == interactivity_database_init) {
+      *circcp = 1;   /* This may not be right. */
+   }
+   else {
+      if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
+         *circcp = circcer_iterator+1;
+
+         if ((selector_iterator | direction_iterator | number_iterator | tagger_iterator) == 0) {
+            circcer_iterator++;
+
+            /* See if we have exhausted all possible circcers. */
+            if (circcer_iterator == number_of_circcers)
+               circcer_iterator = 0;
+         }
+      }
+      else {
+         *circcp = generate_random_number(number_of_circcers)+1;
+      }
+
+      hash_nonrandom_number(*circcp - 1);
+   }
+
+   return FALSE;
+}
+
+
+
+
+/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+Private long_boolean find_selector(selector_kind *sel_p, long_boolean allow_iteration)
+{
+   static selector_kind selector_iterator_table[] = {
+      selector_boys,
+      selector_girls,
+      selector_centers,
+      selector_ends,
+      selector_leads,
+      selector_trailers,
+      selector_beaus,
+      selector_belles,
+      selector_uninitialized};
+
+   if (interactivity == interactivity_normal) {
+      int j;
+
+      if ((j = uims_do_selector_popup()) == 0)
+         return TRUE;
+      else
+         *sel_p = (selector_kind) j;
+   }
+   else if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
+      if (verify_options.who == selector_uninitialized) {
+         *sel_p = selector_for_initialize;
+         verify_used_selector = 1;
+      }
+      else
+         *sel_p = verify_options.who;
+   }
+   else {
+      int j;
+
+      if (     allow_iteration &&
+               (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan)) {
+         j = (int) selector_iterator_table[selector_iterator];
+
+         selector_iterator++;
+
+         /* See if we have exhausted all possible selectors.
+               We only look for "boys", "girls", "centers", and "ends" in the first scan. */
+         if (selector_iterator_table[selector_iterator] ==
+                     (  (interactivity == interactivity_in_first_scan) ?
+                        selector_leads :
+                        (  (calling_level < beau_belle_level) ?
+                           selector_beaus :
+                           selector_uninitialized)))
+            selector_iterator = 0;
+      }
+      else {
+         /* We don't generate unsymmetrical selectors when searching.  It generates
+              too many "couple #3 u-turn-back" calls. */
+         j = generate_random_number(unsymm_selector_start-1)+1;
+      }
+
+      hash_nonrandom_number(j - 1);
+      *sel_p = (selector_kind) j;
+   }
+
+   return FALSE;
+}
+
+
+/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+Private long_boolean find_direction(direction_kind *dir_p)
+{
+   static direction_kind direction_iterator_table[] = {
+      direction_left,
+      direction_right,
+      direction_in,
+      direction_out,
+      direction_uninitialized};
+
+   if (interactivity == interactivity_normal) {
+      int j;
+
+      if ((j = uims_do_direction_popup()) == 0)
+         return TRUE;
+      else
+         *dir_p = (direction_kind) j;
+   }
+   else if (interactivity == interactivity_database_init || interactivity == interactivity_verify) {
+      *dir_p = direction_right;   /* This may not be right. */
+   }
+   else {
+      int j;
+
+      if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
+         j = (int) direction_iterator_table[direction_iterator];
+
+         if (selector_iterator == 0) {
+            direction_iterator++;
+
+            /* See if we have exhausted all possible directions.
+               We only look for "left" and "right" in the first scan. */
+            if (     direction_iterator_table[direction_iterator] == 
+                     ((interactivity == interactivity_in_first_scan) ?
+                        direction_in :
+                        direction_uninitialized))
+               direction_iterator = 0;
+         }
+      }
+      else {
+         j = generate_random_number(last_direction_kind)+1;
+      }
+
+      hash_nonrandom_number(j - 1);
+      *dir_p = (direction_kind) j;
+   }
+
+   return FALSE;
+}
+
+
+/* Returns TRUE if it fails, meaning that the user waved the mouse away. */
+Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, uint32 odd_number_only, long_boolean allow_iteration, uint32 *number_list)
 {
    if (interactivity == interactivity_normal) {
       *number_list = uims_get_number_fields(howmanynumbers, forbid_zero);
@@ -562,11 +785,37 @@ Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, 
             }
          }
          else {
-            this_num = generate_random_number(4)+1;
+            if (  allow_iteration &&
+                  (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan)) {
+               this_num = ((number_iterator >> (i*2)) & 3) + 1;
+            }
+            else if (odd_number_only)
+               this_num = (generate_random_number(2)<<1)+1;
+            else
+               this_num = generate_random_number(4)+1;
+
             hash_nonrandom_number(this_num-1);
          }
 
          *number_list |= (this_num << (i*4));
+      }
+
+      if (     (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) &&
+               (selector_iterator | direction_iterator) == 0) {
+         number_iterator++;
+         /* If the call requires it, or if doing the first scan and the call
+            takes multiple numbers, we iterate over odd numbers only.  The
+            reason for the latter clause is that we don't want to wast a lot of
+            time enumerating 256 combinations of i-j-k-l quarter the deucey.
+            We will get to them on the second scan in any case. */
+         if (     odd_number_only ||
+                  (howmanynumbers >= 2 && interactivity == interactivity_in_first_scan)) {
+            while (number_iterator & 0x55555555)
+               number_iterator += number_iterator & ~(number_iterator-1);
+         }
+
+         /* See if we have exhausted all possible numbers. */
+         if (number_iterator >> (howmanynumbers*2)) number_iterator = 0;
       }
    }
 
@@ -583,79 +832,41 @@ Private long_boolean find_numbers(int howmanynumbers, long_boolean forbid_zero, 
 extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_state *options)
 {
    parse_block *new_block;
-   int tagclass;
+   callspec_block *tagger_call;
+   int tagg = 0;
    selector_kind sel = selector_uninitialized;
    direction_kind dir = direction_uninitialized;
-   int tagg = -1;
-   int circc = -1;
+   int circc = -1;    /* Circulator index (1-based). */
    uint32 number_list = 0;
    int howmanynums = (call->callflags1 & CFLAG1_NUMBER_MASK) / CFLAG1_NUMBER_BIT;
 
-   /* Put in tagging call index if required. */
+   /* Put in tagging call info if required. */
 
    if (call->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) {
-      tagclass = ((call->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) / CFLAGH__TAG_CALL_RQ_BIT) - 1;
-
-      if (number_of_taggers[tagclass] == 0) return TRUE;   /* We can't possibly do this. */
-
-      if (interactivity == interactivity_database_init) {
-         tagg = 1;   /* This may not be right. */
-         tagg |= tagclass << 5;
-      }
-      else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
-         tagg = generate_random_number(number_of_taggers[tagclass])+1;
-         hash_nonrandom_number(tagg - 1);
-         tagg |= tagclass << 5;
-      }
-      else if ((tagg = uims_do_tagger_popup(tagclass)) == 0)
+      if (find_tagger(
+               ((call->callflagsf & CFLAGH__TAG_CALL_RQ_MASK) / CFLAGH__TAG_CALL_RQ_BIT) - 1,
+               &tagg,
+               &tagger_call))
          return TRUE;
    }
 
    /* Or circulating call index. */
 
    if (call->callflagsf & CFLAGH__CIRC_CALL_RQ_BIT) {
-      if (number_of_circcers == 0) return TRUE;   /* We can't possibly do this. */
-
-      if (interactivity == interactivity_database_init) {
-         circc = 1;   /* This may not be right. */
-      }
-      else if (interactivity != interactivity_normal && interactivity != interactivity_verify) {
-         circc = generate_random_number(number_of_circcers)+1;
-         hash_nonrandom_number(circc - 1);
-      }
-      else if ((circc = uims_do_circcer_popup()) == 0)
-         return TRUE;
+      if (find_circcer(&circc)) return TRUE;
    }
-
-   /* At this point, tagg contains 8 bits:
-         3 bits of tagger list (zero-based - 0/1/2/3)
-         5 bits of tagger within that list (1-based).
-      and circc has just the number (1-based). */
 
    /* Put in selector, direction, and/or number as required. */
 
    if (call->callflagsf & CFLAGH__REQUIRES_SELECTOR) {
-      if (find_selector(&sel)) return TRUE;
+      if (find_selector(&sel, TRUE)) return TRUE;
    }
 
-   if (call->callflagsf & CFLAGH__REQUIRES_DIRECTION) {
-      int j;
+   if (call->callflagsf & CFLAGH__REQUIRES_DIRECTION)
+      if (find_direction(&dir)) return TRUE;
 
-      if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
-         dir = direction_right;   /* This may not be right. */
-      else if (interactivity != interactivity_normal) {
-         dir = (direction_kind) generate_random_number(last_direction_kind)+1;
-         hash_nonrandom_number(((int) dir) - 1);
-      }
-      else if ((j = uims_do_direction_popup()) == 0)
-         return TRUE;
-      else
-         dir = (direction_kind) j;
-   }
-
-   if (howmanynums != 0) {
-      if (find_numbers(howmanynums, FALSE, &number_list)) return TRUE;
-   }
+   if (howmanynums != 0)
+      if (find_numbers(howmanynums, FALSE, call->callflagsf & CFLAGH__ODD_NUMBER_ONLY, TRUE, &number_list)) return TRUE;
 
    new_block = get_parse_block();
    new_block->concept = &mark_end_of_list;
@@ -682,12 +893,8 @@ extern long_boolean deposit_call(callspec_block *call, Const call_conc_option_st
 
       new_block->next->call = base_calls[BASE_CALL_TAGGER0];
 
-      if ((tagg >> 5) != tagclass) fail("bad tagger class???");
-      tagg &= 0x1F;
-      if (tagg > number_of_taggers[tagclass]) fail("bad tagger index???");
-
       parse_state.concept_write_ptr = &new_block->next->subsidiary_root;
-      if (deposit_call(tagger_calls[tagclass][tagg-1], &null_options))
+      if (deposit_call(tagger_call, &null_options))
          longjmp(longjmp_ptr->the_buf, 5);     /* User waved the mouse away while getting subcall. */
       parse_state.concept_write_ptr = savecwp;
    }
@@ -740,7 +947,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
    hash_nonrandom_number((int) conc);
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_SELECTOR) {
-      if (find_selector(&sel)) return TRUE;
+      if (find_selector(&sel, FALSE)) return TRUE;
    }
 
    if (concept_table[conc->kind].concept_prop & CONCPROP__USE_NUMBER)
@@ -749,7 +956,7 @@ extern long_boolean deposit_concept(concept_descriptor *conc)
       howmanynumbers = 2;
 
    if (howmanynumbers != 0) {
-      if (find_numbers(howmanynumbers, TRUE, &number_list)) return TRUE;
+      if (find_numbers(howmanynumbers, TRUE, 0, FALSE, &number_list)) return TRUE;
    }
 
    new_block = get_parse_block();
@@ -965,10 +1172,12 @@ extern long_boolean query_for_call(void)
             using_active_phantoms = !using_active_phantoms;
             goto check_menu;
          }
+#ifdef OLD_ELIDE_BLANKS_JUNK
          else if (uims_menu_index == (int) command_toggle_ignoreblanks) {
             elide_blanks = !elide_blanks;
             goto check_menu;
          }
+#endif
          else if (uims_menu_index == (int) command_toggle_retain_after_error) {
             retain_after_error = !retain_after_error;
             goto check_menu;
@@ -1066,32 +1275,49 @@ extern long_boolean query_for_call(void)
    /* We have a call.  Get the actual call and deposit it into the parse tree, if we haven't already. */
 
    if (interactivity == interactivity_starting_first_scan) {
-      /* Note that this random number will NOT be hashed. */
-      resolve_scan_start_point = generate_random_number(number_of_calls[parse_state.call_list_to_use]);
+      /* Generate the random starting point for the scan, so it won't be identical
+         each time we resolve from this position.  This is the only time that we use
+         the random number generator during the initial scans.  Note that this random
+         number will NOT be hashed.  But don't use a random number if in diagnostic mode. */
+
+      resolve_scan_start_point =
+            (diagnostic_mode) ?
+            0 :
+            generate_random_number(number_of_calls[parse_state.call_list_to_use]);
       resolve_scan_current_point = resolve_scan_start_point;
       interactivity = interactivity_in_first_scan;
+      selector_iterator = 0;
+      direction_iterator = 0;
+      number_iterator = 0;
+      tagger_iterator = 0;
+      circcer_iterator = 0;
    }
+   else if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
+      if ((selector_iterator | direction_iterator | number_iterator | tagger_iterator | circcer_iterator) == 0 && resolve_scan_current_point == resolve_scan_start_point) {
+         /* Done with this scan.  Advance to the next thing to do. */
+         if (interactivity == interactivity_in_first_scan)
+            interactivity = interactivity_in_second_scan;
+         else
+            interactivity = interactivity_in_random_search;
+      }
+   }
+
 
    if (interactivity != interactivity_normal) {
       if (interactivity == interactivity_database_init || interactivity == interactivity_verify)
          result = base_calls[1];     /* Get "nothing". */
       else if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan) {
+         if ((selector_iterator | direction_iterator | number_iterator | tagger_iterator | circcer_iterator) == 0) {
+            resolve_scan_current_point = (resolve_scan_current_point == 0) ?
+                                             number_of_calls[parse_state.call_list_to_use]-1 :
+                                             resolve_scan_current_point-1;
+         }
+
          result = main_call_lists[parse_state.call_list_to_use][resolve_scan_current_point];
 
          /* Fix up the "hashed randoms" stuff as though we had generated this number through the random number generator. */
 
          hash_nonrandom_number(resolve_scan_current_point);
-
-         resolve_scan_current_point = (resolve_scan_current_point == 0) ?
-                                          number_of_calls[parse_state.call_list_to_use]-1 :
-                                          resolve_scan_current_point-1;
-         if (resolve_scan_current_point == resolve_scan_start_point) {
-            /* Done with this scan.  Advance to the next thing to do. */
-            if (interactivity == interactivity_in_first_scan)
-               interactivity = interactivity_in_second_scan;
-            else
-               interactivity = interactivity_in_random_search;
-         }
       }
       else {    /* In random search. */
          int i = generate_random_number(number_of_calls[parse_state.call_list_to_use]);
@@ -1147,7 +1373,7 @@ extern long_boolean query_for_call(void)
    /* Advance the write pointer. */
    parse_state.concept_write_ptr = &((*parse_state.concept_write_ptr)->next);
 
-   return(FALSE);
+   return FALSE;
 }
 
 
@@ -1225,7 +1451,7 @@ Private int mark_aged_calls(
       }
    }
 
-   return(remainder);
+   return remainder;
 }
 #endif
 
@@ -1468,7 +1694,7 @@ void main(int argc, char *argv[])
    initialize_conc_tables();
    initialize_map_tables();
    initialize_touch_tables();
-   
+
    initialize_menus(glob_call_list_mode);    /* This sets up max_base_calls. */
 
    /* If we wrote a call list file, that's all we do. */
@@ -1480,12 +1706,15 @@ void main(int argc, char *argv[])
    uims_postinitialize();
 
    for (i=0 ; i<NUM_WARNINGS ; i++) {
-      if (warning_strings[i][0] == '*')
+      char c = warning_strings[i][0];
+      if (c == '*' || c == '#')
          no_search_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (warning_strings[i][0] == '+')
+      if (c == '+')
          conc_elong_warnings.bits[i>>5] |= 1 << (i & 0x1F);
-      if (warning_strings[i][0] == '=')
+      if (c == '=')
          dyp_each_warnings.bits[i>>5] |= 1 << (i & 0x1F);
+      if (c == '#')
+         useless_phan_clw_warnings.bits[i>>5] |= 1 << (i & 0x1F);
    }
 
    global_age = 1;
@@ -1545,6 +1774,8 @@ void main(int argc, char *argv[])
    clear_screen();
 
    if (!diagnostic_mode) {
+      FILE *session;
+
       writestuff("SD -- square dance caller's helper.");
       newline();
       newline();
@@ -1564,6 +1795,16 @@ void main(int argc, char *argv[])
       newline();
       newline();
       uims_display_ui_intro_text();   /* Sdtty shows additional stuff about typing question mark. */
+
+      session = fopen(SESSION_FILENAME, "r");
+      if (session) {
+         (void) fclose(session);
+      }
+      else {
+         writestuff("You do not have a session control file.  If you want to create one, give the command \"initialize session file\".");
+         newline();
+         newline();
+      }
    }
 
    show_banner:
@@ -1603,9 +1844,11 @@ void main(int argc, char *argv[])
       case start_select_toggle_act:
          using_active_phantoms = !using_active_phantoms;
          goto new_sequence;
+#ifdef OLD_ELIDE_BLANKS_JUNK
       case start_select_toggle_ignoreblank:
          elide_blanks = !elide_blanks;
          goto new_sequence;
+#endif
       case start_select_toggle_retain:
          retain_after_error = !retain_after_error;
          goto new_sequence;
@@ -1624,6 +1867,47 @@ void main(int argc, char *argv[])
          else
             singing_call_mode = 2;
          goto new_sequence;
+      case start_select_init_session_file:
+         {
+            FILE *session = fopen(SESSION_FILENAME, "r");
+            if (session) {
+               (void) fclose(session);
+               if (uims_do_session_init_popup() != POPUP_ACCEPT) {
+                  writestuff("No action has been taken.\n");
+                  newline();
+                  goto new_sequence;
+               }
+               else if (!rename(SESSION_FILENAME, SESSION2_FILENAME)) {
+                  writestuff("File '" SESSION_FILENAME "' has been saved as '" SESSION2_FILENAME "'.\n");
+                  newline();
+               }
+            }
+
+            if (!(session = fopen(SESSION_FILENAME, "w"))) {
+               writestuff("Failed to create '" SESSION_FILENAME "'.\n");
+               newline();
+               goto new_sequence;
+            }
+
+            if (fputs("[Options]\n", session) == EOF) goto copy_failed;
+            if (fputs("\n", session) == EOF) goto copy_failed;
+            if (fputs("[Sessions]\n", session) == EOF) goto copy_failed;
+            if (fputs("sequence.C1          C1               1      Sample\n", session) == EOF) goto copy_failed;
+            if (fputs("\n", session) == EOF) goto copy_failed;
+            (void) fclose(session);
+            writestuff("The file has been initialized, and will take effect the next time the program is started.");
+            newline();
+            writestuff("Exit and restart the program if you want to use it now.");
+            newline();
+            goto new_sequence;
+
+            copy_failed:
+
+            writestuff("Failed to create '" SESSION_FILENAME "'\n");
+            newline();
+            (void) fclose(session);
+            goto new_sequence;
+         }
       case start_select_change_outfile:
          {
             char newfile_string[MAX_FILENAME_LENGTH];

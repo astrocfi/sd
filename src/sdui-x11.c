@@ -40,6 +40,7 @@ static const char time_stamp[] = "sdui-x11.c Time-stamp: <1997-10-14 17:51:42 gi
    uims_do_getout_popup
    uims_do_write_anyway_popup
    uims_do_abort_popup
+   uims_do_session_init_popup
    uims_do_neglect_popup
    uims_do_selector_popup
    uims_do_direction_popup
@@ -108,7 +109,9 @@ typedef enum {
    cmd_button_allow_mods,
    cmd_button_allow_concepts,
    cmd_button_active_phantoms,
+#ifdef OLD_ELIDE_BLANKS_JUNK
    cmd_button_ignoreblanks,
+#endif
    cmd_button_retain_after_error,
    cmd_button_nowarn_mode,
    cmd_button_create_comment,
@@ -323,7 +326,9 @@ static int button_translations[] = {
    SPECIAL_ALLOW_MODS,                    /* cmd_button_allow_mods */
    SPECIAL_TOGGLE_ALL_CONCEPTS,           /* cmd_button_allow_concepts */
    SPECIAL_TOGGLE_ACT_PHANTOMS,           /* cmd_button_active_phantoms */
+#ifdef OLD_ELIDE_BLANKS_JUNK
    SPECIAL_TOGGLE_IGNOREBLANKS,           /* cmd_button_ignoreblanks */
+#endif
    SPECIAL_TOGGLE_RETAIN_AFTER_ERROR,     /* cmd_button_retain_after_error */
    SPECIAL_TOGGLE_NOWARN_MODE,            /* cmd_button_nowarn_mode */
    command_create_comment,                /* cmd_button_create_comment */
@@ -571,6 +576,7 @@ typedef struct _SdResources {
     String database;		/* -db */
     String write_anyway_query;
     String abort_query;
+    String sess_init_query;
     String modify_format;
     String modify_tag_format;
     String modify_circ_format;
@@ -608,11 +614,14 @@ Private XtResource startup_resources[] = {
     MENU("asTheyAre", start_list[start_select_as_they_are], "Just as they are"),
     MENU("toggleConceptLevels", start_list[start_select_toggle_conc], "Toggle concept levels"),
     MENU("toggleActivePhantoms", start_list[start_select_toggle_act], "Toggle active phantoms"),
+#ifdef OLD_ELIDE_BLANKS_JUNK
     MENU("toggleIgnoreBlanks", start_list[start_select_toggle_ignoreblank], "Toggle ignoreblanks"),
+#endif
     MENU("toggleRetain_after_error", start_list[start_select_toggle_retain], "Toggle retain after error"),
     MENU("toggleNowarnMode", start_list[start_select_toggle_nowarn_mode], "Toggle nowarn mode"),
     MENU("toggleSinger", start_list[start_select_toggle_singer], "Toggle singing call"),
     MENU("toggleReverseSinger", start_list[start_select_toggle_singer_backward], "Toggle singing call with backward progression"),
+    MENU("initSessionFile", start_list[start_select_init_session_file], "Initialize session file"),
     MENU("changeOutputFile", start_list[start_select_change_outfile], "Change output file"),
     MENU("changeTitle", start_list[start_select_change_header_comment], "Change title")
 };
@@ -626,7 +635,9 @@ Private XtResource command_resources[] = {
     MENU("allowmods", cmd_list[cmd_button_allow_mods], "Allow modifications"),
     MENU("allowconcepts", cmd_list[cmd_button_allow_concepts], "Toggle concept levels"),
     MENU("activephantoms", cmd_list[cmd_button_active_phantoms], "Toggle active phantoms"),
+#ifdef OLD_ELIDE_BLANKS_JUNK
     MENU("ignoreblanks", cmd_list[cmd_button_ignoreblanks], "Toggle ignoreblanks"),
+#endif
     MENU("retainaftererror", cmd_list[cmd_button_retain_after_error], "Toggle retain after error"),
     MENU("nowarnmode", cmd_list[cmd_button_nowarn_mode], "Toggle nowarn mode"),
     MENU("comment", cmd_list[cmd_button_create_comment], "Insert a comment"),
@@ -671,6 +682,7 @@ Private XtResource enabledmods_resources[] = {
 Private XtResource confirm_resources[] = {
     MENU("writeAnyway", write_anyway_query, "Do you want to write this sequence anyway?"),
     MENU("abort", abort_query, "Do you really want to abort this sequence?"),
+    MENU("sessInit", sess_init_query, "Do you really want to re-initialize your session file?"),
     MENU("modifyFormat", modify_format, "The \"%s\" can be replaced."),
     MENU("modifyTagFormat", modify_tag_format, "The \"%s\" can be replaced with a tagging call."),
     MENU("modifyCircFormat", modify_circ_format, "The \"%s\" can be replaced with a modified circulate-like call."),
@@ -1369,10 +1381,12 @@ extern uims_reply uims_get_startup_command(void)
             using_active_phantoms = !using_active_phantoms;
             goto try_again;
          }
+#ifdef OLD_ELIDE_BLANKS_JUNK
          else if (uims_menu_index == SPECIAL_TOGGLE_IGNOREBLANKS) {
             elide_blanks = !elide_blanks;
             goto try_again;
          }
+#endif
          else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
             retain_after_error = !retain_after_error;
             goto try_again;
@@ -1452,10 +1466,12 @@ extern long_boolean uims_get_call_command(uims_reply *reply_p)
          using_active_phantoms = !using_active_phantoms;
          goto try_again;
       }
+#ifdef OLD_ELIDE_BLANKS_JUNK
       else if (uims_menu_index == SPECIAL_TOGGLE_IGNOREBLANKS) {
          elide_blanks = !elide_blanks;
          goto try_again;
       }
+#endif
       else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
          retain_after_error = !retain_after_error;
          goto try_again;
@@ -1534,10 +1550,12 @@ extern uims_reply uims_get_resolve_command(void)
             using_active_phantoms = !using_active_phantoms;
             goto try_again;
          }
+#ifdef OLD_ELIDE_BLANKS_JUNK
          else if (uims_menu_index == SPECIAL_TOGGLE_IGNOREBLANKS) {
             elide_blanks = !elide_blanks;
             goto try_again;
          }
+#endif
          else if (uims_menu_index == SPECIAL_TOGGLE_RETAIN_AFTER_ERROR) {
             retain_after_error = !retain_after_error;
             goto try_again;
@@ -1626,6 +1644,12 @@ extern int uims_do_write_anyway_popup(void)
 extern int uims_do_abort_popup(void)
 {
     return confirm(sd_resources.abort_query);
+}
+
+
+extern int uims_do_session_init_popup(void)
+{
+    return confirm(sd_resources.sess_init_query);
 }
 
 

@@ -276,22 +276,25 @@ Cstring warning_strings[] = {
    /*  warn__check_c1_stars      */   " Check 'stars'.",
    /*  warn__check_gen_c1_stars  */   " Check a generalized 'star' setup.",
    /*  warn__bigblock_feet       */   " Bigblock/stagger shapechanger -- go to footprints.",
+   /*  warn__bigblockqtag_feet   */   " Adjust to bigblock/stagger 1/4 tag footprints.",
    /*  warn__adjust_to_feet      */   " Adjust back to footprints.",
    /*  warn__some_touch          */   " Some people step to a wave.",
-   /*  warn__split_to_2x4s       */   " Do the call in each 2x4.",
-   /*  warn__split_to_2x3s       */   " Do the call in each 2x3.",
-   /*  warn__split_to_1x8s       */   " Do the call in each 1x8.",
-   /*  warn__split_to_1x6s       */   " Do the call in each 1x6.",
+   /*  warn__split_to_2x4s       */   "=Do the call in each 2x4.",
+   /*  warn__split_to_2x3s       */   "=Do the call in each 2x3.",
+   /*  warn__split_to_1x8s       */   "=Do the call in each 1x8.",
+   /*  warn__split_to_1x6s       */   "=Do the call in each 1x6.",
    /*  warn__take_left_hands     */   " Take left hands, since this call is being done mirror.",
    /*  warn__evil_interlocked    */   " Interlocked phantom shape-changers are very evil.",
    /*  warn__split_phan_in_pgram */   " The split phantom setups are directly adjacent to the real people.",
    /*  warn__bad_interlace_match */   "*The interlaced calls have mismatched lengths.",
    /*  warn__not_on_block_spots  */   " Generalized bigblock/stagger -- people are not on block spots.",
+   /*  warn__stupid_phantom_clw  */   "#This use of phantom setups seems superfluous.",
    /*  warn__bad_modifier_level  */   "*Use of this modifier on this call is not allowed at this level.",
    /*  warn__bad_call_level      */   "*This call is not really legal at this level.",
    /*  warn__did_not_interact    */   "*The setups did not interact with each other.",
    /*  warn__opt_for_normal_cast */   "*If in doubt, assume a normal cast.",
    /*  warn__opt_for_normal_hinge */  "*If in doubt, assume a normal hinge.",
+   /*  warn__opt_for_2fl         */   "*If in doubt, assume a two-faced line.",
    /*  warn__like_linear_action  */   "*Ends start like a linear action -- this may be controversial.",
    /*  warn__split_1x6           */   "*Do the call in each 1x3 setup.",
    /*  warn__colocated_once_rem  */   " The once-removed setups have the same center.",
@@ -301,7 +304,7 @@ Cstring warning_strings[] = {
    /*  warn__unusual             */   "*This is an unusual setup for this call.",
    /*  warn_controversial        */   "*This may be controversial.",
    /*  warn_serious_violation    */   "*This appears to be a serious violation of the definition.",
-   /*  warn__tasteless_com_spot  */   "*Common-spot people have left hands -- this may be controversial.",
+   /*  warn__tasteless_com_spot  */   "*Not all common-spot people had right hands.",
    /*  warn__tasteless_slide_thru*/   "*Slide thru from left-handed miniwave may be controversial."};
 
 
@@ -1123,6 +1126,9 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
    long_boolean use_cross_name = FALSE;
    long_boolean use_magic_name = FALSE;
    long_boolean use_intlk_name = FALSE;
+   long_boolean allow_deferred_concept = TRUE;
+   parse_block *deferred_concept = (parse_block *) 0;
+   int deferred_concept_paren = 0;
    int comma_after_next_concept = 0;    /* 1 for comma, 2 for the word "all". */
    int did_comma = 0;                   /* Same as comma_after_next_concept. */
    long_boolean did_concept = FALSE;
@@ -1299,90 +1305,81 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             else
                writestuff(" BY");
 
+            /* Note that we leave "allow_deferred_concept" on.  This means that if we say "twice"
+               immediately inside the second clause of an interlace, it will get the special
+               processing.  The first clause will get the special processing by virtue of the recursion. */
+
             next_cptr = subsidiary_ptr;
-         }
-         else if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
 
-            /* These concepts want to take special action if there are no following concepts and
-               certain escape characters are found in the name of the following call. */
-
-            uint64 finaljunk;
-            callspec_block *target_call;
-            parse_block *tptr;
-            
-            /* Skip all final concepts, then demand that what remains is a marker (as opposed to a serious
-                concept), and that a real call has been entered, and that its name starts with "@g". */
-            tptr = process_final_concepts(next_cptr, FALSE, &finaljunk);
-
-            if (tptr) {
-               target_call = tptr->call;
-   
-               if ((tptr->concept->kind <= marker_end_of_list) && target_call && (
-                     target_call->callflagsf & (ESCAPE_WORD__LEFT | ESCAPE_WORD__MAGIC | ESCAPE_WORD__CROSS | ESCAPE_WORD__INTLK))) {
-                  if (k == concept_left) {
-                     /* See if this is a call whose name naturally changes when the "left" concept is used. */
-                     if (target_call->callflagsf & ESCAPE_WORD__LEFT) {
-                        use_left_name = TRUE;
-                     }
-                     else {
-                        writestuff(item->name);
-                        request_final_space = TRUE;
-                     }
-                  }
-                  else if (k == concept_magic) {
-                     /* See if this is a call that wants the "magic" modifier to be moved inside its name. */
-                     if (target_call->callflagsf & ESCAPE_WORD__MAGIC) {
-                        use_magic_name = TRUE;
-                     }
-                     else {
-                        writestuff(item->name);
-                        request_final_space = TRUE;
-                     }
-                  }
-                  else if (k == concept_interlocked) {
-                     /* See if this is a call that wants the "interlocked" modifier to be moved inside its name. */
-                     if (target_call->callflagsf & ESCAPE_WORD__INTLK) {
-                        use_intlk_name = TRUE;
-                     }
-                     else {
-                        writestuff(item->name);
-                        request_final_space = TRUE;
-                     }
-                  }
-                  else {
-                     /* See if this is a call that wants the "cross" modifier to be moved inside its name. */
-                     if (target_call->callflagsf & ESCAPE_WORD__CROSS) {
-                        use_cross_name = TRUE;
-                     }
-                     else {
-                        writestuff(item->name);
-                        request_final_space = TRUE;
-                     }
-                  }
-               }
-               else {
-                  writestuff(item->name);
-                  request_final_space = TRUE;
-               }
-            }
-            else {
-               writestuff(item->name);
-               request_final_space = TRUE;
-            }
+            /* Setting this means that, if the second argument uses "twice", we will put
+               it in parens.  This is needed to disambiguate this situation from the
+               use of "twice" before the entire "interlace". */
+            if (deferred_concept_paren == 0) deferred_concept_paren = 2;
          }
          else {
-            if (     (k == concept_nth_part && local_cptr->concept->value.arg1 == 8) ||                /* "DO THE <Nth> PART" */
-                     (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||    /* If INVERT is followed by another concept,
-                                                                                                             it must be SNAG or MYSTIC. */
-                     (k == concept_meta && (local_cptr->concept->value.arg1 == 3 || local_cptr->concept->value.arg1 == 7))) {   /* INITIALLY/FINALLY. */
-               request_comma_after_next_concept = 1;     /* These concepts require a comma after the following concept. */
-            }
-            else if (k == concept_so_and_so_only && local_cptr->concept->value.arg1 == 11) {         /* "<ANYONE> WORK" */
-               request_comma_after_next_concept = 2;     /* This concept requires the word "all" after the following concept. */
+            callspec_block *target_call = (callspec_block *) 0;
+            parse_block *tptr;
+
+            /* Look for special concepts that, in conjunction with calls that have certain escape codes
+               in them, get deferred and inserted into the call name. */
+
+            if (local_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
+   
+               /* These concepts want to take special action if there are no following concepts and
+                  certain escape characters are found in the name of the following call. */
+   
+               uint64 finaljunk;
+               
+               /* Skip all final concepts, then demand that what remains is a marker (as opposed to a serious
+                   concept), and that a real call has been entered, and that its name starts with "@g". */
+               tptr = process_final_concepts(next_cptr, FALSE, &finaljunk);
+   
+               if (tptr && tptr->concept->kind <= marker_end_of_list) target_call = tptr->call;
             }
 
-            writestuff_with_decorations(local_cptr, (Const char *) 0);
-            request_final_space = TRUE;
+            if (target_call && k == concept_left && (target_call->callflagsf & ESCAPE_WORD__LEFT)) {
+               use_left_name = TRUE;
+            }
+            else if (target_call && k == concept_magic && (target_call->callflagsf & ESCAPE_WORD__MAGIC)) {
+               use_magic_name = TRUE;
+            }
+            else if (target_call && k == concept_interlocked && (target_call->callflagsf & ESCAPE_WORD__INTLK)) {
+               use_intlk_name = TRUE;
+            }
+            else if (target_call && k == concept_cross && (target_call->callflagsf & ESCAPE_WORD__CROSS)) {
+               use_cross_name = TRUE;
+            }
+            else if (allow_deferred_concept &&
+                     next_cptr &&
+                     (     k == concept_twice ||
+                           k == concept_n_times ||
+                           (k == concept_fractional && item->value.arg1 == 2))) {
+               deferred_concept = local_cptr;
+               comma_after_next_concept = 0;
+               did_concept = FALSE;
+
+               /* If there is another concept, we need parens. */
+               if (next_cptr->concept->kind > marker_end_of_list) deferred_concept_paren |= 1;
+
+               if (deferred_concept_paren == 3) writestuff("("/*)*/);
+               if (deferred_concept_paren) writestuff("("/*)*/);
+            }
+            else {
+               if (     (k == concept_nth_part && item->value.arg1 == 8) ||                /* "DO THE <Nth> PART" */
+                        (k == concept_snag_mystic && item->value.arg1 == CMD_MISC2__CTR_END_INVERT) ||    /* If INVERT is followed by another concept,
+                                                                                                                it must be SNAG or MYSTIC. */
+                        (k == concept_meta && (item->value.arg1 == 3 || item->value.arg1 == 7))) {   /* INITIALLY/FINALLY. */
+                  request_comma_after_next_concept = 1;     /* These concepts require a comma after the following concept. */
+               }
+               else if (k == concept_so_and_so_only && item->value.arg1 == 11) {         /* "<ANYONE> WORK" */
+                  request_comma_after_next_concept = 2;     /* This concept requires the word "all" after the following concept. */
+               }
+
+               writestuff_with_decorations(local_cptr, (Const char *) 0);
+               request_final_space = TRUE;
+            }
+
+            allow_deferred_concept = FALSE;
          }
 
          if (comma_after_next_concept == 2) {
@@ -1866,6 +1863,13 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
       }
    }
 
+   if (deferred_concept) {
+      if (deferred_concept_paren & 1) writestuff(/*(*/")");
+      writestuff(" ");
+      writestuff_with_decorations(deferred_concept, (Const char *) 0);
+      if (deferred_concept_paren & 2) writestuff(/*(*/")");
+   }
+
    return;
 }
 
@@ -1886,7 +1890,7 @@ static char *pn1 = peoplenames1;
 static char *pn2 = peoplenames2;
 
 
-Private void printperson(unsigned int x)
+Private void printperson(uint32 x)
 {
    if (x & BIT_PERSON) {
       static char personbuffer[] = " ZZZ";
@@ -2755,8 +2759,9 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
    for (p = spec; p; p = p->next) {
       uint32 i, k, t, u, v, w, mask;
       assumption_thing tt;
-      int idx, j;
+      int idx;
       restriction_thing *rr;
+      search_qualifier this_qualifier;
 
       /* First, we demand that the starting setup be correct.  Also, if a qualifier
          number was specified, it must match. */
@@ -2770,31 +2775,39 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
       if (!ss) goto good;
 
-      if ((p->qual_num & 0xF) != 0) {
+      /* The bits of the "qualifierstuff" field have the following meaning
+                  (see definitions in database.h):
+         8000  left/out only (put 2 into assump_both)
+         4000  right/in only (put 1 into assump_both)
+         2000  must be live
+         1000  must be T-boned
+         0800  must not be T-boned
+         0780  if these 4 bits are nonzero, they must match the number plus 1
+         007F  the qualifier itsel (we allow 127 qualifiers) */
+
+      if ((p->qualifierstuff & QUALBIT__NUM_MASK) != 0) {
          number_used = TRUE;
-         if ((p->qual_num & 0xF) != (current_options.number_fields & 0xF)+1) continue;
+         if (((p->qualifierstuff & QUALBIT__NUM_MASK) / QUALBIT__NUM_BIT) != (current_options.number_fields & 0xF)+1) continue;
       }
 
-      /* The "0x10" bit of the "qual_num" field means we require people to be not T-boned. */
-      /* The "0x20" bit of the "qual_num" field means we require people to be T-boned. */
-
-      if ((p->qual_num & 0x30) != 0) {
+      if ((p->qualifierstuff & (QUALBIT__TBONE|QUALBIT__NTBONE)) != 0) {
          u = 0;
 
          for (i=0; i<=setup_attrs[ss->kind].setup_limits; i++)
             u |= ss->people[i].id1;
 
          if ((u & 011) == 011) {
-            /* They are T-boned.  The "10" bit says to reject. */
-            if ((p->qual_num & 0x10) != 0) continue;
+            /* They are T-boned.  The "QUALBIT__NTBONE" bit says to reject. */
+            if ((p->qualifierstuff & QUALBIT__NTBONE) != 0) continue;
          }
          else {
-            /* They are not T-boned.  The "20" bit says to reject. */
-            if ((p->qual_num & 0x20) != 0) continue;
+            /* They are not T-boned.  The "QUALBIT__TBONE" bit says to reject. */
+            if ((p->qualifierstuff & QUALBIT__TBONE) != 0) continue;
          }
       }
 
-      if ((search_qualifier) p->qualifier == sq_none) goto good;
+      this_qualifier = (search_qualifier) (p->qualifierstuff & QUALBIT__QUAL_CODE);
+      if (this_qualifier == sq_none) goto good;
 
       /* Note that we have to examine setups larger than the setup the
          qualifier is officially defined for.  If a qualifier were defined
@@ -2809,20 +2822,12 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
       k = 0;   /* Many tests will find these values useful. */
       i = 2;
       tt.assump_col = 0;
-      tt.assump_both = 0;
       tt.assump_cast = 0;
-      tt.assump_live = 0;
-      /* The "0x40" bit of the "qual_num" field means we require people to be live. */
-      if ((p->qual_num & 0x40) != 0) tt.assump_live = 1;
+      tt.assump_live = (p->qualifierstuff / QUALBIT__LIVE) & 1;
+      tt.assump_both = (p->qualifierstuff / QUALBIT__RIGHT) & 3;
 
-      switch ((search_qualifier) p->qualifier) {
+      switch (this_qualifier) {
          case sq_wave_only:       /* 1x4 or 2x4 - waves; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
-            goto do_wave_stuff;
-         case sq_rwave_only:
-            tt.assump_both = 1;   /* To get right-hand only. */
-            goto do_wave_stuff;
-         case sq_lwave_only:
-            tt.assump_both = 2;   /* To get left-hand only. */
             goto do_wave_stuff;
          case sq_magic_only:      /* 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line; 2x2 - inverted box */
             switch (ss->cmd.cmd_assume.assumption) {
@@ -2834,19 +2839,11 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             tt.assumption = cr_magic_only;
             goto fix_col_line_stuff;
-         case sq_live_facing_in:
-            tt.assump_live = 1;   /* To get live only. */
-            /* FALL THROUGH!!! */
          case sq_facing_in:
-            /* FELL THROUGH!!! */
             tt.assump_both = 1;   /* To get facing-in only. */
             tt.assumption = cr_li_lo;
             goto fix_col_line_stuff;
-         case sq_live_facing_out:
-            tt.assump_live = 1;   /* To get live only. */
-            /* FALL THROUGH!!! */
          case sq_facing_out:
-            /* FELL THROUGH!!! */
             tt.assump_both = 2;   /* To get facing-out only. */
             tt.assumption = cr_li_lo;
             goto fix_col_line_stuff;
@@ -2879,23 +2876,6 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             tt.assumption = cr_1fl_only;
             goto check_tt;
          case sq_2fl_only:        /* 1x4 or 2x4 - 2FL; 4x1 - single DPT or single CDPT */
-            goto do_2fl_stuff;
-         case sq_r2fl_only:
-            tt.assump_both = 1;   /* To get right-hand only. */
-            goto do_2fl_stuff;
-         case sq_l2fl_only:
-            tt.assump_both = 2;   /* To get left-hand only. */
-            goto do_2fl_stuff;
-         case sq_live_2fl_only:   /* 1x4 or 2x4 - 2fls; 3x2 or 4x2 - magic columns; 2x2 - real RH or LH box */
-            tt.assump_live = 1;   /* To get live only. */
-            goto do_2fl_stuff;
-         case sq_live_r2fl_only:
-            tt.assump_both = 1;   /* To get right-hand only. */
-            tt.assump_live = 1;   /* To get live only. */
-            goto do_2fl_stuff;
-         case sq_live_l2fl_only:
-            tt.assump_both = 2;   /* To get left-hand only. */
-            tt.assump_live = 1;   /* To get live only. */
             goto do_2fl_stuff;
          case sq_couples_only:         /* 1x2/1x4/1x8/2x2/2x4 lines, or 2x4 columns - people are in genuine couples, not miniwaves */
             switch (ss->cmd.cmd_assume.assumption) {
@@ -2980,6 +2960,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
+            else if (ss->kind == s1x8) {
+               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 0 &&
+                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 0 &&
+                   ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 2 &&
+                   ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 2)
+               goto good;
+               goto bad;
+            }
             else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_ctr2fl_endwv:
@@ -3002,6 +2990,14 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
                goto good;
                goto bad;
             }
+            else if (ss->kind == s1x8) {
+               if (((ss->people[0].id1 ^ ss->people[1].id1) & d_mask) == 2 &&
+                   ((ss->people[4].id1 ^ ss->people[5].id1) & d_mask) == 2 &&
+                   ((ss->people[2].id1 ^ ss->people[3].id1) & d_mask) == 0 &&
+                   ((ss->people[6].id1 ^ ss->people[7].id1) & d_mask) == 0)
+               goto good;
+               goto bad;
+            }
             else
                goto good;                 /* We don't understand the setup -- we'd better accept it. */
          case sq_true_Z_cw: case sq_true_Z_ccw:
@@ -3013,7 +3009,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
             if (ss->kind == s2x3) {
                /* In this case, we actually check the shear direction of the Z. */
-               if (mask == ((((search_qualifier) p->qualifier) == sq_true_Z_cw) ? 066 : 033)) goto good;
+               if (mask == ((this_qualifier == sq_true_Z_cw) ? 066 : 033)) goto good;
                goto bad;
             }
 
@@ -3123,7 +3119,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_trade_by:                  /* 4x1/2x1/4x2 - setup is (single) trade-by */
             tt.assumption = cr_li_lo;
             tt.assump_col = 1;
-            tt.assump_both = (((search_qualifier) p->qualifier) == sq_trade_by) ? 2 : 1;
+            tt.assump_both = (this_qualifier == sq_trade_by) ? 2 : 1;
 
             switch (ss->kind) {
                case s1x2: case s1x4: case s2x4:
@@ -3228,15 +3224,15 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
             
                if (z) {
                   if (b1) {
-                     if ((search_qualifier) p->qualifier == sq_all_ctrs_rh) goto good;
-                     if ((search_qualifier) p->qualifier == sq_dmd_ctrs_rh) goto good;
+                     if (this_qualifier == sq_all_ctrs_rh) goto good;
+                     if (this_qualifier == sq_dmd_ctrs_rh) goto good;
                   }
                   else if (b2) {
-                     if ((search_qualifier) p->qualifier == sq_all_ctrs_lh) goto good;
-                     if ((search_qualifier) p->qualifier == sq_dmd_ctrs_lh) goto good;
+                     if (this_qualifier == sq_all_ctrs_lh) goto good;
+                     if (this_qualifier == sq_dmd_ctrs_lh) goto good;
                   }
                   else {
-                     if ((search_qualifier) p->qualifier == sq_dmd_ctrs_1f) goto good;
+                     if (this_qualifier == sq_dmd_ctrs_1f) goto good;
                   }
                }
             }
@@ -3271,7 +3267,7 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
 
                if (b1 == b2) goto bad;
                kkk = b1 ? sq_ctr_pts_rh : sq_ctr_pts_lh;
-               if ((search_qualifier) p->qualifier == kkk) goto good;
+               if (this_qualifier == kkk) goto good;
             }
             goto bad;
          case sq_line_ends_looking_out:
@@ -3319,46 +3315,52 @@ extern callarray *assoc(begin_kind key, setup *ss, callarray *spec)
          case sq_people_1_and_5_real:
             if (ss->people[1].id1 & ss->people[5].id1) goto good;
             goto bad;
-         case sq_ctrs_sel:
-            k = 0xFF;     /* K was initialized to zero. */
-            /* FALL THROUGH!!!!!! */
+
+         /* Beware!  These next four use cumulative xoring of the variable k, which
+            is in all cases initialized to zero. */
+
          case sq_ends_sel:
+            k = ~k;
+            /* FALL THROUGH!!!!!! */
+         case sq_ctrs_sel:
             /* FELL THROUGH!!!!!! */
-            /* Now k=0 for "ends_sel", and 0xFF for "ctrs_sel". */
+
             switch (ss->kind) {
+               case s1x4: k ^= 0x5; break;
                case s2x4: k ^= 0x99; break;
                case s_qtag: k ^= 0x33; break;
-               default: goto bad;
+               default: k = ~1;  /* Will force an error later, unless splitting. */
             }
-            j = 1;
-            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++,k>>=1) {
-               if (selectp(ss, idx)) {
-                  if (!(k&1)) j = 0;
-               }
-               else {
-                  if (k&1) j = 0;
-               }
-            }
-            if (j) goto good;
-            goto bad;
+            /* FALL THROUGH!!!!!! */
          case sq_all_sel:
-            k = 1;     /* K was initialized to zero. */
+            /* FELL THROUGH!!!!!! */
+            k = ~k;
             /* FALL THROUGH!!!!!! */
          case sq_none_sel:
             /* FELL THROUGH!!!!!! */
-            /* Now k=0 for "none_sel", and 1 for "all_sel". */
-            if (setup_attrs[ss->kind].setup_limits >= 2) goto good;
-            j = 1;
-            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++) {
-               if (selectp(ss, idx)) {
-                  if (k==0) j = 0;
+
+            /* If we are not looking at the whole setup (that is, we
+               are deciding whether to split the setup into smaller
+               ones), let it pass. */
+
+            if (     setup_attrs[ss->kind].keytab[0] != key &&
+                     setup_attrs[ss->kind].keytab[1] != key)
+               goto good;
+
+            if (k == 1) goto bad;
+
+            for (idx=0 ; idx<=setup_attrs[ss->kind].setup_limits ; idx++,k>>=1) {
+               if (!ss->people[idx].id1) {
+                  if (tt.assump_live) goto bad;
+               }
+               else if (selectp(ss, idx)) {
+                  if (!(k&1)) goto bad;
                }
                else {
-                  if (k!=0) j = 0;
+                  if (k&1) goto bad;
                }
             }
-            if (j) goto good;
-            goto bad;
+            goto good;
          default:
             break;
       }
@@ -3465,7 +3467,7 @@ extern uint32 find_calldef(
 {
    unsigned short *calldef_array;
    predptr_pair *predlistptr;
-   unsigned int z;
+   uint32 z;
 
    if (tdef->callarray_flags & CAF__PREDS) {
       predlistptr = tdef->stuff.prd.predlist;
@@ -3530,7 +3532,7 @@ extern uint32 copy_person(setup *resultpeople, int resultplace, setup *sourcepeo
 
 extern uint32 copy_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
 {
-   unsigned int newperson = sourcepeople->people[sourceplace].id1;
+   uint32 newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) newperson = (newperson + rotamount) & ~064;
    resultpeople->people[resultplace].id2 = sourcepeople->people[sourceplace].id2;
@@ -3548,7 +3550,7 @@ extern void swap_people(setup *ss, int oneplace, int otherplace)
 
 extern void install_person(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace)
 {
-   unsigned int newperson = sourcepeople->people[sourceplace].id1;
+   uint32 newperson = sourcepeople->people[sourceplace].id1;
 
    if (resultpeople->people[resultplace].id1 == 0)
       resultpeople->people[resultplace] = sourcepeople->people[sourceplace];
@@ -3564,7 +3566,7 @@ extern void install_person(setup *resultpeople, int resultplace, setup *sourcepe
 
 extern void install_rot(setup *resultpeople, int resultplace, setup *sourcepeople, int sourceplace, int rotamount)
 {
-   unsigned int newperson = sourcepeople->people[sourceplace].id1;
+   uint32 newperson = sourcepeople->people[sourceplace].id1;
 
    if (newperson) {
       if (resultplace < 0) fail("This would go into an excessively large matrix.");
@@ -3782,8 +3784,10 @@ extern parse_block *skip_one_concept(parse_block *incoming)
 
 
 /* Prepare several setups to be assembled into one, by making them all have
-   the same kind and rotation. */
-extern long_boolean fix_n_results(int arity, setup z[])
+   the same kind and rotation.  If there is a question about what ending
+   setup to opt for (because of lots of phantoms), use "goal". */
+
+extern long_boolean fix_n_results(int arity, setup_kind goal, setup z[])
 {
    int i;
    long_boolean lineflag = FALSE;
@@ -3865,7 +3869,30 @@ extern long_boolean fix_n_results(int arity, setup z[])
    }
 
    if (kk == nothing) {
+      /* This next line was, for a short while:
+
+      if (lineflag) {
+         if (goal == sdmd)
+            kk = sdmd;   * Opt for a 1x4 unless the map we are working with says it wants a diamond. *
+         else
+            kk = s1x4;
+      }
+
+      which was intended to be helpful, and was, in fact, the only reason for the
+      addition of the "goal" argument.  Alas, it caused no end of problems,
+      typified by [tidal wave] split phantom diamonds diamond chain thru.  The
+      new behavior created outside triple columns instead of the long-accustomed
+      outside quadruple columns.  While the triple columns might be able to be
+      justified on theoretical grounds, it breaks far too much accepted usage. */
+
+/* Then it was:
+
       if (lineflag) kk = s1x4;
+which we believe is equivalent to the following.
+*/
+
+      /* If client really needs a diamond, return a diamond.  Otherwise opt for 1x4. */
+      if (lineflag) kk = (goal == sdmd) ? sdmd : s1x4;
       else if (miniflag) kk = s1x2;
    }
 

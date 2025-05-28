@@ -146,6 +146,14 @@ APPLICATION_INTERFACE sd_dialog
       COMP => <RETURN> ;
       END
 
+   sess_init_confirm_select_task := NULL:
+      COMP => <RETURN> ;
+      END
+
+   sess_init_confirm_abort_task := NULL:
+      COMP => <RETURN> ;
+      END
+
    search_title_task := MSG:
       END
 
@@ -197,13 +205,12 @@ APPLICATION_INTERFACE sd_dialog
          start$as_they_are
          start$toggle_conc
          start$toggle_act
-         start$toggle_ignore
+{         start$toggle_ignore}
          start$toggle_retain
          start$toggle_nowarn
-
          start$toggle_singer
          start$toggle_revsinger
-
+         start$init_sess_file
          start$change_outfile
          start$change_header_comment)
       END
@@ -420,6 +427,7 @@ APPLICATION_INTERFACE sd_dialog
 
    write_confirm_enabler := task_group: END
    abort_confirm_enabler := task_group: END
+   sess_init_confirm_enabler := task_group: END
    search_enabler := task_group: END
 
 
@@ -549,6 +557,7 @@ USER_INTERFACE sd_dialog
 
    write_confirm_enabler activate => <write_confirm_popup show>
    abort_confirm_enabler activate => <abort_confirm_popup show>
+   sess_init_confirm_enabler activate => <sess_init_confirm_popup show>
    search_enabler activate => <search_stuff be_current_child>
 
    whole_call_show activate => <whole_call_menu be_current_child>
@@ -846,11 +855,12 @@ USER_INTERFACE sd_dialog
                 "From squared set"          => start$as_they_are
                 "Toggle concept levels"     => start$toggle_conc
                 "Toggle active phantoms"    => start$toggle_act
-                "Toggle ignoreblanks"       => start$toggle_ignore
+{                "Toggle ignoreblanks"       => start$toggle_ignore}
                 "Toggle retain after error" => start$toggle_retain
                 "Toggle nowarn mode"        => start$toggle_nowarn
                 "Toggle singing call"       => start$toggle_singer
                 "Toggle reverse singing call" => start$toggle_revsinger
+                "Initialize session file"   => start$init_sess_file
                 "Change output file"        => start$change_outfile
                 "Change title"              => start$change_header_comment) ;
             HELP_TEXT = "You are about to start a sequence."
@@ -1370,6 +1380,25 @@ USER_INTERFACE sd_dialog
    abort_confirm_popup := POPUP:
       [m1] => <abort_confirm_popup popdown; abort_confirm_abort_task comp> ;
       leave => <abort_confirm_popup popdown; abort_confirm_abort_task comp> ;
+      HELP_TEXT = "You have a ssesssion initialization file."
+                 &"This command will destroy that file and replace it with an empty one."
+                 &"Click on INITIALIZE IT to destroy file and create a new one"
+                 &"Move the mouse away to exit this popup without taking any action." ;
+      CONTENTS = NICE_ROW:
+         ORIENTATION = vertical ;
+         CONTENTS = (
+            NICE_HEADER: TEXT = "You already have a session initialization file."; END
+            NICE_ICON:
+               [m1] => <abort_confirm_popup popdown; abort_confirm_select_task comp> ;
+               TASK = abort_confirm_select_task ;
+               STRING = "INITIALIZE IT?" ;
+               END )
+         END
+      END
+
+   sess_init_confirm_popup := POPUP:
+      [m1] => <sess_init_confirm_popup popdown; sess_init_confirm_abort_task comp> ;
+      leave => <sess_init_confirm_popup popdown; sess_init_confirm_abort_task comp> ;
       HELP_TEXT = "The sequence you are working on has not been"
                  &"written to disk, and you have clicked on a command that"
                  &"will destroy it.  Click on ABORT IT to destroy this sequence"
@@ -1382,12 +1411,13 @@ USER_INTERFACE sd_dialog
          CONTENTS = (
             NICE_HEADER: TEXT = "You have a sequence in progress."; END
             NICE_ICON:
-               [m1] => <abort_confirm_popup popdown; abort_confirm_select_task comp> ;
-               TASK = abort_confirm_select_task ;
+               [m1] => <sess_init_confirm_popup popdown; sess_init_confirm_select_task comp> ;
+               TASK = sess_init_confirm_select_task ;
                STRING = "ABORT IT?" ;
                END )
          END
       END
+
 
    std_window:
       [del] => <+ backspace> ;

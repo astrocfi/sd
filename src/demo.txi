@@ -293,6 +293,9 @@ Type @kbd{1/2 acey deucey}, and press
 @end group
 @end example
 
+The program puts commas in the final
+sequence where needed for clarity.  You never type them in.
+
 It now shows us the full line 4, and the 3x1 diamond that resulted.
 It places a comma after some concepts to make everything completely unambiguous.
 You never need to type the commas.
@@ -982,7 +985,7 @@ in the concept name, to avoid confusion.
 @example
 @group
 --> @kbd{1-1/2 column circulate} @key{ENTER}
-29:   1-1/2, column circulate
+29:   column circulate 1-1/2
 
    1G<
  1BV 4B^
@@ -992,12 +995,10 @@ in the concept name, to avoid confusion.
 @end group
 @end example
 
-It is common to say ``once and a half'' after you say the name of the
-call, but the program prints concepts first, and leaves the exact
-wording up to you.
-
-The program puts commas in the final
-sequence where needed for clarity.  You never type them in.
+The program has moved the phrase @code{1-1/2} to the end when
+it displays the line, and it will also do so in the printed card.
+It does the same with the concepts @code{twice} and @code{<n> times}.
+You must still type all concepts before the calls that they modify.
 
 Let's have the boys hinge.
 
@@ -1293,7 +1294,7 @@ BOYS single wheel
   Warning:  Check a 'C1 phantom' setup.
 SIAMESE trail to a diamond
 unwrap the interlocked diamonds
-1-1/2, column circulate
+column circulate 1-1/2
 BOYS hinge
 CENTER DIAMOND flip the diamond
 wheel and deal

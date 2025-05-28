@@ -213,6 +213,22 @@ extern long_boolean divide_for_magic(
    uint32 heritflags_to_check,
    setup *result)
 {
+   static expand_thing exp27  = {{1, 3, 4, 5, 7, 9, 10, 11}, 8, s2x4, s2x6, 0};
+   static expand_thing exp72  = {{0, 1, 2, 4, 6, 7, 8, 10},  8, s2x4, s2x6, 0};
+   static expand_thing exp35  = {{1, 2, 3, 5, 7, 8, 9, 11},  8, s2x4, s2x6, 0};
+   static expand_thing exp56  = {{0, 2, 3, 4, 6, 8, 9, 10},  8, s2x4, s2x6, 0};
+   static expand_thing expg27 = {{1, 3, 5, 4, 7, 9, 11, 10},  8, s1x8, s1x12, 0};
+   static expand_thing expg72 = {{0, 1, 4, 2, 6, 7, 10, 8},  8, s1x8, s1x12, 0};
+   static expand_thing expg35 = {{1, 2, 5, 3, 7, 8, 11, 9},  8, s1x8, s1x12, 0};
+   static expand_thing expg56 = {{0, 2, 4, 3, 6, 8, 10, 9},  8, s1x8, s1x12, 0};
+
+   /* Duplicated in sdtop.c */
+   static expand_thing exp_qtg_3x4_stuff     = {{1, 2, 4, 5, 7, 8, 10, 11}, 8, s_qtag, s3x4, 0};
+
+   uint32 directions = 0;
+   uint32 livemask;
+   warning_info saved_warnings;
+   int i;
    map_thing *division_maps;
    uint32 resflags = 0;
 
@@ -221,6 +237,92 @@ extern long_boolean divide_for_magic(
          /* "Magic" was specified.  Split it into 1x4's in the appropriate magical way. */
          division_maps = &map_2x4_magic;
          goto divide_us;
+      }
+      else if (heritflags_to_check & (INHERITFLAG_3X1|INHERITFLAG_1X3)) {
+         for (i=0; i<8; i++) {
+            uint32 p = ss->people[i].id1;
+            if (!p) return FALSE;
+            directions = (directions<<2) | (p&3);
+         }
+
+         if (heritflags_to_check != INHERITFLAG_3X1 && heritflags_to_check != INHERITFLAG_1X3)
+            return FALSE;
+
+         /* These are independent of whether we said "1x3" or "3x1". */
+         if (directions == 0x2A80 || directions == 0x802A || directions == 0x7FD5 || directions == 0xD57F) {
+            expand_setup(&exp27, ss);
+            goto do_3x3;
+         }
+         else if (directions == 0xA802 || directions == 0x02A8 || directions == 0xFD57 || directions == 0x57FD) {
+            expand_setup(&exp72, ss);
+            goto do_3x3;
+         }
+         else if (directions == 0x208A || directions == 0x8A20 || directions == 0x75DF || directions == 0xDF75) {
+            expand_setup(&exp35, ss);
+            goto do_3x3;
+         }
+         else if (directions == 0xA208 || directions == 0x08A2 || directions == 0xF75D || directions == 0x5DF7) {
+            expand_setup(&exp56, ss);
+            goto do_3x3;
+         }
+
+         /* These are specific to "1x3" or "3x1". */
+         if (directions == 0x55FF || directions == 0x00AA) {
+            expand_setup(
+               (heritflags_to_check & INHERITFLAG_3X1) ? &exp27 : &exp72,
+               ss);
+            goto do_3x3;
+         }
+         else if (directions == 0xFF55 || directions == 0xAA00) {
+            expand_setup(
+               (heritflags_to_check & INHERITFLAG_3X1) ? &exp72 : &exp27,
+               ss);
+            goto do_3x3;
+         }
+      }
+   }
+   if (ss->kind == s1x8) {
+      if (heritflags_to_check & (INHERITFLAG_3X1|INHERITFLAG_1X3)) {
+         for (i=0; i<8; i++) {
+            uint32 p = ss->people[i].id1;
+            if (!p) return FALSE;
+            directions = (directions<<2) | (p&3);
+         }
+
+         if (heritflags_to_check != INHERITFLAG_3X1 && heritflags_to_check != INHERITFLAG_1X3)
+            return FALSE;
+
+         /* These are independent of whether we said "1x3" or "3x1". */
+         if (directions == 0x2A80 || directions == 0x802A || directions == 0x7FD5 || directions == 0xD57F) {
+            expand_setup(&expg27, ss);
+            goto do_3x3;
+         }
+         else if (directions == 0xA208 || directions == 0x08A2 || directions == 0xF75D || directions == 0x5DF7) {
+            expand_setup(&expg72, ss);
+            goto do_3x3;
+         }
+         else if (directions == 0x208A || directions == 0x8A20 || directions == 0x75DF || directions == 0xDF75) {
+            expand_setup(&expg35, ss);
+            goto do_3x3;
+         }
+         else if (directions == 0xA802 || directions == 0x02A8 || directions == 0xFD57 || directions == 0x57FD) {
+            expand_setup(&expg56, ss);
+            goto do_3x3;
+         }
+
+         /* These are specific to "1x3" or "3x1". */
+         if (directions == 0x55FF || directions == 0x00AA) {
+            expand_setup(
+               (heritflags_to_check & INHERITFLAG_3X1) ? &expg27 : &expg72,
+               ss);
+            goto do_3x3;
+         }
+         else if (directions == 0xFF55 || directions == 0xAA00) {
+            expand_setup(
+               (heritflags_to_check & INHERITFLAG_3X1) ? &expg72 : &expg27,
+               ss);
+            goto do_3x3;
+         }
       }
    }
    else if (ss->kind == s_qtag) {
@@ -237,6 +339,13 @@ extern long_boolean divide_for_magic(
          division_maps = &map_qtg_magic_intlk;
          goto divide_us;
       }
+      else if (heritflags_to_check & (INHERITFLAG_3X1|INHERITFLAG_1X3)) {
+         if (heritflags_to_check != INHERITFLAG_3X1 && heritflags_to_check != INHERITFLAG_1X3)
+            return FALSE;
+
+         expand_setup(&exp_qtg_3x4_stuff, ss);
+         goto do_3x3;
+      }
    }
    else if (ss->kind == s_ptpd) {
       resflags = RESULTFLAG__NEED_DIAMOND;
@@ -251,6 +360,21 @@ extern long_boolean divide_for_magic(
       else if (heritflags_to_check == (INHERITFLAG_MAGIC | INHERITFLAG_INTLK)) {
          division_maps = &map_ptp_magic_intlk;
          goto divide_us;
+      }
+   }
+   else if (ss->kind == s3x4) {
+      if (heritflags_to_check & (INHERITFLAG_3X1|INHERITFLAG_1X3)) {
+         if (heritflags_to_check != INHERITFLAG_3X1 && heritflags_to_check != INHERITFLAG_1X3)
+            return FALSE;
+
+         livemask = 0;
+
+         for (i=0; i<12; i++) {
+            livemask <<= 1;
+            if (ss->people[i].id1) livemask |= 1;
+         }
+
+         if (livemask == 03333 || livemask == 04747) goto do_3x3;
       }
    }
 
@@ -271,6 +395,62 @@ divide_us:
       setupflags word in the result. */
 
    result->result_flags |= resflags;
+   return TRUE;
+
+   do_3x3:
+
+   ss->cmd.cmd_final_flags.herit = (heritflags_to_use & ~heritflags_to_check) | INHERITFLAG_3X3 | INHERITFLAG_12_MATRIX;
+   saved_warnings = history[history_ptr+1].warnings;
+   impose_assumption_and_move(ss, result);
+
+   /* Shut off "each 2x3" types of warnings -- they will arise spuriously while
+      the people do the calls in isolation. */
+   for (i=0 ; i<WARNING_WORDS ; i++) {
+      history[history_ptr+1].warnings.bits[i] &= ~dyp_each_warnings.bits[i];
+      history[history_ptr+1].warnings.bits[i] |= saved_warnings.bits[i];
+   }
+
+   livemask = 0;
+
+   for (i=0; i<=setup_attrs[result->kind].setup_limits; i++) {
+      livemask <<= 1;
+      if (result->people[i].id1) livemask |= 1;
+   }
+
+   if (result->kind == s2x6) {
+      if (livemask == 02727) {
+         compress_setup(&exp27, result);
+      }
+      else if (livemask == 07272) {
+         compress_setup(&exp72, result);
+      }
+      else if (livemask == 03535) {
+         compress_setup(&exp35, result);
+      }
+      else if (livemask == 05656) {
+         compress_setup(&exp56, result);
+      }
+   }
+   else if (result->kind == s1x12) {
+      if (livemask == 02727) {
+         compress_setup(&expg27, result);
+      }
+      else if (livemask == 07272) {
+         compress_setup(&expg72, result);
+      }
+      else if (livemask == 03535) {
+         compress_setup(&expg35, result);
+      }
+      else if (livemask == 05656) {
+         compress_setup(&expg56, result);
+      }
+   }
+   else if (result->kind == s3x4) {
+      if (livemask == 03333) {
+         compress_setup(&exp_qtg_3x4_stuff, result);
+      }
+   }
+
    return TRUE;
 }
 
@@ -1760,7 +1940,6 @@ Private long_boolean get_real_subcall(
    callspec_block *orig_call = base_calls[item_id];
    long_boolean this_is_tagger = item_id >= BASE_CALL_TAGGER0 && item_id <= BASE_CALL_TAGGER3;
    long_boolean this_is_tagger_circcer = this_is_tagger || item_id == BASE_CALL_CIRCCER;
-   uint32 callflagsh = parent_call->callflagsh;  /* This has the "XXX_is_inherited" stuff from the parent. */
 
    uint32 local_number_fields = current_options.number_fields;
    int local_num_numbers = current_options.howmanynumbers;
@@ -1877,9 +2056,15 @@ Private long_boolean get_real_subcall(
    snumber = (mods1 & DFM1_CALL_MOD_MASK) / DFM1_CALL_MOD_BIT;
 
    /* Note whether we are using any mandatory substitutions, so that the menu
-      initialization will always accept this call. */
+      initialization will always accept this call.  Also, if we are in one of the
+      special scans in the resolver, any call that takes a mandatory subcall
+      (e.g. "wheel and <anything>") is rejected. */
 
-   if (snumber == 2 || snumber == 6) mandatory_call_used = TRUE;
+   if (snumber == 2 || snumber == 6) {
+      mandatory_call_used = TRUE;
+      if (interactivity == interactivity_in_first_scan || interactivity == interactivity_in_second_scan)
+         fail("Mandatory subcall fail.");
+   }
 
    /* Now we know that the list doesn't say anything about this call.  Perhaps we should
       query the user for a replacement and add something to the list.  First, decide whether
@@ -1889,6 +2074,9 @@ Private long_boolean get_real_subcall(
       "clover and anything" is tested as "clover and nothing", since "nothing" is the subcall
       that appears in the database. */
 
+   /* The same is true when we are doing the special scans in the resolver -- we don't get subcalls -- we just
+      leave the default call in place.  Only when in the random search do we generate random subcalls. */
+
    /* Of course, if we are testing the fidelity of later calls during a reconcile
       operation, we DO NOT EVER add any modifiers to the list, even if the user
       clicked on "allow modification" before clicking on "reconcile".  It is perfectly
@@ -1897,7 +2085,7 @@ Private long_boolean get_real_subcall(
       interactive) for the calls that we randomly choose, but not for the later calls
       that we test for fidelity. */
 
-   if (interactivity == interactivity_database_init || interactivity == interactivity_verify || testing_fidelity) return FALSE;
+   if (!(interactivity == interactivity_normal || interactivity == interactivity_in_random_search) || testing_fidelity) return FALSE;
 
    /* When we are searching for resolves and the like, the situation is different.  In this case,
       the interactivity state is set for a search.  We do perform mandatory
@@ -2512,8 +2700,12 @@ Private void do_sequential_call(
             /*    ***** This line looks screwy. */
             total += (local_number_fields >> (((this_mod1 & DFM1_NUM_SHIFT_MASK) / DFM1_NUM_SHIFT_BIT) * 4)) & 0xF;
 
-            if (DFM1_REPEAT_N_ALTERNATE & this_mod1) ii++;
-            if (DFM1_REPEAT_NM1 & this_mod1) {
+            if (this_mod1 & DFM1_REPEAT_N_ALTERNATE) ii++;
+            if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
+               total++;
+               do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+            }
+            if (this_mod1 & DFM1_REPEAT_NM1) {
                if ((local_number_fields & 0xF) == 0) fail("Can't give number zero.");
                total--;
             }
@@ -2551,6 +2743,8 @@ Private void do_sequential_call(
 
    if (ss->cmd.cmd_frac_flags != CMD_FRAC_NULL_VALUE) {
       fraction_info zzz;
+
+      if (do_half_of_last_part != 0) fail("Sorry, can't fractionalize this.");
 
       get_fraction_info(ss->cmd.cmd_frac_flags, callflags1, total, &zzz);
       reverse_order = zzz.reverse_order;
@@ -2711,6 +2905,9 @@ Private void do_sequential_call(
 
       recompute_id = get_real_subcall(parseptr, this_item, new_final_concepts, callspec, &foo1);
 
+      if (this_mod1 & DFM1_PERMIT_TOUCH_OR_REAR_BACK)
+         ss->cmd.cmd_misc_flags &= ~CMD_MISC__ALREADY_STEPPED;   /* We allow stepping (or rearing back) again. */
+
       if (this_mod1 & DFM1_REPEAT_N_ALTERNATE)
          (void) get_real_subcall(parseptr, alt_item, new_final_concepts, callspec, &foo2);
 
@@ -2734,6 +2931,7 @@ Private void do_sequential_call(
          int count_to_use = current_options.number_fields & 0xF;
 
          number_used = TRUE;
+         if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) count_to_use++;
          if (this_mod1 & DFM1_REPEAT_NM1) count_to_use--;
          if (count_to_use < 0) fail("Can't give number zero.");
 
@@ -3080,6 +3278,22 @@ Private calldef_schema fixup_conc_schema(callspec_block *callspec, setup *ss)
             fail("Can't use this combination of modifiers.");
       }
    }
+   else if (the_schema == schema_maybe_matrix_single_concentric_together) {
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         the_schema = schema_conc_12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         the_schema = schema_conc_16;
+      else
+         the_schema = schema_single_concentric_together;
+   }
+   else if (the_schema == schema_maybe_matrix_conc) {
+      if (herit_concepts & INHERITFLAG_12_MATRIX)
+         the_schema = schema_conc_12;
+      else if (herit_concepts & INHERITFLAG_16_MATRIX)
+         the_schema = schema_conc_16;
+      else
+         the_schema = schema_concentric;
+   }
    else if (the_schema == schema_maybe_matrix_conc_star) {
       if (herit_concepts & INHERITFLAG_12_MATRIX)
          the_schema = schema_conc_star12;
@@ -3162,16 +3376,15 @@ that probably need to be put in. */
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DOING_ENDS;
 
       /* Now we demand that, if a concept was given, the call had the appropriate flag set saying
-         that the concept is legal and will be inherited to the children. */
+         that the concept is legal and will be inherited to the children.  Unless it is defined by array. */
 
-      if (ss->cmd.cmd_final_flags.herit & (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF)))
+      if (the_schema != schema_by_array && (ss->cmd.cmd_final_flags.herit & (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))))
          fail("Can't do this call with this concept.");
 
       switch (ss->cmd.cmd_misc2_flags & CMD_MISC2__CTR_END_KMASK) {
          case CMD_MISC2__CENTRAL_PLAIN:
             /* If it is sequential, we just pass it through.  Otherwise, we handle it here. */
             if (the_schema != schema_sequential && the_schema != schema_sequential_with_fraction) {
-               uint32 temp_concepts, forcing_concepts;
                by_def_item *defptr;
                uint32 inv_bits = ss->cmd.cmd_misc2_flags & (CMD_MISC2__CTR_END_INV_CONC | CMD_MISC2__CTR_END_INVERT);
 
@@ -3233,6 +3446,7 @@ that probably need to be put in. */
          case schema_conc_o:
          case schema_select_ctr2:
          case schema_select_ctr4:
+         case schema_select_ctr6:
          case schema_single_concentric:
          case schema_single_concentric_together:
          case schema_cross_concentric:
@@ -3380,21 +3594,24 @@ that probably need to be put in. */
    }
 
    /* Check for a call whose schema is single (cross) concentric.
-      If so, be sure the setup is divided into 1x4's or diamonds. */
+      If so, be sure the setup is divided into 1x4's or diamonds.
+      But don't do it if something like "magic" is still unprocessed. */
 
-   switch (the_schema) {
-      case schema_single_concentric:
-      case schema_single_cross_concentric:
-         force_split = TRUE;
-         break;
-      case schema_single_concentric_together:
-      case schema_concentric_6p_or_sgltogether:
-         switch (ss->kind) {
-            case s1x8: case s_ptpd:
+   if ((ss->cmd.cmd_final_flags.herit & (~(callspec->callflagsh|INHERITFLAG_HALF|INHERITFLAG_LASTHALF))) == 0) {
+      switch (the_schema) {
+         case schema_single_concentric:
+         case schema_single_cross_concentric:
                force_split = TRUE;
-               break;
-         }
-         break;
+            break;
+         case schema_single_concentric_together:
+         case schema_concentric_6p_or_sgltogether:
+            switch (ss->kind) {
+               case s1x8: case s_ptpd:
+                  force_split = TRUE;
+                  break;
+            }
+            break;
+      }
    }
 
    if (force_split) {
@@ -3886,6 +4103,7 @@ int m, j;
                case schema_single_concentric:
                case schema_select_ctr2:
                case schema_select_ctr4:
+               case schema_select_ctr6:
                   break;
                default:
                   if (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK)
@@ -3912,6 +4130,24 @@ int m, j;
                   outerdef->modifiers1,
                   result);
             }
+            else if (the_schema == schema_select_headliners) {
+               inner_selective_move(
+                  ss, &foo1, &foo2,
+                  4, TRUE, 0, 0x80000008UL,
+                  selector_uninitialized,
+                  innerdef->modifiers1,
+                  outerdef->modifiers1,
+                  result);
+            }
+            else if (the_schema == schema_select_sideliners) {
+               inner_selective_move(
+                  ss, &foo1, &foo2,
+                  4, TRUE, 0, 0x80000001UL,
+                  selector_uninitialized,
+                  innerdef->modifiers1,
+                  outerdef->modifiers1,
+                  result);
+            }
             else if (the_schema == schema_select_ctr2 || the_schema == schema_select_ctr4) {
                if (     (ss->kind == s2x4 && !(ss->people[1].id1 | ss->people[2].id1 | ss->people[5].id1 | ss->people[6].id1)) ||
                         (ss->kind == s2x6 && !(ss->people[2].id1 | ss->people[3].id1 | ss->people[8].id1 | ss->people[9].id1))) {
@@ -3927,6 +4163,16 @@ int m, j;
                      0,
                      result);
                }
+            }
+            else if (the_schema == schema_select_ctr6) {
+               update_id_bits(ss);  /* We have to do this -- the schema means the *current* centers. */
+               inner_selective_move(
+                  ss, &foo1, (setup_command *) 0,
+                  4, FALSE, 0, 0,
+                  selector_center6,
+                  innerdef->modifiers1,
+                  0,
+                  result);
             }
             else {
                int i;
@@ -4173,7 +4419,7 @@ extern void move(
       }
 
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__DO_AS_COUPLES;
-      tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, result);
+      tandem_couples_move(ss, selector_uninitialized, 0, 0, 0, 1, TRUE, result);
       return;
    }
 
@@ -4275,6 +4521,8 @@ extern void move(
                               INHERITFLAG_3X1 |
                               INHERITFLAG_3X3 |
                               INHERITFLAG_4X4 |
+                              INHERITFLAG_12_MATRIX |
+                              INHERITFLAG_16_MATRIX |
                               INHERITFLAG_SINGLEFILE |
                               INHERITFLAG_YOYO |
                               INHERITFLAG_STRAIGHT)) == 0 &&

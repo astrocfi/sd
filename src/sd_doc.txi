@@ -5,8 +5,8 @@
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
 @c
-@set Time-stamp: November 14, 1997
-@set sd-version 31.91
+@set Time-stamp: December 30, 1997
+@set sd-version 31.92
 @set full-manual
 @c %**end of header
 @iftex
@@ -109,7 +109,7 @@ The Completing Reader for Sdtty
 
 * Question Mark::               Question Mark and Exclamation Point
 * Minimizing Typing::           Minimizing the Amount of Typing You Must Do
-* Ignoring Blanks::             Ignoring Blanks and Hyphens when Typing
+* Ignoring Hyphens::            Ignoring Hyphens and Apostrophes when Typing
 
 Invoking Sd via Command Line
 
@@ -316,7 +316,7 @@ aesthetics and ambiguity avoidance.
 @menu
 * Question Mark::               Question Mark and Exclamation Point
 * Minimizing Typing::           Minimizing the Amount of Typing You Must Do
-* Ignoring Blanks::             Ignoring Blanks and Hyphens when Typing
+* Ignoring Hyphens::            Ignoring Hyphens and Apostrophes when Typing
 @end menu
 
 @node Question Mark, Minimizing Typing,  , The Completing Reader for Sdtty
@@ -371,7 +371,7 @@ while there are multiple syntactic choices available, the computer can't count
 them fast enough to respond instantaneously.  It therefore displays an approximate
 number, computed by looking at its database without testing each call.
 
-@node Minimizing Typing, Ignoring Blanks, Question Mark, The Completing Reader for Sdtty
+@node Minimizing Typing, Ignoring Hyphens, Question Mark, The Completing Reader for Sdtty
 @section Minimizing the Amount of Typing You Must Do
 
 The @code{Sdtty} completion mechanism, especially the
@@ -446,25 +446,17 @@ followed by
 @key{ESC}
 is still a good way to start.
 
-@node Ignoring Blanks, , Minimizing Typing, The Completing Reader for Sdtty
-@section Ignoring Blanks and Hyphens when Typing
+@node Ignoring Hyphens, , Minimizing Typing, The Completing Reader for Sdtty
+@section Ignoring Hyphens and Apostrophes when Typing
 
-@code{Sdtty} has an option whereby it can recognize calls and concepts
-that have been typed
-in without the spaces that normally separate words.  Some users prefer
-abbreviated spellings like @code{inroll circulate}---when this switch is
-given, you can spell it that way.  You can even type
-@code{tandemreverserandomstablespinthetop} if you wish.
-This also allows one to ignore hyphens, as in @code{tandembased triangles}
-or to type blanks instead of hyphens, as in @code{tandem based triangles}.
-In all cases the correct spelling will be printed in the transcript:
-@code{tandem-based triangles} or @code{in roll circulate}.
+You can type a space instead of a hyphen in call and concept names.
+For example, you can type @code{ping pong circulate} or @code{tandem based triangles}
+instead of @code{ping-pong circulate} or @code{tandem-based triangles}.
+The calls will always be printed out with the hyphen.
 
-The @code{toggle ignoreblanks} command toggles
-(turns on or off) the state of this option.
-@xref{Changing Modes}.  It can also be turned on when the program begins,
-either by giving a command-line option (@xref{Command-Line Options}) or
-through the use of the initialization file (@xref{Option Control}).
+You can omit apostrophes when typing in call and concept names.  For example,
+you can type @code{lockers choice} instead of @code{locker's choice}.
+The calls will always be printed out with the apostrophe.
 
 @node Invoking Sd, The Initialization File, The Completing Reader for Sdtty, Top
 @chapter Invoking Sd via Command Line (DOS or UNIX only)
@@ -551,11 +543,6 @@ which makes phantoms persist
 throughout calls.
 It is the same as giving the
 @code{toggle active phantoms} command to the program.
-@item -ignoreblanks
-This makes the program recognize calls and concepts that have been typed
-in without the spaces that normally separate words.  In particular, it
-makes the program behave as though you had given the @code{toggle ignoreblanks}
-command.  @xref{Ignoring Blanks}.
 @item -no_warnings
 This suppresses the display and printing of the
 warning messages that are sometimes given to help less-experienced callers.
@@ -820,56 +807,49 @@ the command line.  This makes it possible to encode your personal
 preferences so that the program will always use them.  Do @emph{not}
 place a hyphen in front of an option in the initialization file.
 
-For example, the line
+@noindent For example, the line
 @example
    singlespace
 @end example
-would be used if you like your output single-spaced.
+@noindent would be used if you like your output single-spaced.
 
-The line
+@noindent The line
 @example
    no_graphics
 @end example
-would be used if your computer does not have the special graphics
+@noindent would be used if your computer does not have the special graphics
 characters.
 
-The line
+@noindent The line
 @example
    concept_levels
 @end example
-would be used if you wish to have the program allow all concepts,
+@noindent would be used if you wish to have the program allow all concepts,
 even those that are not actually legal at the specified level.
 @xref{Entering Concepts} and @ref{Using Off-Level Concepts}.
 
-The line
+@noindent The line
 @example
    active_phantoms
 @end example
-would be used if you wish to write material that assumes that
+@noindent would be used if you wish to write material that assumes that
 phantoms persist throughout calls.  @xref{Assume Waves}.
 
-The line
-@example
-   ignoreblanks
-@end example
-would be used if you wish to type calls and concepts without the normal
-blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
-
-The line
+@noindent The line
 @example
    no_warnings
 @end example
-would be used if you wish to suppress the display and printing of the
+@noindent would be used if you wish to suppress the display and printing of the
 warning messages that are sometimes given to help less-experienced callers.
 
-The line
+@noindent The line
 @example
    retain_after_error
 @end example
-would be used if you wish to have the program retain the concepts that
+@noindent would be used if you wish to have the program retain the concepts that
 you had typed when an error occurs.  @xref{Retaining Concepts After an Error}.
 
-You can edit the file with an editor such as @samp{notepad}.
+@noindent You can edit the file with an editor such as @samp{notepad}.
 
 @node Sample Initialization Files, , Option Control, The Initialization File
 @section Sample Initialization Files
@@ -1426,7 +1406,7 @@ concepts appear in more than one submenu---it doesn't matter which one
 you use.  With practice, you will know which submenu to use.  All available
 concepts, organized by submenu, are listed in @ref{Concept Notes}.
 
-When you click on any concept, the universal call menu replaces whatever
+When you select any concept, the universal call menu replaces whatever
 special call menu may have been presented, since the set of legal calls
 becomes highly unpredictable.
 
@@ -1442,11 +1422,13 @@ override this if you wish.  The @code{toggle concept levels} command toggles
 @node Call Modifications, Retaining Concepts After an Error, Entering Concepts, Calling
 @section Call Modifications
 
-Some calls can be modified in a natural way, such as @samp{catch fan the top 3},
-@samp{busy 1/2 tag},
+Some calls can be modified in a natural way, such as @samp{catch [fan the top] 3},
+@samp{busy [1/2 tag]},
 and @samp{vertical tag your neighbor}.  Some calls can be modified in
 unnatural ways, such as @samp{trade
 the diamond but replace the diamond circulate with explode the diamond}.
+The usual way to perform natural modifications is simply to type the call
+as decribed in @ref{Call Variations}.
 To form either type of modified call, you must first enable call modifications
 by selecting @code{simple modifications} or @code{allow modifications}
 before choosing the call.
@@ -1648,7 +1630,7 @@ another 5000 attempts if you wish.
 @i{Remember that the @code{resolve} operation by itself does not write
 the sequence to a file.}  You will not be able to print a sequence until
 it has been written to a file.  You must give the @code{write this sequence}
-command to write out the sequence.
+command (or press function key @key{F10}) to write out the sequence.
 
 @node Normalize and Standardize, Pick Random Call, Resolving, Resolving and Searching
 @section Normalizing or Standardizing the Setup
@@ -1736,7 +1718,7 @@ The commands are:
 ``Any lines'' and ``any columns'' mean any 2x4 setup in which people
 are all in generalized lines or columns, respectively.  ``Any tidal
 setup'' means any 1x8, no matter how people are facing.
-All the others are independent of handedness---for example, a
+All the commands are independent of handedness---for example, a
 two-faced line can be of either handedness.
 
 @node Reconcile,  , Create Setup, Resolving and Searching
@@ -1811,7 +1793,8 @@ sequences.
 @section Saving the Sequence
 
 At any time when the sequence is resolved (for example, after a successful
-use of the @code{resolve} operation), you can select @code{write this sequence}.
+use of the @code{resolve} operation), you can select @code{write this sequence}
+or press @key{F10}.
 (This command used to be called @code{end this sequence}.)
 This will append the current sequence to the current output file, and then
 go back to the startup menu.  You will be given an opportunity to enter
@@ -1820,9 +1803,9 @@ or ``stupid biggie.''  The written sequence will also be annotated with the
 level, the current date and time, and the version numbers of the program and
 database.
 
-Until you have done the @code{write this sequence} operation, the sequence is not
-written to disk and you cannot start writing a new sequence.  Just
-resolving isn't enough.
+Until you have done the @code{write this sequence} operation or pressed @key{F10},
+the sequence is not written to disk and you cannot start writing a new sequence.
+Just resolving isn't enough.
 
 @node Change Output File, Change Title, Save Sequence, Misc Commands
 @section Changing the Output File
@@ -1941,7 +1924,6 @@ or @code{Sdtty} runs.  They are:
 @example
    toggle concept levels
    toggle active phantoms
-   toggle ignoreblanks
    toggle retain after error
    toggle nowarn mode
    toggle singing call
@@ -1962,10 +1944,6 @@ and @ref{Using Off-Level Concepts}.
 
 The @code{toggle active phantoms} command changes the persistence of
 phantoms during certain calls.  @xref{Assume Waves}.
-
-The @code{toggle ignoreblanks} command changes the option whereby
-the parser lets you type calls and concepts without the normal
-blanks separating them, or without hyphens.  @xref{Ignoring Blanks}.
 
 The @code{toggle retain after error} command changes the option whereby
 program retains the concepts that
@@ -2506,7 +2484,7 @@ of calls, and is a recognized C1 call.  You should use this name rather
 than the potentially misleading @samp{flip back to a wave}.
 
 @node Face <DIRECTION>, Grand Chain 8, Flip Back, Call Notes
-@section @code{Face <DIRECTION>}
+@section Face <DIRECTION>
 
 The call @samp{face <DIRECTION>} does not appear to be a genuine
 Callerlab-sanctioned call.  It is intended to be used, for example,
@@ -2532,7 +2510,7 @@ just @samp{grand chain 8} should work.
 When performed from some formations (but not waves), these calls have the
 property that the centers stay centers and the ends stay ends.
 One can make use of that property, by using concepts like @samp{central}
-when the formation is appropriate.  Unfortunately, @code{Sd}, can't figure
+when the formation is appropriate.  Unfortunately, @code{Sd} can't figure
 out whether to allow the @samp{central} concept, based on the starting
 formation, without help.  Use the calls @samp{percolate (centers and ends)},
 @samp{perk up (centers and ends)},
@@ -3016,10 +2994,10 @@ The menu for these concepts is brought up by clicking on the
 @item as couples in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 tag
 @item as couples in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 1/4 line
 @item as couples in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ couples twosome in a 3/4 line
-@item tandem in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 tag
-@item tandem in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 tag
-@item tandem in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 line
-@item tandem in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 line
+@item tandem in a 1/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 tag
+@item tandem in a 3/4 tag@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 tag
+@item tandem in a 1/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 1/4 line
+@item tandem in a 3/4 line@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ tandem twosome in a 3/4 line
 @item <ANYONE> are as couples@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are couples twosome
 @item <ANYONE> are tandem@ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ @ <ANYONE> are tandem twosome
 @item <ANYONE> are couples of three@ @ @ @ @ @ @ @ @ @ <ANYONE> are couples threesome
@@ -3148,6 +3126,9 @@ in a 2x3 matrix, doing a 6-person call.
 @item distorted tidal C/L/W @r{(singular)}
 These are done from a 2x8 matrix in which the real people form some
 kind of distorted 1x8.
+@item offset tidal C/L/W @r{(singular)}
+These are done from a 2x8 matrix in which the real people form two
+1x4's joined with an offset in the center.
 @item distorted C/L/W (singular) of 6
 These are done from a center diamond with offset pairs of people on the outside.
 @item double bent tidal C/L/W @r{(singular)}
@@ -3488,6 +3469,7 @@ These are followed by the concept to which they apply.
 These are straightforward.
 @item finish
 @item like a
+@item like an
 See @ref{Interruptions and Interlace}, for information about some tricky aspects
 of the concepts that pull calls into their constituent parts.
 
@@ -3499,16 +3481,6 @@ they are not accepted as common usage.  For example, @code{finish shazam} as a w
 saying @dfn{U-turn back}, or @code{finish mix} or @code{like a mix} as ways
 of saying @dfn{centers trade}, would have to be considered rather peculiar.
 You must exercise your judgement when using these concepts.
-
-We believe that this is consistent with common usage when that common usage
-is correctly applied.  For example,
-@example
-@group
-   cast off 3/4
-   LIKE A shazam
-@end group
-@end example
-is a commonly accepted and completely correct usage.
 
 One occasionally hears things like @dfn{cross chain reaction, centers
 finish like a wheel the ocean}, in which the final cast off 3/4 of the
@@ -3985,13 +3957,13 @@ the exchange point, no matter what other things they might do, or ``leaving
 notes on the floor'' when an interruption occurs, intending to tell the
 dancer who will resume from that point whether they should consider themselves
 to have passed the exchange point.  We believe that these methods are of
-marginal utility even in simple cases, an unworkable in complex cases.
-Sd takes the position that the only state information is what part of the call
+marginal utility even in simple cases, and unworkable in complex cases.
+@code{Sd} takes the position that the only state information is what part of the call
 one is doing now.  If a collision occurs after parts 1 or 2 of an @samp{exchange the
 diamonds}, the person who is an out-point has exchanged and the other has
 not.  If a collision occurs after parts 3 or 4, both have exchanged, and
 hence they take right hands.  (You can work this out with checkers.)
-Sd therefore considers parts 1 and 2 to be different from parts 3 and 4.
+@code{Sd} therefore considers parts 1 and 2 to be different from parts 3 and 4.
 No matter what interruptions, interlaces, or other concepts were in use,
 the dancers only need to know which of the 4 parts of the @samp{exchange the diamond}
 they are doing at each instant.  They infer whether they have passed the
