@@ -11,8 +11,8 @@ computes the resulting setup and shows it to you.
    Several user interfaces are available.  They come in two general
 types, and the program name is different for these types.
 
-   Sd is the name of the program that uses menus and a "graphical" user
-interface.  Calls are selected by clicking with the mouse on the chosen
+   Sd is the name of the program that uses menus and a "graphical user
+interface".  Calls are selected by clicking with the mouse on the chosen
 menu item.  The principal version of Sd runs on Unix-like systems with
 the X Window System interface.  Sd is also available for Domain/OS on
 Apollo systems, and on the Macintosh.  It is not yet available for PC
@@ -26,7 +26,7 @@ Documentation
 =============
 
    The file `INSTALL' contains instructions for building and installing
-Sd and for formatting and printing its documentation.  If you ahve
+Sd and for formatting and printing its documentation.  If you have
 received the program in pre-built form, you shouldn't need to read it.
 
    The files `sd_doc.txt' and `sd_doc.ps' are this manual, in plain
@@ -48,7 +48,7 @@ Getting Sd or Sdtty
 valid for 1995).  If you want sources, or a different format instead,
 please say so.
 
-   To install the program from a floppy disk to a PC compatible, change
+   To install the program from a floppy disk to a PC-compatible, change
 to the desired directory, insert the disk, and type `A:INSTALL' or
 `B:INSTALL' as appropriate.
 

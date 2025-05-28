@@ -4,8 +4,8 @@
 @setfilename sd_doc.info
 @settitle Sd
 @c @subtitle A Square Dance Caller's Helper
-@set sd-version 30.84
-@set Time-stamp: Dec 18, 1994
+@set sd-version 30.87
+@set Time-stamp: Dec 29, 1994
 @set full-manual
 @c %**end of header
 @iftex
@@ -79,10 +79,10 @@ This is the summary table of contents:
 * Getting Started::             Getting started quickly with Sd
 * The Completing Reader for Sdtty:: The Completing Reader for Sdtty
 * Invoking Sd::                 Invoking Sd via Command Line
-* Macintosh Overview::          Overview of the Macintosh Version
 * Calling::                     Calling
 * Resolving and Searching::     Resolving and Searching
 * Misc Commands::               Miscellaneous Commands
+* Macintosh Overview::          Overview of the Macintosh Version
 * Terminal Interface::          Terminal Interface
 * Linguistic Idiosyncrasies::   Linguistic Idiosyncrasies
 * Call Notes::                  Call Notes
@@ -105,19 +105,6 @@ Invoking Sd via Command Line
 * Command-Line Options::        Command-Line Options
 * Abridgement::                 Abridgement
 
-Macintosh Overview
-
-* Mac Requirements::            Macintosh System Requirements
-* Initial Dialog::              The Initial Dialog
-* Mac Abridgement::             Abridgement
-* Creating Dictionaries::       Creating New Call Dictionaries
-* Preferences::                 Saving Preferences
-* Sequence Files::              Sequence Files
-* Log Files::                   Log Files
-* Sequence Window::             The Sequence Window
-* Call Window::                 The Call Window
-* Keyboard Input::              Keyboard Input
-
 Calling
 
 * Startup Screen::              The Startup Screen
@@ -130,7 +117,6 @@ Calling
 * Scrolling::                     the call menu scroll bar
 * Entering Concepts::           Entering Concepts
 * Call Modifications::          Call Modifications
-* Single/Cross/Left::           The Single, Cross, and Left Modifiers
 * Asymmetric Selectors::        How to Write Asymmetric Sequences
 
 Resolving and Searching
@@ -147,6 +133,20 @@ Miscellaneous Commands
 * Abort/Exit/Undo::             Abort, Exit, and Undo
 * Inserting Comments::          Inserting Comments
 * Keeping Pictures::            Keeping Pictures of the Setup
+* Changing Modes::              Changing Modes
+
+Macintosh Overview
+
+* Mac Requirements::            Macintosh System Requirements
+* Initial Dialog::              The Initial Dialog
+* Mac Abridgement::             Abridgement
+* Creating Dictionaries::       Creating New Call Dictionaries
+* Preferences::                 Saving Preferences
+* Sequence Files::              Sequence Files
+* Log Files::                   Log Files
+* Sequence Window::             The Sequence Window
+* Call Window::                 The Call Window
+* Keyboard Input::              Keyboard Input
 * Hiding Couple Numbers::       Hiding Couple Numbers on the Macintosh
 
 Terminal Interface
@@ -169,7 +169,6 @@ Call Notes
 
 Concept Notes
 
-* Gruesome::                    Gruesome
 * Divided::                     Divided
 * Concentric::                  Concentric
 * Two Calls::                   Two Calls in Succession
@@ -208,13 +207,16 @@ on the application icon, which looks like the square dance symbol (two
 overlapping squares).  An information window is displayed at startup;
 this window can be dismissed by clicking anywhere on it with the mouse.
 
-Program commands for actions such as automatic
-resolves and exiting the program can be found in the menu in the upper
+In addition to calls and concepts, there are program commands for actions
+such as automatic resolves, exiting the program, and other miscellaneous
+actions.  @xref{Resolving and Searching}.
+In @code{sd}, they are found in the menu in the upper
 left corner (or in pull-down menus on the Macintosh version).
+In @code{sdtty}, just type the name of the command.
 
 With some experimentation, you should be able to use the program without
-reading this document.  The following chapters cover using @code{Sd} in
-detail.
+reading this document.  The following chapters cover using @code{Sd} and
+@code{sdtty} in detail.
 
 @node The Completing Reader for Sdtty, Invoking Sd, Getting Started, Top
 @chapter The Completing Reader for Sdtty
@@ -223,14 +225,16 @@ detail.
 This means that you only need to type as much of the word or command as is
 required to be unambiguous.  Whenever you type a space, @code{sdtty} completes
 the word you just typed, if necessary and possible.  Whenever you type
-"return" (or "enter"), @code{sdtty} completes the entire line if necessary and possible.
+@key{<RET>} (or @key{<ENTER>}), @code{sdtty} completes the entire line
+if necessary and possible.
 
 For example, at mainstream, you can enter a swing thru by typing
 @samp{swing thru <RET>}.  When the space aftter @samp{swing} is typed,
 no completion is required.  When the @samp{<RET>} after @samp{thru} is typed,
 no completion is required either.  If you type @samp{sw thru <RET>} instead,
-@code{sdtty} completes the word @samp{swing}.  As soon as you type the space after
-@samp{sw}, @code{sdtty} prints @samp{ing} on the screen.  If you type @samp{sw th <RET>},
+@code{sdtty} completes the word @samp{swing}.  It does this by printing
+@samp{ing} on the screen as soon as you type the space after
+@samp{sw}.  If you type @samp{sw th <RET>},
 @code{sdtty} will complete both words.  It prints @samp{ing} as soon as you type the
 space, and it prints @samp{ru} as soon as you type the return.  In fact, you
 could just type @samp{sw <RET>}.  @code{Sdtty} completes the entire line, if necessary
@@ -247,30 +251,30 @@ type @kbd{?} (discussed below) to see what the problem is.
 With practice, you can get a reasonable feel for how much abbreviation you can
 get away with in a given context.
 
-Typing @key{Escape} (or @key{Alt Mode} on some keyboards) or @key{Tab} will
-complete the entire line, just like @key{RET}, but will not actually process
-the line.  If you like what you see, you can then press @key{RET} to execute
+Typing @code{<ESCAPE>} (or @code{<ALT MODE>} on some keyboards) or @code{<TAB>} will
+complete the entire line, just like @code{<RET>}, but will not actually process
+the line.  If you like what you see, you can then press @code{<RET>} to execute
 the call.
 
 At any time, you can type a question mark.  This will make @code{sdtty} print out
 all legal completions of the line that has been entered so far.  If what you
 have typed is unambiguous, that will consist of just one thing.  If you
-have typed nothing, it will ocnsist of every legal thing you could type---typically
+have typed nothing, it will consist of every legal thing you could type---typically
 that is every call, every concept, and every special command.
 
 The output from typing a question mark may be quite lengthy.  If it fills
 more than one screenful, @code{sdtty} will stop and display @samp{--More--} at the
 bottom of the screen.  Type a space to go on to the next screenful.  Type
-@key{Return} to see just one more line.  Type a backspace (or @key{Delete})
+@code{<RET>} to see just one more line.  Type a backspace (or @code{<DEL>})
 to stop.  When the output ends, either because @code{sdtty} printed everything or
 because you typed a backspace, the partially entered line will be redisplayed, just
 as it was before you typed the question mark.
 
 @code{Sdtty}'s completing reader is completely indifferent to the capitalization of
 what you type.  It caplitalizes its output according to its own notions of
-esthetics and ambiguity avaoidance.
+esthetics and ambiguity avoidance.
 
-@node Invoking Sd, Macintosh Overview, The Completing Reader for Sdtty, Top
+@node Invoking Sd, Calling, The Completing Reader for Sdtty, Top
 @chapter Invoking Sd via Command Line
 
 @display
@@ -425,7 +429,794 @@ flags.  The program has no tolerance for creative capitalization, stray
 blanks, or other variations.  Any line in the file that does not match a
 call in the menu is simply ignored.  The order of the lines is not important.
 
-@node Macintosh Overview, Calling, Invoking Sd, Top
+@node Calling, Resolving and Searching, Invoking Sd, Top
+@chapter Calling
+
+This chapter describes how to use the program in its normal mode to
+generate a sequence of calls of your choosing.
+
+@menu
+* Startup Screen::              The Startup Screen
+* Entering Calls::              Entering Calls
+* Entering Concepts::           Entering Concepts
+* Call Modifications::          Call Modifications
+* Asymmetric Selectors::        How to Write Asymmetric Sequences
+@end menu
+
+@node Startup Screen, Entering Calls,  , Calling
+@section The Startup Screen
+
+The startup menu is displayed when the program starts and after each
+sequence has been completed and written to a file.  In addition to the
+obvious program exit button, this permits you to select the starting
+operation.  The selections here, and almost everywhere else in the
+program, are made by moving the mouse until the cursor is over the
+chosen item, and pressing Mouse Button 1 (typically the left button).
+
+If you are using the Macintosh version of @code{sd}, the startup screen
+displays a set of buttons in the input pane of the sequence window.
+These buttons correspond to the startup menu commands described in this
+chapter.
+
+@menu
+* Heads/Sides Start::           starting with the heads or sides
+* 1P2P Lines::                  starting with 1P2P lines
+* Just As They Are::            starting with a squared set
+@end menu
+
+@node Heads/Sides Start, 1P2P Lines,  , Startup Screen
+@subsection Heads/Sides Start
+
+If you click on @code{heads start} or @code{sides start}, the sequence will begin
+with @samp{heads} or @samp{sides} and the first call.  Normally this means that the
+designated people will move into the center and do the first call while
+the others wait.  Subsequent calls will be directed to everyone.  For
+example, one might click on @code{heads start}, and then @code{star thru}, and
+then @code{double pass thru}, and so on.  You can also click on @code{heads start}
+or @code{sides start} followed by a call such as @i{split square thru} or @i{split
+dixie style to a wave}.  Use the @code{split} concept to get these.
+
+If you want to have the heads go into the middle and do several calls
+before the sides join in, as in @i{head ladies chain ; heads square thru 4},
+or @i{heads touch 1/4 ; walk and dodge}, you must click on @code{centers}
+before all calls after the initial one.  Typically, you won't need to read
+the card that way, but can rely on precise phrasing and inflection of your
+voice to express what you want.
+
+@node 1P2P Lines, Just As They Are, Heads/Sides Start, Startup Screen
+@subsection 1P2P Lines
+
+The @code{heads 1P2P} and @code{sides 1P2P} starting actions refer to caller jargon
+for a common starting maneuver, typified by @i{so-and-so lead right and
+circle up 4}.  You can read the card that way, or as @i{wheel thru and
+circle up 4}, or as @i{step right}, or as @i{bring us together}, or whatever
+improvisation you like.  The promenade distance printed at the end of the
+sequence will assume that you said @i{step right} or @i{lead right @r{(or @i{wheel
+thru})} and circle up 4}.
+
+Whether you consider 1P2P openings to be overused is up to you.
+
+@node Just As They Are,  , 1P2P Lines, Startup Screen
+@subsection Just As They Are
+
+The @code{just as they are} button starts the sequence on squared set spots,
+without having the heads or sides begin.  This is nearly useless, since
+the program doesn't know about the @i{all 4 couples} concept or about
+thars or alamo rings.  This shortcoming may be fixed in the future.
+
+In the Macintosh version, this button is labelled @code{Squared Set}.
+
+@node Entering Calls, Entering Concepts, Startup Screen, Calling
+@section Entering Calls
+
+The usual thing you do when writing a sequence is to select calls from
+the call menu, perhaps preceded by one or more concepts.  (Concepts are
+discussed in the next section.)  In @code{sd}, a call is selected by clicking
+on the desired menu item.  In @code{sdtty}, a call is selected by typing
+its name, followed by a @key{Return}.  The completing reader
+(@xref{The Completing Reader for Sdtty}) lets you abbreviate calls.
+
+A number of calls have limitations or quirks that you should be aware of.
+@xref{Call Notes}.
+
+@menu
+* Call Variations::             How to write variations on calls
+* Call Menus::                  call menus
+* Scrolling::                   The call menu scroll bar
+@end menu
+
+@node Call Variations, Call Menus,  , Entering Calls
+@subsection Call Variations
+
+There are a number of issues that make call entry less than completely
+straightforward.  These have to do with variations that calls have---directions
+(as in @code{quarter left}), numbers (as in @code{square thru 3} or @code{three quarter
+thru}), person designators (as in @code{sides kickoff}), subcalls (as in @code{clover
+and quarter thru} or @code{vertical tag your neighbor} or @code{shuttle rally} or
+@code{in roll motivate}), and modifiers (as in @code{strut left} or @code{trans cross
+chain reaction}).
+
+To list all possible variations in the menus would be unweildy for a variety
+of reasons.  Because of this, various methods are used to shorten the menus
+and to allow the user to specify the desired variation.  These methods will
+be discussed in detail presently, but in most cases what happens is the following:
+
+In @code{sd}, the menus list only the base calls with special keywords
+as in @code{quarter <DIRECTION>} or @code{square thru <N>}.  When you
+click on such a menu item, a popup menu appears listing the possible choices.
+
+In @code{sdtty}, the "menu" (that is, what you see if you type a question
+mark) also has keywords.  You can type the item just as shown, e.g.
+@code{quarter <DIRECTION>} or @code{square thru <N>} (you would actually type the
+angle brackets) and then answer the question that @code{sdtty} asks.  But there is
+an easier way---you can type what you want directly.  That is, just type
+@code{quarter left} or @code{square thru 3}.  If you want to see the choices,
+type @code{quarter <DIRECTION>} or whatever, and then type a question mark.
+
+@table @code
+@item Directions
+Calls that take a direction have the keyword @code{<DIRECTION>} in them in the
+menus, like @code{pass <DIRECTION>} or @code{spin a windmill, outsides <DIRECTION>}.
+
+When using @code{sd}, after you click on such a call, a popup will appear listing
+all possible directions.  Click on the one you want.  If you decide you don't
+want that call, just move the mouse away from the popup.  (On the Macintosh, click
+the @code{Cancel} button.)
+
+When using @code{sdtty}, you can either type @code{pass <DIRECTION>} literally,
+and then answer the question that the program will ask, or just type the actual call,
+for example, @code{pass in}.
+
+The menu lists all possible directions, including some that may not be possible
+in the given context.
+
+@item Numbers
+Calls that take a number have the keyword @code{<N>}, @code{<N/4>}, or @code{<Nth>}
+in them, like @code{eight chain <N>}, @code{invert the column <N/4>}, or
+@code{square thru, but on the <Nth> hand <ANYTHING>}.
+
+When using @code{sd}, a popup will appear listing the numbers from 1 to 8.  Click
+on the one you want.  If the keyword was @code{<N/4>}, click on the value of @code{N}.
+The program will turn it into @code{N/4} (or, if @code{N}=2, into @code{1/2}).
+If you decide you don't
+want that call, just move the mouse away from the popup.  (On the Macintosh, click
+the @code{Cancel} button.)
+
+When using @code{sdtty}, you can either type the keyword literally,
+and then answer the question, or just type the number just as you want it to
+appear in the call.  That is, you can type @code{invert the column <N/4>} and then
+@code{3}, or @code{invert the column 3/4}.  You can type @code{1/2} or
+@code{2/4}---the program will print it as @code{1/2} in all cases.  For @code{square
+thru but on the <Nth> hand}, you can type the number in @code{Nth} form,
+as in @code{square thru but on the 3rd hand}.  Of course, if you just type @code{3},
+the completing reader will finish it for you.
+
+Not all values of @code{N} will be meaningful for all calls.  For example, you
+can @code{eight chain 5}, but you can't @code{invert the column 5/4}.
+
+Some calls have the words @code{quarter}, @code{half}, or @code{three quarter}
+in their names.  Examples are @code{quarter thru}, @code{quarter the deucey},
+@code{quarter mix}, @code{quarter the alter}, and @code{quarter chain and circulate in}.
+These are listed in the Callerlab lists with the words spelled out, though
+individual preferences vary.  Some people prefer to write @code{1/4 thru} and
+@code{3/4 thru}.  @code{Sd} and @code{sdtty} list the call as @code{<N/4> thru}
+in the menu.  In @code{sd}, you click on that and then click on a number (only 1 and 3
+are legal, of course).  In @code{sdtty}, you can type @code{<N/4> thru} and then type
+1 or 3, or you can type the call directly, either in numbers or in words.  That is,
+you can type either @code{1/4 thru} or @code{quarter thru}.  No matter how you
+enter one of these calls, it will always be printed out in words, as in
+@code{three quarter thru} or @code{half chain and circulate in}.
+
+@item Person designators
+These work like the others in a straightforward way.  The calls appear in the menu
+with the @code{<ANYONE>} keyword, as in @code{patch the <ANYONE>}.  In @code{sd},
+you click on that and then make a selection from a popup menu.  In @code{sdtty},
+you can either type the @code{<ANYONE>} literally and then answer the question,
+or you can type in the desired call directly, as in @code{patch the sides}.
+
+The gender designators are @code{boys} and @code{girls}.  This is the way they
+appear in the Callerlab mainstream list.  The author does not take a position
+on whether the adult terms would be more reasonable words to use in any given context.
+You must use your own judgement in deciding what to say.
+
+Not all designators are legal in all cases, such as @code{leads run} from a grand
+wave.
+
+The program specifically refuses to recognize the meaning of the designators @code{centers}
+and @code{ends} while in a 1x8 setup (e.g. a grand wave).  This is because these terms
+can be ambiguous in such a setup.  If you want the centers of each 1x4, you must use
+the @code{EACH 1X4}, @code{EACH LINE}, or @code{EACH WAVE} concept in order to make the
+@code{centers} or @code{ends} designators work.  Of course, in many cases, other designators,
+such as @code{boys} or @code{girls} can identify the same people unambiguously.
+If you want to designate the 4 people in the center of the set, use @code{center 4}.
+@code{Outer pairs} specifies the others.
+
+@item Tagging Calls
+Calls that use tagging calls have the keyword @code{<ATC>} (for Any Tagging Call) in
+them, as in @code{<ATC> your neighbor} or @code{<ATC> chain thru and scatter reaction}.
+Specify these in the usual way.  In @code{sdtty} you can type the @code{<ATC>} directly
+or you can enter the complete call.
+
+At C3 and above, the tagging calls include the calls @code{revert <ATC>} and
+@code{reflected <ATC>} that make use of another tagging call.  In @code{sd}, you
+will be presented with another popup.  In @code{sdtty}, you can type in the
+entire call directly, as in @code{revert cross flip chain thru reactivate}.
+
+@item Subcalls
+Mandatory subcalls appear in the menu as the keyword @code{<ANYTHING>}, as
+in @code{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
+nice as for the keywords discussed previously.  It is not possible to type in the call
+just the way you want it to appear.  @i{You must literally type the <ANYTHING>}.
+That is, you type @code{clover and <ANYTHING>}.  Of course, because of the completing
+reader, you rarely need to type that much.  Just @code{clover a} is enough, for
+example.  In @code{sd}, click on the menu item in the usual way.  Either way,
+the program will prompt you for a subcall.  This can be any legal call, including
+concepts and modifiers.  Whatever you enter will appear in brackets, as in
+@code{clover and [TANDEM shazam]}.
+These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
+are just one of many types of modifications.  @xref{Call Modifications},
+for others.
+
+@item cross, left, magic, and interlocked concepts
+Some calls can use these concepts, but have the words appear in the call in a
+tricky way.  You can always enter the concept followed by the call in the usual
+way.  For example, in @code{sd}, you can click on @code{left} followed by
+@code{chase right}.  In @code{sdtty}, you can type in @code{left} and then
+@code{chase right}, on two separate lines.
+
+In addition, @code{sdtty} allows more natural text entry.  You can type in
+@code{chase left} directly.
+
+No matter how you entered it, the calls will be printed out with the words
+in the correct place.
+
+Other examples of this phenomenon are
+@example
+   @code{switch to a magic diamond}
+   @code{unwrap the interlocked diamonds}
+   @code{hang a left}
+   @code{scoot and cross ramble}
+   @code{trans cross reactivate}
+   @code{revert cross flip chain thru cross nuclear reaction}
+@end example
+
+The foregoing only applies to calls in which the word is an actual concept
+or modifier.  Some calls happen to have the word @code{cross} as part of
+their names.  Examples are:  @code{cross and wheel}, @code{cross and turn},
+@code{cross your neighbor}, and @code{crossfire}.  Such calls appear in the
+menu just as they are spelled.  Also, this only applies to cases in which the
+word order is actually transformed.  To get @code{magic diamond circulate},
+you must enter @code{magic} and then @code{diamond circulate} separately,
+because no transformation of word order takes place.
+@end table
+
+@node Call Menus, Scrolling, Call Variations, Entering Calls
+@subsection Call Menus
+
+In @code{sd}, the call menu is the long menu near the center of the screen.  There are
+actually 17 menus that can appear here, each tailored to the current
+setup.  For example, if the current setup is right-hand waves, a menu
+will appear that contains only those calls that the program believes
+might be legal from right-hand waves.  This determination is approximate
+but conservative---appearance on the menu does not necessarily mean it
+is legal, though absence from the menu means that the program is fairly
+certain that it can't be legal.  There is a @dfn{universal} menu that
+appears when the setup is not one of the common ones, or when anything
+complex is going on.  This contains every call that is in the database
+for the chosen level.
+
+The call menus are alphabetized in a way that ignores blanks and hyphens.
+Special keywords such as @code{<N>}, @code{<ANYONE>}, @code{<DIRECTION>},
+or @code{<ANYTHING>} are listed before letters.
+Hence, @code{<ANYONE> run} and @code{<ATC> your neighbor}
+will be found near the beginning of the menu.
+
+If you are using the Macintosh version of @code{sd}, the call menu
+is displayed as a utility window.  Calls are selected by double
+clicking.  In addition, calls can be entered by typing their name,
+as described in the next paragraph.
+
+@node Scrolling,  , Call Menus, Entering Calls
+@subsection Scrolling
+
+The call menu can be scrolled with the scroll bar to its left.  Move the
+mouse into the scroll bar area.  Clicking the left mouse button will scroll
+the window down over the menu by a percentage of the window's size that is
+equal to the percentage that the cursor is down from the top of the scroll
+bar.  Clicking the right mouse button will scroll the window up by the
+same amount.  Clicking the middle mouse button will move the window to a
+percentage down the menu that is equal to the percentage that the cursor
+is down from the top of the scroll bar.  If the mouse is moved while the
+middle mouse button is held down, the menu will scroll in real time.
+
+If you are using the Macintosh version of @code{sd}, the call window
+can be scrolled using the scroll bar at the right of the window.
+
+@node Entering Concepts, Call Modifications, Entering Calls, Calling
+@section Entering Concepts
+
+A call may be preceded by concepts, which modify the action of the call.
+These may be nested (@dfn{stacked}) to any reasonable depth.
+
+In @code{sdtty}, just type the concept you want.  The completing reader will
+operate in the usual way.  @i{You must type a <RET> after each concept,}
+even though the concept and the call that it modifies will appear
+on the same line in the finished text.
+
+In @code{sd}, click on the concept from a menu.  In a
+perhaps hopeless attempt to keep the concept menus from becoming too
+unwieldy, concepts have been organized into a general concept menu and
+several submenus organized by topics.  The main concept menu is in the
+lower left corner.  It supposedly contains all the extremely common
+concepts.  Buttons for the other concepts submenus appear above this
+menu.  Clicking on one of these buttons brings up the submenu.  If you
+don't see what you want on a concept submenu, move the mouse away.  Some
+concepts appear in more than one submenu---it doesn't matter which one
+you use.  The submenus are listed below.  With practice, you will know
+which submenu to use.
+
+@table @code
+@item phantom line/col concepts
+those that involve picking out virtual setups, that may include
+phantoms, from a real formation that is larger than eight people.
+Examples: @i{split phantom lines}, @i{triple lines working forward}.
+
+@item phantom box/dmd/qtag concepts
+The same, for boxes, diamonds, and generalized quarter-tags.
+Examples: @i{triple boxes}, @i{quadruple diamonds}, @i{triple
+1/4 tags working together}.
+
+@item couples/tandem concepts
+the obvious thing.
+
+@item distorted setup concepts
+those that involve picking out distorted virtual setups, without
+phantoms, by identifying real people out of a formation that is larger
+than eight people, or the phantom equivalent of same.  Examples:
+@i{parallelogram}, @i{stairstep lines}, @i{bigblock}.
+
+@item 4-person distorted concepts
+those that involve picking out 4-person virtual setups, without
+phantoms, by identifying real people, or the phantom equivalent of same.
+Examples: @i{trapezoid}, @i{once removed}, @i{jay}.
+
+@item miscellaneous concepts
+all others.  There are a lot of them.
+@end table
+
+When you click on any concept, the universal call menu replaces whatever
+special call menu may have been presented, since the set of legal calls
+becomes highly unpredictable.
+
+If you are using the Macintosh version of @code{sd}, concepts are
+displayed in the call window, following the calls.
+
+Some concepts require a numeric designator (e.g., @code{interrupt after the 3rd
+part}) or a people designator (e.g., @code{girls are stable}).  The handling
+is the same as for calls that require these.
+
+Some concepts require two calls (e.g., @code{checkpoint} and @code{interlace}).  After
+choosing such a concept, enter the first call, preceded by whatever concepts
+apply to it.  The program will then prompt you for the second call.
+A complex tree of concepts and calls can thus be constructed.
+
+The program recognizes the level at which concepts are legal, but lets you
+override this if you wish.  The @code{toggle concept levels} command toggles
+(turns on or off) the state of off-level concept permission.
+@xref{Changing Modes}.
+In the Macintosh program, use the @code{Allow Any Concept} command in the
+@code{Sequence} menu to enable or disable off-level concepts.
+When off-level concepts are enabled,
+their use will cause a warning to be inserted into the transcript.
+
+@node Call Modifications, Asymmetric Selectors, Entering Concepts, Calling
+@section Call Modifications
+
+Some calls can be modified in a natural way, such as @samp{in roll motivate}
+and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
+the diamond but replace the diamond circulate with explode the diamond}.
+To form such a call, you must first enable call modifications
+by clicking on @code{simple modifications} or @code{allow modifications}
+before choosing the call.
+
+There are two levels of this feature.  If you click on @code{simple
+modifications}, you get the simple version, which only prompts
+you for @dfn{natural} modifications.  Natural modifications have been somewhat
+arbitrarily defined as those for which there is an accepted way of fitting
+the words in without using the phrase ``but replace the <whatever> with
+<whatever>.''  If you click on @code{allow modifications}, you allow
+a potentially large number of modification possibilities, sometimes several
+in the same call.
+
+In most cases, @code{simple modifications} is probably the right thing.
+
+If you are using the Macintosh version, call modification is enabled
+using the @code{Modify Next Call} submenu of the @code{Sequence} menu.
+Three commands are provided, which either disable call modification,
+enable simple modifications, or enable all modifications.
+
+When either level of modifications is selected, the line at the top of
+the text transcript area indicates this.  Also, the universal call menu
+is chosen whenever modifications are enabled, since the possibilities are
+unpredictable.
+
+When you click on a call for which modifications are possible, a popup
+will appear saying something like @code{The box circulate can be
+replaced.  Do you want to replace it?}  If you want to replace the
+designated call, click in the active area of the popup; otherwise, move
+the mouse away.  (On the Macintosh, click either the @code{Replace} or
+the @code{Don't Replace} button.)  If you indicate that you want to
+replace the call, you will then be prompted for the replacement call.
+Enter it, along with any concepts.  In some cases you may be asked
+repeatedly about various modifications.  For example, in @i{motivate},
+you can replace the initial @i{circulate}, and you can turn the star a
+different amount.  You may select any or all of these modifications.
+
+Note:  When complex modifications are involved, the program may ask for them
+in an order that seems unnatural.  This is because it asks in the order that
+it executes the call internally, which may not be the same as the order in which
+the words are spoken.  Do not be alarmed.  Observe the popup titles and
+prompts carefully.  The final result should come out in the correct order.
+
+For both these optional modifications and the mandatory subcalls discussed
+earlier (e.g., @code{clover and <anything>}), the program attempts to show
+unambiguously how everything is structured, by putting subcalls and their
+accompanying concepts in square brackets.  It also attempts to put
+natural modifications in their natural place in the phrase.  In complex
+cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
+[2/3 recycle] the difference] cover up} things may be quite difficult.
+How (and whether) you choose to read such a card is up to you.
+
+@node Asymmetric Selectors,  , Call Modifications, Calling
+@section Asymmetric Selectors
+
+The people selector popup contains various asymmetric selectors such as
+@code{near line} and @code{far box}.  You can use these selectors with
+the @code{so-and-so do your part} concept to call @i{near column
+pass thru}, etc.  The resultant setup must be reasonable---shape-changers
+on one side of the set may lead to problems.
+Most calls have not been checked for
+robustness in the presence of asymmetrical setups.  Use this with care!
+The resolver checks all eight people, so it should work.
+If you have not restored symmetry, resolves may be extraordinarily difficult
+to find.
+
+
+@node Resolving and Searching, Misc Commands, Calling, Top
+@chapter Resolving and Searching
+
+This chapter describes how to have the program find calls for you to
+accomplish various goals.
+
+@menu
+* Resolving::                   Resolving
+* Normalize::                   Normalizing the Setup
+* Pick Random Call::            Letting the program choose a random call
+* Reconcile::                   The @code{Reconcile} operation.
+@end menu
+
+@node Resolving, Normalize,  , Resolving and Searching
+@section Resolving
+
+Whenever the setup is in a resolved state, whether intentionally or
+accidentally, the program indicates that fact at the bottom of the
+transcript area.
+The program looks for @i{right and left grand}, @i{left allemande},
+@i{promenade}, @i{single file promenade}, and @i{circle left/right}
+getouts from a variety of setups.  If the sequence needs an
+@i{extend}, @i{slip the clutch}, @i{circulate}, @i{pass thru}, @i{trade by},
+@i{cross by}, or @i{dixie grand}
+first, the program reports that too.
+
+Whenever the @samp{resolve} message appears, you can end the sequence and
+write it to a file by selecting @code{end this sequence}.
+In @code{sd}, the button for this is in the group in the upper left
+portion of the screen.  In @code{sdtty}, simply type the command, with
+the usual completion mechanism.
+If you are using the Macintosh version, you can save the sequence to
+a file at any time, whether or not it is resolved, using the @code{Save}
+or @code{Save As} commands.
+
+There are
+at least three ways to resolve a sequence: you can wander into a resolve
+by accident, you can @dfn{sight resolve} the square, entering the calls
+that you want, or you can use the @code{resolve} command.  This command
+adds the necessary calls to the sequence, exactly as if you had entered
+them.
+
+When you select @code{resolve}, the program goes into a special mode in
+which it searches for resolutions, saves them, and lets you look through
+them and pick one that you like.
+A resolution is a sequence of up to three calls
+that leads to a resolved state.  While the program is in resolve mode,
+the call menu is replaced by a special menu of options, along with
+information about the current resolution.  That information tells how
+many resolutions are currently stored and which one is currently shown.
+When you select @code{resolve}, the program finds the first resolution and
+displays it, showing information @samp{1 out of 1}, which means that it
+has one resolution stored, and resolution number one is currently displayed.
+The transcript area shows the effect of that resolution.
+
+You can select @code{find another} to search for another resolution and add
+it to its stored list.  When the list has more than one resolution in it,
+selecting on @code{go to previous} and @code{go to next} will move around in its
+list of previously found resolutions and show whichever one you want.
+In this way, you can search
+for a better resolution than the one you already have, but go back to
+the earlier one if no better one is forthcoming.
+
+Selecting @code{accept} will leave resolve mode, causing the current
+resolution to be added to the sequence exactly as though you had
+entered those calls manually.
+
+Selecting @code{abort the search} (@code{Cancel} in the Macintosh
+version) will throw away all of the saved resolutions and leave resolve
+mode, but will not destroy the sequence.  The sequence will be left just
+as it was before @code{resolve} was selected.
+
+Selecting anything else, such as @code{exit} or @code{end this sequence},
+is equivalent to @code{accept} followed by whatever that action
+is.  So, for example, you can select @code{end this sequence} as soon as
+you see a resolution that you like.
+
+When using @code{sdtty}, these special commands are typed into the completing reader
+in the usual way.  To make it more convenient to enter them, the command names
+have been chosen to be unambiguous from just one or two letters.  So, for example,
+@code{p} means @code{previous}, @code{n} means @code{next}, and @code{f}
+means @code{find another}.
+
+If one or more concepts have been entered when you select @code{resolve}, the
+program will search only for resolutions whose first call starts with those
+concepts.  So, for example, selecting @code{once removed} and then
+@code{resolve} might get you this resolution:
+
+@example
+   ONCE REMOVED reverse the pass
+   linear flow
+   right and left grand  (7/8 promenade)
+@end example
+
+The program searches for resolutions by using a random number generator to
+generate up to 5000 random sequences, occasionally inserting concepts.
+It biases the search in favor of short sequences (one call) rather than
+long ones (three calls) and against resolutions that require @i{all 8
+circulate}, @i{pass thru}, or @i{trade by} at the end.
+If, after 5000 attempts, no resolution is found, the @code{find another}
+operation fails.  (This tends to happen if you try to resolve out of an
+hourglass at Mainstream.)  You can select @code{find another} again to make
+another 5000 attempts if you wish.
+
+@i{Remember that the @code{resolve} operation by itself does not write
+the sequence to a file.}  You will not be able to print a sequence until
+it has been written to a file.  You must give the @code{end this sequence}
+command to write out the sequence.
+
+@node Normalize, Pick Random Call, Resolving, Resolving and Searching
+@section Normalizing the setup
+
+Selecting @code{normalize} invokes an operation very similar to the resolver,
+except that it searches for sequences of up to three calls that normalize
+various matrices, such as 4x4, into a normal 8-person setup.  It uses a variety
+of phantom-like concepts to do its work.
+
+Be aware that the phantom-like concepts that this command uses are not
+the only ways to get out of large matrix setups.
+There are a number of calls,
+like @i{press},
+@i{truck}, @i{loop}, @i{squeeze}, @i{Z axle}, and @i{finish a long trip}
+that are also useful.
+The @code{normalize} operation does not search for such things.  It is only
+intended to search for things that might not be obvious.
+
+If you have selected @code{toggle concept levels},
+the @code{normalize} command may
+make use of concepts that are not legal at the chosen level.  This is sometimes
+useful in emergencies.
+
+@node Pick Random Call, Reconcile, Normalize, Resolving and Searching
+@section Letting the program pick a random call
+
+Selecting @code{pick random call} invokes an operation very similar to the resolver,
+except that it searches for any legal single call.  While this may sound like
+a fairly pointless operation, remember that you can use this while one or
+more concepts are already entered, in which case it will search for legal calls
+that involve those concepts.  Hence, this operation is useful for finding
+clever uses of difficult concepts such as @i{checkpoint},
+@i{interlace}, or @i{on your own}.
+
+@node Reconcile,  , Pick Random Call, Resolving and Searching
+@section The @code{Reconcile} operation
+
+Selecting @code{reconcile} invokes an operation like resolving, but it
+puts the generated calls someplace other than at the end of the
+sequence.  This is useful if you have a clever getout at the end of the
+sequence, and you want it to be the resolve, but people don't have their
+partners and corners.  This lets you retroactively modify the sequence
+so that the clever getout will work.
+
+Note first that this operation may only be invoked when the setup is
+left-handed two-faced lines, right-handed waves, or left-handed waves,
+in which case it assumes you want a @i{promenade}, @i{right and left grand}, or
+@i{left allemande} respectively.  The program must know which getout type you
+want.  If the setup is an 8-chain, it can't tell.  In that case, either
+do a @code{touch} or a @code{left touch}, to tell the program that you really
+want a @i{right and left grand} or @i{allemande left}, respectively.
+Then, after the reconcile operation is complete, you can erase that extra call.
+
+The reconcile operation is very similar in behavior to resolve, except
+that the program needs to know the insertion point.  Rather than
+searching for the first resolve as soon as you enter the mode, the
+reconcile operation lets you set the insertion point before searching.
+Select @code{raise insertion point} or @code{lower insertion point} to
+set it.  A dotted line will be displayed showing where in the sequence
+the generated calls will be placed.  When this is in the right place,
+select @code{find another} to find the first reconcile.  You can
+change the insertion point at any time.
+
+If you are using the Macintosh version, you change the insertion point
+using a utility window labelled @code{reconcile point} that appears
+after you perform the @code{Resolve} command.  Simply drag the dotted
+line to the place in the sequence where you want the generated calls to
+be inserted.
+
+Reconciles are extremely difficult to find---much harder than resolves.
+To avoid frustration, make the insertion point be at a place where the
+setup is very simple and a large number of calls are legal.  We recommend
+making the insertion point be at a place where the setup is in waves.
+Remember that, if the insertion point is at an hourglass, the program
+has to find a random sequence of up to three calls that goes from an hourglass
+to another hourglass while miraculously performing the required
+permutation.
+
+Avoid using reconcile when a gender-dependent or head/side-dependent
+call lies between the insertion point and the end of the sequence.  The
+program checks every reconcile by re-executing all calls from the
+insertion point to the end and verifying that everything is exactly as
+it was except for the permutation of the people.  For example, if the
+call @samp{heads kickoff} occurs after the insertion point, and a
+potential reconcile changes heads and sides, it will not be offered.
+For gender-dependent calls the situation is a little better: if, at the
+end of the sequence, the boys are in the center and the girls on the end
+before doing the reconcile, you know that any inserted sequence will
+have to be gender-preserving anyway, so calls like @samp{star thru} and
+@samp{boys kickoff} will be okay.
+
+@node Misc Commands, Macintosh Overview, Resolving and Searching, Top
+@chapter Miscellaneous Commands
+
+This section describes commands that are not concerned with generating
+sequences.
+
+@menu
+* Save Sequence::               Saving the Sequence
+* Change Output File::          Changing the Output File
+* Abort/Exit/Undo::             Abort, Exit, and Undo
+* Inserting Comments::          Inserting Comments
+* Keeping Pictures::            Keeping Pictures of the Setup
+* Changing Modes::              Changing Modes
+@end menu
+
+@node Save Sequence, Change Output File,  , Misc Commands
+@section Saving the Sequence
+
+At any time when the sequence is resolved (for example, after a successful
+use of the @code{resolve} operation), you can select @code{end this sequence}.
+This will append the current sequence to the current output file, and then
+go back to the startup screen.  You will be given an opportunity to enter
+a line of text to be used as a subtitle, for example ``very hard interlace''
+or ``stupid biggie.''  The written sequence will also be annotated with the
+level, the current date and time, and the version numbers of the program and
+database.
+
+Until you have done the @code{end this sequence} operation, the sequence is not
+written to disk and you cannot start writing a new sequence.  Just
+resolving isn't enough.
+
+If you are using the Macintosh version, files are handled differently.
+@xref{Sequence Files}. To specify a label to be used as a subtitle,
+use the @code{Label} command in the @code{Sequence} menu.
+
+@node Change Output File, Abort/Exit/Undo, Save Sequence, Misc Commands
+@section Changing the Output File
+
+You can change the name of the file to which the program writes its
+output by selecting the @code{Change output file} command.  A popup
+will appear, prompting you for a new file name.  This action will become
+effective the next time a sequence is written out.  Sequences previously
+written will stay under their old name.
+
+If you are using the Macintosh version, files are handled differently.
+@xref{Sequence Files}.
+
+@node Abort/Exit/Undo, Inserting Comments, Change Output File, Misc Commands
+@section @code{Abort}, @code{Exit}, and @code{Undo}
+
+If you select the @code{exit} command, the program will exit.  If a
+sequence is in progress, the program will ask for confirmation first.
+(Remember that a sequence is not finished until the @code{end this
+sequence} command has been given.)
+In @code{sdtty} with the X Window System, using your window manager
+to send a @code{Delete Window} message to the
+program is equivalent to clicking on the @code{exit} button.  This is
+what normally happens when you double-click the special control button in the
+upper left corner of the @code{sd} window.
+
+If you select the @code{abort} command, the program will abort the sequence
+but not exit.  It will go back to the startup screen to allow you to
+start another sequence.  It will ask for confirmation first.
+
+If you are using the Macintosh version, you end a sequence and start a
+new one using the @code{End This Sequence} command in the
+@code{Sequence} menu.
+
+If you select the @code{undo} command while no call is partially entered,
+that is, while no concepts have been entered, the program will erase
+the last complete call, with all of its concepts.  If one or more
+concepts have been entered, only the last concept will be erased.
+
+@node Inserting Comments, Keeping Pictures, Abort/Exit/Undo, Misc Commands
+@section Inserting Comments
+
+You can insert arbitrary text strings into the sequence transcript in the
+form of @i{comments}.  This is useful for things that you may want to say
+to help the dancers, such as ``side boys be careful---go to your left.''
+Also, if you want to call something that the program can't do, so you have
+to trick the program into doing it by means of several other calls, it is useful
+to enter a comment saying what you originally wanted.  This can guide you
+when editing the transcript file.
+
+To enter a comment, select @code{insert a comment}.  In @code{sd}, a popup
+will appear into which you may enter the text.  In @code{sdtty}, simply type
+the comment text on the next line.  The comment will be enclosed in curly braces
+in the transcript.
+
+A comment may be entered in front of any concept or call, and goes into
+the transcript exactly where it was entered.  Because of the way the program
+assembles mouse-clicks into transcript lines, it is not possible to enter
+a comment at the end of a line.
+
+@node Keeping Pictures, Changing Modes, Inserting Comments, Misc Commands
+@section Keeping Pictures
+
+The program shows pictures on the screen for the current position
+and the position just before the last call.  Normally, those pictures
+will not appear in the sequence written to a file.  If you want the
+current position to have its picture written in a file (say, because the
+sequence is very difficult and you believe it may be necessary to say
+something helpful then like ``check a parallelogram with boys in the center
+box'') click on @code{keep picture}.
+
+If you are using the Macintosh version, the picture stored in a sequence
+file or log file uses alphanumeric characters, even if the sequence
+window displays graphical symbols.  Similarly, if you copy text from the
+sequence window, the copied text will use alphanumeric characters for
+pictures.  However, if you have an appropriate symbol font, you can
+recreate the pictures using graphical symbols by using the @code{Copy
+Special Font} command in the @code{Edit} menu.  This command is like the
+@code{Copy} command except that pictures are represented using encoded
+text, where each graphical symbol is represented by a single ASCII
+character.
+
+@node Changing Modes, , Keeping Pictures, Misc Commands
+@section Changing Modes
+
+There are two commands that change some aspect of the way @code{sd}
+or @code{sdtty} run.  The two commands are @code{toggle concept levels}
+and @code{toggle active phantoms}.  Normally, both of these are off.
+You may want to turn one or both of them on for your own personal
+preference, or for some special reason.  These commands "toggle" their
+respective modes.  That is, they turn the mode on if it was off, and
+off if it was on.  The current state of the modes is always displayed
+in the input prompt in @code{sdtty}, or the mode line in the upper
+right corner in @code{sd}.
+
+The @code{toggle concept levels} command changes the legality of concepts
+that are not on the specified calling level.  @xref{Entering Concepts}.
+
+The @code{toggle active phantoms} command changes the persistence of
+phantoms during certain calls.  @xref{Assume Waves}.
+
+@node Macintosh Overview, Terminal Interface, Misc Commands, Top
 @chapter Overview of the Macintosh Version
 
 The Macintosh version of @code{sd} supports a graphical user interface
@@ -455,6 +1246,7 @@ display of available options.
 * Sequence Window::             The Sequence Window
 * Call Window::                 The Call Window
 * Keyboard Input::              Keyboard Input
+* Hiding Couple Numbers::       Hiding Couple Numbers on the Macintosh
 @end menu
 
 @node Mac Requirements, Initial Dialog,  , Macintosh Overview
@@ -669,7 +1461,7 @@ and the calling level.  Although normally validation is quite fast, it
 is not fast enough to want to do it automatically after every call.
 
 
-@node Keyboard Input,  , Call Window, Macintosh Overview
+@node Keyboard Input, Hiding Couple Numbers, Call Window, Macintosh Overview
 @section Keyboard Input
 
 When working on a call sequence, you can enter calls and concepts using
@@ -689,765 +1481,7 @@ the level is mainstream, you could type just @code{sw th} and
 @key{Return} is enough.  Typing a question mark (@key{?}) is equivalent
 to clicking on the @code{Validate} button.
 
-@node Calling, Resolving and Searching, Macintosh Overview, Top
-@chapter Calling
-
-This chapter describes how to use the program in its normal mode to
-generate a sequence of calls of your choosing.
-
-@menu
-* Startup Screen::              The Startup Screen
-* Entering Calls::              Entering Calls
-* Entering Concepts::           Entering Concepts
-* Call Modifications::          Call Modifications
-* Single/Cross/Left::           The Single, Cross, and Left Modifiers
-* Asymmetric Selectors::        How to Write Asymmetric Sequences
-@end menu
-
-@node Startup Screen, Entering Calls,  , Calling
-@section The Startup Screen
-
-The startup menu is displayed when the program starts and after each
-sequence has been completed and written to a file.  In addition to the
-obvious program exit button, this permits you to select the starting
-operation.  The selections here, and almost everywhere else in the
-program, are made by moving the mouse until the cursor is over the
-chosen item, and pressing Mouse Button 1 (typically the left button).
-
-If you are using the Macintosh version of @code{sd}, the startup screen
-displays a set of buttons in the input pane of the sequence window.
-These buttons correspond to the startup menu commands described in this
-chapter.
-
-@menu
-* Heads/Sides Start::           starting with the heads or sides
-* 1P2P Lines::                  starting with 1P2P lines
-* Just As They Are::            starting with a squared set
-@end menu
-
-@node Heads/Sides Start, 1P2P Lines,  , Startup Screen
-@subsection Heads/Sides Start
-
-If you click on @code{heads start} or @code{sides start}, the sequence will begin
-with @samp{heads} or @samp{sides} and the first call.  Normally this means that the
-designated people will move into the center and do the first call while
-the others wait.  Subsequent calls will be directed to everyone.  For
-example, one might click on @code{heads start}, and then @code{star thru}, and
-then @code{double pass thru}, and so on.  You can also click on @code{heads start}
-or @code{sides start} followed by a call such as @i{split square thru} or @i{split
-dixie style to a wave}.  Use the @code{split} concept to get these.
-
-If you want to have the heads go into the middle and do several calls
-before the sides join in, as in @i{head ladies chain ; heads square thru 4},
-or @i{heads touch 1/4 ; walk and dodge}, you must click on @code{centers}
-before all calls after the initial one.  Whether you actually read the card
-that way while calling is up to you.
-
-@node 1P2P Lines, Just As They Are, Heads/Sides Start, Startup Screen
-@subsection 1P2P Lines
-
-The @code{heads 1P2P} and @code{sides 1P2P} starting actions refer to caller jargon
-for a common starting maneuver, typified by @i{so-and-so lead right and
-circle up 4}.  You can read the card that way, or as @i{wheel thru and
-circle up 4}, or as @i{step right}, or as @i{bring us together}, or whatever
-improvisation you like.  The promenade distance printed at the end of the
-sequence will assume that you said @i{step right} or @i{lead right @r{(or @i{wheel
-thru})} and circle up 4}.
-
-Whether you consider 1P2P openings to be overused is up to you.
-
-@node Just As They Are,  , 1P2P Lines, Startup Screen
-@subsection Just As They Are
-
-The @code{just as they are} button starts the sequence on squared set spots,
-without having the heads or sides begin.  This is nearly useless, since
-the program doesn't know about the @i{all 4 couples} concept or about
-thars or alamo rings.  This shortcoming may be fixed in the future.
-
-In the Macintosh version, this button is labelled @code{Squared Set}.
-
-@node Entering Calls, Entering Concepts, Startup Screen, Calling
-@section Entering Calls
-
-The usual thing you do when writing a sequence is to select calls from
-the call menu, perhaps preceded by one or more concepts.  (Concepts are
-discussed in the next section.)  In @code{sd}, a call is selected by clicking
-on the desired menu item.  In @code{sdtty}, a call is selected by typing
-its name, followed by a @key{Return}.  The completing reader
-(@xref{The Completing Reader for Sdtty}) lets you abbreviate calls.
-
-A number of calls have limitations or quirks that you should be aware of.
-@xref{Call Notes}.
-
-@menu
-* Call Variations::             How to write variations on calls
-* Call Menus::                  call menus
-* Scrolling::                   The call menu scroll bar
-@end menu
-
-@node Call Variations, Call Menus,  , Entering Calls
-@subsection Call Variations
-
-There are a number of issues that make call entry less than completely
-straightforward.  These have to do with variations that calls have---directions
-(as in @samp{quarter left}), numbers (as in @samp{square thru 3} or @samp{three quarter
-thru}), person designators (as in @samp{sides kickoff}), subcalls (as in @samp{clover
-and quarter thru} or @samp{vertical tag your neighbor} or @samp{shuttle rally} or
-@samp{in roll motivate}), and modifiers (as in @samp{strut left} or @samp{trans cross
-chain reaction}).
-
-To list all possible variations in the menus would be unweildy for a variety
-of reasons.  Because of this, various methods are used to shorten the menus
-and to allow the user to specify the desired variation.  These methods will
-be discussed in detail presently, but in most cases what happens is the following:
-
-In @code{sd}, the menus list only the base calls with special keywords
-as in @samp{quarter <DIRECTION>} or @samp{square thru <N>}.  When you
-click on such a menu item, a popup menu appears listing the possible choices.
-
-In @code{sdtty}, the "menu" (that is, what you see if you type a question
-mark) also has keywords.  You can type the item just as shown, e.g.
-@samp{quarter <DIRECTION>} or @samp{square thru <N>} (you would actually type the
-angle brackets) and then answer the question that @code{sdtty} asks.  But there is
-an easier way---you can type what you want directly.  That is, just type
-@samp{quarter left} or @samp{square thru 3}.  If you want to see the choices,
-type @samp{quarter <DIRECTION>} or whatever, and then type a question mark.
-
-@table @code
-@item Directions
-Calls that take a direction have the keyword @samp{<DIRECTION>} in them in the
-menus, like @samp{pass <DIRECTION>} or @samp{spin a windmill, outsides <DIRECTION>}.
-
-When using @code{sd}, after you click on such a call, a popup will appear listing
-all possible directions.  Click on the one you want.  If you decide you don't
-want that call, just move the mouse away from the popup.  (On the Macintosh, click
-the @code{Cancel} button.)
-
-When using @code{sdtty}, you can either type @samp{pass <DIRECTION>} literally,
-and then answer the question that the program will ask, or just type the actual call,
-for example, @samp{pass in}.
-
-The menu lists all possible directions, including some that may not be possible
-in the given context.
-
-@item Numbers
-Calls that take a number have the keyword @samp{<N>}, @samp{<N/4>}, or @samp{<Nth>}
-in them, like @samp{eight chain <N>}, @samp{invert the column <N/4>}, or
-@samp{square thru, but on the <Nth> hand <ANYTHING>}.
-
-When using @code{sd}, a popup will appear listing the numbers from 1 to 8.  Click
-on the one you want.  If the keyword was @samp{<N/4>}, click on the value of @samp{N}.
-The program will turn it into @samp{N/4} (or, if @samp{N}=2, into @samp{1/2}).
-If you decide you don't
-want that call, just move the mouse away from the popup.  (On the Macintosh, click
-the @code{Cancel} button.)
-
-When using @code{sdtty}, you can either type the keyword literally,
-and then answer the question, or just type the number just as you want it to
-appear in the call.  That is, you can type @samp{invert the column <N/4>} and then
-@samp{3}, or @samp{invert the column 3/4}.  You can type @samp{1/2} or
-@samp{2/4}---the program will print it as @samp{1/2} in all cases.  For @samp{square
-thru but on the <Nth> hand}, you can type the number in @samp{Nth} form,
-as in @samp{square thru but on the 3rd hand}.  Of course, if you just type @samp{3},
-the completing reader will finish it for you.
-
-Not all values of @samp{N} will be meaningful for all calls.  For example, you
-can @samp{eight chain 5}, but you can't @samp{invert the column 5/4}.
-
-Some calls have the words @samp{quarter}, @samp{half}, or @samp{three quarter}
-in their names.  Examples are @samp{quarter thru}, @samp{quarter the deucey},
-@samp{quarter mix}, @samp{quarter the alter}, and @samp{quarter chain and circulate in}.
-These are listed in the Callerlab lists with the words spelled out, though the issue is
-not without controversy.  Some people prefer to write @samp{1/4 thru} and
-@samp{3/4 thru}.  @code{Sd} and @code{sdtty} list the call as @samp{<N/4> thru}
-in the menu.  In @code{sd}, you click on that and then click on a number (only 1 and 3
-are legal, of course).  In @code{sdtty}, you can type @samp{<N/4> thru} and then type
-1 or 3, or you can type the call directly, either in numbers or in words.  That is,
-you can type either @samp{1/4 thru} or @samp{quarter thru}.  No matter how you
-enter one of these calls, it will always be printed out in words, as in
-@samp{three quarter thru} or @samp{half chain and circulate in}.
-
-@item Person designators
-These work like the others in a straightforward way.  The calls appear in the menu
-with the @samp{<ANYONE>} keyword, as in @samp{patch the <ANYONE>}.  In @code{sd},
-you click on that and then make a selection from a popup menu.  In @code{sdtty},
-you can either type the @samp{<ANYONE>} literally and then answer the question,
-or you can type in the desired call directly, as in @samp{patch the sides}.
-
-The gender designators are @samp{boys} and @samp{girls}.  This is the way they
-appear in the Callerlab mainstream list.  The author does not take a position
-on whether the adult terms would be more reasonable words to use in any given context.
-You must use your own judgement in deciding what to say.
-
-Not all designators are legal in all cases, such as @samp{leads run} from a grand
-wave.
-
-The program specifically refuses to recognize the meaning of the word @samp{centers}
-and @samp{ends} while in a 1x8 setup (e.g. a grand wave).  This is because these terms
-can be ambiguous in such a setup.  If you want the centers of each 1x4, you must use
-the @samp{EACH 1X4} or @samp{EACH WAVE} concept in order to make the @samp{centers}
-or @samp{ends} designators work.  Of course, in many cases, other designators,
-such as @samp{boys} or @samp{girls} can identify the same people unambiguously.
-If you want the 4 people in the center of the set, use the @samp{center 4}
-designator.  The @samp{outer pairs} designator specifies the others.
-
-@item Tagging Calls
-Calls that use tagging calls have the keyword @samp{<ATC>} (for Any Tagging Call) in
-them, as in @samp{<ATC> your neighbor} or @samp{<ATC> chain thru and scatter reaction}.
-Specify these in the usual way.  In @code{sdtty} you can type the @samp{<ATC>} directly
-or you can enter the complete call.
-
-At C3 and above, the tagging calls include the calls @samp{revert <ATC>} and
-@samp{reflected <ATC>} that make use of another tagging call.  In @code{sd}, you
-will be presented with another popup.  In @code{sdtty}, you can type in the
-entire call directly, as in @samp{revert cross flip chain thru reactivate}.
-
-@item Subcalls
-Mandatory subcalls appear in the menu as the keyword @samp{<ANYTHING>}, as
-in @samp{clover and <ANYTHING>}.  The handling of these in @code{sdtty} is not as
-nice as for the keywords discussed previously.  It is not possible to type in the call
-just the way you want it to appear.  @i{You must literally type the <ANYTHING>}.
-That is, you type @samp{clover and <ANYTHING>}.  Of course, because of the completing
-reader, you rarely need to type that much.  Just @samp{clover a} is enough, for
-example.  In @code{sd}, click on the menu item in the usual way.  Either way,
-the program will prompt you for a subcall.  This can be any legal call, including
-concepts and modifiers.  Whatever you enter will appear in brackets, as in
-@samp{clover and [TANDEM shazam]}.
-These mandatory subcalls, with the keyword @code{<ANYTHING>} in the menu,
-are just one of many types of modifications.  @xref{Call Modifications},
-for others.
-@end table
-
-@node Call Menus, Scrolling, Call Variations, Entering Calls
-@subsection Call Menus
-
-The call menu is the long menu near the center of the screen.  There are
-actually 17 menus that can appear here, each tailored to the current
-setup.  For example, if the current setup is right-hand waves, a menu
-will appear that contains only those calls that the program believes
-might be legal from right-hand waves.  This determination is approximate
-but conservative---appearance on the menu does not necessarily mean it
-is legal, though absence from the menu means that the program is fairly
-certain that it can't be legal.  There is a @dfn{universal} menu that
-appears when the setup is not one of the common ones, or when anything
-complex is going on.  This contains every call that is in the database
-for the chosen level.
-
-The call menus are alphabetized in a way that ignores blanks and hyphens.
-Special keywords such as @samp{<N>}, @samp{<ANYONE>}, @samp{<DIRECTION>},
-or @samp{<ANYTHING>} are listed before letters.
-Hence, @samp{<ANYONE> run} and @samp{<ATC> your neighbor}
-will be found near the beginning of the menu.
-
-If you are using the Macintosh version of @code{sd}, the call menu
-is displayed as a utility window.  Calls are selected by double
-clicking.  In addition, calls can be entered by typing their name,
-as described in the next paragraph.
-
-@node Scrolling,  , Call Menus, Entering Calls
-@subsection Scrolling
-
-The call menu can be scrolled with the scroll bar to its left.  Move the
-mouse into the scroll bar area.  Clicking the left mouse button will scroll
-the window down over the menu by a percentage of the window's size that is
-equal to the percentage that the cursor is down from the top of the scroll
-bar.  Clicking the right mouse button will scroll the window up by the
-same amount.  Clicking the middle mouse button will move the window to a
-percentage down the menu that is equal to the percentage that the cursor
-is down from the top of the scroll bar.  If the mouse is moved while the
-middle mouse button is held down, the menu will scroll in real time.
-
-If you are using the Macintosh version of @code{sd}, the call window
-can be scrolled using the scroll bar at the right of the window.
-
-
-@node Entering Concepts, Call Modifications, Entering Calls, Calling
-@section Entering Concepts
-
-A call may be preceded by concepts, which modify the action of the call.
-These may be nested (@dfn{stacked}) to any reasonable depth.  In a
-perhaps hopeless attempt to keep the concept menus from becoming too
-unwieldy, concepts have been organized into a general concept menu and
-several submenus organized by topics.  The main concept menu is in the
-lower left corner.  It supposedly contains all the extremely common
-concepts.  Buttons for the other concepts submenus appear above this
-menu.  Clicking on one of these buttons brings up the submenu.  If you
-don't see what you want on a concept submenu, move the mouse away.  Some
-concepts appear in more than one submenu---it doesn't matter which one
-you use.  The submenus are listed below.  With practice, you will know
-which submenu to use.
-
-@table @code
-@item phantom line/col concepts
-those that involve picking out virtual setups, that may include
-phantoms, from a real formation that is larger than eight people.
-Examples: @i{split phantom lines}, @i{triple lines working forward}.
-
-@item phantom box/dmd/qtag concepts
-The same, for boxes, diamonds, and generalized quarter-tags.
-Examples: @i{triple boxes}, @i{quadruple diamonds}, @i{triple
-1/4 tags working together}.
-
-@item couples/tandem concepts
-the obvious thing.
-
-@item distorted setup concepts
-those that involve picking out distorted virtual setups, without
-phantoms, by identifying real people out of a formation that is larger
-than eight people, or the phantom equivalent of same.  Examples:
-@i{parallelogram}, @i{stairstep lines}, @i{bigblock}.
-
-@item 4-person distorted concepts
-those that involve picking out 4-person virtual setups, without
-phantoms, by identifying real people, or the phantom equivalent of same.
-Examples: @i{trapezoid}, @i{once removed}, @i{jay}.
-
-@item miscellaneous concepts
-all others.  There are a lot of them.
-@end table
-
-When you click on any concept, the universal call menu replaces whatever
-special call menu may have been presented, since the set of legal calls
-becomes highly unpredictable.
-
-If you are using the Macintosh version of @code{sd}, concepts are
-displayed in the call window, following the calls.
-
-When using keyboard input (@code{sdtty} or Macintosh), type the
-concept the same way that you would type a call.  The completing reader
-works the same way.  Type @key{Return} after the concept and
-then enter the call on the next line.  Even though a concept and the call
-to which it applies will appear on the same line in the final transcript,
-each concept and each call is entered on its own line.
-
-Some concepts require a numeric designator (e.g., @i{interrupt after the 3rd
-part}) or a people designator (e.g., @i{girls are stable}).  The handling
-is the same as for calls that require these.
-
-Some concepts require two calls (e.g., @i{checkpoint} and @i{interlace}).  After
-choosing such a concept, enter the first call, preceded by whatever concepts
-apply to it.  The program will then prompt you for the second call.
-A complex tree of concepts and calls can thus be constructed.
-
-The program recognizes the level at which concepts are legal, but lets you
-override this if you wish.  The @code{toggle concept levels} command toggles
-(turns on or off) the state of off-level concept permission.  In the menu-based
-program, click on the @code{toggle concept levels} button.
-In the text-based program, type the command @code{toggle concept levels}.
-In the Macintosh program, use the @code{Allow Any Concept} command in the
-@code{Sequence} menu to enable or disable off-level concepts.
-When off-level concepts are enabled,
-their use will cause a warning to be inserted into the transcript.
-
-
-@node Call Modifications, Single/Cross/Left, Entering Concepts, Calling
-@section Call Modifications
-
-Some calls can be modified in a natural way, such as @samp{in roll motivate}
-and @samp{vertical tag your neighbor}, or in unnatural ways, such as @samp{trade
-the diamond but replace the diamond circulate with explode the diamond}.
-To form such a call, you must first enable call modifications
-by clicking on @code{simple modifications} or @code{allow modifications}
-before choosing the call.
-
-There are two levels of this feature.  If you click on @code{simple
-modifications}, you get the simple version, which only prompts
-you for @dfn{natural} modifications.  Natural modifications have been somewhat
-arbitrarily defined as those for which there is an accepted way of fitting
-the words in without using the phrase ``but replace the <whatever> with
-<whatever>.''  If you click on @code{allow modifications}, you allow
-a potentially large number of modification possibilities, sometimes several
-in the same call.
-
-In most cases, @code{simple modifications} is probably the right thing.
-
-If you are using the Macintosh version, call modification is enabled
-using the @code{Modify Next Call} submenu of the @code{Sequence} menu.
-Three commands are provided, which either disable call modification,
-enable simple modifications, or enable all modifications.
-
-When either level of modifications is selected, the line at the top of
-the text transcript area indicates this.  Also, the universal call menu
-is chosen whenever modifications are enabled, since the possibilities are
-unpredictable.
-
-When you click on a call for which modifications are possible, a popup
-will appear saying something like @code{The box circulate can be
-replaced.  Do you want to replace it?}  If you want to replace the
-designated call, click in the active area of the popup; otherwise, move
-the mouse away.  (On the Macintosh, click either the @code{Replace} or
-the @code{Don't Replace} button.)  If you indicate that you want to
-replace the call, you will then be prompted for the replacement call.
-Enter it, along with any concepts.  In some cases you may be asked
-repeatedly about various modifications.  For example, in @i{motivate},
-you can replace the initial @i{circulate}, and you can turn the star a
-different amount.  You may select any or all of these modifications.
-
-Note:  When complex modifications are involved, the program may ask for them
-in an order that seems unnatural.  This is because it asks in the order that
-it executes the call internally, which may not be the same as the order in which
-the words are spoken.  Do not be alarmed.  Observe the popup titles and
-prompts carefully.  The final result should come out in the correct order.
-
-For both these optional modifications and the mandatory subcalls discussed
-earlier (e.g., @code{clover and <anything>}), the program attempts to show
-unambiguously how everything is structured, by putting subcalls and their
-accompanying concepts in square brackets.  It also attempts to put
-natural modifications in their natural place in the phrase.  In complex
-cases, like @samp{[CHECKPOINT LEFT catch [SINGLE CONCENTRIC snake] 3 BY
-[2/3 recycle] the difference] cover up} things may be quite difficult.
-How (and whether) you choose to read such a card is up to you.
-
-@node Single/Cross/Left, Asymmetric Selectors, Call Modifications, Calling
-@section The @i{Single,} @i{Cross,} and @i{Left} Modifiers
-
-There are a number of calls that contain these words in a nonstraightforward
-way.  In these cases, click on the concept before clicking on the call,
-even though the word order seems wrong.  The program will repair the
-word order.
-
-Examples:
-
-@table @i
-@item Chase left @r{or} left roll the
-Click on @code{LEFT} and then @code{chase right} or @code{right roll
-the}.
-
-@item Scoot and cross ramble, trans cross reactivate, @r{etc.}
-Click on @code{CROSS} and then the call.  The program will move the
-word @samp{cross} into the correct place in the transcript.
-For example, click on @code{CROSS} and then @code{scoot and ramble}
-to get @i{scoot and cross ramble}.  Click on @code{CROSS} and then
-@code{transactivate} to get @i{trans cross reactivate}.  Click on
-@code{MAGIC}, @code{CROSS} and then @code{trans nuclear reaction} to get
-@i{magic trans cross nuclear reaction}.
-@end table
-
-Not all calls that have the word @samp{cross} or @samp{single} in them are invoked
-by clicking on the concept.  For example, @samp{cross your neighbor},
-@samp{cross and turn}, @samp{cross and wheel}, and @samp{single circle
-to a wave} are simply in the database under their full names.
-
-
-@node Asymmetric Selectors,  , Single/Cross/Left, Calling
-@section Asymmetric Selectors
-
-The people selector popup contains various asymmetric selectors such as
-@code{near line} and @code{far box}.  You can use these selectors with
-the @code{so-and-so do your part} concept to call @i{near column
-pass thru}, etc.  The resultant setup must be reasonable---shape-changers
-on one side of the set may lead to problems.
-Most calls have not been checked for
-robustness in the presence of asymmetrical setups.  Use this with care!
-The resolver checks all eight people, so it should work.
-If you have not restored symmetry, resolves may be extraordinarily difficult
-to find.
-
-
-@node Resolving and Searching, Misc Commands, Calling, Top
-@chapter Resolving and Searching
-
-This chapter describes how to have the program find calls for you to
-accomplish various goals.
-
-@menu
-* Resolving::                   Resolving
-* Normalize::                   Normalizing the Setup
-* Pick Random Call::            Letting the program choose a random call
-* Reconcile::                   The @code{Reconcile} operation.
-@end menu
-
-@node Resolving, Normalize,  , Resolving and Searching
-@section Resolving
-
-Whenever the setup is in a resolved state, whether intentionally or
-accidentally, the program indicates that fact at the bottom of the
-transcript area.
-The program looks for @i{right and left grand} or
-@i{left allemande}
-from 8-chain,
-trade by, double pass thru, waves, crossed waves, 1/4 tag, and 3/4 tag.
-If the sequence needs an
-@i{extend}, @i{slip the clutch}, @i{circulate}, @i{pass thru}, @i{trade by},
-@i{cross by}, or @i{dixie grand}
-first, the program reports that too.
-The program will also find
-@i{promenade}, @i{reverse promenade},
-@i{single file promenade}, @i{reverse single file promenade},
-and @i{circle right (or left)}
-resolves.
-
-Whenever the @samp{resolve} message appears, you can end the sequence and
-write it to a file by clicking on @code{end this sequence}.
-If you are using the Macintosh version, you can save the sequence to
-a file at any time, whether or not it is resolved, using the @code{Save}
-or @code{Save As} commands.
-
-There are
-at least three ways to resolve a sequence: you can wander into a resolve
-by accident, you can @dfn{sight resolve} the square, entering the calls
-that you want, or you can use the @code{resolve} command.  This command
-adds the necessary calls to the sequence, exactly as if you had entered
-them.
-
-When you click on @code{resolve}, the program goes into a special mode in
-which it searches for resolves, saves them, and lets you look through
-them and pick one that you like.
-A resolve is a sequence of up to three calls
-that leads to a resolved state.  While the program is in resolve mode,
-the call menu is replaced by a special menu of options, along with
-information about the current resolve.  That information tells how
-many resolves are currently stored and which one is currently shown.
-When you click on @code{resolve}, the program finds the first resolve and
-displays it, showing information @samp{1 out of 1}, which means that it
-has one resolve stored, and resolve number one is currently displayed.
-The transcript area shows the effect of that resolve.
-
-You can click on @code{find another} to search for another resolve and add
-it to its stored list.  When the list has more than one resolve in it,
-clicking on @code{go to previous} and @code{go to next} will move around in its
-list of previously found resolves and show whichever one you want.
-In this way, you can search
-for a better resolve than the one you already have, but go back to
-the earlier one if no better one is forthcoming.
-
-Clicking on @code{accept} will leave resolve mode, causing the current
-resolve to be added to the sequence exactly as though you had
-entered those calls manually.  You can then @code{undo} individual calls if
-you wish.
-
-Clicking on @code{abort the search} (@code{Cancel} in the Macintosh
-version) will throw away all of the saved resolves and leave resolve
-mode, but will not destroy the sequence.  The sequence will be left just
-as it was before @code{resolve} was selected.
-
-Clicking on anything else, such as @code{exit}, @code{end this sequence}, or a
-concept, is equivalent to @code{accept} followed by whatever that action
-is.  So, for example, you can click on @code{end this sequence} as soon as
-you see a resolve that you like.
-
-If one or more concepts are pending when you select @code{resolve}, the
-program will search only for resolves whose first call starts with those
-concepts.  So, for example, clicking on @code{once removed} and then
-@code{resolve} might get you this resolve:
-
-@example
-   ONCE REMOVED reverse the pass
-   linear flow
-   right and left grand  (7/8 promenade)
-@end example
-
-The program searches for resolves by using a random number generator to
-generate up to 5000 random sequences, occasionally inserting concepts.
-It biases the search in favor of short sequences (one call) rather than
-long ones (three calls) and in favor of resolves that do not contain @i{all 8
-circulate}.  If, after 5000 attempts, no resolve is found, the @code{find another}
-operation fails.  (This tends to happen if you try to resolve out of an
-hourglass at Mainstream.)  You can click on @code{find another} again to make
-another attempt if you wish.
-
-@node Normalize, Pick Random Call, Resolving, Resolving and Searching
-@section Normalizing the setup
-
-Clicking on @code{normalize} invokes an operation very similar to the resolver,
-except that it searches for sequences of up to three calls that normalize
-various matrices, such as 4x4, into a nice 8-person setup.  It uses a variety
-of phantom-like concepts to do its work.
-
-Be aware that the phantom-like concepts that this command uses are not
-the only ways to get out of large matrix setups.
-There are a number of calls,
-like @i{press},
-@i{truck}, @i{loop}, @i{squeeze}, @i{Z axle}, and @i{finish a long trip}
-that are also useful.
-The @code{normalize} operation does not search for such things.  It is only
-intended to search for things that might not be obvious.
-
-If you have selected @code{toggle concept levels},
-the @code{normalize} command may
-make use of concepts that are not legal at the chosen level.  This is sometimes
-useful in emergencies.
-
-@node Pick Random Call, Reconcile, Normalize, Resolving and Searching
-@section Letting the program choose a random call
-
-Clicking on @code{pick random call} invokes an operation very similar to the resolver,
-except that it searches for any legal single call.  While this may sound like
-a fairly pointless operation, remember that you can use this while one or
-more concepts are already entered, in which case it will search for legal calls
-that involve those concepts.  Hence, this operation is useful for finding
-clever uses of difficult concepts such as @i{checkpoint},
-@i{interlace}, or @i{on your own}.
-
-@node Reconcile,  , Pick Random Call, Resolving and Searching
-@section The @code{Reconcile} operation
-
-Clicking on @code{reconcile} invokes an operation like resolving, but it
-puts the generated calls someplace other than at the end of the
-sequence.  This is useful if you have a clever getout at the end of the
-sequence, and you want it to be the resolve, but people don't have their
-partners and corners.  This lets you retroactively modify the sequence
-so that the clever getout will work.
-
-Note first that this operation may only be invoked when the setup is
-left-handed two-faced lines, right-handed waves, or left-handed waves,
-in which case it assumes you want a @i{promenade}, @i{right and left grand}, or
-@i{left allemande} respectively.  The program must know which getout type you
-want.  If the setup is an 8-chain, it can't tell.  In that case, either
-do a @code{touch} or a @code{left touch}, to give the program a clue.  Then, after the
-reconcile operation is complete, you can erase that extra call.
-
-The reconcile operation is very similar in behavior to resolve, except
-that the program needs to know the insertion point.  Rather than
-searching for the first resolve as soon as you enter the mode, the
-reconcile operation lets you set the insertion point before searching.
-Click on @code{raise insertion point} or @code{lower insertion point} to
-set it.  A dotted line will be displayed showing where in the sequence
-the generated calls will be placed.  When this is in the right place,
-click on @code{find another} to find the first reconcile.  You can
-change the insertion point at any time.
-
-If you are using the Macintosh version, you change the insertion point
-using a utility window labelled @code{reconcile point} that appears
-after you perform the @code{Resolve} command.  Simply drag the dotted
-line to the place in the sequence where you want the generated calls to
-be inserted.
-
-Reconciles are extremely difficult to find---much harder than resolves.
-To avoid frustration, make the insertion point be at a place where the
-setup is very simple and a large number of calls are legal.  We recommend
-making the insertion point be at a place where the setup is in waves.
-Remember that, if the insertion point is at an hourglass, the program
-has to find a random sequence of up to three calls that goes from an hourglass
-to another hourglass while miraculously performing the required
-permutation.
-
-Avoid using reconcile when a gender-dependent or head/side-dependent
-call lies between the insertion point and the end of the sequence.  The
-program checks every reconcile by re-executing all calls from the
-insertion point to the end and verifying that everything is exactly as
-it was except for the permutation of the people.  For example, if the
-call @samp{heads kickoff} occurs after the insertion point, and a
-potential reconcile changes heads and sides, it will not be offered.
-For gender-dependent calls the situation is a little better: if, at the
-end of the sequence, the boys are in the center and the girls on the end
-before doing the reconcile, you know that any inserted sequence will
-have to be gender-preserving anyway, so calls like @samp{star thru} and
-@samp{boys kickoff} will be okay.
-
-@node Misc Commands, Terminal Interface, Resolving and Searching, Top
-@chapter Miscellaneous Commands
-
-This section describes commands that are not concerned with generating
-sequences.
-
-@menu
-* Save Sequence::               Saving the Sequence
-* Change Output File::          Changing the Output File
-* Abort/Exit/Undo::             Abort, Exit, and Undo
-* Inserting Comments::          Inserting Comments
-* Keeping Pictures::            Keeping Pictures of the Setup
-* Hiding Couple Numbers::       Hiding Couple Numbers on the Macintosh
-@end menu
-
-@node Save Sequence, Change Output File,  , Misc Commands
-@section Saving the Sequence
-
-At any time when the sequence is resolved (for example, after a successful
-use of the @code{resolve} operation), you can click on @code{end this sequence}.
-This will append the current sequence to the current output file, and then
-go back to the startup screen.  You will be given an opportunity to enter
-a line of text to be used as a subtitle, for example ``very hard interlace''
-or ``stupid biggie.''  The written sequence will also be annotated with the
-level, the current date and time, and the versions of the program and
-database.
-
-Until you have done the @code{end this sequence} operation, the sequence is not
-written to disk and you cannot start writing a new sequence.  Just
-resolving isn't enough.
-
-If you are using the Macintosh version, files are handled differently.
-@xref{Sequence Files}. To specify a label to be used as a subtitle,
-use the @code{Label} command in the @code{Sequence} menu.
-
-@node Change Output File, Abort/Exit/Undo, Save Sequence, Misc Commands
-@section Changing the Output File
-
-You can change the name of the file to which the program writes its
-output by clicking on the @code{Change output file} button.  A popup
-will appear, prompting you for a new file name.  This action will become
-effective the next time a sequence is written out.  Sequences previously
-written will stay under their old name.
-
-If you are using the Macintosh version, files are handled differently.
-@xref{Sequence Files}.
-
-@node Abort/Exit/Undo, Inserting Comments, Change Output File, Misc Commands
-@section @code{Abort}, @code{Exit}, and @code{Undo}
-
-If you click on the @code{exit} button, the program will exit.  If a
-sequence is in progress, the program will ask for confirmation first.
-Using your window manager to send a @code{Delete Window} message to the
-program is equivalent to clicking on the @code{exit} button.  The
-@code{exit} button appears on the startup screen as well as the normal
-screen.
-
-If you click on the @code{abort} button, the program will abort the sequence
-but not exit.  It will go back to the startup screen to allow you to
-start another sequence.  It will ask for confirmation first.
-
-If you are using the Macintosh version, you end a sequence and start a
-new one using the @code{End This Sequence} command in the
-@code{Sequence} menu.
-
-If you click on the @code{undo} button while no call is partially entered,
-that is, while no concepts have been entered, the program will erase
-the last complete call, with all of its concepts.  If one or more
-concepts have been entered, only the last concept will be erased.
-
-@node Inserting Comments, Keeping Pictures, Abort/Exit/Undo, Misc Commands
-@section Inserting Comments
-
-You can insert arbitrary text strings into the sequence transcript in the
-form of @i{comments}.  This is useful for things that you may want to say
-to help the dancers, such as ``side boys be careful---go to your left.''
-Also, if you want to call something that the program can't do, so you have
-to trick the program into doing it by means of several other calls, it is useful
-to enter a comment saying what you originally wanted.  This can guide you
-when editing the transcript file.
-
-To enter a comment, click on @code{insert a comment}.  A popup will appear into
-which you may enter the text.  The comment will be enclosed in curly braces
-in the transcript.
-
-A comment may be entered in front of any concept or call, and goes into
-the transcript exactly where it was entered.  Because of the way the program
-assembles mouse-clicks into transcript lines, it is not possible to enter
-a comment at the end of a line.
-
-@node Keeping Pictures, Hiding Couple Numbers, Inserting Comments, Misc Commands
-@section Keeping Pictures
-
-The program shows pictures on the screen for the current position
-and the position just before the last call.  Normally, those pictures
-will not appear in the sequence written to a file.  If you want the
-current position to have its picture written in a file (say, because the
-sequence is very difficult and you believe it may be necessary to say
-something helpful then like ``check a parallelogram with boys in the center
-box'') click on @code{keep picture}.
-
-If you are using the Macintosh version, the picture stored in a sequence
-file or log file uses alphanumeric characters, even if the sequence
-window displays graphical symbols.  Similarly, if you copy text from the
-sequence window, the copied text will use alphanumeric characters for
-pictures.  However, if you have an appropriate symbol font, you can
-recreate the pictures using graphical symbols by using the @code{Copy
-Special Font} command in the @code{Edit} menu.  This command is like the
-@code{Copy} command except that pictures are represented using encoded
-text, where each graphical symbol is represented by a single ASCII
-character.
-
-@node Hiding Couple Numbers, , Keeping Pictures, Misc Commands
+@node Hiding Couple Numbers, , Keyboard Input, Macintosh Overview
 @section Hiding Couple Numbers
 
 If you are using the Macintosh version and displaying formations using
@@ -1455,7 +1489,7 @@ graphical symbols, you can select whether or not to display couple
 numbers using the @code{Hide Couple Numbers} or @code{Reveal Couple
 Numbers} commands in the @code{Sequence} menu.
 
-@node Terminal Interface, Linguistic Idiosyncrasies, Misc Commands, Top
+@node Terminal Interface, Linguistic Idiosyncrasies, Macintosh Overview, Top
 @chapter Terminal Interface
 
 @menu
@@ -1467,32 +1501,12 @@ Numbers} commands in the @code{Sequence} menu.
 @node Sdtty, Sdtty on the PC,  , Terminal Interface
 @section Sdtty
 
-A variation of the program, called @code{sdtty}, provides
-a terminal-oriented interface useful when you don't have access to a
-window system.  In this version, you type the commands, calls, and
-concepts to a completing reader.
-
-At present, @code{sdtty} is the only version of the program available for
-PC-compatible computers.  We hope to have the window-based version
-available for Microsoft-Windows soon.
-
-Where the window-based interface prompts in a separate popup for people,
-number, or direction designators,
-you type the designator as part of the call name.
-For example, to call @code{<ANYONE> run} and select @code{centers}, just
-type @code{centers run}.
-Where in the window interface you would select @w{@code{square thru <n>}}
-and then select @code{4} in response to the ``How many?'' prompt, with
-@code{sdtty} you type @w{@code{square thru 4}} as one command.
+The program @code{sdtty} uses the completing reader for call,
+concept, and command entry.
 
 When typing, press @key{Space} to complete the current word.
 Type @key{TAB} or @key{ESC} to complete as much as possible.
 Type @kbd{C-u} (that is, Control U) to clear a partially-typed line.
-
-Press @kbd{?} to see the possible completions.
-If there are many possibilities, @code{sdtty} will display a page and
-offer a @samp{More} prompt.  Type @key{Space} to see the next
-page, @key{RET} to see the next line, and @key{DEL} to stop.
 
 @code{sdtty} has a special command @code{refresh display}
 that has no counterpart in
@@ -1528,6 +1542,9 @@ A hard disk is recommended.  There
 should be at least 175 kilobytes of memory free in the first 640Kb.
 The authors have not actually tried it on a system this small, and we
 would be interested in your experiences.
+
+@code{Sd} is believed to be
+insensitive to slight inaccuracies in floating-point division.
 
 To deal with different types of display hardware with various screen sizes,
 the @code{-lines @var{n}} switch can be given at program startup, as in
@@ -1581,10 +1598,10 @@ dancers do not necessarily know this computer-ese dialect.  Use the words
 that you think are correct and natural.  Your judgement is much better than any
 program's judgement can ever be.
 
-The program sometimes requires you to say various @dfn{helper} words, such
+The program sometimes requires you to say various "helper" words, such
 as @code{left} in cases where their necessity is is not universally
-agreed upon.  For example, from a left-handed quarter-tag, @code{scoot
-and plenty} is not considered legal---you are required to enter
+agreed upon.  For example, from a left-handed quarter-tag, @code{sd}
+will not accept @code{scoot and plenty}---you are required to enter
 @code{left scoot and plenty}, even though the Callerlab definition does
 not require the word @code{left} in this case.  What helper words you
 use or don't use when calling is, of course, up to you.
@@ -1743,7 +1760,6 @@ To permit fractional use of recycle, as with
 @chapter Concept Notes
 
 @menu
-* Gruesome::                    Gruesome
 * Divided::                     Divided
 * Concentric::                  Concentric
 * Two Calls::                   Two Calls in Succession
@@ -1758,24 +1774,13 @@ To permit fractional use of recycle, as with
 * 12 Matrix and 16 Matrix::     12 Matrix and 16 Matrix
 @end menu
 
-@node Gruesome, Divided,  , Concept Notes
-@section Gruesome
-
-In this program, @dfn{gruesome} simply means
-@i{phantom couples or tandem} with the phantoms added to make a 2x8 rather than
-the 4x4 that would normally be created, and with the added requirement that
-the pairing be parallel to the long axis.  @dfn{Gruesome twosome} is just an
-abbreviation for @i{gruesome as couples twosome}.
-This extension is not
-widely accepted at present.  Be prepared to explain what you mean.
-
-@node Divided, Concentric, Gruesome, Concept Notes
+@node Divided, Concentric,  , Concept Notes
 @section Divided
 
 The concepts @samp{divided lines} and @samp{divided columns}, done from a 2x8,
 and @samp{12 matrix divided lines} and @samp{12 matrix divided columns}, done from
 a 2x6, mean that the setup is to be separated into 2x4's or 2x3's, respectively.
-The former two are equivalent to @i{split phantom twin
+The former two are equivalent to @i{split phantom
 boxes}, except that they demand that people be facing in the indicated way.
 For all of these concepts, if people are T-boned, you can use @code{standard}
 to permit the concept to be used.  In all
@@ -1919,8 +1924,8 @@ instead of @code{lines}.  These cause an implicit @code{assume waves}.
 So, for example, in columns, @code{split phantom waves in roll circulate}, which
 is equivalent to @code{split phantom lines assume waves in roll circulate}, tells
 the live dancers which way the phantom in-roller is facing.  The call @code{split
-phantom lines in roll circulate} is illegal because the facing direction of the
-phantom in-roller is unknown.
+phantom lines in roll circulate} is illegal from columns because the facing
+direction of the phantom in-roller is unknown.
 
 For the concepts that name some kind of @dfn{diamonds} or @dfn{1/4 tags}, there
 are 5 types of setups that can be named.  They are
@@ -1937,9 +1942,10 @@ diamond spots}, @code{split phantom 1/4-tags}, etc.
 
 When using these concepts, @code{diamonds} gives an implicit assumption @code{assume
 general diamonds}, that is, it requires that everyone think they are individually
-in some kind of diamond.  You may give an explicit @code{assume} concept to make
-the setup more specific if you wish, as in @code{split phantom diamonds} followed
-by @code{assume interlocked diamonds}.
+in some kind of diamond, with their right or left hand toward the center.
+You may give an explicit @code{assume} concept to make the setup more specific if
+you wish, as in @code{split phantom diamonds} followed by @code{assume interlocked
+diamonds}.
 
 The @code{general 1/4-tags} designator gives an implicit assumption @code{assume
 general 1/4 tags}, that is, the centers must be in some kind of line, and the
@@ -2002,6 +2008,15 @@ It is extremely dangerous in terms of what it may require the dancers to do.
 Many dancers find it difficult enough to do the live people's parts of calls
 without having to do the phantoms' parts also.
 
+You can put @code{sd} into a mode in which there is an implicit
+@code{with active phantoms} whenever any assumption is made.
+The @code{toggle active phantoms} command toggles (turns on or off)
+this mode.  @xref{Changing Modes}.
+When in this mode, @code{sd} will not actually insert the text
+@code{with active phantoms} after each @code{assume} concept.
+It will, however, put the annotation "(AP)" into the title line of any
+card that uses it, to remind you of why the dancers are having such a hard time.
+
 @node Diamond, Rewind, Assume Waves, Concept Notes
 @section Diamond
 
@@ -2021,6 +2036,8 @@ quarter right}.
 @section Rewind
 
 There is no @samp{rewind} concept in this program.
+A small number of individual @samp{rewind} calls may be in
+the database.
 
 @node Implied Piecewise, Twice, Rewind, Concept Notes
 @section Implied Piecewise
@@ -2475,21 +2492,21 @@ Sd*frame*List*Translations: #override <Btn3Down>: undo()
 
 The version is a string consisting of parts separated by colons.
 
-If you customize any part of Sd for your own use, or fix bugs, please
+If you customize any part of Sd for your own use, or fix bugs, you should
 assign the result a new version by appending to the current version.
 This will help in keeping track of bug reports.  The version string is
 defined near the top of the file @file{sdmain.c}.  For example, you might
-set it to @code{25.6.joe1} for your private version.  By leaving the
-original two numbers, we can correlate possible problems with the
-fileset on which the private version was based.
+set it to @code{25.6.joe1} for your private version.
 
 The calls database also has a version.
-If you modify the database, we ask that you
+If you modify the database, you should
 change the version string at the top of the file.
 
 @node Copying, , Versions, Top
 @include gpl.txinfo
 
+@page
+@ @c make an even number of pages
 @page
 @contents
 @page

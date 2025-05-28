@@ -82,20 +82,6 @@ static Cstring startup_commands[] = {
     "just as they are"
 };
 
-static Cstring *command_commands; /* This holds the text strings for special commands. */
-static int num_command_commands;  /* And this tells how many there are.  These variables
-                                     are set up by the call to "match_user_input". */
-
-/* BEWARE!!  This list is keyed to the definition of "resolve_command_kind" in sd.h . */
-static Cstring resolve_commands[] = {
-    "abort the search",
-    "find another",
-    "next",
-    "previous",
-    "accept current choice",
-    "raise reconcile point",
-    "lower reconcile point"
-};
 
 static Cstring n_4_patterns[] = {
     "1/4",
@@ -528,7 +514,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
          match_suffix_2(user, direction_names[i], &p2b, patxp, &new_result);
       }
    }
-   else if (key == 'v' && (result->tagger & 0xFF000000) == 0) {
+   else if (key == 'v' && (result->tagger & 0xFF000000UL) == 0) {
       /* We allow recursion 4 levels deep.  In fact, we consider it
          inappropriate to stack revert/reflect things.  There are special
          calls "revert, then reflect", etc. for this purpose. */
@@ -633,7 +619,7 @@ static void match_wildcard(Cstring user, Cstring pat, pat2_block *pat2, char *pa
           match_suffix_2(user, prefix, &p2b, patxp, &new_result);
       }
    }
-   else if ((key == 'a' || key == 'b' || key == 'B') && (result->who == selector_uninitialized)) {
+   else if (key == 'a' || key == 'b' || key == 'B') {
       if (user == 0) return;
       new_result = *result;
 
@@ -795,8 +781,8 @@ static void search_menu(uims_reply kind, int which_command)
          }
          else if (which_command == match_resolve_commands) {
             kind = ui_resolve_select;
-            menu = resolve_commands;
-            menu_length = NUM_RESOLVE_COMMAND_KINDS;
+            menu = resolve_command_strings;
+            menu_length = number_of_resolve_commands;
          }
    
          result.kind = kind;
@@ -874,8 +860,6 @@ extern int match_user_input(
     char *user_input,
     int which_commands,
     match_result *mr,
-    Cstring *command_list,    /* Text of commands to search for (Mac and Unix versions differ). */
-    int num_commands,         /* How many items in above list. */
     char *extension,
     show_function sf,
     long_boolean show_verify)
@@ -887,11 +871,6 @@ extern int match_user_input(
     char time_buf[20];
     uims_debug_print("");
 #endif
-
-    if (num_commands) {
-        command_commands = command_list;
-        num_command_commands = num_commands;
-    }
 
     static_ss.full_input = user_input;
     static_ss.extended_input = extension;

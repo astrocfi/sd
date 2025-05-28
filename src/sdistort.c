@@ -50,18 +50,33 @@ Private void innards(
    int vert = maps->vert;
    int arity = maps->arity;
    int insize = setup_attrs[maps->inner_kind].setup_limits+1;
+   uint32 mysticflag = ss->cmd.cmd_misc_flags;
    mpkind map_kind = maps->map_kind;
 
    clear_people(result);
+   ss->cmd.cmd_misc_flags &= ~(CMD_MISC__MYSTIFY_SPLIT | CMD_MISC__MYSTIFY_INVERT);
 
    for (i=0; i<arity; i++) {
       if (x[i].kind != nothing) {
+         long_boolean mirror = FALSE;
+
+         if (mysticflag & CMD_MISC__MYSTIFY_SPLIT) {
+            mirror = i & 1;
+            if (mysticflag & CMD_MISC__MYSTIFY_INVERT)
+               mirror = !mirror;
+         }
+
          x[i].cmd = ss->cmd;
          x[i].rotation = 0;
          /* It is clearly too late to expand the matrix -- that can't be what is wanted. */
          x[i].cmd.cmd_misc_flags = (x[i].cmd.cmd_misc_flags & ~(CMD_MISC__OFFSET_Z | CMD_MISC__MATRIX_CONCEPT)) | CMD_MISC__DISTORTED | CMD_MISC__NO_EXPAND_MATRIX;
          x[i].cmd.cmd_assume = new_assume;
          if (recompute_id) update_id_bits(&x[i]);
+
+         if (mirror) {
+            mirror_this(&x[i]);
+            x[i].cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
+         }
 
          if (x[i].cmd.cmd_misc_flags & CMD_MISC__VERIFY_MASK) {
             assumption_thing t;
@@ -92,6 +107,9 @@ Private void innards(
          }
          else
             move(&x[i], FALSE, &z[i]);
+
+         if (mirror)
+            mirror_this(&z[i]);
       }
       else {
          z[i].kind = nothing;
@@ -564,7 +582,8 @@ static short indices_for_2x6_4x6[12]  = {11, 10, 9, 8, 7, 6, 23, 22, 21, 20, 19,
    provides the following:
          maps: the map to use (assuming not end-to-end)
          arg1: "phantest_kind" -- special stuff to watch for
-         arg2: "linesp" -- 1 if these setups are lines; 0 if columns */
+         arg2: "linesp" -- 1 if these setups are lines; 0 if columns
+         arg3: "map_kind" for the map */
 
 /* This handles the end-to-end versions also.  We should either have a 4x4 or a 1x16. */
 
@@ -590,6 +609,9 @@ extern void do_phantom_2x4_concept(
 
    if (linesp || parseptr->concept->value.arg3 == MPKIND__NONE)
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_STEP_TO_WAVE;
+
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MYSTIFY_SPLIT) && parseptr->concept->value.arg3 != MPKIND__CONCPHAN)
+      fail("Mystic not allowed with this concept.");
 
    switch (ss->kind) {
       case s1x16:
@@ -621,7 +643,6 @@ extern void do_phantom_2x4_concept(
 
          if ((global_tbonetest & 011) == 011) {
             /* People are T-boned!  This is messy. */
-      
             phantom_2x4_move(
                ss,
                linesp,

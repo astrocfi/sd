@@ -1174,7 +1174,7 @@ that probably need to be put in. */
    /* Check for "central" concept and its ilk, and pick up correct definition. */
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
-      uint32 temp_concepts;
+      uint32 temp_concepts, forcing_concepts;
 
       ss->cmd.cmd_misc_flags |= CMD_MISC__NO_EXPAND_MATRIX | CMD_MISC__DISTORTED;
       /* We shut off the "doing ends" stuff.  If we say "ends detour" we mean "ends do the ends part of
@@ -1197,28 +1197,23 @@ that probably need to be put in. */
 
             temp_concepts = final_concepts;
 
-            if (callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
+            forcing_concepts = callspec->stuff.conc.innerdef.modifiersh & ~callspec->callflagsh;
+
+            if (forcing_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT)) {
                if (final_concepts & (INHERITFLAG_REVERSE | INHERITFLAG_LEFT))
                   temp_concepts |= (INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
             }
 
             temp_concepts &= ~(final_concepts & HERITABLE_FLAG_MASK & ~callspec->stuff.conc.innerdef.modifiersh);
+            temp_concepts |= forcing_concepts & ~(INHERITFLAG_REVERSE | INHERITFLAG_LEFT);
             callspec = base_calls[callspec->stuff.conc.innerdef.call_id];
             final_concepts = temp_concepts;
             ss->cmd.cmd_final_flags = final_concepts;
             ss->cmd.callspec = callspec;
             ss->cmd.cmd_misc_flags &= ~CMD_MISC__CENTRAL_MASK;   /* We are done. */
             break;
-         case CMD_MISC__CENTRAL_SNAG:
-            if (final_concepts & ~HERITABLE_FLAG_MASK)
-               fail("This concept not allowed here.");
-
-            break;
-         case CMD_MISC__CENTRAL_MYSTIC:
-            if (final_concepts & ~HERITABLE_FLAG_MASK)
-               fail("This concept not allowed here.");
-
-            fail("Sorry, can't do mystic.");
+         case CMD_MISC__CENTRAL_SNAG: case CMD_MISC__CENTRAL_MYSTIC:
+            if (final_concepts & ~HERITABLE_FLAG_MASK) fail("This concept not allowed here.");
             break;
       }
    }
@@ -1242,6 +1237,9 @@ that probably need to be put in. */
       else
          the_schema = schema_conc_star;
    }
+
+   /* We of course don't allow "mystic" or "snag" for things that are
+      *CROSS* concentrically defined. */
 
    if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
       switch (the_schema) {
@@ -2032,6 +2030,24 @@ that probably need to be put in. */
                ss->kind = s_qtag;
                ss->cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
             }
+            else if (ss->kind == s_qtag && (callspec->callflags1 & CFLAG1_FUDGE_TO_Q_TAG) &&
+                  the_schema == schema_conc_triple_lines) {
+               /* Or change from qtag to 3x4 if schema requires same. */
+               (void) copy_person(ss, 11, ss, 7);
+               (void) copy_person(ss, 10, ss, 6);
+               (void) copy_person(ss, 8, ss, 5);
+               (void) copy_person(ss, 7, ss, 4);
+               (void) copy_person(ss, 5, ss, 3);
+               (void) copy_person(ss, 4, ss, 2);
+               (void) copy_person(ss, 2, ss, 1);
+               (void) copy_person(ss, 1, ss, 0);
+               clear_person(ss, 0);
+               clear_person(ss, 3);
+               clear_person(ss, 6);
+               clear_person(ss, 9);
+
+               ss->kind = s3x4;
+            }
 
             foo1.parseptr = cp1;
             foo1.callspec = call1;
@@ -2173,9 +2189,6 @@ extern void move(
 
       result->result_flags = 0;
 
-      if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK)
-         fail("Can't do \"central/snag/mystic\" followed by another concept.");
-
       if (check_concepts == 0) {
          /* Look for virtual setup concept that can be done by dispatch from table, with no
             intervening final concepts. */
@@ -2197,6 +2210,9 @@ extern void move(
       }
 
       clear_people(result);
+
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK)
+         fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
 
       /* Some final concept (e.g. "magic") is present in front of our virtual setup concept.
          We have to dispose of it.  This means that expanding the matrix (e.g. 2x4->2x6)

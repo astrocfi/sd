@@ -24,7 +24,7 @@ Sd knows nothing about timing, body flow, or esthetics.
 
 This program is not appropriate for Traditional square dancing.  A good
 Traditional square dance sequence requires extremely accurate control
-of timing and phrasing, which are beyond the capability of this program.
+of timing and phrasing, which is beyond the capability of this program.
 
 Since the emphasis here is on checker pushing, you will find various
 Mainstream staples missing, such as Circle Left, Grand Square, and
@@ -65,8 +65,8 @@ is to receive instruction from a qualified teacher/coach, and to practice.
 Several user interfaces are available.  They come in two general types,
 and the program name is different for these types.
 
-Sd is the name of the program that uses menus and a "graphical" user
-interface.  Calls are selected by clicking with the mouse on the chosen
+Sd is the name of the program that uses menus and a "graphical user
+interface".  Calls are selected by clicking with the mouse on the chosen
 menu item.  The principal version of Sd runs on Unix-like systems with
 the X Window System interface.  Sd is also available for Domain/OS on
 Apollo systems, and on the Macintosh.  It is not yet available for PC
@@ -95,7 +95,7 @@ notes in other chapters.
 
 The file @file{INSTALL} contains instructions for building and
 installing Sd and for formatting and printing its documentation.
-If you ahve received the program in pre-built form, you shouldn't
+If you have received the program in pre-built form, you shouldn't
 need to read it.
 
 The files @file{sd_doc.txt} and @file{sd_doc.ps} are this manual,
@@ -119,7 +119,7 @@ HD disk, with printed documentation.  The price is $4 (price valid for 1995).
 @end ifset
 If you want sources, or a different format instead, please say so.
 
-To install the program from a floppy disk to a PC compatible, change
+To install the program from a floppy disk to a PC-compatible, change
 to the desired directory, insert the disk, and type @samp{A:INSTALL}
 or @samp{B:INSTALL} as appropriate.
 

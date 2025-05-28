@@ -65,6 +65,14 @@ static char *id="@(#)$He" "ader: Sd: sdui-tty.c "
    uims_database_tick_end
    uims_database_error
    uims_bad_argument
+
+and the following data that are used by sdmatch.c :
+
+   num_command_commands
+   command_commands
+   number_of_resolve_commands
+   resolve_command_strings
+   resolve_command_values
 */
 
 #ifndef THINK_C
@@ -411,7 +419,16 @@ Private match_result user_match;
    corresponds to the special commands defined in sdmatch.h .  There
    are NUM_SPECIAL_COMMANDS of those items. */
 
-static Cstring command_list[] = {
+#define NUM_SPECIAL_COMMANDS 4
+#define SPECIAL_COMMAND_SIMPLE_MODS 0
+#define SPECIAL_COMMAND_ALLOW_MODS 1
+#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
+#define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
+
+int num_command_commands = NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS;
+
+
+Cstring command_commands[] = {
     "exit the program",
     "undo last call",
     "abort this sequence",
@@ -434,11 +451,42 @@ static Cstring command_list[] = {
     "toggle active phantoms"
 };
 
-#define NUM_SPECIAL_COMMANDS 4
-#define SPECIAL_COMMAND_SIMPLE_MODS 0
-#define SPECIAL_COMMAND_ALLOW_MODS 1
-#define SPECIAL_COMMAND_TOGGLE_CONCEPT_LEVELS 2
-#define SPECIAL_COMMAND_TOGGLE_ACTIVE_PHANTOMS 3
+
+
+
+
+/* BEWARE!!  These two lists must stay in step. */
+
+int number_of_resolve_commands = 10;    /* The number of items, independent of NUM_RESOLVE_COMMAND_KINDS. */
+
+Cstring resolve_command_strings[] = {
+    "abort the search",
+    "exit the search",
+    "quit the search",
+    "undo the search",
+    "find another",
+    "next",
+    "previous",
+    "accept current choice",
+    "raise reconcile point",
+    "lower reconcile point"
+};
+
+resolve_command_kind resolve_command_values[] = {
+   resolve_command_abort,
+   resolve_command_abort,
+   resolve_command_abort,
+   resolve_command_abort,
+   resolve_command_find_another,
+   resolve_command_goto_next,
+   resolve_command_goto_previous,
+   resolve_command_accept,
+   resolve_command_raise_rec_point,
+   resolve_command_lower_rec_point
+};
+
+
+
 
 
 
@@ -478,7 +526,7 @@ get_user_input(char *prompt, int which)
             put_line ("\n");
             current_text_line++;
             start_matches();
-            match_user_input(user_input, which, (match_result *) 0, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, (char *) 0, show_match, FALSE);
+            match_user_input(user_input, which, (match_result *) 0, (char *) 0, show_match, FALSE);
             put_line ("\n");     /* Write a blank line. */
             current_text_line++;
             put_line(user_input_prompt);   /* Redisplay the current line. */
@@ -488,7 +536,7 @@ get_user_input(char *prompt, int which)
 
         if (c == ' ') {
             /* extend only to one space, inclusive */
-            matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
+            matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
             p = extended_input;
             if (*p) {
                 while (*p) {
@@ -510,7 +558,7 @@ get_user_input(char *prompt, int which)
                 bell();
         }
         else if ((c == '\n') || (c == '\r')) {
-            matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
+            matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
             if (matches == 1 || matches - user_match.yielding_matches == 1 || user_match.exact) {
                 p = extended_input;
                 while (*p)
@@ -542,7 +590,7 @@ get_user_input(char *prompt, int which)
             current_text_line++;   /* Count that line for erasure. */
         }
         else if (c == '\t' || c == '\033') {
-            matches = match_user_input(user_input, which, &user_match, command_list, NUM_COMMAND_KINDS+NUM_SPECIAL_COMMANDS, extended_input, (show_function) 0, FALSE);
+            matches = match_user_input(user_input, which, &user_match, extended_input, (show_function) 0, FALSE);
             p = extended_input;
             if (*p) {
                 while (*p)
@@ -601,7 +649,7 @@ uims_get_command(mode_kind mode, call_list_kind *call_menu)
     }
     else if (mode == mode_resolve) {
          get_user_input("Enter resolve command> ", (int) match_resolve_commands);
-         uims_menu_index = user_match.index;
+         uims_menu_index = resolve_command_values[user_match.index];
     }
     else {
         char prompt_buffer[200];
@@ -860,7 +908,7 @@ uims_do_tagger_popup(void)
      uint32 n;
      int j = 0;
 
-      while ((user_match.tagger & 0xFF000000) == 0) {
+      while ((user_match.tagger & 0xFF000000UL) == 0) {
          user_match.tagger <<= 8;
          j++;
       }

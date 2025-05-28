@@ -76,7 +76,12 @@ typedef char veryshort;
    "long int" or "unsigned long int".  We think that all compilers we deal with
    will do the right thing with that, but, just in case, we use a typedef.
 
-   The type "uint32" must be an unsigned integer of at least 32 bits. */
+   The type "uint32" must be an unsigned integer of at least 32 bits.
+
+   Note also:  There are many places in the program (not just in database.h and sd.h)
+   where the suffix "UL" is put on constants that are intended to be of type "uint32".
+   If "uint32" is changed to anything other than "unsigned long int", it may be
+   necessary to change all of those. */
 
 typedef unsigned long int uint32;
 
@@ -146,36 +151,36 @@ typedef struct {
 */
 
 /* These are a 3 bit field -- ROLL_BIT tells where its low bit lies. */
-#define ROLL_MASK   0700000000
-#define ROLL_BIT    0100000000
-#define ROLLBITL    0400000000
-#define ROLLBITM    0200000000
-#define ROLLBITR    0100000000
+#define ROLL_MASK   0700000000UL
+#define ROLL_BIT    0100000000UL
+#define ROLLBITL    0400000000UL
+#define ROLLBITM    0200000000UL
+#define ROLLBITR    0100000000UL
 
-#define STABLE_MASK  077000000
-#define STABLE_ENAB  040000000
-#define STABLE_VBIT  010000000
-#define STABLE_RBIT  001000000
-#define BIT_PERSON   04000
-#define BIT_ACT_PHAN 02000
-#define BIT_TANDVIRT 01000
+#define STABLE_MASK  077000000UL
+#define STABLE_ENAB  040000000UL
+#define STABLE_VBIT  010000000UL
+#define STABLE_RBIT  001000000UL
+#define BIT_PERSON   04000UL
+#define BIT_ACT_PHAN 02000UL
+#define BIT_TANDVIRT 01000UL
 
 /* Person ID.  These bit positions are extremely hard wired into, among other
    things, the resolver and the printer. */
-#define PID_MASK  0700
+#define PID_MASK  0700UL
 
 /* Extended person ID.  These 5 bits identify who the person is for the purpose
    of most manipulations.  0 to 7 are normal live people (the ones who squared up).
    8 to 15 are virtual people assembled for tandem or couples.  16 to 31 are
    active (but nevertheless identifiable) phantoms.  This means that, when
    BIT_ACT_PHAN is on, it usurps the meaning of BIT_TANDVIRT. */
-#define XPID_MASK 03700
+#define XPID_MASK 03700UL
 
-#define d_mask  04013
-#define d_north 04010
-#define d_south 04012
-#define d_east  04001
-#define d_west  04003
+#define d_mask  04013UL
+#define d_north 04010UL
+#define d_south 04012UL
+#define d_east  04001UL
+#define d_west  04003UL
 
 /* Person bits for "id2" field are:
  20 000 000 000 - headliner
@@ -212,36 +217,36 @@ typedef struct {
               1 -
 */
 
-#define ID2_HEADLINE 020000000000
-#define ID2_SIDELINE 010000000000
-#define ID2_CTR2      04000000000
-#define ID2_BELLE     02000000000
-#define ID2_BEAU      01000000000
-#define ID2_CTR6       0400000000
-#define ID2_OUTR2      0200000000
-#define ID2_OUTR6      0100000000
-#define ID2_TRAILER     040000000
-#define ID2_LEAD        020000000
-#define ID2_NSG         010000000
-#define ID2_NSB          04000000
-#define ID2_NHG          02000000
-#define ID2_NHB          01000000
-#define ID2_HCOR          0400000
-#define ID2_SCOR          0200000
-#define ID2_HEAD          0100000
-#define ID2_SIDE           040000
-#define ID2_BOY            020000
-#define ID2_GIRL           010000
-#define ID2_CENTER          04000
-#define ID2_END             02000
-#define ID2_NEARCOL         01000
-#define ID2_NEARLINE         0400
-#define ID2_NEARBOX          0200
-#define ID2_FARCOL           0100
-#define ID2_FARLINE           040
-#define ID2_FARBOX            020
-#define ID2_CTR4              010
-#define ID2_OUTRPAIRS         004
+#define ID2_HEADLINE 020000000000UL
+#define ID2_SIDELINE 010000000000UL
+#define ID2_CTR2      04000000000UL
+#define ID2_BELLE     02000000000UL
+#define ID2_BEAU      01000000000UL
+#define ID2_CTR6       0400000000UL
+#define ID2_OUTR2      0200000000UL
+#define ID2_OUTR6      0100000000UL
+#define ID2_TRAILER     040000000UL
+#define ID2_LEAD        020000000UL
+#define ID2_NSG         010000000UL
+#define ID2_NSB          04000000UL
+#define ID2_NHG          02000000UL
+#define ID2_NHB          01000000UL
+#define ID2_HCOR          0400000UL
+#define ID2_SCOR          0200000UL
+#define ID2_HEAD          0100000UL
+#define ID2_SIDE           040000UL
+#define ID2_BOY            020000UL
+#define ID2_GIRL           010000UL
+#define ID2_CENTER          04000UL
+#define ID2_END             02000UL
+#define ID2_NEARCOL         01000UL
+#define ID2_NEARLINE         0400UL
+#define ID2_NEARBOX          0200UL
+#define ID2_FARCOL           0100UL
+#define ID2_FARLINE           040UL
+#define ID2_FARBOX            020UL
+#define ID2_CTR4              010UL
+#define ID2_OUTRPAIRS         004UL
 
 
 typedef struct {
@@ -271,7 +276,8 @@ typedef struct {
    waves, and we have to set the assumption stuff, so that a "with active phantoms" concept
    can be handled.  This flag is used only through "divided_setup_move", to propagate
    information from a concept like "split phantom waves" through the division, and then
-   cause the assumption to be acted upon in each resulting setup.
+   cause the assumption to be acted upon in each resulting setup.  It is removed immediately
+   by "divided_setup_move" after use.
 
    CMD_MISC__EXPLICIT_MATRIX means that the caller said "4x4 matrix" or "2x6 matrix" or whatever,
    so we got to this matrix explicitly.  This enables natural splitting of the setup, e.g. form
@@ -319,6 +325,13 @@ typedef struct {
    CMD_MISC__CENTRAL_MASK, when nonzero, says that one of the "central", "snag",
    or "mystic" concepts is in use.  They are all closely related.
 
+   CMD_MISC__MYSTIFY_SPLIT tells "divided_setup_move" to perform selective mirroring
+   of the subsidiary setups because a concept like "mystic triple boxes" is in use.
+   It is removed immediately by "divided_setup_move" after use.
+
+   CMD_MISC__MYSTIFY_INVERT is only meaningful when CMD_MISC__MYSTIFY_SPLIT is on.
+   It says that the concept is actually "invert mystic triple boxes" or whatever.
+
    CMD_MISC__NO_CHK_ELONG means that the elongation of the incoming setup is for
    informational purposes only (to tell where people should finish) and should not
    be used for raising error messages.  It suppresses the error that would be
@@ -350,45 +363,47 @@ typedef struct {
 */
 
 /* Since DFM1_CONCENTRICITY_FLAG_MASK is FF, we start at 100. */
-#define CMD_MISC__EXPLICIT_MIRROR    0x00000100
-#define CMD_MISC__MATRIX_CONCEPT     0x00000200
+/* Note that these bits are ALL USED UP!!!!!!! */
+
+#define CMD_MISC__EXPLICIT_MIRROR    0x00000100UL
+#define CMD_MISC__MATRIX_CONCEPT     0x00000200UL
 /* This is a 3 bit field.  For codes inside same, see "CMD_MISC__VERIFY_WAVES" below. */
-#define CMD_MISC__VERIFY_MASK        0x00001C00
-#define CMD_MISC__EXPLICIT_MATRIX    0x00002000
-#define CMD_MISC__NO_EXPAND_MATRIX   0x00004000
-#define CMD_MISC__DISTORTED          0x00008000
-#define CMD_MISC__OFFSET_Z           0x00010000
-#define CMD_MISC__SAID_SPLIT         0x00020000
-#define CMD_MISC__SAID_TRIANGLE      0x00040000
-#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00080000
-#define CMD_MISC__DO_AS_COUPLES      0x00100000
-#define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000
-/* available:                        0x00400000
-                                     0x00800000 */
-#define CMD_MISC__INVERT_CENTRAL     0x01000000
-#define CMD_MISC__MUST_SPLIT         0x02000000
+#define CMD_MISC__VERIFY_MASK        0x00001C00UL
+#define CMD_MISC__EXPLICIT_MATRIX    0x00002000UL
+#define CMD_MISC__NO_EXPAND_MATRIX   0x00004000UL
+#define CMD_MISC__DISTORTED          0x00008000UL
+#define CMD_MISC__OFFSET_Z           0x00010000UL
+#define CMD_MISC__SAID_SPLIT         0x00020000UL
+#define CMD_MISC__SAID_TRIANGLE      0x00040000UL
+#define CMD_MISC__PUT_FRAC_ON_FIRST  0x00080000UL
+#define CMD_MISC__DO_AS_COUPLES      0x00100000UL
+#define CMD_MISC__RESTRAIN_CRAZINESS 0x00200000UL
+#define CMD_MISC__MYSTIFY_SPLIT      0x00400000UL
+#define CMD_MISC__MYSTIFY_INVERT     0x00800000UL
+#define CMD_MISC__INVERT_CENTRAL     0x01000000UL
+#define CMD_MISC__MUST_SPLIT         0x02000000UL
 /* This is a 2 bit field.  For codes inside same, see "CMD_MISC__CENTRAL_PLAIN" below. */
-#define CMD_MISC__CENTRAL_MASK       0x0C000000
-#define CMD_MISC__NO_CHK_ELONG       0x10000000
-#define CMD_MISC__PHANTOMS           0x20000000
-#define CMD_MISC__NO_STEP_TO_WAVE    0x40000000
-#define CMD_MISC__DOING_ENDS         0x80000000
+#define CMD_MISC__CENTRAL_MASK       0x0C000000UL
+#define CMD_MISC__NO_CHK_ELONG       0x10000000UL
+#define CMD_MISC__PHANTOMS           0x20000000UL
+#define CMD_MISC__NO_STEP_TO_WAVE    0x40000000UL
+#define CMD_MISC__DOING_ENDS         0x80000000UL
 
 /* Here are the encodings that can go into the CMD_MISC__VERIFY_MASK field.
    Zero means no verification. */
-#define CMD_MISC__VERIFY_WAVES       0x00000400
-#define CMD_MISC__VERIFY_DMD_LIKE    0x00000800
-#define CMD_MISC__VERIFY_QTAG_LIKE   0x00000C00
-#define CMD_MISC__VERIFY_1_4_TAG     0x00001000
-#define CMD_MISC__VERIFY_3_4_TAG     0x00001400
-/* available:                        0x00001800
-                                     0x00001C00 */
+#define CMD_MISC__VERIFY_WAVES       0x00000400UL
+#define CMD_MISC__VERIFY_DMD_LIKE    0x00000800UL
+#define CMD_MISC__VERIFY_QTAG_LIKE   0x00000C00UL
+#define CMD_MISC__VERIFY_1_4_TAG     0x00001000UL
+#define CMD_MISC__VERIFY_3_4_TAG     0x00001400UL
+/* available:                        0x00001800UL
+                                     0x00001C00UL */
 
 /* Here are the encodings that can go into the CMD_MISC__CENTRAL_MASK field.
    Zero means none of these concepts is in use. */
-#define CMD_MISC__CENTRAL_PLAIN      0x04000000
-#define CMD_MISC__CENTRAL_SNAG       0x08000000
-#define CMD_MISC__CENTRAL_MYSTIC     0x0C000000
+#define CMD_MISC__CENTRAL_PLAIN      0x04000000UL
+#define CMD_MISC__CENTRAL_SNAG       0x08000000UL
+#define CMD_MISC__CENTRAL_MYSTIC     0x0C000000UL
 
 
 /* Flags that reside in the "result_flags" word of a setup AFTER a call is executed.
@@ -465,16 +480,16 @@ typedef struct {
 */
 
 /* The two low bits are used for result elongation, so we start with 0x00000004. */
-#define RESULTFLAG__DID_LAST_PART       0x00000004
-#define RESULTFLAG__PARTS_ARE_KNOWN     0x00000008
-#define RESULTFLAG__EXPAND_TO_2X3       0x00000010
-#define RESULTFLAG__NEED_DIAMOND        0x00000020
-#define RESULTFLAG__IMPRECISE_ROT       0x00000040
+#define RESULTFLAG__DID_LAST_PART       0x00000004UL
+#define RESULTFLAG__PARTS_ARE_KNOWN     0x00000008UL
+#define RESULTFLAG__EXPAND_TO_2X3       0x00000010UL
+#define RESULTFLAG__NEED_DIAMOND        0x00000020UL
+#define RESULTFLAG__IMPRECISE_ROT       0x00000040UL
 /* This is a two-bit field. */
-#define RESULTFLAG__SPLIT_AXIS_MASK     0x00000180
-#define RESULTFLAG__SPLIT_AXIS_BIT      0x00000080
-#define RESULTFLAG__ACTIVE_PHANTOMS_ON  0x00000200
-#define RESULTFLAG__ACTIVE_PHANTOMS_OFF 0x00000400
+#define RESULTFLAG__SPLIT_AXIS_MASK     0x00000180UL
+#define RESULTFLAG__SPLIT_AXIS_BIT      0x00000080UL
+#define RESULTFLAG__ACTIVE_PHANTOMS_ON  0x00000200UL
+#define RESULTFLAG__ACTIVE_PHANTOMS_OFF 0x00000400UL
 
 
 
@@ -1222,29 +1237,30 @@ typedef cm_thing *cm_hunk[];
 
 
 
-#define CONCPROP__SECOND_CALL      0x00000001
-#define CONCPROP__USE_SELECTOR     0x00000002
-#define CONCPROP__NEED_4X4         0x00000004
-#define CONCPROP__NEED_2X8         0x00000008
-#define CONCPROP__NEED_2X6         0x00000010
-#define CONCPROP__NEED_4DMD        0x00000020
-#define CONCPROP__NEED_BLOB        0x00000040
-#define CONCPROP__NEED_4X6         0x00000080
-#define CONCPROP__SET_PHANTOMS     0x00000100
-#define CONCPROP__NO_STEP          0x00000200
-#define CONCPROP__GET_MASK         0x00000400
-#define CONCPROP__STANDARD         0x00000800
-#define CONCPROP__USE_NUMBER       0x00001000
-#define CONCPROP__USE_TWO_NUMBERS  0x00002000
-#define CONCPROP__NEED_3DMD        0x00004000
-#define CONCPROP__NEED_1X12        0x00008000
-#define CONCPROP__NEED_3X4         0x00010000
-#define CONCPROP__NEED_1X16        0x00020000
-#define CONCPROP__NEED_4X4_1X16    0x00040000
-#define CONCPROP__NEED_3X4_1X12    0x00080000
-#define CONCPROP__MATRIX_OBLIVIOUS 0x00100000
-#define CONCPROP__PERMIT_MATRIX    0x00200000
-#define CONCPROP__SHOW_SPLIT       0x00400000
+#define CONCPROP__SECOND_CALL      0x00000001UL
+#define CONCPROP__USE_SELECTOR     0x00000002UL
+#define CONCPROP__NEED_4X4         0x00000004UL
+#define CONCPROP__NEED_2X8         0x00000008UL
+#define CONCPROP__NEED_2X6         0x00000010UL
+#define CONCPROP__NEED_4DMD        0x00000020UL
+#define CONCPROP__NEED_BLOB        0x00000040UL
+#define CONCPROP__NEED_4X6         0x00000080UL
+#define CONCPROP__SET_PHANTOMS     0x00000100UL
+#define CONCPROP__NO_STEP          0x00000200UL
+#define CONCPROP__GET_MASK         0x00000400UL
+#define CONCPROP__STANDARD         0x00000800UL
+#define CONCPROP__USE_NUMBER       0x00001000UL
+#define CONCPROP__USE_TWO_NUMBERS  0x00002000UL
+#define CONCPROP__NEED_3DMD        0x00004000UL
+#define CONCPROP__NEED_1X12        0x00008000UL
+#define CONCPROP__NEED_3X4         0x00010000UL
+#define CONCPROP__NEED_1X16        0x00020000UL
+#define CONCPROP__NEED_4X4_1X16    0x00040000UL
+#define CONCPROP__NEED_3X4_1X12    0x00080000UL
+#define CONCPROP__MATRIX_OBLIVIOUS 0x00100000UL
+#define CONCPROP__PERMIT_MATRIX    0x00200000UL
+#define CONCPROP__SHOW_SPLIT       0x00400000UL
+#define CONCPROP__PERMIT_MYSTIC    0x00800000UL
 
 typedef enum {    /* These control error messages that arise when we divide a setup
                      into subsetups (e.g. phantom lines) and find that one of
@@ -1436,6 +1452,7 @@ typedef struct {
 #define zig_zag_level l_a2
 #define cross_by_level l_c1
 #define dixie_grand_level l_plus
+#define phantom_tandem_level l_c4a
 
 typedef struct {           /* This is done to preserve the encapsulation of type "jmp_buf".                  */
    jmp_buf the_buf;        /*   We are going to use pointers to these things.  If we simply used             */
@@ -1502,6 +1519,7 @@ extern nice_setup_thing nice_setup_thing_3dmd;                      /* in SDCTAB
 extern nice_setup_thing nice_setup_thing_4dmd;                      /* in SDCTABLE */
 extern nice_setup_thing nice_setup_thing_4x6;                       /* in SDCTABLE */
 extern int phantom_concept_index;                                   /* in SDCTABLE */
+extern int matrix_2x8_concept_index;                                /* in SDCTABLE */
 extern int left_concept_index;                                      /* in SDCTABLE */
 extern int cross_concept_index;                                     /* in SDCTABLE */
 extern int magic_concept_index;                                     /* in SDCTABLE */
@@ -1897,9 +1915,9 @@ extern void tandem_couples_move(
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
    int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
-   int tnd_cpl_siam,          /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
+   int key,                   /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
                                  tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
-                                 box = 8 / diamond = 9 */
+                                 box = 10 / diamond = 10 / outside triangles = 20 / inside triangles = 21 */
    setup *result);
 
 extern void initialize_tandem_tables(void);

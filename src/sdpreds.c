@@ -1320,21 +1320,51 @@ Private long_boolean no_dir_p(setup *real_people, int real_index,
    return current_direction == direction_no_direction;
 }
 
+
+
+
+
+Private long_boolean check_handedness(veryshort *p1, veryshort *p2, personrec ppp[])
+{
+   uint32 z = 0;
+   int i;
+   long_boolean b1 = TRUE;
+   long_boolean b2 = TRUE;
+
+   for (i=0 ; p1[i]>=0 ; i++) {
+      z |= ppp[p1[i]].id1 | ppp[p2[i]].id1;
+      if (ppp[p1[i]].id1 && (ppp[p1[i]].id1 & d_mask)!=d_east) b1 = FALSE;
+      if (ppp[p2[i]].id1 && (ppp[p2[i]].id1 & d_mask)!=d_west) b1 = FALSE;
+      if (ppp[p1[i]].id1 && (ppp[p1[i]].id1 & d_mask)!=d_west) b2 = FALSE;
+      if (ppp[p2[i]].id1 && (ppp[p2[i]].id1 & d_mask)!=d_east) b2 = FALSE;
+   }
+
+   if (z) {
+      if (b1) return TRUE;
+      else if (b2) return FALSE;
+   }
+
+   fail("Can't determine handedness.");
+   /* NOTREACHED */
+}
+
+
+
+
 /* ARGSUSED */
 Private long_boolean dmd_ctrs_rh(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
-   if (real_people->people[1].id1 | real_people->people[3].id1) {
-      if (     (!real_people->people[1].id1 || (real_people->people[1].id1 & d_mask)==d_east) &&
-               (!real_people->people[3].id1 || (real_people->people[3].id1 & d_mask)==d_west) )
-         return(TRUE);
-      else if ((!real_people->people[1].id1 || (real_people->people[1].id1 & d_mask)==d_west) &&
-               (!real_people->people[3].id1 || (real_people->people[3].id1 & d_mask)==d_east) )
-         return(FALSE);
-   }
+   static veryshort spindle1[] = {0, 1, 2, -1};
+   static veryshort spindle2[] = {4, 5, 6, -1};
 
-   fail("Can't determine handedness of centers.");
-   /* NOTREACHED */
+   static veryshort dmd1[] = {1, -1};
+   static veryshort dmd2[] = {3, -1};
+
+   if (real_people->kind == s_spindle)
+      return check_handedness(spindle1, spindle2, real_people->people);
+   else    /* Required to be diamond or single general 1/4 tag. */
+      return check_handedness(dmd1, dmd2, real_people->people);
 }
 
 /* ARGSUSED */
@@ -1342,9 +1372,9 @@ Private long_boolean trngl_pt_rh(setup *real_people, int real_index,
    int real_direction, int northified_index)
 {
    if ((real_people->people[0].id1 & d_mask)==d_west)
-      return(TRUE);
+      return TRUE;
    else if ((real_people->people[0].id1 & d_mask)==d_east)
-      return(FALSE);
+      return FALSE;
 
    fail("Can't determine handedness of triangle point.");
    /* NOTREACHED */

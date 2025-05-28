@@ -40,28 +40,28 @@
    The constant HERITABLE_FLAG_MASK embraces them.
 */
 
-#define INHERITFLAG_DIAMOND               0x00000001
-#define INHERITFLAG_REVERSE               0x00000002
-#define INHERITFLAG_LEFT                  0x00000004
-#define INHERITFLAG_FUNNY                 0x00000008
-#define INHERITFLAG_INTLK                 0x00000010
-#define INHERITFLAG_MAGIC                 0x00000020
-#define INHERITFLAG_GRAND                 0x00000040
-#define INHERITFLAG_12_MATRIX             0x00000080
-#define INHERITFLAG_16_MATRIX             0x00000100
-#define INHERITFLAG_CROSS                 0x00000200
-#define INHERITFLAG_SINGLE                0x00000400
-#define INHERITFLAG_1X2                   0x00000800
-#define INHERITFLAG_2X1                   0x00001000
-#define INHERITFLAG_2X2                   0x00002000
-#define INHERITFLAG_1X3                   0x00004000
-#define INHERITFLAG_3X1                   0x00008000
-#define INHERITFLAG_3X3                   0x00010000
-#define INHERITFLAG_4X4                   0x00020000
-#define INHERITFLAG_SINGLEFILE            0x00040000
-#define INHERITFLAG_HALF                  0x00080000
+#define INHERITFLAG_DIAMOND               0x00000001UL
+#define INHERITFLAG_REVERSE               0x00000002UL
+#define INHERITFLAG_LEFT                  0x00000004UL
+#define INHERITFLAG_FUNNY                 0x00000008UL
+#define INHERITFLAG_INTLK                 0x00000010UL
+#define INHERITFLAG_MAGIC                 0x00000020UL
+#define INHERITFLAG_GRAND                 0x00000040UL
+#define INHERITFLAG_12_MATRIX             0x00000080UL
+#define INHERITFLAG_16_MATRIX             0x00000100UL
+#define INHERITFLAG_CROSS                 0x00000200UL
+#define INHERITFLAG_SINGLE                0x00000400UL
+#define INHERITFLAG_1X2                   0x00000800UL
+#define INHERITFLAG_2X1                   0x00001000UL
+#define INHERITFLAG_2X2                   0x00002000UL
+#define INHERITFLAG_1X3                   0x00004000UL
+#define INHERITFLAG_3X1                   0x00008000UL
+#define INHERITFLAG_3X3                   0x00010000UL
+#define INHERITFLAG_4X4                   0x00020000UL
+#define INHERITFLAG_SINGLEFILE            0x00040000UL
+#define INHERITFLAG_HALF                  0x00080000UL
 
-#define HERITABLE_FLAG_MASK               0x000FFFFF
+#define HERITABLE_FLAG_MASK               0x000FFFFFUL
 
 /* These spare bits are used in the include file sd.h to allocate flag bits
    that will share a word with the heritable flags.  Those flag bits are
@@ -72,48 +72,48 @@
    If the definitions in sd.h find themselves using an undefined spare bit,
    we know we are in serious trouble. */
 
-#define CFLAGH__REQUIRES_TAG_CALL         0x00100000
-#define CFLAGH__REQUIRES_SELECTOR         0x00200000
-#define CFLAGH__REQUIRES_DIRECTION        0x00400000
-#define INHERITSPARE_1                    0x00800000
-#define INHERITSPARE_2                    0x01000000
-#define INHERITSPARE_3                    0x02000000
-#define INHERITSPARE_4                    0x04000000
-#define INHERITSPARE_5                    0x08000000
-#define INHERITSPARE_6                    0x10000000
-#define INHERITSPARE_7                    0x20000000
-#define INHERITSPARE_8                    0x40000000
-#define INHERITSPARE_9                    0x80000000
+#define CFLAGH__REQUIRES_TAG_CALL         0x00100000UL
+#define CFLAGH__REQUIRES_SELECTOR         0x00200000UL
+#define CFLAGH__REQUIRES_DIRECTION        0x00400000UL
+#define INHERITSPARE_1                    0x00800000UL
+#define INHERITSPARE_2                    0x01000000UL
+#define INHERITSPARE_3                    0x02000000UL
+#define INHERITSPARE_4                    0x04000000UL
+#define INHERITSPARE_5                    0x08000000UL
+#define INHERITSPARE_6                    0x10000000UL
+#define INHERITSPARE_7                    0x20000000UL
+#define INHERITSPARE_8                    0x40000000UL
+#define INHERITSPARE_9                    0x80000000UL
 
 /* BEWARE!!  This list must track the table "flagtab1" in dbcomp.c .
    These flags go into the "callflags1" word of a callspec_block. */
 
-#define CFLAG1_VISIBLE_FRACTIONS          0x00000001
-#define CFLAG1_FIRST_PART_VISIBLE         0x00000002
-#define CFLAG1_12_16_MATRIX_MEANS_SPLIT   0x00000004
-#define CFLAG1_IMPRECISE_ROTATION         0x00000008
-#define CFLAG1_SPLIT_LIKE_DIXIE_STYLE     0x00000010
-#define CFLAG1_PARALLEL_CONC_END          0x00000020
-#define CFLAG1_TAKE_RIGHT_HANDS           0x00000040
-#define CFLAG1_IS_STAR_CALL               0x00000080
-#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000100
-#define CFLAG1_FUDGE_TO_Q_TAG             0x00000200
-#define CFLAG1_STEP_TO_WAVE               0x00000400
-#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00000800
-#define CFLAG1_REAR_BACK_FROM_QTAG        0x00001000
-#define CFLAG1_DONT_USE_IN_RESOLVE        0x00002000
+#define CFLAG1_VISIBLE_FRACTIONS          0x00000001UL
+#define CFLAG1_FIRST_PART_VISIBLE         0x00000002UL
+#define CFLAG1_12_16_MATRIX_MEANS_SPLIT   0x00000004UL
+#define CFLAG1_IMPRECISE_ROTATION         0x00000008UL
+#define CFLAG1_SPLIT_LIKE_DIXIE_STYLE     0x00000010UL
+#define CFLAG1_PARALLEL_CONC_END          0x00000020UL
+#define CFLAG1_TAKE_RIGHT_HANDS           0x00000040UL
+#define CFLAG1_IS_STAR_CALL               0x00000080UL
+#define CFLAG1_SPLIT_LARGE_SETUPS         0x00000100UL
+#define CFLAG1_FUDGE_TO_Q_TAG             0x00000200UL
+#define CFLAG1_STEP_TO_WAVE               0x00000400UL
+#define CFLAG1_REAR_BACK_FROM_R_WAVE      0x00000800UL
+#define CFLAG1_REAR_BACK_FROM_QTAG        0x00001000UL
+#define CFLAG1_DONT_USE_IN_RESOLVE        0x00002000UL
 /* This is a 3 bit field -- NUMBER_BIT tells where its low bit lies. */
-#define CFLAG1_NUMBER_MASK                0x0001C000
-#define CFLAG1_NUMBER_BIT                 0x00004000
-#define CFLAG1_SEQUENCE_STARTER           0x00020000
-#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00040000
-#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00080000
-#define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00100000
-#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x00200000
-#define CFLAG1_NO_CUTTING_THROUGH         0x00400000
-#define CFLAG1_NO_ELONGATION_ALLOWED      0x00800000
-#define CFLAG1_IS_BASE_TAG_CALL           0x01000000
-#define CFLAG1_YIELD_IF_AMBIGUOUS         0x02000000
+#define CFLAG1_NUMBER_MASK                0x0001C000UL
+#define CFLAG1_NUMBER_BIT                 0x00004000UL
+#define CFLAG1_SEQUENCE_STARTER           0x00020000UL
+#define CFLAG1_SPLIT_LIKE_SQUARE_THRU     0x00040000UL
+#define CFLAG1_FINISH_MEANS_SKIP_FIRST    0x00080000UL
+#define CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK  0x00100000UL
+#define CFLAG1_CAN_BE_FAN_OR_YOYO         0x00200000UL
+#define CFLAG1_NO_CUTTING_THROUGH         0x00400000UL
+#define CFLAG1_NO_ELONGATION_ALLOWED      0x00800000UL
+#define CFLAG1_IS_BASE_TAG_CALL           0x01000000UL
+#define CFLAG1_YIELD_IF_AMBIGUOUS         0x02000000UL
 
 /* Beware!!  This list must track the table "matrixcallflagtab" in dbcomp.c . */
 
@@ -334,13 +334,13 @@ typedef enum {
    cr_none,
    cr_alwaysfail,                   /* any setup - this always fails (presumably to give the "unusual position" warning) */
    cr_wave_only,                    /* 1x2 - a miniwave; 1x4 - a wave; 2x4/3x4/2x6/2x8 - waves; 1x6-1x16 - a grand wave;
-                                       2x2 - real box; 4x4 -consistent waves; qtag - wave in center; pqtag - wave in center
+                                       2x2 - real box; 4x4 - consistent waves; qtag - wave in center; pqtag - wave in center
                                        (use only if center people have no legal move from pqtag, only from qtag); 3x2/4x2/6x2/8x2 - column */
    cr_wave_unless_say_2faced,
    cr_all_facing_same,              /* 2x2/2x3/2x4/1x4/1x6/1x8 - all people in the setup facing the same way */
    cr_1fl_only,                     /* 1x4/1x6/1x8 - a 1FL; 2x3/2x4 - individual 1FL's */
    cr_2fl_only,                     /* 1x2 - a couple; 1x4 - a 2FL; 2x4/3x4 - 2FL's; 1x8 - a grand 2FL; 2x2 - "1-faced" box;
-                                       2x4 columns - a DPT or CDPT; qtag - 2FL in center */
+                                       4x4 - consistent 2FL's; 2x4 columns - a DPT or CDPT; qtag - 2FL in center */
    cr_3x3_2fl_only,                 /* 1x6 - 3 facing one way, 3 the other */
    cr_4x4_2fl_only,                 /* 1x8 - 4 facing one way, 4 the other */
    cr_leads_only,                   /* 2x2 - all people are leads, and not T-boned */
@@ -350,7 +350,7 @@ typedef enum {
    cr_awkward_centers,              /* 1x2, 1x4, 1x6, or 1x8 - centers must not have left hands with each other */
    cr_diamond_like,                 /* dmd, qtag or ptpd - in some kind of diamond(s), as opposed to single quarter-tag(s), i.e. points look sideways */
    cr_qtag_like,                    /* dmd, qtag or ptpd - in some kind of single quarter-tag(s), as opposed to diamond(s), i.e. points look in or out */
-   cr_nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are dimaonds and not qtags */
+   cr_nice_diamonds,                /* dmd, qtag or ptpd - diamond(s) have consistent handedness, assuming they are diamonds and not qtags */
    cr_magic_only,                   /* 2x2 - split-trade-circulate type of box; 3x2 or 4x2 - magic column; 2x4 - inverted lines; 1x4 - single inverted line */
    cr_peelable_box,                 /* 2x2, 3x2, 4x2, 6x2 or 8x2 - all people in each column are facing same way */
    cr_ends_are_peelable,            /* 2x4 - ends are a box with each person in genuine tandem */

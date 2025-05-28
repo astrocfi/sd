@@ -39,6 +39,7 @@
    nice_setup_thing_4dmd
    nice_setup_thing_4x6
    phantom_concept_index
+   matrix_2x8_concept_index
    left_concept_index
    cross_concept_index
    magic_concept_index
@@ -344,8 +345,6 @@ concept_descriptor concept_descriptor_table[] = {
 #define tt__1_size 14
 #define tt__1_cpl 0
 #define tt__1_tnd 1
-#define tt__1_grc 12
-#define tt__1_grt 13
    {"AS COUPLES",                            concept_tandem,                FALSE, l_a1,         {0, FALSE, 0, 0, 1}},
    {"TANDEM",                                concept_tandem,                FALSE, l_c1,         {0, FALSE, 0, 0, 0}},
    {"SIAMESE",                               concept_tandem,                FALSE, l_c1,         {0, FALSE, 0, 0, 2}},
@@ -353,17 +352,17 @@ concept_descriptor concept_descriptor_table[] = {
    {"TANDEMS OF THREE",                      concept_tandem,                FALSE, l_c1,         {0, FALSE, 0, 0, 4}},
    {"COUPLES OF FOUR",                       concept_tandem,                FALSE, l_c1,         {0, FALSE, 0, 0, 7}},
    {"TANDEMS OF FOUR",                       concept_tandem,                FALSE, l_c1,         {0, FALSE, 0, 0, 6}},
-   {"BOXES WORK SOLID",                      concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 8}},
-   {"DIAMONDS WORK SOLID",                   concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 9}},
+   {"BOXES WORK SOLID",                      concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 10}},
+   {"DIAMONDS WORK SOLID",                   concept_tandem,                FALSE, l_c3,         {0, FALSE, 0, 0, 11}},
    {"SKEW",                                  concept_tandem,                FALSE, l_c4a,        {0, FALSE, 0, 0, 3}},
    {"@6 ARE AS COUPLES",                     concept_some_are_tandem,       FALSE, l_a1,         {0, TRUE,  0, 0, 1}},
    {"@6 ARE TANDEM",                         concept_some_are_tandem,       FALSE, l_c1,         {0, TRUE,  0, 0, 0}},
-   {"GRUESOME AS COUPLES",                   concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 0, 2, 1}},
-   {"GRUESOME TANDEM",                       concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 0, 2, 0}},
+   {"OUTSIDE TRIANGLES WORK SOLID",          concept_tandem,                FALSE, l_c3x,         {0, FALSE, 0, 0, 20}},
+   {"INSIDE TRIANGLES WORK SOLID",           concept_tandem,                FALSE, l_c3x,         {0, FALSE, 0, 0, 21}},
 /* -------- column break -------- */
-#define tt__2_size 14
-#define tt__2_grct 12
-#define tt__2_grtt 13
+#define tt__2_size 15
+#define tt__2_cpl2s 0
+#define tt__2_tnd2s 1
    {"COUPLES TWOSOME",                       concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 1}},
    {"TANDEM TWOSOME",                        concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 0}},
    {"SIAMESE TWOSOME",                       concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 2}},
@@ -371,13 +370,14 @@ concept_descriptor concept_descriptor_table[] = {
    {"TANDEM THREESOME",                      concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 4}},
    {"COUPLES FOURSOME",                      concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 7}},
    {"TANDEM FOURSOME",                       concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 6}},
-   {"BOXSOME",                               concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 8}},
-   {"DIAMONDSOME",                           concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 9}},
+   {"BOXSOME",                               concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 10}},
+   {"DIAMONDSOME",                           concept_tandem,                FALSE, l_c3,         {0, FALSE, 1, 0, 11}},
    {"SKEWSOME",                              concept_tandem,                FALSE, l_c4a,        {0, FALSE, 1, 0, 3}},
    {"@6 ARE COUPLES TWOSOME",                concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 1}},
    {"@6 ARE TANDEM TWOSOME",                 concept_some_are_tandem,       FALSE, l_c3,         {0, TRUE,  1, 0, 0}},
+   {"OUTSIDE TRIANGLES WORK THREESOME",      concept_tandem,                FALSE, l_a1,         {0, FALSE, 1, 0, 20}},
+   {"INSIDE TRIANGLES WORK THREESOME",       concept_tandem,                FALSE, l_a1,         {0, FALSE, 1, 0, 21}},
    {"GRUESOME TWOSOME",                      concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 1, 2, 1}},
-   {"GRUESOME TANDEM TWOSOME",               concept_gruesome_tandem,       FALSE, l_c4a,        {0, FALSE, 1, 2, 0}},
 /* -------- column break -------- */
 #define tt__3_size 14
    {"COUPLES @b TWOSOME",                    concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 1}},
@@ -387,15 +387,15 @@ concept_descriptor concept_descriptor_table[] = {
    {"TANDEMS OF THREE @b THREESOME",         concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 4}},
    {"COUPLES OF FOUR @b FOURSOME",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 7}},
    {"TANDEMS OF FOUR @b FOURSOME",           concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 6}},
-   {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 8}},
-   {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 9}},
+   {"BOXES ARE SOLID @b BOXSOME",            concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 10}},
+   {"DIAMONDS ARE SOLID @b DIAMONDSOME",     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 11}},
    {"SKEW @b TWOSOME",                       concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 2, 0, 3}},
    {"@6 ARE COUPLES @b TWOSOME",             concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 1}},
    {"@6 ARE TANDEM @b TWOSOME",              concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  2, 0, 0}},
-   {"GRUESOME AS COUPLES @b TWOSOME",        concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 2, 1}},
-   {"GRUESOME TANDEM @b TWOSOME",            concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 2, 2, 0}},
+   {"OUTSIDE TRIANGLES WORK SOLID @b THREESOME", concept_frac_tandem,       FALSE, l_c3x,         {0, FALSE, 2, 0, 20}},
+   {"INSIDE TRIANGLES WORK SOLID @b THREESOME",  concept_frac_tandem,       FALSE, l_c3x,         {0, FALSE, 2, 0, 21}},
 /* -------- column break -------- */         
-#define tt__4_size 14                        
+#define tt__4_size 14
    {"COUPLES TWOSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 1}},
    {"TANDEM TWOSOME @b SOLID",               concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 0}},
    {"SIAMESE TWOSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 2}},
@@ -403,13 +403,13 @@ concept_descriptor concept_descriptor_table[] = {
    {"TANDEM THREESOME @b SOLID",             concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 4}},
    {"COUPLES FOURSOME @b SOLID",             concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 7}},
    {"TANDEM FOURSOME @b SOLID",              concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 6}},
-   {"BOXSOME @b SOLID",                      concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 8}},
-   {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 9}},
+   {"BOXSOME @b SOLID",                      concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 10}},
+   {"DIAMONDSOME @b SOLID",                  concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 11}},
    {"SKEWSOME @b SOLID",                     concept_frac_tandem,           FALSE, l_c4,         {0, FALSE, 3, 0, 3}},
-   {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,  FALSE, l_c4,       {0, TRUE,  3, 0, 1}},
-   {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,  FALSE, l_c4,       {0, TRUE,  3, 0, 0}},
-   {"GRUESOME TWOSOME @b SOLID",             concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 2, 1}},
-   {"GRUESOME TANDEM TWOSOME @b SOLID",      concept_gruesome_frac_tandem,  FALSE, l_c4,         {0, FALSE, 3, 2, 0}},
+   {"@6 ARE COUPLES TWOSOME @b SOLID",       concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  3, 0, 1}},
+   {"@6 ARE TANDEM TWOSOME @b SOLID",        concept_some_are_frac_tandem,  FALSE, l_c4,         {0, TRUE,  3, 0, 0}},
+   {"OUTSIDE TRIANGLES WORK THREESOME @b SOLID", concept_frac_tandem,       FALSE, l_c4,         {0, FALSE, 3, 0, 20}},
+   {"INSIDE TRIANGLES WORK THREESOME @b SOLID",  concept_frac_tandem,       FALSE, l_c4,         {0, FALSE, 3, 0, 21}},
 
 /* distorted concepts */
 
@@ -665,6 +665,7 @@ concept_descriptor concept_descriptor_table[] = {
 
 /* general concepts */
 
+#define gg_2x8_matrix 18
    {"CENTERS",                               concept_centers_or_ends,       TRUE,  l_mainstream, {0, 0}},
    {"ENDS",                                  concept_centers_or_ends,       TRUE,  l_mainstream, {0, 1}},
    {"CENTERS AND ENDS",                      concept_centers_and_ends,      TRUE,  l_mainstream, {0, 0}},
@@ -785,10 +786,10 @@ static int nice_setup_concept_2x8[] = {
    pl_3_offset + pl__3_pc8,     /* phantom tidal columns */
    /* The less likely ones: */
    mm_3_offset + mm__3_4x4,
-   tt_1_offset + tt__1_grc,     /* gruesome as couples */
-   tt_1_offset + tt__1_grt,     /* gruesome tandem */
-   tt_2_offset + tt__2_grct,    /* gruesome (as couples) twosome */
-   tt_2_offset + tt__2_grtt,    /* gruesome tandem twosome */
+   tt_1_offset + tt__1_cpl,     /* (2x8 matrix) as couples */
+   tt_1_offset + tt__1_tnd,     /* (2x8 matrix) tandem */
+   tt_2_offset + tt__2_cpl2s,   /* (2x8 matrix) couples twosome */
+   tt_2_offset + tt__2_tnd2s,   /* (2x8 matrix) tandem twosome */
    -1};
 
 static int nice_setup_concept_2x6[] = {
@@ -897,6 +898,7 @@ nice_setup_thing nice_setup_thing_4x6 = {
 
 
 int phantom_concept_index = mm_1_offset + mm__1_phan;
+int matrix_2x8_concept_index = gg_offset + gg_2x8_matrix;
 int left_concept_index = mm_1_offset + mm__1_left;
 int cross_concept_index = mm_1_offset + mm__1_cross;
 int magic_concept_index = d4_1_offset + d4__1_magic;

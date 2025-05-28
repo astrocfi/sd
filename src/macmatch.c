@@ -451,7 +451,7 @@ match_update(int which_menu)
     if (matchWindow == NULL) {
         return;
     }
-    match_user_input(user_input, match_active_menu, (match_result *) 0, (char **) 0, 0, (char *) 0, (show_function) match_add, FALSE);
+    match_user_input(user_input, match_active_menu, (match_result *) 0, (char *) 0, (show_function) match_add, FALSE);
     match_end();
 }
 
@@ -475,6 +475,6 @@ match_validate(void)
     if (matchWindow == NULL) {
         return;
     }
-    match_user_input(user_input, match_active_menu, (match_result *) 0, (char **) 0, 0, (char *) 0, (show_function) match_add, TRUE);
+    match_user_input(user_input, match_active_menu, (match_result *) 0, (char *) 0, (show_function) match_add, TRUE);
     match_end();
 }

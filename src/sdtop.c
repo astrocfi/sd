@@ -141,6 +141,16 @@ Private uint32 bit_table_qtag[][4] = {
    {ID2_CENTER|ID2_CTR4|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_OUTR6, ID2_CENTER|ID2_CTR4|ID2_OUTR6},
    {ID2_CENTER|ID2_CTR4|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_CTR2,  ID2_CENTER|ID2_CTR4|ID2_CTR2}};
 
+Private uint32 bit_table_ptpd[][4] = {
+   {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
+   {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE},
+   {ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER, ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD},
+   {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
+   {ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2,           ID2_OUTR6|ID2_OUTR2,            ID2_OUTR6|ID2_OUTR2},
+   {ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE,  ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU},
+   {ID2_CTR2|ID2_CTR6|ID2_BELLE,    ID2_CTR2|ID2_CTR6|ID2_LEAD,    ID2_CTR2|ID2_CTR6|ID2_BEAU,     ID2_CTR2|ID2_CTR6|ID2_TRAILER},
+   {ID2_OUTR6|ID2_CTR6|ID2_LEAD,    ID2_OUTR6|ID2_CTR6|ID2_BEAU,   ID2_OUTR6|ID2_CTR6|ID2_TRAILER, ID2_OUTR6|ID2_CTR6|ID2_BELLE}};
+
 Private uint32 bit_table_crosswave[][4] = {
    {ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6,  ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6},
    {ID2_END|ID2_OUTRPAIRS|ID2_BELLE|ID2_OUTR6,      ID2_END|ID2_OUTRPAIRS|ID2_LEAD|ID2_OUTR6,     ID2_END|ID2_OUTRPAIRS|ID2_BEAU|ID2_OUTR6,       ID2_END|ID2_OUTRPAIRS|ID2_TRAILER|ID2_OUTR6},
@@ -258,13 +268,15 @@ extern void update_id_bits(setup *ss)
          /* **** This isn't really right -- it would allow "outer pairs bingo".
             We really should only allow 2-person calls, unless we say
             "outer triple boxes".  So we're not completely sure what the right thing is. */
-         if (livemask == 0x3CF || livemask == 0xF3C)
+         if (livemask == 0x3CFUL || livemask == 0xF3CUL)
             { ptr = bit_table_2x6p; break; }
          return;
       case s1x8:
          ptr = bit_table_1x8; break;
       case s_qtag:
          ptr = bit_table_qtag; break;
+      case s_ptpd:
+         ptr = bit_table_ptpd; break;
       case s_crosswave:
          ptr = bit_table_crosswave; break;
       case s_hrglass:
@@ -402,77 +414,77 @@ extern void touch_or_rear_back(
    /* Check first for rearing back from a wave. */
 
    if (callflags1 & CFLAG1_REAR_BACK_FROM_R_WAVE) {
-      if (scopy->kind == s1x4 && (livemask == 0xFF) && (directions == 0x28)) {
+      if (scopy->kind == s1x4 && (livemask == 0xFFUL) && (directions == 0x28UL)) {
          tptr = &rear_wave_pair;          /* Rear back from a wave to facing couples. */
       }
-      else if (scopy->kind == s1x2 && (livemask == 0xF) && (directions == 0x2)) {
+      else if (scopy->kind == s1x2 && (livemask == 0xFUL) && (directions == 0x2UL)) {
          tptr = &rear_miniwave_pair;      /* Rear back from a miniwave to facing people. */
       }
       else if (scopy->kind == s2x4) {
-         if ((livemask == 0xFFFF) && (directions == 0x2288)) {
+         if ((livemask == 0xFFFFUL) && (directions == 0x2288UL)) {
             tptr = &rear_2x4_pair;        /* Rear back from parallel waves to an 8 chain. */
          }
-         else if ((livemask == 0xFFFF) && (directions == 0x55FF)) {
+         else if ((livemask == 0xFFFFUL) && (directions == 0x55FFUL)) {
             tptr = &rear_col_pair;        /* Rear back from columns to end-to-end single 8-chains. */
          }
       }
       else if (scopy->kind == s2x2) {
-         if ((livemask == 0xFF) && (directions == 0x28)) {
+         if ((livemask == 0xFFUL) && (directions == 0x28UL)) {
             tptr = &rear_vrbox_pair;      /* Rear back from a right-hand box to a single 8 chain. */
          }
-         else if ((livemask == 0xFF) && (directions == 0x5F)) {
+         else if ((livemask == 0xFFUL) && (directions == 0x5FUL)) {
             tptr = &rear_hrbox_pair;      /* Rear back from a right-hand box to a single 8 chain. */
          }
       }
-      else if (scopy->kind == s1x8 && (livemask == 0xFFFF) && (directions == 0x2882)) {
+      else if (scopy->kind == s1x8 && (livemask == 0xFFFFUL) && (directions == 0x2882UL)) {
          tptr = &rear_gwave_pair;         /* Rear back from a grand wave to facing lines. */
       }
-      else if (scopy->kind == s_bone && livemask == 0xFFFF && ((directions == 0xA802) || (directions == 0x78D2))) {
+      else if (scopy->kind == s_bone && livemask == 0xFFFFUL && ((directions == 0xA802UL) || (directions == 0x78D2UL))) {
          /* Centers rear back from a "bone" to lines facing or "split square thru" setup. */
          tptr = &rear_bone_pair;
       }
-      else if (scopy->kind == s_rigger && livemask == 0xFFFF && ((directions == 0xA802) || (directions == 0xD872))) {
+      else if (scopy->kind == s_rigger && livemask == 0xFFFFUL && ((directions == 0xA802UL) || (directions == 0xD872UL))) {
          /* Ends rear back from a "rigger" to lines facing or "split square thru" setup. */
          tptr = &rear_wing_pair;
       }
-      else if (scopy->kind == sbigdmd && livemask == 0xFF0FF0 && ((directions == 0x1E0B40) || (directions == 0x5D0F70))) {
+      else if (scopy->kind == sbigdmd && livemask == 0xFF0FF0UL && ((directions == 0x1E0B40UL) || (directions == 0x5D0F70UL))) {
          /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
          tptr = &rear_bigd_pair1;
       }
-      else if (scopy->kind == sbigdmd && livemask == 0xC3FC3F && ((directions == 0x80702D) || (directions == 0x417C3D))) {
+      else if (scopy->kind == sbigdmd && livemask == 0xC3FC3FUL && ((directions == 0x80702DUL) || (directions == 0x417C3DUL))) {
          /* Some people rear back from horrible "T"'s to couples facing or "split square thru" setup. */
          tptr = &rear_bigd_pair2;
       }
-      else if (scopy->kind == s_thar && livemask == 0xFFFF && directions == 0x278D) {
+      else if (scopy->kind == s_thar && livemask == 0xFFFFUL && directions == 0x278DUL) {
          tptr = &rear_thar_pair;         /* Rear back from a grand wave to facing lines. */
       }
-      else if (scopy->kind == s4x4 && livemask == 0x3C3C3C3C && directions == 0x1C203408) {
+      else if (scopy->kind == s4x4 && livemask == 0x3C3C3C3CUL && directions == 0x1C203408UL) {
          tptr = &rear_ohh_pair;         /* Rear back from a grand wave to facing lines. */
       }
-      else if (scopy->kind == s_trngl4 && (livemask == 0xFF) && (directions == 0xDA)) {
+      else if (scopy->kind == s_trngl4 && (livemask == 0xFFUL) && (directions == 0xDAUL)) {
          tptr = &rear_trgl4a;        /* Rear back from a 4-person triangle to a "split square thru" setup. */
       }
-      else if (scopy->kind == s_trngl4 && (livemask == 0xFF) && (directions == 0x22)) {
+      else if (scopy->kind == s_trngl4 && (livemask == 0xFFUL) && (directions == 0x22UL)) {
          tptr = &rear_trgl4b;        /* Rear back from a 4-person triangle to a single 8 chain. */
       }
       else if (scopy->kind == s_c1phan) {
          /* Check for certain people rearing back from C1 phantoms. */
-         if ((livemask == 0xCCCCCCCC) && ((directions == 0x884C00C4) || (directions == 0x4C4CC4C4))) {
+         if ((livemask == 0xCCCCCCCCUL) && ((directions == 0x884C00C4UL) || (directions == 0x4C4CC4C4UL))) {
             tptr = &rear_c1a_pair;
          }
-         else if ((livemask == 0x33333333) && ((directions == 0x13223100) || (directions == 0x13313113))) {
+         else if ((livemask == 0x33333333UL) && ((directions == 0x13223100UL) || (directions == 0x13313113UL))) {
             tptr = &rear_c1b_pair;
          }
-         else if ((livemask == 0xCCCCCCCC) && ((directions == 0x08CC8044) || (directions == 0x08808008))) {
+         else if ((livemask == 0xCCCCCCCCUL) && ((directions == 0x08CC8044UL) || (directions == 0x08808008UL))) {
             tptr = &rear_c1c_pair;
          }
-         else if ((livemask == 0x33333333) && ((directions == 0x11203302) || (directions == 0x20200202))) {
+         else if ((livemask == 0x33333333UL) && ((directions == 0x11203302UL) || (directions == 0x20200202UL))) {
             tptr = &rear_c1d_pair;
          }
-         else if ((livemask == 0xCCCCCCCC) && ((directions == 0x084C80C4))) {
+         else if ((livemask == 0xCCCCCCCCUL) && ((directions == 0x084C80C4UL))) {
             tptr = &rear_c1e_pair;
          }
-         else if ((livemask == 0x33333333) && ((directions == 0x13203102))) {
+         else if ((livemask == 0x33333333UL) && ((directions == 0x13203102UL))) {
             tptr = &rear_c1f_pair;
          }
       }
@@ -481,13 +493,13 @@ extern void touch_or_rear_back(
    /* If we didn't find anything, check for rearing back from a qtag. */
 
    if (!tptr && (callflags1 & CFLAG1_REAR_BACK_FROM_QTAG)) {
-      if (scopy->kind == s_qtag && livemask == 0xFFFF && ((directions == 0x08A2) || (directions == 0xA802))) {
+      if (scopy->kind == s_qtag && livemask == 0xFFFFUL && ((directions == 0x08A2UL) || (directions == 0xA802UL))) {
          tptr = &rear_qtag_pair;         /* Have the centers rear back from a 1/4 tag or 3/4 tag. */
       }
-      else if (scopy->kind == s_ptpd && livemask == 0xFFFF && ((directions == 0x5FF5) || (directions == 0xD77D))) {
+      else if (scopy->kind == s_ptpd && livemask == 0xFFFFUL && ((directions == 0x5FF5UL) || (directions == 0xD77DUL))) {
          tptr = &rear_ptpd_pair;         /* Have the centers rear back from point-to-point 1/4 tags or 3/4 tags. */
       }
-      else if (scopy->kind == sdmd && livemask == 0xFF && ((directions == 0x5F) || (directions == 0xD7))) {
+      else if (scopy->kind == sdmd && livemask == 0xFFUL && ((directions == 0x5FUL) || (directions == 0xD7UL))) {
          tptr = &rear_sqtag_pair;         /* Have the centers rear back from a single 1/4 tag or 3/4 tag. */
       }
    }
@@ -500,91 +512,91 @@ extern void touch_or_rear_back(
 
       switch (scopy->kind) {
          case s2x2:
-            if (((directions ^ 0x7D) & livemask) == 0 && livemask != 0)
+            if (((directions ^ 0x7DUL) & livemask) == 0 && livemask != 0)
                tptr = &step_2x2h_pair;
-            else if (((directions ^ 0xA0) & livemask) == 0 && livemask != 0)
+            else if (((directions ^ 0xA0UL) & livemask) == 0 && livemask != 0)
                tptr = &step_2x2v_pair;
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-               if ((directions & livemask) != (0x28 & livemask) && (directions & livemask) != (0x5F & livemask))
+               if ((directions & livemask) != (0x28UL & livemask) && (directions & livemask) != (0x5FUL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
          case s2x4:
-            if ((livemask == 0xFFFF) && (directions == 0x77DD)) {
+            if ((livemask == 0xFFFFUL) && (directions == 0x77DDUL)) {
                tptr = &step_8ch_pair;         /* Check for stepping to parallel waves from an 8 chain. */
             }
-            else if ((livemask == 0xFFFF) && (directions == 0xAA00)) {
+            else if ((livemask == 0xFFFFUL) && (directions == 0xAA00UL)) {
                tptr = &step_li_pair;          /* Check for stepping to a grand wave from lines facing. */
             }
-            else if ((livemask == 0xFFFF) && ((directions == 0xDD77) || (directions == 0x5FF5))) {
+            else if ((livemask == 0xFFFFUL) && ((directions == 0xDD77UL) || (directions == 0x5FF5UL))) {
                tptr = &step_tby_pair;         /* Check for stepping to a 1/4 tag or 3/4 tag from a DPT or trade-by. */
             }
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-               if ((directions & livemask) != (0x2288 & livemask) && (directions & livemask) != (0x55FF & livemask))
+               if ((directions & livemask) != (0x2288UL & livemask) && (directions & livemask) != (0x55FFUL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
          case s_bone:
-            if (livemask == 0xFFFF && (directions == 0xA802)) {
+            if (livemask == 0xFFFFUL && (directions == 0xA802UL)) {
                /* Ends touch from a "bone" to a grand wave. */
                tptr = &step_bone_pair;
             }
             break;
          case s_rigger:
-            if (livemask == 0xFFFF && (directions == 0xA802)) {
+            if (livemask == 0xFFFFUL && (directions == 0xA802UL)) {
                /* Centers touch from a "rigger" to a grand wave. */
                tptr = &step_rig_pair;
             }
             break;
          case sbigdmd:
             /* Some people touch from horrible "T"'s. */
-            if (livemask == 0xC3FC3F && directions == 0x417C3D) {
+            if (livemask == 0xC3FC3FUL && directions == 0x417C3DUL) {
                tptr = &step_bigd_pair1;
             }
-            else if (livemask == 0xFF0FF0 && directions == 0x5D0F70) {
+            else if (livemask == 0xFF0FF0UL && directions == 0x5D0F70UL) {
                tptr = &step_bigd_pair2;
             }
             break;
          case s_trngl4:
-            if (livemask == 0xFF && (directions == 0xD7)) {
+            if (livemask == 0xFFUL && (directions == 0xD7UL)) {
                tptr = &step_tgl4_pair;
             }
             break;
          case s1x2:
-            if ((livemask == 0xF) && (directions == 0x7)) {
+            if ((livemask == 0xFUL) && (directions == 0x7UL)) {
                tptr = &step_1x2_pair;         /* Check for stepping to a miniwave from people facing. */
             }
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-               if ((directions & livemask) != (0x2 & livemask))
+               if ((directions & livemask) != (0x2UL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
          case s1x4:
             /* Check for stepping to a box from a 1x4 single 8 chain -- we allow some phantoms.  This is what makes
                triple columns turn and weave legal in certain interesting cases. */
-            if ((livemask == 0xFF) && (directions == 0x7D))
+            if ((livemask == 0xFFUL) && (directions == 0x7DUL))
                tptr = &step_1x4_pair;
-            else if ((livemask == 0xF0) && (directions == 0x70))
+            else if ((livemask == 0xF0UL) && (directions == 0x70UL))
                tptr = &step_1x4_pair;
-            else if ((livemask == 0x0F) && (directions == 0x0D))
+            else if ((livemask == 0x0FUL) && (directions == 0x0DUL))
                tptr = &step_1x4_pair;
             /* Check for stepping to a single 1/4 tag or 3/4 tag from a single-file DPT or trade-by --
                we allow some phantoms, as above. */
-            else if ((livemask == 0xFF) && ((directions == 0xD7) || (directions == 0x5F)))
+            else if ((livemask == 0xFFUL) && ((directions == 0xD7UL) || (directions == 0x5FUL)))
                tptr = &step_1x4_side_pair;
-            else if ((livemask == 0x33) && (directions == 0x13))
+            else if ((livemask == 0x33UL) && (directions == 0x13UL))
                tptr = &step_1x4_side_pair;
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-               if ((directions & livemask) != (0x22 & livemask))
+               if ((directions & livemask) != (0x22UL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
          case s1x8:
-            if ((livemask == 0xFFFF) && (directions == 0x7DD7)) {
+            if ((livemask == 0xFFFFUL) && (directions == 0x7DD7UL)) {
                tptr = &step_1x8_pair;         /* Check for stepping to a column from a 1x8 single 8 chain. */
             }
             else if ((callflags1 & CFLAG1_LEFT_MEANS_TOUCH_OR_CHECK) && did_mirror) {
-               if ((directions & livemask) != (0x2882 & livemask))
+               if ((directions & livemask) != (0x2882UL & livemask))
                   fail("Setup is not left-handed.");
             }
             break;
@@ -677,10 +689,10 @@ extern void do_matrix_expansion(
                   if (ss->people[i].id1) livemask |= j;
                }
    
-               if (livemask == 0x1717) {
+               if (livemask == 0x1717UL) {
                   eptr = &exp_4x4_4dm_stuff_a; goto expand_me;
                }
-               else if (livemask == 0x7171) {
+               else if (livemask == 0x7171UL) {
                   eptr = &exp_4x4_4dm_stuff_b; goto expand_me;
                }
          }
@@ -1380,7 +1392,7 @@ extern void toplevelmove(void)
             tbonetest[i>>3] |= starting_setup.people[i].id1;
          }
    
-         if (livemask == 0x5AA5) {
+         if (livemask == 0x5AA5UL) {
             nearbit = ID2_NEARBOX;
    
             if (!(tbonetest[0] & 1)) {
@@ -1390,7 +1402,7 @@ extern void toplevelmove(void)
                farbit = ID2_FARCOL;
             }
          }
-         else if (livemask == 0xA55A) {
+         else if (livemask == 0xA55AUL) {
             farbit = ID2_FARBOX;
    
             if (!(tbonetest[1] & 1)) {

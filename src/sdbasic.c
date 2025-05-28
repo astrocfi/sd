@@ -70,6 +70,8 @@ extern void mirror_this(setup *s)
 
    setup temp = *s;
 
+   if (s->kind == nothing) return;
+
    cptr = setup_attrs[s->kind].nice_setup_coords;
    if (!cptr) fail("Don't recognize ending setup for this call; not able to do it mirror.");
    limit = setup_attrs[s->kind].setup_limits;

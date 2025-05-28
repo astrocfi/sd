@@ -99,6 +99,8 @@ Private restriction_thing box_1face     = {0, {2, 2, 2, 2},                {0, 0
 Private restriction_thing box_magic     = {0, {2, 0, 2, 0},                {0, 2, 0, 2},                   {0}, {0}, TRUE,  chk_box};            /* check for a "magic" (split-trade-circulate type) box */
 Private restriction_thing s4x4_wave     = {0,   {2, 0, 2, 0, 0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0},
                                                 {0, 0, 0, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
+Private restriction_thing s4x4_2fl     = {0,   {2, 2, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2},
+                                                {0, 0, 0, 0, 0, 0, 2, 0, 2, 2, 2, 2, 2, 2, 0, 2},          {0}, {0}, FALSE, chk_box};            /* check for 4 waves of consistent handedness and consistent headliner-ness. */
 
 Private restriction_thing cwave_qtg     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
 Private restriction_thing wave_qtag     = {2, {2, 7},                      {3, 6},                         {0}, {0}, FALSE, chk_wave};           /* check for wave across the center */
@@ -140,6 +142,8 @@ extern restriction_thing *get_restriction_thing(setup_kind k, assumption_thing t
       case s4x4:
          if (t.assumption == cr_wave_only && (t.assump_col & 1) == 0)
             restr_thing_ptr = &s4x4_wave;
+         if (t.assumption == cr_2fl_only && (t.assump_col & 1) == 0)
+            restr_thing_ptr = &s4x4_2fl;
          break;
       case s2x3:
          if (t.assumption == cr_wave_only && t.assump_col != 0)
@@ -426,12 +430,16 @@ Private void do_concept_expand_4dm_matrix(
 
 
 typedef struct {
+   int size;
+   setup_kind ikind;
    int map1[8];
    int map2[8];
 } phan_map;
 
-Private phan_map map_c1_phan = {{0, 2, 7, 5, 8, 10, 15, 13}, {4, 6, 11, 9, 12, 14, 3, 1}};
-Private phan_map map_o_spots = {{10, -1, -1, 1, 2, -1, -1, 9}, {14, -1, -1, 5, 6, -1, -1, 13}};
+Private phan_map map_c1_phan = {8, s2x4, {0, 2, 7, 5, 8, 10, 15, 13}, {4, 6, 11, 9, 12, 14, 3, 1}};
+Private phan_map map_o_spots = {8, s2x4, {10, -1, -1, 1, 2, -1, -1, 9}, {14, -1, -1, 5, 6, -1, -1, 13}};
+Private phan_map map_qt_phan = {8, s_qtag, {-1, -1, 2, 3, -1, -1, 6, 7}, {1, 4, -1, -1, 5, 0, -1, -1}};
+
 
 
 Private void do_c1_phantom_move(
@@ -461,6 +469,9 @@ Private void do_c1_phantom_move(
 
       if (junk_concepts != 0)
          fail("Phantom couples/tandem must not have intervening concpets.");
+
+      /* "Phantom tandem" has a higher level than either "phantom" or "tandem". */
+      if (phantom_tandem_level > calling_level) warn(warn__bad_concept_level);
 
       switch (next_parseptr->concept->value.arg4) {
          case 2: case 3:
@@ -512,6 +523,9 @@ Private void do_c1_phantom_move(
    else if (ss->kind == s_c1phan)
       /* This is a vanilla C1 phantom setup. */
       map_ptr = &map_c1_phan;
+   else if (ss->kind == s_bone)
+      /* We allow "phantom" in a bone setup to mean two "dunlap" quarter tags. */
+      map_ptr = &map_qt_phan;
    else if (ss->kind == s4x4) {
       setup temp;
 
@@ -574,14 +588,14 @@ Private void do_c1_phantom_move(
    setup1 = *ss;
    setup2 = *ss;
    
-   setup1.kind = s2x4;
-   setup2.kind = s2x4;
+   setup1.kind = map_ptr->ikind;
+   setup2.kind = map_ptr->ikind;
    setup1.rotation = ss->rotation;
    setup2.rotation = ss->rotation+1;
    clear_people(&setup1);
    clear_people(&setup2);
 
-   for (i=0 ; i<8 ; i++) {
+   for (i=0 ; i<map_ptr->size ; i++) {
       if (map_ptr->map1[i] >= 0)
          (void) copy_person(&setup1, i, ss, map_ptr->map1[i]);
 
@@ -2893,6 +2907,10 @@ Private void do_concept_triple_boxes(
    setup *result)
 {
    if (ss->kind != s2x6) fail("Must have a 2x6 setup for this concept.");
+
+   if ((ss->cmd.cmd_misc_flags & CMD_MISC__MYSTIFY_SPLIT) && parseptr->concept->value.arg1 != MPKIND__SPLIT)
+      fail("Mystic not allowed with this concept.");
+
    divided_setup_move(ss, (*map_lists[s2x2][2])[parseptr->concept->value.arg1][0], phantest_ok, TRUE, result);
 }
 
@@ -4033,7 +4051,7 @@ Private void do_concept_tandem(
          parseptr->concept->value.arg2,    /* normal=FALSE, twosome=TRUE */
          parseptr->number,
          parseptr->concept->value.arg3,    /* normal=0 phantom=1 gruesome=2 */
-         parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2 */
+         parseptr->concept->value.arg4,    /* tandem=0 couples=1 siamese=2, etc. */
          result);
 }
 
@@ -4082,6 +4100,23 @@ extern long_boolean do_big_concept(
          passing zero for the final commands.   This may be a bug.  In any case, we
          have now preserved even those two flags in cmd_final_flags, so things can
          possibly get better. */
+
+   if (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) {
+      /* We only allow "mystic", not "central" or "snag", and only for certain concepts. */
+      if (     (ss->cmd.cmd_misc_flags & CMD_MISC__CENTRAL_MASK) != CMD_MISC__CENTRAL_MYSTIC ||
+               !(this_table_item->concept_prop & CONCPROP__PERMIT_MYSTIC))
+      fail("Can't do \"central/snag/mystic\" followed by another concept or modifier.");
+
+      /* Turn on the good bits. */
+
+      ss->cmd.cmd_misc_flags |= CMD_MISC__MYSTIFY_SPLIT;
+      if (ss->cmd.cmd_misc_flags & CMD_MISC__INVERT_CENTRAL)
+         ss->cmd.cmd_misc_flags |= CMD_MISC__MYSTIFY_INVERT;
+
+      /* And turn off the old ones. */
+
+      ss->cmd.cmd_misc_flags &= ~(CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL);
+   }
 
    if ((ss->cmd.cmd_misc_flags & CMD_MISC__MATRIX_CONCEPT) && !(this_table_item->concept_prop & CONCPROP__PERMIT_MATRIX))
       fail("\"Matrix\" concept must be followed by applicable concept.");
@@ -4306,7 +4341,7 @@ concept_table_item concept_table[] = {
    /* concept_do_phantom_diamonds */      {CONCPROP__NEED_4DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_do_phantom_diamonds},
    /* concept_do_phantom_1x6 */           {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x6},
    /* concept_do_phantom_1x8 */           {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_1x8},
-   /* concept_do_phantom_2x4 */           {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_phantom_2x4_concept},
+   /* concept_do_phantom_2x4 */           {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,            do_phantom_2x4_concept},
    /* concept_do_phantom_2x3 */           {CONCPROP__NEED_3X4 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_do_phantom_2x3},
    /* concept_divided_2x4 */              {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x4},
    /* concept_divided_2x3 */              {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Standard_matrix_phantom,                       do_concept_divided_2x3},
@@ -4315,7 +4350,7 @@ concept_table_item concept_table[] = {
    /* concept_single_diagonal */          {CONCPROP__NO_STEP | CONCPROP__GET_MASK | CONCPROP__USE_SELECTOR,                        do_concept_single_diagonal},
    /* concept_double_diagonal */          {CONCPROP__NO_STEP | CONCPROP__STANDARD,                                                 do_concept_double_diagonal},
    /* concept_parallelogram */            {CONCPROP__NO_STEP | CONCPROP__GET_MASK,                                                 do_concept_parallelogram},
-   /* concept_triple_lines */             {CONCPROP__NEED_3X4_1X12 | Standard_matrix_phantom,                                      do_concept_triple_lines},
+   /* concept_triple_lines */             {CONCPROP__NEED_3X4_1X12 | Standard_matrix_phantom | CONCPROP__PERMIT_MYSTIC,            do_concept_triple_lines},
    /* concept_triple_lines_tog */         {CONCPROP__NEED_3X4_1X12 | Nostandard_matrix_phantom,                                    do_concept_triple_lines_tog},
    /* concept_triple_lines_tog_std */     {CONCPROP__NEED_3X4_1X12 | Standard_matrix_phantom,                                      do_concept_triple_lines_tog},
    /* concept_quad_lines */               {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_concept_quad_lines},
@@ -4323,7 +4358,7 @@ concept_table_item concept_table[] = {
    /* concept_quad_lines_tog_std */       {CONCPROP__NEED_4X4_1X16 | Standard_matrix_phantom,                                      do_concept_quad_lines_tog},
    /* concept_quad_boxes */               {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_quad_boxes},
    /* concept_quad_boxes_together */      {CONCPROP__NEED_2X8 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_quad_boxes_tog},
-   /* concept_triple_boxes */             {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_triple_boxes},
+   /* concept_triple_boxes */             {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom | CONCPROP__PERMIT_MYSTIC, do_concept_triple_boxes},
    /* concept_triple_boxes_together */    {CONCPROP__NEED_2X6 | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                     do_concept_triple_boxes_tog},
    /* concept_triple_diamonds */          {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds},
    /* concept_triple_diamonds_together */ {CONCPROP__NEED_3DMD | CONCPROP__NO_STEP | Nostandard_matrix_phantom,                    do_concept_triple_diamonds_tog},
@@ -4339,8 +4374,8 @@ concept_table_item concept_table[] = {
    /* concept_assume_waves */             {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_assume_waves},
    /* concept_active_phantoms */          {0,                                                                                      do_concept_active_phantoms},
    /* concept_mirror */                   {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_mirror},
-   /* concept_central */                  {CONCPROP__SHOW_SPLIT,                                                                   do_concept_central},
-   /* concept_snag_mystic */              {0,                                                                                      do_concept_central},
+   /* concept_central */                  {CONCPROP__MATRIX_OBLIVIOUS | CONCPROP__SHOW_SPLIT,                                      do_concept_central},
+   /* concept_snag_mystic */              {CONCPROP__MATRIX_OBLIVIOUS,                                                             do_concept_central},
    /* concept_crazy */                    {0,                                                                                      do_concept_crazy},
    /* concept_frac_crazy */               {CONCPROP__USE_NUMBER,                                                                   do_concept_crazy},
    /* concept_fan_or_yoyo */              {0,                                                                                      do_concept_fan_or_yoyo},

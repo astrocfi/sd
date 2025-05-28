@@ -1749,11 +1749,14 @@ x22_girl_facing_boy
       person is not checked.
 
 dmd_ctrs_rh
-      applies to a diamond or single 1/4-tag.  Returns TRUE if the center
-      two people are in a right-handed miniwave.  Returns FALSE if they
-      are in a left-handed miniwave.  One live person in the center is
-      sufficient to make the test.  Raises an error if the centers are
-      both phantoms or they are not in a miniwave.  This predicate is
+      applies to a diamond, single general 1/4-tag, or a spindle.
+      Returns TRUE if the center two people or the diamond or 1/4 tag are in a
+      right-handed miniwave.  Returns FALSE if they are in a left-handed
+      miniwave.  For a spindle, tests whether all 3 miniwaves have right
+      or left handedness, respectively.  This predicate is lax in the
+      presences of phantoms -- one live person in the center is sufficient
+      to make the test.  Raises an error if the centers are all phantoms or
+      if they are not in a miniwave or consistent miniwaves.  This predicate is
       unusual in that it does not look specifically at the person under
       test.  It evaluates the setup as a whole.
 

@@ -1111,7 +1111,7 @@ uims_postinitialize(void)
    for (i=0; i<number_of_taggers; i++)
       tagger_menu_list[i] = tagger_calls[i]->menu_name;
 
-   tagger_menu_list[number_of_taggers] = (cstring) 0;
+   tagger_menu_list[number_of_taggers] = (Cstring) 0;
 
     /* initialize our special empty call menu */
     call_menu_lists[call_list_empty] = empty_menu;

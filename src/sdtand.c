@@ -36,7 +36,8 @@ typedef struct {
    setup virtual_result;
    int vertical_people[MAX_PEOPLE];    /* 1 if original people were near/far; 0 if lateral */
    int twosomep[MAX_PEOPLE];           /* 0: solid / 1: twosome / 2: solid-to-twosome / 3: twosome-to-solid */
-   unsigned int single_mask;
+   uint32 single_mask;
+   long_boolean triangles;
    int np;
 } tandrec;
 
@@ -157,7 +158,7 @@ Private tm_thing maps_isearch_threesome[] = {
    {{0, 5},               {1, 4},               {2, 3},                {0},      0,      077,         2, 1,  0,  0, 0,  s1x2,  s2x3},
    {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s2x2,  s2x6},
    {{3, 8, 11, 0},        {4, 7, 10, 1},        {5, 6, 9, 2},          {0},      0,    07777,         4, 1,  0,  0, 0,  s2x2,  s2x6},
-   {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},    0x55,   07777,         4, 0,  0,  0, 0,  s1x4,  s1x12},
+   {{0, 3, 8, 11},        {1, 4, 7, 10},        {2, 5, 6, 9},          {0},   0x55,    07777,         4, 0,  0,  0, 0,  s1x4,  s1x12},
    {{3, 8, 21, 14, 17, 18, 11, 0},       {4, 7, 22, 13, 16, 19, 10, 1},
                                          {5, 6, 23, 12, 15, 20, 9, 2}, {0},      0,0x0FFFFFF,         8, 1,  0,  0, 0,  s2x4,  s4x6},
    {{9, 8, 6, 7},         {10, 11, 4, 5},       {0, 1, 3, 2},          {0},      0,     0000,         4, 0,  0,  0, 0,  s1x4,  s3x4},
@@ -180,20 +181,30 @@ Private tm_thing maps_isearch_foursome[] = {
 Private tm_thing maps_isearch_boxsome[] = {
 
 /*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
-   {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s1x2,  s2x4},
+   {{0, 2},           {1, 3},           {7, 5},           {6, 4},              0x5,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s2x4},
    {{7, 5},           {0, 2},           {6, 4},           {1, 3},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s2x4},
-   {{0, 2, 6, 4},     {1, 3, 7, 5},     {15, 13, 9, 11},  {14, 12, 8, 10},    0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s1x4,  s2x8},
+   {{0, 2, 6, 4},     {1, 3, 7, 5},     {15, 13, 9, 11},  {14, 12, 8, 10},    0x55,   0xFFFF,         4, 0,  0,  0, 0,  s1x4,  s2x8},
    {{15, 13, 9, 11},  {0, 2, 6, 4},     {14, 12, 8, 10},  {1, 3, 7, 5},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s2x8},
-   {{12, 14, 7, 9},   {13, 0, 2, 11},   {10, 3, 5, 8},    {15, 1, 4, 6},      0x55,  0x0FFFF,         4, 0,  0,  0, 0,  s2x2,  s4x4},
-   {{10, 3, 5, 8},    {12, 14, 7, 9},   {15, 1, 4, 6},   {13, 0, 2, 11},         0,        0,         4, 0,  0,  0, 0,  s2x2,  s4x4},
+   {{12, 14, 7, 9},   {13, 0, 2, 11},   {10, 3, 5, 8},    {15, 1, 4, 6},      0x55,   0xFFFF,         4, 0,  0,  0, 0,  s2x2,  s4x4},
+   {{10, 3, 5, 8},    {12, 14, 7, 9},   {15, 1, 4, 6},    {13, 0, 2, 11},        0,        0,         4, 0,  0,  0, 0,  s2x2,  s4x4},
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 Private tm_thing maps_isearch_dmdsome[] = {
 
 /*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
-   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,    0x0FF,         2, 0,  0,  0, 0,  s1x2,  s_ptpd},
+   {{0, 6},           {1, 7},           {3, 5},           {2, 4},              0x5,     0xFF,         2, 0,  0,  0, 0,  s1x2,  s_ptpd},
    {{5, 4},           {6, 3},           {7, 2},           {0, 1},                0,        0,         2, 0,  0,  0, 0,  s1x2,  s_qtag},
    {{11, 10, 8, 9},   {12, 14, 5, 7},   {13, 15, 4, 6},   {0, 1, 3, 2},          0,        0,         4, 0,  0,  0, 0,  s1x4,  s4dmd},
+   {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
+
+
+Private tm_thing maps_isearch_tglsome[] = {
+
+/*   map1              map2              map3              map4               sidemask outsidemask limit rot            insetup outsetup */
+   {{6, 0, 2, 4},     {-1, 7, -1, 3},   {-1, 5, -1, 1},   {0},                0xC4,     0xBB,         4, 0,  0,  0, 0,  s1x4,  s_rigger},
+   {{1, 2, 5, 6},     {0, -1, 4, -1},   {3, -1, 7, -1},   {0},                0x31,     0xBB,         4, 0,  0,  0, 0,  s1x4,  s_ptpd},
+   {{0, 3, 4, 7},     {-1, 2, -1, 6},   {-1, 1, -1, 5},   {0},                0x4C,     0xEE,         4, 0,  0,  0, 0,  s1x4,  s_ptpd},
+   {{5, 7, 1, 3},     {6, -1, 2, -1},   {0, -1, 4, -1},   {0},                0x13,     0x77,         4, 0,  0,  0, 0,  s1x4,  s_bone},
    {{0},              {0},              {0},              {0},                   0,     0000,         0, 0,  0,  0, 0,  nothing,  nothing}};
 
 
@@ -205,41 +216,41 @@ typedef struct {
 } siamese_item;
 
 siamese_item siamese_table[] = {
-   {s2x4,        0x00FF0000, 0x99,   warn__ctrstand_endscpls},
-   {s2x4,        0x00990066, 0x99,   warn__ctrstand_endscpls},
-   {s2x4,        0x000000FF, 0x66,   warn__ctrscpls_endstand},
-   {s2x4,        0x00660099, 0x66,   warn__ctrscpls_endstand},
-   {s2x4,        0x003300CC, 0xCC,   warn__none},
-   {s2x4,        0x00CC0033, 0x33,   warn__none},
-   {s_trngl4,    0x000F0000, 0x03,   warn__none},
-   {s_trngl4,    0x0000000F, 0x0C,   warn__none},
-   {s_c1phan,    0x0000AAAA, 0xA0A0, warn__none},
-   {s_c1phan,    0x00005555, 0x0505, warn__none},
-   {s_c1phan,    0xAAAA0000, 0x0A0A, warn__none},
-   {s_c1phan,    0x55550000, 0x5050, warn__none},
-   {s_c1phan,    0x00005AA5, 0x00A5, warn__none},  /* These 8 are unsymmetrical. */
-   {s_c1phan,    0x0000A55A, 0xA500, warn__none},
-   {s_c1phan,    0x000055AA, 0x05A0, warn__none},
-   {s_c1phan,    0x0000AA55, 0xA005, warn__none},
-   {s_c1phan,    0x5AA50000, 0x5A00, warn__none},
-   {s_c1phan,    0xA55A0000, 0x005A, warn__none},
-   {s_c1phan,    0x55AA0000, 0x500A, warn__none},
-   {s_c1phan,    0xAA550000, 0x0A50, warn__none},
-   {s4x4,        0x0000AAAA, 0x0A0A, warn__none},
-   {s4x4,        0x0000CCCC, 0x8484, warn__none},
-   {s4x4,        0xAAAA0000, 0xA0A0, warn__none},
-   {s4x4,        0xCCCC0000, 0x4848, warn__none},
-   {s_qtag,      0x003300CC, 0xCC,   warn__ctrscpls_endstand},
-   {s_qtag,      0x00CC0033, 0x33,   warn__ctrstand_endscpls},
-   {s_rigger,    0x00FF0000, 0x33,   warn__ctrscpls_endstand},
-   {s_rigger,    0x00CC0033, 0x33,   warn__ctrscpls_endstand},
-   {s_rigger,    0x000000FF, 0xCC,   warn__ctrstand_endscpls},
-   {s_rigger,    0x003300CC, 0xCC,   warn__ctrstand_endscpls},
-   {s_bone,      0x00FF0000, 0x33,   warn__ctrstand_endscpls},
-   {s_bone,      0x000000FF, 0xCC,   warn__ctrscpls_endstand},
-   {s_crosswave, 0x00FF0000, 0xCC,   warn__ctrscpls_endstand},
-   {s_crosswave, 0x000000FF, 0x33,   warn__ctrstand_endscpls},
-   {nothing,     0,          0,      warn__none}};
+   {s2x4,        0x00FF0000UL, 0x99UL,   warn__ctrstand_endscpls},
+   {s2x4,        0x00990066UL, 0x99UL,   warn__ctrstand_endscpls},
+   {s2x4,        0x000000FFUL, 0x66UL,   warn__ctrscpls_endstand},
+   {s2x4,        0x00660099UL, 0x66UL,   warn__ctrscpls_endstand},
+   {s2x4,        0x003300CCUL, 0xCCUL,   warn__none},
+   {s2x4,        0x00CC0033UL, 0x33UL,   warn__none},
+   {s_trngl4,    0x000F0000UL, 0x03UL,   warn__none},
+   {s_trngl4,    0x0000000FUL, 0x0CUL,   warn__none},
+   {s_c1phan,    0x0000AAAAUL, 0xA0A0UL, warn__none},
+   {s_c1phan,    0x00005555UL, 0x0505UL, warn__none},
+   {s_c1phan,    0xAAAA0000UL, 0x0A0AUL, warn__none},
+   {s_c1phan,    0x55550000UL, 0x5050UL, warn__none},
+   {s_c1phan,    0x00005AA5UL, 0x00A5UL, warn__none},  /* These 8 are unsymmetrical. */
+   {s_c1phan,    0x0000A55AUL, 0xA500UL, warn__none},
+   {s_c1phan,    0x000055AAUL, 0x05A0UL, warn__none},
+   {s_c1phan,    0x0000AA55UL, 0xA005UL, warn__none},
+   {s_c1phan,    0x5AA50000UL, 0x5A00UL, warn__none},
+   {s_c1phan,    0xA55A0000UL, 0x005AUL, warn__none},
+   {s_c1phan,    0x55AA0000UL, 0x500AUL, warn__none},
+   {s_c1phan,    0xAA550000UL, 0x0A50UL, warn__none},
+   {s4x4,        0x0000AAAAUL, 0x0A0AUL, warn__none},
+   {s4x4,        0x0000CCCCUL, 0x8484UL, warn__none},
+   {s4x4,        0xAAAA0000UL, 0xA0A0UL, warn__none},
+   {s4x4,        0xCCCC0000UL, 0x4848UL, warn__none},
+   {s_qtag,      0x003300CCUL, 0xCCUL,   warn__ctrscpls_endstand},
+   {s_qtag,      0x00CC0033UL, 0x33UL,   warn__ctrstand_endscpls},
+   {s_rigger,    0x00FF0000UL, 0x33UL,   warn__ctrscpls_endstand},
+   {s_rigger,    0x00CC0033UL, 0x33UL,   warn__ctrscpls_endstand},
+   {s_rigger,    0x000000FFUL, 0xCCUL,   warn__ctrstand_endscpls},
+   {s_rigger,    0x003300CCUL, 0xCCUL,   warn__ctrstand_endscpls},
+   {s_bone,      0x00FF0000UL, 0x33UL,   warn__ctrstand_endscpls},
+   {s_bone,      0x000000FFUL, 0xCCUL,   warn__ctrscpls_endstand},
+   {s_crosswave, 0x00FF0000UL, 0xCCUL,   warn__ctrscpls_endstand},
+   {s_crosswave, 0x000000FFUL, 0x33UL,   warn__ctrstand_endscpls},
+   {nothing,     0,            0,        warn__none}};
 
 
 Private void initialize_one_table(tm_thing *map_start, int np)
@@ -248,13 +259,13 @@ Private void initialize_one_table(tm_thing *map_start, int np)
 
    for (map_search = map_start; map_search->outsetup != nothing; map_search++) {
       int i;
-      unsigned int m;
-      unsigned int imask = 0;
-      unsigned int omask = 0;
-      unsigned int osidemask = 0;
+      uint32 m;
+      uint32 imask = 0;
+      uint32 omask = 0;
+      uint32 osidemask = 0;
 
       /* All 1's for people in outer setup. */
-      unsigned int alloutmask = (1 << (setup_attrs[map_search->outsetup].setup_limits+1))-1;
+      uint32 alloutmask = (1 << (setup_attrs[map_search->outsetup].setup_limits+1))-1;
 
       for (i=0, m=1; i<map_search->limit; i++, m<<=2) {
          alloutmask &= ~(1 << map_search->map1[i]);
@@ -299,17 +310,18 @@ extern void initialize_tandem_tables(void)
    initialize_one_table(maps_isearch_foursome, 4);
    initialize_one_table(maps_isearch_boxsome, 4);
    initialize_one_table(maps_isearch_dmdsome, 4);
+   initialize_one_table(maps_isearch_tglsome, 3);
 }
 
 
 Private void unpack_us(
    tm_thing *map_ptr,
-   unsigned int orbitmask,
+   uint32 orbitmask,
    tandrec *tandstuff,
    setup *result)
 {
    int i;
-   unsigned int m, o, r;
+   uint32 m, o, r;
 
    result->kind = map_ptr->outsetup;
    result->rotation = tandstuff->virtual_result.rotation - map_ptr->rot;
@@ -317,7 +329,7 @@ Private void unpack_us(
    r = map_ptr->rot*011;
 
    for (i=0, m=map_ptr->insinglemask, o=orbitmask; i<map_ptr->limit; i++, m>>=2, o>>=2) {
-      int z = rotperson(tandstuff->virtual_result.people[i].id1, r);
+      uint32 z = rotperson(tandstuff->virtual_result.people[i].id1, r);
 
       if (m & 1) {
          /* Unpack single person. */
@@ -393,12 +405,11 @@ Private void pack_us(
    tm_thing *map_ptr,
    int fraction,
    long_boolean twosome,
-   int tnd_cpl_siam,
+   int key,
    tandrec *tandstuff)
 {
    int i;
-   int lat;
-   unsigned int m, sgl;
+   uint32 m, sgl;
 
    tandstuff->virtual_setup.rotation = map_ptr->rot & 1;
    tandstuff->virtual_setup.kind = map_ptr->insetup;
@@ -408,17 +419,19 @@ Private void pack_us(
 
       personrec *ptr = &tandstuff->virtual_setup.people[i];
 
+      int vert = (3 + map_ptr->rot - m) & 3;
+
       f = s[map_ptr->map1[i]];
 
-      lat = (m ^ map_ptr->rot) & 1;
+      if (!tandstuff->triangles) vert &= 1;
 
       if (sgl & 1) {
          ptr->id1 = (f.id1 & ~0700) | (i << 6) | BIT_TANDVIRT;
          ptr->id2 = f.id2;
-         b.id1 = 0xFFFFFFFF;
+         b.id1 = ~0UL;
       }
       else {
-         unsigned int u1;
+         uint32 u1;
 
          b = s[map_ptr->map2[i]];
          b2 = b;
@@ -426,7 +439,7 @@ Private void pack_us(
          if (tandstuff->np >= 3) b2 = s[map_ptr->map3[i]];
          if (tandstuff->np >= 4) b3 = s[map_ptr->map4[i]];
 
-         if (tnd_cpl_siam == 3) {
+         if (key == 3) {
             /* If this is skew/skewsome, we require people paired in the appropriate way.
                This means [f, b3] must match, [b, b2] must match, and [f, b] must not match. */
 
@@ -458,7 +471,7 @@ Private void pack_us(
          u1 = f.id1 | b.id1 | b2.id1 | b3.id1;
 
          if (u1) {
-            unsigned int vp1, vp2;
+            uint32 vp1, vp2;
          
             if (twosome >= 2 && (u1 & STABLE_MASK))
                fail("Sorry, can't nest fractional stable/twosome.");
@@ -535,7 +548,7 @@ Private void pack_us(
             ptr->id2 = 0;
          }
       
-         tandstuff->vertical_people[i] = lat ^ 1;   /* 1 if original people were near/far; 0 if lateral */
+         tandstuff->vertical_people[i] = vert;   /* 1 if original people were near/far; 0 if lateral */
          tandstuff->twosomep[i] = twosome;
       }
 
@@ -558,9 +571,9 @@ extern void tandem_couples_move(
    int twosome,               /* solid=0 / twosome=1 / solid-to-twosome=2 / twosome-to-solid=3 */
    int fraction,              /* number, if doing fractional twosome/solid */
    int phantom,               /* normal=0 / phantom=1 / gruesome=2 */
-   int tnd_cpl_siam,          /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
+   int key,                   /* tandem = 0 / couples = 1 / siamese = 2 / skew = 3
                                  tandem of 3 = 4 / couples of 3 = 5 / tandem of 4 = 6 / couples of 4 = 7
-                                 box = 8 / diamond = 9 */
+                                 box = 10 / diamond = 10 / outside triangles = 20 / inside triangles = 21 */
    setup *result)
 {
    selector_kind saved_selector;
@@ -570,16 +583,44 @@ extern void tandem_couples_move(
    uint32 nsmask, ewmask, allmask;
    int i, np;
    uint32 jbit;
-   uint32 hmask;
+   uint32 hmask, hmask2;
    uint32 orbitmask;
-   uint32 sglmask;
-   uint32 livemask;
+   uint32 sglmask, sglmask2;
+   uint32 livemask, livemask2;
    setup saved_originals;
    long_boolean fractional = FALSE;
    tm_thing *our_map_table;
 
    tandstuff.single_mask = 0;
+   tandstuff.triangles = FALSE;
    clear_people(result);
+
+   if (key == 20 || key == 21) {
+      np = 3;
+      our_map_table = maps_isearch_tglsome;
+      tandstuff.triangles = TRUE;
+      selector = (key == 20) ? selector_outer6 : selector_center6;
+   }
+   else if (key == 11) {
+      np = 4;
+      our_map_table = maps_isearch_dmdsome;
+   }
+   else if (key == 10 || key == 3) {
+      np = 4;
+      our_map_table = maps_isearch_boxsome;
+   }
+   else if (key >= 6) {
+      np = 4;
+      our_map_table = maps_isearch_foursome;
+   }
+   else if (key >= 4) {
+      np = 3;
+      our_map_table = maps_isearch_threesome;
+   }
+   else {
+      np = 2;
+      our_map_table = maps_isearch_twosome;
+   }
 
    if (setup_attrs[ss->kind].setup_limits < 0) fail("Can't do tandem/couples concept from this position.");
 
@@ -592,6 +633,7 @@ extern void tandem_couples_move(
 
    /* Find out who is selected, if this is a "so-and-so are tandem". */
    saved_selector = current_selector;
+
    if (selector != selector_uninitialized)
       current_selector = selector;
 
@@ -600,7 +642,7 @@ extern void tandem_couples_move(
    allmask = 0;
 
    for (i=0, jbit=1; i<=setup_attrs[ss->kind].setup_limits; i++, jbit<<=1) {
-      unsigned int p = ss->people[i].id1;
+      uint32 p = ss->people[i].id1;
       if (p) {
          allmask |= jbit;
          if ((selector != selector_uninitialized) && !selectp(ss, i))
@@ -627,28 +669,7 @@ extern void tandem_couples_move(
    if (fractional && fraction > 4)
       fail("Can't do fractional twosome more than 4/4.");
 
-   if (tnd_cpl_siam == 9) {
-      np = 4;
-      our_map_table = maps_isearch_dmdsome;
-   }
-   else if (tnd_cpl_siam == 8 || tnd_cpl_siam == 3) {
-      np = 4;
-      our_map_table = maps_isearch_boxsome;
-   }
-   else if (tnd_cpl_siam >= 6) {
-      np = 4;
-      our_map_table = maps_isearch_foursome;
-   }
-   else if (tnd_cpl_siam >= 4) {
-      np = 3;
-      our_map_table = maps_isearch_threesome;
-   }
-   else {
-      np = 2;
-      our_map_table = maps_isearch_twosome;
-   }
-
-   if (tnd_cpl_siam == 2) {
+   if (key == 2) {
       /* Siamese. */
       uint32 j;
 
@@ -668,15 +689,11 @@ extern void tandem_couples_move(
       ewmask ^= (j & allmask);
       nsmask ^= (j & allmask);
    }
-   else if (tnd_cpl_siam == 3) {
+   else if (key == 10 || key == 3) {
       ewmask = allmask;
       nsmask = 0;
    }
-   else if (tnd_cpl_siam == 8) {
-      ewmask = allmask;
-      nsmask = 0;
-   }
-   else if (tnd_cpl_siam == 9) {
+   else if (key == 11) {
       if (ss->kind == s_ptpd) {
          ewmask = allmask;
          nsmask = 0;
@@ -686,7 +703,11 @@ extern void tandem_couples_move(
          nsmask = allmask;
       }
    }
-   else if (tnd_cpl_siam & 1) {
+   else if (key == 20 || key == 21) {
+      ewmask = allmask;
+      nsmask = 0;
+   }
+   else if (key & 1) {
       /* Couples -- swap masks.  Tandem -- do nothing. */
       uint32 j = ewmask;
       ewmask = nsmask;
@@ -729,38 +750,51 @@ extern void tandem_couples_move(
 
    tandstuff.np = np;
    tandstuff.virtual_setup.cmd = ss->cmd;
+   tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_none;
    tandstuff.virtual_setup.cmd.cmd_misc_flags |= CMD_MISC__DISTORTED;
-   pack_us(ss->people, map, fraction, twosome, tnd_cpl_siam, &tandstuff);
+   pack_us(ss->people, map, fraction, twosome, key, &tandstuff);
    update_id_bits(&tandstuff.virtual_setup);
    saved_originals = tandstuff.virtual_setup;    /* Move will clobber the incoming setup.  This bug caused
                                                     embarrassment at an ATA dance, April 3, 1993. */
-   move(&tandstuff.virtual_setup, FALSE, &tandstuff.virtual_result);
+
+   if (phantom == 2) {
+      tandstuff.virtual_setup.cmd.cmd_assume.assump_col = 0;
+      tandstuff.virtual_setup.cmd.cmd_assume.assump_both = 0;
+      tandstuff.virtual_setup.cmd.cmd_assume.assumption = cr_wave_only;
+
+      move_perhaps_with_active_phantoms(
+            &tandstuff.virtual_setup,
+            check_restriction(&tandstuff.virtual_setup, tandstuff.virtual_setup.cmd.cmd_assume, 99),
+            &tandstuff.virtual_result);
+   }
+   else
+      move(&tandstuff.virtual_setup, FALSE, &tandstuff.virtual_result);
 
    if (setup_attrs[tandstuff.virtual_result.kind].setup_limits < 0)
       fail("Don't recognize ending position from this tandem or as couples call.");
 
-   sglmask = 0;     /* Bits appear here in pairs!  Only low bit of each pair is used. */
-   livemask = 0;    /* Bits appear here in pairs!  Only low bit of each pair is used. */
+   sglmask2 = 0;    /* Bits appear here in pairs!  Both are duplicates. */
+   livemask2 = 0;   /* Bits appear here in pairs!  Both are duplicates. */
    orbitmask = 0;   /* Bits appear here in pairs! */
 
-   /* Compute orbitmask, livemask, and sglmask.
+   /* Compute orbitmask, livemask2, and sglmask2.
       Since we are synthesizing bit masks, we scan in reverse order to make things easier. */
 
    for (i=setup_attrs[tandstuff.virtual_result.kind].setup_limits; i>=0; i--) {
-      int p = tandstuff.virtual_result.people[i].id1;
-      sglmask <<= 2;
-      livemask <<= 2;
+      uint32 p = tandstuff.virtual_result.people[i].id1;
+      sglmask2 <<= 2;
+      livemask2 <<= 2;
       orbitmask <<= 2;
 
       if (p) {
          int vpi = (p >> 6) & 7;
-         livemask |= 1;
+         livemask2 |= 3;
 
-         if (tandstuff.real_back_people[vpi].id1 == 0xFFFFFFFF) {
-            sglmask |= 1;
+         if (tandstuff.real_back_people[vpi].id1 == ~0UL) {
+            sglmask2 |= 3;
          }
          else {
-            unsigned int orbit;
+            uint32 orbit;
 
             if (fractional) {
                if (!(p & STABLE_ENAB))
@@ -788,8 +822,17 @@ extern void tandem_couples_move(
       }
    }
 
+   sglmask = sglmask2 & 0x55555555UL;     /* Bits appear here in pairs!  Only low bit of each pair is used. */
+   livemask = livemask2 & 0x55555555UL;   /* Bits appear here in pairs!  Only low bit of each pair is used. */
+   hmask2 = ~orbitmask & livemask2 & ~sglmask2;
+
    /* Pick out only low bits for map search, and only bits of live paired people. */
-   hmask = (~orbitmask) & livemask & ~sglmask & 0x55555555;
+   hmask = hmask2 & 0x55555555UL;
+   if (tandstuff.triangles) {
+      hmask = hmask2;
+      livemask = livemask2;
+      orbitmask = 0;    /* We have already completely dealt with rotation. */
+   }
 
    map_search = our_map_table;
    while (map_search->outsetup != nothing) {

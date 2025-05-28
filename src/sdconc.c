@@ -357,6 +357,9 @@ extern void normalize_concentric(
          outers->rotation = 0;
          outers->kind = s2x2;
       }
+      else if (inners[0].kind == nothing) {
+         outers->kind = nothing;
+      }
       else
          fail("Can't figure out what to do.");
 
@@ -1326,19 +1329,13 @@ extern void concentric_move(
 
       ss->cmd.cmd_misc_flags &= ~CMD_MISC__CENTRAL_MASK;
    }
+   else if ((snagflag & CMD_MISC__CENTRAL_MASK) == CMD_MISC__CENTRAL_MYSTIC)
+      ss->cmd.cmd_misc_flags &= ~CMD_MISC__CENTRAL_MASK;
 
    begin_inner[0].cmd = ss->cmd;
+   begin_inner[1].cmd = ss->cmd;
+   begin_inner[2].cmd = ss->cmd;
    begin_outer.cmd = ss->cmd;
-
-   if ((snagflag & CMD_MISC__CENTRAL_MASK) == CMD_MISC__CENTRAL_SNAG) {
-      if (snagflag & CMD_MISC__INVERT_CENTRAL)
-         begin_outer.cmd.cmd_frac_flags = 0x00200112;
-      else
-         begin_inner[0].cmd.cmd_frac_flags = 0x00200112;
-   }
-
-   begin_inner[1].cmd = begin_inner[0].cmd;
-   begin_inner[2].cmd = begin_inner[0].cmd;
 
    concentrify(ss, analyzer, begin_inner, &begin_outer, &center_arity, &begin_outer_elongation, &begin_xconc_elongation);
 
@@ -1395,7 +1392,24 @@ extern void concentric_move(
          begin_inner[k].cmd.parseptr = cmdin->parseptr;
          begin_inner[k].cmd.callspec = cmdin->callspec;
          begin_inner[k].cmd.cmd_final_flags = cmdin->cmd_final_flags;
+
+         /* Handle "snag" for centers. */
+         if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == CMD_MISC__CENTRAL_SNAG) {
+            begin_inner[k].cmd.cmd_frac_flags = 0x00200112;
+         }
+
+         /* Handle "mystic" for centers. */
+
+         if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == CMD_MISC__CENTRAL_MYSTIC) {
+            mirror_this(&begin_inner[k]);
+            begin_inner[k].cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
+         }
+
          move(&begin_inner[k], FALSE, &result_inner[k]);
+
+         if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == CMD_MISC__CENTRAL_MYSTIC)
+            mirror_this(&result_inner[k]);
+
          current_number_fields = saved_number_fields;
       }
    }
@@ -1451,7 +1465,22 @@ extern void concentric_move(
       begin_outer.cmd.parseptr = cmdout->parseptr;
       begin_outer.cmd.callspec = cmdout->callspec;
       begin_outer.cmd.cmd_final_flags = cmdout->cmd_final_flags;
+
+      /* Handle "invert snag" for ends. */
+      if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == (CMD_MISC__CENTRAL_SNAG | CMD_MISC__INVERT_CENTRAL))
+         begin_outer.cmd.cmd_frac_flags = 0x00200112;
+
+      /* Handle "invert mystic" for ends. */
+      if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == (CMD_MISC__CENTRAL_MYSTIC | CMD_MISC__INVERT_CENTRAL)) {
+         mirror_this(&begin_outer);
+         begin_outer.cmd.cmd_misc_flags ^= CMD_MISC__EXPLICIT_MIRROR;
+      }
+
       move(&begin_outer, FALSE, &result_outer);
+
+      if ((snagflag & (CMD_MISC__CENTRAL_MASK | CMD_MISC__INVERT_CENTRAL)) == (CMD_MISC__CENTRAL_MYSTIC | CMD_MISC__INVERT_CENTRAL))
+         mirror_this(&result_outer);
+
       current_number_fields = saved_number_fields;
    }
    else {
@@ -1480,7 +1509,7 @@ extern void concentric_move(
    }
 
    if (analyzer == schema_conc_triple_lines && fix_n_results(2, result_inner))
-      fail("Illegal result for this call.");
+      result_inner[0].kind = nothing;
 
    /* If the call was something like "ends detour", the concentricity info was left in the
       cmd_misc_flags during the execution of the call, so we have to pick it up to make sure
@@ -1576,6 +1605,12 @@ extern void concentric_move(
          result_outer.result_flags = 0;
          result_outer.rotation = 0;
       }
+      else if (analyzer == schema_conc_triple_lines) {
+         result_outer.kind = s2x2;
+         clear_people(&result_outer);
+         result_outer.result_flags = 0;
+         result_outer.rotation = 0;
+      }
       else if (analyzer == schema_concentric_diamond_line) {
          if (ss->kind == s_wingedstar || ss->kind == s_wingedstar12 || ss->kind == s_wingedstar16) {
             result_outer.kind = s2x2;
@@ -1647,7 +1682,8 @@ extern void concentric_move(
       if (  analyzer == schema_conc_star ||
             analyzer == schema_ckpt_star ||
             analyzer == schema_conc_star12 ||
-            analyzer == schema_conc_star16) {
+            analyzer == schema_conc_star16 ||
+            analyzer == schema_conc_triple_lines) {
                   ;        /* Take no action. */
       }
       /* If the ends are a 2x2, we just set the missing centers to a 2x2.
@@ -2236,6 +2272,24 @@ extern void merge_setups(setup *ss, merge_action action, setup *result)
       (void) copy_person(res2, 2, res2, 4);
       (void) copy_person(res2, 3, res2, 7);
       canonicalize_rotation(res2);
+      outer_inners[0] = *res2;
+      outer_inners[1] = *res1;
+      normalize_concentric(schema_concentric, 1, outer_inners, outer_elongation, result);
+      return;
+   }
+   else if (res2->kind == s2x4 && res1->kind == s_qtag &&
+            (!(res2->people[1].id1 | res2->people[2].id1 | res2->people[5].id1 | res2->people[6].id1 |
+               res1->people[0].id1 | res1->people[1].id1 | res1->people[4].id1 | res1->people[5].id1))) {
+      int outer_elongation = res2->rotation & 1;
+      res2->kind = s2x2;
+      (void) copy_person(res2, 1, res2, 3);
+      (void) copy_person(res2, 2, res2, 4);
+      (void) copy_person(res2, 3, res2, 7);
+      res1->kind = s1x4;
+      (void) copy_person(res1, 0, res1, 6);
+      (void) copy_person(res1, 1, res1, 7);
+      canonicalize_rotation(res2);
+      canonicalize_rotation(res1);
       outer_inners[0] = *res2;
       outer_inners[1] = *res1;
       normalize_concentric(schema_concentric, 1, outer_inners, outer_elongation, result);

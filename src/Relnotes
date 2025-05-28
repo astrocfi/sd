@@ -1,6 +1,31 @@
-		   RELEASE NOTES FOR SD VERSION 30.84
-		 Database version = 30.84 format = 51,
+		   RELEASE NOTES FOR SD VERSION 30.87
+		 Database version = 30.87 format = 51,
     X11 UI version 1.16, SDTTY UI version 1.6, MAC UI version 2.2.
+
+****** Changes as of version 30.87 ******
+
++++++++ WARNING!!!!!! +++++++
+
+This is very experimental.  It has a very incomplete version of
+some MAJOR changes in the way tagging calls are done.  It is being
+released in this state only for experimental use by knowledgeable
+users.  The sdtty parser can handle tagging calls much more
+naturally than before.  See the manual for details.  However,
+there are some loose ends that have not been cleaned up.  Users
+are earnestly requested not to call things like "chase the line 3/4".
+
+New concepts: MYSTIC and INVERT MYSTIC work with the following:
+   TRIPLE BOXES
+   TRIPLE LINES/WAVES/COLUMNS
+   PHANTOM LINES/WAVES/COLUMNS
+
+INNER/OUTER TRIANGLES WORK SOLID/THREESOME or fractional quarter
+solid/threesome, etc.
+
+****** Changes as of version 30.86 ******
+
+New concepts: MYSTIC and INVERT MYSTIC.  You can of course
+also use MIRROR MYSTIC or MYSTIC MIRROR if you wish.
 
 ****** Changes as of version 30.84 ******
 
@@ -14,9 +39,7 @@ New concepts: SNAG and INVERT SNAG.
 +++++++ WARNING!!!!!! +++++++
 
 This is very experimental.  It has a very incomplete version of
-some MAJOR changes in the way tagging calls are done.  If your
-name is Lynette Bellini, you know what they are.  If not, you
-should *NOT* use this program.
+some MAJOR changes in the way tagging calls are done.
 
 The menu alphabetization algorithm has been changed.  Designators
 like <ATC>, <ANYONE>, <DIRECTION>, and <N> appearing in a call name

@@ -14,6 +14,18 @@
  */
 
 
+/* The following items are PROVIDED by the main program (that is, the user
+   interface part of it) and IMPORTED by sdmatch.c */
+
+extern int num_command_commands;
+extern Cstring command_commands[];
+
+extern int number_of_resolve_commands;
+extern Cstring resolve_command_strings[];
+extern resolve_command_kind resolve_command_values[];
+
+
+
 /*
  * A match_result describes the result of matching a string against
  * a set of acceptable commands. A match_result is effectively a
@@ -66,8 +78,6 @@ match_user_input(
     char *user_input,
     int which_commands,
     match_result *mr,
-    Cstring *command_list,    /* Text of commands to search for (Mac and Unix versions differ). */
-    int num_commands,         /* How many items in above list. */
     char *extension,
     show_function sf,
     long_boolean show_verify);

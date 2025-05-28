@@ -656,13 +656,6 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             writestuff_with_decorations(static_cptr, (Const char *) 0, TRUE);
             request_final_space = TRUE;
          }
-         else if (k == concept_so_and_so_stable || k == concept_so_and_so_frac_stable ||
-                  k == concept_so_and_so_begin || k == concept_some_are_frac_tandem ||
-                  k == concept_some_are_tandem) {
-            writestuff_with_decorations(static_cptr, (Const char *) 0, FALSE);
-            writestuff(",");
-            request_final_space = TRUE;
-         }
          else if (static_cptr && (k == concept_left || k == concept_cross || k == concept_magic || k == concept_interlocked)) {
 
             /* These concepts want to take special action if there are no following concepts and
@@ -752,8 +745,20 @@ Private void print_recurse(parse_block *thing, int print_recurse_arg)
             request_final_space = TRUE;
          }
 
-         if (k == concept_fractional || k == concept_twice)
+         /* Some concepts look better with a comma after them. */
+
+         if (     k == concept_so_and_so_stable ||
+                  k == concept_so_and_so_frac_stable ||
+                  k == concept_so_and_so_begin ||
+                  k == concept_fractional ||
+                  k == concept_twice ||
+                  k == concept_some_are_tandem ||
+                  k == concept_some_are_frac_tandem ||
+                  (    (k == concept_tandem ||           /* The arg4 test picks out all but the */
+                        k == concept_frac_tandem) &&     /*simple "as couples" and "tandem" concepts. */
+                     static_cptr->concept->value.arg4 >= 10)) {
             comma_after_next_concept = TRUE;
+         }
 
          static_cptr = next_cptr;
 

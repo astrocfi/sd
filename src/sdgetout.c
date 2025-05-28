@@ -606,9 +606,15 @@ Private long_boolean inner_search(search_kind goal, resolve_rec *new_resolve, in
       l = generate_random_number(l);
       hash_nonrandom_number(l);
 
-      /* If the concept is a tandem or as couples type, we really want "phantom" in front of it. */
-      if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]].kind == concept_tandem)
-         deposit_concept(&concept_descriptor_table[phantom_concept_index], 0);
+      /* If the concept is a tandem or as couples type, we really want "phantom"
+         or "2x8 matrix"" in front of it. */
+
+      if (concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]].kind == concept_tandem) {
+         if (history[history_ptr].state.kind == s4x4)
+            deposit_concept(&concept_descriptor_table[phantom_concept_index], 0);
+         else
+            deposit_concept(&concept_descriptor_table[matrix_2x8_concept_index], 0);
+      }
 
       deposit_concept(&concept_descriptor_table[nice_setup_info[k].array_to_use_now[l]], 0);
    }
