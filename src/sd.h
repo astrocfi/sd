@@ -3449,8 +3449,8 @@ class fraction_info {
       m_instant_stop(99),  // If not 99, says to stop instantly after doing one part,
                          // and to report (in RESULTFLAG__PART_COMPLETION_BITS bit)
                          // whether that part was the last part.
-      m_do_half_of_last_part(0),
-      m_do_last_half_of_first_part(0),
+      m_do_half_of_last_part((fracfrac) 0),
+      m_do_last_half_of_first_part((fracfrac) 0),
       m_highlimit(n),
       m_start_point(0),
       m_end_point(n-1),
@@ -3467,8 +3467,8 @@ class fraction_info {
    fraction_info(setup_command & cmd, int offset, bool allow_halves = false) :
       m_reverse_order(false),
       m_instant_stop(-99),  // Error indication; will change to +99 if OK.
-      m_do_half_of_last_part(0),
-      m_do_last_half_of_first_part(0),
+      m_do_half_of_last_part((fracfrac) 0),
+      m_do_last_half_of_first_part((fracfrac) 0),
       m_highlimit(0),
       m_start_point(0),
       m_end_point(0),
@@ -3510,11 +3510,12 @@ class fraction_info {
 
    // This one is in sdmoves.cpp
    void get_fraction_info(fraction_command frac_stuff,
-                          uint32 part_visibility_info,  // visible_fraction stuff in right half, size of call in left.
-                          revert_weirdness_type doing_weird_revert) THROW_DECL;
+                          uint32 part_visibility_info,
+                          revert_weirdness_type doing_weird_revert,
+                          parse_block **restrained_concept_p = (parse_block **) 0) THROW_DECL;
 
    // This one is in sdmoves.cpp
-   uint32 get_fracs_for_this_part();
+   fracfrac get_fracs_for_this_part();
 
    // This one is in sdmoves.cpp
    bool query_instant_stop(uint32 & result_flag_wordmisc) const;
@@ -3565,8 +3566,8 @@ class fraction_info {
    bool m_reverse_order;
    int m_instant_stop;
    bool m_first_call;
-   uint32 m_do_half_of_last_part;
-   uint32 m_do_last_half_of_first_part;
+   fracfrac m_do_half_of_last_part;
+   fracfrac m_do_last_half_of_first_part;
    int m_highlimit;
  private:
    int m_start_point;

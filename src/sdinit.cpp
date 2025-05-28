@@ -285,7 +285,8 @@ static void test_starting_setup(call_list_kind cl, const setup & test_setup)
 
    // We also accept "<ATC> your neighbor" and "<ANYTHING> motivate" calls,
    // since we don't know what the tagging call will be.
-   if (test_call->the_defn.callflagsf & (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT))
+   if (test_call->the_defn.callflagsf &
+       (CFLAGH__TAG_CALL_RQ_MASK | CFLAGH__CIRC_CALL_RQ_BIT | CFLAG2_ACCEPT_IN_ALL_MENUS))
       goto accept;
 
    // Do the call.  An error will signal and go to try_again.

@@ -1002,7 +1002,7 @@ const char *flagtab1f[] = {
    "dont_raise_overcast",
    "overcast_transparent",
    "is_star_call",
-   "left_only_if_half",
+   "accept_in_all_menus",
    ""};
 
 // The next three tables are all in step with each other, and with the "heritable" flags.

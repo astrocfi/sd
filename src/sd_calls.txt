@@ -57,7 +57,7 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-version "38.85"
+version "38.86"
 
 call "nothing" mainstream tag nullcall
             dont_use_in_resolve dont_raise_overcast
@@ -7450,7 +7450,7 @@ call "@6 split the others, first go right, next go left" mainstream
 
 call "pass thru" mainstream tag passthru
 /* **** can't do rear_back if doing last half! */
-            rear_back_from_r_wave left_means_mirror left_only_if_half
+            rear_back_from_r_wave left_means_mirror
             12_16_matrix_means_split
             funny_means_those_facing
    setup 2x1 1x2
@@ -7794,16 +7794,16 @@ call "left pitch @h" c4a
          if outp     [AL3E AL2E CR1E AL0W]
          if no_dir_p [AL3E AL2E ZM1N ZM0N]
 
-call "leads roll @eright@f to a wave" a1 tag leadsrollright
+// The consensus seems to be that the leaders can roll, because they did it
+// as one smooth motion.  Or something.  I'm tired of hearing about that.
+call "leads roll @eright@f to a wave" a1
             left_means_mirror
-   setup 2x1 1x2 rotate qualifier live none
-      predscantdocallinsetup
-         if columns_tandem [ZM0W CR1E]
-         if always         [0    CR1E]
-   setup 2x1 1x2 rotate   // If a phantom is present, we allow a lone trailer.
-      array [ZM0W R1E]
+   setup 2x1 1x2 rotate qualifier all_facing_same
+      array [ZM0W CR1E]
+   setup 2x1 1x2 rotate
+      array [0 CR1E]
 
-call "roll @eright@f to a wave" a1 tag everyonerollright
+call "roll @eright@f to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier all_facing_same
       array [ZM0W CR1E]
@@ -7811,40 +7811,44 @@ call "roll @eright@f to a wave" a1 tag everyonerollright
       array [0 CR1E]
 
 // The "official" spellings.
+call "leads @eright@f roll to a wave" a1
+            left_means_mirror
+   setup 2x1 1x2 rotate qualifier all_facing_same
+      array [ZM0W CR1E]
+   setup 2x1 1x2 rotate
+      array [0 CR1E]
+
 call "@eright@f roll to a wave" a1
             left_means_mirror
    setup 2x1 1x2 rotate qualifier all_facing_same
-      array [ZM0W CM1E]
+      array [ZM0W CR1E]
    setup 2x1 1x2 rotate
-      array [0 CM1E]
+      array [0 CR1E]
 
-call "leads @eright@f roll to a wave" a1
+// Latch on is legal even if both people are facing.
+call "permissive leads roll @eright@f to a wave" dontshow tag permissiveleadsrollright
             left_means_mirror
-   setup 2x1 1x2 rotate qualifier live none
-      predscantdocallinsetup
-         if columns_tandem [ZM0W CM1E]
-         if always         [0    CM1E]
    setup 2x1 1x2 rotate
       array [ZM0W CR1E]
 
 call "leads @e@f latch on" c3a
             left_means_mirror visible_fractions
-   seq leadsrollright [inherit_left]
+   seq permissiveleadsrollright [inherit_left]
    seq hinge_with_warn []
 
 call "leads @e@f latch on @b" c3a
             left_means_mirror visible_fractions neednumber
-   seq leadsrollright [inherit_left]
+   seq permissiveleadsrollright [inherit_left]
    seq hinge_with_warn [repeat_n]
 
 call "latch on" c3a
             left_means_mirror visible_fractions
-   seq everyonerollright [inherit_left]
+   seq permissiveleadsrollright [inherit_left]
    seq hinge_with_warn []
 
 call "latch on @b" c3a
             left_means_mirror visible_fractions neednumber
-   seq everyonerollright [inherit_left]
+   seq permissiveleadsrollright [inherit_left]
    seq hinge_with_warn [repeat_n]
 
 call "_like a slide thru" dontshow tag likeaslidethru
@@ -9622,6 +9626,8 @@ call "about" c4 tag about
             parallel_conc_end
    setup 1x4 2x2 restriction controversial wave_only
       array [CR0E CR0E AL1W AL1W]
+   setup thar alamo restriction miniwaves
+      array [CR7E CR7E 0 0 AL2W AL2W 0 0]
 
 call "@0 about" c4
             dont_use_in_resolve visible_fractions
@@ -15452,7 +15458,7 @@ call "clean sweep @b" c4a
                  inherit_nxn inherit_bigmatrix]
    seq lft_veer_left [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
    seq tagtheline [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
-   seq leadsrollright [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
+   seq permissiveleadsrollright [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
 
 /* This is grammatically similar to "finish advance to a column".  Since we are not
    doing the part that needs a number, the number is absent. */
@@ -15461,7 +15467,7 @@ call "finish clean sweep" c4a
             nxn_is_inherited bigmatrix_is_inherited
    seq lft_veer_left [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
    seq tagtheline [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
-   seq leadsrollright [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
+   seq permissiveleadsrollright [allow_forced_mod inherit_left inherit_nxn inherit_bigmatrix]
 
 call "reflected clean sweep @b" c4
             reverse_means_mirror neednumber singlefile_is_inherited visible_fractions
@@ -15470,7 +15476,7 @@ call "reflected clean sweep @b" c4
    seq tag_the_line_n_4 [allow_forced_mod inherit_left insert_number 2]
    seq revert_if_needed [force_reflect]
    seq extend_n [insert_number 4]
-   seq leadsrollright [allow_forced_mod inherit_left]
+   seq permissiveleadsrollright [allow_forced_mod inherit_left]
 
 call "walk and dodge" mainstream tag walkndodge
    setup 2x2 2x2 no_cutting_through restriction unusual wave_only
@@ -21382,7 +21388,7 @@ call "_half circ prefer real box" dontshow tag half_circ_real_box
       array [ZM5W ZM0W CR1N AL1S ZM2W ZM3W]
 
 call "circulate" mainstream tag circulate
-            take_right_hands left_means_mirror left_only_if_half diamond_is_legal
+            take_right_hands left_means_mirror diamond_is_legal
    simple_funny
    setup 2x4 2x4
       array [CR3S CR2S AL1S AL0S ZM3N ZM2N ZM1N ZM0N]
@@ -21593,7 +21599,7 @@ call "circulate" mainstream tag circulate
       array [CM1N 0]
 
 call "circulate for tally ho" dontshow tag circulate_for_tally_ho
-            take_right_hands left_means_mirror left_only_if_half
+            take_right_hands left_means_mirror
    // The obvious mechanism of making this call have the "half" built in doesn't
    // handle "left tally ho" correctly.  Not sure why.  Maybe there is a fundamental
    // problem.  But no time to investigate just now.  So the full version exists and
@@ -21627,7 +21633,7 @@ call "circulate for tally ho" dontshow tag circulate_for_tally_ho
    // couple facing in or out.  In such a case we want the old 2-faced line
    // interpretation, going to a crosswave.
    //
-   // So we only do the special tidal wave trick is the setup is consistent
+   // So we only do the special tidal wave trick if the setup is consistent
    // with 1-faced lines and *not* consistent with 2-faced lines.  We do this
    // by putting a 2fl_only qualifier first, going to the old behavior.
    setup 2x4 crosswave rotate qualifier 2fl_only
@@ -21669,7 +21675,7 @@ call "circulate for tally ho" dontshow tag circulate_for_tally_ho
       array [CR0N CR1N AL1S AL0S ZM2W ZM3W ZM11W ZM10W ZM9W ZM8W ZM5W ZM4W]
 
 call "circulate for acey deucey" dontshow tag circulateforacey
-            take_right_hands left_means_mirror left_only_if_half diamond_is_legal
+            take_right_hands left_means_mirror diamond_is_legal
    simple_funny
    setup 2x2 2x2 no_cutting_through
       array [CR1S AL0S ZM1N ZM0N]
@@ -23005,7 +23011,7 @@ call "spin chain thru" mainstream
 
 call "swing chain thru" c3a
             step_to_wave yoyo_is_inherited fractal_is_inherited gen_sting_is_inherited can_be_fan
-            left_means_touch_or_check first_part_visible bigmatrix_is_inherited
+            left_means_touch_or_check visible_fractions bigmatrix_is_inherited
    seq tradencheckparwaves [inherit_yoyo inherit_gensting inherit_bigmatrix]
    seq ctrarmturn_n [inherit_bigmatrix insert_number 1 inherit_gensting inherit_fractal]
    seq ctrs_slip_with_mod1216 [inherit_bigmatrix roll_transparent]

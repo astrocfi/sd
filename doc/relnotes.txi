@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <1 Jan 2016 wba>
+@c Time-stamp: <22 Jan 2016 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 38.85
-@set title2 Database version = 38.85 format = 328
+@set title1 RELEASE NOTES FOR VERSION 38.86
+@set title2 Database version = 38.86 format = 329
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 38.86::
 * 38.85::
 * 38.84::
 * 38.83::
@@ -124,7 +125,7 @@ The files @file{relnotes03.txi} and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 38.85, Top, (dir)
+@node Intro, 38.86, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -135,11 +136,29 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2016 William B. Ackerman
 @sp 3
 @menu
-* 38.85::               Changes in the current version
+* 38.86::               Changes in the current version
 @end menu
 
 @c ************
-@node 38.85, 38.84, Intro, Top
+@node 38.86, 38.85, Intro, Top
+@unnumberedsec Version 38.86 changes
+
+The handling of @strong{right roll to a wave} and @strong{latch on} was changed, in accordance with the definitions.
+@strong{latch on}, and @strong{leads latch on} (they're the same thing), are legal when the two people are facing.
+@strong{right roll to a wave}, and @strong{leads right roll to a wave} (they're the same thing), require that at least one person be a lead.
+
+Improved @strong{swing chain thru}.
+
+Improved the handling of the meta-concepts @strong{FIRST M/N <concept>}, @strong{MIDDLE M/N <concept>}, @strong{LAST M/N <concept>}, and @strong{HALFWAY <concept>}.
+
+These may be used with concepts that manipulate the parts of the subject: @strong{REVERSE ORDER}, @strong{M/N}, and @strong{DO THE LAST M/N}.
+
+When the latter concepts are used with a meta-concept that picks out a specific part, as in @strong{INITIALLY REVERSE ORDER settle back}, it picks out the first part and applies the concept to the parts of that picked-out part.  That is, it does the @strong{reset} in reverse order: @strong{hinge}, @strong{1/2 zoom}, @strong{hinge}, @strong{1/2 zoom}.
+
+But when they are used with a meta-concept that selects a @emph{range}, of the target call, the indicated concept acts directly on that range, not on any particular subcall.  So @strong{HALFWAY 1/2 reset} does @strong{1/2 zoom}, @strong{1/2 zoom}, @strong{hinge}.  @strong{FIRST 3/5 REVERSE ORDER, swing the fractions} does turns of 3/4, 1/2, 1/4, 1/2, and 1/4.
+
+@c ************
+@node 38.85, 38.84, 38.86, Top
 @unnumberedsec Version 38.85 changes
 
 Fixed obscure case of @strong{jay walk} (or @strong{jay <anycall>}).  In some cases, this call can be very complex.  An example is @strong{boys jay walk} from a normal starting DPT.

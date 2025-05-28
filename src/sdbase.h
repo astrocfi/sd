@@ -1099,7 +1099,7 @@ struct direction_item {
 //         the call.  The layout is
 //         <start den> / <start num> / <end den> / <end num>.  To do the whole
 //         call, we use 1/0/1/1, which is the constant NUMBER_FIELDS_1_0_1_1 or
-//         CMD_FRAC_NULL_VALUE.
+//         FRAC_FRAC_NULL_VALUE.
 
 enum {
    BITS_PER_NUMBER_FIELD = 6,
@@ -1121,31 +1121,49 @@ enum {
 };
 
 // The following enumeration and struct encode the fraction/parts information
-// about a call to be executed.
+// for a call to be executed.
 
+// This enumeration lists the things that go into the "fraction" word of a
+// fraction_command.  The low 24 bits give the fractions values, in 4 6-bit fields,
+// which are the numerators and denominators of the starting and ending points of the
+// desired part of the call.  The layout is
+//
+//      <start den> / <start num> / <end den> / <end num>.
+//
+// To do the whole call, we use 1/0/1/1, which is the constant
+// NUMBER_FIELDS_1_0_1_1 or FRAC_FRAC_NULL_VALUE.
+// Helpful hint:  when debugging, display the word in octal.
+
+enum fracfrac {
+   // These refer to the "fraction" field.
+   FRAC_FRAC_NULL_VALUE      = NUMBER_FIELDS_1_0_1_1,
+   FRAC_FRAC_HALF_VALUE      = NUMBER_FIELDS_1_0_2_1,
+   FRAC_FRAC_LASTHALF_VALUE  = NUMBER_FIELDS_2_1_1_1,
+
+   // Special flags for the top of the "fraction" field.
+   // Not to be confused with the "flags" field, which has most of the information.
+   // There is actually room for 8 bits here, though we only use 2.
+   CMD_FRAC_DEFER_LASTHALF_OF_FIRST   = 0x40000000,
+   CMD_FRAC_DEFER_HALF_OF_LAST        = 0x80000000
+};
+
+
+// This enumeration lists the things that go into the "flags" word of a
+// fraction_command.  This is largely flags and the "code" info, though there are also
+// two 6-bit items at the bottom, called "N" and "K", that are associated with the
+// codes.  We encode those fields in 6 bits, as usual.  They are independent of the
+// four 6-bit fields in the "fraction" word.
+//
 // For the meaning of this, see the long block of comments before
 // "process_fractions" in sdmoves.cpp.
 // But note that much of that (the bit layout) is out of date.
 // The documentation of the codes is correct, but the "N" and "K" fields
-// are now 6 bits, in the "flags" word.  The fraction info has been moved
-// to another word, and all fields are 6 bits.
+// are now 6 bits, in the "flags" word.
 
 enum {
-   // These refer to the "fraction" field.
-   CMD_FRAC_NULL_VALUE      = NUMBER_FIELDS_1_0_1_1,
-   CMD_FRAC_HALF_VALUE      = NUMBER_FIELDS_1_0_2_1,
-   CMD_FRAC_LASTHALF_VALUE  = NUMBER_FIELDS_2_1_1_1,
-
-   // Special flags for the top of the "fraction" field.
-   CMD_FRAC_DEFER_HALF_OF_LAST = 0x80000000,
-   CMD_FRAC_DEFER_LASTHALF_OF_FIRST = 0x40000000,
-
-   // These refer to the "flags" field.  First, there are two numeric fields,
-   // called "n" and "k", that are associated with the codes.  We encode those
-   // fields in 6 bits, as usual.
-   CMD_FRAC_PART_BIT        = 00001U,  // This is "n".
+   CMD_FRAC_PART_BIT        = 00001U,  // This is "N".
    CMD_FRAC_PART_MASK       = 00077U,
-   CMD_FRAC_PART2_BIT       = 00100U,  // This is "k".
+   CMD_FRAC_PART2_BIT       = 00100U,  // This is "K".
    CMD_FRAC_PART2_MASK      = 07700U,
 
    CMD_FRAC_IMPROPER_BIT    = 0x00200000U,
@@ -1179,7 +1197,7 @@ enum {
 // about this.
 //
 // The default value ("do the whole call") is zero in the flags word and
-// CMD_FRAC_NULL_VALUE in the fraction word.  Note that CMD_FRAC_NULL_VALUE is
+// FRAC_FRAC_NULL_VALUE in the fraction word.  Note that FRAC_FRAC_NULL_VALUE is
 // not zero.  Under normal circumstances, the fraction word is never zero,
 // because it has fraction denominators.  There are a few special situations in
 // which zero is stored in the fractions word.  For example, the
@@ -1198,25 +1216,25 @@ struct fraction_command {
       no,
       notsure};
 
-   inline void set_to_null()     { flags = 0; fraction = CMD_FRAC_NULL_VALUE; }
-   inline void set_to_firsthalf(){ flags = 0; fraction = CMD_FRAC_HALF_VALUE; }
-   inline void set_to_lasthalf() { flags = 0; fraction = CMD_FRAC_LASTHALF_VALUE; }
+   inline void set_to_null()     { flags = 0; fraction = FRAC_FRAC_NULL_VALUE; }
+   inline void set_to_firsthalf(){ flags = 0; fraction = FRAC_FRAC_HALF_VALUE; }
+   inline void set_to_lasthalf() { flags = 0; fraction = FRAC_FRAC_LASTHALF_VALUE; }
    inline void set_to_null_with_flags(uint32 newflags)
-   { flags = newflags; fraction = CMD_FRAC_NULL_VALUE; }
+   { flags = newflags; fraction = FRAC_FRAC_NULL_VALUE; }
    inline void set_to_firsthalf_with_flags(uint32 newflags)
-   { flags = newflags; fraction = CMD_FRAC_HALF_VALUE; }
+   { flags = newflags; fraction = FRAC_FRAC_HALF_VALUE; }
    inline void set_to_lasthalf_with_flags(uint32 newflags)
-   { flags = newflags; fraction = CMD_FRAC_LASTHALF_VALUE; }
+   { flags = newflags; fraction = FRAC_FRAC_LASTHALF_VALUE; }
 
-   inline bool is_null() { return flags == 0 && fraction == CMD_FRAC_NULL_VALUE; }
-   inline bool is_firsthalf() { return flags == 0 && fraction == CMD_FRAC_HALF_VALUE; }
-   inline bool is_lasthalf() { return flags == 0 && fraction == CMD_FRAC_LASTHALF_VALUE; }
+   inline bool is_null() { return flags == 0 && fraction == FRAC_FRAC_NULL_VALUE; }
+   inline bool is_firsthalf() { return flags == 0 && fraction == FRAC_FRAC_HALF_VALUE; }
+   inline bool is_lasthalf() { return flags == 0 && fraction == FRAC_FRAC_LASTHALF_VALUE; }
 
    inline bool is_null_with_exact_flags(uint32 testflags)
-   { return flags == testflags && fraction == CMD_FRAC_NULL_VALUE; }
+   { return flags == testflags && fraction == FRAC_FRAC_NULL_VALUE; }
 
    inline bool is_null_with_masked_flags(uint32 testmask, uint32 testflags)
-   { return (flags & testmask) == testflags && fraction == CMD_FRAC_NULL_VALUE; }
+   { return (flags & testmask) == testflags && fraction == FRAC_FRAC_NULL_VALUE; }
 
    includes_first_part_enum includes_first_part();
 };

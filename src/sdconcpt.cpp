@@ -2,7 +2,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2013  William B. Ackerman.
+//    Copyright (C) 1990-2016  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -6621,7 +6621,7 @@ static void do_concept_meta(
       ss->cmd.cmd_fraction.flags &= ~CMD_FRAC_THISISLAST;
 
       if (ss->cmd.restrained_fraction.fraction) {
-         if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
+         if (ss->cmd.cmd_fraction.fraction != FRAC_FRAC_NULL_VALUE)
             fail("Fraction nesting is too complicated.");
          ss->cmd.cmd_fraction.fraction = ss->cmd.restrained_fraction.fraction;
          ss->cmd.restrained_fraction.fraction = 0;
@@ -6640,7 +6640,7 @@ static void do_concept_meta(
       // we are being asked to do 1/2 of "like a whatever".  The order in which
       // parts and fractions are specified can't handle that correctly.  (If we
       // just set a fraction field of
-      //        FRACS(CMD_FRAC_CODE_ONLYREV,1,0) + CMD_FRAC_HALF_VALUE
+      //        FRACS(CMD_FRAC_CODE_ONLYREV,1,0) + FRAC_FRAC_HALF_VALUE
       // it would have us do the last part whatever the first half of the call is.)
       // We want the first half of the last part.  But we can do it by using
       // the "CMD_FRAC_FIRSTHALF_ALL" flag, which says to apply the "first half"
@@ -7244,7 +7244,7 @@ static void do_concept_meta(
          // This is "do the Nth part <concept>".
          fraction_info ff(ss->cmd, 0, true);    // Allow half parts.
          // For now, we allow only m_do_half_of_last_part = "1/2".
-         if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != CMD_FRAC_HALF_VALUE) ||
+         if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != FRAC_FRAC_HALF_VALUE) ||
              ff.m_do_last_half_of_first_part != 0 ||
              ff.m_instant_stop < 0)  // This is the error indication.
             fail("Can't stack meta or fractional concepts this way.");
@@ -7290,7 +7290,7 @@ static void do_concept_meta(
                   FRACS(CMD_FRAC_CODE_FROMTOREV, S+1, N-Z) | CMD_FRAC_BREAKING_UP);
             }
 
-            if (ff.m_do_half_of_last_part == CMD_FRAC_HALF_VALUE)
+            if (ff.m_do_half_of_last_part == FRAC_FRAC_HALF_VALUE)
                result->cmd.cmd_fraction.fraction |= CMD_FRAC_DEFER_HALF_OF_LAST;
             else if (ff.m_do_half_of_last_part != 0)
                fail("Can't stack meta or fractional concepts this way.");  // Needs more thought.
@@ -7356,7 +7356,7 @@ static void do_concept_meta(
          else {
             fraction_info ff(ss->cmd, 0, true);    // Allow half parts.
             // For now, we allow only m_do_half_of_last_part = "1/2".
-            if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != CMD_FRAC_HALF_VALUE) ||
+            if ((ff.m_do_half_of_last_part != 0 && ff.m_do_half_of_last_part != FRAC_FRAC_HALF_VALUE) ||
                 ff.m_do_last_half_of_first_part != 0 ||
                 ff.m_instant_stop < 0)  // This is the error indication.
                fail("Can't stack meta or fractional concepts this way.");
@@ -8074,7 +8074,7 @@ static void do_concept_fractional(
    fraction_command ARG4 = ss->cmd.cmd_fraction;
 
    if (ss->cmd.restrained_fraction.fraction) {
-      if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
+      if (ss->cmd.cmd_fraction.fraction != FRAC_FRAC_NULL_VALUE)
          fail("Fraction nesting is too complicated.");
       ARG4.fraction = FOO;
       ss->cmd.cmd_fraction.fraction = ss->cmd.restrained_fraction.fraction;
@@ -8106,7 +8106,7 @@ static void do_concept_fractional(
          if ((ss->cmd.cmd_fraction.flags & CMD_FRAC_IMPROPER_BIT) == 0) {
             // First time around -- Do the indicated part of a whole swing the fractions.
 
-            ss->cmd.cmd_fraction.fraction = CMD_FRAC_NULL_VALUE;
+            ss->cmd.cmd_fraction.fraction = FRAC_FRAC_NULL_VALUE;
             move(ss, false, result);
             // And, if it reported that it did the last part, change it to
             // "secondary_done" to indicate that we're not finished.

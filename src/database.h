@@ -5,7 +5,7 @@
 
 // SD -- square dance caller's helper.
 //
-//    Copyright (C) 1990-2015  William B. Ackerman.
+//    Copyright (C) 1990-2016  William B. Ackerman.
 //
 //    This file is part of "Sd".
 //
@@ -47,7 +47,7 @@
 // database format version.
 
 #define DATABASE_MAGIC_NUM 21316
-#define DATABASE_FORMAT_VERSION 328
+#define DATABASE_FORMAT_VERSION 329
 
 
 // We used to do some stuff to cater to compiler vendors (e.g. Sun
@@ -407,7 +407,7 @@ enum {
    CFLAG2_NO_RAISE_OVERCAST         = 0x08000000U,
    CFLAG2_OVERCAST_TRANSPARENT      = 0x10000000U,
    CFLAG2_IS_STAR_CALL              = 0x20000000U,
-   CFLAG2_LEFT_ONLY_IF_HALF99       = 0x40000000U    // Not actually used.
+   CFLAG2_ACCEPT_IN_ALL_MENUS       = 0x40000000U
    // 1 spare.
 };
 

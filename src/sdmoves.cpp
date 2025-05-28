@@ -3837,8 +3837,9 @@ extern uint32 process_fractions(int start, int end,
 
 void fraction_info::get_fraction_info(
    fraction_command frac_stuff,
-   uint32 part_visibility_info,  // visible_fraction stuff in right half, size of call in left.
-   revert_weirdness_type doing_weird_revert) THROW_DECL
+   uint32 part_visibility_info,
+   revert_weirdness_type doing_weird_revert,
+   parse_block **restrained_concept_p /* = (parse_block **) 0 */ ) THROW_DECL
 {
    uint32 last_half_stuff = 0;
    uint32 first_half_stuff = 0;
@@ -3878,8 +3879,8 @@ void fraction_info::get_fraction_info(
 
    m_reverse_order = false;
    m_instant_stop = 0;
-   m_do_half_of_last_part = 0;
-   m_do_last_half_of_first_part = 0;
+   m_do_half_of_last_part = (fracfrac) 0;
+   m_do_last_half_of_first_part = (fracfrac) 0;
 
    int this_part = (frac_stuff.flags & CMD_FRAC_PART_MASK) / CMD_FRAC_PART_BIT;
    int s_denom = (frac_stuff.fraction >> (BITS_PER_NUMBER_FIELD*3)) & NUMBER_FIELD_MASK;
@@ -3898,12 +3899,12 @@ void fraction_info::get_fraction_info(
       s_denom /= divisor;
       my_start_point /= divisor;
       last_half_stuff = my_start_point - test_num * s_denom;   /* We will need this if we have
-                                                                 to reverse the order. */
-      m_do_last_half_of_first_part =
-         (last_half_stuff << (BITS_PER_NUMBER_FIELD*2)) |
-         (s_denom << (BITS_PER_NUMBER_FIELD*3)) |
-         NUMBER_FIELDS_1_1;
-      if (m_do_last_half_of_first_part != CMD_FRAC_LASTHALF_VALUE)
+                                                                  to reverse the order. */
+      m_do_last_half_of_first_part = (fracfrac)
+         ((last_half_stuff << (BITS_PER_NUMBER_FIELD*2)) |
+          (s_denom << (BITS_PER_NUMBER_FIELD*3)) |
+          NUMBER_FIELDS_1_1);
+      if (m_do_last_half_of_first_part != FRAC_FRAC_LASTHALF_VALUE)
          warn(warn_hairy_fraction);
    }
 
@@ -3920,9 +3921,9 @@ void fraction_info::get_fraction_info(
       m_highlimit /= divisor;
       e_denom /= divisor;
       first_half_stuff = m_highlimit-e_denom*test_num;
-      m_do_half_of_last_part = NUMBER_FIELDS_1_0_0_0 |
-         (e_denom << BITS_PER_NUMBER_FIELD) | first_half_stuff;
-      if (m_do_half_of_last_part != CMD_FRAC_HALF_VALUE)
+      m_do_half_of_last_part = (fracfrac) (NUMBER_FIELDS_1_0_0_0 |
+         (e_denom << BITS_PER_NUMBER_FIELD) | first_half_stuff);
+      if (m_do_half_of_last_part != FRAC_FRAC_HALF_VALUE)
          warn(warn_hairy_fraction);
       test_num++;
    }
@@ -3944,20 +3945,20 @@ void fraction_info::get_fraction_info(
       m_highlimit = m_client_total-m_highlimit;
 
       if (m_do_half_of_last_part) {
-         m_do_last_half_of_first_part =
-            (e_denom << (BITS_PER_NUMBER_FIELD*3)) |
-            ((e_denom - first_half_stuff) << (BITS_PER_NUMBER_FIELD*2)) |
-            NUMBER_FIELDS_1_1;
-         m_do_half_of_last_part = 0;
+         m_do_last_half_of_first_part = (fracfrac)
+            ((e_denom << (BITS_PER_NUMBER_FIELD*3)) |
+             ((e_denom - first_half_stuff) << (BITS_PER_NUMBER_FIELD*2)) |
+             NUMBER_FIELDS_1_1);
+         m_do_half_of_last_part = (fracfrac) 0;
          dont_clobber = true;
       }
 
       if (orig_last) {
-         m_do_half_of_last_part =
+         m_do_half_of_last_part = (fracfrac) (
             NUMBER_FIELDS_1_0_0_0 |
             (s_denom << BITS_PER_NUMBER_FIELD) |
-            (s_denom - last_half_stuff);
-         if (!dont_clobber) m_do_last_half_of_first_part = 0;
+            (s_denom - last_half_stuff));
+         if (!dont_clobber) m_do_last_half_of_first_part = (fracfrac) 0;
       }
    }
 
@@ -4126,7 +4127,7 @@ void fraction_info::get_fraction_info(
 
             m_highlimit = highdel;
             my_start_point -= kvalue;
-            m_do_last_half_of_first_part = CMD_FRAC_HALF_VALUE;
+            m_do_last_half_of_first_part = FRAC_FRAC_HALF_VALUE;
 
             if (my_start_point > available_initial_fractions)
                fail("This call can't be fractionalized.");
@@ -4143,7 +4144,7 @@ void fraction_info::get_fraction_info(
 
             m_highlimit -= highdel;
             my_start_point += kvalue;
-            m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+            m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
 
             if (m_highlimit > available_initial_fractions || my_start_point > available_initial_fractions)
                fail("This call can't be fractionalized.");
@@ -4164,7 +4165,7 @@ void fraction_info::get_fraction_info(
 
             m_highlimit += kvalue;
             my_start_point += lowdel;
-            m_do_half_of_last_part = CMD_FRAC_LASTHALF_VALUE;
+            m_do_half_of_last_part = FRAC_FRAC_LASTHALF_VALUE;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If lowdel is zero, we weren't cutting the upper limit, so it's
@@ -4183,7 +4184,7 @@ void fraction_info::get_fraction_info(
          else {
             m_highlimit -= kvalue;
             my_start_point += this_part-1;
-            m_do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
+            m_do_last_half_of_first_part = FRAC_FRAC_LASTHALF_VALUE;
 
             /* Be sure that enough parts are visible, and that we are within bounds.
                If kvalue is zero, we weren't cutting the upper limit, so it's
@@ -4220,14 +4221,14 @@ void fraction_info::get_fraction_info(
    if (frac_stuff.fraction & CMD_FRAC_DEFER_HALF_OF_LAST) {
       if (m_do_half_of_last_part || m_do_last_half_of_first_part)
          fail("Can't do this nested fraction.");
-      m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+      m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
       frac_stuff.fraction &= ~CMD_FRAC_DEFER_HALF_OF_LAST;
    }
 
    if (frac_stuff.fraction & CMD_FRAC_DEFER_LASTHALF_OF_FIRST) {
       if (m_do_half_of_last_part || m_do_last_half_of_first_part)
          fail("Can't do this nested fraction.");
-      m_do_last_half_of_first_part = CMD_FRAC_LASTHALF_VALUE;
+      m_do_last_half_of_first_part = FRAC_FRAC_LASTHALF_VALUE;
       frac_stuff.fraction &= ~CMD_FRAC_DEFER_LASTHALF_OF_FIRST;
    }
 
@@ -4238,7 +4239,7 @@ void fraction_info::get_fraction_info(
          fail("Can't do this nested fraction.");
 
       if (m_instant_stop && diff == 1)
-         m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+         m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
       else {
          if (m_instant_stop || diff <= 0 || (diff & 1))
             fail("Can't do this nested fraction.");
@@ -4252,19 +4253,13 @@ void fraction_info::get_fraction_info(
          fail("Can't do this nested fraction.");
 
       if (m_instant_stop && diff == 1)
-         m_do_half_of_last_part = CMD_FRAC_LASTHALF_VALUE;
+         m_do_half_of_last_part = FRAC_FRAC_LASTHALF_VALUE;
       else {
          if (m_instant_stop || diff <= 0 || (diff & 1))
             fail("Can't do this nested fraction.");
          my_start_point += diff >> 1;
       }
    }
-
-   m_subcall_incr = m_reverse_order ? -1 : 1;
-   if (m_instant_stop != 0)
-      m_instant_stop = my_start_point*m_subcall_incr+1;
-   else
-      m_instant_stop = 99;
 
    if (m_reverse_order) {
       m_end_point = m_highlimit;
@@ -4274,29 +4269,119 @@ void fraction_info::get_fraction_info(
       m_end_point = m_highlimit-1;
    }
 
+   // Here's how "restrained concepts" work.
+   //
+   // If the user said something like
+   //      SECONDLY TANDEM swing the fractions
+   // the main code for SECONDLY (in do_concept_meta) will do the work of picking out
+   // the third part.  It will call this procedure, but with RESTRAIN_CRAZINESS turned
+   // off, for the first part, then call this procedure with RESTRAIN_CRAZINESS turned
+   // on, with some code like CMD_FRAC_CODE_ONLY, and then make a normal call for the
+   // remaining parts.  But, for a concept that picks out a specific part of a call,
+   // like SECONDLY, leading to a key of CMD_FRAC_CODE_ONLY, m_instant_stop will be
+   // nonzero, so the code just below will not be executed.  That means that the
+   // restraint will be lifted, and hence the TANDEM concept will be applied, *after*
+   // picking out the specific second part.  So the restrained concept, TANDEM, will be
+   // applied to the *subcall*, not to the actual "swing the fractions".
+   //
+   // But if the user gives some kind of "FIRST M/N <concept>" metaconcept, like
+   //      FIRST 3/5 REVERSE ORDER swing the fractions
+   // things are totally different.  Here the main concept selects a whole *range* of
+   // the multi-part call.  (Other concepts like this are LAST M/N, MIDDLE M/N, M/N, and
+   // DO THE LAST M/N.)  When one of those concepts comes in, the key will be something
+   // like CMD_FRAC_CODE_FROMTO, which will leave m_instant_stop equal to zero, and
+   // my_start_point and m_end_point delineating that range.  As before, do_concept_meta
+   // will take care of the parts of the call not affected by the metaconcept (in this
+   // case the last 2/5), and this code will be called with RESTRAIN_CRAZINESS, leading
+   // to a nonzero restrained_concept_p.  That will trigger the code below.  In this
+   // case the restrained concept will *not* be applied to individual subcalls.  It will
+   // be applied to the indicated range of the "swing the fractions" itself.  This is
+   // handled by directly taking care of the given concept (only REVERSE ORDER, M/N, and
+   // DO THE LAST M/N are allowed), applying it to whatever range is specified.  We do
+   // this by manipulating my_start_point and m_end_point directly.  We then indicate
+   // that we have taken care of this by clearing the restrained concept pointer.  (The
+   // RESTRAIN_CRAZINESS bit also needs to be cleared, but that will be done later.)
+
+   if (restrained_concept_p && m_instant_stop == 0) {
+      if ((frac_stuff.fraction & (CMD_FRAC_DEFER_HALF_OF_LAST|CMD_FRAC_DEFER_LASTHALF_OF_FIRST)) ||
+          (frac_stuff.flags & (CMD_FRAC_FIRSTHALF_ALL|CMD_FRAC_LASTHALF_ALL)) ||
+          m_do_last_half_of_first_part != 0 ||
+          m_do_half_of_last_part != (fracfrac) 0)
+         fail("Can't do this.");
+
+      if ((*restrained_concept_p)->concept->kind == concept_meta &&
+          (*restrained_concept_p)->concept->arg1 == meta_key_revorder) {
+         // Swap my_start_point and m_end_point.  They are inclusive integer limits.
+         int t = my_start_point;
+         my_start_point = m_end_point;
+         m_end_point = t;
+         m_reverse_order = !m_reverse_order;     // Indicate that we are going the other way.
+         *restrained_concept_p = (parse_block *) 0;  // Indicate that it's been taken care of.
+      }
+      else if ((*restrained_concept_p)->concept->kind == concept_fractional) {
+         int span = m_end_point - my_start_point;
+         if (span < 0) span = -span;
+         span++;
+         int num = (*restrained_concept_p)->options.number_fields & NUMBER_FIELD_MASK;
+         int den = ((*restrained_concept_p)->options.number_fields >> BITS_PER_NUMBER_FIELD) & NUMBER_FIELD_MASK;
+         int t = num * span;
+         int shorter_span = t / den;
+
+         if (num == 0 || den == 0 || num >= den || shorter_span * den != t || shorter_span >= span)
+            fail("Can't do this.");
+
+         if ((*restrained_concept_p)->concept->arg1 == 0) {
+            // Use shorter span.
+            if (m_reverse_order)
+               m_end_point = my_start_point + 1 - shorter_span;
+            else
+               m_end_point = my_start_point + shorter_span - 1;
+            *restrained_concept_p = (parse_block *) 0;
+         }
+         else if ((*restrained_concept_p)->concept->arg1 == 1) {
+            // Use shorter span.
+            if (m_reverse_order)
+               my_start_point = m_end_point + shorter_span - 1;
+            else
+               my_start_point = m_end_point - shorter_span + 1;
+            *restrained_concept_p = (parse_block *) 0;
+         }
+         else
+            fail("Can't do this.");
+      }
+      else
+         fail("Can't do this.");
+   }
+
+   m_subcall_incr = m_reverse_order ? -1 : 1;
+   if (m_instant_stop != 0)
+      m_instant_stop = my_start_point*m_subcall_incr+1;
+   else
+      m_instant_stop = 99;
+
    m_fetch_index = my_start_point;
    m_client_index = my_start_point;
    m_start_point = my_start_point;
 }
 
 
-uint32 fraction_info::get_fracs_for_this_part()
+fracfrac fraction_info::get_fracs_for_this_part()
 {
    if (m_reverse_order) {
       if (m_do_half_of_last_part != 0 && m_client_index == m_start_point)
          return m_do_half_of_last_part;
       else if (m_do_last_half_of_first_part != 0 && m_client_index == m_end_point)
-         return m_do_last_half_of_first_part;
+         return (fracfrac) m_do_last_half_of_first_part;
       else
-         return CMD_FRAC_NULL_VALUE;
+         return FRAC_FRAC_NULL_VALUE;
    }
    else {
       if (m_do_half_of_last_part != 0 && (m_client_index == m_highlimit-1 || m_client_index == m_instant_stop-1))
          return m_do_half_of_last_part;
       else if (m_do_last_half_of_first_part != 0 && m_client_index == m_start_point)
-         return m_do_last_half_of_first_part;
+         return (fracfrac) m_do_last_half_of_first_part;
       else
-         return CMD_FRAC_NULL_VALUE;
+         return FRAC_FRAC_NULL_VALUE;
    }
 }
 
@@ -4820,12 +4905,6 @@ static void do_sequential_call(
       ss->cmd.cmd_fraction.flags |= CMD_FRAC_FORCE_VIS;
    }
 
-   // If a restrained concept is in place, it is waiting for the call to be pulled apart
-   // into its pieces.  That is about to happen.  Turn off the restraint flag.
-   // That will be the signal to "move" that it should act on the concept.
-
-   ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
-
    bool distribute = (callflags1 & CFLAG1_DISTRIBUTE_REPETITIONS) != 0;
 
    fraction_info zzz(callspec->stuff.seq.howmanyparts);
@@ -4854,7 +4933,7 @@ static void do_sequential_call(
 
             if (this_mod1 & DFM1_SEQ_DO_HALF_MORE) {
                delta++;
-               zzz.m_do_half_of_last_part = CMD_FRAC_HALF_VALUE;
+               zzz.m_do_half_of_last_part = FRAC_FRAC_HALF_VALUE;
             }
 
             if (this_schema_is_rem_or_alt)
@@ -4868,7 +4947,7 @@ static void do_sequential_call(
    // Check for special behavior of "sequential_with_fraction".
 
    if (this_schema == schema_sequential_with_fraction) {
-      if (ss->cmd.cmd_fraction.fraction != CMD_FRAC_NULL_VALUE)
+      if (ss->cmd.cmd_fraction.fraction != FRAC_FRAC_NULL_VALUE)
          fail("Fractions have been specified in two places.");
 
       if (current_options.number_fields == 0 || current_options.number_fields > 4)
@@ -4943,7 +5022,14 @@ static void do_sequential_call(
          doing_weird_revert = weirdness_otherstuff;
       }
 
-      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_fraction, visibility_info, weirdness_off);
+      parse_block **restrained_concept_p = (parse_block **) 0;
+      if (ss->cmd.cmd_misc3_flags & CMD_MISC3__RESTRAIN_CRAZINESS)
+         restrained_concept_p = &ss->cmd.restrained_concept;
+
+      if (!feeding_fractions_through) zzz.get_fraction_info(ss->cmd.cmd_fraction,
+                                                            visibility_info,
+                                                            weirdness_off,
+                                                            restrained_concept_p);
 
       // If distribution is on, we have to do some funny stuff.
       // We will scan the fetch array in its entirety, using the
@@ -4963,13 +5049,13 @@ static void do_sequential_call(
       if (zzz.m_reverse_order && zzz.m_instant_stop == 99) first_call = false;
    }
 
-   /* We will let "zzz.m_fetch_index" scan the actual call definition:
-         forward - from 0 to zzz.m_fetch_total-1 inclusive
-         reverse - from zzz.m_fetch_total-1 down to 0 inclusive.
-      While doing this, we will let "zzz.m_client_index" scan the parts of the
-      call as seen by the fracionalization stuff.  If we are not distributing
-      parts, "zzz.m_client_index" will be the same as "zzz.m_fetch_index".  Otherwise,
-      it will show the distributed subparts. */
+   // We will let "zzz.m_fetch_index" scan the actual call definition:
+   //    forward - from 0 to zzz.m_fetch_total-1 inclusive
+   //    reverse - from zzz.m_fetch_total-1 down to 0 inclusive.
+   // While doing this, we will let "zzz.m_client_index" scan the parts of the
+   // call as seen by the fracionalization stuff.  If we are not distributing
+   // parts, "zzz.m_client_index" will be the same as "zzz.m_fetch_index".  Otherwise,
+   // it will show the distributed subparts.
 
    if (new_final_concepts.test_finalbit(FINAL__SPLIT)) {
       if (callflags1 & CFLAG1_SPLIT_LIKE_SQUARE_THRU)
@@ -4994,7 +5080,7 @@ static void do_sequential_call(
        zzz.this_starts_at_beginning() &&
        (callflags1 & CFLAG1_STEP_REAR_MASK) &&
        !(ss->cmd.restrained_concept &&
-         (ss->cmd.cmd_misc3_flags & (CMD_MISC3__RESTRAIN_CRAZINESS|CMD_MISC3__SUPERCALL)) == CMD_MISC3__SUPERCALL)) {
+         (ss->cmd.cmd_misc3_flags & CMD_MISC3__SUPERCALL))) {
 
       if (new_final_concepts.test_heritbit(INHERITFLAG_LEFT)) {
          if (!*mirror_p) mirror_this(ss);
@@ -5004,6 +5090,12 @@ static void do_sequential_call(
       ss->cmd.cmd_misc_flags |= CMD_MISC__ALREADY_STEPPED;  // Can only do it once.
       touch_or_rear_back(ss, *mirror_p, callflags1);
    }
+
+   // If a restrained concept is in place, it is waiting for the call to be pulled apart
+   // into its pieces.  That is about to happen.  Turn off the restraint flag.
+   // That will be the signal to "move" that it should act on the concept.
+
+   ss->cmd.cmd_misc3_flags &= ~CMD_MISC3__RESTRAIN_CRAZINESS;
 
    int i;
 
@@ -5288,7 +5380,7 @@ static void do_sequential_call(
          &remembered_2x2_elongation,
          new_final_concepts,
          ss->cmd.cmd_misc_flags,
-         zzz.m_reverse_order != 0,
+         zzz.m_reverse_order,
          recompute_id,
          qtfudged,
          setup_is_elongated);
@@ -6503,7 +6595,7 @@ fraction_command::includes_first_part_enum fraction_command::includes_first_part
    uint32 fracfrac = fraction;
 
    // If doing fractions, we can't (yet) be bothered to figure this out.
-   if (fracfrac != CMD_FRAC_NULL_VALUE)
+   if (fracfrac != FRAC_FRAC_NULL_VALUE)
       return notsure;
 
    if (fracflags == 0 ||                              // Whole thing
@@ -6781,9 +6873,9 @@ static void move_with_real_call(
                }
 
                if ((ss->cmd.cmd_fraction.flags & ~CMD_FRAC_BREAKING_UP) == 0) {
-                  if (ss->cmd.cmd_fraction.fraction == CMD_FRAC_HALF_VALUE)
+                  if (ss->cmd.cmd_fraction.fraction == FRAC_FRAC_HALF_VALUE)
                      bit_to_set = INHERITFLAG_HALF;
-                  else if (ss->cmd.cmd_fraction.fraction == CMD_FRAC_LASTHALF_VALUE) {
+                  else if (ss->cmd.cmd_fraction.fraction == FRAC_FRAC_LASTHALF_VALUE) {
                      bit_to_set = INHERITFLAG_LASTHALF;
                   }
                }
