@@ -490,6 +490,7 @@ enum warning_index {
    warn__xclineconc_perpc,
    warn__xcdmdconc_perpc,
    warn__xclineconc_perpe,
+   warn__conc_perpfail,
    warn__each2x2,
    warn__each1x4,
    warn__each1x2,

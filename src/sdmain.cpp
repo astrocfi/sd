@@ -44,8 +44,8 @@
 //    string is also required by paragraphs 2(a) and 2(c) of the GNU
 //    General Public License if you distribute the file.
 
-#define VERSION_STRING "39.40"
-#define TIME_STAMP "wba@alum.mit.edu Nov 5 2021 $"
+#define VERSION_STRING "39.41"
+#define TIME_STAMP "wba@alum.mit.edu Dec 11 2021 $"
 
 /* This defines the following functions:
    sd_version_string
@@ -105,7 +105,9 @@ and the following external variables:
 // weird things with dollar signs in them that one still occasionally sees
 // in software, are totally stupid.  But we leave it in for cultural enlightenment.
 
-static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
+// Nope.  It's gone.  And the horse it rode in on.
+
+// static const char id[] = "@(#)$He" "ader: Sd: version " VERSION_STRING "  " TIME_STAMP;
 
 
 extern const char *sd_version_string()

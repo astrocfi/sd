@@ -2112,15 +2112,13 @@ static bool can_swing_left(setup *real_people, int real_index,
 
    if (t < 0) return false;
 
+   if (real_direction & 1)
+      warn(warn__opt_for_no_collision);
+
    if (direction_index != real_index) {
       t -= halfsize;
+      if (t < 0) t += size;
    }
-
-   if (real_direction & 1)
-      t += direction_index - real_index - size;    // Be sure it's downward.
-
-   // We could be way out of range, always downward.
-   while (t < 0) t += size;
 
    return ((real_people->people[real_index].id1 ^ real_people->people[t].id1) & DIR_MASK) == 2;
 }

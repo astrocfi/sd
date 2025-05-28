@@ -423,6 +423,7 @@ Cstring warning_strings[] = {
    /*  warn__xclineconc_perpc    */   "+New ends should opt for setup perpendicular to their original (center) line.",
    /*  warn__xcdmdconc_perpc     */   "+New ends should opt for setup perpendicular to their original (center) diamond points.",
    /*  warn__xclineconc_perpe    */   "+New ends should opt for setup perpendicular to their original (center) line.  Beware:  This may be controversial.",
+   /*  warn__conc_perpfail       */   "+New ends can't set elongation properly; elongating on both axes.",
    /*  warn__each2x2             */   "=Each 2x2.",
    /*  warn__each1x4             */   "=Each 1x4.",
    /*  warn__each1x2             */   "=Each 1x2.",

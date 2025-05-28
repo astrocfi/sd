@@ -1,7 +1,7 @@
 \input texinfo @c %**start of header -*-texinfo-*-
 @setfilename relnotes.info
 @settitle Sd Release Notes
-@c Time-stamp: <5 Nov 2021 wba>
+@c Time-stamp: <11 Dec 2021 wba>
 @iftex
 @headings off
 @oddheading @| @| @thispage
@@ -10,8 +10,8 @@
 @end iftex
 @c %**end of header
 
-@set title1 RELEASE NOTES FOR VERSION 39.40
-@set title2 Database version = 39.40 format = 398
+@set title1 RELEASE NOTES FOR VERSION 39.41
+@set title2 Database version = 39.41 format = 398
 @set title3 parser version 1.13, X11 UI version 1.17, SD UI version 4.10
 
 @node Top, Intro, (dir), (dir)
@@ -23,6 +23,7 @@ versions of the Sd program.
 * Intro::               Information about the current version
 
 Changes as of the following versions:
+* 39.41::
 * 39.40::
 * 39.39::
 * 39.38::
@@ -140,7 +141,7 @@ and @file{relnotes98.txi} have
 notes relating to even older versions.
 @end menu
 
-@node Intro, 39.40, Top, (dir)
+@node Intro, 39.41, Top, (dir)
 
 @center @titlefont{@value{title1}}@*
 @center @value{title2}@*
@@ -151,11 +152,19 @@ notes relating to even older versions.
 @noindent Copyright @copyright{} 1996-2021 William B. Ackerman
 @sp 3
 @menu
-* 39.40::               Changes in the current version
+* 39.41::               Changes in the current version
 @end menu
 
 @c ************
-@node 39.40, 39.39, Intro, Top
+@node 39.41, 39.40, Intro, Top
+@unnumberedsec Version 39.41 changes
+
+In accordance with a recent list change from Callerlab, @strong{grand drop <direction>} was moved to C2.
+
+Handling of things involving arm-turning some fraction right or left, as in @strong{swing thru}, were improved.
+
+@c ************
+@node 39.40, 39.39, 39.41, Top
 @unnumberedsec Version 39.40 changes
 
 An error in @strong{3x1 lockit} was fixed.  The removal of empty spaaces at the end of the call is done

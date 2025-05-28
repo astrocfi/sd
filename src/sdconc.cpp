@@ -1892,7 +1892,10 @@ static calldef_schema concentrify(
       }
       else if (ss->kind == s1x8) {
          analyzer_result = schema_concentric_2_6;
-         if (current_options.howmanynumbers == 1 && current_options.number_fields == 3) {
+         if (current_options.howmanynumbers == 1 && current_options.number_fields == 2) {
+            analyzer_result = schema_concentric;
+         }
+         else if (current_options.howmanynumbers == 1 && current_options.number_fields == 3) {
             if (cmdout) cmdout->cmd_final_flags.set_heritbits(INHERITFLAGNXNK_3X3);
          }
          else if (current_options.howmanynumbers == 1 && current_options.number_fields == 4) {
@@ -4455,9 +4458,15 @@ extern void concentric_move(
                final_elongation = ((~final_outers_finish_dirs) & 1) + 1;
             }
             else if (DFM1_CONC_CONCENTRIC_RULES & localmods1) {
-               if (outer_inners[0].kind != s2x3)
-                  warn(concwarntable[crossing]);  // Don't give warning that would obviously break Solomon.
-               final_elongation ^= 3;
+               if (outer_inners[0].eighth_rotation != 0) {
+                  warn(warn__conc_perpfail);
+                  final_elongation = 3;
+               }
+               else {
+                  if (outer_inners[0].kind != s2x3)
+                     warn(concwarntable[crossing]);  // Don't give warning that would obviously break Solomon.
+                  final_elongation ^= 3;
+               }
             }
             else if (DFM1_CONC_FORCE_OTHERWAY & localmods1) {
                // But we don't obey this flag unless we did the whole call.  (Or it's a checkpoint.)
