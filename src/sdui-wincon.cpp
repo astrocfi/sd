@@ -179,7 +179,7 @@ extern void ttu_initialize()
    if (!GetConsoleMode(consoleStdin, &oldMode)) {
       int err = GetLastError();
       if (err == ERROR_INVALID_HANDLE) {
-         sdtty_no_console = 1;
+         sdtty_no_console = true;
          return;
       }
       fprintf(stderr, "GetConsoleMode failed: %d.\n", err);
@@ -195,7 +195,7 @@ extern void ttu_initialize()
    if (!SetConsoleMode(consoleStdin, newMode)) {
       int err = GetLastError();
       if (err == ERROR_INVALID_HANDLE) {
-         sdtty_no_console = 1;
+         sdtty_no_console = true;
          return;
       }
       fprintf(stderr, "SetConsoleMode failed: %d.\n", err);

@@ -88,6 +88,7 @@
    id_bit_table_3x4_ctr6
    id_bit_table_3x4_offset
    id_bit_table_3x4_corners
+   id_bit_table_3x4_zs
    id_bit_table_butterfly
    id_bit_table_4x4_outer_pairs
    id_bit_table_525_nw
@@ -5660,8 +5661,22 @@ id_bit_table id_bit_table_3x4_corners[] = {
    NOBIT(0),
    NOBIT(ID2_CTR2  | ID2_CTR1X4  | ID2_CENTER)};
 
+// Else if the setup is occupied as Z's, use this.
+id_bit_table id_bit_table_3x4_zs[] = {
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_CTR4),
+   NOBIT(ID2_NCTR1X4 | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_OUTRPAIRS),
+   NOBIT(ID2_CTR1X4  | ID2_CTR4)};
 
-/* If all else fails, use this. */
+// If all else fails, use this.
 static const id_bit_table id_bit_table_3x4[] = {
    NOBIT(ID2_OUTR6 | ID2_NCTR1X4),
    NOBIT(ID2_OUTR6 | ID2_NCTR1X4),

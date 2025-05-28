@@ -335,7 +335,6 @@ extern bool selectp(setup *ss, int place) THROW_DECL
       if      ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_OUTR1X3) return true;
       else if ((pid2 & (ID2_OUTR1X3|ID2_NOUTR1X3)) == ID2_NOUTR1X3) return false;
       break;
-
    case selector_center_wave:
    case selector_center_line:
    case selector_center_col:
@@ -344,6 +343,8 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
          break;
       }
+      if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_CTR1X4) return true;
+      else if ((pid2 & (ID2_CTR1X4|ID2_NCTR1X4)) == ID2_NCTR1X4) return false;
       // Warning!  Fall through!
    case selector_center4:
    case selector_center_box:
@@ -366,7 +367,6 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_OUTRPAIRS) return true;
          else if ((pid2 & (ID2_CENTER|ID2_OUTRPAIRS)) == ID2_CENTER) return false;
       }
-
       break;
    case selector_headliners:
       if      ((pid2 & (ID2_HEADLINE|ID2_SIDELINE)) == ID2_HEADLINE) return true;
@@ -491,7 +491,6 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          goto first_last_test;
       }
       break;
-
    case selector_leftmostone:
    case selector_rightmostone:
    case selector_leftmosttwo:
@@ -513,7 +512,6 @@ extern bool selectp(setup *ss, int place) THROW_DECL
          goto first_last_test;
       }
       break;
-
    default:
       fail("INTERNAL ERROR - selector failed to get initialized.");
    }

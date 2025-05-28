@@ -646,12 +646,14 @@ extern void update_id_bits(setup *ss)
       // the "outer pairs".
       // If the corners are occupied but the ends of the center line
       // are not, use a table that recognizes those corners as "ends".
+      // If occupied as Z's, recognize "center 4" as the center Z.
       // If all else fails, we use the default table. */
 
       if (livemask == 07171UL) ptr = id_bit_table_3x4_h;
       else if ((livemask & 04646UL) == 04646UL) ptr = id_bit_table_3x4_ctr6;
       else if (livemask == 07474UL || livemask == 06363UL) ptr = id_bit_table_3x4_offset;
       else if ((livemask & 03131UL) == 01111UL) ptr = id_bit_table_3x4_corners;
+      else if (livemask == 07272UL || livemask == 06565UL) ptr = id_bit_table_3x4_zs;
       break;
    case s_d3x4:
       if ((livemask & 01616UL) != 01616UL) ptr = (id_bit_table *) 0;

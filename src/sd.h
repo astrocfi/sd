@@ -3709,9 +3709,9 @@ extern SDLIB_API char *sd_version_string();                         /* In SDMAIN
 extern SDLIB_API bool query_for_call();                             /* In SDMAIN */
 
 extern int sdtty_screen_height;                                     /* in SDUI-TTY */
-extern int sdtty_no_cursor;                                         /* in SDUI-TTY */
-extern int sdtty_no_console;                                        /* in SDUI-TTY */
-extern int sdtty_no_line_delete;                                    /* in SDUI-TTY */
+extern bool sdtty_no_cursor;                                        /* in SDUI-TTY */
+extern bool sdtty_no_console;                                       /* in SDUI-TTY */
+extern bool sdtty_no_line_delete;                                   /* in SDUI-TTY */
 
 
 // During initialization, the main program makes a number of callbacks
@@ -3964,6 +3964,7 @@ extern id_bit_table id_bit_table_3x4_h[];                           /* in SDTABL
 extern id_bit_table id_bit_table_3x4_ctr6[];                        /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_offset[];                      /* in SDTABLES */
 extern id_bit_table id_bit_table_3x4_corners[];                     /* in SDTABLES */
+extern id_bit_table id_bit_table_3x4_zs[];                          /* in SDTABLES */
 extern id_bit_table id_bit_table_butterfly[];                       /* in SDTABLES */
 extern id_bit_table id_bit_table_4x4_outer_pairs[];                 /* in SDTABLES */
 extern id_bit_table id_bit_table_525_nw[];                          /* in SDTABLES */

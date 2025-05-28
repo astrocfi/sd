@@ -31,9 +31,11 @@
 #include <stdlib.h>
 #include <termios.h>   // We use this stuff if "-no_cursor" was specified.
 #include <unistd.h>    //    This too.
-#if defined (__linux__) || defined (__CYGWIN__) || defined (__APPLE__)
+
+#if !defined(NO_IOCTL) && (defined(__linux__) || defined(__CYGWIN__) || defined(__APPLE__))
 #include <sys/ioctl.h>
 #endif
+
 #include <signal.h>
 #include <string.h>
 #include "sd.h"
@@ -122,14 +124,15 @@ extern void ttu_initialize()
    // Set the default value if the user hasn't explicitly set something.
    if (sdtty_screen_height <= 0) sdtty_screen_height = 25;
 
-   /* This code uses "no_cursor" rather than "no_console"
-      to direct what it does.  So, if "no_console" is on,
-      we take appropriate action. */
+#ifdef NO_IOCTL
+   sdtty_no_console = true;
+#endif
 
+   // If user doesn't want any console stuff at all, turn off "curses".
    sdtty_no_cursor |= sdtty_no_console;
 
 #ifdef NO_CURSES
-   sdtty_no_cursor = 1;
+   sdtty_no_cursor = true;
 #else
    if (!sdtty_no_cursor) {
       initscr();    /* Initialize "curses". */
@@ -212,30 +215,33 @@ void ttu_terminate()
       }
 #endif
    }
-   else {
+   else
       csetmode(0);   // Restore normal input mode.
-   }
 }
 
 // If not using curses, query the terminal driver for the
 //	window size.  The file descriptor for stdout is 1.
 //	If the window size cannot be determined, return 24,
-//	as a reasonable guess.
+//	(or whatever the user specified) as a reasonable guess.
 //
-int get_term_lines()
+static int get_nocurses_term_lines()
 {
-#ifdef NO_IOCTL
-   return sdtty_screen_height-1;
-#else
-   struct winsize w;
+   if (!sdtty_no_console) {
+#ifndef NO_IOCTL
+      // If NO_IOCTL is on, we can't compile these lines.
+      // But we'll never get here in that case.
+      struct winsize w;
 
-   if (ioctl(1, TIOCGWINSZ, &w) >= 0) {
-      return w.ws_row;
-   }
-   else {
+      if (ioctl(1, TIOCGWINSZ, &w) >= 0)
+         return w.ws_row;
+      else
+         return sdtty_screen_height-1;
+#else
       return sdtty_screen_height-1;
-   }
 #endif
+   }
+   else
+      return sdtty_screen_height-1;
 }
 
 extern int get_lines_for_more()
@@ -248,12 +254,11 @@ extern int get_lines_for_more()
       getmaxyx(stdscr, y, x);		// returns 1 more than desired values
       return y-1;
 #else
-      return get_term_lines();
+      return get_nocurses_term_lines();
 #endif
    }
-   else {
-      return get_term_lines();
-   }
+   else
+      return get_nocurses_term_lines();
 }
 
 

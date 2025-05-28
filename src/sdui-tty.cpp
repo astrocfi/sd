@@ -79,9 +79,9 @@ int sdtty_screen_height = 0;  // The "lines" option may set this to something.
                               // Otherwise, any subsystem that sees the value zero
                               // will initialize it to whatever value it thinks best,
                               // perhaps by interrogating the OS.
-int sdtty_no_cursor = 0;
-int sdtty_no_console = 0;
-int sdtty_no_line_delete = 0;
+bool sdtty_no_cursor = false;
+bool sdtty_no_console = false;
+bool sdtty_no_line_delete = false;
 
 char *iofull::version_string()
 {
@@ -179,11 +179,11 @@ void iofull::process_command_line(int *argcp, char ***argvp)
       int i;
 
       if (strcmp(argv[argno], "-no_line_delete") == 0)
-         sdtty_no_line_delete = 1;
+         sdtty_no_line_delete = true;
       else if (strcmp(argv[argno], "-no_cursor") == 0)
-         sdtty_no_cursor = 1;
+         sdtty_no_cursor = true;
       else if (strcmp(argv[argno], "-no_console") == 0)
-         sdtty_no_console = 1;
+         sdtty_no_console = true;
       else if (strcmp(argv[argno], "-alternate_glyphs_1") == 0) {
          ui_options.pn1 = alt1_names1;
          ui_options.pn2 = alt1_names2;
@@ -459,16 +459,18 @@ static void pack_and_echo_character(char c)
    print any more stuff. */
 static int match_counter;
 
-/* This is what we reset the counter to whenever the user confirms.  That
-   is, it is the number of lines we print per "screenful".  On a VT-100-like
-   ("dumb") terminal, we will actually make it a screenful.  On a printing
-   device or a workstation, we don't need to do the hold-screen stuff, because
-   the device can handle output intelligently (on a printing device, it does
-   this by letting us look at the paper that is spewing out on the floor;
-   on a workstation we know that the window system provides real (infinite,
-   of course) scrolling).  But on printing devices or workstations we still
-   do the output in screenful-like blocks, because the user may not want
-   to see an enormous amount of output. */
+// This is what we reset the counter to whenever the user confirms.  That is,
+// it is the number of lines we print per "screenful".  On a VT-100-like
+// ("dumb") terminal, we will actually make it a screenful.  On a printing
+// device or a workstation, we don't need to do the hold-screen stuff,
+// because the device can handle output intelligently (on a printing device,
+// it does this by letting us look at the paper that is spewing out on the
+// floor; on a workstation we know that the window system provides real
+// (infinite, of course) scrolling).  But on printing devices or workstations
+// we still do the output in screenful-like blocks, because the user may not
+// want to see an enormous amount of output all at once.  This way, a
+// workstation user sees things presented one screenful at a time, and only
+// needs to scroll back if she wants to look at earlier screenfuls.
 static int match_lines;
 
 

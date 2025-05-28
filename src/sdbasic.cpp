@@ -3442,16 +3442,12 @@ static int divide_the_setup(
    if (must_do_mystic)
       fail("Can't do \"snag/mystic\" with this call.");
 
-   {
-      uint32 save_misc = ss->cmd.cmd_misc_flags;
-      ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
-      ss->cmd.prior_elongation_bits = 0;
-      ss->cmd.prior_expire_bits = 0;
-      ss->rotation += finalrot;   // Flip the setup around and recanonicalize.
-      canonicalize_rotation(ss);
-      divided_setup_move(ss, division_code, phantest_ok,
-                         (save_misc & CMD_MISC__MUST_SPLIT_MASK) != 0, result);
-   }
+   ss->cmd.prior_elongation_bits = 0;
+   ss->cmd.prior_expire_bits = 0;
+   ss->rotation += finalrot;   // Flip the setup around and recanonicalize.
+   canonicalize_rotation(ss);
+   divided_setup_move(ss, division_code, phantest_ok,
+                      (ss->cmd.cmd_misc_flags & CMD_MISC__MUST_SPLIT_MASK) != 0, result);
 
    // Flip the setup back if necessary.  It will get canonicalized.
    result->rotation -= finalrot;

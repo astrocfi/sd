@@ -1224,6 +1224,10 @@ extern void divided_setup_move(
    int arity = maps->arity;
    uint32 frot;
 
+   // We have already figured out what kind of enforced splitting
+   // is called for.  Erase that information.
+   ss->cmd.cmd_misc_flags &= ~CMD_MISC__MUST_SPLIT_MASK;
+
    for (j=0,frot=rot; j<arity; j++,frot>>=2) {
       vflags[j] = 0;
 
